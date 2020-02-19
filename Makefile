@@ -3,8 +3,8 @@ USE_INTEL = no #yes
 EIGEN=/usr/local/Cellar/eigen/3.3.7/include/eigen3
 BOOST=/usr/local
 
-FLAGS = -std=c++11 -g  -O3 -I${EIGEN} -I${BOOST}/include ${INCLUDE_sci} 
-DFLAGS = -std=c++11 -g -O3 -I${EIGEN} -I${BOOST}/include ${INCLUDE_sci} -DComplex
+FLAGS  = -std=c++11 -g -O0 -Wall -I${EIGEN} -I${BOOST}/include ${INCLUDE_DIR} 
+DFLAGS = -std=c++11 -g -O0 -Wall -I${EIGEN} -I${BOOST}/include ${INCLUDE_DIR} -DComplex
                  
 FLAGS += -fopenmp
 DFLAGS +=  -fopenmp
@@ -20,38 +20,45 @@ else
 	DFLAGS += -DSERIAL 
 endif
 
-BIN_DIR = ./bin
-OBJ_DIR = ./obj
 SRC_DIR0 = ./src/settings
 SRC_DIR1 = ./src/io
-SRC_DIR2 = ./src/sci
+SRC_DIR2 = ./src/utils
+INCLUDE_DIR = -I$(SRC_DIR0) \
+	      -I$(SRC_DIR1) \
+	      -I$(SRC_DIR2)
+SRC_DIR = $(wildcard $(SRC_DIR0)/*.cpp \
+  	      	     $(SRC_DIR1)/*.cpp \
+	  	     $(SRC_DIR2)/*.cpp)
+OBJ_DIR = $(patsubst %.cpp,./obj/%.o,$(notdir ${SRC_DIR}))
+# all the files
+SRC_ALL = $(SRC_DIR) $(wildcard src/sci/*.cpp)
+OBJ_ALL = $(patsubst %.cpp,./obj/%.o,$(notdir ${SRC_ALL}))
 
-SRC_sci = $(wildcard $(SRC_DIR0)/*.cpp \
-	  	     $(SRC_DIR1)/*.cpp \
-		     $(SRC_DIR2)/*.cpp)
-OBJ_sci = $(patsubst %.cpp,${OBJ_DIR}/%.o,$(notdir ${SRC_sci})) 
-INCLUDE_sci = -I$(SRC_DIR0) -I$(SRC_DIR1)
-
-all: depend bin/sci.x
+all: depend bin/fci.x bin/sci.x 
 
 depend:
 	set -e; \
 	mkdir -p obj; \
-	$(CXX) -MM $(SRC_sci) > $$$$.depend; \
+	$(CXX) -MM $(SRC_ALL) > $$$$.depend; \
 	sed 's,\([^.]*\.o\),$(OBJ_DIR)/\1,' < $$$$.depend > .depend; \
 	rm -f $$$$.depend # $$$$ id number 
 -include .depend
 
-bin/sci.x: $(OBJ_sci)
+bin/fci.x: obj/fci.o $(OBJ_DIR)
 	@mkdir -p bin
 	@echo "\n=== LINK $@"
-	@echo "OBJ_sci=" $(OBJ_sci)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
-$(OBJ_DIR)/%.o:
+bin/sci.x: obj/sci.o $(OBJ_DIR)
+	@mkdir -p bin
+	@echo "\n=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
+
+$(OBJ_ALL):
 	@echo "=== COMPILE $@ FROM $<" # just from *.cpp is sufficient	
 	$(CXX) $(FLAGS) -o $@ -c $< 
 
 clean:
-	rm -f bin/sci.x
 	rm -f obj/*.o
+	rm -f bin/fci.x
+	rm -f bin/sci.x

@@ -7,16 +7,20 @@
 
 using namespace std;
 
+namespace input{
+
 struct schedule{
-public:
-   void readInput(string fname="input.dat");
 public:
    int nelec;
    int norb;
    int nseed;
-   set<vector<int>> detSeeds;
+   set<vector<int>> det_seeds;
    int nroots;
-   string integralFile;
+   string integral_file;
 };
+   
+void read_input(schedule& schd, string fname="input.dat");
+
+}
 
 #endif

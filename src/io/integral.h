@@ -5,65 +5,69 @@
 #include <string>
 #include "../settings/global.h"
 
-using namespace global;
 using namespace std;
 
-struct oneInt{
+namespace integral{
+
+struct one_body{
    public:
-      void initSpace(){
-         store.clear();
-	 store.resize(norbs*(norbs+1)/2,zero);
+      void init_space(){
+         data.clear();
+	 data.resize(sorb*(sorb+1)/2,zero);
       };
 
       // note that using sizeof(oneInt) only return 40,
       // since unlike array, vector only contains 3 pointers (3*8=24).
-      inline double memSpace(){
-         return memSize(store.size());
+      inline double get_mem_space(){
+         return global::mem_size(data.size());
       };
 
-      inline DType& operator()(int i, int j){
-	 if(i%2 != j%2) return zero;
+      // non-relativistic h1e[i,j]=[i|h|j] where i<=j
+      inline double& operator()(const int i, const int j){
+	 if(i%2 != j%2) return zero; // h[A,B]=0
          int I = i/2, J = j/2;
 	 int IJ = max(I,J)*(max(I,J)+1)/2 + min(I,J);
-	 return store[IJ];
+	 return data[IJ];
       };
    public:
-      DType zero = 0.0;
-      int norbs;
-      vector<DType> store;
+      double zero = 0.0;
+      int sorb;
+      vector<double> data;
 };
 
-struct twoInt{
+struct two_body{
    public:
-      void initSpace(){
-         store.clear();
-	 int npair = norbs*(norbs+1)/2;     
-	 store.resize(npair*(npair+1)/2,zero);
+      void init_space(){
+         data.clear();
+	 int npair = sorb*(sorb+1)/2;     
+	 data.resize(npair*(npair+1)/2,zero);
       };
 
-      inline double memSpace(){
-         return memSize(store.size());
+      inline double get_mem_space(){
+         return global::mem_size(data.size());
       };
 
-      // input spin-orbital indices   
-      inline DType& operator()(int i, int j, int k, int l){
+      // non-relativistic h2e[i,j,k,l]=[ij|kl] where i<=j,k<=l,(ij)<=(kl)
+      inline double& operator()(const int i, const int j, const int k, const int l){
 	 if(i%2 != j%2) return zero;
 	 if(k%2 != l%2) return zero;
          int I = i/2, J = j/2, K = k/2, L = l/2;
 	 int IJ = max(I,J)*(max(I,J)+1)/2 + min(I,J);
 	 int KL = max(K,L)*(max(K,L)+1)/2 + min(K,L);
 	 int A = max(IJ,KL), B = min(IJ,KL);
-	 return store[A*(A+1)/2+B];
+	 return data[A*(A+1)/2+B];
       }
    public:
-      DType zero = 0.0;
-      int norbs;
-      vector<DType> store;
+      double zero = 0.0;
+      int sorb;
+      vector<double> data;
 };
 
-void readIntegral(string fcidump,
-		  twoInt& I2,
-		  oneInt& I1,
-		  double& coreE);
+void read_integral(string fcidump,
+  		   two_body& int2e,
+  		   one_body& int1e,
+  		   double& ecore);
+
+}
 
 #endif

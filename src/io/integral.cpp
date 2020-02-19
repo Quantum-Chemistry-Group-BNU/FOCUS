@@ -1,22 +1,19 @@
-#include <vector>
-#include <string>
+#include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <vector>
 #include <boost/algorithm/string.hpp>
-#include "../settings/global.h"
 #include "integral.h"
 
-using namespace global;
 using namespace std;
-using namespace boost;
 
-void readIntegral(string fname,
-		  twoInt& I2,
-		  oneInt& I1,
-		  double& coreE){
-   cout << line_separator << endl;
-   cout << "Integral fname = " << fname << endl;
-   cout << line_separator << endl;
+void integral::read_integral(string fname,
+		  	     integral::two_body& int2e,
+		  	     integral::one_body& int1e,
+		  	     double& ecore){
+   cout << "\nintegral::read_integral" << endl;
+   cout << "fname = " << fname << endl;
   
    ifstream istrm(fname);
    if(!istrm){
@@ -25,55 +22,51 @@ void readIntegral(string fname,
    }
 
    // parse FCIDUMP file
-   int icounter=0;
-   int norbs=0;
-   int i,j,k,l;
-   double eri;
+   int icounter = 0;
+   int norb = 0;
    vector<string> v;
    string line;
    while(!istrm.eof() && icounter < 4){
       line.clear();	    
-      std::getline(istrm,line);
+      getline(istrm,line);
       if(line.empty() || line[0]=='#') continue;
       icounter++;
-      //cout << line << endl;
       if(icounter == 1){
-         trim_left(line); // in case there is a space in FCIDUMP
-         split(v,line,is_any_of(" ,="),token_compress_on);
-         norbs = stoi(v[2]);
-         cout << "norbs_spatial = " << norbs << endl;
-         cout << "norbs_spinorb = " << 2*norbs << endl;
+	 boost::trim_left(line); // in case there is a space in FCIDUMP
+	 boost::split(v,line,boost::is_any_of(" ,="),boost::token_compress_on);
+         norb = stoi(v[2]);
+         cout << "norb(spatial) = " << norb << endl;
+         cout << "norb(spinorb) = " << 2*norb << endl;
       }
    }
 
-   //
-   // Currently, suppose spin-orbital eri (TO IMPROVE STORAGE LATER!)
-   // 
-   I1.norbs = 2*norbs; 
-   I1.initSpace();
-   cout << "size of I1 (MB) = " << I1.memSpace() << endl;
-   I2.norbs = 2*norbs; 
-   I2.initSpace();
-   cout << "size of I2 (MB) = " << I2.memSpace() << endl;
+   // load integrals
+   int1e.sorb = 2*norb; 
+   int1e.init_space();
+   cout << "size of int1e (MB) = " << int1e.get_mem_space() << endl;
+   int2e.sorb = 2*norb; 
+   int2e.init_space();
+   cout << "size of int2e (MB) = " << int2e.get_mem_space() << endl;
 
+   int i,j,k,l;
+   double eri;
    while(!istrm.eof()){
       line.clear();	    
-      std::getline(istrm,line);
+      getline(istrm,line);
       if(line.empty() || line[0]=='#') continue;
-      trim_left(line);
-      split(v,line,is_any_of(" "),token_compress_on);
+      boost::trim_left(line);
+      boost::split(v,line,boost::is_any_of(" "),boost::token_compress_on);
       eri = stod(v[0]); 
       i = stoi(v[1]); 
       j = stoi(v[2]); 
       k = stoi(v[3]);
       l = stoi(v[4]);
       if(i*j == 0 && k*l == 0){
-         coreE = eri;
+         ecore = eri;
       }else if(i*j != 0 && k*l == 0){
-         I1(2*i-2,2*j-2) = eri; // AA
-         I1(2*i-1,2*j-1) = eri; // BB
+         int1e(2*i-2,2*j-2) = eri; // AA
       }else if(i*j != 0 && k*l != 0){
-         I2(2*i-2,2*j-2,2*k-2,2*l-2) = eri;     
+         int2e(2*i-2,2*j-2,2*k-2,2*l-2) = eri; // AAAA 
       }
    }
    istrm.close();
