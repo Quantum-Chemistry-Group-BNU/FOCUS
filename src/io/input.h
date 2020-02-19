@@ -1,5 +1,6 @@
-#ifndef INPUT_HEADER_H
-#define INPUT_HEADER_H
+#ifndef INPUT_H
+#define INPUT_H
+
 #include <vector>
 #include <string>
 #include <set> 

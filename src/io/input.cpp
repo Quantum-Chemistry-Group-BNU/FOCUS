@@ -3,19 +3,20 @@
 #include <sstream> // istringstream
 #include <string>
 #include <vector>
-#include "global.h"
+#include "../settings/global.h"
 #include "input.h"
 
+using namespace global;
 using namespace std;
 
 void schedule::readInput(string fname){
-   pout << line_separator << endl;
-   pout << "Input fname = " << fname << endl;
-   pout << line_separator << endl;
+   cout << line_separator << endl;
+   cout << "Input fname = " << fname << endl;
+   cout << line_separator << endl;
 
    ifstream istrm(fname);
    if(!istrm) {
-      pout << "failed to open " << fname << '\n';
+      cout << "failed to open " << fname << '\n';
       exit(1);
    }
 
@@ -29,7 +30,7 @@ void schedule::readInput(string fname){
    while(!istrm.eof()){
       line.clear();	   
       std::getline(istrm,line);
-      //pout << line << endl;
+      //cout << line << endl;
       if(line.empty() || line[0]=='#'){
 	 continue; // skip empty and comments    
       }else if(line.substr(0,5)=="nelec"){
@@ -58,22 +59,22 @@ void schedule::readInput(string fname){
          istringstream is(line.substr(8));
 	 is >> this->integralFile;
       }else{
-         pout << "error: no matching key! line=" << line << endl;
+         cout << "error: no matching key! line=" << line << endl;
 	 exit(1);
       }
    }
    istrm.close();
 
    // check
-   pout << "no. of unique seeds = " << this->nseed << endl;
+   cout << "no. of unique seeds = " << this->nseed << endl;
    int idet = 0;
    for(auto det : detSeeds){
-      pout << "det" << idet << " = "; 
+      cout << "det" << idet << " = "; 
       for(auto k : det)
-         pout << k << " ";
-      pout << endl;
+         cout << k << " ";
+      cout << endl;
       idet += 1;
    }
-   pout << "integral file = " << this->integralFile << endl;
+   cout << "integral file = " << this->integralFile << endl;
 
 }
