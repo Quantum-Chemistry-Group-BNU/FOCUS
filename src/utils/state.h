@@ -7,7 +7,7 @@ namespace fock{
 
 class state{
    public:
-      static int sorbs;
+      static int sorb;
       static int efflen;
       long repr[detlen];
 }
