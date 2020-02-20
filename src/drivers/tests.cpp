@@ -1,10 +1,10 @@
-#include "../tests/test_state.h"
+#include "../tests/tests.h"
 
 using namespace std;
 
 int main(){
 
-   test_state();
+   test_onstate();
 
    return 0;   
 }

@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <vector>
-#include "state.h"
+#include "onstate.h"
 
 using namespace std;
 
@@ -11,7 +11,7 @@ namespace fock{
 
 class space{
    public:
-      vecor<state> states;
+      vecor<onstate> states;
 }
 
 }
