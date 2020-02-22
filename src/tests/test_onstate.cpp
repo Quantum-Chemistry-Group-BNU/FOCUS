@@ -1,5 +1,6 @@
 #include <iostream>
 #include "../utils/onstate.h"
+#include <tuple>
 
 using namespace std;
 
@@ -11,31 +12,82 @@ int test_onstate(){
    cout << "\ntest_onstate" << endl;
  
    // test constructor and getocc/setocc
-   fock::onstate state1(65);
+   fock::onstate state1(66);
    state1[0] = 1;
    state1[4] = 1;
    state1[9] = 1;
    state1[64] = 1;
+   state1[65] = 1;
    cout << "len=" << state1.len() << endl;
    cout << "size=" << state1.size() << endl;
    for(int i=0; i<state1.size(); i++){
       cout << "i=" << i << " occ=" << state1[i] << endl;
    };
    cout << "state1=" << state1 << endl;
+   cout << "state1=" << state1.to_string2() << endl; 
 
    // test constructor from string
-   fock::onstate state2("0000101");
+   fock::onstate state2("00000101");
    cout << "state2=" << state2 << endl;
+   cout << "state2=" << state2.to_string2() << endl; 
 
    // test assignment
    fock::onstate state3(state1.size());
    state3 = state1;
+   state3[1] = 1;
    cout << "state3=" << state3 << endl; 
+   cout << "state3=" << state3.to_string2() << endl; 
 
    // test count
-   cout << "Ne1=" << state1.Ne() << endl;
-   cout << "Ne2=" << state2.Ne() << endl;
-   cout << "Ne3=" << state3.Ne() << endl;
+   cout << "Ne1=" << " " << state1.nelec() 
+   		  << " " << state1.nelec_a() 
+   		  << " " << state1.nelec_b() << endl;
+   cout << "Ne2=" << " " << state2.nelec() 
+   		  << " " << state2.nelec_a() 
+   		  << " " << state2.nelec_b() << endl;
+   cout << "Ne3=" << " " << state3.nelec() 
+   		  << " " << state3.nelec_a() 
+   		  << " " << state3.nelec_b() << endl;
 
+   // test copy
+   fock::onstate state4(state3);
+   cout << "state3=" << state3.to_string2() << endl; 
+   cout << state4.num_diff(state3) << endl;
+   cout << state4.num_diff(state1) << endl;
+   cout << state4.if_Hconnected(state4) << endl;
+
+   // test non
+   fock::onstate non;
+   cout << "non=" << non << endl;
+   cout << "non=" << non.to_string() << endl;
+   cout << "non=" << non.to_string2() << endl;
+
+   // test cre/ann
+   cout << "input\n" << state4 << endl;
+   cout << "\ncre 1" << endl; 
+   auto x = state4.cre(1);   // copy constructor
+   cout << "f=" << x.first << endl;
+   cout << "s=" << x.second << endl;
+   
+   cout << "\nann 1" << endl;
+   auto y = state4.ann(1);   // copy+move constructor 
+   cout << "f=" << y.first << endl;
+   cout << "s=" << y.second << endl;
+   
+   cout << "\nann 3" << endl;
+   auto z = state4.ann(3);   // copy+move constructor 
+   cout << "f=" << z.first << endl;
+   cout << "s=" << z.second << endl;
+   //auto z = y.second.cre(6).second;
+   //cout << z << endl;
+   //int fac;
+   //fock::onstate stmp(66);
+   //std::tie(fac,stmp) = y.second.cre(6);
+
+   //cout << z.first << endl;
+   //cout << z.second << endl;
+
+   // test kramers
+   //cout << "input\n" << state4 << endl;
    return 0;   
 }

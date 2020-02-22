@@ -9,6 +9,13 @@ using namespace std;
 
 namespace fock{
 
+// assuming i < 64, return 0[i=0],1[i=1],11[i=2],...
+// must be inlined in header
+inline long allones(const int& n){
+   long one = 1;
+   return (one<<n) - one; // parenthesis must be added due to priority
+}
+
 inline int popcnt(long x)
 {
   x = (x & 0x5555555555555555ULL) + ((x >> 1) & 0x5555555555555555ULL);
@@ -40,18 +47,26 @@ class bit_proxy{
 class onstate{
    public:
       // constructors
-      onstate(const int n): _size(n){
+      onstate(): _size(0), _len(0), _repr(nullptr) {};
+      onstate(const int n){
          assert(n>0);
+	 _size = n;
          _len = (n-1)/64+1;
-	  _repr = new long[_len];
+	 _repr = new long[_len];
          for(int i=0; i<_len; i++)
 	    _repr[i] = 0;
       }
       onstate(const string& on);
       // destructors
-      ~onstate() { delete[] _repr; }
-      // assignment constructor
+      ~onstate(){ delete[] _repr; }
+      // copy constructor
+      onstate(const onstate& state);
+      // copy assignment constructor
       onstate& operator =(const onstate& state);
+      // move constructor - move resources to this
+      onstate(onstate&& state);
+      // move assignement [no const, since it will be modified] 
+      onstate& operator =(onstate&& state);
       // core functions
       int len() const{ return _len; }
       int size() const{ return _size; }
@@ -66,16 +81,122 @@ class onstate{
 	  assert(i < _size);
 	  return {_repr[i/64],1ULL << i%64}; 
       }
-      // count the number of 1 in ontate
-      int Ne() const;
-      /*
-      int Na();
-      int Nb();
-      int Nd();
-      */
       // print
+      string to_string() const;
+      string to_string2() const;
       friend ostream& operator <<(ostream& os, const onstate& state);
-   public:
+      // comparison [from high position] 
+      bool operator <(const onstate& state) const{
+         for(int i=_len-1; i>=0; i--){
+	    if(_repr[i] < state._repr[i]) 
+	       return true;
+	    else
+	       break;
+	 }
+	return false; 
+      }
+      bool operator =(const onstate& state) const{
+         for(int i=_len-1; i>=0; i--){
+	    if(_repr[i] != state._repr[i]) return false;
+	 } 
+	 return true;
+      }
+      // count the number of 1 in ontate
+      int nelec() const{
+         int ne = 0;
+         for(int i=0; i<_len; i++){
+            ne += popcnt(_repr[i]);
+         }
+         return ne;
+      }
+      int nelec_a() const{
+         int ne = 0; // 0x5 = 0101 [count from left]
+	 long mask = 0x5555555555555555;
+         for(int i=0; i<_len; i++){
+ 	    long even = _repr[i] & mask;
+            ne += popcnt(even);
+         }
+         return ne;
+      }
+      int nelec_b() const{
+         int ne = 0; // 0xA = 1010 [count from left]
+	 long mask = 0xAAAAAAAAAAAAAAAA;
+         for(int i=0; i<_len; i++){
+ 	    long odd = _repr[i] & mask;
+            ne += popcnt(odd);
+         }
+         return ne;
+      }
+      // hamiltonian
+      int num_diff(const onstate& state) const{
+         int ndiff = 0;
+	 for(int i=0; i<_len; i++)
+            ndiff += popcnt(_repr[i]^state._repr[i]);
+	 return ndiff;
+      }
+      // we assume the no. of electrons are the same,
+      // to avoid checking this condition. 
+      bool if_Hconnected(const onstate& state) const{
+         return this->num_diff(state) <= 4;
+      }
+      // creation/annihilation operators subroutines
+      // parity: =0, even; =1, odd.
+      int parity_sum(const int& n){
+          int nonzero = 0;
+	  for(int i=0; i<n/64; i++){
+             nonzero += popcnt(_repr[i]);
+	  }
+	  nonzero += popcnt((_repr[n/64] & allones(n%64)));
+	  return -2*(nonzero%2)+1;
+      }
+      // i^+|state>
+      pair<int,onstate> cre(const int& i) const{
+         int fac;
+	 onstate res;
+	 if((*this)[i]){
+	    fac = 0; // vanishing result
+         }else{
+	    res = *this;
+	    res[i] = 1;
+	    fac = res.parity_sum(i);
+	 }
+	 return make_pair(fac,move(res));
+      }
+      // i|state>
+      pair<int,onstate> ann(const int& i) const{
+         int fac;
+	 onstate res;
+	 if((*this)[i]){
+	    res = *this;
+	    res[i] = 0;
+	    fac = res.parity_sum(i);
+	 }else{
+	    fac = 0;
+	 }
+	 return make_pair(fac,move(res));
+      }
+
+
+
+      // kramers symmetry related functions
+      bool has_unpaired(){
+         long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
+	 for(int i=_len-1; i>=0; i--){
+	    if( ((_repr[i]&even)<<1) != (_repr[i]&odd) ) return true;
+	 }
+	 return false;
+      }
+      int num_unpaired(){
+         long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
+	 int unpaired = 0;
+	 for(int i=_len-1; i>=0; i--){
+	     long single = ((_repr[i]&even)<<1) ^ (_repr[i]&odd);
+	     unpaired += popcnt(single);
+	 }
+	 return unpaired;
+      }
+
+   private:
       int _size;
       int _len;
       long* _repr;

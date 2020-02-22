@@ -1,0 +1,21 @@
+
+*** TODOs ***
+
+--- Fundamental functionalities ---
+
+ 20200221 onstate
+ 2020xxxx generation space
+ 2020xxxx hamiltonian 
+ 2020xxxx brute-force fci [benchmark]
+ 2020xxxx selected ci
+ 2020xxxx entropy measure
+ 2020xxxx mps structure & fit
+ 2020xxxx dmrg
+
+--- Advanced functionalities ---
+
+ 2020xxxx complex version
+ 2020xxxx g-tensor
+ 2020xxxx operator compression
+ 2020xxxx random sampling - pDMRG/CC
+
