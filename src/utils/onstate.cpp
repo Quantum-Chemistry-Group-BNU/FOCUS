@@ -18,7 +18,7 @@ onstate::onstate(const string& s){
 
 // copy constructor
 onstate::onstate(const onstate& state){
-   cout << "copy-c" << endl;	
+   cout << "copy c" << endl;	
    _size = state._size;
    _len  = state._len; 
    _repr = new long[state._len];
@@ -27,7 +27,7 @@ onstate::onstate(const onstate& state){
 
 // copy assignement constructor
 onstate& onstate::operator =(const onstate& state){
-   cout << "copy-=" << endl;	
+   cout << "copy =" << endl;	
    if(this != &state){
       _size = state._size;
       _len  = state._len;
@@ -40,7 +40,7 @@ onstate& onstate::operator =(const onstate& state){
 
 // move constructor
 onstate::onstate(onstate&& state){
-   cout << "move-c" << endl;	
+   cout << "move c" << endl;	
    _size = state._size;
    _len  = state._len;
    _repr = state._repr;
@@ -51,11 +51,11 @@ onstate::onstate(onstate&& state){
 
 // move assignement constructor
 onstate& onstate::operator =(onstate&& state){
-   cout << "move-=" << endl;	
+   cout << "move =" << endl;	
    if(this != &state){
-      _size == state._size;
-      _len  == state._len;
-      delete[] _repr;
+      _size = state._size;
+      _len  = state._len;
+      delete[] _repr; // release memory that _repr hold
       _repr = state._repr;
       state._size = 0;
       state._len  = 0;

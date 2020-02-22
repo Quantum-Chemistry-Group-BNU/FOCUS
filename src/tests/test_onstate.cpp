@@ -66,26 +66,34 @@ int test_onstate(){
    cout << "input\n" << state4 << endl;
    cout << "\ncre 1" << endl; 
    auto x = state4.cre(1);   // copy constructor
-   cout << "f=" << x.first << endl;
-   cout << "s=" << x.second << endl;
+   cout << "x.f=" << x.first << endl;
+   cout << "x.s=" << x.second << endl;
    
    cout << "\nann 1" << endl;
    auto y = state4.ann(1);   // copy+move constructor 
-   cout << "f=" << y.first << endl;
-   cout << "s=" << y.second << endl;
+   cout << "y.f=" << y.first << endl;
+   cout << "y.s=" << y.second << endl;
    
    cout << "\nann 3" << endl;
    auto z = state4.ann(3);   // copy+move constructor 
-   cout << "f=" << z.first << endl;
-   cout << "s=" << z.second << endl;
-   //auto z = y.second.cre(6).second;
-   //cout << z << endl;
-   //int fac;
-   //fock::onstate stmp(66);
-   //std::tie(fac,stmp) = y.second.cre(6);
+   cout << "z.f=" << z.first << endl;
+   cout << "z.s=" << z.second << endl;
 
-   //cout << z.first << endl;
-   //cout << z.second << endl;
+   cout << "\ncre 6" << endl;
+   cout << "y.second = " << y.second << endl;
+   auto m = y.second.cre(6);
+   cout << "m.f=" << m.first << endl;
+   cout << "m.s=" << m.second << endl;
+
+   cout << "\nann 64" << endl;
+   cout << "y.second = " << y.second << endl;
+   fock::onstate sta;
+   sta = y.second.ann(65).second; // move =
+   cout << "sta=" << sta << endl;
+   int fac;
+   std::tie(fac,sta) = y.second.ann(65);
+   cout << "fac=" << fac << endl;
+   cout << "sta=" << sta << endl;
 
    // test kramers
    //cout << "input\n" << state4 << endl;
