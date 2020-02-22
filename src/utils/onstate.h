@@ -140,14 +140,26 @@ class onstate{
          return this->num_diff(state) <= 4;
       }
       // creation/annihilation operators subroutines
-      // parity: =0, even; =1, odd.
-      int parity_sum(const int& n){
-          int nonzero = 0;
-	  for(int i=0; i<n/64; i++){
-             nonzero += popcnt(_repr[i]);
-	  }
-	  nonzero += popcnt((_repr[n/64] & allones(n%64)));
-	  return -2*(nonzero%2)+1;
+      // parity: =0, even; =1, odd. 
+      int parity(const int& n){
+         int nonzero = 0;
+	 for(int i=0; i<n/64; i++){
+            nonzero += popcnt(_repr[i]);
+	 }
+	 nonzero += popcnt((_repr[n/64] & allones(n%64)));
+	 return -2*(nonzero%2)+1;
+      }
+      int parity(const int& start, const int& end){
+	 int ista = start%64;
+         long mask = allones(ista);
+         long res = _repr[start/64] & mask;
+         int nonzero = -popcnt(res)-(*this)[ista];
+         for(int i=start/64; i<end/64; i++)
+	    nonzero += popcnt(_repr[i]);
+         mask = allones(end%64);
+         res = _repr[end/64] & mask;	 
+	 nonzero += popcnt(res);
+	 return -2*(nonzero%2)+1;
       }
       // i^+|state>
       pair<int,onstate> cre(const int& i) const{
@@ -158,7 +170,7 @@ class onstate{
          }else{
 	    res = *this;
 	    res[i] = 1;
-	    fac = res.parity_sum(i);
+	    fac = res.parity(i);
 	 }
 	 return make_pair(fac,move(res));
       }
@@ -169,7 +181,7 @@ class onstate{
 	 if((*this)[i]){
 	    res = *this;
 	    res[i] = 0;
-	    fac = res.parity_sum(i);
+	    fac = res.parity(i);
 	 }else{
 	    fac = 0;
 	 }
@@ -195,6 +207,13 @@ class onstate{
 	 }
 	 return unpaired;
       }
+      // isStandard
+      // flipAlphaBeta
+      // parityOfFlipAlphaBeta
+      // makeStandard
+      //
+      // double Energy(oneInt& I1, twoInt& I2, double& coreE);
+      // CItype Hij(Determinant& bra, Determinant& ket, oneInt& I1, twoInt& I2, double& coreE, size_t& orbDiff);
 
    private:
       int _size;

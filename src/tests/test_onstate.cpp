@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../utils/onstate.h"
 #include <tuple>
+#include <bitset>
 
 using namespace std;
 
@@ -94,6 +95,21 @@ int test_onstate(){
    std::tie(fac,sta) = y.second.ann(65);
    cout << "fac=" << fac << endl;
    cout << "sta=" << sta << endl;
+   /*
+   for(int i=0; i<64; i++){
+      long tmp = fock::allones(i);
+      cout << bitset<64>(tmp) << endl;
+      cout << bitset<64>(~tmp) << endl;
+   }
+   */
+   cout << "parity(0)=" << sta.parity(0) << endl;
+   cout << "parity(1)=" << sta.parity(1) << endl;
+   cout << "parity(0,3)=" << sta.parity(0,3) << endl;
+   cout << "parity(0,4)=" << sta.parity(0,4) << endl;
+   cout << "parity(0,5)=" << sta.parity(0,5) << endl;
+   cout << "parity(0,6)=" << sta.parity(0,6) << endl;
+   cout << "parity(3,10)=" << sta.parity(3,10) << endl;
+   cout << "parity(0,64)=" << sta.parity(0,64) << endl;
 
    // test kramers
    //cout << "input\n" << state4 << endl;
