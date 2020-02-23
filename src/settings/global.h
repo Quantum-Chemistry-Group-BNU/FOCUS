@@ -4,12 +4,14 @@
 
 namespace global{
 
-void license();
-
 const std::string line_separator(70,'-');
 extern const std::string line_separator;
 
-extern double mem_size(size_t sz, const int fac=8);
+void license();
+
+double mem_size(size_t sz, const int fac=8);
+
+extern int print_level; // just declaration
 
 }
 

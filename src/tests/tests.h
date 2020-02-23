@@ -3,4 +3,6 @@
 
 int test_onstate();
 
+int test_hamiltonian();
+
 #endif

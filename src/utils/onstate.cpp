@@ -1,7 +1,9 @@
 #include <iostream>
 #include <algorithm>
 #include "onstate.h"
+#include "../settings/global.h"
 
+using namespace std;
 using namespace fock;
 
 // constructor from '010011' strings
@@ -16,19 +18,32 @@ onstate::onstate(const string& s){
    }
 }
 
+// merge two state for different spins
+onstate::onstate(const onstate& state_a, const onstate& state_b){
+   assert(state_a._size == state_b._size);
+   _size = 2*state_a._size;
+   _len = (_size-1)/64+1;
+   _repr = new long[_len];
+   for(int ia=0; ia<state_a._size; ia++){
+      (*this)[2*ia] = state_a[ia];
+      (*this)[2*ia+1] = state_b[ia]; 
+   }
+}
+
 // copy constructor
 onstate::onstate(const onstate& state){
-   cout << "copy c" << endl;	
+   if(global::print_level>3) cout << "copy c" << endl;	
    _size = state._size;
-   _len  = state._len; 
-   _repr = new long[state._len];
+   _len  = state._len;
+   _repr = new long[_len];
    copy(state._repr, state._repr+state._len, _repr);
 }
 
 // copy assignement constructor
 onstate& onstate::operator =(const onstate& state){
-   cout << "copy =" << endl;	
+   if(global::print_level>3) cout << "copy =" << endl;	
    if(this != &state){
+      cout << "copyd=" << endl;	   
       _size = state._size;
       _len  = state._len;
       delete[] _repr;
@@ -40,7 +55,7 @@ onstate& onstate::operator =(const onstate& state){
 
 // move constructor
 onstate::onstate(onstate&& state){
-   cout << "move c" << endl;	
+   if(global::print_level>3) cout << "move c" << endl;	
    _size = state._size;
    _len  = state._len;
    _repr = state._repr;
@@ -51,8 +66,9 @@ onstate::onstate(onstate&& state){
 
 // move assignement constructor
 onstate& onstate::operator =(onstate&& state){
-   cout << "move =" << endl;	
+   if(global::print_level>3) cout << "move =" << endl;	
    if(this != &state){
+      if(global::print_level>3) cout << "moved=" << endl;
       _size = state._size;
       _len  = state._len;
       delete[] _repr; // release memory that _repr hold

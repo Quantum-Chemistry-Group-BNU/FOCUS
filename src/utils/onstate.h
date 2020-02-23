@@ -2,10 +2,9 @@
 #define STATE_H
 
 #include <iostream>
-#include <string>
 #include <cassert>
-
-using namespace std;
+#include <string>
+#include <vector>
 
 namespace fock{
 
@@ -18,10 +17,10 @@ inline long allones(const int& n){
 
 inline int popcnt(long x)
 {
-  x = (x & 0x5555555555555555ULL) + ((x >> 1) & 0x5555555555555555ULL);
-  x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
-  x = (x & 0x0F0F0F0F0F0F0F0FULL) + ((x >> 4) & 0x0F0F0F0F0F0F0F0FULL);
-  return (x * 0x0101010101010101ULL) >> 56;
+   x = (x & 0x5555555555555555ULL) + ((x >> 1) & 0x5555555555555555ULL);
+   x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
+   x = (x & 0x0F0F0F0F0F0F0F0FULL) + ((x >> 4) & 0x0F0F0F0F0F0F0F0FULL);
+   return (x * 0x0101010101010101ULL) >> 56;
 }
 
 class bit_proxy{
@@ -56,7 +55,6 @@ class onstate{
          for(int i=0; i<_len; i++)
 	    _repr[i] = 0;
       }
-      onstate(const string& on);
       // destructors
       ~onstate(){ delete[] _repr; }
       // copy constructor
@@ -67,6 +65,9 @@ class onstate{
       onstate(onstate&& state);
       // move assignement [no const, since it will be modified] 
       onstate& operator =(onstate&& state);
+      // special constructors
+      onstate(const std::string& on);
+      onstate(const onstate& state_a, const onstate& state_b);
       // core functions
       int len() const{ return _len; }
       int size() const{ return _size; }
@@ -82,9 +83,9 @@ class onstate{
 	  return {_repr[i/64],1ULL << i%64}; 
       }
       // print
-      string to_string() const;
-      string to_string2() const;
-      friend ostream& operator <<(ostream& os, const onstate& state);
+      std::string to_string() const;
+      std::string to_string2() const;
+      friend std::ostream& operator <<(std::ostream& os, const onstate& state);
       // comparison [from high position] 
       bool operator <(const onstate& state) const{
          for(int i=_len-1; i>=0; i--){
@@ -93,9 +94,9 @@ class onstate{
 	    else
 	       break;
 	 }
-	return false; 
+	 return false; 
       }
-      bool operator =(const onstate& state) const{
+      bool operator ==(const onstate& state) const{
          for(int i=_len-1; i>=0; i--){
 	    if(_repr[i] != state._repr[i]) return false;
 	 } 
@@ -127,18 +128,6 @@ class onstate{
          }
          return ne;
       }
-      // hamiltonian
-      int num_diff(const onstate& state) const{
-         int ndiff = 0;
-	 for(int i=0; i<_len; i++)
-            ndiff += popcnt(_repr[i]^state._repr[i]);
-	 return ndiff;
-      }
-      // we assume the no. of electrons are the same,
-      // to avoid checking this condition. 
-      bool if_Hconnected(const onstate& state) const{
-         return this->num_diff(state) <= 4;
-      }
       // creation/annihilation operators subroutines
       // parity: =0, even; =1, odd. 
       int parity(const int& n){
@@ -162,7 +151,7 @@ class onstate{
 	 return -2*(nonzero%2)+1;
       }
       // i^+|state>
-      pair<int,onstate> cre(const int& i) const{
+      std::pair<int,onstate> cre(const int& i) const{
          int fac;
 	 onstate res;
 	 if((*this)[i]){
@@ -172,10 +161,10 @@ class onstate{
 	    res[i] = 1;
 	    fac = res.parity(i);
 	 }
-	 return make_pair(fac,move(res));
+	 return std::make_pair(fac,std::move(res));
       }
       // i|state>
-      pair<int,onstate> ann(const int& i) const{
+      std::pair<int,onstate> ann(const int& i) const{
          int fac;
 	 onstate res;
 	 if((*this)[i]){
@@ -185,36 +174,107 @@ class onstate{
 	 }else{
 	    fac = 0;
 	 }
-	 return make_pair(fac,move(res));
+	 return std::make_pair(fac,std::move(res));
       }
-
-
-
+      // number of spatial orbitals
+      int norb(){ return _size/2; }
+      // number of singly occupied (seniority number)
+      int norb_single(){
+         long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
+	 int num = 0;
+	 for(int i=_len-1; i>=0; i--){
+	     long tmp = ((_repr[i]&even)<<1) ^ (_repr[i]&odd); // xor
+	     num += popcnt(tmp);
+	 }
+	 return num;
+      }
+      // number of doubly occupied
+      int norb_double(){
+         long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
+	 int num = 0;
+	 for(int i=_len-1; i>=0; i--){
+	     long tmp = ((_repr[i]&even)<<1) & (_repr[i]&odd); // and
+	     num += popcnt(tmp);
+	 }
+	 return num;
+      }
+      // number of vacant
+      int norb_vacant(){
+         long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
+	 int num = 0;
+	 for(int i=_len-1; i>=0; i--){
+	     long tmp = ((_repr[i]&even)<<1) | (_repr[i]&odd); // or
+	     num -= popcnt(tmp);
+	 }
+	 num += norb();
+	 return num;
+      }
       // kramers symmetry related functions
-      bool has_unpaired(){
+      bool has_single(){
          long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
 	 for(int i=_len-1; i>=0; i--){
 	    if( ((_repr[i]&even)<<1) != (_repr[i]&odd) ) return true;
 	 }
 	 return false;
       }
-      int num_unpaired(){
-         long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
-	 int unpaired = 0;
+      // standard representative for {|state>,K|state>}
+      bool is_standard(){
+         if(!has_single()) return true;
+	 long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
 	 for(int i=_len-1; i>=0; i--){
-	     long single = ((_repr[i]&even)<<1) ^ (_repr[i]&odd);
-	     unpaired += popcnt(single);
+	    long flipped = ((_repr[i]&even)<<1) + ((_repr[i]&odd)>>1);
+	    if(_repr[i] < flipped) 
+               return false;
+	    // define the det with max integer rep as standard
+            else if(_repr[i] > flipped) 
+ 	       return true;
 	 }
-	 return unpaired;
+	 std::cout << "error in onstate.is_standard" << std::endl;
+	 std::cout << *this << std::endl;
+ 	 exit(1);
       }
-      // isStandard
-      // flipAlphaBeta
-      // parityOfFlipAlphaBeta
-      // makeStandard
-      //
-      // double Energy(oneInt& I1, twoInt& I2, double& coreE);
-      // CItype Hij(Determinant& bra, Determinant& ket, oneInt& I1, twoInt& I2, double& coreE, size_t& orbDiff);
-
+      // flip K{|a>,|b>}={|b>,-|a>}
+      onstate flip(){
+         unsigned long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
+	 onstate state(_size); 
+	 for(int i=0; i<_len; i++){
+	    state._repr[i] = ((_repr[i]&even)<<1) + ((_repr[i]&odd)>>1);
+	 }
+	 return state;
+      }
+      // return standard representative for {|state>,K|state>}
+      onstate make_standard(){
+	 if(is_standard())
+	    return *this;
+	 else
+	    return flip();
+      }
+      // K|state>=|state'>(-1)^{sum[na*nb+nb]} (na*nb=nd)
+      int parity_flip(){
+	 return -2*((norb_double()+nelec_b())%2)+1;
+      }
+      // hamiltonian
+      int num_diff(const onstate& state) const{
+         int ndiff = 0;
+	 for(int i=0; i<_len; i++)
+            ndiff += popcnt(_repr[i]^state._repr[i]);
+	 return ndiff;
+      }
+      // we assume the no. of electrons are the same,
+      // to avoid checking this condition. 
+      bool if_Hconnected(const onstate& state) const{
+         return num_diff(state) <= 4;
+      }
+      // 
+      void get_occlst(std::vector<int>& olst, std::vector<int>& vlst){
+         for(int i=0; i<_size; i++){
+	    if((*this)[i]){
+	       olst.push_back(i);
+	    }else{
+	       vlst.push_back(i);
+	    }
+	 }
+      }
    private:
       int _size;
       int _len;

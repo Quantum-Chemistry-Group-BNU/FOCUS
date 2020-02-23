@@ -5,8 +5,6 @@
 #include <string>
 #include <set> 
 
-using namespace std;
-
 namespace input{
 
 struct schedule{
@@ -14,12 +12,12 @@ public:
    int nelec;
    int norb;
    int nseed;
-   set<vector<int>> det_seeds;
+   std::set<std::vector<int>> det_seeds;
    int nroots;
-   string integral_file;
+   std::string integral_file;
 };
    
-void read_input(schedule& schd, string fname="input.dat");
+void read_input(schedule& schd, std::string fname="input.dat");
 
 }
 

@@ -1,16 +1,15 @@
 #include <iostream>
-#include "../utils/onstate.h"
 #include <tuple>
 #include <bitset>
+#include "../utils/onstate.h"
+#include "../settings/global.h"
 
 using namespace std;
 
-int tmp(const fock::onstate& y){
-   return y[0];
-}
-
 int test_onstate(){
-   cout << "\ntest_onstate" << endl;
+   cout << global::line_separator << endl;	
+   cout << "test_onstate" << endl;
+   cout << global::line_separator << endl;	
  
    // test constructor and getocc/setocc
    fock::onstate state1(66);
@@ -88,6 +87,9 @@ int test_onstate(){
 
    cout << "\nann 64" << endl;
    cout << "y.second = " << y.second << endl;
+   // move constructor 
+   fock::onstate tmp = y.second.ann(65).second;
+   // move assignment 
    fock::onstate sta;
    sta = y.second.ann(65).second; // move =
    cout << "sta=" << sta << endl;
@@ -112,6 +114,71 @@ int test_onstate(){
    cout << "parity(0,64)=" << sta.parity(0,64) << endl;
 
    // test kramers
-   //cout << "input\n" << state4 << endl;
+   cout << "input\n" << state4 << endl;
+   cout << state4.to_string2() << endl;
+   cout << state4.nelec_a() << "," << state4.nelec_b() << endl;
+   cout << "is_standard=" << state4.is_standard() << endl;
+   fock::onstate state5 = state4.flip();
+   cout << "flip=" << state5 << endl;
+   cout << "flip=" << state5.to_string2() << endl;
+   cout << (state4 == state5) << endl;
+   cout << (state4 < state5) << endl;
+  
+   // test for make_standard() 
+   cout << "--- initial ---" << endl;
+   cout << state5 << endl;
+   cout << state4 << endl; 
+   cout << "--- state5 ---" << endl;
+   cout << state5.is_standard() << endl;
+   state5 = state5.make_standard();
+   cout << state5 << endl;
+   state5[2] = 1;
+   cout << state5 << endl;
+   cout << "--- state4 ---" << endl;
+   cout << state4.is_standard() << endl;
+   state4 = state4.make_standard();
+   cout << state4 << endl;
+   state4[3] = 1;
+   cout << state4 << endl;
+   cout << "--- final ---" << endl;
+   cout << state5 << endl;
+   cout << state4 << endl; 
+
+   cout << state4.to_string2() << endl;
+   cout << "has_single=" << state4.has_single() << endl;
+   cout << "norb_single=" << state4.norb_single() << endl;
+   cout << "norb_double=" << state4.norb_double() << endl;
+   cout << "norb_vacant=" << state4.norb_vacant() << endl;
+   cout << state4.norb_single()
+	   +state4.norb_double()
+	   +state4.norb_vacant() << endl;
+   cout << state4.to_string2() << endl;
+   cout << state4.parity_flip() << endl;
+   cout << state4.flip().to_string2() << endl;
+   cout << state4.flip().parity_flip() << endl;
+
+   vector<int> olst,vlst;
+   state4.get_occlst(olst,vlst);
+   cout << "olst=";
+   for(auto i : olst)
+      cout << " " << i;
+   cout << endl;
+   cout << "vlst="; 
+   for(auto i : vlst)
+      cout << " " << i;
+   cout << endl;
+   
+   olst.clear();
+   vlst.clear();
+   state5.get_occlst(olst,vlst);
+   cout << "olst=";
+   for(auto i : olst)
+      cout << " " << i;
+   cout << endl;
+   cout << "vlst="; 
+   for(auto i : vlst)
+      cout << " " << i;
+   cout << endl;
+ 
    return 0;   
 }

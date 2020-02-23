@@ -5,8 +5,6 @@
 #include <string>
 #include "../settings/global.h"
 
-using namespace std;
-
 namespace integral{
 
 struct one_body{
@@ -26,13 +24,13 @@ struct one_body{
       inline double& operator()(const int i, const int j){
 	 if(i%2 != j%2) return zero; // h[A,B]=0
          int I = i/2, J = j/2;
-	 int IJ = max(I,J)*(max(I,J)+1)/2 + min(I,J);
+	 int IJ = std::max(I,J)*(std::max(I,J)+1)/2 + std::min(I,J);
 	 return data[IJ];
       };
    public:
       double zero = 0.0;
       int sorb;
-      vector<double> data;
+      std::vector<double> data;
 };
 
 struct two_body{
@@ -52,18 +50,18 @@ struct two_body{
 	 if(i%2 != j%2) return zero;
 	 if(k%2 != l%2) return zero;
          int I = i/2, J = j/2, K = k/2, L = l/2;
-	 int IJ = max(I,J)*(max(I,J)+1)/2 + min(I,J);
-	 int KL = max(K,L)*(max(K,L)+1)/2 + min(K,L);
-	 int A = max(IJ,KL), B = min(IJ,KL);
+	 int IJ = std::max(I,J)*(std::max(I,J)+1)/2 + std::min(I,J);
+	 int KL = std::max(K,L)*(std::max(K,L)+1)/2 + std::min(K,L);
+	 int A = std::max(IJ,KL), B = std::min(IJ,KL);
 	 return data[A*(A+1)/2+B];
       }
    public:
       double zero = 0.0;
       int sorb;
-      vector<double> data;
+      std::vector<double> data;
 };
 
-void read_integral(string fcidump,
+void read_integral(std::string fcidump,
   		   two_body& int2e,
   		   one_body& int1e,
   		   double& ecore);

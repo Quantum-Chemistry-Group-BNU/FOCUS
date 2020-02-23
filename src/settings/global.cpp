@@ -4,6 +4,8 @@
 
 using namespace std;
 
+int global::print_level = 1;
+
 void global::license() {
    cout << line_separator <<endl;
    cout << "Qubic: a platform for exploring the intersection of three fields" << endl;
