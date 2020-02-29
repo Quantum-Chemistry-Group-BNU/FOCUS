@@ -2,6 +2,7 @@
 #include <cmath>
 #include "analysis.h"
 #include "tools.h"
+#include "matrix.h"
 
 using namespace std;
 using namespace fock;
@@ -53,11 +54,16 @@ double fock::vonNeumann_entropy(const vector<double>& sigs, const double cutoff)
    return ssum;
 }
 
-/*
+using namespace linalg;
+
 void fock::get_rdm1(const onspace& space,
 		    const vector<double>& civec1,
 		    const vector<double>& civec2,
-		    ){
-
+		    matrix& rdm1){
 }
-*/
+
+void get_rdm2(const onspace& space,
+	      const vector<double>& civec1,
+	      const vector<double>& civec2,
+	      matrix& rdm2){
+}

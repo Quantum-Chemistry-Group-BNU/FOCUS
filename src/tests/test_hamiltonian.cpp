@@ -4,8 +4,9 @@
 #include "../utils/integral.h"
 #include "../utils/hamiltonian.h"
 #include "../utils/analysis.h"
+#include "../utils/matrix.h"
+#include "../utils/linalg.h"
 #include "../settings/global.h"
-#include <Eigen/Dense>
 #include <iomanip>
 #include <chrono>
 #include <cmath>
@@ -14,7 +15,6 @@
 
 using namespace std;
 using namespace fock;
-using namespace Eigen;
 
 int tests::test_hamiltonian(){
    cout << global::line_separator << endl;	
@@ -25,7 +25,6 @@ int tests::test_hamiltonian(){
    onspace space2 = fci_space(6,2,2);
    int dim = space2.size();
    cout << "dim=" << dim << endl; 
-
    /*
    for(const auto& s1 : space2){
       for(const auto& s2 : space2){
@@ -41,36 +40,27 @@ int tests::test_hamiltonian(){
    double ecore;
    integral::read_integral(int2e, int1e, ecore);
 
-   // Eigen3
    cout << "\neigenvalue problem" << endl;
    auto H = get_Ham(space2,int2e,int1e,ecore);
-   Map<MatrixXd> Hm(H.get(),dim,dim);
-   //cout << "Hm\n" << Hm << endl;
+   auto t0 = chrono::high_resolution_clock::now();
+   linalg::matrix v(H);
+   vector<double> e(H.rows());
+   linalg::eig(v,e);
+   cout << "eigenvalues:\n" << setprecision(10) 
+	<< e[0] << "\n" << e[1] << "\n" << e[2] << endl;
+   auto t1 = chrono::high_resolution_clock::now();
+   cout << "timing : " << setw(10) << fixed << setprecision(2) 
+	<< chrono::duration_cast<chrono::milliseconds>(t1-t0).count()*0.001 << " s" << endl;
    
-   auto time0 = chrono::high_resolution_clock::now();
-   SelfAdjointEigenSolver<MatrixXd> eigensolver(Hm);
-   if (eigensolver.info() != Success) abort();
-   auto eig = eigensolver.eigenvalues();
-   auto vec = eigensolver.eigenvectors();
-   cout << "eigenvalues:\n" << setprecision(10) << eig.head(3) << endl;
-   //cout << "eigenvectors:\n" << scientific << vec << endl;
-   auto time1 = chrono::high_resolution_clock::now();
-   cout << " timing : " << setw(10) << fixed << setprecision(2) 
-	<< chrono::duration_cast<chrono::milliseconds>(time1-time0).count()*0.001 << " s" << endl;
-
-   // copy back 
-   vector<double> v(vec.col(0).data(), vec.col(0).data()+dim);
-   fock::coefficients(space2,v);
-
-   vector<double> sigs(v.size());
-   transform(v.cbegin(),v.cend(),sigs.begin(),
+   //vector<double> v0(&v(0,0),&v(0,0)+v.rows());
+   vector<double> v0(v.data(),v.data()+v.rows());
+   fock::coefficients(space2,v0);
+   vector<double> sigs(v0.size());
+   transform(v0.cbegin(),v0.cend(),sigs.begin(),
 	     [](const double& x){return pow(x,2);});
-   auto c2 = vec.col(0).array().pow(2);
-   cout << sigs[0] << " " << c2[0] << endl;
-  
+   cout << "p0=" << sigs[0] << endl;
    cout << vonNeumann_entropy(sigs) << endl;
 
-   // sort?
-   
+//   fock::get_rdm1(
    return 0;
 }

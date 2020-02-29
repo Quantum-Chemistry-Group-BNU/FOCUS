@@ -6,6 +6,7 @@
 #include <memory>
 #include "onstate.h"
 #include "integral.h"
+#include "matrix.h"
 
 namespace fock{
 
@@ -21,10 +22,10 @@ onspace fci_space(const int k, const int n);
 onspace fci_space(const int ks, const int na, const int nb);
       
 // generate represenation of H in this space
-std::unique_ptr<double[]> get_Ham(const onspace& space,
-		                  const integral::two_body& int2e,
-			          const integral::one_body& int1e,
-			          const double ecore=0.0);
+linalg::matrix get_Ham(const onspace& space,
+		       const integral::two_body& int2e,
+		       const integral::one_body& int1e,
+		       const double ecore=0.0);
 
 }
 

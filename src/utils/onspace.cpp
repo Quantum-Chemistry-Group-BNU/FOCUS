@@ -44,20 +44,21 @@ onspace fock::fci_space(const int ks, const int na, const int nb){
    return space;
 }
 
+using namespace linalg;
+
 // generate represenation of H in this space
-unique_ptr<double[]> fock::get_Ham(const onspace& space,
-		                   const integral::two_body& int2e,
-			           const integral::one_body& int1e,
-			           const double ecore)
-{
+matrix fock::get_Ham(const onspace& space,
+		     const integral::two_body& int2e,
+		     const integral::one_body& int1e,
+		     const double ecore){
    auto dim = space.size();
-   unique_ptr<double[]> H(new double[dim*dim]);
+   matrix H(dim,dim);
    // row major - H[i,j] (col major would be H[j*dim+i]=Hij (transposed)
    for(size_t i=0; i<dim; i++){
       for(size_t j=0; j<dim; j++){
-         H[i*dim+j] = get_Hij(space[i],space[j],int2e,int1e);
+         H(i,j) = get_Hij(space[i],space[j],int2e,int1e);
       }
-      H[i*dim+i] += ecore;
+      H(i,i) += ecore;
    }
    return H;
 }
