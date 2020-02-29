@@ -1,5 +1,7 @@
 log
 tags
 .depend
+obj
+bin
 bin/*.x
 obj/*.o

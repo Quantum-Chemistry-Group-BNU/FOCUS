@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cassert>
 #include <random>
+#include <iomanip>
+#include <string>
 
 namespace linalg{
 
@@ -74,14 +76,15 @@ class matrix{
 	 return _data[i*_cols+j];
       }
       // print
-      friend std::ostream& operator <<(std::ostream& os, const matrix& mat){
-         for(int i=0; i<mat._rows; i++){
-   	    for(int j=0; j<mat._cols; j++){
-	       std::cout << mat._data[i*mat._cols+j] << " ";
+      void print(std::string name=""){
+         std::cout << "\nmatrix: " << name << std::endl;
+	 std::cout << std::scientific << std::setprecision(2); 
+	 for(int i=0; i<_rows; i++){
+   	    for(int j=0; j<_cols; j++){
+	       std::cout << std::setw(10) << _data[i*_cols+j] << " ";
 	    } 
 	    std::cout << std::endl;
 	 }
-	 return os;
       }
       // helpers
       inline int rows() const{ return _rows; }
@@ -94,12 +97,12 @@ class matrix{
 			[fac](const double& x){return fac*x;});
 	 return *this;
       }
-      matrix& operator +=(matrix& mat){
+      matrix& operator +=(const matrix& mat){
          std::transform(_data, _data+_size, mat._data, _data,
 			[](const double& x, const double& y){return x+y;});
 	 return *this;
       }
-      matrix& operator -=(matrix& mat){
+      matrix& operator -=(const matrix& mat){
          std::transform(_data, _data+_size, mat._data, _data,
 			[](const double& x, const double& y){return x-y;});
 	 return *this;

@@ -11,10 +11,10 @@
  	  - use EIGEN for the moment 
 	  [not flexible for eigenvalue]
  20200227 brute-force fci for benchmark
- 2020xxxx matrix class for 2RDM:
+ 20200229 matrix class for 2RDM:
 	  - pack/unpack indices
 	  - special matrix: iden,rand 
-	  - linalg: dgemm/dsyevd/svd
+	  - linalg: dgemm, dsyevd, dnrm2
  2020xxxx analysis tools:
 	  - 0. sorting and printing
 	  - 1. entropy measure

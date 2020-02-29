@@ -50,8 +50,8 @@ void linalg::eig(matrix& A, vector<double>& e){
    }
 }
 
-// Fnorm
-double linalg::Fnorm(const matrix& A){
+// normF
+double linalg::normF(const matrix& A){
     int mn = A.size(), incx = 1;
     return dnrm2_(&mn,A.data(),&incx);
 }

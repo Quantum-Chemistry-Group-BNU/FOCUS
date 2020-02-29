@@ -30,8 +30,8 @@ void dgemm(const char* TRANSA, const char* TRANSB,
 // eigenvalues
 void eig(matrix& A, std::vector<double>& e);
 
-// Fnorm
-double Fnorm(const matrix& A);
+// normF
+double normF(const matrix& A);
 
 } // linalg
 

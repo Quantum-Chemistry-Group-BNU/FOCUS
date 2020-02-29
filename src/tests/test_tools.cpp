@@ -41,41 +41,42 @@ int tests::test_tools(){
    matrix mat(3,3);
    mat(1,2) = 1.0;
    mat(2,0) = 3.0;
-   cout << "mat\n" << mat << endl;
+   mat.print("mat");
    matrix mat1(mat);
-   cout << "mat1\n" << mat1 << endl;
+   mat.print("mat1");
 
    // random & identity;
    matrix iden = identity_matrix(4);
    matrix rd = random_matrix(4,3);
-   cout << iden << endl;
-   cout << "rd\n" << rd << endl;
+   iden.print();
+   rd.print("rd");
    matrix rd2 = random_matrix(4,3);
-   cout << "rd2\n" << rd2 << endl;
+   rd2.print("rd2");
 
+   // dgemm
    dgemm("T","N",1.0,iden,rd,1.0,rd2);
-   cout << "rd2\n" << rd2 << endl;
+   rd2.print("rd2");
    dgemm("N","t",1.0,rd,rd2,1.0,iden);
-   cout << "id\n" << iden << endl;
+   iden.print("id");
+   
    // math
    iden *= 2;
-   cout << "2*id\n" << iden << endl;
+   iden.print("2*id");
    iden += iden;
-   cout << "+*id\n" << iden << endl;
+   iden.print("+*id");
    iden -= iden;
-   cout << "-*id\n" << iden << endl;
+   iden.print("-*id");
    auto tmp = rd + rd2;
-   cout << "rd+rd2\n" << tmp << endl;
+   iden.print("rd+rd2");
    auto tmp1 = rd - rd2;
-   cout << "rd-rd2\n" << tmp1 << endl;
+   tmp1.print("rd-rd2");
    auto tmp2 = 3*rd;
-   cout << "3*rd\n" << tmp2 << endl;
+   tmp2.print("3*rd");
    auto tmp3 = 3*rd + rd2;
-   cout << "3*rd+rd2\n" << tmp3 << endl;
-   exit(1);
+   tmp3.print("3*rd+rd2");
 
-/*
-   const int n = 10;
+   // linalg: Av=ve
+   const int n = 6;
    matrix rd3 = random_matrix(n,n);
    matrix rd4(rd3);
    matrix rd5(n,n);
@@ -87,18 +88,18 @@ int tests::test_tools(){
    matrix vt(v);
    matrix idn(v.rows(),v.cols());
    dgemm("T","N",1.0,vt,v,0.0,idn);
-   cout << "idn=" << idn << endl;   
    idn -= identity_matrix(n);
-   cout << "Fnorm=" << idn.Fnorm() << endl;
-   exit(1); 
+   idn.print("idn");
+   cout << "normF=" << normF(idn) << endl;
 
    // Ax-xb
    matrix Av(n,n);
-   dgemm("N","N",rd5,v,0.0,Av);
+   dgemm("N","N",1.0,rd5,v,0.0,Av);
    matrix ve(n,n);
-   dgemm("N","N",v,diagonal_matrix(e),0.0,ve);
+   dgemm("N","N",1.0,v,diagonal_matrix(e),0.0,ve);
    auto diff = Av - ve;
-   cout << "Fnorm=" << diff.Fnorm() << endl; 
-   exit(1);
-*/
+   diff.print("diff");
+   cout << "normF=" << normF(diff) << endl; 
+
+   return 0;
 }
