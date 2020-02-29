@@ -1,5 +1,6 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
+
 #include <string>
 
 namespace global{
@@ -12,7 +13,7 @@ void license();
 double mem_size(size_t sz, const int fac=8);
 
 extern int print_level; // just declaration
-
+   
 }
 
 #endif

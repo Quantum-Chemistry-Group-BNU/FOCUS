@@ -1,5 +1,5 @@
-#ifndef SPACE_H
-#define SPACE_H
+#ifndef ONSPACE_H
+#define ONSPACE_H
 
 #include <iostream>
 #include <vector>
@@ -17,11 +17,14 @@ void check_space(onspace& space);
 // spinless case
 onspace fci_space(const int k, const int n);
 
-// k - number of spin orbitals 
-onspace fci_space(const int k, const int na, const int nb);
+// k - number of spatial orbitals 
+onspace fci_space(const int ks, const int na, const int nb);
       
 // generate represenation of H in this space
-//std::unique_ptr<double> genH();
+std::unique_ptr<double[]> get_Ham(const onspace& space,
+		                  const integral::two_body& int2e,
+			          const integral::one_body& int1e,
+			          const double ecore=0.0);
 
 }
 

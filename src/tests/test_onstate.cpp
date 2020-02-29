@@ -3,10 +3,11 @@
 #include <bitset>
 #include "../utils/onstate.h"
 #include "../settings/global.h"
+#include "tests.h"
 
 using namespace std;
 
-int test_onstate(){
+int tests::test_onstate(){
    cout << global::line_separator << endl;	
    cout << "test_onstate" << endl;
    cout << global::line_separator << endl;	
@@ -158,7 +159,7 @@ int test_onstate(){
    cout << state4.flip().parity_flip() << endl;
 
    vector<int> olst,vlst;
-   state4.get_occlst(olst,vlst);
+   state4.get_occvir(olst,vlst);
    cout << "olst=";
    for(auto i : olst)
       cout << " " << i;
@@ -170,7 +171,7 @@ int test_onstate(){
    
    olst.clear();
    vlst.clear();
-   state5.get_occlst(olst,vlst);
+   state5.get_occvir(olst,vlst);
    cout << "olst=";
    for(auto i : olst)
       cout << " " << i;

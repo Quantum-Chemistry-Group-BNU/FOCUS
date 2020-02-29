@@ -1,13 +1,9 @@
-USE_MPI = no
-USE_INTEL = no #yes
-EIGEN=/usr/local/Cellar/eigen/3.3.7/include/eigen3
-BOOST=/usr/local
+BOOST = /usr/local
+MATH = -I /usr/local/include/eigen3 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE \
+       -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
+FLAGS  = -std=c++11 -g -O0 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR}  
 
-FLAGS  = -std=c++11 -g -O0 -Wall -I${EIGEN} -I${BOOST}/include ${INCLUDE_DIR} 
-DFLAGS = -std=c++11 -g -O0 -Wall -I${EIGEN} -I${BOOST}/include ${INCLUDE_DIR} -DComplex
-                 
-FLAGS += -fopenmp
-DFLAGS +=  -fopenmp
+USE_MPI = no
 ifeq ($(USE_MPI), yes) 
 	CXX = mpig++
 	CC = mpigcc
@@ -16,8 +12,6 @@ else
 	CXX = g++
 	CC = gcc
 	LFLAGS = -L${BOOST}/lib -lboost_serialization #-lrt
-	FLAGS += -DSERIAL 
-	DFLAGS += -DSERIAL 
 endif
 
 BIN_DIR = ./bin
@@ -57,6 +51,7 @@ depend:
 
 $(BIN_DIR)/tests.x: $(OBJ_DIR)/tests.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
+	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
 $(BIN_DIR)/fci.x: $(OBJ_DIR)/fci.o $(OBJ_DEP)

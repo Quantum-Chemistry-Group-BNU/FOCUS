@@ -8,10 +8,10 @@
 
 using namespace std;
 
-void integral::read_integral(string fname,
-		  	     integral::two_body& int2e,
+void integral::read_integral(integral::two_body& int2e,
 		  	     integral::one_body& int1e,
-		  	     double& ecore){
+		  	     double& ecore,
+			     string fname){
    cout << "\nintegral::read_integral" << endl;
    cout << "fname = " << fname << endl;
   

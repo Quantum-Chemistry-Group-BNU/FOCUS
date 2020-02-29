@@ -1,21 +1,48 @@
 
-*** TODOs ***
+*** TODOs: New Techniques & Platforms ***
 
 --- Fundamental functionalities ---
 
- 20200221 onstate
- 2020xxxx generation space
- 2020xxxx hamiltonian 
- 2020xxxx brute-force fci [benchmark]
+ 20200219 Makefile, IO, integrals
+ 20200221 fock space util - onstate
+ 20200224 fock space util - onspace
+ 20200226 fock space util - hamiltonian
+ 20200227 linear algebra framework 
+ 	  - use EIGEN for the moment 
+	  [not flexible for eigenvalue]
+ 20200227 brute-force fci for benchmark
+ 2020xxxx matrix class for 2RDM:
+	  - pack/unpack indices
+	  - special matrix: iden,rand 
+	  - linalg: dgemm/dsyevd/svd
+ 2020xxxx analysis tools:
+	  - 0. sorting and printing
+	  - 1. entropy measure
+	  - 2. <N>, <Na>, <Nb>
+	    3. in general, n-RDM [!!!]
+ 2020xxxx multi-state Davidson diagonalization 
+
+--- SCI ---
+
  2020xxxx selected ci
- 2020xxxx entropy measure
+ 2020xxxx PT2 util
+ 2020xxxx parallelizaiton
+ 2020xxxx storage/serialization
+
+--- DMRG --- 
+
  2020xxxx mps structure & fit
  2020xxxx dmrg
+ 2020xxxx p-dmrg
 
 --- Advanced functionalities ---
 
  2020xxxx complex version
- 2020xxxx g-tensor
+ 2020xxxx g-tensor [quantum computation? 
+		    <Psi|sigma K|Psi>? G-matrix;
+		    How <Psi1|H|Psi2> are measured?
+		    For VQE this can be made symmetric,
+		    <0|(U1d*H*U2)|0> - Hardmard test]
  2020xxxx operator compression
  2020xxxx random sampling - pDMRG/CC
 

@@ -5,8 +5,14 @@
 #include "integral.h"
 
 namespace fock{
-      // double Energy(oneInt& I1, twoInt& I2, double& coreE);
-      // CItype Hij(Determinant& bra, Determinant& ket, oneInt& I1, twoInt& I2, double& coreE, size_t& orbDiff);
+
+double get_Hii(const onstate& state1,
+	       const integral::two_body& int2e,
+	       const integral::one_body& int1e);
+
+double get_Hij(const onstate& state1, const onstate& state2,
+	       const integral::two_body& int2e,
+	       const integral::one_body& int1e);
 
 }
 

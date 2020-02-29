@@ -16,10 +16,11 @@ int main(int argc, char* argv[]){
    input::read_input(schd,fname);
 
    // read integral
-   double ecore;
-   integral::one_body int1e;
    integral::two_body int2e;
-   integral::read_integral(schd.integral_file, int2e, int1e, ecore);
+   integral::one_body int1e;
+   double ecore;
+   integral::read_integral(int2e, int1e, ecore,
+		           schd.integral_file);
 
    // heat-bath setup
 /*
