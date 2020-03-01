@@ -6,6 +6,7 @@
 #include "../utils/analysis.h"
 #include "../utils/matrix.h"
 #include "../utils/linalg.h"
+#include "../utils/tools.h"
 #include "../settings/global.h"
 #include <iomanip>
 #include <chrono>
@@ -61,6 +62,50 @@ int tests::test_hamiltonian(){
    cout << "p0=" << sigs[0] << endl;
    cout << vonNeumann_entropy(sigs) << endl;
 
-//   fock::get_rdm1(
+   int k = space2[0].size();
+   linalg::matrix rdm1(k,k);
+   fock::get_rdm1(space2,v0,v0,rdm1);
+   rdm1.print("rdm1");
+   cout << "tr(RDM1)=" << rdm1.trace() << endl;
+   auto diag = rdm1.diagonal();
+   for(int i=0; i<diag.size(); i++){
+      cout << "i=" << i << " ni=" << diag[i] << endl;
+   }
+   
+   int k2 = k*(k-1)/2;
+   linalg::matrix rdm2(k2,k2);
+   fock::get_rdm2(space2,v0,v0,rdm2);
+   rdm2.print("rdm2");
+   cout << rdm2(0,0) << endl;
+   for(int p0=0; p0<k; p0++){
+      for(int p1=0; p1<p0; p1++){
+         for(int q0=0; q0<k; q0++){
+            for(int q1=0; q1<q0; q1++){
+	       auto p01 = tools::canonical_pair0(p0,p1);
+	       auto q01 = tools::canonical_pair0(q0,q1);
+	       // AAAA-block
+	       if(p0%2 == 0 && p1%2 == 0 && 
+		  q0%2 == 0 && q1%2 == 0 &&
+		  abs(rdm2(p01,q01))>1.e-5){
+		  cout << "(p0,p1,q1,q0)=" 
+		       << defaultfloat << setprecision(8)
+		       << p0/2 << " "
+		       << p1/2 << " "
+		       << q1/2 << " "
+		       << q0/2 << " "
+		       << rdm2(p01,q01) << endl; 
+	       }
+	    }
+	 }
+      }
+   }
+
+   cout << "e0=" << ecore << endl;
+   double e1 = fock::get_e1(rdm1, int1e);
+   cout << "e1=" << e1 << endl;
+   double e2 = fock::get_e2(rdm2, int2e);
+   cout << "e2=" << e2 << endl;
+   cout << "etot=" << ecore+e1+e2 << endl; 
+
    return 0;
 }

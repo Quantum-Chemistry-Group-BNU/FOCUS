@@ -15,16 +15,18 @@
 	  - pack/unpack indices
 	  - special matrix: iden,rand 
 	  - linalg: dgemm, dsyevd, dnrm2
- 2020xxxx analysis tools:
+ 20200301 analysis tools:
 	  - 0. sorting and printing
 	  - 1. entropy measure
 	  - 2. <N>, <Na>, <Nb>
-	    3. in general, n-RDM [!!!]
- 2020xxxx multi-state Davidson diagonalization 
+	  - 3. in general, n-RDM [!!!]
+ 2020xxxx multi-state Davidson diagonalization
+	  - sigma-vector formation 
+ 	  - larger FCI problem
 
 --- SCI ---
 
- 2020xxxx selected ci
+ 2020xxxx selected ci (sort in incomplete space)
  2020xxxx PT2 util
  2020xxxx parallelizaiton
  2020xxxx storage/serialization

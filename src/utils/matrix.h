@@ -77,14 +77,17 @@ class matrix{
       }
       // print
       void print(std::string name=""){
-         std::cout << "\nmatrix: " << name << std::endl;
-	 std::cout << std::scientific << std::setprecision(2); 
+         std::cout << "matrix: " << name 
+		   << " size=(" << _rows << "," << _cols << ")" 
+		   << std::endl;
+	 std::cout << std::scientific << std::setprecision(4); 
 	 for(int i=0; i<_rows; i++){
    	    for(int j=0; j<_cols; j++){
-	       std::cout << std::setw(10) << _data[i*_cols+j] << " ";
+	       std::cout << std::setw(12) << _data[i*_cols+j] << " ";
 	    } 
 	    std::cout << std::endl;
 	 }
+	 std::cout << std::defaultfloat;
       }
       // helpers
       inline int rows() const{ return _rows; }
@@ -92,6 +95,23 @@ class matrix{
       inline int size() const{ return _size; }
       inline double* data() const{ return _data; }
       // basic mathematics of matrices
+      std::vector<double> diagonal(){
+	 assert(_rows == _cols);
+         std::vector<double> diag(_rows);
+	 for(int i=0; i<_rows; i++){
+	    diag[i] = _data[i*_rows+i];
+	 }
+	 return diag;
+      }
+      double trace(){
+	 assert(_rows == _cols);
+         double tr = 0.0;
+	 for(int i=0; i<_rows; i++){
+	    tr += _data[i*_rows+i];
+	 }
+	 return tr;
+      }
+      // *,+,- operations
       matrix& operator *=(const double fac){
          std::transform(_data, _data+_size, _data,
 			[fac](const double& x){return fac*x;});

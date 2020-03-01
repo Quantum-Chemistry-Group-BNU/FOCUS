@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace fock;
+using namespace linalg;
 
 void fock::check_space(onspace& space){
    if(global::print_level>0){
@@ -43,8 +44,6 @@ onspace fock::fci_space(const int ks, const int na, const int nb){
    check_space(space);
    return space;
 }
-
-using namespace linalg;
 
 // generate represenation of H in this space
 matrix fock::get_Ham(const onspace& space,
