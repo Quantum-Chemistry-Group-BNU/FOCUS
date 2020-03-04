@@ -21,6 +21,7 @@
 	  - 2. <N>, <Na>, <Nb>
 	  - 3. in general, n-RDM [!!!]
  2020xxxx multi-state Davidson diagonalization
+	  - change to COLUMN-MAJOR matrix for BLAS/LAPACK
 	  - sigma-vector formation 
  	  - larger FCI problem
 
