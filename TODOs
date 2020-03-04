@@ -40,11 +40,13 @@
 --- Advanced functionalities ---
 
  2020xxxx complex version
- 2020xxxx g-tensor [quantum computation? 
+
+ 2020xxxx g-tensor [IMPORTANT!!! - quantum computation] 
 		    <Psi|sigma K|Psi>? G-matrix;
 		    How <Psi1|H|Psi2> are measured?
 		    For VQE this can be made symmetric,
 		    <0|(U1d*H*U2)|0> - Hardmard test]
+
  2020xxxx operator compression
  2020xxxx random sampling - pDMRG/CC
 

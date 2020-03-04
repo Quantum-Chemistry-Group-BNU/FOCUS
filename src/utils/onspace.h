@@ -27,6 +27,28 @@ linalg::matrix get_Ham(const onspace& space,
 		       const integral::one_body& int1e,
 		       const double ecore=0.0);
 
+// solve eigenvalue problem in this space
+void ci_solver(std::vector<double>& es,
+	       linalg::matrix& vs,	 
+	       const onspace& space, 
+	       const integral::two_body& int2e,
+	       const integral::one_body& int1e,
+	       const double ecore=0.0);
+
+// Hdiag
+std::vector<double> get_Hdiag(const onspace& space,
+		              const integral::two_body& int2e,
+		              const integral::one_body& int1e,
+		              const double ecore);
+
+// y = H*x
+void get_Hx(double* y,
+	    const double* x, 
+	    const onspace& space,
+	    const integral::two_body& int2e,
+	    const integral::one_body& int1e,
+	    const double ecore);
+
 }
 
 #endif

@@ -26,14 +26,6 @@ int tests::test_hamiltonian(){
    onspace space2 = fci_space(6,2,2);
    int dim = space2.size();
    cout << "dim=" << dim << endl; 
-   /*
-   for(const auto& s1 : space2){
-      for(const auto& s2 : space2){
-         cout << "s1,s2=" << s1 << " " << s2 << 
-		 " diff=" << s1.num_diff(s2) << " " << s2.num_diff(s1) << endl;
-      }
-   }
-   */
 
    // read integral
    integral::two_body int2e;
@@ -46,22 +38,23 @@ int tests::test_hamiltonian(){
    auto t0 = chrono::high_resolution_clock::now();
    linalg::matrix v(H);
    vector<double> e(H.rows());
-   linalg::eig(v,e);
+   eigen_solver(v,e);
    cout << "eigenvalues:\n" << setprecision(10) 
 	<< e[0] << "\n" << e[1] << "\n" << e[2] << endl;
    auto t1 = chrono::high_resolution_clock::now();
    cout << "timing : " << setw(10) << fixed << setprecision(2) 
 	<< chrono::duration_cast<chrono::milliseconds>(t1-t0).count()*0.001 << " s" << endl;
    
-   //vector<double> v0(&v(0,0),&v(0,0)+v.rows());
    vector<double> v0(v.data(),v.data()+v.rows());
    fock::coefficients(space2,v0);
    vector<double> sigs(v0.size());
+   // pi=|ci|^2
    transform(v0.cbegin(),v0.cend(),sigs.begin(),
 	     [](const double& x){return pow(x,2);});
    cout << "p0=" << sigs[0] << endl;
    cout << vonNeumann_entropy(sigs) << endl;
 
+   // compute rdm
    int k = space2[0].size();
    linalg::matrix rdm1(k,k);
    fock::get_rdm1(space2,v0,v0,rdm1);
@@ -100,6 +93,7 @@ int tests::test_hamiltonian(){
       }
    }
 
+   // compute E
    cout << "e0=" << ecore << endl;
    double e1 = fock::get_e1(rdm1, int1e);
    cout << "e1=" << e1 << endl;

@@ -43,23 +43,44 @@ inline void inverse_pair(const int ij, int& i, int& j){
 // return index for sorting 
 // template do not need implementation but only header
 template <typename T>
-vector<int> sort_index(const vector<T>& v){
-  vector<int> idx(v.size());
-  iota(idx.begin(), idx.end(), 0);
-  stable_sort(idx.begin(), idx.end(),
-       	      [&v](int i1, int i2) {return v[i1] > v[i2];});
-  return idx;
+vector<int> sort_index(const int size, const T* v, const int iop){
+   vector<int> idx(size);
+   iota(idx.begin(), idx.end(), 0);
+   if(iop == 0){
+      stable_sort(idx.begin(), idx.end(),
+           	  [&v](int i1, int i2) {return v[i1] > v[i2];});
+   }else{
+      stable_sort(idx.begin(), idx.end(),
+        	  [&v](int i1, int i2) {return v[i1] < v[i2];});
+   }
+   return idx;
 }
 
 template <typename T>
-vector<int> sort_index_abs(const vector<T>& v){
-  vector<int> idx(v.size());
-  iota(idx.begin(), idx.end(), 0);
-  stable_sort(idx.begin(), idx.end(),
-       	      [&v](int i1, int i2) {return abs(v[i1]) > abs(v[i2]);});
-  return idx;
+vector<int> sort_index(const vector<T>& v, const int iop = 0){
+   return sort_index(v.size(), v.data(), iop);
 }
 
+// sort by absolute value
+template <typename T>
+vector<int> sort_index_abs(const int size, const T* v, const int iop){
+   vector<int> idx(size);
+   iota(idx.begin(), idx.end(), 0);
+   if(iop == 0){
+      stable_sort(idx.begin(), idx.end(),
+        	  [&v](int i1, int i2) {return abs(v[i1]) > abs(v[i2]);});
+   }else{
+      stable_sort(idx.begin(), idx.end(),
+        	  [&v](int i1, int i2) {return abs(v[i1]) < abs(v[i2]);});
+   }
+   return idx;
 }
+
+template <typename T>
+vector<int> sort_index_abs(const vector<T>& v, const int iop = 0){
+   return sort_index_abs(v.size(), v.data(), iop);
+}
+
+} // tools
 
 #endif

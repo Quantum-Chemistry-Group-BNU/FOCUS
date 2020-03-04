@@ -10,6 +10,7 @@
 
 namespace linalg{
 
+// column-major matrix
 class matrix{
    public:
       // constructors
@@ -17,6 +18,12 @@ class matrix{
 	 _size = m*n;     
          _data = new double[_size];
 	 std::fill_n(_data, _size, 0.0);
+      }
+      // special constructor
+      matrix(const int m, const int n, const double* data): _rows(m), _cols(n){
+	 _size = m*n;
+ 	 _data = new double[_size];
+	 std::copy(data, data+_size, _data);
       }
       // desctructors
       ~matrix(){ delete[] _data; }
@@ -69,21 +76,30 @@ class matrix{
       // access: A[i,j] - row major
       const double operator()(const int i, const int j) const{
 	 assert(i>=0 && i<_rows && j>=0 && j<_cols);
-	 return _data[i*_cols+j];
+	 return _data[j*_rows+i];
       } 
       double& operator()(const int i, const int j){
 	 assert(i>=0 && i<_rows && j>=0 && j<_cols);
-	 return _data[i*_cols+j];
+	 return _data[j*_rows+i];
+      }
+      // return the memory address 
+      const double* addr(const int i, const int j) const{ // for f(const matrix& v)
+         assert(i>=0 && i<_rows && j>=0 && j<_cols);
+         return &_data[j*_rows+i];
+      }
+      double* addr(const int i, const int j){
+         assert(i>=0 && i<_rows && j>=0 && j<_cols);
+         return &_data[j*_rows+i];
       }
       // print
-      void print(std::string name=""){
+      void print(std::string name="") const{
          std::cout << "matrix: " << name 
 		   << " size=(" << _rows << "," << _cols << ")" 
 		   << std::endl;
 	 std::cout << std::scientific << std::setprecision(4); 
 	 for(int i=0; i<_rows; i++){
    	    for(int j=0; j<_cols; j++){
-	       std::cout << std::setw(12) << _data[i*_cols+j] << " ";
+	       std::cout << std::setw(12) << _data[j*_rows+i] << " ";
 	    } 
 	    std::cout << std::endl;
 	 }
@@ -95,7 +111,7 @@ class matrix{
       inline int size() const{ return _size; }
       inline double* data() const{ return _data; }
       // basic mathematics of matrices
-      std::vector<double> diagonal(){
+      std::vector<double> diagonal() const{
 	 assert(_rows == _cols);
          std::vector<double> diag(_rows);
 	 for(int i=0; i<_rows; i++){
@@ -103,13 +119,26 @@ class matrix{
 	 }
 	 return diag;
       }
-      double trace(){
+      double trace() const{
 	 assert(_rows == _cols);
          double tr = 0.0;
 	 for(int i=0; i<_rows; i++){
 	    tr += _data[i*_rows+i];
 	 }
 	 return tr;
+      }
+      // row operations
+      const double* col(const int i) const{
+	 assert(i>=0 && i<_cols);
+	 return &_data[i*_rows];
+      }
+      double* col(const int i){
+	 assert(i>=0 && i<_cols);
+	 return &_data[i*_rows];
+      }
+      void col_scale(const int icol, const double fac){
+         std::transform(&_data[icol*_rows], (&_data[icol*_rows])+_cols, &_data[icol*_rows],
+			[fac](const double& x){return fac*x;});
       }
       // *,+,- operations
       matrix& operator *=(const double fac){

@@ -3,6 +3,8 @@
 
 namespace tests{
 
+int test_dvdson();
+
 int test_tools();
 
 int test_onstate();

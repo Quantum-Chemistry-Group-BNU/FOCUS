@@ -147,8 +147,8 @@ double fock::get_e1(const linalg::matrix& rdm1,
    double e1 = 0.0;
    int k = int1e.sorb;
    assert(k == rdm1.rows());
-   for(int i=0; i<k; i++){
-      for(int j=0; j<k; j++){
+   for(int j=0; j<k; j++){
+      for(int i=0; i<k; i++){
 	 e1 += rdm1(i,j)*int1e(i,j);
       }
    }

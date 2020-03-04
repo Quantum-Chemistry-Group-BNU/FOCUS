@@ -54,9 +54,9 @@ int tests::test_tools(){
    rd2.print("rd2");
 
    // dgemm
-   dgemm("T","N",1.0,iden,rd,1.0,rd2);
+   dgemm("T","N",1.0,iden,rd,1.0,rd2); // (4,4)*(4,3) => (4,3)
    rd2.print("rd2");
-   dgemm("N","t",1.0,rd,rd2,1.0,iden);
+   dgemm("n","t",1.0,rd,rd2,1.0,iden); // (4,3)*(3,4)
    iden.print("id");
    
    // math
@@ -83,7 +83,7 @@ int tests::test_tools(){
    dgemm("T","N",1.0,rd3,rd4,0.0,rd5);
    matrix v(rd5);
    vector<double> e(v.rows());
-   eig(v,e);
+   eigen_solver(v,e);
    cout << "eig0=" << e[0] << endl;
    matrix vt(v);
    matrix idn(v.rows(),v.cols());
