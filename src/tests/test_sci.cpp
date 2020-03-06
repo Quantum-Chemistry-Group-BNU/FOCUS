@@ -37,7 +37,7 @@ int tests::test_sci(){
    int nroot = 1; 
    vector<double> es(nroot,0.0);
    linalg::matrix vs(dim,nroot);
-   sci::ci_solver(es, vs, fci_space, int2e, int1e, ecore);
+   ci_solver(es, vs, fci_space, int2e, int1e, ecore);
    
    // analysis 
    vector<double> v0i(vs.col(0),vs.col(0)+dim);

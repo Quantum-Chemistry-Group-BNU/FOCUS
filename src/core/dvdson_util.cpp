@@ -16,7 +16,7 @@ void dvdsonSolver::HVecs(const int nstate, double* y, const double* x){
    nmvp += nstate;
    if(iprt > 0){
       auto t1 = global::get_time();
-      cout << " timing=" << setprecision(2)  
+      cout << "timing for HVecs=" << setprecision(2)  
            << global::get_duration(t1-t0)/nstate << " s" << endl;
    }
 }

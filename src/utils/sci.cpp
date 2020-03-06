@@ -15,16 +15,15 @@ void sci::ci_solver(vector<double>& es,
    cout << "\nsci::ci_solver" << endl; 
 
    auto dim = space.size();
+   int ndiff;
    for(size_t j=0; j<dim; j++){
       auto t0 = global::get_time();
       for(size_t i=0; i<dim; i++){
-	 auto state1 = space[i];
-	 auto state2 = space[j];
-	 int ndiff = state1.num_diff(state2);
+	 ndiff = space[i].num_diff(space[j]);
       }
       auto t1 = global::get_time();
-      cout << "j=" << j 
-	   << " timing=" << setprecision(2)  
+      cout << "j=" << j << " ndiff=" << ndiff 
+	   << " timing=" << setprecision(10)
 	   << global::get_duration(t1-t0) << " s" << endl;
    }
 }

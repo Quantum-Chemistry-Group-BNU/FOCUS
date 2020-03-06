@@ -28,9 +28,8 @@
 
 --- SCI ---
 
- 2020xxxx selected ci (sort in incomplete space)
+ 2020xxxx Selected ci (sort in incomplete space?)
  2020xxxx PT2 util
- 2020xxxx parallelizaiton
  2020xxxx storage/serialization
 
 --- DMRG --- 
@@ -40,7 +39,7 @@
  2020xxxx p-dmrg
 
 --- Advanced functionalities ---
-
+ 
  2020xxxx complex version
 
  2020xxxx g-tensor [IMPORTANT!!! - quantum computation] 
@@ -52,5 +51,7 @@
  2020xxxx HCI/DMRG for RIXS [also relevant for quantum computation]
 
  2020xxxx operator compression
+
  2020xxxx random sampling - pDMRG/CC
 
+ 2020xxxx parallelizaiton
