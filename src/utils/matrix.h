@@ -19,11 +19,16 @@ class matrix{
          _data = new double[_size];
 	 std::fill_n(_data, _size, 0.0);
       }
-      // special constructor
+      // special constructor: copied from raw data
       matrix(const int m, const int n, const double* data): _rows(m), _cols(n){
 	 _size = m*n;
  	 _data = new double[_size];
 	 std::copy(data, data+_size, _data);
+      }
+      matrix(const int m, const int n, const double val): _rows(m), _cols(n){
+	 _size = m*n;
+ 	 _data = new double[_size];
+	 std::fill(_data, _data+_size, val);
       }
       // desctructors
       ~matrix(){ delete[] _data; }

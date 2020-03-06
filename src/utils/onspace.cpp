@@ -114,7 +114,6 @@ void fock::ci_solver(vector<double>& es,
    dvdsonSolver solver;
    solver.ndim = space.size();
    solver.neig = es.size();
-   solver.cnst = ecore;
    // Hdiag
    auto Diag = get_Hdiag(space, int2e, int1e, ecore);
    solver.Diag = Diag.data(); 

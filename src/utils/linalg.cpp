@@ -38,10 +38,12 @@ void linalg::dgemm(const char* TRANSA, const char* TRANSB,
 }
 
 // shorthand for A*B
-matrix linalg::mdot(const matrix& A, const matrix& B){
-   int M = A.rows(), N = B.cols();
+matrix linalg::dgemm(const char* TRANSA, const char* TRANSB,
+		     const matrix& A, const matrix& B){
+   int M = (toupper(TRANSA[0]) == 'N')? A.rows() : A.cols(); 
+   int N = (toupper(TRANSB[0]) == 'N')? B.cols() : B.rows(); 
    matrix C(M,N);
-   dgemm("N","N",1.0,A,B,0.0,C);
+   dgemm(TRANSA,TRANSB,1.0,A,B,0.0,C);
    return C;
 }
 
@@ -67,7 +69,7 @@ void linalg::eigen_solver(matrix& A, vector<double>& e){
    }
 }
 
-// normF = sqrt(\sum_{ij}|aij|^2)
+// norm_F = sqrt(\sum_{ij}|aij|^2)
 double linalg::normF(const matrix& A){
    int mn = A.size(), incx = 1;
    return dnrm2_(&mn,A.data(),&incx);
@@ -96,7 +98,7 @@ matrix linalg::transpose(const matrix& A){
    return At;
 }
 
-// ||A - At||F
+// ||A - At||_F
 double linalg::symmetric_diff(const matrix& A){
    assert(A.rows() == A.cols());
    matrix At(A);

@@ -42,8 +42,9 @@ inline void inverse_pair(const int ij, int& i, int& j){
 
 // return index for sorting 
 // template do not need implementation but only header
+// pointer version
 template <typename T>
-vector<int> sort_index(const int size, const T* v, const int iop){
+vector<int> sort_index(const int size, const T* v, const int iop=0){
    vector<int> idx(size);
    iota(idx.begin(), idx.end(), 0);
    if(iop == 0){
@@ -56,14 +57,15 @@ vector<int> sort_index(const int size, const T* v, const int iop){
    return idx;
 }
 
+// vector version
 template <typename T>
-vector<int> sort_index(const vector<T>& v, const int iop = 0){
+vector<int> sort_index(const vector<T>& v, const int iop=0){
    return sort_index(v.size(), v.data(), iop);
 }
 
 // sort by absolute value
 template <typename T>
-vector<int> sort_index_abs(const int size, const T* v, const int iop){
+vector<int> sort_index_abs(const int size, const T* v, const int iop=0){
    vector<int> idx(size);
    iota(idx.begin(), idx.end(), 0);
    if(iop == 0){
@@ -77,7 +79,7 @@ vector<int> sort_index_abs(const int size, const T* v, const int iop){
 }
 
 template <typename T>
-vector<int> sort_index_abs(const vector<T>& v, const int iop = 0){
+vector<int> sort_index_abs(const vector<T>& v, const int iop=0){
    return sort_index_abs(v.size(), v.data(), iop);
 }
 

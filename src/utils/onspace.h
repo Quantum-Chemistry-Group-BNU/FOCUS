@@ -25,7 +25,7 @@ onspace fci_space(const int ks, const int na, const int nb);
 linalg::matrix get_Ham(const onspace& space,
 		       const integral::two_body& int2e,
 		       const integral::one_body& int1e,
-		       const double ecore=0.0);
+		       const double ecore);
 
 // solve eigenvalue problem in this space
 void ci_solver(std::vector<double>& es,
@@ -33,7 +33,7 @@ void ci_solver(std::vector<double>& es,
 	       const onspace& space, 
 	       const integral::two_body& int2e,
 	       const integral::one_body& int1e,
-	       const double ecore=0.0);
+	       const double ecore);
 
 // Hdiag
 std::vector<double> get_Hdiag(const onspace& space,
