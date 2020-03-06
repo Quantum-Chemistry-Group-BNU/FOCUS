@@ -41,28 +41,26 @@ void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
 
    // generate initial subspace - vbas
    int nl = min(ndim,neig+nbuff); // maximal size
-   int nsub;
    vector<double> vbas(ndim*nl), wbas(ndim*nl);
    if(vguess != nullptr){
       copy(vguess, vguess+ndim*neig, vbas.begin());
-      nsub = neig;
    }else{
       auto index = tools::sort_index(ndim, Diag, 1);
-      for(int i=0; i<nl; i++){
+      for(int i=0; i<neig; i++){
 	 vbas[i*ndim+index[i]] = 1.0;
       }
-      nsub = nl;
    }
-   check_orthogonality(ndim, nsub, vbas);
-   HVecs(nsub, wbas.data(), vbas.data());
+   check_orthogonality(ndim, neig, vbas);
+   HVecs(neig, wbas.data(), vbas.data());
 
    // Begin to solve
    vector<double> rbas(ndim*nl), tbas(ndim*nl);
    vector<double> tmpE(nl), tmpV(nl*nl), tnorm(neig);
    vector<bool> rconv(neig);
    matrix eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); // record history
-   bool ifconv;
+   bool ifconv = false;
    double damp = damping;
+   int nsub = neig;
    for(int iter=1; iter<maxcycle+1; iter++){
      
       // solve subspace problem and form full residuals: Res[i]=HX[i]-w[i]*X[i]
@@ -114,10 +112,9 @@ void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
 	 nsub = neig+nindp;
 	 check_orthogonality(ndim,nsub,vbas);
       }
-   } // iter 
+   } // iter
+
    if(!ifconv){
       cout << "Convergence failure: out of maxcycle ! maxcycle=" << maxcycle << endl;
    }
-   cout << "FINAL" << endl;
-   exit(1);
 }

@@ -5,10 +5,10 @@
 #include <algorithm>
 #include <functional>
 #include <chrono>
-#include "../settings/global.h"
 #include "onspace.h"
 #include "hamiltonian.h"
 #include "dvdson.h"
+#include "../settings/global.h"
 
 using namespace std;
 using namespace fock;
@@ -24,8 +24,8 @@ void fock::check_space(onspace& space){
    }
 }
 
-onspace fock::fci_space(const int k, const int n){
-   cout << "\nfock::fci_space" << endl; 
+onspace fock::get_fci_space(const int k, const int n){
+   cout << "\nfock::get_fci_space" << endl; 
    assert(k >= n);
    onspace space;
    string s = string(k-n,'0')+string(n,'1');
@@ -36,10 +36,10 @@ onspace fock::fci_space(const int k, const int n){
    return space;
 }
 
-onspace fock::fci_space(const int ks, const int na, const int nb){
-   cout << "\nfock::fci_space" << endl; 
-   onspace space_a = fock::fci_space(ks,na);
-   onspace space_b = fock::fci_space(ks,nb);
+onspace fock::get_fci_space(const int ks, const int na, const int nb){
+   cout << "\nfock::get_fci_space" << endl; 
+   onspace space_a = fock::get_fci_space(ks,na);
+   onspace space_b = fock::get_fci_space(ks,nb);
    onspace space;
    for(size_t ia=0; ia<space_a.size(); ia++){
       for(size_t ib=0; ib<space_b.size(); ib++){
@@ -109,7 +109,7 @@ void fock::ci_solver(vector<double>& es,
 	       	     const integral::one_body& int1e,
 	       	     const double ecore){
    cout << "\nfock::ci_solver" << endl; 
-   auto t0 = chrono::high_resolution_clock::now();
+   auto t0 = global::get_time();
    // Davidson solver 
    dvdsonSolver solver;
    solver.ndim = space.size();
@@ -124,7 +124,7 @@ void fock::ci_solver(vector<double>& es,
    // solve
    solver.solve_iter(es.data(), vs.data());
    //solver.full_diag(es.data(), vs.data());
-   auto t1 = chrono::high_resolution_clock::now();
-   cout << "timing : " << setw(10) << fixed << setprecision(2) 
-	<< chrono::duration_cast<chrono::milliseconds>(t1-t0).count()*0.001 << " s" << endl;
+   auto t1 = global::get_time();
+   cout << "\ntiming for fock::ci_solver : " << setprecision(2) 
+	<< global::get_duration(t1-t0) << " s" << endl;
 }

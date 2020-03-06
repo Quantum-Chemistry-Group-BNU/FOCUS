@@ -1,7 +1,7 @@
 #include <iostream>
 #include <tuple>
 #include <bitset>
-#include "../utils/onstate.h"
+#include "../core/onstate.h"
 #include "../settings/global.h"
 #include "tests.h"
 

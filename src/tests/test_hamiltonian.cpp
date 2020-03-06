@@ -1,12 +1,12 @@
 #include <iostream>
-#include "../utils/onstate.h"
-#include "../utils/onspace.h"
-#include "../utils/integral.h"
-#include "../utils/hamiltonian.h"
-#include "../utils/analysis.h"
-#include "../utils/matrix.h"
-#include "../utils/linalg.h"
-#include "../utils/tools.h"
+#include "../core/onstate.h"
+#include "../core/onspace.h"
+#include "../core/integral.h"
+#include "../core/hamiltonian.h"
+#include "../core/analysis.h"
+#include "../core/matrix.h"
+#include "../core/linalg.h"
+#include "../core/tools.h"
 #include "../settings/global.h"
 #include <iomanip>
 #include <chrono>
@@ -22,8 +22,9 @@ int tests::test_hamiltonian(){
    cout << "test_hamiltonian" << endl;
    cout << global::line_separator << endl;	
 
-   onspace space1 = fci_space(4,2);
-   onspace space2 = fci_space(6,2,2);
+   // just for LiH
+   onspace space1 = get_fci_space(4,2);
+   onspace space2 = get_fci_space(6,2,2);
    int dim = space2.size();
    cout << "dim=" << dim << endl; 
 
@@ -31,7 +32,7 @@ int tests::test_hamiltonian(){
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
-   integral::read_integral(int2e, int1e, ecore);
+   integral::read_integral(int2e, int1e, ecore, "FCIDUMP_lih");
 
    cout << "\neigenvalue problem" << endl;
    auto H = get_Ham(space2,int2e,int1e,ecore);

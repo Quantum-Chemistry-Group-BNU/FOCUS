@@ -3,13 +3,15 @@
 
 namespace tests{
 
-int test_dvdson();
-
 int test_tools();
 
 int test_onstate();
 
 int test_hamiltonian();
+
+int test_dvdson();
+
+int test_sci();
 
 }
 

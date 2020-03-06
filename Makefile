@@ -2,7 +2,7 @@ BOOST = /usr/local
 #MATH = -I /usr/local/include/eigen3 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE \
        -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
 MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
-FLAGS  = -std=c++11 -g -O0 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR}  
+FLAGS  = -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR}  
 
 USE_MPI = no
 ifeq ($(USE_MPI), yes) 
@@ -17,18 +17,22 @@ endif
 
 BIN_DIR = ./bin
 OBJ_DIR = ./obj
+# all dependence
 SRC_DIR0 = ./src/settings
 SRC_DIR1 = ./src/io
-SRC_DIR2 = ./src/utils
+SRC_DIR2 = ./src/core
 SRC_DIR3 = ./src/tests
+SRC_DIR4 = ./src/utils
 INCLUDE_DIR = -I$(SRC_DIR0) \
 	      -I$(SRC_DIR1) \
 	      -I$(SRC_DIR2) \
-	      -I$(SRC_DIR3)
+	      -I$(SRC_DIR3) \
+	      -I$(SRC_DIR4)
 SRC_DEP = $(wildcard $(SRC_DIR0)/*.cpp \
   	      	     $(SRC_DIR1)/*.cpp \
 	  	     $(SRC_DIR2)/*.cpp \
-	  	     $(SRC_DIR3)/*.cpp)
+	  	     $(SRC_DIR3)/*.cpp \
+	  	     $(SRC_DIR4)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
 # all the files
@@ -50,16 +54,16 @@ depend:
 	rm -f $$$$.depend # $$$$ id number 
 -include .depend
 
-$(BIN_DIR)/tests.x: $(OBJ_DIR)/tests.o $(OBJ_DEP)
+$(BIN_DIR)/tests.x: $(OBJ_DIR)/main_tests.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
-$(BIN_DIR)/fci.x: $(OBJ_DIR)/fci.o $(OBJ_DEP)
+$(BIN_DIR)/fci.x: $(OBJ_DIR)/main_fci.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
-$(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(OBJ_DEP)
+$(BIN_DIR)/sci.x: $(OBJ_DIR)/main_sci.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 

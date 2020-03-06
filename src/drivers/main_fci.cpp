@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../settings/global.h"
 #include "../io/input.h"
-#include "../utils/integral.h"
+#include "../core/integral.h"
 
 using namespace std;
 

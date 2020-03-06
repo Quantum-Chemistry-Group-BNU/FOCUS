@@ -64,6 +64,7 @@ void dvdsonSolver::print_iter(const int iter,
 			      const double t){
    string ifconverge = "-+";
    if(iter == 1){
+      cout << defaultfloat; 
       cout << "settings: ndim=" << ndim 
 	   << " neig=" << neig
 	   << " nbuff=" << nbuff  

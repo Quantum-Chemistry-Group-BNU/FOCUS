@@ -1,8 +1,8 @@
 #include <iostream>
 #include "../settings/global.h"
-#include "../utils/tools.h"
-#include "../utils/matrix.h"
-#include "../utils/linalg.h"
+#include "../core/tools.h"
+#include "../core/matrix.h"
+#include "../core/linalg.h"
 #include "tests.h"
 
 using namespace std;

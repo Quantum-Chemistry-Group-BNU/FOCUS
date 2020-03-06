@@ -20,10 +20,11 @@
 	  - 1. entropy measure
 	  - 2. <N>, <Na>, <Nb>
 	  - 3. in general, n-RDM [!!!]
- 2020xxxx multi-state Davidson diagonalization
+ 20200306 multi-state Davidson diagonalization
+	  - sigma-vector formation
 	  - change to COLUMN-MAJOR matrix for BLAS/LAPACK
-	  - sigma-vector formation 
- 	  - larger FCI problem
+          - dvdson algorithm 
+ 2020xxxx larger FCI problem
 
 --- SCI ---
 
@@ -47,6 +48,8 @@
 		    How <Psi1|H|Psi2> are measured?
 		    For VQE this can be made symmetric,
 		    <0|(U1d*H*U2)|0> - Hardmard test]
+
+ 2020xxxx HCI/DMRG for RIXS [also relevant for quantum computation]
 
  2020xxxx operator compression
  2020xxxx random sampling - pDMRG/CC
