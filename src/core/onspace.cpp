@@ -90,12 +90,11 @@ void fock::get_Hx(double* y,
 		  const integral::one_body& int1e,
 		  const double ecore){
    // y[i] = sum_j H[i,j]*x[j] 
-   auto dim = space.size();
+   size_t dim = space.size();
    for(size_t i=0; i<dim; i++){
       y[i] = 0.0;
       for(size_t j=0; j<dim; j++){
-	 auto Hij = get_Hij(space[i],space[j],int2e,int1e);
-         y[i] += Hij*x[j]; 
+	 y[i] += get_Hij(space[i],space[j],int2e,int1e)*x[j];
       }
       y[i] += ecore*x[i];
    }

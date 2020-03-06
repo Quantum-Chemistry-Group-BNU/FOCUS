@@ -1,7 +1,7 @@
 
 *** TODOs: New Techniques & Platforms ***
 
---- Fundamental functionalities ---
+--- Core functionalities ---
 
  20200219 Makefile, IO, integrals
  20200221 fock space util - onstate
@@ -24,7 +24,7 @@
 	  - sigma-vector formation
 	  - change to COLUMN-MAJOR matrix for BLAS/LAPACK
           - dvdson algorithm 
- 2020xxxx larger FCI problem
+ 20200306 larger FCI problem - [12 orbitals, C2]
 
 --- SCI ---
 

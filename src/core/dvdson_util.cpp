@@ -2,16 +2,23 @@
 #include "linalg.h"
 #include <iomanip>
 #include <string>
+#include "../settings/global.h"
 
 using namespace std;
 using namespace linalg;
 
 // perform H*x for a set of input vectors
 void dvdsonSolver::HVecs(const int nstate, double* y, const double* x){
+   if(iprt > 0) auto t0 = global::get_time();
    for(int istate=0; istate<nstate; istate++){
-      HVec(y+istate*ndim, x+istate*ndim);
+      HVec(y+istate*ndim, x+istate*ndim); // y=H*x
    }   
    nmvp += nstate;
+   if(iprt > 0){
+      auto t1 = global::get_time();
+      cout << " timing=" << setprecision(2)  
+           << global::get_duration(t1-t0)/nstate << " s" << endl;
+   }
 }
 
 void dvdsonSolver::subspace_solver(const int ndim, 

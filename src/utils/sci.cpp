@@ -1,4 +1,5 @@
 #include "sci.h"
+#include "../settings/global.h"
 
 using namespace std;
 using namespace fock;
@@ -11,11 +12,24 @@ void sci::ci_solver(vector<double>& es,
 	       	    const integral::two_body& int2e,
 	       	    const integral::one_body& int1e,
 	       	    const double ecore){
-
-};
-/*
    cout << "\nsci::ci_solver" << endl; 
-   auto t0 = global::get_time();
+
+   auto dim = space.size();
+   for(size_t j=0; j<dim; j++){
+      auto t0 = global::get_time();
+      for(size_t i=0; i<dim; i++){
+	 auto state1 = space[i];
+	 auto state2 = space[j];
+	 int ndiff = state1.num_diff(state2);
+      }
+      auto t1 = global::get_time();
+      cout << "j=" << j 
+	   << " timing=" << setprecision(2)  
+	   << global::get_duration(t1-t0) << " s" << endl;
+   }
+}
+
+/*
    // Davidson solver 
    dvdsonSolver solver;
    solver.ndim = space.size();
@@ -30,9 +44,6 @@ void sci::ci_solver(vector<double>& es,
    // solve
    solver.solve_iter(es.data(), vs.data());
    //solver.full_diag(es.data(), vs.data());
-   auto t1 = global::get_time();
-   cout << "\ntiming for fock::ci_solver : " << setprecision(2) 
-	<< global::get_duration(t1-t0) << " s" << endl;
 }
 */
 
