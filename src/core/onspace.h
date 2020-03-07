@@ -39,7 +39,7 @@ std::vector<double> get_Hdiag(const onspace& space,
 		              const integral::one_body& int1e,
 		              const double ecore);
 
-// y = H*x
+// y=H*x
 void get_Hx(double* y,
 	    const double* x, 
 	    const onspace& space,

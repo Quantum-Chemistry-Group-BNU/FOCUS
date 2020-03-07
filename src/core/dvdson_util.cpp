@@ -9,16 +9,14 @@ using namespace linalg;
 
 // perform H*x for a set of input vectors
 void dvdsonSolver::HVecs(const int nstate, double* y, const double* x){
-   if(iprt > 0) auto t0 = global::get_time();
+   auto t0 = global::get_time();
    for(int istate=0; istate<nstate; istate++){
       HVec(y+istate*ndim, x+istate*ndim); // y=H*x
    }   
    nmvp += nstate;
-   if(iprt > 0){
-      auto t1 = global::get_time();
-      cout << "timing for HVecs=" << setprecision(2)  
-           << global::get_duration(t1-t0)/nstate << " s" << endl;
-   }
+   auto t1 = global::get_time();
+   cout << "timing for HVecs=" << setprecision(2)  
+        << global::get_duration(t1-t0)/nstate << " s" << endl;
 }
 
 void dvdsonSolver::subspace_solver(const int ndim, 

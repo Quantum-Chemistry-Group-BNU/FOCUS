@@ -53,9 +53,8 @@ int tests::test_onstate(){
    // test copy
    fock::onstate state4(state3);
    cout << "state3=" << state3.to_string2() << endl; 
-   cout << state4.num_diff(state3) << endl;
-   cout << state4.num_diff(state1) << endl;
-   cout << state4.if_Hconnected(state4) << endl;
+   cout << state4.diff_num(state3) << endl;
+   cout << state4.diff_num(state1) << endl;
 
    // test non
    fock::onstate non;
@@ -180,6 +179,73 @@ int tests::test_onstate(){
    for(auto i : vlst)
       cout << " " << i;
    cout << endl;
- 
+
+   // test for diff_orb 
+   fock::onstate state_v1("0000");
+   fock::onstate state_v2("1011");
+   fock::onstate state_v3("0101");
+   vector<int> cre, ann;
+
+   cre.clear();
+   ann.clear();
+   fock::diff_orb(state_v1, state_v2, cre, ann);
+   cout << "\ndiff_orb: 1,2 : " << state_v1 << " " << state_v2 << endl;
+   cout << "diff_num " << state_v1.diff_num(state_v2) << endl;
+   cout << "cre " << cre.size() << " : ";
+   for(int x : cre) cout << x;
+   cout << endl;
+   cout << "ann " << ann.size() << " : ";
+   for(int x : ann) cout << x;
+   cout << endl;
+   auto p = fock::diff_type(state_v1, state_v2);
+   cout << "type " << p.first << "," << p.second << endl;
+
+   cre.clear();
+   ann.clear();
+   fock::diff_orb(state_v1, state_v3, cre, ann);
+   cout << "\ndiff_orb: 1,3 : " << state_v1 << " " << state_v3 << endl;
+   cout << "diff_num " << state_v1.diff_num(state_v3) << endl;
+   cout << "cre " << cre.size() << " : ";
+   for(int x : cre) cout << x;
+   cout << endl;
+   cout << "ann " << ann.size() << " : ";
+   for(int x : ann) cout << x;
+   cout << endl;
+   p = fock::diff_type(state_v1, state_v3);
+   cout << "type " << p.first << "," << p.second << endl;
+
+   cre.clear();
+   ann.clear();
+   fock::diff_orb(state_v2, state_v3, cre, ann);
+   cout << "\ndiff_orb: 2,3 : " << state_v2 << " " << state_v3 << endl;
+   cout << "diff_num " << state_v2.diff_num(state_v3) << endl;
+   cout << "cre " << cre.size() << " : ";
+   for(int x : cre) cout << x;
+   cout << endl;
+   cout << "ann " << ann.size() << " : ";
+   for(int x : ann) cout << x;
+   cout << endl;
+   p = fock::diff_type(state_v2, state_v3);
+   cout << "type " << p.first << "," << p.second << endl;
+   
+   cre.clear();
+   ann.clear();
+   fock::diff_orb(state_v3, state_v2, cre, ann);
+   cout << "\ndiff_orb: 3,2 : " << state_v3 << " " << state_v2 << endl;
+   cout << "diff_num " << state_v3.diff_num(state_v2) << endl;
+   cout << "cre " << cre.size() << " : ";
+   for(int x : cre) cout << x;
+   cout << endl;
+   cout << "ann " << ann.size() << " : ";
+   for(int x : ann) cout << x;
+   cout << endl;
+   p = fock::diff_type(state_v3, state_v2);
+   cout << "type " << p.first << "," << p.second << endl;
+
+   cout << "\neven and odd:" << endl;
+   cout << state_v1 << " " << state_v1.get_even() << " " << state_v1.get_odd() << endl;
+   cout << state_v2 << " " << state_v2.get_even() << " " << state_v2.get_odd() << endl;
+   cout << state_v3 << " " << state_v3.get_even() << " " << state_v3.get_odd() << endl;
+
    return 0;   
 }

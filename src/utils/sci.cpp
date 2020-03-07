@@ -19,7 +19,7 @@ void sci::ci_solver(vector<double>& es,
    for(size_t j=0; j<dim; j++){
       auto t0 = global::get_time();
       for(size_t i=0; i<dim; i++){
-	 ndiff = space[i].num_diff(space[j]);
+	 ndiff = space[i].diff_num(space[j]);
       }
       auto t1 = global::get_time();
       cout << "j=" << j << " ndiff=" << ndiff 

@@ -10,19 +10,19 @@ using namespace fock;
 onstate::onstate(const string& s){
    _size = s.size();
    _len = (_size-1)/64+1;
-   _repr = new long[_len];
+   _repr = new unsigned long[_len];
    fill_n(_repr, _len, 0); // initialize, otherwise some unused bits will not be 0.
    for(int i=0; i<_size; i++){
       (*this)[i] = s[_size-1-i] == '1' ? 1 : 0;
    }
 }
 
-// merge two state for different spins
+// merge two states with different spins - neglect phases
 onstate::onstate(const onstate& state_a, const onstate& state_b){
    assert(state_a._size == state_b._size);
    _size = 2*state_a._size;
    _len = (_size-1)/64+1;
-   _repr = new long[_len];
+   _repr = new unsigned long[_len];
    fill_n(_repr, _len, 0); // initialize, otherwise some unused bits will not be 0.
    for(int ia=0; ia<state_a._size; ia++){
       (*this)[2*ia] = state_a[ia];
@@ -35,7 +35,7 @@ onstate::onstate(const onstate& state){
    if(global::print_level>3) cout << "copy c" << endl;	
    _size = state._size;
    _len  = state._len;
-   _repr = new long[_len];
+   _repr = new unsigned long[_len];
    copy_n(state._repr, _len, _repr);
 }
 
@@ -47,7 +47,7 @@ onstate& onstate::operator =(const onstate& state){
       _size = state._size;
       _len  = state._len;
       delete[] _repr;
-      _repr = new long[_len];
+      _repr = new unsigned long[_len];
       copy_n(state._repr, _len, _repr);
    }
    return *this;
@@ -117,18 +117,18 @@ string onstate::to_string2() const{
 
 // compute orbital difference: 
 //
-// the convention is p1>p2>...>pn, q1>q2>...>qn
-// such that <bra|p1^+...pn^+ qn...q1|ket>=sgn(bra,p1)...sgn(bra,pn)
+// the convention is p1>p2>...>pm, q1>q2>...>qn
+// such that <bra|p1^+...pm^+ qn...q1|ket>=sgn(bra,p1)...sgn(bra,pm)
 // 					  *sgn(ket,q1)...sgn(ket,qn)		
 //
-// derivation: |Phi_common> (onstate) = pn*...*p1|bra>*sgn(bra)
+// derivation: |Phi_common> (onstate) = pm*...*p1|bra>*sgn(bra)
 // 			 	      = qn*...*q1|ket>*sgn(ket)
-// then <bra|p1^+...pn^+*pn*...*p1|bra> = <Phi|Phi> = 1
-//      <bra|p1^+...pn^+*qn*...*q1|ket>*sgn(bra)*sgn(ket) = 1
+// then <bra|p1^+...pm^+*pn*...*p1|bra> = <Phi|Phi> = 1
+//      <bra|p1^+...pm^+*qn*...*q1|ket>*sgn(bra)*sgn(ket) = 1
 // which leads to the above result.
-void fock::orb_diff(const onstate& bra, const onstate& ket,
+void fock::diff_orb(const onstate& bra, const onstate& ket,
 		    vector<int>& cre, vector<int>& ann){
-   long idiff,icre,iann;
+   unsigned long idiff,icre,iann;
    // from higher position
    for(int i=bra._len-1; i>=0; i--){
       idiff = bra._repr[i] ^ ket._repr[i];
@@ -139,4 +139,20 @@ void fock::orb_diff(const onstate& bra, const onstate& ket,
       for(int j=63; j>=0; j--)
 	 if(iann & 1ULL<<j) ann.push_back(i*64+j);
    }
+}
+
+// connection type
+pair<int,int> fock::diff_type(const onstate& bra, 
+		      	      const onstate& ket){
+   unsigned long idiff,icre,iann;
+   pair<int,int> p(0,0);
+   // from higher position
+   for(int i=bra._len-1; i>=0; i--){
+      idiff = bra._repr[i] ^ ket._repr[i];
+      icre = idiff & bra._repr[i];
+      iann = idiff & ket._repr[i];
+      p.first  += fock::popcnt(icre);
+      p.second += fock::popcnt(iann);
+   }
+   return p;
 }

@@ -28,11 +28,11 @@ double fock::get_Hij(const onstate& state1, const onstate& state2,
 	             const integral::one_body& int1e){
    double Hij = 0.0;
    vector<int> cre,ann;
-   int ndiff = state1.num_diff(state2);
+   int ndiff = state1.diff_num(state2);
    if(ndiff == 0){
       Hij = fock::get_Hii(state1,int2e,int1e);
-   }else if(ndiff == 1){
-      fock::orb_diff(state1,state2,cre,ann);
+   }else if(ndiff == 2){
+      fock::diff_orb(state1,state2,cre,ann);
       int p0 = cre[0];
       int q0 = ann[0];
       Hij += int1e(p0,q0); // hpq
@@ -42,8 +42,8 @@ double fock::get_Hij(const onstate& state1, const onstate& state2,
 	 Hij += int2e(p0,q0,k,k) - int2e(p0,k,k,q0); // <pk||qk>
       } 
       Hij *= state1.parity(p0)*state2.parity(q0);
-   }else if(ndiff == 2){
-      fock::orb_diff(state1,state2,cre,ann);
+   }else if(ndiff == 4){
+      fock::diff_orb(state1,state2,cre,ann);
       int p0 = cre[0], p1 = cre[1];
       int q0 = ann[0], q1 = ann[1]; 
       // <p0p1||q0q1> = [p0q0|p1q1]-[p0q1|p1q0]

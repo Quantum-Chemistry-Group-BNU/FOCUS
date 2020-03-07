@@ -71,9 +71,9 @@ void fock::get_rdm1(const onspace& space,
       }
       // c1[i]<Di|p^+q|Dj>c2[j] + c1[j]<Dj|p^+q|Di>c2[i] (j<i)
       for(size_t j=0; j<i; j++){
-         if(space[i].num_diff(space[j]) != 1) continue;
+         if(space[i].diff_num(space[j]) != 2) continue;
          vector<int> cre,ann;
-         fock::orb_diff(space[i],space[j],cre,ann);
+         fock::diff_orb(space[i],space[j],cre,ann);
 	 auto p0 = cre[0];
 	 auto q0 = ann[0];
          auto sgn = space[i].parity(p0)*space[j].parity(q0);
@@ -103,12 +103,11 @@ void fock::get_rdm2(const onspace& space,
       }
       // c1[i]<Di|p0^+p1^+q1q0|Dj>c2[j] + c1[j]<Dj|p0^+p1^+q1q0|Di>c2[i] (j<i)
       for(size_t j=0; j<i; j++){
-         auto ndiff = space[i].num_diff(space[j]); 
-	 if(ndiff > 2) continue;
+         auto ndiff = space[i].diff_num(space[j]); 
 	 // <Di|p0^+k^+kq0|Dj>
-	 if(ndiff == 1){
+	 if(ndiff == 2){
             vector<int> cre,ann;
-            fock::orb_diff(space[i],space[j],cre,ann);
+            fock::diff_orb(space[i],space[j],cre,ann);
 	    auto p0 = cre[0];
 	    auto q0 = ann[0];
             auto sgn0 = space[i].parity(p0)*space[j].parity(q0);
@@ -125,9 +124,9 @@ void fock::get_rdm2(const onspace& space,
                rdm2(q01,p01) += sgn*civec1[j]*civec2[i];
 	    }
 	 // <Di|p0^+p1^+q1q0|Dj>
-	 }else if(ndiff == 2){
+	 }else if(ndiff == 4){
             vector<int> cre,ann;
-            fock::orb_diff(space[i],space[j],cre,ann);
+            fock::diff_orb(space[i],space[j],cre,ann);
 	    auto p0 = cre[0], p1 = cre[1];
 	    auto q0 = ann[0], q1 = ann[1];
 	    auto p01 = tools::canonical_pair0(p0,p1);
