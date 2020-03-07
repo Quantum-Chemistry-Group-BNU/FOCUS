@@ -73,7 +73,7 @@ void fock::get_rdm1(const onspace& space,
       for(size_t j=0; j<i; j++){
          if(space[i].diff_num(space[j]) != 2) continue;
          vector<int> cre,ann;
-         fock::diff_orb(space[i],space[j],cre,ann);
+         space[i].diff_orb(space[j],cre,ann);
 	 auto p0 = cre[0];
 	 auto q0 = ann[0];
          auto sgn = space[i].parity(p0)*space[j].parity(q0);
@@ -107,7 +107,7 @@ void fock::get_rdm2(const onspace& space,
 	 // <Di|p0^+k^+kq0|Dj>
 	 if(ndiff == 2){
             vector<int> cre,ann;
-            fock::diff_orb(space[i],space[j],cre,ann);
+            space[i].diff_orb(space[j],cre,ann);
 	    auto p0 = cre[0];
 	    auto q0 = ann[0];
             auto sgn0 = space[i].parity(p0)*space[j].parity(q0);
@@ -126,7 +126,7 @@ void fock::get_rdm2(const onspace& space,
 	 // <Di|p0^+p1^+q1q0|Dj>
 	 }else if(ndiff == 4){
             vector<int> cre,ann;
-            fock::diff_orb(space[i],space[j],cre,ann);
+            space[i].diff_orb(space[j],cre,ann);
 	    auto p0 = cre[0], p1 = cre[1];
 	    auto q0 = ann[0], q1 = ann[1];
 	    auto p01 = tools::canonical_pair0(p0,p1);

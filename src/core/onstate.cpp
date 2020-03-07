@@ -126,13 +126,14 @@ string onstate::to_string2() const{
 // then <bra|p1^+...pm^+*pn*...*p1|bra> = <Phi|Phi> = 1
 //      <bra|p1^+...pm^+*qn*...*q1|ket>*sgn(bra)*sgn(ket) = 1
 // which leads to the above result.
-void fock::diff_orb(const onstate& bra, const onstate& ket,
-		    vector<int>& cre, vector<int>& ann){
+void onstate::diff_orb(const onstate& ket,
+	  	       vector<int>& cre, 
+		       vector<int>& ann) const{
    unsigned long idiff,icre,iann;
    // from higher position
-   for(int i=bra._len-1; i>=0; i--){
-      idiff = bra._repr[i] ^ ket._repr[i];
-      icre = idiff & bra._repr[i];
+   for(int i=_len-1; i>=0; i--){
+      idiff = _repr[i] ^ ket._repr[i];
+      icre = idiff & _repr[i];
       iann = idiff & ket._repr[i];
       for(int j=63; j>=0; j--)
          if(icre & 1ULL<<j) cre.push_back(i*64+j);
@@ -142,14 +143,13 @@ void fock::diff_orb(const onstate& bra, const onstate& ket,
 }
 
 // connection type
-pair<int,int> fock::diff_type(const onstate& bra, 
-		      	      const onstate& ket){
+pair<int,int> onstate::diff_type(const onstate& ket) const{
    unsigned long idiff,icre,iann;
    pair<int,int> p(0,0);
    // from higher position
-   for(int i=bra._len-1; i>=0; i--){
-      idiff = bra._repr[i] ^ ket._repr[i];
-      icre = idiff & bra._repr[i];
+   for(int i=_len-1; i>=0; i--){
+      idiff = _repr[i] ^ ket._repr[i];
+      icre = idiff & _repr[i];
       iann = idiff & ket._repr[i];
       p.first  += fock::popcnt(icre);
       p.second += fock::popcnt(iann);

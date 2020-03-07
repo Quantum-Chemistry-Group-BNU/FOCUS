@@ -32,7 +32,7 @@ double fock::get_Hij(const onstate& state1, const onstate& state2,
    if(ndiff == 0){
       Hij = fock::get_Hii(state1,int2e,int1e);
    }else if(ndiff == 2){
-      fock::diff_orb(state1,state2,cre,ann);
+      state1.diff_orb(state2,cre,ann);
       int p0 = cre[0];
       int q0 = ann[0];
       Hij += int1e(p0,q0); // hpq
@@ -43,7 +43,7 @@ double fock::get_Hij(const onstate& state1, const onstate& state2,
       } 
       Hij *= state1.parity(p0)*state2.parity(q0);
    }else if(ndiff == 4){
-      fock::diff_orb(state1,state2,cre,ann);
+      state1.diff_orb(state2,cre,ann);
       int p0 = cre[0], p1 = cre[1];
       int q0 = ann[0], q1 = ann[1]; 
       // <p0p1||q0q1> = [p0q0|p1q1]-[p0q1|p1q0]

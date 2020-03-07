@@ -28,9 +28,18 @@
 
 --- SCI ---
 
- 2020xxxx Selected ci (sort in incomplete space?)
- 2020xxxx PT2 util
- 2020xxxx storage/serialization
+ selected ci (sort in incomplete space?)
+ 2020xxxx substrings and coupling table
+ 2020xxxx efficient algorithm for direct CI
+ 2020xxxx selection procedure 
+	  (control the space size for large problem)
+
+ PT2 util
+ 2020xxxx compute e2 
+ 
+ storage/serialization
+ 2020xxxx serialization on disk
+	  load space/vector for analysis 
 
 --- DMRG --- 
 

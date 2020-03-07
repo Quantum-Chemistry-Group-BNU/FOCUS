@@ -197,13 +197,11 @@ class onstate{
       }
       // connection type: (2,0) for <bra|c1^+c2^+|ket>
       // 	       also implies <bra|c1^+c2^+k^+k|ket> 
-      friend std::pair<int,int> diff_type(const onstate& bra, 
-		      			  const onstate& ket);
+      std::pair<int,int> diff_type(const onstate& ket) const;
       // orbital difference
-      friend void diff_orb(const onstate& bra,
-		      	   const onstate& ket,
-			   std::vector<int>& cre,
-			   std::vector<int>& ann);
+      void diff_orb(const onstate& ket,
+		    std::vector<int>& cre,
+		    std::vector<int>& ann) const;
       // even strings 
       onstate get_even() const{
          assert(_size%2 == 0);
