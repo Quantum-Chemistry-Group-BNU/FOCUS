@@ -33,7 +33,7 @@ int tests::test_sci(){
    k = 12*2; ne = 8; // c2
    //integral::read_integral(int2e, int1e, ecore, "FCIDUMP_lih");
    //k =  6*2; ne = 4; // lih
-   onspace fci_space = get_fci_space(k/2,ne/2,ne/2+1);
+   onspace fci_space = get_fci_space(k/2,ne/2,ne/2);
    int dim = fci_space.size();
  
    // iterative algorithm

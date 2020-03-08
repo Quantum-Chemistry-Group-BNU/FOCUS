@@ -14,13 +14,22 @@ struct product_space{
    public:
       // constructor	   
       product_space(const fock::onspace& space);
-      // debug
-      void print();
    public:
-      // second int is used for indexing in constructing BsetA, AsetB 
-      std::map<fock::onstate,int> UsetA, UsetB; 
-      std::vector<std::vector<int>> DsetA, BsetA;
-      std::vector<std::vector<int>> DsetB, AsetB;
+      // second int is used for indexing in constructing bsetA, asetB 
+      std::map<fock::onstate,int> umapA, umapB;
+      fock::onspace usetA, usetB; 
+      std::vector<std::vector<int>> dsetA, bsetA, dsetB, asetB; 
+      std::vector<int> nnzA, nnzB;
+      // dpt - a table to store the set of {Det} in direct product space
+      //       |  0  1  2 ... dimB
+      // --------------------------
+      //   0   |  -1 -1  1      3    nnzA,bsetA,dsetA = (nnz,col,val) per row
+      //   1   |  -1  4 -1      6    nnzB,asetB,dsetB = (nnz,row,val) per col
+      //   2   |   0  5  9     10
+      //   .   | 
+      //  dimA |   2  7  8     11  
+      int dimA, dimB;
+      std::vector<std::vector<int>> dpt;
 };
 
 // compute coupling of states:
@@ -29,7 +38,7 @@ struct product_space{
 struct coupling_table{
    public:
       // constructor	   
-      coupling_table(const std::map<fock::onstate,int>& Uset);
+      coupling_table(const fock::onspace& uset);
    public:
       int dim;
       std::vector<std::vector<int>> C11;      // <I|p^+q|J> 
@@ -49,8 +58,26 @@ struct sparse_hamiltonian{
 			 const integral::two_body& int2e,
 			 const integral::one_body& int1e,
 			 const double ecore);
+      void get_diagonal(const fock::onspace& space,
+	 	        const integral::two_body& int2e,
+		        const integral::one_body& int1e,
+		        const double ecore);
+      void get_localA(const product_space& pspace,
+		      const coupling_table& ctabA,
+		      const integral::two_body& int2e,
+		      const integral::one_body& int1e);
+      void get_localB(const product_space& pspace,
+		      const coupling_table& ctabB,
+		      const integral::two_body& int2e,
+		      const integral::one_body& int1e);
+      void get_int_11_11(const fock::onspace& space,
+		         const product_space& pspace,
+		         const coupling_table& ctabA,
+		         const coupling_table& ctabB,
+		         const integral::two_body& int2e,
+		         const integral::one_body& int1e);
    public:
-      size_t dim;
+      int dim;
       vector<vector<int>> connect;
       vector<vector<double>> value;
       vector<int> nnz;

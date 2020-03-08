@@ -24,32 +24,44 @@
 	  - sigma-vector formation
 	  - change to COLUMN-MAJOR matrix for BLAS/LAPACK
           - dvdson algorithm 
- 20200306 larger FCI problem - [12 orbitals, C2]
+ 20200306 larger FCI problem [12o,8e: C2 ~200,000, ~500s MVP]
 
 --- SCI ---
 
- selected ci (sort in incomplete space?)
- 2020xxxx substrings and coupling table
- 2020xxxx efficient algorithm for direct CI
- 2020xxxx selection procedure 
+ 202003xx selected ci (sort in incomplete space?)
+          - substrings and coupling table
+          - efficient algorithm for direct CI
+          - selection procedure 
 	  (control the space size for large problem)
 
- PT2 util
- 2020xxxx compute e2 
+ 2020xxxx pt2 util
+	  - compute e2 
  
- storage/serialization
- 2020xxxx serialization on disk
-	  load space/vector for analysis 
+ 2020xxxx storage/serialization
+          - serialization on disk
+	  - load space/vector for analysis 
 
 --- DMRG --- 
 
  2020xxxx mps structure & fit
+	  - brute force converge A[n]=<ln|L>
+	  - compressed: SVD & variational
+
  2020xxxx dmrg
- 2020xxxx p-dmrg
+
+ 2020xxxx rdms?
+
+ 2020xxxx p-dmrg?
 
 --- Advanced functionalities ---
  
- 2020xxxx complex version
+ 2020xxxx complex version / relativistic SCI/DMRG
+
+ 2020xxxx operator compression
+
+ 2020xxxx random sampling - pDMRG/CC
+
+ 2020xxxx parallelizaiton - large-scale applications!
 
  2020xxxx g-tensor [IMPORTANT!!! - quantum computation] 
 		    <Psi|sigma K|Psi>? G-matrix;
@@ -57,10 +69,6 @@
 		    For VQE this can be made symmetric,
 		    <0|(U1d*H*U2)|0> - Hardmard test]
 
- 2020xxxx HCI/DMRG for RIXS [also relevant for quantum computation]
+ 2020xxxx excited state: HCI/DMRG for RIXS 
+	  [also relevant for quantum computation]
 
- 2020xxxx operator compression
-
- 2020xxxx random sampling - pDMRG/CC
-
- 2020xxxx parallelizaiton
