@@ -18,9 +18,9 @@ int tests::test_tools(){
    cout << "\ncanonical_pair0" << endl;
    for(int i=0; i<nmax; i++){
       for(int j=0; j<nmax; j++){
-         int ii,jj,ij;
-	 ij = tools::canonical_pair0(i,j);
-	 tools::inverse_pair0(ij,ii,jj);
+	 size_t ij = tools::canonical_pair0(i,j);
+         auto p = tools::inverse_pair0(ij);
+	 size_t ii = p.first, jj = p.second;
 	 cout << "(" << i << "," << j << ")=>" << ij
 	      << "=>" << ii << "," << jj << endl;	 
       }
@@ -29,9 +29,9 @@ int tests::test_tools(){
    cout << "\ncanonical_pair" << endl;
    for(int i=0; i<nmax; i++){
       for(int j=0; j<nmax; j++){
-         int ii,jj,ij;
-	 ij = tools::canonical_pair(i,j);
-	 tools::inverse_pair(ij,ii,jj);
+	 size_t ij = tools::canonical_pair(i,j);
+         auto p = tools::inverse_pair(ij);
+	 size_t ii = p.first, jj = p.second;
 	 cout << "(" << i << "," << j << ")=>" << ij
 	      << "=>" << ii << "," << jj << endl;	 
       }

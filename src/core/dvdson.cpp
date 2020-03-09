@@ -9,8 +9,8 @@ using namespace std;
 using namespace linalg;
 
 // check by full diag
-void dvdsonSolver::full_diag(double* es, double* vs){
-   cout << "\ndvdsonSolver:full_diag" << endl;
+void dvdsonSolver::solve_diag(double* es, double* vs){
+   cout << "\ndvdsonSolver:solve_diag" << endl;
    matrix id = identity_matrix(ndim);
    matrix H(ndim,ndim);
    HVecs(ndim,H.data(),id.data());

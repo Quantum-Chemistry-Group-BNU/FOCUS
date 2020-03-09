@@ -1,11 +1,11 @@
 #ifndef SCI_H
 #define SCI_H
 
-#include <vector>
-#include <map>
 #include "../core/integral.h"
 #include "../core/matrix.h"
 #include "../core/onspace.h"
+#include <vector>
+#include <map>
 
 namespace sci{
 
@@ -43,9 +43,11 @@ struct coupling_table{
       int dim;
       std::vector<std::vector<int>> C11;      // <I|p^+q|J> 
       std::vector<std::vector<int>> C22;      // <I|p^+p^+rs|J> 
+      /*
       std::vector<std::vector<int>> C10, C01; // <I|p^+|J>, <I|p|J>
       std::vector<std::vector<int>> C21, C12; // <I|p^+q^+r|J>, <I|p^+rs|J>
       std::vector<std::vector<int>> C20, C02; // <I|p^+q^+|J>, <I|rs|J>
+      */
 };
 
 // linked list - store each row H[o] as a list
@@ -62,11 +64,13 @@ struct sparse_hamiltonian{
 	 	        const integral::two_body& int2e,
 		        const integral::one_body& int1e,
 		        const double ecore);
-      void get_localA(const product_space& pspace,
+      void get_localA(const fock::onspace& space,
+		      const product_space& pspace,
 		      const coupling_table& ctabA,
 		      const integral::two_body& int2e,
 		      const integral::one_body& int1e);
-      void get_localB(const product_space& pspace,
+      void get_localB(const fock::onspace& space,
+		      const product_space& pspace,
 		      const coupling_table& ctabB,
 		      const integral::two_body& int2e,
 		      const integral::one_body& int1e);
@@ -78,9 +82,9 @@ struct sparse_hamiltonian{
 		         const integral::one_body& int1e);
    public:
       int dim;
-      vector<vector<int>> connect;
-      vector<vector<double>> value;
-      vector<int> nnz;
+      std::vector<std::vector<int>> connect;  // TODOs:
+      std::vector<std::vector<double>> value; // this could be merged into a pair!
+      std::vector<int> nnz;
 };
 
 void ci_solver(std::vector<double>& es,

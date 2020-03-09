@@ -148,7 +148,7 @@ double fock::get_e1(const linalg::matrix& rdm1,
    assert(k == rdm1.rows());
    for(int j=0; j<k; j++){
       for(int i=0; i<k; i++){
-	 e1 += rdm1(i,j)*int1e(i,j);
+	 e1 += rdm1(i,j)*int1e.get(i,j);
       }
    }
    return e1;
@@ -166,7 +166,7 @@ double fock::get_e2(const linalg::matrix& rdm2,
             for(int q1=0; q1<q0; q1++){
 	       auto p01 = tools::canonical_pair0(p0,p1);
 	       auto q01 = tools::canonical_pair0(q0,q1);
-	       e2 += rdm2(p01,q01)*(int2e(p0,q0,p1,q1)-int2e(p0,q1,p1,q0));
+	       e2 += rdm2(p01,q01)*(int2e.get(p0,q0,p1,q1)-int2e.get(p0,q1,p1,q0));
 	    }
 	 }
       }

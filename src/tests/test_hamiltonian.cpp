@@ -25,14 +25,12 @@ int tests::test_hamiltonian(){
    // just for LiH
    onspace space1 = get_fci_space(4,2);
    onspace space2 = get_fci_space(6,2,2);
-   int dim = space2.size();
-   cout << "dim=" << dim << endl; 
 
    // read integral
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
-   integral::read_integral(int2e, int1e, ecore, "FCIDUMP_lih");
+   integral::read_fcidump(int2e, int1e, ecore, "FCIDUMP_lih");
 
    cout << "\neigenvalue problem" << endl;
    auto H = get_Ham(space2,int2e,int1e,ecore);

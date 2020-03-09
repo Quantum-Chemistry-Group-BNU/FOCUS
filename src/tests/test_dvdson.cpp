@@ -23,14 +23,13 @@ int tests::test_dvdson(){
    // for LiH
    onspace space2 = get_fci_space(6,2,2);
    int dim = space2.size();
-   cout << "dim=" << dim << endl;
    check_space(space2);
 
    // read integral
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
-   integral::read_integral(int2e, int1e, ecore, "FCIDUMP_lih");
+   integral::read_fcidump(int2e, int1e, ecore, "FCIDUMP_lih");
 
    // iterative algorithm
    int nroot = 1; 

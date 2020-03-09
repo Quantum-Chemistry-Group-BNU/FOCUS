@@ -24,7 +24,7 @@ void fock::check_space(onspace& space){
 }
 
 onspace fock::get_fci_space(const int k, const int n){
-   cout << "\nfock::get_fci_space" << endl; 
+   cout << "\nfock::get_fci_space (k,n)=" << k << "," << n << endl; 
    assert(k >= n);
    onspace space;
    string s = string(k-n,'0')+string(n,'1');
@@ -35,7 +35,7 @@ onspace fock::get_fci_space(const int k, const int n){
 }
 
 onspace fock::get_fci_space(const int ks, const int na, const int nb){
-   cout << "\nfock::get_fci_space" << endl; 
+   cout << "\nfock::get_fci_space (ks,na,nb)=" << ks << "," << na << "," << nb << endl; 
    onspace space_a = fock::get_fci_space(ks,na);
    onspace space_b = fock::get_fci_space(ks,nb);
    onspace space;
@@ -119,8 +119,8 @@ void fock::ci_solver(vector<double>& es,
    solver.HVec = bind(fock::get_Hx, _1, _2, cref(space), cref(int2e), cref(int1e), ecore);
    // solve
    solver.solve_iter(es.data(), vs.data());
-   //solver.full_diag(es.data(), vs.data());
+   //solver.solve_diag(es.data(), vs.data());
    auto t1 = global::get_time();
-   cout << "\ntiming for fock::ci_solver : " << setprecision(2) 
+   cout << "timing for fock::ci_solver : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
 }

@@ -19,8 +19,7 @@ int main(int argc, char* argv[]){
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
-   integral::read_integral(int2e, int1e, ecore,
-		           schd.integral_file);
+   integral::read_fcidump(int2e, int1e, ecore, schd.integral_file);
 
    // heat-bath setup
 /*
