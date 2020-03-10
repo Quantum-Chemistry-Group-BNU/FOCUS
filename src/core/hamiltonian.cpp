@@ -27,7 +27,7 @@ double fock::get_HijS(const onstate& state1, const onstate& state2,
 	              const integral::two_body& int2e,
 	              const integral::one_body& int1e,
 		      const int iop){
-   vector<int> cre,ann;
+   vector<int> cre, ann;
    state1.diff_orb(state2,cre,ann);
    int p0 = cre[0];
    int q0 = ann[0];
@@ -61,16 +61,15 @@ double fock::get_HijS(const onstate& state1, const onstate& state2,
    return Hij;
 }
 
-// double
+// double: <p0p1||q0q1> = [p0q0|p1q1]-[p0q1|p1q0]
 double fock::get_HijD(const onstate& state1, const onstate& state2,
 	              const integral::two_body& int2e,
 	              const integral::one_body& int1e,
 		      const int iop){
-   vector<int> cre,ann;
+   vector<int> cre, ann;
    state1.diff_orb(state2,cre,ann);
    int p0 = cre[0], p1 = cre[1];
    int q0 = ann[0], q1 = ann[1]; 
-   // <p0p1||q0q1> = [p0q0|p1q1]-[p0q1|p1q0]
    double Hij = 0.0;
    if(iop == 0){ 
       int pp0 = 2*p0, qq0 = 2*q0, pp1 = 2*p1, qq1 = 2*q1;

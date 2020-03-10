@@ -11,7 +11,7 @@ int test_hamiltonian();
 
 int test_dvdson();
 
-int test_sci();
+int test_fci();
 
 }
 

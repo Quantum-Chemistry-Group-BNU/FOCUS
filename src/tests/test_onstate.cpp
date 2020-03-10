@@ -1,6 +1,7 @@
 #include <iostream>
 #include <tuple>
 #include <bitset>
+#include <cassert>
 #include "../core/onstate.h"
 #include "../settings/global.h"
 #include "tests.h"
@@ -8,8 +9,9 @@
 using namespace std;
 
 int tests::test_onstate(){
+   cout << endl;
    cout << global::line_separator << endl;	
-   cout << "test_onstate" << endl;
+   cout << "test::test_onstate" << endl;
    cout << global::line_separator << endl;	
  
    // test constructor and getocc/setocc
@@ -112,6 +114,14 @@ int tests::test_onstate(){
    cout << "parity(0,6)=" << sta.parity(0,6) << endl;
    cout << "parity(3,10)=" << sta.parity(3,10) << endl;
    cout << "parity(0,64)=" << sta.parity(0,64) << endl;
+   assert(sta.parity(0)==1);
+   assert(sta.parity(1)==-1);
+   assert(sta.parity(0,3)==-1);
+   assert(sta.parity(0,4)==-1);
+   assert(sta.parity(0,5)==1);
+   assert(sta.parity(0,6)==1);
+   assert(sta.parity(3,10)==1);
+   assert(sta.parity(0,64)==-1);
 
    // test kramers
    cout << "input\n" << state4 << endl;

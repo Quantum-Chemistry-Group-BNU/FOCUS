@@ -60,6 +60,9 @@ struct sparse_hamiltonian{
 			 const integral::two_body& int2e,
 			 const integral::one_body& int1e,
 			 const double ecore);
+      void debug(const fock::onspace& space,
+	 	 const integral::two_body& int2e,
+		 const integral::one_body& int1e);
       void get_diagonal(const fock::onspace& space,
 	 	        const integral::two_body& int2e,
 		        const integral::one_body& int1e,

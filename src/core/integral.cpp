@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include <boost/algorithm/string.hpp>
-#include "integral.h"
 #include "tools.h"
+#include "integral.h"
 #include "../settings/global.h"
 
 using namespace std;
@@ -76,6 +76,10 @@ void integral::read_fcidump(integral::two_body& int2e,
          int2e.set(ia, ja, ka, la, eri); // AAAA 
          int2e.set(ib, jb, kb, lb, eri); // BBBB 
          int2e.set(ib, jb, ka, la, eri); // BBAA (only set independent part) 
+	 // implement 8-fold symmetric NR integrals 
+         int2e.set(ja, ia,  ka, la, eri); // AAAA 
+         int2e.set(jb, ib,  kb, lb, eri); // BBBB 
+         int2e.set(jb, ib,  ka, la, eri); // BBAA (only set independent part) 
       }
    }
    istrm.close();
@@ -85,9 +89,11 @@ void integral::read_fcidump(integral::two_body& int2e,
    auto t1 = global::get_time();
    cout << "timing for integral::read_fcidump: " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
-   int1e.print();
-   int2e.print();
-   exit(1);
+
+   // debug
+   //int1e.print();
+   //int2e.print();
+   //exit(1);
 }
 
 // print for debug
@@ -102,9 +108,9 @@ void one_body::print(){
    cout << "unordered_map:" << endl;
    for(auto dt : data){
       auto p = tools::inverse_pair(dt.first);
-      cout << dt.first << " ("
-	   << p.first << "," << p.second << ") "
-	   << dt.second << endl;
+      cout << "addr=" << dt.first << " i,j="
+	   << p.first << "," << p.second 
+	   << " eri=" << dt.second << endl;
    }
 }
 
@@ -116,10 +122,9 @@ void two_body::print(){
 	 for(int k=0; k<sorb; k++){
  	    for(int l=0; l<sorb; l++){
 	       cout << "i,j,k,l=" 
-		    << i << "," 
-		    << j << ","
-		    << k << ","
-		    << l << " " 
+	            << i << "," << j << "," << k << "," << l 
+	            << " -> " << i/2+1 << "," << j/2+1 << "," << k/2+1 << "," << l/2+1
+	            << " : " << i%2 << "," << j%2 << "," << k%2 << "," << l%2  
 		    << " val=" << this->get(i,j,k,l) << endl;
 	    }
 	 }
@@ -127,8 +132,16 @@ void two_body::print(){
    }
    cout << "unordered_map:" << endl;
    for(auto dt : data){
-      //auto p = tools::inverse_pair(dt.first);
-      cout << dt.first << " " << dt.second << endl;
+      auto q = inverse_quad(dt.first);
+      size_t i = std::get<0>(q); 
+      size_t j = std::get<1>(q); 
+      size_t k = std::get<2>(q); 
+      size_t l = std::get<3>(q); 
+      cout << "addr=" << dt.first << " i,j,k,l=" 
+	   << i << "," << j << "," << k << "," << l 
+	   << " -> " << i/2+1 << "," << j/2+1 << "," << k/2+1 << "," << l/2+1
+	   << " : " << i%2 << "," << j%2 << "," << k%2 << "," << l%2  
+	   << " eri=" << dt.second << endl;
    }
 }
 
@@ -252,6 +265,29 @@ two_body two_body::get_BBBA() const{
 	    }
 	 }
       }	 
+   }
+   return int2e;
+}
+
+// operations
+one_body integral::operator +(const one_body& int1eA,
+			      const one_body& int1eB){
+   one_body int1e(int1eA);
+   for(const auto& p : int1eB.data){
+      auto search = int1e.data.find(p.first);
+      if(search == int1e.data.end()) int1e.data[p.first] = 0.0;
+      int1e.data[p.first] += int1eB.data.at(p.first);
+   }
+   return int1e;
+}
+
+two_body integral::operator +(const two_body& int2eA,
+			      const two_body& int2eB){
+   two_body int2e(int2eA);
+   for(const auto& p : int2eB.data){
+      auto search = int2e.data.find(p.first);
+      if(search == int2e.data.end()) int2e.data[p.first] = 0.0;
+      int2e.data[p.first] += int2eB.data.at(p.first);
    }
    return int2e;
 }

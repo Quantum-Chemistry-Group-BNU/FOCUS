@@ -17,11 +17,8 @@ namespace tools{
 // 20[1] 21[2]
 // 30[3] 31[4] 32[5]
 inline size_t canonical_pair0(const size_t i, const size_t j){
-   if(i==j){
-      return -1;
-   }else{
-      return std::max(i,j)*(std::max(i,j)-1)/2 + std::min(i,j);
-   }
+   assert(i != j);
+   return std::max(i,j)*(std::max(i,j)-1)/2 + std::min(i,j);
 }
 
 inline std::pair<size_t,size_t> inverse_pair0(const size_t ij){

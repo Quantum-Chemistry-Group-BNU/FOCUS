@@ -37,25 +37,27 @@ struct one_body{
       }
       // core functions
       void print();
+      // clear
+      void clear(){ data.clear(); }
       // memsize
       double get_mem_space(){
          return global::mem_size(data.size());
       }
       // generic case: h1e[i,j]=[i|h|j]=[j|h|i]^*
-      double get(const int i, const int j) const{
+      double get(const size_t i, const size_t j) const{
 	 size_t key = tools::canonical_pair(i,j);
 	 auto search = data.find(key);
 	 if(search == data.end()){
 	    return 0.0;
 	 }else{
             if(i >= j){
-	       return data.at(key);
+	       return data.at(key); // at work with const
             }else{
 	       return data.at(key); // complex conjugate in future
             }
 	 }
       }
-      void set(const int i, const int j, 
+      void set(const size_t i, const size_t j, 
 	       const double val){
 	 size_t key = tools::canonical_pair(i,j);
          if(i >= j){
@@ -68,6 +70,9 @@ struct one_body{
       one_body get_AA() const; // [A|A]
       one_body get_BB() const; // [B|B]
       one_body get_BA() const; // [B|A],[A|B] (lower-triangular)
+      // operations
+      friend one_body operator +(const one_body& int1eA,
+		      	         const one_body& int1eB);
    public:
       int sorb;
       std::unordered_map<size_t,double> data; // sparse representation
@@ -82,7 +87,7 @@ inline size_t canonical_quad(const size_t i, const size_t j,
    return i*i*i2/4 + j*i2 + k*i1 + l;
 }
 
-inline std::tuple<size_t,size_t,size_t,size_t> invert_quad(const size_t addr){
+inline std::tuple<size_t,size_t,size_t,size_t> inverse_quad(const size_t addr){
    size_t i = floor((sqrt(sqrt(addr*1.0)*8+1)-1)/2);
    size_t i1 = i+1;
    size_t i2 = i1*i1;
@@ -96,19 +101,18 @@ inline std::tuple<size_t,size_t,size_t,size_t> invert_quad(const size_t addr){
 }
 
 // return key,conj
-inline std::pair<size_t,bool> packed_quad(const int i, 
-					  const int j, 
-	 				  const int k, 
-					  const int l){
-   bool swapIJ = j>i ? true : false;
-   bool swapKL = l>k ? true : false;
-   int IJ = tools::canonical_pair(i,j);
-   int KL = tools::canonical_pair(k,l);
-   bool swap12 = KL>IJ? true : false;
-   if(!swap12 && !swapIJ) return make_pair(canonical_quad(i,j,k,l),false);
-   if(!swap12 &&  swapIJ) return make_pair(canonical_quad(j,i,l,k),true);
-   if( swap12 && !swapKL) return make_pair(canonical_quad(k,l,i,j),false);
-   if( swap12 &&  swapKL) return make_pair(canonical_quad(l,k,j,i),true);
+inline std::pair<size_t,bool> packed_quad(const size_t i, 
+					  const size_t j, 
+	 				  const size_t k, 
+					  const size_t l){
+   auto ti = std::make_tuple(i,j,k,l);
+   auto tk = std::make_tuple(k,l,i,j);
+   auto tj = std::make_tuple(j,i,l,k);
+   auto tl = std::make_tuple(l,k,j,i);
+   if(ti>=tk && ti>=tj && ti>=tl) return make_pair(canonical_quad(i,j,k,l),false);
+   if(tk>=ti && tk>=tj && tk>=tl) return make_pair(canonical_quad(k,l,i,j),false);
+   if(tj>=ti && tj>=tk && tj>=tl) return make_pair(canonical_quad(j,i,l,k),true);
+   if(tl>=ti && tl>=tk && tl>=tj) return make_pair(canonical_quad(l,k,j,i),true);
 }
 
 class two_body{
@@ -136,12 +140,15 @@ class two_body{
       }
       // core functions
       void print();
+      // clear
+      void clear(){ data.clear(); }
       // memsize
       double get_mem_space(){
          return global::mem_size(data.size());
       }
       // [ij|kl] = [ji|lk]^* = [kl|ij] = [lk|ji]^*
-      double get(const int i, const int j, const int k, const int l) const{
+      double get(const size_t i, const size_t j, 
+		 const size_t k, const size_t l) const{
          auto p = packed_quad(i,j,k,l);
          size_t key = p.first;
 	 bool ifconj = p.second;
@@ -156,7 +163,8 @@ class two_body{
             }
 	 }
       }
-      void set(const int i, const int j, const int k, const int l, 
+      void set(const size_t i, const size_t j, 
+	       const size_t k, const size_t l, 
 	       const double val){
          auto p = packed_quad(i,j,k,l);
          size_t key = p.first;
@@ -174,6 +182,9 @@ class two_body{
       two_body get_BAAA() const; // [BA|AA],[AB|AA],[AA|BA],[AA|AB]
       two_body get_BABA() const; // [BA|BA],[BA|AB],[AB|BA],[AB|AB]
       two_body get_BBBA() const; // [BB|BA],[BB|AB],[BA|BB],[AB|BB]
+      // operations
+      friend two_body operator +(const two_body& int2eA,
+		      	         const two_body& int2eB);
    public:
       int sorb;
       std::unordered_map<size_t,double> data; // sparse representation

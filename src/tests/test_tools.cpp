@@ -9,8 +9,9 @@ using namespace std;
 using namespace linalg;
 
 int tests::test_tools(){
+   cout << endl;
    cout << global::line_separator << endl;	
-   cout << "test_tools" << endl;
+   cout << "tests::test_tools" << endl;
    cout << global::line_separator << endl;
   
    const int nmax = 5;
@@ -18,6 +19,7 @@ int tests::test_tools(){
    cout << "\ncanonical_pair0" << endl;
    for(int i=0; i<nmax; i++){
       for(int j=0; j<nmax; j++){
+	 if(i == j) continue;     
 	 size_t ij = tools::canonical_pair0(i,j);
          auto p = tools::inverse_pair0(ij);
 	 size_t ii = p.first, jj = p.second;
@@ -48,7 +50,7 @@ int tests::test_tools(){
    // random & identity;
    matrix iden = identity_matrix(4);
    matrix rd = random_matrix(4,3);
-   iden.print();
+   iden.print("iden");
    rd.print("rd");
    matrix rd2 = random_matrix(4,3);
    rd2.print("rd2");
@@ -67,7 +69,9 @@ int tests::test_tools(){
    iden -= iden;
    iden.print("-*id");
    auto tmp = rd + rd2;
-   iden.print("rd+rd2");
+   tmp.print("rd+rd2");
+   rd.print("rd");
+   rd2.print("rd2");
    auto tmp1 = rd - rd2;
    tmp1.print("rd-rd2");
    auto tmp2 = 3*rd;
@@ -87,18 +91,15 @@ int tests::test_tools(){
    cout << "eig0=" << e[0] << endl;
    matrix vt(v);
    matrix idn(v.rows(),v.cols());
-   dgemm("T","N",1.0,vt,v,0.0,idn);
-   idn -= identity_matrix(n);
-   idn.print("idn");
+   idn = dgemm("T","N",vt,v) - identity_matrix(n);
+   idn.print("VtV-idn");
    cout << "normF=" << normF(idn) << endl;
 
-   // Ax-xb
-   matrix Av(n,n);
-   dgemm("N","N",1.0,rd5,v,0.0,Av);
-   matrix ve(n,n);
-   dgemm("N","N",1.0,v,diagonal_matrix(e),0.0,ve);
+   // Av-ve
+   matrix Av = dgemm("N","N",rd5,v);
+   matrix ve = dgemm("N","N",v,diagonal_matrix(e));
    auto diff = Av - ve;
-   diff.print("diff");
+   diff.print("Av-ve");
    cout << "normF=" << normF(diff) << endl; 
 
    return 0;
