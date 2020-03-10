@@ -52,7 +52,7 @@ struct dvdsonSolver{
       std::function<void(double*, const double*)> HVec;
       // parameters
       int iprt = 1;
-      double crit_v = 1.e-6;  // used 
+      double crit_v = 1.e-7;  // used 
       double crit_e = 1.e-12; // not used
       double crit_indp = 1.e-12;
       double damping = 1.e-1; 
