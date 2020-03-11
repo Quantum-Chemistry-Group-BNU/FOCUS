@@ -18,7 +18,7 @@ double fock::get_Hii(const onstate& state1,
          int q = olst[j];
 	 Hii += int2e.get(p,p,q,q)-int2e.get(p,q,q,p); 
       }
-   } 
+   }
    return Hii;
 }
 

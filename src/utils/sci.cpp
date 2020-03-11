@@ -286,7 +286,7 @@ void sci::get_initial(const onspace& space,
 		      matrix& v0){
    int ndim = v0.rows(); 
    int neig = v0.cols();
-   int pdim = min(ndim, 100);
+   int pdim = min(ndim, max(neig,100));
    // construct H in the low-energy subspace 
    auto index = tools::sort_index(Diag, 1);
    matrix Hpp(pdim, pdim);

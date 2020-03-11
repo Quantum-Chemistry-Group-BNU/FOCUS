@@ -4,6 +4,7 @@
 #include "../core/matrix.h"
 #include "../core/linalg.h"
 #include "../core/tools.h"
+#include "../core/hamiltonian.h"
 #include "../settings/global.h"
 #include "../utils/sci.h"
 #include <iostream>
@@ -15,6 +16,7 @@
 
 using namespace std;
 using namespace fock;
+using namespace linalg;
 
 int tests::test_sci(){
    cout << endl;	
@@ -32,29 +34,27 @@ int tests::test_sci(){
    int k, ne;
    integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_c2");
    k = 12*2; ne = 8; 
-   //integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_c2sto3g");
-   //k = 10*2; ne = 12; 
    onspace fci_space = get_fci_space(k/2,ne/2,ne/2);
    int dim = fci_space.size();
 
-   int nroot = 2; 
+   int nroot = 1;
    vector<double> es(nroot,0.0);
    linalg::matrix vs(dim,nroot);
 
    sci::ci_solver(es, vs, fci_space, int2e, int1e, ecore);
-   exit(1);
 
    // analysis 
-   vector<double> v0i(vs.col(0),vs.col(0)+dim);
-   fock::coefficients(fci_space, v0i);
-   vector<double> sigs(v0i.size());
-   transform(v0i.cbegin(),v0i.cend(),sigs.begin(),
-	     [](const double& x){return pow(x,2);}); // pi=|ci|^2
-   auto SvN = vonNeumann_entropy(sigs);
-   cout << "p0=" << sigs[0] << endl;
-   cout << "SvN=" << SvN  << endl;
-   assert(abs(sigs[0]-0.9805968962) < thresh);
-   assert(abs(SvN-0.1834419989) < thresh);
+   for(int i=0; i<nroot; i++){
+      cout << defaultfloat << setprecision(10);	  
+      cout << "\ni=" << i << " e=" << es[i] << endl; 
+      vector<double> v0i(vs.col(i),vs.col(i)+dim);
+      //fock::coefficients(fci_space, v0i);
+      vector<double> sigs(v0i.size());
+      transform(v0i.cbegin(),v0i.cend(),sigs.begin(),
+                [](const double& x){return pow(x,2);}); // pi=|ci|^2
+      auto SvN = vonNeumann_entropy(sigs);
+   }
+   exit(1);
 
    return 0;
 }

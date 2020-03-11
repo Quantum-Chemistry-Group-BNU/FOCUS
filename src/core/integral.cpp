@@ -66,6 +66,7 @@ void integral::read_fcidump(integral::two_body& int2e,
       }else if(i*j != 0 && k*l == 0){
 	 auto ia = 2*i-2, ib = 2*i-1;
 	 auto ja = 2*j-2, jb = 2*j-1;
+	 // expand spatial into spin-orbital integrals
          int1e.set(ia, ja, eri); // AA
          int1e.set(ib, jb, eri); // BB
       }else if(i*j != 0 && k*l != 0){
@@ -75,11 +76,13 @@ void integral::read_fcidump(integral::two_body& int2e,
 	 auto la = 2*l-2, lb = 2*l-1;
          int2e.set(ia, ja, ka, la, eri); // AAAA 
          int2e.set(ib, jb, kb, lb, eri); // BBBB 
-         int2e.set(ib, jb, ka, la, eri); // BBAA (only set independent part) 
+         int2e.set(ib, jb, ka, la, eri); // BBAA
+	 int2e.set(ia, ja, kb, lb, eri); // AABB 
 	 // implement 8-fold symmetric NR integrals 
          int2e.set(ja, ia,  ka, la, eri); // AAAA 
          int2e.set(jb, ib,  kb, lb, eri); // BBBB 
-         int2e.set(jb, ib,  ka, la, eri); // BBAA (only set independent part) 
+         int2e.set(jb, ib,  ka, la, eri); // BBAA
+	 int2e.set(ja, ia,  kb, lb, eri); // AABB
       }
    }
    istrm.close();
