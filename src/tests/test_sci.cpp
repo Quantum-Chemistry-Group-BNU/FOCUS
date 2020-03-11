@@ -44,16 +44,14 @@ int tests::test_sci(){
    sci::ci_solver(es, vs, fci_space, int2e, int1e, ecore);
 
    // analysis 
-   for(int i=0; i<nroot; i++){
-      cout << defaultfloat << setprecision(10);	  
-      cout << "\ni=" << i << " e=" << es[i] << endl; 
-      vector<double> v0i(vs.col(i),vs.col(i)+dim);
-      //fock::coefficients(fci_space, v0i);
-      vector<double> sigs(v0i.size());
-      transform(v0i.cbegin(),v0i.cend(),sigs.begin(),
-                [](const double& x){return pow(x,2);}); // pi=|ci|^2
-      auto SvN = vonNeumann_entropy(sigs);
-   }
+   vector<double> v0i(vs.col(0),vs.col(0)+dim);
+   fock::coefficients(fci_space, v0i);
+   vector<double> sigs(v0i.size());
+   transform(v0i.cbegin(),v0i.cend(),sigs.begin(),
+             [](const double& x){return pow(x,2);}); // pi=|ci|^2
+   auto SvN = vonNeumann_entropy(sigs);
+   assert(abs(es[0]+75.48440859785963) < thresh);
+   assert(abs(SvN-0.7211959135921441) < thresh);
    exit(1);
 
    return 0;

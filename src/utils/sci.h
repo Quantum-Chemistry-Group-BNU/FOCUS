@@ -5,6 +5,7 @@
 #include "../core/matrix.h"
 #include "../core/onspace.h"
 #include <vector>
+#include <tuple>
 #include <map>
 
 namespace sci{
@@ -41,8 +42,8 @@ struct coupling_table{
       coupling_table(const fock::onspace& uset);
    public:
       int dim;
-      std::vector<std::vector<int>> C11;      // <I|p^+q|J> 
-      std::vector<std::vector<int>> C22;      // <I|p^+p^+rs|J> 
+      std::vector<std::vector<int>> C11; // differ by single
+      std::vector<std::vector<int>> C22; // differ by double
       /*
       std::vector<std::vector<int>> C10, C01; // <I|p^+|J>, <I|p|J>
       std::vector<std::vector<int>> C21, C12; // <I|p^+q^+r|J>, <I|p^+rs|J>
@@ -63,30 +64,29 @@ struct sparse_hamiltonian{
       void debug(const fock::onspace& space,
 	 	 const integral::two_body& int2e,
 		 const integral::one_body& int1e);
-      void get_diagonal(const fock::onspace& space,
-	 	        const integral::two_body& int2e,
-		        const integral::one_body& int1e,
-		        const double ecore);
-      void get_localA(const fock::onspace& space,
-		      const product_space& pspace,
-		      const coupling_table& ctabA,
-		      const integral::two_body& int2e,
-		      const integral::one_body& int1e);
-      void get_localB(const fock::onspace& space,
-		      const product_space& pspace,
-		      const coupling_table& ctabB,
-		      const integral::two_body& int2e,
-		      const integral::one_body& int1e);
-      void get_int_11_11(const fock::onspace& space,
-		         const product_space& pspace,
-		         const coupling_table& ctabA,
-		         const coupling_table& ctabB,
-		         const integral::two_body& int2e,
-		         const integral::one_body& int1e);
+      void get_C00_C00(const fock::onspace& space,
+	 	       const integral::two_body& int2e,
+		       const integral::one_body& int1e,
+		       const double ecore);
+      void get_C11C22_C00(const fock::onspace& space,
+		          const product_space& pspace,
+		          const coupling_table& ctabA,
+		          const integral::two_body& int2e,
+		          const integral::one_body& int1e);
+      void get_C00_C11C22(const fock::onspace& space,
+		          const product_space& pspace,
+		          const coupling_table& ctabB,
+		          const integral::two_body& int2e,
+		          const integral::one_body& int1e);
+      void get_C11_C11(const fock::onspace& space,
+		       const product_space& pspace,
+		       const coupling_table& ctabA,
+		       const coupling_table& ctabB,
+		       const integral::two_body& int2e,
+		       const integral::one_body& int1e);
    public:
       int dim;
-      std::vector<std::vector<int>> connect;  // TODOs:
-      std::vector<std::vector<double>> value; // this could be merged into a pair!
+      std::vector<std::vector<std::pair<int,double>>> connect; 
       std::vector<int> nnz;
 };
 

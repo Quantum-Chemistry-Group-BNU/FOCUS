@@ -52,6 +52,7 @@ double fock::vonNeumann_entropy(const vector<double>& sigs, const double cutoff)
       ssum -= sig*log2(sig);
    }
    cout << "fock::vonNeumann_entropy" << endl;
+   cout << defaultfloat << setprecision(10);	  
    cout << "Psum=" << psum << " SvN=" << ssum << endl; 
    return ssum;
 }

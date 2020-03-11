@@ -81,17 +81,6 @@ coupling_table::coupling_table(const onspace& uset){
    }
 }
 
-void sparse_hamiltonian::get_diagonal(const onspace& space, 
-				      const integral::two_body& int2e, 
-				      const integral::one_body& int1e, 
-				      const double ecore){
-   for(int i=0; i<dim; i++){
-      double Hii = fock::get_Hii(space[i], int2e, int1e) + ecore; 
-      connect[i].push_back(i);
-      value[i].push_back(Hii);
-   }
-}
-
 // compare with full construction
 void sparse_hamiltonian::debug(const onspace& space,
 			       const integral::two_body& int2e,
@@ -99,12 +88,9 @@ void sparse_hamiltonian::debug(const onspace& space,
    auto dim = connect.size();
    matrix H1(dim,dim);
    for(int i=0; i<dim; i++){
-      int sgn_i = space[i].parity_odd_even();
       for(int jdx=0; jdx<connect[i].size(); jdx++){
-    	 int j = connect[i][jdx];
-         int sgn_j = space[j].parity_odd_even();
-	 //H1(i,j) = sgn_i*sgn_j*value[i][jdx];
-	 H1(i,j) = value[i][jdx];
+    	 int j = connect[i][jdx].first;
+	 H1(i,j) = connect[i][jdx].second;
       }
    }
    auto H2 = get_Ham(space,int2e,int1e,0.0);
@@ -123,13 +109,25 @@ void sparse_hamiltonian::debug(const onspace& space,
    cout << "|H2-H1|=" << normF(H2-H1) << endl;
 }
 
-// local term: (C11+C22)_A*Id_B
-void sparse_hamiltonian::get_localA(const onspace& space,
-				    const product_space& pspace,
-				    const coupling_table& ctabA,
-				    const integral::two_body& int2e,
-				    const integral::one_body& int1e){
-   // <I_A,I_B|H_A|J_A,J_B> = <I_A|H_A|J_A><I_B|J_B>	
+// C00_A*C00_B
+void sparse_hamiltonian::get_C00_C00(const onspace& space, 
+				     const integral::two_body& int2e, 
+				     const integral::one_body& int1e, 
+				     const double ecore){
+   for(int i=0; i<dim; i++){
+      double Hii = fock::get_Hii(space[i], int2e, int1e) + ecore; 
+      connect[i].emplace_back(i,Hii);
+   }
+}
+
+// (C11+C22)_A*C00_B
+void sparse_hamiltonian::get_C11C22_C00(const onspace& space,
+				        const product_space& pspace,
+				        const coupling_table& ctabA,
+				        const integral::two_body& int2e,
+				        const integral::one_body& int1e){
+   // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by single/double
+   // 			    {I_B,J_B} differ by zero (I_B=J_B)
    for(int ia=0; ia<pspace.dimA; ia++){
       for(int ja : ctabA.C11[ia]){
 	 for(int ib : pspace.bsetA[ia]){
@@ -137,8 +135,7 @@ void sparse_hamiltonian::get_localA(const onspace& space,
 	    if(j>=0){
 	       int i = pspace.dpt[ia][ib];
 	       double Hij = fock::get_HijS(space[i], space[j], int2e, int1e, 2); 
-	       connect[i].push_back(j);
-	       value[i].push_back(Hij);
+	       connect[i].emplace_back(j,Hij);
 	    }
 	 }
       }
@@ -148,22 +145,21 @@ void sparse_hamiltonian::get_localA(const onspace& space,
 	    if(j>=0){
 	       int i = pspace.dpt[ia][ib];
 	       double Hij = fock::get_HijD(space[i], space[j], int2e, int1e, 2); 
-	       connect[i].push_back(j);
-	       value[i].push_back(Hij);
+	       connect[i].emplace_back(j,Hij);
 	    }
 	 }
       }
    } // ia
-   //this->debug(space, int2e, int1e);
 }
 
-// local term: Id_A*(C11+C22)_B
-void sparse_hamiltonian::get_localB(const onspace& space,
-				    const product_space& pspace,
-				    const coupling_table& ctabB,
-				    const integral::two_body& int2e,
-				    const integral::one_body& int1e){
-   // <I_A,I_B|H_B|J_A,J_B> = <I_A|J_A><I_B|H_B|J_B>	
+// C00_A*(C11+C22)_B
+void sparse_hamiltonian::get_C00_C11C22(const onspace& space,
+				        const product_space& pspace,
+				        const coupling_table& ctabB,
+				        const integral::two_body& int2e,
+				        const integral::one_body& int1e){
+   // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by zero (I_A=J_A)
+   // 			    {I_B,J_B} differ by single/double
    for(int ib=0; ib<pspace.dimB; ib++){
       for(int jb : ctabB.C11[ib]){
 	 for(int ia : pspace.asetB[ib]){
@@ -171,8 +167,7 @@ void sparse_hamiltonian::get_localB(const onspace& space,
 	    if(j>=0){
 	       int i = pspace.dpt[ia][ib];
 	       double Hij = fock::get_HijS(space[i], space[j], int2e, int1e, 2); 
-	       connect[i].push_back(j);
-	       value[i].push_back(Hij);
+	       connect[i].emplace_back(j,Hij);
 	    }
 	 }
       }
@@ -182,23 +177,22 @@ void sparse_hamiltonian::get_localB(const onspace& space,
 	    if(j>=0){
 	       int i = pspace.dpt[ia][ib];
 	       double Hij = fock::get_HijD(space[i], space[j], int2e, int1e, 2); 
-	       connect[i].push_back(j);
-	       value[i].push_back(Hij);
+	       connect[i].emplace_back(j,Hij);
 	    }
 	 }
       }
    } // ib
-   //this->debug(space, int2e, int1e);
 }
 
-// interaction term: C11_A*C11_B
-void sparse_hamiltonian::get_int_11_11(const onspace& space,
-				       const product_space& pspace,
-				       const coupling_table& ctabA,
-				       const coupling_table& ctabB,
-				       const integral::two_body& int2e,
-				       const integral::one_body& int1e){
-   // C11_A*C11_B: <I_A|C11_A|J_A><I_B|C11_B|J_B>
+// C11_A*C11_B
+void sparse_hamiltonian::get_C11_C11(const onspace& space,
+				     const product_space& pspace,
+				     const coupling_table& ctabA,
+				     const coupling_table& ctabB,
+				     const integral::two_body& int2e,
+				     const integral::one_body& int1e){
+   // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by single
+   // 			    {I_B,J_B} differ by single
    for(int ia=0; ia<pspace.dimA; ia++){
       for(int ja : ctabA.C11[ia]){
          for(int ib : pspace.bsetA[ia]){
@@ -207,14 +201,12 @@ void sparse_hamiltonian::get_int_11_11(const onspace& space,
    	       int j = pspace.dpt[ja][jb];
    	       if(j>=0){
 	          double Hij = get_HijD(space[i], space[j], int2e, int1e, 2);
-		  connect[i].push_back(j);
-	          value[i].push_back(Hij);
+	          connect[i].emplace_back(j,Hij);
 	       } // j>0
 	    } // jb
 	 } // ib
       } // ja
    } // ia
-   //this->debug(space, int2e, int1e);
 }
 
 // compute sparse H
@@ -227,33 +219,32 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
 				       const double ecore){
    dim = space.size();
    connect.resize(dim);
-   value.resize(dim);
    nnz.resize(dim);
    bool debug = true;
   
-   // diagonal term:
+   // C00_A*C00_B
    auto t0 = global::get_time();
-   this->get_diagonal(space, int2e, int1e, ecore);
+   this->get_C00_C00(space, int2e, int1e, ecore);
    auto ta = global::get_time();
-   if(debug) cout << "timing for get_diagonal : " << setprecision(2) 
+   if(debug) cout << "timing for get_C00_C00 : " << setprecision(2) 
 		  << global::get_duration(ta-t0) << " s" << endl;
 
-   // local term: (C11+C22)_A*Id_B
-   this->get_localA(space, pspace, ctabA, int2e, int1e);
+   // (C11+C22)_A*C00_B
+   this->get_C11C22_C00(space, pspace, ctabA, int2e, int1e);
    auto tb = global::get_time();
-   if(debug) cout << "timing for get_localA : " << setprecision(2) 
+   if(debug) cout << "timing for get_C11C22_C00 : " << setprecision(2) 
 		  << global::get_duration(tb-ta) << " s" << endl;
    
-   // local term: Id_A*(C11+C22)_B
-   this->get_localB(space,pspace, ctabB, int2e, int1e);
+   // C00_A*(C11+C22)_B
+   this->get_C00_C11C22(space,pspace, ctabB, int2e, int1e);
    auto tc = global::get_time();
-   if(debug) cout << "timing for get_localB : " << setprecision(2) 
+   if(debug) cout << "timing for get_C00_C11C22 : " << setprecision(2) 
 		  << global::get_duration(tc-tb) << " s" << endl;
 
-   // interaction term: C11_A*C11_B  
-   this->get_int_11_11(space, pspace, ctabA, ctabB, int2e, int1e);
+   // C11_A*C11_B  
+   this->get_C11_C11(space, pspace, ctabA, ctabB, int2e, int1e);
    auto td = global::get_time();
-   if(debug) cout << "timing for get_int_11_11: " << setprecision(2) 
+   if(debug) cout << "timing for get_C11_C11 : " << setprecision(2) 
    		  << global::get_duration(td-tc) << " s" << endl;
 
    // compute nnz
@@ -270,8 +261,8 @@ void sci::get_Hx(double* y,
    for(int i=0; i<sparseH.dim; i++){
       y[i] = 0.0;
       for(int jdx=0; jdx<sparseH.nnz[i]; jdx++){
-         int j = sparseH.connect[i][jdx];
-	 double Hij = sparseH.value[i][jdx];
+         int j = sparseH.connect[i][jdx].first;
+	 double Hij = sparseH.connect[i][jdx].second;
 	 y[i] += Hij*x[j];
       }
    }
@@ -281,7 +272,7 @@ void sci::get_Hx(double* y,
 void sci::get_initial(const onspace& space,
 		      const integral::two_body& int2e, 
 		      const integral::one_body& int1e, 
-		      const double ecore, 
+	       	      const double ecore,
 		      vector<double>& Diag,
 		      matrix& v0){
    int ndim = v0.rows(); 
