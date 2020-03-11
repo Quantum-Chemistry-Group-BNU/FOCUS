@@ -4,8 +4,6 @@ using namespace std;
 
 int main(){
    
-   tests::test_sci();
-   
    tests::test_tools();
    
    tests::test_onstate();
@@ -15,6 +13,8 @@ int main(){
    tests::test_dvdson();
    
    tests::test_fci();
+   
+   tests::test_sci();
    
    return 0;   
 }

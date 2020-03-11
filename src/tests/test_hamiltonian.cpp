@@ -33,7 +33,7 @@ int tests::test_hamiltonian(){
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
-   integral::read_fcidump(int2e, int1e, ecore, "FCIDUMP_lih");
+   integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_lih");
 
    // test get_Hij
    cout << space2[16] << endl;

@@ -30,9 +30,9 @@ int tests::test_sci(){
    double ecore;
 
    int k, ne;
-   integral::read_fcidump(int2e, int1e, ecore, "FCIDUMP_c2");
+   integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_c2");
    k = 12*2; ne = 8; 
-   //integral::read_fcidump(int2e, int1e, ecore, "FCIDUMP_c2sto3g");
+   //integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_c2sto3g");
    //k = 10*2; ne = 12; 
    onspace fci_space = get_fci_space(k/2,ne/2,ne/2);
    int dim = fci_space.size();
