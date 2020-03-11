@@ -90,6 +90,7 @@ struct sparse_hamiltonian{
       std::vector<int> nnz;
 };
 
+// sci
 void ci_solver(std::vector<double>& es,
 	       linalg::matrix& vs,	
 	       const fock::onspace& space,
@@ -101,6 +102,14 @@ void ci_solver(std::vector<double>& es,
 void get_Hx(double* y,
 	    const double* x,
 	    const sparse_hamiltonian& sparseH);
+
+// initial guess
+void get_initial(const fock::onspace& space,
+	         const integral::two_body& int2e,
+	         const integral::one_body& int1e,
+		 const double ecore,
+		 vector<double>& Diag,
+		 linalg::matrix& v0);
 
 } // sci
 

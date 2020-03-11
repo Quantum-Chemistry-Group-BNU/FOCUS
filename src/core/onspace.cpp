@@ -104,7 +104,7 @@ void fock::ci_solver(vector<double>& es,
 	       	     const integral::two_body& int2e,
 	       	     const integral::one_body& int1e,
 	       	     const double ecore){
-   cout << "\nfock::ci_solver" << endl; 
+   cout << "\nfock::ci_solver dim=" << space.size() << endl; 
    auto t0 = global::get_time();
    // Davidson solver 
    dvdsonSolver solver;

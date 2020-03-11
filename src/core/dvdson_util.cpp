@@ -73,7 +73,7 @@ void dvdsonSolver::print_iter(const int iter,
       cout << "settings: ndim=" << ndim 
 	   << " neig=" << neig
 	   << " nbuff=" << nbuff  
-	   << " maxcycle= " << maxcycle << endl;
+	   << " maxcycle= " << maxcycle << endl; 
       cout << "          damping=" << damping 
 	   << " crit_v=" << crit_v 
            << " crit_e=" << crit_e 
@@ -107,6 +107,7 @@ void dvdsonSolver::check_orthogonality(const int n, const int m,
 	   << thresh << endl;      
       V.print("V");
       dev.print("dev");
+      exit(1);
    }
 }
 

@@ -13,6 +13,8 @@ int test_dvdson();
 
 int test_fci();
 
+int test_sci();
+
 }
 
 #endif

@@ -4,6 +4,8 @@ using namespace std;
 
 int main(){
    
+   tests::test_sci();
+   
    tests::test_tools();
    
    tests::test_onstate();

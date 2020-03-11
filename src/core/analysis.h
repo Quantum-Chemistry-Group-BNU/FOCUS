@@ -35,8 +35,6 @@ double get_e1(const linalg::matrix& rdm1,
 double get_e2(const linalg::matrix& rdm2,
 	      const integral::two_body& int2e);
 
-//void rdm1_from_rdm2(linalg::matrix&rdm2,
-
 }
 
 #endif

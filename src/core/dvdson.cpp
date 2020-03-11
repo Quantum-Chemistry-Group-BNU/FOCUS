@@ -40,7 +40,7 @@ void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
    auto t0 = global::get_time();
 
    // generate initial subspace - vbas
-   int nl = min(ndim,neig+nbuff); // maximal size
+   int nl = min(ndim,neig+nbuff); // maximal subspace size
    vector<double> vbas(ndim*nl), wbas(ndim*nl);
    if(vguess != nullptr){
       copy(vguess, vguess+ndim*neig, vbas.begin());
@@ -58,8 +58,8 @@ void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
    vector<double> tmpE(nl), tmpV(nl*nl), tnorm(neig);
    vector<bool> rconv(neig);
    matrix eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); // record history
-   bool ifconv = false;
    double damp = damping;
+   bool ifconv = false;
    int nsub = neig;
    for(int iter=1; iter<maxcycle+1; iter++){
      
