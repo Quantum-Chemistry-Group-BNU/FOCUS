@@ -66,6 +66,7 @@ product_space::product_space(const onspace& space){
 
 // constructor
 coupling_table::coupling_table(const onspace& uset){
+   auto t0 = global::get_time();
    dim = uset.size();
    C11.resize(dim);
    C22.resize(dim);
@@ -79,6 +80,10 @@ coupling_table::coupling_table(const onspace& uset){
 	 }
       }
    }
+   auto t1 = global::get_time();
+   cout << "coupling_table : " << dim 
+	<< " time=" << global::get_duration(t1-t0) << " s" 
+	<< endl; 
 }
 
 // compare with full construction
@@ -126,15 +131,20 @@ void sparse_hamiltonian::get_C11C22_C00(const onspace& space,
 				        const coupling_table& ctabA,
 				        const integral::two_body& int2e,
 				        const integral::one_body& int1e){
+   double t = 0.0;
+
    // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by single/double
    // 			    {I_B,J_B} differ by zero (I_B=J_B)
    for(int ia=0; ia<pspace.dimA; ia++){
+
+      auto t0 = global::get_time();
+
       for(int ja : ctabA.C11[ia]){
 	 for(int ib : pspace.bsetA[ia]){
 	    int j = pspace.dpt[ja][ib];
 	    if(j>=0){
 	       int i = pspace.dpt[ia][ib];
-	       double Hij = fock::get_HijS(space[i], space[j], int2e, int1e, 2); 
+	       double Hij = fock::get_HijS_fast(space[i], space[j], int2e, int1e);
 	       connect[i].emplace_back(j,Hij);
 	    }
 	 }
@@ -144,12 +154,22 @@ void sparse_hamiltonian::get_C11C22_C00(const onspace& space,
 	    int j = pspace.dpt[ja][ib];
 	    if(j>=0){
 	       int i = pspace.dpt[ia][ib];
+	       //double Hij = fock::get_HijD_fast(space[i], space[j], int2e, int1e); 
 	       double Hij = fock::get_HijD(space[i], space[j], int2e, int1e, 2); 
 	       connect[i].emplace_back(j,Hij);
 	    }
 	 }
       }
+      
+      auto t1 = global::get_time();
+      cout << "ia=" << ia 
+	   << " C11=" << ctabA.C11[ia].size() 
+	   << " C22=" << ctabA.C22[ia].size() 
+	   << " t=" << global::get_duration(t1-t0) << " s" << endl;
+
+      t += global::get_duration(t1-t0);
    } // ia
+   cout << "t=" << t << " tav=" << t/pspace.dimA << endl;
 }
 
 // C00_A*(C11+C22)_B
@@ -166,7 +186,7 @@ void sparse_hamiltonian::get_C00_C11C22(const onspace& space,
 	    int j = pspace.dpt[ia][jb];
 	    if(j>=0){
 	       int i = pspace.dpt[ia][ib];
-	       double Hij = fock::get_HijS(space[i], space[j], int2e, int1e, 2); 
+	       double Hij = fock::get_HijS_fast(space[i], space[j], int2e, int1e); 
 	       connect[i].emplace_back(j,Hij);
 	    }
 	 }
@@ -176,6 +196,7 @@ void sparse_hamiltonian::get_C00_C11C22(const onspace& space,
 	    int j = pspace.dpt[ia][jb];
 	    if(j>=0){
 	       int i = pspace.dpt[ia][ib];
+	       //double Hij = fock::get_HijD_fast(space[i], space[j], int2e, int1e); 
 	       double Hij = fock::get_HijD(space[i], space[j], int2e, int1e, 2); 
 	       connect[i].emplace_back(j,Hij);
 	    }
@@ -200,7 +221,8 @@ void sparse_hamiltonian::get_C11_C11(const onspace& space,
    	    for(int jb : ctabB.C11[ib]){
    	       int j = pspace.dpt[ja][jb];
    	       if(j>=0){
-	          double Hij = get_HijD(space[i], space[j], int2e, int1e, 2);
+	          //double Hij = fock::get_HijD_fast(space[i], space[j], int2e, int1e);
+	          double Hij = fock::get_HijD(space[i], space[j], int2e, int1e, 2); 
 	          connect[i].emplace_back(j,Hij);
 	       } // j>0
 	    } // jb

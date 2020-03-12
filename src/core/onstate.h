@@ -5,21 +5,32 @@
 #include <cassert>
 #include <string>
 #include <vector>
+#include <tuple>
 
 namespace fock{
 
 // assuming i < 64, return 0[i=0],1[i=1],11[i=2],...
 // must be inlined in header
-inline unsigned long allones(const int& n){
+inline unsigned long get_ones(const int& n){
    return (1ULL<<n) - 1ULL; // parenthesis must be added due to priority
 }
 
+// count the number of nonzero bits
 inline int popcnt(unsigned long x)
 {
-   x = (x & 0x5555555555555555ULL) + ((x >> 1) & 0x5555555555555555ULL);
-   x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
-   x = (x & 0x0F0F0F0F0F0F0F0FULL) + ((x >> 4) & 0x0F0F0F0F0F0F0F0FULL);
-   return (x * 0x0101010101010101ULL) >> 56;
+#ifdef GNU
+   return __builtin_popcount(x);
+#else
+   // https://en.wikipedia.org/wiki/Hamming_weight
+   const uint64_t m1  = 0x5555555555555555; //binary: 0101...
+   const uint64_t m2  = 0x3333333333333333; //binary: 00110011..
+   const uint64_t m4  = 0x0f0f0f0f0f0f0f0f; //binary:  4 zeros,  4 ones ...
+   const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0,1,2,3...
+   x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
+   x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
+   x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
+   return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+#endif
 }
 
 class bit_proxy{
@@ -75,6 +86,7 @@ class onstate{
       // core functions
       int len() const{ return _len; }
       int size() const{ return _size; }
+      unsigned long repr(const int i) const{ return _repr[i]; }
       // getocc: only for the case where onstate is read-only (const) 
       bool operator [](const int i) const{ 
 	  assert(i < _size);
@@ -140,7 +152,7 @@ class onstate{
       
       // creation/annihilation operators related subroutines
       //
-      // phase to convert to |ON>=f[odd,even]|odd>|even>
+      // phase to convert |ON>=f[odd,even]|odd>|even>
       // f[odd,even] = sum_{i=0}^{n-1} f[2i+1] (sum_{j=0}^{i} f[2j])
       // n=3: f1*f0
       //      f3*(f2+f0)
@@ -157,21 +169,25 @@ class onstate{
       }
       // parity: = sum_k(-1)^fk for k in [0,n) 
       int parity(const int& n) const{
+	 assert(n>=0 && n<_size);     
          int nonzero = 0;
 	 for(int i=0; i<n/64; i++){
             nonzero += popcnt(_repr[i]);
 	 }
-	 nonzero += popcnt((_repr[n/64] & allones(n%64)));
+	 nonzero += popcnt((_repr[n/64] & get_ones(n%64)));
 	 return -2*(nonzero%2)+1;
       }
       // parity: = sum_k(-1)^fk for k in [start,end) 
       int parity(const int& start, const int& end) const{
-         unsigned long mask = allones(start%64);
+	 assert(start>=0 && start<_size);
+         assert(end>=0 && start<_size);
+         assert(start<end);	 
+         unsigned long mask = get_ones(start%64);
          unsigned long res = _repr[start/64] & mask;
          int nonzero = -popcnt(res);
          for(int i=start/64; i<end/64; i++)
 	    nonzero += popcnt(_repr[i]);
-         mask = allones(end%64);
+         mask = get_ones(end%64);
          res = _repr[end/64] & mask;	 
 	 nonzero += popcnt(res);
 	 return -2*(nonzero%2)+1;
@@ -213,11 +229,24 @@ class onstate{
       }
       // connection type: (2,0) for <bra|c1^+c2^+|ket>
       // 	       also implies <bra|c1^+c2^+k^+k|ket> 
-      std::pair<int,int> diff_type(const onstate& ket) const;
+      std::pair<int,int> diff_type(const onstate& ket) const{
+         unsigned long idiff,icre,iann;
+	 std::pair<int,int> p(0,0);
+         for(int i=_len-1; i>=0; i--){
+            idiff = _repr[i] ^ ket._repr[i];
+            icre = idiff & _repr[i];
+            iann = idiff & ket._repr[i];
+            p.first  += popcnt(icre);
+            p.second += popcnt(iann);
+         }
+         return p; // ndiff = p.first + p.second
+      }
       // orbital difference
       void diff_orb(const onstate& ket,
 		    std::vector<int>& cre,
 		    std::vector<int>& ann) const;
+      void diff_orb(const onstate& ket,
+      		    int* cre, int* ann) const;
       // even strings 
       onstate get_even() const{
          assert(_size%2 == 0);
@@ -345,10 +374,7 @@ class onstate{
       unsigned long* _repr;
 };
 
-// compare two states
-std::pair<int,int> diff_type(const onstate& bra, 
-		 	     const onstate& ket);
-
+// functions for comparing two states
 void diff_orb(const onstate& bra, const onstate& ket,
 	      std::vector<int>& cre, std::vector<int>& ann);
 

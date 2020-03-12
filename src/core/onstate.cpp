@@ -3,6 +3,8 @@
 #include "onstate.h"
 #include "../settings/global.h"
 
+#include <bitset>
+
 using namespace std;
 using namespace fock;
 
@@ -135,24 +137,67 @@ void onstate::diff_orb(const onstate& ket,
       idiff = _repr[i] ^ ket._repr[i];
       icre = idiff & _repr[i];
       iann = idiff & ket._repr[i];
-      for(int j=63; j>=0; j--)
-         if(icre & 1ULL<<j) cre.push_back(i*64+j);
-      for(int j=63; j>=0; j--)
-	 if(iann & 1ULL<<j) ann.push_back(i*64+j);
-   }
+#ifdef GNU
+      while(icre != 0){
+         int j = 63-__builtin_clzl(icre);
+         cre.push_back(i*64+j);
+         icre &= ~(1ULL<<j);
+      }
+      while(iann != 0){
+	 int j = 63-__builtin_clzl(iann);
+	 ann.push_back(i*64+j);
+	 iann &= ~(1ULL<<j);
+      }
+#else
+      for(int j=63; j>=0; j--){
+         if(icre & 1ULL<<j){
+	    cre.push_back(i*64+j);
+	 }
+      }
+      for(int j=63; j>=0; j--){
+	 if(iann & 1ULL<<j){
+	    ann.push_back(i*64+j);
+	 }
+      }
+#endif
+   } // i
 }
 
-// connection type
-pair<int,int> onstate::diff_type(const onstate& ket) const{
+void onstate::diff_orb(const onstate& ket,
+	  	       int* cre, int* ann) const{
    unsigned long idiff,icre,iann;
-   pair<int,int> p(0,0);
+   int ic=0, ia=0;
    // from higher position
    for(int i=_len-1; i>=0; i--){
       idiff = _repr[i] ^ ket._repr[i];
       icre = idiff & _repr[i];
       iann = idiff & ket._repr[i];
-      p.first  += fock::popcnt(icre);
-      p.second += fock::popcnt(iann);
-   }
-   return p;
+#ifdef GNU
+      while(icre != 0){
+         int j = 63-__builtin_clzl(icre);
+	 cre[ic] = i*64+j;
+	 ic++;
+         icre &= ~(1ULL<<j);
+      }
+      while(iann != 0){
+	 int j = 63-__builtin_clzl(iann);
+	 ann[ia] = i*64+j;
+	 ia++;
+	 iann &= ~(1ULL<<j);
+      }
+#else
+      for(int j=63; j>=0; j--){
+         if(icre & 1ULL<<j){
+	    cre[ic] += i*64+j;
+	    ic++;
+	 }
+      }
+      for(int j=63; j>=0; j--){
+	 if(iann & 1ULL<<j){
+	    ann[ia] += i*64+j;
+	    ia++;
+	 }
+      }
+#endif
+   } // i
 }
