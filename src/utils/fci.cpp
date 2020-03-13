@@ -5,6 +5,7 @@
 #include "../core/hamiltonian.h"
 #include "../core/linalg.h"
 #include "../core/tools.h"
+#include "../core/analysis.h" // rdm debug
 #include "fci.h"
 
 using namespace std;
@@ -57,6 +58,9 @@ product_space::product_space(const onspace& space){
 	 dpt[ia][b] = d;
       }
    }
+   // spaceA/B
+   for(const auto& p : umapA) spaceA.push_back(p.first);
+   for(const auto& p : umapB) spaceB.push_back(p.first);
 }
 
 // constructor
@@ -333,4 +337,153 @@ void fci::ci_solver(vector<double>& es,
 
    cout << "timing for fci::ci_solver : " << setprecision(2) 
 	<< global::get_duration(tf-t0) << " s" << endl;
+}
+
+// <Psi1|p^+q|Psi2> (NR case)
+void fci::get_rdm1(const onspace& space,
+ 		   const vector<double>& civec1,
+		   const vector<double>& civec2,
+		   matrix& rdm1){
+   cout << "\nfci:get_rdm1" << endl;
+   bool debug = true;
+   auto t0 = global::get_time();
+   // setup product_space
+   product_space pspace(space);
+   // setupt coupling_table
+   coupling_table ctabA(pspace.umapA);
+   // diagonal term
+   for(size_t i=0; i<space.size(); i++){
+      // c1[i]<Di|p^+q|Di>c2[i]
+      vector<int> olst;
+      space[i].get_occ(olst);
+      for(int p : olst){
+         rdm1(p,p) += civec1[i]*civec2[i];
+      }
+   }
+   // <I_A,I_B|pA^+qA|J_A,J_B> - essentially follow from construction of H_connect
+   for(int ia=0; ia<pspace.dimA; ia++){
+      for(int ja : ctabA.C11[ia]){
+	 int p[1], q[1];
+         pspace.spaceA[ia].diff_orb(pspace.spaceA[ja],p,q);
+	 int p0 = 2*p[0], q0 = 2*q[0];
+         for(const auto& pb : pspace.rowA[ia]){
+            int ib = pb.first;
+            int i = pb.second;
+            int j = pspace.dpt[ja][ib];
+            if(j>i){
+               auto sgn = space[i].parity(p0)*space[j].parity(q0);
+               rdm1(p0,q0) += sgn*civec1[i]*civec2[j];
+               rdm1(q0,p0) += sgn*civec1[j]*civec2[i];
+            }
+	 }
+      }
+   }
+   // <I_A,I_B|pB^+qB|J_A,J_B>
+   for(int ib=0; ib<pspace.dimB; ib++){
+      for(int jb : ctabB.C11[ib]){
+         int p[1], q[1];
+	 pspace.spaceB[ib].diff_orb(pspace.spaceB[jb],p,q);
+         int p0 = 2*p[0]+1, q0 = 2*q[0]+1;
+         for(const auto& pa : pspace.colB[ib]){
+            int ia = pa.first;
+            int i = pa.second;
+            int j = pspace.dpt[ia][jb];
+            if(j>i){
+               double sgn = space[i].parity(p0)*space[j].parity(q0); 
+               rdm1(p0,q0) += sgn*civec1[i]*civec2[j];
+               rdm1(q0,p0) += sgn*civec1[j]*civec2[i];
+            }
+	 }
+      }
+   } // ib
+   auto t1 = global::get_time();
+   if(debug) cout << "timing for rdm1 : " << setprecision(2) 
+		  << global::get_duration(t1-t0) << " s" << endl;
+   /* 
+   // debug by comparing against the brute-force implementation 
+   matrix rdm1b(rdm1.rows(),rdm1.cols());
+   fock::get_rdm1(space, civec1, civec2, rdm1b);
+   auto rdm1_diff = rdm1b - rdm1;
+   cout << "rdm1_diff=" << normF(rdm1_diff) << endl;
+   auto t2 = global::get_time();
+   if(debug) cout << "timing for rdm1 : " << setprecision(2) 
+		  << global::get_duration(t2-t1) << " s" << endl;
+   */
+}
+
+// <Psi|p0^+p1^+q1q0|Psi> (p0>p1, q0>q1)
+void fci::get_rdm2(const onspace& space,
+ 		   const vector<double>& civec1,
+		   const vector<double>& civec2,
+		   matrix& rdm2){
+   cout << "\nfci:get_rdm2" << endl;
+   bool debug = true;
+   auto t0 = global::get_time();
+   // setup product_space
+   product_space pspace(space);
+   // setupt coupling_table
+   coupling_table ctabA(pspace.umapA);
+   // diagonal term
+/*
+   for(size_t i=0; i<space.size(); i++){
+      // c1[i]<Di|p0^+p1^+p1p0|Di>c2[i]
+      vector<int> olst;
+      space[i].get_occ(olst);
+      for(int idx=0; idx<olst.size(); idx++){
+         auto p0 = olst[idx]; 
+	 for(int jdx=0; jdx<idx; jdx++){
+            auto p1 = olst[jdx];
+	    auto p01 = tools::canonical_pair0(p0,p1);
+	    rdm2(p01,p01) += civec1[i]*civec2[i]; 
+	 }
+      }
+      // c1[i]<Di|p0^+p1^+q1q0|Dj>c2[j] + c1[j]<Dj|p0^+p1^+q1q0|Di>c2[i] (j<i)
+      for(size_t j=0; j<i; j++){
+         auto ndiff = space[i].diff_num(space[j]); 
+	 // <Di|p0^+k^+kq0|Dj>
+	 if(ndiff == 2){
+            vector<int> cre,ann;
+            space[i].diff_orb(space[j],cre,ann);
+	    auto p0 = cre[0];
+	    auto q0 = ann[0];
+            auto sgn0 = space[i].parity(p0)*space[j].parity(q0);
+	    for(int idx=0; idx<olst.size(); idx++){
+               auto p1 = olst[idx];
+	       if(p1 == p0) continue; 
+               auto sgn = sgn0;
+	       auto p01 = tools::canonical_pair0(p0,p1);
+	       if(p0 < p1) sgn *= -1; // sign coming from ordering of operators
+	       // p1 must be not identical to q0, otherwise it cannot be in olst 
+	       auto q01 = tools::canonical_pair0(q0,p1);
+	       if(q0 < p1) sgn *= -1; 
+               rdm2(p01,q01) += sgn*civec1[i]*civec2[j];
+               rdm2(q01,p01) += sgn*civec1[j]*civec2[i];
+	    }
+	 // <Di|p0^+p1^+q1q0|Dj>
+	 }else if(ndiff == 4){
+            vector<int> cre,ann;
+            space[i].diff_orb(space[j],cre,ann);
+	    auto p0 = cre[0], p1 = cre[1];
+	    auto q0 = ann[0], q1 = ann[1];
+	    auto p01 = tools::canonical_pair0(p0,p1);
+	    auto q01 = tools::canonical_pair0(q0,q1);
+            auto sgn = space[i].parity(p0)*space[i].parity(p1)
+		     * space[j].parity(q0)*space[j].parity(q1);
+            rdm2(p01,q01) += sgn*civec1[i]*civec2[j];
+            rdm2(q01,p01) += sgn*civec1[j]*civec2[i];
+	 }
+      } // j
+   } // i
+*/
+   auto t1 = global::get_time();
+   if(debug) cout << "timing for rdm1 : " << setprecision(2) 
+		  << global::get_duration(t1-t0) << " s" << endl;
+   // debug by comparing against the brute-force implementation 
+   matrix rdm2b(rdm2.rows(),rdm2.cols());
+   fock::get_rdm2(space, civec1, civec2, rdm2b);
+   auto rdm2_diff = rdm2b - rdm2;
+   cout << "rdm2_diff=" << normF(rdm2_diff) << endl;
+   auto t2 = global::get_time();
+   if(debug) cout << "timing for rdm2 : " << setprecision(2) 
+		  << global::get_duration(t2-t1) << " s" << endl;
 }

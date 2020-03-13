@@ -18,6 +18,7 @@ struct product_space{
    public:
       // second int is used for indexing in constructing bsetA, asetB 
       std::map<fock::onstate,int> umapA, umapB;
+      fock::onspace spaceA, spaceB;
       std::vector<std::vector<std::pair<int,int>>> rowA, colB;  
       std::vector<int> nnzA, nnzB;
       // dpt - a table to store the set of {Det} in direct product space
@@ -90,6 +91,18 @@ void get_initial(const fock::onspace& space,
 		 const double ecore,
 		 vector<double>& Diag,
 		 linalg::matrix& v0);
+
+// <Psi1|p^+q|Psi2> (NR case)
+void get_rdm1(const fock::onspace& space,
+ 	      const std::vector<double>& civec1,
+	      const std::vector<double>& civec2,
+	      linalg::matrix& rdm1);
+
+// <Psi|p0^+p1^+q1q0|Psi> (p0>p1, q0>q1)
+void get_rdm2(const fock::onspace& space,
+ 	      const std::vector<double>& civec1,
+	      const std::vector<double>& civec2,
+	      linalg::matrix& rdm2);
 
 } // fci
 

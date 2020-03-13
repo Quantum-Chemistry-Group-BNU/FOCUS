@@ -30,10 +30,10 @@ int tests::test_sci(){
    double ecore;
 
    int k, ne;
-   //integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_lih");
-   //k = 6*2; ne = 2; 
-   integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_c2");
-   k = 12*2; ne = 8; 
+   integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_lih");
+   k = 6*2; ne = 2; 
+   //integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_c2");
+   //k = 12*2; ne = 8; 
    onspace fci_space = get_fci_space(k/2,ne/2,ne/2);
    int dim = fci_space.size();
 
@@ -50,14 +50,15 @@ int tests::test_sci(){
    transform(v0.cbegin(),v0.cend(),sigs.begin(),
              [](const double& x){return pow(x,2);}); // pi=|ci|^2
    auto SvN = vonNeumann_entropy(sigs);
-   assert(abs(es[0]+75.48440859785963) < 1.e-8);
-   assert(abs(SvN-0.7211959135921441) < 1.e-5);
-   exit(1);
+   //assert(abs(es[0]+75.48440859785963) < 1.e-8);
+   //assert(abs(SvN-0.7211959135921441) < 1.e-5);
 
    // compute rdm1
    linalg::matrix rdm1(k,k);
-   fock::get_rdm1(fci_space,v0,v0,rdm1);
+   fci::get_rdm1(fci_space,v0,v0,rdm1);
    cout << "tr(RDM1)=" << rdm1.trace() << endl;
+   exit(1);
+
    // compute rdm2
    int k2 = k*(k-1)/2;
    linalg::matrix rdm2(k2,k2);
