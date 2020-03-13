@@ -138,7 +138,7 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
 	    int ib = pb.first;
 	    int i = pb.second;
 	    int j = pspace.dpt[ja][ib];
-	    if(j>=0){
+	    if(j>i){
 	       double Hij = fock::get_HijS(space[i], space[j], int2e, int1e);
 	       connect[i].emplace_back(j,Hij);
 	    }
@@ -149,7 +149,7 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
 	    int ib = pb.first;
 	    int i = pb.second;
 	    int j = pspace.dpt[ja][ib];
-	    if(j>=0){
+	    if(j>i){
 	       double Hij = fock::get_HijD(space[i], space[j], int2e, int1e); 
 	       connect[i].emplace_back(j,Hij);
 	    }
@@ -172,14 +172,14 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
          int i = pa.second;
          for(int jb : ctabB.C11[ib]){
 	    int j = pspace.dpt[ia][jb];
-	    if(j>=0){
+	    if(j>i){
 	       double Hij = fock::get_HijS(space[i], space[j], int2e, int1e); 
 	       connect[i].emplace_back(j,Hij);
 	    }
 	 }
          for(int jb : ctabB.C22[ib]){
 	    int j = pspace.dpt[ia][jb];
-	    if(j>=0){
+	    if(j>i){
 	       double Hij = fock::get_HijD(space[i], space[j], int2e, int1e); 
 	       connect[i].emplace_back(j,Hij);
 	    }
@@ -200,7 +200,7 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
             int i = pb.second;
    	    for(int jb : ctabB.C11[ib]){
    	       int j = pspace.dpt[ja][jb];
-   	       if(j>=0){
+   	       if(j>i){
 	          double Hij = fock::get_HijD(space[i], space[j], int2e, int1e);
 	          connect[i].emplace_back(j,Hij);
 	       } // j>0
@@ -217,19 +217,21 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
    }
 }
 
-// to implement i>j constraint
-
 // matrix-vector product using stored H
 void fci::get_Hx(double* y,
 	         const double* x,
 	         const sparse_hamiltonian& sparseH){
+   // y[i] = sparseH.diag[i]*x[i]; 
+   transform(sparseH.diag.begin(), sparseH.diag.end(), x, y,
+	     [](const double& d, const double& c){return d*c;}); 
    // y[i] = sum_j H[i,j]*x[j] 
    for(int i=0; i<sparseH.dim; i++){
-      y[i] = sparseH.diag[i]*x[i];
       for(int jdx=0; jdx<sparseH.nnz[i]; jdx++){
          int j = sparseH.connect[i][jdx].first;
 	 double Hij = sparseH.connect[i][jdx].second;
-	 y[i] += Hij*x[j];
+	 assert(j > i);
+	 y[i] += Hij*x[j]; // j>i
+	 y[j] += Hij*x[i]; // j<i
       }
    }
 }
@@ -324,6 +326,7 @@ void fci::ci_solver(vector<double>& es,
 
    // solve
    solver.solve_iter(es.data(), vs.data(), v0.data());
+   //solver.solve_diag(es.data(), vs.data());
    auto tf = global::get_time();
    if(debug) cout << "timing for solve_iter : " << setprecision(2) 
 		  << global::get_duration(tf-te) << " s" << endl;

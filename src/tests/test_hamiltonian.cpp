@@ -25,15 +25,15 @@ int tests::test_hamiltonian(){
    
    double thresh = 1.e-8;
 
-   // just for LiH
-   onspace space1 = get_fci_space(4,2);
-   onspace space2 = get_fci_space(6,2,2);
-
    // read integral
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
    integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_lih");
+
+   // just for LiH
+   onspace space1 = get_fci_space(4,2);
+   onspace space2 = get_fci_space(6,2,2);
 
    // test get_Hij
    cout << space2[16] << endl;

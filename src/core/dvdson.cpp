@@ -14,7 +14,14 @@ void dvdsonSolver::solve_diag(double* es, double* vs){
    matrix id = identity_matrix(ndim);
    matrix H(ndim,ndim);
    HVecs(ndim,H.data(),id.data());
-   cout << "symmetric_diff=" << symmetric_diff(H) << endl;
+   // check symmetry
+   auto sdiff = symmetric_diff(H);
+   cout << "|H-H.T|=" << sdiff << endl;
+   if(sdiff > 1.e-5){
+      H.print("H");
+      cout << "error in dvdsonSolver::solve_diag: H is not symmetric!" << endl;
+      exit(1);
+   }
    // eigenvalue problem
    vector<double> e(ndim);
    matrix V(H);
