@@ -6,7 +6,7 @@
 #include "../core/linalg.h"
 #include "../core/tools.h"
 #include "../settings/global.h"
-#include "../utils/sci.h"
+#include "../utils/fci.h"
 #include <iomanip>
 #include <chrono>
 #include <cmath>
@@ -64,7 +64,7 @@ int tests::test_fci(){
    int2e_tmp = int2e.get_AAAA();
    //----------------------------------------------
    ci_solver(es, vs, fci_space, int2e_tmp, int1e_tmp, ecore);
-   sci::ci_solver(es1, vs1, fci_space, int2e_tmp, int1e_tmp, ecore);
+   fci::ci_solver(es1, vs1, fci_space, int2e_tmp, int1e_tmp, ecore);
    compare_eigs(es, es1);
    double e1e0 = -6.043786524747;
    assert(abs(es[0]-e1e0) < thresh);
@@ -76,7 +76,7 @@ int tests::test_fci(){
    int2e_tmp = int2e.get_AAAA() + int2e.get_BBBB();
    //----------------------------------------------
    ci_solver(es, vs, fci_space, int2e_tmp, int1e_tmp, ecore);
-   sci::ci_solver(es1, vs1, fci_space, int2e_tmp, int1e_tmp, ecore);
+   fci::ci_solver(es1, vs1, fci_space, int2e_tmp, int1e_tmp, ecore);
    compare_eigs(es, es1);
    assert(abs(es[0]-2*e1e0) < thresh);
 
@@ -88,7 +88,7 @@ int tests::test_fci(){
    int2e_tmp = int2e.get_BBAA();
    //----------------------------------------------
    ci_solver(es, vs, fci_space, int2e_tmp, int1e_tmp, ecore);
-   sci::ci_solver(es1, vs1, fci_space, int2e_tmp, int1e_tmp, ecore);
+   fci::ci_solver(es1, vs1, fci_space, int2e_tmp, int1e_tmp, ecore);
    compare_eigs(es, es1);
    assert(abs(es[0]-0.9667157752) < thresh);
 */
@@ -101,7 +101,7 @@ int tests::test_fci(){
    //----------------------------------------------
    ecore = ecore0; 
    ci_solver(es, vs, fci_space, int2e_tmp, int1e_tmp, ecore);
-   sci::ci_solver(es1, vs1, fci_space, int2e_tmp, int1e_tmp, ecore);
+   fci::ci_solver(es1, vs1, fci_space, int2e_tmp, int1e_tmp, ecore);
    compare_eigs(es, es1);
    double e0 = -7.873881390340;
    assert(abs(es[0]-e0) < thresh);

@@ -10,28 +10,20 @@ double get_Hii(const onstate& state1,
 	       const integral::two_body& int2e,
 	       const integral::one_body& int1e);
 
-double get_HijS(const onstate& state1, const onstate& state2,
+double get_HijS(const onstate& state1, 
+		const onstate& state2,
 	        const integral::two_body& int2e,
-	        const integral::one_body& int1e,
-		const int iop);
+	        const integral::one_body& int1e);
 
-double get_HijD(const onstate& state1, const onstate& state2,
+double get_HijD(const onstate& state1, 
+		const onstate& state2,
 	        const integral::two_body& int2e,
-	        const integral::one_body& int1e,
-		const int iop);
+	        const integral::one_body& int1e);
 
-double get_Hij(const onstate& state1, const onstate& state2,
+double get_Hij(const onstate& state1, 
+	       const onstate& state2,
 	       const integral::two_body& int2e,
 	       const integral::one_body& int1e);
-
-// fast version
-double get_HijS_fast(const onstate& state1, const onstate& state2,
-	      	     const integral::two_body& int2e,
-	      	     const integral::one_body& int1e);
-
-double get_HijD_fast(const onstate& state1, const onstate& state2,
-	      	     const integral::two_body& int2e,
-	      	     const integral::one_body& int1e);
 
 }
 

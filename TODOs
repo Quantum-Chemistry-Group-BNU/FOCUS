@@ -31,7 +31,8 @@
  202003xx selected ci (sort in incomplete space?)
  20200309 - substrings and coupling table
  202003xx - efficient algorithm for direct CI 
- 202003xx - optimization
+ 202003xx - optimization (use array instead of vector for diff_orb)
+ 202003xx - optimized RDM implementation
  2020xxxx - selection procedure 
 	    [control the space size for large problem]
 

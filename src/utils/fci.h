@@ -8,7 +8,7 @@
 #include <tuple>
 #include <map>
 
-namespace sci{
+namespace fci{
 
 // represent space of dets by direct product structure
 struct product_space{
@@ -51,7 +51,7 @@ struct coupling_table{
       */
 };
 
-// linked list - store each row H[o] as a list
+// linked list - store each row H[i] as a list
 struct sparse_hamiltonian{
    public:
       sparse_hamiltonian(const fock::onspace& space,
@@ -64,33 +64,14 @@ struct sparse_hamiltonian{
       void debug(const fock::onspace& space,
 	 	 const integral::two_body& int2e,
 		 const integral::one_body& int1e);
-      void get_C00_C00(const fock::onspace& space,
-	 	       const integral::two_body& int2e,
-		       const integral::one_body& int1e,
-		       const double ecore);
-      void get_C11C22_C00(const fock::onspace& space,
-		          const product_space& pspace,
-		          const coupling_table& ctabA,
-		          const integral::two_body& int2e,
-		          const integral::one_body& int1e);
-      void get_C00_C11C22(const fock::onspace& space,
-		          const product_space& pspace,
-		          const coupling_table& ctabB,
-		          const integral::two_body& int2e,
-		          const integral::one_body& int1e);
-      void get_C11_C11(const fock::onspace& space,
-		       const product_space& pspace,
-		       const coupling_table& ctabA,
-		       const coupling_table& ctabB,
-		       const integral::two_body& int2e,
-		       const integral::one_body& int1e);
    public:
       int dim;
-      std::vector<std::vector<std::pair<int,double>>> connect; 
+      std::vector<double> diag; // H[i,i]
+      std::vector<std::vector<std::pair<int,double>>> connect; // H[i>j] 
       std::vector<int> nnz;
 };
 
-// sci
+// fci
 void ci_solver(std::vector<double>& es,
 	       linalg::matrix& vs,	
 	       const fock::onspace& space,
@@ -111,6 +92,6 @@ void get_initial(const fock::onspace& space,
 		 vector<double>& Diag,
 		 linalg::matrix& v0);
 
-} // sci
+} // fci
 
 #endif

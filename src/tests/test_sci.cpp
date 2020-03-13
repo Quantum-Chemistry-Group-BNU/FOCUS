@@ -6,7 +6,7 @@
 #include "../core/tools.h"
 #include "../core/hamiltonian.h"
 #include "../settings/global.h"
-#include "../utils/sci.h"
+#include "../utils/fci.h"
 #include <iostream>
 #include <iomanip>
 #include <chrono>
@@ -39,7 +39,7 @@ int tests::test_sci(){
    vector<double> es(nroot,0.0);
    linalg::matrix vs(dim,nroot);
 
-   sci::ci_solver(es, vs, fci_space, int2e, int1e, ecore);
+   fci::ci_solver(es, vs, fci_space, int2e, int1e, ecore);
 
    // analysis 
    vector<double> v0(vs.col(0),vs.col(0)+dim);

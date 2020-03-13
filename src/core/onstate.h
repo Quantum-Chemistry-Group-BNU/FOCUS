@@ -181,7 +181,7 @@ class onstate{
       int parity(const int& start, const int& end) const{
 	 assert(start>=0 && start<_size);
          assert(end>=0 && start<_size);
-         assert(start<end);	 
+         assert(start<end);
          unsigned long mask = get_ones(start%64);
          unsigned long res = _repr[start/64] & mask;
          int nonzero = -popcnt(res);
@@ -266,6 +266,7 @@ class onstate{
          return state;
       }
 
+      // 20200313: NOT efficient in a number of calls  
       // occupied-virtual lists 
       void get_occ(std::vector<int>& olst) const{
          for(int i=0; i<_size; i++){
@@ -374,10 +375,6 @@ class onstate{
       unsigned long* _repr;
 };
 
-// functions for comparing two states
-void diff_orb(const onstate& bra, const onstate& ket,
-	      std::vector<int>& cre, std::vector<int>& ann);
-
-}
+} // fock
 
 #endif

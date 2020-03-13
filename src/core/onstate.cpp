@@ -188,13 +188,13 @@ void onstate::diff_orb(const onstate& ket,
 #else
       for(int j=63; j>=0; j--){
          if(icre & 1ULL<<j){
-	    cre[ic] += i*64+j;
+	    cre[ic] = i*64+j;
 	    ic++;
 	 }
       }
       for(int j=63; j>=0; j--){
 	 if(iann & 1ULL<<j){
-	    ann[ia] += i*64+j;
+	    ann[ia] = i*64+j;
 	    ia++;
 	 }
       }
