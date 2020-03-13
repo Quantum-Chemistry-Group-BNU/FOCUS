@@ -52,7 +52,7 @@ matrix fock::get_Ham(const onspace& space,
 		     const integral::two_body& int2e,
 		     const integral::one_body& int1e,
 		     const double ecore){
-   cout << "\nfock::fci_getHam" << endl; 
+   cout << "\nfock::get_Ham" << endl; 
    auto dim = space.size();
    matrix H(dim,dim);
    // column major
@@ -70,7 +70,7 @@ vector<double> fock::get_Hdiag(const onspace& space,
 			       const integral::two_body& int2e,
 			       const integral::one_body& int1e,
 			       const double ecore){
-   cout << "\nfock::fci_getHdiag" << endl;
+   cout << "\nfock::get_Hdiag" << endl;
    auto dim = space.size();
    vector<double> diag(dim);
    for(size_t i=0; i<dim; i++){
@@ -79,7 +79,7 @@ vector<double> fock::get_Hdiag(const onspace& space,
    return diag;
 }
 
-// y = H*x
+// Brute-force construction of y = H*x
 void fock::get_Hx(double* y,
 		  const double* x,
 		  const onspace& space,
