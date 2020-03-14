@@ -29,19 +29,22 @@
 --- SCI ---
 
  selected ci:
- 20200309 - substrings and coupling table
- 20200313 - efficient algorithm for direct CI 
- 	    optimization (use array instead of vector for diff_orb)
- 202003xx - optimized RDM implementation
- 2020xxxx - selection procedure 
-	    [control the space size for large problem]
+
+ 20200313 efficient algorithm for direct CI 
+          - substrings and coupling table
+ 	  - optimization [use array instead of vector for diff_orb]
+          - optimization [use direct product structure in forming H]
+ 202003xx optimized RDM implementation (reuse information)
+
+ 2020xxxx selection procedure 
+	  [control the space size for large problem]
 
  pt2 util:
- 2020xxxx - compute e2 
+ 2020xxxx compute e2 
  
  storage/serialization:
- 2020xxxx - serialization on disk
- 2020xxxx - load space/vector for analysis 
+ 2020xxxx serialization on disk
+ 2020xxxx load space/vector for analysis 
 
 --- DMRG --- 
 

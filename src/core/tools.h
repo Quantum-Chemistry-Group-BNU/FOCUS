@@ -14,8 +14,10 @@ namespace tools{
 
 // compress symmetric (i,j) [i>j] pair:
 // 10[0]
-// 20[1] 21[2]
-// 30[3] 31[4] 32[5]
+// 20[1]  21[2]
+// 30[3]  31[4]  32[5]
+// 40[6]  41[7]  42[8]  43[9]
+// 50[10] 51[11] 52[12] 53[13] 54[14] = 5*6/2 - 1 
 inline size_t canonical_pair0(const size_t i, const size_t j){
    assert(i != j);
    return std::max(i,j)*(std::max(i,j)-1)/2 + std::min(i,j);

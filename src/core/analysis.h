@@ -27,6 +27,9 @@ void get_rdm2(const onspace& space,
 	      const vector<double>& civec2,
 	      linalg::matrix& rdm2);
 
+// from rdm2 for particle number conserving wf
+linalg::matrix get_rdm1_from_rdm2(const linalg::matrix& rdm2);
+
 // E1
 double get_e1(const linalg::matrix& rdm1,
 	      const integral::one_body& int1e);
@@ -35,6 +38,18 @@ double get_e1(const linalg::matrix& rdm1,
 double get_e2(const linalg::matrix& rdm2,
 	      const integral::two_body& int2e);
 
-}
+// Etot
+double get_etot(const linalg::matrix& rdm1,
+		const linalg::matrix& rdm2,
+	        const integral::two_body& int2e,
+	        const integral::one_body& int1e,
+	        const double ecore);
+
+double get_etot(const linalg::matrix& rdm2,
+	        const integral::two_body& int2e,
+	        const integral::one_body& int1e,
+	        const double ecore);
+
+} // fock
 
 #endif

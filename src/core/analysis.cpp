@@ -4,6 +4,7 @@
 #include "tools.h"
 #include "matrix.h"
 #include "integral.h"
+#include "linalg.h"
 
 using namespace std;
 using namespace fock;
@@ -141,8 +142,52 @@ void fock::get_rdm2(const onspace& space,
    } // i
 }
 
+// from rdm2 for particle number conserving wf
+matrix fock::get_rdm1_from_rdm2(const matrix& rdm2){
+   cout << "\nfock:get_rdm1_from_rdm2" << endl;
+   int k2 = rdm2.rows();
+   auto pr = tools::inverse_pair0(k2-1);
+   assert(pr.first == pr.second+1);
+   int k = pr.first+1;   
+   matrix rdm1(k,k);
+   // <p^+r^+rq>
+   for(int p=0; p<k; p++){
+      for(int q=0; q<k; q++){
+         for(int r=0; r<k; r++){
+            if(r == p || r == q) continue;		 
+	    auto pr = tools::canonical_pair0(p,r);
+	    auto qr = tools::canonical_pair0(q,r);
+	    double sgn_pr = p>r? 1 : -1;
+	    double sgn_qr = q>r? 1 : -1;
+	    rdm1(p,q) += sgn_pr*sgn_qr*rdm2(pr,qr);
+	 }
+      }
+   }
+   double diff = symmetric_diff(rdm1);
+   assert(diff < 1.e-8);
+   // normalization
+   double dn2 = rdm1.trace(); // tr(rdm2) is normalized to n(n-1)
+   int n2 = round(dn2);
+   if(abs(dn2 - n2)>1.e-8){
+      cout << scientific << setprecision(12);
+      cout << "error in get_rdm1_from_rdm2: non-integer electron number" << endl;
+      cout << "n2=n(n-1)" << n2 << " while dn2=" << dn2 << " diff=" << dn2-n2 << endl;
+      exit(1);
+   }
+   if(n2 == 0){
+      cout << "error in get_rdm1_from_rdm2: not work for ne = 1" << endl;
+      exit(1);
+   }
+   // find nelec
+   auto pp = tools::inverse_pair0(n2/2-1);
+   assert(pp.first == pp.second+1);
+   int ne = pp.first+1;
+   rdm1 *= 1.0/(ne-1.0);
+   return rdm1;
+}
+
 // E1 = h[p,q]*<p^+q>
-double fock::get_e1(const linalg::matrix& rdm1,
+double fock::get_e1(const matrix& rdm1,
 	      	    const integral::one_body& int1e){
    double e1 = 0.0;
    int k = int1e.sorb;
@@ -156,7 +201,7 @@ double fock::get_e1(const linalg::matrix& rdm1,
 }
 
 // E2 = <p0p1||q0q1>*<p0^+p1^+q1q0> (p0>p1,q0>q1)
-double fock::get_e2(const linalg::matrix& rdm2,
+double fock::get_e2(const matrix& rdm2,
 	     	    const integral::two_body& int2e){
    double e2 = 0.0;
    int k = int2e.sorb;
@@ -173,4 +218,23 @@ double fock::get_e2(const linalg::matrix& rdm2,
       }
    }
    return e2;
+}
+
+// Etot = h[p,q]*<p^+q> + <p0p1||q0q1>*<p0^+p1^+q1q0>
+double fock::get_etot(const matrix& rdm1,
+		      const matrix& rdm2,
+	     	      const integral::two_body& int2e,
+	     	      const integral::one_body& int1e,
+		      const double ecore){
+   double e1 = get_e1(rdm1, int1e);
+   double e2 = get_e2(rdm2, int2e);
+   return ecore+e1+e2;
+}
+
+double fock::get_etot(const matrix& rdm2,
+	     	      const integral::two_body& int2e,
+	     	      const integral::one_body& int1e,
+		      const double ecore){
+   auto rdm1 = get_rdm1_from_rdm2(rdm2);
+   return get_etot(rdm1, rdm2, int2e, int1e, ecore);
 }
