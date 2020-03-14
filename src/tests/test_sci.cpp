@@ -7,6 +7,7 @@
 #include "../core/hamiltonian.h"
 #include "../settings/global.h"
 #include "../utils/fci.h"
+#include "../utils/fci_rdm.h"
 #include <iostream>
 #include <iomanip>
 #include <chrono>

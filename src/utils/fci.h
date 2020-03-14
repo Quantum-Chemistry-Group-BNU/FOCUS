@@ -1,5 +1,5 @@
-#ifndef SCI_H
-#define SCI_H
+#ifndef FCI_H
+#define FCI_H
 
 #include "../core/integral.h"
 #include "../core/matrix.h"
@@ -91,18 +91,6 @@ void get_initial(const fock::onspace& space,
 		 const double ecore,
 		 vector<double>& Diag,
 		 linalg::matrix& v0);
-
-// <Psi1|p^+q|Psi2> (NR case)
-void get_rdm1(const fock::onspace& space,
- 	      const std::vector<double>& civec1,
-	      const std::vector<double>& civec2,
-	      linalg::matrix& rdm1);
-
-// <Psi|p0^+p1^+q1q0|Psi> (p0>p1, q0>q1)
-void get_rdm2(const fock::onspace& space,
- 	      const std::vector<double>& civec1,
-	      const std::vector<double>& civec2,
-	      linalg::matrix& rdm2);
 
 } // fci
 
