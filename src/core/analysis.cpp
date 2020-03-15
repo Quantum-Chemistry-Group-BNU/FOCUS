@@ -67,7 +67,7 @@ void fock::get_rdm1(const onspace& space,
    for(size_t i=0; i<space.size(); i++){
       // c1[i]<Di|p^+q|Di>c2[i]
       vector<int> olst;
-      space[i].get_occ(olst);
+      space[i].get_olst(olst);
       for(int p : olst){
          rdm1(p,p) += civec1[i]*civec2[i];
       }
@@ -94,7 +94,7 @@ void fock::get_rdm2(const onspace& space,
    for(size_t i=0; i<space.size(); i++){
       // c1[i]<Di|p0^+p1^+p1p0|Di>c2[i]
       vector<int> olst;
-      space[i].get_occ(olst);
+      space[i].get_olst(olst);
       for(int idx=0; idx<olst.size(); idx++){
          auto p0 = olst[idx]; 
 	 for(int jdx=0; jdx<idx; jdx++){

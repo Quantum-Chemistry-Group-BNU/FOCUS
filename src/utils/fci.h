@@ -20,12 +20,11 @@ struct product_space{
       std::map<fock::onstate,int> umapA, umapB;
       fock::onspace spaceA, spaceB;
       std::vector<std::vector<std::pair<int,int>>> rowA, colB;  
-      std::vector<int> nnzA, nnzB;
       // dpt - a table to store the set of {Det} in direct product space
       //       |  0  1  2 ... dimB
       // --------------------------
-      //   0   |  -1 -1  1      3    nnzA,rowA = (nnz,colIndex,val) per row
-      //   1   |  -1  4 -1      6    nnzB,colB = (nnz,rowIndex,val) per col
+      //   0   |  -1 -1  1      3    rowA = (colIndex,val) per row for val != -1
+      //   1   |  -1  4 -1      6    colB = (rowIndex,val) per col for val != -1
       //   2   |   0  5  9     10
       //   .   | 
       //  dimA |   2  7  8     11  
@@ -67,8 +66,7 @@ struct sparse_hamiltonian{
    public:
       int dim;
       std::vector<double> diag; // H[i,i]
-      std::vector<std::vector<std::pair<int,double>>> connect; // H[i][j] (i<j) 
-      std::vector<int> nnz;
+      std::vector<std::vector<std::tuple<int,double,size_t>>> connect; // H[i][j] (i<j) 
 };
 
 // fci

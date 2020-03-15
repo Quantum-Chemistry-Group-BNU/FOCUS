@@ -266,29 +266,11 @@ class onstate{
          return state;
       }
 
-      // 20200313: NOT efficient in a number of calls  
-      // occupied-virtual lists 
-      void get_occ(std::vector<int>& olst) const{
-         for(int i=0; i<_size; i++){
-	    if((*this)[i])
-	       olst.push_back(i);
-	 }
-      }
-      void get_vir(std::vector<int>& vlst) const{
-         for(int i=0; i<_size; i++){
-	    if(!(*this)[i])
-	       vlst.push_back(i);
-	 }
-      }
-      void get_occvir(std::vector<int>& olst, 
-		      std::vector<int>& vlst) const{
-         for(int i=0; i<_size; i++){
-	    if((*this)[i])
-	       olst.push_back(i);
-	    else
-	       vlst.push_back(i);
-	 }
-      }
+      // occupied, virtual orbital lists 
+      void get_olst(std::vector<int>& olst) const;
+      void get_olst(int* olst) const;
+      void get_vlst(std::vector<int>& vlst) const;
+      void get_vlst(int* vlst) const;
       
       // number of spatial orbitals
       int norb() const{ return _size/2; }

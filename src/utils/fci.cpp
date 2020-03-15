@@ -41,21 +41,15 @@ product_space::product_space(const onspace& space){
       rowA[itA->second].emplace_back(itB->second,i);
       colB[itB->second].emplace_back(itA->second,i);
    }
-   // nnzA
+   // dimA,dimB,dpt
    dimA = udxA;
-   nnzA.resize(dimA);
-   for(int ia=0; ia<dimA; ia++) nnzA[ia] = rowA[ia].size();
-   // nnzB
    dimB = udxB;
-   nnzB.resize(dimB);
-   for(int ib=0; ib<dimB; ib++) nnzB[ib] = colB[ib].size();	  
-   // dpt
    dpt.resize(dimA); 
    for(int ia=0; ia<dimA; ia++){
       dpt[ia].resize(dimB,-1);
-      for(int ib=0; ib<nnzA[ia]; ib++){
-	 int b = rowA[ia][ib].first;  // nonzero column
-         int d = rowA[ia][ib].second; // index of det in space 
+      for(const auto& pr : rowA[ia]){
+	 int b = pr.first;  // nonzero column
+         int d = pr.second; // // index of det in space	 
 	 dpt[ia][b] = d;
       }
    }
@@ -93,9 +87,9 @@ void sparse_hamiltonian::debug(const onspace& space,
    auto dim = connect.size();
    matrix H1(dim,dim);
    for(int i=0; i<dim; i++){
-      for(int jdx=0; jdx<connect[i].size(); jdx++){
-    	 int j = connect[i][jdx].first;
-	 H1(i,j) = connect[i][jdx].second;
+      for(const auto& pr : connect[i]){
+         int j = get<0>(pr);	      
+	 H1(i,j) = get<1>(pr);
       }
    }
    auto H2 = get_Ham(space,int2e,int1e,0.0);
@@ -124,7 +118,6 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
 				       const double ecore){
    dim = space.size();
    connect.resize(dim);
-   nnz.resize(dim);
    bool debug = true;
    auto t0 = global::get_time();
  
@@ -144,8 +137,8 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
 	    int i = pb.second;
 	    int j = pspace.dpt[ja][ib];
 	    if(j>i){
-	       double Hij = fock::get_HijS(space[i], space[j], int2e, int1e);
-	       connect[i].emplace_back(j,Hij);
+	       auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
+	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
 	    }
 	 }
       }
@@ -155,8 +148,8 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
 	    int i = pb.second;
 	    int j = pspace.dpt[ja][ib];
 	    if(j>i){
-	       double Hij = fock::get_HijD(space[i], space[j], int2e, int1e); 
-	       connect[i].emplace_back(j,Hij);
+	       auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
+	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
 	    }
 	 }
       }
@@ -178,15 +171,15 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
          for(int jb : ctabB.C11[ib]){
 	    int j = pspace.dpt[ia][jb];
 	    if(j>i){
-	       double Hij = fock::get_HijS(space[i], space[j], int2e, int1e); 
-	       connect[i].emplace_back(j,Hij);
+	       auto pr = fock::get_HijS(space[i], space[j], int2e, int1e); 
+	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
 	    }
 	 }
          for(int jb : ctabB.C22[ib]){
 	    int j = pspace.dpt[ia][jb];
 	    if(j>i){
-	       double Hij = fock::get_HijD(space[i], space[j], int2e, int1e); 
-	       connect[i].emplace_back(j,Hij);
+	       auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
+	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
 	    }
 	 }
       }
@@ -206,8 +199,8 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
    	    for(int jb : ctabB.C11[ib]){
    	       int j = pspace.dpt[ja][jb];
    	       if(j>i){
-	          double Hij = fock::get_HijD(space[i], space[j], int2e, int1e);
-	          connect[i].emplace_back(j,Hij);
+	          auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
+	          connect[i].push_back(make_tuple(j, pr.first, pr.second));
 	       } // j>0
 	    } // jb
 	 } // ib
@@ -216,10 +209,6 @@ sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
    auto td = global::get_time();
    if(debug) cout << "timing for C11_A*C11_B : " << setprecision(2) 
    		  << global::get_duration(td-tc) << " s" << endl;
-   // compute nnz
-   for(int i=0; i<dim; i++){
-      nnz[i] = connect[i].size();
-   }
 }
 
 // matrix-vector product using stored H
@@ -231,9 +220,9 @@ void fci::get_Hx(double* y,
 	     [](const double& d, const double& c){return d*c;}); 
    // y[i] = sum_j H[i,j]*x[j] 
    for(int i=0; i<sparseH.dim; i++){
-      for(int jdx=0; jdx<sparseH.nnz[i]; jdx++){
-         int j = sparseH.connect[i][jdx].first;
-	 double Hij = sparseH.connect[i][jdx].second;
+      for(const auto& pj : sparseH.connect[i]){
+	 int j = get<0>(pj);
+	 double Hij = get<1>(pj);
 	 assert(j > i);
 	 y[i] += Hij*x[j]; // j>i
 	 y[j] += Hij*x[i]; // j<i
@@ -347,11 +336,12 @@ void fci::ci_solver(vector<double>& es,
 	 vector<double> vi(vs.col(i),vs.col(i)+vs.rows());
          make_rdm2(space,sparseH,vi,vi,rdm2);
 	 double etot = fock::get_etot(rdm2,int2e,int1e,ecore);
-	 cout << " i=" << i << " etot(RDM)=" << etot << endl;
-      }
-      auto tf = global::get_time();
+	 assert(abs(etot-es[i]) < 1.e-8);
+	 cout << " i=" << i << " etot(rdm)=" << etot << endl;
+      } // i
+      auto tg = global::get_time();
       if(debug) cout << "timing for make_rdm2: " << setprecision(2) 
-		     << global::get_duration(tf-te) << " s" << endl;
+		     << global::get_duration(tg-tf) << " s" << endl;
    }
 
    auto t1 = global::get_time();

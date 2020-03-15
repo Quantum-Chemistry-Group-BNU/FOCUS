@@ -168,7 +168,8 @@ int tests::test_onstate(){
    cout << state4.flip().parity_flip() << endl;
 
    vector<int> olst,vlst;
-   state4.get_occvir(olst,vlst);
+   state4.get_olst(olst);
+   state4.get_vlst(vlst);
    cout << "olst=";
    for(auto i : olst)
       cout << " " << i;
@@ -180,7 +181,8 @@ int tests::test_onstate(){
    
    olst.clear();
    vlst.clear();
-   state5.get_occvir(olst,vlst);
+   state5.get_olst(olst);
+   state5.get_vlst(vlst);
    cout << "olst=";
    for(auto i : olst)
       cout << " " << i;

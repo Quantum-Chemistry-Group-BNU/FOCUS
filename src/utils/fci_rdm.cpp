@@ -19,7 +19,7 @@ void fci::get_rdm1_diag(const onspace& space,
    for(size_t i=0; i<space.size(); i++){
       // c1[i]<Di|p^+q|Di>c2[i]
       vector<int> olst;
-      space[i].get_occ(olst);
+      space[i].get_olst(olst);
       for(int p : olst){
          rdm1(p,p) += civec1[i]*civec2[i];
       }
@@ -33,7 +33,7 @@ void fci::get_rdm2_diag(const onspace& space,
 		        matrix& rdm2){
    for(size_t i=0; i<space.size(); i++){
       vector<int> olst;
-      space[i].get_occ(olst);
+      space[i].get_olst(olst);
       for(int idx=0; idx<olst.size(); idx++){
          auto p0 = olst[idx]; 
 	 for(int jdx=0; jdx<idx; jdx++){
@@ -133,7 +133,7 @@ void fci::get_rdm2S(const onstate& stateI,
    auto q0 = q[0];
    auto sgn0 = stateI.parity(p0)*stateJ.parity(q0);
    vector<int> olst;
-   stateI.get_occ(olst);
+   stateI.get_olst(olst);
    for(int idx=0; idx<olst.size(); idx++){
       auto p1 = olst[idx];
       if(p1 == p0) continue; 
@@ -277,21 +277,53 @@ void fci::make_rdm2(const onspace& space,
 		    const vector<double>& civec2,
 		    matrix& rdm2){
    cout << "\nfci:make_rdm2" << endl;
-   // diagonal term
-   get_rdm2_diag(space, civec1, civec2, rdm2);
-   // off-diagonal term: ci*<Di|p0^+p1^+q1q0|Dj>cj (j != i)
+   int k = space[0].size();
    for(int i=0; i<sparseH.dim; i++){
+      // diagonal term
+      vector<int> olst;
+      space[i].get_olst(olst);
+      for(int idx=0; idx<olst.size(); idx++){
+         auto p0 = olst[idx]; 
+	 for(int jdx=0; jdx<idx; jdx++){
+            auto p1 = olst[jdx];
+	    auto p01 = tools::canonical_pair0(p0,p1);
+	    rdm2(p01,p01) += civec1[i]*civec2[i]; 
+	 }
+      }
+      // off-diagonal term: ci*<Di|p0^+p1^+q1q0|Dj>cj (j != i)
       for(const auto& pj : sparseH.connect[i]){
-         int j = pj.first;
-	 assert(j>i);
+         int j = get<0>(pj);
          auto pr = space[i].diff_type(space[j]);
 	 if(pr == make_pair(1,1)){
-            get_rdm2S(space[i],space[j],civec1[i],civec1[j],
-             	      civec2[i],civec2[j],rdm2);
+            //get_rdm2S(space[i],space[j],civec1[i],civec1[j],
+            // 	        civec2[i],civec2[j],rdm2);
+	    size_t ph1 = get<2>(pj);
+	    int p[1], q[1];
+	    unpack_ph1(ph1,k,p,q);
+            auto sgn0 = space[i].parity(p[0])*space[j].parity(q[0]);
+            for(const int p1 : olst){
+               if(p1 == p[0]) continue; 
+               auto sgn = sgn0;
+               auto p01 = tools::canonical_pair0(p[0],p1);
+               if(p[0] < p1) sgn *= -1; // sign coming from ordering of operators
+               auto q01 = tools::canonical_pair0(q[0],p1);
+               if(q[0] < p1) sgn *= -1;
+               rdm2(p01,q01) += sgn*civec1[i]*civec2[j];
+               rdm2(q01,p01) += sgn*civec1[j]*civec2[i];
+            }
 	 }else if(pr == make_pair(2,2)){
-            get_rdm2D(space[i],space[j],civec1[i],civec1[j],
-             	      civec2[i],civec2[j],rdm2);
-	 } 
+            //get_rdm2D(space[i],space[j],civec1[i],civec1[j],
+            // 	        civec2[i],civec2[j],rdm2);
+	    size_t ph2 = get<2>(pj);
+	    int p[2], q[2];
+	    unpack_ph2(ph2,k,p,q);
+	    auto p01 = tools::canonical_pair0(p[0],p[1]);
+            auto q01 = tools::canonical_pair0(q[0],q[1]);
+            auto sgn = space[i].parity(p[0])*space[i].parity(p[1])
+                     * space[j].parity(q[0])*space[j].parity(q[1]);
+            rdm2(p01,q01) += sgn*civec1[i]*civec2[j];
+            rdm2(q01,p01) += sgn*civec1[j]*civec2[i];
+	 }
       }	// Dj     
    } // Di
 }

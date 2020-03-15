@@ -201,3 +201,91 @@ void onstate::diff_orb(const onstate& ket,
 #endif
    } // i
 }
+
+// vector version
+void onstate::get_olst(std::vector<int>& olst) const{
+#ifdef GNU
+   unsigned long tmp;
+   for(int i=0; i<_len; i++){
+      tmp = _repr[i];
+      while(tmp != 0){
+         int j = __builtin_ctzl(tmp);
+         olst.push_back(i*64+j);
+         tmp &= ~(1ULL<<j);
+      }
+   }
+#else
+   for(int i=0; i<_size; i++){
+      if((*this)[i])
+         olst.push_back(i);
+   }
+#endif   
+}
+
+// array version
+void onstate::get_olst(int* olst) const{
+   int ic = 0;
+#ifdef GNU
+   unsigned long tmp;
+   for(int i=0; i<_len; i++){
+      tmp = _repr[i];
+      while(tmp != 0){
+         int j = __builtin_ctzl(tmp);
+         olst[ic] = i*64+j;
+	 ic++;
+         tmp &= ~(1ULL<<j);
+      }
+   }
+#else
+   for(int i=0; i<_size; i++){
+      if((*this)[i]){
+         olst[ic] = i;
+	 ic++;
+      }
+   }
+#endif   
+}
+
+// vector version
+void onstate::get_vlst(std::vector<int>& vlst) const{
+#ifdef GNU
+   unsigned long tmp;
+   for(int i=0; i<_len; i++){
+      tmp = ~(_repr[i]);
+      while(tmp != 0){
+         int j = __builtin_ctzl(tmp);
+         vlst.push_back(i*64+j);
+         tmp &= ~(1ULL<<j);
+      }
+   }
+#else
+   for(int i=0; i<_size; i++){
+      if(!(*this)[i])
+         vlst.push_back(i);
+   }
+#endif   
+}
+
+// array version
+void onstate::get_vlst(int* vlst) const{
+   int ic = 0;
+#ifdef GNU
+   unsigned long tmp;
+   for(int i=0; i<_len; i++){
+      tmp = ~(_repr[i]);
+      while(tmp != 0){
+         int j = __builtin_ctzl(tmp);
+         vlst[ic] = i*64+j;
+	 ic++;
+         tmp &= ~(1ULL<<j);
+      }
+   }
+#else
+   for(int i=0; i<_size; i++){
+      if(!(*this)[i]){
+         vlst[ic] = i;
+	 ic++;
+      }
+   }
+#endif   
+}
