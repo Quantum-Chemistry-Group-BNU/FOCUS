@@ -35,7 +35,7 @@ int tests::test_sci(){
    //k = 6*2; ne = 4; 
    integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_c2");
    k = 12*2; ne = 8; 
-   onspace fci_space = get_fci_space(k/2,ne/2,ne/2);
+   onspace fci_space = get_fci_space(k/2,ne/2,ne/2+1);
    int dim = fci_space.size();
 
    int nroot = 1;
@@ -43,6 +43,7 @@ int tests::test_sci(){
    linalg::matrix vs(dim,nroot);
 
    fci::ci_solver(es, vs, fci_space, int2e, int1e, ecore);
+   exit(1);
 
    // analysis 
    vector<double> v0(vs.col(0),vs.col(0)+dim);

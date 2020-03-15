@@ -23,7 +23,7 @@ double fock::get_Hii(const onstate& state1,
 }
 
 // single - fast version (20200312) 
-pair<double,size_t> fock::get_HijS(const onstate& state1, 
+pair<double,long> fock::get_HijS(const onstate& state1, 
 		      	           const onstate& state2,
 	              	           const integral::two_body& int2e,
 	              	           const integral::one_body& int1e){
@@ -50,22 +50,23 @@ pair<double,size_t> fock::get_HijS(const onstate& state1,
       }
    }
 #endif
-   Hij *= state1.parity(p[0])*state2.parity(q[0]);
-   size_t ph1 = pack_ph1(int1e.sorb,p,q);
+   int sgn = state1.parity(p[0])*state2.parity(q[0]);
+   Hij *= sgn;
+   long ph1 = sgn*(p[0]+q[0]*int1e.sorb);
    return make_pair(Hij, ph1);
 }
 
 // double: <p0p1||q0q1> = [p0q0|p1q1]-[p0q1|p1q0]
-pair<double,size_t> fock::get_HijD(const onstate& state1, 
-				   const onstate& state2,
-	              		   const integral::two_body& int2e,
-	              		   const integral::one_body& int1e){
+pair<double,long> fock::get_HijD(const onstate& state1, 
+				 const onstate& state2,
+	              		 const integral::two_body& int2e,
+	              		 const integral::one_body& int1e){
    int p[2], q[2];
    state1.diff_orb(state2,p,q);
-   double Hij = state1.parity(p[0])*state1.parity(p[1])
-               *state2.parity(q[0])*state2.parity(q[1])
-               *(int2e.get(p[0],q[0],p[1],q[1])-int2e.get(p[0],q[1],p[1],q[0]));
-   size_t ph2 = pack_ph2(int1e.sorb,p,q);
+   int sgn = state1.parity(p[0])*state1.parity(p[1])
+            *state2.parity(q[0])*state2.parity(q[1]);
+   double Hij = sgn*(int2e.get(p[0],q[0],p[1],q[1])-int2e.get(p[0],q[1],p[1],q[0]));
+   long ph2 = sgn*(p[0]+(q[0]+(p[1]+q[1]*int1e.sorb)*int1e.sorb)*int1e.sorb);
    return make_pair(Hij, ph2);
 }
 

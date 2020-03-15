@@ -283,46 +283,39 @@ void fci::make_rdm2(const onspace& space,
       vector<int> olst;
       space[i].get_olst(olst);
       for(int idx=0; idx<olst.size(); idx++){
-         auto p0 = olst[idx]; 
+         int p0 = olst[idx]; 
 	 for(int jdx=0; jdx<idx; jdx++){
-            auto p1 = olst[jdx];
-	    auto p01 = tools::canonical_pair0(p0,p1);
+            int p1 = olst[jdx];
+	    int p01 = tools::canonical_pair0(p0,p1);
 	    rdm2(p01,p01) += civec1[i]*civec2[i]; 
 	 }
       }
       // off-diagonal term: ci*<Di|p0^+p1^+q1q0|Dj>cj (j != i)
       for(const auto& pj : sparseH.connect[i]){
          int j = get<0>(pj);
-         auto pr = space[i].diff_type(space[j]);
-	 if(pr == make_pair(1,1)){
-            //get_rdm2S(space[i],space[j],civec1[i],civec1[j],
-            // 	        civec2[i],civec2[j],rdm2);
-	    size_t ph1 = get<2>(pj);
-	    int p[1], q[1];
-	    unpack_ph1(ph1,k,p,q);
-            auto sgn0 = space[i].parity(p[0])*space[j].parity(q[0]);
-            for(const int p1 : olst){
-               if(p1 == p[0]) continue; 
-               auto sgn = sgn0;
-               auto p01 = tools::canonical_pair0(p[0],p1);
-               if(p[0] < p1) sgn *= -1; // sign coming from ordering of operators
-               auto q01 = tools::canonical_pair0(q[0],p1);
-               if(q[0] < p1) sgn *= -1;
+	 long ph = get<2>(pj);
+    	 int sgn0 = ph>0? 1 : -1;
+    	 ph = std::abs(ph);
+    	 int p0 = ph%k;
+    	 int q0 = (ph/k)%k;
+	 // single excitations
+	 if(ph/k/k == 0){
+	    for(const int& p1 : olst){
+               if(p1 == p0) continue;
+               int p01 = tools::canonical_pair0(p0,p1);
+               int q01 = tools::canonical_pair0(q0,p1);
+	       int sgn = ((p0<p1)^(q0<p1))? -sgn0 : sgn0; 
                rdm2(p01,q01) += sgn*civec1[i]*civec2[j];
                rdm2(q01,p01) += sgn*civec1[j]*civec2[i];
             }
-	 }else if(pr == make_pair(2,2)){
-            //get_rdm2D(space[i],space[j],civec1[i],civec1[j],
-            // 	        civec2[i],civec2[j],rdm2);
-	    size_t ph2 = get<2>(pj);
-	    int p[2], q[2];
-	    unpack_ph2(ph2,k,p,q);
-	    auto p01 = tools::canonical_pair0(p[0],p[1]);
-            auto q01 = tools::canonical_pair0(q[0],q[1]);
-            auto sgn = space[i].parity(p[0])*space[i].parity(p[1])
-                     * space[j].parity(q[0])*space[j].parity(q[1]);
-            rdm2(p01,q01) += sgn*civec1[i]*civec2[j];
-            rdm2(q01,p01) += sgn*civec1[j]*civec2[i];
+	 // double excitations   
+	 }else{
+	    int p1 = (ph/k/k)%k;
+	    int q1 = ph/k/k/k;
+	    int p01 = p0*(p0-1)/2+p1;
+	    int q01 = q0*(q0-1)/2+q1;
+            rdm2(p01,q01) += sgn0*civec1[i]*civec2[j];
+            rdm2(q01,p01) += sgn0*civec1[j]*civec2[i];
 	 }
       }	// Dj     
    } // Di

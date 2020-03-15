@@ -66,7 +66,7 @@ struct sparse_hamiltonian{
    public:
       int dim;
       std::vector<double> diag; // H[i,i]
-      std::vector<std::vector<std::tuple<int,double,size_t>>> connect; // H[i][j] (i<j) 
+      std::vector<std::vector<std::tuple<int,double,long>>> connect; // H[i][j] (i<j) 
 };
 
 // fci

@@ -50,7 +50,7 @@ void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
    int nl = min(ndim,neig+nbuff); // maximal subspace size
    vector<double> vbas(ndim*nl), wbas(ndim*nl);
    if(vguess != nullptr){
-      copy(vguess, vguess+ndim*neig, vbas.begin());
+      copy(vguess, vguess+ndim*neig, vbas.data());
    }else{
       auto index = tools::sort_index(ndim, Diag, 1);
       for(int i=0; i<neig; i++){

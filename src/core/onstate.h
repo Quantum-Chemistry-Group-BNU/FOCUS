@@ -16,8 +16,7 @@ inline unsigned long get_ones(const int& n){
 }
 
 // count the number of nonzero bits
-inline int popcnt(unsigned long x)
-{
+inline int popcnt(unsigned long x){
 #ifdef GNU
    return __builtin_popcount(x);
 #else
@@ -30,6 +29,14 @@ inline int popcnt(unsigned long x)
    x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
    x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
    return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+#endif
+}
+
+inline int get_parity(unsigned long x){
+#ifdef GNU
+   return __builtin_parityl(x);
+#else
+   return popcnt(x)%2;
 #endif
 }
 
@@ -169,26 +176,32 @@ class onstate{
       }
       // parity: = sum_k(-1)^fk for k in [0,n) 
       int parity(const int& n) const{
-	 assert(n>=0 && n<_size);     
-         int nonzero = 0;
+	 /*
+	 assert(n>=0 && n<_size);    
+	 int nonzero = 0;
 	 for(int i=0; i<n/64; i++){
             nonzero += popcnt(_repr[i]);
 	 }
 	 nonzero += popcnt((_repr[n/64] & get_ones(n%64)));
 	 return -2*(nonzero%2)+1;
+	 */
+	 int p = 0;
+	 for(int i=0; i<n/64; i++){
+	    p ^= get_parity( _repr[i] );
+	 }
+	 p ^= get_parity( (_repr[n/64] & get_ones(n%64)) );
+	 return -2*p+1;
       }
       // parity: = sum_k(-1)^fk for k in [start,end) 
       int parity(const int& start, const int& end) const{
 	 assert(start>=0 && start<_size);
          assert(end>=0 && start<_size);
          assert(start<end);
-         unsigned long mask = get_ones(start%64);
-         unsigned long res = _repr[start/64] & mask;
+         unsigned long res = (_repr[start/64] & get_ones(start%64));
          int nonzero = -popcnt(res);
          for(int i=start/64; i<end/64; i++)
 	    nonzero += popcnt(_repr[i]);
-         mask = get_ones(end%64);
-         res = _repr[end/64] & mask;	 
+         res = (_repr[end/64] & get_ones(end%64));
 	 nonzero += popcnt(res);
 	 return -2*(nonzero%2)+1;
       }

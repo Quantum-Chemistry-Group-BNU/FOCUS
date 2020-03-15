@@ -12,11 +12,12 @@ void dvdsonSolver::HVecs(const int nstate, double* y, const double* x){
    auto t0 = global::get_time();
    for(int istate=0; istate<nstate; istate++){
       HVec(y+istate*ndim, x+istate*ndim); // y=H*x
-   }   
+   }
    nmvp += nstate;
    auto t1 = global::get_time();
-   cout << "timing for HVecs=" << setprecision(2)  
-        << global::get_duration(t1-t0)/nstate << " s" << endl;
+   cout << "timing for HVecs : " << setprecision(2)  
+        << global::get_duration(t1-t0)/nstate << " s" 
+	<< " for nstate = " << nstate << endl;
 }
 
 void dvdsonSolver::subspace_solver(const int ndim, 
