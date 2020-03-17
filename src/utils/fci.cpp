@@ -326,7 +326,7 @@ void fci::ci_solver(vector<double>& es,
 		  << global::get_duration(tf-te) << " s" << endl;
 
    // make_rdm2
-   bool if_make_rdm2 = true;
+   bool if_make_rdm2 = false;
    if(if_make_rdm2){
       int k = int1e.sorb;
       int k2 = k*(k-1)/2;
@@ -337,10 +337,10 @@ void fci::ci_solver(vector<double>& es,
          make_rdm2(space,sparseH,vi,vi,rdm2);
 	 double etot = fock::get_etot(rdm2,int2e,int1e,ecore);
 	 assert(abs(etot-es[i]) < 1.e-8);
-	 cout << " i=" << i << " etot(rdm)=" << etot << endl;
+	 cout << "i=" << i << " etot(rdm)=" << etot << endl;
       } // i
       auto tg = global::get_time();
-      if(debug) cout << "timing for make_rdm2: " << setprecision(2) 
+      if(debug) cout << "timing for make_rdm2 : " << setprecision(2) 
 		     << global::get_duration(tg-tf) << " s" << endl;
    }
 

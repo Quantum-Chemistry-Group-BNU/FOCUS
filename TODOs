@@ -34,7 +34,8 @@
           - substrings and coupling table
  	  - optimization [use array instead of vector for diff_orb]
           - optimization [use direct product structure in forming H]
- 202003xx optimized RDM implementation (reuse information)
+ 20200316 optimized RDM implementation 
+	  [reuse information & avoid O(Ndet) call of redundant functions]
 
  2020xxxx selection procedure 
 	  [control the space size for large problem]

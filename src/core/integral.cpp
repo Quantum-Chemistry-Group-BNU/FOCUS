@@ -17,8 +17,7 @@ void integral::read_fcidump(integral::two_body& int2e,
 		  	    double& ecore,
 			    string fname){
    auto t0 = global::get_time();
-   cout << "\nintegral::read_fcidump" << endl;
-   cout << "fname = " << fname << endl;
+   cout << "\nintegral::read_fcidump fname = " << fname << endl;
  
    ifstream istrm(fname);
    if(!istrm){
@@ -90,7 +89,7 @@ void integral::read_fcidump(integral::two_body& int2e,
    cout << "size of int1e (MB) = " << int1e.get_mem_space() << endl;
    cout << "size of int2e (MB) = " << int2e.get_mem_space() << endl;
    auto t1 = global::get_time();
-   cout << "timing for integral::read_fcidump: " << setprecision(2) 
+   cout << "timing for integral::read_fcidump : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
 
    // debug

@@ -24,9 +24,9 @@ double fock::get_Hii(const onstate& state1,
 
 // single - fast version (20200312) 
 pair<double,long> fock::get_HijS(const onstate& state1, 
-		      	           const onstate& state2,
-	              	           const integral::two_body& int2e,
-	              	           const integral::one_body& int1e){
+		      	         const onstate& state2,
+	              	         const integral::two_body& int2e,
+	              	         const integral::one_body& int1e){
    int p[1], q[1];
    state1.diff_orb(state2,p,q);
    double Hij = int1e.get(p[0],q[0]); // hpq

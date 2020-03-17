@@ -1,6 +1,7 @@
 #ifndef ONSTATE_H
 #define ONSTATE_H
 
+#include <boost/functional/hash.hpp>
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -109,7 +110,7 @@ class onstate{
       std::string to_string() const;
       std::string to_string2() const;
       friend std::ostream& operator <<(std::ostream& os, const onstate& state);
-      
+     
       // comparison [from high position] 
       bool operator <(const onstate& state) const{
          for(int i=_len-1; i>=0; i--){
@@ -371,5 +372,18 @@ class onstate{
 };
 
 } // fock
+
+// custom std::hash for onstate
+namespace std{
+   template<> struct hash<fock::onstate>{
+      size_t operator()(fock::onstate const& state) const{
+         size_t seed = 0;
+	 for(int i=0; i<state.len(); i++){
+	    boost::hash_combine(seed, state.repr(i));
+   	 }
+	 return seed;
+      }
+   };
+} // std
 
 #endif

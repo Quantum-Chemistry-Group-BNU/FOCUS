@@ -6,6 +6,8 @@ int main(){
    
    tests::test_sci();
    
+   tests::test_rdm();
+   
    tests::test_tools();
    
    tests::test_onstate();

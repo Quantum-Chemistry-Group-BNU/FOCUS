@@ -2,26 +2,29 @@
 #include <fstream>
 #include <sstream> // istringstream
 #include <string>
-#include <vector>
 #include <cassert>
 #include "input.h"
 
 using namespace std;
 
 void input::read_input(input::schedule& schd, string fname){
-   cout << "\ninput::read_input" << endl;
-   cout << "fname = " << fname << endl;
+   cout << "\ninput::read_input fname = " << fname << endl;
 
    ifstream istrm(fname);
    if(!istrm) {
       cout << "failed to open " << fname << '\n';
       exit(1);
    }
+  
+   vector<int> sweep_iter;
+   vector<double> sweep_eps;
 
    schd.nelec = 0;
-   schd.norb = 0;
-   schd.nseed = 0;
    schd.nroots = 1;
+   schd.nseeds = 0;
+   schd.maxiter = 0;
+   schd.deltaE = 1.e-10;
+   schd.dvdson = 1.e-6;
    schd.integral_file = "FCIDUMP";
    	 
    string line;
@@ -31,11 +34,18 @@ void input::read_input(input::schedule& schd, string fname){
       if(line.empty() || line[0]=='#'){
 	 continue; // skip empty and comments    
       }else if(line.substr(0,5)=="nelec"){
-	 schd.nelec = stoi(line.substr(5));
-      }else if(line.substr(0,4)=="norb"){
-	 schd.norb = stoi(line.substr(4));
+	 schd.nelec = stoi(line.substr(5)); // [5,end)
       }else if(line.substr(0,6)=="nroots"){
 	 schd.nroots = stoi(line.substr(6));
+      }else if(line.substr(0,7)=="maxiter"){
+         schd.maxiter = stoi(line.substr(7)); 
+      }else if(line.substr(0,6)=="deltaE"){
+         schd.deltaE = stod(line.substr(6)); 
+      }else if(line.substr(0,6)=="dvdson"){
+         schd.dvdson = stod(line.substr(6)); 
+      }else if(line.substr(0,9)=="integrals"){
+         istringstream is(line.substr(9));
+	 is >> schd.integral_file;
       }else if(line.substr(0,4)=="dets"){
 	 int ndet = 0;
 	 while(true){
@@ -47,43 +57,79 @@ void input::read_input(input::schedule& schd, string fname){
 	    // read occ from string 
 	    istringstream is(line);
 	    string s;
-	    vector<int> det;
+	    set<int> det;
 	    while(is>>s){
-	       det.push_back(stoi(s));	    
+	       det.insert( stoi(s) );	    
 	    }
 	    schd.det_seeds.insert(det);
-	    assert(ndet == schd.det_seeds.size());
+	    if(ndet != schd.det_seeds.size()){
+	       cout << "error: det is redundant!" << endl;	    
+	       exit(1);
+	    }
 	 }
-	 schd.nseed = schd.det_seeds.size();
-      }else if(line.substr(0,8)=="orbitals"){
-         istringstream is(line.substr(8));
-	 is >> schd.integral_file;
+	 schd.nseeds = schd.det_seeds.size();
+      }else if(line.substr(0,8)=="schedule"){
+	 while(true){
+	    line.clear();
+	    getline(istrm,line);
+	    if(line.empty() || line[0]=='#') continue;
+	    if(line.substr(0,3)=="end") break;
+	    istringstream is(line);
+	    string iter, eps;
+	    is >> iter >> eps;
+	    sweep_iter.push_back( stoi(iter) );
+	    sweep_eps.push_back( stod(eps) );
+	 }
       }else{
-         cout << "error: no matching key! line=" << line << endl;
+         cout << "error: no matching key! line = " << line << endl;
 	 exit(1);
       }
    }
    istrm.close();
 
+   //-------
    // check
+   //-------
    cout << "nelec = " << schd.nelec << endl;
    assert(schd.nelec > 0);
-   cout << "norb = " << schd.norb << endl;
-   assert(schd.norb > 0);
-   cout << "no. of unique seeds = " << schd.nseed << endl;
+   cout << "nroots = " << schd.nroots << endl;
+   assert(schd.nroots > 0);
+   cout << "integral file = " << schd.integral_file << endl;
+   cout << "no. of unique seeds = " << schd.nseeds << endl;
    int ndet = 0;
-   for(auto& det : schd.det_seeds){
+   for(const auto& det : schd.det_seeds){
       cout << ndet << "-th det: ";
       int nelec = 0; 
       for(auto k : det){
          cout << k << " ";
-	 assert(k < 2*schd.norb);
 	 nelec += 1;
       }
-      assert(nelec == schd.nelec);
       cout << endl;
+      if(nelec != schd.nelec){
+         cout << "error: det is not consistent with nelec!" << endl;
+	 exit(1);
+      }
       ndet += 1;
+   } // det
+   cout << "maxiter = " << schd.maxiter << endl;
+   assert(schd.maxiter > 0);
+   schd.eps1.resize(schd.maxiter);
+   // put into eps1 array
+   int size = sweep_iter.size();
+   assert(size > 0 && schd.maxiter >= size);
+   for(int i=1; i<size; i++){
+      for(int j=sweep_iter[i-1]; j<sweep_iter[i]; j++){
+	 schd.eps1[j] = sweep_eps[i-1];
+      }
    }
-   cout << "integral file = " << schd.integral_file << endl;
-
+   for(int j=sweep_iter[size-1]; j<schd.maxiter; j++){
+      schd.eps1[j] = sweep_eps[size-1];
+   }
+   cout << "schedule: iter eps1" << endl;
+   for(int i=0; i<schd.maxiter; i++){
+      cout << i << " " << schd.eps1[i] << endl;
+   }
+   cout << "convergence parameters" << endl;
+   cout << "deltaE = " << schd.deltaE << endl;
+   cout << "dvdson = " << schd.dvdson << endl;
 }

@@ -5,74 +5,61 @@
 #include "../core/linalg.h"
 #include "../core/tools.h"
 #include "../core/hamiltonian.h"
+#include "../settings/global.h"
 #include "../utils/fci.h"
 #include "../utils/fci_rdm.h"
-#include "../utils/sci.h"
-#include "../settings/global.h"
-#include "../io/input.h"
 #include <iostream>
 #include <iomanip>
 #include <chrono>
 #include <cmath>
 #include <algorithm>
-#include <string>
 #include "tests.h"
 
 using namespace std;
 using namespace fock;
 using namespace linalg;
 
-int tests::test_sci(){
+int tests::test_rdm(){
    cout << endl;	
    cout << global::line_separator << endl;	
-   cout << "tests::test_sci" << endl;
+   cout << "tests::test_rdm" << endl;
    cout << global::line_separator << endl;	
-
-   // read input
-   string fname = "input.dat";
-   input::schedule schd;
-   input::read_input(schd,fname);
-
+   
    // read integral
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
-   integral::read_fcidump(int2e, int1e, ecore, schd.integral_file);
-  
-   int nroot = schd.nroots;
-   vector<double> es(nroot,0.0);
 
-   /*
-   // FCI
-   onspace fci_space = get_fci_space(6,2,2);
+   int k, ne;
+   //integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_lih");
+   //k = 6*2; ne = 4; 
+   integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_c2");
+   k = 12*2; ne = 8; 
+   onspace fci_space = get_fci_space(k/2,ne/2,ne/2);
    int dim = fci_space.size();
+
+   int nroot = 1;
+   vector<double> es(nroot,0.0);
    linalg::matrix vs(dim,nroot);
-   ci_solver(es, vs, fci_space, int2e, int1e, ecore);
-   */
-   
-   // selected CI
-   onspace sci_space;
-   vector<vector<double>> vs1(nroot);
-   sci::ci_solver(es, vs1, sci_space, schd, int2e, int1e, ecore);
-   exit(1);
-/*
+
+   fci::ci_solver(es, vs, fci_space, int2e, int1e, ecore);
+
    // analysis 
-   auto v0 = vs[0];
-   fock::coefficients(sci_space, v0);
+   vector<double> v0(vs.col(0),vs.col(0)+dim);
+   fock::coefficients(fci_space, v0);
    vector<double> sigs(v0.size());
    transform(v0.cbegin(),v0.cend(),sigs.begin(),
              [](const double& x){return pow(x,2);}); // pi=|ci|^2
    auto SvN = vonNeumann_entropy(sigs);
 
    // compute rdm1
-   int k = int1e.sorb; 
    linalg::matrix rdm1(k,k);
-   fci::get_rdm1(sci_space,v0,v0,rdm1);
+   fci::get_rdm1(fci_space,v0,v0,rdm1);
 
    // compute rdm2
    int k2 = k*(k-1)/2;
    linalg::matrix rdm2(k2,k2);
-   fci::get_rdm2(sci_space,v0,v0,rdm2);
+   fci::get_rdm2(fci_space,v0,v0,rdm2);
 
    // compute E
    cout << setprecision(12) << endl;
@@ -97,10 +84,10 @@ int tests::test_sci(){
    assert(abs(etot1-etot) < 1.e-8);
 
    // check for FCIDUMP_c2
-   //if(k == 12*2 && ne == 8){
-   //   assert(abs(es[0]+75.48440859785963) < 1.e-8);
-   //   assert(abs(SvN-0.7211959135921441) < 1.e-5);
-   //}
-*/
+   if(k == 12*2 && ne == 8){
+      assert(abs(es[0]+75.48440859785963) < 1.e-8);
+      assert(abs(SvN-0.7211959135921441) < 1.e-5);
+   }
+
    return 0;
 }

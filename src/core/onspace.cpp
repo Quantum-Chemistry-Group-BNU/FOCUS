@@ -97,7 +97,8 @@ void fock::get_Hx(double* y,
    }
 }
 
-// solve eigenvalue problem in this space
+// solve eigenvalue problem in this space via Brute-force construction of H*x,
+// which works best for small configuration space
 void fock::ci_solver(vector<double>& es,
 	       	     matrix& vs,	
 		     const onspace& space,
