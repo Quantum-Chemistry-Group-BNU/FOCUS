@@ -5,9 +5,8 @@ using namespace std;
 int main(){
    
    tests::test_sci();
-   
-   tests::test_rdm();
-   
+
+/*   
    tests::test_tools();
    
    tests::test_onstate();
@@ -18,5 +17,8 @@ int main(){
    
    tests::test_fci();
    
+   tests::test_rdm();
+*/
+
    return 0;   
 }

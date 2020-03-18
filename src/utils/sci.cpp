@@ -6,8 +6,6 @@
 #include "fci.h"
 #include "sci.h"
 
-#include <bitset>
-
 using namespace std;
 using namespace fock;
 using namespace linalg;
@@ -52,6 +50,8 @@ heatbath_table::heatbath_table(const integral::two_body& int2e){
 	 }
       }
    } // debug
+
+   exit(1);
 }
      
 // expand variational subspace
@@ -85,15 +85,25 @@ void sci::expand_varSpace(onspace& space,
       vector<int> olst,vlst;
       state.get_olst(olst);
       state.get_vlst(vlst);
-/*
+
       // singles
       for(int ia=0; ia<nsingles; ia++){
-         int i = ia%no, a = ia/no;
-	 onstate state1(state);
-	 state1[olst[i]] = 0;
-	 state1[vlst[a]] = 1;
-	 auto HijDiff = fock::get_HijS(state1,state,int2e,int1e);
-	 if(abs(HijDiff.first)*cmax[idx] > eps1){
+         int idx = ia%no, adx = ia/no;
+	 int i = olst[idx], a = vlst[adx];
+
+//	 onstate state1(state);
+//	 state1[i] = 0;
+//	 state1[a] = 1;
+
+	 //auto HijDiff = fock::get_HijS(state1,state,int2e,int1e);
+	 //double Hij = HijDiff.first;
+
+         double Hij = int1e.get(a,i); // hai
+	 for(int j : olst){
+	    Hij += int2e.get(a,i,j,j) - int2e.get(a,j,j,i);
+	 } // <aj||ij>
+/*
+	 if(abs(Hij)*cmax[idx] > eps1){
 	    auto search = varSpace.find(state1);
 	    if(search == varSpace.end()){
 	       varSpace.insert(state1);
@@ -105,13 +115,14 @@ void sci::expand_varSpace(onspace& space,
 		       << " " << state1.to_string2() 
 		       << " (N,Na,Nb)=" << state1.nelec() << ","
 		       << state1.nelec_a() << "," << state1.nelec_b()
-	               << " mag=" << abs(HijDiff.first) << endl;
+	               << " mag=" << abs(Hij) << endl;
 	 	  inew++;
 	       }
 	    }
 	 }
-      } // ia 
 */
+      } // ia 
+
       // doubles
       for(int ijdx=0; ijdx<no*(no-1)/2; ijdx++){
 	 auto pr = tools::inverse_pair0(ijdx);
@@ -145,6 +156,7 @@ void sci::expand_varSpace(onspace& space,
 	    }
 	 } // ab
       } // ij
+
    } // idx
    cout << "dim0 = " << dim 
 	<< " dim1 = " << space.size() 
@@ -251,8 +263,6 @@ void sci::ci_solver(vector<double>& es,
 
    
    } // iter
-
-   exit(1);
 
    auto t1 = global::get_time();
    cout << "timing for sci::ci_solver : " << setprecision(2) 

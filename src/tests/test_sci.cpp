@@ -54,6 +54,7 @@ int tests::test_sci(){
    onspace sci_space;
    vector<vector<double>> vs1(nroot);
    sci::ci_solver(es, vs1, sci_space, schd, int2e, int1e, ecore);
+   return 0;
    exit(1);
 /*
    // analysis 

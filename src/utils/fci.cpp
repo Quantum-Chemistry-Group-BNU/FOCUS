@@ -75,9 +75,8 @@ coupling_table::coupling_table(const map<onstate,int>& umap){
       }
    } 
    auto t1 = global::get_time();
-   cout << "coupling_table : " << dim 
-	<< " time=" << global::get_duration(t1-t0) << " s" 
-	<< endl; 
+   cout << "coupling_table with dim = " << dim
+	<< " timing : " << global::get_duration(t1-t0) << " s" << endl; 
 }
 
 // compare with full construction

@@ -26,7 +26,7 @@ public:
 public:
    double thresh = 1.e-12; // cut-off value for |Hij,ab|
    int sorb;
-   std::unordered_map<int,std::multimap<float,int,greater<float>>> eri;
+   std::map<int,std::multimap<float,int,greater<float>>> eri;
 };
 
 // expand variational subspace
