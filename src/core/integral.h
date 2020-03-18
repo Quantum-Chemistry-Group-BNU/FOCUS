@@ -188,6 +188,7 @@ class two_body{
    public:
       int sorb;
       std::unordered_map<size_t,double> data; // sparse representation
+      vector<double> J, K, Q; // [ii|jj],[ij|ji],<ij||ij>
 };
 
 void read_fcidump(two_body& int2e, one_body& int1e, double& ecore,

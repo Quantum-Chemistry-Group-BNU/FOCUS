@@ -19,7 +19,7 @@ inline unsigned long get_ones(const int& n){
 // count the number of nonzero bits
 inline int popcnt(unsigned long x){
 #ifdef GNU
-   return __builtin_popcount(x);
+   return __builtin_popcountl(x);
 #else
    // https://en.wikipedia.org/wiki/Hamming_weight
    const uint64_t m1  = 0x5555555555555555; //binary: 0101...
@@ -61,6 +61,7 @@ class bit_proxy{
       unsigned long _mask;
 };
 
+// occupation number state
 class onstate{
    public:
       
@@ -234,10 +235,13 @@ class onstate{
       }
       
       // connection for hamiltonian
+      friend onstate operator ^(const onstate& state1, const onstate& state2);
+      friend onstate operator &(const onstate& state1, const onstate& state2);
+      // number of diffs 
       int diff_num(const onstate& state) const{
          int ndiff = 0;
 	 for(int i=0; i<_len; i++){
-            ndiff += popcnt(_repr[i]^state._repr[i]);
+            ndiff += popcnt(_repr[i] ^ state._repr[i]);
 	 }
          return ndiff;
       }
@@ -369,7 +373,13 @@ class onstate{
       int _size;
       int _len;
       unsigned long* _repr;
-};
+}; // onstate
+
+inline std::string symbol(const int i){
+   std::string spatial = std::to_string(i/2);
+   std::string spin = i%2? "b" : "a";
+   return spatial+spin;
+}
 
 } // fock
 

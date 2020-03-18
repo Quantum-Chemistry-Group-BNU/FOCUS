@@ -289,3 +289,22 @@ void onstate::get_vlst(int* vlst) const{
    }
 #endif   
 }
+
+// perform binary operations ^(xor), &(and) on onstate 
+onstate fock::operator ^(const onstate& state1, const onstate& state2){
+   assert(state1._size == state2._size);
+   onstate dstate(state1._size);
+   for(int i=0; i<state1._len; i++){
+      dstate._repr[i] = state1._repr[i] ^ state2._repr[i];
+   }
+   return dstate;
+}
+
+onstate fock::operator &(const onstate& state1, const onstate& state2){
+   assert(state1._size == state2._size);
+   onstate dstate(state1._size);
+   for(int i=0; i<state1._len; i++){
+      dstate._repr[i] = state1._repr[i] & state2._repr[i];
+   }
+   return dstate;
+}

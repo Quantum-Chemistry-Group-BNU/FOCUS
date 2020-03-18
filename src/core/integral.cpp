@@ -92,6 +92,29 @@ void integral::read_fcidump(integral::two_body& int2e,
    cout << "timing for integral::read_fcidump : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
 
+   // get two-index integrals
+   int2e.J.resize(int2e.sorb*(int2e.sorb+1)/2);
+   int2e.K.resize(int2e.sorb*(int2e.sorb+1)/2);
+   int2e.Q.resize(int2e.sorb*(int2e.sorb-1)/2);
+   for(int i=0; i<int2e.sorb; i++){
+      for(int j=0; j<=i; j++){
+         int ij = i*(i+1)/2+j;
+	 int2e.J[ij] = int2e.get(i,i,j,j);
+      }
+   }
+   for(int i=0; i<int2e.sorb; i++){
+      for(int j=0; j<=i; j++){
+         int ij = i*(i+1)/2+j;
+	 int2e.K[ij] = int2e.get(i,j,j,i);
+      }
+   }
+   for(int i=0; i<int2e.sorb; i++){
+      for(int j=0; j<i; j++){
+         int ij = i*(i-1)/2+j;
+	 int2e.Q[ij] = int2e.get(i,i,j,j)-int2e.get(i,j,j,i);
+      }
+   }
+
    // debug
    //int1e.print();
    //int2e.print();

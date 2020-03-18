@@ -6,6 +6,8 @@
 #include "fci.h"
 #include "sci.h"
 
+#include <bitset>
+
 using namespace std;
 using namespace fock;
 using namespace linalg;
@@ -15,6 +17,8 @@ using namespace sci;
 heatbath_table::heatbath_table(const integral::two_body& int2e){
    cout << "\nheatbath_table::heatbath_table" << endl;
    auto t0 = global::get_time();
+   bool debug = false;
+
    int k = int2e.sorb;
    sorb = k;
    for(int i=0; i<k; i++){
@@ -34,7 +38,7 @@ heatbath_table::heatbath_table(const integral::two_body& int2e){
    auto t1 = global::get_time();
    cout << "timing for heatbath_table::heatbath_table : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
-   bool debug = false;
+   
    if(debug){
       cout << defaultfloat << setprecision(12);
       for(int ij=0; ij<k*(k-1)/2; ij++){
@@ -60,7 +64,7 @@ void sci::expand_varSpace(onspace& space,
 			  const double eps1){
    cout << "\nsci::expand_varSpace dim = " << space.size() << endl;
    auto t0 = global::get_time();
-   bool debug = true;
+   bool debug = false; //true;
 
    onstate state = space[0];
    int no = state.nelec();
@@ -68,19 +72,20 @@ void sci::expand_varSpace(onspace& space,
    int nsingles = no*nv;
    int dim = space.size();
    int inew = 0;
-   // loop over each det |Di>
-   for(int di=0; di<dim; di++){
-      // select |Dj> if |<Dj|H|Di>cmax[i]|>eps1
-      state = space[di];
+   // loop over each det |Di> in V
+   for(int idx=0; idx<dim; idx++){
+      // select |Dj> if |<Dj|H|Di>cmax[i]|>eps1 && |Dj> is not in V 
+      state = space[idx];
       if(debug){
-	 cout << "di=" << di << " " << state.to_string2() 
+	 cout << " i=" << idx << " " << state.to_string2() 
 	      << " (N,Na,Nb)=" << state.nelec()
 	      << "," << state.nelec_a() << "," << state.nelec_b()
-	      << " cmax=" << cmax[di] << endl;	   
+	      << " cmax=" << cmax[idx] << endl;	 
       } 
       vector<int> olst,vlst;
       state.get_olst(olst);
       state.get_vlst(vlst);
+/*
       // singles
       for(int ia=0; ia<nsingles; ia++){
          int i = ia%no, a = ia/no;
@@ -88,30 +93,32 @@ void sci::expand_varSpace(onspace& space,
 	 state1[olst[i]] = 0;
 	 state1[vlst[a]] = 1;
 	 auto HijDiff = fock::get_HijS(state1,state,int2e,int1e);
-	 if(abs(HijDiff.first)*cmax[di] > eps1){
+	 if(abs(HijDiff.first)*cmax[idx] > eps1){
 	    auto search = varSpace.find(state1);
 	    if(search == varSpace.end()){
 	       varSpace.insert(state1);
 	       space.push_back(state1);
 	       if(debug){
-		  cout << " inew=" << inew 
-	               << " S: i,a=" << olst[i] 
-	               << "," << vlst[a] << " " << state1.to_string2() 
+		  cout << "   " << inew 
+	               << " S(i->a) = " << symbol(olst[i]) 
+		       << "->" << symbol(vlst[a]) 
+		       << " " << state1.to_string2() 
 		       << " (N,Na,Nb)=" << state1.nelec() << ","
-		       << state1.nelec_a() << "," << state1.nelec_b() 
+		       << state1.nelec_a() << "," << state1.nelec_b()
 	               << " mag=" << abs(HijDiff.first) << endl;
 	 	  inew++;
 	       }
 	    }
 	 }
       } // ia 
+*/
       // doubles
       for(int ijdx=0; ijdx<no*(no-1)/2; ijdx++){
 	 auto pr = tools::inverse_pair0(ijdx);
 	 int i = olst[pr.first], j = olst[pr.second];
 	 int ij = tools::canonical_pair0(i,j);
 	 for(const auto& p : hbtab.eri.at(ij)){
-	    if(p.first*cmax[di] < eps1) break; // avoid searching all 
+	    if(p.first*cmax[idx] < eps1) break; // avoid searching all 
 	    auto ab = tools::inverse_pair0(p.second);
 	    int a = ab.first, b = ab.second;
 	    if(state[a]==0 && state[b]==0){ // excitations
@@ -124,13 +131,13 @@ void sci::expand_varSpace(onspace& space,
 	       if(search == varSpace.end()){
 	          varSpace.insert(state2);
 	          space.push_back(state2);
-		  if(debug && false){
-		     cout << "inew=" << inew << endl;
-	             cout << "Di=" << di << " " << state 
-	                  << " D: i,j,a,b=" << i << "," << j
-	                  << "," << a << "," << b << " " << state2
+		  if(debug){
+		     cout << "   " << inew
+	                  << " D(ij->ab) = " << symbol(i) << "," << symbol(j)
+	                  << "->" << symbol(a) << "," << symbol(b) 
+			  << " " << state2.to_string2()
 			  << " (N,Na,Nb)=" << state2.nelec() << ","
-			  << state2.nelec_a() << "," << state2.nelec_b()   
+			  << state2.nelec_a() << "," << state2.nelec_b()
 		          << " mag=" << p.first << endl;
 		     inew++;
 		  }
@@ -138,20 +145,13 @@ void sci::expand_varSpace(onspace& space,
 	    }
 	 } // ab
       } // ij
-   } // di
-   cout << "dim0=" << dim << " dim1=" << space.size() << endl;
+   } // idx
+   cout << "dim0 = " << dim 
+	<< " dim1 = " << space.size() 
+	<< " new = " << space.size()-dim << endl;
    auto t1 = global::get_time();
    cout << "timing for sci::expand_varSpace : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
-   /*
-   sort(space.begin(),space.end());
-   inew = 0;
-   for(auto s : space){
-      cout << inew << " " << s.nelec_a() << s.nelec_b() << " " << s << endl;
-      inew++;
-   }
-   cout << endl;
-   */
 }
 
 void sci::ci_solver(vector<double>& es,
@@ -202,6 +202,8 @@ void sci::ci_solver(vector<double>& es,
       cout << "-------------" << endl;
       double eps1 = schd.eps1[iter];
 
+      // print initial space here?
+
       // compute |cmax| for screening
       vector<double> cmax(nsub,0.0);
       for(int j=0; j<neig; j++){
@@ -244,6 +246,9 @@ void sci::ci_solver(vector<double>& es,
       vtmp = vtmp1; // copy assignment
       
       // increment sparseH 
+      
+      // analysi of coefficients here!
+
    
    } // iter
 
