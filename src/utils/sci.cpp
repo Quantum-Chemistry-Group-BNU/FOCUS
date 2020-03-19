@@ -2,7 +2,6 @@
 #include "../core/onstate.h"
 #include "../core/dvdson.h"
 #include "../core/tools.h"
-#include "../core/hamiltonian.h"
 #include "fci.h"
 #include "sci.h"
 
@@ -16,42 +15,56 @@ heatbath_table::heatbath_table(const integral::two_body& int2e){
    cout << "\nheatbath_table::heatbath_table" << endl;
    auto t0 = global::get_time();
    bool debug = false;
-
    int k = int2e.sorb;
    sorb = k;
+   eri4.resize(k*(k-1)/2);
    for(int i=0; i<k; i++){
       for(int j=0; j<i; j++){
 	 int ij = i*(i-1)/2+j;
 	 for(int p=0; p<k; p++){
+	    if(p == i || p == j) continue; // guarantee true double excitations
  	    for(int q=0; q<p; q++){
-	       // <ij||pq>=[ip|jq]-[iq|jp] (i>j, p>q)
+	       if(q == i || q == j) continue;
+	       // <ij||pq> = [ip|jq] - [iq|jp] (i>j, p>q)
 	       double mag = abs(int2e.get(i,p,j,q) - int2e.get(i,q,j,p));
 	       if(mag > thresh){
-	          eri[ij].insert(make_pair(mag,p*(p-1)/2+q));
+	          eri4[ij].insert(make_pair(mag,p*(p-1)/2+q));
 	       }
 	    } // q
 	 } // p
       } // j
    } // i
-   auto t1 = global::get_time();
-   cout << "timing for heatbath_table::heatbath_table : " << setprecision(2) 
-	<< global::get_duration(t1-t0) << " s" << endl;
-   
+   eri3.resize(k*(k+1)/2);
+   for(int i=0; i<k; i++){
+      for(int j=0; j<=i; j++){
+	 int ij = i*(i+1)/2+j;
+	 eri3[ij].resize(k);
+	 for(int p=0; p<k; p++){
+	    // <ip||jp> = [ij|pp] - [ip|pj] (i>=j)
+	    eri3[ij][p] = int2e.get(i,j,p,p) - int2e.get(i,p,p,j); 
+	 } // p
+      } // j
+   } // i
    if(debug){
       cout << defaultfloat << setprecision(12);
       for(int ij=0; ij<k*(k-1)/2; ij++){
          auto pr = tools::inverse_pair0(ij);
 	 int i = pr.first, j = pr.second;
-	 cout << "i,j=" << i << "," << j << " eri[ij] : " << eri[ij].size() << endl;
-	 for(const auto& p : eri[ij]){
-            auto rs = tools::inverse_pair0(p.second);
-            cout << " val=" << p.first 
-     		 << " r,s=" << rs.first << "," << rs.second << endl;
+         cout << "ij=" << ij << " i,j=" << i << "," << j 
+	      << " eri4[ij] size : " << eri4[ij].size() << endl;
+	 for(const auto& p : eri4[ij]){
+	    if(p.first > 1.e-2){
+               auto pq = tools::inverse_pair0(p.second);
+     	       cout << "   val=" << p.first 
+		    << " -> p,q=" << pq.first << "," << pq.second 
+		    << endl;
+	    }
 	 }
       }
    } // debug
-
-   exit(1);
+   auto t1 = global::get_time();
+   cout << "timing for heatbath_table::heatbath_table : " << setprecision(2) 
+	<< global::get_duration(t1-t0) << " s" << endl;
 }
      
 // expand variational subspace
@@ -66,73 +79,82 @@ void sci::expand_varSpace(onspace& space,
    auto t0 = global::get_time();
    bool debug = false; //true;
 
+   // assuming particle number conserving space
    onstate state = space[0];
    int no = state.nelec();
    int nv = state.size() - no;
+   vector<int> olst(no), vlst(nv);
    int nsingles = no*nv;
    int dim = space.size();
-   int inew = 0;
+   
    // loop over each det |Di> in V
+   int ns = 0;
    for(int idx=0; idx<dim; idx++){
       // select |Dj> if |<Dj|H|Di>cmax[i]|>eps1 && |Dj> is not in V 
       state = space[idx];
+      state.get_olst(olst.data());
+      state.get_vlst(vlst.data());
       if(debug){
 	 cout << " i=" << idx << " " << state.to_string2() 
 	      << " (N,Na,Nb)=" << state.nelec()
 	      << "," << state.nelec_a() << "," << state.nelec_b()
 	      << " cmax=" << cmax[idx] << endl;	 
-      } 
-      vector<int> olst,vlst;
-      state.get_olst(olst);
-      state.get_vlst(vlst);
-
+      }
       // singles
       for(int ia=0; ia<nsingles; ia++){
-         int idx = ia%no, adx = ia/no;
-	 int i = olst[idx], a = vlst[adx];
-
-//	 onstate state1(state);
-//	 state1[i] = 0;
-//	 state1[a] = 1;
-
-	 //auto HijDiff = fock::get_HijS(state1,state,int2e,int1e);
-	 //double Hij = HijDiff.first;
-
-         double Hij = int1e.get(a,i); // hai
-	 for(int j : olst){
-	    Hij += int2e.get(a,i,j,j) - int2e.get(a,j,j,i);
+         int ix = ia%no, ax = ia/no;
+	 int i = olst[ix], a = vlst[ax];
+	 // direct computation of HijS using eri3 [fast]
+	 int p = std::max(i,a), q = std::min(i,a);
+         int pq = p*(p+1)/2+q;
+	 double Hij = int1e.get(p,q); // hai 
+	 for(int jx=0; jx<no; jx++){
+            int j = olst[jx];
+	    Hij += hbtab.eri3[pq][j];
 	 } // <aj||ij>
-/*
+	 // heat-bath check
 	 if(abs(Hij)*cmax[idx] > eps1){
+	    onstate state1(state);
+	    state1[i] = 0;
+	    state1[a] = 1;
 	    auto search = varSpace.find(state1);
 	    if(search == varSpace.end()){
-	       varSpace.insert(state1);
-	       space.push_back(state1);
 	       if(debug){
-		  cout << "   " << inew 
-	               << " S(i->a) = " << symbol(olst[i]) 
-		       << "->" << symbol(vlst[a]) 
+		  cout << "   " << ns
+	               << " S(i->a) = " << symbol(i)
+		       << "->" << symbol(a) 
 		       << " " << state1.to_string2() 
 		       << " (N,Na,Nb)=" << state1.nelec() << ","
 		       << state1.nelec_a() << "," << state1.nelec_b()
-	               << " mag=" << abs(Hij) << endl;
-	 	  inew++;
+	               << " mag=" << abs(Hij) << " " << cmax[idx]<< endl;
 	       }
+	       varSpace.insert(state1);
+	       space.push_back(state1);
+ 	       ns++;
 	    }
-	 }
-*/
+	 } 
       } // ia 
+   } // idx
+   auto ts = global::get_time();
+   cout << "no. of singles = " << ns << " timing : " << setprecision(2) 
+	<< global::get_duration(ts-t0) << " s" << endl;
 
+   int nd = 0;
+   for(int idx=0; idx<dim; idx++){
+      // select |Dj> if |<Dj|H|Di>cmax[i]|>eps1 && |Dj> is not in V 
+      state = space[idx];
+      state.get_olst(olst.data());
+      state.get_vlst(vlst.data());
       // doubles
       for(int ijdx=0; ijdx<no*(no-1)/2; ijdx++){
 	 auto pr = tools::inverse_pair0(ijdx);
 	 int i = olst[pr.first], j = olst[pr.second];
 	 int ij = tools::canonical_pair0(i,j);
-	 for(const auto& p : hbtab.eri.at(ij)){
-	    if(p.first*cmax[idx] < eps1) break; // avoid searching all 
+	 for(const auto& p : hbtab.eri4.at(ij)){
+	    if(p.first*cmax[idx] < eps1) break; // avoid searching all doubles
 	    auto ab = tools::inverse_pair0(p.second);
 	    int a = ab.first, b = ab.second;
-	    if(state[a]==0 && state[b]==0){ // excitations
+	    if(state[a]==0 && state[b]==0){ // if true double excitations
 	       onstate state2(state);
 	       state2[i] = 0;
 	       state2[j] = 0;
@@ -140,27 +162,29 @@ void sci::expand_varSpace(onspace& space,
 	       state2[b] = 1;
 	       auto search = varSpace.find(state2);
 	       if(search == varSpace.end()){
-	          varSpace.insert(state2);
-	          space.push_back(state2);
 		  if(debug){
-		     cout << "   " << inew
+		     cout << "   " << nd
 	                  << " D(ij->ab) = " << symbol(i) << "," << symbol(j)
 	                  << "->" << symbol(a) << "," << symbol(b) 
 			  << " " << state2.to_string2()
 			  << " (N,Na,Nb)=" << state2.nelec() << ","
 			  << state2.nelec_a() << "," << state2.nelec_b()
 		          << " mag=" << p.first << endl;
-		     inew++;
 		  }
+	          varSpace.insert(state2);
+	          space.push_back(state2);
+		  nd++;
 	       }
 	    }
 	 } // ab
       } // ij
-
    } // idx
-   cout << "dim0 = " << dim 
-	<< " dim1 = " << space.size() 
-	<< " new = " << space.size()-dim << endl;
+   auto td = global::get_time();
+   cout << "no. of doubles = " << nd << " timing : " << setprecision(2) 
+	<< global::get_duration(td-ts) << " s" << endl;
+
+   cout << "dim = " << dim << " new = " << space.size()-dim 
+	<< " total = " << space.size() << endl;
    auto t1 = global::get_time();
    cout << "timing for sci::expand_varSpace : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;

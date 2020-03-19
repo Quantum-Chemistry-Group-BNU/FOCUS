@@ -18,10 +18,6 @@ struct one_body{
          assert(n > 0);
          data.resize(n*(n+1)/2,0.0); 
       };
-      // core functions
-      void print();
-      // clear
-      //void clear(){ data.clear(); }
       // init_memory
       void init_mem(){
 	 assert(sorb > 0);
@@ -31,6 +27,8 @@ struct one_body{
       double get_mem(){
          return global::mem_size(data.size());
       }
+      // core functions
+      void print();
       // generic case: h1e[i,j]=[i|h|j]=[j|h|i]^*
       double get(const size_t i, const size_t j) const{
 	 size_t key = std::max(i,j)*(std::max(i,j)+1)/2 + std::min(i,j); 
@@ -111,10 +109,6 @@ struct two_body{
 	 size_t p = n*(n+1)/2; 
          data.resize(p*p,0.0);
       };
-      // core functions
-      void print();
-      // clear
-      //void clear(){ data.clear(); }
       // init_memory
       void init_mem(){
 	 assert(sorb > 0);
@@ -125,6 +119,8 @@ struct two_body{
       double get_mem(){
          return global::mem_size(data.size());
       }
+      // core functions
+      void print();
       // [ij|kl] = [ji|lk]^* = [kl|ij] = [lk|ji]^*
       double get(const size_t i, const size_t j, 
 		 const size_t k, const size_t l) const{
@@ -186,7 +182,7 @@ struct two_body{
 		      	         const two_body& int2eB);
    public:
       int sorb;
-      std::vector<double> data; // sparse representation
+      std::vector<double> data; // [ij|kl] 
       std::vector<double> J, K, Q; // [ii|jj],[ij|ji],<ij||ij>
 };
 

@@ -191,7 +191,9 @@ class onstate{
 	 for(int i=0; i<n/64; i++){
 	    p ^= get_parity( _repr[i] );
 	 }
-	 p ^= get_parity( (_repr[n/64] & get_ones(n%64)) );
+	 // bit with index n is excluded 
+	 // as it is the (n+1)-th bit starting from 0 
+	 p ^= get_parity( (_repr[n/64] & get_ones(n%64)) ); 
 	 return -2*p+1;
       }
       // parity: = sum_k(-1)^fk for k in [start,end) 
@@ -235,8 +237,6 @@ class onstate{
       }
       
       // connection for hamiltonian
-      friend onstate operator ^(const onstate& state1, const onstate& state2);
-      friend onstate operator &(const onstate& state1, const onstate& state2);
       // number of diffs 
       int diff_num(const onstate& state) const{
          int ndiff = 0;
@@ -283,6 +283,10 @@ class onstate{
 	 }
          return state;
       }
+      // perform operations ~(not), ^(xor), &(and) on onstate 
+      friend onstate operator ~(const onstate& state1);
+      friend onstate operator ^(const onstate& state1, const onstate& state2);
+      friend onstate operator &(const onstate& state1, const onstate& state2);
 
       // occupied, virtual orbital lists 
       void get_olst(std::vector<int>& olst) const;

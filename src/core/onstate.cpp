@@ -243,7 +243,7 @@ void onstate::get_olst(int* olst) const{
 	 ic++;
       }
    }
-#endif   
+#endif  
 }
 
 // vector version
@@ -251,7 +251,8 @@ void onstate::get_vlst(std::vector<int>& vlst) const{
 #ifdef GNU
    unsigned long tmp;
    for(int i=0; i<_len; i++){
-      tmp = ~(_repr[i]);
+      // be careful about the virtual orbital case 
+      tmp = (i!=_len-1)? (~_repr[i]) : ((~_repr[i]) & get_ones(_size%64));  
       while(tmp != 0){
          int j = __builtin_ctzl(tmp);
          vlst.push_back(i*64+j);
@@ -272,7 +273,8 @@ void onstate::get_vlst(int* vlst) const{
 #ifdef GNU
    unsigned long tmp;
    for(int i=0; i<_len; i++){
-      tmp = ~(_repr[i]);
+      // be careful about the virtual orbital case 
+      tmp = (i!=_len-1)? (~_repr[i]) : ((~_repr[i]) & get_ones(_size%64));  
       while(tmp != 0){
          int j = __builtin_ctzl(tmp);
          vlst[ic] = i*64+j;
@@ -287,10 +289,20 @@ void onstate::get_vlst(int* vlst) const{
 	 ic++;
       }
    }
-#endif   
+#endif  
 }
 
-// perform binary operations ^(xor), &(and) on onstate 
+// perform operations ~(not), ^(xor), &(and) on onstate 
+onstate fock::operator ~(const onstate& state1){
+   onstate dstate(state1._size);
+   for(int i=0; i<state1._len-1; i++){
+      dstate._repr[i] = ~state1._repr[i];
+   }
+   int i = state1._len-1;
+   dstate._repr[i] = ((~state1._repr[i]) & get_ones(state1._size%64));
+   return dstate;
+}
+
 onstate fock::operator ^(const onstate& state1, const onstate& state2){
    assert(state1._size == state2._size);
    onstate dstate(state1._size);

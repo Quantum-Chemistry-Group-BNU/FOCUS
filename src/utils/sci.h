@@ -24,9 +24,12 @@ struct heatbath_table{
 public: 
    heatbath_table(const integral::two_body& int2e);
 public:
-   double thresh = 1.e-12; // cut-off value for |Hij,ab|
    int sorb;
-   std::map<int,std::multimap<float,int,greater<float>>> eri;
+   // sorted by magnitude Iij=<ij||kl> (i>j,k>l)
+   double thresh = 1.e-12; // cut-off value 
+   std::vector<std::multimap<float,int,greater<float>>> eri4; 
+   // Iik[j]=<ij||kj> (i>=k) for singles
+   std::vector<std::vector<float>> eri3; 
 };
 
 // expand variational subspace
