@@ -8,12 +8,15 @@
 
 namespace fock{
 
-void coefficients(const onspace& space, 
-		  const std::vector<double>& civec, 
-		  const double thresh=1.e-2);
+void coeff_population(const onspace& space, 
+	   	      const std::vector<double>& civec, 
+	   	      const double thresh=1.e-2);
 
-double vonNeumann_entropy(const std::vector<double>& sigs, 
-			  const double cutoff=1.e-12);
+double entropy(const std::vector<double>& p, 
+	       const double cutoff=1.e-12);
+
+double coeff_entropy(const std::vector<double>& coeff, 
+	       	     const double cutoff=1.e-12);
 
 // <Psi1|p^+q|Psi2> - this also allows to compute transition rdm
 void get_rdm1(const onspace& space,

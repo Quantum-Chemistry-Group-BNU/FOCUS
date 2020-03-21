@@ -190,6 +190,7 @@ void sci::expand_varSpace(onspace& space,
 	<< global::get_duration(t1-t0) << " s" << endl;
 }
 
+// selected CI procedure
 void sci::ci_solver(vector<double>& es,
 	       	    vector<vector<double>>& vs,	
 		    onspace& space,
@@ -200,7 +201,7 @@ void sci::ci_solver(vector<double>& es,
    cout << "\nsci::ci_solver" << endl; 
    bool debug = true;
    auto t0 = global::get_time();
-
+/*
    // set up intial configurations
    unordered_set<onstate> varSpace;
    int k = int1e.sorb;
@@ -265,6 +266,8 @@ void sci::ci_solver(vector<double>& es,
       // set up Davidson solver 
       dvdsonSolver solver;
       solver.iprt = 2;
+      solver.crit_v = 1.e-4;
+      solver.crit_e = 1.e-10;
       solver.ndim = nsub;
       solver.neig = neig;
       solver.Diag = sparseH.diag.data();
@@ -275,9 +278,9 @@ void sci::ci_solver(vector<double>& es,
       matrix v0(solver.ndim, solver.neig);
       get_initial(space, int2e, int1e, ecore, sparseH.diag, v0);
       // solve
-      vector<double> etmp1(neig);
+      etmp.resize(neig);
       matrix vtmp1(nsub,neig);
-      solver.solve_iter(etmp1.data(), vtmp1.data(), v0.data());
+      solver.solve_iter(etmp.data(), vtmp1.data(), v0.data());
       // check convergence of SCI
       vtmp = vtmp1; // copy assignment
       
@@ -288,6 +291,15 @@ void sci::ci_solver(vector<double>& es,
    
    } // iter
 
+   // copy results
+   copy_n(etmp.begin(), neig, es.begin());
+   for(int i=0; i<neig; i++){
+      vs[i].resize(nsub);
+      copy_n(vtmp.col(i), nsub, vs[i].begin());
+   }
+   cout << space.size() << endl;
+   cout << "nsub=" << nsub << endl;
+*/
    auto t1 = global::get_time();
    cout << "timing for sci::ci_solver : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;

@@ -142,7 +142,8 @@ class matrix{
 	 return &_data[i*_rows];
       }
       void col_scale(const int icol, const double fac){
-         std::transform(&_data[icol*_rows], (&_data[icol*_rows])+_cols, &_data[icol*_rows],
+         std::transform(&_data[icol*_rows], (&_data[icol*_rows])+_cols, 
+			&_data[icol*_rows],
 			[fac](const double& x){return fac*x;});
       }
       // *,+,- operations

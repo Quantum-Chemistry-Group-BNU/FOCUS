@@ -31,7 +31,7 @@ int tests::test_dvdson(){
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
-   integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_lih");
+   integral::read_fcidump(int2e, int1e, ecore, "../database/fcidump/FCIDUMP_lih");
 
    // iterative algorithm
    int nroot = 2; 
@@ -42,15 +42,10 @@ int tests::test_dvdson(){
    assert(abs(es[1]+7.74509251524) < thresh);
 
    // analysis 
-   vector<double> v0i(vs.col(0),vs.col(0)+dim);
-   fock::coefficients(space2,v0i);
-   vector<double> sigs(v0i.size());
-   transform(v0i.cbegin(),v0i.cend(),sigs.begin(),
-	     [](const double& x){return pow(x,2);}); // pi=|ci|^2
-   auto SvN = vonNeumann_entropy(sigs);
-   cout << "p0=" << sigs[0] << endl;
+   vector<double> v0(vs.col(0),vs.col(0)+dim);
+   coeff_population(space2,v0);
+   auto SvN = coeff_entropy(v0);
    cout << "SvN=" << SvN  << endl;
-   assert(abs(sigs[0]-0.9805968962) < thresh);
    assert(abs(SvN-0.1834419989) < thresh);
 
    return 0;

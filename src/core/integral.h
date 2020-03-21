@@ -59,20 +59,6 @@ struct one_body{
       std::vector<double> data;
 };
 
-// not used here
-inline std::tuple<size_t,size_t,size_t,size_t> inverse_quad(const size_t addr){
-   size_t i = floor((sqrt(sqrt(addr*1.0)*8+1)-1)/2);
-   size_t i1 = i+1;
-   size_t i2 = i1*i1;
-   size_t r1 = addr-i*i*i2/4;
-   size_t j = floor(r1/i2);
-   size_t r2 = r1-j*i2;
-   size_t k = floor(r2/i1);
-   size_t l = r2-k*i1;
-   assert(canonical_quad(i,j,k,l)==addr);
-   return std::make_tuple(i,j,k,l);
-}
-
 // redundant indexing function for 
 // [ij|kl] = [ji|lk]^* = [kl|ij] = [lk|ji]^*
 // scheme: for canonical index [ij|kl] store [ij|**] 
@@ -98,6 +84,20 @@ inline std::pair<size_t,bool> packed_quad(const size_t i,
    if(tj>=ti && tj>=tk && tj>=tl) return std::make_pair(canonical_quad(j,i,l,k),true);
    if(tl>=ti && tl>=tk && tl>=tj) return std::make_pair(canonical_quad(l,k,j,i),true);
    exit(1);
+}
+
+// not used here
+inline std::tuple<size_t,size_t,size_t,size_t> inverse_quad(const size_t addr){
+   size_t i = floor((sqrt(sqrt(addr*1.0)*8+1)-1)/2);
+   size_t i1 = i+1;
+   size_t i2 = i1*i1;
+   size_t r1 = addr-i*i*i2/4;
+   size_t j = floor(r1/i2);
+   size_t r2 = r1-j*i2;
+   size_t k = floor(r2/i1);
+   size_t l = r2-k*i1;
+   assert(canonical_quad(i,j,k,l)==addr);
+   return std::make_tuple(i,j,k,l);
 }
 
 struct two_body{

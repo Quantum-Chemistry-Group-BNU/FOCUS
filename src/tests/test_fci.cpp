@@ -43,7 +43,7 @@ int tests::test_fci(){
    double ecore0;
 
    int k, ne;
-   integral::read_fcidump(int2e, int1e, ecore0, "../fcidump/FCIDUMP_lih");
+   integral::read_fcidump(int2e, int1e, ecore0, "../database/fcidump/FCIDUMP_lih");
    k = 6*2; ne = 4; // lih
    onspace fci_space = get_fci_space(k/2,ne/2,ne/2);
    int dim = fci_space.size();
@@ -119,15 +119,10 @@ int tests::test_fci(){
    }
    */
    // analysis 
-   vector<double> v0i(vs.col(0),vs.col(0)+dim);
-   fock::coefficients(fci_space, v0i);
-   vector<double> sigs(v0i.size());
-   transform(v0i.cbegin(),v0i.cend(),sigs.begin(),
-	     [](const double& x){return pow(x,2);}); // pi=|ci|^2
-   auto SvN = vonNeumann_entropy(sigs);
-   cout << "p0=" << sigs[0] << endl;
+   vector<double> v0(vs.col(0),vs.col(0)+dim);
+   coeff_population(fci_space, v0);
+   auto SvN = coeff_entropy(v0);
    cout << "SvN=" << SvN  << endl;
-   assert(abs(sigs[0]-0.9805968962) < thresh);
    assert(abs(SvN-0.1834419989) < thresh);
 
    return 0;

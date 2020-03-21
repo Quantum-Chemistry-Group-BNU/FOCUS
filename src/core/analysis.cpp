@@ -10,16 +10,17 @@ using namespace std;
 using namespace fock;
 using namespace linalg;
 
-void fock::coefficients(const onspace& space, 
-			const vector<double>& civec, 
-			const double thresh){
-   cout << "\nfock::coefficients thresh=" << thresh << endl;
-   cout << "onstate / nelec / single / idx / ci / pi" << endl;
+void fock::coeff_population(const onspace& space, 
+		            const vector<double>& civec, 
+		            const double thresh){
+   cout << "\nfock::coeff_population dim=" << space.size() << " thresh=" << thresh << endl;
+   cout << "   i-th   /   idx   /   coeff   /   onstate   /   nelec    /   single" << endl;
    cout << setprecision(10);
    double ne = 0.0, na = 0.0, nb = 0.0;
-   double pi, psum = 0.0;
+   double pi, psum = 0.0, psum1 = 0.0;
    vector<int> idx;
    idx = tools::sort_index_abs(civec);
+   int j = 0;
    for(const auto& i : idx){ 
       pi = pow(civec[i],2);
       psum += pi;
@@ -28,34 +29,43 @@ void fock::coefficients(const onspace& space,
       na += pi*space[i].nelec_a();
       nb += pi*space[i].nelec_b();
       if(abs(civec[i]) > thresh){ 
-         cout << space[i] << " "
-              << space[i].to_string2() << " ("
+         cout << setw(8) << j << " : " << setw(8) << i << " ";
+	 if(civec[i]>0) cout << fixed << setprecision(5) << "  " << civec[i];
+	 if(civec[i]<0) cout << fixed << setprecision(5) << " " << civec[i];
+	 cout << "  " << space[i].to_string2() << " ("
               << space[i].nelec() << ","
               << space[i].nelec_a() << ","
               << space[i].nelec_b() << ") "
-              << space[i].norb_single() << " | "
-              << i << " "
-              << civec[i] << " " 
-              << pi << endl;
+              << space[i].norb_single() << " "
+              << endl;
+	 psum1 += pi;
+	 j++;
       }
    }
-   cout << "psum=" << psum << endl;
+   cout << "psum=" << psum << " psum1=" << psum1 << endl;
    cout << "(Ne,Na,Nb)=" << ne << "," 
 	   		 << na << "," 
 			 << nb << endl; 
 }
 
-double fock::vonNeumann_entropy(const vector<double>& sigs, const double cutoff){
+double fock::entropy(const vector<double>& p, const double cutoff){
    double psum = 0.0, ssum = 0.0;
-   for(const auto& sig : sigs){
-      if(sig < cutoff) continue;
-      psum += sig;
-      ssum -= sig*log2(sig);
+   for(const auto& pi : p){
+      if(pi < cutoff) continue;
+      psum += pi;
+      ssum -= pi*log2(pi);
    }
-   cout << "fock::vonNeumann_entropy" << endl;
-   cout << defaultfloat << setprecision(10);	  
-   cout << "Psum=" << psum << " SvN=" << ssum << endl; 
+   cout << "fock::entropy : " 
+        << defaultfloat << setprecision(10)
+        << "psum=" << psum << " SvN=" << ssum << endl; 
    return ssum;
+}
+
+double fock::coeff_entropy(const vector<double>& coeff, const double cutoff){
+   vector<double> p(coeff.size());
+   transform(coeff.cbegin(),coeff.cend(),p.begin(),
+	     [](const double& x){return pow(x,2);}); // pi=|ci|^2
+   return entropy(p, cutoff);
 }
 
 // <Psi1|p^+q|Psi2>

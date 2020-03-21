@@ -42,34 +42,23 @@ int tests::test_sci(){
    int nroot = schd.nroots;
    vector<double> es(nroot,0.0);
 
-   /*
-   // FCI
-   onspace fci_space = get_fci_space(6,2,2);
-   int dim = fci_space.size();
-   linalg::matrix vs(dim,nroot);
-   ci_solver(es, vs, fci_space, int2e, int1e, ecore);
-   */
-   
    // selected CI
    onspace sci_space;
-   vector<vector<double>> vs1(nroot);
-   sci::ci_solver(es, vs1, sci_space, schd, int2e, int1e, ecore);
-   return 0;
-   exit(1);
-/*
+   vector<vector<double>> vs(nroot);
+   sci::ci_solver(es, vs, sci_space, schd, int2e, int1e, ecore);
+
    // analysis 
    auto v0 = vs[0];
-   fock::coefficients(sci_space, v0);
-   vector<double> sigs(v0.size());
-   transform(v0.cbegin(),v0.cend(),sigs.begin(),
-             [](const double& x){return pow(x,2);}); // pi=|ci|^2
-   auto SvN = vonNeumann_entropy(sigs);
+   coeff_population(sci_space, v0, 1.e-2);
+   auto SvN = coeff_entropy(v0);
 
    // compute rdm1
    int k = int1e.sorb; 
    linalg::matrix rdm1(k,k);
    fci::get_rdm1(sci_space,v0,v0,rdm1);
+   exit(1);
 
+/*
    // compute rdm2
    int k2 = k*(k-1)/2;
    linalg::matrix rdm2(k2,k2);
@@ -103,5 +92,7 @@ int tests::test_sci(){
    //   assert(abs(SvN-0.7211959135921441) < 1.e-5);
    //}
 */
+   exit(1);
+
    return 0;
 }

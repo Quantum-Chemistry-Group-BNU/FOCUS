@@ -20,21 +20,19 @@ product_space::product_space(const onspace& space){
    int udxA = 0, udxB = 0;
    // construct {U(A), D(A), B(A)}, {U(B), D(B), A(B)}
    for(int i=0; i<dim; i++){
-      // even bits 
-      onstate strA = space[i].get_even();
+      // even 
+      auto strA = space[i].get_even();
       auto itA = umapA.find(strA);
       if(itA == umapA.end()){
-	 spaceA.push_back(strA);
          auto pr = umapA.insert({strA,udxA});
 	 itA = pr.first;
 	 udxA += 1;
-	 rowA.resize(udxA); // reserve additional space for the new row
+	 rowA.resize(udxA); // make space for new row
       };
-      // odd bits
-      onstate strB = space[i].get_odd();
+      // odd 
+      auto strB = space[i].get_odd();
       auto itB = umapB.find(strB);
       if(itB == umapB.end()){
-	 spaceB.push_back(strB);
          auto pr = umapB.insert({strB,udxB});
 	 itB = pr.first;
 	 udxB += 1;
@@ -43,28 +41,41 @@ product_space::product_space(const onspace& space){
       rowA[itA->second].emplace_back(itB->second,i);
       colB[itB->second].emplace_back(itA->second,i);
    }
-   assert(udxA == spaceA.size());
-   assert(udxB == spaceB.size());
+   // dimA,dimB,dpt
    dimA = udxA;
    dimB = udxB;
+   dpt.resize(dimA); 
+   for(int ia=0; ia<dimA; ia++){
+      dpt[ia].resize(dimB,-1);
+      for(const auto& pr : rowA[ia]){
+	 int b = pr.first;  // nonzero column
+         int d = pr.second; // // index of det in space	 
+	 dpt[ia][b] = d;
+      }
+   }
+   // spaceA/B
+   for(const auto& p : umapA) spaceA.push_back(p.first);
+   for(const auto& p : umapB) spaceB.push_back(p.first);
 }
 
-// coupling_table
-void coupling_table::get_C11(const onspace& space){
+// constructor
+coupling_table::coupling_table(const map<onstate,int>& umap){
    auto t0 = global::get_time();
-   int dim = space.size();
+   dim = umap.size();
    C11.resize(dim);
-   double avg = 0.0;
-   for(int i=0; i<dim; i++){
-      for(int j=0; j<dim; j++){
-         auto pr = space[i].diff_type(space[j]);
-	 if(pr == make_pair(1,1)) C11[i].insert(j);
+   C22.resize(dim);
+   for(const auto& pi : umap){
+      for(const auto& pj : umap){
+	 auto pr = pi.first.diff_type(pj.first);
+	 if(pr == make_pair(1,1)){
+	    C11[pi.second].push_back(pj.second);
+	 }else if(pr == make_pair(2,2)){
+	    C22[pi.second].push_back(pj.second);
+	 }
       }
-      avg += C11[i].size();
-   }
+   } 
    auto t1 = global::get_time();
-   cout << "coupling_table::get_C11 : dim=" << dim
-	<< " avg=" << avg/dim
+   cout << "coupling_table with dim = " << dim
 	<< " timing : " << global::get_duration(t1-t0) << " s" << endl; 
 }
 
@@ -97,90 +108,96 @@ void sparse_hamiltonian::debug(const onspace& space,
 }
 
 // compute sparse H
-void sparse_hamiltonian::get_hamiltonian(const onspace& space,
-				         const product_space& pspace,
-				         const coupling_table& ctabA,
-				         const coupling_table& ctabB,
-				         const integral::two_body& int2e,
-				         const integral::one_body& int1e,
-				         const double ecore){
-   cout << "\nsparse_hamiltonian::get_hamiltonian" << endl; 
+sparse_hamiltonian::sparse_hamiltonian(const onspace& space,
+				       const product_space& pspace,
+				       const coupling_table& ctabA,
+				       const coupling_table& ctabB,
+				       const integral::two_body& int2e,
+				       const integral::one_body& int1e,
+				       const double ecore){
+   dim = space.size();
+   connect.resize(dim);
    bool debug = true;
    auto t0 = global::get_time();
-   // diagonal 
+ 
+   // 0. diagonal 
    diag = fock::get_Hdiag(space, int2e, int1e, ecore);
    auto ta = global::get_time();
    if(debug) cout << "timing for fock::get_Hdiag : " << setprecision(2) 
 		  << global::get_duration(ta-t0) << " s" << endl;
-   // off-diagonal 
-   dim = space.size();
-   connect.resize(dim);
+   
    // 1. (C11+C22)_A*C00_B:
    // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by single/double
-   // 	 		    {I_B,J_B} differ by zero (I_B=J_B)
+   // 			    {I_B,J_B} differ by zero (I_B=J_B)
    for(int ia=0; ia<pspace.dimA; ia++){
-      for(const auto& pib : pspace.rowA[ia]){
-	 int ib = pib.first;
-	 int i = pib.second;
-	 for(const auto& pja : pspace.colB[ib]){
-	    int ja = pja.first;
-	    int j = pja.second;
-	    if(j <= i) continue; 
-	    // check connectivity <I_A|H|J_A>
-	    auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
-	    if(pr == make_pair(1,1)){
+      for(int ja : ctabA.C11[ia]){
+	 for(const auto& pb : pspace.rowA[ia]){
+	    int ib = pb.first;
+	    int i = pb.second;
+	    int j = pspace.dpt[ja][ib];
+	    if(j>i){
 	       auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
 	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
-	    }else if(pr == make_pair(2,2)){
+	    }
+	 }
+      }
+      for(int ja : ctabA.C22[ia]){
+	 for(const auto& pb : pspace.rowA[ia]){
+	    int ib = pb.first;
+	    int i = pb.second;
+	    int j = pspace.dpt[ja][ib];
+	    if(j>i){
 	       auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
 	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
 	    }
-	 } // ja
-      } // ib
+	 }
+      }
    } // ia
    auto tb = global::get_time();
    if(debug) cout << "timing for (C11+C22)_A*C00_B : " << setprecision(2) 
 		  << global::get_duration(tb-ta) << " s" << endl;
+
    // 2. C00_A*(C11+C22)_B:
    // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by zero (I_A=J_A)
    // 			    {I_B,J_B} differ by single/double
-   for(int ia=0; ia<pspace.dimA; ia++){
-      for(const auto& pib : pspace.rowA[ia]){
-	 int ib = pib.first;
-	 int i = pib.second;
-         for(const auto& pjb : pspace.rowA[ia]){
-	    int jb = pjb.first;
-	    int j = pjb.second;
-	    if(j <= i) continue; 
-	    // check connectivity <I_B|H|J_B>
-	    auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
-	    if(pr == make_pair(1,1)){
-	       auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
+   // This particular ordering of loops is optimized to minmize the
+   // cache missing by exploring data locality as much as possible
+   // for colB[ib], C11[ib], and dpt[ia][jb].
+   for(int ib=0; ib<pspace.dimB; ib++){
+      for(const auto& pa : pspace.colB[ib]){
+         int ia = pa.first;
+         int i = pa.second;
+         for(int jb : ctabB.C11[ib]){
+	    int j = pspace.dpt[ia][jb];
+	    if(j>i){
+	       auto pr = fock::get_HijS(space[i], space[j], int2e, int1e); 
 	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
-	    }else if(pr == make_pair(2,2)){
+	    }
+	 }
+         for(int jb : ctabB.C22[ib]){
+	    int j = pspace.dpt[ia][jb];
+	    if(j>i){
 	       auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
 	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
 	    }
-	 } // jb
-      } // ib
-   } // ia
+	 }
+      }
+   } // ib
    auto tc = global::get_time();
    if(debug) cout << "timing for C00_A*(C11+C22)_B : " << setprecision(2) 
 		  << global::get_duration(tc-tb) << " s" << endl;
+
    // 3. C11_A*C11_B:
    // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by single
    // 			    {I_B,J_B} differ by single
    for(int ia=0; ia<pspace.dimA; ia++){
-      for(const auto& pib : pspace.rowA[ia]){
-	 int ib = pib.first;
-	 int i = pib.second;
-	 for(int ja : ctabA.C11[ia]){
-	    for(const auto& pjb : pspace.rowA[ja]){
-	       int jb = pjb.first;
-	       int j = pjb.second;	       
-   	       if(j<=i) continue;
-	       auto search = ctabB.C11[ib].find(jb);
-	       if(search != ctabB.C11[ib].end()){
+      for(int ja : ctabA.C11[ia]){
+         for(const auto& pb : pspace.rowA[ia]){
+	    int ib = pb.first;
+            int i = pb.second;
+   	    for(int jb : ctabB.C11[ib]){
+   	       int j = pspace.dpt[ja][jb];
+   	       if(j>i){
 	          auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
 	          connect[i].push_back(make_tuple(j, pr.first, pr.second));
 	       } // j>0
@@ -191,9 +208,6 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
    auto td = global::get_time();
    if(debug) cout << "timing for C11_A*C11_B : " << setprecision(2) 
    		  << global::get_duration(td-tc) << " s" << endl;
-   auto t1 = global::get_time();
-   cout << "timing for sparse_hamiltonian::sparse_hamiltonian : " 
-	<< setprecision(2) << global::get_duration(t1-t0) << " s" << endl;
 }
 
 // matrix-vector product using stored H
@@ -255,8 +269,7 @@ void fci::get_initial(const onspace& space,
 
 // solve eigenvalue problem in this space
 void fci::ci_solver(vector<double>& es,
-	       	    matrix& vs,
-	            sparse_hamiltonian& sparseH,	    
+	       	    matrix& vs,	
 		    const onspace& space,
 	       	    const integral::two_body& int2e,
 	       	    const integral::one_body& int1e,
@@ -272,18 +285,17 @@ void fci::ci_solver(vector<double>& es,
 		  << global::get_duration(ta-t0) << " s" << endl;
   
    // setupt coupling_table
-   coupling_table ctabA, ctabB;
-   ctabA.get_C11(pspace.spaceA);
+   coupling_table ctabA(pspace.umapA);
    auto tb = global::get_time();
-   ctabB.get_C11(pspace.spaceB);
+   coupling_table ctabB(pspace.umapB);
    auto tc = global::get_time();
    if(debug) cout << "timing for ctabA/B : " << setprecision(2) 
 		  << global::get_duration(tb-ta) << " s" << " "
 		  << global::get_duration(tc-tb) << " s" << endl;
    
    // compute sparse_hamiltonian
-   sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
-		   	   int2e, int1e, ecore);
+   sparse_hamiltonian sparseH(space, pspace, ctabA, ctabB,
+		   	      int2e, int1e, ecore);
    auto td = global::get_time();
    if(debug) cout << "timing for sparseH : " << setprecision(2) 
 		  << global::get_duration(td-tc) << " s" << endl;
@@ -312,18 +324,26 @@ void fci::ci_solver(vector<double>& es,
    if(debug) cout << "timing for solve_iter : " << setprecision(2) 
 		  << global::get_duration(tf-te) << " s" << endl;
 
+   // make_rdm2
+   bool if_make_rdm2 = false;
+   if(if_make_rdm2){
+      int k = int1e.sorb;
+      int k2 = k*(k-1)/2;
+      cout << defaultfloat << setprecision(12);
+      for(int i=0; i<vs.cols(); i++){
+         matrix rdm2(k2,k2);
+	 vector<double> vi(vs.col(i),vs.col(i)+vs.rows());
+         make_rdm2(space,sparseH,vi,vi,rdm2);
+	 double etot = fock::get_etot(rdm2,int2e,int1e,ecore);
+	 assert(abs(etot-es[i]) < 1.e-8);
+	 cout << "i=" << i << " etot(rdm)=" << etot << endl;
+      } // i
+      auto tg = global::get_time();
+      if(debug) cout << "timing for make_rdm2 : " << setprecision(2) 
+		     << global::get_duration(tg-tf) << " s" << endl;
+   }
+
    auto t1 = global::get_time();
    cout << "timing for fci::ci_solver : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
-}
-
-// without sparseH as output
-void fci::ci_solver(vector<double>& es,
-	       	    matrix& vs,
-		    const onspace& space,
-	       	    const integral::two_body& int2e,
-	       	    const integral::one_body& int1e,
-	       	    const double ecore){
-   sparse_hamiltonian sparseH;
-   ci_solver(es, vs, sparseH, space, int2e, int1e, ecore);
 }

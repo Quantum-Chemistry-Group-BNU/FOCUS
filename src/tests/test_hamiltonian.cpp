@@ -29,7 +29,7 @@ int tests::test_hamiltonian(){
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
-   integral::read_fcidump(int2e, int1e, ecore, "../fcidump/FCIDUMP_lih");
+   integral::read_fcidump(int2e, int1e, ecore, "../database/fcidump/FCIDUMP_lih");
 
    // just for LiH
    onspace space1 = get_fci_space(4,2);
@@ -93,14 +93,9 @@ int tests::test_hamiltonian(){
 
    // check coefficient
    vector<double> v0(v.data(),v.data()+v.rows());
-   fock::coefficients(space2,v0);
-   vector<double> sigs(v0.size());
-   transform(v0.cbegin(),v0.cend(),sigs.begin(),
-	     [](const double& x){return pow(x,2);}); // pi=|ci|^2
-   auto SvN = vonNeumann_entropy(sigs);
-   cout << "p0=" << sigs[0] << endl;
+   coeff_population(space2,v0);
+   auto SvN = coeff_entropy(v0);
    cout << "SvN=" << SvN  << endl;
-   assert(abs(sigs[0]-0.9805968962) < thresh);
    assert(abs(SvN-0.1834419989) < thresh);
 
    // compute rdm1
