@@ -113,9 +113,9 @@ void fci::get_rdm2(const onspace& space,
 	 }
       }
       // off-diagonal term: ci*<Di|p0^+p1^+q1q0|Dj>cj (j != i)
-      for(const auto& pj : sparseH.connect[i]){
-         int j = get<0>(pj);
-	 long ph = get<2>(pj);
+      for(int jdx=0; jdx<sparseH.connect[i].size(); jdx++){
+	 int j = sparseH.connect[i][jdx];
+	 long ph = sparseH.diff[i][jdx];
     	 int sgn0 = ph>0? 1 : -1;
     	 ph = std::abs(ph);
     	 int p0 = ph%k;

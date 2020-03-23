@@ -75,9 +75,9 @@ void sparse_hamiltonian::debug(const onspace& space,
    auto dim = connect.size();
    matrix H1(dim,dim);
    for(int i=0; i<dim; i++){
-      for(const auto& pr : connect[i]){
-         int j = get<0>(pr);	      
-	 H1(i,j) = get<1>(pr);
+      for(int jdx=0; jdx<connect[i].size(); jdx++){
+	 int j = connect[i][jdx];
+	 H1(i,j) = value[i][jdx];
       }
    }
    auto H2 = get_Ham(space,int2e,int1e,0.0);
@@ -115,6 +115,8 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
    // off-diagonal 
    dim = space.size();
    connect.resize(dim);
+   value.resize(dim);
+   diff.resize(dim);
    // 1. (C11+C22)_A*C00_B:
    // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by single/double
    // 	 		    {I_B,J_B} differ by zero (I_B=J_B)
@@ -130,10 +132,14 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
 	    auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
 	    if(pr == make_pair(1,1)){
 	       auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
-	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
+	       connect[i].push_back(j);
+	       value[i].push_back(pr.first);
+	       diff[i].push_back(pr.second);
 	    }else if(pr == make_pair(2,2)){
 	       auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
-	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
+	       connect[i].push_back(j);
+	       value[i].push_back(pr.first);
+	       diff[i].push_back(pr.second);
 	    }
 	 } // ja
       } // ib
@@ -156,10 +162,14 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
 	    auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
 	    if(pr == make_pair(1,1)){
 	       auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
-	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
+	       connect[i].push_back(j);
+	       value[i].push_back(pr.first);
+	       diff[i].push_back(pr.second);
 	    }else if(pr == make_pair(2,2)){
 	       auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
-	       connect[i].push_back(make_tuple(j, pr.first, pr.second));
+	       connect[i].push_back(j);
+	       value[i].push_back(pr.first);
+	       diff[i].push_back(pr.second);
 	    }
 	 } // jb
       } // ib
@@ -182,7 +192,9 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
 	       auto search = ctabB.C11[ib].find(jb);
 	       if(search != ctabB.C11[ib].end()){
 	          auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
-	          connect[i].push_back(make_tuple(j, pr.first, pr.second));
+	          connect[i].push_back(j);
+	          value[i].push_back(pr.first);
+	          diff[i].push_back(pr.second);
 	       } // j>0
 	    } // jb
 	 } // ib
@@ -192,7 +204,7 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
    if(debug) cout << "timing for C11_A*C11_B : " << setprecision(2) 
    		  << global::get_duration(td-tc) << " s" << endl;
    auto t1 = global::get_time();
-   cout << "timing for sparse_hamiltonian::sparse_hamiltonian : " 
+   cout << "timing for sparse_hamiltonian::get_hamiltonian : " 
 	<< setprecision(2) << global::get_duration(t1-t0) << " s" << endl;
 }
 
@@ -205,10 +217,9 @@ void fci::get_Hx(double* y,
 	     [](const double& d, const double& c){return d*c;}); 
    // y[i] = sum_j H[i,j]*x[j] 
    for(int i=0; i<sparseH.dim; i++){
-      for(const auto& pj : sparseH.connect[i]){
-	 int j = get<0>(pj);
-	 double Hij = get<1>(pj);
-	 assert(j > i);
+      for(int jdx=0; jdx<sparseH.connect[i].size(); jdx++){
+	 int j = sparseH.connect[i][jdx];
+	 double Hij = sparseH.value[i][jdx];
 	 y[i] += Hij*x[j]; // j>i
 	 y[j] += Hij*x[i]; // j<i
       }

@@ -131,6 +131,9 @@ class onstate{
 	 } 
 	 return true;
       }
+      bool operator !=(const onstate& state) const{
+         return !(*this == state);
+      }
       
       // count the number of 1 in ontate
       int nelec() const{

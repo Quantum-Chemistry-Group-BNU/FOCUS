@@ -12,9 +12,6 @@
 #include "../io/input.h"
 #include <iostream>
 #include <iomanip>
-#include <chrono>
-#include <cmath>
-#include <algorithm>
 #include <string>
 #include "tests.h"
 

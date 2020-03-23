@@ -41,6 +41,7 @@ void expand_varSpace(fock::onspace& space,
 		     std::vector<double>& cmax, 
 		     const double eps1);
 
+// sci
 void ci_solver(std::vector<double>& es,
 	       std::vector<std::vector<double>>& vs,
 	       fock::onspace& space,

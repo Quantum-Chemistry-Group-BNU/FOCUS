@@ -4,8 +4,8 @@
 #include "../core/integral.h"
 #include "../core/matrix.h"
 #include "../core/onspace.h"
+#include <string>
 #include <vector>
-#include <tuple>
 #include <map>
 #include <set>
 
@@ -53,10 +53,14 @@ struct sparse_hamiltonian{
       void debug(const fock::onspace& space,
 	 	 const integral::two_body& int2e,
 		 const integral::one_body& int1e);
+      void to_gephi(const std::string& fname,
+		    const fock::onspace& space);
    public:
       int dim;
       std::vector<double> diag; // H[i,i]
-      std::vector<std::vector<std::tuple<int,double,long>>> connect; // H[i][j] (i<j) 
+      std::vector<std::vector<int>> connect; // i<->j (i<j) connected by H
+      std::vector<std::vector<double>> value; // H[i][j] (i<j)
+      std::vector<std::vector<long>> diff; // packed orbital difference 
 };
 
 // matrix-vector product using stored H
@@ -69,7 +73,7 @@ void get_initial(const fock::onspace& space,
 	         const integral::two_body& int2e,
 	         const integral::one_body& int1e,
 		 const double ecore,
-		 vector<double>& Diag,
+		 std::vector<double>& Diag,
 		 linalg::matrix& v0);
 
 // fci

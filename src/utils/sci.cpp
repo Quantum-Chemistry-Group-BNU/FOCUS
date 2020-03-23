@@ -77,7 +77,7 @@ void sci::expand_varSpace(onspace& space,
 			  const double eps1){
    cout << "\nsci::expand_varSpace dim = " << space.size() << endl;
    auto t0 = global::get_time();
-   bool debug = false; //true;
+   bool debug = false;
 
    // assuming particle number conserving space
    onstate state = space[0];
@@ -87,7 +87,7 @@ void sci::expand_varSpace(onspace& space,
    int nsingles = no*nv;
    int dim = space.size();
    
-   // loop over each det |Di> in V
+   // singles
    int ns = 0;
    for(int idx=0; idx<dim; idx++){
       // select |Dj> if |<Dj|H|Di>cmax[i]|>eps1 && |Dj> is not in V 
@@ -100,7 +100,6 @@ void sci::expand_varSpace(onspace& space,
 	      << "," << state.nelec_a() << "," << state.nelec_b()
 	      << " cmax=" << cmax[idx] << endl;	 
       }
-      // singles
       for(int ia=0; ia<nsingles; ia++){
          int ix = ia%no, ax = ia/no;
 	 int i = olst[ix], a = vlst[ax];
@@ -131,6 +130,16 @@ void sci::expand_varSpace(onspace& space,
 	       varSpace.insert(state1);
 	       space.push_back(state1);
  	       ns++;
+
+	       // flip
+	       auto state1f = state1.flip();
+	       auto search1 = varSpace.find(state1f);
+	       if(search1 == varSpace.end()){
+	          varSpace.insert(state1f);
+	          space.push_back(state1f);
+ 	          ns++;
+	       }
+
 	    }
 	 } 
       } // ia 
@@ -138,14 +147,20 @@ void sci::expand_varSpace(onspace& space,
    auto ts = global::get_time();
    cout << "no. of singles = " << ns << " timing : " << setprecision(2) 
 	<< global::get_duration(ts-t0) << " s" << endl;
-
+   
+   // doubles
    int nd = 0;
    for(int idx=0; idx<dim; idx++){
       // select |Dj> if |<Dj|H|Di>cmax[i]|>eps1 && |Dj> is not in V 
       state = space[idx];
       state.get_olst(olst.data());
       state.get_vlst(vlst.data());
-      // doubles
+      if(debug){
+	 cout << " i=" << idx << " " << state.to_string2() 
+	      << " (N,Na,Nb)=" << state.nelec()
+	      << "," << state.nelec_a() << "," << state.nelec_b()
+	      << " cmax=" << cmax[idx] << endl;
+      }
       for(int ijdx=0; ijdx<no*(no-1)/2; ijdx++){
 	 auto pr = tools::inverse_pair0(ijdx);
 	 int i = olst[pr.first], j = olst[pr.second];
@@ -174,6 +189,16 @@ void sci::expand_varSpace(onspace& space,
 	          varSpace.insert(state2);
 	          space.push_back(state2);
 		  nd++;
+
+	          // flip
+	          auto state2f = state2.flip();
+	          auto search2 = varSpace.find(state2f);
+	          if(search2 == varSpace.end()){
+	             varSpace.insert(state2f);
+	             space.push_back(state2f);
+ 	             nd++;
+	          }
+
 	       }
 	    }
 	 } // ab
@@ -201,7 +226,7 @@ void sci::ci_solver(vector<double>& es,
    cout << "\nsci::ci_solver" << endl; 
    bool debug = true;
    auto t0 = global::get_time();
-/*
+
    // set up intial configurations
    unordered_set<onstate> varSpace;
    int k = int1e.sorb;
@@ -213,10 +238,13 @@ void sci::ci_solver(vector<double>& es,
       }
       space.push_back(state);
       varSpace.insert(state);
+      // flip
+      auto state1 = state.flip();
+      if(state1 != state){
+	 space.push_back(state1);
+	 varSpace.insert(state1);
+      } 
    }
-
-   // set up head-bath table
-   heatbath_table hbtab(int2e);
 
    // set up initial states
    int nsub = space.size();
@@ -224,6 +252,80 @@ void sci::ci_solver(vector<double>& es,
    vector<double> etmp(neig);
    matrix vtmp(nsub,neig);
    fock::ci_solver(etmp, vtmp, space, int2e, int1e, ecore);
+
+   // set up head-bath table
+   heatbath_table hbtab(int2e);
+
+   // start increment
+   for(int iter=0; iter<schd.maxiter; iter++){
+      cout << "\n-------------" << endl;
+      cout << "iter=" << iter << " eps1=" << schd.eps1[iter] << endl;
+      cout << "-------------" << endl;
+      double eps1 = schd.eps1[iter];
+
+      // print initial space here?
+
+      // compute |cmax| for screening
+      vector<double> cmax(nsub,0.0);
+      for(int j=0; j<neig; j++){
+         for(int i=0; i<nsub; i++){
+	    cmax[i] += pow(vtmp(i,j),2);
+         }
+      }
+      transform(cmax.begin(), cmax.end(), cmax.begin(),
+		[](const double& x){ return pow(x,0.5); });
+
+      // expand 
+      expand_varSpace(space, varSpace, int2e, int1e, hbtab, cmax, eps1);
+
+      product_space pspace(space);
+      coupling_table ctabA, ctabB;
+      ctabA.get_C11(pspace.spaceA);
+      ctabB.get_C11(pspace.spaceB);
+      sparse_hamiltonian sparseH;
+      sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
+   		   	      int2e, int1e, ecore);
+  
+      auto fname = "Hij_"+to_string(iter);
+      sparseH.to_gephi(fname, space);
+      if(iter == 4) exit(1);
+
+      // update
+      nsub = space.size();
+      neig = min(schd.nroots, nsub);
+      // set up Davidson solver 
+      dvdsonSolver solver;
+      solver.iprt = 2;
+      solver.crit_v = 1.e-3;
+      solver.crit_e = 1.e-10;
+      solver.ndim = nsub;
+      solver.neig = neig;
+      solver.Diag = sparseH.diag.data();
+      using std::placeholders::_1;
+      using std::placeholders::_2;
+      solver.HVec = bind(fci::get_Hx, _1, _2, cref(sparseH));
+      // get initial guess
+      matrix v0(solver.ndim, solver.neig);
+      get_initial(space, int2e, int1e, ecore, sparseH.diag, v0);
+      // solve
+      etmp.resize(neig);
+      matrix vtmp1(nsub,neig);
+      solver.solve_iter(etmp.data(), vtmp1.data(), v0.data());
+      // check convergence of SCI
+      vtmp = vtmp1; // copy assignment
+     
+      //if(iter == 2) exit(1);
+
+      // increment sparseH 
+      
+      // analysi of coefficients here!
+
+   }
+
+   exit(1);
+
+
+/*
 
    // set up initial sparseH
    product_space pspace(space);
