@@ -79,7 +79,8 @@ void sci::expand_varSpace(onspace& space,
 		          const heatbath_table& hbtab, 
 			  vector<double>& cmax, 
 			  const double eps1){
-   cout << "\nsci::expand_varSpace dim = " << space.size() << endl;
+   cout << "\nsci::expand_varSpace dim = " 
+	<< space.size() << " eps1 = " << eps1 << endl;
    auto t0 = global::get_time();
    bool debug = false;
 
@@ -250,8 +251,8 @@ void sci::get_initial(vector<double>& es,
 	   << " e = " << fock::get_Hii(space[i],int2e,int1e)+ecore 
 	   << endl;
    }
-   // CISD space
-   double eps1 = schd.eps1[0];
+   // selected CISD space
+   double eps1 = 1.e-2;
    vector<double> cmax(nsub,1.0);
    expand_varSpace(space, varSpace, hbtab, cmax, eps1);
    nsub = space.size();
@@ -313,6 +314,7 @@ void sci::ci_solver(vector<double>& es,
 //		   	   int2e, int1e, ecore);
 
    // start increment
+   bool ifconv = false;
    int nsub = space.size(); 
    int neig = schd.nroots;
    for(int iter=0; iter<schd.maxiter; iter++){
@@ -348,8 +350,7 @@ void sci::ci_solver(vector<double>& es,
       // set up Davidson solver 
       dvdsonSolver solver;
       solver.iprt = 2;
-      solver.crit_v = 1.e-4;
-      solver.crit_e = 1.e-10;
+      solver.crit_v = schd.dvdson;
       solver.ndim = nsub;
       solver.neig = neig;
       solver.Diag = sparseH.diag.data();
@@ -371,27 +372,37 @@ void sci::ci_solver(vector<double>& es,
       solver.solve_iter(esol1.data(), vsol1.data(), v0.data());
 
       // check convergence of SCI
-      vsol = vsol1; // copy assignment
-     
-      if(iter == 5) exit(1);
-
-      // increment sparseH 
-      
-      // analysi of coefficients here!
-
+      vector<bool> conv(neig);
+      cout << endl;
+      for(int i=0; i<neig; i++){
+	 conv[i] = abs(esol1[i]-esol[i])<schd.deltaE; 
+	 cout << "iter=" << iter
+	      << " eps1=" << scientific << setprecision(2) << schd.eps1[iter]
+	      << " nsub=" << nsub 
+	      << " i=" << i 
+	      << " e=" << defaultfloat << setprecision(12) << esol1[i] 
+	      << " de=" << scientific << setprecision(2) << esol1[i]-esol[i] 
+	      << " conv=" << conv[i] << endl;
+      }
+      esol = esol1;
+      vsol = vsol1;
+      ifconv = (count(conv.begin(), conv.end(), true) == neig);
+      if(ifconv){
+	 cout << "convergence is achieved!" << endl;
+	 break;
+      }
    } // iter
-   exit(1);
+   if(!ifconv){
+      cout << "convergence failure: out of maxiter =" 
+	   << schd.maxiter << endl;
+   }
 
-/*
    // copy results
    copy_n(esol.begin(), neig, es.begin());
    for(int i=0; i<neig; i++){
       vs[i].resize(nsub);
       copy_n(vsol.col(i), nsub, vs[i].begin());
    }
-   cout << space.size() << endl;
-   cout << "nsub=" << nsub << endl;
-*/
 
    auto t1 = global::get_time();
    cout << "timing for sci::ci_solver : " << setprecision(2) 

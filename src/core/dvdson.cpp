@@ -120,8 +120,8 @@ void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
 	 check_orthogonality(ndim,nsub,vbas);
       }
    } // iter
-
    if(!ifconv){
-      cout << "Convergence failure: out of maxcycle ! maxcycle=" << maxcycle << endl;
+      cout << "convergence failure: out of maxcycle =" 
+	   << maxcycle << endl;
    }
 }
