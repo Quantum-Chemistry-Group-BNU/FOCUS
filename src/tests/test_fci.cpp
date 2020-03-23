@@ -20,7 +20,7 @@ void compare_eigs(vector<double>& es,
 		  vector<double>& es1){
    int nroot = es.size();
    cout << "\nCheck difference:" << endl;
-   cout << defaultfloat << setprecision(10);
+   cout << defaultfloat << setprecision(12);
    for(int i=0; i<nroot; i++){
       cout << "i=" << i 
 	   << " e=" << es[i] << " " << es1[i] 

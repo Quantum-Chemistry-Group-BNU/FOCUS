@@ -15,7 +15,7 @@ void fock::coeff_population(const onspace& space,
 		            const double thresh){
    cout << "\nfock::coeff_population dim=" << space.size() << " thresh=" << thresh << endl;
    cout << "   i-th   /   idx   /   coeff   /   onstate   /   nelec    /   single" << endl;
-   cout << setprecision(10);
+   cout << setprecision(12);
    double ne = 0.0, na = 0.0, nb = 0.0;
    double pi, psum = 0.0, psum1 = 0.0;
    vector<int> idx;
@@ -56,7 +56,7 @@ double fock::entropy(const vector<double>& p, const double cutoff){
       ssum -= pi*log2(pi);
    }
    cout << "fock::entropy : " 
-        << defaultfloat << setprecision(10)
+        << defaultfloat << setprecision(12)
         << "psum=" << psum << " SvN=" << ssum << endl; 
    return ssum;
 }

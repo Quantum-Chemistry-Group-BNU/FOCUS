@@ -42,7 +42,7 @@ int tests::test_hamiltonian(){
    assert(space2[1].to_string() == "000000100111");
    auto Ha = fock::get_Hij(space2[16], space2[1], int2e, int1e);
    auto Hb = fock::get_Hij(space2[1], space2[16], int2e, int1e);
-   cout << setprecision(10);
+   cout << setprecision(12);
    cout << Ha << endl;
    cout << Hb << endl;
    assert(abs(Ha-0.04854627932) < thresh);
@@ -114,7 +114,7 @@ int tests::test_hamiltonian(){
    linalg::matrix rdm2(k2,k2);
    fock::get_rdm2(space2,v0,v0,rdm2);
    rdm2.print("rdm2");
-   cout << setprecision(10);
+   cout << setprecision(12);
    cout << rdm2(0,0) << endl;
    assert(abs(rdm2(0,0)-0.999930449) < thresh);
    // check AAAA part

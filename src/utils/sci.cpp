@@ -1,4 +1,6 @@
 #include "../settings/global.h"
+#include "../core/hamiltonian.h"
+#include "../core/linalg.h"
 #include "../core/onstate.h"
 #include "../core/dvdson.h"
 #include "../core/tools.h"
@@ -11,10 +13,12 @@ using namespace linalg;
 using namespace fci;
 using namespace sci;
 
-heatbath_table::heatbath_table(const integral::two_body& int2e){
+heatbath_table::heatbath_table(const integral::two_body& int2e,
+			       const integral::one_body& int1e){
    cout << "\nheatbath_table::heatbath_table" << endl;
-   auto t0 = global::get_time();
    bool debug = false;
+   auto t0 = global::get_time();
+
    int k = int2e.sorb;
    sorb = k;
    eri4.resize(k*(k-1)/2);
@@ -38,13 +42,15 @@ heatbath_table::heatbath_table(const integral::two_body& int2e){
    for(int i=0; i<k; i++){
       for(int j=0; j<=i; j++){
 	 int ij = i*(i+1)/2+j;
-	 eri3[ij].resize(k);
+	 eri3[ij].resize(k+1);
 	 for(int p=0; p<k; p++){
 	    // <ip||jp> = [ij|pp] - [ip|pj] (i>=j)
 	    eri3[ij][p] = int2e.get(i,j,p,p) - int2e.get(i,p,p,j); 
 	 } // p
+	 eri3[ij][k] = int1e.get(i,j);
       } // j
    } // i
+   
    if(debug){
       cout << defaultfloat << setprecision(12);
       for(int ij=0; ij<k*(k-1)/2; ij++){
@@ -70,8 +76,6 @@ heatbath_table::heatbath_table(const integral::two_body& int2e){
 // expand variational subspace
 void sci::expand_varSpace(onspace& space, 
 			  unordered_set<onstate>& varSpace,
-	       	          const integral::two_body& int2e,
-	       	          const integral::one_body& int1e,
 		          const heatbath_table& hbtab, 
 			  vector<double>& cmax, 
 			  const double eps1){
@@ -81,8 +85,7 @@ void sci::expand_varSpace(onspace& space,
 
    // assuming particle number conserving space
    onstate state = space[0];
-   int no = state.nelec();
-   int nv = state.size() - no;
+   int no = state.nelec(), k = state.size(), nv = k - no;
    vector<int> olst(no), vlst(nv);
    int nsingles = no*nv;
    int dim = space.size();
@@ -104,9 +107,8 @@ void sci::expand_varSpace(onspace& space,
          int ix = ia%no, ax = ia/no;
 	 int i = olst[ix], a = vlst[ax];
 	 // direct computation of HijS using eri3 [fast]
-	 int p = std::max(i,a), q = std::min(i,a);
-         int pq = p*(p+1)/2+q;
-	 double Hij = int1e.get(p,q); // hai 
+	 int p = std::max(i,a), q = std::min(i,a), pq = p*(p+1)/2+q;
+	 double Hij = hbtab.eri3[pq][k]; // hai
 	 for(int jx=0; jx<no; jx++){
             int j = olst[jx];
 	    Hij += hbtab.eri3[pq][j];
@@ -130,7 +132,6 @@ void sci::expand_varSpace(onspace& space,
 	       varSpace.insert(state1);
 	       space.push_back(state1);
  	       ns++;
-
 	       // flip
 	       auto state1f = state1.flip();
 	       auto search1 = varSpace.find(state1f);
@@ -139,7 +140,6 @@ void sci::expand_varSpace(onspace& space,
 	          space.push_back(state1f);
  	          ns++;
 	       }
-
 	    }
 	 } 
       } // ia 
@@ -189,7 +189,6 @@ void sci::expand_varSpace(onspace& space,
 	          varSpace.insert(state2);
 	          space.push_back(state2);
 		  nd++;
-
 	          // flip
 	          auto state2f = state2.flip();
 	          auto search2 = varSpace.find(state2f);
@@ -198,7 +197,6 @@ void sci::expand_varSpace(onspace& space,
 	             space.push_back(state2f);
  	             nd++;
 	          }
-
 	       }
 	    }
 	 } // ab
@@ -215,20 +213,18 @@ void sci::expand_varSpace(onspace& space,
 	<< global::get_duration(t1-t0) << " s" << endl;
 }
 
-// selected CI procedure
-void sci::ci_solver(vector<double>& es,
-	       	    vector<vector<double>>& vs,	
-		    onspace& space,
-		    const input::schedule& schd, 
-	       	    const integral::two_body& int2e,
-	       	    const integral::one_body& int1e,
-	       	    const double ecore){
-   cout << "\nsci::ci_solver" << endl; 
-   bool debug = true;
-   auto t0 = global::get_time();
-
-   // set up intial configurations
-   unordered_set<onstate> varSpace;
+// prepare intial solution
+void sci::get_initial(vector<double>& es,
+		      matrix& vs,
+		      onspace& space, 
+		      unordered_set<onstate>& varSpace, 
+		      const heatbath_table& hbtab, 
+		      const input::schedule& schd, 
+		      const integral::two_body& int2e, 
+		      const integral::one_body& int1e, 
+		      const double ecore){
+   cout << "\nsci::get_initial" << endl;
+   // space = {|Di>}
    int k = int1e.sorb;
    for(const auto& det : schd.det_seeds){
       // convert det to onstate
@@ -245,39 +241,102 @@ void sci::ci_solver(vector<double>& es,
 	 varSpace.insert(state1);
       } 
    }
-
-   // set up initial states
+   // print
+   cout << "energies for reference states:" << endl;
+   cout << defaultfloat << setprecision(12);
    int nsub = space.size();
-   int neig = min(schd.nroots, nsub);
-   vector<double> etmp(neig);
-   matrix vtmp(nsub,neig);
-   fock::ci_solver(etmp, vtmp, space, int2e, int1e, ecore);
+   for(int i=0; i<nsub; i++){
+      cout << "i = " << i << " state = " << space[i].to_string2() 
+	   << " e = " << fock::get_Hii(space[i],int2e,int1e)+ecore 
+	   << endl;
+   }
+   // CISD space
+   double eps1 = schd.eps1[0];
+   vector<double> cmax(nsub,1.0);
+   expand_varSpace(space, varSpace, hbtab, cmax, eps1);
+   nsub = space.size();
+   // set up initial states
+   if(schd.nroots > nsub){
+      cout << "error in sci::ci_solver: subspace is too small!" << endl;
+      exit(1);
+   }
+   auto vsol = fock::get_Ham(space, int2e, int1e, ecore);
+   vector<double> esol(nsub);
+   eigen_solver(vsol, esol);
+   // save
+   int neig = schd.nroots;
+   es.resize(neig);
+   matrix vtmp(nsub, neig);
+   for(int j=0; j<neig; j++){
+      for(int i=0; i<nsub; i++){
+	 vtmp(i,j) = vsol(i,j);
+      }
+      es[j] = esol[j];
+   }
+   vs = vtmp;
+   // print
+   cout << setprecision(12);
+   for(int i=0; i<neig; i++){
+      cout << "i = " << i << " e = " << es[i] << endl; 
+   }
+}
 
+// selected CI procedure
+void sci::ci_solver(vector<double>& es,
+	       	    vector<vector<double>>& vs,	
+		    onspace& space,
+		    const input::schedule& schd, 
+	       	    const integral::two_body& int2e,
+	       	    const integral::one_body& int1e,
+	       	    const double ecore){
+   cout << "\nsci::ci_solver" << endl; 
+   bool debug = true;
+   auto t0 = global::get_time();
+   
    // set up head-bath table
-   heatbath_table hbtab(int2e);
+   heatbath_table hbtab(int2e, int1e);
+
+   // set up intial configurations
+   vector<double> esol;
+   matrix vsol;
+   unordered_set<onstate> varSpace;
+   get_initial(esol, vsol, space, varSpace, 
+	       hbtab, schd, int2e, int1e, ecore);
+
+//   // set up initial sparseH
+//   product_space pspace(space);
+//   coupling_table ctabA, ctabB;
+//   ctabA.get_C11(pspace.spaceA);
+//   ctabB.get_C11(pspace.spaceB);
+//   sparse_hamiltonian sparseH;
+//   sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
+//		   	   int2e, int1e, ecore);
 
    // start increment
+   int nsub = space.size(); 
+   int neig = schd.nroots;
    for(int iter=0; iter<schd.maxiter; iter++){
-      cout << "\n-------------" << endl;
+      cout << "\n---------------------" << endl;
       cout << "iter=" << iter << " eps1=" << schd.eps1[iter] << endl;
-      cout << "-------------" << endl;
+      cout << "---------------------" << endl;
       double eps1 = schd.eps1[iter];
-
-      // print initial space here?
 
       // compute |cmax| for screening
       vector<double> cmax(nsub,0.0);
       for(int j=0; j<neig; j++){
          for(int i=0; i<nsub; i++){
-	    cmax[i] += pow(vtmp(i,j),2);
+	    cmax[i] += pow(vsol(i,j),2);
          }
       }
       transform(cmax.begin(), cmax.end(), cmax.begin(),
 		[](const double& x){ return pow(x,0.5); });
 
       // expand 
-      expand_varSpace(space, varSpace, int2e, int1e, hbtab, cmax, eps1);
+      expand_varSpace(space, varSpace, hbtab, cmax, eps1);
+      int nsub0 = nsub;
+      nsub = space.size();
 
+      // update auxilliary data structure 
       product_space pspace(space);
       coupling_table ctabA, ctabB;
       ctabA.get_C11(pspace.spaceA);
@@ -285,86 +344,7 @@ void sci::ci_solver(vector<double>& es,
       sparse_hamiltonian sparseH;
       sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
    		   	      int2e, int1e, ecore);
-  
-      auto fname = "Hij_"+to_string(iter);
-      sparseH.to_gephi(fname, space);
-      if(iter == 4) exit(1);
 
-      // update
-      nsub = space.size();
-      neig = min(schd.nroots, nsub);
-      // set up Davidson solver 
-      dvdsonSolver solver;
-      solver.iprt = 2;
-      solver.crit_v = 1.e-3;
-      solver.crit_e = 1.e-10;
-      solver.ndim = nsub;
-      solver.neig = neig;
-      solver.Diag = sparseH.diag.data();
-      using std::placeholders::_1;
-      using std::placeholders::_2;
-      solver.HVec = bind(fci::get_Hx, _1, _2, cref(sparseH));
-      // get initial guess
-      matrix v0(solver.ndim, solver.neig);
-      get_initial(space, int2e, int1e, ecore, sparseH.diag, v0);
-      // solve
-      etmp.resize(neig);
-      matrix vtmp1(nsub,neig);
-      solver.solve_iter(etmp.data(), vtmp1.data(), v0.data());
-      // check convergence of SCI
-      vtmp = vtmp1; // copy assignment
-     
-      //if(iter == 2) exit(1);
-
-      // increment sparseH 
-      
-      // analysi of coefficients here!
-
-   }
-
-   exit(1);
-
-
-/*
-
-   // set up initial sparseH
-   product_space pspace(space);
-   coupling_table ctabA(pspace.umapA);
-   coupling_table ctabB(pspace.umapB);
-   sparse_hamiltonian sparseH(space, pspace, ctabA, ctabB,
-		   	      int2e, int1e, ecore);
-
-   // start increment
-   for(int iter=0; iter<schd.maxiter; iter++){
-      cout << "\n-------------" << endl;
-      cout << "iter=" << iter << " eps1=" << schd.eps1[iter] << endl;
-      cout << "-------------" << endl;
-      double eps1 = schd.eps1[iter];
-
-      // print initial space here?
-
-      // compute |cmax| for screening
-      vector<double> cmax(nsub,0.0);
-      for(int j=0; j<neig; j++){
-         for(int i=0; i<nsub; i++){
-	    cmax[i] += pow(vtmp(i,j),2);
-         }
-      }
-      transform(cmax.begin(), cmax.end(), cmax.begin(),
-		[](const double& x){ return pow(x,0.5); });
-
-      // expand 
-      expand_varSpace(space, varSpace, int2e, int1e, hbtab, cmax, eps1);
-
-      product_space pspace(space);
-      coupling_table ctabA(pspace.umapA);
-      coupling_table ctabB(pspace.umapB);
-      sparse_hamiltonian sparseH(space, pspace, ctabA, ctabB,
-   		   	         int2e, int1e, ecore);
-   
-      // update
-      nsub = space.size();
-      neig = min(schd.nroots, nsub);
       // set up Davidson solver 
       dvdsonSolver solver;
       solver.iprt = 2;
@@ -376,32 +356,43 @@ void sci::ci_solver(vector<double>& es,
       using std::placeholders::_1;
       using std::placeholders::_2;
       solver.HVec = bind(fci::get_Hx, _1, _2, cref(sparseH));
-      // get initial guess
-      matrix v0(solver.ndim, solver.neig);
-      get_initial(space, int2e, int1e, ecore, sparseH.diag, v0);
-      // solve
-      etmp.resize(neig);
-      matrix vtmp1(nsub,neig);
-      solver.solve_iter(etmp.data(), vtmp1.data(), v0.data());
-      // check convergence of SCI
-      vtmp = vtmp1; // copy assignment
+
+      // copy previous initial guess
+      matrix v0(nsub, neig);
+      for(int j=0; j<neig; j++){
+         for(int i=0; i<nsub0; i++){
+            v0(i,j) = vsol(i,j);
+	 }
+      }
       
+      // solve
+      vector<double> esol1(neig);
+      matrix vsol1(nsub,neig);
+      solver.solve_iter(esol1.data(), vsol1.data(), v0.data());
+
+      // check convergence of SCI
+      vsol = vsol1; // copy assignment
+     
+      if(iter == 5) exit(1);
+
       // increment sparseH 
       
       // analysi of coefficients here!
 
-   
    } // iter
+   exit(1);
 
+/*
    // copy results
-   copy_n(etmp.begin(), neig, es.begin());
+   copy_n(esol.begin(), neig, es.begin());
    for(int i=0; i<neig; i++){
       vs[i].resize(nsub);
-      copy_n(vtmp.col(i), nsub, vs[i].begin());
+      copy_n(vsol.col(i), nsub, vs[i].begin());
    }
    cout << space.size() << endl;
    cout << "nsub=" << nsub << endl;
 */
+
    auto t1 = global::get_time();
    cout << "timing for sci::ci_solver : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;

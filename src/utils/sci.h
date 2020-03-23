@@ -3,6 +3,7 @@
 
 #include "../core/integral.h"
 #include "../core/onspace.h"
+#include "../core/matrix.h"
 #include "../io/input.h"
 #include <unordered_set>
 #include <functional>
@@ -22,7 +23,8 @@ class greater_abs{
 // t[pq](r,s)=<pq||rs> for p>q, r>s
 struct heatbath_table{
 public: 
-   heatbath_table(const integral::two_body& int2e);
+   heatbath_table(const integral::two_body& int2e,
+		  const integral::one_body& int1e);
 public:
    int sorb;
    // sorted by magnitude Iij=<ij||kl> (i>j,k>l)
@@ -35,11 +37,20 @@ public:
 // expand variational subspace
 void expand_varSpace(fock::onspace& space, 
 		     std::unordered_set<fock::onstate>& varSpace, 
-	       	     const integral::two_body& int2e,
-	       	     const integral::one_body& int1e,
 		     const heatbath_table& hbtab, 
 		     std::vector<double>& cmax, 
 		     const double eps1);
+
+// prepare intial solution
+void get_initial(std::vector<double>& e, 
+		 linalg::matrix& v,
+		 fock::onspace& space,
+	         std::unordered_set<fock::onstate>& varSpace,
+		 const heatbath_table& hbtab, 
+		 const input::schedule& schd, 
+	         const integral::two_body& int2e,
+	         const integral::one_body& int1e,
+	         const double ecore);
 
 // sci
 void ci_solver(std::vector<double>& es,

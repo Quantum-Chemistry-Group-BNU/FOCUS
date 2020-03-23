@@ -26,7 +26,7 @@ void dvdsonSolver::solve_diag(double* es, double* vs){
    vector<double> e(ndim);
    matrix V(H);
    eigen_solver(V,e);
-   cout << "eigenvalues:\n" << setprecision(10);
+   cout << "eigenvalues:\n" << setprecision(12);
    for(int i=0; i<ndim; i++){
       cout << "i=" << i << " e=" << e[i] << endl;
    }

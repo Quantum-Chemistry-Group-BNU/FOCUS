@@ -14,6 +14,7 @@ namespace linalg{
 class matrix{
    public:
       // constructors
+      matrix(): _rows(0), _cols(0), _size(0), _data(nullptr) {};
       matrix(const int m, const int n): _rows(m), _cols(n){
 	 _size = m*n;     
          _data = new double[_size];
@@ -110,6 +111,8 @@ class matrix{
 	 }
 	 std::cout << std::defaultfloat;
       }
+      // save
+      void save_text(const std::string& fname) const;
       // helpers
       inline int rows() const{ return _rows; }
       inline int cols() const{ return _cols; }

@@ -53,8 +53,10 @@ struct sparse_hamiltonian{
       void debug(const fock::onspace& space,
 	 	 const integral::two_body& int2e,
 		 const integral::one_body& int1e);
-      void to_gephi(const std::string& fname,
-		    const fock::onspace& space);
+      // save for analysis
+      void save_gephi(const std::string& fname,
+		      const fock::onspace& space);
+      void save_text(const std::string& fname);
    public:
       int dim;
       std::vector<double> diag; // H[i,i]

@@ -1,4 +1,5 @@
 #include <random>
+#include <fstream>
 #include "matrix.h"
 
 using namespace std;
@@ -60,4 +61,16 @@ matrix linalg::random_matrix(const int m, const int n){
       }
    }
    return rand;
+}
+
+void matrix::save_text(const string& fname) const{
+   ofstream file(fname+".txt"); 
+   file << defaultfloat << setprecision(4); 
+   for(int i=0; i<_rows; i++){
+      for(int j=0; j<_cols; j++){
+         file << _data[j*_rows+i] << " ";
+      } 
+      file << endl;
+   }
+   file.close();
 }

@@ -257,7 +257,7 @@ void fci::get_initial(const onspace& space,
    }
    // print
    cout << "\nfci::get_initial pdim=" << pdim << endl;
-   cout << setprecision(10);
+   cout << setprecision(12);
    for(int i=0; i<neig; i++){
       cout << "i=" << i << " e=" << e[i] << " " 
 	   << " e+ecore=" << e[i]+ecore << endl;
