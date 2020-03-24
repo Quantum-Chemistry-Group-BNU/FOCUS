@@ -398,8 +398,7 @@ void sci::ci_solver(const input::schedule& schd,
       }
    } // iter
    if(!ifconv){
-      cout << "convergence failure: out of maxiter =" 
-	   << schd.maxiter << endl;
+      cout << "convergence failure: out of maxiter=" << schd.maxiter << endl;
    }
 
    // copy results

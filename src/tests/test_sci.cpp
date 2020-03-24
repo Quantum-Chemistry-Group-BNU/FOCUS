@@ -60,12 +60,10 @@ int tests::test_sci(){
    vector<double> occ;
    fci::get_natural_nr(rdm1,u,occ);
 
-/*
    // compute rdm2
    int k2 = k*(k-1)/2;
    linalg::matrix rdm2(k2,k2);
-   fci::get_rdm2(sci_space,sparseH,v0,v0,rdm2);
-   exit(1);
+   fci::get_rdm2(sparseH,sci_space,v0,v0,rdm2);
 
    // compute E
    cout << setprecision(12) << endl;
@@ -77,24 +75,6 @@ int tests::test_sci(){
    auto etot = ecore+e1+e2;
    cout << "etot=" << etot << endl; 
    assert(abs(es[0]-etot) < 1.e-8);
-
-   // get_rdm1_from_rdm2
-   auto rdm1b = fock::get_rdm1_from_rdm2(rdm2);
-   auto diff = normF(rdm1b-rdm1);
-   cout << "|rdm1b-rdm1|=" << diff << endl;
-   assert(diff < 1.e-6);
-  
-   // get_etot 
-   double etot1 = fock::get_etot(rdm1,rdm2,int2e,int1e,ecore);
-   cout << "etot1=" << etot1 << endl;
-   assert(abs(etot1-etot) < 1.e-8);
-
-   // check for FCIDUMP_c2
-   //if(k == 12*2 && ne == 8){
-   //   assert(abs(es[0]+75.48440859785963) < 1.e-8);
-   //   assert(abs(SvN-0.7211959135921441) < 1.e-5);
-   //}
-*/
    exit(1);
 
    return 0;
