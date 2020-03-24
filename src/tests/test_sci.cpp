@@ -42,24 +42,30 @@ int tests::test_sci(){
    // selected CI
    onspace sci_space;
    vector<vector<double>> vs(nroot);
-   sci::ci_solver(es, vs, sci_space, schd, int2e, int1e, ecore);
+   fci::sparse_hamiltonian sparseH;
+   sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
 
    // analysis 
    auto v0 = vs[0];
-   coeff_population(sci_space, v0, 1.e-2);
+   coeff_population(sci_space, v0);
    auto SvN = coeff_entropy(v0);
 
    // compute rdm1
    int k = int1e.sorb; 
    linalg::matrix rdm1(k,k);
    fci::get_rdm1(sci_space,v0,v0,rdm1);
-   exit(1);
+
+   // natural orbitals
+   linalg::matrix u;
+   vector<double> occ;
+   fci::get_natural_nr(rdm1,u,occ);
 
 /*
    // compute rdm2
    int k2 = k*(k-1)/2;
    linalg::matrix rdm2(k2,k2);
-   fci::get_rdm2(sci_space,v0,v0,rdm2);
+   fci::get_rdm2(sci_space,sparseH,v0,v0,rdm2);
+   exit(1);
 
    // compute E
    cout << setprecision(12) << endl;

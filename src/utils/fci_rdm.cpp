@@ -21,7 +21,8 @@ void fci::get_rdm1(const onspace& space,
    auto t0 = global::get_time();
   
    // setup product_space
-   product_space pspace(space);
+   product_space pspace;
+   pspace.get_pspace(space);
    // setupt coupling_table
    coupling_table ctabA, ctabB;
    ctabA.get_C11(pspace.spaceA);
@@ -90,8 +91,8 @@ void fci::get_rdm1(const onspace& space,
 
 // <Psi|p0^+p1^+q1q0|Psi> (p0>p1, q0>q1) using sparseH
 // which contains the computed connection information  
-void fci::get_rdm2(const onspace& space,
-	 	   const sparse_hamiltonian& sparseH,
+void fci::get_rdm2(const sparse_hamiltonian& sparseH,
+		   const onspace& space,
 	           const vector<double>& civec1,
 		   const vector<double>& civec2,
 		   matrix& rdm2){
@@ -157,4 +158,32 @@ void fci::get_rdm2(const onspace& space,
       cout << "rdm2_diff=" << rdm2_diff << endl;
       if(rdm2_diff>1.e-8) exit(1);
    }
+}
+
+// natural orbital
+void fci::get_natural_nr(const matrix& rdm1,
+		         matrix& u,
+		         vector<double>& occ){
+   int k1 = rdm1.rows()/2;
+   matrix u1(k1,k1);
+   occ.resize(k1);
+   for(int j=0; j<k1; j++){
+      for(int i=0; i<k1; i++){
+         u1(i,j) = rdm1(2*i,2*j) + rdm1(2*i+1,2*j+1);
+      }
+   }
+   u = -1.0*u1;
+   // diagonalize spin-averaged dm
+   eigen_solver(u, occ);
+   transform(occ.begin(), occ.end(), occ.begin(),
+             [](const double x){ return -x; });
+   double ne = 0.0;
+   cout << "\nfci::get_natural_nr k/2=" << rdm1.rows()/2 << endl;
+   for(int i=0; i<k1; i++){
+      cout << setw(3) << i 
+	   << " :" << fixed << setw(7) << setprecision(4) << occ[i] 
+	   << endl;
+      ne += occ[i];
+   }
+   cout << "no. of electrons=" << ne << endl;
 }

@@ -15,11 +15,14 @@ using namespace linalg;
 using namespace fci;
 
 // constructor
-product_space::product_space(const onspace& space){
-   int dim = space.size();
-   int udxA = 0, udxB = 0;
+void product_space::get_pspace(const onspace& space,
+		 	       const int istart){
+   dimA0 = spaceA.size();
+   dimB0 = spaceB.size();
+   int udxA = dimA0, udxB = dimB0;
    // construct {U(A), D(A), B(A)}, {U(B), D(B), A(B)}
-   for(int i=0; i<dim; i++){
+   int dim = space.size();
+   for(int i=istart; i<dim; i++){
       // even bits 
       onstate strA = space[i].get_even();
       auto itA = umapA.find(strA);
@@ -50,15 +53,23 @@ product_space::product_space(const onspace& space){
 }
 
 // coupling_table
-void coupling_table::get_C11(const onspace& space){
+void coupling_table::get_C11(const onspace& space,
+			     const int istart){
    auto t0 = global::get_time();
+   int avg = 0;
    int dim = space.size();
    C11.resize(dim);
-   double avg = 0.0;
    for(int i=0; i<dim; i++){
-      for(int j=0; j<dim; j++){
-         auto pr = space[i].diff_type(space[j]);
-	 if(pr == make_pair(1,1)) C11[i].insert(j);
+      if(i<istart){
+         for(int j=istart; j<dim; j++){
+            auto pr = space[i].diff_type(space[j]);
+            if(pr == make_pair(1,1)) C11[i].insert(j);
+         }
+      }else{
+         for(int j=0; j<dim; j++){
+            auto pr = space[i].diff_type(space[j]);
+            if(pr == make_pair(1,1)) C11[i].insert(j);
+         }
       }
       avg += C11[i].size();
    }
@@ -103,17 +114,22 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
 				         const coupling_table& ctabB,
 				         const integral::two_body& int2e,
 				         const integral::one_body& int1e,
-				         const double ecore){
-   cout << "\nsparse_hamiltonian::get_hamiltonian" << endl; 
+				         const double ecore,
+					 const int istart){
+   cout << "\nsparse_hamiltonian::get_hamiltonian" 
+	<< " dim0 = " << istart << " dim = " << space.size() << endl; 
    bool debug = true;
    auto t0 = global::get_time();
    // diagonal 
-   diag = fock::get_Hdiag(space, int2e, int1e, ecore);
+   dim = space.size();
+   diag.resize(dim);
+   for(size_t i=istart; i<dim; i++){
+      diag[i] = fock::get_Hii(space[i],int2e,int1e) + ecore;
+   }
    auto ta = global::get_time();
-   if(debug) cout << "timing for fock::get_Hdiag : " << setprecision(2) 
+   if(debug) cout << "timing for diagonal : " << setprecision(2) 
 		  << global::get_duration(ta-t0) << " s" << endl;
    // off-diagonal 
-   dim = space.size();
    connect.resize(dim);
    value.resize(dim);
    diff.resize(dim);
@@ -124,10 +140,11 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
       for(const auto& pib : pspace.rowA[ia]){
 	 int ib = pib.first;
 	 int i = pib.second;
+	 if(i < istart) continue; // incremental build
 	 for(const auto& pja : pspace.colB[ib]){
 	    int ja = pja.first;
 	    int j = pja.second;
-	    if(j <= i) continue; 
+	    if(j >= i) continue; 
 	    // check connectivity <I_A|H|J_A>
 	    auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
 	    if(pr == make_pair(1,1)){
@@ -154,10 +171,11 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
       for(const auto& pib : pspace.rowA[ia]){
 	 int ib = pib.first;
 	 int i = pib.second;
+	 if(i < istart) continue; // incremental build
          for(const auto& pjb : pspace.rowA[ia]){
 	    int jb = pjb.first;
 	    int j = pjb.second;
-	    if(j <= i) continue; 
+	    if(j >= i) continue; 
 	    // check connectivity <I_B|H|J_B>
 	    auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
 	    if(pr == make_pair(1,1)){
@@ -184,11 +202,12 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
       for(const auto& pib : pspace.rowA[ia]){
 	 int ib = pib.first;
 	 int i = pib.second;
+	 if(i < istart) continue; // incremental build
 	 for(int ja : ctabA.C11[ia]){
 	    for(const auto& pjb : pspace.rowA[ja]){
 	       int jb = pjb.first;
 	       int j = pjb.second;	       
-   	       if(j<=i) continue;
+   	       if(j >=i) continue;
 	       auto search = ctabB.C11[ib].find(jb);
 	       if(search != ctabB.C11[ib].end()){
 	          auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
@@ -265,9 +284,9 @@ void fci::get_initial(const onspace& space,
 }
 
 // solve eigenvalue problem in this space
-void fci::ci_solver(vector<double>& es,
+void fci::ci_solver(sparse_hamiltonian& sparseH,	    
+		    vector<double>& es,
 	       	    matrix& vs,
-	            sparse_hamiltonian& sparseH,	    
 		    const onspace& space,
 	       	    const integral::two_body& int2e,
 	       	    const integral::one_body& int1e,
@@ -277,7 +296,8 @@ void fci::ci_solver(vector<double>& es,
    auto t0 = global::get_time();
   
    // setup product_space
-   product_space pspace(space);
+   product_space pspace;
+   pspace.get_pspace(space);
    auto ta = global::get_time();
    if(debug) cout << "timing for pspace : " << setprecision(2) 
 		  << global::get_duration(ta-t0) << " s" << endl;
@@ -336,5 +356,5 @@ void fci::ci_solver(vector<double>& es,
 	       	    const integral::one_body& int1e,
 	       	    const double ecore){
    sparse_hamiltonian sparseH;
-   ci_solver(es, vs, sparseH, space, int2e, int1e, ecore);
+   ci_solver(sparseH, es, vs, space, int2e, int1e, ecore);
 }

@@ -36,10 +36,13 @@
           - optimization [use direct product structure in forming H]
  20200316 optimized RDM implementation 
 	  - reuse information & avoid O(Ndet) call of redundant functions
- 2020xxxx selection procedure 
+ 20200324 selection procedure 
 	  - control the space size for large problem
 	  - needs to be optimized for Fe8S7
-	  - implement the TR symmetry? => flip centers? 
+
+ 202003xx unrestricted/generalized (noncollinear) hartree-fock
+ 
+	  - implement the TR symmetry? => flip centers?
 	  - Coarse-Graining? Hierachical Clustering???
 
  pt2 util & storage/serialization:

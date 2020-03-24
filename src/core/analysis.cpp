@@ -14,7 +14,7 @@ void fock::coeff_population(const onspace& space,
 		            const vector<double>& civec, 
 		            const double thresh){
    cout << "\nfock::coeff_population dim=" << space.size() << " thresh=" << thresh << endl;
-   cout << "   i-th   /   idx   /   coeff   /   onstate   /   nelec    /   single" << endl;
+   cout << "  i-th  /  idx  /  coeff  /  rank  /  seniority  /  onstate  /  nelec" << endl;
    cout << setprecision(12);
    double ne = 0.0, na = 0.0, nb = 0.0;
    double pi, psum = 0.0, psum1 = 0.0;
@@ -32,11 +32,12 @@ void fock::coeff_population(const onspace& space,
          cout << setw(8) << j << " : " << setw(8) << i << " ";
 	 if(civec[i]>0) cout << fixed << setprecision(5) << "  " << civec[i];
 	 if(civec[i]<0) cout << fixed << setprecision(5) << " " << civec[i];
-	 cout << "  " << space[i].to_string2() << " ("
+	 cout << fixed << setw(3) << space[i].diff_num(space[idx[0]])/2 << " " 
+	      << fixed << setw(3) << space[i].norb_single() << "  "
+	      << space[i].to_string2() << " ("
               << space[i].nelec() << ","
               << space[i].nelec_a() << ","
               << space[i].nelec_b() << ") "
-              << space[i].norb_single() << " "
               << endl;
 	 psum1 += pi;
 	 j++;

@@ -14,14 +14,14 @@ namespace fci{
 // represent space of dets by direct product structure
 struct product_space{
    public:
-      // constructor	   
-      product_space(const fock::onspace& space);
+      void get_pspace(const fock::onspace& space,
+		      const int istart=0);
    public:
-      // second int is used for indexing in constructing bsetA, asetB 
+      // second int is used for indexing in constructing rowA, colB 
       std::map<fock::onstate,int> umapA, umapB;
       fock::onspace spaceA, spaceB; // ordered by appearance
       std::vector<std::vector<std::pair<int,int>>> rowA, colB;  
-      int dimA, dimB;
+      int dimA0 = 0, dimB0 = 0, dimA, dimB;
 };
 
 // compute coupling of states:
@@ -29,7 +29,8 @@ struct product_space{
 // which partition the cartesian space (I,J) into disjoint subspace!
 struct coupling_table{
    public:
-      void get_C11(const fock::onspace& space);
+      void get_C11(const fock::onspace& space,
+		   const int istart=0);
    public:
       std::vector<std::set<int>> C11; // differ by single (sorted, binary_search)
       /*
@@ -49,7 +50,8 @@ struct sparse_hamiltonian{
 			   const coupling_table& ctabB,
 			   const integral::two_body& int2e,
 			   const integral::one_body& int1e,
-			   const double ecore);
+			   const double ecore,
+			   const int istart=0);
       void debug(const fock::onspace& space,
 	 	 const integral::two_body& int2e,
 		 const integral::one_body& int1e);
@@ -59,9 +61,11 @@ struct sparse_hamiltonian{
       void save_text(const std::string& fname);
    public:
       int dim;
-      std::vector<double> diag; // H[i,i]
-      std::vector<std::vector<int>> connect; // i<->j (i<j) connected by H
-      std::vector<std::vector<double>> value; // H[i][j] (i<j)
+      // diagonal part: H[i,i]
+      std::vector<double> diag;   
+      // lower-riangular part: H[i,j] (i>=j)
+      std::vector<std::vector<int>> connect; // connected by H
+      std::vector<std::vector<double>> value; // H[i][j] 
       std::vector<std::vector<long>> diff; // packed orbital difference 
 };
 
@@ -79,9 +83,9 @@ void get_initial(const fock::onspace& space,
 		 linalg::matrix& v0);
 
 // fci
-void ci_solver(std::vector<double>& es,
+void ci_solver(sparse_hamiltonian& sparseH,
+	       std::vector<double>& es,
 	       linalg::matrix& vs,	
-	       sparse_hamiltonian& sparseH,
 	       const fock::onspace& space,
 	       const integral::two_body& int2e,
 	       const integral::one_body& int1e,

@@ -233,11 +233,16 @@ void sci::get_initial(vector<double>& es,
       for(int i : det){
          state[i] = 1;
       }
-      space.push_back(state);
-      varSpace.insert(state);
+      // search first
+      auto search = varSpace.find(state);
+      if(search == varSpace.end()){
+	 varSpace.insert(state);
+	 space.push_back(state);
+      }
       // flip
       auto state1 = state.flip();
-      if(state1 != state){
+      auto search1 = varSpace.find(state1);
+      if(search1 == varSpace.end()){
 	 space.push_back(state1);
 	 varSpace.insert(state1);
       } 
@@ -283,10 +288,11 @@ void sci::get_initial(vector<double>& es,
 }
 
 // selected CI procedure
-void sci::ci_solver(vector<double>& es,
+void sci::ci_solver(const input::schedule& schd, 
+	            sparse_hamiltonian& sparseH,
+		    vector<double>& es,
 	       	    vector<vector<double>>& vs,	
 		    onspace& space,
-		    const input::schedule& schd, 
 	       	    const integral::two_body& int2e,
 	       	    const integral::one_body& int1e,
 	       	    const double ecore){
@@ -303,15 +309,16 @@ void sci::ci_solver(vector<double>& es,
    unordered_set<onstate> varSpace;
    get_initial(esol, vsol, space, varSpace, 
 	       hbtab, schd, int2e, int1e, ecore);
-
-//   // set up initial sparseH
-//   product_space pspace(space);
-//   coupling_table ctabA, ctabB;
-//   ctabA.get_C11(pspace.spaceA);
-//   ctabB.get_C11(pspace.spaceB);
-//   sparse_hamiltonian sparseH;
-//   sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
-//		   	   int2e, int1e, ecore);
+   
+   // set up auxilliary data structure   
+   product_space pspace;
+   coupling_table ctabA, ctabB;
+   // build initial
+   pspace.get_pspace(space);
+   ctabA.get_C11(pspace.spaceA);
+   ctabB.get_C11(pspace.spaceB);
+   sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
+   		   	   int2e, int1e, ecore);
 
    // start increment
    bool ifconv = false;
@@ -339,13 +346,11 @@ void sci::ci_solver(vector<double>& es,
       nsub = space.size();
 
       // update auxilliary data structure 
-      product_space pspace(space);
-      coupling_table ctabA, ctabB;
-      ctabA.get_C11(pspace.spaceA);
-      ctabB.get_C11(pspace.spaceB);
-      sparse_hamiltonian sparseH;
+      pspace.get_pspace(space, nsub0);
+      ctabA.get_C11(pspace.spaceA, pspace.dimA0);
+      ctabB.get_C11(pspace.spaceB, pspace.dimB0);
       sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
-   		   	      int2e, int1e, ecore);
+        	   	      int2e, int1e, ecore, nsub0);
 
       // set up Davidson solver 
       dvdsonSolver solver;

@@ -4,8 +4,6 @@ using namespace std;
 
 int main(){
    
-   tests::test_sci();
-
 /*
    tests::test_tools();
    
@@ -19,5 +17,8 @@ int main(){
    
    tests::test_rdm();
 */
+   
+   tests::test_sci();
+
    return 0;   
 }

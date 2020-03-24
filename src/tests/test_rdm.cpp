@@ -42,7 +42,7 @@ int tests::test_rdm(){
    vector<double> es(nroot,0.0);
    linalg::matrix vs(dim,nroot);
    fci::sparse_hamiltonian sparseH;
-   fci::ci_solver(es, vs, sparseH, fci_space, int2e, int1e, ecore);
+   fci::ci_solver(sparseH, es, vs, fci_space, int2e, int1e, ecore);
    if(k == 12*2 && ne == 8) assert(abs(es[0]+75.48440859785963) < 1.e-8);
 
    // analysis 
@@ -54,7 +54,7 @@ int tests::test_rdm(){
    // make_rdm2 from sparseH
    int k2 = k*(k-1)/2;
    linalg::matrix rdm2(k2,k2);
-   fci::get_rdm2(fci_space,sparseH,v0,v0,rdm2);
+   fci::get_rdm2(sparseH,fci_space,v0,v0,rdm2);
    double etot = fock::get_etot(rdm2,int2e,int1e,ecore);
    cout << "etot(rdm)=" << setprecision(12) << etot << endl;
    assert(abs(etot-es[0]) < 1.e-8);

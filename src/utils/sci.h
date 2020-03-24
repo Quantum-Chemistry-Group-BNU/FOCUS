@@ -5,6 +5,7 @@
 #include "../core/onspace.h"
 #include "../core/matrix.h"
 #include "../io/input.h"
+#include "fci.h"
 #include <unordered_set>
 #include <functional>
 #include <vector>
@@ -53,10 +54,11 @@ void get_initial(std::vector<double>& e,
 	         const double ecore);
 
 // sci
-void ci_solver(std::vector<double>& es,
+void ci_solver(const input::schedule& schd,
+	       fci::sparse_hamiltonian& sparseH,
+	       std::vector<double>& es,
 	       std::vector<std::vector<double>>& vs,
 	       fock::onspace& space,
-	       const input::schedule& schd, 
 	       const integral::two_body& int2e,
 	       const integral::one_body& int1e,
 	       const double ecore);
