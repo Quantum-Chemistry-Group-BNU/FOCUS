@@ -12,6 +12,7 @@ public:
    int nelec;
    int nroots;
    std::string integral_file;
+   int integral_type;
    std::set<std::set<int>> det_seeds;
    int nseeds;
    int maxiter;

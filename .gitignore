@@ -5,3 +5,5 @@ obj
 bin
 bin/*.x
 obj/*.o
+*.pyc
+*.h5

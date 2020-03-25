@@ -40,17 +40,25 @@
 	  - control the space size for large problem
 	  - needs to be optimized for Fe8S7
 
- 202003xx unrestricted/generalized (noncollinear) hartree-fock
- 
-	  - implement the TR symmetry? => flip centers?
-	  - Coarse-Graining? Hierachical Clustering???
-
  pt2 util & storage/serialization:
  2020xxxx compute e2 
- 2020xxxx serialization on disk
+ 2020xxxx serialization on disk?
  2020xxxx load space/vector for analysis 
 
+--- FUTURE ---
+
+ 202003xx unrestricted/generalized (noncollinear) hartree-fock
+ 2020xxxx dump integrals to interface with SCI: UHF-SCI
+
+ 2020xxxx VMC-c-MPS ansatz?
+
+ 2020xxxx entanglement localizaiton? 1-body & 2-body disentanglers?
+
 --- DMRG --- 
+
+ 2020xxxx grouping orbitals - meaningful structure & interpretation!!!
+	  - implement the TR symmetry? => flip centers
+	  - Coarse-Graining? Hierachical Clustering???
 
  2020xxxx mps structure & fit
 	  - brute force converge A[n]=<ln|L>

@@ -26,6 +26,7 @@ void input::read_input(input::schedule& schd, string fname){
    schd.deltaE = 1.e-10;
    schd.dvdson = 1.e-6;
    schd.integral_file = "FCIDUMP";
+   schd.integral_type = 0; // =0, RHF; =1, UHF
    	 
    string line;
    while(!istrm.eof()){
@@ -43,9 +44,12 @@ void input::read_input(input::schedule& schd, string fname){
          schd.deltaE = stod(line.substr(6)); 
       }else if(line.substr(0,6)=="dvdson"){
          schd.dvdson = stod(line.substr(6)); 
-      }else if(line.substr(0,9)=="integrals"){
-         istringstream is(line.substr(9));
+      }else if(line.substr(0,13)=="integral_file"){
+         istringstream is(line.substr(13));
 	 is >> schd.integral_file;
+      }else if(line.substr(0,13)=="integral_type"){
+         istringstream is(line.substr(13));
+	 is >> schd.integral_type;
       }else if(line.substr(0,4)=="dets"){
 	 int ndet = 0;
 	 while(true){
@@ -94,7 +98,8 @@ void input::read_input(input::schedule& schd, string fname){
    assert(schd.nelec > 0);
    cout << "nroots = " << schd.nroots << endl;
    assert(schd.nroots > 0);
-   cout << "integral file = " << schd.integral_file << endl;
+   cout << "integral_file = " << schd.integral_file << endl;
+   cout << "integral_type = " << schd.integral_type << endl;
    cout << "no. of unique seeds = " << schd.nseeds << endl;
    int ndet = 0;
    for(const auto& det : schd.det_seeds){

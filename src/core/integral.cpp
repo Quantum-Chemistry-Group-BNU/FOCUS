@@ -13,9 +13,11 @@ using namespace integral;
 void integral::read_fcidump(integral::two_body& int2e,
 		  	    integral::one_body& int1e,
 		  	    double& ecore,
-			    string fname){
+			    string fname,
+			    int type){
    auto t0 = global::get_time();
-   cout << "\nintegral::read_fcidump fname = " << fname << endl;
+   cout << "\nintegral::read_fcidump fname = " << fname 
+	<< " type = " << type << endl;
  
    ifstream istrm(fname);
    if(!istrm){
@@ -37,15 +39,18 @@ void integral::read_fcidump(integral::two_body& int2e,
 	 boost::trim_left(line); // in case there is a space in FCIDUMP
 	 boost::split(v,line,boost::is_any_of(" ,="),boost::token_compress_on);
          norb = stoi(v[2]);
-         cout << "norb(spatial) = " << norb << endl;
-         cout << "norb(spinorb) = " << 2*norb << endl;
+	 if(type == 0){
+            norb = 2*norb;
+	    cout << "norb(spatial) = " << norb/2 << endl;
+	 }
+         cout << "norb(spinorb) = " << norb << endl;
       }
    }
 
    // load integrals
-   int1e.sorb = 2*norb;
+   int1e.sorb = norb;
    int1e.init_mem(); 
-   int2e.sorb = 2*norb; 
+   int2e.sorb = norb; 
    int2e.init_mem(); 
    cout << "size of int1e (MB) = " << int1e.get_mem() << endl;
    cout << "size of int2e (MB) = " << int2e.get_mem() << endl;
@@ -66,28 +71,44 @@ void integral::read_fcidump(integral::two_body& int2e,
       if(i*j == 0 && k*l == 0){
          ecore = eri;
       }else if(i*j != 0 && k*l == 0){
-	 auto ia = 2*i-2, ib = 2*i-1;
-	 auto ja = 2*j-2, jb = 2*j-1;
-	 // expand spatial into spin-orbital integrals
-	 //cout << "int1e:" << i << "," << j << endl;
-         int1e.set(ia, ja, eri); // AA
-         int1e.set(ib, jb, eri); // BB
+	 // one-body integral
+	 //cout << "i,j,eri=" << i << "," << j << " " << eri << endl;
+	 if(type == 0){
+	    int ia = 2*i-2, ib = 2*i-1;
+	    int ja = 2*j-2, jb = 2*j-1;
+	    // expand spatial into spin-orbital integrals
+	    //cout << "int1e:" << i << "," << j << endl;
+            int1e.set(ia, ja, eri); // AA
+            int1e.set(ib, jb, eri); // BB
+	 }else if(type == 1){
+	    int i1 = i-1, j1 = j-1;
+            int1e.set(i1, j1, eri); 
+	 }
       }else if(i*j != 0 && k*l != 0){
-	 auto ia = 2*i-2, ib = 2*i-1;
-	 auto ja = 2*j-2, jb = 2*j-1;
-	 auto ka = 2*k-2, kb = 2*k-1;
-	 auto la = 2*l-2, lb = 2*l-1;
-	 // expand spatial into spin-orbital integrals
-	 //cout << "int2e:" << i << "," << j << "," << k << "," << l << endl;
-         int2e.set(ia, ja, ka, la, eri); // AAAA 
-         int2e.set(ib, jb, kb, lb, eri); // BBBB 
-         int2e.set(ib, jb, ka, la, eri); // BBAA
-	 int2e.set(ia, ja, kb, lb, eri); // AABB 
-	 // implement 8-fold symmetric NR integrals 
-         int2e.set(ja, ia,  ka, la, eri); // AAAA 
-         int2e.set(jb, ib,  kb, lb, eri); // BBBB 
-         int2e.set(jb, ib,  ka, la, eri); // BBAA
-	 int2e.set(ja, ia,  kb, lb, eri); // AABB
+	 // two-body integral
+	 //cout << "i,j,k,l,eri=" << i << "," << j 
+	 //     << "," << k << "," << l << " " << eri << endl;
+	 if(type == 0){
+	    int ia = 2*i-2, ib = 2*i-1;
+	    int ja = 2*j-2, jb = 2*j-1;
+	    int ka = 2*k-2, kb = 2*k-1;
+	    int la = 2*l-2, lb = 2*l-1;
+	    // expand spatial into spin-orbital integrals
+	    //cout << "int2e:" << i << "," << j << "," << k << "," << l << endl;
+            int2e.set(ia, ja, ka, la, eri); // AAAA 
+            int2e.set(ib, jb, kb, lb, eri); // BBBB 
+            int2e.set(ib, jb, ka, la, eri); // BBAA
+	    int2e.set(ia, ja, kb, lb, eri); // AABB 
+	    // implement 8-fold symmetric NR integrals 
+            int2e.set(ja, ia, ka, la, eri); // AAAA 
+            int2e.set(jb, ib, kb, lb, eri); // BBBB 
+            int2e.set(jb, ib, ka, la, eri); // BBAA
+	    int2e.set(ja, ia, kb, lb, eri); // AABB
+	 }else if(type == 1){
+	    int i1 = i-1, j1 = j-1, k1 = k-1, l1 = l-1;
+            int2e.set(i1, j1, k1, l1, eri); // AAAA 
+            int2e.set(j1, i1, k1, l1, eri); // AAAA 
+	 }
       }
    }
    istrm.close();
@@ -98,7 +119,6 @@ void integral::read_fcidump(integral::two_body& int2e,
    auto t1 = global::get_time();
    cout << "timing for integral::read_fcidump : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
-
    // debug
    //int1e.print();
    //int2e.print();

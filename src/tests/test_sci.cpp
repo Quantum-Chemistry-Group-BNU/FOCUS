@@ -34,7 +34,9 @@ int tests::test_sci(){
    integral::two_body int2e;
    integral::one_body int1e;
    double ecore;
-   integral::read_fcidump(int2e, int1e, ecore, schd.integral_file);
+   integral::read_fcidump(int2e, int1e, ecore, 
+		   	  schd.integral_file,
+		    	  schd.integral_type);
   
    int nroot = schd.nroots;
    vector<double> es(nroot,0.0);
@@ -75,7 +77,6 @@ int tests::test_sci(){
    auto etot = ecore+e1+e2;
    cout << "etot=" << etot << endl; 
    assert(abs(es[0]-etot) < 1.e-8);
-   exit(1);
 
    return 0;
 }

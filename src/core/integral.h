@@ -187,7 +187,7 @@ struct two_body{
 };
 
 void read_fcidump(two_body& int2e, one_body& int1e, double& ecore,
-		  std::string fcidump="FCIDUMP");
+		  std::string fcidump, const int type=0);
 
 } // integral
 
