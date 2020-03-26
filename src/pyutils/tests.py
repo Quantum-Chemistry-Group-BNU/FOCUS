@@ -3,7 +3,7 @@ import scipy.linalg
 import tools_io
 import ghf
 
-mol = "fe4s4"
+mol = "fe2s2"
 
 if mol == "fe2s2":
    integrals = "../../database/benchmark/fes/fe2s2/FCIDUMP"
