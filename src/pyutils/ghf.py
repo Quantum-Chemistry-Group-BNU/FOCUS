@@ -56,12 +56,14 @@ class ghf:
       self.ints = None
       # control parameters
       self.iprt = 0
-      self.maxcycle = 1000
+      self.maxcycle = 100
       self.ifUHF = True
       self.ifMOM = True
+      self.ifPOP = False
       self.thresh_e = 1.e-10
       self.thresh_d = 1.e-5
-      self.vshift = 0.5
+      self.vshift = 0.0
+      self.guess = "hcore" # "det" / "read"
       # save
       self.occ = None
       self.mocoeff = None
@@ -92,20 +94,31 @@ class ghf:
       k = h1e.shape[0]
       print 'k=',k
       dm = numpy.zeros((k,k))
-      if det == None:
-         # Hcore 
+      if self.guess == "hcore":
          e,v = scipy.linalg.eigh(h1e)
          mo_occ = v[:,:self.nelec]
          dm = mo_occ.dot(mo_occ.T)
-      else:
+      elif self.guess == "det":
          guess = str2lst(det)
          print 'guess=',guess
          assert len(guess) == self.nelec
          dm[guess,guess] = 1.0
+      elif self.guess == "read":
+         # load from PYSCF result
+         f = h5py.File(self.guess_mo,"r")
+         mo = f["mo"].value
+         na = f["na"].value
+         nb = f["nb"].value
+         f.close()
+         v = numpy.zeros((k,k))
+         v[0::2,0::2] = mo[0]
+         v[1::2,1::2] = mo[1]
+         v_occ = numpy.hstack((v[:,0:2*na:2],v[:,1:2*nb:2]))
+         dm = v_occ.dot(v_occ.T)
       # noise
       if not self.ifUHF:
          numpy.random.seed(0)
-         dm += numpy.random.uniform(-1,1,size=(k,k))
+         dm += 0.1*numpy.random.uniform(-1,1,size=(k,k))
          dm = dm/numpy.trace(dm)*self.nelec
       etot0 = 1.e10
       # analysis
@@ -151,7 +164,7 @@ class ghf:
             v[0::2,0::2] = vA
             v[1::2,1::2] = vB
          # update dm by maximum overlap criteria
-         if det != None and self.ifMOM:
+         if self.guess == "det" and self.ifMOM:
             pop = numpy.einsum('ij->j',v[guess,:]**2)
             index = numpy.argsort(-pop)
             mo_occ = v[:,index[:self.nelec]]
@@ -169,18 +182,27 @@ class ghf:
          ifconv = abs(deltaE) < self.thresh_e and deltaD < self.thresh_d
          if ifconv: break
          
-        # # population analysis for occupied mo
-        # pop_occA = numpy.einsum('ij->j',mo_occ[0::2,:]**2)
-        # pop_occB = numpy.einsum('ij->j',mo_occ[1::2,:]**2)
-        # print e
-        # print pop_occA
-        # print pop_occB
-        # sx_av = numpy.diag(mo_occ.T.dot(sx.dot(mo_occ)))
-        # sy_av = numpy.diag(mo_occ.T.dot(sy.dot(mo_occ)))
-        # sz_av = numpy.diag(mo_occ.T.dot(sz.dot(mo_occ)))
-        # print 'sx',sx_av
-        # print 'sy',sy_av
-        # print 'sz',sz_av
+      # population analysis for occupied mo
+      if self.ifPOP == True:
+         pop_occA = numpy.einsum('ij->j',mo_occ[0::2,:]**2)
+         pop_occB = numpy.einsum('ij->j',mo_occ[1::2,:]**2)
+         print "pop_occA=",pop_occA
+         print "pop_occB=",pop_occB
+         sx_av = numpy.diag(mo_occ.T.dot(sx.dot(mo_occ)))
+         sy_av = numpy.diag(mo_occ.T.dot(sy.dot(mo_occ)))
+         sz_av = numpy.diag(mo_occ.T.dot(sz.dot(mo_occ)))
+         print 'sx',sx_av
+         print 'sy',sy_av
+         print 'sz',sz_av
+         if det != None:
+            pop = numpy.diag(dm)
+            guess = str2lst(det)
+            pop_guess = numpy.zeros(k)
+            pop_guess[guess] = 1.0
+            print "occupations"
+            for i in range(k/2):
+               print("i=%2d pop=(%6.3f,%6.3f) guess=(%4.1f,%4.1f)")%\
+                    (i,pop[2*i],pop[2*i+1],pop_guess[2*i],pop_guess[2*i+1]) 
 
       diis.final()
       # check convergence
@@ -225,18 +247,33 @@ class ghf:
 
 if __name__ == '__main__':
 
-   integrals = "../../database/benchmark/fes/fe2s2/FCIDUMP"
+   mol = "fe4s4"
+
+   if mol == "fe2s2":
+      integrals = "../../database/benchmark/fes/fe2s2/FCIDUMP"
+      det = "0 2 4 6 8 10 12 14 16 18 20 22 24 36 38   1 3 15 17 19 21 23 25 27 29 31 33 35 37 39"
+      nelec = 30
+   elif mol == "fe4s4":
+      integrals = "../../database/benchmark/fes/fe4s4/FCIDUMP"
+      det = "0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 68 70   1 3 5 25 27 29 31 33 35 37 39 41 43 45 47 49 51 53 55 57 59 61 63 65 67 69 71"
+      nelec = 54
+   
    e,h1,h2 = tools_io.load_FCIDUMP(integrals)
    h1e,h2e = tools_io.to_SpinOrbitalERI(h1,h2)
 
    mf = ghf()
-   mf.nelec = 30
+   mf.nelec = nelec
    mf.ints = (e,h1e,h2e)
-   det = "0 2 4 6 8 10 12 14 16 18 20 22 24 36 38   1 3 15 17 19 21 23 25 27 29 31 33 35 37 39"
    mf.energy_det(det)
+   mf.guess = "det"
+   #mf.guess = "read"
+   #mf.guess_mo = "uhf_mo.h5"
+   mf.ifUHF = True #False
+   mf.ifPOP = True
    mf.solve(det)
-   mf.trans("fe2s2")
+   exit(1)
+   mf.trans(mol)
 
-   e,h1,h2 = tools_io.load_FCIDUMP("FCIDUMP_fe2s2")
+   e,h1,h2 = tools_io.load_FCIDUMP("FCIDUMP_"+mol)
    mf.ints = (e,h1,h2)
    mf.energy_det(mf.det)

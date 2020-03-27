@@ -480,7 +480,7 @@ class CC(object):
 	print 'Nocc = ',self.nocc
 	print 'Nvir = ',self.nvir
 	print 'Memory Usage for (T)=',1.0*self.nocc**3*self.nvir**3*8/1024**3,'G'
-        # t3
+        # t3[ijkabc]
 	tmp = -numpy.einsum('ijae,kebc->ijkabc',self.t2,self.eris.ovvv)\
    	      -numpy.einsum('imab,jkmc->ijkabc',self.t2,self.eris.ooov)
 	# cyclic permutation      

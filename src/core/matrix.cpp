@@ -32,6 +32,11 @@ matrix linalg::operator -(const matrix& mat1, const matrix& mat2){
    return mat;
 }
 
+matrix linalg::zero_matrix(const int m, const int n){
+   matrix zero(m,n);
+   return zero;
+}
+
 matrix linalg::identity_matrix(const int n){
    matrix iden(n,n);
    for(int i=0; i<n; i++)
@@ -52,7 +57,7 @@ std::seed_seq linalg::seeds{0}; //linalg::rd()};
 std::default_random_engine linalg::generator(linalg::seeds);
 
 matrix linalg::random_matrix(const int m, const int n){
-   std::uniform_real_distribution<double> dist(-1, 1);
+   std::uniform_real_distribution<double> dist(-1,1);
    matrix rand(m,n);
    // column major
    for(int j=0; j<n; j++){

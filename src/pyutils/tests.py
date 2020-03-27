@@ -3,7 +3,7 @@ import scipy.linalg
 import tools_io
 import ghf
 
-mol = "fe2s2"
+mol = "fe4s4"
 
 if mol == "fe2s2":
    integrals = "../../database/benchmark/fes/fe2s2/FCIDUMP"
@@ -30,3 +30,14 @@ mf.trans(mol)
 e,h1,h2 = tools_io.load_FCIDUMP("FCIDUMP_"+mol)
 mf.ints = (e,h1,h2)
 mf.energy_det(mf.det)
+
+import cc_itrf
+k = h1.shape[0]
+mycc = cc_itrf.CC(k,nelec,h1,h2)
+ecisd = mycc.cisd()
+eccsd = mycc.ccsd()
+ept = mycc.pt()
+print "\nEhf=",ehf
+print "Ecisd=",ehf+ecisd
+print "Eccsd=",ehf+eccsd
+print "Eccsd(t)=",ehf+eccsd+ept

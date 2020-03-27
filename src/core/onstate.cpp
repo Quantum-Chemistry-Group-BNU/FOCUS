@@ -204,6 +204,7 @@ void onstate::diff_orb(const onstate& ket,
 
 // vector version
 void onstate::get_olst(std::vector<int>& olst) const{
+   olst.clear();
 #ifdef GNU
    unsigned long tmp;
    for(int i=0; i<_len; i++){
@@ -248,6 +249,7 @@ void onstate::get_olst(int* olst) const{
 
 // vector version
 void onstate::get_vlst(std::vector<int>& vlst) const{
+   vlst.clear();
 #ifdef GNU
    unsigned long tmp;
    for(int i=0; i<_len; i++){

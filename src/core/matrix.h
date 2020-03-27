@@ -149,7 +149,11 @@ class matrix{
 			&_data[icol*_rows],
 			[fac](const double& x){return fac*x;});
       }
-      // *,+,- operations
+      // =,*,+,- operations
+      matrix& operator =(const double val){
+	 std::fill_n(_data, _size, val);
+	 return *this;
+      }
       matrix& operator *=(const double fac){
          std::transform(_data, _data+_size, _data,
 			[fac](const double& x){return fac*x;});
@@ -176,6 +180,8 @@ class matrix{
 };
 
 // special matrices
+matrix zero_matrix(const int m, const int n);
+
 matrix identity_matrix(const int n);
 
 matrix diagonal_matrix(const std::vector<double>& diag);

@@ -17,6 +17,8 @@ int test_rdm();
 
 int test_sci();
 
+int test_vmc();
+
 }
 
 #endif

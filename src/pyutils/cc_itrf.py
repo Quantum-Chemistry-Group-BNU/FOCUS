@@ -11,7 +11,7 @@ class CC:
                - numpy.einsum('iljk->ijkl',h2e)
       # use cc 
       self.mcc = ccsd.CC(self.nb,self.ne,self.h1e,self.h2e)
-      self.mcc.max_cycle = 300
+      self.mcc.max_cycle = 100
 
    def cisd(self):
       print "\nCC.cisd"
@@ -32,10 +32,17 @@ class CC:
 if __name__ == '__main__':
   
    import tools_io
-   mol = "fe2s2"
-   ehf = -116.51269169894704
+
+   mol = "fe4s4"
+
+   if mol == "fe2s2":
+      ehf = -116.51269169894704
+      nelec = 30
+   elif mol == "fe4s4":
+      ehf = -327.0619022451
+      nelec = 54
+   # load new integrals   
    e,h1e,h2e = tools_io.load_FCIDUMP("FCIDUMP_"+mol)
-   nelec = 30
    k = h1e.shape[0]
 
    mycc = CC(k,nelec,h1e,h2e)
