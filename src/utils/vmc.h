@@ -28,12 +28,11 @@ struct vecmat{
       // member functions
       int size() const{ return site.size(); }
       double norm() const{
-	 double nrm = 0.0;
+	 double tmp = 0.0;
 	 for(int i=0; i<site.size(); i++){
-	    nrm += pow(linalg::normF(site[i]),2);
+	    tmp += pow(linalg::normF(site[i]),2);
 	 }
-	 nrm = sqrt(nrm);
-	 return nrm;
+	 return sqrt(tmp);
       }
       // useful operations
       vecmat& operator +=(const vecmat& tmp){

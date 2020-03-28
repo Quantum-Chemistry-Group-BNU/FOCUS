@@ -38,9 +38,9 @@ double vmc::get_Ws(const onstate& state,
    // ensure olst is ordered 
    vector<int> olst;
    state.get_olst(olst);
-   int nelec = olst.size();
+   int n = olst.size();
    auto tmp = mps.site[olst[0]];
-   for(int idx=1; idx<nelec; idx++){
+   for(int idx=1; idx<n; idx++){
       int i = olst[idx];
       tmp = dgemm("N","N",tmp,mps.site[i]);
    }
@@ -66,7 +66,7 @@ void vmc::local_egrad(const onstate& state,
    wt = get_Ws(state,mps);
    double wtinv = 1.0/wt; 
    // local energy E[n] = <n|H|Psi>/<n|Psi>
-   // 			= <n|H|n> + <n|H|ex><ex|Psi>/<ex|Psi>
+   // 			= <n|H|n> + <n|H|ex><ex|Psi>/<n|Psi>
    elocal = fock::get_Hii(state,int2e,int1e)+ecore;
    // single
    auto state1 = state;
@@ -141,13 +141,19 @@ void vmc::estimate_egrad(const int mcmc,
    // settings
    std::uniform_real_distribution<double> dist(0,1);
    int D = mps.D;
+   int k = seed.size();
+   int n = seed.nelec();
    // initial 
-   onstate state = seed;
-   int k = state.size();
-   int n = state.nelec();
+   vector<int> v(k);
+   iota(v.begin(), v.end(), 0);
+   shuffle(v.begin(), v.end(), linalg::generator);
+   onstate state(k);
+   for(int i=0; i<n; i++){
+      state[v[i]] = 1;
+   }
    cout << "\nvmc::estimate_egrad" << endl;
    cout << "k=" << k << " n=" << n << " D=" << D
-	<< " seed=" << seed
+	<< " seed=" << seed << " init=" << state
 	<< endl;
    // compute local quantities
    vector<int> olst(n),vlst(k-n);
@@ -158,14 +164,15 @@ void vmc::estimate_egrad(const int mcmc,
    local_egrad(state,olst,vlst,mps,int2e,int1e,ecore,
 	       wt,elocal,delta);
    // MCMC
+   onstate state1;
+   int discard = 2000;
    double acpt = 0;
    double esum = 0.0;
    vecmat dsum(k,D,"zero");
    vecmat edsum(k,D,"zero");
-   for(int it=1; it<=mcmc; it++){
-
+   for(int iter=1; iter<=discard+mcmc; iter++){
       // MC move: 
-      onstate state1 = state;
+      state1 = state;
       double sd = dist(linalg::generator);
       if(sd < 0.5){
          // randomly pick a single excitation i->a
@@ -173,8 +180,9 @@ void vmc::estimate_egrad(const int mcmc,
          int adx = (k-n)*dist(linalg::generator);
          state1[olst[idx]] = 0;
          state1[vlst[adx]] = 1;
+	 //cout << "single i,a=" << olst[idx] << "->" << vlst[adx] << endl;
       }else{
-         // randomly pick a single excitation i->a
+         // randomly pick a double excitation ij->ab
          int ijdx = n*(n-1)/2*dist(linalg::generator);
 	 auto pij = tools::inverse_pair0(ijdx);
 	 int idx = pij.first, jdx = pij.second;
@@ -185,29 +193,36 @@ void vmc::estimate_egrad(const int mcmc,
          state1[olst[jdx]] = 0;
          state1[vlst[adx]] = 1;
          state1[vlst[bdx]] = 1;
+	 //cout << "double i,j,a,b=" << olst[idx] << "," << olst[jdx] 
+	 //	 		   << "->" << vlst[adx] << "," << vlst[bdx] << endl;
       }
-      double wt1 = get_Ws(state1,mps);
       // Metropolis step 
+      double wt1 = get_Ws(state1,mps);
       double prob = min(1.0,pow(wt1/wt,2));
       double rand = dist(linalg::generator);
-      // if accepted, compute new local quantities
       if(prob > rand){
          acpt += 1;
          state = state1;
-         state.get_olst(olst);
-         state.get_vlst(vlst);
+         state.get_olst(olst.data());
+         state.get_vlst(vlst.data());
+         // if accepted, compute new local quantities
          local_egrad(state,olst,vlst,mps,int2e,int1e,ecore,
            	     wt,elocal,delta);
       }
       // accumulate
-      esum += elocal;
-      dsum += delta;
-      edsum += elocal*delta;
-      if(it%10000 == 0){
-         cout << "it=" << it 
-	      << " ratio=" << setprecision(3) << acpt/it
-              << " e=" << setprecision(10) << esum/it
-              << endl;
+      int it = iter-discard;
+      if(it==0) acpt = 0;
+      if(it>0){
+         esum += elocal;
+         dsum += delta;
+         edsum += elocal*delta;
+         if(it%10000 == 0){
+            cout << "it=" << it 
+                 << " ratio=" << setprecision(3) << acpt/it
+                 << " state=" << state
+                 << " e=" << setprecision(10) << esum/it
+                 << endl;
+         }
       }
    } // it
    double fac = 1.0/mcmc;
@@ -219,7 +234,7 @@ void vmc::estimate_egrad(const int mcmc,
 void vmc::update_mps(const double step,
 	   	     const vecmat& grad,
 		     vecmat& mps){
-   // settings
+   /*
    std::uniform_real_distribution<double> dist(0,1);
    int D = mps.D;
    int k = mps.size();
@@ -227,10 +242,12 @@ void vmc::update_mps(const double step,
       for(int m=0; m<D; m++){
 	 for(int n=0; n<D; n++){
 	    mps.site[i](n,m) -= copysign(step*dist(linalg::generator),grad.site[i](n,m));
-	    //mps.site[i](n,m) -= step*grad.site[i](n,m);
 	 }
       }
    }
+   */
+   // gradient descent
+   mps -= step*grad; 
 }
 
 // optimize
@@ -245,7 +262,7 @@ void vmc::solver(const input::schedule& schd,
    int k = int1e.sorb;
    int n = schd.nelec;
    int maxcycle = 100;
-   int mcmc = 100000;
+   int mcmc = 10000;
    int D = 10;
   
    // initial state 
@@ -255,7 +272,7 @@ void vmc::solver(const input::schedule& schd,
    for(const auto& det : schd.det_seeds){
       for(int i : det){
          seed[i] = 1;
-	 mps.site[i](0,0) = 1.0;
+	 mps.site[i](0,0) = 1.0; // set a "reference" state
       }
       break;
    }
@@ -266,24 +283,34 @@ void vmc::solver(const input::schedule& schd,
    double emps; 
    vecmat grad(k,D,"zero");
    for(int iter=1; iter<=maxcycle; iter++){
+      // "normalization"
+      double amax = -1.0;
+      for(int i=0; i<k; i++){
+	 for(int m=0; m<D; m++){
+	    amax = max(amax, abs(mps.site[i](m,m)));
+	 }
+      }
+      for(int i=0; i<k; i++){
+	 mps.site[i] *= 1.0/amax;
+      }
+      
       // compute Energy and Gradient
       estimate_egrad(mcmc,seed,mps,int2e,int1e,ecore,emps,grad);
+ 
       // update sites
       double Q = 0.95;
-      double step = 0.05*(pow(Q,iter));
+      double step = 0.01*(pow(Q,iter));
       update_mps(step,grad,mps);
+      
       // print
-      cout << "iter=" << iter << " e=" << emps 
-	   << " |g|=" << grad.norm() << " step=" << step << endl;
-      // debug
-      cout << "mps = ";
-      for(int i=0; i<k; i++){
-	 cout << defaultfloat << setprecision(3) << mps.site[i](0,0) << " ";
-      }
-      cout << endl;
+      cout << "\niter=" << iter 
+	   << " e=" << setprecision(12) << emps 
+	   << " |g|=" << setprecision(6) << grad.norm() 
+	   << " step=" << setprecision(6) << step << endl;
+      if(iter%10 == 0) mcmc += 10000;
    } // iter
 
    auto t1 = global::get_time();
    cout << "timing for vmc::solver : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
-}   
+}
