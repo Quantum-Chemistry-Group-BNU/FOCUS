@@ -29,8 +29,8 @@ public:
 public:
    int sorb;
    // sorted by magnitude Iij=<ij||kl> (i>j,k>l)
-   double thresh = 1.e-12; // cut-off value 
-   std::vector<std::multimap<float,int,greater<float>>> eri4; 
+   double thresh = 1.e-14; // cut-off value 
+   std::vector<std::multimap<float,int,std::greater<float>>> eri4; 
    // Iik[j]=<ij||kj> (i>=k) for singles
    std::vector<std::vector<float>> eri3; 
 };

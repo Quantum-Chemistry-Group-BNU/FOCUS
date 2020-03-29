@@ -3,9 +3,13 @@ import scipy.linalg
 import tools_io
 import ghf
 
-mol = "fe4s4"
+mol = "c2"
 
-if mol == "fe2s2":
+if mol == "c2":
+   integrals = "../../database/c2_dice/FCIDUMP"
+   det = "0 1  4 5  8 9  14 15"
+   nelec = 8
+elif mol == "fe2s2":
    integrals = "../../database/benchmark/fes/fe2s2/FCIDUMP"
    det = "0 2 4 6 8 10 12 14 16 18 20 22 24 36 38   1 3 15 17 19 21 23 25 27 29 31 33 35 37 39"
    nelec = 30
@@ -29,7 +33,7 @@ mf.trans(mol)
 
 e,h1,h2 = tools_io.load_FCIDUMP("FCIDUMP_"+mol)
 mf.ints = (e,h1,h2)
-mf.energy_det(mf.det)
+ehf = mf.energy_det(mf.det)
 
 import cc_itrf
 k = h1.shape[0]
@@ -38,6 +42,7 @@ ecisd = mycc.cisd()
 eccsd = mycc.ccsd()
 ept = mycc.pt()
 print "\nEhf=",ehf
+print "Emp2=",ehf+mycc.emp2
 print "Ecisd=",ehf+ecisd
 print "Eccsd=",ehf+eccsd
 print "Eccsd(t)=",ehf+eccsd+ept

@@ -20,6 +20,11 @@ def get_SpinMat(k):
       sz[i1,i1] = -0.5
    return sx,sy,sz
 
+def lst2str(lst):
+   s = [str(i) for i in lst]
+   s = " ".join(s)
+   return s
+
 def str2lst(s):
    lst = s.split(' ')
    lst = [int(x) for x in lst if x != '']
@@ -59,11 +64,11 @@ class ghf:
       self.maxcycle = 100
       self.ifUHF = True
       self.ifMOM = True
-      self.ifPOP = False
+      self.ifPOP = True
       self.thresh_e = 1.e-10
-      self.thresh_d = 1.e-5
+      self.thresh_d = 1.e-6
       self.vshift = 0.0
-      self.guess = "hcore" # "det" / "read"
+      self.guess = "det" # "hcore" / "read"
       # save
       self.occ = None
       self.mocoeff = None
@@ -89,7 +94,7 @@ class ghf:
       print '\nghf.solve'
       print 'nelec=',self.nelec
       e0,h1e,h2e = self.ints
-      print 'e0=',e0
+      print 'ecore=',e0
       # set up initial guess
       k = h1e.shape[0]
       print 'k=',k
@@ -245,11 +250,60 @@ class ghf:
       tools_io.save_FCIDUMP(e0,h1e,h2e,fname_tmp)
       return 0
 
+   def mp2(self,fname,partition="MP"):
+      print "\nghf.mp2 fname=",fname
+      f = h5py.File(fname+".h5","r")
+      occ = f["occ"].value 
+      eorb = f["eorb"].value
+      e0  = f["e0"].value
+      h1e = f["h1e"].value
+      h2e = f["h2e"].value
+      self.ints = (e0,h1e,h2e) 
+      f.close()
+      # emp2 
+      norb = len(occ)
+      occupied = [i for i in range(norb) if abs(occ[i]-1)<1.e-5]
+      virtual = [i for i in range(norb) if abs(occ[i])<1.e-5]
+      eHF = self.energy_det(lst2str(occupied))
+      e2 = 0.0
+      for i in occupied:
+         for j in occupied:
+            if(j>=i): continue
+            for a in virtual:
+               for b in virtual: # <ij||ab>=[ia|jb]-[ib|ja]
+                  if(b>=a): continue
+                  aeri_ijab = h2e[i,a,j,b] - h2e[i,b,j,a]
+                  num = aeri_ijab**2
+                  dnrm = eorb[i]+eorb[j]-eorb[a]-eorb[b]
+                  if(partition=="EN"): 
+                     # <ij||ij>=[ii|jj]-[ij|ji]
+                     dnrm -= (h2e[i,i,j,j]-h2e[i,j,j,i]) \
+                           + (h2e[a,a,b,b]-h2e[a,b,b,a]) \
+                           - (h2e[a,a,i,i] - h2e[a,i,i,a]) \
+                           - (h2e[b,b,j,j] - h2e[b,j,j,b]) \
+                           - (h2e[a,a,j,j] - h2e[a,j,j,a]) \
+                           - (h2e[b,b,i,i] - h2e[b,i,i,b])
+                  #occupied1 = [k for k in occupied if k != i and k != j] + [a,b]
+                  #eIJAB = self.energy_det(lst2str(occupied1))
+                  #dnrm = eHF-eIJAB
+                  e2 += num/dnrm
+                  #print (i,j,a,b),aeri_ijab
+      print 
+      print "occ=",occupied
+      print "vir=",virtual
+      print "e2=",e2
+      return e2
+ 
+
 if __name__ == '__main__':
 
-   mol = "fe4s4"
+   mol = "c2"
 
-   if mol == "fe2s2":
+   if mol == "c2":
+      integrals = "../../database/c2_dice/FCIDUMP"
+      det = "0 1  4 5  8 9  14 15"
+      nelec = 8
+   elif mol == "fe2s2":
       integrals = "../../database/benchmark/fes/fe2s2/FCIDUMP"
       det = "0 2 4 6 8 10 12 14 16 18 20 22 24 36 38   1 3 15 17 19 21 23 25 27 29 31 33 35 37 39"
       nelec = 30
@@ -271,9 +325,13 @@ if __name__ == '__main__':
    mf.ifUHF = True #False
    mf.ifPOP = True
    mf.solve(det)
-   exit(1)
    mf.trans(mol)
+   mf.mp2(mol,"EN")
+   exit(1)
 
    e,h1,h2 = tools_io.load_FCIDUMP("FCIDUMP_"+mol)
    mf.ints = (e,h1,h2)
    mf.energy_det(mf.det)
+  
+
+

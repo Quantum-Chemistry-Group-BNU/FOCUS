@@ -3,10 +3,10 @@
 using namespace std;
 
 int main(){
-   
-   tests::test_vmc();
-   
-/*
+  
+   tests::test_pt2();
+
+/*   
    tests::test_tools();
    
    tests::test_onstate();
@@ -20,6 +20,8 @@ int main(){
    tests::test_rdm();
    
    tests::test_sci();
+
+   tests::test_vmc();
 */
 
    return 0;   

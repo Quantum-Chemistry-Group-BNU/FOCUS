@@ -16,11 +16,13 @@ class CC:
    def cisd(self):
       print "\nCC.cisd"
       self.mcc.cisd()
+      self.emp2 = self.mcc.emp2
       return self.mcc.ecisd
 
    def ccsd(self):
       print "\nCC.ccsd"
       self.mcc.ccsd()
+      self.emp2 = self.mcc.emp2
       return self.mcc.eccsd
 
    def pt(self):

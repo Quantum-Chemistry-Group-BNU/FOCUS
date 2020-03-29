@@ -38,24 +38,16 @@
  20200324 selection procedure 
 	  - control the space size for large problem
 	  - needs to be optimized for Fe8S7
+	  - implement the TR symmetry? => add flip centers
  20200326 UHF/CC/CI support
 	  - unrestricted/generalized (noncollinear) hartree-fock
  	  - integrals to interface with SCI: UHF-SCI
- 2020xxxx pt2 util & storage/serialization:
- 	  - compute e2
-	  - stochastic pt2 
- 	  - serialization on disk?
- 	  - load space/vector for analysis 
+ 20200329 pt2 util & storage/serialization:
+ 	  - primilinary implementation of deterministic pt2
 
 --- DMRG --- 
 
- 2020xxxx finding compact representation of many-body wavefunctions
-	  - VMC-c-MPS ansatz?
-
- 2020xxxx entanglement localizaiton? 1-body & 2-body disentanglers?
-
  2020xxxx grouping orbitals - meaningful structure & interpretation!!!
-	  - implement the TR symmetry? => flip centers
 	  - Coarse-Graining? Hierachical Clustering???
 
  2020xxxx mps structure & fit
@@ -69,7 +61,12 @@
  2020xxxx p-dmrg?
 
 --- Advanced functionalities ---
- 
+
+ 2020xxxx finding compact representation of many-body wavefunctions
+	  - VMC-c-MPS ansatz?
+
+ 2020xxxx entanglement localizaiton? 1-body & 2-body disentanglers?
+
  2020xxxx complex version / relativistic SCI/DMRG
 
  2020xxxx operator compression

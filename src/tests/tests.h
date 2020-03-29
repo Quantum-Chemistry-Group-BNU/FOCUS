@@ -3,6 +3,8 @@
 
 namespace tests{
 
+// -- basics ---
+
 int test_tools();
 
 int test_onstate();
@@ -16,6 +18,10 @@ int test_fci();
 int test_rdm();
 
 int test_sci();
+
+// --- experiemental ---
+
+int test_pt2();
 
 int test_vmc();
 

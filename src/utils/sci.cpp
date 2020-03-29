@@ -257,7 +257,7 @@ void sci::get_initial(vector<double>& es,
 	   << endl;
    }
    // selected CISD space
-   double eps1 = 1.e-2;
+   double eps1 = schd.eps1[0];
    vector<double> cmax(nsub,1.0);
    expand_varSpace(space, varSpace, hbtab, cmax, eps1);
    nsub = space.size();
@@ -392,7 +392,7 @@ void sci::ci_solver(const input::schedule& schd,
       esol = esol1;
       vsol = vsol1;
       ifconv = (count(conv.begin(), conv.end(), true) == neig);
-      if(ifconv){
+      if(iter>=schd.miniter && ifconv){
 	 cout << "convergence is achieved!" << endl;
 	 break;
       }

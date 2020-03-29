@@ -15,10 +15,12 @@ public:
    int integral_type;
    std::set<std::set<int>> det_seeds;
    int nseeds;
+   int miniter;
    int maxiter;
    std::vector<double> eps1;
    double deltaE;
    double dvdson;
+   bool ifpt2;
 };
    
 void read_input(schedule& schd, std::string fname="input.dat");
