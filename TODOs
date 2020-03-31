@@ -42,10 +42,13 @@
  20200326 UHF/CC/CI support
 	  - unrestricted/generalized (noncollinear) hartree-fock
  	  - integrals to interface with SCI: UHF-SCI
- 20200329 pt2 util & storage/serialization:
+ 20200331 pt2 util & storage/serialization:
  	  - primilinary implementation of deterministic pt2
 
 --- DMRG --- 
+
+ Main observation: small gap [Fe2S2] pt2 is not sufficient!
+		   non-perturbative treatment / high-order PT
 
  2020xxxx grouping orbitals - meaningful structure & interpretation!!!
 	  - Coarse-Graining? Hierachical Clustering???

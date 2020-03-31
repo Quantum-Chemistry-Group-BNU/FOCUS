@@ -25,6 +25,8 @@ int test_pt2();
 
 int test_vmc();
 
+int test_group();
+
 }
 
 #endif

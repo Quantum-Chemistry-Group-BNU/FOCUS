@@ -68,9 +68,9 @@ matrix linalg::random_matrix(const int m, const int n){
    return rand;
 }
 
-void matrix::save_text(const string& fname) const{
+void matrix::save_text(const string& fname, const int prec) const{
    ofstream file(fname+".txt"); 
-   file << defaultfloat << setprecision(4); 
+   file << defaultfloat << setprecision(prec); 
    for(int i=0; i<_rows; i++){
       for(int j=0; j<_cols; j++){
          file << _data[j*_rows+i] << " ";

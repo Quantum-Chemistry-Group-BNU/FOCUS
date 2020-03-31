@@ -112,7 +112,7 @@ class matrix{
 	 std::cout << std::defaultfloat;
       }
       // save
-      void save_text(const std::string& fname) const;
+      void save_text(const std::string& fname, const int prec=4) const;
       // helpers
       inline int rows() const{ return _rows; }
       inline int cols() const{ return _cols; }

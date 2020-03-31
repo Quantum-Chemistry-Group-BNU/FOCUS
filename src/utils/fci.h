@@ -55,10 +55,12 @@ struct sparse_hamiltonian{
       void debug(const fock::onspace& space,
 	 	 const integral::two_body& int2e,
 		 const integral::one_body& int1e);
-      // save for analysis
+      // save to *.gexf for the program gephi for visualization 
       void save_gephi(const std::string& fname,
 		      const fock::onspace& space);
       void save_text(const std::string& fname);
+      // statistical analysis
+      void analysis();
    public:
       int dim;
       // diagonal part: H[i,i]

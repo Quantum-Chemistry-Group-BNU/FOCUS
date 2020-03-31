@@ -23,9 +23,11 @@ void input::read_input(input::schedule& schd, string fname){
    schd.nroots = 1;
    schd.nseeds = 0;
    schd.maxiter = 0;
-   schd.deltaE = 1.e-10;
    schd.dvdson = 1.e-6;
+   schd.deltaE = 1.e-10;
    schd.ifpt2 = false;
+   schd.eps2 = 1.e-8;
+   schd.eps0 = 1.e-2;
    schd.integral_file = "FCIDUMP";
    schd.integral_type = 0; // =0, RHF; =1, UHF
    	 
@@ -41,12 +43,16 @@ void input::read_input(input::schedule& schd, string fname){
 	 schd.nroots = stoi(line.substr(6));
       }else if(line.substr(0,7)=="maxiter"){
          schd.maxiter = stoi(line.substr(7)); 
-      }else if(line.substr(0,6)=="deltaE"){
-         schd.deltaE = stod(line.substr(6)); 
       }else if(line.substr(0,6)=="dvdson"){
          schd.dvdson = stod(line.substr(6)); 
+      }else if(line.substr(0,6)=="deltaE"){
+         schd.deltaE = stod(line.substr(6)); 
       }else if(line.substr(0,3)=="pt2"){
          schd.ifpt2 = true;
+      }else if(line.substr(0,4)=="eps2"){
+         schd.eps2 = stod(line.substr(4)); 
+      }else if(line.substr(0,4)=="eps0"){
+         schd.eps0 = stod(line.substr(4)); 
       }else if(line.substr(0,13)=="integral_file"){
          istringstream is(line.substr(13));
 	 is >> schd.integral_file;
@@ -119,6 +125,7 @@ void input::read_input(input::schedule& schd, string fname){
       }
       ndet += 1;
    } // det
+   cout << "eps0 = " << schd.eps0 << endl;
    cout << "maxiter = " << schd.maxiter << endl;
    assert(schd.maxiter > 0);
    schd.eps1.resize(schd.maxiter);
@@ -140,7 +147,7 @@ void input::read_input(input::schedule& schd, string fname){
       cout << i << " " << schd.eps1[i] << endl;
    }
    cout << "convergence parameters" << endl;
-   cout << "deltaE = " << schd.deltaE << endl;
    cout << "dvdson = " << schd.dvdson << endl;
-   cout << "pt2 = " << schd.ifpt2 << endl;
+   cout << "deltaE = " << schd.deltaE << endl;
+   cout << "pt2 = " << schd.ifpt2 << " eps2=" << schd.eps2 << endl;
 }

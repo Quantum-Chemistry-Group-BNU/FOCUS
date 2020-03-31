@@ -257,7 +257,7 @@ void sci::get_initial(vector<double>& es,
 	   << endl;
    }
    // selected CISD space
-   double eps1 = schd.eps1[0];
+   double eps1 = schd.eps0;
    vector<double> cmax(nsub,1.0);
    expand_varSpace(space, varSpace, hbtab, cmax, eps1);
    nsub = space.size();
