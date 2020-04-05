@@ -4,6 +4,7 @@
 #include "../core/onstate.h"
 #include "../core/dvdson.h"
 #include "../core/tools.h"
+#include "../core/analysis.h"
 #include "fci.h"
 #include "sci.h"
 
@@ -381,13 +382,17 @@ void sci::ci_solver(const input::schedule& schd,
       cout << endl;
       for(int i=0; i<neig; i++){
 	 conv[i] = abs(esol1[i]-esol[i])<schd.deltaE; 
+	 vector<double> vtmp(vsol1.col(i),vsol1.col(i)+nsub);
+         double SvN = coeff_entropy(vtmp); 
 	 cout << "iter=" << iter
 	      << " eps1=" << scientific << setprecision(2) << schd.eps1[iter]
 	      << " nsub=" << nsub 
 	      << " i=" << i 
 	      << " e=" << defaultfloat << setprecision(12) << esol1[i] 
 	      << " de=" << scientific << setprecision(2) << esol1[i]-esol[i] 
-	      << " conv=" << conv[i] << endl;
+	      << " conv=" << conv[i] 
+	      << " SvN=" << SvN
+	      << endl;
       }
       esol = esol1;
       vsol = vsol1;

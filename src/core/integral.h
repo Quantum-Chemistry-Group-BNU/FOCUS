@@ -10,6 +10,10 @@
 
 namespace integral{
 
+void save_text_sym1e(const std::vector<double>& data,
+		     const std::string& fname, 
+		     const int prec=12);
+
 struct one_body{
    public:
       // constructor

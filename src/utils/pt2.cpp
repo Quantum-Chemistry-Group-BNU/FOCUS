@@ -1,8 +1,9 @@
-#include "pt2.h"
-#include "../core/hamiltonian.h"
-#include "../core/tools.h"
 #include <unordered_map>
 #include <tuple>
+#include "../core/hamiltonian.h"
+#include "../core/analysis.h"
+#include "../core/tools.h"
+#include "pt2.h"
 
 using namespace std;
 using namespace sci;
@@ -94,7 +95,7 @@ void sci::pt2_solver(const input::schedule& schd,
    
    // collect all contributions
    int pdim = pt2Space.size();
-   double e2 = 0.0;
+   double e2 = 0.0, z2 = 1.0, S_PT = 0.0;
    int nmax = 100;
    vector<double> e2max(nmax,0.0);
    vector<onstate> vmax(nmax);
@@ -103,6 +104,9 @@ void sci::pt2_solver(const input::schedule& schd,
       double va0 = pr.second;
       double e2tmp = pow(va0,2)/(e0-ea);
       e2 += e2tmp;
+      double pa = pow(va0/(e0-ea),2);
+      z2 += pa;
+      if(pa > 1.e-12) S_PT += -pa*log2(pa);
       // check whether smaller e2tmp has been found
       for(int i=0; i<nmax; i++){
 	 if(e2tmp < e2max[i]){
@@ -117,7 +121,7 @@ void sci::pt2_solver(const input::schedule& schd,
       } // i
    }
 
-   cout << "\nstatistics:" << endl;
+   cout << "\nstatistics for individual contributions:" << endl;
    cout << fixed << setprecision(12);
    double e2sum = 0.0;
    for(int i=0; i<nmax; i++){
@@ -138,10 +142,17 @@ void sci::pt2_solver(const input::schedule& schd,
    cout << "\npt2 summary: eps2=" << defaultfloat << schd.eps2 << endl;  
    cout << "vdim = " << setw(20) << vdim << endl;
    cout << "pdim = " << setw(20) << pdim << endl;
-   cout << "eCI  = " << fixed << setw(20) << setprecision(12) << e0 << endl; 
-   cout << "ePT2 = " << fixed << setw(20) << setprecision(12) << e2 << endl;
-   cout << "etot = " << fixed << setw(20) << setprecision(12) << e0+e2 << endl;
-
+   // diagonal entropy
+   double S_CI = fock::coeff_entropy(v0);
+   double S_tot = (S_CI+S_PT)/z2 + log2(z2);
+   cout << "z2   = " << fixed << setw(20) << setprecision(12) << z2 << endl;
+   cout << "eCI  = " << fixed << setw(20) << setprecision(12) << e0 
+	<< "     S_CI = " << S_CI << endl; 
+   cout << "ePT2 = " << fixed << setw(20) << setprecision(12) << e2 
+	<< "     S_PT = " << S_PT << endl;
+   cout << "etot = " << fixed << setw(20) << setprecision(12) << e0+e2 
+	<< "     Stot = " << S_tot << endl;
+   
    auto t1 = global::get_time();
    cout << "timing for sci::pt2_solver : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;

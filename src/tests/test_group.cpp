@@ -39,6 +39,9 @@ int tests::test_group(){
 		    	  schd.integral_type);
 
    // analysis of hij, Jij, Kij
+   integral::save_text_sym1e(int1e.data,"hpq");
+   integral::save_text_sym1e(int2e.J,"jpq");
+   integral::save_text_sym1e(int2e.K,"kpq");
 
    return 0;
 }

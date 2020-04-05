@@ -55,8 +55,8 @@ struct dvdsonSolver{
       double crit_v = 1.e-6;  // used 
       double crit_e = 1.e-12; // not used
       double crit_indp = 1.e-12;
-      double damping = 1.e-1; 
-      int maxcycle = 500;
+      double damping = 1.e-1;
+      int maxcycle = 50;
       int nbuff = 3; // maximal additional vectors
       int nmvp = 0;
 };

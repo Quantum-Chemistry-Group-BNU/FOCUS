@@ -63,10 +63,14 @@ double fock::entropy(const vector<double>& p, const double cutoff){
 }
 
 double fock::coeff_entropy(const vector<double>& coeff, const double cutoff){
-   vector<double> p(coeff.size());
-   transform(coeff.cbegin(),coeff.cend(),p.begin(),
-	     [](const double& x){return pow(x,2);}); // pi=|ci|^2
-   return entropy(p, cutoff);
+   double psum = 0.0, ssum = 0.0;
+   for(const auto& ci : coeff){
+      double pi = pow(ci,2);
+      if(pi < cutoff) continue;
+      psum += pi;
+      ssum += -pi*log2(pi);
+   }
+   return ssum;
 }
 
 // <Psi1|p^+q|Psi2>

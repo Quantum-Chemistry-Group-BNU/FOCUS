@@ -3,8 +3,9 @@
 #include <sstream>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include "integral.h"
 #include "../settings/global.h"
+#include "integral.h"
+#include "tools.h"
 
 using namespace std;
 using namespace integral;
@@ -62,6 +63,7 @@ void integral::read_fcidump(integral::two_body& int2e,
       getline(istrm,line);
       if(line.empty() || line[0]=='#') continue;
       boost::trim_left(line);
+      // might have some problems with taps? 
       boost::split(v,line,boost::is_any_of(" "),boost::token_compress_on);
       eri = stod(v[0]); 
       i = stoi(v[1]); 
@@ -123,6 +125,24 @@ void integral::read_fcidump(integral::two_body& int2e,
    //int1e.print();
    //int2e.print();
    //exit(1);
+}
+
+// save_text for symmetric 1e integrals
+void integral::save_text_sym1e(const std::vector<double>& data,
+		               const std::string& fname, 
+		               const int prec){
+   cout << "\nintegral::save_text_sym1e fname = " << fname << endl; 
+   ofstream file(fname+".txt");
+   int k = tools::inverse_pair(data.size()).first;
+   file << defaultfloat << setprecision(prec); 
+   for(int i=0; i<k; i++){
+      for(int j=0; j<k; j++){
+	 int ij = i>j? i*(i+1)/2+j : j*(j+1)/2+i;
+	 file << data[ij] << " ";
+      } 
+      file << endl;
+   }
+   file.close();
 }
 
 // print for debug

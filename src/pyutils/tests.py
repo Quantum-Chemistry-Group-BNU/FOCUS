@@ -3,9 +3,13 @@ import scipy.linalg
 import tools_io
 import ghf
 
-mol = "c2"
+mol = "h2d" #"c2"
 
-if mol == "c2":
+if mol == "h2d":
+   integrals = "../../bin/hubbard2D/block_U16/FCIDUMP"
+   det = "0 3 4 7 9 10 13 14 16 19 20 23 25 26 29 30" 
+   nelec = 16
+elif mol == "c2":
    integrals = "../../database/c2_dice/FCIDUMP"
    det = "0 1  4 5  8 9  14 15"
    nelec = 8
