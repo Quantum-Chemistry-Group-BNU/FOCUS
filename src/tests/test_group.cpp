@@ -43,5 +43,19 @@ int tests::test_group(){
    integral::save_text_sym1e(int2e.J,"jpq");
    integral::save_text_sym1e(int2e.K,"kpq");
 
+   int nroot = schd.nroots;
+   vector<double> es(nroot,0.0);
+
+   // selected CI
+   onspace sci_space;
+   vector<vector<double>> vs(nroot);
+   fci::sparse_hamiltonian sparseH;
+   sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
+
+   sparseH.analysis();
+   for(int i=0; i<nroot; i++){
+      coeff_population(sci_space, vs[i]);
+   }
+
    return 0;
 }

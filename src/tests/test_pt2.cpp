@@ -8,7 +8,6 @@
 #include "../utils/fci.h"
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
-#include "../utils/pt2.h"
 #include "../settings/global.h"
 #include "../io/input.h"
 #include <iostream>

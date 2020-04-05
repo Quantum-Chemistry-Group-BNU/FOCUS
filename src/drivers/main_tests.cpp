@@ -4,9 +4,7 @@ using namespace std;
 
 int main(){
    
-   tests::test_pt2();
-
-//   tests::test_group();
+   tests::test_group();
 
 /*   
    tests::test_tools();
@@ -25,6 +23,8 @@ int main(){
 
    tests::test_vmc();
    
+   tests::test_pt2();
+
 */
 
    return 0;   
