@@ -3,6 +3,7 @@
 #include "../core/hamiltonian.h"
 #include "../core/analysis.h"
 #include "../core/tools.h"
+#include "sci.h"
 
 using namespace std;
 using namespace sci;

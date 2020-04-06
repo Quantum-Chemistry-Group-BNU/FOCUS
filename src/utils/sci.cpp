@@ -83,7 +83,7 @@ void sci::expand_varSpace(onspace& space,
    cout << "\nsci::expand_varSpace dim = " 
 	<< space.size() << " eps1 = " << eps1 << endl;
    auto t0 = global::get_time();
-   bool debug = false;
+   bool debug = true;
 
    // assuming particle number conserving space
    onstate state = space[0];
@@ -134,14 +134,14 @@ void sci::expand_varSpace(onspace& space,
 	       varSpace.insert(state1);
 	       space.push_back(state1);
  	       ns++;
-	       // flip
-	       auto state1f = state1.flip();
-	       auto search1 = varSpace.find(state1f);
-	       if(search1 == varSpace.end()){
-	          varSpace.insert(state1f);
-	          space.push_back(state1f);
- 	          ns++;
-	       }
+	    //   // flip
+	    //   auto state1f = state1.flip();
+	    //   auto search1 = varSpace.find(state1f);
+	    //   if(search1 == varSpace.end()){
+	    //      varSpace.insert(state1f);
+	    //      space.push_back(state1f);
+ 	    //      ns++;
+	    //   }
 	    }
 	 } 
       } // ia 
@@ -191,14 +191,14 @@ void sci::expand_varSpace(onspace& space,
 	          varSpace.insert(state2);
 	          space.push_back(state2);
 		  nd++;
-	          // flip
-	          auto state2f = state2.flip();
-	          auto search2 = varSpace.find(state2f);
-	          if(search2 == varSpace.end()){
-	             varSpace.insert(state2f);
-	             space.push_back(state2f);
- 	             nd++;
-	          }
+	       //   // flip
+	       //   auto state2f = state2.flip();
+	       //   auto search2 = varSpace.find(state2f);
+	       //   if(search2 == varSpace.end()){
+	       //      varSpace.insert(state2f);
+	       //      space.push_back(state2f);
+ 	       //      nd++;
+	       //   }
 	       }
 	    }
 	 } // ab
@@ -240,13 +240,13 @@ void sci::get_initial(vector<double>& es,
 	 varSpace.insert(state);
 	 space.push_back(state);
       }
-      // flip
-      auto state1 = state.flip();
-      auto search1 = varSpace.find(state1);
-      if(search1 == varSpace.end()){
-	 space.push_back(state1);
-	 varSpace.insert(state1);
-      } 
+   //   // flip
+   //   auto state1 = state.flip();
+   //   auto search1 = varSpace.find(state1);
+   //   if(search1 == varSpace.end()){
+   //      space.push_back(state1);
+   //      varSpace.insert(state1);
+   //   } 
    }
    // print
    cout << "energies for reference states:" << endl;

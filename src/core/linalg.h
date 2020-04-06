@@ -34,8 +34,10 @@ void dgemm(const char* TRANSA, const char* TRANSB,
 matrix dgemm(const char* TRANSA, const char* TRANSB,
 	     const matrix& A, const matrix& B);
 
-// eigenvalues
-void eigen_solver(matrix& A, std::vector<double>& e);
+// eigenvalues: 
+// order=0 from small to large; 
+// order=1 from large to small.
+void eigen_solver(matrix& A, std::vector<double>& e, const int order=0);
 
 // normF = ||A||_F = sqrt(\sum_{ij}|aij|^2)
 double normF(const matrix& A);
@@ -45,9 +47,6 @@ double dnrm2(const int N, const double* X);
 
 // ddot2
 double ddot(const int N, const double* X, const double* Y);
-
-// transpose
-matrix transpose(const matrix& A);
 
 // ||A - At||_F
 double symmetric_diff(const matrix& A);

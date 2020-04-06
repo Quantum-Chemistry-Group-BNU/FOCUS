@@ -1,6 +1,6 @@
-#include <random>
 #include <fstream>
 #include "matrix.h"
+#include "tools.h"
 
 using namespace std;
 using namespace linalg;
@@ -52,17 +52,13 @@ matrix linalg::diagonal_matrix(const vector<double>& diag){
    return mat;
 }
 
-//std::random_device linalg::rd; // non-deterministic hardware gen
-std::seed_seq linalg::seeds{0}; //linalg::rd()};
-std::default_random_engine linalg::generator(linalg::seeds);
-
 matrix linalg::random_matrix(const int m, const int n){
    std::uniform_real_distribution<double> dist(-1,1);
    matrix rand(m,n);
    // column major
    for(int j=0; j<n; j++){
       for(int i=0; i<m; i++){
-         rand(i,j) = dist(linalg::generator);
+         rand(i,j) = dist(tools::generator);
       }
    }
    return rand;

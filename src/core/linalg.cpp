@@ -48,13 +48,14 @@ matrix linalg::dgemm(const char* TRANSA, const char* TRANSB,
 }
 
 // eigenvalues: HC=CE
-void linalg::eigen_solver(matrix& A, vector<double>& e){
+void linalg::eigen_solver(matrix& A, vector<double>& e, const int order){
    assert(A.rows() == A.cols());  
    assert(A.rows() <= e.size()); // allow larger space used for e 
    int n = A.rows();
    int lwork = -1, liwork=-1;
    int iworkopt,info;
    double workopt;
+   if(order == 1) A = -A;
    dsyevd_("V","L",&n,A.data(),&n,e.data(),&workopt,&lwork,
                    &iworkopt,&liwork,&info);
    lwork = static_cast<int>(workopt);
@@ -63,6 +64,10 @@ void linalg::eigen_solver(matrix& A, vector<double>& e){
    std::unique_ptr<int[]> iwork(new int[liwork]);
    dsyevd_("V","L",&n,A.data(),&n,e.data(),work.get(),&lwork,
                    iwork.get(),&liwork,&info);
+   if(order == 1){
+      transform(e.begin(),e.end(),e.begin(),
+		[](const double& x){ return -x; });
+   }
    if(info){
       std::cout << "dsyevd failed with info=" << info << std::endl;
       exit(1);
@@ -87,21 +92,10 @@ double linalg::ddot(const int N, const double* X, const double* Y){
    return ::ddot_(&N, X, &INCX, Y, &INCY);
 }
 
-// transpose
-matrix linalg::transpose(const matrix& A){
-   matrix At(A.cols(),A.rows());
-   for(int j=0; j<At.cols(); j++){
-      for(int i=0; i<At.rows(); i++){
-	 At(i,j) = A(j,i);
-      }
-   }
-   return At;
-}
-
 // ||A - At||_F
 double linalg::symmetric_diff(const matrix& A){
    assert(A.rows() == A.cols());
    matrix At(A);
-   At -= transpose(A);
+   At -= A.transpose();
    return normF(At);
 }

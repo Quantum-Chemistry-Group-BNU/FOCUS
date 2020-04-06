@@ -7,6 +7,8 @@
 #include <algorithm>    // std::stable_sort
 #include <tuple>
 #include <cassert>
+#include <iostream>
+#include <random>
 
 using namespace std;
 
@@ -87,6 +89,35 @@ template <typename T>
 vector<int> sort_index_abs(const vector<T>& v, const int iop=0){
    return sort_index_abs(v.size(), v.data(), iop);
 }
+
+//extern std::random_device rd;
+extern std::seed_seq seeds;
+extern std::default_random_engine generator;
+
+// permutations
+class perm{
+   public:
+      perm(const int k): size(k){
+         image.resize(k);
+	 std::iota(image.begin(), image.end(), 0);
+      }
+      void shuffle(){
+	 std::shuffle(image.begin(), image.end(), generator);
+      }
+      // spin orbital sites
+      std::vector<int> to_image2(){
+	 std::vector<int> image2(size*2);
+	 for(int i=0; i<size; i++){
+	    image2[2*i] = 2*image[i];
+	    image2[2*i+1] = 2*image[i]+1;
+	 }
+	 return image2;
+      }
+      friend std::ostream& operator <<(std::ostream& os, const perm& p);
+   public:
+      int size;
+      std::vector<int> image;
+};
 
 } // tools
 

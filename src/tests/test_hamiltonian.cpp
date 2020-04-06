@@ -52,7 +52,7 @@ int tests::test_hamiltonian(){
    cout << "\nCheck Hamiltonian & eigenvalue problem" << endl;
    auto H = get_Ham(space2,int2e,int1e,ecore);
    auto t0 = global::get_time();
-   H = transpose(H);
+   H = H.transpose();
    cout << setprecision(12);
    int ndiff = 0;
    for(int j=0; j<H.cols(); j++){

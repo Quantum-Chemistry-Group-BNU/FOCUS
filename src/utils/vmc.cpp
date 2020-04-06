@@ -1,8 +1,8 @@
 #include "../core/linalg.h"
 #include "../core/hamiltonian.h"
 #include "../core/tools.h"
-#include <iostream>
 #include "vmc.h"
+#include <iostream>
 
 using namespace std;
 using namespace linalg;
@@ -146,7 +146,7 @@ void vmc::estimate_egrad(const int mcmc,
    // initial 
    vector<int> v(k);
    iota(v.begin(), v.end(), 0);
-   shuffle(v.begin(), v.end(), linalg::generator);
+   shuffle(v.begin(), v.end(), tools::generator);
    onstate state(k);
    for(int i=0; i<n; i++){
       state[v[i]] = 1;
@@ -173,20 +173,20 @@ void vmc::estimate_egrad(const int mcmc,
    for(int iter=1; iter<=discard+mcmc; iter++){
       // MC move: 
       state1 = state;
-      double sd = dist(linalg::generator);
+      double sd = dist(tools::generator);
       if(sd < 0.5){
          // randomly pick a single excitation i->a
-         int idx = n*dist(linalg::generator);
-         int adx = (k-n)*dist(linalg::generator);
+         int idx = n*dist(tools::generator);
+         int adx = (k-n)*dist(tools::generator);
          state1[olst[idx]] = 0;
          state1[vlst[adx]] = 1;
 	 //cout << "single i,a=" << olst[idx] << "->" << vlst[adx] << endl;
       }else{
          // randomly pick a double excitation ij->ab
-         int ijdx = n*(n-1)/2*dist(linalg::generator);
+         int ijdx = n*(n-1)/2*dist(tools::generator);
 	 auto pij = tools::inverse_pair0(ijdx);
 	 int idx = pij.first, jdx = pij.second;
-         int abdx = (k-n)*(k-n-1)/2*dist(linalg::generator);
+         int abdx = (k-n)*(k-n-1)/2*dist(tools::generator);
 	 auto pab = tools::inverse_pair0(abdx);
 	 int adx = pab.first, bdx = pab.second; 
          state1[olst[idx]] = 0;
@@ -199,7 +199,7 @@ void vmc::estimate_egrad(const int mcmc,
       // Metropolis step 
       double wt1 = get_Ws(state1,mps);
       double prob = min(1.0,pow(wt1/wt,2));
-      double rand = dist(linalg::generator);
+      double rand = dist(tools::generator);
       if(prob > rand){
          acpt += 1;
          state = state1;
@@ -241,7 +241,7 @@ void vmc::update_mps(const double step,
    for(int i=0; i<k; i++){
       for(int m=0; m<D; m++){
 	 for(int n=0; n<D; n++){
-	    mps.site[i](n,m) -= copysign(step*dist(linalg::generator),grad.site[i](n,m));
+	    mps.site[i](n,m) -= copysign(step*dist(tools::generator),grad.site[i](n,m));
 	 }
       }
    }

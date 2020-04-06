@@ -8,6 +8,7 @@
 #include "../utils/fci.h"
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
+#include "../utils/tns.h"
 #include "../settings/global.h"
 #include "../io/input.h"
 #include <iostream>
@@ -52,10 +53,9 @@ int tests::test_group(){
    fci::sparse_hamiltonian sparseH;
    sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
 
-   sparseH.analysis();
-   for(int i=0; i<nroot; i++){
-      coeff_population(sci_space, vs[i]);
-   }
+   // tns
+   vector<int> order;
+   tns::ordering_ga(sci_space, vs, order); 
 
    return 0;
 }

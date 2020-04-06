@@ -99,7 +99,7 @@ void dvdsonSolver::check_orthogonality(const int n, const int m,
 				       const vector<double>& vbas, 
 				       const double thresh){
    matrix V(n,m,vbas.data());
-   matrix Vt = transpose(V);
+   matrix Vt = V.transpose();
    matrix dev = dgemm("N","N",Vt,V) - identity_matrix(m);
    double diff = normF(dev);
    if(iprt > 1) cout << "dvdsonSolver::check_orthogonality diff=" << diff << endl;

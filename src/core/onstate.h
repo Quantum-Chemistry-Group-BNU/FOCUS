@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <numeric>      // std::iota
 
 namespace fock{
 
@@ -285,6 +286,63 @@ class onstate{
 	    if((*this)[2*i+1]) state[i] = 1; 
 	 }
          return state;
+      }
+      // first n strings 
+      onstate get_before(const int n) const{
+	 onstate state(n);
+	 for(int i=0; i<n; i++){
+	    if((*this)[i]) state[i] = 1; 
+	 }
+         return state;
+      }
+      // strings after n
+      onstate get_after(const int n) const{
+	 onstate state(_size-n);
+	 for(int i=0; i<_size-n; i++){
+	    if((*this)[n+i]) state[i] = 1; 
+	 }
+         return state;
+      }
+      // permutation of sites
+      onstate permute(const std::vector<int>& image2) const{
+         assert(image2.size() == _size);
+	 onstate state(_size);
+	 for(int i=0; i<_size; i++){
+	    if((*this)[i]) state[image2[i]] = 1;
+	 }
+	 return state;
+      }
+      // sign change due to permutation 
+      int permute_sgn(const std::vector<int>& image2) const{
+         assert(image2.size() == _size);
+	 std::vector<int> index(_size);
+	 std::iota(index.begin(), index.end(), 0);
+	 int sgn = 0;
+         for(int i=0; i<_size; i++){
+	    if(image2[i] == index[i]) continue;
+	    // find the position of target image2[i] in index
+	    int k=0;
+	    for(int j=i+1; j<_size; j++){
+	       if(index[j] == image2[i]){
+		  k=j;
+		  break;
+	       }
+	    }  
+	    // shift data
+	    bool fk = (*this)[index[k]];
+            for(int j=k-1; j>=i; j--){
+	       index[j+1] = index[j];
+	       if(fk && (*this)[index[j]]) sgn ^= 1; 
+	    }
+	    index[i] = image2[i];
+	    //// debug
+	    //std::cout << "i=" << i << " : ";
+	    //for(int j=0; j<_size; j++){
+	    //   std::cout << index[j] << " ";
+	    //}
+	    //std::cout << std::endl; 
+	 }
+         return -2*sgn+1;
       }
       // perform operations ~(not), ^(xor), &(and) on onstate 
       friend onstate operator ~(const onstate& state1);

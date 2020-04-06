@@ -3,8 +3,6 @@
 #include "onstate.h"
 #include "../settings/global.h"
 
-#include <bitset>
-
 using namespace std;
 using namespace fock;
 

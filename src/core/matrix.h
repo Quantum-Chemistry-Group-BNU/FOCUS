@@ -4,9 +4,9 @@
 #include <iostream>
 #include <algorithm>
 #include <cassert>
-#include <random>
 #include <iomanip>
 #include <string>
+#include <vector>
 
 namespace linalg{
 
@@ -135,6 +135,16 @@ class matrix{
 	 }
 	 return tr;
       }
+      // transpose
+      matrix transpose() const{
+         matrix At(_cols,_rows);
+         for(int j=0; j<_rows; j++){
+            for(int i=0; i<_cols; i++){
+      	       At(i,j) = _data[i*_rows+j];
+            }
+         }
+         return At;
+      }
       // row operations
       const double* col(const int i) const{
 	 assert(i>=0 && i<_cols);
@@ -169,6 +179,12 @@ class matrix{
 			[](const double& x, const double& y){return x-y;});
 	 return *this;
       }
+      matrix operator -() const{
+	 matrix mat(_rows,_cols);
+         std::transform(_data, _data+_size, mat._data,
+			[](const double& x){return -x;});
+	 return mat;
+      }
       // friend
       friend matrix operator *(const double fac, const matrix& mat1);
       friend matrix operator *(const matrix& mat1, const double fac);
@@ -186,9 +202,6 @@ matrix identity_matrix(const int n);
 
 matrix diagonal_matrix(const std::vector<double>& diag);
 
-//extern std::random_device rd;
-extern std::seed_seq seeds;
-extern std::default_random_engine generator;
 matrix random_matrix(const int m, const int n);
 
 } // linalg
