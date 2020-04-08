@@ -83,7 +83,7 @@ void sci::expand_varSpace(onspace& space,
    cout << "\nsci::expand_varSpace dim = " 
 	<< space.size() << " eps1 = " << eps1 << endl;
    auto t0 = global::get_time();
-   bool debug = true;
+   bool debug = false;
 
    // assuming particle number conserving space
    onstate state = space[0];
@@ -298,7 +298,7 @@ void sci::ci_solver(const input::schedule& schd,
 	       	    const integral::one_body& int1e,
 	       	    const double ecore){
    cout << "\nsci::ci_solver" << endl; 
-   bool debug = true;
+   bool debug = false;
    auto t0 = global::get_time();
    
    // set up head-bath table

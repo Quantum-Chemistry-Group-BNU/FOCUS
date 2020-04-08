@@ -47,9 +47,9 @@ inline std::pair<size_t,size_t> inverse_pair(const size_t ij){
    return std::make_pair(i,j);
 }
 
-// return index for sorting 
-// template do not need implementation but only header
+// return index for sorting: max first default, min first if iop=1  
 // pointer version
+// template do not need implementation but only header
 template <typename T>
 vector<int> sort_index(const int size, const T* v, const int iop=0){
    vector<int> idx(size);
@@ -101,10 +101,15 @@ class perm{
          image.resize(k);
 	 std::iota(image.begin(), image.end(), 0);
       }
+      perm(std::vector<int>& order){
+	 size = order.size();
+	 image.resize(size);
+	 std::copy(order.begin(),order.end(),image.begin());
+      }
       void shuffle(){
 	 std::shuffle(image.begin(), image.end(), generator);
       }
-      // spin orbital sites
+      // to spin orbital sites
       std::vector<int> to_image2(){
 	 std::vector<int> image2(size*2);
 	 for(int i=0; i<size; i++){

@@ -55,7 +55,7 @@ void product_space::get_pspace(const onspace& space, const int n){
       
 pair<int,double> product_space::projection(const vector<vector<double>>& vs,
 				           const double thresh){
-   bool debug = true;
+   bool debug = false;
    if(debug) cout << "\nproduct_space::projection" << endl;
    // collect states with the same symmetry (N,NA)
    map<pair<int,int>,vector<int>> qsecA; 

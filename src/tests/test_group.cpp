@@ -55,7 +55,8 @@ int tests::test_group(){
 
    // tns
    vector<int> order;
-   tns::ordering_ga(sci_space, vs, order); 
+   double Smin;
+   tns::ordering_ga(sci_space, vs, order, Smin); 
 
    return 0;
 }
