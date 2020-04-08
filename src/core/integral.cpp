@@ -128,8 +128,8 @@ void integral::read_fcidump(integral::two_body& int2e,
 }
 
 // save_text for symmetric 1e integrals
-void integral::save_text_sym1e(const std::vector<double>& data,
-		               const std::string& fname, 
+void integral::save_text_sym1e(const vector<double>& data,
+		               const string& fname, 
 		               const int prec){
    cout << "\nintegral::save_text_sym1e fname = " << fname << endl; 
    ofstream file(fname+".txt");

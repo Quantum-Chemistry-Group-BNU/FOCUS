@@ -54,8 +54,10 @@ int tests::test_group(){
    sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
 
    // tns
+   coeff_population(sci_space, vs[0]);
    vector<int> order;
    double Smin;
+   tns::ordering_fiedler(int2e.K, order);
    tns::ordering_ga(sci_space, vs, order, Smin); 
 
    return 0;

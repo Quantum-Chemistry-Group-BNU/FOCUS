@@ -1,3 +1,4 @@
+#include "../core/linalg.h"
 #include "tns.h"
 #include <numeric>
 #include <algorithm> // swap
@@ -86,6 +87,14 @@ void tns::ordering_ga(const onspace& space,
 		      vector<int>& order,
 		      double& Smin){
    cout << "\ntns::ordering_ga" << endl;
+   // parameters for truncation
+   const int ndet = 500;
+   // parameters fro genetic optimization
+   const int nelite = 1;
+   int popsize = 50;
+   int maxgen = 1000;
+   double crxprob = 0.8;
+   double mutprob = 0.2;
    // compute exact solution by brute-force enumeration
    bool debug = false;
    if(debug){
@@ -94,20 +103,48 @@ void tns::ordering_ga(const onspace& space,
       for(int i : order) cout << i << " ";
       cout << endl;
    }
-   // parameters
-   const int nelite = 1;
-   int popsize = 100;
-   int maxgen = 1000;
-   double crxprob = 0.8;
-   double mutprob = 0.2;
+   // truncation
+   int nroot = vs.size();
+   int dim = space.size();
+   cout << " ndet=" << ndet << " dim=" << dim << endl;
+   onspace space2;
+   vector<vector<double>> vs2(nroot);
+   if(dim < ndet){
+      space2 = space;
+      vs2 = vs;
+   }else{
+      vector<double> p2(dim,0.0);
+      for(int i=0; i<dim; i++){
+         for(int j=0; j<nroot; j++){
+            p2[i] += vs[j][i];
+         }
+      }
+      auto index = tools::sort_index(p2);
+      space2.resize(ndet);
+      for(int i=0; i<ndet; i++){
+         space2[i] = space[index[i]];
+      }
+      for(int j=0; j<nroot; j++){
+         vs2[j].resize(ndet);
+         for(int i=0; i<ndet; i++){
+            vs2[j][i] = vs[j][index[i]];
+         }
+      }
+   }
    // init population by random sequence
    int k = space[0].size()/2;
    GApop pop(k, popsize);
-   pop.eval_fitness(space, vs);
-   // Evolution
+   pop.eval_fitness(space2, vs2);
+   // evolution
    uniform_real_distribution<double> rdist(0,1);
    for(int igen=0; igen<maxgen; igen++){
-      discrete_distribution<int> dist(pop.fitness.begin(), pop.fitness.end());
+      // roulette wheel selection:
+      //discrete_distribution<int> dist(pop.fitness.begin(), pop.fitness.end());
+      // rank selection:
+      vector<int> rank(popsize);
+      iota(rank.begin(),rank.end(),0);
+      discrete_distribution<int> dist(rank.rbegin(), rank.rend());
+      // evolution 
       vector<vector<int>> newpop(popsize);
       // elitism
       for(int i=0; i<nelite; i++){
@@ -137,7 +174,7 @@ void tns::ordering_ga(const onspace& space,
 	 newpop[i] = offspring;
       }
       pop.pop = newpop;
-      pop.eval_fitness(space, vs);
+      pop.eval_fitness(space2, vs2);
       // print
       cout << "igen=" << igen << endl;
       for(int i=0; i<min(popsize,5); i++){
@@ -146,5 +183,40 @@ void tns::ordering_ga(const onspace& space,
          for(int j : pop.pop[i]) cout << j << " ";
          cout << endl;
       }
+      vector<int> bdims;
+      double SvN;
+      bipartite_entanglement(space2, vs2, pop.pop[0], bdims, SvN);
+      cout << "bdims=";
+      for(int i : bdims) cout << i << " ";
+      cout << endl;
    } // igen
+}
+
+// fiedler ordering
+void tns::ordering_fiedler(const vector<double>& data,
+		           vector<int>& order){
+   cout << "\ntns::ordering_fiedler" << endl;
+   int k = tools::inverse_pair(data.size()).first;
+   matrix kij(k/2,k/2);
+   for(int i=0; i<k; i+=2){
+      for(int j=0; j<k; j+=2){
+	 int ij = i>j? i*(i+1)/2+j : j*(j+1)/2+i;
+	 kij(j/2,i/2) = data[ij];
+      } 
+   }
+   auto lij = -kij;
+   for(int i=0; i<k/2; i++){
+      for(int j=0; j<k/2; j++){
+         lij(i,i) += kij(j,i);
+      }
+   }
+   vector<double> e(k/2);
+   eigen_solver(lij,e);
+   cout << "e0=" << e[0] << " e1=" << e[1] << endl;
+   for(int i=0; i<k/2; i++) e[i] = lij(i,1);
+   order = tools::sort_index(e);
+   if(order[0] > order[k/2-1]) reverse(order.begin(), order.end());
+   cout << "fiedler ordering : ";
+   for(int i : order) cout << i << " ";
+   cout << endl;
 }

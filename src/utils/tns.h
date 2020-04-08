@@ -13,7 +13,7 @@ struct product_space{
    public:
       void get_pspace(const fock::onspace& space, const int n);
       std::pair<int,double> projection(const std::vector<std::vector<double>>& vs,
-		      		       const double thresh=1.e-4);
+		      		       const double thresh=1.e-6);
    public:
       // second int is used for indexing in constructing rowA, colB 
       std::map<fock::onstate,int> umapA, umapB;
@@ -114,6 +114,10 @@ void ordering_ga(const fock::onspace& space,
 	         const std::vector<std::vector<double>>& vs,
 	         std::vector<int>& order,
 		 double& Smin);
+
+// fiedler ordering
+void ordering_fiedler(const std::vector<double>& data,
+		      std::vector<int>& order);
 
 } // tns
 
