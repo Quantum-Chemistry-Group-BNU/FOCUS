@@ -92,7 +92,15 @@ void sci::pt2_solver(const input::schedule& schd,
 	 } // ab
       } // ij
    } // idx
-   
+  
+   // redefined energy following p-DMRG
+   double e0wt = 0.0;
+   for(int i=0; i<vdim; i++){
+      double ei = fock::get_Hii(space[i],int2e,int1e)+ecore;
+      e0wt += ei*pow(v0[i],2);
+   }	
+   double e2av = 0.0;
+
    // collect all contributions
    int pdim = pt2Space.size();
    double e2 = 0.0, z2 = 1.0, S_PT = 0.0;
@@ -104,6 +112,7 @@ void sci::pt2_solver(const input::schedule& schd,
       double va0 = pr.second;
       double e2tmp = pow(va0,2)/(e0-ea);
       e2 += e2tmp;
+      e2av += pow(va0,2)/(0.5*(e0+e0wt)-ea);
       double pa = pow(va0/(e0-ea),2);
       z2 += pa;
       if(pa > 1.e-12) S_PT += -pa*log2(pa);
@@ -152,7 +161,15 @@ void sci::pt2_solver(const input::schedule& schd,
 	<< "     S_PT = " << S_PT << endl;
    cout << "etot = " << fixed << setw(20) << setprecision(12) << e0+e2 
 	<< "     Stot = " << S_tot << endl;
-   
+   // modified e0
+   cout << endl;
+   cout << "e0wt = " << fixed << setw(20) 
+	   	     << setprecision(12) << e0wt << endl;
+   cout << "ePT2h= " << fixed << setw(20) 
+		     << setprecision(12) << e2av << endl;
+   cout << "etot = " << fixed << setw(20) 
+	    	     << setprecision(12) << e0+e2av << endl;
+
    auto t1 = global::get_time();
    cout << "timing for sci::pt2_solver : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
