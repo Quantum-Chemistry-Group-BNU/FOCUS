@@ -22,9 +22,9 @@ void get_rdm2(const sparse_hamiltonian& sparseH,
 	      linalg::matrix& rdm2);
 
 // natural orbital
-void get_natural_nr(const linalg::matrix& rdm1,
-		    linalg::matrix& u,
-		    std::vector<double>& occ);
+void get_natorb_nr(const linalg::matrix& rdm1,
+		   linalg::matrix& u,
+		   std::vector<double>& occ);
 
 } // fci
 

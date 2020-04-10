@@ -19,10 +19,10 @@ using namespace std;
 using namespace fock;
 using namespace linalg;
 
-int tests::test_sci(){
+int tests::test_proj(){
    cout << endl;	
    cout << global::line_separator << endl;	
-   cout << "tests::test_sci" << endl;
+   cout << "tests::test_proj" << endl;
    cout << global::line_separator << endl;	
 
    // read input
@@ -44,39 +44,43 @@ int tests::test_sci(){
    // selected CI
    onspace sci_space;
    vector<vector<double>> vs(nroot);
-   fci::sparse_hamiltonian sparseH;
-   sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
-
-   // analysis 
-   auto v0 = vs[0];
-   coeff_population(sci_space, v0);
-   auto SvN = coeff_entropy(v0);
+   
+   if(!schd.ciload){
+      fci::sparse_hamiltonian sparseH;
+      sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
+      sparseH.analysis();
+      // pt2 for single root
+      if(schd.ifpt2){
+         sci::pt2_solver(schd, es[0], vs[0], sci_space, int2e, int1e, ecore);
+      }
+      fci::ci_save(sci_space, vs);
+      cout << vs[0][0] << endl;
+   }else{
+      fci::ci_load(sci_space, vs);
+      int dim = vs[0].size();
+      cout << "dim=" << dim << endl;
+      cout << vs[0][0] << " " << vs[0][dim-1] << endl;
+      cout << vs[nroot-1][0] << " " << vs[nroot-1][dim-1] << endl;
+   }
+      
+   for(int i=0; i<nroot; i++){
+      coeff_population(sci_space, vs[i]);
+      exit(1);
+   }
 
    // compute rdm1
    int k = int1e.sorb; 
    linalg::matrix rdm1(k,k);
-   fci::get_rdm1(sci_space,v0,v0,rdm1);
-
+   for(int i=0; i<nroot; i++){
+      linalg::matrix rdm1t(k,k);
+      fci::get_rdm1(sci_space,vs[i],vs[i],rdm1t);
+      rdm1 += rdm1t*(1.0/nroot);
+   }
    // natural orbitals
    linalg::matrix u;
    vector<double> occ;
    fci::get_natorb_nr(rdm1,u,occ);
-
-   // compute rdm2
-   int k2 = k*(k-1)/2;
-   linalg::matrix rdm2(k2,k2);
-   fci::get_rdm2(sparseH,sci_space,v0,v0,rdm2);
-
-   // compute E
-   cout << setprecision(12) << endl;
-   cout << "e0=" << ecore << endl;
-   double e1 = fock::get_e1(rdm1, int1e);
-   cout << "e1=" << e1 << endl;
-   double e2 = fock::get_e2(rdm2, int2e);
-   cout << "e2=" << e2 << endl;
-   auto etot = ecore+e1+e2;
-   cout << "etot=" << etot << endl; 
-   assert(abs(es[0]-etot) < 1.e-8);
+   exit(1);
 
    return 0;
 }

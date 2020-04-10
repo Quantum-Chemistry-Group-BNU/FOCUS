@@ -17,12 +17,14 @@ public:
    int nseeds;
    int miniter;
    int maxiter;
+   bool flip;
    double eps0; // for initial guess
    std::vector<double> eps1;
    double deltaE;
    double dvdson;
    bool ifpt2;
    double eps2;
+   bool ciload;
 };
    
 void read_input(schedule& schd, std::string fname="input.dat");

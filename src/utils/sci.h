@@ -39,8 +39,9 @@ public:
 void expand_varSpace(fock::onspace& space, 
 		     std::unordered_set<fock::onstate>& varSpace, 
 		     const heatbath_table& hbtab, 
-		     std::vector<double>& cmax, 
-		     const double eps1);
+		     const std::vector<double>& cmax, 
+		     const double eps1,
+		     const bool flip);
 
 // prepare intial solution
 void get_initial(std::vector<double>& e, 

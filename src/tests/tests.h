@@ -21,11 +21,13 @@ int test_sci();
 
 // --- experiemental ---
 
-int test_pt2();
-
 int test_vmc();
 
-int test_group();
+int test_pt2();
+
+int test_order();
+
+int test_proj();
 
 }
 

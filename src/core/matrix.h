@@ -15,6 +15,14 @@ class matrix{
    public:
       // constructors
       matrix(): _rows(0), _cols(0), _size(0), _data(nullptr) {};
+      void resize(const int m, const int n){
+	 _rows = m;
+	 _cols = n;
+	 _size = m*n;
+	 delete[] _data;
+         _data = new double[_size];
+	 std::fill_n(_data, _size, 0.0);
+      }
       matrix(const int m, const int n): _rows(m), _cols(n){
 	 _size = m*n;     
          _data = new double[_size];
@@ -26,10 +34,10 @@ class matrix{
  	 _data = new double[_size];
 	 std::copy(data, data+_size, _data);
       }
-      matrix(const int m, const int n, const double val): _rows(m), _cols(n){
+      matrix(const int m, const int n, const double cval): _rows(m), _cols(n){
 	 _size = m*n;
  	 _data = new double[_size];
-	 std::fill(_data, _data+_size, val);
+	 std::fill(_data, _data+_size, cval);
       }
       // desctructors
       ~matrix(){ delete[] _data; }

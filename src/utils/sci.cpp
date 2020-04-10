@@ -78,8 +78,9 @@ heatbath_table::heatbath_table(const integral::two_body& int2e,
 void sci::expand_varSpace(onspace& space, 
 			  unordered_set<onstate>& varSpace,
 		          const heatbath_table& hbtab, 
-			  vector<double>& cmax, 
-			  const double eps1){
+			  const vector<double>& cmax, 
+			  const double eps1,
+			  const bool flip){
    cout << "\nsci::expand_varSpace dim = " 
 	<< space.size() << " eps1 = " << eps1 << endl;
    auto t0 = global::get_time();
@@ -134,14 +135,16 @@ void sci::expand_varSpace(onspace& space,
 	       varSpace.insert(state1);
 	       space.push_back(state1);
  	       ns++;
-	    //   // flip
-	    //   auto state1f = state1.flip();
-	    //   auto search1 = varSpace.find(state1f);
-	    //   if(search1 == varSpace.end()){
-	    //      varSpace.insert(state1f);
-	    //      space.push_back(state1f);
- 	    //      ns++;
-	    //   }
+	       // flip
+	       if(flip){
+	          auto state1f = state1.flip();
+	          auto search1 = varSpace.find(state1f);
+	          if(search1 == varSpace.end()){
+	             varSpace.insert(state1f);
+	             space.push_back(state1f);
+ 	             ns++;
+	          }
+	       }
 	    }
 	 } 
       } // ia 
@@ -191,14 +194,16 @@ void sci::expand_varSpace(onspace& space,
 	          varSpace.insert(state2);
 	          space.push_back(state2);
 		  nd++;
-	       //   // flip
-	       //   auto state2f = state2.flip();
-	       //   auto search2 = varSpace.find(state2f);
-	       //   if(search2 == varSpace.end()){
-	       //      varSpace.insert(state2f);
-	       //      space.push_back(state2f);
- 	       //      nd++;
-	       //   }
+	          // flip
+		  if(flip){
+	             auto state2f = state2.flip();
+	             auto search2 = varSpace.find(state2f);
+	             if(search2 == varSpace.end()){
+	                varSpace.insert(state2f);
+	                space.push_back(state2f);
+ 	                nd++;
+	             }
+		  }
 	       }
 	    }
 	 } // ab
@@ -240,13 +245,15 @@ void sci::get_initial(vector<double>& es,
 	 varSpace.insert(state);
 	 space.push_back(state);
       }
-   //   // flip
-   //   auto state1 = state.flip();
-   //   auto search1 = varSpace.find(state1);
-   //   if(search1 == varSpace.end()){
-   //      space.push_back(state1);
-   //      varSpace.insert(state1);
-   //   } 
+      // flip determinant for S=0
+      if(schd.flip){
+         auto state1 = state.flip();
+         auto search1 = varSpace.find(state1);
+         if(search1 == varSpace.end()){
+            space.push_back(state1);
+            varSpace.insert(state1);
+         }
+      }
    }
    // print
    cout << "energies for reference states:" << endl;
@@ -260,7 +267,7 @@ void sci::get_initial(vector<double>& es,
    // selected CISD space
    double eps1 = schd.eps0;
    vector<double> cmax(nsub,1.0);
-   expand_varSpace(space, varSpace, hbtab, cmax, eps1);
+   expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.flip);
    nsub = space.size();
    // set up initial states
    if(schd.nroots > nsub){
@@ -342,7 +349,7 @@ void sci::ci_solver(const input::schedule& schd,
 		[](const double& x){ return pow(x,0.5); });
 
       // expand 
-      expand_varSpace(space, varSpace, hbtab, cmax, eps1);
+      expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.flip);
       int nsub0 = nsub;
       nsub = space.size();
 

@@ -20,10 +20,10 @@ using namespace std;
 using namespace fock;
 using namespace linalg;
 
-int tests::test_group(){
+int tests::test_order(){
    cout << endl;	
    cout << global::line_separator << endl;	
-   cout << "tests::test_group" << endl;
+   cout << "tests::test_order" << endl;
    cout << global::line_separator << endl;	
 
    // read input
@@ -52,9 +52,10 @@ int tests::test_group(){
    vector<vector<double>> vs(nroot);
    fci::sparse_hamiltonian sparseH;
    sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
+   
+   coeff_population(sci_space, vs[0]);
 
    // tns
-   coeff_population(sci_space, vs[0]);
    vector<int> order;
    double Smin;
    tns::ordering_fiedler(int2e.K, order);

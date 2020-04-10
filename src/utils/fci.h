@@ -101,6 +101,15 @@ void ci_solver(std::vector<double>& es,
 	       const integral::one_body& int1e,
 	       const double ecore);
 
+// io
+void ci_save(const fock::onspace& space,
+	     const std::vector<std::vector<double>>& vs,
+	     const std::string fname="ci.info");
+
+void ci_load(fock::onspace& space,
+	     std::vector<std::vector<double>>& vs,
+	     const std::string fname="ci.info");
+
 } // fci
 
 #endif

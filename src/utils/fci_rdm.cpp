@@ -161,24 +161,21 @@ void fci::get_rdm2(const sparse_hamiltonian& sparseH,
 }
 
 // natural orbital
-void fci::get_natural_nr(const matrix& rdm1,
-		         matrix& u,
-		         vector<double>& occ){
+void fci::get_natorb_nr(const matrix& rdm1,
+		        matrix& u,
+		        vector<double>& occ){
    int k1 = rdm1.rows()/2;
-   matrix u1(k1,k1);
+   u.resize(k1,k1);
    occ.resize(k1);
    for(int j=0; j<k1; j++){
       for(int i=0; i<k1; i++){
-         u1(i,j) = rdm1(2*i,2*j) + rdm1(2*i+1,2*j+1);
+         u(i,j) = rdm1(2*i,2*j) + rdm1(2*i+1,2*j+1);
       }
    }
-   u = -1.0*u1;
    // diagonalize spin-averaged dm
-   eigen_solver(u, occ);
-   transform(occ.begin(), occ.end(), occ.begin(),
-             [](const double x){ return -x; });
+   eigen_solver(u, occ, 1);
    double ne = 0.0;
-   cout << "\nfci::get_natural_nr k/2=" << rdm1.rows()/2 << endl;
+   cout << "\nfci::get_natorb_nr k/2=" << rdm1.rows()/2 << endl;
    for(int i=0; i<k1; i++){
       cout << setw(3) << i 
 	   << " :" << fixed << setw(7) << setprecision(4) << occ[i] 

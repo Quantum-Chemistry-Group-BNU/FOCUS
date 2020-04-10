@@ -1,6 +1,7 @@
 #ifndef ONSTATE_H
 #define ONSTATE_H
 
+#include <boost/serialization/serialization.hpp>
 #include <boost/functional/hash.hpp>
 #include <iostream>
 #include <cassert>
@@ -64,8 +65,23 @@ class bit_proxy{
 
 // occupation number state
 class onstate{
+   private:
+      friend class boost::serialization::access;	   
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	 ar & _size;
+         int len = _len; // work for both save and load 
+         ar & len;
+	 if(len != _len){
+	    _len = len;
+	    _repr = new unsigned long[_len];
+	 }
+         for(int i=0; i<_len; i++){
+	    ar & _repr[i];
+	 }
+      }
+
    public:
-      
       // constructors
       onstate(): _size(0), _len(0), _repr(nullptr) {};
       onstate(const int n){

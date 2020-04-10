@@ -25,11 +25,13 @@ void input::read_input(input::schedule& schd, string fname){
    schd.maxiter = 0;
    schd.dvdson = 1.e-6;
    schd.deltaE = 1.e-10;
+   schd.flip = false;
    schd.ifpt2 = false;
    schd.eps2 = 1.e-8;
    schd.eps0 = 1.e-2;
    schd.integral_file = "FCIDUMP";
    schd.integral_type = 0; // =0, RHF; =1, UHF
+   schd.ciload = false;
    	 
    string line;
    while(!istrm.eof()){
@@ -47,6 +49,8 @@ void input::read_input(input::schedule& schd, string fname){
          schd.dvdson = stod(line.substr(6)); 
       }else if(line.substr(0,6)=="deltaE"){
          schd.deltaE = stod(line.substr(6)); 
+      }else if(line.substr(0,4)=="flip"){
+         schd.flip = true;
       }else if(line.substr(0,3)=="pt2"){
          schd.ifpt2 = true;
       }else if(line.substr(0,4)=="eps2"){
@@ -59,6 +63,8 @@ void input::read_input(input::schedule& schd, string fname){
       }else if(line.substr(0,13)=="integral_type"){
          istringstream is(line.substr(13));
 	 is >> schd.integral_type;
+      }else if(line.substr(0,6)=="ciload"){
+         schd.ciload = true;
       }else if(line.substr(0,4)=="dets"){
 	 int ndet = 0;
 	 while(true){
@@ -125,6 +131,7 @@ void input::read_input(input::schedule& schd, string fname){
       }
       ndet += 1;
    } // det
+   cout << "flip = " << schd.flip << endl;
    cout << "eps0 = " << schd.eps0 << endl;
    cout << "maxiter = " << schd.maxiter << endl;
    assert(schd.maxiter > 0);
