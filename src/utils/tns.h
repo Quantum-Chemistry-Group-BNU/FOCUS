@@ -22,6 +22,13 @@ struct product_space{
       int dim, dimA, dimB;
 };
 
+// transform space and coefficient upon permutation
+void transform_coeff(const fock::onspace& space,
+ 	             const std::vector<std::vector<double>>& vs,
+		     const std::vector<int>& order,
+		     fock::onspace& space2,
+		     std::vector<std::vector<double>>& vs2);
+
 // compute SvN for permuted orbitals
 void bipartite_entanglement(const fock::onspace& space,
  	                    const std::vector<std::vector<double>>& vs,

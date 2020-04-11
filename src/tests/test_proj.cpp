@@ -8,6 +8,7 @@
 #include "../utils/fci.h"
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
+#include "../utils/tns.h"
 #include "../settings/global.h"
 #include "../io/input.h"
 #include <iostream>
@@ -54,33 +55,69 @@ int tests::test_proj(){
          sci::pt2_solver(schd, es[0], vs[0], sci_space, int2e, int1e, ecore);
       }
       fci::ci_save(sci_space, vs);
-      cout << vs[0][0] << endl;
    }else{
       fci::ci_load(sci_space, vs);
-      int dim = vs[0].size();
-      cout << "dim=" << dim << endl;
-      cout << vs[0][0] << " " << vs[0][dim-1] << endl;
-      cout << vs[nroot-1][0] << " " << vs[nroot-1][dim-1] << endl;
    }
-      
+   // check 
    for(int i=0; i<nroot; i++){
       coeff_population(sci_space, vs[i]);
-      exit(1);
    }
 
-   // compute rdm1
-   int k = int1e.sorb; 
-   linalg::matrix rdm1(k,k);
-   for(int i=0; i<nroot; i++){
-      linalg::matrix rdm1t(k,k);
-      fci::get_rdm1(sci_space,vs[i],vs[i],rdm1t);
-      rdm1 += rdm1t*(1.0/nroot);
+   vector<int> orderJ;
+   tns::ordering_fiedler(int2e.J, orderJ);
+   vector<int> orderK;
+   tns::ordering_fiedler(int2e.K, orderK); 
+
+   const double thresh = 1.e-2;
+
+   int pos = 7;
+   tns::product_space pspace;
+   pspace.get_pspace(sci_space, 2*pos);
+   auto pr = pspace.projection(vs, thresh);
+   cout << "pos=" << pos
+        << " bdim=" << pr.first
+        << " SvN=" << pr.second << endl;
+
+   // partitions
+   vector<int> fe1({2,3,4,5,6});
+   vector<int> fe2({13,14,15,16,17});
+   vector<int> felst;
+   copy(fe1.begin(),fe1.end(),std::back_inserter(felst));
+   copy(fe2.begin(),fe2.end(),std::back_inserter(felst));
+   for(int i : felst) cout << i << " ";
+   cout << endl;
+
+   set<int> feset(felst.begin(),felst.end());
+   vector<int> bath;
+   for(int i : orderK){
+      auto search = feset.find(i);
+      if(search == feset.end()){
+	 bath.push_back(i);
+      }
    }
-   // natural orbitals
-   linalg::matrix u;
-   vector<double> occ;
-   fci::get_natorb_nr(rdm1,u,occ);
-   exit(1);
+   for(int i : bath) cout << i << " ";
+   cout << endl;
+
+   // bipartitions
+   vector<int> order_new;
+   copy(fe2.begin(),fe2.end(),std::back_inserter(order_new));
+   copy(fe1.begin(),fe1.end(),std::back_inserter(order_new));
+   copy(bath.begin(),bath.end(),std::back_inserter(order_new));
+   cout << "\norder_new:" << endl;
+   for(int i : order_new) cout << i << " ";
+   cout << endl;
+
+   pos = 5;
+   onspace space2;
+   vector<vector<double>> vs2;
+   tns::transform_coeff(sci_space, vs, order_new, space2, vs2);
+   tns::product_space pspace2;
+   pspace2.get_pspace(space2, 2*pos);
+
+   auto pr2 = pspace2.projection(vs2, thresh);
+   cout << "pos=" << pos
+        << " bdim=" << pr2.first
+        << " SvN=" << pr2.second << endl;
 
    return 0;
 }

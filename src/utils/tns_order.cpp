@@ -8,12 +8,12 @@ using namespace fock;
 using namespace linalg;
 using namespace tns;
 
-// compute SvN for permuted orbitals
-void tns::bipartite_entanglement(const onspace& space,
- 	                         const vector<vector<double>>& vs,
-			         const vector<int>& order,
-			         vector<int>& bdims,
-			         double& SvN){
+// transform space and coefficient upon permutation
+void tns::transform_coeff(const onspace& space,
+ 	                  const vector<vector<double>>& vs,
+			  const vector<int>& order,
+			  onspace& space2,
+			  vector<vector<double>>& vs2){
    // image2
    int k = order.size();
    vector<int> image2(2*k);
@@ -22,25 +22,37 @@ void tns::bipartite_entanglement(const onspace& space,
       image2[2*i+1] = 2*order[i]+1;
    }
    // update basis vector and signs 
-   onspace sci_space2;
+   space2.clear();
    vector<int> sgns;
    for(const auto& state : space){
-      sci_space2.push_back(state.permute(image2));
+      space2.push_back(state.permute(image2));
       sgns.push_back(state.permute_sgn(image2));
    }
    int dim = space.size();
    int nroot = vs.size();
-   vector<vector<double>> vs2(nroot);
+   vs2.resize(nroot);
    for(int i=0; i<nroot; i++){
       vs2[i].resize(dim);
       transform(vs[i].begin(),vs[i].end(),sgns.begin(),vs2[i].begin(),
 	        [](const double& x, const int& y){ return x*y; });
    }
+}
+
+// compute SvN for permuted orbitals
+void tns::bipartite_entanglement(const onspace& space,
+ 	                         const vector<vector<double>>& vs,
+			         const vector<int>& order,
+			         vector<int>& bdims,
+			         double& SvN){
+   onspace space2;
+   vector<vector<double>> vs2;
+   transform_coeff(space, vs, order, space2, vs2);
    // (n-1) bipartitions of spatial lattice 
+   bdims.clear();
    SvN = 0.0;
-   for(int pos=1; pos<k; pos++){
+   for(int pos=1; pos<order.size(); pos++){
       tns::product_space pspace2;
-      pspace2.get_pspace(sci_space2, 2*pos);
+      pspace2.get_pspace(space2, 2*pos);
       auto pr = pspace2.projection(vs2);
       SvN += pr.second;
       bdims.push_back(pr.first);

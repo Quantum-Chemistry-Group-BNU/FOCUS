@@ -324,7 +324,7 @@ class onstate{
          assert(image2.size() == _size);
 	 onstate state(_size);
 	 for(int i=0; i<_size; i++){
-	    if((*this)[i]) state[image2[i]] = 1;
+	    if((*this)[image2[i]]) state[i] = 1;
 	 }
 	 return state;
       }
@@ -343,7 +343,7 @@ class onstate{
 		  k=j;
 		  break;
 	       }
-	    }  
+	    }
 	    // shift data
 	    bool fk = (*this)[index[k]];
             for(int j=k-1; j>=i; j--){

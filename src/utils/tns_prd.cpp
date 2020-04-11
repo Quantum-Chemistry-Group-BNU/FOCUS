@@ -45,18 +45,19 @@ void product_space::get_pspace(const onspace& space, const int n){
    if(debug){
       cout << "dim=" << dim << " dimA=" << dimA << " dimB=" << dimB << endl;
       for(int i=0; i<dimA; i++){
-         cout << "ia=" << i << " : " << spaceA[i] << endl;
+         cout << "ia=" << i << " : " << spaceA[i].to_string2() << endl;
       }
       for(int i=0; i<dimB; i++){
-         cout << "ib=" << i << " : " << spaceB[i] << endl;
+         cout << "ib=" << i << " : " << spaceB[i].to_string2() << endl;
       }
    }
 }
       
 pair<int,double> product_space::projection(const vector<vector<double>>& vs,
 				           const double thresh){
-   bool debug = false;
-   if(debug) cout << "\nproduct_space::projection" << endl;
+   bool debug = true;
+   if(debug) cout << "\nproduct_space::projection thresh="
+	          << thresh << endl;
    // collect states with the same symmetry (N,NA)
    map<pair<int,int>,vector<int>> qsecA; 
    for(int i=0; i<dimA; i++){
@@ -77,11 +78,14 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
          cout << "idx=" << idx << " symA=" << sym.first << ":" << sym.second 
               << " dim=" << dimAs << endl;
 	 for(int i=0; i<dimAs; i++){
-	    cout << " i=" << i << " : " << spaceA[idxA[i]] << endl;
+	    cout << " i=" << i << " : " << spaceA[idxA[i]].to_string2() << endl;
+	    /*
+	    // complementary part
 	    for(auto pr : rowA[idxA[i]]){
 	       int j = pr.first;
 	       cout << "  j=" << j << " : " << spaceB[j] << endl;
 	    }
+	    */
 	 }
       }
       // build reduced density matrix
@@ -104,10 +108,15 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
       eigen_solver(rhol,eig,1);
       // compute entropy
       for(int i=0; i<dimAs; i++){ 
-         sum += eig[i];
 	 if(eig[i]>thresh){
-            if(debug) cout << " i=" << i << " eig=" << eig[i] << endl;
+            if(debug){ 
+	       cout << " i=" << i << " eig=" << eig[i] << endl;
+	       cout << "      v=";
+	       for(int j=0; j<dimAs; j++) cout << rhol(j,i) << " ";
+	       cout << endl;
+	    }
  	    SvN += -eig[i]*log2(eig[i]);
+            sum += eig[i];
 	    dimAr += 1;
 	 }
       }
