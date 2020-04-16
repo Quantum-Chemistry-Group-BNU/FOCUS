@@ -27,7 +27,11 @@ int test_pt2();
 
 int test_order();
 
+// --- Comb ---
+
 int test_proj();
+
+int test_ras();
 
 }
 

@@ -109,6 +109,19 @@ class onstate{
       // merge two states with different spins - neglect phases
       onstate(const onstate& state_a, const onstate& state_b);
 
+      // join two states
+      onstate join(const onstate& state) const{
+         int size = _size + state._size;
+	 onstate state12(size);
+         for(int i=0; i<_size; i++){
+	    if((*this)[i]) state12[i] = 1;
+	 }
+	 for(int i=0; i<state._size; i++){
+	    state12[_size+i] = state[i];
+	 }
+	 return state12;
+      }
+
       // core functions
       int len() const{ return _len; }
       int size() const{ return _size; }

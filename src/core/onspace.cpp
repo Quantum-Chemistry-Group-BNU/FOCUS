@@ -24,7 +24,7 @@ void fock::check_space(onspace& space){
 }
 
 onspace fock::get_fci_space(const int k, const int n){
-   cout << "\nfock::get_fci_space (k,n)=" << k << "," << n << endl; 
+   //cout << "\nfock::get_fci_space (k,n)=" << k << "," << n << endl; 
    assert(k >= n);
    onspace space;
    string s = string(k-n,'0')+string(n,'1');
@@ -35,7 +35,7 @@ onspace fock::get_fci_space(const int k, const int n){
 }
 
 onspace fock::get_fci_space(const int ks, const int na, const int nb){
-   cout << "\nfock::get_fci_space (ks,na,nb)=" << ks << "," << na << "," << nb << endl; 
+   //cout << "\nfock::get_fci_space (ks,na,nb)=" << ks << "," << na << "," << nb << endl;
    onspace space_a = fock::get_fci_space(ks,na);
    onspace space_b = fock::get_fci_space(ks,nb);
    onspace space;

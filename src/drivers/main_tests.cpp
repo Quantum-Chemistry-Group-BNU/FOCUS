@@ -4,7 +4,9 @@ using namespace std;
 
 int main(){
 
-   tests::test_proj();  
+   tests::test_ras();
+
+   //tests::test_proj();  
 
 /*   
    tests::test_tools();

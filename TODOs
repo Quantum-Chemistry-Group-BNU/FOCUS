@@ -66,19 +66,25 @@
 	  - Can coarse-graining improve 2D-Hubbard Model description?
 	  - Possibility to reduce entanglement?
 
+ 2020xxxx question: what types of configurations 
+		    are relevant for S-T gap in Fe2S2???
+
+ 2020xxxx "infinite-system" DMRG / SCI as initial guess?
+
  2020xxxx mps structure & fit
 	  - brute force converge A[n]=<ln|L>
 	  - compressed: SVD & variational
 
  2020xxxx basic dmrg algorithm
+	  - complementary operator approach
 
 --- Advanced functionalities ---
+ 
+ 2020xxxx operator compression
 
  2020xxxx entanglement localizaiton? 
 	  - orbital optimization
 	  - 1-body & 2-body disentanglers?
-
- 2020xxxx operator compression
 
  2020xxxx pDMRG: random sampling? 
  

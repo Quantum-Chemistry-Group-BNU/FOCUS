@@ -294,6 +294,13 @@ void fci::ci_solver(sparse_hamiltonian& sparseH,
    cout << "\nfci::ci_solver dim=" << space.size() << endl; 
    bool debug = true;
    auto t0 = global::get_time();
+   
+   // dimensionality check
+   if(es.size() > space.size()){
+      cout << "error: too much roots are required! nroot,ndim=" 
+	   << es.size() << "," << space.size() << endl;
+      exit(1);
+   }
   
    // setup product_space
    product_space pspace;

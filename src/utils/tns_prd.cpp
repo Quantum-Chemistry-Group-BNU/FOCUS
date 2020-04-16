@@ -55,6 +55,7 @@ void product_space::get_pspace(const onspace& space, const int n){
       
 pair<int,double> product_space::projection(const vector<vector<double>>& vs,
 				           const double thresh){
+   double thresh_vcoeff = 1.e-2;
    bool debug = true;
    if(debug) cout << "\nproduct_space::projection thresh="
 	          << thresh << endl;
@@ -65,25 +66,42 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
       int ne_a = spaceA[i].nelec_a();
       qsecA[make_pair(ne,ne_a)].push_back(i); 
    }
-   // loop over symmetry sectors
+   /* 
+   // print only
    int idx = 0;
-   int dimAr = 0;
-   double sum = 0.0;
-   double SvN = 0.0;
-   for(auto& pr : qsecA){
-      const pair<int,int>& sym = pr.first;
-      vector<int>& idxA = pr.second;
+   for(auto it = qsecA.crbegin(); it != qsecA.crend(); ++it){
+      const pair<int,int>& sym = it->first;
+      const vector<int>& idxA = it->second;
       int dimAs = idxA.size();
       if(debug){
-         cout << "idx=" << idx << " symA=" << sym.first << ":" << sym.second 
+         cout << "\nidx=" << idx << " symA(Ne,Na)=(" 
+	      << sym.first << "," << sym.second << ")"
+              << " dim=" << dimAs << endl;
+      }
+      cout << " ia=0 : " << spaceA[idxA[0]].to_string2() << endl;
+      idx++;
+   }
+   */
+   // loop over symmetry sectors
+   int idx = 0;
+   int dimAc = 0;
+   double sum = 0.0;
+   double SvN = 0.0;
+   for(auto it = qsecA.crbegin(); it != qsecA.crend(); ++it){
+      const pair<int,int>& sym = it->first;
+      const vector<int>& idxA = it->second;
+      int dimAs = idxA.size();
+      if(debug){
+         cout << "\nidx=" << idx << " symA(Ne,Na)=(" 
+	      << sym.first << "," << sym.second << ")"
               << " dim=" << dimAs << endl;
 	 for(int i=0; i<dimAs; i++){
-	    cout << " i=" << i << " : " << spaceA[idxA[i]].to_string2() << endl;
+	    cout << " ia=" << i << " : " << spaceA[idxA[i]].to_string2() << endl;
 	    /*
 	    // complementary part
 	    for(auto pr : rowA[idxA[i]]){
 	       int j = pr.first;
-	       cout << "  j=" << j << " : " << spaceB[j] << endl;
+	       cout << "  ib=" << j << " : " << spaceB[j] << endl;
 	    }
 	    */
 	 }
@@ -107,27 +125,42 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
       vector<double> eig(dimAs);
       eigen_solver(rhol,eig,1);
       // compute entropy
+      int dimAi = 0;
+      double sumi = 0.0;
       for(int i=0; i<dimAs; i++){ 
 	 if(eig[i]>thresh){
             if(debug){ 
-	       cout << " i=" << i << " eig=" << eig[i] << endl;
-	       cout << "      v=";
-	       for(int j=0; j<dimAs; j++) cout << rhol(j,i) << " ";
-	       cout << endl;
+	       cout << " i=" << i
+		    << " eig=" << scientific << eig[i] << endl;
+	       for(int j=0; j<dimAs; j++){
+		  if(abs(rhol(j,i))>thresh_vcoeff){
+		     cout << "     " << j << " " << spaceA[idxA[j]].to_string2() 
+			  << " : " << rhol(j,i) << endl; 
+		  }
+	       }
 	    }
  	    SvN += -eig[i]*log2(eig[i]);
-            sum += eig[i];
-	    dimAr += 1;
+            sumi += eig[i];
+	    dimAi += 1;
 	 }
       }
+      sum += sumi;
+      dimAc += dimAi;
       idx++;
-      if(debug) cout << " sum=" << sum << " dimAr=" << dimAr << endl;
+      if(debug) cout << " dimAs=" << dimAs 
+	       	     << " sumi=" << defaultfloat << sumi
+	             << " dimAi=" << dimAi 
+		     << " sum=" << sum
+	             << " dimAc=" << dimAc 
+		     << endl;
    } // sym sectors
-
-   if(debug){
-      cout << "dim=" << dim << " dimA=" << dimA << " dimB=" << dimB
-           << " thresh=" << thresh << " dimAr=" << dimAr 
+   if(!debug){
+      cout << "\ndim=" << dim << " dimA=" << dimA << " dimB=" << dimB
+           << " thresh=" << thresh << " dimAc=" << dimAc 
            << " SvN=" << SvN << endl;
+   }
+   if(debug){
+      cout << endl;
       // also check qsecB
       map<pair<int,int>,vector<int>> qsecB; 
       for(int i=0; i<dimB; i++){
@@ -143,5 +176,5 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
               << " dim=" << dimBs << endl;
       }
    }
-   return make_pair(dimAr,SvN); 
+   return make_pair(dimAc,SvN); 
 }
