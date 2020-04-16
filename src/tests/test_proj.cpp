@@ -8,7 +8,8 @@
 #include "../utils/fci.h"
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
-#include "../utils/tns.h"
+#include "../utils/tns_pspace.h"
+#include "../utils/tns_ordering.h"
 #include "../settings/global.h"
 #include "../io/input.h"
 #include <iostream>

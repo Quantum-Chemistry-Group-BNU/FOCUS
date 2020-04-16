@@ -8,7 +8,8 @@
 #include "../utils/fci.h"
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
-#include "../utils/tns.h"
+#include "../utils/tns_pspace.h"
+#include "../utils/tns_ordering.h"
 #include "../settings/global.h"
 #include "../io/input.h"
 #include <iostream>
@@ -20,10 +21,10 @@ using namespace std;
 using namespace fock;
 using namespace linalg;
 
-int tests::test_order(){
+int tests::test_ordering(){
    cout << endl;	
    cout << global::line_separator << endl;	
-   cout << "tests::test_order" << endl;
+   cout << "tests::test_ordering" << endl;
    cout << global::line_separator << endl;	
 
    // read input

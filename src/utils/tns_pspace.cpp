@@ -1,5 +1,5 @@
 #include "../core/linalg.h"
-#include "tns.h"
+#include "tns_prd.h"
 #include <map>
 #include <tuple>
 #include <cmath>

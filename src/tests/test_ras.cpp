@@ -10,7 +10,8 @@
 #include "../utils/fci.h"
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
-#include "../utils/tns.h"
+#include "../utils/tns_pspace.h"
+#include "../utils/tns_ordering.h"
 #include <iostream>
 #include <iomanip>
 #include <chrono>

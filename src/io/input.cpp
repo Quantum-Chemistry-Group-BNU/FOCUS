@@ -23,7 +23,8 @@ void input::read_input(input::schedule& schd, string fname){
    schd.nroots = 1;
    schd.nseeds = 0;
    schd.maxiter = 0;
-   schd.dvdson = 1.e-6;
+   schd.crit_v = 1.e-6;
+   schd.maxcycle = 100;
    schd.deltaE = 1.e-10;
    schd.flip = false;
    schd.ifpt2 = false;
@@ -32,6 +33,7 @@ void input::read_input(input::schedule& schd, string fname){
    schd.integral_file = "FCIDUMP";
    schd.integral_type = 0; // =0, RHF; =1, UHF
    schd.ciload = false;
+   schd.topology_file = "TOPOLOGY";
    	 
    string line;
    while(!istrm.eof()){
@@ -45,8 +47,10 @@ void input::read_input(input::schedule& schd, string fname){
 	 schd.nroots = stoi(line.substr(6));
       }else if(line.substr(0,7)=="maxiter"){
          schd.maxiter = stoi(line.substr(7)); 
-      }else if(line.substr(0,6)=="dvdson"){
-         schd.dvdson = stod(line.substr(6)); 
+      }else if(line.substr(0,6)=="crit_v"){
+         schd.crit_v = stod(line.substr(6));
+      }else if(line.substr(0,8)=="maxcycle"){
+         schd.maxcycle = stoi(line.substr(8)); 
       }else if(line.substr(0,6)=="deltaE"){
          schd.deltaE = stod(line.substr(6)); 
       }else if(line.substr(0,4)=="flip"){
@@ -99,6 +103,9 @@ void input::read_input(input::schedule& schd, string fname){
 	    sweep_iter.push_back( stoi(iter) );
 	    sweep_eps.push_back( stod(eps) );
 	 }
+      }else if(line.substr(0,13)=="topology_file"){
+         istringstream is(line.substr(13));
+	 is >> schd.topology_file;
       }else{
          cout << "error: no matching key! line = " << line << endl;
 	 exit(1);
@@ -154,7 +161,11 @@ void input::read_input(input::schedule& schd, string fname){
       cout << i << " " << schd.eps1[i] << endl;
    }
    cout << "convergence parameters" << endl;
-   cout << "dvdson = " << schd.dvdson << endl;
    cout << "deltaE = " << schd.deltaE << endl;
+   cout << "dvdson:crit_v = " << schd.crit_v << endl;
+   cout << "dvdson:maxcycle = " << schd.maxcycle << endl;
+   // pt2
    cout << "pt2 = " << schd.ifpt2 << " eps2=" << schd.eps2 << endl;
+   // comb tensor network
+   cout << "topology_file = " << schd.topology_file << endl;
 }

@@ -363,7 +363,8 @@ void sci::ci_solver(const input::schedule& schd,
       // set up Davidson solver 
       dvdsonSolver solver;
       solver.iprt = 2;
-      solver.crit_v = schd.dvdson;
+      solver.crit_v = schd.crit_v;
+      solver.maxcycle = schd.maxcycle;
       solver.ndim = nsub;
       solver.neig = neig;
       solver.Diag = sparseH.diag.data();

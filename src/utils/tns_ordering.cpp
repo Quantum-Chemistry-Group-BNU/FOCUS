@@ -1,5 +1,5 @@
 #include "../core/linalg.h"
-#include "tns.h"
+#include "tns_ordering.h"
 #include <numeric>
 #include <algorithm> // swap
 

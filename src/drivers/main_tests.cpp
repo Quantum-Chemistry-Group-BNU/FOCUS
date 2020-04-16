@@ -4,7 +4,9 @@ using namespace std;
 
 int main(){
 
-   tests::test_ras();
+   tests::test_comb();
+
+   //tests::test_ras();
 
    //tests::test_proj();  
 
@@ -27,7 +29,7 @@ int main(){
    
    tests::test_pt2();
    
-   tests::test_group();
+   tests::test_ordering();
 */
 
    return 0;   

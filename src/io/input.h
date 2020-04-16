@@ -13,18 +13,27 @@ public:
    int nroots;
    std::string integral_file;
    int integral_type;
+   // initial dets
    std::set<std::set<int>> det_seeds;
    int nseeds;
+   bool flip;
+   // for initial guess
+   double eps0; 
+   std::vector<double> eps1;
+   // sci
    int miniter;
    int maxiter;
-   bool flip;
-   double eps0; // for initial guess
-   std::vector<double> eps1;
    double deltaE;
-   double dvdson;
+   // dvdson
+   double crit_v;
+   int maxcycle;
+   // pt2
    bool ifpt2;
    double eps2;
+   // io
    bool ciload;
+   // comb
+   std::string topology_file;
 };
    
 void read_input(schedule& schd, std::string fname="input.dat");
