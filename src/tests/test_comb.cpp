@@ -8,6 +8,7 @@
 #include "../utils/fci.h"
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
+#include "../utils/tns_comb.h"
 #include "../settings/global.h"
 #include "../io/input.h"
 #include <iostream>
@@ -63,6 +64,10 @@ int tests::test_comb(){
    }
 
    // comb tensor networks
+   tns::comb comb;
+   comb.read_topology(schd.topology_file);
+   comb.init();
+   comb.print();
 
    return 0;
 }
