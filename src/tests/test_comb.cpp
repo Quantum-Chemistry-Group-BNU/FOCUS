@@ -68,6 +68,7 @@ int tests::test_comb(){
    comb.read_topology(schd.topology_file);
    comb.init();
    comb.print();
+   comb.get_rcanon(sci_space, vs);
 
    return 0;
 }

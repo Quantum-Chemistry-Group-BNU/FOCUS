@@ -45,10 +45,11 @@
  20200331 pt2 util & storage/serialization:
  	  - primilinary implementation of deterministic pt2
 
---- DMRG --- 
+--- TNS --- 
 
- Main observation: small gap [Fe2S2] pt2 is not sufficient!
-		   non-perturbative treatment / high-order PT
+ Main observation: denseH as in [Fe2S2], pt2 is not sufficient unlike c2/cr2!
+		   non-perturbative treatment / high-order PT?
+		   more efficient capture of entanglement?
 
  20200405 bipartition analysis for arbitrary parition of rhos!
 	  - permutation => sign
@@ -61,40 +62,43 @@
 	  - relevance for quantum computing, which could 
 	    reduce the depth of circuits in limited topology (e.g.,1D)
 
- 2020xxxx grouping orbitals - meaningful structure & interpretation!!!
+ 20200409 grouping orbitals - meaningful structure & interpretation!!!
 	  - Coarse-Graining? Hierachical Clustering??? 
 	  - Can coarse-graining improve 2D-Hubbard Model description?
 	  - Possibility to reduce entanglement?
 
- 2020xxxx question: what types of configurations 
+ 20200410 question: what types of configurations 
 		    are relevant for S-T gap in Fe2S2???
 
- 2020xxxx "infinite-system" DMRG / SCI as initial guess?
+--- Comb TNS ---
 
- 2020xxxx mps structure & fit
-	  - brute force converge A[n]=<ln|L>
-	  - compressed: SVD & variational
+ 20200417 Comb structure
 
- 2020xxxx basic dmrg algorithm
-	  - complementary operator approach
+ 2020xxxx SCI as initial guess? projection for 
+          obtaining schmidt basis {|r>}
+
+ 2020xxxx rebuild local sites: A[n]=<ln|L>, W[n]=<r12|r1r2>
+
+ 2020xxxx initialize normal & complementary operators
+
+ 2020xxxx basic sweep algorithm
+
+ 2020xxxx more functionalities:
+ 	  - efficient implementation using abelian symmetry
+ 	  - propogation of initial guess
+	  - support for state-average excited state calculations
 
 --- Advanced functionalities ---
  
- 2020xxxx operator compression
-
- 2020xxxx entanglement localizaiton? 
-	  - orbital optimization
-	  - 1-body & 2-body disentanglers?
-
- 2020xxxx pDMRG: random sampling? 
- 
- 2020xxxx rdms?
-
  2020xxxx parallelizaiton: large-scale applications!
 
---- FUTURE ---
+ 2020xxxx random sampling? as for stochastic pDMRG
+ 
+ 2020xxxx operator compression
 
- 2020xxxx complex version / relativistic SCI/DMRG
+ 2020xxxx complex version: relativistic SCI/DMRG
+
+ 2020xxxx rdms?
 
  2020xxxx g-tensor [IMPORTANT!!! - quantum computation] 
 		    <Psi|sigma K|Psi>? G-matrix;
@@ -102,9 +106,16 @@
 		    For VQE this can be made symmetric,
 		    <0|(U1d*H*U2)|0> - Hardmard test]
 
+--- FUTURE ---
+
+ 2020xxxx entanglement localizaiton? 
+	  - orbital optimization
+	  - 1-body & 2-body disentanglers?
+ 
  2020xxxx excited state: HCI/DMRG for RIXS 
 	  [also relevant for quantum computation]
 
- 2020xxxx finding compact representation of many-body wavefunctions
+ 2020xxxx exploring more compact representation of many-body wavefunctions
 	  - VMC-c-MPS ansatz?
+	  - Neural network states?
 

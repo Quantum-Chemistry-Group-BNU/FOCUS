@@ -15,6 +15,10 @@ void dsyevd_(const char* JOBZ, const char* UPLO, const int* N, double* A, const 
 	     double* W, double* WORK, const int* LWORK, 
 	     int* IWORK, const int* LIWORK, int* INFO);
 
+void dgesvd_(const char* JOBU, const char* JOBVT, const int* M, const int* N,
+	     double* A, const int* LDA, double* S, double* U, const int* LDU,
+	     double* VT, const int* LDVT, double* WORK, const int* LWORK, int* INFO);
+
 double dnrm2_(const int* N, const double* X, const int* INCX);
 
 double ddot_(const int* N, const double* X, const int* INCX,
@@ -38,6 +42,11 @@ matrix dgemm(const char* TRANSA, const char* TRANSB,
 // order=0 from small to large; 
 // order=1 from large to small.
 void eigen_solver(matrix& A, std::vector<double>& e, const int order=0);
+
+// singular value decomposition
+void svd_solver(matrix& A, std::vector<double>& s, 
+		matrix& U, matrix& Vt, 
+		const int iop=0);
 
 // normF = ||A||_F = sqrt(\sum_{ij}|aij|^2)
 double normF(const matrix& A);

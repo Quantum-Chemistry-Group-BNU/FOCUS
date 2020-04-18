@@ -48,6 +48,8 @@ matrix linalg::dgemm(const char* TRANSA, const char* TRANSB,
 }
 
 // eigenvalues: HC=CE
+// order=0 from small to large; 
+// order=1 from large to small.
 void linalg::eigen_solver(matrix& A, vector<double>& e, const int order){
    assert(A.rows() == A.cols());  
    assert(A.rows() <= e.size()); // allow larger space used for e 
@@ -60,8 +62,8 @@ void linalg::eigen_solver(matrix& A, vector<double>& e, const int order){
                    &iworkopt,&liwork,&info);
    lwork = static_cast<int>(workopt);
    liwork = static_cast<int>(iworkopt);
-   std::unique_ptr<double[]> work(new double[lwork]);
-   std::unique_ptr<int[]> iwork(new int[liwork]);
+   unique_ptr<double[]> work(new double[lwork]);
+   unique_ptr<int[]> iwork(new int[liwork]);
    dsyevd_("V","L",&n,A.data(),&n,e.data(),work.get(),&lwork,
                    iwork.get(),&liwork,&info);
    if(order == 1){
@@ -69,7 +71,38 @@ void linalg::eigen_solver(matrix& A, vector<double>& e, const int order){
 		[](const double& x){ return -x; });
    }
    if(info){
-      std::cout << "dsyevd failed with info=" << info << std::endl;
+      cout << "dsyevd failed with info=" << info << endl;
+      exit(1);
+   }
+}
+
+// A = U*s*Vt
+void linalg::svd_solver(matrix& A, vector<double>& s,
+			matrix& U, matrix& Vt,
+			const int iop){
+   int m = A.rows(), n = A.cols(), r = min(m,n);
+   int lwork = -1, ldu = 1, ldvt = 1, info;
+   char JOBU, JOBVT;
+   if(iop == 0){
+      JOBU = 'A'; U.resize(m,m); ldu = m;
+      JOBVT = 'A'; Vt.resize(n,n); ldvt = n;
+   }else if(iop == 1){
+      JOBU = 'S'; U.resize(m,r); ldu = m;
+      JOBVT = 'N';
+   }else if(iop == 2){
+      JOBU = 'N';
+      JOBVT = 'S'; Vt.resize(r,n); ldvt = r;
+   }
+   double workopt;
+   s.resize(r);
+   dgesvd_(&JOBU,&JOBVT,&m,&n,A.data(),&m,s.data(),U.data(),&ldu,
+           Vt.data(),&ldvt,&workopt,&lwork,&info);
+   lwork = static_cast<int>(workopt);
+   unique_ptr<double[]> work(new double[lwork]);
+   dgesvd_(&JOBU,&JOBVT,&m,&n,A.data(),&m,s.data(),U.data(),&ldu,
+	   Vt.data(),&ldvt,work.get(),&lwork,&info);
+   if(info){
+      cout << "dgesvd failed with info=" << info << endl;
       exit(1);
    }
 }

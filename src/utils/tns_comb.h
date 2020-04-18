@@ -1,6 +1,7 @@
 #ifndef TNS_COMB_H
 #define TNS_COMB_H
 
+#include "../core/onspace.h"
 #include <vector>
 #include <string>
 #include <tuple>
@@ -13,10 +14,15 @@ class comb{
       void read_topology(std::string topology); 
       void print();
       void init();
+      // right canonical form
+      void get_rcanon(const fock::onspace& space,
+		      const std::vector<std::vector<double>>& vs,
+		      const double thresh=1.e-6);
    public:
       int nbackbone, nphysical, ninternal, ntotal;
       std::vector<std::vector<int>> topo;
       using coord = std::pair<int,int>;
+      std::vector<coord> rcoord;
       std::map<coord,std::vector<int>> rsupport;
       std::vector<std::pair<coord,coord>> sweep_seq;
 };

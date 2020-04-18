@@ -1,11 +1,14 @@
+#include "tns_ordering.h"
+#include "tns_pspace.h"
 #include "tns_comb.h"
 #include <iostream>
 #include <fstream>
-#include <sstream>
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace tns;
+using namespace fock;
 
 void comb::read_topology(string fname){
    cout << "\ncomb::read_topology fname=" << fname << endl;
@@ -55,9 +58,14 @@ void comb::init(){
          idx++;
       }
    }
+   // coordinate of nodes in right canonical form
+   for(int i=nbackbone-1; i>=0; i--){
+      for(int j=topo[i].size()-1; j>=0; j--){
+         rcoord.push_back(make_pair(i,j));
+      }
+   }
    // compute support of each node in right canonical form
    for(int i=nbackbone-1; i>=0; i--){
-      cout << topo[i][0] << endl;  
       int size = topo[i].size();
       if(size == 1){
 	 // upper branch is just physical indices     
@@ -131,6 +139,12 @@ void comb::print(){
       cout << endl;
       idx++;
    }
+   cout << "--- rcoord ---" << endl;
+   for(int i=0; i<ntotal; i++){
+      auto p = rcoord[i];
+      cout << "i=" << i << " : (" << p.first << "," << p.second << ")" 
+	   << "[" << topo[p.first][p.second] << "]" << endl;
+   }
    cout << "--- rsupport ---" << endl;
    for(const auto& p : rsupport){
       auto coord = p.first;
@@ -153,4 +167,67 @@ void comb::print(){
            << "(" << x1 << "," << y1 << ")[" << topo[x1][y1] << "]" 
 	   << endl;
    }
+}
+
+void comb::get_rcanon(const onspace& space,
+		      const vector<vector<double>>& vs,
+		      const double thresh){
+   cout << "\ncomb::get_rcanon" << endl;
+   bool debug = true;
+   vector<int> bas(nphysical);
+   iota(bas.begin(), bas.end(), 0);
+   // loop over nodes (except the last one)
+   for(int idx=10; idx<ntotal-1; idx++){
+
+      auto p = rcoord[idx];
+      int i = p.first, j = p.second;
+      if(debug){
+         cout << "\nidx=" << idx 
+	      << " node=(" << i << "," << j << ")" 
+              << "[" << topo[i][j] << "] ";
+	 cout << "rsup=";
+         for(int k : rsupport[make_pair(i,j)]) cout << k << " ";
+         cout << endl;
+      }
+      // 1. generate 1D ordering
+      auto rsupp = rsupport[make_pair(i,j)];
+      stable_sort(rsupp.begin(), rsupp.end());
+      vector<int> order;
+      set_difference(bas.begin(), bas.end(), rsupp.begin(), rsupp.end(),
+                     back_inserter(order));
+      int pos = order.size();
+      copy(rsupp.begin(), rsupp.end(), back_inserter(order));
+      if(debug){
+         cout << "pos=" << pos << endl;
+	 cout << "order=";
+         for(int k : order){
+            cout << k << " ";
+         }
+         cout << endl;
+      } 
+      // 2. transform SCI coefficient
+      onspace space2;
+      vector<vector<double>> vs2;
+      transform_coeff(space, vs, order, space2, vs2); 
+      // 3. bipartition of space
+      tns::product_space pspace2;
+      pspace2.get_pspace(space2, 2*pos);
+      // 4. projection of SCI wavefunction (Schmidt decomposition for single state)
+      pspace2.right_projection(vs2);
+      // 5. save renormalized states
+
+      // pr = pspace2.projectionRight(vs2);
+      
+      // Need to resolve the difficulty in state-average projection
+      // rho_rr' = \sum_i ci_[l]r*ci_[l]r' (r>>l)
+      // rho_rr'*v = \sum_i ci^t*ci*v
+
+      // [C^t]C => QR*R^tQt => Q[RRt]Qt ---> QR decomposition or SVD equivalently
+      //				     for stacked quantities
+      // ci_lr = (QR)^t = R^t*Qt => requires QR
+      // rho_rr' = Q*[RR^t]*Qt
+      // 	 = Q*U*v*[U^t*Qt] => eigenvalues
+
+   } // idx
+   exit(1);
 }

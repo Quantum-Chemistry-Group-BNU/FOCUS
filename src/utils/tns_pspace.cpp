@@ -3,12 +3,14 @@
 #include <map>
 #include <tuple>
 #include <cmath>
+#include <cassert>
 
 using namespace std;
 using namespace fock;
 using namespace linalg;
 using namespace tns;
 
+// factorize the space into products of two spaces 
 void product_space::get_pspace(const onspace& space, const int n){
    bool debug = false;
    if(debug) cout << "\nproduct_space::get_pspace" << endl;
@@ -52,7 +54,8 @@ void product_space::get_pspace(const onspace& space, const int n){
       }
    }
 }
-      
+
+// left projection
 pair<int,double> product_space::projection(const vector<vector<double>>& vs,
 				           const double thresh){
    double thresh_vcoeff = 1.e-2;
@@ -115,8 +118,8 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
          for(int ia=0; ia<dimAs; ia++){
             for(const auto& pib : rowA[idxA[ia]]){
                int ib = pib.first;
-               int i = pib.second;
-               vlr(ia,ib) = vs[iroot][i];
+               int id = pib.second;
+               vlr(ia,ib) = vs[iroot][id];
             }
          }
          rhol += dgemm("N","N",vlr,vlr.transpose());
@@ -177,4 +180,149 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
       }
    }
    return make_pair(dimAc,SvN); 
+}
+     
+// right projection
+void product_space::right_projection(const vector<vector<double>>& vs,
+				     const double thresh){
+   double thresh_vcoeff = 1.e-2;
+   bool debug = true;
+   if(debug) cout << "\nproduct_space::right_projection thresh="
+	          << thresh << endl;
+   // 1. collect states with the same symmetry (N,NA)
+   using qsym = pair<int,int>;
+   map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
+   for(int i=0; i<dimB; i++){
+      int ne = spaceB[i].nelec();
+      int ne_a = spaceB[i].nelec_a();
+      qsym symB = make_pair(ne,ne_a);
+      qsecB[symB].push_back(i); 
+   }
+   if(debug){
+      int idx = 0, dB = 0;
+      for(auto it = qsecB.crbegin(); it != qsecB.crend(); ++it){
+         const qsym& symB = it->first;
+	 const auto& idxB = it->second;
+	 int dimBs = idxB.size();
+         cout << "idx=" << idx << " symB(Ne,Na)=(" 
+              << symB.first << "," << symB.second << ")"
+              << " dimBs=" << dimBs 
+	      << " state0=" << spaceB[idxB[0]].to_string2() 
+	      << endl;
+	 dB += dimBs;
+         idx++;
+      }
+      assert(dB == dimB);
+   }
+   // 2. loop over symmetry sectors to compute renormalized states
+   int idx = 0;
+   int dimBc = 0;
+   double sum = 0.0;
+   double SvN = 0.0;
+   for(auto it = qsecB.crbegin(); it != qsecB.crend(); ++it){
+      const qsym& symB = it->first;
+      const auto& idxB = it->second;
+      int dimBs = idxB.size(); 
+
+      if(debug){
+         cout << "\nidx=" << idx << " symB(Ne,Na)=(" 
+	      << symB.first << "," << symB.second << ")"
+              << " dim=" << dimBs << endl;
+	 for(int i=0; i<dimBs; i++){
+	    cout << " ib=" << i << " : " 
+		 << spaceB[idxB[i]].to_string2() << endl;
+	 }
+      }
+
+      // compute renormalized basis using SVD
+      int nroots = vs.size();
+      matrix vrl(dimBs,dimA*nroots);
+      for(int iroot = 0; iroot<nroots; iroot++){
+	 for(int ib=0; ib<dimBs; ib++){
+	    for(const auto& pia : colB[idxB[ib]]){
+	       int ia = pia.first;
+	       int id = pia.second;
+               vrl(ib,ia+dimA*iroot) = vs[iroot][id];
+	    }
+	 }
+      }
+      vrl *= 1.0/sqrt(nroots);
+
+      // build reduced density matrix
+      matrix rhor(dimBs,dimBs);
+      for(int iroot = 0; iroot<nroots; iroot++){
+         // vlr for sym sector
+         matrix vlr(dimA,dimBs);
+	 for(int ib=0; ib<dimBs; ib++){
+	    for(const auto& pia : colB[idxB[ib]]){
+	       int ia = pia.first;
+	       int id = pia.second;
+               vlr(ia,ib) = vs[iroot][id];
+	    }
+	 }
+         rhor += dgemm("N","N",vlr.transpose(),vlr);
+      }
+      rhor *= 1.0/nroots;
+      vector<double> eig(dimBs);
+      eigen_solver(rhor,eig,1);
+      cout << "eig=" << endl;
+      for(const double& e : eig) cout << e << " ";
+      cout << endl;
+
+      rhor.print("rhor");
+
+      vector<double> sig;
+      matrix u, vt;
+      svd_solver(vrl,sig,u,vt,1);
+      
+      transform(sig.begin(),sig.end(),sig.begin(),
+		[](const double& x){ return x*x; });
+     
+      cout << "sig=" << endl;
+      for(const double& s : sig) cout << s << " ";
+      cout << endl;
+
+      u.print("u");
+
+      auto im = dgemm("T","N",rhor,u);
+      im.print("id"); 
+      exit(1);
+/*
+      // compute entanglement entropy
+      int dimBi = 0;
+      double sumi = 0.0;
+      for(int i=0; i<dimBs; i++){ 
+	 if(eig[i]>thresh){
+            if(debug){ 
+	       cout << " i=" << i
+		    << " eig=" << scientific << eig[i] << endl;
+	       for(int j=0; j<dimBs; j++){
+		  if(abs(rhor(j,i))>thresh_vcoeff){
+		     cout << "     " << j << " " << spaceB[idxB[j]].to_string2() 
+			  << " : " << rhor(j,i) << endl; 
+		  }
+	       }
+	    }
+ 	    SvN += -eig[i]*log2(eig[i]);
+            sumi += eig[i];
+	    dimBi += 1;
+	 }
+      }
+      sum += sumi;
+      dimBc += dimBi;
+      idx++;
+      if(debug) cout << " dimBs=" << dimBs 
+	       	     << " sumi=" << defaultfloat << sumi
+	             << " dimBi=" << dimBi 
+		     << " sum=" << sum
+	             << " dimBc=" << dimBc 
+		     << endl;
+   } // sym sectors
+   if(!debug){
+      cout << "\ndim=" << dim << " dimA=" << dimA << " dimB=" << dimB
+           << " thresh=" << thresh << " dimBc=" << dimBc 
+           << " SvN=" << SvN << endl;
+   }
+*/
+   }
 }
