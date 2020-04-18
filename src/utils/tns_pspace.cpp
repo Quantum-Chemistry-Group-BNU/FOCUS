@@ -1,3 +1,4 @@
+#include "../settings/global.h"
 #include "../core/linalg.h"
 #include "tns_pspace.h"
 #include <map>
@@ -185,18 +186,34 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
 // right projection
 void product_space::right_projection(const vector<vector<double>>& vs,
 				     const double thresh){
-   double thresh_vcoeff = 1.e-2;
+   auto t0 = global::get_time();
    bool debug = true;
    if(debug) cout << "\nproduct_space::right_projection thresh="
 	          << thresh << endl;
    // 1. collect states with the same symmetry (N,NA)
    using qsym = pair<int,int>;
    map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
-   for(int i=0; i<dimB; i++){
-      int ne = spaceB[i].nelec();
-      int ne_a = spaceB[i].nelec_a();
+   map<qsym,vector<tuple<int,int,int>>> qspace;
+   map<qsym,map<int,int>> qmapA;
+   for(int ib=0; ib<dimB; ib++){
+      int ne = spaceB[ib].nelec();
+      int ne_a = spaceB[ib].nelec_a();
       qsym symB = make_pair(ne,ne_a);
-      qsecB[symB].push_back(i); 
+      qsecB[symB].push_back(ib);
+
+      for(const auto& pia : colB[ib]){
+	 int ia = pia.first;
+	 int idet = pia.second;
+
+	 auto it = qmapA[symB].find(ia);
+         if(it == qmapA[symB].end()){
+            auto pr = qmapA[symB].insert({ia,qmapA[symB].size()});
+         };
+	 int idxB = qsecB[symB].size()-1;
+	 int idxA = qmapA[symB][ia];
+	 qspace[symB].push_back(make_tuple(idxB,idxA,idet));
+      }
+
    }
    if(debug){
       int idx = 0, dB = 0;
@@ -206,7 +223,8 @@ void product_space::right_projection(const vector<vector<double>>& vs,
 	 int dimBs = idxB.size();
          cout << "idx=" << idx << " symB(Ne,Na)=(" 
               << symB.first << "," << symB.second << ")"
-              << " dimBs=" << dimBs 
+              << " dimBs=" << dimBs
+	      << " dimAs=" << qmapA[symB].size() 
 	      << " state0=" << spaceB[idxB[0]].to_string2() 
 	      << endl;
 	 dB += dimBs;
@@ -223,7 +241,6 @@ void product_space::right_projection(const vector<vector<double>>& vs,
       const qsym& symB = it->first;
       const auto& idxB = it->second;
       int dimBs = idxB.size(); 
-
       if(debug){
          cout << "\nidx=" << idx << " symB(Ne,Na)=(" 
 	      << symB.first << "," << symB.second << ")"
@@ -233,60 +250,60 @@ void product_space::right_projection(const vector<vector<double>>& vs,
 		 << spaceB[idxB[i]].to_string2() << endl;
 	 }
       }
-
       // compute renormalized basis using SVD
       int nroots = vs.size();
-      matrix vrl(dimBs,dimA*nroots);
+      
+      int dimAs = qmapA[symB].size();
+
+      matrix vrl(dimBs,dimAs*nroots);
+      matrix vrl2(dimBs,dimA*nroots);
       for(int iroot = 0; iroot<nroots; iroot++){
+ 
+     	 for(const auto& t : qspace[symB]){
+	    int ib = get<0>(t);
+	    int ia = get<1>(t);
+	    int id = get<2>(t);
+	    vrl(ib,ia+dimAs*iroot) = vs[iroot][id];
+	 } 
+        
 	 for(int ib=0; ib<dimBs; ib++){
 	    for(const auto& pia : colB[idxB[ib]]){
 	       int ia = pia.first;
 	       int id = pia.second;
-               vrl(ib,ia+dimA*iroot) = vs[iroot][id];
+               vrl2(ib,ia+dimA*iroot) = vs[iroot][id];
 	    }
 	 }
+	 
       }
       vrl *= 1.0/sqrt(nroots);
-
-      // build reduced density matrix
-      matrix rhor(dimBs,dimBs);
-      for(int iroot = 0; iroot<nroots; iroot++){
-         // vlr for sym sector
-         matrix vlr(dimA,dimBs);
-	 for(int ib=0; ib<dimBs; ib++){
-	    for(const auto& pia : colB[idxB[ib]]){
-	       int ia = pia.first;
-	       int id = pia.second;
-               vlr(ia,ib) = vs[iroot][id];
-	    }
-	 }
-         rhor += dgemm("N","N",vlr.transpose(),vlr);
-      }
-      rhor *= 1.0/nroots;
-      vector<double> eig(dimBs);
-      eigen_solver(rhor,eig,1);
-      cout << "eig=" << endl;
-      for(const double& e : eig) cout << e << " ";
-      cout << endl;
-
-      rhor.print("rhor");
-
+      vrl2 *= 1.0/sqrt(nroots);
+      
       vector<double> sig;
       matrix u, vt;
+     
+      //auto rr = dgemm("N","N",vrl,vrl.transpose());
+      //rr.print("r");
+      //vrl.print("vrl");
       svd_solver(vrl,sig,u,vt,1);
-      
       transform(sig.begin(),sig.end(),sig.begin(),
 		[](const double& x){ return x*x; });
-     
-      cout << "sig=" << endl;
+      cout << "sig=" << scientific << endl;
       for(const double& s : sig) cout << s << " ";
       cout << endl;
 
-      u.print("u");
+      /*
+      //auto rr2 = dgemm("N","N",vrl2,vrl2.transpose());
+      //rr2.print("r2");
+      //vrl2.print("vrl2");
+      svd_solver(vrl2,sig,u,vt,1);
+      transform(sig.begin(),sig.end(),sig.begin(),
+		[](const double& x){ return x*x; });
+      cout << "sig=" << scientific << endl;
+      for(const double& s : sig) cout << s << " ";
+      cout << endl;
+      */
 
-      auto im = dgemm("T","N",rhor,u);
-      im.print("id"); 
-      exit(1);
+      idx++;
 /*
       // compute entanglement entropy
       int dimBi = 0;
@@ -310,7 +327,6 @@ void product_space::right_projection(const vector<vector<double>>& vs,
       }
       sum += sumi;
       dimBc += dimBi;
-      idx++;
       if(debug) cout << " dimBs=" << dimBs 
 	       	     << " sumi=" << defaultfloat << sumi
 	             << " dimBi=" << dimBi 
@@ -325,4 +341,7 @@ void product_space::right_projection(const vector<vector<double>>& vs,
    }
 */
    }
+   auto t1 = global::get_time();
+   cout << "timing for product_space::right_projection : " << setprecision(2) 
+	<< global::get_duration(t1-t0) << " s" << endl;
 }

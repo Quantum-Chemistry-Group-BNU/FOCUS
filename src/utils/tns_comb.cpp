@@ -212,22 +212,9 @@ void comb::get_rcanon(const onspace& space,
       // 3. bipartition of space
       tns::product_space pspace2;
       pspace2.get_pspace(space2, 2*pos);
-      // 4. projection of SCI wavefunction (Schmidt decomposition for single state)
+      // 4. projection of SCI wavefunction and save renormalized states
+      //    (Schmidt decomposition for single state)
       pspace2.right_projection(vs2);
-      // 5. save renormalized states
-
-      // pr = pspace2.projectionRight(vs2);
-      
-      // Need to resolve the difficulty in state-average projection
-      // rho_rr' = \sum_i ci_[l]r*ci_[l]r' (r>>l)
-      // rho_rr'*v = \sum_i ci^t*ci*v
-
-      // [C^t]C => QR*R^tQt => Q[RRt]Qt ---> QR decomposition or SVD equivalently
-      //				     for stacked quantities
-      // ci_lr = (QR)^t = R^t*Qt => requires QR
-      // rho_rr' = Q*[RR^t]*Qt
-      // 	 = Q*U*v*[U^t*Qt] => eigenvalues
-
+      exit(1);
    } // idx
-   exit(1);
 }
