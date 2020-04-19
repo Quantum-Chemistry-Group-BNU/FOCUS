@@ -140,14 +140,15 @@ void input::read_input(input::schedule& schd, string fname){
    } // det
    cout << "flip = " << schd.flip << endl;
    cout << "eps0 = " << schd.eps0 << endl;
-   cout << "maxiter = " << schd.maxiter << endl;
-   assert(schd.maxiter > 0);
-   schd.eps1.resize(schd.maxiter);
-   // put into eps1 array
+   // set miniter & maxiter
    int size = sweep_iter.size();
-   schd.miniter = sweep_iter[size-1];
+   assert(size > 0);
+   schd.miniter = sweep_iter[size-1]+1;
    cout << "miniter = " << schd.miniter << endl;
-   assert(size > 0 && schd.maxiter >= size);
+   cout << "maxiter = " << schd.maxiter << endl;
+   assert(schd.maxiter >= schd.miniter);
+   // put eps1 into array
+   schd.eps1.resize(schd.maxiter);
    for(int i=1; i<size; i++){
       for(int j=sweep_iter[i-1]; j<sweep_iter[i]; j++){
 	 schd.eps1[j] = sweep_eps[i-1];

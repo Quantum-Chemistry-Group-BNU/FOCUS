@@ -73,6 +73,11 @@ void pt2_solver(const input::schedule& schd,
 	        const integral::one_body& int1e,
 	        const double ecore);
 
+// truncate
+void ci_truncate(fock::onspace& space,
+		 std::vector<std::vector<double>>& vs,
+		 const int maxdets = 10000);
+
 } // sci
 
 #endif

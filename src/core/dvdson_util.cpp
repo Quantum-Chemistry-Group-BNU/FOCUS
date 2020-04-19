@@ -95,14 +95,14 @@ void dvdsonSolver::print_iter(const int iter,
 }
 
 // column major matrix - vbas(ndim,mstate) as in Fortran
-void dvdsonSolver::check_orthogonality(const int n, const int m, 
-				       const vector<double>& vbas, 
-				       const double thresh){
+void linalg::check_orthogonality(const int n, const int m, 
+				 const vector<double>& vbas, 
+				 const double thresh){
    matrix V(n,m,vbas.data());
    matrix Vt = V.transpose();
    matrix dev = dgemm("N","N",Vt,V) - identity_matrix(m);
    double diff = normF(dev);
-   if(iprt > 1) cout << "dvdsonSolver::check_orthogonality diff=" << diff << endl;
+   cout << "linalg::check_orthogonality diff=" << diff << endl;
    if(diff > thresh){
       cout << "error: deviation from orthonormal basis exceed thresh=" 
 	   << thresh << endl;      
@@ -113,12 +113,12 @@ void dvdsonSolver::check_orthogonality(const int n, const int m,
 }
 
 // modified Gram-Schmidt orthogonalization - vbas(ndim,neig), rbas(ndim,nres) 
-int dvdsonSolver::gen_ortho_basis(const int ndim,
-		    		  const int neig,
-		    		  const int nres,
-		    		  const vector<double>& vbas,
-		    		  vector<double>& rbas,
-		    		  const double crit_indp){
+int linalg::get_ortho_basis(const int ndim,
+		    	    const int neig,
+		    	    const int nres,
+		    	    const vector<double>& vbas,
+		    	    vector<double>& rbas,
+		    	    const double crit_indp){
    double one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
    // 1. projection (1-V*V^+)*R = R-V*(V^+R)
@@ -171,10 +171,10 @@ int dvdsonSolver::gen_ortho_basis(const int ndim,
    return nindp;
 }
 
-int dvdsonSolver::gen_ortho_basis(const int ndim,
-		    		  const int nres,
-		    		  vector<double>& rbas,
-		    		  const double crit_indp){
+int linalg::get_ortho_basis(const int ndim,
+		    	    const int nres,
+		    	    vector<double>& rbas,
+		    	    const double crit_indp){
    double one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
    // 2. form new basis from rbas by modified Gram-Schmidt procedure

@@ -172,19 +172,18 @@ void comb::print(){
 void comb::get_rcanon(const onspace& space,
 		      const vector<vector<double>>& vs,
 		      const double thresh){
-   cout << "\ncomb::get_rcanon" << endl;
    bool debug = true;
+   cout << "\ncomb::get_rcanon thresh=" << scientific << thresh << endl;
+   vector<pair<int,int>> shapes;
    vector<int> bas(nphysical);
    iota(bas.begin(), bas.end(), 0);
    // loop over nodes (except the last one)
-   for(int idx=10; idx<ntotal-1; idx++){
-
+   for(int idx=0; idx<ntotal-1; idx++){
       auto p = rcoord[idx];
       int i = p.first, j = p.second;
       if(debug){
          cout << "\nidx=" << idx 
-	      << " node=(" << i << "," << j << ")" 
-              << "[" << topo[i][j] << "] ";
+	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "] ";
 	 cout << "rsup=";
          for(int k : rsupport[make_pair(i,j)]) cout << k << " ";
          cout << endl;
@@ -200,11 +199,9 @@ void comb::get_rcanon(const onspace& space,
       if(debug){
          cout << "pos=" << pos << endl;
 	 cout << "order=";
-         for(int k : order){
-            cout << k << " ";
-         }
+         for(int k : order) cout << k << " ";
          cout << endl;
-      } 
+      }
       // 2. transform SCI coefficient
       onspace space2;
       vector<vector<double>> vs2;
@@ -214,7 +211,26 @@ void comb::get_rcanon(const onspace& space,
       pspace2.get_pspace(space2, 2*pos);
       // 4. projection of SCI wavefunction and save renormalized states
       //    (Schmidt decomposition for single state)
-      auto rbasis = pspace2.right_projection(vs2,1.e-4);
-      exit(1);
+      auto rbasis = pspace2.right_projection(vs2,thresh);
+      if(debug){
+	 int ndim = 0, nbas = 0;
+         for(int i=0; i<rbasis.size(); i++){
+	    rbasis[i].print("rsec"+to_string(i));
+	    ndim += rbasis[i].coeff.rows();
+	    nbas += rbasis[i].coeff.cols();
+	 }
+	 cout << "rbasis: ndim,nbas=" << ndim << "," << nbas << endl;
+	 shapes.push_back(make_pair(ndim,nbas));
+      }
    } // idx
+   if(debug){
+      for(int idx=0; idx<ntotal-1; idx++){
+         auto p = rcoord[idx];
+         int i = p.first, j = p.second;
+	 cout << "idx=" << idx 
+	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "] "
+	      << " shape=" << shapes[idx].first << "," << shapes[idx].second
+	      << endl;
+      } // idx
+   }
 }

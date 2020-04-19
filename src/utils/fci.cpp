@@ -7,7 +7,6 @@
 #include "../core/hamiltonian.h"
 #include "../core/analysis.h"
 #include "fci.h"
-#include "fci_rdm.h"
 
 using namespace std;
 using namespace fock;
@@ -120,6 +119,13 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
 	<< " dim0 = " << istart << " dim = " << space.size() << endl; 
    bool debug = true;
    auto t0 = global::get_time();
+   // initialization for the first use
+   if(istart == 0){
+      diag.clear();
+      connect.clear();
+      value.clear();
+      diff.clear();
+   }
    // diagonal 
    dim = space.size();
    diag.resize(dim);

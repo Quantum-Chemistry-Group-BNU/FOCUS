@@ -30,8 +30,8 @@ void fock::coeff_population(const onspace& space,
       nb += pi*space[i].nelec_b();
       if(abs(civec[i]) > thresh){ 
          cout << setw(8) << j << " : " << setw(8) << i << " ";
-	 if(civec[i]>0) cout << fixed << setprecision(5) << "  " << civec[i];
-	 if(civec[i]<0) cout << fixed << setprecision(5) << " " << civec[i];
+	 if(civec[i]>0) cout << fixed << scientific << setprecision(2) << "  " << civec[i];
+	 if(civec[i]<0) cout << fixed << scientific << setprecision(2) << " " << civec[i];
 	 cout << fixed << setw(3) << space[i].diff_num(space[idx[0]])/2 << " " 
 	      << fixed << setw(3) << space[i].norb_single() << "  "
 	      << space[i].to_string2() << " ("

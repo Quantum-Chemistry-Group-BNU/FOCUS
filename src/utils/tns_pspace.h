@@ -4,6 +4,7 @@
 #include "../core/onspace.h"
 #include "../core/matrix.h"
 #include "../core/tools.h"
+#include <string>
 #include <vector>
 #include <tuple>
 
@@ -12,11 +13,23 @@ namespace tns{
 // renormalized states from determinants
 struct renorm_sector{
    public:
+      void print(std::string msg, const int level=0){
+	 cout << msg << " qsym=(" << label.first << "," << label.second << ")"
+	      << " shape=" << coeff.rows() << "," << coeff.cols() << endl; 
+	 if(level >= 1){
+	    for(int i=0; i<space.size(); i++){
+	       cout << " idx=" << i << " state=" << space[i].to_string2() << endl;
+	    }
+	 }
+	 if(level >= 2) coeff.print("coeff");
+      }
+   public:
       using qsym = std::pair<int,int>;
       qsym label;
       fock::onspace space;
       linalg::matrix coeff;
 };
+
 // this is just like atomic basis
 using renorm_basis = std::vector<renorm_sector>;
 

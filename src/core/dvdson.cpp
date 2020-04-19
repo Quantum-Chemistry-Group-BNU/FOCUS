@@ -107,7 +107,7 @@ void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
 	 copy(&tbas[index[i]*ndim], &tbas[index[i]*ndim]+ndim, &rbas[i*ndim]); 
       }
       // re-orthogonalization and get nindp
-      int nindp = gen_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
+      int nindp = get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
       if(nindp == 0){
 	 cout << "Convergence failure: unable to generate new direction: nindp=0!" << endl;
 	 exit(1);

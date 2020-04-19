@@ -17,7 +17,7 @@ class comb{
       // right canonical form
       void get_rcanon(const fock::onspace& space,
 		      const std::vector<std::vector<double>>& vs,
-		      const double thresh=1.e-6);
+		      const double thresh=1.e-4);
    public:
       int nbackbone, nphysical, ninternal, ntotal;
       std::vector<std::vector<int>> topo;

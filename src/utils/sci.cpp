@@ -5,8 +5,9 @@
 #include "../core/dvdson.h"
 #include "../core/tools.h"
 #include "../core/analysis.h"
-#include "fci.h"
 #include "sci.h"
+#include "fci.h"
+#include "fci_rdm.h"
 
 using namespace std;
 using namespace fock;
@@ -346,7 +347,7 @@ void sci::ci_solver(const input::schedule& schd,
          }
       }
       transform(cmax.begin(), cmax.end(), cmax.begin(),
-		[](const double& x){ return pow(x,0.5); });
+		[neig](const double& x){ return pow(x/neig,0.5); });
 
       // expand 
       expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.flip);
@@ -424,4 +425,56 @@ void sci::ci_solver(const input::schedule& schd,
    auto t1 = global::get_time();
    cout << "timing for sci::ci_solver : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
+}
+
+void sci::ci_truncate(onspace& space,
+	  	      vector<vector<double>>& vs,	
+		      const int maxdets){
+   cout << "\nsci::ci_truncate maxdets=" << maxdets << endl;
+   int nsub = space.size();
+   int neig = vs.size();
+   int nred = min(nsub,maxdets);
+   cout << "reduction from " << nsub << " to " << nred << " dets" << endl;
+   // select important basis
+   vector<double> cmax(nsub,0.0);
+   for(int j=0; j<neig; j++){
+      for(int i=0; i<nsub; i++){
+	 cmax[i] += pow(vs[j][i],2);
+      }
+   }
+   auto index = tools::sort_index(cmax); 
+   // orthogonalization
+   vector<double> vtmp(nred*neig);
+   for(int j=0; j<neig; j++){
+      for(int i=0; i<nred; i++){
+	 vtmp[i+nred*j] = vs[j][index[i]];
+      }
+   }
+   int nindp = linalg::get_ortho_basis(nred,neig,vtmp);
+   if(nindp != neig){
+      cout << "error: thresh is too large for ci_truncate!" << endl;
+      cout << "nindp,neig=" << nindp << "," << neig << endl;
+      exit(1);
+   }
+   // copy basis and coefficients
+   onspace space2(nred);
+   for(int i=0; i<nred; i++){
+      space2[i] = space[index[i]];	
+   }
+   vector<vector<double>> vs2(neig);
+   for(int j=0; j<neig; j++){
+      vs2[j].resize(nred);
+      copy(&vtmp[nred*j],&vtmp[nred*j]+nred,vs2[j].begin());
+   }
+   // check
+   for(int j=0; j<neig; j++){
+      vector<double> vec(nred);
+      for(int i=0; i<nred; i++){
+	 vec[i] = vs[j][index[i]];
+      }
+      double ova = ddot(nred,vs2[j].data(),vec.data());
+      cout << "iroot=" << j << " ova=" << ova << endl; 
+   }
+   space = space2;
+   vs = vs2;
 }

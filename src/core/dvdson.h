@@ -30,21 +30,6 @@ struct dvdsonSolver{
 		      const linalg::matrix& eigs,
 		      const linalg::matrix& rnorm,
 		      const double t);
-      // orthogonality of vbas
-      void check_orthogonality(const int n, const int m, 
-		      	       const std::vector<double>& vbas,
-			       const double thresh=1.e-10);
-      // modified Gram-Schmidt orthogonalization 
-      int gen_ortho_basis(const int ndim,
-		      	  const int neig,
-			  const int nres,
-			  const std::vector<double>& vbas,
-			  std::vector<double>& rbas,
-			  const double crit_indp);
-      int gen_ortho_basis(const int ndim,
-		          const int nres,
-		          std::vector<double>& rbas,
-		          const double crit_indp);
    public:
       int ndim = 0;
       int neig = 0;
@@ -61,6 +46,25 @@ struct dvdsonSolver{
       int nmvp = 0;
 };
 
-}
+// orthogonality of vbas
+void check_orthogonality(const int n, const int m, 
+   	      	         const std::vector<double>& vbas,
+  		         const double thresh=1.e-10);
+
+// modified Gram-Schmidt orthogonalization of rbas against vbas 
+int get_ortho_basis(const int ndim,
+  	      	    const int neig,
+  		    const int nres,
+  		    const std::vector<double>& vbas,
+  		    std::vector<double>& rbas,
+  		    const double crit_indp=1.e-12);
+
+// MGS for rbas of size (ndim,nres)
+int get_ortho_basis(const int ndim,
+		    const int nres,
+		    std::vector<double>& rbas,
+		    const double crit_indp=1.e-12);
+
+} // linalg
 
 #endif
