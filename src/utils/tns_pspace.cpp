@@ -184,36 +184,35 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
 }
      
 // right projection
-void product_space::right_projection(const vector<vector<double>>& vs,
-				     const double thresh){
+renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
+				 	     const double thresh){
    auto t0 = global::get_time();
    bool debug = true;
-   if(debug) cout << "\nproduct_space::right_projection thresh="
-	          << thresh << endl;
+   cout << "\nproduct_space::right_projection thresh="
+	<< scientific << thresh << endl;
+   renorm_basis rbasis;				     
    // 1. collect states with the same symmetry (N,NA)
    using qsym = pair<int,int>;
    map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
+   map<qsym,map<int,int>> qmapA; // index in spaceA to idxA
    map<qsym,vector<tuple<int,int,int>>> qspace;
-   map<qsym,map<int,int>> qmapA;
    for(int ib=0; ib<dimB; ib++){
       int ne = spaceB[ib].nelec();
       int ne_a = spaceB[ib].nelec_a();
       qsym symB = make_pair(ne,ne_a);
       qsecB[symB].push_back(ib);
-
       for(const auto& pia : colB[ib]){
 	 int ia = pia.first;
 	 int idet = pia.second;
-
+	 // search unique
 	 auto it = qmapA[symB].find(ia);
          if(it == qmapA[symB].end()){
-            auto pr = qmapA[symB].insert({ia,qmapA[symB].size()});
+            qmapA[symB].insert({ia,qmapA[symB].size()});
          };
 	 int idxB = qsecB[symB].size()-1;
 	 int idxA = qmapA[symB][ia];
 	 qspace[symB].push_back(make_tuple(idxB,idxA,idet));
       }
-
    }
    if(debug){
       int idx = 0, dB = 0;
@@ -233,18 +232,19 @@ void product_space::right_projection(const vector<vector<double>>& vs,
       assert(dB == dimB);
    }
    // 2. loop over symmetry sectors to compute renormalized states
-   int idx = 0;
-   int dimBc = 0;
-   double sum = 0.0;
-   double SvN = 0.0;
+   int idx = 0, dimBc = 0;
+   double sum = 0.0, SvN = 0.0;
    for(auto it = qsecB.crbegin(); it != qsecB.crend(); ++it){
       const qsym& symB = it->first;
       const auto& idxB = it->second;
       int dimBs = idxB.size(); 
+      int dimAs = qmapA[symB].size();
       if(debug){
-         cout << "\nidx=" << idx << " symB(Ne,Na)=(" 
+         cout << "idx=" << idx << " symB(Ne,Na)=(" 
 	      << symB.first << "," << symB.second << ")"
-              << " dim=" << dimBs << endl;
+              << " dimBs=" << dimBs
+	      << " dimAs=" << qmapA[symB].size() 
+	      << endl;
 	 for(int i=0; i<dimBs; i++){
 	    cout << " ib=" << i << " : " 
 		 << spaceB[idxB[i]].to_string2() << endl;
@@ -252,96 +252,68 @@ void product_space::right_projection(const vector<vector<double>>& vs,
       }
       // compute renormalized basis using SVD
       int nroots = vs.size();
-      
-      int dimAs = qmapA[symB].size();
-
       matrix vrl(dimBs,dimAs*nroots);
-      matrix vrl2(dimBs,dimA*nroots);
       for(int iroot = 0; iroot<nroots; iroot++){
- 
      	 for(const auto& t : qspace[symB]){
 	    int ib = get<0>(t);
 	    int ia = get<1>(t);
 	    int id = get<2>(t);
 	    vrl(ib,ia+dimAs*iroot) = vs[iroot][id];
 	 } 
-        
-	 for(int ib=0; ib<dimBs; ib++){
-	    for(const auto& pia : colB[idxB[ib]]){
-	       int ia = pia.first;
-	       int id = pia.second;
-               vrl2(ib,ia+dimA*iroot) = vs[iroot][id];
-	    }
-	 }
-	 
       }
       vrl *= 1.0/sqrt(nroots);
-      vrl2 *= 1.0/sqrt(nroots);
-      
       vector<double> sig;
       matrix u, vt;
-     
-      //auto rr = dgemm("N","N",vrl,vrl.transpose());
-      //rr.print("r");
-      //vrl.print("vrl");
       svd_solver(vrl,sig,u,vt,1);
       transform(sig.begin(),sig.end(),sig.begin(),
 		[](const double& x){ return x*x; });
-      cout << "sig=" << scientific << endl;
-      for(const double& s : sig) cout << s << " ";
-      cout << endl;
-
-      /*
-      //auto rr2 = dgemm("N","N",vrl2,vrl2.transpose());
-      //rr2.print("r2");
-      //vrl2.print("vrl2");
-      svd_solver(vrl2,sig,u,vt,1);
-      transform(sig.begin(),sig.end(),sig.begin(),
-		[](const double& x){ return x*x; });
-      cout << "sig=" << scientific << endl;
-      for(const double& s : sig) cout << s << " ";
-      cout << endl;
-      */
-
-      idx++;
-/*
-      // compute entanglement entropy
+      // select important renormalized states
       int dimBi = 0;
-      double sumi = 0.0;
-      for(int i=0; i<dimBs; i++){ 
-	 if(eig[i]>thresh){
-            if(debug){ 
+      for(int i=0; i<sig.size(); i++){
+	 if(sig[i]>thresh){
+	    // print coefficients
+	    bool debug_coeff = false;
+            if(debug_coeff){ 
 	       cout << " i=" << i
-		    << " eig=" << scientific << eig[i] << endl;
+		    << " sig2=" << scientific << sig[i] << endl;
+	       double thresh_coeff = -1.e-2;
 	       for(int j=0; j<dimBs; j++){
-		  if(abs(rhor(j,i))>thresh_vcoeff){
+		  if(abs(u(j,i))>thresh_coeff){
 		     cout << "     " << j << " " << spaceB[idxB[j]].to_string2() 
-			  << " : " << rhor(j,i) << endl; 
+			  << " : " << u(j,i) << endl; 
 		  }
 	       }
 	    }
- 	    SvN += -eig[i]*log2(eig[i]);
-            sumi += eig[i];
+            // compute entanglement entropy
+ 	    SvN += -sig[i]*log2(sig[i]);
+            sum += sig[i];
 	    dimBi += 1;
 	 }
-      }
-      sum += sumi;
+      } // i
       dimBc += dimBi;
       if(debug) cout << " dimBs=" << dimBs 
-	       	     << " sumi=" << defaultfloat << sumi
 	             << " dimBi=" << dimBi 
 		     << " sum=" << sum
-	             << " dimBc=" << dimBc 
 		     << endl;
+      // save sites
+      if(dimBi > 0){
+	 renorm_sector rsec;
+	 rsec.label = symB;
+	 rsec.space.resize(dimBs);
+	 for(int i=0; i<dimBs; i++){
+            rsec.space[i] = spaceB[idxB[i]];
+	 }
+	 rsec.coeff.resize(dimBs,dimBi);
+         copy(u.data(),u.data()+dimBs*dimBi,rsec.coeff.data());
+	 //rsec.coeff.print("coeff");
+	 rbasis.push_back(rsec);
+      }
+      idx++;
    } // sym sectors
-   if(!debug){
-      cout << "\ndim=" << dim << " dimA=" << dimA << " dimB=" << dimB
-           << " thresh=" << thresh << " dimBc=" << dimBc 
-           << " SvN=" << SvN << endl;
-   }
-*/
-   }
+   cout << "dim=" << dim << " dimA=" << dimA << " dimB=" << dimB
+	<< " dimBc=" << dimBc << " sum=" << defaultfloat << sum << " SvN=" << SvN << endl;
    auto t1 = global::get_time();
    cout << "timing for product_space::right_projection : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
+   return rbasis;
 }

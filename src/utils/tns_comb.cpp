@@ -214,7 +214,7 @@ void comb::get_rcanon(const onspace& space,
       pspace2.get_pspace(space2, 2*pos);
       // 4. projection of SCI wavefunction and save renormalized states
       //    (Schmidt decomposition for single state)
-      pspace2.right_projection(vs2);
+      auto rbasis = pspace2.right_projection(vs2,1.e-4);
       exit(1);
    } // idx
 }
