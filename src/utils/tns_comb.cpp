@@ -224,6 +224,8 @@ void comb::get_rcanon(const onspace& space,
       }
    } // idx
    if(debug){
+      cout << "\nfinal results with thresh = " << thresh << endl;
+      int Dmax = 0;
       for(int idx=0; idx<ntotal-1; idx++){
          auto p = rcoord[idx];
          int i = p.first, j = p.second;
@@ -231,6 +233,8 @@ void comb::get_rcanon(const onspace& space,
 	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "] "
 	      << " shape=" << shapes[idx].first << "," << shapes[idx].second
 	      << endl;
+	 Dmax = max(Dmax,shapes[idx].second);
       } // idx
+      cout << "maximum bond dimension = " << Dmax << endl;
    }
 }

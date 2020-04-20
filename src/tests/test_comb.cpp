@@ -70,8 +70,7 @@ int tests::test_comb(){
    comb.print();
 
    // truncate CI coefficients
-   int maxdets = 40000;
-   sci::ci_truncate(sci_space, vs, maxdets);
+   sci::ci_truncate(sci_space, vs, schd.maxdets);
    comb.get_rcanon(sci_space, vs);
 
    return 0;

@@ -82,27 +82,47 @@ void linalg::svd_solver(matrix& A, vector<double>& s,
 			const int iop){
    int m = A.rows(), n = A.cols(), r = min(m,n);
    int lwork = -1, ldu = 1, ldvt = 1, info;
-   char JOBU, JOBVT;
-   if(iop == 0){
-      JOBU = 'A'; U.resize(m,m); ldu = m;
-      JOBVT = 'A'; Vt.resize(n,n); ldvt = n;
-   }else if(iop == 1){
-      JOBU = 'S'; U.resize(m,r); ldu = m;
-      JOBVT = 'N';
-   }else if(iop == 2){
-      JOBU = 'N';
-      JOBVT = 'S'; Vt.resize(r,n); ldvt = r;
-   }
-   double workopt;
+   char JOBU, JOBVT, JOBZ;
    s.resize(r);
-   dgesvd_(&JOBU,&JOBVT,&m,&n,A.data(),&m,s.data(),U.data(),&ldu,
-           Vt.data(),&ldvt,&workopt,&lwork,&info);
-   lwork = static_cast<int>(workopt);
-   unique_ptr<double[]> work(new double[lwork]);
-   dgesvd_(&JOBU,&JOBVT,&m,&n,A.data(),&m,s.data(),U.data(),&ldu,
-	   Vt.data(),&ldvt,work.get(),&lwork,&info);
+   if(iop < 10){
+      if(iop == 0){
+         JOBU = 'A'; U.resize(m,m); ldu = m;
+         JOBVT = 'A'; Vt.resize(n,n); ldvt = n;
+      }else if(iop == 1){
+         JOBU = 'S'; U.resize(m,r); ldu = m;
+         JOBVT = 'N';
+      }else if(iop == 2){
+         JOBU = 'N';
+         JOBVT = 'S'; Vt.resize(r,n); ldvt = r;
+      }
+      double workopt;
+      dgesvd_(&JOBU,&JOBVT,&m,&n,A.data(),&m,s.data(),U.data(),&ldu,
+              Vt.data(),&ldvt,&workopt,&lwork,&info);
+      lwork = static_cast<int>(workopt);
+      unique_ptr<double[]> work(new double[lwork]);
+      dgesvd_(&JOBU,&JOBVT,&m,&n,A.data(),&m,s.data(),U.data(),&ldu,
+              Vt.data(),&ldvt,work.get(),&lwork,&info);
+   }else{
+      if(iop == 10){
+         JOBZ = 'A'; 
+	 U.resize(m,m); ldu = m;
+         Vt.resize(n,n); ldvt = n;
+      }else if(iop == 11){
+         JOBZ = 'S'; 
+	 U.resize(m,r); ldu = m;
+	 Vt.resize(r,n); ldvt = r;
+      }
+      unique_ptr<int[]> iwork(new int[8*r]);
+      double workopt;
+      dgesdd_(&JOBZ,&m,&n,A.data(),&m,s.data(),U.data(),&ldu,
+              Vt.data(),&ldvt,&workopt,&lwork,iwork.get(),&info);
+      lwork = static_cast<int>(workopt);
+      unique_ptr<double[]> work(new double[lwork]);
+      dgesdd_(&JOBZ,&m,&n,A.data(),&m,s.data(),U.data(),&ldu,
+              Vt.data(),&ldvt,work.get(),&lwork,iwork.get(),&info);
+   }
    if(info){
-      cout << "dgesvd failed with info=" << info << endl;
+      cout << "svd failed with info=" << info << endl;
       exit(1);
    }
 }

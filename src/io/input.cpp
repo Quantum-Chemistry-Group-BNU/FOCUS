@@ -34,6 +34,7 @@ void input::read_input(input::schedule& schd, string fname){
    schd.integral_type = 0; // =0, RHF; =1, UHF
    schd.ciload = false;
    schd.topology_file = "TOPOLOGY";
+   schd.maxdets = 10000;
    	 
    string line;
    while(!istrm.eof()){
@@ -106,6 +107,8 @@ void input::read_input(input::schedule& schd, string fname){
       }else if(line.substr(0,13)=="topology_file"){
          istringstream is(line.substr(13));
 	 is >> schd.topology_file;
+      }else if(line.substr(0,7)=="maxdets"){
+         schd.maxdets = stoi(line.substr(7)); 
       }else{
          cout << "error: no matching key! line = " << line << endl;
 	 exit(1);
@@ -169,4 +172,5 @@ void input::read_input(input::schedule& schd, string fname){
    cout << "pt2 = " << schd.ifpt2 << " eps2=" << schd.eps2 << endl;
    // comb tensor network
    cout << "topology_file = " << schd.topology_file << endl;
+   cout << "maxdets = " << schd.maxdets << endl;
 }

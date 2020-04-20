@@ -34,6 +34,7 @@ public:
    bool ciload;
    // comb
    std::string topology_file;
+   int maxdets;
 };
    
 void read_input(schedule& schd, std::string fname="input.dat");

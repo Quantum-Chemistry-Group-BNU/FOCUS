@@ -19,6 +19,11 @@ void dgesvd_(const char* JOBU, const char* JOBVT, const int* M, const int* N,
 	     double* A, const int* LDA, double* S, double* U, const int* LDU,
 	     double* VT, const int* LDVT, double* WORK, const int* LWORK, int* INFO);
 
+void dgesdd_(const char* JOBZ, const int* M, const int* N,
+	     double* A, const int* LDA, double* S, double* U, const int* LDU,
+	     double* VT, const int* LDVT, double* WORK, const int* LWORK, 
+	     int* IWORK, int* INFO);
+	
 double dnrm2_(const int* N, const double* X, const int* INCX);
 
 double ddot_(const int* N, const double* X, const int* INCX,

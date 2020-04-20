@@ -473,7 +473,8 @@ void sci::ci_truncate(onspace& space,
 	 vec[i] = vs[j][index[i]];
       }
       double ova = ddot(nred,vs2[j].data(),vec.data());
-      cout << "iroot=" << j << " ova=" << ova << endl; 
+      cout << "iroot=" << j << " ova=" 
+	   << setprecision(12) << ova << endl; 
    }
    space = space2;
    vs = vs2;

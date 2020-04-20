@@ -186,11 +186,9 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
 // right projection
 renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
 				 	     const double thresh){
-   int debug = 1;
-   if(debug){
-      cout << "\nproduct_space::right_projection thresh="
-           << scientific << thresh << endl;
-   }
+   cout << "\nproduct_space::right_projection thresh="
+        << scientific << thresh << endl;
+   int debug = 0;
    auto t0 = global::get_time();
    renorm_basis rbasis;				     
    // 1. collect states with the same symmetry (N,NA)
@@ -239,23 +237,42 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
 	    }
 	 }
       }
-      // compute renormalized basis using SVD
       int nroots = vs.size();
-      matrix vrl(dimBs,dimAs*nroots);
-      for(int iroot = 0; iroot<nroots; iroot++){
-     	 for(const auto& t : qspace[symB]){
-	    int ib = get<0>(t);
-	    int ia = get<1>(t);
-	    int id = get<2>(t);
-	    vrl(ib,ia+dimAs*iroot) = vs[iroot][id];
-	 } 
-      }
-      vrl *= 1.0/sqrt(nroots);
       vector<double> sig;
-      matrix u, vt;
-      svd_solver(vrl,sig,u,vt,1);
-      transform(sig.begin(),sig.end(),sig.begin(),
-		[](const double& x){ return x*x; });
+      matrix vrl, u, vt;
+      if(dimBs > dimAs*nroots){
+         // compute renormalized basis using SVD
+	 sig.resize(dimAs*nroots);
+         vrl.resize(dimBs,dimAs*nroots);
+         for(int iroot = 0; iroot<nroots; iroot++){
+            for(const auto& t : qspace[symB]){
+               int ib = get<0>(t);
+               int ia = get<1>(t);
+               int id = get<2>(t);
+               vrl(ib,ia+dimAs*iroot) = vs[iroot][id];
+            }
+         }
+         vrl *= 1.0/sqrt(nroots);
+         svd_solver(vrl,sig,u,vt,1);
+         transform(sig.begin(),sig.end(),sig.begin(),
+		   [](const double& x){ return x*x; });
+      }else{
+	 // compute renormalized basis using eigen decomposition
+	 sig.resize(dimBs);
+	 vrl.resize(dimBs,dimAs);
+	 u.resize(dimBs,dimBs);
+         for(int iroot = 0; iroot<nroots; iroot++){
+            for(const auto& t : qspace[symB]){
+               int ib = get<0>(t);
+               int ia = get<1>(t);
+               int id = get<2>(t);
+               vrl(ib,ia) = vs[iroot][id];
+            }
+	    u += dgemm("N","N",vrl,vrl.transpose()); 
+         }
+         u *= 1.0/nroots;
+         eigen_solver(u,sig,1);
+      } 
       // select important renormalized states
       int dimBi = 0;
       double sumi = 0.0;
@@ -297,13 +314,11 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
       }
       idx++;
    } // sym sectors
+   assert(dA == dimA && dB == dimB);
    auto t1 = global::get_time();
-   if(debug){
-      assert(dA == dimA && dB == dimB);
-      cout << "dim=" << dim << " dimA=" << dimA << " dimB=" << dimB
-           << " dimBc=" << dimBc << " sum=" << sum << " SvN=" << SvN << endl;
-      cout << "timing for product_space::right_projection : " << setprecision(2) 
-           << global::get_duration(t1-t0) << " s" << endl;
-   }
+   cout << "dim=" << dim << " dimA=" << dimA << " dimB=" << dimB
+        << " dimBc=" << dimBc << " sum=" << sum << " SvN=" << SvN << endl;
+   cout << "timing for product_space::right_projection : " << setprecision(2) 
+        << global::get_duration(t1-t0) << " s" << endl;
    return rbasis;
 }
