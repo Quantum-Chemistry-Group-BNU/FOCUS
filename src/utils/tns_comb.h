@@ -12,15 +12,27 @@
 namespace tns{
 
 using qsym = std::pair<int,int>;
-const std::vector<qsym> qphys({{0,0},{1,0},{1,1},{2,0}});
+
+// physical indieces
+const std::vector<qsym> qphys({{0,0},{1,0},{1,1},{2,1}});
 extern const std::vector<qsym> qphys;
 
 const fock::onstate phys_0("00");
 const fock::onstate phys_b("10");
 const fock::onstate phys_a("01");
 const fock::onstate phys_2("11");
-const fock::onspace phys({phys_0,phys_b,phys_a,phys_2});
-extern const fock::onspace phys;
+const fock::onspace space_phys({phys_0,phys_b,phys_a,phys_2});
+extern const fock::onspace space_phys;
+
+inline renorm_basis get_rbasis_phys(){
+   renorm_basis rbasis(4);
+   for(int i=0; i<4; i++){
+      rbasis[i].sym = qphys[i]; 
+      rbasis[i].space.push_back(space_phys[i]);
+      rbasis[i].coeff = linalg::identity_matrix(1);
+   }
+   return rbasis;
+}
 
 // <in0,in1|out> = [in0](in1,out)
 struct renorm_tensor{
@@ -44,16 +56,16 @@ struct renorm_tensor{
 	 return size;
       }
       void print(std::string msg, const int level=0){
-         cout << msg << endl;
+         cout << msg << " level=" << level << endl;
 	 // qspace0
-	 cout << "qspace0 dim0=" << get_dim0() << endl;
+	 cout << "qspace0: dim0=" << get_dim0() << endl;
 	 for(int i=0; i<qspace0.size(); i++){
 	    cout << i << ":(" << qspace0[i].first << ","
 		 << qspace0[i].second << ") ";
 	 } 
 	 cout << endl;
  	 // qspace1
-	 cout << "qspace1 dim1=" << get_dim1() << endl;
+	 cout << "qspace1: nsym1=" << qspace1.size() << " dim1=" << get_dim1() << endl;
 	 for(const auto& p : qspace1){
 	    auto sym = p.first;
 	    auto dim = p.second;
@@ -61,7 +73,7 @@ struct renorm_tensor{
 	 }
 	 cout << endl;
 	 // qspace
-	 cout << "qspace dim=" << get_dim() << endl;
+	 cout << "qspace: nsym=" << qspace.size() << " dim=" << get_dim() << endl;
 	 for(const auto& p : qspace){
 	    auto sym = p.first;
 	    auto dim = p.second;
@@ -70,26 +82,28 @@ struct renorm_tensor{
 	 cout << endl;
 	 // qblocks
 	 if(level >= 1){
-	    cout << "qblocks nnz=" << qblocks.size() << endl;
+	    cout << "qblocks nblocks=" << qblocks.size() << endl;
+	    int nnz = 0;
 	    for(const auto& p : qblocks){
 	       auto& t = p.first;
 	       auto& m = p.second;
 	       if(m.size() > 0){
-	          cout << "block[" << get<0>(t) << "," 
+		  nnz++;
+	          cout << " block[" << get<0>(t) << "," 
 	               << "(" << get<1>(t).first << "," << get<1>(t).second << ")," 
 	               << "(" << get<2>(t).first << "," << get<2>(t).second << ")]"
-	               << " rows=" << m.rows() << " cols=" << m.cols() 
-	               << " size=" << m.size() << endl;
+	               << " rows,cols,size=(" << m.rows() << "," << m.cols() << "," 
+	               << m.size() << ")" << endl;
 	          if(level >= 2) m.print("mat");
 	       }
 	    }
-	    cout << "total size=" << get_size() << endl;
+	    cout << "total nnz=" << nnz << " size=" << get_size() << endl;
 	 }
       }
    public:
-      std::vector<qsym> qspace0;
-      std::map<qsym,int> qspace1;
-      std::map<qsym,int> qspace;
+      std::vector<qsym> qspace0;  // central
+      std::map<qsym,int> qspace1; // in [sym,dim]
+      std::map<qsym,int> qspace;  // out [sym,dim]
       std::map<std::tuple<int,qsym,qsym>,linalg::matrix> qblocks; 
 };
 
@@ -101,10 +115,8 @@ class comb{
       // right canonical form
       void get_rbases(const fock::onspace& space,
 		      const std::vector<std::vector<double>>& vs,
-		      const double thresh=1.e-6);
-      void get_rcanon(const fock::onspace& space,
-		      const std::vector<std::vector<double>>& vs,
-		      const double thresh=1.e-6);
+		      const double thresh=1.e-16); 
+      void get_rcanon();
    public:
       using coord = std::pair<int,int>;
       int nbackbone, nphysical, ninternal, ntotal;

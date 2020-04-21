@@ -78,7 +78,10 @@
           - projection for obtaining schmidt basis {|r>}
 	  - optimized implementation for Fe8S7 (eigen+svd)
 
- 2020xxxx rebuild local sites: A[n]=<ln|L>, W[n]=<r1r2|r12>
+ 2020xxxx rebuild local sites:
+	  - A[n]=<ln|L> for MPS 
+	  - W[n]=<r1r2|r12> for Comb
+	  - check right canonical form by computing overlap 
 
  2020xxxx initialize normal & complementary operators
 
