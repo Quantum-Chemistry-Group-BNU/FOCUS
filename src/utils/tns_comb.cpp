@@ -195,10 +195,11 @@ void comb::print(){
 // compute renormalized bases {|r>} 
 void comb::get_rbases(const onspace& space,
 		      const vector<vector<double>>& vs,
-		      const double thresh){
+		      const double thresh_proj){
    auto t0 = global::get_time();
    bool debug = true;
-   cout << "\ncomb::get_rbases thresh=" << scientific << thresh << endl;
+   cout << "\ncomb::get_rbases thresh_proj=" 
+	<< scientific << thresh_proj << endl;
    vector<pair<int,int>> shapes;
    vector<int> bas(nphysical);
    iota(bas.begin(), bas.end(), 0);
@@ -236,7 +237,7 @@ void comb::get_rbases(const onspace& space,
       pspace2.get_pspace(space2, 2*pos);
       // 4. projection of SCI wavefunction and save renormalized states
       //    (Schmidt decomposition for single state)
-      auto rbasis = pspace2.right_projection(vs2,thresh);
+      auto rbasis = pspace2.right_projection(vs2,thresh_proj);
       rbases[p] = rbasis;
       if(debug){
 	 int ndim = 0, nbas = 0;
@@ -250,7 +251,7 @@ void comb::get_rbases(const onspace& space,
       }
    } // idx
    if(debug){
-      cout << "\nfinal results with thresh = " << thresh << endl;
+      cout << "\nfinal results with thresh_proj = " << thresh_proj << endl;
       int Dmax = 0;
       for(int idx=0; idx<ntotal-1; idx++){
          auto p = rcoord[idx];
@@ -269,7 +270,7 @@ void comb::get_rbases(const onspace& space,
 }
 
 // build site tensor from {|r>} basis
-void comb::get_rcanon(){
+void comb::get_rcanon(const double thresh_ortho){
    auto t0 = global::get_time();
    bool debug = true;
    cout << "\ncomb::get_rcanon" << endl;
@@ -286,6 +287,7 @@ void comb::get_rcanon(){
       renorm_tensor rt;
       // type0,1 are sufficient for MPS 
       if(type[p] == 0){
+	 
 	 //       n             |vac>
 	 //      \|/             \|/
 	 //    -<-*-<-|vac>   n-<-*
@@ -302,6 +304,7 @@ void comb::get_rcanon(){
 	 rt.qblocks[make_tuple(3,qphys[0],qphys[3])] = identity_matrix(1);
 
       }else if(type[p] == 1 || type[p] == 2){
+	 
 	 rt.qspace0 = qphys;
 	 pair<int,int> pre;
 	 if(type[p] == 1){
@@ -347,6 +350,7 @@ void comb::get_rcanon(){
 	 } // k
 
       }else if(type[p] == 3){
+	 
 	 //      |u>      
 	 //      \|/      
 	 //    -<-*-<-|r> 
@@ -404,34 +408,37 @@ void comb::get_rcanon(){
 	       } // k0
 	    } // k1
 	 } // k
+
       } // type[p]
       rt.print("renorm_tensor_"+to_string(idx),1);
       rsites[p] = rt;
 
-      cout << "Check orthogonality for right canonical site:" << endl;
+      cout << "check orthogonality for right canonical site:" << endl;
+      int Dtot = 0;
       for(const auto& p : rt.qspace){
          auto& sym = p.first;
          int dim = p.second;
-         matrix orr(dim,dim);
-	 // o[r,r'] = \sum_{l,c} Ac[l,r]*Ac[l,r']
+	 Dtot += dim;
+         matrix Sr(dim,dim);
+	 // S[r,r'] = \sum_{l,c} Ac[l,r]*Ac[l,r']
          for(const auto& p1 : rt.qspace1){
             auto& sym1 = p1.first;
             for(int i=0; i<rt.qspace0.size(); i++){
                auto& blk = rt.qblocks[make_tuple(i,sym1,sym)];
                if(blk.size() == 0) continue; 
-               orr += dgemm("N","N",blk.transpose(),blk);
+               Sr += dgemm("N","N",blk.transpose(),blk);
             }
          }
-         auto diff = normF(orr - identity_matrix(dim));
-         cout << "sym=(" << sym.first << "," << sym.second << ")"
-              << " dim=" << dim   
-              << " |Orr-Id|_F=" << diff << endl;
-         if(diff > 1.e-10){
-            cout << "error: deviate from right canonical form!" << endl;
-            orr.print("orr_sym("+to_string(sym.first)+","+to_string(sym.second)+")");
+         auto diff = normF(Sr - identity_matrix(dim));
+         cout << " sym=(" << sym.first << "," << sym.second << ")"
+              << " dim=" << dim << " |Sr-Id|_F=" << diff << endl;
+         if(diff > thresh_ortho){
+            Sr.print("Sr_sym("+to_string(sym.first)+","+to_string(sym.second)+")");
+            cout << "error: deviate from identity matrix! diff=" << diff << endl;
             exit(1);
          }
       } // sym blocks
+      cout << "total bond dimension=" << Dtot << endl;
 
    } // idx
    auto t1 = global::get_time();

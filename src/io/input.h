@@ -35,6 +35,8 @@ public:
    // comb
    std::string topology_file;
    int maxdets;
+   double thresh_proj;
+   double thresh_ortho;
 };
    
 void read_input(schedule& schd, std::string fname="input.dat");

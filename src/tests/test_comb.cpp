@@ -71,8 +71,8 @@ int tests::test_comb(){
 
    // truncate CI coefficients
    sci::ci_truncate(sci_space, vs, schd.maxdets);
-   comb.get_rbases(sci_space, vs);
-   comb.get_rcanon();
+   comb.get_rbases(sci_space, vs, schd.thresh_proj);
+   comb.get_rcanon(schd.thresh_ortho);
 
    return 0;
 }

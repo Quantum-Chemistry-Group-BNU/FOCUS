@@ -35,6 +35,8 @@ void input::read_input(input::schedule& schd, string fname){
    schd.ciload = false;
    schd.topology_file = "TOPOLOGY";
    schd.maxdets = 10000;
+   schd.thresh_proj = 1.e-15;
+   schd.thresh_ortho = 1.e-10;
    	 
    string line;
    while(!istrm.eof()){
@@ -109,6 +111,10 @@ void input::read_input(input::schedule& schd, string fname){
 	 is >> schd.topology_file;
       }else if(line.substr(0,7)=="maxdets"){
          schd.maxdets = stoi(line.substr(7)); 
+      }else if(line.substr(0,11)=="thresh_proj"){
+         schd.thresh_proj = stod(line.substr(11)); 
+      }else if(line.substr(0,12)=="thresh_ortho"){
+         schd.thresh_ortho = stod(line.substr(12)); 
       }else{
          cout << "error: no matching key! line = " << line << endl;
 	 exit(1);
@@ -173,4 +179,6 @@ void input::read_input(input::schedule& schd, string fname){
    // comb tensor network
    cout << "topology_file = " << schd.topology_file << endl;
    cout << "maxdets = " << schd.maxdets << endl;
+   cout << "thresh_proj = " << scientific << schd.thresh_proj << endl;
+   cout << "thresh_ortho = " << scientific << schd.thresh_ortho << endl;
 }

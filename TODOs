@@ -79,9 +79,10 @@
 	  - optimized implementation for Fe8S7 (eigen+svd)
 
  2020xxxx rebuild local sites:
-	  - A[n]=<ln|L> for MPS 
+	  - A[n]=<ln|L> for MPS: become slow at the end, 
+	    since the no. of underlying dets is large! 
 	  - W[n]=<r1r2|r12> for Comb
-	  - check right canonical form by computing overlap 
+	  - check right canonical form by computing overlap Sr
 
  2020xxxx initialize normal & complementary operators
 

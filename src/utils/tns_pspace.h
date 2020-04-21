@@ -37,9 +37,9 @@ struct product_space{
    public:
       void get_pspace(const fock::onspace& space, const int n);
       std::pair<int,double> projection(const std::vector<std::vector<double>>& vs,
-		      		       const double thresh=1.e-6);
+		      		       const double thresh_proj=1.e-15);
       renorm_basis right_projection(const std::vector<std::vector<double>>& vs,
-		      	 	    const double thresh=1.e-6);
+		      	 	    const double thresh_proj=1.e-15);
    public:
       // second int is used for indexing in constructing rowA, colB 
       std::map<fock::onstate,int> umapA, umapB;

@@ -60,8 +60,8 @@ struct renorm_tensor{
 	 // qspace0
 	 cout << "qspace0: dim0=" << get_dim0() << endl;
 	 for(int i=0; i<qspace0.size(); i++){
-	    cout << i << ":(" << qspace0[i].first << ","
-		 << qspace0[i].second << ") ";
+	    cout << " " << i << ":(" << qspace0[i].first << ","
+		 << qspace0[i].second << ")";
 	 } 
 	 cout << endl;
  	 // qspace1
@@ -69,7 +69,7 @@ struct renorm_tensor{
 	 for(const auto& p : qspace1){
 	    auto sym = p.first;
 	    auto dim = p.second;
-	    cout << "(" << sym.first << "," << sym.second << "):" << dim << " ";
+	    cout << " (" << sym.first << "," << sym.second << "):" << dim;
 	 }
 	 cout << endl;
 	 // qspace
@@ -77,7 +77,7 @@ struct renorm_tensor{
 	 for(const auto& p : qspace){
 	    auto sym = p.first;
 	    auto dim = p.second;
-	    cout << "(" << sym.first << "," << sym.second << "):" << dim << " ";
+	    cout << " (" << sym.first << "," << sym.second << "):" << dim;
 	 }
 	 cout << endl;
 	 // qblocks
@@ -101,7 +101,7 @@ struct renorm_tensor{
 	 }
       }
    public:
-      std::vector<qsym> qspace0;  // central
+      std::vector<qsym>  qspace0; // central
       std::map<qsym,int> qspace1; // in [sym,dim]
       std::map<qsym,int> qspace;  // out [sym,dim]
       std::map<std::tuple<int,qsym,qsym>,linalg::matrix> qblocks; 
@@ -110,13 +110,14 @@ struct renorm_tensor{
 class comb{
    public:
       void read_topology(std::string topology); 
-      void print();
       void init();
-      // right canonical form
+      void print();
+      // compute renormalized bases {|r>} 
       void get_rbases(const fock::onspace& space,
 		      const std::vector<std::vector<double>>& vs,
-		      const double thresh=1.e-16); 
-      void get_rcanon();
+		      const double thresh_proj=1.e-15); 
+      // build site tensor from {|r>} basis
+      void get_rcanon(const double thresh_ortho=1.e-10);
    public:
       using coord = std::pair<int,int>;
       int nbackbone, nphysical, ninternal, ntotal;
