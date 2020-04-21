@@ -73,7 +73,7 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
    /* 
    // print only
    int idx = 0;
-   for(auto it = qsecA.crbegin(); it != qsecA.crend(); ++it){
+   for(auto it = qsecA.cbegin(); it != qsecA.cend(); ++it){
       const pair<int,int>& sym = it->first;
       const vector<int>& idxA = it->second;
       int dimAs = idxA.size();
@@ -91,7 +91,7 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
    int dimAc = 0;
    double sum = 0.0;
    double SvN = 0.0;
-   for(auto it = qsecA.crbegin(); it != qsecA.crend(); ++it){
+   for(auto it = qsecA.cbegin(); it != qsecA.cend(); ++it){
       const pair<int,int>& sym = it->first;
       const vector<int>& idxA = it->second;
       int dimAs = idxA.size();
@@ -217,7 +217,7 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
    // 2. loop over symmetry sectors to compute renormalized states
    int idx = 0, dimBc = 0, dB = 0, dA = 0;
    double sum = 0.0, SvN = 0.0;
-   for(auto it = qsecB.crbegin(); it != qsecB.crend(); ++it){
+   for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
       const qsym& symB = it->first;
       const auto& idxB = it->second;
       int dimBs = idxB.size(); 
@@ -302,7 +302,7 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
       // save sites
       if(dimBi > 0){
 	 renorm_sector rsec;
-	 rsec.label = symB;
+	 rsec.sym = symB;
 	 rsec.space.resize(dimBs);
 	 for(int i=0; i<dimBs; i++){
             rsec.space[i] = spaceB[idxB[i]];

@@ -74,11 +74,11 @@
 
  20200417 Comb structure [topology/coord/support/sweep]
 
- 202004xx SCI as initial guess? 
+ 20200420 SCI as initial guess? 
           - projection for obtaining schmidt basis {|r>}
-	  - optimized implementation for Fe8S7
+	  - optimized implementation for Fe8S7 (eigen+svd)
 
- 2020xxxx rebuild local sites: A[n]=<ln|L>, W[n]=<r12|r1r2>
+ 2020xxxx rebuild local sites: A[n]=<ln|L>, W[n]=<r1r2|r12>
 
  2020xxxx initialize normal & complementary operators
 

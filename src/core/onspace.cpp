@@ -125,3 +125,17 @@ void fock::ci_solver(vector<double>& es,
    cout << "timing for fock::ci_solver : " << setprecision(2) 
 	<< global::get_duration(t1-t0) << " s" << endl;
 }
+
+// coupling matrix: B0[b1,b] = <b0,b1|b>
+matrix fock::get_Bmatrix(const onstate& state0,
+	 	         const onspace& space1,
+		         const onspace& space){
+   int m = space1.size(), n = space.size();
+   matrix B(m,n);
+   for(int i=0; i<n; i++){
+      for(int j=0; j<m; j++){
+	 B(j,i) = static_cast<double>(state0.join(space1[j]) == space[i]);
+      } // j
+   } // i
+   return B;
+}

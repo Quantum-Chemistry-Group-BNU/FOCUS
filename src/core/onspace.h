@@ -18,7 +18,9 @@ onspace get_fci_space(const int k, const int n);
 
 // k - number of spatial orbitals 
 onspace get_fci_space(const int ks, const int na, const int nb);
-      
+
+// -- Hamiltonian related ---
+
 // generate represenation of H in this space
 linalg::matrix get_Ham(const onspace& space,
 		       const integral::two_body& int2e,
@@ -46,6 +48,13 @@ void get_Hx(double* y,
 	    const integral::two_body& int2e,
 	    const integral::one_body& int1e,
 	    const double ecore);
+
+// --- Direct product space ---
+
+// coupling matrix: B0[b1,b] = <b0,b1|b>
+linalg::matrix get_Bmatrix(const fock::onstate& state0,
+		           const onspace& space1,
+			   const onspace& space);
 
 } // fock
 

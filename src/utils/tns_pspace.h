@@ -14,7 +14,7 @@ namespace tns{
 struct renorm_sector{
    public:
       void print(std::string msg, const int level=0){
-	 cout << msg << " qsym=(" << label.first << "," << label.second << ")"
+	 cout << msg << " qsym=(" << sym.first << "," << sym.second << ")"
 	      << " shape=" << coeff.rows() << "," << coeff.cols() << endl; 
 	 if(level >= 1){
 	    for(int i=0; i<space.size(); i++){
@@ -25,11 +25,10 @@ struct renorm_sector{
       }
    public:
       using qsym = std::pair<int,int>;
-      qsym label;
+      qsym sym;
       fock::onspace space;
       linalg::matrix coeff;
 };
-
 // this is just like atomic basis
 using renorm_basis = std::vector<renorm_sector>;
 
