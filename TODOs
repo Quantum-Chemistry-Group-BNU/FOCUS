@@ -84,9 +84,17 @@
 	  - W[n]=<r1r2|r12> for Comb: type3 nodes
 	  - check right canonical form by computing overlap Sr
 
+ 2020xxxx central wavefunction:
+	  - implement wf for the last site from SCI wf
+ 	  - implement <n|comb> for checking
+
  2020xxxx initialize normal & complementary operators
+	  - data structure for operators
+	  - serializaiton
 
  2020xxxx basic sweep algorithm
+	  - implement H*x
+	  - implement renormalization
 
  2020xxxx more functionalities:
  	  - efficient implementation using abelian symmetry

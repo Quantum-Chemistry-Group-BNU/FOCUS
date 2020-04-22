@@ -123,12 +123,20 @@ class comb{
       int nbackbone, nphysical, ninternal, ntotal;
       std::vector<std::vector<int>> topo; // save site index
       std::map<coord,int> type; // type of nodes 0,1,2
-      // right canonical form
+      // --- right canonical form ---
       std::vector<coord> rcoord; // coordinate of each node in visit order
       std::map<coord,std::vector<int>> rsupport;
       // right canonical form
       std::map<coord,renorm_basis> rbases;
       std::map<coord,renorm_tensor> rsites;
+      
+      // central wavefunction 
+      //
+
+      // --- left canonical form ---
+      // std::map<coord,std::vector<int>> lsupport;
+      // std::map<coord,renorm_tensor> lsites;
+      
       // sweep
       std::vector<std::pair<coord,coord>> sweep_seq;
 };

@@ -74,5 +74,9 @@ int tests::test_comb(){
    comb.get_rbases(sci_space, vs, schd.thresh_proj);
    comb.get_rcanon(schd.thresh_ortho);
 
+   // save sites to file?
+   
+   // sweep optimization?
+
    return 0;
 }
