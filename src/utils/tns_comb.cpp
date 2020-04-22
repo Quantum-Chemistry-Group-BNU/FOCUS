@@ -216,11 +216,14 @@ void comb::get_rbases(const onspace& space,
       }
       // 1. generate 1D ordering
       auto rsupp = rsupport[make_pair(i,j)];
-      stable_sort(rsupp.begin(), rsupp.end());
+      // order required in set_difference
+      stable_sort(rsupp.begin(), rsupp.end()); 
       vector<int> order;
       set_difference(bas.begin(), bas.end(), rsupp.begin(), rsupp.end(),
                      back_inserter(order));
       int pos = order.size();
+      // original order required [IMPORTANT]
+      rsupp = rsupport[make_pair(i,j)]; 
       copy(rsupp.begin(), rsupp.end(), back_inserter(order));
       if(debug){
          cout << "pos=" << pos << endl;
@@ -240,14 +243,14 @@ void comb::get_rbases(const onspace& space,
       auto rbasis = pspace2.right_projection(vs2,thresh_proj);
       rbases[p] = rbasis;
       if(debug){
-	 int ndim = 0, nbas = 0;
+	 int nbas = 0, ndim = 0;
          for(int k=0; k<rbasis.size(); k++){
 	    rbasis[k].print("rsec_"+to_string(k));
-	    ndim += rbasis[k].coeff.rows();
-	    nbas += rbasis[k].coeff.cols();
+	    nbas += rbasis[k].coeff.rows();
+	    ndim += rbasis[k].coeff.cols();
 	 }
-	 cout << "rbasis: ndim,nbas=" << ndim << "," << nbas << endl;
-	 shapes.push_back(make_pair(ndim,nbas));
+	 cout << "rbasis: nbas,ndim=" << nbas << "," << ndim << endl;
+	 shapes.push_back(make_pair(nbas,ndim));
       }
    } // idx
    if(debug){
@@ -257,8 +260,8 @@ void comb::get_rbases(const onspace& space,
          auto p = rcoord[idx];
          int i = p.first, j = p.second;
 	 cout << "idx=" << idx 
-	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "] "
-	      << " shape=" << shapes[idx].first << "," << shapes[idx].second
+	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "]"
+	      << " nbas=" << shapes[idx].first << " ndim=" << shapes[idx].second
 	      << endl;
 	 Dmax = max(Dmax,shapes[idx].second);
       } // idx
@@ -285,7 +288,6 @@ void comb::get_rcanon(const double thresh_ortho){
       }
       auto rbasis = rbases[p]; 
       renorm_tensor rt;
-      // type0,1 are sufficient for MPS 
       if(type[p] == 0){
 	 
 	 //       n             |vac>
@@ -355,13 +357,13 @@ void comb::get_rcanon(const double thresh_ortho){
 	 //      \|/      
 	 //    -<-*-<-|r> 
 	 if(debug) cout << "type 3: internal site on backbone" << endl;
-	 auto rbasis1 = rbases[make_pair(i+1,j)];
 	 auto rbasis0 = rbases[make_pair(i,j+1)];
+	 auto rbasis1 = rbases[make_pair(i+1,j)];
 	 // qspace0
 	 for(int k0=0; k0<rbasis0.size(); k0++){
 	    auto sym0 = rbasis0[k0].sym;
-	    int nbas = rbasis0[k0].coeff.cols();
-	    for(int ibas = 0; ibas < nbas; ibas++){
+	    int ndim = rbasis0[k0].coeff.cols();
+	    for(int idim=0; idim<ndim; idim++){
 	       rt.qspace0.push_back(sym0);
 	    } // ibas
 	 }
@@ -376,50 +378,50 @@ void comb::get_rcanon(const double thresh_ortho){
 	       int ioff = 0;
 	       for(int k0=0; k0<rbasis0.size(); k0++){
 	          auto sym0 = rbasis0[k0].sym;
-		  int ndim = rbasis0[k0].coeff.rows();
-		  int nbas = rbasis0[k0].coeff.cols();
+		  int nbas = rbasis0[k0].coeff.rows();
+		  int ndim = rbasis0[k0].coeff.cols();
 		  if((sym.first != sym1.first+sym0.first) ||
 	             (sym.second != sym1.second+sym0.second)){
-		     for(int ibas = 0; ibas < nbas; ibas++){
-		        rt.qblocks[make_tuple(ioff+ibas,sym1,sym)] = matrix();
-		     } // ibas
+		     for(int idim=0; idim<ndim; idim++){
+		        rt.qblocks[make_tuple(ioff+idim,sym1,sym)] = matrix();
+		     } // idim
 		  }else{
-		     vector<matrix> Wrl(nbas);
-		     for(int idim = 0; idim < ndim; idim++){
-			auto state0 = rbasis0[k0].space[idim];
+		     vector<matrix> Wrl(ndim);
+		     for(int ibas=0; ibas<nbas; ibas++){
+			auto state0 = rbasis0[k0].space[ibas];
 		        auto Bi = get_Bmatrix(state0,rbasis1[k1].space,rbasis[k].space);
 		        auto BL = dgemm("N","N",Bi,rbasis[k].coeff);
 		        auto RBL = dgemm("T","N",rbasis1[k1].coeff,BL);
-			if(idim == 0){
-		           for(int ibas = 0; ibas < nbas; ibas++){ 
-			      Wrl[ibas] = rbasis0[k0].coeff(idim,ibas)*RBL;
-			   } // ibas
+			if(ibas == 0){
+		           for(int idim=0; idim<ndim; idim++){
+			      Wrl[idim] = rbasis0[k0].coeff(ibas,idim)*RBL;
+			   } // idim
 			}else{
-		           for(int ibas = 0; ibas < nbas; ibas++){ 
-			      Wrl[ibas] += rbasis0[k0].coeff(idim,ibas)*RBL;
-			   } // ibas
+		           for(int idim=0; idim<ndim; idim++){
+			      Wrl[idim] += rbasis0[k0].coeff(ibas,idim)*RBL;
+			   } // idim
 			}
-		     } // idet
-		     for(int ibas = 0; ibas < nbas; ibas++){
-			rt.qblocks[make_tuple(ioff+ibas,sym1,sym)] = Wrl[ibas];
 		     } // ibas
+		     for(int idim=0; idim<ndim; idim++){
+			rt.qblocks[make_tuple(ioff+idim,sym1,sym)] = Wrl[idim];
+		     } // idim
 		  }
-	          ioff += nbas;
+	          ioff += ndim;
 	       } // k0
 	    } // k1
 	 } // k
 
       } // type[p]
-      rt.print("renorm_tensor_"+to_string(idx),1);
+      rt.print("renorm_tensor_"+to_string(idx));
       rsites[p] = rt;
 
       cout << "check orthogonality for right canonical site:" << endl;
       int Dtot = 0;
       for(const auto& p : rt.qspace){
          auto& sym = p.first;
-         int dim = p.second;
-	 Dtot += dim;
-         matrix Sr(dim,dim);
+         int ndim = p.second;
+	 Dtot += ndim;
+         matrix Sr(ndim,ndim);
 	 // S[r,r'] = \sum_{l,c} Ac[l,r]*Ac[l,r']
          for(const auto& p1 : rt.qspace1){
             auto& sym1 = p1.first;
@@ -429,9 +431,9 @@ void comb::get_rcanon(const double thresh_ortho){
                Sr += dgemm("N","N",blk.transpose(),blk);
             }
          }
-         auto diff = normF(Sr - identity_matrix(dim));
-         cout << " sym=(" << sym.first << "," << sym.second << ")"
-              << " dim=" << dim << " |Sr-Id|_F=" << diff << endl;
+         auto diff = normF(Sr - identity_matrix(ndim));
+         cout << " qsym=(" << sym.first << "," << sym.second << ")"
+              << " ndim=" << ndim << " |Sr-Id|_F=" << diff << endl;
          if(diff > thresh_ortho){
             Sr.print("Sr_sym("+to_string(sym.first)+","+to_string(sym.second)+")");
             cout << "error: deviate from identity matrix! diff=" << diff << endl;

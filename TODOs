@@ -78,10 +78,10 @@
           - projection for obtaining schmidt basis {|r>}
 	  - optimized implementation for Fe8S7 (eigen+svd)
 
- 2020xxxx rebuild local sites:
+ 20200422 build local sites:
 	  - A[n]=<ln|L> for MPS: become slow at the end, 
-	    since the no. of underlying dets is large! 
-	  - W[n]=<r1r2|r12> for Comb
+	    because the no. of underlying dets is large! 
+	  - W[n]=<r1r2|r12> for Comb: type3 nodes
 	  - check right canonical form by computing overlap Sr
 
  2020xxxx initialize normal & complementary operators
