@@ -35,7 +35,7 @@ inline renorm_basis get_rbasis_phys(){
 }
 
 // <in0,in1|out> = [in0](in1,out)
-struct renorm_tensor{
+struct site_tensor{
    public:
       inline int get_dim0() const{
 	 return qspace0.size(); 
@@ -56,7 +56,7 @@ struct renorm_tensor{
 	 return size;
       }
       void print(std::string msg, const int level=0){
-         cout << msg << " level=" << level << endl;
+         cout << "site_tensor: " << msg << endl;
 	 // qspace0
 	 cout << "qspace0: dim0=" << get_dim0() << endl;
 	 for(int i=0; i<qspace0.size(); i++){
@@ -92,8 +92,7 @@ struct renorm_tensor{
 	          cout << " block[" << get<0>(t) << "," 
 	               << "(" << get<1>(t).first << "," << get<1>(t).second << ")," 
 	               << "(" << get<2>(t).first << "," << get<2>(t).second << ")]"
-	               << " rows,cols,size=(" << m.rows() << "," << m.cols() << "," 
-	               << m.size() << ")" << endl;
+	               << " rows,cols=(" << m.rows() << "," << m.cols() << ")" << endl; 
 	          if(level >= 2) m.print("mat");
 	       }
 	    }
@@ -107,38 +106,47 @@ struct renorm_tensor{
       std::map<std::tuple<int,qsym,qsym>,linalg::matrix> qblocks; 
 };
 
+using comb_coord = std::pair<int,int>;
+using comb_rbases = std::map<comb_coord,renorm_basis>;
+
 class comb{
    public:
       void read_topology(std::string topology); 
       void init();
       void print();
-      // compute renormalized bases {|r>} 
-      void get_rbases(const fock::onspace& space,
-		      const std::vector<std::vector<double>>& vs,
-		      const double thresh_proj=1.e-15); 
-      // build site tensor from {|r>} basis
-      void get_rcanon(const double thresh_ortho=1.e-10);
+      // compute renormalized bases {|r>} from SCI wf 
+      comb_rbases get_rbases(const fock::onspace& space,
+		      	     const std::vector<std::vector<double>>& vs,
+		      	     const double thresh_proj=1.e-15);
+      // compute wave function at the start for right canonical form 
+      site_tensor get_rwfuns(const fock::onspace& space,
+		      	     const std::vector<std::vector<double>>& vs,
+			     const std::vector<int>& order,
+			     const renorm_basis& rbasis);
+      // build site tensor from {|r>} bases
+      void rcanon_init(const fock::onspace& space,
+		       const std::vector<std::vector<double>>& vs,
+		       const double thresh_proj=1.e-15,
+		       const double thresh_ortho=1.e-10);
+      // <n|Comb[i]>
+      std::vector<double> rcanon_coeff(const fock::onstate& state);
+      // ovlp[n,m] = <Comb[n]|SCI[m]>
+      linalg::matrix rcanon_ovlp(const fock::onspace& space,
+		                 const std::vector<std::vector<double>>& vs);
    public:
-      using coord = std::pair<int,int>;
       int nbackbone, nphysical, ninternal, ntotal;
       std::vector<std::vector<int>> topo; // save site index
-      std::map<coord,int> type; // type of nodes 0,1,2
+      std::map<comb_coord,int> type; // type of nodes 0,1,2
       // --- right canonical form ---
-      std::vector<coord> rcoord; // coordinate of each node in visit order
-      std::map<coord,std::vector<int>> rsupport;
-      // right canonical form
-      std::map<coord,renorm_basis> rbases;
-      std::map<coord,renorm_tensor> rsites;
-      
-      // central wavefunction 
-      //
-
+      std::vector<comb_coord> rcoord; // coordinate of each node in visit order
+      std::map<comb_coord,std::vector<int>> rsupport;
+      std::map<comb_coord,site_tensor> rsites;
+      std::vector<int> image2;
       // --- left canonical form ---
-      // std::map<coord,std::vector<int>> lsupport;
-      // std::map<coord,renorm_tensor> lsites;
-      
-      // sweep
-      std::vector<std::pair<coord,coord>> sweep_seq;
+      // std::map<comb_coord,std::vector<int>> lsupport;
+      // std::map<comb_coord,site_tensor> lsites;
+      // --- sweep ---
+      std::vector<std::pair<comb_coord,comb_coord>> sweep_seq;
 };
 
 } // tns

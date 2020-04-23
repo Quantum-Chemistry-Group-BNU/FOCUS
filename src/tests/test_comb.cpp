@@ -71,8 +71,8 @@ int tests::test_comb(){
 
    // truncate CI coefficients
    sci::ci_truncate(sci_space, vs, schd.maxdets);
-   comb.get_rbases(sci_space, vs, schd.thresh_proj);
-   comb.get_rcanon(schd.thresh_ortho);
+   comb.rcanon_init(sci_space, vs, schd.thresh_proj, schd.thresh_ortho);
+   comb.rcanon_ovlp(sci_space, vs);
 
    // save sites to file?
    

@@ -14,7 +14,8 @@ namespace tns{
 struct renorm_sector{
    public:
       void print(std::string msg, const int level=0){
-	 cout << msg << " qsym=(" << sym.first << "," << sym.second << ")"
+	 cout << "renorm_sector: " << msg 
+	      << " qsym=(" << sym.first << "," << sym.second << ")"
 	      << " shape=" << coeff.rows() << "," << coeff.cols() << endl; 
 	 if(level >= 1){
 	    for(int i=0; i<space.size(); i++){
@@ -43,7 +44,7 @@ struct product_space{
    public:
       // second int is used for indexing in constructing rowA, colB 
       std::map<fock::onstate,int> umapA, umapB;
-      fock::onspace spaceA, spaceB; // ordered by appearance
+      fock::onspace spaceA, spaceB; // ordered by appearance [NOT sorted!]
       std::vector<std::vector<std::pair<int,int>>> rowA, colB;  
       int dim, dimA, dimB;
 };
