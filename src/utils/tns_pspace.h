@@ -13,7 +13,7 @@ namespace tns{
 // renormalized states from determinants
 struct renorm_sector{
    public:
-      void print(std::string msg, const int level=0){
+      void print(const std::string msg, const int level=0){
 	 cout << "renorm_sector: " << msg 
 	      << " qsym=(" << sym.first << "," << sym.second << ")"
 	      << " shape=" << coeff.rows() << "," << coeff.cols() << endl; 
@@ -40,7 +40,8 @@ struct product_space{
       std::pair<int,double> projection(const std::vector<std::vector<double>>& vs,
 		      		       const double thresh_proj=1.e-15);
       renorm_basis right_projection(const std::vector<std::vector<double>>& vs,
-		      	 	    const double thresh_proj=1.e-15);
+		      	 	    const double thresh_proj=1.e-15,
+				    const bool debug=false);
    public:
       // second int is used for indexing in constructing rowA, colB 
       std::map<fock::onstate,int> umapA, umapB;

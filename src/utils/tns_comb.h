@@ -1,6 +1,8 @@
 #ifndef TNS_COMB_H
 #define TNS_COMB_H
 
+#include <boost/serialization/serialization.hpp>
+#include "serialize_tuple.h"
 #include "../core/onspace.h"
 #include "../core/matrix.h"
 #include "tns_pspace.h"
@@ -11,104 +13,119 @@
 
 namespace tns{
 
+// --- qsym = (Ne,Na) ---
 using qsym = std::pair<int,int>;
+using qsym_space = std::map<qsym,int>;
 
-// physical indieces
-const std::vector<qsym> qphys({{0,0},{1,0},{1,1},{2,1}});
-extern const std::vector<qsym> qphys;
 
-const fock::onstate phys_0("00");
-const fock::onstate phys_b("10");
-const fock::onstate phys_a("01");
-const fock::onstate phys_2("11");
-const fock::onspace space_phys({phys_0,phys_b,phys_a,phys_2});
-extern const fock::onspace space_phys;
-
+// --- physical degree of freedoms  ---
+// symmetry
+const std::vector<qsym> phys_sym({{0,0}, {1,0}, {1,1}, {2,1}});
+extern const std::vector<qsym> phys_sym;
+// states
+const fock::onstate phys_0("00"), phys_b("10"), phys_a("01"), phys_2("11");
+const fock::onspace phys_space({phys_0, phys_b, phys_a, phys_2});
+extern const fock::onspace phys_space;
+// qsym_space
+const qsym_space phys_qsym_space({{phys_sym[0],1},
+			          {phys_sym[1],1},
+			          {phys_sym[2],1},
+			          {phys_sym[3],1}});
+extern const qsym_space phys_qsym_space;
+// rbasis for leaves
 inline renorm_basis get_rbasis_phys(){
    renorm_basis rbasis(4);
    for(int i=0; i<4; i++){
-      rbasis[i].sym = qphys[i]; 
-      rbasis[i].space.push_back(space_phys[i]);
+      rbasis[i].sym = phys_sym[i]; 
+      rbasis[i].space.push_back(phys_space[i]);
       rbasis[i].coeff = linalg::identity_matrix(1);
    }
    return rbasis;
 }
 
+// --- qspace ---
+// total dimension
+inline int qsym_space_dim(const qsym_space& qs){
+   int dim = 0;
+   for(const auto& p : qs) dim += p.second;
+   return dim;
+}
+// print
+inline void qsym_space_print(const qsym_space& qs, const std::string& name){ 
+   std::cout << name 
+	     << " nsym=" << qs.size() 
+	     << " dim=" << qsym_space_dim(qs) 
+	     << std::endl;
+   // loop over symmetry sectors
+   for(const auto& p : qs){
+      auto sym = p.first;
+      auto dim = p.second;
+      std::cout << " (" << sym.first << "," << sym.second << "):" << dim;
+   }
+   std::cout << std::endl;
+}
+
+// --- rank-3 tensor ---
+const std::vector<linalg::matrix> empty_block;
+extern const std::vector<linalg::matrix> empty_block;
 // <in0,in1|out> = [in0](in1,out)
 struct site_tensor{
+   private:
+      friend class boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+         ar & qspace0;
+	 ar & qspace1;
+	 ar & qspace;
+	 ar & qblocks;
+      }
    public:
-      inline int get_dim0() const{
-	 return qspace0.size(); 
-      }
-      inline int get_dim1() const{
-	 int dim = 0;
-	 for(const auto& p : qspace1) dim += p.second;
-	 return dim;
-      }
-      inline int get_dim() const{
-	 int dim = 0;
-	 for(const auto& p : qspace) dim += p.second;
-	 return dim;
-      }
-      inline int get_size() const{
-	 int size = 0;
-	 for(const auto& p : qblocks) size += p.second.size();
-	 return size;
-      }
-      void print(std::string msg, const int level=0){
-         cout << "site_tensor: " << msg << endl;
-	 // qspace0
-	 cout << "qspace0: dim0=" << get_dim0() << endl;
-	 for(int i=0; i<qspace0.size(); i++){
-	    cout << " " << i << ":(" << qspace0[i].first << ","
-		 << qspace0[i].second << ")";
-	 } 
-	 cout << endl;
- 	 // qspace1
-	 cout << "qspace1: nsym1=" << qspace1.size() << " dim1=" << get_dim1() << endl;
-	 for(const auto& p : qspace1){
-	    auto sym = p.first;
-	    auto dim = p.second;
-	    cout << " (" << sym.first << "," << sym.second << "):" << dim;
-	 }
-	 cout << endl;
-	 // qspace
-	 cout << "qspace: nsym=" << qspace.size() << " dim=" << get_dim() << endl;
-	 for(const auto& p : qspace){
-	    auto sym = p.first;
-	    auto dim = p.second;
-	    cout << " (" << sym.first << "," << sym.second << "):" << dim;
-	 }
-	 cout << endl;
-	 // qblocks
+      inline int get_dim0() const{ return qsym_space_dim(qspace0); }
+      inline int get_dim1() const{ return qsym_space_dim(qspace1); }
+      inline int get_dim() const{ return qsym_space_dim(qspace); }
+      void print(const std::string msg, const int level=0){
+	 std::cout << "site_tensor: " << msg << std::endl;
+	 qsym_space_print(qspace0,"qspace0");
+	 qsym_space_print(qspace1,"qspace1");
+	 qsym_space_print(qspace,"qspace");
 	 if(level >= 1){
-	    cout << "qblocks nblocks=" << qblocks.size() << endl;
+	    std::cout << "qblocks: nblocks=" << qblocks.size() << std::endl;
 	    int nnz = 0;
 	    for(const auto& p : qblocks){
 	       auto& t = p.first;
 	       auto& m = p.second;
+	       auto sym0 = get<0>(t);
+	       auto sym1 = get<1>(t);
+	       auto sym = get<2>(t);
 	       if(m.size() > 0){
 		  nnz++;
-	          cout << " block[" << get<0>(t) << "," 
-	               << "(" << get<1>(t).first << "," << get<1>(t).second << ")," 
-	               << "(" << get<2>(t).first << "," << get<2>(t).second << ")]"
-	               << " rows,cols=(" << m.rows() << "," << m.cols() << ")" << endl; 
-	          if(level >= 2) m.print("mat");
+		  std::cout << "idx=" << nnz << " block[" 
+		       << "(" << sym0.first << "," << sym0.second << "),"
+	               << "(" << sym1.first << "," << sym1.second << ")," 
+	               << "(" << sym.first  << "," << sym.second  << ")]"
+	               << " size=" << m.size() 
+		       << " rows,cols=(" << m[0].rows() << "," << m[0].cols() << ")" 
+		       << std::endl; 
+	          if(level >= 2){
+		     for(int i=0; i<m.size(); i++){		 
+		        m[i].print("mat"+std::to_string(i));
+		     }
+		  } // level=2
 	       }
 	    }
-	    cout << "total nnz=" << nnz << " size=" << get_size() << endl;
-	 }
+	    std::cout << "total no. of nonzero blocks =" << nnz << std::endl;
+	 } // level=1
       }
    public:
-      std::vector<qsym>  qspace0; // central
-      std::map<qsym,int> qspace1; // in [sym,dim]
-      std::map<qsym,int> qspace;  // out [sym,dim]
-      std::map<std::tuple<int,qsym,qsym>,linalg::matrix> qblocks; 
+      qsym_space qspace0; // central [sym,dim]
+      qsym_space qspace1; // in [sym,dim]
+      qsym_space qspace;  // out [sym,dim]
+      std::map<std::tuple<qsym,qsym,qsym>,std::vector<linalg::matrix>> qblocks;
 };
 
+// --- comb tensor networks ---
 using comb_coord = std::pair<int,int>;
 using comb_rbases = std::map<comb_coord,renorm_basis>;
-
 class comb{
    public:
       void read_topology(std::string topology); 
@@ -133,6 +150,9 @@ class comb{
       // ovlp[n,m] = <Comb[n]|SCI[m]>
       linalg::matrix rcanon_ovlp(const fock::onspace& space,
 		                 const std::vector<std::vector<double>>& vs);
+      // io
+      void save_rsites(const std::string fname="rsites.info");
+      void load_rsites(const std::string fname="rsites.info");
    public:
       int nbackbone, nphysical, ninternal, ntotal;
       std::vector<std::vector<int>> topo; // save site index
@@ -140,8 +160,8 @@ class comb{
       // --- right canonical form ---
       std::vector<comb_coord> rcoord; // coordinate of each node in visit order
       std::map<comb_coord,std::vector<int>> rsupport;
-      std::map<comb_coord,site_tensor> rsites;
       std::vector<int> image2;
+      std::map<comb_coord,site_tensor> rsites;
       // --- left canonical form ---
       // std::map<comb_coord,std::vector<int>> lsupport;
       // std::map<comb_coord,site_tensor> lsites;

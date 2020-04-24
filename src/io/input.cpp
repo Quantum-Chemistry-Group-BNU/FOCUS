@@ -33,6 +33,7 @@ void input::read_input(input::schedule& schd, string fname){
    schd.integral_file = "FCIDUMP";
    schd.integral_type = 0; // =0, RHF; =1, UHF
    schd.ciload = false;
+   schd.combload = false;
    schd.topology_file = "TOPOLOGY";
    schd.maxdets = 10000;
    schd.thresh_proj = 1.e-15;
@@ -72,6 +73,8 @@ void input::read_input(input::schedule& schd, string fname){
 	 is >> schd.integral_type;
       }else if(line.substr(0,6)=="ciload"){
          schd.ciload = true;
+      }else if(line.substr(0,8)=="combload"){
+         schd.combload = true;
       }else if(line.substr(0,4)=="dets"){
 	 int ndet = 0;
 	 while(true){

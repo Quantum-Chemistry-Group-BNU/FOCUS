@@ -1,6 +1,7 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include <boost/serialization/serialization.hpp>
 #include <iostream>
 #include <algorithm>
 #include <cassert>
@@ -12,6 +13,25 @@ namespace linalg{
 
 // column-major matrix
 class matrix{
+   private:
+      friend class boost::serialization::access;	   
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	 int rows = _rows, cols = _cols, size = _size;
+	 ar & rows;
+	 ar & cols;
+	 ar & size;
+	 if(size != _size){
+	    _rows = rows;
+	    _cols = cols;
+	    _size = size;
+	    _data = new double[_size];
+	 }
+         for(int i=0; i<_size; i++){
+	    ar & _data[i];
+	 }
+      }
+
    public:
       // constructors
       matrix(): _rows(0), _cols(0), _size(0), _data(nullptr) {};

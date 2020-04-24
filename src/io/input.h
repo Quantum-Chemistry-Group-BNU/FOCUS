@@ -32,6 +32,7 @@ public:
    double eps2;
    // io
    bool ciload;
+   bool combload;
    // comb
    std::string topology_file;
    int maxdets;

@@ -185,17 +185,18 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
      
 // right projection
 renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
-				 	     const double thresh){
-   cout << "\nproduct_space::right_projection thresh="
-        << scientific << thresh << endl;
-   int debug = 0;
+				 	     const double thresh,
+					     const bool debug){
    auto t0 = global::get_time();
+   int debug_level = debug;
+   if(debug_level) cout << "\nproduct_space::right_projection thresh="
+                        << scientific << thresh << endl;
    renorm_basis rbasis;				     
    // 1. collect states with the same symmetry (N,NA)
    using qsym = pair<int,int>;
    map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
    map<qsym,map<int,int>> qmapA; // index in spaceA to idxA
-   map<qsym,vector<tuple<int,int,int>>> qspace;
+   map<qsym,vector<tuple<int,int,int>>> qlst;
    for(int ib=0; ib<dimB; ib++){
       int ne = spaceB[ib].nelec();
       int ne_a = spaceB[ib].nelec_a();
@@ -211,7 +212,7 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
          };
 	 int idxB = qsecB[symB].size()-1;
 	 int idxA = qmapA[symB][ia];
-	 qspace[symB].push_back(make_tuple(idxB,idxA,idet));
+	 qlst[symB].push_back(make_tuple(idxB,idxA,idet));
       }
    }
    // 2. loop over symmetry sectors to compute renormalized states
@@ -224,13 +225,13 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
       int dimAs = qmapA[symB].size();
       dB += dimBs;
       dA += dimAs;
-      if(debug){
+      if(debug_level){
          cout << "idx=" << idx << " symB(Ne,Na)=(" 
 	      << symB.first << "," << symB.second << ")"
               << " dimBs=" << dimBs
 	      << " dimAs=" << qmapA[symB].size() 
 	      << endl;
-	 if(debug>1){
+	 if(debug_level>1){
 	    for(int i=0; i<dimBs; i++){
 	       cout << " ib=" << i << " : " 
 	            << spaceB[idxB[i]].to_string2() << endl;
@@ -245,7 +246,7 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
 	 sig.resize(dimAs*nroots);
          vrl.resize(dimBs,dimAs*nroots);
          for(int iroot = 0; iroot<nroots; iroot++){
-            for(const auto& t : qspace[symB]){
+            for(const auto& t : qlst[symB]){
                int ib = get<0>(t);
                int ia = get<1>(t);
                int id = get<2>(t);
@@ -262,7 +263,7 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
 	 vrl.resize(dimBs,dimAs);
 	 u.resize(dimBs,dimBs);
          for(int iroot = 0; iroot<nroots; iroot++){
-            for(const auto& t : qspace[symB]){
+            for(const auto& t : qlst[symB]){
                int ib = get<0>(t);
                int ia = get<1>(t);
                int id = get<2>(t);
@@ -278,7 +279,10 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
       double sumi = 0.0;
       for(int i=0; i<sig.size(); i++){
 	 if(sig[i]>thresh){
-            if(debug>1){ 
+	    dimBi += 1;
+            sumi += sig[i];
+ 	    SvN += -sig[i]*log2(sig[i]); // compute entanglement entropy
+            if(debug_level>1){ 
 	       cout << " i=" << i
 		    << " sig2=" << scientific << sig[i] << endl;
 	       double thresh_coeff = -1.e-2;
@@ -289,16 +293,12 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
 		  }
 	       }
 	    }
-	    dimBi += 1;
-            sumi += sig[i];
-            // compute entanglement entropy
- 	    SvN += -sig[i]*log2(sig[i]);
 	 }
       } // i
       dimBc += dimBi;
       sum += sumi;
-      if(debug) cout << " dimBs=" << dimBs << " dimBi=" << dimBi 
-		     << " sumi=" << sumi << " sum=" << sum << endl;
+      if(debug_level) cout << " dimBs=" << dimBs << " dimBi=" << dimBi 
+		           << " sumi=" << sumi << " sum=" << sum << endl;
       // save sites
       if(dimBi > 0){
 	 renorm_sector rsec;
@@ -315,10 +315,12 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
       idx++;
    } // sym sectors
    assert(dA == dimA && dB == dimB);
-   auto t1 = global::get_time();
-   cout << "dim=" << dim << " dimA=" << dimA << " dimB=" << dimB
-        << " dimBc=" << dimBc << " sum=" << sum << " SvN=" << SvN << endl;
-   cout << "timing for product_space::right_projection : " << setprecision(2) 
-        << global::get_duration(t1-t0) << " s" << endl;
+   if(debug_level){
+      cout << "dim=" << dim << " dimA=" << dimA << " dimB=" << dimB
+           << " dimBc=" << dimBc << " sum=" << sum << " SvN=" << SvN << endl;
+      auto t1 = global::get_time();
+      cout << "timing for product_space::right_projection : " << setprecision(2) 
+           << global::get_duration(t1-t0) << " s" << endl;
+   }
    return rbasis;
 }

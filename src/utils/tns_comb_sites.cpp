@@ -6,208 +6,22 @@
 #include "tns_pspace.h"
 #include "tns_comb.h"
 #include <iostream>
-#include <fstream>
 #include <algorithm>
-#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace tns;
 using namespace fock;
 using namespace linalg;
 
-void comb::read_topology(string fname){
-   cout << "\ncomb::read_topology fname=" << fname << endl;
-   ifstream istrm(fname);
-   if(!istrm){
-      cout << "failed to open " << fname << '\n';
-      exit(1);
-   }
-   vector<string> v;
-   string line;
-   while(!istrm.eof()){
-      line.clear();	    
-      getline(istrm,line);
-      if(line.empty() || line[0]=='#') continue;
-      boost::trim_left(line); // in case there is a space in FCIDUMP
-      boost::split(v,line,boost::is_any_of(","),boost::token_compress_on);
-      vector<int> branch;
-      for(auto s : v){
-	 branch.push_back(stoi(s));
-      }
-      topo.push_back(branch);
-   }
-   istrm.close();
-}
-
-void comb::init(){
-   cout << "\ncomb::init" << endl;
-   // initialize comb structure
-   nbackbone = topo.size();
-   nphysical = 0;
-   ninternal = 0;
-   if(topo[0].size() != 1 || topo[nbackbone-1].size() != 1){
-      cout << "error: we assume the start and end nodes are leaves!" << endl;
-      exit(1);
-   }
-   for(int i=0; i<nbackbone; i++){
-      int size = topo[i].size();
-      nphysical += size;
-      if(size > 1) ninternal += 1;
-   }
-   ntotal = nphysical + ninternal;
-   // add internal nodes
-   int idx = nphysical;
-   for(int i=0; i<nbackbone; i++){
-      if(topo[i].size() > 1){
-	 topo[i].insert(topo[i].begin(),idx);
-         idx++;
-      }
-   }
-   // coordinate of nodes in right canonical form
-   for(int i=nbackbone-1; i>=0; i--){
-      for(int j=topo[i].size()-1; j>=0; j--){
-         rcoord.push_back(make_pair(i,j));
-      }
-   }
-   // type of sites 
-   for(int i=nbackbone-1; i>=0; i--){
-      int size = topo[i].size();
-      if(i==nbackbone-1 || i==0){ 
-	 type[make_pair(i,0)] = 0; // type 0: end
-      }else{
-	 if(size == 1){
-            type[make_pair(i,0)] = 1; // type 1: physical site on backbone
-	 }else if(size > 1){
-            type[make_pair(i,size-1)] = 0; // type 0: leaves on branch
-	    for(int j=size-2; j>=1; j--){
-	       type[make_pair(i,j)] = 2; // type 2: physical site on branch
-	    } // j
-            type[make_pair(i,0)] = 3; // type 3: internal site on backbone
-	 }
-      }
-   }
-   // compute support of each node in right canonical form
-   for(int i=nbackbone-1; i>=0; i--){
-      int size = topo[i].size();
-      if(size == 1){
-	 // upper branch is just physical indices     
-	 rsupport[make_pair(i,0)].push_back(topo[i][0]);
-         if(i!=nbackbone-1){ 
-	    // build recursively by copying right branch
-	    copy(rsupport[make_pair(i+1,0)].begin(),
-	         rsupport[make_pair(i+1,0)].end(),
-		 back_inserter(rsupport[make_pair(i,0)]));
-	 }
-      }else{
-	 // visit upper branch from the leaf
-         for(int j=size-1; j>0; j--){
-	    rsupport[make_pair(i,j)].push_back(topo[i][j]);
-	    if(j!=size-1){
-  	       copy(rsupport[make_pair(i,j+1)].begin(),
-	            rsupport[make_pair(i,j+1)].end(),
-		    back_inserter(rsupport[make_pair(i,j)]));
-	    }
-	 }
-	 // branching node: upper
-	 copy(rsupport[make_pair(i,1)].begin(),
-	      rsupport[make_pair(i,1)].end(),
-	      back_inserter(rsupport[make_pair(i,0)]));
-	 // right - assuming the end node is leaf (which is true)
-	 copy(rsupport[make_pair(i+1,0)].begin(),
-	      rsupport[make_pair(i+1,0)].end(),
-	      back_inserter(rsupport[make_pair(i,0)]));
-      }
-   }
-   // image2
-   auto order = rsupport[make_pair(0,0)]; 
-   image2.resize(2*nphysical);
-   for(int i=0; i<nphysical; i++){
-      image2[2*i] = 2*order[i];
-      image2[2*i+1] = 2*order[i]+1;
-   }
-   // sweep sequence: forward
-   for(int i=1; i<nbackbone; i++){
-      auto coord0 = make_pair(i-1,0);
-      auto coord1 = make_pair(i,0);      
-      sweep_seq.push_back(make_pair(coord0,coord1));
-      // branch forward
-      for(int j=1; j<topo[i].size(); j++){
-         auto coord0 = make_pair(i,j-1);
-         auto coord1 = make_pair(i,j);      
-         sweep_seq.push_back(make_pair(coord0,coord1));
-      }
-      // branch backward
-      for(int j=topo[i].size()-1; j>0; j--){
-         auto coord0 = make_pair(i,j);
-         auto coord1 = make_pair(i,j-1);      
-         sweep_seq.push_back(make_pair(coord0,coord1));
-      }
-   }
-   // backward
-   for(int i=nbackbone-1; i>0; i--){
-      auto coord0 = make_pair(i,0);
-      auto coord1 = make_pair(i-1,0);      
-      sweep_seq.push_back(make_pair(coord0,coord1));
-   }
-   assert(sweep_seq.size() == 2*(ntotal-1));
-}
-
-void comb::print(){
-   cout << "\ncomb::print" << endl;
-   cout << "nbackbone=" << nbackbone << " " 
-	<< "nphysical=" << nphysical << " "
-	<< "ninternal=" << ninternal << " " 
-	<< "ntotal=" << ntotal << endl;
-   cout << "--- topo ---" << endl;
-   int idx = 0;
-   for(auto& branch : topo){
-      cout << "idx=" << idx << " : "; 
-      for(int i : branch){
-         cout << i << " ";  
-      }
-      cout << endl;
-      idx++;
-   }
-   cout << "--- rcoord & type ---" << endl;
-   for(int i=0; i<ntotal; i++){
-      auto p = rcoord[i];
-      cout << "i=" << i << " : (" << p.first << "," << p.second << ")" 
-	   << "[" << topo[p.first][p.second] << "]" 
-	   << " type=" << type[p] << endl;
-   }
-   cout << "--- rsupport ---" << endl;
-   for(const auto& p : rsupport){
-      auto coord = p.first;
-      auto rsupp = p.second;
-      cout << "coord=(" << coord.first << "," << coord.second << ") : ";
-      for(const auto& k : rsupp){
-         cout << k << " ";
-      }
-      cout << endl;
-   }
-   cout << "--- sweep_seq --" << endl;
-   for(int i=0; i<sweep_seq.size(); i++){
-      cout << "i=" << i << " : ";
-      auto coord0 = sweep_seq[i].first;
-      auto coord1 = sweep_seq[i].second;
-      int x0 = coord0.first, y0 = coord0.second;
-      int x1 = coord1.first, y1 = coord1.second; 
-      cout << "(" << x0 << "," << y0 << ")[" << topo[x0][y0] << "]" 
-	   << " - "
-           << "(" << x1 << "," << y1 << ")[" << topo[x1][y1] << "]" 
-	   << endl;
-   }
-}
-
 // compute renormalized bases {|r>} 
 comb_rbases comb::get_rbases(const onspace& space,
 		    	     const vector<vector<double>>& vs,
 		    	     const double thresh_proj){
    auto t0 = global::get_time();
-   bool debug = true;
+   bool debug = false;
    cout << "\ncomb::get_rbases thresh_proj=" << scientific << thresh_proj << endl;
    comb_rbases rbases;
-   vector<pair<int,int>> shapes;
+   vector<pair<int,int>> shapes; // for debug
    vector<int> bas(nphysical);
    iota(bas.begin(), bas.end(), 0);
    // loop over nodes (except the last one)
@@ -249,18 +63,20 @@ comb_rbases comb::get_rbases(const onspace& space,
       //    (Schmidt decomposition for single state)
       auto rbasis = pspace2.right_projection(vs2,thresh_proj);
       rbases[p] = rbasis;
-      if(debug){
+      // debug
+      {
 	 int nbas = 0, ndim = 0;
          for(int k=0; k<rbasis.size(); k++){
-	    rbasis[k].print("rsec_"+to_string(k));
+	    if(debug) rbasis[k].print("rsec_"+to_string(k));
 	    nbas += rbasis[k].coeff.rows();
 	    ndim += rbasis[k].coeff.cols();
 	 }
-	 cout << "rbasis: nbas,ndim=" << nbas << "," << ndim << endl;
 	 shapes.push_back(make_pair(nbas,ndim));
+	 if(debug) cout << "rbasis: nbas,ndim=" << nbas << "," << ndim << endl;
       }
    } // idx
-   if(debug){
+   // debug
+   {
       cout << "\nfinal results with thresh_proj = " << thresh_proj << endl;
       int Dmax = 0;
       for(int idx=0; idx<ntotal-1; idx++){
@@ -285,7 +101,7 @@ site_tensor comb::get_rwfuns(const onspace& space,
 		             const vector<vector<double>>& vs,
 		             const vector<int>& order,
 		             const renorm_basis& rbasis){
-   bool debug = true;
+   bool debug = false;
    cout << "\ncomb::get_rwfuns" << endl;
    // transform SCI coefficient
    onspace space2;
@@ -298,7 +114,7 @@ site_tensor comb::get_rwfuns(const onspace& space,
    using qsym = pair<int,int>;
    map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
    map<qsym,map<int,int>> qmapA; // index in spaceA to idxA
-   map<qsym,vector<tuple<int,int,int>>> qspace;
+   map<qsym,vector<tuple<int,int,int>>> qlst;
    for(int ib=0; ib<pspace2.dimB; ib++){
       int ne = pspace2.spaceB[ib].nelec();
       int ne_a = pspace2.spaceB[ib].nelec_a();
@@ -314,27 +130,31 @@ site_tensor comb::get_rwfuns(const onspace& space,
          };
 	 int idxB = qsecB[symB].size()-1;
 	 int idxA = qmapA[symB][ia];
-	 qspace[symB].push_back(make_tuple(idxB,idxA,idet));
+	 qlst[symB].push_back(make_tuple(idxB,idxA,idet));
       }
    } // ib
    // construct rwfuns 
    site_tensor rwfuns;
-   rwfuns.qspace0 = qphys;
+   rwfuns.qspace0 = phys_qsym_space;
    // assuming the symmetry of wavefunctions are the same
    int ne = space[0].nelec();
    int ne_a = space[0].nelec_a();
    auto sym_state = make_pair(ne,ne_a); 
-   int nroots = vs.size();
+   int nroots = vs2.size();
    rwfuns.qspace[sym_state] = nroots;
-   // init zero blocks for all combinations 
-   for(int k0=0; k0<4; k0++){ 
-      for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
- 	 const qsym& symB = it->first;
-	 rwfuns.qblocks[make_tuple(k0,symB,sym_state)] = matrix(); 
+   // init empty blocks for all combinations 
+   int idx = 0;
+   for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
+      const qsym& symB = it->first;
+      rwfuns.qspace1[symB] = rbasis[idx].coeff.cols();
+      for(int k0=0; k0<4; k0++){
+	 auto key = make_tuple(phys_sym[k0],symB,sym_state);
+         rwfuns.qblocks[key] = empty_block; 
       }
+      idx++;
    }
    // loop over symmetry sectors of |r>
-   int idx = 0;
+   idx = 0;
    for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
       const qsym& symB = it->first;
       const auto& idxB = it->second;
@@ -360,27 +180,19 @@ site_tensor comb::get_rwfuns(const onspace& space,
       // construct <nm|psi>
       matrix vrl(dimBs,nroots);
       for(int iroot = 0; iroot<nroots; iroot++){
-         for(const auto& t : qspace[symB]){
+         for(const auto& t : qlst[symB]){
             int ib = get<0>(t);
-            int ia = get<1>(t);
             int id = get<2>(t);
             vrl(ib,iroot) = vs2[iroot][id];
          }
       }
-      // match physical index
-      auto itA = qmapA[symB].begin();
-      int pidx = -1;
-      for(int k0=0; k0<4; k0++){
-         auto state0 = space_phys[k0];
-         if(state0 == pspace2.spaceA[itA->first]){
-            pidx = k0;
-	    break;	    
-	 }
-      } // k0
-      assert(pidx != -1);
+      // compute key
+      auto it0 = qmapA[symB].begin();
+      onstate state0 = pspace2.spaceA[it0->first];
+      qsym sym0 = make_pair(state0.nelec(),state0.nelec_a());
+      auto key = make_tuple(sym0,symB,sym_state);
       // c[n][r,i] = <nr|psi[i]> = W(b,r)*<nb|psi[i]>(b,i)
-      rwfuns.qspace1[symB] = rsec.coeff.cols();
-      rwfuns.qblocks[make_tuple(pidx,symB,sym_state)] = dgemm("T","N",rsec.coeff,vrl);
+      rwfuns.qblocks[key].push_back(dgemm("T","N",rsec.coeff,vrl));
       idx++;
    } // symB sectors
    if(debug) rwfuns.print("wavefuns",1);
@@ -393,7 +205,7 @@ void comb::rcanon_init(const onspace& space,
 		       const double thresh_proj,
 		       const double thresh_ortho){
    auto t0 = global::get_time();
-   bool debug = true;
+   bool debug = false;
    cout << "\ncomb::rcanon_init" << endl;
    // compute renormalized bases {|r>}
    auto rbases = get_rbases(space, vs, thresh_proj);
@@ -409,7 +221,7 @@ void comb::rcanon_init(const onspace& space,
 	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "] "
 	      << endl;
       }
-      auto rbasis = rbases[p]; 
+      auto& rbasis = rbases[p]; 
       site_tensor rt;
       if(type[p] == 0){
 	 
@@ -418,19 +230,20 @@ void comb::rcanon_init(const onspace& space,
 	 //    -<-*-<-|vac>   n-<-*
 	 //    			 \|/
 	 if(debug) cout << "type 0: end or leaves" << endl; 
-	 rt.qspace0 = qphys; 
-	 rt.qspace1[qphys[0]] = 1; // in  
-	 for(int k0=0; k0<qphys.size(); k0++){
-	    rt.qspace[qphys[k0]] = 1; // out
-	 }
-	 rt.qblocks[make_tuple(0,qphys[0],qphys[0])] = identity_matrix(1);
-	 rt.qblocks[make_tuple(1,qphys[0],qphys[1])] = identity_matrix(1);
-	 rt.qblocks[make_tuple(2,qphys[0],qphys[2])] = identity_matrix(1);
-	 rt.qblocks[make_tuple(3,qphys[0],qphys[3])] = identity_matrix(1);
+	 rt.qspace0 = phys_qsym_space; 
+	 rt.qspace1[phys_sym[0]] = 1; // |vac> in
+	 for(int k=0; k<4; k++){
+	    rt.qspace[phys_sym[k]] = 1; // out
+	    for(int k0=0; k0<4; k0++){
+	       auto key = make_tuple(phys_sym[k0],phys_sym[0],phys_sym[k]);
+	       rt.qblocks[key] = empty_block;
+	       if(k0 == k) rt.qblocks[key].push_back(identity_matrix(1));
+	    } // k0
+	 } // k
 
       }else if(type[p] == 1 || type[p] == 2){
-	 
-	 rt.qspace0 = qphys;
+
+	 rt.qspace0 = phys_qsym_space;
 	 pair<int,int> pre;
 	 if(type[p] == 1){
 	    //       n      
@@ -448,7 +261,7 @@ void comb::rcanon_init(const onspace& space,
 	 }
          renorm_basis rbasis1; 
 	 if(type[pre] == 0){
-	    rbasis1 = get_rbasis_phys(); // exact repr. for this bond 
+	    rbasis1 = get_rbasis_phys(); // we use exact repr. for this bond 
 	 }else{
 	    rbasis1 = rbases[pre];
 	 }
@@ -460,15 +273,15 @@ void comb::rcanon_init(const onspace& space,
 	       auto sym1 = rbasis1[k1].sym;
 	       rt.qspace1[sym1] = rbasis1[k1].coeff.cols();
 	       // loop over physical indices
-	       for(int k0=0; k0<qphys.size(); k0++){
-	          if((sym.first != sym1.first+qphys[k0].first) ||
-	             (sym.second != sym1.second+qphys[k0].second)){
-		     rt.qblocks[make_tuple(k0,sym1,sym)] = matrix();
-		  }else{
-		     auto Bi = get_Bmatrix(space_phys[k0],rbasis1[k1].space,rbasis[k].space);
+	       for(int k0=0; k0<4; k0++){
+		  auto key = make_tuple(phys_sym[k0],sym1,sym);
+		  rt.qblocks[key] = empty_block;
+	          if((sym.first == sym1.first+phys_sym[k0].first) &&
+	             (sym.second == sym1.second+phys_sym[k0].second)){
+		     auto Bi = get_Bmatrix(phys_space[k0],rbasis1[k1].space,rbasis[k].space);
 		     auto BL = dgemm("N","N",Bi,rbasis[k].coeff);
 		     auto RBL = dgemm("T","N",rbasis1[k1].coeff,BL);
-		     rt.qblocks[make_tuple(k0,sym1,sym)] = RBL;
+		     rt.qblocks[key].push_back(RBL);
 		  }
 	       } // k0
 	    } // k1
@@ -482,33 +295,25 @@ void comb::rcanon_init(const onspace& space,
 	 if(debug) cout << "type 3: internal site on backbone" << endl;
 	 auto rbasis0 = rbases[make_pair(i,j+1)];
 	 auto rbasis1 = rbases[make_pair(i+1,j)];
-	 // qspace0
-	 for(int k0=0; k0<rbasis0.size(); k0++){
-	    auto sym0 = rbasis0[k0].sym;
-	    int ndim = rbasis0[k0].coeff.cols();
-	    for(int idim=0; idim<ndim; idim++){
-	       rt.qspace0.push_back(sym0);
-	    } // ibas
-	 }
 	 // loop over symmetry blocks
 	 for(int k=0; k<rbasis.size(); k++){
 	    auto sym = rbasis[k].sym;
 	    rt.qspace[sym] = rbasis[k].coeff.cols();
+	    // loop over right blocks
             for(int k1=0; k1<rbasis1.size(); k1++){
 	       auto sym1 = rbasis1[k1].sym;
 	       rt.qspace1[sym1] = rbasis1[k1].coeff.cols();
 	       // loop over upper indices
-	       int ioff = 0;
 	       for(int k0=0; k0<rbasis0.size(); k0++){
 	          auto sym0 = rbasis0[k0].sym;
 		  int nbas = rbasis0[k0].coeff.rows();
 		  int ndim = rbasis0[k0].coeff.cols();
-		  if((sym.first != sym1.first+sym0.first) ||
-	             (sym.second != sym1.second+sym0.second)){
-		     for(int idim=0; idim<ndim; idim++){
-		        rt.qblocks[make_tuple(ioff+idim,sym1,sym)] = matrix();
-		     } // idim
-		  }else{
+		  auto key = make_tuple(sym0,sym1,sym); 
+	    	  rt.qspace0[sym0] = ndim;
+	          rt.qblocks[key] = empty_block;
+		  // symmetry conversing combination
+		  if((sym.first == sym1.first+sym0.first) &&
+	             (sym.second == sym1.second+sym0.second)){
 		     vector<matrix> Wrl(ndim);
 		     for(int ibas=0; ibas<nbas; ibas++){
 			auto state0 = rbasis0[k0].space[ibas];
@@ -525,45 +330,50 @@ void comb::rcanon_init(const onspace& space,
 			   } // idim
 			}
 		     } // ibas
-		     for(int idim=0; idim<ndim; idim++){
-			rt.qblocks[make_tuple(ioff+idim,sym1,sym)] = Wrl[idim];
-		     } // idim
+		     rt.qblocks[key] = Wrl;
 		  }
-	          ioff += ndim;
 	       } // k0
 	    } // k1
 	 } // k
 
       } // type[p]
-      rt.print("site_tensor_"+to_string(idx));
+      if(debug) rt.print("site_tensor_"+to_string(idx));
       rsites[p] = rt;
    } // idx
-   if(debug){ 
-      cout << "\ncheck orthogonality for right canonical site:" << endl;
+   // debug
+   {
+      cout << "\ncheck orthogonality for right canonical sites:" << endl;
       for(int idx=0; idx<ntotal; idx++){
          auto p = rcoord[idx];
          int i = p.first, j = p.second;
-         if(debug){
+         {
             cout << "\nidx=" << idx 
                  << " node=(" << i << "," << j << ")[" << topo[i][j] << "] "
                  << endl;
          }
          auto& rt = rsites[p]; 
          int Dtot = 0;
+	 // loop over out blocks
          for(const auto& pr : rt.qspace){
             auto& sym = pr.first;
             int ndim = pr.second;
             Dtot += ndim;
             matrix Sr(ndim,ndim);
             // S[r,r'] = \sum_{l,c} Ac[l,r]*Ac[l,r']
+	    // loop over upper blocks 
             for(const auto& p1 : rt.qspace1){
                auto& sym1 = p1.first;
-               for(int i=0; i<rt.qspace0.size(); i++){
-                  auto& blk = rt.qblocks[make_tuple(i,sym1,sym)];
+	       // loop over in blocks
+	       for(const auto& p0 : rt.qspace0){
+		  auto& sym0 = p0.first;
+		  auto& blk = rt.qblocks[make_tuple(sym0,sym1,sym)];
                   if(blk.size() == 0) continue; 
-                  Sr += dgemm("N","N",blk.transpose(),blk);
-               }
-            }
+		  int ndim0 = p0.second;
+                  for(int i=0; i<ndim0; i++){
+                     Sr += dgemm("N","N",blk[i].transpose(),blk[i]);
+                  }
+	       } // p0
+            } // p1
             auto diff = normF(Sr - identity_matrix(ndim));
             cout << " qsym=(" << sym.first << "," << sym.second << ")"
                  << " ndim=" << ndim << " |Sr-Id|_F=" << diff << endl;
@@ -575,9 +385,9 @@ void comb::rcanon_init(const onspace& space,
          } // sym blocks
          cout << "total bond dimension=" << Dtot << endl;
       } // idx
-   }
+   } // debug
    auto t1 = global::get_time();
-   cout << "\ntiming for comb::get_rcanon : " << setprecision(2) 
+   cout << "\ntiming for comb::rcanon_init : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
 }
 
@@ -587,16 +397,73 @@ vector<double> comb::rcanon_coeff(const onstate& state){
    vector<double> coeff(n);
    // compute fermionic sign changes
    auto sgn = state.permute_sgn(image2);
-   // update basis vector and signs 
    // compute <n'|Comb> by contracting all sites
-
-   // k = topo[i][j] state[2*k],state[2*k+1]
+   qsym sym_vac = make_pair(0,0);
+   qsym sym_p, sym_l, sym_r, sym_u, sym_d;
+   matrix mat_r, mat_u;
+   sym_r = sym_vac;
+   for(int i=nbackbone-1; i>=0; i--){
+      int tp = type[make_pair(i,0)];
+      // site on backbone with physical index
+      if(tp == 0 || tp == 1){
+         int orb = topo[i][0];
+	 int na = state[2*orb], nb = state[2*orb+1];
+	 auto sym_p = make_pair(na+nb,na);
+         sym_l = make_pair(sym_p.first+sym_r.first,sym_p.second+sym_r.second);
+	 auto key = make_tuple(sym_p,sym_r,sym_l);
+	 matrix mat = rsites[make_pair(i,0)].qblocks[key][0];
+	 if(i==nbackbone-1){
+	    mat_r = mat;
+         }else{
+            mat_r = dgemm("N","N",mat_r,mat); // (in,out),(out,out')->(in,out')
+	 }
+	 sym_r = sym_l; // update sym_r (in)
+      }else if(tp == 3){
+	 // propogate symmetry from leaves down to backbone
+	 sym_u = sym_vac;
+         for(int j=topo[i].size()-1; j>=1; j--){
+	    int orb = topo[i][j];
+	    int na = state[2*orb], nb = state[2*orb+1];
+	    auto sym_p = make_pair(na+nb,na);
+	    sym_d = make_pair(sym_p.first+sym_u.first,sym_p.second+sym_u.second);
+	    auto key = make_tuple(sym_p,sym_u,sym_d);
+	    matrix mat = rsites[make_pair(i,j)].qblocks[key][0];
+	    if(j==topo[i].size()-1){
+	       mat_u = mat;
+	    }else{
+	       mat_u = dgemm("N","N",mat_u,mat);
+	    }
+	    sym_u = sym_d; // update sym_u (in)
+         } // j
+	 // internal site without physical index
+	 //       u
+	 //       |
+	 // l--<--*--<--r
+	 sym_l = make_pair(sym_u.first+sym_r.first,sym_u.second+sym_r.second);
+	 auto key = make_tuple(sym_u,sym_r,sym_l);
+	 auto& blk = rsites[make_pair(i,0)].qblocks[key];
+	 int dim_r = blk[0].rows(), dim_l = blk[0].cols(); 
+	 // contract upper sites
+	 matrix mat(dim_r,dim_l);
+	 int dim_u = rsites[make_pair(i,0)].qspace0[sym_u];
+	 for(int k=0; k<dim_u; k++){
+	    mat += mat_u(0,k)*blk[k];
+	 }
+	 // contract right matrix
+	 mat_r = dgemm("N","N",mat_r,mat);
+	 sym_r = sym_l;
+      } // tp
+   } // j
+   assert(mat_r.rows() == 1 && mat_r.cols() == n);
+   for(int j=0; j<n; j++){
+      coeff[j] = sgn*mat_r(0,j);
+   }
    return coeff;
 }
 
 // ovlp[n,m] = <Comb[n]|SCI[m]>
 matrix comb::rcanon_ovlp(const onspace& space,
-	               const vector<vector<double>>& vs){
+	                 const vector<vector<double>>& vs){
    int n = rsites[make_pair(0,0)].get_dim();
    int dim = space.size();
    matrix cmat(n,dim);
@@ -611,6 +478,5 @@ matrix comb::rcanon_ovlp(const onspace& space,
       copy(vs[im].begin(),vs[im].end(),vmat.col(im));
    }
    matrix ovlp = dgemm("N","N",cmat,vmat);
-   ovlp.print("ovlp");
-   return ovlp; 
+   return ovlp;
 }

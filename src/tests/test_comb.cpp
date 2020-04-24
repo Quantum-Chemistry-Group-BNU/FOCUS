@@ -69,14 +69,18 @@ int tests::test_comb(){
    comb.init();
    comb.print();
 
-   // truncate CI coefficients
-   sci::ci_truncate(sci_space, vs, schd.maxdets);
-   comb.rcanon_init(sci_space, vs, schd.thresh_proj, schd.thresh_ortho);
-   comb.rcanon_ovlp(sci_space, vs);
-
-   // save sites to file?
-   
-   // sweep optimization?
+   if(!schd.combload){
+      // truncate CI coefficients
+      sci::ci_truncate(sci_space, vs, schd.maxdets);
+      comb.rcanon_init(sci_space, vs, schd.thresh_proj, schd.thresh_ortho);
+      // save sites to file
+      comb.save_rsites();
+   }else{
+      comb.load_rsites();
+   }
+   // check overlap
+   auto ovlp = comb.rcanon_ovlp(sci_space, vs);
+   ovlp.print("ovlp");
 
    return 0;
 }
