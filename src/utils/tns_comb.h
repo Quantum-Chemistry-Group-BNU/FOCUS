@@ -150,17 +150,17 @@ class comb{
       // ovlp[n,m] = <Comb[n]|SCI[m]>
       linalg::matrix rcanon_ovlp(const fock::onspace& space,
 		                 const std::vector<std::vector<double>>& vs);
-      // io
-      void save_rsites(const std::string fname="rsites.info");
-      void load_rsites(const std::string fname="rsites.info");
+      // io for rsites
+      void rcanon_save(const std::string fname="rcanon.info");
+      void rcanon_load(const std::string fname="rcanon.info");
    public:
       int nbackbone, nphysical, ninternal, ntotal;
       std::vector<std::vector<int>> topo; // save site index
       std::map<comb_coord,int> type; // type of nodes 0,1,2
-      // --- right canonical form ---
-      std::vector<comb_coord> rcoord; // coordinate of each node in visit order
+      std::vector<comb_coord> rcoord; // coordinate of each node in rvisit order
       std::map<comb_coord,std::vector<int>> rsupport;
-      std::vector<int> image2;
+      std::vector<int> image2; // mapping of physical indices
+      // --- right canonical form ---
       std::map<comb_coord,site_tensor> rsites;
       // --- left canonical form ---
       // std::map<comb_coord,std::vector<int>> lsupport;

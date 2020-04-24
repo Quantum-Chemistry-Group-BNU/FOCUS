@@ -10,15 +10,15 @@
 using namespace std;
 using namespace tns;
 
-void comb::save_rsites(const string fname){
-   cout << "\ncomb::save_rsites" << endl;
+void comb::rcanon_save(const string fname){
+   cout << "\ncomb::rcanon_save" << endl;
    ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << rsites;
 }
 
-void comb::load_rsites(const string fname){
-   cout << "\ncomb:load_rsites" << endl;
+void comb::rcanon_load(const string fname){
+   cout << "\ncomb:rcanon_load" << endl;
    ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> rsites;

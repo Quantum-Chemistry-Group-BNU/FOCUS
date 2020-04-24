@@ -73,14 +73,18 @@ int tests::test_comb(){
 
    if(!schd.combload){
       comb.rcanon_init(sci_space, vs, schd.thresh_proj, schd.thresh_ortho);
-      comb.save_rsites();
+      comb.rcanon_save();
    }else{
-      comb.load_rsites();
+      comb.rcanon_load();
    }
    
    // check overlap
    auto ovlp = comb.rcanon_ovlp(sci_space, vs);
    ovlp.print("ovlp");
+
+   // comb.energy();
+
+   // comb.sweep();
 
    return 0;
 }
