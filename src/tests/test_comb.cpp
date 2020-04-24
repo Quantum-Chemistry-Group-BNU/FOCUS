@@ -62,7 +62,9 @@ int tests::test_comb(){
    for(int i=0; i<nroot; i++){
       coeff_population(sci_space, vs[i]);
    }
-
+   // truncate CI coefficients
+   sci::ci_truncate(sci_space, vs, schd.maxdets);
+ 
    // comb tensor networks
    tns::comb comb;
    comb.read_topology(schd.topology_file);
@@ -70,14 +72,12 @@ int tests::test_comb(){
    comb.print();
 
    if(!schd.combload){
-      // truncate CI coefficients
-      sci::ci_truncate(sci_space, vs, schd.maxdets);
       comb.rcanon_init(sci_space, vs, schd.thresh_proj, schd.thresh_ortho);
-      // save sites to file
       comb.save_rsites();
    }else{
       comb.load_rsites();
    }
+   
    // check overlap
    auto ovlp = comb.rcanon_ovlp(sci_space, vs);
    ovlp.print("ovlp");
