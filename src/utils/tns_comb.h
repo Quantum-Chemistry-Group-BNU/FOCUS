@@ -18,7 +18,7 @@ class comb{
       // --- topology of comb ---
       void read_topology(std::string topology); 
       void init();
-      void print();
+      void print() const;
       // --- from SCI wavefunctions ---
       // compute renormalized bases {|r>} from SCI wf 
       comb_rbases get_rbases(const fock::onspace& space,
