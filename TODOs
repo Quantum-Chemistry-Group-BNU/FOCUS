@@ -88,6 +88,9 @@
 	  - implement wf for the last site from SCI wf
  	  - implement <n|comb> for checking
 
+ 20200425 refactorize the tns part to make them more modular
+	  - essential for future developement
+
  2020xxxx initialize normal & complementary operators
 	  - serializaiton
 	  - data structure for operators

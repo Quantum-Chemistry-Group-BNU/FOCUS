@@ -1,10 +1,8 @@
 #include "../settings/global.h"
-#include "../core/matrix.h"
-#include "../core/onspace.h"
 #include "../core/linalg.h"
-#include "tns_ordering.h"
-#include "tns_pspace.h"
+#include "tns_qsym.h"
 #include "tns_comb.h"
+#include "tns_ordering.h"
 #include <iostream>
 #include <algorithm>
 
@@ -18,7 +16,7 @@ comb_rbases comb::get_rbases(const onspace& space,
 		    	     const vector<vector<double>>& vs,
 		    	     const double thresh_proj){
    auto t0 = global::get_time();
-   bool debug = false;
+   bool debug = true;
    cout << "\ncomb::get_rbases thresh_proj=" << scientific << thresh_proj << endl;
    comb_rbases rbases;
    vector<pair<int,int>> shapes; // for debug
@@ -97,11 +95,11 @@ comb_rbases comb::get_rbases(const onspace& space,
 }
 
 // compute wave function at the start for right canonical form 
-site_tensor comb::get_rwfuns(const onspace& space,
-		             const vector<vector<double>>& vs,
-		             const vector<int>& order,
-		             const renorm_basis& rbasis){
-   bool debug = false;
+qtensor3 comb::get_rwfuns(const onspace& space,
+		          const vector<vector<double>>& vs,
+		          const vector<int>& order,
+		          const renorm_basis& rbasis){
+   bool debug = true;
    cout << "\ncomb::get_rwfuns" << endl;
    // transform SCI coefficient
    onspace space2;
@@ -111,14 +109,12 @@ site_tensor comb::get_rwfuns(const onspace& space,
    tns::product_space pspace2;
    pspace2.get_pspace(space2, 2);
    // loop over symmetry of B;
-   using qsym = pair<int,int>;
    map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
    map<qsym,map<int,int>> qmapA; // index in spaceA to idxA
    map<qsym,vector<tuple<int,int,int>>> qlst;
    for(int ib=0; ib<pspace2.dimB; ib++){
-      int ne = pspace2.spaceB[ib].nelec();
-      int ne_a = pspace2.spaceB[ib].nelec_a();
-      qsym symB = make_pair(ne,ne_a);
+      auto& stateB = pspace2.spaceB[ib];
+      qsym symB(stateB.nelec(), stateB.nelec_a());
       qsecB[symB].push_back(ib);
       for(const auto& pia : pspace2.colB[ib]){
 	 int ia = pia.first;
@@ -134,18 +130,16 @@ site_tensor comb::get_rwfuns(const onspace& space,
       }
    } // ib
    // construct rwfuns 
-   site_tensor rwfuns;
+   qtensor3 rwfuns;
    rwfuns.qspace0 = phys_qsym_space;
    // assuming the symmetry of wavefunctions are the same
-   int ne = space[0].nelec();
-   int ne_a = space[0].nelec_a();
-   auto sym_state = make_pair(ne,ne_a); 
+   qsym sym_state(space[0].nelec(), space[0].nelec_a());
    int nroots = vs2.size();
    rwfuns.qspace[sym_state] = nroots;
    // init empty blocks for all combinations 
    int idx = 0;
    for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
-      const qsym& symB = it->first;
+      auto& symB = it->first;
       rwfuns.qspace1[symB] = rbasis[idx].coeff.cols();
       for(int k0=0; k0<4; k0++){
 	 auto key = make_tuple(phys_sym[k0],symB,sym_state);
@@ -156,20 +150,19 @@ site_tensor comb::get_rwfuns(const onspace& space,
    // loop over symmetry sectors of |r>
    idx = 0;
    for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
-      const qsym& symB = it->first;
-      const auto& idxB = it->second;
+      auto& symB = it->first;
+      auto& idxB = it->second;
       int dimBs = idxB.size(); 
       int dimAs = qmapA[symB].size();
       if(debug){
-         cout << "idx=" << idx << " symB(Ne,Na)=(" 
-              << symB.first << "," << symB.second << ")"
+         cout << "idx=" << idx << " symB(Ne,Na)=" << symB 
               << " dimBs=" << dimBs
               << " dimAs=" << qmapA[symB].size() 
               << endl;
       }
       // load renormalized basis
       auto& rsec = rbasis[idx];
-      if(rsec.sym.first != symB.first || rsec.sym.second != symB.second){
+      if(rsec.sym != symB){
          cout << "error: symmetry does not match!" << endl;
          exit(1);
       }
@@ -189,13 +182,13 @@ site_tensor comb::get_rwfuns(const onspace& space,
       // compute key
       auto it0 = qmapA[symB].begin();
       onstate state0 = pspace2.spaceA[it0->first];
-      qsym sym0 = make_pair(state0.nelec(),state0.nelec_a());
+      qsym sym0(state0.nelec(),state0.nelec_a());
       auto key = make_tuple(sym0,symB,sym_state);
       // c[n][r,i] = <nr|psi[i]> = W(b,r)*<nb|psi[i]>(b,i)
       rwfuns.qblocks[key].push_back(dgemm("T","N",rsec.coeff,vrl));
       idx++;
    } // symB sectors
-   if(debug) rwfuns.print("wavefuns",1);
+   if(debug) rwfuns.print("wavefuns",2);
    return rwfuns;
 }
 
@@ -205,7 +198,7 @@ void comb::rcanon_init(const onspace& space,
 		       const double thresh_proj,
 		       const double thresh_ortho){
    auto t0 = global::get_time();
-   bool debug = false;
+   bool debug = true;
    cout << "\ncomb::rcanon_init" << endl;
    // compute renormalized bases {|r>}
    auto rbases = get_rbases(space, vs, thresh_proj);
@@ -222,7 +215,7 @@ void comb::rcanon_init(const onspace& space,
 	      << endl;
       }
       auto& rbasis = rbases[p]; 
-      site_tensor rt;
+      qtensor3 rt;
       if(type[p] == 0){
 	 
 	 //       n             |vac>
@@ -276,8 +269,7 @@ void comb::rcanon_init(const onspace& space,
 	       for(int k0=0; k0<4; k0++){
 		  auto key = make_tuple(phys_sym[k0],sym1,sym);
 		  rt.qblocks[key] = empty_block;
-	          if((sym.first == sym1.first+phys_sym[k0].first) &&
-	             (sym.second == sym1.second+phys_sym[k0].second)){
+		  if(sym == sym1 + phys_sym[k0]){
 		     auto Bi = get_Bmatrix(phys_space[k0],rbasis1[k1].space,rbasis[k].space);
 		     auto BL = dgemm("N","N",Bi,rbasis[k].coeff);
 		     auto RBL = dgemm("T","N",rbasis1[k1].coeff,BL);
@@ -312,8 +304,7 @@ void comb::rcanon_init(const onspace& space,
 	    	  rt.qspace0[sym0] = ndim;
 	          rt.qblocks[key] = empty_block;
 		  // symmetry conversing combination
-		  if((sym.first == sym1.first+sym0.first) &&
-	             (sym.second == sym1.second+sym0.second)){
+		  if(sym == sym1 + sym0){
 		     vector<matrix> Wrl(ndim);
 		     for(int ibas=0; ibas<nbas; ibas++){
 			auto state0 = rbasis0[k0].space[ibas];
@@ -337,7 +328,7 @@ void comb::rcanon_init(const onspace& space,
 	 } // k
 
       } // type[p]
-      if(debug) rt.print("site_tensor_"+to_string(idx));
+      if(debug) rt.print("rsites_"+to_string(idx));
       rsites[p] = rt;
    } // idx
    // debug
@@ -375,10 +366,10 @@ void comb::rcanon_init(const onspace& space,
 	       } // p0
             } // p1
             auto diff = normF(Sr - identity_matrix(ndim));
-            cout << " qsym=(" << sym.first << "," << sym.second << ")"
-                 << " ndim=" << ndim << " |Sr-Id|_F=" << diff << endl;
+            cout << " qsym=" << sym << " ndim=" << ndim 
+		 << " |Sr-Id|_F=" << diff << endl;
             if(diff > thresh_ortho){
-               Sr.print("Sr_sym("+to_string(sym.first)+","+to_string(sym.second)+")");
+               Sr.print("Sr_sym"+sym.to_string());
                cout << "error: deviate from identity matrix! diff=" << diff << endl;
                exit(1);
             }
@@ -398,7 +389,7 @@ vector<double> comb::rcanon_coeff(const onstate& state){
    // compute fermionic sign changes
    auto sgn = state.permute_sgn(image2);
    // compute <n'|Comb> by contracting all sites
-   qsym sym_vac = make_pair(0,0);
+   qsym sym_vac(0,0);
    qsym sym_p, sym_l, sym_r, sym_u, sym_d;
    matrix mat_r, mat_u;
    sym_r = sym_vac;
@@ -408,8 +399,8 @@ vector<double> comb::rcanon_coeff(const onstate& state){
       if(tp == 0 || tp == 1){
          int orb = topo[i][0];
 	 int na = state[2*orb], nb = state[2*orb+1];
-	 auto sym_p = make_pair(na+nb,na);
-         sym_l = make_pair(sym_p.first+sym_r.first,sym_p.second+sym_r.second);
+	 qsym sym_p(na+nb,na);
+         sym_l = sym_p + sym_r;
 	 auto key = make_tuple(sym_p,sym_r,sym_l);
 	 matrix mat = rsites[make_pair(i,0)].qblocks[key][0];
 	 if(i==nbackbone-1){
@@ -424,8 +415,8 @@ vector<double> comb::rcanon_coeff(const onstate& state){
          for(int j=topo[i].size()-1; j>=1; j--){
 	    int orb = topo[i][j];
 	    int na = state[2*orb], nb = state[2*orb+1];
-	    auto sym_p = make_pair(na+nb,na);
-	    sym_d = make_pair(sym_p.first+sym_u.first,sym_p.second+sym_u.second);
+	    qsym sym_p(na+nb,na);
+	    sym_d = sym_p + sym_u;
 	    auto key = make_tuple(sym_p,sym_u,sym_d);
 	    matrix mat = rsites[make_pair(i,j)].qblocks[key][0];
 	    if(j==topo[i].size()-1){
@@ -439,7 +430,7 @@ vector<double> comb::rcanon_coeff(const onstate& state){
 	 //       u
 	 //       |
 	 // l--<--*--<--r
-	 sym_l = make_pair(sym_u.first+sym_r.first,sym_u.second+sym_r.second);
+	 sym_l = sym_u + sym_r;
 	 auto key = make_tuple(sym_u,sym_r,sym_l);
 	 auto& blk = rsites[make_pair(i,0)].qblocks[key];
 	 int dim_r = blk[0].rows(), dim_l = blk[0].cols(); 

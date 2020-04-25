@@ -1,15 +1,37 @@
 #include "../settings/global.h"
 #include "../core/linalg.h"
 #include "tns_pspace.h"
-#include <map>
-#include <tuple>
-#include <cmath>
 #include <cassert>
+#include <cmath>
+#include <map>
 
 using namespace std;
 using namespace fock;
 using namespace linalg;
 using namespace tns;
+
+// renormalized states from determinants
+void renorm_sector::print(const string msg, const int level){
+   cout << "renorm_sector: " << msg << " qsym=" << sym 
+        << " shape=" << coeff.rows() << "," << coeff.cols() << endl; 
+   if(level >= 1){
+      for(int i=0; i<space.size(); i++){
+         cout << " idx=" << i << " state=" << space[i].to_string2() << endl;
+      }
+   }
+   if(level >= 2) coeff.print("coeff");
+}
+
+// rbasis for leaves
+renorm_basis tns::get_rbasis_phys(){
+   renorm_basis rbasis(4);
+   for(int i=0; i<4; i++){
+      rbasis[i].sym = phys_sym[i]; 
+      rbasis[i].space.push_back(phys_space[i]);
+      rbasis[i].coeff = linalg::identity_matrix(1);
+   }
+   return rbasis;
+}
 
 // factorize the space into products of two spaces 
 void product_space::get_pspace(const onspace& space, const int n){
@@ -64,40 +86,23 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
    if(debug) cout << "\nproduct_space::projection thresh="
 	          << thresh << endl;
    // collect states with the same symmetry (N,NA)
-   map<pair<int,int>,vector<int>> qsecA; 
+   map<qsym,vector<int>> qsecA; 
    for(int i=0; i<dimA; i++){
       int ne = spaceA[i].nelec();
       int ne_a = spaceA[i].nelec_a();
-      qsecA[make_pair(ne,ne_a)].push_back(i); 
+      qsecA[qsym(ne,ne_a)].push_back(i); 
    }
-   /* 
-   // print only
-   int idx = 0;
-   for(auto it = qsecA.cbegin(); it != qsecA.cend(); ++it){
-      const pair<int,int>& sym = it->first;
-      const vector<int>& idxA = it->second;
-      int dimAs = idxA.size();
-      if(debug){
-         cout << "\nidx=" << idx << " symA(Ne,Na)=(" 
-	      << sym.first << "," << sym.second << ")"
-              << " dim=" << dimAs << endl;
-      }
-      cout << " ia=0 : " << spaceA[idxA[0]].to_string2() << endl;
-      idx++;
-   }
-   */
    // loop over symmetry sectors
    int idx = 0;
    int dimAc = 0;
    double sum = 0.0;
    double SvN = 0.0;
    for(auto it = qsecA.cbegin(); it != qsecA.cend(); ++it){
-      const pair<int,int>& sym = it->first;
-      const vector<int>& idxA = it->second;
+      auto& sym = it->first;
+      auto& idxA = it->second;
       int dimAs = idxA.size();
       if(debug){
-         cout << "\nidx=" << idx << " symA(Ne,Na)=(" 
-	      << sym.first << "," << sym.second << ")"
+         cout << "\nidx=" << idx << " symA(Ne,Na)=" << sym
               << " dim=" << dimAs << endl;
 	 for(int i=0; i<dimAs; i++){
 	    cout << " ia=" << i << " : " << spaceA[idxA[i]].to_string2() << endl;
@@ -166,18 +171,17 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
    if(debug){
       cout << endl;
       // also check qsecB
-      map<pair<int,int>,vector<int>> qsecB; 
+      map<qsym,vector<int>> qsecB; 
       for(int i=0; i<dimB; i++){
          int ne = spaceB[i].nelec();
          int ne_a = spaceB[i].nelec_a();
-         qsecB[make_pair(ne,ne_a)].push_back(i); 
+         qsecB[qsym(ne,ne_a)].push_back(i); 
       }
       for(auto& pr : qsecB){
-         const pair<int,int>& sym = pr.first;
-         vector<int>& idxB = pr.second;
+         auto& sym = pr.first;
+         auto& idxB = pr.second;
          int dimBs = idxB.size();
-         cout << "symB=" << sym.first << ":" << sym.second 
-              << " dim=" << dimBs << endl;
+         cout << "symB=" << sym << " dim=" << dimBs << endl;
       }
    }
    return make_pair(dimAc,SvN); 
@@ -193,14 +197,13 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
                         << scientific << thresh << endl;
    renorm_basis rbasis;				     
    // 1. collect states with the same symmetry (N,NA)
-   using qsym = pair<int,int>;
    map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
    map<qsym,map<int,int>> qmapA; // index in spaceA to idxA
    map<qsym,vector<tuple<int,int,int>>> qlst;
    for(int ib=0; ib<dimB; ib++){
       int ne = spaceB[ib].nelec();
       int ne_a = spaceB[ib].nelec_a();
-      qsym symB = make_pair(ne,ne_a);
+      qsym symB(ne,ne_a);
       qsecB[symB].push_back(ib);
       for(const auto& pia : colB[ib]){
 	 int ia = pia.first;
@@ -219,15 +222,14 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
    int idx = 0, dimBc = 0, dB = 0, dA = 0;
    double sum = 0.0, SvN = 0.0;
    for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
-      const qsym& symB = it->first;
-      const auto& idxB = it->second;
+      auto& symB = it->first;
+      auto& idxB = it->second;
       int dimBs = idxB.size(); 
       int dimAs = qmapA[symB].size();
       dB += dimBs;
       dA += dimAs;
       if(debug_level){
-         cout << "idx=" << idx << " symB(Ne,Na)=(" 
-	      << symB.first << "," << symB.second << ")"
+         cout << "idx=" << idx << " symB(Ne,Na)=(" << symB 
               << " dimBs=" << dimBs
 	      << " dimAs=" << qmapA[symB].size() 
 	      << endl;
