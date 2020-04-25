@@ -16,7 +16,7 @@ comb_rbases comb::get_rbases(const onspace& space,
 		    	     const vector<vector<double>>& vs,
 		    	     const double thresh_proj){
    auto t0 = global::get_time();
-   bool debug = true;
+   bool debug = false;
    cout << "\ncomb::get_rbases thresh_proj=" << scientific << thresh_proj << endl;
    comb_rbases rbases;
    vector<pair<int,int>> shapes; // for debug
@@ -99,7 +99,7 @@ qtensor3 comb::get_rwfuns(const onspace& space,
 		          const vector<vector<double>>& vs,
 		          const vector<int>& order,
 		          const renorm_basis& rbasis){
-   bool debug = true;
+   bool debug = false;
    cout << "\ncomb::get_rwfuns" << endl;
    // transform SCI coefficient
    onspace space2;
@@ -198,7 +198,7 @@ void comb::rcanon_init(const onspace& space,
 		       const double thresh_proj,
 		       const double thresh_ortho){
    auto t0 = global::get_time();
-   bool debug = true;
+   bool debug = false;
    cout << "\ncomb::rcanon_init" << endl;
    // compute renormalized bases {|r>}
    auto rbases = get_rbases(space, vs, thresh_proj);
@@ -384,8 +384,6 @@ void comb::rcanon_init(const onspace& space,
 
 // <n|Comb[i]>
 vector<double> comb::rcanon_coeff(const onstate& state){
-   int n = rsites[make_pair(0,0)].get_dim();
-   vector<double> coeff(n);
    // compute fermionic sign changes
    auto sgn = state.permute_sgn(image2);
    // compute <n'|Comb> by contracting all sites
@@ -445,7 +443,9 @@ vector<double> comb::rcanon_coeff(const onstate& state){
 	 sym_r = sym_l;
       } // tp
    } // j
+   int n = rsites[make_pair(0,0)].get_dim();
    assert(mat_r.rows() == 1 && mat_r.cols() == n);
+   vector<double> coeff(n);
    for(int j=0; j<n; j++){
       coeff[j] = sgn*mat_r(0,j);
    }

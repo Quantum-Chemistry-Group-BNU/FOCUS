@@ -88,8 +88,10 @@
 	  - implement wf for the last site from SCI wf
  	  - implement <n|comb> for checking
 
- 20200425 refactorize the tns part to make them more modular
+ 202004xx refactorize the tns part to make them more modular
 	  - essential for future developement
+	  - separate into qsym, phys, qtensor[2,3,4]
+	  - tensor contraction for qtensor	  
 
  2020xxxx initialize normal & complementary operators
 	  - serializaiton

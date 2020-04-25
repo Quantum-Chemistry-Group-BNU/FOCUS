@@ -144,7 +144,7 @@ void comb::init(){
    assert(sweep_seq.size() == 2*(ntotal-1));
 }
 
-void comb::print(){
+void comb::print() const{
    cout << "\ncomb::print" << endl;
    cout << "nbackbone=" << nbackbone << " " 
 	<< "nphysical=" << nphysical << " "
@@ -165,7 +165,7 @@ void comb::print(){
       auto p = rcoord[i];
       cout << "i=" << i << " : (" << p.first << "," << p.second << ")" 
 	   << "[" << topo[p.first][p.second] << "]" 
-	   << " type=" << type[p] << endl;
+	   << " type=" << type.at(p) << endl;
    }
    cout << "--- rsupport ---" << endl;
    for(const auto& p : rsupport){
