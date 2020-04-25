@@ -9,6 +9,7 @@
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
 #include "../utils/tns_comb.h"
+#include "../utils/tns_oper.h"
 #include "../settings/global.h"
 #include "../io/input.h"
 #include <iostream>
@@ -82,9 +83,18 @@ int tests::test_comb(){
    auto ovlp = comb.rcanon_ovlp(sci_space, vs);
    ovlp.print("ovlp");
 
-   // comb.energy();
+   // check energy
+   auto Smat = fci::get_Smat(sci_space, vs);
+   auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
+   Smat.print("Smat");
+   Hmat.print("Hmat");
+  
+   auto Sij = tns::get_Sij(comb, comb);
+   Sij.print("Sij");
+   auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
+   Hij.print("Hij");
 
-   // comb.sweep();
+   // optimization
 
    return 0;
 }
