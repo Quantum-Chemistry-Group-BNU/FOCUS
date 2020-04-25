@@ -1,8 +1,7 @@
 #ifndef TNS_COMB_H
 #define TNS_COMB_H
 
-#include <boost/serialization/serialization.hpp>
-#include "serialize_tuple.h"
+#include "../core/serialization.h"
 #include "../core/onspace.h"
 #include "../core/matrix.h"
 #include "tns_pspace.h"

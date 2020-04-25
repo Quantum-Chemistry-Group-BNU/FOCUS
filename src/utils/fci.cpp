@@ -371,3 +371,48 @@ void fci::ci_solver(vector<double>& es,
    sparse_hamiltonian sparseH;
    ci_solver(sparseH, es, vs, space, int2e, int1e, ecore);
 }
+
+// compute S & H
+matrix fci::get_Smat(const onspace& space,
+ 		     const vector<vector<double>>& vs){
+   int dim = space.size();
+   int n = vs.size();
+   matrix Smat(n,n);
+   for(int j=0; j<n; j++){
+      for(int i=0; i<n; i++){
+   	 // SIJ = <I|S|J>
+	 Smat(i,j) = ddot(dim,vs[i].data(),vs[j].data());
+      }
+   }
+   return Smat;
+}
+
+matrix fci::get_Hmat(const onspace& space,
+ 		     const vector<vector<double>>& vs,
+	       	     const integral::two_body& int2e,
+	       	     const integral::one_body& int1e,
+	             const double ecore){
+   // setup product_space
+   product_space pspace;
+   pspace.get_pspace(space);
+   // setupt coupling_table
+   coupling_table ctabA, ctabB;
+   ctabA.get_C11(pspace.spaceA);
+   ctabB.get_C11(pspace.spaceB);
+   // compute sparse_hamiltonian
+   sparse_hamiltonian sparseH;
+   sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
+		   	   int2e, int1e, ecore);
+   int dim = space.size();
+   int n = vs.size();
+   matrix Hmat(n,n);
+   for(int j=0; j<n; j++){
+      vector<double> Hx(dim,0.0);
+      fci::get_Hx(Hx.data(),vs[j].data(),sparseH);
+      for(int i=0; i<n; i++){
+         // HIJ = <I|H|J>
+	 Hmat(i,j) = ddot(dim,vs[i].data(),Hx.data());
+      }
+   }
+   return Hmat;
+}

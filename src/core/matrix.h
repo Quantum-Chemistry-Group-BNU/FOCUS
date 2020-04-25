@@ -1,7 +1,7 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <boost/serialization/serialization.hpp>
+#include "serialization.h"
 #include <iostream>
 #include <algorithm>
 #include <cassert>

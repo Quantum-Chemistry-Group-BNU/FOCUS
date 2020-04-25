@@ -1,10 +1,5 @@
 #include "fci.h"
-#include <fstream>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/binary_object.hpp>
+#include "../core/serialization.h"
 
 using namespace std;
 using namespace fock;

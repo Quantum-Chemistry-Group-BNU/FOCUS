@@ -110,6 +110,16 @@ void ci_load(fock::onspace& space,
 	     std::vector<std::vector<double>>& vs,
 	     const std::string fname="ci.info");
 
+// compute S & H
+linalg::matrix get_Smat(const fock::onspace& space,
+ 		        const std::vector<std::vector<double>>& vs);
+
+linalg::matrix get_Hmat(const fock::onspace& space,
+ 		        const std::vector<std::vector<double>>& vs,
+	       	        const integral::two_body& int2e,
+	       	        const integral::one_body& int1e,
+	                const double ecore);
+ 
 } // fci
 
 #endif

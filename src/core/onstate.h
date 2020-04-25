@@ -1,7 +1,7 @@
 #ifndef ONSTATE_H
 #define ONSTATE_H
 
-#include <boost/serialization/serialization.hpp>
+#include "serialization.h"
 #include <boost/functional/hash.hpp>
 #include <iostream>
 #include <cassert>
