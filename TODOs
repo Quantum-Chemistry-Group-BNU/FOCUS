@@ -91,7 +91,7 @@
  202004xx refactorize the tns part to make them more modular
 	  - essential for future developement
 	  - separate into qsym, phys, qtensor[2,3,4]
-	  - tensor contraction for qtensor	  
+	  - implement useful tensor contractions for qtensor
 
  2020xxxx initialize normal & complementary operators
 	  - serializaiton

@@ -89,10 +89,10 @@ int tests::test_comb(){
    Smat.print("Smat");
    Hmat.print("Hmat");
   
-   //auto Sij = tns::get_Sij(comb, comb);
-   //Sij.print("Sij");
-   //auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
-   //Hij.print("Hij");
+   auto Sij = tns::get_Sij(comb, comb);
+   auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
+   Sij.print("Sij");
+   Hij.print("Hij");
 
    // optimization
 

@@ -13,10 +13,23 @@ namespace tns{
 // --- rank-2 tensor ---
 // matrix <in1|o0|out> = [o0](in1,out)
 struct qtensor2{
+   private:
+      friend class boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+         ar & sym;
+	 ar & qrow;
+	 ar & qcol;
+	 ar & qblocks;
+      }
    public:
-      qsym qsym0;
-      qsym_space qspace1; // row
-      qsym_space qspace;  // col
+      inline int get_dim_row() const{ return qsym_space_dim(qrow); }
+      inline int get_dim_col() const{ return qsym_space_dim(qcol); }
+      linalg::matrix to_matrix() const;
+   public:
+      qsym sym;
+      qsym_space qrow;
+      qsym_space qcol;
       std::map<std::pair<qsym,qsym>,linalg::matrix> qblocks;
 };
 
@@ -29,25 +42,29 @@ struct qtensor3{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-         ar & qspace0;
-	 ar & qspace1;
-	 ar & qspace;
+         ar & qmid;
+         ar & qrow;
+	 ar & qcol;
 	 ar & qblocks;
       }
    public:
-      inline int get_dim0() const{ return qsym_space_dim(qspace0); }
-      inline int get_dim1() const{ return qsym_space_dim(qspace1); }
-      inline int get_dim() const{ return qsym_space_dim(qspace); }
+      inline int get_dim_mid() const{ return qsym_space_dim(qmid); }
+      inline int get_dim_row() const{ return qsym_space_dim(qrow); }
+      inline int get_dim_col() const{ return qsym_space_dim(qcol); }
       void print(const std::string msg, const int level=0);
    public:
-      qsym_space qspace0; // central [sym,dim]
-      qsym_space qspace1; // in [sym,dim] - row
-      qsym_space qspace;  // out [sym,dim] - col
+      qsym_space qmid; // [sym,dim] - middle
+      qsym_space qrow; // [sym,dim] - row
+      qsym_space qcol; // [sym,dim] - col
       std::map<std::tuple<qsym,qsym,qsym>,std::vector<linalg::matrix>> qblocks;
 };
 
 // --- tensor linear algebra : contractions ---
-//qtensor2 contractCR(const qtensor3 qta, const qtensor3 qtb);
+qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b);
+qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b);
+qtensor3 contract_qt3_qt2_r(const qtensor3& qt3, const qtensor2& qt2);
+qtensor3 contract_qt3_qt2_l(const qtensor3& qt3, const qtensor2& qt2);
+qtensor3 contract_qt3_qt2_c(const qtensor3& qt3, const qtensor2& qt2);
 
 } // tns
 
