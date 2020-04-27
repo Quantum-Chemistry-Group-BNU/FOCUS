@@ -19,7 +19,8 @@ void fci::get_rdm1(const onspace& space,
    cout << "\nfci:get_rdm1" << endl;
    bool debug_rdm1 = false;
    auto t0 = global::get_time();
-  
+   // initialization 
+   rdm1 = 0.0;
    // setup product_space
    product_space pspace;
    pspace.get_pspace(space);
@@ -78,10 +79,12 @@ void fci::get_rdm1(const onspace& space,
 	<< global::get_duration(t1-t0) << " s" << endl;
    // debug by comparing against the brute-force implementation 
    if(debug_rdm1){
+      cout << "\ndebug fci::get_rdm1 ..." << endl;
       matrix rdm1b(rdm1.rows(),rdm1.cols());
       fock::get_rdm1(space, civec1, civec2, rdm1b);
+      cout << "tr(rdm1)=" << rdm1b.trace() << endl;
       auto t2 = global::get_time();
-      cout << "timing for rdm1 : " << setprecision(2) 
+      cout << "timing for fock::get_rdm1 : " << setprecision(2) 
    	   << global::get_duration(t2-t1) << " s" << endl;
       auto rdm1_diff = normF(rdm1b - rdm1);
       cout << "rdm1_diff=" << rdm1_diff << endl;
@@ -99,7 +102,9 @@ void fci::get_rdm2(const sparse_hamiltonian& sparseH,
    cout << "\nfci:get_rdm2" << endl;
    bool debug_rdm2 = false;
    auto t0 = global::get_time();
-   
+   // initialization 
+   rdm2 = 0.0;
+   // connected  
    int k = space[0].size();
    for(int i=0; i<sparseH.dim; i++){
       // diagonal term
@@ -149,10 +154,12 @@ void fci::get_rdm2(const sparse_hamiltonian& sparseH,
 	<< global::get_duration(t1-t0) << " s" << endl;
    // debug by comparing against the brute-force implementation 
    if(debug_rdm2){
+      cout << "\ndebug fci::get_rdm2 ..." << endl;
       matrix rdm2b(rdm2.rows(),rdm2.cols());
       fock::get_rdm2(space, civec1, civec2, rdm2b);
+      cout << "tr(rdm2)=" << 2.0*rdm2.trace() << endl;
       auto t2 = global::get_time();
-      cout << "timing for rdm2 : " << setprecision(2) 
+      cout << "timing for fock::get_rdm2 : " << setprecision(2) 
    	   << global::get_duration(t2-t1) << " s" << endl;
       auto rdm2_diff = normF(rdm2b - rdm2);
       cout << "rdm2_diff=" << rdm2_diff << endl;
