@@ -22,7 +22,7 @@ ifeq ($(USE_MPI), yes)
 else
 	CXX = g++
 	CC = gcc
-	LFLAGS = -L${BOOST}/lib -lboost_serialization #-lrt
+	LFLAGS = -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 	
 endif
 
 BIN_DIR = ./bin

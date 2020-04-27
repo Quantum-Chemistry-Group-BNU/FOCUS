@@ -95,7 +95,7 @@
 	  - checked by evaluating <Comb|Comb> 
 
  2020xxxx initialize normal & complementary operators
-	  - serializaiton
+	  - serializaiton: -lboost_system -lboost_filesystem
 	  - data structure for operators
 	  - recursive build of operators (blocking & renormalization)
 	  - check by evaluating energies
