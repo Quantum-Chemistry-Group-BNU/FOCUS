@@ -25,8 +25,8 @@ matrix tns::get_Sij(const comb& bra,
    matrix Sij(m,n);
    // use tensor contraction to compute Sij
    if(bra.nbackbone != ket.nbackbone){
-      cout << "error: shapes of two combs should be the same!" << endl;
-      cout << "bra/ket nbackbone=" << bra.nbackbone << "," << ket.nbackbone << endl; 
+      cout << "error: bra/ket nbackbone=" << bra.nbackbone 
+	   << "," << ket.nbackbone << endl; 
       exit(1); 
    }
    int nbackbone = bra.nbackbone;
@@ -36,9 +36,8 @@ matrix tns::get_Sij(const comb& bra,
       auto p = make_pair(i,0);
       int tp = bra.type.at(p);
       if(tp == 0 || tp == 1){
-         // site on backbone with physical index
 	 if(i==nbackbone-1){
-	    qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),ket.rsites.at(p)); 
+	    qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),ket.rsites.at(p));
 	 }else{
 	    auto qtmp = contract_qt3_qt2_r(ket.rsites.at(p),qt2_r);
 	    qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),qtmp);
@@ -55,7 +54,7 @@ matrix tns::get_Sij(const comb& bra,
 	 } // j
 	 // internal site without physical index
 	 auto qtmp = contract_qt3_qt2_r(ket.rsites.at(p),qt2_r);
-	 qtmp = contract_qt3_qt2_c(qtmp,qt2_u);
+	 qtmp = contract_qt3_qt2_c(qtmp,qt2_u); // upper branch
 	 qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),qtmp);
       }
    } // i
@@ -74,6 +73,41 @@ matrix tns::get_Hij(const comb& bra,
    int n = ket.rsites.at(start).get_dim_row();
    matrix Hij(m,n);
    // use renormalization of operators to compute Hij
-   
+   if(bra.nbackbone != ket.nbackbone){
+      cout << "error: bra/ket nbackbone=" << bra.nbackbone 
+	   << "," << ket.nbackbone << endl; 
+      exit(1); 
+   }
+   int nbackbone = bra.nbackbone;
+   qtensor2 qt2_l, qt2_u;
+   // loop over sites on backbone
+   for(int i=0; i<nbackbone; i++){
+      auto p = make_pair(i,0);
+      int tp = bra.type.at(p);
+      if(tp == 0 || tp == 1){
+	 if(i==0){
+	    qt2_l = contract_qt3_qt3_lc(bra.rsites.at(p),ket.rsites.at(p)); 
+	 }else{
+	    auto qtmp = contract_qt3_qt2_l(ket.rsites.at(p),qt2_l);
+	    qt2_l = contract_qt3_qt3_lc(bra.rsites.at(p),qtmp);
+	 }
+      }else if(tp == 3){
+         for(int j=bra.topo[i].size()-1; j>=1; j--){
+	    auto pj = make_pair(i,j);
+            if(j==bra.topo[i].size()-1){
+	       qt2_u = contract_qt3_qt3_cr(bra.rsites.at(pj),ket.rsites.at(pj));	   
+	    }else{
+	       auto qtmp = contract_qt3_qt2_r(ket.rsites.at(pj),qt2_u);
+	       qt2_u = contract_qt3_qt3_cr(bra.rsites.at(pj),qtmp);
+	    }
+	 } // j
+	 // internal site without physical index
+	 auto qtmp = contract_qt3_qt2_l(ket.rsites.at(p),qt2_l);
+	 qtmp = contract_qt3_qt2_c(qtmp,qt2_u);
+	 qt2_l = contract_qt3_qt3_lc(bra.rsites.at(p),qtmp);
+      }
+   } // i
+   // final: qt2_r to normal matrix
+   Hij = qt2_l.to_matrix();
    return Hij;
 }

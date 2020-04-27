@@ -85,13 +85,13 @@ int tests::test_comb(){
 
    // check energy
    auto Smat = fci::get_Smat(sci_space, vs);
-   auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Smat.print("Smat");
+   auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hmat.print("Hmat");
   
    auto Sij = tns::get_Sij(comb, comb);
-   auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
    Sij.print("Sij");
+   auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
    Hij.print("Hij");
 
    // optimization
