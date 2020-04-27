@@ -17,7 +17,7 @@ struct qtensor2{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-         ar & sym;
+         ar & msym;
 	 ar & qrow;
 	 ar & qcol;
 	 ar & qblocks;
@@ -25,9 +25,10 @@ struct qtensor2{
    public:
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
+      void print(const std::string msg, const int level=0);
       linalg::matrix to_matrix() const;
    public:
-      qsym sym;
+      qsym msym;
       qsym_space qrow;
       qsym_space qcol;
       std::map<std::pair<qsym,qsym>,linalg::matrix> qblocks;
@@ -62,9 +63,9 @@ struct qtensor3{
 // --- tensor linear algebra : contractions ---
 qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b);
 qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b);
-qtensor3 contract_qt3_qt2_r(const qtensor3& qt3, const qtensor2& qt2);
-qtensor3 contract_qt3_qt2_l(const qtensor3& qt3, const qtensor2& qt2);
-qtensor3 contract_qt3_qt2_c(const qtensor3& qt3, const qtensor2& qt2);
+qtensor3 contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b);
+qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
+qtensor3 contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b);
 
 } // tns
 

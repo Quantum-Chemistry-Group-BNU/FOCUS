@@ -1,5 +1,6 @@
 #include "tns_comb.h" 
 #include "tns_oper.h"
+#include "tns_qtensor.h"
 
 using namespace std;
 using namespace linalg;
@@ -37,10 +38,10 @@ matrix tns::get_Sij(const comb& bra,
       if(tp == 0 || tp == 1){
          // site on backbone with physical index
 	 if(i==nbackbone-1){
-	    //qt2_r = contract33CR(bra.rsites[p],ket.rsites[p]); 
+	    qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),ket.rsites.at(p)); 
 	 }else{
-	    //auto qtmp = contractR(ket.rsites[p],qt2_r)
-	    //auto qt2_r = contract22CR(qtmp,bra.rsites[p])
+	    auto qtmp = contract_qt3_qt2_r(ket.rsites.at(p),qt2_r);
+	    qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),qtmp);
 	 }
       }else if(tp == 3){
          for(int j=bra.topo[i].size()-1; j>=1; j--){
