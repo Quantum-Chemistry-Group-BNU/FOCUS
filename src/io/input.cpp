@@ -19,6 +19,7 @@ void input::read_input(input::schedule& schd, string fname){
    vector<int> sweep_iter;
    vector<double> sweep_eps;
 
+   schd.scratch = ".";
    schd.nelec = 0;
    schd.nroots = 1;
    schd.nseeds = 0;
@@ -45,6 +46,9 @@ void input::read_input(input::schedule& schd, string fname){
       getline(istrm,line);
       if(line.empty() || line[0]=='#'){
 	 continue; // skip empty and comments    
+      }else if(line.substr(0,7)=="scratch"){
+         istringstream is(line.substr(7));
+	 is >> schd.scratch;
       }else if(line.substr(0,5)=="nelec"){
 	 schd.nelec = stoi(line.substr(5)); // [5,end)
       }else if(line.substr(0,6)=="nroots"){
@@ -128,6 +132,7 @@ void input::read_input(input::schedule& schd, string fname){
    //-------
    // check
    //-------
+   cout << "scratch = " << schd.scratch << endl;
    cout << "nelec = " << schd.nelec << endl;
    assert(schd.nelec > 0);
    cout << "nroots = " << schd.nroots << endl;

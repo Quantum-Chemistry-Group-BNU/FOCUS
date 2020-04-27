@@ -9,6 +9,10 @@ namespace input{
 
 struct schedule{
 public:
+   void create_scratch();
+   void remove_scratch();
+public:
+   std::string scratch;
    int nelec;
    int nroots;
    std::string integral_file;
