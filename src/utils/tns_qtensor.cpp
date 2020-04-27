@@ -7,7 +7,7 @@ using namespace linalg;
 using namespace tns;
 
 // --- rank-2 tensor ---
-void qtensor2::print(const string msg, const int level){
+void qtensor2::print(const string msg, const int level) const{
    cout << "qtensor2: " << msg << " msym=" << msym << endl;
    qsym_space_print(qrow,"qrow");
    qsym_space_print(qcol,"qcol");
@@ -63,7 +63,7 @@ matrix qtensor2::to_matrix() const{
 }
 
 // --- rank-3 tensor ---
-void qtensor3::print(const string msg, const int level){
+void qtensor3::print(const string msg, const int level) const{
    cout << "qtensor3: " << msg << endl;
    qsym_space_print(qmid,"qmid");
    qsym_space_print(qrow,"qrow");
@@ -124,8 +124,8 @@ qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b){
 	       auto& blkb = qt3b.qblocks.at(keyb);
 	       if(blka.size() == 0 || blkb.size() == 0) continue;
 	       ilist.push_back(make_pair(msym,xsym));
-	    } // x
-	 } // m
+	    } // qx
+	 } // qm
 	 // perform contractions
 	 auto key = make_pair(rsym,csym);
 	 if(ilist.size() == 0){
@@ -143,11 +143,11 @@ qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b){
                for(int m=0; m<mdim; m++){
 	          mat += dgemm("N","T",blkb[m],blka[m]); 
 	       } // m
-	    }
+	    } // qm,qx
 	    qt2.qblocks[key] = mat;
 	 }
-      } // c
-   } // r
+      } // qc
+   } // qr
    return qt2;
 }
 
@@ -180,7 +180,7 @@ qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b){
 	       auto& blkb = qt2b.qblocks.at(keyb);
 	       if(blka.size() == 0 || blkb.size() == 0) continue;
 	       ilist.push_back(xsym);
-	    }
+	    } // qx
 	    // perform contractions
 	    auto key = make_tuple(msym,rsym,csym);
 	    if(ilist.size() == 0){
@@ -198,9 +198,66 @@ qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b){
 	          qt3.qblocks[key].push_back(mat);
 	       } // m
 	    } 
-	 } // m
-      } // c
-   } // r
+	 } // qm
+      } // qc
+   } // qr
+   return qt3;
+}
+
+//     |m/c
+//     *	  
+//     |x/r  
+//  r--*--c
+qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b){
+   qtensor3 qt3;
+   qt3.qmid = qt2b.qcol;
+   qt3.qrow = qt3a.qrow;
+   qt3.qcol = qt3a.qcol;
+   // loop over external indices
+   for(const auto& pm : qt3.qmid){
+      const qsym& msym = pm.first;
+      int mdim = pm.second;
+      for(const auto& pr : qt3.qrow){
+         const qsym& rsym = pr.first; 
+         int rdim = pr.second;
+         for(const auto& pc : qt3.qcol){
+            const qsym& csym = pc.first;
+            int cdim = pc.second;
+	    // loop over contracted indices
+	    vector<qsym> ilist;
+	    for(const auto& px : qt2b.qrow){
+	       const qsym& xsym = px.first;
+	       // contract blocks
+	       auto keya = make_tuple(xsym,rsym,csym);
+	       auto keyb = make_pair(xsym,msym);
+	       auto& blka = qt3a.qblocks.at(keya);
+	       auto& blkb = qt2b.qblocks.at(keyb);
+	       if(blka.size() == 0 || blkb.size() == 0) continue;
+	       ilist.push_back(xsym);
+	    } // qx
+	    // perform contractions
+	    auto key = make_tuple(msym,rsym,csym);
+	    if(ilist.size() == 0){
+	       qt3.qblocks[key] = empty_block;
+	    }else{
+	       for(int m=0; m<mdim; m++){
+	          matrix mat(rdim,cdim);
+		  for(const auto& xsym : ilist){
+	             auto keya = make_tuple(xsym,rsym,csym);
+	             auto keyb = make_pair(xsym,msym);
+	             auto& blka = qt3a.qblocks.at(keya);
+	             auto& blkb = qt2b.qblocks.at(keyb);
+		     int xdim = blkb.rows();
+		     for(int x=0; x<xdim; x++){
+		        mat += blkb(x,m)*blka[x];
+	 	     } // x 
+		  } // qx
+	          qt3.qblocks[key].push_back(mat);
+	       } // m
+	    } 
+	 } // qm
+      } // qc
+   } // qr
    return qt3;
 }
 
@@ -218,10 +275,3 @@ qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b){
 
 }
 
-//     |c
-//     *	  
-//     |r  
-//   --*--
-qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b){
-
-}

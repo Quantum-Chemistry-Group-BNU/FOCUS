@@ -47,16 +47,16 @@ matrix tns::get_Sij(const comb& bra,
          for(int j=bra.topo[i].size()-1; j>=1; j--){
 	    auto pj = make_pair(i,j);
             if(j==bra.topo[i].size()-1){
-	       //qt2_u = contract33CR(bra.rsites[pj],ket.rsites[pj]);	   
+	       qt2_u = contract_qt3_qt3_cr(bra.rsites.at(pj),ket.rsites.at(pj));	   
 	    }else{
-	       //auto qtmp = contractR(ket.rsites[pj],qt2_u)
-	       //auto qt2_u = contract22CR(qtmp,bra.rsites[pj])
-	    } 
+	       auto qtmp = contract_qt3_qt2_r(ket.rsites.at(pj),qt2_u);
+	       qt2_u = contract_qt3_qt3_cr(bra.rsites.at(pj),qtmp);
+	    }
 	 } // j
 	 // internal site without physical index
-	 // auto qtmp = contract(ket.rsites[p],qt2_u);
-	 // qtmp = contract(qtmp,qt2_r);
-	 // qt2_r = contract(bra.rsites[p],qtmp);
+	 auto qtmp = contract_qt3_qt2_r(ket.rsites.at(p),qt2_r);
+	 qtmp = contract_qt3_qt2_c(qtmp,qt2_u);
+	 qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),qtmp);
       }
    } // i
    // final: qt2_r to normal matrix

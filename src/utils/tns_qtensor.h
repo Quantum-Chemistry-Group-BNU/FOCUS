@@ -25,7 +25,7 @@ struct qtensor2{
    public:
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
-      void print(const std::string msg, const int level=0);
+      void print(const std::string msg, const int level=0) const;
       linalg::matrix to_matrix() const;
    public:
       qsym msym;
@@ -52,7 +52,7 @@ struct qtensor3{
       inline int get_dim_mid() const{ return qsym_space_dim(qmid); }
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
-      void print(const std::string msg, const int level=0);
+      void print(const std::string msg, const int level=0) const;
    public:
       qsym_space qmid; // [sym,dim] - middle
       qsym_space qrow; // [sym,dim] - row
