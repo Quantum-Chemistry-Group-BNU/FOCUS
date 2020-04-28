@@ -76,8 +76,10 @@ matrix tns::get_Hij(const comb& bra,
       int tp = bra.type.at(p);
       if(tp == 0 || tp == 1){
 	 if(i==0){
-	    qt2_l = contract_qt3_qt3_lc(bra.rsites.at(p),ket.rsites.at(p)); 
+	    //qt2_l = contract_qt3_qt3_lc(bra.rsites.at(p),ket.rsites.at(p));
+	    //build_local_oper();
 	 }else{
+	    //build_local_oper();
 	    auto qtmp = contract_qt3_qt2_l(ket.rsites.at(p),qt2_l);
 	    qt2_l = contract_qt3_qt3_lc(bra.rsites.at(p),qtmp);
 	 }

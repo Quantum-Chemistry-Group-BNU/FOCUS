@@ -62,6 +62,45 @@ matrix qtensor2::to_matrix() const{
    return mat;
 }
 
+void qtensor2::init_qblocks(){
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      int rdim = pr.second;
+      for(const auto& pc : qcol){
+	 const auto& qc = pc.first;
+	 int cdim = pc.second;
+	 auto key = make_pair(qr,qc);
+         if(qr == msym + qc){
+	    qblocks[key] = matrix(rdim,cdim);
+	 }else{
+	    qblocks[key] = matrix();
+	 }
+      }
+   }
+}
+
+qtensor2 qtensor2::transpose(){
+   qtensor2 qt2;
+   qt2.msym = -msym;
+   qt2.qrow = qcol;
+   qt2.qcol = qrow;
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      int rdim = pr.second;
+      for(const auto& pc : qcol){
+	 const auto& qc = pc.first;
+	 int cdim = pc.second;
+	 auto key = make_pair(qr,qc);
+         if(qr == qt2.msym + qc){
+	    qt2.qblocks[key] = qblocks[make_pair(qc,qr)].transpose();
+	 }else{
+	    qt2.qblocks[key] = matrix();
+	 }
+      }
+   }
+   return qt2;
+}
+
 // --- rank-3 tensor ---
 void qtensor3::print(const string msg, const int level) const{
    cout << "qtensor3: " << msg << endl;

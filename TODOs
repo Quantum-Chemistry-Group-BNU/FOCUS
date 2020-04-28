@@ -97,6 +97,7 @@
  2020xxxx initialize normal & complementary operators
 	  - serializaiton: -lboost_system -lboost_filesystem
 	  - data structure for operators: qtensor2
+	  - operator on dot
 	  - implement recursive build of operators (blocking & renormalization)
 	  - check by evaluating energies
 

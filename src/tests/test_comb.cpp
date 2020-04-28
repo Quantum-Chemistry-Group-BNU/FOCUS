@@ -9,6 +9,7 @@
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
 #include "../utils/tns_comb.h"
+#include "../utils/tns_alg.h"
 #include "../utils/tns_oper.h"
 #include "../settings/global.h"
 #include "../io/input.h"
@@ -88,12 +89,24 @@ int tests::test_comb(){
    Smat.print("Smat");
    auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hmat.print("Hmat");
-  
+
+   // check rdm1
+   int k = int1e.sorb;
+   linalg::matrix rdm1(k,k); 
+   fci::get_rdm1(sci_space, vs[0], vs[0], rdm1);
+   fci::get_rdm1(sci_space, vs[1], vs[1], rdm1);
+   fci::get_rdm1(sci_space, vs[0], vs[1], rdm1);
+
+   schd.create_scratch();
+
    auto Sij = tns::get_Sij(comb, comb);
    Sij.print("Sij");
-   auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
-   Hij.print("Hij");
+  
+   //auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
+   //Hij.print("Hij");
 
+   schd.remove_scratch();
+   
    // optimization
 
    return 0;

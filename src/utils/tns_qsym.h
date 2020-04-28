@@ -35,8 +35,7 @@ class qsym{
       bool operator !=(const qsym& sym) const{
 	 return !(*this == sym);
       }
-      //inline int ne() const{ return _ne; }
-      //inline int na() const{ return _na; }
+      qsym operator -() const{ return qsym(-_ne,-_na); }
       std::string to_string() const;
       friend std::ostream& operator <<(std::ostream& os, const qsym& sym);
       // Abelian symmetry

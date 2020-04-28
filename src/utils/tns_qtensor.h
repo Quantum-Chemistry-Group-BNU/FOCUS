@@ -27,6 +27,8 @@ struct qtensor2{
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
       void print(const std::string msg, const int level=0) const;
       linalg::matrix to_matrix() const;
+      void init_qblocks();
+      qtensor2 transpose();
    public:
       qsym msym;
       qsym_space qrow;
