@@ -5,6 +5,7 @@
 #include "tns_qtensor.h"
 #include "../core/integral.h"
 #include <tuple>
+#include <string>
 
 namespace tns{
 
@@ -37,6 +38,41 @@ qopers oper_dot_ccaa();
 // 2. universal blocking code to deal with
 //    - blocking at type 1,2 site (L/R) {|nr>}
 //    - blocking at type 3 site (L/R) {|ur>}
+
+/*
+void oper_renorm_A(const comb& bra, const comb& ket, comb_coord& coord);
+void oper_renorm_B(const comb& bra, const comb& ket, comb_coord& coord);
+void oper_renorm_H(const comb& bra, const comb& ket, comb_coord& coord);
+void oper_renorm_S(const comb& bra, const comb& ket, comb_coord& coord);
+void oper_renorm_Q(const comb& bra, const comb& ket, comb_coord& coord);
+void oper_renorm_P(const comb& bra, const comb& ket, comb_coord& coord);
+*/
+
+void oper_renorm_C(const comb& bra, 
+		   const comb& ket,
+		   const comb_coord& p, 
+		   const comb_coord& p0,
+		   const int iop,
+		   const std::string scratch);
+
+void oper_renorm_right(const comb& bra, 
+		       const comb& ket,
+		       const comb_coord& p, 
+		       const comb_coord& p0,
+		       const std::string scratch);
+
+void oper_env_right(const comb& bra, 
+		    const comb& ket,
+	            const integral::two_body& int2e,
+	            const integral::one_body& int1e,
+		    const std::string scratch=".");
+
+// io for operators
+std::string oper_fname(const std::string scratch, 
+  		       const comb_coord& p,
+		       const std::string optype);
+void oper_save(const std::string fname, const qopers& qops);
+void oper_load(const std::string fname, qopers& qops);
 
 } // tns
 

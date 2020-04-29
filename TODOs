@@ -94,11 +94,12 @@
 	  - implement tensor contraction kernels for qtensor
 	  - checked by evaluating <Comb|Comb> 
 
- 2020xxxx initialize normal & complementary operators
-	  - serializaiton: -lboost_system -lboost_filesystem
+ 202004xx initialize normal & complementary operators (MOST CHALLENGING PART)
 	  - data structure for operators: qtensor2
-	  - operator on dot
+	  - operators on dot (in memory)
+	  - serializaiton: -lboost_system -lboost_filesystem
 	  - implement recursive build of operators (blocking & renormalization)
+	    - ap^+ 
 	  - check by evaluating energies
 
  2020xxxx basic sweep algorithm

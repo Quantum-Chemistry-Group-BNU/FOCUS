@@ -29,6 +29,7 @@ struct qtensor2{
       linalg::matrix to_matrix() const;
       void init_qblocks();
       qtensor2 transpose();
+      qtensor2 csigned();
    public:
       qsym msym;
       qsym_space qrow;
@@ -64,11 +65,13 @@ struct qtensor3{
 
 // --- tensor linear algebra : contractions ---
 // for right canonical form
-qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b);
+qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b, 
+			     const bool sgnc=false);
 qtensor3 contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b);
 // for left canonical form
-qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b);
+qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b,
+			     const bool sgnl=false);
 qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
 
 } // tns

@@ -101,6 +101,27 @@ qtensor2 qtensor2::transpose(){
    return qt2;
 }
 
+qtensor2 qtensor2::csigned(){
+   qtensor2 qt2;
+   qt2.msym = msym;
+   qt2.qrow = qrow;
+   qt2.qcol = qcol;
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      for(const auto& pc : qcol){
+	 const auto& qc = pc.first;
+	 auto key = make_pair(qr,qc);
+	 double fac = qc.parity();
+         if(qr == qt2.msym + qc){
+	    qt2.qblocks[key] = qblocks[key]*fac;
+	 }else{
+	    qt2.qblocks[key] = matrix();
+	 }
+      }
+   }
+   return qt2;
+}
+
 // --- rank-3 tensor ---
 void qtensor3::print(const string msg, const int level) const{
    cout << "qtensor3: " << msg << endl;
@@ -139,7 +160,9 @@ void qtensor3::print(const string msg, const int level) const{
 //          r---*--\ qt3a
 // q(r,c) =     |m |x     = <r|c> = \sum_n An^C*Bn^T
 //          c---*--/ qt3b
-qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b){
+qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a, 
+				  const qtensor3& qt3b,
+				  const bool sgnc){ 
    qtensor2 qt2;
    qt2.qrow = qt3a.qrow;
    qt2.qcol = qt3b.qrow;
@@ -179,8 +202,9 @@ qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b){
 	       auto& blka = qt3a.qblocks.at(keya);
 	       auto& blkb = qt3b.qblocks.at(keyb);
 	       int mdim = qt3b.qmid.at(msym);
+	       double fac = sgnc ? msym.parity() : 1.0; 
                for(int m=0; m<mdim; m++){
-	          mat += dgemm("N","T",blka[m],blkb[m]); 
+	          mat += dgemm("N","T",blka[m],blkb[m],fac); 
 	       } // m
 	    } // qm,qx
 	    qt2.qblocks[key] = mat;
@@ -193,7 +217,8 @@ qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b){
 //     m  \r2
 //     |  *   = [m](r,r2) = A[m](r,x)*R(r2,x)^T
 //  r--*--/x 
-qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b){
+qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a, 
+				 const qtensor2& qt2b){
    qtensor3 qt3;
    qt3.qmid = qt3a.qmid;
    qt3.qrow = qt3a.qrow;
@@ -247,7 +272,8 @@ qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b){
 //     *	 
 //     |x/c  = [m](r,c) = B(m,x)* A[x](r,c)
 //  r--*--c
-qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b){
+qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a, 
+			 	 const qtensor2& qt2b){
    qtensor3 qt3;
    qt3.qmid = qt2b.qrow;
    qt3.qrow = qt3a.qrow;
@@ -303,7 +329,9 @@ qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b){
 //          /--*--r qt3a
 // q(r,c) = |x |m  	  = <r|c> = \sum_n An^H*Bn
 //          \--*--c qt3b
-qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b){
+qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a, 
+				  const qtensor3& qt3b,
+				  const bool sgnl){
    qtensor2 qt2;
    qt2.qrow = qt3a.qcol;
    qt2.qcol = qt3b.qcol;
@@ -343,8 +371,9 @@ qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b){
 	       auto& blka = qt3a.qblocks.at(keya);
 	       auto& blkb = qt3b.qblocks.at(keyb);
 	       int mdim = qt3b.qmid.at(msym);
+	       double fac = sgnl ? xsym.parity() : 1.0; 
                for(int m=0; m<mdim; m++){
-	          mat += dgemm("T","N",blka[m],blkb[m]); 
+	          mat += dgemm("T","N",blka[m],blkb[m],fac); 
 	       } // m
 	    } // qm,qx
 	    qt2.qblocks[key] = mat;
@@ -357,7 +386,8 @@ qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b){
 //  r/	m 
 //   *  |     = [m](r,c) = L(r,x)*A[m](x,c)
 //  x\--*--c
-qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b){
+qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a, 
+				 const qtensor2& qt2b){
    qtensor3 qt3;
    qt3.qmid = qt3a.qmid;
    qt3.qrow = qt2b.qrow;

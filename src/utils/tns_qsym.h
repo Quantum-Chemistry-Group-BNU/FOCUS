@@ -18,8 +18,10 @@ class qsym{
 	 ar & _na;
       }
    public:
+      // constructors
       qsym(): _ne(0), _na(0) {};
       qsym(const int ne, const int na): _ne(ne), _na(na) {};
+      // assignement
       qsym& operator =(const qsym& sym){
 	 _ne = sym._ne;
 	 _na = sym._na;
@@ -35,10 +37,14 @@ class qsym{
       bool operator !=(const qsym& sym) const{
 	 return !(*this == sym);
       }
-      qsym operator -() const{ return qsym(-_ne,-_na); }
+      inline int ne() const{ return _ne; }
+      inline int na() const{ return _na; }
+      inline double parity() const{ return -2*(_ne%2)+1; }
+      // print
       std::string to_string() const;
       friend std::ostream& operator <<(std::ostream& os, const qsym& sym);
       // Abelian symmetry
+      qsym operator -() const{ return qsym(-_ne,-_na); }
       friend qsym operator +(const qsym& sym1, const qsym& sym2);
       friend qsym operator -(const qsym& sym1, const qsym& sym2);
    private:

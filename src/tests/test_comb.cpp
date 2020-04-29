@@ -105,7 +105,9 @@ int tests::test_comb(){
    //auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
    //Hij.print("Hij");
 
-   schd.remove_scratch();
+   tns::oper_env_right(comb, comb, int2e, int1e, schd.scratch);
+
+   //schd.remove_scratch();
    
    // optimization
 

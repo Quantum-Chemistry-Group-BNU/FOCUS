@@ -39,11 +39,12 @@ void linalg::dgemm(const char* TRANSA, const char* TRANSB,
 
 // shorthand for A*B
 matrix linalg::dgemm(const char* TRANSA, const char* TRANSB,
-		     const matrix& A, const matrix& B){
+		     const matrix& A, const matrix& B,
+		     const double alpha){
    int M = (toupper(TRANSA[0]) == 'N')? A.rows() : A.cols(); 
    int N = (toupper(TRANSB[0]) == 'N')? B.cols() : B.rows(); 
    matrix C(M,N);
-   dgemm(TRANSA,TRANSB,1.0,A,B,0.0,C);
+   dgemm(TRANSA,TRANSB,alpha,A,B,0.0,C);
    return C;
 }
 

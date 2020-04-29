@@ -41,7 +41,8 @@ void dgemm(const char* TRANSA, const char* TRANSB,
 
 // shorthand for A*B
 matrix dgemm(const char* TRANSA, const char* TRANSB,
-	     const matrix& A, const matrix& B);
+	     const matrix& A, const matrix& B,
+	     const double alpha=1.0);
 
 // eigenvalues: 
 // order=0 from small to large; 
