@@ -101,9 +101,16 @@
 	  - implement recursive build of operators (blocking & renormalization)
 	    - ap^+
 	    - ap^+aq (checked against fci_rdm1 for <psi1|p^+q|psi2>)
- 
+	    - ap^+aq^+
 	  - check by evaluating energies
-
+	  - note: currently the adjoint is used for operators like ap,
+		  hence the renorm functions work only for <comb1|o|comb2>,
+		  not for <combA|o|combB> where sites are different for A,B.
+		  The impelementation of state-specific transition properties
+		  requires more operators to be constructed in future.
+		  Also, we do not use Hermicity of Bpq/Qps, which allows to 
+		  compute <rdm1|p^+q|rdm2> for state-averaged comb states.
+		  
  2020xxxx basic sweep algorithm
 	  - implement H*x
 	  - decimation 

@@ -10,9 +10,18 @@
 
 namespace tns{
 
-// build different types of operators specified by
-// - coord (i,j)
-// - kind (Symbol)
+// Build 7 types of operators specified by coord and kind 
+//
+// {C,A,B}:
+//    Cp = ap^+
+//    Bpq = ap^+aq (p<=q) 
+//    Apq = ap^+aq^+ (p<q)
+// 
+// {H,S,Q,P}:
+//    Qps = <pq||sr> aq^+ar (p<=s)
+//    Ppq = <pq||rs> aras [r>s] (p<q)
+//    Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
+//    H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
 
 // 1. exact construction at type 0 site {|n>}
 using qopers = std::vector<qtensor2>;
@@ -22,46 +31,32 @@ qopers oper_dot_ca(const int k0);
 qopers oper_dot_caa(const int k0);
 qopers oper_dot_ccaa(const int k0);
 
-// 7 kinds of operators:
-//
-// {C,A,B}
-// Cp = ap^+
-// Apq = ap^+aq^+
-// Bpq = ap^+aq  
-//
-// {H,S,Q,P}
-// H = hpq ap^+aq + 1/4<pq||sr> ap^+aq^+aras
-// Sp = 1/2 hpq aq + <pq||sr> aq^+ ar as (r<s)
-// Qps = <pq||sr> aq^+ ar
-// Ppq = <pq||rs> ar as (r<s)
+// 2. universal blocking code for {|nr>} and {|ln>}
 
-// 2. universal blocking code to deal with
-//    - blocking at type 1,2 site (L/R) {|nr>}
-//    - blocking at type 3 site (L/R) {|ur>}
+// --- kernel ---
+void oper_kernel_rightC(const qtensor3& bsite,
+		        const qtensor3& ksite,
+		        const qopers& cqops,
+		        const qopers& rqops,
+		        qopers& qops);
 
-/*
-void oper_renorm_A(const comb& bra, const comb& ket, comb_coord& coord);
-void oper_renorm_B(const comb& bra, const comb& ket, comb_coord& coord);
-void oper_renorm_H(const comb& bra, const comb& ket, comb_coord& coord);
-void oper_renorm_S(const comb& bra, const comb& ket, comb_coord& coord);
-void oper_renorm_Q(const comb& bra, const comb& ket, comb_coord& coord);
-void oper_renorm_P(const comb& bra, const comb& ket, comb_coord& coord);
-*/
+void oper_kernel_rightB(const qtensor3& bsite,
+		        const qtensor3& ksite,
+		        const qopers& cqops_ca,
+		        const qopers& cqops_c,
+		        const qopers& rqops_ca,
+		        const qopers& rqops_c,
+		        qopers& qops);
 
-void oper_renorm_rightC_kernel(const qtensor3& bsite,
-		               const qtensor3& ksite,
-		               const qopers& cqops,
-		               const qopers& rqops,
-		               qopers& qops);
+void oper_kernel_rightA(const qtensor3& bsite,
+		        const qtensor3& ksite,
+		        const qopers& cqops_cc,
+		        const qopers& cqops_c,
+		        const qopers& rqops_cc,
+		        const qopers& rqops_c,
+		        qopers& qops);
 
-void oper_renorm_rightB_kernel(const qtensor3& bsite,
-		               const qtensor3& ksite,
-		               const qopers& cqops_ca,
-		               const qopers& cqops_c,
-		               const qopers& rqops_ca,
-		               const qopers& rqops_c,
-		               qopers& qops);
-
+// --- renorm ---
 void oper_renorm_rightC(const comb& bra, 
 		        const comb& ket,
 		        const comb_coord& p, 
@@ -76,6 +71,14 @@ void oper_renorm_rightB(const comb& bra,
 		        const int ifload,
 		        const std::string scratch);
 
+void oper_renorm_rightA(const comb& bra, 
+		        const comb& ket,
+		        const comb_coord& p, 
+		        const comb_coord& p0,
+		        const int ifload,
+		        const std::string scratch);
+
+// --- different directions ---
 void oper_renorm_right(const comb& bra, 
 		       const comb& ket,
 		       const comb_coord& p, 
@@ -88,7 +91,7 @@ void oper_env_right(const comb& bra,
 	            const integral::one_body& int1e,
 		    const std::string scratch=".");
 
-// io for operators
+// --- io for operators ---
 std::string oper_fname(const std::string scratch, 
   		       const comb_coord& p,
 		       const std::string optype);

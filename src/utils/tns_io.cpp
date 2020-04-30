@@ -32,7 +32,8 @@ string tns::oper_fname(const string scratch,
 }
  
 void tns::oper_save(const string fname, const qopers& qops){
-   cout << "tns::oper_save fname=" << fname << endl;
+   cout << "tns::oper_save fname=" << fname 
+	<< " size=" << qops.size() << endl;
    ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << qops;

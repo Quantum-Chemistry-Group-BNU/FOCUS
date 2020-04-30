@@ -64,7 +64,7 @@ qopers tns::oper_dot_cc(const int k0){
    return qops;
 }
 
-// 00,01,10,11
+// 00,01,(10),11
 qopers tns::oper_dot_ca(const int k0){
    qopers qops;
    qtensor2 qt2;
