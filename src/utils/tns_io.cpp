@@ -5,6 +5,7 @@
 using namespace std;
 using namespace tns;
 
+// for comb
 void comb::rcanon_save(const string fname){
    cout << "comb::rcanon_save fname=" << fname << endl;
    ofstream ofs(fname, std::ios::binary);
@@ -19,6 +20,17 @@ void comb::rcanon_load(const string fname){
    load >> rsites;
 }
 
+// for qopers
+string tns::oper_fname(const string scratch, 
+  	 	       const comb_coord& p,
+		       const string optype){
+   string fname = scratch+"/oper_("
+	         +to_string(p.first)+","
+	         +to_string(p.second)+")_"
+		 +optype;
+   return fname;
+}
+ 
 void tns::oper_save(const string fname, const qopers& qops){
    cout << "tns::oper_save fname=" << fname << endl;
    ofstream ofs(fname, std::ios::binary);

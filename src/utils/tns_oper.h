@@ -54,20 +54,27 @@ void oper_renorm_rightC_kernel(const qtensor3& bsite,
 		               const qopers& rqops,
 		               qopers& qops);
 
+void oper_renorm_rightB_kernel(const qtensor3& bsite,
+		               const qtensor3& ksite,
+		               const qopers& cqops_ca,
+		               const qopers& cqops_c,
+		               const qopers& rqops_ca,
+		               const qopers& rqops_c,
+		               qopers& qops);
+
 void oper_renorm_rightC(const comb& bra, 
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
 		        const int ifload,
 		        const std::string scratch);
-/*
-void oper_renorm_B(const comb& bra, 
-		   const comb& ket,
-		   const comb_coord& p, 
-		   const comb_coord& p0,
-		   const int ifload,
-		   const std::string scratch);
-*/
+
+void oper_renorm_rightB(const comb& bra, 
+		        const comb& ket,
+		        const comb_coord& p, 
+		        const comb_coord& p0,
+		        const int ifload,
+		        const std::string scratch);
 
 void oper_renorm_right(const comb& bra, 
 		       const comb& ket,
