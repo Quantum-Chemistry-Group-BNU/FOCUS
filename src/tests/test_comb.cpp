@@ -94,8 +94,11 @@ int tests::test_comb(){
    int k = int1e.sorb;
    linalg::matrix rdm1(k,k); 
    fci::get_rdm1(sci_space, vs[0], vs[0], rdm1);
-   fci::get_rdm1(sci_space, vs[1], vs[1], rdm1);
-   fci::get_rdm1(sci_space, vs[0], vs[1], rdm1);
+   rdm1.save("fci_rdm1_00");
+   fci::get_rdm1(sci_space, vs[1], vs[0], rdm1);
+   rdm1.save("fci_rdm1_10");
+   fci::get_rdm1(sci_space, vs[0], vs[2], rdm1);
+   rdm1.save("fci_rdm1_02");
 
    schd.create_scratch();
 

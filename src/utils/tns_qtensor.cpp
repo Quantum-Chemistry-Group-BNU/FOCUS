@@ -79,7 +79,7 @@ void qtensor2::init_qblocks(){
    }
 }
 
-qtensor2 qtensor2::transpose(){
+qtensor2 qtensor2::transpose() const{
    qtensor2 qt2;
    qt2.msym = -msym;
    qt2.qrow = qcol;
@@ -92,7 +92,8 @@ qtensor2 qtensor2::transpose(){
 	 int cdim = pc.second;
 	 auto key = make_pair(qr,qc);
          if(qr == qt2.msym + qc){
-	    qt2.qblocks[key] = qblocks[make_pair(qc,qr)].transpose();
+            auto tkey = make_pair(qc,qr);
+	    qt2.qblocks[key] = qblocks.at(tkey).transpose();
 	 }else{
 	    qt2.qblocks[key] = matrix();
 	 }
@@ -101,7 +102,7 @@ qtensor2 qtensor2::transpose(){
    return qt2;
 }
 
-qtensor2 qtensor2::csigned(){
+qtensor2 qtensor2::col_signed(const double fac) const{
    qtensor2 qt2;
    qt2.msym = msym;
    qt2.qrow = qrow;
@@ -111,9 +112,29 @@ qtensor2 qtensor2::csigned(){
       for(const auto& pc : qcol){
 	 const auto& qc = pc.first;
 	 auto key = make_pair(qr,qc);
-	 double fac = qc.parity();
+	 double fac2 = qc.parity()*fac;
          if(qr == qt2.msym + qc){
-	    qt2.qblocks[key] = qblocks[key]*fac;
+	    qt2.qblocks[key] = fac2*qblocks.at(key);
+	 }else{
+	    qt2.qblocks[key] = matrix();
+	 }
+      }
+   }
+   return qt2;
+}
+
+qtensor2 qtensor2::operator -() const{
+   qtensor2 qt2;
+   qt2.msym = msym;
+   qt2.qrow = qrow;
+   qt2.qcol = qcol;
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      for(const auto& pc : qcol){
+	 const auto& qc = pc.first;
+	 auto key = make_pair(qr,qc);
+         if(qr == qt2.msym + qc){
+	    qt2.qblocks[key] = -qblocks.at(key);
 	 }else{
 	    qt2.qblocks[key] = matrix();
 	 }
@@ -312,7 +333,7 @@ qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a,
 	             auto keyb = make_pair(msym,xsym);
 	             auto& blka = qt3a.qblocks.at(keya);
 	             auto& blkb = qt2b.qblocks.at(keyb);
-		     int xdim = blkb.rows();
+		     int xdim = qt3a.qmid.at(xsym);
 		     for(int x=0; x<xdim; x++){
 		        mat += blkb(m,x)*blka[x];
 	 	     } // x 

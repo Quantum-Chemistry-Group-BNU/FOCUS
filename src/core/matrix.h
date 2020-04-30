@@ -141,6 +141,9 @@ class matrix{
       }
       // save
       void save_text(const std::string& fname, const int prec=4) const;
+      // binary
+      void save(const std::string& fname) const; 
+      void load(const std::string& fname); 
       // helpers
       inline int rows() const{ return _rows; }
       inline int cols() const{ return _cols; }

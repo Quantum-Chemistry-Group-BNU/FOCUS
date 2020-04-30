@@ -6,6 +6,7 @@
 #include "../core/integral.h"
 #include <tuple>
 #include <string>
+#include <vector>
 
 namespace tns{
 
@@ -14,13 +15,12 @@ namespace tns{
 // - kind (Symbol)
 
 // 1. exact construction at type 0 site {|n>}
-using qopers = std::map<int,qtensor2>;
-qopers oper_dot_c();
-qopers oper_dot_a();
-qopers oper_dot_cc();
-qopers oper_dot_ca();
-qopers oper_dot_caa();
-qopers oper_dot_ccaa();
+using qopers = std::vector<qtensor2>;
+qopers oper_dot_c(const int k0);
+qopers oper_dot_cc(const int k0);
+qopers oper_dot_ca(const int k0);
+qopers oper_dot_caa(const int k0);
+qopers oper_dot_ccaa(const int k0);
 
 // 7 kinds of operators:
 //
@@ -48,12 +48,26 @@ void oper_renorm_Q(const comb& bra, const comb& ket, comb_coord& coord);
 void oper_renorm_P(const comb& bra, const comb& ket, comb_coord& coord);
 */
 
-void oper_renorm_C(const comb& bra, 
+void oper_renorm_rightC_kernel(const qtensor3& bsite,
+		               const qtensor3& ksite,
+		               const qopers& cqops,
+		               const qopers& rqops,
+		               qopers& qops);
+
+void oper_renorm_rightC(const comb& bra, 
+		        const comb& ket,
+		        const comb_coord& p, 
+		        const comb_coord& p0,
+		        const int ifload,
+		        const std::string scratch);
+/*
+void oper_renorm_B(const comb& bra, 
 		   const comb& ket,
 		   const comb_coord& p, 
 		   const comb_coord& p0,
-		   const int iop,
+		   const int ifload,
 		   const std::string scratch);
+*/
 
 void oper_renorm_right(const comb& bra, 
 		       const comb& ket,

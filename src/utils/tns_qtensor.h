@@ -17,6 +17,7 @@ struct qtensor2{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
+	 ar & index;
          ar & msym;
 	 ar & qrow;
 	 ar & qcol;
@@ -28,9 +29,11 @@ struct qtensor2{
       void print(const std::string msg, const int level=0) const;
       linalg::matrix to_matrix() const;
       void init_qblocks();
-      qtensor2 transpose();
-      qtensor2 csigned();
+      qtensor2 transpose() const;
+      qtensor2 col_signed(const double fac=1.0) const;
+      qtensor2 operator -() const;
    public:
+      short index[4]; // for operators (ZL@20200429)
       qsym msym;
       qsym_space qrow;
       qsym_space qcol;

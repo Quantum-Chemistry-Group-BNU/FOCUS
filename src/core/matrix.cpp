@@ -1,6 +1,7 @@
 #include <fstream>
 #include "matrix.h"
 #include "tools.h"
+#include "serialization.h"
 
 using namespace std;
 using namespace linalg;
@@ -74,4 +75,17 @@ void matrix::save_text(const string& fname, const int prec) const{
       file << endl;
    }
    file.close();
+}
+
+// binary
+void matrix::save(const string& fname) const{
+   ofstream ofs(fname, std::ios::binary);
+   boost::archive::binary_oarchive save(ofs);
+   save << *this;
+}
+
+void matrix::load(const string& fname){
+   ifstream ifs(fname, std::ios::binary);
+   boost::archive::binary_iarchive load(ifs);
+   load >> *this;
 }
