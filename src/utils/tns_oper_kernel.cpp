@@ -52,7 +52,7 @@ void tns::oper_renorm_rightB_kernel(const qtensor3& bsite,
       qops.push_back(qt2);
    }
    // pC^+ * qR and pR^+qC = -qC*pR^+
-   for(const auto& cop_c : cqops_ca){
+   for(const auto& cop_c : cqops_c){
       for(const auto& rop_c : rqops_c){
 	 // pC^+ * qR
 	 auto qR = rop_c.transpose();

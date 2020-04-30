@@ -99,7 +99,9 @@
 	  - operators on dot (in memory)
 	  - serializaiton: -lboost_system -lboost_filesystem
 	  - implement recursive build of operators (blocking & renormalization)
-	    - ap^+ 
+	    - ap^+
+	    - ap^+aq (checked against fci_rdm1 for <psi1|p^+q|psi2>)
+ 
 	  - check by evaluating energies
 
  2020xxxx basic sweep algorithm
