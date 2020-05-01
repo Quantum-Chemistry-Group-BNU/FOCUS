@@ -99,9 +99,15 @@
 	  - operators on dot (in memory)
 	  - serializaiton: -lboost_system -lboost_filesystem
 	  - implement recursive build of operators (blocking & renormalization)
-	    - ap^+
-	    - ap^+aq (checked against fci_rdm1 for <psi1|p^+q|psi2>)
-	    - ap^+aq^+
+	    - normal operators:
+	      - ap^+
+	      - ap^+aq (checked against fci_rdm1 for <psi1|p^+q|psi2>)
+	      - ap^+aq^+
+	    - complementary operators:
+	      - Qps
+	      - Ppq
+	      - Sp
+	      - H
 	  - check by evaluating energies
 	  - note: currently the adjoint is used for operators like ap,
 		  hence the renorm functions work only for <comb1|o|comb2>,
