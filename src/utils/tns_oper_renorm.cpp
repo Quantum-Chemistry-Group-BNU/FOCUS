@@ -38,13 +38,16 @@ void tns::oper_renorm_right(const comb& bra,
       cout << "error: no such case! (tp,tp0)=" << tp << "," << tp0 << endl;
       exit(1);
    }
+   // Branch only have normal operators in right canonical form. 
    oper_renorm_rightC(bra,ket,p,p0,ifload,scratch);
    oper_renorm_rightB(bra,ket,p,p0,ifload,scratch);
    oper_renorm_rightA(bra,ket,p,p0,ifload,scratch);
-   oper_renorm_rightQ(bra,ket,p,p0,ifload,scratch);
-   //oper_renorm_rightP(bra,ket,p,p0,ifload,scratch);
-   //oper_renorm_rightS(bra,ket,p,p0,ifload,scratch);
-   //oper_renorm_rightH(bra,ket,p,p0,ifload,scratch);
+   if(j == 0){
+      oper_renorm_rightQ(bra,ket,p,p0,ifload,int2e,int1e,scratch);
+      //oper_renorm_rightP(bra,ket,p,p0,ifload,scratch);
+      //oper_renorm_rightS(bra,ket,p,p0,ifload,scratch);
+      //oper_renorm_rightH(bra,ket,p,p0,ifload,scratch);
+   }
 }
 
 void tns::oper_env_right(const comb& bra, 

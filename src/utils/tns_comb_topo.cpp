@@ -125,7 +125,11 @@ void comb::topo_init(){
    // lsupport
    for(int idx=0; idx<rcoord.size(); idx++){
       auto coord = rcoord[idx];
-      lsupport[coord] = support_rest(rsupport[coord]); 
+      lsupport[coord] = support_rest(rsupport[coord]);
+      if(iswitch==-1 && coord.second == 0 && 
+         lsupport[coord].size()<rsupport[coord].size()){
+         iswitch = coord.first;
+      }
    }
    // image2
    auto order = rsupport[make_pair(0,0)]; 
@@ -168,6 +172,7 @@ void comb::topo_print() const{
 	<< "ninternal=" << ninternal << " " 
 	<< "ntotal=" << ntotal << endl;
    cout << "--- topo ---" << endl;
+   cout << "iswitch=" << iswitch << endl; 
    int idx = 0;
    for(auto& branch : topo){
       cout << "idx=" << idx << " : "; 

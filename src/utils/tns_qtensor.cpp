@@ -143,6 +143,48 @@ qtensor2 qtensor2::operator -() const{
    return qt2;
 }
 
+// algorithmic operations like matrix
+qtensor2& qtensor2::operator +=(const qtensor2& qt){
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      for(const auto& pc : qcol){
+	 const auto& qc = pc.first;
+	 auto key = make_pair(qr,qc);
+	 auto& blk = qblocks[key];
+	 if(blk.size() > 0){
+	    blk += qt.qblocks.at(key);
+	 }
+      }
+   }
+   return *this;
+}
+
+qtensor2& qtensor2::operator *=(const double fac){
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      for(const auto& pc : qcol){
+	 const auto& qc = pc.first;
+	 auto key = make_pair(qr,qc);
+	 auto& blk = qblocks[key];
+	 if(blk.size() > 0){
+	    blk = fac*blk;
+	 }
+      }
+   }
+   return *this;
+}
+
+qtensor2 tns::operator *(const double fac, const qtensor2& qt){
+   qtensor2 qt2;
+   qt2 = qt; // use default assignment constructor;
+   qt2 *= fac;
+   return qt2;
+}
+
+qtensor2 tns::operator *(const qtensor2& qt, const double fac){
+   return fac*qt;
+}
+
 // --- rank-3 tensor ---
 void qtensor3::print(const string msg, const int level) const{
    cout << "qtensor3: " << msg << endl;

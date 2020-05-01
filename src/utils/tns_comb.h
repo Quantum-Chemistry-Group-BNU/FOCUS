@@ -46,6 +46,7 @@ class comb{
       void rcanon_load(const std::string fname="rcanon.info");
    public:
       int nbackbone, nphysical, ninternal, ntotal;
+      int iswitch=-1; // i<=iswitch size_lsupp<size_rsupp;
       std::vector<std::vector<int>> topo; // save site index
       std::map<comb_coord,int> type; // type of nodes 0,1,2
       std::vector<comb_coord> rcoord; // coordinate of each node in rvisit order

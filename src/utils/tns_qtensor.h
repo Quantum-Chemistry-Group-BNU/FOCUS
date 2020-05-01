@@ -32,6 +32,11 @@ struct qtensor2{
       qtensor2 transpose() const;
       qtensor2 col_signed(const double fac=1.0) const;
       qtensor2 operator -() const;
+      // algorithmic operations like matrix
+      qtensor2& operator +=(const qtensor2& qt);
+      qtensor2& operator *=(const double fac);
+      friend qtensor2 operator *(const double fac, const qtensor2& qt);  
+      friend qtensor2 operator *(const qtensor2& qt, const double fac);  
    public:
       short index[4]; // for operators (ZL@20200429)
       qsym msym;
