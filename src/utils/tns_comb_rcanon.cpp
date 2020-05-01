@@ -16,12 +16,10 @@ comb_rbases comb::get_rbases(const onspace& space,
 		    	     const vector<vector<double>>& vs,
 		    	     const double thresh_proj){
    auto t0 = global::get_time();
-   bool debug = false;
+   bool debug = true;
    cout << "\ncomb::get_rbases thresh_proj=" << scientific << thresh_proj << endl;
    comb_rbases rbases;
    vector<pair<int,int>> shapes; // for debug
-   vector<int> bas(nphysical);
-   iota(bas.begin(), bas.end(), 0);
    // loop over nodes (except the last one)
    for(int idx=0; idx<ntotal-1; idx++){
       auto p = rcoord[idx];
@@ -34,15 +32,9 @@ comb_rbases comb::get_rbases(const onspace& space,
          cout << endl;
       }
       // 1. generate 1D ordering
-      auto rsupp = rsupport[make_pair(i,j)];
-      // order required in set_difference
-      stable_sort(rsupp.begin(), rsupp.end()); 
-      vector<int> order;
-      set_difference(bas.begin(), bas.end(), rsupp.begin(), rsupp.end(),
-                     back_inserter(order));
-      int pos = order.size();
-      // original order required [IMPORTANT]
-      rsupp = rsupport[make_pair(i,j)]; 
+      auto rsupp = rsupport[make_pair(i,j)]; // original order required [IMPORTANT]
+      auto order = support_rest(rsupp);
+      int pos = order.size(); // must be put here to account bipartition position
       copy(rsupp.begin(), rsupp.end(), back_inserter(order));
       if(debug){
          cout << "pos=" << pos << endl;

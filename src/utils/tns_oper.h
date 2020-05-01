@@ -78,6 +78,34 @@ void oper_renorm_rightA(const comb& bra,
 		        const int ifload,
 		        const std::string scratch);
 
+void oper_renorm_rightQ(const comb& bra, 
+		        const comb& ket,
+		        const comb_coord& p, 
+		        const comb_coord& p0,
+		        const int ifload,
+		        const std::string scratch);
+
+void oper_renorm_rightP(const comb& bra, 
+		        const comb& ket,
+		        const comb_coord& p, 
+		        const comb_coord& p0,
+		        const int ifload,
+		        const std::string scratch);
+
+void oper_renorm_rightS(const comb& bra, 
+		        const comb& ket,
+		        const comb_coord& p, 
+		        const comb_coord& p0,
+		        const int ifload,
+		        const std::string scratch);
+
+void oper_renorm_rightH(const comb& bra, 
+		        const comb& ket,
+		        const comb_coord& p, 
+		        const comb_coord& p0,
+		        const int ifload,
+		        const std::string scratch);
+
 // --- different directions ---
 void oper_renorm_right(const comb& bra, 
 		       const comb& ket,

@@ -7,8 +7,20 @@
 using namespace std;
 using namespace tns;
 
-void comb::read_topology(string fname){
-   cout << "\ncomb::read_topology fname=" << fname << endl;
+vector<int> comb::support_rest(const vector<int>& rsupp){
+   vector<int> bas(nphysical);
+   iota(bas.begin(), bas.end(), 0);
+   auto supp = rsupp;
+   // order required in set_difference
+   stable_sort(supp.begin(), supp.end()); 
+   vector<int> rest;
+   set_difference(bas.begin(), bas.end(), supp.begin(), supp.end(),
+                  back_inserter(rest));
+   return rest;
+}
+
+void comb::topo_read(string fname){
+   cout << "\ncomb::topo_read fname=" << fname << endl;
    ifstream istrm(fname);
    if(!istrm){
       cout << "failed to open " << fname << '\n';
@@ -31,8 +43,8 @@ void comb::read_topology(string fname){
    istrm.close();
 }
 
-void comb::init(){
-   cout << "\ncomb::init" << endl;
+void comb::topo_init(){
+   cout << "\ncomb::topo_init" << endl;
    // initialize comb structure
    nbackbone = topo.size();
    nphysical = 0;
@@ -110,6 +122,11 @@ void comb::init(){
 	      back_inserter(rsupport[make_pair(i,0)]));
       }
    }
+   // lsupport
+   for(int idx=0; idx<rcoord.size(); idx++){
+      auto coord = rcoord[idx];
+      lsupport[coord] = support_rest(rsupport[coord]); 
+   }
    // image2
    auto order = rsupport[make_pair(0,0)]; 
    image2.resize(2*nphysical);
@@ -144,8 +161,8 @@ void comb::init(){
    assert(sweep_seq.size() == 2*(ntotal-1));
 }
 
-void comb::print() const{
-   cout << "\ncomb::print" << endl;
+void comb::topo_print() const{
+   cout << "\ncomb::topo_print" << endl;
    cout << "nbackbone=" << nbackbone << " " 
 	<< "nphysical=" << nphysical << " "
 	<< "ninternal=" << ninternal << " " 
@@ -160,21 +177,19 @@ void comb::print() const{
       cout << endl;
       idx++;
    }
-   cout << "--- rcoord & type ---" << endl;
+   cout << "--- rcoord & type & rsupport/lsupport ---" << endl;
    for(int i=0; i<ntotal; i++){
       auto p = rcoord[i];
+      auto rsupp = rsupport.at(p);
+      auto lsupp = lsupport.at(p);
       cout << "i=" << i << " : (" << p.first << "," << p.second << ")" 
 	   << "[" << topo[p.first][p.second] << "]" 
 	   << " type=" << type.at(p) << endl;
-   }
-   cout << "--- rsupport ---" << endl;
-   for(const auto& p : rsupport){
-      auto coord = p.first;
-      auto rsupp = p.second;
-      cout << "coord=(" << coord.first << "," << coord.second << ") : ";
-      for(const auto& k : rsupp){
-         cout << k << " ";
-      }
+      cout << "rsupport: ";
+      for(int k : rsupp) cout << k << " ";
+      cout << endl;
+      cout << "lsupport: ";
+      for(int k : lsupp) cout << k << " ";
       cout << endl;
    }
    cout << "--- sweep_seq --" << endl;

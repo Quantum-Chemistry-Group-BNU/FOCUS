@@ -16,9 +16,10 @@ using comb_rbases = std::map<comb_coord,renorm_basis>;
 class comb{
    public:
       // --- topology of comb ---
-      void read_topology(std::string topology); 
-      void init();
-      void print() const;
+      std::vector<int> support_rest(const std::vector<int>& rsupp);
+      void topo_read(std::string topology_file); 
+      void topo_init();
+      void topo_print() const;
       // --- from SCI wavefunctions ---
       // compute renormalized bases {|r>} from SCI wf 
       comb_rbases get_rbases(const fock::onspace& space,
@@ -53,8 +54,8 @@ class comb{
       // --- right canonical form ---
       std::map<comb_coord,qtensor3> rsites;
       // --- left canonical form ---
-      // std::map<comb_coord,std::vector<int>> lsupport;
-      // std::map<comb_coord,qtensor3> lsites;
+      std::map<comb_coord,std::vector<int>> lsupport;
+      std::map<comb_coord,qtensor3> lsites;
       // --- sweep ---
       std::vector<std::pair<comb_coord,comb_coord>> sweep_seq;
 };
