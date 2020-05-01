@@ -83,6 +83,8 @@ void oper_renorm_rightQ(const comb& bra,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
 		        const int ifload,
+	                const integral::two_body& int2e,
+	                const integral::one_body& int1e,
 		        const std::string scratch);
 
 void oper_renorm_rightP(const comb& bra, 
@@ -90,6 +92,8 @@ void oper_renorm_rightP(const comb& bra,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
 		        const int ifload,
+	                const integral::two_body& int2e,
+	                const integral::one_body& int1e,
 		        const std::string scratch);
 
 void oper_renorm_rightS(const comb& bra, 
@@ -97,6 +101,8 @@ void oper_renorm_rightS(const comb& bra,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
 		        const int ifload,
+	                const integral::two_body& int2e,
+	                const integral::one_body& int1e,
 		        const std::string scratch);
 
 void oper_renorm_rightH(const comb& bra, 
@@ -104,6 +110,8 @@ void oper_renorm_rightH(const comb& bra,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
 		        const int ifload,
+	                const integral::two_body& int2e,
+	                const integral::one_body& int1e,
 		        const std::string scratch);
 
 // --- different directions ---
@@ -111,6 +119,8 @@ void oper_renorm_right(const comb& bra,
 		       const comb& ket,
 		       const comb_coord& p, 
 		       const comb_coord& p0,
+	               const integral::two_body& int2e,
+	               const integral::one_body& int1e,
 		       const std::string scratch);
 
 void oper_env_right(const comb& bra, 

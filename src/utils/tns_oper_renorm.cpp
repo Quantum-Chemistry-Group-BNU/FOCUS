@@ -1,4 +1,4 @@
-#include "../settings/global.h"
+ #include "../settings/global.h"
 #include "tns_comb.h" 
 #include "tns_qtensor.h"
 #include "tns_oper.h"
@@ -11,6 +11,8 @@ void tns::oper_renorm_right(const comb& bra,
 			    const comb& ket,
 		            const comb_coord& p,
 		            const comb_coord& p0,
+		            const integral::two_body& int2e,
+		            const integral::one_body& int1e,
 			    const string scratch){
    cout << "\ntns::oper_renorm_right" << endl;
    int i = p.first, j = p.second;
@@ -39,7 +41,7 @@ void tns::oper_renorm_right(const comb& bra,
    oper_renorm_rightC(bra,ket,p,p0,ifload,scratch);
    oper_renorm_rightB(bra,ket,p,p0,ifload,scratch);
    oper_renorm_rightA(bra,ket,p,p0,ifload,scratch);
-   //oper_renorm_rightQ(bra,ket,p,p0,ifload,scratch);
+   oper_renorm_rightQ(bra,ket,p,p0,ifload,scratch);
    //oper_renorm_rightP(bra,ket,p,p0,ifload,scratch);
    //oper_renorm_rightS(bra,ket,p,p0,ifload,scratch);
    //oper_renorm_rightH(bra,ket,p,p0,ifload,scratch);
@@ -57,16 +59,16 @@ void tns::oper_env_right(const comb& bra,
       auto p = make_pair(i,0);
       int tp = bra.type.at(p);
       if(tp == 0 || tp == 1){
-	 auto p0 = make_pair(i+1,0);    
-	 oper_renorm_right(bra,ket,p,p0,scratch);
+	 auto p0 = make_pair(i+1,0);
+	 oper_renorm_right(bra,ket,p,p0,int2e,int1e,scratch);
       }else if(tp == 3){
          for(int j=bra.topo[i].size()-2; j>=1; j--){
 	    auto pj = make_pair(i,j);
 	    auto p0 = make_pair(i,j+1);    
-	    oper_renorm_right(bra,ket,pj,p0,scratch);
+	    oper_renorm_right(bra,ket,pj,p0,int2e,int1e,scratch);
 	 } // j
 	 auto p0 = make_pair(i+1,0);
-	 oper_renorm_right(bra,ket,p,p0,scratch);
+	 oper_renorm_right(bra,ket,p,p0,int2e,int1e,scratch);
       }else{
 	 cout << "error: tp=" << tp << endl;
 	 exit(1);

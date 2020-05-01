@@ -72,7 +72,6 @@ int tests::test_comb(){
    comb.topo_read(schd.topology_file);
    comb.topo_init();
    comb.topo_print();
-   exit(1);
 
    if(!schd.combload){
       comb.rcanon_init(sci_space, vs, schd.thresh_proj, schd.thresh_ortho);
