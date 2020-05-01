@@ -19,7 +19,7 @@ namespace tns{
 // 
 // {H,S,Q,P}:
 //    Qps = <pq||sr> aq^+ar 
-//    Ppq = <pq||rs> aras [r>s] (p<q)
+//    Ppq = <pq||sr> aras [r>s] (p<q)
 //    Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
 //    H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
 
