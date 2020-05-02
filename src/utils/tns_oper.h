@@ -31,30 +31,34 @@ qopers oper_dot_ca(const int k0);
 qopers oper_dot_caa(const int k0);
 qopers oper_dot_ccaa(const int k0);
 
+void oper_dot_rightS_loc(const int k,
+			 const std::vector<int>& lsupp,
+			 const qopers& cqops_c,
+			 const qopers& cqops_caa,
+			 const integral::two_body& int2e,
+		         const integral::one_body& int1e,
+			 qopers& cqops_S);
+ 
 // 2. universal blocking code for {|nr>} and {|ln>}
 
 // --- kernel ---
-void oper_kernel_rightC(const qtensor3& bsite,
-		        const qtensor3& ksite,
-		        const qopers& cqops,
-		        const qopers& rqops,
-		        qopers& qops);
+qtensor2 oper_kernel_right_IcOr(const qtensor3& bsite,
+		                const qtensor3& ksite,
+		                const qtensor2& rop);
 
-void oper_kernel_rightB(const qtensor3& bsite,
-		        const qtensor3& ksite,
-		        const qopers& cqops_ca,
-		        const qopers& cqops_c,
-		        const qopers& rqops_ca,
-		        const qopers& rqops_c,
-		        qopers& qops);
+qtensor2 oper_kernel_right_OcIr(const qtensor3& bsite,
+		                const qtensor3& ksite,
+		                const qtensor2& cop);
 
-void oper_kernel_rightA(const qtensor3& bsite,
-		        const qtensor3& ksite,
-		        const qopers& cqops_cc,
-		        const qopers& cqops_c,
-		        const qopers& rqops_cc,
-		        const qopers& rqops_c,
-		        qopers& qops);
+qtensor2 oper_kernel_right_OcOr(const qtensor3& bsite,
+		                const qtensor3& ksite,
+		                const qtensor2& cop,
+		                const qtensor2& rop);
+
+qtensor2 oper_kernel_right_OrOc(const qtensor3& bsite,
+		                const qtensor3& ksite,
+		                const qtensor2& rop,
+		                const qtensor2& cop);
 
 // --- renorm ---
 void oper_renorm_rightC(const comb& bra, 

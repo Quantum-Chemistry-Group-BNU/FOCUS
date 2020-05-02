@@ -137,6 +137,11 @@ struct two_body{
 	    return data[p.first]; // complex conjugate in future
          }
       }
+      // <ij||kl> = [ik|jl]-[il|jk]
+      double getAnti(const size_t i, const size_t j,
+		     const size_t k, const size_t l) const{
+	 return this->get(i,k,j,l) - this->get(i,l,j,k);
+      }
       void set(const size_t i, const size_t j, 
 	       const size_t k, const size_t l, 
 	       const double val){

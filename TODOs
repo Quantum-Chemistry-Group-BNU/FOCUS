@@ -1,4 +1,6 @@
 
+# FOCUS: FermiOniC qUantum Simulation #
+
 *** TODOs: New Techniques & Platforms ***
 	   New Insights & Innovations 
 
@@ -104,10 +106,12 @@
 	      - ap^+aq (checked against fci_rdm1 for <psi1|p^+q|psi2>)
 	      - ap^+aq^+
 	    - complementary operators:
-	      - Qps
-	      - Ppq
-	      - Sp
-	      - H
+	      - lazy construction (to be improved in future):
+	        - Qps
+	        - Ppq
+	      - typeAB/typePQ decomposition (to be cheked by H1e & H2e):
+	        - Sp
+	        - H
 	  - check by evaluating energies
 	  - note: currently the adjoint is used for operators like ap,
 		  hence the renorm functions work only for <comb1|o|comb2>,

@@ -24,21 +24,31 @@ struct qtensor2{
 	 ar & qblocks;
       }
    public:
+      // constructor
+      qtensor2(const qsym& msym1, 
+	       const qsym_space& qrow1, 
+	       const qsym_space& qcol1,
+  	       const int nindex=0); 
+      // useful functions
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
       void print(const std::string msg, const int level=0) const;
       linalg::matrix to_matrix() const;
-      void init_qblocks();
-      qtensor2 transpose() const;
+      // deal with fermionic sign in fermionic direct product
       qtensor2 col_signed(const double fac=1.0) const;
-      qtensor2 operator -() const;
       // algorithmic operations like matrix
+      qtensor2 transpose() const;
+      qtensor2 operator -() const;
+      // pure algorithmic operations 
       qtensor2& operator +=(const qtensor2& qt);
+      qtensor2& operator -=(const qtensor2& qt);
       qtensor2& operator *=(const double fac);
       friend qtensor2 operator *(const double fac, const qtensor2& qt);  
-      friend qtensor2 operator *(const qtensor2& qt, const double fac);  
+      friend qtensor2 operator *(const qtensor2& qt, const double fac); 
+      friend qtensor2 operator +(const qtensor2& qta, const qtensor2& qtb);
+      friend qtensor2 operator -(const qtensor2& qta, const qtensor2& qtb);
    public:
-      short index[4]; // for operators (ZL@20200429)
+      std::vector<short> index; // for operators (ZL@20200429)
       qsym msym;
       qsym_space qrow;
       qsym_space qcol;

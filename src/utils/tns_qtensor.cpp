@@ -1,14 +1,41 @@
 #include "tns_qtensor.h"
 #include "../core/linalg.h"
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 using namespace linalg;
 using namespace tns;
 
 // --- rank-2 tensor ---
+qtensor2::qtensor2(const qsym& msym1,
+		   const qsym_space& qrow1, 
+		   const qsym_space& qcol1,
+		   const int nindex){
+   if(nindex>0) index.resize(nindex); 
+   msym = msym1;
+   qrow = qrow1;
+   qcol = qcol1;
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      int rdim = pr.second;
+      for(const auto& pc : qcol){
+	 const auto& qc = pc.first;
+	 int cdim = pc.second;
+	 auto key = make_pair(qr,qc);
+         if(qr == msym + qc){
+	    qblocks[key] = matrix(rdim,cdim);
+	 }else{
+	    qblocks[key] = matrix();
+	 }
+      }
+   }
+}
+
 void qtensor2::print(const string msg, const int level) const{
-   cout << "qtensor2: " << msg << " msym=" << msym << endl;
+   cout << "qtensor2: " << msg << " msym=" << msym << " index=";
+   for(int i : index) cout << i << " ";
+   cout << endl;
    qsym_space_print(qrow,"qrow");
    qsym_space_print(qcol,"qcol");
    if(level >= 1){
@@ -62,32 +89,18 @@ matrix qtensor2::to_matrix() const{
    return mat;
 }
 
-void qtensor2::init_qblocks(){
-   for(const auto& pr : qrow){
-      const auto& qr = pr.first;
-      int rdim = pr.second;
-      for(const auto& pc : qcol){
-	 const auto& qc = pc.first;
-	 int cdim = pc.second;
-	 auto key = make_pair(qr,qc);
-         if(qr == msym + qc){
-	    qblocks[key] = matrix(rdim,cdim);
-	 }else{
-	    qblocks[key] = matrix();
-	 }
-      }
-   }
-}
-
 qtensor2 qtensor2::transpose() const{
    qtensor2 qt2;
    qt2.msym = -msym;
    qt2.qrow = qcol;
    qt2.qcol = qrow;
-   for(const auto& pr : qrow){
+   qt2.index = index;
+   // (pq)^+ = q^+p^+
+   reverse(qt2.index.begin(), qt2.index.end());
+   for(const auto& pr : qt2.qrow){
       const auto& qr = pr.first;
       int rdim = pr.second;
-      for(const auto& pc : qcol){
+      for(const auto& pc : qt2.qcol){
 	 const auto& qc = pc.first;
 	 int cdim = pc.second;
 	 auto key = make_pair(qr,qc);
@@ -107,6 +120,7 @@ qtensor2 qtensor2::col_signed(const double fac) const{
    qt2.msym = msym;
    qt2.qrow = qrow;
    qt2.qcol = qcol;
+   qt2.index = index;
    for(const auto& pr : qrow){
       const auto& qr = pr.first;
       for(const auto& pc : qcol){
@@ -128,6 +142,7 @@ qtensor2 qtensor2::operator -() const{
    qt2.msym = msym;
    qt2.qrow = qrow;
    qt2.qcol = qcol;
+   qt2.index = index;
    for(const auto& pr : qrow){
       const auto& qr = pr.first;
       for(const auto& pc : qcol){
@@ -159,6 +174,21 @@ qtensor2& qtensor2::operator +=(const qtensor2& qt){
    return *this;
 }
 
+qtensor2& qtensor2::operator -=(const qtensor2& qt){
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      for(const auto& pc : qcol){
+	 const auto& qc = pc.first;
+	 auto key = make_pair(qr,qc);
+	 auto& blk = qblocks[key];
+	 if(blk.size() > 0){
+	    blk -= qt.qblocks.at(key);
+	 }
+      }
+   }
+   return *this;
+}
+
 qtensor2& qtensor2::operator *=(const double fac){
    for(const auto& pr : qrow){
       const auto& qr = pr.first;
@@ -175,14 +205,25 @@ qtensor2& qtensor2::operator *=(const double fac){
 }
 
 qtensor2 tns::operator *(const double fac, const qtensor2& qt){
-   qtensor2 qt2;
-   qt2 = qt; // use default assignment constructor;
+   qtensor2 qt2 = qt; // use default assignment constructor;
    qt2 *= fac;
    return qt2;
 }
 
 qtensor2 tns::operator *(const qtensor2& qt, const double fac){
    return fac*qt;
+}
+
+qtensor2 tns::operator +(const qtensor2& qta, const qtensor2& qtb){
+   qtensor2 qt2 = qta;
+   qt2 += qtb;
+   return qt2;
+}
+
+qtensor2 tns::operator -(const qtensor2& qta, const qtensor2& qtb){
+   qtensor2 qt2 = qta;
+   qt2 -= qtb;
+   return qt2;
 }
 
 // --- rank-3 tensor ---

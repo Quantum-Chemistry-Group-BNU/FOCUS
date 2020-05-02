@@ -1,4 +1,4 @@
- #include "../settings/global.h"
+#include "../settings/global.h"
 #include "tns_comb.h" 
 #include "tns_qtensor.h"
 #include "tns_oper.h"
@@ -45,7 +45,7 @@ void tns::oper_renorm_right(const comb& bra,
    if(j == 0){
       oper_renorm_rightQ(bra,ket,p,p0,ifload,int2e,int1e,scratch);
       oper_renorm_rightP(bra,ket,p,p0,ifload,int2e,int1e,scratch);
-      //oper_renorm_rightS(bra,ket,p,p0,ifload,int2e,int1e,scratch);
+      oper_renorm_rightS(bra,ket,p,p0,ifload,int2e,int1e,scratch);
       //oper_renorm_rightH(bra,ket,p,p0,ifload,int2e,int1e,scratch);
    }
 }
