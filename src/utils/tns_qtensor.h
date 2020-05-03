@@ -49,7 +49,7 @@ struct qtensor2{
       friend qtensor2 operator +(const qtensor2& qta, const qtensor2& qtb);
       friend qtensor2 operator -(const qtensor2& qta, const qtensor2& qtb);
    public:
-      std::vector<short> index; // for operators (ZL@20200429)
+      std::vector<short> index; // for operators (ZL@20200429); not handled in +/-;
       qsym msym;
       qsym_space qrow;
       qsym_space qcol;

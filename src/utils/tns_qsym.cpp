@@ -23,8 +23,8 @@ qsym tns::operator +(const qsym& sym1, const qsym& sym2){
 
 qsym tns::operator -(const qsym& sym1, const qsym& sym2){
    qsym sym;
-   sym._ne = sym1._ne + sym2._ne;
-   sym._na = sym1._na + sym2._na;
+   sym._ne = sym1._ne - sym2._ne;
+   sym._na = sym1._na - sym2._na;
    return sym;
 }
 

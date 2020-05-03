@@ -135,9 +135,9 @@ void tns::oper_renorm_rightS(const comb& bra,
    // C: build / load
    if(ifload/2 == 0){
       // type AB decomposition (build,build)
-      cqops_c   = tns::oper_dot_c(k);
-      cqops_cc  = tns::oper_dot_cc(k);
-      cqops_ca  = tns::oper_dot_ca(k);
+      cqops_c  = tns::oper_dot_c(k);
+      cqops_cc = tns::oper_dot_cc(k);
+      cqops_ca = tns::oper_dot_ca(k);
       oper_dot_rightS_loc(k, lsupp, int2e, int1e, cqops_c, cqops_S);
    }else if(ifload/2 == 1){
       // type PQ decomposition (load,build)
@@ -157,27 +157,27 @@ void tns::oper_renorm_rightS(const comb& bra,
    if(ifload%2 == 0){
       rtype = 0;
       int k0 = bra.rsupport.at(p0)[0];
-      rqops_c   = tns::oper_dot_c(k0);
-      rqops_cc  = tns::oper_dot_cc(k0);
-      rqops_ca  = tns::oper_dot_ca(k0);
+      rqops_c  = tns::oper_dot_c(k0);
+      rqops_cc = tns::oper_dot_cc(k0);
+      rqops_ca = tns::oper_dot_ca(k0);
       oper_dot_rightS_loc(k0, lsupp, int2e, int1e, rqops_c, rqops_S);
    }else if(ifload%2 == 1){
       fname0r = oper_fname(scratch, p0, "rightC");
       oper_load(fname0r, rqops_c);
-      if(j > 0){ 
-         // branch
+      if(j == 0 && i <= bra.iswitch){ 
+	 // left half of the backbone [type-PQ]
+         rtype = 1;
+         fname0r = oper_fname(scratch, p0, "rightP");
+         oper_load(fname0r, rqops_P);
+         fname0r = oper_fname(scratch, p0, "rightQ");
+         oper_load(fname0r, rqops_Q);
+      }else{
+         // branch & left half of the backbone [type-AB]
 	 rtype = 0;
          fname0r = oper_fname(scratch, p0, "rightA");
          oper_load(fname0r, rqops_cc);
          fname0r = oper_fname(scratch, p0, "rightB");
          oper_load(fname0r, rqops_ca);
-      }else{
-	 // backbone
-	 rtype = 1;
-         fname0r = oper_fname(scratch, p0, "rightP");
-         oper_load(fname0r, rqops_P);
-         fname0r = oper_fname(scratch, p0, "rightQ");
-         oper_load(fname0r, rqops_Q);
       }
       fname0r = oper_fname(scratch, p0, "rightS");
       oper_load(fname0r, rqops_S);
@@ -193,30 +193,133 @@ void tns::oper_renorm_rightS(const comb& bra,
       qops.push_back(Sb);
    }
    // resolving the index matching issue
-   map<int,int> c_pL2pos;
+   map<int,int> Sc_pL2pos;
    for(int idx=0; idx<cqops_S.size(); idx++){
       int pL = cqops_S[idx].index[0];
-      c_pL2pos[pL] = idx;
+      Sc_pL2pos[pL] = idx;
    }
-   map<int,int> r_pL2pos;
+   map<int,int> Sr_pL2pos;
    for(int idx=0; idx<rqops_S.size(); idx++){
       int pL = rqops_S[idx].index[0];
-      r_pL2pos[pL] = idx;
+      Sr_pL2pos[pL] = idx;
    }
    // kernel for computing renormalized Sp^{CR} [6 terms]
-   qtensor2 qt2;
+   // SpL = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    for(int i=0; i<qops.size(); i++){
       int pL = qops[i].index[0];
-      // local term: Sc*Ir
-      int pos = c_pL2pos[pL];
-      qt2 = oper_kernel_right_OcIr(bsite,ksite,cqops_S[pos]);
-      qops[i] += qt2;
-      // local term: Ic*Sr
-      pos = r_pL2pos[pL];
-      qt2 = oper_kernel_right_IcOr(bsite,ksite,rqops_S[pos]);
-      qops[i] += qt2;
-      // 
+      // 1. local term: Sc*Ir
+      int pos = Sc_pL2pos[pL];
+      qops[i] += oper_kernel_right_OcIr(bsite,ksite,cqops_S[pos]);
+      // 2. local term: Ic*Sr
+      pos = Sr_pL2pos[pL];
+      qops[i] += oper_kernel_right_IcOr(bsite,ksite,rqops_S[pos]);
+      // 3. B[qC,sC]*[<pLqC||sCrR>(-rR)]
+      for(const auto& cop_ca : cqops_ca){
+         int qC = cop_ca.index[0];
+	 int sC = cop_ca.index[1];
+	 // rop = sum_rR <pLqC||sCrR>(-rR)
+	 qsym rsym = qops[i].msym - cop_ca.msym;
+	 qtensor2 rop(rsym,bsite.qcol,ksite.qcol);
+	 bool ifcal = false;
+	 for(const auto& rop_c : rqops_c){
+	    if(rsym != -rop_c.msym) continue;
+	    ifcal = true;
+	    int rR = rop_c.index[0];
+	    rop -= int2e.getAnti(pL,qC,sC,rR)*rop_c.transpose();
+	 }
+	 if(ifcal) qops[i] += oper_kernel_right_OcOr(bsite,ksite,cop_ca,rop);
+      }
+      // 4. A[sC,rC]^+*[<pLqR||sCrC>qR^+] (s<r)
+      for(const auto& cop_cc : cqops_cc){
+         int sC = cop_cc.index[0];
+	 int rC = cop_cc.index[1];
+	 // rop = sum_qR <pLqR||sCrC>qR^+
+	 qsym rsym = qops[i].msym + cop_cc.msym;
+	 qtensor2 rop(rsym,bsite.qcol,ksite.qcol);
+	 bool ifcal = false;
+	 for(const auto& rop_c : rqops_c){
+	    if(rsym != rop_c.msym) continue;
+	    ifcal = true;
+	    int qR = rop_c.index[0];
+            rop += int2e.getAnti(pL,qR,sC,rC)*rop_c; 
+	 }
+	 if(ifcal) qops[i] += oper_kernel_right_OcOr(bsite,ksite,cop_cc.transpose(),rop);
+      }
    } // pL
+   if(rtype == 0){
+      // type-AB decomposition
+      for(int i=0; i<qops.size(); i++){
+         int pL = qops[i].index[0];
+	 // A: sum_qC qc^+ * sum_rRsR <pLqC||sRrR> rRsR (r>s)
+         for(const auto& cop_c : cqops_c){
+	    int qC = cop_c.index[0];
+	    // rop = sum_rRsR <qLqC||sRrR> rRsR (r>s)
+	    qsym rsym = qops[i].msym - cop_c.msym;
+	    qtensor2 rop(rsym,bsite.qcol,ksite.qcol);
+	    bool ifcal = false; 
+	    for(const auto& rop_cc : rqops_cc){
+	       if(rsym != - rop_cc.msym) continue;
+	       ifcal = true;
+	       int rR = rop_cc.index[1];
+	       int sR = rop_cc.index[0];
+	       rop += int2e.getAnti(pL,qC,sR,rR)*rop_cc.transpose();
+	    }
+	    if(ifcal) qops[i] += oper_kernel_right_OcOr(bsite,ksite,cop_c,rop);
+         }
+	 // B: sum_sC sc * sum_qRrR <pLqR||sCrR> qR^+rR
+	 for(const auto& cop_c : cqops_c){
+	    int sC = cop_c.index[0];
+	    // rop = sum_qRrR <pLqR||sCrR> qR^+rR
+	    qsym rsym = qops[i].msym + cop_c.msym;
+	    qtensor2 rop(rsym,bsite.qcol,ksite.qcol);
+	    bool ifcal = false;
+	    for(const auto& rop_ca : rqops_ca){
+	       if(rsym != rop_ca.msym) continue;
+	       ifcal = true;
+	       int qR = rop_ca.index[0];
+	       int rR = rop_ca.index[1];
+	       rop += int2e.getAnti(pL,qR,sC,rR)*rop_ca;
+	    }
+	    if(ifcal) qops[i] += oper_kernel_right_OcOr(bsite,ksite,cop_c.transpose(),rop);
+	 }
+      } // pL
+   }else{
+      // resolving the index matching issue
+      map<pair<int,int>,int> Pr_pLqL2pos;
+      for(int idx=0; idx<rqops_P.size(); idx++){
+         int pL = rqops_P[idx].index[0];
+	 int qL = rqops_P[idx].index[1];
+         Pr_pLqL2pos[make_pair(pL,qL)] = idx;
+      }
+      map<pair<int,int>,int> Qr_pLsL2pos;
+      for(int idx=0; idx<rqops_Q.size(); idx++){
+         int pL = rqops_Q[idx].index[0];
+         int sL = rqops_Q[idx].index[1];
+         Qr_pLsL2pos[make_pair(pL,sL)] = idx;
+      }
+      // type-PQ decomposition
+      for(int i=0; i<qops.size(); i++){
+         int pL = qops[i].index[0];
+	 // P: sum_qC qc^+ * P_pLqC
+  	 for(const auto& cop_c : cqops_c){
+	    int qC = cop_c.index[0];
+	    int pos = Pr_pLqL2pos[make_pair(pL,qC)];
+	    auto& rop = rqops_P[pos];
+	    qsym rsym = qops[i].msym - cop_c.msym;
+ 	    assert(rsym == rop.msym);
+	    qops[i] += oper_kernel_right_OcOr(bsite,ksite,cop_c,rop);
+	 } 
+	 // Q: sum_sC sc * Q_pLsC
+	 for(const auto& cop_c : cqops_c){
+	    int sC = cop_c.index[0];
+	    int pos = Qr_pLsL2pos[make_pair(pL,sC)];
+	    auto& rop = rqops_Q[pos];
+	    qsym rsym = qops[i].msym + cop_c.msym;
+	    assert(rsym == rop.msym);
+	    qops[i] += oper_kernel_right_OcOr(bsite,ksite,cop_c.transpose(),rop);
+	 }
+      }	// pL 
+   } // rtype
    string fname = oper_fname(scratch, p, "rightS"); 
    oper_save(fname, qops);
 }
