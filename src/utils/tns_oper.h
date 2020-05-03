@@ -33,10 +33,9 @@ qopers oper_dot_ccaa(const int k0);
 
 void oper_dot_rightS_loc(const int k,
 			 const std::vector<int>& lsupp,
-			 const qopers& cqops_c,
-			 const qopers& cqops_caa,
 			 const integral::two_body& int2e,
 		         const integral::one_body& int1e,
+			 const qopers& cqops_c,
 			 qopers& cqops_S);
  
 // 2. universal blocking code for {|nr>} and {|ln>}

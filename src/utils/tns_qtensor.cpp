@@ -121,16 +121,16 @@ qtensor2 qtensor2::col_signed(const double fac) const{
    qt2.qrow = qrow;
    qt2.qcol = qcol;
    qt2.index = index;
+   qt2.qblocks = qblocks;
    for(const auto& pr : qrow){
       const auto& qr = pr.first;
       for(const auto& pc : qcol){
 	 const auto& qc = pc.first;
 	 auto key = make_pair(qr,qc);
+	 // nonzero blocks scaled by fac*(-1)^p(c)
 	 double fac2 = qc.parity()*fac;
-         if(qr == qt2.msym + qc){
-	    qt2.qblocks[key] = fac2*qblocks.at(key);
-	 }else{
-	    qt2.qblocks[key] = matrix();
+         if(qr == msym + qc){
+	    qt2.qblocks[key] *= fac2;
 	 }
       }
    }
@@ -143,15 +143,14 @@ qtensor2 qtensor2::operator -() const{
    qt2.qrow = qrow;
    qt2.qcol = qcol;
    qt2.index = index;
+   qt2.qblocks = qblocks;
    for(const auto& pr : qrow){
       const auto& qr = pr.first;
       for(const auto& pc : qcol){
 	 const auto& qc = pc.first;
 	 auto key = make_pair(qr,qc);
-         if(qr == qt2.msym + qc){
-	    qt2.qblocks[key] = -qblocks.at(key);
-	 }else{
-	    qt2.qblocks[key] = matrix();
+         if(qr == msym + qc){
+	    qt2.qblocks[key] *= -1;
 	 }
       }
    }
@@ -160,6 +159,7 @@ qtensor2 qtensor2::operator -() const{
 
 // algorithmic operations like matrix
 qtensor2& qtensor2::operator +=(const qtensor2& qt){
+   assert(msym == qt.msym); // symmetry blocking must be the same
    for(const auto& pr : qrow){
       const auto& qr = pr.first;
       for(const auto& pc : qcol){
@@ -167,6 +167,7 @@ qtensor2& qtensor2::operator +=(const qtensor2& qt){
 	 auto key = make_pair(qr,qc);
 	 auto& blk = qblocks[key];
 	 if(blk.size() > 0){
+	    assert(blk.size() == qt.qblocks.at(key).size());
 	    blk += qt.qblocks.at(key);
 	 }
       }
@@ -175,6 +176,7 @@ qtensor2& qtensor2::operator +=(const qtensor2& qt){
 }
 
 qtensor2& qtensor2::operator -=(const qtensor2& qt){
+   assert(msym == qt.msym); // symmetry blocking must be the same
    for(const auto& pr : qrow){
       const auto& qr = pr.first;
       for(const auto& pc : qcol){
@@ -182,6 +184,7 @@ qtensor2& qtensor2::operator -=(const qtensor2& qt){
 	 auto key = make_pair(qr,qc);
 	 auto& blk = qblocks[key];
 	 if(blk.size() > 0){
+	    assert(blk.size() == qt.qblocks.at(key).size());
 	    blk -= qt.qblocks.at(key);
 	 }
       }
@@ -189,6 +192,19 @@ qtensor2& qtensor2::operator -=(const qtensor2& qt){
    return *this;
 }
 
+qtensor2 tns::operator +(const qtensor2& qta, const qtensor2& qtb){
+   qtensor2 qt2 = qta;
+   qt2 += qtb;
+   return qt2;
+}
+
+qtensor2 tns::operator -(const qtensor2& qta, const qtensor2& qtb){
+   qtensor2 qt2 = qta;
+   qt2 -= qtb;
+   return qt2;
+}
+
+// fac*qt2
 qtensor2& qtensor2::operator *=(const double fac){
    for(const auto& pr : qrow){
       const auto& qr = pr.first;
@@ -197,7 +213,7 @@ qtensor2& qtensor2::operator *=(const double fac){
 	 auto key = make_pair(qr,qc);
 	 auto& blk = qblocks[key];
 	 if(blk.size() > 0){
-	    blk = fac*blk;
+	    blk *= fac;
 	 }
       }
    }
@@ -214,19 +230,95 @@ qtensor2 tns::operator *(const qtensor2& qt, const double fac){
    return fac*qt;
 }
 
-qtensor2 tns::operator +(const qtensor2& qta, const qtensor2& qtb){
-   qtensor2 qt2 = qta;
-   qt2 += qtb;
-   return qt2;
-}
-
-qtensor2 tns::operator -(const qtensor2& qta, const qtensor2& qtb){
-   qtensor2 qt2 = qta;
-   qt2 -= qtb;
-   return qt2;
-}
-
 // --- rank-3 tensor ---
+qtensor3::qtensor3(const qsym_space& qmid1,
+		   const qsym_space& qrow1, 
+		   const qsym_space& qcol1){
+   qmid = qmid1;
+   qrow = qrow1;
+   qcol = qcol1;
+   for(const auto& pm : qmid){
+      const auto& qm = pm.first;
+      int mdim = pm.second; 
+      for(const auto& pr : qrow){
+         const auto& qr = pr.first;
+         int rdim = pr.second;
+         for(const auto& pc : qcol){
+            const auto& qc = pc.first;
+            int cdim = pc.second;
+	    // initialization
+	    auto key = make_tuple(qm,qr,qc);
+            if(qr == qm + qc){
+	       vector<matrix> blk(mdim,matrix(rdim,cdim));
+	       qblocks[key] = blk;
+	    }else{
+	       qblocks[key] = empty_block;
+	    }
+	 }
+      }
+   }
+}
+      
+qtensor3 qtensor3::mid_signed(const double fac) const{
+   qtensor3 qt3;
+   qt3.qmid = qmid;
+   qt3.qrow = qrow;
+   qt3.qcol = qcol;
+   qt3.qblocks = qblocks;
+   for(const auto& pm : qmid){
+      const auto& qm = pm.first;
+      int mdim = pm.second; 
+      double fac2 = qm.parity()*fac;
+      for(const auto& pr : qrow){
+         const auto& qr = pr.first;
+         int rdim = pr.second;
+         for(const auto& pc : qcol){
+            const auto& qc = pc.first;
+            int cdim = pc.second;
+	    // initialization
+	    auto key = make_tuple(qm,qr,qc);
+            if(qr == qm + qc){
+	       auto& blk = qt3.qblocks[key]; 
+	       for(int m=0; m<mdim; m++){
+	          blk[m] *= fac2;
+	       }
+	    }
+	 } // c
+      } // r
+   } // m
+   return qt3;
+}
+
+qtensor3 qtensor3::col_signed(const double fac) const{
+   qtensor3 qt3;
+   qt3.qmid = qmid;
+   qt3.qrow = qrow;
+   qt3.qcol = qcol;
+   qt3.qblocks = qblocks;
+   for(const auto& pm : qmid){
+      const auto& qm = pm.first;
+      int mdim = pm.second; 
+      for(const auto& pr : qrow){
+         const auto& qr = pr.first;
+         int rdim = pr.second;
+         for(const auto& pc : qcol){
+            const auto& qc = pc.first;
+            int cdim = pc.second;
+            double fac2 = qc.parity()*fac;
+	    // initialization
+	    auto key = make_tuple(qm,qr,qc);
+            if(qr == qm + qc){
+	       auto& blk = qt3.qblocks[key]; 
+	       for(int m=0; m<mdim; m++){
+	          blk[m] *= fac2;
+	       }
+	    }
+	 } // c
+      } // r
+   } // m
+   return qt3;
+}
+
 void qtensor3::print(const string msg, const int level) const{
    cout << "qtensor3: " << msg << endl;
    qsym_space_print(qmid,"qmid");
@@ -266,10 +358,8 @@ void qtensor3::print(const string msg, const int level) const{
 //          c---*--/ qt3b
 qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a, 
 				  const qtensor3& qt3b,
-				  const bool sgnc){ 
-   qtensor2 qt2;
-   qt2.qrow = qt3a.qrow;
-   qt2.qcol = qt3b.qrow;
+				  const qsym& msym){
+   qtensor2 qt2(msym,qt3a.qrow,qt3b.qrow);
    // loop over external indices
    for(const auto& pr : qt2.qrow){
       const qsym& rsym = pr.first; 
@@ -277,10 +367,15 @@ qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a,
       for(const auto& pc : qt2.qcol){
 	 const qsym& csym = pc.first;
 	 int cdim = pc.second;
+	 auto key = make_pair(rsym,csym);
+	 auto& blk = qt2.qblocks[key];
+	 // impose symmetry selection for the final blocks
+	 if(blk.size() == 0) continue;
+	 
 	 // loop over contracted indices
-	 vector<pair<qsym,qsym>> ilist;
          for(const auto& pm : qt3a.qmid){
             const qsym& msym = pm.first;
+	    int mdim = pm.second;
 	    for(const auto& px : qt3a.qcol){
 	       const qsym& xsym = px.first;
 	       // contract blocks
@@ -289,30 +384,12 @@ qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a,
 	       auto& blka = qt3a.qblocks.at(keya);
 	       auto& blkb = qt3b.qblocks.at(keyb);
 	       if(blka.size() == 0 || blkb.size() == 0) continue;
-	       ilist.push_back(make_pair(msym,xsym));
+               for(int m=0; m<mdim; m++){
+	          blk += dgemm("N","T",blka[m],blkb[m]); 
+	       } // m
 	    } // qx
 	 } // qm
-	 // perform contractions
-	 auto key = make_pair(rsym,csym);
-	 if(ilist.size() == 0){
-	    qt2.qblocks[key] = matrix();
-	 }else{
-	    matrix mat(rdim,cdim);
-	    for(const auto& p : ilist){
-	       const qsym& msym = p.first;
-	       const qsym& xsym = p.second;
-	       auto keya = make_tuple(msym,rsym,xsym);
-	       auto keyb = make_tuple(msym,csym,xsym);
-	       auto& blka = qt3a.qblocks.at(keya);
-	       auto& blkb = qt3b.qblocks.at(keyb);
-	       int mdim = qt3b.qmid.at(msym);
-	       double fac = sgnc ? msym.parity() : 1.0; 
-               for(int m=0; m<mdim; m++){
-	          mat += dgemm("N","T",blka[m],blkb[m],fac); 
-	       } // m
-	    } // qm,qx
-	    qt2.qblocks[key] = mat;
-	 }
+
       } // qc
    } // qr
    return qt2;
@@ -323,10 +400,7 @@ qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a,
 //  r--*--/x 
 qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a, 
 				 const qtensor2& qt2b){
-   qtensor3 qt3;
-   qt3.qmid = qt3a.qmid;
-   qt3.qrow = qt3a.qrow;
-   qt3.qcol = qt2b.qrow;
+   qtensor3 qt3(qt3a.qmid,qt3a.qrow,qt2b.qrow);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
       const qsym& msym = pm.first;
@@ -337,8 +411,11 @@ qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a,
          for(const auto& pc : qt3.qcol){
             const qsym& csym = pc.first;
             int cdim = pc.second;
+	    auto key = make_tuple(msym,rsym,csym);
+	    auto& blk = qt3.qblocks[key];
+	    if(blk.size() == 0) continue;
+
 	    // loop over contracted indices
-	    vector<qsym> ilist;
 	    for(const auto& px : qt3a.qcol){
 	       const qsym& xsym = px.first;
 	       // contract blocks
@@ -347,28 +424,14 @@ qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a,
 	       auto& blka = qt3a.qblocks.at(keya);
 	       auto& blkb = qt2b.qblocks.at(keyb);
 	       if(blka.size() == 0 || blkb.size() == 0) continue;
-	       ilist.push_back(xsym);
-	    } // qx
-	    // perform contractions
-	    auto key = make_tuple(msym,rsym,csym);
-	    if(ilist.size() == 0){
-	       qt3.qblocks[key] = empty_block;
-	    }else{
 	       for(int m=0; m<mdim; m++){
-	          matrix mat(rdim,cdim);
-		  for(const auto& xsym : ilist){
-	             auto keya = make_tuple(msym,rsym,xsym);
-	             auto keyb = make_pair(csym,xsym);
-	             auto& blka = qt3a.qblocks.at(keya);
-	             auto& blkb = qt2b.qblocks.at(keyb);
-		     mat += dgemm("N","T",blka[m],blkb);
-		  }
-	          qt3.qblocks[key].push_back(mat);
+	          blk[m] += dgemm("N","T",blka[m],blkb);
 	       } // m
-	    } 
-	 } // qm
-      } // qc
-   } // qr
+	    } // qx
+	    
+	 } // qc
+      } // qr
+   } // qm
    return qt3;
 }
 
@@ -378,10 +441,7 @@ qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a,
 //  r--*--c
 qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a, 
 			 	 const qtensor2& qt2b){
-   qtensor3 qt3;
-   qt3.qmid = qt2b.qrow;
-   qt3.qrow = qt3a.qrow;
-   qt3.qcol = qt3a.qcol;
+   qtensor3 qt3(qt2b.qrow,qt3a.qrow,qt3a.qcol);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
       const qsym& msym = pm.first;
@@ -392,41 +452,30 @@ qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a,
          for(const auto& pc : qt3.qcol){
             const qsym& csym = pc.first;
             int cdim = pc.second;
+	    auto key = make_tuple(msym,rsym,csym);
+	    auto& blk = qt3.qblocks[key];
+	    if(blk.size() == 0) continue;
+
 	    // loop over contracted indices
-	    vector<qsym> ilist;
 	    for(const auto& px : qt3a.qmid){
 	       const qsym& xsym = px.first;
+	       int xdim = px.second;
 	       // contract blocks
 	       auto keya = make_tuple(xsym,rsym,csym);
 	       auto keyb = make_pair(msym,xsym);
 	       auto& blka = qt3a.qblocks.at(keya);
 	       auto& blkb = qt2b.qblocks.at(keyb);
 	       if(blka.size() == 0 || blkb.size() == 0) continue;
-	       ilist.push_back(xsym);
+	       for(int x=0; x<xdim; x++){
+	          for(int m=0; m<mdim; m++){
+	             blk[m] += blkb(m,x)*blka[x];
+	          } // m
+	       } // x 
 	    } // qx
-	    // perform contractions
-	    auto key = make_tuple(msym,rsym,csym);
-	    if(ilist.size() == 0){
-	       qt3.qblocks[key] = empty_block;
-	    }else{
-	       for(int m=0; m<mdim; m++){
-	          matrix mat(rdim,cdim);
-		  for(const auto& xsym : ilist){
-	             auto keya = make_tuple(xsym,rsym,csym);
-	             auto keyb = make_pair(msym,xsym);
-	             auto& blka = qt3a.qblocks.at(keya);
-	             auto& blkb = qt2b.qblocks.at(keyb);
-		     int xdim = qt3a.qmid.at(xsym);
-		     for(int x=0; x<xdim; x++){
-		        mat += blkb(m,x)*blka[x];
-	 	     } // x 
-		  } // qx
-	          qt3.qblocks[key].push_back(mat);
-	       } // m
-	    } 
-	 } // qm
-      } // qc
-   } // qr
+	    
+	 } // qc
+      } // qr
+   } // qm
    return qt3;
 }
 
@@ -435,10 +484,8 @@ qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a,
 //          \--*--c qt3b
 qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a, 
 				  const qtensor3& qt3b,
-				  const bool sgnl){
-   qtensor2 qt2;
-   qt2.qrow = qt3a.qcol;
-   qt2.qcol = qt3b.qcol;
+				  const qsym& msym){
+   qtensor2 qt2(msym,qt3a.qcol,qt3b.qcol);
    // loop over external indices
    for(const auto& pr : qt2.qrow){
       const qsym& rsym = pr.first; 
@@ -446,10 +493,14 @@ qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a,
       for(const auto& pc : qt2.qcol){
 	 const qsym& csym = pc.first;
 	 int cdim = pc.second;
+	 auto key = make_pair(rsym,csym);
+	 auto& blk = qt2.qblocks[key];
+	 if(blk.size() == 0) continue;
+
 	 // loop over contracted indices
-	 vector<pair<qsym,qsym>> ilist;
          for(const auto& pm : qt3a.qmid){
             const qsym& msym = pm.first;
+	    int mdim = pm.second;
 	    for(const auto& px : qt3a.qrow){
 	       const qsym& xsym = px.first;
 	       // contract blocks
@@ -458,30 +509,12 @@ qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a,
 	       auto& blka = qt3a.qblocks.at(keya);
 	       auto& blkb = qt3b.qblocks.at(keyb);
 	       if(blka.size() == 0 || blkb.size() == 0) continue;
-	       ilist.push_back(make_pair(msym,xsym));
+               for(int m=0; m<mdim; m++){
+	          blk += dgemm("T","N",blka[m],blkb[m]); 
+	       } // m
 	    } // qx
 	 } // qm
-	 // perform contractions
-	 auto key = make_pair(rsym,csym);
-	 if(ilist.size() == 0){
-	    qt2.qblocks[key] = matrix();
-	 }else{
-	    matrix mat(rdim,cdim);
-	    for(const auto& p : ilist){
-	       const qsym& msym = p.first;
-	       const qsym& xsym = p.second;
-	       auto keya = make_tuple(msym,xsym,rsym);
-	       auto keyb = make_tuple(msym,xsym,csym);
-	       auto& blka = qt3a.qblocks.at(keya);
-	       auto& blkb = qt3b.qblocks.at(keyb);
-	       int mdim = qt3b.qmid.at(msym);
-	       double fac = sgnl ? xsym.parity() : 1.0; 
-               for(int m=0; m<mdim; m++){
-	          mat += dgemm("T","N",blka[m],blkb[m],fac); 
-	       } // m
-	    } // qm,qx
-	    qt2.qblocks[key] = mat;
-	 }
+	 
       } // qc
    } // qr
    return qt2;
@@ -492,10 +525,7 @@ qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a,
 //  x\--*--c
 qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a, 
 				 const qtensor2& qt2b){
-   qtensor3 qt3;
-   qt3.qmid = qt3a.qmid;
-   qt3.qrow = qt2b.qrow;
-   qt3.qcol = qt3a.qcol;
+   qtensor3 qt3(qt3a.qmid,qt2b.qrow,qt3a.qcol);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
       const qsym& msym = pm.first;
@@ -506,8 +536,11 @@ qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a,
          for(const auto& pc : qt3.qcol){
             const qsym& csym = pc.first;
             int cdim = pc.second;
+	    auto key = make_tuple(msym,rsym,csym);
+	    auto& blk = qt3.qblocks[key];
+	    if(blk.size() == 0) continue;
+
 	    // loop over contracted indices
-	    vector<qsym> ilist;
 	    for(const auto& px : qt3a.qrow){
 	       const qsym& xsym = px.first;
 	       // contract blocks
@@ -516,27 +549,13 @@ qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a,
 	       auto& blka = qt3a.qblocks.at(keya);
 	       auto& blkb = qt2b.qblocks.at(keyb);
 	       if(blka.size() == 0 || blkb.size() == 0) continue;
-	       ilist.push_back(xsym);
-	    } // qx
-	    // perform contractions
-	    auto key = make_tuple(msym,rsym,csym);
-	    if(ilist.size() == 0){
-	       qt3.qblocks[key] = empty_block;
-	    }else{
 	       for(int m=0; m<mdim; m++){
-	          matrix mat(rdim,cdim);
-		  for(const auto& xsym : ilist){
-	             auto keya = make_tuple(msym,xsym,csym);
-	             auto keyb = make_pair(rsym,xsym);
-	             auto& blka = qt3a.qblocks.at(keya);
-	             auto& blkb = qt2b.qblocks.at(keyb);
-		     mat += dgemm("N","N",blkb,blka[m]);
-		  }
-	          qt3.qblocks[key].push_back(mat);
+	          blk[m] += dgemm("N","N",blkb,blka[m]);
 	       } // m
-	    } 
-	 } // qm
-      } // qc
-   } // qr
+	    } // qx
+	    
+	 } // qc
+      } // qr
+   } // qm
    return qt3;
 }

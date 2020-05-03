@@ -25,6 +25,7 @@ struct qtensor2{
       }
    public:
       // constructor
+      qtensor2(){};
       qtensor2(const qsym& msym1, 
 	       const qsym_space& qrow1, 
 	       const qsym_space& qcol1,
@@ -70,10 +71,18 @@ struct qtensor3{
 	 ar & qblocks;
       }
    public:
+      // constructor
+      qtensor3(){};
+      qtensor3(const qsym_space& qmid1,
+	       const qsym_space& qrow1, 
+	       const qsym_space& qcol1);
       inline int get_dim_mid() const{ return qsym_space_dim(qmid); }
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
       void print(const std::string msg, const int level=0) const;
+      // deal with fermionic sign in fermionic direct product
+      qtensor3 mid_signed(const double fac=1.0) const;
+      qtensor3 col_signed(const double fac=1.0) const;
    public:
       qsym_space qmid; // [sym,dim] - middle
       qsym_space qrow; // [sym,dim] - row
@@ -84,12 +93,12 @@ struct qtensor3{
 // --- tensor linear algebra : contractions ---
 // for right canonical form
 qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b, 
-			     const bool sgnc=false);
+			     const qsym& msym=qsym(0,0)); 
 qtensor3 contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b);
 // for left canonical form
 qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b,
-			     const bool sgnl=false);
+			     const qsym& msym=qsym(0,0));
 qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
 
 } // tns

@@ -150,11 +150,11 @@ qopers tns::oper_dot_ccaa(const int k0){
 // build local S_{p_L}^C = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
 void tns::oper_dot_rightS_loc(const int k,
 			      const vector<int>& lsupp,
-			      const qopers& cqops_c,
-			      const qopers& cqops_caa,
 			      const integral::two_body& int2e,
 		              const integral::one_body& int1e,
+			      const qopers& cqops_c,
 			      qopers& cqops_S){
+   qopers cqops_caa = oper_dot_caa(k);
    int ka = 2*k, kb = ka+1;
    for(int korb_p : lsupp){
       int pa = 2*korb_p, pb = pa+1;

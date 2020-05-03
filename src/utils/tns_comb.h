@@ -24,7 +24,7 @@ class comb{
       // compute renormalized bases {|r>} from SCI wf 
       comb_rbases get_rbases(const fock::onspace& space,
 		      	     const std::vector<std::vector<double>>& vs,
-		      	     const double thresh_proj=1.e-15);
+		      	     const double thresh_proj=1.e-14);
       // compute wave function at the start for right canonical form 
       qtensor3 get_rwfuns(const fock::onspace& space,
 		      	  const std::vector<std::vector<double>>& vs,
@@ -34,7 +34,7 @@ class comb{
       // build site tensor from {|r>} bases
       void rcanon_init(const fock::onspace& space,
 		       const std::vector<std::vector<double>>& vs,
-		       const double thresh_proj=1.e-15,
+		       const double thresh_proj=1.e-14,
 		       const double thresh_ortho=1.e-10);
       // <n|Comb[i]>
       std::vector<double> rcanon_coeff(const fock::onstate& state);
