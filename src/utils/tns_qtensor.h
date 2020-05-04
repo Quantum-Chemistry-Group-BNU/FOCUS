@@ -38,7 +38,7 @@ struct qtensor2{
       // deal with fermionic sign in fermionic direct product
       qtensor2 col_signed(const double fac=1.0) const;
       // algorithmic operations like matrix
-      qtensor2 transpose() const;
+      qtensor2 T() const;
       qtensor2 operator -() const;
       // pure algorithmic operations 
       qtensor2& operator +=(const qtensor2& qt);

@@ -22,6 +22,9 @@ struct one_body{
          assert(n > 0);
          data.resize(n*(n+1)/2,0.0); 
       };
+      void set_zeros(){
+	 fill(data.begin(), data.end(), 0.0);
+      }
       // init_memory
       void init_mem(){
 	 assert(sorb > 0);
@@ -113,6 +116,10 @@ struct two_body{
 	 size_t p = n*(n+1)/2; 
          data.resize(p*p,0.0);
       };
+      void set_zeros(){
+	 fill(data.begin(), data.end(), 0.0);
+         this->set_JKQ();
+      }
       // init_memory
       void init_mem(){
 	 assert(sorb > 0);

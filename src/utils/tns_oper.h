@@ -31,13 +31,19 @@ qopers oper_dot_ca(const int k0);
 qopers oper_dot_caa(const int k0);
 qopers oper_dot_ccaa(const int k0);
 
-void oper_dot_rightS_loc(const int k,
-			 const std::vector<int>& lsupp,
-			 const integral::two_body& int2e,
-		         const integral::one_body& int1e,
-			 const qopers& cqops_c,
-			 qopers& cqops_S);
- 
+void oper_dot_S(const int k,
+	        const std::vector<int>& psupp,
+	        const integral::two_body& int2e,
+	        const integral::one_body& int1e,
+	        const qopers& cqops_c,
+	        qopers& cqops_S);
+
+void oper_dot_H(const int k,
+	        const integral::two_body& int2e,
+	        const integral::one_body& int1e,
+	        const qopers& cqops_ca,
+	        qopers& cqops_H);
+
 // 2. universal blocking code for {|nr>} and {|ln>}
 
 // --- kernel ---

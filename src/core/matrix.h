@@ -167,7 +167,7 @@ class matrix{
 	 return tr;
       }
       // transpose
-      matrix transpose() const{
+      matrix T() const{
          matrix At(_cols,_rows);
          for(int j=0; j<_rows; j++){
             for(int i=0; i<_cols; i++){

@@ -89,7 +89,7 @@ matrix qtensor2::to_matrix() const{
    return mat;
 }
 
-qtensor2 qtensor2::transpose() const{
+qtensor2 qtensor2::T() const{
    qtensor2 qt2;
    qt2.msym = -msym;
    qt2.qrow = qcol;
@@ -106,7 +106,7 @@ qtensor2 qtensor2::transpose() const{
 	 auto key = make_pair(qr,qc);
          if(qr == qt2.msym + qc){
             auto tkey = make_pair(qc,qr);
-	    qt2.qblocks[key] = qblocks.at(tkey).transpose();
+	    qt2.qblocks[key] = qblocks.at(tkey).T();
 	 }else{
 	    qt2.qblocks[key] = matrix();
 	 }

@@ -355,7 +355,7 @@ void comb::rcanon_init(const onspace& space,
 		  int ndim0 = p0.second;
                   for(int i=0; i<ndim0; i++){
                      // S[r,r'] = \sum_{l,c} Ac[r,l]*Ac[r',l]
-                     Sr += dgemm("N","N",blk[i],blk[i].transpose());
+                     Sr += dgemm("N","N",blk[i],blk[i].T());
                   }
 	       } // p0
             } // p1

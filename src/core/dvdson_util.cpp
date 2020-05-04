@@ -99,7 +99,7 @@ void linalg::check_orthogonality(const int n, const int m,
 				 const vector<double>& vbas, 
 				 const double thresh){
    matrix V(n,m,vbas.data());
-   matrix Vt = V.transpose();
+   matrix Vt = V.T();
    matrix dev = dgemm("N","N",Vt,V) - identity_matrix(m);
    double diff = normF(dev);
    cout << "linalg::check_orthogonality diff=" << diff << endl;

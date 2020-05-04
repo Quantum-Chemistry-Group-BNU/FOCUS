@@ -5,7 +5,7 @@ import numpy
 
 # 2-electron term: <pq||sr> p^+ q^+ r s (p<q,r>s)
 
-keys = ["L","R"] #["L","C","R"]
+keys = ["C","R"] #["L","C","R"]
 npart = len(keys)
 print keys,npart
 idx = 0
@@ -28,6 +28,7 @@ for kp in range(npart):
       perm = numpy.argsort(irep)
       op_sort = ''.join([oplst[i] for i in perm])
       print idx,eri+' '+op,irep,perm,op_sort
+exit(1)
 
 print
 keys = ["C","R"] #["L","C","R"]

@@ -147,28 +147,42 @@ qopers tns::oper_dot_ccaa(const int k0){
    return qops;
 }
 
-// build local S_{p_L}^C = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
-void tns::oper_dot_rightS_loc(const int k,
-			      const vector<int>& lsupp,
-			      const integral::two_body& int2e,
-		              const integral::one_body& int1e,
-			      const qopers& cqops_c,
-			      qopers& cqops_S){
+// build local S_{p}^C = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
+void tns::oper_dot_S(const int k,
+		     const vector<int>& psupp,
+		     const integral::two_body& int2e,
+		     const integral::one_body& int1e,
+		     const qopers& cqops_c,
+		     qopers& cqops_S){
    qopers cqops_caa = oper_dot_caa(k);
    int ka = 2*k, kb = ka+1;
-   for(int korb_p : lsupp){
+   for(int korb_p : psupp){
       int pa = 2*korb_p, pb = pa+1;
       // SpLa
-      qtensor2 Spa = 0.5*int1e.get(pa,ka)*cqops_c[0].transpose()
+      qtensor2 Spa = 0.5*int1e.get(pa,ka)*cqops_c[0].T()
       	           + int2e.getAnti(pa,kb,ka,kb)*cqops_caa[1]; // qrs=110
       Spa.index.resize(1);
       Spa.index[0] = pa;
       cqops_S.push_back(Spa);
       // SpLb
-      qtensor2 Spb = 0.5*int1e.get(pb,kb)*cqops_c[1].transpose()
+      qtensor2 Spb = 0.5*int1e.get(pb,kb)*cqops_c[1].T()
       	           + int2e.getAnti(pa,ka,ka,kb)*cqops_caa[0]; // qrs=010
       Spb.index.resize(1);
       Spb.index[0] = pb;
       cqops_S.push_back(Spb);
    } // p
+}
+
+// build local H^C = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
+void tns::oper_dot_H(const int k,
+		     const integral::two_body& int2e,
+		     const integral::one_body& int1e,
+		     const qopers& cqops_ca,
+		     qopers& cqops_H){
+   qopers cqops_ccaa = oper_dot_ccaa(k);
+   int ka = 2*k, kb = ka+1;
+   qtensor2 H = int1e.get(ka,ka)*cqops_ca[0]
+      	      + int1e.get(kb,kb)*cqops_ca[3]
+      	      + int2e.getAnti(ka,kb,ka,kb)*cqops_ccaa[0];
+   cqops_H.push_back(H);
 }

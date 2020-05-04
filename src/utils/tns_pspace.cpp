@@ -128,7 +128,7 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
                vlr(ia,ib) = vs[iroot][id];
             }
          }
-         rhol += dgemm("N","N",vlr,vlr.transpose());
+         rhol += dgemm("N","N",vlr,vlr.T());
       }
       rhol *= 1.0/nroots;
       vector<double> eig(dimAs);
@@ -271,7 +271,7 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
                int id = get<2>(t);
                vrl(ib,ia) = vs[iroot][id];
             }
-	    u += dgemm("N","N",vrl,vrl.transpose()); 
+	    u += dgemm("N","N",vrl,vrl.T()); 
          }
          u *= 1.0/nroots;
          eigen_solver(u,sig,1);

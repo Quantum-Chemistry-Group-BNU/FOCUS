@@ -102,9 +102,9 @@ void tns::oper_renorm_rightB(const comb& bra,
    // pC^+ * qR and pR^+*qC = -qC*pR^+
    for(const auto& cop_c : cqops_c){
       for(const auto& rop_c : rqops_c){
-         qt2 = oper_kernel_right_OcOr(bsite,ksite,cop_c,rop_c.transpose()); 
+         qt2 = oper_kernel_right_OcOr(bsite,ksite,cop_c,rop_c.T()); 
          qops.push_back(qt2);
-	 qt2 = oper_kernel_right_OrOc(bsite,ksite,rop_c,cop_c.transpose());
+	 qt2 = oper_kernel_right_OrOc(bsite,ksite,rop_c,cop_c.T());
          qops.push_back(qt2);
       }
    }
@@ -123,11 +123,11 @@ void tns::oper_renorm_rightB(const comb& bra,
         rdmC(r,s) = op.to_matrix()(1,2);
      }
      cout << "trA=" << rdmA.trace() << " |A|=" << normF(rdmA)
-	  << " A-A.t=" << normF(rdmA-rdmA.transpose()) << endl;
+	  << " A-A.t=" << normF(rdmA-rdmA.T()) << endl;
      cout << "trA=" << rdmB.trace() << " |A|=" << normF(rdmB)
-	  << " A-A.t=" << normF(rdmB-rdmB.transpose()) << endl;
+	  << " A-A.t=" << normF(rdmB-rdmB.T()) << endl;
      cout << "trA=" << rdmC.trace() << " |A|=" << normF(rdmC)
-	  << " A-A.t=" << normF(rdmC-rdmC.transpose()) << endl;
+	  << " A-A.t=" << normF(rdmC-rdmC.T()) << endl;
      cout << qops.size() << endl;
 
      matrix rdm1a,rdm1b,rdm1c;
@@ -135,11 +135,11 @@ void tns::oper_renorm_rightB(const comb& bra,
      rdm1b.load("fci_rdm1b");
      rdm1c.load("fci_rdm1c");
      cout << "trA=" << rdm1a.trace() << " |A|=" << normF(rdm1a)
-	  << " A-A.t=" << normF(rdm1a-rdm1a.transpose()) << endl;
+	  << " A-A.t=" << normF(rdm1a-rdm1a.T()) << endl;
      cout << "trA=" << rdm1b.trace() << " |A|=" << normF(rdm1b)
-	  << " A-A.t=" << normF(rdm1b-rdm1b.transpose()) << endl;
+	  << " A-A.t=" << normF(rdm1b-rdm1b.T()) << endl;
      cout << "trA=" << rdm1c.trace() << " |A|=" << normF(rdm1c)
-	  << " A-A.t=" << normF(rdm1c-rdm1c.transpose()) << endl;
+	  << " A-A.t=" << normF(rdm1c-rdm1c.T()) << endl;
 
      cout << "diff=" << normF(rdmA-rdm1a) << endl;
      cout << "diff=" << normF(rdmB-rdm1b) << endl;

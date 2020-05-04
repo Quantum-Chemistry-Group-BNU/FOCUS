@@ -150,6 +150,6 @@ double linalg::ddot(const int N, const double* X, const double* Y){
 double linalg::symmetric_diff(const matrix& A){
    assert(A.rows() == A.cols());
    matrix At(A);
-   At -= A.transpose();
+   At -= A.T();
    return normF(At);
 }

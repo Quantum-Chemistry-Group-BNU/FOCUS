@@ -87,8 +87,6 @@ int tests::test_comb(){
    // check energy
    auto Smat = fci::get_Smat(sci_space, vs);
    Smat.print("Smat");
-   auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-   Hmat.print("Hmat");
 
    // check rdm1
    int k = int1e.sorb;
@@ -108,7 +106,14 @@ int tests::test_comb(){
    //auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
    //Hij.print("Hij");
 
+   int1e.set_zeros();
+   int2e.set_zeros();
+
    tns::oper_env_right(comb, comb, int2e, int1e, schd.scratch);
+
+   auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
+   cout << "ecore=" << ecore << endl;
+   Hmat.print("Hmat");
 
    //schd.remove_scratch();
    

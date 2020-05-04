@@ -47,7 +47,7 @@ void tns::oper_renorm_right(const comb& bra,
       oper_renorm_rightP(bra,ket,p,p0,ifload,int2e,int1e,scratch);
    }
    oper_renorm_rightS(bra,ket,p,p0,ifload,int2e,int1e,scratch);
-   //oper_renorm_rightH(bra,ket,p,p0,ifload,int2e,int1e,scratch);
+   oper_renorm_rightH(bra,ket,p,p0,ifload,int2e,int1e,scratch);
 }
 
 void tns::oper_env_right(const comb& bra, 
