@@ -27,25 +27,25 @@ matrix tns::get_Sij(const comb& bra,
       int tp = bra.type.at(p);
       if(tp == 0 || tp == 1){
 	 if(i==nbackbone-1){
-	    qt2_r = contract_qt3_qt3_lc(bra.rsites.at(p),ket.rsites.at(p));
+	    qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),ket.rsites.at(p));
 	 }else{
-	    auto qtmp = contract_qt3_qt2_l(ket.rsites.at(p),qt2_r);
-	    qt2_r = contract_qt3_qt3_lc(bra.rsites.at(p),qtmp);
+	    auto qtmp = contract_qt3_qt2_r(ket.rsites.at(p),qt2_r);
+	    qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),qtmp);
 	 }
       }else if(tp == 3){
          for(int j=bra.topo[i].size()-1; j>=1; j--){
 	    auto pj = make_pair(i,j);
             if(j==bra.topo[i].size()-1){
-	       qt2_u = contract_qt3_qt3_lc(bra.rsites.at(pj),ket.rsites.at(pj));	   
+	       qt2_u = contract_qt3_qt3_cr(bra.rsites.at(pj),ket.rsites.at(pj));	   
 	    }else{
-	       auto qtmp = contract_qt3_qt2_l(ket.rsites.at(pj),qt2_u);
-	       qt2_u = contract_qt3_qt3_lc(bra.rsites.at(pj),qtmp);
+	       auto qtmp = contract_qt3_qt2_r(ket.rsites.at(pj),qt2_u);
+	       qt2_u = contract_qt3_qt3_cr(bra.rsites.at(pj),qtmp);
 	    }
 	 } // j
 	 // internal site without physical index
-	 auto qtmp = contract_qt3_qt2_l(ket.rsites.at(p),qt2_r);
+	 auto qtmp = contract_qt3_qt2_r(ket.rsites.at(p),qt2_r);
 	 qtmp = contract_qt3_qt2_c(qtmp,qt2_u); // upper branch
-	 qt2_r = contract_qt3_qt3_lc(bra.rsites.at(p),qtmp);
+	 qt2_r = contract_qt3_qt3_cr(bra.rsites.at(p),qtmp);
       }
    } // i
    // final: qt2_r to normal matrix
@@ -87,10 +87,10 @@ matrix tns::get_Hij(const comb& bra,
          for(int j=bra.topo[i].size()-1; j>=1; j--){
 	    auto pj = make_pair(i,j);
             if(j==bra.topo[i].size()-1){
-	       qt2_u = contract_qt3_qt3_lc(bra.rsites.at(pj),ket.rsites.at(pj));	   
+	       qt2_u = contract_qt3_qt3_cr(bra.rsites.at(pj),ket.rsites.at(pj));	   
 	    }else{
-	       auto qtmp = contract_qt3_qt2_l(ket.rsites.at(pj),qt2_u);
-	       qt2_u = contract_qt3_qt3_lc(bra.rsites.at(pj),qtmp);
+	       auto qtmp = contract_qt3_qt2_r(ket.rsites.at(pj),qt2_u);
+	       qt2_u = contract_qt3_qt3_cr(bra.rsites.at(pj),qtmp);
 	    }
 	 } // j
 	 // internal site without physical index

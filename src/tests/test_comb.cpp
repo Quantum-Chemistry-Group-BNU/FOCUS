@@ -80,44 +80,40 @@ int tests::test_comb(){
       comb.rcanon_load();
    }
    
-   // check overlap
-   auto ovlp = comb.rcanon_ovlp(sci_space, vs);
+   // check overlap with CI
+   auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
    ovlp.print("ovlp");
-
-   // check energy
+   
+   // check self-overlap
    auto Smat = fci::get_Smat(sci_space, vs);
    Smat.print("Smat");
+   auto Sij = tns::get_Sij(comb, comb);
+   Sij.print("Sij");
 
    // check rdm1
    int k = int1e.sorb;
    linalg::matrix rdm1(k,k); 
    fci::get_rdm1(sci_space, vs[0], vs[0], rdm1);
    rdm1.save("fci_rdm1a");
-   fci::get_rdm1(sci_space, vs[0], vs[1], rdm1);
+   fci::get_rdm1(sci_space, vs[2], vs[0], rdm1);
    rdm1.save("fci_rdm1b");
    fci::get_rdm1(sci_space, vs[1], vs[2], rdm1);
    rdm1.save("fci_rdm1c");
-
-   schd.create_scratch();
-
-   auto Sij = tns::get_Sij(comb, comb);
-   Sij.print("Sij");
   
+   schd.create_scratch();
+   // check energy
    //auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
    //Hij.print("Hij");
-
-   int1e.set_zeros();
+   
+   //int1e.set_zeros();
    int2e.set_zeros();
-
    tns::oper_env_right(comb, comb, int2e, int1e, schd.scratch);
-
+   
    auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    cout << "ecore=" << ecore << endl;
    Hmat.print("Hmat");
 
    //schd.remove_scratch();
-   
-   // optimization
 
    return 0;
 }

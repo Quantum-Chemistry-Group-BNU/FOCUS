@@ -96,7 +96,7 @@
 	  - implement tensor contraction kernels for qtensor
 	  - checked by evaluating <Comb|Comb> 
 
- 202004xx initialize normal & complementary operators (MOST CHALLENGING PART)
+ 202005xx initialize normal & complementary operators (MOST CHALLENGING PART)
 	  - data structure for operators: qtensor2
 	  - operators on dot (in memory)
 	  - serializaiton: -lboost_system -lboost_filesystem

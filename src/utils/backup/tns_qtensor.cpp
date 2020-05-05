@@ -10,7 +10,7 @@ using namespace tns;
 // --- tensor linear algebra : contractions ---
 
 //  r/	m 
-//   *  |     = [m](r,c) = op(r,x)*A[m](x,c) = <mr|o|c>
+//   *  |     = [m](r,c) = L(r,x)*A[m](x,c)
 //  x\--*--c
 qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a, 
 				 const qtensor2& qt2b){
@@ -135,3 +135,4 @@ qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a,
    } // qr
    return qt2;
 }
+

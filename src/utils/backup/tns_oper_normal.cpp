@@ -104,8 +104,15 @@ void tns::oper_renorm_rightB(const comb& bra,
       for(const auto& rop_c : rqops_c){
          qt2 = oper_kernel_OcOr(bsite,ksite,cop_c,rop_c.T()); 
          qops.push_back(qt2);
-	 qt2 = oper_kernel_OrOc(bsite,ksite,rop_c,cop_c.T());
-         qops.push_back(qt2);
+
+	 qt2.print("tmp",2);
+//	 //qt2 = oper_kernel_OrOc(bsite,ksite,rop_c,cop_c.T());
+//         //qops.push_back(qt2);
+//	 qt2 = -oper_kernel_OcOr(bsite,ksite,cop_c.T(),rop_c);
+//	 int tmp = qt2.index[0];
+//	 qt2.index[0] = qt2.index[1];
+//	 qt2.index[1] = tmp;
+//         qops.push_back(qt2);
       }
    }
    string fname = oper_fname(scratch, p, "rightB"); 
@@ -119,10 +126,9 @@ void tns::oper_renorm_rightB(const comb& bra,
         int r = op.index[0];
         int s = op.index[1];
         rdmA(r,s) = op.to_matrix()(0,0);
-        rdmB(r,s) = op.to_matrix()(2,0);
+        rdmB(r,s) = op.to_matrix()(1,1);
         rdmC(r,s) = op.to_matrix()(1,2);
      }
-     cout << setprecision(10) << endl;
      cout << "trA=" << rdmA.trace() << " |A|=" << normF(rdmA)
 	  << " A-A.t=" << normF(rdmA-rdmA.T()) << endl;
      cout << "trA=" << rdmB.trace() << " |A|=" << normF(rdmB)

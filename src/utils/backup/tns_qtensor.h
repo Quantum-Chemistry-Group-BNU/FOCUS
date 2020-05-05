@@ -17,11 +17,11 @@ struct qtensor2{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
+	 ar & index;
          ar & sym;
 	 ar & qrow;
 	 ar & qcol;
 	 ar & qblocks;
-	 ar & index;
       }
    public:
       // constructor
@@ -98,9 +98,12 @@ struct qtensor3{
 };
 
 // --- tensor linear algebra : contractions ---
-qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
+// for right canonical form
+qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b); 
+qtensor3 contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b);
+qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
 
 } // tns
 
