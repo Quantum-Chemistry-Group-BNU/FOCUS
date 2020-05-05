@@ -126,14 +126,14 @@ class matrix{
          return &_data[j*_rows+i];
       }
       // print
-      void print(std::string name="") const{
+      void print(std::string name="", const int prec=4) const{
          std::cout << "matrix: " << name 
 		   << " size=(" << _rows << "," << _cols << ")" 
 		   << std::endl;
-	 std::cout << std::scientific << std::setprecision(4); 
+	 std::cout << std::scientific << std::setprecision(prec); 
 	 for(int i=0; i<_rows; i++){
    	    for(int j=0; j<_cols; j++){
-	       std::cout << std::setw(12) << _data[j*_rows+i] << " ";
+	       std::cout << std::setw(12+prec) << _data[j*_rows+i] << " ";
 	    } 
 	    std::cout << std::endl;
 	 }

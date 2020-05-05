@@ -101,18 +101,19 @@ int tests::test_comb(){
    rdm1.save("fci_rdm1c");
   
    schd.create_scratch();
-   // check energy
-   //auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
-   //Hij.print("Hij");
-   
    //int1e.set_zeros();
    int2e.set_zeros();
-   tns::oper_env_right(comb, comb, int2e, int1e, schd.scratch);
-   
+
    auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    cout << "ecore=" << ecore << endl;
    Hmat.print("Hmat");
+   Hmat.save("fci_Hmat");
 
+   tns::oper_env_right(comb, comb, int2e, int1e, schd.scratch);
+   
+   // check energy
+   //auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
+   //Hij.print("Hij");
    //schd.remove_scratch();
 
    return 0;

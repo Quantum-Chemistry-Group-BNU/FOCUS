@@ -146,7 +146,6 @@ void tns::oper_renorm_rightB(const comb& bra,
      cout << "diff=" << normF(rdmA-rdm1a) << endl;
      cout << "diff=" << normF(rdmB-rdm1b) << endl;
      cout << "diff=" << normF(rdmC-rdm1c) << endl;
-     exit(1);
    }
 
 }
