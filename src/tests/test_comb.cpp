@@ -101,8 +101,8 @@ int tests::test_comb(){
    rdm1.save("fci_rdm1c");
   
    schd.create_scratch();
-   //int1e.set_zeros();
-   int2e.set_zeros();
+   int1e.set_zeros();
+   //int2e.set_zeros();
 
    auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    cout << "ecore=" << ecore << endl;

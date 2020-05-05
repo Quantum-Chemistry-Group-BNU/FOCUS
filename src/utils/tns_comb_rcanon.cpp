@@ -12,13 +12,12 @@ using namespace fock;
 using namespace linalg;
 
 // compute renormalized bases {|r>} 
-comb_rbases comb::get_rbases(const onspace& space,
-		    	     const vector<vector<double>>& vs,
-		    	     const double thresh_proj){
+void comb::get_rbases(const onspace& space,
+		      const vector<vector<double>>& vs,
+		      const double thresh_proj){
    auto t0 = global::get_time();
    bool debug = true;
    cout << "\ncomb::get_rbases thresh_proj=" << scientific << thresh_proj << endl;
-   comb_rbases rbases;
    vector<pair<int,int>> shapes; // for debug
    // loop over nodes (except the last one)
    for(int idx=0; idx<ntotal-1; idx++){
@@ -83,7 +82,6 @@ comb_rbases comb::get_rbases(const onspace& space,
    auto t1 = global::get_time();
    cout << "\ntiming for comb::get_rbases : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
-   return rbases;
 }
 
 // compute wave function at the start for right canonical form 
@@ -193,7 +191,7 @@ void comb::rcanon_init(const onspace& space,
    bool debug = false;
    cout << "\ncomb::rcanon_init" << endl;
    // compute renormalized bases {|r>}
-   auto rbases = get_rbases(space, vs, thresh_proj);
+   get_rbases(space, vs, thresh_proj);
    // loop over sites
    for(int idx=0; idx<ntotal-1; idx++){
       auto p = rcoord[idx];

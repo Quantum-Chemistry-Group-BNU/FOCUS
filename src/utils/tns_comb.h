@@ -12,7 +12,6 @@ namespace tns{
 
 // --- comb tensor networks ---
 using comb_coord = std::pair<int,int>;
-using comb_rbases = std::map<comb_coord,renorm_basis>;
 class comb{
    public:
       // --- topology of comb ---
@@ -22,9 +21,9 @@ class comb{
       void topo_print() const;
       // --- from SCI wavefunctions ---
       // compute renormalized bases {|r>} from SCI wf 
-      comb_rbases get_rbases(const fock::onspace& space,
-		      	     const std::vector<std::vector<double>>& vs,
-		      	     const double thresh_proj=1.e-14);
+      void get_rbases(const fock::onspace& space,
+		      const std::vector<std::vector<double>>& vs,
+		      const double thresh_proj=1.e-14);
       // compute wave function at the start for right canonical form 
       qtensor3 get_rwfuns(const fock::onspace& space,
 		      	  const std::vector<std::vector<double>>& vs,
@@ -53,6 +52,8 @@ class comb{
       std::vector<comb_coord> rcoord; // coordinate of each node in rvisit order
       std::map<comb_coord,std::vector<int>> rsupport;
       std::vector<int> image2; // mapping of physical indices
+      // --- rbases ---
+      std::map<comb_coord,renorm_basis> rbases;
       // --- right canonical form ---
       std::map<comb_coord,qtensor3> rsites;
       // --- left canonical form ---

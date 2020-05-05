@@ -146,6 +146,14 @@ void oper_env_right(const comb& bra,
 	            const integral::one_body& int1e,
 		    const std::string scratch=".");
 
+// determinant
+void oper_rbases(const comb& bra,
+		 const comb& ket,
+		 const comb_coord& p, 
+	         const integral::two_body& int2e,
+	         const integral::one_body& int1e,
+		 const std::string scratch);
+
 } // tns
 
 #endif

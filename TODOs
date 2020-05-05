@@ -122,16 +122,16 @@
 		  compute <rdm1|p^+q|rdm2> for state-averaged comb states.
 		  
  2020xxxx basic sweep algorithm
-	  - implement canonicalization of Comb
-	  - decimation 
 	  - implement H*x for one-dot wf
  	  - implement H*x for two-dot wf 
+	  - decimation 
 
  2020xxxx more functionalities:
  	  - efficient implementation using abelian symmetry
 	  - noise for pRDM
  	  - propogation of initial guess
 	  - support for state-average excited state calculations
+	  - implement canonicalization of Comb for random sampling
 
 --- Advanced functionalities ---
  

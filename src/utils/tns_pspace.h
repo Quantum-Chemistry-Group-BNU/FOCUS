@@ -13,7 +13,7 @@ namespace tns{
 // renormalized states from determinants
 struct renorm_sector{
    public:
-      void print(const std::string msg, const int level=0);
+      void print(const std::string msg, const int level=0) const;
    public:
       qsym sym;
       fock::onspace space;

@@ -11,7 +11,7 @@ using namespace linalg;
 using namespace tns;
 
 // renormalized states from determinants
-void renorm_sector::print(const string msg, const int level){
+void renorm_sector::print(const string msg, const int level) const{
    cout << "renorm_sector: " << msg << " qsym=" << sym 
         << " shape=" << coeff.rows() << "," << coeff.cols() << endl; 
    if(level >= 1){
