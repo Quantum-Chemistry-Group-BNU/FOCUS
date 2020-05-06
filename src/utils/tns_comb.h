@@ -51,7 +51,9 @@ class comb{
       std::map<comb_coord,int> type; // type of nodes 0,1,2
       std::vector<comb_coord> rcoord; // coordinate of each node in rvisit order
       std::map<comb_coord,std::vector<int>> rsupport;
+      // --- 1D ordering ---
       std::vector<int> image2; // mapping of physical indices
+      std::vector<int> orbord; // map orbital to 1D position
       // --- rbases ---
       std::map<comb_coord,renorm_basis> rbases;
       // --- right canonical form ---

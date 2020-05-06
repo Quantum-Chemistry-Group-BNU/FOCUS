@@ -28,8 +28,8 @@ void tns::oper_renorm_right(const comb& bra,
    if(kind == make_pair(1,0) || kind == make_pair(2,0)){
       ifload = 0; // (C:false,R:false)
    }else if(kind == make_pair(1,1) || kind == make_pair(1,3) ||
-	    kind == make_pair(0,1) || kind == make_pair(0,3) ||
-            kind == make_pair(2,2)){
+	    kind == make_pair(2,2) ||
+	    kind == make_pair(0,1) || kind == make_pair(0,3)){ // start site
       ifload = 1; // (C:false,R:true)
    }else if(kind == make_pair(3,0)){
       ifload = 2; // (C:true,R:false)

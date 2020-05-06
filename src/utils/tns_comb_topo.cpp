@@ -131,12 +131,16 @@ void comb::topo_init(){
          iswitch = coord.first;
       }
    }
-   // image2
+   // image2 / orbord (from rsupport[0,0] - an 1D order)
    auto order = rsupport[make_pair(0,0)]; 
    image2.resize(2*nphysical);
+   orbord.resize(2*nphysical);
    for(int i=0; i<nphysical; i++){
       image2[2*i] = 2*order[i];
       image2[2*i+1] = 2*order[i]+1;
+      // for later usage in LCR 
+      orbord[2*order[i]] = 2*i;
+      orbord[2*order[i]+1] = 2*i+1;
    }
    // sweep sequence: forward
    for(int i=1; i<nbackbone; i++){
@@ -182,6 +186,10 @@ void comb::topo_print() const{
       cout << endl;
       idx++;
    }
+   cout << "--- image2 / orbord ---" << endl;
+   for(int i=0; i<2*nphysical; i++){
+      cout << i << " " << image2[i] << " " << orbord[i] << endl;
+   }	  
    cout << "--- rcoord & type & rsupport/lsupport ---" << endl;
    for(int i=0; i<ntotal; i++){
       auto p = rcoord[i];

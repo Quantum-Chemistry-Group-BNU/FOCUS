@@ -8,6 +8,60 @@ using namespace std;
 using namespace linalg;
 using namespace tns;
 
+void tns::oper_renorm_rightP(const comb& bra,
+			     const comb& ket,
+		             const comb_coord& p,
+		             const comb_coord& p0,
+			     const int ifload,
+	                     const integral::two_body& int2e,
+	                     const integral::one_body& int1e,
+			     const string scratch){
+   cout << "tns::oper_renorm_rightP ifload=" << ifload << endl;
+   const auto& bsite = bra.rsites.at(p);
+   const auto& ksite = ket.rsites.at(p);
+   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
+   qopers qops, qops_cc;
+   string fname0 = oper_fname(scratch, p, "rightA");
+   oper_load(fname0, qops_cc);
+   // initialization for Ppq = <pq||sr> aras [r>s] (p<q)
+   qtensor2 Paa(qsym(-2,-2), bsite.qcol, ksite.qcol, 2);
+   qtensor2 Pbb(qsym(-2, 0), bsite.qcol, ksite.qcol, 2);
+   qtensor2 Pab(qsym(-2,-1), bsite.qcol, ksite.qcol, 2);
+   for(int korb_p : bra.lsupport.at(p)){
+      int pa = 2*korb_p, pb = pa+1;
+      for(int korb_q : bra.lsupport.at(p)){
+	 int qa = 2*korb_q, qb = qa+1;
+         Paa.index[0] = pa;
+         Paa.index[1] = qa;
+	 if(bra.orbord[pa] < bra.orbord[qa]) qops.push_back(Paa);
+         Pbb.index[0] = pb;
+         Pbb.index[1] = qb;
+	 if(bra.orbord[pb] < bra.orbord[qb]) qops.push_back(Pbb);
+         Pab.index[0] = pa;
+         Pab.index[1] = qb;
+	 if(bra.orbord[pa] < bra.orbord[qb]) qops.push_back(Pab);
+         // for ababab orbital ordering, Pba may also be needed.
+	 Pab.index[0] = pb;
+         Pab.index[1] = qa;
+	 if(bra.orbord[pb] < bra.orbord[qa]) qops.push_back(Pab);
+      }
+   }
+   // Ppq = <pq||sr> aras [r>s] (p<q)
+   for(auto& qop : qops){
+      int orb_p = qop.index[0];
+      int orb_q = qop.index[1];
+      // (as^+ar^+)^+ (s<r) => aras
+      for(const auto& op_cc : qops_cc){
+         if(qop.sym != -op_cc.sym) continue;
+         int orb_s = op_cc.index[0];
+         int orb_r = op_cc.index[1];
+         qop += int2e.getAnti(orb_p,orb_q,orb_s,orb_r) * op_cc.T();
+      } // ps
+   } // qr
+   string fname = oper_fname(scratch, p, "rightP"); 
+   oper_save(fname, qops);
+}
+
 void tns::oper_renorm_rightQ(const comb& bra,
 			     const comb& ket,
 		             const comb_coord& p,
@@ -61,60 +115,6 @@ void tns::oper_renorm_rightQ(const comb& bra,
    oper_save(fname, qops);
 }
 
-void tns::oper_renorm_rightP(const comb& bra,
-			     const comb& ket,
-		             const comb_coord& p,
-		             const comb_coord& p0,
-			     const int ifload,
-	                     const integral::two_body& int2e,
-	                     const integral::one_body& int1e,
-			     const string scratch){
-   cout << "tns::oper_renorm_rightP ifload=" << ifload << endl;
-   const auto& bsite = bra.rsites.at(p);
-   const auto& ksite = ket.rsites.at(p);
-   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
-   qopers qops, qops_cc;
-   string fname0 = oper_fname(scratch, p, "rightA");
-   oper_load(fname0, qops_cc);
-   // initialization for Ppq = <pq||sr> aras [r>s] (p<q)
-   qtensor2 Paa(qsym(-2,-2), bsite.qcol, ksite.qcol, 2);
-   qtensor2 Pbb(qsym(-2, 0), bsite.qcol, ksite.qcol, 2);
-   qtensor2 Pab(qsym(-2,-1), bsite.qcol, ksite.qcol, 2);
-   for(int korb_p : bra.lsupport.at(p)){
-      int pa = 2*korb_p, pb = pa+1;
-      for(int korb_q : bra.lsupport.at(p)){
-	 int qa = 2*korb_q, qb = qa+1;
-         Paa.index[0] = pa;
-         Paa.index[1] = qa;
-	 if(pa<qa) qops.push_back(Paa);
-         Pbb.index[0] = pb;
-         Pbb.index[1] = qb;
-	 if(pb<qb) qops.push_back(Pbb);
-         Pab.index[0] = pa;
-         Pab.index[1] = qb;
-	 if(pa<qb) qops.push_back(Pab);
-         // for ababab orbital ordering, Pba is also needed.
-	 Pab.index[0] = pb;
-         Pab.index[1] = qa;
-	 if(pb<qa) qops.push_back(Pab);
-      }
-   }
-   // Ppq = <pq||sr> aras [r>s] (p<q)
-   for(auto& qop : qops){
-      int orb_p = qop.index[0];
-      int orb_q = qop.index[1];
-      // (as^+ar^+)^+ (s<r) => aras
-      for(const auto& op_cc : qops_cc){
-         if(qop.sym != -op_cc.sym) continue;
-         int orb_s = op_cc.index[0];
-         int orb_r = op_cc.index[1];
-         qop += int2e.getAnti(orb_p,orb_q,orb_s,orb_r) * op_cc.T();
-      } // ps
-   } // qr
-   string fname = oper_fname(scratch, p, "rightP"); 
-   oper_save(fname, qops);
-}
-
 void tns::oper_renorm_rightS(const comb& bra,
 			     const comb& ket,
 		             const comb_coord& p,
@@ -134,13 +134,13 @@ void tns::oper_renorm_rightS(const comb& bra,
    auto lsupp = bra.lsupport.at(p);
    // C: build / load
    if(ifload/2 == 0){
-      // type AB decomposition (build,build)
+      // type-AB decomposition (build,build)
       cqops_c  = oper_dot_c(kp);
       cqops_cc = oper_dot_cc(kp);
       cqops_ca = oper_dot_ca(kp);
       oper_dot_S(kp, lsupp, int2e, int1e, cqops_c, cqops_S);
    }else if(ifload/2 == 1){
-      // type PQ decomposition (load,build)
+      // type-PQ decomposition (load,build)
       assert(jp == 0);
       auto pc = make_pair(ip,1);
       fname0c = oper_fname(scratch, pc, "rightC");
@@ -234,6 +234,7 @@ void tns::oper_renorm_rightS(const comb& bra,
       for(const auto& cop_cc : cqops_cc){
          int sC = cop_cc.index[0];
 	 int rC = cop_cc.index[1];
+	 assert(bra.orbord[sC] < bra.orbord[rC]);
 	 // rop = sum_qR <pLqR||sCrC>qR^+
 	 qsym rsym = qops[i].sym + cop_cc.sym;
 	 qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 1);
@@ -303,16 +304,17 @@ void tns::oper_renorm_rightS(const comb& bra,
       }
       for(int i=0; i<qops.size(); i++){
          int pL = qops[i].index[0];
-	 // 5. qCrRsR: P: sum_qC qC^+ * P_pLqC
+	 // 5. qCrRsR: P: sum_qC qC^+ * P_pLqC^R
   	 for(const auto& cop_c : cqops_c){
 	    int qC = cop_c.index[0];
+	    assert(bra.orbord[pL] < bra.orbord[qC]);
 	    int pos = Pr_pLqL2pos.at(make_pair(pL,qC));
 	    auto& rop = rqops_P[pos];
 	    qsym rsym = qops[i].sym - cop_c.sym;
  	    assert(rsym == rop.sym);
 	    qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c,rop);
 	 } 
-	 // 6. qRrRsC: Q: sum_sC sC * Q_pLsC
+	 // 6. qRrRsC: Q: sum_sC sC * Q_pLsC^R
 	 for(const auto& cop_c : cqops_c){
 	    int sC = cop_c.index[0];
 	    int pos = Qr_pLsL2pos.at(make_pair(pL,sC));
@@ -345,7 +347,7 @@ void tns::oper_renorm_rightH(const comb& bra,
    string fname0r, fname0c;
    // C: build / load
    if(ifload/2 == 0){
-      // type AB decomposition (build,build)
+      // type-AB decomposition (build,build)
       cqops_c  = oper_dot_c(kp);
       cqops_cc = oper_dot_cc(kp);
       cqops_ca = oper_dot_ca(kp);
@@ -353,7 +355,7 @@ void tns::oper_renorm_rightH(const comb& bra,
       oper_dot_S(kp, rsupp, int2e, int1e, cqops_c, cqops_S);
       oper_dot_H(kp, int2e, int1e, cqops_ca, cqops_H);
    }else if(ifload/2 == 1){
-      // type PQ decomposition (load,build)
+      // type-PQ decomposition (load,build)
       assert(jp == 0);
       auto pc = make_pair(ip,1);
       fname0c = oper_fname(scratch, pc, "rightC");
@@ -375,7 +377,14 @@ void tns::oper_renorm_rightH(const comb& bra,
       rqops_c  = oper_dot_c(kp0);
       rqops_cc = oper_dot_cc(kp0);
       rqops_ca = oper_dot_ca(kp0);
-      vector<int> csupp({kp});
+      // support for Hc
+      vector<int> csupp;
+      if(ifload == 0){
+         csupp.push_back({kp});
+      }else if(ifload == 2){
+         auto pc = make_pair(ip,1);
+	 csupp = bra.rsupport.at(pc);
+      }
       oper_dot_S(kp0, csupp, int2e, int1e, rqops_c, rqops_S);
       oper_dot_H(kp0, int2e, int1e, rqops_ca, rqops_H);
    }else if(ifload%2 == 1){
@@ -446,6 +455,7 @@ void tns::oper_renorm_rightH(const comb& bra,
       for(const auto& cop_cc : cqops_cc){
          int pC = cop_cc.index[0];
 	 int qC = cop_cc.index[1];
+	 assert(bra.orbord[pC] < bra.orbord[qC]);
          // rop = P_pCqC^R = sum_rRsR <pCqC||sRrR> rRsR (r>s)
          qsym rsym = H.sym - cop_cc.sym;
          qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 2);
@@ -492,6 +502,7 @@ void tns::oper_renorm_rightH(const comb& bra,
       for(const auto& cop_cc : cqops_cc){
 	 int pC = cop_cc.index[0];
 	 int qC = cop_cc.index[1];
+	 assert(bra.orbord[pC] < bra.orbord[qC]);
 	 int pos = Pr_pLqL2pos.at(make_pair(pC,qC));
 	 auto& rop = rqops_P[pos];
          qsym rsym = H.sym - cop_cc.sym;

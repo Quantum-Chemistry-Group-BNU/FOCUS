@@ -52,6 +52,68 @@ void tns::oper_renorm_rightC(const comb& bra,
    oper_save(fname, qops);
 }
 
+void tns::oper_renorm_rightA(const comb& bra,
+			     const comb& ket,
+		             const comb_coord& p,
+		             const comb_coord& p0,
+			     const int ifload,
+			     const string scratch){
+   cout << "tns::oper_renorm_rightA ifload=" << ifload << endl;
+   const auto& bsite = bra.rsites.at(p);
+   const auto& ksite = ket.rsites.at(p);
+   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
+   qopers qops, rqops_cc, rqops_c, cqops_cc, cqops_c;
+   string fname0r, fname0c;
+   // C: build / load
+   if(ifload/2 == 0){
+      cqops_c  = oper_dot_c(kp);
+      cqops_cc = oper_dot_cc(kp);
+   }else if(ifload/2 == 1){
+      assert(jp == 0);
+      auto pc = make_pair(ip,1);
+      fname0c = oper_fname(scratch, pc, "rightC");
+      oper_load(fname0c, cqops_c);
+      fname0c = oper_fname(scratch, pc, "rightA");
+      oper_load(fname0c, cqops_cc);
+   }
+   // R: build /load
+   if(ifload%2 == 0){
+      int kp0 = bra.rsupport.at(p0)[0];
+      rqops_c  = oper_dot_c(kp0);
+      rqops_cc = oper_dot_cc(kp0);
+   }else if(ifload%2 == 1){
+      fname0r = oper_fname(scratch, p0, "rightC");
+      oper_load(fname0r, rqops_c);
+      fname0r = oper_fname(scratch, p0, "rightA");
+      oper_load(fname0r, rqops_cc);
+   }
+   // kernel for computing renormalized ap^+aq
+   qtensor2 qt2;
+   // Ic * pR^+qR^+ (p<q) 
+   for(const auto& rop_cc : rqops_cc){
+      qt2 = oper_kernel_IcOr(bsite,ksite,rop_cc);
+      qops.push_back(qt2);
+   }
+   // pC^+qC^+ * Ir
+   for(const auto& cop_cc : cqops_cc){
+      qt2 = oper_kernel_OcIr(bsite,ksite,cop_cc); 
+      qops.push_back(qt2);
+   }
+   // pC^+ * qR^+
+   for(const auto& cop_c : cqops_c){
+      int pC = cop_c.index[0];
+      for(const auto& rop_c : rqops_c){
+	 int qR = rop_c.index[0];
+	 // only store Apq where node[p]<node[q]
+	 assert(bra.orbord[pC] < bra.orbord[qR]);
+	 qt2 = oper_kernel_OcOr(bsite,ksite,cop_c,rop_c);
+         qops.push_back(qt2);
+      }
+   }
+   string fname = oper_fname(scratch, p, "rightA"); 
+   oper_save(fname, qops);
+}
+
 void tns::oper_renorm_rightB(const comb& bra,
 			     const comb& ket,
 		             const comb_coord& p,
@@ -148,62 +210,4 @@ void tns::oper_renorm_rightB(const comb& bra,
      cout << "diff=" << normF(rdmC-rdm1c) << endl;
    }
 
-}
-
-void tns::oper_renorm_rightA(const comb& bra,
-			     const comb& ket,
-		             const comb_coord& p,
-		             const comb_coord& p0,
-			     const int ifload,
-			     const string scratch){
-   cout << "tns::oper_renorm_rightA ifload=" << ifload << endl;
-   const auto& bsite = bra.rsites.at(p);
-   const auto& ksite = ket.rsites.at(p);
-   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
-   qopers qops, rqops_cc, rqops_c, cqops_cc, cqops_c;
-   string fname0r, fname0c;
-   // C: build / load
-   if(ifload/2 == 0){
-      cqops_c  = oper_dot_c(kp);
-      cqops_cc = oper_dot_cc(kp);
-   }else if(ifload/2 == 1){
-      assert(jp == 0);
-      auto pc = make_pair(ip,1);
-      fname0c = oper_fname(scratch, pc, "rightC");
-      oper_load(fname0c, cqops_c);
-      fname0c = oper_fname(scratch, pc, "rightA");
-      oper_load(fname0c, cqops_cc);
-   }
-   // R: build /load
-   if(ifload%2 == 0){
-      int kp0 = bra.rsupport.at(p0)[0];
-      rqops_c  = oper_dot_c(kp0);
-      rqops_cc = oper_dot_cc(kp0);
-   }else if(ifload%2 == 1){
-      fname0r = oper_fname(scratch, p0, "rightC");
-      oper_load(fname0r, rqops_c);
-      fname0r = oper_fname(scratch, p0, "rightA");
-      oper_load(fname0r, rqops_cc);
-   }
-   // kernel for computing renormalized ap^+aq
-   qtensor2 qt2;
-   // Ic * pR^+qR^+ (p<q) 
-   for(const auto& rop_cc : rqops_cc){
-      qt2 = oper_kernel_IcOr(bsite,ksite,rop_cc);
-      qops.push_back(qt2);
-   }
-   // pC^+qC^+ * Ir
-   for(const auto& cop_cc : cqops_cc){
-      qt2 = oper_kernel_OcIr(bsite,ksite,cop_cc); 
-      qops.push_back(qt2);
-   }
-   // pC^+ * qR^+ 
-   for(const auto& cop_c : cqops_c){
-      for(const auto& rop_c : rqops_c){
-	 qt2 = oper_kernel_OcOr(bsite,ksite,cop_c,rop_c);
-         qops.push_back(qt2);
-      }
-   }
-   string fname = oper_fname(scratch, p, "rightA"); 
-   oper_save(fname, qops);
 }
