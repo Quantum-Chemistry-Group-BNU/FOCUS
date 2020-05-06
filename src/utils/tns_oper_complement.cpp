@@ -249,6 +249,7 @@ void tns::oper_renorm_rightS(const comb& bra,
    } // pL
    // type-AB/PQ decomposition for SpL^CR
    if(rtype == 0){
+      cout << "decomposition type-AB" << endl;
       // type-AB decomposition
       for(int i=0; i<qops.size(); i++){
          int pL = qops[i].index[0];
@@ -286,6 +287,7 @@ void tns::oper_renorm_rightS(const comb& bra,
 	 }
       } // pL
    }else{
+      cout << "decomposition type-PQ" << endl;
       // type-PQ decomposition
       map<pair<int,int>,int> Pr_pLqL2pos;
       for(int idx=0; idx<rqops_P.size(); idx++){
@@ -438,6 +440,7 @@ void tns::oper_renorm_rightH(const comb& bra,
    }
    // type-AB/PQ decomposition for H 
    if(rtype == 0){
+      cout << "decomposition type-AB" << endl;
       // type-AB decomposition
       // 5. A: A_pCqC^C*P_pCqC^R + h.c.
       for(const auto& cop_cc : cqops_cc){
@@ -477,6 +480,7 @@ void tns::oper_renorm_rightH(const comb& bra,
          if(ifcal) H += oper_kernel_OcOr(bsite,ksite,cop_ca,rop);
       }
    }else{
+      cout << "decomposition type-PQ" << endl;
       // type-PQ decomposition
       // 5. P: A_pCqC^C*P_pCqC^R + h.c.
       map<pair<int,int>,int> Pr_pLqL2pos;
@@ -510,7 +514,6 @@ void tns::oper_renorm_rightH(const comb& bra,
 	 qsym rsym = H.sym - cop_ca.sym;
 	 assert(rsym == rop.sym);
 	 H += oper_kernel_OcOr(bsite,ksite,cop_ca,rop);
-	 H += oper_kernel_OrOc(bsite,ksite,rop.T(),cop_ca.T());
       }
    } // rtype
    qops.push_back(H);

@@ -18,6 +18,8 @@ void tns::oper_rbases(const comb& bra,
 	              const integral::one_body& int1e,
 		      const string scratch){
    const double thresh = 1.e-10;
+   int nfail = 0;
+   double mdiff = -1.0;
    cout << "\ntns::oper_rbases" << endl;
    int i = p.first, j = p.second;
    const auto& bsite = bra.rsites.at(p);
@@ -100,13 +102,14 @@ void tns::oper_rbases(const comb& bra,
       }
       auto opmat = op.to_matrix();
       double diff = normF(opmat-tmat);
+      mdiff = max(diff,mdiff);
       if(diff > thresh){
          cout << scientific << setprecision(8);
          cout << "C: p=" << orb_p 
               << " |op|=" << normF(opmat)
               << " |dm|=" << normF(tmat)
               << " diff=" << diff << endl;
-	 exit(1);
+	 nfail++;
       }
    } // op
 
@@ -164,13 +167,14 @@ void tns::oper_rbases(const comb& bra,
       }
       auto opmat = op.to_matrix();
       double diff = normF(opmat-tmat);
+      mdiff = max(diff,mdiff);
       if(diff > thresh){
          cout << scientific << setprecision(8);
          cout << "A: p,q=" << orb_p << "," << orb_q
               << " |op|=" << normF(opmat)
               << " |dm|=" << normF(tmat)
               << " diff=" << diff << endl;
-	 exit(1);
+	 nfail++;
       }
    } // op
 
@@ -228,13 +232,14 @@ void tns::oper_rbases(const comb& bra,
       }
       auto opmat = op.to_matrix();
       double diff = normF(opmat-tmat);
+      mdiff = max(diff,mdiff);
       if(diff > thresh){
          cout << scientific << setprecision(8);
          cout << "B: p,q=" << orb_p << "," << orb_q
               << " |op|=" << normF(opmat)
               << " |dm|=" << normF(tmat)
               << " diff=" << diff << endl;
-	 exit(1);
+	 nfail++;
       }
    } // op
 
@@ -297,13 +302,14 @@ void tns::oper_rbases(const comb& bra,
          }
          auto opmat = op.to_matrix();
          double diff = normF(opmat-tmat);
+         mdiff = max(diff,mdiff);
          if(diff > thresh){
             cout << scientific << setprecision(8);
             cout << "P: p,q=" << orb_p << "," << orb_q
    	         << " |op|=" << normF(opmat)
    	         << " |dm|=" << normF(tmat)
    	         << " diff=" << diff << endl;
-	    exit(1);
+	    nfail++;
 	 }
       } // op
    
@@ -364,13 +370,14 @@ void tns::oper_rbases(const comb& bra,
          }
          auto opmat = op.to_matrix();
          double diff = normF(opmat-tmat);
+         mdiff = max(diff,mdiff);
          if(diff > thresh){
             cout << scientific << setprecision(8);
             cout << "Q: p,s=" << orb_p << "," << orb_s
                  << " |op|=" << normF(opmat)
                  << " |dm|=" << normF(tmat)
                  << " diff=" << diff << endl;
-	    exit(1);
+	    nfail++;
 	 }
       } // op
    }
@@ -444,13 +451,14 @@ void tns::oper_rbases(const comb& bra,
       }
       auto opmat = op.to_matrix();
       double diff = normF(opmat-tmat);
+      mdiff = max(diff,mdiff);
       if(diff > thresh){
          cout << scientific << setprecision(8);
          cout << "S: p=" << orb_p
               << " |op|=" << normF(opmat)
               << " |dm|=" << normF(tmat)
               << " diff=" << diff << endl;
-	 exit(1);
+	 nfail++;
       }
    } // op
 
@@ -533,14 +541,19 @@ void tns::oper_rbases(const comb& bra,
       }
       auto opmat = op.to_matrix();
       double diff = normF(opmat-tmat);
+      mdiff = max(diff,mdiff);
       if(diff > thresh){
          cout << scientific << setprecision(8);
          cout << "H:"
               << " |op|=" << normF(opmat)
               << " |dm|=" << normF(tmat)
               << " diff=" << diff << endl;
-	 exit(1);
+	 nfail++;
       }
    } // op
-
+   
+   cout << "no. of failed cases = " << nfail 
+	<< " maxdiff = " << mdiff
+        << endl;
+   //if(nfail > 0) exit(1);
 }

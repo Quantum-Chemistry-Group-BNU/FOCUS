@@ -32,15 +32,21 @@ string tns::oper_fname(const string scratch,
 }
  
 void tns::oper_save(const string fname, const qopers& qops){
-   cout << "tns::oper_save fname=" << fname 
-	<< " size=" << qops.size() << endl;
+   bool debug = false;
+   if(debug){
+      cout << "tns::oper_save fname=" << fname 
+ 	   << " size=" << qops.size() << endl;
+   }
    ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << qops;
 }
 
 void tns::oper_load(const string fname, qopers& qops){
-   cout << "tns::oper_load fname=" << fname << endl;
+   bool debug = false;
+   if(debug){
+      cout << "tns::oper_load fname=" << fname << endl;
+   }
    ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> qops;
