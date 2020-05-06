@@ -245,11 +245,13 @@ class onstate{
       // i^+|state>
       std::pair<int,onstate> cre(const int& i) const{
          int fac;
-	 onstate res;
+	 // uninitialized onstate to represent vanishing case.
+	 // to distinguish from the vacuum state!
+	 onstate res; 
 	 if((*this)[i]){
 	    fac = 0; // vanishing result
          }else{
-	    res = *this;
+	    res = *this; // copy result
 	    res[i] = 1;
 	    fac = res.parity(i);
 	 }

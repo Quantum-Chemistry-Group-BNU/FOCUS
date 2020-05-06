@@ -166,7 +166,7 @@ void tns::oper_dot_S(const int k,
       cqops_S.push_back(Spa);
       // SpLb
       qtensor2 Spb = 0.5*int1e.get(pb,kb)*cqops_c[1].T()
-      	           + int2e.getAnti(pa,ka,ka,kb)*cqops_caa[0]; // qrs=010
+      	           + int2e.getAnti(pb,ka,ka,kb)*cqops_caa[0]; // qrs=010
       Spb.index.resize(1);
       Spb.index[0] = pb;
       cqops_S.push_back(Spb);

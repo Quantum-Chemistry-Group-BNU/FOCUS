@@ -17,22 +17,22 @@ void tns::oper_renorm_rightC(const comb& bra,
    cout << "tns::oper_renorm_rightC ifload=" << ifload << endl;
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int i = p.first, j = p.second, k = bra.topo[i][j];
+   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
    qopers qops, rqops, cqops;
    string fname0r, fname0c;
    // C: build / load
    if(ifload/2 == 0){
-      cqops = oper_dot_c(k);
+      cqops = oper_dot_c(kp);
    }else if(ifload/2 == 1){
-      assert(j == 0); // C = upper branch
-      auto pc = make_pair(i,1);
+      assert(jp == 0); // C = upper branch
+      auto pc = make_pair(ip,1);
       fname0c = oper_fname(scratch, pc, "rightC");
       oper_load(fname0c, cqops);
    }
    // R: build /load
    if(ifload%2 == 0){
-      int k0 = bra.rsupport.at(p0)[0];
-      rqops = oper_dot_c(k0);
+      int kp0 = bra.rsupport.at(p0)[0];
+      rqops = oper_dot_c(kp0);
    }else if(ifload%2 == 1){
       fname0r = oper_fname(scratch, p0, "rightC");
       oper_load(fname0r, rqops);
@@ -61,16 +61,16 @@ void tns::oper_renorm_rightB(const comb& bra,
    cout << "tns::oper_renorm_rightB ifload=" << ifload << endl;
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int i = p.first, j = p.second, k = bra.topo[i][j];
+   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
    qopers qops, rqops_ca, rqops_c, cqops_ca, cqops_c;
    string fname0r, fname0c;
    // C: build / load
    if(ifload/2 == 0){
-      cqops_c  = oper_dot_c(k);
-      cqops_ca = oper_dot_ca(k);
+      cqops_c  = oper_dot_c(kp);
+      cqops_ca = oper_dot_ca(kp);
    }else if(ifload/2 == 1){
-      assert(j == 0);
-      auto pc = make_pair(i,1);
+      assert(jp == 0);
+      auto pc = make_pair(ip,1);
       fname0c = oper_fname(scratch, pc, "rightC");
       oper_load(fname0c, cqops_c);
       fname0c = oper_fname(scratch, pc, "rightB");
@@ -78,9 +78,9 @@ void tns::oper_renorm_rightB(const comb& bra,
    }
    // R: build /load
    if(ifload%2 == 0){
-      int k0 = bra.rsupport.at(p0)[0];
-      rqops_c  = oper_dot_c(k0);
-      rqops_ca = oper_dot_ca(k0);
+      int kp0 = bra.rsupport.at(p0)[0];
+      rqops_c  = oper_dot_c(kp0);
+      rqops_ca = oper_dot_ca(kp0);
    }else if(ifload%2 == 1){
       fname0r = oper_fname(scratch, p0, "rightC");
       oper_load(fname0r, rqops_c);
@@ -112,7 +112,7 @@ void tns::oper_renorm_rightB(const comb& bra,
    oper_save(fname, qops);
 
    // debug
-   if(i==0){
+   if(ip==0){
      int nb = bra.nphysical*2;
      matrix rdmA(nb,nb),rdmB(nb,nb),rdmC(nb,nb);
      for(const auto& op : qops){
@@ -159,16 +159,16 @@ void tns::oper_renorm_rightA(const comb& bra,
    cout << "tns::oper_renorm_rightA ifload=" << ifload << endl;
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int i = p.first, j = p.second, k = bra.topo[i][j];
+   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
    qopers qops, rqops_cc, rqops_c, cqops_cc, cqops_c;
    string fname0r, fname0c;
    // C: build / load
    if(ifload/2 == 0){
-      cqops_c  = oper_dot_c(k);
-      cqops_cc = oper_dot_cc(k);
+      cqops_c  = oper_dot_c(kp);
+      cqops_cc = oper_dot_cc(kp);
    }else if(ifload/2 == 1){
-      assert(j == 0);
-      auto pc = make_pair(i,1);
+      assert(jp == 0);
+      auto pc = make_pair(ip,1);
       fname0c = oper_fname(scratch, pc, "rightC");
       oper_load(fname0c, cqops_c);
       fname0c = oper_fname(scratch, pc, "rightA");
@@ -176,9 +176,9 @@ void tns::oper_renorm_rightA(const comb& bra,
    }
    // R: build /load
    if(ifload%2 == 0){
-      int k0 = bra.rsupport.at(p0)[0];
-      rqops_c  = oper_dot_c(k0);
-      rqops_cc = oper_dot_cc(k0);
+      int kp0 = bra.rsupport.at(p0)[0];
+      rqops_c  = oper_dot_c(kp0);
+      rqops_cc = oper_dot_cc(kp0);
    }else if(ifload%2 == 1){
       fname0r = oper_fname(scratch, p0, "rightC");
       oper_load(fname0r, rqops_c);

@@ -1,0 +1,7 @@
+
+KNOWN PROBLEMS:
+
+ - thresh_proj & thresh_ortho sensitivity in SCI projection
+ - improved implementation of Q & P
+ - debug SpL
+

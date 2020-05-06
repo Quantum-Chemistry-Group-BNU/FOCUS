@@ -13,7 +13,9 @@ qtensor2::qtensor2(const qsym& sym1,
 		   const qsym_space& qrow1, 
 		   const qsym_space& qcol1,
 		   const int nindex){
-   if(nindex>0) index.resize(nindex); 
+   // default value set to -1, only the no. of index matters 
+   // for col_signed() in fermionic direct product! 
+   if(nindex>0) index.resize(nindex,-1); 
    sym = sym1;
    qrow = qrow1;
    qcol = qcol1;

@@ -16,12 +16,12 @@ void tns::oper_renorm_right(const comb& bra,
 			    const string scratch){
    bool debug = true;
    cout << "\ntns::oper_renorm_right" << endl;
-   int i = p.first, j = p.second;
-   int i0 = p0.first, j0 = p0.second; 
+   int ip = p.first, jp = p.second;
+   int ip0 = p0.first, jp0 = p0.second; 
    int tp = bra.type.at(p);
    int tp0 = bra.type.at(p0);
-   cout << "p=(" << i << "," << j << ")[" << bra.topo[i][j] << "] "
-	<< "p0=(" << i0 << "," << j0 << ")[" << bra.topo[i0][j0] << "] " 
+   cout << "p=(" << ip << "," << jp << ")[" << bra.topo[ip][jp] << "] "
+	<< "p0=(" << ip0 << "," << jp0 << ")[" << bra.topo[ip0][jp0] << "] " 
 	<< "type=[" << tp << "," << tp0 << "]" << endl;
    auto kind = make_pair(tp,tp0);
    int ifload;
@@ -43,7 +43,7 @@ void tns::oper_renorm_right(const comb& bra,
    oper_renorm_rightC(bra,ket,p,p0,ifload,scratch);
    oper_renorm_rightA(bra,ket,p,p0,ifload,scratch);
    oper_renorm_rightB(bra,ket,p,p0,ifload,scratch);
-   if(j == 0){
+   if(jp == 0){
       oper_renorm_rightP(bra,ket,p,p0,ifload,int2e,int1e,scratch);
       oper_renorm_rightQ(bra,ket,p,p0,ifload,int2e,int1e,scratch);
    }

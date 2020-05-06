@@ -1,18 +1,15 @@
 #include "tns_qtensor.h"
 #include "tns_oper.h"
 
-#include <iostream>
-
 using namespace tns;
-
-using namespace std;
 
 // renorm Ic*Or
 qtensor2 tns::oper_kernel_IcOr(const qtensor3& bsite,
 	  	  	       const qtensor3& ksite,
 			       const qtensor2& rop){
    auto qt3 = contract_qt3_qt2_l(ksite,rop);
-   if(rop.index.size()%2 != 0){ 
+   int pr = rop.index.size()%2;
+   if(pr != 0){ 
       qt3 = qt3.mid_signed(); // due to fermionic exchange of |c> and Or
    }
    auto qt2 = contract_qt3_qt3_lc(bsite,qt3);
@@ -36,9 +33,10 @@ qtensor2 tns::oper_kernel_OcOr(const qtensor3& bsite,
 			       const qtensor2& cop,
 			       const qtensor2& rop){
    auto qt3 = contract_qt3_qt2_l(ksite,rop);
-   if(rop.index.size()%2 == 0){
+   int pr = rop.index.size()%2;
+   if(pr == 0){
       qt3 = contract_qt3_qt2_c(qt3,cop);
-   }else{
+   }else{	
       auto cop_s = cop.col_signed();
       qt3 = contract_qt3_qt2_c(qt3,cop_s); 
    }

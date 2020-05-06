@@ -102,15 +102,15 @@
 	  - serializaiton: -lboost_system -lboost_filesystem
 	  - implement recursive build of operators (blocking & renormalization)
 	    - normal operators:
-	      - ap^+
-	      - ap^+aq (checked against fci_rdm1 for <psi1|p^+q|psi2>)
-	      - ap^+aq^+
+	      - a_pL^+
+	      - a_pL^+a_qL (checked against fci_rdm1 for <psi1|p^+q|psi2>)
+	      - a_pL^+a_qL^+
 	    - complementary operators:
 	      - lazy construction (to be improved in future):
-	        - Qps
-	        - Ppq
+	        - Q_pLsL^R
+	        - P_pLqL^R
 	      - typeAB/typePQ decomposition (to be cheked by H1e & H2e):
-	        - Sp
+	        - S_pL^R
 	        - H
 	  - check by evaluating energies
 	  - note: currently the adjoint is used for operators like ap,
@@ -120,7 +120,7 @@
 		  requires more operators to be constructed in future.
 		  Also, we do not use Hermicity of Bpq/Qps, which allows to 
 		  compute <rdm1|p^+q|rdm2> for state-averaged comb states.
-		  
+ 
  2020xxxx basic sweep algorithm
 	  - implement H*x for one-dot wf
  	  - implement H*x for two-dot wf 

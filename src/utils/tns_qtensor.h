@@ -29,7 +29,7 @@ struct qtensor2{
       qtensor2(const qsym& sym1, 
 	       const qsym_space& qrow1, 
 	       const qsym_space& qcol1,
-  	       const int nindex=0); 
+  	       const int nindex); 
       // useful functions
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
