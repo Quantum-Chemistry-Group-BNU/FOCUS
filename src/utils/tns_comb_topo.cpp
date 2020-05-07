@@ -186,10 +186,6 @@ void comb::topo_print() const{
       cout << endl;
       idx++;
    }
-   cout << "--- image2 / orbord ---" << endl;
-   for(int i=0; i<2*nphysical; i++){
-      cout << i << " " << image2[i] << " " << orbord[i] << endl;
-   }	  
    cout << "--- rcoord & type & rsupport/lsupport ---" << endl;
    for(int i=0; i<ntotal; i++){
       auto p = rcoord[i];
@@ -205,6 +201,10 @@ void comb::topo_print() const{
       for(int k : lsupp) cout << k << " ";
       cout << endl;
    }
+   cout << "--- image2 / orbord ---" << endl;
+   for(int i=0; i<2*nphysical; i++){
+      cout << i << " " << image2[i] << " " << orbord[i] << endl;
+   }	  
    cout << "--- sweep_seq --" << endl;
    for(int i=0; i<sweep_seq.size(); i++){
       cout << "i=" << i << " : ";

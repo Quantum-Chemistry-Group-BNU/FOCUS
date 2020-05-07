@@ -15,8 +15,8 @@ using namespace linalg;
 void comb::get_rbases(const onspace& space,
 		      const vector<vector<double>>& vs,
 		      const double thresh_proj){
-   auto t0 = global::get_time();
    bool debug = true;
+   auto t0 = global::get_time();
    cout << "\ncomb::get_rbases thresh_proj=" << scientific << thresh_proj << endl;
    vector<pair<int,int>> shapes; // for debug
    // loop over nodes (except the last one)
@@ -187,8 +187,8 @@ void comb::rcanon_init(const onspace& space,
 		       const vector<vector<double>>& vs,
 		       const double thresh_proj,
 		       const double thresh_ortho){
-   auto t0 = global::get_time();
    bool debug = false;
+   auto t0 = global::get_time();
    cout << "\ncomb::rcanon_init" << endl;
    // compute renormalized bases {|r>}
    get_rbases(space, vs, thresh_proj);

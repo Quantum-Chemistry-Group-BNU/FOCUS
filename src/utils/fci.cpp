@@ -115,10 +115,10 @@ void sparse_hamiltonian::get_hamiltonian(const onspace& space,
 				         const integral::one_body& int1e,
 				         const double ecore,
 					 const int istart){
-   cout << "\nsparse_hamiltonian::get_hamiltonian" 
-	<< " dim0 = " << istart << " dim = " << space.size() << endl; 
    bool debug = true;
    auto t0 = global::get_time();
+   cout << "\nsparse_hamiltonian::get_hamiltonian" 
+	<< " dim0 = " << istart << " dim = " << space.size() << endl; 
    // initialization for the first use
    if(istart == 0){
       diag.clear();
@@ -297,9 +297,9 @@ void fci::ci_solver(sparse_hamiltonian& sparseH,
 	       	    const integral::two_body& int2e,
 	       	    const integral::one_body& int1e,
 	       	    const double ecore){
-   cout << "\nfci::ci_solver dim=" << space.size() << endl; 
    bool debug = true;
    auto t0 = global::get_time();
+   cout << "\nfci::ci_solver dim=" << space.size() << endl; 
    
    // dimensionality check
    if(es.size() > space.size()){

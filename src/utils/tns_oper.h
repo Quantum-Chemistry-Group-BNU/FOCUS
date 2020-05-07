@@ -1,10 +1,9 @@
 #ifndef TNS_OPER_H
 #define TNS_OPER_H
 
+#include "../core/integral.h"
 #include "tns_comb.h"
 #include "tns_qtensor.h"
-#include "../core/integral.h"
-#include <tuple>
 #include <string>
 #include <vector>
 
@@ -73,33 +72,34 @@ qtensor2 oper_kernel_OrOc(const qtensor3& bsite,
 		          const qtensor2& rop,
 		          const qtensor2& cop);
 
-// renorm different types of operators 
+// renorm different types of operators
 void oper_renorm_rightC(const comb& bra, 
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
-		        const int ifload,
+		        const std::pair<bool,bool>& ifbuild,
 		        const std::string scratch);
 
 void oper_renorm_rightA(const comb& bra, 
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
-		        const int ifload,
+		        const std::pair<bool,bool>& ifbuild,
 		        const std::string scratch);
 
 void oper_renorm_rightB(const comb& bra, 
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
-		        const int ifload,
+		        const std::pair<bool,bool>& ifbuild,
 		        const std::string scratch);
 
 void oper_renorm_rightP(const comb& bra, 
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
-		        const int ifload,
+		        const std::pair<bool,bool>& ifbuild,
+			const bool& ifAB,
 	                const integral::two_body& int2e,
 	                const integral::one_body& int1e,
 		        const std::string scratch);
@@ -108,7 +108,8 @@ void oper_renorm_rightQ(const comb& bra,
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
-		        const int ifload,
+		        const std::pair<bool,bool>& ifbuild,
+			const bool& ifAB,
 	                const integral::two_body& int2e,
 	                const integral::one_body& int1e,
 		        const std::string scratch);
@@ -117,7 +118,8 @@ void oper_renorm_rightS(const comb& bra,
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
-		        const int ifload,
+		        const std::pair<bool,bool>& ifbuild,
+			const bool& ifAB,
 	                const integral::two_body& int2e,
 	                const integral::one_body& int1e,
 		        const std::string scratch);
@@ -126,7 +128,8 @@ void oper_renorm_rightH(const comb& bra,
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
-		        const int ifload,
+		        const std::pair<bool,bool>& ifbuild,
+			const bool& ifAB,
 	                const integral::two_body& int2e,
 	                const integral::one_body& int1e,
 		        const std::string scratch);

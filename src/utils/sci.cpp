@@ -17,9 +17,9 @@ using namespace sci;
 
 heatbath_table::heatbath_table(const integral::two_body& int2e,
 			       const integral::one_body& int1e){
-   cout << "\nheatbath_table::heatbath_table" << endl;
    bool debug = false;
    auto t0 = global::get_time();
+   cout << "\nheatbath_table::heatbath_table" << endl;
 
    int k = int2e.sorb;
    sorb = k;
@@ -82,10 +82,10 @@ void sci::expand_varSpace(onspace& space,
 			  const vector<double>& cmax, 
 			  const double eps1,
 			  const bool flip){
+   bool debug = false;
+   auto t0 = global::get_time();
    cout << "\nsci::expand_varSpace dim = " 
 	<< space.size() << " eps1 = " << eps1 << endl;
-   auto t0 = global::get_time();
-   bool debug = false;
 
    // assuming particle number conserving space
    onstate state = space[0];
@@ -305,9 +305,9 @@ void sci::ci_solver(const input::schedule& schd,
 	       	    const integral::two_body& int2e,
 	       	    const integral::one_body& int1e,
 	       	    const double ecore){
-   cout << "\nsci::ci_solver" << endl; 
    bool debug = false;
    auto t0 = global::get_time();
+   cout << "\nsci::ci_solver" << endl; 
    
    // set up head-bath table
    heatbath_table hbtab(int2e, int1e);

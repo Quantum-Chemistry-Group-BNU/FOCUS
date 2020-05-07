@@ -99,6 +99,7 @@ void tns::ordering_ga(const onspace& space,
 		      const vector<vector<double>>& vs,
 		      vector<int>& order,
 		      double& Smin){
+   bool debug = false;
    cout << "\ntns::ordering_ga" << endl;
    // parameters for truncation
    const int ndet = 500;
@@ -109,7 +110,6 @@ void tns::ordering_ga(const onspace& space,
    double crxprob = 0.8;
    double mutprob = 0.2;
    // compute exact solution by brute-force enumeration
-   bool debug = false;
    if(debug){
       ordering_bf(space, vs, order, Smin);
       cout << "Smin=" << Smin << " : ";

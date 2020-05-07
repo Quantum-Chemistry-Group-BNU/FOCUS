@@ -1,3 +1,4 @@
+#include "../settings/global.h"
 #include "../core/matrix.h"
 #include "../core/linalg.h"
 #include "tns_comb.h" 
@@ -12,28 +13,29 @@ void tns::oper_renorm_rightC(const comb& bra,
 			     const comb& ket,
 		             const comb_coord& p,
 		             const comb_coord& p0,
-			     const int ifload,
+			     const pair<bool,bool>& ifbuild,
 			     const string scratch){
-   cout << "tns::oper_renorm_rightC ifload=" << ifload << endl;
+   bool debug = true;
+   auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
    int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
    qopers qops, rqops, cqops;
    string fname0r, fname0c;
    // C: build / load
-   if(ifload/2 == 0){
+   if(ifbuild.first){
       cqops = oper_dot_c(kp);
-   }else if(ifload/2 == 1){
+   }else{
       assert(jp == 0); // C = upper branch
       auto pc = make_pair(ip,1);
       fname0c = oper_fname(scratch, pc, "rightC");
       oper_load(fname0c, cqops);
    }
    // R: build /load
-   if(ifload%2 == 0){
+   if(ifbuild.second){
       int kp0 = bra.rsupport.at(p0)[0];
       rqops = oper_dot_c(kp0);
-   }else if(ifload%2 == 1){
+   }else{
       fname0r = oper_fname(scratch, p0, "rightC");
       oper_load(fname0r, rqops);
    }
@@ -50,25 +52,29 @@ void tns::oper_renorm_rightC(const comb& bra,
    }
    string fname = oper_fname(scratch, p, "rightC");
    oper_save(fname, qops);
+   auto t1 = global::get_time();
+   if(debug) cout << "timing for tns::renorm_rightC : " << setprecision(2) 
+           	  << global::get_duration(t1-t0) << " s" << endl;
 }
 
 void tns::oper_renorm_rightA(const comb& bra,
 			     const comb& ket,
 		             const comb_coord& p,
 		             const comb_coord& p0,
-			     const int ifload,
+			     const pair<bool,bool>& ifbuild,
 			     const string scratch){
-   cout << "tns::oper_renorm_rightA ifload=" << ifload << endl;
+   bool debug = true;
+   auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
    int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
    qopers qops, rqops_cc, rqops_c, cqops_cc, cqops_c;
    string fname0r, fname0c;
    // C: build / load
-   if(ifload/2 == 0){
+   if(ifbuild.first){
       cqops_c  = oper_dot_c(kp);
       cqops_cc = oper_dot_cc(kp);
-   }else if(ifload/2 == 1){
+   }else{
       assert(jp == 0);
       auto pc = make_pair(ip,1);
       fname0c = oper_fname(scratch, pc, "rightC");
@@ -77,17 +83,17 @@ void tns::oper_renorm_rightA(const comb& bra,
       oper_load(fname0c, cqops_cc);
    }
    // R: build /load
-   if(ifload%2 == 0){
+   if(ifbuild.second){
       int kp0 = bra.rsupport.at(p0)[0];
       rqops_c  = oper_dot_c(kp0);
       rqops_cc = oper_dot_cc(kp0);
-   }else if(ifload%2 == 1){
+   }else{
       fname0r = oper_fname(scratch, p0, "rightC");
       oper_load(fname0r, rqops_c);
       fname0r = oper_fname(scratch, p0, "rightA");
       oper_load(fname0r, rqops_cc);
    }
-   // kernel for computing renormalized ap^+aq
+   // kernel for computing renormalized Apq=ap^+aq^+
    qtensor2 qt2;
    // Ic * pR^+qR^+ (p<q) 
    for(const auto& rop_cc : rqops_cc){
@@ -112,25 +118,29 @@ void tns::oper_renorm_rightA(const comb& bra,
    }
    string fname = oper_fname(scratch, p, "rightA"); 
    oper_save(fname, qops);
+   auto t1 = global::get_time();
+   if(debug) cout << "timing for tns::renorm_rightA : " << setprecision(2) 
+                  << global::get_duration(t1-t0) << " s" << endl;
 }
 
 void tns::oper_renorm_rightB(const comb& bra,
 			     const comb& ket,
 		             const comb_coord& p,
 		             const comb_coord& p0,
-			     const int ifload,
+			     const pair<bool,bool>& ifbuild,
 			     const string scratch){
-   cout << "tns::oper_renorm_rightB ifload=" << ifload << endl;
+   bool debug = true;
+   auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
    int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
    qopers qops, rqops_ca, rqops_c, cqops_ca, cqops_c;
    string fname0r, fname0c;
    // C: build / load
-   if(ifload/2 == 0){
+   if(ifbuild.first){
       cqops_c  = oper_dot_c(kp);
       cqops_ca = oper_dot_ca(kp);
-   }else if(ifload/2 == 1){
+   }else{
       assert(jp == 0);
       auto pc = make_pair(ip,1);
       fname0c = oper_fname(scratch, pc, "rightC");
@@ -139,11 +149,11 @@ void tns::oper_renorm_rightB(const comb& bra,
       oper_load(fname0c, cqops_ca);
    }
    // R: build /load
-   if(ifload%2 == 0){
+   if(ifbuild.second){
       int kp0 = bra.rsupport.at(p0)[0];
       rqops_c  = oper_dot_c(kp0);
       rqops_ca = oper_dot_ca(kp0);
-   }else if(ifload%2 == 1){
+   }else{
       fname0r = oper_fname(scratch, p0, "rightC");
       oper_load(fname0r, rqops_c);
       fname0r = oper_fname(scratch, p0, "rightB");
@@ -210,4 +220,7 @@ void tns::oper_renorm_rightB(const comb& bra,
      cout << "diff=" << normF(rdmC-rdm1c) << endl;
    }
 
+   auto t1 = global::get_time();
+   if(debug) cout << "timing for tns::renorm_rightB : " << setprecision(2) 
+                  << global::get_duration(t1-t0) << " s" << endl;
 }

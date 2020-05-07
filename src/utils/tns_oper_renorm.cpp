@@ -4,7 +4,6 @@
 #include "tns_oper.h"
 
 using namespace std;
-using namespace linalg;
 using namespace tns;
 
 void tns::oper_renorm_right(const comb& bra,
@@ -16,40 +15,43 @@ void tns::oper_renorm_right(const comb& bra,
 			    const string scratch){
    bool debug = true;
    cout << "\ntns::oper_renorm_right" << endl;
-   int ip = p.first, jp = p.second;
-   int ip0 = p0.first, jp0 = p0.second; 
-   int tp = bra.type.at(p);
-   int tp0 = bra.type.at(p0);
-   cout << "p=(" << ip << "," << jp << ")[" << bra.topo[ip][jp] << "] "
-	<< "p0=(" << ip0 << "," << jp0 << ")[" << bra.topo[ip0][jp0] << "] " 
-	<< "type=[" << tp << "," << tp0 << "]" << endl;
-   auto kind = make_pair(tp,tp0);
-   int ifload;
-   if(kind == make_pair(1,0) || kind == make_pair(2,0)){
-      ifload = 0; // (C:false,R:false)
-   }else if(kind == make_pair(1,1) || kind == make_pair(1,3) ||
-	    kind == make_pair(2,2) ||
-	    kind == make_pair(0,1) || kind == make_pair(0,3)){ // start site
-      ifload = 1; // (C:false,R:true)
-   }else if(kind == make_pair(3,0)){
-      ifload = 2; // (C:true,R:false)
-   }else if(kind == make_pair(3,1) || kind == make_pair(3,3)){
-      ifload = 3; // (C:true,R:true)
+   int ip  =  p.first, jp  =  p.second, tp  = bra.type.at(p); 
+   int ip0 = p0.first, jp0 = p0.second, tp0 = bra.type.at(p0);
+   auto type = make_pair(tp,tp0);
+   pair<bool,bool> ifbuild;
+   if(type == make_pair(1,0) || type == make_pair(2,0)){
+      ifbuild = make_pair(1,1); // build or load
+   }else if(type == make_pair(1,1) || type == make_pair(1,3) ||
+	    type == make_pair(2,2) ||
+	    type == make_pair(0,1) || type == make_pair(0,3)){ // start site
+      ifbuild = make_pair(1,0);
+   }else if(type == make_pair(3,0)){
+      ifbuild = make_pair(0,1);
+   }else if(type == make_pair(3,1) || type == make_pair(3,3)){
+      ifbuild = make_pair(0,0);
    }else{
       cout << "error: no such case! (tp,tp0)=" << tp << "," << tp0 << endl;
       exit(1);
    }
-   // Branch only have normal operators in right canonical form. 
-   oper_renorm_rightC(bra,ket,p,p0,ifload,scratch);
-   oper_renorm_rightA(bra,ket,p,p0,ifload,scratch);
-   oper_renorm_rightB(bra,ket,p,p0,ifload,scratch);
-   if(jp == 0){
-      oper_renorm_rightP(bra,ket,p,p0,ifload,int2e,int1e,scratch);
-      oper_renorm_rightQ(bra,ket,p,p0,ifload,int2e,int1e,scratch);
+   cout << "p=(" << ip << "," << jp << ")[" << bra.topo[ip][jp] << "]"
+	<< " p0=(" << ip0 << "," << jp0 << ")[" << bra.topo[ip0][jp0] << "]" 
+	<< " type=(" << tp << "," << tp0 << ")"
+	<< " ifbuild(C,R)=(" << ifbuild.first << "," << ifbuild.second <<  ")"
+	<< endl;
+   oper_renorm_rightC(bra,ket,p,p0,ifbuild,scratch);
+   //if(!(jp == 0 && ip < bra.iswitch)){
+      oper_renorm_rightA(bra,ket,p,p0,ifbuild,scratch);
+      oper_renorm_rightB(bra,ket,p,p0,ifbuild,scratch);
+   //}
+   if(jp == 0 && ip <= bra.iswitch){
+      bool ifAB = (ip == bra.iswitch)? 1 : 0;
+      oper_renorm_rightP(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
+      oper_renorm_rightQ(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
    }
-   oper_renorm_rightS(bra,ket,p,p0,ifload,int2e,int1e,scratch);
-   oper_renorm_rightH(bra,ket,p,p0,ifload,int2e,int1e,scratch);
-   if(debug) oper_rbases(bra,ket,p,int2e,int1e,scratch);
+   bool ifAB = (ip <= bra.iswitch)? 1 : 0;
+   oper_renorm_rightS(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
+   oper_renorm_rightH(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
+   //if(debug) oper_rbases(bra,ket,p,int2e,int1e,scratch);
 }
 
 void tns::oper_env_right(const comb& bra, 

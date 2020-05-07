@@ -17,9 +17,9 @@ void sci::pt2_solver(const input::schedule& schd,
 	       	     const integral::two_body& int2e,
 	       	     const integral::one_body& int1e,
 	       	     const double ecore){
-   cout << "\nsci::pt2_solver" << endl; 
    bool debug = true;
    auto t0 = global::get_time();
+   cout << "\nsci::pt2_solver" << endl; 
   
    // set up head-bath table
    heatbath_table hbtab(int2e, int1e);
