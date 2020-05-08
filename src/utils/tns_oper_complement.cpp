@@ -19,6 +19,7 @@ void tns::oper_renorm_rightP(const comb& bra,
 	                     const integral::one_body& int1e,
 			     const string scratch,
 			     const bool debug){
+   if(debug) cout << "tns::oper_renorm_rightP" << endl;
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -91,14 +92,12 @@ void tns::oper_renorm_rightP(const comb& bra,
          // rop = sum_rR <pLqL||sCrR>(-rR)
          qsym rsym = qops[i].sym + cop_c.sym;
          qtensor2 rop(-rsym, bsite.qrow, ksite.qrow, 1);
-         bool ifcal = false;
          for(const auto& rop_c : rqops_c){
             if(rop.sym != rop_c.sym) continue;
-            ifcal = true;
             int rR = rop_c.index[0];
             rop -= int2e.getAnti(pL,qL,sC,rR)*rop_c;
          }
-         if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c.T(),rop.T());
+         qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c.T(),rop.T());
       }
    }
    // 2. RR: Ic*Pr
@@ -159,6 +158,7 @@ void tns::oper_renorm_rightQ(const comb& bra,
 	                     const integral::one_body& int1e,
 			     const string scratch,
 			     const bool debug){
+   if(debug) cout << "tns::oper_renorm_rightQ" << endl;
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -229,14 +229,12 @@ void tns::oper_renorm_rightQ(const comb& bra,
 	 // rop = sum_rR <pLqC||sLrR> rR
 	 qsym rsym = qops[i].sym - cop_c.sym;
 	 qtensor2 rop(-rsym, bsite.qrow, ksite.qrow, 1);
-	 bool ifcal = false;
 	 for(const auto& rop_c : rqops_c){
 	    if(rop.sym != rop_c.sym) continue;
-            ifcal = true;
 	    int rR = rop_c.index[0];
 	    rop += int2e.getAnti(pL,qC,sL,rR)*rop_c;
 	 }
-	 if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c,rop.T()); 
+	 qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c,rop.T()); 
       }
       // 4. RC: rC * (<pLqR||sLrC> (-qR^+))
       for(const auto& cop_c : cqops_c){
@@ -244,14 +242,12 @@ void tns::oper_renorm_rightQ(const comb& bra,
 	 // rop = sum_rR <pLqR||sLrC> (-qR^+)
 	 qsym rsym = qops[i].sym + cop_c.sym;
 	 qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 1);
-	 bool ifcal = false;
 	 for(const auto& rop_c : rqops_c){
             if(rop.sym != rop_c.sym) continue;
-	    ifcal = true;
 	    int qR = rop_c.index[0];
 	    rop -= int2e.getAnti(pL,qR,sL,rC)*rop_c;
 	 }
-	 if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c.T(),rop);
+	 qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c.T(),rop);
       }
    }
    // 2. RR: Ic*Qr
@@ -309,6 +305,7 @@ void tns::oper_renorm_rightS(const comb& bra,
 	                     const integral::one_body& int1e,
 			     const string scratch,
 			     const bool debug){
+   if(debug) cout << "tns::oper_renorm_rightS" << endl;
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -403,15 +400,13 @@ void tns::oper_renorm_rightS(const comb& bra,
 	 int sC = cop_ca.index[1];
 	 // rop = sum_rR <pLqC||sCrR>(-rR)
 	 qsym rsym = qops[i].sym - cop_ca.sym;
-	 qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 1);
-	 bool ifcal = false;
+	 qtensor2 rop(-rsym, bsite.qrow, ksite.qrow, 1);
 	 for(const auto& rop_c : rqops_c){
-	    if(rsym != -rop_c.sym) continue;
-	    ifcal = true;
+	    if(rop.sym != rop_c.sym) continue;
 	    int rR = rop_c.index[0];
-	    rop -= int2e.getAnti(pL,qC,sC,rR)*rop_c.T();
+	    rop -= int2e.getAnti(pL,qC,sC,rR)*rop_c;
 	 }
-	 if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_ca,rop);
+	 qops[i] += oper_kernel_OcOr(bsite,ksite,cop_ca,rop.T());
       }
       // 4. qRrCsC: A[sC,rC]^+*[<pLqR||sCrC>qR^+] (s<r)
       for(const auto& cop_cc : cqops_cc){
@@ -421,14 +416,12 @@ void tns::oper_renorm_rightS(const comb& bra,
 	 // rop = sum_qR <pLqR||sCrC>qR^+
 	 qsym rsym = qops[i].sym + cop_cc.sym;
 	 qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 1);
-	 bool ifcal = false;
 	 for(const auto& rop_c : rqops_c){
 	    if(rsym != rop_c.sym) continue;
-	    ifcal = true;
 	    int qR = rop_c.index[0];
             rop += int2e.getAnti(pL,qR,sC,rC)*rop_c; 
 	 }
-	 if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_cc.T(),rop);
+	 qops[i] += oper_kernel_OcOr(bsite,ksite,cop_cc.T(),rop);
       }
    } // pL
    if(ifAB){
@@ -440,16 +433,14 @@ void tns::oper_renorm_rightS(const comb& bra,
 	    int qC = cop_c.index[0];
 	    // rop = sum_rRsR <pLqC||sRrR> rRsR (r>s)
 	    qsym rsym = qops[i].sym - cop_c.sym;
-	    qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 2);
-	    bool ifcal = false; 
+	    qtensor2 rop(-rsym, bsite.qrow, ksite.qrow, 2);
 	    for(const auto& rop_cc : rqops_cc){
-	       if(rsym != -rop_cc.sym) continue;
-	       ifcal = true;
+	       if(rop.sym != rop_cc.sym) continue;
 	       int rR = rop_cc.index[1];
 	       int sR = rop_cc.index[0];
-	       rop += int2e.getAnti(pL,qC,sR,rR)*rop_cc.T();
+	       rop += int2e.getAnti(pL,qC,sR,rR)*rop_cc;
 	    }
-	    if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c,rop);
+	    qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c,rop.T());
          }
 	 // 6. qRrRsC: B: sum_sC sC * sum_qRrR <pLqR||sCrR> qR^+rR
 	 for(const auto& cop_c : cqops_c){
@@ -457,15 +448,13 @@ void tns::oper_renorm_rightS(const comb& bra,
 	    // rop = sum_qRrR <pLqR||sCrR> qR^+rR
 	    qsym rsym = qops[i].sym + cop_c.sym;
 	    qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 2);
-	    bool ifcal = false;
 	    for(const auto& rop_ca : rqops_ca){
 	       if(rsym != rop_ca.sym) continue;
-	       ifcal = true;
 	       int qR = rop_ca.index[0];
 	       int rR = rop_ca.index[1];
 	       rop += int2e.getAnti(pL,qR,sC,rR)*rop_ca;
 	    }
-	    if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c.T(),rop);
+	    qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c.T(),rop);
 	 }
       } // pL
    }else{
@@ -526,6 +515,7 @@ void tns::oper_renorm_rightH(const comb& bra,
 	                     const integral::one_body& int1e,
 			     const string scratch,
 			     const bool debug){
+   if(debug) cout << "tns::oper_renorm_rightH" << endl;
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -596,7 +586,7 @@ void tns::oper_renorm_rightH(const comb& bra,
       oper_load(fname0r, rqops_H);
    }
 
-   // H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
+   // kernel for H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
    qtensor2 H(qsym(0,0), bsite.qcol, ksite.qcol, 0);
    // 1. local term: Hc*Ir
    H += oper_kernel_OcIr(bsite,ksite,cqops_H[0]);
@@ -640,19 +630,15 @@ void tns::oper_renorm_rightH(const comb& bra,
 	 assert(bra.orbord[pC] < bra.orbord[qC]);
          // rop = P_pCqC^R = sum_rRsR <pCqC||sRrR> rRsR (r>s)
          qsym rsym = H.sym - cop_cc.sym;
-         qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 2);
-         bool ifcal = false; 
+         qtensor2 rop(-rsym, bsite.qrow, ksite.qrow, 2);
          for(const auto& rop_cc : rqops_cc){
-            if(rsym != -rop_cc.sym) continue;
-            ifcal = true;
+            if(rop.sym != rop_cc.sym) continue;
             int rR = rop_cc.index[1];
             int sR = rop_cc.index[0];
-            rop += int2e.getAnti(pC,qC,sR,rR)*rop_cc.T();
+            rop += int2e.getAnti(pC,qC,sR,rR)*rop_cc;
          }
-         if(ifcal){
-	    H += oper_kernel_OcOr(bsite,ksite,cop_cc,rop);
-	    H += oper_kernel_OrOc(bsite,ksite,rop.T(),cop_cc.T());
-	 }
+	 H += oper_kernel_OcOr(bsite,ksite,cop_cc,rop.T());
+	 H += oper_kernel_OrOc(bsite,ksite,rop,cop_cc.T());
       }
       // 6. B: Q: B_pCsC^C*Q_pCsC^R
       for(const auto& cop_ca : cqops_ca){
@@ -661,15 +647,13 @@ void tns::oper_renorm_rightH(const comb& bra,
          // rop = Q_pCsC^R = sum_qRrR <pCqR||sCrR> qR^+rR
          qsym rsym = H.sym - cop_ca.sym;
          qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 2);
-         bool ifcal = false;
          for(const auto& rop_ca : rqops_ca){
             if(rsym != rop_ca.sym) continue;
-            ifcal = true;
             int qR = rop_ca.index[0];
             int rR = rop_ca.index[1];
             rop += int2e.getAnti(pC,qR,sC,rR)*rop_ca;
          }
-         if(ifcal) H += oper_kernel_OcOr(bsite,ksite,cop_ca,rop);
+         H += oper_kernel_OcOr(bsite,ksite,cop_ca,rop);
       }
    }else{
       // 5. P: A_pCqC^C*P_pCqC^R + h.c.

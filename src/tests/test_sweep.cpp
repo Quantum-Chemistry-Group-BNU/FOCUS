@@ -22,10 +22,10 @@ using namespace std;
 using namespace fock;
 using namespace linalg;
 
-int tests::test_comb(){
+int tests::test_sweep(){
    cout << endl;	
    cout << global::line_separator << endl;	
-   cout << "tests::test_comb" << endl;
+   cout << "tests::test_sweep" << endl;
    cout << global::line_separator << endl;	
 
    // read input

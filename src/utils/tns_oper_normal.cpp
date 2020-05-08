@@ -16,6 +16,7 @@ void tns::oper_renorm_rightC(const comb& bra,
 			     const pair<bool,bool>& ifbuild,
 			     const string scratch,
 			     const bool debug){
+   if(debug) cout << "tns::oper_renorm_rightC" << endl;
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -67,6 +68,7 @@ void tns::oper_renorm_rightA(const comb& bra,
 			     const pair<bool,bool>& ifbuild,
 			     const string scratch,
 			     const bool debug){
+   if(debug) cout << "tns::oper_renorm_rightA" << endl;
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -136,6 +138,7 @@ void tns::oper_renorm_rightB(const comb& bra,
 			     const pair<bool,bool>& ifbuild,
 			     const string scratch,
 			     const bool debug){
+   if(debug) cout << "tns::oper_renorm_rightB" << endl;
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
