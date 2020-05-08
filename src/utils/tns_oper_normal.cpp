@@ -182,7 +182,7 @@ void tns::oper_renorm_rightB(const comb& bra,
    }
    string fname = oper_fname(scratch, p, "rightB"); 
    oper_save(fname, qops);
-
+   /*
    // debug
    if(ip==0){
      int nb = bra.nphysical*2;
@@ -219,7 +219,7 @@ void tns::oper_renorm_rightB(const comb& bra,
      cout << "diff=" << normF(rdmB-rdm1b) << endl;
      cout << "diff=" << normF(rdmC-rdm1c) << endl;
    }
-
+   */
    auto t1 = global::get_time();
    if(debug) cout << "timing for tns::renorm_rightB : " << setprecision(2) 
                   << global::get_duration(t1-t0) << " s" << endl;

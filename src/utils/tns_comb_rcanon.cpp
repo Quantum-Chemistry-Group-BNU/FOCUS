@@ -3,6 +3,7 @@
 #include "tns_qsym.h"
 #include "tns_comb.h"
 #include "tns_ordering.h"
+#include "tns_qtensor.h"
 #include <iostream>
 #include <algorithm>
 
@@ -15,7 +16,7 @@ using namespace linalg;
 void comb::get_rbases(const onspace& space,
 		      const vector<vector<double>>& vs,
 		      const double thresh_proj){
-   bool debug = true;
+   bool debug = false;
    auto t0 = global::get_time();
    cout << "\ncomb::get_rbases thresh_proj=" << scientific << thresh_proj << endl;
    vector<pair<int,int>> shapes; // for debug
@@ -178,15 +179,14 @@ qtensor3 comb::get_rwfuns(const onspace& space,
       rwfuns.qblocks[key].push_back(dgemm("T","N",rsec.coeff,vrl));
       idx++;
    } // symB sectors
-   rwfuns.print("rwfuns",1);
+   if(debug) rwfuns.print("rwfuns",1);
    return rwfuns;
 }
 
 // build site tensor from {|r>} bases
 void comb::rcanon_init(const onspace& space,
 		       const vector<vector<double>>& vs,
-		       const double thresh_proj,
-		       const double thresh_ortho){
+		       const double thresh_proj){
    bool debug = false;
    auto t0 = global::get_time();
    cout << "\ncomb::rcanon_init" << endl;
@@ -325,56 +325,29 @@ void comb::rcanon_init(const onspace& space,
    // compute wave function at the start for right canonical form 
    auto p = make_pair(0,0), p0 = make_pair(1,0);
    rsites[p] = get_rwfuns(space, vs, rsupport[p], rbases[p0]);
-   // debug
-   {
-      cout << "\ncheck orthogonality for right canonical sites:" << endl;
-      for(int idx=0; idx<ntotal; idx++){
-         auto p = rcoord[idx];
-         int i = p.first, j = p.second;
-         {
-            cout << "\nidx=" << idx 
-                 << " node=(" << i << "," << j << ")[" << topo[i][j] << "] "
-                 << endl;
-         }
-         auto& rt = rsites[p];
-         int Dtot = 0;
-	 // loop over out blocks
-         for(const auto& pr : rt.qcol){
-            auto& sym = pr.first;
-            int ndim = pr.second;
-            Dtot += ndim;
-            matrix Sr(ndim,ndim);
-	    // loop over upper blocks 
-            for(const auto& p1 : rt.qrow){
-               auto& sym1 = p1.first;
-	       // loop over in blocks
-	       for(const auto& p0 : rt.qmid){
-		  auto& sym0 = p0.first;
-		  auto key = make_tuple(sym0,sym1,sym);
-		  auto& blk = rt.qblocks[key];
-                  if(blk.size() == 0) continue; 
-		  int ndim0 = p0.second;
-                  // S[r,r'] = \sum_{l,c} Ac[l,r]*Ac[l,r']
-                  for(int i=0; i<ndim0; i++){
-                     Sr += dgemm("N","N",blk[i].T(),blk[i]);
-                  }
-	       } // p0
-            } // p1
-            auto diff = normF(Sr - identity_matrix(ndim));
-            cout << " qsym=" << sym << " ndim=" << ndim 
-		 << " |Sr-Id|_F=" << diff << endl;
-            if(diff > thresh_ortho){
-               Sr.print("Sr_sym"+sym.to_string());
-               cout << "error: deviate from identity matrix! diff=" << diff << endl;
-               exit(1);
-            }
-         } // sym blocks
-         cout << "total bond dimension=" << Dtot << endl;
-      } // idx
-   } // debug
    auto t1 = global::get_time();
    cout << "\ntiming for comb::rcanon_init : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
+}
+
+void comb::rcanon_check(const double thresh_ortho,
+		        const bool ifortho){
+   cout << "\ncomb::rcanon_check thresh_ortho=" << thresh_ortho << endl;
+   for(int idx=0; idx<ntotal; idx++){
+      auto p = rcoord[idx];
+      auto qt2 = contract_qt3_qt3_lc(rsites[p],rsites[p]);
+      int Dtot = qt2.get_dim_row();
+      int i = p.first, j = p.second;
+      double mdiff = qt2.check_identity(thresh_ortho, false);
+      cout << "idx=" << idx 
+           << " node=(" << i << "," << j << ")[" << topo[i][j] << "]"
+           << " Dtot=" << Dtot << " mdiff=" << mdiff << endl;
+      if((ifortho || (!ifortho && idx != ntotal-1)) 
+         && (mdiff>thresh_ortho)){
+         cout << "error: deviate from identity matrix!" << endl;
+         exit(1);
+      }
+   } // idx
 }
 
 // <det|Comb[n]> by contracting the Comb

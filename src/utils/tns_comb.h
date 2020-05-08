@@ -33,8 +33,9 @@ class comb{
       // build site tensor from {|r>} bases
       void rcanon_init(const fock::onspace& space,
 		       const std::vector<std::vector<double>>& vs,
-		       const double thresh_proj=1.e-14,
-		       const double thresh_ortho=1.e-10);
+		       const double thresh_proj); // =1.e-14
+      void rcanon_check(const double thresh_ortho, // =1.e-10
+		        const bool ifortho=false); // check last site
       // io for rsites
       void rcanon_save(const std::string fname="rcanon.info");
       void rcanon_load(const std::string fname="rcanon.info");

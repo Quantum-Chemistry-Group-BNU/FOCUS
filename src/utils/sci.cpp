@@ -429,8 +429,10 @@ void sci::ci_solver(const input::schedule& schd,
 
 void sci::ci_truncate(onspace& space,
 	  	      vector<vector<double>>& vs,	
-		      const int maxdets){
-   cout << "\nsci::ci_truncate maxdets=" << maxdets << endl;
+		      const int maxdets,
+		      const bool ifortho){
+   cout << "\nsci::ci_truncate maxdets=" 
+	<< maxdets << " ifortho=" << ifortho << endl;
    int nsub = space.size();
    int neig = vs.size();
    int nred = min(nsub,maxdets);
@@ -443,18 +445,20 @@ void sci::ci_truncate(onspace& space,
       }
    }
    auto index = tools::sort_index(cmax); 
-   // orthogonalization
+   // orthogonalization if required
    vector<double> vtmp(nred*neig);
    for(int j=0; j<neig; j++){
       for(int i=0; i<nred; i++){
 	 vtmp[i+nred*j] = vs[j][index[i]];
       }
    }
-   int nindp = linalg::get_ortho_basis(nred,neig,vtmp);
-   if(nindp != neig){
-      cout << "error: thresh is too large for ci_truncate!" << endl;
-      cout << "nindp,neig=" << nindp << "," << neig << endl;
-      exit(1);
+   if(ifortho){
+      int nindp = linalg::get_ortho_basis(nred,neig,vtmp);
+      if(nindp != neig){
+         cout << "error: thresh is too large for ci_truncate!" << endl;
+         cout << "nindp,neig=" << nindp << "," << neig << endl;
+         exit(1);
+      }
    }
    // copy basis and coefficients
    onspace space2(nred);

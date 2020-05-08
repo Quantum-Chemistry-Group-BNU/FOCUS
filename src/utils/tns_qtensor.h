@@ -49,6 +49,8 @@ struct qtensor2{
       friend qtensor2 operator +(const qtensor2& qta, const qtensor2& qtb);
       friend qtensor2 operator -(const qtensor2& qta, const qtensor2& qtb);
       double normF() const;
+      double check_identity(const double thresh_ortho,
+		            const bool debug=false) const;
    public:
       qsym sym; // <row|op|col>
       qsym_space qrow;

@@ -1,5 +1,5 @@
-#include "tns_qtensor.h"
 #include "../core/linalg.h"
+#include "tns_qtensor.h"
 #include <iostream>
 #include <algorithm>
 
@@ -239,4 +239,32 @@ double qtensor2::normF() const{
       }
    }
    return sqrt(sum);
+}
+
+double qtensor2::check_identity(const double thresh_ortho,
+			        const bool debug) const{
+   double mdiff = -1.0;
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      for(const auto& pc : qcol){
+	 const auto& qc = pc.first;	
+	 auto key = make_pair(qr,qc);
+	 const auto& blk = qblocks.at(key);
+	 if(blk.size() > 0){
+	    if(qr != qc){
+	       cout << "error: not a block-diagonal matrix!";
+	       exit(1);
+	    }
+            int ndim = pr.second;
+            double diff = linalg::normF(blk - identity_matrix(ndim));
+	    mdiff = max(diff,mdiff);
+	    if(debug){
+               cout << " qsym=" << qr << " ndim=" << ndim 
+     	 	    << " |Sr-Id|_F=" << diff << endl;
+	    }
+            if(diff > thresh_ortho) blk.print("block sym"+sym.to_string());
+	 }
+      }
+   }
+   return mdiff;
 }

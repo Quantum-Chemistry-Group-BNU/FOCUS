@@ -2,5 +2,6 @@
 KNOWN PROBLEMS:
 
  - thresh_proj & thresh_ortho sensitivity in SCI projection
- - improved implementation of Q & P
+ - minimize T() in Q/P/S/H
+
 

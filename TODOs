@@ -96,7 +96,7 @@
 	  - implement tensor contraction kernels for qtensor
 	  - checked by evaluating <Comb|Comb> 
 
- 202005xx initialize normal & complementary operators (MOST CHALLENGING PART)
+ 20200508 initialize normal & complementary operators (MOST CHALLENGING PART)
 	  - data structure for operators: qtensor2
 	  - operators on dot (in memory)
 	  - serializaiton: -lboost_system -lboost_filesystem
@@ -106,12 +106,12 @@
 	      - a_pL^+a_qL (checked against fci_rdm1 for <psi1|p^+q|psi2>)
 	      - a_pL^+a_qL^+
 	    - complementary operators:
-	      - lazy construction (to be improved in future):
+	      - lazy construction (to be improved in future - checked):
 	        - Q_pLsL^R
 	        - P_pLqL^R
 	      - typeAB/typePQ decomposition (to be cheked by H1e & H2e):
 	        - S_pL^R
-	        - H
+	        - H^R
 	  - check by evaluating energies
 	  - note: currently the adjoint is used for operators like ap,
 		  hence the renorm functions work only for <comb1|o|comb2>,
@@ -122,6 +122,7 @@
 		  compute <rdm1|p^+q|rdm2> for state-averaged comb states.
  
  2020xxxx basic sweep algorithm
+	  - data structure for wavefunction (wf)
 	  - implement H*x for one-dot wf
  	  - implement H*x for two-dot wf 
 	  - decimation 

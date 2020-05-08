@@ -143,8 +143,7 @@ void tns::oper_renorm_rightP(const comb& bra,
    auto t1 = global::get_time();
    if(debug) cout << "timing for tns::renorm_rightP ifAB=" << ifAB
 	          << " : " << setprecision(2) 
-	          << global::get_duration(t1-t0) << " s"
-		  << endl;
+	          << global::get_duration(t1-t0) << " s" << endl;
 }
 
 void tns::oper_renorm_rightQ(const comb& bra,
@@ -158,13 +157,31 @@ void tns::oper_renorm_rightQ(const comb& bra,
 			     const string scratch){
    bool debug = true;
    auto t0 = global::get_time();
-   cout << "tns::oper_renorm_rightQ" << endl;
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
    int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
-   qopers qops, qops_ca;
-   string fname0 = oper_fname(scratch, p, "rightB");
-   oper_load(fname0, qops_ca);
+   qopers qops;
+   qopers cqops_c, cqops_ca;
+   qopers rqops_c, rqops_ca, rqops_Q;
+   string fname0r, fname0c;
+   auto lsupp = bra.lsupport.at(p);
+   // C: build / load
+   if(ifbuild.first){
+      cqops_c  = oper_dot_c(kp);
+      cqops_ca = oper_dot_ca(kp);
+   }else{
+      assert(jp == 0);
+      auto pc = make_pair(ip,1);
+      fname0c = oper_fname(scratch, pc, "rightC");
+      oper_load(fname0c, cqops_c);
+      fname0c = oper_fname(scratch, pc, "rightB");
+      oper_load(fname0c, cqops_ca);
+   }
+   // R: load
+   assert(!ifbuild.second);
+   fname0r = oper_fname(scratch, p0, "rightC");
+   oper_load(fname0r, rqops_c);
+
    // initialization for Qps = <pq||sr> aq^+ar
    // Qaa,bb, Qab ~ b^+a, Qba ~ a^+b
    qtensor2 Qss(qsym(0, 0), bsite.qcol, ksite.qcol, 2);
@@ -188,24 +205,92 @@ void tns::oper_renorm_rightQ(const comb& bra,
 	 qops.push_back(Qba);
       }
    }
-   // Qps = <pq||sr> aq^+ar
-   for(auto& qop : qops){
-      int orb_p = qop.index[0];
-      int orb_s = qop.index[1];
-      for(const auto& op_ca : qops_ca){
-         if(qop.sym != op_ca.sym) continue;
-         int orb_q = op_ca.index[0];
-         int orb_r = op_ca.index[1];
-         qop += int2e.getAnti(orb_p,orb_q,orb_s,orb_r) * op_ca;
-      } // ps
-   } // qr
+
+   // kernel for computing renormalized Q_pLsL^{CR} [4 terms]
+   for(int i=0; i<qops.size(); i++){
+      int pL = qops[i].index[0];
+      int sL = qops[i].index[1];
+      // 1. CC: Qc*Ir
+      qtensor2 cop(qops[i].sym, bsite.qmid, ksite.qmid, 2);
+      for(const auto& cop_ca : cqops_ca){
+	 int qC = cop_ca.index[0];
+	 int rC = cop_ca.index[1];
+	 // Qc = <pLqC||sLrC> qC^+rC
+	 if(cop.sym != cop_ca.sym) continue;
+	 cop += int2e.getAnti(pL,qC,sL,rC)*cop_ca;
+      }
+      qops[i] += oper_kernel_OcIr(bsite,ksite,cop);
+      // 3. CR: qC^+ * (<pLqC||sLrR> rR)
+      for(const auto& cop_c : cqops_c){
+	 int qC = cop_c.index[0];
+	 // rop = sum_rR <pLqC||sLrR> rR
+	 qsym rsym = qops[i].sym - cop_c.sym;
+	 qtensor2 rop(-rsym, bsite.qrow, ksite.qrow, 1);
+	 bool ifcal = false;
+	 for(const auto& rop_c : rqops_c){
+	    if(rop.sym != rop_c.sym) continue;
+            ifcal = true;
+	    int rR = rop_c.index[0];
+	    rop += int2e.getAnti(pL,qC,sL,rR)*rop_c;
+	 }
+	 if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c,rop.T()); 
+      }
+      // 4. RC: rC * (<pLqR||sLrC> (-qR^+))
+      for(const auto& cop_c : cqops_c){
+	 int rC = cop_c.index[0];
+	 // rop = sum_rR <pLqR||sLrC> (-qR^+)
+	 qsym rsym = qops[i].sym + cop_c.sym;
+	 qtensor2 rop(rsym, bsite.qrow, ksite.qrow, 1);
+	 bool ifcal = false;
+	 for(const auto& rop_c : rqops_c){
+            if(rop.sym != rop_c.sym) continue;
+	    ifcal = true;
+	    int qR = rop_c.index[0];
+	    rop -= int2e.getAnti(pL,qR,sL,rC)*rop_c;
+	 }
+	 if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c.T(),rop);
+      }
+   }
+   // 2. RR: Ic*Qr
+   if(ifAB){
+      fname0r = oper_fname(scratch, p0, "rightB");
+      oper_load(fname0r, rqops_ca);
+      for(int i=0; i<qops.size(); i++){
+         int pL = qops[i].index[0];
+         int sL = qops[i].index[1];
+	 // Q_pLsL^R = sum_qRrR <pLqR||sLrR> qR^+rR
+         qtensor2 rop(qops[i].sym, bsite.qrow, ksite.qrow, 2);
+         for(const auto& rop_ca : rqops_ca){
+            if(rop.sym != rop_ca.sym) continue;
+            int qR = rop_ca.index[0];
+            int rR = rop_ca.index[1];
+            rop += int2e.getAnti(pL,qR,sL,rR)*rop_ca;
+         }
+         qops[i] += oper_kernel_IcOr(bsite,ksite,rop);
+      }
+   }else{
+      fname0r = oper_fname(scratch, p0, "rightQ");
+      oper_load(fname0r, rqops_Q);
+      map<pair<int,int>,int> Qr_pLsL2pos;
+      for(int idx=0; idx<rqops_Q.size(); idx++){
+         int pL = rqops_Q[idx].index[0];
+         int sL = rqops_Q[idx].index[1];
+         Qr_pLsL2pos[make_pair(pL,sL)] = idx;
+      }
+      for(int i=0; i<qops.size(); i++){
+         int pL = qops[i].index[0];
+         int sL = qops[i].index[1];
+         // RR: Ic*Qr
+         int pos_r = Qr_pLsL2pos.at(make_pair(pL,sL));
+         qops[i] += oper_kernel_IcOr(bsite,ksite,rqops_Q[pos_r]);
+      }
+   }
    string fname = oper_fname(scratch, p, "rightQ"); 
    oper_save(fname, qops);
    auto t1 = global::get_time();
    if(debug) cout << "timing for tns::renorm_rightQ ifAB=" << ifAB
 	          << " : " << setprecision(2) 
-	          << global::get_duration(t1-t0) << " s"
-		  << endl;
+	          << global::get_duration(t1-t0) << " s" << endl;
 }
 
 void tns::oper_renorm_rightS(const comb& bra,
@@ -219,7 +304,6 @@ void tns::oper_renorm_rightS(const comb& bra,
 			     const string scratch){
    bool debug = true;
    auto t0 = global::get_time();
-   cout << "tns::oper_renorm_rightS" << endl;
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
    int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
@@ -249,9 +333,7 @@ void tns::oper_renorm_rightS(const comb& bra,
       oper_load(fname0c, cqops_S);
    }
    // R: build /load
-   int rtype = 0; // =0, AB; =1, PQ;
    if(ifbuild.second){
-      rtype = 0;
       int kp0 = bra.rsupport.at(p0)[0];
       rqops_c  = oper_dot_c(kp0);
       rqops_cc = oper_dot_cc(kp0);
@@ -260,20 +342,18 @@ void tns::oper_renorm_rightS(const comb& bra,
    }else{
       fname0r = oper_fname(scratch, p0, "rightC");
       oper_load(fname0r, rqops_c);
-      if(jp == 0 && ip <= bra.iswitch){ 
-	 // left half of the backbone [type-PQ]
-         rtype = 1;
-         fname0r = oper_fname(scratch, p0, "rightP");
-         oper_load(fname0r, rqops_P);
-         fname0r = oper_fname(scratch, p0, "rightQ");
-         oper_load(fname0r, rqops_Q);
-      }else{
-         // branch & left half of the backbone [type-AB]
-	 rtype = 0;
+      if(ifAB){	      
+	 // branch & right half of the backbone [type-AB]
          fname0r = oper_fname(scratch, p0, "rightA");
          oper_load(fname0r, rqops_cc);
          fname0r = oper_fname(scratch, p0, "rightB");
          oper_load(fname0r, rqops_ca);
+      }else{
+	 // left half of the backbone [type-PQ]
+         fname0r = oper_fname(scratch, p0, "rightP");
+         oper_load(fname0r, rqops_P);
+         fname0r = oper_fname(scratch, p0, "rightQ");
+         oper_load(fname0r, rqops_Q);
       }
       fname0r = oper_fname(scratch, p0, "rightS");
       oper_load(fname0r, rqops_S);
@@ -345,9 +425,7 @@ void tns::oper_renorm_rightS(const comb& bra,
 	 if(ifcal) qops[i] += oper_kernel_OcOr(bsite,ksite,cop_cc.T(),rop);
       }
    } // pL
-   // type-AB/PQ decomposition for SpL^CR
-   if(rtype == 0){
-      cout << "decomposition type-AB" << endl;
+   if(ifAB){
       // type-AB decomposition
       for(int i=0; i<qops.size(); i++){
          int pL = qops[i].index[0];
@@ -385,7 +463,6 @@ void tns::oper_renorm_rightS(const comb& bra,
 	 }
       } // pL
    }else{
-      cout << "decomposition type-PQ" << endl;
       // type-PQ decomposition
       map<pair<int,int>,int> Pr_pLqL2pos;
       for(int idx=0; idx<rqops_P.size(); idx++){
@@ -421,14 +498,13 @@ void tns::oper_renorm_rightS(const comb& bra,
 	    qops[i] += oper_kernel_OcOr(bsite,ksite,cop_c.T(),rop);
 	 }
       }	// pL 
-   } // rtype
+   } // ifAB
    string fname = oper_fname(scratch, p, "rightS"); 
    oper_save(fname, qops);
    auto t1 = global::get_time();
    if(debug) cout << "timing for tns::renorm_rightS ifAB=" << ifAB
 	          << " : " << setprecision(2) 
-	          << global::get_duration(t1-t0) << " s"
-		  << endl;
+	          << global::get_duration(t1-t0) << " s" << endl;
 }
 
 void tns::oper_renorm_rightH(const comb& bra,
@@ -442,7 +518,6 @@ void tns::oper_renorm_rightH(const comb& bra,
 			     const string scratch){
    bool debug = true;
    auto t0 = global::get_time();
-   cout << "tns::oper_renorm_rightH" << endl;
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
    int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
@@ -475,9 +550,7 @@ void tns::oper_renorm_rightH(const comb& bra,
       oper_load(fname0c, cqops_H);
    }
    // R: build /load
-   int rtype = 0; // =0, AB; =1, PQ;
    if(ifbuild.second){
-      rtype = 0;
       int kp0 = bra.rsupport.at(p0)[0];
       rqops_c  = oper_dot_c(kp0);
       rqops_cc = oper_dot_cc(kp0);
@@ -495,20 +568,18 @@ void tns::oper_renorm_rightH(const comb& bra,
    }else{
       fname0r = oper_fname(scratch, p0, "rightC");
       oper_load(fname0r, rqops_c);
-      if(jp == 0 && ip <= bra.iswitch){ 
-	 // left half of the backbone [type-PQ]
-         rtype = 1;
-         fname0r = oper_fname(scratch, p0, "rightP");
-         oper_load(fname0r, rqops_P);
-         fname0r = oper_fname(scratch, p0, "rightQ");
-         oper_load(fname0r, rqops_Q);
-      }else{
-         // branch & left half of the backbone [type-AB]
-	 rtype = 0;
+      if(ifAB){
+         // branch & right half of the backbone [type-AB]
          fname0r = oper_fname(scratch, p0, "rightA");
          oper_load(fname0r, rqops_cc);
          fname0r = oper_fname(scratch, p0, "rightB");
          oper_load(fname0r, rqops_ca);
+      }else{
+	 // left half of the backbone [type-PQ]
+         fname0r = oper_fname(scratch, p0, "rightP");
+         oper_load(fname0r, rqops_P);
+         fname0r = oper_fname(scratch, p0, "rightQ");
+         oper_load(fname0r, rqops_Q);
       }
       fname0r = oper_fname(scratch, p0, "rightS");
       oper_load(fname0r, rqops_S);
@@ -552,10 +623,7 @@ void tns::oper_renorm_rightH(const comb& bra,
       H += oper_kernel_OrOc(bsite,ksite,rop_c,cop);
       H += oper_kernel_OcOr(bsite,ksite,cop.T(),rop_c.T());
    }
-   // type-AB/PQ decomposition for H 
-   if(rtype == 0){
-      cout << "decomposition type-AB" << endl;
-      // type-AB decomposition
+   if(ifAB){
       // 5. A: A_pCqC^C*P_pCqC^R + h.c.
       for(const auto& cop_cc : cqops_cc){
          int pC = cop_cc.index[0];
@@ -595,8 +663,6 @@ void tns::oper_renorm_rightH(const comb& bra,
          if(ifcal) H += oper_kernel_OcOr(bsite,ksite,cop_ca,rop);
       }
    }else{
-      cout << "decomposition type-PQ" << endl;
-      // type-PQ decomposition
       // 5. P: A_pCqC^C*P_pCqC^R + h.c.
       map<pair<int,int>,int> Pr_pLqL2pos;
       for(int idx=0; idx<rqops_P.size(); idx++){
@@ -631,11 +697,12 @@ void tns::oper_renorm_rightH(const comb& bra,
 	 assert(rsym == rop.sym);
 	 H += oper_kernel_OcOr(bsite,ksite,cop_ca,rop);
       }
-   } // rtype
+   } // ifAB
    qops.push_back(H);
    string fname = oper_fname(scratch, p, "rightH"); 
    oper_save(fname, qops);
-
+   /*
+   // debug against fci::get_Hij
    if(ip==0){
       H.print("H",2);
       auto Hmat = H.to_matrix();
@@ -645,10 +712,9 @@ void tns::oper_renorm_rightH(const comb& bra,
       diffH.print("diffH");
       cout << normF(diffH) << endl;
    }
-
+   */
    auto t1 = global::get_time();
    if(debug) cout << "timing for tns::renorm_rightH ifAB=" << ifAB
 	          << " : " << setprecision(2) 
-	          << global::get_duration(t1-t0) << " s"
-		  << endl;
+	          << global::get_duration(t1-t0) << " s" << endl;
 }

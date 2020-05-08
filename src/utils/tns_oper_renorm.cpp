@@ -14,7 +14,8 @@ void tns::oper_renorm_right(const comb& bra,
 		            const integral::one_body& int1e,
 			    const string scratch){
    bool debug = true;
-   cout << "\ntns::oper_renorm_right" << endl;
+   cout << "\ntns::oper_renorm_right switch=" 
+	<< (p == make_pair(bra.iswitch,0)) << endl;
    int ip  =  p.first, jp  =  p.second, tp  = bra.type.at(p); 
    int ip0 = p0.first, jp0 = p0.second, tp0 = bra.type.at(p0);
    auto type = make_pair(tp,tp0);
@@ -38,17 +39,21 @@ void tns::oper_renorm_right(const comb& bra,
 	<< " type=(" << tp << "," << tp0 << ")"
 	<< " ifbuild(C,R)=(" << ifbuild.first << "," << ifbuild.second <<  ")"
 	<< endl;
+   // three kinds of sites 
+   bool left = (jp == 0 && ip < bra.iswitch);
+   bool swpt = (jp == 0 && ip == bra.iswitch);
+   bool rest = !(left || swpt); 
    oper_renorm_rightC(bra,ket,p,p0,ifbuild,scratch);
-   //if(!(jp == 0 && ip < bra.iswitch)){
+   if(rest){
       oper_renorm_rightA(bra,ket,p,p0,ifbuild,scratch);
       oper_renorm_rightB(bra,ket,p,p0,ifbuild,scratch);
-   //}
-   if(jp == 0 && ip <= bra.iswitch){
-      bool ifAB = (ip == bra.iswitch)? 1 : 0;
+   }
+   if(left || swpt){
+      auto ifAB = swpt;	   
       oper_renorm_rightP(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
       oper_renorm_rightQ(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
    }
-   bool ifAB = (ip <= bra.iswitch)? 1 : 0;
+   auto ifAB = swpt || rest;
    oper_renorm_rightS(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
    oper_renorm_rightH(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
    //if(debug) oper_rbases(bra,ket,p,int2e,int1e,scratch);

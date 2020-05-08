@@ -65,7 +65,8 @@ int tests::test_comb(){
       coeff_population(sci_space, vs[i]);
    }
    // truncate CI coefficients
-   sci::ci_truncate(sci_space, vs, schd.maxdets);
+   const bool ifortho = true;
+   sci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
  
    // comb tensor networks
    tns::comb comb;
@@ -74,11 +75,14 @@ int tests::test_comb(){
    comb.topo_print();
 
    if(!schd.combload){
-      comb.rcanon_init(sci_space, vs, schd.thresh_proj, schd.thresh_ortho);
+      comb.rcanon_init(sci_space, vs, schd.thresh_proj);
+      comb.rcanon_check(schd.thresh_ortho, ifortho);
       comb.rcanon_save();
    }else{
       comb.rcanon_load();
    }
+
+   const double thresh=1.e-10;
    
    // check overlap with CI
    auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
@@ -87,10 +91,17 @@ int tests::test_comb(){
    // check self-overlap
    auto Smat = fci::get_Smat(sci_space, vs);
    Smat.print("Smat");
-   auto Sij = tns::get_Sij(comb, comb);
+   auto Sij = tns::get_Smat(comb, comb);
    Sij.print("Sij");
+   double diff = normF(Smat-Sij);
+   cout << "diff_Sij=" << diff << endl;
+   if(diff > thresh){
+      cout << "error: diff_Sij > thresh=" << thresh << endl;
+      exit(1);
+   }
 
-   // check rdm1
+   /*
+   // check rdm1 & Bpq
    int k = int1e.sorb;
    linalg::matrix rdm1(k,k); 
    fci::get_rdm1(sci_space, vs[0], vs[0], rdm1);
@@ -99,21 +110,24 @@ int tests::test_comb(){
    rdm1.save("fci_rdm1b");
    fci::get_rdm1(sci_space, vs[1], vs[2], rdm1);
    rdm1.save("fci_rdm1c");
-  
+   */
+
+   // check energy
    schd.create_scratch();
    //int1e.set_zeros();
    //int2e.set_zeros();
    auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-   cout << "ecore=" << ecore << endl;
    Hmat.print("Hmat");
    Hmat.save("fci_Hmat");
-
-   tns::oper_env_right(comb, comb, int2e, int1e, schd.scratch);
-   
-   // check energy
-   //auto Hij = tns::get_Hij(comb, comb, int2e, int1e, ecore);
-   //Hij.print("Hij");
-   //schd.remove_scratch();
+   auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
+   Hij.print("Hij");
+   schd.remove_scratch();
+   diff = normF(Hmat-Hij);
+   cout << "diff_Hij=" << diff << endl;
+   if(diff > thresh){ 
+      cout << "error: diff_Hij > thresh=" << thresh << endl;
+      exit(1);
+   }
 
    return 0;
 }

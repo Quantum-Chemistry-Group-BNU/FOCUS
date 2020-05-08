@@ -76,7 +76,8 @@ void pt2_solver(const input::schedule& schd,
 // truncate
 void ci_truncate(fock::onspace& space,
 		 std::vector<std::vector<double>>& vs,
-		 const int maxdets = 10000);
+		 const int maxdets,
+		 const bool ifortho=false);
 
 } // sci
 

@@ -6,14 +6,15 @@
 
 namespace tns{
 
-linalg::matrix get_Sij(const comb& bra, 
-  		       const comb& ket);
+linalg::matrix get_Smat(const comb& bra, 
+  		        const comb& ket);
 
-linalg::matrix get_Hij(const comb& bra, 
-		       const comb& ket,
-		       const integral::two_body& int2e,
-		       const integral::one_body& int1e,
-		       const double ecore);
+linalg::matrix get_Hmat(const comb& bra, 
+		        const comb& ket,
+		        const integral::two_body& int2e,
+		        const integral::one_body& int1e,
+		        const double ecore,
+		        const std::string scratch);
 
 } // tns
 
