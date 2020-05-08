@@ -17,8 +17,8 @@ void tns::oper_renorm_rightP(const comb& bra,
 			     const bool& ifAB,
 	                     const integral::two_body& int2e,
 	                     const integral::one_body& int1e,
-			     const string scratch){
-   bool debug = true;
+			     const string scratch,
+			     const bool debug){
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -141,9 +141,12 @@ void tns::oper_renorm_rightP(const comb& bra,
    string fname = oper_fname(scratch, p, "rightP"); 
    oper_save(fname, qops);
    auto t1 = global::get_time();
-   if(debug) cout << "timing for tns::renorm_rightP ifAB=" << ifAB
-	          << " : " << setprecision(2) 
-	          << global::get_duration(t1-t0) << " s" << endl;
+   if(debug){
+      cout << "timing for tns::renorm_rightP ifAB=" << ifAB
+	   << " : " << setprecision(2) 
+	   << global::get_duration(t1-t0) << " s" << endl;
+      oper_rbases(bra,ket,p,int2e,int1e,scratch,"P");
+   }
 }
 
 void tns::oper_renorm_rightQ(const comb& bra,
@@ -154,8 +157,8 @@ void tns::oper_renorm_rightQ(const comb& bra,
 			     const bool& ifAB,
 	                     const integral::two_body& int2e,
 	                     const integral::one_body& int1e,
-			     const string scratch){
-   bool debug = true;
+			     const string scratch,
+			     const bool debug){
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -288,9 +291,12 @@ void tns::oper_renorm_rightQ(const comb& bra,
    string fname = oper_fname(scratch, p, "rightQ"); 
    oper_save(fname, qops);
    auto t1 = global::get_time();
-   if(debug) cout << "timing for tns::renorm_rightQ ifAB=" << ifAB
-	          << " : " << setprecision(2) 
-	          << global::get_duration(t1-t0) << " s" << endl;
+   if(debug){ 
+      cout << "timing for tns::renorm_rightQ ifAB=" << ifAB
+	   << " : " << setprecision(2) 
+	   << global::get_duration(t1-t0) << " s" << endl;
+      oper_rbases(bra,ket,p,int2e,int1e,scratch,"Q");
+   }
 }
 
 void tns::oper_renorm_rightS(const comb& bra,
@@ -301,8 +307,8 @@ void tns::oper_renorm_rightS(const comb& bra,
 			     const bool& ifAB,
 	                     const integral::two_body& int2e,
 	                     const integral::one_body& int1e,
-			     const string scratch){
-   bool debug = true;
+			     const string scratch,
+			     const bool debug){
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -502,9 +508,12 @@ void tns::oper_renorm_rightS(const comb& bra,
    string fname = oper_fname(scratch, p, "rightS"); 
    oper_save(fname, qops);
    auto t1 = global::get_time();
-   if(debug) cout << "timing for tns::renorm_rightS ifAB=" << ifAB
-	          << " : " << setprecision(2) 
-	          << global::get_duration(t1-t0) << " s" << endl;
+   if(debug){
+      cout << "timing for tns::renorm_rightS ifAB=" << ifAB
+	   << " : " << setprecision(2) 
+	   << global::get_duration(t1-t0) << " s" << endl;
+      oper_rbases(bra,ket,p,int2e,int1e,scratch,"S");
+   }
 }
 
 void tns::oper_renorm_rightH(const comb& bra,
@@ -515,8 +524,8 @@ void tns::oper_renorm_rightH(const comb& bra,
 			     const bool& ifAB,
 	                     const integral::two_body& int2e,
 	                     const integral::one_body& int1e,
-			     const string scratch){
-   bool debug = true;
+			     const string scratch,
+			     const bool debug){
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -714,7 +723,10 @@ void tns::oper_renorm_rightH(const comb& bra,
    }
    */
    auto t1 = global::get_time();
-   if(debug) cout << "timing for tns::renorm_rightH ifAB=" << ifAB
-	          << " : " << setprecision(2) 
-	          << global::get_duration(t1-t0) << " s" << endl;
+   if(debug){
+      cout << "timing for tns::renorm_rightH ifAB=" << ifAB
+	   << " : " << setprecision(2) 
+	   << global::get_duration(t1-t0) << " s" << endl;
+      oper_rbases(bra,ket,p,int2e,int1e,scratch,"H");
+   }
 }

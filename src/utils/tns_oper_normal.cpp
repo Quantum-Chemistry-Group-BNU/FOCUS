@@ -14,8 +14,8 @@ void tns::oper_renorm_rightC(const comb& bra,
 		             const comb_coord& p,
 		             const comb_coord& p0,
 			     const pair<bool,bool>& ifbuild,
-			     const string scratch){
-   bool debug = true;
+			     const string scratch,
+			     const bool debug){
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -53,8 +53,11 @@ void tns::oper_renorm_rightC(const comb& bra,
    string fname = oper_fname(scratch, p, "rightC");
    oper_save(fname, qops);
    auto t1 = global::get_time();
-   if(debug) cout << "timing for tns::renorm_rightC : " << setprecision(2) 
-           	  << global::get_duration(t1-t0) << " s" << endl;
+   if(debug){ 
+      cout << "timing for tns::renorm_rightC : " << setprecision(2) 
+           << global::get_duration(t1-t0) << " s" << endl;
+      oper_rbases(bra,ket,p,scratch,"C");
+   }
 }
 
 void tns::oper_renorm_rightA(const comb& bra,
@@ -62,8 +65,8 @@ void tns::oper_renorm_rightA(const comb& bra,
 		             const comb_coord& p,
 		             const comb_coord& p0,
 			     const pair<bool,bool>& ifbuild,
-			     const string scratch){
-   bool debug = true;
+			     const string scratch,
+			     const bool debug){
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -119,8 +122,11 @@ void tns::oper_renorm_rightA(const comb& bra,
    string fname = oper_fname(scratch, p, "rightA"); 
    oper_save(fname, qops);
    auto t1 = global::get_time();
-   if(debug) cout << "timing for tns::renorm_rightA : " << setprecision(2) 
-                  << global::get_duration(t1-t0) << " s" << endl;
+   if(debug){
+      cout << "timing for tns::renorm_rightA : " << setprecision(2) 
+           << global::get_duration(t1-t0) << " s" << endl;
+      oper_rbases(bra,ket,p,scratch,"A");
+   }
 }
 
 void tns::oper_renorm_rightB(const comb& bra,
@@ -128,8 +134,8 @@ void tns::oper_renorm_rightB(const comb& bra,
 		             const comb_coord& p,
 		             const comb_coord& p0,
 			     const pair<bool,bool>& ifbuild,
-			     const string scratch){
-   bool debug = true;
+			     const string scratch,
+			     const bool debug){
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -221,6 +227,9 @@ void tns::oper_renorm_rightB(const comb& bra,
    }
    */
    auto t1 = global::get_time();
-   if(debug) cout << "timing for tns::renorm_rightB : " << setprecision(2) 
-                  << global::get_duration(t1-t0) << " s" << endl;
+   if(debug){ 
+      cout << "timing for tns::renorm_rightB : " << setprecision(2) 
+           << global::get_duration(t1-t0) << " s" << endl;
+      oper_rbases(bra,ket,p,scratch,"B");
+   }
 }

@@ -78,21 +78,24 @@ void oper_renorm_rightC(const comb& bra,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
 		        const std::pair<bool,bool>& ifbuild,
-		        const std::string scratch);
+		        const std::string scratch,
+			const bool debug=false);
 
 void oper_renorm_rightA(const comb& bra, 
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
 		        const std::pair<bool,bool>& ifbuild,
-		        const std::string scratch);
+		        const std::string scratch,
+			const bool debug=false);
 
 void oper_renorm_rightB(const comb& bra, 
 		        const comb& ket,
 		        const comb_coord& p, 
 		        const comb_coord& p0,
 		        const std::pair<bool,bool>& ifbuild,
-		        const std::string scratch);
+		        const std::string scratch,
+			const bool debug=false);
 
 void oper_renorm_rightP(const comb& bra, 
 		        const comb& ket,
@@ -102,7 +105,8 @@ void oper_renorm_rightP(const comb& bra,
 			const bool& ifAB,
 	                const integral::two_body& int2e,
 	                const integral::one_body& int1e,
-		        const std::string scratch);
+		        const std::string scratch,
+			const bool debug=false);
 
 void oper_renorm_rightQ(const comb& bra, 
 		        const comb& ket,
@@ -112,7 +116,8 @@ void oper_renorm_rightQ(const comb& bra,
 			const bool& ifAB,
 	                const integral::two_body& int2e,
 	                const integral::one_body& int1e,
-		        const std::string scratch);
+		        const std::string scratch,
+			const bool debug=false);
 
 void oper_renorm_rightS(const comb& bra, 
 		        const comb& ket,
@@ -122,7 +127,8 @@ void oper_renorm_rightS(const comb& bra,
 			const bool& ifAB,
 	                const integral::two_body& int2e,
 	                const integral::one_body& int1e,
-		        const std::string scratch);
+		        const std::string scratch,
+			const bool debug=false);
 
 void oper_renorm_rightH(const comb& bra, 
 		        const comb& ket,
@@ -132,7 +138,8 @@ void oper_renorm_rightH(const comb& bra,
 			const bool& ifAB,
 	                const integral::two_body& int2e,
 	                const integral::one_body& int1e,
-		        const std::string scratch);
+		        const std::string scratch,
+			const bool debug=false);
 
 // driver for renorm in different directions 
 void oper_renorm_right(const comb& bra, 
@@ -149,13 +156,22 @@ void oper_env_right(const comb& bra,
 	            const integral::one_body& int1e,
 		    const std::string scratch=".");
 
-// determinant
+// generator operators based on rbases from determinants for debugging
+// normal operators
+void oper_rbases(const comb& bra,
+		 const comb& ket,
+		 const comb_coord& p, 
+		 const std::string scratch,
+		 const std::string optype);
+
+// complementary operator
 void oper_rbases(const comb& bra,
 		 const comb& ket,
 		 const comb_coord& p, 
 	         const integral::two_body& int2e,
 	         const integral::one_body& int1e,
-		 const std::string scratch);
+		 const std::string scratch,
+		 const std::string optype);
 
 } // tns
 

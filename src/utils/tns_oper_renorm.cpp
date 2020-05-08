@@ -13,12 +13,14 @@ void tns::oper_renorm_right(const comb& bra,
 		            const integral::two_body& int2e,
 		            const integral::one_body& int1e,
 			    const string scratch){
-   bool debug = true;
+   bool debug = false;
+   auto t0 = global::get_time();
    cout << "\ntns::oper_renorm_right switch=" 
 	<< (p == make_pair(bra.iswitch,0)) << endl;
    int ip  =  p.first, jp  =  p.second, tp  = bra.type.at(p); 
    int ip0 = p0.first, jp0 = p0.second, tp0 = bra.type.at(p0);
    auto type = make_pair(tp,tp0);
+   
    pair<bool,bool> ifbuild;
    if(type == make_pair(1,0) || type == make_pair(2,0)){
       ifbuild = make_pair(1,1); // build or load
@@ -34,29 +36,34 @@ void tns::oper_renorm_right(const comb& bra,
       cout << "error: no such case! (tp,tp0)=" << tp << "," << tp0 << endl;
       exit(1);
    }
+
    cout << "p=(" << ip << "," << jp << ")[" << bra.topo[ip][jp] << "]"
 	<< " p0=(" << ip0 << "," << jp0 << ")[" << bra.topo[ip0][jp0] << "]" 
 	<< " type=(" << tp << "," << tp0 << ")"
 	<< " ifbuild(C,R)=(" << ifbuild.first << "," << ifbuild.second <<  ")"
 	<< endl;
+   
    // three kinds of sites 
    bool left = (jp == 0 && ip < bra.iswitch);
    bool swpt = (jp == 0 && ip == bra.iswitch);
-   bool rest = !(left || swpt); 
-   oper_renorm_rightC(bra,ket,p,p0,ifbuild,scratch);
+   bool rest = !(left || swpt);
+   oper_renorm_rightC(bra,ket,p,p0,ifbuild,scratch,debug);
    if(rest){
-      oper_renorm_rightA(bra,ket,p,p0,ifbuild,scratch);
-      oper_renorm_rightB(bra,ket,p,p0,ifbuild,scratch);
+      oper_renorm_rightA(bra,ket,p,p0,ifbuild,scratch,debug);
+      oper_renorm_rightB(bra,ket,p,p0,ifbuild,scratch,debug);
    }
    if(left || swpt){
       auto ifAB = swpt;	   
-      oper_renorm_rightP(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
-      oper_renorm_rightQ(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
+      oper_renorm_rightP(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch,debug);
+      oper_renorm_rightQ(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch,debug);
    }
    auto ifAB = swpt || rest;
-   oper_renorm_rightS(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
-   oper_renorm_rightH(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch);
-   //if(debug) oper_rbases(bra,ket,p,int2e,int1e,scratch);
+   oper_renorm_rightS(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch,debug);
+   oper_renorm_rightH(bra,ket,p,p0,ifbuild,ifAB,int2e,int1e,scratch,debug);
+   
+   auto t1 = global::get_time();
+   cout << "timing for tns::oper_renorm_right : " << setprecision(2) 
+        << global::get_duration(t1-t0) << " s" << endl;
 }
 
 void tns::oper_env_right(const comb& bra, 
