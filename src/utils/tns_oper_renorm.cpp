@@ -13,7 +13,7 @@ void tns::oper_renorm_right(const comb& bra,
 		            const integral::two_body& int2e,
 		            const integral::one_body& int1e,
 			    const string scratch){
-   bool debug = true;
+   bool debug = false;
    auto t0 = global::get_time();
    cout << "\ntns::oper_renorm_right switch=" 
 	<< (p == make_pair(bra.iswitch,0)) << endl;

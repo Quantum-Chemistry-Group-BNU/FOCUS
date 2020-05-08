@@ -253,6 +253,7 @@ void tns::oper_rbases(const comb& bra,
    cout << "no. of failed cases = " << nfail 
 	<< " maxdiff = " << mdiff
         << endl;
+   cout << endl;
    if(nfail > 0) exit(1);
 }
 
@@ -618,5 +619,6 @@ void tns::oper_rbases(const comb& bra,
    cout << "no. of failed cases = " << nfail 
 	<< " maxdiff = " << mdiff
         << endl;
+   cout << endl;
    if(nfail > 0) exit(1);
 }
