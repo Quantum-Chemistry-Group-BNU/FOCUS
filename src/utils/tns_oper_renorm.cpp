@@ -72,6 +72,7 @@ void tns::oper_env_right(const comb& bra,
 		         const integral::one_body& int1e,
 			 const string scratch){
    auto t0 = global::get_time();
+   cout << "\ntns::oper_env_right" << endl;
    int nbackbone = bra.nbackbone;
    // loop over internal nodes
    for(int i=nbackbone-2; i>=0; i--){
