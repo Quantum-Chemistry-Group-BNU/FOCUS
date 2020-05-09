@@ -5,13 +5,20 @@
 #include "../core/matrix.h"
 #include "tns_pspace.h"
 #include "tns_qtensor.h"
+#include <tuple>
 #include <vector>
 #include <string>
 
 namespace tns{
 
 // --- comb tensor networks ---
+
 using comb_coord = std::pair<int,int>;
+
+using directed_bond = std::tuple<comb_coord,comb_coord,bool>;
+
+using triple_coord = std::tuple<comb_coord,comb_coord,comb_coord>;
+
 class comb{
    public:
       // --- topology of comb ---
@@ -19,6 +26,15 @@ class comb{
       void topo_read(std::string topology_file); 
       void topo_init();
       void topo_print() const;
+      // --- neightbor ---
+      comb_coord get_c(const comb_coord& p) const{ return std::get<0>(neighbor.at(p)); }
+      comb_coord get_l(const comb_coord& p) const{ return std::get<1>(neighbor.at(p)); }
+      comb_coord get_r(const comb_coord& p) const{ return std::get<2>(neighbor.at(p)); }
+      bool ifbuild_c(const comb_coord& p) const{ return this->get_c(p) == std::make_pair(-1,-1); }
+      bool ifbuild_l(const comb_coord& p) const{ return type.at(this->get_l(p)) == 0; }
+      bool ifbuild_r(const comb_coord& p) const{ return type.at(this->get_r(p)) == 0; }
+      // --- sweep sequence ---
+      std::vector<directed_bond> get_sweeps();
       // --- from SCI wavefunctions ---
       // compute renormalized bases {|r>} from SCI wf 
       void get_rbases(const fock::onspace& space,
@@ -46,10 +62,11 @@ class comb{
       linalg::matrix rcanon_CIovlp(const fock::onspace& space,
 		                   const std::vector<std::vector<double>>& vs);
    public:
-      int nbackbone, nphysical, ninternal, ntotal;
+      int nbackbone, nphysical, ninternal, nboundary, ntotal;
       int iswitch=-1; // i<=iswitch size_lsupp<size_rsupp;
       std::vector<std::vector<int>> topo; // save site index
       std::map<comb_coord,int> type; // type of nodes 0,1,2
+      std::map<comb_coord,triple_coord> neighbor; // internal nodes
       std::vector<comb_coord> rcoord; // coordinate of each node in rvisit order
       std::map<comb_coord,std::vector<int>> rsupport;
       // --- 1D ordering ---
@@ -62,8 +79,6 @@ class comb{
       // --- left canonical form ---
       std::map<comb_coord,std::vector<int>> lsupport;
       std::map<comb_coord,qtensor3> lsites;
-      // --- sweep ---
-      std::vector<std::pair<comb_coord,comb_coord>> sweep_seq;
 };
 
 } // tns

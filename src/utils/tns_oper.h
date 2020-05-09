@@ -73,82 +73,67 @@ qtensor2 oper_kernel_OrOc(const qtensor3& bsite,
 		          const qtensor2& cop);
 
 // renorm different types of operators
-void oper_renorm_rightC(const comb& bra, 
-		        const comb& ket,
-		        const comb_coord& p, 
-		        const comb_coord& p0,
-		        const std::pair<bool,bool>& ifbuild,
-		        const std::string scratch,
-			const bool debug=false);
+void oper_renorm_ropC(const comb& bra, 
+		      const comb& ket,
+		      const comb_coord& p, 
+		      const std::string scratch,
+		      const bool debug=false);
 
-void oper_renorm_rightA(const comb& bra, 
-		        const comb& ket,
-		        const comb_coord& p, 
-		        const comb_coord& p0,
-		        const std::pair<bool,bool>& ifbuild,
-		        const std::string scratch,
-			const bool debug=false);
+void oper_renorm_ropA(const comb& bra, 
+		      const comb& ket,
+		      const comb_coord& p, 
+		      const std::string scratch,
+		      const bool debug=false);
 
-void oper_renorm_rightB(const comb& bra, 
-		        const comb& ket,
-		        const comb_coord& p, 
-		        const comb_coord& p0,
-		        const std::pair<bool,bool>& ifbuild,
-		        const std::string scratch,
-			const bool debug=false);
+void oper_renorm_ropB(const comb& bra, 
+		      const comb& ket,
+		      const comb_coord& p, 
+		      const std::string scratch,
+		      const bool debug=false);
 
-void oper_renorm_rightP(const comb& bra, 
-		        const comb& ket,
-		        const comb_coord& p, 
-		        const comb_coord& p0,
-		        const std::pair<bool,bool>& ifbuild,
-			const bool& ifAB,
-	                const integral::two_body& int2e,
-	                const integral::one_body& int1e,
-		        const std::string scratch,
-			const bool debug=false);
+void oper_renorm_ropP(const comb& bra, 
+		      const comb& ket,
+		      const comb_coord& p, 
+		      const bool& ifAB,
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
+		      const std::string scratch,
+		      const bool debug=false);
 
-void oper_renorm_rightQ(const comb& bra, 
-		        const comb& ket,
-		        const comb_coord& p, 
-		        const comb_coord& p0,
-		        const std::pair<bool,bool>& ifbuild,
-			const bool& ifAB,
-	                const integral::two_body& int2e,
-	                const integral::one_body& int1e,
-		        const std::string scratch,
-			const bool debug=false);
+void oper_renorm_ropQ(const comb& bra, 
+		      const comb& ket,
+		      const comb_coord& p, 
+		      const bool& ifAB,
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
+		      const std::string scratch,
+		      const bool debug=false);
 
-void oper_renorm_rightS(const comb& bra, 
-		        const comb& ket,
-		        const comb_coord& p, 
-		        const comb_coord& p0,
-		        const std::pair<bool,bool>& ifbuild,
-			const bool& ifAB,
-	                const integral::two_body& int2e,
-	                const integral::one_body& int1e,
-		        const std::string scratch,
-			const bool debug=false);
+void oper_renorm_ropS(const comb& bra, 
+		      const comb& ket,
+		      const comb_coord& p, 
+		      const bool& ifAB,
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
+		      const std::string scratch,
+		      const bool debug=false);
 
-void oper_renorm_rightH(const comb& bra, 
-		        const comb& ket,
-		        const comb_coord& p, 
-		        const comb_coord& p0,
-		        const std::pair<bool,bool>& ifbuild,
-			const bool& ifAB,
-	                const integral::two_body& int2e,
-	                const integral::one_body& int1e,
-		        const std::string scratch,
-			const bool debug=false);
+void oper_renorm_ropH(const comb& bra, 
+		      const comb& ket,
+		      const comb_coord& p, 
+		      const bool& ifAB,
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
+		      const std::string scratch,
+		      const bool debug=false);
 
 // driver for renorm in different directions 
-void oper_renorm_right(const comb& bra, 
-		       const comb& ket,
-		       const comb_coord& p, 
-		       const comb_coord& p0,
-	               const integral::two_body& int2e,
-	               const integral::one_body& int1e,
-		       const std::string scratch);
+void oper_renorm_rops(const comb& bra, 
+		      const comb& ket,
+		      const comb_coord& p, 
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
+		      const std::string scratch);
 
 void oper_env_right(const comb& bra, 
 		    const comb& ket,

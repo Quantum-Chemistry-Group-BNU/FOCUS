@@ -55,7 +55,7 @@ void tns::oper_rbases(const comb& bra,
     
    // check for ap^+
    if(optype == "C"){ 
-   fname  = oper_fname(scratch, p, "rightC");
+   fname  = oper_fname(scratch, p, "ropC");
    oper_load(fname, qops_C);
    for(const auto& op: qops_C){
       int orb_p = op.index[0];
@@ -118,7 +118,7 @@ void tns::oper_rbases(const comb& bra,
 
    // check for Apq = ap^+aq^+
    if(optype == "A"){ 
-   fname = oper_fname(scratch, p, "rightA");
+   fname = oper_fname(scratch, p, "ropA");
    oper_load(fname, qops_A);
    for(const auto& op : qops_A){
       int orb_p = op.index[0];
@@ -185,7 +185,7 @@ void tns::oper_rbases(const comb& bra,
 
    // check for Bpq = ap^+aq
    if(optype == "B"){ 
-   fname = oper_fname(scratch, p, "rightB");
+   fname = oper_fname(scratch, p, "ropB");
    oper_load(fname, qops_B);
    for(const auto& op : qops_B){
       int orb_p = op.index[0];
@@ -303,7 +303,7 @@ void tns::oper_rbases(const comb& bra,
  
    // check for Ppq = <pq||sr> aras [r>s]
    if(optype == "P"){ 
-   fname = oper_fname(scratch, p, "rightP");
+   fname = oper_fname(scratch, p, "ropP");
    oper_load(fname, qops_P);
    for(const auto& op : qops_P){
       int orb_p = op.index[0];
@@ -374,7 +374,7 @@ void tns::oper_rbases(const comb& bra,
 
    // check for Qps = <pq||sr> aq^+ar
    if(optype == "Q"){ 
-   fname = oper_fname(scratch, p, "rightQ");
+   fname = oper_fname(scratch, p, "ropQ");
    oper_load(fname, qops_Q);
    for(const auto& op : qops_Q){
       int orb_p = op.index[0];
@@ -444,7 +444,7 @@ void tns::oper_rbases(const comb& bra,
   
    // check for Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    if(optype == "S"){
-   fname = oper_fname(scratch, p, "rightS");
+   fname = oper_fname(scratch, p, "ropS");
    oper_load(fname, qops_S);
    for(const auto& op : qops_S){
       int orb_p = op.index[0];
@@ -526,7 +526,7 @@ void tns::oper_rbases(const comb& bra,
 
    // check for H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
    if(optype == "H"){
-   fname = oper_fname(scratch, p, "rightH");
+   fname = oper_fname(scratch, p, "ropH");
    oper_load(fname, qops_H);
    for(const auto& op : qops_H){
       // build
