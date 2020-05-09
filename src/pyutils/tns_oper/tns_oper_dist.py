@@ -1,11 +1,19 @@
 import numpy
 
+#
+# Note@20200508:
+# For each term (distribution), we can determine its optimal computation form
+# 1. optimal combination of normal / complementation operators
+# 2. contraction order
+# 3. reduction to already available normal / complementation operators
+#
+
 #def get_eri(kp,kq,kr,ks):
 #   return '<'+symp+symq+'||'+syms+symr+'>'
 
 # 2-electron term: <pq||sr> p^+ q^+ r s (p<q,r>s)
 
-keys = ["C","R"] #["L","C","R"]
+keys = ["L","C1","C2","R"] #["L","R"] #["L","C","R"] #["L","C","R"]
 npart = len(keys)
 print keys,npart
 idx = 0
@@ -51,4 +59,5 @@ for kq in range(npart):
       perm = numpy.argsort(irep)
       op_sort = ''.join([oplst[i] for i in perm])
       print idx,eri+' '+op,irep,perm,op_sort
+
 
