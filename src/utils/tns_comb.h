@@ -33,6 +33,8 @@ class comb{
       bool ifbuild_c(const comb_coord& p) const{ return this->get_c(p) == std::make_pair(-1,-1); }
       bool ifbuild_l(const comb_coord& p) const{ return type.at(this->get_l(p)) == 0; }
       bool ifbuild_r(const comb_coord& p) const{ return type.at(this->get_r(p)) == 0; }
+      // --- boundary site ---
+      qtensor3 get_bsite() const; 
       // --- sweep sequence ---
       std::vector<directed_bond> get_sweeps();
       // --- from SCI wavefunctions ---
@@ -41,10 +43,10 @@ class comb{
 		      const std::vector<std::vector<double>>& vs,
 		      const double thresh_proj=1.e-14);
       // compute wave function at the start for right canonical form 
-      qtensor3 get_rwfuns(const fock::onspace& space,
-		      	  const std::vector<std::vector<double>>& vs,
-			  const std::vector<int>& order,
-			  const renorm_basis& rbasis);
+      qtensor3 get_rwavefuns(const fock::onspace& space,
+		      	     const std::vector<std::vector<double>>& vs,
+			     const std::vector<int>& order,
+			     const renorm_basis& rbasis);
       // --- right canonical form ---
       // build site tensor from {|r>} bases
       void rcanon_init(const fock::onspace& space,
@@ -63,7 +65,7 @@ class comb{
 		                   const std::vector<std::vector<double>>& vs);
    public:
       int nbackbone, nphysical, ninternal, nboundary, ntotal;
-      int iswitch=-1; // i<=iswitch size_lsupp<size_rsupp;
+      int iswitch = -1; // i<=iswitch size_lsupp<size_rsupp;
       std::vector<std::vector<int>> topo; // save site index
       std::map<comb_coord,int> type; // type of nodes 0,1,2
       std::map<comb_coord,triple_coord> neighbor; // internal nodes

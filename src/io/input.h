@@ -14,6 +14,7 @@ public:
 public:
    std::string scratch;
    int nelec;
+   int twoms;
    int nroots;
    std::string integral_file;
    int integral_type;

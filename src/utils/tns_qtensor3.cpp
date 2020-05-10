@@ -146,3 +146,77 @@ double qtensor3::normF() const{
    }
    return sqrt(sum);
 }
+
+// for Davidson algorithm
+int qtensor3::get_dim() const{
+   int dim = 0;
+   for(const auto& pm : qmid){
+      const auto& qm = pm.first;
+      int mdim = pm.second; 
+      for(const auto& pr : qrow){
+         const auto& qr = pr.first;
+         int rdim = pr.second;
+         for(const auto& pc : qcol){
+            const auto& qc = pc.first;
+            int cdim = pc.second;
+	    auto key = make_tuple(qm,qr,qc);
+	    auto& blk = qblocks.at(key);
+	    if(blk.size() > 0){
+	       dim += mdim*rdim*cdim;
+	    }
+	 } // qc
+      } // qr
+   } // qm
+   return dim;
+}
+
+vector<double> qtensor3::to_vector() const{
+   vector<double> vec;
+   for(const auto& pm : qmid){
+      const auto& qm = pm.first;
+      int mdim = pm.second; 
+      for(const auto& pr : qrow){
+         const auto& qr = pr.first;
+         int rdim = pr.second;
+         for(const auto& pc : qcol){
+            const auto& qc = pc.first;
+            int cdim = pc.second;
+	    auto key = make_tuple(qm,qr,qc);
+	    auto& blk = qblocks.at(key);
+	    if(blk.size() > 0){
+	       for(int m=0; m<mdim; m++){
+	          copy(blk[m].data(), blk[m].data()+rdim*cdim, 
+		       back_inserter(vec));
+	       }
+	    }
+	 } // qc
+      } // qr
+   } // qm
+   return vec;
+}
+
+void qtensor3::from_vector(const vector<double>& vec){
+   int ioff = 0;
+   for(const auto& pm : qmid){
+      const auto& qm = pm.first;
+      int mdim = pm.second; 
+      for(const auto& pr : qrow){
+         const auto& qr = pr.first;
+         int rdim = pr.second;
+         for(const auto& pc : qcol){
+            const auto& qc = pc.first;
+            int cdim = pc.second;
+	    auto key = make_tuple(qm,qr,qc);
+	    auto& blk = qblocks.at(key);
+	    if(blk.size() > 0){
+	       int size = rdim*cdim;
+	       for(int m=0; m<mdim; m++){
+		  auto psta = &vec[ioff+m*size];
+	          copy(psta,psta+rdim*cdim,blk[m].data());
+	       }
+	       ioff += mdim*size;
+	    }
+	 } // qc
+      } // qr
+   } // qm
+}

@@ -86,12 +86,12 @@ void comb::get_rbases(const onspace& space,
 }
 
 // compute wave function at the start for right canonical form 
-qtensor3 comb::get_rwfuns(const onspace& space,
-		          const vector<vector<double>>& vs,
-		          const vector<int>& order,
-		          const renorm_basis& rbasis){
+qtensor3 comb::get_rwavefuns(const onspace& space,
+		             const vector<vector<double>>& vs,
+		             const vector<int>& order,
+		             const renorm_basis& rbasis){
    bool debug = false;
-   cout << "\ncomb::get_rwfuns" << endl;
+   cout << "\ncomb::get_rwavefuns" << endl;
    // transform SCI coefficient
    onspace space2;
    vector<vector<double>> vs2;
@@ -120,21 +120,21 @@ qtensor3 comb::get_rwfuns(const onspace& space,
 	 qlst[symB].push_back(make_tuple(idxB,idxA,idet));
       }
    } // ib
-   // construct rwfuns 
-   qtensor3 rwfuns;
-   rwfuns.qmid = phys_qsym_space;
+   // construct rwavefuns 
+   qtensor3 rwavefuns;
+   rwavefuns.qmid = phys_qsym_space;
    // assuming the symmetry of wavefunctions are the same
    qsym sym_state(space[0].nelec(), space[0].nelec_a());
    int nroots = vs2.size();
-   rwfuns.qcol[sym_state] = nroots;
+   rwavefuns.qcol[sym_state] = nroots;
    // init empty blocks for all combinations 
    int idx = 0;
    for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
       auto& symB = it->first;
-      rwfuns.qrow[symB] = rbasis[idx].coeff.cols();
+      rwavefuns.qrow[symB] = rbasis[idx].coeff.cols();
       for(int k0=0; k0<4; k0++){
 	 auto key = make_tuple(phys_sym[k0],symB,sym_state);
-         rwfuns.qblocks[key] = empty_block; 
+         rwavefuns.qblocks[key] = empty_block; 
       }
       idx++;
    }
@@ -176,11 +176,27 @@ qtensor3 comb::get_rwfuns(const onspace& space,
       qsym sym0(state0.nelec(),state0.nelec_a());
       auto key = make_tuple(sym0,symB,sym_state);
       // c[n][r,i] = <nr|psi[i]> = W(b,r)*<nb|psi[i]> [vlr(b,i)] 
-      rwfuns.qblocks[key].push_back(dgemm("T","N",rsec.coeff,vrl));
+      rwavefuns.qblocks[key].push_back(dgemm("T","N",rsec.coeff,vrl));
       idx++;
    } // symB sectors
-   if(debug) rwfuns.print("rwfuns",1);
-   return rwfuns;
+   if(debug) rwavefuns.print("rwavefuns",1);
+   return rwavefuns;
+}
+
+//
+// exact boundary tensor:
+//       n             |vac>
+//      \|/             \|/
+//    -<-*-<-|vac>   n-<-*
+//  |out> 	        \|/
+//
+qtensor3 comb::get_bsite() const{
+   qtensor3 qt3(qsym(0,0),phys_qsym_space,vac_qsym_space,phys_qsym_space);
+   for(int k=0; k<4; k++){
+      auto key = make_tuple(phys_sym[k],phys_sym[0],phys_sym[k]);
+      qt3.qblocks[key][0] = identity_matrix(1);
+   }
+   return qt3;
 }
 
 // build site tensor from {|r>} bases
@@ -205,24 +221,8 @@ void comb::rcanon_init(const onspace& space,
       qtensor3 rt;
       if(type[p] == 0){
 	 
-	 //       n             |vac>
-	 //      \|/             \|/
-	 //    -<-*-<-|vac>   n-<-*
-	 //    			 \|/
-	 if(debug) cout << "type 0: end or leaves" << endl; 
-	 rt.qmid = phys_qsym_space; 
-	 // in index: |vac> 
-	 rt.qrow = vacuum;
-	 // loop over symmetry blocks of out index 
-	 for(int k=0; k<4; k++){
-	    rt.qcol[phys_sym[k]] = 1; // out
-	    // loop over physical indices
-	    for(int k0=0; k0<4; k0++){
-	       auto key = make_tuple(phys_sym[k0],phys_sym[0],phys_sym[k]);
-	       rt.qblocks[key] = empty_block;
-	       if(k0 == k) rt.qblocks[key].push_back(identity_matrix(1));
-	    } // k0
-	 } // k
+	 if(debug) cout << "type 0: end or leaves" << endl;
+         rt = this->get_bsite();
 
       }else if(type[p] == 1 || type[p] == 2){
 
@@ -324,7 +324,7 @@ void comb::rcanon_init(const onspace& space,
    } // idx
    // compute wave function at the start for right canonical form 
    auto p = make_pair(0,0), p0 = make_pair(1,0);
-   rsites[p] = get_rwfuns(space, vs, rsupport[p], rbases[p0]);
+   rsites[p] = get_rwavefuns(space, vs, rsupport[p], rbases[p0]);
    auto t1 = global::get_time();
    cout << "\ntiming for comb::rcanon_init : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;

@@ -122,11 +122,15 @@
 		  compute <rdm1|p^+q|rdm2> for state-averaged comb states.
  
  2020xxxx basic sweep algorithm
-	  - better data structure to handle {L,C,R} neigbors 
+	  - better data structure to handle {L,C,R} neigbors [DONE@20200510] 
 	  - data structure for wavefunction (wf)
-	  - automated analysis tool for generating formula:
-	    - implement H*x for one-dot wf
- 	    - implement H*x for two-dot wf 
+	  - automated analysis tool for generating formula
+	  - one-dot opt:
+	    - implement Hdiag 
+	    - implement Hx
+ 	  - two-dot opt: 
+ 	    - implement Hdiag
+	    - implement Hx
 	  - decimation 
 
  2020xxxx more functionalities:

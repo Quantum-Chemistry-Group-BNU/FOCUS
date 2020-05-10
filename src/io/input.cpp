@@ -21,6 +21,7 @@ void input::read_input(input::schedule& schd, string fname){
 
    schd.scratch = ".";
    schd.nelec = 0;
+   schd.twoms = 0;
    schd.nroots = 1;
    schd.nseeds = 0;
    schd.maxiter = 0;
@@ -51,6 +52,8 @@ void input::read_input(input::schedule& schd, string fname){
 	 is >> schd.scratch;
       }else if(line.substr(0,5)=="nelec"){
 	 schd.nelec = stoi(line.substr(5)); // [5,end)
+      }else if(line.substr(0,5)=="twoms"){
+	 schd.twoms = stoi(line.substr(5)); // [5,end)
       }else if(line.substr(0,6)=="nroots"){
 	 schd.nroots = stoi(line.substr(6));
       }else if(line.substr(0,7)=="maxiter"){
@@ -135,6 +138,7 @@ void input::read_input(input::schedule& schd, string fname){
    cout << "scratch = " << schd.scratch << endl;
    cout << "nelec = " << schd.nelec << endl;
    assert(schd.nelec > 0);
+   cout << "twoms = " << schd.twoms << endl;
    cout << "nroots = " << schd.nroots << endl;
    assert(schd.nroots > 0);
    cout << "integral_file = " << schd.integral_file << endl;

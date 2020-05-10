@@ -62,7 +62,7 @@ extern const fock::onspace phys_space;
 extern const qsym_space phys_qsym_space;
 
 // vacuum
-extern const qsym_space vacuum;
+extern const qsym_space vac_qsym_space;
 
 } // tns
 

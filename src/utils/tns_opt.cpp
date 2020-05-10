@@ -8,8 +8,6 @@ using namespace linalg;
 using namespace tns;
 
 // sweep optimizations for Comb
-// see my former implementation of DMRG
-
 void tns::opt_sweep(const input::schedule& schd,
 	            comb& icomb,
 	            const integral::two_body& int2e,
@@ -18,8 +16,14 @@ void tns::opt_sweep(const input::schedule& schd,
    cout << "\ntns::opt_sweep" << endl;
    
    // prepare environmental operators 
-   oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
-   
+   //oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
+
+   // init boundary sites
+   for(int idx=0; idx<icomb.ntotal; idx++){
+      auto p = icomb.rcoord[idx];
+      if(icomb.type[p] == 0) icomb.lsites[p] = icomb.get_bsite();
+   }
+
    // one-dot sweep
    const int nsweeps = 2;
    auto sweeps = icomb.get_sweeps();
@@ -30,7 +34,7 @@ void tns::opt_sweep(const input::schedule& schd,
          auto coord0  = get<0>(dbond);
 	 auto coord1  = get<1>(dbond);
          auto forward = get<2>(dbond);
-         cout << "i=" << i << " : " 
+         cout << "\ni=" << i << " : " 
 	      << "(" << coord0.first << "," << coord0.second << ")->"
 	      << "(" << coord1.first << "," << coord1.second << ") "
 	      << "forward=" << forward 
@@ -49,20 +53,44 @@ void tns::opt_onedot(const input::schedule& schd,
                      const double ecore){
    bool debug = false;
    auto t0 = global::get_time();
-   cout << "tns::opt_onedot" << endl;
+   auto p = get<0>(dbond);
+   auto ip = p.first, jp = p.second;
+   cout << "tns::opt_onedot coord=(" << ip << "," << jp << ")"
+	<< "[" << icomb.topo[ip][jp] << "]" << endl; 
 
+   auto l = icomb.get_l(p);
+   auto c = icomb.get_c(p);
+   auto r = icomb.get_r(p);
+   cout << "neighbor: "
+	<< "l=(" << l.first << "," << l.second << ") " 
+        << "c=(" << c.first << "," << c.second << ") " 
+        << "r=(" << r.first << "," << r.second << ") " 
+	<< endl;
+   
    // 1. process symmetry information
-   qsym_space ql;
-   qsym_space qc;
-   qsym_space qr;
+   qsym_space ql, qc, qr;
+   ql = icomb.lsites[l].qcol;
+   qr = icomb.rsites[r].qcol;
+   if(c == make_pair(-1,-1)){
+      qc = phys_qsym_space;
+   }else{
+      qc = icomb.rsites[p].qmid;
+   } 
    //qtensor3 qt(ql,qc,qr);
+   int nelec_a = (schd.nelec+schd.twoms)/2;
+   qsym sym_state(schd.nelec,nelec_a);
+   qsym_space qr2; 
+   for(const auto p : qr){
+      auto q = sym_state - p.first;
+      qr2[q] = p.second;
+   }
+   qtensor3 wf(qsym(0,0),qc,ql,qr2);
+   wf.print("wf");
 
-   exit(1);
-
-   //int nsub = qt.get_dim();
-   int nsub = 0;
-   int neig = 1;
-
+   int nsub = wf.get_dim();
+   int neig = schd.nroots;
+  
+   vector<double> diag(nsub,1);
    //auto diag = tns::get_Hdiag();
 
    // 2. Davidson solver 
@@ -72,7 +100,7 @@ void tns::opt_onedot(const input::schedule& schd,
    solver.maxcycle = schd.maxcycle;
    solver.ndim = nsub;
    solver.neig = neig;
-   //solver.Diag = diag.data();
+   solver.Diag = diag.data();
    using std::placeholders::_1;
    using std::placeholders::_2;
    //solver.HVec = bind(tns::get_Hx, _1, _2);
@@ -91,14 +119,16 @@ void tns::opt_onedot(const input::schedule& schd,
    if(forward){
       // TRY TO GETRID OF p0
       //auto& site = icomb.lsites[p]; 
-      //oper_renorm_left(bra,ket,p,p0,int2e,int1e,scratch);
+      //oper_renorm_left(icomb,icomb,p,p0,int2e,int1e,scratch);
    }else{
       // TRY TO GETRID OF p0
       //auto& site = icomb.rsites[p]; 
       //oper_renorm_right(site,site,p,p0,int2e,int1e,schd.scratch);
    }
-   
+  
+   exit(1);
+
    auto t1 = global::get_time();
-   cout << "\ntiming for tns::opt_onedot : " << setprecision(2) 
+   cout << "timing for tns::opt_onedot : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
 }

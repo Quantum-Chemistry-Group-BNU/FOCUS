@@ -69,5 +69,5 @@ const qsym_space tns::phys_qsym_space({{qsym(0,0),1},
 			               {qsym(2,1),1}});
 
 // --- vacuum ---
-const qsym_space tns::vacuum({{qsym(0,0),1}});
+const qsym_space tns::vac_qsym_space({{qsym(0,0),1}});
 

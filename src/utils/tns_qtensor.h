@@ -91,6 +91,10 @@ struct qtensor3{
       qtensor3 col_signed(const double fac=1.0) const;
       // simple algrithmic operations 
       double normF() const;
+      // for Davidson algorithm
+      int get_dim() const;
+      std::vector<double> to_vector() const;
+      void from_vector(const std::vector<double>& vec);
    public:
       qsym sym; // <mid,row|op|col> (tensor A[m](r,c) = <mr|c>) 
       qsym_space qmid; // [sym,dim] - middle
