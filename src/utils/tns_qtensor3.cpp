@@ -42,57 +42,45 @@ qtensor3::qtensor3(const qsym& sym1,
       
 qtensor3 qtensor3::mid_signed(const double fac) const{
    qtensor3 qt3;
+   qt3.dir = dir;
    qt3.sym = sym;
    qt3.qmid = qmid;
    qt3.qrow = qrow;
    qt3.qcol = qcol;
    qt3.qblocks = qblocks;
-   for(const auto& pm : qmid){
-      const auto& qm = pm.first;
-      int mdim = pm.second; 
-      double fac2 = qm.parity()*fac;
-      for(const auto& pr : qrow){
-         const auto& qr = pr.first;
-         for(const auto& pc : qcol){
-            const auto& qc = pc.first;
-	    auto key = make_tuple(qm,qr,qc);
-	    auto& blk = qt3.qblocks[key];
-	    if(blk.size() > 0){ 
-	       for(int m=0; m<mdim; m++){
-	          blk[m] *= fac2;
-	       }
-	    }
-	 } // c
-      } // r
-   } // m
+   for(auto& p : qt3.qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0){
+         auto qm = get<0>(key);
+         double fac2 = qm.parity()*fac;
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] *= fac2;
+	 }
+      }
+   }
    return qt3;
 }
 
 qtensor3 qtensor3::col_signed(const double fac) const{
    qtensor3 qt3;
+   qt3.dir = dir;
    qt3.sym = sym;
    qt3.qmid = qmid;
    qt3.qrow = qrow;
    qt3.qcol = qcol;
    qt3.qblocks = qblocks;
-   for(const auto& pm : qmid){
-      const auto& qm = pm.first;
-      int mdim = pm.second; 
-      for(const auto& pr : qrow){
-         const auto& qr = pr.first;
-         for(const auto& pc : qcol){
-            const auto& qc = pc.first;
-            double fac2 = qc.parity()*fac;
-	    auto key = make_tuple(qm,qr,qc);
-	    auto& blk = qt3.qblocks[key];
-	    if(blk.size() > 0){ 
-	       for(int m=0; m<mdim; m++){
-	          blk[m] *= fac2;
-	       }
-	    }
-	 } // c
-      } // r
-   } // m
+   for(auto& p : qt3.qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0){
+         auto qc = get<2>(key);
+         double fac2 = qc.parity()*fac;
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] *= fac2;
+	 }
+      }
+   }
    return qt3;
 }
 
@@ -133,19 +121,12 @@ void qtensor3::print(const string msg, const int level) const{
 
 double qtensor3::normF() const{
    double sum = 0.0;
-   for(const auto& pm : qmid){
-      const auto& qm = pm.first;
-      for(const auto& pr : qrow){
-	 const auto& qr = pr.first;
-         for(const auto& pc : qcol){
-	    const auto& qc = pc.first;
-            auto key = make_tuple(qm,qr,qc);
-            const auto& blk = qblocks.at(key);
-            if(blk.size() > 0){
-	       for(int m=0; m<pm.second; m++){
-                  sum += pow(linalg::normF(blk[m]),2);
-	       }
-            }
+   for(const auto& p : qblocks){
+      const auto& key = p.first;
+      const auto& blk = p.second;
+      if(blk.size() > 0){
+	 for(int m=0; m<blk.size(); m++){
+            sum += pow(linalg::normF(blk[m]),2);
          }
       }
    }
@@ -153,123 +134,90 @@ double qtensor3::normF() const{
 }
 
 qtensor3& qtensor3::operator +=(const qtensor3& qt){
+   assert(dir == qt.dir); // direction must be the same
    assert(sym == qt.sym); // symmetry blocking must be the same
-   for(const auto& pm : qmid){
-      const auto& qm = pm.first;
-      int mdim = pm.second;
-      for(const auto& pr : qrow){
-         const auto& qr = pr.first;
-         for(const auto& pc : qcol){
-	    const auto& qc = pc.first;
-	    auto key = make_tuple(qm,qr,qc);
-	    auto& blk = qblocks[key];
-	    assert(blk.size() == qt.qblocks.at(key).size());
-	    if(blk.size() > 0){
-	       const auto& blk1 = qt.qblocks.at(key);
-	       for(int m=0; m<mdim; m++){
-	          blk[m] += blk1[m]; 
-	       }
-	    }
-	 } // pc
-      } // pr
-   } // pm
+   for(auto& p : qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      const auto& blk1 = qt.qblocks.at(key);
+      assert(blk.size() == blk1.size());
+      if(blk.size() > 0){
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] += blk1[m]; 
+	 }
+      }
+   }
    return *this;
 }
 
 qtensor3& qtensor3::operator -=(const qtensor3& qt){
+   assert(dir == qt.dir); // direction must be the same
    assert(sym == qt.sym); // symmetry blocking must be the same
-   for(const auto& pm : qmid){
-      const auto& qm = pm.first;
-      int mdim = pm.second;
-      for(const auto& pr : qrow){
-         const auto& qr = pr.first;
-         for(const auto& pc : qcol){
-	    const auto& qc = pc.first;
-	    auto key = make_tuple(qm,qr,qc);
-	    auto& blk = qblocks[key];
-	    assert(blk.size() == qt.qblocks.at(key).size());
-	    if(blk.size() > 0){
-	       const auto& blk1 = qt.qblocks.at(key);
-	       for(int m=0; m<mdim; m++){
-	          blk[m] -= blk1[m]; 
-	       }
-	    }
-	 } // pc
-      } // pr
-   } // pm
+   for(auto& p : qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      const auto& blk1 = qt.qblocks.at(key);
+      assert(blk.size() == blk1.size());
+      if(blk.size() > 0){
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] -= blk1[m]; 
+	 }
+      }
+   }
    return *this;
 }
 
 // for Davidson algorithm
 int qtensor3::get_dim() const{
    int dim = 0;
-   for(const auto& pm : qmid){
-      const auto& qm = pm.first;
-      int mdim = pm.second; 
-      for(const auto& pr : qrow){
-         const auto& qr = pr.first;
-         int rdim = pr.second;
-         for(const auto& pc : qcol){
-            const auto& qc = pc.first;
-            int cdim = pc.second;
-	    auto key = make_tuple(qm,qr,qc);
-	    auto& blk = qblocks.at(key);
-	    if(blk.size() > 0){
-	       dim += mdim*rdim*cdim;
-	    }
-	 } // qc
-      } // qr
-   } // qm
+   for(const auto& p : qblocks){
+      auto& blk = p.second;
+      if(blk.size() > 0){
+	 dim += blk.size()*blk[0].size();
+      }
+   }
    return dim;
 }
 
-vector<double> qtensor3::to_vector() const{
-   vector<double> vec;
-   for(const auto& pm : qmid){
-      const auto& qm = pm.first;
-      int mdim = pm.second; 
-      for(const auto& pr : qrow){
-         const auto& qr = pr.first;
-         int rdim = pr.second;
-         for(const auto& pc : qcol){
-            const auto& qc = pc.first;
-            int cdim = pc.second;
-	    auto key = make_tuple(qm,qr,qc);
-	    auto& blk = qblocks.at(key);
-	    if(blk.size() > 0){
-	       for(int m=0; m<mdim; m++){
-	          copy(blk[m].data(), blk[m].data()+rdim*cdim, 
-		       back_inserter(vec));
-	       }
-	    }
-	 } // qc
-      } // qr
-   } // qm
-   return vec;
+void qtensor3::from_array(const double* array){
+   int ioff = 0;
+   for(auto& p : qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0){
+         int size = blk[0].size();
+	 for(int m=0; m<blk.size(); m++){
+            auto psta = array+ioff+m*size;
+	    copy(psta, psta+size, blk[m].data());
+	 }
+	 ioff += blk.size()*size;
+      }
+   }
+}
+
+void qtensor3::to_array(double* array) const{
+   int ioff = 0;
+   for(auto& p : qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0){
+         int size = blk[0].size();
+	 for(int m=0; m<blk.size(); m++){
+            auto psta = array+ioff+m*size;
+	    copy(blk[m].data(), blk[m].data()+size, psta);
+	 }
+	 ioff += blk.size()*size;
+      }
+   }
 }
 
 void qtensor3::from_vector(const vector<double>& vec){
-   int ioff = 0;
-   for(const auto& pm : qmid){
-      const auto& qm = pm.first;
-      int mdim = pm.second; 
-      for(const auto& pr : qrow){
-         const auto& qr = pr.first;
-         int rdim = pr.second;
-         for(const auto& pc : qcol){
-            const auto& qc = pc.first;
-            int cdim = pc.second;
-	    auto key = make_tuple(qm,qr,qc);
-	    auto& blk = qblocks.at(key);
-	    if(blk.size() > 0){
-	       int size = rdim*cdim;
-	       for(int m=0; m<mdim; m++){
-		  auto psta = &vec[ioff+m*size];
-	          copy(psta,psta+rdim*cdim,blk[m].data());
-	       }
-	       ioff += mdim*size;
-	    }
-	 } // qc
-      } // qr
-   } // qm
+   from_array(vec.data());
+}
+
+vector<double> qtensor3::to_vector() const{
+   int dim = get_dim();
+   vector<double> vec(dim,0.0);
+   to_array(vec.data());
+   return vec;
 }

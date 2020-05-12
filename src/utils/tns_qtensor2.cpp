@@ -26,6 +26,7 @@ qtensor2::qtensor2(const qsym& sym1,
 	 const auto& qc = pc.first;
 	 int cdim = pc.second;
 	 auto key = make_pair(qr,qc);
+	 // symmetry rule for <r|O|c>
          if(qr == sym + qc){
 	    qblocks[key] = matrix(rdim,cdim);
 	 }else{
@@ -77,7 +78,7 @@ matrix qtensor2::to_matrix() const{
 	 const auto& qi = pi.first;
 	 const int mi = pi.second;
 	 const auto& blk = qblocks.at(make_pair(qi,qj));
-	 if(blk.size() != 0){
+	 if(blk.size() > 0){
 	    // save
 	    for(int j=0; j<mj; j++){
 	       for(int i=0; i<mi; i++){
@@ -100,18 +101,15 @@ qtensor2 qtensor2::T() const{
    qt2.index = index;
    // (pq)^+ = q^+p^+
    reverse(qt2.index.begin(), qt2.index.end());
-   for(const auto& pr : qt2.qrow){
-      const auto& qr = pr.first;
-      for(const auto& pc : qt2.qcol){
-	 const auto& qc = pc.first;
-	 auto key = make_pair(qr,qc);
-         if(qr == qt2.sym + qc){
-            auto tkey = make_pair(qc,qr);
-	    qt2.qblocks[key] = qblocks.at(tkey).T();
-	 }else{
-	    qt2.qblocks[key] = matrix();
-	 }
-      }
+   for(const auto& p : qblocks){
+      const auto& key = p.first;
+      const auto& blk = qblocks.at(key);
+      auto tkey = make_pair(key.second,key.first);
+      if(blk.size() > 0){
+         qt2.qblocks[tkey] = blk.T();
+      }else{
+         qt2.qblocks[tkey] = matrix();
+      } 
    }
    return qt2;
 }
@@ -124,15 +122,13 @@ qtensor2 qtensor2::col_signed(const double fac) const{
    qt2.qcol = qcol;
    qt2.index = index;
    qt2.qblocks = qblocks;
-   for(const auto& pr : qrow){
-      const auto& qr = pr.first;
-      for(const auto& pc : qcol){
-	 const auto& qc = pc.first;
-         if(qr == sym + qc){
-	    double fac2 = qc.parity()*fac;
-	    auto key = make_pair(qr,qc);
-	    qt2.qblocks[key] *= fac2;
-	 }
+   for(auto& p : qt2.qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0){
+         auto qc = key.second;
+         double fac2 = qc.parity()*fac;
+	 blk *= fac2;
       }
    }
    return qt2;
@@ -145,15 +141,10 @@ qtensor2 qtensor2::operator -() const{
    qt2.qcol = qcol;
    qt2.index = index;
    qt2.qblocks = qblocks;
-   for(const auto& pr : qrow){
-      const auto& qr = pr.first;
-      for(const auto& pc : qcol){
-	 const auto& qc = pc.first;
-         if(qr == sym + qc){
-	    auto key = make_pair(qr,qc);
-	    qt2.qblocks[key] *= -1;
-	 }
-      }
+   for(auto& p : qt2.qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0) blk *= -1;
    }
    return qt2;
 }
@@ -161,30 +152,22 @@ qtensor2 qtensor2::operator -() const{
 // algorithmic operations like matrix
 qtensor2& qtensor2::operator +=(const qtensor2& qt){
    assert(sym == qt.sym); // symmetry blocking must be the same
-   for(const auto& pr : qrow){
-      const auto& qr = pr.first;
-      for(const auto& pc : qcol){
-	 const auto& qc = pc.first;
-	 auto key = make_pair(qr,qc);
-	 auto& blk = qblocks[key];
-	 assert(blk.size() == qt.qblocks.at(key).size());
-	 if(blk.size() > 0) blk += qt.qblocks.at(key);
-      }
+   for(auto& p : qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      assert(blk.size() == qt.qblocks.at(key).size());
+      if(blk.size() > 0) blk += qt.qblocks.at(key);
    }
    return *this;
 }
 
 qtensor2& qtensor2::operator -=(const qtensor2& qt){
    assert(sym == qt.sym); // symmetry blocking must be the same
-   for(const auto& pr : qrow){
-      const auto& qr = pr.first;
-      for(const auto& pc : qcol){
-	 const auto& qc = pc.first;
-	 auto key = make_pair(qr,qc);
-	 auto& blk = qblocks[key];
-	 assert(blk.size() == qt.qblocks.at(key).size());
-	 if(blk.size() > 0) blk -= qt.qblocks.at(key);
-      }
+   for(auto& p : qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      assert(blk.size() == qt.qblocks.at(key).size());
+      if(blk.size() > 0) blk -= qt.qblocks.at(key);
    }
    return *this;
 }
@@ -203,14 +186,10 @@ qtensor2 tns::operator -(const qtensor2& qta, const qtensor2& qtb){
 
 // fac*qt2
 qtensor2& qtensor2::operator *=(const double fac){
-   for(const auto& pr : qrow){
-      const auto& qr = pr.first;
-      for(const auto& pc : qcol){
-	 const auto& qc = pc.first;
-	 auto key = make_pair(qr,qc);
-	 auto& blk = qblocks[key];
-	 if(blk.size() > 0) blk *= fac;
-      }
+   for(auto& p : qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0) blk *= fac;
    }
    return *this;
 }
@@ -227,16 +206,9 @@ qtensor2 tns::operator *(const qtensor2& qt, const double fac){
 
 double qtensor2::normF() const{
    double sum = 0.0;
-   for(const auto& pr : qrow){
-      const auto& qr = pr.first;
-      for(const auto& pc : qcol){
-	 const auto& qc = pc.first;	
-	 auto key = make_pair(qr,qc);
-	 const auto& blk = qblocks.at(key);
-	 if(blk.size() > 0){
-	    sum += pow(linalg::normF(blk),2);
-	 }
-      }
+   for(const auto& p : qblocks){
+      const auto& blk = p.second;
+      if(blk.size() > 0) sum += pow(linalg::normF(blk),2);
    }
    return sqrt(sum);
 }

@@ -97,8 +97,10 @@ struct qtensor3{
       qtensor3& operator -=(const qtensor3& qt);
       // for Davidson algorithm
       int get_dim() const;
-      std::vector<double> to_vector() const;
+      void from_array(const double* array);
+      void to_array(double* array) const; 
       void from_vector(const std::vector<double>& vec);
+      std::vector<double> to_vector() const;
       // symmetry conservation rule [20200510]
       bool ifconserve(const qsym& qm, const qsym& qr, const qsym& qc) const{
 	 auto qsum = dir[0] ? sym : -sym;

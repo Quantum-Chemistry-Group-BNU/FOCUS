@@ -12,7 +12,7 @@ void tns::oper_renorm_rops(const comb& bra,
 		           const integral::two_body& int2e,
 		           const integral::one_body& int1e,
 			   const string scratch){
-   bool debug = false;
+   bool debug = true;
    auto t0 = global::get_time();
    int ip  =  p.first, jp  =  p.second;
    cout << "\ntns::oper_renorm_rops iswitch=" 

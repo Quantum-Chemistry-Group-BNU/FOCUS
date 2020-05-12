@@ -96,11 +96,14 @@ void tns::get_Hx(double* y,
    bool debug = true;
    if(debug) cout << "\ntns::get_Hx" << endl;
    int dim = wf.get_dim();
+/*
    // const term
    vector<double> yi(dim);
    transform(x, x+dim, yi.begin(),
              [&ecore](const double& xi){ return ecore*xi; });
    wf.from_vector(yi);
+*/
+   wf.from_array(x);
    // load Hl, Hc, Hr
    auto pl = icomb.get_l(p);
    auto pc = icomb.get_c(p);
@@ -136,18 +139,12 @@ void tns::get_Hx(double* y,
    auto Hc = cqops_H[0];
    auto Hr = rqops_H[0];
    // Hl*wf
-   auto wf2 = contract_qt3_qt2_l(wf,Hl);
-   wf.print("wf",1);
-   cout << endl;
-   wf2.print("wf2",1);
-
-   exit(1);
-
-//   // Hc*wf
-//   wf += contract_qt3_qt2_c(wf,Hc);
-//   // Hr*wf
+   auto Hwf = contract_qt3_qt2_l(wf,Hl);
+   //wf += contract_qt3_qt2_c(wf,Hc);
+   
+   auto Hlm = Hl.to_matrix();
+   Hlm.print("Hlm");
 
    // copy back
-   yi = wf.to_vector();
-   copy(yi.begin(), yi.end(), y);
+   Hwf.to_array(y);
 }

@@ -18,7 +18,7 @@ void tns::opt_sweep(const input::schedule& schd,
    cout << "\ntns::opt_sweep" << endl;
    
    // prepare environmental operators 
-   //oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
+   oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
 
    // init boundary sites
    for(int idx=0; idx<icomb.ntotal; idx++){
