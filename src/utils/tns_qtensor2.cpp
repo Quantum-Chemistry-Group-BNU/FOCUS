@@ -54,7 +54,7 @@ void qtensor2::print(const string msg, const int level) const{
             nnz++;
             cout << "idx=" << nnz 
 		 << " block[" << sym_row << "," << sym_col << "]"
-                 << " size=" << m.size() 
+                 << " rows,cols=(" << m.rows() << "," << m.cols() << ")"
                  << endl; 
             if(level >= 2){
                m.print("mat");

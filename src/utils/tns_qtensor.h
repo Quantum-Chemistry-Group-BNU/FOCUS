@@ -43,11 +43,11 @@ struct qtensor2{
       // pure algorithmic operations 
       qtensor2& operator +=(const qtensor2& qt);
       qtensor2& operator -=(const qtensor2& qt);
+      friend qtensor2 operator +(const qtensor2& qta, const qtensor2& qtb);
+      friend qtensor2 operator -(const qtensor2& qta, const qtensor2& qtb);
       qtensor2& operator *=(const double fac);
       friend qtensor2 operator *(const double fac, const qtensor2& qt);  
       friend qtensor2 operator *(const qtensor2& qt, const double fac); 
-      friend qtensor2 operator +(const qtensor2& qta, const qtensor2& qtb);
-      friend qtensor2 operator -(const qtensor2& qta, const qtensor2& qtb);
       double normF() const;
       double check_identity(const double thresh_ortho,
 		            const bool debug=false) const;
@@ -95,6 +95,11 @@ struct qtensor3{
       double normF() const;
       qtensor3& operator +=(const qtensor3& qt);
       qtensor3& operator -=(const qtensor3& qt);
+      friend qtensor3 operator +(const qtensor3& qta, const qtensor3& qtb);
+      friend qtensor3 operator -(const qtensor3& qta, const qtensor3& qtb);
+      qtensor3& operator *=(const double fac);
+      friend qtensor3 operator *(const double fac, const qtensor3& qt);  
+      friend qtensor3 operator *(const qtensor3& qt, const double fac); 
       // for Davidson algorithm
       int get_dim() const;
       void from_array(const double* array);

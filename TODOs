@@ -100,7 +100,7 @@
 	  - data structure for operators: qtensor2
 	  - operators on dot (in memory)
 	  - serializaiton: -lboost_system -lboost_filesystem
-	  - implement recursive build of operators (blocking & renormalization)
+	  - implement recursive build of rops (blocking & renormalization)
 	    - normal operators:
 	      - a_pL^+
 	      - a_pL^+a_qL (checked against fci_rdm1 for <psi1|p^+q|psi2>)
@@ -128,21 +128,22 @@
   	    - qtensor3 (with sym) : site tensor A and O*A 
 	    - qtensor3 (with dir) : wf on one site  
 	  - one-dot opt:
-	    - implement Hdiag 
-	    - implement Hx
+	    - implement Hdiag [DONE@20200512] 
+	    - implement Hx?
 	    - automated analysis tool for generating formula
-	  - decimation 
+	  - decimation?
+          - renormalization of lops?
 
  202005xx extension to two-dot opt: 
-	  - qtensor4 : to be implemented
+	  - qtensor4 : to be implemented? qt4->qt3?
  	  - implement Hdiag
 	  - implement Hx
 
  202005xx more functionalities:
- 	  - efficient implementation using abelian symmetry
-	  - noise for pRDM
+	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L|
  	  - propogation of initial guess
 	  - support for state-average excited state calculations
+ 	  - efficient implementation using abelian symmetry
 	  - implement canonicalization of Comb for random sampling
 
  202006xx parallelizaiton: large-scale applications!

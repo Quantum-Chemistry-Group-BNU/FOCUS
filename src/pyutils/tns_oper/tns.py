@@ -86,9 +86,10 @@ def transform(op_dic,partition,index4):
    return oplst
 
 def classification(oplst):
-   lst = []
-   for op in oplst:
-      lst.append(op[0][0:1])
-   lst = sorted(lst)   
-   key = ''.join(lst)   
+   #lst = []
+   #for op in oplst:
+   #   lst.append(op[0][0:1])
+   #lst = sorted(lst)   
+   #key = ''.join(lst) 
+   key = oplst[0][0][0:1]
    return key

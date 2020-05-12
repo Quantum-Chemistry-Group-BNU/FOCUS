@@ -167,6 +167,40 @@ qtensor3& qtensor3::operator -=(const qtensor3& qt){
    return *this;
 }
 
+qtensor3 tns::operator +(const qtensor3& qta, const qtensor3& qtb){
+   qtensor3 qt3 = qta;
+   qt3 += qtb;
+   return qt3;
+}
+
+qtensor3 tns::operator -(const qtensor3& qta, const qtensor3& qtb){
+   qtensor3 qt3 = qta;
+   qt3 -= qtb;
+   return qt3;
+}
+
+qtensor3& qtensor3::operator *=(const double fac){
+   for(auto& p : qblocks){
+      auto& blk = p.second;
+      if(blk.size() > 0){ 
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] *= fac;
+	 }
+      }
+   }
+   return *this;
+}
+
+qtensor3 tns::operator *(const double fac, const qtensor3& qt){
+   qtensor3 qt3 = qt; // use default assignment constructor;
+   qt3 *= fac;
+   return qt3;
+}
+
+qtensor3 tns::operator *(const qtensor3& qt, const double fac){
+   return fac*qt;
+}
+
 // for Davidson algorithm
 int qtensor3::get_dim() const{
    int dim = 0;
