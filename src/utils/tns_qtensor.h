@@ -69,6 +69,7 @@ struct qtensor3{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
+	 ar & dir;     
          ar & sym;
          ar & qmid;
          ar & qrow;
@@ -81,7 +82,8 @@ struct qtensor3{
       qtensor3(const qsym& sym1,
 	       const qsym_space& qmid1,
 	       const qsym_space& qrow1, 
-	       const qsym_space& qcol1);
+	       const qsym_space& qcol1,
+	       const std::vector<bool> dir1={0,1,1,0});
       inline int get_dim_mid() const{ return qsym_space_dim(qmid); }
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
@@ -91,11 +93,22 @@ struct qtensor3{
       qtensor3 col_signed(const double fac=1.0) const;
       // simple algrithmic operations 
       double normF() const;
+      qtensor3& operator +=(const qtensor3& qt);
+      qtensor3& operator -=(const qtensor3& qt);
       // for Davidson algorithm
       int get_dim() const;
       std::vector<double> to_vector() const;
       void from_vector(const std::vector<double>& vec);
+      // symmetry conservation rule [20200510]
+      bool ifconserve(const qsym& qm, const qsym& qr, const qsym& qc) const{
+	 auto qsum = dir[0] ? sym : -sym;
+	 qsum += dir[1] ? qm : -qm;
+	 qsum += dir[2] ? qr : -qr;
+	 qsum += dir[3] ? qc : -qc;
+	 return qsum == qsym(0,0); 
+      }
    public:
+      std::vector<bool> dir = {0,1,1,0}; // {in,out,out,in}
       qsym sym; // <mid,row|op|col> (tensor A[m](r,c) = <mr|c>) 
       qsym_space qmid; // [sym,dim] - middle
       qsym_space qrow; // [sym,dim] - row

@@ -18,7 +18,7 @@ void tns::oper_renorm_ropC(const comb& bra,
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
+   int ip = p.first, jp = p.second, kp = bra.get_kp(p);
    qopers qops, rqops, cqops;
    string fname0r, fname0c;
    // C: build / load
@@ -32,7 +32,7 @@ void tns::oper_renorm_ropC(const comb& bra,
    // R: build /load
    auto pr = bra.get_r(p);
    if(bra.ifbuild_r(p)){
-      int kpr = bra.topo[pr.first][pr.second];
+      int kpr = bra.get_kp(pr);
       rqops = oper_dot_c(kpr);
    }else{
       fname0r = oper_fname(scratch, pr, "ropC");
@@ -68,7 +68,7 @@ void tns::oper_renorm_ropA(const comb& bra,
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
+   int ip = p.first, jp = p.second, kp = bra.get_kp(p);
    qopers qops, rqops_cc, rqops_c, cqops_cc, cqops_c;
    string fname0r, fname0c;
    // C: build / load
@@ -85,7 +85,7 @@ void tns::oper_renorm_ropA(const comb& bra,
    // R: build /load
    auto pr = bra.get_r(p);
    if(bra.ifbuild_r(p)){
-      int kpr = bra.topo[pr.first][pr.second];
+      int kpr = bra.get_kp(pr);
       rqops_c  = oper_dot_c(kpr);
       rqops_cc = oper_dot_cc(kpr);
    }else{
@@ -136,7 +136,7 @@ void tns::oper_renorm_ropB(const comb& bra,
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
+   int ip = p.first, jp = p.second, kp = bra.get_kp(p);
    qopers qops, rqops_ca, rqops_c, cqops_ca, cqops_c;
    string fname0r, fname0c;
    // C: build / load
@@ -153,7 +153,7 @@ void tns::oper_renorm_ropB(const comb& bra,
    // R: build /load
    auto pr = bra.get_r(p);
    if(bra.ifbuild_r(p)){
-      int kpr = bra.topo[pr.first][pr.second];
+      int kpr = bra.get_kp(pr);
       rqops_c  = oper_dot_c(kpr);
       rqops_ca = oper_dot_ca(kpr);
    }else{

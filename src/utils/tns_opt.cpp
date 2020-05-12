@@ -2,6 +2,8 @@
 #include "../core/dvdson.h"
 #include "tns_oper.h"
 #include "tns_opt.h"
+#include "tns_hamiltonian.h"
+#include "tns_decimation.h"
 
 using namespace std;
 using namespace linalg;
@@ -55,45 +57,36 @@ void tns::opt_onedot(const input::schedule& schd,
    auto t0 = global::get_time();
    auto p = get<0>(dbond);
    auto ip = p.first, jp = p.second;
+   auto pl = icomb.get_l(p);
+   auto pc = icomb.get_c(p);
+   auto pr = icomb.get_r(p);
    cout << "tns::opt_onedot coord=(" << ip << "," << jp << ")"
 	<< "[" << icomb.topo[ip][jp] << "]" << endl; 
-
-   auto l = icomb.get_l(p);
-   auto c = icomb.get_c(p);
-   auto r = icomb.get_r(p);
    cout << "neighbor: "
-	<< "l=(" << l.first << "," << l.second << ") " 
-        << "c=(" << c.first << "," << c.second << ") " 
-        << "r=(" << r.first << "," << r.second << ") " 
+	<< "pl=(" << pl.first << "," << pl.second << ") " 
+        << "pc=(" << pc.first << "," << pc.second << ") " 
+        << "pr=(" << pr.first << "," << pr.second << ") " 
 	<< endl;
    
    // 1. process symmetry information
    qsym_space ql, qc, qr;
-   ql = icomb.lsites[l].qcol;
-   qr = icomb.rsites[r].qcol;
-   if(c == make_pair(-1,-1)){
+   ql = icomb.lsites[pl].qcol;
+   qr = icomb.rsites[pr].qcol;
+   if(pc == make_pair(-1,-1)){
       qc = phys_qsym_space;
    }else{
       qc = icomb.rsites[p].qmid;
-   } 
-   //qtensor3 qt(ql,qc,qr);
+   }
    int nelec_a = (schd.nelec+schd.twoms)/2;
    qsym sym_state(schd.nelec,nelec_a);
-   qsym_space qr2; 
-   for(const auto p : qr){
-      auto q = sym_state - p.first;
-      qr2[q] = p.second;
-   }
-   qtensor3 wf(qsym(0,0),qc,ql,qr2);
-   wf.print("wf");
-
-   int nsub = wf.get_dim();
-   int neig = schd.nroots;
-  
-   vector<double> diag(nsub,1);
-   //auto diag = tns::get_Hdiag();
-
+   qtensor3 wf(sym_state,qc,ql,qr,{0,1,1,1});
+   wf.print("wf",1);
+   cout << wf.get_dim() << endl;
+   
    // 2. Davidson solver 
+   int nsub = wf.get_dim();
+   int neig = 1; //schd.nroots;
+   auto diag = tns::get_Hdiag(icomb, p, int2e, int1e, ecore, schd.scratch, wf);
    dvdsonSolver solver;
    solver.iprt = 2;
    solver.crit_v = schd.crit_v;
@@ -103,13 +96,17 @@ void tns::opt_onedot(const input::schedule& schd,
    solver.Diag = diag.data();
    using std::placeholders::_1;
    using std::placeholders::_2;
-   //solver.HVec = bind(tns::get_Hx, _1, _2);
+   solver.HVec = bind(tns::get_Hx, _1, _2, 
+		      cref(icomb), cref(p), 
+		      cref(int2e), cref(int1e), cref(ecore), 
+		      cref(schd.scratch),
+		      ref(wf));
    // solve
    vector<double> esol(neig);
    matrix vsol(nsub,neig);
-   //solver.solve_iter(esol.data(), vsol.data());
-
+   solver.solve_iter(esol.data(), vsol.data());
    cout << "energy=" << esol[0] << endl;
+   exit(1);
 
    // 3. decimation
    //qtensor3 site = tns::decimation(icomb, dbond, vsol);

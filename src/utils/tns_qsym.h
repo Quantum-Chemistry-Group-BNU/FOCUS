@@ -45,6 +45,11 @@ class qsym{
       friend std::ostream& operator <<(std::ostream& os, const qsym& sym);
       // Abelian symmetry
       qsym operator -() const{ return qsym(-_ne,-_na); }
+      qsym& operator +=(const qsym& sym1){ 
+	 _ne += sym1._ne;
+	 _na += sym1._na;
+	return *this; 
+      }
       friend qsym operator +(const qsym& sym1, const qsym& sym2);
       friend qsym operator -(const qsym& sym1, const qsym& sym2);
    private:

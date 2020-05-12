@@ -11,7 +11,9 @@ using namespace tns;
 qtensor3::qtensor3(const qsym& sym1,
 		   const qsym_space& qmid1,
 		   const qsym_space& qrow1, 
-		   const qsym_space& qcol1){
+		   const qsym_space& qcol1,
+		   const vector<bool> dir1){
+   dir = dir1;
    sym = sym1;
    qmid = qmid1;
    qrow = qrow1;
@@ -27,7 +29,7 @@ qtensor3::qtensor3(const qsym& sym1,
             int cdim = pc.second;
 	    // initialization
 	    auto key = make_tuple(qm,qr,qc);
-            if(qm + qr == sym + qc){
+            if(ifconserve(qm,qr,qc)){
 	       vector<matrix> blk(mdim,matrix(rdim,cdim));
 	       qblocks[key] = blk;
 	    }else{
@@ -95,7 +97,10 @@ qtensor3 qtensor3::col_signed(const double fac) const{
 }
 
 void qtensor3::print(const string msg, const int level) const{
-   cout << "qtensor3: " << msg << " sym=" << sym << endl;
+   cout << "qtensor3: " << msg << " sym=" << sym;
+   cout << " dir=";
+   for(auto b : dir) cout << b << " ";
+   cout << endl;
    qsym_space_print(qmid,"qmid");
    qsym_space_print(qrow,"qrow");
    qsym_space_print(qcol,"qcol");
@@ -145,6 +150,54 @@ double qtensor3::normF() const{
       }
    }
    return sqrt(sum);
+}
+
+qtensor3& qtensor3::operator +=(const qtensor3& qt){
+   assert(sym == qt.sym); // symmetry blocking must be the same
+   for(const auto& pm : qmid){
+      const auto& qm = pm.first;
+      int mdim = pm.second;
+      for(const auto& pr : qrow){
+         const auto& qr = pr.first;
+         for(const auto& pc : qcol){
+	    const auto& qc = pc.first;
+	    auto key = make_tuple(qm,qr,qc);
+	    auto& blk = qblocks[key];
+	    assert(blk.size() == qt.qblocks.at(key).size());
+	    if(blk.size() > 0){
+	       const auto& blk1 = qt.qblocks.at(key);
+	       for(int m=0; m<mdim; m++){
+	          blk[m] += blk1[m]; 
+	       }
+	    }
+	 } // pc
+      } // pr
+   } // pm
+   return *this;
+}
+
+qtensor3& qtensor3::operator -=(const qtensor3& qt){
+   assert(sym == qt.sym); // symmetry blocking must be the same
+   for(const auto& pm : qmid){
+      const auto& qm = pm.first;
+      int mdim = pm.second;
+      for(const auto& pr : qrow){
+         const auto& qr = pr.first;
+         for(const auto& pc : qcol){
+	    const auto& qc = pc.first;
+	    auto key = make_tuple(qm,qr,qc);
+	    auto& blk = qblocks[key];
+	    assert(blk.size() == qt.qblocks.at(key).size());
+	    if(blk.size() > 0){
+	       const auto& blk1 = qt.qblocks.at(key);
+	       for(int m=0; m<mdim; m++){
+	          blk[m] -= blk1[m]; 
+	       }
+	    }
+	 } // pc
+      } // pr
+   } // pm
+   return *this;
 }
 
 // for Davidson algorithm

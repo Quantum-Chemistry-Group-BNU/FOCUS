@@ -1,8 +1,8 @@
 #ifndef TNS_ALG_H
 #define TNS_ALG_H
 
-#include "tns_comb.h"
 #include "../core/integral.h"
+#include "tns_comb.h"
 
 namespace tns{
 

@@ -27,6 +27,7 @@ class comb{
       void topo_init();
       void topo_print() const;
       // --- neightbor ---
+      int get_kp(const comb_coord& p) const{ return topo[p.first][p.second]; }
       comb_coord get_c(const comb_coord& p) const{ return std::get<0>(neighbor.at(p)); }
       comb_coord get_l(const comb_coord& p) const{ return std::get<1>(neighbor.at(p)); }
       comb_coord get_r(const comb_coord& p) const{ return std::get<2>(neighbor.at(p)); }

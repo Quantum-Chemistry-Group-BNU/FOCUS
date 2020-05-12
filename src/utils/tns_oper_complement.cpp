@@ -21,7 +21,7 @@ void tns::oper_renorm_ropP(const comb& bra,
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
+   int ip = p.first, jp = p.second, kp = bra.get_kp(p);
    qopers qops;
    qopers cqops_c, cqops_cc;
    qopers rqops_c, rqops_cc, rqops_P;
@@ -158,7 +158,7 @@ void tns::oper_renorm_ropQ(const comb& bra,
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
+   int ip = p.first, jp = p.second, kp = bra.get_kp(p);
    qopers qops;
    qopers cqops_c, cqops_ca;
    qopers rqops_c, rqops_ca, rqops_Q;
@@ -303,7 +303,7 @@ void tns::oper_renorm_ropS(const comb& bra,
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
+   int ip = p.first, jp = p.second, kp = bra.get_kp(p);
    qopers qops;
    qopers cqops_c, cqops_cc, cqops_ca, cqops_S;
    qopers rqops_c, rqops_cc, rqops_ca, rqops_S, rqops_P, rqops_Q;
@@ -329,7 +329,7 @@ void tns::oper_renorm_ropS(const comb& bra,
    // R: build /load
    auto pr = bra.get_r(p);
    if(bra.ifbuild_r(p)){
-      int kpr = bra.topo[pr.first][pr.second];
+      int kpr = bra.get_kp(pr);
       rqops_c  = oper_dot_c(kpr);
       rqops_cc = oper_dot_cc(kpr);
       rqops_ca = oper_dot_ca(kpr);
@@ -509,7 +509,7 @@ void tns::oper_renorm_ropH(const comb& bra,
    auto t0 = global::get_time();
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
-   int ip = p.first, jp = p.second, kp = bra.topo[ip][jp];
+   int ip = p.first, jp = p.second, kp = bra.get_kp(p);
    qopers qops;
    qopers cqops_c, cqops_cc, cqops_ca, cqops_S, cqops_H;
    qopers rqops_c, rqops_cc, rqops_ca, rqops_S, rqops_H, rqops_P, rqops_Q;
@@ -538,7 +538,7 @@ void tns::oper_renorm_ropH(const comb& bra,
    // R: build /load
    auto pr = bra.get_r(p);
    if(bra.ifbuild_r(p)){
-      int kpr = bra.topo[pr.first][pr.second];
+      int kpr = bra.get_kp(pr);
       rqops_c  = oper_dot_c(kpr);
       rqops_cc = oper_dot_cc(kpr);
       rqops_ca = oper_dot_ca(kpr);

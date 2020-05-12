@@ -15,7 +15,7 @@ using namespace tns;
 qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a, 
 				 const qtensor2& qt2b){
    qsym sym = qt3a.sym + qt2b.sym;
-   qtensor3 qt3(sym, qt3a.qmid, qt2b.qrow, qt3a.qcol);
+   qtensor3 qt3(sym, qt3a.qmid, qt2b.qrow, qt3a.qcol, qt3a.dir);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
       const qsym& msym = pm.first;
@@ -57,7 +57,7 @@ qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a,
 qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a, 
 			 	 const qtensor2& qt2b){
    qsym sym = qt3a.sym + qt2b.sym;
-   qtensor3 qt3(sym, qt2b.qrow, qt3a.qrow, qt3a.qcol);
+   qtensor3 qt3(sym, qt2b.qrow, qt3a.qrow, qt3a.qcol, qt3a.dir);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
       const qsym& msym = pm.first;

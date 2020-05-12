@@ -121,36 +121,41 @@
 		  Also, we do not use Hermicity of Bpq/Qps, which allows to 
 		  compute <rdm1|p^+q|rdm2> for state-averaged comb states.
  
- 2020xxxx basic sweep algorithm
+ 202005xx basic sweep algorithm for one-dot opt
 	  - better data structure to handle {L,C,R} neigbors [DONE@20200510] 
-	  - data structure for wavefunction (wf)
-	  - automated analysis tool for generating formula
+	  - data structure for wavefunction (wf) [DONE@20200512]
+	    - qtensor2 (with sym) : operators O
+  	    - qtensor3 (with sym) : site tensor A and O*A 
+	    - qtensor3 (with dir) : wf on one site  
 	  - one-dot opt:
 	    - implement Hdiag 
 	    - implement Hx
- 	  - two-dot opt: 
- 	    - implement Hdiag
-	    - implement Hx
+	    - automated analysis tool for generating formula
 	  - decimation 
 
- 2020xxxx more functionalities:
+ 202005xx extension to two-dot opt: 
+	  - qtensor4 : to be implemented
+ 	  - implement Hdiag
+	  - implement Hx
+
+ 202005xx more functionalities:
  	  - efficient implementation using abelian symmetry
 	  - noise for pRDM
  	  - propogation of initial guess
 	  - support for state-average excited state calculations
 	  - implement canonicalization of Comb for random sampling
 
---- Advanced functionalities ---
- 
- 2020xxxx parallelizaiton: large-scale applications!
+ 202006xx parallelizaiton: large-scale applications!
 
- 2020xxxx random sampling? as for stochastic pDMRG
- 
- 2020xxxx operator compression
+--- Advanced functionalities ---
 
  2020xxxx complex version: relativistic SCI/DMRG
 
  2020xxxx rdms?
+
+ 2020xxxx random sampling? as for stochastic pDMRG
+ 
+ 2020xxxx operator compression
 
  2020xxxx g-tensor [IMPORTANT!!! - quantum computation] 
 		    <Psi|sigma K|Psi>? G-matrix;
