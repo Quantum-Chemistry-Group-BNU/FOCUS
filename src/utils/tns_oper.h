@@ -80,70 +80,72 @@ qtensor2 oper_kernel_OcOr(const qtensor3& bsite,
 			  const int prop);
 
 // renorm different types of operators
-void oper_renorm_ropC(const qtensor3& bsite,
-		      const qtensor3& ksite,
+void oper_renorm_ropC(const comb& bra,
+		      const comb& ket,
+		      const comb_coord& p, 
 		      oper_dict& cqops,
 		      oper_dict& rqops,
 		      oper_dict& qops,
 		      const bool debug=false);
 
-void oper_renorm_ropA(const qtensor3& bsite,
-		      const qtensor3& ksite,
+void oper_renorm_ropA(const comb& bra,
+		      const comb& ket,
+		      const comb_coord& p, 
 		      oper_dict& cqops,
 		      oper_dict& rqops,
 		      oper_dict& qops,
 		      const bool debug=false);
 
-void oper_renorm_ropB(const qtensor3& bsite,
-		      const qtensor3& ksite,
+void oper_renorm_ropB(const comb& bra,
+		      const comb& ket,
+		      const comb_coord& p, 
 		      oper_dict& cqops,
 		      oper_dict& rqops,
 		      oper_dict& qops,
 		      const bool debug=false);
 
-void oper_renorm_ropP(const qtensor3& bsite,
-		      const qtensor3& ksite,
-		      const std::vector<int>& orbord,
-		      const std::vector<int>& lsupp,
-		      const bool& ifAB,
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
+void oper_renorm_ropP(const comb& bra,
+		      const comb& ket,
+		      const comb_coord& p, 
 		      oper_dict& cqops,
 		      oper_dict& rqops,
 		      oper_dict& qops,
+		      const bool& ifAB,
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
 		      const bool debug=false);
 	
-void oper_renorm_ropQ(const qtensor3& bsite,
-		      const qtensor3& ksite,
-		      const std::vector<int>& lsupp,
-		      const bool& ifAB,
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
+void oper_renorm_ropQ(const comb& bra,
+		      const comb& ket,
+		      const comb_coord& p, 
 		      oper_dict& cqops,
 		      oper_dict& rqops,
 		      oper_dict& qops,
+		      const bool& ifAB,
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
 		      const bool debug=false);
 	
-void oper_renorm_ropS(const qtensor3& bsite,
-		      const qtensor3& ksite,
-		      const std::vector<int>& lsupp,
-		      const bool& ifAB,
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
+void oper_renorm_ropS(const comb& bra,
+		      const comb& ket,
+		      const comb_coord& p, 
 		      oper_dict& cqops,
 		      oper_dict& rqops,
 		      oper_dict& qops,
+		      const bool& ifAB,
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
 		      const bool debug=false);
 	
-void oper_renorm_ropH(const qtensor3& bsite,
-		      const qtensor3& ksite,
-		      const std::vector<int>& lsupp,
-		      const bool& ifAB,
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
+void oper_renorm_ropH(const comb& bra,
+		      const comb& ket,
+		      const comb_coord& p, 
 		      oper_dict& cqops,
 		      oper_dict& rqops,
 		      oper_dict& qops,
+		      const bool& ifAB,
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
 		      const bool debug=false);
 	
 // driver for renorm in different directions 
@@ -165,7 +167,6 @@ void oper_env_right(const comb& bra,
 	            const integral::one_body& int1e,
 		    const std::string scratch=".");
 
-/*
 // generator operators based on rbases from determinants for debugging
 // normal operators
 void oper_rbases(const comb& bra,
@@ -182,7 +183,6 @@ void oper_rbases(const comb& bra,
 	         const integral::one_body& int1e,
 		 const std::string scratch,
 		 const std::string optype);
-*/
 
 } // tns
 

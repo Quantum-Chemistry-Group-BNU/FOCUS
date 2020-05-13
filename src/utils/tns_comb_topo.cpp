@@ -79,8 +79,20 @@ void comb::topo_init(){
    // type of sites & neighbor of non-boundary sites
    for(int i=nbackbone-1; i>=0; i--){
       int size = topo[i].size();
-      if(i==nbackbone-1 || i==0){
-	 type[make_pair(i,0)] = 0; // type 0: start/end
+      if(i==nbackbone-1){
+	 // type 0: end
+	 auto coord = make_pair(i,0);
+	 type[coord] = 0; 
+	 neighbor[coord] = make_tuple(make_pair(-1,-1),  // C : phys
+	           		      make_pair(i-1,0),  // L
+	           		      make_pair(-2,-2)); // R : vacuum
+      }else if(i==0){
+	 // type 0: start
+	 auto coord = make_pair(i,0);
+	 type[coord] = 0; 
+	 neighbor[coord] = make_tuple(make_pair(-1,-1),  // C
+	           		      make_pair(-2,-2),  // L
+	           		      make_pair(i+1,0)); // R
       }else{
 	 if(size == 1){
 	    // type 1: physical site on backbone
@@ -91,17 +103,21 @@ void comb::topo_init(){
 	           			 make_pair(i+1,0)); // R
 	 }else if(size > 1){
 	    // type 0: leaves on branch
-            type[make_pair(i,size-1)] = 0;
+            auto coord = make_pair(i,size-1);
+	    type[coord] = 0;
+	    neighbor[coord] = make_tuple(make_pair(-1,-1),    // C
+	           		         make_pair(i,size-2), // L
+	           		         make_pair(-2,-2));   // R
+	    // type 2: physical site on branch
 	    for(int j=size-2; j>=1; j--){
-	       // type 2: physical site on branch
-	       auto coord = make_pair(i,j);
+	       coord = make_pair(i,j);
 	       type[coord] = 2; 
 	       neighbor[coord] = make_tuple(make_pair(-1,-1),  // C
 	              			    make_pair(i,j-1),  // L
 	   				    make_pair(i,j+1)); // R
 	    } // j
 	    // type 3: internal site on backbone
-            auto coord = make_pair(i,0);
+            coord = make_pair(i,0);
 	    type[coord] = 3; 
 	    neighbor[coord] = make_tuple(make_pair(i,1),    // C
 	           			 make_pair(i-1,0),  // L
@@ -196,16 +212,12 @@ void comb::topo_print() const{
       auto l = get<1>(pr.second);
       auto r = get<2>(pr.second);
       cout << "idx=" << idx << " : (" << p.first << "," << p.second << ")" 
-	   << " type=" << type.at(p) 
 	   << "  c=(" << c.first << "," << c.second << ")"
 	   << "  l=(" << l.first << "," << l.second << ")"
-	   << " type=" << type.at(l) 
 	   << "  r=(" << r.first << "," << r.second << ")" 
-	   << " type=" << type.at(r) 
 	   << endl;
       idx++;
    }
-   assert(idx == ntotal-nboundary);
    cout << "--- rsupport/lsupport ---" << endl;
    for(int i=0; i<ntotal; i++){
       auto p = rcoord[i];

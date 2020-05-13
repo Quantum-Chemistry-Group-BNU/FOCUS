@@ -9,16 +9,18 @@ using namespace std;
 using namespace linalg;
 using namespace tns;
 
-void tns::oper_renorm_ropC(const qtensor3& bsite,
-			   const qtensor3& ksite,
+void tns::oper_renorm_ropC(const comb& bra,
+			   const comb& ket,
+			   const comb_coord& p, 
 			   oper_dict& cqops,
 			   oper_dict& rqops,
 			   oper_dict& qops,
 			   const bool debug){
    if(debug) cout << "tns::oper_renorm_ropC" << endl;
    auto t0 = global::get_time();
-   
    // kernel for computing renormalized ap^+
+   const auto& bsite = bra.rsites.at(p);
+   const auto& ksite = ket.rsites.at(p);
    // 1. Ic*pR^+ 
    for(const auto& ropC : rqops['C']){
       qops['C'][ropC.first] = oper_kernel_IcOr(bsite,ksite,ropC.second,1); 
@@ -27,7 +29,6 @@ void tns::oper_renorm_ropC(const qtensor3& bsite,
    for(const auto& copC : cqops['C']){
       qops['C'][copC.first] = oper_kernel_OcIr(bsite,ksite,copC.second);
    }
-   
    auto t1 = global::get_time();
    if(debug){ 
       cout << "timing for tns::renorm_ropC : " << setprecision(2) 
@@ -35,16 +36,18 @@ void tns::oper_renorm_ropC(const qtensor3& bsite,
    }
 }
 
-void tns::oper_renorm_ropA(const qtensor3& bsite,
-			   const qtensor3& ksite,
+void tns::oper_renorm_ropA(const comb& bra,
+			   const comb& ket,
+			   const comb_coord& p, 
 			   oper_dict& cqops,
 			   oper_dict& rqops,
 			   oper_dict& qops,
 			   const bool debug){
    if(debug) cout << "tns::oper_renorm_ropA" << endl;
    auto t0 = global::get_time();
-   
    // kernel for computing renormalized Apq=ap^+aq^+
+   const auto& bsite = bra.rsites.at(p);
+   const auto& ksite = ket.rsites.at(p);
    // 1. Ic * pR^+qR^+ (p<q) 
    for(const auto& ropA : rqops['A']){
       qops['A'][ropA.first] = oper_kernel_IcOr(bsite,ksite,ropA.second,0);
@@ -60,11 +63,10 @@ void tns::oper_renorm_ropA(const qtensor3& bsite,
       for(const auto& ropC : rqops['C']){
 	 int qR = ropC.first;
 	 const auto& rop = ropC.second;
-	 // only store Apq where node[p]<node[q]
+	 // only store Apq where orbord[p]<orbord[q] (i.e., no qRpC)
 	 qops['A'][oper_pack(pC,qR)] = oper_kernel_OcOr(bsite,ksite,cop,rop,1);
       }
    }
-
    auto t1 = global::get_time();
    if(debug){
       cout << "timing for tns::renorm_ropA : " << setprecision(2) 
@@ -72,16 +74,18 @@ void tns::oper_renorm_ropA(const qtensor3& bsite,
    }
 }
 
-void tns::oper_renorm_ropB(const qtensor3& bsite,
-			   const qtensor3& ksite,
+void tns::oper_renorm_ropB(const comb& bra,
+			   const comb& ket,
+			   const comb_coord& p, 
 			   oper_dict& cqops,
 			   oper_dict& rqops,
 			   oper_dict& qops,
 			   const bool debug){
    if(debug) cout << "tns::oper_renorm_ropB" << endl;
    auto t0 = global::get_time();
-   
    // kernel for computing renormalized ap^+aq
+   const auto& bsite = bra.rsites.at(p);
+   const auto& ksite = ket.rsites.at(p);
    // Ic * pR^+qR 
    for(const auto& ropB : rqops['B']){
       qops['B'][ropB.first] = oper_kernel_IcOr(bsite,ksite,ropB.second,0);
@@ -101,7 +105,6 @@ void tns::oper_renorm_ropB(const qtensor3& bsite,
 	 qops['B'][oper_pack(pR,pC)] = -oper_kernel_OcOr(bsite,ksite,cop.T(),rop,1);
       }
    }
-
    auto t1 = global::get_time();
    if(debug){ 
       cout << "timing for tns::renorm_ropB : " << setprecision(2) 

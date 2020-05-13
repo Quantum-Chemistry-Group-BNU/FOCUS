@@ -1,9 +1,9 @@
 #include "../settings/global.h"
+#include "../core/matrix.h"
+#include "../core/linalg.h"
 #include "tns_comb.h" 
 #include "tns_qtensor.h"
 #include "tns_oper.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
 #include <string>
 #include <iomanip>
 
@@ -11,7 +11,6 @@ using namespace std;
 using namespace linalg;
 using namespace tns;
 
-/*
 // normal operators
 void tns::oper_rbases(const comb& bra,
 		      const comb& ket, 
@@ -51,15 +50,15 @@ void tns::oper_rbases(const comb& bra,
    cout << endl;
 
    // load renormalized operators 
-   qopers qops_C, qops_A, qops_B;
-   string fname;
+   oper_dict qops;
+   string fname = oper_fname(scratch, p, "rop");
+   oper_load(fname, qops);
     
    // check for ap^+
    if(optype == "C"){ 
-   fname  = oper_fname(scratch, p, "ropC");
-   oper_load(fname, qops_C);
-   for(const auto& op: qops_C){
-      int orb_p = op.index[0];
+   for(const auto& opC: qops['C']){
+      const auto& op = opC.second;
+      int orb_p = opC.first;
       int pos = orb2pos.at(orb_p);
       // build
       int dim0 = bsite.get_dim_col();
@@ -119,11 +118,11 @@ void tns::oper_rbases(const comb& bra,
 
    // check for Apq = ap^+aq^+
    if(optype == "A"){ 
-   fname = oper_fname(scratch, p, "ropA");
-   oper_load(fname, qops_A);
-   for(const auto& op : qops_A){
-      int orb_p = op.index[0];
-      int orb_q = op.index[1];
+   for(const auto& opA : qops['A']){
+      const auto& op = opA.second;
+      auto pq = oper_unpack(opA.first);
+      int orb_p = pq.first;
+      int orb_q = pq.second;
       int pos_p = orb2pos.at(orb_p);
       int pos_q = orb2pos.at(orb_q);
       // build
@@ -186,11 +185,11 @@ void tns::oper_rbases(const comb& bra,
 
    // check for Bpq = ap^+aq
    if(optype == "B"){ 
-   fname = oper_fname(scratch, p, "ropB");
-   oper_load(fname, qops_B);
-   for(const auto& op : qops_B){
-      int orb_p = op.index[0];
-      int orb_q = op.index[1];
+   for(const auto& opB : qops['B']){
+      const auto& op = opB.second;
+      auto pq = oper_unpack(opB.first);
+      int orb_p = pq.first;
+      int orb_q = pq.second;
       int pos_p = orb2pos.at(orb_p);
       int pos_q = orb2pos.at(orb_q);
       // build
@@ -299,16 +298,17 @@ void tns::oper_rbases(const comb& bra,
    cout << endl;
 
    // load renormalized operators 
-   qopers qops_P, qops_Q, qops_S, qops_H;
-   string fname;
+   oper_dict qops;
+   string fname = oper_fname(scratch, p, "rop");
+   oper_load(fname, qops);
  
    // check for Ppq = <pq||sr> aras [r>s]
    if(optype == "P"){ 
-   fname = oper_fname(scratch, p, "ropP");
-   oper_load(fname, qops_P);
-   for(const auto& op : qops_P){
-      int orb_p = op.index[0];
-      int orb_q = op.index[1];
+   for(const auto& opP : qops['P']){
+      const auto& op = opP.second;
+      auto pq = oper_unpack(opP.first);
+      int orb_p = pq.first;
+      int orb_q = pq.second;
       // build
       int dim0 = bsite.get_dim_col();
       int dim1 = ksite.get_dim_col();
@@ -375,11 +375,11 @@ void tns::oper_rbases(const comb& bra,
 
    // check for Qps = <pq||sr> aq^+ar
    if(optype == "Q"){ 
-   fname = oper_fname(scratch, p, "ropQ");
-   oper_load(fname, qops_Q);
-   for(const auto& op : qops_Q){
-      int orb_p = op.index[0];
-      int orb_s = op.index[1];
+   for(const auto& opQ : qops['Q']){
+      const auto& op = opQ.second;
+      auto ps = oper_unpack(opQ.first);
+      int orb_p = ps.first;
+      int orb_s = ps.second;
       // build
       int dim0 = bsite.get_dim_col();
       int dim1 = ksite.get_dim_col();
@@ -445,10 +445,9 @@ void tns::oper_rbases(const comb& bra,
   
    // check for Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    if(optype == "S"){
-   fname = oper_fname(scratch, p, "ropS");
-   oper_load(fname, qops_S);
-   for(const auto& op : qops_S){
-      int orb_p = op.index[0];
+   for(const auto& opS : qops['S']){
+      const auto& op = opS.second;
+      int orb_p = opS.first;
       // build
       int dim0 = bsite.get_dim_col();
       int dim1 = ksite.get_dim_col();
@@ -527,9 +526,8 @@ void tns::oper_rbases(const comb& bra,
 
    // check for H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
    if(optype == "H"){
-   fname = oper_fname(scratch, p, "ropH");
-   oper_load(fname, qops_H);
-   for(const auto& op : qops_H){
+   for(const auto& opH : qops['H']){
+      const auto& op = opH.second;
       // build
       int dim0 = bsite.get_dim_col();
       int dim1 = ksite.get_dim_col();
@@ -623,5 +621,3 @@ void tns::oper_rbases(const comb& bra,
    cout << endl;
    if(nfail > 0) exit(1);
 }
-*/
-
