@@ -12,6 +12,7 @@ vector<double> tns::get_Hdiag(const comb& icomb,
 			      const string scratch,
 			      qtensor3& wf){
    cout << "\ntns::get_Hdiag" << endl;
+/*
    // load Hl, Hc, Hr
    auto pl = icomb.get_l(p);
    auto pc = icomb.get_c(p);
@@ -80,6 +81,7 @@ vector<double> tns::get_Hdiag(const comb& icomb,
 	 } // qc
       } // qr
    } // qm
+*/
    auto diag = wf.to_vector();
    return diag;
 }
@@ -95,6 +97,7 @@ void tns::get_Hx(double* y,
 		 qtensor3& wf){
    bool debug = true;
    if(debug) cout << "\ntns::get_Hx" << endl;
+/*
    int dim = wf.get_dim();
    // const term
    wf.from_array(x);
@@ -138,4 +141,5 @@ void tns::get_Hx(double* y,
         + contract_qt3_qt2_c(wf,Hc);
    // finally copy back to y
    Hwf.to_array(y);
+*/
 }

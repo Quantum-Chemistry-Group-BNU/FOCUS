@@ -101,8 +101,7 @@ qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a,
 qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a, 
 				  const qtensor3& qt3b){
    qsym sym = qt3a.sym + qt3b.sym;
-   // the index is dealt with outside this function, as in tns_oper_kernel.cpp 
-   qtensor2 qt2(sym, qt3a.qcol, qt3b.qcol, 0); 
+   qtensor2 qt2(sym, qt3a.qcol, qt3b.qcol); 
    // loop over external indices
    for(const auto& pr : qt2.qrow){
       const qsym& rsym = pr.first; 

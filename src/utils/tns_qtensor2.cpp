@@ -11,11 +11,7 @@ using namespace tns;
 // constructor for operator <r|o|c>
 qtensor2::qtensor2(const qsym& sym1,
 		   const qsym_space& qrow1, 
-		   const qsym_space& qcol1,
-		   const int nindex){
-   // default value set to -1, only the no. of index matters 
-   // for col_signed() in fermionic direct product! 
-   if(nindex>0) index.resize(nindex,-1); 
+		   const qsym_space& qcol1){
    sym = sym1;
    qrow = qrow1;
    qcol = qcol1;
@@ -37,9 +33,7 @@ qtensor2::qtensor2(const qsym& sym1,
 }
 
 void qtensor2::print(const string msg, const int level) const{
-   cout << "qtensor2: " << msg << " sym=" << sym << " index=";
-   for(int i : index) cout << i << " ";
-   cout << endl;
+   cout << "qtensor2: " << msg << " sym=" << sym << endl; 
    qsym_space_print(qrow,"qrow");
    qsym_space_print(qcol,"qcol");
    if(level >= 1){
@@ -98,9 +92,6 @@ qtensor2 qtensor2::T() const{
    qt2.sym = -sym;
    qt2.qrow = qcol;
    qt2.qcol = qrow;
-   qt2.index = index;
-   // (pq)^+ = q^+p^+
-   reverse(qt2.index.begin(), qt2.index.end());
    for(const auto& p : qblocks){
       const auto& key = p.first;
       const auto& blk = qblocks.at(key);
@@ -120,7 +111,6 @@ qtensor2 qtensor2::col_signed(const double fac) const{
    qt2.sym = sym;
    qt2.qrow = qrow;
    qt2.qcol = qcol;
-   qt2.index = index;
    qt2.qblocks = qblocks;
    for(auto& p : qt2.qblocks){
       auto& key = p.first;
@@ -139,7 +129,6 @@ qtensor2 qtensor2::operator -() const{
    qt2.sym = sym;
    qt2.qrow = qrow;
    qt2.qcol = qcol;
-   qt2.index = index;
    qt2.qblocks = qblocks;
    for(auto& p : qt2.qblocks){
       auto& key = p.first;

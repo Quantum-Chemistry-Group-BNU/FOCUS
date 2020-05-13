@@ -31,7 +31,7 @@ string tns::oper_fname(const string scratch,
    return fname;
 }
  
-void tns::oper_save(const string fname, const qopers& qops){
+void tns::oper_save(const string fname, const oper_dict& qops){
    bool debug = false;
    if(debug){
       cout << "tns::oper_save fname=" << fname 
@@ -42,7 +42,7 @@ void tns::oper_save(const string fname, const qopers& qops){
    save << qops;
 }
 
-void tns::oper_load(const string fname, qopers& qops){
+void tns::oper_load(const string fname, oper_dict& qops){
    bool debug = false;
    if(debug){
       cout << "tns::oper_load fname=" << fname << endl;

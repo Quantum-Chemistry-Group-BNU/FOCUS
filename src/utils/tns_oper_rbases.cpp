@@ -11,6 +11,7 @@ using namespace std;
 using namespace linalg;
 using namespace tns;
 
+/*
 // normal operators
 void tns::oper_rbases(const comb& bra,
 		      const comb& ket, 
@@ -622,3 +623,5 @@ void tns::oper_rbases(const comb& bra,
    cout << endl;
    if(nfail > 0) exit(1);
 }
+*/
+

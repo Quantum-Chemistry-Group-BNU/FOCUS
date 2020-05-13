@@ -65,10 +65,10 @@ matrix tns::get_Hmat(const comb& bra,
    // environement
    oper_env_right(bra, ket, int2e, int1e, scratch);
    // load
+   oper_dict qops;
    auto p = make_pair(0,0); 
-   string fname = oper_fname(scratch, p, "rightH");
-   qopers qops;
+   string fname = oper_fname(scratch, p, "rop");
    oper_load(fname, qops);
-   auto Hmat = qops[0].to_matrix();
+   auto Hmat = qops['H'][0].to_matrix();
    return Hmat;
 }

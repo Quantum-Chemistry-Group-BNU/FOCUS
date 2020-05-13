@@ -21,15 +21,13 @@ struct qtensor2{
 	 ar & qrow;
 	 ar & qcol;
 	 ar & qblocks;
-	 ar & index;
       }
    public:
       // constructor
       qtensor2(){};
       qtensor2(const qsym& sym1, 
 	       const qsym_space& qrow1, 
-	       const qsym_space& qcol1,
-  	       const int nindex); 
+	       const qsym_space& qcol1);
       // useful functions
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
@@ -56,8 +54,6 @@ struct qtensor2{
       qsym_space qrow;
       qsym_space qcol;
       std::map<std::pair<qsym,qsym>,linalg::matrix> qblocks;
-      // for operators (ZL@20200429); not handled in operations +/-;
-      std::vector<short> index; 
 };
 
 // --- rank-3 tensor ---
