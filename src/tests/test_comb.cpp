@@ -98,8 +98,8 @@ int tests::test_comb(){
       cout << "error: diff_Sij > thresh=" << thresh << endl;
       exit(1);
    }
-
-   /*
+  
+   /* 
    // check rdm1 & Bpq
    int k = int1e.sorb;
    linalg::matrix rdm1(k,k); 
@@ -119,7 +119,6 @@ int tests::test_comb(){
    Hmat.print("Hmat");
    Hmat.save("fci_Hmat");
    auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
-   schd.remove_scratch();
    Hij.print("Hij");
    diff = normF(Hmat-Hij);
    cout << "diff_Hij=" << diff << endl;
@@ -127,6 +126,7 @@ int tests::test_comb(){
       cout << "error: diff_Hij > thresh=" << thresh << endl;
       exit(1);
    }
+   schd.remove_scratch();
 
    return 0;
 }

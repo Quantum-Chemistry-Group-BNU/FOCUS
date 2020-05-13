@@ -3,10 +3,6 @@
 #include "tns_qtensor.h"
 #include "tns_oper.h"
 
-#include "../core/matrix.h"
-#include "../core/linalg.h"
-
-using namespace linalg;
 using namespace std;
 using namespace tns;
 
@@ -44,6 +40,7 @@ void tns::oper_renorm_rops(const comb& bra,
 	<< " type=" << bra.type.at(p) << endl;
    oper_dict qops;
    // construct directly for boundary case {C,A,B,S,H}
+   // exclude (0,0) here to get hamiltonian at (0,0)
    if(bra.type.at(p) == 0 && ip != 0){
       int kp = bra.get_kp(p);
       oper_build_cops(kp, int2e, int1e, qops);
