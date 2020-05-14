@@ -251,8 +251,8 @@ vector<directed_bond> comb::get_sweeps(){
       }
       // branch backward
       for(int j=topo[i].size()-2; j>0; j--){
-         auto coord0 = make_pair(i,j);
-         auto coord1 = make_pair(i,j-1);      
+         auto coord0 = make_pair(i,j-1);      
+         auto coord1 = make_pair(i,j);
          sweeps.push_back(make_tuple(coord0,coord1,0));
       }
       // backbone forward
@@ -264,8 +264,8 @@ vector<directed_bond> comb::get_sweeps(){
    }
    // backward on backbone
    for(int i=nbackbone-2; i>=2; i--){
-      auto coord0 = make_pair(i,0);
-      auto coord1 = make_pair(i-1,0);      
+      auto coord0 = make_pair(i-1,0);      
+      auto coord1 = make_pair(i,0);
       sweeps.push_back(make_tuple(coord0,coord1,0));
    }
    assert(sweeps.size() == 2*(ntotal-nboundary-1));

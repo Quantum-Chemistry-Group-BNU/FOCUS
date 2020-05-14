@@ -1,5 +1,5 @@
-#include "tns_qtensor.h"
 #include "../core/linalg.h"
+#include "tns_qtensor.h"
 #include <iostream>
 #include <algorithm>
 

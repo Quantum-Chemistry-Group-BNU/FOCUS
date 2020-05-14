@@ -147,13 +147,30 @@ void oper_renorm_ropH(const comb& bra,
 	              const integral::two_body& int2e,
 	              const integral::one_body& int1e,
 		      const bool debug=false);
-	
-// driver for renorm in different directions 
-void oper_build_cops(const int kp,
-		     const integral::two_body& int2e,
-		     const integral::one_body& int1e,
-		     oper_dict& qops);
- 
+
+// helpers for building/loading environment
+oper_dict oper_build_local(const int kp,
+		           const integral::two_body& int2e,
+		           const integral::one_body& int1e);
+
+void oper_build_boundary(const comb& icomb,
+			 const integral::two_body& int2e,
+			 const integral::one_body& int1e,
+		         const std::string scratch);
+
+oper_dict oper_get_cqops(const comb& icomb,
+		         const comb_coord& p,
+			 const std::string scratch);
+
+oper_dict oper_get_rqops(const comb& icomb,
+		         const comb_coord& p,
+			 const std::string scratch);
+
+oper_dict oper_get_lqops(const comb& icomb,
+		         const comb_coord& p,
+			 const std::string scratch);
+
+// driver for renorm in different directions  
 void oper_renorm_rops(const comb& bra, 
 		      const comb& ket,
 		      const comb_coord& p, 
@@ -166,6 +183,13 @@ void oper_env_right(const comb& bra,
 	            const integral::two_body& int2e,
 	            const integral::one_body& int1e,
 		    const std::string scratch=".");
+
+void oper_renorm_lops(const comb& bra, 
+		      const comb& ket,
+		      const comb_coord& p, 
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e,
+		      const std::string scratch);
 
 // generator operators based on rbases from determinants for debugging
 // normal operators

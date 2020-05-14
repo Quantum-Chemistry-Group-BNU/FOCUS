@@ -126,12 +126,13 @@
 	  - data structure for wavefunction (wf) [DONE@20200512]
 	    - qtensor2 (with sym) : operators O
   	    - qtensor3 (with sym) : site tensor A and O*A 
-	    - qtensor3 (with dir) : wf on one site  
+	    - qtensor3 (with dir) : wf on one site 
+ 	  - rewrite tns_oper to put all operators in memory [DONE@20200514] 
 	  - one-dot opt:
 	    - implement Hdiag [DONE@20200512] 
 	    - implement Hx?
 	    - automated analysis tool for generating formula
-	  - decimation?
+	  - decimation? qt3->qt2
           - renormalization of lops?
 
  202005xx extension to two-dot opt: 

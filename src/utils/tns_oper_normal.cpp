@@ -1,12 +1,9 @@
 #include "../settings/global.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
 #include "tns_comb.h" 
 #include "tns_qtensor.h"
 #include "tns_oper.h"
 
 using namespace std;
-using namespace linalg;
 using namespace tns;
 
 void tns::oper_renorm_ropC(const comb& bra,

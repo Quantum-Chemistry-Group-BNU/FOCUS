@@ -119,6 +119,44 @@ struct qtensor3{
       std::map<std::tuple<qsym,qsym,qsym>,std::vector<linalg::matrix>> qblocks;
 };
 
+// --- rank-4 tensor: only for holding two-dot wavefunction ---
+struct qtensor4{
+   private:
+      friend class boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+         ar & sym;
+	 ar & qmid;
+         ar & qver;
+         ar & qrow;
+	 ar & qcol;
+	 ar & qblocks;
+      }
+   public:
+      // constructor
+      qtensor4(){};
+      qtensor4(const qsym& sym1,
+	       const qsym_space& qmid1,
+	       const qsym_space& qver1,
+	       const qsym_space& qrow1, 
+	       const qsym_space& qcol1);
+      void print(const std::string msg, const int level=0) const;
+      // for Davidson algorithm
+      int get_dim() const;
+      void from_array(const double* array);
+      void to_array(double* array) const; 
+      // merge
+      qtensor3 mergeLC();
+      qtensor3 mergeCR();
+   public:
+      qsym sym; 
+      qsym_space qmid; 
+      qsym_space qver;
+      qsym_space qrow; 
+      qsym_space qcol; 
+      std::map<std::tuple<qsym,qsym,qsym,qsym>,std::vector<linalg::matrix>> qblocks;
+};
+
 // --- tensor linear algebra : contractions ---
 qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b);

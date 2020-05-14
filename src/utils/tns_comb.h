@@ -31,9 +31,18 @@ class comb{
       comb_coord get_c(const comb_coord& p) const{ return std::get<0>(neighbor.at(p)); }
       comb_coord get_l(const comb_coord& p) const{ return std::get<1>(neighbor.at(p)); }
       comb_coord get_r(const comb_coord& p) const{ return std::get<2>(neighbor.at(p)); }
-      bool ifbuild_c(const comb_coord& p) const{ return this->get_c(p) == std::make_pair(-1,-1); }
-      bool ifbuild_l(const comb_coord& p) const{ return type.at(this->get_l(p)) == 0; }
-      bool ifbuild_r(const comb_coord& p) const{ return type.at(this->get_r(p)) == 0; }
+      bool ifbuild_c(const comb_coord& p) const{ return get_c(p) == std::make_pair(-1,-1); }
+      bool ifbuild_l(const comb_coord& p) const{ return type.at(get_l(p)) == 0; }
+      bool ifbuild_r(const comb_coord& p) const{ return type.at(get_r(p)) == 0; }
+      qsym_space get_qc(const comb_coord& p) const{
+         return ifbuild_c(p)? phys_qsym_space : rsites.at(p).qmid;
+      }
+      qsym_space get_ql(const comb_coord& p) const{
+         return lsites.at(get_l(p)).qcol;
+      }
+      qsym_space get_qr(const comb_coord& p) const{ 
+         return rsites.at(get_r(p)).qcol;
+      }
       // --- boundary site ---
       qtensor3 get_bsite() const; 
       // --- sweep sequence ---

@@ -4,84 +4,42 @@
 using namespace std;
 using namespace tns;
 
-vector<double> tns::get_Hdiag(const comb& icomb,
-			      const comb_coord& p,
-	              	      const integral::two_body& int2e,
-	              	      const integral::one_body& int1e,
+vector<double> tns::get_Hdiag(oper_dict& cqops,
+			      oper_dict& lqops,
+			      oper_dict& rqops,
 			      const double ecore,
-			      const string scratch,
 			      qtensor3& wf){
    cout << "\ntns::get_Hdiag" << endl;
-/*
    // load Hl, Hc, Hr
-   auto pl = icomb.get_l(p);
-   auto pc = icomb.get_c(p);
-   auto pr = icomb.get_r(p);
-   string fname0l, fname0c, fname0r;
-   qopers lqops_H, cqops_H, rqops_H;
-   if(icomb.ifbuild_l(p)){
-      int kp = icomb.get_kp(pl);
-      auto lqops_ca = oper_dot_ca(kp);
-      oper_dot_H(kp, int2e, int1e, lqops_ca, lqops_H);
-   }else{
-      fname0l = oper_fname(scratch, pl, "lopH");
-      oper_load(fname0l, lqops_H);
-   }
-   if(icomb.ifbuild_c(p)){
-      int kp = icomb.get_kp(p);
-      auto cqops_ca = oper_dot_ca(kp);
-      oper_dot_H(kp, int2e, int1e, cqops_ca, cqops_H);
-   }else{
-      // load only if C is branch, which is in right canonical form 
-      fname0c = oper_fname(scratch, pc, "ropH"); 
-      oper_load(fname0c, cqops_H);
-   }
-   if(icomb.ifbuild_r(p)){
-      int kp = icomb.get_kp(pr);
-      auto rqops_ca = oper_dot_ca(kp);
-      oper_dot_H(kp, int2e, int1e, rqops_ca, rqops_H);
-   }else{
-      fname0r = oper_fname(scratch, pr, "ropH");
-      oper_load(fname0r, rqops_H);
-   }
-   auto Hl = lqops_H[0];
-   auto Hc = cqops_H[0];
-   auto Hr = rqops_H[0];
+   auto& Hl = lqops['H'][0];
+   auto& Hc = cqops['H'][0];
+   auto& Hr = rqops['H'][0];
    // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
-   for(const auto& pm : wf.qmid){
-      const auto& qm = pm.first;
-      int mdim = pm.second; 
-      for(const auto& pr : wf.qrow){
-         const auto& qr = pr.first;
-         int rdim = pr.second;
-         for(const auto& pc : wf.qcol){
-            const auto& qc = pc.first;
-            int cdim = pc.second;
-	    auto key = make_tuple(qm,qr,qc);
-	    auto& blk = wf.qblocks.at(key);
-	    if(blk.size() > 0){
-	       int size = rdim*cdim;
-	       auto lkey = make_pair(qr,qr); // left->row
-	       auto ckey = make_pair(qm,qm); // central->mid
-	       auto rkey = make_pair(qc,qc); // row->col
-	       auto& lblk = Hl.qblocks.at(lkey);
-	       auto& cblk = Hc.qblocks.at(ckey);
-	       auto& rblk = Hr.qblocks.at(rkey);
-	       for(int m=0; m<mdim; m++){
-		  for(int c=0; c<cdim; c++){
-		     for(int r=0; r<rdim; r++){
-			blk[m](r,c) = ecore 
-				    + lblk(r,r) 
-				    + cblk(m,m)
-				    + rblk(c,c);
-		     } // r
-		  } // c
-	       } // m
-	    }
-	 } // qc
-      } // qr
-   } // qm
-*/
+   for(auto& p : wf.qblocks){
+      auto& blk = p.second;
+      int mdim = blk.size();
+      if(mdim > 0){
+         auto& q = p.first;
+         auto qm = get<0>(q);
+         auto qr = get<1>(q);
+         auto qc = get<2>(q);
+	 auto& cblk = Hc.qblocks[make_pair(qm,qm)]; // central->mid
+	 auto& lblk = Hl.qblocks[make_pair(qr,qr)]; // left->row
+	 auto& rblk = Hr.qblocks[make_pair(qc,qc)]; // row->col
+	 int rdim = blk[0].rows();
+	 int cdim = blk[0].cols();
+	 for(int m=0; m<mdim; m++){
+	    for(int c=0; c<cdim; c++){
+	       for(int r=0; r<rdim; r++){
+	          blk[m](r,c) = ecore 
+			      + lblk(r,r) 
+			      + cblk(m,m)
+			      + rblk(c,c);
+	       } // r
+	    } // c
+	 } // m
+      }
+   } // qblocks
    auto diag = wf.to_vector();
    return diag;
 }
@@ -90,56 +48,59 @@ void tns::get_Hx(double* y,
 		 const double* x,
 		 const comb& icomb,
 		 const comb_coord& p,
-	         const integral::two_body& int2e,
+	         oper_dict& cqops,
+		 oper_dict& lqops,
+		 oper_dict& rqops,
+		 const integral::two_body& int2e,
 	         const integral::one_body& int1e,
 		 const double ecore,
-		 const string scratch,
 		 qtensor3& wf){
    bool debug = true;
    if(debug) cout << "\ntns::get_Hx" << endl;
-/*
-   int dim = wf.get_dim();
    // const term
    wf.from_array(x);
    auto Hwf = ecore*wf;
-   // load Hl, Hc, Hr
-   auto pl = icomb.get_l(p);
-   auto pc = icomb.get_c(p);
-   auto pr = icomb.get_r(p);
-   string fname0l, fname0c, fname0r;
-   qopers lqops_H, cqops_H, rqops_H;
-   if(icomb.ifbuild_l(p)){
-      int kp = icomb.get_kp(pl);
-      auto lqops_ca = oper_dot_ca(kp);
-      oper_dot_H(kp, int2e, int1e, lqops_ca, lqops_H);
-   }else{
-      fname0l = oper_fname(scratch, pl, "lopH");
-      oper_load(fname0l, lqops_H);
-   }
-   if(icomb.ifbuild_c(p)){
-      int kp = icomb.get_kp(p);
-      auto cqops_ca = oper_dot_ca(kp);
-      oper_dot_H(kp, int2e, int1e, cqops_ca, cqops_H);
-   }else{
-      // load only if C is branch, which is in right canonical form 
-      fname0c = oper_fname(scratch, pc, "ropH"); 
-      oper_load(fname0c, cqops_H);
-   }
-   if(icomb.ifbuild_r(p)){
-      int kp = icomb.get_kp(pr);
-      auto rqops_ca = oper_dot_ca(kp);
-      oper_dot_H(kp, int2e, int1e, rqops_ca, rqops_H);
-   }else{
-      fname0r = oper_fname(scratch, pr, "ropH");
-      oper_load(fname0r, rqops_H);
-   }
-   auto Hl = lqops_H[0];
-   auto Hc = cqops_H[0];
-   auto Hr = rqops_H[0];
-   // Hl*wf
+/*   
+   // construct H*wf
+   // 1. local term: Hl*IR
    Hwf += contract_qt3_qt2_l(wf,Hl)
-        + contract_qt3_qt2_c(wf,Hc);
+   // 2. local term: Il*HR
+   Hwf += transform_ropH_wf(wf,p,cqops,rqops,int2e,int1e);
+   // 3. pL^+ S_pL^R + h.c.
+   for(const auto& lopC : lqops['C']){
+      int pL = lopC.first;
+      const auto& lop = lopC.second;
+      // pL^+ (S_pL^R * wf)
+      auto Swf = transform_ropS_wf(wf,p,cqops,rqops,int2e,int1e,0);
+      Hwf += contract_qt3_qt2_l(wf,lop);
+      // S_pL^R^+ * pL * wf
+      auto Swf = transform_ropS_wf(wf,p,cqops,rqops,int2e,int1e,1);
+      Hwf += contract_qt3_qt2_l(wf,lop.T());
+   }
+   // 4. qR^+ S_qR^L + h.c.
+   for(const auto& ropC : rqops['C']){
+      int qR = ropC.first;
+      const auto& rop = ropC.second;
+      auto Swf = transform_lopS_wf(wf,p,cqops,rqops,int2e,int1e,0);
+      auto Swf = transform_lopS_wf(wf,p,cqops,rqops,int2e,int1e,1);
+      // Hwf += 
+   } 
+   // ifAB:
+   // 5. A: A_pLqL^L*P_pLqL^R + h.c.
+   for(const auto& lopA : lqops['A']){
+      const auto& lop = lopA.second;
+      auto pq = oper_unpack(lopA.first);
+      int pL = pq.first;
+      int qL = pq.second; 
+   }
+   // 6. B: Q: B_pLsL^L*Q_pLsL^R
+   for(const auto& lopB : lqops['B']){
+      const auto& lop = lopB.second;
+      auto ps = oper_unpack(lopB.first);
+      int pL = ps.first;
+      int sL = ps.second;
+   } 
+*/
    // finally copy back to y
    Hwf.to_array(y);
-*/
 }
