@@ -163,6 +163,7 @@ void tns::opt_twodot(const input::schedule& schd,
    qsym sym_state(schd.nelec,nelec_a);
    qtensor4 wf(sym_state,qm,qv,ql,qr);
    wf.print("wf",1);
+   wf.random();
    cout << wf.get_dim() << endl;
 
    qsym_space qlc1, qc2r;
@@ -204,8 +205,8 @@ void tns::opt_twodot(const input::schedule& schd,
    cout << qt2xy.get_dim_row() << endl;
    cout << qt2xy.get_dim_col() << endl;
    cout << qt2xy.get_dim() << endl;
-   exit(1);
-/*
+
+   cout << "---qt3qt2---" << endl;
    qsym_space qlc, qcr;
    qsym_dpt dpta, dptb;
    qsym_space_dpt(ql,qm,qlc1,dpt1);
@@ -219,19 +220,25 @@ void tns::opt_twodot(const input::schedule& schd,
    qt3a.print("qt3a",1);
    cout << qt3a.get_dim() << endl;
 
-   auto qt2x = merge_qt3_qt2_cr(qt3,qcr2,dpt2);
+   auto qt2x = merge_qt3_qt2_cr(qt3,qc2r,dpt2);
    qt2x.print("qt2x",1);
    cout << qt2x.get_dim() << endl;
 
    auto qt3b = split_qt3_qt2_cr(qt2x,qv,qr,dpt2);
    qt3b.print("qt3b",1);
    cout << qt3b.get_dim() << endl;
-*/
+
+   auto qt3s = split_qt3_qt2_lr(qt2xy,ql,qr,dptx);
+   qt3s.print("qt3s",1);
+   cout << qt3s.get_dim() << endl;
+
+   auto qt2m = merge_qt3_qt2_lr(qt3s,qlr,dptx);
+   qt2m.print("qt2m",1);
+   cout << qt2m.get_dim() << endl;
+   cout << "diff=" << (qt2m-qt2xy).normF() << endl;
+   cout << "normF=" << qt2m.normF() << endl;
+    
    // test decimation in various directions
-
-
-
-
 
    // expand into sites
 

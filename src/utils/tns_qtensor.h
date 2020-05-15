@@ -51,6 +51,7 @@ struct qtensor2{
       double normF() const;
       double check_identity(const double thresh_ortho,
 		            const bool debug=false) const;
+      void random();
       int get_dim() const;
       // symmetry conservation rule [20200515]
       bool ifconserve(const qsym& qr, const qsym& qc) const{
@@ -108,6 +109,7 @@ struct qtensor3{
       friend qtensor3 operator *(const double fac, const qtensor3& qt);  
       friend qtensor3 operator *(const qtensor3& qt, const double fac); 
       // for Davidson algorithm
+      void random();
       int get_dim() const;
       void from_array(const double* array);
       void to_array(double* array) const; 
@@ -151,6 +153,7 @@ struct qtensor4{
 	       const qsym_space& qcol1);
       void print(const std::string msg, const int level=0) const;
       // for Davidson algorithm
+      void random();
       int get_dim() const;
       void from_array(const double* array);
       void to_array(double* array) const; 
@@ -166,50 +169,54 @@ struct qtensor4{
 
 // --- symmetry operations : merge & expand operations ---
 
-/*
 // one-dot wavefunction
+// matrix storage order : (lc,r) [fortran] 
 qtensor2 merge_qt3_qt2_lc(const qtensor3& qt3,
 			  const qsym_space& qlc, 
 			  const qsym_dpt& dpt);
 qtensor3 split_qt3_qt2_lc(const qtensor2& qt2,
-			  const qsym_space& ql,
-			  const qsym_space& qc,
+			  const qsym_space& qlx,
+			  const qsym_space& qcx,
 			  const qsym_dpt& dpt);
+// matrix storage order : (l,rc) 
 qtensor2 merge_qt3_qt2_cr(const qtensor3& qt3,
 			  const qsym_space& qcr, 
 			  const qsym_dpt& dpt);
 qtensor3 split_qt3_qt2_cr(const qtensor2& qt2,
-			  const qsym_space& qc,
-			  const qsym_space& qr,
+			  const qsym_space& qcx,
+			  const qsym_space& qrx,
 			  const qsym_dpt& dpt);
+// matrix storage order : (lr,c) 
 qtensor2 merge_qt3_qt2_lr(const qtensor3& qt3,
 			  const qsym_space& qlr, 
 			  const qsym_dpt& dpt);
 qtensor3 split_qt3_qt2_lr(const qtensor2& qt2,
-			  const qsym_space& ql,
-			  const qsym_space& qr,
+			  const qsym_space& qlx,
+			  const qsym_space& qrx,
 			  const qsym_dpt& dpt);
-*/
 
 // two-dot wavefunction
+// matrix storage order : (lr,c2c1)
 qtensor2 merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
 			       const qsym_space& qlr,
 		               const qsym_space& qc1c2,
 			       const qsym_dpt& dpt1,
 			       const qsym_dpt& dpt2);	       
+// matrix storage order : [c2](lc1,r) 
 qtensor3 merge_qt4_qt3_lc1(const qtensor4& qt4,
 			   const qsym_space& qlc1, 
 			   const qsym_dpt& dpt);
 qtensor4 split_qt4_qt3_lc1(const qtensor3& qt3,
-			   const qsym_space& ql,
+			   const qsym_space& qlx,
 			   const qsym_space& qc1,
 			   const qsym_dpt& dpt);
+// matrix storage order : [c1](l,rc2)
 qtensor3 merge_qt4_qt3_c2r(const qtensor4& qt4,
 			   const qsym_space& qc2r, 
 			   const qsym_dpt& dpt);
 qtensor4 split_qt4_qt3_c2r(const qtensor3& qt3,
 			   const qsym_space& qc2,
-			   const qsym_space& qr,
+			   const qsym_space& qrx,
 			   const qsym_dpt& dpt);
 
 // --- tensor linear algebra : contractions ---

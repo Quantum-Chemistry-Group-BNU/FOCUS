@@ -202,6 +202,20 @@ qtensor3 tns::operator *(const qtensor3& qt, const double fac){
 }
 
 // for Davidson algorithm
+void qtensor3::random(){
+   for(auto& p : qblocks){
+      auto& blk = p.second;
+      if(blk.size() > 0){
+	 int mdim = blk.size();
+	 int rdim = blk[0].rows();
+	 int cdim = blk[0].cols();
+	 for(int m=0; m<mdim; m++){
+	    blk[m] = random_matrix(rdim,cdim);
+	 }
+      }
+   }
+}
+
 int qtensor3::get_dim() const{
    int dim = 0;
    for(const auto& p : qblocks){
@@ -244,3 +258,4 @@ void qtensor3::to_array(double* array) const{
       }
    }
 }
+

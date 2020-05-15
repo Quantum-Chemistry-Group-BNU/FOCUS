@@ -80,6 +80,20 @@ void qtensor4::print(const string msg, const int level) const{
 }
 
 // for Davidson algorithm
+void qtensor4::random(){
+   for(auto& p : qblocks){
+      auto& blk = p.second;
+      if(blk.size() > 0){
+	 int mdim = blk.size();
+	 int rdim = blk[0].rows();
+	 int cdim = blk[0].cols();
+	 for(int m=0; m<mdim; m++){
+	    blk[m] = random_matrix(rdim,cdim);
+	 }
+      }
+   }
+}
+
 int qtensor4::get_dim() const{
    int dim = 0;
    for(const auto& p : qblocks){

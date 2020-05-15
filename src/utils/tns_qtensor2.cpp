@@ -240,6 +240,17 @@ double qtensor2::check_identity(const double thresh_ortho,
    return mdiff;
 }
 
+void qtensor2::random(){
+   for(auto& p : qblocks){
+      auto& blk = p.second;
+      if(blk.size()>0){
+	 int rdim = blk.rows();
+	 int cdim = blk.cols();
+	 blk = random_matrix(rdim,cdim);
+      }
+   }
+}
+
 int qtensor2::get_dim() const{
    int dim = 0;
    for(const auto& p : qblocks){
