@@ -11,7 +11,9 @@ using namespace tns;
 // constructor for operator <r|o|c>
 qtensor2::qtensor2(const qsym& sym1,
 		   const qsym_space& qrow1, 
-		   const qsym_space& qcol1){
+		   const qsym_space& qcol1,
+		   const vector<bool> dir1){
+   dir = dir1;
    sym = sym1;
    qrow = qrow1;
    qcol = qcol1;
@@ -23,7 +25,7 @@ qtensor2::qtensor2(const qsym& sym1,
 	 int cdim = pc.second;
 	 auto key = make_pair(qr,qc);
 	 // symmetry rule for <r|O|c>
-         if(qr == sym + qc){
+         if(ifconserve(qr,qc)){
 	    qblocks[key] = matrix(rdim,cdim);
 	 }else{
 	    qblocks[key] = matrix();
@@ -33,7 +35,10 @@ qtensor2::qtensor2(const qsym& sym1,
 }
 
 void qtensor2::print(const string msg, const int level) const{
-   cout << "qtensor2: " << msg << " sym=" << sym << endl; 
+   cout << "qtensor2: " << msg << " sym=" << sym;
+   cout << " dir=";
+   for(auto b : dir) cout << b << " ";
+   cout << endl; 
    qsym_space_print(qrow,"qrow");
    qsym_space_print(qcol,"qcol");
    if(level >= 1){
@@ -108,6 +113,7 @@ qtensor2 qtensor2::T() const{
 // nonzero blocks scaled by fac*(-1)^p(c)
 qtensor2 qtensor2::col_signed(const double fac) const{
    qtensor2 qt2;
+   qt2.dir = dir;
    qt2.sym = sym;
    qt2.qrow = qrow;
    qt2.qcol = qcol;
@@ -126,6 +132,7 @@ qtensor2 qtensor2::col_signed(const double fac) const{
 
 qtensor2 qtensor2::operator -() const{
    qtensor2 qt2;
+   qt2.dir = dir;
    qt2.sym = sym;
    qt2.qrow = qrow;
    qt2.qcol = qcol;
@@ -140,6 +147,7 @@ qtensor2 qtensor2::operator -() const{
 
 // algorithmic operations like matrix
 qtensor2& qtensor2::operator +=(const qtensor2& qt){
+   assert(dir == qt.dir);
    assert(sym == qt.sym); // symmetry blocking must be the same
    for(auto& p : qblocks){
       auto& key = p.first;
@@ -151,6 +159,7 @@ qtensor2& qtensor2::operator +=(const qtensor2& qt){
 }
 
 qtensor2& qtensor2::operator -=(const qtensor2& qt){
+   assert(dir == qt.dir);
    assert(sym == qt.sym); // symmetry blocking must be the same
    for(auto& p : qblocks){
       auto& key = p.first;
@@ -202,6 +211,7 @@ double qtensor2::normF() const{
    return sqrt(sum);
 }
 
+// check whether <l|o|r> is a faithful rep for o=I
 double qtensor2::check_identity(const double thresh_ortho,
 			        const bool debug) const{
    double mdiff = -1.0;
@@ -228,4 +238,13 @@ double qtensor2::check_identity(const double thresh_ortho,
       }
    }
    return mdiff;
+}
+
+int qtensor2::get_dim() const{
+   int dim = 0;
+   for(const auto& p : qblocks){
+      auto& blk = p.second;
+      dim += blk.size();
+   }
+   return dim;
 }

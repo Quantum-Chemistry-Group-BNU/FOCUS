@@ -244,14 +244,3 @@ void qtensor3::to_array(double* array) const{
       }
    }
 }
-
-void qtensor3::from_vector(const vector<double>& vec){
-   from_array(vec.data());
-}
-
-vector<double> qtensor3::to_vector() const{
-   int dim = get_dim();
-   vector<double> vec(dim,0.0);
-   to_array(vec.data());
-   return vec;
-}

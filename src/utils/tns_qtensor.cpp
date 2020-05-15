@@ -135,3 +135,237 @@ qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a,
    } // qr
    return qt2;
 }
+
+// --- symmetry operations : merge & expand operations ---
+
+// two-dot wavefunction
+qtensor2 tns::merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
+			            const qsym_space& qlr,
+		                    const qsym_space& qc1c2,
+			            const qsym_dpt& dpt1,
+			            const qsym_dpt& dpt2){
+   const auto& sym = qt4.sym;
+   qtensor2 qt2(sym, qlr, qc1c2, {0, 1, 1});
+   // col
+   for(const auto& pc1c2 : qc1c2){
+      auto q2 = pc1c2.first;
+      for(const auto& pcc12 : dpt2.at(q2)){
+	 auto qcc12 = pcc12.first;
+	 auto qm = qcc12.first;
+	 auto qv = qcc12.second;
+         int mdim = get<0>(pcc12.second);
+         int vdim = get<0>(pcc12.second);
+         int joff = get<0>(pcc12.second);
+	 // row
+	 for(const auto& plr : qlr){
+            auto q1 = plr.first;
+	    for(const auto& plr12 : dpt1.at(q1)){
+	       auto qlr12 = plr12.first;
+	       auto qr = qlr12.first;
+	       auto qc = qlr12.second;
+	       int rdim = get<0>(plr12.second);
+	       int cdim = get<0>(plr12.second);
+	       int ioff = get<0>(plr12.second);
+	       auto& blk2 = qt2.qblocks[make_pair(q1,q2)];
+	       const auto& blk4 = qt4.qblocks.at(make_tuple(qm,qv,qr,qc));
+	       if(blk2.size()>0 && blk4.size()>0){
+		  for(int imv=0; imv<mdim*vdim; imv++){
+		     int j = joff+imv; // im*vdim+iv
+		     for(int ic=0; ic<cdim; ic++){
+		        for(int ir=0; ir<rdim; ir++){
+			   int i = ioff+ic*rdim+ir;
+			   blk2(i,j) = blk4[imv](ir,ic);
+			} // ir
+		     } // ic
+		  } // imv
+	       }
+	    } // plr12
+	 } // plr
+      }  // pcc12
+   } // pc1c2
+   return qt2;
+}	
+
+// A[l,c1,c2,r]->A[lc1,c2,r]
+qtensor3 tns::merge_qt4_qt3_lc1(const qtensor4& qt4,
+			        const qsym_space& qlc1, 
+			        const qsym_dpt& dpt){
+   const auto& sym = qt4.sym;
+   const auto& qver = qt4.qver;
+   const auto& qcol = qt4.qcol;
+   qtensor3 qt3(sym, qver, qlc1, qcol, {0,1,1,1});
+   for(const auto& pv : qver){
+      auto qv = pv.first;
+      int vdim = pv.second;
+      for(const auto& plc1 : qlc1){
+         auto qlc = plc1.first;
+         for(const auto& p12 : dpt.at(qlc)){
+	    auto q12 = p12.first;
+	    auto qr = q12.first;  // l
+	    auto qm = q12.second; // c1
+	    int rdim = get<0>(p12.second);
+	    int mdim = get<1>(p12.second);
+            int ioff = get<2>(p12.second);
+	    for(const auto& pc : qcol){
+               auto qc = pc.first;
+	       int cdim = pc.second;
+	       auto& blk3 = qt3.qblocks[make_tuple(qv,qlc,qc)];
+	       const auto& blk4 = qt4.qblocks.at(make_tuple(qm,qv,qr,qc)); 
+	       if(blk3.size()>0 && blk4.size()>0){
+	          // merging block blk3[v](lcdim,cdim)
+		  for(int im=0; im<mdim; im++){
+		     for(int iv=0; iv<vdim; iv++){
+	               for(int ic=0; ic<cdim; ic++){
+		          for(int ir=0; ir<rdim; ir++){
+			     int ilc = ioff+im*rdim+ir; // store (ir,im) 
+		             blk3[iv](ilc,ic) = blk4[im*vdim+iv](ir,ic);
+		          } // ir
+		       } // ic
+		     } // iv
+		  } // im
+	       }
+	    } // c
+	 } // rm
+      } // lc1
+   } // v
+   return qt3;
+}
+
+// A[l,c1,c2,r]<-A[lc1,c2,r]
+qtensor4 tns::split_qt4_qt3_lc1(const qtensor3& qt3,
+			        const qsym_space& ql,
+			        const qsym_space& qc1, 
+			        const qsym_dpt& dpt){
+   const auto& sym = qt3.sym;
+   const auto& qlc1 = qt3.qrow;
+   const auto& qver = qt3.qmid;
+   const auto& qcol = qt3.qcol;
+   qtensor4 qt4(sym, qc1, qver, ql, qcol);
+   for(const auto& pv : qver){
+      auto qv = pv.first;
+      int vdim = pv.second;
+      for(const auto& plc1 : qlc1){
+         auto qlc = plc1.first;
+         for(const auto& p12 : dpt.at(qlc)){
+	    auto q12 = p12.first;
+	    auto qr = q12.first;  // l
+	    auto qm = q12.second; // c1
+	    int rdim = get<0>(p12.second);
+	    int mdim = get<1>(p12.second);
+            int ioff = get<2>(p12.second);
+	    for(const auto& pc : qcol){
+               auto qc = pc.first;
+	       int cdim = pc.second;
+	       auto& blk4 = qt4.qblocks[make_tuple(qm,qv,qr,qc)]; 
+	       const auto& blk3 = qt3.qblocks.at(make_tuple(qv,qlc,qc));
+	       if(blk3.size()>0 && blk4.size()>0){
+	          // merging block blk3[v](lcdim,cdim) reversed
+		  for(int im=0; im<mdim; im++){
+		     for(int iv=0; iv<vdim; iv++){
+	               for(int ic=0; ic<cdim; ic++){
+		          for(int ir=0; ir<rdim; ir++){
+			     int ilc = ioff+im*rdim+ir; // storage order (ir,im) 
+			     blk4[im*vdim+iv](ir,ic) = blk3[iv](ilc,ic);
+		          } // ir
+		       } // ic
+		     } // iv
+		  } // im
+	       }
+	    } // c
+	 } // rm
+      } // lc1
+   } // v
+   return qt4;
+}
+
+// A[l,c1,c2,r]->A[l,c1,c2r]
+qtensor3 tns::merge_qt4_qt3_c2r(const qtensor4& qt4,
+			        const qsym_space& qc2r, 
+			        const qsym_dpt& dpt){
+   const auto& sym = qt4.sym;
+   const auto& qrow = qt4.qrow; 
+   const auto& qmid = qt4.qmid;
+   qtensor3 qt3(sym, qmid, qrow, qc2r, {0,1,1,1});
+   for(const auto& pm : qmid){
+      auto qm = pm.first;
+      int mdim = pm.second;
+      for(const auto& pr : qrow){
+         auto qr = pr.first;
+	 int rdim = pr.second;
+	 for(const auto& pc2r : qc2r){
+	    auto qcr = pc2r.first;
+	    for(const auto& p12 : dpt.at(qcr)){
+	       auto q12 = p12.first;
+	       auto qv = q12.first;
+	       auto qc = q12.second;
+	       int vdim = get<0>(p12.second);
+	       int cdim = get<1>(p12.second);
+	       int ioff = get<2>(p12.second);
+	       auto& blk3 = qt3.qblocks[make_tuple(qm,qr,qcr)];
+	       const auto& blk4 = qt4.qblocks.at(make_tuple(qm,qv,qr,qc)); 
+	       if(blk3.size()>0 && blk4.size()>0){
+	          // merging block blk3[v](lcdim,cdim)
+		  for(int im=0; im<mdim; im++){
+		     for(int iv=0; iv<vdim; iv++){
+	               for(int ic=0; ic<cdim; ic++){
+		          for(int ir=0; ir<rdim; ir++){
+			     int icr = ioff+iv*cdim+ic; // storage order (ic,iv) 
+		             blk3[im](ir,icr) = blk4[im*vdim+iv](ir,ic);
+		          } // ir
+		       } // ic
+		     } // iv
+		  } // im
+	       }
+	    } // vc
+	 } // c2r 
+      } // qr
+   } // qm
+   return qt3;
+}
+
+// A[l,c1,c2,r]<-A[l,c1,c2r]
+qtensor4 tns::split_qt4_qt3_c2r(const qtensor3& qt3,
+			        const qsym_space& qc2,
+			        const qsym_space& qr, 
+			        const qsym_dpt& dpt){
+   const auto& sym = qt3.sym;
+   const auto& qrow = qt3.qrow; 
+   const auto& qmid = qt3.qmid;
+   const auto& qc2r = qt3.qcol;
+   qtensor4 qt4(sym, qmid, qc2, qrow, qr);
+   for(const auto& pm : qmid){
+      auto qm = pm.first;
+      int mdim = pm.second;
+      for(const auto& pr : qrow){
+         auto qr = pr.first;
+	 int rdim = pr.second;
+	 for(const auto& pc2r : qc2r){
+	    auto qcr = pc2r.first;
+	    for(const auto& p12 : dpt.at(qcr)){
+	       auto q12 = p12.first;
+	       auto qv = q12.first;
+	       auto qc = q12.second;
+	       int vdim = get<0>(p12.second);
+	       int cdim = get<1>(p12.second);
+	       int ioff = get<2>(p12.second);
+	       auto& blk4 = qt4.qblocks[make_tuple(qm,qv,qr,qc)]; 
+	       const auto& blk3 = qt3.qblocks.at(make_tuple(qm,qr,qcr));
+	       if(blk3.size()>0 && blk4.size()>0){
+	          // merging block blk3[v](lcdim,cdim)
+		  for(int im=0; im<mdim; im++){
+		     for(int iv=0; iv<vdim; iv++){
+	               for(int ic=0; ic<cdim; ic++){
+		          for(int ir=0; ir<rdim; ir++){
+			     int icr = ioff+iv*cdim+ic; // storage order (ic,iv) 
+			     blk4[im*vdim+iv](ir,ic) = blk3[im](ir,icr);
+		          } // ir
+		       } // ic
+		     } // iv
+		  } // im
+	       }
+	    } // vc
+	 } // c2r 
+      } // qr
+   } // qm
+   return qt4;
+}

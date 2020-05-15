@@ -17,6 +17,7 @@ struct qtensor2{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
+	 ar & dir;
          ar & sym;
 	 ar & qrow;
 	 ar & qcol;
@@ -27,7 +28,8 @@ struct qtensor2{
       qtensor2(){};
       qtensor2(const qsym& sym1, 
 	       const qsym_space& qrow1, 
-	       const qsym_space& qcol1);
+	       const qsym_space& qcol1,
+	       const std::vector<bool> dir1={0,1,0});
       // useful functions
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
@@ -49,7 +51,16 @@ struct qtensor2{
       double normF() const;
       double check_identity(const double thresh_ortho,
 		            const bool debug=false) const;
+      int get_dim() const;
+      // symmetry conservation rule [20200515]
+      bool ifconserve(const qsym& qr, const qsym& qc) const{
+	 auto qsum = dir[0] ? sym : -sym;
+	 qsum += dir[1] ? qr : -qr;
+	 qsum += dir[2] ? qc : -qc;
+	 return qsum == qsym(0,0); 
+      }
    public:
+      std::vector<bool> dir = {0,1,0}; // {in,out,in} by usual convention in diagrams
       qsym sym; // <row|op|col>
       qsym_space qrow;
       qsym_space qcol;
@@ -100,8 +111,6 @@ struct qtensor3{
       int get_dim() const;
       void from_array(const double* array);
       void to_array(double* array) const; 
-      void from_vector(const std::vector<double>& vec);
-      std::vector<double> to_vector() const;
       // symmetry conservation rule [20200510]
       bool ifconserve(const qsym& qm, const qsym& qr, const qsym& qc) const{
 	 auto qsum = dir[0] ? sym : -sym;
@@ -145,10 +154,8 @@ struct qtensor4{
       int get_dim() const;
       void from_array(const double* array);
       void to_array(double* array) const; 
-      // merge
-      qtensor3 mergeLC();
-      qtensor3 mergeCR();
    public:
+      //std::vector<bool> dir = {0,1,1,1,1}; // {in,out,out,out,out}
       qsym sym; 
       qsym_space qmid; 
       qsym_space qver;
@@ -156,6 +163,54 @@ struct qtensor4{
       qsym_space qcol; 
       std::map<std::tuple<qsym,qsym,qsym,qsym>,std::vector<linalg::matrix>> qblocks;
 };
+
+// --- symmetry operations : merge & expand operations ---
+
+/*
+// one-dot wavefunction
+qtensor2 merge_qt3_qt2_lc(const qtensor3& qt3,
+			  const qsym_space& qlc, 
+			  const qsym_dpt& dpt);
+qtensor3 split_qt3_qt2_lc(const qtensor2& qt2,
+			  const qsym_space& ql,
+			  const qsym_space& qc,
+			  const qsym_dpt& dpt);
+qtensor2 merge_qt3_qt2_cr(const qtensor3& qt3,
+			  const qsym_space& qcr, 
+			  const qsym_dpt& dpt);
+qtensor3 split_qt3_qt2_cr(const qtensor2& qt2,
+			  const qsym_space& qc,
+			  const qsym_space& qr,
+			  const qsym_dpt& dpt);
+qtensor2 merge_qt3_qt2_lr(const qtensor3& qt3,
+			  const qsym_space& qlr, 
+			  const qsym_dpt& dpt);
+qtensor3 split_qt3_qt2_lr(const qtensor2& qt2,
+			  const qsym_space& ql,
+			  const qsym_space& qr,
+			  const qsym_dpt& dpt);
+*/
+
+// two-dot wavefunction
+qtensor2 merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
+			       const qsym_space& qlr,
+		               const qsym_space& qc1c2,
+			       const qsym_dpt& dpt1,
+			       const qsym_dpt& dpt2);	       
+qtensor3 merge_qt4_qt3_lc1(const qtensor4& qt4,
+			   const qsym_space& qlc1, 
+			   const qsym_dpt& dpt);
+qtensor4 split_qt4_qt3_lc1(const qtensor3& qt3,
+			   const qsym_space& ql,
+			   const qsym_space& qc1,
+			   const qsym_dpt& dpt);
+qtensor3 merge_qt4_qt3_c2r(const qtensor4& qt4,
+			   const qsym_space& qc2r, 
+			   const qsym_dpt& dpt);
+qtensor4 split_qt4_qt3_c2r(const qtensor3& qt3,
+			   const qsym_space& qc2,
+			   const qsym_space& qr,
+			   const qsym_dpt& dpt);
 
 // --- tensor linear algebra : contractions ---
 qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);

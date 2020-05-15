@@ -51,6 +51,33 @@ void tns::qsym_space_print(const qsym_space& qs, const string& name){
    cout << endl;
 }
 
+// direct product space V1*V2->V12
+void tns::qsym_space_dpt(const qsym_space& qs1, 
+		         const qsym_space& qs2,
+			 qsym_space& qs12,
+			 qsym_dpt& dpt){
+   // form qs12 and dpt
+   for(const auto& p1 : qs1){
+      auto q1 = p1.first;
+      for(const auto& p2 : qs2){
+	 auto q2 = p2.first;
+	 qs12[q1+q2] = 0;
+	 dpt[q1+q2][make_pair(q1,q2)] = make_tuple(0,0,0);
+      }
+   }
+   for(const auto& p : dpt){
+      int ioff = 0;
+      for(const auto& p12 : p.second){
+	 auto q12 = p12.first;
+	 int d1 = qs1.at(q12.first);
+	 int d2 = qs2.at(q12.second);
+	 qs12[p.first] += d1*d2;
+	 dpt[p.first][p12.first] = make_tuple(d1,d2,ioff);
+	 ioff += d1*d2;
+      }
+   }
+}
+
 // --- physical degree of freedoms  ---
 // symmetry
 const vector<qsym> tns::phys_sym({qsym(0,0), 

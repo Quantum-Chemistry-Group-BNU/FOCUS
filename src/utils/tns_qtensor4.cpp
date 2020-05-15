@@ -122,13 +122,3 @@ void qtensor4::to_array(double* array) const{
       }
    }
 }
-
-qtensor3 qtensor4::mergeLC(){
-   qtensor3 qt3;
-   return qt3;
-}
-
-qtensor3 qtensor4::mergeCR(){
-   qtensor3 qt3;
-   return qt3;
-}

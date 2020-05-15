@@ -18,7 +18,7 @@ void tns::opt_sweep(const input::schedule& schd,
    cout << "\ntns::opt_sweep" << endl;
    
    // prepare environmental operators 
-   oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
+   //oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
 
    // init left boundary sites
    icomb.lsites[make_pair(0,0)] = icomb.get_bsite();
@@ -34,7 +34,7 @@ void tns::opt_sweep(const input::schedule& schd,
 	 auto p1 = get<1>(dbond);
          auto forward = get<2>(dbond);
          auto p = forward? p0 : p1;
-         cout << "isweep=" << i << " bond=" 
+         cout << "\ni=" << i << " bond=" 
 	      << "(" << p0.first << "," << p0.second << ")-"
 	      << "(" << p1.first << "," << p1.second << ")"
 	      << " forward=" << forward
@@ -86,7 +86,7 @@ void tns::opt_onedot(const input::schedule& schd,
    // 2. Davidson solver 
    int nsub = wf.get_dim();
    int neig = 1; //schd.nroots;
-   auto diag = tns::get_Hdiag(cqops, lqops, rqops, ecore, wf);
+   auto diag = tns::get_onedot_Hdiag(cqops, lqops, rqops, ecore, wf);
    dvdsonSolver solver;
    solver.iprt = 2;
    solver.crit_v = schd.crit_v;
@@ -96,7 +96,7 @@ void tns::opt_onedot(const input::schedule& schd,
    solver.Diag = diag.data();
    using std::placeholders::_1;
    using std::placeholders::_2;
-   solver.HVec = bind(tns::get_Hx, _1, _2, 
+   solver.HVec = bind(tns::get_onedot_Hx, _1, _2, 
 		      cref(icomb), cref(p),
 		      ref(cqops), ref(lqops), ref(rqops), 
 		      cref(int2e), cref(int1e), cref(ecore), 
@@ -150,48 +150,102 @@ void tns::opt_twodot(const input::schedule& schd,
 	<< endl;
    
    auto pl = icomb.get_l(p0);
-   auto pc = icomb.get_c(p1);
+   auto pm = icomb.get_c(p1);
    auto pv = icomb.get_r(p1);
    auto pr = icomb.get_r(p0);
 
+   // 1. process symmetry information & operators
    auto ql = icomb.get_ql(p0);
-   auto qc = icomb.get_qc(p1); 
+   auto qm = icomb.get_qc(p1); 
    auto qv = icomb.get_qr(p1);
    auto qr = icomb.get_qr(p0);
    int nelec_a = (schd.nelec+schd.twoms)/2;
    qsym sym_state(schd.nelec,nelec_a);
-   qtensor4 wf(sym_state,qc,qv,ql,qr);
+   qtensor4 wf(sym_state,qm,qv,ql,qr);
    wf.print("wf",1);
    cout << wf.get_dim() << endl;
+
+   qsym_space qlc1, qc2r;
+   qsym_dpt dpt1, dpt2;
+   qsym_space_dpt(ql,qm,qlc1,dpt1);
+   qsym_space_dpt(qv,qr,qc2r,dpt2);
+
+   auto qt3 = merge_qt4_qt3_lc1(wf,qlc1,dpt1);
+   cout << endl;
+   qt3.print("qt3",1);
+   cout << qt3.get_dim() << endl;
+   cout << "lzdA" << endl;
+
+   auto qt4 = split_qt4_qt3_lc1(qt3,ql,qm,dpt1);
+   cout << endl;
+   qt4.print("qt4",1);
+   cout << qt4.get_dim() << endl;
+   cout << "lzdB" << endl;
+   
+   auto qt3x = merge_qt4_qt3_c2r(wf,qc2r,dpt2);
+   cout << "lzdC" << endl;
+   cout << endl;
+   qt3x.print("qt3x",1);
+   cout << qt3.get_dim() << endl;
+   
+   auto qt4x = split_qt4_qt3_c2r(qt3x,qv,qr,dpt2);
+   cout << "lzdD" << endl;
+   cout << endl;
+   qt4x.print("qt4x",1);
+   cout << qt4.get_dim() << endl;
+   
+   cout << "lzdE" << endl;
+   qsym_space qlr, qc1c2;
+   qsym_dpt dptx, dpty;
+   qsym_space_dpt(ql,qr,qlr,dptx);
+   qsym_space_dpt(qm,qv,qc1c2,dpty);
+   auto qt2xy = merge_qt4_qt2_lr_c1c2(qt4,qlr,qc1c2,dptx,dpty);
+   qt2xy.print("qt2xy",1);
+   cout << qt2xy.get_dim_row() << endl;
+   cout << qt2xy.get_dim_col() << endl;
+   cout << qt2xy.get_dim() << endl;
+   exit(1);
+/*
+   qsym_space qlc, qcr;
+   qsym_dpt dpta, dptb;
+   qsym_space_dpt(ql,qm,qlc1,dpt1);
+   qsym_space_dpt(qv,qr,qc2r,dpt2);
+
+   auto qt2 = merge_qt3_qt2_lc(qt3x,qlc1,dpt1);
+   qt2.print("qt2",1);
+   cout << qt2.get_dim() << endl;
+
+   auto qt3a = split_qt3_qt2_lc(qt2,ql,qm,dpt1);
+   qt3a.print("qt3a",1);
+   cout << qt3a.get_dim() << endl;
+
+   auto qt2x = merge_qt3_qt2_cr(qt3,qcr2,dpt2);
+   qt2x.print("qt2x",1);
+   cout << qt2x.get_dim() << endl;
+
+   auto qt3b = split_qt3_qt2_cr(qt2x,qv,qr,dpt2);
+   qt3b.print("qt3b",1);
+   cout << qt3b.get_dim() << endl;
+*/
+   // test decimation in various directions
+
+
+
+
+
+   // expand into sites
+
    exit(1);
 
-
-/*
-   cout << "neighbor: "
-        << "pc0=(" << pc0.first << "," << pc0.second << ") " 
-        << "pc1=(" << pc1.first << "," << pc1.second << ") " 
-	<< "pl0=(" << pl0.first << "," << pl0.second << ") " 
-        << "pr1=(" << pr1.first << "," << pr1.second << ") " 
-	<< endl;
-  
-   // 1. process symmetry information & operators
-   auto qc = icomb.get_qc(p); 
-   auto ql = icomb.get_ql(p);
-   auto qr = icomb.get_qr(p);
-   int nelec_a = (schd.nelec+schd.twoms)/2;
-   qsym sym_state(schd.nelec,nelec_a);
-   qtensor3 wf(sym_state,qc,ql,qr,{0,1,1,1});
-   wf.print("wf",1);
-   cout << wf.get_dim() << endl;
-
-   auto cqops = oper_get_cqops(icomb, p, schd.scratch);
-   auto lqops = oper_get_lqops(icomb, p, schd.scratch);
-   auto rqops = oper_get_rqops(icomb, p, schd.scratch);
+   auto lqops = oper_get_lqops(icomb, p0, schd.scratch);
+   auto cqops = oper_get_cqops(icomb, p1, schd.scratch);
+   auto vqops = oper_get_rqops(icomb, p1, schd.scratch);
+   auto rqops = oper_get_rqops(icomb, p0, schd.scratch);
   
    // 2. Davidson solver 
    int nsub = wf.get_dim();
    int neig = 1; //schd.nroots;
-   auto diag = tns::get_Hdiag(cqops, lqops, rqops, ecore, wf);
+   auto diag = tns::get_twodot_Hdiag(cqops, vqops, lqops, rqops, ecore, wf);
    dvdsonSolver solver;
    solver.iprt = 2;
    solver.crit_v = schd.crit_v;
@@ -201,7 +255,8 @@ void tns::opt_twodot(const input::schedule& schd,
    solver.Diag = diag.data();
    using std::placeholders::_1;
    using std::placeholders::_2;
-   solver.HVec = bind(tns::get_Hx, _1, _2, 
+/*
+   solver.HVec = bind(tns::get_twodot_Hx, _1, _2, 
 		      cref(icomb), cref(p),
 		      ref(cqops), ref(lqops), ref(rqops), 
 		      cref(int2e), cref(int1e), cref(ecore), 
@@ -225,6 +280,7 @@ void tns::opt_twodot(const input::schedule& schd,
       //oper_renorm_rops(icomb,icomb,p,int2e,int1e,schd.scratch);
    }
 */
+   exit(1);
 
    auto t1 = global::get_time();
    cout << "timing for tns::opt_twodot : " << setprecision(2) 
