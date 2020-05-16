@@ -19,7 +19,6 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
    vector<double> sig2all(dr);
    map<qsym,matrix> rbasis;
    int idx = 0, ioff = 0;
-   double sum = 0.0;
    for(const auto& pr : qrow){
       auto qr = pr.first;
       int rdim = pr.second;
@@ -36,7 +35,6 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
       // save
       for(int i=0; i<rdim; i++){
          idx2qsym[ioff+i] = qr;
-	 sum += sig2[i];
       }
       copy(sig2.begin(), sig2.end(), &sig2all[ioff]);
       rbasis[qr] = rdm;
@@ -53,6 +51,7 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
    auto index = tools::sort_index(sig2all, 1);
    int nres = min(Dcut,dr); 
    qsym_space qres;
+   double sum = 0.0;
    for(int i=0; i<nres; i++){
       int idx = index[i];
       auto q = idx2qsym[idx];
@@ -62,12 +61,16 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
       }else{
 	 qres[q] += 1;
       }
+      sum += sig2all[idx];
       if(debug){
 	if(i==0) cout << "sorted sig2: nres=" << nres << endl;     
 	cout << "i=" << i << " q=" << q << " idx=" << qres[q]-1 
-             << " sig2=" << sig2all[idx] << endl;
+             << " sig2=" << sig2all[idx] 
+	     << " accum=" << sum << endl;
       }
    }
+   double dwt = 1.0-sum;
+   if(debug) cout << "discarded weight=" << dwt << endl;
    // 3. form qt2
    idx = 0;
    qtensor2 qt2(qsym(0,0), qrow, qres);

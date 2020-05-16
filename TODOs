@@ -129,17 +129,18 @@
 	    - qtensor3 (with dir) : wf on one site 
  	  - rewrite tns_oper to put all operators in memory [DONE@20200514] 
 	  - conversion: qt4,qt3,qt2 [DONE@20200515]
-	  - decimation? qt3->qt2
-          - renormalization of lops?
-	  - one-dot opt:
-	    - implement Hdiag [DONE@20200512] 
-	    - implement Hx?
-	    - automated analysis tool for generating formula
 
- 202005xx extension to two-dot opt: 
-	  - qtensor4 : to be implemented? qt4->qt3?
- 	  - implement Hdiag
-	  - implement Hx
+	  - different decimation schemes for sweeps [DONE@20200516]
+          - better computational kernels:
+            - renormalization of lops?
+	    - one-dot opt:
+	      - implement Hdiag [DONE@20200512] 
+	      - implement Hx?
+	      - automated analysis tool for generating formula
+ 	    - extension to two-dot opt: 
+	      - qtensor4 : to be implemented? qt4->qt3? [DONE@20200515]
+ 	      - implement Hdiag
+	      - implement Hx
 
  202005xx more functionalities:
 	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L|

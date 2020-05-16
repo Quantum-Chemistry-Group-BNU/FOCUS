@@ -144,7 +144,9 @@ qtensor2 tns::merge_qt3_qt2_lc(const qtensor3& qt3,
 			       const qsym_space& qlc, 
 			       const qsym_dpt& dpt){
    const auto& qcol = qt3.qcol;
-   qtensor2 qt2(qt3.sym, qlc, qcol, {0,1,1});
+   assert(qt3.dir[1] == qt3.dir[2]); // dc == dl
+   vector<bool> dir = {qt3.dir[0],qt3.dir[2],qt3.dir[3]};
+   qtensor2 qt2(qt3.sym, qlc, qcol, dir);
    for(const auto& pc : qcol){
       auto qc = pc.first;
       int cdim = pc.second;
@@ -181,7 +183,8 @@ qtensor3 tns::split_qt3_qt2_lc(const qtensor2& qt2,
 			       const qsym_dpt& dpt){
    const auto& qlc  = qt2.qrow; 
    const auto& qcol = qt2.qcol;
-   qtensor3 qt3(qt2.sym, qcx, qlx, qcol, {0,1,1,1});
+   vector<bool> dir = {qt2.dir[0],qt2.dir[1],qt2.dir[1],qt2.dir[2]};
+   qtensor3 qt3(qt2.sym, qcx, qlx, qcol, dir);
    for(const auto& pc : qcol){
       auto qc = pc.first;
       int cdim = pc.second;
@@ -217,7 +220,9 @@ qtensor2 tns::merge_qt3_qt2_cr(const qtensor3& qt3,
 			       const qsym_space& qcr, 
 			       const qsym_dpt& dpt){;
    const auto& qrow = qt3.qrow;
-   qtensor2 qt2(qt3.sym, qrow, qcr, {0,1,1});
+   assert(qt3.dir[1] == qt3.dir[3]); // dc == dr
+   vector<bool> dir = {qt3.dir[0],qt3.dir[2],qt3.dir[3]};
+   qtensor2 qt2(qt3.sym, qrow, qcr, dir);
    for(const auto& pcr : qcr){
       auto qcomb = pcr.first;
       for(const auto& p12 : dpt.at(qcomb)){
@@ -254,7 +259,8 @@ qtensor3 tns::split_qt3_qt2_cr(const qtensor2& qt2,
 			       const qsym_dpt& dpt){
    const auto& qrow = qt2.qrow;
    const auto& qcr  = qt2.qcol;
-   qtensor3 qt3(qt2.sym, qcx, qrow, qrx, {0,1,1,1});
+   vector<bool> dir = {qt2.dir[0],qt2.dir[2],qt2.dir[1],qt2.dir[2]};
+   qtensor3 qt3(qt2.sym, qcx, qrow, qrx, dir);
    for(const auto& pcr : qcr){
       auto qcomb = pcr.first;
       for(const auto& p12 : dpt.at(qcomb)){
@@ -290,7 +296,9 @@ qtensor2 tns::merge_qt3_qt2_lr(const qtensor3& qt3,
 			       const qsym_space& qlr, 
 			       const qsym_dpt& dpt){
    const auto& qmid = qt3.qmid;
-   qtensor2 qt2(qt3.sym, qlr, qmid, {0,1,1});
+   assert(qt3.dir[2] == qt3.dir[3]); // dl == dr
+   vector<bool> dir = {qt3.dir[0],qt3.dir[2],qt3.dir[1]};
+   qtensor2 qt2(qt3.sym, qlr, qmid, dir);
    for(const auto& pm : qmid){
       auto qm = pm.first;
       int mdim = pm.second;
@@ -327,7 +335,8 @@ qtensor3 tns::split_qt3_qt2_lr(const qtensor2& qt2,
 			       const qsym_dpt& dpt){
    const auto& qlr  = qt2.qrow;
    const auto& qmid = qt2.qcol;
-   qtensor3 qt3(qt2.sym, qmid, qlx, qrx, {0,1,1,1});
+   vector<bool> dir = {qt2.dir[0],qt2.dir[2],qt2.dir[1],qt2.dir[1]};
+   qtensor3 qt3(qt2.sym, qmid, qlx, qrx, dir);
    for(const auto& pm : qmid){
       auto qm = pm.first;
       int mdim = pm.second;

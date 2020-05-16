@@ -113,7 +113,7 @@ void tns::opt_onedot(const input::schedule& schd,
    wf *= 1.0/nrm;
    cout << wf.normF() << endl;
 
-   int Dcut = 10;
+   int Dcut = 20;
    // 3. decimation & renormalize operators
    if(!forward){
       // update rsites (p1) & qr
@@ -132,8 +132,15 @@ void tns::opt_onedot(const input::schedule& schd,
          cout << "renormlize |lr>" << endl;
 	 auto qt2 = wf.merge_lr();
 	 qt2 = decimation_row(qt2, Dcut);
+	 qt2.print("QT2",1);
+         cout << endl;
          auto dpt = wf.dpt_lr().second;
 	 auto qt3 = qt2.split_lr(wf.qrow,wf.qcol,dpt);
+	 
+	 wf.print("WF",1);
+	 cout << endl;
+	 qt3.print("qt3",1);
+	 exit(1);
          icomb.lsites[p] = qt3;
          //oper_renorm_lops(icomb,icomb,p0,int2e,int1e,schd.scratch); ???
       }else{
