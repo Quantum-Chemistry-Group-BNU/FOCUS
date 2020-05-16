@@ -121,7 +121,7 @@
 		  Also, we do not use Hermicity of Bpq/Qps, which allows to 
 		  compute <rdm1|p^+q|rdm2> for state-averaged comb states.
  
- 202005xx basic sweep algorithm for one-dot opt
+ 20200516 improved data structure for operators/wavefunction/decimations
 	  - better data structure to handle {L,C,R} neigbors [DONE@20200510] 
 	  - data structure for wavefunction (wf) [DONE@20200512]
 	    - qtensor2 (with sym) : operators O
@@ -129,9 +129,17 @@
 	    - qtensor3 (with dir) : wf on one site 
  	  - rewrite tns_oper to put all operators in memory [DONE@20200514] 
 	  - conversion: qt4,qt3,qt2 [DONE@20200515]
+	  - change convention for rsite [DONE@20200516]
+            - rows for renormalized states 
+	    - update rcanon
+	    - update alg
+ 	    - update operator construction
 
-	  - different decimation schemes for sweeps [DONE@20200516]
+ 202005xx sweep algorithm for optimizaiton 
+	  - different decimation schemes for sweeps 
+	    - check symmetry handling by using random wf (no need for H*x & renorm ops)
           - better computational kernels:
+	    - rewriten renormalization kernel for rops
             - renormalization of lops?
 	    - one-dot opt:
 	      - implement Hdiag [DONE@20200512] 

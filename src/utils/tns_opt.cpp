@@ -18,10 +18,10 @@ void tns::opt_sweep(const input::schedule& schd,
    cout << "\ntns::opt_sweep" << endl;
    
    // prepare environmental operators 
-   //oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
+   oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
 
    // init left boundary sites
-   icomb.lsites[make_pair(0,0)] = icomb.get_bsite();
+   icomb.lsites[make_pair(0,0)] = icomb.get_lbsite();
 
    // one-dot sweep
    const int nsweeps = 2;
@@ -34,16 +34,19 @@ void tns::opt_sweep(const input::schedule& schd,
 	 auto p1 = get<1>(dbond);
          auto forward = get<2>(dbond);
          auto p = forward? p0 : p1;
-         cout << "\ni=" << i << " bond=" 
-	      << "(" << p0.first << "," << p0.second << ")-"
+         cout << "\n### i=" << i << " bond=" 
+	      << "(" << p0.first << "," << p0.second << ")"
+	      << "[" << icomb.topo[p0.first][p0.second] << "]-"
 	      << "(" << p1.first << "," << p1.second << ")"
+	      << "[" << icomb.topo[p1.first][p1.second] << "]"
 	      << " forward=" << forward
 	      << " type=[" << icomb.type[p0] << "," << icomb.type[p1] << "]"
-	      << " updated=(" << p.first << "," << p.second << ")"
+	      << " updated site=(" << p.first << "," << p.second << ")"
 	      << endl;
 	 opt_onedot(schd, icomb, dbond, int2e, int1e, ecore);
 	 //opt_twodot(schd, icomb, dbond, int2e, int1e, ecore);
       } // i
+      exit(1);
    } // isweep
 
 }
@@ -115,46 +118,35 @@ void tns::opt_onedot(const input::schedule& schd,
 
    int Dcut = 20;
    // 3. decimation & renormalize operators
-   if(!forward){
-      // update rsites (p1) & qr
-      cout << "renormlize |cr>" << endl;
-      auto qt2 = wf.merge_cr();
-      qt2 = decimation_col(qt2, Dcut);
-      auto dpt = wf.dpt_cr().second;
-      auto qt3 = qt2.split_cr(wf.qmid,wf.qcol,dpt);
-      icomb.rsites[p] = qt3;
-      //oper_renorm_rops(icomb,icomb,p0,int2e,int1e,schd.scratch);
-   }else{
-      // update lsites (p0)
-      if(p1.second == 1){
-	 assert(p0.second == 0);
-	 // update lsites & qc [special for comb]
-         cout << "renormlize |lr>" << endl;
-	 auto qt2 = wf.merge_lr();
-	 qt2 = decimation_row(qt2, Dcut);
-	 qt2.print("QT2",1);
-         cout << endl;
-         auto dpt = wf.dpt_lr().second;
-	 auto qt3 = qt2.split_lr(wf.qrow,wf.qcol,dpt);
-	 
-	 wf.print("WF",1);
-	 cout << endl;
-	 qt3.print("qt3",1);
-	 exit(1);
-         icomb.lsites[p] = qt3;
-         //oper_renorm_lops(icomb,icomb,p0,int2e,int1e,schd.scratch); ???
-      }else{
+   if(forward){
+      if(p1.second != 1){
          // update lsites & ql
          cout << "renormlize |lc>" << endl;
 	 auto qt2 = wf.merge_lc();
 	 qt2 = decimation_row(qt2, Dcut);
-         auto dpt = wf.dpt_lc().second;
-	 auto qt3 = qt2.split_lc(wf.qrow,wf.qmid,dpt);
-         icomb.lsites[p] = qt3;
+         qsym_space_print(qt2.qcol, "after renormalization");
+         icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
+         //oper_renorm_lops(icomb,icomb,p0,int2e,int1e,schd.scratch); ???
+      }else{
+	 // update lsites & qc [special for comb]
+         cout << "renormlize |lr>" << endl;
+	 assert(p0.second == 0);
+	 auto qt2 = wf.merge_lr();
+	 qt2 = decimation_row(qt2, Dcut);
+         qsym_space_print(qt2.qcol, "after renormalization");
+	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
+	 icomb.lsites[p].print("lsite",1);
          //oper_renorm_lops(icomb,icomb,p0,int2e,int1e,schd.scratch); ???
       }
+   }else{
+      // update rsites (p1) & qr
+      cout << "renormlize |cr>" << endl;
+      auto qt2 = wf.merge_cr();
+      qt2 = decimation_col(qt2, Dcut);
+      qsym_space_print(qt2.qrow, "after renormalization");
+      icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, wf.dpt_cr().second);
+      //oper_renorm_rops(icomb,icomb,p0,int2e,int1e,schd.scratch);
    }
-   exit(1);
 
    auto t1 = global::get_time();
    cout << "timing for tns::opt_onedot : " << setprecision(2) 

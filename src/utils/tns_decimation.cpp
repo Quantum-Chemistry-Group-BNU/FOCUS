@@ -9,8 +9,8 @@ using namespace linalg;
 // wf[L,R] = U[L,l]*sl*Vt[l,R]
 qtensor2 tns::decimation_row(const qtensor2& wf,
 			     const int Dcut){
-   bool debug = true;
-   cout << "\ntns::decimation_row Dcut=" << Dcut << endl;
+   bool debug = false;
+   cout << "tns::decimation_row Dcut=" << Dcut << endl;
    const auto& qrow = wf.qrow;
    const auto& qcol = wf.qcol;
    // 1. compute reduced basis
@@ -70,7 +70,7 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
       }
    }
    double dwt = 1.0-sum;
-   if(debug) cout << "discarded weight=" << dwt << endl;
+   cout << "final nres=" << nres << " discarded weight=" << dwt << endl;
    // 3. form qt2
    idx = 0;
    qtensor2 qt2(qsym(0,0), qrow, qres);

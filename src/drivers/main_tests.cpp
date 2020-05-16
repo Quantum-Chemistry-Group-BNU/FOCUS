@@ -4,9 +4,7 @@ using namespace std;
 
 int main(){
 
-   tests::test_sweep();
-   
-   //tests::test_comb();
+   tests::test_comb();
 
    //tests::test_ras();
 

@@ -39,7 +39,7 @@ void tns::oper_build_boundary(const comb& icomb,
          oper_save(fname, qops);
       }
    } 
-   // right boundary
+   // right boundary (exclude the start point)
    for(int idx=0; idx<icomb.rcoord.size(); idx++){
       auto p = icomb.rcoord[idx];
       if(icomb.type.at(p) == 0 && p.first != 0){

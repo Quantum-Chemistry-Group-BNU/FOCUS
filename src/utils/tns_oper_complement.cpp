@@ -23,9 +23,9 @@ void tns::oper_renorm_ropP(const comb& bra,
    const auto& lsupp = bra.lsupport.at(p);
    const auto& orbord = bra.orbord;
    // initialization for Ppq = <pq||sr> aras [r>s] (p<q)
-   qtensor2 Paa(qsym(-2,-2), bsite.qcol, ksite.qcol);
-   qtensor2 Pbb(qsym(-2, 0), bsite.qcol, ksite.qcol);
-   qtensor2 Pab(qsym(-2,-1), bsite.qcol, ksite.qcol);
+   qtensor2 Paa(qsym(-2,-2), bsite.qrow, ksite.qrow);
+   qtensor2 Pbb(qsym(-2, 0), bsite.qrow, ksite.qrow);
+   qtensor2 Pab(qsym(-2,-1), bsite.qrow, ksite.qrow);
    for(int korb_p : lsupp){
       int pa = 2*korb_p, pb = pa+1;
       for(int korb_q : lsupp){
@@ -56,7 +56,7 @@ void tns::oper_renorm_ropP(const comb& bra,
          int sC = copC.first;
          // rop = sum_rR <pLqL||sCrR>(-rR)
          qsym rsym = qop.second.sym + copC.second.sym;
-         qtensor2 rop(-rsym, bsite.qrow, ksite.qrow);
+         qtensor2 rop(-rsym, bsite.qcol, ksite.qcol);
          for(const auto& ropC : rqops['C']){
             if(rop.sym != ropC.second.sym) continue;
             int rR = ropC.first;
@@ -67,7 +67,7 @@ void tns::oper_renorm_ropP(const comb& bra,
       // 2. RR: Ic*Pr
       if(ifAB){
 	 // P_pLqL^R = sum_rRsR <pLqL||sRrR> rRsR
-         qtensor2 rop(-qop.second.sym, bsite.qrow, ksite.qrow);
+         qtensor2 rop(-qop.second.sym, bsite.qcol, ksite.qcol);
          for(const auto& ropA : rqops['A']){
             if(rop.sym != ropA.second.sym) continue;
 	    auto sr = oper_unpack(ropA.first);
@@ -106,9 +106,9 @@ void tns::oper_renorm_ropQ(const comb& bra,
    const auto& orbord = bra.orbord;
    // initialization for Qps = <pq||sr> aq^+ar
    // Qaa,bb, Qab ~ b^+a, Qba ~ a^+b
-   qtensor2 Qss(qsym(0, 0), bsite.qcol, ksite.qcol);
-   qtensor2 Qab(qsym(0,-1), bsite.qcol, ksite.qcol);
-   qtensor2 Qba(qsym(0, 1), bsite.qcol, ksite.qcol);
+   qtensor2 Qss(qsym(0, 0), bsite.qrow, ksite.qrow);
+   qtensor2 Qab(qsym(0,-1), bsite.qrow, ksite.qrow);
+   qtensor2 Qba(qsym(0, 1), bsite.qrow, ksite.qrow);
    for(int korb_p : lsupp){
       int pa = 2*korb_p, pb = pa+1;
       for(int korb_s : lsupp){
@@ -139,7 +139,7 @@ void tns::oper_renorm_ropQ(const comb& bra,
 	 int qC = copC.first;
 	 // rop = sum_rR <pLqC||sLrR> rR
 	 qsym rsym = qop.second.sym - copC.second.sym;
-	 qtensor2 rop(-rsym, bsite.qrow, ksite.qrow);
+	 qtensor2 rop(-rsym, bsite.qcol, ksite.qcol);
 	 for(const auto& ropC : rqops['C']){
 	    if(rop.sym != ropC.second.sym) continue;
 	    int rR = ropC.first;
@@ -152,7 +152,7 @@ void tns::oper_renorm_ropQ(const comb& bra,
 	 int rC = copC.first;
 	 // rop = sum_rR <pLqR||sLrC> (-qR^+)
 	 qsym rsym = qop.second.sym + copC.second.sym;
-	 qtensor2 rop(rsym, bsite.qrow, ksite.qrow);
+	 qtensor2 rop(rsym, bsite.qcol, ksite.qcol);
 	 for(const auto& ropC : rqops['C']){
             if(rop.sym != ropC.second.sym) continue;
 	    int qR = ropC.first;
@@ -163,7 +163,7 @@ void tns::oper_renorm_ropQ(const comb& bra,
       // 2. RR: Ic*Qr
       if(ifAB){
 	 // Q_pLsL^R = sum_qRrR <pLqR||sLrR> qR^+rR
-         qtensor2 rop(qop.second.sym, bsite.qrow, ksite.qrow);
+         qtensor2 rop(qop.second.sym, bsite.qcol, ksite.qcol);
          for(const auto& ropB : rqops['B']){
             if(rop.sym != ropB.second.sym) continue;
 	    auto qr = oper_unpack(ropB.first);
@@ -202,8 +202,8 @@ void tns::oper_renorm_ropS(const comb& bra,
    const auto& lsupp = bra.lsupport.at(p);
    const auto& orbord = bra.orbord;
    // initialization for 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
-   qtensor2 Sa(qsym(-1,-1), bsite.qcol, ksite.qcol);
-   qtensor2 Sb(qsym(-1, 0), bsite.qcol, ksite.qcol);
+   qtensor2 Sa(qsym(-1,-1), bsite.qrow, ksite.qrow);
+   qtensor2 Sb(qsym(-1, 0), bsite.qrow, ksite.qrow);
    for(int korb_p : lsupp){
       int pa = 2*korb_p, pb = pa+1;
       qops['S'][pa] = Sa;
@@ -223,7 +223,7 @@ void tns::oper_renorm_ropS(const comb& bra,
 	 int sC = qs.second;
 	 // rop = sum_rR <pLqC||sCrR>(-rR)
 	 qsym rsym = qop.second.sym - copB.second.sym;
-	 qtensor2 rop(-rsym, bsite.qrow, ksite.qrow);
+	 qtensor2 rop(-rsym, bsite.qcol, ksite.qcol);
 	 for(const auto& ropC : rqops['C']){
 	    if(rop.sym != ropC.second.sym) continue;
 	    int rR = ropC.first;
@@ -238,7 +238,7 @@ void tns::oper_renorm_ropS(const comb& bra,
 	 int rC = sr.second;
 	 // rop = sum_qR <pLqR||sCrC>qR^+
 	 qsym rsym = qop.second.sym + copA.second.sym;
-	 qtensor2 rop(rsym, bsite.qrow, ksite.qrow);
+	 qtensor2 rop(rsym, bsite.qcol, ksite.qcol);
 	 for(const auto& ropC : rqops['C']){
 	    if(rsym != ropC.second.sym) continue;
 	    int qR = ropC.first;
@@ -252,7 +252,7 @@ void tns::oper_renorm_ropS(const comb& bra,
 	    int qC = copC.first;
 	    // rop = sum_rRsR <pLqC||sRrR> rRsR (r>s)
 	    qsym rsym = qop.second.sym - copC.second.sym;
-	    qtensor2 rop(-rsym, bsite.qrow, ksite.qrow);
+	    qtensor2 rop(-rsym, bsite.qcol, ksite.qcol);
 	    for(const auto& ropA : rqops['A']){
 	       if(rop.sym != ropA.second.sym) continue;
 	       auto sr = oper_unpack(ropA.first);
@@ -267,7 +267,7 @@ void tns::oper_renorm_ropS(const comb& bra,
 	    int sC = copC.first;
 	    // rop = sum_qRrR <pLqR||sCrR> qR^+rR
 	    qsym rsym = qop.second.sym + copC.second.sym;
-	    qtensor2 rop(rsym, bsite.qrow, ksite.qrow);
+	    qtensor2 rop(rsym, bsite.qcol, ksite.qcol);
 	    for(const auto& ropB : rqops['B']){
 	       if(rsym != ropB.second.sym) continue;
 	       auto qr = oper_unpack(ropB.first);
@@ -321,7 +321,7 @@ void tns::oper_renorm_ropH(const comb& bra,
    const auto& lsupp = bra.lsupport.at(p);
    const auto& orbord = bra.orbord;
    // kernel for H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
-   qtensor2 H(qsym(0,0), bsite.qcol, ksite.qcol);
+   qtensor2 H(qsym(0,0), bsite.qrow, ksite.qrow);
    // 1. local term: Hc*Ir
    H += oper_kernel_OcIr(bsite,ksite,cqops['H'][0]);
    // 2. local term: Ic*Hr
@@ -351,7 +351,7 @@ void tns::oper_renorm_ropH(const comb& bra,
       if(ifAB){
          // rop = P_pCqC^R = sum_rRsR <pCqC||sRrR> rRsR (r>s)
          qsym rsym = H.sym - cop.sym;
-         qtensor2 rop(-rsym, bsite.qrow, ksite.qrow);
+         qtensor2 rop(-rsym, bsite.qcol, ksite.qcol);
          for(const auto& ropA : rqops['A']){
             if(rop.sym != ropA.second.sym) continue;
             auto sr = oper_unpack(ropA.first);
@@ -377,7 +377,7 @@ void tns::oper_renorm_ropH(const comb& bra,
       if(ifAB){
          // rop = Q_pCsC^R = sum_qRrR <pCqR||sCrR> qR^+rR
          qsym rsym = H.sym - cop.sym;
-         qtensor2 rop(rsym, bsite.qrow, ksite.qrow);
+         qtensor2 rop(rsym, bsite.qcol, ksite.qcol);
          for(const auto& ropB : rqops['B']){
             if(rsym != ropB.second.sym) continue;
             auto qr = oper_unpack(ropB.first);

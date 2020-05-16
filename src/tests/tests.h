@@ -35,8 +35,6 @@ int test_ras();
 
 int test_comb();
 
-int test_sweep();
-
 }
 
 #endif

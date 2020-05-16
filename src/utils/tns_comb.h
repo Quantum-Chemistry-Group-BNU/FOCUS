@@ -1,6 +1,7 @@
 #ifndef TNS_COMB_H
 #define TNS_COMB_H
 
+#include "../core/integral.h"
 #include "../core/onspace.h"
 #include "../core/matrix.h"
 #include "tns_pspace.h"
@@ -34,17 +35,24 @@ class comb{
       bool ifbuild_c(const comb_coord& p) const{ return get_c(p) == std::make_pair(-1,-1); }
       bool ifbuild_l(const comb_coord& p) const{ return type.at(get_l(p)) == 0; }
       bool ifbuild_r(const comb_coord& p) const{ return type.at(get_r(p)) == 0; }
+      // --- environmental quantum numbers --- 
       qsym_space get_qc(const comb_coord& p) const{
-         return ifbuild_c(p)? phys_qsym_space : rsites.at(p).qmid;
+         auto pc = get_c(p);
+	 bool physical = (pc == std::make_pair(-1,-1));
+         return physical? phys_qsym_space : rsites.at(pc).qrow; 
       }
       qsym_space get_ql(const comb_coord& p) const{
-         return lsites.at(get_l(p)).qcol;
+         auto pl = get_l(p);
+         bool cturn = (type.at(pl) == 3 and p.second == 1);
+	 return cturn? lsites.at(pl).qmid : lsites.at(pl).qcol;
       }
-      qsym_space get_qr(const comb_coord& p) const{ 
-         return rsites.at(get_r(p)).qcol;
+      qsym_space get_qr(const comb_coord& p) const{
+         auto pr = get_r(p);
+         return rsites.at(pr).qrow;
       }
       // --- boundary site ---
-      qtensor3 get_bsite() const; 
+      qtensor3 get_lbsite() const; 
+      qtensor3 get_rbsite() const; 
       // --- sweep sequence ---
       std::vector<directed_bond> get_sweeps();
       // --- from SCI wavefunctions ---
@@ -92,6 +100,16 @@ class comb{
       std::map<comb_coord,std::vector<int>> lsupport;
       std::map<comb_coord,qtensor3> lsites;
 };
+
+linalg::matrix get_Smat(const comb& bra, 
+  		        const comb& ket);
+
+linalg::matrix get_Hmat(const comb& bra, 
+		        const comb& ket,
+		        const integral::two_body& int2e,
+		        const integral::one_body& int1e,
+		        const double ecore,
+		        const std::string scratch);
 
 } // tns
 

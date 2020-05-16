@@ -195,9 +195,9 @@ void oper_renorm_lops(const comb& bra,
 // normal operators
 void oper_rbases(const comb& bra,
 		 const comb& ket,
-		 const comb_coord& p, 
-		 const std::string scratch,
-		 const std::string optype);
+		 const comb_coord& p,
+		 oper_dict& qops, 
+		 const char opname);
 
 // complementary operator
 void oper_rbases(const comb& bra,
@@ -205,8 +205,8 @@ void oper_rbases(const comb& bra,
 		 const comb_coord& p, 
 	         const integral::two_body& int2e,
 	         const integral::one_body& int1e,
-		 const std::string scratch,
-		 const std::string optype);
+		 oper_dict& qops, 
+		 const char opname);
 
 } // tns
 

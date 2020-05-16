@@ -9,7 +9,7 @@
 #include "../utils/fci_rdm.h"
 #include "../utils/sci.h"
 #include "../utils/tns_comb.h"
-#include "../utils/tns_alg.h"
+#include "../utils/tns_opt.h"
 #include "../settings/global.h"
 #include "../io/input.h"
 #include <iostream>
@@ -64,7 +64,7 @@ int tests::test_comb(){
       coeff_population(sci_space, vs[i]);
    }
    // truncate CI coefficients
-   const bool ifortho = true;
+   const bool ifortho = false;
    sci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
  
    // comb tensor networks
@@ -113,6 +113,7 @@ int tests::test_comb(){
 
    // check energy
    schd.create_scratch();
+
    //int1e.set_zeros();
    //int2e.set_zeros();
    auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
@@ -126,6 +127,9 @@ int tests::test_comb(){
       cout << "error: diff_Hij > thresh=" << thresh << endl;
       exit(1);
    }
+   
+   tns::opt_sweep(schd, comb, int2e, int1e, ecore);
+   
    schd.remove_scratch();
 
    return 0;

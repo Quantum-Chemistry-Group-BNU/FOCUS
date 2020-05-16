@@ -99,7 +99,7 @@ struct qtensor3{
 	       const qsym_space& qmid1,
 	       const qsym_space& qrow1, 
 	       const qsym_space& qcol1,
-	       const std::vector<bool> dir1={0,1,1,0});
+	       const std::vector<bool> dir1={0,1,0,1});
       inline int get_dim_mid() const{ return qsym_space_dim(qmid); }
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
@@ -140,11 +140,13 @@ struct qtensor3{
       qtensor4 split_lc1(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
       qtensor4 split_c2r(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
    public:
-      std::vector<bool> dir = {0,1,1,0}; // {in,out,out,in}
-      qsym sym; // <mid,row|op|col> (tensor A[m](r,c) = <mr|c>) 
-      qsym_space qmid; // [sym,dim] - middle
-      qsym_space qrow; // [sym,dim] - row
-      qsym_space qcol; // [sym,dim] - col
+      std::vector<bool> dir = {0,1,0,1}; // =0,in; =1,out; default RCF
+      				         // {0,1,1,0} - LCF
+					 // {0,1,1,1} - WF
+      qsym sym; 
+      qsym_space qmid; 
+      qsym_space qrow; 
+      qsym_space qcol; 
       std::map<std::tuple<qsym,qsym,qsym>,std::vector<linalg::matrix>> qblocks;
 };
 
@@ -248,7 +250,9 @@ qtensor2 merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
 // --- tensor linear algebra : contractions ---
 qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b);
+qtensor3 contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b);
+qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b);
 
 } // tns
 

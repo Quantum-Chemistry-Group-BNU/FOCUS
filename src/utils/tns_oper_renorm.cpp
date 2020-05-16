@@ -29,25 +29,25 @@ void tns::oper_renorm_rops(const comb& bra,
    bool swpt = (jp == 0 && ip == bra.iswitch);
    bool rest = !(left || swpt);
    oper_renorm_ropC(bra,ket,p,cqops,rqops,qops,debug);
-   if(debug) oper_rbases(bra,ket,p,scratch,"C");
+   if(debug) oper_rbases(bra,ket,p,qops,'C');
    if(rest){
       oper_renorm_ropA(bra,ket,p,cqops,rqops,qops,debug);
-      if(debug) oper_rbases(bra,ket,p,scratch,"A");
+      if(debug) oper_rbases(bra,ket,p,qops,'A');
       oper_renorm_ropB(bra,ket,p,cqops,rqops,qops,debug);
-      if(debug) oper_rbases(bra,ket,p,scratch,"B");
+      if(debug) oper_rbases(bra,ket,p,qops,'B');
    }
    if(left || swpt){
       auto ifAB = swpt;
       oper_renorm_ropP(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
-      if(debug) oper_rbases(bra,ket,p,int2e,int1e,scratch,"P");
+      if(debug) oper_rbases(bra,ket,p,int2e,int1e,qops,'P');
       oper_renorm_ropQ(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
-      if(debug) oper_rbases(bra,ket,p,int2e,int1e,scratch,"Q");
+      if(debug) oper_rbases(bra,ket,p,int2e,int1e,qops,'Q');
    }
    auto ifAB = swpt || rest;
    oper_renorm_ropS(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
-   if(debug) oper_rbases(bra,ket,p,int2e,int1e,scratch,"S");
+   if(debug) oper_rbases(bra,ket,p,int2e,int1e,qops,'S');
    oper_renorm_ropH(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
-   if(debug) oper_rbases(bra,ket,p,int2e,int1e,scratch,"H");
+   if(debug) oper_rbases(bra,ket,p,int2e,int1e,qops,'H');
    // save
    string fname = oper_fname(scratch, p, "rop");
    oper_save(fname, qops);

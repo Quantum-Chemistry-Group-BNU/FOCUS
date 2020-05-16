@@ -15,13 +15,13 @@ using namespace tns;
 void tns::oper_rbases(const comb& bra,
 		      const comb& ket, 
 		      const comb_coord& p,
-		      const string scratch,
-		      const string optype){
+		      oper_dict& qops,
+		      const char opname){
    if(p == make_pair(0,0)) return; // no rbases at the start 
-   const double thresh = 1.e-5;
+   const double thresh = 1.e-6;
    int nfail = 0;
    double mdiff = -1.0;
-   cout << "tns::oper_rbases optype=" << optype << endl;
+   cout << "tns::oper_rbases opname=" << opname << endl;
    int i = p.first, j = p.second;
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -49,20 +49,15 @@ void tns::oper_rbases(const comb& bra,
    for(int i : rspinorbs) cout << i << " ";
    cout << endl;
 
-   // load renormalized operators 
-   oper_dict qops;
-   string fname = oper_fname(scratch, p, "rop");
-   oper_load(fname, qops);
-    
    // check for ap^+
-   if(optype == "C"){ 
+   if(opname == 'C'){ 
    for(const auto& opC: qops['C']){
       const auto& op = opC.second;
       int orb_p = opC.first;
       int pos = orb2pos.at(orb_p);
       // build
-      int dim0 = bsite.get_dim_col();
-      int dim1 = ksite.get_dim_col();
+      int dim0 = bsite.get_dim_row();
+      int dim1 = ksite.get_dim_row();
       matrix tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -110,14 +105,15 @@ void tns::oper_rbases(const comb& bra,
          cout << "C: p=" << orb_p 
               << " |op|=" << normF(opmat)
               << " |dm|=" << normF(tmat)
-              << " diff=" << diff << endl;
+              << " diff=" << diff
+	      << endl;
 	 nfail++;
       }
    } // op
    } 
 
    // check for Apq = ap^+aq^+
-   if(optype == "A"){ 
+   if(opname == 'A'){ 
    for(const auto& opA : qops['A']){
       const auto& op = opA.second;
       auto pq = oper_unpack(opA.first);
@@ -126,8 +122,8 @@ void tns::oper_rbases(const comb& bra,
       int pos_p = orb2pos.at(orb_p);
       int pos_q = orb2pos.at(orb_q);
       // build
-      int dim0 = bsite.get_dim_col();
-      int dim1 = ksite.get_dim_col();
+      int dim0 = bsite.get_dim_row();
+      int dim1 = ksite.get_dim_row();
       matrix tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -184,7 +180,7 @@ void tns::oper_rbases(const comb& bra,
    }
 
    // check for Bpq = ap^+aq
-   if(optype == "B"){ 
+   if(opname == 'B'){ 
    for(const auto& opB : qops['B']){
       const auto& op = opB.second;
       auto pq = oper_unpack(opB.first);
@@ -193,8 +189,8 @@ void tns::oper_rbases(const comb& bra,
       int pos_p = orb2pos.at(orb_p);
       int pos_q = orb2pos.at(orb_q);
       // build
-      int dim0 = bsite.get_dim_col();
-      int dim1 = ksite.get_dim_col();
+      int dim0 = bsite.get_dim_row();
+      int dim1 = ksite.get_dim_row();
       matrix tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -254,7 +250,7 @@ void tns::oper_rbases(const comb& bra,
 	<< " maxdiff = " << mdiff
         << endl;
    cout << endl;
-   if(nfail > 0) exit(1);
+   //if(nfail > 0) exit(1);
 }
 
 // complementary operators
@@ -263,13 +259,13 @@ void tns::oper_rbases(const comb& bra,
 		      const comb_coord& p,
 	              const integral::two_body& int2e,
 	              const integral::one_body& int1e,
-		      const string scratch,
-		      const string optype){
+		      oper_dict& qops,
+		      const char opname){
    if(p == make_pair(0,0)) return; // no rbases at the start 
    const double thresh = 1.e-5;
    int nfail = 0;
    double mdiff = -1.0;
-   cout << "tns::oper_rbases optype=" << optype << endl;
+   cout << "tns::oper_rbases opname=" << opname << endl;
    int i = p.first, j = p.second;
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
@@ -297,21 +293,16 @@ void tns::oper_rbases(const comb& bra,
    for(int i : rspinorbs) cout << i << " ";
    cout << endl;
 
-   // load renormalized operators 
-   oper_dict qops;
-   string fname = oper_fname(scratch, p, "rop");
-   oper_load(fname, qops);
- 
    // check for Ppq = <pq||sr> aras [r>s]
-   if(optype == "P"){ 
+   if(opname == 'P'){ 
    for(const auto& opP : qops['P']){
       const auto& op = opP.second;
       auto pq = oper_unpack(opP.first);
       int orb_p = pq.first;
       int orb_q = pq.second;
       // build
-      int dim0 = bsite.get_dim_col();
-      int dim1 = ksite.get_dim_col();
+      int dim0 = bsite.get_dim_row();
+      int dim1 = ksite.get_dim_row();
       matrix tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -374,15 +365,15 @@ void tns::oper_rbases(const comb& bra,
    }
 
    // check for Qps = <pq||sr> aq^+ar
-   if(optype == "Q"){ 
+   if(opname == 'Q'){ 
    for(const auto& opQ : qops['Q']){
       const auto& op = opQ.second;
       auto ps = oper_unpack(opQ.first);
       int orb_p = ps.first;
       int orb_s = ps.second;
       // build
-      int dim0 = bsite.get_dim_col();
-      int dim1 = ksite.get_dim_col();
+      int dim0 = bsite.get_dim_row();
+      int dim1 = ksite.get_dim_row();
       matrix tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -444,13 +435,13 @@ void tns::oper_rbases(const comb& bra,
    }
   
    // check for Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
-   if(optype == "S"){
+   if(opname == 'S'){
    for(const auto& opS : qops['S']){
       const auto& op = opS.second;
       int orb_p = opS.first;
       // build
-      int dim0 = bsite.get_dim_col();
-      int dim1 = ksite.get_dim_col();
+      int dim0 = bsite.get_dim_row();
+      int dim1 = ksite.get_dim_row();
       matrix tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -525,12 +516,12 @@ void tns::oper_rbases(const comb& bra,
    }
 
    // check for H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
-   if(optype == "H"){
+   if(opname == 'H'){
    for(const auto& opH : qops['H']){
       const auto& op = opH.second;
       // build
-      int dim0 = bsite.get_dim_col();
-      int dim1 = ksite.get_dim_col();
+      int dim0 = bsite.get_dim_row();
+      int dim1 = ksite.get_dim_row();
       matrix tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -619,5 +610,5 @@ void tns::oper_rbases(const comb& bra,
 	<< " maxdiff = " << mdiff
         << endl;
    cout << endl;
-   if(nfail > 0) exit(1);
+   //if(nfail > 0) exit(1);
 }
