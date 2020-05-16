@@ -262,7 +262,7 @@ void fci::get_initial(const onspace& space,
    int neig = v0.cols();
    int pdim = min(ndim, max(neig,100));
    // construct H in the low-energy subspace 
-   auto index = tools::sort_index(Diag, 1);
+   auto index = tools::sort_index(Diag);
    matrix Hpp(pdim, pdim);
    for(int j=0; j<pdim; j++){
       int jj = index[j];

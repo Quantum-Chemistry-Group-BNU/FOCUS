@@ -47,19 +47,19 @@ inline std::pair<size_t,size_t> inverse_pair(const size_t ij){
    return std::make_pair(i,j);
 }
 
-// return index for sorting: max first default, min first if iop=1  
 // pointer version
 // template do not need implementation but only header
 template <typename T>
 vector<int> sort_index(const int size, const T* v, const int iop=0){
    vector<int> idx(size);
    iota(idx.begin(), idx.end(), 0);
+   // return index for sorting: iop=0, min; =1, max first;
    if(iop == 0){
       stable_sort(idx.begin(), idx.end(),
-           	  [&v](int i1, int i2) {return v[i1] > v[i2];});
+           	  [&v](int i1, int i2) {return v[i1] < v[i2];});
    }else{
       stable_sort(idx.begin(), idx.end(),
-        	  [&v](int i1, int i2) {return v[i1] < v[i2];});
+        	  [&v](int i1, int i2) {return v[i1] > v[i2];});
    }
    return idx;
 }
@@ -77,10 +77,10 @@ vector<int> sort_index_abs(const int size, const T* v, const int iop=0){
    iota(idx.begin(), idx.end(), 0);
    if(iop == 0){
       stable_sort(idx.begin(), idx.end(),
-        	  [&v](int i1, int i2) {return abs(v[i1]) > abs(v[i2]);});
+        	  [&v](int i1, int i2) {return abs(v[i1]) < abs(v[i2]);});
    }else{
       stable_sort(idx.begin(), idx.end(),
-        	  [&v](int i1, int i2) {return abs(v[i1]) < abs(v[i2]);});
+        	  [&v](int i1, int i2) {return abs(v[i1]) > abs(v[i2]);});
    }
    return idx;
 }

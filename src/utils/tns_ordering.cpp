@@ -132,7 +132,7 @@ void tns::ordering_ga(const onspace& space,
             p2[i] += vs[j][i];
          }
       }
-      auto index = tools::sort_index(p2);
+      auto index = tools::sort_index(p2, 1);
       space2.resize(ndet);
       for(int i=0; i<ndet; i++){
          space2[i] = space[index[i]];
@@ -227,7 +227,7 @@ void tns::ordering_fiedler(const vector<double>& data,
    eigen_solver(lij,e);
    cout << "e0=" << e[0] << " e1=" << e[1] << endl;
    for(int i=0; i<k/2; i++) e[i] = lij(i,1);
-   order = tools::sort_index(e);
+   order = tools::sort_index(e, 1);
    if(order[0] > order[k/2-1]) reverse(order.begin(), order.end());
    cout << "fiedler ordering : ";
    for(int i : order) cout << i << " ";

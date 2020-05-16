@@ -136,3 +136,36 @@ void qtensor4::to_array(double* array) const{
       }
    }
 }
+
+// decimation
+pair<qsym_space,qsym_dpt> qtensor4::dpt_lc1() const{
+   return qsym_space_dpt(qrow,qmid);
+}
+
+pair<qsym_space,qsym_dpt> qtensor4::dpt_c2r() const{
+   return qsym_space_dpt(qver,qcol);
+}
+
+pair<qsym_space,qsym_dpt> qtensor4::dpt_lr() const{
+   return qsym_space_dpt(qrow,qcol);
+}
+
+pair<qsym_space,qsym_dpt> qtensor4::dpt_c1c2() const{
+   return qsym_space_dpt(qmid,qver);
+}
+
+qtensor3 qtensor4::merge_lc1() const{
+   auto dp = dpt_lc1();
+   return merge_qt4_qt3_lc1(*this,dp.first,dp.second);
+}
+
+qtensor3 qtensor4::merge_c2r() const{
+   auto dp = dpt_c2r();
+   return merge_qt4_qt3_c2r(*this,dp.first,dp.second);
+}
+
+qtensor2 qtensor4::merge_lr_c1c2() const{
+   auto dp1 = dpt_lr();
+   auto dp2 = dpt_c1c2();
+   return merge_qt4_qt2_lr_c1c2(*this,dp1.first,dp1.second,dp2.first,dp2.second); 
+}

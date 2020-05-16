@@ -10,6 +10,10 @@
 
 namespace tns{
 
+struct qtensor2;
+struct qtensor3;
+struct qtensor4;
+
 // --- rank-2 tensor ---
 // matrix <in1|o0|out> = [o0](in1,out)
 struct qtensor2{
@@ -60,6 +64,10 @@ struct qtensor2{
 	 qsum += dir[2] ? qc : -qc;
 	 return qsum == qsym(0,0); 
       }
+      // decimation
+      qtensor3 split_lc(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
+      qtensor3 split_cr(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
+      qtensor3 split_lr(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
    public:
       std::vector<bool> dir = {0,1,0}; // {in,out,in} by usual convention in diagrams
       qsym sym; // <row|op|col>
@@ -121,6 +129,16 @@ struct qtensor3{
 	 qsum += dir[3] ? qc : -qc;
 	 return qsum == qsym(0,0); 
       }
+      // decimation
+      std::pair<qsym_space,qsym_dpt> dpt_lc() const;
+      std::pair<qsym_space,qsym_dpt> dpt_cr() const;
+      std::pair<qsym_space,qsym_dpt> dpt_lr() const;
+      qtensor2 merge_lc() const;
+      qtensor2 merge_cr() const;
+      qtensor2 merge_lr() const;
+      // split
+      qtensor4 split_lc1(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
+      qtensor4 split_c2r(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
    public:
       std::vector<bool> dir = {0,1,1,0}; // {in,out,out,in}
       qsym sym; // <mid,row|op|col> (tensor A[m](r,c) = <mr|c>) 
@@ -156,7 +174,15 @@ struct qtensor4{
       void random();
       int get_dim() const;
       void from_array(const double* array);
-      void to_array(double* array) const; 
+      void to_array(double* array) const;
+      // decimation
+      std::pair<qsym_space,qsym_dpt> dpt_lc1() const;
+      std::pair<qsym_space,qsym_dpt> dpt_c2r() const;
+      std::pair<qsym_space,qsym_dpt> dpt_lr() const;
+      std::pair<qsym_space,qsym_dpt> dpt_c1c2() const;
+      qtensor3 merge_lc1() const;
+      qtensor3 merge_c2r() const;
+      qtensor2 merge_lr_c1c2() const;
    public:
       //std::vector<bool> dir = {0,1,1,1,1}; // {in,out,out,out,out}
       qsym sym; 
@@ -196,12 +222,6 @@ qtensor3 split_qt3_qt2_lr(const qtensor2& qt2,
 			  const qsym_dpt& dpt);
 
 // two-dot wavefunction
-// matrix storage order : (lr,c2c1)
-qtensor2 merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
-			       const qsym_space& qlr,
-		               const qsym_space& qc1c2,
-			       const qsym_dpt& dpt1,
-			       const qsym_dpt& dpt2);	       
 // matrix storage order : [c2](lc1,r) 
 qtensor3 merge_qt4_qt3_lc1(const qtensor4& qt4,
 			   const qsym_space& qlc1, 
@@ -218,6 +238,12 @@ qtensor4 split_qt4_qt3_c2r(const qtensor3& qt3,
 			   const qsym_space& qc2,
 			   const qsym_space& qrx,
 			   const qsym_dpt& dpt);
+// matrix storage order : (lr,c2c1)
+qtensor2 merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
+			       const qsym_space& qlr,
+			       const qsym_dpt& dpt1,
+		               const qsym_space& qc1c2,
+			       const qsym_dpt& dpt2);	       
 
 // --- tensor linear algebra : contractions ---
 qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);

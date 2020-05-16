@@ -444,7 +444,7 @@ void sci::ci_truncate(onspace& space,
 	 cmax[i] += pow(vs[j][i],2);
       }
    }
-   auto index = tools::sort_index(cmax); 
+   auto index = tools::sort_index(cmax, 1); 
    // orthogonalization if required
    vector<double> vtmp(nred*neig);
    for(int j=0; j<neig; j++){

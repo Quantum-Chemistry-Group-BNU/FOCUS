@@ -63,8 +63,8 @@ void qsym_space_print(const qsym_space& qs, const std::string& name);
 
 // direct product table of qsym_space : V1*V2->V12
 using qsym_dpt = std::map<qsym,std::map<std::pair<qsym,qsym>,std::tuple<int,int,int>>>;
-void qsym_space_dpt(const qsym_space& qs1, const qsym_space& qs2,
-		    qsym_space& qs12, qsym_dpt& dpt);
+std::pair<qsym_space,qsym_dpt> qsym_space_dpt(const qsym_space& qs1, 
+					      const qsym_space& qs2);
 
 // physical degree of freedoms
 extern const std::vector<qsym> phys_sym;

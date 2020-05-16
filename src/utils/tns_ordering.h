@@ -51,7 +51,7 @@ class GApop{
             fitness[i] = 1.0/SvN;
 	 } // i
 	 // sort by fitness
-         auto index = tools::sort_index(fitness);
+         auto index = tools::sort_index(fitness, 1);
 	 std::vector<std::vector<int>> pop2(size);
          std::vector<double> fitness2(size);
          for(int i=0; i<size; i++){

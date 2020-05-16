@@ -52,10 +52,10 @@ void tns::qsym_space_print(const qsym_space& qs, const string& name){
 }
 
 // direct product space V1*V2->V12
-void tns::qsym_space_dpt(const qsym_space& qs1, 
-		         const qsym_space& qs2,
-			 qsym_space& qs12,
-			 qsym_dpt& dpt){
+pair<qsym_space,qsym_dpt> tns::qsym_space_dpt(const qsym_space& qs1, 
+		         		      const qsym_space& qs2){
+   qsym_space qs12;
+   qsym_dpt dpt;
    // form qs12 and dpt
    for(const auto& p1 : qs1){
       auto q1 = p1.first;
@@ -76,6 +76,7 @@ void tns::qsym_space_dpt(const qsym_space& qs1,
 	 ioff += d1*d2;
       }
    }
+   return make_pair(qs12,dpt);
 }
 
 // --- physical degree of freedoms  ---

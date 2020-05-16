@@ -9,7 +9,8 @@ using namespace linalg;
 // wf[L,R] = U[L,l]*sl*Vt[l,R]
 qtensor2 tns::decimation_row(const qtensor2& wf,
 			     const int Dcut){
-   cout << "tns::decimation_row" << endl;
+   bool debug = true;
+   cout << "\ntns::decimation_row Dcut=" << Dcut << endl;
    const auto& qrow = wf.qrow;
    const auto& qcol = wf.qcol;
    // 1. compute reduced basis
@@ -17,7 +18,7 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
    map<int,qsym> idx2qsym; 
    vector<double> sig2all(dr);
    map<qsym,matrix> rbasis;
-   int ioff = 0;
+   int idx = 0, ioff = 0;
    double sum = 0.0;
    for(const auto& pr : qrow){
       auto qr = pr.first;
@@ -26,6 +27,7 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
       for(const auto& pc : qcol){
 	 auto qc = pc.first;
 	 const auto& blk = wf.qblocks.at(make_pair(qr,qc)); 
+	 if(blk.size() == 0) continue;
 	 rdm += dgemm("N","N",blk,blk.T()); 
       }
       // compute renormalized basis
@@ -39,6 +41,13 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
       copy(sig2.begin(), sig2.end(), &sig2all[ioff]);
       rbasis[qr] = rdm;
       ioff += rdim;
+      if(debug){
+	 cout << "idx=" << idx << " qr=" << qr << " rdim=" << rdim << endl;
+	 cout << "    sig2=";
+	 for(auto s : sig2) cout << s << " ";
+	 cout << endl;
+	 idx++;
+      }
    }
    // 2. select important ones
    auto index = tools::sort_index(sig2all, 1);
@@ -53,8 +62,14 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
       }else{
 	 qres[q] += 1;
       }
+      if(debug){
+	if(i==0) cout << "sorted sig2: nres=" << nres << endl;     
+	cout << "i=" << i << " q=" << q << " idx=" << qres[q]-1 
+             << " sig2=" << sig2all[idx] << endl;
+      }
    }
    // 3. form qt2
+   idx = 0;
    qtensor2 qt2(qsym(0,0), qrow, qres);
    for(auto& p : qt2.qblocks){
       auto q = p.first;
@@ -64,6 +79,13 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
 	 auto qd = q.first;
 	 auto& rbas = rbasis[qd];
 	 copy(rbas.data(), rbas.data()+blk.size(), blk.data());
+	 if(debug){
+	    if(idx == 0) cout << "reduced basis:" << endl;
+	    cout << "idx=" << idx << " qr=" << qd << " shape=(" 
+		 << blk.rows() << "," << blk.cols() << ")"
+		 << endl;
+	    idx++; 
+	 }
       }
    }
    return qt2;
@@ -71,7 +93,7 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
 
 qtensor2 tns::decimation_col(const qtensor2& wf,
 			     const int Dcut){
-   cout << "tns::decimation_col" << endl;
+   cout << "tns::decimation_col Dcut=" << Dcut << endl;
    auto wfT = wf.T();
    auto Ubas = decimation_row(wfT, Dcut);
    return Ubas.T();

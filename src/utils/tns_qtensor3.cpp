@@ -259,3 +259,42 @@ void qtensor3::to_array(double* array) const{
    }
 }
 
+// decimation
+pair<qsym_space,qsym_dpt> qtensor3::dpt_lc() const{
+   return qsym_space_dpt(qrow,qmid);
+}
+
+pair<qsym_space,qsym_dpt> qtensor3::dpt_cr() const{
+   return qsym_space_dpt(qmid,qcol);
+}
+
+pair<qsym_space,qsym_dpt> qtensor3::dpt_lr() const{
+   return qsym_space_dpt(qrow,qcol);
+}
+
+qtensor2 qtensor3::merge_lc() const{
+   auto dp = dpt_lc();
+   return merge_qt3_qt2_lc(*this,dp.first,dp.second);
+}
+
+qtensor2 qtensor3::merge_cr() const{
+   auto dp = dpt_cr();
+   return merge_qt3_qt2_cr(*this,dp.first,dp.second);
+}
+
+qtensor2 qtensor3::merge_lr() const{
+   auto dp = dpt_lr();
+   return merge_qt3_qt2_lr(*this,dp.first,dp.second);
+}
+
+qtensor4 qtensor3::split_lc1(const qsym_space& qlx,
+			     const qsym_space& qc1,
+			     const qsym_dpt& dpt) const{
+   return split_qt4_qt3_lc1(*this, qlx, qc1, dpt);
+}
+
+qtensor4 qtensor3::split_c2r(const qsym_space& qc2,
+			     const qsym_space& qrx,
+			     const qsym_dpt& dpt) const{
+   return split_qt4_qt3_c2r(*this, qc2, qrx, dpt);
+}

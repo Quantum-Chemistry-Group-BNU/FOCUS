@@ -259,3 +259,22 @@ int qtensor2::get_dim() const{
    }
    return dim;
 }
+
+// decimation: -<-*->- split into qt3
+qtensor3 qtensor2::split_lc(const qsym_space& qlx,
+			    const qsym_space& qcx,
+			    const qsym_dpt& dpt) const{
+   return split_qt3_qt2_lc(*this, qlx, qcx, dpt);
+}
+
+qtensor3 qtensor2::split_cr(const qsym_space& qcx,
+			    const qsym_space& qrx,
+		    	    const qsym_dpt& dpt) const{	    
+   return split_qt3_qt2_cr(*this, qcx, qrx, dpt);
+}
+
+qtensor3 qtensor2::split_lr(const qsym_space& qlx,
+			    const qsym_space& qrx,
+			    const qsym_dpt& dpt) const{
+   return split_qt3_qt2_lr(*this, qlx, qrx, dpt);
+}

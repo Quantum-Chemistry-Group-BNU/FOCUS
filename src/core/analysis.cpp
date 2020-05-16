@@ -19,7 +19,7 @@ void fock::coeff_population(const onspace& space,
    double ne = 0.0, na = 0.0, nb = 0.0;
    double pi, psum = 0.0, psum1 = 0.0;
    vector<int> idx;
-   idx = tools::sort_index_abs(civec);
+   idx = tools::sort_index_abs(civec, 1);
    int j = 0;
    for(const auto& i : idx){ 
       pi = pow(civec[i],2);

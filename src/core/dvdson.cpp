@@ -52,7 +52,7 @@ void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
    if(vguess != nullptr){
       copy(vguess, vguess+ndim*neig, vbas.data());
    }else{
-      auto index = tools::sort_index(ndim, Diag, 1);
+      auto index = tools::sort_index(ndim, Diag);
       for(int i=0; i<neig; i++){
 	 vbas[i*ndim+index[i]] = 1.0;
       }
@@ -102,7 +102,7 @@ void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
       }
       // *** this part is critical for better performance ***
       // ordering the residual to be added from large to small
-      auto index = tools::sort_index(nres, tnorm.data());
+      auto index = tools::sort_index(nres, tnorm.data(), 1);
       for(int i=0; i<nres; i++){
 	 copy(&tbas[index[i]*ndim], &tbas[index[i]*ndim]+ndim, &rbas[i*ndim]); 
       }
