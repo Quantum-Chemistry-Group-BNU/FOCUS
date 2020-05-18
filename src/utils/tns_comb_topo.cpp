@@ -268,6 +268,7 @@ vector<directed_bond> comb::get_sweeps(){
       auto coord1 = make_pair(i,0);
       sweeps.push_back(make_tuple(coord0,coord1,0));
    }
+   // each internal bond is visited twice
    assert(sweeps.size() == 2*(ntotal-nboundary-1));
    if(debug){
       for(int i=0; i<sweeps.size(); i++){

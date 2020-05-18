@@ -128,36 +128,35 @@
   	    - qtensor3 (with sym) : site tensor A and O*A 
 	    - qtensor3 (with dir) : wf on one site 
  	  - rewrite tns_oper to put all operators in memory [DONE@20200514] 
-	  - conversion: qt4,qt3,qt2 [DONE@20200515]
+	  - conversion among qt4,qt3,qt2 [DONE@20200515]
 	  - change convention for rsite [DONE@20200516]
             - rows for renormalized states 
 	    - update rcanon
 	    - update alg
  	    - update operator construction
 
- 202005xx sweep algorithm for optimizaiton 
-	  - different decimation schemes for sweeps 
-	    - check symmetry handling by using random wf (no need for H*x & renorm ops)
-          - better computational kernels:
-	    - rewriten renormalization kernel for rops
-            - renormalization of lops?
-	    - one-dot opt:
-	      - implement Hdiag [DONE@20200512] 
-	      - implement Hx?
-	      - automated analysis tool for generating formula
- 	    - extension to two-dot opt: 
-	      - qtensor4 : to be implemented? qt4->qt3? [DONE@20200515]
- 	      - implement Hdiag
-	      - implement Hx
+ 202005xx a WORKING version of sweep algorithm 
+	  - 1. symmetry processing (depending on configuration of dots)
+	       - check symmetry handling by using random wf 
+ 		 (no need for H*x & renorm ops)
+	       - one-dot opt: only decimation is different
+	       - two-dot opt: setting up qops is also different
+	  - 2. different decimation schemes for sweeps [DONE@2020517]
+	  - 3. universal operator renormalization (lops & rops)
+	       - general combination of two qops (lc,cr,lr)
+	       - strategy for constructing operators?
+	  - 4. hamiltonian operations
+	       - one-dot opt: Hdiag & HVec
+	       - two-dot opt: Hdiag & Hvec
 
- 202005xx more functionalities:
+ 202005xx an IMPROVED version with more functionalities:
 	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L|
- 	  - propogation of initial guess
+ 	  - propogation of initial guess to next site
 	  - support for state-average excited state calculations
- 	  - efficient implementation using abelian symmetry
-	  - implement canonicalization of Comb for random sampling
 
  202006xx parallelizaiton: large-scale applications!
+	  - different sweep schedule [backbone & branch] 
+	  - naturally leads to branch-based parallelization!!!
 
 --- Advanced functionalities ---
 
@@ -166,6 +165,7 @@
  2020xxxx rdms?
 
  2020xxxx random sampling? as for stochastic pDMRG
+	  implement canonicalization of Comb for random sampling
  
  2020xxxx operator compression
 

@@ -1,5 +1,5 @@
-#ifndef TNS_HAMILTONIAN_H
-#define TNS_HAMILTONIAN_H
+#ifndef TNS_HAM_H
+#define TNS_HAM_H
 
 #include "../core/integral.h"
 #include "tns_qtensor.h"
@@ -10,12 +10,26 @@
 
 namespace tns{
 
+// one-dot
 std::vector<double> get_onedot_Hdiag(oper_dict& cqops,
 			             oper_dict& lqops,
 			             oper_dict& rqops,
 			             const double ecore,
 			             qtensor3& wf);
 
+void get_onedot_Hx(double* y,
+	    	   const double* x,
+	    	   const comb& icomb,
+ 	    	   const comb_coord& p,
+	    	   oper_dict& cqops,
+	    	   oper_dict& lqops,
+	    	   oper_dict& rqops,
+	    	   const integral::two_body& int2e,
+	    	   const integral::one_body& int1e,
+	    	   const double ecore,
+	    	   qtensor3& wf);
+
+// two-dot
 std::vector<double> get_twodot_Hdiag(oper_dict& cqops,
 			             oper_dict& vqops,
 			             oper_dict& lqops,
@@ -23,11 +37,12 @@ std::vector<double> get_twodot_Hdiag(oper_dict& cqops,
 			             const double ecore,
 			             qtensor4& wf);
 
-void get_onedot_Hx(double* y,
+void get_twodot_Hx(double* y,
 	    	   const double* x,
 	    	   const comb& icomb,
  	    	   const comb_coord& p,
 	    	   oper_dict& cqops,
+	    	   oper_dict& vqops,
 	    	   oper_dict& lqops,
 	    	   oper_dict& rqops,
 	    	   const integral::two_body& int2e,

@@ -1,4 +1,4 @@
-#include "tns_hamiltonian.h"
+#include "tns_ham.h"
 #include "tns_oper.h"
 
 using namespace std;
@@ -45,57 +45,6 @@ vector<double> tns::get_onedot_Hdiag(oper_dict& cqops,
    return diag;
 }
 
-vector<double> tns::get_twodot_Hdiag(oper_dict& cqops,
-			             oper_dict& vqops,
-			             oper_dict& lqops,
-			             oper_dict& rqops,
-			             const double ecore,
-			             qtensor4& wf){
-   cout << "\ntns::get_twodot_Hdiag" << endl;
-   // load Hl, Hc, Hr
-   auto& Hc = cqops['H'][0];
-   auto& Hv = vqops['H'][0];
-   auto& Hl = lqops['H'][0];
-   auto& Hr = rqops['H'][0];
-   // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
-   for(auto& p : wf.qblocks){
-      auto& blk = p.second;
-      int mvdim = blk.size();
-      if(mvdim > 0){
-         auto& q = p.first;
-         auto qm = get<0>(q);
-         auto qv = get<1>(q);
-         auto qr = get<2>(q);
-         auto qc = get<3>(q);
-	 auto& cblk = Hc.qblocks[make_pair(qm,qm)]; // central0->mid
-	 auto& vblk = Hv.qblocks[make_pair(qv,qv)]; // central1->ver
-	 auto& lblk = Hl.qblocks[make_pair(qr,qr)]; // left->row
-	 auto& rblk = Hr.qblocks[make_pair(qc,qc)]; // row->col
-	 int mdim = cblk.rows();
-	 int vdim = vblk.rows();
-	 int rdim = blk[0].rows();
-	 int cdim = blk[0].cols();
-	 for(int mv=0; mv<mvdim; mv++){
-            int m = mv/vdim;
-	    int v = mv%vdim;
-	    for(int c=0; c<cdim; c++){
-	       for(int r=0; r<rdim; r++){
-	          blk[m](r,c) = ecore 
-			      + lblk(r,r) 
-			      + cblk(m,m)
-			      + vblk(v,v)
-			      + rblk(c,c);
-	       } // r
-	    } // c
-	 } // mv
-      }
-   } // qblocks
-   vector<double> diag(wf.get_dim());
-   wf.to_array(diag.data());
-   return diag;
-}
-
-
 void tns::get_onedot_Hx(double* y,
 		        const double* x,
 		        const comb& icomb,
@@ -112,10 +61,12 @@ void tns::get_onedot_Hx(double* y,
    // const term
    wf.from_array(x);
    auto Hwf = ecore*wf;
-/*   
    // construct H*wf
-   // 1. local term: Hl*IR
-   Hwf += contract_qt3_qt2_l(wf,Hl)
+   // 1. local term: Hl,Hc,Hr
+   Hwf += contract_qt3_qt2_l(wf,lqops['H'][0]);
+/*
+   Hwf += contract_qt3_qt2_c(wf,cqops['H'][0]);
+   Hwf += contract_qt3_qt2_r(wf,rqops['H'][0]);
    // 2. local term: Il*HR
    Hwf += transform_ropH_wf(wf,p,cqops,rqops,int2e,int1e);
    // 3. pL^+ S_pL^R + h.c.
@@ -153,6 +104,7 @@ void tns::get_onedot_Hx(double* y,
       int sL = ps.second;
    } 
 */
+
    // finally copy back to y
    Hwf.to_array(y);
 }

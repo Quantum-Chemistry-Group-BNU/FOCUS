@@ -106,9 +106,9 @@ struct qtensor3{
       void print(const std::string msg, const int level=0) const;
       // deal with fermionic sign in fermionic direct product
       qtensor3 mid_signed(const double fac=1.0) const;
+      qtensor3 row_signed(const double fac=1.0) const;
       qtensor3 col_signed(const double fac=1.0) const;
       // simple algrithmic operations 
-      double normF() const;
       qtensor3& operator +=(const qtensor3& qt);
       qtensor3& operator -=(const qtensor3& qt);
       friend qtensor3 operator +(const qtensor3& qta, const qtensor3& qtb);
@@ -117,6 +117,7 @@ struct qtensor3{
       friend qtensor3 operator *(const double fac, const qtensor3& qt);  
       friend qtensor3 operator *(const qtensor3& qt, const double fac); 
       // for Davidson algorithm
+      double normF() const;
       void random();
       int get_dim() const;
       void from_array(const double* array);
@@ -140,8 +141,10 @@ struct qtensor3{
       qtensor4 split_lc1(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
       qtensor4 split_c2r(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
    public:
-      std::vector<bool> dir = {0,1,0,1}; // =0,in; =1,out; default RCF
+      std::vector<bool> dir = {0,1,0,1}; // =0,in; =1,out; {sym,mid,row,col}
+      				         // {0,1,0,1} default RCF
       				         // {0,1,1,0} - LCF
+					 // {0,0,1,1} - CCF (for internal upward node)
 					 // {0,1,1,1} - WF
       qsym sym; 
       qsym_space qmid; 
@@ -172,7 +175,10 @@ struct qtensor4{
 	       const qsym_space& qrow1, 
 	       const qsym_space& qcol1);
       void print(const std::string msg, const int level=0) const;
+      // simple operations
+      qtensor4& operator *=(const double fac);
       // for Davidson algorithm
+      double normF() const;
       void random();
       int get_dim() const;
       void from_array(const double* array);
@@ -253,6 +259,7 @@ qtensor3 contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b);
 qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b);
+qtensor2 contract_qt3_qt3_lr(const qtensor3& qt3a, const qtensor3& qt3b);
 
 } // tns
 

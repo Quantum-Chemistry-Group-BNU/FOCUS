@@ -62,6 +62,28 @@ qtensor3 qtensor3::mid_signed(const double fac) const{
    return qt3;
 }
 
+qtensor3 qtensor3::row_signed(const double fac) const{
+   qtensor3 qt3;
+   qt3.dir = dir;
+   qt3.sym = sym;
+   qt3.qmid = qmid;
+   qt3.qrow = qrow;
+   qt3.qcol = qcol;
+   qt3.qblocks = qblocks;
+   for(auto& p : qt3.qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0){
+         auto qr = get<1>(key);
+         double fac2 = qr.parity()*fac;
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] *= fac2;
+	 }
+      }
+   }
+   return qt3;
+}
+
 qtensor3 qtensor3::col_signed(const double fac) const{
    qtensor3 qt3;
    qt3.dir = dir;
@@ -117,20 +139,6 @@ void qtensor3::print(const string msg, const int level) const{
       }
       cout << "total no. of nonzero blocks=" << nnz << endl;
    } // level=1
-}
-
-double qtensor3::normF() const{
-   double sum = 0.0;
-   for(const auto& p : qblocks){
-      const auto& key = p.first;
-      const auto& blk = p.second;
-      if(blk.size() > 0){
-	 for(int m=0; m<blk.size(); m++){
-            sum += pow(linalg::normF(blk[m]),2);
-         }
-      }
-   }
-   return sqrt(sum);
 }
 
 qtensor3& qtensor3::operator +=(const qtensor3& qt){
@@ -202,6 +210,20 @@ qtensor3 tns::operator *(const qtensor3& qt, const double fac){
 }
 
 // for Davidson algorithm
+double qtensor3::normF() const{
+   double sum = 0.0;
+   for(const auto& p : qblocks){
+      const auto& key = p.first;
+      const auto& blk = p.second;
+      if(blk.size() > 0){
+	 for(int m=0; m<blk.size(); m++){
+            sum += pow(linalg::normF(blk[m]),2);
+         }
+      }
+   }
+   return sqrt(sum);
+}
+
 void qtensor3::random(){
    for(auto& p : qblocks){
       auto& blk = p.second;

@@ -78,8 +78,35 @@ void qtensor4::print(const string msg, const int level) const{
       cout << "total no. of nonzero blocks=" << nnz << endl;
    } // level=1
 }
+      
+// simple operations
+qtensor4& qtensor4::operator *=(const double fac){
+   for(auto& p : qblocks){
+      auto& blk = p.second;
+      if(blk.size() > 0){ 
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] *= fac;
+	 }
+      }
+   }
+   return *this;
+}
 
 // for Davidson algorithm
+double qtensor4::normF() const{
+   double sum = 0.0;
+   for(const auto& p : qblocks){
+      const auto& key = p.first;
+      const auto& blk = p.second;
+      if(blk.size() > 0){
+	 for(int m=0; m<blk.size(); m++){
+            sum += pow(linalg::normF(blk[m]),2);
+         }
+      }
+   }
+   return sqrt(sum);
+}
+
 void qtensor4::random(){
    for(auto& p : qblocks){
       auto& blk = p.second;

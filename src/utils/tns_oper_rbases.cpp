@@ -257,10 +257,10 @@ void tns::oper_rbases(const comb& bra,
 void tns::oper_rbases(const comb& bra,
 		      const comb& ket, 
 		      const comb_coord& p,
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
 		      oper_dict& qops,
-		      const char opname){
+		      const char opname,
+	              const integral::two_body& int2e,
+	              const integral::one_body& int1e){
    if(p == make_pair(0,0)) return; // no rbases at the start 
    const double thresh = 1.e-5;
    int nfail = 0;

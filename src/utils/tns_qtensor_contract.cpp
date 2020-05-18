@@ -217,3 +217,47 @@ qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a,
    } // qr
    return qt2;
 }
+
+// 	      r|
+//          /--*--\ qt3a
+// q(r,c) = |x    |y	  = <r|c> = tr(A[r]^**B[c]^T)
+//          \--*--/ qt3b
+//            c|
+qtensor2 tns::contract_qt3_qt3_lr(const qtensor3& qt3a, 
+				  const qtensor3& qt3b){
+   qsym sym = qt3a.sym + qt3b.sym;
+   qtensor2 qt2(sym, qt3a.qmid, qt3b.qmid);
+   // loop over external indices
+   for(const auto& pr : qt2.qrow){
+      const qsym& rsym = pr.first; 
+      int rdim = pr.second;
+      for(const auto& pc : qt2.qcol){
+	 const qsym& csym = pc.first;
+	 int cdim = pc.second;
+	 auto key = make_pair(rsym,csym);
+	 auto& blk = qt2.qblocks[key];
+	 if(blk.size() == 0) continue;
+	 //---------------------------------- 
+	 // loop over contracted indices
+         for(const auto& px : qt3a.qrow){
+            const qsym& xsym = px.first;
+	    for(const auto& py : qt3a.qcol){
+	       const qsym& ysym = py.first;
+	       // contract blocks
+	       auto keya = make_tuple(rsym,xsym,ysym);
+	       auto keyb = make_tuple(csym,xsym,ysym);
+	       auto& blka = qt3a.qblocks.at(keya);
+	       auto& blkb = qt3b.qblocks.at(keyb);
+	       if(blka.size() == 0 || blkb.size() == 0) continue;
+	       for(int ic=0; ic<cdim; ic++){
+                  for(int ir=0; ir<rdim; ir++){
+	             blk(ir,ic) = dgemm("N","T",blka[ir],blkb[ic]).trace();
+		  } // r 
+	       } // c
+	    } // qy
+	 } // qx
+	 //---------------------------------- 
+      } // qc
+   } // qr
+   return qt2;
+}

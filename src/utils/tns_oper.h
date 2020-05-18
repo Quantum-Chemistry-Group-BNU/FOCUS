@@ -79,31 +79,53 @@ qtensor2 oper_kernel_OcOr(const qtensor3& bsite,
 		          const qtensor2& rop,
 			  const int prop);
 
+// O*psi
+qtensor3 oper_kernel_OIwf(const std::string& superblock,
+			  const qtensor3& ksite,
+ 			  const qtensor2& o1);
+
+qtensor3 oper_kernel_IOwf(const std::string& superblock,
+			  const qtensor3& ksite,
+ 			  const qtensor2& o2,
+			  const bool po2);
+ 
+qtensor3 oper_kernel_OOwf(const std::string& superblock,
+			  const qtensor3& ksite,
+ 			  const qtensor2& o1,
+ 			  const qtensor2& o2,
+			  const bool po2);
+
+qtensor2 oper_kernel_renorm(const std::string& superblock,
+			    const qtensor3& bsite,
+			    const qtensor3& ksite);
+
 // renorm different types of operators
-void oper_renorm_ropC(const comb& bra,
-		      const comb& ket,
-		      const comb_coord& p, 
-		      oper_dict& cqops,
-		      oper_dict& rqops,
-		      oper_dict& qops,
-		      const bool debug=false);
+// normal operators
+void oper_renorm_opC(const std::string& superblock,
+		     const qtensor3& bsite,
+		     const qtensor3& ksite,
+		     oper_dict& cqops,
+		     oper_dict& rqops,
+		     oper_dict& qops,
+		     const bool debug=false);
 
-void oper_renorm_ropA(const comb& bra,
-		      const comb& ket,
-		      const comb_coord& p, 
-		      oper_dict& cqops,
-		      oper_dict& rqops,
-		      oper_dict& qops,
-		      const bool debug=false);
+void oper_renorm_opA(const std::string& superblock,
+		     const qtensor3& bsite,
+		     const qtensor3& ksite,
+		     oper_dict& cqops,
+		     oper_dict& rqops,
+		     oper_dict& qops,
+		     const bool debug=false);
 
-void oper_renorm_ropB(const comb& bra,
-		      const comb& ket,
-		      const comb_coord& p, 
-		      oper_dict& cqops,
-		      oper_dict& rqops,
-		      oper_dict& qops,
-		      const bool debug=false);
+void oper_renorm_opB(const std::string& superblock,
+		     const qtensor3& bsite,
+		     const qtensor3& ksite,
+		     oper_dict& cqops,
+		     oper_dict& rqops,
+		     oper_dict& qops,
+		     const bool debug=false);
 
+// complementary operators
 void oper_renorm_ropP(const comb& bra,
 		      const comb& ket,
 		      const comb_coord& p, 
@@ -171,25 +193,27 @@ oper_dict oper_get_lqops(const comb& icomb,
 			 const std::string scratch);
 
 // driver for renorm in different directions  
-void oper_renorm_rops(const comb& bra, 
-		      const comb& ket,
-		      const comb_coord& p, 
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
-		      const std::string scratch);
+oper_dict oper_renorm_rops(const comb& bra, 
+		           const comb& ket,
+		           const comb_coord& p,
+		           oper_dict& cqops,
+		           oper_dict& rqops,
+	                   const integral::two_body& int2e,
+	                   const integral::one_body& int1e);
+
+oper_dict oper_renorm_lops(const comb& bra, 
+		           const comb& ket,
+		           const comb_coord& p, 
+		           oper_dict& lqops,
+		           oper_dict& cqops,
+	                   const integral::two_body& int2e,
+	                   const integral::one_body& int1e);
 
 void oper_env_right(const comb& bra, 
 		    const comb& ket,
 	            const integral::two_body& int2e,
 	            const integral::one_body& int1e,
 		    const std::string scratch=".");
-
-void oper_renorm_lops(const comb& bra, 
-		      const comb& ket,
-		      const comb_coord& p, 
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
-		      const std::string scratch);
 
 // generator operators based on rbases from determinants for debugging
 // normal operators
@@ -203,10 +227,10 @@ void oper_rbases(const comb& bra,
 void oper_rbases(const comb& bra,
 		 const comb& ket,
 		 const comb_coord& p, 
-	         const integral::two_body& int2e,
-	         const integral::one_body& int1e,
 		 oper_dict& qops, 
-		 const char opname);
+		 const char opname,
+	         const integral::two_body& int2e,
+	         const integral::one_body& int1e);
 
 } // tns
 

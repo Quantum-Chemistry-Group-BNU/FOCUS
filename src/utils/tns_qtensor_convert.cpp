@@ -437,8 +437,8 @@ qtensor2 tns::merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
 	 auto qm = qcc12.first;
 	 auto qv = qcc12.second;
          int mdim = get<0>(pcc12.second);
-         int vdim = get<0>(pcc12.second);
-         int joff = get<0>(pcc12.second);
+         int vdim = get<1>(pcc12.second);
+         int joff = get<2>(pcc12.second);
 	 // row
 	 for(const auto& plr : qlr){
             auto qcomb1 = plr.first;
@@ -447,13 +447,13 @@ qtensor2 tns::merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
 	       auto qr = qlr12.first;
 	       auto qc = qlr12.second;
 	       int rdim = get<0>(plr12.second);
-	       int cdim = get<0>(plr12.second);
-	       int ioff = get<0>(plr12.second);
+	       int cdim = get<1>(plr12.second);
+	       int ioff = get<2>(plr12.second);
 	       auto& blk2 = qt2.qblocks[make_pair(qcomb1,qcomb2)];
 	       const auto& blk4 = qt4.qblocks.at(make_tuple(qm,qv,qr,qc));
 	       if(blk2.size()>0 && blk4.size()>0){
 		  for(int imv=0; imv<mdim*vdim; imv++){
-		     int j = joff+imv; // im*vdim+iv
+		     int j = joff+imv; // im*vdim+iv - in this way, allows to reuse split_c2r()
 		     for(int ic=0; ic<cdim; ic++){
 		        for(int ir=0; ir<rdim; ir++){
 			   int i = ioff+ic*rdim+ir;
