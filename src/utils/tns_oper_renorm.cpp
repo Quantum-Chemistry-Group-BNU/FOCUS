@@ -10,8 +10,8 @@ using namespace tns;
 oper_dict tns::oper_renorm_rops(const comb& bra,
 			        const comb& ket,
 		                const comb_coord& p,
-			        oper_dict& cqops,
-			        oper_dict& rqops,
+			        oper_dict& qops1,
+			        oper_dict& qops2,
 		                const integral::two_body& int2e,
 		                const integral::one_body& int1e){
    bool debug = true;
@@ -23,32 +23,36 @@ oper_dict tns::oper_renorm_rops(const comb& bra,
 	<< "[" << bra.topo[ip][jp] << "]" 
 	<< " type=" << bra.type.at(p) << endl;
    // three kinds of sites 
-   bool left = (jp == 0 && ip < bra.iswitch);
-   bool swpt = (jp == 0 && ip == bra.iswitch);
-   bool rest = !(left || swpt);
    oper_dict qops;
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
+   const auto& lsupp = bra.lsupport.at(p);
+   const auto& orbord = bra.orbord;
+   bool left = (jp == 0 && ip <= bra.iswitch);
    const string superblock = "cr";
-   oper_renorm_opC(superblock,bsite,ksite,cqops,rqops,qops,debug);
+   // normal operators
+   oper_renorm_opC(superblock,bsite,ksite,qops1,qops2,qops,debug);
    if(debug) oper_rbases(bra,ket,p,qops,'C');
-   if(rest){
-      oper_renorm_opA(superblock,bsite,ksite,cqops,rqops,qops,debug);
+   if(!left){
+      oper_renorm_opA(superblock,bsite,ksite,qops1,qops2,qops,debug);
       if(debug) oper_rbases(bra,ket,p,qops,'A');
-      oper_renorm_opB(superblock,bsite,ksite,cqops,rqops,qops,debug);
+      oper_renorm_opB(superblock,bsite,ksite,qops1,qops2,qops,debug);
       if(debug) oper_rbases(bra,ket,p,qops,'B');
    }
-   if(left || swpt){
-      auto ifAB = swpt;
-      oper_renorm_ropP(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
+   // complementary operators
+   if(left){
+      oper_renorm_opP(superblock,bsite,ksite,qops1,qops2,qops,
+		      lsupp,orbord,int2e,int1e,debug);
       if(debug) oper_rbases(bra,ket,p,qops,'P',int2e,int1e);
-      oper_renorm_ropQ(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
+      oper_renorm_opQ(superblock,bsite,ksite,qops1,qops2,qops,
+      	              lsupp,int2e,int1e,debug);
       if(debug) oper_rbases(bra,ket,p,qops,'Q',int2e,int1e);
    }
-   auto ifAB = swpt || rest;
-   oper_renorm_ropS(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
+   oper_renorm_opS(superblock,bsite,ksite,qops1,qops2,qops,
+   		   lsupp,int2e,int1e,debug);
    if(debug) oper_rbases(bra,ket,p,qops,'S',int2e,int1e);
-   oper_renorm_ropH(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
+   oper_renorm_opH(superblock,bsite,ksite,qops1,qops2,qops,
+   		   int2e,int1e,debug);
    if(debug) oper_rbases(bra,ket,p,qops,'H',int2e,int1e);
    auto t1 = global::get_time();
    cout << "timing for tns::oper_renorm_rops : " << setprecision(2) 
@@ -61,7 +65,7 @@ oper_dict tns::oper_renorm_lops(const comb& bra,
 			        const comb& ket,
 		                const comb_coord& p,
 			        oper_dict& lqops,
-			        oper_dict& cqops,
+			        oper_dict& qops1,
 		                const integral::two_body& int2e,
 		                const integral::one_body& int1e){
    bool debug = false;
@@ -78,19 +82,19 @@ oper_dict tns::oper_renorm_lops(const comb& bra,
    bool rest = !(left || swpt);
    oper_dict qops;
 /*   
-   oper_renorm_ropC(bra,ket,p,cqops,rqops,qops,debug);
+   oper_renorm_ropC(bra,ket,p,qops1,qops2,qops,debug);
    if(rest){
-      oper_renorm_ropA(bra,ket,p,cqops,rqops,qops,debug);
-      oper_renorm_ropB(bra,ket,p,cqops,rqops,qops,debug);
+      oper_renorm_ropA(bra,ket,p,qops1,qops2,qops,debug);
+      oper_renorm_ropB(bra,ket,p,qops1,qops2,qops,debug);
    }
    if(left || swpt){
       auto ifAB = swpt;
-      oper_renorm_ropP(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
-      oper_renorm_ropQ(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
+      oper_renorm_ropP(bra,ket,p,qops1,qops2,qops,ifAB,int2e,int1e,debug);
+      oper_renorm_ropQ(bra,ket,p,qops1,qops2,qops,ifAB,int2e,int1e,debug);
    }
    auto ifAB = swpt || rest;
-   oper_renorm_ropS(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
-   oper_renorm_ropH(bra,ket,p,cqops,rqops,qops,ifAB,int2e,int1e,debug);
+   oper_renorm_ropS(bra,ket,p,qops1,qops2,qops,ifAB,int2e,int1e,debug);
+   oper_renorm_ropH(bra,ket,p,qops1,qops2,qops,ifAB,int2e,int1e,debug);
    // save
    string fname = oper_fname(scratch, p, "lop");
    oper_save(fname, qops);
@@ -112,9 +116,9 @@ void tns::oper_env_right(const comb& bra,
    for(int idx=0; idx<bra.rcoord.size(); idx++){
       auto p = bra.rcoord[idx];
       if(bra.type.at(p) != 0 || p.first == 0){
-         auto cqops = oper_get_cqops(bra, p, scratch);
-         auto rqops = oper_get_rqops(bra, p, scratch);
-         auto qops = oper_renorm_rops(bra, ket, p, cqops, rqops, int2e, int1e);
+         auto qops1 = oper_get_cqops(bra, p, scratch);
+         auto qops2 = oper_get_rqops(bra, p, scratch);
+         auto qops = oper_renorm_rops(bra, ket, p, qops1, qops2, int2e, int1e);
          string fname = oper_fname(scratch, p, "rop");
          oper_save(fname, qops);
       }

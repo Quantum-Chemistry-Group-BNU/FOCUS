@@ -61,24 +61,7 @@ void oper_dot_H(const int kp,
 	        const integral::one_body& int1e,
 	        oper_dict& qops);
 
-// 2. universal blocking code for {|nr>} and {|ln>}
-
-// kernel for right renormalization 
-qtensor2 oper_kernel_OcIr(const qtensor3& bsite,
-		          const qtensor3& ksite,
-		          const qtensor2& cop);
-
-qtensor2 oper_kernel_IcOr(const qtensor3& bsite,
-		          const qtensor3& ksite,
-		          const qtensor2& rop,
-			  const int prop);
-
-qtensor2 oper_kernel_OcOr(const qtensor3& bsite,
-		          const qtensor3& ksite,
-		          const qtensor2& cop,
-		          const qtensor2& rop,
-			  const int prop);
-
+// 2. universal blocking code for {|lc>},{|cr>},{|lr>}
 // O*psi
 qtensor3 oper_kernel_OIwf(const std::string& superblock,
 			  const qtensor3& ksite,
@@ -99,76 +82,108 @@ qtensor2 oper_kernel_renorm(const std::string& superblock,
 			    const qtensor3& bsite,
 			    const qtensor3& ksite);
 
+// {P,Q,S,H}*wf
+qtensor3 oper_kernel_Pwf(const std::string& superblock,
+		         const qtensor3& ksite,
+		         oper_dict& qops1,
+		         oper_dict& qops2,
+	                 const integral::two_body& int2e,
+	                 const integral::one_body& int1e,
+		         const int index);
+
+qtensor3 oper_kernel_Qwf(const std::string& superblock,
+		         const qtensor3& ksite,
+		         oper_dict& qops1,
+		         oper_dict& qops2,
+	                 const integral::two_body& int2e,
+	                 const integral::one_body& int1e,
+		         const int index);
+
+qtensor3 oper_kernel_Swf(const std::string& superblock,
+		         const qtensor3& ksite,
+		         oper_dict& qops1,
+		         oper_dict& qops2,
+	                 const integral::two_body& int2e,
+	                 const integral::one_body& int1e,
+		         const int index);
+
+qtensor3 oper_kernel_Hwf(const std::string& superblock,
+		         const qtensor3& ksite,
+		         oper_dict& qops1,
+		         oper_dict& qops2,
+	                 const integral::two_body& int2e,
+	                 const integral::one_body& int1e);
+
 // renorm different types of operators
 // normal operators
 void oper_renorm_opC(const std::string& superblock,
 		     const qtensor3& bsite,
 		     const qtensor3& ksite,
-		     oper_dict& cqops,
-		     oper_dict& rqops,
+		     oper_dict& qops1,
+		     oper_dict& qops2,
 		     oper_dict& qops,
 		     const bool debug=false);
 
 void oper_renorm_opA(const std::string& superblock,
 		     const qtensor3& bsite,
 		     const qtensor3& ksite,
-		     oper_dict& cqops,
-		     oper_dict& rqops,
+		     oper_dict& qops1,
+		     oper_dict& qops2,
 		     oper_dict& qops,
 		     const bool debug=false);
 
 void oper_renorm_opB(const std::string& superblock,
 		     const qtensor3& bsite,
 		     const qtensor3& ksite,
-		     oper_dict& cqops,
-		     oper_dict& rqops,
+		     oper_dict& qops1,
+		     oper_dict& qops2,
 		     oper_dict& qops,
 		     const bool debug=false);
 
 // complementary operators
-void oper_renorm_ropP(const comb& bra,
-		      const comb& ket,
-		      const comb_coord& p, 
-		      oper_dict& cqops,
-		      oper_dict& rqops,
-		      oper_dict& qops,
-		      const bool& ifAB,
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
-		      const bool debug=false);
-	
-void oper_renorm_ropQ(const comb& bra,
-		      const comb& ket,
-		      const comb_coord& p, 
-		      oper_dict& cqops,
-		      oper_dict& rqops,
-		      oper_dict& qops,
-		      const bool& ifAB,
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
-		      const bool debug=false);
-	
-void oper_renorm_ropS(const comb& bra,
-		      const comb& ket,
-		      const comb_coord& p, 
-		      oper_dict& cqops,
-		      oper_dict& rqops,
-		      oper_dict& qops,
-		      const bool& ifAB,
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
-		      const bool debug=false);
-	
-void oper_renorm_ropH(const comb& bra,
-		      const comb& ket,
-		      const comb_coord& p, 
-		      oper_dict& cqops,
-		      oper_dict& rqops,
-		      oper_dict& qops,
-		      const bool& ifAB,
-	              const integral::two_body& int2e,
-	              const integral::one_body& int1e,
-		      const bool debug=false);
+void oper_renorm_opP(const std::string& superblock,
+		     const qtensor3& bsite,
+		     const qtensor3& ksite,
+		     oper_dict& qops1,
+		     oper_dict& qops2,
+		     oper_dict& qops,
+		     const std::vector<int>& lsupp,
+		     const std::vector<int>& orbord,
+	             const integral::two_body& int2e,
+	             const integral::one_body& int1e,
+		     const bool debug=false);
+
+void oper_renorm_opQ(const std::string& superblock,
+		     const qtensor3& bsite,
+		     const qtensor3& ksite,
+		     oper_dict& qops1,
+		     oper_dict& qops2,
+		     oper_dict& qops,
+		     const std::vector<int>& lsupp,
+	             const integral::two_body& int2e,
+	             const integral::one_body& int1e,
+		     const bool debug=false);
+
+void oper_renorm_opS(const std::string& superblock,
+		     const qtensor3& bsite,
+		     const qtensor3& ksite,
+		     oper_dict& qops1,
+		     oper_dict& qops2,
+		     oper_dict& qops,
+		     const std::vector<int>& lsupp,
+	             const integral::two_body& int2e,
+	             const integral::one_body& int1e,
+		     const bool debug=false);
+
+void oper_renorm_opH(const std::string& superblock,
+		     const qtensor3& bsite,
+		     const qtensor3& ksite,
+		     oper_dict& qops1,
+		     oper_dict& qops2,
+		     oper_dict& qops,
+	             const integral::two_body& int2e,
+	             const integral::one_body& int1e,
+		     const bool debug=false);
 
 // helpers for building/loading environment
 oper_dict oper_build_local(const int kp,
