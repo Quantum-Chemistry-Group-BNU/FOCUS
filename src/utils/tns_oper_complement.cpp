@@ -21,23 +21,20 @@ void tns::oper_renorm_opP(const string& superblock,
    auto t0 = global::get_time();
 
    // initialization for Ppq = <pq||sr> aras [r>s] (p<q)
-   qtensor2 Paa(qsym(-2,-2), bsite.qrow, ksite.qrow);
-   qtensor2 Pbb(qsym(-2, 0), bsite.qrow, ksite.qrow);
-   qtensor2 Pos(qsym(-2,-1), bsite.qrow, ksite.qrow);
+   vector<int> index;
    for(int korb_p : lsupp){
       int pa = 2*korb_p, pb = pa+1;
       for(int korb_q : lsupp){
 	 int qa = 2*korb_q, qb = qa+1;
-	 if(orbord[pa] < orbord[qa]) qops['P'][oper_pack(pa,qa)] = Paa;
-	 if(orbord[pb] < orbord[qb]) qops['P'][oper_pack(pb,qb)] = Pbb;
-	 if(orbord[pa] < orbord[qb]) qops['P'][oper_pack(pa,qb)] = Pos;
-	 if(orbord[pb] < orbord[qa]) qops['P'][oper_pack(pb,qa)] = Pos;
+	 if(orbord[pa] < orbord[qa]) index.push_back(oper_pack(pa,qa));
+	 if(orbord[pb] < orbord[qb]) index.push_back(oper_pack(pb,qb));
+	 if(orbord[pa] < orbord[qb]) index.push_back(oper_pack(pa,qb));
+	 if(orbord[pb] < orbord[qa]) index.push_back(oper_pack(pb,qa));
       }
    }
-   for(auto& qop : qops['P']){
-      auto pq = qop.first;
+   for(const int pq : index){
       auto Hwf = oper_kernel_Pwf(superblock,ksite,qops1,qops2,int2e,int1e,pq);
-      qop.second = oper_kernel_renorm(superblock,bsite,Hwf);
+      qops['P'][pq] = oper_kernel_renorm(superblock,bsite,Hwf);
    }
 
    auto t1 = global::get_time();
@@ -61,24 +58,20 @@ void tns::oper_renorm_opQ(const string& superblock,
    auto t0 = global::get_time();
 
    // initialization for Qps = <pq||sr> aq^+ar
-   // Qaa,bb, Qab ~ b^+a, Qba ~ a^+b
-   qtensor2 Qss(qsym(0, 0), bsite.qrow, ksite.qrow);
-   qtensor2 Qab(qsym(0,-1), bsite.qrow, ksite.qrow);
-   qtensor2 Qba(qsym(0, 1), bsite.qrow, ksite.qrow);
+   vector<int> index;
    for(int korb_p : lsupp){
       int pa = 2*korb_p, pb = pa+1;
       for(int korb_s : lsupp){
 	 int sa = 2*korb_s, sb = sa+1;
-	 qops['Q'][oper_pack(pa,sa)] = Qss;
-	 qops['Q'][oper_pack(pb,sb)] = Qss;
-	 qops['Q'][oper_pack(pa,sb)] = Qab;
-	 qops['Q'][oper_pack(pb,sa)] = Qba;
+	 index.push_back(oper_pack(pa,sa));
+	 index.push_back(oper_pack(pb,sb));
+	 index.push_back(oper_pack(pa,sb));
+	 index.push_back(oper_pack(pb,sa));
       }
    }
-   for(auto& qop : qops['Q']){
-      auto ps = qop.first;
+   for(const int ps : index){
       auto Hwf = oper_kernel_Qwf(superblock,ksite,qops1,qops2,int2e,int1e,ps);
-      qop.second = oper_kernel_renorm(superblock,bsite,Hwf);
+      qops['Q'][ps] = oper_kernel_renorm(superblock,bsite,Hwf);
    }
 
    auto t1 = global::get_time();
@@ -102,17 +95,15 @@ void tns::oper_renorm_opS(const string& superblock,
    auto t0 = global::get_time();
 
    // initialization for 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
-   qtensor2 Sa(qsym(-1,-1), bsite.qrow, ksite.qrow);
-   qtensor2 Sb(qsym(-1, 0), bsite.qrow, ksite.qrow);
+   vector<int> index;
    for(int korb_p : lsupp){
       int pa = 2*korb_p, pb = pa+1;
-      qops['S'][pa] = Sa;
-      qops['S'][pb] = Sb;
+      index.push_back(pa);
+      index.push_back(pb);
    }
-   for(auto& qop : qops['S']){
-      int pL = qop.first;
-      auto Hwf = oper_kernel_Swf(superblock,ksite,qops1,qops2,int2e,int1e,pL);
-      qop.second = oper_kernel_renorm(superblock,bsite,Hwf);
+   for(const int p : index){
+      auto Hwf = oper_kernel_Swf(superblock,ksite,qops1,qops2,int2e,int1e,p);
+      qops['S'][p] = oper_kernel_renorm(superblock,bsite,Hwf);
    }
 
    auto t1 = global::get_time();

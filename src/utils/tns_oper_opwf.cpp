@@ -36,7 +36,7 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
    if(ifP1){
       opwf += oper_kernel_OIwf(superblock,ksite,qops1['P'][index]);
    }else{
-      auto it = qops1['A'].begin()->second;
+      auto& it = qops1['A'].begin()->second;
       qtensor2 op1Pdag(-symP, it.qrow, it.qcol);
       for(const auto& op1A : qops1['A']){
          if(op1Pdag.sym != op1A.second.sym) continue;
@@ -53,7 +53,7 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
       opwf += oper_kernel_IOwf(superblock,ksite,qops2['P'][index],0);
    }else{
       // P_pLqL^R = sum_rRsR <pLqL||sRrR> rRsR
-      auto it = qops2['A'].begin()->second;
+      auto& it = qops2['A'].begin()->second;
       qtensor2 op2Pdag(-symP, it.qrow, it.qcol);
       for(const auto& op2A : qops2['A']){
          if(op2Pdag.sym != op2A.second.sym) continue;
@@ -71,8 +71,8 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
          int s1 = op1C.first;
 	 const auto& op1 = op1C.second;
          // op2 = -<pq||s1r2> r2
-         qsym rsym = symP + op1C.second.sym;
-	 auto it = qops2['C'].begin()->second;
+         qsym rsym = symP + op1.sym;
+	 auto& it = qops2['C'].begin()->second;
          qtensor2 op2(-rsym, it.qrow, it.qcol);
          for(const auto& op2C : qops2['C']){
             if(op2.sym != op2C.second.sym) continue;
@@ -87,8 +87,8 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
          int r2 = op2C.first;
 	 const auto& op2 = op2C.second;
          // op1 = -<pq||s1r2> s1
-	 qsym rsym = symP + op2C.second.sym;
-	 auto it = qops1['C'].begin()->second;
+	 qsym rsym = symP + op2.sym;
+	 auto& it = qops1['C'].begin()->second;
          qtensor2 op1(-rsym, it.qrow, it.qcol);
          for(const auto& op1C : qops1['C']){
             if(op1.sym != op1C.second.sym) continue;
@@ -114,12 +114,12 @@ qtensor3 tns::oper_kernel_Qwf(const string& superblock,
    int p = ps.first,  spin_p = p%2;
    int s = ps.second, spin_s = s%2;
    qsym symQ;
-   if(spin_p == 1 && spin_s == 0){
-      symQ = qsym(0,-1); // Qab
-   }else if(spin_p == 0 && spin_s == 1){
-      symQ = qsym(0, 1); // Qba
+   if(spin_p == 0 && spin_s == 1){
+      symQ = qsym(0,-1); // Qab ~ b^+a
+   }else if(spin_p == 1 && spin_s == 0){
+      symQ = qsym(0, 1); // Qba ~ a^+b
    }else{
-      symQ = qsym(0, 0); // Qss
+      symQ = qsym(0, 0); // Qss ~ a^+a,b^+b
    }
    qtensor3 opwf(symQ+ksite.sym, ksite.qmid, ksite.qrow, ksite.qcol, ksite.dir);
    //
@@ -134,7 +134,7 @@ qtensor3 tns::oper_kernel_Qwf(const string& superblock,
    if(ifP1){
       opwf += oper_kernel_OIwf(superblock,ksite,qops1['Q'][index]);
    }else{
-      auto it = qops1['B'].begin()->second;
+      auto& it = qops1['B'].begin()->second;
       qtensor2 op1Q(symQ, it.qrow, it.qcol);
       for(const auto& op1B : qops1['B']){
          if(op1Q.sym != op1B.second.sym) continue;
@@ -151,7 +151,7 @@ qtensor3 tns::oper_kernel_Qwf(const string& superblock,
       opwf += oper_kernel_IOwf(superblock,ksite,qops2['Q'][index],0);
    }else{
       // Q_pLsL^R = sum_qRrR <pLqR||sLrR> qR^+rR
-      auto it = qops2['B'].begin()->second;
+      auto& it = qops2['B'].begin()->second;
       qtensor2 op2Q(symQ, it.qrow, it.qcol);
       for(const auto& op2B : qops2['B']){
          if(op2Q.sym != op2B.second.sym) continue;
@@ -165,13 +165,13 @@ qtensor3 tns::oper_kernel_Qwf(const string& superblock,
    // 3. <pq1||sr2> aq1^+ar2
    // 4. <pq2||sr1> aq2^+ar1
    if(qops1['C'].size() < qops2['C'].size()){
-      // 3. CR: q1^+ * (<pq1||sr2> r2)
+      // 3. q1^+ * (<pq1||sr2> r2)
       for(const auto& op1C : qops1['C']){
 	 int q1 = op1C.first;
 	 const auto& op1 = op1C.second;
 	 // op2 = <pq1||sr2> r2 
-	 qsym rsym = symQ - op1C.second.sym;
-	 auto it = qops2['C'].begin()->second;
+	 qsym rsym = symQ - op1.sym;
+	 auto& it = qops2['C'].begin()->second;
 	 qtensor2 op2(-rsym, it.qrow, it.qcol);
 	 for(const auto& op2C : qops2['C']){
 	    if(op2.sym != op2C.second.sym) continue;
@@ -180,13 +180,13 @@ qtensor3 tns::oper_kernel_Qwf(const string& superblock,
 	 }
 	 opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1);
       }
-      // 4. RC: r1 * (<pq2||sr1> (-q2^+))
+      // 4. r1 * (-<pq2||sr1> q2^+)
       for(const auto& op1C : qops1['C']){
 	 int r1 = op1C.first;
 	 const auto& op1 = op1C.second;
-	 // op2 = <pq2||sr1> (-q2^+)
-	 qsym rsym = symQ + op1C.second.sym;
-	 auto it = qops2['C'].begin()->second;
+	 // op2 = -<pq2||sr1> q2^+
+	 qsym rsym = symQ + op1.sym;
+	 auto& it = qops2['C'].begin()->second;
 	 qtensor2 op2(rsym, it.qrow, it.qcol);
 	 for(const auto& op2C : qops2['C']){
             if(op2.sym != op2C.second.sym) continue;
@@ -196,14 +196,14 @@ qtensor3 tns::oper_kernel_Qwf(const string& superblock,
 	 opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,1);
       }
    }else{
-      // 3. CR: q1^+ * (<pq1||sr2> r2) = (<pq1||sr2> q1^+) * r2
+      // 3. (<pq1||sr2> q1^+) * r2
       for(const auto& op2C : qops2['C']){
 	 int r2 = op2C.first;
 	 const auto& op2 = op2C.second;
-	 // op1 = <pq1||sr2> q1 
-	 qsym rsym = symQ + op2C.second.sym;
-	 auto it = qops1['C'].begin()->second;
-	 qtensor2 op1(-rsym, it.qrow, it.qcol);
+	 // op1 = <pq1||sr2> q1^+
+	 qsym rsym = symQ + op2.sym;
+	 auto& it = qops1['C'].begin()->second;
+	 qtensor2 op1(rsym, it.qrow, it.qcol);
 	 for(const auto& op1C : qops1['C']){
 	    if(op1.sym != op1C.second.sym) continue;
 	    int q1 = op1C.first;
@@ -211,14 +211,14 @@ qtensor3 tns::oper_kernel_Qwf(const string& superblock,
 	 }
 	 opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1);
       }
-      // 4. RC: r1 * (<pq2||sr1> (-q2^+)) = (-<pq2||sr1> r1) * q2^+
+      // 4. (-<pq2||sr1> r1) * q2^+
       for(const auto& op2C : qops2['C']){
 	 int q2 = op2C.first;
 	 const auto& op2 = op2C.second;
 	 // op1 = -<pq2||sr1> r1
-	 qsym rsym = symQ - op2C.second.sym;
-	 auto it = qops1['C'].begin()->second;
-	 qtensor2 op1(rsym, it.qrow, it.qcol);
+	 qsym rsym = symQ - op2.sym;
+	 auto& it = qops1['C'].begin()->second;
+	 qtensor2 op1(-rsym, it.qrow, it.qcol);
 	 for(const auto& op1C : qops1['C']){
             if(op1.sym != op1C.second.sym) continue;
 	    int r1 = op1C.first;
@@ -240,7 +240,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 		              const int index){
    // determine symmetry
    int p = index, spin_p = p%2;
-   qsym symS = (spin_p == 1)? qsym(-1,-1) : qsym(-1,0); // Sa or Sb
+   qsym symS = (spin_p == 0)? qsym(-1,-1) : qsym(-1,0); // Sa or Sb
    qtensor3 opwf(symS+ksite.sym, ksite.qmid, ksite.qrow, ksite.qcol, ksite.dir);
    //
    // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
@@ -271,24 +271,26 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
             auto sr = oper_unpack(op1A.first);
             int s1 = sr.first;
             int r1 = sr.second;
+	    const auto& op1 = op1A.second;
             // op2 = <pq2||s1r1>aq2^+
-            qsym rsym = symS + op1A.second.sym;
-	    auto it = qops2['C'].begin()->second;
+            qsym rsym = symS + op1.sym;
+	    auto& it = qops2['C'].begin()->second;
             qtensor2 op2(rsym, it.qrow, it.qcol);
             for(const auto& op2C : qops2['C']){
                if(op2.sym != op2C.second.sym) continue;
                int q2 = op2C.first;
                op2 += int2e.getAnti(p,q2,s1,r1)*op2C.second;
             }
-            opwf += oper_kernel_OOwf(superblock,ksite,op1A.second.T(),op2,1);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,1);
          }
       }else{
          // 3. <pq2||s1r1> aq2^+ ar1 as1 = (<pq2||s1r1>ar1as1) aq2^+
 	 for(const auto& op2C : qops2['C']){
 	    int q2 = op2C.first;
+	    const auto& op2 = op2C.second;
 	    // op1 = <pq2||s1r1>ar1as1
-	    qsym rsym = symS - op2C.second.sym;
-	    auto it = qops1['A'].begin()->second;
+	    qsym rsym = symS - op2.sym;
+	    auto& it = qops1['A'].begin()->second;
 	    qtensor2 op1(-rsym, it.qrow, it.qcol);
 	    for(const auto& op1A : qops1['A']){
 	       if(op1.sym != op1A.second.sym) continue;
@@ -297,7 +299,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	       int r1 = sr.second;
 	       op1 += int2e.getAnti(p,q2,s1,r1)*op1A.second;
 	    }
-	    opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2C.second,1);
+	    opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,1);
 	 }
       }
    }
@@ -318,24 +320,26 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
             auto qs = oper_unpack(op1B.first);
             int q1 = qs.first;
             int s1 = qs.second;
+	    const auto& op1 = op1B.second;
             // op2 = -<pq1||s1r2>ar2
-            qsym rsym = symS - op1B.second.sym;
-            auto it = qops2['C'].begin()->second;
+            qsym rsym = symS - op1.sym;
+            auto& it = qops2['C'].begin()->second;
 	    qtensor2 op2(-rsym, it.qrow, it.qcol);
             for(const auto& op2C : qops2['C']){
                if(op2.sym != op2C.second.sym) continue;
                int r2 = op2C.first;
                op2 -= int2e.getAnti(p,q1,s1,r2)*op2C.second;
             }
-            opwf += oper_kernel_OOwf(superblock,ksite,op1B.second,op2.T(),1);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1);
          }
       }else{
          // 4. <pq1||s1r2> aq1^+ ar2 as1 = (-<pq1||s1r2> aq1^+as1) ar2
-	 for(const auto& op2C : qops2['A']){
+	 for(const auto& op2C : qops2['C']){
 	    int r2 = op2C.first;
+	    const auto& op2 = op2C.second;
 	    // op1 = -<pq1||s1r2> aq1^+as1
-	    qsym rsym = symS + op2C.second.sym;
-	    auto it = qops1['B'].begin()->second;
+	    qsym rsym = symS + op2.sym;
+	    auto& it = qops1['B'].begin()->second;
 	    qtensor2 op1(rsym, it.qrow, it.qcol);
 	    for(const auto& op1B : qops1['B']){
 	       if(op1.sym != op1B.second.sym) continue;
@@ -344,11 +348,11 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	       int s1 = qs.second;
 	       op1 -= int2e.getAnti(p,q1,s1,r2)*op1B.second;
 	    }
-	    opwf += oper_kernel_OOwf(superblock,ksite,op1,op2C.second.T(),1);
+	    opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1);
 	 }
       }
    }
-   // 5. <pq1||s2r2> aq1^+ar2as2 
+   // 5. <pq1||s2r2> aq1^+ ar2 as2 
    bool ifP2 = qops2.find('P') != qops2.end();
    if(ifP2){
       // 5. <pq1||s2r2> aq1^+ar2as2 => aq1^+*Ppq1^2
@@ -363,9 +367,10 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
          // 5. <pq1||s2r2> aq1^+ar2as2 = aq1^+ (<pq1||s2r2>ar2as2)
          for(const auto& op1C : qops1['C']){
             int q1 = op1C.first;
+	    const auto& op1 = op1C.second;
 	    // op2 = <pq1||s2r2>ar2as2
-            qsym rsym = symS - op1C.second.sym;
-	    auto it = qops2['A'].begin()->second;
+            qsym rsym = symS - op1.sym;
+	    auto& it = qops2['A'].begin()->second;
             qtensor2 op2(-rsym, it.qrow, it.qcol);
             for(const auto& op2A : qops2['A']){
                if(op2.sym != op2A.second.sym) continue;
@@ -374,7 +379,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
                int r2 = sr.second;
                op2 += int2e.getAnti(p,q1,s2,r2)*op2A.second;
             }
-            opwf += oper_kernel_OOwf(superblock,ksite,op1C.second,op2.T(),0);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),0);
          }
       }else{
          // 5. <pq1||s2r2> aq1^+ar2as2 = (<pq1||s2r2> aq1^+) ar2as2
@@ -382,27 +387,28 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	    auto sr = oper_unpack(op2A.first);
 	    int s2 = sr.first;
 	    int r2 = sr.second;
+	    const auto& op2 = op2A.second;
 	    // op1 = <pq1||s2r2> aq1^+
-	    qsym rsym = symS + op2A.second.sym;
-	    auto it = qops1['C'].begin()->second;
+	    qsym rsym = symS + op2.sym;
+	    auto& it = qops1['C'].begin()->second;
 	    qtensor2 op1(rsym, it.qrow, it.qcol);
 	    for(const auto& op1C : qops1['C']){
  	       if(op1.sym != op1C.second.sym) continue;
 	       int q1 = op1C.first;
 	       op1 += int2e.getAnti(p,q1,s2,r2)*op1C.second;
 	    }
-	    opwf += oper_kernel_OOwf(superblock,ksite,op1,op2A.second.T(),0);
+	    opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),0);
 	 }
       }
    }
-   // 6. <pq2||s1r2> aq2^+ar2as1 
+   // 6. <pq2||s1r2> aq2^+ ar2 as1 
    bool ifQ2 = qops2.find('Q') != qops2.end();
    if(ifQ2){
       // 6. <pq2||s1r2> aq2^+ar2as1 => Qps1^2*as1
       for(const auto& op1C : qops1['C']){
-         int q1 = op1C.first;
+         int s1 = op1C.first;
 	 const auto& op1 = op1C.second;
-         const auto& op2Q = qops2['Q'][oper_pack(p,q1)];
+         const auto& op2Q = qops2['Q'][oper_pack(p,s1)];
          opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2Q,0);
       }
    }else{
@@ -410,9 +416,10 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
          // 6. <pq2||s1r2> aq2^+ar2as1 = as1 (<pq2||s1r2>aq2^+ar2)
          for(const auto& op1C : qops1['C']){
             int s1 = op1C.first;
+	    const auto& op1 = op1C.second;
 	    // op2 = <pq2||s1r2>aq2^+ar2
-            qsym rsym = symS + op1C.second.sym;
-	    auto it = qops2['B'].begin()->second;
+            qsym rsym = symS + op1.sym;
+	    auto& it = qops2['B'].begin()->second;
             qtensor2 op2(rsym, it.qrow, it.qcol);
             for(const auto& op2B : qops2['B']){
                if(op2.sym != op2B.second.sym) continue;
@@ -421,7 +428,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
                int r2 = qr.second;
                op2 += int2e.getAnti(p,q2,s1,r2)*op2B.second;
             }
-            opwf += oper_kernel_OOwf(superblock,ksite,op1C.second.T(),op2,0);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,0);
 	 }
       }else{
          // 6. <pq2||s1r2> aq2^+ar2as1 = (<pq2||s1r2> as1) aq2^+ar2
@@ -429,16 +436,17 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	    auto qr = oper_unpack(op2B.first);
 	    int q2 = qr.first;
 	    int r2 = qr.second;
+	    const auto& op2 = op2B.second;
 	    // op1 = <pq2||s1r2> as1
-	    qsym rsym = symS - op2B.second.sym;
-	    auto it = qops1['C'].begin()->second;
+	    qsym rsym = symS - op2.sym;
+	    auto& it = qops1['C'].begin()->second;
 	    qtensor2 op1(-rsym, it.qrow, it.qcol);
 	    for(const auto& op1C : qops1['C']){
 	       if(op1.sym != op1C.second.sym) continue;
 	       int s1 = op1C.first;
 	       op1 += int2e.getAnti(p,q2,s1,r2)*op1C.second;
 	    }
-	    opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2B.second,0);
+	    opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,0);
 	 }
       }
    }
@@ -507,13 +515,13 @@ qtensor3 tns::oper_kernel_Hwf(const std::string& superblock,
       if(qops1['A'].size() < qops2['A'].size()){
          // 5. p1^+q1^+ (<p1q1||s2r2> r2s2) + h.c.
          for(const auto& op1A : qops1['A']){
-            const auto& op1 = op1A.second;
             auto pq = oper_unpack(op1A.first);
             int p1 = pq.first;
             int q1 = pq.second;
+            const auto& op1 = op1A.second;
             // op2 = <p1q1||s2r2> r2s2
             qsym rsym = symH - op1.sym;
-	    auto it = qops2['A'].begin()->second;
+	    auto& it = qops2['A'].begin()->second;
             qtensor2 op2(-rsym, it.qrow, it.qcol);
             for(const auto& op2A : qops2['A']){
                if(op2.sym != op2A.second.sym) continue;
@@ -528,13 +536,13 @@ qtensor3 tns::oper_kernel_Hwf(const std::string& superblock,
       }else{
          // 5. (<p1q1||s2r2> p1^+q1^+) r2s2 + h.c.
 	 for(const auto& op2A : qops2['A']){
-	    const auto& op2 = op2A.second;
 	    auto sr = oper_unpack(op2A.first);
 	    int s2 = sr.first;
 	    int r2 = sr.second;
+	    const auto& op2 = op2A.second;
 	    // op1 = <p1q1||s2r2> p1^+q1^+
 	    qsym rsym = symH + op2.sym;
-	    auto it = qops1['A'].begin()->second;
+	    auto& it = qops1['A'].begin()->second;
 	    qtensor2 op1(rsym, it.qrow, it.qcol);
 	    for(const auto& op1A : qops1['A']){
 	       if(op1.sym != op1A.second.sym) continue;
@@ -571,13 +579,13 @@ qtensor3 tns::oper_kernel_Hwf(const std::string& superblock,
       if(qops1['B'].size() < qops2['B'].size()){
          // 6. p1^+s1 (<p1q2||s1r2> q2^+r2)
          for(const auto& op1B : qops1['B']){
-            const auto& op1 = op1B.second;
             auto ps = oper_unpack(op1B.first);
             int p1 = ps.first;
             int s1 = ps.second;
+            const auto& op1 = op1B.second;
             // op2 = <p1q2||s1r2> q2^+r2
             qsym rsym = symH - op1.sym;
-            auto it = qops2['B'].begin()->second;
+            auto& it = qops2['B'].begin()->second;
             qtensor2 op2(rsym, it.qrow, it.qcol);
             for(const auto& op2B : qops2['B']){
                if(op2.sym != op2B.second.sym) continue;
@@ -591,13 +599,13 @@ qtensor3 tns::oper_kernel_Hwf(const std::string& superblock,
       }else{
          // 6. (<p1q2||s1r2> p1^+s1) q2^r2 
 	 for(const auto& op2B : qops2['B']){
-	    const auto& op2 = op2B.second;
 	    auto qr = oper_unpack(op2B.first);
 	    int q2 = qr.first;
 	    int r2 = qr.second;
+	    const auto& op2 = op2B.second;
 	    // <p1q2||s1r2> p1^+s1
 	    qsym rsym = symH - op2.sym;
-	    auto it = qops1['B'].begin()->second;
+	    auto& it = qops1['B'].begin()->second;
 	    qtensor2 op1(rsym, it.qrow, it.qcol);
 	    for(const auto& op1B : qops1['B']){
 	       if(op1.sym != op1B.second.sym) continue;

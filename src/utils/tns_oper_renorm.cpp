@@ -21,7 +21,11 @@ oper_dict tns::oper_renorm_rops(const comb& bra,
 	<< (p == make_pair(bra.iswitch,0)) 
         << " coord=(" << ip << "," << jp << ")"
 	<< "[" << bra.topo[ip][jp] << "]" 
-	<< " type=" << bra.type.at(p) << endl;
+        << " qops1="; 
+   for(const auto& p : qops1) cout << p.first;
+   cout << " qops2="; 
+   for(const auto& p : qops2) cout << p.first;
+   cout << endl;
    // three kinds of sites 
    oper_dict qops;
    const auto& bsite = bra.rsites.at(p);
@@ -42,7 +46,7 @@ oper_dict tns::oper_renorm_rops(const comb& bra,
    // complementary operators
    if(left){
       oper_renorm_opP(superblock,bsite,ksite,qops1,qops2,qops,
-		      lsupp,orbord,int2e,int1e,debug);
+        	      lsupp,orbord,int2e,int1e,debug);
       if(debug) oper_rbases(bra,ket,p,qops,'P',int2e,int1e);
       oper_renorm_opQ(superblock,bsite,ksite,qops1,qops2,qops,
       	              lsupp,int2e,int1e,debug);
@@ -74,8 +78,8 @@ oper_dict tns::oper_renorm_lops(const comb& bra,
    cout << "\ntns::oper_renorm_lops iswitch=" 
 	<< (p == make_pair(bra.iswitch,0)) 
         << " coord=(" << ip << "," << jp << ")"
-	<< "[" << bra.topo[ip][jp] << "]" 
-	<< " type=" << bra.type.at(p) << endl;
+	<< "[" << bra.topo[ip][jp] << "]"
+        << endl;	
    // three kinds of sites 
    bool left = (jp == 0 && ip < bra.iswitch);
    bool swpt = (jp == 0 && ip == bra.iswitch);
