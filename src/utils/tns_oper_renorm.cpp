@@ -48,7 +48,6 @@ oper_dict tns::oper_renorm_ops(const string& superblock,
 	<< "->" << (ifAB? "AB" : "PQ")
         << endl;	
    // three kinds of sites 
-   const auto& orbord = bra.orbord;
    oper_dict qops;
    // normal operators & complementary operators
    oper_renorm_opC(superblock,bsite,ksite,qops1,qops2,qops,debug);
@@ -66,7 +65,7 @@ oper_dict tns::oper_renorm_ops(const string& superblock,
       if(debug && ifrops) oper_rbases(bra,ket,p,qops,'B');
    }else{
       oper_renorm_opP(superblock,bsite,ksite,qops1,qops2,qops,
-        	      supp,orbord,int2e,int1e,debug);
+        	      supp,int2e,int1e,debug);
       if(debug && ifrops) oper_rbases(bra,ket,p,qops,'P',int2e,int1e);
       oper_renorm_opQ(superblock,bsite,ksite,qops1,qops2,qops,
       	              supp,int2e,int1e,debug);

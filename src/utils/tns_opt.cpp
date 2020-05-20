@@ -156,7 +156,6 @@ void tns::opt_onedot(const input::schedule& schd,
       string fname = oper_fname(schd.scratch, p, "rop");
       oper_save(fname, qops);
    }
-   exit(1);
 
    auto t1 = global::get_time();
    cout << "timing for tns::opt_onedot : " << setprecision(2) 

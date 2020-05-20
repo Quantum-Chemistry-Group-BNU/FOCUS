@@ -13,7 +13,6 @@ void tns::oper_renorm_opP(const string& superblock,
 			  oper_dict& qops2,
 			  oper_dict& qops,
 			  const vector<int>& supp,
-			  const vector<int>& orbord,
 	                  const integral::two_body& int2e,
 	                  const integral::one_body& int1e,
 			  const bool debug){
@@ -26,10 +25,10 @@ void tns::oper_renorm_opP(const string& superblock,
       int pa = 2*korb_p, pb = pa+1;
       for(int korb_q : supp){
 	 int qa = 2*korb_q, qb = qa+1;
-	 if(orbord[pa] < orbord[qa]) index.push_back(oper_pack(pa,qa));
-	 if(orbord[pb] < orbord[qb]) index.push_back(oper_pack(pb,qb));
-	 if(orbord[pa] < orbord[qb]) index.push_back(oper_pack(pa,qb));
-	 if(orbord[pb] < orbord[qa]) index.push_back(oper_pack(pb,qa));
+	 if(pa < qa) index.push_back(oper_pack(pa,qa));
+	 if(pb < qb) index.push_back(oper_pack(pb,qb));
+	 if(pa < qb) index.push_back(oper_pack(pa,qb));
+	 if(pb < qa) index.push_back(oper_pack(pb,qa));
       }
    }
    for(const int pq : index){

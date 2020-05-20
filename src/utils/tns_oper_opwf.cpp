@@ -34,7 +34,7 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
    // 1. CC: Pc*Ir with Pc = <pLqL||sCrC> rCsC [=(sCrC)^+, s<r] 
    bool ifP1 = qops1.find('P') != qops1.end();
    if(ifP1){
-      opwf += oper_kernel_OIwf(superblock,ksite,qops1['P'][index]);
+      opwf += oper_kernel_OIwf(superblock,ksite,qops1['P'].at(index));
    }else{
       auto& it = qops1['A'].begin()->second;
       qtensor2 op1Pdag(-symP, it.qrow, it.qcol);
@@ -50,7 +50,7 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
    // 2. RR: Ic*Pr
    bool ifP2 = qops2.find('P') != qops2.end();
    if(ifP2){
-      opwf += oper_kernel_IOwf(superblock,ksite,qops2['P'][index],0);
+      opwf += oper_kernel_IOwf(superblock,ksite,qops2['P'].at(index),0);
    }else{
       // P_pLqL^R = sum_rRsR <pLqL||sRrR> rRsR
       auto& it = qops2['A'].begin()->second;
@@ -130,9 +130,9 @@ qtensor3 tns::oper_kernel_Qwf(const string& superblock,
    //     + <pq2||sr1> aq2^+ar1
    //
    // 1. CC: Qc*Ir with Qc = <pLqC||sLrC> qC^+rC
-   bool ifP1 = qops1.find('P') != qops1.end();
-   if(ifP1){
-      opwf += oper_kernel_OIwf(superblock,ksite,qops1['Q'][index]);
+   bool ifQ1 = qops1.find('Q') != qops1.end();
+   if(ifQ1){
+      opwf += oper_kernel_OIwf(superblock,ksite,qops1['Q'].at(index));
    }else{
       auto& it = qops1['B'].begin()->second;
       qtensor2 op1Q(symQ, it.qrow, it.qcol);
@@ -146,9 +146,9 @@ qtensor3 tns::oper_kernel_Qwf(const string& superblock,
       opwf += oper_kernel_OIwf(superblock,ksite,op1Q);
    }
    // 2. RR: Ic*Qr
-   bool ifP2 = qops2.find('P') != qops2.end();
-   if(ifP2){
-      opwf += oper_kernel_IOwf(superblock,ksite,qops2['Q'][index],0);
+   bool ifQ2 = qops2.find('Q') != qops2.end();
+   if(ifQ2){
+      opwf += oper_kernel_IOwf(superblock,ksite,qops2['Q'].at(index),0);
    }else{
       // Q_pLsL^R = sum_qRrR <pLqR||sLrR> qR^+rR
       auto& it = qops2['B'].begin()->second;
@@ -251,9 +251,9 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
    //    + <pq2||s1r2> aq2^+ar2as1 => Qps1^2*as1
    //
    // 1. qCrCsC: Sc*Ir
-   opwf += oper_kernel_OIwf(superblock,ksite,qops1['S'][p]);
+   opwf += oper_kernel_OIwf(superblock,ksite,qops1['S'].at(p));
    // 2. qRrRsR: Ic*Sr
-   opwf += oper_kernel_IOwf(superblock,ksite,qops2['S'][p],1);
+   opwf += oper_kernel_IOwf(superblock,ksite,qops2['S'].at(p),1);
    // 3. <pq2||s1r1> aq2^+ ar1 as1 
    bool ifP1 = qops1.find('P') != qops1.end();
    if(ifP1){
@@ -261,8 +261,14 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
       for(const auto& op2C : qops2['C']){
          int q2 = op2C.first;
          const auto& op2 = op2C.second;
-	 const auto& op1P = qops1['P'][oper_pack(p,q2)];
-	 opwf += oper_kernel_OOwf(superblock,ksite,op1P,op2,1);
+	 // special treatment of index for P 
+         if(p < q2){	
+	    const auto& op1P = qops1['P'].at(oper_pack(p,q2));
+            opwf += oper_kernel_OOwf(superblock,ksite,op1P,op2,1);
+	 }else{
+	    const auto& op1P = qops1['P'].at(oper_pack(q2,p));
+            opwf -= oper_kernel_OOwf(superblock,ksite,op1P,op2,1);
+	 }
       }
    }else{
       if(qops1['A'].size() < qops2['C'].size()){
@@ -310,7 +316,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
       for(const auto& op2C : qops2['C']){
          int r2 = op2C.first;
          const auto& op2 = op2C.second;
-         const auto& op1Q = qops1['Q'][oper_pack(p,r2)];
+         const auto& op1Q = qops1['Q'].at(oper_pack(p,r2));
          opwf += oper_kernel_OOwf(superblock,ksite,op1Q,op2.T(),1);
       }
    }else{
@@ -359,8 +365,14 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
       for(const auto& op1C : qops1['C']){
          int q1 = op1C.first;
 	 const auto& op1 = op1C.second;
-         const auto& op2P = qops2['P'][oper_pack(p,q1)];
-         opwf += oper_kernel_OOwf(superblock,ksite,op1,op2P,0);
+	 // special treatment of index for P
+	 if(p < q1){ 
+            const auto& op2P = qops2['P'].at(oper_pack(p,q1));
+            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2P,0);
+	 }else{
+            const auto& op2P = qops2['P'].at(oper_pack(q1,p));
+            opwf -= oper_kernel_OOwf(superblock,ksite,op1,op2P,0);
+	 }
       }
    }else{
       if(qops1['C'].size() < qops2['A'].size()){
@@ -408,7 +420,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
       for(const auto& op1C : qops1['C']){
          int s1 = op1C.first;
 	 const auto& op1 = op1C.second;
-         const auto& op2Q = qops2['Q'][oper_pack(p,s1)];
+         const auto& op2Q = qops2['Q'].at(oper_pack(p,s1));
          opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2Q,0);
       }
    }else{
@@ -471,14 +483,14 @@ qtensor3 tns::oper_kernel_Hwf(const std::string& superblock,
    //   + <p1q2||s1r2> p1^+q2^+r2s1 
    //
    // 1. Hc*Ir
-   opwf += oper_kernel_OIwf(superblock,ksite,qops1['H'][0]);
+   opwf += oper_kernel_OIwf(superblock,ksite,qops1['H'].at(0));
    // 2. Ic*Hr
-   opwf += oper_kernel_IOwf(superblock,ksite,qops2['H'][0],0);
+   opwf += oper_kernel_IOwf(superblock,ksite,qops2['H'].at(0),0);
    // 3. p1^+ Sp1^2 + h.c. 
    for(const auto& op1C : qops1['C']){
       int p1 = op1C.first;
       const auto& op1 = op1C.second;
-      const auto& op2S = qops2['S'][p1];
+      const auto& op2S = qops2['S'].at(p1);
       opwf += oper_kernel_OOwf(superblock,ksite,op1,op2S,1);
       opwf -= oper_kernel_OOwf(superblock,ksite,op1.T(),op2S.T(),1);
    }
@@ -486,30 +498,50 @@ qtensor3 tns::oper_kernel_Hwf(const std::string& superblock,
    for(const auto& op2C : qops2['C']){
       int q2 = op2C.first;
       const auto& op2 = op2C.second;
-      const auto& op1S = qops1['S'][q2];
+      const auto& op1S = qops1['S'].at(q2);
       opwf -= oper_kernel_OOwf(superblock,ksite,op1S,op2,1);
       opwf += oper_kernel_OOwf(superblock,ksite,op1S.T(),op2.T(),1);
    }
    // 5. <p1q1||s2r2> p1^+q1^+r2s2 + h.c.
    int ifA1P2 = (qops1.find('A') != qops1.end() && qops2.find('P') != qops2.end()); 
    int ifP1A2 = (qops1.find('P') != qops1.end() && qops2.find('A') != qops2.end());
-   int ifA1A2 = (qops1.find('A') != qops2.end() && qops2.find('A') != qops2.end());
+   int ifA1A2 = (qops1.find('A') != qops1.end() && qops2.find('A') != qops2.end());
    assert(ifA1P2 + ifP1A2 + ifA1A2 == 1);
    if(ifA1P2){ 
       // Apq^1*Ppq^2 + h.c.
       for(const auto& op1A : qops1['A']){
          const auto& op1 = op1A.second;
-         const auto& op2 = qops2['P'][op1A.first];
-         opwf += oper_kernel_OOwf(superblock,ksite,op1,op2,0);
-         opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),0);
+         auto pq = oper_unpack(op1A.first);
+	 int p = pq.first;
+	 int q = pq.second;
+	 // special treatment of index for P 
+	 if(p < q){
+	    const auto& op2 = qops2['P'].at(oper_pack(p,q));
+            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2,0);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),0);
+	 }else{
+	    const auto& op2 = qops2['P'].at(oper_pack(q,p));
+            opwf -= oper_kernel_OOwf(superblock,ksite,op1,op2,0);
+            opwf -= oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),0);
+	 }
       }
    }else if(ifP1A2){
       // Prs^1+Ars^2+ + h.c.
       for(const auto& op2A : qops2['A']){
          const auto& op2 = op2A.second;
-         const auto& op1 = qops1['P'][op2A.first];
-         opwf += oper_kernel_OOwf(superblock,ksite,op1,op2,0);
-         opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),0);
+         auto rs = oper_unpack(op2A.first);
+	 int r = rs.first;
+	 int s = rs.second;
+	 // special treatment of index for P 
+	 if(r < s){
+            const auto& op1 = qops1['P'].at(oper_pack(r,s));
+	    opwf += oper_kernel_OOwf(superblock,ksite,op1,op2,0);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),0);
+	 }else{
+            const auto& op1 = qops1['P'].at(oper_pack(s,r));
+	    opwf -= oper_kernel_OOwf(superblock,ksite,op1,op2,0);
+            opwf -= oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),0);
+	 }
       }
    }else if(ifA1A2){
       if(qops1['A'].size() < qops2['A'].size()){
@@ -559,20 +591,20 @@ qtensor3 tns::oper_kernel_Hwf(const std::string& superblock,
    // 6. <p1q2||s1r2> p1^+q2^+r2s1 
    int ifB1Q2 = (qops1.find('B') != qops1.end() && qops2.find('Q') != qops2.end()); 
    int ifQ1B2 = (qops1.find('Q') != qops1.end() && qops2.find('B') != qops2.end());
-   int ifB1B2 = (qops1.find('B') != qops2.end() && qops2.find('B') != qops2.end());
+   int ifB1B2 = (qops1.find('B') != qops1.end() && qops2.find('B') != qops2.end());
    assert(ifB1Q2 + ifQ1B2 + ifB1B2 == 1);
    if(ifB1Q2){
       // Bps^1*Qps^2
       for(const auto& op1B : qops1['B']){
          const auto& op1 = op1B.second;
-         const auto& op2 = qops2['Q'][op1B.first];
+         const auto& op2 = qops2['Q'].at(op1B.first);
          opwf += oper_kernel_OOwf(superblock,ksite,op1,op2,0);
       }
    }else if(ifQ1B2){
       // Qqr^1*Bqr^2
       for(const auto& op2B : qops2['B']){
          const auto& op2 = op2B.second;
-         const auto& op1 = qops1['Q'][op2B.first];
+         const auto& op1 = qops1['Q'].at(op2B.first);
          opwf += oper_kernel_OOwf(superblock,ksite,op1,op2,0);
       }
    }else if(ifB1B2){
