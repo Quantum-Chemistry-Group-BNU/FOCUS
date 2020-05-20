@@ -12,7 +12,7 @@ void tns::oper_renorm_opP(const string& superblock,
 			  oper_dict& qops1,
 			  oper_dict& qops2,
 			  oper_dict& qops,
-			  const vector<int>& lsupp,
+			  const vector<int>& supp,
 			  const vector<int>& orbord,
 	                  const integral::two_body& int2e,
 	                  const integral::one_body& int1e,
@@ -22,9 +22,9 @@ void tns::oper_renorm_opP(const string& superblock,
 
    // initialization for Ppq = <pq||sr> aras [r>s] (p<q)
    vector<int> index;
-   for(int korb_p : lsupp){
+   for(int korb_p : supp){
       int pa = 2*korb_p, pb = pa+1;
-      for(int korb_q : lsupp){
+      for(int korb_q : supp){
 	 int qa = 2*korb_q, qb = qa+1;
 	 if(orbord[pa] < orbord[qa]) index.push_back(oper_pack(pa,qa));
 	 if(orbord[pb] < orbord[qb]) index.push_back(oper_pack(pb,qb));
@@ -50,7 +50,7 @@ void tns::oper_renorm_opQ(const string& superblock,
 			  oper_dict& qops1,
 			  oper_dict& qops2,
 			  oper_dict& qops,
-			  const vector<int>& lsupp,
+			  const vector<int>& supp,
 	                  const integral::two_body& int2e,
 	                  const integral::one_body& int1e,
 			  const bool debug){
@@ -59,9 +59,9 @@ void tns::oper_renorm_opQ(const string& superblock,
 
    // initialization for Qps = <pq||sr> aq^+ar
    vector<int> index;
-   for(int korb_p : lsupp){
+   for(int korb_p : supp){
       int pa = 2*korb_p, pb = pa+1;
-      for(int korb_s : lsupp){
+      for(int korb_s : supp){
 	 int sa = 2*korb_s, sb = sa+1;
 	 index.push_back(oper_pack(pa,sa));
 	 index.push_back(oper_pack(pb,sb));
@@ -87,7 +87,7 @@ void tns::oper_renorm_opS(const string& superblock,
 			  oper_dict& qops1,
 			  oper_dict& qops2,
 			  oper_dict& qops,
-			  const vector<int>& lsupp,
+			  const vector<int>& supp,
 	                  const integral::two_body& int2e,
 	                  const integral::one_body& int1e,
 			  const bool debug){
@@ -96,7 +96,7 @@ void tns::oper_renorm_opS(const string& superblock,
 
    // initialization for 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    vector<int> index;
-   for(int korb_p : lsupp){
+   for(int korb_p : supp){
       int pa = 2*korb_p, pb = pa+1;
       index.push_back(pa);
       index.push_back(pb);

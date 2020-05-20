@@ -142,7 +142,7 @@
 	       - one-dot opt: only decimation is different
 	       - two-dot opt: setting up qops is also different
 	  - 2. different decimation schemes for sweeps [DONE@2020517]
-	  - 3. universal operator renormalization (lops & rops)
+	  - 3. universal operator renormalization (lops & rops) [DONE@20200520]
 	       - general combination of two qops (lc,cr,lr)
 	       - strategy for constructing operators? (P,Q,S,H)
 	  - 4. hamiltonian operations

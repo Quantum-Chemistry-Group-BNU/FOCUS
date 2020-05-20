@@ -162,7 +162,7 @@ void comb::topo_init(){
       auto coord = rcoord[idx];
       lsupport[coord] = support_rest(rsupport[coord]);
       if(iswitch==-1 && coord.second == 0 && 
-         lsupport[coord].size()<rsupport[coord].size()){
+         lsupport[coord].size()<=rsupport[coord].size()){
          iswitch = coord.first;
       }
    }

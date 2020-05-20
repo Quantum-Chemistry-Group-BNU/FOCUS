@@ -34,6 +34,15 @@ inline std::pair<int,int> oper_unpack(const int ij){
 
 using oper_dict = std::map<char,std::map<int,qtensor2>>;
 
+inline std::string oper_dict_opnames(const oper_dict& qops){
+   std::string s;
+   s += (qops.find('A') != qops.end())? "A" : "";
+   s += (qops.find('B') != qops.end())? "B" : "";
+   s += (qops.find('P') != qops.end())? "P" : "";
+   s += (qops.find('Q') != qops.end())? "Q" : "";
+   return s;
+}
+
 // 0. IO for operators
 std::string oper_fname(const std::string scratch, 
   		       const comb_coord& p,
@@ -208,21 +217,15 @@ oper_dict oper_get_lqops(const comb& icomb,
 			 const std::string scratch);
 
 // driver for renorm in different directions  
-oper_dict oper_renorm_rops(const comb& bra, 
-		           const comb& ket,
-		           const comb_coord& p,
-		           oper_dict& cqops,
-		           oper_dict& rqops,
-	                   const integral::two_body& int2e,
-	                   const integral::one_body& int1e);
-
-oper_dict oper_renorm_lops(const comb& bra, 
-		           const comb& ket,
-		           const comb_coord& p, 
-		           oper_dict& lqops,
-		           oper_dict& cqops,
-	                   const integral::two_body& int2e,
-	                   const integral::one_body& int1e);
+oper_dict oper_renorm_ops(const std::string& superblock,
+			  const comb& bra, 
+		          const comb& ket,
+		          const comb_coord& p,
+		          oper_dict& cqops,
+		          oper_dict& rqops,
+	                  const integral::two_body& int2e,
+	                  const integral::one_body& int1e,
+			  const bool debug=false);
 
 void oper_env_right(const comb& bra, 
 		    const comb& ket,

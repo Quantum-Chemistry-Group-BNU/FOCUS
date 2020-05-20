@@ -132,7 +132,7 @@ void tns::opt_onedot(const input::schedule& schd,
 	 qt2 = decimation_row(qt2, Dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
          icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
-         qops = oper_renorm_lops(icomb, icomb, p, lqops, cqops, int2e, int1e);
+         qops = oper_renorm_ops("lc",icomb, icomb, p, lqops, cqops, int2e, int1e, true);
       }else{
 	 // update lsites & qc [special for comb]
          cout << "renormlize |lr>" << endl;
@@ -141,7 +141,7 @@ void tns::opt_onedot(const input::schedule& schd,
 	 qt2 = decimation_row(qt2, Dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
-         qops = oper_renorm_lops(icomb, icomb, p, lqops, rqops, int2e, int1e);
+         qops = oper_renorm_ops("lr",icomb, icomb, p, lqops, rqops, int2e, int1e, true);
       }
       string fname = oper_fname(schd.scratch, p, "lop");
       oper_save(fname, qops);
@@ -152,7 +152,7 @@ void tns::opt_onedot(const input::schedule& schd,
       qt2 = decimation_col(qt2, Dcut);
       qsym_space_print(qt2.qrow, "after renormalization");
       icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, wf.dpt_cr().second);
-      qops = oper_renorm_rops(icomb, icomb, p, cqops, rqops, int2e, int1e);
+      qops = oper_renorm_ops("cr",icomb, icomb, p, cqops, rqops, int2e, int1e, true);
       string fname = oper_fname(schd.scratch, p, "rop");
       oper_save(fname, qops);
    }
@@ -251,7 +251,7 @@ void tns::opt_twodot(const input::schedule& schd,
 	 qt2 = decimation_row(qt2, Dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
          icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc1().second);
-         //oper_renorm_lops(icomb,icomb,p0,int2e,int1e,schd.scratch); ???
+         //oper_renorm_ops("lc",icomb,icomb,p0,int2e,int1e,schd.scratch); ???
       }else{
 	 // update lsites & qc [special for comb]
          cout << "renormlize |lr>" << endl;
@@ -260,7 +260,7 @@ void tns::opt_twodot(const input::schedule& schd,
 	 qt2 = decimation_row(qt2, Dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
-         //oper_renorm_lops(icomb,icomb,p0,int2e,int1e,schd.scratch); ???
+         //oper_renorm_ops("lr",icomb,icomb,p0,int2e,int1e,schd.scratch); ???
       }
    }else{
       if(!cturn){
@@ -270,7 +270,7 @@ void tns::opt_twodot(const input::schedule& schd,
          qt2 = decimation_col(qt2, Dcut);
          qsym_space_print(qt2.qrow, "after renormalization");
          icomb.rsites[p] = qt2.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
-         //oper_renorm_rops(icomb,icomb,p0,int2e,int1e,schd.scratch);
+         //oper_renorm_ops("cr",icomb,icomb,p0,int2e,int1e,schd.scratch);
       }else{
 	 // update rsites & qr [special for comb]
          cout << "renormlize |c1r2>" << endl;
@@ -279,7 +279,7 @@ void tns::opt_twodot(const input::schedule& schd,
 	 qt2 = decimation_col(qt2, Dcut);
          qsym_space_print(qt2.qrow, "after renormalization");
 	 icomb.rsites[p]= qt2.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
-         //oper_renorm_lops(icomb,icomb,p0,int2e,int1e,schd.scratch); ???
+         //oper_renorm_ops("lr",icomb,icomb,p0,int2e,int1e,schd.scratch); ???
       }
    }
 
