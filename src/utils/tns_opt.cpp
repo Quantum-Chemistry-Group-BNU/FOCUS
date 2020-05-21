@@ -5,6 +5,8 @@
 #include "tns_ham.h"
 #include "tns_decimation.h"
 
+#include "../core/linalg.h"
+
 using namespace std;
 using namespace linalg;
 using namespace tns;
@@ -46,8 +48,12 @@ void tns::opt_sweep(const input::schedule& schd,
 	 
 	 opt_onedot(schd, icomb, dbond, int2e, int1e, ecore);
 	 //opt_twodot(schd, icomb, dbond, int2e, int1e, ecore);
-	 
-	 if(isweep==1 && i==0) exit(1);
+
+	 //if(isweep==1 && i==0){
+         //   cout << "break here" << endl;
+	 //   exit(1);
+	 //}
+
       } // i
    } // isweep
 
@@ -128,7 +134,7 @@ void tns::opt_onedot(const input::schedule& schd,
    cout << wf.normF() << endl;
    cout << "energy=" << esol[0] << endl;
 
-   int Dcut = 10;
+   int Dcut = 2;
    // 3. decimation & renormalize operators
    oper_dict qops;
    bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
@@ -139,8 +145,13 @@ void tns::opt_onedot(const input::schedule& schd,
 	 auto qt2 = wf.merge_lc();
 	 qt2 = decimation_row(qt2, Dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
-         icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
-         qops = oper_renorm_ops("lc",icomb, icomb, p, lqops, cqops, int2e, int1e);
+	 icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
+ 	 //-------------------------------------------------------------------	 
+	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
+	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
+	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+ 	 //-------------------------------------------------------------------	 
+	 qops = oper_renorm_ops("lc",icomb, icomb, p, lqops, cqops, int2e, int1e);
       }else{
 	 // update lsites & qc [special for comb]
          cout << "renormlize |lr>" << endl;
@@ -149,7 +160,12 @@ void tns::opt_onedot(const input::schedule& schd,
 	 qt2 = decimation_row(qt2, Dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
-         qops = oper_renorm_ops("lr",icomb, icomb, p, lqops, rqops, int2e, int1e);
+ 	 //-------------------------------------------------------------------	 
+	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
+	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
+	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+ 	 //-------------------------------------------------------------------	 
+	 qops = oper_renorm_ops("lr",icomb, icomb, p, lqops, rqops, int2e, int1e);
       }
       string fname = oper_fname(schd.scratch, p, "lop");
       oper_save(fname, qops);
@@ -160,6 +176,11 @@ void tns::opt_onedot(const input::schedule& schd,
       qt2 = decimation_col(qt2, Dcut);
       qsym_space_print(qt2.qrow, "after renormalization");
       icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, wf.dpt_cr().second);
+      //-------------------------------------------------------------------	
+      assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
+      auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
+      assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+      //-------------------------------------------------------------------	 
       qops = oper_renorm_ops("cr",icomb, icomb, p, cqops, rqops, int2e, int1e);
       string fname = oper_fname(schd.scratch, p, "rop");
       oper_save(fname, qops);

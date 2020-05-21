@@ -214,6 +214,8 @@ double qtensor2::normF() const{
 // check whether <l|o|r> is a faithful rep for o=I
 double qtensor2::check_identity(const double thresh_ortho,
 			        const bool debug) const{
+   if(debug) cout << "qtensor2::check_identity thresh_ortho=" 
+	  	  << thresh_ortho << endl;
    double mdiff = -1.0;
    for(const auto& pr : qrow){
       const auto& qr = pr.first;
@@ -230,10 +232,13 @@ double qtensor2::check_identity(const double thresh_ortho,
             double diff = linalg::normF(blk - identity_matrix(ndim));
 	    mdiff = max(diff,mdiff);
 	    if(debug){
-               cout << " qsym=" << qr << " ndim=" << ndim 
+               cout << "qsym=" << qr << " ndim=" << ndim 
      	 	    << " |Sr-Id|_F=" << diff << endl;
 	    }
-            if(diff > thresh_ortho) blk.print("block sym"+sym.to_string());
+            if(diff > thresh_ortho){
+	       cout << "error: not an identity matrix at qsym=" << qr << endl;
+	       blk.print("block sym"+sym.to_string());
+	    }
 	 }
       }
    }

@@ -18,7 +18,7 @@ void dvdsonSolver::solve_diag(double* es, double* vs){
    auto sdiff = symmetric_diff(H);
    cout << "|H-H.T|=" << sdiff << endl;
    if(sdiff > 1.e-5){
-      H.print("H");
+      (H-H.T()).print("H-H.T");
       cout << "error in dvdsonSolver::solve_diag: H is not symmetric!" << endl;
       exit(1);
    }

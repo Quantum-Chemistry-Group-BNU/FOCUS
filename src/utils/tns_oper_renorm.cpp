@@ -49,7 +49,7 @@ oper_dict tns::oper_renorm_ops(const string& superblock,
         << endl;	
    // three kinds of sites 
    oper_dict qops;
-   // normal operators & complementary operators
+   // C,S,H
    oper_renorm_opC(superblock,bsite,ksite,qops1,qops2,qops,debug);
    if(debug && ifrops) oper_rbases(bra,ket,p,qops,'C');
    oper_renorm_opS(superblock,bsite,ksite,qops1,qops2,qops,
@@ -58,6 +58,16 @@ oper_dict tns::oper_renorm_ops(const string& superblock,
    oper_renorm_opH(superblock,bsite,ksite,qops1,qops2,qops,
    		   int2e,int1e,debug);
    if(debug && ifrops) oper_rbases(bra,ket,p,qops,'H',int2e,int1e);
+   // consistency check
+   auto H = qops['H'].at(0);
+   auto diffH = (H-H.T()).normF();
+   cout << "diffH=" << diffH << endl; 
+   if(diffH > 1.e-10){
+      H.print("H",2);
+      cout << "error: H-H.T is too large! diffH=" << diffH << endl;
+      exit(1);
+   }
+   // AB/PQ
    if(ifAB){
       oper_renorm_opA(superblock,bsite,ksite,qops1,qops2,qops,debug);
       if(debug && ifrops) oper_rbases(bra,ket,p,qops,'A');

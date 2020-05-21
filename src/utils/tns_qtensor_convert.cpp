@@ -200,6 +200,7 @@ qtensor2 tns::merge_qt3_qt2_lr(const qtensor3& qt3,
    return qt2;
 }
 
+// split the row of qt2
 qtensor3 tns::split_qt3_qt2_lr(const qtensor2& qt2,
 			       const qsym_space& qlx,
 			       const qsym_space& qrx,

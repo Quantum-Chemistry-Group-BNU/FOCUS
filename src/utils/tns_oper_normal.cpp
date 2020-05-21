@@ -68,9 +68,14 @@ void tns::oper_renorm_opA(const string& superblock,
       for(const auto& op2C : qops2['C']){
 	 int p2 = op2C.first;
 	 const auto& op2 = op2C.second;
-	 // only store Apq where orbord[p]<orbord[q] (i.e., no qRpC)
          auto Hwf = oper_kernel_OOwf(superblock,ksite,op1,op2,1);
-	 qops['A'][oper_pack(p1,p2)] = oper_kernel_renorm(superblock,bsite,Hwf);
+	 auto qt2 = oper_kernel_renorm(superblock,bsite,Hwf);
+	 // only store Apq where p<q;
+	 if(p1 < p2){
+	    qops['A'][oper_pack(p1,p2)] = qt2; 
+	 }else{
+	    qops['A'][oper_pack(p2,p1)] = -qt2;
+	 }
       }
    }
    auto t1 = global::get_time();

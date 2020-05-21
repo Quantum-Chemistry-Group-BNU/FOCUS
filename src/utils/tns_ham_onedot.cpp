@@ -57,7 +57,6 @@ void tns::get_onedot_Hx(double* y,
 		        const double ecore,
 		        qtensor3& wf){
    bool debug = true;
-   if(debug) cout << "\ntns::get_onedot_Hx" << endl;
    // const term
    wf.from_array(x);
    auto Hwf = ecore*wf;
@@ -65,8 +64,10 @@ void tns::get_onedot_Hx(double* y,
    int ifPl = lqops.find('P') != lqops.end();
    int ifPr = rqops.find('P') != rqops.end();
    assert(ifPl + ifPr == 1);
+   if(debug) cout << "\ntns::get_onedot_Hx "
+	          << (ifPl? "LC|R" : "L|CR") 
+	          << endl;
    if(ifPl){
-      cout << "LC|R" << endl;
       // L=lc, R=r
       // H1
       Hwf += oper_kernel_Hwf("lc",wf,lqops,cqops,int2e,int1e);
@@ -84,6 +85,7 @@ void tns::get_onedot_Hx(double* y,
 	 int p1 = op1C.first;
 	 const auto& op1 = op1C.second;
 	 const auto& op2S = rqops['S'].at(p1);
+	 // special treatment of sign
 	 Hwf += oper_kernel_OOwf("lr",wf.mid_signed(),op1,op2S,1);
 	 Hwf -= oper_kernel_OOwf("lr",wf.mid_signed(),op1.T(),op2S.T(),1);
       }
@@ -92,17 +94,18 @@ void tns::get_onedot_Hx(double* y,
          int q2 = op2C.first;
   	 const auto& op2 = op2C.second;
          auto qt3 = oper_kernel_Swf("lc",wf,lqops,cqops,int2e,int1e,q2);
-	 Hwf += oper_kernel_IOwf("cr",qt3.row_signed(),op2,1);
 	 auto qt3hc = oper_kernel_Swf("lc",wf,lqops,cqops,int2e,int1e,q2,true);
-	 Hwf -= oper_kernel_IOwf("cr",qt3hc.row_signed(),op2.T(),1); 
+	 // special treatment of sign
+	 Hwf -= oper_kernel_IOwf("cr",qt3.row_signed(),op2,1);
+	 Hwf += oper_kernel_IOwf("cr",qt3hc.row_signed(),op2.T(),1); 
       }
       // Ars^2*Prs^1 + h.c.
       for(const auto& op2A : rqops['A']){
          int index = op2A.first;
 	 const auto& op2 = op2A.second;
 	 auto qt3 = oper_kernel_Pwf("lc",wf,lqops,cqops,int2e,int1e,index);
-	 Hwf += oper_kernel_IOwf("cr",qt3,op2,0);
 	 auto qt3hc = oper_kernel_Pwf("lc",wf,lqops,cqops,int2e,int1e,index,true);
+	 Hwf += oper_kernel_IOwf("cr",qt3,op2,0);
 	 Hwf += oper_kernel_IOwf("cr",qt3hc,op2.T(),0);
       }
       // Qqr^1*Bqr^2
@@ -113,8 +116,7 @@ void tns::get_onedot_Hx(double* y,
 	 Hwf += oper_kernel_IOwf("cr",qt3,op2,0);
       }
    }else{
-      cout << "L|CR" << endl;
-      // L=c, R=cr 
+      // L=l, R=cr 
       // H1 
       Hwf += contract_qt3_qt2_l(wf,lqops['H'][0]);
       // H2
@@ -124,8 +126,8 @@ void tns::get_onedot_Hx(double* y,
 	 int p1 = op1C.first;
 	 const auto op1 = op1C.second;
 	 auto qt3 = oper_kernel_Swf("cr",wf,cqops,rqops,int2e,int1e,p1);
-	 Hwf += oper_kernel_OIwf("lc",qt3.row_signed(),op1); // both lc/lr work here
 	 auto qt3hc = oper_kernel_Swf("cr",wf,cqops,rqops,int2e,int1e,p1,true); 
+	 Hwf += oper_kernel_OIwf("lc",qt3.row_signed(),op1); // both lc/lr work here
 	 Hwf -= oper_kernel_OIwf("lc",qt3hc.row_signed(),op1.T());
       }
       // q2^+*Sq2^1 + h.c.
@@ -143,17 +145,15 @@ void tns::get_onedot_Hx(double* y,
 	 Hwf -= oper_kernel_OOwf("lr",wf.mid_signed(),op1S,op2,1);
 	 Hwf += oper_kernel_OOwf("lr",wf.mid_signed(),op1S.T(),op2.T(),1);
       }
-
       // Apq^1*Ppq^2 + h.c.
       for(const auto& op1A : lqops['A']){
 	 int index = op1A.first;
 	 const auto& op1 = op1A.second;
 	 auto qt3 = oper_kernel_Pwf("cr",wf,cqops,rqops,int2e,int1e,index);
-	 Hwf += oper_kernel_OIwf("lc",qt3,op1);
 	 auto qt3hc = oper_kernel_Pwf("cr",wf,cqops,rqops,int2e,int1e,index,true);
+	 Hwf += oper_kernel_OIwf("lc",qt3,op1);
 	 Hwf += oper_kernel_OIwf("lc",qt3hc,op1.T());
       }
-
       // Bps^1*Qps^2
       for(const auto& op1B : lqops['B']){
 	 int index = op1B.first;

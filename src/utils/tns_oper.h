@@ -87,8 +87,7 @@ qtensor3 oper_kernel_OOwf(const std::string& superblock,
 			  const qtensor3& ksite,
  			  const qtensor2& o1,
  			  const qtensor2& o2,
-			  const bool po2,
-			  const bool ifdagger=false);
+			  const bool po2);
 
 qtensor2 oper_kernel_renorm(const std::string& superblock,
 			    const qtensor3& bsite,

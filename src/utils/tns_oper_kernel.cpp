@@ -71,10 +71,9 @@ qtensor3 tns::oper_kernel_OOwf(const string& superblock,
 			       const qtensor3& ksite,
  			       const qtensor2& o1,
  			       const qtensor2& o2,
-			       const bool po2,
-			       const bool ifdagger){
-   auto qt3 = oper_kernel_IOwf(superblock, ksite, o2, po2, ifdagger);
-   return oper_kernel_OIwf(superblock, qt3, o1, ifdagger);
+			       const bool po2){
+   auto qt3 = oper_kernel_IOwf(superblock, ksite, o2, po2);
+   return oper_kernel_OIwf(superblock, qt3, o1);
 }
 
 // <bra|O|ket>
