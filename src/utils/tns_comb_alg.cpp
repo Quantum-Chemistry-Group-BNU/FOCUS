@@ -160,5 +160,6 @@ matrix tns::get_Hmat(const comb& bra,
    string fname = oper_fname(scratch, p, "rop");
    oper_load(fname, qops);
    auto Hmat = qops['H'][0].to_matrix();
+   Hmat += ecore*identity_matrix(Hmat.rows());
    return Hmat;
 }

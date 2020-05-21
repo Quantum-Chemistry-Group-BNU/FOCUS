@@ -115,7 +115,8 @@ void tns::opt_onedot(const input::schedule& schd,
 		      ref(cqops), ref(lqops), ref(rqops), 
 		      cref(int2e), cref(int1e), cref(ecore), 
 		      ref(wf));
-  
+ 
+   /* 
    // initial guess 
    matrix v0 = random_matrix(nsub, neig);
    vector<double> v0tmp(nsub*neig);
@@ -123,18 +124,20 @@ void tns::opt_onedot(const input::schedule& schd,
    int nindp = linalg::get_ortho_basis(nsub,neig,v0tmp);
    assert(nindp == neig);
    copy(v0tmp.begin(), v0tmp.end(), v0.data());
+   */
 
    // solve
    vector<double> esol(neig);
    matrix vsol(nsub,neig);
+   solver.solve_iter(esol.data(), vsol.data());
    //solver.solve_iter(esol.data(), vsol.data(), v0.data());
-   solver.solve_diag(esol.data(), vsol.data());
+   //solver.solve_diag(esol.data(), vsol.data());
 
    wf.from_array(vsol.data());
    cout << wf.normF() << endl;
    cout << "energy=" << esol[0] << endl;
 
-   int Dcut = 2;
+   int Dcut = 100;
    // 3. decimation & renormalize operators
    oper_dict qops;
    bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
