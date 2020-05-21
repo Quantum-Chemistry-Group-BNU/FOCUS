@@ -74,18 +74,21 @@ void oper_dot_H(const int kp,
 // O*psi
 qtensor3 oper_kernel_OIwf(const std::string& superblock,
 			  const qtensor3& ksite,
- 			  const qtensor2& o1);
+ 			  const qtensor2& o1,
+			  const bool ifdagger=false);
 
 qtensor3 oper_kernel_IOwf(const std::string& superblock,
 			  const qtensor3& ksite,
  			  const qtensor2& o2,
-			  const bool po2);
+			  const bool po2,
+			  const bool ifdagger=false);
  
 qtensor3 oper_kernel_OOwf(const std::string& superblock,
 			  const qtensor3& ksite,
  			  const qtensor2& o1,
  			  const qtensor2& o2,
-			  const bool po2);
+			  const bool po2,
+			  const bool ifdagger=false);
 
 qtensor2 oper_kernel_renorm(const std::string& superblock,
 			    const qtensor3& bsite,
@@ -98,7 +101,8 @@ qtensor3 oper_kernel_Pwf(const std::string& superblock,
 		         oper_dict& qops2,
 	                 const integral::two_body& int2e,
 	                 const integral::one_body& int1e,
-		         const int index);
+		         const int index,
+			 const bool ifdagger=false);
 
 qtensor3 oper_kernel_Qwf(const std::string& superblock,
 		         const qtensor3& ksite,
@@ -114,7 +118,8 @@ qtensor3 oper_kernel_Swf(const std::string& superblock,
 		         oper_dict& qops2,
 	                 const integral::two_body& int2e,
 	                 const integral::one_body& int1e,
-		         const int index);
+		         const int index,
+			 const bool ifdagger=false);
 
 qtensor3 oper_kernel_Hwf(const std::string& superblock,
 		         const qtensor3& ksite,

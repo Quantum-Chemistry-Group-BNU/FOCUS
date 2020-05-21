@@ -135,7 +135,7 @@
 	    - update alg
  	    - update operator construction
 
- 202005xx a WORKING version of sweep algorithm 
+ 202005xx a WORKING version of sweep algorithm [key part!] 
 	  - 1. symmetry processing (depending on configuration of dots)
 	       - check symmetry handling by using random wf 
  		 (no need for H*x & renorm ops)
@@ -145,9 +145,12 @@
 	  - 3. universal operator renormalization (lops & rops) [DONE@20200520]
 	       - general combination of two qops (lc,cr,lr)
 	       - strategy for constructing operators? (P,Q,S,H)
-	  - 4. hamiltonian operations
+	  - 4. hamiltonian operations [DONE@2020]
 	       - one-dot opt: Hdiag & HVec
+		 - 1. dealing with partition and sign in OIwf/IOwf/OOwf
+		 - 2. dealing with dagger transformation such as P^+|wf>
 	       - two-dot opt: Hdiag & Hvec
+		 - 1. dealing with merge of LC1, C2R, etc.
 
  202005xx an IMPROVED version with more functionalities:
 	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L|

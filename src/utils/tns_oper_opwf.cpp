@@ -11,7 +11,8 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
 			      oper_dict& qops2,
 	                      const integral::two_body& int2e,
 	                      const integral::one_body& int1e,
-		              const int index){
+		              const int index,
+			      const bool ifdagger){
    // determine symmetry
    auto pq = oper_unpack(index);
    int p = pq.first,  spin_p = p%2;
@@ -24,7 +25,8 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
    }else{
       symP = qsym(-2,-1); // Pos
    }
-   qtensor3 opwf(symP+ksite.sym, ksite.qmid, ksite.qrow, ksite.qcol, ksite.dir);
+   qsym sym_opwf = ifdagger? -symP+ksite.sym : symP+ksite.sym;  
+   qtensor3 opwf(sym_opwf, ksite.qmid, ksite.qrow, ksite.qcol, ksite.dir);
    // 
    // Ppq = <pq||sr> aras [r>s] (p<q)
    //     = <pq||s1r1> As1r1 => Ppq^1
@@ -34,7 +36,7 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
    // 1. CC: Pc*Ir with Pc = <pLqL||sCrC> rCsC [=(sCrC)^+, s<r] 
    bool ifP1 = qops1.find('P') != qops1.end();
    if(ifP1){
-      opwf += oper_kernel_OIwf(superblock,ksite,qops1['P'].at(index));
+      opwf += oper_kernel_OIwf(superblock,ksite,qops1['P'].at(index),ifdagger);
    }else{
       auto& it = qops1['A'].begin()->second;
       qtensor2 op1Pdag(-symP, it.qrow, it.qcol);
@@ -45,12 +47,12 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
          int r1 = sr.second;
          op1Pdag += int2e.getAnti(p,q,s1,r1)*op1A.second;
       }
-      opwf += oper_kernel_OIwf(superblock,ksite,op1Pdag.T());
+      opwf += oper_kernel_OIwf(superblock,ksite,op1Pdag.T(),ifdagger);
    }
    // 2. RR: Ic*Pr
    bool ifP2 = qops2.find('P') != qops2.end();
    if(ifP2){
-      opwf += oper_kernel_IOwf(superblock,ksite,qops2['P'].at(index),0);
+      opwf += oper_kernel_IOwf(superblock,ksite,qops2['P'].at(index),0,ifdagger);
    }else{
       // P_pLqL^R = sum_rRsR <pLqL||sRrR> rRsR
       auto& it = qops2['A'].begin()->second;
@@ -62,7 +64,7 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
          int r2 = sr.second;
          op2Pdag += int2e.getAnti(p,q,s2,r2)*op2A.second;
       }
-      opwf += oper_kernel_IOwf(superblock,ksite,op2Pdag.T(),0);
+      opwf += oper_kernel_IOwf(superblock,ksite,op2Pdag.T(),0,ifdagger);
    }
    // 3. <pq||s1r2> ar2*as1 : use one with smaller support in the outer sum
    if(qops1['C'].size() < qops2['C'].size()){
@@ -79,7 +81,7 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
             int r2 = op2C.first;
             op2 -= int2e.getAnti(p,q,s1,r2)*op2C.second;
          }
-         opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),1);
+         opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),1,ifdagger);
       }
    }else{
       // 3. (-<pq||s1r2> s1) * r2
@@ -95,9 +97,9 @@ qtensor3 tns::oper_kernel_Pwf(const string& superblock,
             int s1 = op1C.first;
             op1 -= int2e.getAnti(p,q,s1,r2)*op1C.second;
          }
-         opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),1);
+         opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2.T(),1,ifdagger);
       }
-   }	   
+   }
    return opwf;
 }
 
@@ -237,11 +239,13 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 			      oper_dict& qops2,
 	                      const integral::two_body& int2e,
 	                      const integral::one_body& int1e,
-		              const int index){
+		              const int index,
+			      const bool ifdagger){
    // determine symmetry
    int p = index, spin_p = p%2;
    qsym symS = (spin_p == 0)? qsym(-1,-1) : qsym(-1,0); // Sa or Sb
-   qtensor3 opwf(symS+ksite.sym, ksite.qmid, ksite.qrow, ksite.qcol, ksite.dir);
+   qsym sym_opwf = ifdagger? -symS+ksite.sym : symS+ksite.sym;  
+   qtensor3 opwf(sym_opwf, ksite.qmid, ksite.qrow, ksite.qcol, ksite.dir);
    //
    // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    //    = Sp^1 + Sp^2 (S exists in both blocks)
@@ -251,9 +255,9 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
    //    + <pq2||s1r2> aq2^+ar2as1 => Qps1^2*as1
    //
    // 1. qCrCsC: Sc*Ir
-   opwf += oper_kernel_OIwf(superblock,ksite,qops1['S'].at(p));
+   opwf += oper_kernel_OIwf(superblock,ksite,qops1['S'].at(p),ifdagger);
    // 2. qRrRsR: Ic*Sr
-   opwf += oper_kernel_IOwf(superblock,ksite,qops2['S'].at(p),1);
+   opwf += oper_kernel_IOwf(superblock,ksite,qops2['S'].at(p),1,ifdagger);
    // 3. <pq2||s1r1> aq2^+ ar1 as1 
    bool ifP1 = qops1.find('P') != qops1.end();
    if(ifP1){
@@ -264,10 +268,10 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	 // special treatment of index for P 
          if(p < q2){	
 	    const auto& op1P = qops1['P'].at(oper_pack(p,q2));
-            opwf += oper_kernel_OOwf(superblock,ksite,op1P,op2,1);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1P,op2,1,ifdagger);
 	 }else{
 	    const auto& op1P = qops1['P'].at(oper_pack(q2,p));
-            opwf -= oper_kernel_OOwf(superblock,ksite,op1P,op2,1);
+            opwf -= oper_kernel_OOwf(superblock,ksite,op1P,op2,1,ifdagger);
 	 }
       }
    }else{
@@ -287,7 +291,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
                int q2 = op2C.first;
                op2 += int2e.getAnti(p,q2,s1,r1)*op2C.second;
             }
-            opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,1);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,1,ifdagger);
          }
       }else{
          // 3. <pq2||s1r1> aq2^+ ar1 as1 = (<pq2||s1r1>ar1as1) aq2^+
@@ -305,7 +309,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	       int r1 = sr.second;
 	       op1 += int2e.getAnti(p,q2,s1,r1)*op1A.second;
 	    }
-	    opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,1);
+	    opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,1,ifdagger);
 	 }
       }
    }
@@ -317,7 +321,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
          int r2 = op2C.first;
          const auto& op2 = op2C.second;
          const auto& op1Q = qops1['Q'].at(oper_pack(p,r2));
-         opwf += oper_kernel_OOwf(superblock,ksite,op1Q,op2.T(),1);
+         opwf += oper_kernel_OOwf(superblock,ksite,op1Q,op2.T(),1,ifdagger);
       }
    }else{
       if(qops1['B'].size() < qops2['C'].size()){
@@ -336,7 +340,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
                int r2 = op2C.first;
                op2 -= int2e.getAnti(p,q1,s1,r2)*op2C.second;
             }
-            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1,ifdagger);
          }
       }else{
          // 4. <pq1||s1r2> aq1^+ ar2 as1 = (-<pq1||s1r2> aq1^+as1) ar2
@@ -354,7 +358,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	       int s1 = qs.second;
 	       op1 -= int2e.getAnti(p,q1,s1,r2)*op1B.second;
 	    }
-	    opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1);
+	    opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1,ifdagger);
 	 }
       }
    }
@@ -368,10 +372,10 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	 // special treatment of index for P
 	 if(p < q1){ 
             const auto& op2P = qops2['P'].at(oper_pack(p,q1));
-            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2P,0);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2P,0,ifdagger);
 	 }else{
             const auto& op2P = qops2['P'].at(oper_pack(q1,p));
-            opwf -= oper_kernel_OOwf(superblock,ksite,op1,op2P,0);
+            opwf -= oper_kernel_OOwf(superblock,ksite,op1,op2P,0,ifdagger);
 	 }
       }
    }else{
@@ -391,7 +395,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
                int r2 = sr.second;
                op2 += int2e.getAnti(p,q1,s2,r2)*op2A.second;
             }
-            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),0);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),0,ifdagger);
          }
       }else{
          // 5. <pq1||s2r2> aq1^+ar2as2 = (<pq1||s2r2> aq1^+) ar2as2
@@ -409,7 +413,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	       int q1 = op1C.first;
 	       op1 += int2e.getAnti(p,q1,s2,r2)*op1C.second;
 	    }
-	    opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),0);
+	    opwf += oper_kernel_OOwf(superblock,ksite,op1,op2.T(),0,ifdagger);
 	 }
       }
    }
@@ -421,7 +425,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
          int s1 = op1C.first;
 	 const auto& op1 = op1C.second;
          const auto& op2Q = qops2['Q'].at(oper_pack(p,s1));
-         opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2Q,0);
+         opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2Q,0,ifdagger);
       }
    }else{
       if(qops1['C'].size() < qops2['B'].size()){
@@ -440,7 +444,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
                int r2 = qr.second;
                op2 += int2e.getAnti(p,q2,s1,r2)*op2B.second;
             }
-            opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,0);
+            opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,0,ifdagger);
 	 }
       }else{
          // 6. <pq2||s1r2> aq2^+ar2as1 = (<pq2||s1r2> as1) aq2^+ar2
@@ -458,7 +462,7 @@ qtensor3 tns::oper_kernel_Swf(const string& superblock,
 	       int s1 = op1C.first;
 	       op1 += int2e.getAnti(p,q2,s1,r2)*op1C.second;
 	    }
-	    opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,0);
+	    opwf += oper_kernel_OOwf(superblock,ksite,op1.T(),op2,0,ifdagger);
 	 }
       }
    }

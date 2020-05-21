@@ -32,7 +32,7 @@ oper_dict tns::oper_renorm_ops(const string& superblock,
       bsite = bra.lsites.at(p);
       ksite = ket.lsites.at(p);
       supp = bra.rsupport.at(bra.get_r(p));
-      ifAB = (jp == 0 && ip < bra.iswitch);
+      ifAB = (jp == 0 && ip < bra.iswitch-1);
    }else if(superblock == "lr"){
       bsite = bra.lsites.at(p);
       ksite = ket.lsites.at(p);

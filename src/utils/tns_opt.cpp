@@ -74,6 +74,7 @@ void tns::opt_onedot(const input::schedule& schd,
    qc = icomb.get_qc(p); 
    ql = icomb.get_ql(p);
    qr = icomb.get_qr(p);
+   
    // wavefunction to be computed
    int nelec_a = (schd.nelec+schd.twoms)/2;
    qsym sym_state(schd.nelec,nelec_a);
@@ -84,6 +85,10 @@ void tns::opt_onedot(const input::schedule& schd,
    cqops = oper_get_cqops(icomb, p, schd.scratch);
    lqops = oper_get_lqops(icomb, p, schd.scratch);
    rqops = oper_get_rqops(icomb, p, schd.scratch);
+   cout << "c:" << oper_dict_opnames(cqops) << " "   
+	<< "l:" << oper_dict_opnames(lqops) << " " 
+	<< "r:" << oper_dict_opnames(rqops) << " "  
+	<< endl;
 
    // 2. Davidson solver 
    int nsub = wf.get_dim();
@@ -104,23 +109,26 @@ void tns::opt_onedot(const input::schedule& schd,
 		      ref(cqops), ref(lqops), ref(rqops), 
 		      cref(int2e), cref(int1e), cref(ecore), 
 		      ref(wf));
+  
+   // initial guess 
+   matrix v0 = random_matrix(nsub, neig);
+   vector<double> v0tmp(nsub*neig);
+   copy(v0.data(), v0.data()+nsub*neig, v0tmp.begin());
+   int nindp = linalg::get_ortho_basis(nsub,neig,v0tmp);
+   assert(nindp == neig);
+   copy(v0tmp.begin(), v0tmp.end(), v0.data());
+
    // solve
    vector<double> esol(neig);
-/*
    matrix vsol(nsub,neig);
-   solver.solve_iter(esol.data(), vsol.data());
+   //solver.solve_iter(esol.data(), vsol.data(), v0.data());
+   solver.solve_diag(esol.data(), vsol.data());
+
+   wf.from_array(vsol.data());
+   cout << wf.normF() << endl;
    cout << "energy=" << esol[0] << endl;
-   exit(1);
-*/
 
-   // test decimation
-   wf.random();
-   cout << wf.normF() << endl;
-   double nrm = wf.normF();
-   wf *= 1.0/nrm;
-   cout << wf.normF() << endl;
-
-   int Dcut = 20;
+   int Dcut = 10;
    // 3. decimation & renormalize operators
    oper_dict qops;
    bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
@@ -132,7 +140,7 @@ void tns::opt_onedot(const input::schedule& schd,
 	 qt2 = decimation_row(qt2, Dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
          icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
-         qops = oper_renorm_ops("lc",icomb, icomb, p, lqops, cqops, int2e, int1e, true);
+         qops = oper_renorm_ops("lc",icomb, icomb, p, lqops, cqops, int2e, int1e);
       }else{
 	 // update lsites & qc [special for comb]
          cout << "renormlize |lr>" << endl;
@@ -141,7 +149,7 @@ void tns::opt_onedot(const input::schedule& schd,
 	 qt2 = decimation_row(qt2, Dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
-         qops = oper_renorm_ops("lr",icomb, icomb, p, lqops, rqops, int2e, int1e, true);
+         qops = oper_renorm_ops("lr",icomb, icomb, p, lqops, rqops, int2e, int1e);
       }
       string fname = oper_fname(schd.scratch, p, "lop");
       oper_save(fname, qops);
@@ -152,7 +160,7 @@ void tns::opt_onedot(const input::schedule& schd,
       qt2 = decimation_col(qt2, Dcut);
       qsym_space_print(qt2.qrow, "after renormalization");
       icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, wf.dpt_cr().second);
-      qops = oper_renorm_ops("cr",icomb, icomb, p, cqops, rqops, int2e, int1e, true);
+      qops = oper_renorm_ops("cr",icomb, icomb, p, cqops, rqops, int2e, int1e);
       string fname = oper_fname(schd.scratch, p, "rop");
       oper_save(fname, qops);
    }
