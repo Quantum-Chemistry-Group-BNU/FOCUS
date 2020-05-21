@@ -251,7 +251,7 @@ qtensor2 tns::contract_qt3_qt3_lr(const qtensor3& qt3a,
 	       if(blka.size() == 0 || blkb.size() == 0) continue;
 	       for(int ic=0; ic<cdim; ic++){
                   for(int ir=0; ir<rdim; ir++){
-	             blk(ir,ic) = dgemm("N","T",blka[ir],blkb[ic]).trace();
+	             blk(ir,ic) += dgemm("N","N",blka[ir],blkb[ic].T()).trace();
 		  } // r 
 	       } // c
 	    } // qy
