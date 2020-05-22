@@ -99,7 +99,7 @@ void tns::opt_onedot(const input::schedule& schd,
    // 2. Davidson solver 
    int nsub = wf.get_dim();
    int neig = 1; //schd.nroots;
-   auto diag = tns::get_onedot_Hdiag(cqops, lqops, rqops, ecore, wf);
+   auto diag = tns::get_onedot_Hdiag(cqops, lqops, rqops, int2e, ecore, wf);
 
    dvdsonSolver solver;
    solver.iprt = 2;
@@ -116,7 +116,6 @@ void tns::opt_onedot(const input::schedule& schd,
 		      cref(int2e), cref(int1e), cref(ecore), 
 		      ref(wf));
  
-   /* 
    // initial guess 
    matrix v0 = random_matrix(nsub, neig);
    vector<double> v0tmp(nsub*neig);
@@ -124,14 +123,13 @@ void tns::opt_onedot(const input::schedule& schd,
    int nindp = linalg::get_ortho_basis(nsub,neig,v0tmp);
    assert(nindp == neig);
    copy(v0tmp.begin(), v0tmp.end(), v0.data());
-   */
 
    // solve
    vector<double> esol(neig);
    matrix vsol(nsub,neig);
    solver.solve_iter(esol.data(), vsol.data());
    //solver.solve_iter(esol.data(), vsol.data(), v0.data());
-   //solver.solve_diag(esol.data(), vsol.data());
+   //solver.solve_diag(esol.data(), vsol.data(), true);
 
    wf.from_array(vsol.data());
    cout << wf.normF() << endl;

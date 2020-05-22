@@ -9,7 +9,9 @@ using namespace std;
 using namespace linalg;
 
 // check by full diag
-void dvdsonSolver::solve_diag(double* es, double* vs){
+void dvdsonSolver::solve_diag(double* es, 
+			      double* vs,
+			      const bool ifCheckDiag){
    cout << "\ndvdsonSolver:solve_diag" << endl;
    matrix id = identity_matrix(ndim);
    matrix H(ndim,ndim);
@@ -22,13 +24,31 @@ void dvdsonSolver::solve_diag(double* es, double* vs){
       cout << "error in dvdsonSolver::solve_diag: H is not symmetric!" << endl;
       exit(1);
    }
-   // eigenvalue problem
+   // solve eigenvalue problem by diagonalization
    vector<double> e(ndim);
    matrix V(H);
    eigen_solver(V,e);
    cout << "eigenvalues:\n" << setprecision(12);
    for(int i=0; i<ndim; i++){
       cout << "i=" << i << " e=" << e[i] << endl;
+   }
+   // final check consistency with diag
+   if(ifCheckDiag){
+      cout << "ndim=" << ndim << endl;
+      cout << setprecision(12);
+      double diff = 0.0;
+      for(int i=0; i<ndim; i++){
+         cout << "i=" << i 
+	      << " H(i,i)=" << H(i,i) 
+	      << " Diag[i]=" << Diag[i] 
+	      << " diff=" << Diag[i]-H(i,i)
+	      << endl;
+	 diff += abs(Diag[i]-H(i,i));
+      } // i
+      if(diff>1.e-10){
+         cout << "error: Diag[i]-H(i,i) is too large!" << endl;
+         exit(1);
+      }
    }
    // copy results
    copy(e.begin(), e.begin()+neig, es);

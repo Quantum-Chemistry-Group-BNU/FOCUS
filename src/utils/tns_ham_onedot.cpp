@@ -7,10 +7,11 @@ using namespace tns;
 vector<double> tns::get_onedot_Hdiag(oper_dict& cqops,
 			             oper_dict& lqops,
 			             oper_dict& rqops,
+		        	     const integral::two_body& int2e,
 			             const double ecore,
 			             qtensor3& wf){
    cout << "\ntns::get_onedot_Hdiag" << endl;
-   // load Hl, Hc, Hr
+   // 1. local contributions
    auto& Hc = cqops['H'][0];
    auto& Hl = lqops['H'][0];
    auto& Hr = rqops['H'][0];
@@ -23,23 +24,163 @@ vector<double> tns::get_onedot_Hdiag(oper_dict& cqops,
          auto qm = get<0>(q);
          auto qr = get<1>(q);
          auto qc = get<2>(q);
+	 int rdim = blk[0].rows();
+	 int cdim = blk[0].cols();
 	 auto& cblk = Hc.qblocks[make_pair(qm,qm)]; // central->mid
 	 auto& lblk = Hl.qblocks[make_pair(qr,qr)]; // left->row
 	 auto& rblk = Hr.qblocks[make_pair(qc,qc)]; // row->col
-	 int rdim = blk[0].rows();
-	 int cdim = blk[0].cols();
 	 for(int m=0; m<mdim; m++){
 	    for(int c=0; c<cdim; c++){
 	       for(int r=0; r<rdim; r++){
-	          blk[m](r,c) = ecore 
-			      + lblk(r,r) 
-			      + cblk(m,m)
-			      + rblk(c,c);
+	          blk[m](r,c) = ecore + lblk(r,r) + cblk(m,m) + rblk(c,c);
 	       } // r
 	    } // c
 	 } // m
       }
    } // qblocks
+   // 2. B*Q term - density-density interactions
+   int ifPl = lqops.find('P') != lqops.end();
+   int ifPr = rqops.find('P') != rqops.end();
+   assert(ifPl + ifPr == 1);
+   if(ifPl){
+      for(auto& p : wf.qblocks){
+         auto& blk = p.second;
+         int mdim = blk.size();
+         if(mdim > 0){
+            auto& q = p.first;
+            auto qm = get<0>(q);
+            auto qr = get<1>(q);
+            auto qc = get<2>(q);
+            int rdim = blk[0].rows();
+            int cdim = blk[0].cols();
+	    //
+	    //      B^C
+	    //       |
+	    // Q^L---*---B^R
+	    //
+            // Q^L*B^C
+            for(auto& Bc : cqops['B']){
+               if(Bc.second.sym != qsym(0,0)) continue;
+	       auto& Ql = lqops['Q'].at(Bc.first);
+	       auto& lblk = Ql.qblocks[make_pair(qr,qr)];
+	       auto& cblk = Bc.second.qblocks[make_pair(qm,qm)];
+               for(int m=0; m<mdim; m++){
+                  for(int c=0; c<cdim; c++){
+                     for(int r=0; r<rdim; r++){
+                        blk[m](r,c) += lblk(r,r)*cblk(m,m);
+                     } // r
+                  } // c
+               } // m
+            }
+            // Q^L*B^R 
+            for(auto& Br : rqops['B']){
+               if(Br.second.sym != qsym(0,0)) continue;
+	       auto& Ql = lqops['Q'].at(Br.first);
+	       auto& lblk = Ql.qblocks[make_pair(qr,qr)];
+	       auto& rblk = Br.second.qblocks[make_pair(qc,qc)];
+               for(int m=0; m<mdim; m++){
+                  for(int c=0; c<cdim; c++){
+                     for(int r=0; r<rdim; r++){
+                        blk[m](r,c) += lblk(r,r)*rblk(c,c);
+                     } // r
+                  } // c
+               } // m
+            } 
+            // B^C*B^R : <p1q2||s1r2>p1q2r2s1 => <p1q2||s1r2>Bps^1*Bqr^2 
+            for(auto& Bc : cqops['B']){
+               if(Bc.second.sym != qsym(0,0)) continue;
+               auto kps = oper_unpack(Bc.first);
+               int kp = kps.first;
+               int ks = kps.second;
+               for(auto& Br : rqops['B']){
+                  if(Br.second.sym != qsym(0,0)) continue;
+                  auto kqr = oper_unpack(Br.first);
+                  int kq = kqr.first;
+                  int kr = kqr.second;
+                  // <p1q2||r1s2>Bpr^1*Bqs^2
+                  auto& cblk = Bc.second.qblocks[make_pair(qm,qm)]; // central->mid
+                  auto& rblk = Br.second.qblocks[make_pair(qc,qc)]; // row->col
+                  for(int m=0; m<mdim; m++){
+                     for(int c=0; c<cdim; c++){
+                        for(int r=0; r<rdim; r++){
+                           blk[m](r,c) += cblk(m,m)*rblk(c,c)*int2e.getAnti(kp,kq,ks,kr);
+                        } // r
+                     } // c
+                  } // m
+	       }
+	    }
+         } // mdim
+      } // qblocks
+   }else{
+      for(auto& p : wf.qblocks){
+         auto& blk = p.second;
+         int mdim = blk.size();
+         if(mdim > 0){
+            auto& q = p.first;
+            auto qm = get<0>(q);
+            auto qr = get<1>(q);
+            auto qc = get<2>(q);
+            int rdim = blk[0].rows();
+            int cdim = blk[0].cols();
+	    //
+	    //      B^C
+	    //       |
+	    // B^L---*---Q^R
+	    //
+            // B^L*B^C : <p1q2||s1r2>p1q2r2s1 => <p1q2||s1r2>Bps^1*Bqr^2 
+            for(auto& Bl : lqops['B']){
+               if(Bl.second.sym != qsym(0,0)) continue;
+               auto kps = oper_unpack(Bl.first);
+               int kp = kps.first;
+               int ks = kps.second;
+               for(auto& Bc : cqops['B']){
+                  if(Bc.second.sym != qsym(0,0)) continue;
+                  auto kqr = oper_unpack(Bc.first);
+                  int kq = kqr.first;
+                  int kr = kqr.second;
+                  auto& lblk = Bl.second.qblocks[make_pair(qr,qr)];
+                  auto& cblk = Bc.second.qblocks[make_pair(qm,qm)];
+                  for(int m=0; m<mdim; m++){
+                     for(int c=0; c<cdim; c++){
+                        for(int r=0; r<rdim; r++){
+                           blk[m](r,c) += lblk(r,r)*cblk(m,m)*int2e.getAnti(kp,kq,ks,kr);
+                        } // r
+                     } // c
+                  } // m
+	       }
+            }
+	    // B^L*Q^R 
+            for(auto& Bl : lqops['B']){
+	       if(Bl.second.sym != qsym(0,0)) continue;
+	       auto& Qr = rqops['Q'].at(Bl.first);
+	       auto& lblk = Bl.second.qblocks[make_pair(qr,qr)];
+	       auto& rblk = Qr.qblocks[make_pair(qc,qc)];
+               for(int m=0; m<mdim; m++){
+                  for(int c=0; c<cdim; c++){
+                     for(int r=0; r<rdim; r++){
+                        blk[m](r,c) += lblk(r,r)*rblk(c,c);
+                     } // r
+                  } // c
+               } // m
+            }
+	    // B^C*Q^R 
+            for(auto& Bc : cqops['B']){
+	       if(Bc.second.sym != qsym(0,0)) continue;
+	       auto& Qr = rqops['Q'].at(Bc.first);
+	       auto& cblk = Bc.second.qblocks[make_pair(qm,qm)];
+	       auto& rblk = Qr.qblocks[make_pair(qc,qc)];
+               for(int m=0; m<mdim; m++){
+                  for(int c=0; c<cdim; c++){
+                     for(int r=0; r<rdim; r++){
+                        blk[m](r,c) += cblk(m,m)*rblk(c,c);
+                     } // r
+                  } // c
+               } // m
+            }
+         } // mdim
+      } // qblocks
+   }
+   // save
    vector<double> diag(wf.get_dim());
    wf.to_array(diag.data());
    return diag;
@@ -64,9 +205,7 @@ void tns::get_onedot_Hx(double* y,
    int ifPl = lqops.find('P') != lqops.end();
    int ifPr = rqops.find('P') != rqops.end();
    assert(ifPl + ifPr == 1);
-   if(debug) cout << "\ntns::get_onedot_Hx "
-	          << (ifPl? "LC|R" : "L|CR") 
-	          << endl;
+   if(debug) cout << "tns::get_onedot_Hx " << (ifPl? "LC|R" : "L|CR") << endl;
    if(ifPl){
       // L=lc, R=r
       // H1

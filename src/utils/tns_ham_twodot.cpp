@@ -8,6 +8,7 @@ vector<double> tns::get_twodot_Hdiag(oper_dict& cqops,
 			             oper_dict& vqops,
 			             oper_dict& lqops,
 			             oper_dict& rqops,
+		        	     const integral::two_body& int2e,
 			             const double ecore,
 			             qtensor4& wf){
    cout << "\ntns::get_twodot_Hdiag" << endl;

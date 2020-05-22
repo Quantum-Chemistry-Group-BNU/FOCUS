@@ -146,15 +146,18 @@
 	       - general combination of two qops (lc,cr,lr)
 	       - strategy for constructing operators? (P,Q,S,H)
 	  - 4. hamiltonian operations [DONE@2020]
-	       - one-dot opt: Hdiag & HVec
-		 - 1. dealing with partition and sign in OIwf/IOwf/OOwf
-		 - 2. dealing with dagger transformation such as P^+|wf>
+	       - one-dot opt: Hdiag & HVec [DONE@20200522]
+		 - dealing with partition and sign in OIwf/IOwf/OOwf
+		 - dealing with dagger transformation such as P^+|wf>
+	         - check consistency of HVec with Hdiag
 	       - two-dot opt: Hdiag & Hvec
-		 - 1. dealing with merge of LC1, C2R, etc.
+		 - dealing with merge of LC1, C2R, etc.
+	         - check consistency of HVec with Hdiag
 
  202005xx an IMPROVED version with more functionalities:
+	  - correct formulation of decimation in lr case
 	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L|
- 	  - propogation of initial guess to next site
+ 	  - propogation of initial guess to next site [!]
 	  - support for state-average excited state calculations
 
  202006xx parallelizaiton: large-scale applications!

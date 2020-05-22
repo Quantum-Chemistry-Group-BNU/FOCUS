@@ -119,13 +119,14 @@ int tests::test_comb(){
    auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hmat.print("Hmat",8);
    Hmat.save("fci_Hmat");
+   
    auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
    Hij.print("Hij",8);
    diff = normF(Hmat-Hij);
    cout << "diff_Hij=" << diff << endl;
    if(diff > thresh){ 
       cout << "error: diff_Hij > thresh=" << thresh << endl;
-      //exit(1);
+      exit(1);
    }
    
    tns::opt_sweep(schd, comb, int2e, int1e, ecore);

@@ -12,7 +12,7 @@ struct dvdsonSolver{
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, double* y, const double* x); 
       // check by full diag
-      void solve_diag(double* es, double* vs);
+      void solve_diag(double* es, double* vs, const bool ifCheckDiag=false);
       // Davidson iterative algorithm for Hv=ve 
       void solve_iter(double* es, double* vs, double* vguess=nullptr);
       // subspace problem
