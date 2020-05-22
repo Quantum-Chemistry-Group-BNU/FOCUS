@@ -43,6 +43,8 @@ public:
    int maxdets;
    double thresh_proj;
    double thresh_ortho;
+   // sweep
+   int dmax;
 };
    
 void read_input(schedule& schd, std::string fname="input.dat");

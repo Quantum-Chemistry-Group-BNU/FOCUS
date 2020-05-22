@@ -18,14 +18,18 @@ void opt_onedot(const input::schedule& schd,
 		directed_bond& dbond,
 	        const integral::two_body& int2e,
 	        const integral::one_body& int1e,
-	        const double ecore);
+	        const double ecore,
+   	        const int dcut,
+		std::vector<double>& eopt);
 
 void opt_twodot(const input::schedule& schd,
 	        comb& icomb, 
 		directed_bond& dbond,
 	        const integral::two_body& int2e,
 	        const integral::one_body& int1e,
-	        const double ecore);
+	        const double ecore,
+   	        const int dcut,
+		std::vector<double>& eopt);
 
 } // tns
 
