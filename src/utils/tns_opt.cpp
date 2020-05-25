@@ -24,7 +24,7 @@ void tns::opt_sweep(const input::schedule& schd,
    icomb.lsites[make_pair(0,0)] = icomb.get_lbsite();
 
    // one-dot sweep
-   const int nsweeps = 1;
+   const int nsweeps = 4;
    auto sweeps = icomb.get_sweeps();
    for(int isweep=0; isweep<nsweeps; isweep++){
       cout << "\nisweep = " << isweep << endl;
@@ -299,9 +299,9 @@ void tns::opt_twodot(const input::schedule& schd,
    // solve
    vector<double> esol(neig);
    matrix vsol(nsub,neig);
-   //solver.solve_iter(esol.data(), vsol.data());
+   solver.solve_iter(esol.data(), vsol.data());
    //solver.solve_iter(esol.data(), vsol.data(), v0.data());
-   solver.solve_diag(esol.data(), vsol.data(), true);
+   //solver.solve_diag(esol.data(), vsol.data(), true);
    
    eopt = esol;
    wf.from_array(vsol.data());

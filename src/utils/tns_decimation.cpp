@@ -6,7 +6,7 @@ using namespace std;
 using namespace tns;
 using namespace linalg;
 
-// wf[L,R] = U[L,l]*sl*Vt[l,R]
+// wf[L,R] = U[L,l]*sl*Vh[l,R]
 qtensor2 tns::decimation_row(const qtensor2& wf,
 			     const int Dcut){
    bool debug = false;
@@ -97,7 +97,8 @@ qtensor2 tns::decimation_row(const qtensor2& wf,
 qtensor2 tns::decimation_col(const qtensor2& wf,
 			     const int Dcut){
    cout << "tns::decimation_col Dcut=" << Dcut << endl;
-   auto wfT = wf.T();
-   auto Ubas = decimation_row(wfT, Dcut);
-   return Ubas.T();
+   auto Vhc = decimation_row(wf.T(), Dcut).T();
+   // flip direction for later generating right canonical form
+   Vhc.dir = {0,0,1};
+   return Vhc;
 }

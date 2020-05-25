@@ -135,7 +135,7 @@
 	    - update alg
  	    - update operator construction
 
- 202005XX a WORKING version of sweep algorithm [key part!]  
+ 20200525 a WORKING version of sweep algorithm [key part!]  
 	  - 1. symmetry processing (depending on configuration of dots)
 	       - check symmetry handling by using random wf 
  		 (no need for H*x & renorm ops)
@@ -150,14 +150,19 @@
 	       - dealing with dagger transformation such as P^+|wf>
 	       - check consistency of HVec with Hdiag
           - 5. two-dot opt: Hdiag & Hvec [DONE@20200522]
-          - 6. special treatment of AB|AB case (middle)
-	  - 7. examine the correctness by comparing against FCI on H-chain ??? 
+          - 6. special treatment of AB|AB case (middle) [DONE@20200525]
+	       - use the fact that Pwf/Qwf works in this case
+	  - 7. examine the correctness by comparing against FCI on H4,6 [DONE@20200525]
+	       - making MPS correct
+	       - special topology 
 
  202005xx an IMPROVED version with more functionalities
+	  - printing: discarded weight, dimension, etc.
+	  - generate benchmark results for C2 for later improvement
 	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L|
 	    - dealing with merge of LC1, C2R, etc.
 	    - check consistency of HVec with Hdiag
-	  - correct formulation of decimation in lr case
+	  - correct formulation of decimation in lr case [how to check optimal?]
  	  - propogation of initial guess to next site [!]
 	  - support for state-average excited state calculations
 
