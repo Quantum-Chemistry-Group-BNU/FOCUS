@@ -5,8 +5,6 @@
 #include "tns_ham.h"
 #include "tns_decimation.h"
 
-#include "../core/linalg.h"
-
 using namespace std;
 using namespace linalg;
 using namespace tns;
@@ -26,13 +24,14 @@ void tns::opt_sweep(const input::schedule& schd,
    icomb.lsites[make_pair(0,0)] = icomb.get_lbsite();
 
    // one-dot sweep
-   const int nsweeps = 2;
+   const int nsweeps = 1;
    auto sweeps = icomb.get_sweeps();
    for(int isweep=0; isweep<nsweeps; isweep++){
       cout << "\nisweep = " << isweep << endl;
 
       // whole sweep optimization
       int dcut = schd.dmax;
+      int dots = schd.dots;
       vector<vector<double>> eopt(sweeps.size());
       for(int i=0; i<sweeps.size(); i++){
 	 auto dbond = sweeps[i];
@@ -49,8 +48,11 @@ void tns::opt_sweep(const input::schedule& schd,
 	      << " type=[" << icomb.type[p0] << "," << icomb.type[p1] << "]"
 	      << " updated site=(" << p.first << "," << p.second << ")"
 	      << endl;
-	 opt_onedot(schd, icomb, dbond, int2e, int1e, ecore, dcut, eopt[i]);
-	 //opt_twodot(schd, icomb, dbond, int2e, int1e, dcut, ecore);
+	 if(dots == 1){
+	    opt_onedot(schd, icomb, dbond, int2e, int1e, ecore, dcut, eopt[i]);
+	 }else if(dots == 2){
+	    opt_twodot(schd, icomb, dbond, int2e, int1e, ecore, dcut, eopt[i]);
+	 }
       } // i
 
       // print 
@@ -97,17 +99,10 @@ void tns::opt_onedot(const input::schedule& schd,
    
    // 1. process symmetry information & operators for {|lcr>}
    qsym_space qc, ql, qr;
+   oper_dict cqops, lqops, rqops;
    qc = icomb.get_qc(p); 
    ql = icomb.get_ql(p);
    qr = icomb.get_qr(p);
-   
-   // wavefunction to be computed
-   int nelec_a = (schd.nelec+schd.twoms)/2;
-   qsym sym_state(schd.nelec,nelec_a);
-   qtensor3 wf(sym_state,qc,ql,qr,{0,1,1,1});
-   //wf.print("wf",1);
-
-   oper_dict cqops, lqops, rqops;
    cqops = oper_get_cqops(icomb, p, schd.scratch);
    lqops = oper_get_lqops(icomb, p, schd.scratch);
    rqops = oper_get_rqops(icomb, p, schd.scratch);
@@ -115,6 +110,13 @@ void tns::opt_onedot(const input::schedule& schd,
 	<< "l:" << oper_dict_opnames(lqops) << " " 
 	<< "r:" << oper_dict_opnames(rqops) << " "  
 	<< endl;
+  
+   // wavefunction to be computed
+   int nelec_a = (schd.nelec+schd.twoms)/2;
+   qsym sym_state(schd.nelec,nelec_a);
+   qtensor3 wf(sym_state,qc,ql,qr,{0,1,1,1});
+   //wf.print("wf",1);
+   //cout << "dimSpace=" << wf.get_dim() << endl;
 
    // 2. Davidson solver 
    int nsub = wf.get_dim();
@@ -147,8 +149,8 @@ void tns::opt_onedot(const input::schedule& schd,
    // solve
    vector<double> esol(neig);
    matrix vsol(nsub,neig);
-   //solver.solve_iter(esol.data(), vsol.data());
-   solver.solve_iter(esol.data(), vsol.data(), v0.data());
+   solver.solve_iter(esol.data(), vsol.data());
+   //solver.solve_iter(esol.data(), vsol.data(), v0.data());
    //solver.solve_diag(esol.data(), vsol.data(), true);
 
    eopt = esol;
@@ -172,7 +174,7 @@ void tns::opt_onedot(const input::schedule& schd,
 	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
-	 qops = oper_renorm_ops("lc",icomb, icomb, p, lqops, cqops, int2e, int1e);
+	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, cqops, int2e, int1e);
       }else{
 	 // update lsites & qc [special for comb]
          cout << "renormlize |lr>" << endl;
@@ -186,7 +188,7 @@ void tns::opt_onedot(const input::schedule& schd,
 	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
-	 qops = oper_renorm_ops("lr",icomb, icomb, p, lqops, rqops, int2e, int1e);
+	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
       }
       string fname = oper_fname(schd.scratch, p, "lop");
       oper_save(fname, qops);
@@ -202,7 +204,7 @@ void tns::opt_onedot(const input::schedule& schd,
       auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
       assert(ovlp.check_identity(1.e-10,false)<1.e-10);
       //-------------------------------------------------------------------	 
-      qops = oper_renorm_ops("cr",icomb, icomb, p, cqops, rqops, int2e, int1e);
+      qops = oper_renorm_ops("cr", icomb, icomb, p, cqops, rqops, int2e, int1e);
       string fname = oper_fname(schd.scratch, p, "rop");
       oper_save(fname, qops);
    }
@@ -239,30 +241,37 @@ void tns::opt_twodot(const input::schedule& schd,
       qc2 = icomb.get_qc(p1);
       ql  = icomb.get_ql(p0);
       qr  = icomb.get_qr(p1);
-      //c1qops = oper_get_cqops(icomb, p0, schd.scratch);
-      //c2qops = oper_get_cqops(icomb, p1, schd.scratch);
-      //lqops  = oper_get_lqops(icomb, p0, schd.scratch);
-      //rqops  = oper_get_rqops(icomb, p1, schd.scratch);  
+      c1qops = oper_get_cqops(icomb, p0, schd.scratch);
+      c2qops = oper_get_cqops(icomb, p1, schd.scratch);
+      lqops  = oper_get_lqops(icomb, p0, schd.scratch);
+      rqops  = oper_get_rqops(icomb, p1, schd.scratch);  
    }else{
       qc1 = icomb.get_qc(p1);
       qc2 = icomb.get_qr(p1);
       ql  = icomb.get_ql(p0);
       qr  = icomb.get_qr(p0);
-      //c1qops = oper_get_cqops(icomb, p1, schd.scratch);
-      //c2qops = oper_get_rqops(icomb, p1, schd.scratch);
-      //lqops  = oper_get_lqops(icomb, p0, schd.scratch);
-      //rqops  = oper_get_rqops(icomb, p0, schd.scratch);  
+      c1qops = oper_get_cqops(icomb, p1, schd.scratch);
+      c2qops = oper_get_rqops(icomb, p1, schd.scratch);
+      lqops  = oper_get_lqops(icomb, p0, schd.scratch);
+      rqops  = oper_get_rqops(icomb, p0, schd.scratch);  
    }
+   cout << "c1:" << oper_dict_opnames(c1qops) << " "   
+	<< "c2:" << oper_dict_opnames(c2qops) << " " 
+	<< "l:"  << oper_dict_opnames(lqops) << " " 
+	<< "r:"  << oper_dict_opnames(rqops) << " "  
+	<< endl;
+
+   // wavefunction to be computed 
    int nelec_a = (schd.nelec+schd.twoms)/2;
    qsym sym_state(schd.nelec,nelec_a);
    qtensor4 wf(sym_state,qc1,qc2,ql,qr);
-   wf.print("wf",1);
+   //wf.print("wf",1);
+   //cout << "dimSpace=" << wf.get_dim() << endl;
 
-/*
    // 2. Davidson solver 
    int nsub = wf.get_dim();
    int neig = 1; //schd.nroots;
-   auto diag = tns::get_twodot_Hdiag(c1qops, c2qops, lqops, rqops, ecore, wf);
+   auto diag = tns::get_twodot_Hdiag(c1qops, c2qops, lqops, rqops, int2e, ecore, wf);
    
    dvdsonSolver solver;
    solver.iprt = 2;
@@ -278,21 +287,29 @@ void tns::opt_twodot(const input::schedule& schd,
 		      ref(c1qops), ref(c2qops), ref(lqops), ref(rqops), 
 		      cref(int2e), cref(int1e), cref(ecore), 
 		      ref(wf));
+  
+   // initial guess 
+   matrix v0 = random_matrix(nsub, neig);
+   vector<double> v0tmp(nsub*neig);
+   copy(v0.data(), v0.data()+nsub*neig, v0tmp.begin());
+   int nindp = linalg::get_ortho_basis(nsub,neig,v0tmp);
+   assert(nindp == neig);
+   copy(v0tmp.begin(), v0tmp.end(), v0.data());
+
    // solve
    vector<double> esol(neig);
    matrix vsol(nsub,neig);
-   solver.solve_iter(esol.data(), vsol.data());
+   //solver.solve_iter(esol.data(), vsol.data());
+   //solver.solve_iter(esol.data(), vsol.data(), v0.data());
+   solver.solve_diag(esol.data(), vsol.data(), true);
+   
+   eopt = esol;
+   wf.from_array(vsol.data());
+   cout << wf.normF() << endl;
    cout << "energy=" << esol[0] << endl;
-   exit(1);
-*/
-   //test decimation
-   wf.random();
-   cout << wf.normF() << endl;
-   double nrm = wf.normF();
-   wf *= 1.0/nrm;
-   cout << wf.normF() << endl;
 
    // 3. decimation & renormalize operators
+   oper_dict qops;
    if(forward){
       if(!cturn){
          // update lsites & ql
@@ -301,7 +318,12 @@ void tns::opt_twodot(const input::schedule& schd,
 	 qt2 = decimation_row(qt2, dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
          icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc1().second);
-         //oper_renorm_ops("lc",icomb,icomb,p0,int2e,int1e,schd.scratch); ???
+ 	 //-------------------------------------------------------------------	 
+	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
+	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
+	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+ 	 //-------------------------------------------------------------------	 
+	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, c1qops, int2e, int1e);
       }else{
 	 // update lsites & qc [special for comb]
          cout << "renormlize |lr>" << endl;
@@ -310,8 +332,15 @@ void tns::opt_twodot(const input::schedule& schd,
 	 qt2 = decimation_row(qt2, dcut);
          qsym_space_print(qt2.qcol, "after renormalization");
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
-         //oper_renorm_ops("lr",icomb,icomb,p0,int2e,int1e,schd.scratch); ???
+ 	 //-------------------------------------------------------------------	 
+	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
+	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
+	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+ 	 //-------------------------------------------------------------------	 
+	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
       }
+      string fname = oper_fname(schd.scratch, p, "lop");
+      oper_save(fname, qops);
    }else{
       if(!cturn){
          // update rsites (p1) & qr
@@ -320,7 +349,12 @@ void tns::opt_twodot(const input::schedule& schd,
          qt2 = decimation_col(qt2, dcut);
          qsym_space_print(qt2.qrow, "after renormalization");
          icomb.rsites[p] = qt2.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
-         //oper_renorm_ops("cr",icomb,icomb,p0,int2e,int1e,schd.scratch);
+         //-------------------------------------------------------------------	
+         assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
+         auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
+         assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+         //-------------------------------------------------------------------	 
+         qops = oper_renorm_ops("cr", icomb, icomb, p, c2qops, rqops, int2e, int1e);
       }else{
 	 // update rsites & qr [special for comb]
          cout << "renormlize |c1r2>" << endl;
@@ -329,8 +363,15 @@ void tns::opt_twodot(const input::schedule& schd,
 	 qt2 = decimation_col(qt2, dcut);
          qsym_space_print(qt2.qrow, "after renormalization");
 	 icomb.rsites[p]= qt2.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
-         //oper_renorm_ops("lr",icomb,icomb,p0,int2e,int1e,schd.scratch); ???
+         //-------------------------------------------------------------------	
+         assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
+         auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
+         assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+         //-------------------------------------------------------------------	 
+         qops = oper_renorm_ops("cr", icomb, icomb, p, c1qops, c2qops, int2e, int1e);
       }
+      string fname = oper_fname(schd.scratch, p, "rop");
+      oper_save(fname, qops);
    }
 
    auto t1 = global::get_time();

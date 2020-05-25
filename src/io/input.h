@@ -45,6 +45,7 @@ public:
    double thresh_ortho;
    // sweep
    int dmax;
+   int dots;
 };
    
 void read_input(schedule& schd, std::string fname="input.dat");

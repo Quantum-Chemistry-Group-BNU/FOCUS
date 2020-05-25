@@ -141,6 +141,7 @@ void qtensor3::print(const string msg, const int level) const{
    } // level=1
 }
 
+// simple operations
 qtensor3& qtensor3::operator +=(const qtensor3& qt){
    assert(dir == qt.dir); // direction must be the same
    assert(sym == qt.sym); // symmetry blocking must be the same

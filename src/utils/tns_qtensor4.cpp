@@ -80,6 +80,38 @@ void qtensor4::print(const string msg, const int level) const{
 }
       
 // simple operations
+qtensor4& qtensor4::operator +=(const qtensor4& qt){
+   assert(sym == qt.sym); // symmetry blocking must be the same
+   for(auto& p : qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      const auto& blk1 = qt.qblocks.at(key);
+      assert(blk.size() == blk1.size());
+      if(blk.size() > 0){
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] += blk1[m]; 
+	 }
+      }
+   }
+   return *this;
+}
+
+qtensor4& qtensor4::operator -=(const qtensor4& qt){
+   assert(sym == qt.sym); // symmetry blocking must be the same
+   for(auto& p : qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      const auto& blk1 = qt.qblocks.at(key);
+      assert(blk.size() == blk1.size());
+      if(blk.size() > 0){
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] -= blk1[m]; 
+	 }
+      }
+   }
+   return *this;
+}
+
 qtensor4& qtensor4::operator *=(const double fac){
    for(auto& p : qblocks){
       auto& blk = p.second;
@@ -90,6 +122,16 @@ qtensor4& qtensor4::operator *=(const double fac){
       }
    }
    return *this;
+}
+
+qtensor4 tns::operator *(const double fac, const qtensor4& qt){
+   qtensor4 qt4 = qt; // use default assignment constructor;
+   qt4 *= fac;
+   return qt4;
+}
+
+qtensor4 tns::operator *(const qtensor4& qt, const double fac){
+   return fac*qt;
 }
 
 // for Davidson algorithm

@@ -31,8 +31,8 @@ void get_onedot_Hx(double* y,
 	    	   qtensor3& wf);
 
 // two-dot
-std::vector<double> get_twodot_Hdiag(oper_dict& cqops,
-			             oper_dict& vqops,
+std::vector<double> get_twodot_Hdiag(oper_dict& c1qops,
+			             oper_dict& c2qops,
 			             oper_dict& lqops,
 			             oper_dict& rqops,
 		        	     const integral::two_body& int2e,
@@ -43,14 +43,14 @@ void get_twodot_Hx(double* y,
 	    	   const double* x,
 	    	   const comb& icomb,
  	    	   const comb_coord& p,
-	    	   oper_dict& cqops,
-	    	   oper_dict& vqops,
+	    	   oper_dict& c1qops,
+	    	   oper_dict& c2qops,
 	    	   oper_dict& lqops,
 	    	   oper_dict& rqops,
 	    	   const integral::two_body& int2e,
 	    	   const integral::one_body& int1e,
 	    	   const double ecore,
-	    	   qtensor3& wf);
+	    	   qtensor4& wf);
 
 } // tns
 

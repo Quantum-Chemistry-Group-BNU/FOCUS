@@ -176,7 +176,11 @@ struct qtensor4{
 	       const qsym_space& qcol1);
       void print(const std::string msg, const int level=0) const;
       // simple operations
+      qtensor4& operator +=(const qtensor4& qt);
+      qtensor4& operator -=(const qtensor4& qt);
       qtensor4& operator *=(const double fac);
+      friend qtensor4 operator *(const double fac, const qtensor4& qt);  
+      friend qtensor4 operator *(const qtensor4& qt, const double fac); 
       // for Davidson algorithm
       double normF() const;
       void random();
