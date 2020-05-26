@@ -39,7 +39,7 @@ oper_dict tns::oper_renorm_ops(const string& superblock,
       supp = bra.rsupport.at(bra.get_c(p));
       ifAB = false;
    }
-   cout << "\ntns::oper_renorm_ops"
+   cout << "tns::oper_renorm_ops"
         << " coord=(" << ip << "," << jp << ")"
 	<< "[" << bra.topo[ip][jp] << "]" 
 	<< " iswitch=" << (p == make_pair(bra.iswitch,0)) 
@@ -61,7 +61,6 @@ oper_dict tns::oper_renorm_ops(const string& superblock,
    // consistency check
    auto H = qops['H'].at(0);
    auto diffH = (H-H.T()).normF();
-   cout << "diffH=" << diffH << endl; 
    if(diffH > 1.e-10){
       H.print("H",2);
       cout << "error: H-H.T is too large! diffH=" << diffH << endl;
@@ -82,8 +81,10 @@ oper_dict tns::oper_renorm_ops(const string& superblock,
       if(debug && ifrops) oper_rbases(bra,ket,p,qops,'Q',int2e,int1e);
    }
    auto t1 = global::get_time();
-   cout << "timing for tns::oper_renorm_ops : " << setprecision(2) 
-        << global::get_duration(t1-t0) << " s" << endl;
+   if(debug){
+      cout << "timing for tns::oper_renorm_ops : " << setprecision(2) 
+           << global::get_duration(t1-t0) << " s" << endl;
+   }
    return qops;
 }
 
@@ -110,4 +111,61 @@ void tns::oper_env_right(const comb& bra,
    auto t1 = global::get_time();
    cout << "\ntiming for tns::oper_env_right : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
+}
+
+void tns::oper_renorm_onedot(const comb& icomb, 
+		             const comb_coord& p, 
+		             const bool forward, 
+		             const bool cturn, 
+			     oper_dict& cqops,
+		             oper_dict& lqops,
+			     oper_dict& rqops,	
+		             const integral::two_body& int2e, 
+		             const integral::one_body& int1e,
+			     const string scratch){ 
+   oper_dict qops;
+   if(forward){
+      if(!cturn){
+	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, cqops, int2e, int1e);
+      }else{
+	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
+      }
+      string fname = oper_fname(scratch, p, "lop");
+      oper_save(fname, qops);
+   }else{
+      qops = oper_renorm_ops("cr", icomb, icomb, p, cqops, rqops, int2e, int1e);
+      string fname = oper_fname(scratch, p, "rop");
+      oper_save(fname, qops);
+   }
+}
+
+void tns::oper_renorm_twodot(const comb& icomb, 
+		             const comb_coord& p, 
+		             const bool forward, 
+		             const bool cturn, 
+			     oper_dict& c1qops,
+			     oper_dict& c2qops,
+		             oper_dict& lqops,
+			     oper_dict& rqops,	
+		             const integral::two_body& int2e, 
+		             const integral::one_body& int1e, 
+			     const string scratch){ 
+   oper_dict qops;
+   if(forward){
+      if(!cturn){
+	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, c1qops, int2e, int1e);
+      }else{
+	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
+      }
+      string fname = oper_fname(scratch, p, "lop");
+      oper_save(fname, qops);
+   }else{
+      if(!cturn){
+         qops = oper_renorm_ops("cr", icomb, icomb, p, c2qops, rqops, int2e, int1e);
+      }else{
+         qops = oper_renorm_ops("cr", icomb, icomb, p, c1qops, c2qops, int2e, int1e);
+      }
+      string fname = oper_fname(scratch, p, "rop");
+      oper_save(fname, qops);
+   }
 }

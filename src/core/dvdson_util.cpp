@@ -15,9 +15,12 @@ void dvdsonSolver::HVecs(const int nstate, double* y, const double* x){
    }
    nmvp += nstate;
    auto t1 = global::get_time();
-   cout << "timing for HVecs : " << setprecision(2)  
-        << global::get_duration(t1-t0)/nstate << " s" 
-	<< " for nstate = " << nstate << endl;
+   bool debug = false;
+   if(debug){
+      cout << "timing for HVecs : " << setprecision(2)  
+           << global::get_duration(t1-t0)/nstate << " s" 
+           << " for nstate = " << nstate << endl;
+   }
 }
 
 void dvdsonSolver::subspace_solver(const int ndim, 
@@ -102,7 +105,7 @@ void linalg::check_orthogonality(const int n, const int m,
    matrix Vt = V.T();
    matrix dev = dgemm("N","N",Vt,V) - identity_matrix(m);
    double diff = normF(dev);
-   cout << "linalg::check_orthogonality diff=" << diff << endl;
+   //cout << "linalg::check_orthogonality diff=" << diff << endl;
    if(diff > thresh){
       cout << "error: deviation from orthonormal basis exceed thresh=" 
 	   << thresh << endl;      

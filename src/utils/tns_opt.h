@@ -4,6 +4,7 @@
 #include "../io/input.h"
 #include "../core/integral.h"
 #include "tns_comb.h"
+#include "tns_oper.h"
 
 namespace tns{
 
@@ -20,7 +21,8 @@ void opt_onedot(const input::schedule& schd,
 	        const integral::one_body& int1e,
 	        const double ecore,
    	        const int dcut,
-		std::vector<double>& eopt);
+		std::vector<double>& eopt,
+		double& dwt);
 
 void opt_twodot(const input::schedule& schd,
 	        comb& icomb, 
@@ -29,7 +31,11 @@ void opt_twodot(const input::schedule& schd,
 	        const integral::one_body& int1e,
 	        const double ecore,
    	        const int dcut,
-		std::vector<double>& eopt);
+		std::vector<double>& eopt,
+		double& dwt);
+
+using tm = std::chrono::high_resolution_clock::time_point;
+void opt_timing(const std::vector<tm> ts);
 
 } // tns
 

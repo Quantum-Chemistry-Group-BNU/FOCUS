@@ -46,6 +46,7 @@ public:
    // sweep
    int dmax;
    int dots;
+   int maxsweep;
 };
    
 void read_input(schedule& schd, std::string fname="input.dat");

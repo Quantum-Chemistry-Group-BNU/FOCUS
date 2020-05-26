@@ -11,7 +11,8 @@ vector<double> tns::get_twodot_Hdiag(oper_dict& c1qops,
 		        	     const integral::two_body& int2e,
 			             const double ecore,
 			             qtensor4& wf){
-   cout << "\ntns::get_twodot_Hdiag" << endl;
+   bool debug = false;
+   if(debug) cout << "\ntns::get_twodot_Hdiag" << endl;
    // 1. local contributions
    auto& Hc1 = c1qops['H'][0];
    auto& Hc2 = c2qops['H'][0];
@@ -326,7 +327,7 @@ void tns::get_twodot_Hx(double* y,
 	                const integral::one_body& int1e,
 		        const double ecore,
 		        qtensor4& wf){
-   bool debug = true;
+   bool debug = false;
    // const term
    wf.from_array(x);
    auto Hwf = ecore*wf;

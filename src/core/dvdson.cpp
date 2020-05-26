@@ -12,7 +12,7 @@ using namespace linalg;
 void dvdsonSolver::solve_diag(double* es, 
 			      double* vs,
 			      const bool ifCheckDiag){
-   cout << "\ndvdsonSolver:solve_diag" << endl;
+   cout << "dvdsonSolver:solve_diag" << endl;
    matrix id = identity_matrix(ndim);
    matrix H(ndim,ndim);
    HVecs(ndim,H.data(),id.data());
@@ -57,7 +57,7 @@ void dvdsonSolver::solve_diag(double* es,
 
 // Davidson iterative algorithm for Hv=ve
 void dvdsonSolver::solve_iter(double* es, double* vs, double* vguess){
-   cout << "\ndvdsonSolver::solve_iter" << endl;
+   cout << "dvdsonSolver::solve_iter" << endl;
    if(neig > ndim){
       cout << "error in dvdson: neig>ndim, neig/ndim=" << neig << "," << ndim << endl; 
       exit(1);

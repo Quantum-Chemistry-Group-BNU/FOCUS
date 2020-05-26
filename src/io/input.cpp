@@ -42,6 +42,7 @@ void input::read_input(input::schedule& schd, string fname){
    schd.thresh_ortho = 1.e-10;
    schd.dmax = 10;
    schd.dots = 2;
+   schd.maxsweep = 1;
    	 
    string line;
    while(!istrm.eof()){
@@ -131,6 +132,8 @@ void input::read_input(input::schedule& schd, string fname){
 	 schd.dmax = stoi(line.substr(4));
       }else if(line.substr(0,4)=="dots"){
 	 schd.dots = stoi(line.substr(4));
+      }else if(line.substr(0,8)=="maxsweep"){
+	 schd.maxsweep = stoi(line.substr(8));
       }else{
          cout << "error: no matching key! line = " << line << endl;
 	 exit(1);
@@ -199,6 +202,8 @@ void input::read_input(input::schedule& schd, string fname){
    cout << "maxdets = " << schd.maxdets << endl;
    cout << "thresh_proj = " << scientific << schd.thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << schd.thresh_ortho << endl;
+   // sweep
    cout << "dmax = " << schd.dmax << endl;
    cout << "dots = " << schd.dots << endl;
+   cout << "maxsweep = " << schd.maxsweep << endl;
 }

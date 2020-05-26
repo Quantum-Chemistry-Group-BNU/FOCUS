@@ -36,10 +36,12 @@ using oper_dict = std::map<char,std::map<int,qtensor2>>;
 
 inline std::string oper_dict_opnames(const oper_dict& qops){
    std::string s;
+   s = "(" + std::to_string(qops.at('C').begin()->second.get_dim_row()) + ",";
    s += (qops.find('A') != qops.end())? "A" : "";
    s += (qops.find('B') != qops.end())? "B" : "";
    s += (qops.find('P') != qops.end())? "P" : "";
    s += (qops.find('Q') != qops.end())? "Q" : "";
+   s += ")";
    return s;
 }
 
@@ -197,6 +199,23 @@ void oper_renorm_opH(const std::string& superblock,
 	             const integral::one_body& int1e,
 		     const bool debug=false);
 
+// generator operators based on rbases from determinants for debugging
+// normal operators
+void oper_rbases(const comb& bra,
+		 const comb& ket,
+		 const comb_coord& p,
+		 oper_dict& qops, 
+		 const char opname);
+
+// complementary operator
+void oper_rbases(const comb& bra,
+		 const comb& ket,
+		 const comb_coord& p, 
+		 oper_dict& qops, 
+		 const char opname,
+	         const integral::two_body& int2e,
+	         const integral::one_body& int1e);
+
 // helpers for building/loading environment
 oper_dict oper_build_local(const int kp,
 		           const integral::two_body& int2e,
@@ -236,22 +255,29 @@ void oper_env_right(const comb& bra,
 	            const integral::one_body& int1e,
 		    const std::string scratch=".");
 
-// generator operators based on rbases from determinants for debugging
-// normal operators
-void oper_rbases(const comb& bra,
-		 const comb& ket,
-		 const comb_coord& p,
-		 oper_dict& qops, 
-		 const char opname);
+// in sweep optimization
+void oper_renorm_onedot(const comb& icomb,
+		        const comb_coord& p,
+			const bool forward,
+			const bool cturn,
+			oper_dict& cqops,
+			oper_dict& lqops,
+			oper_dict& rqops,
+		        const integral::two_body& int2e, 
+		        const integral::one_body& int1e,
+			const std::string scratch); 
 
-// complementary operator
-void oper_rbases(const comb& bra,
-		 const comb& ket,
-		 const comb_coord& p, 
-		 oper_dict& qops, 
-		 const char opname,
-	         const integral::two_body& int2e,
-	         const integral::one_body& int1e);
+void oper_renorm_twodot(const comb& icomb,
+		        const comb_coord& p,
+			const bool forward,
+			const bool cturn,
+			oper_dict& c1qops,
+			oper_dict& c2qops,
+			oper_dict& lqops,
+			oper_dict& rqops,
+		        const integral::two_body& int2e, 
+		        const integral::one_body& int1e,
+			const std::string scratch); 
 
 } // tns
 
