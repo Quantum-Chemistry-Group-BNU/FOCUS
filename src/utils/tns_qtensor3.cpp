@@ -53,7 +53,7 @@ qtensor3 qtensor3::mid_signed(const double fac) const{
       auto& blk = p.second;
       if(blk.size() > 0){
          auto qm = get<0>(key);
-         double fac2 = qm.parity()*fac;
+         double fac2 = qm.parity()==0? fac : -fac;
 	 for(int m=0; m<blk.size(); m++){
 	    blk[m] *= fac2;
 	 }
@@ -75,7 +75,7 @@ qtensor3 qtensor3::row_signed(const double fac) const{
       auto& blk = p.second;
       if(blk.size() > 0){
          auto qr = get<1>(key);
-         double fac2 = qr.parity()*fac;
+         double fac2 = qr.parity()==0? fac : -fac;
 	 for(int m=0; m<blk.size(); m++){
 	    blk[m] *= fac2;
 	 }
@@ -97,7 +97,7 @@ qtensor3 qtensor3::col_signed(const double fac) const{
       auto& blk = p.second;
       if(blk.size() > 0){
          auto qc = get<2>(key);
-         double fac2 = qc.parity()*fac;
+         double fac2 = qc.parity()==0? fac : -fac;
 	 for(int m=0; m<blk.size(); m++){
 	    blk[m] *= fac2;
 	 }
@@ -208,6 +208,25 @@ qtensor3 tns::operator *(const double fac, const qtensor3& qt){
 
 qtensor3 tns::operator *(const qtensor3& qt, const double fac){
    return fac*qt;
+}
+
+qtensor3 qtensor3::perm_signed() const{
+   qtensor3 qt3;
+   qt3 = *this;
+   for(auto& p : qt3.qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0){
+	 auto qm = get<0>(key);
+	 auto qc = get<2>(key);
+	 if(qm.parity()*qc.parity() == 1){
+	    for(int m=0; m<blk.size(); m++){	
+	       blk[m] = -blk[m];
+	    }
+	 }
+      }
+   }
+   return qt3;
 }
 
 // for Davidson algorithm

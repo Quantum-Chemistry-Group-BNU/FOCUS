@@ -11,6 +11,9 @@ namespace global{
 const std::string line_separator(70,'-');
 extern const std::string line_separator;
 
+const std::string line_separator2(70,'=');
+extern const std::string line_separator2;
+
 extern int print_level; // just declaration
 
 // useful functions

@@ -123,7 +123,7 @@ qtensor2 qtensor2::col_signed(const double fac) const{
       auto& blk = p.second;
       if(blk.size() > 0){
          auto qc = key.second;
-         double fac2 = qc.parity()*fac;
+         double fac2 = qc.parity()==0? fac : -fac;
 	 blk *= fac2;
       }
    }

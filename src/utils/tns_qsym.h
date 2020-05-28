@@ -39,7 +39,7 @@ class qsym{
       }
       inline int ne() const{ return _ne; }
       inline int na() const{ return _na; }
-      inline double parity() const{ return -2*(_ne%2)+1; }
+      inline int parity() const{ return _ne%2; }
       // print
       std::string to_string() const;
       friend std::ostream& operator <<(std::ostream& os, const qsym& sym);

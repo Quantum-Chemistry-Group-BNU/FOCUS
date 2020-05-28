@@ -24,40 +24,44 @@ void tns::opt_sweep(const input::schedule& schd,
    icomb.lsites[make_pair(0,0)] = icomb.get_lbsite();
 
    auto sweeps = icomb.get_sweeps();
+   vector<pair<double,vector<double>>> sweep_data(schd.maxsweep);
    for(int isweep=0; isweep<schd.maxsweep; isweep++){
-      cout << "\nisweep = " << isweep << endl;
-
-      // whole sweep optimization
+      // settings
       int dcut = schd.dmax;
       int dots = schd.dots;
       int size = sweeps.size();
       vector<vector<double>> eopt(size);
       vector<double> dwt(size);
+      vector<int> deff(size);
       for(int i=0; i<size; i++){
 	 auto dbond = sweeps[i];
          auto p0 = get<0>(dbond);
 	 auto p1 = get<1>(dbond);
          auto forward = get<2>(dbond);
          auto p = forward? p0 : p1;
-         cout << "\n### isweep=" << isweep 
-	      << " i=" << i << " bond=" 
+         cout << "\n" << global::line_separator << endl;
+         cout << "isweep=" << isweep 
+	      << " ibond=" << i << " bond=" 
 	      << "(" << p0.first << "," << p0.second << ")"
 	      << "[" << icomb.topo[p0.first][p0.second] << "]-"
 	      << "(" << p1.first << "," << p1.second << ")"
 	      << "[" << icomb.topo[p1.first][p1.second] << "]"
 	      << " fw=" << forward
 	      << " tp=[" << icomb.type[p0] << "," << icomb.type[p1] << "]"
-	      << " updated=(" << p.first << "," << p.second << ")"
+	      << " update=" << !forward //-th site of bond get updated
 	      << endl;
+         cout << global::line_separator << endl;
 	 if(dots == 1){
-	    opt_onedot(schd, icomb, dbond, int2e, int1e, ecore, dcut, eopt[i], dwt[i]);
+	    opt_onedot(schd, icomb, dbond, int2e, int1e, ecore, dcut, eopt[i], dwt[i], deff[i]);
 	 }else if(dots == 2){
-	    opt_twodot(schd, icomb, dbond, int2e, int1e, ecore, dcut, eopt[i], dwt[i]);
+	    opt_twodot(schd, icomb, dbond, int2e, int1e, ecore, dcut, eopt[i], dwt[i], deff[i]);
 	 }
       } // i
-
+      
       // print 
-      cout << "\nisweep=" << isweep << " dcut=" << dcut << " energies:" << endl;
+      cout << "\n" << global::line_separator << endl;
+      cout << "isweep=" << isweep << " dcut=" << dcut << " energies:" << endl;
+      cout << global::line_separator << endl;
       vector<double> emean(size,0.0);
       for(int i=0; i<size; i++){
 	 auto dbond = sweeps[i];
@@ -71,12 +75,13 @@ void tns::opt_sweep(const input::schedule& schd,
 	      << "(" << p1.first << "," << p1.second << ")"
 	      << "[" << icomb.topo[p1.first][p1.second] << "]"
 	      << " fw=" << forward
-	      << " dwt=" << scientific << setprecision(2) << dwt[i];
+	      << " deff=" << deff[i]
+	      << " dwt=" << showpos << scientific << setprecision(2) << dwt[i] << noshowpos;
 	 // print energy
 	 cout << defaultfloat << setprecision(12);
 	 int nstate = eopt[i].size();
 	 for(int j=0; j<nstate; j++){ 
-	    cout << " " << j << ":" << eopt[i][j];
+	    cout << "  " << j << ":" << eopt[i][j];
 	    emean[i] += eopt[i][j];
 	 }
 	 emean[i] /= nstate;
@@ -85,9 +90,27 @@ void tns::opt_sweep(const input::schedule& schd,
       auto pos = std::min_element(emean.begin(), emean.end());
       auto min = std::distance(emean.begin(), pos);
       cout << "min energies at: " << min << endl;
+      sweep_data[isweep].first = dwt[min];
+      sweep_data[isweep].second = eopt[min];
+      cout << global::line_separator << endl;
 
+      cout << "\n" << global::line_separator2 << endl;
+      cout << "summary of sweep optimization up to isweep=" << isweep << endl;
+      cout << global::line_separator << endl;
+      for(int jsweep=0; jsweep<=isweep; jsweep++){
+         auto dwt = sweep_data[jsweep].first;
+         auto& eopt = sweep_data[jsweep].second;
+         int nstate = eopt.size();
+         cout << "isweep=" << setw(2) << jsweep 
+              << "  dwt="  << showpos << scientific << setprecision(2) << dwt << noshowpos;
+         cout << defaultfloat << setprecision(12);
+         for(int j=0; j<nstate; j++){ 
+            cout << "  " << j << ":" << eopt[j];
+         }
+         cout << endl;
+      } // jsweep
+      cout << global::line_separator2 << endl;
    } // isweep
-
 }
 
 void tns::opt_onedot(const input::schedule& schd,
@@ -98,8 +121,8 @@ void tns::opt_onedot(const input::schedule& schd,
                      const double ecore,
 		     const int dcut,
 		     vector<double>& eopt,
-		     double& dwt){
-   bool debug = false;
+		     double& dwt,
+		     int& deff){
    auto t0 = global::get_time();
    cout << "tns::opt_onedot";
 
@@ -166,7 +189,7 @@ void tns::opt_onedot(const input::schedule& schd,
 
    // 3. decimation & renormalize operators
    bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
-   decimation_onedot(icomb, p, forward, cturn, dcut, wfs, dwt);
+   decimation_onedot(icomb, p, forward, cturn, dcut, wfs, dwt, deff);
    auto td = global::get_time();
 
    oper_renorm_onedot(icomb, p, forward, cturn, 
@@ -186,8 +209,8 @@ void tns::opt_twodot(const input::schedule& schd,
                      const double ecore,
 		     const int dcut,
 		     vector<double>& eopt,
-		     double& dwt){
-   bool debug = false;
+		     double& dwt,
+		     int& deff){
    auto t0 = global::get_time();
    cout << "tns::opt_twodot";
 
@@ -268,7 +291,7 @@ void tns::opt_twodot(const input::schedule& schd,
    }
 
    // 3. decimation & renormalize operators
-   decimation_twodot(icomb, p, forward, cturn, dcut, wfs, dwt);
+   decimation_twodot(icomb, p, forward, cturn, dcut, wfs, dwt, deff);
    auto td = global::get_time();
 
    oper_renorm_twodot(icomb, p, forward, cturn, 
@@ -288,10 +311,10 @@ void tns::opt_timing(const vector<tns::tm> ts){
    double dt_1d = global::get_duration(ts[5]-ts[4]);
    double dt_10 = global::get_duration(ts[5]-ts[0]); // total
    cout << scientific << setprecision(2);
-   cout << " - procs : " << dt_a0 << " s  per : " << dt_a0/dt_10*100<< endl;
-   cout << " - hdiag : " << dt_ba << " s  per : " << dt_ba/dt_10*100<< endl;
-   cout << " - dvdsn : " << dt_cb << " s  per : " << dt_cb/dt_10*100<< endl;
-   cout << " - decim : " << dt_dc << " s  per : " << dt_dc/dt_10*100<< endl;
-   cout << " - renrm : " << dt_1d << " s  per : " << dt_1d/dt_10*100<< endl;
-   cout << " - total : " << dt_10 << " s  per : " << dt_10/dt_10*100<< endl;
+   cout << "  t(procs)=" << dt_a0 << " s  per=" << dt_a0/dt_10*100<< endl;
+   cout << "  t(hdiag)=" << dt_ba << " s  per=" << dt_ba/dt_10*100<< endl;
+   cout << "  t(dvdsn)=" << dt_cb << " s  per=" << dt_cb/dt_10*100<< endl;
+   cout << "  t(decim)=" << dt_dc << " s  per=" << dt_dc/dt_10*100<< endl;
+   cout << "  t(renrm)=" << dt_1d << " s  per=" << dt_1d/dt_10*100<< endl;
+   cout << "  t(total)=" << dt_10 << " s  per=" << dt_10/dt_10*100<< endl;
 }

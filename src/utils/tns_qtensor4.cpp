@@ -134,6 +134,26 @@ qtensor4 tns::operator *(const qtensor4& qt, const double fac){
    return fac*qt;
 }
 
+qtensor4 qtensor4::perm_signed() const{
+   qtensor4 qt4;
+   qt4 = *this;
+   for(auto& p : qt4.qblocks){
+      auto& key = p.first;
+      auto& blk = p.second;
+      if(blk.size() > 0){
+	 auto qm = get<0>(key);
+	 auto qv = get<1>(key);
+	 auto qc = get<3>(key);
+	 if(((qm.parity()+qv.parity())*qc.parity())%2 == 1){
+	    for(int m=0; m<blk.size(); m++){
+	       blk[m] = -blk[m];
+	    }
+	 }
+      }
+   }
+   return qt4;
+}
+
 // for Davidson algorithm
 double qtensor4::normF() const{
    double sum = 0.0;

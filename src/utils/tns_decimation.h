@@ -6,8 +6,9 @@
 namespace tns{
 
 qtensor2 decimation_row(const std::vector<qtensor2>& wf,
-			const int Dcut,
+			const int dcut,
 			double& dwt,
+			int& deff,
 			const bool trans=false);
 
 void decimation_onedot(comb& icomb, 
@@ -16,7 +17,8 @@ void decimation_onedot(comb& icomb,
 		       const bool cturn, 
 		       const int dcut,
 		       const std::vector<qtensor3>& wfs,
-		       double& dwt);
+		       double& dwt,
+		       int& deff);
 
 void decimation_twodot(comb& icomb, 
 		       const comb_coord& p, 
@@ -24,7 +26,8 @@ void decimation_twodot(comb& icomb,
 		       const bool cturn, 
 		       const int dcut,
 		       const std::vector<qtensor4>& wfs,
-		       double& dwt);
+		       double& dwt,
+		       int& deff);
  
 } // tns
 

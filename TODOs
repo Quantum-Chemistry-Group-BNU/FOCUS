@@ -159,18 +159,22 @@
  202006xx an IMPROVED version with more functionalities
 	  - printing: discarded weight, dimension, etc. [DONE@20200527]
 	  - support for state-average calculations [DONE@20200526]
-	  - generate benchmark results for C2 for later improvement
+	  - correct formulation of decimation in lr case,
+	    checked by one-dot and two-dot opt for different topologies [DONE@20200528]
+
 	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L|
 	    - dealing with merge of LC1, C2R, etc.
-	    - check consistency of HVec with Hdiag
-	  - correct formulation of decimation in lr case [how to check optimal?]
  	  - propogation of initial guess to next site [!]
 
  202006xx random sampling?
-	  - implement canonicalization of Comb for random sampling
+	  - last site treatment -> RCF! 
+	  - canonicalization of Comb? 
+	  - generalizable to mixed canonical form?
 	  - generating det according to p(n) for computing Sdiag [hardness]
 
  202006xx an OPTIMIZED version:
+	  - prepare benchmark systems
+	  - sweep schedules
 	  - faster implementation: 
 	    - benchmarking scalability
 	    - preconstruction of P/Q from A/B to accelerate efficiency in H*v?

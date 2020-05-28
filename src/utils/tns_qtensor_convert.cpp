@@ -193,7 +193,7 @@ qtensor2 tns::merge_qt3_qt2_lr(const qtensor3& qt3,
 		     } // ir
 		  } // ic
 	       } // im
-	    } 
+	    }
 	 }
       }
    }

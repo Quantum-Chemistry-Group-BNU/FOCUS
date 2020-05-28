@@ -22,7 +22,8 @@ void opt_onedot(const input::schedule& schd,
 	        const double ecore,
    	        const int dcut,
 		std::vector<double>& eopt,
-		double& dwt);
+		double& dwt,
+		int& deff);
 
 void opt_twodot(const input::schedule& schd,
 	        comb& icomb, 
@@ -32,7 +33,8 @@ void opt_twodot(const input::schedule& schd,
 	        const double ecore,
    	        const int dcut,
 		std::vector<double>& eopt,
-		double& dwt);
+		double& dwt,
+		int& deff);
 
 using tm = std::chrono::high_resolution_clock::time_point;
 void opt_timing(const std::vector<tm> ts);

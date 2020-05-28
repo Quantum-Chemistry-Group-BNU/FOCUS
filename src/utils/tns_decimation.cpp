@@ -8,12 +8,13 @@ using namespace linalg;
 
 // wf[L,R] = U[L,l]*sl*Vh[l,R]
 qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
-			     const int Dcut,
+			     const int dcut,
 			     double& dwt,
+			     int& deff,
 			     const bool trans){
    const double thresh_sig2 = 1.e-16;
    bool debug = false;
-   if(debug) cout << "tns::decimation_row Dcut=" << Dcut << endl;
+   if(debug) cout << "tns::decimation_row dcut=" << dcut << endl;
    const auto& wf = wfs[0];
    const auto& qrow = wf.qrow;
    const auto& qcol = wf.qcol;
@@ -59,9 +60,10 @@ qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
    auto index = tools::sort_index(sig2all, 1);
    qsym_space qres;
    map<qsym,double> wts;
+   double SvN = 0.0;
    double sum = 0.0;
    for(int i=0; i<sig2all.size(); i++){
-      if(i >= Dcut) break; // discard rest
+      if(i >= dcut) break; // discard rest
       int idx = index[i];
       if(sig2all[idx] < thresh_sig2) continue; // discard negative weights
       auto q = idx2qsym[idx];
@@ -74,6 +76,7 @@ qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
 	 wts[q] += sig2all[idx];
       }
       sum += sig2all[idx];
+      SvN += -sig2all[idx]*log2(sig2all[idx]);
       if(debug){
 	if(i==0) cout << "sorted sig2:" << endl;     
 	cout << "i=" << i << " q=" << q << " idx=" << qres[q]-1 
@@ -81,16 +84,18 @@ qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
 	     << " accum=" << sum << endl;
       }
    }
+   deff = qsym_space_dim(qres);
    dwt = 1.0-sum;
-   cout << " reduction:" << sig2all.size() << "->" << qsym_space_dim(qres) 
-        << " dwt=" << dwt << endl; 
+   cout << "  reduction:" << sig2all.size() << "->" << deff
+        << "  dwt=" << dwt 
+	<< "  SvN=" << SvN << endl; 
    sum = 0.0;
    idx = 0;
    for(const auto& p : qres){
       auto& q = p.first;
       sum += wts[q];
-      cout << " idx=" << idx << " qsym=" << q << " dim=" << p.second 
-	   << " wt=" << wts[q] << " acc=" << sum << endl;
+      cout << "  idx=" << idx << "  qsym=" << q << "  dim=" << p.second 
+	   << "  wt=" << wts[q] << "  acc=" << sum << endl;
       idx++;
    }
    // 3. form qt2 assembling blocks
@@ -127,19 +132,20 @@ void tns::decimation_onedot(comb& icomb,
 		            const bool cturn, 
 		            const int dcut, 
 		            const vector<qtensor3>& wfs,
-		            double& dwt){
+		            double& dwt,
+			    int& deff){
    cout << "tns::decimation_onedot (fw,ct,dcut)=(" 
 	<< forward << "," << cturn << "," << dcut << ") "; 
    const auto& wf = wfs[0];
    vector<qtensor2> qt2s;
    if(forward){
+      // update lsites & ql
       if(!cturn){
-         // update lsites & ql
          cout << "renormalize |lc>" << endl;
 	 for(int i=0; i<wfs.size(); i++){
 	    qt2s.push_back(wfs[i].merge_lc());
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt);
+	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff);
 	 icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
@@ -147,12 +153,12 @@ void tns::decimation_onedot(comb& icomb,
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
       }else{
-	 // update lsites & qc [special for comb]
-         cout << "renormalize |lr>" << endl;
+	 // special for comb
+         cout << "renormalize |lr> (comb)" << endl;
 	 for(int i=0; i<wfs.size(); i++){
-	    qt2s.push_back(wfs[i].merge_lr());
+	    qt2s.push_back(wfs[i].perm_signed().merge_lr());
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt);
+	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff);
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
@@ -161,12 +167,12 @@ void tns::decimation_onedot(comb& icomb,
  	 //-------------------------------------------------------------------	 
       }
    }else{
-      // update rsites (p1) & qr
+      // update rsites & qr
       cout << "renormalize |cr>" << endl;
       for(int i=0; i<wfs.size(); i++){
 	 qt2s.push_back(wfs[i].merge_cr().T()); // transpose here
       }
-      auto qt2 = decimation_row(qt2s, dcut, dwt, true);
+      auto qt2 = decimation_row(qt2s, dcut, dwt, deff, true);
       icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, wf.dpt_cr().second);
       //-------------------------------------------------------------------	
       assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
@@ -182,19 +188,20 @@ void tns::decimation_twodot(comb& icomb,
 		            const bool cturn, 
 		            const int dcut, 
 		            const vector<qtensor4>& wfs,
-		            double& dwt){
+		            double& dwt,
+			    int& deff){
    cout << "tns::decimation_twodot (fw,ct,dcut)=(" 
 	<< forward << "," << cturn << "," << dcut << ") "; 
    const auto& wf = wfs[0];
    vector<qtensor2> qt2s;
    if(forward){
+      // update lsites & ql
       if(!cturn){
-         // update lsites & ql
          cout << "renormalize |lc1>" << endl;
 	 for(int i=0; i<wfs.size(); i++){
 	    qt2s.push_back(wfs[i].merge_lc1().merge_cr());
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt);
+	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff);
          icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc1().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
@@ -202,12 +209,11 @@ void tns::decimation_twodot(comb& icomb,
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
       }else{
-	 // update lsites & qc [special for comb]
-         cout << "renormalize |lr>" << endl;
+         cout << "renormalize |lr> (comb)" << endl;
 	 for(int i=0; i<wfs.size(); i++){
-	    qt2s.push_back(wfs[i].merge_lr_c1c2());
+	    qt2s.push_back(wfs[i].perm_signed().merge_lr_c1c2());
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt);
+	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff);
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
@@ -216,13 +222,13 @@ void tns::decimation_twodot(comb& icomb,
  	 //-------------------------------------------------------------------	 
       }
    }else{
+      // update rsites & qr
       if(!cturn){
-         // update rsites (p1) & qr
          cout << "renormalize |c2r>" << endl;
          for(int i=0; i<wfs.size(); i++){
 	    qt2s.push_back(wfs[i].merge_c2r().merge_lc().T());
 	 }
-         auto qt2 = decimation_row(qt2s, dcut, dwt, true);
+         auto qt2 = decimation_row(qt2s, dcut, dwt, deff, true);
          icomb.rsites[p] = qt2.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
          //-------------------------------------------------------------------	
          assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
@@ -230,12 +236,11 @@ void tns::decimation_twodot(comb& icomb,
          assert(ovlp.check_identity(1.e-10,false)<1.e-10);
          //-------------------------------------------------------------------	 
       }else{
-	 // update rsites & qr [special for comb]
-         cout << "renormalize |c1r2>" << endl;
+         cout << "renormalize |c1r2> (comb)" << endl;
 	 for(int i=0; i<wfs.size(); i++){
-	    qt2s.push_back(wfs[i].merge_lr_c1c2().T());
+	    qt2s.push_back(wfs[i].perm_signed().merge_lr_c1c2().T());
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt, true);
+	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff, true);
 	 icomb.rsites[p]= qt2.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
          //-------------------------------------------------------------------	
          assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 

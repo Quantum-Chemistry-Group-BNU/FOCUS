@@ -137,6 +137,7 @@ struct qtensor3{
       qtensor2 merge_lc() const;
       qtensor2 merge_cr() const;
       qtensor2 merge_lr() const;
+      qtensor3 perm_signed() const; // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
       // split
       qtensor4 split_lc1(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
       qtensor4 split_c2r(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
@@ -195,6 +196,7 @@ struct qtensor4{
       qtensor3 merge_lc1() const;
       qtensor3 merge_c2r() const;
       qtensor2 merge_lr_c1c2() const;
+      qtensor4 perm_signed() const; // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}
    public:
       //std::vector<bool> dir = {0,1,1,1,1}; // {in,out,out,out,out}
       qsym sym; 
@@ -255,7 +257,7 @@ qtensor2 merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
 			       const qsym_space& qlr,
 			       const qsym_dpt& dpt1,
 		               const qsym_space& qc1c2,
-			       const qsym_dpt& dpt2);	       
+			       const qsym_dpt& dpt2); 
 
 // --- tensor linear algebra : contractions ---
 qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
