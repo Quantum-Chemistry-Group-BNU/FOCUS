@@ -7,6 +7,14 @@
 
 namespace input{
 
+struct sweep_ctrl{
+   int isweep;
+   int dots;
+   int dcut;
+   double eps;
+   double noise; 
+};
+
 struct schedule{
 public:
    void create_scratch();
@@ -18,6 +26,7 @@ public:
    int nroots;
    std::string integral_file;
    int integral_type;
+   // --- SCI --- 
    // initial dets
    std::set<std::set<int>> det_seeds;
    int nseeds;
@@ -38,18 +47,21 @@ public:
    // io
    bool ciload;
    bool combload;
+   // --- CombTNS --- 
    // comb
    std::string topology_file;
    int maxdets;
    double thresh_proj;
    double thresh_ortho;
    // sweep
-   int dmax;
-   int dots;
    int maxsweep;
+   std::vector<sweep_ctrl> combsweep;
 };
    
 void read_input(schedule& schd, std::string fname="input.dat");
+
+void init_combsweep(const int maxsweep,
+		    std::vector<sweep_ctrl>& combsweep);
 
 } // input
 

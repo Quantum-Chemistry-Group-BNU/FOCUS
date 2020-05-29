@@ -109,7 +109,7 @@ void tns::oper_env_right(const comb& bra,
       }
    } // i
    auto t1 = global::get_time();
-   cout << "\ntiming for tns::oper_env_right : " << setprecision(2) 
+   cout << "timing for tns::oper_env_right : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
 }
 
@@ -122,7 +122,8 @@ void tns::oper_renorm_onedot(const comb& icomb,
 			     oper_dict& rqops,	
 		             const integral::two_body& int2e, 
 		             const integral::one_body& int1e,
-			     const string scratch){ 
+			     const string scratch){
+   cout << "tns::oper_renorm_onedot" << endl;
    oper_dict qops;
    if(forward){
       if(!cturn){
@@ -150,6 +151,7 @@ void tns::oper_renorm_twodot(const comb& icomb,
 		             const integral::two_body& int2e, 
 		             const integral::one_body& int1e, 
 			     const string scratch){ 
+   cout << "tns::oper_renorm_twodot" << endl;
    oper_dict qops;
    if(forward){
       if(!cturn){

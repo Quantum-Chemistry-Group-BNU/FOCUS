@@ -289,7 +289,7 @@ qtensor2 qtensor2::get_rdm_row() const{
    qtensor2 rdm(qsym(0,0), qrow, qrow);
    for(const auto& pr : qrow){
       auto& qr = pr.first;
-      auto& key = make_pair(qr,qr);
+      auto key = make_pair(qr,qr);
       for(const auto& pc : qcol){
 	 auto& qc = pc.first;
 	 const auto& blk = qblocks.at(make_pair(qr,qc));
@@ -297,6 +297,7 @@ qtensor2 qtensor2::get_rdm_row() const{
 	 rdm.qblocks[key] += dgemm("N","N",blk,blk.T());
       }
    }
+   return rdm;
 }
 
 // rdm from wf: rdm[c1,c2] += wf[r,c1]*wf[r,c2]^* = M^t.M^*
@@ -306,10 +307,11 @@ qtensor2 qtensor2::get_rdm_col() const{
       auto& qc = pc.first;
       for(const auto& pr : qrow){
          auto& qr = pr.first;
-         auto& key = make_pair(qc,qc);
+         auto key = make_pair(qc,qc);
 	 const auto& blk = qblocks.at(make_pair(qr,qc));
 	 if(blk.size() == 0) continue;
 	 rdm.qblocks[key] += dgemm("N","N",blk.T(),blk);
       }
    }
+   return rdm;
 }

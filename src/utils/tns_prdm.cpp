@@ -1,10 +1,12 @@
 #include "tns_prdm.h"
 
-void get_prdm_lc(const qtensor3& wf3, 
-		 oper_dict& lqops, 
-		 oper_dict& cqops, 
-		 const double noise, 
-		 qtensor2& rdm){
+using namespace tns;
+
+void tns::get_prdm_lc(const qtensor3& wf, 
+		      oper_dict& lqops, 
+		      oper_dict& cqops, 
+		      const double noise, 
+		      qtensor2& rdm){
    // a^C+|psi>, A^C|psi>, B^C|psi>
    for(const auto& op2C : cqops['C']){
       const auto& op2 = op2C.second;
@@ -52,11 +54,11 @@ void get_prdm_lc(const qtensor3& wf3,
    }
 }
 
-void get_prdm_cr(const qtensor3& wf3, 
-		 oper_dict& cqops, 
-		 oper_dict& rqops, 
-		 const double noise, 
-		 qtensor2& rdm){
+void tns::get_prdm_cr(const qtensor3& wf, 
+		      oper_dict& cqops, 
+		      oper_dict& rqops, 
+		      const double noise, 
+		      qtensor2& rdm){
    // a^C+|psi>, A^C|psi>, B^C|psi>
    for(const auto& op1C : cqops['C']){
       const auto& op1 = op1C.second;
@@ -104,11 +106,11 @@ void get_prdm_cr(const qtensor3& wf3,
    }
 }
 
-void get_prdm_lr(const qtensor3& wf3, 
-		 oper_dict& lqops, 
-		 oper_dict& rqops, 
-		 const double noise, 
-		 qtensor2& rdm){
+void tns::get_prdm_lr(const qtensor3& wf, 
+		      oper_dict& lqops, 
+		      oper_dict& rqops, 
+		      const double noise, 
+		      qtensor2& rdm){
    // a^L+|psi>	
    for(const auto& op1C : lqops['C']){
       const auto& op1 = op1C.second;

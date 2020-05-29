@@ -163,6 +163,7 @@
 	    checked by one-dot and two-dot opt for different topologies [DONE@20200528]
 	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L| [DONE@20200529]
 	    only apply noise correction for one-dot optimizaiton!
+	  - better sweep control handling [DONE@20200529]
  	  - propogation of initial guess to next site [!]
 
  202006xx random sampling?

@@ -6,6 +6,7 @@
 #include "input.h"
 
 using namespace std;
+using namespace input;
 
 void input::read_input(input::schedule& schd, string fname){
    cout << "\ninput::read_input fname = " << fname << endl;
@@ -16,7 +17,7 @@ void input::read_input(input::schedule& schd, string fname){
       exit(1);
    }
   
-   vector<int> sweep_iter;
+   vector<int> sweep_iter; // for SCI
    vector<double> sweep_eps;
 
    schd.scratch = ".";
@@ -40,9 +41,7 @@ void input::read_input(input::schedule& schd, string fname){
    schd.maxdets = 10000;
    schd.thresh_proj = 1.e-15;
    schd.thresh_ortho = 1.e-10;
-   schd.dmax = 10;
-   schd.dots = 2;
-   schd.maxsweep = 1;
+   schd.maxsweep = 0;
    	 
    string line;
    while(!istrm.eof()){
@@ -107,7 +106,7 @@ void input::read_input(input::schedule& schd, string fname){
 	    }
 	 }
 	 schd.nseeds = schd.det_seeds.size();
-      }else if(line.substr(0,8)=="schedule"){
+      }else if(line.substr(0,12)=="sci_schedule"){
 	 while(true){
 	    line.clear();
 	    getline(istrm,line);
@@ -119,6 +118,17 @@ void input::read_input(input::schedule& schd, string fname){
 	    sweep_iter.push_back( stoi(iter) );
 	    sweep_eps.push_back( stod(eps) );
 	 }
+      }else if(line.substr(0,13)=="comb_schedule"){
+	 while(true){
+	    line.clear();
+	    getline(istrm,line);
+	    if(line.empty() || line[0]=='#') continue;
+	    if(line.substr(0,3)=="end") break;
+	    istringstream is(line);
+	    string iter, dots, dcut, eps, noise;
+	    is >> iter >> dots >> dcut >> eps >> noise;
+	    schd.combsweep.push_back({stoi(iter),stoi(dots),stoi(dcut),stod(eps),stod(noise)});
+	 }
       }else if(line.substr(0,13)=="topology_file"){
          istringstream is(line.substr(13));
 	 is >> schd.topology_file;
@@ -128,10 +138,6 @@ void input::read_input(input::schedule& schd, string fname){
          schd.thresh_proj = stod(line.substr(11)); 
       }else if(line.substr(0,12)=="thresh_ortho"){
          schd.thresh_ortho = stod(line.substr(12));
-      }else if(line.substr(0,4)=="dmax"){
-	 schd.dmax = stoi(line.substr(4));
-      }else if(line.substr(0,4)=="dots"){
-	 schd.dots = stoi(line.substr(4));
       }else if(line.substr(0,8)=="maxsweep"){
 	 schd.maxsweep = stoi(line.substr(8));
       }else{
@@ -141,9 +147,9 @@ void input::read_input(input::schedule& schd, string fname){
    }
    istrm.close();
 
-   //-------
-   // check
-   //-------
+   //---------------------
+   // process information
+   //---------------------
    cout << "scratch = " << schd.scratch << endl;
    cout << "nelec = " << schd.nelec << endl;
    assert(schd.nelec > 0);
@@ -203,7 +209,34 @@ void input::read_input(input::schedule& schd, string fname){
    cout << "thresh_proj = " << scientific << schd.thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << schd.thresh_ortho << endl;
    // sweep
-   cout << "dmax = " << schd.dmax << endl;
-   cout << "dots = " << schd.dots << endl;
    cout << "maxsweep = " << schd.maxsweep << endl;
+   if(schd.maxsweep > 0) init_combsweep(schd.maxsweep, schd.combsweep);
+}
+
+void input::init_combsweep(const int maxsweep,
+			   vector<sweep_ctrl>& combsweep){
+   auto tmp = combsweep;
+   combsweep.resize(maxsweep);
+   int size = tmp.size();
+   for(int i=1; i<size; i++){
+      for(int j=tmp[i-1].isweep; j<tmp[i].isweep; j++){
+	 combsweep[j] = tmp[i-1];
+	 combsweep[j].isweep = j;
+      }
+   }
+   for(int j=tmp[size-1].isweep; j<maxsweep; j++){
+      combsweep[j] = tmp[size-1];
+      combsweep[j].isweep = j;
+   }
+   // check
+   cout << "comb_schedule: iter, dots, dcut, eps, noise" << endl;
+   for(int i=0; i<maxsweep; i++){
+      auto ctrl = combsweep[i];
+      cout << ctrl.isweep << " " 
+	   << ctrl.dots << " " 
+	   << ctrl.dcut << " "
+	   << ctrl.eps << " " 
+	   << ctrl.noise
+	   << endl;
+   }
 }

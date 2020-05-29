@@ -1,6 +1,7 @@
 #include "../core/linalg.h"
 #include "../core/tools.h"
 #include "tns_decimation.h"
+#include "tns_prdm.h"
 
 using namespace std;
 using namespace tns;
@@ -16,6 +17,14 @@ qtensor2 tns::decimation_row(const qtensor2& rdm,
    bool debug = false;
    if(debug) cout << "tns::decimation_row dcut=" << dcut << endl;
    const auto& qrow = rdm.qrow;
+   // 0. normalize
+   double rfac = 0.0;
+   for(const auto& pr : qrow){
+      auto qr = pr.first;
+      auto key = make_pair(qr,qr);
+      rfac += rdm.qblocks.at(key).trace();
+   }
+   rfac = 1.0/rfac;
    // 1. compute reduced basis
    map<int,qsym> idx2qsym; 
    vector<double> sig2all;
@@ -23,11 +32,12 @@ qtensor2 tns::decimation_row(const qtensor2& rdm,
    int idx = 0, ioff = 0;
    for(const auto& pr : qrow){
       auto qr = pr.first;
-      int rdim = pr.second;
-      auto& key = make_pair(qr,qr);
+      auto key = make_pair(qr,qr);
       // compute renormalized basis
+      int rdim = pr.second;
       vector<double> sig2(rdim);
       matrix rbas(rdm.qblocks.at(key));
+      rbas *= rfac; // normalize
       eigen_solver(rbas, sig2, 1);
       // save
       for(int i=0; i<rdim; i++){
@@ -44,7 +54,7 @@ qtensor2 tns::decimation_row(const qtensor2& rdm,
 	 idx++;
       }
    }
-   assert(wf.get_dim_row() == sig2all.size());
+   assert(rdm.get_dim_row() == sig2all.size());
    // 2. select important ones
    auto index = tools::sort_index(sig2all, 1);
    qsym_space qres;
@@ -120,22 +130,18 @@ void tns::decimation_onedot(comb& icomb,
 		            const bool forward, 
 		            const bool cturn,
 		            const int dcut,
-			    const double noise, 
 			    const matrix& vsol,
 			    qtensor3& wf,
 		            double& dwt,
 			    int& deff,
+			    const double noise, 
 			    oper_dict& cqops,
 			    oper_dict& lqops,
-			    oper_dict& rqops,
-	                    const integral::two_body& int2e,
-	                    const integral::one_body& int1e,
-		            const string scratch){
+			    oper_dict& rqops){
    const double thresh_nz = 1.e-10;
-   cout << "tns::decimation_onedot (fw,ct,dcut)=(" 
-	<< forward << "," << cturn << "," << dcut << ") ";
+   cout << "tns::decimation_onedot (fw,ct,dcut,noise)=(" 
+	<< forward << "," << cturn << "," << dcut << "," << scientific << noise << ") ";
    qtensor2 rdm;
-   oper_dict qops;
    if(forward){
       // update lsites & ql
       if(!cturn){
@@ -156,7 +162,6 @@ void tns::decimation_onedot(comb& icomb,
 	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
-	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, cqops, int2e, int1e);
       }else{
 	 // special for comb
          cout << "renormalize |lr> (comb)" << endl;
@@ -176,10 +181,7 @@ void tns::decimation_onedot(comb& icomb,
 	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
-	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
       }
-      string fname = oper_fname(scratch, p, "lop");
-      oper_save(fname, qops);
    }else{
       // update rsites & qr
       cout << "renormalize |cr>" << endl;
@@ -199,9 +201,6 @@ void tns::decimation_onedot(comb& icomb,
       auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
       assert(ovlp.check_identity(1.e-10,false)<1.e-10);
       //-------------------------------------------------------------------	 
-      qops = oper_renorm_ops("cr", icomb, icomb, p, cqops, rqops, int2e, int1e);
-      string fname = oper_fname(scratch, p, "rop");
-      oper_save(fname, qops);
    }
 }
 
@@ -210,20 +209,20 @@ void tns::decimation_twodot(comb& icomb,
 		            const bool forward, 
 		            const bool cturn, 
 		            const int dcut, 
-		            const vector<qtensor4>& wfs,
+			    const matrix& vsol,
+			    qtensor4& wf,
 		            double& dwt,
 			    int& deff){
-   const double thresh_nz = 1.e-10;
    cout << "tns::decimation_twodot (fw,ct,dcut)=(" 
 	<< forward << "," << cturn << "," << dcut << ") "; 
    qtensor2 rdm;
-   oper_dict qops;
    if(forward){
       // update lsites & ql
       if(!cturn){
          cout << "renormalize |lc1>" << endl;
 	 for(int i=0; i<vsol.cols(); i++){
-            auto wf3 = wf.from_array(vsol.col(i)).merg_c2r();
+	    wf.from_array(vsol.col(i));
+            auto wf3 = wf.merge_c2r();
 	    if(i == 0){
 	       rdm  = wf3.merge_lc().get_rdm_row();
 	    }else{
@@ -237,7 +236,6 @@ void tns::decimation_twodot(comb& icomb,
 	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
-	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, c1qops, int2e, int1e);
       }else{
          cout << "renormalize |lr> (comb)" << endl;
 	 for(int i=0; i<vsol.cols(); i++){
@@ -255,14 +253,14 @@ void tns::decimation_twodot(comb& icomb,
 	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
-	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
       }
    }else{
       // update rsites & qr
       if(!cturn){
          cout << "renormalize |c2r>" << endl;
 	 for(int i=0; i<vsol.cols(); i++){
-            auto wf3 = wf.from_array(vsol.col(i)).merge_lc1();
+	    wf.from_array(vsol.col(i));
+	    auto wf3 = wf.merge_lc1();
             if(i == 0){
                rdm  = wf3.merge_cr().get_rdm_col();
             }else{
@@ -276,7 +274,6 @@ void tns::decimation_twodot(comb& icomb,
          auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
          assert(ovlp.check_identity(1.e-10,false)<1.e-10);
          //-------------------------------------------------------------------	 
-         qops = oper_renorm_ops("cr", icomb, icomb, p, c2qops, rqops, int2e, int1e);
       }else{
          cout << "renormalize |c1r2> (comb)" << endl;
 	 for(int i=0; i<vsol.cols(); i++){
@@ -294,9 +291,6 @@ void tns::decimation_twodot(comb& icomb,
          auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
          assert(ovlp.check_identity(1.e-10,false)<1.e-10);
          //-------------------------------------------------------------------	 
-         qops = oper_renorm_ops("cr", icomb, icomb, p, c1qops, c2qops, int2e, int1e);
       }
-      string fname = oper_fname(scratch, p, "rop");
-      oper_save(fname, qops);
    }
 }

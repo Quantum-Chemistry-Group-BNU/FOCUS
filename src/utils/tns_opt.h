@@ -15,23 +15,23 @@ void opt_sweep(const input::schedule& schd,
 	       const double ecore);
 
 void opt_onedot(const input::schedule& schd,
+   	        const input::sweep_ctrl& ctrl,
 	        comb& icomb, 
 		directed_bond& dbond,
 	        const integral::two_body& int2e,
 	        const integral::one_body& int1e,
 	        const double ecore,
-   	        const int dcut,
 		std::vector<double>& eopt,
 		double& dwt,
 		int& deff);
 
 void opt_twodot(const input::schedule& schd,
+   	        const input::sweep_ctrl& ctrl,
 	        comb& icomb, 
 		directed_bond& dbond,
 	        const integral::two_body& int2e,
 	        const integral::one_body& int1e,
 	        const double ecore,
-   	        const int dcut,
 		std::vector<double>& eopt,
 		double& dwt,
 		int& deff);

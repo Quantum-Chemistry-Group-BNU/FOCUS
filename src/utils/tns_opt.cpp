@@ -15,30 +15,42 @@ void tns::opt_sweep(const input::schedule& schd,
 	            const integral::two_body& int2e,
 	            const integral::one_body& int1e,
 	            const double ecore){
-   cout << "\ntns::opt_sweep" << endl;
-  
-   // prepare environmental operators 
-   //oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
+   cout << "\ntns::opt_sweep maxsweep=" << schd.maxsweep << endl;
+ 
+   if(schd.maxsweep == 0) return;
 
-   // init left boundary sites
+   // prepare environmental operators 
+   oper_env_right(icomb, icomb, int2e, int1e, schd.scratch);
+
+   // init left boundary site
    icomb.lsites[make_pair(0,0)] = icomb.get_lbsite();
 
    auto sweeps = icomb.get_sweeps();
-   vector<pair<double,vector<double>>> sweep_data(schd.maxsweep);
+   vector<pair<double,vector<double>>> sweep_data(schd.maxsweep); // (dwt,eopt)
    for(int isweep=0; isweep<schd.maxsweep; isweep++){
-      // settings
-      int dcut = schd.dmax;
-      int dots = schd.dots;
+      
+      auto& ctrl = schd.combsweep[isweep];
+      cout << "\nsweep parameters:" 
+	   << " isweep=" << ctrl.isweep
+	   << " dots=" << ctrl.dots
+	   << " dcut=" << ctrl.dcut
+	   << " eps=" << ctrl.eps
+	   << " noise=" << ctrl.noise
+	   << endl;
+      
       int size = sweeps.size();
-      vector<vector<double>> eopt(size);
       vector<double> dwt(size);
+      vector<vector<double>> eopt(size);
       vector<int> deff(size);
+      // loop over sites
       for(int i=0; i<size; i++){
 	 auto dbond = sweeps[i];
          auto p0 = get<0>(dbond);
 	 auto p1 = get<1>(dbond);
          auto forward = get<2>(dbond);
          auto p = forward? p0 : p1;
+	 int tp0 = icomb.type[p0];
+	 int tp1 = icomb.type[p1];
          cout << "\n" << global::line_separator << endl;
          cout << "isweep=" << isweep 
 	      << " ibond=" << i << " bond=" 
@@ -47,20 +59,26 @@ void tns::opt_sweep(const input::schedule& schd,
 	      << "(" << p1.first << "," << p1.second << ")"
 	      << "[" << icomb.topo[p1.first][p1.second] << "]"
 	      << " fw=" << forward
-	      << " tp=[" << icomb.type[p0] << "," << icomb.type[p1] << "]"
+	      << " tp=[" << tp0 << "," << tp1 << "]"
 	      << " update=" << !forward //-th site of bond get updated
 	      << endl;
          cout << global::line_separator << endl;
-	 if(dots == 1){
-	    opt_onedot(schd, icomb, dbond, int2e, int1e, ecore, dcut, eopt[i], dwt[i], deff[i]);
-	 }else if(dots == 2){
-	    opt_twodot(schd, icomb, dbond, int2e, int1e, ecore, dcut, eopt[i], dwt[i], deff[i]);
+	 if(ctrl.dots == 1 || (ctrl.dots == 2 && tp0 == 3 && tp1 == 3)){ 
+	    opt_onedot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, 
+		       eopt[i], dwt[i], deff[i]);
+	 }else{
+	    opt_twodot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, 
+		       eopt[i], dwt[i], deff[i]);
 	 }
       } // i
       
       // print 
       cout << "\n" << global::line_separator << endl;
-      cout << "isweep=" << isweep << " dcut=" << dcut << " energies:" << endl;
+      cout << "isweep=" << ctrl.isweep
+	   << " dots=" << ctrl.dots
+	   << " dcut=" << ctrl.dcut
+	   << " eps=" << ctrl.eps
+	   << " noise=" << ctrl.noise
       cout << global::line_separator << endl;
       vector<double> emean(size,0.0);
       for(int i=0; i<size; i++){
@@ -116,12 +134,12 @@ void tns::opt_sweep(const input::schedule& schd,
 }
 
 void tns::opt_onedot(const input::schedule& schd,
+		     const input::sweep_ctrl& ctrl,
                      comb& icomb,
 		     directed_bond& dbond,
                      const integral::two_body& int2e,
                      const integral::one_body& int1e,
                      const double ecore,
-		     const int dcut,
 		     vector<double>& eopt,
 		     double& dwt,
 		     int& deff){
@@ -163,7 +181,7 @@ void tns::opt_onedot(const input::schedule& schd,
 
    dvdsonSolver solver;
    solver.iprt = 1;
-   solver.crit_v = schd.crit_v;
+   solver.crit_v = ctrl.eps;
    solver.maxcycle = schd.maxcycle;
    solver.ndim = nsub;
    solver.neig = neig;
@@ -184,28 +202,27 @@ void tns::opt_onedot(const input::schedule& schd,
    auto tc = global::get_time();
    
    // 3. decimation & renormalize operators
-   double noise = 0.0;
-   qtensor2 rdm = rdm_onedot(forward, cturn, vsol, wf, noise);
+   decimation_onedot(icomb, p, forward, cturn, ctrl.dcut, vsol, wf, dwt, deff,
+		     ctrl.noise, cqops, lqops, rqops);
    auto td = global::get_time();
 
-   decimation_onedot(icomb, p, forward, cturn, dcut, vsol, wf, dwt, deff,
-		     cqops, lqops, rqops, int2e, int1e, schd.scratch); 
-
+   oper_renorm_onedot(icomb, p, forward, cturn, 
+		      cqops, lqops, rqops, int2e, int1e, 
+		      schd.scratch);
    auto t1 = global::get_time();
+
    cout << "timing for tns::opt_onedot : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
-   opt_timing({t0,ta,tb,tc,t1});
+   opt_timing({t0,ta,tb,tc,td,t1});
 }
 
-
-
 void tns::opt_twodot(const input::schedule& schd,
+		     const input::sweep_ctrl& ctrl,
                      comb& icomb,
 		     directed_bond& dbond,
                      const integral::two_body& int2e,
                      const integral::one_body& int1e,
                      const double ecore,
-		     const int dcut,
 		     vector<double>& eopt,
 		     double& dwt,
 		     int& deff){
@@ -261,7 +278,7 @@ void tns::opt_twodot(const input::schedule& schd,
    
    dvdsonSolver solver;
    solver.iprt = 1;
-   solver.crit_v = schd.crit_v;
+   solver.crit_v = ctrl.eps;
    solver.maxcycle = schd.maxcycle;
    solver.ndim = nsub;
    solver.neig = neig;
@@ -282,10 +299,14 @@ void tns::opt_twodot(const input::schedule& schd,
    auto tc = global::get_time();
    
    // 3. decimation & renormalize operators
-   decimation_twodot(icomb, p, forward, cturn, dcut, vsol, wf, dwt, deff,
-		     c1qops, c2qops, lqops, rqops, int2e, int1e, schd.scratch);
-
+   decimation_twodot(icomb, p, forward, cturn, ctrl.dcut, vsol, wf, dwt, deff);
+   auto td = global::get_time();
+   
+   oper_renorm_twodot(icomb, p, forward, cturn, 
+		      c1qops, c2qops, lqops, rqops, int2e, int1e, 
+		      schd.scratch);
    auto t1 = global::get_time();
+
    cout << "timing for tns::opt_twodot : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
    opt_timing({t0,ta,tb,tc,td,t1});
@@ -296,7 +317,8 @@ void tns::opt_timing(const vector<tns::tm> ts){
    double dt1 = global::get_duration(ts[2]-ts[1]);
    double dt2 = global::get_duration(ts[3]-ts[2]);
    double dt3 = global::get_duration(ts[4]-ts[3]);
-   double dt  = global::get_duration(ts[4]-ts[0]); // total
+   double dt4 = global::get_duration(ts[5]-ts[4]);
+   double dt  = global::get_duration(ts[5]-ts[0]); // total
    cout << "  t(procs)=" << scientific << setprecision(2) << dt0 << " s"
 	<< "  per=" << defaultfloat << dt0/dt*100 << endl;
    cout << "  t(hdiag)=" << scientific << setprecision(2) << dt1 << " s"
@@ -305,4 +327,6 @@ void tns::opt_timing(const vector<tns::tm> ts){
 	<< "  per=" << defaultfloat << dt2/dt*100<< endl;
    cout << "  t(decim)=" << scientific << setprecision(2) << dt3 << " s"
 	<< "  per=" << defaultfloat << dt3/dt*100<< endl;
+   cout << "  t(renrm)=" << scientific << setprecision(2) << dt4 << " s"
+	<< "  per=" << defaultfloat << dt4/dt*100<< endl;
 }
