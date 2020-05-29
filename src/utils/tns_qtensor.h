@@ -68,6 +68,8 @@ struct qtensor2{
       qtensor3 split_lc(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
       qtensor3 split_cr(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
       qtensor3 split_lr(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
+      qtensor2 get_rdm_row() const;
+      qtensor2 get_rdm_col() const;
    public:
       std::vector<bool> dir = {0,1,0}; // {in,out,in} by usual convention in diagrams
       qsym sym; // <row|op|col>

@@ -283,3 +283,33 @@ qtensor3 qtensor2::split_lr(const qsym_space& qlx,
 			    const qsym_dpt& dpt) const{
    return split_qt3_qt2_lr(*this, qlx, qrx, dpt);
 }
+
+// rdm from wf: rdm[r1,r2] += wf[r1,c]*wf[r2,c]^* = M.M^d
+qtensor2 qtensor2::get_rdm_row() const{
+   qtensor2 rdm(qsym(0,0), qrow, qrow);
+   for(const auto& pr : qrow){
+      auto& qr = pr.first;
+      auto& key = make_pair(qr,qr);
+      for(const auto& pc : qcol){
+	 auto& qc = pc.first;
+	 const auto& blk = qblocks.at(make_pair(qr,qc));
+	 if(blk.size() == 0) continue;
+	 rdm.qblocks[key] += dgemm("N","N",blk,blk.T());
+      }
+   }
+}
+
+// rdm from wf: rdm[c1,c2] += wf[r,c1]*wf[r,c2]^* = M^t.M^*
+qtensor2 qtensor2::get_rdm_col() const{
+   qtensor2 rdm(qsym(0,0), qcol, qcol);
+   for(const auto& pc : qcol){
+      auto& qc = pc.first;
+      for(const auto& pr : qrow){
+         auto& qr = pr.first;
+         auto& key = make_pair(qc,qc);
+	 const auto& blk = qblocks.at(make_pair(qr,qc));
+	 if(blk.size() == 0) continue;
+	 rdm.qblocks[key] += dgemm("N","N",blk.T(),blk);
+      }
+   }
+}

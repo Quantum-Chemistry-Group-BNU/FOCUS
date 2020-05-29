@@ -5,7 +5,7 @@
 
 namespace tns{
 
-qtensor2 decimation_row(const std::vector<qtensor2>& wf,
+qtensor2 decimation_row(const qtensor2& rdm,
 			const int dcut,
 			double& dwt,
 			int& deff,

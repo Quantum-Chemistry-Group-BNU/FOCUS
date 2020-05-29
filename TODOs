@@ -161,9 +161,8 @@
 	  - support for state-average calculations [DONE@20200526]
 	  - correct formulation of decimation in lr case,
 	    checked by one-dot and two-dot opt for different topologies [DONE@20200528]
-
-	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L|
-	    - dealing with merge of LC1, C2R, etc.
+	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L| [DONE@20200529]
+	    only apply noise correction for one-dot optimizaiton!
  	  - propogation of initial guess to next site [!]
 
  202006xx random sampling?

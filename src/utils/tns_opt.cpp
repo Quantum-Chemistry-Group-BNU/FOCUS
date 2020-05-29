@@ -99,13 +99,15 @@ void tns::opt_sweep(const input::schedule& schd,
       cout << global::line_separator << endl;
       for(int jsweep=0; jsweep<=isweep; jsweep++){
          auto dwt = sweep_data[jsweep].first;
-         auto& eopt = sweep_data[jsweep].second;
-         int nstate = eopt.size();
-         cout << "isweep=" << setw(2) << jsweep 
+         auto& eopt0 = sweep_data[jsweep].second;
+         int nstate = eopt0.size();
+         cout << "isweep=" << setw(3) << jsweep 
               << "  dwt="  << showpos << scientific << setprecision(2) << dwt << noshowpos;
          cout << defaultfloat << setprecision(12);
          for(int j=0; j<nstate; j++){ 
-            cout << "  " << j << ":" << eopt[j];
+            cout << "  " << j << ":" 
+		 << defaultfloat << setprecision(12) << eopt0[j] << " "
+	         << scientific << setprecision(2) << eopt0[j]-eopt[min][j];
          }
          cout << endl;
       } // jsweep
@@ -135,6 +137,7 @@ void tns::opt_onedot(const input::schedule& schd,
    // 1. process symmetry information & operators for {|lcr>}
    qsym_space qc, ql, qr;
    oper_dict cqops, lqops, rqops;
+   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
    qc = icomb.get_qc(p); 
    ql = icomb.get_ql(p);
    qr = icomb.get_qr(p);
@@ -180,26 +183,21 @@ void tns::opt_onedot(const input::schedule& schd,
    //solver.solve_diag(eopt.data(), vsol.data(), true);
    auto tc = global::get_time();
    
-   // save
-   vector<qtensor3> wfs;
-   for(int i=0; i<neig; i++){
-      wf.from_array(vsol.col(i));
-      wfs.push_back(wf);
-   }
-
    // 3. decimation & renormalize operators
-   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
-   decimation_onedot(icomb, p, forward, cturn, dcut, wfs, dwt, deff);
+   double noise = 0.0;
+   qtensor2 rdm = rdm_onedot(forward, cturn, vsol, wf, noise);
    auto td = global::get_time();
 
-   oper_renorm_onedot(icomb, p, forward, cturn, 
-		      cqops, lqops, rqops, int2e, int1e, schd.scratch);
+   decimation_onedot(icomb, p, forward, cturn, dcut, vsol, wf, dwt, deff,
+		     cqops, lqops, rqops, int2e, int1e, schd.scratch); 
 
    auto t1 = global::get_time();
    cout << "timing for tns::opt_onedot : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
-   opt_timing({t0,ta,tb,tc,td,t1});
+   opt_timing({t0,ta,tb,tc,t1});
 }
+
+
 
 void tns::opt_twodot(const input::schedule& schd,
                      comb& icomb,
@@ -283,19 +281,9 @@ void tns::opt_twodot(const input::schedule& schd,
    //solver.solve_diag(eopt.data(), vsol.data(), true);
    auto tc = global::get_time();
    
-   // save
-   vector<qtensor4> wfs;
-   for(int i=0; i<neig; i++){
-      wf.from_array(vsol.col(i));
-      wfs.push_back(wf);
-   }
-
    // 3. decimation & renormalize operators
-   decimation_twodot(icomb, p, forward, cturn, dcut, wfs, dwt, deff);
-   auto td = global::get_time();
-
-   oper_renorm_twodot(icomb, p, forward, cturn, 
-		      c1qops, c2qops, lqops, rqops, int2e, int1e, schd.scratch);
+   decimation_twodot(icomb, p, forward, cturn, dcut, vsol, wf, dwt, deff,
+		     c1qops, c2qops, lqops, rqops, int2e, int1e, schd.scratch);
 
    auto t1 = global::get_time();
    cout << "timing for tns::opt_twodot : " << setprecision(2) 
@@ -304,17 +292,17 @@ void tns::opt_twodot(const input::schedule& schd,
 }
 
 void tns::opt_timing(const vector<tns::tm> ts){
-   double dt_a0 = global::get_duration(ts[1]-ts[0]);
-   double dt_ba = global::get_duration(ts[2]-ts[1]);
-   double dt_cb = global::get_duration(ts[3]-ts[2]);
-   double dt_dc = global::get_duration(ts[4]-ts[3]);
-   double dt_1d = global::get_duration(ts[5]-ts[4]);
-   double dt_10 = global::get_duration(ts[5]-ts[0]); // total
-   cout << scientific << setprecision(2);
-   cout << "  t(procs)=" << dt_a0 << " s  per=" << dt_a0/dt_10*100<< endl;
-   cout << "  t(hdiag)=" << dt_ba << " s  per=" << dt_ba/dt_10*100<< endl;
-   cout << "  t(dvdsn)=" << dt_cb << " s  per=" << dt_cb/dt_10*100<< endl;
-   cout << "  t(decim)=" << dt_dc << " s  per=" << dt_dc/dt_10*100<< endl;
-   cout << "  t(renrm)=" << dt_1d << " s  per=" << dt_1d/dt_10*100<< endl;
-   cout << "  t(total)=" << dt_10 << " s  per=" << dt_10/dt_10*100<< endl;
+   double dt0 = global::get_duration(ts[1]-ts[0]);
+   double dt1 = global::get_duration(ts[2]-ts[1]);
+   double dt2 = global::get_duration(ts[3]-ts[2]);
+   double dt3 = global::get_duration(ts[4]-ts[3]);
+   double dt  = global::get_duration(ts[4]-ts[0]); // total
+   cout << "  t(procs)=" << scientific << setprecision(2) << dt0 << " s"
+	<< "  per=" << defaultfloat << dt0/dt*100 << endl;
+   cout << "  t(hdiag)=" << scientific << setprecision(2) << dt1 << " s"
+	<< "  per=" << defaultfloat << dt1/dt*100<< endl;
+   cout << "  t(dvdsn)=" << scientific << setprecision(2) << dt2 << " s"
+	<< "  per=" << defaultfloat << dt2/dt*100<< endl;
+   cout << "  t(decim)=" << scientific << setprecision(2) << dt3 << " s"
+	<< "  per=" << defaultfloat << dt3/dt*100<< endl;
 }

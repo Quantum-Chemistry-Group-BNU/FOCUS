@@ -7,7 +7,7 @@ using namespace tns;
 using namespace linalg;
 
 // wf[L,R] = U[L,l]*sl*Vh[l,R]
-qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
+qtensor2 tns::decimation_row(const qtensor2& rdm,
 			     const int dcut,
 			     double& dwt,
 			     int& deff,
@@ -15,9 +15,7 @@ qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
    const double thresh_sig2 = 1.e-16;
    bool debug = false;
    if(debug) cout << "tns::decimation_row dcut=" << dcut << endl;
-   const auto& wf = wfs[0];
-   const auto& qrow = wf.qrow;
-   const auto& qcol = wf.qcol;
+   const auto& qrow = rdm.qrow;
    // 1. compute reduced basis
    map<int,qsym> idx2qsym; 
    vector<double> sig2all;
@@ -26,26 +24,17 @@ qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
    for(const auto& pr : qrow){
       auto qr = pr.first;
       int rdim = pr.second;
-      matrix rdm(rdim,rdim);
-      // construct RDM = (psi*psi^dagger)[l',l] by averaging over states
-      for(int i=0; i<wfs.size(); i++){
-         for(const auto& pc : qcol){
-            auto qc = pc.first;
-            const auto& blk = wfs[i].qblocks.at(make_pair(qr,qc)); 
-            if(blk.size() == 0) continue;
-            rdm += dgemm("N","N",blk,blk.T());
-         }
-      }
-      rdm *= 1.0/wfs.size(); 
+      auto& key = make_pair(qr,qr);
       // compute renormalized basis
       vector<double> sig2(rdim);
-      eigen_solver(rdm, sig2, 1);
+      matrix rbas(rdm.qblocks.at(key));
+      eigen_solver(rbas, sig2, 1);
       // save
       for(int i=0; i<rdim; i++){
          idx2qsym[ioff+i] = qr;
       }
       copy(sig2.begin(), sig2.end(), back_inserter(sig2all));
-      rbasis[qr] = rdm;
+      rbasis[qr] = rbas;
       ioff += rdim;
       if(debug){
 	 cout << "idx=" << idx << " qr=" << qr << " rdim=" << rdim << endl;
@@ -60,8 +49,8 @@ qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
    auto index = tools::sort_index(sig2all, 1);
    qsym_space qres;
    map<qsym,double> wts;
-   double SvN = 0.0;
    double sum = 0.0;
+   double SvN = 0.0;
    for(int i=0; i<sig2all.size(); i++){
       if(i >= dcut) break; // discard rest
       int idx = index[i];
@@ -105,7 +94,7 @@ qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
       auto q = p.first;
       auto& blk = p.second;
       if(blk.size() > 0){
-         assert(q.first == q.second);
+         assert(q.first == q.second); // must be block diagonal
 	 auto qd = q.first;
 	 auto& rbas = rbasis[qd];
 	 copy(rbas.data(), rbas.data()+blk.size(), blk.data());
@@ -125,60 +114,94 @@ qtensor2 tns::decimation_row(const vector<qtensor2>& wfs,
    }
    return qt2;
 }
-
+   
 void tns::decimation_onedot(comb& icomb, 
 		            const comb_coord& p, 
 		            const bool forward, 
-		            const bool cturn, 
-		            const int dcut, 
-		            const vector<qtensor3>& wfs,
+		            const bool cturn,
+		            const int dcut,
+			    const double noise, 
+			    const matrix& vsol,
+			    qtensor3& wf,
 		            double& dwt,
-			    int& deff){
+			    int& deff,
+			    oper_dict& cqops,
+			    oper_dict& lqops,
+			    oper_dict& rqops,
+	                    const integral::two_body& int2e,
+	                    const integral::one_body& int1e,
+		            const string scratch){
+   const double thresh_nz = 1.e-10;
    cout << "tns::decimation_onedot (fw,ct,dcut)=(" 
-	<< forward << "," << cturn << "," << dcut << ") "; 
-   const auto& wf = wfs[0];
-   vector<qtensor2> qt2s;
+	<< forward << "," << cturn << "," << dcut << ") ";
+   qtensor2 rdm;
+   oper_dict qops;
    if(forward){
       // update lsites & ql
       if(!cturn){
          cout << "renormalize |lc>" << endl;
-	 for(int i=0; i<wfs.size(); i++){
-	    qt2s.push_back(wfs[i].merge_lc());
+	 for(int i=0; i<vsol.cols(); i++){
+            wf.from_array(vsol.col(i));
+	    if(i == 0){
+	       rdm  = wf.merge_lc().get_rdm_row();
+	    }else{
+	       rdm += wf.merge_lc().get_rdm_row();
+	    }
+	    if(noise > thresh_nz) get_prdm_lc(wf, lqops, cqops, noise, rdm);
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff);
+	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
 	 icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
+	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, cqops, int2e, int1e);
       }else{
 	 // special for comb
          cout << "renormalize |lr> (comb)" << endl;
-	 for(int i=0; i<wfs.size(); i++){
-	    qt2s.push_back(wfs[i].perm_signed().merge_lr());
+	 for(int i=0; i<vsol.cols(); i++){
+            wf.from_array(vsol.col(i));
+	    if(i == 0){
+	       rdm  = wf.perm_signed().merge_lr().get_rdm_row();
+	    }else{
+	       rdm += wf.perm_signed().merge_lr().get_rdm_row();
+	    }
+	    if(noise > thresh_nz) get_prdm_lr(wf, lqops, rqops, noise, rdm);
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff);
+	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
+	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
       }
+      string fname = oper_fname(scratch, p, "lop");
+      oper_save(fname, qops);
    }else{
       // update rsites & qr
       cout << "renormalize |cr>" << endl;
-      for(int i=0; i<wfs.size(); i++){
-	 qt2s.push_back(wfs[i].merge_cr().T()); // transpose here
+      for(int i=0; i<vsol.cols(); i++){
+         wf.from_array(vsol.col(i));
+         if(i == 0){
+            rdm  = wf.merge_cr().get_rdm_col();
+         }else{
+            rdm += wf.merge_cr().get_rdm_col();
+         }
+         if(noise > thresh_nz) get_prdm_cr(wf, cqops, rqops, noise, rdm);
       }
-      auto qt2 = decimation_row(qt2s, dcut, dwt, deff, true);
+      auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
       icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, wf.dpt_cr().second);
       //-------------------------------------------------------------------	
       assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
       auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
       assert(ovlp.check_identity(1.e-10,false)<1.e-10);
       //-------------------------------------------------------------------	 
+      qops = oper_renorm_ops("cr", icomb, icomb, p, cqops, rqops, int2e, int1e);
+      string fname = oper_fname(scratch, p, "rop");
+      oper_save(fname, qops);
    }
 }
 
@@ -190,63 +213,90 @@ void tns::decimation_twodot(comb& icomb,
 		            const vector<qtensor4>& wfs,
 		            double& dwt,
 			    int& deff){
+   const double thresh_nz = 1.e-10;
    cout << "tns::decimation_twodot (fw,ct,dcut)=(" 
 	<< forward << "," << cturn << "," << dcut << ") "; 
-   const auto& wf = wfs[0];
-   vector<qtensor2> qt2s;
+   qtensor2 rdm;
+   oper_dict qops;
    if(forward){
       // update lsites & ql
       if(!cturn){
          cout << "renormalize |lc1>" << endl;
-	 for(int i=0; i<wfs.size(); i++){
-	    qt2s.push_back(wfs[i].merge_lc1().merge_cr());
+	 for(int i=0; i<vsol.cols(); i++){
+            auto wf3 = wf.from_array(vsol.col(i)).merg_c2r();
+	    if(i == 0){
+	       rdm  = wf3.merge_lc().get_rdm_row();
+	    }else{
+	       rdm += wf3.merge_lc().get_rdm_row();
+	    }
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff);
+	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
          icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc1().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
+	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, c1qops, int2e, int1e);
       }else{
          cout << "renormalize |lr> (comb)" << endl;
-	 for(int i=0; i<wfs.size(); i++){
-	    qt2s.push_back(wfs[i].perm_signed().merge_lr_c1c2());
+	 for(int i=0; i<vsol.cols(); i++){
+            wf.from_array(vsol.col(i));
+	    if(i == 0){
+	       rdm  = wf.perm_signed().merge_lr_c1c2().get_rdm_row();
+	    }else{
+	       rdm += wf.perm_signed().merge_lr_c1c2().get_rdm_row();
+	    }
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff);
+	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
+	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
       }
    }else{
       // update rsites & qr
       if(!cturn){
          cout << "renormalize |c2r>" << endl;
-         for(int i=0; i<wfs.size(); i++){
-	    qt2s.push_back(wfs[i].merge_c2r().merge_lc().T());
-	 }
-         auto qt2 = decimation_row(qt2s, dcut, dwt, deff, true);
-         icomb.rsites[p] = qt2.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
+	 for(int i=0; i<vsol.cols(); i++){
+            auto wf3 = wf.from_array(vsol.col(i)).merge_lc1();
+            if(i == 0){
+               rdm  = wf3.merge_cr().get_rdm_col();
+            }else{
+               rdm += wf3.merge_cr().get_rdm_col();
+            }
+         }
+         auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
+	 icomb.rsites[p] = qt2.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
          //-------------------------------------------------------------------	
          assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
          auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
          assert(ovlp.check_identity(1.e-10,false)<1.e-10);
          //-------------------------------------------------------------------	 
+         qops = oper_renorm_ops("cr", icomb, icomb, p, c2qops, rqops, int2e, int1e);
       }else{
          cout << "renormalize |c1r2> (comb)" << endl;
-	 for(int i=0; i<wfs.size(); i++){
-	    qt2s.push_back(wfs[i].perm_signed().merge_lr_c1c2().T());
+	 for(int i=0; i<vsol.cols(); i++){
+            wf.from_array(vsol.col(i));
+	    if(i == 0){
+	       rdm  = wf.perm_signed().merge_lr_c1c2().get_rdm_col();
+	    }else{
+	       rdm += wf.perm_signed().merge_lr_c1c2().get_rdm_col();
+	    }
 	 }
-	 auto qt2 = decimation_row(qt2s, dcut, dwt, deff, true);
+	 auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
 	 icomb.rsites[p]= qt2.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
          //-------------------------------------------------------------------	
          assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
          auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
          assert(ovlp.check_identity(1.e-10,false)<1.e-10);
          //-------------------------------------------------------------------	 
+         qops = oper_renorm_ops("cr", icomb, icomb, p, c1qops, c2qops, int2e, int1e);
       }
+      string fname = oper_fname(scratch, p, "rop");
+      oper_save(fname, qops);
    }
 }
