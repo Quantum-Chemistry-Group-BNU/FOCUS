@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream> // istringstream
 #include <string>
@@ -210,10 +211,13 @@ void input::read_input(input::schedule& schd, string fname){
    cout << "thresh_ortho = " << scientific << schd.thresh_ortho << endl;
    // sweep
    cout << "maxsweep = " << schd.maxsweep << endl;
-   if(schd.maxsweep > 0) init_combsweep(schd.maxsweep, schd.combsweep);
+   if(schd.maxsweep > 0){
+      combsweep_init(schd.maxsweep, schd.combsweep);
+      combsweep_print(schd.maxsweep, schd.combsweep);
+   }
 }
 
-void input::init_combsweep(const int maxsweep,
+void input::combsweep_init(const int maxsweep,
 			   vector<sweep_ctrl>& combsweep){
    auto tmp = combsweep;
    combsweep.resize(maxsweep);
@@ -228,10 +232,13 @@ void input::init_combsweep(const int maxsweep,
       combsweep[j] = tmp[size-1];
       combsweep[j].isweep = j;
    }
-   // check
+}
+
+void input::combsweep_print(const int maxsweep,
+	 		    const vector<sweep_ctrl>& combsweep){
    cout << "comb_schedule: iter, dots, dcut, eps, noise" << endl;
    for(int i=0; i<maxsweep; i++){
-      auto ctrl = combsweep[i];
+      auto& ctrl = combsweep[i];
       cout << ctrl.isweep << " " 
 	   << ctrl.dots << " " 
 	   << ctrl.dcut << " "
@@ -239,4 +246,14 @@ void input::init_combsweep(const int maxsweep,
 	   << ctrl.noise
 	   << endl;
    }
+}
+
+void input::combsweep_print(const sweep_ctrl& ctrl){
+   cout << "sweep parameters:" 
+        << " isweep=" << ctrl.isweep
+        << " dots=" << ctrl.dots
+        << " dcut=" << ctrl.dcut
+        << " eps=" << ctrl.eps
+        << " noise=" << ctrl.noise
+        << endl;
 }

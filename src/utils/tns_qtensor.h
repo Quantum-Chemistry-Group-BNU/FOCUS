@@ -55,6 +55,7 @@ struct qtensor2{
       double normF() const;
       double check_identity(const double thresh_ortho,
 		            const bool debug=false) const;
+      qtensor2 dot(const qtensor2& qt) const;
       void random();
       int get_dim() const;
       // symmetry conservation rule [20200515]
@@ -262,6 +263,7 @@ qtensor2 merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
 			       const qsym_dpt& dpt2); 
 
 // --- tensor linear algebra : contractions ---
+qtensor2 contract_qt2_qt2(const qtensor2& qt2a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b);

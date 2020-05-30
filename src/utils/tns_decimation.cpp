@@ -88,13 +88,12 @@ qtensor2 tns::decimation_row(const qtensor2& rdm,
    cout << "  reduction:" << sig2all.size() << "->" << deff
         << "  dwt=" << dwt 
 	<< "  SvN=" << SvN << endl; 
-   sum = 0.0;
    idx = 0;
    for(const auto& p : qres){
       auto& q = p.first;
-      sum += wts[q];
       cout << "  idx=" << idx << "  qsym=" << q << "  dim=" << p.second 
-	   << "  wt=" << wts[q] << "  acc=" << sum << endl;
+	   << "  wt=" << scientific << setprecision(2) << wts[q] 
+	   << "  per=" << defaultfloat << wts[q]*100 << endl;
       idx++;
    }
    // 3. form qt2 assembling blocks
@@ -156,6 +155,11 @@ void tns::decimation_onedot(comb& icomb,
 	    if(noise > thresh_nz) get_prdm_lc(wf, lqops, cqops, noise, rdm);
 	 }
 	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
+	 for(int i=0; i<vsol.cols(); i++){
+	    wf.from_array(vsol.col(i));
+	    auto cwf = qt2.T().dot(wf.merge_lc()); // <-W[alpha,r]->
+	    icomb.psi0.push_back(cwf);
+	 }
 	 icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
@@ -175,6 +179,11 @@ void tns::decimation_onedot(comb& icomb,
 	    if(noise > thresh_nz) get_prdm_lr(wf, lqops, rqops, noise, rdm);
 	 }
 	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
+	 for(int i=0; i<vsol.cols(); i++){
+	    wf.from_array(vsol.col(i));
+	    auto cwf = qt2.T().dot(wf.merge_lr()); // <-W[alpha,c]->
+	    icomb.psi0.push_back(cwf);
+	 }
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
@@ -195,6 +204,11 @@ void tns::decimation_onedot(comb& icomb,
          if(noise > thresh_nz) get_prdm_cr(wf, cqops, rqops, noise, rdm);
       }
       auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
+      for(int i=0; i<vsol.cols(); i++){
+         wf.from_array(vsol.col(i));
+	 auto cwf = wf.merge_cr().dot(qt2.T()); // <-W[l,alpha]->
+         icomb.psi0.push_back(cwf);
+      }
       icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, wf.dpt_cr().second);
       //-------------------------------------------------------------------	
       assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 

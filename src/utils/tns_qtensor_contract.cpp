@@ -9,6 +9,38 @@ using namespace tns;
 
 // --- tensor linear algebra : contractions ---
 
+// xgemm : C[i,k] = A[i,j]*B[j,k]
+qtensor2 tns::contract_qt2_qt2(const qtensor2& qt2a, 
+			       const qtensor2& qt2b){
+   qsym sym = qt2a.sym + qt2b.sym;
+   assert(qt2a.dir[2] == !qt2b.dir[1]);
+   std::vector<bool> dir = {0, qt2a.dir[1], qt2b.dir[2]};
+   qtensor2 qt2(sym, qt2a.qrow, qt2b.qcol, dir); 
+   for(const auto& pr : qt2.qrow){
+      const qsym& qr = pr.first;
+      for(const auto& pc : qt2.qcol){
+	 const qsym& qc = pc.first;
+	 auto key = make_pair(qr,qc);
+	 auto& blk = qt2.qblocks[key];
+	 if(blk.size() == 0) continue;
+	 //---------------------------------- 
+	 // loop over contracted indices
+	 for(const auto& px : qt2a.qcol){
+	    const qsym& qx = px.first;
+	    // contract blocks
+	    auto keya = make_pair(qr,qx);
+	    auto keyb = make_pair(qx,qc);
+	    auto& blka = qt2a.qblocks.at(keya);
+	    auto& blkb = qt2b.qblocks.at(keyb);
+	    if(blka.size() == 0 || blkb.size() == 0) continue;
+	    blk += dgemm("N","N",blka,blkb);
+	 } // qx
+	 //---------------------------------- 
+      } // qc
+   } // qr
+   return qt2;
+}
+
 //  r/	m 
 //   *  |     = [m](r,c) = op(r,x)*A[m](x,c) = <mr|o|c>
 //  x\--*--c

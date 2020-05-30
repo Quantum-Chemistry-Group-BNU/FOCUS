@@ -60,8 +60,13 @@ public:
    
 void read_input(schedule& schd, std::string fname="input.dat");
 
-void init_combsweep(const int maxsweep,
+void combsweep_init(const int maxsweep,
 		    std::vector<sweep_ctrl>& combsweep);
+
+void combsweep_print(const int maxsweep,
+		     const std::vector<sweep_ctrl>& combsweep);
+
+void combsweep_print(const sweep_ctrl& ctrl);
 
 } // input
 

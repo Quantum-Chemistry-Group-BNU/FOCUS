@@ -30,13 +30,8 @@ void tns::opt_sweep(const input::schedule& schd,
    for(int isweep=0; isweep<schd.maxsweep; isweep++){
       
       auto& ctrl = schd.combsweep[isweep];
-      cout << "\nsweep parameters:" 
-	   << " isweep=" << ctrl.isweep
-	   << " dots=" << ctrl.dots
-	   << " dcut=" << ctrl.dcut
-	   << " eps=" << ctrl.eps
-	   << " noise=" << ctrl.noise
-	   << endl;
+      cout << endl;
+      input::combsweep_print(ctrl);
       
       int size = sweeps.size();
       vector<double> dwt(size);
@@ -72,13 +67,9 @@ void tns::opt_sweep(const input::schedule& schd,
 	 }
       } // i
       
-      // print 
+      // print summary 
       cout << "\n" << global::line_separator << endl;
-      cout << "isweep=" << ctrl.isweep
-	   << " dots=" << ctrl.dots
-	   << " dcut=" << ctrl.dcut
-	   << " eps=" << ctrl.eps
-	   << " noise=" << ctrl.noise
+      input::combsweep_print(ctrl);
       cout << global::line_separator << endl;
       vector<double> emean(size,0.0);
       for(int i=0; i<size; i++){
@@ -115,15 +106,21 @@ void tns::opt_sweep(const input::schedule& schd,
       cout << "\n" << global::line_separator2 << endl;
       cout << "summary of sweep optimization up to isweep=" << isweep << endl;
       cout << global::line_separator << endl;
+      cout << "comb_schedule: iter, dots, dcut, eps, noise, dwts, energies" << endl;
       for(int jsweep=0; jsweep<=isweep; jsweep++){
          auto dwt = sweep_data[jsweep].first;
          auto& eopt0 = sweep_data[jsweep].second;
          int nstate = eopt0.size();
-         cout << "isweep=" << setw(3) << jsweep 
-              << "  dwt="  << showpos << scientific << setprecision(2) << dwt << noshowpos;
+	 auto& jctrl = schd.combsweep[jsweep];
+	 cout << setw(3) << jctrl.isweep << " "
+	      << jctrl.dots << " " 
+	      << jctrl.dcut << " "
+	      << scientific << setprecision(1) << jctrl.eps << " " 
+	      << scientific << setprecision(1) << jctrl.noise << " | " 
+              << "dwt="  << showpos << scientific << setprecision(2) << dwt << noshowpos;
          cout << defaultfloat << setprecision(12);
          for(int j=0; j<nstate; j++){ 
-            cout << "  " << j << ":" 
+            cout << " e" << j << ":" 
 		 << defaultfloat << setprecision(12) << eopt0[j] << " "
 	         << scientific << setprecision(2) << eopt0[j]-eopt[min][j];
          }
@@ -196,9 +193,14 @@ void tns::opt_onedot(const input::schedule& schd,
    // solve
    eopt.resize(neig);
    matrix vsol(nsub,neig);
-   solver.solve_iter(eopt.data(), vsol.data());
-   //solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-   //solver.solve_diag(eopt.data(), vsol.data(), true);
+   //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
+   if(icomb.psi0.size() == 0){
+      solver.solve_iter(eopt.data(), vsol.data());
+   }else{
+      cout << "initial guess" << endl;
+      //solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+      exit(1);
+   }
    auto tc = global::get_time();
    
    // 3. decimation & renormalize operators
@@ -293,9 +295,14 @@ void tns::opt_twodot(const input::schedule& schd,
    // solve
    eopt.resize(neig);
    matrix vsol(nsub,neig);
-   solver.solve_iter(eopt.data(), vsol.data());
-   //solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-   //solver.solve_diag(eopt.data(), vsol.data(), true);
+   //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
+   if(icomb.psi0.size() == 0){
+      solver.solve_iter(eopt.data(), vsol.data());
+   }else{
+      cout << "initial guess" << endl;
+      //solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+      exit(1);
+   }
    auto tc = global::get_time();
    
    // 3. decimation & renormalize operators

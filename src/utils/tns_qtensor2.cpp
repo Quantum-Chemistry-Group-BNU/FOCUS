@@ -245,6 +245,11 @@ double qtensor2::check_identity(const double thresh_ortho,
    return mdiff;
 }
 
+// xgemm
+qtensor2 qtensor2::dot(const qtensor2& qt) const{
+   return contract_qt2_qt2(*this, qt);
+}
+
 void qtensor2::random(){
    for(auto& p : qblocks){
       auto& blk = p.second;

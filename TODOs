@@ -163,19 +163,16 @@
 	    checked by one-dot and two-dot opt for different topologies [DONE@20200528]
 	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L| [DONE@20200529]
 	    only apply noise correction for one-dot optimizaiton!
-	  - better sweep control handling [DONE@20200529]
+	  - better sweep control schedule [DONE@20200529]
  	  - propogation of initial guess to next site [!]
 
  202006xx random sampling?
-	  - last site treatment -> RCF! 
-	  - canonicalization of Comb? 
-	  - generalizable to mixed canonical form?
+	  - implement a general sampling algorithm for any comb-tns
 	  - generating det according to p(n) for computing Sdiag [hardness]
 
  202006xx an OPTIMIZED version:
 	  - prepare benchmark systems
-	  - sweep schedules
-	  - faster implementation: 
+	  - faster low-level implementation: 
 	    - benchmarking scalability
 	    - preconstruction of P/Q from A/B to accelerate efficiency in H*v?
 	    - better data structure
@@ -185,61 +182,38 @@
 
 --- Advanced functionalities ---
 
+ 2020xxxx implement 2-rdms
+
  2020xxxx complex version: relativistic SCI/DMRG
+	  - may require a redesign of low-level functionalities (including SCI)
+	  - implementation of time-reversal symmetry for efficiency? 
+ 	  - g-tensor [IMPORTANT!!! - appliable for quantum computation] 
+		      <Psi|sigma K|Psi>? G-matrix;
+		      How <Psi1|H|Psi2> are measured?
+		      For VQE this can be made symmetric,
+		      <0|(U1d*H*U2)|0> - Hardmard test]
 
- 2020xxxx rdms?
-
- 2020xxxx random sampling? as for stochastic pDMRG 
- 
- 2020xxxx operator compression
-
- 2020xxxx g-tensor [IMPORTANT!!! - quantum computation] 
-		    <Psi|sigma K|Psi>? G-matrix;
-		    How <Psi1|H|Psi2> are measured?
-		    For VQE this can be made symmetric,
-		    <0|(U1d*H*U2)|0> - Hardmard test]
+ 2020xxxx operator compression?
 
 --- FUTURE ---
 
- 2020xxxx entanglement localizaiton? 
+ 2020xxxx entanglement localizaiton of SCI wavefunction? 
 	  - orbital optimization
 	  - 1-body & 2-body disentanglers?
  
- 2020xxxx excited state: HCI/DMRG for RIXS 
-	  [also relevant for quantum computation]
+ 2020xxxx spectra and excited states: HCI/DMRG for RIXS 
+  	  - Core excitations? complex propogator? (A-w-i*gamma)x(w)=r
+	  - also relevant for quantum computation
 
  2020xxxx exploring more compact representation of many-body wavefunctions
 	  - VMC-c-MPS ansatz?
 	  - Neural network states?
 
-
-# Matrix++: A set of program for many-electron problems #
-
-## Functionalities ##
-
-* Selected CI:
-
-  1. NR-SCI with entanglement measure
-
-  2. Relativistic generalization SCI+PT: Au?	
-
-  3. Open-shell KRCI: g-tensor?
-
-  4. Core excitations? complex propogator? (A-w-i*gamma)x(w)=r
-
-* DMRG:
-  
-  1. Det-Fit?
-  
-  2. KR-DMRG?
-
-  3. Operator compression?
-
 =============
  Note on SCI
 =============
 
-Selected ci fails in two forms:
+Selected CI fails in two forms:
 
    1. computational time increases when ci coefficients are dense!
    
@@ -257,11 +231,11 @@ Such situations appear in
  Targets
 =========
  
+   0) quantum supremacy : FeMoco?
+
    a) doublet benchmark sets: CO+, CN, N2+
 
    b) O2: SOC and ZSF testing ground!
 
-   c) Selected CI: (A-w-i*gamma)x(w)=r ??? 
-		   a=A+d 
-      ===> How to do PT correction? <===
+   c) IP of gold
 
