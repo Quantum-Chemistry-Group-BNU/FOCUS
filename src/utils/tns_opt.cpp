@@ -147,12 +147,12 @@ void tns::opt_onedot(const input::schedule& schd,
    matrix vsol(nsub,neig);
    // load initial guess from previous opt
    vector<double> v0(nsub*neig);
-   if(icomb.psi0a.size() == 0){
+   if(icomb.psi.size() == 0){
       initial_onedot(icomb, nsub, neig, v0); 
    }else{
       for(int i=0; i<neig; i++){
-	 assert(icomb.psi0a[i].get_dim() == nsub);
-	 icomb.psi0a[i].to_array(&v0[nsub*i]);
+	 assert(icomb.psi[i].get_dim() == nsub);
+	 icomb.psi[i].to_array(&v0[nsub*i]);
       }
    }
    int nindp = get_ortho_basis(nsub,neig,v0); // reorthogonalization
@@ -252,7 +252,7 @@ void tns::opt_twodot(const input::schedule& schd,
    eopt.resize(neig);
    matrix vsol(nsub,neig);
    //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
-   if(icomb.psi0b.size() == 0){
+   if(icomb.psi.size() == 0){
       solver.solve_iter(eopt.data(), vsol.data());
    }else{
       cout << "initial guess" << endl;

@@ -163,12 +163,12 @@ void tns::decimation_onedot(comb& icomb,
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	
 	 // initial guess for next site within the bond
-	 icomb.psi0a.clear();
+	 icomb.psi.clear();
 	 for(int i=0; i<vsol.cols(); i++){
 	    wf.from_array(vsol.col(i));
 	    auto cwf = qt2.T().dot(wf.merge_lc()); // <-W[alpha,r]->
-	    auto psi0 = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
-	    icomb.psi0a.push_back(psi0);
+	    auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
+	    icomb.psi.push_back(psi);
 	 }
       }else{
 	 // special for comb
@@ -191,12 +191,12 @@ void tns::decimation_onedot(comb& icomb,
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
 	 // initial guess for next site within the bond
-	 icomb.psi0a.clear();
+	 icomb.psi.clear();
 	 for(int i=0; i<vsol.cols(); i++){
 	    wf.from_array(vsol.col(i));
 	    auto cwf = qt2.T().dot(wf.perm_signed().merge_lr()); // <-W[alpha,r]->
-	    auto psi0 = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
-	    icomb.psi0a.push_back(psi0);
+	    auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
+	    icomb.psi.push_back(psi);
 	 }
       }
    }else{
@@ -220,18 +220,18 @@ void tns::decimation_onedot(comb& icomb,
       assert(ovlp.check_identity(1.e-10,false)<1.e-10);
       //-------------------------------------------------------------------	 
       // initial guess for next site within the bond
-      icomb.psi0a.clear();
+      icomb.psi.clear();
       for(int i=0; i<vsol.cols(); i++){
 	 wf.from_array(vsol.col(i));
 	 auto cwf = wf.merge_cr().dot(qt2.T()); // <-W[l,alpha]->
 	 if(!cturn){
-	    auto psi0 = contract_qt3_qt2_r0(icomb.lsites[p0],cwf);
-            icomb.psi0a.push_back(psi0);
+	    auto psi = contract_qt3_qt2_r0(icomb.lsites[p0],cwf);
+            icomb.psi.push_back(psi);
 	 }else{
 	    // special treatment of the propagation downside to backbone
-	    auto psi0 = contract_qt3_qt2_c(icomb.lsites[p0],cwf.P());
-	    psi0 = psi0.perm_signed(); // |(lr)c> back to |lcr> order on backbone
-	    icomb.psi0a.push_back(psi0);
+	    auto psi = contract_qt3_qt2_c(icomb.lsites[p0],cwf.P());
+	    psi = psi.perm_signed(); // |(lr)c> back to |lcr> order on backbone
+	    icomb.psi.push_back(psi);
 	 }
       }
    }
