@@ -165,9 +165,9 @@
 	    only apply noise correction for one-dot optimizaiton!
 	  - better sweep control schedule [DONE@20200529]
  	  - propogation of initial guess to next site [!]
-	    - one-dot MPS: |lc>,|cr>
-	    - one-dot Comb: |lr>
-	    - initial site?
+	    - one-dot MPS: |lc>,|cr> [DONE@20200531]
+	    - one-dot Comb: |lr> - special in both directions! [DONE@20200531]
+	    - initial site? [DONE@20200531] 
 	    - two-dot extension 
 
  202006xx random sampling?

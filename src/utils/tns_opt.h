@@ -37,7 +37,17 @@ void opt_twodot(const input::schedule& schd,
 		int& deff);
 
 using tm = std::chrono::high_resolution_clock::time_point;
-void opt_timing(const std::vector<tm> ts);
+void opt_timing_analysis(const std::vector<tm> ts);
+
+void opt_sweep_print(const input::schedule& schd,
+		     const int isweep,
+		     const comb& icomb,
+		     const std::vector<directed_bond>& sweeps,
+		     std::vector<std::pair<double,std::vector<double>>>& sweep_data,
+		     const std::vector<double>& timing,
+		     const std::vector<std::vector<double>>& eopt,
+		     const std::vector<double>& dwt,
+		     const std::vector<int>& deff);
 
 } // tns
 

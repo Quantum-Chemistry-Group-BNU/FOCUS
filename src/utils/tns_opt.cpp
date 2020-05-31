@@ -4,6 +4,7 @@
 #include "tns_oper.h"
 #include "tns_opt.h"
 #include "tns_ham.h"
+#include "tns_initial.h"
 #include "tns_decimation.h"
 
 using namespace std;
@@ -16,6 +17,7 @@ void tns::opt_sweep(const input::schedule& schd,
 	            const integral::two_body& int2e,
 	            const integral::one_body& int1e,
 	            const double ecore){
+   auto t0 = global::get_time();
    cout << "\ntns::opt_sweep maxsweep=" << schd.maxsweep << endl;
  
    if(schd.maxsweep == 0) return;
@@ -28,17 +30,19 @@ void tns::opt_sweep(const input::schedule& schd,
 
    auto sweeps = icomb.get_sweeps();
    vector<pair<double,vector<double>>> sweep_data(schd.maxsweep); // (dwt,eopt)
+   vector<double> timing(schd.maxsweep);
    for(int isweep=0; isweep<schd.maxsweep; isweep++){
-      
+
       auto& ctrl = schd.combsweep[isweep];
       cout << endl;
       input::combsweep_print(ctrl);
       
       int size = sweeps.size();
-      vector<double> dwt(size);
       vector<vector<double>> eopt(size);
+      vector<double> dwt(size);
       vector<int> deff(size);
       // loop over sites
+      auto ti = global::get_time();
       for(int i=0; i<size; i++){
 	 auto dbond = sweeps[i];
          auto p0 = get<0>(dbond);
@@ -67,68 +71,14 @@ void tns::opt_sweep(const input::schedule& schd,
 		       eopt[i], dwt[i], deff[i]);
 	 }
       } // i
-      
-      // print summary 
-      cout << "\n" << global::line_separator << endl;
-      input::combsweep_print(ctrl);
-      cout << global::line_separator << endl;
-      vector<double> emean(size,0.0);
-      for(int i=0; i<size; i++){
-	 auto dbond = sweeps[i];
-         auto p0 = get<0>(dbond);
-	 auto p1 = get<1>(dbond);
-         auto forward = get<2>(dbond);
-         auto p = forward? p0 : p1;
-         cout << "i=" << i << " bond=" 
-	      << "(" << p0.first << "," << p0.second << ")"
-	      << "[" << icomb.topo[p0.first][p0.second] << "]-"
-	      << "(" << p1.first << "," << p1.second << ")"
-	      << "[" << icomb.topo[p1.first][p1.second] << "]"
-	      << " fw=" << forward
-	      << " deff=" << deff[i]
-	      << " dwt=" << showpos << scientific << setprecision(2) << dwt[i] << noshowpos;
-	 // print energy
-	 cout << defaultfloat << setprecision(12);
-	 int nstate = eopt[i].size();
-	 for(int j=0; j<nstate; j++){ 
-	    cout << " e" << j << ":" << eopt[i][j];
-	    emean[i] += eopt[i][j];
-	 }
-	 emean[i] /= nstate;
-	 cout << endl;
-      }
-      auto pos = std::min_element(emean.begin(), emean.end());
-      auto min = std::distance(emean.begin(), pos);
-      cout << "min energies at: " << min << endl;
-      sweep_data[isweep].first = dwt[min];
-      sweep_data[isweep].second = eopt[min];
-      cout << global::line_separator << endl;
-
-      cout << "\n" << global::line_separator2 << endl;
-      cout << "summary of sweep optimization up to isweep=" << isweep << endl;
-      cout << global::line_separator << endl;
-      cout << "comb_schedule: iter, dots, dcut, eps, noise, dwts, energies" << endl;
-      for(int jsweep=0; jsweep<=isweep; jsweep++){
-         auto dwt = sweep_data[jsweep].first;
-         auto& eopt0 = sweep_data[jsweep].second;
-         int nstate = eopt0.size();
-	 auto& jctrl = schd.combsweep[jsweep];
-	 cout << setw(3) << jctrl.isweep << " "
-	      << jctrl.dots << " " 
-	      << jctrl.dcut << " "
-	      << scientific << setprecision(1) << jctrl.eps << " " 
-	      << scientific << setprecision(1) << jctrl.noise << " | " 
-              << "dwt="  << showpos << scientific << setprecision(2) << dwt << noshowpos;
-         cout << defaultfloat << setprecision(12);
-         for(int j=0; j<nstate; j++){ 
-            cout << " e" << j << ":" 
-		 << defaultfloat << setprecision(12) << eopt0[j] << " "
-	         << scientific << setprecision(2) << eopt0[j]-eopt[min][j];
-         }
-         cout << endl;
-      } // jsweep
-      cout << global::line_separator2 << endl;
+      auto tf = global::get_time();
+      timing[isweep] = global::get_duration(tf-ti);
+      opt_sweep_print(schd,isweep,icomb,sweeps,sweep_data,timing,eopt,dwt,deff);
    } // isweep
+
+   auto t1 = global::get_time();
+   cout << "\ntiming for tns::opt_sweep: " << setprecision(2) 
+        << global::get_duration(t1-t0) << " s" << endl;
 }
 
 void tns::opt_onedot(const input::schedule& schd,
@@ -191,24 +141,24 @@ void tns::opt_onedot(const input::schedule& schd,
 		      ref(cqops), ref(lqops), ref(rqops), 
 		      cref(int2e), cref(int1e), cref(ecore), 
 		      ref(wf));
-   // solve
+   
+   // solve local problem
    eopt.resize(neig);
    matrix vsol(nsub,neig);
-   //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
+   // load initial guess from previous opt
+   vector<double> v0(nsub*neig);
    if(icomb.psi0a.size() == 0){
-      solver.solve_iter(eopt.data(), vsol.data());
+      initial_onedot(icomb, nsub, neig, v0); 
    }else{
-      vector<double> v0(nsub*neig);
-      // load initial guess from previous opt
       for(int i=0; i<neig; i++){
-	 assert(icomb.psi0a[i].get_dim()==nsub);
+	 assert(icomb.psi0a[i].get_dim() == nsub);
 	 icomb.psi0a[i].to_array(&v0[nsub*i]);
       }
-      // reorthogonalization
-      int nindp = get_ortho_basis(nsub,neig,v0); 
-      assert(nindp == neig);
-      solver.solve_iter(eopt.data(), vsol.data(), v0.data());
    }
+   int nindp = get_ortho_basis(nsub,neig,v0); // reorthogonalization
+   assert(nindp == neig);
+   //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
+   solver.solve_iter(eopt.data(), vsol.data(), v0.data());
    auto tc = global::get_time();
    
    // 3. decimation & renormalize operators
@@ -217,11 +167,11 @@ void tns::opt_onedot(const input::schedule& schd,
    auto td = global::get_time();
 
    oper_renorm_onedot(icomb, dbond, cqops, lqops, rqops, int2e, int1e, schd.scratch);
+   
    auto t1 = global::get_time();
-
    cout << "timing for tns::opt_onedot : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
-   opt_timing({t0,ta,tb,tc,td,t1});
+   opt_timing_analysis({t0,ta,tb,tc,td,t1});
 }
 
 void tns::opt_twodot(const input::schedule& schd,
@@ -321,10 +271,10 @@ void tns::opt_twodot(const input::schedule& schd,
 
    cout << "timing for tns::opt_twodot : " << setprecision(2) 
         << global::get_duration(t1-t0) << " s" << endl;
-   opt_timing({t0,ta,tb,tc,td,t1});
+   opt_timing_analysis({t0,ta,tb,tc,td,t1});
 }
 
-void tns::opt_timing(const vector<tns::tm> ts){
+void tns::opt_timing_analysis(const vector<tns::tm> ts){
    double dt0 = global::get_duration(ts[1]-ts[0]);
    double dt1 = global::get_duration(ts[2]-ts[1]);
    double dt2 = global::get_duration(ts[3]-ts[2]);
@@ -341,4 +291,86 @@ void tns::opt_timing(const vector<tns::tm> ts){
 	<< "  per=" << defaultfloat << dt3/dt*100<< endl;
    cout << "  t(renrm)=" << scientific << setprecision(2) << dt4 << " s"
 	<< "  per=" << defaultfloat << dt4/dt*100<< endl;
+}
+
+void tns::opt_sweep_print(const input::schedule& schd,
+		          const int isweep,
+	            	  const comb& icomb,
+		          const vector<directed_bond>& sweeps,
+		          vector<pair<double,vector<double>>>& sweep_data,
+		          const vector<double>& timing,
+		          const vector<vector<double>>& eopt,
+		          const vector<double>& dwt,
+		          const vector<int>& deff){
+   auto& ctrl = schd.combsweep[isweep];
+   cout << "\n" << global::line_separator << endl;
+   input::combsweep_print(ctrl);
+   cout << global::line_separator << endl;
+   int size = sweeps.size();
+   vector<double> emean(size,0.0);
+   for(int i=0; i<size; i++){
+      auto dbond = sweeps[i];
+      auto p0 = get<0>(dbond);
+      auto p1 = get<1>(dbond);
+      auto forward = get<2>(dbond);
+      auto p = forward? p0 : p1;
+      cout << "i=" << i << " bond=" 
+           << "(" << p0.first << "," << p0.second << ")"
+           << "[" << icomb.topo[p0.first][p0.second] << "]-"
+           << "(" << p1.first << "," << p1.second << ")"
+           << "[" << icomb.topo[p1.first][p1.second] << "]"
+           << " fw=" << forward
+           << " deff=" << deff[i]
+           << " dwt=" << showpos << scientific << setprecision(2) << dwt[i] << noshowpos;
+      // print energy
+      cout << defaultfloat << setprecision(12);
+      int nstate = eopt[i].size();
+      for(int j=0; j<nstate; j++){ 
+         cout << " e" << j << ":" << eopt[i][j];
+         emean[i] += eopt[i][j];
+      }
+      emean[i] /= nstate;
+      cout << endl;
+   }
+   auto pos = std::min_element(emean.begin(), emean.end());
+   auto min = std::distance(emean.begin(), pos);
+   sweep_data[isweep].first = dwt[min];
+   sweep_data[isweep].second = eopt[min];
+   cout << "min energies at: " << min << endl;
+   cout << "timing for sweep: " << setprecision(2) << timing[isweep] << " s" << endl; 
+   cout << global::line_separator << endl;
+   // print all previous optimized results
+   cout << "\n" << global::line_separator2 << endl;
+   cout << "summary of sweep optimization up to isweep=" << isweep << endl;
+   cout << global::line_separator << endl;
+   cout << "comb_schedule: iter, dots, dcut, eps, noise, timing (tsum)" << endl;
+   cout << scientific << setprecision(2);
+   double tsum = 0.0;
+   for(int jsweep=0; jsweep<=isweep; jsweep++){
+      auto& jctrl = schd.combsweep[jsweep];
+      tsum += timing[jsweep];
+      cout << setw(3) << jsweep << " "
+           << jctrl.dots << " " 
+           << jctrl.dcut << " "
+           << jctrl.eps << " " 
+           << jctrl.noise << " | "
+           << timing[jsweep] << " (" 
+           << tsum << ")" << endl;
+   } // jsweep
+   cout << "results: dwt, energies (de)" << endl;
+   for(int jsweep=0; jsweep<=isweep; jsweep++){
+      auto dwt = sweep_data[jsweep].first;
+      auto& eopt0 = sweep_data[jsweep].second;
+      int nstate = eopt0.size();
+      cout << setw(3) << jsweep << " ";
+      cout << showpos << scientific << setprecision(2) << dwt << noshowpos;
+      cout << defaultfloat << setprecision(12);
+      for(int j=0; j<nstate; j++){ 
+         cout << " e" << j << ":" 
+     	      << defaultfloat << setprecision(12) << eopt0[j] << " ("
+              << scientific << setprecision(2) << eopt0[j]-eopt[min][j] << ")";
+      }
+      cout << endl;
+   } // jsweep
+   cout << global::line_separator2 << endl;
 }
