@@ -92,9 +92,34 @@ matrix qtensor2::to_matrix() const{
    return mat;
 }
 
+// ZL20200531: if row/col is permuted while dir fixed, 
+// 	       effectively change the direction of lines in diagrams
+//	       This is used in taking Hermitian conjugate of operators
 qtensor2 qtensor2::T() const{
    qtensor2 qt2;
-   qt2.sym = -sym;
+   qt2.dir = dir; 
+   qt2.sym = -sym; // symmetry of operator get changed in consistency with line changes
+   qt2.qrow = qcol;
+   qt2.qcol = qrow;
+   for(const auto& p : qblocks){
+      const auto& key = p.first;
+      const auto& blk = qblocks.at(key);
+      auto tkey = make_pair(key.second,key.first);
+      if(blk.size() > 0){
+         qt2.qblocks[tkey] = blk.T();
+      }else{
+         qt2.qblocks[tkey] = matrix();
+      } 
+   }
+   return qt2;
+}
+
+// ZL20200531: permute the line of diagrams 
+// 	       while maintaining their directions
+qtensor2 qtensor2::P() const{
+   qtensor2 qt2;
+   qt2.dir = {dir[0],dir[2],dir[1]}; 
+   qt2.sym = sym;
    qt2.qrow = qcol;
    qt2.qcol = qrow;
    for(const auto& p : qblocks){

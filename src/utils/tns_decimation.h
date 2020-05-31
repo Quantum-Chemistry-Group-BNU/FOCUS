@@ -10,12 +10,10 @@ qtensor2 decimation_row(const qtensor2& rdm,
 			const int dcut,
 			double& dwt,
 			int& deff,
-			const bool trans=false);
+			const bool permute=false);
 
 void decimation_onedot(comb& icomb, 
-		       const comb_coord& p, 
-		       const bool forward, 
-		       const bool cturn, 
+		       const directed_bond& dbond,
 		       const int dcut,
 		       const linalg::matrix& vsol,
 		       qtensor3& wf,
@@ -27,9 +25,7 @@ void decimation_onedot(comb& icomb,
 		       oper_dict& rqops);
 
 void decimation_twodot(comb& icomb, 
-		       const comb_coord& p, 
-		       const bool forward, 
-		       const bool cturn, 
+		       const directed_bond& dbond,
 		       const int dcut,
  		       const linalg::matrix& vsol,
 		       qtensor4& wf,

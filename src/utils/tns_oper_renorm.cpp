@@ -114,15 +114,18 @@ void tns::oper_env_right(const comb& bra,
 }
 
 void tns::oper_renorm_onedot(const comb& icomb, 
-		             const comb_coord& p, 
-		             const bool forward, 
-		             const bool cturn, 
+		             const directed_bond& dbond,
 			     oper_dict& cqops,
 		             oper_dict& lqops,
 			     oper_dict& rqops,	
 		             const integral::two_body& int2e, 
 		             const integral::one_body& int1e,
 			     const string scratch){
+   auto p0 = get<0>(dbond);
+   auto p1 = get<1>(dbond);
+   auto forward = get<2>(dbond);
+   auto p = forward? p0 : p1;
+   bool cturn = (icomb.type.at(p0) == 3 && p1.second == 1);
    cout << "tns::oper_renorm_onedot" << endl;
    oper_dict qops;
    if(forward){
@@ -141,9 +144,7 @@ void tns::oper_renorm_onedot(const comb& icomb,
 }
 
 void tns::oper_renorm_twodot(const comb& icomb, 
-		             const comb_coord& p, 
-		             const bool forward, 
-		             const bool cturn, 
+		             const directed_bond& dbond,
 			     oper_dict& c1qops,
 			     oper_dict& c2qops,
 		             oper_dict& lqops,
@@ -151,6 +152,11 @@ void tns::oper_renorm_twodot(const comb& icomb,
 		             const integral::two_body& int2e, 
 		             const integral::one_body& int1e, 
 			     const string scratch){ 
+   auto p0 = get<0>(dbond);
+   auto p1 = get<1>(dbond);
+   auto forward = get<2>(dbond);
+   auto p = forward? p0 : p1;
+   bool cturn = (icomb.type.at(p0) == 3 && p1.second == 1);
    cout << "tns::oper_renorm_twodot" << endl;
    oper_dict qops;
    if(forward){

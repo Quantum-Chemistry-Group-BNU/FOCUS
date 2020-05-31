@@ -14,7 +14,7 @@ qtensor2 tns::contract_qt2_qt2(const qtensor2& qt2a,
 			       const qtensor2& qt2b){
    qsym sym = qt2a.sym + qt2b.sym;
    assert(qt2a.dir[2] == !qt2b.dir[1]);
-   std::vector<bool> dir = {0, qt2a.dir[1], qt2b.dir[2]};
+   vector<bool> dir = {0, qt2a.dir[1], qt2b.dir[2]};
    qtensor2 qt2(sym, qt2a.qrow, qt2b.qcol, dir); 
    for(const auto& pr : qt2.qrow){
       const qsym& qr = pr.first;
@@ -47,7 +47,9 @@ qtensor2 tns::contract_qt2_qt2(const qtensor2& qt2a,
 qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a, 
 				 const qtensor2& qt2b){
    qsym sym = qt3a.sym + qt2b.sym;
-   qtensor3 qt3(sym, qt3a.qmid, qt2b.qrow, qt3a.qcol, qt3a.dir);
+   assert(qt2b.dir[2] == !qt3a.dir[2]);
+   vector<bool> dir = {0, qt3a.dir[1], qt2b.dir[1], qt3a.dir[3]};
+   qtensor3 qt3(sym, qt3a.qmid, qt2b.qrow, qt3a.qcol, dir);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
       const qsym& msym = pm.first;
@@ -89,7 +91,9 @@ qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a,
 qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a, 
 			 	 const qtensor2& qt2b){
    qsym sym = qt3a.sym + qt2b.sym;
-   qtensor3 qt3(sym, qt2b.qrow, qt3a.qrow, qt3a.qcol, qt3a.dir);
+   assert(qt2b.dir[2] == !qt3a.dir[1]);
+   vector<bool> dir = {0, qt2b.dir[1], qt3a.dir[2], qt3a.dir[3]};
+   qtensor3 qt3(sym, qt2b.qrow, qt3a.qrow, qt3a.qcol, dir);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
       const qsym& msym = pm.first;
@@ -127,13 +131,23 @@ qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a,
    return qt3;
 }
 
+//     m  
+//     |    	= [m](r,c) = A[m](r,x)*op(x,c) [normal contraction] 
+//  r--*--x-*-c 
+qtensor3 tns::contract_qt3_qt2_r0(const qtensor3& qt3a, 
+				  const qtensor2& qt2b){
+   return contract_qt3_qt2_r(qt3a,qt2b.P()); 
+}
+
 //     m  \c
-//     |  *  = [m](r,c) = A[m](r,x)*op(c,x) 
+//     |  *  = [m](r,c) = A[m](r,x)*op(c,x) [permuted contraction (AO^T)]
 //  r--*--/x
 qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a, 
 				 const qtensor2& qt2b){
    qsym sym = qt3a.sym + qt2b.sym;
-   qtensor3 qt3(sym, qt3a.qmid, qt3a.qrow, qt2b.qrow, qt3a.dir);
+   assert(qt2b.dir[2] == !qt3a.dir[3]); // each line is associated with one dir
+   vector<bool> dir = {0, qt3a.dir[1], qt3a.dir[2], qt2b.dir[1]};
+   qtensor3 qt3(sym, qt3a.qmid, qt3a.qrow, qt2b.qrow, dir);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
       const qsym& msym = pm.first;

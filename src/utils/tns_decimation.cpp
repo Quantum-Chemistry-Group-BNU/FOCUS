@@ -12,7 +12,7 @@ qtensor2 tns::decimation_row(const qtensor2& rdm,
 			     const int dcut,
 			     double& dwt,
 			     int& deff,
-			     const bool trans){
+			     const bool permute){
    const double thresh_sig2 = 1.e-16;
    bool debug = false;
    if(debug) cout << "tns::decimation_row dcut=" << dcut << endl;
@@ -116,18 +116,13 @@ qtensor2 tns::decimation_row(const qtensor2& rdm,
 	 }
       }
    }
-   // 4. flip direction for later generating right canonical form
-   if(trans){
-      qt2 = qt2.T();	   
-      qt2.dir = {0,0,1};
-   }
+   // 4. permute two lines for later generating right canonical form
+   if(permute) qt2 = qt2.P();
    return qt2;
 }
    
 void tns::decimation_onedot(comb& icomb, 
-		            const comb_coord& p, 
-		            const bool forward, 
-		            const bool cturn,
+		            const directed_bond& dbond,
 		            const int dcut,
 			    const matrix& vsol,
 			    qtensor3& wf,
@@ -138,6 +133,11 @@ void tns::decimation_onedot(comb& icomb,
 			    oper_dict& lqops,
 			    oper_dict& rqops){
    const double thresh_nz = 1.e-10;
+   auto p0 = get<0>(dbond);
+   auto p1 = get<1>(dbond);
+   auto forward = get<2>(dbond);
+   auto p = forward? p0 : p1;
+   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
    cout << "tns::decimation_onedot (fw,ct,dcut,noise)=(" 
 	<< forward << "," << cturn << "," << dcut << "," << scientific << noise << ") ";
    qtensor2 rdm;
@@ -155,17 +155,21 @@ void tns::decimation_onedot(comb& icomb,
 	    if(noise > thresh_nz) get_prdm_lc(wf, lqops, cqops, noise, rdm);
 	 }
 	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-	    auto cwf = qt2.T().dot(wf.merge_lc()); // <-W[alpha,r]->
-	    icomb.psi0.push_back(cwf);
-	 }
+	 // update site tensor
 	 icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
- 	 //-------------------------------------------------------------------	 
+ 	 //-------------------------------------------------------------------	
+	 // initial guess for next site within the bond
+	 icomb.psi0a.clear();
+	 for(int i=0; i<vsol.cols(); i++){
+	    wf.from_array(vsol.col(i));
+	    auto cwf = qt2.T().dot(wf.merge_lc()); // <-W[alpha,r]->
+	    auto psi0 = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
+	    icomb.psi0a.push_back(psi0);
+	 }
       }else{
 	 // special for comb
          cout << "renormalize |lr> (comb)" << endl;
@@ -179,17 +183,21 @@ void tns::decimation_onedot(comb& icomb,
 	    if(noise > thresh_nz) get_prdm_lr(wf, lqops, rqops, noise, rdm);
 	 }
 	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-	    auto cwf = qt2.T().dot(wf.merge_lr()); // <-W[alpha,c]->
-	    icomb.psi0.push_back(cwf);
-	 }
+	 // update site tensor
 	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	 
+	 // initial guess for next site within the bond
+	 icomb.psi0a.clear();
+	 for(int i=0; i<vsol.cols(); i++){
+	    wf.from_array(vsol.col(i));
+	    auto cwf = qt2.T().dot(wf.perm_signed().merge_lr()); // <-W[alpha,r]->
+	    auto psi0 = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
+	    icomb.psi0a.push_back(psi0);
+	 }
       }
    }else{
       // update rsites & qr
@@ -204,29 +212,43 @@ void tns::decimation_onedot(comb& icomb,
          if(noise > thresh_nz) get_prdm_cr(wf, cqops, rqops, noise, rdm);
       }
       auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
-      for(int i=0; i<vsol.cols(); i++){
-         wf.from_array(vsol.col(i));
-	 auto cwf = wf.merge_cr().dot(qt2.T()); // <-W[l,alpha]->
-         icomb.psi0.push_back(cwf);
-      }
+      // update site tensor
       icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, wf.dpt_cr().second);
       //-------------------------------------------------------------------	
       assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
       auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
       assert(ovlp.check_identity(1.e-10,false)<1.e-10);
       //-------------------------------------------------------------------	 
+      // initial guess for next site within the bond
+      icomb.psi0a.clear();
+      for(int i=0; i<vsol.cols(); i++){
+	 wf.from_array(vsol.col(i));
+	 auto cwf = wf.merge_cr().dot(qt2.T()); // <-W[l,alpha]->
+	 if(!cturn){
+	    auto psi0 = contract_qt3_qt2_r0(icomb.lsites[p0],cwf);
+            icomb.psi0a.push_back(psi0);
+	 }else{
+	    // special treatment of the propagation downside to backbone
+	    auto psi0 = contract_qt3_qt2_c(icomb.lsites[p0],cwf.P());
+	    psi0 = psi0.perm_signed(); // |(lr)c> back to |lcr> order on backbone
+	    icomb.psi0a.push_back(psi0);
+	 }
+      }
    }
 }
 
 void tns::decimation_twodot(comb& icomb, 
-		            const comb_coord& p, 
-		            const bool forward, 
-		            const bool cturn, 
+		            const directed_bond& dbond,
 		            const int dcut, 
 			    const matrix& vsol,
 			    qtensor4& wf,
 		            double& dwt,
 			    int& deff){
+   auto p0 = get<0>(dbond);
+   auto p1 = get<1>(dbond);
+   auto forward = get<2>(dbond);
+   auto p = forward? p0 : p1;
+   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
    cout << "tns::decimation_twodot (fw,ct,dcut)=(" 
 	<< forward << "," << cturn << "," << dcut << ") "; 
    qtensor2 rdm;

@@ -1,5 +1,6 @@
 #include "../settings/global.h"
 #include "../core/dvdson.h"
+#include "../core/linalg.h"
 #include "tns_oper.h"
 #include "tns_opt.h"
 #include "tns_ham.h"
@@ -44,8 +45,9 @@ void tns::opt_sweep(const input::schedule& schd,
 	 auto p1 = get<1>(dbond);
          auto forward = get<2>(dbond);
          auto p = forward? p0 : p1;
-	 int tp0 = icomb.type[p0];
-	 int tp1 = icomb.type[p1];
+	 auto tp0 = icomb.type[p0];
+	 auto tp1 = icomb.type[p1];
+         bool cturn = (tp0 == 3 && p1.second == 1);
          cout << "\n" << global::line_separator << endl;
          cout << "isweep=" << isweep 
 	      << " ibond=" << i << " bond=" 
@@ -53,9 +55,8 @@ void tns::opt_sweep(const input::schedule& schd,
 	      << "[" << icomb.topo[p0.first][p0.second] << "]-"
 	      << "(" << p1.first << "," << p1.second << ")"
 	      << "[" << icomb.topo[p1.first][p1.second] << "]"
-	      << " fw=" << forward
-	      << " tp=[" << tp0 << "," << tp1 << "]"
-	      << " update=" << !forward //-th site of bond get updated
+	      << " (fw,ct,update)=(" << forward << "," 
+	      << cturn << "," << !forward << ")" // -th udpated site in the bond
 	      << endl;
          cout << global::line_separator << endl;
 	 if(ctrl.dots == 1 || (ctrl.dots == 2 && tp0 == 3 && tp1 == 3)){ 
@@ -90,7 +91,7 @@ void tns::opt_sweep(const input::schedule& schd,
 	 cout << defaultfloat << setprecision(12);
 	 int nstate = eopt[i].size();
 	 for(int j=0; j<nstate; j++){ 
-	    cout << "  " << j << ":" << eopt[i][j];
+	    cout << " e" << j << ":" << eopt[i][j];
 	    emean[i] += eopt[i][j];
 	 }
 	 emean[i] /= nstate;
@@ -133,7 +134,7 @@ void tns::opt_sweep(const input::schedule& schd,
 void tns::opt_onedot(const input::schedule& schd,
 		     const input::sweep_ctrl& ctrl,
                      comb& icomb,
-		     directed_bond& dbond,
+		     const directed_bond& dbond,
                      const integral::two_body& int2e,
                      const integral::one_body& int1e,
                      const double ecore,
@@ -148,11 +149,11 @@ void tns::opt_onedot(const input::schedule& schd,
    auto p1 = get<1>(dbond);
    auto forward = get<2>(dbond);
    auto p = forward? p0 : p1;
+   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
    
    // 1. process symmetry information & operators for {|lcr>}
    qsym_space qc, ql, qr;
    oper_dict cqops, lqops, rqops;
-   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
    qc = icomb.get_qc(p); 
    ql = icomb.get_ql(p);
    qr = icomb.get_qr(p);
@@ -194,23 +195,28 @@ void tns::opt_onedot(const input::schedule& schd,
    eopt.resize(neig);
    matrix vsol(nsub,neig);
    //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
-   if(icomb.psi0.size() == 0){
+   if(icomb.psi0a.size() == 0){
       solver.solve_iter(eopt.data(), vsol.data());
    }else{
-      cout << "initial guess" << endl;
-      //solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-      exit(1);
+      vector<double> v0(nsub*neig);
+      // load initial guess from previous opt
+      for(int i=0; i<neig; i++){
+	 assert(icomb.psi0a[i].get_dim()==nsub);
+	 icomb.psi0a[i].to_array(&v0[nsub*i]);
+      }
+      // reorthogonalization
+      int nindp = get_ortho_basis(nsub,neig,v0); 
+      assert(nindp == neig);
+      solver.solve_iter(eopt.data(), vsol.data(), v0.data());
    }
    auto tc = global::get_time();
    
    // 3. decimation & renormalize operators
-   decimation_onedot(icomb, p, forward, cturn, ctrl.dcut, vsol, wf, dwt, deff,
+   decimation_onedot(icomb, dbond, ctrl.dcut, vsol, wf, dwt, deff,
 		     ctrl.noise, cqops, lqops, rqops);
    auto td = global::get_time();
 
-   oper_renorm_onedot(icomb, p, forward, cturn, 
-		      cqops, lqops, rqops, int2e, int1e, 
-		      schd.scratch);
+   oper_renorm_onedot(icomb, dbond, cqops, lqops, rqops, int2e, int1e, schd.scratch);
    auto t1 = global::get_time();
 
    cout << "timing for tns::opt_onedot : " << setprecision(2) 
@@ -221,7 +227,7 @@ void tns::opt_onedot(const input::schedule& schd,
 void tns::opt_twodot(const input::schedule& schd,
 		     const input::sweep_ctrl& ctrl,
                      comb& icomb,
-		     directed_bond& dbond,
+		     const directed_bond& dbond,
                      const integral::two_body& int2e,
                      const integral::one_body& int1e,
                      const double ecore,
@@ -236,11 +242,11 @@ void tns::opt_twodot(const input::schedule& schd,
    auto p1 = get<1>(dbond);
    auto forward = get<2>(dbond);
    auto p = forward? p0 : p1;
+   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
    
    // 1. process symmetry information & operators for {|lmvr>}
    qsym_space qc1, qc2, ql, qr;
    oper_dict c1qops, c2qops, lqops, rqops;
-   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
    if(!cturn){
       qc1 = icomb.get_qc(p0);
       qc2 = icomb.get_qc(p1);
@@ -296,22 +302,21 @@ void tns::opt_twodot(const input::schedule& schd,
    eopt.resize(neig);
    matrix vsol(nsub,neig);
    //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
-   if(icomb.psi0.size() == 0){
+   if(icomb.psi0b.size() == 0){
       solver.solve_iter(eopt.data(), vsol.data());
    }else{
       cout << "initial guess" << endl;
+      //matrix v0(nsub,neig);
       //solver.solve_iter(eopt.data(), vsol.data(), v0.data());
       exit(1);
    }
    auto tc = global::get_time();
    
    // 3. decimation & renormalize operators
-   decimation_twodot(icomb, p, forward, cturn, ctrl.dcut, vsol, wf, dwt, deff);
+   decimation_twodot(icomb, dbond, ctrl.dcut, vsol, wf, dwt, deff);
    auto td = global::get_time();
    
-   oper_renorm_twodot(icomb, p, forward, cturn, 
-		      c1qops, c2qops, lqops, rqops, int2e, int1e, 
-		      schd.scratch);
+   oper_renorm_twodot(icomb, dbond, c1qops, c2qops, lqops, rqops, int2e, int1e, schd.scratch);
    auto t1 = global::get_time();
 
    cout << "timing for tns::opt_twodot : " << setprecision(2) 

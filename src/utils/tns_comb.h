@@ -100,7 +100,8 @@ class comb{
       std::map<comb_coord,std::vector<int>> lsupport;
       std::map<comb_coord,qtensor3> lsites;
       // --- propagation of initial guess ---
-      std::vector<qtensor2> psi0;
+      std::vector<qtensor3> psi0a;
+      std::vector<qtensor4> psi0b;
 };
 
 linalg::matrix get_Smat(const comb& bra, 

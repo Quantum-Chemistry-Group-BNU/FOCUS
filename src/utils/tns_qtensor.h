@@ -43,6 +43,7 @@ struct qtensor2{
       qtensor2 col_signed(const double fac=1.0) const;
       // algorithmic operations like matrix
       qtensor2 T() const;
+      qtensor2 P() const;
       qtensor2 operator -() const;
       // pure algorithmic operations 
       qtensor2& operator +=(const qtensor2& qt);
@@ -267,6 +268,7 @@ qtensor2 contract_qt2_qt2(const qtensor2& qt2a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_l(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_c(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor3 contract_qt3_qt2_r(const qtensor3& qt3a, const qtensor2& qt2b);
+qtensor3 contract_qt3_qt2_r0(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b);
 qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b);
 qtensor2 contract_qt3_qt3_lr(const qtensor3& qt3a, const qtensor3& qt3b);

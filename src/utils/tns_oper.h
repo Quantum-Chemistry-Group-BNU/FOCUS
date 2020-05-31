@@ -257,9 +257,7 @@ void oper_env_right(const comb& bra,
 
 // in sweep optimization
 void oper_renorm_onedot(const comb& icomb,
-		        const comb_coord& p,
-			const bool forward,
-			const bool cturn,
+		        const directed_bond& dbond,
 			oper_dict& cqops,
 			oper_dict& lqops,
 			oper_dict& rqops,
@@ -268,9 +266,7 @@ void oper_renorm_onedot(const comb& icomb,
 			const std::string scratch); 
 
 void oper_renorm_twodot(const comb& icomb,
-		        const comb_coord& p,
-			const bool forward,
-			const bool cturn,
+		        const directed_bond& dbond,
 			oper_dict& c1qops,
 			oper_dict& c2qops,
 			oper_dict& lqops,

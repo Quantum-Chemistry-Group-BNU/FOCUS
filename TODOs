@@ -165,6 +165,10 @@
 	    only apply noise correction for one-dot optimizaiton!
 	  - better sweep control schedule [DONE@20200529]
  	  - propogation of initial guess to next site [!]
+	    - one-dot MPS: |lc>,|cr>
+	    - one-dot Comb: |lr>
+	    - initial site?
+	    - two-dot extension 
 
  202006xx random sampling?
 	  - implement a general sampling algorithm for any comb-tns
