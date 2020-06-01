@@ -156,7 +156,7 @@
 	       - making MPS correct
 	       - special topology 
 
- 202006xx an IMPROVED version with more functionalities
+ 20200601 an IMPROVED version with more functionalities
 	  - printing: discarded weight, dimension, etc. [DONE@20200527]
 	  - support for state-average calculations [DONE@20200526]
 	  - correct formulation of decimation in lr case,
@@ -168,7 +168,9 @@
 	    - one-dot MPS: |lc>,|cr> [DONE@20200531]
 	    - one-dot Comb: |lr> - special in both directions! [DONE@20200531]
 	    - initial site? [DONE@20200531] 
-	    - two-dot extension 
+	    - two-dot extension: first site, configurations (lc1, lr, c2r, c1r2) 
+	      - elegantly done by combining the wf3 obtained from previous decimation 
+		and an appropriate l/rsite on the optimized bond [DONE@20200601]
 
  202006xx random sampling?
 	  - implement a general sampling algorithm for any comb-tns

@@ -468,4 +468,56 @@ qtensor2 tns::merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
       }  // pcc12
    } // pc1c2
    return qt2;
-}	
+}
+
+// A[l,c1,c2,r]<-A[lr,c1c2]
+qtensor4 tns::split_qt4_qt2_lr_c1c2(const qtensor2& qt2,
+			            const qsym_space& qlx,
+			            const qsym_space& qrx,
+			            const qsym_dpt& dpt1,
+		                    const qsym_space& qc1,
+		                    const qsym_space& qc2,
+			            const qsym_dpt& dpt2){
+   const auto& sym = qt2.sym;
+   const auto& qlr = qt2.qrow;
+   const auto& qc1c2 = qt2.qcol;
+   qtensor4 qt4(sym, qc1, qc2, qlx, qrx);
+   // col
+   for(const auto& pc1c2 : qc1c2){
+      auto qcomb2 = pc1c2.first;
+      for(const auto& pcc12 : dpt2.at(qcomb2)){
+	 auto qcc12 = pcc12.first;
+	 auto qm = qcc12.first;
+	 auto qv = qcc12.second;
+         int mdim = get<0>(pcc12.second);
+         int vdim = get<1>(pcc12.second);
+         int joff = get<2>(pcc12.second);
+	 // row
+	 for(const auto& plr : qlr){
+            auto qcomb1 = plr.first;
+	    for(const auto& plr12 : dpt1.at(qcomb1)){
+	       auto qlr12 = plr12.first;
+	       auto qr = qlr12.first;
+	       auto qc = qlr12.second;
+	       int rdim = get<0>(plr12.second);
+	       int cdim = get<1>(plr12.second);
+	       int ioff = get<2>(plr12.second);
+	       auto& blk4 = qt4.qblocks[make_tuple(qm,qv,qr,qc)];
+	       const auto& blk2 = qt2.qblocks.at(make_pair(qcomb1,qcomb2));
+	       if(blk2.size()>0 && blk4.size()>0){
+		  for(int imv=0; imv<mdim*vdim; imv++){
+		     int j = joff+imv; // im*vdim+iv - in this way, allows to reuse split_c2r()
+		     for(int ic=0; ic<cdim; ic++){
+		        for(int ir=0; ir<rdim; ir++){
+			   int i = ioff+ic*rdim+ir;
+		           blk4[imv](ir,ic) = blk2(i,j); 
+			} // ir
+		     } // ic
+		  } // imv
+	       }
+	    } // plr12
+	 } // plr
+      }  // pcc12
+   } // pc1c2
+   return qt4;
+}

@@ -314,6 +314,15 @@ qtensor3 qtensor2::split_lr(const qsym_space& qlx,
    return split_qt3_qt2_lr(*this, qlx, qrx, dpt);
 }
 
+qtensor4 qtensor2::split_lr_c1c2(const qsym_space& qlx,
+				 const qsym_space& qrx,
+				 const qsym_dpt& dpt1,
+				 const qsym_space& qc1,
+				 const qsym_space& qc2,
+				 const qsym_dpt& dpt2) const{
+   return split_qt4_qt2_lr_c1c2(*this, qlx, qrx, dpt1, qc1, qc2, dpt2); 
+}
+
 // rdm from wf: rdm[r1,r2] += wf[r1,c]*wf[r2,c]^* = M.M^d
 qtensor2 qtensor2::get_rdm_row() const{
    qtensor2 rdm(qsym(0,0), qrow, qrow);

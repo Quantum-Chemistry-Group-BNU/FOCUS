@@ -271,7 +271,16 @@ void tns::decimation_twodot(comb& icomb,
 	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
- 	 //-------------------------------------------------------------------	 
+ 	 //-------------------------------------------------------------------	
+	 // initial guess for next site within the bond
+	 icomb.psi.clear();
+	 for(int i=0; i<vsol.cols(); i++){
+	    wf.from_array(vsol.col(i));
+	    auto wf3 = wf.merge_c2r();
+	    auto cwf = qt2.T().dot(wf3.merge_lc()); // <-W[alpha,r]->
+	    auto psi = cwf.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
+	    icomb.psi.push_back(psi);
+	 }
       }else{
          cout << "renormalize |lr> (comb)" << endl;
 	 for(int i=0; i<vsol.cols(); i++){
@@ -288,7 +297,15 @@ void tns::decimation_twodot(comb& icomb,
 	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
 	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
- 	 //-------------------------------------------------------------------	 
+ 	 //-------------------------------------------------------------------	
+	 // initial guess for next site within the bond
+	 icomb.psi.clear();
+	 for(int i=0; i<vsol.cols(); i++){
+	    wf.from_array(vsol.col(i));
+	    auto cwf = qt2.T().dot(wf.perm_signed().merge_lr_c1c2());
+	    auto psi = cwf.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
+	    icomb.psi.push_back(psi); // psi on branch
+	 }
       }
    }else{
       // update rsites & qr
@@ -309,9 +326,18 @@ void tns::decimation_twodot(comb& icomb,
          assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
          auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
          assert(ovlp.check_identity(1.e-10,false)<1.e-10);
-         //-------------------------------------------------------------------	 
+         //-------------------------------------------------------------------	
+         // initial guess for next site within the bond
+	 icomb.psi.clear();
+	 for(int i=0; i<vsol.cols(); i++){
+	    wf.from_array(vsol.col(i));
+	    auto wf3 = wf.merge_lc1();
+	    auto cwf = wf3.merge_cr().dot(qt2.T()); // <-W[l,alpha]->
+	    auto psi = cwf.split_lc(wf.qrow, wf.qmid, wf.dpt_lc1().second);
+            icomb.psi.push_back(psi);
+	 }
       }else{
-         cout << "renormalize |c1r2> (comb)" << endl;
+         cout << "renormalize |c1c2> (comb)" << endl;
 	 for(int i=0; i<vsol.cols(); i++){
             wf.from_array(vsol.col(i));
 	    if(i == 0){
@@ -326,7 +352,16 @@ void tns::decimation_twodot(comb& icomb,
          assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
          auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
          assert(ovlp.check_identity(1.e-10,false)<1.e-10);
-         //-------------------------------------------------------------------	 
+         //-------------------------------------------------------------------	
+         // initial guess for next site within the bond
+	 icomb.psi.clear();
+	 for(int i=0; i<vsol.cols(); i++){
+	    wf.from_array(vsol.col(i));
+	    auto cwf = wf.perm_signed().merge_lr_c1c2().dot(qt2.T()); 
+	    auto psi = cwf.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
+	    psi = psi.perm_signed();
+            icomb.psi.push_back(psi); // psi on backbone
+	 }
       }
    }
 }

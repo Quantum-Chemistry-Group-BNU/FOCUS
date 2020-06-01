@@ -70,6 +70,9 @@ struct qtensor2{
       qtensor3 split_lc(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
       qtensor3 split_cr(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
       qtensor3 split_lr(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
+      qtensor4 split_lr_c1c2(const qsym_space&, const qsym_space&, const qsym_dpt&,
+		      	     const qsym_space&, const qsym_space&, const qsym_dpt&) const;
+      // row/col dm
       qtensor2 get_rdm_row() const;
       qtensor2 get_rdm_col() const;
    public:
@@ -262,6 +265,13 @@ qtensor2 merge_qt4_qt2_lr_c1c2(const qtensor4& qt4,
 			       const qsym_dpt& dpt1,
 		               const qsym_space& qc1c2,
 			       const qsym_dpt& dpt2); 
+qtensor4 split_qt4_qt2_lr_c1c2(const qtensor2& qt2,
+			       const qsym_space& ql,
+			       const qsym_space& qr,
+			       const qsym_dpt& dpt1,
+			       const qsym_space& qc1,
+			       const qsym_space& qc2,
+			       const qsym_dpt& dpt2);
 
 // --- tensor linear algebra : contractions ---
 qtensor2 contract_qt2_qt2(const qtensor2& qt2a, const qtensor2& qt2b);
