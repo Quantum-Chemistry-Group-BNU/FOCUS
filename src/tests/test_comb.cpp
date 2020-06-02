@@ -72,65 +72,65 @@ int tests::test_comb(){
    comb.topo_read(schd.topology_file);
    comb.topo_init();
    comb.topo_print();
+   
+   schd.create_scratch();
 
    if(!schd.combload){
       comb.rcanon_init(sci_space, vs, schd.thresh_proj);
       comb.rcanon_check(schd.thresh_ortho, ifortho);
+      
+      const double thresh=1.e-6;
+      // check overlap with CI
+      auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
+      ovlp.print("ovlp");
+      // check self-overlap
+      auto Smat = fci::get_Smat(sci_space, vs);
+      Smat.print("Smat");
+      auto Sij = tns::get_Smat(comb, comb);
+      Sij.print("Sij");
+      double diff = normF(Smat-Sij);
+      cout << "diff_Sij=" << diff << endl;
+      if(diff > thresh){
+         cout << "error: diff_Sij > thresh=" << thresh << endl;
+         exit(1);
+      }
+  
+      /* 
+      // check rdm1 & Bpq
+      int k = int1e.sorb;
+      linalg::matrix rdm1(k,k); 
+      fci::get_rdm1(sci_space, vs[0], vs[0], rdm1);
+      rdm1.save("fci_rdm1a");
+      fci::get_rdm1(sci_space, vs[2], vs[0], rdm1);
+      rdm1.save("fci_rdm1b");
+      fci::get_rdm1(sci_space, vs[1], vs[2], rdm1);
+      rdm1.save("fci_rdm1c");
+      */
+
+      // check Hij
+      auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
+      Hmat.print("Hmat",8);
+      Hmat.save("fci_Hmat");
+      auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
+      Hij.print("Hij",8);
+      diff = normF(Hmat-Hij);
+      cout << "diff_Hij=" << diff << endl;
+      if(diff > thresh){ 
+         cout << "error: diff_Hij > thresh=" << thresh << endl;
+         exit(1);
+      }
+   
+      tns::opt_sweep(schd, comb, int2e, int1e, ecore);
       comb.rcanon_save();
+
    }else{
       comb.rcanon_load();
    }
-
-   const double thresh=1.e-6;
-   
-   // check overlap with CI
-   auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
-   ovlp.print("ovlp");
-   
-   // check self-overlap
-   auto Smat = fci::get_Smat(sci_space, vs);
-   Smat.print("Smat");
    auto Sij = tns::get_Smat(comb, comb);
    Sij.print("Sij");
-   double diff = normF(Smat-Sij);
-   cout << "diff_Sij=" << diff << endl;
-   if(diff > thresh){
-      cout << "error: diff_Sij > thresh=" << thresh << endl;
-      exit(1);
-   }
-  
-   /* 
-   // check rdm1 & Bpq
-   int k = int1e.sorb;
-   linalg::matrix rdm1(k,k); 
-   fci::get_rdm1(sci_space, vs[0], vs[0], rdm1);
-   rdm1.save("fci_rdm1a");
-   fci::get_rdm1(sci_space, vs[2], vs[0], rdm1);
-   rdm1.save("fci_rdm1b");
-   fci::get_rdm1(sci_space, vs[1], vs[2], rdm1);
-   rdm1.save("fci_rdm1c");
-   */
-
-   // check energy
-   schd.create_scratch();
-
-   //int1e.set_zeros();
-   //int2e.set_zeros();
-   auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-   Hmat.print("Hmat",8);
-   Hmat.save("fci_Hmat");
-   
    auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
    Hij.print("Hij",8);
-   diff = normF(Hmat-Hij);
-   cout << "diff_Hij=" << diff << endl;
-   if(diff > thresh){ 
-      cout << "error: diff_Hij > thresh=" << thresh << endl;
-      exit(1);
-   }
-   
-   tns::opt_sweep(schd, comb, int2e, int1e, ecore);
-   
+ 
    schd.remove_scratch();
 
    return 0;

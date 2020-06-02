@@ -40,6 +40,42 @@ vector<qtensor2> tns::get_cwf0(const qtensor3& rsite0){
    return cwf0;
 }
 
+qtensor3 tns::get_rsite0(const vector<qtensor3>& psi){
+   int neig = psi.size();
+   qsym sym = psi[0].sym, qvac = qsym(0,0);
+   qsym_space qstates;
+   qstates[sym] = neig;
+   qtensor3 rsite0(qvac,psi[0].qmid,qstates,psi[0].qcol); 
+   // put data into rsite0[n](I,c) = psi[I](n,1,c);
+   for(const auto& pm : rsite0.qmid){
+      auto qm = pm.first;
+      int mdim = pm.second;
+      for(const auto& pr : rsite0.qrow){
+	 auto qr = pr.first;
+	 int rdim = pr.second;
+	 for(const auto& pc : rsite0.qcol){
+	    auto qc = pc.first;
+	    int cdim = pc.second;
+	    auto key = make_tuple(qm,qr,qc);
+	    auto& blk0 = rsite0.qblocks[key];
+	    if(blk0.size() > 0){
+	       for(int m=0; m<mdim; m++){
+	          for(int c=0; c<cdim; c++){
+	             for(int r=0; r<rdim; r++){
+	                blk0[m](r,c) = psi[r].qblocks.at(make_tuple(qm,qvac,qc))[0](0,c);
+	             }
+	          }
+	       }
+	    }
+	 }
+      }
+   }
+   //debug
+   //auto qt2 = contract_qt3_qt3_cr(rsite0,rsite0);
+   //qt2.print("qt2",2);
+   return rsite0;
+}
+
 void tns::initial_onedot(comb& icomb){
    auto& rsite0 = icomb.rsites.at(make_pair(0,0));
    auto& rsite1 = icomb.rsites.at(make_pair(1,0));

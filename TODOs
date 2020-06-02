@@ -171,10 +171,10 @@
 	    - two-dot extension: first site, configurations (lc1, lr, c2r, c1r2) 
 	      - elegantly done by combining the wf3 obtained from previous decimation 
 		and an appropriate l/rsite on the optimized bond [DONE@20200601]
-	  - final result: one-dot wf at the boundary?
-	    - fix bug in small sizeo of Dets
- 
+
  202006xx random sampling?
+	  - final result: one-dot wf at the boundary? [DONE@20200602]
+	  - IO for comb states [DONE@20200602]
 	  - implement a general sampling algorithm for any comb-tns
 	  - generating det according to p(n) for computing Sdiag [hardness of SCI cal]
 

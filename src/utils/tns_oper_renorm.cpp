@@ -94,7 +94,7 @@ void tns::oper_env_right(const comb& bra,
 		         const integral::one_body& int1e,
 			 const string scratch){
    auto t0 = global::get_time();
-   cout << "\ntns::oper_env_right" << endl;
+   cout << "tns::oper_env_right" << endl;
    oper_build_boundary(bra, int2e, int1e, scratch);
    for(int idx=0; idx<bra.rcoord.size(); idx++){
       auto p = bra.rcoord[idx];

@@ -7,6 +7,8 @@ namespace tns{
 
 std::vector<qtensor2> get_cwf0(const qtensor3& rsite0);
 
+qtensor3 get_rsite0(const std::vector<qtensor3>& psi0);
+
 void initial_onedot(comb& icomb);
 
 void initial_twodot(comb& icomb,

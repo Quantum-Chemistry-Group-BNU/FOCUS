@@ -75,7 +75,7 @@ void tns::opt_sweep(const input::schedule& schd,
       timing[isweep] = global::get_duration(tf-ti);
       opt_sweep_print(schd,isweep,icomb,sweeps,sweep_data,timing,eopt,dwt,deff);
    } // isweep
-   opt_finaldot(schd, icomb);
+   opt_finaldot(schd, icomb, int2e, int1e, ecore);
 
    auto t1 = global::get_time();
    cout << "\ntiming for tns::opt_sweep: " << setprecision(2) 
@@ -83,37 +83,24 @@ void tns::opt_sweep(const input::schedule& schd,
 }
 
 void tns::opt_finaldot(const input::schedule& schd,
-		       comb& icomb){
-   cout << "tns::opt_finaldot" << endl;
+		       comb& icomb,
+		       const integral::two_body& int2e,
+	               const integral::one_body& int1e,
+		       const double ecore){
+   cout << "\ntns::opt_finaldot" << endl;
+   // use one dot algorithm to produce a final wavefunction in 
+   // right canonical form stored in icomb.rsites for later usage 
    auto p0 = make_pair(0,0);
    auto p1 = make_pair(1,0);
-   auto forward = false;
-   auto dbond = make_tuple(p0,p1,forward);
-   auto p = forward? p0 : p1;
-   bool cturn = false;
-   qsym_space qc, ql, qr;
-   oper_dict cqops, lqops, rqops;
-   qc = icomb.get_qc(p); 
-   ql = icomb.get_ql(p);
-   qr = icomb.get_qr(p);
-   // wavefunction to be computed
-   int nelec_a = (schd.nelec+schd.twoms)/2;
-   qsym sym_state(schd.nelec,nelec_a);
-   qtensor3 wf(sym_state,qc,ql,qr,{0,1,1,1});
-   cout << " dim=" << wf.get_dim() << endl;
-   auto ta = global::get_time();
-   // load initial guess from previous opt
-   int nsub = wf.get_dim();
-   int neig = schd.nroots;
-   matrix vsol(nsub,neig);
-   for(int i=0; i<neig; i++){
-      icomb.psi[i].to_array(vsol.col(i));
-   }
-   // 3. decimation & renormalize operators
-   int dcut = 4*neig, deff;
-   double dwt, noise = 0.0;
-   decimation_onedot(icomb, dbond, dcut, vsol, wf, dwt, deff,
-		     noise, cqops, lqops, rqops);
+   auto dbond = make_tuple(p0,p1,false);
+   input::sweep_ctrl ctrl = {0, 1, 4*schd.nroots, 1.e-5, 0.0};
+   vector<double> eopt;
+   double dwt;
+   int deff;
+   opt_onedot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, 
+	      eopt, dwt, deff);
+   // convert wfs on the last dot to rsite0
+   icomb.rsites[p0] = get_rsite0(icomb.psi);
 }
 
 void tns::opt_onedot(const input::schedule& schd,
@@ -183,12 +170,6 @@ void tns::opt_onedot(const input::schedule& schd,
    // load initial guess from previous opt
    vector<double> v0(nsub*neig);
    if(icomb.psi.size() == 0) initial_onedot(icomb); 
-   
-   cout << icomb.psi.size() << " " << neig << endl;
-   for(int i=0; i<neig; i++){
-      cout << icomb.psi[0].get_dim() << " " << nsub << endl;
-   }
-
    assert(icomb.psi.size() == neig);
    assert(icomb.psi[0].get_dim() == nsub);
    for(int i=0; i<neig; i++){
