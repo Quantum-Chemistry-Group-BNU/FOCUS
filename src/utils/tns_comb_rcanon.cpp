@@ -31,30 +31,35 @@ void comb::get_rbases(const onspace& space,
          for(int k : rsupport[make_pair(i,j)]) cout << k << " ";
          cout << endl;
       }
-      // 1. generate 1D ordering
-      auto rsupp = rsupport[make_pair(i,j)]; // original order required [IMPORTANT]
-      auto order = support_rest(rsupp);
-      int pos = order.size(); // must be put here to account bipartition position
-      copy(rsupp.begin(), rsupp.end(), back_inserter(order));
-      if(debug){
-         cout << "pos=" << pos << endl;
-	 cout << "order=";
-         for(int k : order) cout << k << " ";
-         cout << endl;
+      if(type[p] == 0){
+         rbases[p] = get_rbasis_phys();
+      }else{
+         // 1. generate 1D ordering
+         auto rsupp = rsupport[p]; // original order required [IMPORTANT]
+         auto order = support_rest(rsupp);
+         int pos = order.size(); // must be put here to account bipartition position
+         copy(rsupp.begin(), rsupp.end(), back_inserter(order));
+         if(debug){
+            cout << "pos=" << pos << endl;
+            cout << "order=";
+            for(int k : order) cout << k << " ";
+            cout << endl;
+         }
+         // 2. transform SCI coefficient
+         onspace space2;
+         vector<vector<double>> vs2;
+         transform_coeff(space, vs, order, space2, vs2); 
+         // 3. bipartition of space
+         tns::product_space pspace2;
+         pspace2.get_pspace(space2, 2*pos);
+         // 4. projection of SCI wavefunction and save renormalized states
+         //    (Schmidt decomposition for single state)
+         auto rbasis = pspace2.right_projection(vs2,thresh_proj);
+         rbases[p] = rbasis;
       }
-      // 2. transform SCI coefficient
-      onspace space2;
-      vector<vector<double>> vs2;
-      transform_coeff(space, vs, order, space2, vs2); 
-      // 3. bipartition of space
-      tns::product_space pspace2;
-      pspace2.get_pspace(space2, 2*pos);
-      // 4. projection of SCI wavefunction and save renormalized states
-      //    (Schmidt decomposition for single state)
-      auto rbasis = pspace2.right_projection(vs2,thresh_proj);
-      rbases[p] = rbasis;
       // debug
       {
+	 auto& rbasis = rbases[p];
 	 int nbas = 0, ndim = 0;
          for(int k=0; k<rbasis.size(); k++){
 	    if(debug) rbasis[k].print("rsec_"+to_string(k));
@@ -237,25 +242,21 @@ void comb::rcanon_init(const onspace& space,
 	 rt.qmid = phys_qsym_space;
 	 pair<int,int> p0;
 	 if(type[p] == 1){
-	    //       n      
-	    //      \|/      
-	    //    -<-*-<-|r> 
+	    //     n      
+	    //    \|/      
+	    //  -<-*-<-|r> 
 	    if(debug) cout << "type 1: physical site on backbone" << endl;
 	    p0 = make_pair(i+1,0);
 	 }else if(type[p] == 2){
-	    //      |u>
-	    //      \|/
-	    //   n-<-*
-	    //      \|/
+	    //     |u>
+	    //     \|/
+	    //  n-<-*
+	    //     \|/
 	    if(debug) cout << "type 2: physical site on branch" << endl;
 	    p0 = make_pair(i,j+1);
 	 }
-         renorm_basis rbasis1; 
-	 if(type[p] == 0){
-	    rbasis1 = get_rbasis_phys(); // we use exact repr. for this bond 
-	 }else{
-	    rbasis1 = rbases[p0];
-	 }
+	 // load rbasis for previous site
+	 auto& rbasis1 = rbases[p0];
 	 // loop over symmetry blocks of out index 
 	 for(int k=0; k<rbasis.size(); k++){
 	    auto sym = rbasis[k].sym;

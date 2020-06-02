@@ -72,7 +72,7 @@
  20200410 question: what types of configurations 
 		    are relevant for S-T gap in Fe2S2???
 
---- Comb TNS ---
+--- Comb TNS : basic functionalities ---
 
  20200417 Comb structure [topology/coord/support/sweep]
 
@@ -171,29 +171,36 @@
 	    - two-dot extension: first site, configurations (lc1, lr, c2r, c1r2) 
 	      - elegantly done by combining the wf3 obtained from previous decimation 
 		and an appropriate l/rsite on the optimized bond [DONE@20200601]
-
+	  - final result: one-dot wf at the boundary?
+	    - fix bug in small sizeo of Dets
+ 
  202006xx random sampling?
 	  - implement a general sampling algorithm for any comb-tns
 	  - generating det according to p(n) for computing Sdiag [hardness of SCI cal]
 
- 202006xx an OPTIMIZED version:
-	  - documentation of each step in formula & diagrams
-	  - prepare benchmark data
-	  - faster low-level implementation: 
-	    - benchmarking scalability
-	    - preconstruction of P/Q from A/B to accelerate efficiency in H*v?
-	    - better data structure
- 	  - parallelizaiton: 
-	    - different sweep schedule [backbone & branch] 
-	    - naturally leads to branch-based parallelization!!!
-	  - large-scale applications: fe2s2/fe4s4/fe8s7/femoco?
+--- Comb TNS : code optimization ---
+
+ 2020xxxx documentation of each step in formula & diagrams [considering complex case]
+ 2020xxxx faster low-level implementation [IMPORTANT for efficiency] 
+ 	  - simplification of the code 
+ 	  - better data structure
+ 	  - benchmarking scalability for large systems
+ 	  - preconstruction of P/Q from A/B to accelerate efficiency in H*v?
+ 2020xxxx parallelizaiton [See Chan2004] 
+ 	  - different sweep schedule [backbone & branch] 
+ 	  - naturally leads to branch-based parallelization!!!
+ 2020xxxx fullrestart from previous sweep?
+ 2020xxxx large-scale applications: fe2s2/fe4s4/fe8s7/femoco?
+	  - measuring Sd for different systems,
+	    some of which are challenging for SCI+PT!
 
 --- Advanced functionalities ---
 
- 2020xxxx implement 2-rdms: restarted from fully converged comb state
+ 2020xxxx implement 2-rdms: following DMRG implementation [Chan2008] 
+ 	  - restarted from fully converged one-dot comb state 
 
  2020xxxx complex version: relativistic SCI/DMRG
-	  - may require a redesign of low-level functionalities (including SCI)
+	  - redesign of low-level functionalities (e.g., SCI/matrix/qtensor2,3,4)
 	  - implementation of time-reversal symmetry for efficiency? 
  	  - g-tensor [IMPORTANT!!! - appliable for quantum computation] 
 		      <Psi|sigma K|Psi>? G-matrix;
@@ -201,7 +208,9 @@
 		      For VQE this can be made symmetric,
 		      <0|(U1d*H*U2)|0> - Hardmard test]
 
- 2020xxxx operator compression?
+ 2020xxxx operator compression or screening?
+	  - scale up to D=5000-10000 may become advantagous! 
+	  - using SVD format for operator block?
 
 --- FUTURE ---
 

@@ -14,6 +14,9 @@ void opt_sweep(const input::schedule& schd,
 	       const integral::one_body& int1e,
 	       const double ecore);
 
+void opt_finaldot(const input::schedule& schd,
+		  comb& icomb);
+
 void opt_onedot(const input::schedule& schd,
    	        const input::sweep_ctrl& ctrl,
 	        comb& icomb, 
