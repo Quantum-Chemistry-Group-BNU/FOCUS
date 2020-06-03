@@ -203,7 +203,7 @@ qtensor3 comb::get_rbsite() const{
 }
 
 qtensor3 comb::get_lbsite() const{
-   vector<bool> dir = {0,1,1,0};
+   vector<bool> dir = {1,1,0};
    qtensor3 qt3(qsym(0,0),phys_qsym_space,vac_qsym_space,phys_qsym_space,dir);
    for(int k=0; k<4; k++){
       auto key = make_tuple(phys_sym[k],phys_sym[0],phys_sym[k]);

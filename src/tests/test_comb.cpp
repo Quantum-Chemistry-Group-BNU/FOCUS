@@ -133,5 +133,17 @@ int tests::test_comb(){
  
    schd.remove_scratch();
 
+   // check with SCI
+   auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
+   ovlp.print("ovlp");
+   // random
+   int nsample = 5.e5;
+   for(int i=0; i<nroot; i++){
+      double Sd = comb.rcanon_sampling_Sd(nsample,i);
+      cout << "istate=" << i << " Sd(estimate)=" << Sd << endl;
+   }
+   exit(1);
+   comb.rcanon_sampling_check();
+
    return 0;
 }

@@ -1,4 +1,5 @@
 #include "../core/linalg.h"
+#include "../core/analysis.h"
 #include "tns_comb.h" 
 #include "tns_qtensor.h"
 #include "tns_oper.h"
@@ -10,6 +11,8 @@ using namespace fock;
 
 // <det|Comb[n]> by contracting the Comb
 vector<double> comb::rcanon_CIcoeff(const onstate& state){
+   int n = rsites[make_pair(0,0)].get_dim_row();
+   vector<double> coeff(n,0.0);
    // compute fermionic sign changes
    auto sgn = state.permute_sgn(image2);
    // compute <n'|Comb> by contracting all sites
@@ -27,7 +30,9 @@ vector<double> comb::rcanon_CIcoeff(const onstate& state){
 	 qsym sym_p(na+nb,na);
          sym_l = sym_p + sym_r;
 	 auto key = make_tuple(sym_p,sym_l,sym_r);
-	 matrix mat = rsites[p].qblocks[key][0];
+	 auto& blk = rsites[p].qblocks[key];
+	 if(blk.size() == 0) return coeff; // in case comb does not encode this det
+	 matrix& mat = blk[0]; // as physical dimension for each fixed sym_p is 1
 	 if(i==nbackbone-1){
 	    mat_r = mat;
          }else{
@@ -44,7 +49,9 @@ vector<double> comb::rcanon_CIcoeff(const onstate& state){
 	    qsym sym_p(na+nb,na);
 	    sym_d = sym_p + sym_u;
 	    auto key = make_tuple(sym_p,sym_d,sym_u);
-	    matrix mat = rsites[make_pair(i,j)].qblocks[key][0];
+	    auto& blk = rsites[make_pair(i,j)].qblocks[key];
+	    if(blk.size() == 0) return coeff;
+	    matrix& mat = blk[0];
 	    if(j==topo[i].size()-1){
 	       mat_u = mat;
 	    }else{
@@ -56,6 +63,7 @@ vector<double> comb::rcanon_CIcoeff(const onstate& state){
 	 sym_l = sym_u + sym_r;
 	 auto key = make_tuple(sym_u,sym_l,sym_r);
 	 auto& blk = rsites[p].qblocks[key];
+	 if(blk.size() == 0) return coeff;
 	 int dim_l = blk[0].rows(); 
 	 int dim_r = blk[0].cols();
 	 matrix mat(dim_l,dim_r);
@@ -70,9 +78,7 @@ vector<double> comb::rcanon_CIcoeff(const onstate& state){
 	 sym_r = sym_l;
       } // tp
    } // j
-   int n = rsites[make_pair(0,0)].get_dim_row();
    assert(mat_r.cols() == 1 && mat_r.rows() == n);
-   vector<double> coeff(n);
    for(int j=0; j<n; j++){
       coeff[j] = sgn*mat_r(j,0);
    }

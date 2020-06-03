@@ -13,9 +13,9 @@ using namespace tns;
 qtensor2 tns::contract_qt2_qt2(const qtensor2& qt2a, 
 			       const qtensor2& qt2b){
    qsym sym = qt2a.sym + qt2b.sym;
-   assert(qt2a.dir[2] == !qt2b.dir[1]);
+   assert(qt2a.dir[1] == !qt2b.dir[0]);
    assert(qt2a.get_dim_col() == qt2b.get_dim_row());
-   vector<bool> dir = {0, qt2a.dir[1], qt2b.dir[2]};
+   vector<bool> dir = {qt2a.dir[0], qt2b.dir[1]};
    qtensor2 qt2(sym, qt2a.qrow, qt2b.qcol, dir); 
    for(const auto& pr : qt2.qrow){
       const qsym& qr = pr.first;
@@ -48,9 +48,9 @@ qtensor2 tns::contract_qt2_qt2(const qtensor2& qt2a,
 qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a, 
 				 const qtensor2& qt2b){
    qsym sym = qt3a.sym + qt2b.sym;
-   assert(qt3a.dir[2] == !qt2b.dir[2] );
+   assert(qt3a.dir[1] == !qt2b.dir[1] );
    assert(qt3a.get_dim_row() == qt2b.get_dim_col());
-   vector<bool> dir = {0, qt3a.dir[1], qt2b.dir[1], qt3a.dir[3]};
+   vector<bool> dir = {qt3a.dir[0], qt2b.dir[0], qt3a.dir[2]};
    qtensor3 qt3(sym, qt3a.qmid, qt2b.qrow, qt3a.qcol, dir);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
@@ -93,9 +93,9 @@ qtensor3 tns::contract_qt3_qt2_l(const qtensor3& qt3a,
 qtensor3 tns::contract_qt3_qt2_c(const qtensor3& qt3a, 
 			 	 const qtensor2& qt2b){
    qsym sym = qt3a.sym + qt2b.sym;
-   assert(qt3a.dir[1] == !qt2b.dir[2]);
+   assert(qt3a.dir[0] == !qt2b.dir[1]);
    assert(qt3a.get_dim_mid() == qt2b.get_dim_col());
-   vector<bool> dir = {0, qt2b.dir[1], qt3a.dir[2], qt3a.dir[3]};
+   vector<bool> dir = {qt2b.dir[0], qt3a.dir[1], qt3a.dir[2]};
    qtensor3 qt3(sym, qt2b.qrow, qt3a.qrow, qt3a.qcol, dir);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
@@ -148,9 +148,9 @@ qtensor3 tns::contract_qt3_qt2_r0(const qtensor3& qt3a,
 qtensor3 tns::contract_qt3_qt2_r(const qtensor3& qt3a, 
 				 const qtensor2& qt2b){
    qsym sym = qt3a.sym + qt2b.sym;
-   assert(qt3a.dir[3] == !qt2b.dir[2]); // each line is associated with one dir
+   assert(qt3a.dir[2] == !qt2b.dir[1]); // each line is associated with one dir
    assert(qt3a.get_dim_col() == qt2b.get_dim_col());
-   vector<bool> dir = {0, qt3a.dir[1], qt3a.dir[2], qt2b.dir[1]};
+   vector<bool> dir = {qt3a.dir[0], qt3a.dir[1], qt2b.dir[0]};
    qtensor3 qt3(sym, qt3a.qmid, qt3a.qrow, qt2b.qrow, dir);
    // loop over external indices
    for(const auto& pm : qt3.qmid){
@@ -315,5 +315,33 @@ qtensor2 tns::contract_qt3_qt3_lr(const qtensor3& qt3a,
 	 //---------------------------------- 
       } // qc
    } // qr
+   return qt2;
+}
+
+// used in sampling with RCF v[l]*R[n,l,r]=>w[n,r]
+qtensor2 tns::contract_qt3_vec_l(const qtensor3& qt3a, 
+			         const qsym& sym_l, 
+			         const matrix& vec_l){
+   assert(qt3a.sym == qsym(0,0));
+   qsym sym = qt3a.sym + sym_l;
+   vector<bool> dir = {1,1};
+   qtensor2 qt2(sym, qt3a.qmid, qt3a.qcol, dir);
+   for(const auto& pm : qt3a.qmid){
+      auto qm = pm.first;
+      int mdim = pm.second;
+      for(const auto& pc : qt3a.qcol){ 
+	 auto qc = pc.first;
+	 int cdim = pc.second;
+	 auto& blk = qt2.qblocks[make_pair(qm,qc)];
+	 auto& blk0 = qt3a.qblocks.at(make_tuple(qm,sym_l,qc));
+	 if(blk.size() == 0 || blk0.size() == 0) continue;
+	 for(int m=0; m<mdim; m++){
+	    auto mat = dgemm("N","N",vec_l,blk0[m]); // (1,c)
+	    for(int c=0; c<cdim; c++){
+	       blk(m,c) = mat(0,c);
+	    }
+         }
+      }
+   }
    return qt2;
 }

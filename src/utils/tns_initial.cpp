@@ -10,7 +10,8 @@ vector<qtensor2> tns::get_cwf0(const qtensor3& rsite0){
    int neig = it->second;
    vector<qtensor2> cwf0;
    for(int i=0; i<neig; i++){
-      qtensor2 qt2(sym,rsite0.qmid,rsite0.qcol,{0,1,1});
+      vector<bool> dir = {1,1};
+      qtensor2 qt2(sym,rsite0.qmid,rsite0.qcol,dir);
       cwf0.push_back(qt2);
    }
    // put data into cwf0[I](n,c) = R0[n](I,c)
@@ -43,8 +44,7 @@ vector<qtensor2> tns::get_cwf0(const qtensor3& rsite0){
 qtensor3 tns::get_rsite0(const vector<qtensor3>& psi){
    int neig = psi.size();
    qsym sym = psi[0].sym, qvac = qsym(0,0);
-   qsym_space qstates;
-   qstates[sym] = neig;
+   qsym_space qstates = {{sym,neig}};
    qtensor3 rsite0(qvac,psi[0].qmid,qstates,psi[0].qcol); 
    // put data into rsite0[n](I,c) = psi[I](n,1,c);
    for(const auto& pm : rsite0.qmid){

@@ -118,7 +118,7 @@ qtensor2 qtensor2::T() const{
 // 	       while maintaining their directions
 qtensor2 qtensor2::P() const{
    qtensor2 qt2;
-   qt2.dir = {dir[0],dir[2],dir[1]}; 
+   qt2.dir = {dir[1],dir[0]}; 
    qt2.sym = sym;
    qt2.qrow = qcol;
    qt2.qcol = qrow;

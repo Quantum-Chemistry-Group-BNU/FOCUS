@@ -139,7 +139,8 @@ void tns::opt_onedot(const input::schedule& schd,
    // wavefunction to be computed
    int nelec_a = (schd.nelec+schd.twoms)/2;
    qsym sym_state(schd.nelec,nelec_a);
-   qtensor3 wf(sym_state,qc,ql,qr,{0,1,1,1});
+   vector<bool> dir = {1,1,1};
+   qtensor3 wf(sym_state,qc,ql,qr,dir);
    cout << " dim=" << wf.get_dim() << info << endl;
    auto ta = global::get_time();
 

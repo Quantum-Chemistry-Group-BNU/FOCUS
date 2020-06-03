@@ -17,13 +17,15 @@ void fock::coeff_population(const onspace& space,
    cout << "  i-th  /  idx  /  coeff  /  rank  /  seniority  /  onstate  /  nelec" << endl;
    cout << setprecision(12);
    double ne = 0.0, na = 0.0, nb = 0.0;
-   double pi, psum = 0.0, psum1 = 0.0;
+   double pi, psum = 0.0, psum1 = 0.0, Sd = 0.0;
+   const double cutoff = 1.e-12;
    vector<int> idx;
    idx = tools::sort_index_abs(civec, 1);
    int j = 0;
    for(const auto& i : idx){ 
       pi = pow(civec[i],2);
       psum += pi;
+      Sd += (pi < cutoff)? 0.0 : -pi*log2(pi);
       // Measurement in Z-basis 
       ne += pi*space[i].nelec();
       na += pi*space[i].nelec_a();
@@ -43,8 +45,11 @@ void fock::coeff_population(const onspace& space,
 	 j++;
       }
    }
-   cout << "psum=" << psum << " psum1=" << psum1 << endl;
-   cout << "(Ne,Na,Nb)=" << ne << "," 
+   cout << "psum=" << psum 
+	<< " psum1=" << psum1 
+	<< " Sd=" << Sd
+        << endl;
+   cout << "<Ne,Na,Nb>=" << ne << "," 
 	   		 << na << "," 
 			 << nb << endl; 
 }

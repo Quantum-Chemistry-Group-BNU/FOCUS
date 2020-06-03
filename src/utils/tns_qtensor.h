@@ -33,7 +33,7 @@ struct qtensor2{
       qtensor2(const qsym& sym1, 
 	       const qsym_space& qrow1, 
 	       const qsym_space& qcol1,
-	       const std::vector<bool> dir1={0,1,0});
+	       const std::vector<bool> dir1={1,0});
       // useful functions
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
@@ -61,9 +61,9 @@ struct qtensor2{
       int get_dim() const;
       // symmetry conservation rule [20200515]
       bool ifconserve(const qsym& qr, const qsym& qc) const{
-	 auto qsum = dir[0] ? sym : -sym;
-	 qsum += dir[1] ? qr : -qr;
-	 qsum += dir[2] ? qc : -qc;
+	 auto qsum = -sym; // in
+	 qsum += dir[0] ? qr : -qr;
+	 qsum += dir[1] ? qc : -qc;
 	 return qsum == qsym(0,0); 
       }
       // decimation
@@ -76,8 +76,8 @@ struct qtensor2{
       qtensor2 get_rdm_row() const;
       qtensor2 get_rdm_col() const;
    public:
-      std::vector<bool> dir = {0,1,0}; // {in,out,in} by usual convention in diagrams
-      qsym sym; // <row|op|col>
+      std::vector<bool> dir = {1,0}; // {out,in} by usual convention in diagrams
+      qsym sym; // <row|op[in]|col> 
       qsym_space qrow;
       qsym_space qcol;
       std::map<std::pair<qsym,qsym>,linalg::matrix> qblocks;
@@ -106,7 +106,7 @@ struct qtensor3{
 	       const qsym_space& qmid1,
 	       const qsym_space& qrow1, 
 	       const qsym_space& qcol1,
-	       const std::vector<bool> dir1={0,1,0,1});
+	       const std::vector<bool> dir1={1,0,1});
       inline int get_dim_mid() const{ return qsym_space_dim(qmid); }
       inline int get_dim_row() const{ return qsym_space_dim(qrow); }
       inline int get_dim_col() const{ return qsym_space_dim(qcol); }
@@ -131,10 +131,10 @@ struct qtensor3{
       void to_array(double* array) const; 
       // symmetry conservation rule [20200510]
       bool ifconserve(const qsym& qm, const qsym& qr, const qsym& qc) const{
-	 auto qsum = dir[0] ? sym : -sym;
-	 qsum += dir[1] ? qm : -qm;
-	 qsum += dir[2] ? qr : -qr;
-	 qsum += dir[3] ? qc : -qc;
+	 auto qsum = -sym;
+	 qsum += dir[0] ? qm : -qm;
+	 qsum += dir[1] ? qr : -qr;
+	 qsum += dir[2] ? qc : -qc;
 	 return qsum == qsym(0,0); 
       }
       // decimation
@@ -149,12 +149,12 @@ struct qtensor3{
       qtensor4 split_lc1(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
       qtensor4 split_c2r(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
    public:
-      std::vector<bool> dir = {0,1,0,1}; // =0,in; =1,out; {sym,mid,row,col}
-      				         // {0,1,0,1} default RCF
-      				         // {0,1,1,0} - LCF
-					 // {0,0,1,1} - CCF (for internal upward node)
-					 // {0,1,1,1} - WF
-      qsym sym; 
+      std::vector<bool> dir = {1,0,1}; // =0,in; =1,out; {mid,row,col}
+      				       // {1,0,1} - RCF (default)
+      				       // {1,1,0} - LCF
+				       // {0,1,1} - CCF (for internal upward node)
+				       // {1,1,1} - WF
+      qsym sym; // in 
       qsym_space qmid; 
       qsym_space qrow; 
       qsym_space qcol; 
@@ -205,7 +205,7 @@ struct qtensor4{
       qtensor2 merge_lr_c1c2() const;
       qtensor4 perm_signed() const; // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}
    public:
-      //std::vector<bool> dir = {0,1,1,1,1}; // {in,out,out,out,out}
+      //std::vector<bool> dir = {1,1,1,1}; // {out,out,out,out}
       qsym sym; 
       qsym_space qmid; 
       qsym_space qver;
@@ -282,6 +282,10 @@ qtensor3 contract_qt3_qt2_r0(const qtensor3& qt3a, const qtensor2& qt2b);
 qtensor2 contract_qt3_qt3_lc(const qtensor3& qt3a, const qtensor3& qt3b);
 qtensor2 contract_qt3_qt3_cr(const qtensor3& qt3a, const qtensor3& qt3b);
 qtensor2 contract_qt3_qt3_lr(const qtensor3& qt3a, const qtensor3& qt3b);
+// used in sampling with RCF
+qtensor2 contract_qt3_vec_l(const qtensor3& qt3a, 
+			    const qsym& sym_l, 
+			    const linalg::matrix& vec_l); 
 
 } // tns
 
