@@ -1,3 +1,4 @@
+#include "../settings/global.h"
 #include "../core/linalg.h"
 #include "../core/analysis.h"
 #include "../core/tools.h"
@@ -98,6 +99,7 @@ pair<onstate,double> comb::rcanon_sampling(const int istate){
 double comb::rcanon_sampling_Sd(const int nsample, const int istate, const int nprt){
    const double cutoff = 1.e-12;
    cout << "\ncomb::rcanon_sampling_Sd nsample=" << nsample << " istate=" << istate << endl;
+   auto t0 = global::get_time();
    int noff = nsample/10;
    double Sd = 0.0;
    double Sd2 = 0.0;
@@ -113,10 +115,14 @@ double comb::rcanon_sampling_Sd(const int nsample, const int istate, const int n
       Sd2 = (Sd2*i + s*s)*fac;
       if((i+1)%noff == 0){
 	 double std = sqrt((Sd2-Sd*Sd)/(i+1.e-10));
+         auto t1 = global::get_time();
+	 double dt = global::get_duration(t1-t0);
          cout << "i=" << i 
  	      << " Sd=" << Sd
 	      << " std=" << std
+	      << " timing=" << dt << " s"
 	      << endl;	      
+         t0 = global::get_time();
       }
    }
    if(nprt > 0){

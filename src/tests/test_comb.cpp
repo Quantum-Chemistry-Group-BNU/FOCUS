@@ -140,8 +140,8 @@ int tests::test_comb(){
    int nsample = 1.e5, istate = 0, nprt = 10;
    double Sd = comb.rcanon_sampling_Sd(nsample,istate,nprt);
    cout << "istate=" << istate << " Sd(estimate)=" << Sd << endl;
-   // small system - exact computation
-   comb.rcanon_sampling_check(istate);
+   // only for small system - exact computation
+   //comb.rcanon_sampling_check(istate);
 
    return 0;
 }
