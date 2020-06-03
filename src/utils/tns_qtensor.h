@@ -148,6 +148,8 @@ struct qtensor3{
       // split
       qtensor4 split_lc1(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
       qtensor4 split_c2r(const qsym_space&, const qsym_space&, const qsym_dpt&) const;
+      // for random sampling
+      qtensor2 fix_qphys(const qsym& sym_p) const;
    public:
       std::vector<bool> dir = {1,0,1}; // =0,in; =1,out; {mid,row,col}
       				       // {1,0,1} - RCF (default)

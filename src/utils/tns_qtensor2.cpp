@@ -41,27 +41,26 @@ void qtensor2::print(const string msg, const int level) const{
    cout << endl; 
    qsym_space_print(qrow,"qrow");
    qsym_space_print(qcol,"qcol");
-   if(level >= 1){
-      cout << "qblocks: nblocks=" << qblocks.size() << endl;
-      int nnz = 0;
-      for(const auto& p : qblocks){
-         auto& t = p.first;
-         auto& m = p.second;
-         auto sym_row = get<0>(t);
-         auto sym_col = get<1>(t);
-         if(m.size() > 0){
-            nnz++;
+   // qblocks
+   cout << "qblocks: nblocks=" << qblocks.size() << endl;
+   int nnz = 0;
+   for(const auto& p : qblocks){
+      auto& t = p.first;
+      auto& m = p.second;
+      auto sym_row = get<0>(t);
+      auto sym_col = get<1>(t);
+      if(m.size() > 0){
+         nnz++;
+         if(level >= 1){
             cout << "idx=" << nnz 
-		 << " block[" << sym_row << "," << sym_col << "]"
+     	         << " block[" << sym_row << "," << sym_col << "]"
                  << " rows,cols=(" << m.rows() << "," << m.cols() << ")"
-                 << endl; 
-            if(level >= 2){
-               m.print("mat");
-            } // level=2
-         }
-      }
-      cout << "total no. of nonzero blocks=" << nnz << endl;
-   } // level=1
+                 << endl;
+            if(level >= 2) m.print("mat");
+	 } // level=2 
+      } // level>=1
+   }
+   cout << "total no. of nonzero blocks=" << nnz << endl;
 }
 
 matrix qtensor2::to_matrix() const{

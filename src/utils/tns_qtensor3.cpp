@@ -114,19 +114,20 @@ void qtensor3::print(const string msg, const int level) const{
    qsym_space_print(qmid,"qmid");
    qsym_space_print(qrow,"qrow");
    qsym_space_print(qcol,"qcol");
-   if(level >= 1){
-      cout << "qblocks: nblocks=" << qblocks.size() << endl;
-      int nnz = 0;
-      for(const auto& p : qblocks){
-         auto& t = p.first;
-         auto& m = p.second;
-         auto sym_mid = get<0>(t);
-         auto sym_row = get<1>(t);
-         auto sym_col = get<2>(t);
-         if(m.size() > 0){
-            nnz++;
+   // qblocks
+   cout << "qblocks: nblocks=" << qblocks.size() << endl;
+   int nnz = 0;
+   for(const auto& p : qblocks){
+      auto& t = p.first;
+      auto& m = p.second;
+      auto sym_mid = get<0>(t);
+      auto sym_row = get<1>(t);
+      auto sym_col = get<2>(t);
+      if(m.size() > 0){
+         nnz++;
+         if(level >= 1){
             cout << "idx=" << nnz 
-		 << " block[" << sym_mid << "," << sym_row << "," << sym_col << "]"
+     	         << " block[" << sym_mid << "," << sym_row << "," << sym_col << "]"
                  << " size=" << m.size() 
                  << " rows,cols=(" << m[0].rows() << "," << m[0].cols() << ")" 
                  << endl; 
@@ -135,10 +136,10 @@ void qtensor3::print(const string msg, const int level) const{
                   m[i].print("mat"+to_string(i));
                }
             } // level=2
-         }
+	 } // level>=1
       }
-      cout << "total no. of nonzero blocks=" << nnz << endl;
-   } // level=1
+   }
+   cout << "total no. of nonzero blocks=" << nnz << endl;
 }
 
 // simple operations
@@ -339,4 +340,22 @@ qtensor4 qtensor3::split_c2r(const qsym_space& qc2,
 			     const qsym_space& qrx,
 			     const qsym_dpt& dpt) const{
    return split_qt4_qt3_c2r(*this, qc2, qrx, dpt);
+}
+
+// for random sampling
+qtensor2 qtensor3::fix_qphys(const qsym& sym_p) const{
+   assert(dir[0] == true); // out
+   assert(qmid.at(sym_p) == 1); // 1d
+   qsym sym1 = sym-sym_p; // merged
+   vector<bool> dir1 = {dir[1], dir[2]};
+   qtensor2 qt2(sym1, qrow, qcol, dir1);
+   for(const auto& pr : qrow){
+      const auto& qr = pr.first;
+      for(const auto& pc : qcol){
+         const auto& qc = pc.first;
+	 auto& blk0 = qblocks.at(make_tuple(sym_p,qr,qc));
+	 if(blk0.size() > 0) qt2.qblocks[make_pair(qr,qc)] = blk0[0];
+      }
+   }
+   return qt2;
 }

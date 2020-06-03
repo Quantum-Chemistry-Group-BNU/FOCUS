@@ -50,21 +50,22 @@ void qtensor4::print(const string msg, const int level) const{
    qsym_space_print(qver,"qver");
    qsym_space_print(qrow,"qrow");
    qsym_space_print(qcol,"qcol");
-   if(level >= 1){
-      cout << "qblocks: nblocks=" << qblocks.size() << endl;
-      int nnz = 0;
-      for(const auto& p : qblocks){
-         auto& t = p.first;
-         auto& m = p.second;
-         auto sym_mid = get<0>(t);
-         auto sym_ver = get<1>(t);
-         auto sym_row = get<2>(t);
-         auto sym_col = get<3>(t);
-         if(m.size() > 0){
-            nnz++;
+   // qblocks
+   cout << "qblocks: nblocks=" << qblocks.size() << endl;
+   int nnz = 0;
+   for(const auto& p : qblocks){
+      auto& t = p.first;
+      auto& m = p.second;
+      auto sym_mid = get<0>(t);
+      auto sym_ver = get<1>(t);
+      auto sym_row = get<2>(t);
+      auto sym_col = get<3>(t);
+      if(m.size() > 0){
+         nnz++;
+         if(level >= 1){
             cout << "idx=" << nnz 
-		 << " block[" << sym_mid << "," << sym_ver << "," 
-		 	      << sym_row << "," << sym_col << "]"
+     	         << " block[" << sym_mid << "," << sym_ver << "," 
+     	    	 << sym_row << "," << sym_col << "]"
                  << " size=" << m.size() 
                  << " rows,cols=(" << m[0].rows() << "," << m[0].cols() << ")" 
                  << endl; 
@@ -73,10 +74,10 @@ void qtensor4::print(const string msg, const int level) const{
                   m[i].print("mat"+to_string(i));
                }
             } // level=2
-         }
+	 } // level>=1
       }
-      cout << "total no. of nonzero blocks=" << nnz << endl;
-   } // level=1
+   }
+   cout << "total no. of nonzero blocks=" << nnz << endl;
 }
       
 // simple operations

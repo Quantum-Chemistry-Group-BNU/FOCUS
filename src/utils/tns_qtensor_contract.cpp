@@ -193,7 +193,8 @@ qtensor2 tns::contract_qt3_qt3_lc(const qtensor3& qt3a,
 				  const qtensor3& qt3b){
    assert(qt3a.get_dim_row() == qt3b.get_dim_row());
    assert(qt3a.get_dim_mid() == qt3b.get_dim_mid());
-   qsym sym = qt3a.sym + qt3b.sym;
+   assert(qt3a.dir == qt3b.dir); // bra dir fliped
+   qsym sym = -qt3a.sym + qt3b.sym;
    qtensor2 qt2(sym, qt3a.qcol, qt3b.qcol); 
    // loop over external indices
    for(const auto& pr : qt2.qrow){
@@ -236,7 +237,8 @@ qtensor2 tns::contract_qt3_qt3_cr(const qtensor3& qt3a,
 				  const qtensor3& qt3b){
    assert(qt3a.get_dim_mid() == qt3b.get_dim_mid());
    assert(qt3a.get_dim_col() == qt3b.get_dim_col());
-   qsym sym = qt3a.sym + qt3b.sym;
+   assert(qt3a.dir == qt3b.dir); // bra dir fliped
+   qsym sym = -qt3a.sym + qt3b.sym;
    qtensor2 qt2(sym, qt3a.qrow, qt3b.qrow);
    // loop over external indices
    for(const auto& pr : qt2.qrow){
@@ -281,7 +283,8 @@ qtensor2 tns::contract_qt3_qt3_lr(const qtensor3& qt3a,
 				  const qtensor3& qt3b){
    assert(qt3a.get_dim_row() == qt3b.get_dim_row());
    assert(qt3a.get_dim_col() == qt3b.get_dim_col());
-   qsym sym = qt3a.sym + qt3b.sym;
+   assert(qt3a.dir == qt3b.dir); // bra dir fliped
+   qsym sym = -qt3a.sym + qt3b.sym;
    qtensor2 qt2(sym, qt3a.qmid, qt3b.qmid);
    // loop over external indices
    for(const auto& pr : qt2.qrow){

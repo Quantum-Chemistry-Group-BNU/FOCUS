@@ -82,11 +82,11 @@ class comb{
       linalg::matrix rcanon_CIovlp(const fock::onspace& space,
 		                   const std::vector<std::vector<double>>& vs);
       // sampling of Comb state to get {|det>,p(det)=|<det|Psi[i]>|^2}
-      std::pair<fock::onstate,double> rcanon_sampling(const int istate=0);
+      std::pair<fock::onstate,double> rcanon_sampling(const int istate);
       // sampling approach for estimating Sd
-      double rcanon_sampling_Sd(const int nsample, const int istate=0);
+      double rcanon_sampling_Sd(const int nsample, const int istate, const int nprt=0);
       // check by explict list all dets in the FCI space
-      void rcanon_sampling_check(const int istate=0);
+      void rcanon_sampling_check(const int istate);
    public:
       int nbackbone, nphysical, ninternal, nboundary, ntotal;
       int iswitch = -1; // i<=iswitch size_lsupp<size_rsupp;

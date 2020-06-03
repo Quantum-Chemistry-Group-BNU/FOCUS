@@ -137,13 +137,11 @@ int tests::test_comb(){
    auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
    ovlp.print("ovlp");
    // random
-   int nsample = 5.e5;
-   for(int i=0; i<nroot; i++){
-      double Sd = comb.rcanon_sampling_Sd(nsample,i);
-      cout << "istate=" << i << " Sd(estimate)=" << Sd << endl;
-   }
-   exit(1);
-   comb.rcanon_sampling_check();
+   int nsample = 1.e5, istate = 0, nprt = 10;
+   double Sd = comb.rcanon_sampling_Sd(nsample,istate,nprt);
+   cout << "istate=" << istate << " Sd(estimate)=" << Sd << endl;
+   // small system - exact computation
+   comb.rcanon_sampling_check(istate);
 
    return 0;
 }
