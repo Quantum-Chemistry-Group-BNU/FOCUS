@@ -26,14 +26,15 @@ else
 	LFLAGS = -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 	
 endif
 
+SRC = src
 BIN_DIR = ./bin
 OBJ_DIR = ./obj
 # all dependence
-SRC_DIR0 = ./src/settings
-SRC_DIR1 = ./src/io
-SRC_DIR2 = ./src/core
-SRC_DIR3 = ./src/tests
-SRC_DIR4 = ./src/utils
+SRC_DIR0 = ./$(SRC)/settings
+SRC_DIR1 = ./$(SRC)/io
+SRC_DIR2 = ./$(SRC)/core
+SRC_DIR3 = ./$(SRC)/tests
+SRC_DIR4 = ./$(SRC)/utils
 INCLUDE_DIR = -I$(SRC_DIR0) \
 	      -I$(SRC_DIR1) \
 	      -I$(SRC_DIR2) \
@@ -48,12 +49,10 @@ OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
 # all the files
 SRC_ALL = $(SRC_DEP) 
-SRC_ALL += $(wildcard ./src/drivers/*.cpp)
+SRC_ALL += $(wildcard ./$(SRC)/drivers/*.cpp)
 OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend \
-     $(BIN_DIR)/fci.x \
-     $(BIN_DIR)/sci.x \
      $(BIN_DIR)/tests.x \
 
 depend:
@@ -68,14 +67,6 @@ depend:
 $(BIN_DIR)/tests.x: $(OBJ_DIR)/main_tests.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
-
-$(BIN_DIR)/fci.x: $(OBJ_DIR)/main_fci.o $(OBJ_DEP)
-	@echo "\n=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
-
-$(BIN_DIR)/sci.x: $(OBJ_DIR)/main_sci.o $(OBJ_DEP)
-	@echo "\n=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
 $(OBJ_ALL):

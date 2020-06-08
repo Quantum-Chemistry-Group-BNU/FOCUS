@@ -69,8 +69,8 @@
 	  - Can coarse-graining improve 2D-Hubbard Model description?
 	  - Possibility to reduce entanglement?
 
- 20200410 question: what types of configurations 
-		    are relevant for S-T gap in Fe2S2???
+ 20200410 physical question: what types of configurations are 
+			     relevant for S-T gap in Fe2S2?
 
 --- Comb TNS : basic functionalities ---
 
@@ -90,9 +90,9 @@
 	  - implement wf for the last site from SCI wf
  	  - implement <n|comb> for checking
 
- 20200427 refactorize the tns part to make them more modular
+ 20200427 refactorize the TNS part to make them more modular
 	  - essential for future developement
-	  - separate into qsym, phys, qtensor[2,3,4]
+	  - separate into qsym, phys, qtensor[2/3/4]
 	  - implement tensor contraction kernels for qtensor
 	  - checked by evaluating <Comb|Comb> 
 
@@ -107,11 +107,9 @@
 	      - a_pL^+a_qL^+
 	    - complementary operators:
 	      - lazy construction (to be improved in future - checked):
-	        - Q_pLsL^R
-	        - P_pLqL^R
+	        - Q_pLsL^R / P_pLqL^R
 	      - typeAB/typePQ decomposition (to be cheked by H1e & H2e):
-	        - S_pL^R
-	        - H^R
+	        - S_pL^R / H^R
 	  - check by evaluating energies
 	  - note: currently the adjoint is used for operators like ap,
 		  hence the renorm functions work only for <comb1|o|comb2>,
@@ -152,7 +150,7 @@
           - 5. two-dot opt: Hdiag & Hvec [DONE@20200522]
           - 6. special treatment of AB|AB case (middle) [DONE@20200525]
 	       - use the fact that Pwf/Qwf works in this case
-	  - 7. examine the correctness by comparing against FCI on H4,6 [DONE@20200525]
+	  - 7. examine the correctness by comparing against FCI on H4/6 [DONE@20200525]
 	       - making MPS correct
 	       - special topology 
 
@@ -161,8 +159,8 @@
 	  - support for state-average calculations [DONE@20200526]
 	  - correct formulation of decimation in lr case,
 	    checked by one-dot and two-dot opt for different topologies [DONE@20200528]
-	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L| [DONE@20200529]
-	    only apply noise correction for one-dot optimizaiton!
+	  - noise for pRDM? |Lr> -> O_L|Lr> -> merge -> trace out |r> => |L'><L| 
+	    only apply noise correction for one-dot optimizaiton! [DONE@20200529]
 	  - better sweep control schedule [DONE@20200529]
  	  - propogation of initial guess to next site [!]
 	    - one-dot MPS: |lc>,|cr> [DONE@20200531]
@@ -178,18 +176,39 @@
 	  - implement a general sampling algorithm for any comb-tn [DONE@20200603]
 	  - generating det according to p(n) for computing Sdiag [hardness of SCI cal!]
 
---- Comb TNS : code optimization ---
+--- Complex version ---
+ 
+ Two major future directions:
+ - 1. complex version ?
+ - 2. parallelization ?
 
  2020xxxx documentation of each step in formula & diagrams [considering complex case]
- 2020xxxx faster low-level implementation [IMPORTANT for efficiency] 
+
+ 2020xxxx complex version: relativistic SCI/DMRG
+	  - read the review - The Spectroscopy of Nitrogenases
+	  - setup benchmark systems of relativistic CI by full diagaonalization of Hmat 
+	  - redesign of low-level functionalities (e.g., SCI/matrix/qtensor2,3,4)
+	  - implementation of time-reversal symmetry for efficiency? 
+ 	  - g-tensor [IMPORTANT!!! - appliable for quantum computation] 
+		      <Psi|sigma K|Psi>? G-matrix;
+		      How <Psi1|H|Psi2> are measured?
+		      For VQE this can be made symmetric,
+		      <0|(U1d*H*U2)|0> - Hardmard test]
+
+--- Code optimization ---
+
+ 2020xxxx optimized version:
+ 	  - faster low-level implementation [IMPORTANT for efficiency] 
  	  - simplification of the code 
  	  - better data structure
  	  - benchmarking scalability for large systems
  	  - preconstruction of P/Q from A/B to accelerate efficiency in H*v?
+ 	  - fullrestart from previous sweep?
+
  2020xxxx parallelizaiton [See Chan2004] 
  	  - different sweep schedule [backbone & branch] 
  	  - naturally leads to branch-based parallelization!!!
- 2020xxxx fullrestart from previous sweep?
+
  2020xxxx large-scale applications: fe2s2/fe4s4/fe8s7/femoco?
 	  - measuring Sd for different systems,
 	    some of which are challenging for SCI+PT!
@@ -198,15 +217,6 @@
 
  2020xxxx implement 2-rdms: following DMRG implementation [Chan2008] 
  	  - restarted from fully converged one-dot comb state 
-
- 2020xxxx complex version: relativistic SCI/DMRG
-	  - redesign of low-level functionalities (e.g., SCI/matrix/qtensor2,3,4)
-	  - implementation of time-reversal symmetry for efficiency? 
- 	  - g-tensor [IMPORTANT!!! - appliable for quantum computation] 
-		      <Psi|sigma K|Psi>? G-matrix;
-		      How <Psi1|H|Psi2> are measured?
-		      For VQE this can be made symmetric,
-		      <0|(U1d*H*U2)|0> - Hardmard test]
 
  2020xxxx operator compression or screening?
 	  - scale up to D=5000-10000 may become advantagous! 
