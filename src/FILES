@@ -1,0 +1,125 @@
+
+-------------------
+AIMS
+-------------------
+ 1. Prepare REAL => COMPLEX
+ 2. Move some unnecessary functionalities in future
+-------------------
+
+-------------------
+Initial commit
+-------------------
+ settings/global.cpp
+ settings/global.h
+ core/serialization.h
+ core/tools.cpp
+ core/tools.h
+ tests/tests.h
+ tests/test_tools.cpp
+ drivers/main_tests.cpp
+-------------------
+Matrix
+-------------------
+ core/matrix.cpp
+ core/matrix.h
+ tests/test_matrix.cpp
+-------------------
+
+
+
+-------------------
+ core/linalg.cpp
+ core/linalg.h
+ tests/test_linalg.cpp
+-------------------
+ core/onstate.cpp
+ core/onstate.h
+ core/onspace.cpp
+ core/onspace.h
+ tests/test_onstate.cpp
+-------------------
+ core/integral.cpp
+ core/integral.h
+ core/hamiltonian.cpp
+ core/hamiltonian.h
+ tests/test_hamiltonian.cpp
+-------------------
+ io/filesystem.cpp
+ io/input.cpp
+ io/input.h
+ tests/test_fci.cpp
+-------------------
+ core/dvdson.cpp
+ core/dvdson.h
+ core/dvdson_util.cpp
+ tests/test_dvdson.cpp
+-------------------
+ core/analysis.cpp
+ core/analysis.h
+ tests/test_rdm.cpp
+-------------------
+ utils/fci.cpp
+ utils/fci.h
+ utils/fci_ana.cpp
+ utils/fci_io.cpp
+ utils/fci_rdm.cpp
+ utils/fci_rdm.h
+ utils/sci.cpp
+ utils/sci.h
+ utils/sci_pt2.cpp
+ tests/test_sci.cpp
+ tests/test_pt2.cpp
+-------------------
+ utils/tns_comb.h
+ utils/tns_comb_alg.cpp
+ utils/tns_comb_rand.cpp
+ utils/tns_comb_rcanon.cpp
+ utils/tns_comb_topo.cpp
+ utils/tns_decimation.cpp
+ utils/tns_decimation.h
+ utils/tns_ham.h
+ utils/tns_ham_onedot.cpp
+ utils/tns_ham_twodot.cpp
+ utils/tns_initial.cpp
+ utils/tns_initial.h
+ utils/tns_io.cpp
+ utils/tns_oper.h
+ utils/tns_oper_complement.cpp
+ utils/tns_oper_dot.cpp
+ utils/tns_oper_init.cpp
+ utils/tns_oper_kernel.cpp
+ utils/tns_oper_normal.cpp
+ utils/tns_oper_opwf.cpp
+ utils/tns_oper_rbases.cpp
+ utils/tns_oper_renorm.cpp
+ utils/tns_opt.cpp
+ utils/tns_opt.h
+ utils/tns_ordering.cpp
+ utils/tns_ordering.h
+ utils/tns_prdm.cpp
+ utils/tns_prdm.h
+ utils/tns_pspace.cpp
+ utils/tns_pspace.h
+ utils/tns_qsym.cpp
+ utils/tns_qsym.h
+ utils/tns_qtensor.h
+ utils/tns_qtensor2.cpp
+ utils/tns_qtensor3.cpp
+ utils/tns_qtensor4.cpp
+ utils/tns_qtensor_contract.cpp
+ utils/tns_qtensor_convert.cpp
+ tests/test_ordering.cpp
+ tests/test_comb.cpp
+-------------------
+
+-------------------
+Unused
+-------------------
+ utils/vmc.cpp
+ utils/vmc.h
+ drivers/main_fci.cpp
+ drivers/main_sci.cpp
+ tests/test_vmc.cpp
+ tests/test_ras.cpp
+ tests/test_proj.cpp
+-------------------

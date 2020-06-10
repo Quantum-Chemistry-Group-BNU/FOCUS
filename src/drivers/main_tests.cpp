@@ -6,6 +6,8 @@ int main(){
    
    tests::test_tools();
 
+   tests::test_matrix();
+
 /*   
    tests::test_onstate();
 

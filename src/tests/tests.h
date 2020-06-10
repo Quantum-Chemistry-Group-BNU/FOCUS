@@ -7,7 +7,11 @@ namespace tests{
 
 int test_tools();
 
+int test_matrix();
+
 /*
+int test_linalg();
+
 int test_onstate();
 
 int test_hamiltonian();
