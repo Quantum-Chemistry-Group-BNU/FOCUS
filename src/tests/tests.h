@@ -9,8 +9,9 @@ int test_tools();
 
 int test_matrix();
 
-/*
 int test_linalg();
+
+/*
 
 int test_onstate();
 

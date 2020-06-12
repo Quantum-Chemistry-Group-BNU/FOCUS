@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <complex>
+#include <fstream>
 
 namespace linalg{
 
@@ -21,7 +22,7 @@ template <typename Tm>
 struct matrix{
    private:
       friend class boost::serialization::access;	   
-      template<class Archive>
+      template <class Archive>
       void serialize(Archive & ar, const unsigned int version){
 	 int rows = _rows, cols = _cols, size = _size;
 	 ar & rows;
@@ -31,7 +32,8 @@ struct matrix{
 	    _rows = rows;
 	    _cols = cols;
 	    _size = size;
-	    _data = new double[_size];
+	    delete[] _data;
+	    _data = new Tm[_size];
 	 }
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
@@ -137,10 +139,28 @@ struct matrix{
 	 std::cout << std::defaultfloat;
       }
       // save
-      void save_text(const std::string& fname, const int prec=4) const;
+      void save_text(const std::string& fname, const int prec=4) const{
+	 std::ofstream file(fname+".txt"); 
+         file << std::defaultfloat << std::setprecision(prec); 
+         for(int i=0; i<_rows; i++){
+            for(int j=0; j<_cols; j++){
+               file << _data[j*_rows+i] << " ";
+            } 
+            file << std::endl;
+         }
+         file.close();
+      }
       // binary
-      void save(const std::string& fname) const; 
-      void load(const std::string& fname); 
+      void save(const std::string& fname) const{
+	 std::ofstream ofs(fname, std::ios::binary);
+         boost::archive::binary_oarchive saver(ofs);
+         saver << *this;
+      } 
+      void load(const std::string& fname){
+	 std::ifstream ifs(fname, std::ios::binary);
+         boost::archive::binary_iarchive loader(ifs);
+         loader >> *this;
+      }
       // helpers
       inline int rows() const{ return _rows; }
       inline int cols() const{ return _cols; }
@@ -256,15 +276,22 @@ struct matrix{
 // operator * for conversion between real & complex
 matrix<std::complex<double>> operator *(const std::complex<double> fac, 
 				        const matrix<double>& mat1);
-
 matrix<std::complex<double>> operator *(const matrix<double>& mat1,
 					const std::complex<double> fac);
 
 // special matrices
 template <typename Tm>
-matrix<Tm> diagonal_matrix(const std::vector<Tm>& diag);
+matrix<Tm> diagonal_matrix(const std::vector<Tm>& diag){
+   int n = diag.size();
+   matrix<Tm> mat(n,n);
+   for(int i=0; i<n; i++) 
+      mat(i,i) = diag[i];	   
+   return mat;
+}
+matrix<std::complex<double>> diagonal_cmatrix(const std::vector<double>& diag);
 
 matrix<double> identity_matrix(const int n);
+matrix<std::complex<double>> identity_cmatrix(const int n);
 
 matrix<double> random_matrix(const int m, const int n);
 

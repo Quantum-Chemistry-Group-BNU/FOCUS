@@ -8,6 +8,8 @@ int main(){
 
    tests::test_matrix();
 
+   tests::test_linalg();
+
 /*   
    tests::test_onstate();
 

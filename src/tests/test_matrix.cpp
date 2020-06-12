@@ -88,9 +88,9 @@ int tests::test_matrix(){
    tmp2c.print("3*cmat");
    auto tmp3c = 3*cmat + cmat2;
    tmp3c.print("3*cmat+cmat2");
+   cout << endl;
 
    // conjugation
-   cout << endl;
    iden(1,0) = 2;
    iden.print("iden");
    iden.conj().print("iden.conj");
@@ -101,6 +101,35 @@ int tests::test_matrix(){
    cmat.conj().print("cmat.conj");
    cmat.T().print("cmat.T");
    cmat.H().print("cmat.H");
+   cout << endl;
 
+   // io
+   iden.save_text("iden");
+   cmat.save_text("cmat");
+   
+   iden.save("iden");
+   cmat.save("cmat");
+   iden(1,1) = 1;
+   iden.print("iden_modified");
+   iden.load("iden");
+   iden.print("iden_load");
+   
+   matrix<double> empty;
+   empty.load("iden");
+   empty.print("empty");
+   
+   cmat(1,0) = {1,0};
+   cmat.load("cmat");
+   cmat.print("cmat_load");
+   
+   // from diagonal
+   vector<double> v({-1,1,2});
+   auto w = diagonal_matrix(v);
+   w.print("w");
+   
+   vector<complex<double>> vc({-1,{1,1},2});
+   auto wc = diagonal_matrix(vc);
+   wc.print("wc");
+   
    return 0;
 }

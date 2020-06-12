@@ -24,13 +24,15 @@ Matrix
  core/matrix.h
  tests/test_matrix.cpp
 -------------------
-
-
-
+Linalg: EIG/SVD
 -------------------
  core/linalg.cpp
  core/linalg.h
  tests/test_linalg.cpp
+-------------------
+
+
+
 -------------------
  core/onstate.cpp
  core/onstate.h

@@ -1,0 +1,115 @@
+#include <iostream>
+#include "../settings/global.h"
+#include "../core/tools.h"
+#include "../core/matrix.h"
+#include "../core/linalg.h"
+#include "tests.h"
+
+using namespace std;
+using namespace linalg;
+
+int tests::test_linalg(){
+   cout << endl;
+   cout << global::line_separator << endl;	
+   cout << "tests::test_linalg" << endl;
+   cout << global::line_separator << endl;
+
+   const int n = 3;
+
+   // --- real matrix ---
+   matrix<double> mat(n,n);
+   mat(1,2) = 1.0;
+   mat(2,0) = 3.0;
+   mat.print("mat");
+   cout << normF(mat) << endl;
+   cout << symmetric_diff(mat) << endl;
+
+   auto mat2 = xgemm("N","N",mat,mat);
+   mat2.print("mat2");
+   
+   auto matx(mat);
+   auto mat3 = xgemm("N","N",mat,matx);
+   mat3.print("mat3");
+
+   // --- complex matrix --- 
+   const complex<double> i(0.0,1.0);
+   matrix<complex<double>> cmat(n,n);
+   cmat(1,2) = 1.0;
+   cmat(2,0) = 3.0;
+   cmat(2,1) = 1.0+1.0*i;
+   cmat.print("cmat");
+   cout << normF(cmat) << endl;
+   cout << symmetric_diff(cmat) << endl;
+
+   const complex<double> ctmp={1.0,0.0};
+   cmat += ctmp*random_matrix(n,n);
+   auto cmat2 = xgemm("C","N",cmat,cmat);
+   cmat2.print("cmat2");
+   
+   auto cmatx(cmat);
+   auto cmat3 = xgemm("C","N",cmat,cmatx);
+   cmat3.print("cmat3");
+
+   // --- linalg : SVD --- 
+   cout << "\ntest svd_solver" << endl;
+   cout << "\nreal version:" << endl;
+   vector<double> s;
+   matrix<double> U, Vt;
+   svd_solver(mat, s, U, Vt, 3);
+   cout << "s0=" << s[0] << endl;
+   auto tmp1 = xgemm("N","N",U,diagonal_matrix(s));
+   auto tmp2 = xgemm("N","N",tmp1,Vt);
+   auto diff_svd = normF(mat-tmp2);
+   cout << "diff_svd=" << diff_svd << endl;
+   
+   cout << "\ncomplex version:" << endl;
+   vector<double> sc;
+   matrix<complex<double>> Uc, Vtc;
+   svd_solver(cmat, sc, Uc, Vtc, 0);
+   cout << "s0=" << sc[0] << endl;
+   auto tmp1c = xgemm("N","N",Uc,diagonal_cmatrix(sc));
+   auto tmp2c = xgemm("N","N",tmp1c,Vtc);
+   auto diff_svdc = normF(cmat-tmp2c);
+   cmat.print("cmat");
+   tmp2c.print("cmat_svd");
+   cout << "diff_svdc=" << diff_svdc << endl;
+
+   // --- linalg: EIG ---
+   cout << "\ntest eig_solver" << endl;
+   cout << "\nreal version:" << endl;
+   mat = (mat + mat.H())*0.5;
+   vector<double> e(n);
+   matrix<double> v(mat);
+   eig_solver(v,e);
+   cout << "eig0=" << e[0] << endl;
+   matrix<double> vt(v);
+   auto diff = xgemm("T","N",vt,v) - identity_matrix(n);
+   v.print("V");
+   diff.print("VtV-idn");
+   cout << "normF=" << normF(diff) << endl;
+   // Av-ve
+   auto Av = xgemm("N","N",mat,v);
+   auto ve = xgemm("N","N",v,diagonal_matrix(e));
+   auto diff1 = Av - ve;
+   diff1.print("Av-ve");
+   cout << "normF=" << normF(diff1) << endl;
+
+   cout << "\ncomplex version:" << endl;
+   cmat = (cmat + cmat.H())*0.5;
+   auto vc = cmat;
+   eig_solver(vc,e);
+   cout << "eig0=" << e[0] << endl;
+   auto  vtc = vc;
+   auto diffc = xgemm("C","N",vtc,vc) - identity_cmatrix(n);
+   vc.print("Vc");
+   diffc.print("VtV-idn");
+   cout << "normF=" << normF(diffc) << endl;
+   // Av-ve
+   auto Avc = xgemm("N","N",cmat,vc);
+   auto vce = xgemm("N","N",vc,diagonal_cmatrix(e));
+   auto diff1c = Avc - vce;
+   diff1c.print("Av-ve");
+   cout << "normF=" << normF(diff1c) << endl;
+
+   return 0;
+}

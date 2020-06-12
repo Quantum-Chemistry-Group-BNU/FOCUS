@@ -2,14 +2,15 @@
 #define SERIALIZATION_H
 
 #include <fstream>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/map.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/binary_object.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/complex.hpp> // for complex 
 
-// Note: https://github.com/Sydius/serialize-tuple/blob/master/serialize_tuple.h
+// for tuple: https://github.com/Sydius/serialize-tuple/blob/master/serialize_tuple.h
 #include <tuple>
 
 namespace boost {
