@@ -30,12 +30,15 @@ Linalg: EIG/SVD
  core/linalg.h
  tests/test_linalg.cpp
 -------------------
+ONState
+-------------------
+ core/onstate.cpp
+ core/onstate.h
+-------------------
 
 
 
 -------------------
- core/onstate.cpp
- core/onstate.h
  core/onspace.cpp
  core/onspace.h
  tests/test_onstate.cpp

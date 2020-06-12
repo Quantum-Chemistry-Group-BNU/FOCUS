@@ -10,9 +10,9 @@ int main(){
 
    tests::test_linalg();
 
-/*   
    tests::test_onstate();
 
+/*   
    tests::test_hamiltonian();
 
    tests::test_dvdson();
