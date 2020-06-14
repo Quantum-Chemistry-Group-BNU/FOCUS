@@ -18,8 +18,6 @@ namespace integral{
 // simple strategy to enable both cases
 inline double conjugate(const double x){ return x; }
 inline std::complex<double> conjugate(const std::complex<double> x){ return std::conj(x); };
-inline double realpart(const double x){ return x; }
-inline double realpart(const std::complex<double> x){ return x.real(); }
 
 template <typename Tm>
 struct one_body{
@@ -90,7 +88,7 @@ struct two_body{
 	 for(int i=0; i<sorb; i++){
 	    for(int j=0; j<i; j++){
 	       int ij = i*(i-1)/2+j;
-	       Q[ij] = realpart(get(i,i,j,j) - get(i,j,j,i));
+	       Q[ij] = std::real(get(i,i,j,j) - get(i,j,j,i));
 	    }
 	 }
       }
@@ -143,7 +141,7 @@ void load(two_body<Tm>& int2e,
       std::istringstream is(line);
       is >> i >> j >> k >> l >> eri;
       if(i*j == 0 && k*l == 0){
-         ecore = realpart(eri);
+         ecore = std::real(eri);
       }else if(i*j != 0 && k*l == 0){
 	 int1e.set(i-1, j-1, eri);
       }else if(i*j != 0 && k*l != 0){
