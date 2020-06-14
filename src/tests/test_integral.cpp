@@ -1,0 +1,27 @@
+#include "../settings/global.h"
+#include "../core/integral.h"
+#include <iostream>
+#include "tests.h"
+
+using namespace std;
+
+int tests::test_integral(){
+   cout << endl;
+   cout << global::line_separator << endl;	
+   cout << "tests::test_integral" << endl;
+   cout << global::line_separator << endl;	
+   
+   // read integral
+   integral::two_body<double> int2e;
+   integral::one_body<double> int1e;
+   double ecore;
+   integral::load(int2e, int1e, ecore, "./rmole.info");
+
+   // read integral
+   integral::two_body<complex<double>> cint2e;
+   integral::one_body<complex<double>> cint1e;
+   double cecore;
+   integral::load(cint2e, cint1e, cecore, "./cmole.info");
+
+   return 0;
+}

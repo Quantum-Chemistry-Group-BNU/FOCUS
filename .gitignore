@@ -8,3 +8,4 @@ obj/*.o
 *.pyc
 *.h5
 .DS_Store
+*.info

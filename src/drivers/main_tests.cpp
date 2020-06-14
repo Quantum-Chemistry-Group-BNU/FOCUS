@@ -12,6 +12,10 @@ int main(){
 
    tests::test_onstate();
 
+   tests::test_onspace();
+
+   tests::test_integral();
+
 /*   
    tests::test_hamiltonian();
 

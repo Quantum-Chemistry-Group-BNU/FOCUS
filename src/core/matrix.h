@@ -15,7 +15,7 @@ namespace linalg{
 
 // simple strategy to enable both cases
 inline double conjugate(const double x){ return x; }
-inline std::complex<double> conjugate(const std::complex<double> x){ return conj(x); };
+inline std::complex<double> conjugate(const std::complex<double> x){ return std::conj(x); };
 
 // column-major matrix
 template <typename Tm>

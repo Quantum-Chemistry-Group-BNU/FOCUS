@@ -34,34 +34,52 @@ ONState
 -------------------
  core/onstate.cpp
  core/onstate.h
--------------------
-
-
-
+ tests/test_onstate.cpp
 -------------------
  core/onspace.cpp
  core/onspace.h
- tests/test_onstate.cpp
+ tests/test_onspace.cpp
 -------------------
- core/integral.cpp
+Integral
+-------------------
  core/integral.h
+ tests/test_integral.cpp
+
+
+
+
+
+
+
+
+-------------------
+Hamiltonian
+-------------------
  core/hamiltonian.cpp
  core/hamiltonian.h
  tests/test_hamiltonian.cpp
 -------------------
- io/filesystem.cpp
- io/input.cpp
- io/input.h
- tests/test_fci.cpp
+Davidson
 -------------------
  core/dvdson.cpp
  core/dvdson.h
  core/dvdson_util.cpp
  tests/test_dvdson.cpp
+ tests/test_fci.cpp
+-------------------
+IO
+-------------------
+ io/filesystem.cpp
+ io/input.cpp
+ io/input.h
+-------------------
+RDM
 -------------------
  core/analysis.cpp
  core/analysis.h
  tests/test_rdm.cpp
+-------------------
+CI
 -------------------
  utils/fci.cpp
  utils/fci.h
@@ -74,6 +92,8 @@ ONState
  utils/sci_pt2.cpp
  tests/test_sci.cpp
  tests/test_pt2.cpp
+-------------------
+TNS
 -------------------
  utils/tns_comb.h
  utils/tns_comb_alg.cpp
