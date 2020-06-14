@@ -32,6 +32,15 @@ struct one_body{
       void set(const size_t i, const size_t j, const Tm val){
          data[j*sorb+i] = val; // column-major storage
       }
+      void print(){
+	 std::cout << "one_body:" << std::endl;
+	 for(int i=0; i<sorb; i++){
+	    for(int j=0; j<sorb; j++){
+	       std::cout << i << " " << j << " " 
+		         << std::setprecision(12) << get(i,j) << std::endl; 
+	    }
+	 }
+      }
    public:
       int sorb;
    private:
@@ -81,6 +90,20 @@ struct two_body{
 	 }else{
 	    size_t ijkl = kl*(kl+1)/2+ij;
 	    data[ijkl] = sgn*conjugate(val);
+	 }
+      }
+      void print(){
+	 std::cout << "two_body:" << std::endl;
+	 std::setprecision(12);
+	 for(int i=0; i<sorb; i++){
+	    for(int j=0; j<i; j++){
+	       for(int k=0; k<sorb; k++){
+	          for(int l=0; l<k; l++){
+	             std::cout << i << " " << j << " " << k << " " << l << " " 
+			       << std::setprecision(12) << get(i,j,k,l) << std::endl;
+		  }
+	       }
+	    }
 	 }
       }
       // Qij = <ij||ij> (i>j);
