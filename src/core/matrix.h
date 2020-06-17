@@ -273,11 +273,19 @@ struct matrix{
       Tm* _data;
 };
 
-// operator * for conversion between real & complex
+// operator */+/- for conversion between real & complex
 matrix<std::complex<double>> operator *(const std::complex<double> fac, 
 				        const matrix<double>& mat1);
 matrix<std::complex<double>> operator *(const matrix<double>& mat1,
 					const std::complex<double> fac);
+matrix<std::complex<double>> operator +(const matrix<double>& mat1,
+					const matrix<std::complex<double>>& mat2);
+matrix<std::complex<double>> operator +(const matrix<std::complex<double>>& mat1,
+					const matrix<double>& mat2);
+matrix<std::complex<double>> operator -(const matrix<double>& mat1,
+					const matrix<std::complex<double>>& mat2);
+matrix<std::complex<double>> operator -(const matrix<std::complex<double>>& mat1,
+					const matrix<double>& mat2);
 
 // special matrices
 template <typename Tm>
@@ -288,11 +296,18 @@ matrix<Tm> diagonal_matrix(const std::vector<Tm>& diag){
       mat(i,i) = diag[i];	   
    return mat;
 }
+// convert diagonal double to complex 
 matrix<std::complex<double>> diagonal_cmatrix(const std::vector<double>& diag);
 
-matrix<double> identity_matrix(const int n);
-matrix<std::complex<double>> identity_cmatrix(const int n);
+template <typename Tm>
+matrix<Tm> identity_matrix(const int n){
+   matrix<Tm> iden(n,n);
+   for(int i=0; i<n; i++)
+      iden(i,i) = 1.0;
+   return iden;
+}
 
+// random double matrix
 matrix<double> random_matrix(const int m, const int n);
 
 } // linalg

@@ -24,7 +24,7 @@ int tests::test_matrix(){
    mat1.print("mat1");
    
    // random & identity;
-   matrix<double> iden = identity_matrix(4);
+   matrix<double> iden = identity_matrix<double>(4);
    matrix<double> rd = random_matrix(4,3);
    iden.print("iden");
    rd.print("rd");

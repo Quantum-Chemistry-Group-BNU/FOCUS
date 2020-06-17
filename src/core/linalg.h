@@ -145,8 +145,10 @@ matrix<Tm> xgemm(const char* TRANSA, const char* TRANSB,
 }
 
 // eigendecomposition HU=Ue: order=0/1 small-large/large-small
-void eig_solver(const matrix<double>& A, std::vector<double>& e, const int order=0);
-void eig_solver(const matrix<std::complex<double>>& A, std::vector<double>& e, const int order=0);
+void eig_solver(const matrix<double>& A, std::vector<double>& e, 
+		matrix<double>& U, const int order=0);
+void eig_solver(const matrix<std::complex<double>>& A, std::vector<double>& e, 
+		matrix<std::complex<double>>& U, const int order=0);
 
 // singular value decomposition: 
 // iop =  0 : JOBU=A, JOBVT=A

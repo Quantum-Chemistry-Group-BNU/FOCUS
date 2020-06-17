@@ -50,15 +50,18 @@ Hamiltonian
  core/hamiltonian.cpp
  core/hamiltonian.h
  tests/test_hamiltonian.cpp
-
-
 -------------------
 Davidson
 -------------------
- core/dvdson.cpp
  core/dvdson.h
- core/dvdson_util.cpp
  tests/test_dvdson.cpp
+-------------------
+
+
+
+-------------------
+SlaterCondonFCI
+-------------------
  tests/test_fci.cpp
 -------------------
 IO

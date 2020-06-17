@@ -8,19 +8,20 @@ using namespace std;
 using namespace linalg;
 
 // eigendecomposition HU=Ue: order=0/1 small-large/large-small
-void linalg::eig_solver(const matrix<double>& A, vector<double>& e, const int order){
+void linalg::eig_solver(const matrix<double>& A, vector<double>& e, 
+			matrix<double>& U, const int order){
    assert(A.rows() == A.cols());  
    assert(A.rows() <= e.size()); // allow larger space used for e 
    int n = A.rows(), lwork = -1, liwork=-1, iworkopt, info;
    double workopt;
-   matrix<double> Atmp;
-   Atmp = (order == 0)? A : -A;
-   dsyevd_("V","L",&n,Atmp.data(),&n,e.data(),&workopt,&lwork,&iworkopt,&liwork,&info);
+   U.resize(A.rows(), A.cols());
+   U = (order == 0)? A : -A;
+   dsyevd_("V","L",&n,U.data(),&n,e.data(),&workopt,&lwork,&iworkopt,&liwork,&info);
    lwork = static_cast<int>(workopt);
    liwork = static_cast<int>(iworkopt);
    unique_ptr<double[]> work(new double[lwork]);
    unique_ptr<int[]> iwork(new int[liwork]);
-   dsyevd_("V","L",&n,A.data(),&n,e.data(),work.get(),&lwork,iwork.get(),&liwork,&info);
+   dsyevd_("V","L",&n,U.data(),&n,e.data(),work.get(),&lwork,iwork.get(),&liwork,&info);
    if(order == 1){ transform(e.begin(),e.end(),e.begin(),[](const double& x){ return -x; }); }
    if(info){
       cout << "eig[d] failed with info=" << info << endl;
@@ -28,22 +29,23 @@ void linalg::eig_solver(const matrix<double>& A, vector<double>& e, const int or
    }
 }
 
-void linalg::eig_solver(const matrix<complex<double>>& A, vector<double>& e, const int order){
+void linalg::eig_solver(const matrix<complex<double>>& A, vector<double>& e, 
+		        matrix<complex<double>>& U, const int order){
    assert(A.rows() == A.cols());  
    assert(A.rows() <= e.size()); // allow larger space used for e 
    int n = A.rows(), lwork = -1, liwork=-1, lrwork = -1, iworkopt, info;
    complex<double> workopt;
    double rworkopt;
-   matrix<complex<double>> Atmp;
-   Atmp = (order == 0)? A : -A;
-   zheevd_("V","L",&n,Atmp.data(),&n,e.data(),&workopt,&lwork,&rworkopt,&lrwork,&iworkopt,&liwork,&info);
+   U.resize(A.rows(), A.cols());
+   U = (order == 0)? A : -A;
+   zheevd_("V","L",&n,U.data(),&n,e.data(),&workopt,&lwork,&rworkopt,&lrwork,&iworkopt,&liwork,&info);
    lwork = static_cast<int>(workopt.real());
    lrwork = static_cast<int>(rworkopt);
    liwork = static_cast<int>(iworkopt);
    unique_ptr<complex<double>[]> work(new complex<double>[lwork]);
    unique_ptr<double[]> rwork(new double[lrwork]);
    unique_ptr<int[]> iwork(new int[liwork]);
-   zheevd_("V","L",&n,A.data(),&n,e.data(),work.get(),&lwork,rwork.get(),&lrwork,iwork.get(),&liwork,&info);
+   zheevd_("V","L",&n,U.data(),&n,e.data(),work.get(),&lwork,rwork.get(),&lrwork,iwork.get(),&liwork,&info);
    if(order == 1){ transform(e.begin(),e.end(),e.begin(),[](const double& x){ return -x; }); }
    if(info){
       cout << "eig[z] failed with info=" << info << endl;

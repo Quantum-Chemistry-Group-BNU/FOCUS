@@ -7,12 +7,6 @@
 #include <iostream>
 #include <iomanip>
 #include "tests.h"
-/*
-#include "../core/analysis.h"
-#include "../core/tools.h"
-#include <cmath>
-#include <algorithm>
-*/
 
 using namespace std;
 using namespace fock;
@@ -69,9 +63,9 @@ int tests::test_hamiltonian(){
    assert(ndiff == 0);
 
    // full diagonalization
-   auto v(H);
    vector<double> e(H.rows());
-   eig_solver(v,e); // Hc=ce
+   auto v(H);
+   eig_solver(H, e, v); // Hc=ce
    cout << "H: symmetric_diff=" << setprecision(12) 
         << symmetric_diff(H) << endl;  
    cout << "eigenvalues:\n" 

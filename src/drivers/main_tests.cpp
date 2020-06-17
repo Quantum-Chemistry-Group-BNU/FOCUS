@@ -12,6 +12,7 @@ int main(){
    tests::test_onspace();
    tests::test_integral();
    tests::test_hamiltonian();
+   tests::test_dvdson();
 
 /*   
    tests::test_dvdson();

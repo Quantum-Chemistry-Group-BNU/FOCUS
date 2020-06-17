@@ -11,7 +11,7 @@ int test_onstate();
 int test_onspace();
 int test_integral();
 int test_hamiltonian();
-
+int test_dvdson();
 
 /*
 int test_dvdson();
