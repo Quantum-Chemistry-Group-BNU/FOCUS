@@ -1,15 +1,14 @@
-#include "../settings/global.h"
 #include "../core/integral.h"
-#include <iostream>
+#include "../core/tools.h"
 #include "tests.h"
 
 using namespace std;
 
 int tests::test_integral(){
    cout << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
    cout << "tests::test_integral" << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
    
    // read integral
    integral::two_body<double> int2e;

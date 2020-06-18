@@ -3,16 +3,42 @@
 
 #include <cmath>
 #include <vector>
+#include <string>
 #include <numeric>      // std::iota
 #include <algorithm>    // std::stable_sort
 #include <tuple>
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 #include <random>
+#include <chrono>
 
 using namespace std;
 
 namespace tools{
+
+// useful functions
+void license();
+
+// print
+const std::string line_separator(70,'-');
+extern const std::string line_separator;
+const std::string line_separator2(70,'=');
+extern const std::string line_separator2;
+
+double mem_size(size_t sz, const int fac=8);
+
+// --- timing ---
+std::chrono::high_resolution_clock::time_point get_time();
+
+template<typename T>
+double get_duration(T t){
+   return std::chrono::duration_cast<std::chrono::milliseconds>(t).count()*0.001; 
+}
+
+// --- random --- 
+extern std::seed_seq seeds;
+extern std::default_random_engine generator;
 
 // compress symmetric (i,j) [i>j] pair:
 // 10[0]
@@ -89,10 +115,6 @@ template <typename T>
 vector<int> sort_index_abs(const vector<T>& v, const int iop=0){
    return sort_index_abs(v.size(), v.data(), iop);
 }
-
-//extern std::random_device rd;
-extern std::seed_seq seeds;
-extern std::default_random_engine generator;
 
 // permutations
 class perm{

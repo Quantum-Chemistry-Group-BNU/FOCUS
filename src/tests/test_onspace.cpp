@@ -1,6 +1,5 @@
-#include <iostream>
 #include "../core/onspace.h"
-#include "../settings/global.h"
+#include "../core/tools.h"
 #include "tests.h"
 
 using namespace std;
@@ -9,9 +8,9 @@ using namespace linalg;
 
 int tests::test_onspace(){
    cout << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
    cout << "tests::test_onspace" << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
  
    onspace space1 = get_fci_space(2,1);
    check_space(space1);

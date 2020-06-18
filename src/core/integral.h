@@ -11,7 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include "../settings/global.h"
+#include "tools.h"
 
 namespace integral{
 
@@ -139,7 +139,7 @@ void load(two_body<Tm>& int2e,
 	  one_body<Tm>& int1e,
 	  double& ecore,
 	  std::string fname){
-   auto t0 = global::get_time();
+   auto t0 = tools::get_time();
    std::cout << "\nintegral::load_integral fname = " << fname << std::endl; 
    std::ifstream istrm(fname);
    if(!istrm){
@@ -173,9 +173,9 @@ void load(two_body<Tm>& int2e,
    }
    istrm.close();
    int2e.initQ();
-   auto t1 = global::get_time();
+   auto t1 = tools::get_time();
    std::cout << "timing for integral::load_integral : " << std::setprecision(2) 
-	     << global::get_duration(t1-t0) << " s" << std::endl;
+	     << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
 } // integral

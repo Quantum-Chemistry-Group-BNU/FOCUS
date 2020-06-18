@@ -1,5 +1,4 @@
 #include <iostream>
-#include "../settings/global.h"
 #include "../core/tools.h"
 #include "../core/matrix.h"
 #include "../core/linalg.h"
@@ -10,9 +9,9 @@ using namespace linalg;
 
 int tests::test_linalg(){
    cout << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
    cout << "tests::test_linalg" << endl;
-   cout << global::line_separator << endl;
+   cout << tools::line_separator << endl;
 
    const int n = 3;
    const double thresh = 1.e-10;

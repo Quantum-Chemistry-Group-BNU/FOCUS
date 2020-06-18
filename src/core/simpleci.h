@@ -9,7 +9,7 @@
 #include "matrix.h"
 #include "hamiltonian.h"
 #include "dvdson.h"
-#include "../settings/global.h"
+#include "tools.h"
 
 namespace fock{
 
@@ -57,7 +57,7 @@ void ci_solver(std::vector<double>& es,
 	       const integral::one_body<Tm>& int1e,
 	       const double ecore){
    std::cout << "\nfock::ci_solver dim=" << space.size() << std::endl; 
-   auto t0 = global::get_time();
+   auto t0 = tools::get_time();
    // Davidson solver 
    linalg::dvdsonSolver<Tm> solver;
    solver.ndim = space.size();
@@ -74,9 +74,9 @@ void ci_solver(std::vector<double>& es,
    // solve
    solver.solve_iter(es.data(), vs.data());
    //solver.solve_diag(es.data(), vs.data());
-   auto t1 = global::get_time();
+   auto t1 = tools::get_time();
    std::cout << "timing for fock::ci_solver : " << std::setprecision(2) 
-	     << global::get_duration(t1-t0) << " s" << std::endl;
+	     << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
 } // fock

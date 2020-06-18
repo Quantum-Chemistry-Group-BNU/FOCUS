@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <vector>
 #include <functional> // for std::function
-#include "../settings/global.h"
 #include "tools.h"
 #include "matrix.h"
 #include "linalg.h"
@@ -171,16 +170,16 @@ struct dvdsonSolver{
 
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, Tm* y, const Tm* x){
-         auto t0 = global::get_time();
+         auto t0 = tools::get_time();
          for(int istate=0; istate<nstate; istate++){
             HVec(y+istate*ndim, x+istate*ndim); // y=H*x
          }
          nmvp += nstate;
-         auto t1 = global::get_time();
+         auto t1 = tools::get_time();
          bool debug = false;
          if(debug){
 	    std::cout << "timing for HVecs : " << std::setprecision(2)  
-                      << global::get_duration(t1-t0)/nstate << " s" 
+                      << tools::get_duration(t1-t0)/nstate << " s" 
                       << " for nstate = " << nstate << std::endl;
          }
       }
@@ -284,7 +283,7 @@ struct dvdsonSolver{
          }
          // clear counter
          nmvp = 0;
-         auto t0 = global::get_time();
+         auto t0 = tools::get_time();
 
          // generate initial subspace - vbas
          int nl = std::min(ndim,neig+nbuff); // maximal subspace size
@@ -320,9 +319,9 @@ struct dvdsonSolver{
                rnorm(i,iter) = norm;
                rconv[i] = (norm < crit_v)? true : false;
             }
-            auto t1 = global::get_time();
-            if(iprt > 0) print_iter(iter,nsub,eigs,rnorm,global::get_duration(t1-t0));
-            t0 = global::get_time();
+            auto t1 = tools::get_time();
+            if(iprt > 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-t0));
+            t0 = tools::get_time();
             
             // check convergence and return (e,v) if applied 
             ifconv = (count(rconv.begin(), rconv.end(), true) == neig);

@@ -6,9 +6,9 @@ using namespace std;
 
 int tests::test_dvdson(){
    cout << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
    cout << "tests::test_dvdson" << endl;
-   cout << global::line_separator << endl;
+   cout << tools::line_separator << endl;
   
    const int n = 100;
    const int m = 3;

@@ -9,8 +9,6 @@ AIMS
 -------------------
 Initial commit
 -------------------
- settings/global.cpp
- settings/global.h
  core/serialization.h
  core/tools.cpp
  core/tools.h
@@ -56,28 +54,19 @@ Davidson
  core/dvdson.h
  tests/test_dvdson.cpp
 -------------------
-
-
-
+Analysis & RDM
 -------------------
-SlaterCondonFCI
+ core/simpleci.h
+ core/analysis.h
 -------------------
- tests/test_fci.cpp
+
+
 -------------------
 IO
 -------------------
  io/filesystem.cpp
  io/input.cpp
  io/input.h
--------------------
-RDM
--------------------
- core/analysis.cpp
- core/analysis.h
- tests/test_rdm.cpp
--------------------
-
-
 -------------------
 SCI
 -------------------
@@ -90,7 +79,9 @@ SCI
  utils/sci.cpp
  utils/sci.h
  utils/sci_pt2.cpp
+ tests/test_fci.cpp
  tests/test_sci.cpp
+ tests/test_rdm.cpp
  tests/test_pt2.cpp
 -------------------
 TNS

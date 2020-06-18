@@ -4,7 +4,6 @@
 #include <complex>
 #include <functional> // for std::function
 #include <iostream>
-#include "../settings/global.h"
 #include "../core/tools.h"
 #include "../core/matrix.h"
 #include "../core/linalg.h"

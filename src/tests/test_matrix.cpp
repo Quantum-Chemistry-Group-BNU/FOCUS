@@ -1,5 +1,3 @@
-#include <iostream>
-#include "../settings/global.h"
 #include "../core/tools.h"
 #include "../core/matrix.h"
 #include "tests.h"
@@ -10,9 +8,9 @@ using namespace std;
 
 int tests::test_matrix(){
    cout << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
    cout << "tests::test_matrix" << endl;
-   cout << global::line_separator << endl;
+   cout << tools::line_separator << endl;
   
    // --- real matrix --- 
    matrix<double> mat(3,3);

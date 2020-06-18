@@ -1,4 +1,4 @@
-#include "../settings/global.h"
+#include "../core/tools.h"
 #include "../core/onspace.h"
 #include "../core/integral.h"
 #include "../core/hamiltonian.h"
@@ -13,9 +13,9 @@ using namespace fock;
 
 int tests::test_hamiltonian(){
    cout << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
    cout << "tests::test_hamiltonian" << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
    
    double thresh = 1.e-8;
 
@@ -44,7 +44,7 @@ int tests::test_hamiltonian(){
    // build H and check symmetry
    cout << "\nCheck Hamiltonian & eigenvalue problem" << endl;
    auto H = get_Ham(space2,int2e,int1e,ecore);
-   auto t0 = global::get_time();
+   auto t0 = tools::get_time();
    cout << setprecision(12);
    int ndiff = 0;
    for(int j=0; j<H.cols(); j++){
@@ -71,9 +71,9 @@ int tests::test_hamiltonian(){
    cout << "eigenvalues:\n" 
 	<< e[0] << "\n" << e[1] << "\n" << e[2] << "\n"
 	<< e[3] << "\n" << e[4] << "\n" << e[5] << endl;
-   auto t1 = global::get_time();
+   auto t1 = tools::get_time();
    cout << "timing : " << setw(10) << fixed << setprecision(2) 
-	<< global::get_duration(t1-t0) << " s" << endl;
+	<< tools::get_duration(t1-t0) << " s" << endl;
    // compared with FCI value
    assert(abs(e[0]+7.87388139034) < thresh); 
    assert(abs(e[1]+7.74509251524) < thresh);

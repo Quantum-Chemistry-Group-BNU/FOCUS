@@ -1,18 +1,17 @@
-#include <iostream>
 #include <tuple>
 #include <bitset>
 #include <cassert>
 #include "../core/onstate.h"
-#include "../settings/global.h"
+#include "../core/tools.h"
 #include "tests.h"
 
 using namespace std;
 
 int tests::test_onstate(){
    cout << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
    cout << "test::test_onstate" << endl;
-   cout << global::line_separator << endl;	
+   cout << tools::line_separator << endl;	
  
    // test constructor and getocc/setocc
    fock::onstate state1(66);

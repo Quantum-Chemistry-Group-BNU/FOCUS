@@ -30,18 +30,15 @@ SRC = src
 BIN_DIR = ./bin
 OBJ_DIR = ./obj
 # all dependence
-SRC_DIR0 = ./$(SRC)/settings
 SRC_DIR1 = ./$(SRC)/io
 SRC_DIR2 = ./$(SRC)/core
 SRC_DIR3 = ./$(SRC)/tests
 SRC_DIR4 = ./$(SRC)/utils
-INCLUDE_DIR = -I$(SRC_DIR0) \
-	      -I$(SRC_DIR1) \
+INCLUDE_DIR = -I$(SRC_DIR1) \
 	      -I$(SRC_DIR2) \
 	      -I$(SRC_DIR3) \
 	      -I$(SRC_DIR4)
-SRC_DEP = $(wildcard $(SRC_DIR0)/*.cpp \
-  	      	     $(SRC_DIR1)/*.cpp \
+SRC_DEP = $(wildcard $(SRC_DIR1)/*.cpp \
 	  	     $(SRC_DIR2)/*.cpp \
 	  	     $(SRC_DIR3)/*.cpp \
 	  	     $(SRC_DIR4)/*.cpp)
