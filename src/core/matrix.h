@@ -10,12 +10,9 @@
 #include <vector>
 #include <complex>
 #include <fstream>
+#include "tools.h"
 
 namespace linalg{
-
-// simple strategy to enable both cases
-inline double conjugate(const double x){ return x; }
-inline std::complex<double> conjugate(const std::complex<double> x){ return std::conj(x); };
 
 // column-major matrix
 template <typename Tm>
@@ -197,14 +194,14 @@ struct matrix{
       matrix conj() const{
 	 matrix<Tm> mat(_rows,_cols);
          std::transform(_data, _data+_size, mat._data,
-			[](const Tm& x){return conjugate(x);});
+			[](const Tm& x){return tools::conjugate(x);});
 	 return mat;
       }
       matrix H() const{
          matrix<Tm> Ah(_cols,_rows);
          for(int j=0; j<_rows; j++){
             for(int i=0; i<_cols; i++){
-      	       Ah(i,j) = conjugate(_data[i*_rows+j]);
+      	       Ah(i,j) = tools::conjugate(_data[i*_rows+j]);
             }
          }
          return Ah;

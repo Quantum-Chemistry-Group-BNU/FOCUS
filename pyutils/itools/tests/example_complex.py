@@ -29,6 +29,10 @@ elif molname == 'hf':
    mol.atom = [['H',(0,0,0)],
    	       ['F',(0,0,R)]]		
    mol.basis = 'sto-3g'
+   # RHF -98.57048973900092
+   # DHF -98.6404374236861                DIRAC: -98.64043742396342
+   # DHF -98.62934960957465  with Gaunt - DIRAC: -98.62934960987491
+
 
 elif molname == 'ch3s':
    mol.atom = [['C', (1.22840691,   -1.18042226,    0.00000000)], 
@@ -69,7 +73,7 @@ mf.init_guess = 'atom'
 mf.level_shift = 0.0
 mf.max_cycle = 100
 mf.conv_tol=1.e-12
-mf.with_gaunt = False
+mf.with_gaunt = False #True
 print(mf.scf())
 
 #==================================================================
@@ -82,8 +86,8 @@ import ipyscf_complex
 iface = ipyscf_complex.iface()
 iface.mol = mol
 iface.mf = mf
-iface.nfrozen = 8 # spinor
-#iface.ifgaunt = mf.with_gaunt
+iface.nfrozen = 0 # spinor
+iface.ifgaunt = mf.with_gaunt
 sbas = mol.nao_2c()
 info = iface.get_integral4C(mf.mo_coeff[:,sbas:])
 iface.dump(info,fname='cmole.info')

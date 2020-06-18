@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <random>
 #include <chrono>
+#include <complex>
 
 using namespace std;
 
@@ -39,6 +40,13 @@ double get_duration(T t){
 // --- random --- 
 extern std::seed_seq seeds;
 extern std::default_random_engine generator;
+
+
+// --- conjugte ---
+inline double conjugate(const double x){ return x; }
+inline std::complex<double> conjugate(const std::complex<double> x){ 
+   return std::conj(x); 
+};
 
 // compress symmetric (i,j) [i>j] pair:
 // 10[0]

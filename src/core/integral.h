@@ -4,7 +4,6 @@
 #include <cassert>
 #include <vector>
 #include <string>
-#include <complex>
 // --- load ---
 #include <iostream>
 #include <iomanip>
@@ -14,10 +13,6 @@
 #include "tools.h"
 
 namespace integral{
-
-// simple strategy to enable both cases
-inline double conjugate(const double x){ return x; }
-inline std::complex<double> conjugate(const std::complex<double> x){ return std::conj(x); };
 
 template <typename Tm>
 struct one_body{
@@ -71,7 +66,7 @@ struct two_body{
 	    val = sgn*data[ijkl];
 	 }else{
 	    size_t ijkl = kl*(kl+1)/2+ij;
-	    val = sgn*conjugate(data[ijkl]);
+	    val = sgn*tools::conjugate(data[ijkl]);
 	 }
 	 return val;
       }
@@ -89,7 +84,7 @@ struct two_body{
 	    data[ijkl] = sgn*val;
 	 }else{
 	    size_t ijkl = kl*(kl+1)/2+ij;
-	    data[ijkl] = sgn*conjugate(val);
+	    data[ijkl] = sgn*tools::conjugate(val);
 	 }
       }
       void print() const{

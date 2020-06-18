@@ -27,7 +27,7 @@ double get_Hii(const onstate& state1,
    return Hii;
 }
 
-// differ by single 
+// differ by single: hpq + <pk||qk> 
 template <typename Tm>
 std::pair<Tm,long> get_HijS(const onstate& state1, 
 			    const onstate& state2,
@@ -43,16 +43,14 @@ std::pair<Tm,long> get_HijS(const onstate& state1,
       while(repr != 0){
          int j = 63-__builtin_clzl(repr);
 	 int k = i*64+j;
-	 Hij += int2e.get(p[0],q[0],k,k) 
-	      - int2e.get(p[0],k,k,q[0]); // <pk||qk>
+	 Hij += int2e.get(p[0],k,q[0],k); // <pk||qk>
 	 repr &= ~(1ULL<<j);
       }
    }
 #else
    for(int k=0; k<state2.size(); k++){
       if(state2[k]){
-         Hij += int2e.get(p[0],q[0],k,k)
-              - int2e.get(p[0],k,k,q[0]); 
+         Hij += int2e.get(p[0],k,q[0],k);
       }
    }
 #endif
@@ -62,7 +60,7 @@ std::pair<Tm,long> get_HijS(const onstate& state1,
    return std::make_pair(Hij, ph1);
 }
 
-// differ by double: <p0p1||q0q1> = [p0q0|p1q1]-[p0q1|p1q0]
+// differ by double: <p0p1||q0q1>
 template <typename Tm>
 std::pair<Tm,long> get_HijD(const onstate& state1, 
 			    const onstate& state2,
@@ -72,8 +70,7 @@ std::pair<Tm,long> get_HijD(const onstate& state1,
    state1.diff_orb(state2,p,q);
    int sgn = state1.parity(p[0])*state1.parity(p[1])
             *state2.parity(q[0])*state2.parity(q[1]);
-   Tm Hij = static_cast<double>(sgn)*(int2e.get(p[0],q[0],p[1],q[1])
-		    		     -int2e.get(p[0],q[1],p[1],q[0]));
+   Tm Hij = static_cast<double>(sgn)*int2e.get(p[0],p[1],q[0],q[1]);
    long ph2 = sgn*(p[0]+(q[0]+(p[1]+q[1]*int1e.sorb)*int1e.sorb)*int1e.sorb);
    return std::make_pair(Hij, ph2);
 }
