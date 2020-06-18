@@ -6,6 +6,7 @@
 #include <vector>
 #include <functional> // for std::function
 #include "../settings/global.h"
+#include "tools.h"
 #include "matrix.h"
 #include "linalg.h"
 
@@ -164,7 +165,7 @@ struct dvdsonSolver{
                  << std::setw(10) << std::setprecision(2) << std::scientific << rnorm(i,iter) << " "
           	 << std::setw(4) << nsub << " " 
                  << std::setw(5) << nmvp << " "
-                 << std::setw(10) << std::setprecision(2) << std::scientific << t << endl;
+                 << std::setw(10) << std::setprecision(2) << std::scientific << t << std::endl;
          } // i
       } 
 

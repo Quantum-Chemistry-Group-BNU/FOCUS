@@ -1,83 +1,8 @@
-#include <iostream>
-#include "../settings/global.h"
-#include "../core/tools.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
-#include "../core/dvdson.h"
 #include "tests.h"
-#include <complex>
-#include <functional> // for std::function
+#include "test_dvdson.h"
 
 using namespace linalg;
 using namespace std;
-
-vector<double> get_diag(const matrix<double>& mat){
-   int n = mat.rows();
-   vector<double> diag(n);
-   for(int i=0; i<n; i++){
-      diag[i] = mat(i,i);
-   }
-   return diag;
-}
-void get_Mx(double* y, const double* x, const matrix<double>& M){
-   int n = M.rows();
-   for(int i=0; i<n; i++){
-      y[i] = 0.0;
-      for(int j=0; j<n; j++){
-         y[i] += M(i,j)*x[j]; 
-      }
-   }
-}
-int iter_solver(const matrix<double>& mat, vector<double>& es, matrix<double>& vs){	
-   // Davidson solver 
-   dvdsonSolver<double> solver;
-   solver.ndim = mat.rows();
-   solver.neig = es.size();
-   // diag
-   auto Diag = get_diag(mat);
-   solver.Diag = Diag.data(); 
-   using std::placeholders::_1;
-   using std::placeholders::_2;
-   solver.HVec = bind(get_Mx, _1, _2, cref(mat));
-   // solve
-   solver.solve_iter(es.data(), vs.data());
-   //solver.solve_diag(es.data(), vs.data());
-   return 0;
-}
-
-vector<double> get_diag(const matrix<complex<double>>& mat){
-   int n = mat.rows();
-   vector<double> diag(n);
-   for(int i=0; i<n; i++){
-      diag[i] = mat(i,i).real();
-   }
-   return diag;
-}
-void get_Mxc(complex<double>* y, const complex<double>* x, const matrix<complex<double>>& M){
-   int n = M.rows();
-   for(int i=0; i<n; i++){
-      y[i] = 0.0;
-      for(int j=0; j<n; j++){
-         y[i] += M(i,j)*x[j]; 
-      }
-   }
-}
-int iter_solver(const matrix<complex<double>>& mat, vector<double>& es, matrix<complex<double>>& vs){	
-   // Davidson solver 
-   dvdsonSolver<complex<double>> solver;
-   solver.ndim = mat.rows();
-   solver.neig = es.size();
-   // diag
-   auto Diag = get_diag(mat);
-   solver.Diag = Diag.data(); 
-   using std::placeholders::_1;
-   using std::placeholders::_2;
-   solver.HVec = bind(get_Mxc, _1, _2, cref(mat));
-   // solve
-   solver.solve_diag(es.data(), vs.data());
-   solver.solve_iter(es.data(), vs.data(), vs.data());
-   return 0;
-}
 
 int tests::test_dvdson(){
    cout << endl;
