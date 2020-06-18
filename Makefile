@@ -33,15 +33,18 @@ OBJ_DIR = ./obj
 SRC_DIR1 = ./$(SRC)/io
 SRC_DIR2 = ./$(SRC)/core
 SRC_DIR3 = ./$(SRC)/tests
-SRC_DIR4 = ./$(SRC)/utils
+SRC_DIR4 = ./$(SRC)/sci
+SRC_DIR5 = ./$(SRC)/tns
 INCLUDE_DIR = -I$(SRC_DIR1) \
 	      -I$(SRC_DIR2) \
 	      -I$(SRC_DIR3) \
-	      -I$(SRC_DIR4)
+	      -I$(SRC_DIR4) \
+	      -I$(SRC_DIR5)
 SRC_DEP = $(wildcard $(SRC_DIR1)/*.cpp \
 	  	     $(SRC_DIR2)/*.cpp \
 	  	     $(SRC_DIR3)/*.cpp \
-	  	     $(SRC_DIR4)/*.cpp)
+	  	     $(SRC_DIR4)/*.cpp \
+	  	     $(SRC_DIR5)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
 # all the files
