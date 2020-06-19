@@ -182,6 +182,14 @@
  - 1. complex version ?
  - 2. parallelization ?
 
+ 20200618 complex version: core utilities using template
+
+ 2020xxxx complex verions: sci+pt2
+	  - loosing Ms in CI
+ 
+ 2020xxxx complex verions: comb
+	  - loosing Ms in symmetry!!!
+
  2020xxxx documentation of each step in formula & diagrams [considering complex case]
 
  2020xxxx complex version: relativistic SCI/DMRG

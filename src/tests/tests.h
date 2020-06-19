@@ -14,10 +14,10 @@ int test_hamiltonian();
 int test_dvdson();
 int test_simpleci();
 
-/*
-
 // --- sci ---
 int test_fci();
+
+/*
 int test_rdm();
 int test_sci();
 int test_pt2();

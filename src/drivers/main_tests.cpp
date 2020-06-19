@@ -15,24 +15,17 @@ int main(){
    tests::test_dvdson();
    tests::test_simpleci();
 
-/*   
-   tests::test_dvdson();
-   
+   // --- sci ---
    tests::test_fci();
    
+/*   
    tests::test_rdm();
    
    tests::test_sci();
 
-   tests::test_vmc();
-   
    tests::test_pt2();
-   
-   tests::test_ordering();
-
-   tests::test_proj();  
-   
-   tests::test_ras();
+  
+   // --- comb ---  
 
    tests::test_comb();
 */

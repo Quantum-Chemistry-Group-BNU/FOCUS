@@ -1,4 +1,4 @@
-import numpy
+TODOsimport numpy
 from pyscf import gto,scf
 
 #==================================================================
@@ -10,7 +10,7 @@ mol.verbose = 5 #6
 #==================================================================
 # Coordinates and basis
 #==================================================================
-molname = 'hf'
+molname = 'random'
 
 if molname == 'ne':
    R = 1.e0
@@ -24,6 +24,13 @@ elif molname == 'h':
    mol.atom = [['H',(0.0,0.0,i*R)] for i in range(natoms)]
    mol.basis = 'sto-3g' #cc-pvdz' #sto-3g' #6-31g' 
 
+elif molname == 'random':
+   mol.atom = [['Li',(0,0,0)],
+   	       ['H' ,(0,0,1)],
+               ['H' ,(2,0.8,0)],
+               ['H' ,(2,0,0)]]
+   mol.basis = 'sto-3g'
+
 elif molname == 'hf':
    R=1.0
    mol.atom = [['H',(0,0,0)],
@@ -32,7 +39,6 @@ elif molname == 'hf':
    # RHF -98.57048973900092
    # DHF -98.6404374236861                DIRAC: -98.64043742396342
    # DHF -98.62934960957465  with Gaunt - DIRAC: -98.62934960987491
-
 
 elif molname == 'ch3s':
    mol.atom = [['C', (1.22840691,   -1.18042226,    0.00000000)], 
@@ -73,8 +79,9 @@ mf.init_guess = 'atom'
 mf.level_shift = 0.0
 mf.max_cycle = 100
 mf.conv_tol=1.e-12
-mf.with_gaunt = False #True
+mf.with_gaunt = False
 print(mf.scf())
+print(mol.nelectron)
 
 #==================================================================
 # Dump integrals
@@ -86,11 +93,12 @@ import ipyscf_complex
 iface = ipyscf_complex.iface()
 iface.mol = mol
 iface.mf = mf
-iface.nfrozen = 0 # spinor
+iface.nfrozen = 4 # spinor
 iface.ifgaunt = mf.with_gaunt
 sbas = mol.nao_2c()
 info = iface.get_integral4C(mf.mo_coeff[:,sbas:])
 iface.dump(info,fname='cmole.info')
+exit(1)
 
 #=================
 # Results for H6 
