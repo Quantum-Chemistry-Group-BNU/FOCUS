@@ -183,10 +183,8 @@
  - 2. parallelization ?
 
  20200618 complex version: core utilities using template
-
  20200621 complex version: fci
-
- 2020xxxx complex verions: sci+pt2
+ 20200622 complex verions: sci+pt2
 	  - loosing Ms in CI
  
  2020xxxx complex verions: comb
