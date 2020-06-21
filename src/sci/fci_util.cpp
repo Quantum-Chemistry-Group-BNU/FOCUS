@@ -45,53 +45,49 @@ void product_space::get_pspace(const onspace& space,
    dimB = udxB;
 }
 
+// update Cmn 
+void coupling_table::update_Cmn(const onspace& space,
+			        const int istart,
+			        const pair<int,int>& key,
+			        vector<set<int>>& Cmn){
+   int dim = space.size(); 
+   Cmn.resize(dim);
+   for(int i=0; i<dim; i++){
+      if(i<istart){
+         for(int j=istart; j<dim; j++){
+            auto pr = space[i].diff_type(space[j]);
+            if(pr == key) Cmn[i].insert(j);
+         }
+      }else{
+         for(int j=0; j<dim; j++){
+            auto pr = space[i].diff_type(space[j]);
+            if(pr == key) Cmn[i].insert(j);
+         }
+      }
+   }
+}
+			     
 // coupling_table
 void coupling_table::get_Cmn(const onspace& space,
 			     const bool Htype,
 			     const int istart){
    auto t0 = tools::get_time();
-   int avg = 0;
-   int dim = space.size();
    // C11
-   C11.resize(dim);
-   for(int i=0; i<dim; i++){
-      if(i<istart){
-         for(int j=istart; j<dim; j++){
-            auto pr = space[i].diff_type(space[j]);
-            if(pr == make_pair(1,1)) C11[i].insert(j);
-         }
-      }else{
-         for(int j=0; j<dim; j++){
-            auto pr = space[i].diff_type(space[j]);
-            if(pr == make_pair(1,1)) C11[i].insert(j);
-         }
-      }
-      avg += C11[i].size();
-   }
+   auto key11 = make_pair(1,1); 
+   update_Cmn(space, istart, key11, C11);
    // relativistic Hamiltonian
    if(Htype){
-      
-/*  
-      C11.resize(dim);
-      for(int i=0; i<dim; i++){
-         if(i<istart){
-            for(int j=istart; j<dim; j++){
-               auto pr = space[i].diff_type(space[j]);
-               if(pr == make_pair(1,1)) C11[i].insert(j);
-            }
-         }else{
-            for(int j=0; j<dim; j++){
-               auto pr = space[i].diff_type(space[j]);
-               if(pr == make_pair(1,1)) C11[i].insert(j);
-            }
-         }
-         avg += C11[i].size();
-      }
-*/
-
+      // C01, C10, C20, C02
+      auto key01 = make_pair(0,1);
+      update_Cmn(space, istart, key01, C01);
+      auto key10 = make_pair(1,0);
+      update_Cmn(space, istart, key10, C10);
+      auto key20 = make_pair(2,0);
+      update_Cmn(space, istart, key20, C20);
+      auto key02 = make_pair(0,2);
+      update_Cmn(space, istart, key02, C02);
    } // Htype
    auto t1 = tools::get_time();
-   cout << "coupling_table::get_Cmn : dim=" << dim
-	<< " avg=" << avg/dim
+   cout << "coupling_table::get_Cmn : dim=" << space.size()
 	<< " timing : " << tools::get_duration(t1-t0) << " s" << endl; 
 }

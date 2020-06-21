@@ -32,14 +32,18 @@ struct product_space{
       int dimA0 = 0, dimB0 = 0, dimA, dimB;
 };
 
-// compute coupling of states:
-// basically describe how two states are differ defined by diff_type,
-// which partition the cartesian space {(I,J)} into disjoint subspace!
+// Coupling pattern between states as defined by diff_type,
+// which partition the cartesian space {(I,J)} into disjoint sets!
+// Note: for two-body H, only S & D matter such that 0<=m<=2, 0<=n<=2, 0<m+n<=2.
 struct coupling_table{
    public:
       void get_Cmn(const fock::onspace& space, 
 		   const bool Htype,
 		   const int istart=0);
+      void update_Cmn(const fock::onspace& space,
+		      const int istart,
+		      const pair<int,int>& key,
+		      std::vector<std::set<int>>& Cmn);
    public:
       std::vector<std::set<int>> C11; // differ by single (sorted, binary_search)
       std::vector<std::set<int>> C10, C01; // <I|p^+|J>, <I|p|J>
@@ -50,6 +54,8 @@ struct coupling_table{
 template <typename Tm>
 struct sparse_hamiltonian{
    public:
+
+      // construct Hij	   
       void get_hamiltonian(const fock::onspace& space,
 		           const product_space& pspace,
 		           const coupling_table& ctabA,
@@ -83,33 +89,33 @@ struct sparse_hamiltonian{
          connect.resize(dim);
          value.resize(dim);
          diff.resize(dim);
-	 get_Haaaa(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
-         get_Hbbbb(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
-	 get_Habba(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
-	 /*
+         get_HIJ_A1122_B00(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
+	 get_HIJ_A00_B1122(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
+	 get_HIJ_A11_B11(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
          if(Htype){
-	    get_Haaab(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
-            get_Hbbba(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
-	    get_Haabb(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
+	    get_HIJ_ABmixed1(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
+	    get_HIJ_ABmixed2(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
 	 }
-	 */
-   auto t1 = tools::get_time();
-   cout << "timing for sparse_hamiltonian::get_hamiltonian : " 
-	<< setprecision(2) << tools::get_duration(t1-t0) << " s" << endl;
+         auto t1 = tools::get_time();
+         cout << "timing for sparse_hamiltonian::get_hamiltonian : " 
+              << setprecision(2) << tools::get_duration(t1-t0) << " s" << endl;
       }
 
-      // (C11+C22)_A*C00_B:
-      // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by single/double
+      // --- HIJ construction by coupling pattern between two states (I & J) ---
+      
+      // <I_A,I_B|H|J_A,J_B> = (C11+C22)_A*C00_B
+      // 		       {I_A,J_A} differ by single/double
       // 	 	       {I_B,J_B} differ by zero (I_B=J_B)
-      void get_Haaaa(const fock::onspace& space,
-                     const product_space& pspace,
-                     const coupling_table& ctabA,
-                     const coupling_table& ctabB,
-                     const integral::two_body<Tm>& int2e,
-                     const integral::one_body<Tm>& int1e,
-                     const int istart,
-		     const bool debug){
+      void get_HIJ_A1122_B00(const fock::onspace& space,
+                             const product_space& pspace,
+                             const coupling_table& ctabA,
+                             const coupling_table& ctabB,
+                             const integral::two_body<Tm>& int2e,
+                             const integral::one_body<Tm>& int1e,
+                             const int istart,
+		             const bool debug){
          auto t0 = tools::get_time();
+	 // (C11+C22)_A*C00_B
          for(int ia=0; ia<pspace.dimA; ia++){
             for(const auto& pib : pspace.rowA[ia]){
                int ib = pib.first;
@@ -123,11 +129,13 @@ struct sparse_hamiltonian{
                   auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
                   if(pr == make_pair(1,1)){
                      auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
-                     connect[i].push_back(j);
+		     if(abs(pr.first) < cutoff) continue;
+		     connect[i].push_back(j);
                      value[i].push_back(pr.first);
                      diff[i].push_back(pr.second);
                   }else if(pr == make_pair(2,2)){
                      auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
+		     if(abs(pr.first) < cutoff) continue;
                      connect[i].push_back(j);
                      value[i].push_back(pr.first);
                      diff[i].push_back(pr.second);
@@ -136,89 +144,278 @@ struct sparse_hamiltonian{
             } // ib
          } // ia
          auto t1 = tools::get_time();
-         if(debug) cout << "timing for (C11+C22)_A*C00_B : " << setprecision(2) 
+         if(debug) cout << "timing for get_HIJ_A1122_B00 : " << setprecision(2) 
               	        << tools::get_duration(t1-t0) << " s" << endl;
       }
 
-      // C00_A*(C11+C22)_B:
-      // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by zero (I_A=J_A)
-      // 			    {I_B,J_B} differ by single/double
-      void get_Hbbbb(const fock::onspace& space,
-                     const product_space& pspace,
-                     const coupling_table& ctabA,
-                     const coupling_table& ctabB,
-                     const integral::two_body<Tm>& int2e,
-                     const integral::one_body<Tm>& int1e,
-                     const int istart,
-		     const bool debug){
+      // <I_A,I_B|H|J_A,J_B> = C00_A*(C11+C22)_B
+      // 		       {I_A,J_A} differ by zero (I_A=J_A)
+      // 		       {I_B,J_B} differ by single/double
+      void get_HIJ_A00_B1122(const fock::onspace& space,
+                             const product_space& pspace,
+                             const coupling_table& ctabA,
+                             const coupling_table& ctabB,
+                             const integral::two_body<Tm>& int2e,
+                             const integral::one_body<Tm>& int1e,
+                             const int istart,
+		             const bool debug){
          auto t0 = tools::get_time();
+	 // C00_A*(C11+C22)_B
          for(int ia=0; ia<pspace.dimA; ia++){
             for(const auto& pib : pspace.rowA[ia]){
-      	 int ib = pib.first;
-      	 int i = pib.second;
-      	 if(i < istart) continue; // incremental build
+      	       int ib = pib.first;
+      	       int i = pib.second;
+      	       if(i < istart) continue; // incremental build
                for(const auto& pjb : pspace.rowA[ia]){
-      	    int jb = pjb.first;
-      	    int j = pjb.second;
-      	    if(j >= i) continue; 
-      	    // check connectivity <I_B|H|J_B>
-      	    auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
-      	    if(pr == make_pair(1,1)){
-      	       auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
-      	       connect[i].push_back(j);
-      	       value[i].push_back(pr.first);
-      	       diff[i].push_back(pr.second);
-      	    }else if(pr == make_pair(2,2)){
-      	       auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
-      	       connect[i].push_back(j);
-      	       value[i].push_back(pr.first);
-      	       diff[i].push_back(pr.second);
-      	    }
-      	 } // jb
+      	          int jb = pjb.first;
+      	          int j = pjb.second;
+      	          if(j >= i) continue; 
+      	          // check connectivity <I_B|H|J_B>
+      	          auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
+      	          if(pr == make_pair(1,1)){
+      	             auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
+		     if(abs(pr.first) < cutoff) continue;
+      	             connect[i].push_back(j);
+      	             value[i].push_back(pr.first);
+      	             diff[i].push_back(pr.second);
+      	          }else if(pr == make_pair(2,2)){
+      	             auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
+		     if(abs(pr.first) < cutoff) continue;
+      	             connect[i].push_back(j);
+      	             value[i].push_back(pr.first);
+      	             diff[i].push_back(pr.second);
+      	          }
+      	       } // jb
             } // ib
          } // ia
          auto t1 = tools::get_time();
-         if(debug) cout << "timing for C00_A*(C11+C22)_B : " << setprecision(2) 
-      		  << tools::get_duration(t1-t0) << " s" << endl;
+         if(debug) cout << "timing for get_HIJ_A00_B1122 : " << setprecision(2) 
+      		        << tools::get_duration(t1-t0) << " s" << endl;
       }
       
-   // 3. C11_A*C11_B:
-   // <I_A,I_B|H|J_A,J_B> = {I_A,J_A} differ by single
-   // 			    {I_B,J_B} differ by single
-       void get_Habba(const fock::onspace& space,
-                     const product_space& pspace,
-                     const coupling_table& ctabA,
-                     const coupling_table& ctabB,
-                     const integral::two_body<Tm>& int2e,
-                     const integral::one_body<Tm>& int1e,
-                     const int istart,
-		     const bool debug){
+      // <I_A,I_B|H|J_A,J_B> = C11_A*C11_B
+      // 		       {I_A,J_A} differ by single
+      // 		       {I_B,J_B} differ by single
+      void get_HIJ_A11_B11(const fock::onspace& space,
+                           const product_space& pspace,
+                           const coupling_table& ctabA,
+                           const coupling_table& ctabB,
+                           const integral::two_body<Tm>& int2e,
+                           const integral::one_body<Tm>& int1e,
+                           const int istart,
+		           const bool debug){
          auto t0 = tools::get_time();
-    for(int ia=0; ia<pspace.dimA; ia++){
-      for(const auto& pib : pspace.rowA[ia]){
-	 int ib = pib.first;
-	 int i = pib.second;
-	 if(i < istart) continue; // incremental build
-	 for(int ja : ctabA.C11[ia]){
-	    for(const auto& pjb : pspace.rowA[ja]){
-	       int jb = pjb.first;
-	       int j = pjb.second;	       
-   	       if(j >=i) continue;
-	       auto search = ctabB.C11[ib].find(jb);
-	       if(search != ctabB.C11[ib].end()){
-	          auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
-	          connect[i].push_back(j);
-	          value[i].push_back(pr.first);
-	          diff[i].push_back(pr.second);
-	       } // j>0
-	    } // jb
-	 } // ib
-      } // ja
-   } // ia
-   auto t1 = tools::get_time();
-   if(debug) cout << "timing for C11_A*C11_B : " << setprecision(2) 
-   		  << tools::get_duration(t1-t0) << " s" << endl;
-       }
+         for(int ia=0; ia<pspace.dimA; ia++){
+            for(const auto& pib : pspace.rowA[ia]){
+               int ib = pib.first;
+               int i = pib.second;
+               if(i < istart) continue; // incremental build
+               for(int ja : ctabA.C11[ia]){
+                  for(const auto& pjb : pspace.rowA[ja]){
+                     int jb = pjb.first;
+                     int j = pjb.second;	       
+         	     if(j >=i) continue;
+                     auto search = ctabB.C11[ib].find(jb);
+                     if(search != ctabB.C11[ib].end()){
+                        auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
+		        if(abs(pr.first) < cutoff) continue;
+                        connect[i].push_back(j);
+                        value[i].push_back(pr.first);
+                        diff[i].push_back(pr.second);
+                     } // j>0
+                  } // jb
+               } // ja
+            } // ia
+         } // ia
+         auto t1 = tools::get_time();
+         if(debug) cout << "timing for get_HIJ_A11_B11 : " << setprecision(2) 
+         		<< tools::get_duration(t1-t0) << " s" << endl;
+      }
+
+      // --- relativistic case ---
+
+      // <I_A,I_B|H|J_A,J_B> = C01_A*C10_B
+      // 		     + C01_A*C21_B
+      // 		     + C10_A*C01_B
+      // 		     + C10_A*C12_B
+      // 		     + C12_A*C10_B 
+      // 		     + C21_A*C01_B
+      void get_HIJ_ABmixed1(const fock::onspace& space,
+                            const product_space& pspace,
+                            const coupling_table& ctabA,
+                            const coupling_table& ctabB,
+                            const integral::two_body<Tm>& int2e,
+                            const integral::one_body<Tm>& int1e,
+                            const int istart,
+		            const bool debug){
+         auto t0 = tools::get_time();
+         // C01_A*(C10_B+C21_B)
+	 for(int ia=0; ia<pspace.dimA; ia++){
+            for(const auto& pib : pspace.rowA[ia]){
+               int ib = pib.first;
+               int i = pib.second;
+               if(i < istart) continue; // incremental build
+	       for(int ja : ctabA.C01[ia]){
+	          for(const auto& pjb : pspace.rowA[ja]){
+                     int jb = pjb.first;
+                     int j = pjb.second;	       
+         	     if(j >=i) continue;
+                     // check connectivity 
+                     auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
+                     if(pr == make_pair(1,0)){
+                        auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
+		        if(abs(pr.first) < cutoff) continue;
+		        connect[i].push_back(j);
+                        value[i].push_back(pr.first);
+                        diff[i].push_back(pr.second);
+                     }else if(pr == make_pair(2,1)){
+                        auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
+		        if(abs(pr.first) < cutoff) continue;
+                        connect[i].push_back(j);
+                        value[i].push_back(pr.first);
+                        diff[i].push_back(pr.second);
+                     }
+		  } // jb
+               } // ja
+            } // ib
+         } // ia
+         // C10_A*(C01_B+C12_B)
+	 for(int ia=0; ia<pspace.dimA; ia++){
+            for(const auto& pib : pspace.rowA[ia]){
+               int ib = pib.first;
+               int i = pib.second;
+               if(i < istart) continue; // incremental build
+	       for(int ja : ctabA.C10[ia]){
+	          for(const auto& pjb : pspace.rowA[ja]){
+                     int jb = pjb.first;
+                     int j = pjb.second;	       
+         	     if(j >=i) continue;
+                     // check connectivity 
+                     auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
+                     if(pr == make_pair(0,1)){
+                        auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
+		        if(abs(pr.first) < cutoff) continue;
+		        connect[i].push_back(j);
+                        value[i].push_back(pr.first);
+                        diff[i].push_back(pr.second);
+                     }else if(pr == make_pair(1,2)){
+                        auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
+		        if(abs(pr.first) < cutoff) continue;
+                        connect[i].push_back(j);
+                        value[i].push_back(pr.first);
+                        diff[i].push_back(pr.second);
+                     }
+		  } // jb
+               } // ja
+            } // ib
+         } // ia
+         // C12_A*C10_B + C21_A*C01_B
+         for(int ia=0; ia<pspace.dimA; ia++){
+            for(const auto& pib : pspace.rowA[ia]){
+               int ib = pib.first;
+               int i = pib.second;
+               if(i < istart) continue; // incremental build
+	       // C12_A*C10_B
+               for(int jb : ctabB.C10[ib]){
+                  for(const auto& pja : pspace.colB[jb]){
+                     int ja = pja.first;
+                     int j = pja.second;	       
+         	     if(j >=i) continue;
+                     // check connectivity 
+                     auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
+                     if(pr == make_pair(1,2)){
+                        auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
+		        if(abs(pr.first) < cutoff) continue;
+		        connect[i].push_back(j);
+                        value[i].push_back(pr.first);
+                        diff[i].push_back(pr.second);
+		     }
+                  } // ja
+               } // jb
+	       // C21_A*C01_B
+               for(int jb : ctabB.C01[ib]){
+                  for(const auto& pja : pspace.colB[jb]){
+                     int ja = pja.first;
+                     int j = pja.second;	       
+         	     if(j >=i) continue;
+                     // check connectivity 
+                     auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
+                     if(pr == make_pair(2,1)){
+                        auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
+		        if(abs(pr.first) < cutoff) continue;
+		        connect[i].push_back(j);
+                        value[i].push_back(pr.first);
+                        diff[i].push_back(pr.second);
+		     }
+                  } // ja
+               } // jb
+            } // ja
+         } // ia
+         auto t1 = tools::get_time();
+         if(debug) cout << "timing for get_HIJ_ABmixed1 : " << setprecision(2) 
+              	        << tools::get_duration(t1-t0) << " s" << endl;
+      }
+
+      // <I_A,I_B|H|J_A,J_B> = C02_A*C20_B + C20_A*C02_B
+      void get_HIJ_ABmixed2(const fock::onspace& space,
+                            const product_space& pspace,
+                            const coupling_table& ctabA,
+                            const coupling_table& ctabB,
+                            const integral::two_body<Tm>& int2e,
+                            const integral::one_body<Tm>& int1e,
+                            const int istart,
+		            const bool debug){
+         auto t0 = tools::get_time();
+	 // C02_A*C20_B = <I_A|rs|J_A><I_B|p+q+|J_B>
+         for(int ia=0; ia<pspace.dimA; ia++){
+            for(const auto& pib : pspace.rowA[ia]){
+               int ib = pib.first;
+               int i = pib.second;
+               if(i < istart) continue; // incremental build
+               for(int ja : ctabA.C02[ia]){
+                  for(const auto& pjb : pspace.rowA[ja]){
+                     int jb = pjb.first;
+                     int j = pjb.second;	       
+         	     if(j >=i) continue;
+                     auto search = ctabB.C20[ib].find(jb);
+                     if(search != ctabB.C20[ib].end()){
+                        auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
+		        if(abs(pr.first) < cutoff) continue;
+                        connect[i].push_back(j);
+                        value[i].push_back(pr.first);
+                        diff[i].push_back(pr.second);
+                     } // j>0
+                  } // jb
+               } // ib
+            } // ja
+         } // ia
+	 // C20_A*C02_B = <I_A|p+q+|J_A><I_B|rs|J_B>
+         for(int ia=0; ia<pspace.dimA; ia++){
+            for(const auto& pib : pspace.rowA[ia]){
+               int ib = pib.first;
+               int i = pib.second;
+               if(i < istart) continue; // incremental build
+               for(int ja : ctabA.C20[ia]){
+                  for(const auto& pjb : pspace.rowA[ja]){
+                     int jb = pjb.first;
+                     int j = pjb.second;	       
+         	     if(j >=i) continue;
+                     auto search = ctabB.C02[ib].find(jb);
+                     if(search != ctabB.C02[ib].end()){
+                        auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
+		        if(abs(pr.first) < cutoff) continue;
+                        connect[i].push_back(j);
+                        value[i].push_back(pr.first);
+                        diff[i].push_back(pr.second);
+                     } // j>0
+                  } // jb
+               } // ib
+            } // ja
+         } // ia
+         auto t1 = tools::get_time();
+         if(debug) cout << "timing for get_HIJ_ABmixed2 : " << setprecision(2) 
+         		<< tools::get_duration(t1-t0) << " s" << endl;
+      }
 
       // compare with full construction
       void check(const fock::onspace& space,
@@ -238,30 +435,34 @@ struct sparse_hamiltonian{
 	    H1(i,i) += diag[i];
          }
          // compared againts construction by Slater-Condon rule
-         auto H2 = fock::get_Ham(space,int2e,int1e,ecore);
+         auto H0 = fock::get_Ham(space,int2e,int1e,ecore);
+	 cout << setprecision(6);
          for(int i=0; i<dim; i++){
             for(int j=0; j<dim; j++){
-               if(abs(H1(i,j))<1.e-8 && abs(H2(i,j))<1.e-8) continue;
-               if(abs(H1(i,j)-H2(i,j))<1.e-8) continue;
-               cout << "i,j=" << i << "," << j << " "
-                    << space[i] << " " << space[j]  
-                    << " val=" << H1(i,j) << "," << H2(i,j) 
-                    << " diff=" << H1(i,j)-H2(i,j) 
+               //if(abs(H1(i,j))<1.e-8 && abs(H2(i,j))<1.e-8) continue;
+               if(abs(H1(i,j)-H0(i,j))<1.e-8) continue;
+               cout << "i,j=" << i << "," << j 
+                    << " val1=" << H1(i,j)  
+		    << " val0=" << H0(i,j)  
+                    << " diff=" << H1(i,j)-H0(i,j) 
+                    << " pair=" << space[i] << " " << space[j]  
                     << " num=" << space[i].diff_num(space[j]) 
                     << endl;
             }
          } 
-	 double diff = normF(H2-H1);
-         cout << "|H2-H1|=" << diff << endl;
+	 double diff = normF(H1-H0);
+         cout << "|H1-H0|=" << diff << endl;
 	 if(diff > thresh){
-	    cout << "error: difference is greater than thresh=" << thresh << endl; 
+	    cout << "error: difference is greater than thresh=" << thresh << endl;
+	    exit(1); 
 	 }
       }
 
       // analyze the magnitude of Hij
       void analysis(){
    	 cout << "\nsparse_hamiltonian::analysis" << endl;
-         map<int,int,greater<int>> bucket;
+         const double thresh = 1.e-8;
+	 map<int,int,greater<int>> bucket;
          double size = 1.e-20; // avoid divide zero in the special case H=0;
          double Hsum = 0;
          for(int i=0; i<dim; i++){
@@ -269,14 +470,15 @@ struct sparse_hamiltonian{
             for(int jdx=0; jdx<connect[i].size(); jdx++){
       	       int j = connect[i][jdx];
       	       double aval = abs(value[i][jdx]);
-      	       if(aval > 1.e-8){
+      	       if(aval > thresh){
       	          int n = floor(log10(aval));
       	          bucket[n] += 1;
       	          Hsum += aval;
       	       }
             }
          }
-         double avc = 2.0*size/dim;
+	 // averaged connection per row
+         double avc = 2.0*size/dim; 
          cout << "dim = " << dim
          	<< "  avc = " << defaultfloat << fixed << avc
          	<< "  per = " << defaultfloat << setprecision(3) << avc/(dim-1)*100 << endl; 
@@ -288,19 +490,19 @@ struct sparse_hamiltonian{
             int n = pr.first;
             accum += per;
             cout << "|Hij| in 10^" << showpos << n+1 << "-10^" << n << " : " 
-      	         << defaultfloat << noshowpos << fixed << setw(8) << setprecision(3) << per << " " 
-      	         << defaultfloat << noshowpos << fixed << setw(8) << setprecision(3) << accum 
+      	         << " per=" << defaultfloat << noshowpos << fixed << setw(5) << setprecision(1) << per << " " 
+      	         << " accum=" << defaultfloat << noshowpos << fixed << setw(5) << setprecision(1) << accum 
       	         << endl;
          }
       }
    public:
+      const double cutoff = 1.e-16;
       int dim;
-      // diagonal part: H[i,i]
-      std::vector<double> diag;   
+      std::vector<double> diag; // H[i,i]
       // lower-riangular part: H[i,j] (i>j)
       std::vector<std::vector<int>> connect; // connected by H
-      std::vector<std::vector<Tm>> value; // H[i][j] 
-      std::vector<std::vector<long>> diff; // packed orbital difference 
+      std::vector<std::vector<Tm>> value;    // H[i][j] 
+      std::vector<std::vector<long>> diff;   // packed orbital difference 
 };
 
 } // fci

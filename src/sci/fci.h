@@ -109,7 +109,6 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
 		   	   int2e, int1e, ecore, Htype);
    sparseH.check(space, int2e, int1e, ecore);
    sparseH.analysis();
-   exit(1);
    auto td = tools::get_time();
    if(debug) cout << "timing for sparseH : " << setprecision(2) 
 		  << tools::get_duration(td-tc) << " s" << endl;

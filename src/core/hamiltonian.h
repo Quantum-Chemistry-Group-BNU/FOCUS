@@ -100,8 +100,8 @@ linalg::matrix<Tm> get_Ham(const onspace& space,
 		           const integral::two_body<Tm>& int2e,
 		           const integral::one_body<Tm>& int1e,
 		           const double ecore){
-   std::cout << "\nfock::get_Ham" << std::endl; 
    auto dim = space.size();
+   std::cout << "fock::get_Ham dim=" << dim << std::endl; 
    linalg::matrix<Tm> H(dim,dim);
    // column major
    for(size_t j=0; j<dim; j++){
