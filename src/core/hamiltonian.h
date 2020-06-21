@@ -3,6 +3,7 @@
 
 #include <tuple>
 #include "onstate.h"
+#include "onspace.h"
 #include "integral.h"
 #include "matrix.h"
 

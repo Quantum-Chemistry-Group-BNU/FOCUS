@@ -5,7 +5,7 @@
 #include "../core/dvdson.h"
 #include "../core/simpleci.h"
 #include "../core/analysis.h"
-//#include "../sci/fci.h"
+#include "../sci/fci.h"
 #include "tests.h"
 
 using namespace std;
@@ -31,6 +31,12 @@ int tests::test_fci(){
    double ecore;
    integral::load(int2e, int1e, ecore, "./cmole2.info");
 
+   //int2e.set_real();
+   int1e.set_real();
+   ecore = 0.0;
+   int2e.set_zero();
+   //int1e.set_zero();
+
    // full diag
    auto eHF = get_Hii(space2[0], int2e, int1e) + ecore;
    cout << "ref=" << space2[0] << " eHF=" << setprecision(12) << eHF << endl;
@@ -40,23 +46,27 @@ int tests::test_fci(){
    auto v(H);
    eig_solver(H, e, v); // Hc=ce
    cout << "e0=" << setprecision(12) << e[0] << " e1=" << e[1] << endl;
-   assert(abs(e[0] + 6.766940567056) < thresh);
+   //assert(abs(e[0] + 6.766940567056) < thresh);
 
-   int nroot = 4;
+   int nroot = 5;
    vector<double> es(nroot), es1(nroot);
    linalg::matrix<DTYPE> vs(dim,nroot), vs1(dim,nroot);
    
+/*
    // simpleci solver
-   ci_solver(es, vs, space2, int2e, int1e, ecore);
+   fock::ci_solver(es, vs, space2, int2e, int1e, ecore);
    assert(abs(es[0] - e[0]) < thresh); 
    assert(abs(es[1] - e[1]) < thresh);
+*/
 
-/*
    // directci solver
    fci::ci_solver(es1, vs1, space2, int2e, int1e, ecore);
+   cout << "finished" << endl;
+   exit(1);
    assert(abs(es1[0] - e[0]) < thresh);
    assert(abs(es1[1] - e[1]) < thresh);
    
+/*
    // check eigenvalues
    cout << "\nCheck difference:" << endl;
    cout << defaultfloat << setprecision(12);

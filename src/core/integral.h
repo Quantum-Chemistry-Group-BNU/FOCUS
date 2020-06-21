@@ -27,6 +27,13 @@ struct one_body{
       void set(const size_t i, const size_t j, const Tm val){
          data[j*sorb+i] = val; // column-major storage
       }
+      void set_real(){
+	 transform(data.begin(), data.end(), data.begin(),
+	           [](const Tm& x){ return std::real(x); }); 
+      }
+      void set_zero(){
+	 fill_n(data.begin(), data.size(), 0.0);
+      }
       void print() const{
 	 std::cout << "one_body:" << std::endl;
 	 for(int i=0; i<sorb; i++){
@@ -86,6 +93,14 @@ struct two_body{
 	    size_t ijkl = kl*(kl+1)/2+ij;
 	    data[ijkl] = sgn*tools::conjugate(val);
 	 }
+      }
+      void set_real(){
+	 transform(data.begin(), data.end(), data.begin(),
+	           [](const Tm& x){ return std::real(x); }); 
+      }
+      void set_zero(){
+	 fill_n(data.begin(), data.size(), 0.0);
+	 fill_n(Q.begin(), Q.size(), 0.0);
       }
       void print() const{
 	 std::cout << "two_body:" << std::endl;
