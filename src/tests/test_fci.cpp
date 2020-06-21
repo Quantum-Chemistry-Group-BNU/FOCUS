@@ -6,6 +6,8 @@
 #include "../core/simpleci.h"
 #include "../core/analysis.h"
 #include "../sci/fci.h"
+#include "../sci/fci_util.h"
+#include "../sci/fci_rdm.h"
 #include "tests.h"
 
 using namespace std;
@@ -55,9 +57,32 @@ int tests::test_fci(){
 */
 
    // directci solver
-   fci::ci_solver(es1, vs1, space2, int2e, int1e, ecore);
+   fci::sparse_hamiltonian<DTYPE> sparseH;
+   fci::ci_solver(sparseH, es1, vs1, space2, int2e, int1e, ecore);
    assert(abs(es1[0] - e[0]) < thresh);
    assert(abs(es1[nroot-1] - e[nroot-1]) < thresh);
+
+   // --- rdm --- 
+   vector<DTYPE> v0(vs1.col(0),vs1.col(0)+dim);
+   coeff_population(space2, v0);
+   auto SvN = coeff_entropy(v0);
+   // make_rdm2 from sparseH
+   int k = int1e.sorb;
+   int k2 = k*(k-1)/2;
+   linalg::matrix<DTYPE> rdm2(k2,k2);
+   fci::get_rdm2(sparseH,space2,v0,v0,rdm2);
+   
+   double etot = fock::get_etot(rdm2,int2e,int1e,ecore);
+   cout << "etot(rdm)=" << setprecision(12) << etot << endl;
+   assert(abs(etot-es1[0]) < 1.e-8);
+
+   // compute rdm1
+   auto rdm1 = fock::get_rdm1_from_rdm2(rdm2);
+   linalg::matrix<DTYPE> rdm1b(k,k);
+   fci::get_rdm1(space2,v0,v0,rdm1b);
+   auto diff = normF(rdm1b-rdm1);
+   cout << "|rdm1b-rdm1|=" << diff << endl;
+   assert(diff < 1.e-6);
 
    return 0;
 }

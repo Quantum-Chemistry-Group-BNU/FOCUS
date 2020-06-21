@@ -244,8 +244,8 @@ struct matrix{
       // simple */+/-
       friend matrix operator *(const Tm fac, const matrix<Tm>& mat1){
          matrix<Tm> mat(mat1.rows(),mat1.cols());
-         transform(mat1._data, mat1._data+mat._size, mat._data,
-      	           [fac](const Tm& x){return fac*x;});
+	 std::transform(mat1._data, mat1._data+mat._size, mat._data,
+      	                [fac](const Tm& x){return fac*x;});
          return mat;
       }
       friend matrix operator *(const matrix<Tm>& mat1, const Tm fac){

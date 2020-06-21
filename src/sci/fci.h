@@ -17,7 +17,7 @@ void get_Hx(Tm* y,
 	    const Tm* x,
 	    const sparse_hamiltonian<Tm>& sparseH){
    // y[i] = sparseH.diag[i]*x[i]; 
-   transform(sparseH.diag.begin(), sparseH.diag.end(), x, y,
+   std::transform(sparseH.diag.begin(), sparseH.diag.end(), x, y,
 	     [](const double& d, const Tm& c){return d*c;}); 
    // y[i] = sum_j H[i,j]*x[j] 
    for(int i=0; i<sparseH.dim; i++){
@@ -40,7 +40,7 @@ void get_initial(const fock::onspace& space,
 		 linalg::matrix<Tm>& v0){
    int ndim = v0.rows(); 
    int neig = v0.cols();
-   int pdim = min(ndim, max(neig,100));
+   int pdim = std::min(ndim, std::max(neig,100));
    // construct H in the low-energy subspace 
    auto index = tools::sort_index(Diag);
    linalg::matrix<Tm> Hpp(pdim, pdim);
@@ -51,7 +51,7 @@ void get_initial(const fock::onspace& space,
 	 Hpp(i,j) = fock::get_Hij(space[ii], space[jj], int2e, int1e);
       }
    }
-   vector<double> e(pdim);
+   std::vector<double> e(pdim);
    linalg::matrix<Tm> v;
    eig_solver(Hpp, e, v);
    // copy back
@@ -61,12 +61,12 @@ void get_initial(const fock::onspace& space,
       }
    }
    // print
-   cout << "\nfci::get_initial pdim=" << pdim << endl;
-   cout << setprecision(12);
+   std::cout << "\nfci::get_initial pdim=" << pdim << std::endl;
+   std::cout << std::setprecision(12);
    for(int i=0; i<neig; i++){
-      cout << "i=" << i 
+      std::cout << "i=" << i 
 	   << " d=" << Diag[index[i]] 
-	   << " e=" << e[i]+ecore << endl;
+	   << " e=" << e[i]+ecore << std::endl;
    }
 }
 
@@ -82,36 +82,36 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
    bool debug = true;
    const bool Htype = is_complex<Tm>();
    auto t0 = tools::get_time();
-   cout << "\nfci::ci_solver dim=" << space.size() << " Htype=" << Htype << endl; 
+   std::cout << "\nfci::ci_solver dim=" << space.size() << " Htype=" << Htype << std::endl; 
    // dimensionality check
    if(es.size() > space.size()){
-      cout << "error: too much roots are required! nroot,ndim=" 
-	   << es.size() << "," << space.size() << endl;
+      std::cout << "error: too much roots are required! nroot,ndim=" 
+	   << es.size() << "," << space.size() << std::endl;
       exit(1);
    }
    // 1. setup product_space
    product_space pspace;
    pspace.get_pspace(space);
    auto ta = tools::get_time();
-   if(debug) cout << "timing for pspace : " << setprecision(2) 
-		  << tools::get_duration(ta-t0) << " s" << endl;
+   if(debug) std::cout << "timing for pspace : " << std::setprecision(2) 
+		  << tools::get_duration(ta-t0) << " s" << std::endl;
    // 2. setupt coupling_table
    coupling_table ctabA, ctabB;
    ctabA.get_Cmn(pspace.spaceA, Htype);
    auto tb = tools::get_time();
    ctabB.get_Cmn(pspace.spaceB, Htype);
    auto tc = tools::get_time();
-   if(debug) cout << "timing for ctabA/B : " << setprecision(2) 
+   if(debug) std::cout << "timing for ctabA/B : " << std::setprecision(2) 
 		  << tools::get_duration(tb-ta) << " s" << " "
-		  << tools::get_duration(tc-tb) << " s" << endl; 
+		  << tools::get_duration(tc-tb) << " s" << std::endl; 
    // 3. compute sparse_hamiltonian
    sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
 		   	   int2e, int1e, ecore, Htype);
    sparseH.check(space, int2e, int1e, ecore);
    sparseH.analysis();
    auto td = tools::get_time();
-   if(debug) cout << "timing for sparseH : " << setprecision(2) 
-		  << tools::get_duration(td-tc) << " s" << endl;
+   if(debug) std::cout << "timing for sparseH : " << std::setprecision(2) 
+		  << tools::get_duration(td-tc) << " s" << std::endl;
    // 4. Davidson solver 
    linalg::dvdsonSolver<Tm> solver;
    solver.iprt = 1;
@@ -125,17 +125,17 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
    linalg::matrix<Tm> v0(solver.ndim, solver.neig);
    get_initial(space, int2e, int1e, ecore, sparseH.diag, v0);
    auto te = tools::get_time();
-   if(debug) cout << "timing for get_initial : " << setprecision(2) 
-		  << tools::get_duration(te-td) << " s" << endl;
+   if(debug) std::cout << "timing for get_initial : " << std::setprecision(2) 
+		  << tools::get_duration(te-td) << " s" << std::endl;
    // solve
    solver.solve_iter(es.data(), vs.data(), v0.data());
    //solver.solve_diag(es.data(), vs.data());
    auto tf = tools::get_time();
-   if(debug) cout << "timing for solve_iter : " << setprecision(2) 
-		  << tools::get_duration(tf-te) << " s" << endl;
+   if(debug) std::cout << "timing for solve_iter : " << std::setprecision(2) 
+		  << tools::get_duration(tf-te) << " s" << std::endl;
    auto t1 = tools::get_time();
-   cout << "timing for fci::ci_solver : " << setprecision(2) 
-	<< tools::get_duration(t1-t0) << " s" << endl;
+   std::cout << "timing for fci::ci_solver : " << std::setprecision(2) 
+	<< tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
 // without sparseH as output

@@ -42,7 +42,7 @@ struct coupling_table{
 		   const int istart=0);
       void update_Cmn(const fock::onspace& space,
 		      const int istart,
-		      const pair<int,int>& key,
+		      const std::pair<int,int>& key,
 		      std::vector<std::set<int>>& Cmn);
    public:
       std::vector<std::set<int>> C11; // differ by single (sorted, binary_search)
@@ -67,8 +67,9 @@ struct sparse_hamiltonian{
 			   const int istart=0){
          bool debug = true;
          auto t0 = tools::get_time();
-         cout << "\nsparse_hamiltonian::get_hamiltonian" 
-              << " dim0 = " << istart << " dim = " << space.size() << endl; 
+         std::cout << "\nsparse_hamiltonian::get_hamiltonian" 
+              << " dim0 = " << istart << " dim = " << space.size() 
+	      << std::endl; 
          // initialization for the first use
          if(istart == 0){
             diag.clear();
@@ -83,8 +84,8 @@ struct sparse_hamiltonian{
             diag[i] = fock::get_Hii(space[i],int2e,int1e) + ecore;
          }
          auto ta = tools::get_time();
-         if(debug) cout << "timing for diagonal : " << setprecision(2) 
-              	        << tools::get_duration(ta-t0) << " s" << endl;
+         if(debug) std::cout << "timing for diagonal : " << std::setprecision(2) 
+              	        << tools::get_duration(ta-t0) << " s" << std::endl;
          // off-diagonal 
          connect.resize(dim);
          value.resize(dim);
@@ -97,8 +98,8 @@ struct sparse_hamiltonian{
 	    get_HIJ_ABmixed2(space, pspace, ctabA, ctabB, int2e, int1e, istart, debug);
 	 }
          auto t1 = tools::get_time();
-         cout << "timing for sparse_hamiltonian::get_hamiltonian : " 
-              << setprecision(2) << tools::get_duration(t1-t0) << " s" << endl;
+         std::cout << "timing for sparse_hamiltonian::get_hamiltonian : " 
+              << std::setprecision(2) << tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
       // --- HIJ construction by coupling pattern between two states (I & J) ---
@@ -127,13 +128,13 @@ struct sparse_hamiltonian{
                   if(j >= i) continue; 
                   // check connectivity <I_A|H|J_A>
                   auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
-                  if(pr == make_pair(1,1)){
+                  if(pr == std::make_pair(1,1)){
                      auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
 		     if(abs(pr.first) < cutoff) continue;
 		     connect[i].push_back(j);
                      value[i].push_back(pr.first);
                      diff[i].push_back(pr.second);
-                  }else if(pr == make_pair(2,2)){
+                  }else if(pr == std::make_pair(2,2)){
                      auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
 		     if(abs(pr.first) < cutoff) continue;
                      connect[i].push_back(j);
@@ -144,8 +145,8 @@ struct sparse_hamiltonian{
             } // ib
          } // ia
          auto t1 = tools::get_time();
-         if(debug) cout << "timing for get_HIJ_A1122_B00 : " << setprecision(2) 
-              	        << tools::get_duration(t1-t0) << " s" << endl;
+         if(debug) std::cout << "timing for get_HIJ_A1122_B00 : " << std::setprecision(2) 
+              	        << tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
       // <I_A,I_B|H|J_A,J_B> = C00_A*(C11+C22)_B
@@ -172,13 +173,13 @@ struct sparse_hamiltonian{
       	          if(j >= i) continue; 
       	          // check connectivity <I_B|H|J_B>
       	          auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
-      	          if(pr == make_pair(1,1)){
+      	          if(pr == std::make_pair(1,1)){
       	             auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
 		     if(abs(pr.first) < cutoff) continue;
       	             connect[i].push_back(j);
       	             value[i].push_back(pr.first);
       	             diff[i].push_back(pr.second);
-      	          }else if(pr == make_pair(2,2)){
+      	          }else if(pr == std::make_pair(2,2)){
       	             auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
 		     if(abs(pr.first) < cutoff) continue;
       	             connect[i].push_back(j);
@@ -189,8 +190,8 @@ struct sparse_hamiltonian{
             } // ib
          } // ia
          auto t1 = tools::get_time();
-         if(debug) cout << "timing for get_HIJ_A00_B1122 : " << setprecision(2) 
-      		        << tools::get_duration(t1-t0) << " s" << endl;
+         if(debug) std::cout << "timing for get_HIJ_A00_B1122 : " << std::setprecision(2) 
+      		        << tools::get_duration(t1-t0) << " s" << std::endl;
       }
       
       // <I_A,I_B|H|J_A,J_B> = C11_A*C11_B
@@ -228,8 +229,8 @@ struct sparse_hamiltonian{
             } // ia
          } // ia
          auto t1 = tools::get_time();
-         if(debug) cout << "timing for get_HIJ_A11_B11 : " << setprecision(2) 
-         		<< tools::get_duration(t1-t0) << " s" << endl;
+         if(debug) std::cout << "timing for get_HIJ_A11_B11 : " << std::setprecision(2) 
+         		<< tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
       // --- relativistic case ---
@@ -262,13 +263,13 @@ struct sparse_hamiltonian{
          	     if(j >=i) continue;
                      // check connectivity 
                      auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
-                     if(pr == make_pair(1,0)){
+                     if(pr == std::make_pair(1,0)){
                         auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
 		        if(abs(pr.first) < cutoff) continue;
 		        connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
-                     }else if(pr == make_pair(2,1)){
+                     }else if(pr == std::make_pair(2,1)){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
 		        if(abs(pr.first) < cutoff) continue;
                         connect[i].push_back(j);
@@ -292,13 +293,13 @@ struct sparse_hamiltonian{
          	     if(j >=i) continue;
                      // check connectivity 
                      auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
-                     if(pr == make_pair(0,1)){
+                     if(pr == std::make_pair(0,1)){
                         auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
 		        if(abs(pr.first) < cutoff) continue;
 		        connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
-                     }else if(pr == make_pair(1,2)){
+                     }else if(pr == std::make_pair(1,2)){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
 		        if(abs(pr.first) < cutoff) continue;
                         connect[i].push_back(j);
@@ -323,7 +324,7 @@ struct sparse_hamiltonian{
          	     if(j >=i) continue;
                      // check connectivity 
                      auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
-                     if(pr == make_pair(1,2)){
+                     if(pr == std::make_pair(1,2)){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
 		        if(abs(pr.first) < cutoff) continue;
 		        connect[i].push_back(j);
@@ -340,7 +341,7 @@ struct sparse_hamiltonian{
          	     if(j >=i) continue;
                      // check connectivity 
                      auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
-                     if(pr == make_pair(2,1)){
+                     if(pr == std::make_pair(2,1)){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
 		        if(abs(pr.first) < cutoff) continue;
 		        connect[i].push_back(j);
@@ -352,8 +353,8 @@ struct sparse_hamiltonian{
             } // ja
          } // ia
          auto t1 = tools::get_time();
-         if(debug) cout << "timing for get_HIJ_ABmixed1 : " << setprecision(2) 
-              	        << tools::get_duration(t1-t0) << " s" << endl;
+         if(debug) std::cout << "timing for get_HIJ_ABmixed1 : " << std::setprecision(2) 
+              	        << tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
       // <I_A,I_B|H|J_A,J_B> = C02_A*C20_B + C20_A*C02_B
@@ -413,8 +414,8 @@ struct sparse_hamiltonian{
             } // ja
          } // ia
          auto t1 = tools::get_time();
-         if(debug) cout << "timing for get_HIJ_ABmixed2 : " << setprecision(2) 
-         		<< tools::get_duration(t1-t0) << " s" << endl;
+         if(debug) std::cout << "timing for get_HIJ_ABmixed2 : " << std::setprecision(2) 
+         		<< tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
       // compare with full construction
@@ -423,7 +424,7 @@ struct sparse_hamiltonian{
 		 const integral::one_body<Tm>& int1e,
 		 const double ecore,
 		 const double thresh=1.e-10){
-   	 cout << "\nsparse_hamiltonian::check" << endl;
+   	 std::cout << "\nsparse_hamiltonian::check" << std::endl;
          int dim = connect.size();
 	 linalg::matrix<Tm> H1(dim,dim);
          for(int i=0; i<dim; i++){
@@ -436,33 +437,33 @@ struct sparse_hamiltonian{
          }
          // compared againts construction by Slater-Condon rule
          auto H0 = fock::get_Ham(space,int2e,int1e,ecore);
-	 cout << setprecision(6);
+	 std::cout << std::setprecision(6);
          for(int i=0; i<dim; i++){
             for(int j=0; j<dim; j++){
                //if(abs(H1(i,j))<1.e-8 && abs(H2(i,j))<1.e-8) continue;
                if(abs(H1(i,j)-H0(i,j))<1.e-8) continue;
-               cout << "i,j=" << i << "," << j 
+               std::cout << "i,j=" << i << "," << j 
                     << " val1=" << H1(i,j)  
 		    << " val0=" << H0(i,j)  
                     << " diff=" << H1(i,j)-H0(i,j) 
                     << " pair=" << space[i] << " " << space[j]  
                     << " num=" << space[i].diff_num(space[j]) 
-                    << endl;
+                    << std::endl;
             }
          } 
 	 double diff = normF(H1-H0);
-         cout << "|H1-H0|=" << diff << endl;
+         std::cout << "|H1-H0|=" << diff << std::endl;
 	 if(diff > thresh){
-	    cout << "error: difference is greater than thresh=" << thresh << endl;
+	    std::cout << "error: difference is greater than thresh=" << thresh << std::endl;
 	    exit(1); 
 	 }
       }
 
       // analyze the magnitude of Hij
       void analysis(){
-   	 cout << "\nsparse_hamiltonian::analysis" << endl;
+   	 std::cout << "\nsparse_hamiltonian::analysis" << std::endl;
          const double thresh = 1.e-8;
-	 map<int,int,greater<int>> bucket;
+	 std::map<int,int,std::greater<int>> bucket;
          double size = 1.e-20; // avoid divide zero in the special case H=0;
          double Hsum = 0;
          for(int i=0; i<dim; i++){
@@ -479,20 +480,20 @@ struct sparse_hamiltonian{
          }
 	 // averaged connection per row
          double avc = 2.0*size/dim; 
-         cout << "dim = " << dim
-         	<< "  avc = " << defaultfloat << fixed << avc
-         	<< "  per = " << defaultfloat << setprecision(3) << avc/(dim-1)*100 << endl; 
-         cout << "average size |Hij| = " << scientific << setprecision(1) << Hsum/size << endl;
+         std::cout << "dim = " << dim
+         	<< "  avc = " << std::defaultfloat << std::fixed << avc
+         	<< "  per = " << std::defaultfloat << std::setprecision(3) << avc/(dim-1)*100 << std::endl; 
+         std::cout << "average size |Hij| = " << std::scientific << std::setprecision(1) << Hsum/size << std::endl;
          // print statistics by magnitude 
          double accum = 0.0;
          for(const auto& pr : bucket){
             double per = pr.second/size*100;
             int n = pr.first;
             accum += per;
-            cout << "|Hij| in 10^" << showpos << n+1 << "-10^" << n << " : " 
-      	         << " per=" << defaultfloat << noshowpos << fixed << setw(5) << setprecision(1) << per << " " 
-      	         << " accum=" << defaultfloat << noshowpos << fixed << setw(5) << setprecision(1) << accum 
-      	         << endl;
+            std::cout << "|Hij| in 10^" << std::showpos << n+1 << "-10^" << n << " : " 
+      	         << " per=" << std::defaultfloat << std::noshowpos << std::fixed << std::setw(5) << std::setprecision(1) << per << " " 
+      	         << " accum=" << std::defaultfloat << std::noshowpos << std::fixed << std::setw(5) << std::setprecision(1) << accum 
+      	         << std::endl;
          }
       }
    public:

@@ -18,7 +18,7 @@ void coeff_population(const onspace& space,
    double ne = 0.0, na = 0.0, nb = 0.0;
    double pi, psum = 0.0, psum1 = 0.0, Sd = 0.0;
    const double cutoff = 1.e-12;
-   vector<int> idx;
+   std::vector<int> idx;
    idx = tools::sort_index_abs(civec, 1);
    int j = 0;
    for(const auto& i : idx){ 
@@ -60,9 +60,9 @@ inline double entropy(const std::vector<double>& p,
       psum += pi;
       ssum -= pi*log2(pi);
    }
-   cout << "fock::entropy : " 
-        << defaultfloat << setprecision(12)
-        << "psum=" << psum << " SvN=" << ssum << endl; 
+   std::cout << "fock::entropy : " 
+        << std::defaultfloat << std::setprecision(12)
+        << "psum=" << psum << " SvN=" << ssum << std::endl; 
    return ssum;
 }
 

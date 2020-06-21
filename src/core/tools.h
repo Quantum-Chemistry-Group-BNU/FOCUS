@@ -14,8 +14,6 @@
 #include <chrono>
 #include <complex>
 
-using namespace std;
-
 namespace tools{
 
 // useful functions
@@ -84,15 +82,15 @@ inline std::pair<size_t,size_t> inverse_pair(const size_t ij){
 // pointer version
 // template do not need implementation but only header
 template <typename T>
-vector<int> sort_index(const int size, const T* v, const int iop=0){
-   vector<int> idx(size);
-   iota(idx.begin(), idx.end(), 0);
+std::vector<int> sort_index(const int size, const T* v, const int iop=0){
+   std::vector<int> idx(size);
+   std::iota(idx.begin(), idx.end(), 0);
    // return index for sorting: iop=0, min; =1, max first;
    if(iop == 0){
-      stable_sort(idx.begin(), idx.end(),
+      std::stable_sort(idx.begin(), idx.end(),
            	  [&v](int i1, int i2) {return v[i1] < v[i2];});
    }else{
-      stable_sort(idx.begin(), idx.end(),
+      std::stable_sort(idx.begin(), idx.end(),
         	  [&v](int i1, int i2) {return v[i1] > v[i2];});
    }
    return idx;
@@ -100,27 +98,27 @@ vector<int> sort_index(const int size, const T* v, const int iop=0){
 
 // vector version
 template <typename T>
-vector<int> sort_index(const vector<T>& v, const int iop=0){
+std::vector<int> sort_index(const std::vector<T>& v, const int iop=0){
    return sort_index(v.size(), v.data(), iop);
 }
 
 // sort by absolute value
 template <typename T>
-vector<int> sort_index_abs(const int size, const T* v, const int iop=0){
-   vector<int> idx(size);
-   iota(idx.begin(), idx.end(), 0);
+std::vector<int> sort_index_abs(const int size, const T* v, const int iop=0){
+   std::vector<int> idx(size);
+   std::iota(idx.begin(), idx.end(), 0);
    if(iop == 0){
-      stable_sort(idx.begin(), idx.end(),
+      std::stable_sort(idx.begin(), idx.end(),
         	  [&v](int i1, int i2) {return abs(v[i1]) < abs(v[i2]);});
    }else{
-      stable_sort(idx.begin(), idx.end(),
+      std::stable_sort(idx.begin(), idx.end(),
         	  [&v](int i1, int i2) {return abs(v[i1]) > abs(v[i2]);});
    }
    return idx;
 }
 
 template <typename T>
-vector<int> sort_index_abs(const vector<T>& v, const int iop=0){
+std::vector<int> sort_index_abs(const std::vector<T>& v, const int iop=0){
    return sort_index_abs(v.size(), v.data(), iop);
 }
 

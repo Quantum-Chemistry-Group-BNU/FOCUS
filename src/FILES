@@ -59,7 +59,14 @@ Analysis & RDM
  core/simpleci.h
  core/analysis.h
 -------------------
-
+FCI
+-------------------
+ utils/fci_util.h
+ utils/fci_util.cpp
+ utils/fci.h
+ utils/fci_rdm.h
+ tests/test_fci.cpp
+-------------------
 
 -------------------
 IO
@@ -70,18 +77,10 @@ IO
 -------------------
 SCI
 -------------------
- utils/fci.cpp
- utils/fci.h
- utils/fci_ana.cpp
- utils/fci_io.cpp
- utils/fci_rdm.cpp
- utils/fci_rdm.h
  utils/sci.cpp
  utils/sci.h
  utils/sci_pt2.cpp
- tests/test_fci.cpp
  tests/test_sci.cpp
- tests/test_rdm.cpp
  tests/test_pt2.cpp
 -------------------
 TNS

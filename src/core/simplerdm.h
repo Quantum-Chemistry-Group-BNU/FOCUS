@@ -18,7 +18,7 @@ void get_rdm1(const onspace& space,
    std::cout << "\nfock:get_rdm1" << std::endl;
    for(size_t i=0; i<space.size(); i++){
       // c1[i]*<Di|p^+q|Di>c2[i]
-      vector<int> olst;
+      std::vector<int> olst;
       space[i].get_olst(olst);
       for(int p : olst){
          rdm1(p,p) += tools::conjugate(civec1[i])*civec2[i];
@@ -26,7 +26,7 @@ void get_rdm1(const onspace& space,
       // c1[i]*<Di|p^+q|Dj>c2[j] + c1[j]*<Dj|p^+q|Di>c2[i] (j<i)
       for(size_t j=0; j<i; j++){
          if(space[i].diff_num(space[j]) != 2) continue;
-         vector<int> cre,ann;
+         std::vector<int> cre,ann;
          space[i].diff_orb(space[j],cre,ann);
 	 auto p0 = cre[0];
 	 auto q0 = ann[0];
@@ -46,7 +46,7 @@ void get_rdm2(const onspace& space,
    std::cout << "\nfock:get_rdm2" << std::endl;
    for(size_t i=0; i<space.size(); i++){
       // c1[i]*<Di|p0^+p1^+p1p0|Di>c2[i]
-      vector<int> olst;
+      std::vector<int> olst;
       space[i].get_olst(olst);
       for(int idx=0; idx<olst.size(); idx++){
          auto p0 = olst[idx]; 
@@ -61,7 +61,7 @@ void get_rdm2(const onspace& space,
          auto ndiff = space[i].diff_num(space[j]); 
 	 // <Di|p0^+k^+kq0|Dj>
 	 if(ndiff == 2){
-            vector<int> cre,ann;
+            std::vector<int> cre,ann;
             space[i].diff_orb(space[j],cre,ann);
 	    auto p0 = cre[0];
 	    auto q0 = ann[0];
@@ -80,7 +80,7 @@ void get_rdm2(const onspace& space,
 	    }
 	 // <Di|p0^+p1^+q1q0|Dj>
 	 }else if(ndiff == 4){
-            vector<int> cre,ann;
+            std::vector<int> cre,ann;
             space[i].diff_orb(space[j],cre,ann);
 	    auto p0 = cre[0], p1 = cre[1];
 	    auto q0 = ann[0], q1 = ann[1];
@@ -102,7 +102,7 @@ linalg::matrix<Tm> get_rdm1_from_rdm2(const linalg::matrix<Tm>& rdm2){
    int k2 = rdm2.rows();
    auto pr = tools::inverse_pair0(k2-1);
    assert(pr.first == pr.second+1);
-   int k = pr.first+1;   
+   int k = pr.first+1; 
    linalg::matrix<Tm> rdm1(k,k);
    // <p^+r^+rq>
    for(int p=0; p<k; p++){
@@ -137,6 +137,7 @@ linalg::matrix<Tm> get_rdm1_from_rdm2(const linalg::matrix<Tm>& rdm2){
    assert(pp.first == pp.second+1);
    int ne = pp.first+1;
    rdm1 *= 1.0/(ne-1.0);
+   std::cout << "tr(RDM1)=" << rdm1.trace() << std::endl;
    return rdm1;
 }
 
@@ -193,7 +194,7 @@ double get_etot(const linalg::matrix<Tm>& rdm2,
 	        const integral::one_body<Tm>& int1e,
 	        const double ecore){
    auto rdm1 = get_rdm1_from_rdm2(rdm2);
-   return get_etot(rdm1, rdm2, int2e, int1e, ecore);
+   return get_etot(rdm2, rdm1, int2e, int1e, ecore);
 }
 
 } // fock

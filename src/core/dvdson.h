@@ -300,9 +300,9 @@ struct dvdsonSolver{
          HVecs(neig, wbas.data(), vbas.data());
 
          // Begin to solve
-         vector<Tm> rbas(ndim*nl), tbas(ndim*nl), tmpV(nl*nl);
-         vector<double> tmpE(nl), tnorm(neig);
-         vector<bool> rconv(neig);
+	 std::vector<Tm> rbas(ndim*nl), tbas(ndim*nl), tmpV(nl*nl);
+	 std::vector<double> tmpE(nl), tnorm(neig);
+         std::vector<bool> rconv(neig);
 	 // record history
 	 linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); 
          double damp = damping;
