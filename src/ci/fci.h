@@ -73,7 +73,7 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
 	       const integral::two_body<Tm>& int2e,
 	       const integral::one_body<Tm>& int1e,
 	       const double ecore){
-   bool debug = true;
+   const bool debug = true;
    const bool Htype = is_complex<Tm>();
    auto t0 = tools::get_time();
    std::cout << "\nfci::ci_solver dim=" << space.size() << " Htype=" << Htype << std::endl; 
@@ -83,30 +83,10 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
 	   << es.size() << "," << space.size() << std::endl;
       exit(1);
    }
-   // 1. setup product_space
-   product_space pspace;
-   pspace.get_pspace(space);
-   auto ta = tools::get_time();
-   if(debug) std::cout << "timing for pspace : " << std::setprecision(2) 
-		  << tools::get_duration(ta-t0) << " s" << std::endl;
-   // 2. setupt coupling_table
-   coupling_table ctabA, ctabB;
-   ctabA.get_Cmn(pspace.spaceA, Htype);
-   auto tb = tools::get_time();
-   ctabB.get_Cmn(pspace.spaceB, Htype);
-   auto tc = tools::get_time();
-   if(debug) std::cout << "timing for ctabA/B : " << std::setprecision(2) 
-		  << tools::get_duration(tb-ta) << " s" << " "
-		  << tools::get_duration(tc-tb) << " s" << std::endl; 
-   // 3. compute sparse_hamiltonian
-   sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
-		   	   int2e, int1e, ecore, Htype);
-   sparseH.check(space, int2e, int1e, ecore);
-   sparseH.analysis();
+   // compute sparse_hamiltonian
+   sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype);
    auto td = tools::get_time();
-   if(debug) std::cout << "timing for sparseH : " << std::setprecision(2) 
-		  << tools::get_duration(td-tc) << " s" << std::endl;
-   // 4. Davidson solver 
+   // Davidson solver 
    linalg::dvdsonSolver<Tm> solver;
    solver.iprt = 1;
    solver.ndim = space.size();
@@ -120,7 +100,7 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
    get_initial(space, int2e, int1e, ecore, sparseH.diag, v0);
    auto te = tools::get_time();
    if(debug) std::cout << "timing for get_initial : " << std::setprecision(2) 
-		  << tools::get_duration(te-td) << " s" << std::endl;
+		       << tools::get_duration(te-td) << " s" << std::endl;
    // solve
    solver.solve_iter(es.data(), vs.data(), v0.data());
    //solver.solve_diag(es.data(), vs.data());
@@ -167,17 +147,9 @@ linalg::matrix<Tm> get_Hmat(const fock::onspace& space,
 	       	            const integral::one_body<Tm>& int1e,
 	                    const double ecore){
    const bool Htype = is_complex<Tm>();
-   // setup product_space
-   product_space pspace;
-   pspace.get_pspace(space);
-   // setupt coupling_table
-   coupling_table ctabA, ctabB;
-   ctabA.get_Cmn(pspace.spaceA, Htype);
-   ctabB.get_Cmn(pspace.spaceB, Htype);
    // compute sparse_hamiltonian
    sparse_hamiltonian<Tm> sparseH;
-   sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
-		   	   int2e, int1e, ecore, Htype);
+   sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype);
    int dim = space.size();
    int n = vs.size();
    linalg::matrix<Tm> Hmat(n,n);

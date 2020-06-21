@@ -126,8 +126,11 @@ void get_rdm1(const fock::onspace& space,
       fock::get_rdm1(space, civec1, civec2, rdm1b);
       std::cout << "tr(rdm1)=" << rdm1b.trace() << std::endl;
       auto rdm1_diff = linalg::normF(rdm1b - rdm1);
-      std::cout << "rdm1_diff=" << rdm1_diff << std::endl;
-      if(rdm1_diff>1.e-8) exit(1);
+      std::cout << "rdm1_diff=" << std::setprecision(12) << rdm1_diff << std::endl;
+      if(rdm1_diff>1.e-8){
+	 std::cout << "error: difference is larger than thresh!" << std::endl;
+	 exit(1);
+      }
    }
 }
 
@@ -199,8 +202,11 @@ void get_rdm2(const sparse_hamiltonian<Tm>& sparseH,
       fock::get_rdm2(space, civec1, civec2, rdm2b);
       std::cout << "tr(rdm2)=" << 2.0*rdm2.trace() << std::endl;
       auto rdm2_diff = linalg::normF(rdm2b - rdm2);
-      std::cout << "rdm2_diff=" << rdm2_diff << std::endl;
-      if(rdm2_diff>1.e-8) exit(1);
+      std::cout << "rdm2_diff=" << std::setprecision(12) << rdm2_diff << std::endl;
+      if(rdm2_diff>1.e-8){
+	 std::cout << "error: difference is larger than thresh!" << std::endl;
+	 exit(1);
+      }
    }
 }
 

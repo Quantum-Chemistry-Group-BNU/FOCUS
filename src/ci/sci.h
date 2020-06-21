@@ -29,14 +29,7 @@ void ci_solver(const input::schedule& schd,
    get_initial(esol, vsol, space, varSpace, 
 	       hbtab, schd, int2e, int1e, ecore);
    // set up auxilliary data structure   
-   fci::product_space pspace;
-   fci::coupling_table ctabA, ctabB;
-   // build initial
-   pspace.get_pspace(space);
-   ctabA.get_Cmn(pspace.spaceA, Htype);
-   ctabB.get_Cmn(pspace.spaceB, Htype);
-   sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
-   		   	   int2e, int1e, ecore, Htype);
+   sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype);
    // start increment
    bool ifconv = false;
    int nsub = space.size(); 
@@ -60,11 +53,7 @@ void ci_solver(const input::schedule& schd,
       int nsub0 = nsub;
       nsub = space.size();
       // update auxilliary data structure 
-      pspace.get_pspace(space, nsub0);
-      ctabA.get_Cmn(pspace.spaceA, Htype, pspace.dimA0);
-      ctabB.get_Cmn(pspace.spaceB, Htype, pspace.dimB0);
-      sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
-        	   	      int2e, int1e, ecore, Htype, nsub0);
+      sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype, nsub0);
       // set up Davidson solver 
       linalg::dvdsonSolver<Tm> solver;
       solver.iprt = 1;

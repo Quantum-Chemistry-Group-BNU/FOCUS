@@ -58,6 +58,35 @@ struct sparse_hamiltonian{
 
       // construct Hij	   
       void get_hamiltonian(const fock::onspace& space,
+			   const integral::two_body<Tm>& int2e,
+			   const integral::one_body<Tm>& int1e,
+			   const double ecore,
+		   	   const bool Htype,
+			   const int istart=0){
+         const bool debug = true;
+         auto t0 = tools::get_time();
+         // 1. setup product_space
+         _pspace.get_pspace(space, istart);
+         auto ta = tools::get_time();
+         if(debug) std::cout << "timing for pspace : " << std::setprecision(2) 
+		             << tools::get_duration(ta-t0) << " s" << std::endl;
+         // 2. setupt coupling_table
+         _ctabA.get_Cmn(_pspace.spaceA, Htype, _pspace.dimA0);
+         auto tb = tools::get_time();
+         _ctabB.get_Cmn(_pspace.spaceB, Htype, _pspace.dimB0);
+         auto tc = tools::get_time();
+         if(debug) std::cout << "timing for ctabA/B : " << std::setprecision(2) 
+      		             << tools::get_duration(tb-ta) << " s" << " "
+      		             << tools::get_duration(tc-tb) << " s" << std::endl; 
+         // 3. compute sparse_hamiltonian
+   	 get_hamiltonian(space, _pspace, _ctabA, _ctabB, int2e, int1e, ecore, Htype, istart);
+         auto td = tools::get_time();
+         if(debug) std::cout << "timing for sparseH : " << std::setprecision(2) 
+		             << tools::get_duration(td-tc) << " s" << std::endl;
+      }
+
+      // construct Hij	   
+      void get_hamiltonian(const fock::onspace& space,
 		           const product_space& pspace,
 		           const coupling_table& ctabA,
 			   const coupling_table& ctabB,
@@ -66,11 +95,11 @@ struct sparse_hamiltonian{
 			   const double ecore,
 		   	   const bool Htype,
 			   const int istart=0){
-         bool debug = true;
+         const bool debug = true;
          auto t0 = tools::get_time();
          std::cout << "\nsparse_hamiltonian::get_hamiltonian" 
-              << " dim0 = " << istart << " dim = " << space.size() 
-	      << std::endl; 
+                   << " dim0 = " << istart << " dim = " << space.size() 
+	           << std::endl; 
          // initialization for the first use
          if(istart == 0){
             diag.clear();
@@ -131,13 +160,11 @@ struct sparse_hamiltonian{
                   auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
                   if(pr == std::make_pair(1,1)){
                      auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
-		     if(abs(pr.first) < cutoff) continue;
 		     connect[i].push_back(j);
                      value[i].push_back(pr.first);
                      diff[i].push_back(pr.second);
                   }else if(pr == std::make_pair(2,2)){
                      auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
-		     if(abs(pr.first) < cutoff) continue;
                      connect[i].push_back(j);
                      value[i].push_back(pr.first);
                      diff[i].push_back(pr.second);
@@ -176,13 +203,11 @@ struct sparse_hamiltonian{
       	          auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
       	          if(pr == std::make_pair(1,1)){
       	             auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
-		     if(abs(pr.first) < cutoff) continue;
       	             connect[i].push_back(j);
       	             value[i].push_back(pr.first);
       	             diff[i].push_back(pr.second);
       	          }else if(pr == std::make_pair(2,2)){
       	             auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
-		     if(abs(pr.first) < cutoff) continue;
       	             connect[i].push_back(j);
       	             value[i].push_back(pr.first);
       	             diff[i].push_back(pr.second);
@@ -220,7 +245,6 @@ struct sparse_hamiltonian{
                      auto search = ctabB.C11[ib].find(jb);
                      if(search != ctabB.C11[ib].end()){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
-		        if(abs(pr.first) < cutoff) continue;
                         connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
@@ -266,13 +290,11 @@ struct sparse_hamiltonian{
                      auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
                      if(pr == std::make_pair(1,0)){
                         auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
-		        if(abs(pr.first) < cutoff) continue;
 		        connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
                      }else if(pr == std::make_pair(2,1)){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
-		        if(abs(pr.first) < cutoff) continue;
                         connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
@@ -296,13 +318,11 @@ struct sparse_hamiltonian{
                      auto pr = pspace.spaceB[ib].diff_type(pspace.spaceB[jb]);
                      if(pr == std::make_pair(0,1)){
                         auto pr = fock::get_HijS(space[i], space[j], int2e, int1e);
-		        if(abs(pr.first) < cutoff) continue;
 		        connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
                      }else if(pr == std::make_pair(1,2)){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e); 
-		        if(abs(pr.first) < cutoff) continue;
                         connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
@@ -327,7 +347,6 @@ struct sparse_hamiltonian{
                      auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
                      if(pr == std::make_pair(1,2)){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
-		        if(abs(pr.first) < cutoff) continue;
 		        connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
@@ -344,7 +363,6 @@ struct sparse_hamiltonian{
                      auto pr = pspace.spaceA[ia].diff_type(pspace.spaceA[ja]);
                      if(pr == std::make_pair(2,1)){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
-		        if(abs(pr.first) < cutoff) continue;
 		        connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
@@ -382,7 +400,6 @@ struct sparse_hamiltonian{
                      auto search = ctabB.C20[ib].find(jb);
                      if(search != ctabB.C20[ib].end()){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
-		        if(abs(pr.first) < cutoff) continue;
                         connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
@@ -405,7 +422,6 @@ struct sparse_hamiltonian{
                      auto search = ctabB.C02[ib].find(jb);
                      if(search != ctabB.C02[ib].end()){
                         auto pr = fock::get_HijD(space[i], space[j], int2e, int1e);
-		        if(abs(pr.first) < cutoff) continue;
                         connect[i].push_back(j);
                         value[i].push_back(pr.first);
                         diff[i].push_back(pr.second);
@@ -497,8 +513,10 @@ struct sparse_hamiltonian{
       	         << std::endl;
          }
       }
+   private:
+      product_space _pspace;
+      coupling_table _ctabA, _ctabB;
    public:
-      const double cutoff = 1.e-16;
       int dim;
       std::vector<double> diag; // H[i,i]
       // lower-riangular part: H[i,j] (i>j)
