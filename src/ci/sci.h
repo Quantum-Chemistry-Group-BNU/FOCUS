@@ -20,17 +20,14 @@ void ci_solver(const input::schedule& schd,
    bool debug = false;
    auto t0 = tools::get_time();
    std::cout << "\nsci::ci_solver Htype=" << Htype << std::endl; 
-   
    // set up head-bath table
    heatbath_table hbtab(int2e, int1e);
-
    // set up intial configurations
    std::vector<double> esol;
    linalg::matrix<Tm> vsol;
    std::unordered_set<fock::onstate> varSpace;
    get_initial(esol, vsol, space, varSpace, 
 	       hbtab, schd, int2e, int1e, ecore);
-   
    // set up auxilliary data structure   
    fci::product_space pspace;
    fci::coupling_table ctabA, ctabB;
@@ -40,7 +37,6 @@ void ci_solver(const input::schedule& schd,
    ctabB.get_Cmn(pspace.spaceB, Htype);
    sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
    		   	   int2e, int1e, ecore, Htype);
-
    // start increment
    bool ifconv = false;
    int nsub = space.size(); 
@@ -50,7 +46,6 @@ void ci_solver(const input::schedule& schd,
       std::cout << "iter=" << iter << " eps1=" << schd.eps1[iter] << std::endl;
       std::cout << "---------------------" << std::endl;
       double eps1 = schd.eps1[iter];
-
       // compute cmax[i] = \sqrt{\sum_j|vj[i]|^2/n} for screening
       std::vector<double> cmax(nsub,0.0);
       for(int j=0; j<neig; j++){
@@ -60,19 +55,16 @@ void ci_solver(const input::schedule& schd,
       }
       std::transform(cmax.begin(), cmax.end(), cmax.begin(),
 		     [neig](const double& x){ return pow(x/neig,0.5); });
-
       // expand 
       expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.flip);
       int nsub0 = nsub;
       nsub = space.size();
-
       // update auxilliary data structure 
       pspace.get_pspace(space, nsub0);
       ctabA.get_Cmn(pspace.spaceA, Htype, pspace.dimA0);
       ctabB.get_Cmn(pspace.spaceB, Htype, pspace.dimB0);
       sparseH.get_hamiltonian(space, pspace, ctabA, ctabB,
         	   	      int2e, int1e, ecore, Htype, nsub0);
-
       // set up Davidson solver 
       linalg::dvdsonSolver<Tm> solver;
       solver.iprt = 1;
@@ -84,7 +76,6 @@ void ci_solver(const input::schedule& schd,
       using std::placeholders::_1;
       using std::placeholders::_2;
       solver.HVec = std::bind(&fci::get_Hx<Tm>, _1, _2, cref(sparseH));
-
       // copy previous initial guess
       linalg::matrix<Tm> v0(nsub, neig);
       for(int j=0; j<neig; j++){
@@ -92,8 +83,8 @@ void ci_solver(const input::schedule& schd,
             v0(i,j) = vsol(i,j);
 	 }
       }
-      
       // solve
+      std::cout << std::endl;
       std::vector<double> esol1(neig);
       linalg::matrix<Tm> vsol1(nsub, neig);
       solver.solve_iter(esol1.data(), vsol1.data(), v0.data());
@@ -105,7 +96,7 @@ void ci_solver(const input::schedule& schd,
 	 conv[i] = abs(esol1[i]-esol[i]) < schd.deltaE; 
 	 std::vector<Tm> vtmp(vsol1.col(i),vsol1.col(i)+nsub);
          double SvN = fock::coeff_entropy(vtmp); 
-	 std::cout << "iter=" << iter
+	 std::cout << "sci: iter=" << iter
 	      << " eps1=" << std::scientific << std::setprecision(2) << schd.eps1[iter]
 	      << " nsub=" << nsub 
 	      << " i=" << i 
@@ -119,12 +110,12 @@ void ci_solver(const input::schedule& schd,
       vsol = vsol1;
       ifconv = (count(conv.begin(), conv.end(), true) == neig);
       if(iter>=schd.miniter && ifconv){
-	 std::cout << "convergence is achieved!" << std::endl;
+	 std::cout << "\nsci convergence is achieved!" << std::endl;
 	 break;
       }
    } // iter
    if(!ifconv){
-      std::cout << "convergence failure: out of maxiter=" << schd.maxiter << std::endl;
+      std::cout << "\n sci convergence failure: out of maxiter=" << schd.maxiter << std::endl;
    }
    // finally save results
    copy_n(esol.begin(), neig, es.begin());
@@ -136,17 +127,6 @@ void ci_solver(const input::schedule& schd,
    std::cout << "timing for sci::ci_solver : " << std::setprecision(2) 
   	     << tools::get_duration(t1-t0) << " s" << std::endl;
 }
-
-/*
-// for single state	
-void pt2_solver(const input::schedule& schd,
-	        const double e0,
-	        const std::vector<double>& v0,
-	        const fock::onspace& space,
-	        const integral::two_body& int2e,
-	        const integral::one_body& int1e,
-	        const double ecore);
-*/
 
 } // sci
 

@@ -5,6 +5,7 @@
 #include <functional>
 #include <vector>
 #include <map>
+#include "../core/analysis.h"
 #include "../core/hamiltonian.h"
 #include "../core/integral.h"
 #include "../core/onspace.h"

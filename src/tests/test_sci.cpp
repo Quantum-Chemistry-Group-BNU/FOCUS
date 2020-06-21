@@ -1,12 +1,10 @@
 #include "../core/onspace.h"
 #include "../core/integral.h"
-#include "../core/analysis.h"
 #include "../core/matrix.h"
 #include "../core/linalg.h"
 #include "../core/tools.h"
-#include "../ci/fci_util.h"
-#include "../ci/fci_rdm.h"
 #include "../ci/sci.h"
+#include "../ci/sci_pt2.h"
 #include "../io/input.h"
 #include <iostream>
 #include <iomanip>
@@ -24,8 +22,9 @@ int tests::test_sci(){
    cout << tools::line_separator << endl;	
 
    // read input
+   string fname = "sci.dat";
    input::schedule schd;
-   input::read_input(schd);
+   input::read_input(schd,fname);
 
    using DTYPE = complex<double>;
    
@@ -43,6 +42,9 @@ int tests::test_sci(){
    vector<vector<DTYPE>> vs(nroot);
    fci::sparse_hamiltonian<DTYPE> sparseH;
    sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
+
+   // pt2 for single root
+   sci::pt2_solver(schd, es[0], vs[0], sci_space, int2e, int1e, ecore);
 
    return 0;
 }

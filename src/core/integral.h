@@ -150,7 +150,7 @@ void load(two_body<Tm>& int2e,
 	  double& ecore,
 	  std::string fname){
    auto t0 = tools::get_time();
-   std::cout << "\nintegral::load_integral fname = " << fname << std::endl; 
+   std::cout << "\nintegral::load fname = " << fname << std::endl; 
    std::ifstream istrm(fname);
    if(!istrm){
       std::cout << "failed to open " << fname << std::endl;

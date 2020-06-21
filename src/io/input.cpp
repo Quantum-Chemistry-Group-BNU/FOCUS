@@ -34,7 +34,7 @@ void input::read_input(input::schedule& schd, string fname){
    schd.ifpt2 = false;
    schd.eps2 = 1.e-8;
    schd.eps0 = 1.e-2;
-   schd.integral_file = "FCIDUMP";
+   schd.integral_file = "mole.info";
    schd.ciload = false;
    schd.combload = false;
    schd.topology_file = "TOPOLOGY";
