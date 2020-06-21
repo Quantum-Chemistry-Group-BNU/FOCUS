@@ -65,6 +65,9 @@ struct sparse_hamiltonian{
 			   const int istart=0){
          const bool debug = true;
          auto t0 = tools::get_time();
+         std::cout << "\nsparse_hamiltonian::get_hamiltonian" 
+                   << " dim0 = " << istart << " dim = " << space.size() 
+	           << std::endl; 
          // 1. setup product_space
          _pspace.get_pspace(space, istart);
          auto ta = tools::get_time();
@@ -79,14 +82,14 @@ struct sparse_hamiltonian{
       		             << tools::get_duration(tb-ta) << " s" << " "
       		             << tools::get_duration(tc-tb) << " s" << std::endl; 
          // 3. compute sparse_hamiltonian
-   	 get_hamiltonian(space, _pspace, _ctabA, _ctabB, int2e, int1e, ecore, Htype, istart);
-         auto td = tools::get_time();
-         if(debug) std::cout << "timing for sparseH : " << std::setprecision(2) 
-		             << tools::get_duration(td-tc) << " s" << std::endl;
+   	 make_hamiltonian(space, _pspace, _ctabA, _ctabB, int2e, int1e, ecore, Htype, istart);
+         auto t1 = tools::get_time();
+         if(debug) std::cout << "timing for get_hamiltonian : " << std::setprecision(2) 
+		             << tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
       // construct Hij	   
-      void get_hamiltonian(const fock::onspace& space,
+      void make_hamiltonian(const fock::onspace& space,
 		           const product_space& pspace,
 		           const coupling_table& ctabA,
 			   const coupling_table& ctabB,
@@ -97,9 +100,7 @@ struct sparse_hamiltonian{
 			   const int istart=0){
          const bool debug = true;
          auto t0 = tools::get_time();
-         std::cout << "\nsparse_hamiltonian::get_hamiltonian" 
-                   << " dim0 = " << istart << " dim = " << space.size() 
-	           << std::endl; 
+         std::cout << "sparse_hamiltonian::make_hamiltonian" << std::endl; 
          // initialization for the first use
          if(istart == 0){
             diag.clear();
@@ -114,7 +115,7 @@ struct sparse_hamiltonian{
             diag[i] = fock::get_Hii(space[i],int2e,int1e) + ecore;
          }
          auto ta = tools::get_time();
-         if(debug) std::cout << "timing for diagonal : " << std::setprecision(2) 
+         if(debug) std::cout << " timing for diagonal : " << std::setprecision(2) 
               	        << tools::get_duration(ta-t0) << " s" << std::endl;
          // off-diagonal 
          connect.resize(dim);
@@ -173,7 +174,7 @@ struct sparse_hamiltonian{
             } // ib
          } // ia
          auto t1 = tools::get_time();
-         if(debug) std::cout << "timing for get_HIJ_A1122_B00 : " << std::setprecision(2) 
+         if(debug) std::cout << " timing for get_HIJ_A1122_B00 : " << std::setprecision(2) 
               	        << tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
@@ -216,7 +217,7 @@ struct sparse_hamiltonian{
             } // ib
          } // ia
          auto t1 = tools::get_time();
-         if(debug) std::cout << "timing for get_HIJ_A00_B1122 : " << std::setprecision(2) 
+         if(debug) std::cout << " timing for get_HIJ_A00_B1122 : " << std::setprecision(2) 
       		        << tools::get_duration(t1-t0) << " s" << std::endl;
       }
       
@@ -254,7 +255,7 @@ struct sparse_hamiltonian{
             } // ia
          } // ia
          auto t1 = tools::get_time();
-         if(debug) std::cout << "timing for get_HIJ_A11_B11 : " << std::setprecision(2) 
+         if(debug) std::cout << " timing for get_HIJ_A11_B11 : " << std::setprecision(2) 
          		<< tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
@@ -372,7 +373,7 @@ struct sparse_hamiltonian{
             } // ja
          } // ia
          auto t1 = tools::get_time();
-         if(debug) std::cout << "timing for get_HIJ_ABmixed1 : " << std::setprecision(2) 
+         if(debug) std::cout << " timing for get_HIJ_ABmixed1 : " << std::setprecision(2) 
               	        << tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
@@ -431,7 +432,7 @@ struct sparse_hamiltonian{
             } // ja
          } // ia
          auto t1 = tools::get_time();
-         if(debug) std::cout << "timing for get_HIJ_ABmixed2 : " << std::setprecision(2) 
+         if(debug) std::cout << " timing for get_HIJ_ABmixed2 : " << std::setprecision(2) 
          		<< tools::get_duration(t1-t0) << " s" << std::endl;
       }
 
