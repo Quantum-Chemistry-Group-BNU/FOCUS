@@ -16,21 +16,13 @@ int test_simpleci();
 
 // --- sci ---
 int test_fci();
+int test_sci();
 
 /*
-int test_rdm();
-int test_sci();
 int test_pt2();
 
 // --- Comb ---
 int test_comb();
-
-// --- experiemental ---
-int test_vmc();
-int test_ordering();
-int test_proj();
-int test_ras();
-
 */
 
 }

@@ -3,12 +3,12 @@ BOOST = /usr/local
 ## eigen
 #MATH = -I /usr/local/include/eigen3 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE \
        -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
-## serial version
+## serial version of MKL
 #MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
-# parallel version
-#MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl 
+# parallel version of MKL
+MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl 
 ## my compiled lapack/blas from netlib
-MATH = -llapack -lblas
+#MATH = -llapack -lblas
 
 #FLAGS = -DGNU -std=c++11 -g -O0 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
 FLAGS = -DGNU -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
@@ -33,7 +33,7 @@ OBJ_DIR = ./obj
 SRC_DIR1 = ./$(SRC)/io
 SRC_DIR2 = ./$(SRC)/core
 SRC_DIR3 = ./$(SRC)/tests
-SRC_DIR4 = ./$(SRC)/sci
+SRC_DIR4 = ./$(SRC)/ci
 SRC_DIR5 = ./$(SRC)/tns
 INCLUDE_DIR = -I$(SRC_DIR1) \
 	      -I$(SRC_DIR2) \

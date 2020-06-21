@@ -1,12 +1,6 @@
 #ifndef FCI_H
 #define FCI_H
 
-#include <string>
-#include <vector>
-#include "../core/onspace.h"
-#include "../core/matrix.h"
-#include "../core/integral.h"
-#include "../core/tools.h"
 #include "fci_util.h"
 
 namespace fci{
@@ -120,7 +114,7 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
    solver.Diag = sparseH.diag.data();
    using std::placeholders::_1;
    using std::placeholders::_2;
-   solver.HVec = bind(&fci::get_Hx<Tm>, _1, _2, cref(sparseH));
+   solver.HVec = std::bind(&fci::get_Hx<Tm>, _1, _2, cref(sparseH));
    // get initial guess
    linalg::matrix<Tm> v0(solver.ndim, solver.neig);
    get_initial(space, int2e, int1e, ecore, sparseH.diag, v0);

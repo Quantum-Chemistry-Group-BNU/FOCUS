@@ -10,6 +10,7 @@
 #include "../core/integral.h"
 #include "../core/matrix.h"
 #include "../core/onspace.h"
+#include "../core/hamiltonian.h"
 
 namespace fci{
 

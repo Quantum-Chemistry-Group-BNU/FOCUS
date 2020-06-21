@@ -17,11 +17,9 @@ int main(){
 
    // --- sci ---
    tests::test_fci();
+   tests::test_sci();
    
 /*   
-   tests::test_rdm();
-   
-   tests::test_sci();
 
    tests::test_pt2();
   
