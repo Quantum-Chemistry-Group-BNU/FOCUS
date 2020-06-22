@@ -73,21 +73,14 @@ IO
  io/input.cpp
  io/input.h
 -------------------
-SCI
+SCI+PT2
 -------------------
- utils/sci.cpp
+ utils/sci_util.h
+ utils/sci_util.cpp
  utils/sci.h
+ utils/sci_pt2.h
  tests/test_sci.cpp
 -------------------
-
-
-
-PT2
--------------------
- utils/sci_pt2.cpp
- tests/test_pt2.cpp
--------------------
-
 
 
 

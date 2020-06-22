@@ -74,6 +74,8 @@ int tests::test_comb(){
    schd.create_scratch();
 
    if(!schd.combload){
+
+      // initialize right canonical form from SCI wavefunction
       comb.rcanon_init(sci_space, vs, schd.thresh_proj);
       comb.rcanon_check(schd.thresh_ortho, ifortho);
       
@@ -115,13 +117,16 @@ int tests::test_comb(){
          cout << "error: diff_Hij > thresh=" << thresh << endl;
          exit(1);
       }
-   
+  
+      // optimization from current RCF 
       tns::opt_sweep(schd, comb, int2e, int1e, ecore);
       comb.rcanon_save();
 
    }else{
       comb.rcanon_load();
    }
+
+   // compute expectation value
    auto Sij = tns::get_Smat(comb, comb);
    Sij.print("Sij");
    auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
@@ -132,10 +137,12 @@ int tests::test_comb(){
    // check with SCI
    auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
    ovlp.print("ovlp");
-   // random
+   
+   // compute Sd by sampling
    int nsample = 1.e5, istate = 0, nprt = 10;
    double Sd = comb.rcanon_sampling_Sd(nsample,istate,nprt);
    cout << "istate=" << istate << " Sd(estimate)=" << Sd << endl;
+   
    // only for small system - exact computation
    //comb.rcanon_sampling_check(istate);
 */
