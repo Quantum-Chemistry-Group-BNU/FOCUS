@@ -19,13 +19,8 @@ int main(){
    tests::test_fci();
    tests::test_sci();
    
-/*   
-
-   tests::test_pt2();
-  
    // --- comb ---  
-
    tests::test_comb();
-*/
+
    return 0;   
 }

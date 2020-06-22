@@ -142,7 +142,7 @@ void get_rdm2(const sparse_hamiltonian<Tm>& sparseH,
  	      const std::vector<Tm>& civec1,
 	      const std::vector<Tm>& civec2,
 	      linalg::matrix<Tm>& rdm2,
-   	      const bool debug = true){
+   	      const bool debug = false){
    auto t0 = tools::get_time();
    std::cout << "\nfci:get_rdm2" << std::endl;
    // initialization 

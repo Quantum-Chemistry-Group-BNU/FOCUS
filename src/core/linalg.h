@@ -11,8 +11,9 @@ double dznrm2_(const int* N, const std::complex<double>* X, const int* INCX);
 // dot
 double ddot_(const int* N, const double* X, const int* INCX,
 	     const double* Y, const int* INCY);
-std::complex<double> zdotc_(const int* N, const std::complex<double>* ZX, const int* INCX,
-		            const std::complex<double>* ZY, const int* INCY); // X^H * Y
+void zdotc_(std::complex<double>* result, 
+	    const int* N, const std::complex<double>* ZX, const int* INCX,
+	    const std::complex<double>* ZY, const int* INCY); // X^H * Y
 // gemm	
 void dgemm_(const char* TRANSA, const char* TRANSB, 
 	    const int* M, const int* N, const int* K,
@@ -80,7 +81,10 @@ inline double xdot(const int N, const double* X, const double* Y){
 }
 inline std::complex<double> xdot(const int N, const std::complex<double>* X, const std::complex<double>* Y){
    int INCX = 1, INCY = 1;
-   return ::zdotc_(&N, X, &INCX, Y, &INCY);
+   // ZL@20200622: This works for MKL, while others may return complex value directly
+   std::complex<double> result;
+   ::zdotc_(&result, &N, X, &INCX, Y, &INCY);
+   return result;
 }
 
 // normF = ||A||_F = sqrt(\sum_{ij}|aij|^2)

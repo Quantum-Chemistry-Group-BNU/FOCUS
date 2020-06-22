@@ -1,6 +1,7 @@
 #ifndef FCI_H
 #define FCI_H
 
+#include "../core/dvdson.h"
 #include "fci_util.h"
 
 namespace fci{

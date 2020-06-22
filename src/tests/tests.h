@@ -18,12 +18,8 @@ int test_simpleci();
 int test_fci();
 int test_sci();
 
-/*
-int test_pt2();
-
 // --- Comb ---
 int test_comb();
-*/
 
 }
 

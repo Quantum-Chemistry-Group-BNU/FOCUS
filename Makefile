@@ -7,11 +7,11 @@ BOOST = /usr/local
 #MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
 # parallel version of MKL
 MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl 
-## my compiled lapack/blas from netlib
+# mac framework Accelerate
 #MATH = -llapack -lblas
 
-#FLAGS = -DGNU -std=c++11 -g -O0 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
-FLAGS = -DGNU -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
+FLAGS = -DGNU -std=c++11 -g -O0 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
+#FLAGS = -DGNU -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
 #FLAGS = -DGNU -DNDEBUG -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
 #	-Wl,-no_pie -lprofiler # google profiler
 

@@ -10,7 +10,7 @@
 #include "../core/integral.h"
 #include "../core/onspace.h"
 #include "../core/matrix.h"
-#include "../core/dvdson.h"
+#include "../core/dvdson.h"  // get_ortho_basis
 #include "../io/input.h" // schedule
 #include "fci_util.h"
 
@@ -170,8 +170,9 @@ void ci_truncate(fock::onspace& space,
 		 std::vector<std::vector<Tm>>& vs,
 		 const int maxdets,
 		 const bool ifortho=false){
-   std::cout << "\nsci::ci_truncate maxdets=" 
-	     << maxdets << " ifortho=" << ifortho << std::endl;
+   const bool debug = true;
+   std::cout << "\nsci::ci_truncate maxdets=" << maxdets 
+	     << " ifortho=" << ifortho << std::endl;
    int nsub = space.size();
    int neig = vs.size();
    int nred = std::min(nsub,maxdets);
@@ -210,15 +211,18 @@ void ci_truncate(fock::onspace& space,
       std::copy(&vtmp[nred*j],&vtmp[nred*j]+nred,vs2[j].begin());
    }
    // check the quality of truncated states
-   for(int j=0; j<neig; j++){
-      std::vector<Tm> vec(nred);
-      for(int i=0; i<nred; i++){
-	 vec[i] = vs[j][index[i]];
+   if(debug){
+      for(int j=0; j<neig; j++){
+         std::vector<Tm> vec(nred);
+         for(int i=0; i<nred; i++){
+            vec[i] = vs[j][index[i]];
+         }
+	 auto ova = linalg::xdot(nred, vs2[j].data(), vec.data());
+         std::cout << "iroot=" << j << " ova=" 
+                   << std::setprecision(12) << ova << std::endl;
       }
-      double ova = linalg::xdot(nred,vs2[j].data(),vec.data());
-      std::cout << "iroot=" << j << " ova=" 
-	        << std::setprecision(12) << ova << std::endl; 
    }
+   // replace (space,vs) by the reduced counterpart 
    space = space2;
    vs = vs2;
 }
