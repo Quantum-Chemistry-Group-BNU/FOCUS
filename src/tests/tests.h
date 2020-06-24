@@ -20,6 +20,7 @@ int test_sci();
 
 // --- Comb ---
 int test_comb();
+int test_tns();
 
 }
 

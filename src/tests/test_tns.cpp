@@ -23,10 +23,10 @@ using namespace std;
 using namespace fock;
 using namespace linalg;
 
-int tests::test_comb(){
+int tests::test_tns(){
    cout << endl;	
    cout << tools::line_separator << endl;	
-   cout << "tests::test_comb" << endl;
+   cout << "tests::test_tns" << endl;
    cout << tools::line_separator << endl;	
 
    // read input
@@ -65,8 +65,7 @@ int tests::test_comb(){
    // truncate CI coefficients
    const bool ifortho = true;
    sci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
-
-/*
+ 
    // comb tensor networks
    tns::comb comb;
    
@@ -148,7 +147,6 @@ int tests::test_comb(){
    cout << "istate=" << istate << " Sd(estimate)=" << Sd << endl;
    // only for small system - exact computation
    comb.rcanon_sampling_check(istate);
-*/
 
    return 0;
 }
