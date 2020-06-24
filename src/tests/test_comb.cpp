@@ -68,6 +68,8 @@ int tests::test_comb(){
  
    // comb tensor networks
    tns::comb comb;
+   
+   //--- 1. dealing with topology ---
    comb.topo_read(schd.topology_file);
    comb.topo_init();
    comb.topo_print();
@@ -76,12 +78,12 @@ int tests::test_comb(){
 
    if(!schd.combload){
 
-      // initialize right canonical form from SCI wavefunction
+      //--- 2. initialize right canonical form from SCI wavefunction --- 
       comb.rcanon_init(sci_space, vs, schd.thresh_proj);
       comb.rcanon_check(schd.thresh_ortho, ifortho);
       
       const double thresh=1.e-6;
-      // check overlap with CI
+      //--- 3. algorithm: check overlap with CI --- 
       auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
       ovlp.print("ovlp");
       // check self-overlap
@@ -106,7 +108,7 @@ int tests::test_comb(){
       //fci::get_rdm1(sci_space, vs[1], vs[2], rdm1);
       //rdm1.save("fci_rdm1c");
 
-      // check Hij
+      //--- 4. algorithm: check Hij ---
       auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
       Hmat.print("Hmat",8);
       Hmat.save("fci_Hmat");
@@ -119,7 +121,7 @@ int tests::test_comb(){
          exit(1);
       }
   
-      // optimization from current RCF 
+      //--- 5. optimization from current RCF ---  
       tns::opt_sweep(schd, comb, int2e, int1e, ecore);
       comb.rcanon_save();
 
@@ -127,7 +129,7 @@ int tests::test_comb(){
       comb.rcanon_load();
    }
 
-   // compute expectation value
+   // re-compute expectation value for optimized TNS
    auto Sij = tns::get_Smat(comb, comb);
    Sij.print("Sij");
    auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
@@ -139,13 +141,12 @@ int tests::test_comb(){
    auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
    ovlp.print("ovlp");
    
-   // compute Sd by sampling
+   //--- 6. compute Sd by sampling ---
    int nsample = 1.e5, istate = 0, nprt = 10;
    double Sd = comb.rcanon_sampling_Sd(nsample,istate,nprt);
    cout << "istate=" << istate << " Sd(estimate)=" << Sd << endl;
-   
    // only for small system - exact computation
-   //comb.rcanon_sampling_check(istate);
+   comb.rcanon_sampling_check(istate);
 
    return 0;
 }
