@@ -123,7 +123,7 @@ std::vector<int> sort_index_abs(const std::vector<T>& v, const int iop=0){
 }
 
 // permutations
-class perm{
+struct perm{
    public:
       perm(const int k): size(k){
          image.resize(k);

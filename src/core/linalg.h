@@ -61,7 +61,7 @@ void zgesdd_(const char* JOBZ, const int* M, const int* N,
 	     double* RWORK, int* IWORK, int* INFO);
 }
 
-// wrapper for BLAS/LAPACK with matrix class
+// wrapper for BLAS/LAPACK with matrix<Tm> and vector<Tm> 
 namespace linalg{
 
 // xnrm2
