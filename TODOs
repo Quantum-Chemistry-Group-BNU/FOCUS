@@ -47,7 +47,7 @@
  20200331 pt2 util & storage/serialization:
  	  - primilinary implementation of deterministic pt2
 
---- TNS --- 
+--- TNS expolaration --- 
 
  Main observation: denseH as in [Fe2S2], pt2 is not sufficient unlike c2/cr2!
 		   non-perturbative treatment / high-order PT?

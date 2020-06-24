@@ -9,8 +9,10 @@
 #include "../ci/fci_rdm.h"
 #include "../ci/sci.h"
 #include "../ci/sci_pt2.h"
-//#include "../tns/tns_comb.h"
-//#include "../tns/tns_opt.h"
+
+#include "../tns/tns_comb.h"
+#include "../tns/tns_opt.h"
+
 #include "../io/input.h"
 #include <iostream>
 #include <iomanip>
@@ -32,7 +34,7 @@ int tests::test_comb(){
    input::schedule schd;
    input::read_input(schd,fname);
 
-   using DTYPE = complex<double>;
+   using DTYPE = double;
    
    // read integral
    integral::two_body<DTYPE> int2e;
@@ -64,7 +66,6 @@ int tests::test_comb(){
    const bool ifortho = true;
    sci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
  
-/*
    // comb tensor networks
    tns::comb comb;
    comb.topo_read(schd.topology_file);
@@ -145,7 +146,6 @@ int tests::test_comb(){
    
    // only for small system - exact computation
    //comb.rcanon_sampling_check(istate);
-*/
 
    return 0;
 }

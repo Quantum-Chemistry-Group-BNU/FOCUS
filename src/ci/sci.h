@@ -64,7 +64,7 @@ void ci_solver(const input::schedule& schd,
       solver.Diag = sparseH.diag.data();
       using std::placeholders::_1;
       using std::placeholders::_2;
-      solver.HVec = std::bind(&fci::get_Hx<Tm>, _1, _2, cref(sparseH));
+      solver.HVec = std::bind(&fci::get_Hx<Tm>, _1, _2, std::cref(sparseH));
       // copy previous initial guess
       linalg::matrix<Tm> v0(nsub, neig);
       for(int j=0; j<neig; j++){

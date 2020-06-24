@@ -54,6 +54,7 @@ OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend \
      $(BIN_DIR)/tests.x \
+     $(BIN_DIR)/comb.x
 
 depend:
 	set -e; \
@@ -65,6 +66,11 @@ depend:
 -include .depend
 
 $(BIN_DIR)/tests.x: $(OBJ_DIR)/main_tests.o $(OBJ_DEP)
+	@echo "\n=== LINK $@"
+	@echo $(OBJ_DEP)
+	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
+
+$(BIN_DIR)/comb.x: $(OBJ_DIR)/main_comb.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)

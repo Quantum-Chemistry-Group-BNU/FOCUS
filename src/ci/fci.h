@@ -135,7 +135,7 @@ linalg::matrix<Tm> get_Smat(const fock::onspace& space,
    for(int j=0; j<n; j++){
       for(int i=0; i<n; i++){
    	 // SIJ = <I|S|J>
-	 Smat(i,j) = xdot(dim,vs[i].data(),vs[j].data());
+	 Smat(i,j) = linalg::xdot(dim,vs[i].data(),vs[j].data());
       }
    }
    return Smat;
@@ -159,7 +159,7 @@ linalg::matrix<Tm> get_Hmat(const fock::onspace& space,
       fci::get_Hx(Hx.data(),vs[j].data(),sparseH);
       for(int i=0; i<n; i++){
          // HIJ = <I|H|J>
-	 Hmat(i,j) = xdot(dim,vs[i].data(),Hx.data());
+	 Hmat(i,j) = linalg::xdot(dim,vs[i].data(),Hx.data());
       }
    }
    return Hmat;

@@ -61,10 +61,10 @@ Analysis & RDM
 -------------------
 FCI
 -------------------
- utils/fci_util.h
- utils/fci_util.cpp
- utils/fci.h
- utils/fci_rdm.h
+ ci/fci_util.h
+ ci/fci_util.cpp
+ ci/fci.h
+ ci/fci_rdm.h
  tests/test_fci.cpp
 -------------------
 IO
@@ -75,10 +75,10 @@ IO
 -------------------
 SCI+PT2
 -------------------
- utils/sci_util.h
- utils/sci_util.cpp
- utils/sci.h
- utils/sci_pt2.h
+ ci/sci_util.h
+ ci/sci_util.cpp
+ ci/sci.h
+ ci/sci_pt2.h
  tests/test_sci.cpp
 -------------------
 
@@ -87,45 +87,44 @@ SCI+PT2
 -------------------
 TNS
 -------------------
- utils/tns_comb.h
- utils/tns_comb_alg.cpp
- utils/tns_comb_rand.cpp
- utils/tns_comb_rcanon.cpp
- utils/tns_comb_topo.cpp
- utils/tns_decimation.cpp
- utils/tns_decimation.h
- utils/tns_ham.h
- utils/tns_ham_onedot.cpp
- utils/tns_ham_twodot.cpp
- utils/tns_initial.cpp
- utils/tns_initial.h
- utils/tns_io.cpp
- utils/tns_oper.h
- utils/tns_oper_complement.cpp
- utils/tns_oper_dot.cpp
- utils/tns_oper_init.cpp
- utils/tns_oper_kernel.cpp
- utils/tns_oper_normal.cpp
- utils/tns_oper_opwf.cpp
- utils/tns_oper_rbases.cpp
- utils/tns_oper_renorm.cpp
- utils/tns_opt.cpp
- utils/tns_opt.h
- utils/tns_ordering.cpp
- utils/tns_ordering.h
- utils/tns_prdm.cpp
- utils/tns_prdm.h
- utils/tns_pspace.cpp
- utils/tns_pspace.h
- utils/tns_qsym.cpp
- utils/tns_qsym.h
- utils/tns_qtensor.h
- utils/tns_qtensor2.cpp
- utils/tns_qtensor3.cpp
- utils/tns_qtensor4.cpp
- utils/tns_qtensor_contract.cpp
- utils/tns_qtensor_convert.cpp
- tests/test_ordering.cpp
+ tns/tns_comb.h
+ tns/tns_comb_alg.cpp
+ tns/tns_comb_rand.cpp
+ tns/tns_comb_rcanon.cpp
+ tns/tns_comb_topo.cpp
+ tns/tns_decimation.cpp
+ tns/tns_decimation.h
+ tns/tns_ham.h
+ tns/tns_ham_onedot.cpp
+ tns/tns_ham_twodot.cpp
+ tns/tns_initial.cpp
+ tns/tns_initial.h
+ tns/tns_io.cpp
+ tns/tns_oper.h
+ tns/tns_oper_complement.cpp
+ tns/tns_oper_dot.cpp
+ tns/tns_oper_init.cpp
+ tns/tns_oper_kernel.cpp
+ tns/tns_oper_normal.cpp
+ tns/tns_oper_opwf.cpp
+ tns/tns_oper_rbases.cpp
+ tns/tns_oper_renorm.cpp
+ tns/tns_opt.cpp
+ tns/tns_opt.h
+ tns/tns_ordering.cpp
+ tns/tns_ordering.h
+ tns/tns_prdm.cpp
+ tns/tns_prdm.h
+ tns/tns_pspace.cpp
+ tns/tns_pspace.h
+ tns/tns_qsym.cpp
+ tns/tns_qsym.h
+ tns/tns_qtensor.h
+ tns/tns_qtensor2.cpp
+ tns/tns_qtensor3.cpp
+ tns/tns_qtensor4.cpp
+ tns/tns_qtensor_contract.cpp
+ tns/tns_qtensor_convert.cpp
  tests/test_comb.cpp
 -------------------
 
@@ -139,4 +138,5 @@ Unused
  tests/test_vmc.cpp
  tests/test_ras.cpp
  tests/test_proj.cpp
+ tests/test_ordering.cpp
 -------------------
