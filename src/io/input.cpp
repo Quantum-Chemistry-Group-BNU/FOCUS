@@ -9,8 +9,8 @@
 using namespace std;
 using namespace input;
 
-void input::read_input(input::schedule& schd, string fname){
-   cout << "\ninput::read_input fname = " << fname << endl;
+void input::read(input::schedule& schd, string fname){
+   cout << "\ninput::read fname = " << fname << endl;
 
    ifstream istrm(fname);
    if(!istrm) {

@@ -29,22 +29,26 @@ endif
 SRC = src
 BIN_DIR = ./bin
 OBJ_DIR = ./obj
+
 # all dependence
 SRC_DIR1 = ./$(SRC)/io
 SRC_DIR2 = ./$(SRC)/core
 SRC_DIR3 = ./$(SRC)/tests
 SRC_DIR4 = ./$(SRC)/ci
 SRC_DIR5 = ./$(SRC)/tns
+SRC_DIR6 = ./$(SRC)/comb
 INCLUDE_DIR = -I$(SRC_DIR1) \
 	      -I$(SRC_DIR2) \
 	      -I$(SRC_DIR3) \
 	      -I$(SRC_DIR4) \
-	      -I$(SRC_DIR5)
+	      -I$(SRC_DIR5) \
+	      -I$(SRC_DIR6)
 SRC_DEP = $(wildcard $(SRC_DIR1)/*.cpp \
 	  	     $(SRC_DIR2)/*.cpp \
 	  	     $(SRC_DIR3)/*.cpp \
 	  	     $(SRC_DIR4)/*.cpp \
-	  	     $(SRC_DIR5)/*.cpp)
+	  	     $(SRC_DIR5)/*.cpp \
+	  	     $(SRC_DIR6)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
 # all the files

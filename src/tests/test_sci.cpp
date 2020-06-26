@@ -24,7 +24,7 @@ int tests::test_sci(){
    // read input
    string fname = "sci.dat";
    input::schedule schd;
-   input::read_input(schd,fname);
+   input::read(schd,fname);
 
    using DTYPE = complex<double>;
    

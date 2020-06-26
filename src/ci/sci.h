@@ -104,7 +104,7 @@ void ci_solver(const input::schedule& schd,
       }
    } // iter
    if(!ifconv){
-      std::cout << "\n sci convergence failure: out of maxiter=" << schd.maxiter << std::endl;
+      std::cout << "\nsci convergence failure: out of maxiter=" << schd.maxiter << std::endl;
    }
    // finally save results
    copy_n(esol.begin(), neig, es.begin());

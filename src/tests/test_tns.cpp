@@ -32,7 +32,7 @@ int tests::test_tns(){
    // read input
    string fname = "comb.dat";
    input::schedule schd;
-   input::read_input(schd,fname);
+   input::read(schd,fname);
 
    using DTYPE = double;
    
@@ -69,7 +69,7 @@ int tests::test_tns(){
    // comb tensor networks
    tns::comb comb;
    
-   //--- 1. dealing with topology ---
+   // --- 1. dealing with topology ---
    comb.topo_read(schd.topology_file);
    comb.topo_init();
    comb.topo_print();
@@ -78,12 +78,13 @@ int tests::test_tns(){
 
    if(!schd.combload){
 
-      //--- 2. initialize right canonical form from SCI wavefunction --- 
+      // --- 2. initialize right canonical form from SCI wavefunction --- 
       comb.rcanon_init(sci_space, vs, schd.thresh_proj);
       comb.rcanon_check(schd.thresh_ortho, ifortho);
       
       const double thresh=1.e-6;
-      //--- 3. algorithm: check overlap with CI --- 
+      
+      // --- 3. algorithm: check overlap with CI --- 
       auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
       ovlp.print("ovlp");
       // check self-overlap
@@ -108,7 +109,7 @@ int tests::test_tns(){
       //fci::get_rdm1(sci_space, vs[1], vs[2], rdm1);
       //rdm1.save("fci_rdm1c");
 
-      //--- 4. algorithm: check Hij ---
+      // --- 4. algorithm: check Hij ---
       auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
       Hmat.print("Hmat",8);
       Hmat.save("fci_Hmat");
@@ -121,7 +122,7 @@ int tests::test_tns(){
          exit(1);
       }
   
-      //--- 5. optimization from current RCF ---  
+      // --- 5. optimization from current RCF ---  
       tns::opt_sweep(schd, comb, int2e, int1e, ecore);
       comb.rcanon_save();
 
@@ -141,7 +142,7 @@ int tests::test_tns(){
    auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
    ovlp.print("ovlp");
    
-   //--- 6. compute Sd by sampling ---
+   // --- 6. compute Sd by sampling ---
    int nsample = 1.e5, istate = 0, nprt = 10;
    double Sd = comb.rcanon_sampling_Sd(nsample,istate,nprt);
    cout << "istate=" << istate << " Sd(estimate)=" << Sd << endl;

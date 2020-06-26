@@ -49,6 +49,7 @@ public:
    // --- CombTNS --- 
    // comb
    std::string topology_file;
+   // sci
    int maxdets;
    double thresh_proj;
    double thresh_ortho;
@@ -59,7 +60,7 @@ public:
    bool combload;
 };
    
-void read_input(schedule& schd, std::string fname="input.dat");
+void read(schedule& schd, std::string fname="input.dat");
 
 void combsweep_init(const int maxsweep,
 		    std::vector<sweep_ctrl>& combsweep);
