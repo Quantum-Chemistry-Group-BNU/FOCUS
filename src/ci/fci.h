@@ -186,6 +186,69 @@ void ci_load(fock::onspace& space,
    load >> space >> vs;
 }
 
+// truncate CI coefficients for later use in initializing TNS
+template <typename Tm>
+void ci_truncate(fock::onspace& space,
+		 std::vector<std::vector<Tm>>& vs,
+		 const int maxdets,
+		 const bool ifortho=false){
+   const bool debug = true;
+   std::cout << "\nfci::ci_truncate maxdets=" << maxdets 
+	     << " ifortho=" << ifortho << std::endl;
+   int nsub = space.size();
+   int neig = vs.size();
+   int nred = std::min(nsub,maxdets);
+   std::cout << "reduction from " << nsub << " to " << nred << " dets" << std::endl;
+   // select important basis
+   std::vector<double> cmax(nsub,0.0);
+   for(int j=0; j<neig; j++){
+      for(int i=0; i<nsub; i++){
+	 cmax[i] += std::norm(vs[j][i]);
+      }
+   }
+   auto index = tools::sort_index(cmax, 1); 
+   // orthogonalization if required
+   std::vector<Tm> vtmp(nred*neig);
+   for(int j=0; j<neig; j++){
+      for(int i=0; i<nred; i++){
+	 vtmp[i+nred*j] = vs[j][index[i]];
+      }
+   }
+   if(ifortho){
+      int nindp = linalg::get_ortho_basis(nred,neig,vtmp);
+      if(nindp != neig){
+	 std::cout << "error: thresh is too large for ci_truncate!" << std::endl;
+         std::cout << "nindp,neig=" << nindp << "," << neig << std::endl;
+         exit(1);
+      }
+   }
+   // copy basis and coefficients
+   fock::onspace space2(nred);
+   for(int i=0; i<nred; i++){
+      space2[i] = space[index[i]];	
+   }
+   std::vector<std::vector<Tm>> vs2(neig);
+   for(int j=0; j<neig; j++){
+      vs2[j].resize(nred);
+      std::copy(&vtmp[nred*j],&vtmp[nred*j]+nred,vs2[j].begin());
+   }
+   // check the quality of truncated states
+   if(debug){
+      for(int j=0; j<neig; j++){
+         std::vector<Tm> vec(nred);
+         for(int i=0; i<nred; i++){
+            vec[i] = vs[j][index[i]];
+         }
+	 auto ova = linalg::xdot(nred, vs2[j].data(), vec.data());
+         std::cout << "iroot=" << j << " ova=" 
+                   << std::setprecision(12) << ova << std::endl;
+      }
+   }
+   // replace (space,vs) by the reduced counterpart 
+   space = space2;
+   vs = vs2;
+}
+
 } // fci
 
 #endif

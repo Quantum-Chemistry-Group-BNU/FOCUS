@@ -64,7 +64,7 @@ int tests::test_tns(){
    }
    // truncate CI coefficients
    const bool ifortho = true;
-   sci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
+   fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
  
    // comb tensor networks
    tns::comb comb;

@@ -18,13 +18,17 @@ namespace sci{
 
 // type information
 template <typename Tm>
-struct hbtab_single{ using type = float; };
+struct heatbath_single{
+   using type = std::vector<std::vector<float>>; 
+};
 template <>
-struct hbtab_single<std::complex<double>>{ using type = std::complex<float>; };
+struct heatbath_single<std::complex<double>>{ 
+   using type = std::vector<std::vector<std::complex<float>>>; 
+};
 
+template <typename Tm>
 struct heatbath_table{
 public: 
-   template <typename Tm>
    heatbath_table(const integral::two_body<Tm>& int2e,
 		  const integral::one_body<Tm>& int1e){
       const bool debug = false;
@@ -83,154 +87,157 @@ public:
    int sorb;
    // cut-off value 
    double thresh = 1.e-14; 
-   // sorted by magnitude Iij[kl]=<ij||kl> (i>j,k>l)
+   // sorted by magnitude Iij[kl]=|<ij||kl>| (i>j,k>l)
    std::vector<std::multimap<float,int,std::greater<float>>> eri4; 
    // Iik[j]={<ij||kj>(i>=k),hik} for fast estimation of singles
-   std::vector<std::vector<heatbath_single<Tm>::type>> eri3; 
+   typename heatbath_single<Tm>::type eri3;
 };
 
 // expand variational subspace
+template <typename Tm>
 void expand_varSpace(fock::onspace& space, 
 		     std::unordered_set<fock::onstate>& varSpace, 
-		     const heatbath_table& hbtab, 
+		     const heatbath_table<Tm>& hbtab, 
 		     const std::vector<double>& cmax, 
 		     const double eps1,
-		     const bool flip);
+		     const bool flip){
+   const bool debug = false;
+   auto t0 = tools::get_time();
+   std::cout << "\nsci::expand_varSpace dim = " 
+	     << space.size() << " eps1 = " << eps1 << std::endl;
+   // assuming particle number conserving space
+   fock::onstate state = space[0];
+   int no = state.nelec(), k = state.size(), nv = k - no;
+   std::vector<int> olst(no), vlst(nv);
+   int nsingles = no*nv;
+   int dim = space.size();
+   // singles
+   int ns = 0;
+   for(int idx=0; idx<dim; idx++){
+      // select |Dj> if |<Dj|H|Di>cmax[i]|>eps1 && |Dj> is not in V 
+      state = space[idx];
+      state.get_olst(olst.data());
+      state.get_vlst(vlst.data());
+      if(debug){
+	 std::cout << " i=" << idx << " " << state
+	           << " (N,Na,Nb)=" << state.nelec()
+	           << "," << state.nelec_a() << "," << state.nelec_b()
+	           << " cmax=" << cmax[idx] << std::endl;	 
+      }
+      for(int ia=0; ia<nsingles; ia++){
+         int ix = ia%no, ax = ia/no;
+	 int i = olst[ix], a = vlst[ax];
+	 // direct computation of HijS using eri3 [fast]
+	 int p = std::max(i,a), q = std::min(i,a), pq = p*(p+1)/2+q;
+	 auto HijS_bound = hbtab.eri3[pq][k]; // hai
+	 for(int jx=0; jx<no; jx++){
+            int j = olst[jx];
+	    HijS_bound += hbtab.eri3[pq][j];
+	 } // <aj||ij>
+	 // heat-bath check
+	 if(std::abs(HijS_bound)*cmax[idx] > eps1){
+	    fock::onstate state1(state);
+	    state1[i] = 0;
+	    state1[a] = 1;
+	    auto search = varSpace.find(state1);
+	    if(search == varSpace.end()){
+	       if(debug){
+		  std::cout << "   " << ns
+	                    << " S(i->a) = " << fock::symbol(i)
+		            << "->" << fock::symbol(a) 
+		            << " " << state1
+		            << " (N,Na,Nb)=" << state1.nelec() << ","
+		            << state1.nelec_a() << "," << state1.nelec_b()
+	                    << " mag=" << abs(HijS_bound) << " " << cmax[idx] 
+			    << std::endl;
+	       }
+	       varSpace.insert(state1);
+	       space.push_back(state1);
+ 	       ns++;
+	       // flip
+	       if(flip){
+	          auto state1f = state1.flip();
+	          auto search1 = varSpace.find(state1f);
+	          if(search1 == varSpace.end()){
+	             varSpace.insert(state1f);
+	             space.push_back(state1f);
+ 	             ns++;
+	          }
+	       }
+	    }
+	 } 
+      } // ia 
+   } // idx
+   auto ts = tools::get_time();
+   std::cout << "no. of singles = " << ns << " timing : " << std::setprecision(2) 
+	     << tools::get_duration(ts-t0) << " s" << std::endl;
+   
+   // doubles
+   int nd = 0;
+   for(int idx=0; idx<dim; idx++){
+      // select |Dj> if |<Dj|H|Di>cmax[i]|>eps1 && |Dj> is not in V 
+      state = space[idx];
+      state.get_olst(olst.data());
+      state.get_vlst(vlst.data());
+      if(debug){
+	 std::cout << " i=" << idx << " " << state
+	           << " (N,Na,Nb)=" << state.nelec()
+	           << "," << state.nelec_a() << "," << state.nelec_b()
+	           << " cmax=" << cmax[idx] << std::endl;
+      }
+      for(int ijdx=0; ijdx<no*(no-1)/2; ijdx++){
+	 auto pr = tools::inverse_pair0(ijdx);
+	 int i = olst[pr.first], j = olst[pr.second];
+	 int ij = tools::canonical_pair0(i,j);
+	 for(const auto& p : hbtab.eri4.at(ij)){
+	    if(p.first*cmax[idx] < eps1) break; // avoid searching all doubles
+	    auto ab = tools::inverse_pair0(p.second);
+	    int a = ab.first, b = ab.second;
+	    if(state[a]==0 && state[b]==0){ // if true double excitations
+	       fock::onstate state2(state);
+	       state2[i] = 0;
+	       state2[j] = 0;
+	       state2[a] = 1;
+	       state2[b] = 1;
+	       auto search = varSpace.find(state2);
+	       if(search == varSpace.end()){
+		  if(debug){
+		     std::cout << "   " << nd
+	                       << " D(ij->ab) = " << fock::symbol(i) << "," << fock::symbol(j)
+	                       << "->" << fock::symbol(a) << "," << fock::symbol(b) 
+			       << " " << state2
+			       << " (N,Na,Nb)=" << state2.nelec() << ","
+			       << state2.nelec_a() << "," << state2.nelec_b()
+		               << " mag=" << p.first 
+			       << std::endl;
+		  }
+	          varSpace.insert(state2);
+	          space.push_back(state2);
+		  nd++;
+	          // flip
+		  if(flip){
+	             auto state2f = state2.flip();
+	             auto search2 = varSpace.find(state2f);
+	             if(search2 == varSpace.end()){
+	                varSpace.insert(state2f);
+	                space.push_back(state2f);
+ 	                nd++;
+	             }
+		  }
+	       }
+	    }
+	 } // ab
+      } // ij
+   } // idx
+   auto td = tools::get_time();
+   std::cout << "no. of doubles = " << nd << " timing : " << std::setprecision(2) 
+	     << tools::get_duration(td-ts) << " s" << std::endl;
 
-// prepare intial solution
-template <typename Tm>
-void get_initial(std::vector<double>& es,
-		 linalg::matrix<Tm>& vs,
-		 fock::onspace& space,
-	         std::unordered_set<fock::onstate>& varSpace,
-		 const heatbath_table& hbtab, 
-		 const input::schedule& schd, 
-	         const integral::two_body<Tm>& int2e,
-	         const integral::one_body<Tm>& int1e,
-	         const double ecore){
-   std::cout << "\nsci::get_initial" << std::endl;
-   // space = {|Di>}
-   int k = int1e.sorb;
-   for(const auto& det : schd.det_seeds){
-      fock::onstate state(k); // convert det to onstate
-      for(int i : det) state[i] = 1;
-      // search first
-      auto search = varSpace.find(state);
-      if(search == varSpace.end()){
-	 varSpace.insert(state);
-	 space.push_back(state);
-      }
-      // flip determinant 
-      if(schd.flip){
-         auto state1 = state.flip();
-         auto search1 = varSpace.find(state1);
-         if(search1 == varSpace.end()){
-            space.push_back(state1);
-            varSpace.insert(state1);
-         }
-      }
-   }
-   // print
-   std::cout << "energies for reference states:" << std::endl;
-   std::cout << std::defaultfloat << std::setprecision(12);
-   int nsub = space.size();
-   for(int i=0; i<nsub; i++){
-      std::cout << "i = " << i << " state = " << space[i]
-	   << " e = " << fock::get_Hii(space[i],int2e,int1e)+ecore 
-	   << std::endl;
-   }
-   // selected CISD space
-   double eps1 = schd.eps0;
-   std::vector<double> cmax(nsub,1.0);
-   expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.flip);
-   nsub = space.size();
-   // set up initial states
-   if(schd.nroots > nsub){
-      std::cout << "error in sci::ci_solver: subspace is too small!" << std::endl;
-      exit(1);
-   }
-   linalg::matrix<Tm> H = fock::get_Ham(space, int2e, int1e, ecore);
-   std::vector<double> esol(nsub);
-   linalg::matrix<Tm> vsol;
-   eig_solver(H, esol, vsol);
-   // save
-   int neig = schd.nroots;
-   es.resize(neig);
-   vs.resize(nsub, neig);
-   for(int j=0; j<neig; j++){
-      for(int i=0; i<nsub; i++){
-	 vs(i,j) = vsol(i,j);
-      }
-      es[j] = esol[j];
-   }
-   // print
-   std::cout << std::setprecision(12);
-   for(int i=0; i<neig; i++){
-      std::cout << "i = " << i << " e = " << es[i] << std::endl; 
-   }
-}
-
-// truncate CI coefficients for later use in initializing TNS
-template <typename Tm>
-void ci_truncate(fock::onspace& space,
-		 std::vector<std::vector<Tm>>& vs,
-		 const int maxdets,
-		 const bool ifortho=false){
-   const bool debug = true;
-   std::cout << "\nsci::ci_truncate maxdets=" << maxdets 
-	     << " ifortho=" << ifortho << std::endl;
-   int nsub = space.size();
-   int neig = vs.size();
-   int nred = std::min(nsub,maxdets);
-   std::cout << "reduction from " << nsub << " to " << nred << " dets" << std::endl;
-   // select important basis
-   std::vector<double> cmax(nsub,0.0);
-   for(int j=0; j<neig; j++){
-      for(int i=0; i<nsub; i++){
-	 cmax[i] += std::norm(vs[j][i]);
-      }
-   }
-   auto index = tools::sort_index(cmax, 1); 
-   // orthogonalization if required
-   std::vector<Tm> vtmp(nred*neig);
-   for(int j=0; j<neig; j++){
-      for(int i=0; i<nred; i++){
-	 vtmp[i+nred*j] = vs[j][index[i]];
-      }
-   }
-   if(ifortho){
-      int nindp = linalg::get_ortho_basis(nred,neig,vtmp);
-      if(nindp != neig){
-	 std::cout << "error: thresh is too large for ci_truncate!" << std::endl;
-         std::cout << "nindp,neig=" << nindp << "," << neig << std::endl;
-         exit(1);
-      }
-   }
-   // copy basis and coefficients
-   fock::onspace space2(nred);
-   for(int i=0; i<nred; i++){
-      space2[i] = space[index[i]];	
-   }
-   std::vector<std::vector<Tm>> vs2(neig);
-   for(int j=0; j<neig; j++){
-      vs2[j].resize(nred);
-      std::copy(&vtmp[nred*j],&vtmp[nred*j]+nred,vs2[j].begin());
-   }
-   // check the quality of truncated states
-   if(debug){
-      for(int j=0; j<neig; j++){
-         std::vector<Tm> vec(nred);
-         for(int i=0; i<nred; i++){
-            vec[i] = vs[j][index[i]];
-         }
-	 auto ova = linalg::xdot(nred, vs2[j].data(), vec.data());
-         std::cout << "iroot=" << j << " ova=" 
-                   << std::setprecision(12) << ova << std::endl;
-      }
-   }
-   // replace (space,vs) by the reduced counterpart 
-   space = space2;
-   vs = vs2;
+   std::cout << "dim = " << dim << " new = " << space.size()-dim 
+	     << " total = " << space.size() << std::endl;
+   auto t1 = tools::get_time();
+   std::cout << "timing for sci::expand_varSpace : " << std::setprecision(2) 
+	     << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
 } // sci

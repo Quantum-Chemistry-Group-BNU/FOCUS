@@ -6,6 +6,79 @@
 
 namespace sci{
 
+// prepare intial solution
+template <typename Tm>
+void get_initial(std::vector<double>& es,
+		 linalg::matrix<Tm>& vs,
+		 fock::onspace& space,
+	         std::unordered_set<fock::onstate>& varSpace,
+		 const heatbath_table<Tm>& hbtab, 
+		 const input::schedule& schd, 
+	         const integral::two_body<Tm>& int2e,
+	         const integral::one_body<Tm>& int1e,
+	         const double ecore){
+   std::cout << "\nsci::get_initial" << std::endl;
+   // space = {|Di>}
+   int k = int1e.sorb;
+   for(const auto& det : schd.det_seeds){
+      fock::onstate state(k); // convert det to onstate
+      for(int i : det) state[i] = 1;
+      // search first
+      auto search = varSpace.find(state);
+      if(search == varSpace.end()){
+	 varSpace.insert(state);
+	 space.push_back(state);
+      }
+      // flip determinant 
+      if(schd.flip){
+         auto state1 = state.flip();
+         auto search1 = varSpace.find(state1);
+         if(search1 == varSpace.end()){
+            space.push_back(state1);
+            varSpace.insert(state1);
+         }
+      }
+   }
+   // print
+   std::cout << "energies for reference states:" << std::endl;
+   std::cout << std::defaultfloat << std::setprecision(12);
+   int nsub = space.size();
+   for(int i=0; i<nsub; i++){
+      std::cout << "i = " << i << " state = " << space[i]
+	   << " e = " << fock::get_Hii(space[i],int2e,int1e)+ecore 
+	   << std::endl;
+   }
+   // selected CISD space
+   double eps1 = schd.eps0;
+   std::vector<double> cmax(nsub,1.0);
+   expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.flip);
+   nsub = space.size();
+   // set up initial states
+   if(schd.nroots > nsub){
+      std::cout << "error in sci::ci_solver: subspace is too small!" << std::endl;
+      exit(1);
+   }
+   linalg::matrix<Tm> H = fock::get_Ham(space, int2e, int1e, ecore);
+   std::vector<double> esol(nsub);
+   linalg::matrix<Tm> vsol;
+   eig_solver(H, esol, vsol);
+   // save
+   int neig = schd.nroots;
+   es.resize(neig);
+   vs.resize(nsub, neig);
+   for(int j=0; j<neig; j++){
+      for(int i=0; i<nsub; i++){
+	 vs(i,j) = vsol(i,j);
+      }
+      es[j] = esol[j];
+   }
+   // print
+   std::cout << std::setprecision(12);
+   for(int i=0; i<neig; i++){
+      std::cout << "i = " << i << " e = " << es[i] << std::endl; 
+   }
+}
+
 // selected CI procedure
 template <typename Tm>
 void ci_solver(const input::schedule& schd,
@@ -21,7 +94,7 @@ void ci_solver(const input::schedule& schd,
    auto t0 = tools::get_time();
    std::cout << "\nsci::ci_solver Htype=" << Htype << std::endl; 
    // set up head-bath table
-   heatbath_table hbtab(int2e, int1e);
+   heatbath_table<Tm> hbtab(int2e, int1e);
    // set up intial configurations
    std::vector<double> esol;
    linalg::matrix<Tm> vsol;

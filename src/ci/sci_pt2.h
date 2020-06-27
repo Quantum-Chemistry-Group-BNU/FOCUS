@@ -19,7 +19,7 @@ void pt2_solver(const input::schedule& schd,
    auto t0 = tools::get_time();
    std::cout << "\nsci::pt2_solver" << std::endl;  
    // set up head-bath table
-   heatbath_table hbtab(int2e, int1e);
+   heatbath_table<Tm> hbtab(int2e, int1e);
    // set up hash table
    std::unordered_set<fock::onstate> varSpace;
    for(const auto& det : space){ 
