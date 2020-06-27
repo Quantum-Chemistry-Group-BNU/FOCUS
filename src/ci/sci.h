@@ -112,7 +112,7 @@ void ci_solver(const input::schedule& schd,
       std::cout << "iter=" << iter << " eps1=" << schd.eps1[iter] << std::endl;
       std::cout << "---------------------" << std::endl;
       double eps1 = schd.eps1[iter];
-      // compute cmax[i] = \sqrt{\sum_j|vj[i]|^2/n} for screening
+      // compute cmax[i] = \sqrt{\sum_j|vj[i]|^2} for screening
       std::vector<double> cmax(nsub,0.0);
       for(int j=0; j<neig; j++){
          for(int i=0; i<nsub; i++){
@@ -120,7 +120,7 @@ void ci_solver(const input::schedule& schd,
          }
       }
       std::transform(cmax.begin(), cmax.end(), cmax.begin(),
-		     [neig](const double& x){ return pow(x/neig,0.5); });
+		     [neig](const double& x){ return pow(x,0.5); });
       // expand 
       expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.flip);
       int nsub0 = nsub;

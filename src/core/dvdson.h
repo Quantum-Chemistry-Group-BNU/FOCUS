@@ -176,10 +176,10 @@ struct dvdsonSolver{
          }
          nmvp += nstate;
          auto t1 = tools::get_time();
-         bool debug = false;
+         bool debug = true;
          if(debug){
 	    std::cout << "timing for HVecs : " << std::setprecision(2)  
-                      << tools::get_duration(t1-t0)/nstate << " s" 
+                      << tools::get_duration(t1-t0) << " s" 
                       << " for nstate = " << nstate << std::endl;
          }
       }
