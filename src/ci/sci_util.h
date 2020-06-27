@@ -16,6 +16,12 @@
 
 namespace sci{
 
+// type information
+template <typename Tm>
+struct hbtab_single{ using type = float; };
+template <>
+struct hbtab_single<std::complex<double>>{ using type = std::complex<float>; };
+
 struct heatbath_table{
 public: 
    template <typename Tm>
@@ -46,10 +52,10 @@ public:
             int ij = i*(i+1)/2+j;
             eri3[ij].resize(k+1);
             for(int p=0; p<k; p++){
-               // |<ip||jp>| 
-               eri3[ij][p] = abs(int2e.get(i,p,j,p));
+               // crucial for using <ip||jp> rather than |<ip||jp>| 
+               eri3[ij][p] = int2e.get(i,p,j,p);
             } // p
-            eri3[ij][k] = abs(int1e.get(i,j));
+            eri3[ij][k] = int1e.get(i,j);
          } // j
       } // i
       if(debug){
@@ -80,7 +86,7 @@ public:
    // sorted by magnitude Iij[kl]=<ij||kl> (i>j,k>l)
    std::vector<std::multimap<float,int,std::greater<float>>> eri4; 
    // Iik[j]={<ij||kj>(i>=k),hik} for fast estimation of singles
-   std::vector<std::vector<float>> eri3; 
+   std::vector<std::vector<heatbath_single<Tm>::type>> eri3; 
 };
 
 // expand variational subspace
