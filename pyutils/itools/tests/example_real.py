@@ -435,13 +435,11 @@ mf.analyze()
 #==================================================================
 # Dump integrals
 #==================================================================
-import sys
-sys.path.append("..")
-import ipyscf_real
+from itools import ipyscf_real
 
 iface = ipyscf_real.iface()
 iface.mol = mol
 iface.mf = mf
 iface.nfrozen = 4
 info = iface.get_integral(mf.mo_coeff)
-iface.dump(info,fname='rmole.info')
+iface.dump(info,fname='./data/rmole.info')

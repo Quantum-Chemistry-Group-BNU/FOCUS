@@ -1,4 +1,4 @@
-TODOsimport numpy
+import numpy
 from pyscf import gto,scf
 
 #==================================================================
@@ -86,9 +86,7 @@ print(mol.nelectron)
 #==================================================================
 # Dump integrals
 #==================================================================
-import sys
-sys.path.append("..")
-import ipyscf_complex
+from itools import ipyscf_complex
 
 iface = ipyscf_complex.iface()
 iface.mol = mol
@@ -97,7 +95,7 @@ iface.nfrozen = 4 # spinor
 iface.ifgaunt = mf.with_gaunt
 sbas = mol.nao_2c()
 info = iface.get_integral4C(mf.mo_coeff[:,sbas:])
-iface.dump(info,fname='cmole.info')
+iface.dump(info,fname='./data/cmole.info')
 exit(1)
 
 #=================
