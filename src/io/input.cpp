@@ -1,4 +1,4 @@
-#include <iostream>
+src/core/dvdson.h#include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <sstream> // istringstream
@@ -191,7 +191,7 @@ void input::read(input::schedule& schd, string fname){
    for(int j=sweep_iter[size-1]; j<schd.maxiter; j++){
       schd.eps1[j] = sweep_eps[size-1];
    }
-   cout << "schedule: iter eps1" << endl;
+   cout << "sci_schedule: iter eps1" << endl;
    for(int i=0; i<schd.maxiter; i++){
       cout << i << " " << schd.eps1[i] << endl;
    }

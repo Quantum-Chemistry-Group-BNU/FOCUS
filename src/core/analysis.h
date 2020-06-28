@@ -34,7 +34,7 @@ void coeff_population(const onspace& space,
 	 std::cout << std::setw(8) << j << " : " << std::setw(8) << i << "   ";
 	 std::cout << std::fixed << std::scientific << std::setprecision(2) 
 		   << std::showpos << civec[i] << std::noshowpos;
-	 std::cout << std::fixed << std::setw(6) << std::setprecision(1) << pi*100;
+	 std::cout << std::fixed << std::setw(6) << std::setprecision(2) << pi*100;
 	 std::cout << std::fixed << std::setw(3) << space[i].diff_num(space[idx[0]])/2
 	           << std::fixed << std::setw(3) << space[i].norb_single() << "  "
 	           << space[i] << " ("
@@ -48,7 +48,6 @@ void coeff_population(const onspace& space,
    }
    std::cout << std::setprecision(6);
    std::cout << "psum=" << psum << " psum0=" << psum0 << " Sd=" << Sd << std::endl;
-   std::cout << std::setprecision(2);
    std::cout << "<Ne>=" << ne << " std=" << std::pow(abs(ne2-ne*ne),0.5) << std::endl;
    std::cout << "<Na>=" << na << " std=" << std::pow(abs(na2-na*na),0.5) << std::endl;
    std::cout << "<Nb>=" << nb << " std=" << std::pow(abs(nb2-nb*nb),0.5) << std::endl;

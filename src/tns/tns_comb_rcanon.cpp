@@ -16,7 +16,7 @@ using namespace linalg;
 void comb::get_rbases(const onspace& space,
 		      const vector<vector<double>>& vs,
 		      const double thresh_proj){
-   bool debug = false;
+   const bool debug = true;
    auto t0 = tools::get_time();
    cout << "\ncomb::get_rbases thresh_proj=" << scientific << thresh_proj << endl;
    vector<pair<int,int>> shapes; // for debug
@@ -40,10 +40,10 @@ void comb::get_rbases(const onspace& space,
          int pos = order.size(); // must be put here to account bipartition position
          copy(rsupp.begin(), rsupp.end(), back_inserter(order));
          if(debug){
-            cout << "pos=" << pos << endl;
             cout << "order=";
             for(int k : order) cout << k << " ";
             cout << endl;
+            cout << "bipartition position=" << pos << endl;
          }
          // 2. transform SCI coefficient
          onspace space2;
@@ -95,7 +95,7 @@ qtensor3 comb::get_rwavefuns(const onspace& space,
 		             const vector<vector<double>>& vs,
 		             const vector<int>& order,
 		             const renorm_basis& rbasis){
-   bool debug = false;
+   const bool debug = false;
    cout << "\ncomb::get_rwavefuns" << endl;
    // transform SCI coefficient
    onspace space2;
@@ -216,7 +216,7 @@ qtensor3 comb::get_lbsite() const{
 void comb::rcanon_init(const onspace& space,
 		       const vector<vector<double>>& vs,
 		       const double thresh_proj){
-   bool debug = false;
+   const bool debug = false;
    auto t0 = tools::get_time();
    cout << "\ncomb::rcanon_init" << endl;
    // compute renormalized bases {|r>}

@@ -318,6 +318,7 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
       idx++;
    } // sym sectors
    assert(dA == dimA && dB == dimB);
+   debug_level = 1;
    if(debug_level){
       cout << "dim=" << dim << " dimA=" << dimA << " dimB=" << dimB
            << " dimBc=" << dimBc << " sum=" << sum << " SvN=" << SvN << endl;

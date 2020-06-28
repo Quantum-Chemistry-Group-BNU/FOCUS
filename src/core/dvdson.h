@@ -246,7 +246,7 @@ struct dvdsonSolver{
                        &beta,tmpH.data(),&nsub);
          // 2. check symmetry property
          double diff = linalg::symmetric_diff(tmpH);
-         if(diff > 1.e-10){
+         if(diff > crit_skewH){
             std::cout << "error in dvdsonSolver::subspace_solver: diff_skewH=" 
                       << diff << std::endl;
             tmpH.print("tmpH");
@@ -375,6 +375,7 @@ struct dvdsonSolver{
       double crit_v = 1.e-6;  // used control parameter
       double crit_e = 1.e-12; // not used actually
       double crit_indp = 1.e-12;
+      double crit_skewH = 1.e-8;
       double damping = 1.e-1;
       int maxcycle = 1000;
       int nbuff = 3; // maximal additional vectors
