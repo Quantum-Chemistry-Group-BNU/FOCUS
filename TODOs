@@ -205,6 +205,8 @@
 
 --- Code optimization ---
 
+ 2020xxxx randomized SVD for generation of rcanon
+
  2020xxxx optimized version:
  	  - faster low-level implementation [IMPORTANT for efficiency] 
  	  - simplification of the code 
