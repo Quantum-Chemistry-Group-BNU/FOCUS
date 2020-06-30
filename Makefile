@@ -16,13 +16,13 @@ FLAGS = -DGNU -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR}
 
 USE_MPI = no
 ifeq ($(USE_MPI), yes) 
-	CXX = mpig++
-	CC = mpigcc
-	LFLAGS += -L${BOOST}/lib -lboost_serialization -lboost_mpi #-lrt
+   CXX = mpig++
+   CC = mpigcc
+   LFLAGS += -L${BOOST}/lib -lboost_serialization -lboost_mpi #-lrt
 else
-	CXX = g++
-	CC = gcc
-	LFLAGS = -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 	
+   CXX = g++
+   CC = gcc
+   LFLAGS = -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 	
 endif
 
 SRC = src
@@ -30,9 +30,9 @@ BIN_DIR = ./bin
 OBJ_DIR = ./obj
 
 # all dependence
-SRC_DIR1 = ./$(SRC)/io
-SRC_DIR2 = ./$(SRC)/core
-SRC_DIR3 = ./$(SRC)/tests
+SRC_DIR1 = ./$(SRC)/tests
+SRC_DIR2 = ./$(SRC)/io
+SRC_DIR3 = ./$(SRC)/core
 SRC_DIR4 = ./$(SRC)/ci
 SRC_DIR5 = ./$(SRC)/tns
 SRC_DIR6 = ./$(SRC)/comb
@@ -50,7 +50,7 @@ SRC_DEP = $(wildcard $(SRC_DIR1)/*.cpp \
 	  	     $(SRC_DIR6)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
-# all the files
+# all the files with main functions
 SRC_ALL = $(SRC_DEP) 
 SRC_ALL += $(wildcard ./$(SRC)/drivers/*.cpp)
 OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))

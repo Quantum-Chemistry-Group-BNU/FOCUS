@@ -60,7 +60,7 @@ int tests::test_tns(){
       fci::ci_load(sci_space, vs);
    }
    for(int i=0; i<nroot; i++){
-      coeff_population(sci_space, vs[i]);
+      coeff_population(sci_space, vs[i], -1.0);
    }
    // truncate CI coefficients
    const bool ifortho = true;

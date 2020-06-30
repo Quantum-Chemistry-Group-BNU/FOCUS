@@ -2,7 +2,9 @@ import numpy
 import tns
 
 #twoindex  = [0, 0, 0] # =0, AB; =1, PQ
-partition = ['L','C','R'] #,'R']
+partition = ['L','C','R'] 
+partition = ['L','R'] 
+partition = ['L','C1','C2','R']
 npart = len(partition)
 
 terms = {}

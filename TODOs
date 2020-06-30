@@ -207,13 +207,16 @@
 
  2020xxxx randomized SVD for generation of rcanon
 
+ 2020xxxx compile core/comb/ci into libx.a; linked with main in drivers
+ 
  2020xxxx optimized version:
  	  - faster low-level implementation [IMPORTANT for efficiency] 
  	  - simplification of the code 
- 	  - better data structure
+ 	  - better data structure [qtensor]
  	  - benchmarking scalability for large systems
  	  - preconstruction of P/Q from A/B to accelerate efficiency in H*v?
  	  - fullrestart from previous sweep?
+   	  - minimize T() in the construction of Q/P/S/H
 
  2020xxxx parallelizaiton [See Chan2004] 
  	  - different sweep schedule [backbone & branch] 
@@ -276,3 +279,8 @@ Such situations appear in
 
    c) IP of gold
 
+==========
+ Problems
+==========
+
+   1. thresh_proj & thresh_ortho sensitivity in SCI projection [theoretical/numerical problem?]
