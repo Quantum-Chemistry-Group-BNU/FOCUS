@@ -9,6 +9,35 @@
 namespace fock{
 
 template <typename Tm>	
+void coeff_analysis(const std::vector<Tm>& civec,
+		    const double thresh=1.e-8){
+   std::cout << "\nfock::coeff_analysis dim=" << civec.size() << std::endl;
+   std::map<int,int,std::greater<int>> bucket;
+   auto size = civec.size();
+   for(int i=0; i<size; i++){
+      double aval = std::abs(civec[i]);
+      if(aval > thresh){
+         int n = floor(log10(aval));
+         bucket[n] += 1;
+      }
+   }
+   // print statistics by magnitude
+   double accum = 0.0;
+   for(const auto& pr : bucket){
+      double per = static_cast<double>(pr.second)/size*100.0;
+      int n = pr.first;
+      accum += per;
+      std::cout << "|ci| in 10^" << std::showpos << n+1 << "-10^" << n << " : "
+               << "  per=" << std::defaultfloat << std::noshowpos << std::fixed 
+	       << std::setw(5) << std::setprecision(1) << per
+               << "  accum=" << std::defaultfloat << std::noshowpos << std::fixed 
+	       << std::setw(5) << std::setprecision(1) << accum
+	       << "  counts=" << pr.second
+               << std::endl;
+   }
+}
+
+template <typename Tm>	
 void coeff_population(const onspace& space, 
 	   	      const std::vector<Tm>& civec, 
 	   	      const double thresh=1.e-2){
@@ -51,6 +80,7 @@ void coeff_population(const onspace& space,
    std::cout << "<Ne>=" << ne << " std=" << std::pow(abs(ne2-ne*ne),0.5) << std::endl;
    std::cout << "<Na>=" << na << " std=" << std::pow(abs(na2-na*na),0.5) << std::endl;
    std::cout << "<Nb>=" << nb << " std=" << std::pow(abs(nb2-nb*nb),0.5) << std::endl;
+   coeff_analysis(civec);
 }
 
 inline double entropy(const std::vector<double>& p, 

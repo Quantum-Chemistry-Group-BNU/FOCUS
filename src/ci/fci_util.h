@@ -1,4 +1,4 @@
-#ifndef FCI_UTIL_H
+19338#ifndef FCI_UTIL_H
 #define FCI_UTIL_H
 
 #include <string>
@@ -478,9 +478,8 @@ struct sparse_hamiltonian{
       }
 
       // analyze the magnitude of Hij
-      void analysis(){
+      void analysis(const double thresh = 1.e-8){
    	 std::cout << "\nsparse_hamiltonian::analysis" << std::endl;
-         const double thresh = 1.e-8;
 	 std::map<int,int,std::greater<int>> bucket;
          double size = 1.e-20; // avoid divide zero in the special case H=0;
          double Hsum = 0;
@@ -505,12 +504,15 @@ struct sparse_hamiltonian{
          // print statistics by magnitude 
          double accum = 0.0;
          for(const auto& pr : bucket){
-            double per = pr.second/size*100;
+            double per = static_cast<double>(pr.second)/size*100.0;
             int n = pr.first;
             accum += per;
             std::cout << "|Hij| in 10^" << std::showpos << n+1 << "-10^" << n << " : " 
-      	         << " per=" << std::defaultfloat << std::noshowpos << std::fixed << std::setw(5) << std::setprecision(1) << per << " " 
-      	         << " accum=" << std::defaultfloat << std::noshowpos << std::fixed << std::setw(5) << std::setprecision(1) << accum 
+      	         << "  per=" << std::defaultfloat << std::noshowpos << std::fixed 
+		 << std::setw(5) << std::setprecision(1) << per
+      	         << "  accum=" << std::defaultfloat << std::noshowpos << std::fixed 
+		 << std::setw(5) << std::setprecision(1) << accum 
+		 << "  counts=" << pr.second 
       	         << std::endl;
          }
       }

@@ -167,6 +167,7 @@ void ci_solver(const input::schedule& schd,
 	      << " conv=" << conv[i] 
 	      << " SvN=" << SvN
 	      << std::endl;
+	 fock::coeff_analysis(vtmp);
       }
       esol = esol1;
       vsol = vsol1;
