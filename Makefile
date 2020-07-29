@@ -1,4 +1,4 @@
-## eigen
+coeff_analysis## eigen
 #MATH = -I /usr/local/include/eigen3 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE \
        -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
 ## serial version of MKL
@@ -35,7 +35,7 @@ SRC_DIR2 = ./$(SRC)/io
 SRC_DIR3 = ./$(SRC)/core
 SRC_DIR4 = ./$(SRC)/ci
 SRC_DIR5 = ./$(SRC)/tns
-SRC_DIR6 = ./$(SRC)/comb
+SRC_DIR6 = ./$(SRC)/ctns
 INCLUDE_DIR = -I$(SRC_DIR1) \
 	      -I$(SRC_DIR2) \
 	      -I$(SRC_DIR3) \
@@ -58,7 +58,7 @@ OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 all: depend \
      $(BIN_DIR)/tests.x \
      $(BIN_DIR)/tns.x \
-     $(BIN_DIR)/comb.x
+     $(BIN_DIR)/ctns.x
 
 depend:
 	set -e; \
@@ -79,7 +79,7 @@ $(BIN_DIR)/tns.x: $(OBJ_DIR)/main_tns.o $(OBJ_DEP)
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
-$(BIN_DIR)/comb.x: $(OBJ_DIR)/main_comb.o $(OBJ_DEP)
+$(BIN_DIR)/ctns.x: $(OBJ_DIR)/main_ctns.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)

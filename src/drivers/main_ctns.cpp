@@ -4,8 +4,8 @@ using namespace std;
 
 int main(){
    
-   // --- comb ---  
-   tests::test_comb();
+   // --- ctns ---  
+   tests::test_ctns();
 
    return 0;   
 }

@@ -30,7 +30,7 @@ int tests::test_tns(){
    cout << tools::line_separator << endl;	
 
    // read input
-   string fname = "comb.dat";
+   string fname = "ctns.dat";
    input::schedule schd;
    input::read(schd,fname);
 

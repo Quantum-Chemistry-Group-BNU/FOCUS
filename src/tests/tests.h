@@ -19,8 +19,8 @@ int test_fci();
 int test_sci();
 
 // --- Comb ---
-int test_comb();
 int test_tns();
+int test_ctns();
 
 }
 

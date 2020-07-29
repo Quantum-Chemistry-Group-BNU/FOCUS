@@ -1,4 +1,4 @@
-19338#ifndef FCI_UTIL_H
+#ifndef FCI_UTIL_H
 #define FCI_UTIL_H
 
 #include <string>

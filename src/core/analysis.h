@@ -11,7 +11,7 @@ namespace fock{
 template <typename Tm>	
 void coeff_analysis(const std::vector<Tm>& civec,
 		    const double thresh=1.e-8){
-   std::cout << "\nfock::coeff_analysis dim=" << civec.size() << std::endl;
+   std::cout << "fock::coeff_analysis dim=" << civec.size() << std::endl;
    std::map<int,int,std::greater<int>> bucket;
    auto size = civec.size();
    for(int i=0; i<size; i++){
@@ -27,7 +27,7 @@ void coeff_analysis(const std::vector<Tm>& civec,
       double per = static_cast<double>(pr.second)/size*100.0;
       int n = pr.first;
       accum += per;
-      std::cout << "|ci| in 10^" << std::showpos << n+1 << "-10^" << n << " : "
+      std::cout << " |ci| in 10^" << std::showpos << n+1 << "-10^" << n << " : "
                << "  per=" << std::defaultfloat << std::noshowpos << std::fixed 
 	       << std::setw(5) << std::setprecision(1) << per
                << "  accum=" << std::defaultfloat << std::noshowpos << std::fixed 

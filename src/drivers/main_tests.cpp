@@ -20,7 +20,8 @@ int main(){
    tests::test_sci();
 
    // --- comb ---  
-   tests::test_comb();
+   tests::test_tns();
+   tests::test_ctns();
 
    return 0;   
 }

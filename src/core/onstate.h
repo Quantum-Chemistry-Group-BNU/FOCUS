@@ -411,8 +411,22 @@ class onstate{
 	 num += norb();
 	 return num;
       }
-      
-      // kramers symmetry related functions
+    
+      // kramers symmetry related functions (used in SCI)
+      // flip Usf{|a>,|b>}={|b>,|a>}
+      onstate flip() const{
+         unsigned long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
+	 onstate state(_size); 
+	 for(int i=0; i<_len; i++){
+	    state._repr[i] = ((_repr[i]&even)<<1) + ((_repr[i]&odd)>>1);
+	 }
+	 return state;
+      }
+      // --- only tested but not used in sci/ctns yet (ZL@20200726) ---
+      // K|state>=|state'>(-1)^{sum[na*nb+nb]} (na*nb=nd)
+      int parity_flip() const{
+	 return -2*((norb_double()+nelec_b())%2)+1;
+      }
       bool has_single() const{
          unsigned long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
 	 for(int i=_len-1; i>=0; i--){
@@ -436,25 +450,12 @@ class onstate{
 	 std::cout << *this << std::endl;
  	 exit(1);
       }
-      // flip K{|a>,|b>}={|b>,-|a>}
-      onstate flip() const{
-         unsigned long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
-	 onstate state(_size); 
-	 for(int i=0; i<_len; i++){
-	    state._repr[i] = ((_repr[i]&even)<<1) + ((_repr[i]&odd)>>1);
-	 }
-	 return state;
-      }
       // return standard representative for {|state>,K|state>}
       onstate make_standard() const{
 	 if(is_standard())
 	    return *this;
 	 else
 	    return flip();
-      }
-      // K|state>=|state'>(-1)^{sum[na*nb+nb]} (na*nb=nd)
-      int parity_flip() const{
-	 return -2*((norb_double()+nelec_b())%2)+1;
       }
 
    private:

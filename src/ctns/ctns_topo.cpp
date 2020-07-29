@@ -2,17 +2,19 @@
 #include <fstream>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include "comb_topo.h"
+#include "ctns_topo.h"
 
 using namespace std;
-using namespace comb;
+using namespace ctns;
 
-ostream& comb::operator <<(ostream& os, const comb_coord& coord){
+// comb_coord
+ostream& ctns::operator <<(ostream& os, const comb_coord& coord){
    os << "(" << coord.first << "," << coord.second << ")";
    return os;
 }
 
-ostream& comb::operator <<(ostream& os, const node& nd){
+// node
+ostream& ctns::operator <<(ostream& os, const node& nd){
    os << "node: pindex=" << nd.pindex 
       << " type="   << nd.type
       << " middle=" << nd.middle 
@@ -21,6 +23,7 @@ ostream& comb::operator <<(ostream& os, const node& nd){
    return os;   
 }
 
+// topology
 void topology::read(string fname){
    cout << "\ntopology::read fname=" << fname << endl;
    ifstream istrm(fname);
@@ -216,36 +219,35 @@ void topology::print() const{
       cout << i << " " << image2[i] << " " << orbord[i] << endl;
    }
 */
-   get_sweeps(*this, true);
+   get_sweeps(true);
 }
 
-vector<directed_bond> comb::get_sweeps(const topology& topo,
-				       const bool debug){
-   cout << "\ncomb::get_sweeps" << endl;
+vector<directed_bond> topology::get_sweeps(const bool debug) const{
+   cout << "\ntopology::get_sweeps" << endl;
    vector<directed_bond> sweeps;
    // sweep sequence: 
-   for(int i=1; i<topo.nbackbone-1; i++){
+   for(int i=1; i<nbackbone-1; i++){
       // branch forward
-      for(int j=1; j<topo.nodes[i].size()-1; j++){
+      for(int j=1; j<nodes[i].size()-1; j++){
          auto coord0 = make_pair(i,j-1);
          auto coord1 = make_pair(i,j);      
          sweeps.push_back(make_tuple(coord0,coord1,1));
       }
       // branch backward
-      for(int j=topo.nodes[i].size()-2; j>0; j--){
+      for(int j=nodes[i].size()-2; j>0; j--){
          auto coord0 = make_pair(i,j-1);      
          auto coord1 = make_pair(i,j);
          sweeps.push_back(make_tuple(coord0,coord1,0));
       }
       // backbone forward
-      if(i != topo.nbackbone-2){
+      if(i != nbackbone-2){
          auto coord0 = make_pair(i,0);
          auto coord1 = make_pair(i+1,0);      
          sweeps.push_back(make_tuple(coord0,coord1,1));
       }
    }
    // backward on backbone
-   for(int i=topo.nbackbone-2; i>=2; i--){
+   for(int i=nbackbone-2; i>=2; i--){
       auto coord0 = make_pair(i-1,0);      
       auto coord1 = make_pair(i,0);
       sweeps.push_back(make_tuple(coord0,coord1,0));
@@ -253,8 +255,8 @@ vector<directed_bond> comb::get_sweeps(const topology& topo,
    if(debug){
       // in this scheme, each internal bond is visited twice
       int ninternal = 0;
-      for(const auto& p : topo.rcoord){
-	 auto& node = topo.nodes[p.first][p.second];
+      for(const auto& p : rcoord){
+	 auto& node = nodes[p.first][p.second];
 	 if(node.type != 0) ninternal += 1; 
       }
       assert(sweeps.size() == 2*(ninternal-1));

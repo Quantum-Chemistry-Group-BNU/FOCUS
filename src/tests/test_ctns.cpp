@@ -9,7 +9,7 @@
 #include "../ci/fci_rdm.h"
 #include "../ci/sci.h"
 #include "../ci/sci_pt2.h"
-#include "../comb/comb_topo.h"
+#include "../ctns/ctns_topo.h"
 #include "../io/input.h"
 #include <iostream>
 #include <iomanip>
@@ -20,17 +20,18 @@ using namespace std;
 using namespace fock;
 using namespace linalg;
 
-int tests::test_comb(){
+int tests::test_ctns(){
    cout << endl;	
    cout << tools::line_separator << endl;	
-   cout << "tests::test_comb" << endl;
+   cout << "tests::test_ctns" << endl;
    cout << tools::line_separator << endl;	
 
    // read input
-   string fname = "comb.dat";
+   string fname = "ctns.dat";
    input::schedule schd;
    input::read(schd,fname);
 
+   // we will use DTYPE to control Hnr/Hrel 
    using DTYPE = double;
    
    // read integral
@@ -63,15 +64,13 @@ int tests::test_comb(){
    const bool ifortho = true;
    fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
 
-
-   // --- Comb TNS ---
-   
+   // --- Comb TNS (CTNS) ---
+/*
    // --- 1. dealing with topology ---
-   comb::topology topo;
+   ctns::topology topo;
    topo.read(schd.topology_file);
    topo.print();
 
-/*
    schd.create_scratch();
 
    if(!schd.combload){
