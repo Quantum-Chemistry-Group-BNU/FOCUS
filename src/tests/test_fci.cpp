@@ -38,12 +38,14 @@ int tests::test_fci(){
 
    // full diag
    auto H = get_Ham(space2,int2e,int1e,ecore);
-   cout << "diff=" << symmetric_diff(H) << endl;
+   cout << "diff(H-H.h)=" << symmetric_diff(H) << endl;
    vector<double> e(H.rows());
    auto v(H);
    eig_solver(H, e, v); // Hc=ce
-   cout << "e0=" << setprecision(12) << e[0] << " e1=" << e[1] << endl;
+   cout << "e0[FCI]=" << setprecision(12) << e[0] << endl; 
+   cout << "e1[FCI]=" << setprecision(12) << e[1] << endl;
    assert(abs(e[0] + 6.766940567056) < thresh);
+   assert(abs(e[1] + 6.68030079306 ) < thresh);
 
    int nroot = 1;
    vector<double> es(nroot), es1(nroot);

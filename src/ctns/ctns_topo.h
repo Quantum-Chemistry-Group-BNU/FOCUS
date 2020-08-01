@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 #include <string>
+#include <map>
 
 namespace ctns{
 
@@ -21,7 +22,7 @@ struct node{
       friend std::ostream& operator <<(std::ostream& os, const node& nd);
    public:
       int pindex; // physical index
-      int type;	 // type of nodes 0 [boundary], 1 [backbone], 2 [branch], 3 [internal]
+      int type;	  // type of node: 0 [boundary], 1 [backbone], 2 [branch], 3 [internal]
       comb_coord middle; // m-neighbor
       comb_coord left;   // l-neighbor
       comb_coord right;  // r-neighbor
@@ -33,22 +34,23 @@ using directed_bond = std::tuple<comb_coord,comb_coord,bool>;
 // topology information of ctns
 struct topology{
    public:
-      void read(std::string topology_file); 
+      topology(const std::string& topology_file); 
       void print() const;
-      std::vector<directed_bond> get_sweeps(const bool debug=false) const;
+      // helper for support 
+      std::vector<int> support_rest(const std::vector<int>& rsupp) const;
+      // sweep sequence 
+      std::vector<directed_bond> get_sweeps(const bool debug=true) const;
    public:
       int nbackbone, nphysical;
       std::vector<std::vector<node>> nodes; // nodes on comb
       std::vector<comb_coord> rcoord; // coordinate of each node in rvisit order
       				      // used in constructing right environment
+      //--- support ---
+      int iswitch; // for i<=iswitch on backbone, size(lsupp)<size(rsupp)
+      std::map<comb_coord,std::vector<int>> rsupport;
+      std::map<comb_coord,std::vector<int>> lsupport;
+      std::vector<int> image2; // 1D ordering of CTNS for |n_p...> 
 };
-
-//      std::map<comb_coord,std::vector<int>> rsupport;
-//      std::map<comb_coord,std::vector<int>> lsupport;
-//      // --- 1D ordering ---
-//      std::vector<int> image2; // mapping of physical indices
-//      std::vector<int> orbord; // map orbital to 1D position
-//std::vector<int> support_rest(const std::vector<int>& rsupp);
 
 } // ctns
 

@@ -1,7 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <algorithm>
+#include <numeric> // iota
 #include "ctns_topo.h"
 
 using namespace std;
@@ -24,8 +25,8 @@ ostream& ctns::operator <<(ostream& os, const node& nd){
 }
 
 // topology
-void topology::read(string fname){
-   cout << "\ntopology::read fname=" << fname << endl;
+topology::topology(const string& fname){
+   cout << "\ntopology::topology fname=" << fname << endl;
    ifstream istrm(fname);
    if(!istrm){
       cout << "failed to open " << fname << '\n';
@@ -126,14 +127,13 @@ void topology::read(string fname){
       }
    }
 
-/*
    // compute support of each node in right canonical form
    for(int i=nbackbone-1; i>=0; i--){
-      int size = tmp[i].size();
+      int size = tmp[i].size(); // same as input topo
       if(size == 1){
 	 // upper branch is just physical indices     
 	 rsupport[make_pair(i,0)].push_back(tmp[i][0]);
-         if(i!=nbackbone-1){ 
+         if(i != nbackbone-1){ 
 	    // build recursively by copying right branch
 	    copy(rsupport[make_pair(i+1,0)].begin(),
 	         rsupport[make_pair(i+1,0)].end(),
@@ -141,9 +141,9 @@ void topology::read(string fname){
 	 }
       }else{
 	 // visit upper branch from the leaf
-         for(int j=size-1; j>0; j--){
-	    rsupport[make_pair(i,j)].push_back(tmp[i][j]);
-	    if(j!=size-1){
+         for(int j=size; j>0; j--){
+	    rsupport[make_pair(i,j)].push_back(tmp[i][j-1]);
+	    if(j != size){
   	       copy(rsupport[make_pair(i,j+1)].begin(),
 	            rsupport[make_pair(i,j+1)].end(),
 		    back_inserter(rsupport[make_pair(i,j)]));
@@ -160,36 +160,34 @@ void topology::read(string fname){
       }
    }
    // lsupport
+   iswitch=-1;
    for(int idx=0; idx<rcoord.size(); idx++){
       auto coord = rcoord[idx];
       lsupport[coord] = support_rest(rsupport[coord]);
-      if(iswitch==-1 && coord.second == 0 && 
+      // locate switch point for bipartition of H 
+      if(iswitch == -1 && coord.second == 0 && 
          lsupport[coord].size()<=rsupport[coord].size()){
          iswitch = coord.first;
       }
    }
-   // image2 / orbord (from rsupport[0,0] - an 1D order)
+   // image2 from rsupport[0,0] (1D order)
    auto order = rsupport[make_pair(0,0)]; 
    image2.resize(2*nphysical);
-   orbord.resize(2*nphysical);
    for(int i=0; i<nphysical; i++){
       image2[2*i] = 2*order[i];
       image2[2*i+1] = 2*order[i]+1;
-      // for later usage in LCR 
-      orbord[2*order[i]] = 2*i;
-      orbord[2*order[i]+1] = 2*i+1;
    }
-*/
 }
 
 void topology::print() const{
    cout << "\ntopology::print"
-        << " nbackbone=" << nbackbone 
 	<< " nphysical=" << nphysical 
+        << " nbackbone=" << nbackbone
+        << " iswitch=" << iswitch	
 	<< endl;
    cout << "topo:" << endl;
    for(int i=0; i<nbackbone; i++){
-      cout << "i=" << i << " : ";
+      cout << " i=" << i << " : ";
       for(int j=0; j<nodes[i].size(); j++){
 	 cout << nodes[i][j].pindex << " ";
       }
@@ -199,27 +197,37 @@ void topology::print() const{
    for(int idx=0; idx<rcoord.size(); idx++){
       auto p = rcoord[idx];
       auto& node = nodes[p.first][p.second];
-      cout << "idx=" << idx << " coord=" << p << " " << node << endl;
+      cout << " idx=" << idx << " coord=" << p << " " << node << endl;
    }
-/*
-   cout << "--- rsupport/lsupport ---" << endl;
-   for(int i=0; i<ntotal; i++){
+   cout << "rsupport/lsupport:" << endl;
+   for(int i=0; i<rcoord.size(); i++){
       auto p = rcoord[i];
       auto rsupp = rsupport.at(p);
       auto lsupp = lsupport.at(p);
-      cout << "rsupport: ";
+      cout << " coord=" << p << " rsupport: ";
       for(int k : rsupp) cout << k << " ";
       cout << endl;
-      cout << "lsupport: ";
+      cout << " coord=" << p << " lsupport: ";
       for(int k : lsupp) cout << k << " ";
       cout << endl;
    }
-   cout << "--- image2 / orbord ---" << endl;
-   for(int i=0; i<2*nphysical; i++){
-      cout << i << " " << image2[i] << " " << orbord[i] << endl;
-   }
-*/
-   get_sweeps(true);
+   cout << "image2:" << endl;
+   for(int i=0; i<2*nphysical; i++) cout << " " << image2[i];
+   cout << endl;
+   // check sweep sequence 
+   get_sweeps();
+}
+
+vector<int> topology::support_rest(const vector<int>& rsupp) const{
+   vector<int> bas(nphysical);
+   iota(bas.begin(), bas.end(), 0);
+   auto supp = rsupp;
+   // order required in set_difference
+   stable_sort(supp.begin(), supp.end()); 
+   vector<int> rest;
+   set_difference(bas.begin(), bas.end(), supp.begin(), supp.end(),
+                  back_inserter(rest));
+   return rest;
 }
 
 vector<directed_bond> topology::get_sweeps(const bool debug) const{
@@ -264,24 +272,10 @@ vector<directed_bond> topology::get_sweeps(const bool debug) const{
          auto coord0  = get<0>(sweeps[idx]);
          auto coord1  = get<1>(sweeps[idx]);
          auto forward = get<2>(sweeps[idx]);
-         cout << "idx=" << idx << " : "
+         cout << " idx=" << idx << " : "
               << " dbond=" << coord0 << "-" << coord1 
 	      << " forward=" << forward << endl; 
       }
    }
    return sweeps;
 }
-
-/*
-vector<int> comb::support_rest(const vector<int>& rsupp){
-   vector<int> bas(nphysical);
-   iota(bas.begin(), bas.end(), 0);
-   auto supp = rsupp;
-   // order required in set_difference
-   stable_sort(supp.begin(), supp.end()); 
-   vector<int> rest;
-   set_difference(bas.begin(), bas.end(), supp.begin(), supp.end(),
-                  back_inserter(rest));
-   return rest;
-}
-*/

@@ -198,7 +198,7 @@ void ci_truncate(fock::onspace& space,
    int nsub = space.size();
    int neig = vs.size();
    int nred = std::min(nsub,maxdets);
-   std::cout << "reduction from " << nsub << " to " << nred << " dets" << std::endl;
+   std::cout << " reduction from " << nsub << " to " << nred << " dets" << std::endl;
    // select important basis
    std::vector<double> cmax(nsub,0.0);
    for(int j=0; j<neig; j++){
@@ -240,7 +240,7 @@ void ci_truncate(fock::onspace& space,
             vec[i] = vs[j][index[i]];
          }
 	 auto ova = linalg::xdot(nred, vs2[j].data(), vec.data());
-         std::cout << "iroot=" << j << " ova=" 
+         std::cout << " iroot=" << j << " ova=" 
                    << std::setprecision(12) << ova << std::endl;
       }
    }

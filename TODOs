@@ -170,7 +170,7 @@
  20200603 random sampling?
 	  - final result: one-dot wf at the boundary? [DONE@20200602]
 	  - IO for comb states [DONE@20200602]
-	  - implement a general sampling algorithm for any comb-tn [DONE@20200603]
+	  - implement a general sampling algorithm for any comb-tns [DONE@20200603]
 	  - generating det according to p(n) for computing Sdiag [hardness of SCI cal!]
 
  Two major future directions:
@@ -186,14 +186,20 @@
 
  20200726 documentation of time-reversal symmetry in TNS
 
+ 202008xx Comb Tensor Network States (CTNS)
+	  - 1. dealing with topology [DONE@20200801]
+	  - 2. initialize right canonical form from SCI wavefunction
+	  - 3. algorithm: check overlap with CI
+	  - 4. compute Sd by sampling
+	  - 5. algorithm: check Hij
+	  - 6. optimization from current RCF
+
  2020xxxx complex version: relativistic SCI/DMRG
  	  - documentation of each step in formula & diagrams [considering complex case]
 	  - loosing Ms in symmetry!!!
 	  - setup benchmark systems of relativistic CI by full diagaonalization of Hmat 
 	  - redesign of low-level functionalities (e.g., SCI/matrix/qtensor2,3,4)
 	  - implementation of time-reversal symmetry for efficiency? 
-
---- Code optimization ---
 
  2020xxxx optimized version:
  	  - faster low-level implementation [IMPORTANT for efficiency] 
@@ -203,6 +209,8 @@
  	  - preconstruction of P/Q from A/B to accelerate efficiency in H*v?
  	  - fullrestart from previous sweep?
    	  - minimize T() in the construction of Q/P/S/H
+
+--- Parallelization ---
 
  2020xxxx parallelizaiton [See Chan2004] 
  	  - different sweep schedule [backbone & branch] 

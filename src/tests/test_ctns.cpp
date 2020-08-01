@@ -10,6 +10,7 @@
 #include "../ci/sci.h"
 #include "../ci/sci_pt2.h"
 #include "../ctns/ctns_topo.h"
+#include "../ctns/ctns_comb.h"
 #include "../io/input.h"
 #include <iostream>
 #include <iomanip>
@@ -32,7 +33,8 @@ int tests::test_ctns(){
    input::read(schd,fname);
 
    // we will use DTYPE to control Hnr/Hrel 
-   using DTYPE = double;
+   using DTYPE = complex<double>;
+   //using DTYPE = double;
    
    // read integral
    integral::two_body<DTYPE> int2e;
@@ -65,22 +67,21 @@ int tests::test_ctns(){
    fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
 
    // --- Comb TNS (CTNS) ---
-/*
-   // --- 1. dealing with topology ---
-   ctns::topology topo;
-   topo.read(schd.topology_file);
-   topo.print();
-
-   schd.create_scratch();
+   // 1. dealing with topology 
+   ctns::topology topo(schd.topology_file);
+   ctns::comb<DTYPE> comb(topo, 0);
+   comb.topo.print();
+   cout << "ISYM=" << comb.isym << endl; 
+   //schd.create_scratch();
 
    if(!schd.combload){
-
-      // --- 2. initialize right canonical form from SCI wavefunction --- 
-      comb.rcanon_init(sci_space, vs, schd.thresh_proj);
+      // 2. initialize right canonical form from SCI wavefunction 
+      //comb.rcanon_init(sci_space, vs, schd.thresh_proj);
+/*
       comb.rcanon_check(schd.thresh_ortho, ifortho);
       
       const double thresh=1.e-6;
-      // --- 3. algorithm: check overlap with CI --- 
+      // 3. algorithm: check overlap with CI 
       auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
       ovlp.print("ovlp");
       // check self-overlap
@@ -105,7 +106,7 @@ int tests::test_ctns(){
       //fci::get_rdm1(sci_space, vs[1], vs[2], rdm1);
       //rdm1.save("fci_rdm1c");
 
-      // --- 4. algorithm: check Hij ---
+      // 4. algorithm: check Hij 
       auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
       Hmat.print("Hmat",8);
       Hmat.save("fci_Hmat");
@@ -118,14 +119,16 @@ int tests::test_ctns(){
          exit(1);
       }
   
-      // --- 5. optimization from current RCF ---  
+      // 5. optimization from current RCF 
       tns::opt_sweep(schd, comb, int2e, int1e, ecore);
       comb.rcanon_save();
-
+*/
    }else{
+/*
       comb.rcanon_load();
+*/
    }
-
+/*
    // re-compute expectation value for optimized TNS
    auto Sij = tns::get_Smat(comb, comb);
    Sij.print("Sij");
@@ -138,7 +141,7 @@ int tests::test_ctns(){
    auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
    ovlp.print("ovlp");
    
-   // --- 6. compute Sd by sampling ---
+   // 6. compute Sd by sampling 
    int nsample = 1.e5, istate = 0, nprt = 10;
    double Sd = comb.rcanon_sampling_Sd(nsample,istate,nprt);
    cout << "istate=" << istate << " Sd(estimate)=" << Sd << endl;

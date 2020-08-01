@@ -1,13 +1,5 @@
 
 -------------------------------
-helpers:
--------------------------------
- tns_pspace.h
- tns_pspace.cpp
- tns_ordering.h
- tns_ordering.cpp
- tns_io.cpp
--------------------------------
 comb:
 -------------------------------
  tns_comb.h
@@ -15,6 +7,14 @@ comb:
  tns_comb_rcanon.cpp
  tns_comb_rand.cpp
  tns_comb_alg.cpp
+-------------------------------
+helpers:
+-------------------------------
+ tns_pspace.h
+ tns_pspace.cpp
+ tns_ordering.h
+ tns_ordering.cpp
+ tns_io.cpp
 -------------------------------
 qtensor:
 -------------------------------
