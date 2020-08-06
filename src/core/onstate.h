@@ -128,14 +128,14 @@ class onstate{
       unsigned long repr(const int i) const{ return _repr[i]; }
       // getocc: only for the case where onstate is read-only (const) 
       bool operator [](const int i) const{ 
-	  assert(i < _size);
-	  // default 1<<i%64 will incur error, since 1 is int - 32bit
-	  return _repr[i/64] & (1ULL << i%64);
+	 assert(i < _size);
+	 // default 1<<i%64 will incur error, since 1 is int - 32bit
+	 return _repr[i/64] & (1ULL << i%64);
       }
       // setocc
       bit_proxy operator [](const int i){
-	  assert(i < _size);
-	  return {_repr[i/64] , 1ULL << i%64}; 
+	 assert(i < _size);
+	 return {_repr[i/64] , 1ULL << i%64}; 
       }
       // print
       std::string to_string() const;
@@ -190,6 +190,9 @@ class onstate{
             ne += popcnt(odd);
          }
          return ne;
+      }
+      int twoms() const{
+	 return nelec_a()-nelec_b();
       }
       
       // creation/annihilation operators related subroutines
@@ -413,7 +416,7 @@ class onstate{
       }
     
       // kramers symmetry related functions (used in SCI)
-      // flip Usf{|a>,|b>}={|b>,|a>}
+      // flip a/b without considering sign
       onstate flip() const{
          unsigned long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
 	 onstate state(_size); 
@@ -422,27 +425,15 @@ class onstate{
 	 }
 	 return state;
       }
-      // --- only tested but not used in sci/ctns yet (ZL@20200726) ---
-      // K|state>=|state'>(-1)^{sum[na*nb+nb]} (na*nb=nd)
-      int parity_flip() const{
-	 return -2*((norb_double()+nelec_b())%2)+1;
-      }
-      bool has_single() const{
-         unsigned long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
-	 for(int i=_len-1; i>=0; i--){
-	    if( ((_repr[i]&even)<<1) != (_repr[i]&odd) ) return true;
-	 }
-	 return false;
-      }
-      // standard representative for {|state>,K|state>}
+      // check standard representative for {|state>,flip|state>} defined by lexicographical ordering 
       bool is_standard() const{
-         if(!has_single()) return true;
+         if(norb_single() == 0) return true;
 	 unsigned long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
 	 for(int i=_len-1; i>=0; i--){
 	    unsigned long flipped = ((_repr[i]&even)<<1) + ((_repr[i]&odd)>>1);
 	    if(_repr[i] < flipped) 
                return false;
-	    // define the det with max integer rep as standard
+	    // define the det with LARGER integer rep as standard!
             else if(_repr[i] > flipped) 
  	       return true;
 	 }
@@ -450,12 +441,22 @@ class onstate{
 	 std::cout << *this << std::endl;
  	 exit(1);
       }
-      // return standard representative for {|state>,K|state>}
+      // return standard representative for {|state>,flip|state>}
       onstate make_standard() const{
 	 if(is_standard())
 	    return *this;
 	 else
 	    return flip();
+      }
+      // K|state>=flip|state>*(-1)^{nb_single}
+      int parity_flip() const{
+         unsigned long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
+	 int num = 0;
+	 for(int i=_len-1; i>=0; i--){
+	     unsigned long tmp = (((_repr[i]&even)<<1) & (_repr[i]&odd)) ^ (_repr[i]&odd); 
+	     num += popcnt(tmp);
+	 }
+	 return -2*(num%2)+1;
       }
 
    private:

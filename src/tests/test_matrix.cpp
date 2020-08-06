@@ -99,6 +99,8 @@ int tests::test_matrix(){
    cmat.conj().print("cmat.conj");
    cmat.T().print("cmat.T");
    cmat.H().print("cmat.H");
+   cmat.real().print("cmat.real");
+   cmat.imag().print("cmat.imag");
    cout << endl;
 
    // io

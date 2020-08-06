@@ -9,8 +9,8 @@
 #include "../ci/fci_rdm.h"
 #include "../ci/sci.h"
 #include "../ci/sci_pt2.h"
-#include "../ctns/ctns_topo.h"
 #include "../ctns/ctns_comb.h"
+#include "../ctns/ctns_comb_init.h"
 #include "../io/input.h"
 #include <iostream>
 #include <iomanip>
@@ -66,17 +66,17 @@ int tests::test_ctns(){
    const bool ifortho = true;
    fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
 
-   // --- Comb TNS (CTNS) ---
+   // --- Comb TNS (CTNS) ---   
    // 1. dealing with topology 
    ctns::topology topo(schd.topology_file);
-   ctns::comb<DTYPE> comb(topo, 0);
+   ctns::comb<DTYPE> comb(topo);
    comb.topo.print();
-   cout << "ISYM=" << comb.isym << endl; 
-   //schd.create_scratch();
+   
+   schd.create_scratch();
 
    if(!schd.combload){
       // 2. initialize right canonical form from SCI wavefunction 
-      //comb.rcanon_init(sci_space, vs, schd.thresh_proj);
+      ctns::rcanon_init(comb, sci_space, vs, schd.thresh_proj);
 /*
       comb.rcanon_check(schd.thresh_ortho, ifortho);
       

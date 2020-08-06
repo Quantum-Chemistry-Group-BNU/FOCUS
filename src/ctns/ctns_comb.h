@@ -1,24 +1,69 @@
 #ifndef CTNS_COMB_H
 #define CTNS_COMB_H
 
-#include "ctns_topo.h"
+#include <iostream>
+#include <tuple>
+#include <vector>
+#include <string>
+#include <map>
+#include "ctns_rbasis.h"
 //#include "../core/integral.h"
 //#include "../core/onspace.h"
 //#include "../core/matrix.h"
 //#include "tns_pspace.h"
 //#include "tns_qtensor.h"
 //#include <tuple>
-//#include <vector>
 //#include <string>
 
 namespace ctns{
 
-// --- comb tensor network states ---
+// coordinates (i,j) for sites of ctns
+using comb_coord = std::pair<int,int>;
+std::ostream& operator <<(std::ostream& os, const comb_coord& coord);
+const comb_coord coord_phy = std::make_pair(-1,-1);  
+const comb_coord coord_vac = std::make_pair(-2,-2); 
+extern const comb_coord coord_phy, coord_vac;
 
+// node information for sites of ctns
+struct node{
+   public:
+      friend std::ostream& operator <<(std::ostream& os, const node& nd);
+   public:
+      int pindex; // physical index
+      int type;	  // type of node: 0 [boundary], 1 [backbone], 2 [branch], 3 [internal]
+      comb_coord middle; // m-neighbor
+      comb_coord left;   // l-neighbor
+      comb_coord right;  // r-neighbor
+      std::vector<int> rsupport;
+      std::vector<int> lsupport;
+};
+
+// sweep sequence for optimization of ctns 
+using directed_bond = std::tuple<comb_coord,comb_coord,bool>;
+
+// topology information of ctns
+struct topology{
+   public:
+      topology(const std::string& topology_file); 
+      void print() const;
+      // helper for support 
+      std::vector<int> support_rest(const std::vector<int>& rsupp) const;
+      // sweep sequence 
+      std::vector<directed_bond> get_sweeps(const bool debug=true) const;
+   public:
+      int nbackbone, nphysical;
+      std::vector<std::vector<node>> nodes; // nodes on comb
+      std::vector<comb_coord> rcoord; // coordinate of each node in rvisit order
+      				      // used in constructing right environment
+      int iswitch; // for i<=iswitch on backbone, size(lsupp)<size(rsupp)
+      std::vector<int> image2; // 1D ordering of CTNS for |n_p...> 
+};
+
+// comb tensor network states 
 template <typename Tm>	
 class comb{
    public:
-      comb(const topology topo1, const int isym1): topo(topo1), isym(isym1) {}
+      comb(const topology topo1): topo(topo1) {}
 
 //      // --- neightbor ---
 //      int get_kp(const comb_coord& p) const{ return topo[p.first][p.second]; }
@@ -44,6 +89,7 @@ class comb{
 //         auto pr = get_r(p);
 //         return rsites.at(pr).qrow;
 //      }
+
 //      // --- boundary site ---
 //      qtensor3 get_lbsite() const; 
 //      qtensor3 get_rbsite() const; 
@@ -57,16 +103,21 @@ class comb{
 //		      	     const std::vector<std::vector<double>>& vs,
 //			     const std::vector<int>& order,
 //			     const renorm_basis& rbasis);
-//      // --- right canonical form ---
-//      // build site tensor from {|r>} bases
+
+//      // --- right canonical form (RCF) ---
 //      void rcanon_init(const fock::onspace& space,
 //		       const std::vector<std::vector<double>>& vs,
-//		       const double thresh_proj); // =1.e-14
+//		       const double thresh_proj){
+//         ::rcanon_init(rsites, topo, space, vs, thresh_proj)
+//      }
+//
 //      void rcanon_check(const double thresh_ortho, // =1.e-10
 //		        const bool ifortho=false); // check last site
+
 //      // io for rsites
 //      void rcanon_save(const std::string fname="rcanon.info");
 //      void rcanon_load(const std::string fname="rcanon.info");
+
 //      // --- overlap with SCI wavefunctions --- 
 //      // <det|Comb[n]> by contracting the Comb
 //      std::vector<double> rcanon_CIcoeff(const fock::onstate& state);
@@ -79,13 +130,13 @@ class comb{
 //      double rcanon_sampling_Sd(const int nsample, const int istate, const int nprt=0);
 //      // check by explict list all dets in the FCI space
 //      void rcanon_sampling_check(const int istate);
+
    public:
       topology topo;
-      short isym; // =0, (N,Na); =1, (N) [symmetry of comb]
-//      std::map<comb_coord,renorm_basis> rbases;
-//      std::map<comb_coord,qtensor3> rsites; // right canonical form 
-//      std::map<comb_coord,qtensor3> lsites; // left canonical form 
-//      std::vector<qtensor3> psi; // propagation of initial guess 
+      std::map<comb_coord,renorm_basis<Tm>> rbases;
+      //std::map<comb_coord,qtensor3> rsites; // right canonical form 
+      //std::map<comb_coord,qtensor3> lsites; // left canonical form 
+      //std::vector<qtensor3> psi; // propagation of initial guess 
 };
 
 //linalg::matrix get_Smat(const comb& bra, 

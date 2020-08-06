@@ -19,9 +19,9 @@ int main(){
    tests::test_fci();
    tests::test_sci();
 
-   // --- comb ---  
-   tests::test_tns();
-   tests::test_ctns();
+   //// --- comb ---  
+   //tests::test_tns();
+   //tests::test_ctns();
 
    return 0;   
 }

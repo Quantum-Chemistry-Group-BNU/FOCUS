@@ -1,16 +1,17 @@
+
 ## eigen
 #MATH = -I /usr/local/include/eigen3 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE \
        -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
 ## serial version of MKL
 #MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
 # parallel version of MKL
-MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl 
+MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+       -L./extlibs/zquatev -lzquatev 
 # mac framework Accelerate
 #MATH = -llapack -lblas
 
 BOOST = /usr/local
 FLAGS = -DGNU -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
-#FLAGS = -DGNU -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
 #FLAGS = -DGNU -DNDEBUG -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
 #	-Wl,-no_pie -lprofiler # google profiler
 
@@ -82,7 +83,7 @@ $(BIN_DIR)/tns.x: $(OBJ_DIR)/main_tns.o $(OBJ_DEP)
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/main_ctns.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
+	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 
 $(OBJ_ALL):
 	@echo "=== COMPILE $@ FROM $<" # just from *.cpp is sufficient	

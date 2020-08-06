@@ -154,7 +154,6 @@ int tests::test_onstate(){
    cout << state4 << endl; 
 
    cout << state4.to_string2() << endl;
-   cout << "has_single=" << state4.has_single() << endl;
    cout << "norb_single=" << state4.norb_single() << endl;
    cout << "norb_double=" << state4.norb_double() << endl;
    cout << "norb_vacant=" << state4.norb_vacant() << endl;

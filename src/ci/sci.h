@@ -89,7 +89,7 @@ void ci_solver(const input::schedule& schd,
 	       const integral::two_body<Tm>& int2e,
 	       const integral::one_body<Tm>& int1e,
 	       const double ecore){
-   const bool Htype = fci::is_complex<Tm>();
+   const bool Htype = tools::is_complex<Tm>();
    bool debug = false;
    auto t0 = tools::get_time();
    std::cout << "\nsci::ci_solver Htype=" << Htype << std::endl; 
@@ -109,7 +109,7 @@ void ci_solver(const input::schedule& schd,
    int neig = schd.nroots;
    for(int iter=0; iter<schd.maxiter; iter++){
       std::cout << "\n---------------------" << std::endl;
-      std::cout << "iter=" << iter << " eps1=" << schd.eps1[iter] << std::endl;
+      std::cout << "iter=" << iter << " eps1=" << std::scientific << schd.eps1[iter] << std::endl;
       std::cout << "---------------------" << std::endl;
       double eps1 = schd.eps1[iter];
       // compute cmax[i] = \sqrt{\sum_j|vj[i]|^2} for screening

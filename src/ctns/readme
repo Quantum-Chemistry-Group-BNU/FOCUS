@@ -1,5 +1,22 @@
 
 -------------------------------
+CTNS:
+-------------------------------
+ ctns_comb_topo.cpp
+ ctns_comb.h
+
+ ctns_qsym.h
+ ctns_qsym.cpp
+
+ ctns_rbasis.h
+ ctns_bipart.h 
+ ctns_bipart.cpp => Challenging Part with TRS
+ ctns_comb_init.h
+-------------------------------
+
+
+
+-------------------------------
 comb:
 -------------------------------
  tns_comb.h
@@ -15,6 +32,7 @@ helpers:
  tns_ordering.h
  tns_ordering.cpp
  tns_io.cpp
+
 -------------------------------
 qtensor:
 -------------------------------

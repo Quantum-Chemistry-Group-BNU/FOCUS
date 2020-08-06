@@ -5,7 +5,7 @@
 using namespace std;
 using namespace fock;
 
-// constructor from '010011' strings
+// constructor from "010011" strings (from right to left)
 onstate::onstate(const string& s){
    _size = s.size();
    _len = (_size-1)/64+1;

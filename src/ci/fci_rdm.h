@@ -19,7 +19,7 @@ void get_rdm1(const fock::onspace& space,
    	      const bool debug = false){
    auto t0 = tools::get_time();
    std::cout << "\nfci:get_rdm1" << std::endl;
-   const bool Htype = is_complex<Tm>();
+   const bool Htype = tools::is_complex<Tm>();
    // initialization 
    rdm1 = 0.0;
    // setup product_space

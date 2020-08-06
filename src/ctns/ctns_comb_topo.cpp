@@ -3,7 +3,7 @@
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
 #include <numeric> // iota
-#include "ctns_topo.h"
+#include "ctns_comb.h"
 
 using namespace std;
 using namespace ctns;
@@ -132,46 +132,47 @@ topology::topology(const string& fname){
       int size = tmp[i].size(); // same as input topo
       if(size == 1){
 	 // upper branch is just physical indices     
-	 rsupport[make_pair(i,0)].push_back(tmp[i][0]);
+	 nodes[i][0].rsupport.push_back(tmp[i][0]);
          if(i != nbackbone-1){ 
 	    // build recursively by copying right branch
-	    copy(rsupport[make_pair(i+1,0)].begin(),
-	         rsupport[make_pair(i+1,0)].end(),
-		 back_inserter(rsupport[make_pair(i,0)]));
+	    copy(nodes[i+1][0].rsupport.begin(),
+	         nodes[i+1][0].rsupport.end(),
+		 back_inserter(nodes[i][0].rsupport));
 	 }
       }else{
 	 // visit upper branch from the leaf
          for(int j=size; j>0; j--){
-	    rsupport[make_pair(i,j)].push_back(tmp[i][j-1]);
+	    nodes[i][j].rsupport.push_back(tmp[i][j-1]);
 	    if(j != size){
-  	       copy(rsupport[make_pair(i,j+1)].begin(),
-	            rsupport[make_pair(i,j+1)].end(),
-		    back_inserter(rsupport[make_pair(i,j)]));
+  	       copy(nodes[i][j+1].rsupport.begin(),
+	            nodes[i][j+1].rsupport.end(),
+		    back_inserter(nodes[i][j].rsupport));
 	    }
 	 }
 	 // branching node: upper
-	 copy(rsupport[make_pair(i,1)].begin(),
-	      rsupport[make_pair(i,1)].end(),
-	      back_inserter(rsupport[make_pair(i,0)]));
+	 copy(nodes[i][1].rsupport.begin(),
+	      nodes[i][1].rsupport.end(),
+	      back_inserter(nodes[i][0].rsupport));
 	 // right - assuming the end node is leaf (which is true)
-	 copy(rsupport[make_pair(i+1,0)].begin(),
-	      rsupport[make_pair(i+1,0)].end(),
-	      back_inserter(rsupport[make_pair(i,0)]));
+	 copy(nodes[i+1][0].rsupport.begin(),
+	      nodes[i+1][0].rsupport.end(),
+	      back_inserter(nodes[i][0].rsupport));
       }
    }
    // lsupport
    iswitch=-1;
    for(int idx=0; idx<rcoord.size(); idx++){
-      auto coord = rcoord[idx];
-      lsupport[coord] = support_rest(rsupport[coord]);
+      auto p = rcoord[idx];
+      int i = p.first, j = p.second;
+      nodes[i][j].lsupport = support_rest(nodes[i][j].rsupport);
       // locate switch point for bipartition of H 
-      if(iswitch == -1 && coord.second == 0 && 
-         lsupport[coord].size()<=rsupport[coord].size()){
-         iswitch = coord.first;
+      if(iswitch == -1 && j == 0 && 
+         nodes[i][j].lsupport.size()<=nodes[i][j].rsupport.size()){
+         iswitch = i;
       }
    }
    // image2 from rsupport[0,0] (1D order)
-   auto order = rsupport[make_pair(0,0)]; 
+   auto order = nodes[0][0].rsupport; 
    image2.resize(2*nphysical);
    for(int i=0; i<nphysical; i++){
       image2[2*i] = 2*order[i];
@@ -200,15 +201,14 @@ void topology::print() const{
       cout << " idx=" << idx << " coord=" << p << " " << node << endl;
    }
    cout << "rsupport/lsupport:" << endl;
-   for(int i=0; i<rcoord.size(); i++){
-      auto p = rcoord[i];
-      auto rsupp = rsupport.at(p);
-      auto lsupp = lsupport.at(p);
+   for(int idx=0; idx<rcoord.size(); idx++){
+      auto p = rcoord[idx];
+      int i = p.first, j = p.second;
       cout << " coord=" << p << " rsupport: ";
-      for(int k : rsupp) cout << k << " ";
+      for(int k : nodes[i][j].rsupport) cout << k << " ";
       cout << endl;
       cout << " coord=" << p << " lsupport: ";
-      for(int k : lsupp) cout << k << " ";
+      for(int k : nodes[i][j].lsupport) cout << k << " ";
       cout << endl;
    }
    cout << "image2:" << endl;

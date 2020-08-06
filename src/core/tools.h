@@ -25,9 +25,22 @@ extern const std::string line_separator;
 const std::string line_separator2(70,'=');
 extern const std::string line_separator2;
 
+// memory
 double mem_size(size_t sz, const int fac=8);
 
-// --- timing ---
+// type information
+template <typename Tm>
+inline bool is_complex(){ return false; }
+template <>
+inline bool is_complex<std::complex<double>>(){ return true; }
+
+// conjugte
+inline double conjugate(const double x){ return x; }
+inline std::complex<double> conjugate(const std::complex<double> x){ 
+   return std::conj(x); 
+};
+
+// timing 
 std::chrono::high_resolution_clock::time_point get_time();
 
 template<typename T>
@@ -35,16 +48,9 @@ double get_duration(T t){
    return std::chrono::duration_cast<std::chrono::milliseconds>(t).count()*0.001; 
 }
 
-// --- random --- 
+// random
 extern std::seed_seq seeds;
 extern std::default_random_engine generator;
-
-
-// --- conjugte ---
-inline double conjugate(const double x){ return x; }
-inline std::complex<double> conjugate(const std::complex<double> x){ 
-   return std::conj(x); 
-};
 
 // compress symmetric (i,j) [i>j] pair:
 // 10[0]
@@ -79,6 +85,7 @@ inline std::pair<size_t,size_t> inverse_pair(const size_t ij){
    return std::make_pair(i,j);
 }
 
+// sort_index 
 // pointer version
 // template do not need implementation but only header
 template <typename T>
@@ -95,7 +102,6 @@ std::vector<int> sort_index(const int size, const T* v, const int iop=0){
    }
    return idx;
 }
-
 // vector version
 template <typename T>
 std::vector<int> sort_index(const std::vector<T>& v, const int iop=0){
@@ -116,7 +122,7 @@ std::vector<int> sort_index_abs(const int size, const T* v, const int iop=0){
    }
    return idx;
 }
-
+// vector version
 template <typename T>
 std::vector<int> sort_index_abs(const std::vector<T>& v, const int iop=0){
    return sort_index_abs(v.size(), v.data(), iop);

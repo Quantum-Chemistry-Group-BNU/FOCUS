@@ -14,12 +14,6 @@
 
 namespace fci{
 
-// type information
-template <typename Tm>
-inline bool is_complex(){ return false; }
-template <>
-inline bool is_complex<std::complex<double>>(){ return true; }
-
 // represent space of dets by direct product structure
 struct product_space{
    public:

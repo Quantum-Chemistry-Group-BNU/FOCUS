@@ -75,7 +75,7 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
 	       const integral::one_body<Tm>& int1e,
 	       const double ecore){
    const bool debug = true;
-   const bool Htype = is_complex<Tm>();
+   const bool Htype = tools::is_complex<Tm>();
    auto t0 = tools::get_time();
    std::cout << "\nfci::ci_solver dim=" << space.size() << " Htype=" << Htype << std::endl; 
    // dimensionality check
@@ -147,7 +147,7 @@ linalg::matrix<Tm> get_Hmat(const fock::onspace& space,
 	       	            const integral::two_body<Tm>& int2e,
 	       	            const integral::one_body<Tm>& int1e,
 	                    const double ecore){
-   const bool Htype = is_complex<Tm>();
+   const bool Htype = tools::is_complex<Tm>();
    // compute sparse_hamiltonian
    sparse_hamiltonian<Tm> sparseH;
    sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype);

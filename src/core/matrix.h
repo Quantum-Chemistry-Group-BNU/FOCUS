@@ -190,12 +190,12 @@ struct matrix{
          }
          return At;
       }
-      // complex case
+      // complex case: conjugate & Hermitian conjugate
       matrix conj() const{
-	 matrix<Tm> mat(_rows,_cols);
-         std::transform(_data, _data+_size, mat._data,
-			[](const Tm& x){return tools::conjugate(x);});
-	 return mat;
+	 matrix<Tm> Ac(_rows,_cols);
+         std::transform(_data, _data+_size, Ac._data,
+			[](const Tm& x){ return tools::conjugate(x); });
+	 return Ac;
       }
       matrix H() const{
          matrix<Tm> Ah(_cols,_rows);
@@ -206,7 +206,27 @@ struct matrix{
          }
          return Ah;
       }
-      // row operations
+      // extract real & imag parts
+      matrix<double> real() const{
+	 matrix<double> matr(_rows,_cols);
+	 std::transform(_data, _data+_size, matr._data,
+			[](const Tm& x){ return std::real(x); });
+	 return matr;
+      }
+      matrix<double> imag() const{
+	 matrix<double> mati(_rows,_cols);
+	 std::transform(_data, _data+_size, mati._data,
+			[](const Tm& x){ return std::imag(x); });
+	 return mati;
+      }
+      // convert real to complex
+      matrix<std::complex<double>> as_complex() const{
+	 matrix<std::complex<double>> mat(_rows,_cols);
+	 std::transform(_data, _data+_size, mat._data,
+			[](const Tm& x){ return x; });
+	 return mat;
+      }
+      // col operations
       const Tm* col(const int i) const{
 	 assert(i>=0 && i<_cols);
 	 return &_data[i*_rows];
@@ -215,6 +235,22 @@ struct matrix{
 	 assert(i>=0 && i<_cols);
 	 return &_data[i*_rows];
       }
+      // scale
+      void rowscale(const std::vector<double>& phases){
+	 assert(phases.size() == _rows);
+         for(int ic=0; ic<_cols; ic++){
+	    std::transform(this->col(ic), this->col(ic)+_rows, phases.begin(), this->col(ic),
+			   [](const Tm& x, const double& y){ return x*y; });
+	 }
+      }
+      void colscale(const std::vector<double>& phases){
+	 assert(phases.size() == _cols);
+         for(int ic=0; ic<_cols; ic++){
+	    double phase = phases[ic];
+	    std::transform(this->col(ic), this->col(ic)+_rows, this->col(ic),
+			   [phase](const Tm& x){ return x*phase; });
+	 }
+      }
       // =,*,+,- operations
       matrix& operator =(const Tm cval){
 	 std::fill_n(_data, _size, cval);
@@ -222,30 +258,30 @@ struct matrix{
       }
       matrix& operator *=(const Tm fac){
          std::transform(_data, _data+_size, _data,
-			[fac](const Tm& x){return fac*x;});
+			[fac](const Tm& x){ return fac*x; });
 	 return *this;
       }
       matrix& operator +=(const matrix<Tm>& mat){
          std::transform(_data, _data+_size, mat._data, _data,
-			[](const Tm& x, const Tm& y){return x+y;});
+			[](const Tm& x, const Tm& y){ return x+y; });
 	 return *this;
       }
       matrix& operator -=(const matrix<Tm>& mat){
          std::transform(_data, _data+_size, mat._data, _data,
-			[](const Tm& x, const Tm& y){return x-y;});
+			[](const Tm& x, const Tm& y){ return x-y; });
 	 return *this;
       }
       matrix operator -() const{
 	 matrix<Tm> mat(_rows,_cols);
          std::transform(_data, _data+_size, mat._data,
-			[](const Tm& x){return -x;});
+			[](const Tm& x){ return -x; });
 	 return mat;
       }
       // simple */+/-
       friend matrix operator *(const Tm fac, const matrix<Tm>& mat1){
          matrix<Tm> mat(mat1.rows(),mat1.cols());
 	 std::transform(mat1._data, mat1._data+mat._size, mat._data,
-      	                [fac](const Tm& x){return fac*x;});
+      	                [fac](const Tm& x){ return fac*x; });
          return mat;
       }
       friend matrix operator *(const matrix<Tm>& mat1, const Tm fac){
@@ -255,14 +291,14 @@ struct matrix{
          assert(mat1._size == mat2._size);
          matrix<Tm> mat(mat1.rows(),mat1.cols());
          std::transform(mat1._data, mat1._data+mat1._size, mat2._data, mat._data,
-      		        [](const Tm& x, const Tm& y){return x+y;});
+      		        [](const Tm& x, const Tm& y){ return x+y; });
          return mat;
       }
       friend matrix operator -(const matrix<Tm>& mat1, const matrix<Tm>& mat2){
          assert(mat1._size == mat2._size);
          matrix<Tm> mat(mat1.rows(),mat1.cols());
          std::transform(mat1._data, mat1._data+mat1._size, mat2._data, mat._data,
-              	        [](const Tm& x, const Tm& y){return x-y;});
+              	        [](const Tm& x, const Tm& y){ return x-y; });
          return mat;
       }
    public:
@@ -270,7 +306,7 @@ struct matrix{
       Tm* _data;
 };
 
-// operator */+/- for conversion between real & complex
+// operator */+/- for conversion between real & complex matrices
 matrix<std::complex<double>> operator *(const std::complex<double> fac, 
 				        const matrix<double>& mat1);
 matrix<std::complex<double>> operator *(const matrix<double>& mat1,

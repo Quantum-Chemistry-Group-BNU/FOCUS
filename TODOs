@@ -93,7 +93,7 @@
 	  - implement tensor contraction kernels for qtensor
 	  - checked by evaluating <Comb|Comb> 
 
- 20200508 initialize normal & complementary operators (MOST CHALLENGING PART)
+ 20200508 initialize normal & complementary operators (most difficult part!)
 	  - data structure for operators: qtensor2
 	  - operators on dot (in memory)
 	  - serializaiton: -lboost_system -lboost_filesystem
@@ -188,10 +188,15 @@
 
  202008xx Comb Tensor Network States (CTNS)
 	  - 1. dealing with topology [DONE@20200801]
-	  - 2. initialize right canonical form from SCI wavefunction
+	  - 2. initialize right canonical form from SCI wavefunction (most difficult part!)
+	       - ciwfs class for constructing rho^R
+	       - include zquatev for diagonalizing rho^R 
+	       - decimation with Kramers projected rho^R [DONE@20200807]
+	       - special treatment for |0->,|0+> in NR case
+	       - build local tensor
 	  - 3. algorithm: check overlap with CI
 	  - 4. compute Sd by sampling
-	  - 5. algorithm: check Hij
+	  - 5. algorithm: check Hij by reformulating op*psi
 	  - 6. optimization from current RCF
 
  2020xxxx complex version: relativistic SCI/DMRG
