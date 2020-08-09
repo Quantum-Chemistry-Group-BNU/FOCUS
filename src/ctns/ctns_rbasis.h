@@ -14,8 +14,8 @@ namespace ctns{
 template <typename Tm>
 struct renorm_sector{
    public:
-      void print(const std::string msg, const int level=0) const{
-	 std::cout << "renorm_sector: " << msg << " qsym=" << sym 
+      void print(const std::string name, const int level=0) const{
+	 std::cout << "renorm_sector: " << name << " qsym=" << sym 
                    << " shape=" << coeff.rows() << "," << coeff.cols() << std::endl; 
          if(level >= 1){
             for(int i=0; i<space.size(); i++){
@@ -29,37 +29,28 @@ struct renorm_sector{
       fock::onspace space;
       linalg::matrix<Tm> coeff;
 };
+
 // renorm_basis: just like atomic basis (vector of symmetry sectors)
 template <typename Tm>
 using renorm_basis = std::vector<renorm_sector<Tm>>;
 
-// rbasis for type-0 physical site 
 template <typename Tm>
-renorm_basis<Tm> get_rbasis_phys(){
-   const bool Htype = tools::is_complex<Tm>();
-   renorm_basis<Tm> rbasis(2);
-   rbasis[0].sym = qsym(0,0);
-   rbasis[0].space.push_back(fock::onstate("00"));
-   rbasis[0].coeff = linalg::identity_matrix<Tm>(1);
-   rbasis[1].sym = qsym(2,0);
-   rbasis[1].space.push_back(fock::onstate("11"));
-   rbasis[1].coeff = linalg::identity_matrix<Tm>(1);
-   if(Htype){
-      rbasis.resize(3);
-      rbasis[2].sym = qsym(1,0);
-      rbasis[2].space.push_back(fock::onstate("01")); // a
-      rbasis[2].space.push_back(fock::onstate("10")); // b
-      rbasis[2].coeff = linalg::identity_matrix<Tm>(2);
-   }else{
-      rbasis.resize(4);
-      rbasis[2].sym = qsym(1,1);
-      rbasis[2].space.push_back(fock::onstate("01")); // a
-      rbasis[2].coeff = linalg::identity_matrix<Tm>(1);
-      rbasis[3].sym = qsym(1,-1);
-      rbasis[3].space.push_back(fock::onstate("10")); // b
-      rbasis[3].coeff = linalg::identity_matrix<Tm>(1);
+inline std::pair<int,int> get_shape(const renorm_basis<Tm>& rbasis){
+   int rows = 0, cols = 0;
+   for(int i=0; i<rbasis.size(); i++){
+      rows += rbasis[i].coeff.rows();
+      cols += rbasis[i].coeff.cols();
    }
-   return rbasis;
+   return std::make_pair(rows,cols);
+}
+
+template <typename Tm>
+qsym_space get_qsym_space(const renorm_basis<Tm>& rbasis){
+   qsym_space qs;
+   for(int i=0; i<rbasis.size(); i++){
+      qs.dims.push_back({rbasis[i].sym, rbasis[i].coeff.cols()});
+   }
+   return qs;
 }
 
 } // ctns

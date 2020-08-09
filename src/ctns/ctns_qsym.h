@@ -2,7 +2,6 @@
 #define CTNS_QSYM_H
 
 #include "../core/serialization.h"
-#include "../core/onspace.h"
 #include <string>
 #include <map>
 
@@ -59,20 +58,44 @@ class qsym{
 };
 
 // qsym_qspace
-using qsym_space = std::map<qsym,int>;
-int qsym_space_dim(const qsym_space& qs);
-void qsym_space_print(const qsym_space& qs, const std::string& name);
-// vacuum
-extern const qsym_space vac_qsym_space;
-// physical degree of freedoms (depending on Htype)
-extern const fock::onspace phys_space;
-std::vector<qsym> get_phys_sym(const bool Htype);
-qsym_space get_phys_qsym_space(const bool Htype);
+class qsym_space{
+   private:
+      friend class boost::serialization::access;	   
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	 ar & dims;
+      }
+   public:
+      inline int size() const{ return dims.size(); }
+      inline qsym get_sym(const int i) const{ return dims[i].first; } 
+      inline int get_dim(const int i) const{ return dims[i].second; }
+      // total dimension
+      int get_dimAll() const{
+         int dim = 0;
+         for(const auto& p : dims) dim += p.second;
+         return dim;
+      }
+      void print(const std::string name) const{
+	 std::cout << "qsym_space: " << name << " nsym=" << dims.size() 
+      	           << " dimAll=" << get_dimAll() << std::endl;
+         // loop over symmetry sectors
+         for(int i=0; i<dims.size(); i++){
+            auto sym = dims[i].first;
+            auto dim = dims[i].second;
+	    std::cout << " " << sym << ":" << dim;
+         }
+	 std::cout << std::endl;
+      }
+   public:
+      std::vector<std::pair<qsym,int>> dims;
+};
 
+/*
 // direct product table of qsym_space : V1*V2->V12
 using qsym_dpt = std::map<qsym,std::map<std::pair<qsym,qsym>,std::tuple<int,int,int>>>;
 std::pair<qsym_space,qsym_dpt> qsym_space_dpt(const qsym_space& qs1, 
 					      const qsym_space& qs2);
+*/
 
 } // tns
 

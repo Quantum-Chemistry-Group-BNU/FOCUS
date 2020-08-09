@@ -4,90 +4,12 @@
 #include "../core/tools.h"
 #include "../core/onspace.h"
 #include "ctns_comb.h"
-#include "ctns_rbasis.h"
 #include "ctns_bipart.h"
+#include "ctns_phys.h"
 
 namespace ctns{
 
 /*
-// compute renormalized bases {|r>} 
-void comb::get_rbases(const onspace& space,
-		      const vector<vector<double>>& vs,
-		      const double thresh_proj){
-   bool debug = false;
-   auto t0 = tools::get_time();
-   cout << "\ncomb::get_rbases thresh_proj=" << scientific << thresh_proj << endl;
-   vector<pair<int,int>> shapes; // for debug
-   // loop over nodes (except the last one)
-   for(int idx=0; idx<ntotal-1; idx++){
-      auto p = rcoord[idx];
-      int i = p.first, j = p.second;
-      if(debug){
-         cout << "\nidx=" << idx 
-	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "] ";
-	 cout << "rsup=";
-         for(int k : rsupport[make_pair(i,j)]) cout << k << " ";
-         cout << endl;
-      }
-      if(type[p] == 0){
-         rbases[p] = get_rbasis_phys();
-      }else{
-         // 1. generate 1D ordering
-         auto rsupp = rsupport[p]; // original order required [IMPORTANT]
-         auto order = support_rest(rsupp);
-         int pos = order.size(); // must be put here to account bipartition position
-         copy(rsupp.begin(), rsupp.end(), back_inserter(order));
-         if(debug){
-            cout << "pos=" << pos << endl;
-            cout << "order=";
-            for(int k : order) cout << k << " ";
-            cout << endl;
-         }
-         // 2. transform SCI coefficient
-         onspace space2;
-         vector<vector<double>> vs2;
-         transform_coeff(space, vs, order, space2, vs2); 
-         // 3. bipartition of space
-         tns::product_space pspace2;
-         pspace2.get_pspace(space2, 2*pos);
-         // 4. projection of SCI wavefunction and save renormalized states
-         //    (Schmidt decomposition for single state)
-         auto rbasis = pspace2.right_projection(vs2,thresh_proj);
-         rbases[p] = rbasis;
-      }
-      // debug
-      {
-	 auto& rbasis = rbases[p];
-	 int nbas = 0, ndim = 0;
-         for(int k=0; k<rbasis.size(); k++){
-	    if(debug) rbasis[k].print("rsec_"+to_string(k));
-	    nbas += rbasis[k].coeff.rows();
-	    ndim += rbasis[k].coeff.cols();
-	 }
-	 shapes.push_back(make_pair(nbas,ndim));
-	 if(debug) cout << "rbasis: nbas,ndim=" << nbas << "," << ndim << endl;
-      }
-   } // idx
-   // debug
-   {
-      cout << "\nfinal results with thresh_proj = " << thresh_proj << endl;
-      int Dmax = 0;
-      for(int idx=0; idx<ntotal-1; idx++){
-         auto p = rcoord[idx];
-         int i = p.first, j = p.second;
-	 cout << "idx=" << idx 
-	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "]"
-	      << " nbas=" << shapes[idx].first << " ndim=" << shapes[idx].second
-	      << endl;
-	 Dmax = max(Dmax,shapes[idx].second);
-      } // idx
-      cout << "maximum bond dimension = " << Dmax << endl;
-   }
-   auto t1 = tools::get_time();
-   cout << "\ntiming for comb::get_rbases : " << setprecision(2) 
-        << tools::get_duration(t1-t0) << " s" << endl;
-}
-
 // compute wave function at the start for right canonical form 
 qtensor3 comb::get_rwavefuns(const onspace& space,
 		             const vector<vector<double>>& vs,
@@ -186,159 +108,6 @@ qtensor3 comb::get_rwavefuns(const onspace& space,
    return rwavefuns;
 }
 
-// exact boundary tensor:
-//        n             |vac>
-//        |               |
-//     ---*---|vac>   n---*
-//  |out> 	          |
-qtensor3 comb::get_rbsite() const{
-   qtensor3 qt3(qsym(0,0),phys_qsym_space,phys_qsym_space,vac_qsym_space);
-   for(int k=0; k<4; k++){
-      auto key = make_tuple(phys_sym[k],phys_sym[k],phys_sym[0]);
-      qt3.qblocks[key][0] = identity_matrix(1);
-   }
-   return qt3;
-}
-
-qtensor3 comb::get_lbsite() const{
-   vector<bool> dir = {1,1,0};
-   qtensor3 qt3(qsym(0,0),phys_qsym_space,vac_qsym_space,phys_qsym_space,dir);
-   for(int k=0; k<4; k++){
-      auto key = make_tuple(phys_sym[k],phys_sym[0],phys_sym[k]);
-      qt3.qblocks[key][0] = identity_matrix(1);
-   }
-   return qt3;
-}
-
-// build site tensor from {|r>} bases
-void comb::rcanon_init(const onspace& space,
-		       const vector<vector<double>>& vs,
-		       const double thresh_proj){
-   bool debug = false;
-   auto t0 = tools::get_time();
-   cout << "\ncomb::rcanon_init" << endl;
-   // compute renormalized bases {|r>}
-   get_rbases(space, vs, thresh_proj);
-   // loop over sites
-   for(int idx=0; idx<ntotal-1; idx++){
-      auto p = rcoord[idx];
-      int i = p.first, j = p.second;
-      if(debug){
-         cout << "\nidx=" << idx 
-	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "] "
-	      << endl;
-      }
-      auto& rbasis = rbases[p]; 
-      qtensor3 rt;
-      if(type[p] == 0){
-	 
-	 if(debug) cout << "type 0: end or leaves" << endl;
-         rt = get_rbsite();
-
-      }else if(type[p] == 1 || type[p] == 2){
-
-	 rt.qmid = phys_qsym_space;
-	 pair<int,int> p0;
-	 if(type[p] == 1){
-	    //     n      
-	    //    \|/      
-	    //  -<-*-<-|r> 
-	    if(debug) cout << "type 1: physical site on backbone" << endl;
-	    p0 = make_pair(i+1,0);
-	 }else if(type[p] == 2){
-	    //     |u>
-	    //     \|/
-	    //  n-<-*
-	    //     \|/
-	    if(debug) cout << "type 2: physical site on branch" << endl;
-	    p0 = make_pair(i,j+1);
-	 }
-	 // load rbasis for previous site
-	 auto& rbasis1 = rbases[p0];
-	 // loop over symmetry blocks of out index 
-	 for(int k=0; k<rbasis.size(); k++){
-	    auto sym = rbasis[k].sym;
-	    rt.qrow[sym] = rbasis[k].coeff.cols();
-	    // loop over symmetry blocks of in index 
-            for(int k1=0; k1<rbasis1.size(); k1++){
-	       auto sym1 = rbasis1[k1].sym;
-	       rt.qcol[sym1] = rbasis1[k1].coeff.cols();
-	       // loop over physical indices
-	       for(int k0=0; k0<4; k0++){
-		  auto key = make_tuple(phys_sym[k0],sym,sym1);
-		  rt.qblocks[key] = empty_block;
-		  if(sym == sym1 + phys_sym[k0]){
-		     // B[i](b1,b)=<ci,b1|b>
-		     auto Bi = get_Bmatrix(phys_space[k0],rbasis1[k1].space,rbasis[k].space);
-		     // BL[i](b1,r)=<ci,b1|b> W(b,r)
-		     auto BL = dgemm("N","N",Bi,rbasis[k].coeff);
-		     // BLR[i](r,l)= W(b,l)<ci,b1|r> = BL^T*W
-		     auto BLR = dgemm("T","N",BL,rbasis1[k1].coeff); 
-		     rt.qblocks[key].push_back(BLR);
-		  }
-	       } // k0
-	    } // k1
-	 } // k
-
-      }else if(type[p] == 3){
-	 
-	 //      |u>      
-	 //      \|/      
-	 //    -<-*-<-|r> 
-	 if(debug) cout << "type 3: internal site on backbone" << endl;
-	 auto rbasis0 = rbases[make_pair(i,j+1)];
-	 auto rbasis1 = rbases[make_pair(i+1,j)];
-	 // loop over symmetry blocks of out index
-	 for(int k=0; k<rbasis.size(); k++){
-	    auto sym = rbasis[k].sym;
-	    rt.qrow[sym] = rbasis[k].coeff.cols();
-	    // loop over right blocks of in index
-            for(int k1=0; k1<rbasis1.size(); k1++){
-	       auto sym1 = rbasis1[k1].sym;
-	       rt.qcol[sym1] = rbasis1[k1].coeff.cols();
-	       // loop over upper indices
-	       for(int k0=0; k0<rbasis0.size(); k0++){
-	          auto sym0 = rbasis0[k0].sym;
-		  int nbas = rbasis0[k0].coeff.rows();
-		  int ndim = rbasis0[k0].coeff.cols();
-		  auto key = make_tuple(sym0,sym,sym1);
-	    	  rt.qmid[sym0] = ndim;
-	          rt.qblocks[key] = empty_block;
-		  // symmetry conversing combination
-		  if(sym == sym1 + sym0){
-		     vector<matrix> Wlr(ndim);
-		     for(int ibas=0; ibas<nbas; ibas++){
-			auto state0 = rbasis0[k0].space[ibas];
-		        auto Bi = get_Bmatrix(state0,rbasis1[k1].space,rbasis[k].space);
-		        auto BL = dgemm("N","N",Bi,rbasis[k].coeff);
-		        auto BLR = dgemm("T","N",BL,rbasis1[k1].coeff);
-			if(ibas == 0){
-		           for(int idim=0; idim<ndim; idim++){
-			      Wlr[idim] = rbasis0[k0].coeff(ibas,idim)*BLR;
-			   } // idim
-			}else{
-		           for(int idim=0; idim<ndim; idim++){
-			      Wlr[idim] += rbasis0[k0].coeff(ibas,idim)*BLR;
-			   } // idim
-			}
-		     } // ibas
-		     rt.qblocks[key] = Wlr;
-		  }
-	       } // k0
-	    } // k1
-	 } // k
-
-      } // type[p]
-      if(debug) rt.print("rsites_"+to_string(idx));
-      rsites[p] = rt;
-   } // idx
-   // compute wave function at the start for right canonical form 
-   auto p = make_pair(0,0), p0 = make_pair(1,0);
-   rsites[p] = get_rwavefuns(space, vs, rsupport[p], rbases[p0]);
-   auto t1 = tools::get_time();
-   cout << "\ntiming for comb::rcanon_init : " << setprecision(2) 
-        << tools::get_duration(t1-t0) << " s" << endl;
-}
 */
 
 // compute renormalized bases {|r>} from SCI wavefunctions 
@@ -347,18 +116,17 @@ void get_rbases(comb<Tm>& icomb,
 		const fock::onspace& space,
 		const std::vector<std::vector<Tm>>& vs,
 		const double thresh_proj){
-   bool debug = true;
+   const bool debug = false;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rbases thresh_proj=" << std::scientific << thresh_proj << std::endl;
-   std::vector<std::pair<int,int>> shapes; // for debug
    // loop over nodes (except the last one)
    for(int idx=0; idx<icomb.topo.rcoord.size()-1; idx++){
       auto p = icomb.topo.rcoord[idx];
       int i = p.first, j = p.second;
       auto& node = icomb.topo.nodes[i][j];
       if(debug){
-	 std::cout << "\nidx=" << idx << " node=" << p << std::endl; 
-	 std::cout << "rsupport=";
+	 std::cout << "\nidx=" << idx << " node=" << p; 
+	 std::cout << " rsupport=";
          for(int k : node.rsupport) std::cout << k << " ";
 	 std::cout << std::endl;
       }
@@ -372,8 +140,8 @@ void get_rbases(comb<Tm>& icomb,
          int bpos = order.size(); // must be put here to account bipartition position
          copy(rsupp.begin(), rsupp.end(), back_inserter(order));
          if(debug){
-            std::cout << "bpos=" << bpos << std::endl;
-	    std::cout << "order=";
+            std::cout << "bpos=" << bpos;
+	    std::cout << " order=";
             for(int k : order) std::cout << k << " ";
 	    std::cout << std::endl;
          }
@@ -382,42 +150,103 @@ void get_rbases(comb<Tm>& icomb,
 	 std::vector<std::vector<Tm>> vs2;
          transform_coeff(space, vs, order, space2, vs2); 
          // 3. bipartition of space and compute renormalized states
-         icomb.rbases[p] = right_projection(space2, vs2, 2*bpos, thresh_proj);
+         icomb.rbases[p] = right_projection(space2, vs2, 2*bpos, thresh_proj, debug);
       }
-/*
-      // debug
-      {
-	 auto& rbasis = rbases[p];
-	 int nbas = 0, ndim = 0;
-         for(int k=0; k<rbasis.size(); k++){
-	    if(debug) rbasis[k].print("rsec_"+to_string(k));
-	    nbas += rbasis[k].coeff.rows();
-	    ndim += rbasis[k].coeff.cols();
-	 }
-	 shapes.push_back(make_pair(nbas,ndim));
-	 if(debug) cout << "rbasis: nbas,ndim=" << nbas << "," << ndim << endl;
-      }
-*/
    } // idx
-/*
-   // debug
-   {
-      cout << "\nfinal results with thresh_proj = " << thresh_proj << endl;
-      int Dmax = 0;
-      for(int idx=0; idx<ntotal-1; idx++){
-         auto p = rcoord[idx];
-         int i = p.first, j = p.second;
-	 cout << "idx=" << idx 
-	      << " node=(" << i << "," << j << ")[" << topo[i][j] << "]"
-	      << " nbas=" << shapes[idx].first << " ndim=" << shapes[idx].second
-	      << endl;
-	 Dmax = max(Dmax,shapes[idx].second);
-      } // idx
-      cout << "maximum bond dimension = " << Dmax << endl;
-   }
-*/
+   // print information for all renormalized basis {|r>} at each bond
+   std::cout << "\nfinal rbases with thresh_proj = " << thresh_proj << std::endl;
+   int Dmax = 0;
+   for(int idx=0; idx<icomb.topo.rcoord.size()-1; idx++){
+      auto p = icomb.topo.rcoord[idx];
+      int i = p.first, j = p.second;
+      auto shape = get_shape(icomb.rbases[p]);
+      std::cout << "idx=" << idx << " node=" << p
+           << " shape=" << shape.first << "," << shape.second 
+           << std::endl;
+      Dmax = std::max(Dmax,shape.second);
+   } // idx
+   std::cout << "maximum bond dimension = " << Dmax << std::endl;
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::get_rbases : " << std::setprecision(2) 
+             << tools::get_duration(t1-t0) << " s" << std::endl;
+}
+
+// build site tensor from {|r>} bases
+template <typename Tm>
+void get_rsites(comb<Tm>& icomb){
+   const bool debug = true;
+   auto t0 = tools::get_time();
+   std::cout << "\nctns::get_rsites" << std::endl;
+   // loop over sites
+   for(int idx=0; idx<icomb.topo.rcoord.size()-1; idx++){
+      auto p = icomb.topo.rcoord[idx];
+      int i = p.first, j = p.second;
+      auto& node = icomb.topo.nodes[i][j];
+      if(debug) std::cout << "\nidx=" << idx << " node=" << p << " ";      
+      if(node.type == 0){
+	 
+	 if(debug) std::cout << "type 0: end or leaves" << std::endl;
+         icomb.rsites[p] = get_right_bsite<Tm>();
+
+      }else{
+	    
+	 if(debug){
+	    if(node.type == 3){
+	       //    |u>(0)      
+	       //     |
+	       //  ---*---|r>(1) 
+	       std::cout << "type 3: internal site on backbone" << std::endl;
+	    }else{
+	       //     n            |u> 
+	       //     |             |
+	       //  ---*---|r>   n---*
+	       //                   |
+	       std::cout << "type 1/2: physical site on backbone/branch" << std::endl;
+	    }
+	 }
+         const auto& rbasis_l = icomb.rbases[p]; 
+	 const auto& rbasis_c = node.type==3? icomb.rbases[node.center] : get_rbasis_phys<Tm>(); 
+	 const auto& rbasis_r = icomb.rbases[node.right];
+	 auto qmid = get_qsym_space(rbasis_c);
+	 auto qrow = get_qsym_space(rbasis_l); 
+	 auto qcol = get_qsym_space(rbasis_r);
+	 qtensor3<Tm> qt3(qsym(0,0), qmid, qrow, qcol);
+	 for(int kl=0; kl<rbasis_l.size(); kl++){ // left
+            for(int kr=0; kr<rbasis_r.size(); kr++){ // right 
+	       for(int kc=0; kc<rbasis_c.size(); kc++){ // upper 
+		  auto& blk = qt3(kc,kl,kr);
+	          if(blk.size() == 0) continue;
+		  // construct site R[c][lr] = <qc,qr|ql> = W*[c'c] W*[r'r] <D[c'],D[r']|D[l']> W[l',l]
+		  auto Wc = rbasis_c[kc].coeff.H();
+		  auto Wr = rbasis_r[kr].coeff.conj();
+		  auto Wl = rbasis_l[kl].coeff; 
+		  for(int dc=0; dc<Wc.cols(); dc++){
+		     auto state_c = rbasis_c[kc].space[dc];
+		     // tmp1[c'][r'l'] = <D[c'],D[r']|[l']>
+		     auto tmp1 = fock::get_Bmatrix<Tm>(state_c,rbasis_r[kr].space,rbasis_l[kl].space);
+		     // tmp2[c'][r'l] = tmp1[c'][r'l']Wl[l'l]
+		     auto tmp2 = linalg::xgemm("N","N",tmp1,Wl);
+		     // tmp3[c'](l,r)= Wr*[r'r]tmp2[c'][r'l] = tmp2^T*Wr.conj() 
+		     auto tmp3 = linalg::xgemm("T","N",tmp2,Wr);
+		     // R[c][lr] = sum_c' Wc*[c'c]tmp3[c'][lr]
+		     for(int ic=0; ic<Wc.rows(); ic++){
+		        blk[ic] += Wc(ic,dc)*tmp3;
+		     } // ic
+		  } // ibas
+	       } // kc
+	    } // kr
+	 } // kl
+         icomb.rsites[p] = std::move(qt3);
+      } // type[p]
+      if(debug) icomb.rsites[p].print("rsites_"+std::to_string(idx));
+   } // idx
+/*
+   // compute wave function at the start for right canonical form 
+   auto p = make_pair(0,0), p0 = make_pair(1,0);
+   rsites[p] = get_rwavefuns(space, vs, rsupport[p], rbases[p0]);
+*/
+   auto t1 = tools::get_time();
+   std::cout << "\ntiming for ctns::get_rsites: " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
@@ -432,7 +261,7 @@ void rcanon_init(comb<Tm>& icomb,
    // compute renormalized bases {|r>} from SCI wavefunctions
    get_rbases(icomb, space, vs, thresh_proj);
    // form sites from rbases
-   //get_rsites(icomb, rbases);
+   get_rsites(icomb);
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::rcanon_init : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;

@@ -40,7 +40,7 @@ void transform_coeff(const fock::onspace& space,
    }
 }
 
-// compute {|r>} basis for a given bipartition specified by the position n 
+// bipartition representation of the determinant space
 struct bipart_qspace{
    public:
       // get syms,dims,index
@@ -81,15 +81,18 @@ struct bipart_ciwfs{
       std::map<std::pair<qsym,qsym>, std::vector<linalg::matrix<Tm>>> qblocks;
 };
 
+// compute {|r>} basis for a given bipartition specified by the position n 
 renorm_basis<double> right_projection(const fock::onspace& space,
 		                      const std::vector<std::vector<double>>& vs,
 		                      const int bpos, 
-		                      const double thresh_proj);
+		                      const double thresh_proj,
+				      const bool debug=false);
  
 renorm_basis<std::complex<double>> right_projection(const fock::onspace& space,
 		                      const std::vector<std::vector<std::complex<double>>>& vs,
 		                      const int bpos, 
-		                      const double thresh_proj);
+		                      const double thresh_proj,
+				      const bool debug=false);
  
 } // ctns
 

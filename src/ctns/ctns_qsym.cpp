@@ -1,7 +1,6 @@
 #include "ctns_qsym.h"
 
 using namespace std;
-using namespace fock;
 using namespace ctns;
 
 // --- qsym ---
@@ -28,29 +27,7 @@ qsym ctns::operator -(const qsym& sym1, const qsym& sym2){
    return sym;
 }
 
-// --- qspace ---
-// total dimension
-int ctns::qsym_space_dim(const qsym_space& qs){
-   int dim = 0;
-   for(const auto& p : qs) dim += p.second;
-   return dim;
-}
-
-// print
-void ctns::qsym_space_print(const qsym_space& qs, const string& name){ 
-   cout << name 
-	<< " nsym=" << qs.size() 
-	<< " dim=" << qsym_space_dim(qs) 
-	<< endl;
-   // loop over symmetry sectors
-   for(const auto& p : qs){
-      auto sym = p.first;
-      auto dim = p.second;
-      cout << sym << ":" << dim << " ";
-   }
-   cout << endl;
-}
-
+/*
 // direct product space V1*V2->V12
 pair<qsym_space,qsym_dpt> ctns::qsym_space_dpt(const qsym_space& qs1, 
 		         		      const qsym_space& qs2){
@@ -79,17 +56,9 @@ pair<qsym_space,qsym_dpt> ctns::qsym_space_dpt(const qsym_space& qs1,
    }
    return make_pair(qs12,dpt);
 }
+*/
 
-// --- vacuum ---
-const qsym_space ctns::vac_qsym_space({{qsym(0,0),1}});
-
-// --- physical degree of freedoms  ---
-// states
-const onspace ctns::phys_space({onstate("00"),   // 0
-			        onstate("11"),   // 2
-	  		        onstate("01"),   // a
-			        onstate("10")}); // b
-
+/*
 // symmetry
 vector<qsym> ctns::get_phys_sym(const bool Htype){
    vector<qsym> phys_sym;
@@ -105,19 +74,4 @@ vector<qsym> ctns::get_phys_sym(const bool Htype){
    }
    return phys_sym;
 }
-
-// qsym_space
-qsym_space ctns::get_phys_qsym_space(const bool Htype){
-   qsym_space phys_qsym_space;
-   if(Htype){
-      phys_qsym_space = {{qsym(0,0),1},
-			 {qsym(2,0),1},
-			 {qsym(1,0),2}};
-   }else{
-      phys_qsym_space = {{qsym(0,0),1},
-			 {qsym(2,0),1},
-			 {qsym(1,1),1},
-			 {qsym(1,-1),1}};
-   }
-   return phys_qsym_space;
-}
+*/

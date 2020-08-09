@@ -39,17 +39,3 @@ onspace fock::get_fci_space(const int ks, const int na, const int nb){
    }
    return space;
 }
-
-// coupling matrix: B0[b1,b] = <b0,b1|b>
-matrix<double> fock::get_Bmatrix(const onstate& state0,
-	 	                 const onspace& space1,
-		                 const onspace& space){
-   int m = space1.size(), n = space.size();
-   matrix<double> B(m,n);
-   for(int i=0; i<n; i++){
-      for(int j=0; j<m; j++){
-	 B(j,i) = static_cast<double>(state0.join(space1[j]) == space[i]);
-      } // j
-   } // i
-   return B;
-}

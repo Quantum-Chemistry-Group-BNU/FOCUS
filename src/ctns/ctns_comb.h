@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include "ctns_rbasis.h"
+#include "ctns_qtensor.h"
 //#include "../core/integral.h"
 //#include "../core/onspace.h"
 //#include "../core/matrix.h"
@@ -20,9 +21,9 @@ namespace ctns{
 // coordinates (i,j) for sites of ctns
 using comb_coord = std::pair<int,int>;
 std::ostream& operator <<(std::ostream& os, const comb_coord& coord);
-const comb_coord coord_phy = std::make_pair(-1,-1);  
 const comb_coord coord_vac = std::make_pair(-2,-2); 
-extern const comb_coord coord_phy, coord_vac;
+const comb_coord coord_phys = std::make_pair(-1,-1);  
+extern const comb_coord coord_vac, coord_phys;
 
 // node information for sites of ctns
 struct node{
@@ -31,7 +32,7 @@ struct node{
    public:
       int pindex; // physical index
       int type;	  // type of node: 0 [boundary], 1 [backbone], 2 [branch], 3 [internal]
-      comb_coord middle; // m-neighbor
+      comb_coord center; // c-neighbor
       comb_coord left;   // l-neighbor
       comb_coord right;  // r-neighbor
       std::vector<int> rsupport;
@@ -133,10 +134,10 @@ class comb{
 
    public:
       topology topo;
-      std::map<comb_coord,renorm_basis<Tm>> rbases;
-      //std::map<comb_coord,qtensor3> rsites; // right canonical form 
-      //std::map<comb_coord,qtensor3> lsites; // left canonical form 
-      //std::vector<qtensor3> psi; // propagation of initial guess 
+      std::map<comb_coord,renorm_basis<Tm>> rbases; // renormalized basis from SCI
+      std::map<comb_coord,qtensor3<Tm>> rsites; // right canonical form 
+      //std::map<comb_coord,qtensor3<Tm>> lsites; // left canonical form 
+      //std::vector<qtensor3<Tm>> psi; // propagation of initial guess 
 };
 
 //linalg::matrix get_Smat(const comb& bra, 

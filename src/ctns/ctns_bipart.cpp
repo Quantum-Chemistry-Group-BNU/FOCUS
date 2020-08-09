@@ -10,11 +10,14 @@ using namespace ctns;
 renorm_basis<double> ctns::right_projection(const onspace& space,
 		                            const vector<vector<double>>& vs,
 		                            const int bpos, 
-		                            const double thresh){
+		                            const double thresh,
+					    const bool debug){
    auto t0 = tools::get_time();
-   bool debug = false;
-   cout << "\nctns::right_projection<real> thresh=" 
-	<< scientific << setprecision(4) << thresh << endl;
+   const bool debug_basis = false;
+   if(debug){
+      cout << "\nctns::right_projection<real> thresh=" 
+           << scientific << setprecision(4) << thresh << endl;
+   }
    renorm_basis<double> rbasis;
    // 1. bipartition form of psi
    bipart_qspace lspace, rspace;
@@ -114,7 +117,7 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
       for(int i=0; i<dim1; i++){
          phases[i] = rspace.basis[qr][i].parity_flip();
       }
-      if(debug){
+      if(debug_basis){
          cout << "qr=" << qr << " (dim,dim1,dim0)=" 
 	      << dim << "," << dim1 << "," << dim0 
 	      << " dgen=" << dgen << endl;
@@ -236,8 +239,10 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
       int dimBi = kept.size();
       dimBc += dgen*dimBi;
       sumBc += dgen*sumBi;
-      cout << " qr=" << qr << " dimB,dimBi=" << dim << "," << dimBi 
-	   << " sumBi=" << sumBi << " sumBc=" << sumBc << endl;
+      if(debug){
+         cout << " qr=" << qr << " dimB,dimBi=" << dim << "," << dimBi 
+              << " sumBi=" << sumBi << " sumBc=" << sumBc << endl;
+      }
       // save sites
       if(dimBi > 0){
          renorm_sector<double> rsec;
@@ -246,13 +251,13 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
 	 rsec.coeff.resize(dim,dimBi);
 	 int i = 0;
          for(const int idx : kept){
-	    if(debug) cout << " i=" << i << " eig=" << scientific << eigs[idx] << endl;
+	    if(debug_basis) cout << " i=" << i << " eig=" << scientific << eigs[idx] << endl;
 	    copy(U.col(idx), U.col(idx)+dim, rsec.coeff.col(i));
 	    i += 1;
 	 }
          rbasis.push_back(rsec);
 	 // check orthogonality
-	 if(debug){
+	 if(debug_basis){
 	    auto ova = xgemm("N","N",rsec.coeff.H(),rsec.coeff);
 	    double diff = normF(ova - identity_matrix<double>(dimBi));
 	    cout << " orthonormality=" << diff << endl;
@@ -270,23 +275,28 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
 	 }
       } // dimBi>0
    } // qr
-   cout << "dim(space,lspace,rspace)=" << space.size() << "," 
-	<< lspace.get_dim() << "," << rspace.get_dim() 
-	<< " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << endl;
-   auto t1 = tools::get_time();
-   cout << "timing for ctns::right_projection<real> : " << setprecision(2) 
-        << tools::get_duration(t1-t0) << " s" << endl;
+   if(debug){
+      cout << "dim(space,lspace,rspace)=" << space.size() << "," 
+           << lspace.get_dim() << "," << rspace.get_dim() 
+           << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << endl;
+      auto t1 = tools::get_time();
+      cout << "timing for ctns::right_projection<real> : " << setprecision(2) 
+           << tools::get_duration(t1-t0) << " s" << endl;
+   }
    return rbasis;
 }
 
 renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
 		                      		     const vector<vector<complex<double>>>& vs,
 		                      		     const int bpos, 
-		                      		     const double thresh){
+		                      		     const double thresh,
+						     const bool debug){
    auto t0 = tools::get_time();
-   bool debug = false;
-   cout << "\nctns::right_projection<cmplx> thresh=" 
-	<< scientific << setprecision(4) << thresh << endl;
+   const bool debug_basis = false;
+   if(debug){
+      cout << "ctns::right_projection<cmplx> thresh=" 
+   	   << scientific << setprecision(4) << thresh << endl;
+   }
    renorm_basis<std::complex<double>> rbasis;
    // 1. bipartition form of psi
    bipart_qspace lspace, rspace;
@@ -388,7 +398,7 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
       for(int i=0; i<dim1; i++){
          phases[i] = rspace.basis[qr][i].parity_flip();
       }
-      if(debug){
+      if(debug_basis){
          cout << "qr=" << qr << " (dim,dim1,dim0)=" 
 	      << dim << "," << dim1 << "," << dim0 << endl;
          for(const auto& state : rspace.basis[qr]){
@@ -504,8 +514,10 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
       int dimBi = kept.size();
       dimBc += dimBi;
       sumBc += sumBi;
-      cout << " qr=" << qr << " dimB,dimBi=" << dim << "," << dimBi 
-	   << " sumBi=" << sumBi << " sumBc=" << sumBc << endl;
+      if(debug){
+         cout << " qr=" << qr << " dimB,dimBi=" << dim << "," << dimBi 
+              << " sumBi=" << sumBi << " sumBc=" << sumBc << endl;
+      }
       if(qr.ne()%2 == 1) assert(dimBi%2 == 0);
       // save sites
       if(dimBi > 0){
@@ -515,13 +527,13 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
 	 rsec.coeff.resize(dim,dimBi);
 	 int i = 0;
          for(const int idx : kept){
-	    if(debug) cout << " i=" << i << " eig=" << scientific << eigs[idx] << endl;
+	    if(debug_basis) cout << " i=" << i << " eig=" << scientific << eigs[idx] << endl;
 	    copy(U.col(idx), U.col(idx)+dim, rsec.coeff.col(i));
 	    i += 1;
 	 }
          rbasis.push_back(rsec);
 	 // check orthogonality
-	 if(debug){
+	 if(debug_basis){
 	    auto ova = xgemm("N","N",rsec.coeff.H(),rsec.coeff);
 	    double diff = normF(ova - identity_matrix<complex<double>>(dimBi));
 	    cout << " orthonormality=" << diff << endl;
@@ -532,11 +544,13 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
 	 }
       } // dimBi>0
    } // qr
-   cout << "dim(space,lspace,rspace)=" << space.size() << "," 
-	<< lspace.get_dim() << "," << rspace.get_dim() 
-	<< " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << endl; 
-   auto t1 = tools::get_time();
-   cout << "timing for ctns::right_projection<cmplx> : " << setprecision(2) 
-        << tools::get_duration(t1-t0) << " s" << endl;
+   if(debug){
+      cout << "dim(space,lspace,rspace)=" << space.size() << "," 
+           << lspace.get_dim() << "," << rspace.get_dim() 
+           << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << endl; 
+      auto t1 = tools::get_time();
+      cout << "timing for ctns::right_projection<cmplx> : " << setprecision(2) 
+           << tools::get_duration(t1-t0) << " s" << endl;
+   }
    return rbasis;
 }

@@ -18,7 +18,7 @@ ostream& ctns::operator <<(ostream& os, const comb_coord& coord){
 ostream& ctns::operator <<(ostream& os, const node& nd){
    os << "node: pindex=" << nd.pindex 
       << " type="   << nd.type
-      << " middle=" << nd.middle 
+      << " center=" << nd.center 
       << " left="   << nd.left
       << " right="  << nd.right;
    return os;   
@@ -69,7 +69,7 @@ topology::topology(const string& fname){
 	 auto& node = nodes[i][0];
 	 node.pindex = tmp[i][0]; 
 	 node.type   = 0;
-	 node.middle = coord_phy;
+	 node.center = coord_phys;
 	 node.left   = make_pair(i-1,0);
 	 node.right  = coord_vac;
       }else if(i==0){
@@ -78,7 +78,7 @@ topology::topology(const string& fname){
 	 auto& node = nodes[i][0];
 	 node.pindex = tmp[i][0]; 
 	 node.type   = 0;
-	 node.middle = coord_phy;
+	 node.center = coord_phys;
 	 node.left   = coord_vac;
 	 node.right  = make_pair(i+1,0);
       }else{
@@ -88,7 +88,7 @@ topology::topology(const string& fname){
 	    auto& node = nodes[i][0];
 	    node.pindex = tmp[i][0];
 	    node.type   = 1;
-	    node.middle = coord_phy;
+	    node.center = coord_phys;
 	    node.left   = make_pair(i-1,0);
 	    node.right  = make_pair(i+1,0);
 	 }else if(size > 1){
@@ -97,7 +97,7 @@ topology::topology(const string& fname){
             auto& node = nodes[i][size];
 	    node.pindex = tmp[i][size-1];
 	    node.type   = 0;
-	    node.middle = coord_phy;
+	    node.center = coord_phys;
 	    node.left   = make_pair(i,size-1);
 	    node.right  = coord_vac;
 	    // type 2: physical site on branch
@@ -105,7 +105,7 @@ topology::topology(const string& fname){
 	       auto& nodej = nodes[i][j];
 	       nodej.pindex = tmp[i][j-1];
 	       nodej.type   = 2;
-	       nodej.middle = coord_phy;
+	       nodej.center = coord_phys;
 	       nodej.left   = make_pair(i,j-1);
 	       nodej.right  = make_pair(i,j+1);
 	    } // j
@@ -113,7 +113,7 @@ topology::topology(const string& fname){
             auto& nodei = nodes[i][0];
 	    nodei.pindex = -1; // no physical index
 	    nodei.type   = 3;
-	    nodei.middle = make_pair(i,1);
+	    nodei.center = make_pair(i,1);
 	    nodei.left   = make_pair(i-1,0);
 	    nodei.right  = make_pair(i+1,0);
 	 }
