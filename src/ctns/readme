@@ -4,14 +4,15 @@ CTNS:
 -------------------------------
  ctns_comb_topo.cpp
  ctns_comb.h
-
- ctns_qsym.h
+ ctns_qsym.h -> quantum number class
  ctns_qsym.cpp
-
- ctns_rbasis.h
+ ctns_rbasis.h -> renorm_basis class 
  ctns_bipart.h 
- ctns_bipart.cpp => Challenging Part with TRS
- ctns_comb_init.h
+ ctns_bipart.cpp => challenging part with TRS
+ ctns_kramers.h -> block matrix class
+ ctns_phys.h
+ ctns_qtensor.h -> qtensor class
+ ctns_comb_init.h -> init CTNS from SCI
 -------------------------------
 
 

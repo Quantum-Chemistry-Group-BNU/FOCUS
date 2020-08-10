@@ -116,7 +116,7 @@ void get_rbases(comb<Tm>& icomb,
 		const fock::onspace& space,
 		const std::vector<std::vector<Tm>>& vs,
 		const double thresh_proj){
-   const bool debug = false;
+   const bool debug = true;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rbases thresh_proj=" << std::scientific << thresh_proj << std::endl;
    // loop over nodes (except the last one)
@@ -250,6 +250,27 @@ void get_rsites(comb<Tm>& icomb){
              << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
+template <typename Tm>
+void rcanon_check(comb<Tm>& icomb,
+		  const double thresh_ortho,
+		  const bool ifortho){
+   std::cout << "\nctns::rcanon_check thresh_ortho=" << thresh_ortho << std::endl;
+   int ntotal = icomb.topo.rcoord.size();
+   for(int idx=0; idx<ntotal; idx++){
+      auto p = icomb.topo.rcoord[idx];
+      // check right canonical form
+      auto qt2 = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
+      int Dtot = qt2.qrow.get_dimAll();
+      double maxdiff = qt2.check_identity(thresh_ortho, false);
+      std::cout << "idx=" << idx << " node=" << p 
+                << " Dtot=" << Dtot << " maxdiff=" << maxdiff << std::endl;
+      if((ifortho || (!ifortho && idx != ntotal-1)) && (maxdiff>thresh_ortho)){
+	 std::cout << "error: deviate from identity matrix!" << std::endl;
+         exit(1);
+      }
+   } // idx
+}
+
 // initialize RCF from SCI wavefunctions
 template <typename Tm>
 void rcanon_init(comb<Tm>& icomb,
@@ -259,9 +280,9 @@ void rcanon_init(comb<Tm>& icomb,
    auto t0 = tools::get_time();
    std::cout << "\nctns::rcanon_init" << std::endl;
    // compute renormalized bases {|r>} from SCI wavefunctions
-   get_rbases(icomb, space, vs, thresh_proj);
+   get_rbases(icomb, space, vs, thresh_proj); 
    // form sites from rbases
-   get_rsites(icomb);
+   get_rsites(icomb); 
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::rcanon_init : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;

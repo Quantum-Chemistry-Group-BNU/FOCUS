@@ -235,8 +235,9 @@ struct matrix{
 	 assert(i>=0 && i<_cols);
 	 return &_data[i*_rows];
       }
-      // scale
+      // scale (used in blockMatrix)
       void rowscale(const std::vector<double>& phases){
+	 if(_cols == 0) return;
 	 assert(phases.size() == _rows);
          for(int ic=0; ic<_cols; ic++){
 	    std::transform(this->col(ic), this->col(ic)+_rows, phases.begin(), this->col(ic),
@@ -244,6 +245,7 @@ struct matrix{
 	 }
       }
       void colscale(const std::vector<double>& phases){
+         if(_rows == 0) return;
 	 assert(phases.size() == _cols);
          for(int ic=0; ic<_cols; ic++){
 	    double phase = phases[ic];

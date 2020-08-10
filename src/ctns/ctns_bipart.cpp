@@ -13,7 +13,7 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
 		                            const double thresh,
 					    const bool debug){
    auto t0 = tools::get_time();
-   const bool debug_basis = false;
+   const bool debug_basis = true;
    if(debug){
       cout << "\nctns::right_projection<real> thresh=" 
            << scientific << setprecision(4) << thresh << endl;
@@ -292,7 +292,7 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
 		                      		     const double thresh,
 						     const bool debug){
    auto t0 = tools::get_time();
-   const bool debug_basis = false;
+   const bool debug_basis = true;
    if(debug){
       cout << "ctns::right_projection<cmplx> thresh=" 
    	   << scientific << setprecision(4) << thresh << endl;

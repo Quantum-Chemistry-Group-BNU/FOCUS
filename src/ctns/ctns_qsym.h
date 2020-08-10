@@ -75,6 +75,27 @@ class qsym_space{
          for(const auto& p : dims) dim += p.second;
          return dim;
       }
+      // offset 
+      std::vector<int> get_offset() const{
+         std::vector<int> offset;
+         int ioff = 0;
+	 for(int i=0; i<dims.size(); i++){
+	    offset.push_back(ioff);
+	    ioff += dims[i].second; 
+	 }
+	 return offset;
+      }
+      // comparison
+      bool operator ==(const qsym_space& qs) const{
+	 bool ifeq = dims.size() == qs.size();
+	 if(not ifeq) return false;
+	 for(int i=0; i<dims.size(); i++){
+	    ifeq = ifeq && dims[i].first == qs.dims[i].first &&
+		           dims[i].second == qs.dims[i].second;
+	    if(not ifeq) return false;
+	 }
+	 return true;
+      }
       void print(const std::string name) const{
 	 std::cout << "qsym_space: " << name << " nsym=" << dims.size() 
       	           << " dimAll=" << get_dimAll() << std::endl;

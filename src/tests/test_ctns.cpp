@@ -34,7 +34,7 @@ int tests::test_ctns(){
 
    // we will use DTYPE to control Hnr/Hrel 
    using DTYPE = complex<double>;
-   //using DTYPE = double;
+   //using DTYPE = double; // to do -> test more
    
    // read integral
    integral::two_body<DTYPE> int2e;
@@ -63,22 +63,22 @@ int tests::test_ctns(){
       coeff_population(sci_space, vs[i]);
    }
    // truncate CI coefficients
-   const bool ifortho = true;
+   const bool ifortho = false; //true;
    fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
 
    // --- Comb TNS (CTNS) ---   
    // 1. dealing with topology 
    ctns::topology topo(schd.topology_file);
-   ctns::comb<DTYPE> comb(topo);
-   comb.topo.print();
+   ctns::comb<DTYPE> icomb(topo);
+   icomb.topo.print();
    
    schd.create_scratch();
 
    if(!schd.combload){
       // 2. initialize right canonical form from SCI wavefunction 
-      ctns::rcanon_init(comb, sci_space, vs, schd.thresh_proj);
+      ctns::rcanon_init(icomb, sci_space, vs, schd.thresh_proj);
+      ctns::rcanon_check(icomb, schd.thresh_ortho, ifortho);
 /*
-      comb.rcanon_check(schd.thresh_ortho, ifortho);
       
       const double thresh=1.e-6;
       // 3. algorithm: check overlap with CI 
