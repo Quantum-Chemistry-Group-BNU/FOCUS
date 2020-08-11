@@ -11,10 +11,6 @@
 //#include "../core/integral.h"
 //#include "../core/onspace.h"
 //#include "../core/matrix.h"
-//#include "tns_pspace.h"
-//#include "tns_qtensor.h"
-//#include <tuple>
-//#include <string>
 
 namespace ctns{
 

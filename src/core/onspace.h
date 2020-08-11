@@ -21,7 +21,7 @@ onspace get_fci_space(const int ks, const int na, const int nb);
 // --- Direct product space ---
 // coupling matrix for basis: B0[j,i] = <D[0],D[j]|D[i]>
 template <typename Tm>
-linalg::matrix<Tm> get_Bmatrix(const fock::onstate& state0,
+linalg::matrix<Tm> get_Bcouple(const fock::onstate& state0,
 		               const onspace& space1,
 			       const onspace& space){
    int m = space1.size(), n = space.size();

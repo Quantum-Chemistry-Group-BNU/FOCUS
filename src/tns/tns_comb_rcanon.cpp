@@ -271,7 +271,7 @@ void comb::rcanon_init(const onspace& space,
 		  rt.qblocks[key] = empty_block;
 		  if(sym == sym1 + phys_sym[k0]){
 		     // B[i](b1,b)=<ci,b1|b>
-		     auto Bi = get_Bmatrix<double>(phys_space[k0],rbasis1[k1].space,rbasis[k].space);
+		     auto Bi = get_Bcouple<double>(phys_space[k0],rbasis1[k1].space,rbasis[k].space);
 		     // BL[i](b1,r)=<ci,b1|b> W(b,r)
 		     auto BL = xgemm("N","N",Bi,rbasis[k].coeff);
 		     // BLR[i](r,l)= W(b,l)<ci,b1|r> = BL^T*W
@@ -311,7 +311,7 @@ void comb::rcanon_init(const onspace& space,
 		     vector<matrix<double>> Wlr(ndim);
 		     for(int ibas=0; ibas<nbas; ibas++){
 			auto state0 = rbasis0[k0].space[ibas];
-		        auto Bi = get_Bmatrix<double>(state0,rbasis1[k1].space,rbasis[k].space);
+		        auto Bi = get_Bcouple<double>(state0,rbasis1[k1].space,rbasis[k].space);
 		        auto BL = xgemm("N","N",Bi,rbasis[k].coeff);
 		        auto BLR = xgemm("T","N",BL,rbasis1[k1].coeff);
 			if(ibas == 0){

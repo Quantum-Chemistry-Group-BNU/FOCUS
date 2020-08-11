@@ -23,9 +23,9 @@ int tests::test_onspace(){
    }
    check_space(space12);
 
-   auto bmat0 = get_Bmatrix<double>(space1[0],space1,space12);
+   auto bmat0 = get_Bcouple<double>(space1[0],space1,space12);
    bmat0.print("bmat0");
-   auto bmat1 = get_Bmatrix<double>(space1[1],space1,space12);
+   auto bmat1 = get_Bcouple<double>(space1[1],space1,space12);
    bmat1.print("bmat1");
 
    return 0; 

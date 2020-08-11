@@ -315,6 +315,7 @@ class onstate{
       }
       // first n strings 
       onstate get_before(const int n) const{
+	 assert(n>0 && n<_size);
 	 onstate state(n);
 	 for(int i=0; i<n; i++){
 	    if((*this)[i]) state[i] = 1; 
@@ -323,6 +324,7 @@ class onstate{
       }
       // strings after n
       onstate get_after(const int n) const{
+	 assert(n>0 && n<_size);
 	 onstate state(_size-n);
 	 for(int i=0; i<_size-n; i++){
 	    if((*this)[n+i]) state[i] = 1; 

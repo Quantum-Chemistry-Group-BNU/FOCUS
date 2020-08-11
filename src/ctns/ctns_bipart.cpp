@@ -22,7 +22,7 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
    // 1. bipartition form of psi
    bipart_qspace lspace, rspace;
    for(int i=0; i<space.size(); i++){
-      auto lstate = space[i].get_before(bpos).make_standard();
+      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos).make_standard();
       auto itl = lspace.uset.find(lstate);
       if(itl == lspace.uset.end()){ // not found - new basis
 	 lspace.uset.insert(lstate);
@@ -33,7 +33,7 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
 	    lspace.basis[ql].push_back(lstate.flip());
 	 }
       }
-      auto rstate = space[i].get_after(bpos).make_standard();
+      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos).make_standard();
       auto itr = rspace.uset.find(rstate);
       if(itr == rspace.uset.end()){
 	 rspace.uset.insert(rstate);
@@ -81,8 +81,8 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
    int nroot = vs.size(); 
    bipart_ciwfs<double> wfs;
    for(int i=0; i<space.size(); i++){
-      auto lstate = space[i].get_before(bpos);
-      auto rstate = space[i].get_after(bpos);
+      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos);
+      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
       auto ql = qsym(lstate.nelec(),lstate.twoms());
       auto qr = qsym(rstate.nelec(),rstate.twoms());
       int nl = lspace.dims[ql];
@@ -301,7 +301,7 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
    // 1. bipartition form of psi
    bipart_qspace lspace, rspace;
    for(int i=0; i<space.size(); i++){
-      auto lstate = space[i].get_before(bpos).make_standard();
+      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos).make_standard();
       auto itl = lspace.uset.find(lstate);
       if(itl == lspace.uset.end()){ // not found - new basis
 	 lspace.uset.insert(lstate);
@@ -309,7 +309,7 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
 	 lspace.basis[ql].push_back(lstate);
 	 if(lstate.norb_single() != 0) lspace.basis[ql].push_back(lstate.flip());
       }
-      auto rstate = space[i].get_after(bpos).make_standard();
+      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos).make_standard();
       auto itr = rspace.uset.find(rstate);
       if(itr == rspace.uset.end()){
 	 rspace.uset.insert(rstate);
@@ -363,8 +363,8 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
    int nroot = vs.size(); 
    bipart_ciwfs<complex<double>> wfs;
    for(int i=0; i<space.size(); i++){
-      auto lstate = space[i].get_before(bpos);
-      auto rstate = space[i].get_after(bpos);
+      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos);
+      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
       auto ql = qsym(lstate.nelec(),0);
       auto qr = qsym(rstate.nelec(),0);
       int nl = lspace.dims[ql];

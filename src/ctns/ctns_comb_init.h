@@ -9,107 +9,6 @@
 
 namespace ctns{
 
-/*
-// compute wave function at the start for right canonical form 
-qtensor3 comb::get_rwavefuns(const onspace& space,
-		             const vector<vector<double>>& vs,
-		             const vector<int>& order,
-		             const renorm_basis& rbasis){
-   bool debug = false;
-   cout << "\ncomb::get_rwavefuns" << endl;
-   // transform SCI coefficient
-   onspace space2;
-   vector<vector<double>> vs2;
-   transform_coeff(space, vs, order, space2, vs2); 
-   // bipartition of space
-   tns::product_space pspace2;
-   pspace2.get_pspace(space2, 2);
-   // loop over symmetry of B;
-   map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
-   map<qsym,map<int,int>> qmapA; // index in spaceA to idxA
-   map<qsym,vector<tuple<int,int,int>>> qlst;
-   for(int ib=0; ib<pspace2.dimB; ib++){
-      auto& stateB = pspace2.spaceB[ib];
-      qsym symB(stateB.nelec(), stateB.nelec_a());
-      qsecB[symB].push_back(ib);
-      for(const auto& pia : pspace2.colB[ib]){
-	 int ia = pia.first;
-	 int idet = pia.second;
-	 // search unique
-	 auto it = qmapA[symB].find(ia);
-         if(it == qmapA[symB].end()){
-            qmapA[symB].insert({ia,qmapA[symB].size()});
-         };
-	 int idxB = qsecB[symB].size()-1;
-	 int idxA = qmapA[symB][ia];
-	 qlst[symB].push_back(make_tuple(idxB,idxA,idet));
-      }
-   } // ib
-   // construct rwavefuns 
-   qtensor3 rwavefuns;
-   rwavefuns.qmid = phys_qsym_space;
-   // assuming the symmetry of wavefunctions are the same
-   qsym sym_state(space[0].nelec(), space[0].nelec_a());
-   int nroots = vs2.size();
-   rwavefuns.qrow[sym_state] = nroots;
-   // init empty blocks for all combinations 
-   int idx = 0;
-   for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
-      auto& symB = it->first;
-      rwavefuns.qcol[symB] = rbasis[idx].coeff.cols();
-      for(int k0=0; k0<4; k0++){
-	 auto key = make_tuple(phys_sym[k0],sym_state,symB);
-         rwavefuns.qblocks[key] = empty_block; 
-      }
-      idx++;
-   }
-   // loop over symmetry sectors of |r>
-   idx = 0;
-   for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
-      auto& symB = it->first;
-      auto& idxB = it->second;
-      int dimBs = idxB.size(); 
-      int dimAs = qmapA[symB].size();
-      if(debug){
-         cout << "idx=" << idx << " symB(Ne,Na)=" << symB 
-              << " dimBs=" << dimBs
-              << " dimAs=" << qmapA[symB].size() 
-              << endl;
-      }
-      // load renormalized basis
-      auto& rsec = rbasis[idx];
-      if(rsec.sym != symB){
-         cout << "error: symmetry does not match!" << endl;
-         exit(1);
-      }
-      if(dimAs != 1){
-         cout << "error: dimAs=" << dimAs << " is not 1!" << endl;
-         exit(1);
-      }
-      // construct <nm|psi>
-      matrix vrl(dimBs,nroots);
-      for(int iroot = 0; iroot<nroots; iroot++){
-         for(const auto& t : qlst[symB]){
-            int ib = get<0>(t);
-            int id = get<2>(t);
-            vrl(ib,iroot) = vs2[iroot][id];
-         }
-      }
-      // compute key
-      auto it0 = qmapA[symB].begin();
-      onstate state0 = pspace2.spaceA[it0->first];
-      qsym sym0(state0.nelec(),state0.nelec_a());
-      auto key = make_tuple(sym0,sym_state,symB);
-      // c[n](i,r) = <nr|psi[i]> = <nb|psi[i]> [vlr(b,i)] * W(b,r)
-      rwavefuns.qblocks[key].push_back(dgemm("T","N",vrl,rsec.coeff));
-      idx++;
-   } // symB sectors
-   if(debug) rwavefuns.print("rwavefuns",1);
-   return rwavefuns;
-}
-
-*/
-
 // compute renormalized bases {|r>} from SCI wavefunctions 
 template <typename Tm>
 void get_rbases(comb<Tm>& icomb,
@@ -161,8 +60,8 @@ void get_rbases(comb<Tm>& icomb,
       int i = p.first, j = p.second;
       auto shape = get_shape(icomb.rbases[p]);
       std::cout << "idx=" << idx << " node=" << p
-           << " shape=" << shape.first << "," << shape.second 
-           << std::endl;
+                << " shape=" << shape.first << "," << shape.second 
+                << std::endl;
       Dmax = std::max(Dmax,shape.second);
    } // idx
    std::cout << "maximum bond dimension = " << Dmax << std::endl;
@@ -182,7 +81,7 @@ void get_rsites(comb<Tm>& icomb){
       auto p = icomb.topo.rcoord[idx];
       int i = p.first, j = p.second;
       auto& node = icomb.topo.nodes[i][j];
-      if(debug) std::cout << "\nidx=" << idx << " node=" << p << " ";      
+      if(debug) std::cout << "\nidx=" << idx << " node=" << p << " ";     
       if(node.type == 0){
 	 
 	 if(debug) std::cout << "type 0: end or leaves" << std::endl;
@@ -216,14 +115,15 @@ void get_rsites(comb<Tm>& icomb){
 	       for(int kc=0; kc<rbasis_c.size(); kc++){ // upper 
 		  auto& blk = qt3(kc,kl,kr);
 	          if(blk.size() == 0) continue;
-		  // construct site R[c][lr] = <qc,qr|ql> = W*[c'c] W*[r'r] <D[c'],D[r']|D[l']> W[l',l]
+		  // construct site R[c][lr] = <qc,qr|ql> 
+		  // 			     = W*[c'c] W*[r'r] <D[c'],D[r']|D[l']> W[l',l]
 		  auto Wc = rbasis_c[kc].coeff.H();
 		  auto Wr = rbasis_r[kr].coeff.conj();
 		  auto Wl = rbasis_l[kl].coeff; 
 		  for(int dc=0; dc<Wc.cols(); dc++){
 		     auto state_c = rbasis_c[kc].space[dc];
 		     // tmp1[c'][r'l'] = <D[c'],D[r']|[l']>
-		     auto tmp1 = fock::get_Bmatrix<Tm>(state_c,rbasis_r[kr].space,rbasis_l[kl].space);
+		     auto tmp1 = fock::get_Bcouple<Tm>(state_c,rbasis_r[kr].space,rbasis_l[kl].space);
 		     // tmp2[c'][r'l] = tmp1[c'][r'l']Wl[l'l]
 		     auto tmp2 = linalg::xgemm("N","N",tmp1,Wl);
 		     // tmp3[c'](l,r)= Wr*[r'r]tmp2[c'][r'l] = tmp2^T*Wr.conj() 
@@ -237,17 +137,126 @@ void get_rsites(comb<Tm>& icomb){
 	    } // kr
 	 } // kl
          icomb.rsites[p] = std::move(qt3);
+
       } // type[p]
       if(debug) icomb.rsites[p].print("rsites_"+std::to_string(idx));
    } // idx
-/*
-   // compute wave function at the start for right canonical form 
-   auto p = make_pair(0,0), p0 = make_pair(1,0);
-   rsites[p] = get_rwavefuns(space, vs, rsupport[p], rbases[p0]);
-*/
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::get_rsites: " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
+}
+
+// compute wave function at the start for right canonical form
+template <typename Tm>
+void get_rwfuns(comb<Tm>& icomb,
+		const fock::onspace& space,
+		const std::vector<std::vector<Tm>>& vs,
+		const double thresh_proj){
+   const bool debug = true;
+   auto t0 = tools::get_time();
+   std::cout << "\nctns::get_rwfuns thresh_proj=" << std::scientific << thresh_proj << std::endl;
+   // transform SCI coefficient
+   fock::onspace space2;
+   std::vector<std::vector<Tm>> vs2;
+   const auto& order = icomb.topo.nodes[0][0].rsupport;
+   transform_coeff(space, vs, order, space2, vs2); 
+   // projection
+   right_projection(space2, vs2, 0, thresh_proj, debug);
+   exit(1);
+/*
+   //rbasis = rbases[make_pair(1,0)];
+
+   //icomb.rbases[p] = right_projection(space2, vs2, 2*bpos, thresh_proj, debug);
+
+   // bipartition of space
+   tns::product_space pspace2;
+   pspace2.get_pspace(space2, 2);
+   
+   // loop over symmetry of B;
+   map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
+   map<qsym,map<int,int>> qmapA; // index in spaceA to idxA
+   map<qsym,vector<tuple<int,int,int>>> qlst;
+   for(int ib=0; ib<pspace2.dimB; ib++){
+      auto& stateB = pspace2.spaceB[ib];
+      qsym symB(stateB.nelec(), stateB.nelec_a());
+      qsecB[symB].push_back(ib);
+      for(const auto& pia : pspace2.colB[ib]){
+	 int ia = pia.first;
+	 int idet = pia.second;
+	 // search unique
+	 auto it = qmapA[symB].find(ia);
+         if(it == qmapA[symB].end()){
+            qmapA[symB].insert({ia,qmapA[symB].size()});
+         };
+	 int idxB = qsecB[symB].size()-1;
+	 int idxA = qmapA[symB][ia];
+	 qlst[symB].push_back(make_tuple(idxB,idxA,idet));
+      }
+   } // ib
+   
+   // construct rwfuns 
+   qtensor3 rwfuns;
+   rwfuns.qmid = phys_qsym_space;
+   // assuming the symmetry of wavefunctions are the same
+   qsym sym_state(space[0].nelec(), space[0].nelec_a());
+   int nroots = vs2.size();
+   rwfuns.qrow[sym_state] = nroots;
+   // init empty blocks for all combinations 
+   int idx = 0;
+   for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
+      auto& symB = it->first;
+      rwfuns.qcol[symB] = rbasis[idx].coeff.cols();
+      for(int k0=0; k0<4; k0++){
+	 auto key = make_tuple(phys_sym[k0],sym_state,symB);
+         rwfuns.qblocks[key] = empty_block; 
+      }
+      idx++;
+   }
+   
+   // loop over symmetry sectors of |r>
+   idx = 0;
+   for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
+      auto& symB = it->first;
+      auto& idxB = it->second;
+      int dimBs = idxB.size(); 
+      int dimAs = qmapA[symB].size();
+      if(debug){
+         cout << "idx=" << idx << " symB(Ne,Na)=" << symB 
+              << " dimBs=" << dimBs
+              << " dimAs=" << qmapA[symB].size() 
+              << endl;
+      }
+      // load renormalized basis
+      auto& rsec = rbasis[idx];
+      if(rsec.sym != symB){
+         cout << "error: symmetry does not match!" << endl;
+         exit(1);
+      }
+      if(dimAs != 1){
+         cout << "error: dimAs=" << dimAs << " is not 1!" << endl;
+         exit(1);
+      }
+      // construct <nm|psi>
+      matrix vrl(dimBs,nroots);
+      for(int iroot = 0; iroot<nroots; iroot++){
+         for(const auto& t : qlst[symB]){
+            int ib = get<0>(t);
+            int id = get<2>(t);
+            vrl(ib,iroot) = vs2[iroot][id];
+         }
+      }
+      // compute key
+      auto it0 = qmapA[symB].begin();
+      onstate state0 = pspace2.spaceA[it0->first];
+      qsym sym0(state0.nelec(),state0.nelec_a());
+      auto key = make_tuple(sym0,sym_state,symB);
+      // c[n](i,r) = <nr|psi[i]> = <nb|psi[i]> [vlr(b,i)] * W(b,r)
+      rwfuns.qblocks[key].push_back(dgemm("T","N",vrl,rsec.coeff));
+      idx++;
+   } // symB sectors
+   if(debug) rwfuns.print("rwfuns",1);
+
+*/
 }
 
 template <typename Tm>
@@ -279,10 +288,15 @@ void rcanon_init(comb<Tm>& icomb,
 		 const double thresh_proj){
    auto t0 = tools::get_time();
    std::cout << "\nctns::rcanon_init" << std::endl;
+   
+   // compute wave functions at the start for right canonical form 
+   get_rwfuns(icomb, space, vs, thresh_proj);
+   
    // compute renormalized bases {|r>} from SCI wavefunctions
    get_rbases(icomb, space, vs, thresh_proj); 
    // form sites from rbases
    get_rsites(icomb); 
+   
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::rcanon_init : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;

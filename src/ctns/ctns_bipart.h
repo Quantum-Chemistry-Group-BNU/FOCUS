@@ -68,6 +68,7 @@ struct bipart_qspace{
    public:
       std::set<fock::onstate> uset; // only TR-representative
       std::map<qsym,fock::onspace> basis; // determinant basis
+      // updated information
       std::vector<qsym> syms; // symmetry
       std::map<qsym,int> dims; // dimension
       std::map<qsym,int> dim0; // dimension for |D> without singly occupied orbitals
@@ -77,7 +78,7 @@ struct bipart_qspace{
 template <typename Tm>
 struct bipart_ciwfs{
    public:
-      bipart_qspace lspace, rspace; // not used right now
+      //bipart_qspace lspace, rspace; // not used right now
       std::map<std::pair<qsym,qsym>, std::vector<linalg::matrix<Tm>>> qblocks;
 };
 
@@ -93,7 +94,19 @@ renorm_basis<std::complex<double>> right_projection(const fock::onspace& space,
 		                      const int bpos, 
 		                      const double thresh_proj,
 				      const bool debug=false);
+
+/*
+renorm_basis<double> right_projection0(const fock::onspace& space,
+		                      const std::vector<std::vector<double>>& vs,
+		                      const double thresh_proj,
+				      const bool debug=false);
+*/
  
+renorm_basis<std::complex<double>> right_projection0(const fock::onspace& space,
+		                      const std::vector<std::vector<std::complex<double>>>& vs,
+		                      const double thresh_proj,
+				      const bool debug=false);
+
 } // ctns
 
 #endif
