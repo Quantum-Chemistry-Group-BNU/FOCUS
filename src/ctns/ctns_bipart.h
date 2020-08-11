@@ -45,26 +45,40 @@ struct bipart_qspace{
    public:
       // get syms,dims,index
       void update(){
-         for(const auto& pl : basis){
-            const auto& ql = pl.first;
-            const auto& ql_space = pl.second;
-            syms.push_back(ql);
-	    dims[ql] = ql_space.size();
+         for(const auto& p : basis){
+            const auto& sym = p.first;
+            const auto& space = p.second;
+            syms.push_back(sym);
+	    dims[sym] = space.size();
             // setup map from state to index
 	    int idx = 0;
-            for(const auto& state : ql_space){
-               index[ql][state] = idx;
-               idx += 1;
+            for(const auto& state : space){
+               index[sym][state] = idx;
+               idx++;
             }
          }
       }
-      int get_dim() const{
-	 int dimt = 0;
+      int get_dimAll() const{
+	 int dim = 0;
 	 for(const auto& p : dims){
-	    dimt += p.second;	
+	    dim += p.second;	
 	 }
-	 return dimt;
+	 return dim;
       }
+      // print basis
+      void print_basis(const std::string name){
+	 std::cout << "\nbipart_qspace: " << name << std::endl; 
+         for(const auto& p : basis){
+            const auto& sym = p.first;
+            const auto& space = p.second;
+	    std::cout << "qsym=" << sym << " ndim=" << space.size() << std::endl;
+	    int istate = 0;
+	    for(const auto& state : space){
+	       std::cout << " istate=" << istate << " " << state << std::endl;
+	       istate++;
+	    }
+	 }
+      } 
    public:
       std::set<fock::onstate> uset; // only TR-representative
       std::map<qsym,fock::onspace> basis; // determinant basis

@@ -13,7 +13,7 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
 		                            const double thresh,
 					    const bool debug){
    auto t0 = tools::get_time();
-   const bool debug_basis = true;
+   const bool debug_basis = false;
    if(debug){
       cout << "\nctns::right_projection<real> thresh=" 
            << scientific << setprecision(4) << thresh << endl;
@@ -22,7 +22,8 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
    // 1. bipartition form of psi
    bipart_qspace lspace, rspace;
    for(int i=0; i<space.size(); i++){
-      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos).make_standard();
+      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos);
+      lstate = lstate.make_standard(); // key must be standard!
       auto itl = lspace.uset.find(lstate);
       if(itl == lspace.uset.end()){ // not found - new basis
 	 lspace.uset.insert(lstate);
@@ -33,7 +34,8 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
 	    lspace.basis[ql].push_back(lstate.flip());
 	 }
       }
-      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos).make_standard();
+      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
+      rstate = rstate.make_standard();
       auto itr = rspace.uset.find(rstate);
       if(itr == rspace.uset.end()){
 	 rspace.uset.insert(rstate);
@@ -277,7 +279,7 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
    } // qr
    if(debug){
       cout << "dim(space,lspace,rspace)=" << space.size() << "," 
-           << lspace.get_dim() << "," << rspace.get_dim() 
+           << lspace.get_dimAll() << "," << rspace.get_dimAll() 
            << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << endl;
       auto t1 = tools::get_time();
       cout << "timing for ctns::right_projection<real> : " << setprecision(2) 
@@ -292,7 +294,7 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
 		                      		     const double thresh,
 						     const bool debug){
    auto t0 = tools::get_time();
-   const bool debug_basis = true;
+   const bool debug_basis = false;
    if(debug){
       cout << "ctns::right_projection<cmplx> thresh=" 
    	   << scientific << setprecision(4) << thresh << endl;
@@ -301,7 +303,8 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
    // 1. bipartition form of psi
    bipart_qspace lspace, rspace;
    for(int i=0; i<space.size(); i++){
-      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos).make_standard();
+      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos);
+      lstate = lstate.make_standard(); // key must be standard!
       auto itl = lspace.uset.find(lstate);
       if(itl == lspace.uset.end()){ // not found - new basis
 	 lspace.uset.insert(lstate);
@@ -309,7 +312,8 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
 	 lspace.basis[ql].push_back(lstate);
 	 if(lstate.norb_single() != 0) lspace.basis[ql].push_back(lstate.flip());
       }
-      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos).make_standard();
+      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
+      rstate = rstate.make_standard();
       auto itr = rspace.uset.find(rstate);
       if(itr == rspace.uset.end()){
 	 rspace.uset.insert(rstate);
@@ -546,7 +550,7 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
    } // qr
    if(debug){
       cout << "dim(space,lspace,rspace)=" << space.size() << "," 
-           << lspace.get_dim() << "," << rspace.get_dim() 
+           << lspace.get_dimAll() << "," << rspace.get_dimAll() 
            << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << endl; 
       auto t1 = tools::get_time();
       cout << "timing for ctns::right_projection<cmplx> : " << setprecision(2) 

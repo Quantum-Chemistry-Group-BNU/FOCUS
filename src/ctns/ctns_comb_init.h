@@ -19,7 +19,7 @@ void get_rbases(comb<Tm>& icomb,
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rbases thresh_proj=" << std::scientific << thresh_proj << std::endl;
    // loop over nodes (except the last one)
-   for(int idx=0; idx<icomb.topo.rcoord.size()-1; idx++){
+   for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
       auto p = icomb.topo.rcoord[idx];
       int i = p.first, j = p.second;
       auto& node = icomb.topo.nodes[i][j];
@@ -29,7 +29,7 @@ void get_rbases(comb<Tm>& icomb,
          for(int k : node.rsupport) std::cout << k << " ";
 	 std::cout << std::endl;
       }
-      if(node.type == 0){
+      if(node.type == 0 && p != std::make_pair(0,0)){
          icomb.rbases[p] = get_rbasis_phys<Tm>();
       }else{
 	 // Generate {|r>} at the internal nodes
@@ -55,7 +55,7 @@ void get_rbases(comb<Tm>& icomb,
    // print information for all renormalized basis {|r>} at each bond
    std::cout << "\nfinal rbases with thresh_proj = " << thresh_proj << std::endl;
    int Dmax = 0;
-   for(int idx=0; idx<icomb.topo.rcoord.size()-1; idx++){
+   for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
       auto p = icomb.topo.rcoord[idx];
       int i = p.first, j = p.second;
       auto shape = get_shape(icomb.rbases[p]);
@@ -77,12 +77,12 @@ void get_rsites(comb<Tm>& icomb){
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rsites" << std::endl;
    // loop over sites
-   for(int idx=0; idx<icomb.topo.rcoord.size()-1; idx++){
+   for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
       auto p = icomb.topo.rcoord[idx];
       int i = p.first, j = p.second;
       auto& node = icomb.topo.nodes[i][j];
       if(debug) std::cout << "\nidx=" << idx << " node=" << p << " ";     
-      if(node.type == 0){
+      if(node.type == 0 && p != std::make_pair(0,0)){
 	 
 	 if(debug) std::cout << "type 0: end or leaves" << std::endl;
          icomb.rsites[p] = get_right_bsite<Tm>();
@@ -289,13 +289,14 @@ void rcanon_init(comb<Tm>& icomb,
    auto t0 = tools::get_time();
    std::cout << "\nctns::rcanon_init" << std::endl;
    
-   // compute wave functions at the start for right canonical form 
-   get_rwfuns(icomb, space, vs, thresh_proj);
-   
    // compute renormalized bases {|r>} from SCI wavefunctions
-   get_rbases(icomb, space, vs, thresh_proj); 
+   get_rbases(icomb, space, vs, thresh_proj);
    // form sites from rbases
    get_rsites(icomb); 
+/*
+   // compute wave functions at the start for right canonical form 
+   get_rwfuns(icomb, space, vs, thresh_proj);
+*/
    
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::rcanon_init : " << std::setprecision(2) 
