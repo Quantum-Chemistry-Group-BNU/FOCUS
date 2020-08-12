@@ -15,7 +15,7 @@ void get_rbases(comb<Tm>& icomb,
 		const fock::onspace& space,
 		const std::vector<std::vector<Tm>>& vs,
 		const double thresh_proj){
-   const bool debug = true;
+   const bool debug = false;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rbases thresh_proj=" << std::scientific << thresh_proj << std::endl;
    // loop over nodes (except the last one)
@@ -53,7 +53,7 @@ void get_rbases(comb<Tm>& icomb,
       }
    } // idx
    // print information for all renormalized basis {|r>} at each bond
-   std::cout << "\nfinal rbases with thresh_proj = " << thresh_proj << std::endl;
+   std::cout << "\nfinal rbases with thresh_proj=" << thresh_proj << std::endl;
    int Dmax = 0;
    for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
       auto p = icomb.topo.rcoord[idx];
@@ -74,7 +74,7 @@ void get_rbases(comb<Tm>& icomb,
 // build site tensor from {|r>} bases
 template <typename Tm>
 void get_rsites(comb<Tm>& icomb){
-   const bool debug = true;
+   const bool debug = false;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rsites" << std::endl;
    // loop over sites
@@ -105,7 +105,7 @@ void get_rsites(comb<Tm>& icomb){
 	    }
 	 }
          const auto& rbasis_l = icomb.rbases[p]; 
-	 const auto& rbasis_c = node.type==3? icomb.rbases[node.center] : get_rbasis_phys<Tm>(); 
+	 const auto& rbasis_c = (node.type==3)? icomb.rbases[node.center] : get_rbasis_phys<Tm>(); 
 	 const auto& rbasis_r = icomb.rbases[node.right];
 	 auto qmid = get_qsym_space(rbasis_c);
 	 auto qrow = get_qsym_space(rbasis_l); 
@@ -143,7 +143,7 @@ void get_rsites(comb<Tm>& icomb){
       if(debug) icomb.rsites[p].print("rsites_"+std::to_string(idx));
    } // idx
    auto t1 = tools::get_time();
-   std::cout << "\ntiming for ctns::get_rsites: " << std::setprecision(2) 
+   std::cout << "\ntiming for ctns::get_rsites : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
@@ -153,19 +153,23 @@ void get_rwfuns(comb<Tm>& icomb,
 		const fock::onspace& space,
 		const std::vector<std::vector<Tm>>& vs,
 		const double thresh_proj){
-   const bool debug = true;
+   const bool debug = false;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rwfuns thresh_proj=" << std::scientific << thresh_proj << std::endl;
    // qrow: we assume all the states are of the same symmetry
    fock::onstate det = space[0];
    const bool Htype = tools::is_complex<Tm>();
    auto sym_states = get_qsym<Tm>(space[0]);
-   for(int i=0; i<space[i].size(); i++){
-      std::cout << "i=" << i << " " << space[i] << " " << get_qsym<Tm>(space[i]) << std::endl; 
+   for(int i=0; i<space.size(); i++){
+      auto sym = get_qsym<Tm>(space[i]);
+      if(sym != sym_states){
+         std::cout << "error: symmetry is different in space!" << std::endl;
+	 std::cout << "sym_states=" << sym_states 
+		   << " det=" << space[i] << " sym=" << sym
+		   << std::endl;
+	 exit(1);
+      }
    }
-   exit(1);
-
-
    int nroot = vs.size(); 
    qsym_space qrow({{sym_states, nroot}});
    // qcol
@@ -173,12 +177,7 @@ void get_rwfuns(comb<Tm>& icomb,
    auto qcol = get_qsym_space(rbasis);
    // rwfuns[l,r]
    qtensor2<Tm> rwfuns(qsym(0,0), qrow, qcol);
-   // transform SCI coefficient
-   fock::onspace space2;
-   std::vector<std::vector<Tm>> vs2;
-   const auto& order = icomb.topo.nodes[0][0].rsupport;
-   transform_coeff(space, vs, order, space2, vs2); 
-   // find the match position
+   // find the match position for qcol in qrow
    int cpos = -1; 
    for(int bc=0; bc<qcol.size(); bc++){
       if(sym_states == qcol.get_sym(bc)){
@@ -187,9 +186,6 @@ void get_rwfuns(comb<Tm>& icomb,
       }
    }
    assert(cpos != -1);
-   auto& rbas = rbasis[cpos].coeff;
-   int ndet = rbas.rows();
-   int nbas = rbas.cols();
    std::map<fock::onstate,int> index; // index of a state
    int idx = 0;
    for(const auto& state : rbasis[cpos].space){
@@ -197,11 +193,17 @@ void get_rwfuns(comb<Tm>& icomb,
       idx++;
    }
    // setup wavefunction: map vs2 to correct position
-   linalg::matrix<Tm> wfs(ndet,nroot);
+   fock::onspace space2;
+   std::vector<std::vector<Tm>> vs2;
+   const auto& order = icomb.topo.nodes[0][0].rsupport;
+   // transform SCI coefficient to order
+   transform_coeff(space, vs, order, space2, vs2); 
+   const auto& rbas = rbasis[cpos].coeff;
+   linalg::matrix<Tm> wfs(rbas.rows(), nroot);
    for(int i=0; i<space2.size(); i++){
-      int ir = index[space2[i]];
+      int ir = index.at(space2[i]);
       for(int iroot=0; iroot<nroot; iroot++){
-	 wfs(ir,iroot) = vs2[iroot][i];
+         wfs(ir,iroot) = vs2[iroot][i];
       } // iroot
    } // i
    // construct the boundary matrix: |psi[i]> = \sum_a |rbas[a]><rbas[a]|psi[i]>
@@ -211,10 +213,11 @@ void get_rwfuns(comb<Tm>& icomb,
    rwfuns(0,cpos) = linalg::xgemm("T","N",wfs,rbas.conj());
    if(debug){
       rwfuns.print("rwfuns",2);
-      std::cout << "\ncomparision of state overlaps" << std::endl;
+      std::cout << "\ncheck state overlaps" << std::endl;
+      // ova
       auto ova = xgemm("N","N",rwfuns(0,cpos).conj(),rwfuns(0,cpos).T());
       ova.print("ova_rwfuns");
-      
+      // ova0
       linalg::matrix<Tm> ova0(nroot,nroot);
       for(int i=0; i<nroot; i++){
          for(int j=0; j<nroot; j++){
@@ -222,20 +225,33 @@ void get_rwfuns(comb<Tm>& icomb,
 	 }
       }
       ova0.print("ova0_vs");
-
-      linalg::matrix<Tm> ova2(nroot,nroot);
-      for(int i=0; i<nroot; i++){
-         for(int j=0; j<nroot; j++){
-	    ova2(i,j) = linalg::xdot(vs2[i].size(),vs2[i].data(),vs2[j].data());
-	 }
+      auto diff = linalg::normF(ova-ova0);
+      std::cout << "diff=" << diff << std::endl;
+      if(diff > 1.e-10){
+         std::cout << "error: too large diff=" << diff << std::endl;
+	 exit(1); 
       }
-      ova2.print("ova2_vs2");
- 
-      auto ova1 = linalg::xgemm("C","N",wfs,wfs);
-      ova1.print("ova1_wfs");
-      
-      exit(1);
    }
+   icomb.rwfuns = rwfuns; 
+}
+
+// initialize RCF from SCI wavefunctions
+template <typename Tm>
+void rcanon_init(comb<Tm>& icomb,
+		 const fock::onspace& space,
+		 const std::vector<std::vector<Tm>>& vs,
+		 const double thresh_proj){
+   auto t0 = tools::get_time();
+   std::cout << "\nctns::rcanon_init" << std::endl;
+   // compute renormalized bases {|r>} from SCI wavefunctions
+   get_rbases(icomb, space, vs, thresh_proj);
+   // form sites from rbases
+   get_rsites(icomb); 
+   // compute wave functions at the start for right canonical form 
+   get_rwfuns(icomb, space, vs, thresh_proj);   
+   auto t1 = tools::get_time();
+   std::cout << "\ntiming for ctns::rcanon_init : " << std::setprecision(2) 
+             << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
 template <typename Tm>
@@ -257,26 +273,6 @@ void rcanon_check(comb<Tm>& icomb,
          exit(1);
       }
    } // idx
-}
-
-// initialize RCF from SCI wavefunctions
-template <typename Tm>
-void rcanon_init(comb<Tm>& icomb,
-		 const fock::onspace& space,
-		 const std::vector<std::vector<Tm>>& vs,
-		 const double thresh_proj){
-   auto t0 = tools::get_time();
-   std::cout << "\nctns::rcanon_init" << std::endl;
-   
-   // compute renormalized bases {|r>} from SCI wavefunctions
-   get_rbases(icomb, space, vs, thresh_proj);
-   // form sites from rbases
-   get_rsites(icomb); 
-   // compute wave functions at the start for right canonical form 
-   get_rwfuns(icomb, space, vs, thresh_proj);   
-   auto t1 = tools::get_time();
-   std::cout << "\ntiming for ctns::rcanon_init : " << std::setprecision(2) 
-             << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
 } // ctns

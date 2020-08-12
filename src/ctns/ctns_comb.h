@@ -132,6 +132,7 @@ class comb{
       topology topo;
       std::map<comb_coord,renorm_basis<Tm>> rbases; // renormalized basis from SCI
       std::map<comb_coord,qtensor3<Tm>> rsites; // right canonical form 
+      qtensor2<Tm> rwfuns; // wavefunction at the left boundary -*-
       //std::map<comb_coord,qtensor3<Tm>> lsites; // left canonical form 
       //std::vector<qtensor3<Tm>> psi; // propagation of initial guess 
 };

@@ -63,7 +63,7 @@ int tests::test_ctns(){
       coeff_population(sci_space, vs[i]);
    }
    // truncate CI coefficients
-   const bool ifortho = true;
+   const bool ifortho = true; 
    fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
 
    // --- Comb TNS (CTNS) ---   

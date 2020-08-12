@@ -40,7 +40,7 @@ void input::read(input::schedule& schd, string fname){
    schd.topology_file = "TOPOLOGY";
    schd.maxdets = 10000;
    schd.thresh_proj = 1.e-15;
-   schd.thresh_ortho = 1.e-10;
+   schd.thresh_ortho = 1.e-8;
    schd.maxsweep = 0;
    	 
    string line;
