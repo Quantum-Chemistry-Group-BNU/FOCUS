@@ -49,7 +49,7 @@ void get_rbases(comb<Tm>& icomb,
 	 std::vector<std::vector<Tm>> vs2;
          transform_coeff(space, vs, order, space2, vs2); 
          // 3. bipartition of space and compute renormalized states
-         icomb.rbases[p] = right_projection(space2, vs2, 2*bpos, thresh_proj, debug);
+         icomb.rbases[p] = right_projection(2*bpos, space2, vs2, thresh_proj, debug);
       }
    } // idx
    // print information for all renormalized basis {|r>} at each bond
@@ -58,6 +58,7 @@ void get_rbases(comb<Tm>& icomb,
    for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
       auto p = icomb.topo.rcoord[idx];
       int i = p.first, j = p.second;
+      // shape can be different from dim(rspace) if associated weight is zero!
       auto shape = get_shape(icomb.rbases[p]);
       std::cout << "idx=" << idx << " node=" << p
                 << " shape=" << shape.first << "," << shape.second 
@@ -155,108 +156,86 @@ void get_rwfuns(comb<Tm>& icomb,
    const bool debug = true;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rwfuns thresh_proj=" << std::scientific << thresh_proj << std::endl;
+   // qrow: we assume all the states are of the same symmetry
+   fock::onstate det = space[0];
+   const bool Htype = tools::is_complex<Tm>();
+   auto sym_states = get_qsym<Tm>(space[0]);
+   for(int i=0; i<space[i].size(); i++){
+      std::cout << "i=" << i << " " << space[i] << " " << get_qsym<Tm>(space[i]) << std::endl; 
+   }
+   exit(1);
+
+
+   int nroot = vs.size(); 
+   qsym_space qrow({{sym_states, nroot}});
+   // qcol
+   auto& rbasis = icomb.rbases[std::make_pair(0,0)];
+   auto qcol = get_qsym_space(rbasis);
+   // rwfuns[l,r]
+   qtensor2<Tm> rwfuns(qsym(0,0), qrow, qcol);
    // transform SCI coefficient
    fock::onspace space2;
    std::vector<std::vector<Tm>> vs2;
    const auto& order = icomb.topo.nodes[0][0].rsupport;
    transform_coeff(space, vs, order, space2, vs2); 
-   // projection
-   right_projection(space2, vs2, 0, thresh_proj, debug);
-   exit(1);
-/*
-   //rbasis = rbases[make_pair(1,0)];
-
-   //icomb.rbases[p] = right_projection(space2, vs2, 2*bpos, thresh_proj, debug);
-
-   // bipartition of space
-   tns::product_space pspace2;
-   pspace2.get_pspace(space2, 2);
-   
-   // loop over symmetry of B;
-   map<qsym,vector<int>> qsecB; // sym -> indices in spaceB
-   map<qsym,map<int,int>> qmapA; // index in spaceA to idxA
-   map<qsym,vector<tuple<int,int,int>>> qlst;
-   for(int ib=0; ib<pspace2.dimB; ib++){
-      auto& stateB = pspace2.spaceB[ib];
-      qsym symB(stateB.nelec(), stateB.nelec_a());
-      qsecB[symB].push_back(ib);
-      for(const auto& pia : pspace2.colB[ib]){
-	 int ia = pia.first;
-	 int idet = pia.second;
-	 // search unique
-	 auto it = qmapA[symB].find(ia);
-         if(it == qmapA[symB].end()){
-            qmapA[symB].insert({ia,qmapA[symB].size()});
-         };
-	 int idxB = qsecB[symB].size()-1;
-	 int idxA = qmapA[symB][ia];
-	 qlst[symB].push_back(make_tuple(idxB,idxA,idet));
+   // find the match position
+   int cpos = -1; 
+   for(int bc=0; bc<qcol.size(); bc++){
+      if(sym_states == qcol.get_sym(bc)){
+	 cpos = bc;
+	 break;
       }
-   } // ib
-   
-   // construct rwfuns 
-   qtensor3 rwfuns;
-   rwfuns.qmid = phys_qsym_space;
-   // assuming the symmetry of wavefunctions are the same
-   qsym sym_state(space[0].nelec(), space[0].nelec_a());
-   int nroots = vs2.size();
-   rwfuns.qrow[sym_state] = nroots;
-   // init empty blocks for all combinations 
+   }
+   assert(cpos != -1);
+   auto& rbas = rbasis[cpos].coeff;
+   int ndet = rbas.rows();
+   int nbas = rbas.cols();
+   std::map<fock::onstate,int> index; // index of a state
    int idx = 0;
-   for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
-      auto& symB = it->first;
-      rwfuns.qcol[symB] = rbasis[idx].coeff.cols();
-      for(int k0=0; k0<4; k0++){
-	 auto key = make_tuple(phys_sym[k0],sym_state,symB);
-         rwfuns.qblocks[key] = empty_block; 
-      }
+   for(const auto& state : rbasis[cpos].space){
+      index[state] = idx;
       idx++;
    }
-   
-   // loop over symmetry sectors of |r>
-   idx = 0;
-   for(auto it = qsecB.cbegin(); it != qsecB.cend(); ++it){
-      auto& symB = it->first;
-      auto& idxB = it->second;
-      int dimBs = idxB.size(); 
-      int dimAs = qmapA[symB].size();
-      if(debug){
-         cout << "idx=" << idx << " symB(Ne,Na)=" << symB 
-              << " dimBs=" << dimBs
-              << " dimAs=" << qmapA[symB].size() 
-              << endl;
+   // setup wavefunction: map vs2 to correct position
+   linalg::matrix<Tm> wfs(ndet,nroot);
+   for(int i=0; i<space2.size(); i++){
+      int ir = index[space2[i]];
+      for(int iroot=0; iroot<nroot; iroot++){
+	 wfs(ir,iroot) = vs2[iroot][i];
+      } // iroot
+   } // i
+   // construct the boundary matrix: |psi[i]> = \sum_a |rbas[a]><rbas[a]|psi[i]>
+   // In RCF the site is defined as 
+   //    W[i,a] =  <rbas[a]|psi[i]> = (rbas^+*wfs)^T = wfs^T*rbas.conj()
+   // such that W*[i,a]W[j,a] = delta[i,j]
+   rwfuns(0,cpos) = linalg::xgemm("T","N",wfs,rbas.conj());
+   if(debug){
+      rwfuns.print("rwfuns",2);
+      std::cout << "\ncomparision of state overlaps" << std::endl;
+      auto ova = xgemm("N","N",rwfuns(0,cpos).conj(),rwfuns(0,cpos).T());
+      ova.print("ova_rwfuns");
+      
+      linalg::matrix<Tm> ova0(nroot,nroot);
+      for(int i=0; i<nroot; i++){
+         for(int j=0; j<nroot; j++){
+	    ova0(i,j) = linalg::xdot(vs[i].size(),vs[i].data(),vs[j].data());
+	 }
       }
-      // load renormalized basis
-      auto& rsec = rbasis[idx];
-      if(rsec.sym != symB){
-         cout << "error: symmetry does not match!" << endl;
-         exit(1);
-      }
-      if(dimAs != 1){
-         cout << "error: dimAs=" << dimAs << " is not 1!" << endl;
-         exit(1);
-      }
-      // construct <nm|psi>
-      matrix vrl(dimBs,nroots);
-      for(int iroot = 0; iroot<nroots; iroot++){
-         for(const auto& t : qlst[symB]){
-            int ib = get<0>(t);
-            int id = get<2>(t);
-            vrl(ib,iroot) = vs2[iroot][id];
-         }
-      }
-      // compute key
-      auto it0 = qmapA[symB].begin();
-      onstate state0 = pspace2.spaceA[it0->first];
-      qsym sym0(state0.nelec(),state0.nelec_a());
-      auto key = make_tuple(sym0,sym_state,symB);
-      // c[n](i,r) = <nr|psi[i]> = <nb|psi[i]> [vlr(b,i)] * W(b,r)
-      rwfuns.qblocks[key].push_back(dgemm("T","N",vrl,rsec.coeff));
-      idx++;
-   } // symB sectors
-   if(debug) rwfuns.print("rwfuns",1);
+      ova0.print("ova0_vs");
 
-*/
+      linalg::matrix<Tm> ova2(nroot,nroot);
+      for(int i=0; i<nroot; i++){
+         for(int j=0; j<nroot; j++){
+	    ova2(i,j) = linalg::xdot(vs2[i].size(),vs2[i].data(),vs2[j].data());
+	 }
+      }
+      ova2.print("ova2_vs2");
+ 
+      auto ova1 = linalg::xgemm("C","N",wfs,wfs);
+      ova1.print("ova1_wfs");
+      
+      exit(1);
+   }
 }
 
 template <typename Tm>
@@ -293,11 +272,8 @@ void rcanon_init(comb<Tm>& icomb,
    get_rbases(icomb, space, vs, thresh_proj);
    // form sites from rbases
    get_rsites(icomb); 
-/*
    // compute wave functions at the start for right canonical form 
-   get_rwfuns(icomb, space, vs, thresh_proj);
-*/
-   
+   get_rwfuns(icomb, space, vs, thresh_proj);   
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::rcanon_init : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;

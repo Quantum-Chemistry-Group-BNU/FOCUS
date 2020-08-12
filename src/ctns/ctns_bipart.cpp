@@ -7,13 +7,13 @@ using namespace fock;
 using namespace linalg;
 using namespace ctns;
 
-renorm_basis<double> ctns::right_projection(const onspace& space,
+renorm_basis<double> ctns::right_projection(const int bpos,
+					    const onspace& space,
 		                            const vector<vector<double>>& vs,
-		                            const int bpos, 
 		                            const double thresh,
 					    const bool debug){
    auto t0 = tools::get_time();
-   const bool debug_basis = false;
+   const bool debug_basis = true;
    if(debug){
       cout << "\nctns::right_projection<real> thresh=" 
            << scientific << setprecision(4) << thresh << endl;
@@ -21,33 +21,8 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
    renorm_basis<double> rbasis;
    // 1. bipartition form of psi
    bipart_qspace lspace, rspace;
-   for(int i=0; i<space.size(); i++){
-      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos);
-      lstate = lstate.make_standard(); // key must be standard!
-      auto itl = lspace.uset.find(lstate);
-      if(itl == lspace.uset.end()){ // not found - new basis
-	 lspace.uset.insert(lstate);
-	 auto ql = qsym(lstate.nelec(),lstate.twoms());
-	 lspace.basis[ql].push_back(lstate);
-	 if(lstate.norb_single() != 0){
-	    ql = ql.flip();
-	    lspace.basis[ql].push_back(lstate.flip());
-	 }
-      }
-      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
-      rstate = rstate.make_standard();
-      auto itr = rspace.uset.find(rstate);
-      if(itr == rspace.uset.end()){
-	 rspace.uset.insert(rstate);
-	 auto qr = qsym(rstate.nelec(),rstate.twoms());
-	 rspace.basis[qr].push_back(rstate);
-	 auto fstate = rstate.flip();
-	 if(rstate.norb_single() != 0){
-	    qr = qr.flip();		 
-	    rspace.basis[qr].push_back(rstate.flip());
-	 }
-      }
-   }
+   lspace.init<double>(bpos, space, 0);
+   rspace.init<double>(bpos, space, 1);
    // reorder rspace.basis to form Kramers-paired structure (for M=0)
    for(const auto& pr : rspace.basis){
       const auto& qr = pr.first;
@@ -77,34 +52,10 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
       }
    }
    // update space info
-   lspace.update();
-   rspace.update();
+   lspace.update_maps();
+   rspace.update_maps();
    // construct wfs
-   int nroot = vs.size(); 
-   bipart_ciwfs<double> wfs;
-   for(int i=0; i<space.size(); i++){
-      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos);
-      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
-      auto ql = qsym(lstate.nelec(),lstate.twoms());
-      auto qr = qsym(rstate.nelec(),rstate.twoms());
-      int nl = lspace.dims[ql];
-      int nr = rspace.dims[qr];
-      int il = lspace.index[ql][lstate];
-      int ir = rspace.index[qr][rstate];
-      auto key = make_pair(ql,qr);
-      if(wfs.qblocks[key].size() == 0){
-	 wfs.qblocks[key].resize(nroot);
-	 for(int iroot=0; iroot<nroot; iroot++){
-	    matrix<double> mat(nl,nr);		
-	    mat(il,ir) = vs[iroot][i]; 
-	    wfs.qblocks[key][iroot] = mat;
-	 }
-      }else{
-	 for(int iroot=0; iroot<nroot; iroot++){
-	    wfs.qblocks[key][iroot](il,ir) = vs[iroot][i]; 
-	 }
-      }
-   }
+   bipart_ciwfs<double> wfs(bpos, space, vs, lspace, rspace);
    // 2. form dm for each qr
    int dimBc = 0;
    double sumBc = 0.0, SvN = 0.0;
@@ -127,32 +78,13 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
             cout << " state=" << state << " index=" << rspace.index[qr][state] << endl;
          }
       }
-      // rhor[r,r'] = psi[l,r]^T*psi[l,r']^*     
-      matrix<double> rhor(dim,dim);
-      for(const auto& ql : lspace.syms){
-         auto key = make_pair(ql,qr);
-         auto& blk = wfs.qblocks[key];
-         if(blk.size() == 0) continue;
-         for(int iroot=0; iroot<nroot; iroot++){
-            rhor += xgemm("T","N",blk[iroot],blk[iroot].conj());
-         }
-      }
-      rhor *= 1.0/nroot;     
+      auto rhor = wfs.get_rhor(lspace, rspace, qr);
       // diagonalize rhor properly to yield rbasis (depending on qr)
       vector<double> eigs(dim); 
       matrix<double> U(dim,dim);
       if(qr.tm() != 0){
 	 // average over q(N,M+) and q(N,M-) sectors
-         matrix<double> rhor1(dim,dim);
-         for(const auto& ql : lspace.syms){
-            auto key = make_pair(ql,qr.flip());
-            auto& blk = wfs.qblocks[key];
-            if(blk.size() == 0) continue;
-            for(int iroot=0; iroot<nroot; iroot++){
-               rhor1 += xgemm("T","N",blk[iroot],blk[iroot].conj());
-            }
-         }
-         rhor1 *= 1.0/nroot;    
+         auto rhor1 = wfs.get_rhor(lspace, rspace, qr.flip());
 	 // TR basis |Dbar> = |Df>*s
 	 rhor1.colscale(phases);
 	 rhor1.rowscale(phases);
@@ -288,41 +220,22 @@ renorm_basis<double> ctns::right_projection(const onspace& space,
    return rbasis;
 }
 
-renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
+renorm_basis<complex<double>> ctns::right_projection(const int bpos,
+						     const onspace& space,
 		                      		     const vector<vector<complex<double>>>& vs,
-		                      		     const int bpos, 
 		                      		     const double thresh,
 						     const bool debug){
    auto t0 = tools::get_time();
-   const bool debug_basis = false;
+   const bool debug_basis = true;
    if(debug){
       cout << "ctns::right_projection<cmplx> thresh=" 
    	   << scientific << setprecision(4) << thresh << endl;
    }
-   renorm_basis<std::complex<double>> rbasis;
+   renorm_basis<complex<double>> rbasis;
    // 1. bipartition form of psi
    bipart_qspace lspace, rspace;
-   for(int i=0; i<space.size(); i++){
-      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos);
-      lstate = lstate.make_standard(); // key must be standard!
-      auto itl = lspace.uset.find(lstate);
-      if(itl == lspace.uset.end()){ // not found - new basis
-	 lspace.uset.insert(lstate);
-	 auto ql = qsym(lstate.nelec(),0);
-	 lspace.basis[ql].push_back(lstate);
-	 if(lstate.norb_single() != 0) lspace.basis[ql].push_back(lstate.flip());
-      }
-      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
-      rstate = rstate.make_standard();
-      auto itr = rspace.uset.find(rstate);
-      if(itr == rspace.uset.end()){
-	 rspace.uset.insert(rstate);
-	 auto qr = qsym(rstate.nelec(),0);
-	 rspace.basis[qr].push_back(rstate);
-	 auto fstate = rstate.flip();
-	 if(rstate.norb_single() != 0) rspace.basis[qr].push_back(rstate.flip());
-      }
-   }
+   lspace.init<complex<double>>(bpos, space, 0);
+   rspace.init<complex<double>>(bpos, space, 1);
    // reorder rspace.basis to form Kramers-paired structure
    for(const auto& pr : rspace.basis){
       const auto& qr = pr.first;
@@ -361,34 +274,10 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
       }
    }
    // update space info
-   lspace.update();
-   rspace.update();
+   lspace.update_maps();
+   rspace.update_maps();
    // construct wfs
-   int nroot = vs.size(); 
-   bipart_ciwfs<complex<double>> wfs;
-   for(int i=0; i<space.size(); i++){
-      auto lstate = (bpos==0)? onstate() : space[i].get_before(bpos);
-      auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
-      auto ql = qsym(lstate.nelec(),0);
-      auto qr = qsym(rstate.nelec(),0);
-      int nl = lspace.dims[ql];
-      int nr = rspace.dims[qr];
-      int il = lspace.index[ql][lstate];
-      int ir = rspace.index[qr][rstate];
-      auto key = make_pair(ql,qr);
-      if(wfs.qblocks[key].size() == 0){
-	 wfs.qblocks[key].resize(nroot);
-	 for(int iroot=0; iroot<nroot; iroot++){
-	    matrix<complex<double>> mat(nl,nr);		
-	    mat(il,ir) = vs[iroot][i]; 
-	    wfs.qblocks[key][iroot] = mat;
-	 }
-      }else{
-	 for(int iroot=0; iroot<nroot; iroot++){
-	    wfs.qblocks[key][iroot](il,ir) = vs[iroot][i]; 
-	 }
-      }
-   }
+   bipart_ciwfs<complex<double>> wfs(bpos, space, vs, lspace, rspace);
    // 2. form dm for each qr
    int dimBc = 0;
    double sumBc = 0.0, SvN = 0.0;
@@ -409,17 +298,7 @@ renorm_basis<complex<double>> ctns::right_projection(const onspace& space,
             cout << " state=" << state << " index=" << rspace.index[qr][state] << endl;
          }
       }
-      // rhor[r,r'] = psi[l,r]^T*psi[l,r']^*     
-      matrix<complex<double>> rhor(dim,dim);
-      for(const auto& ql : lspace.syms){
-	 auto key = make_pair(ql,qr);
-	 auto& blk = wfs.qblocks[key];
-	 if(blk.size() == 0) continue;
-	 for(int iroot=0; iroot<nroot; iroot++){
-	    rhor += xgemm("T","N",blk[iroot],blk[iroot].conj());
-	 }
-      }
-      rhor *= 1.0/nroot;      
+      auto rhor = wfs.get_rhor(lspace, rspace, qr);
       // 3. diagonalized properly to yield rbasis (depending on qr)
       vector<double> eigs(dim); 
       matrix<complex<double>> U(dim,dim);

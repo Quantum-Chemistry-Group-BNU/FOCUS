@@ -1,6 +1,8 @@
 #ifndef CTNS_QSYM_H
 #define CTNS_QSYM_H
 
+#include "../core/onstate.h" // qsym of det
+#include "../core/tools.h"
 #include "../core/serialization.h"
 #include <string>
 #include <map>
@@ -57,6 +59,14 @@ class qsym{
       int _ne, _tm;
 };
 
+// onstate
+template <typename Tm>
+qsym get_qsym(const fock::onstate& state){
+   int ne = state.nelec();
+   int tm = tools::is_complex<Tm>()? 0 : state.twoms();
+   return qsym(ne,tm);
+}
+
 // qsym_qspace
 class qsym_space{
    private:
@@ -66,6 +76,9 @@ class qsym_space{
 	 ar & dims;
       }
    public:
+      qsym_space(){}
+      qsym_space(std::vector<std::pair<qsym,int>> ds): dims(ds) {}
+      // helpers
       inline int size() const{ return dims.size(); }
       inline qsym get_sym(const int i) const{ return dims[i].first; } 
       inline int get_dim(const int i) const{ return dims[i].second; }

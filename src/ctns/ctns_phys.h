@@ -40,8 +40,7 @@ renorm_basis<Tm> get_rbasis_phys(){
 
 // qsym_space
 qsym_space get_qsym_space_vac(){
-   qsym_space qs_vac;
-   qs_vac.dims = {{qsym(0,0),1}};
+   qsym_space qs_vac({{qsym(0,0),1}});
    return qs_vac;
 }
 
