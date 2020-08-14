@@ -15,7 +15,7 @@ void get_rbases(comb<Tm>& icomb,
 		const fock::onspace& space,
 		const std::vector<std::vector<Tm>>& vs,
 		const double thresh_proj){
-   const bool debug = false;
+   const bool debug = true;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rbases thresh_proj=" << std::scientific << thresh_proj << std::endl;
    // loop over nodes (except the last one)
