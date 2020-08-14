@@ -20,7 +20,7 @@ if molname == 'ne':
 
 elif molname == 'h':
    R = 1.0
-   natoms = 6 #40 #,14,20,50
+   natoms = 2 #40 #,14,20,50
    mol.atom = [['H',(0.0,0.0,i*R)] for i in range(natoms)]
    mol.basis = 'sto-3g' #cc-pvdz' #sto-3g' #6-31g' 
 
@@ -59,10 +59,6 @@ elif molname == 'f':
    mol.atom = [['F',(0,0,0)]]
    mol.basis = {'F': gto.uncontract_basis(gto.basis.load('sto-3g', 'F'))}
 
-elif molname == 'ne':
-   mol.atom = [['Ne',(0,0,0)]]
-   mol.basis = {'Ne': gto.uncontract_basis(gto.basis.load('321g', 'Ne'))}
-
 #==================================================================
 mol.symmetry = False 
 mol.charge = 0 #1 #-1 
@@ -94,8 +90,9 @@ iface.mol = mol
 iface.mf = mf
 iface.nfrozen = 4 # spinor
 iface.ifgaunt = mf.with_gaunt
+kmo_coeff = iface.kramers_projection()
 sbas = mol.nao_2c()
-info = iface.get_integral4C(mf.mo_coeff[:,sbas:])
+info = iface.get_integral4C(kmo_coeff[:,sbas:])
 iface.dump(info,fname='./data/cmole.info')
 exit(1)
 

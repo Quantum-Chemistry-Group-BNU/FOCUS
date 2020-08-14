@@ -2,6 +2,7 @@
 -------------------------------
 CTNS:
 -------------------------------
+ readme
  ctns_comb_topo.cpp
  ctns_comb.h
  ctns_qsym.h -> quantum number class
@@ -12,9 +13,11 @@ CTNS:
  ctns_kramers.h -> block matrix class
  ctns_phys.h
  ctns_qtensor.h -> qtensor class
+ ctns_qtensor2.h -> rwfuns
+ ctns_qtensor3.h -> rsites
+ ctns_qtensor_contract.h
  ctns_comb_init.h -> init CTNS from SCI
 -------------------------------
-
 
 
 -------------------------------
@@ -33,7 +36,6 @@ helpers:
  tns_ordering.h
  tns_ordering.cpp
  tns_io.cpp
-
 -------------------------------
 qtensor:
 -------------------------------

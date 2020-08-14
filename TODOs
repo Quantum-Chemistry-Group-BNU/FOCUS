@@ -195,7 +195,7 @@
 	       - special treatment for |0->,|0+> in NR case [NOT YET!]
 	       - build local tensor [DONE@20200810]
 	       - wavefunction at the first site [DONE@20200812]
-	       - PySCF: time-reversal adapted MOs?
+	       - PySCF: time-reversal symmetry-adapted MOs?
 	  - 3. algorithm: check overlap with CI
 	  - 4. compute Sd by sampling
 	  - 5. algorithm: check Hij by reformulating op*psi

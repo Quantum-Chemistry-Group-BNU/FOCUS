@@ -32,7 +32,7 @@ def ao2mo(mf, mo_coeff, erifile):
                 logger.debug(mf, 'load %s %d', intor, i0)
                 buf = feri[dst][i0:i1]
                 # Add the contribution from 'tmp' to erifile
-		buf += feri['tmp'][i0:i1]
+                buf += feri['tmp'][i0:i1]
                 feri[dst][i0:i1] = buf
                 buf = None
 
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     casorb = mf.mo_coeff[:,nmo//2+4:nmo//2+8]
     ao2mo(mf, casorb, erifile)
     with h5py.File(erifile) as f1:
-        print f1['ericas'].shape
+       print(f1['ericas'].shape)
 
     #-----------------------------------------
     # DCG

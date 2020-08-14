@@ -153,7 +153,7 @@ void get_rwfuns(comb<Tm>& icomb,
 		const fock::onspace& space,
 		const std::vector<std::vector<Tm>>& vs,
 		const double thresh_proj){
-   const bool debug = false;
+   const bool debug = true;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rwfuns thresh_proj=" << std::scientific << thresh_proj << std::endl;
    // qrow: we assume all the states are of the same symmetry

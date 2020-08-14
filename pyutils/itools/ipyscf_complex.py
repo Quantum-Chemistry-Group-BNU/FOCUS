@@ -15,10 +15,28 @@ class iface:
       #--- special for 4C ---
       self.ifgaunt = False
 
+   def kramers_projection(self,debug=False):
+      print('\n[iface.kramers_projection]')
+      n = self.mol.nao_2c() 
+      ova = self.mf.get_ovlp()
+      fock = self.mf.get_fock()
+      import zquatev
+      e,kmo_coeff = zquatev.solve_KR_FCSCE(self.mol,fock,ova,True)
+      # check
+      iden = numpy.diag(kmo_coeff.T.conj().dot(ova.dot(kmo_coeff)))
+      eorb = numpy.diag(kmo_coeff.T.conj().dot(fock.dot(kmo_coeff)))
+      print('e_diff=',numpy.linalg.norm(e-eorb))
+      diff1 = numpy.linalg.norm(iden - numpy.ones(2*n))
+      diff2 = numpy.linalg.norm(eorb - self.mf.mo_energy)
+      print('iden_diff=',diff1)
+      print('eorb_diff=',diff2)
+      assert(diff1 < 1.e-12 and diff2 < 1.e-6)
+      return kmo_coeff
+
    # 2016.10.12: 
-   # The very first version of dump4C - no localization, no reorder!
+   # The very first version of dump4C - no localization, no reorder! (should be performed outside the function)
    def get_integral4C(self,mo_coeff):
-      print '\n[iface.get_integral4C]'	 
+      print('\n[iface.get_integral4C]') 
       ecore = self.mol.energy_nuc()
       # The first N2C orbitals are negative energy states
       mcoeffC = mo_coeff[:,:self.nfrozen].copy()
@@ -34,15 +52,15 @@ class iface:
       ncore = self.nfrozen
       norb = mo_coeff.shape[1]
       with h5py.File(erifile) as f1:
-	 eri = f1['ericas'].value # [ij|kl]
-	 eri = eri.reshape(norb,norb,norb,norb)
+         eri = f1['ericas'].value
+         eri = eri.reshape(norb,norb,norb,norb)
       os.remove(erifile)
       # Core contribution
       if ncore > 0:
-	 eriC = eri[:ncore,:ncore,:ncore,:ncore]
+         eriC = eri[:ncore,:ncore,:ncore,:ncore]
          # ecore = hii + 1/2<ij||ij> = hij + 1/2*([ii|jj]-[ij|ji])
          ecore1 = numpy.einsum('ii',hmo[:ncore,:ncore])\
-               + 0.5*(numpy.einsum('iijj',eriC)-numpy.einsum('ijji',eriC))
+                + 0.5*(numpy.einsum('iijj',eriC)-numpy.einsum('ijji',eriC))
          ecore += ecore1.real
          # fock_ij = hij + <ik||jk> = hij + [ij|kk]-[ik|kj]; k in core
          fock = hmo[ncore:,ncore:].copy()
@@ -57,7 +75,7 @@ class iface:
       return ecore,hmo,eri
 
    def dump(self,info,fname='mole.info'):
-      print '\n[iface.dump] fname=',fname
+      print('\n[iface.dump] fname=',fname)
       ecore,int1e,int2e = info
       # Spin orbital integrals
       sbas = int1e.shape[0]
@@ -78,19 +96,19 @@ class iface:
             for j in range(i):
                for k in range(i+1):
                   if k == i: 	
-            	     lmax = j+1
+                     lmax = j+1
                   else:
              	     lmax = k
                   for l in range(lmax):
                      nblk += 1
                      if abs(h2e[i,j,k,l])<thresh: continue
-            	     line = str(i+1) + ' ' \
+                     line = str(i+1) + ' ' \
                           + str(j+1) + ' ' \
                           + str(k+1) + ' ' \
                           + str(l+1) + ' ' \
                           + '('+str(h2e[i,j,k,l].real)+','+str(h2e[i,j,k,l].imag)+')' \
                           + '\n'
-            	     f.writelines(line)
+                     f.writelines(line)
          assert nq == nblk 
          # int1e
          for i in range(n):
@@ -105,5 +123,5 @@ class iface:
          # ecore 
          line = '0 0 0 0 ' + str(ecore)+'\n'
          f.writelines(line)
-      print 'finished'
+      print('finished')
       return 0
