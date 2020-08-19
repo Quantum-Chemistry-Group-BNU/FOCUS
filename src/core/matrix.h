@@ -53,16 +53,28 @@ struct matrix{
          _data = new Tm[_size];
 	 std::fill_n(_data, _size, 0.0);
       }
-      // special constructor: copied from raw data
-      matrix(const int m, const int n, const Tm* data): _rows(m), _cols(n){
+      // some special constructors: 
+      // 1. copied from raw data
+      matrix(const int m, const int n, const Tm* pdata): _rows(m), _cols(n){
 	 _size = m*n;
  	 _data = new Tm[_size];
-	 std::copy(data, data+_size, _data);
+	 std::copy(pdata, pdata+_size, _data);
       }
+      // 2. from constant value
       matrix(const int m, const int n, const Tm cval): _rows(m), _cols(n){
 	 _size = m*n;
  	 _data = new Tm[_size];
 	 std::fill(_data, _data+_size, cval);
+      }
+      // 3. from vector of vector
+      matrix(const std::vector<std::vector<Tm>>& vs){
+         _cols = vs.size();
+	 _rows = vs[0].size();
+	 _size = _rows*_cols;
+	 _data = new Tm[_size];
+	 for(int j=0; j<_cols; j++){
+	    std::copy(vs[j].cbegin(), vs[j].cend(), &_data[j*_rows]);
+	 }
       }
       // desctructors
       ~matrix(){ delete[] _data; }

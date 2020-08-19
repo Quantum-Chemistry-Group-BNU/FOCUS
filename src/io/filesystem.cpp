@@ -7,7 +7,7 @@ using namespace input;
 namespace fs = boost::filesystem;
 
 void schedule::create_scratch(){
-   cout << "\nschedule::create_scratch" << endl;
+   cout << "\nschedule::create_scratch scratch=" << scratch << endl;
    if(scratch == ".") return;
    fs::path dir(scratch);
    if(fs::exists(dir)){
@@ -23,7 +23,7 @@ void schedule::create_scratch(){
 }
 
 void schedule::remove_scratch(){
-   cout << "\nschedule::remove_scratch" << endl;
+   cout << "\nschedule::remove_scratch scratch=" << scratch << endl;
    if(scratch == ".") return;
    fs::path dir(scratch);
    if(fs::remove_all(dir)){

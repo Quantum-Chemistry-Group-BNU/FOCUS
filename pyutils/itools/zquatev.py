@@ -62,16 +62,18 @@ def solve_KR_FCSCE(mol,fock,ova,debug=False):
    assert(nelec%2 == 0)
    # index for kramers basis from
    # https://github.com/sunqm/pyscf/blob/master/pyscf/gto/mole.py
-   labels = mol.spinor_labels()
    trmaps = mol.time_reversal_map()
-   idx = numpy.arange(n)
-   idxA = numpy.array(idx[trmaps>0])
-   idxB = numpy.array([abs(trmaps[x])-1 for x in idxA])
-   idx2 = numpy.hstack((idxA,idxA+n,idxB,idxB+n))
+   idxA = numpy.where(trmaps > 0)[0]
+   idxB = trmaps[idxA] - 1
+   if fock.shape[0] == trmaps.size:
+      idx = numpy.hstack((idxA,idxB))
+   else:   
+      idx2 = numpy.hstack((idxA,idxA+n,idxB,idxB+n))
    # {|chi>,T|chi>}
    tova = ova[numpy.ix_(idx2,idx2)].copy()
    tfock = fock[numpy.ix_(idx2,idx2)].copy()
    if debug:
+      labels = mol.spinor_labels()
       print labels
       for i in range(n):
          print i,labels[i],trmaps[i]

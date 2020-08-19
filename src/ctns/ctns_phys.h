@@ -9,6 +9,29 @@ namespace ctns{
 
 // physical degree of freedoms related
 
+// qsym_space
+qsym_space get_qsym_space_vac(){
+   qsym_space qs_vac({{qsym(0,0),1}});
+   return qs_vac;
+}
+
+template <typename Tm>
+qsym_space get_qsym_space_phys(){
+   const bool Htype = tools::is_complex<Tm>();
+   qsym_space qs_phys;
+   if(Htype){
+      qs_phys.dims = {{qsym(0,0),1},
+		      {qsym(2,0),1},
+		      {qsym(1,0),2}};
+   }else{
+      qs_phys.dims = {{qsym(0,0),1},
+		      {qsym(2,0),1},
+		      {qsym(1,1),1},
+		      {qsym(1,-1),1}};
+   }
+   return qs_phys;
+}
+
 // rbasis for type-0 physical site 
 template <typename Tm>
 renorm_basis<Tm> get_rbasis_phys(){
@@ -38,27 +61,48 @@ renorm_basis<Tm> get_rbasis_phys(){
    return rbasis;
 }
 
-// qsym_space
-qsym_space get_qsym_space_vac(){
-   qsym_space qs_vac({{qsym(0,0),1}});
-   return qs_vac;
+// block index (bm,im) for middle physical index
+template <typename Tm>
+std::pair<int,int> get_mdx(const int idx){
+   std::pair<int,int> mdx;
+   if(idx == 0){
+      mdx = std::make_pair(0,0);
+   }else if(idx == 1){
+      mdx = std::make_pair(1,0);
+   }else if(idx == 2){
+      mdx = std::make_pair(2,0);
+   }else if(idx == 3){
+      const bool Htype = tools::is_complex<Tm>();
+      mdx = Htype? std::make_pair(2,1) : std::make_pair(3,0);
+   }
+   return mdx;
 }
 
+ // 0: |0>=(0,0) -> 0
+ // 1: |b>=(0,1) -> 3
+ // 2: |a>=(1,0) -> 2
+ // 3: |2>=(1,1) -> 1
 template <typename Tm>
-qsym_space get_qsym_space_phys(){
-   const bool Htype = tools::is_complex<Tm>();
-   qsym_space qs_phys;
-   if(Htype){
-      qs_phys.dims = {{qsym(0,0),1},
-		      {qsym(2,0),1},
-		      {qsym(1,0),2}};
-   }else{
-      qs_phys.dims = {{qsym(0,0),1},
-		      {qsym(2,0),1},
-		      {qsym(1,1),1},
-		      {qsym(1,-1),1}};
+std::pair<int,int> get_mdx_phys(const fock::onstate& state,
+			        const int k){
+   int packed = 2*state[2*k]+state[2*k+1];
+   const std::vector<int> index = {0,3,2,1};
+   return get_mdx<Tm>(index[packed]);
+}
+
+// used in random sampling  
+void assign_occupation_phys(fock::onstate& state,
+			    const int k, 
+			    const int idx){
+   if(idx == 0){
+      state[2*k] = 0; state[2*k+1] = 0; // 0
+   }else if(idx == 1){
+      state[2*k] = 1; state[2*k+1] = 1; // 2
+   }else if(idx == 2){
+      state[2*k] = 1; state[2*k+1] = 0; // a
+   }else if(idx == 3){
+      state[2*k] = 0; state[2*k+1] = 1; // b
    }
-   return qs_phys;
 }
 
 // exact right/left boundary tensor:

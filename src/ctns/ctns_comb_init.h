@@ -175,8 +175,8 @@ void get_rwfuns(comb<Tm>& icomb,
    // qcol
    auto& rbasis = icomb.rbases[std::make_pair(0,0)];
    auto qcol = get_qsym_space(rbasis);
-   // rwfuns[l,r]
-   qtensor2<Tm> rwfuns(qsym(0,0), qrow, qcol);
+   // rwfuns[l,r] for RCF
+   qtensor2<Tm> rwfuns(qsym(0,0), qrow, qcol, {0, 1});
    // find the match position for qcol in qrow
    int cpos = -1; 
    for(int bc=0; bc<qcol.size(); bc++){
@@ -227,8 +227,10 @@ void get_rwfuns(comb<Tm>& icomb,
       ova0.print("ova0_vs");
       auto diff = linalg::normF(ova-ova0);
       std::cout << "diff=" << diff << std::endl;
-      if(diff > 1.e-10){
-         std::cout << "error: too large diff=" << diff << std::endl;
+      const double thresh = 1.e-8;
+      if(diff > thresh){
+         std::cout << "error: too large diff=" << diff 
+		   << " thresh=" << thresh << std::endl;
 	 exit(1); 
       }
    }

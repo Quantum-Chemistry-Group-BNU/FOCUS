@@ -7,6 +7,7 @@
 #include "../core/serialization.h"
 #include "../core/matrix.h"
 #include "ctns_qsym.h"
+#include "ctns_qtensor2.h"
 
 namespace ctns{
 
@@ -63,6 +64,33 @@ struct qtensor3{
 	    } // br
 	 } // bm
       }
+      // helpers
+      int mids() const{ return _mids; }
+      int rows() const{ return _rows; }
+      int cols() const{ return _cols; }
+      // access
+      std::vector<linalg::matrix<Tm>>& operator ()(const int bm, const int br, const int bc){
+         return _qblocks[_addr(bm,br,bc)];
+      }
+      const std::vector<linalg::matrix<Tm>>& operator ()(const int bm, const int br, const int bc) const{
+         return _qblocks[_addr(bm,br,bc)];
+      }
+      // fix middle index
+      qtensor2<Tm> fix_mid(const std::pair<int,int> mdx) const{
+	 int bm = mdx.first, im = mdx.second;   
+	 auto symIn = dir[0] ? sym-qmid.get_sym(bm) : sym+qmid.get_sym(bm);
+         qtensor2<Tm> qt2(symIn, qrow, qcol, {dir[1],dir[2]});
+       	 for(int br=0; br<_rows; br++){
+	    for(int bc=0; bc<_cols; bc++){
+	       if(not _ifconserve(bm,br,bc)) continue;
+	       int addr = _addr(bm,br,bc);
+	       int mdim = qmid.get_dim(bm);
+	       assert(im < mdim);
+	       qt2(br,bc) = _qblocks[addr][im];
+	    } // bc
+	 } // br
+	 return qt2;
+      }
       // print
       void print(const std::string name, const int level=0) const{
 	 std::cout << "\nqtensor3: " << name << " sym=" << sym;
@@ -99,13 +127,6 @@ struct qtensor3{
             }
          } // idx
 	 std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
-      }
-      // access
-      std::vector<linalg::matrix<Tm>>& operator ()(const int bm, const int br, const int bc){
-         return _qblocks[_addr(bm,br,bc)];
-      }
-      const std::vector<linalg::matrix<Tm>>& operator ()(const int bm, const int br, const int bc) const{
-         return _qblocks[_addr(bm,br,bc)];
       }
    public:
       std::vector<bool> dir = {1,0,1}; // =0,in; =1,out; {mid,row,col}

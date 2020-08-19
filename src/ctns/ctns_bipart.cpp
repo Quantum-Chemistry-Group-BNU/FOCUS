@@ -7,6 +7,7 @@ using namespace fock;
 using namespace linalg;
 using namespace ctns;
 
+// non-relativistic case
 renorm_basis<double> ctns::right_projection(const int bpos,
 					    const onspace& space,
 		                            const vector<vector<double>>& vs,
@@ -220,6 +221,7 @@ renorm_basis<double> ctns::right_projection(const int bpos,
    return rbasis;
 }
 
+// relativistic case
 renorm_basis<complex<double>> ctns::right_projection(const int bpos,
 						     const onspace& space,
 		                      		     const vector<vector<complex<double>>>& vs,
@@ -370,9 +372,9 @@ renorm_basis<complex<double>> ctns::right_projection(const int bpos,
 	 matrix<double> Ur;
 	 eig_solver(rho,eigs,Ur,1);
 	 // back to determinant basis {|D>,|Df>,|D0>} from {|->,|+>,|0>}
-	 // [  I    1    0  ]       [ u[-] ]   [    u[+]+I*u[-]  ]
-	 // [-sI   s1    0  ]/sqrt2 [ u[+] ] = [ s*(u[+]-I*u[-]) ]/sqrt2
-	 // [  0    0  sqrt2]       [ u[0] ]   [   sqrt2*u[0]    ]
+	 // [   i     1    0  ]       [ u[-] ]   [    u[+]+i*u[-]  ]
+	 // [-s*i   s*1    0  ]/sqrt2 [ u[+] ] = [ s*(u[+]-i*u[-]) ]/sqrt2
+	 // [   0     0  sqrt2]       [ u[0] ]   [   sqrt2*u[0]    ]
 	 // where the sign comes from |Dbar>=|Df>*s
 	 blockMatrix<double> matu(partition,{dim});
          matu = Ur;

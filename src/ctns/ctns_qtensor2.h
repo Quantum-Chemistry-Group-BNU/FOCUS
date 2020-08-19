@@ -8,6 +8,7 @@
 #include "../core/matrix.h"
 #include "../core/linalg.h"
 #include "ctns_qsym.h"
+#include "ctns_qtensor_contract.h"
 
 namespace ctns{
 
@@ -55,6 +56,16 @@ struct qtensor2{
 	    } // bc
 	 } // br
       }
+      // helpers
+      int rows() const{ return _rows; }
+      int cols() const{ return _cols; }
+      // access
+      linalg::matrix<Tm>& operator ()(const int br, const int bc){
+         return _qblocks[_addr(br,bc)];
+      }
+      const linalg::matrix<Tm>& operator ()(const int br, const int bc) const{
+         return _qblocks[_addr(br,bc)];
+      }
       // print
       void print(const std::string name, const int level=0) const{
 	 std::cout << "\nqtensor2: " << name << " sym=" << sym;
@@ -83,13 +94,6 @@ struct qtensor2{
          } // idx
 	 std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
       }
-      // access
-      linalg::matrix<Tm>& operator ()(const int br, const int bc){
-         return _qblocks[_addr(br,bc)];
-      }
-      const linalg::matrix<Tm>& operator ()(const int br, const int bc) const{
-         return _qblocks[_addr(br,bc)];
-      }
       // check whether <l|o|r> is a faithful rep for o=I
       double check_identity(const double thresh_ortho, const bool debug) const{
          if(debug) std::cout << "qtensor2::check_identity thresh_ortho=" 
@@ -100,20 +104,23 @@ struct qtensor2{
 	       const auto& blk = _qblocks[_addr(br,bc)];
 	       if(blk.size() > 0){
       	          if(br != bc){
-      	             std::cout << "error: not a block-diagonal matrix!" << std::endl;
+      	             std::cout << "error: not a block-diagonal matrix! br,bc="
+			       << br << "," << bc << std::endl;
       	             exit(1);
       	          }
 	          auto qr = qrow.get_sym(br);
                   int ndim = qrow.get_dim(br);
                   double diff = linalg::normF(blk - linalg::identity_matrix<Tm>(ndim));
       	          maxdiff = std::max(diff,maxdiff);
-      	          if(debug){
+      	          if(debug || diff > thresh_ortho){
 	             std::cout << "qsym=" << qr << " ndim=" << ndim 
                     	       << " |Sr-Id|_F=" << diff << std::endl;
       	          }
                   if(diff > thresh_ortho){
-      	             std::cout << "error: not an identity matrix at qsym=" << qr << std::endl;
+      	             std::cout << "error: not an identity matrix at qsym! thresh_ortho=" 
+			       << thresh_ortho << std::endl;
       	             blk.print("diagonal block");
+		     exit(1);
       	          }
 	       } // blk
             } // bc
@@ -142,6 +149,38 @@ struct qtensor2{
 	    } // bc
 	 } // br
 	 return mat;
+      }
+      // xgemm
+      qtensor2<Tm> dot(const qtensor2<Tm>& qt) const{
+         return contract_qt2_qt2(*this, qt);
+      }
+      // ZL20200531: permute the line of diagrams, while maintaining their directions
+      // 	     This does not change the tensor, but just permute order of index
+      qtensor2<Tm> T() const{
+         qtensor2<Tm> qt2(sym, qcol, qrow, {dir[1],dir[0]});
+         for(int br=0; br<qt2.rows(); br++){
+	    for(int bc=0; bc<qt2.cols(); bc++){
+	       auto& blk = qt2(br,bc);
+	       if(blk.size() == 0) continue;
+	       blk = _qblocks[_addr(bc,br)].T(); 
+	    }
+	 }
+	 return qt2; 
+      }
+      // ZL20200531: if row/col is permuted while dir fixed, 
+      // 	     effectively change the direction of lines in diagrams
+      //	     This is used in taking Hermitian conjugate of operators
+      qtensor2<Tm> H() const{
+	 // symmetry of operator get changed in consistency with line changes
+         qtensor2<Tm> qt2(-sym, qcol, qrow, dir);
+         for(int br=0; br<qt2.rows(); br++){
+	    for(int bc=0; bc<qt2.cols(); bc++){
+	       auto& blk = qt2(br,bc);
+	       if(blk.size() == 0) continue;
+	       blk = _qblocks[_addr(bc,br)].H(); 
+	    }
+	 }
+	 return qt2; 
       }
    public:
       std::vector<bool> dir = {1,0}; // {out,int} by usual convention for operators in diagrams

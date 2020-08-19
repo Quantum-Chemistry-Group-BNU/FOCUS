@@ -1,6 +1,7 @@
 
--------------------------------
 CTNS:
+-------------------------------
+Initialization: TRS-adapted
 -------------------------------
  readme
  ctns_comb_topo.cpp
@@ -18,35 +19,25 @@ CTNS:
  ctns_qtensor_contract.h
  ctns_comb_init.h -> init CTNS from SCI
 -------------------------------
+Sij and <n|CTNS>
+-------------------------------
+ ctns_comb_alg.h
+-------------------------------
+Hij: operators
+-------------------------------
+
+-------------------------------
+Optimization: decimation
+-------------------------------
+
+-------------------------------
 
 
--------------------------------
-comb:
--------------------------------
- tns_comb.h
- tns_comb_topo.cpp
- tns_comb_rcanon.cpp
- tns_comb_rand.cpp
- tns_comb_alg.cpp
--------------------------------
-helpers:
--------------------------------
- tns_pspace.h
- tns_pspace.cpp
- tns_ordering.h
- tns_ordering.cpp
- tns_io.cpp
 -------------------------------
 qtensor:
 -------------------------------
  tns_qtensor_reshape.cpp
- tns_qtensor_contract.cpp
  tns_qtensor4.cpp
- tns_qtensor3.cpp
- tns_qtensor2.cpp
- tns_qtensor.h
- tns_qsym.h
- tns_qsym.cpp
 -------------------------------
 oper:
 -------------------------------

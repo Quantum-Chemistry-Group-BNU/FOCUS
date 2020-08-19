@@ -56,7 +56,7 @@ class qsym{
       friend qsym operator +(const qsym& sym1, const qsym& sym2);
       friend qsym operator -(const qsym& sym1, const qsym& sym2);
    private:
-      int _ne, _tm;
+      int _ne, _tm; // na+nb, na-nb
 };
 
 // onstate

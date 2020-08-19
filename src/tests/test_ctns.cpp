@@ -11,6 +11,8 @@
 #include "../ci/sci_pt2.h"
 #include "../ctns/ctns_comb.h"
 #include "../ctns/ctns_comb_init.h"
+#include "../ctns/ctns_comb_alg.h"
+#include "../ctns/ctns_io.h"
 #include "../io/input.h"
 #include <iostream>
 #include <iomanip>
@@ -63,7 +65,7 @@ int tests::test_ctns(){
       coeff_population(sci_space, vs[i]);
    }
    // truncate CI coefficients
-   const bool ifortho = true; 
+   const bool ifortho = false; //true; 
    fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
 
    // --- Comb TNS (CTNS) ---   
@@ -78,16 +80,16 @@ int tests::test_ctns(){
       // 2. initialize right canonical form from SCI wavefunction 
       ctns::rcanon_init(icomb, sci_space, vs, schd.thresh_proj);
       ctns::rcanon_check(icomb, schd.thresh_ortho, ifortho);
-/*
       
       const double thresh=1.e-6;
+
       // 3. algorithm: check overlap with CI 
-      auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
-      ovlp.print("ovlp");
-      // check self-overlap
+      auto ovlp = ctns::rcanon_CIovlp(icomb, sci_space, vs);
+      ovlp.print("CIovlp");
+      // check overlap
       auto Smat = fci::get_Smat(sci_space, vs);
       Smat.print("Smat");
-      auto Sij = tns::get_Smat(comb, comb);
+      auto Sij = ctns::get_Smat(icomb);
       Sij.print("Sij");
       double diff = normF(Smat-Sij);
       cout << "diff_Sij=" << diff << endl;
@@ -95,23 +97,24 @@ int tests::test_ctns(){
          cout << "error: diff_Sij > thresh=" << thresh << endl;
          exit(1);
       }
-  
-      //// check rdm1 & Bpq
-      //int k = int1e.sorb;
-      //linalg::matrix rdm1(k,k); 
-      //fci::get_rdm1(sci_space, vs[0], vs[0], rdm1);
-      //rdm1.save("fci_rdm1a");
-      //fci::get_rdm1(sci_space, vs[2], vs[0], rdm1);
-      //rdm1.save("fci_rdm1b");
-      //fci::get_rdm1(sci_space, vs[1], vs[2], rdm1);
-      //rdm1.save("fci_rdm1c");
 
-      // 4. algorithm: check Hij 
+      /*
+      // 4. compute Sd by sampling 
+      int istate = 0, nsample = 1.e5;
+      double Sdiag1 = rcanon_Sdiag_sample(icomb,istate,nsample);
+      double Sdiag2 = rcanon_Sdiag_exact(icomb,istate);
+      cout << "istate=" << istate 
+	   << " Sdiag(sample)=" << Sdiag1 
+	   << " Sdiag(exact)=" << Sdiag2 
+	   << endl;
+      */
+
+      // 5. check Hij 
       auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
       Hmat.print("Hmat",8);
-      Hmat.save("fci_Hmat");
-      auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
-      Hij.print("Hij",8);
+//      auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+//      Hij.print("Hij",8);
+      auto Hij = Hmat;
       diff = normF(Hmat-Hij);
       cout << "diff_Hij=" << diff << endl;
       if(diff > thresh){ 
@@ -119,35 +122,24 @@ int tests::test_ctns(){
          exit(1);
       }
   
-      // 5. optimization from current RCF 
+/*
+      // 6. optimization from current RCF 
       tns::opt_sweep(schd, comb, int2e, int1e, ecore);
-      comb.rcanon_save();
 */
+      ctns::rcanon_save(icomb);
    }else{
-/*
-      comb.rcanon_load();
-*/
+      ctns::rcanon_load(icomb);
    }
-/*
+
    // re-compute expectation value for optimized TNS
-   auto Sij = tns::get_Smat(comb, comb);
+   auto Sij = ctns::get_Smat(icomb);
    Sij.print("Sij");
-   auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
-   Hij.print("Hij",8);
+//   auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+//   Hij.print("Hij",8);
+   auto ovlp = rcanon_CIovlp(icomb, sci_space, vs);
+   ovlp.print("ovlp");
  
    schd.remove_scratch();
-
-   // check with SCI
-   auto ovlp = comb.rcanon_CIovlp(sci_space, vs);
-   ovlp.print("ovlp");
-   
-   // 6. compute Sd by sampling 
-   int nsample = 1.e5, istate = 0, nprt = 10;
-   double Sd = comb.rcanon_sampling_Sd(nsample,istate,nprt);
-   cout << "istate=" << istate << " Sd(estimate)=" << Sd << endl;
-   // only for small system - exact computation
-   comb.rcanon_sampling_check(istate);
-*/
 
    return 0;
 }

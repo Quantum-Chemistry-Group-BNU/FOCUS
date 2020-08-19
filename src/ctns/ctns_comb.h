@@ -60,7 +60,28 @@ struct topology{
 template <typename Tm>	
 class comb{
    public:
-      comb(const topology topo1): topo(topo1) {}
+      comb(const topology& topo1): topo(topo1) {}
+      // helpers
+      int get_nphysical() const{ return topo.nphysical; }
+      int get_nstate() const{
+	 assert(rwfuns.rows() == 1); // only one symmetry sector
+	 return rwfuns.qrow.get_dim(0);
+      }
+      qsym get_sym_state() const{
+	 assert(rwfuns.rows() == 1); // only one symmetry sector
+         return rwfuns.qrow.get_sym(0);
+      }
+      qtensor2<Tm> get_state(const int istate) const{
+         assert(rwfuns.rows() == 1);
+	 qsym_space qrow({{rwfuns.qrow.get_sym(0),1}});
+	 qtensor2<Tm> rwfun(rwfuns.sym, qrow, rwfuns.qcol, rwfuns.dir);
+	 const auto& blk0 = rwfuns(0,0);
+	 auto& blk = rwfun(0,0);
+	 for(int ic=0; ic<rwfuns.qcol.get_dim(0); ic++){
+	    blk(0,ic) = blk0(istate,ic);
+	 }
+	 return rwfun;
+      }
 
 //      // --- neightbor ---
 //      int get_kp(const comb_coord& p) const{ return topo[p.first][p.second]; }
@@ -70,7 +91,6 @@ class comb{
 //      bool ifbuild_c(const comb_coord& p) const{ return get_c(p) == std::make_pair(-1,-1); }
 //      bool ifbuild_l(const comb_coord& p) const{ return type.at(get_l(p)) == 0; }
 //      bool ifbuild_r(const comb_coord& p) const{ return type.at(get_r(p)) == 0; }
-
 //      // --- environmental quantum numbers --- 
 //      qsym_space get_qc(const comb_coord& p) const{
 //         auto pc = get_c(p);
@@ -87,47 +107,6 @@ class comb{
 //         return rsites.at(pr).qrow;
 //      }
 
-//      // --- boundary site ---
-//      qtensor3 get_lbsite() const; 
-//      qtensor3 get_rbsite() const; 
-//      // --- from SCI wavefunctions ---
-//      // compute renormalized bases {|r>} from SCI wf 
-//      void get_rbases(const fock::onspace& space,
-//		      const std::vector<std::vector<double>>& vs,
-//		      const double thresh_proj=1.e-14);
-//      // compute wave function at the start for right canonical form 
-//      qtensor3 get_rwavefuns(const fock::onspace& space,
-//		      	     const std::vector<std::vector<double>>& vs,
-//			     const std::vector<int>& order,
-//			     const renorm_basis& rbasis);
-
-//      // --- right canonical form (RCF) ---
-//      void rcanon_init(const fock::onspace& space,
-//		       const std::vector<std::vector<double>>& vs,
-//		       const double thresh_proj){
-//         ::rcanon_init(rsites, topo, space, vs, thresh_proj)
-//      }
-//
-//      void rcanon_check(const double thresh_ortho, // =1.e-10
-//		        const bool ifortho=false); // check last site
-
-//      // io for rsites
-//      void rcanon_save(const std::string fname="rcanon.info");
-//      void rcanon_load(const std::string fname="rcanon.info");
-
-//      // --- overlap with SCI wavefunctions --- 
-//      // <det|Comb[n]> by contracting the Comb
-//      std::vector<double> rcanon_CIcoeff(const fock::onstate& state);
-//      // ovlp[m,n] = <SCI[m]|Comb[n]>
-//      linalg::matrix rcanon_CIovlp(const fock::onspace& space,
-//		                   const std::vector<std::vector<double>>& vs);
-//      // sampling of Comb state to get {|det>,p(det)=|<det|Psi[i]>|^2}
-//      std::pair<fock::onstate,double> rcanon_sampling(const int istate);
-//      // sampling approach for estimating Sd
-//      double rcanon_sampling_Sd(const int nsample, const int istate, const int nprt=0);
-//      // check by explict list all dets in the FCI space
-//      void rcanon_sampling_check(const int istate);
-
    public:
       topology topo;
       std::map<comb_coord,renorm_basis<Tm>> rbases; // renormalized basis from SCI
@@ -136,16 +115,6 @@ class comb{
       //std::map<comb_coord,qtensor3<Tm>> lsites; // left canonical form 
       //std::vector<qtensor3<Tm>> psi; // propagation of initial guess 
 };
-
-//linalg::matrix get_Smat(const comb& bra, 
-//  		        const comb& ket);
-//
-//linalg::matrix get_Hmat(const comb& bra, 
-//		        const comb& ket,
-//		        const integral::two_body& int2e,
-//		        const integral::one_body& int1e,
-//		        const double ecore,
-//		        const std::string scratch);
 
 } // ctns
 
