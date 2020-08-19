@@ -13,19 +13,16 @@ void rcanon_save(const comb<Tm>& icomb,
    std::cout << "\nctns::rcanon_save fname=" << fname << std::endl;
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
-   //save << icomb.rsites << icomb.rwfuns;
-   save << icomb.rwfuns;
-   //save << icomb.rsites.at(std::make_pair(0,0));
+   save << icomb.rsites << icomb.rwfuns;
 }
 
 template <typename Tm>
-void rcanon_load(const comb<Tm>& icomb,
+void rcanon_load(comb<Tm>& icomb, // no const!
    	         const std::string fname="rcanon.info"){
    std::cout << "\nctns:rcanon_load fname=" << fname << std::endl;
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
-   //load >> icomb.rsites >> icomb.rwfuns;
-   load >> icomb.rwfuns;
+   load >> icomb.rsites >> icomb.rwfuns;
 }
 
 } // ctns

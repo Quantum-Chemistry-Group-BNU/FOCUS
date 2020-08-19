@@ -35,8 +35,8 @@ int tests::test_ctns(){
    input::read(schd,fname);
 
    // we will use DTYPE to control Hnr/Hrel 
-   using DTYPE = complex<double>;
-   //using DTYPE = double; // to do -> test more
+   //using DTYPE = complex<double>;
+   using DTYPE = double; // to do -> test more
    
    // read integral
    integral::two_body<DTYPE> int2e;
@@ -98,18 +98,7 @@ int tests::test_ctns(){
          exit(1);
       }
 
-      /*
-      // 4. compute Sd by sampling 
-      int istate = 0, nsample = 1.e5;
-      double Sdiag1 = rcanon_Sdiag_sample(icomb,istate,nsample);
-      double Sdiag2 = rcanon_Sdiag_exact(icomb,istate);
-      cout << "istate=" << istate 
-	   << " Sdiag(sample)=" << Sdiag1 
-	   << " Sdiag(exact)=" << Sdiag2 
-	   << endl;
-      */
-
-      // 5. check Hij 
+      // 4. check Hij 
       auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
       Hmat.print("Hmat",8);
 //      auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
@@ -123,7 +112,7 @@ int tests::test_ctns(){
       }
   
 /*
-      // 6. optimization from current RCF 
+      // 5. optimization from current RCF 
       tns::opt_sweep(schd, comb, int2e, int1e, ecore);
 */
       ctns::rcanon_save(icomb);
@@ -138,7 +127,16 @@ int tests::test_ctns(){
 //   Hij.print("Hij",8);
    auto ovlp = rcanon_CIovlp(icomb, sci_space, vs);
    ovlp.print("ovlp");
- 
+
+   // 6. compute Sd by sampling 
+   int istate = 0, nsample = 1.e5;
+   double Sdiag1 = rcanon_Sdiag_sample(icomb,istate,nsample);
+   double Sdiag2 = rcanon_Sdiag_exact(icomb,istate);
+   cout << "istate=" << istate 
+        << " Sdiag(sample)=" << Sdiag1 
+        << " Sdiag(exact)=" << Sdiag2 
+        << endl;
+
    schd.remove_scratch();
 
    return 0;

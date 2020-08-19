@@ -57,21 +57,3 @@ pair<qsym_space,qsym_dpt> ctns::qsym_space_dpt(const qsym_space& qs1,
    return make_pair(qs12,dpt);
 }
 */
-
-/*
-// symmetry
-vector<qsym> ctns::get_phys_sym(const bool Htype){
-   vector<qsym> phys_sym;
-   if(Htype){
-      phys_sym.push_back(qsym(0,0));
-      phys_sym.push_back(qsym(2,0));
-      phys_sym.push_back(qsym(1,0));
-   }else{
-      phys_sym.push_back(qsym(0,0));
-      phys_sym.push_back(qsym(2,0));
-      phys_sym.push_back(qsym(1,1));
-      phys_sym.push_back(qsym(1,-1));
-   }
-   return phys_sym;
-}
-*/

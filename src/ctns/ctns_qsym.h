@@ -76,6 +76,7 @@ class qsym_space{
 	 ar & dims;
       }
    public:
+      // constructor
       qsym_space(){}
       qsym_space(std::vector<std::pair<qsym,int>> ds): dims(ds) {}
       // helpers
