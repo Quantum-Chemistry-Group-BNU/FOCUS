@@ -13,6 +13,7 @@
 #include "../ctns/ctns_comb_init.h"
 #include "../ctns/ctns_comb_alg.h"
 #include "../ctns/ctns_io.h"
+#include "../ctns/ctns_oper.h"
 #include "../io/input.h"
 #include <iostream>
 #include <iomanip>
@@ -37,7 +38,7 @@ int tests::test_ctns(){
    // we will use DTYPE to control Hnr/Hrel 
    //using DTYPE = complex<double>;
    using DTYPE = double; // to do -> test more
-   
+  
    // read integral
    integral::two_body<DTYPE> int2e;
    integral::one_body<DTYPE> int1e;
@@ -101,15 +102,15 @@ int tests::test_ctns(){
       // 4. check Hij 
       auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
       Hmat.print("Hmat",8);
-//      auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
-//      Hij.print("Hij",8);
-      auto Hij = Hmat;
+      auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+      Hij.print("Hij",8);
       diff = normF(Hmat-Hij);
       cout << "diff_Hij=" << diff << endl;
       if(diff > thresh){ 
          cout << "error: diff_Hij > thresh=" << thresh << endl;
          exit(1);
       }
+      exit(1);
   
 /*
       // 5. optimization from current RCF 
@@ -123,8 +124,8 @@ int tests::test_ctns(){
    // re-compute expectation value for optimized TNS
    auto Sij = ctns::get_Smat(icomb);
    Sij.print("Sij");
-//   auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
-//   Hij.print("Hij",8);
+   auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+   Hij.print("Hij",8);
    auto ovlp = rcanon_CIovlp(icomb, sci_space, vs);
    ovlp.print("ovlp");
 

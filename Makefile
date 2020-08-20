@@ -5,8 +5,11 @@
 ## serial version of MKL
 #MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
 # parallel version of MKL
-MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+MATH = -L/Users/zhendongli/anaconda2/envs/py36/lib -Wl,-rpath,/Users/zhendongli/anaconda2/envs/py36/lib \
+       -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
        -L./extlibs/zquatev -lzquatev 
+#MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+#       -L./extlibs/zquatev -lzquatev 
 # mac framework Accelerate
 #MATH = -llapack -lblas
 
