@@ -36,8 +36,8 @@ int tests::test_ctns(){
    input::read(schd,fname);
 
    // we will use DTYPE to control Hnr/Hrel 
-   //using DTYPE = complex<double>;
-   using DTYPE = double; // to do -> test more
+   using DTYPE = complex<double>;
+   //using DTYPE = double; // to do -> test more
   
    // read integral
    integral::two_body<DTYPE> int2e;

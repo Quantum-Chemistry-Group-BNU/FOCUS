@@ -138,7 +138,7 @@ struct qtensor2{
 	 for(int br=0; br<_rows; br++){
  	    int offr = roff[br];		 
 	    for(int bc=0; bc<_cols; bc++){
-	       auto& blk = _qblocks[_addr(br,bc)];
+	       const auto& blk = _qblocks[_addr(br,bc)];
 	       if(blk.size() == 0) continue;
 	       int offc = coff[bc];
 	       for(int ic=0; ic<qcol.get_dim(bc); ic++){
@@ -149,6 +149,24 @@ struct qtensor2{
 	    } // bc
 	 } // br
 	 return mat;
+      }
+      // from dense matrix: assign block to proper place
+      void from_matrix(const linalg::matrix<Tm>& mat){
+	 auto roff = qrow.get_offset();
+	 auto coff = qcol.get_offset();
+	 for(int br=0; br<_rows; br++){
+ 	    int offr = roff[br];		 
+	    for(int bc=0; bc<_cols; bc++){
+	       auto& blk = _qblocks[_addr(br,bc)];
+	       if(blk.size() == 0) continue;
+	       int offc = coff[bc];
+	       for(int ic=0; ic<qcol.get_dim(bc); ic++){
+	 	  for(int ir=0; ir<qrow.get_dim(br); ir++){
+		     blk(ir,ic) = mat(offr+ir,offc+ic);
+		  } // ir
+	       } // ic
+	    } // bc
+	 } // br
       }
       // xgemm
       qtensor2<Tm> dot(const qtensor2<Tm>& qt) const{
@@ -181,6 +199,136 @@ struct qtensor2{
 	    }
 	 }
 	 return qt2; 
+      }
+      // generate matrix representation for Kramers paired operators
+      // po: =0,1 parity for no. of barred indices of the target operators
+      // with this factor, a_{\bar{p}} can be simply obtained from a_{p}.K(1)
+      qtensor2<Tm> K(const int po=0) const{
+	 const double fpo = (po == 0)? 1.0 : -1.0;
+         const bool Htype = tools::is_complex<Tm>();
+	 if(Htype){
+	    // <r|\bar{O}|c> = (K<r|\bar{O}|c>)*
+	    // 		     = p{O} <\bar{r}|O|\bar{c}>*
+	    // \bar{\bar{O}} = p{O} O (p{O}: 'parity' of operator)
+	    qtensor2<Tm> qt2(sym, qrow, qcol, dir);
+            for(int br=0; br<qt2.rows(); br++){
+	       for(int bc=0; bc<qt2.cols(); bc++){
+	          auto& blk = qt2(br,bc);
+	          if(blk.size() == 0) continue;
+		  const auto& blk1 = _qblocks[_addr(br,bc)];
+	          const qsym& qr = qt2.qrow.get_sym(br);
+		  const qsym& qc = qt2.qcol.get_sym(bc);
+		  int dr = qt2.qrow.get_dim(br);
+		  int dc = qt2.qcol.get_dim(bc);
+		  int pr = qr.ne()%2;
+		  int pc = qc.ne()%2;
+		  if(pr == 0 && pc == 0){
+		     // <e|\bar{O}|e> = p{O} <e|O|e>^*
+		     blk = fpo*blk1.conj();
+		  }else if(pr == 0 && pc == 1){
+		     // <e|\bar{O}|o> = p{O} <e|O|\bar{o}>^*
+		     // <e|\bar{O}|\bar{o}> = p{O} <e|O|o>^* (-1)
+		     // [A,B] -> p{O}[B*,-A*]  
+		     assert(dc%2 == 0);
+		     int dc2 = dc/2;
+		     for(int ic=0; ic<dc2; ic++){
+		        std::transform(blk1.col(ic),blk1.col(ic)+dr,blk.col(ic+dc2),
+				       [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
+		     }
+		     for(int ic=0; ic<dc2; ic++){
+			std::transform(blk1.col(ic+dc2),blk1.col(ic+dc2)+dr,blk.col(ic),
+				       [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
+		     } 
+		  }else if(pr == 1 && pc == 0){
+		     // [A]        [ B*]
+		     // [ ] -> p{O}[   ]
+		     // [B]        [-A*] 
+		     assert(dr%2 == 0);
+		     int dr2 = dr/2;
+		     for(int ic=0; ic<dc; ic++){
+		        std::transform(blk1.col(ic),blk1.col(ic)+dr2,blk.col(ic)+dr2,
+				       [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
+			std::transform(blk1.col(ic)+dr2,blk1.col(ic)+dr,blk.col(ic),
+				       [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
+		     }
+		  }else if(pr == 1 && pc == 1){
+		     // [A B]        [ D* -C*]
+		     // [   ] -> p{O}[       ]
+		     // [C D]        [-B*  A*]
+		     assert(dr%2 == 0 && dc%2 == 0);
+		     int dr2 = dr/2, dc2 = dc/2;
+		     for(int ic=0; ic<dc2; ic++){
+		        std::transform(blk1.col(ic),blk1.col(ic)+dr2,blk.col(ic+dc2)+dr2,
+				       [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
+		        std::transform(blk1.col(ic)+dr2,blk1.col(ic)+dr,blk.col(ic+dc2),
+				       [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
+		     }
+		     for(int ic=0; ic<dc2; ic++){
+			std::transform(blk1.col(ic+dc2),blk1.col(ic+dc2)+dr2,blk.col(ic)+dr2,
+				       [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
+			std::transform(blk1.col(ic+dc2)+dr2,blk1.col(ic+dc2)+dr,blk.col(ic),
+				       [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
+		     }
+		  }
+	       } // bc
+	    } // br
+	    return qt2;
+	 }else{
+	    qtensor2<Tm> qt2;
+	    return qt2;
+	 }
+      }
+      // algebra
+      qtensor2<Tm> operator -() const{
+	 qtensor2<Tm> qt2 = *this;
+         for(auto& blk : qt2._qblocks){
+	    if(blk.size() > 0) blk *= -1;
+	 }
+	 return qt2;
+      }
+      qtensor2<Tm>& operator +=(const qtensor2<Tm>& qt){
+         assert(dir == qt.dir);
+         assert(sym == qt.sym); // symmetry blocking must be the same
+         for(int i=0; i<_qblocks.size(); i++){
+	    auto& blk = _qblocks[i];
+            assert(blk.size() == qt._qblocks[i].size());
+            if(blk.size() > 0) blk += qt._qblocks[i];
+         }
+         return *this;
+      }
+      qtensor2<Tm>& operator -=(const qtensor2<Tm>& qt){
+         assert(dir == qt.dir);
+         assert(sym == qt.sym); // symmetry blocking must be the same
+         for(int i=0; i<_qblocks.size(); i++){
+	    auto& blk = _qblocks[i];
+            assert(blk.size() == qt._qblocks[i].size());
+            if(blk.size() > 0) blk -= qt._qblocks[i];
+         }
+         return *this;
+      }
+      qtensor2<Tm>& operator *=(const Tm fac){
+         for(auto& blk : _qblocks){
+            if(blk.size() > 0) blk *= fac;
+         }
+         return *this;
+      }
+      friend qtensor2<Tm> operator +(const qtensor2<Tm>& qta, const qtensor2<Tm>& qtb){
+         qtensor2<Tm> qt2 = qta;
+         qt2 += qtb;
+         return qt2;
+      }
+      friend qtensor2<Tm> operator -(const qtensor2<Tm>& qta, const qtensor2<Tm>& qtb){
+         qtensor2<Tm> qt2 = qta;
+         qt2 -= qtb;
+         return qt2;
+      }
+      friend qtensor2<Tm> operator *(const Tm fac, const qtensor2<Tm>& qt){ 
+         qtensor2<Tm> qt2 = qt;
+         qt2 *= fac;
+         return qt2;
+      }
+      friend qtensor2<Tm> operator *(const qtensor2<Tm>& qt, const Tm fac){ 
+         return fac*qt;
       }
    public:
       std::vector<bool> dir = {1,0}; // {out,int} by usual convention for operators in diagrams

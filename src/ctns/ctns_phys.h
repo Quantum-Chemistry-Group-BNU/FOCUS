@@ -32,6 +32,44 @@ qsym_space get_qsym_space_phys(){
    return qs_phys;
 }
 
+// exact right/left boundary tensor:
+//        n             |vac>
+//        |               |
+//     ---*---|vac>   n---*
+//  |out> 	          |
+template <typename Tm>
+qtensor3<Tm> get_right_bsite(){
+   auto qs_vac = get_qsym_space_vac();
+   auto qs_phys = get_qsym_space_phys<Tm>();
+   qtensor3<Tm> qt3(qsym(0,0), qs_phys, qs_phys, qs_vac);
+   for(int k=0; k<qs_phys.size(); k++){
+      int pdim = qs_phys.get_dim(k);
+      for(int im=0; im<pdim; im++){
+	 linalg::matrix<Tm> mat(pdim,1);
+	 mat(im,0) = 1.0;
+         qt3(k,k,0)[im] = mat;
+      }
+   }
+   return qt3;
+}
+
+template <typename Tm>
+qtensor3<Tm> get_left_bsite(){
+   std::vector<bool> dir = {1,1,0};
+   auto qs_vac = get_qsym_space_vac();
+   auto qs_phys = get_qsym_space_phys<Tm>();
+   qtensor3<Tm> qt3(qsym(0,0), qs_phys, qs_vac, qs_phys, dir);
+   for(int k=0; k<qs_phys.size(); k++){
+      int pdim = qs_phys.get_dim(k);
+      for(int im=0; im<pdim; im++){
+	 linalg::matrix<Tm> mat(1,pdim);
+	 mat(0,im) = 1.0;
+         qt3(k,0,k)[im] = mat;
+      }
+   }
+   return qt3;
+}
+
 // rbasis for type-0 physical site 
 template <typename Tm>
 renorm_basis<Tm> get_rbasis_phys(){
@@ -103,44 +141,6 @@ void assign_occupation_phys(fock::onstate& state,
    }else if(idx == 3){
       state[2*k] = 0; state[2*k+1] = 1; // b
    }
-}
-
-// exact right/left boundary tensor:
-//        n             |vac>
-//        |               |
-//     ---*---|vac>   n---*
-//  |out> 	          |
-template <typename Tm>
-qtensor3<Tm> get_right_bsite(){
-   qsym_space qs_vac = get_qsym_space_vac();
-   qsym_space qs_phys = get_qsym_space_phys<Tm>();
-   qtensor3<Tm> qt3(qsym(0,0), qs_phys, qs_phys, qs_vac);
-   for(int k=0; k<qs_phys.size(); k++){
-      int pdim = qs_phys.get_dim(k);
-      for(int im=0; im<pdim; im++){
-	 linalg::matrix<Tm> mat(pdim,1);
-	 mat(im,0) = 1.0;
-         qt3(k,k,0)[im] = mat;
-      }
-   }
-   return qt3;
-}
-
-template <typename Tm>
-qtensor3<Tm> get_left_bsite(){
-   std::vector<bool> dir = {1,1,0};
-   qsym_space qs_vac = get_qsym_space_vac();
-   qsym_space qs_phys = get_qsym_space_phys<Tm>();
-   qtensor3<Tm> qt3(qsym(0,0), qs_phys, qs_vac, qs_phys, dir);
-   for(int k=0; k<qs_phys.size(); k++){
-      int pdim = qs_phys.get_dim(k);
-      for(int im=0; im<pdim; im++){
-	 linalg::matrix<Tm> mat(1,pdim);
-	 mat(0,im) = 1.0;
-         qt3(k,0,k)[im] = mat;
-      }
-   }
-   return qt3;
 }
 
 } // ctns
