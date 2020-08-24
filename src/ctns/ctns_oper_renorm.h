@@ -17,7 +17,7 @@ void oper_renorm_opC(const std::string& superblock,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
 		     const bool debug=false){
-   if(debug) std::cout << "ctns::oper_renorm_opC" << std::endl;
+   if(debug) std::cout << "\nctns::oper_renorm_opC" << std::endl;
    auto t0 = tools::get_time();
    // 1. p1^+*I2 
    for(const auto& op1C : qops1['C']){
@@ -40,99 +40,118 @@ void oper_renorm_opC(const std::string& superblock,
    }
 }
 
-/*
 // kernel for computing renormalized Apq=ap^+aq^+
-void tns::oper_renorm_opA(const string& superblock,
-			  const qtensor3& bsite,
-			  const qtensor3& ksite,
-			  oper_dict& qops1,
-			  oper_dict& qops2,
-			  oper_dict& qops,
-			  const bool debug){
-   if(debug) cout << "tns::oper_renorm_opA" << endl;
+template <typename Tm>
+void oper_renorm_opA(const std::string& superblock,
+		     const qtensor3<Tm>& site,
+		     oper_dict<Tm>& qops1,
+		     oper_dict<Tm>& qops2,
+		     oper_dict<Tm>& qops,
+		     const bool debug=false){
+   if(debug) std::cout << "\nctns::oper_renorm_opA" << std::endl;
    auto t0 = tools::get_time();
-   // 1. pC^+qC^+ * Ir
+   // 1. p1^+q1^+ * I2
    for(const auto& op1A : qops1['A']){
       int pq1 = op1A.first;
       const auto& op1 = op1A.second;
-      auto Hwf = oper_kernel_OIwf(superblock,ksite,op1);
-      qops['A'][pq1] = oper_kernel_renorm(superblock,bsite,Hwf);
+      auto Hwf = oper_kernel_OIwf(superblock,site,op1);
+      qops['A'][pq1] = oper_kernel_renorm(superblock,site,Hwf);
    }
-   // 2. Ic * pR^+qR^+ (p<q) 
+   // 2. I1 * p2^+q2^+ (p<q) 
    for(const auto& op2A : qops2['A']){
       int pq2 = op2A.first;
       const auto& op2 = op2A.second;
-      auto Hwf = oper_kernel_IOwf(superblock,ksite,op2,0);
-      qops['A'][pq2] = oper_kernel_renorm(superblock,bsite,Hwf);
+      auto Hwf = oper_kernel_IOwf(superblock,site,op2,0);
+      qops['A'][pq2] = oper_kernel_renorm(superblock,site,Hwf);
    }
-   // 3. pC^+ * qR^+
+   // 3. p1^+ * q2^+
    for(const auto& op1C : qops1['C']){
       int p1 = op1C.first;
       const auto& op1 = op1C.second;
       for(const auto& op2C : qops2['C']){
 	 int p2 = op2C.first;
 	 const auto& op2 = op2C.second;
-         auto Hwf = oper_kernel_OOwf(superblock,ksite,op1,op2,1);
-	 auto qt2 = oper_kernel_renorm(superblock,bsite,Hwf);
-	 // only store Apq where p<q;
+	 // pAqA and pAqB
+         auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
+	 auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa); 
+         auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1),1);
+	 auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab); 
+	 // only store Apq where kp<kq;
 	 if(p1 < p2){
-	    qops['A'][oper_pack(p1,p2)] = qt2; 
+	    // <a1^+a2^+> = [a1^+]*[a2^+]
+	    qops['A'][oper_pack(0,p1,p2)] = qt2aa; 
+	    qops['A'][oper_pack(1,p1,p2)] = qt2ab; 
 	 }else{
-	    qops['A'][oper_pack(p2,p1)] = -qt2;
+ 	    // <a2^+a1^+> = -<a1^+a2^+> = -[a1^+]*[a2^+] 
+	    qops['A'][oper_pack(0,p2,p1)] = -qt2aa;
+	    qops['A'][oper_pack(1,p2,p1)] = -qt2ab; 
 	 }
       }
    }
    auto t1 = tools::get_time();
    if(debug){
-      cout << "timing for tns::oper_renorm_opA : " << setprecision(2) 
-           << tools::get_duration(t1-t0) << " s" << endl;
+      std::cout << "timing for ctns::oper_renorm_opA : " << std::setprecision(2) 
+                << tools::get_duration(t1-t0) << " s" << std::endl;
    }
 }
 
 // kernel for computing renormalized ap^+aq
-void tns::oper_renorm_opB(const string& superblock,
-			  const qtensor3& bsite,
-			  const qtensor3& ksite,
-			  oper_dict& qops1,
-			  oper_dict& qops2,
-			  oper_dict& qops,
-			  const bool debug){
-   if(debug) cout << "tns::oper_renorm_opB" << endl;
+template <typename Tm>
+void oper_renorm_opB(const std::string& superblock,
+		     const qtensor3<Tm>& site,
+		     oper_dict<Tm>& qops1,
+		     oper_dict<Tm>& qops2,
+		     oper_dict<Tm>& qops,
+		     const bool debug=false){
+   if(debug) std::cout << "ctns::oper_renorm_opB" << std::endl;
    auto t0 = tools::get_time();
-   // 1. pC^+qC * Ir
+   // 1. p1^+q1 * I2
    for(const auto& op1B : qops1['B']){
       int pq1 = op1B.first;
       const auto& op1 = op1B.second;
-      auto Hwf = oper_kernel_OIwf(superblock,ksite,op1);
-      qops['B'][pq1] = oper_kernel_renorm(superblock,bsite,Hwf);
+      auto Hwf = oper_kernel_OIwf(superblock,site,op1);
+      qops['B'][pq1] = oper_kernel_renorm(superblock,site,Hwf);
    }
-   // 2. Ic * pR^+qR 
+   // 2. I1 * p2^+q2 
    for(const auto& op2B : qops2['B']){
       int pq2 = op2B.first;
       const auto& op2 = op2B.second;
-      auto Hwf = oper_kernel_IOwf(superblock,ksite,op2,0);
-      qops['B'][pq2] = oper_kernel_renorm(superblock,bsite,Hwf);
+      auto Hwf = oper_kernel_IOwf(superblock,site,op2,0);
+      qops['B'][pq2] = oper_kernel_renorm(superblock,site,Hwf);
    }
-   // 3. pC^+ * qR and pR^+*qC = -qC*pR^+
+   // 3. p1^+*q2 
    for(const auto& op1C : qops1['C']){
       int p1 = op1C.first;
       const auto& op1 = op1C.second;
       for(const auto& op2C : qops2['C']){
 	 int p2 = op2C.first;
 	 const auto& op2 = op2C.second;
-	 auto Hwf = oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1);
-	 qops['B'][oper_pack(p1,p2)] =  oper_kernel_renorm(superblock,bsite,Hwf);
-	 Hwf = oper_kernel_OOwf(superblock,ksite,op1.T(),op2,1);
-	 qops['B'][oper_pack(p2,p1)] =  -oper_kernel_renorm(superblock,bsite,Hwf);
+	 // pAqA and pAqB
+	 if(p1 < p2){ 
+	    // <a1^+a2> = [a1^+]*[a2] 
+	    auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2.H(),1);
+	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
+	    auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1).H(),1);
+	    auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab);
+	    qops['B'][oper_pack(0,p1,p2)] = qt2aa; 
+	    qops['B'][oper_pack(1,p1,p2)] = qt2ab;
+	 }else{ 
+	    // <a2^+a1> = -<a1*a2^+> = -[a1]*[a2^+] 
+	    auto Hwfaa = oper_kernel_OOwf(superblock,site,op1.H(),op2,1);
+	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
+	    auto Hwfab = oper_kernel_OOwf(superblock,site,op1.K(1).H(),op2,1);
+	    auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab);
+	    qops['B'][oper_pack(0,p2,p1)] = -qt2aa; 
+	    qops['B'][oper_pack(1,p2,p1)] = -qt2ab;
+	 }
       }
    }
    auto t1 = tools::get_time();
    if(debug){ 
-      cout << "timing for tns::oper_renorm_opB : " << setprecision(2) 
-           << tools::get_duration(t1-t0) << " s" << endl;
+      std::cout << "timing for tns::oper_renorm_opB : " << std::setprecision(2) 
+                << tools::get_duration(t1-t0) << " s" << std::endl;
    }
 }
-*/
 
 // renormalize ops
 template <typename Tm>
@@ -168,10 +187,10 @@ oper_dict<Tm> oper_renorm_ops(const std::string& superblock,
    oper_renorm_opC(superblock,site,qops1,qops2,qops,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'C');
 /*
-   oper_renorm_opS(superblock,bsite,ksite,qops1,qops2,qops,
+   oper_renorm_opS(superblock,site,qops1,qops2,qops,
    		   supp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'S',int2e,int1e);
-   oper_renorm_opH(superblock,bsite,ksite,qops1,qops2,qops,
+   oper_renorm_opH(superblock,site,qops1,qops2,qops,
    		   int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'H',int2e,int1e);
    // consistency check
@@ -182,15 +201,17 @@ oper_dict<Tm> oper_renorm_ops(const std::string& superblock,
       cout << "error: H-H.T is too large! diffH=" << diffH << endl;
       exit(1);
    }
+*/
    // AB/PQ
-   oper_renorm_opA(superblock,bsite,ksite,qops1,qops2,qops,debug);
+   oper_renorm_opA(superblock,site,qops1,qops2,qops,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'A');
-   oper_renorm_opB(superblock,bsite,ksite,qops1,qops2,qops,debug);
+   oper_renorm_opB(superblock,site,qops1,qops2,qops,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'B');
-   oper_renorm_opP(superblock,bsite,ksite,qops1,qops2,qops,
+/*
+   oper_renorm_opP(superblock,site,qops1,qops2,qops,
      	      supp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'P',int2e,int1e);
-   oper_renorm_opQ(superblock,bsite,ksite,qops1,qops2,qops,
+   oper_renorm_opQ(superblock,site,qops1,qops2,qops,
    	              supp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'Q',int2e,int1e);
 */

@@ -13,7 +13,6 @@ namespace ctns{
 // pA^+
 template <typename Tm>
 void oper_dot_C(const int k0, oper_dict<Tm>& qops){
-   int ka = 2*k0, kb = ka+1;
    auto qs_phys = get_qsym_space_phys<Tm>();
    const bool Htype = tools::is_complex<Tm>();
    // c[0]
@@ -27,7 +26,7 @@ void oper_dot_C(const int k0, oper_dict<Tm>& qops){
    auto sym_op = Htype? qsym(1,0) : qsym(1,1);
    qtensor2<Tm> qt2(sym_op, qs_phys, qs_phys);
    qt2.from_matrix(mat);
-   qops['C'][ka] = qt2;
+   qops['C'][k0] = qt2;
 /*
    qops['C'][ka].to_matrix().print("c0");
    auto a0 = qops['C'][ka].H();
@@ -44,7 +43,6 @@ void oper_dot_C(const int k0, oper_dict<Tm>& qops){
 // A[pA,pB] = pA^+pB^+
 template <typename Tm>
 void oper_dot_A(const int k0, oper_dict<Tm>& qops){
-   int ka = 2*k0, kb = ka+1;
    auto qs_phys = get_qsym_space_phys<Tm>();
    // c[0].dot(c[1])
    // [[0. 0. 0. 0.]
@@ -56,7 +54,7 @@ void oper_dot_A(const int k0, oper_dict<Tm>& qops){
    auto sym_op = qsym(2,0);
    qtensor2<Tm> qt2(sym_op, qs_phys, qs_phys);
    qt2.from_matrix(mat);
-   qops['A'][oper_pack(ka,kb)] = qt2;
+   qops['A'][oper_pack(1,k0,k0)] = qt2;
 /* 
    qt2.print("qt2",2);
    qt2.to_matrix().print("A0");
@@ -75,18 +73,18 @@ void oper_dot_P(const int k0,
 		const integral::two_body<Tm>& int2e,
 		const std::vector<int>& krest,
 		oper_dict<Tm>& qops){
-   int ka = 2*k0, kb = ka+1;
-   auto qt2ab = qops['A'][oper_pack(ka,kb)].H();
    // P[pA,qA] (p<q) and P[pA,qB] (p<=q)
+   auto qt2ab = qops['A'][oper_pack(1,k0,k0)].H();
+   int ka = 2*k0, kb = ka+1;
    for(int kp : krest){
       int pa = 2*kp, pb = pa+1;
       for(int kq : krest){
 	 int qa = 2*kq, qb = qa+1;
 	 if(kp < kq){
-	    qops['P'][oper_pack(pa,qa)] = int2e.get(pa,qa,ka,kb)*qt2ab;
+	    qops['P'][oper_pack(0,kp,kq)] = int2e.get(pa,qa,ka,kb)*qt2ab;
 	 }
 	 if(kp <= kq){
-	    qops['P'][oper_pack(pa,qb)] = int2e.get(pa,qb,ka,kb)*qt2ab;
+	    qops['P'][oper_pack(1,kp,kq)] = int2e.get(pa,qb,ka,kb)*qt2ab;
 	 }
       }
    }
@@ -95,7 +93,6 @@ void oper_dot_P(const int k0,
 // B[pA,pA] = pA^+pA, B[pA,pB] = pA^+pB
 template <typename Tm>
 void oper_dot_B(const int k0, oper_dict<Tm>& qops){
-   int ka = 2*k0, kb = ka+1;
    auto qs_phys = get_qsym_space_phys<Tm>();
    const bool Htype = tools::is_complex<Tm>();
    // c[0].dot(a[0])
@@ -108,7 +105,7 @@ void oper_dot_B(const int k0, oper_dict<Tm>& qops){
    mataa(2,2) = 1;
    qtensor2<Tm> qt2aa(qsym(0,0), qs_phys, qs_phys);
    qt2aa.from_matrix(mataa);
-   qops['B'][oper_pack(ka,ka)] = qt2aa;
+   qops['B'][oper_pack(0,k0,k0)] = qt2aa;
    // c[0].dot(a[1])
    // [[0. 0. 0. 0.]
    //  [0. 0. 0. 0.]
@@ -119,7 +116,7 @@ void oper_dot_B(const int k0, oper_dict<Tm>& qops){
    auto sym_op = Htype? qsym(0,0) : qsym(0,1);
    qtensor2<Tm> qt2ab(sym_op, qs_phys, qs_phys);
    qt2ab.from_matrix(matab);
-   qops['B'][oper_pack(ka,kb)] = qt2ab;
+   qops['B'][oper_pack(1,k0,k0)] = qt2ab;
 /*
    qt2aa.print("qt2aa",2);
    qt2aa.to_matrix().print("Baa");
@@ -146,25 +143,25 @@ void oper_dot_Q(const int k0,
 		const integral::two_body<Tm>& int2e,
 		const std::vector<int>& krest,
 		oper_dict<Tm>& qops){
-   int ka = 2*k0, kb = ka+1;
-   auto& qt2aa = qops['B'][oper_pack(ka,ka)];
-   auto& qt2ab = qops['B'][oper_pack(ka,kb)];
+   auto& qt2aa = qops['B'][oper_pack(0,k0,k0)];
+   auto& qt2ab = qops['B'][oper_pack(1,k0,k0)];
    auto qt2bb = qt2aa.K(0);
    auto qt2ba = qt2ab.K(1); 
    // Q[pA,sA] (p<=s) and Q[pA,sB] (p<=s)
+   int ka = 2*k0, kb = ka+1;
    for(int kp : krest){
       int pa = 2*kp, pb = pa+1;
       for(int ks : krest){
 	 int sa = 2*ks, sb = sa+1;
 	 if(kp <= ks){
-	    qops['Q'][oper_pack(pa,sa)] = int2e.get(pa,ka,sa,ka)*qt2aa
-		    		        + int2e.get(pa,kb,sa,kb)*qt2bb
-					+ int2e.get(pa,ka,sa,kb)*qt2ab
-					+ int2e.get(pa,kb,sa,ka)*qt2ba;
-	    qops['Q'][oper_pack(pa,sb)] = int2e.get(pa,ka,sb,ka)*qt2aa
-	    			        + int2e.get(pa,kb,sb,kb)*qt2bb
-					+ int2e.get(pa,ka,sb,kb)*qt2ab
-					+ int2e.get(pa,kb,sb,ka)*qt2ba;
+	    qops['Q'][oper_pack(0,kp,ks)] = int2e.get(pa,ka,sa,ka)*qt2aa
+		    		          + int2e.get(pa,kb,sa,kb)*qt2bb
+				   	  + int2e.get(pa,ka,sa,kb)*qt2ab
+					  + int2e.get(pa,kb,sa,ka)*qt2ba;
+	    qops['Q'][oper_pack(1,kp,ks)] = int2e.get(pa,ka,sb,ka)*qt2aa
+	    			          + int2e.get(pa,kb,sb,kb)*qt2bb
+					  + int2e.get(pa,ka,sb,kb)*qt2ab
+					  + int2e.get(pa,kb,sb,ka)*qt2ba;
 	 }
       }
    }
@@ -177,7 +174,6 @@ void oper_dot_S(const int k0,
 		const integral::one_body<Tm>& int1e,
 		const std::vector<int>& krest,
 		oper_dict<Tm>& qops){
-   int ka = 2*k0, kb = ka+1;
    auto qs_phys = get_qsym_space_phys<Tm>();
    const bool Htype = tools::is_complex<Tm>();
    // c[0].dot(a[1].dot(a[0]))
@@ -191,15 +187,16 @@ void oper_dot_S(const int k0,
    qtensor2<Tm> qt2aba(sym_op, qs_phys, qs_phys); // ka^+ kb ka
    qt2aba.from_matrix(mat);
    // S_{p}^C = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
+   int ka = 2*k0, kb = ka+1;
    for(int kp : krest){
       int pa = 2*kp, pb = pa+1;
-      auto Spa = 0.5*int1e.get(pa,ka)*qops['C'][ka].H()
+      auto Spa = 0.5*int1e.get(pa,ka)*qops['C'][k0].H()
 	       - int2e.get(pa,kb,ka,kb)*qt2aba.K(0);
       if(Htype){
-	 Spa += 0.5*int1e.get(pa,kb)*qops['C'][ka].K(1).H()
+	 Spa += 0.5*int1e.get(pa,kb)*qops['C'][k0].K(1).H()
 	      + int2e.get(pa,ka,ka,kb)*qt2aba;		 
       }
-      qops['S'][pa] = Spa;
+      qops['S'][kp] = Spa;
 /*
       Spa.to_matrix().print("Spa");
 */
@@ -228,11 +225,11 @@ void oper_dot_H(const int k0,
    // <ka,kb||ka,kb> ka^+ kb^+ kb ka
    auto qt2 = int2e.get(ka,kb,ka,kb)*qt2abba;
    // h[ka,ka] ka^+ka + h[kb,kb] kb^+kb
-   const auto& qop = qops['B'][oper_pack(ka,ka)];
+   const auto& qop = qops['B'][oper_pack(0,k0,k0)];
    qt2 += int1e.get(ka,ka)*qop + int1e.get(kb,kb)*qop.K(0);
    if(Htype){
       // h[ka,kb] ka^+kb + h[kb,ka] kb^+ka
-      const auto& qop = qops['B'][oper_pack(ka,kb)];
+      const auto& qop = qops['B'][oper_pack(1,k0,k0)];
       qt2 += int1e.get(ka,kb)*qop + int1e.get(kb,ka)*qop.K(1); 
    }
    qops['H'][0] = qt2;

@@ -204,7 +204,7 @@ struct qtensor2{
       // po: =0,1 parity for no. of barred indices of the target operators
       // with this factor, a_{\bar{p}} can be simply obtained from a_{p}.K(1)
       qtensor2<Tm> K(const bool po) const{
-	 const double fpo = (po == 0)? 1.0 : -1.0;
+	 const double fpo = po? -1.0 : 1.0;
          const bool Htype = tools::is_complex<Tm>();
 	 if(Htype){
 	    // <r|\bar{O}|c> = (K<r|\bar{O}|c>)*

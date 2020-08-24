@@ -9,6 +9,7 @@ namespace ctns{
 void setup_orb2pos_map(const std::vector<int>& rsupp,
 		       std::vector<int>& rspinorbs,
 		       std::map<int,int>& orb2pos){
+   const bool debug=false;
    int idx = 0;
    for(auto it=rsupp.begin(); it!=rsupp.end(); it++){
       int ks = *it;
@@ -18,12 +19,14 @@ void setup_orb2pos_map(const std::vector<int>& rsupp,
       rspinorbs.push_back(2*ks); // spin-orbitals
       rspinorbs.push_back(2*ks+1);
    }
-   std::cout << "rsupp=";
-   for(int i : rsupp) std::cout << i << " ";
-   std::cout << std::endl;
-   std::cout << "rspinorbs=";
-   for(int i : rspinorbs) std::cout << i << " ";
-   std::cout << std::endl;
+   if(debug){
+      std::cout << "rsupp=";
+      for(int i : rsupp) std::cout << i << " ";
+      std::cout << std::endl;
+      std::cout << "rspinorbs=";
+      for(int i : rspinorbs) std::cout << i << " ";
+      std::cout << std::endl;
+   }
 }
 
 // normal operators
@@ -33,18 +36,18 @@ void oper_check_rbasis(const comb<Tm>& bra,
 		       const comb_coord& p,
 		       oper_dict<Tm>& qops,
 		       const char opname){
-   if(p == std::make_pair(0,0)) return; // no rbases at the start 
    const double thresh = 1.e-6;
+   if(p == std::make_pair(0,0)) return; // no rbases at the start 
+   std::cout << "ctns::oper_check_rbasis coord=" << p 
+	     << " opname=" << opname << std::endl; 
    int nfail = 0;
    double mdiff = -1.0;
-   std::cout << "ctns::oper_check_rbasis opname=" << opname << std::endl;
    const auto& node = bra.topo.get_node(p);
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
    const auto& rbasis0 = bra.rbases.at(p);
    const auto& rbasis1 = ket.rbases.at(p);
    // setup mapping for orbitals to local support
-   std::cout << "p=" << p << "[" << node.pindex << "]" << std::endl;
    auto rsupp = node.rsupport;
    std::vector<int> rspinorbs;
    std::map<int,int> orb2pos;
@@ -54,7 +57,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    if(opname == 'C'){ 
    for(const auto& opC: qops['C']){
       const auto& op = opC.second;
-      int orb_p = opC.first;
+      int orb_p = 2*opC.first;
       int pos = orb2pos.at(orb_p);
       // build
       int dim0 = bsite.qrow.get_dimAll();
@@ -117,7 +120,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    if(opname == 'A'){ 
    for(const auto& opA : qops['A']){
       const auto& op = opA.second;
-      auto pq = oper_unpack(opA.first);
+      auto pq = oper_unpack2(opA.first);
       int orb_p = pq.first;
       int orb_q = pq.second;
       int pos_p = orb2pos.at(orb_p);
@@ -184,7 +187,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    if(opname == 'B'){ 
    for(const auto& opB : qops['B']){
       const auto& op = opB.second;
-      auto pq = oper_unpack(opB.first);
+      auto pq = oper_unpack2(opB.first);
       int orb_p = pq.first;
       int orb_q = pq.second;
       int pos_p = orb2pos.at(orb_p);
@@ -249,7 +252,6 @@ void oper_check_rbasis(const comb<Tm>& bra,
    
    std::cout << "no. of failed cases = " << nfail 
 	     << " maxdiff = " << mdiff << std::endl;
-   if(nfail > 0 || std::abs(mdiff) > thresh) exit(1);
 }
 
 // complementary operators
@@ -261,18 +263,18 @@ void oper_check_rbasis(const comb<Tm>& bra,
 		       const char opname,
 	               const integral::two_body<Tm>& int2e,
 	               const integral::one_body<Tm>& int1e){
-   if(p == std::make_pair(0,0)) return; // no rbases at the start 
    const double thresh = 1.e-5;
+   if(p == std::make_pair(0,0)) return; // no rbases at the start 
+   std::cout << "ctns::oper_check_rbasis coord=" << p 
+	     << " opname=" << opname << std::endl; 
    int nfail = 0;
    double mdiff = -1.0;
-   std::cout << "ctns::oper_check_rbasis opname=" << opname << std::endl;
    const auto& node = bra.topo.get_node(p);
    const auto& bsite = bra.rsites.at(p);
    const auto& ksite = ket.rsites.at(p);
    const auto& rbasis0 = bra.rbases.at(p);
    const auto& rbasis1 = ket.rbases.at(p);
    // setup mapping for orbitals to local support
-   std::cout << "p=" << p << "[" << node.pindex << "]" << std::endl;
    auto rsupp = node.rsupport;
    std::vector<int> rspinorbs;
    std::map<int,int> orb2pos;
@@ -282,7 +284,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    if(opname == 'P'){ 
    for(const auto& opP : qops['P']){
       const auto& op = opP.second;
-      auto pq = oper_unpack(opP.first);
+      auto pq = oper_unpack2(opP.first);
       int orb_p = pq.first;
       int orb_q = pq.second;
       // build
@@ -353,7 +355,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    if(opname == 'Q'){ 
    for(const auto& opQ : qops['Q']){
       const auto& op = opQ.second;
-      auto ps = oper_unpack(opQ.first);
+      auto ps = oper_unpack2(opQ.first);
       int orb_p = ps.first;
       int orb_s = ps.second;
       // build
@@ -423,7 +425,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    if(opname == 'S'){
    for(const auto& opS : qops['S']){
       const auto& op = opS.second;
-      int orb_p = opS.first;
+      int orb_p = 2*opS.first;
       // build
       int dim0 = bsite.qrow.get_dimAll();
       int dim1 = ksite.qrow.get_dimAll();
@@ -593,7 +595,6 @@ void oper_check_rbasis(const comb<Tm>& bra,
    
    std::cout << "no. of failed cases = " << nfail 
 	     << " maxdiff = " << mdiff << std::endl;
-   if(nfail > 0 || std::abs(mdiff) > thresh) exit(1);
 }
 
 } // ctns

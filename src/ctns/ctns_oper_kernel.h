@@ -38,7 +38,7 @@ template <typename Tm>
 qtensor3<Tm> oper_kernel_IOwf(const std::string& superblock,
 			      const qtensor3<Tm>& ksite,
  			      const qtensor2<Tm>& o2,
-			      const bool po2, // parity
+			      const bool po2, // parity of O2
 			      const bool ifdagger=false){
    qtensor3<Tm> qt3;
    if(superblock == "lc"){
