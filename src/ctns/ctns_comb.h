@@ -8,9 +8,6 @@
 #include <map>
 #include "ctns_rbasis.h"
 #include "ctns_qtensor.h"
-//#include "../core/integral.h"
-//#include "../core/onspace.h"
-//#include "../core/matrix.h"
 
 namespace ctns{
 
@@ -43,6 +40,8 @@ struct topology{
    public:
       topology(const std::string& topology_file); 
       void print() const;
+      // node
+      const node& get_node(const comb_coord& p) const{ return nodes[p.first][p.second]; }
       // helper for support 
       std::vector<int> support_rest(const std::vector<int>& rsupp) const;
       // sweep sequence 
@@ -112,7 +111,7 @@ class comb{
       std::map<comb_coord,renorm_basis<Tm>> rbases; // renormalized basis from SCI
       std::map<comb_coord,qtensor3<Tm>> rsites; // right canonical form 
       qtensor2<Tm> rwfuns; // wavefunction at the left boundary -*-
-      //std::map<comb_coord,qtensor3<Tm>> lsites; // left canonical form 
+      std::map<comb_coord,qtensor3<Tm>> lsites; // left canonical form 
       //std::vector<qtensor3<Tm>> psi; // propagation of initial guess 
 };
 

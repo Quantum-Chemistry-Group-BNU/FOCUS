@@ -74,6 +74,74 @@ qtensor2<Tm> contract_qt3_qt3_cr(const qtensor3<Tm>& qt3a,
    return qt2;
 }
 
+//          /--*--r qt3a
+// q(r,c) = |x |m  	  = <r|c> = \sum_n An^H*Bn
+//          \--*--c qt3b
+template <typename Tm>
+qtensor2<Tm> contract_qt3_qt3_lc(const qtensor3<Tm>& qt3a, 
+				 const qtensor3<Tm>& qt3b){
+   assert(qt3a.dir == qt3b.dir); // bra dir fliped
+   assert(qt3a.qrow == qt3b.qrow);
+   assert(qt3a.qmid == qt3b.qmid);
+   qsym sym = -qt3a.sym + qt3b.sym;
+   qtensor2<Tm> qt2(sym, qt3a.qcol, qt3b.qcol); 
+   // loop over external indices
+   for(int br=0; br<qt2.rows(); br++){
+      for(int bc=0; bc<qt2.cols(); bc++){
+	 auto& blk = qt2(br,bc);
+	 if(blk.size() == 0) continue;
+	 // loop over contracted indices
+         for(int bm=0; bm<qt3a.mids(); bm++){
+	    for(int bx=0; bx<qt3a.rows(); bx++){
+	       const auto& blka = qt3a(bm,bx,br);
+	       const auto& blkb = qt3b(bm,bx,bc);
+	       if(blka.size() == 0 || blkb.size() == 0) continue;
+               for(int im=0; im<qt3a.qmid.get_dim(bm); im++){
+	          blk += linalg::xgemm("C","N",blka[im],blkb[im]); 
+	       } // im
+	    } // bx
+	 } // bm
+      } // bc
+   } // br
+   return qt2;
+}
+
+// 	      r|
+//          /--*--\ qt3a
+// q(r,c) = |x    |y	  = <r|c> = tr(A[r]^* B[c]^T)
+//          \--*--/ qt3b
+//            c|
+template <typename Tm>
+qtensor2<Tm> contract_qt3_qt3_lr(const qtensor3<Tm>& qt3a, 
+				 const qtensor3<Tm>& qt3b){
+   assert(qt3a.dir == qt3b.dir); // bra dir fliped
+   assert(qt3a.qrow == qt3b.qrow);
+   assert(qt3a.qcol == qt3b.qcol);
+   qsym sym = -qt3a.sym + qt3b.sym;
+   qtensor2<Tm> qt2(sym, qt3a.qmid, qt3b.qmid);
+   // loop over external indices
+   for(int br=0; br<qt2.rows(); br++){
+      for(int bc=0; bc<qt2.cols(); bc++){
+         auto& blk = qt2(br,bc);
+	 if(blk.size() == 0) continue;
+	 // loop over contracted indices
+         for(int bx=0; bx<qt3a.rows(); bx++){
+	    for(int by=0; by<qt3a.cols(); by++){
+	       const auto& blka = qt3a(br,bx,by);
+	       const auto& blkb = qt3b(bc,bx,by);
+	       if(blka.size() == 0 || blkb.size() == 0) continue;
+	       for(int ic=0; ic<qt2.qcol.get_dim(bc); ic++){
+                  for(int ir=0; ir<qt2.qrow.get_dim(br); ir++){
+	             blk(ir,ic) += linalg::xgemm("N","T",blka[ir].conj(),blkb[ic]).trace();
+		  } // ir 
+	       } // ic
+	    } // by
+	 } // bx
+      } // bc
+   } // br
+   return qt2;
+}
+
 //     |m/r
 //     *	 
 //     |x/c  = [m](r,c) = B(m,x) A[x](r,c) [mostly used for op*wf]

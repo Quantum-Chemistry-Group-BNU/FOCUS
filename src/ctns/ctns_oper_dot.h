@@ -10,7 +10,7 @@ namespace ctns{
 // The index in the middle is larger than that close to the boundary.
 // This is different from the ordering used in onstate.h
 
-// <l'|ap^+|l>
+// pA^+
 template <typename Tm>
 void oper_dot_C(const int k0, oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
@@ -41,7 +41,7 @@ void oper_dot_C(const int k0, oper_dict<Tm>& qops){
 */
 }
 
-// 01 (c0<c1)
+// A[pA,pB] = pA^+pB^+
 template <typename Tm>
 void oper_dot_A(const int k0, oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
@@ -67,7 +67,32 @@ void oper_dot_A(const int k0, oper_dict<Tm>& qops){
 */
 }
 
-// 00,01,(10),11
+// Ppq = <pq||sr> aras [p<q,r>s] = <pq||sr> A[sr]^+
+// P[pA,qA] = <pA,qA||kA,kB> A[kA,kB]^+ (zero in NR)
+// P[pA,qB] = <pA,qB||kA,kB> A[kA,kB]^+
+template <typename Tm>
+void oper_dot_P(const int k0,
+		const integral::two_body<Tm>& int2e,
+		const std::vector<int>& krest,
+		oper_dict<Tm>& qops){
+   int ka = 2*k0, kb = ka+1;
+   auto qt2ab = qops['A'][oper_pack(ka,kb)].H();
+   // P[pA,qA] (p<q) and P[pA,qB] (p<=q)
+   for(int kp : krest){
+      int pa = 2*kp, pb = pa+1;
+      for(int kq : krest){
+	 int qa = 2*kq, qb = qa+1;
+	 if(kp < kq){
+	    qops['P'][oper_pack(pa,qa)] = int2e.get(pa,qa,ka,kb)*qt2ab;
+	 }
+	 if(kp <= kq){
+	    qops['P'][oper_pack(pa,qb)] = int2e.get(pa,qb,ka,kb)*qt2ab;
+	 }
+      }
+   }
+}
+
+// B[pA,pA] = pA^+pA, B[pA,pB] = pA^+pB
 template <typename Tm>
 void oper_dot_B(const int k0, oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
@@ -108,7 +133,43 @@ void oper_dot_B(const int k0, oper_dict<Tm>& qops){
    exit(1);
 */
 }
- 
+
+// Qps = <pq||sr> aq^+ar
+// Q[pA,sA] = <pA,q||sA,r> B[q,r]
+// 	    = <pA,kA||sA,kA> B[kA,kA] + <pA,kB||sA,kB> B[kB,kB]
+//	    + <pA,kA||sA,kB> B[kA,kB] + <pA,kB||sA,kA> B[kB,kA] (zero in NR)
+// Q[pA,sB] = <pA,q||sB,r> B[q,r]
+// 	    = <pA,kA||sB,kA> B[kA,kA] + <pA,kB||sB,kB> B[kB,kB] 
+//	    + <pA,kA||sB,kB> B[kA,kB] + <pA,kB||sB,kA> B[kB,kA] (nonzero) 
+template <typename Tm>
+void oper_dot_Q(const int k0,
+		const integral::two_body<Tm>& int2e,
+		const std::vector<int>& krest,
+		oper_dict<Tm>& qops){
+   int ka = 2*k0, kb = ka+1;
+   auto& qt2aa = qops['B'][oper_pack(ka,ka)];
+   auto& qt2ab = qops['B'][oper_pack(ka,kb)];
+   auto qt2bb = qt2aa.K(0);
+   auto qt2ba = qt2ab.K(1); 
+   // Q[pA,sA] (p<=s) and Q[pA,sB] (p<=s)
+   for(int kp : krest){
+      int pa = 2*kp, pb = pa+1;
+      for(int ks : krest){
+	 int sa = 2*ks, sb = sa+1;
+	 if(kp <= ks){
+	    qops['Q'][oper_pack(pa,sa)] = int2e.get(pa,ka,sa,ka)*qt2aa
+		    		        + int2e.get(pa,kb,sa,kb)*qt2bb
+					+ int2e.get(pa,ka,sa,kb)*qt2ab
+					+ int2e.get(pa,kb,sa,ka)*qt2ba;
+	    qops['Q'][oper_pack(pa,sb)] = int2e.get(pa,ka,sb,ka)*qt2aa
+	    			        + int2e.get(pa,kb,sb,kb)*qt2bb
+					+ int2e.get(pa,ka,sb,kb)*qt2ab
+					+ int2e.get(pa,kb,sb,ka)*qt2ba;
+	 }
+      }
+   }
+}
+
 // build local S_{p}^C = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
 template <typename Tm>
 void oper_dot_S(const int k0,
@@ -130,8 +191,8 @@ void oper_dot_S(const int k0,
    qtensor2<Tm> qt2aba(sym_op, qs_phys, qs_phys); // ka^+ kb ka
    qt2aba.from_matrix(mat);
    // S_{p}^C = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
-   for(int korb_p : krest){
-      int pa = 2*korb_p, pb = pa+1;
+   for(int kp : krest){
+      int pa = 2*kp, pb = pa+1;
       auto Spa = 0.5*int1e.get(pa,ka)*qops['C'][ka].H()
 	       - int2e.get(pa,kb,ka,kb)*qt2aba.K(0);
       if(Htype){
@@ -139,8 +200,9 @@ void oper_dot_S(const int k0,
 	      + int2e.get(pa,ka,ka,kb)*qt2aba;		 
       }
       qops['S'][pa] = Spa;
-
+/*
       Spa.to_matrix().print("Spa");
+*/
    } // p
 }
 

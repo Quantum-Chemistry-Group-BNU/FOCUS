@@ -196,9 +196,11 @@
 	       - build local tensor [DONE@20200810]
 	       - wavefunction at the first site [DONE@20200812]
 	       - PySCF: time-reversal symmetry-adapted MOs? [DONE@20200814]
-	  - 3. algorithm: check overlap with CI
-	  - 4. compute Sd by sampling
+	  - 3. algorithm: check overlap with CI [DONE@20200823]
+	  - 4. compute Sd by sampling [DONE@20200823]
 	  - 5. algorithm: check Hij by reformulating op*psi
+	       - build both AB&PQ to simplify the code logic,
+		 which will be also useful for parallelization
 	  - 6. optimization from current RCF
 
  2020xxxx complex version: relativistic SCI/DMRG

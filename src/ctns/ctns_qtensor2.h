@@ -203,7 +203,7 @@ struct qtensor2{
       // generate matrix representation for Kramers paired operators
       // po: =0,1 parity for no. of barred indices of the target operators
       // with this factor, a_{\bar{p}} can be simply obtained from a_{p}.K(1)
-      qtensor2<Tm> K(const int po=0) const{
+      qtensor2<Tm> K(const bool po) const{
 	 const double fpo = (po == 0)? 1.0 : -1.0;
          const bool Htype = tools::is_complex<Tm>();
 	 if(Htype){

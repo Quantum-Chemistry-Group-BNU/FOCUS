@@ -1,0 +1,277 @@
+#ifndef CTNS_OPER_RENORM_H
+#define CTNS_OPER_RENORM_H
+
+#include "ctns_io.h"
+#include "ctns_comb.h"
+#include "ctns_oper_util.h"
+#include "ctns_oper_rbasis.h"
+#include "ctns_oper_kernel.h"
+
+namespace ctns{
+
+// kernel for computing renormalized ap^+
+template <typename Tm>
+void oper_renorm_opC(const std::string& superblock,
+		     const qtensor3<Tm>& site,
+		     oper_dict<Tm>& qops1,
+		     oper_dict<Tm>& qops2,
+		     oper_dict<Tm>& qops,
+		     const bool debug=false){
+   if(debug) std::cout << "ctns::oper_renorm_opC" << std::endl;
+   auto t0 = tools::get_time();
+   // 1. p1^+*I2 
+   for(const auto& op1C : qops1['C']){
+      int p1 = op1C.first;
+      const auto& op1 = op1C.second;
+      auto Hwf = oper_kernel_OIwf(superblock,site,op1);
+      qops['C'][p1] = oper_kernel_renorm(superblock,site,Hwf);
+   }
+   // 2. I1*p2^+ 
+   for(const auto& op2C : qops2['C']){
+      int p2 = op2C.first;
+      const auto& op2 = op2C.second;
+      auto Hwf = oper_kernel_IOwf(superblock,site,op2,1);
+      qops['C'][p2] = oper_kernel_renorm(superblock,site,Hwf); 
+   }
+   auto t1 = tools::get_time();
+   if(debug){ 
+      std::cout << "timing for ctns::oper_renorm_opC : " << std::setprecision(2) 
+                << tools::get_duration(t1-t0) << " s" << std::endl;
+   }
+}
+
+/*
+// kernel for computing renormalized Apq=ap^+aq^+
+void tns::oper_renorm_opA(const string& superblock,
+			  const qtensor3& bsite,
+			  const qtensor3& ksite,
+			  oper_dict& qops1,
+			  oper_dict& qops2,
+			  oper_dict& qops,
+			  const bool debug){
+   if(debug) cout << "tns::oper_renorm_opA" << endl;
+   auto t0 = tools::get_time();
+   // 1. pC^+qC^+ * Ir
+   for(const auto& op1A : qops1['A']){
+      int pq1 = op1A.first;
+      const auto& op1 = op1A.second;
+      auto Hwf = oper_kernel_OIwf(superblock,ksite,op1);
+      qops['A'][pq1] = oper_kernel_renorm(superblock,bsite,Hwf);
+   }
+   // 2. Ic * pR^+qR^+ (p<q) 
+   for(const auto& op2A : qops2['A']){
+      int pq2 = op2A.first;
+      const auto& op2 = op2A.second;
+      auto Hwf = oper_kernel_IOwf(superblock,ksite,op2,0);
+      qops['A'][pq2] = oper_kernel_renorm(superblock,bsite,Hwf);
+   }
+   // 3. pC^+ * qR^+
+   for(const auto& op1C : qops1['C']){
+      int p1 = op1C.first;
+      const auto& op1 = op1C.second;
+      for(const auto& op2C : qops2['C']){
+	 int p2 = op2C.first;
+	 const auto& op2 = op2C.second;
+         auto Hwf = oper_kernel_OOwf(superblock,ksite,op1,op2,1);
+	 auto qt2 = oper_kernel_renorm(superblock,bsite,Hwf);
+	 // only store Apq where p<q;
+	 if(p1 < p2){
+	    qops['A'][oper_pack(p1,p2)] = qt2; 
+	 }else{
+	    qops['A'][oper_pack(p2,p1)] = -qt2;
+	 }
+      }
+   }
+   auto t1 = tools::get_time();
+   if(debug){
+      cout << "timing for tns::oper_renorm_opA : " << setprecision(2) 
+           << tools::get_duration(t1-t0) << " s" << endl;
+   }
+}
+
+// kernel for computing renormalized ap^+aq
+void tns::oper_renorm_opB(const string& superblock,
+			  const qtensor3& bsite,
+			  const qtensor3& ksite,
+			  oper_dict& qops1,
+			  oper_dict& qops2,
+			  oper_dict& qops,
+			  const bool debug){
+   if(debug) cout << "tns::oper_renorm_opB" << endl;
+   auto t0 = tools::get_time();
+   // 1. pC^+qC * Ir
+   for(const auto& op1B : qops1['B']){
+      int pq1 = op1B.first;
+      const auto& op1 = op1B.second;
+      auto Hwf = oper_kernel_OIwf(superblock,ksite,op1);
+      qops['B'][pq1] = oper_kernel_renorm(superblock,bsite,Hwf);
+   }
+   // 2. Ic * pR^+qR 
+   for(const auto& op2B : qops2['B']){
+      int pq2 = op2B.first;
+      const auto& op2 = op2B.second;
+      auto Hwf = oper_kernel_IOwf(superblock,ksite,op2,0);
+      qops['B'][pq2] = oper_kernel_renorm(superblock,bsite,Hwf);
+   }
+   // 3. pC^+ * qR and pR^+*qC = -qC*pR^+
+   for(const auto& op1C : qops1['C']){
+      int p1 = op1C.first;
+      const auto& op1 = op1C.second;
+      for(const auto& op2C : qops2['C']){
+	 int p2 = op2C.first;
+	 const auto& op2 = op2C.second;
+	 auto Hwf = oper_kernel_OOwf(superblock,ksite,op1,op2.T(),1);
+	 qops['B'][oper_pack(p1,p2)] =  oper_kernel_renorm(superblock,bsite,Hwf);
+	 Hwf = oper_kernel_OOwf(superblock,ksite,op1.T(),op2,1);
+	 qops['B'][oper_pack(p2,p1)] =  -oper_kernel_renorm(superblock,bsite,Hwf);
+      }
+   }
+   auto t1 = tools::get_time();
+   if(debug){ 
+      cout << "timing for tns::oper_renorm_opB : " << setprecision(2) 
+           << tools::get_duration(t1-t0) << " s" << endl;
+   }
+}
+*/
+
+// renormalize ops
+template <typename Tm>
+oper_dict<Tm> oper_renorm_ops(const std::string& superblock,
+			      const comb<Tm>& icomb,
+		              const comb_coord& p,
+			      oper_dict<Tm>& qops1,
+			      oper_dict<Tm>& qops2,
+		              const integral::two_body<Tm>& int2e,
+		              const integral::one_body<Tm>& int1e,
+			      const bool debug=true){
+   const bool ifcheck = true;
+   auto t0 = tools::get_time();
+   std::cout << "ctns::oper_renorm_ops coord=" << p 
+             << " superblock=" << superblock << std::endl;
+   auto& node = icomb.topo.get_node(p);
+   qtensor3<Tm> site;
+   std::vector<int> supp; // support for index of complementary ops 
+   if(superblock == "cr"){
+      site = icomb.rsites.at(p);
+      supp = node.lsupport;
+   }else if(superblock == "lc"){
+      site = icomb.lsites.at(p);
+      auto pr = node.right;
+      supp = icomb.topo.get_node(pr).rsupport;
+   }else if(superblock == "lr"){
+      site = icomb.lsites.at(p);
+      auto pc = node.center;
+      supp = icomb.topo.get_node(pc).rsupport;
+   }
+   oper_dict<Tm> qops;
+   // C,S,H
+   oper_renorm_opC(superblock,site,qops1,qops2,qops,debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'C');
+/*
+   oper_renorm_opS(superblock,bsite,ksite,qops1,qops2,qops,
+   		   supp,int2e,int1e,debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'S',int2e,int1e);
+   oper_renorm_opH(superblock,bsite,ksite,qops1,qops2,qops,
+   		   int2e,int1e,debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'H',int2e,int1e);
+   // consistency check
+   auto H = qops['H'].at(0);
+   auto diffH = (H-H.T()).normF();
+   if(diffH > 1.e-10){
+      H.print("H",2);
+      cout << "error: H-H.T is too large! diffH=" << diffH << endl;
+      exit(1);
+   }
+   // AB/PQ
+   oper_renorm_opA(superblock,bsite,ksite,qops1,qops2,qops,debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'A');
+   oper_renorm_opB(superblock,bsite,ksite,qops1,qops2,qops,debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'B');
+   oper_renorm_opP(superblock,bsite,ksite,qops1,qops2,qops,
+     	      supp,int2e,int1e,debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'P',int2e,int1e);
+   oper_renorm_opQ(superblock,bsite,ksite,qops1,qops2,qops,
+   	              supp,int2e,int1e,debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'Q',int2e,int1e);
+*/
+   auto t1 = tools::get_time();
+   if(debug){
+      std::cout << "timing for ctns::oper_renorm_ops : " << std::setprecision(2) 
+                << tools::get_duration(t1-t0) << " s" << std::endl;
+   }
+
+   exit(1);
+
+   return qops;
+}
+
+/*
+void oper_renorm_onedot(const comb& icomb, 
+		             const directed_bond& dbond,
+			     oper_dict& cqops,
+		             oper_dict& lqops,
+			     oper_dict& rqops,	
+		             const integral::two_body& int2e, 
+		             const integral::one_body& int1e,
+			     const string scratch){
+   auto p0 = get<0>(dbond);
+   auto p1 = get<1>(dbond);
+   auto forward = get<2>(dbond);
+   auto p = forward? p0 : p1;
+   bool cturn = (icomb.type.at(p0) == 3 && p1.second == 1);
+   cout << "ctns::oper_renorm_onedot" << endl;
+   oper_dict qops;
+   if(forward){
+      if(!cturn){
+	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, cqops, int2e, int1e);
+      }else{
+	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
+      }
+      string fname = oper_fname(scratch, p, "lop");
+      oper_save(fname, qops);
+   }else{
+      qops = oper_renorm_ops("cr", icomb, icomb, p, cqops, rqops, int2e, int1e);
+      string fname = oper_fname(scratch, p, "rop");
+      oper_save(fname, qops);
+   }
+}
+
+void oper_renorm_twodot(const comb& icomb, 
+		             const directed_bond& dbond,
+			     oper_dict& c1qops,
+			     oper_dict& c2qops,
+		             oper_dict& lqops,
+			     oper_dict& rqops,	
+		             const integral::two_body& int2e, 
+		             const integral::one_body& int1e, 
+			     const string scratch){ 
+   auto p0 = get<0>(dbond);
+   auto p1 = get<1>(dbond);
+   auto forward = get<2>(dbond);
+   auto p = forward? p0 : p1;
+   bool cturn = (icomb.type.at(p0) == 3 && p1.second == 1);
+   cout << "ctns::oper_renorm_twodot" << endl;
+   oper_dict qops;
+   if(forward){
+      if(!cturn){
+	 qops = oper_renorm_ops("lc", icomb, icomb, p, lqops, c1qops, int2e, int1e);
+      }else{
+	 qops = oper_renorm_ops("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
+      }
+      string fname = oper_fname(scratch, p, "lop");
+      oper_save(fname, qops);
+   }else{
+      if(!cturn){
+         qops = oper_renorm_ops("cr", icomb, icomb, p, c2qops, rqops, int2e, int1e);
+      }else{
+         qops = oper_renorm_ops("cr", icomb, icomb, p, c1qops, c2qops, int2e, int1e);
+      }
+      string fname = oper_fname(scratch, p, "rop");
+      oper_save(fname, qops);
+   }
+}
+*/
+
+} // ctns
+
+#endif

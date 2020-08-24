@@ -34,6 +34,12 @@ struct qtensor3{
       int _addr(const int bm, const int br, const int bc) const{
          return bm*_rows*_cols + br*_cols + bc;
       }
+      void _addr_unpack(const int idx, int& bm, int& br, int& bc) const{
+	 int mr = idx/_cols;
+	 bm = mr/_rows;	    
+         br = mr%_rows;
+ 	 bc = idx%_cols;
+      }
    public:
       // constructor
       qtensor3(){}
@@ -104,14 +110,12 @@ struct qtensor3{
 	 std::cout << "qblocks: nblocks=" << _qblocks.size() << std::endl;
          int nnz = 0;
          for(int idx=0; idx<_qblocks.size(); idx++){
- 	    int bc = idx%_cols;
-	    int mr = idx/_cols;
-            int br = mr%_rows;
-	    int bm = mr/_rows;	    
             auto& blk = _qblocks[idx];
 	    if(blk.size() > 0){
                nnz++;
                if(level >= 1){
+	          int bm,br,bc;
+	          _addr_unpack(idx,bm,br,bc);
                   std::cout << "idx=" << idx 
            	       << " block[" << qmid.get_sym(bm) << "," 
 		       << qrow.get_sym(br) << "," << qcol.get_sym(bc) << "]" 
@@ -127,6 +131,37 @@ struct qtensor3{
             }
          } // idx
 	 std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
+      }
+      // deal with fermionic sign in fermionic direct product
+      qtensor3<Tm> mid_signed(const double fac=1.0) const{
+	 qtensor3<Tm> qt3 = *this;
+	 for(int idx=0; idx<qt3._qblocks.size(); idx++){
+	    auto& blk = qt3._qblocks[idx];
+	    if(blk.size() > 0){
+	       int bm,br,bc;
+	       _addr_unpack(idx,bm,br,bc);
+	       double fac2 = (qmid.get_parity(bm)==0)? fac : -fac;
+	       for(int im=0; im<blk.size(); im++){
+	          blk[im] *= fac2;
+	       }
+	    }
+	 }
+	 return qt3;
+      }
+      qtensor3<Tm> row_signed(const double fac=1.0) const{
+ 	 qtensor3<Tm> qt3 = *this;
+	 for(int idx=0; idx<qt3._qblocks.size(); idx++){
+	    auto& blk = qt3._qblocks[idx];
+	    if(blk.size() > 0){
+	       int bm,br,bc;
+	       _addr_unpack(idx,bm,br,bc);
+	       double fac2 = (qrow.get_parity(br)==0)? fac : -fac;
+	       for(int im=0; im<blk.size(); im++){
+	          blk[im] *= fac2;
+	       }
+	    }
+	 }
+	 return qt3;
       }
    public:
       std::vector<bool> dir = {1,0,1}; // =0,in; =1,out; {mid,row,col}

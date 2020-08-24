@@ -83,6 +83,7 @@ class qsym_space{
       inline int size() const{ return dims.size(); }
       inline qsym get_sym(const int i) const{ return dims[i].first; } 
       inline int get_dim(const int i) const{ return dims[i].second; }
+      inline int get_parity(const int i) const{ return dims[i].first.parity(); }
       // total dimension
       int get_dimAll() const{
          int dim = 0;
