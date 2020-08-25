@@ -201,6 +201,8 @@
 	  - 5. algorithm: check Hij by reformulating op*psi
 	       - build both AB&PQ to simplify the code logic,
 		 which will be also useful for parallelization
+	       - normal operators [DONE@20200825]
+	       - complementary operators
 	  - 6. optimization from current RCF
 
  2020xxxx complex version: relativistic SCI/DMRG

@@ -17,7 +17,7 @@ void oper_renorm_opC(const std::string& superblock,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
 		     const bool debug=false){
-   if(debug) std::cout << "\nctns::oper_renorm_opC" << std::endl;
+   if(debug) std::cout << "ctns::oper_renorm_opC" << std::endl;
    auto t0 = tools::get_time();
    // 1. p1^+*I2 
    for(const auto& op1C : qops1['C']){
@@ -48,7 +48,7 @@ void oper_renorm_opA(const std::string& superblock,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
 		     const bool debug=false){
-   if(debug) std::cout << "\nctns::oper_renorm_opA" << std::endl;
+   if(debug) std::cout << "ctns::oper_renorm_opA" << std::endl;
    auto t0 = tools::get_time();
    // 1. p1^+q1^+ * I2
    for(const auto& op1A : qops1['A']){
@@ -72,17 +72,22 @@ void oper_renorm_opA(const std::string& superblock,
 	 int p2 = op2C.first;
 	 const auto& op2 = op2C.second;
 	 // pAqA and pAqB
-         auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
-	 auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa); 
-         auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1),1);
-	 auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab); 
-	 // only store Apq where kp<kq;
 	 if(p1 < p2){
 	    // <a1^+a2^+> = [a1^+]*[a2^+]
+	    // storage: <a1A^+a2A^+>,<a1A^+a2B^+>
+            auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
+	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa); 
+            auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1),1);
+	    auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab); 
 	    qops['A'][oper_pack(0,p1,p2)] = qt2aa; 
 	    qops['A'][oper_pack(1,p1,p2)] = qt2ab; 
 	 }else{
- 	    // <a2^+a1^+> = -<a1^+a2^+> = -[a1^+]*[a2^+] 
+ 	    // <a2^+a1^+> = -<a1^+a2^+> = -[a1^+]*[a2^+]
+	    // storage <a2A^+a1A^+>,<a2A^+a1B^+> 
+            auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
+	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa); 
+            auto Hwfab = oper_kernel_OOwf(superblock,site,op1.K(1),op2,1);
+	    auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab); 
 	    qops['A'][oper_pack(0,p2,p1)] = -qt2aa;
 	    qops['A'][oper_pack(1,p2,p1)] = -qt2ab; 
 	 }
@@ -128,7 +133,8 @@ void oper_renorm_opB(const std::string& superblock,
 	 const auto& op2 = op2C.second;
 	 // pAqA and pAqB
 	 if(p1 < p2){ 
-	    // <a1^+a2> = [a1^+]*[a2] 
+	    // <a1^+a2> = [a1^+]*[a2]
+	    // storage: <a1A^+a2A>,<a1A^+a2B>  
 	    auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2.H(),1);
 	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
 	    auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1).H(),1);
@@ -136,7 +142,8 @@ void oper_renorm_opB(const std::string& superblock,
 	    qops['B'][oper_pack(0,p1,p2)] = qt2aa; 
 	    qops['B'][oper_pack(1,p1,p2)] = qt2ab;
 	 }else{ 
-	    // <a2^+a1> = -<a1*a2^+> = -[a1]*[a2^+] 
+	    // <a2^+a1> = -<a1*a2^+> = -[a1]*[a2^+]
+	    // storage: <a2A^+a1A>,<a2A^+a1B> 
 	    auto Hwfaa = oper_kernel_OOwf(superblock,site,op1.H(),op2,1);
 	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
 	    auto Hwfab = oper_kernel_OOwf(superblock,site,op1.K(1).H(),op2,1);
@@ -165,7 +172,7 @@ oper_dict<Tm> oper_renorm_ops(const std::string& superblock,
 			      const bool debug=true){
    const bool ifcheck = true;
    auto t0 = tools::get_time();
-   std::cout << "ctns::oper_renorm_ops coord=" << p 
+   std::cout << "\nctns::oper_renorm_ops coord=" << p 
              << " superblock=" << superblock << std::endl;
    auto& node = icomb.topo.get_node(p);
    qtensor3<Tm> site;
@@ -220,9 +227,6 @@ oper_dict<Tm> oper_renorm_ops(const std::string& superblock,
       std::cout << "timing for ctns::oper_renorm_ops : " << std::setprecision(2) 
                 << tools::get_duration(t1-t0) << " s" << std::endl;
    }
-
-   exit(1);
-
    return qops;
 }
 

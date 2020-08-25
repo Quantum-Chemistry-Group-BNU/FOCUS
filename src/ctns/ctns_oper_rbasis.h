@@ -52,8 +52,9 @@ void oper_check_rbasis(const comb<Tm>& bra,
    std::vector<int> rspinorbs;
    std::map<int,int> orb2pos;
    setup_orb2pos_map(rsupp, rspinorbs, orb2pos);
-
+   //----------------
    // check for ap^+
+   //----------------
    if(opname == 'C'){ 
    for(const auto& opC: qops['C']){
       const auto& op = opC.second;
@@ -105,18 +106,20 @@ void oper_check_rbasis(const comb<Tm>& bra,
       double diff = normF(opmat-tmat);
       mdiff = std::max(diff,mdiff);
       if(diff > thresh){
-	 std::cout << std::scientific << std::setprecision(8);
-         std::cout << "C: p=" << orb_p 
+         std::cout << std::scientific << std::setprecision(8);
+         std::cout << " C: p=" << orb_p 
                    << " |op|=" << normF(opmat)
                    << " |dm|=" << normF(tmat)
                    << " diff=" << diff
-	           << std::endl;
+                   << " " << (diff > thresh)	
+                   << std::endl;
 	 nfail++;
       }
    } // op
    } 
-
+   //--------------------------
    // check for Apq = ap^+aq^+
+   //--------------------------
    if(opname == 'A'){ 
    for(const auto& opA : qops['A']){
       const auto& op = opA.second;
@@ -173,17 +176,20 @@ void oper_check_rbasis(const comb<Tm>& bra,
       double diff = normF(opmat-tmat);
       mdiff = std::max(diff,mdiff);
       if(diff > thresh){
-	 std::cout << std::scientific << std::setprecision(8);
-         std::cout << "A: p,q=" << orb_p << "," << orb_q
+         std::cout << std::scientific << std::setprecision(8);
+         std::cout << " A: p,q=" << orb_p << "," << orb_q
                    << " |op|=" << normF(opmat)
                    << " |dm|=" << normF(tmat)
-                   << " diff=" << diff << std::endl;
+                   << " diff=" << diff
+                   << " " << (diff > thresh)	
+           	   << std::endl;
 	 nfail++;
       }
    } // op
    }
-
+   //------------------------
    // check for Bpq = ap^+aq
+   //------------------------
    if(opname == 'B'){ 
    for(const auto& opB : qops['B']){
       const auto& op = opB.second;
@@ -241,17 +247,19 @@ void oper_check_rbasis(const comb<Tm>& bra,
       mdiff = std::max(diff,mdiff);
       if(diff > thresh){
          std::cout << std::scientific << std::setprecision(8);
-         std::cout << "B: p,q=" << orb_p << "," << orb_q
+         std::cout << " B: p,q=" << orb_p << "," << orb_q
                    << " |op|=" << normF(opmat)
                    << " |dm|=" << normF(tmat)
-                   << " diff=" << diff << std::endl;
+                   << " diff=" << diff 
+                   << " " << (diff > thresh)	
+           	   << std::endl;
 	 nfail++;
       }
    } // op
    }
-   
    std::cout << "no. of failed cases = " << nfail 
 	     << " maxdiff = " << mdiff << std::endl;
+   if(nfail>0 || std::abs(mdiff)>thresh) exit(1);
 }
 
 // complementary operators
@@ -279,8 +287,9 @@ void oper_check_rbasis(const comb<Tm>& bra,
    std::vector<int> rspinorbs;
    std::map<int,int> orb2pos;
    setup_orb2pos_map(rsupp, rspinorbs, orb2pos);
-
+   //-------------------------------------
    // check for Ppq = <pq||sr> aras [r>s]
+   //-------------------------------------
    if(opname == 'P'){ 
    for(const auto& opP : qops['P']){
       const auto& op = opP.second;
@@ -341,17 +350,20 @@ void oper_check_rbasis(const comb<Tm>& bra,
       double diff = normF(opmat-tmat);
       mdiff = std::max(diff,mdiff);
       if(diff > thresh){
-	 std::cout << std::scientific << std::setprecision(8);
-	 std::cout << "P: p,q=" << orb_p << "," << orb_q
+         std::cout << std::scientific << std::setprecision(8);
+         std::cout << " P: p,q=" << orb_p << "," << orb_q
                    << " |op|=" << normF(opmat)
                    << " |dm|=" << normF(tmat)
-                   << " diff=" << diff << std::endl;
-         nfail++;
+                   << " diff=" << diff 
+                   << " " << (diff > thresh)	
+           	   << std::endl;
+	 nfail++;
       }
    } // op
    }
-
+   //---------------------------------
    // check for Qps = <pq||sr> aq^+ar
+   //---------------------------------
    if(opname == 'Q'){ 
    for(const auto& opQ : qops['Q']){
       const auto& op = opQ.second;
@@ -411,17 +423,20 @@ void oper_check_rbasis(const comb<Tm>& bra,
       double diff = normF(opmat-tmat);
       mdiff = std::max(diff,mdiff);
       if(diff > thresh){
-	 std::cout << std::scientific << std::setprecision(8);
-         std::cout << "Q: p,s=" << orb_p << "," << orb_s
+         std::cout << std::scientific << std::setprecision(8);
+         std::cout << " Q: p,s=" << orb_p << "," << orb_s
                    << " |op|=" << normF(opmat)
                    << " |dm|=" << normF(tmat)
-                   << " diff=" << diff << std::endl;
-         nfail++;
+                   << " diff=" << diff 
+                   << " " << (diff > thresh)	
+           	   << std::endl;
+	 nfail++;
       }
    } // op
    }
-  
+   //-----------------------------------------------------
    // check for Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
+   //-----------------------------------------------------
    if(opname == 'S'){
    for(const auto& opS : qops['S']){
       const auto& op = opS.second;
@@ -492,17 +507,20 @@ void oper_check_rbasis(const comb<Tm>& bra,
       double diff = normF(opmat-tmat);
       mdiff = std::max(diff,mdiff);
       if(diff > thresh){
-	 std::cout << std::scientific << std::setprecision(8);
-         std::cout << "S: p=" << orb_p
+         std::cout << std::scientific << std::setprecision(8);
+         std::cout << " S: p=" << orb_p
                    << " |op|=" << normF(opmat)
                    << " |dm|=" << normF(tmat)
-                   << " diff=" << diff << std::endl;
+                   << " diff=" << diff 
+                   << " " << (diff > thresh)	
+           	   << std::endl;
 	 nfail++;
       }
    } // op
    }
-
+   //------------------------------------------------------------
    // check for H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
+   //------------------------------------------------------------
    if(opname == 'H'){
    for(const auto& opH : qops['H']){
       const auto& op = opH.second;
@@ -583,18 +601,20 @@ void oper_check_rbasis(const comb<Tm>& bra,
       double diff = normF(opmat-tmat);
       mdiff = std::max(diff,mdiff);
       if(diff > thresh){
-	 std::cout << std::scientific << std::setprecision(8);
-         std::cout << "H:"
+         std::cout << std::scientific << std::setprecision(8);
+         std::cout << " H:"
                    << " |op|=" << normF(opmat)
                    << " |dm|=" << normF(tmat)
-                   << " diff=" << diff << std::endl;
+                   << " diff=" << diff 
+                   << " " << (diff > thresh)	
+           	   << std::endl;
 	 nfail++;
       }
    } // op
    }
-   
    std::cout << "no. of failed cases = " << nfail 
 	     << " maxdiff = " << mdiff << std::endl;
+   if(nfail>0 || std::abs(mdiff)>thresh) exit(1);
 }
 
 } // ctns

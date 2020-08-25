@@ -116,6 +116,7 @@ void oper_env_right(const comb<Tm>& icomb,
    auto t1 = tools::get_time();
    std::cout << "timing for ctns::oper_env_right : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
+   exit(1);
 }
 
 template <typename Tm>
