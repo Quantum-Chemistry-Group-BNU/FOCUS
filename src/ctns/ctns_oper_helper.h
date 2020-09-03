@@ -38,9 +38,9 @@ oper_dict<Tm> oper_load_qops(const comb<Tm>& icomb,
    return qops;
 }
 
-// construct directly for boundary case {C,A,B,S,H}
+// init local operators
 template <typename Tm>
-oper_dict<Tm> oper_init_local(const int kp,
+oper_dict<Tm> oper_init_dot(const int kp,
 		              const integral::two_body<Tm>& int2e,
 		              const integral::one_body<Tm>& int1e){
    std::vector<int> krest;
@@ -68,25 +68,25 @@ void oper_init(const comb<Tm>& icomb,
    for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
       auto p = icomb.topo.rcoord[idx];
       auto& node = icomb.topo.get_node(p);
-      // local operators on physical sites
-      if(node.type != 3){
+      // cop: local operators on physical sites
+      if(node.type == 1 || node.type == 2){
          int kp = node.pindex;
-         auto qops = oper_init_local(kp, int2e, int1e);
+         auto qops = oper_init_dot(kp, int2e, int1e);
 	 std::string fname = oper_fname(scratch, p, "cop");
          oper_save(fname, qops);
       }
-      // right boundary (exclude the start point)
+      // rop: right boundary (exclude the start point)
       if(node.type == 0 && p.first != 0){
-         int kp = node.pindex;
-         auto qops = oper_init_local(kp, int2e, int1e);
+	 int kp = node.pindex;
+	 auto qops = oper_init_dot(kp, int2e, int1e);
 	 std::string fname = oper_fname(scratch, p, "rop");
          oper_save(fname, qops);
       }
    }
-   // left boundary at the start
+   // left boundary at the start (0,0)
    auto p = std::make_pair(0,0);
-   int kp = icomb.topo.nodes[0][0].pindex;
-   auto qops = oper_init_local(kp, int2e, int1e);
+   int kp = icomb.topo.get_node(p).pindex;
+   auto qops = oper_init_dot(kp, int2e, int1e);
    std::string fname = oper_fname(scratch, p, "lop");
    oper_save(fname, qops);
 }
@@ -106,9 +106,9 @@ void oper_env_right(const comb<Tm>& icomb,
       if(node.type != 0 || p.first == 0){
          auto qops1 = oper_load_qops(icomb, p, scratch, 'c');
          auto qops2 = oper_load_qops(icomb, p, scratch, 'r');
+	 // perform renormalization for superblock {|cr>}
 	 const std::string superblock = "cr"; 
-         auto qops = oper_renorm_ops(superblock, icomb, p, 
-	        	 	     qops1, qops2, int2e, int1e);
+         auto qops = oper_renorm_opAll(superblock, icomb, p, qops1, qops2, int2e, int1e);
 	 auto fname = oper_fname(scratch, p, "rop");
          oper_save(fname, qops);
       }

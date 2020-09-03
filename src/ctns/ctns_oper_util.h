@@ -15,6 +15,8 @@ using oper_dict = std::map<char,std::map<int,qtensor2<Tm>>>;
 const int kpack = 500;
 extern const int kpack;
 // spincase = 0/1 : same/different spin
+// val = even: same spin
+// val = odd : different spin
 inline int oper_pack(const int spincase, const int i, const int j){
    return spincase + (i+j*kpack)*2;
 }

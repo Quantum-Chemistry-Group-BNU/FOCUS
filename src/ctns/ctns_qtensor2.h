@@ -275,6 +275,10 @@ struct qtensor2{
 	    return qt2;
 	 }else{
 	    qtensor2<Tm> qt2;
+
+	    std::cout << "error: not implemented yet!" << std::endl;
+	    exit(1);
+		   
 	    return qt2;
 	 }
       }

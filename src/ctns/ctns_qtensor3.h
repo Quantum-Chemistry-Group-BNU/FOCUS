@@ -163,6 +163,63 @@ struct qtensor3{
 	 }
 	 return qt3;
       }
+      // simple algrithmic operations
+      qtensor3<Tm>& operator +=(const qtensor3<Tm>& qt){
+         assert(dir == qt.dir); // direction must be the same
+         assert(sym == qt.sym); // symmetry blocking must be the same
+         for(int i=0; i<_qblocks.size(); i++){
+            auto& blk = _qblocks[i];
+            assert(blk.size() == qt._qblocks[i].size());
+	    if(blk.size() > 0){
+	       for(int m=0; m<blk.size(); m++){
+		  blk[m] += qt._qblocks[i][m];
+	       } // m
+	    }
+         }
+         return *this;
+      }
+      qtensor3<Tm>& operator -=(const qtensor3<Tm>& qt){
+         assert(dir == qt.dir); // direction must be the same
+         assert(sym == qt.sym); // symmetry blocking must be the same
+         for(int i=0; i<_qblocks.size(); i++){
+            auto& blk = _qblocks[i];
+            assert(blk.size() == qt._qblocks[i].size());
+	    if(blk.size() > 0){
+	       for(int m=0; m<blk.size(); m++){
+		  blk[m] -= qt._qblocks[i][m];
+	       } // m
+	    }
+         }
+         return *this;
+      }
+      qtensor3<Tm>& operator *=(const Tm fac){
+         for(auto& blk : _qblocks){
+            if(blk.size() > 0){ 
+      	       for(int m=0; m<blk.size(); m++){
+      	          blk[m] *= fac;
+      	       } // m
+            }
+         }
+         return *this;
+      }
+      friend qtensor3<Tm> operator +(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb){
+         qtensor3<Tm> qt3 = qta;
+         qt3 += qtb;
+         return qt3;
+      }
+      friend qtensor3<Tm> operator -(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb){
+         qtensor3<Tm> qt3 = qta;
+         qt3 -= qtb;
+         return qt3;
+      }
+      friend qtensor3<Tm> operator *(const double fac, const qtensor3<Tm>& qt){
+         qtensor3 qt3 = qt; 
+         qt3 *= fac;
+         return qt3;
+      }
+      friend qtensor3<Tm> operator *(const qtensor3<Tm>& qt, const double fac){
+         return fac*qt;
+      }
    public:
       std::vector<bool> dir = {1,0,1}; // =0,in; =1,out; {mid,row,col}
       				       // {1,0,1} - RCF (default)

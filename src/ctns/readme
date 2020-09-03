@@ -33,6 +33,7 @@ Hij: operators
  ctns_oper_renorm.h
  ctns_oper_rbasis.h
  ctns_oper_kernel.h
+ ctns_oper_opwf.h
 -------------------------------
 Optimization: decimation
 -------------------------------
@@ -45,12 +46,6 @@ qtensor:
 -------------------------------
  tns_qtensor_reshape.cpp
  tns_qtensor4.cpp
--------------------------------
-oper:
--------------------------------
- tns_oper_normal.cpp
- tns_oper_complement.cpp
- tns_oper_opwf.cpp
 -------------------------------
 opt:
 -------------------------------

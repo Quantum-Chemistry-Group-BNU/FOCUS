@@ -290,7 +290,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    //-------------------------------------
    // check for Ppq = <pq||sr> aras [r>s]
    //-------------------------------------
-   if(opname == 'P'){ 
+   if(opname == 'P'){
    for(const auto& opP : qops['P']){
       const auto& op = opP.second;
       auto pq = oper_unpack2(opP.first);
@@ -328,7 +328,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
                      for(int i0=0; i0<m0; i0++){
      		        if(res2.second != space0[i0]) continue;
                         mat(i0,i1) += int2e.get(orb_p,orb_q,orb_s,orb_r)
-                                    * res1.first*res2.first;
+                                    * static_cast<double>(res1.first*res2.first);
                      } // i0
                   } // r
                } // s
@@ -401,7 +401,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
                      for(int i0=0; i0<m0; i0++){
      		        if(res2.second != space0[i0]) continue;
                         mat(i0,i1) += int2e.get(orb_p,orb_q,orb_s,orb_r)
-                                    * res1.first*res2.first;
+                                    * static_cast<double>(res1.first*res2.first);
                      } // i0
      	          } // q
                } // r
@@ -469,7 +469,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
 		  for(int i0=0; i0<m0; i0++){
 		     if(res1.second != space0[i0]) continue;
 		     mat(i0,i1) += 0.5*int1e.get(orb_p,orb_s)
-			         * res1.first;
+			         * static_cast<double>(res1.first);
 		  }
 	          // <pq||sr> aq^+aras [r>s]
                   for(int orb_r : rspinorbs){
@@ -484,7 +484,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
                         for(int i0=0; i0<m0; i0++){
 			   if(res3.second != space0[i0]) continue;
 		           mat(i0,i1) += int2e.get(orb_p,orb_q,orb_s,orb_r)
-     	                               * res1.first*res2.first*res3.first;
+     	                               * static_cast<double>(res1.first*res2.first*res3.first);
 			} // i0
 	             } // q
                   } // r
@@ -556,7 +556,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
 		     for(int i0=0; i0<m0; i0++){
 		        if(res2.second != space0[i0]) continue;
 	     	        mat(i0,i1) += int1e.get(orb_p,orb_s)
-				    * res1.first*res2.first;
+				    * static_cast<double>(res1.first*res2.first);
 		     }
 	          } // p
 	          // <pq||sr> ap^+aq^+aras
@@ -577,7 +577,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
                            for(int i0=0; i0<m0; i0++){
 			      if(res4.second != space0[i0]) continue;
 	     	              mat(i0,i1) += int2e.get(orb_p,orb_q,orb_s,orb_r)
-     	                                  * res1.first*res2.first*res3.first*res4.first;
+     	                                  * static_cast<double>(res1.first*res2.first*res3.first*res4.first);
 			   } // i0
 			} // p 
 	             } // q
