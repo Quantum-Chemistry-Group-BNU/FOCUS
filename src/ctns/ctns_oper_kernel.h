@@ -78,9 +78,10 @@ qtensor3<Tm> oper_kernel_OOwf(const std::string& superblock,
 			      const qtensor3<Tm>& ksite,
  			      const qtensor2<Tm>& o1,
  			      const qtensor2<Tm>& o2,
-			      const bool po2){
-   auto qt3 = oper_kernel_IOwf(superblock, ksite, o2, po2);
-   return oper_kernel_OIwf(superblock, qt3, o1);
+			      const bool po2,
+			      const bool ifdagger=false){
+   auto qt3 = oper_kernel_IOwf(superblock, ksite, o2, po2, ifdagger);
+   return oper_kernel_OIwf(superblock, qt3, o1, ifdagger);
 }
 
 // <bra|[O|ket>]

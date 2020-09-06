@@ -40,7 +40,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    if(p == std::make_pair(0,0)) return; // no rbases at the start 
    std::cout << "ctns::oper_check_rbasis coord=" << p 
 	     << " opname=" << opname << std::endl; 
-   int nfail = 0;
+   int nop = 0, nfail = 0; 
    double mdiff = -1.0;
    const auto& node = bra.topo.get_node(p);
    const auto& bsite = bra.rsites.at(p);
@@ -55,7 +55,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    //----------------
    // check for ap^+
    //----------------
-   if(opname == 'C'){ 
+   if(opname == 'C'){
    for(const auto& opC: qops['C']){
       const auto& op = opC.second;
       int orb_p = 2*opC.first;
@@ -108,13 +108,14 @@ void oper_check_rbasis(const comb<Tm>& bra,
       if(diff > thresh){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " C: p=" << orb_p 
-                   << " |op|=" << normF(opmat)
-                   << " |dm|=" << normF(tmat)
+                   << " |opmat|=" << normF(opmat)
+                   << " |tmat|=" << normF(tmat)
                    << " diff=" << diff
                    << " " << (diff > thresh)	
                    << std::endl;
 	 nfail++;
       }
+      nop++;
    } // op
    } 
    //--------------------------
@@ -178,13 +179,14 @@ void oper_check_rbasis(const comb<Tm>& bra,
       if(diff > thresh){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " A: p,q=" << orb_p << "," << orb_q
-                   << " |op|=" << normF(opmat)
-                   << " |dm|=" << normF(tmat)
+                   << " |opmat|=" << normF(opmat)
+                   << " |tmat|=" << normF(tmat)
                    << " diff=" << diff
                    << " " << (diff > thresh)	
            	   << std::endl;
 	 nfail++;
       }
+      nop++;
    } // op
    }
    //------------------------
@@ -248,16 +250,18 @@ void oper_check_rbasis(const comb<Tm>& bra,
       if(diff > thresh){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " B: p,q=" << orb_p << "," << orb_q
-                   << " |op|=" << normF(opmat)
-                   << " |dm|=" << normF(tmat)
+                   << " |opmat|=" << normF(opmat)
+                   << " |tmat|=" << normF(tmat)
                    << " diff=" << diff 
                    << " " << (diff > thresh)	
            	   << std::endl;
 	 nfail++;
       }
+      nop++;
    } // op
    }
-   std::cout << "no. of failed cases = " << nfail 
+   std::cout << "no. of ops = " << nop 
+	     << " failed = " << nfail 
 	     << " maxdiff = " << mdiff << std::endl;
    if(nfail>0 || std::abs(mdiff)>thresh) exit(1);
 }
@@ -275,7 +279,7 @@ void oper_check_rbasis(const comb<Tm>& bra,
    if(p == std::make_pair(0,0)) return; // no rbases at the start 
    std::cout << "ctns::oper_check_rbasis coord=" << p 
 	     << " opname=" << opname << std::endl; 
-   int nfail = 0;
+   int nop = 0, nfail = 0;
    double mdiff = -1.0;
    const auto& node = bra.topo.get_node(p);
    const auto& bsite = bra.rsites.at(p);
@@ -352,13 +356,14 @@ void oper_check_rbasis(const comb<Tm>& bra,
       if(diff > thresh){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " P: p,q=" << orb_p << "," << orb_q
-                   << " |op|=" << normF(opmat)
-                   << " |dm|=" << normF(tmat)
+                   << " |opmat|=" << normF(opmat)
+                   << " |tmat|=" << normF(tmat)
                    << " diff=" << diff 
                    << " " << (diff > thresh)	
            	   << std::endl;
 	 nfail++;
       }
+      nop++;
    } // op
    }
    //---------------------------------
@@ -425,13 +430,14 @@ void oper_check_rbasis(const comb<Tm>& bra,
       if(diff > thresh){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " Q: p,s=" << orb_p << "," << orb_s
-                   << " |op|=" << normF(opmat)
-                   << " |dm|=" << normF(tmat)
+                   << " |opmat|=" << normF(opmat)
+                   << " |tmat|=" << normF(tmat)
                    << " diff=" << diff 
                    << " " << (diff > thresh)	
            	   << std::endl;
 	 nfail++;
       }
+      nop++;
    } // op
    }
    //-----------------------------------------------------
@@ -509,13 +515,14 @@ void oper_check_rbasis(const comb<Tm>& bra,
       if(diff > thresh){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " S: p=" << orb_p
-                   << " |op|=" << normF(opmat)
-                   << " |dm|=" << normF(tmat)
+                   << " |opmat|=" << normF(opmat)
+                   << " |tmat|=" << normF(tmat)
                    << " diff=" << diff 
                    << " " << (diff > thresh)	
            	   << std::endl;
 	 nfail++;
       }
+      nop++;
    } // op
    }
    //------------------------------------------------------------
@@ -603,16 +610,18 @@ void oper_check_rbasis(const comb<Tm>& bra,
       if(diff > thresh){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " H:"
-                   << " |op|=" << normF(opmat)
-                   << " |dm|=" << normF(tmat)
+                   << " |opmat|=" << normF(opmat)
+                   << " |tmat|=" << normF(tmat)
                    << " diff=" << diff 
                    << " " << (diff > thresh)	
            	   << std::endl;
 	 nfail++;
       }
+      nop++;
    } // op
    }
-   std::cout << "no. of failed cases = " << nfail 
+   std::cout << "no. of ops = " << nop
+	     << " failed = " << nfail 
 	     << " maxdiff = " << mdiff << std::endl;
    if(nfail>0 || std::abs(mdiff)>thresh) exit(1);
 }

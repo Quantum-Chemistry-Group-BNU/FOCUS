@@ -334,7 +334,6 @@ oper_dict<Tm> oper_renorm_opAll(const std::string& superblock,
 
    oper_renorm_opP(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'P',int2e,int1e);
-   exit(1);
 /*
    oper_renorm_opQ(superblock,site,qops1,qops2,qops,
    	              ksupp,int2e,int1e,debug);
