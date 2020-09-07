@@ -218,9 +218,9 @@ void oper_renorm_opQ(const std::string& superblock,
 	 }
       }
    }
-   for(const int ps : index){
-      //auto Hwf = oper_opwf__opQ(superblock,site,qops1,qops2,int2e,int1e,ps);
-      //qops['Q'][ps] = oper_kernel_renorm(superblock,site,Hwf);
+   for(const int sps : index){
+      auto Hwf = oper_opwf_opQ(superblock,site,qops1,qops2,int2e,int1e,sps);
+      qops['Q'][sps] = oper_kernel_renorm(superblock,site,Hwf);
    }
    auto t1 = tools::get_time();
    if(debug){ 
@@ -325,20 +325,19 @@ oper_dict<Tm> oper_renorm_opAll(const std::string& superblock,
       exit(1);
    }
 */
-   // AB/PQ
+   // A
    oper_renorm_opA(superblock,site,qops1,qops2,qops,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'A');
-   
+   // B
    oper_renorm_opB(superblock,site,qops1,qops2,qops,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'B');
-
+   // P
    oper_renorm_opP(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'P',int2e,int1e);
-/*
-   oper_renorm_opQ(superblock,site,qops1,qops2,qops,
-   	              ksupp,int2e,int1e,debug);
+   // Q
+   oper_renorm_opQ(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'Q',int2e,int1e);
-*/
+
    auto t1 = tools::get_time();
    if(debug){
       std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 
