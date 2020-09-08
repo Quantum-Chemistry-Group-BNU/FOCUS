@@ -338,9 +338,8 @@ qtensor3<Tm> oper_opwf_opH(const std::string& superblock,
 		           oper_dict<Tm>& qops2,
 	                   const integral::two_body<Tm>& int2e,
 	                   const integral::one_body<Tm>& int1e){
-   qsym symH = qsym(0,0);
-   qtensor3<Tm> opwf(symH+site.sym, site.qmid, site.qrow, site.qcol, site.dir);
-/*
+   const bool dagger = true;
+   qtensor3<Tm> opwf(site.sym, site.qmid, site.qrow, site.qcol, site.dir);
    //
    // H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
    //   = H1 + H2
@@ -349,177 +348,97 @@ qtensor3<Tm> oper_opwf_opH(const std::string& superblock,
    //   + <p1q1||s2r2> p1^+q1^+r2s2 + h.c.
    //   + <p1q2||s1r2> p1^+q2^+r2s1 
    //
-   // 1. Hc*Ir
+   // 1. H1*I2
    opwf += oper_kernel_OIwf(superblock,site,qops1['H'].at(0));
-   // 2. Ic*Hr
+   // 2. I1*H2
    opwf += oper_kernel_IOwf(superblock,site,qops2['H'].at(0),0);
+   //
+   // One-index operators
+   //
    // 3. p1^+ Sp1^2 + h.c. 
    for(const auto& op1C : qops1['C']){
       int p1 = op1C.first;
-      const auto& op1 = op1C.second;
+      const auto& op1c = op1C.second;
       const auto& op2S = qops2['S'].at(p1);
-      opwf += oper_kernel_OOwf(superblock,site,op1,op2S,1);
-      opwf -= oper_kernel_OOwf(superblock,site,op1.T(),op2S.T(),1);
+      opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1);
+      opwf -= oper_kernel_OOwf(superblock,site,op1c,op2S,1,dagger);
+      // KR part
+      opwf += oper_kernel_OOwf(superblock,site,op1c.K(1),op2S.K(1),1);
+      opwf -= oper_kernel_OOwf(superblock,site,op1c.K(1),op2S.K(1),1,dagger);
    }
-   // 4. q2^+ Sq2^1 + h.c. 
+   // 4. q2^+ Sq2^1 + h.c. = -Sq2^1 q2^+ + h.c. 
    for(const auto& op2C : qops2['C']){
       int q2 = op2C.first;
-      const auto& op2 = op2C.second;
+      const auto& op2c = op2C.second;
       const auto& op1S = qops1['S'].at(q2);
-      opwf -= oper_kernel_OOwf(superblock,site,op1S,op2,1);
-      opwf += oper_kernel_OOwf(superblock,site,op1S.T(),op2.T(),1);
+      opwf -= oper_kernel_OOwf(superblock,site,op1S,op2c,1);
+      opwf += oper_kernel_OOwf(superblock,site,op1S,op2c,1,dagger);
+      // KR part
+      opwf -= oper_kernel_OOwf(superblock,site,op1S.K(1),op2c.K(1),1);
+      opwf += oper_kernel_OOwf(superblock,site,op1S.K(1),op2c.K(1),1,dagger);
    }
-   
-   // 5. <p1q1||s2r2> p1^+q1^+r2s2 + h.c.
-   int ifA1P2 = (qops1.find('A') != qops1.end() && qops2.find('P') != qops2.end()); 
-   int ifP1A2 = (qops1.find('P') != qops1.end() && qops2.find('A') != qops2.end());
-   int ifA1A2 = (qops1.find('A') != qops1.end() && qops2.find('A') != qops2.end());
-   assert(ifA1P2 + ifP1A2 + ifA1A2 == 1);
-   if(ifA1P2){ 
-      // Apq^1*Ppq^2 + h.c.
+   //
+   // Two-index operators
+   //
+   // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
+   assert(qops1.find('A') != qops1.end() && qops2.find('P') != qops2.end()); 
+   assert(qops1.find('P') != qops1.end() && qops2.find('A') != qops2.end());
+   if(qops1['A'].size() < qops2['A'].size()){ 
       for(const auto& op1A : qops1['A']){
+	 const auto& index = op1A.first;
          const auto& op1 = op1A.second;
-         auto pq = oper_unpack(op1A.first);
-	 int p = pq.first;
-	 int q = pq.second;
-	 // special treatment of index for P 
-	 if(p < q){
-	    const auto& op2 = qops2['P'].at(oper_pack(p,q));
-            opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
-            opwf += oper_kernel_OOwf(superblock,site,op1.T(),op2.T(),0);
-	 }else{
-	    const auto& op2 = qops2['P'].at(oper_pack(q,p));
-            opwf -= oper_kernel_OOwf(superblock,site,op1,op2,0);
-            opwf -= oper_kernel_OOwf(superblock,site,op1.T(),op2.T(),0);
-	 }
+	 const auto& op2 = qops2['P'].at(index);
+         double wt = wfacAP(index);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
+	 // KR part: phases will get cancelled in op1 and op2.
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1.K(0),op2.K(0),0);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1.K(0),op2.K(0),0,dagger);
       }
-   }else if(ifP1A2){
+   }else{
       // Prs^1+Ars^2+ + h.c.
       for(const auto& op2A : qops2['A']){
-         const auto& op2 = op2A.second;
-         auto rs = oper_unpack(op2A.first);
-	 int r = rs.first;
-	 int s = rs.second;
-	 // special treatment of index for P 
-	 if(r < s){
-            const auto& op1 = qops1['P'].at(oper_pack(r,s));
-	    opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
-            opwf += oper_kernel_OOwf(superblock,site,op1.T(),op2.T(),0);
-	 }else{
-            const auto& op1 = qops1['P'].at(oper_pack(s,r));
-	    opwf -= oper_kernel_OOwf(superblock,site,op1,op2,0);
-            opwf -= oper_kernel_OOwf(superblock,site,op1.T(),op2.T(),0);
-	 }
-      }
-   }else if(ifA1A2){
-      if(qops1['A'].size() < qops2['A'].size()){
-         // 5. p1^+q1^+ (<p1q1||s2r2> r2s2) + h.c.
-         for(const auto& op1A : qops1['A']){
-            auto pq = oper_unpack(op1A.first);
-            int p1 = pq.first;
-            int q1 = pq.second;
-            const auto& op1 = op1A.second;
-            // op2 = <p1q1||s2r2> r2s2
-            qsym rsym = symH - op1.sym;
-	    auto& it = qops2['A'].begin()->second;
-            qtensor2 op2(-rsym, it.qrow, it.qcol);
-            for(const auto& op2A : qops2['A']){
-               if(op2.sym != op2A.second.sym) continue;
-               auto sr = oper_unpack(op2A.first);
-               int s2 = sr.first;
-               int r2 = sr.second;
-               op2 += int2e.getAnti(p1,q1,s2,r2)*op2A.second;
-            } // rs
-            opwf += oper_kernel_OOwf(superblock,site,op1,op2.T(),0);
-            opwf += oper_kernel_OOwf(superblock,site,op1.T(),op2,0);
-         } // pq
-      }else{
-         // 5. (<p1q1||s2r2> p1^+q1^+) r2s2 + h.c.
-	 for(const auto& op2A : qops2['A']){
-	    auto sr = oper_unpack(op2A.first);
-	    int s2 = sr.first;
-	    int r2 = sr.second;
-	    const auto& op2 = op2A.second;
-	    // op1 = <p1q1||s2r2> p1^+q1^+
-	    qsym rsym = symH + op2.sym;
-	    auto& it = qops1['A'].begin()->second;
-	    qtensor2 op1(rsym, it.qrow, it.qcol);
-	    for(const auto& op1A : qops1['A']){
-	       if(op1.sym != op1A.second.sym) continue;
-	       auto pq = oper_unpack(op1A.first);
-	       int p1 = pq.first;
-	       int q1 = pq.second;
-	       op1 += int2e.getAnti(p1,q1,s2,r2)*op1A.second;
-	    }
-	    opwf += oper_kernel_OOwf(superblock,site,op1,op2.T(),0);
-	    opwf += oper_kernel_OOwf(superblock,site,op1.T(),op2,0);
-	 }
+	 const auto& index = op2A.first;
+	 const auto& op2 = op2A.second;
+         const auto& op1 = qops1['P'].at(index);
+         double wt = wfacAP(index);
+	 opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
+	 // KR part
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1.K(0),op2.K(0),0);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1.K(0),op2.K(0),0,dagger);
       }
    }
-   
-   // 6. <p1q2||s1r2> p1^+q2^+r2s1 
-   int ifB1Q2 = (qops1.find('B') != qops1.end() && qops2.find('Q') != qops2.end()); 
-   int ifQ1B2 = (qops1.find('Q') != qops1.end() && qops2.find('B') != qops2.end());
-   int ifB1B2 = (qops1.find('B') != qops1.end() && qops2.find('B') != qops2.end());
-   assert(ifB1Q2 + ifQ1B2 + ifB1B2 == 1);
-   if(ifB1Q2){
+   // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
+   assert(qops1.find('B') != qops1.end() && qops2.find('Q') != qops2.end()); 
+   assert(qops1.find('Q') != qops1.end() && qops2.find('B') != qops2.end());
+   if(qops1['B'].size() < qops2['B'].size()){
       // Bps^1*Qps^2
       for(const auto& op1B : qops1['B']){
+	 const auto& index = op1B.first;
          const auto& op1 = op1B.second;
-         const auto& op2 = qops2['Q'].at(op1B.first);
-         opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
+	 const auto& op2 = qops2['Q'].at(index);
+	 double wt = wfacBQ(index);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
+	 // KR part
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1.K(0),op2.K(0),0);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1.K(0),op2.K(0),0,dagger);
       }
-   }else if(ifQ1B2){
+   }else{
       // Qqr^1*Bqr^2
       for(const auto& op2B : qops2['B']){
+	 const auto& index = op2B.first;
          const auto& op2 = op2B.second;
-         const auto& op1 = qops1['Q'].at(op2B.first);
-         opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
-      }
-   }else if(ifB1B2){
-      if(qops1['B'].size() < qops2['B'].size()){
-         // 6. p1^+s1 (<p1q2||s1r2> q2^+r2)
-         for(const auto& op1B : qops1['B']){
-            auto ps = oper_unpack(op1B.first);
-            int p1 = ps.first;
-            int s1 = ps.second;
-            const auto& op1 = op1B.second;
-            // op2 = <p1q2||s1r2> q2^+r2
-            qsym rsym = symH - op1.sym;
-            auto& it = qops2['B'].begin()->second;
-            qtensor2 op2(rsym, it.qrow, it.qcol);
-            for(const auto& op2B : qops2['B']){
-               if(op2.sym != op2B.second.sym) continue;
-               auto qr = oper_unpack(op2B.first);
-               int q2 = qr.first;
-               int r2 = qr.second;
-               op2 += int2e.getAnti(p1,q2,s1,r2)*op2B.second;
-            }
-            opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
-	 }
-      }else{
-         // 6. (<p1q2||s1r2> p1^+s1) q2^r2 
-	 for(const auto& op2B : qops2['B']){
-	    auto qr = oper_unpack(op2B.first);
-	    int q2 = qr.first;
-	    int r2 = qr.second;
-	    const auto& op2 = op2B.second;
-	    // <p1q2||s1r2> p1^+s1
-	    qsym rsym = symH - op2.sym;
-	    auto& it = qops1['B'].begin()->second;
-	    qtensor2 op1(rsym, it.qrow, it.qcol);
-	    for(const auto& op1B : qops1['B']){
-	       if(op1.sym != op1B.second.sym) continue;
-	       auto ps = oper_unpack(op1B.first);
-	       int p1 = ps.first;
-	       int s1 = ps.second;
-	       op1 += int2e.getAnti(p1,q2,s1,r2)*op1B.second;
-	    }
-	    opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
-	 }
+         const auto& op1 = qops1['Q'].at(index);
+	 double wt = wfacBQ(index);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
+	 // KR part
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1.K(0),op2.K(0),0);
+         opwf += wt*oper_kernel_OOwf(superblock,site,op1.K(0),op2.K(0),0,dagger);
       }
    }
-*/
    return opwf;
 }
 

@@ -29,6 +29,18 @@ inline std::pair<int,int> oper_unpack2(const int ij){
    int kq = (ij/2)/kpack;
    return std::make_pair(2*kp, 2*kq+spincase);
 }
+inline double wfacAP(const int ij){
+   int spincase = ij%2;
+   int kp = (ij/2)%kpack;
+   int kq = (ij/2)/kpack;
+   return (spincase==1 && kp==kq)? 0.5 : 1.0; 
+}
+inline double wfacBQ(const int ij){
+   int spincase = ij%2;
+   int kp = (ij/2)%kpack;
+   int kq = (ij/2)/kpack;
+   return (kp==kq)? 0.5 : 1.0; 
+}
 
 } // ctns
 

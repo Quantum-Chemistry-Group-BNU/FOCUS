@@ -285,10 +285,10 @@ oper_dict<Tm> oper_renorm_opAll(const std::string& superblock,
 			      oper_dict<Tm>& qops2,
 		              const integral::two_body<Tm>& int2e,
 		              const integral::one_body<Tm>& int1e,
-			      const bool debug=true){
-   const bool ifcheck = true;
+			      const bool debug=false){
+   const bool ifcheck = false;
    auto t0 = tools::get_time();
-   std::cout << "\nctns::oper_renorm_opAll coord=" << p 
+   std::cout << "ctns::oper_renorm_opAll coord=" << p 
              << " superblock=" << superblock << std::endl;
    auto& node = icomb.topo.get_node(p);
    qtensor3<Tm> site;
@@ -339,6 +339,7 @@ oper_dict<Tm> oper_renorm_opAll(const std::string& superblock,
    if(debug){
       std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 
                 << tools::get_duration(t1-t0) << " s" << std::endl;
+      std::cout << std::endl;
    }
    return qops;
 }

@@ -69,7 +69,7 @@ void oper_init(const comb<Tm>& icomb,
       auto p = icomb.topo.rcoord[idx];
       auto& node = icomb.topo.get_node(p);
       // cop: local operators on physical sites
-      if(node.type == 1 || node.type == 2){
+      if(node.type != 3){
          int kp = node.pindex;
          auto qops = oper_init_dot(kp, int2e, int1e);
 	 std::string fname = oper_fname(scratch, p, "cop");
@@ -116,7 +116,6 @@ void oper_env_right(const comb<Tm>& icomb,
    auto t1 = tools::get_time();
    std::cout << "timing for ctns::oper_env_right : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
-   exit(1);
 }
 
 template <typename Tm>
@@ -135,10 +134,10 @@ linalg::matrix<Tm> get_Hmat(const comb<Tm>& icomb,
    oper_load(fname, qops);
    auto Hmat = qops['H'][0].to_matrix();
    Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows());
-   
-   // also deal with rwfuns, if necessary
-   exit(1);
-
+   // also deal with rwfuns(istate,ibas) 
+   auto wfmat = icomb.rwfuns.to_matrix();
+   auto tmp = linalg::xgemm("N","T",Hmat,wfmat);
+   Hmat = linalg::xgemm("N","N",wfmat.conj(),tmp);
    return Hmat;
 }
 
