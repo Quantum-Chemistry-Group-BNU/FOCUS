@@ -334,6 +334,13 @@ struct qtensor2{
       friend qtensor2<Tm> operator *(const qtensor2<Tm>& qt, const Tm fac){ 
          return fac*qt;
       }
+      double normF() const{
+         double sum = 0.0;
+         for(const auto& blk : _qblocks){
+            if(blk.size() > 0) sum += std::pow(linalg::normF(blk),2);
+         }
+         return std::sqrt(sum);
+      }
    public:
       std::vector<bool> dir = {1,0}; // {out,int} by usual convention for operators in diagrams
       qsym sym; // <row|op[in]|col>

@@ -241,10 +241,10 @@ void oper_renorm_opS(const std::string& superblock,
 		     const bool debug=false){
    if(debug) std::cout << "ctns::oper_renorm_opS" << std::endl;
    auto t0 = tools::get_time();
-   // initialization for 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
+   // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    for(const int kp : ksupp){
-      //auto Hwf = oper_opwf_opS(superblock,site,qops1,qops2,int2e,int1e,kp);
-      //qops['S'][kp] = oper_kernel_renorm(superblock,site,Hwf);
+      auto Hwf = oper_opwf_opS(superblock,site,qops1,qops2,int2e,int1e,kp);
+      qops['S'][kp] = oper_kernel_renorm(superblock,site,Hwf);
    }
    auto t1 = tools::get_time();
    if(debug){
@@ -266,8 +266,8 @@ void oper_renorm_opH(const std::string& superblock,
    auto t0 = tools::get_time();
    // <b1b2|H|b1b2>
    {
-      //auto Hwf = oper_opwf_opH(superblock,site,qops1,qops2,int2e,int1e);
-      //qops['H'][0] = oper_kernel_renorm(superblock,site,Hwf);
+      auto Hwf = oper_opwf_opH(superblock,site,qops1,qops2,int2e,int1e);
+      qops['H'][0] = oper_kernel_renorm(superblock,site,Hwf);
    }
    auto t1 = tools::get_time();
    if(debug){
@@ -306,25 +306,23 @@ oper_dict<Tm> oper_renorm_opAll(const std::string& superblock,
       ksupp = icomb.topo.get_node(pc).rsupport;
    }
    oper_dict<Tm> qops;
-   // C,S,H
+   // C
    oper_renorm_opC(superblock,site,qops1,qops2,qops,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'C');
-/*
-   oper_renorm_opS(superblock,site,qops1,qops2,qops,
-   		   ksupp,int2e,int1e,debug);
+   // S
+   oper_renorm_opS(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'S',int2e,int1e);
-   oper_renorm_opH(superblock,site,qops1,qops2,qops,
-   		   int2e,int1e,debug);
+   // H
+   oper_renorm_opH(superblock,site,qops1,qops2,qops,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'H',int2e,int1e);
-   // consistency check
-   auto H = qops['H'].at(0);
-   auto diffH = (H-H.T()).normF();
+   // consistency check for Hamiltonian
+   const auto& H = qops['H'].at(0);
+   auto diffH = (H-H.H()).normF();
    if(diffH > 1.e-10){
       H.print("H",2);
-      cout << "error: H-H.T is too large! diffH=" << diffH << endl;
+      std::cout << "error: H-H.H() is too large! diffH=" << diffH << std::endl;
       exit(1);
    }
-*/
    // A
    oper_renorm_opA(superblock,site,qops1,qops2,qops,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'A');
@@ -337,7 +335,6 @@ oper_dict<Tm> oper_renorm_opAll(const std::string& superblock,
    // Q
    oper_renorm_opQ(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'Q',int2e,int1e);
-
    auto t1 = tools::get_time();
    if(debug){
       std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 

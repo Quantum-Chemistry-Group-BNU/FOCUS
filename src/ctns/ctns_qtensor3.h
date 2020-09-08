@@ -220,6 +220,17 @@ struct qtensor3{
       friend qtensor3<Tm> operator *(const qtensor3<Tm>& qt, const double fac){
          return fac*qt;
       }
+      double normF() const{
+         double sum = 0.0;
+         for(const auto& blk : _qblocks){
+            if(blk.size() > 0){
+      	       for(int m=0; m<blk.size(); m++){
+                  sum += std::pow(linalg::normF(blk[m]),2);
+               }
+            }
+         }
+         return std::sqrt(sum);
+      }
    public:
       std::vector<bool> dir = {1,0,1}; // =0,in; =1,out; {mid,row,col}
       				       // {1,0,1} - RCF (default)
