@@ -272,7 +272,7 @@ vector<directed_bond> topology::get_sweeps(const bool debug) const{
          auto coord0  = get<0>(sweeps[idx]);
          auto coord1  = get<1>(sweeps[idx]);
          auto forward = get<2>(sweeps[idx]);
-         cout << " idx=" << idx << " : "
+         cout << " idx=" << idx 
               << " dbond=" << coord0 << "-" << coord1 
 	      << " forward=" << forward << endl; 
       }

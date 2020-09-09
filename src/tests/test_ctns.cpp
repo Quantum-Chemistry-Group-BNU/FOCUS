@@ -14,6 +14,7 @@
 #include "../ctns/ctns_comb_alg.h"
 #include "../ctns/ctns_io.h"
 #include "../ctns/ctns_oper.h"
+#include "../ctns/ctns_opt.h"
 #include "../io/input.h"
 #include <iostream>
 #include <iomanip>
@@ -110,12 +111,11 @@ int tests::test_ctns(){
          cout << "error: diff_Hij > thresh=" << thresh << endl;
          exit(1);
       }
-      exit(1);
   
-/*
       // 5. optimization from current RCF 
-      tns::opt_sweep(schd, comb, int2e, int1e, ecore);
-*/
+      ctns::opt_sweep(icomb, int2e, int1e, ecore, schd);
+      exit(1);
+
       ctns::rcanon_save(icomb);
    }else{
       ctns::rcanon_load(icomb);

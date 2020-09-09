@@ -199,11 +199,11 @@
 	  - 3. algorithm: check overlap with CI [DONE@20200823]
 	  - 4. compute Sd by sampling [DONE@20200823]
 	  - 5. algorithm: check Hij by reformulating op*psi
-	       - build both AB&PQ to simplify the code logic,
-		 which will be also useful for parallelization
+	       - build both AB&PQ to simplify the code logic, which will be useful for parallelization
 	       - normal operators [DONE@20200825]
-	       - complementary operators
-	  - 6. optimization from current RCF
+	       - complementary operators [DONE@20200908]
+	  - 6. optimization from current RCF 
+	  - 7. non-relativistic version
 
  2020xxxx complex version: relativistic SCI/DMRG
  	  - documentation of each step in formula & diagrams [considering complex case]

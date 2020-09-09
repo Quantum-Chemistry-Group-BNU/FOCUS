@@ -29,6 +29,8 @@ inline std::pair<int,int> oper_unpack2(const int ij){
    int kq = (ij/2)/kpack;
    return std::make_pair(2*kp, 2*kq+spincase);
 }
+
+// weight factor for AP/BQ pairs
 inline double wfacAP(const int ij){
    int spincase = ij%2;
    int kp = (ij/2)%kpack;
