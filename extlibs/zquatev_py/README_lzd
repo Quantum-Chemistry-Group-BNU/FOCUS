@@ -1,0 +1,16 @@
+main - test.cc zquatev.cc
+py - wrapper.cc
+ 
+ f77.h - lapack
+ 
+ test.cc
+ wrapper.cc
+ zquatev.cc
+ zquatev.h
+ 
+ unblocked.cc
+ 
+ blocked.cc
+ supermat.h
+ transpose.cc - transpose matrix
+

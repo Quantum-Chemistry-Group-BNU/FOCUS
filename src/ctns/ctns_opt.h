@@ -5,16 +5,6 @@
 #include "ctns_oper_helper.h"
 #include "ctns_opt_util.h"
 
-/*
-#include "../core/dvdson.h"
-#include "../core/linalg.h"
-#include "tns_oper.h"
-#include "tns_opt.h"
-#include "tns_ham.h"
-#include "tns_initial.h"
-#include "tns_decimation.h"
- */
-
 namespace ctns{
 
 // main for sweep optimizations for CTNS
@@ -33,7 +23,7 @@ void opt_sweep(comb<Tm>& icomb, // initial comb wavefunction
    icomb.lsites[std::make_pair(0,0)] = get_left_bsite<Tm>();
    // generate sweeps
    auto sweeps = icomb.topo.get_sweeps();
-   std::vector<sweep_result> sweep_data(schd.maxsweep); 
+   std::vector<dot_result> sweep_summary(schd.maxsweep); 
    std::vector<double> timing(schd.maxsweep);
    for(int isweep=0; isweep<schd.maxsweep; isweep++){
       std::cout << std::endl;
@@ -42,9 +32,7 @@ void opt_sweep(comb<Tm>& icomb, // initial comb wavefunction
       input::combsweep_print(ctrl);
       // data per sweep
       int size = sweeps.size();
-      std::vector<std::vector<double>> eopt(size);
-      std::vector<double> dwt(size);
-      std::vector<int> deff(size);
+      std::vector<dot_result> sweep_result(size);
       // loop over sites
       auto ti = tools::get_time();
       for(int i=0; i<size; i++){
@@ -54,29 +42,24 @@ void opt_sweep(comb<Tm>& icomb, // initial comb wavefunction
          auto forward = std::get<2>(dbond);
 	 auto updated = !forward; // 0/1-th udpated site in the bond
          auto p = forward? p0 : p1;
-	 auto tp0 = icomb.topo.get_node(p0).type;
-	 auto tp1 = icomb.topo.get_node(p1).type;
+	 auto tp0 = icomb.topo.node_type(p0);
+	 auto tp1 = icomb.topo.node_type(p1);
          bool cturn = (tp0 == 3 && p1.second == 1);
 	 std::cout << "isweep=" << isweep << " ibond=" << i << " bond=" << p0 << "-" << p1 
 	           << " (fw,ct,update)=(" << forward << "," << cturn << "," << updated << ")" 
 	           << std::endl;
-
-	 eopt[i].resize(icomb.get_nstate());
-	 /*
+	 sweep_result[i].eopt.resize(icomb.get_nstate());
 	 if(ctrl.dots == 1 || (ctrl.dots == 2 && tp0 == 3 && tp1 == 3)){ 
-	    opt_onedot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, 
-		       eopt[i], dwt[i], deff[i]);
+	    opt_sweep_onedot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, sweep_result[i]);
 	 }else{
-	    opt_twodot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, 
-		       eopt[i], dwt[i], deff[i]);
-	 }
+	 /*
+	    opt_sweep_twodot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, sweep_result[i]);
 	 */
-
+	 }
       } // i
       auto tf = tools::get_time();
       timing[isweep] = tools::get_duration(tf-ti);
-      opt_sweep_summary(schd,sweeps,eopt,dwt,deff,
-		        isweep,timing,sweep_data);
+      opt_sweep_summary(schd, sweeps, sweep_result, isweep, timing, sweep_summary);
    } // isweep
 /*
    opt_finaldot(schd, icomb, int2e, int1e, ecore);

@@ -220,6 +220,7 @@ struct qtensor3{
       friend qtensor3<Tm> operator *(const qtensor3<Tm>& qt, const double fac){
          return fac*qt;
       }
+      // for Davidson algorithm
       double normF() const{
          double sum = 0.0;
          for(const auto& blk : _qblocks){
@@ -231,6 +232,34 @@ struct qtensor3{
          }
          return std::sqrt(sum);
       }
+      int get_dim() const{
+         int dim = 0;
+         for(const auto& blk : _qblocks){
+            if(blk.size() > 0){
+               dim += blk.size()*blk[0].size(); // A[l,c,r] = A[c](l,r)
+            }
+         }
+         return dim;
+      }
+      //void from_array(const double* array);
+      //void to_array(double* array) const;
+      
+/*
+      // extract real & imag parts
+      matrix<double> real() const{
+	 matrix<double> matr(_rows,_cols);
+	 std::transform(_data, _data+_size, matr._data,
+			[](const Tm& x){ return std::real(x); });
+	 return matr;
+      }
+      matrix<double> imag() const{
+	 matrix<double> mati(_rows,_cols);
+	 std::transform(_data, _data+_size, mati._data,
+			[](const Tm& x){ return std::imag(x); });
+	 return mati;
+      }
+*/
+
    public:
       std::vector<bool> dir = {1,0,1}; // =0,in; =1,out; {mid,row,col}
       				       // {1,0,1} - RCF (default)

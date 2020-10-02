@@ -39,6 +39,7 @@ Optimization: decimation
 -------------------------------
  ctns_opt.h
  ctns_opt_util.h
+ ctns_opt_ham.h
 -------------------------------
 
 
@@ -52,7 +53,6 @@ opt:
 -------------------------------
  tns_opt.h
  tns_opt.cpp
- tns_ham.h
  tns_ham_onedot.cpp
  tns_ham_twodot.cpp
  tns_decimation.h

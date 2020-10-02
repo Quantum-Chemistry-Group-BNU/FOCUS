@@ -1,13 +1,9 @@
 #ifndef CTNS_COMB_H
 #define CTNS_COMB_H
 
-#include <iostream>
-#include <tuple>
-#include <vector>
-#include <string>
-#include <map>
 #include "ctns_rbasis.h"
 #include "ctns_qtensor.h"
+#include "ctns_phys.h"
 
 namespace ctns{
 
@@ -42,6 +38,8 @@ struct topology{
       void print() const;
       // node
       const node& get_node(const comb_coord& p) const{ return nodes[p.first][p.second]; }
+      // type
+      int node_type(const comb_coord& p) const{ return nodes[p.first][p.second].type; }
       // helper for support 
       std::vector<int> support_rest(const std::vector<int>& rsupp) const;
       // sweep sequence 
@@ -70,6 +68,7 @@ class comb{
 	 assert(rwfuns.rows() == 1); // only one symmetry sector
          return rwfuns.qrow.get_sym(0);
       }
+      // return rwfun for istate, extracted from rwfuns
       qtensor2<Tm> get_state(const int istate) const{
          assert(rwfuns.rows() == 1);
 	 qsym_space qrow({{rwfuns.qrow.get_sym(0),1}});
@@ -81,31 +80,38 @@ class comb{
 	 }
 	 return rwfun;
       }
-
-//      // --- neightbor ---
-//      int get_kp(const comb_coord& p) const{ return topo[p.first][p.second]; }
-//      comb_coord get_c(const comb_coord& p) const{ return std::get<0>(neighbor.at(p)); }
-//      comb_coord get_l(const comb_coord& p) const{ return std::get<1>(neighbor.at(p)); }
-//      comb_coord get_r(const comb_coord& p) const{ return std::get<2>(neighbor.at(p)); }
-//      bool ifbuild_c(const comb_coord& p) const{ return get_c(p) == std::make_pair(-1,-1); }
-//      bool ifbuild_l(const comb_coord& p) const{ return type.at(get_l(p)) == 0; }
-//      bool ifbuild_r(const comb_coord& p) const{ return type.at(get_r(p)) == 0; }
-//      // --- environmental quantum numbers --- 
-//      qsym_space get_qc(const comb_coord& p) const{
-//         auto pc = get_c(p);
-//	 bool physical = (pc == std::make_pair(-1,-1));
-//         return physical? phys_qsym_space : rsites.at(pc).qrow; 
-//      }
-//      qsym_space get_ql(const comb_coord& p) const{
-//         auto pl = get_l(p);
-//         bool cturn = (type.at(pl) == 3 and p.second == 1);
-//	 return cturn? lsites.at(pl).qmid : lsites.at(pl).qcol;
-//      }
-//      qsym_space get_qr(const comb_coord& p) const{
-//         auto pr = get_r(p);
-//         return rsites.at(pr).qrow;
-//      }
-
+      // symmetry information used in opt_sweep
+      qsym_space get_qc(const comb_coord& p) const{
+	 //
+	 //				  |
+	 // MPS-like:	    Additional: --pc
+	 //  \|/			 \|/
+	 // --p--			--p--
+	 //
+         auto pc = topo.get_node(p).center;
+	 bool physical = (pc == coord_phys);
+         return physical? get_qsym_space_phys<Tm>() : rsites.at(pc).qrow; 
+      }
+      qsym_space get_ql(const comb_coord& p) const{
+	 //
+	 // 			           |
+	 // MPS-like:       Additional:  --p 
+	 //   |      | 			  /|\
+	 // --pl-->--p-- 		 --pl--
+	 //
+         auto pl = topo.get_node(p).left;
+         bool cturn = (topo.node_type(pl) == 3 and p.second == 1);
+	 return cturn? lsites.at(pl).qmid : lsites.at(pl).qcol;
+      }
+      qsym_space get_qr(const comb_coord& p) const{
+	 //
+	 // MPS-like:
+	 //    |     |
+	 //  --p--<--pr-- : qrow of rsites[pr]
+	 //
+         auto pr = topo.get_node(p).right;
+         return rsites.at(pr).qrow;
+      }
    public:
       topology topo;
       std::map<comb_coord,renorm_basis<Tm>> rbases; // renormalized basis from SCI

@@ -1,0 +1,28 @@
+ZQUATEV
+
+Code to diagonalize large quaternionic matrices to yield symmetry-adapted eigenvectors
+======================================================================================
+
+Author:
+    Toru Shiozaki (shiozaki@northwestern.edu)
+
+License:
+    FreeBSD
+    
+Reference:
+    T. Shiozaki, Molecular Physics 115, 5-12 (2017)
+    DOI: 10.1080/00268976.2016.1158423, arXiv:1512.08934 (http://arxiv.org/abs/1512.08934)
+
+Synopsis:
+    This program diagonalizes quaternionic matrices,
+
+    (  A  -B* )
+    (  B   A* )
+
+    which is Hermitian. Only the left half of the matrix will be referenced as an input.
+
+    This matrix has doubly-degenerate eigenvalues, and there is a set of
+    eivenvectors that has the same symmetry property:
+
+    (  U  -V* )
+    (  V   U* )

@@ -203,7 +203,12 @@
 	       - normal operators [DONE@20200825]
 	       - complementary operators [DONE@20200908]
 	  - 6. optimization from current RCF 
+	       - onedot: using qt3?
+	       - twodot: efficient treatment of qt4?
+	       - decomation: Kramers pairs
+	       - embedding scheme for odd-electron systems?
 	  - 7. non-relativistic version
+	       - special treatment |0-> and |0+>
 
  2020xxxx complex version: relativistic SCI/DMRG
  	  - documentation of each step in formula & diagrams [considering complex case]

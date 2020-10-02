@@ -10,7 +10,7 @@ namespace ctns{
 // physical degree of freedoms related
 
 // qsym_space
-qsym_space get_qsym_space_vac(){
+inline qsym_space get_qsym_space_vac(){
    qsym_space qs_vac({{qsym(0,0),1}});
    return qs_vac;
 }
@@ -129,9 +129,9 @@ std::pair<int,int> get_mdx_phys(const fock::onstate& state,
 }
 
 // used in random sampling  
-void assign_occupation_phys(fock::onstate& state,
-			    const int k, 
-			    const int idx){
+inline void assign_occupation_phys(fock::onstate& state,
+			           const int k, 
+			           const int idx){
    if(idx == 0){
       state[2*k] = 0; state[2*k+1] = 0; // 0
    }else if(idx == 1){
