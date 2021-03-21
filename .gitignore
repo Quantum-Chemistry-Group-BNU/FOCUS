@@ -9,3 +9,7 @@ obj/*.o
 *.h5
 .DS_Store
 *.info
+*.o
+*.x
+*.out
+*.a

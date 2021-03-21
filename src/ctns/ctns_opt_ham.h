@@ -17,7 +17,7 @@ std::vector<double> get_onedot_Hdiag(oper_dict<Tm>& cqops,
 			             qtensor3<Tm>& wf){
    const bool debug = false;
    if(debug) std::cout << "\nctns::get_onedot_Hdiag" << std::endl;
-   
+/*   
    // 1. local contributions
    auto& Hc = cqops['H'][0];
    auto& Hl = lqops['H'][0];
@@ -108,10 +108,12 @@ std::vector<double> get_onedot_Hdiag(oper_dict<Tm>& cqops,
 	 } // bc
       } // br
    } // bm
-
+*/
    // save
    std::vector<double> diag(wf.get_dim());
+/*
    wf.to_array(diag.data());
+*/
    return diag;
 }
 
