@@ -44,7 +44,7 @@ public:
                if(p == i || p == j) continue; // guarantee true double excitations
                for(int q=0; q<p; q++){
                   if(q == i || q == j) continue;
-                  double mag = abs(int2e.get(i,j,p,q)); // |<ij||pq>|
+                  double mag = std::abs(int2e.get(i,j,p,q)); // |<ij||pq>|
                   if(mag > thresh) eri4[ij].insert(std::make_pair(mag,p*(p-1)/2+q));
                } // q
             } // p
@@ -148,7 +148,7 @@ void expand_varSpace(fock::onspace& space,
 		            << " " << state1
 		            << " (N,Na,Nb)=" << state1.nelec() << ","
 		            << state1.nelec_a() << "," << state1.nelec_b()
-	                    << " mag=" << abs(HijS_bound) << " " << cmax[idx] 
+	                    << " mag=" << std::abs(HijS_bound) << " " << cmax[idx] 
 			    << std::endl;
 	       }
 	       varSpace.insert(state1);

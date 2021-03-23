@@ -184,7 +184,7 @@ std::pair<fock::onstate,double> rcanon_random(const comb<Tm>& icomb,
       std::cout << " state=" << state 
                 << " coeff0,sgn=" << coeff0 << "," << sgn
         	<< " coeff1=" << coeff1 << std::endl;
-      assert(abs(coeff0*sgn-coeff1)<1.e-10);
+      assert(std::abs(coeff0*sgn-coeff1)<1.e-10);
    }
    double prob = std::norm(coeff0);
    return std::make_pair(state,prob);

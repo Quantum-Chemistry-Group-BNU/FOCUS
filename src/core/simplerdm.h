@@ -122,7 +122,7 @@ linalg::matrix<Tm> get_rdm1_from_rdm2(const linalg::matrix<Tm>& rdm2){
    // normalization
    double dn2 = std::real(rdm1.trace()); // tr(rdm2) is normalized to n(n-1)
    int n2 = round(dn2);
-   if(abs(dn2 - n2)>1.e-8){
+   if(std::abs(dn2 - n2)>1.e-8){
       std::cout << std::scientific << std::setprecision(12);
       std::cout << "error in get_rdm1_from_rdm2: non-integer electron number" << std::endl;
       std::cout << "n2=n(n-1)" << n2 << " while dn2=" << dn2 << " diff=" << dn2-n2 << std::endl;

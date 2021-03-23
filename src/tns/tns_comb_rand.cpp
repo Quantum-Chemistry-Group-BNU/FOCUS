@@ -90,7 +90,7 @@ pair<onstate,double> comb::rcanon_sampling(const int istate){
    if(debug){
       auto sgn = state.permute_sgn(image2); // due to change of orbital ordering
       double coeff1 = rcanon_CIcoeff(state)[istate];
-      assert(abs(coeff0*sgn-coeff1)<1.e-10);
+      assert(std::abs(coeff0*sgn-coeff1)<1.e-10);
    }
    double prob = coeff0*coeff0;
    return make_pair(state,prob);

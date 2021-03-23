@@ -40,15 +40,15 @@ int tests::test_simpleci(){
    auto v(H);
    eig_solver(H, e, v); // Hc=ce
    cout << "e0=" << setprecision(12) << e[0] << " e1=" << e[1] << endl;
-   assert(abs(e[0] + 98.67325222947) < thresh);
-   assert(abs(e[1] + 98.31758870307) < thresh);
+   assert(std::abs(e[0] + 98.67325222947) < thresh);
+   assert(std::abs(e[1] + 98.31758870307) < thresh);
 
    // analysis 
    vector<DTYPE> v0x(v.col(0),v.col(0)+dim);
    coeff_population(space2, v0x, 1.e-3);
    auto SvNx = coeff_entropy(v0x);
    cout << "SvN=" << setprecision(12) << SvNx << endl;
-   assert(abs(SvNx-0.176260153867) < thresh);
+   assert(std::abs(SvNx-0.176260153867) < thresh);
 
    // --- iterative algorithm --- 
    int nroot = 3;
@@ -56,8 +56,8 @@ int tests::test_simpleci(){
    matrix<DTYPE> vs(dim,nroot);
    ci_solver(es, vs, space2, int2e, int1e, ecore);
    cout << "e0=" << setprecision(12) << es[0] << " e1=" << es[1] << endl;
-   assert(abs(es[0] - e[0]) < thresh); 
-   assert(abs(es[1] - e[1]) < thresh);
+   assert(std::abs(es[0] - e[0]) < thresh); 
+   assert(std::abs(es[1] - e[1]) < thresh);
    vs.print("vs");
 
    // analysis 
@@ -65,7 +65,7 @@ int tests::test_simpleci(){
    coeff_population(space2, v0, 1.e-3);
    auto SvN = coeff_entropy(v0);
    cout << "SvN=" << setprecision(12) << SvN  << endl;
-   assert(abs(SvN-0.176260153867) < thresh);
+   assert(std::abs(SvN-0.176260153867) < thresh);
 
    // --- rdm1 / rdm2 --- 
    // compute rdm1
@@ -87,7 +87,7 @@ int tests::test_simpleci(){
    //rdm2.print("rdm2");
    cout << setprecision(12);
    cout << rdm2(0,0) << endl;
-   assert(abs(rdm2(0,0) - 0.9999994014) < thresh);
+   assert(std::abs(rdm2(0,0) - 0.9999994014) < thresh);
    // check AAAA part
    for(int p0=0; p0<k; p0++){
       for(int p1=0; p1<p0; p1++){
@@ -98,7 +98,7 @@ int tests::test_simpleci(){
 	       // AAAA-block
 	       if(p0%2 == 0 && p1%2 == 0 && 
 		  q0%2 == 0 && q1%2 == 0 &&
-		  abs(rdm2(p01,q01))>1.e-5){
+		  std::abs(rdm2(p01,q01))>1.e-5){
 		  cout << "(p0,p1,q1,q0)=" 
 		       << defaultfloat << setprecision(8)
 		       << p0/2 << " "
@@ -127,10 +127,10 @@ int tests::test_simpleci(){
    cout << "e2=" << e2 << endl;
    auto etot = get_etot(rdm2, rdm1, int2e, int1e, ecore);
    cout << "etot=" << etot << " e0=" << e[0] << " diff=" << e[0]-etot << endl; 
-   assert(abs(ecore - 4.76259489828) < thresh);
-   assert(abs(e1 - (-148.922894885)) < thresh);
-   assert(abs(e2 - 45.4870477569) < thresh);
-   assert(abs(etot - e[0]) < thresh);
+   assert(std::abs(ecore - 4.76259489828) < thresh);
+   assert(std::abs(e1 - (-148.922894885)) < thresh);
+   assert(std::abs(e2 - 45.4870477569) < thresh);
+   assert(std::abs(etot - e[0]) < thresh);
 
    return 0;
 }

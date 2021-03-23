@@ -453,7 +453,7 @@ struct sparse_hamiltonian{
          for(int i=0; i<dim; i++){
             for(int j=0; j<dim; j++){
                //if(abs(H1(i,j))<1.e-8 && abs(H2(i,j))<1.e-8) continue;
-               if(abs(H1(i,j)-H0(i,j))<1.e-8) continue;
+               if(std::abs(H1(i,j)-H0(i,j))<1.e-8) continue;
                std::cout << "i,j=" << i << "," << j 
                     << " val1=" << H1(i,j)  
 		    << " val0=" << H0(i,j)  
@@ -481,7 +481,7 @@ struct sparse_hamiltonian{
             size += connect[i].size();
             for(int jdx=0; jdx<connect[i].size(); jdx++){
       	       int j = connect[i][jdx];
-      	       double aval = abs(value[i][jdx]);
+      	       double aval = std::abs(value[i][jdx]);
       	       if(aval > thresh){
       	          int n = floor(log10(aval));
       	          bucket[n] += 1;

@@ -155,7 +155,7 @@ void ci_solver(const input::schedule& schd,
       std::vector<bool> conv(neig);
       std::cout << std::endl;
       for(int i=0; i<neig; i++){
-	 conv[i] = abs(esol1[i]-esol[i]) < schd.deltaE; 
+	 conv[i] = std::abs(esol1[i]-esol[i]) < schd.deltaE; 
 	 std::vector<Tm> vtmp(vsol1.col(i),vsol1.col(i)+nsub);
          double SvN = fock::coeff_entropy(vtmp); 
 	 std::cout << "sci: iter=" << iter

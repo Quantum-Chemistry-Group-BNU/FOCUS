@@ -77,9 +77,9 @@ void coeff_population(const onspace& space,
    }
    std::cout << std::setprecision(6);
    std::cout << "psum=" << psum << " psum0=" << psum0 << " Sd=" << Sd << std::endl;
-   std::cout << "<Ne>=" << ne << " std=" << std::pow(abs(ne2-ne*ne),0.5) << std::endl;
-   std::cout << "<Na>=" << na << " std=" << std::pow(abs(na2-na*na),0.5) << std::endl;
-   std::cout << "<Nb>=" << nb << " std=" << std::pow(abs(nb2-nb*nb),0.5) << std::endl;
+   std::cout << "<Ne>=" << ne << " std=" << std::pow(std::abs(ne2-ne*ne),0.5) << std::endl;
+   std::cout << "<Na>=" << na << " std=" << std::pow(std::abs(na2-na*na),0.5) << std::endl;
+   std::cout << "<Nb>=" << nb << " std=" << std::pow(std::abs(nb2-nb*nb),0.5) << std::endl;
    coeff_analysis(civec);
 }
 

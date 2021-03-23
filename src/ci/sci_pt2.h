@@ -48,7 +48,7 @@ void pt2_solver(const input::schedule& schd,
 	 if(search == varSpace.end()){
 	    auto pr = fock::get_HijS(state1,state,int2e,int1e);
 	    Tm Hc = pr.first*v0[idx];
-	    if(abs(Hc)<schd.eps2) continue;
+	    if(std::abs(Hc)<schd.eps2) continue;
 	    auto search = pt2Space.find(state1);
 	    if(search == pt2Space.end()){
 	       pt2Space[state1] = Hc;
@@ -63,7 +63,7 @@ void pt2_solver(const input::schedule& schd,
 	 int i = olst[pr.first], j = olst[pr.second];
 	 int ij = tools::canonical_pair0(i,j);
 	 for(const auto& p : hbtab.eri4.at(ij)){
-	    if(p.first*abs(v0[idx]) < schd.eps2) break; // avoid searching all doubles
+	    if(p.first*std::abs(v0[idx]) < schd.eps2) break; // avoid searching all doubles
 	    auto ab = tools::inverse_pair0(p.second);
 	    int a = ab.first, b = ab.second;
 	    if(state[a]==0 && state[b]==0){ // if true double excitations
@@ -76,7 +76,7 @@ void pt2_solver(const input::schedule& schd,
 	       if(search == varSpace.end()){
   	          auto pr = fock::get_HijD(state2,state,int2e,int1e);
   	    	  Tm Hc = pr.first*v0[idx];
-	          if(abs(Hc)<schd.eps2) continue;
+	          if(std::abs(Hc)<schd.eps2) continue;
            	  auto search = pt2Space.find(state2);
            	  if(search == pt2Space.end()){
            	     pt2Space[state2] = Hc;

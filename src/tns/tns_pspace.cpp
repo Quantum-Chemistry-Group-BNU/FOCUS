@@ -143,7 +143,7 @@ pair<int,double> product_space::projection(const vector<vector<double>>& vs,
 	       cout << " i=" << i
 		    << " eig=" << scientific << eig[i] << endl;
 	       for(int j=0; j<dimAs; j++){
-		  if(abs(rhol(j,i))>thresh_vcoeff){
+		  if(std::abs(rhol(j,i))>thresh_vcoeff){
 		     cout << "     " << j << " " << spaceA[idxA[j]].to_string2() 
 			  << " : " << rhol(j,i) << endl; 
 		  }
@@ -291,7 +291,7 @@ renorm_basis product_space::right_projection(const vector<vector<double>>& vs,
 		    << " sig2=" << scientific << sig[i] << endl;
 	       double thresh_coeff = -1.e-2;
 	       for(int j=0; j<dimBs; j++){
-		  if(abs(u(j,i))>thresh_coeff){
+		  if(std::abs(u(j,i))>thresh_coeff){
 		     cout << "     " << j << " " << spaceB[idxB[j]].to_string2() 
 			  << " : " << u(j,i) << endl; 
 		  }

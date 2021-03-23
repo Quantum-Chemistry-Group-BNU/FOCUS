@@ -36,10 +36,10 @@ int tests::test_hamiltonian(){
    auto Ha = fock::get_Hij(space2[16], space2[1], int2e, int1e);
    auto Hb = fock::get_Hij(space2[1], space2[16], int2e, int1e);
    cout << setprecision(12);
-   cout << Ha << " " << abs(Ha-0.04854627932) << endl;
-   cout << Hb << " " << abs(Hb-0.04854627932) << endl;
-   assert(abs(Ha-0.04854627932) < thresh);
-   assert(abs(Hb-0.04854627932) < thresh);
+   cout << Ha << " " << std::abs(Ha-0.04854627932) << endl;
+   cout << Hb << " " << std::abs(Hb-0.04854627932) << endl;
+   assert(std::abs(Ha-0.04854627932) < thresh);
+   assert(std::abs(Hb-0.04854627932) < thresh);
 
    // build H and check symmetry
    cout << "\nCheck Hamiltonian & eigenvalue problem" << endl;
@@ -49,13 +49,13 @@ int tests::test_hamiltonian(){
    int ndiff = 0;
    for(int j=0; j<H.cols(); j++){
       for(int i=0; i<H.rows(); i++){
-         if(abs(H(i,j))<thresh) continue; // skip small terms
-	 if(abs(H(i,j)-H(j,i))<thresh) continue;
+         if(std::abs(H(i,j))<thresh) continue; // skip small terms
+	 if(std::abs(H(i,j)-H(j,i))<thresh) continue;
 	 ndiff += 1; 
          cout << space2[i].diff_num(space2[j]) 
 	      << " (" << i << "," << j << ")=" 
 	      << H(i,j) << " " << H(j,i)
-              << " diff=" << abs(H(i,j)-H(j,i))	   
+              << " diff=" << std::abs(H(i,j)-H(j,i))	   
               << endl;
       }
    }
@@ -75,12 +75,12 @@ int tests::test_hamiltonian(){
    cout << "timing : " << setw(10) << fixed << setprecision(2) 
 	<< tools::get_duration(t1-t0) << " s" << endl;
    // compared with FCI value
-   assert(abs(e[0]+7.87388139034) < thresh); 
-   assert(abs(e[1]+7.74509251524) < thresh);
-   assert(abs(e[2]+7.72987790743) < thresh);
-   assert(abs(e[3]+7.70051892907) < thresh);
-   assert(abs(e[4]+7.70051892907) < thresh);
-   assert(abs(e[5]+7.67557444095) < thresh);
+   assert(std::abs(e[0]+7.87388139034) < thresh); 
+   assert(std::abs(e[1]+7.74509251524) < thresh);
+   assert(std::abs(e[2]+7.72987790743) < thresh);
+   assert(std::abs(e[3]+7.70051892907) < thresh);
+   assert(std::abs(e[4]+7.70051892907) < thresh);
+   assert(std::abs(e[5]+7.67557444095) < thresh);
    assert(symmetric_diff(H) < thresh);
 
    return 0;

@@ -115,10 +115,10 @@ std::vector<int> sort_index_abs(const int size, const T* v, const int iop=0){
    std::iota(idx.begin(), idx.end(), 0);
    if(iop == 0){
       std::stable_sort(idx.begin(), idx.end(),
-        	  [&v](int i1, int i2) {return abs(v[i1]) < abs(v[i2]);});
+        	  [&v](int i1, int i2) {return std::abs(v[i1]) < std::abs(v[i2]);});
    }else{
       std::stable_sort(idx.begin(), idx.end(),
-        	  [&v](int i1, int i2) {return abs(v[i1]) > abs(v[i2]);});
+        	  [&v](int i1, int i2) {return std::abs(v[i1]) > std::abs(v[i2]);});
    }
    return idx;
 }
