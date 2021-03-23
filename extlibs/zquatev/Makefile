@@ -1,5 +1,6 @@
-INCLUDE  = -I.
-LIBS = -L../../libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl 
+INCLUDE = -I.
+MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib  
+LIBS = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl 
 
 CXX      = g++
 CXXFLAGS = -O3 -DNDEBUG -std=c++11 $(INCLUDE)

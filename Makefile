@@ -5,8 +5,8 @@
 ## serial version of MKL
 #MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
 # parallel version of MKL
-MATH = -L/Users/zhendongli/anaconda2/envs/py36/lib -Wl,-rpath,/Users/zhendongli/anaconda2/envs/py36/lib \
-       -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
+MATH = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
        -L./extlibs/zquatev -lzquatev 
 #MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
 #       -L./extlibs/zquatev -lzquatev 
@@ -14,7 +14,7 @@ MATH = -L/Users/zhendongli/anaconda2/envs/py36/lib -Wl,-rpath,/Users/zhendongli/
 #MATH = -llapack -lblas
 
 BOOST = /usr/local
-FLAGS = -DGNU -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
+FLAGS = -DGNU -std=c++11 -g -O0 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
 #FLAGS = -DGNU -DNDEBUG -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
 #	-Wl,-no_pie -lprofiler # google profiler
 
@@ -34,24 +34,24 @@ BIN_DIR = ./bin
 OBJ_DIR = ./obj
 
 # all dependence
-SRC_DIR1 = ./$(SRC)/tests
-SRC_DIR2 = ./$(SRC)/io
-SRC_DIR3 = ./$(SRC)/core
-SRC_DIR4 = ./$(SRC)/ci
-SRC_DIR5 = ./$(SRC)/tns
-SRC_DIR6 = ./$(SRC)/ctns
-INCLUDE_DIR = -I$(SRC_DIR1) \
-	      -I$(SRC_DIR2) \
-	      -I$(SRC_DIR3) \
-	      -I$(SRC_DIR4) \
-	      -I$(SRC_DIR5) \
-	      -I$(SRC_DIR6)
-SRC_DEP = $(wildcard $(SRC_DIR1)/*.cpp \
-	  	     $(SRC_DIR2)/*.cpp \
-	  	     $(SRC_DIR3)/*.cpp \
-	  	     $(SRC_DIR4)/*.cpp \
-	  	     $(SRC_DIR5)/*.cpp \
-	  	     $(SRC_DIR6)/*.cpp)
+SRC_DIR_CORE = ./$(SRC)/core
+SRC_DIR_CI   = ./$(SRC)/ci
+SRC_DIR_TNS  = ./$(SRC)/tns
+SRC_DIR_CTNS = ./$(SRC)/ctns
+SRC_DIR_IO   = ./$(SRC)/io
+SRC_DIR_TEST = ./$(SRC)/tests
+INCLUDE_DIR = -I$(SRC_DIR_CORE) \
+	      -I$(SRC_DIR_CI) \
+	      -I$(SRC_DIR_TNS) \
+	      -I$(SRC_DIR_CTNS) \
+	      -I$(SRC_DIR_IO) \
+	      -I$(SRC_DIR_TEST)
+SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
+	  	     $(SRC_DIR_CI)/*.cpp \
+	  	     $(SRC_DIR_TNS)/*.cpp \
+	  	     $(SRC_DIR_CTNS)/*.cpp \
+	  	     $(SRC_DIR_IO)/*.cpp \
+	  	     $(SRC_DIR_TEST)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
 # all the files with main functions
@@ -95,3 +95,4 @@ $(OBJ_ALL):
 clean:
 	rm -f obj/*.o
 	rm -f bin/*.x
+	rm -f *.depend
