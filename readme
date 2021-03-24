@@ -1,5 +1,6 @@
+### FOCUS: FermiOniC qUantum Simulation ###
 
-TO INSTALL:
+How to install:
    
  1. edit makefile in extlibs/zquatev/ & make for diagonalizing quaternion matrix
    
