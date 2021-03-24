@@ -1,6 +1,6 @@
 
-CTNS:
--------------------------------
+# CTNS #
+
 Initialization: TRS-adapted
 -------------------------------
  readme
@@ -18,11 +18,11 @@ Initialization: TRS-adapted
  ctns_qtensor3.h -> rsites
  ctns_qtensor_contract.h
  ctns_comb_init.h -> init CTNS from SCI
--------------------------------
+
 Sij and <n|CTNS>
 -------------------------------
  ctns_comb_alg.h
--------------------------------
+
 Hij: operators
 -------------------------------
  ctns_io.h
@@ -34,13 +34,12 @@ Hij: operators
  ctns_oper_rbasis.h
  ctns_oper_kernel.h
  ctns_oper_opwf.h
--------------------------------
+
 Optimization: decimation
 -------------------------------
  ctns_opt.h
  ctns_opt_util.h
  ctns_opt_ham.h
--------------------------------
 
 
 -------------------------------

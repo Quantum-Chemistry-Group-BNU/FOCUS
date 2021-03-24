@@ -1,0 +1,18 @@
+
+# CI #
+
+FCI
+-------------------
+ ci/fci_util.h
+ ci/fci_util.cpp
+ ci/fci.h
+ ci/fci_rdm.h
+ tests/test_fci.cpp
+
+SCI+PT2
+-------------------
+ ci/sci_util.h
+ ci/sci_util.cpp
+ ci/sci.h
+ ci/sci_pt2.h
+ tests/test_sci.cpp

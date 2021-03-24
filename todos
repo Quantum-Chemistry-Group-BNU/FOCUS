@@ -1,0 +1,22 @@
+
+TODOs:
+
+ 1. setup tests for NR & R (DONE20210324)
+ 
+ 2. redesign and decouple codes
+
+ 3. implementation
+
+ 4. parallelization
+
+ 5. applications:
+    1. Small system like C2+/O2? [checked against FCI results]
+    2. Fe2S2 [CAS(30e,20o)] - parallelized
+    3. SOC within this active space
+    4. G-tensor/GIAO for Ferric-Ferrous dimer [GREAT!]
+
+
+KNOWN PROBLEMs:
+
+ 1. thresh_proj & thresh_ortho sensitivity in SCI projection [theoretical/numerical problem?]
+
