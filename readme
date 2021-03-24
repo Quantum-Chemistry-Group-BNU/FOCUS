@@ -3,6 +3,11 @@
 
    Started by Zhendong Li @ Sep 14, 2019
 
+
+Goals:
+ 1. Explore the complexity of electronic structure problems
+ 2. Predict magnetic parameters of transition metal compounds
+
 Requirements:
  1. C++ compiler
  2. BOOST
