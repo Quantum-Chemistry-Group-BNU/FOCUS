@@ -1,5 +1,5 @@
-#include "../core/tools.h"
-#include "tests.h"
+#include "tools.h"
+#include "tests_core.h"
 
 using namespace std;
 

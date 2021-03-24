@@ -1,12 +1,12 @@
-#include "../core/tools.h"
-#include "../core/onspace.h"
-#include "../core/integral.h"
-#include "../core/matrix.h"
-#include "../core/dvdson.h"
-#include "../core/simpleci.h"
-#include "../core/analysis.h"
-#include "../core/simplerdm.h"
-#include "tests.h"
+#include "tools.h"
+#include "onspace.h"
+#include "integral.h"
+#include "matrix.h"
+#include "dvdson.h"
+#include "simpleci.h"
+#include "analysis.h"
+#include "simplerdm.h"
+#include "tests_core.h"
 
 using namespace std;
 using namespace fock;

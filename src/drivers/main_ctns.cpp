@@ -1,4 +1,4 @@
-#include "../tests/tests.h"
+#include "../ctns/tests_ctns.h"
 
 using namespace std;
 

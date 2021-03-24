@@ -1,6 +1,6 @@
-#include "../core/integral.h"
-#include "../core/tools.h"
-#include "tests.h"
+#include "integral.h"
+#include "tools.h"
+#include "tests_core.h"
 
 using namespace std;
 

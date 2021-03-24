@@ -35,23 +35,20 @@ OBJ_DIR = ./obj
 
 # all dependence
 SRC_DIR_CORE = ./$(SRC)/core
+SRC_DIR_IO   = ./$(SRC)/io
 SRC_DIR_CI   = ./$(SRC)/ci
 SRC_DIR_TNS  = ./$(SRC)/tns
 SRC_DIR_CTNS = ./$(SRC)/ctns
-SRC_DIR_IO   = ./$(SRC)/io
-SRC_DIR_TEST = ./$(SRC)/tests
 INCLUDE_DIR = -I$(SRC_DIR_CORE) \
+	      -I$(SRC_DIR_IO) \
 	      -I$(SRC_DIR_CI) \
 	      -I$(SRC_DIR_TNS) \
-	      -I$(SRC_DIR_CTNS) \
-	      -I$(SRC_DIR_IO) \
-	      -I$(SRC_DIR_TEST)
+	      -I$(SRC_DIR_CTNS)
 SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
+	  	     $(SRC_DIR_IO)/*.cpp  \
 	  	     $(SRC_DIR_CI)/*.cpp \
 	  	     $(SRC_DIR_TNS)/*.cpp \
-	  	     $(SRC_DIR_CTNS)/*.cpp \
-	  	     $(SRC_DIR_IO)/*.cpp \
-	  	     $(SRC_DIR_TEST)/*.cpp)
+	  	     $(SRC_DIR_CTNS)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
 # all the files with main functions
@@ -60,9 +57,10 @@ SRC_ALL += $(wildcard ./$(SRC)/drivers/*.cpp)
 OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend \
-     $(BIN_DIR)/tests.x \
-     $(BIN_DIR)/tns.x \
-     $(BIN_DIR)/ctns.x
+     $(BIN_DIR)/test_core.x \
+     $(BIN_DIR)/test_ci.x \
+     $(BIN_DIR)/test_tns.x \
+     $(BIN_DIR)/test_ctns.x
 
 depend:
 	set -e; \
@@ -73,17 +71,25 @@ depend:
 	rm -f $$$$.depend # $$$$ id number 
 -include .depend
 
-$(BIN_DIR)/tests.x: $(OBJ_DIR)/main_tests.o $(OBJ_DEP)
+#
+# Executables
+#
+$(BIN_DIR)/test_core.x: $(OBJ_DIR)/main_core.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
-$(BIN_DIR)/tns.x: $(OBJ_DIR)/main_tns.o $(OBJ_DEP)
+$(BIN_DIR)/test_ci.x: $(OBJ_DIR)/main_ci.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
-$(BIN_DIR)/ctns.x: $(OBJ_DIR)/main_ctns.o $(OBJ_DEP)
+$(BIN_DIR)/test_tns.x: $(OBJ_DIR)/main_tns.o $(OBJ_DEP)
+	@echo "\n=== LINK $@"
+	@echo $(OBJ_DEP)
+	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
+
+$(BIN_DIR)/test_ctns.x: $(OBJ_DIR)/main_ctns.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 

@@ -5,10 +5,10 @@
 #include "../core/dvdson.h"
 #include "../core/simpleci.h"
 #include "../core/analysis.h"
-#include "../ci/fci.h"
-#include "../ci/fci_util.h"
-#include "../ci/fci_rdm.h"
-#include "tests.h"
+#include "fci.h"
+#include "fci_util.h"
+#include "fci_rdm.h"
+#include "tests_ci.h"
 
 using namespace std;
 using namespace fock;

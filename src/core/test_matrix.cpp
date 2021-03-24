@@ -1,7 +1,7 @@
-#include "../core/tools.h"
-#include "../core/matrix.h"
-#include "tests.h"
 #include <complex>
+#include "tools.h"
+#include "matrix.h"
+#include "tests_core.h"
 
 using namespace linalg;
 using namespace std;

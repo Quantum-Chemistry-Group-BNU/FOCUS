@@ -1,8 +1,8 @@
 #include <iostream>
-#include "../core/tools.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
-#include "tests.h"
+#include "tools.h"
+#include "matrix.h"
+#include "linalg.h"
+#include "tests_core.h"
 
 using namespace std;
 using namespace linalg;

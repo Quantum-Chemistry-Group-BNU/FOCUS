@@ -1,9 +1,9 @@
 #include <tuple>
 #include <bitset>
 #include <cassert>
-#include "../core/onstate.h"
-#include "../core/tools.h"
-#include "tests.h"
+#include "onstate.h"
+#include "tools.h"
+#include "tests_core.h"
 
 using namespace std;
 

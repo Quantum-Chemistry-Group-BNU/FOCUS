@@ -1,12 +1,12 @@
-#include "../core/tools.h"
-#include "../core/onspace.h"
-#include "../core/integral.h"
-#include "../core/hamiltonian.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
 #include <iostream>
 #include <iomanip>
-#include "tests.h"
+#include "tools.h"
+#include "onspace.h"
+#include "integral.h"
+#include "hamiltonian.h"
+#include "matrix.h"
+#include "linalg.h"
+#include "tests_core.h"
 
 using namespace std;
 using namespace fock;

@@ -1,4 +1,4 @@
-#include "../tests/tests.h"
+#include "../core/tests_core.h"
 
 using namespace std;
 
@@ -14,14 +14,6 @@ int main(){
    tests::test_hamiltonian();
    tests::test_dvdson();
    tests::test_simpleci();
-
-   // --- sci ---
-   tests::test_fci();
-   tests::test_sci();
-
-   //// --- comb --- 
-   //tests::test_tns();
-   //tests::test_ctns();
 
    return 0;   
 }

@@ -1,5 +1,5 @@
-#ifndef TESTS_H
-#define TESTS_H
+#ifndef TESTS_CORE_H
+#define TESTS_CORE_H
 
 namespace tests{
 
@@ -13,14 +13,6 @@ int test_integral();
 int test_hamiltonian();
 int test_dvdson();
 int test_simpleci();
-
-// --- sci ---
-int test_fci();
-int test_sci();
-
-// --- Comb ---
-int test_tns();
-int test_ctns();
 
 }
 

@@ -1,15 +1,15 @@
+#include <iostream>
+#include <iomanip>
+#include <string>
 #include "../core/onspace.h"
 #include "../core/integral.h"
 #include "../core/matrix.h"
 #include "../core/linalg.h"
 #include "../core/tools.h"
-#include "../ci/sci.h"
-#include "../ci/sci_pt2.h"
 #include "../io/input.h"
-#include <iostream>
-#include <iomanip>
-#include <string>
-#include "tests.h"
+#include "sci.h"
+#include "sci_pt2.h"
+#include "tests_ci.h"
 
 using namespace std;
 using namespace fock;
