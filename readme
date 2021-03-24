@@ -1,8 +1,14 @@
 ### FOCUS: FermiOniC qUantum Simulation ###
 
+Requirements:
+ 1. C++ compiler
+ 2. BOOST
+
+Functionalities:
+ 1. FCI and SCI
+ 2. DMRG and CTNS
+
 How to install:
-   
  1. edit makefile in extlibs/zquatev/ & make for diagonalizing quaternion matrix
-   
  2. edit makefile & make
 
