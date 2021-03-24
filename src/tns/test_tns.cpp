@@ -28,7 +28,7 @@ int tests::test_tns(){
    cout << tools::line_separator << endl;	
 
    // read input
-   string fname = "ctns.dat";
+   string fname = "input.dat";
    input::schedule schd;
    input::read(schd,fname);
 
@@ -110,7 +110,7 @@ int tests::test_tns(){
       // --- 4. algorithm: check Hij ---
       auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
       Hmat.print("Hmat",8);
-      Hmat.save("fci_Hmat");
+      //Hmat.save("fci_Hmat");
       auto Hij = tns::get_Hmat(comb, comb, int2e, int1e, ecore, schd.scratch);
       Hij.print("Hij",8);
       diff = normF(Hmat-Hij);

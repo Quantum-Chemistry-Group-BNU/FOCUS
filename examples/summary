@@ -2,7 +2,9 @@
 Examples
 --------
 
- 0_h6:
+ 0_h6_tns: FCI with NR Hamiltonian
+   E[PySCF] = -3.23606628 -3.06251934
+   E[FOCUS] = -3.23606627989 -3.06251933594 (D=60)
 
  1_lih3_dcg: relativistic FCI with DCG Hamiltonian
    E[DIRAC] = -6.76694052

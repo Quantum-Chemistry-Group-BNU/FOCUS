@@ -13,3 +13,4 @@ obj/*.o
 *.x
 *.out
 *.a
+scratch

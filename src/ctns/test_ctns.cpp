@@ -32,7 +32,7 @@ int tests::test_ctns(){
    cout << tools::line_separator << endl;	
 
    // read input
-   string fname = "ctns.dat";
+   string fname = "input.dat";
    input::schedule schd;
    input::read(schd,fname);
 

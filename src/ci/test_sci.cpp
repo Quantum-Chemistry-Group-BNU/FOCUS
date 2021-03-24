@@ -22,7 +22,7 @@ int tests::test_sci(){
    cout << tools::line_separator << endl;	
 
    // read input
-   string fname = "sci.dat";
+   string fname = "input.dat";
    input::schedule schd;
    input::read(schd,fname);
 
