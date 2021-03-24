@@ -4,9 +4,13 @@ Requirements:
  1. C++ compiler
  2. BOOST
 
-Functionalities:
- 1. FCI and SCI
- 2. DMRG and CTNS
+Functionalities: 
+ 1. FCI and SCI for benchmarking & preparing initial guess for TNS
+ 2. DMRG and CTNS with time-reversal symmetry adaptation
+
+Features:
+ 1. Support NR and R Hamiltonians
+ 2. Parallelization
 
 How to install:
  1. edit makefile in extlibs/zquatev/ & make for diagonalizing quaternion matrix
