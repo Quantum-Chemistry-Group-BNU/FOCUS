@@ -14,6 +14,7 @@
 
 namespace integral{
 
+// one-electron integral h[i,j] [full in column-major storage]	
 template <typename Tm>
 struct one_body{
    public:
@@ -49,16 +50,18 @@ struct one_body{
       std::vector<Tm> data; // Oij = <i|O|j>	
 };
 
+// two-electron integral <ij||kl> [packed i>j, k>l, (ij)>(kl)]
+// diagonal term Qij = <ij||ij> (i>j)
 template <typename Tm>
 struct two_body{
    public:
-      // store <ij||kl> where i>j, k>l, (ij)>(kl)
       void init_mem(){
 	 assert(sorb > 0);
 	 size_t p = sorb*(sorb-1)/2;
 	 data.resize(p*(p+1)/2,0.0);
 	 Q.resize(p);
       }
+      // return <ij||kl> from packed storage
       Tm get(const size_t i, const size_t j, 
 	     const size_t k, const size_t l) const{
          if((i == j) || (k==l)) return 0.0;
@@ -77,6 +80,7 @@ struct two_body{
 	 }
 	 return val;
       }
+      // save <ij||kl>
       void set(const size_t i, const size_t j, 
 	       const size_t k, const size_t l, 
 	       const Tm val){
@@ -94,10 +98,12 @@ struct two_body{
 	    data[ijkl] = sgn*tools::conjugate(val);
 	 }
       }
+      // set all integrals to real parts
       void set_real(){
 	 transform(data.begin(), data.end(), data.begin(),
 	           [](const Tm& x){ return std::real(x); }); 
       }
+      // set all integrals to zero
       void set_zero(){
 	 fill_n(data.begin(), data.size(), 0.0);
 	 fill_n(Q.begin(), Q.size(), 0.0);
@@ -116,39 +122,30 @@ struct two_body{
 	    }
 	 }
       }
-      // Qij = <ij||ij> (i>j);
+      // Q related functions
       void initQ(){
 	 for(int i=0; i<sorb; i++){
 	    for(int j=0; j<i; j++){
 	       int ij = i*(i-1)/2+j;
-	       Q[ij] = std::real(get(i,i,j,j) - get(i,j,j,i));
+	       Q[ij] = std::real(get(i,j,i,j));
 	    }
 	 }
       }
       double getQ(const size_t i, const size_t j) const{
 	 if(i == j) return 0.0;
-	 double val;
-	 if(i>j){
-	    int ij = i*(i-1)/2+j;
-	    val = Q[ij];
-	 }else{
-            int ji = j*(j-1)/2+i;
-    	    val = -Q[ji];	    
-	 }
-	 return val;
+	 int ij = (i>j)? i*(i-1)/2+j : j*(j-1)/2+i;
+	 return Q[ij];
       }
    public:
-      int sorb;
+      int sorb; // no. of spin orbitals
    private:   
       std::vector<Tm> data; // <ij||kl>
-      std::vector<double> Q;  // <ij||ij> 
+      std::vector<double> Q;  // Qij=<ij||ij> 
 };
 
-template <typename Tm>	
-void load(two_body<Tm>& int2e,
-	  one_body<Tm>& int1e,
-	  double& ecore,
-	  std::string fname){
+// load integrals from mole.info 
+template <typename Tm>
+void load(two_body<Tm>& int2e, one_body<Tm>& int1e, double& ecore, const std::string fname){
    auto t0 = tools::get_time();
    std::cout << "\nintegral::load fname = " << fname << std::endl; 
    std::ifstream istrm(fname);

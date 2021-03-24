@@ -9,7 +9,7 @@
 
 namespace fock{
 
-// <Di|H|Di> =  hpp + \sum_{p>q}<pq||pq> 
+// <Di|H|Di> =  hpp + \sum_{p>q}<pq||pq> = hpp + \sum_{p>q}Q[p,q] 
 template <typename Tm>
 double get_Hii(const onstate& state1,
 	       const integral::two_body<Tm>& int2e,
