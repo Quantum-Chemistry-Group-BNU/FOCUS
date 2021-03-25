@@ -4,9 +4,9 @@
    Started by Zhendong Li @ Sep 14, 2019
 
 
-Goals:
- 1. Explore the complexity of electronic structure problems
- 2. Predict magnetic parameters of transition metal compounds
+Goals: 
+ 1. Explore the complexity of electronic structure problems (FeMoco, Mn12, U2, etc.)
+ 2. Predict magnetic parameters (g-/A-tensors) of transition metal compounds 
 
 Requirements:
  1. C++ compiler

@@ -13,12 +13,14 @@
 #include "../ci/fci_rdm.h"
 #include "../ci/sci.h"
 #include "../ci/sci_pt2.h"
+/*
 #include "ctns_comb.h"
 #include "ctns_comb_init.h"
 #include "ctns_comb_alg.h"
 #include "ctns_io.h"
 #include "ctns_oper.h"
 #include "ctns_opt.h"
+*/
 #include "tests_ctns.h"
 
 using namespace std;
@@ -36,6 +38,7 @@ int tests::test_ctns(){
    input::schedule schd;
    input::read(schd,fname);
 
+/*
    // we will use DTYPE to control Hnr/Hrel 
    using DTYPE = complex<double>;
    //using DTYPE = double; // to do -> test more
@@ -139,6 +142,7 @@ int tests::test_ctns(){
         << endl;
 
    schd.remove_scratch();
+*/
 
    return 0;
 }
