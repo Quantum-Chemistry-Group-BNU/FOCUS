@@ -1,9 +1,96 @@
 
 # CTNS #
 
+Basic tasks:
+ 1. algebra -> <n|ctns>, <ctns1|ctns2>, <ctns1|H|ctns2>, etc.
+ 2. sampling -> |<n|ctns>|^2
+ 3. IO
+
+Initialization:
+ 1. from SCI wavefunction
+ 2. variational optimization
+
+Efficiency:
+ 1. use symmetry  
+ 2. parallelization
+ 
+Description of files:
+
+Test
+-------------------
+ tests_ctns.h
+ test_ctns.cpp  
+
+Basics
+-------------------
+Topology:
+ ctns_topo.h  
+ ctns_topo.cpp  
+Dtype & Qsym:
+ ctns_kind.h -> kind of CTNS
+ ctns_qsym.h -> quantum number class!
+
+Initialization
+-------------------
+ ctns_comb.h
+ ctns_init.h -> init CTNS from SCI
+ ctns_rbasis.h -> renorm_basis class 
+ ctns_bipart.h 
+ ctns_bipart.cpp => challenging part with TRS
+ ctns_kramers.h -> block matrix class
+
+ ctns_phys.h
+ ctns_qtensor.h -> qtensor class
+ ctns_qtensor2.h -> rwfuns
+ ctns_qtensor3.h -> rsites
+ ctns_qtensor_contract.h
+ 
+Low-level
+-------------------
+qtensor.h
+
+Data structure
+-------------------
+
+Tensor operations
+-------------------
+
+Parallelization
+-------------------
+
+
+
+
+
+
+
+
+Compute <n|CTNS>
+-------------------
+
+Compute <I|J>
+-------------------
+
+Compute <I|H|J>
+-------------------
+
+Sweep algorithm
+-------------------
+blocking
+local CI
+decimation
+ density matrix
+ operator transformation
+
+
+
+
+
+
+CTNS:
+-------------------------------
 Initialization: TRS-adapted
 -------------------------------
- readme
  ctns_comb_topo.cpp
  ctns_comb.h
  ctns_qsym.h -> quantum number class
@@ -18,11 +105,11 @@ Initialization: TRS-adapted
  ctns_qtensor3.h -> rsites
  ctns_qtensor_contract.h
  ctns_comb_init.h -> init CTNS from SCI
-
+-------------------------------
 Sij and <n|CTNS>
 -------------------------------
  ctns_comb_alg.h
-
+-------------------------------
 Hij: operators
 -------------------------------
  ctns_io.h
@@ -34,13 +121,13 @@ Hij: operators
  ctns_oper_rbasis.h
  ctns_oper_kernel.h
  ctns_oper_opwf.h
-
+-------------------------------
 Optimization: decimation
 -------------------------------
  ctns_opt.h
  ctns_opt_util.h
  ctns_opt_ham.h
-
+-------------------------------
 
 -------------------------------
 qtensor:
@@ -60,4 +147,3 @@ opt:
  tns_prdm.cpp
  tns_initial.h
  tns_initial.cpp
-

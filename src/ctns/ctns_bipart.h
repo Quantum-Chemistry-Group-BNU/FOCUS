@@ -1,0 +1,487 @@
+#ifndef CTNS_BIPART_H
+#define CTNS_BIPART_H
+
+#include <vector>
+#include <algorithm> // transform
+#include "../core/onspace.h"
+#include "ctns_kind.h"
+#include "ctns_kramers.h"
+#include "ctns_rbasis.h"
+
+namespace ctns{
+
+// transform space and coefficient upon permutation
+template <typename Tm>
+void transform_coeff(const fock::onspace& space,
+ 	             const std::vector<std::vector<Tm>>& vs,
+		     const std::vector<int>& order,
+		     fock::onspace& space2,
+		     std::vector<std::vector<Tm>>& vs2){
+   // image2
+   int k = order.size();
+   std::vector<int> image2(2*k);
+   for(int i=0; i<k; i++){
+      image2[2*i] = 2*order[i];
+      image2[2*i+1] = 2*order[i]+1;
+   }
+   // update basis vector and signs 
+   space2.clear();
+   std::vector<double> sgns;
+   for(const auto& state : space){
+      space2.push_back(state.permute(image2));
+      double sgn = state.permute_sgn(image2); // for multiplication with complex<double>
+      sgns.push_back(sgn);
+   }
+   int dim = space.size();
+   int nroot = vs.size();
+   vs2.resize(nroot);
+   for(int i=0; i<nroot; i++){
+      vs2[i].resize(dim);
+      std::transform(vs[i].begin(),vs[i].end(),sgns.begin(),vs2[i].begin(),
+	             [](const Tm& x, const double& y){ return x*y; });
+   }
+}
+
+// bipartition representation of the determinant space
+struct bipart_qspace{
+   public:
+      void init(const int isym, 
+		const int bpos, 
+		const fock::onspace& space, 
+		const int dir){
+         // becore bpos
+         if(dir == 0){
+            for(int i=0; i<space.size(); i++){
+               auto lstate = (bpos==0)? fock::onstate() : space[i].get_before(bpos);
+               lstate = lstate.make_standard(); // key must be standard!
+               auto itl = uset.find(lstate);
+               if(itl == uset.end()){ // not found - new basis
+                  uset.insert(lstate);
+                  auto ql = get_qsym(isym,lstate);
+                  basis[ql].push_back(lstate);
+                  if(lstate.norb_single() != 0) basis[ql.flip()].push_back(lstate.flip());
+               }
+	    } // i
+	 // after bpos
+         }else{
+            for(int i=0; i<space.size(); i++){
+               auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
+               rstate = rstate.make_standard();
+               auto itr = uset.find(rstate);
+               if(itr == uset.end()){
+                  uset.insert(rstate);
+                  auto qr = get_qsym(isym,rstate);
+                  basis[qr].push_back(rstate);
+                  if(rstate.norb_single() != 0) basis[qr.flip()].push_back(rstate.flip());
+               }
+	    } // i
+	 }
+      }
+      // get syms,dims,index
+      void update_maps(){
+         for(const auto& p : basis){
+            const auto& sym = p.first;
+            const auto& space = p.second;
+            syms.push_back(sym);
+	    dims[sym] = space.size();
+            // setup map from state to index
+	    int idx = 0;
+            for(const auto& state : space){
+               index[sym][state] = idx;
+               idx++;
+            }
+         }
+      }
+      int get_dimAll() const{
+	 int dim = 0;
+	 for(const auto& p : dims){
+	    dim += p.second;	
+	 }
+	 return dim;
+      }
+      // print basis
+      void print_basis(const std::string name){
+	 std::cout << "\nbipart_qspace: " << name << std::endl; 
+         for(const auto& p : basis){
+            const auto& sym = p.first;
+            const auto& space = p.second;
+	    std::cout << "qsym=" << sym << " ndim=" << space.size() << std::endl;
+	    int istate = 0;
+	    for(const auto& state : space){
+	       std::cout << " istate=" << istate << " " << state << std::endl;
+	       istate++;
+	    }
+	 }
+      } 
+   public:
+      std::set<fock::onstate> uset; // only store TR-representative
+      std::map<qsym,fock::onspace> basis; // determinant basis
+      // updated information
+      std::vector<qsym> syms; // symmetry
+      std::map<qsym,int> dims; // dimension
+      std::map<qsym,int> dim0; // dimension for |D> without singly occupied orbitals
+      std::map<qsym,std::map<fock::onstate,int>> index; // index of a state
+};
+
+// wavefunction in the bipartite representation: (ql,qr)->block (support multistate)
+template <typename Tm>
+struct bipart_ciwfs{
+   public:
+      bipart_ciwfs(const int bpos, 
+		   const fock::onspace& space, 
+		   const std::vector<std::vector<typename Tm::dtype>>& vs,
+		   const bipart_qspace& lspace, 
+		   const bipart_qspace& rspace){
+         nroot = vs.size(); 
+         for(int i=0; i<space.size(); i++){
+            auto lstate = (bpos==0)? fock::onstate() : space[i].get_before(bpos);
+            auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
+            auto ql = get_qsym(Tm::isym, lstate);
+            auto qr = get_qsym(Tm::isym, rstate);
+            int nl = lspace.dims.at(ql);
+            int nr = rspace.dims.at(qr);
+            int il = lspace.index.at(ql).at(lstate);
+            int ir = rspace.index.at(qr).at(rstate);
+            auto key = std::make_pair(ql,qr);
+            if(qblocks[key].size() == 0){
+               qblocks[key].resize(nroot); // init
+               for(int iroot=0; iroot<nroot; iroot++){
+		  linalg::matrix<typename Tm::dtype> mat(nl,nr);		
+                  mat(il,ir) = vs[iroot][i]; 
+                  qblocks[key][iroot] = mat;
+               }
+            }else{
+               for(int iroot=0; iroot<nroot; iroot++){
+                  qblocks[key][iroot](il,ir) = vs[iroot][i]; 
+               }
+            }
+         }
+      }
+      // rhor[r,r'] = psi[l,r]^T*psi[l,r']^*    
+      linalg::matrix<typename Tm::dtype> get_rhor(const bipart_qspace& lspace, 
+		      		  		  const bipart_qspace& rspace, 
+				  		  const qsym qr){ 
+         int dim = rspace.dims.at(qr);
+	 linalg::matrix<typename Tm::dtype> rhor(dim,dim);
+         for(const auto& ql : lspace.syms){
+            auto key = std::make_pair(ql,qr);
+            auto& blk = qblocks[key];
+            if(blk.size() == 0) continue;
+            for(int iroot=0; iroot<nroot; iroot++){
+               rhor += linalg::xgemm("T","N",blk[iroot],blk[iroot].conj());
+            }
+         }
+         rhor *= 1.0/nroot;   
+	 return rhor; 
+      }
+   public:
+      int nroot;
+      std::map<std::pair<qsym,qsym>, std::vector<linalg::matrix<typename Tm::dtype>>> qblocks;
+};
+
+// update rbasis for qr
+template <typename Tm>
+void update_rbasis(renorm_basis<Tm>& rbasis, 
+		   const qsym& qr, // qr 
+		   const bipart_qspace& rspace, 
+		   const std::vector<double>& eigs, 
+		   linalg::matrix<typename Tm::dtype>& U, 
+		   int& dimBc, double& sumBc, double& SvN,
+		   const double thresh,
+		   const bool debug){
+   const bool debug_basis = true;
+   int dim = rspace.dims.at(qr);
+   double sumBi = 0.0;
+   std::vector<int> kept;
+   for(int i=0; i<dim; i++){
+      if(eigs[i] > thresh){
+         kept.push_back(i);
+         sumBi += eigs[i];
+         SvN += -eigs[i]*log2(eigs[i]); // compute entanglement entropy
+      }
+   }
+   int dimBi = kept.size();
+   dimBc += dimBi;
+   sumBc += sumBi;
+   if(debug){
+     std::cout << " qr=" << qr << " dimB,dimBi=" << dim << "," << dimBi 
+               << " sumBi=" << sumBi << " sumBc=" << sumBc << std::endl;
+   }
+   // save sites 
+   if(dimBi > 0){
+      renorm_sector<Tm> rsec;
+      rsec.sym = qr;
+      rsec.space = rspace.basis.at(qr);
+      rsec.coeff.resize(dim, dimBi);
+      int i = 0;
+      for(const int idx : kept){
+         if(debug_basis) std::cout << " i=" << i << " eig=" << std::scientific 
+     	    		           << eigs[idx] << std::endl;
+         std::copy(U.col(idx), U.col(idx)+dim, rsec.coeff.col(i)); // copy U[i] to coeff
+         i += 1;
+      }
+      rbasis.push_back(rsec);
+      // check orthogonality
+      if(debug_basis){
+         auto ova = linalg::xgemm("N","N",rsec.coeff.H(),rsec.coeff);
+         double diff = linalg::normF(ova - linalg::identity_matrix<typename Tm::dtype>(dimBi));
+         std::cout << " orthonormality=" << diff << std::endl;
+         if(diff > 1.e-10){
+            std::cout << " error: basis is not orthonormal!" << std::endl;
+            exit(1);
+         }
+      }
+   } // dimBi>0
+}
+
+// compute {|r>} basis for a given bipartition specified by the position n 
+template <typename Tm>
+void right_projection(renorm_basis<Tm>& rbasis,
+		      const int bpos,
+		      const fock::onspace& space,
+		      const std::vector<std::vector<typename Tm::dtype>>& vs,
+		      const double thresh,
+		      const bool debug){
+   auto t0 = tools::get_time();
+   const bool debug_basis = false;
+   if(debug){
+      std::cout << "\nctns::right_projection<Tm> thresh=" 
+                << std::scientific << std::setprecision(4) << thresh << std::endl;
+   }
+   //
+   // 1. bipartition form of psi
+   //
+   bipart_qspace lspace, rspace;
+   lspace.init(Tm::isym, bpos, space, 0);
+   rspace.init(Tm::isym, bpos, space, 1);
+   // update space info
+   lspace.update_maps();
+   rspace.update_maps();
+   // construct wfs
+   bipart_ciwfs<Tm> wfs(bpos, space, vs, lspace, rspace);
+   //
+   // 2. form dm for each qr
+   //
+   int dimBc = 0; 
+   double sumBc = 0.0, SvN = 0.0;
+   for(const auto& qr : rspace.syms){
+      int dim = rspace.dims[qr];
+      if(debug_basis){
+	 std::cout << "qr=" << qr << " dim=" << dim << std::endl;
+         for(const auto& state : rspace.basis[qr]){
+	    std::cout << " state=" << state << " index=" << rspace.index[qr][state] << std::endl;
+         }
+      }
+      auto rhor = wfs.get_rhor(lspace, rspace, qr);
+      //
+      // 3. diagonalized properly to yield rbasis (depending on qr)
+      //
+      std::vector<double> eigs(dim); 
+      linalg::matrix<typename Tm::dtype> U(dim,dim);
+      linalg::eig_solver(rhor,eigs,U,1);
+      //
+      // 4. select important renormalized states from (eigs,U) 
+      //
+      update_rbasis(rbasis, qr, rspace, eigs, U, dimBc, sumBc, SvN, thresh, debug);
+   } // qr
+   if(debug){
+      std::cout << "dim(space,lspace,rspace)=" << space.size() << "," 
+           << lspace.get_dimAll() << "," << rspace.get_dimAll() 
+           << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << std::endl; 
+      auto t1 = tools::get_time();
+      std::cout << "timing for ctns::right_projection<Tm> : " << std::setprecision(2) 
+           << tools::get_duration(t1-t0) << " s" << std::endl;
+   }
+}
+
+// time-reversal symmetry adapted right_projection
+template <> 
+void right_projection(renorm_basis<kind::cNK>& rbasis,
+		      const int bpos,
+		      const fock::onspace& space,
+		      const std::vector<std::vector<std::complex<double>>>& vs,
+		      const double thresh,
+		      const bool debug){
+   auto t0 = tools::get_time();
+   const bool debug_basis = false;
+   if(debug){
+      std::cout << "\nctns::right_projection<cNK> thresh=" 
+                << std::scientific << std::setprecision(4) << thresh << std::endl;
+   }
+   //
+   // 1. bipartition form of psi
+   //
+   bipart_qspace lspace, rspace;
+   lspace.init(kind::cNK::isym, bpos, space, 0);
+   rspace.init(kind::cNK::isym, bpos, space, 1);
+   // reorder rspace.basis to form Kramers-paired structure
+   for(const auto& pr : rspace.basis){
+      const auto& qr = pr.first;
+      const auto& qr_space = pr.second;
+      int dim = qr_space.size();
+      // odd electron case {|D>,|Df>}
+      if(qr.ne()%2 == 1){
+         assert(dim%2 == 0);
+	 fock::onspace rdets(dim);
+         for(int i=0; i<dim/2; i++){
+            rdets[i] = qr_space[2*i];
+            rdets[i+dim/2] = qr_space[2*i+1];
+         }
+         rspace.basis[qr] = rdets;
+      // even electron case {|D>,|Df>,|D0>} 
+      }else{
+	 fock::onspace rdets0, rdets1, rdets;
+	 for(int i=0; i<dim; i++){
+	    auto& state = qr_space[i];
+	    if(state.norb_single() == 0){
+	       rdets0.push_back(state);
+	    }else{
+	       if(state.is_standard()){
+	          rdets1.push_back(state);
+	       }
+	    }
+	 }
+	 rspace.dim0[qr] = rdets0.size();
+         assert(2*rdets1.size()+rdets0.size() == dim);
+	 rdets = rdets1;
+	 std::transform(rdets1.begin(),rdets1.end(),rdets1.begin(),
+	                [](const fock::onstate& state){ return state.flip(); });		 
+	 std::copy(rdets1.begin(),rdets1.end(),back_inserter(rdets));
+	 std::copy(rdets0.begin(),rdets0.end(),back_inserter(rdets));
+         rspace.basis[qr] = rdets;
+      }
+   }
+   // update space info
+   lspace.update_maps();
+   rspace.update_maps();
+   // construct wfs
+   bipart_ciwfs<kind::cNK> wfs(bpos, space, vs, lspace, rspace);
+   //
+   // 2. form dm for each qr
+   //
+   int dimBc = 0; double sumBc = 0.0, SvN = 0.0;
+   for(const auto& qr : rspace.syms){
+      int dim = rspace.dims[qr];
+      int dim0 = (qr.ne()%2 == 1)? 0 : rspace.dim0[qr];
+      int dim1 = (dim-dim0)/2;
+      assert(dim0 + dim1*2 == dim);
+      // phase for determinant with open-shell electrons
+      std::vector<double> phases(dim1);
+      for(int i=0; i<dim1; i++){
+         phases[i] = rspace.basis[qr][i].parity_flip();
+      }
+      if(debug_basis){
+	 std::cout << "qr=" << qr << " (dim,dim1,dim0)=" 
+	           << dim << "," << dim1 << "," << dim0 << std::endl;
+         for(const auto& state : rspace.basis[qr]){
+	    std::cout << " state=" << state << " index=" << rspace.index[qr][state] << std::endl;
+         }
+      }
+      auto rhor = wfs.get_rhor(lspace, rspace, qr);
+      //
+      // 3. diagonalized properly to yield rbasis (depending on qr)
+      //
+      std::vector<double> eigs(dim); 
+      linalg::matrix<std::complex<double>> U(dim,dim);
+      // Odd-electron case: 
+      //    from det basis {|D>,|Df>} to TR basis {|D>,|Dbar>}
+      if(qr.ne()%2 == 1){
+	 std::vector<int> partition = {dim1,dim1};
+	 blockMatrix<std::complex<double>> rmat(partition,partition);
+	 rmat = rhor;
+	 rmat(0,1).colscale(phases);
+	 rmat(1,1).colscale(phases);
+	 rmat(1,0).rowscale(phases);
+         rmat(1,1).rowscale(phases);
+	 // Kramers projection
+	 auto A = 0.5*(rmat(0,0) + rmat(1,1).conj());
+	 auto B = 0.5*(rmat(0,1) - rmat(1,0).conj()); 
+	 rmat(0,0) = A;
+	 rmat(0,1) = B;
+	 rmat(1,0) = -B.conj();
+	 rmat(1,1) = A.conj();
+	 rhor = rmat.to_matrix();
+	 // TRS-preserving diagonalization (only half eigs are output) 
+	 zquatev(rhor,eigs,U,1);
+	 std::copy(eigs.begin(), eigs.begin()+dim1, eigs.begin()+dim1); // duplicate eigs!
+	 // back to determinant basis {|D>,|Df>}
+	 blockMatrix<std::complex<double>> umat(partition,{dim});
+	 umat = U;
+	 umat(1,0).rowscale(phases);
+	 U = umat.to_matrix();
+      // Even-electron case:
+      //    from det basis {|D>,|Df>,|D0>} to {|D>,|Dbar>,|D0>} to TR basis {|->,|+>,|0>}
+      //    |-> = i(|D> - |Dbar>)/sqrt2 = i(|D> - s|Df>)/sqrt2
+      //    |+> =  (|D> + |Dbar>)/sqrt2 =  (|D> + s|Df>)/sqrt2
+      }else{
+	 std::vector<int> partition = {dim1,dim1,dim0};
+	 blockMatrix<std::complex<double>> rmat(partition,partition);
+	 rmat = rhor;
+	 // col-1 & row-1
+	 rmat(0,1).colscale(phases);
+	 rmat(1,1).colscale(phases);
+	 rmat(2,1).colscale(phases);
+	 rmat(1,0).rowscale(phases);
+         rmat(1,1).rowscale(phases);
+         rmat(1,2).rowscale(phases);
+	 // Kramers projection
+	 auto A = 0.5*(rmat(0,0) + rmat(1,1).conj());
+	 auto B = 0.5*(rmat(0,1) + rmat(1,0).conj());
+	 auto C = 0.5*(rmat(0,2) + rmat(1,2).conj());
+	 auto E = 0.5*(rmat(2,2) + rmat(2,2).conj());
+	 // real matrix representation in {|->,|+>,|0>}
+	 //  [   (a-b)r   (a+b)i   sqrt2*ci ]
+	 //  [  -(a-b)i   (a+b)r   sqrt2*cr ] 
+	 //  [ sqrt2*ciT sqrt2*crT     e    ]
+	 auto ApB = A+B;
+	 auto AmB = A-B;
+	 double sqrt2 = sqrt(2.0), invsqrt2 = 1.0/sqrt2;
+	 auto Cr = sqrt2*C.real();
+	 auto Ci = sqrt2*C.imag();
+	 blockMatrix<double> matr(partition,partition);
+	 matr(0,0) = AmB.real();
+	 matr(1,0) = -AmB.imag();
+	 matr(2,0) = Ci.T();
+	 matr(0,1) = ApB.imag();
+	 matr(1,1) = ApB.real();
+	 matr(2,1) = Cr.T();
+	 matr(0,2) = Ci;
+	 matr(1,2) = Cr;
+	 matr(2,2) = E.real();
+	 // diagonalization
+	 linalg::matrix<double> rho = matr.to_matrix();
+	 linalg::matrix<double> Ur;
+	 linalg::eig_solver(rho,eigs,Ur,1);
+	 // back to determinant basis {|D>,|Df>,|D0>} from {|->,|+>,|0>}
+	 // [   i     1    0  ]       [ u[-] ]   [    u[+]+i*u[-]  ]
+	 // [-s*i   s*1    0  ]/sqrt2 [ u[+] ] = [ s*(u[+]-i*u[-]) ]/sqrt2
+	 // [   0     0  sqrt2]       [ u[0] ]   [   sqrt2*u[0]    ]
+	 // where the sign comes from |Dbar>=|Df>*s
+	 blockMatrix<double> matu(partition,{dim});
+         matu = Ur;
+	 blockMatrix<std::complex<double>> umat(partition,{dim});
+	 const std::complex<double> iunit(0.0,1.0);
+	 umat(0,0) = (matu(1,0) + iunit*matu(0,0))*invsqrt2;
+	 umat(1,0) = umat(0,0).conj();
+	 umat(1,0).rowscale(phases);
+	 umat(2,0) = matu(2,0).as_complex();
+	 U = umat.to_matrix();
+      }
+      //
+      // 4. select important renormalized states from (eigs,U) 
+      //
+      update_rbasis(rbasis, qr, rspace, eigs, U, dimBc, sumBc, SvN, thresh, debug);
+   } // qr
+   if(debug){
+      std::cout << "dim(space,lspace,rspace)=" << space.size() << "," 
+           << lspace.get_dimAll() << "," << rspace.get_dimAll() 
+           << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << std::endl; 
+      auto t1 = tools::get_time();
+      std::cout << "timing for ctns::right_projection<cNK> : " << std::setprecision(2) 
+           << tools::get_duration(t1-t0) << " s" << std::endl;
+   }
+}
+
+} // ctns
+
+#endif
