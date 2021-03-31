@@ -17,7 +17,6 @@ bool is_available(){ return false; }
 struct rN{
    using dtype = double;
    static const int isym = 1;
-   static const bool is_kramers = false;
 };
 template <>
 bool is_available<rN>(){ return true; } 
@@ -25,7 +24,6 @@ bool is_available<rN>(){ return true; }
 struct cN{
    using dtype = std::complex<double>;
    static const int isym = 1;
-   static const bool is_kramers = false;
 };
 template <>
 bool is_available<cN>(){ return true; } 
@@ -34,7 +32,6 @@ bool is_available<cN>(){ return true; }
 struct rNSz{
    using dtype = double;
    static const int isym = 2;
-   static const bool is_kramers = false;
 };
 template <>
 bool is_available<rNSz>(){ return true; }
@@ -42,7 +39,6 @@ bool is_available<rNSz>(){ return true; }
 struct cNSz{
    using dtype = std::complex<double>;
    static const int isym = 2;
-   static const bool is_kramers = false;
 };
 template <>
 bool is_available<cNSz>(){ return true; }
@@ -51,7 +47,6 @@ bool is_available<cNSz>(){ return true; }
 struct cNK{
    using dtype = std::complex<double>;
    static const int isym = 1;
-   static const bool is_kramers = true;
 };
 template <>
 bool is_available<cNK>(){ return true; }

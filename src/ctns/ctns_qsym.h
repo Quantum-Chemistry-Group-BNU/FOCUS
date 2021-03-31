@@ -11,7 +11,7 @@
 
 namespace ctns{
 
-// Abelian symmetry: NSz=(Ne,2M); N=(Ne,0)
+// Quantum number class for Abelian symmetry: NSz=(Ne,2M); N=(Ne,0)
 class qsym{
    private:
       friend class boost::serialization::access;	   
@@ -72,15 +72,14 @@ inline qsym operator -(const qsym& sym1, const qsym& sym2){
 }
 
 // get qsym for a given onstate
-inline qsym get_qsym(const int isym, const fock::onstate& state){
+inline qsym get_qsym_onstate(const int isym, const fock::onstate& state){
    int ne = state.nelec();
    int tm = (isym==1)? 0 : state.twoms();
    return qsym(ne,tm);
 }
 
-/*
-// qsym_qspace
-class qsym_space{
+// qsym_qspace for bond of CTNS: std::vector<std::pair<qsym,int>> dims
+class qbond{
    private:
       friend class boost::serialization::access;	   
       template<class Archive>
@@ -89,8 +88,8 @@ class qsym_space{
       }
    public:
       // constructor
-      qsym_space(){}
-      qsym_space(std::vector<std::pair<qsym,int>> ds): dims(ds) {}
+      qbond(){}
+      qbond(const std::vector<std::pair<qsym,int>>& ds): dims(ds) {}
       // helpers
       inline int size() const{ return dims.size(); }
       inline qsym get_sym(const int i) const{ return dims[i].first; } 
@@ -113,7 +112,7 @@ class qsym_space{
 	 return offset;
       }
       // comparison
-      bool operator ==(const qsym_space& qs) const{
+      bool operator ==(const qbond& qs) const{
 	 bool ifeq = dims.size() == qs.size();
 	 if(not ifeq) return false;
 	 for(int i=0; i<dims.size(); i++){
@@ -124,7 +123,7 @@ class qsym_space{
 	 return true;
       }
       void print(const std::string name) const{
-	 std::cout << "qsym_space: " << name << " nsym=" << dims.size() 
+	 std::cout << "qbond: " << name << " nsym=" << dims.size() 
       	           << " dimAll=" << get_dimAll() << std::endl;
          // loop over symmetry sectors
          for(int i=0; i<dims.size(); i++){
@@ -137,18 +136,34 @@ class qsym_space{
    public:
       std::vector<std::pair<qsym,int>> dims;
 };
-*/
+
+inline qbond get_qbond_vac(){ return qbond({{qsym(0,0),1}}); }
+
+inline qbond get_qbond_phys(const int isym){
+   qbond qphys;
+   if(isym == 1){
+      qphys.dims = {{qsym(0,0),1},
+		    {qsym(2,0),1},
+		    {qsym(1,0),2}};
+   }else if(isym == 2){
+      qphys.dims = {{qsym(0,0),1},
+		    {qsym(2,0),1},
+		    {qsym(1,1),1},
+		    {qsym(1,-1),1}};
+   }
+   return qphys;
+}
 
 /*
-// direct product table of qsym_space : V1*V2->V12
+// direct product table of qbond : V1*V2->V12
 using qsym_dpt = std::map<qsym,std::map<std::pair<qsym,qsym>,std::tuple<int,int,int>>>;
-std::pair<qsym_space,qsym_dpt> qsym_space_dpt(const qsym_space& qs1, 
-					      const qsym_space& qs2);
+std::pair<qbond,qsym_dpt> qbond_dpt(const qbond& qs1, 
+					      const qbond& qs2);
 
 // direct product space V1*V2->V12
-pair<qsym_space,qsym_dpt> ctns::qsym_space_dpt(const qsym_space& qs1, 
-		         		      const qsym_space& qs2){
-   qsym_space qs12;
+pair<qbond,qsym_dpt> ctns::qbond_dpt(const qbond& qs1, 
+		         		      const qbond& qs2){
+   qbond qs12;
    qsym_dpt dpt;
    // init
    for(const auto& p1 : qs1){

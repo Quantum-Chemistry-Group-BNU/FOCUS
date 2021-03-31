@@ -6,9 +6,7 @@
 #include <tuple>
 #include "../core/onspace.h"
 #include "../core/matrix.h"
-/*
 #include "ctns_qsym.h"
-*/
 
 namespace ctns{
 
@@ -20,7 +18,7 @@ struct renorm_sector{
    public:
       qsym sym;
       fock::onspace space;
-      linalg::matrix<typename Tm::dtype> coeff;
+      linalg::matrix<Tm> coeff;
 };
 
 template <typename Tm>
@@ -51,55 +49,56 @@ std::pair<int,int> get_shape(const renorm_basis<Tm>& rbasis){
    return std::make_pair(rows,cols);
 }
 
-/*
+// qbond of rbasis
 template <typename Tm>
-qsym_space get_qsym_space(const renorm_basis<Tm>& rbasis){
-   qsym_space qs;
+qbond get_qbond(const renorm_basis<Tm>& rbasis){
+   qbond qs;
    for(int i=0; i<rbasis.size(); i++){
       qs.dims.push_back({rbasis[i].sym, rbasis[i].coeff.cols()});
    }
    return qs;
 }
-*/
 
 // rbasis for type-0 physical site 
 template <typename Tm>
-void get_rbasis_phys(renorm_basis<Tm>& rbasis){
+inline renorm_basis<Tm> get_rbasis_phys(const int isym){
+   renorm_basis<Tm> rbasis;
    // (N)
-   if(Tm::isym == 1){
+   if(isym == 1){
       rbasis.resize(3);
       // |00>
       rbasis[0].sym = qsym(0,0);
       rbasis[0].space.push_back(fock::onstate("00"));
-      rbasis[0].coeff = linalg::identity_matrix<typename Tm::dtype>(1);
+      rbasis[0].coeff = linalg::identity_matrix<Tm>(1);
       // |11>
       rbasis[1].sym = qsym(2,0);
       rbasis[1].space.push_back(fock::onstate("11"));
-      rbasis[1].coeff = linalg::identity_matrix<typename Tm::dtype>(1);
+      rbasis[1].coeff = linalg::identity_matrix<Tm>(1);
       // a=|01> & b=|10>
       rbasis[2].sym = qsym(1,0);
       rbasis[2].space.push_back(fock::onstate("01")); // a
       rbasis[2].space.push_back(fock::onstate("10")); // b
-      rbasis[2].coeff = linalg::identity_matrix<typename Tm::dtype>(2);
-   }else if(Tm::isym == 2){
+      rbasis[2].coeff = linalg::identity_matrix<Tm>(2);
+   }else if(isym == 2){
       rbasis.resize(4);
       // |00>
       rbasis[0].sym = qsym(0,0);
       rbasis[0].space.push_back(fock::onstate("00"));
-      rbasis[0].coeff = linalg::identity_matrix<typename Tm::dtype>(1);
+      rbasis[0].coeff = linalg::identity_matrix<Tm>(1);
       // |11>
       rbasis[1].sym = qsym(2,0);
       rbasis[1].space.push_back(fock::onstate("11"));
-      rbasis[1].coeff = linalg::identity_matrix<typename Tm::dtype>(1);
+      rbasis[1].coeff = linalg::identity_matrix<Tm>(1);
       // |01>
       rbasis[2].sym = qsym(1,1);
       rbasis[2].space.push_back(fock::onstate("01")); // a
-      rbasis[2].coeff = linalg::identity_matrix<typename Tm::dtype>(1);
+      rbasis[2].coeff = linalg::identity_matrix<Tm>(1);
       // |10>
       rbasis[3].sym = qsym(1,-1);
       rbasis[3].space.push_back(fock::onstate("10")); // b
-      rbasis[3].coeff = linalg::identity_matrix<typename Tm::dtype>(1);
+      rbasis[3].coeff = linalg::identity_matrix<Tm>(1);
    }
+   return rbasis;
 }
 
 } // ctns

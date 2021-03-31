@@ -28,26 +28,29 @@ Topology:
  ctns_topo.cpp  
 Dtype & Qsym:
  ctns_kind.h -> kind of CTNS
- ctns_qsym.h -> quantum number class!
+ ctns_qsym.h -> quantum number class: qsym & qbond
 
-Initialization
+* Initialization *
 -------------------
  ctns_comb.h
  ctns_init.h -> init CTNS from SCI
+Schmidt decomposition:
  ctns_rbasis.h -> renorm_basis class 
  ctns_bipart.h 
- ctns_bipart.cpp => challenging part with TRS
+ ctns_bipart.cpp => challenging part with TRS!
  ctns_kramers.h -> block matrix class
-
+Qtensor:
  ctns_phys.h
- ctns_qtensor.h -> qtensor class
- ctns_qtensor2.h -> rwfuns
- ctns_qtensor3.h -> rsites
- ctns_qtensor_contract.h
+ qtensor.h
+ qtensor.h -> qtensor class
+ qtensor2.h -> rwfuns
+ qtensor3.h -> rsites
+
+
  
 Low-level
 -------------------
-qtensor.h
+ qtensor_contract.h
 
 Data structure
 -------------------
@@ -57,13 +60,6 @@ Tensor operations
 
 Parallelization
 -------------------
-
-
-
-
-
-
-
 
 Compute <n|CTNS>
 -------------------
@@ -84,27 +80,7 @@ decimation
 
 
 
-
-
-
 CTNS:
--------------------------------
-Initialization: TRS-adapted
--------------------------------
- ctns_comb_topo.cpp
- ctns_comb.h
- ctns_qsym.h -> quantum number class
- ctns_qsym.cpp
- ctns_rbasis.h -> renorm_basis class 
- ctns_bipart.h 
- ctns_bipart.cpp => challenging part with TRS
- ctns_kramers.h -> block matrix class
- ctns_phys.h
- ctns_qtensor.h -> qtensor class
- ctns_qtensor2.h -> rwfuns
- ctns_qtensor3.h -> rsites
- ctns_qtensor_contract.h
- ctns_comb_init.h -> init CTNS from SCI
 -------------------------------
 Sij and <n|CTNS>
 -------------------------------

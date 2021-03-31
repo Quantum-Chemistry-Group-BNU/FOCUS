@@ -3,52 +3,53 @@
 
 #include "../core/tools.h"
 #include "../core/onspace.h"
-#include "ctns_rbasis.h"
 #include "ctns_bipart.h"
+#include "ctns_comb.h"
+#include "ctns_phys.h"
 
 namespace ctns{
 
 // initialize RCF from SCI wavefunctions
-template <typename Tm>
-void rcanon_init(comb<Tm>& icomb,
+template <typename Km>
+void rcanon_init(comb<Km>& icomb,
 		 const fock::onspace& space,
-		 const std::vector<std::vector<typename Tm::dtype>>& vs,
+		 const std::vector<std::vector<typename Km::dtype>>& vs,
 		 const double thresh_proj){
    auto t0 = tools::get_time();
    std::cout << "\nctns::rcanon_init" << std::endl;
    
    // 1. compute renormalized bases {|r>} from SCI wavefunctions
-   std::map<comb_coord,renorm_basis<Tm>> rbases; 
-   get_rbases(rbases, icomb, space, vs, thresh_proj);
-/*
- 
-   // 2. form sites from rbases
-   get_rsites(icomb); 
+   rbases_type<typename Km::dtype> rbases; 
+   get_rbases(icomb, rbases, space, vs, thresh_proj);
+
+   // 2. build sites from rbases
+   get_rsites(icomb, rbases); 
  
    // 3. compute wave functions at the start for right canonical form 
-   get_rwfuns(icomb, space, vs, thresh_proj);  
-*/
+   get_rwfuns(icomb, rbases, space, vs, thresh_proj);  
+
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::rcanon_init : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
 // compute renormalized bases {|r>} from SCI wavefunctions 
-template <typename Tm>
-void get_rbases(std::map<comb_coord,renorm_basis<Tm>>& rbases,
-		const comb<Tm>& icomb,
+template <typename Km>
+void get_rbases(comb<Km>& icomb,
+		rbases_type<typename Km::dtype>& rbases,
 		const fock::onspace& space,
-		const std::vector<std::vector<typename Tm::dtype>>& vs,
+		const std::vector<std::vector<typename Km::dtype>>& vs,
 		const double thresh_proj){
    const bool debug = true;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rbases thresh_proj=" << std::scientific << thresh_proj << std::endl;
 
    // loop over nodes/bond (except the last one) - parallelizable
-   for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
-      auto p = icomb.topo.rcoord[idx];
+   const auto& topo = icomb.topo;
+   for(int idx=0; idx<topo.rcoord.size(); idx++){
+      auto p = topo.rcoord[idx];
       int i = p.first, j = p.second;
-      auto& node = icomb.topo.nodes[i][j];
+      auto& node = topo.nodes[i][j];
       if(debug){
 	 std::cout << "\nidx=" << idx << " node=" << p << " type=" << node.type; 
 	 std::cout << " rsupport=";
@@ -57,7 +58,7 @@ void get_rbases(std::map<comb_coord,renorm_basis<Tm>>& rbases,
       }
       if(node.type == 0 && p != std::make_pair(0,0)){
          // for boundary site, we choose to use identity
-	 get_rbasis_phys(rbases[p]);
+	 rbases[p] = get_rbasis_phys<typename Km::dtype>(Km::isym);
       }else{
 	 // Generate {|r>} at the internal nodes
          // 1. generate 1D ordering
@@ -73,18 +74,18 @@ void get_rbases(std::map<comb_coord,renorm_basis<Tm>>& rbases,
          }
          // 2. transform SCI coefficient
 	 fock::onspace space2;
-	 std::vector<std::vector<typename Tm::dtype>> vs2;
+	 std::vector<std::vector<typename Km::dtype>> vs2;
          transform_coeff(space, vs, order, space2, vs2); 
          // 3. bipartition of space and compute renormalized states
-         right_projection<Tm>(rbases[p], 2*bpos, space2, vs2, thresh_proj, debug);
+         right_projection<Km>(rbases[p], 2*bpos, space2, vs2, thresh_proj, debug);
       }
    } // idx
    
    // print information for all renormalized basis {|r>} at each bond
    std::cout << "\nfinal rbases with thresh_proj=" << thresh_proj << std::endl;
    int Dmax = 0;
-   for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
-      auto p = icomb.topo.rcoord[idx];
+   for(int idx=0; idx<topo.rcoord.size(); idx++){
+      auto p = topo.rcoord[idx];
       int i = p.first, j = p.second;
       // shape can be different from dim(rspace) if associated weight is zero!
       auto shape = get_shape(rbases[p]);
@@ -100,27 +101,27 @@ void get_rbases(std::map<comb_coord,renorm_basis<Tm>>& rbases,
              << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 
-/*
-
 // build site tensor from {|r>} bases
-template <typename Tm>
-void get_rsites(comb<Tm>& icomb){
-   const bool debug = false;
+template <typename Km>
+void get_rsites(comb<Km>& icomb, const rbases_type<typename Km::dtype>& rbases){
+   const bool debug = true;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rsites" << std::endl;
+
    // loop over sites
-   for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
-      auto p = icomb.topo.rcoord[idx];
+   const auto& topo = icomb.topo;
+   for(int idx=0; idx<topo.rcoord.size(); idx++){
+      auto p = topo.rcoord[idx];
       int i = p.first, j = p.second;
-      auto& node = icomb.topo.nodes[i][j];
+      auto& node = topo.nodes[i][j];
       if(debug) std::cout << "\nidx=" << idx << " node=" << p << " ";     
       if(node.type == 0 && p != std::make_pair(0,0)){
 	 
 	 if(debug) std::cout << "type 0: end or leaves" << std::endl;
-         icomb.rsites[p] = get_right_bsite<Tm>();
+         get_right_bsite(Km::isym, icomb.rsites[p]);
 
       }else{
-	    
+
 	 if(debug){
 	    if(node.type == 3){
 	       //    |u>(0)      
@@ -135,13 +136,13 @@ void get_rsites(comb<Tm>& icomb){
 	       std::cout << "type 1/2: physical site on backbone/branch" << std::endl;
 	    }
 	 }
-         const auto& rbasis_l = icomb.rbases[p]; 
-	 const auto& rbasis_c = (node.type==3)? icomb.rbases[node.center] : get_rbasis_phys<Tm>(); 
-	 const auto& rbasis_r = icomb.rbases[node.right];
-	 auto qmid = get_qsym_space(rbasis_c);
-	 auto qrow = get_qsym_space(rbasis_l); 
-	 auto qcol = get_qsym_space(rbasis_r);
-	 qtensor3<Tm> qt3(qsym(0,0), qmid, qrow, qcol);
+         const auto& rbasis_l = rbases.at(p); 
+	 const auto& rbasis_c = (node.type==3)? rbases.at(node.center) : get_rbasis_phys<typename Km::dtype>(Km::isym); 
+	 const auto& rbasis_r = rbases.at(node.right);
+	 auto qmid = get_qbond(rbasis_c);
+	 auto qrow = get_qbond(rbasis_l); 
+	 auto qcol = get_qbond(rbasis_r);
+	 qtensor3<typename Km::dtype> qt3(qsym(), qmid, qrow, qcol);
 	 for(int kl=0; kl<rbasis_l.size(); kl++){ // left
             for(int kr=0; kr<rbasis_r.size(); kr++){ // right 
 	       for(int kc=0; kc<rbasis_c.size(); kc++){ // upper 
@@ -155,7 +156,7 @@ void get_rsites(comb<Tm>& icomb){
 		  for(int dc=0; dc<Wc.cols(); dc++){
 		     auto state_c = rbasis_c[kc].space[dc];
 		     // tmp1[c'][r'l'] = <D[c'],D[r']|[l']>
-		     auto tmp1 = fock::get_Bcouple<Tm>(state_c,rbasis_r[kr].space,rbasis_l[kl].space);
+		     auto tmp1 = fock::get_Bcouple<typename Km::dtype>(state_c,rbasis_r[kr].space,rbasis_l[kl].space);
 		     // tmp2[c'][r'l] = tmp1[c'][r'l']Wl[l'l]
 		     auto tmp2 = linalg::xgemm("N","N",tmp1,Wl);
 		     // tmp3[c'](l,r)= Wr*[r'r]tmp2[c'][r'l] = tmp2^T*Wr.conj() 
@@ -172,6 +173,7 @@ void get_rsites(comb<Tm>& icomb){
 
       } // type[p]
       if(debug) icomb.rsites[p].print("rsites_"+std::to_string(idx));
+
    } // idx
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::get_rsites : " << std::setprecision(2) 
@@ -179,20 +181,22 @@ void get_rsites(comb<Tm>& icomb){
 }
 
 // compute wave function at the start for right canonical form
-template <typename Tm>
-void get_rwfuns(comb<Tm>& icomb,
+template <typename Km>
+void get_rwfuns(comb<Km>& icomb,
+		const rbases_type<typename Km::dtype>& rbases,
 		const fock::onspace& space,
-		const std::vector<std::vector<Tm>>& vs,
+		const std::vector<std::vector<typename Km::dtype>>& vs,
 		const double thresh_proj){
    const bool debug = true;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rwfuns thresh_proj=" << std::scientific << thresh_proj << std::endl;
-   // qrow: we assume all the states are of the same symmetry
-   fock::onstate det = space[0];
-   const bool Htype = tools::is_complex<Tm>();
-   auto sym_states = get_qsym<Tm>(space[0]);
+
+   // determine symmetry of rwfuns
+   const auto& det = space[0];
+   auto sym_states = get_qsym_onstate(Km::isym, space[0]);
+   // determine qrow: we assume all the dets are of the same symmetry!
    for(int i=0; i<space.size(); i++){
-      auto sym = get_qsym<Tm>(space[i]);
+      auto sym = get_qsym_onstate(Km::isym, space[i]);
       if(sym != sym_states){
          std::cout << "error: symmetry is different in space!" << std::endl;
 	 std::cout << "sym_states=" << sym_states 
@@ -202,12 +206,18 @@ void get_rwfuns(comb<Tm>& icomb,
       }
    }
    int nroot = vs.size(); 
-   qsym_space qrow({{sym_states, nroot}});
+   qbond qrow({{sym_states, nroot}});
    // qcol
-   auto& rbasis = icomb.rbases[std::make_pair(0,0)];
-   auto qcol = get_qsym_space(rbasis);
+   const auto& rbasis = rbases.at(std::make_pair(0,0));
+   auto qcol = get_qbond(rbasis);
    // rwfuns[l,r] for RCF
-   qtensor2<Tm> rwfuns(qsym(0,0), qrow, qcol, {0, 1});
+   qtensor2<typename Km::dtype> rwfuns(qsym(), qrow, qcol, {0, 1});
+   //
+   // construct the boundary matrix: |psi[i]> = \sum_a |rbas[a]>(<rbas[a]|psi[i]>)
+   // In RCF the site is defined as 
+   //    W[i,a] =  <rbas[a]|psi[i]> = (rbas^+*wfs)^T = wfs^T*rbas.conj()
+   // such that W*[i,a]W[j,a] = delta[i,j]
+   //
    // find the match position for qcol in qrow
    int cpos = -1; 
    for(int bc=0; bc<qcol.size(); bc++){
@@ -225,23 +235,21 @@ void get_rwfuns(comb<Tm>& icomb,
    }
    // setup wavefunction: map vs2 to correct position
    fock::onspace space2;
-   std::vector<std::vector<Tm>> vs2;
+   std::vector<std::vector<typename Km::dtype>> vs2;
    const auto& order = icomb.topo.nodes[0][0].rsupport;
    // transform SCI coefficient to order
    transform_coeff(space, vs, order, space2, vs2); 
    const auto& rbas = rbasis[cpos].coeff;
-   linalg::matrix<Tm> wfs(rbas.rows(), nroot);
+   linalg::matrix<typename Km::dtype> wfs(rbas.rows(), nroot);
    for(int i=0; i<space2.size(); i++){
       int ir = index.at(space2[i]);
       for(int iroot=0; iroot<nroot; iroot++){
          wfs(ir,iroot) = vs2[iroot][i];
       } // iroot
    } // i
-   // construct the boundary matrix: |psi[i]> = \sum_a |rbas[a]><rbas[a]|psi[i]>
-   // In RCF the site is defined as 
-   //    W[i,a] =  <rbas[a]|psi[i]> = (rbas^+*wfs)^T = wfs^T*rbas.conj()
-   // such that W*[i,a]W[j,a] = delta[i,j]
    rwfuns(0,cpos) = linalg::xgemm("T","N",wfs,rbas.conj());
+   icomb.rwfuns = std::move(rwfuns);
+
    if(debug){
       rwfuns.print("rwfuns",2);
       std::cout << "\ncheck state overlaps" << std::endl;
@@ -249,7 +257,7 @@ void get_rwfuns(comb<Tm>& icomb,
       auto ova = xgemm("N","N",rwfuns(0,cpos).conj(),rwfuns(0,cpos).T());
       ova.print("ova_rwfuns");
       // ova0
-      linalg::matrix<Tm> ova0(nroot,nroot);
+      linalg::matrix<typename Km::dtype> ova0(nroot,nroot);
       for(int i=0; i<nroot; i++){
          for(int j=0; j<nroot; j++){
 	    ova0(i,j) = linalg::xdot(vs[i].size(),vs[i].data(),vs[j].data());
@@ -265,9 +273,9 @@ void get_rwfuns(comb<Tm>& icomb,
 	 exit(1); 
       }
    }
-   icomb.rwfuns = rwfuns; 
 }
 
+/*
 template <typename Tm>
 void rcanon_check(comb<Tm>& icomb,
 		  const double thresh_ortho,

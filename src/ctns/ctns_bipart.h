@@ -45,7 +45,7 @@ void transform_coeff(const fock::onspace& space,
 // bipartition representation of the determinant space
 struct bipart_qspace{
    public:
-      void init(const int isym, 
+      void init(const int isym, // choose qsym according to isym 
 		const int bpos, 
 		const fock::onspace& space, 
 		const int dir){
@@ -57,7 +57,7 @@ struct bipart_qspace{
                auto itl = uset.find(lstate);
                if(itl == uset.end()){ // not found - new basis
                   uset.insert(lstate);
-                  auto ql = get_qsym(isym,lstate);
+                  auto ql = get_qsym_onstate(isym,lstate);
                   basis[ql].push_back(lstate);
                   if(lstate.norb_single() != 0) basis[ql.flip()].push_back(lstate.flip());
                }
@@ -70,7 +70,7 @@ struct bipart_qspace{
                auto itr = uset.find(rstate);
                if(itr == uset.end()){
                   uset.insert(rstate);
-                  auto qr = get_qsym(isym,rstate);
+                  auto qr = get_qsym_onstate(isym,rstate);
                   basis[qr].push_back(rstate);
                   if(rstate.norb_single() != 0) basis[qr.flip()].push_back(rstate.flip());
                }
@@ -127,17 +127,18 @@ struct bipart_qspace{
 template <typename Tm>
 struct bipart_ciwfs{
    public:
-      bipart_ciwfs(const int bpos, 
+      bipart_ciwfs(const int isym,
+		   const int bpos, 
 		   const fock::onspace& space, 
-		   const std::vector<std::vector<typename Tm::dtype>>& vs,
+		   const std::vector<std::vector<Tm>>& vs,
 		   const bipart_qspace& lspace, 
 		   const bipart_qspace& rspace){
          nroot = vs.size(); 
          for(int i=0; i<space.size(); i++){
             auto lstate = (bpos==0)? fock::onstate() : space[i].get_before(bpos);
             auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
-            auto ql = get_qsym(Tm::isym, lstate);
-            auto qr = get_qsym(Tm::isym, rstate);
+            auto ql = get_qsym_onstate(isym, lstate);
+            auto qr = get_qsym_onstate(isym, rstate);
             int nl = lspace.dims.at(ql);
             int nr = rspace.dims.at(qr);
             int il = lspace.index.at(ql).at(lstate);
@@ -146,7 +147,7 @@ struct bipart_ciwfs{
             if(qblocks[key].size() == 0){
                qblocks[key].resize(nroot); // init
                for(int iroot=0; iroot<nroot; iroot++){
-		  linalg::matrix<typename Tm::dtype> mat(nl,nr);		
+		  linalg::matrix<Tm> mat(nl,nr);		
                   mat(il,ir) = vs[iroot][i]; 
                   qblocks[key][iroot] = mat;
                }
@@ -158,11 +159,11 @@ struct bipart_ciwfs{
          }
       }
       // rhor[r,r'] = psi[l,r]^T*psi[l,r']^*    
-      linalg::matrix<typename Tm::dtype> get_rhor(const bipart_qspace& lspace, 
-		      		  		  const bipart_qspace& rspace, 
-				  		  const qsym qr){ 
+      linalg::matrix<Tm> get_rhor(const bipart_qspace& lspace, 
+		      		  const bipart_qspace& rspace, 
+				  const qsym qr){ 
          int dim = rspace.dims.at(qr);
-	 linalg::matrix<typename Tm::dtype> rhor(dim,dim);
+	 linalg::matrix<Tm> rhor(dim,dim);
          for(const auto& ql : lspace.syms){
             auto key = std::make_pair(ql,qr);
             auto& blk = qblocks[key];
@@ -176,7 +177,7 @@ struct bipart_ciwfs{
       }
    public:
       int nroot;
-      std::map<std::pair<qsym,qsym>, std::vector<linalg::matrix<typename Tm::dtype>>> qblocks;
+      std::map<std::pair<qsym,qsym>, std::vector<linalg::matrix<Tm>>> qblocks;
 };
 
 // update rbasis for qr
@@ -185,11 +186,11 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
 		   const qsym& qr, // qr 
 		   const bipart_qspace& rspace, 
 		   const std::vector<double>& eigs, 
-		   linalg::matrix<typename Tm::dtype>& U, 
+		   linalg::matrix<Tm>& U, 
 		   int& dimBc, double& sumBc, double& SvN,
 		   const double thresh,
 		   const bool debug){
-   const bool debug_basis = true;
+   const bool debug_basis = false;
    int dim = rspace.dims.at(qr);
    double sumBi = 0.0;
    std::vector<int> kept;
@@ -224,7 +225,7 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
       // check orthogonality
       if(debug_basis){
          auto ova = linalg::xgemm("N","N",rsec.coeff.H(),rsec.coeff);
-         double diff = linalg::normF(ova - linalg::identity_matrix<typename Tm::dtype>(dimBi));
+         double diff = linalg::normF(ova - linalg::identity_matrix<Tm>(dimBi));
          std::cout << " orthonormality=" << diff << std::endl;
          if(diff > 1.e-10){
             std::cout << " error: basis is not orthonormal!" << std::endl;
@@ -235,30 +236,30 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
 }
 
 // compute {|r>} basis for a given bipartition specified by the position n 
-template <typename Tm>
-void right_projection(renorm_basis<Tm>& rbasis,
+template <typename Km>
+void right_projection(renorm_basis<typename Km::dtype>& rbasis,
 		      const int bpos,
 		      const fock::onspace& space,
-		      const std::vector<std::vector<typename Tm::dtype>>& vs,
+		      const std::vector<std::vector<typename Km::dtype>>& vs,
 		      const double thresh,
 		      const bool debug){
    auto t0 = tools::get_time();
    const bool debug_basis = false;
    if(debug){
-      std::cout << "\nctns::right_projection<Tm> thresh=" 
+      std::cout << "\nctns::right_projection<Km> thresh=" 
                 << std::scientific << std::setprecision(4) << thresh << std::endl;
    }
    //
    // 1. bipartition form of psi
    //
    bipart_qspace lspace, rspace;
-   lspace.init(Tm::isym, bpos, space, 0);
-   rspace.init(Tm::isym, bpos, space, 1);
+   lspace.init(Km::isym, bpos, space, 0);
+   rspace.init(Km::isym, bpos, space, 1);
    // update space info
    lspace.update_maps();
    rspace.update_maps();
    // construct wfs
-   bipart_ciwfs<Tm> wfs(bpos, space, vs, lspace, rspace);
+   bipart_ciwfs<typename Km::dtype> wfs(Km::isym, bpos, space, vs, lspace, rspace);
    //
    // 2. form dm for each qr
    //
@@ -277,7 +278,7 @@ void right_projection(renorm_basis<Tm>& rbasis,
       // 3. diagonalized properly to yield rbasis (depending on qr)
       //
       std::vector<double> eigs(dim); 
-      linalg::matrix<typename Tm::dtype> U(dim,dim);
+      linalg::matrix<typename Km::dtype> U(dim,dim);
       linalg::eig_solver(rhor,eigs,U,1);
       //
       // 4. select important renormalized states from (eigs,U) 
@@ -289,19 +290,19 @@ void right_projection(renorm_basis<Tm>& rbasis,
            << lspace.get_dimAll() << "," << rspace.get_dimAll() 
            << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << std::endl; 
       auto t1 = tools::get_time();
-      std::cout << "timing for ctns::right_projection<Tm> : " << std::setprecision(2) 
+      std::cout << "timing for ctns::right_projection<Km> : " << std::setprecision(2) 
            << tools::get_duration(t1-t0) << " s" << std::endl;
    }
 }
 
 // time-reversal symmetry adapted right_projection
 template <> 
-void right_projection(renorm_basis<kind::cNK>& rbasis,
-		      const int bpos,
-		      const fock::onspace& space,
-		      const std::vector<std::vector<std::complex<double>>>& vs,
-		      const double thresh,
-		      const bool debug){
+void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbasis,
+		      	         const int bpos,
+		      	         const fock::onspace& space,
+		      	         const std::vector<std::vector<std::complex<double>>>& vs,
+		      	         const double thresh,
+		      	         const bool debug){
    auto t0 = tools::get_time();
    const bool debug_basis = false;
    if(debug){
@@ -355,7 +356,7 @@ void right_projection(renorm_basis<kind::cNK>& rbasis,
    lspace.update_maps();
    rspace.update_maps();
    // construct wfs
-   bipart_ciwfs<kind::cNK> wfs(bpos, space, vs, lspace, rspace);
+   bipart_ciwfs<std::complex<double>> wfs(kind::cNK::isym, bpos, space, vs, lspace, rspace);
    //
    // 2. form dm for each qr
    //

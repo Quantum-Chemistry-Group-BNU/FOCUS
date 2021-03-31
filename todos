@@ -4,9 +4,10 @@ TODOs:
  1. setup tests for NR & R [DONE20210324]
  
  2. redesign and decouple codes
-
- 3. implementation of CTNS with TRS
     
+ 3. implementation of CTNS with TRS
+    - rewrite qtensor such that qt2/qt3/qt4 are just views
+
  4. parallelization
     1. openmp
     2. mpi

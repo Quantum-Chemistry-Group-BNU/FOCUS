@@ -1,37 +1,12 @@
 #ifndef CTNS_PHYS_H
 #define CTNS_PHYS_H
 
-/*
 #include "ctns_qsym.h"
-#include "ctns_rbasis.h"
-#include "ctns_qtensor.h"
+#include "qtensor.h"
 
 namespace ctns{
 
 // physical degree of freedoms related
-
-// qsym_space
-inline qsym_space get_qsym_space_vac(){
-   qsym_space qs_vac({{qsym(0,0),1}});
-   return qs_vac;
-}
-
-template <typename Tm>
-qsym_space get_qsym_space_phys(){
-   const bool Htype = tools::is_complex<Tm>();
-   qsym_space qs_phys;
-   if(Htype){
-      qs_phys.dims = {{qsym(0,0),1},
-		      {qsym(2,0),1},
-		      {qsym(1,0),2}};
-   }else{
-      qs_phys.dims = {{qsym(0,0),1},
-		      {qsym(2,0),1},
-		      {qsym(1,1),1},
-		      {qsym(1,-1),1}};
-   }
-   return qs_phys;
-}
 
 // exact right/left boundary tensor:
 //        n             |vac>
@@ -39,26 +14,26 @@ qsym_space get_qsym_space_phys(){
 //     ---*---|vac>   n---*
 //  |out> 	          |
 template <typename Tm>
-qtensor3<Tm> get_right_bsite(){
-   auto qs_vac = get_qsym_space_vac();
-   auto qs_phys = get_qsym_space_phys<Tm>();
-   qtensor3<Tm> qt3(qsym(0,0), qs_phys, qs_phys, qs_vac);
-   for(int k=0; k<qs_phys.size(); k++){
-      int pdim = qs_phys.get_dim(k);
+inline void get_right_bsite(const int isym, qtensor3<Tm>& qt3){
+   auto qvac = get_qbond_vac();
+   auto qphys = get_qbond_phys(isym);
+   qt3.init(qsym(), qphys, qphys, qvac);
+   for(int k=0; k<qphys.size(); k++){
+      int pdim = qphys.get_dim(k);
       for(int im=0; im<pdim; im++){
 	 linalg::matrix<Tm> mat(pdim,1);
 	 mat(im,0) = 1.0;
          qt3(k,k,0)[im] = mat;
       }
    }
-   return qt3;
 }
 
+/*
 template <typename Tm>
 qtensor3<Tm> get_left_bsite(){
    std::vector<bool> dir = {1,1,0};
-   auto qs_vac = get_qsym_space_vac();
-   auto qs_phys = get_qsym_space_phys<Tm>();
+   auto qs_vac = get_qbond_vac();
+   auto qs_phys = get_qbond_phys<Tm>();
    qtensor3<Tm> qt3(qsym(0,0), qs_phys, qs_vac, qs_phys, dir);
    for(int k=0; k<qs_phys.size(); k++){
       int pdim = qs_phys.get_dim(k);
@@ -115,7 +90,8 @@ inline void assign_occupation_phys(fock::onstate& state,
       state[2*k] = 0; state[2*k+1] = 1; // b
    }
 }
-} // ctns
 */
+
+} // ctns
 
 #endif

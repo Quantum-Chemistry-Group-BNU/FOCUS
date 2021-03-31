@@ -77,7 +77,6 @@ int tests::test_ctns(){
    // 1. dealing with topology 
    ctns::topology topo(schd.topology_file);
    topo.print();
-
    // 2. initialize right canonical form from SCI wavefunction
    ctns::comb<ctns::kind::cNK> icomb(topo);
    if(!schd.combload){
