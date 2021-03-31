@@ -18,7 +18,6 @@ struct qtensor2;
 template <typename Tm>
 struct qtensor3;
 
-/*
 // xgemm : C[i,k] = A[i,j] B[j,k]
 template <typename Tm>
 qtensor2<Tm> contract_qt2_qt2(const qtensor2<Tm>& qt2a, 
@@ -247,7 +246,6 @@ qtensor3<Tm> contract_qt3_qt2_r(const qtensor3<Tm>& qt3a,
    } // bm
    return qt3;
 }
-*/
 
 } // ctns
 

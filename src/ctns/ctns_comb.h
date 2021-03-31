@@ -16,12 +16,19 @@ using rsites_type = std::map<comb_coord,qtensor3<Tm>>;
 template <typename Km>
 class comb{
    public:
+      // constructors
       comb(const topology& topo1): topo(topo1) 
       {
          if(!kind::is_available<Km>()){
             std::cout << "error: no such kind for CTNS!" << std::endl;
 	    exit(1);
 	 }
+      }
+      // helpers
+      int get_nphysical() const{ return topo.nphysical; }
+      int get_nstate() const{
+	 assert(rwfuns.rows() == 1); // currently, only allow one symmetry sector
+	 return rwfuns.qrow.get_dim(0);
       }
    public:
       topology topo;
@@ -34,13 +41,6 @@ class comb{
 template <typename Tm>	
 class comb{
    public:
-      comb(const topology& topo1): topo(topo1) {}
-      // helpers
-      int get_nphysical() const{ return topo.nphysical; }
-      int get_nstate() const{
-	 assert(rwfuns.rows() == 1); // only one symmetry sector
-	 return rwfuns.qrow.get_dim(0);
-      }
       qsym get_sym_state() const{
 	 assert(rwfuns.rows() == 1); // only one symmetry sector
          return rwfuns.qrow.get_sym(0);

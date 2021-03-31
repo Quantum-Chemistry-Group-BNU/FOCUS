@@ -15,9 +15,9 @@
 #include "../ci/sci_pt2.h"
 #include "ctns_comb.h"
 #include "ctns_init.h"
-/*
-#include "ctns_comb_alg.h"
 #include "ctns_io.h"
+#include "ctns_ovlp.h"
+/*
 #include "ctns_oper.h"
 #include "ctns_opt.h"
 */
@@ -69,7 +69,7 @@ int tests::test_ctns(){
       coeff_population(sci_space, vs[i]);
    }
    // truncate CI coefficients
-   const bool ifortho = true; 
+   const bool ifortho = false; //true; 
    fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
 
    // --- CTNS --- 
@@ -77,49 +77,56 @@ int tests::test_ctns(){
    // 1. dealing with topology 
    ctns::topology topo(schd.topology_file);
    topo.print();
+
    // 2. initialize right canonical form from SCI wavefunction
    ctns::comb<ctns::kind::cNK> icomb(topo);
    if(!schd.combload){
       ctns::rcanon_init(icomb, sci_space, vs, schd.thresh_proj);
-//      ctns::rcanon_check(icomb, schd.thresh_ortho, ifortho);
-//      ctns::rcanon_save(icomb);
-//   }else{
-//      ctns::rcanon_load(icomb);
+      ctns::rcanon_save(icomb);
+   }else{
+      ctns::rcanon_load(icomb);
    }
+   ctns::rcanon_check(icomb, schd.thresh_ortho, ifortho);
 
-   // 3. compute Sd by sampling 
-   /*
-   int istate = 0, nsample = 1.e5;
-   double Sdiag1 = rcanon_Sdiag_sample(icomb,istate,nsample);
-   double Sdiag2 = rcanon_Sdiag_exact(icomb,istate);
-   cout << "istate=" << istate 
-        << " Sdiag(sample)=" << Sdiag1 
-        << " Sdiag(exact)=" << Sdiag2 
-        << endl;
-   */
-
-   //const double thresh=1.e-6;
-
-   // 4. algorithm: check overlap with CI
-   /* 
-   auto ovlp = ctns::rcanon_CIovlp(icomb, sci_space, vs);
-   ovlp.print("CIovlp");
-   // check overlap
-   auto Smat = fci::get_Smat(sci_space, vs);
-   Smat.print("Smat");
-   auto Sij = ctns::get_Smat(icomb);
-   Sij.print("Sij");
-   double diff = normF(Smat-Sij);
-   cout << "diff_Sij=" << diff << endl;
-   if(diff > thresh){
-      cout << "error: diff_Sij > thresh=" << thresh << endl;
+   // 3. overlap
+   const double thresh=1.e-6;
+   // <CI|CI>
+   auto Sij_ci = fci::get_Smat(sci_space, vs);
+   Sij_ci.print("Sij_ci");
+   // <CTNS|CTNS>
+   auto Sij_ctns = ctns::get_Smat(icomb);
+   Sij_ctns.print("Sij");
+   // <CI|CTNS>
+   auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
+   Sij_mix.print("Sij_mix");
+   // check
+   double diff_ctns = normF(Sij_ctns - Sij_ci);
+   cout << "diff_Sij[ctns] = " << diff_ctns << endl;
+   if(diff_ctns > thresh){
+      cout << "error: diff_Sij[ctns] > thresh=" << thresh << endl;
       exit(1);
    }
-   */
+   double diff_mix = normF(Sij_mix - Sij_ci);
+   cout << "diff_Sij[mix] = " << diff_mix << endl;
+   if(diff_mix > thresh){
+      cout << "error: diff_Sij[mix] > thresh=" << thresh << endl;
+      exit(1);
+   }
+
+/*
+   // 4. compute Sd by sampling 
+   int istate = 0, nsample = 1.e5;
+   double Sdiag1 = rcanon_Sdiag_exact(icomb,istate);
+   double Sdiag2 = rcanon_Sdiag_sample(icomb,istate,nsample);
+   cout << "istate=" << istate 
+        << " Sdiag(exact)=" << Sdiag1 
+        << " Sdiag(sample)=" << Sdiag2 
+        << endl;
+*/
 
    //schd.create_scratch();
    
-   // 5. check Hij
+   // 5. Hij
    /* 
    auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hmat.print("Hmat",8);

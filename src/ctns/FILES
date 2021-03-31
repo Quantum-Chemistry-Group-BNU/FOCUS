@@ -30,10 +30,11 @@ Dtype & Qsym:
  ctns_kind.h -> kind of CTNS
  ctns_qsym.h -> quantum number class: qsym & qbond
 
-* Initialization *
+Initialization 
 -------------------
  ctns_comb.h
  ctns_init.h -> init CTNS from SCI
+ ctns_io.h
 Schmidt decomposition:
  ctns_rbasis.h -> renorm_basis class 
  ctns_bipart.h 
@@ -45,27 +46,11 @@ Qtensor:
  qtensor.h -> qtensor class
  qtensor2.h -> rwfuns
  qtensor3.h -> rsites
-
-
- 
-Low-level
--------------------
  qtensor_contract.h
 
-Data structure
+Compute <I|J>,<n|CTNS>
 -------------------
-
-Tensor operations
--------------------
-
-Parallelization
--------------------
-
-Compute <n|CTNS>
--------------------
-
-Compute <I|J>
--------------------
+ ctns_ovlp.h
 
 Compute <I|H|J>
 -------------------
@@ -79,16 +64,22 @@ decimation
  operator transformation
 
 
+ 
+Low-level data structure
+-------------------
+
+Tensor operations
+-------------------
+
+Parallelization
+-------------------
+
+
 
 CTNS:
 -------------------------------
-Sij and <n|CTNS>
--------------------------------
- ctns_comb_alg.h
--------------------------------
 Hij: operators
 -------------------------------
- ctns_io.h
  ctns_oper.h
  ctns_oper_util.h
  ctns_oper_helper.h

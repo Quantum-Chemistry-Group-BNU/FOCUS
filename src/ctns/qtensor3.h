@@ -7,9 +7,7 @@
 #include "../core/serialization.h"
 #include "../core/matrix.h"
 #include "ctns_qsym.h"
-/*
-#include "ctns_qtensor2.h"
-*/
+#include "qtensor2.h"
 
 namespace ctns{
 
@@ -62,9 +60,9 @@ struct qtensor3{
       }
       // print
       void print(const std::string name, const int level=0) const;
-      /*
       // fix middle index (bm,im) - bm-th block, im-idx - composite index!
       qtensor2<Tm> fix_mid(const std::pair<int,int> mdx) const;
+      /*
       // deal with fermionic sign in fermionic direct product
       qtensor3<Tm> mid_signed(const double fac=1.0) const;
       qtensor3<Tm> row_signed(const double fac=1.0) const;
@@ -171,24 +169,25 @@ void qtensor3<Tm>::print(const std::string name, const int level) const{
    std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
 }
 
-/*
-      // fix middle index (bm,im) - bm-th block, im-idx - composite index!
-      qtensor2<Tm> fix_mid(const std::pair<int,int> mdx) const{
-	 int bm = mdx.first, im = mdx.second;   
-	 auto symIn = dir[0] ? sym-qmid.get_sym(bm) : sym+qmid.get_sym(bm);
-         qtensor2<Tm> qt2(symIn, qrow, qcol, {dir[1],dir[2]});
-       	 for(int br=0; br<_rows; br++){
-	    for(int bc=0; bc<_cols; bc++){
-	       if(not _ifconserve(bm,br,bc)) continue;
-	       int addr = _addr(bm,br,bc);
-	       int mdim = qmid.get_dim(bm);
-	       assert(im < mdim);
-	       qt2(br,bc) = _qblocks[addr][im];
-	    } // bc
-	 } // br
-	 return qt2;
-      }
+// fix middle index (bm,im) - bm-th block, im-idx - composite index!
+template <typename Tm>
+qtensor2<Tm> qtensor3<Tm>::fix_mid(const std::pair<int,int> mdx) const{
+   int bm = mdx.first, im = mdx.second;   
+   auto symIn = dir[0] ? sym-qmid.get_sym(bm) : sym+qmid.get_sym(bm);
+   qtensor2<Tm> qt2(symIn, qrow, qcol, {dir[1],dir[2]});
+   for(int br=0; br<_rows; br++){
+      for(int bc=0; bc<_cols; bc++){
+         if(not _ifconserve(bm,br,bc)) continue;
+         int addr = _addr(bm,br,bc);
+         int mdim = qmid.get_dim(bm);
+         assert(im < mdim);
+         qt2(br,bc) = _qblocks[addr][im];
+      } // bc
+   } // br
+   return qt2;
+}
 
+/*
       // deal with fermionic sign in fermionic direct product
       qtensor3<Tm> mid_signed(const double fac=1.0) const{
 	 qtensor3<Tm> qt3 = *this;

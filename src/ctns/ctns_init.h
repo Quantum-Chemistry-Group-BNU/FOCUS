@@ -251,12 +251,12 @@ void get_rwfuns(comb<Km>& icomb,
    icomb.rwfuns = std::move(rwfuns);
 
    if(debug){
-      rwfuns.print("rwfuns",2);
+      icomb.rwfuns.print("rwfuns",2);
       std::cout << "\ncheck state overlaps" << std::endl;
-      // ova
-      auto ova = xgemm("N","N",rwfuns(0,cpos).conj(),rwfuns(0,cpos).T());
+      // ova = <CTNS[i]|CTNS[j]>
+      auto ova = xgemm("N","N",icomb.rwfuns(0,cpos).conj(),icomb.rwfuns(0,cpos).T());
       ova.print("ova_rwfuns");
-      // ova0
+      // ova0 = <CI[i]|CI[j]>
       linalg::matrix<typename Km::dtype> ova0(nroot,nroot);
       for(int i=0; i<nroot; i++){
          for(int j=0; j<nroot; j++){
@@ -265,38 +265,14 @@ void get_rwfuns(comb<Km>& icomb,
       }
       ova0.print("ova0_vs");
       auto diff = linalg::normF(ova-ova0);
-      std::cout << "diff=" << diff << std::endl;
+      std::cout << "diff of ova matrix = " << diff << std::endl;
       const double thresh = 1.e-8;
       if(diff > thresh){
-         std::cout << "error: too large diff=" << diff 
-		   << " thresh=" << thresh << std::endl;
+         std::cout << "error: too large diff=" << diff << " thresh=" << thresh << std::endl;
 	 exit(1); 
       }
    }
 }
-
-/*
-template <typename Tm>
-void rcanon_check(comb<Tm>& icomb,
-		  const double thresh_ortho,
-		  const bool ifortho){
-   std::cout << "\nctns::rcanon_check thresh_ortho=" << thresh_ortho << std::endl;
-   int ntotal = icomb.topo.rcoord.size();
-   for(int idx=0; idx<ntotal; idx++){
-      auto p = icomb.topo.rcoord[idx];
-      // check right canonical form
-      auto qt2 = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
-      int Dtot = qt2.qrow.get_dimAll();
-      double maxdiff = qt2.check_identity(thresh_ortho, false);
-      std::cout << "idx=" << idx << " node=" << p 
-                << " Dtot=" << Dtot << " maxdiff=" << maxdiff << std::endl;
-      if((ifortho || (!ifortho && idx != ntotal-1)) && (maxdiff>thresh_ortho)){
-	 std::cout << "error: deviate from identity matrix!" << std::endl;
-         exit(1);
-      }
-   } // idx
-}
-*/
 
 } // ctns
 

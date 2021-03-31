@@ -59,48 +59,6 @@ qbond get_qbond(const renorm_basis<Tm>& rbasis){
    return qs;
 }
 
-// rbasis for type-0 physical site 
-template <typename Tm>
-inline renorm_basis<Tm> get_rbasis_phys(const int isym){
-   renorm_basis<Tm> rbasis;
-   // (N)
-   if(isym == 1){
-      rbasis.resize(3);
-      // |00>
-      rbasis[0].sym = qsym(0,0);
-      rbasis[0].space.push_back(fock::onstate("00"));
-      rbasis[0].coeff = linalg::identity_matrix<Tm>(1);
-      // |11>
-      rbasis[1].sym = qsym(2,0);
-      rbasis[1].space.push_back(fock::onstate("11"));
-      rbasis[1].coeff = linalg::identity_matrix<Tm>(1);
-      // a=|01> & b=|10>
-      rbasis[2].sym = qsym(1,0);
-      rbasis[2].space.push_back(fock::onstate("01")); // a
-      rbasis[2].space.push_back(fock::onstate("10")); // b
-      rbasis[2].coeff = linalg::identity_matrix<Tm>(2);
-   }else if(isym == 2){
-      rbasis.resize(4);
-      // |00>
-      rbasis[0].sym = qsym(0,0);
-      rbasis[0].space.push_back(fock::onstate("00"));
-      rbasis[0].coeff = linalg::identity_matrix<Tm>(1);
-      // |11>
-      rbasis[1].sym = qsym(2,0);
-      rbasis[1].space.push_back(fock::onstate("11"));
-      rbasis[1].coeff = linalg::identity_matrix<Tm>(1);
-      // |01>
-      rbasis[2].sym = qsym(1,1);
-      rbasis[2].space.push_back(fock::onstate("01")); // a
-      rbasis[2].coeff = linalg::identity_matrix<Tm>(1);
-      // |10>
-      rbasis[3].sym = qsym(1,-1);
-      rbasis[3].space.push_back(fock::onstate("10")); // b
-      rbasis[3].coeff = linalg::identity_matrix<Tm>(1);
-   }
-   return rbasis;
-}
-
 } // ctns
 
 #endif

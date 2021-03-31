@@ -1,10 +1,6 @@
 #ifndef CTNS_QSYM_H
 #define CTNS_QSYM_H
 
-/*
-#include "../core/tools.h"
-#include <map>
-*/
 #include "../core/serialization.h"
 #include "../core/onstate.h"
 #include <string>
@@ -136,23 +132,6 @@ class qbond{
    public:
       std::vector<std::pair<qsym,int>> dims;
 };
-
-inline qbond get_qbond_vac(){ return qbond({{qsym(0,0),1}}); }
-
-inline qbond get_qbond_phys(const int isym){
-   qbond qphys;
-   if(isym == 1){
-      qphys.dims = {{qsym(0,0),1},
-		    {qsym(2,0),1},
-		    {qsym(1,0),2}};
-   }else if(isym == 2){
-      qphys.dims = {{qsym(0,0),1},
-		    {qsym(2,0),1},
-		    {qsym(1,1),1},
-		    {qsym(1,-1),1}};
-   }
-   return qphys;
-}
 
 /*
 // direct product table of qbond : V1*V2->V12

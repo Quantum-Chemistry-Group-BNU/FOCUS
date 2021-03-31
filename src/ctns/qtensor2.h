@@ -8,9 +8,7 @@
 #include "../core/matrix.h"
 #include "../core/linalg.h"
 #include "ctns_qsym.h"
-/*
-#include "ctns_qtensor_contract.h"
-*/
+#include "qtensor_contract.h"
 
 namespace ctns{
 
@@ -48,7 +46,7 @@ struct qtensor2{
       // print
       void print(const std::string name, const int level=0) const;
       // check whether <l|o|r> is a faithful rep for o=I
-      double check_identity(const double thresh_ortho, const bool debug) const;
+      double check_identityMatrix(const double thresh_ortho, const bool debug) const;
       // convert to matrix class
       linalg::matrix<Tm> to_matrix() const;
       // from dense matrix: assign block to proper place
@@ -76,10 +74,8 @@ struct qtensor2{
       friend qtensor2<Tm> operator *(const Tm fac, const qtensor2<Tm>& qt);
       friend qtensor2<Tm> operator *(const qtensor2<Tm>& qt, const Tm fac);
       double normF() const;
-      /*
       // xgemm
       qtensor2<Tm> dot(const qtensor2<Tm>& qt) const;
-      */
    public:
       std::vector<bool> dir = {1,0}; // {out,int} by usual convention for operators in diagrams
       qsym sym; // <row|op[in]|col>
@@ -146,8 +142,8 @@ void qtensor2<Tm>::print(const std::string name, const int level) const{
 }
 
 template <typename Tm>
-double qtensor2<Tm>::check_identity(const double thresh_ortho, const bool debug) const{
-   if(debug) std::cout << "qtensor2::check_identity thresh_ortho=" << thresh_ortho << std::endl;
+double qtensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool debug) const{
+   if(debug) std::cout << "qtensor2::check_identityMatrix thresh_ortho=" << thresh_ortho << std::endl;
    double maxdiff = -1.0;
    for(int br=0; br<_rows; br++){
       for(int bc=0; bc<_cols; bc++){
@@ -163,8 +159,7 @@ double qtensor2<Tm>::check_identity(const double thresh_ortho, const bool debug)
             double diff = linalg::normF(blk - linalg::identity_matrix<Tm>(ndim));
 	    maxdiff = std::max(diff,maxdiff);
 	    if(debug || diff > thresh_ortho){
-               std::cout << "qsym=" << qr << " ndim=" << ndim 
-              	         << " |Sr-Id|_F=" << diff << std::endl;
+               std::cout << "qsym=" << qr << " ndim=" << ndim << " |Sr-Id|_F=" << diff << std::endl;
 	    }
             if(diff > thresh_ortho){
 	       std::cout << "error: not an identity matrix at qsym! thresh_ortho=" 
@@ -415,13 +410,11 @@ double qtensor2<Tm>::normF() const{
    return std::sqrt(sum);
 }
 
-/*
 // xgemm
 template <typename Tm>
-qtensor2::qtensor2<Tm> dot(const qtensor2<Tm>& qt) const{
+qtensor2<Tm> qtensor2<Tm>::dot(const qtensor2<Tm>& qt) const{
    return contract_qt2_qt2(*this, qt);
 }
-*/
 
 } // ctns
 
