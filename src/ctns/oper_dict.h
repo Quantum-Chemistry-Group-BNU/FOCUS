@@ -11,28 +11,18 @@ namespace ctns{
 template <typename Tm>
 using oper_dict = std::map<char,std::map<int,qtensor2<Tm>>>;
 
-/*
 // pack two indices
-const int kpack = 500;
+const int kpack = 1000;
 extern const int kpack;
-// spincase = 0/1 : same/different spin
-// val = even: same spin
-// val = odd : different spin
-inline int oper_pack(const int spincase, const int i, const int j){
-   return spincase + (i+j*kpack)*2;
+// pack & unpack
+inline int oper_pack(const int i, const int j){ 
+   return i+j*kpack;
 }
-// (spincase, i, j)
-inline std::tuple<int,int,int> oper_unpack(const int ij){
-   return std::make_tuple(ij%2, (ij/2)%kpack, (ij/2)/kpack);
-}
-// (2*i,2*j+spincase);
-inline std::pair<int,int> oper_unpack2(const int ij){
-   int spincase = ij%2;
-   int kp = (ij/2)%kpack;
-   int kq = (ij/2)/kpack;
-   return std::make_pair(2*kp, 2*kq+spincase);
+inline std::pair<int,int> oper_unpack(const int ij){
+   return std::make_pair(ij%kpack,ij/kpack);
 }
 
+/*
 // weight factor for AP/BQ pairs: ij - packed index
 inline double wfacAP(const int ij){
    int spincase = ij%2;

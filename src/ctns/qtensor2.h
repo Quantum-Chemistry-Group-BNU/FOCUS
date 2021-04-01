@@ -58,12 +58,8 @@ struct qtensor2{
       // 	     effectively change the direction of lines in diagrams
       //	     This is used in taking Hermitian conjugate of operators
       qtensor2<Tm> H() const;
-      /*
-      // generate matrix representation for Kramers paired operators
-      // po: =0,1 parity for no. of barred indices of the target operators
-      // with this factor, a_{\bar{p}} can be simply obtained from a_{p}.K(1)
-      qtensor2<Tm> K(const bool po) const;
-      */
+      // ZL20210401: generate matrix representation for Kramers paired operators
+      qtensor2<Tm> K(const int nbar) const;
       // simple algorithmic operations
       qtensor2<Tm> operator -() const;
       qtensor2<Tm>& operator +=(const qtensor2<Tm>& qt);
@@ -249,91 +245,84 @@ qtensor2<Tm> qtensor2<Tm>::H() const{
    return qt2; 
 }
 
-/*
-      // generate matrix representation for Kramers paired operators
-      // po: =0,1 parity for no. of barred indices of the target operators
-      // with this factor, a_{\bar{p}} can be simply obtained from a_{p}.K(1)
+// generate matrix representation for Kramers paired operators
+// suppose row and col are KRS-adapted basis, then
+//    <r|\bar{O}|c> = (K<r|\bar{O}|c>)*
+//    		    = p{O} <\bar{r}|O|\bar{c}>*
+// using \bar{\bar{O}} = p{O} O (p{O}: 'parity' of operator)
 template <typename Tm>
-      qtensor2<Tm> K(const bool po) const{
-	 const double fpo = po? -1.0 : 1.0;
-         const bool Htype = tools::is_complex<Tm>();
-	 if(Htype){
-	    // <r|\bar{O}|c> = (K<r|\bar{O}|c>)*
-	    // 		     = p{O} <\bar{r}|O|\bar{c}>*
-	    // \bar{\bar{O}} = p{O} O (p{O}: 'parity' of operator)
-	    qtensor2<Tm> qt2(sym, qrow, qcol, dir);
-            for(int br=0; br<qt2.rows(); br++){
-	       for(int bc=0; bc<qt2.cols(); bc++){
-	          auto& blk = qt2(br,bc);
-	          if(blk.size() == 0) continue;
-		  const auto& blk1 = _qblocks[_addr(br,bc)];
-	          const qsym& qr = qt2.qrow.get_sym(br);
-		  const qsym& qc = qt2.qcol.get_sym(bc);
-		  int dr = qt2.qrow.get_dim(br);
-		  int dc = qt2.qcol.get_dim(bc);
-		  int pr = qr.ne()%2;
-		  int pc = qc.ne()%2;
-		  if(pr == 0 && pc == 0){
-		     // <e|\bar{O}|e> = p{O} <e|O|e>^*
-		     blk = fpo*blk1.conj();
-		  }else if(pr == 0 && pc == 1){
-		     // <e|\bar{O}|o> = p{O} <e|O|\bar{o}>^*
-		     // <e|\bar{O}|\bar{o}> = p{O} <e|O|o>^* (-1)
-		     // [A,B] -> p{O}[B*,-A*]  
-		     assert(dc%2 == 0);
-		     int dc2 = dc/2;
-		     for(int ic=0; ic<dc2; ic++){
-		        std::transform(blk1.col(ic),blk1.col(ic)+dr,blk.col(ic+dc2),
-				       [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
-		     }
-		     for(int ic=0; ic<dc2; ic++){
-			std::transform(blk1.col(ic+dc2),blk1.col(ic+dc2)+dr,blk.col(ic),
-				       [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
-		     } 
-		  }else if(pr == 1 && pc == 0){
-		     // [A]        [ B*]
-		     // [ ] -> p{O}[   ]
-		     // [B]        [-A*] 
-		     assert(dr%2 == 0);
-		     int dr2 = dr/2;
-		     for(int ic=0; ic<dc; ic++){
-		        std::transform(blk1.col(ic),blk1.col(ic)+dr2,blk.col(ic)+dr2,
-				       [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
-			std::transform(blk1.col(ic)+dr2,blk1.col(ic)+dr,blk.col(ic),
-				       [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
-		     }
-		  }else if(pr == 1 && pc == 1){
-		     // [A B]        [ D* -C*]
-		     // [   ] -> p{O}[       ]
-		     // [C D]        [-B*  A*]
-		     assert(dr%2 == 0 && dc%2 == 0);
-		     int dr2 = dr/2, dc2 = dc/2;
-		     for(int ic=0; ic<dc2; ic++){
-		        std::transform(blk1.col(ic),blk1.col(ic)+dr2,blk.col(ic+dc2)+dr2,
-				       [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
-		        std::transform(blk1.col(ic)+dr2,blk1.col(ic)+dr,blk.col(ic+dc2),
-				       [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
-		     }
-		     for(int ic=0; ic<dc2; ic++){
-			std::transform(blk1.col(ic+dc2),blk1.col(ic+dc2)+dr2,blk.col(ic)+dr2,
-				       [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
-			std::transform(blk1.col(ic+dc2)+dr2,blk1.col(ic+dc2)+dr,blk.col(ic),
-				       [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
-		     }
-		  }
-	       } // bc
-	    } // br
-	    return qt2;
-	 }else{
-	    qtensor2<Tm> qt2;
-
-	    std::cout << "error: not implemented yet!" << std::endl;
-	    exit(1);
-		   
-	    return qt2;
-	 }
-      }
-*/
+qtensor2<Tm> qtensor2<Tm>::K(const int nbar) const{
+   const double fpo = (nbar%2==0)? 1.0 : -1.0;
+   qtensor2<Tm> qt2(sym, qrow, qcol, dir);
+   for(int br=0; br<qt2.rows(); br++){
+      for(int bc=0; bc<qt2.cols(); bc++){
+         auto& blk = qt2(br,bc);
+         if(blk.size() == 0) continue;
+	 const auto& blk1 = _qblocks[_addr(br,bc)];
+         const qsym& qr = qt2.qrow.get_sym(br);
+	 const qsym& qc = qt2.qcol.get_sym(bc);
+	 int dr = qt2.qrow.get_dim(br);
+	 int dc = qt2.qcol.get_dim(bc);
+	 int pr = qr.parity();
+	 int pc = qc.parity();
+	 // even-even block:
+	 // <e|\bar{O}|e> = p{O} <e|O|e>^*
+	 if(pr == 0 && pc == 0){
+	    blk = fpo*blk1.conj();
+	 // even-odd block:
+	 // <e|\bar{O}|o> = p{O} <e|O|\bar{o}>^*
+	 // <e|\bar{O}|\bar{o}> = p{O} <e|O|o>^* (-1)
+	 // [A,B] -> p{O}[B*,-A*]  
+	 }else if(pr == 0 && pc == 1){
+	    assert(dc%2 == 0);
+	    int dc2 = dc/2;
+	    // copy blocks <e|O|o>^*
+	    for(int ic=0; ic<dc2; ic++){
+	       std::transform(blk1.col(ic),blk1.col(ic)+dr,blk.col(ic+dc2),
+	        	      [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
+	    }
+	    // copy blocks <e|O|\bar{o}>
+	    for(int ic=0; ic<dc2; ic++){
+	       std::transform(blk1.col(ic+dc2),blk1.col(ic+dc2)+dr,blk.col(ic),
+	       	              [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
+	    } 
+	 // odd-even block:
+	 // [A]        [ B*]
+	 // [ ] -> p{O}[   ]
+	 // [B]        [-A*] 
+	 }else if(pr == 1 && pc == 0){
+	    assert(dr%2 == 0);
+	    int dr2 = dr/2;
+	    for(int ic=0; ic<dc; ic++){
+	       std::transform(blk1.col(ic),blk1.col(ic)+dr2,blk.col(ic)+dr2,
+	       	              [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
+	       std::transform(blk1.col(ic)+dr2,blk1.col(ic)+dr,blk.col(ic),
+	       	              [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
+	    }
+	 // odd-odd block:
+	 // [A B]        [ D* -C*]
+	 // [   ] -> p{O}[       ]
+	 // [C D]        [-B*  A*]
+	 }else if(pr == 1 && pc == 1){
+	    assert(dr%2 == 0 && dc%2 == 0);
+	    int dr2 = dr/2, dc2 = dc/2;
+	    for(int ic=0; ic<dc2; ic++){
+	       std::transform(blk1.col(ic),blk1.col(ic)+dr2,blk.col(ic+dc2)+dr2,
+	       	              [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
+	       std::transform(blk1.col(ic)+dr2,blk1.col(ic)+dr,blk.col(ic+dc2),
+	       	              [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
+	    }
+	    for(int ic=0; ic<dc2; ic++){
+	       std::transform(blk1.col(ic+dc2),blk1.col(ic+dc2)+dr2,blk.col(ic)+dr2,
+	       	              [fpo](const Tm& x){ return -fpo*tools::conjugate(x); });
+	       std::transform(blk1.col(ic+dc2)+dr2,blk1.col(ic+dc2)+dr,blk.col(ic),
+	       	              [fpo](const Tm& x){ return fpo*tools::conjugate(x); });
+	    }
+         } // (pr,pc)
+      } // bc
+   } // br
+   return qt2;
+}
 
 // simple algorithmic operations
 template <typename Tm>

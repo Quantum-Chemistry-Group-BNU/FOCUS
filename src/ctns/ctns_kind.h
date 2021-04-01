@@ -51,6 +51,11 @@ struct cNK{
 template <>
 bool is_available<cNK>(){ return true; }
 
+template <typename>
+bool is_kramers(){ return false; }
+template <>
+bool is_kramers<cNK>(){ return true; }
+
 } // kind
 
 } // ctns

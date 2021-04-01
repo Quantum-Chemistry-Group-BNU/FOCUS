@@ -58,6 +58,8 @@ Compute <I|H|J>
  oper_dict.h
  oper_io.h 
  oper_util.h
+ oper_dot.h -> Essential
+ oper_renorm.h
 
 Sweep algorithm
 -------------------
