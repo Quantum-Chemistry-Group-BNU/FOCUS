@@ -30,6 +30,10 @@ class comb{
 	 assert(rwfuns.rows() == 1); // currently, only allow one symmetry sector
 	 return rwfuns.qrow.get_dim(0);
       }
+      qsym get_sym_state() const{
+	 assert(rwfuns.rows() == 1); // only one symmetry sector
+         return rwfuns.qrow.get_sym(0);
+      }
    public:
       topology topo;
       rsites_type<typename Km::dtype> rsites; // right canonical form 
@@ -41,10 +45,6 @@ class comb{
 template <typename Tm>	
 class comb{
    public:
-      qsym get_sym_state() const{
-	 assert(rwfuns.rows() == 1); // only one symmetry sector
-         return rwfuns.qrow.get_sym(0);
-      }
       // return rwfun for istate, extracted from rwfuns
       qtensor2<Tm> get_state(const int istate) const{
          assert(rwfuns.rows() == 1);

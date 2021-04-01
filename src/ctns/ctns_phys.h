@@ -15,9 +15,9 @@ inline qbond get_qbond_vac(){ return qbond({{qsym(0,0),1}}); }
 inline qbond get_qbond_phys(const int isym){
    qbond qphys;
    if(isym == 1){
-      qphys.dims = {{qsym(0,0),1},
-		    {qsym(2,0),1},
-		    {qsym(1,0),2}};
+      qphys.dims = {{qsym(0,0),1},   // 0
+		    {qsym(2,0),1},   // 2
+		    {qsym(1,0),2}};  // a,b
    }else if(isym == 2){
       qphys.dims = {{qsym(0,0),1},
 		    {qsym(2,0),1},
@@ -96,13 +96,13 @@ inline std::pair<int,int> occ2mdx(const int isym,
 				  const fock::onstate& state, 
 				  const int k){
    std::pair<int,int> mdx;
-   if(state[2*k] == 0 and state[2*k+1] == 0){
+   if(state[2*k] == 0 and state[2*k+1] == 0){ 	    // 0
       mdx = std::make_pair(0,0);
-   }else if(state[2*k] == 1 and state[2*k+1] == 1){
+   }else if(state[2*k] == 1 and state[2*k+1] == 1){ // 2
       mdx = std::make_pair(1,0);
-   }else if(state[2*k] == 0 and state[2*k+1] == 1){
+   }else if(state[2*k] == 1 and state[2*k+1] == 0){ // a
       mdx = std::make_pair(2,0);
-   }else if(state[2*k] == 1 and state[2*k+1] == 0){
+   }else if(state[2*k] == 0 and state[2*k+1] == 1){ // b
       mdx = (isym == 1)? std::make_pair(2,1) : std::make_pair(3,0);
    }
    return mdx;

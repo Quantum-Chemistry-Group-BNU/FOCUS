@@ -151,6 +151,64 @@ linalg::matrix<typename Km::dtype> rcanon_CIovlp(const comb<Km>& icomb,
    return ovlp.T();
 }
 
+// check rcanon_CIcoeff
+template <typename Km>
+int rcanon_CIcoeff_check(const comb<Km>& icomb,
+		         const fock::onspace& space,
+	                 const std::vector<std::vector<typename Km::dtype>>& vs){
+   std::cout << "\nctns::rcanon_CIcoeff_check" << std::endl;
+   int n = icomb.get_nstate(); 
+   int dim = space.size();
+   double maxdiff = -1.e10;
+   // cmat[j,i] = <D[i]|CTNS[j]>
+   for(int i=0; i<dim; i++){
+      auto coeff = rcanon_CIcoeff(icomb, space[i]);
+      std::cout << " i=" << i << " state=" << space[i] << std::endl;
+      for(int j=0; j<n; j++){
+	 auto diff = std::abs(coeff[j] - vs[j][i]);
+         std::cout << "   j=" << j << " <n|CTNS[j]>=" << coeff[j] 
+		   << " <n|CI[j]>=" << vs[j][i] 
+		   << " diff=" << diff << std::endl;
+	 maxdiff = std::max(maxdiff, diff);
+      }
+   }
+   std::cout << "maxdiff = " << maxdiff << std::endl;
+   return 0;
+}
+
+// exact computation of Sdiag, only for small system
+template <typename Km>
+double rcanon_Sdiag_exact(const comb<Km>& icomb,
+			  const int istate){
+   const double thresh_print = 1.e-10;
+   std::cout << "\nctns::rcanon_Sdiag_exact istate=" << istate;
+   // setup FCI space
+   qsym sym_state = icomb.get_sym_state();
+   int ne = sym_state.ne(); 
+   int ks = icomb.get_nphysical();
+   fock::onspace fci_space;
+   if(Km::isym == 1){
+      fci_space = fock::get_fci_space(2*ks,ne);
+   }else if(Km::isym == 2){
+      int tm = sym_state.tm(); 
+      int na = (ne+tm)/2, nb = ne - na;
+      fci_space = fock::get_fci_space(ks,na,nb); 
+   }
+   int dim = fci_space.size();
+   std::cout << " ks=" << ks << " sym=" << sym_state << " dimFCI=" << dim << std::endl;
+   // brute-force computation of exact coefficients <n|CTNS>
+   std::vector<typename Km::dtype> coeff(dim,0.0);
+   for(int i=0; i<dim; i++){
+      const auto& state = fci_space[i];
+      coeff[i] = rcanon_CIcoeff(icomb, state)[istate];
+      if(std::abs(coeff[i]) < thresh_print) continue;
+      std::cout << " i=" << i << " " << state << " coeff=" << coeff[i] << std::endl; 
+   }
+   double Sdiag = fock::coeff_entropy(coeff);
+   std::cout << "Sdiag(exact) = " << Sdiag << std::endl;
+   return Sdiag;
+}
+
 /*
 // sampling of CTNS state to get {|det>,p(det)=|<det|Psi[i]>|^2}
 template <typename Tm>
@@ -270,38 +328,6 @@ double rcanon_Sdiag_sample(const comb<Tm>& icomb,
       }
    }
    return Sd;
-}
-
-// exact computation of Sdiag, only for small system
-template <typename Tm>
-double rcanon_Sdiag_exact(const comb<Tm>& icomb,
-			  const int istate){
-   std::cout << "\nctns::rcanon_Sdiag_exact istate=" << istate;
-   // setup FCI space
-   qsym sym_state = icomb.get_sym_state();
-   int ne = sym_state.ne(); // na+nb
-   int tm = sym_state.tm(); // na-nb
-   int ks = icomb.get_nphysical();
-   const bool Htype = tools::is_complex<Tm>();
-   fock::onspace fci_space;
-   if(Htype){
-      fci_space = fock::get_fci_space(2*ks,ne);
-   }else{
-      int na = (ne+tm)/2, nb = ne - na;
-      fci_space = fock::get_fci_space(ks,na,nb); 
-   }
-   int dim = fci_space.size();
-   std::cout << " ks=" << ks << " sym=" << sym_state << " dimFCI=" << dim << std::endl;
-   // compute exact coefficients <n|CTNS>
-   std::vector<Tm> coeff(dim,0.0);
-   for(int i=0; i<dim; i++){
-      const auto& state = fci_space[i];
-      coeff[i] = rcanon_CIcoeff(icomb, state)[istate];
-      std::cout << " i=" << i << " " << state << " coeff=" << coeff[i] << std::endl; 
-   }
-   double Sdiag = fock::coeff_entropy(coeff);
-   std::cout << "Sdiag(exact) = " << Sdiag << std::endl;
-   return Sdiag;
 }
 */
 

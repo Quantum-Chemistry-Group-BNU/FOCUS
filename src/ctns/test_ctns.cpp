@@ -96,9 +96,6 @@ int tests::test_ctns(){
    // <CTNS|CTNS>
    auto Sij_ctns = ctns::get_Smat(icomb);
    Sij_ctns.print("Sij");
-   // <CI|CTNS>
-   auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
-   Sij_mix.print("Sij_mix");
    // check
    double diff_ctns = normF(Sij_ctns - Sij_ci);
    cout << "diff_Sij[ctns] = " << diff_ctns << endl;
@@ -106,6 +103,11 @@ int tests::test_ctns(){
       cout << "error: diff_Sij[ctns] > thresh=" << thresh << endl;
       exit(1);
    }
+   // <CI|CTNS>
+   ctns::rcanon_CIcoeff_check(icomb, sci_space, vs);
+   auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
+   Sij_mix.print("Sij_mix");
+   // check
    double diff_mix = normF(Sij_mix - Sij_ci);
    cout << "diff_Sij[mix] = " << diff_mix << endl;
    if(diff_mix > thresh){
@@ -113,10 +115,10 @@ int tests::test_ctns(){
       exit(1);
    }
 
-/*
    // 4. compute Sd by sampling 
    int istate = 0, nsample = 1.e5;
    double Sdiag1 = rcanon_Sdiag_exact(icomb,istate);
+/*
    double Sdiag2 = rcanon_Sdiag_sample(icomb,istate,nsample);
    cout << "istate=" << istate 
         << " Sdiag(exact)=" << Sdiag1 
