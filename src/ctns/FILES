@@ -50,10 +50,14 @@ Qtensor:
 
 Compute <I|J>,<n|CTNS>
 -------------------
- ctns_ovlp.h
+ ctns_ovlp.h -> basic algorithms
 
 Compute <I|H|J>
 -------------------
+ ctns_oper.h -> operators
+ oper_dict.h
+ oper_io.h 
+ oper_util.h
 
 Sweep algorithm
 -------------------
@@ -80,8 +84,6 @@ CTNS:
 -------------------------------
 Hij: operators
 -------------------------------
- ctns_oper.h
- ctns_oper_util.h
  ctns_oper_helper.h
  ctns_oper_dot.h
  ctns_oper_renorm.h

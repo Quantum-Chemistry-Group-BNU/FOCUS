@@ -214,8 +214,8 @@ double rcanon_Sdiag_exact(const comb<Km>& icomb,
    std::transform(coeff.begin(), coeff.end(), weights.begin(),
 		  [](const typename Km::dtype& x){ return std::norm(x); });
    std::discrete_distribution<> dist(weights.begin(),weights.end());
-   const int nsample = 1e7;
-   int noff = nsample/100;
+   const int nsample = 1e6;
+   int noff = nsample/10;
    const double cutoff = 1.e-12;
    double Sd = 0.0, Sd2 = 0.0, std = 0.0;
    for(int i=0; i<nsample; i++){
@@ -230,7 +230,6 @@ double rcanon_Sdiag_exact(const comb<Km>& icomb,
 	 std::cout << " i=" << i << " Sd=" << Sd << " std=" << std << std::endl;
       }
    }
-
    return Sdiag;
 }
 

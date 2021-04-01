@@ -17,8 +17,8 @@
 #include "ctns_init.h"
 #include "ctns_io.h"
 #include "ctns_ovlp.h"
-/*
 #include "ctns_oper.h"
+/*
 #include "ctns_opt.h"
 */
 #include "tests_ctns.h"
@@ -119,29 +119,29 @@ int tests::test_ctns(){
    int istate = 0, nsample = 1.e6;
    double Sdiag0 = fock::coeff_entropy(vs[istate]);
    double Sdiag1 = rcanon_Sdiag_exact(icomb,istate);
+   /*
    double Sdiag2 = rcanon_Sdiag_sample(icomb,istate,nsample);
    cout << "\nistate=" << istate 
         << " Sdiag(exact)=" << Sdiag0
         << " Sdiag(brute-force)=" << Sdiag1 
         << " Sdiag(sample)=" << Sdiag2
         << endl;
+   */
 
-   //schd.create_scratch();
+   schd.create_scratch();
    
    // 5. Hij
-   /* 
-   auto Hmat = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-   Hmat.print("Hmat",8);
-   auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
-   Hij.print("Hij",8);
-   diff = normF(Hmat-Hij);
-   cout << "diff_Hij=" << diff << endl;
-   if(diff > thresh){ 
-      cout << "error: diff_Hij > thresh=" << thresh << endl;
+   auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
+   Hij_ci.print("Hij_ci",8);
+   auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+   Hij_ctns.print("Hij_ctns",8);
+   double diffH = normF(Hij_ctns - Hij_ci);
+   cout << "diffH=" << diffH << endl;
+   if(diffH > thresh){ 
+      cout << "error: diffH > thresh=" << thresh << endl;
       exit(1);
    }
-   */
-  
+ 
    // 6. optimization from current RCF 
    /*
    ctns::opt_sweep(icomb, int2e, int1e, ecore, schd);
@@ -154,7 +154,7 @@ int tests::test_ctns(){
    ovlp.print("ovlp");
    */
 
-   //schd.remove_scratch();
+   schd.remove_scratch();
 
    return 0;
 }
