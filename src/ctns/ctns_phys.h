@@ -87,8 +87,8 @@ inline void idx2occ(fock::onstate& state,
 
 // block index (bm,im) for middle physical index mdx=(qi,iq)
 inline std::pair<int,int> idx2mdx(const int isym, const int idx){
-   int qi = (isym==2 and idx==3)? 2 : idx;
-   int iq = (isym==2 and idx==3)? 1 : 0;
+   int qi = (isym==1 and idx==3)? 2 : idx;
+   int iq = (isym==1 and idx==3)? 1 : 0;
    return std::make_pair(qi, iq);
 }
 

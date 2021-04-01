@@ -69,7 +69,7 @@ int tests::test_ctns(){
       coeff_population(sci_space, vs[i]);
    }
    // truncate CI coefficients
-   const bool ifortho = false; //true; 
+   const bool ifortho = false; 
    fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
 
    // --- CTNS --- 
@@ -116,15 +116,15 @@ int tests::test_ctns(){
    }
 
    // 4. compute Sd by sampling 
-   int istate = 0, nsample = 1.e5;
+   int istate = 0, nsample = 1.e6;
+   double Sdiag0 = fock::coeff_entropy(vs[istate]);
    double Sdiag1 = rcanon_Sdiag_exact(icomb,istate);
-/*
    double Sdiag2 = rcanon_Sdiag_sample(icomb,istate,nsample);
-   cout << "istate=" << istate 
-        << " Sdiag(exact)=" << Sdiag1 
-        << " Sdiag(sample)=" << Sdiag2 
+   cout << "\nistate=" << istate 
+        << " Sdiag(exact)=" << Sdiag0
+        << " Sdiag(brute-force)=" << Sdiag1 
+        << " Sdiag(sample)=" << Sdiag2
         << endl;
-*/
 
    //schd.create_scratch();
    

@@ -196,6 +196,7 @@ double rcanon_Sdiag_exact(const comb<Km>& icomb,
    }
    int dim = fci_space.size();
    std::cout << " ks=" << ks << " sym=" << sym_state << " dimFCI=" << dim << std::endl;
+   
    // brute-force computation of exact coefficients <n|CTNS>
    std::vector<typename Km::dtype> coeff(dim,0.0);
    for(int i=0; i<dim; i++){
@@ -205,18 +206,42 @@ double rcanon_Sdiag_exact(const comb<Km>& icomb,
       std::cout << " i=" << i << " " << state << " coeff=" << coeff[i] << std::endl; 
    }
    double Sdiag = fock::coeff_entropy(coeff);
-   std::cout << "Sdiag(exact) = " << Sdiag << std::endl;
+   double ovlp = std::pow(linalg::xnrm2(dim,&coeff[0]),2); 
+   std::cout << "ovlp = " << ovlp << " Sdiag(exact) = " << Sdiag << std::endl;
+
+   // computation by sampling
+   std::vector<double> weights(dim,0.0);
+   std::transform(coeff.begin(), coeff.end(), weights.begin(),
+		  [](const typename Km::dtype& x){ return std::norm(x); });
+   std::discrete_distribution<> dist(weights.begin(),weights.end());
+   const int nsample = 1e7;
+   int noff = nsample/100;
+   const double cutoff = 1.e-12;
+   double Sd = 0.0, Sd2 = 0.0, std = 0.0;
+   for(int i=0; i<nsample; i++){
+      int idx = dist(tools::generator);
+      auto ci2 = weights[idx];
+      double s = (ci2 < cutoff)? 0.0 : -log2(ci2)*ovlp;
+      double fac = 1.0/(i+1.0);
+      Sd = (Sd*i + s)*fac;
+      Sd2 = (Sd2*i + s*s)*fac;
+      if((i+1)%noff == 0){
+         std = sqrt((Sd2-Sd*Sd)/(i+1.e-10));
+	 std::cout << " i=" << i << " Sd=" << Sd << " std=" << std << std::endl;
+      }
+   }
+
    return Sdiag;
 }
 
-/*
-// sampling of CTNS state to get {|det>,p(det)=|<det|Psi[i]>|^2}
-template <typename Tm>
-std::pair<fock::onstate,double> rcanon_random(const comb<Tm>& icomb, 
+// Sampling CTNS to get {|det>,p(det)=|<det|Psi[i]>|^2} 
+// In case that CTNS is unnormalized, p(det) is also unnormalized. 
+template <typename Km>
+std::pair<fock::onstate,double> rcanon_random(const comb<Km>& icomb, 
 					      const int istate){
    const bool debug = false;
    fock::onstate state(2*icomb.get_nphysical());
-   auto wf = icomb.get_state(istate); // initialize wf
+   auto wf = icomb.get_istate(istate); // initialize wf
    const auto& nodes = icomb.topo.nodes; 
    for(int i=0; i<icomb.topo.nbackbone; i++){
       int tp = nodes[i][0].type;
@@ -224,16 +249,16 @@ std::pair<fock::onstate,double> rcanon_random(const comb<Tm>& icomb,
 	 const auto& site = icomb.rsites.at(std::make_pair(i,0));
 	 auto qt3 = contract_qt3_qt2_l(site,wf);
 	 // compute probability for physical index
-         std::vector<qtensor2<Tm>> qt2n(4);
+         std::vector<qtensor2<typename Km::dtype>> qt2n(4);
 	 std::vector<double> weights(4);
 	 for(int idx=0; idx<4; idx++){
-            qt2n[idx] = qt3.fix_mid(get_mdx<Tm>(idx));
+	    qt2n[idx] = qt3.fix_mid( idx2mdx(Km::isym, idx) );
 	    auto psi2 = qt2n[idx].dot(qt2n[idx].H()); // \sum_a |psi[n,a]|^2
 	    weights[idx] = std::real(psi2(0,0)(0,0));
 	 }
 	 std::discrete_distribution<> dist(weights.begin(),weights.end());
 	 int idx = dist(tools::generator);
-	 assign_occupation_phys(state, nodes[i][0].pindex, idx);
+	 idx2occ(state, nodes[i][0].pindex, idx);
 	 wf = qt2n[idx];
       }else if(tp == 3){
 	 const auto& site = icomb.rsites.at(std::make_pair(i,0));
@@ -242,17 +267,17 @@ std::pair<fock::onstate,double> rcanon_random(const comb<Tm>& icomb,
 	 for(int j=1; j<nodes[i].size(); j++){
 	    const auto& sitej = icomb.rsites.at(std::make_pair(i,j));
 	    // compute probability for physical index
-            std::vector<qtensor3<Tm>> qt3n(4);
+            std::vector<qtensor3<typename Km::dtype>> qt3n(4);
 	    std::vector<double> weights(4);
 	    for(int idx=0; idx<4; idx++){
-	       auto qt2 = sitej.fix_mid(get_mdx<Tm>(idx));
+	       auto qt2 = sitej.fix_mid( idx2mdx(Km::isym, idx) );
 	       qt3n[idx] = contract_qt3_qt2_c(qt3,qt2.T()); // purely change direction
                auto psi2 = contract_qt3_qt3_cr(qt3n[idx],qt3n[idx]); // \sum_ab |psi[n,a,b]|^2
 	       weights[idx] = std::real(psi2(0,0)(0,0));
 	    }
 	    std::discrete_distribution<> dist(weights.begin(),weights.end());
 	    int idx = dist(tools::generator);
-	    assign_occupation_phys(state, nodes[i][j].pindex, idx);
+	    idx2occ(state, nodes[i][j].pindex, idx);
 	    qt3 = qt3n[idx];
          } // j
          wf = qt3.fix_mid(std::make_pair(0,0));
@@ -265,38 +290,45 @@ std::pair<fock::onstate,double> rcanon_random(const comb<Tm>& icomb,
       auto coeff1 = rcanon_CIcoeff(icomb, state)[istate];
       std::cout << " state=" << state 
                 << " coeff0,sgn=" << coeff0 << "," << sgn
-        	<< " coeff1=" << coeff1 << std::endl;
+        	<< " coeff1=" << coeff1 
+		<< " diff=" << coeff0*sgn-coeff1 << std::endl;
       assert(std::abs(coeff0*sgn-coeff1)<1.e-10);
    }
    double prob = std::norm(coeff0);
    return std::make_pair(state,prob);
 }
 
-// compute diagonal entropy via sampling 
-template <typename Tm>
-double rcanon_Sdiag_sample(const comb<Tm>& icomb,
+// compute diagonal entropy via sampling
+//
+// S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
+//
+template <typename Km>
+double rcanon_Sdiag_sample(const comb<Km>& icomb,
 		           const int istate,
 		           const int nsample,  
-		           const int nprt=10){ // no. of states to be printed
+		           const int nprt=10){ // no. of largest states to be printed
    const double cutoff = 1.e-12;
    std::cout << "\nctns::rcanon_Sdiag_sample istate=" << istate 
 	     << " nsample=" << nsample << std::endl;
    auto t0 = tools::get_time();
    int noff = nsample/10;
-   double Sd = 0.0, Sd2 = 0.0;
+   // In case CTNS is not normalized 
+   double ovlp = std::abs(get_Smat(icomb)(istate,istate));
+   std::cout << "<CTNS[i]|CTNS[i]> = " << ovlp << std::endl; 
+   double Sd = 0.0, Sd2 = 0.0, std = 0.0;
    std::map<fock::onstate,int> pop;
    for(int i=0; i<nsample; i++){
       auto pr = rcanon_random(icomb,istate);
       auto state = pr.first;
-      auto pi = pr.second;
+      auto ci2 = pr.second;
       // statistical analysis
       pop[state] += 1;
-      double s = (pi < cutoff)? 0.0 : -log2(pi);
+      double s = (ci2 < cutoff)? 0.0 : -log2(ci2)*ovlp;
       double fac = 1.0/(i+1.0);
       Sd = (Sd*i + s)*fac;
       Sd2 = (Sd2*i + s*s)*fac;
       if((i+1)%noff == 0){
-	 double std = sqrt((Sd2-Sd*Sd)/(i+1.e-10));
+         std = sqrt((Sd2-Sd*Sd)/(i+1.e-10));
          auto t1 = tools::get_time();
 	 double dt = tools::get_duration(t1-t0);
 	 std::cout << " i=" << i << " Sd=" << Sd << " std=" << std
@@ -324,12 +356,11 @@ double rcanon_Sdiag_sample(const comb<Tm>& icomb,
 	 std::cout << " i=" << i << " " << state
 	           << " counts=" << counts[idx] 
 	           << " p_i(sample)=" << counts[idx]/(1.0*nsample)
-	           << " p_i(exact)=" << std::norm(ci) << std::endl;
+	           << " p_i(exact)=" << std::norm(ci)/ovlp << std::endl;
       }
    }
    return Sd;
 }
-*/
 
 } // ctns
 
