@@ -3,6 +3,7 @@
 
 #include "oper_kernel.h"
 #include "oper_rbasis.h"
+#include "oper_compxwf.h"
 
 namespace ctns{
 
@@ -189,13 +190,13 @@ void oper_renorm_opB(const std::string& superblock,
    }
 }
 
-/*
 template <typename Tm>
 void oper_renorm_opP(const std::string& superblock,	
 		     const qtensor3<Tm>& site,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const bool& ifkr,
 		     const std::vector<int>& ksupp,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e,
@@ -205,18 +206,28 @@ void oper_renorm_opP(const std::string& superblock,
    // initialization for Ppq = <pq||sr> aras [r>s] (p<q)
    std::vector<int> index;
    for(int kp : ksupp){
+      int pa = 2*kp, pb = pa+1;
       for(int kq : ksupp){
+	 int qa = 2*kq, qb = qa+1;
+	 //
+	 // tricky part: determine the storage pattern for Ppq
+	 //
 	 if(kp < kq){
-            index.push_back(oper_pack(0,kp,kq)); // Paa 
-	    index.push_back(oper_pack(1,kp,kq)); // Pab
+            index.push_back(oper_pack(pa,qb)); // Paa 
+	    index.push_back(oper_pack(pa,qb)); // Pab
+	    if(not ifkr){
+	       // since if kp<kq, pb<qa and pb<qb hold
+	       index.push_back(oper_pack(pb,qa));
+	       index.push_back(oper_pack(pb,qb));
+	    }
 	 }else if(kp == kq){
-            index.push_back(oper_pack(1,kp,kq)); // Pab 
+            index.push_back(oper_pack(pa,pb)); // Pab 
 	 }
       }
    }
-   for(const int spq : index){
-      auto Hwf = oper_opwf_opP(superblock,site,qops1,qops2,int2e,int1e,spq);
-      qops['P'][spq] = oper_kernel_renorm(superblock,site,Hwf);
+   for(const int pq : index){
+      auto Hwf = oper_compxwf_opP(superblock,site,qops1,qops2,ifkr,int2e,int1e,pq);
+      qops['P'][pq] = oper_kernel_renorm(superblock,site,Hwf);
    }
    auto t1 = tools::get_time();
    if(debug){
@@ -231,6 +242,7 @@ void oper_renorm_opQ(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const bool& ifkr,
 		     const std::vector<int>& ksupp,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e,
@@ -240,16 +252,24 @@ void oper_renorm_opQ(const std::string& superblock,
    // initialization for Qps = <pq||sr> aq^+ar
    std::vector<int> index;
    for(int kp : ksupp){
+      int pa = 2*kp, pb = pa+1;
       for(int ks : ksupp){
-	 if(kp <= ks){
-            index.push_back(oper_pack(0,kp,ks)); // Qaa 
-	    index.push_back(oper_pack(1,kp,ks)); // Qab
+	 int sa = 2*ks, sb = sa+1;
+	 if(kp <= ks){ 
+	    index.push_back(oper_pack(pa,sa));
+	    index.push_back(oper_pack(pa,sb));
+	    if(not ifkr){
+	       // if kp=ks, QpApB is stored while QpBpA is redundant,
+	       // because it can be related with QpApB using Hermiticity if bra=ket.
+	       if(kp != ks) index.push_back(oper_pack(pb,sa));
+	       index.push_back(oper_pack(pb,sb));
+	    }
 	 }
       }
    }
-   for(const int sps : index){
-      auto Hwf = oper_opwf_opQ(superblock,site,qops1,qops2,int2e,int1e,sps);
-      qops['Q'][sps] = oper_kernel_renorm(superblock,site,Hwf);
+   for(const int ps : index){
+      auto Hwf = oper_compxwf_opQ(superblock,site,qops1,qops2,ifkr,int2e,int1e,ps);
+      qops['Q'][ps] = oper_kernel_renorm(superblock,site,Hwf);
    }
    auto t1 = tools::get_time();
    if(debug){ 
@@ -264,16 +284,23 @@ void oper_renorm_opS(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const bool& ifkr,
 		     const std::vector<int>& ksupp,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e,
 		     const bool debug=false){
    if(debug) std::cout << "ctns::oper_renorm_opS" << std::endl;
    auto t0 = tools::get_time();
-   // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
-   for(const int kp : ksupp){
-      auto Hwf = oper_opwf_opS(superblock,site,qops1,qops2,int2e,int1e,kp);
-      qops['S'][kp] = oper_kernel_renorm(superblock,site,Hwf);
+   // initialization for 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
+   std::vector<int> index;
+   for(int kp: ksupp){
+      int pa = 2*kp, pb = pa+1;
+      index.push_back(pa);
+      if(not ifkr) index.push_back(pb);
+   }
+   for(const int p : index){
+      auto Hwf = oper_compxwf_opS(superblock,site,qops1,qops2,ifkr,int2e,int1e,p);
+      qops['S'][p] = oper_kernel_renorm(superblock,site,Hwf);
    }
    auto t1 = tools::get_time();
    if(debug){
@@ -288,23 +315,22 @@ void oper_renorm_opH(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const bool& ifkr,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e,
 		     const bool debug=false){
    if(debug) std::cout << "ctns::oper_renorm_opH" << std::endl;
    auto t0 = tools::get_time();
-   // <b1b2|H|b1b2>
-   {
-      auto Hwf = oper_opwf_opH(superblock,site,qops1,qops2,int2e,int1e);
-      qops['H'][0] = oper_kernel_renorm(superblock,site,Hwf);
-   }
+   
+   auto Hwf = oper_compxwf_opH(superblock,site,qops1,qops2,ifkr,int2e,int1e);
+   qops['H'][0] = oper_kernel_renorm(superblock,site,Hwf);
+   
    auto t1 = tools::get_time();
    if(debug){
       std::cout << "timing for tns::oper_renorm_opH : " << std::setprecision(2) 
 	        << tools::get_duration(t1-t0) << " s" << std::endl;
    }
 }
-*/
 
 // renormalize ops
 template <typename Km>
@@ -319,8 +345,10 @@ void oper_renorm_opAll(const std::string& superblock,
 		       const bool debug=true){
    const bool ifcheck = true;
    auto t0 = tools::get_time();
+   const bool ifkr = kind::is_kramers<Km>();
    std::cout << "ctns::oper_renorm_opAll coord=" << p 
-             << " superblock=" << superblock << std::endl;
+             << " superblock=" << superblock 
+	     << " ifkr=" << ifkr << std::endl;
   
    // settings for current site & ksupp 
    auto& node = icomb.topo.get_node(p);
@@ -338,8 +366,7 @@ void oper_renorm_opAll(const std::string& superblock,
       auto pc = node.center;
       ksupp = icomb.topo.get_node(pc).rsupport;
    }
-   
-   const bool ifkr = kind::is_kramers<Km>();
+  
    // C
    oper_renorm_opC(superblock, site, qops1, qops2, qops, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'C');
@@ -349,14 +376,20 @@ void oper_renorm_opAll(const std::string& superblock,
    // B
    oper_renorm_opB(superblock, site, qops1, qops2, qops, ifkr, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'B');
-
-/*
+  
+   // P
+   oper_renorm_opP(superblock, site, qops1, qops2, qops, ifkr, ksupp, int2e, int1e, debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'P', int2e, int1e);
+   // Q
+   oper_renorm_opQ(superblock, site, qops1, qops2, qops, ifkr, ksupp, int2e, int1e, debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'Q', int2e, int1e);
    // S
-   oper_renorm_opS(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'S',int2e,int1e);
+   oper_renorm_opS(superblock, site, qops1, qops2, qops, ifkr, ksupp, int2e, int1e, debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'S', int2e, int1e);
+   
    // H
-   oper_renorm_opH(superblock,site,qops1,qops2,qops,int2e,int1e,debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'H',int2e,int1e);
+   oper_renorm_opH(superblock, site, qops1, qops2, qops, ifkr, int2e, int1e, debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'H', int2e, int1e);
    // consistency check for Hamiltonian
    const auto& H = qops['H'].at(0);
    auto diffH = (H-H.H()).normF();
@@ -366,13 +399,6 @@ void oper_renorm_opAll(const std::string& superblock,
       exit(1);
    }
 
-   // P
-   oper_renorm_opP(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'P',int2e,int1e);
-   // Q
-   oper_renorm_opQ(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'Q',int2e,int1e);
-*/
    auto t1 = tools::get_time();
    if(debug){
       std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 
