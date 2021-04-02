@@ -1,6 +1,6 @@
 log
 tags
-.depend
+*.depend
 obj
 bin
 bin/*.x

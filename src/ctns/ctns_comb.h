@@ -11,7 +11,7 @@ namespace ctns{
 template <typename Tm>
 using rbases_type = std::map<comb_coord,renorm_basis<Tm>>;
 template <typename Tm>
-using rsites_type = std::map<comb_coord,qtensor3<Tm>>;
+using sites_type = std::map<comb_coord,qtensor3<Tm>>;
 
 template <typename Km>
 class comb{
@@ -36,10 +36,18 @@ class comb{
       }
       // return rwfun for istate, extracted from rwfuns
       qtensor2<typename Km::dtype> get_istate(const int istate) const;
+      // get_qc/ql/qr used in setting up optimization
+      qbond get_qc(const comb_coord& p) const;
+      qbond get_ql(const comb_coord& p) const;
+      qbond get_qr(const comb_coord& p) const;
    public:
       topology topo;
-      rsites_type<typename Km::dtype> rsites; // right canonical form 
+      sites_type<typename Km::dtype> rsites; // right canonical form 
       qtensor2<typename Km::dtype> rwfuns; // wavefunction at the left boundary -*-
+      //--- auxilliary data ---
+      rbases_type<typename Km::dtype> rbases; // used in initialization & debug operators 
+      sites_type<typename Km::dtype> lsites; // left canonical form 
+      //std::vector<qtensor3<Tm>> psi; // propagation of initial guess 
 };
 
 // return rwfun for istate, extracted from rwfuns
@@ -56,52 +64,43 @@ qtensor2<typename Km::dtype> comb<Km>::get_istate(const int istate) const{
    return rwfun;
 }
 
-/*
-// comb tensor network states 
-template <typename Tm>	
-class comb{
-   public:
-      // symmetry information used in opt_sweep
-      qbond get_qc(const comb_coord& p) const{
-	 //
-	 //				  |
-	 // MPS-like:	    Additional: --pc
-	 //  \|/			 \|/
-	 // --p--			--p--
-	 //
-         auto pc = topo.get_node(p).center;
-	 bool physical = (pc == coord_phys);
-         return physical? get_qbond_phys<Tm>() : rsites.at(pc).qrow; 
-      }
-      qbond get_ql(const comb_coord& p) const{
-	 //
-	 // 			           |
-	 // MPS-like:       Additional:  --p 
-	 //   |      | 			  /|\
-	 // --pl-->--p-- 		 --pl--
-	 //
-         auto pl = topo.get_node(p).left;
-         bool cturn = (topo.node_type(pl) == 3 and p.second == 1);
-	 return cturn? lsites.at(pl).qmid : lsites.at(pl).qcol;
-      }
-      qbond get_qr(const comb_coord& p) const{
-	 //
-	 // MPS-like:
-	 //    |     |
-	 //  --p--<--pr-- : qrow of rsites[pr]
-	 //
-         auto pr = topo.get_node(p).right;
-         return rsites.at(pr).qrow;
-      }
-   public:
-      topology topo;
-      std::map<comb_coord,renorm_basis<Tm>> rbases; // renormalized basis from SCI
-      std::map<comb_coord,qtensor3<Tm>> rsites; // right canonical form 
-      qtensor2<Tm> rwfuns; // wavefunction at the left boundary -*-
-      std::map<comb_coord,qtensor3<Tm>> lsites; // left canonical form 
-      //std::vector<qtensor3<Tm>> psi; // propagation of initial guess 
-};
-*/
+// symmetry information used in opt_sweep
+template <typename Km>
+qbond comb<Km>::get_qc(const comb_coord& p) const{
+   //
+   //				  |
+   // MPS-like:	    Additional: --pc
+   //  \|/			 \|/
+   // --p--			--p--
+   //
+   auto pc = topo.get_node(p).center;
+   bool physical = (pc == coord_phys);
+   return physical? get_qbond_phys(Km::isym) : rsites.at(pc).qrow; 
+}
+
+template <typename Km>
+qbond comb<Km>::get_ql(const comb_coord& p) const{
+   //
+   // 			          |
+   // MPS-like:     Additional: --p 
+   //   |      |                 /|\
+   // --pl-->--p--     	        --pl--
+   //
+   auto pl = topo.get_node(p).left;
+   bool cturn = (topo.node_type(pl) == 3 and p.second == 1);
+   return cturn? lsites.at(pl).qmid : lsites.at(pl).qcol;
+}
+
+template <typename Km>
+qbond comb<Km>::get_qr(const comb_coord& p) const{
+   //
+   // MPS-like:
+   //    |     |
+   //  --p--<--pr-- : qrow of rsites[pr]
+   //
+   auto pr = topo.get_node(p).right;
+   return rsites.at(pr).qrow;
+}
 
 } // ctns
 

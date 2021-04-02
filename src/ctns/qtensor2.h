@@ -65,12 +65,26 @@ struct qtensor2{
       qtensor2<Tm>& operator +=(const qtensor2<Tm>& qt);
       qtensor2<Tm>& operator -=(const qtensor2<Tm>& qt);
       qtensor2<Tm>& operator *=(const Tm fac);
-      friend qtensor2<Tm> operator +(const qtensor2<Tm>& qta, const qtensor2<Tm>& qtb);
-      friend qtensor2<Tm> operator -(const qtensor2<Tm>& qta, const qtensor2<Tm>& qtb);
-      friend qtensor2<Tm> operator *(const Tm fac, const qtensor2<Tm>& qt);
-      friend qtensor2<Tm> operator *(const qtensor2<Tm>& qt, const Tm fac);
+      friend qtensor2<Tm> operator +(const qtensor2<Tm>& qta, const qtensor2<Tm>& qtb){
+         qtensor2<Tm> qt2 = qta;
+         qt2 += qtb;
+         return qt2;
+      }
+      friend qtensor2<Tm> operator -(const qtensor2<Tm>& qta, const qtensor2<Tm>& qtb){
+         qtensor2<Tm> qt2 = qta;
+         qt2 -= qtb;
+         return qt2;
+      }
+      friend qtensor2<Tm> operator *(const Tm fac, const qtensor2<Tm>& qt){
+         qtensor2<Tm> qt2 = qt;
+         qt2 *= fac;
+         return qt2;
+      }
+      friend qtensor2<Tm> operator *(const qtensor2<Tm>& qt, const Tm fac){
+         return fac*qt;
+      }
+      // algebra
       double normF() const;
-      // xgemm
       qtensor2<Tm> dot(const qtensor2<Tm>& qt) const;
    public:
       std::vector<bool> dir = {1,0}; // {out,int} by usual convention for operators in diagrams
@@ -127,11 +141,11 @@ void qtensor2<Tm>::print(const std::string name, const int level) const{
          nnz++;
          if(level >= 1){
             std::cout << "idx=" << idx 
-     	       << " block[" << qrow.get_sym(br) << "," << qcol.get_sym(bc) << "]" 
-                 << " rows,cols=(" << blk.rows() << "," << blk.cols() << ")" 
-                 << std::endl; 
+     	    	      << " block[" << qrow.get_sym(br) << "," << qcol.get_sym(bc) << "]" 
+                      << " rows,cols=(" << blk.rows() << "," << blk.cols() << ")" 
+                      << std::endl; 
             if(level >= 2) blk.print("blk");
-	       } // level>=1
+	 } // level>=1
       }
    } // idx
    std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
@@ -366,30 +380,7 @@ qtensor2<Tm>& qtensor2<Tm>::operator *=(const Tm fac){
    return *this;
 }
 
-// friend
-template <typename Tm>
-qtensor2<Tm> operator +(const qtensor2<Tm>& qta, const qtensor2<Tm>& qtb){
-   qtensor2<Tm> qt2 = qta;
-   qt2 += qtb;
-   return qt2;
-}
-template <typename Tm>
-qtensor2<Tm> operator -(const qtensor2<Tm>& qta, const qtensor2<Tm>& qtb){
-   qtensor2<Tm> qt2 = qta;
-   qt2 -= qtb;
-   return qt2;
-}
-template <typename Tm>
-qtensor2<Tm> operator *(const Tm fac, const qtensor2<Tm>& qt){ 
-   qtensor2<Tm> qt2 = qt;
-   qt2 *= fac;
-   return qt2;
-}
-template <typename Tm>
-qtensor2<Tm> operator *(const qtensor2<Tm>& qt, const Tm fac){ 
-   return fac*qt;
-}
-
+// algebra
 template <typename Tm>
 double qtensor2<Tm>::normF() const{
    double sum = 0.0;

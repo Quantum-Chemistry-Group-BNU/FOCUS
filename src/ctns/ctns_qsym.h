@@ -41,7 +41,10 @@ class qsym{
       inline int parity() const{ return _ne%2; }
       // print
       std::string to_string() const{ return "("+std::to_string(_ne)+","+std::to_string(_tm)+")"; }
-      friend std::ostream& operator <<(std::ostream& os, const qsym& sym);
+      friend std::ostream& operator <<(std::ostream& os, const qsym& sym){
+         os << sym.to_string();
+         return os;
+      }
       // Abelian symmetry
       qsym flip() const{ return qsym(_ne,-_tm); }
       qsym operator -() const{ return qsym(-_ne,-_tm); }
@@ -50,22 +53,15 @@ class qsym{
 	 _tm += sym1._tm;
 	return *this; 
       }
-      friend qsym operator +(const qsym& sym1, const qsym& sym2);
-      friend qsym operator -(const qsym& sym1, const qsym& sym2);
+      friend qsym operator +(const qsym& sym1, const qsym& sym2){
+         return qsym(sym1._ne + sym2._ne, sym1._tm + sym2._tm);
+      }
+      friend qsym operator -(const qsym& sym1, const qsym& sym2){
+         return qsym(sym1._ne - sym2._ne, sym1._tm - sym2._tm);
+      }
    private:
       int _ne, _tm; // na+nb, na-nb
 };
-
-inline std::ostream& operator <<(std::ostream& os, const qsym& sym){
-   os << sym.to_string();
-   return os;
-}
-inline qsym operator +(const qsym& sym1, const qsym& sym2){
-   return qsym(sym1._ne + sym2._ne, sym1._tm + sym2._tm);
-}
-inline qsym operator -(const qsym& sym1, const qsym& sym2){
-   return qsym(sym1._ne - sym2._ne, sym1._tm - sym2._tm);
-}
 
 // get qsym for a given onstate
 inline qsym get_qsym_onstate(const int isym, const fock::onstate& state){

@@ -19,15 +19,14 @@ void rcanon_init(comb<Km>& icomb,
    std::cout << "\nctns::rcanon_init" << std::endl;
    
    // 1. compute renormalized bases {|r>} from SCI wavefunctions
-   rbases_type<typename Km::dtype> rbases; 
-   get_rbases(icomb, rbases, space, vs, thresh_proj);
+   get_rbases(icomb, space, vs, thresh_proj);
 
    // 2. build sites from rbases
-   get_rsites(icomb, rbases); 
+   get_rsites(icomb); 
  
    // 3. compute wave functions at the start for right canonical form 
-   get_rwfuns(icomb, rbases, space, vs, thresh_proj);  
-
+   get_rwfuns(icomb, space, vs, thresh_proj);  
+  
    auto t1 = tools::get_time();
    std::cout << "\ntiming for ctns::rcanon_init : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
@@ -36,7 +35,6 @@ void rcanon_init(comb<Km>& icomb,
 // compute renormalized bases {|r>} from SCI wavefunctions 
 template <typename Km>
 void get_rbases(comb<Km>& icomb,
-		rbases_type<typename Km::dtype>& rbases,
 		const fock::onspace& space,
 		const std::vector<std::vector<typename Km::dtype>>& vs,
 		const double thresh_proj){
@@ -58,7 +56,7 @@ void get_rbases(comb<Km>& icomb,
       }
       if(node.type == 0 && p != std::make_pair(0,0)){
          // for boundary site, we choose to use identity
-	 rbases[p] = get_rbasis_phys<typename Km::dtype>(Km::isym);
+	 icomb.rbases[p] = get_rbasis_phys<typename Km::dtype>(Km::isym);
       }else{
 	 // Generate {|r>} at the internal nodes
          // 1. generate 1D ordering
@@ -77,7 +75,7 @@ void get_rbases(comb<Km>& icomb,
 	 std::vector<std::vector<typename Km::dtype>> vs2;
          transform_coeff(space, vs, order, space2, vs2); 
          // 3. bipartition of space and compute renormalized states
-         right_projection<Km>(rbases[p], 2*bpos, space2, vs2, thresh_proj, debug);
+         right_projection<Km>(icomb.rbases[p], 2*bpos, space2, vs2, thresh_proj, debug);
       }
    } // idx
    
@@ -88,7 +86,7 @@ void get_rbases(comb<Km>& icomb,
       auto p = topo.rcoord[idx];
       int i = p.first, j = p.second;
       // shape can be different from dim(rspace) if associated weight is zero!
-      auto shape = get_shape(rbases[p]);
+      auto shape = get_shape(icomb.rbases[p]);
       std::cout << " idx=" << idx << " node=" << p
                 << " shape=" << shape.first << "," << shape.second 
                 << std::endl;
@@ -103,7 +101,7 @@ void get_rbases(comb<Km>& icomb,
 
 // build site tensor from {|r>} bases
 template <typename Km>
-void get_rsites(comb<Km>& icomb, const rbases_type<typename Km::dtype>& rbases){
+void get_rsites(comb<Km>& icomb){
    const bool debug = true;
    auto t0 = tools::get_time();
    std::cout << "\nctns::get_rsites" << std::endl;
@@ -136,9 +134,9 @@ void get_rsites(comb<Km>& icomb, const rbases_type<typename Km::dtype>& rbases){
 	       std::cout << "type 1/2: physical site on backbone/branch" << std::endl;
 	    }
 	 }
-         const auto& rbasis_l = rbases.at(p); 
-	 const auto& rbasis_c = (node.type==3)? rbases.at(node.center) : get_rbasis_phys<typename Km::dtype>(Km::isym); 
-	 const auto& rbasis_r = rbases.at(node.right);
+         const auto& rbasis_l = icomb.rbases.at(p); 
+	 const auto& rbasis_c = (node.type==3)? icomb.rbases.at(node.center) : get_rbasis_phys<typename Km::dtype>(Km::isym); 
+	 const auto& rbasis_r = icomb.rbases.at(node.right);
 	 auto qmid = get_qbond(rbasis_c);
 	 auto qrow = get_qbond(rbasis_l); 
 	 auto qcol = get_qbond(rbasis_r);
@@ -183,7 +181,6 @@ void get_rsites(comb<Km>& icomb, const rbases_type<typename Km::dtype>& rbases){
 // compute wave function at the start for right canonical form
 template <typename Km>
 void get_rwfuns(comb<Km>& icomb,
-		const rbases_type<typename Km::dtype>& rbases,
 		const fock::onspace& space,
 		const std::vector<std::vector<typename Km::dtype>>& vs,
 		const double thresh_proj){
@@ -208,7 +205,7 @@ void get_rwfuns(comb<Km>& icomb,
    int nroot = vs.size(); 
    qbond qrow({{sym_states, nroot}});
    // qcol
-   const auto& rbasis = rbases.at(std::make_pair(0,0));
+   const auto& rbasis = icomb.rbases.at(std::make_pair(0,0));
    auto qcol = get_qbond(rbasis);
    // rwfuns[l,r] for RCF
    qtensor2<typename Km::dtype> rwfuns(qsym(), qrow, qcol, {0, 1});

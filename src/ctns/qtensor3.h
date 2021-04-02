@@ -62,11 +62,9 @@ struct qtensor3{
       void print(const std::string name, const int level=0) const;
       // fix middle index (bm,im) - bm-th block, im-idx - composite index!
       qtensor2<Tm> fix_mid(const std::pair<int,int> mdx) const;
-      /*
       // deal with fermionic sign in fermionic direct product
       qtensor3<Tm> mid_signed(const double fac=1.0) const;
       qtensor3<Tm> row_signed(const double fac=1.0) const;
-      */
       // simple algorithmic operations
       qtensor3<Tm>& operator +=(const qtensor3<Tm>& qt);
       qtensor3<Tm>& operator -=(const qtensor3<Tm>& qt);
@@ -113,15 +111,15 @@ void qtensor3<Tm>::init(const qsym& sym1, const qbond& qmid1, const qbond& qrow1
    for(int bm=0; bm<_mids; bm++){
       for(int br=0; br<_rows; br++){
          for(int bc=0; bc<_cols; bc++){
-  	  if(not _ifconserve(bm,br,bc)) continue;
-  	  int mdim = qmid.get_dim(bm);
-  	  int rdim = qrow.get_dim(br);
-  	  int cdim = qcol.get_dim(bc);
-  	  int addr = _addr(bm,br,bc);
-  	  _qblocks[addr].resize(mdim);
-  	  for(int im=0; im<mdim; im++){
-  	     _qblocks[addr][im].resize(rdim,cdim);
-  	  }
+  	    if(not _ifconserve(bm,br,bc)) continue;
+  	    int mdim = qmid.get_dim(bm);
+  	    int rdim = qrow.get_dim(br);
+  	    int cdim = qcol.get_dim(bc);
+  	    int addr = _addr(bm,br,bc);
+  	    _qblocks[addr].resize(mdim);
+  	    for(int im=0; im<mdim; im++){
+  	       _qblocks[addr][im].resize(rdim,cdim);
+  	    }
          } // bc
       } // br
    } // bm
@@ -187,39 +185,40 @@ qtensor2<Tm> qtensor3<Tm>::fix_mid(const std::pair<int,int> mdx) const{
    return qt2;
 }
 
-/*
-      // deal with fermionic sign in fermionic direct product
-      qtensor3<Tm> mid_signed(const double fac=1.0) const{
-	 qtensor3<Tm> qt3 = *this;
-	 for(int idx=0; idx<qt3._qblocks.size(); idx++){
-	    auto& blk = qt3._qblocks[idx];
-	    if(blk.size() > 0){
-	       int bm,br,bc;
-	       _addr_unpack(idx,bm,br,bc);
-	       double fac2 = (qmid.get_parity(bm)==0)? fac : -fac;
-	       for(int im=0; im<blk.size(); im++){
-	          blk[im] *= fac2;
-	       }
-	    }
-	 }
-	 return qt3;
+// deal with fermionic sign in fermionic direct product
+template <typename Tm>
+qtensor3<Tm> qtensor3<Tm>::mid_signed(const double fac) const{
+   qtensor3<Tm> qt3 = *this;
+   for(int idx=0; idx<qt3._qblocks.size(); idx++){
+      auto& blk = qt3._qblocks[idx];
+      if(blk.size() > 0){
+         int bm,br,bc;
+         _addr_unpack(idx,bm,br,bc);
+         double fac2 = (qmid.get_parity(bm)==0)? fac : -fac;
+         for(int im=0; im<blk.size(); im++){
+            blk[im] *= fac2;
+         }
       }
-      qtensor3<Tm> row_signed(const double fac=1.0) const{
- 	 qtensor3<Tm> qt3 = *this;
-	 for(int idx=0; idx<qt3._qblocks.size(); idx++){
-	    auto& blk = qt3._qblocks[idx];
-	    if(blk.size() > 0){
-	       int bm,br,bc;
-	       _addr_unpack(idx,bm,br,bc);
-	       double fac2 = (qrow.get_parity(br)==0)? fac : -fac;
-	       for(int im=0; im<blk.size(); im++){
-	          blk[im] *= fac2;
-	       }
-	    }
-	 }
-	 return qt3;
+   }
+   return qt3;
+}
+
+template <typename Tm>
+qtensor3<Tm> qtensor3<Tm>::row_signed(const double fac) const{
+   qtensor3<Tm> qt3 = *this;
+   for(int idx=0; idx<qt3._qblocks.size(); idx++){
+      auto& blk = qt3._qblocks[idx];
+      if(blk.size() > 0){
+         int bm,br,bc;
+         _addr_unpack(idx,bm,br,bc);
+         double fac2 = (qrow.get_parity(br)==0)? fac : -fac;
+         for(int im=0; im<blk.size(); im++){
+            blk[im] *= fac2;
+         }
       }
-*/
+   }
+   return qt3;
+}
 
 // simple algorithmic operations
 template <typename Tm>
@@ -234,7 +233,7 @@ qtensor3<Tm>& qtensor3<Tm>::operator +=(const qtensor3<Tm>& qt){
             blk[m] += qt._qblocks[i][m];
          } // m
       }
-   }
+   } // i
    return *this;
 }
 
@@ -250,7 +249,7 @@ qtensor3<Tm>& qtensor3<Tm>::operator -=(const qtensor3<Tm>& qt){
   	    blk[m] -= qt._qblocks[i][m];
          } // m
       }
-   }
+   } // i
    return *this;
 }
 
@@ -262,7 +261,7 @@ qtensor3<Tm>& qtensor3<Tm>::operator *=(const Tm fac){
 	    blk[m] *= fac;
 	 } // m
       }
-   }
+   } // blk
    return *this;
 }
 
@@ -273,18 +272,21 @@ qtensor3<Tm> operator +(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb){
    qt3 += qtb;
    return qt3;
 }
+
 template <typename Tm>
 qtensor3<Tm> operator -(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb){
    qtensor3<Tm> qt3 = qta;
    qt3 -= qtb;
    return qt3;
 }
+
 template <typename Tm>
 qtensor3<Tm> operator *(const double fac, const qtensor3<Tm>& qt){
    qtensor3<Tm> qt3 = qt; 
    qt3 *= fac;
    return qt3;
 }
+
 template <typename Tm>
 qtensor3<Tm> operator *(const qtensor3<Tm>& qt, const double fac){
    return fac*qt;
@@ -296,7 +298,7 @@ double qtensor3<Tm>::normF() const{
    double sum = 0.0;
    for(const auto& blk : _qblocks){
       if(blk.size() > 0){
-	       for(int m=0; m<blk.size(); m++){
+         for(int m=0; m<blk.size(); m++){
             sum += std::pow(linalg::normF(blk[m]),2);
          }
       }

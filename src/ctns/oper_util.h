@@ -3,6 +3,8 @@
 
 #include "oper_dict.h"
 #include "oper_io.h"
+#include "oper_dot.h"
+#include "oper_renorm.h"
 
 namespace ctns{
 
@@ -74,7 +76,7 @@ void oper_init(const comb<Km>& icomb,
       if(node.type != 3){
          int kp = node.pindex;
          oper_dict<typename Km::dtype> qops;
-	 oper_init_dot(Km::isym, is_kramers<Km>(), kp, int2e, int1e, qops);
+	 oper_init_dot(Km::isym, kind::is_kramers<Km>(), kp, int2e, int1e, qops);
 	 std::string fname = oper_fname(scratch, p, "cop");
          oper_save(fname, qops);
       }
@@ -82,7 +84,7 @@ void oper_init(const comb<Km>& icomb,
       if(node.type == 0 && p.first != 0){
 	 int kp = node.pindex;
          oper_dict<typename Km::dtype> qops;
-	 oper_init_dot(Km::isym, is_kramers<Km>(), kp, int2e, int1e, qops);
+	 oper_init_dot(Km::isym, kind::is_kramers<Km>(), kp, int2e, int1e, qops);
 	 std::string fname = oper_fname(scratch, p, "rop");
          oper_save(fname, qops);
       }
@@ -91,7 +93,7 @@ void oper_init(const comb<Km>& icomb,
    auto p = std::make_pair(0,0);
    int kp = icomb.topo.get_node(p).pindex;
    oper_dict<typename Km::dtype> qops;
-   oper_init_dot(Km::isym, is_kramers<Km>(), kp, int2e, int1e, qops);
+   oper_init_dot(Km::isym, kind::is_kramers<Km>(), kp, int2e, int1e, qops);
    std::string fname = oper_fname(scratch, p, "lop");
    oper_save(fname, qops);
 }
@@ -111,7 +113,7 @@ void oper_env_right(const comb<Km>& icomb,
       auto p = icomb.topo.rcoord[idx];
       const auto& node = icomb.topo.get_node(p);
       if(node.type != 0 || p.first == 0){
-	 oper_dict<typename Km::dtype> qops1, qops2, qops 
+	 oper_dict<typename Km::dtype> qops1, qops2, qops; 
          // load operators from disk    
          oper_load_qops(icomb, p, scratch, 'c', qops1);
          oper_load_qops(icomb, p, scratch, 'r', qops2);

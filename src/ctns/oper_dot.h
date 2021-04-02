@@ -59,9 +59,8 @@ void oper_dot_A(const int isym, const bool ifkr, const int k0,
 }
 
 // B[kA,kA] = kA^+kA, B[kA,kB] = kA^+kB
-//
 // B[kB,kA] = kB^+kA = B[kA,kB].K(1)
-// B[kB,kB] = kB^+kB = B[kA,kA].K(0)
+// B[kB,kB] = kB^+kB = B[kA,kA].K(2)
 template <typename Tm>
 void oper_dot_B(const int isym, const bool ifkr, const int k0, 
 		oper_dict<Tm>& qops){
@@ -126,7 +125,7 @@ void oper_dot_S(const int isym, const bool ifkr, const int k0,
       if(not ifkr){
          qops['S'][pb] = qops['S'][pa].K(1);
       }
-   } // p
+   } // kp
 }
 
 // build local H^C = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
@@ -180,8 +179,8 @@ void oper_dot_P(const int isym, const bool ifkr, const int k0,
 	 }else if(kp == kq){
 	    qops['P'][oper_pack(pa,pb)] = int2e.get(pa,pb,ka,kb)*qt2ab;
 	 }
-      }
-   }
+      } // kq
+   } // kp
 }
 
 // Qps = <pq||sr> aq^+ar
@@ -215,9 +214,9 @@ void oper_dot_Q(const int isym, const bool ifkr, const int k0,
 	    			        + int2e.get(pa,kb,sb,kb)*qt2bb
 					+ int2e.get(pa,ka,sb,kb)*qt2ab
 					+ int2e.get(pa,kb,sb,ka)*qt2ba;
-	    if(not if kr){
-	       qops['Q'][oper_pack(pb,sa)] = qops['Q'][oper_pack(pa,sb)].K(1)
-	       qops['Q'][oper_pack(pb,sb)] = qops['Q'][oper_pack(pa,sa)].K(2)
+	    if(not ifkr){
+	       qops['Q'][oper_pack(pb,sa)] = qops['Q'][oper_pack(pa,sb)].K(1);
+	       qops['Q'][oper_pack(pb,sb)] = qops['Q'][oper_pack(pa,sa)].K(2);
 	    }
 	 }
       } // ks

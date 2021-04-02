@@ -6,13 +6,13 @@
 #include "ctns_comb.h"
 #include "ctns_oper_util.h"
 #include "ctns_oper_rbasis.h"
-#include "ctns_oper_kernel.h"
 #include "ctns_oper_opwf.h"
 */
+#include "oper_kernel.h"
+#include "oper_rbasis.h"
 
 namespace ctns{
 
-/*
 // kernel for computing renormalized ap^+
 template <typename Tm>
 void oper_renorm_opC(const std::string& superblock,
@@ -44,6 +44,7 @@ void oper_renorm_opC(const std::string& superblock,
    }
 }
 
+/*
 // kernel for computing renormalized Apq=ap^+aq^+
 template <typename Tm>
 void oper_renorm_opA(const std::string& superblock,
@@ -289,14 +290,16 @@ void oper_renorm_opAll(const std::string& superblock,
 		       const integral::one_body<typename Km::dtype>& int1e,
 		       oper_dict<typename Km::dtype>& qops1,
 		       oper_dict<typename Km::dtype>& qops2,
-		       oper_dict<typename Km::dtype>& qops){
-/*
-   const bool ifcheck = false;
+		       oper_dict<typename Km::dtype>& qops,
+		       const bool debug=true){
+   const bool ifcheck = true;
    auto t0 = tools::get_time();
    std::cout << "ctns::oper_renorm_opAll coord=" << p 
              << " superblock=" << superblock << std::endl;
+  
+   // settings for current site & ksupp 
    auto& node = icomb.topo.get_node(p);
-   qtensor3<Tm> site;
+   qtensor3<typename Km::dtype> site;
    std::vector<int> ksupp; // support for index of complementary ops 
    if(superblock == "cr"){
       site = icomb.rsites.at(p);
@@ -310,10 +313,11 @@ void oper_renorm_opAll(const std::string& superblock,
       auto pc = node.center;
       ksupp = icomb.topo.get_node(pc).rsupport;
    }
-   oper_dict<Tm> qops;
+   
    // C
    oper_renorm_opC(superblock,site,qops1,qops2,qops,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'C');
+/*
    // S
    oper_renorm_opS(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'S',int2e,int1e);
@@ -340,13 +344,14 @@ void oper_renorm_opAll(const std::string& superblock,
    // Q
    oper_renorm_opQ(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'Q',int2e,int1e);
+*/
    auto t1 = tools::get_time();
    if(debug){
       std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 
                 << tools::get_duration(t1-t0) << " s" << std::endl;
       std::cout << std::endl;
    }
-*/
+   exit(1);
 }
 
 /*

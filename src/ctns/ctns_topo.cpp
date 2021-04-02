@@ -56,10 +56,6 @@ topology::topology(const string& fname){
       exit(1);
    }
 
-   // special coord 
-   const comb_coord coord_vac = std::make_pair(-2,-2); 
-   const comb_coord coord_phys = std::make_pair(-1,-1);  
-
    // initialize topo structure: type & neighbor of each site
    nbackbone = tmp.size();
    nphysical = 0;

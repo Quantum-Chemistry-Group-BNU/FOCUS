@@ -10,6 +10,12 @@ namespace ctns{
 using comb_coord = std::pair<int,int>;
 std::ostream& operator <<(std::ostream& os, const comb_coord& coord);
 
+// special coord 
+const comb_coord coord_vac = std::make_pair(-2,-2);
+extern const comb_coord coord_vac;
+const comb_coord coord_phys = std::make_pair(-1,-1);  
+extern const comb_coord coord_phys;
+
 // node information for sites of ctns in right 
 //		            r
 //      c		    |
