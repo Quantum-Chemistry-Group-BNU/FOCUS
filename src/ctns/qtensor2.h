@@ -267,7 +267,7 @@ qtensor2<Tm> qtensor2<Tm>::H() const{
 template <typename Tm>
 qtensor2<Tm> qtensor2<Tm>::K(const int nbar) const{
    const double fpo = (nbar%2==0)? 1.0 : -1.0;
-   qtensor2<Tm> qt2(sym, qrow, qcol, dir);
+   qtensor2<Tm> qt2(sym.flip(), qrow, qcol, dir); // the symmetry is flipped
    for(int br=0; br<qt2.rows(); br++){
       for(int bc=0; bc<qt2.cols(); bc++){
          auto& blk = qt2(br,bc);

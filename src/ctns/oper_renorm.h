@@ -346,6 +346,7 @@ void oper_renorm_opAll(const std::string& superblock,
    const bool ifcheck = true;
    auto t0 = tools::get_time();
    const bool ifkr = kind::is_kramers<Km>();
+   const int isym = Km::isym;
    std::cout << "ctns::oper_renorm_opAll coord=" << p 
              << " superblock=" << superblock 
 	     << " ifkr=" << ifkr << std::endl;
@@ -376,19 +377,19 @@ void oper_renorm_opAll(const std::string& superblock,
    // B
    oper_renorm_opB(superblock, site, qops1, qops2, qops, ifkr, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'B');
-  
+/*  
    // P
-   oper_renorm_opP(superblock, site, qops1, qops2, qops, ifkr, ksupp, int2e, int1e, debug);
+   oper_renorm_opP(superblock, site, qops1, qops2, qops, isym, ifkr, ksupp, int2e, int1e, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'P', int2e, int1e);
    // Q
-   oper_renorm_opQ(superblock, site, qops1, qops2, qops, ifkr, ksupp, int2e, int1e, debug);
+   oper_renorm_opQ(superblock, site, qops1, qops2, qops, isym, ifkr, ksupp, int2e, int1e, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'Q', int2e, int1e);
    // S
-   oper_renorm_opS(superblock, site, qops1, qops2, qops, ifkr, ksupp, int2e, int1e, debug);
+   oper_renorm_opS(superblock, site, qops1, qops2, qops, isym, ifkr, ksupp, int2e, int1e, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'S', int2e, int1e);
    
    // H
-   oper_renorm_opH(superblock, site, qops1, qops2, qops, ifkr, int2e, int1e, debug);
+   oper_renorm_opH(superblock, site, qops1, qops2, qops, isym, ifkr, int2e, int1e, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'H', int2e, int1e);
    // consistency check for Hamiltonian
    const auto& H = qops['H'].at(0);
@@ -398,7 +399,7 @@ void oper_renorm_opAll(const std::string& superblock,
       std::cout << "error: H-H.H() is too large! diffH=" << diffH << std::endl;
       exit(1);
    }
-
+*/
    auto t1 = tools::get_time();
    if(debug){
       std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 

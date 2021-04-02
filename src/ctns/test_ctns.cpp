@@ -80,6 +80,7 @@ int tests::test_ctns(){
 
    // 2. initialize right canonical form from SCI wavefunction
    ctns::comb<ctns::kind::cNK> icomb(topo);
+
    if(!schd.combload){
       ctns::rcanon_init(icomb, sci_space, vs, schd.thresh_proj);
       ctns::rcanon_save(icomb);
@@ -116,17 +117,18 @@ int tests::test_ctns(){
    }
 
    // 4. compute Sd by sampling 
-   int istate = 0, nsample = 1.e6;
+   int istate = 0, nsample = 1.e5;
    double Sdiag0 = fock::coeff_entropy(vs[istate]);
    double Sdiag1 = rcanon_Sdiag_exact(icomb,istate);
-   /*
-   double Sdiag2 = rcanon_Sdiag_sample(icomb,istate,nsample);
-   cout << "\nistate=" << istate 
-        << " Sdiag(exact)=" << Sdiag0
-        << " Sdiag(brute-force)=" << Sdiag1 
-        << " Sdiag(sample)=" << Sdiag2
-        << endl;
-   */
+   bool ifsample = false;
+   if(ifsample){
+      double Sdiag2 = rcanon_Sdiag_sample(icomb,istate,nsample);
+      cout << "\nistate=" << istate 
+           << " Sdiag(exact)=" << Sdiag0
+           << " Sdiag(brute-force)=" << Sdiag1 
+           << " Sdiag(sample)=" << Sdiag2
+           << endl;
+   }
 
    schd.create_scratch();
    

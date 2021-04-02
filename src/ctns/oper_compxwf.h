@@ -13,18 +13,31 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
 		              const qtensor3<Tm>& site,
 		              oper_dict<Tm>& qops1,
 		              oper_dict<Tm>& qops2,
+			      const int& isym,
 			      const bool& ifkr,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 		              const bool ifdagger=false){
 /*
-   const bool Htype = tools::is_complex<Tm>();
-   auto spq = oper_unpack(index);
-   int spincase = std::get<0>(spq);
-   int p = 2*std::get<1>(spq);
-   int q = 2*std::get<2>(spq)+spincase;
+   auto pq = oper_unpack(index);
+   int p = pq.first,  kp = p/2, spin_p = p%2;
+   int q = pq.second, kq = q/2, spin_q = q%2;
    // determine symmetry of Paa/Pab
+   qsym sym_op;
+   if(isym == 1){
+      qsym_op = qsym(-2,0);
+   }else if(isym == 2){
+
+      if(spin_p == 0 && spin_q == 0){
+         symP = (isym==1)? qsym(-2,0) : qsym(-2,-2); // Paa
+      }else if(spin_p == 1 && spin_q == 1){
+         symP = (isym==1)? qsym(-2,0) : qsym(-2,0); // Pbb
+      }else{
+         symP = qsym(-2,-1); // Pos
+      }
+   }
+
    qsym sym_op = (!Htype & spincase==0)? qsym(-2,-2) : qsym(-2,0);
    qsym sym_opwf = ifdagger? -sym_op+site.sym : sym_op+site.sym;
    qtensor3<Tm> opwf(sym_opwf, site.qmid, site.qrow, site.qcol, site.dir);
@@ -144,6 +157,7 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
 		              const qtensor3<Tm>& site,
 			      oper_dict<Tm>& qops1,
 			      oper_dict<Tm>& qops2,
+			      const int& isym,
 			      const bool& ifkr,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e,
@@ -262,6 +276,7 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 		              const qtensor3<Tm>& site,
 			      oper_dict<Tm>& qops1,
 			      oper_dict<Tm>& qops2,
+			      const int& isym,
 			      const bool& ifkr,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e,
@@ -348,6 +363,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
 		              const qtensor3<Tm>& site,
 		              oper_dict<Tm>& qops1,
 		              oper_dict<Tm>& qops2,
+			      const int& isym,
 			      const bool& ifkr,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e){
