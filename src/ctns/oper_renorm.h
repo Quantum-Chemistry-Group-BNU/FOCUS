@@ -1,13 +1,6 @@
 #ifndef OPER_RENORM_H
 #define OPER_RENORM_H
 
-/*
-#include "ctns_io.h"
-#include "ctns_comb.h"
-#include "ctns_oper_util.h"
-#include "ctns_oper_rbasis.h"
-#include "ctns_oper_opwf.h"
-*/
 #include "oper_kernel.h"
 #include "oper_rbasis.h"
 
@@ -44,7 +37,6 @@ void oper_renorm_opC(const std::string& superblock,
    }
 }
 
-/*
 // kernel for computing renormalized Apq=ap^+aq^+
 template <typename Tm>
 void oper_renorm_opA(const std::string& superblock,
@@ -52,6 +44,7 @@ void oper_renorm_opA(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const bool& ifkr,
 		     const bool debug=false){
    if(debug) std::cout << "ctns::oper_renorm_opA" << std::endl;
    auto t0 = tools::get_time();
@@ -76,25 +69,42 @@ void oper_renorm_opA(const std::string& superblock,
       for(const auto& op2C : qops2['C']){
 	 int p2 = op2C.first;
 	 const auto& op2 = op2C.second;
-	 // pAqA and pAqB
-	 if(p1 < p2){
-	    // <a1^+a2^+> = [a1^+]*[a2^+]
-	    // storage: <a1A^+a2A^+>,<a1A^+a2B^+>
-            auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
-	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa); 
-            auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1),1);
-	    auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab); 
-	    qops['A'][oper_pack(0,p1,p2)] = qt2aa; 
-	    qops['A'][oper_pack(1,p1,p2)] = qt2ab; 
+	 //
+	 // tricky part: determine the storage pattern for Apq
+	 //
+	 if(not ifkr){
+            auto Hwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
+	    auto qt2 = oper_kernel_renorm(superblock,site,Hwf);
+            // only store Apq where p<q;
+	    if(p1 < p2){
+	       qops['A'][oper_pack(p1,p2)] = qt2; 
+	    }else{
+	       qops['A'][oper_pack(p2,p1)] = -qt2;
+	    }
 	 }else{
- 	    // <a2^+a1^+> = -<a1^+a2^+> = -[a1^+]*[a2^+]
-	    // storage <a2A^+a1A^+>,<a2A^+a1B^+> 
-            auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
-	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa); 
-            auto Hwfab = oper_kernel_OOwf(superblock,site,op1.K(1),op2,1);
-	    auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab); 
-	    qops['A'][oper_pack(0,p2,p1)] = -qt2aa;
-	    qops['A'][oper_pack(1,p2,p1)] = -qt2ab; 
+	    int kp1 = p1/2;
+	    int kp2 = p2/2;
+            assert(p1%2 == 0 && p2%2 == 0 && kp1 != kp2);
+	    // pA+qA+ and pA+qB+
+            if(kp1 < kp2){
+	       // <a1^+a2^+> = [a1^+]*[a2^+]
+	       // storage: <a1A^+a2A^+>,<a1A^+a2B^+>
+               auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
+	       auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa); 
+               auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1),1);
+	       auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab); 
+	       qops['A'][oper_pack(p1,p2)] = qt2aa; 
+	       qops['A'][oper_pack(p1,p2+1)] = qt2ab; 
+	    }else{
+ 	       // <a2^+a1^+> = -<a1^+a2^+> = -[a1^+]*[a2^+]
+	       // storage <a2A^+a1A^+>,<a2A^+a1B^+> 
+               auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
+	       auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa); 
+               auto Hwfab = oper_kernel_OOwf(superblock,site,op1.K(1),op2,1);
+	       auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab); 
+	       qops['A'][oper_pack(p2,p1)] = -qt2aa;
+	       qops['A'][oper_pack(p2,p1+1)] = -qt2ab; 
+	    }
 	 }
       }
    }
@@ -112,6 +122,7 @@ void oper_renorm_opB(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const bool& ifkr,
 		     const bool debug=false){
    if(debug) std::cout << "ctns::oper_renorm_opB" << std::endl;
    auto t0 = tools::get_time();
@@ -136,26 +147,39 @@ void oper_renorm_opB(const std::string& superblock,
       for(const auto& op2C : qops2['C']){
 	 int p2 = op2C.first;
 	 const auto& op2 = op2C.second;
-	 // pAqA and pAqB
-	 if(p1 < p2){ 
-	    // <a1^+a2> = [a1^+]*[a2]
-	    // storage: <a1A^+a2A>,<a1A^+a2B>  
-	    auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2.H(),1);
-	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
-	    auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1).H(),1);
-	    auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab);
-	    qops['B'][oper_pack(0,p1,p2)] = qt2aa; 
-	    qops['B'][oper_pack(1,p1,p2)] = qt2ab;
-	 }else{ 
-	    // <a2^+a1> = -<a1*a2^+> = -[a1]*[a2^+]
-	    // storage: <a2A^+a1A>,<a2A^+a1B> 
-	    auto Hwfaa = oper_kernel_OOwf(superblock,site,op1.H(),op2,1);
-	    auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
-	    auto Hwfab = oper_kernel_OOwf(superblock,site,op1.K(1).H(),op2,1);
-	    auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab);
-	    qops['B'][oper_pack(0,p2,p1)] = -qt2aa; 
-	    qops['B'][oper_pack(1,p2,p1)] = -qt2ab;
-	 }
+	 //
+	 // tricky part: determine the storage pattern for Bps
+	 //
+	 if(not ifkr){
+	    auto Hwf = oper_kernel_OOwf(superblock,site,op1,op2.H(),1);
+	    qops['B'][oper_pack(p1,p2)] =  oper_kernel_renorm(superblock,site,Hwf);
+	    Hwf = oper_kernel_OOwf(superblock,site,op1.H(),op2,1);
+	    qops['B'][oper_pack(p2,p1)] = -oper_kernel_renorm(superblock,site,Hwf);
+	 }else{
+	    int kp1 = p1/2;
+	    int kp2 = p2/2;
+            assert(p1%2 == 0 && p2%2 == 0 && kp1 != kp2);
+	    // pA+qA and pA+qB
+	    if(kp1 < kp2){ 
+	       // <a1^+a2> = [a1^+]*[a2]
+	       // storage: <a1A^+a2A>,<a1A^+a2B>  
+	       auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2.H(),1);
+	       auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
+	       auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1).H(),1);
+	       auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab);
+	       qops['B'][oper_pack(p1,p2)] = qt2aa; 
+	       qops['B'][oper_pack(p1,p2+1)] = qt2ab;
+	    }else{ 
+	       // <a2^+a1> = -<a1*a2^+> = -[a1]*[a2^+]
+	       // storage: <a2A^+a1A>,<a2A^+a1B> 
+	       auto Hwfaa = oper_kernel_OOwf(superblock,site,op1.H(),op2,1);
+	       auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
+	       auto Hwfab = oper_kernel_OOwf(superblock,site,op1.K(1).H(),op2,1);
+	       auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab);
+	       qops['B'][oper_pack(p2,p1)] = -qt2aa; 
+	       qops['B'][oper_pack(p2,p1+1)] = -qt2ab;
+	    }
+         }
       }
    }
    auto t1 = tools::get_time();
@@ -165,6 +189,7 @@ void oper_renorm_opB(const std::string& superblock,
    }
 }
 
+/*
 template <typename Tm>
 void oper_renorm_opP(const std::string& superblock,	
 		     const qtensor3<Tm>& site,
@@ -314,9 +339,17 @@ void oper_renorm_opAll(const std::string& superblock,
       ksupp = icomb.topo.get_node(pc).rsupport;
    }
    
+   const bool ifkr = kind::is_kramers<Km>();
    // C
-   oper_renorm_opC(superblock,site,qops1,qops2,qops,debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'C');
+   oper_renorm_opC(superblock, site, qops1, qops2, qops, debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'C');
+   // A
+   oper_renorm_opA(superblock, site, qops1, qops2, qops, ifkr, debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'A');
+   // B
+   oper_renorm_opB(superblock, site, qops1, qops2, qops, ifkr, debug);
+   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'B');
+
 /*
    // S
    oper_renorm_opS(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
@@ -332,12 +365,7 @@ void oper_renorm_opAll(const std::string& superblock,
       std::cout << "error: H-H.H() is too large! diffH=" << diffH << std::endl;
       exit(1);
    }
-   // A
-   oper_renorm_opA(superblock,site,qops1,qops2,qops,debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'A');
-   // B
-   oper_renorm_opB(superblock,site,qops1,qops2,qops,debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'B');
+
    // P
    oper_renorm_opP(superblock,site,qops1,qops2,qops,ksupp,int2e,int1e,debug);
    if(debug && ifcheck) oper_check_rbasis(icomb,icomb,p,qops,'P',int2e,int1e);
@@ -351,7 +379,6 @@ void oper_renorm_opAll(const std::string& superblock,
                 << tools::get_duration(t1-t0) << " s" << std::endl;
       std::cout << std::endl;
    }
-   exit(1);
 }
 
 /*

@@ -54,13 +54,13 @@ void oper_init_dot(const int isym,
       if(k == kp) continue;
       krest.push_back(k);
    }
-   oper_dot_C(isym, ifkr, kp, qops);
-   oper_dot_A(isym, ifkr, kp, qops);
-   oper_dot_B(isym, ifkr, kp, qops);
-   oper_dot_P(isym, ifkr, kp, int2e, krest, qops);
-   oper_dot_Q(isym, ifkr, kp, int2e, krest, qops);
-   oper_dot_S(isym, ifkr, kp, int2e, int1e, krest, qops);
-   oper_dot_H(isym, ifkr, kp, int2e, int1e, qops);
+   oper_dot_opC(isym, ifkr, kp, qops);
+   oper_dot_opA(isym, ifkr, kp, qops);
+   oper_dot_opB(isym, ifkr, kp, qops);
+   oper_dot_opP(isym, ifkr, kp, int2e, krest, qops);
+   oper_dot_opQ(isym, ifkr, kp, int2e, krest, qops);
+   oper_dot_opS(isym, ifkr, kp, int2e, int1e, krest, qops);
+   oper_dot_opH(isym, ifkr, kp, int2e, int1e, qops);
 }
 
 // construct for dot operators [cop] & boundary operators [lop/rop]

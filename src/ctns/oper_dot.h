@@ -17,8 +17,8 @@ namespace ctns{
 
 // kA^+
 template <typename Tm>
-void oper_dot_C(const int isym, const bool ifkr, const int k0, 
-		oper_dict<Tm>& qops){
+void oper_dot_opC(const int isym, const bool ifkr, const int k0, 
+		  oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
    auto qphys = get_qbond_phys(isym);
    // c[0] = kA^+
@@ -41,8 +41,8 @@ void oper_dot_C(const int isym, const bool ifkr, const int k0,
 
 // A[kA,kB] = kA^+kB^+
 template <typename Tm>
-void oper_dot_A(const int isym, const bool ifkr, const int k0, 
-		oper_dict<Tm>& qops){
+void oper_dot_opA(const int isym, const bool ifkr, const int k0, 
+		  oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
    auto qphys = get_qbond_phys(isym);
    // c[0].dot(c[1])
@@ -62,8 +62,8 @@ void oper_dot_A(const int isym, const bool ifkr, const int k0,
 // B[kB,kA] = kB^+kA = B[kA,kB].K(1)
 // B[kB,kB] = kB^+kB = B[kA,kA].K(2)
 template <typename Tm>
-void oper_dot_B(const int isym, const bool ifkr, const int k0, 
-		oper_dict<Tm>& qops){
+void oper_dot_opB(const int isym, const bool ifkr, const int k0, 
+		  oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
    auto qphys = get_qbond_phys(isym);
    // c[0].dot(a[0])
@@ -97,11 +97,11 @@ void oper_dot_B(const int isym, const bool ifkr, const int k0,
 
 // build local S_{p}^C = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
 template <typename Tm>
-void oper_dot_S(const int isym, const bool ifkr, const int k0,
-		const integral::two_body<Tm>& int2e,
-		const integral::one_body<Tm>& int1e,
-		const std::vector<int>& krest,
-		oper_dict<Tm>& qops){
+void oper_dot_opS(const int isym, const bool ifkr, const int k0,
+		  const integral::two_body<Tm>& int2e,
+		  const integral::one_body<Tm>& int1e,
+		  const std::vector<int>& krest,
+		  oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
    auto qphys = get_qbond_phys(isym);
    // c[0].dot(a[1].dot(a[0]))
@@ -130,10 +130,10 @@ void oper_dot_S(const int isym, const bool ifkr, const int k0,
 
 // build local H^C = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
 template <typename Tm>
-void oper_dot_H(const int isym, const bool ifkr, const int k0,
-		const integral::two_body<Tm>& int2e,
-		const integral::one_body<Tm>& int1e,
-		oper_dict<Tm>& qops){
+void oper_dot_opH(const int isym, const bool ifkr, const int k0,
+		  const integral::two_body<Tm>& int2e,
+		  const integral::one_body<Tm>& int1e,
+		  oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
    auto qphys = get_qbond_phys(isym);
    // 0110 (*<01||01>)
@@ -158,10 +158,10 @@ void oper_dot_H(const int isym, const bool ifkr, const int k0,
 // P[pA,qA] = <pA,qA||kA,kB> A[kA,kB]^+ (zero in NR)
 // P[pA,qB] = <pA,qB||kA,kB> A[kA,kB]^+
 template <typename Tm>
-void oper_dot_P(const int isym, const bool ifkr, const int k0,
-		const integral::two_body<Tm>& int2e,
-		const std::vector<int>& krest,
-		oper_dict<Tm>& qops){
+void oper_dot_opP(const int isym, const bool ifkr, const int k0,
+		  const integral::two_body<Tm>& int2e,
+		  const std::vector<int>& krest,
+		  oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
    auto qt2ab = qops['A'][oper_pack(ka,kb)].H();
    for(int kp : krest){
@@ -191,10 +191,10 @@ void oper_dot_P(const int isym, const bool ifkr, const int k0,
 // 	    = <pA,kA||sB,kA> B[kA,kA] + <pA,kB||sB,kB> B[kB,kB] 
 //	    + <pA,kA||sB,kB> B[kA,kB] + <pA,kB||sB,kA> B[kB,kA] (nonzero) 
 template <typename Tm>
-void oper_dot_Q(const int isym, const bool ifkr, const int k0,
-		const integral::two_body<Tm>& int2e,
-		const std::vector<int>& krest,
-		oper_dict<Tm>& qops){
+void oper_dot_opQ(const int isym, const bool ifkr, const int k0,
+		  const integral::two_body<Tm>& int2e,
+		  const std::vector<int>& krest,
+		  oper_dict<Tm>& qops){
    int ka = 2*k0, kb = ka+1;
    const auto& qt2aa = qops['B'][oper_pack(ka,ka)];
    const auto& qt2ab = qops['B'][oper_pack(ka,kb)];
