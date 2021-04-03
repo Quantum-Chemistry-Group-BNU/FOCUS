@@ -76,7 +76,7 @@ void oper_renorm_opA(const std::string& superblock,
 	 if(not ifkr){
             auto Hwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
 	    auto qt2 = oper_kernel_renorm(superblock,site,Hwf);
-            // only store Apq where p<q;
+            // only store Apq where p<q: total number (2K)*(2K-1)/2 ~ O(2K^2)
 	    if(p1 < p2){
 	       qops['A'][oper_pack(p1,p2)] = qt2; 
 	    }else{
@@ -86,7 +86,8 @@ void oper_renorm_opA(const std::string& superblock,
 	    int kp1 = p1/2;
 	    int kp2 = p2/2;
             assert(p1%2 == 0 && p2%2 == 0 && kp1 != kp2);
-	    // pA+qA+ and pA+qB+
+	    // If time-reversal symmetry adapted basis is used, Apq blocks:
+	    // pA+qA+ and pA+qB+: K*(K-1)/2+K*(K+1)/2=K^2 (reduction by half)
             if(kp1 < kp2){
 	       // <a1^+a2^+> = [a1^+]*[a2^+]
 	       // storage: <a1A^+a2A^+>,<a1A^+a2B^+>
@@ -152,15 +153,20 @@ void oper_renorm_opB(const std::string& superblock,
 	 // tricky part: determine the storage pattern for Bps
 	 //
 	 if(not ifkr){
-	    auto Hwf = oper_kernel_OOwf(superblock,site,op1,op2.H(),1);
-	    qops['B'][oper_pack(p1,p2)] =  oper_kernel_renorm(superblock,site,Hwf);
-	    Hwf = oper_kernel_OOwf(superblock,site,op1.H(),op2,1);
-	    qops['B'][oper_pack(p2,p1)] = -oper_kernel_renorm(superblock,site,Hwf);
+	    // only store Bps (p<=s): (2K)*(2K+1)/2 ~ O(2K^2)
+	    if(p1 < p2){
+	       auto Hwf = oper_kernel_OOwf(superblock,site,op1,op2.H(),1);
+	       qops['B'][oper_pack(p1,p2)] =  oper_kernel_renorm(superblock,site,Hwf);
+	    }else{
+	       auto Hwf = oper_kernel_OOwf(superblock,site,op1.H(),op2,1);
+	       qops['B'][oper_pack(p2,p1)] = -oper_kernel_renorm(superblock,site,Hwf);
+	    }
 	 }else{
 	    int kp1 = p1/2;
 	    int kp2 = p2/2;
             assert(p1%2 == 0 && p2%2 == 0 && kp1 != kp2);
-	    // pA+qA and pA+qB
+	    // If time-reversal symmetry adapted basis is used, Apq blocks:
+	    // pA+qA and pA+qB: K*(K+1)/2+K*(K+1)/2=K(K+1) (reduction by half)
 	    if(kp1 < kp2){ 
 	       // <a1^+a2> = [a1^+]*[a2]
 	       // storage: <a1A^+a2A>,<a1A^+a2B>  

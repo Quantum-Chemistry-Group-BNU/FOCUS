@@ -5,7 +5,7 @@
 
 namespace ctns{
 
-const bool debug_dot = false;
+const bool debug_dot = true;
 extern const bool debug_dot;
 
 /*
@@ -112,6 +112,8 @@ void oper_dot_opB(const int isym, const bool ifkr, const int k0,
    if(debug_dot) qops['B'][oper_pack(ka,kb)].to_matrix().print("c0^+c1");
    // Bba and Bbb
    if(not ifkr){
+      /*
+      // NOTE: in this case, we can still use Hermicity to reduce b^+a!
       // c[1].dot(a[0])
       // [[0. 0. 0. 0.]
       //  [0. 0. 0. 0.]
@@ -124,6 +126,7 @@ void oper_dot_opB(const int isym, const bool ifkr, const int k0,
       qt2ba.from_matrix(matba);
       qops['B'][oper_pack(kb,ka)] = qt2ba;
       if(debug_dot) qops['B'][oper_pack(kb,ka)].to_matrix().print("c1^+c0");
+      */
       // c[1].dot(a[1])
       // [[0. 0. 0. 0.]
       //  [0. 1. 0. 0.]
@@ -233,7 +236,7 @@ void oper_dot_opH(const int isym, const bool ifkr, const int k0,
                    + int1e.get(ka,ka)*qBaa + int1e.get(kb,kb)*qBaa.K(2);
                    + int1e.get(ka,kb)*qBab + int1e.get(kb,ka)*qBab.K(1);
    }else{
-      const auto& qBba = qops['B'][oper_pack(kb,ka)];
+      const auto& qBba = qops['B'][oper_pack(ka,kb)].H(); // recovered by Hermicity
       const auto& qBbb = qops['B'][oper_pack(kb,kb)];
       if(isym == 1){
          qops['H'][0] = int2e.get(ka,kb,ka,kb)*qt2abba
@@ -316,7 +319,7 @@ void oper_dot_opQ(const int isym, const bool ifkr, const int k0,
          } // ks
       } // kp
    }else{
-      qt2ba = qops['B'][oper_pack(kb,ka)];
+      qt2ba = qops['B'][oper_pack(ka,kb)].H();
       qt2bb = qops['B'][oper_pack(kb,kb)];
       if(isym == 1){
          for(int kp : krest){
