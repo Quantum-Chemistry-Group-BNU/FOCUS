@@ -39,8 +39,8 @@ int tests::test_ctns(){
    input::read(schd,fname);
 
    // we will use DTYPE to control Hnr/Hrel 
-   using DTYPE = complex<double>;
    //using DTYPE = double; // to do -> test more
+   using DTYPE = complex<double>;
   
    // read integral
    integral::two_body<DTYPE> int2e;
@@ -79,9 +79,9 @@ int tests::test_ctns(){
    topo.print();
 
    // 2. initialize right canonical form from SCI wavefunction
-   //ctns::comb<ctns::kind::rN> icomb(topo);
-   ctns::comb<ctns::kind::cNK> icomb(topo);
+   //ctns::comb<ctns::kind::rNSz> icomb(topo);
    //ctns::comb<ctns::kind::cN> icomb(topo);
+   ctns::comb<ctns::kind::cNK> icomb(topo);
 
    if(!schd.combload){
       ctns::rcanon_init(icomb, sci_space, vs, schd.thresh_proj);

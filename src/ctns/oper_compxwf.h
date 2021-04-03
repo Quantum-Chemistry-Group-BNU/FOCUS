@@ -7,6 +7,139 @@ namespace ctns{
  compute complementary operators in the superblock acting on a wavefunction
 */
  
+// opwf = (sum_{ij} oij*a1^(d)[i]*a2^(d)[i])*wf
+template <typename Tm>
+void oper_op1op2xwf_nkr(qtensor3<Tm>& opwf,
+		        const std::string& superblock,
+		        const qtensor3<Tm>& site,
+		        oper_map<Tm>& qops1C,
+		        oper_map<Tm>& qops2C,
+		        std::map<std::pair<int,int>,Tm>& oij,
+			const bool ifdagger1,
+			const bool ifdagger2,
+			const bool ifdagger){
+   Tm sgn = ifdagger? -1.0 : 1.0;
+   const auto& sym_op = opwf.sym;
+   const auto& qrow1 = (qops1C.begin()->second).qrow;
+   const auto& qcol1 = (qops1C.begin()->second).qcol;
+   const auto& qrow2 = (qops2C.begin()->second).qrow;
+   const auto& qcol2 = (qops2C.begin()->second).qcol;
+   // sum_i a1[i] * (sum_j oij a2[j])
+   if(qops1C.size() <= qops2C.size()){
+      for(const auto& op1C : qops1C){
+         int i = op1C.first;
+	 const auto& op1 = ifdagger1? op1C.second : op1C.second.H();
+	 // tmp_op2 = sum_j oij a2[j]
+	 qtensor2<Tm> tmp_op2(sym_op-op1.sym, qrow2, qcol2);
+	 for(const auto& op2C : qops2C){
+	    bool symAllowed = tmp_op2.sym == (ifdagger2? op2C.second.sym : -op2C.second.sym); 
+	    if(not symAllowed) continue;
+	    int j = op2C.first;
+	    const auto& op2 = ifdagger2? op2C.second : op2C.second.H();	
+	    tmp_op2 += oij[std::make_pair(i,j)]*op2;
+	 }
+	 opwf += sgn*oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger); 
+      }
+   // sum_j (sum_i oij a1[i]) * a2[j]
+   }else{
+      // this part appears when the branch is larger 
+      for(const auto& op2C : qops2C){
+	 int j = op2C.first;
+	 const auto& op2 = ifdagger2? op2C.second : op2C.second.H();
+	 // tmp_op1 = sum_i oij a1[i]
+	 qtensor2<Tm> tmp_op1(sym_op-op2.sym, qrow1, qcol1);
+         for(const auto& op1C : qops1C){
+	    bool symAllowed = tmp_op1.sym == (ifdagger1? op1C.second.sym : -op1C.second.sym);
+	    if(not symAllowed) continue;
+	    int i = op1C.first;
+	    const auto& op1 = ifdagger1? op1C.second : op1C.second.H();
+	    tmp_op1 += oij[std::make_pair(i,j)]*op1;
+	 }
+	 opwf += sgn*oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
+      }
+   }
+}
+
+// TRS version: only unbar part of creation ops is stored
+// opwf = (sum_{ij}oij*a1^(d)[i]*a2^(d)[i])*wf
+template <typename Tm>
+void oper_op1op2xwf_kr(qtensor3<Tm>& opwf,
+		       const std::string& superblock,
+		       const qtensor3<Tm>& site,
+		       oper_map<Tm>& qops1C,
+		       oper_map<Tm>& qops2C,
+		       std::map<std::pair<int,int>,Tm>& oij,
+		       const bool ifdagger1,
+		       const bool ifdagger2,
+		       const bool ifdagger){
+   Tm sgn = ifdagger? -1.0 : 1.0;
+   const auto& sym_op = opwf.sym;
+   const auto& qrow1 = (qops1C.begin()->second).qrow;
+   const auto& qcol1 = (qops1C.begin()->second).qcol;
+   const auto& qrow2 = (qops2C.begin()->second).qrow;
+   const auto& qcol2 = (qops2C.begin()->second).qcol;
+   // sum_i a1[i] * (sum_j oij a2[j])
+   if(qops1C.size() <= qops2C.size()){
+      for(const auto& op1C : qops1C){
+         int ia = op1C.first, ib = ia+1;
+	 const auto& op1a = ifdagger1? op1C.second : op1C.second.H();
+	 const auto& op1b = op1a.K(1);
+	 // top2 = sum_j oij a2[j]
+	 qtensor2<Tm> top2a(sym_op-op1a.sym, qrow2, qcol2);
+	 qtensor2<Tm> top2b(sym_op-op1b.sym, qrow2, qcol2);
+	 for(const auto& op2C : qops2C){
+	    int ja = op2C.first, jb = ja+1;
+	    const auto& op2a = ifdagger2? op2C.second : op2C.second.H();
+            const auto& op2b = op2a.K(1);	    
+	    top2a += oij[std::make_pair(ia,ja)]*op2a + oij[std::make_pair(ia,jb)]*op2b;
+	    top2b += oij[std::make_pair(ib,ja)]*op2a + oij[std::make_pair(ib,jb)]*op2b;
+	 }
+	 opwf += sgn*(oper_kernel_OOwf(superblock,site,op1a,top2a,1,ifdagger)
+		     +oper_kernel_OOwf(superblock,site,op1b,top2b,1,ifdagger));
+      }
+   // sum_j (sum_i oij a1[i]) * a2[j]
+   }else{
+      // this part appears when the branch is larger 
+      for(const auto& op2C : qops2C){
+	 int ja = op2C.first, jb = ja+1;
+	 const auto& op2a = ifdagger2? op2C.second : op2C.second.H();
+	 const auto& op2b = op2a.K(1);
+	 // top1 = sum_i oij a1[i]
+	 qtensor2<Tm> top1a(sym_op-op2a.sym, qrow1, qcol1);
+	 qtensor2<Tm> top1b(sym_op-op2b.sym, qrow1, qcol1);
+         for(const auto& op1C : qops1C){
+	    int ia = op1C.first, ib = ia+1;
+	    const auto& op1a = ifdagger1? op1C.second : op1C.second.H();
+	    const auto& op1b = op1a.K(1);
+	    top1a += oij[std::make_pair(ia,ja)]*op1a + oij[std::make_pair(ib,ja)]*op1b;
+	    top1b += oij[std::make_pair(ia,jb)]*op1a + oij[std::make_pair(ib,jb)]*op1b;
+	 }
+	 opwf += sgn*(oper_kernel_OOwf(superblock,site,top1a,op2a,1,ifdagger)
+	             +oper_kernel_OOwf(superblock,site,top1b,op2b,1,ifdagger));
+      }
+   }
+}
+
+template <typename Tm>
+void oper_op1op2xwf(const bool& ifkr,
+		    qtensor3<Tm>& opwf,
+		    const std::string& superblock,
+		    const qtensor3<Tm>& site,
+		    oper_map<Tm>& qops1C,
+		    oper_map<Tm>& qops2C,
+		    std::map<std::pair<int,int>,Tm>& oij,
+		    const bool ifdagger1,
+		    const bool ifdagger2,
+		    const bool ifdagger){
+   if(not ifkr){
+      oper_op1op2xwf_nkr(opwf, superblock, site, qops1C, qops2C, 
+		         oij, ifdagger1, ifdagger2, ifdagger);
+   }else{
+      oper_op1op2xwf_kr(opwf, superblock, site, qops1C, qops2C, 
+		        oij, ifdagger1, ifdagger2, ifdagger);
+   }
+}
+
 // kernel for computing renormalized P|ket> or P^+|ket> 
 template <typename Tm>
 qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
@@ -50,89 +183,29 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
    assert(qops2.find('P') != qops2.end());
    opwf += oper_kernel_IOwf(superblock,site,qops2['P'].at(index),0,ifdagger);
    // 3. -<pq||s1r2> as1*ar2
-   Tm sgn = ifdagger? -1.0 : 1.0; // (aras)^+ = as^+ar^+
+   std::map<std::pair<int,int>,Tm> oij;
    if(not ifkr){
-      if(qops1['C'].size() <= qops2['C'].size()){
-         // s1 * (-<pq||s1r2> r2) 
-         for(const auto& op1C : qops1['C']){
-            int s1 = op1C.first;
-	    const auto& op1 = op1C.second.H();
-            // op2 = -sum_r2 <pq||s1r2> r2
-	    qsym rsym = sym_op - op1.sym;
-	    const auto& it = qops2['C'].begin()->second;
-	    qtensor2<Tm> tmp_op2(rsym, it.qrow, it.qcol);
-            for(const auto& op2C : qops2['C']){
-	       if(tmp_op2.sym != -op2C.second.sym) continue;
-               int r2 = op2C.first;
-	       const auto& op2 = op2C.second.H();
-	       tmp_op2 -= int2e.get(p,q,s1,r2)*op2;
-            }
-	    opwf += sgn*oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
-         }
-      }else{
-         // this part appears when the branch is larger 
-         // (-<pq||s1r2> s1) * r2
+      for(const auto& op1C : qops1['C']){
+         int s1 = op1C.first;
          for(const auto& op2C : qops2['C']){
 	    int r2 = op2C.first;
-	    const auto& op2 = op2C.second.H();
-	    // op1 = -<pq||s1r2> s1
-	    qsym rsym = sym_op - op2.sym;
-	    const auto& it = qops1['C'].begin()->second;
-	    qtensor2<Tm> tmp_op1(rsym, it.qrow, it.qcol);
-            for(const auto& op1C : qops1['C']){
-	       if(tmp_op1.sym != -op1C.second.sym) continue;
-	       int s1 = op1C.first;
-	       const auto& op1 = op1C.second.H();
-	       tmp_op1 -= int2e.get(p,q,s1,r2)*op1;
-	    }
-	    opwf += sgn*oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
+	    oij[std::make_pair(s1,r2)] = -int2e.get(p,q,s1,r2);
 	 }
       }
    }else{
-      // using time-reversal symmetry
-      if(qops1['C'].size() <= qops2['C'].size()){
-         // s1 * (-<pq||s1r2> r2) 
-         for(const auto& op1C : qops1['C']){
-            int s1a = op1C.first, s1b = s1a+1;
-            const auto& op1a = op1C.second.H();
-	    const auto& op1b = op1a.K(1);
-            // op2 = -<pq||s1r2> r2
-	    const auto& it = qops2['C'].begin()->second;
-            qtensor2<Tm> tmp_op2a(qsym(-1), it.qrow, it.qcol);
-            qtensor2<Tm> tmp_op2b(qsym(-1), it.qrow, it.qcol);
-            for(const auto& op2C : qops2['C']){
-               int r2a = op2C.first, r2b = r2a+1;
-               const auto& op2a = op2C.second.H(); 
-	       const auto& op2b = op2a.K(1);
-               tmp_op2a -= int2e.get(p,q,s1a,r2a)*op2a + int2e.get(p,q,s1a,r2b)*op2b;
-               tmp_op2b -= int2e.get(p,q,s1b,r2a)*op2a + int2e.get(p,q,s1b,r2b)*op2b;
-            }
-            opwf += sgn*(oper_kernel_OOwf(superblock,site,op1a,tmp_op2a,1,ifdagger)
-                        +oper_kernel_OOwf(superblock,site,op1b,tmp_op2b,1,ifdagger));
+      for(const auto& op1C : qops1['C']){
+         int s1a = op1C.first, s1b = s1a+1;
+         for(const auto& op2C : qops2['C']){
+	    int r2a = op2C.first, r2b = r2a+1;
+	    oij[std::make_pair(s1a,r2a)] = -int2e.get(p,q,s1a,r2a);
+	    oij[std::make_pair(s1a,r2b)] = -int2e.get(p,q,s1a,r2b);
+	    oij[std::make_pair(s1b,r2a)] = -int2e.get(p,q,s1b,r2a);
+	    oij[std::make_pair(s1b,r2b)] = -int2e.get(p,q,s1b,r2b);
 	 }
-      }else{
-         // this part appears when the branch is larger 
-         // (-<pq||s1r2> s1) * r2
-	 for(const auto& op2C : qops2['C']){
-            int r2a = op2C.first, r2b = r2a+1;
-	    const auto& op2a = op2C.second.H();
-	    const auto& op2b = op2a.K(1);
-            // op1 = -<pq||s1r2> s1
-	    const auto& it = qops1['C'].begin()->second;
-            qtensor2<Tm> tmp_op1a(qsym(-1,0), it.qrow, it.qcol);
-            qtensor2<Tm> tmp_op1b(qsym(-1,0), it.qrow, it.qcol);
-            for(const auto& op1C : qops1['C']){
-               int s1a = op1C.first, s1b = s1a+1;
-	       const auto& op1a = op1C.second.H();
-	       const auto& op1b = op1a.K(1);
-	       tmp_op1a -= int2e.get(p,q,s1a,r2a)*op1a + int2e.get(p,q,s1b,r2a)*op1b;
-	       tmp_op1b -= int2e.get(p,q,s1a,r2b)*op1a + int2e.get(p,q,s1b,r2b)*op1b;
-            }
-            opwf += sgn*(oper_kernel_OOwf(superblock,site,tmp_op1a,op2a,1,ifdagger)
-                        +oper_kernel_OOwf(superblock,site,tmp_op1b,op2b,1,ifdagger));
-         }
       }
-   } // ifkr
+   }
+   oper_op1op2xwf(ifkr,opwf,superblock,site,qops1['C'],qops2['C'],
+		  oij,false,false,ifdagger);
    return opwf;
 }
 
@@ -168,7 +241,6 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
    }
    qsym sym_opwf = ifdagger? -sym_op+site.sym : sym_op+site.sym;
    qtensor3<Tm> opwf(sym_opwf, site.qmid, site.qrow, site.qcol, site.dir);
-/*
    //
    // Qps = <pq||sr> aq^+ar
    //     = <pq1||sr1> Bq1r1 	=> Qps^1
@@ -182,87 +254,37 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
    // 2. I1*Q2
    assert(qops2.find('Q') != qops2.end());
    opwf += oper_kernel_IOwf(superblock,site,qops2['Q'].at(index),0,ifdagger);
-   // 3. <pq1||sr2> aq1^+*ar2 
-   // 4. -<pq2||sr1> ar1*aq2^+
-   const auto& qrow1 = qops1['Q'].at(index).qrow;
-   const auto& qcol1 = qops1['Q'].at(index).qcol;
-   const auto& qrow2 = qops2['Q'].at(index).qrow;
-   const auto& qcol2 = qops2['Q'].at(index).qcol;
-   double sgn = ifdagger? -1.0 : 1.0; // (aras)^+ = as^+ar^+
-   if(Htype){ 
-
-      if(qops1['C'].size() < qops2['C'].size()){
-         // 3. q1^+ * (<pq1||sr2> r2)
-         for(const auto& op1C : qops1['C']){
-            int q1 = op1C.first, q1A = 2*q1, q1B = q1A+1;
-            const auto& op1c = op1C.second;
-            // op2 = <pq1||sr2> r2
-	    qtensor2<Tm> op2A(qsym(-1,0), qrow2, qcol2);
-	    qtensor2<Tm> op2B(qsym(-1,0), qrow2, qcol2);
-            for(const auto& op2C : qops2['C']){
-               int r2 = op2C.first, r2A = 2*r2, r2B = r2A+1;
-	       const auto& op2a = op2C.second.H();
-               op2A += int2e.get(p,q1A,s,r2A)*op2a + int2e.get(p,q1A,s,r2B)*op2a.K(1);
-	       op2B += int2e.get(p,q1B,s,r2A)*op2a + int2e.get(p,q1B,s,r2B)*op2a.K(1);
-            }
-            opwf += sgn*(oper_kernel_OOwf(superblock,site,op1c,op2A,1,ifdagger)
-			+oper_kernel_OOwf(superblock,site,op1c.K(1),op2B,1,ifdagger));
-         }
-         // 4. r1 * (-<pq2||sr1> q2^+)
-         for(const auto& op1C : qops1['C']){
-            int r1 = op1C.first, r1A = 2*r1, r1B = r1A+1;
-            const auto& op1a = op1C.second.H();
-            // op2 = -<pq2||sr1> q2^+
-	    qtensor2<Tm> op2A(qsym(1,0), qrow2, qcol2);
-	    qtensor2<Tm> op2B(qsym(1,0), qrow2, qcol2);
-            for(const auto& op2C : qops2['C']){
-               int q2 = op2C.first, q2A = 2*q2, q2B = q2A+1;
-	       const auto& op2c = op2C.second;
-	       op2A -= int2e.get(p,q2A,s,r1A)*op2c + int2e.get(p,q2B,s,r1A)*op2c.K(1);
-	       op2B -= int2e.get(p,q2A,s,r1B)*op2c + int2e.get(p,q2B,s,r1B)*op2c.K(1);
-            }
-            opwf += sgn*(oper_kernel_OOwf(superblock,site,op1a,op2A,1,ifdagger)
-			+oper_kernel_OOwf(superblock,site,op1a.K(1),op2B,1,ifdagger));
-         }
-      }else{
-         // 3. (<pq1||sr2> q1^+) * r2
+   // 3. <pq1||sr2> aq1^+*ar2 &  4. -<pr2||sq1> aq1*ar2^+
+   std::map<std::pair<int,int>,Tm> o1ij, o2ij;
+   if(not ifkr){
+      for(const auto& op1C : qops1['C']){
+         int q1 = op1C.first;
          for(const auto& op2C : qops2['C']){
-            int r2 = op2C.first, r2A = 2*r2, r2B = r2A+1;
-            const auto& op2a = op2C.second.H();
-            // op1 = <pq1||sr2> q1^+
-            qtensor2<Tm> op1A(qsym(1,0), qrow1, qcol1);
-            qtensor2<Tm> op1B(qsym(1,0), qrow1, qcol1);
-            for(const auto& op1C : qops1['C']){
-               int q1 = op1C.first, q1A = 2*q1, q1B = q1A+1;
-	       const auto& op1c = op1C.second;
-	       op1A += int2e.get(p,q1A,s,r2A)*op1c + int2e.get(p,q1B,s,r2A)*op1c.K(1);
-	       op1B += int2e.get(p,q1A,s,r2B)*op1c + int2e.get(p,q1B,s,r2B)*op1c.K(1);
-            }
-            opwf += sgn*(oper_kernel_OOwf(superblock,site,op1A,op2a,1,ifdagger)
-			+oper_kernel_OOwf(superblock,site,op1B,op2a.K(1),1,ifdagger));    
+            int r2 = op2C.first;
+            o1ij[std::make_pair(q1,r2)] =  int2e.get(p,q1,s,r2);
+	    o2ij[std::make_pair(q1,r2)] = -int2e.get(p,r2,s,q1);
          }
-         // 4. (-<pq2||sr1> r1) * q2^+
-         for(const auto& op2C : qops2['C']){
-            int q2 = op2C.first, q2A = 2*q2, q2B = q2A+1;
-            const auto& op2c = op2C.second;
-            // op1 = -<pq2||sr1> r1
-            qtensor2<Tm> op1A(qsym(-1,0), qrow1, qcol1);
-            qtensor2<Tm> op1B(qsym(-1,0), qrow1, qcol1);
-            for(const auto& op1C : qops1['C']){
-               int r1 = op1C.first, r1A = 2*r1, r1B = r1A+1;
-	       const auto& op1a = op1C.second.H();
-	       op1A -= int2e.get(p,q2A,s,r1A)*op1a + int2e.get(p,q2A,s,r1B)*op1a.K(1);
-	       op1B -= int2e.get(p,q2B,s,r1A)*op1a + int2e.get(p,q2B,s,r1B)*op1a.K(1);
-            }
-            opwf += sgn*(oper_kernel_OOwf(superblock,site,op1A,op2c,1,ifdagger)
-			+oper_kernel_OOwf(superblock,site,op1B,op2c.K(1),1,ifdagger));
-         }
-      }
-
+      }	
    }else{
-
-   } // Htype
-*/
+      for(const auto& op1C : qops1['C']){
+         int q1a = op1C.first, q1b = q1a+1;
+         for(const auto& op2C : qops2['C']){
+            int r2a = op2C.first, r2b = r2a+1;
+            o1ij[std::make_pair(q1a,r2a)] =  int2e.get(p,q1a,s,r2a);
+            o1ij[std::make_pair(q1a,r2b)] =  int2e.get(p,q1a,s,r2b);
+            o1ij[std::make_pair(q1b,r2a)] =  int2e.get(p,q1b,s,r2a);
+            o1ij[std::make_pair(q1b,r2b)] =  int2e.get(p,q1b,s,r2b);
+	    o2ij[std::make_pair(q1a,r2a)] = -int2e.get(p,r2a,s,q1a);
+	    o2ij[std::make_pair(q1a,r2b)] = -int2e.get(p,r2b,s,q1a);
+	    o2ij[std::make_pair(q1b,r2a)] = -int2e.get(p,r2a,s,q1b);
+	    o2ij[std::make_pair(q1b,r2b)] = -int2e.get(p,r2b,s,q1b);
+         }
+      }	
+   }
+   oper_op1op2xwf(ifkr,opwf,superblock,site,qops1['C'],qops2['C'],
+		  o1ij,true,false,ifdagger);
+   oper_op1op2xwf(ifkr,opwf,superblock,site,qops1['C'],qops2['C'],
+		  o2ij,false,true,ifdagger);
    return opwf;
 }
 

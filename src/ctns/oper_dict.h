@@ -7,9 +7,11 @@
 
 namespace ctns{
 
-// container for operators	
+// container for operators
 template <typename Tm>
-using oper_dict = std::map<char,std::map<int,qtensor2<Tm>>>;
+using oper_map = std::map<int,qtensor2<Tm>>;
+template <typename Tm>
+using oper_dict = std::map<char,oper_map<Tm>>;
 
 // pack two indices
 const int kpack = 1000;
