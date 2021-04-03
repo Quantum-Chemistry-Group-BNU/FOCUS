@@ -15,7 +15,7 @@ void oper_renorm_opC(const std::string& superblock,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
 		     const bool debug=false){
-   if(debug) std::cout << "ctns::oper_renorm_opC" << std::endl;
+   if(debug) std::cout << "\nctns::oper_renorm_opC" << std::endl;
    auto t0 = tools::get_time();
    // 1. p1^+*I2 
    for(const auto& op1C : qops1['C']){
@@ -47,7 +47,7 @@ void oper_renorm_opA(const std::string& superblock,
 		     oper_dict<Tm>& qops,
 		     const bool& ifkr,
 		     const bool debug=false){
-   if(debug) std::cout << "ctns::oper_renorm_opA" << std::endl;
+   if(debug) std::cout << "\nctns::oper_renorm_opA" << std::endl;
    auto t0 = tools::get_time();
    // 1. p1^+q1^+ * I2
    for(const auto& op1A : qops1['A']){
@@ -126,7 +126,7 @@ void oper_renorm_opB(const std::string& superblock,
 		     oper_dict<Tm>& qops,
 		     const bool& ifkr,
 		     const bool debug=false){
-   if(debug) std::cout << "ctns::oper_renorm_opB" << std::endl;
+   if(debug) std::cout << "\nctns::oper_renorm_opB" << std::endl;
    auto t0 = tools::get_time();
    // 1. p1^+q1 * I2
    for(const auto& op1B : qops1['B']){
@@ -202,12 +202,13 @@ void oper_renorm_opP(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const int& isym,
 		     const bool& ifkr,
 		     const std::vector<int>& ksupp,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e,
 		     const bool debug=false){
-   if(debug) std::cout << "ctns::oper_renorm_opP" << std::endl;
+   if(debug) std::cout << "\nctns::oper_renorm_opP" << std::endl;
    auto t0 = tools::get_time();
    // initialization for Ppq = <pq||sr> aras [r>s] (p<q)
    std::vector<int> index;
@@ -216,10 +217,10 @@ void oper_renorm_opP(const std::string& superblock,
       for(int kq : ksupp){
 	 int qa = 2*kq, qb = qa+1;
 	 //
-	 // tricky part: determine the storage pattern for Ppq
+	 // tricky part: determine the storage pattern for Ppq for p,q in ksupp
 	 //
 	 if(kp < kq){
-            index.push_back(oper_pack(pa,qb)); // Paa 
+            index.push_back(oper_pack(pa,qa)); // Paa 
 	    index.push_back(oper_pack(pa,qb)); // Pab
 	    if(not ifkr){
 	       // since if kp<kq, pb<qa and pb<qb hold
@@ -232,7 +233,7 @@ void oper_renorm_opP(const std::string& superblock,
       }
    }
    for(const int pq : index){
-      auto Hwf = oper_compxwf_opP(superblock,site,qops1,qops2,ifkr,int2e,int1e,pq);
+      auto Hwf = oper_compxwf_opP(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,pq);
       qops['P'][pq] = oper_kernel_renorm(superblock,site,Hwf);
    }
    auto t1 = tools::get_time();
@@ -248,12 +249,13 @@ void oper_renorm_opQ(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const int& isym,
 		     const bool& ifkr,
 		     const std::vector<int>& ksupp,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e,
 		     const bool debug=false){
-   if(debug) std::cout << "ctns::oper_renorm_opQ" << std::endl;
+   if(debug) std::cout << "\nctns::oper_renorm_opQ" << std::endl;
    auto t0 = tools::get_time();
    // initialization for Qps = <pq||sr> aq^+ar
    std::vector<int> index;
@@ -274,7 +276,7 @@ void oper_renorm_opQ(const std::string& superblock,
       }
    }
    for(const int ps : index){
-      auto Hwf = oper_compxwf_opQ(superblock,site,qops1,qops2,ifkr,int2e,int1e,ps);
+      auto Hwf = oper_compxwf_opQ(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,ps);
       qops['Q'][ps] = oper_kernel_renorm(superblock,site,Hwf);
    }
    auto t1 = tools::get_time();
@@ -290,12 +292,13 @@ void oper_renorm_opS(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const int& isym,
 		     const bool& ifkr,
 		     const std::vector<int>& ksupp,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e,
 		     const bool debug=false){
-   if(debug) std::cout << "ctns::oper_renorm_opS" << std::endl;
+   if(debug) std::cout << "\nctns::oper_renorm_opS" << std::endl;
    auto t0 = tools::get_time();
    // initialization for 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    std::vector<int> index;
@@ -305,7 +308,7 @@ void oper_renorm_opS(const std::string& superblock,
       if(not ifkr) index.push_back(pb);
    }
    for(const int p : index){
-      auto Hwf = oper_compxwf_opS(superblock,site,qops1,qops2,ifkr,int2e,int1e,p);
+      auto Hwf = oper_compxwf_opS(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,p);
       qops['S'][p] = oper_kernel_renorm(superblock,site,Hwf);
    }
    auto t1 = tools::get_time();
@@ -321,14 +324,15 @@ void oper_renorm_opH(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
+		     const int& isym,
 		     const bool& ifkr,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e,
 		     const bool debug=false){
-   if(debug) std::cout << "ctns::oper_renorm_opH" << std::endl;
+   if(debug) std::cout << "\nctns::oper_renorm_opH" << std::endl;
    auto t0 = tools::get_time();
    
-   auto Hwf = oper_compxwf_opH(superblock,site,qops1,qops2,ifkr,int2e,int1e);
+   auto Hwf = oper_compxwf_opH(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e);
    qops['H'][0] = oper_kernel_renorm(superblock,site,Hwf);
    
    auto t1 = tools::get_time();
@@ -383,7 +387,6 @@ void oper_renorm_opAll(const std::string& superblock,
    // B
    oper_renorm_opB(superblock, site, qops1, qops2, qops, ifkr, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'B');
-/*  
    // P
    oper_renorm_opP(superblock, site, qops1, qops2, qops, isym, ifkr, ksupp, int2e, int1e, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'P', int2e, int1e);
@@ -405,7 +408,9 @@ void oper_renorm_opAll(const std::string& superblock,
       std::cout << "error: H-H.H() is too large! diffH=" << diffH << std::endl;
       exit(1);
    }
-*/
+  
+   exit(1);
+
    auto t1 = tools::get_time();
    if(debug){
       std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 

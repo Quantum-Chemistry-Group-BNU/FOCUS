@@ -79,6 +79,7 @@ int tests::test_ctns(){
    topo.print();
 
    // 2. initialize right canonical form from SCI wavefunction
+   //ctns::comb<ctns::kind::rNSz> icomb(topo);
    //ctns::comb<ctns::kind::cNK> icomb(topo);
    ctns::comb<ctns::kind::cN> icomb(topo);
 

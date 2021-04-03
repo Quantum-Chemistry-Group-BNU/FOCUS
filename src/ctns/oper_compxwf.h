@@ -19,28 +19,25 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
 	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 		              const bool ifdagger=false){
-/*
    auto pq = oper_unpack(index);
    int p = pq.first,  kp = p/2, spin_p = p%2;
    int q = pq.second, kq = q/2, spin_q = q%2;
-   // determine symmetry of Paa/Pab
+   // determine symmetry of Ppq
    qsym sym_op;
    if(isym == 1){
-      qsym_op = qsym(-2,0);
+      sym_op = qsym(-2,0);
    }else if(isym == 2){
-
       if(spin_p == 0 && spin_q == 0){
-         symP = (isym==1)? qsym(-2,0) : qsym(-2,-2); // Paa
+         sym_op = qsym(-2,-2); // Paa
       }else if(spin_p == 1 && spin_q == 1){
-         symP = (isym==1)? qsym(-2,0) : qsym(-2,0); // Pbb
+         sym_op = qsym(-2, 2); // Pbb
       }else{
-         symP = qsym(-2,-1); // Pos
+         sym_op = qsym(-2, 0); // Pos
       }
    }
-
-   qsym sym_op = (!Htype & spincase==0)? qsym(-2,-2) : qsym(-2,0);
    qsym sym_opwf = ifdagger? -sym_op+site.sym : sym_op+site.sym;
    qtensor3<Tm> opwf(sym_opwf, site.qmid, site.qrow, site.qcol, site.dir);
+
    // 
    // Ppq = 1/2<pq||sr> aras  (p<q)
    //     = <pq||s1r1> As1r1 [r>s] => Ppq^1
@@ -53,6 +50,7 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
    // 2. I1*P2
    assert(qops2.find('P') != qops2.end());
    opwf += oper_kernel_IOwf(superblock,site,qops2['P'].at(index),0,ifdagger);
+/*
    // 3. -<pq||s1r2> as1*ar2
    const auto& qrow1 = qops1['P'].at(index).qrow;
    const auto& qcol1 = qops1['P'].at(index).qcol;
@@ -147,8 +145,8 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
 */
 /*
    } // Htype
-   return opwf;
 */
+   return opwf;
 }
 
 // kernel for computing renormalized Q|ket> or Q^+|ket>
@@ -163,16 +161,27 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
 	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 			      const bool ifdagger=false){
-/*
-   const bool Htype = tools::is_complex<Tm>();
-   auto sps = oper_unpack(index);
-   int spincase = std::get<0>(sps);
-   int p = 2*std::get<1>(sps);
-   int s = 2*std::get<2>(sps)+spincase;
-   // determine symmetry of Qaa/Qab
-   qsym sym_op = (!Htype & spincase==1)? qsym(0,-1) : qsym(0,0);
+   auto ps = oper_unpack(index);
+   int p = ps.first,  kp = p/2, spin_p = p%2;
+   int s = ps.second, ks = s/2, spin_s = s%2;
+   // determine symmetry of Qps
+   qsym sym_op;
+   if(isym == 1){
+      sym_op = qsym(0,0);
+   }else if(isym == 2){
+      if(spin_p == 0 && spin_s == 0){
+         sym_op = qsym(0, 0); // Qaa
+      }else if(spin_p == 1 && spin_s == 1){
+         sym_op = qsym(0, 0); // Qbb
+      }else if(spin_p == 0 && spin_s == 1){
+         sym_op = qsym(0,-2); // Qab 
+      }else if(spin_p == 1 && spin_s == 0){
+         sym_op = qsym(0, 2); // Qba 
+      }
+   }
    qsym sym_opwf = ifdagger? -sym_op+site.sym : sym_op+site.sym;
    qtensor3<Tm> opwf(sym_opwf, site.qmid, site.qrow, site.qcol, site.dir);
+/*
    //
    // Qps = <pq||sr> aq^+ar
    //     = <pq1||sr1> Bq1r1 	=> Qps^1
@@ -266,8 +275,8 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
    }else{
 
    } // Htype
-   return opwf;
 */
+   return opwf;
 }
 
 // kernel for computing renormalized Sp|ket> [6 terms]
@@ -280,14 +289,19 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 			      const bool& ifkr,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e,
-		              const int kp,
+		              const int index,
 			      const bool ifdagger=false){
-/*
-   const bool Htype = tools::is_complex<Tm>();
+   int p = index, kp = p/2, spin_p = p%2;
    // determine symmetry
-   qsym sym_op = Htype? qsym(-1,0) : qsym(-1,-1); // Sa
+   qsym sym_op;
+   if(isym == 1){
+      sym_op = qsym(-1,0);
+   }else if(isym == 2){
+      sym_op = (spin_p==0)? qsym(-1,-1) : qsym(-1,1);
+   }
    qsym sym_opwf = ifdagger? -sym_op+site.sym : sym_op+site.sym;  
    qtensor3<Tm> opwf(sym_opwf, site.qmid, site.qrow, site.qcol, site.dir);
+/*
    //
    // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    //    = Sp^1 + Sp^2 (S exists in both blocks)
@@ -353,8 +367,8 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
       opwf += oper_kernel_OOwf(superblock,site,op1a,op2QAA,0,ifdagger)
 	    + oper_kernel_OOwf(superblock,site,op1a.K(1),op2QAB,0,ifdagger);
    }
-   return opwf;
 */
+   return opwf;
 }
 
 // kernel for computing renormalized H|ket>
@@ -367,9 +381,9 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
 			      const bool& ifkr,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e){
-/*
    const bool dagger = true;
    qtensor3<Tm> opwf(site.sym, site.qmid, site.qrow, site.qcol, site.dir);
+/*
    //
    // H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
    //   = H1 + H2
@@ -469,8 +483,8 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
          opwf += wt*oper_kernel_OOwf(superblock,site,op1.K(0),op2.K(0),0,dagger);
       }
    }
-   return opwf;
 */
+   return opwf;
 }
 
 } // ctns

@@ -5,7 +5,7 @@
 
 namespace ctns{
 
-const bool debug_dot = true;
+const bool debug_dot = false;
 extern const bool debug_dot;
 
 /*
