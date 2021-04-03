@@ -69,14 +69,29 @@ struct qtensor3{
       qtensor3<Tm>& operator +=(const qtensor3<Tm>& qt);
       qtensor3<Tm>& operator -=(const qtensor3<Tm>& qt);
       qtensor3<Tm>& operator *=(const Tm fac);
-      friend qtensor3<Tm> operator +(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb);
-      friend qtensor3<Tm> operator -(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb);
-      friend qtensor3<Tm> operator *(const double fac, const qtensor3<Tm>& qt);
-      friend qtensor3<Tm> operator *(const qtensor3<Tm>& qt, const double fac);
-      // for Davidson algorithm
+      friend qtensor3<Tm> operator +(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb){
+         qtensor3<Tm> qt3 = qta;
+         qt3 += qtb;
+         return qt3;
+      }
+      friend qtensor3<Tm> operator -(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb){
+         qtensor3<Tm> qt3 = qta;
+         qt3 -= qtb;
+         return qt3;
+      }
+      friend qtensor3<Tm> operator *(const Tm fac, const qtensor3<Tm>& qt){
+         qtensor3<Tm> qt3 = qt; 
+         qt3 *= fac;
+         return qt3;
+      }
+      friend qtensor3<Tm> operator *(const qtensor3<Tm>& qt, const Tm fac){
+         return fac*qt;
+      }
+      // algebra
       double normF() const;
-      int get_dim() const;
 /*
+      // for Davidson algorithm
+      int get_dim() const;
       //void from_array(const double* array);
       //void to_array(double* array) const;
       // extract real & imag parts
@@ -265,33 +280,6 @@ qtensor3<Tm>& qtensor3<Tm>::operator *=(const Tm fac){
    return *this;
 }
 
-// friend
-template <typename Tm>
-qtensor3<Tm> operator +(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb){
-   qtensor3<Tm> qt3 = qta;
-   qt3 += qtb;
-   return qt3;
-}
-
-template <typename Tm>
-qtensor3<Tm> operator -(const qtensor3<Tm>& qta, const qtensor3<Tm>& qtb){
-   qtensor3<Tm> qt3 = qta;
-   qt3 -= qtb;
-   return qt3;
-}
-
-template <typename Tm>
-qtensor3<Tm> operator *(const double fac, const qtensor3<Tm>& qt){
-   qtensor3<Tm> qt3 = qt; 
-   qt3 *= fac;
-   return qt3;
-}
-
-template <typename Tm>
-qtensor3<Tm> operator *(const qtensor3<Tm>& qt, const double fac){
-   return fac*qt;
-}
-
 // for Davidson algorithm
 template <typename Tm>
 double qtensor3<Tm>::normF() const{
@@ -306,6 +294,7 @@ double qtensor3<Tm>::normF() const{
    return std::sqrt(sum);
 }
 
+/*
 template <typename Tm>
 int qtensor3<Tm>::get_dim() const{
    int dim = 0;
@@ -317,7 +306,6 @@ int qtensor3<Tm>::get_dim() const{
    return dim;
 }
 
-/*
       //void from_array(const double* array);
       //void to_array(double* array) const;
       // extract real & imag parts

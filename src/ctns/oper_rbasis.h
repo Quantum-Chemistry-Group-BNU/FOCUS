@@ -274,7 +274,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    std::cout << "no. of ops = " << nop 
 	     << " failed = " << nfail 
 	     << " maxdiff = " << maxdiff << std::endl;
-   //if(nfail>0 || std::abs(maxdiff)>thresh) exit(1);
+   if(nfail>0 || std::abs(maxdiff)>thresh) exit(1);
 }
 
 // check complementary operators: P, Q, S, H
@@ -636,7 +636,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    std::cout << "no. of ops = " << nop
 	     << " failed = " << nfail 
 	     << " maxdiff = " << maxdiff << std::endl;
-   //if(nfail>0 || std::abs(maxdiff)>thresh) exit(1);
+   if(nfail>0 || std::abs(maxdiff)>thresh) exit(1);
 }
 
 } // ctns

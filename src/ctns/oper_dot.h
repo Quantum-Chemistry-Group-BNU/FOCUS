@@ -255,30 +255,63 @@ void oper_dot_opP(const int isym, const bool ifkr, const int k0,
 		  const integral::two_body<Tm>& int2e,
 		  const std::vector<int>& krest,
 		  oper_dict<Tm>& qops){
-   if(debug_dot) std::cout << "ctns::oper_dot_opP" << std::endl; 
+   if(debug_dot) std::cout << "ctns::oper_dot_opP" << std::endl;   
    int ka = 2*k0, kb = ka+1;
    auto qt2ab = qops['A'][oper_pack(ka,kb)].H();
-   for(int kp : krest){
-      int pa = 2*kp, pb = pa+1;
-      for(int kq : krest){
-	 int qa = 2*kq, qb = qa+1;
-	 // storage scheme for Ppq: according to spatial orbital
-	 if(kp < kq){
-            // P[pA,qA] = <pA,qA||kA,kB> A[kA,kB]^+ (zero in NR)
-	    qops['P'][oper_pack(pa,qa)] = int2e.get(pa,qa,ka,kb)*qt2ab; 
-            // P[pA,qB] = <pA,qB||kA,kB> A[kA,kB]^+
-	    qops['P'][oper_pack(pa,qb)] = int2e.get(pa,qb,ka,kb)*qt2ab;
-	    if(not ifkr){
-               // P[pB,qA] = <pB,qA||kA,kB> A[kA,kB]^+ 
-	       qops['P'][oper_pack(pb,qa)] = int2e.get(pb,qa,ka,kb)*qt2ab; 
-               // P[pB,qB] = <pB,qB||kA,kB> A[kA,kB]^+ (zero in NR)
-	       qops['P'][oper_pack(pb,qb)] = int2e.get(pb,qb,ka,kb)*qt2ab;
-	    }
-	 }else if(kp == kq){
-	    qops['P'][oper_pack(pa,pb)] = int2e.get(pa,pb,ka,kb)*qt2ab;
-	 }
-      } // kq
-   } // kp
+   if(ifkr){
+      for(int kp : krest){
+         int pa = 2*kp, pb = pa+1;
+         for(int kq : krest){
+            int qa = 2*kq, qb = qa+1;
+            // storage scheme for Ppq: according to spatial orbital
+            if(kp < kq){
+               // P[pA,qA] = <pA,qA||kA,kB> A[kA,kB]^+ (zero in NR)
+               qops['P'][oper_pack(pa,qa)] = int2e.get(pa,qa,ka,kb)*qt2ab; 
+               // P[pA,qB] = <pA,qB||kA,kB> A[kA,kB]^+
+               qops['P'][oper_pack(pa,qb)] = int2e.get(pa,qb,ka,kb)*qt2ab;
+            }else if(kp == kq){
+               qops['P'][oper_pack(pa,pb)] = int2e.get(pa,pb,ka,kb)*qt2ab;
+            }
+         } // kq
+      } // kp
+   }else{     
+      if(isym == 1){
+         for(int kp : krest){
+            int pa = 2*kp, pb = pa+1;
+            for(int kq : krest){
+               int qa = 2*kq, qb = qa+1;
+               if(kp < kq){
+                  qops['P'][oper_pack(pa,qa)] = int2e.get(pa,qa,ka,kb)*qt2ab; 
+                  qops['P'][oper_pack(pa,qb)] = int2e.get(pa,qb,ka,kb)*qt2ab;
+                  qops['P'][oper_pack(pb,qa)] = int2e.get(pb,qa,ka,kb)*qt2ab; 
+                  qops['P'][oper_pack(pb,qb)] = int2e.get(pb,qb,ka,kb)*qt2ab;
+               }else if(kp == kq){
+                  qops['P'][oper_pack(pa,pb)] = int2e.get(pa,pb,ka,kb)*qt2ab;
+               }
+            } // kq
+         } // kp
+      }else if(isym == 2){
+         // isym =1 
+         auto qphys = get_qbond_phys(isym);
+         qtensor2<Tm> paa_zero(qsym(-2,-2),qphys,qphys);
+         qtensor2<Tm> pbb_zero(qsym(-2, 2),qphys,qphys);
+         qtensor2<Tm> pab_zero(qsym(-2, 0),qphys,qphys);
+         for(int kp : krest){
+            int pa = 2*kp, pb = pa+1;
+            for(int kq : krest){
+               int qa = 2*kq, qb = qa+1;
+               if(kp < kq){
+                  qops['P'][oper_pack(pa,qa)] = paa_zero;
+                  qops['P'][oper_pack(pa,qb)] = int2e.get(pa,qb,ka,kb)*qt2ab;
+                  qops['P'][oper_pack(pb,qa)] = int2e.get(pb,qa,ka,kb)*qt2ab; 
+                  qops['P'][oper_pack(pb,qb)] = pbb_zero;
+               }else if(kp == kq){
+                  qops['P'][oper_pack(pa,pb)] = int2e.get(pa,pb,ka,kb)*qt2ab;
+               }
+            } // kq
+         } // kp
+      }
+   }
 }
 
 // Qps = <pq||sr> aq^+ar

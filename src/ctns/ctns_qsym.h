@@ -19,6 +19,7 @@ class qsym{
    public:
       // constructors
       qsym(): _ne(0), _tm(0) {};
+      qsym(const int ne): _ne(ne), _tm(0) {};
       qsym(const int ne, const int tm): _ne(ne), _tm(tm) {};
       // assignement
       qsym& operator =(const qsym& sym){
