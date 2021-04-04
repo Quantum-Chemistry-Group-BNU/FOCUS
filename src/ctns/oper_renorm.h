@@ -393,7 +393,6 @@ void oper_renorm_opAll(const std::string& superblock,
    // Q
    oper_renorm_opQ(superblock, site, qops1, qops2, qops, isym, ifkr, ksupp, int2e, int1e, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'Q', int2e, int1e);
-/*
    // S
    oper_renorm_opS(superblock, site, qops1, qops2, qops, isym, ifkr, ksupp, int2e, int1e, debug);
    if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'S', int2e, int1e);
@@ -409,7 +408,7 @@ void oper_renorm_opAll(const std::string& superblock,
       std::cout << "error: H-H.H() is too large! diffH=" << diffH << std::endl;
       exit(1);
    }
-*/  
+
    auto t1 = tools::get_time();
    if(debug){
       std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 

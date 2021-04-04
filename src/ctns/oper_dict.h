@@ -24,21 +24,27 @@ inline std::pair<int,int> oper_unpack(const int ij){
    return std::make_pair(ij%kpack,ij/kpack);
 }
 
-/*
-// weight factor for AP/BQ pairs: ij - packed index
+// ifkr = false
+inline double wfac(const int ij){
+   int i = ij%kpack;
+   int j = ij/kpack;
+   return (i==j)? 0.5 : 1.0; 
+}
+// ifkr = true
 inline double wfacAP(const int ij){
-   int spincase = ij%2;
-   int kp = (ij/2)%kpack;
-   int kq = (ij/2)/kpack;
-   return (spincase==1 && kp==kq)? 0.5 : 1.0; 
+   int i = ij%kpack, ki = i/2, spin_i = i%2;
+   int j = ij/kpack, kj = j/2, spin_j = j%2;
+   if(spin_i == spin_j){
+      return 1.0;
+   }else{
+      return (ki==kj)? 0.5 : 1.0;
+   }
 }
 inline double wfacBQ(const int ij){
-   int spincase = ij%2;
-   int kp = (ij/2)%kpack;
-   int kq = (ij/2)/kpack;
-   return (kp==kq)? 0.5 : 1.0; 
+   int i = ij%kpack, ki = i/2, spin_i = i%2;
+   int j = ij/kpack, kj = j/2, spin_j = j%2;
+   return (ki==kj)? 0.5 : 1.0;
 }
-*/
 
 } // ctns
 

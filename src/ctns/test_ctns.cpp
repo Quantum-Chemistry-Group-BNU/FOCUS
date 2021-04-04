@@ -101,7 +101,7 @@ int tests::test_ctns(){
    Sij_ctns.print("Sij");
    // check
    double diff_ctns = normF(Sij_ctns - Sij_ci);
-   cout << "diff_Sij[ctns] = " << diff_ctns << endl;
+   cout << "\ncheck diff_Sij[ctns] = " << diff_ctns << endl;
    if(diff_ctns > thresh){
       cout << "error: diff_Sij[ctns] > thresh=" << thresh << endl;
       exit(1);
@@ -112,7 +112,7 @@ int tests::test_ctns(){
    Sij_mix.print("Sij_mix");
    // check
    double diff_mix = normF(Sij_mix - Sij_ci);
-   cout << "diff_Sij[mix] = " << diff_mix << endl;
+   cout << "\ncheck diff_Sij[mix] = " << diff_mix << endl;
    if(diff_mix > thresh){
       cout << "error: diff_Sij[mix] > thresh=" << thresh << endl;
       exit(1);
@@ -140,7 +140,7 @@ int tests::test_ctns(){
    auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
    Hij_ctns.print("Hij_ctns",8);
    double diffH = normF(Hij_ctns - Hij_ci);
-   cout << "diffH=" << diffH << endl;
+   cout << "\ncheck diffH=" << diffH << endl;
    if(diffH > thresh){ 
       cout << "error: diffH > thresh=" << thresh << endl;
       exit(1);
