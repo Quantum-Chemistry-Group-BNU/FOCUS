@@ -58,9 +58,9 @@ Compute <I|H|J>
  oper_dict.h
  oper_io.h 
  oper_util.h
- oper_dot.h -> essential
+ oper_dot.h -> essential: dot op
  oper_renorm.h -> renormalization rules
- oper_compxwf.h -> formula: Oc*qt3
+ oper_compxwf.h -> essential: Oc*qt3
  oper_kernel.h -> for tensor operations
  oper_rbasis.h -> debug
 

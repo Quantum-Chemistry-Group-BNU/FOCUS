@@ -18,9 +18,7 @@
 #include "ctns_io.h"
 #include "ctns_ovlp.h"
 #include "ctns_oper.h"
-/*
 #include "ctns_opt.h"
-*/
 #include "tests_ctns.h"
 
 using namespace std;
@@ -80,8 +78,8 @@ int tests::test_ctns(){
 
    // 2. initialize right canonical form from SCI wavefunction
    //ctns::comb<ctns::kind::rNSz> icomb(topo);
-   //ctns::comb<ctns::kind::cN> icomb(topo);
-   ctns::comb<ctns::kind::cNK> icomb(topo);
+   //ctns::comb<ctns::kind::cNK> icomb(topo);
+   ctns::comb<ctns::kind::cN> icomb(topo);
 
    if(!schd.combload){
       ctns::rcanon_init(icomb, sci_space, vs, schd.thresh_proj);
@@ -147,8 +145,8 @@ int tests::test_ctns(){
    }
  
    // 6. optimization from current RCF 
-   /*
    ctns::opt_sweep(icomb, int2e, int1e, ecore, schd);
+   /* 
    // re-compute expectation value for optimized TNS
    auto Sij = ctns::get_Smat(icomb);
    Sij.print("Sij");

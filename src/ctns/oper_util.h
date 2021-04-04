@@ -147,7 +147,7 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    oper_load(fname, qops);
    auto Hmat = qops['H'][0].to_matrix();
    Hmat += ecore*linalg::identity_matrix<typename Km::dtype>(Hmat.rows());
-   // deal with rwfuns(istate,ibas)
+   // deal with rwfuns(istate,ibas):
    // Hij = w*[i,a] H[a,b] w[j,b] = (w^* H w^T) 
    auto wfmat = icomb.rwfuns.to_matrix();
    auto tmp = linalg::xgemm("N","T",Hmat,wfmat);
