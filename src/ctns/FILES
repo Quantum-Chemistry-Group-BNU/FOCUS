@@ -67,9 +67,9 @@ Compute <I|H|J>
 Sweep algorithm
 -------------------
  ctns_sweep.h
+ sweep_data.h
+ sweep_util.h
 
-
- ctns_opt_util.h
  tns_opt.h
  tns_opt.cpp
 
@@ -81,6 +81,7 @@ working in the format of qt2 -> psi(L,R)!
 
 * local CI: Hdiag & Hx
  ctns_opt_ham.h
+ tns_ham.h
  tns_ham_onedot.cpp
  tns_ham_twodot.cpp
 
@@ -95,7 +96,6 @@ working in the format of qt2 -> psi(L,R)!
   * operator transformation
  tns_initial.h
  tns_initial.cpp
-
  
 Low-level data structure
 -------------------
