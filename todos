@@ -3,7 +3,7 @@ TODOs:
 
  1. setup tests for NR & R [DONE20210324]
  
- 2. redesign and decouple codes
+ 2. redesign and decouple codes [DONE20210408]
     
  3. implementation of CTNS with TRS
     - checked for kinds {rN,rNSz,cN,cNSz,cNK}

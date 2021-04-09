@@ -515,7 +515,9 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
             const auto& index = op1A.first;
             const auto& op1_A = op1A.second;
             const auto& op2_A = qops2['P'].at(index);
-	    const auto& op1_B = op1_A.K(0);
+	    // NOTE: the following lines work for A_{pq} & A_{p\bqr{q}}, because 
+	    // the global sign does not matter as the pair AP has even no. of barred indices!
+	    const auto& op1_B = op1_A.K(0); 
 	    const auto& op2_B = op2_A.K(0);
             const Tm wt = wfacAP(index);
             opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);

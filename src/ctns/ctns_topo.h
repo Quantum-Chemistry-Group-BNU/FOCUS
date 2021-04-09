@@ -52,6 +52,16 @@ struct topology{
       std::vector<int> support_rest(const std::vector<int>& rsupp) const;
       // sweep sequence 
       std::vector<directed_bond> get_sweeps(const bool debug=true) const;
+      // cturn: bond that at the turning points to branches
+      //
+      //           |
+      //        ---* (i,1)
+      //       |   |   |
+      //    ---*---*---*---
+      //             (i,0)
+      inline bool is_cturn(const comb_coord& p0, const comb_coord& p1) const{
+	 return p0.second == 0 && p1.second == 1;
+      }
    public:
       int nbackbone, nphysical;
       std::vector<std::vector<node>> nodes; // nodes on comb

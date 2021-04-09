@@ -128,25 +128,21 @@ inline void get_right_bsite(const int isym, qtensor3<Tm>& qt3){
    }
 }
 
-/*
 template <typename Tm>
-qtensor3<Tm> get_left_bsite(){
+inline void get_left_bsite(const int isym, qtensor3<Tm>& qt3){
    std::vector<bool> dir = {1,1,0};
-   auto qs_vac = get_qbond_vac();
-   auto qs_phys = get_qbond_phys<Tm>();
-   qtensor3<Tm> qt3(qsym(0,0), qs_phys, qs_vac, qs_phys, dir);
-   for(int k=0; k<qs_phys.size(); k++){
-      int pdim = qs_phys.get_dim(k);
+   auto qvac = get_qbond_vac();
+   auto qphys = get_qbond_phys(isym);
+   qt3.init(qsym(), qphys, qvac, qphys, dir);
+   for(int k=0; k<qphys.size(); k++){
+      int pdim = qphys.get_dim(k);
       for(int im=0; im<pdim; im++){
 	 linalg::matrix<Tm> mat(1,pdim);
 	 mat(0,im) = 1.0;
          qt3(k,0,k)[im] = mat;
       }
    }
-   return qt3;
 }
-*/
-
 
 } // ctns
 

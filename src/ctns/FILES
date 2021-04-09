@@ -66,12 +66,35 @@ Compute <I|H|J>
 
 Sweep algorithm
 -------------------
-blocking
-local CI
-decimation
- density matrix
- operator transformation
+ ctns_sweep.h
 
+
+ ctns_opt_util.h
+ tns_opt.h
+ tns_opt.cpp
+
+* blocking
+
+working in the format of qt2 -> psi(L,R)! 
+ tns_qtensor_reshape.cpp
+ tns_qtensor4.cpp
+
+* local CI: Hdiag & Hx
+ ctns_opt_ham.h
+ tns_ham_onedot.cpp
+ tns_ham_twodot.cpp
+
+* decimation
+
+  * perturbed density matrix
+ tns_prdm.h
+ tns_prdm.cpp
+ tns_decimation.h
+ tns_decimation.cpp
+
+  * operator transformation
+ tns_initial.h
+ tns_initial.cpp
 
  
 Low-level data structure
@@ -83,32 +106,3 @@ Tensor operations
 Parallelization
 -------------------
 
-
-
-CTNS:
--------------------------------
-Optimization: decimation
--------------------------------
- ctns_opt.h
- ctns_opt_util.h
- ctns_opt_ham.h
--------------------------------
-
--------------------------------
-qtensor:
--------------------------------
- tns_qtensor_reshape.cpp
- tns_qtensor4.cpp
--------------------------------
-opt:
--------------------------------
- tns_opt.h
- tns_opt.cpp
- tns_ham_onedot.cpp
- tns_ham_twodot.cpp
- tns_decimation.h
- tns_decimation.cpp
- tns_prdm.h
- tns_prdm.cpp
- tns_initial.h
- tns_initial.cpp

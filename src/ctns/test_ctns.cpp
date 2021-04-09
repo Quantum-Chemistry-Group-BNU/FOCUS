@@ -18,7 +18,7 @@
 #include "ctns_io.h"
 #include "ctns_ovlp.h"
 #include "ctns_oper.h"
-#include "ctns_opt.h"
+#include "ctns_sweep.h"
 #include "tests_ctns.h"
 
 using namespace std;
@@ -145,7 +145,7 @@ int tests::test_ctns(){
    }
  
    // 6. optimization from current RCF 
-   ctns::opt_sweep(icomb, int2e, int1e, ecore, schd);
+   ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
    /* 
    // re-compute expectation value for optimized TNS
    auto Sij = ctns::get_Smat(icomb);
