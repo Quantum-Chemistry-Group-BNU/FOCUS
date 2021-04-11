@@ -23,10 +23,10 @@ int tests::test_matrix(){
    
    // random & identity;
    matrix<double> iden = identity_matrix<double>(4);
-   matrix<double> rd = random_matrix(4,3);
+   matrix<double> rd = random_matrix<double>(4,3);
    iden.print("iden");
    rd.print("rd");
-   matrix<double> rd2 = random_matrix(4,3);
+   auto rd2 = random_matrix<complex<double>>(4,3);
    rd2.print("rd2");
 
    // simple math for real matrix

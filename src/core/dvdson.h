@@ -372,7 +372,7 @@ struct dvdsonSolver{
       std::function<void(Tm*, const Tm*)> HVec;
       // settings
       int iprt = 1;
-      double crit_v = 1.e-6;  // used control parameter
+      double crit_v = 1.e-5;  // used control parameter
       double crit_e = 1.e-12; // not used actually
       double crit_indp = 1.e-12;
       double crit_skewH = 1.e-8;

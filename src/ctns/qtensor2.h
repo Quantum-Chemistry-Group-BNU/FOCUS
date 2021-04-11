@@ -86,6 +86,9 @@ struct qtensor2{
       // algebra
       double normF() const;
       qtensor2<Tm> dot(const qtensor2<Tm>& qt) const;
+      // for Davidson algorithm
+      int get_dim() const;
+      void random();
    public:
       std::vector<bool> dir = {1,0}; // {out,int} by usual convention for operators in diagrams
       qsym sym; // <row|op[in]|col>
@@ -394,6 +397,28 @@ double qtensor2<Tm>::normF() const{
 template <typename Tm>
 qtensor2<Tm> qtensor2<Tm>::dot(const qtensor2<Tm>& qt) const{
    return contract_qt2_qt2(*this, qt);
+}
+
+// get_dim 
+template <typename Tm> 
+int qtensor2<Tm>::get_dim() const{
+   int dim = 0;
+   for(const auto& blk : _qblocks){
+      if(blk.size() > 0) dim += blk.size();
+   }
+   return dim;
+}
+
+// random tensor
+template<typename Tm>
+void qtensor2<Tm>::random(){
+   for(auto& blk : _qblocks){
+      if(blk.size() > 0){
+	 int rdim = blk.rows();
+	 int cdim = blk.cols();
+	 blk = linalg::random_matrix<Tm>(rdim, cdim);
+      }
+   }
 }
 
 } // ctns

@@ -59,15 +59,3 @@ matrix<complex<double>> linalg::diagonal_cmatrix(const vector<double>& diag){
       mat(i,i) = diag[i];	   
    return mat;
 }
-
-matrix<double> linalg::random_matrix(const int m, const int n){
-   std::uniform_real_distribution<double> dist(-1,1);
-   matrix<double> rand(m,n);
-   // column major
-   for(int j=0; j<n; j++){
-      for(int i=0; i<m; i++){
-         rand(i,j) = dist(tools::generator);
-      }
-   }
-   return rand;
-}

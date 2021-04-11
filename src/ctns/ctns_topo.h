@@ -67,7 +67,6 @@ struct topology{
       std::vector<std::vector<node>> nodes; // nodes on comb
       std::vector<comb_coord> rcoord; // coordinate of each node in rvisit order ("sliced from right")
       				      // used in constructing right environment
-      int iswitch; // for i<=iswitch on backbone, size(lsupp)<size(rsupp)
       std::vector<int> image2; // 1D ordering of CTNS for mapping |n_p...> 
 };
 

@@ -1,6 +1,7 @@
 #ifndef CTNS_COMB_H
 #define CTNS_COMB_H
 
+#include "ctns_phys.h"
 #include "ctns_kind.h"
 #include "ctns_topo.h"
 #include "ctns_rbasis.h"
@@ -40,6 +41,9 @@ class comb{
       qbond get_qc(const comb_coord& p) const;
       qbond get_ql(const comb_coord& p) const;
       qbond get_qr(const comb_coord& p) const;
+      std::vector<int> get_suppc(const comb_coord& p, const bool ifprt=true) const;
+      std::vector<int> get_suppl(const comb_coord& p, const bool ifprt=true) const;
+      std::vector<int> get_suppr(const comb_coord& p, const bool ifprt=true) const;
    public:
       topology topo;
       sites_type<typename Km::dtype> rsites; // right canonical form 
@@ -79,6 +83,19 @@ qbond comb<Km>::get_qc(const comb_coord& p) const{
 }
 
 template <typename Km>
+std::vector<int> comb<Km>::get_suppc(const comb_coord& p, const bool ifprt) const{
+   auto pc = topo.get_node(p).center;
+   bool physical = (pc == coord_phys);
+   auto suppc = physical? std::vector<int>({topo.get_node(p).pindex}) : topo.get_node(pc).rsupport;
+   if(ifprt){
+      std::cout << "suppc :";
+      for(const auto& k : suppc) std::cout << " " << k;
+      std::cout << std::endl; 
+   }
+   return suppc;
+}
+
+template <typename Km>
 qbond comb<Km>::get_ql(const comb_coord& p) const{
    //
    // 			          |
@@ -87,8 +104,19 @@ qbond comb<Km>::get_ql(const comb_coord& p) const{
    // --pl-->--p--     	        --pl--
    //
    auto pl = topo.get_node(p).left;
-   bool cturn = (topo.node_type(pl) == 3 and p.second == 1);
+   bool cturn = topo.is_cturn(pl,p);
    return cturn? lsites.at(pl).qmid : lsites.at(pl).qcol;
+}
+
+template <typename Km>
+std::vector<int> comb<Km>::get_suppl(const comb_coord& p, const bool ifprt) const{
+   auto suppl = topo.get_node(p).lsupport;
+   if(ifprt){
+      std::cout << "suppl :";
+      for(const auto& k : suppl) std::cout << " " << k;
+      std::cout << std::endl; 
+   }
+   return suppl;
 }
 
 template <typename Km>
@@ -100,6 +128,18 @@ qbond comb<Km>::get_qr(const comb_coord& p) const{
    //
    auto pr = topo.get_node(p).right;
    return rsites.at(pr).qrow;
+}
+
+template <typename Km>
+std::vector<int> comb<Km>::get_suppr(const comb_coord& p, const bool ifprt) const{
+   auto pr = topo.get_node(p).right;
+   auto suppr = topo.get_node(pr).rsupport;
+   if(ifprt){
+      std::cout << "suppr :";
+      for(const auto& k : suppr) std::cout << " " << k;
+      std::cout << std::endl; 
+   }
+   return suppr;
 }
 
 } // ctns

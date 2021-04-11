@@ -130,43 +130,6 @@ class qbond{
       std::vector<std::pair<qsym,int>> dims;
 };
 
-/*
-// direct product table of qbond : V1*V2->V12
-using qsym_dpt = std::map<qsym,std::map<std::pair<qsym,qsym>,std::tuple<int,int,int>>>;
-std::pair<qbond,qsym_dpt> qbond_dpt(const qbond& qs1, 
-					      const qbond& qs2);
-
-// direct product space V1*V2->V12
-pair<qbond,qsym_dpt> ctns::qbond_dpt(const qbond& qs1, 
-		         		      const qbond& qs2){
-   qbond qs12;
-   qsym_dpt dpt;
-   // init
-   for(const auto& p1 : qs1){
-      auto q1 = p1.first;
-      for(const auto& p2 : qs2){
-	 auto q2 = p2.first;
-	 qs12[q1+q2] = 0;
-	 dpt[q1+q2][make_pair(q1,q2)] = make_tuple(0,0,0); // just init
-      }
-   }
-   // form qs12 and dpt
-   for(const auto& p : dpt){
-      int ioff = 0;
-      for(const auto& p12 : p.second){
-	 auto q12 = p12.first;
-	 int d1 = qs1.at(q12.first);
-	 int d2 = qs2.at(q12.second);
-	 qs12[p.first] += d1*d2;
-	 dpt[p.first][p12.first] = make_tuple(d1,d2,ioff); // save d1,d2,offset
-	 ioff += d1*d2;
-      }
-   }
-   return make_pair(qs12,dpt);
-}
-
-*/
-
 } // ctns
 
 #endif

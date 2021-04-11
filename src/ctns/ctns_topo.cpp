@@ -160,16 +160,10 @@ topology::topology(const string& fname){
       }
    }
    // lsupport
-   iswitch=-1;
    for(int idx=0; idx<rcoord.size(); idx++){
       auto p = rcoord[idx];
       int i = p.first, j = p.second;
       nodes[i][j].lsupport = support_rest(nodes[i][j].rsupport);
-      // locate switch point for bipartition of H 
-      if(iswitch == -1 && j == 0 && 
-         nodes[i][j].lsupport.size()<=nodes[i][j].rsupport.size()){
-         iswitch = i;
-      }
    }
    // image2 simply from rsupport[0,0] (1D order)
    auto order = nodes[0][0].rsupport; 
@@ -184,7 +178,6 @@ void topology::print() const{
    cout << "\ntopology::print"
 	<< " nphysical=" << nphysical 
         << " nbackbone=" << nbackbone
-        << " iswitch=" << iswitch	
 	<< endl;
    cout << "topo:" << endl;
    for(int i=0; i<nbackbone; i++){

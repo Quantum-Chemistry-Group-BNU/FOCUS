@@ -280,7 +280,7 @@ void qtensor2::random(){
       if(blk.size()>0){
 	 int rdim = blk.rows();
 	 int cdim = blk.cols();
-	 blk = random_matrix(rdim,cdim);
+	 blk = random_matrix<double>(rdim,cdim);
       }
    }
 }

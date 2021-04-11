@@ -42,7 +42,7 @@ int tests::test_linalg(){
    cout << symmetric_diff(cmat) << endl;
 
    const complex<double> ctmp={1.0,0.0};
-   cmat += ctmp*random_matrix(n,n);
+   cmat += ctmp*random_matrix<complex<double>>(n,n);
    auto cmat2 = xgemm("C","N",cmat,cmat);
    cmat2.print("cmat2");
    

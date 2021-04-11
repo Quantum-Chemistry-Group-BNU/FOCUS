@@ -253,7 +253,7 @@ void qtensor3::random(){
 	 int rdim = blk[0].rows();
 	 int cdim = blk[0].cols();
 	 for(int m=0; m<mdim; m++){
-	    blk[m] = random_matrix(rdim,cdim);
+	    blk[m] = random_matrix<double>(rdim,cdim);
 	 }
       }
    }

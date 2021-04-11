@@ -89,9 +89,10 @@ struct qtensor3{
       }
       // algebra
       double normF() const;
-/*
       // for Davidson algorithm
       int get_dim() const;
+      void random();
+/*
       //void from_array(const double* array);
       //void to_array(double* array) const;
       // extract real & imag parts
@@ -294,18 +295,16 @@ double qtensor3<Tm>::normF() const{
    return std::sqrt(sum);
 }
 
-/*
 template <typename Tm>
 int qtensor3<Tm>::get_dim() const{
    int dim = 0;
    for(const auto& blk : _qblocks){
-      if(blk.size() > 0){
-         dim += blk.size()*blk[0].size(); // A[l,c,r] = A[c](l,r)
-      }
+      if(blk.size() > 0) dim += blk.size()*blk[0].size(); // A[l,c,r] = A[c](l,r)
    }
    return dim;
 }
 
+/*
       //void from_array(const double* array);
       //void to_array(double* array) const;
       // extract real & imag parts

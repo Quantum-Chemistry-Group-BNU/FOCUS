@@ -354,8 +354,30 @@ matrix<Tm> identity_matrix(const int n){
    return iden;
 }
 
-// random double matrix
-matrix<double> random_matrix(const int m, const int n);
+// random matrix
+template <typename Tm>
+matrix<Tm> random_matrix(const int m, const int n){};
+
+template <>
+inline matrix<double> random_matrix(const int m, const int n){
+   std::uniform_real_distribution<double> dist(-1,1);
+   matrix<double> rand(m,n);
+   // column major
+   for(int j=0; j<n; j++){
+      for(int i=0; i<m; i++){
+         rand(i,j) = dist(tools::generator);
+      }
+   }
+   return rand;
+}
+
+template <>
+inline matrix<std::complex<double>> random_matrix(const int m, const int n){
+   const std::complex<double> i(0.0,1.0);
+   matrix<std::complex<double>> rand(m,n);
+   rand = random_matrix<double>(m,n) + i*random_matrix<double>(m,n);
+   return rand;
+}
 
 } // linalg
 

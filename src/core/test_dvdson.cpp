@@ -57,49 +57,61 @@ int tests::test_dvdson(){
    cout << tools::line_separator << endl;
   
    const int n = 100;
-   const int m = 3;
-   const double thresh = 1.e-10;
+   const int m = 5;
+   const double thresh = 1.e-6;
    
-   // --- real matrix --- 
+   //
+   // real matrix test
+   //
+
+   // 1. generation of matrix
    cout << "\nreal version" << endl; 
-   matrix<double> rd1 = random_matrix(n,n);
-   matrix<double> rd2 = random_matrix(n,n);
+   matrix<double> rd1 = random_matrix<double>(n,n);
+   matrix<double> rd2 = random_matrix<double>(n,n);
    rd1 = 0.5*(rd1 + rd1.H()) + identity_matrix<double>(n);
    //rd1.print("rd1");
 
+   // 2. exact solver
    vector<double> e(n);
    matrix<double> v;
    eig_solver(rd1, e, v);
    cout << "e: " << setprecision(12) << e[0] << " " << e[1] << endl;
    //v.print("v");
    
+   // 3. dvdson solver
    vector<double> es(m);
    matrix<double> vs(n,m);
    iter_solver(rd1, es, vs);
    for(int i=0; i<m; i++){
       auto diff = es[i]-e[i];
-      cout << "e(iter): " << setprecision(12) << es[i] << " " << e[i] << " diff=" << diff << endl;
+      cout << "e(real/iter): " << setprecision(12) << es[i] << " " << e[i] << " diff=" << diff << endl;
       assert(diff < thresh);
    }
 
-   // --- complex matrix ---
+   //
+   // complex matrix
+   //
+
+   // 1. generation of matrix
    cout << "\ncomplex version" << endl; 
    const complex<double> i0(1.0,0.0), i1(0.0,1.0);
    matrix<complex<double>> cmat = i0*rd1 + i1*rd2;
    cmat = cmat + cmat.H();
    //cmat.print("cmat");
 
+   // 2. exact solver
    vector<double> ec(n);
    matrix<complex<double>> vc;
    eig_solver(cmat, ec, vc);
    cout << "ec: " << ec[0] << " " << ec[1] << endl;
    
+   // 3. dvdson solver
    vector<double> esc(m);
    matrix<complex<double>> vsc(n,m);
    iter_solver(cmat, esc, vsc);
    for(int i=0; i<m; i++){
       auto diff = esc[i]-ec[i];
-      cout << "e(iter): " << esc[i] << " " << ec[i] << " diff=" << diff << endl;
+      cout << "e(cmplx/iter): " << setprecision(12) << esc[i] << " " << ec[i] << " diff=" << diff << endl;
       assert(diff < thresh);
    }
 

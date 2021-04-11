@@ -6,6 +6,9 @@
 
 namespace ctns{ 
 
+const bool debug_oper_io = true;
+extern const bool debug_oper_io;
+
 // for qopers
 std::string oper_fname(const std::string scratch, 
   	  	       const comb_coord& p,
@@ -20,8 +23,7 @@ std::string oper_fname(const std::string scratch,
 template <typename Tm>
 void oper_save(const std::string fname, 
 	       const oper_dict<Tm>& qops){
-   const bool debug = false;
-   if(debug){
+   if(debug_oper_io){
       std::cout << "ctns::oper_save fname=" << fname 
  	        << " size=" << qops.size() << std::endl;
    }
@@ -33,8 +35,7 @@ void oper_save(const std::string fname,
 template <typename Tm>
 void oper_load(const std::string fname, 
 	       oper_dict<Tm>& qops){
-   const bool debug = false;
-   if(debug){
+   if(debug_oper_io){
       std::cout << "ctns::oper_load fname=" << fname 
 	        << std::endl;
    }
