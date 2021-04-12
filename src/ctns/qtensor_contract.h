@@ -1,14 +1,6 @@
 #ifndef QTENSOR_CONTRACT_H
 #define QTENSOR_CONTRACT_H
 
-/*
-#include <vector>
-#include <string>
-#include <map>
-#include "../core/matrix.h"
-#include "ctns_qsym.h"
-*/
-
 namespace ctns{
 
 // --- tensor linear algebra : contractions ---

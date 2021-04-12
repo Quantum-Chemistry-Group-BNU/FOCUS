@@ -92,9 +92,9 @@ struct qtensor3{
       // for Davidson algorithm
       int get_dim() const;
       void random();
+      void from_array(const Tm* array);
+      void to_array(Tm* array) const;
 /*
-      //void from_array(const double* array);
-      //void to_array(double* array) const;
       // extract real & imag parts
       matrix<double> real() const;
       matrix<double> imag() const;
@@ -302,6 +302,38 @@ int qtensor3<Tm>::get_dim() const{
       if(blk.size() > 0) dim += blk.size()*blk[0].size(); // A[l,c,r] = A[c](l,r)
    }
    return dim;
+}
+
+template <typename Tm>
+void qtensor3<Tm>::from_array(const Tm* array){
+   int ioff = 0;
+   for(int idx=0; idx<_qblocks.size(); idx++){
+      auto& blk = _qblocks[idx];
+      if(blk.size() == 0) continue;
+      int size = blk[0].size();
+      for(int im=0; im<blk.size(); im++){
+         auto psta = array+ioff+im*size;
+	 // copy from array to blk
+	 copy(psta, psta+size, blk[im].data());
+      }
+      ioff += blk.size()*size;
+   }
+}
+
+template <typename Tm>
+void qtensor3<Tm>::to_array(Tm* array) const{
+   int ioff = 0;
+   for(int idx=0; idx<_qblocks.size(); idx++){
+      auto& blk = _qblocks[idx];
+      if(blk.size() == 0) continue;
+      int size = blk[0].size();
+      for(int im=0; im<blk.size(); im++){
+         auto psta = array+ioff+im*size;
+	 // copy from blk to array
+	 copy(blk[im].data(), blk[im].data()+size, psta);
+      }
+      ioff += blk.size()*size;
+   }
 }
 
 /*

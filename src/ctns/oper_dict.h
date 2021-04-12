@@ -13,6 +13,7 @@ using oper_map = std::map<int,qtensor2<Tm>>;
 template <typename Tm>
 using oper_dict = std::map<char,oper_map<Tm>>;
 
+// --- packing ---
 // pack two indices
 const int kpack = 1000;
 extern const int kpack;
@@ -24,6 +25,7 @@ inline std::pair<int,int> oper_unpack(const int ij){
    return std::make_pair(ij%kpack,ij/kpack);
 }
 
+// --- weight factor ---
 // ifkr = false
 inline double wfac(const int ij){
    int i = ij%kpack;
@@ -44,6 +46,43 @@ inline double wfacBQ(const int ij){
    int i = ij%kpack, ki = i/2, spin_i = i%2;
    int j = ij/kpack, kj = j/2, spin_j = j%2;
    return (ki==kj)? 0.5 : 1.0;
+}
+
+// --- display ---
+template <typename Tm>
+void oper_display(oper_dict<Tm>& qops, const std::string sinfo, const int level=0){
+   std::string oplist = "HCSABPQ";
+   std::map<char,int> exist;
+   std::string s(sinfo + ": ");
+   for(const auto& key : oplist){
+      if(qops.find(key) != qops.end()){ 
+	 s += key;
+	 s += ":"+std::to_string(qops[key].size())+ " ";
+	 exist[key] = qops[key].size();
+      }else{
+	 exist[key] = 0;
+      }
+   }
+   std::cout << s << std::endl;
+   // print each operator
+   if(level > 0){
+      for(const auto& key : oplist){
+         if(exist[key] > 0){
+            std::cout << " " << key << ": ";
+	    if(key == 'H' || key == 'C' || key == 'S'){
+	       for(const auto& op : qops[key]){
+	          std::cout << op.first << " ";
+	       }
+	    }else{
+	       for(const auto& op : qops[key]){
+	          auto pq = oper_unpack(op.first);
+	          std::cout << "(" << pq.first << "," << pq.second << ") ";
+	       }
+	    }
+	    std::cout << std::endl;
+         }
+      }
+   }
 }
 
 } // ctns

@@ -2,6 +2,7 @@
 #define SWEEP_UTIL_H
 
 #include "ctns_dpt.h"
+#include "sweep_onedot.h"
 
 namespace ctns{
 
@@ -52,33 +53,17 @@ void sweep_onedot(const input::schedule& schd,
    int sl = suppl.size();
    int sc = suppc.size();
    int sr = suppr.size();
-   const bool ifMergeLC = (sl*sc < sr);
-   std::cout << "sl,sc,sr=(" << sl << "," << sc << "," << sr 
-	     << ") ifMergeLC=" << ifMergeLC << std::endl;
    // processing symmetry
-   qbond ql, qc, qr, q1, q2;
+   qbond ql, qc, qr;
    ql = icomb.get_ql(p);
    qc = icomb.get_qc(p); 
    qr = icomb.get_qr(p);
    ql.print("ql");
    qc.print("qc");
    qr.print("qr");
-   if(ifMergeLC){ 
-      auto qlc = merge(ql,qc);
-      auto dpt = qlc.second;
-      q1 = qlc.first;
-      q2 = qr;
-   }else{
-      auto qcr = merge(qc,qr);
-      auto dpt = qcr.second;
-      q1 = ql;
-      q2 = qcr.first;
-   }
-   q1.print("q1");
-   q2.print("q2");
    // wavefunction to be computed
    qsym sym_state = (Km::isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
-   qtensor2<Tm> wf(sym_state, q1, q2, {1,1});
+   qtensor3<Tm> wf(sym_state, ql, qc, qr, {1,1,1});
    std::cout << "dimCI=" << wf.get_dim() << std::endl;
 
    // 1. load operators 
@@ -86,6 +71,9 @@ void sweep_onedot(const input::schedule& schd,
    oper_load_qops(icomb, p, schd.scratch, 'l', lqops);
    oper_load_qops(icomb, p, schd.scratch, 'c', cqops);
    oper_load_qops(icomb, p, schd.scratch, 'r', rqops);
+   oper_display(lqops, "lqops", 1);
+   oper_display(cqops, "cqops", 1);
+   oper_display(rqops, "rqops", 1);
    auto ta = tools::get_time();
 
    // 2. Davidson solver for wf
@@ -93,8 +81,15 @@ void sweep_onedot(const input::schedule& schd,
    int nsub = wf.get_dim();
    int neig = sweeps.nstate;
    std::vector<double> diag(nsub,1.0);
-   //diag = get_onedot_Hdiag(cqops, lqops, rqops, ecore, wf);
+   diag = onedot_Hdiag(cqops, lqops, rqops, int2e, ecore, wf);
+   
+   for(const auto& p : diag){
+      std::cout << p << " ";
+   }
+   std::cout << std::endl;
+
    auto tb = tools::get_time();
+   exit(1);
 
 /*
    // 2.2 Solve Hc=cE
