@@ -14,12 +14,12 @@ void oper_op1op2xwf_nkr(qtensor3<Tm>& opwf,
 		        const qtensor3<Tm>& site,
 		        oper_map<Tm>& qops1C,
 		        oper_map<Tm>& qops2C,
+			qsym& sym_op,
 		        std::map<std::pair<int,int>,Tm>& oij,
 			const bool ifdagger1,
 			const bool ifdagger2,
 			const bool ifdagger){
-   Tm sgn = ifdagger? -1.0 : 1.0;
-   const auto& sym_op = opwf.sym;
+   const Tm sgn = ifdagger? -1.0 : 1.0;
    const auto& qrow1 = (qops1C.begin()->second).qrow;
    const auto& qcol1 = (qops1C.begin()->second).qcol;
    const auto& qrow2 = (qops2C.begin()->second).qrow;
@@ -68,12 +68,12 @@ void oper_op1op2xwf_kr(qtensor3<Tm>& opwf,
 		       const qtensor3<Tm>& site,
 		       oper_map<Tm>& qops1C,
 		       oper_map<Tm>& qops2C,
+		       qsym& sym_op,
 		       std::map<std::pair<int,int>,Tm>& oij,
 		       const bool ifdagger1,
 		       const bool ifdagger2,
 		       const bool ifdagger){
-   Tm sgn = ifdagger? -1.0 : 1.0;
-   const auto& sym_op = opwf.sym;
+   const Tm sgn = ifdagger? -1.0 : 1.0;
    const auto& qrow1 = (qops1C.begin()->second).qrow;
    const auto& qcol1 = (qops1C.begin()->second).qcol;
    const auto& qrow2 = (qops2C.begin()->second).qrow;
@@ -127,16 +127,17 @@ void oper_op1op2xwf(const bool& ifkr,
 		    const qtensor3<Tm>& site,
 		    oper_map<Tm>& qops1C,
 		    oper_map<Tm>& qops2C,
+		    qsym& sym_op,
 		    std::map<std::pair<int,int>,Tm>& oij,
 		    const bool ifdagger1,
 		    const bool ifdagger2,
 		    const bool ifdagger){
    if(not ifkr){
       oper_op1op2xwf_nkr(opwf, superblock, site, qops1C, qops2C, 
-		         oij, ifdagger1, ifdagger2, ifdagger);
+		         sym_op, oij, ifdagger1, ifdagger2, ifdagger);
    }else{
       oper_op1op2xwf_kr(opwf, superblock, site, qops1C, qops2C, 
-		        oij, ifdagger1, ifdagger2, ifdagger);
+		        sym_op, oij, ifdagger1, ifdagger2, ifdagger);
    }
 }
 
@@ -205,7 +206,7 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
       }
    }
    oper_op1op2xwf(ifkr,opwf,superblock,site,qops1['C'],qops2['C'],
-		  oij,false,false,ifdagger);
+		  sym_op,oij,false,false,ifdagger);
    return opwf;
 }
 
@@ -282,9 +283,9 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
       }	
    }
    oper_op1op2xwf(ifkr,opwf,superblock,site,qops1['C'],qops2['C'],
-		  o1ij,true,false,ifdagger);
+		  sym_op,o1ij,true,false,ifdagger);
    oper_op1op2xwf(ifkr,opwf,superblock,site,qops1['C'],qops2['C'],
-		  o2ij,false,true,ifdagger);
+		  sym_op,o2ij,false,true,ifdagger);
    return opwf;
 }
 
@@ -439,7 +440,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       if(qops1['A'].size() <= qops2['A'].size()){
 	 // Apq^1*Ppq^2 + h.c. 
          for(const auto& op1A : qops1['A']){
-            const auto& index = op1A.first;
+            int index = op1A.first;
             const auto& op1 = op1A.second;
             const auto& op2 = qops2['P'].at(index);
             opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
@@ -448,7 +449,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       }else{
          // Prs^1+Ars^2+ + h.c.
          for(const auto& op2A : qops2['A']){
-            const auto& index = op2A.first;
+            int index = op2A.first;
             const auto& op2 = op2A.second;
             const auto& op1 = qops1['P'].at(index);
             opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
@@ -459,7 +460,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       if(qops1['B'].size() <= qops2['B'].size()){
          // Bps^1*Qps^2
          for(const auto& op1B : qops1['B']){
-            const auto& index = op1B.first;
+            int index = op1B.first;
             const auto& op1 = op1B.second;
             const auto& op2 = qops2['Q'].at(index);
 	    const Tm wt = wfac(index);
@@ -469,7 +470,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       }else{
          // Qqr^1*Bqr^2
          for(const auto& op2B : qops2['B']){
-            const auto& index = op2B.first;
+            int index = op2B.first;
             const auto& op2 = op2B.second;
             const auto& op1 = qops1['Q'].at(index);
 	    const Tm wt = wfac(index);
@@ -512,7 +513,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       if(qops1['A'].size() <= qops2['A'].size()){ 
 	 // Apq^1*Ppq^2 + h.c. 
          for(const auto& op1A : qops1['A']){
-            const auto& index = op1A.first;
+            int index = op1A.first;
             const auto& op1_A = op1A.second;
             const auto& op2_A = qops2['P'].at(index);
 	    // NOTE: the following lines work for A_{pq} & A_{p\bqr{q}}, because 
@@ -529,7 +530,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       }else{
          // Prs^1+Ars^2+ + h.c.
          for(const auto& op2A : qops2['A']){
-            const auto& index = op2A.first;
+            int index = op2A.first;
             const auto& op2_A = op2A.second;
             const auto& op1_A = qops1['P'].at(index);
             const auto& op2_B = op2_A.K(0);
@@ -546,7 +547,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       if(qops1['B'].size() <= qops2['B'].size()){
          // Bps^1*Qps^2
          for(const auto& op1B : qops1['B']){
-            const auto& index = op1B.first;
+            int index = op1B.first;
             const auto& op1_A = op1B.second;
             const auto& op2_A = qops2['Q'].at(index);
             const auto& op1_B = op1_A.K(0);
@@ -561,7 +562,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       }else{
          // Qqr^1*Bqr^2
          for(const auto& op2B : qops2['B']){
-            const auto& index = op2B.first;
+            int index = op2B.first;
             const auto& op2_A = op2B.second;
             const auto& op1_A = qops1['Q'].at(index);
 	    const auto& op2_B = op2_A.K(0);

@@ -1,6 +1,9 @@
 #ifndef SWEEP_UTIL_H
 #define SWEEP_UTIL_H
 
+#include "../core/tools.h"
+#include "../core/dvdson.h"
+#include "../core/linalg.h"
 #include "ctns_dpt.h"
 #include "sweep_onedot.h"
 
@@ -28,7 +31,7 @@ void sweep_timing(const std::vector<tm> ts){
 
 template <typename Km>
 void sweep_onedot(const input::schedule& schd,
-		  const sweep_data& sweeps,
+		  sweep_data& sweeps,
 		  const int isweep,
 		  const int ibond,
                   comb<Km>& icomb,
@@ -36,7 +39,8 @@ void sweep_onedot(const input::schedule& schd,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore){
    using Tm = typename Km::dtype;
-   const bool ifkr = kind::is_kramers<Tm>();
+   const int isym = Km::isym;
+   const bool ifkr = kind::is_kramers<Km>();
    auto t0 = tools::get_time();
    std::cout << "ctns::sweep_onedot" << std::endl;
    
@@ -63,7 +67,7 @@ void sweep_onedot(const input::schedule& schd,
    qc.print("qc");
    qr.print("qr");
    // wavefunction to be computed
-   qsym sym_state = (Km::isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
+   qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
    qtensor3<Tm> wf(sym_state, ql, qc, qr, {1,1,1});
    std::cout << "dimCI=" << wf.get_dim() << std::endl;
 
@@ -90,28 +94,27 @@ void sweep_onedot(const input::schedule& schd,
    std::cout << std::endl;
 
    auto tb = tools::get_time();
-   exit(1);
-
-/*
+   
    // 2.2 Solve Hc=cE
-   dvdsonSolver solver;
+   linalg::dvdsonSolver<Tm> solver;
    solver.iprt = 1;
-   solver.crit_v = ctrl.eps;
+   solver.crit_v = sweeps.ctrls[isweep].eps;
    solver.maxcycle = schd.maxcycle;
    solver.ndim = nsub;
    solver.neig = neig;
    solver.Diag = diag.data();
    using std::placeholders::_1;
    using std::placeholders::_2;
-   solver.HVec = bind(tns::get_onedot_Hx, _1, _2, 
-		      cref(icomb), cref(p),
-		      ref(cqops), ref(lqops), ref(rqops), 
-		      cref(int2e), cref(int1e), cref(ecore), 
-		      ref(wf));
+   solver.HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
+		      std::cref(isym), std::cref(ifkr), 
+		      std::ref(cqops), std::ref(lqops), std::ref(rqops), 
+		      std::cref(int2e), std::cref(int1e), std::cref(ecore), 
+		      std::ref(wf));
    
    // solve local problem
-   eopt.resize(neig);
-   matrix vsol(nsub,neig);
+   auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
+   linalg::matrix<Tm> vsol(nsub,neig);
+/*
    // load initial guess from previous opt
    vector<double> v0(nsub*neig);
    if(icomb.psi.size() == 0) initial_onedot(icomb); 
@@ -125,14 +128,15 @@ void sweep_onedot(const input::schedule& schd,
    //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());
 */
+   solver.solve_diag(eopt.data(), vsol.data(), true); // debug
    auto tc = tools::get_time();
-
+/*
    wf.random();
    auto nrm = wf.normF();
    wf *= 1.0/nrm;
    auto nrm2 = wf.normF();
    std::cout << "nrm2=" << nrm2 << std::endl;
-
+*/
    // 3. decimation 
 /*   
    decimation_onedot(icomb, dbond, ctrl.dcut, vsol, wf, dwt, deff,
