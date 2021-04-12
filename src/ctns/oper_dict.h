@@ -39,7 +39,7 @@ inline double wfacAP(const int ij){
    if(spin_i == spin_j){
       return 1.0;
    }else{
-      return (ki==kj)? 0.5 : 1.0;
+      return (ki==kj)? 0.5 : 1.0; // avoid duplication for A[p\bar{p}]
    }
 }
 inline double wfacBQ(const int ij){

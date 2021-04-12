@@ -36,6 +36,7 @@ void sweep_onedot(const input::schedule& schd,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore){
    using Tm = typename Km::dtype;
+   const bool ifkr = kind::is_kramers<Tm>();
    auto t0 = tools::get_time();
    std::cout << "ctns::sweep_onedot" << std::endl;
    
@@ -81,7 +82,7 @@ void sweep_onedot(const input::schedule& schd,
    int nsub = wf.get_dim();
    int neig = sweeps.nstate;
    std::vector<double> diag(nsub,1.0);
-   diag = onedot_Hdiag(cqops, lqops, rqops, int2e, ecore, wf);
+   diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
    
    for(const auto& p : diag){
       std::cout << p << " ";

@@ -68,7 +68,8 @@ template <typename Km>
 void oper_init(const comb<Km>& icomb,
 	       const integral::two_body<typename Km::dtype>& int2e,
 	       const integral::one_body<typename Km::dtype>& int1e,
-	       const std::string scratch){
+	       const std::string scratch){ 
+   const bool ifkr = kind::is_kramers<Km>();
    for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
       auto p = icomb.topo.rcoord[idx];
       auto& node = icomb.topo.get_node(p);
@@ -76,7 +77,7 @@ void oper_init(const comb<Km>& icomb,
       if(node.type != 3){
          int kp = node.pindex;
          oper_dict<typename Km::dtype> qops;
-	 oper_init_dot(Km::isym, kind::is_kramers<Km>(), kp, int2e, int1e, qops);
+	 oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);
 	 std::string fname = oper_fname(scratch, p, "cop");
          oper_save(fname, qops);
       }
@@ -84,7 +85,7 @@ void oper_init(const comb<Km>& icomb,
       if(node.type == 0 && p.first != 0){
 	 int kp = node.pindex;
          oper_dict<typename Km::dtype> qops;
-	 oper_init_dot(Km::isym, kind::is_kramers<Km>(), kp, int2e, int1e, qops);
+	 oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);
 	 std::string fname = oper_fname(scratch, p, "rop");
          oper_save(fname, qops);
       }
@@ -93,7 +94,7 @@ void oper_init(const comb<Km>& icomb,
    auto p = std::make_pair(0,0);
    int kp = icomb.topo.get_node(p).pindex;
    oper_dict<typename Km::dtype> qops;
-   oper_init_dot(Km::isym, kind::is_kramers<Km>(), kp, int2e, int1e, qops);
+   oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);
    std::string fname = oper_fname(scratch, p, "lop");
    oper_save(fname, qops);
 }
