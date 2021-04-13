@@ -65,6 +65,8 @@ struct qtensor3{
       // deal with fermionic sign in fermionic direct product
       qtensor3<Tm> mid_signed(const double fac=1.0) const;
       qtensor3<Tm> row_signed(const double fac=1.0) const;
+      // ZL20210413: application of time-reversal operation
+      qtensor3<Tm> K() const;
       // simple algorithmic operations
       qtensor3<Tm>& operator +=(const qtensor3<Tm>& qt);
       qtensor3<Tm>& operator -=(const qtensor3<Tm>& qt);
@@ -236,6 +238,41 @@ qtensor3<Tm> qtensor3<Tm>::row_signed(const double fac) const{
    return qt3;
 }
 
+// ZL20210413: application of time-reversal operation
+template <typename Tm>
+qtensor3<Tm> qtensor3<Tm>::K() const{
+   qtensor3<Tm> qt3(sym, qmid, qrow, qcol, dir); // assuming it only works for (N), no flip of symmetry is necessary
+   for(int idx=0; idx<qt3._qblocks.size(); idx++){
+      auto& blk = qt3._qblocks[idx];
+      if(blk.size() > 0){
+         int bm,br,bc;
+         _addr_unpack(idx,bm,br,bc);
+         // qt3[c](l,r) = blk[bar{c}](bar{l},bar{r})^*
+	 const auto& blk1 = _qblocks[idx];
+	 int pm = qmid.get_parity(bm);
+	 int pr = qrow.get_parity(br);
+	 int pc = qcol.get_parity(bc);
+	 if(pm == 0){
+            // c[e]
+            for(int im=0; im<blk.size(); im++){
+               blk[im] = time_reversal(blk1[im], pr, pc);
+            }
+	 }else{
+	    assert(blk.size()%2 == 0);
+	    int dm2 = blk.size()/2;
+	    // c[o],c[\bar{o}]
+            for(int im=0; im<dm2; im++){
+               blk[im] = time_reversal(blk1[im+dm2], pr, pc);
+            }
+	    for(int im=0; im<dm2; im++){
+	       blk[im+dm2] = -time_reversal(blk1[im], pr, pc);
+	    }
+	 }
+      }
+   }
+   return qt3;
+}
+
 // simple algorithmic operations
 template <typename Tm>
 qtensor3<Tm>& qtensor3<Tm>::operator +=(const qtensor3<Tm>& qt){
@@ -314,7 +351,7 @@ void qtensor3<Tm>::from_array(const Tm* array){
       for(int im=0; im<blk.size(); im++){
          auto psta = array+ioff+im*size;
 	 // copy from array to blk
-	 copy(psta, psta+size, blk[im].data());
+	 std::copy(psta, psta+size, blk[im].data());
       }
       ioff += blk.size()*size;
    }
@@ -330,15 +367,13 @@ void qtensor3<Tm>::to_array(Tm* array) const{
       for(int im=0; im<blk.size(); im++){
          auto psta = array+ioff+im*size;
 	 // copy from blk to array
-	 copy(blk[im].data(), blk[im].data()+size, psta);
+	 std::copy(blk[im].data(), blk[im].data()+size, psta);
       }
       ioff += blk.size()*size;
    }
 }
 
 /*
-      //void from_array(const double* array);
-      //void to_array(double* array) const;
       // extract real & imag parts
       matrix<double> real() const{
 	 matrix<double> matr(_rows,_cols);

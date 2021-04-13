@@ -128,15 +128,18 @@ void sweep_onedot(const input::schedule& schd,
    //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());
 */
-   solver.solve_diag(eopt.data(), vsol.data(), true); // debug
+   if(schd.cisolver == 0){
+      solver.solve_diag(eopt.data(), vsol.data(), true); // debug
+   }else if(schd.cisolver == 1){ // davidson
+
+   }else if(schd.cisolver == 2){ // guessed
+
+   }else{
+      std::cout << "error: no such option for cisolver=" << schd.cisolver << std::endl;
+   }
    auto tc = tools::get_time();
-/*
-   wf.random();
-   auto nrm = wf.normF();
-   wf *= 1.0/nrm;
-   auto nrm2 = wf.normF();
-   std::cout << "nrm2=" << nrm2 << std::endl;
-*/
+   exit(1);
+
    // 3. decimation 
 /*   
    decimation_onedot(icomb, dbond, ctrl.dcut, vsol, wf, dwt, deff,

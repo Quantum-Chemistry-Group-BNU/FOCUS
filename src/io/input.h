@@ -39,8 +39,9 @@ public:
    int maxiter;
    double deltaE;
    // dvdson
-   double crit_v;
+   int cisolver;
    int maxcycle;
+   double crit_v;
    // pt2
    bool ifpt2;
    double eps2;

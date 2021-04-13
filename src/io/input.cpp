@@ -27,8 +27,9 @@ void input::read(input::schedule& schd, string fname){
    schd.nroots = 1;
    schd.nseeds = 0;
    schd.maxiter = 0;
-   schd.crit_v = 1.e-6;
+   schd.cisolver = 0;
    schd.maxcycle = 100;
+   schd.crit_v = 1.e-6;
    schd.deltaE = 1.e-10;
    schd.flip = false;
    schd.ifpt2 = false;
@@ -62,6 +63,8 @@ void input::read(input::schedule& schd, string fname){
          schd.maxiter = stoi(line.substr(7)); 
       }else if(line.substr(0,6)=="crit_v"){
          schd.crit_v = stod(line.substr(6));
+      }else if(line.substr(0,8)=="cisolver"){
+         schd.cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
          schd.maxcycle = stoi(line.substr(8)); 
       }else if(line.substr(0,6)=="deltaE"){
@@ -197,8 +200,9 @@ void input::read(input::schedule& schd, string fname){
    }
    cout << "convergence parameters" << endl;
    cout << "deltaE = " << schd.deltaE << endl;
-   cout << "dvdson:crit_v = " << schd.crit_v << endl;
+   cout << "dvdson:cisolver = " << schd.cisolver << endl;
    cout << "dvdson:maxcycle = " << schd.maxcycle << endl;
+   cout << "dvdson:crit_v = " << schd.crit_v << endl;
    // pt2
    cout << "pt2 = " << schd.ifpt2 << " eps2=" << schd.eps2 << endl;
    

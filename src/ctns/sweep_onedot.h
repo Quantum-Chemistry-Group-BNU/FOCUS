@@ -244,31 +244,25 @@ void onedot_Hx(Tm* y,
 	       const double ecore,
 	       qtensor3<Tm>& wf){
    const bool debug = true;
-   const bool dagger = true;
    if(debug) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
+   const bool dagger = true;
+   const Tm scale = ifkr? 0.5 : 1.0;
    // const term
    wf.from_array(x);
-   auto Hwf = ecore*wf;
+   auto Hwf = scale*ecore*wf;
    // construct H*wf
    int nl_opA = (lqops.find('A') != lqops.end())? lqops['A'].size() : 0;
    int nl_opB = (lqops.find('B') != lqops.end())? lqops['B'].size() : 0;
    int nr_opA = (rqops.find('A') != rqops.end())? rqops['A'].size() : 0;
    int nr_opB = (rqops.find('B') != rqops.end())? rqops['B'].size() : 0;
-   if(debug){
-      std::cout << "(nl_opA,nl_opB)=" << nl_opA << "," << nl_opB << " "
-	        << "(nr_opA,nr_opB)=" << nr_opA << "," << nr_opB << std::endl; 
-   }
    bool ifMergeCR = (nl_opA + nl_opB <= nr_opA + nr_opB)? true : false;
-
-   ifMergeCR = false;
-
    // Al*Pr+Bl*Qr => L=l, R=cr
    if(ifMergeCR){
 
       // 1. H^l 
-      Hwf += contract_qt3_qt2_l(wf,lqops['H'][0]);
+      Hwf += scale*contract_qt3_qt2_l(wf,lqops['H'][0]);
       // 2. H^cr
-      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e);
+      Hwf += scale*oper_compxwf_opH("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e);
       // 3. p1^l+*Sp1^cr + h.c.
       //    ol*or|lcr>psi[lcr] => ol|l>*or|cr>(-1)^{p(l)}psi[lcr]
       for(const auto& op1C : lqops['C']){
@@ -302,16 +296,17 @@ void onedot_Hx(Tm* y,
 	 const auto& op1 = op1A.second;
 	 auto qt3n = oper_compxwf_opP("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
 	 auto qt3h = oper_compxwf_opP("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index,dagger);
-	 Hwf += oper_kernel_OIwf("lc",qt3n,op1);
-	 Hwf += oper_kernel_OIwf("lc",qt3h,op1,dagger);
+	 const Tm wt = ifkr? wfacAP(index) : 1.0;
+	 Hwf += wt*oper_kernel_OIwf("lc",qt3n,op1);
+	 Hwf += wt*oper_kernel_OIwf("lc",qt3h,op1,dagger);
       }
       // 6. Bps^l*Qps^cr (using Hermicity)
       for(const auto& op1B : lqops['B']){
 	 int index = op1B.first;
 	 const auto& op1 = op1B.second;
-	 const Tm wt = wfac(index);
 	 auto qt3n = oper_compxwf_opQ("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
 	 auto qt3h = oper_compxwf_opQ("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index,dagger);
+	 const Tm wt = ifkr? wfacBQ(index) : wfac(index);
 	 Hwf += wt*oper_kernel_OIwf("lc",qt3n,op1);
 	 Hwf += wt*oper_kernel_OIwf("lc",qt3h,op1,dagger);
       }
@@ -320,9 +315,9 @@ void onedot_Hx(Tm* y,
    }else{
 
       // 1. H^lc
-      Hwf += oper_compxwf_opH("lc",wf,lqops,cqops,isym,ifkr,int2e,int1e);
+      Hwf += scale*oper_compxwf_opH("lc",wf,lqops,cqops,isym,ifkr,int2e,int1e);
       // 2. H^r
-      Hwf += contract_qt3_qt2_r(wf,rqops['H'][0]);
+      Hwf += scale*contract_qt3_qt2_r(wf,rqops['H'][0]);
       // 3. p1^lc+*Sp1^r + h.c.
       // 3.1 p1^l+*Sp1^r
       for(const auto& op1C : lqops['C']){
@@ -355,8 +350,9 @@ void onedot_Hx(Tm* y,
          int index = op2A.first;
 	 const auto& op2 = op2A.second;
 	 // Ars^r*Prs^lc = Prs^lc*Ars^r
-	 auto qt3n = oper_kernel_IOwf("cr",wf,op2,0);
-	 auto qt3h = oper_kernel_IOwf("cr",wf,op2,0,dagger);
+	 const Tm wt = ifkr? wfacAP(index) : 1.0;
+	 auto qt3n = wt*oper_kernel_IOwf("cr",wf,op2,0);
+	 auto qt3h = wt*oper_kernel_IOwf("cr",wf,op2,0,dagger);
 	 Hwf += oper_compxwf_opP("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,index);
 	 Hwf += oper_compxwf_opP("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,index,dagger);
       }
@@ -364,7 +360,7 @@ void onedot_Hx(Tm* y,
       for(const auto& op2B : rqops['B']){
 	 int index = op2B.first;
 	 const auto& op2 = op2B.second;
-	 const Tm wt = wfac(index);
+	 const Tm wt = ifkr? wfacBQ(index) : wfac(index);
 	 auto qt3n = wt*oper_kernel_IOwf("cr",wf,op2,0);
 	 auto qt3h = wt*oper_kernel_IOwf("cr",wf,op2,0,dagger);
 	 Hwf += oper_compxwf_opQ("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,index);
@@ -373,6 +369,9 @@ void onedot_Hx(Tm* y,
    
    } // ifMergeCR
    // finally copy back to y
+   if(ifkr){
+      Hwf += Hwf.K();
+   }
    Hwf.to_array(y);
 }
 
