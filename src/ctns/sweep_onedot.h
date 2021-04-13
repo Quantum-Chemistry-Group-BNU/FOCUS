@@ -245,11 +245,32 @@ void onedot_Hx(Tm* y,
 	       qtensor3<Tm>& wf){
    const bool debug = true;
    if(debug) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
+   wf.from_array(x);
+   qtensor3<Tm> Hwf;
+   if(not ifkr){
+      Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
+   }else{
+      Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
+      auto wfK = wf.K();
+      Hwf += onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wfK).K();
+   }
+   Hwf.to_array(y);
+}
+
+template <typename Tm> 
+qtensor3<Tm> onedot_sigma(const int& isym,
+	                  const bool& ifkr,
+	                  oper_dict<Tm>& cqops,
+	                  oper_dict<Tm>& lqops,
+	                  oper_dict<Tm>& rqops,
+	                  const integral::two_body<Tm>& int2e,
+	                  const integral::one_body<Tm>& int1e,
+			  const double ecore,
+	                  qtensor3<Tm>& wf){
    const bool dagger = true;
    const Tm scale = ifkr? 0.5 : 1.0;
    // const term
-   wf.from_array(x);
-   auto Hwf = scale*ecore*wf;
+   qtensor3<Tm> Hwf = (scale*ecore)*wf;
    // construct H*wf
    int nl_opA = (lqops.find('A') != lqops.end())? lqops['A'].size() : 0;
    int nl_opB = (lqops.find('B') != lqops.end())? lqops['B'].size() : 0;
@@ -368,11 +389,7 @@ void onedot_Hx(Tm* y,
       }
    
    } // ifMergeCR
-   // finally copy back to y
-   if(ifkr){
-      Hwf += Hwf.K();
-   }
-   Hwf.to_array(y);
+   return Hwf;
 }
 
 } // ctns

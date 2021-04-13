@@ -223,6 +223,7 @@ struct dvdsonSolver{
 	       std::cout << "error: Diag[i]-H(i,i) is too large!" << std::endl;
                exit(1);
             }
+	    std::cout << "CheckDiag passed successfully!" << std::endl;
          }
          // copy results
 	 std::copy(e.begin(), e.begin()+neig, es);
