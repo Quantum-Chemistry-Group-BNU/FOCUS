@@ -1,13 +1,16 @@
+#ifndef SWEEP_DECIMATION_H
+#define SWEEP_DECIMATION_H
+
 /*
 #include "../core/linalg.h"
 #include "../core/tools.h"
 #include "tns_decimation.h"
 #include "tns_prdm.h"
+*/
 
-using namespace std;
-using namespace tns;
-using namespace linalg;
+namespace ctns{
 
+/*
 // wf[L,R] = U[L,l]*sl*Vh[l,R]
 qtensor2 tns::decimation_row(const qtensor2& rdm,
 			     const int dcut,
@@ -121,25 +124,26 @@ qtensor2 tns::decimation_row(const qtensor2& rdm,
    if(permute) qt2 = qt2.P();
    return qt2;
 }
-   
-void tns::decimation_onedot(comb& icomb, 
-		            const directed_bond& dbond,
-		            const int dcut,
-			    const matrix& vsol,
-			    qtensor3& wf,
-		            double& dwt,
-			    int& deff,
-			    const double noise, 
-			    oper_dict& cqops,
-			    oper_dict& lqops,
-			    oper_dict& rqops){
+*/
+
+template <typename Km>
+void decimation_onedot(sweep_data& sweeps,
+		       const int isweep,
+		       const int ibond, 
+		       comb<Km>& icomb,
+		       const linalg::matrix<typename Km::dtype>& vsol,
+		       qtensor3<typename Km::dtype>& wf,
+		       oper_dict<typename Km::dtype>& cqops,
+		       oper_dict<typename Km::dtype>& lqops,
+		       oper_dict<typename Km::dtype>& rqops){
+/*
    const double thresh_nz = 1.e-10;
    auto p0 = get<0>(dbond);
    auto p1 = get<1>(dbond);
    auto forward = get<2>(dbond);
    auto p = forward? p0 : p1;
    bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
-   cout << "tns::decimation_onedot (fw,ct,dcut,noise)=(" 
+   cout << "ctns::decimation_onedot (forward,cturn,dcut,noise)=(" 
 	<< forward << "," << cturn << "," << dcut << "," << scientific << noise << ") ";
    qtensor2 rdm;
    if(forward){
@@ -236,8 +240,11 @@ void tns::decimation_onedot(comb& icomb,
 	 }
       }
    }
+*/
+   exit(1);
 }
 
+/*
 void tns::decimation_twodot(comb& icomb, 
 		            const directed_bond& dbond,
 		            const int dcut, 
@@ -367,3 +374,7 @@ void tns::decimation_twodot(comb& icomb,
    }
 }
 */
+
+} // ctns
+
+#endif

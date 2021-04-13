@@ -5,7 +5,8 @@
 #include "../core/dvdson.h"
 #include "../core/linalg.h"
 #include "ctns_dpt.h"
-#include "sweep_onedot.h"
+#include "sweep_ham_onedot.h"
+#include "sweep_decimation.h"
 
 namespace ctns{
 
@@ -87,7 +88,8 @@ void sweep_onedot(const input::schedule& schd,
    int neig = sweeps.nstate;
    std::vector<double> diag(nsub,1.0);
    diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
-   
+ 
+   // debug 
    for(const auto& p : diag){
       std::cout << p << " ";
    }
@@ -138,17 +140,14 @@ void sweep_onedot(const input::schedule& schd,
       std::cout << "error: no such option for cisolver=" << schd.cisolver << std::endl;
    }
    auto tc = tools::get_time();
+
+   // 3. decimation
+   decimation_onedot(sweeps, isweep, ibond, icomb, vsol, wf, cqops, lqops, rqops);
+   auto td = tools::get_time();
    exit(1);
 
-   // 3. decimation 
-/*   
-   decimation_onedot(icomb, dbond, ctrl.dcut, vsol, wf, dwt, deff,
-		     ctrl.noise, cqops, lqops, rqops);
-*/
-   auto td = tools::get_time();
-
    // 4. renormalize operators
-   //oper_renorm_onedot(icomb, dbond, cqops, lqops, rqops, int2e, int1e, schd.scratch);
+   //renorm_onedot(icomb, dbond, cqops, lqops, rqops, int2e, int1e, schd.scratch);
    auto t1 = tools::get_time();
    std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
