@@ -258,22 +258,25 @@ void onedot_Hx(Tm* y,
       std::cout << "(nl_opA,nl_opB)=" << nl_opA << "," << nl_opB << " "
 	        << "(nr_opA,nr_opB)=" << nr_opA << "," << nr_opB << std::endl; 
    }
-   // Al*Pr+Bl*Qr => L=l, R=cr
    bool ifMergeCR = (nl_opA + nl_opB <= nr_opA + nr_opB)? true : false;
+
+   ifMergeCR = false;
+
+   // Al*Pr+Bl*Qr => L=l, R=cr
    if(ifMergeCR){
 
-      // 1. Hl 
+      // 1. H^l 
       Hwf += contract_qt3_qt2_l(wf,lqops['H'][0]);
-      // 2. Hcr
+      // 2. H^cr
       Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e);
       // 3. p1^l+*Sp1^cr + h.c.
       //    ol*or|lcr>psi[lcr] => ol|l>*or|cr>(-1)^{p(l)}psi[lcr]
       for(const auto& op1C : lqops['C']){
 	 int p1 = op1C.first;
 	 const auto op1 = op1C.second;
-	 auto qt3  = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1);
+	 auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1);
 	 auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1,dagger); 
-	 Hwf += oper_kernel_OIwf("lc",qt3.row_signed() ,op1); // both lc/lr can work 
+	 Hwf += oper_kernel_OIwf("lc",qt3n.row_signed(),op1); // both lc/lr can work 
 	 Hwf -= oper_kernel_OIwf("lc",qt3h.row_signed(),op1,dagger);
       }
       // 4. q2^cr+*Sq2^l + h.c.
@@ -296,84 +299,79 @@ void onedot_Hx(Tm* y,
       // 5. Apq^l*Ppq^cr + h.c.
       for(const auto& op1A : lqops['A']){
 	 int index = op1A.first;
-	 std::cout << "index=" << index << std::endl;
 	 const auto& op1 = op1A.second;
-	 auto qt3  = oper_compxwf_opP("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
+	 auto qt3n = oper_compxwf_opP("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
 	 auto qt3h = oper_compxwf_opP("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index,dagger);
-	 Hwf += oper_kernel_OIwf("lc",qt3 ,op1);
+	 Hwf += oper_kernel_OIwf("lc",qt3n,op1);
 	 Hwf += oper_kernel_OIwf("lc",qt3h,op1,dagger);
       }
-      // 6. Bps^l*Qps^cr
+      // 6. Bps^l*Qps^cr (using Hermicity)
       for(const auto& op1B : lqops['B']){
 	 int index = op1B.first;
 	 const auto& op1 = op1B.second;
 	 const Tm wt = wfac(index);
-	 auto qt3  = oper_compxwf_opQ("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
+	 auto qt3n = oper_compxwf_opQ("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
 	 auto qt3h = oper_compxwf_opQ("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index,dagger);
-	 Hwf += wt*oper_kernel_OIwf("lc", qt3,op1);
+	 Hwf += wt*oper_kernel_OIwf("lc",qt3n,op1);
 	 Hwf += wt*oper_kernel_OIwf("lc",qt3h,op1,dagger);
       }
 
    // Ar*Pl+Br*Ql => L=lc, R=r
    }else{
 
-      exit(1);
-   }
-/*
-   // construct H*wf
-   if(ifPl){
-      // L=lc, R=r
       // 1. H^lc
-      Hwf += oper_compxwf_opH("lc",wf,lqops,cqops,int2e,int1e);
+      Hwf += oper_compxwf_opH("lc",wf,lqops,cqops,isym,ifkr,int2e,int1e);
       // 2. H^r
       Hwf += contract_qt3_qt2_r(wf,rqops['H'][0]);
       // 3. p1^lc+*Sp1^r + h.c.
-      // p1^l+*Sp1^r
+      // 3.1 p1^l+*Sp1^r
       for(const auto& op1C : lqops['C']){
 	 int p1 = op1C.first;
 	 const auto& op1 = op1C.second;
 	 const auto& op2S = rqops['S'].at(p1);
 	 Hwf += oper_kernel_OOwf("lr",wf.mid_signed(),op1,op2S,1); // special treatment of mid sign
-	 Hwf -= oper_kernel_OOwf("lr",wf.mid_signed(),op1.T(),op2S.T(),1);
+	 Hwf -= oper_kernel_OOwf("lr",wf.mid_signed(),op1,op2S,1,dagger);
       }
-      // p1^c+*Sp1^r
+      // 3.2 p1^c+*Sp1^r
       for(const auto& op1C : cqops['C']){
 	 int p1 = op1C.first;
 	 const auto& op1 = op1C.second;
 	 const auto& op2S = rqops['S'].at(p1);
 	 Hwf += oper_kernel_OOwf("cr",wf,op1,op2S,1);
-	 Hwf -= oper_kernel_OOwf("cr",wf,op1.T(),op2S.T(),1);
+	 Hwf -= oper_kernel_OOwf("cr",wf,op1,op2S,1,dagger);
       }
       // 4. q2^r+*Sq2^lc + h.c.
       for(const auto& op2C : rqops['C']){
          int q2 = op2C.first;
   	 const auto& op2 = op2C.second;
 	 // q2^r+*Sq2^lc = -Sq2^lc*q2^r
-	 auto qt3 = oper_kernel_IOwf("cr",wf,op2,1); 
-	 Hwf -= oper_compxwf_opS("lc",qt3.row_signed(),lqops,cqops,int2e,int1e,q2);
-	 auto qt3hc = oper_kernel_IOwf("cr",wf,op2.T(),1);
-	 Hwf += oper_compxwf_opS("lc",qt3hc.row_signed(),lqops,cqops,int2e,int1e,q2,true);
+	 auto qt3n = oper_kernel_IOwf("cr",wf,op2,1); 
+	 auto qt3h = oper_kernel_IOwf("cr",wf,op2,1,dagger);
+	 Hwf -= oper_compxwf_opS("lc",qt3n.row_signed(),lqops,cqops,isym,ifkr,int2e,int1e,q2);
+	 Hwf += oper_compxwf_opS("lc",qt3h.row_signed(),lqops,cqops,isym,ifkr,int2e,int1e,q2,dagger);
       }
       // 5. Ars^r*Prs^lc + h.c.
       for(const auto& op2A : rqops['A']){
          int index = op2A.first;
 	 const auto& op2 = op2A.second;
 	 // Ars^r*Prs^lc = Prs^lc*Ars^r
-	 auto qt3 = oper_kernel_IOwf("cr",wf,op2,0);
-	 Hwf += oper_compxwf_opP("lc",qt3,lqops,cqops,int2e,int1e,index);
-	 auto qt3hc = oper_kernel_IOwf("cr",wf,op2.T(),0);
-	 Hwf += oper_compxwf_opP("lc",qt3hc,lqops,cqops,int2e,int1e,index,true);
+	 auto qt3n = oper_kernel_IOwf("cr",wf,op2,0);
+	 auto qt3h = oper_kernel_IOwf("cr",wf,op2,0,dagger);
+	 Hwf += oper_compxwf_opP("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,index);
+	 Hwf += oper_compxwf_opP("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,index,dagger);
       }
-      // 6. Qqr^lc*Bqr^r
+      // 6. Qqr^lc*Bqr^r (using Hermicity)
       for(const auto& op2B : rqops['B']){
 	 int index = op2B.first;
 	 const auto& op2 = op2B.second;
-	 auto qt3 = oper_kernel_IOwf("cr",wf,op2,0);
-	 Hwf += oper_compxwf_opQ("lc",qt3,lqops,cqops,int2e,int1e,index);
+	 const Tm wt = wfac(index);
+	 auto qt3n = wt*oper_kernel_IOwf("cr",wf,op2,0);
+	 auto qt3h = wt*oper_kernel_IOwf("cr",wf,op2,0,dagger);
+	 Hwf += oper_compxwf_opQ("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,index);
+	 Hwf += oper_compxwf_opQ("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,index,dagger);
       }
-   }else{
-   }
-*/
+   
+   } // ifMergeCR
    // finally copy back to y
    Hwf.to_array(y);
 }

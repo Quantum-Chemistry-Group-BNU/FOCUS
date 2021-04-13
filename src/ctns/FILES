@@ -72,11 +72,8 @@ Sweep algorithm
  ctns_dpt.h
 
 * local CI: Hdiag & Hx
- sweep_onedot.h
+ sweep_onedot.h => ED works!
 
- ctns_opt_ham.h
- tns_ham.h
- tns_ham_onedot.cpp
  tns_ham_twodot.cpp
 
 * perturbed density matrix
