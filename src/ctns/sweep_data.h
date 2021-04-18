@@ -16,6 +16,7 @@ struct dot_result{
 struct sweep_data{
    // constructor
    sweep_data(const input::schedule& schd, const std::vector<directed_bond>& sweep_seq, const int n_state){
+      guess = schd.guess;
       nstate = n_state;
       seq = sweep_seq; 
       seqsize = sweep_seq.size();
@@ -38,6 +39,7 @@ struct sweep_data{
    // summary for a single sweep
    void summary(const int isweep);
 public:
+   bool guess;
    int maxsweep, seqsize, nstate; 
    std::vector<directed_bond> seq; // sweep bond sequence 
    std::vector<input::sweep_ctrl> ctrls; // control parameters
@@ -52,15 +54,14 @@ void sweep_data::summary(const int isweep){
    std::cout << "sweep_data::summary isweep=" << isweep << std::endl;
    std::cout << tools::line_separator << std::endl;
    print_ctrl(isweep);
-
    // print results for each dot in a single sweep
    std::vector<double> emean(seqsize,0.0);
    for(int ibond=0; ibond<seqsize; ibond++){
       auto dbond = seq[ibond];
-      auto p0 = std::get<0>(dbond);
-      auto p1 = std::get<1>(dbond);
-      auto forward = std::get<2>(dbond);
-      auto p = forward? p0 : p1;
+      auto p0 = dbond.p0;
+      auto p1 = dbond.p1;
+      auto forward = dbond.forward;
+      auto p = dbond.p;
       std::cout << " ibond=" << ibond << " bond=" << p0 << "-" << p1 
                 << " forward=" << forward
                 << " deff=" << opt_result[isweep][ibond].deff

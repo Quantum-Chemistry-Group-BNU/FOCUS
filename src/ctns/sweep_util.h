@@ -4,9 +4,10 @@
 #include "../core/tools.h"
 #include "../core/dvdson.h"
 #include "../core/linalg.h"
-#include "ctns_dpt.h"
+#include "ctns_qdpt.h"
 #include "sweep_ham_onedot.h"
 #include "sweep_decimation.h"
+#include "sweep_renorm.h"
 
 namespace ctns{
 
@@ -45,40 +46,36 @@ void sweep_onedot(const input::schedule& schd,
    auto t0 = tools::get_time();
    std::cout << "ctns::sweep_onedot" << std::endl;
    
-   // 0. determine bond and site to be updated 
-   auto dbond = sweeps.seq[ibond];
-   auto p0 = std::get<0>(dbond);
-   auto p1 = std::get<1>(dbond);
-   auto forward = std::get<2>(dbond);
-   auto p = forward? p0 : p1;
-   bool cturn = icomb.topo.is_cturn(p0,p1);
+   // 0. preprocessing 
    // processing partition & symmetry
-   auto suppl = icomb.get_suppl(p);
+   auto dbond = sweeps.seq[ibond];
+   auto p = dbond.p;
    auto suppc = icomb.get_suppc(p); 
+   auto suppl = icomb.get_suppl(p);
    auto suppr = icomb.get_suppr(p);
-   int sl = suppl.size();
    int sc = suppc.size();
+   int sl = suppl.size();
    int sr = suppr.size();
    // processing symmetry
-   qbond ql, qc, qr;
-   ql = icomb.get_ql(p);
+   qbond qc, ql, qr;
    qc = icomb.get_qc(p); 
+   ql = icomb.get_ql(p);
    qr = icomb.get_qr(p);
-   ql.print("ql");
    qc.print("qc");
+   ql.print("ql");
    qr.print("qr");
    // wavefunction to be computed
    qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
-   qtensor3<Tm> wf(sym_state, ql, qc, qr, {1,1,1});
+   qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
    std::cout << "dimCI=" << wf.get_dim() << std::endl;
 
    // 1. load operators 
-   oper_dict<Tm> lqops, cqops, rqops;
-   oper_load_qops(icomb, p, schd.scratch, 'l', lqops);
+   oper_dict<Tm> cqops, lqops, rqops;
    oper_load_qops(icomb, p, schd.scratch, 'c', cqops);
+   oper_load_qops(icomb, p, schd.scratch, 'l', lqops);
    oper_load_qops(icomb, p, schd.scratch, 'r', rqops);
-   oper_display(lqops, "lqops", 1);
    oper_display(cqops, "cqops", 1);
+   oper_display(lqops, "lqops", 1);
    oper_display(rqops, "rqops", 1);
    auto ta = tools::get_time();
 
@@ -112,11 +109,14 @@ void sweep_onedot(const input::schedule& schd,
 		      std::ref(cqops), std::ref(lqops), std::ref(rqops), 
 		      std::cref(int2e), std::cref(int1e), std::cref(ecore), 
 		      std::ref(wf));
-   
    // solve local problem
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
-/*
+   if(schd.cisolver == 0){
+      solver.solve_diag(eopt.data(), vsol.data(), true); // debug
+   }else if(schd.cisolver == 1){ // davidson
+      // guess or not
+ /*
    // load initial guess from previous opt
    vector<double> v0(nsub*neig);
    if(icomb.psi.size() == 0) initial_onedot(icomb); 
@@ -129,13 +129,7 @@ void sweep_onedot(const input::schedule& schd,
    assert(nindp == neig);
    //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-*/
-   if(schd.cisolver == 0){
-      solver.solve_diag(eopt.data(), vsol.data(), true); // debug
-   }else if(schd.cisolver == 1){ // davidson
-
-   }else if(schd.cisolver == 2){ // guessed
-
+*/     
    }else{
       std::cout << "error: no such option for cisolver=" << schd.cisolver << std::endl;
    }
@@ -144,15 +138,15 @@ void sweep_onedot(const input::schedule& schd,
    // 3. decimation
    decimation_onedot(sweeps, isweep, ibond, icomb, vsol, wf, cqops, lqops, rqops);
    auto td = tools::get_time();
-   exit(1);
 
    // 4. renormalize operators
-   //renorm_onedot(icomb, dbond, cqops, lqops, rqops, int2e, int1e, schd.scratch);
+   renorm_onedot(sweeps.seq[ibond], icomb, cqops, lqops, rqops, int2e, int1e, schd.scratch);
    auto t1 = tools::get_time();
    std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
+   
    sweep_timing({t0,ta,tb,tc,td,t1});
-   exit(1);
+   
 }
 
 
@@ -277,73 +271,6 @@ void tns::opt_finaldot(const input::schedule& schd,
    icomb.rsites[p0] = get_rsite0(icomb.psi);
 }
 
-*/
-
-/*
-void oper_renorm_onedot(const comb& icomb, 
-		             const directed_bond& dbond,
-			     oper_dict& cqops,
-		             oper_dict& lqops,
-			     oper_dict& rqops,	
-		             const integral::two_body& int2e, 
-		             const integral::one_body& int1e,
-			     const string scratch){
-   auto p0 = get<0>(dbond);
-   auto p1 = get<1>(dbond);
-   auto forward = get<2>(dbond);
-   auto p = forward? p0 : p1;
-   bool cturn = (icomb.type.at(p0) == 3 && p1.second == 1);
-   cout << "ctns::oper_renorm_onedot" << endl;
-   oper_dict qops;
-   if(forward){
-      if(!cturn){
-	 qops = oper_renorm_opAll("lc", icomb, icomb, p, lqops, cqops, int2e, int1e);
-      }else{
-	 qops = oper_renorm_opAll("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
-      }
-      string fname = oper_fname(scratch, p, "lop");
-      oper_save(fname, qops);
-   }else{
-      qops = oper_renorm_opAll("cr", icomb, icomb, p, cqops, rqops, int2e, int1e);
-      string fname = oper_fname(scratch, p, "rop");
-      oper_save(fname, qops);
-   }
-}
-
-void oper_renorm_twodot(const comb& icomb, 
-		             const directed_bond& dbond,
-			     oper_dict& c1qops,
-			     oper_dict& c2qops,
-		             oper_dict& lqops,
-			     oper_dict& rqops,	
-		             const integral::two_body& int2e, 
-		             const integral::one_body& int1e, 
-			     const string scratch){ 
-   auto p0 = get<0>(dbond);
-   auto p1 = get<1>(dbond);
-   auto forward = get<2>(dbond);
-   auto p = forward? p0 : p1;
-   bool cturn = (icomb.type.at(p0) == 3 && p1.second == 1);
-   cout << "ctns::oper_renorm_twodot" << endl;
-   oper_dict qops;
-   if(forward){
-      if(!cturn){
-	 qops = oper_renorm_opAll("lc", icomb, icomb, p, lqops, c1qops, int2e, int1e);
-      }else{
-	 qops = oper_renorm_opAll("lr", icomb, icomb, p, lqops, rqops, int2e, int1e);
-      }
-      string fname = oper_fname(scratch, p, "lop");
-      oper_save(fname, qops);
-   }else{
-      if(!cturn){
-         qops = oper_renorm_opAll("cr", icomb, icomb, p, c2qops, rqops, int2e, int1e);
-      }else{
-         qops = oper_renorm_opAll("cr", icomb, icomb, p, c1qops, c2qops, int2e, int1e);
-      }
-      string fname = oper_fname(scratch, p, "rop");
-      oper_save(fname, qops);
-   }
-}
 */
 
 } // ctns

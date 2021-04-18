@@ -69,26 +69,36 @@ Sweep algorithm
  ctns_sweep.h
  sweep_data.h
  sweep_util.h
- ctns_dpt.h
 
 * local CI: Hdiag & Hx
  sweep_onedot.h => ED works!
 
- tns_ham_twodot.cpp
-
-* perturbed density matrix
- tns_prdm.h
- tns_prdm.cpp
- tns_decimation.h
- tns_decimation.cpp
+* decimation
+ ctns_dpt.h
+ sweep_decimation.h
+ qtensor_reshape.h
 
 * operator transformation
+ sweep_renorm.h 
+
+-------------------
+
+* perturbed density matrix
+
+ tns_prdm.h
+ tns_prdm.cpp
+
  tns_initial.h
  tns_initial.cpp
  
+* twodot
+ tns_ham_twodot.cpp
+
 * reshaping: working in the format of qt2 -> psi(L,R)! 
  tns_qtensor_reshape.cpp
  tns_qtensor4.cpp
+
+
 
 Low-level data structure
 -------------------

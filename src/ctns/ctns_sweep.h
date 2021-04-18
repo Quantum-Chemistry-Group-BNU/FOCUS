@@ -33,18 +33,17 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
       auto ti = tools::get_time();
       for(int ibond=0; ibond<sweeps.seqsize; ibond++){
 	 auto dbond = sweeps.seq[ibond];
-         auto p0 = std::get<0>(dbond);
-	 auto p1 = std::get<1>(dbond);
-         auto forward = std::get<2>(dbond);
-	 auto updated = !forward; // 0/1-th udpated site in the bond
-         auto p = forward? p0 : p1;
-	 auto tp0 = icomb.topo.node_type(p0);
-	 auto tp1 = icomb.topo.node_type(p1);
-         bool cturn = icomb.topo.is_cturn(p0,p1);
+         auto p0 = dbond.p0;
+	 auto p1 = dbond.p1;
+         auto forward = dbond.forward;
+         auto p = dbond.p;
+         bool cturn = dbond.cturn;
 	 std::cout << " isweep=" << isweep << " ibond=" << ibond << " bond=" << p0 << "-" << p1 
-	           << " (forward,update,cturn)=(" << forward << "," << updated << "," << cturn << ")" 
+	           << " (forward,update,cturn)=(" << forward << "," << !forward << "," << cturn << ")" 
 	           << std::endl;
 
+	 auto tp0 = icomb.topo.node_type(p0);
+	 auto tp1 = icomb.topo.node_type(p1);
 	 if(sweeps.ctrls[isweep].dots == 1){ // || (ctrl.dots == 2 && tp0 == 3 && tp1 == 3)){
 	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }else{

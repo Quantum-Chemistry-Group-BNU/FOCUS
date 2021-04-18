@@ -1,130 +1,262 @@
 #ifndef SWEEP_DECIMATION_H
 #define SWEEP_DECIMATION_H
 
-/*
-#include "../core/linalg.h"
-#include "../core/tools.h"
-#include "tns_decimation.h"
-#include "tns_prdm.h"
-*/
 
 namespace ctns{
 
-/*
 // wf[L,R] = U[L,l]*sl*Vh[l,R]
-qtensor2 tns::decimation_row(const qtensor2& rdm,
-			     const int dcut,
-			     double& dwt,
-			     int& deff,
-			     const bool permute){
+template <typename Tm>
+qtensor2<Tm> decimation_row(const qtensor2<Tm>& rdm,
+			    const int dcut,
+			    double& dwt,
+			    int& deff){
    const double thresh_sig2 = 1.e-16;
-   bool debug = false;
-   if(debug) cout << "tns::decimation_row dcut=" << dcut << endl;
-   const auto& qrow = rdm.qrow;
-   // 0. normalize
-   double rfac = 0.0;
-   for(const auto& pr : qrow){
-      auto qr = pr.first;
-      auto key = make_pair(qr,qr);
-      rfac += rdm.qblocks.at(key).trace();
-   }
-   rfac = 1.0/rfac;
+   const bool debug = true;
+   if(debug) std::cout << "ctns::decimation_row dcut=" << dcut << std::endl;
+   // 0. normalize before diagonalization
+   Tm rfac = 1.0/rdm.trace();
    // 1. compute reduced basis
-   map<int,qsym> idx2qsym; 
-   vector<double> sig2all;
-   map<qsym,matrix> rbasis;
-   int idx = 0, ioff = 0;
-   for(const auto& pr : qrow){
-      auto qr = pr.first;
-      auto key = make_pair(qr,qr);
+   std::map<int,int> idx2sector; 
+   std::vector<double> sig2all;
+   std::map<int,linalg::matrix<Tm>> rbasis;
+   auto offset = rdm.qrow.get_offset();
+   for(int br=0; br<rdm.rows(); br++){
+      const auto& blk = rdm(br,br);
+      if(blk.size() == 0) continue;
       // compute renormalized basis
-      int rdim = pr.second;
-      vector<double> sig2(rdim);
-      matrix rbas(rdm.qblocks.at(key));
-      rbas *= rfac; // normalize
-      eigen_solver(rbas, sig2, 1);
+      int rdim = rdm.qrow.get_dim(br);
+      std::vector<double> sig2(rdim);
+      linalg::matrix<Tm> rbas(rdim,rdim);
+      auto rblk = rfac*blk;
+      linalg::eig_solver(rblk, sig2, rbas, 1);
       // save
+      std::copy(sig2.begin(), sig2.end(), std::back_inserter(sig2all));
+      rbasis[br] = rbas;
+      int ioff = offset[br];
       for(int i=0; i<rdim; i++){
-         idx2qsym[ioff+i] = qr;
+	 idx2sector[ioff+i] = br;
       }
-      copy(sig2.begin(), sig2.end(), back_inserter(sig2all));
-      rbasis[qr] = rbas;
-      ioff += rdim;
       if(debug){
-	 cout << "idx=" << idx << " qr=" << qr << " rdim=" << rdim << endl;
-	 cout << "    sig2=";
-	 for(auto s : sig2) cout << s << " ";
-	 cout << endl;
-	 idx++;
+	 if(br == 0) std::cout << "diagonalization of rdm for each symmetry sector:" << std::endl;
+	 std::cout << " br=" << br << " qr=" << rdm.qrow.get_sym(br) << " rdim=" << rdim << " sig2=";
+	 for(auto s : sig2) std::cout << s << " ";
+	 std::cout << std::endl;
       }
    }
-   assert(rdm.get_dim_row() == sig2all.size());
-   // 2. select important ones
+   // 2. select important sig2
    auto index = tools::sort_index(sig2all, 1);
-   qsym_space qres;
-   map<qsym,double> wts;
+   std::map<int,std::pair<int,double>> kept; // br->(dim,wt)
+   deff = 0;
    double sum = 0.0;
    double SvN = 0.0;
    for(int i=0; i<sig2all.size(); i++){
       if(i >= dcut) break; // discard rest
       int idx = index[i];
       if(sig2all[idx] < thresh_sig2) continue; // discard negative weights
-      auto q = idx2qsym[idx];
-      auto it = qres.find(q);
-      if(it == qres.end()){
-         qres[q] = 1;
-	 wts[q] = sig2all[idx];
+      int br = idx2sector[idx];
+      auto it = kept.find(br);
+      if(it == kept.end()){
+         kept[br].first = 1;
+	 kept[br].second = sig2all[idx];
       }else{
-	 qres[q] += 1;
-	 wts[q] += sig2all[idx];
+	 kept[br].first += 1;
+	 kept[br].second += sig2all[idx];
       }
+      deff += 1;
       sum += sig2all[idx];
-      SvN += -sig2all[idx]*log2(sig2all[idx]);
+      SvN += -sig2all[idx]*std::log2(sig2all[idx]);
       if(debug){
-	if(i==0) cout << "sorted sig2:" << endl;     
-	cout << "i=" << i << " q=" << q << " idx=" << qres[q]-1 
-             << " sig2=" << sig2all[idx] 
-	     << " accum=" << sum << endl;
+	if(i == 0) std::cout << "sorted sig2:" << std::endl;     
+	std::cout << " i=" << i << " (br,ith)=" << br << "," << kept[br].first-1 
+             	  << " sig2=" << sig2all[idx] 
+	          << " accum=" << sum << std::endl;
       }
    }
-   deff = qsym_space_dim(qres);
    dwt = 1.0-sum;
-   cout << "  reduction:" << sig2all.size() << "->" << deff
-        << "  dwt=" << dwt 
-	<< "  SvN=" << SvN << endl; 
-   idx = 0;
-   for(const auto& p : qres){
-      auto& q = p.first;
-      cout << "  idx=" << idx << "  qsym=" << q << "  dim=" << p.second 
-	   << "  wt=" << scientific << setprecision(2) << wts[q] 
-	   << "  per=" << defaultfloat << wts[q]*100 << endl;
-      idx++;
-   }
-   // 3. form qt2 assembling blocks
-   idx = 0;
-   qtensor2 qt2(qsym(0,0), qrow, qres);
-   for(auto& p : qt2.qblocks){
-      auto q = p.first;
-      auto& blk = p.second;
-      if(blk.size() > 0){
-         assert(q.first == q.second); // must be block diagonal
-	 auto qd = q.first;
-	 auto& rbas = rbasis[qd];
-	 copy(rbas.data(), rbas.data()+blk.size(), blk.data());
-	 if(debug){
-	    if(idx == 0) cout << "reduced basis:" << endl;
-	    cout << "idx=" << idx << " qr=" << qd << " shape=(" 
-		 << blk.rows() << "," << blk.cols() << ")"
-		 << endl;
-	    idx++; 
-	 }
+   std::cout << "summary: reduce from " << sig2all.size() << " to " << deff
+     	     << "  dwt=" << dwt << "  SvN=" << SvN << std::endl;
+   // 3. construct qbond and qt2 by assembling blocks
+   std::vector<int> br_matched;
+   std::vector<std::pair<qsym,int>> dims;
+   for(const auto& p : kept){
+      const auto& br = p.first;
+      const auto& dim = p.second.first;
+      const auto& wt = p.second.second;
+      br_matched.push_back(br);
+      dims.push_back(std::make_pair(rdm.qrow.get_sym(br),dim));
+      if(debug){
+         std::cout << " br=" << p.first << " dim=" << dim 
+           	   << " wt=" << wt << std::endl;
       }
    }
-   // 4. permute two lines for later generating right canonical form
-   if(permute) qt2 = qt2.P();
+   qbond qkept(dims);
+   qtensor2<Tm> qt2(qsym(), rdm.qrow, qkept);
+   for(int bc=0; bc<qkept.size(); bc++){
+      int br = br_matched[bc];
+      auto& blk = qt2(br,bc); 
+      auto& rbas = rbasis[br];
+      std::copy(rbas.data(), rbas.data()+blk.size(), blk.data());
+      if(debug){
+         assert(rdm.qrow.get_sym(br) == qt2.qcol.get_sym(bc));
+         if(bc == 0) std::cout << "reduced basis:" << std::endl;
+         std::cout << " (br,bc)=" << br << "," << bc 
+		   << " qsym=" << qt2.qcol.get_sym(bc)
+		   << " shape=(" << blk.rows() << "," << blk.cols() << ")"
+     	           << std::endl;
+      }
+   } // bc
    return qt2;
 }
+
+template <typename Km>
+void decimation_onedot_lc(sweep_data& sweeps,
+		          const int isweep,
+		          const int ibond, 
+		          comb<Km>& icomb,
+		          const linalg::matrix<typename Km::dtype>& vsol,
+		          qtensor3<typename Km::dtype>& wf,
+		          oper_dict<typename Km::dtype>& lqops,
+		          oper_dict<typename Km::dtype>& cqops){
+   const auto& dcut  = sweeps.ctrls[isweep].dcut;
+   const auto& noise = sweeps.ctrls[isweep].noise; 
+   std::cout << " renormalize |lc> : (dcut,noise)=" << dcut << "," 
+	     << std::scientific << std::setprecision(1) << noise << std::endl;
+   auto& result = sweeps.opt_result[isweep][ibond];
+   auto qprod = qmerge(wf.qrow, wf.qmid);
+   auto qlc = qprod.first;
+   auto dpt = qprod.second;
+   qtensor2<typename Km::dtype> rdm(qsym(), qlc, qlc);
+   // 1. build pRDM 
+   for(int i=0; i<vsol.cols(); i++){
+      wf.from_array(vsol.col(i));
+      rdm += wf.merge_lc().get_rdm_row();
+      //if(noise > thresh_noise) get_prdm_lc(wf, lqops, cqops, noise, rdm);
+   }
+   // 2. decimation
+   auto qt2 = decimation_row(rdm, dcut, result.dwt, result.deff);
+   // 3. update site tensor
+   const auto& p = sweeps.seq[ibond].p;
+   icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, dpt);
+   //-------------------------------------------------------------------	 
+   assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
+   auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
+   assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
+   //-------------------------------------------------------------------
+/*
+   // 4. initial guess for next site within the bond
+   if(sweeps.guess){	
+      icomb.psi.clear();
+      for(int i=0; i<vsol.cols(); i++){
+         wf.from_array(vsol.col(i));
+         auto cwf = qt2.T().dot(wf.merge_lc()); // <-W[alpha,r]->
+         auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
+         icomb.psi.push_back(psi);
+      }
+   }
 */
+}
+
+template <typename Km>
+void decimation_onedot_lr(sweep_data& sweeps,
+		          const int isweep,
+		          const int ibond, 
+		          comb<Km>& icomb,
+		          const linalg::matrix<typename Km::dtype>& vsol,
+		          qtensor3<typename Km::dtype>& wf,
+		          oper_dict<typename Km::dtype>& lqops,
+		          oper_dict<typename Km::dtype>& rqops){
+   const auto& dcut  = sweeps.ctrls[isweep].dcut;
+   const auto& noise = sweeps.ctrls[isweep].noise; 
+   std::cout << " renormalize |lr> (comb) : (dcut,noise)=" << dcut << "," 
+	     << std::scientific << std::setprecision(1) << noise << std::endl;
+   auto& result = sweeps.opt_result[isweep][ibond];
+   auto qprod = qmerge(wf.qrow, wf.qcol);
+   auto qlr = qprod.first;
+   auto dpt = qprod.second;
+   qtensor2<typename Km::dtype> rdm(qsym(), qlr, qlr);
+   // 1. build pRDM 
+   for(int i=0; i<vsol.cols(); i++){
+      wf.from_array(vsol.col(i));
+      // Note: need to first bring two dimensions adjacent to each other before merge!
+      rdm += wf.perm_signed().merge_lr().get_rdm_row();
+      //if(noise > thresh_noise) get_prdm_lr(wf, lqops, rqops, noise, rdm);
+   }
+   // 2. decimation
+   auto qt2 = decimation_row(rdm, dcut, result.dwt, result.deff);
+   // 3. update site tensor
+   const auto& p = sweeps.seq[ibond].p;
+   icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, dpt);
+   //-------------------------------------------------------------------	 
+   assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
+   auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
+   assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
+   //-------------------------------------------------------------------	
+/*   
+   // 4. initial guess for next site within the bond
+   if(sweeps.guess){	
+      icomb.psi.clear();
+      for(int i=0; i<vsol.cols(); i++){
+         wf.from_array(vsol.col(i));
+         auto cwf = qt2.T().dot(wf.perm_signed().merge_lr()); // <-W[alpha,r]->
+         auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
+         icomb.psi.push_back(psi);
+      }
+   }
+*/
+}
+
+template <typename Km>
+void decimation_onedot_cr(sweep_data& sweeps,
+		          const int isweep,
+		          const int ibond, 
+		          comb<Km>& icomb,
+		          const linalg::matrix<typename Km::dtype>& vsol,
+		          qtensor3<typename Km::dtype>& wf,
+		          oper_dict<typename Km::dtype>& cqops,
+		          oper_dict<typename Km::dtype>& rqops){
+   const auto& dcut  = sweeps.ctrls[isweep].dcut;
+   const auto& noise = sweeps.ctrls[isweep].noise; 
+   std::cout << " renormalize |cr> : (dcut,noise)=" << dcut << "," 
+	     << std::scientific << std::setprecision(1) << noise << std::endl;
+   auto& result = sweeps.opt_result[isweep][ibond];
+   auto qprod = qmerge(wf.qmid, wf.qcol);
+   auto qcr = qprod.first;
+   auto dpt = qprod.second;
+   qtensor2<typename Km::dtype> rdm(qsym(), qcr, qcr);
+   // 1. build pRDM 
+   for(int i=0; i<vsol.cols(); i++){
+      wf.from_array(vsol.col(i));
+      rdm += wf.merge_cr().get_rdm_col();
+      //if(noise > thresh_noise) get_prdm_cr(wf, cqops, rqops, noise, rdm);
+   }
+   // 2. decimation
+   auto qt2 = decimation_row(rdm, dcut, result.dwt, result.deff).T(); // permute two lines for RCF
+   // 3. update site tensor
+   const auto& p = sweeps.seq[ibond].p;
+   icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, dpt);
+   //-------------------------------------------------------------------	
+   assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
+   auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
+   assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
+   //-------------------------------------------------------------------	
+/*   
+   // 4. initial guess for next site within the bond
+   icomb.psi.clear();
+   for(int i=0; i<vsol.cols(); i++){
+      wf.from_array(vsol.col(i));
+      auto cwf = wf.merge_cr().dot(qt2.T()); // <-W[l,alpha]->
+      if(!cturn){
+         auto psi = contract_qt3_qt2_r0(icomb.lsites[p0],cwf);
+         icomb.psi.push_back(psi);
+      }else{
+         // special treatment of the propagation downside to backbone
+         auto psi = contract_qt3_qt2_c(icomb.lsites[p0],cwf.P());
+         psi = psi.perm_signed(); // |(lr)c> back to |lcr> order on backbone
+         icomb.psi.push_back(psi);
+      }
+   }
+*/
+}
 
 template <typename Km>
 void decimation_onedot(sweep_data& sweeps,
@@ -136,112 +268,22 @@ void decimation_onedot(sweep_data& sweeps,
 		       oper_dict<typename Km::dtype>& cqops,
 		       oper_dict<typename Km::dtype>& lqops,
 		       oper_dict<typename Km::dtype>& rqops){
-/*
-   const double thresh_nz = 1.e-10;
-   auto p0 = get<0>(dbond);
-   auto p1 = get<1>(dbond);
-   auto forward = get<2>(dbond);
-   auto p = forward? p0 : p1;
-   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
-   cout << "ctns::decimation_onedot (forward,cturn,dcut,noise)=(" 
-	<< forward << "," << cturn << "," << dcut << "," << scientific << noise << ") ";
-   qtensor2 rdm;
-   if(forward){
+   const auto& dbond = sweeps.seq[ibond];
+   std::cout << "ctns::decimation_onedot (forward,cturn)=" 
+	     << dbond.forward << "," << dbond.cturn;
+   // build reduced density matrix & perform renormalization
+   if(dbond.forward){
       // update lsites & ql
-      if(!cturn){
-         cout << "renormalize |lc>" << endl;
-	 for(int i=0; i<vsol.cols(); i++){
-            wf.from_array(vsol.col(i));
-	    if(i == 0){
-	       rdm  = wf.merge_lc().get_rdm_row();
-	    }else{
-	       rdm += wf.merge_lc().get_rdm_row();
-	    }
-	    if(noise > thresh_nz) get_prdm_lc(wf, lqops, cqops, noise, rdm);
-	 }
-	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
-	 // update site tensor
-	 icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc().second);
- 	 //-------------------------------------------------------------------	 
-	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
-	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
-	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
- 	 //-------------------------------------------------------------------	
-	 // initial guess for next site within the bond
-	 icomb.psi.clear();
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-	    auto cwf = qt2.T().dot(wf.merge_lc()); // <-W[alpha,r]->
-	    auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
-	    icomb.psi.push_back(psi);
-	 }
+      if(!dbond.cturn){
+	 decimation_onedot_lc(sweeps, isweep, ibond, icomb, vsol, wf, lqops, cqops);
       }else{
 	 // special for comb
-         cout << "renormalize |lr> (comb)" << endl;
-	 for(int i=0; i<vsol.cols(); i++){
-            wf.from_array(vsol.col(i));
-	    if(i == 0){
-	       rdm  = wf.perm_signed().merge_lr().get_rdm_row();
-	    }else{
-	       rdm += wf.perm_signed().merge_lr().get_rdm_row();
-	    }
-	    if(noise > thresh_nz) get_prdm_lr(wf, lqops, rqops, noise, rdm);
-	 }
-	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
-	 // update site tensor
-	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
- 	 //-------------------------------------------------------------------	 
-	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
-	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
-	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
- 	 //-------------------------------------------------------------------	 
-	 // initial guess for next site within the bond
-	 icomb.psi.clear();
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-	    auto cwf = qt2.T().dot(wf.perm_signed().merge_lr()); // <-W[alpha,r]->
-	    auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
-	    icomb.psi.push_back(psi);
-	 }
-      }
+         decimation_onedot_lr(sweeps, isweep, ibond, icomb, vsol, wf, lqops, rqops);
+      } // cturn
    }else{
       // update rsites & qr
-      cout << "renormalize |cr>" << endl;
-      for(int i=0; i<vsol.cols(); i++){
-         wf.from_array(vsol.col(i));
-         if(i == 0){
-            rdm  = wf.merge_cr().get_rdm_col();
-         }else{
-            rdm += wf.merge_cr().get_rdm_col();
-         }
-         if(noise > thresh_nz) get_prdm_cr(wf, cqops, rqops, noise, rdm);
-      }
-      auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
-      // update site tensor
-      icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, wf.dpt_cr().second);
-      //-------------------------------------------------------------------	
-      assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
-      auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
-      assert(ovlp.check_identity(1.e-10,false)<1.e-10);
-      //-------------------------------------------------------------------	 
-      // initial guess for next site within the bond
-      icomb.psi.clear();
-      for(int i=0; i<vsol.cols(); i++){
-	 wf.from_array(vsol.col(i));
-	 auto cwf = wf.merge_cr().dot(qt2.T()); // <-W[l,alpha]->
-	 if(!cturn){
-	    auto psi = contract_qt3_qt2_r0(icomb.lsites[p0],cwf);
-            icomb.psi.push_back(psi);
-	 }else{
-	    // special treatment of the propagation downside to backbone
-	    auto psi = contract_qt3_qt2_c(icomb.lsites[p0],cwf.P());
-	    psi = psi.perm_signed(); // |(lr)c> back to |lcr> order on backbone
-	    icomb.psi.push_back(psi);
-	 }
-      }
+      decimation_onedot_cr(sweeps, isweep, ibond, icomb, vsol, wf, cqops, rqops); 
    }
-*/
-   exit(1);
 }
 
 /*
@@ -278,7 +320,7 @@ void tns::decimation_twodot(comb& icomb,
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
-	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+	 assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	
 	 // initial guess for next site within the bond
 	 icomb.psi.clear();
@@ -304,7 +346,7 @@ void tns::decimation_twodot(comb& icomb,
  	 //-------------------------------------------------------------------	 
 	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
 	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
-	 assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+	 assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
  	 //-------------------------------------------------------------------	
 	 // initial guess for next site within the bond
 	 icomb.psi.clear();
@@ -329,11 +371,16 @@ void tns::decimation_twodot(comb& icomb,
             }
          }
          auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
+   
+	 if(permute) qt2 = qt2.P();
+	 
+	 
+	 
 	 icomb.rsites[p] = qt2.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
          //-------------------------------------------------------------------	
          assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
          auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
-         assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+         assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
          //-------------------------------------------------------------------	
          // initial guess for next site within the bond
 	 icomb.psi.clear();
@@ -359,7 +406,7 @@ void tns::decimation_twodot(comb& icomb,
          //-------------------------------------------------------------------	
          assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
          auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
-         assert(ovlp.check_identity(1.e-10,false)<1.e-10);
+         assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
          //-------------------------------------------------------------------	
          // initial guess for next site within the bond
 	 icomb.psi.clear();

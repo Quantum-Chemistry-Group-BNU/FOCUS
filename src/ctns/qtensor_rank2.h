@@ -1,5 +1,5 @@
-#ifndef QTENSOR2_H
-#define QTENSOR2_H
+#ifndef QTENSOR_RANK2_H
+#define QTENSOR_RANK2_H
 
 #include <vector>
 #include <string>
@@ -8,6 +8,7 @@
 #include "../core/matrix.h"
 #include "../core/linalg.h"
 #include "ctns_qsym.h"
+#include "ctns_qdpt.h"
 #include "ctns_kramers.h"
 #include "qtensor_contract.h"
 
@@ -86,10 +87,28 @@ struct qtensor2{
       }
       // algebra
       double normF() const;
+      Tm trace() const;
       qtensor2<Tm> dot(const qtensor2<Tm>& qt) const;
       // for Davidson algorithm
       int get_dim() const;
       void random();
+      // decimation: row/col rdm
+      qtensor2<Tm> get_rdm_row() const;
+      qtensor2<Tm> get_rdm_col() const;
+      // reshape
+      qtensor3<Tm> split_lc(const qbond& qlx, const qbond& qcx, const qdpt& dpt) const{
+         return split_qt3_qt2_lc(*this, qlx, qcx, dpt);
+      }
+      qtensor3<Tm> split_cr(const qbond& qcx, const qbond& qrx, const qdpt& dpt) const{
+         return split_qt3_qt2_cr(*this, qcx, qrx, dpt);
+      }
+      qtensor3<Tm> split_lr(const qbond& qlx, const qbond& qrx, const qdpt& dpt) const{
+         return split_qt3_qt2_lr(*this, qlx, qrx, dpt);
+      }
+/*     
+      qtensor4 split_lr_c1c2(const qbond&, const qbond&, const qdpt&,
+		      	     const qbond&, const qbond&, const qdpt&) const;
+*/
    public:
       std::vector<bool> dir = {1,0}; // {out,int} by usual convention for operators in diagrams
       qsym sym; // <row|op[in]|col>
@@ -337,6 +356,17 @@ double qtensor2<Tm>::normF() const{
    return std::sqrt(sum);
 }
 
+template <typename Tm>
+Tm qtensor2<Tm>::trace() const{
+   assert(_rows == _cols);
+   Tm sum = 0.0;
+   for(int br=0; br<_rows; br++){
+      auto& blk = _qblocks[_addr(br,br)];
+      if(blk.size() > 0) sum += blk.trace();
+   }
+   return sum;
+}
+
 // xgemm
 template <typename Tm>
 qtensor2<Tm> qtensor2<Tm>::dot(const qtensor2<Tm>& qt) const{
@@ -363,6 +393,34 @@ void qtensor2<Tm>::random(){
 	 blk = linalg::random_matrix<Tm>(rdim, cdim);
       }
    }
+}
+
+// row rdm from wf: rdm[r1,r2] += wf[r1,c]*wf[r2,c]^* = M.M^d
+template<typename Tm>
+qtensor2<Tm> qtensor2<Tm>::get_rdm_row() const{
+   qtensor2<Tm> rdm(qsym(), qrow, qrow);
+   for(int br=0; br<_rows; br++){
+      for(int bc=0; bc<_cols; bc++){
+         const auto& blk = _qblocks[_addr(br,bc)];
+	 if(blk.size() == 0) continue;
+	 rdm(br,br) += linalg::xgemm("N","N",blk,blk.H()); 
+      }
+   }
+   return rdm;
+}
+
+// col rdm from wf: rdm[c1,c2] += wf[r,c1]*wf[r,c2]^* = M^t.M^*
+template<typename Tm>
+qtensor2<Tm> qtensor2<Tm>::get_rdm_col() const{
+   qtensor2<Tm> rdm(qsym(), qcol, qcol);
+   for(int bc=0; bc<_cols; bc++){
+      for(int br=0; br<_rows; br++){
+         const auto& blk = _qblocks[_addr(br,bc)];
+	 if(blk.size() == 0) continue;
+	 rdm(bc,bc) += linalg::xgemm("T","N",blk,blk.conj()); 
+      }
+   }
+   return rdm;
 }
 
 } // ctns

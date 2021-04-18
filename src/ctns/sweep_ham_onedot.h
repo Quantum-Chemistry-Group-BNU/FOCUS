@@ -20,8 +20,8 @@ void onedot_Hdiag_local(oper_dict<Tm>& cqops,
             auto& blk = wf(bm,br,bc);
 	    if(blk.size() == 0) continue;
 	    int mdim = wf.qmid.get_dim(bm);
-	    int cdim = wf.qcol.get_dim(bc);
 	    int rdim = wf.qrow.get_dim(br);  
+	    int cdim = wf.qcol.get_dim(bc);
 	    // 1. local contributions: all four indices in c/l/r
 	    const auto& cblk = Hc(bm,bm); // central->mid 
 	    const auto& lblk = Hl(br,br); // left->row 

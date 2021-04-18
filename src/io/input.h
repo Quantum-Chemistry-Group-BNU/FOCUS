@@ -50,11 +50,12 @@ public:
    // --- CombTNS --- 
    // comb
    std::string topology_file;
-   // sci
+   // conversion of sci 
    int maxdets;
    double thresh_proj;
    double thresh_ortho;
    // sweep
+   bool guess;
    int maxsweep;
    std::vector<sweep_ctrl> combsweep;
    // io

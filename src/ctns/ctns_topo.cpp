@@ -230,29 +230,34 @@ vector<directed_bond> topology::get_sweeps(const bool debug) const{
    for(int i=1; i<nbackbone-1; i++){
       // branch forward
       for(int j=1; j<nodes[i].size()-1; j++){
-         auto coord0 = make_pair(i,j-1);
-         auto coord1 = make_pair(i,j);      
-         sweeps.push_back(make_tuple(coord0,coord1,1));
+         auto p0 = make_pair(i,j-1);
+         auto p1 = make_pair(i,j);
+	 auto cturn = is_cturn(p0,p1);
+         sweeps.push_back( directed_bond(p0,p1,1,p0,cturn) );
       }
       // branch backward
       for(int j=nodes[i].size()-2; j>0; j--){
-         auto coord0 = make_pair(i,j-1);      
-         auto coord1 = make_pair(i,j);
-         sweeps.push_back(make_tuple(coord0,coord1,0));
+         auto p0 = make_pair(i,j-1);
+         auto p1 = make_pair(i,j);
+	 auto cturn = is_cturn(p0,p1);
+         sweeps.push_back( directed_bond(p0,p1,0,p1,cturn) );
       }
       // backbone forward
       if(i != nbackbone-2){
-         auto coord0 = make_pair(i,0);
-         auto coord1 = make_pair(i+1,0);      
-         sweeps.push_back(make_tuple(coord0,coord1,1));
+         auto p0 = make_pair(i,0);
+         auto p1 = make_pair(i+1,0);      
+	 auto cturn = is_cturn(p0,p1);
+         sweeps.push_back( directed_bond(p0,p1,1,p0,cturn) );
       }
    }
    // backward on backbone
    for(int i=nbackbone-2; i>=2; i--){
-      auto coord0 = make_pair(i-1,0);      
-      auto coord1 = make_pair(i,0);
-      sweeps.push_back(make_tuple(coord0,coord1,0));
+      auto p0 = make_pair(i-1,0);      
+      auto p1 = make_pair(i,0); 
+      auto cturn = is_cturn(p0,p1);
+      sweeps.push_back( directed_bond(p0,p1,0,p1,cturn) );
    }
+   // check
    if(debug){
       // in this scheme, each internal bond is visited twice
       int ninternal = 0;
@@ -262,12 +267,13 @@ vector<directed_bond> topology::get_sweeps(const bool debug) const{
       }
       assert(sweeps.size() == 2*(ninternal-1));
       for(int idx=0; idx<sweeps.size(); idx++){
-         auto coord0  = get<0>(sweeps[idx]);
-         auto coord1  = get<1>(sweeps[idx]);
-         auto forward = get<2>(sweeps[idx]);
-         cout << " idx=" << idx 
-              << " dbond=" << coord0 << "-" << coord1 
-	      << " forward=" << forward << endl; 
+         auto p0 = sweeps[idx].p0;
+         auto p1 = sweeps[idx].p1;
+         auto forward = sweeps[idx].forward;
+	 auto cturn = sweeps[idx].cturn; 
+	 cout << " ibond=" << idx << " bond=" << p0 << "-" << p1 
+	      << " (forward,cturn)=(" << forward << "," << cturn << ")" 
+	      << endl;
       }
    }
    return sweeps;

@@ -36,6 +36,7 @@ void input::read(input::schedule& schd, string fname){
    schd.eps2 = 1.e-8;
    schd.eps0 = 1.e-2;
    schd.integral_file = "mole.info";
+   schd.guess = false;
    schd.ciload = false;
    schd.combload = false;
    schd.topology_file = "TOPOLOGY";
@@ -80,6 +81,8 @@ void input::read(input::schedule& schd, string fname){
       }else if(line.substr(0,13)=="integral_file"){
          istringstream is(line.substr(13));
 	 is >> schd.integral_file;
+      }else if(line.substr(0,5)=="guess"){
+         schd.guess = true;
       }else if(line.substr(0,6)=="ciload"){
          schd.ciload = true;
       }else if(line.substr(0,8)=="combload"){
@@ -212,6 +215,7 @@ void input::read(input::schedule& schd, string fname){
    cout << "thresh_proj = " << scientific << schd.thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << schd.thresh_ortho << endl;
    // sweep
+   cout << "guess = " << schd.guess << endl;
    cout << "maxsweep = " << schd.maxsweep << endl;
    if(schd.maxsweep > 0){
       combsweep_init(schd.maxsweep, schd.combsweep);

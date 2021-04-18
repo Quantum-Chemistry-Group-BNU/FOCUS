@@ -36,8 +36,24 @@ struct node{
       std::vector<int> lsupport;  // orbitals in the left part
 };
 
-// directed_bond used in sweep sequence for optimization of ctns 
-using directed_bond = std::tuple<comb_coord,comb_coord,bool>;
+// directed_bond used in sweep sequence for optimization of ctns: (p0,p1,forward,p,cturn)
+struct directed_bond{
+   public:
+      directed_bond(const comb_coord p0_, const comb_coord p1_, const bool forward_, 
+		    const comb_coord p_, const bool cturn_){
+         p0 = p0_;
+	 p1 = p1_;
+	 forward = forward_;
+	 p = p_;
+	 cturn = cturn_;
+      }
+   public:
+      comb_coord p0;
+      comb_coord p1;
+      bool forward;
+      comb_coord p; 
+      bool cturn;
+};
 
 // topology information of ctns
 struct topology{
@@ -54,11 +70,11 @@ struct topology{
       std::vector<directed_bond> get_sweeps(const bool debug=true) const;
       // cturn: bond that at the turning points to branches
       //
-      //           |
-      //        ---* (i,1)
-      //       |   |   |
-      //    ---*---*---*---
-      //             (i,0)
+      //              |
+      //           ---*(i,1)
+      //       |      I      |
+      //    ---*------*------*---
+      //               (i,0)
       inline bool is_cturn(const comb_coord& p0, const comb_coord& p1) const{
 	 return p0.second == 0 && p1.second == 1;
       }

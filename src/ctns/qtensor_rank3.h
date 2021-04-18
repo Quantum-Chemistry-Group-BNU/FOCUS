@@ -1,5 +1,5 @@
-#ifndef QTENSOR3_H
-#define QTENSOR3_H
+#ifndef QTENSOR_RANK3_H
+#define QTENSOR_RANK3_H
 
 #include <vector>
 #include <string>
@@ -7,7 +7,8 @@
 #include "../core/serialization.h"
 #include "../core/matrix.h"
 #include "ctns_qsym.h"
-#include "qtensor2.h"
+#include "ctns_qdpt.h"
+#include "qtensor_rank2.h"
 
 namespace ctns{
 
@@ -63,8 +64,9 @@ struct qtensor3{
       // fix middle index (bm,im) - bm-th block, im-idx - composite index!
       qtensor2<Tm> fix_mid(const std::pair<int,int> mdx) const;
       // deal with fermionic sign in fermionic direct product
-      qtensor3<Tm> mid_signed(const double fac=1.0) const;
-      qtensor3<Tm> row_signed(const double fac=1.0) const;
+      qtensor3<Tm> mid_signed(const double fac=1.0) const; // wf[lcr](-1)^{p(c)}
+      qtensor3<Tm> row_signed(const double fac=1.0) const; // wf[lcr](-1)^{p(l)}
+      qtensor3<Tm> perm_signed() const; // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
       // ZL20210413: application of time-reversal operation
       qtensor3<Tm> K() const;
       // simple algorithmic operations
@@ -96,6 +98,23 @@ struct qtensor3{
       void random();
       void from_array(const Tm* array);
       void to_array(Tm* array) const;
+      // decimation
+      inline qproduct dpt_lc() const{ return qmerge(qrow,qmid); }
+      inline qproduct dpt_cr() const{ return qmerge(qmid,qcol); }
+      inline qproduct dpt_lr() const{ return qmerge(qrow,qcol); }
+      // reshape
+      qtensor2<Tm> merge_lc() const{ 
+	 auto qprod = dpt_lc();
+	 return merge_qt3_qt2_lc(*this, qprod.first, qprod.second);
+      }
+      qtensor2<Tm> merge_cr() const{
+	 auto qprod = dpt_cr(); 
+	 return merge_qt3_qt2_cr(*this, qprod.first, qprod.second);
+      }
+      qtensor2<Tm> merge_lr() const{
+	 auto qprod = dpt_lr();  
+	 return merge_qt3_qt2_lr(*this, qprod.first, qprod.second);
+      }
 /*
       // extract real & imag parts
       matrix<double> real() const;
@@ -238,6 +257,24 @@ qtensor3<Tm> qtensor3<Tm>::row_signed(const double fac) const{
    return qt3;
 }
 
+template <typename Tm>
+qtensor3<Tm> qtensor3<Tm>::perm_signed() const{
+   qtensor3<Tm> qt3 = *this;
+   for(int idx=0; idx<qt3._qblocks.size(); idx++){
+      auto& blk = qt3._qblocks[idx];
+      if(blk.size() > 0){
+         int bm,br,bc;
+         _addr_unpack(idx,bm,br,bc);
+	 if(qmid.get_parity(bm)*qcol.get_parity(bc) == 1){
+            for(int im=0; im<blk.size(); im++){
+               blk[im] = -blk[im];
+            }
+	 }
+      }
+   }
+   return qt3;
+}
+
 // ZL20210413: application of time-reversal operation
 template <typename Tm>
 qtensor3<Tm> qtensor3<Tm>::K() const{
@@ -372,6 +409,7 @@ void qtensor3<Tm>::to_array(Tm* array) const{
       ioff += blk.size()*size;
    }
 }
+
 
 /*
       // extract real & imag parts
