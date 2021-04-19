@@ -11,7 +11,7 @@ qtensor2<Tm> decimation_row(const qtensor2<Tm>& rdm,
 			    double& dwt,
 			    int& deff){
    const double thresh_sig2 = 1.e-16;
-   const bool debug = true;
+   const bool debug = false;
    if(debug) std::cout << "ctns::decimation_row dcut=" << dcut << std::endl;
    // 0. normalize before diagonalization
    Tm rfac = 1.0/rdm.trace();
@@ -142,18 +142,17 @@ void decimation_onedot_lc(sweep_data& sweeps,
    auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
    assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
    //-------------------------------------------------------------------
-/*
    // 4. initial guess for next site within the bond
-   if(sweeps.guess){	
+   if(sweeps.guess){
+      const auto& p1 = sweeps.seq[ibond].p1;	   
       icomb.psi.clear();
       for(int i=0; i<vsol.cols(); i++){
          wf.from_array(vsol.col(i));
-         auto cwf = qt2.T().dot(wf.merge_lc()); // <-W[alpha,r]->
+         auto cwf = qt2.H().dot(wf.merge_lc()); // <-W[alpha,r]->
          auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
          icomb.psi.push_back(psi);
       }
    }
-*/
 }
 
 template <typename Km>
@@ -191,18 +190,17 @@ void decimation_onedot_lr(sweep_data& sweeps,
    auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
    assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
    //-------------------------------------------------------------------	
-/*   
    // 4. initial guess for next site within the bond
    if(sweeps.guess){	
+      const auto& p1 = sweeps.seq[ibond].p1;	   
       icomb.psi.clear();
       for(int i=0; i<vsol.cols(); i++){
          wf.from_array(vsol.col(i));
-         auto cwf = qt2.T().dot(wf.perm_signed().merge_lr()); // <-W[alpha,r]->
+         auto cwf = qt2.H().dot(wf.perm_signed().merge_lr()); // <-W[alpha,r]->
          auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
          icomb.psi.push_back(psi);
       }
    }
-*/
 }
 
 template <typename Km>
@@ -239,23 +237,25 @@ void decimation_onedot_cr(sweep_data& sweeps,
    auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
    assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
    //-------------------------------------------------------------------	
-/*   
    // 4. initial guess for next site within the bond
-   icomb.psi.clear();
-   for(int i=0; i<vsol.cols(); i++){
-      wf.from_array(vsol.col(i));
-      auto cwf = wf.merge_cr().dot(qt2.T()); // <-W[l,alpha]->
-      if(!cturn){
-         auto psi = contract_qt3_qt2_r0(icomb.lsites[p0],cwf);
-         icomb.psi.push_back(psi);
-      }else{
-         // special treatment of the propagation downside to backbone
-         auto psi = contract_qt3_qt2_c(icomb.lsites[p0],cwf.P());
-         psi = psi.perm_signed(); // |(lr)c> back to |lcr> order on backbone
+   if(sweeps.guess){
+      const auto& p0 = sweeps.seq[ibond].p0;	  
+      const auto& cturn = sweeps.seq[ibond].cturn; 
+      icomb.psi.clear();
+      for(int i=0; i<vsol.cols(); i++){
+         wf.from_array(vsol.col(i));
+         auto cwf = wf.merge_cr().dot(qt2.H()); // <-W[l,alpha]->
+	 qtensor3<typename Km::dtype> psi;
+         if(!cturn){
+            psi = contract_qt3_qt2_r(icomb.lsites[p0],cwf.T());
+         }else{
+            // special treatment of the propagation downside to backbone
+            psi = contract_qt3_qt2_c(icomb.lsites[p0],cwf.T());
+            psi = psi.perm_signed(); // |(lr)c> back to |lcr> order on backbone
+         }
          icomb.psi.push_back(psi);
       }
    }
-*/
 }
 
 template <typename Km>

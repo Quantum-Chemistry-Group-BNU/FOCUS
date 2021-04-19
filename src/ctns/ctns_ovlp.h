@@ -50,11 +50,11 @@ linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){
       int tp = node.type;
       if(tp == 0 || tp == 1){
 	 auto site = icomb.rsites.at(std::make_pair(i,0));
-	 // merge wfuns[j,l] S[n,l,r] => tmp[n,j,r]
-	 if(i == 0) site = contract_qt3_qt2_l(site, icomb.rwfuns); 
 	 if(i == icomb.topo.nbackbone-1){
 	    qt2_r = contract_qt3_qt3_cr(site,site);
 	 }else{
+	    // first merge wfuns[j,l] S[n,l,r] => tmp[n,j,r]
+	    if(i == 0) site = contract_qt3_qt2_l(site, icomb.rwfuns); 
 	    auto qtmp = contract_qt3_qt2_r(site,qt2_r);
 	    qt2_r = contract_qt3_qt3_cr(site,qtmp);
 	 }
@@ -83,7 +83,7 @@ linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){
 template <typename Km>
 std::vector<typename Km::dtype> rcanon_CIcoeff(const comb<Km>& icomb,
 			       		       const fock::onstate& state){
-   int n = icomb.get_nstate(); 
+   int n = icomb.get_nstates(); 
    std::vector<typename Km::dtype> coeff(n,0.0);
    // compute <n|CTNS> by contracting all sites
    const auto& nodes = icomb.topo.nodes;
@@ -137,7 +137,7 @@ linalg::matrix<typename Km::dtype> rcanon_CIovlp(const comb<Km>& icomb,
 				 		 const fock::onspace& space,
 	                         		 const std::vector<std::vector<typename Km::dtype>>& vs){
    std::cout << "\nctns::rcanon_CIovlp" << std::endl;
-   int n = icomb.get_nstate(); 
+   int n = icomb.get_nstates(); 
    int dim = space.size();
    // cmat[j,i] = <D[i]|CTNS[j]>
    linalg::matrix<typename Km::dtype> cmat(n,dim);
@@ -157,7 +157,7 @@ int rcanon_CIcoeff_check(const comb<Km>& icomb,
 		         const fock::onspace& space,
 	                 const std::vector<std::vector<typename Km::dtype>>& vs){
    std::cout << "\nctns::rcanon_CIcoeff_check" << std::endl;
-   int n = icomb.get_nstate(); 
+   int n = icomb.get_nstates(); 
    int dim = space.size();
    double maxdiff = -1.e10;
    // cmat[j,i] = <D[i]|CTNS[j]>

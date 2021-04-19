@@ -8,6 +8,7 @@
 #include "sweep_ham_onedot.h"
 #include "sweep_decimation.h"
 #include "sweep_renorm.h"
+#include "sweep_guess.h"
 
 namespace ctns{
 
@@ -82,7 +83,7 @@ void sweep_onedot(const input::schedule& schd,
    // 2. Davidson solver for wf
    // 2.1 Hdiag 
    int nsub = wf.get_dim();
-   int neig = sweeps.nstate;
+   int neig = sweeps.nstates;
    std::vector<double> diag(nsub,1.0);
    diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
  
@@ -112,24 +113,28 @@ void sweep_onedot(const input::schedule& schd,
    // solve local problem
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
+
+   std::cout << schd.cisolver << "X" << sweeps.guess << std::endl;
+
    if(schd.cisolver == 0){
       solver.solve_diag(eopt.data(), vsol.data(), true); // debug
    }else if(schd.cisolver == 1){ // davidson
       // guess or not
- /*
-   // load initial guess from previous opt
-   vector<double> v0(nsub*neig);
-   if(icomb.psi.size() == 0) initial_onedot(icomb); 
-   assert(icomb.psi.size() == neig);
-   assert(icomb.psi[0].get_dim() == nsub);
-   for(int i=0; i<neig; i++){
-      icomb.psi[i].to_array(&v0[nsub*i]);
-   }
-   int nindp = get_ortho_basis(nsub, neig, v0); // reorthogonalization
-   assert(nindp == neig);
-   //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
-   solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-*/     
+      if(!sweeps.guess){
+         solver.solve_iter(eopt.data(), vsol.data());
+      }else{     
+         // load initial guess from previous opt
+	 std::vector<Tm> v0(nsub*neig);
+         if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
+         assert(icomb.psi.size() == neig);
+         assert(icomb.psi[0].get_dim() == nsub);
+         for(int i=0; i<neig; i++){
+            icomb.psi[i].to_array(&v0[nsub*i]);
+         }
+         int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
+         assert(nindp == neig);
+         solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+      }
    }else{
       std::cout << "error: no such option for cisolver=" << schd.cisolver << std::endl;
    }
@@ -206,7 +211,7 @@ void opt_sweep_twodot(const input::schedule& schd,
 
    // 2. Davidson solver 
    int nsub = wf.get_dim();
-   int neig = schd.nroots;
+   int neig = sweeps.nstates;
    auto diag = tns::get_twodot_Hdiag(c1qops, c2qops, lqops, rqops, int2e, ecore, wf);
    auto tb = tools::get_time();
    
@@ -261,7 +266,7 @@ void tns::opt_finaldot(const input::schedule& schd,
    auto p0 = make_pair(0,0);
    auto p1 = make_pair(1,0);
    auto dbond = make_tuple(p0,p1,false);
-   input::sweep_ctrl ctrl = {0, 1, 4*schd.nroots, 1.e-5, 0.0};
+   input::sweep_ctrl ctrl = {0, 1, 4*sweeps.nstates, 1.e-5, 0.0};
    vector<double> eopt;
    double dwt;
    int deff;

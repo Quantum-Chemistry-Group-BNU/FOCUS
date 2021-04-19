@@ -27,7 +27,7 @@ class comb{
       }
       // helpers
       int get_nphysical() const{ return topo.nphysical; }
-      int get_nstate() const{
+      int get_nstates() const{
 	 assert(rwfuns.rows() == 1); // currently, only allow one symmetry sector
 	 return rwfuns.qrow.get_dim(0);
       }
@@ -51,7 +51,7 @@ class comb{
       //--- auxilliary data ---
       rbases_type<typename Km::dtype> rbases; // used in initialization & debug operators 
       sites_type<typename Km::dtype> lsites; // left canonical form 
-      //std::vector<qtensor3<Tm>> psi; // propagation of initial guess 
+      std::vector<qtensor3<typename Km::dtype>> psi; // propagation of initial guess 
 };
 
 // return rwfun for istate, extracted from rwfuns

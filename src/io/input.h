@@ -55,6 +55,7 @@ public:
    double thresh_proj;
    double thresh_ortho;
    // sweep
+   int nstates; // this can be smaller than nroots in CI 
    bool guess;
    int maxsweep;
    std::vector<sweep_ctrl> combsweep;

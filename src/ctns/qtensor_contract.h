@@ -206,9 +206,9 @@ qtensor3<Tm> contract_qt3_qt2_l(const qtensor3<Tm>& qt3a,
    return qt3;
 }
 
-//     m  \c/r
+//     m  \ c/r
 //     |  *  = [m](r,c) = A[m](r,x) op(c,x) [permuted contraction (AO^T)]
-//  r--*--/x/c
+//  r--*--/ x/c
 template <typename Tm>
 qtensor3<Tm> contract_qt3_qt2_r(const qtensor3<Tm>& qt3a, 
 				const qtensor2<Tm>& qt2b){

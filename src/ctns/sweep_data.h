@@ -8,16 +8,16 @@ namespace ctns{
 
 // computed results at a given dot	
 struct dot_result{
-   std::vector<double> eopt; // eopt[nstate]
+   std::vector<double> eopt; // eopt[nstates]
    double dwt;
    int deff;
 };
 
 struct sweep_data{
    // constructor
-   sweep_data(const input::schedule& schd, const std::vector<directed_bond>& sweep_seq, const int n_state){
+   sweep_data(const input::schedule& schd, const std::vector<directed_bond>& sweep_seq, const int n_states){
       guess = schd.guess;
-      nstate = n_state;
+      nstates = n_states;
       seq = sweep_seq; 
       seqsize = sweep_seq.size();
       maxsweep = schd.maxsweep;
@@ -26,7 +26,7 @@ struct sweep_data{
       for(int i=0; i<maxsweep; i++){
 	 opt_result[i].resize(seqsize+1);
 	 for(int j=0; j<seqsize; j++){
-	    opt_result[i][j].eopt.resize(nstate);
+	    opt_result[i][j].eopt.resize(nstates);
 	 }
       }
       min_result.resize(maxsweep);
@@ -40,7 +40,7 @@ struct sweep_data{
    void summary(const int isweep);
 public:
    bool guess;
-   int maxsweep, seqsize, nstate; 
+   int maxsweep, seqsize, nstates; 
    std::vector<directed_bond> seq; // sweep bond sequence 
    std::vector<input::sweep_ctrl> ctrls; // control parameters
    std::vector<std::vector<dot_result>> opt_result; // (maxsweep,seqsize) 
@@ -70,12 +70,11 @@ void sweep_data::summary(const int isweep){
       // print energy
       std::cout << std::defaultfloat << std::setprecision(12);
       const auto& eopt = opt_result[isweep][ibond].eopt;
-      int nstate = eopt.size();
-      for(int j=0; j<nstate; j++){ 
+      for(int j=0; j<nstates; j++){ 
          std::cout << " e[" << j << "]=" << eopt[j];
          emean[ibond] += eopt[j]; 
       }
-      emean[ibond] /= nstate;
+      emean[ibond] /= nstates;
       std::cout << std::endl;
    }
    // find the minimal energy
@@ -84,10 +83,11 @@ void sweep_data::summary(const int isweep){
    min_result[isweep] = opt_result[isweep][minpos];
    std::cout << "min energies at pos=" << minpos << std::endl;
    std::cout << "timing for sweep: " << std::setprecision(2) << timing[isweep] << " s" << std::endl; 
+   std::cout << tools::line_separator << std::endl;
    
    // print all previous optimized results - sweep_data
    std::cout << "summary of sweep optimization up to isweep=" << isweep << std::endl;
-   std::cout << "iter, dots, dcut, eps, noise | timing/s (taccum/s)" << std::endl;
+   std::cout << "schedule: iter, dots, dcut, eps, noise | timing/s (taccum/s)" << std::endl;
    std::cout << std::scientific << std::setprecision(2);
    // print previous ctrl parameters
    double taccum = 0.0;
@@ -100,19 +100,18 @@ void sweep_data::summary(const int isweep){
            	<< timing[jsweep] << " (" << taccum << ")" << std::endl;
    } // jsweep
    std::cout << "results: iter, dwt, energies (delta_e)" << std::endl;
-   const auto& eopt = min_result[isweep].eopt;
+   const auto& eopt_isweep = min_result[isweep].eopt;
    for(int jsweep=0; jsweep<=isweep; jsweep++){
       const auto& dwt = min_result[jsweep].dwt;
-      const auto& eopt0 = min_result[jsweep].eopt;
-      int nstate = eopt0.size();
+      const auto& eopt_jsweep = min_result[jsweep].eopt;
       std::cout << std::setw(3) << jsweep << " ";
       std::cout << std::showpos << std::scientific << std::setprecision(2) << dwt;
       std::cout << std::noshowpos << std::defaultfloat << std::setprecision(12);
-      for(int j=0; j<nstate; j++){ 
+      for(int j=0; j<nstates; j++){ 
          std::cout << " e" << j << ":" 
-     	      << std::defaultfloat << std::setprecision(12) << eopt0[j] << " ("
-              << std::scientific << std::setprecision(2) << eopt0[j]-eopt[j] << ")";
-      }
+     	      << std::defaultfloat << std::setprecision(12) << eopt_jsweep[j] << " ("
+              << std::scientific << std::setprecision(2) << eopt_jsweep[j]-eopt_isweep[j] << ")";
+      } // jstate
       std::cout << std::endl;
    } // jsweep
    std::cout << tools::line_separator << "\n" << std::endl;
