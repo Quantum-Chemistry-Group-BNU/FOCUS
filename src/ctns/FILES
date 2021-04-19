@@ -64,8 +64,8 @@ Compute <I|H|J>
  oper_kernel.h -> for tensor operations
  oper_rbasis.h -> debug
 
-Sweep algorithm
--------------------
+Sweep algorithm: (1) onedot
+---------------------------
  ctns_sweep.h
  sweep_data.h
  sweep_util.h
@@ -73,24 +73,37 @@ Sweep algorithm
 * local CI: Hdiag & Hx
  sweep_onedot.h => ED works!
 
-* decimation
+* decimation & operator transformation
  ctns_dpt.h
  sweep_decimation.h
  qtensor_reshape.h
-
-* operator transformation
  sweep_renorm.h 
 
 * guess
  sweep_guess.h
- 
+
+
+
+
+
+
+
+
+
+
+Sweep algorithm: (2) TRS
+---------------------------
+
+* time-reversal symmetry-adapted
+ * local CI
+ * decimation
+
+Sweep algorithm: (3) twodot
+---------------------------
+
 * reshaping: working in the format of qt2 -> psi(L,R)! 
  tns_qtensor_reshape.cpp
  tns_qtensor4.cpp
-
-* time-reversal symmetry-adapted
-  * local CI
-  * decimation
 
 * twodot
  tns_ham_twodot.cpp
@@ -100,12 +113,16 @@ Sweep algorithm
  tns_prdm.cpp
 
 
+
+Optimized/Advanced:
+=========================
+
 Low-level data structure
--------------------
+-------------------------
 
 Tensor operations
--------------------
+-------------------------
 
 Parallelization
--------------------
+-------------------------
 

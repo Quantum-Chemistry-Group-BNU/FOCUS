@@ -7,30 +7,12 @@
 #include "ctns_qdpt.h"
 #include "sweep_ham_onedot.h"
 #include "sweep_decimation.h"
-#include "sweep_renorm.h"
 #include "sweep_guess.h"
 
 namespace ctns{
 
-using tm = std::chrono::high_resolution_clock::time_point;
-void sweep_timing(const std::vector<tm> ts){
-   double dt0 = tools::get_duration(ts[1]-ts[0]); // t(procs)
-   double dt1 = tools::get_duration(ts[2]-ts[1]); // t(hdiag)
-   double dt2 = tools::get_duration(ts[3]-ts[2]); // t(dvdsn)
-   double dt3 = tools::get_duration(ts[4]-ts[3]); // t(decim)
-   double dt4 = tools::get_duration(ts[5]-ts[4]); // t(renrm)
-   double dt  = tools::get_duration(ts[5]-ts[0]); // total
-   std::cout << " t(procs) = " << std::scientific << std::setprecision(2) << dt0 << " s "
-	     << " per = " << std::defaultfloat << dt0/dt*100 << std::endl;
-   std::cout << " t(hdiag) = " << std::scientific << std::setprecision(2) << dt1 << " s "
-	     << " per = " << std::defaultfloat << dt1/dt*100 << std::endl;
-   std::cout << " t(dvdsn) = " << std::scientific << std::setprecision(2) << dt2 << " s "
-	     << " per = " << std::defaultfloat << dt2/dt*100 << std::endl;
-   std::cout << " t(decim) = " << std::scientific << std::setprecision(2) << dt3 << " s "
-	     << " per = " << std::defaultfloat << dt3/dt*100 << std::endl;
-   std::cout << " t(renrm) = " << std::scientific << std::setprecision(2) << dt4 << " s "
-	     << " per = " << std::defaultfloat << dt4/dt*100 << std::endl;
-}
+const bool debug_sweep = false;
+extern const bool debug_sweep;
 
 template <typename Km>
 void sweep_onedot(const input::schedule& schd,
@@ -44,16 +26,17 @@ void sweep_onedot(const input::schedule& schd,
    using Tm = typename Km::dtype;
    const int isym = Km::isym;
    const bool ifkr = kind::is_kramers<Km>();
-   auto t0 = tools::get_time();
+   auto& timing = sweeps.opt_timing[isweep][ibond];
+   timing.t0 = tools::get_time();
    std::cout << "ctns::sweep_onedot" << std::endl;
    
    // 0. preprocessing 
    // processing partition & symmetry
    auto dbond = sweeps.seq[ibond];
    auto p = dbond.p;
-   auto suppc = icomb.get_suppc(p); 
-   auto suppl = icomb.get_suppl(p);
-   auto suppr = icomb.get_suppr(p);
+   auto suppc = icomb.get_suppc(p, debug_sweep); 
+   auto suppl = icomb.get_suppl(p, debug_sweep);
+   auto suppr = icomb.get_suppr(p, debug_sweep);
    int sc = suppc.size();
    int sl = suppl.size();
    int sr = suppr.size();
@@ -62,23 +45,26 @@ void sweep_onedot(const input::schedule& schd,
    qc = icomb.get_qc(p); 
    ql = icomb.get_ql(p);
    qr = icomb.get_qr(p);
-   qc.print("qc");
-   ql.print("ql");
-   qr.print("qr");
+   qc.print("qc", debug_sweep);
+   ql.print("ql", debug_sweep);
+   qr.print("qr", debug_sweep);
    // wavefunction to be computed
    qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
    qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
-   std::cout << "dimCI=" << wf.get_dim() << std::endl;
+   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
 
    // 1. load operators 
    oper_dict<Tm> cqops, lqops, rqops;
    oper_load_qops(icomb, p, schd.scratch, 'c', cqops);
    oper_load_qops(icomb, p, schd.scratch, 'l', lqops);
    oper_load_qops(icomb, p, schd.scratch, 'r', rqops);
-   oper_display(cqops, "cqops", 1);
-   oper_display(lqops, "lqops", 1);
-   oper_display(rqops, "rqops", 1);
-   auto ta = tools::get_time();
+   if(debug_sweep){
+      const int level = 0;
+      oper_display(cqops, "cqops", level);
+      oper_display(lqops, "lqops", level);
+      oper_display(rqops, "rqops", level);
+   }
+   timing.ta = tools::get_time();
 
    // 2. Davidson solver for wf
    // 2.1 Hdiag 
@@ -86,14 +72,7 @@ void sweep_onedot(const input::schedule& schd,
    int neig = sweeps.nstates;
    std::vector<double> diag(nsub,1.0);
    diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
- 
-   // debug 
-   for(const auto& p : diag){
-      std::cout << p << " ";
-   }
-   std::cout << std::endl;
-
-   auto tb = tools::get_time();
+   timing.tb = tools::get_time();
    
    // 2.2 Solve Hc=cE
    linalg::dvdsonSolver<Tm> solver;
@@ -113,9 +92,6 @@ void sweep_onedot(const input::schedule& schd,
    // solve local problem
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
-
-   std::cout << schd.cisolver << "X" << sweeps.guess << std::endl;
-
    if(schd.cisolver == 0){
       solver.solve_diag(eopt.data(), vsol.data(), true); // debug
    }else if(schd.cisolver == 1){ // davidson
@@ -138,20 +114,16 @@ void sweep_onedot(const input::schedule& schd,
    }else{
       std::cout << "error: no such option for cisolver=" << schd.cisolver << std::endl;
    }
-   auto tc = tools::get_time();
+   timing.tc = tools::get_time();
 
-   // 3. decimation
-   decimation_onedot(sweeps, isweep, ibond, icomb, vsol, wf, cqops, lqops, rqops);
-   auto td = tools::get_time();
+   // 3. decimation & renormalize operators
+   decimation_onedot(sweeps, isweep, ibond, icomb, vsol, wf, 
+		     cqops, lqops, rqops, int2e, int1e, schd.scratch);
 
-   // 4. renormalize operators
-   renorm_onedot(sweeps.seq[ibond], icomb, cqops, lqops, rqops, int2e, int1e, schd.scratch);
-   auto t1 = tools::get_time();
+   timing.t1 = tools::get_time();
    std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 
-             << tools::get_duration(t1-t0) << " s" << std::endl;
-   
-   sweep_timing({t0,ta,tb,tc,td,t1});
-   
+             << tools::get_duration(timing.t1-timing.t0) << " s" << std::endl;
+   timing.analysis();
 }
 
 

@@ -115,16 +115,18 @@ class qbond{
 	 }
 	 return true;
       }
-      void print(const std::string name) const{
-	 std::cout << "qbond: " << name << " nsym=" << dims.size() 
+      void print(const std::string name, const bool debug=false) const{
+	 std::cout << " qbond: " << name << " nsym=" << dims.size()
       	           << " dimAll=" << get_dimAll() << std::endl;
          // loop over symmetry sectors
-         for(int i=0; i<dims.size(); i++){
-            auto sym = dims[i].first;
-            auto dim = dims[i].second;
-	    std::cout << " " << sym << ":" << dim;
-         }
-	 std::cout << std::endl;
+	 if(debug){
+            for(int i=0; i<dims.size(); i++){
+               auto sym = dims[i].first;
+               auto dim = dims[i].second;
+	       std::cout << " " << sym << ":" << dim;
+            }
+	    std::cout << std::endl;
+	 }
       }
    public:
       std::vector<std::pair<qsym,int>> dims;

@@ -73,7 +73,7 @@ qtensor2<Tm> decimation_row(const qtensor2<Tm>& rdm,
       }
    }
    dwt = 1.0-sum;
-   std::cout << "summary: reduce from " << sig2all.size() << " to " << deff
+   std::cout << "decimation summary: reduce from " << sig2all.size() << " to " << deff
      	     << "  dwt=" << dwt << "  SvN=" << SvN << std::endl;
    // 3. construct qbond and qt2 by assembling blocks
    std::vector<int> br_matched;
@@ -116,11 +116,15 @@ void decimation_onedot_lc(sweep_data& sweeps,
 		          const linalg::matrix<typename Km::dtype>& vsol,
 		          qtensor3<typename Km::dtype>& wf,
 		          oper_dict<typename Km::dtype>& lqops,
-		          oper_dict<typename Km::dtype>& cqops){
+		          oper_dict<typename Km::dtype>& cqops,
+	                  const integral::two_body<typename Km::dtype>& int2e, 
+	                  const integral::one_body<typename Km::dtype>& int1e,
+	                  const std::string scratch){
    const auto& dcut  = sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise; 
    std::cout << " renormalize |lc> : (dcut,noise)=" << dcut << "," 
 	     << std::scientific << std::setprecision(1) << noise << std::endl;
+   auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
    auto qprod = qmerge(wf.qrow, wf.qmid);
    auto qlc = qprod.first;
@@ -153,6 +157,12 @@ void decimation_onedot_lc(sweep_data& sweeps,
          icomb.psi.push_back(psi);
       }
    }
+   timing.td = tools::get_time();
+   // 5. renorm operators	 
+   oper_dict<typename Km::dtype> qops;
+   oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, cqops, qops);
+   auto fname = oper_fname(scratch, p, "lop");
+   oper_save(fname, qops);
 }
 
 template <typename Km>
@@ -163,11 +173,15 @@ void decimation_onedot_lr(sweep_data& sweeps,
 		          const linalg::matrix<typename Km::dtype>& vsol,
 		          qtensor3<typename Km::dtype>& wf,
 		          oper_dict<typename Km::dtype>& lqops,
-		          oper_dict<typename Km::dtype>& rqops){
+		          oper_dict<typename Km::dtype>& rqops,
+	                  const integral::two_body<typename Km::dtype>& int2e, 
+	                  const integral::one_body<typename Km::dtype>& int1e,
+	                  const std::string scratch){
    const auto& dcut  = sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise; 
    std::cout << " renormalize |lr> (comb) : (dcut,noise)=" << dcut << "," 
 	     << std::scientific << std::setprecision(1) << noise << std::endl;
+   auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
    auto qprod = qmerge(wf.qrow, wf.qcol);
    auto qlr = qprod.first;
@@ -201,6 +215,12 @@ void decimation_onedot_lr(sweep_data& sweeps,
          icomb.psi.push_back(psi);
       }
    }
+   timing.td = tools::get_time();
+   // 5. renorm operators	 
+   oper_dict<typename Km::dtype> qops;
+   oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops);
+   auto fname = oper_fname(scratch, p, "lop");
+   oper_save(fname, qops);
 }
 
 template <typename Km>
@@ -211,11 +231,15 @@ void decimation_onedot_cr(sweep_data& sweeps,
 		          const linalg::matrix<typename Km::dtype>& vsol,
 		          qtensor3<typename Km::dtype>& wf,
 		          oper_dict<typename Km::dtype>& cqops,
-		          oper_dict<typename Km::dtype>& rqops){
+		          oper_dict<typename Km::dtype>& rqops,
+	                  const integral::two_body<typename Km::dtype>& int2e, 
+	                  const integral::one_body<typename Km::dtype>& int1e,
+	                  const std::string scratch){
    const auto& dcut  = sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise; 
    std::cout << " renormalize |cr> : (dcut,noise)=" << dcut << "," 
 	     << std::scientific << std::setprecision(1) << noise << std::endl;
+   auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
    auto qprod = qmerge(wf.qmid, wf.qcol);
    auto qcr = qprod.first;
@@ -256,6 +280,12 @@ void decimation_onedot_cr(sweep_data& sweeps,
          icomb.psi.push_back(psi);
       }
    }
+   timing.td = tools::get_time();
+   // 5. renorm operators	 
+   oper_dict<typename Km::dtype> qops;
+   oper_renorm_opAll("cr", icomb, p, int2e, int1e, cqops, rqops, qops);
+   auto fname = oper_fname(scratch, p, "rop");
+   oper_save(fname, qops);
 }
 
 template <typename Km>
@@ -267,7 +297,10 @@ void decimation_onedot(sweep_data& sweeps,
 		       qtensor3<typename Km::dtype>& wf,
 		       oper_dict<typename Km::dtype>& cqops,
 		       oper_dict<typename Km::dtype>& lqops,
-		       oper_dict<typename Km::dtype>& rqops){
+		       oper_dict<typename Km::dtype>& rqops,
+	               const integral::two_body<typename Km::dtype>& int2e, 
+	               const integral::one_body<typename Km::dtype>& int1e,
+	               const std::string scratch){
    const auto& dbond = sweeps.seq[ibond];
    std::cout << "ctns::decimation_onedot (forward,cturn)=" 
 	     << dbond.forward << "," << dbond.cturn;
@@ -275,14 +308,17 @@ void decimation_onedot(sweep_data& sweeps,
    if(dbond.forward){
       // update lsites & ql
       if(!dbond.cturn){
-	 decimation_onedot_lc(sweeps, isweep, ibond, icomb, vsol, wf, lqops, cqops);
+	 decimation_onedot_lc(sweeps, isweep, ibond, icomb, vsol, wf, 
+			      lqops, cqops, int2e, int1e, scratch);
       }else{
 	 // special for comb
-         decimation_onedot_lr(sweeps, isweep, ibond, icomb, vsol, wf, lqops, rqops);
+         decimation_onedot_lr(sweeps, isweep, ibond, icomb, vsol, wf, 
+			      lqops, rqops, int2e, int1e, scratch);
       } // cturn
    }else{
       // update rsites & qr
-      decimation_onedot_cr(sweeps, isweep, ibond, icomb, vsol, wf, cqops, rqops); 
+      decimation_onedot_cr(sweeps, isweep, ibond, icomb, vsol, wf, 
+		           cqops, rqops, int2e, int1e, scratch); 
    }
 }
 
@@ -418,6 +454,53 @@ void tns::decimation_twodot(comb& icomb,
             icomb.psi.push_back(psi); // psi on backbone
 	 }
       }
+   }
+}
+*/
+
+/*
+template <typename Km>
+void renorm_twodot(const directed_bond& dbond,
+		   const comb<Km>& icomb, 
+	           oper_dict<typename Km::dtype>& c1qops,
+	           oper_dict<typename Km::dtype>& c2qops,
+	           oper_dict<typename Km::dtype>& lqops,
+	           oper_dict<typename Km::dtype>& rqops,	
+	           const integral::two_body<typename Km::dtype>& int2e, 
+	           const integral::one_body<typename Km::dtype>& int1e,
+	           const std::string scratch){
+   std::cout << "ctns::renorm_twodot superblock=";
+   const auto& p = dbond.p;
+   const auto& forward = dbond.forward;
+   const auto& cturn = dbond.cturn;
+   oper_dict<typename Km::dtype> qops;
+   if(forward){
+      if(!cturn){
+	 std::cout << "lc1" << std::endl;
+	 oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, c1qops, qops);
+      }else{
+	 std::cout << "lr" << std::endl;
+	 oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops);
+      }
+      std::string fname = oper_fname(scratch, p, "lop");
+      oper_save(fname, qops);
+   }else{
+      if(!cturn){
+         std::cout << "c2r" << std::endl;
+         oper_renorm_opAll("cr", icomb, p, int2e, int1e, c2qops, rqops, qops);
+      }else{
+	 //     
+	 //        c2      
+	 //        |
+	 //   c1---p
+	 //        |
+	 //    l---*---r
+	 //
+         std::cout << "c1c2" << std::endl;
+         oper_renorm_opAll("cr", icomb, p, int2e, int1e, c1qops, c2qops, qops);
+      }
+      std::string fname = oper_fname(scratch, p, "rop");
+      oper_save(fname, qops);
    }
 }
 */

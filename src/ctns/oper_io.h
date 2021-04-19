@@ -6,7 +6,7 @@
 
 namespace ctns{ 
 
-const bool debug_oper_io = true;
+const bool debug_oper_io = false;
 extern const bool debug_oper_io;
 
 // for qopers
@@ -24,8 +24,7 @@ template <typename Tm>
 void oper_save(const std::string fname, 
 	       const oper_dict<Tm>& qops){
    if(debug_oper_io){
-      std::cout << "ctns::oper_save fname=" << fname 
- 	        << " size=" << qops.size() << std::endl;
+      std::cout << "ctns::oper_save fname=" << fname << " size=" << qops.size() << std::endl;
    }
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
@@ -36,8 +35,7 @@ template <typename Tm>
 void oper_load(const std::string fname, 
 	       oper_dict<Tm>& qops){
    if(debug_oper_io){
-      std::cout << "ctns::oper_load fname=" << fname 
-	        << std::endl;
+      std::cout << "ctns::oper_load fname=" << fname << std::endl;
    }
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);

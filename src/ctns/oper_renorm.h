@@ -352,7 +352,7 @@ void oper_renorm_opAll(const std::string& superblock,
 		       oper_dict<typename Km::dtype>& qops1,
 		       oper_dict<typename Km::dtype>& qops2,
 		       oper_dict<typename Km::dtype>& qops,
-		       const bool debug=true){
+		       const bool debug=false){
    const bool ifcheck = false;
    auto t0 = tools::get_time();
    const bool ifkr = kind::is_kramers<Km>();

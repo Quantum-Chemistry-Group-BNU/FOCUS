@@ -82,7 +82,7 @@ void oper_display(oper_dict<Tm>& qops, const std::string sinfo, const int level=
 	    std::cout << std::endl;
          }
       }
-   }
+   } // level
 }
 
 } // ctns

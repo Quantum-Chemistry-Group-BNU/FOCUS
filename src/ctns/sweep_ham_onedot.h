@@ -2,6 +2,9 @@
 #define SWEEP_ONEDOT_H
 
 namespace ctns{
+   
+const bool debug_ham_onedot = false;
+extern const bool debug_ham_onedot;
 
 // local 
 template <typename Tm>
@@ -129,8 +132,7 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
 			         oper_dict<Tm>& rqops,
 			         const double ecore,
 			         qtensor3<Tm>& wf){
-   bool debug = true;
-   if(debug) std::cout << "\nctns::onedot_Hdiag ifkr=" << ifkr << std::endl;
+   if(debug_ham_onedot) std::cout << "ctns::onedot_Hdiag ifkr=" << ifkr << std::endl;
    // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
    onedot_Hdiag_local(cqops, lqops, rqops, ecore, wf);
    // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
@@ -243,8 +245,7 @@ void onedot_Hx(Tm* y,
 	       const integral::one_body<Tm>& int1e,
 	       const double ecore,
 	       qtensor3<Tm>& wf){
-   const bool debug = true;
-   if(debug) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
+   if(debug_ham_onedot) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
    wf.from_array(x);
    qtensor3<Tm> Hwf;
    if(not ifkr){

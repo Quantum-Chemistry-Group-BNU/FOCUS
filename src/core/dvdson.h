@@ -277,7 +277,7 @@ struct dvdsonSolver{
 
       // Davidson iterative algorithm for Hv=ve 
       void solve_iter(double* es, Tm* vs, Tm* vguess=nullptr){
-	 std::cout << "dvdsonSolver::solve_iter" << std::endl;
+	 std::cout << "dvdsonSolver::solve_iter is_complex=" << tools::is_complex<Tm>() << std::endl;
          if(neig > ndim){
             std::cout << "error in dvdson: neig>ndim, neig/ndim=" << neig << "," << ndim << std::endl; 
             exit(1);
