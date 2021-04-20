@@ -289,7 +289,7 @@ qtensor3<Tm> onedot_sigma(const int& isym,
       //    ol*or|lcr>psi[lcr] => ol|l>*or|cr>(-1)^{p(l)}psi[lcr]
       for(const auto& op1C : lqops['C']){
 	 int p1 = op1C.first;
-	 const auto op1 = op1C.second;
+	 const auto& op1 = op1C.second;
 	 auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1);
 	 auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1,dagger); 
 	 Hwf += oper_kernel_OIwf("lc",qt3n.row_signed(),op1); // both lc/lr can work 

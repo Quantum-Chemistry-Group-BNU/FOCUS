@@ -137,8 +137,7 @@ void sweep_rwfuns(const input::schedule& schd,
    std::cout << "ctns::sweep_rwfuns" << std::endl;
 
    // perform additional onedot opt   
-   int dcut = 4*schd.nstates;
-   input::sweep_ctrl ctrl = {0, 1, dcut, 1.e-4, 0.0};
+   input::sweep_ctrl ctrl = {0, 1, 4*schd.nstates, 1.e-4, 0.0};
    auto p0 = std::make_pair(0,0);
    auto p1 = std::make_pair(1,0);
    auto cturn = icomb.topo.is_cturn(p0,p1);
@@ -159,7 +158,7 @@ void sweep_rwfuns(const input::schedule& schd,
    // decimation
    double dwt; 
    int deff;
-   auto qt2 = decimation_row(rdm, dcut, dwt, deff).T(); // permute two lines for RCF
+   auto qt2 = decimation_row(rdm, schd.nstates, dwt, deff).T(); // permute two lines for RCF
    icomb.rsites[p0] = qt2.split_cr(wf.qmid, wf.qcol, dpt);
 
    // form rwfuns

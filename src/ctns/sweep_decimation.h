@@ -1,8 +1,15 @@
 #ifndef SWEEP_DECIMATION_H
 #define SWEEP_DECIMATION_H
 
+#include "sweep_prdm.h"
 
 namespace ctns{
+
+const double thresh_noise = 1.e-10;
+extern const double thresh_noise;
+
+const double thresh_sig2 = 1.e-20;
+extern const double thresh_sig2;
 
 // wf[L,R] = U[L,l]*sl*Vh[l,R]
 template <typename Tm>
@@ -10,7 +17,6 @@ qtensor2<Tm> decimation_row(const qtensor2<Tm>& rdm,
 			    const int dcut,
 			    double& dwt,
 			    int& deff){
-   const double thresh_sig2 = 1.e-16;
    const bool debug = false;
    if(debug) std::cout << "ctns::decimation_row dcut=" << dcut << std::endl;
    // 0. normalize before diagonalization
@@ -134,7 +140,7 @@ void decimation_onedot_lc(sweep_data& sweeps,
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
       rdm += wf.merge_lc().get_rdm_row();
-      //if(noise > thresh_noise) get_prdm_lc(wf, lqops, cqops, noise, rdm);
+      if(noise > thresh_noise) get_prdm_lc(wf, lqops, cqops, noise, rdm);
    }
    // 2. decimation
    auto qt2 = decimation_row(rdm, dcut, result.dwt, result.deff);
@@ -192,7 +198,7 @@ void decimation_onedot_lr(sweep_data& sweeps,
       wf.from_array(vsol.col(i));
       // Note: need to first bring two dimensions adjacent to each other before merge!
       rdm += wf.perm_signed().merge_lr().get_rdm_row();
-      //if(noise > thresh_noise) get_prdm_lr(wf, lqops, rqops, noise, rdm);
+      if(noise > thresh_noise) get_prdm_lr(wf, lqops, rqops, noise, rdm);
    }
    // 2. decimation
    auto qt2 = decimation_row(rdm, dcut, result.dwt, result.deff);
@@ -249,7 +255,7 @@ void decimation_onedot_cr(sweep_data& sweeps,
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
       rdm += wf.merge_cr().get_rdm_col();
-      //if(noise > thresh_noise) get_prdm_cr(wf, cqops, rqops, noise, rdm);
+      if(noise > thresh_noise) get_prdm_cr(wf, cqops, rqops, noise, rdm);
    }
    // 2. decimation
    auto qt2 = decimation_row(rdm, dcut, result.dwt, result.deff).T(); // permute two lines for RCF
