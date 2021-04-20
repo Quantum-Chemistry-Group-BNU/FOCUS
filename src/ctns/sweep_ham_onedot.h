@@ -1,5 +1,5 @@
-#ifndef SWEEP_ONEDOT_H
-#define SWEEP_ONEDOT_H
+#ifndef SWEEP_HAM_ONEDOT_H
+#define SWEEP_HAM_ONEDOT_H
 
 namespace ctns{
    

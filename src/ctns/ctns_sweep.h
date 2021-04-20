@@ -25,7 +25,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    get_left_bsite(Km::isym, icomb.lsites[std::make_pair(0,0)]);
 
    // generate sweep sequence
-   sweep_data sweeps(schd, icomb.topo.get_sweeps(), schd.nstates);
+   sweep_data sweeps(icomb.topo.get_sweeps(), schd.nstates,   
+		     schd.guess, schd.maxsweep, schd.combsweep); 
    for(int isweep=0; isweep<schd.maxsweep; isweep++){
       // print sweep control
       std::cout << tools::line_separator2 << std::endl;
@@ -40,26 +41,25 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
          auto forward = dbond.forward;
          auto p = dbond.p;
          bool cturn = dbond.cturn;
+	 auto dots = sweeps.ctrls[isweep].dots;
 	 std::cout << "\nisweep=" << isweep << " ibond=" << ibond << " bond=" << p0 << "-" << p1 
-	           << " (dot,forward,update,cturn)=(" << sweeps.ctrls[isweep].dots << ","
+	           << " (dots,forward,update,cturn)=(" << dots << ","
 		   << forward << "," << !forward << "," << cturn << ")" 
 		   << std::endl;
          std::cout << tools::line_separator << std::endl;
-
 	 auto tp0 = icomb.topo.node_type(p0);
 	 auto tp1 = icomb.topo.node_type(p1);
-	 if(sweeps.ctrls[isweep].dots == 1){ // || (ctrl.dots == 2 && tp0 == 3 && tp1 == 3)){
+	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
 	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }else{
 	    //sweep_twodot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, sweep_result[i]);
 	 }
-
       } // ibond
       auto tf = tools::get_time();
       sweeps.t_total[isweep] = tools::get_duration(tf-ti);
       sweeps.summary(isweep);
    } // isweep
-   //opt_finaldot(schd, icomb, int2e, int1e, ecore);
+   sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
 
    auto t1 = tools::get_time();
    std::cout << "timing for ctns::opt_sweep : " << std::setprecision(2) 

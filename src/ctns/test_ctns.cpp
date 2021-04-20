@@ -146,7 +146,7 @@ int tests::test_ctns(){
  
    // 6. optimization from current RCF 
    ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
-   /* 
+
    // re-compute expectation value for optimized TNS
    auto Sij = ctns::get_Smat(icomb);
    Sij.print("Sij");
@@ -154,7 +154,6 @@ int tests::test_ctns(){
    Hij.print("Hij",8);
    auto ovlp = rcanon_CIovlp(icomb, sci_space, vs);
    ovlp.print("ovlp");
-   */
 
    schd.remove_scratch();
 

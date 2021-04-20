@@ -55,13 +55,18 @@ public:
 
 struct sweep_data{
    // constructor
-   sweep_data(const input::schedule& schd, const std::vector<directed_bond>& sweep_seq, const int n_states){
-      guess = schd.guess;
-      nstates = n_states;
+   sweep_data(const std::vector<directed_bond>& sweep_seq, 
+	      const int _nstates,
+	      const bool _guess,
+	      const int _maxsweep,
+	      const std::vector<input::sweep_ctrl>& _ctrls){
       seq = sweep_seq; 
       seqsize = sweep_seq.size();
-      maxsweep = schd.maxsweep;
-      ctrls = schd.combsweep;
+      guess = _guess;
+      nstates = _nstates;
+      maxsweep = _maxsweep;
+      ctrls = _ctrls;
+      // sweep results
       opt_result.resize(maxsweep);
       opt_timing.resize(maxsweep);
       for(int i=0; i<maxsweep; i++){
@@ -89,7 +94,7 @@ struct sweep_data{
    void summary(const int isweep);
 public:
    bool guess;
-   int maxsweep, seqsize, nstates; 
+   int seqsize, nstates, maxsweep; 
    std::vector<directed_bond> seq; // sweep bond sequence 
    std::vector<input::sweep_ctrl> ctrls; // control parameters
    // energies

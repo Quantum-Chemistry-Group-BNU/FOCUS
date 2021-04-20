@@ -126,10 +126,62 @@ void sweep_onedot(const input::schedule& schd,
    timing.analysis();
 }
 
+// use one dot algorithm to produce a final wavefunction
+// in right canonical form for later usage 
+template <typename Km>
+void sweep_rwfuns(const input::schedule& schd,
+		  comb<Km>& icomb,
+		  const integral::two_body<typename Km::dtype>& int2e,
+	          const integral::one_body<typename Km::dtype>& int1e,
+		  const double ecore){
+   std::cout << "ctns::sweep_rwfuns" << std::endl;
+
+   // perform additional onedot opt   
+   int dcut = 4*schd.nstates;
+   input::sweep_ctrl ctrl = {0, 1, dcut, 1.e-4, 0.0};
+   auto p0 = std::make_pair(0,0);
+   auto p1 = std::make_pair(1,0);
+   auto cturn = icomb.topo.is_cturn(p0,p1);
+   auto dbond = directed_bond(p0,p1,0,p1,cturn);
+   sweep_data sweeps({dbond}, schd.nstates, schd.guess, 1, {ctrl});
+   sweep_onedot(schd, sweeps, 0, 0, icomb, int2e, int1e, ecore);
+   
+   std::cout << "deal with site-0 by decimation" << std::endl;
+   auto wf = icomb.psi[0];
+   auto qprod = qmerge(wf.qmid, wf.qcol);
+   auto qcr = qprod.first;
+   auto dpt = qprod.second;
+   qtensor2<typename Km::dtype> rdm(qsym(), qcr, qcr);
+   // build pRDM 
+   for(int i=0; i<schd.nstates; i++){
+      rdm += icomb.psi[i].merge_cr().get_rdm_col();
+   }
+   // decimation
+   double dwt; 
+   int deff;
+   auto qt2 = decimation_row(rdm, dcut, dwt, deff).T(); // permute two lines for RCF
+   icomb.rsites[p0] = qt2.split_cr(wf.qmid, wf.qcol, dpt);
+
+   // form rwfuns
+   auto& sym_state = icomb.psi[0].sym;
+   qbond qrow({{sym_state, schd.nstates}});
+   auto& qcol = qt2.qrow; 
+   qtensor2<typename Km::dtype> rwfuns(qsym(), qrow, qcol, {0, 1});
+   assert(qcol.size() == 1);
+   int rdim = qrow.get_dim(0);
+   int cdim = qcol.get_dim(0);
+   for(int i=0; i<schd.nstates; i++){
+      auto cwf = icomb.psi[i].merge_cr().dot(qt2.H()); // <-W[1,alpha]->
+      for(int c=0; c<cdim; c++){
+         rwfuns(0,0)(i,c) = cwf(0,0)(0,c);	      
+      }
+   }
+   icomb.rwfuns = std::move(rwfuns);
+}
 
 /*
 template <typename Tm>
-void opt_sweep_twodot(const input::schedule& schd,
+void sweep_twodot(const input::schedule& schd,
 		      const input::sweep_ctrl& ctrl,
                       comb<Tm>& icomb,
 		      const directed_bond& dbond,
@@ -138,7 +190,7 @@ void opt_sweep_twodot(const input::schedule& schd,
                       const double ecore,
 		      dot_result& result){
    auto t0 = tools::get_time();
-   cout << "tns::opt_twodot";
+   cout << "ctns::opt_twodot";
 
    // 0. determine bond and site to be updated
    auto p0 = std::get<0>(dbond);
@@ -225,27 +277,6 @@ void opt_sweep_twodot(const input::schedule& schd,
    cout << "timing for tns::opt_twodot : " << setprecision(2) 
         << tools::get_duration(t1-t0) << " s" << endl;
    opt_timing_analysis({t0,ta,tb,tc,td,t1});
-}
-
-void tns::opt_finaldot(const input::schedule& schd,
-		       comb& icomb,
-		       const integral::two_body& int2e,
-	               const integral::one_body& int1e,
-		       const double ecore){
-   cout << "\ntns::opt_finaldot" << endl;
-   // use one dot algorithm to produce a final wavefunction in 
-   // right canonical form stored in icomb.rsites for later usage 
-   auto p0 = make_pair(0,0);
-   auto p1 = make_pair(1,0);
-   auto dbond = make_tuple(p0,p1,false);
-   input::sweep_ctrl ctrl = {0, 1, 4*sweeps.nstates, 1.e-5, 0.0};
-   vector<double> eopt;
-   double dwt;
-   int deff;
-   opt_onedot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, 
-	      eopt, dwt, deff);
-   // convert wfs on the last dot to rsite0
-   icomb.rsites[p0] = get_rsite0(icomb.psi);
 }
 
 */
