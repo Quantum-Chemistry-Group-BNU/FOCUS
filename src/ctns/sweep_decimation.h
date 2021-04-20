@@ -197,7 +197,7 @@ void decimation_onedot_lr(sweep_data& sweeps,
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
       // Note: need to first bring two dimensions adjacent to each other before merge!
-      rdm += wf.perm_signed().merge_lr().get_rdm_row();
+      rdm += wf.permCR_signed().merge_lr().get_rdm_row();
       if(noise > thresh_noise) get_prdm_lr(wf, lqops, rqops, noise, rdm);
    }
    // 2. decimation
@@ -216,7 +216,7 @@ void decimation_onedot_lr(sweep_data& sweeps,
       icomb.psi.clear();
       for(int i=0; i<vsol.cols(); i++){
          wf.from_array(vsol.col(i));
-         auto cwf = qt2.H().dot(wf.perm_signed().merge_lr()); // <-W[alpha,r]->
+         auto cwf = qt2.H().dot(wf.permCR_signed().merge_lr()); // <-W[alpha,r]->
          auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
          icomb.psi.push_back(psi);
       }
@@ -281,7 +281,7 @@ void decimation_onedot_cr(sweep_data& sweeps,
          }else{
             // special treatment of the propagation downside to backbone
             psi = contract_qt3_qt2_c(icomb.lsites[p0],cwf.T());
-            psi = psi.perm_signed(); // |(lr)c> back to |lcr> order on backbone
+            psi = psi.permCR_signed(); // |(lr)c> back to |lcr> order on backbone
          }
          icomb.psi.push_back(psi);
       }
@@ -378,9 +378,9 @@ void tns::decimation_twodot(comb& icomb,
 	 for(int i=0; i<vsol.cols(); i++){
             wf.from_array(vsol.col(i));
 	    if(i == 0){
-	       rdm  = wf.perm_signed().merge_lr_c1c2().get_rdm_row();
+	       rdm  = wf.permCR_signed().merge_lr_c1c2().get_rdm_row();
 	    }else{
-	       rdm += wf.perm_signed().merge_lr_c1c2().get_rdm_row();
+	       rdm += wf.permCR_signed().merge_lr_c1c2().get_rdm_row();
 	    }
 	 }
 	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
@@ -394,7 +394,7 @@ void tns::decimation_twodot(comb& icomb,
 	 icomb.psi.clear();
 	 for(int i=0; i<vsol.cols(); i++){
 	    wf.from_array(vsol.col(i));
-	    auto cwf = qt2.T().dot(wf.perm_signed().merge_lr_c1c2());
+	    auto cwf = qt2.T().dot(wf.permCR_signed().merge_lr_c1c2());
 	    auto psi = cwf.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
 	    icomb.psi.push_back(psi); // psi on branch
 	 }
@@ -438,9 +438,9 @@ void tns::decimation_twodot(comb& icomb,
 	 for(int i=0; i<vsol.cols(); i++){
             wf.from_array(vsol.col(i));
 	    if(i == 0){
-	       rdm  = wf.perm_signed().merge_lr_c1c2().get_rdm_col();
+	       rdm  = wf.permCR_signed().merge_lr_c1c2().get_rdm_col();
 	    }else{
-	       rdm += wf.perm_signed().merge_lr_c1c2().get_rdm_col();
+	       rdm += wf.permCR_signed().merge_lr_c1c2().get_rdm_col();
 	    }
 	 }
 	 auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
@@ -454,9 +454,9 @@ void tns::decimation_twodot(comb& icomb,
 	 icomb.psi.clear();
 	 for(int i=0; i<vsol.cols(); i++){
 	    wf.from_array(vsol.col(i));
-	    auto cwf = wf.perm_signed().merge_lr_c1c2().dot(qt2.T()); 
+	    auto cwf = wf.permCR_signed().merge_lr_c1c2().dot(qt2.T()); 
 	    auto psi = cwf.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
-	    psi = psi.perm_signed();
+	    psi = psi.permCR_signed();
             icomb.psi.push_back(psi); // psi on backbone
 	 }
       }

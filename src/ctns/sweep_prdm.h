@@ -3,6 +3,11 @@
 
 namespace ctns{
 
+// ZL@20210420:	
+// Note that for perturbative noise, the signs are not properly treated as in 
+// see sweep_ham_onedot.h. We assume that they are not essential for recovering
+// the losing quantum number! This proved to work for simple tests at least.
+
 template <typename Tm>
 void get_prdm_lc(const qtensor3<Tm>& wf, 
 		 oper_dict<Tm>& lqops, 
@@ -20,7 +25,7 @@ void get_prdm_lc(const qtensor3<Tm>& wf,
    // a^L(+)|psi>	
    for(const auto& op1C : lqops['C']){
       const auto& op1 = op1C.second;
-      rdm += noise*oper_kernel_OIwf("lc",wf,op1).merge_lc().get_rdm_row();
+      rdm += noise*oper_kernel_OIwf("lc",wf,op1).merge_lc().get_rdm_row(); 
       rdm += noise*oper_kernel_OIwf("lc",wf,op1,dagger).merge_lc().get_rdm_row();
    }
    // A^L|psi>

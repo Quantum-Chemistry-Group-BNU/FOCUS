@@ -89,7 +89,7 @@ void tns::guess_twodot(comb& icomb,
 	    auto wf4 = wf2.split_lr_c1c2(wf.qrow, wf.qcol, wf.dpt_lr().second,
 			    	         wf.qmid, wf.qver, wf.dpt_c1c2().second);
 	    assert(wf4.get_dim() == nsub);
-	    wf4 = wf4.perm_signed(); // back to backbone
+	    wf4 = wf4.permCR_signed(); // back to backbone
 	    wf4.to_array(&v0[nsub*i]);
 	 }
       }

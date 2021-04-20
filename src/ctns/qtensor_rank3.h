@@ -66,7 +66,7 @@ struct qtensor3{
       // deal with fermionic sign in fermionic direct product
       qtensor3<Tm> mid_signed(const double fac=1.0) const; // wf[lcr](-1)^{p(c)}
       qtensor3<Tm> row_signed(const double fac=1.0) const; // wf[lcr](-1)^{p(l)}
-      qtensor3<Tm> perm_signed() const; // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
+      qtensor3<Tm> permCR_signed() const; // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
       // ZL20210413: application of time-reversal operation
       qtensor3<Tm> K() const;
       // simple algorithmic operations
@@ -258,7 +258,7 @@ qtensor3<Tm> qtensor3<Tm>::row_signed(const double fac) const{
 }
 
 template <typename Tm>
-qtensor3<Tm> qtensor3<Tm>::perm_signed() const{
+qtensor3<Tm> qtensor3<Tm>::permCR_signed() const{
    qtensor3<Tm> qt3 = *this;
    for(int idx=0; idx<qt3._qblocks.size(); idx++){
       auto& blk = qt3._qblocks[idx];
