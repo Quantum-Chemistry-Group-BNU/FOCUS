@@ -386,7 +386,7 @@ void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbasis,
       linalg::matrix<std::complex<double>> U(dim,dim);
       // Odd-electron case: 
       //    from det basis {|D>,|Df>} to TR basis {|D>,|Dbar>}
-      if(qr.ne()%2 == 1){
+      if(qr.parity() == 1){
 	 std::vector<int> partition = {dim1,dim1};
 	 blockMatrix<std::complex<double>> rmat(partition,partition);
 	 rmat = rhor;

@@ -265,6 +265,60 @@ struct matrix{
 			   [phase](const Tm& x){ return x*phase; });
 	 }
       }
+      // ZL@20210421: reorder row/col/rowcol 
+      matrix reorder_row(const std::vector<int>& idx, const bool iop=0){
+	 matrix<Tm> rmat(_rows,_cols);
+	 if(iop == 0){
+            for(int j=0; j<_cols; j++){
+               for(int i=0; i<_rows; i++){
+      	          rmat(i,j) = (*this)(idx[i],j);
+               }
+            }
+	 }else{
+            for(int j=0; j<_cols; j++){
+               for(int i=0; i<_rows; i++){
+      	          rmat(idx[i],j) = (*this)(i,j);
+               }
+            }
+	 }
+         return rmat;
+      }
+      matrix reorder_col(const std::vector<int>& idx, const bool iop=0){
+	 matrix<Tm> rmat(_rows,_cols);
+	 if(iop == 0){
+            for(int j=0; j<_cols; j++){
+               for(int i=0; i<_rows; i++){
+      	          rmat(i,j) = (*this)(i,idx[j]);
+               }
+            }
+	 }else{
+            for(int j=0; j<_cols; j++){
+               for(int i=0; i<_rows; i++){
+      	          rmat(i,idx[j]) = (*this)(i,j);
+               }
+            }
+	 }
+         return rmat;
+      }
+      matrix reorder_rowcol(const std::vector<int>& idx1,
+		      	    const std::vector<int>& idx2,
+			    const bool iop=0){
+	 matrix<Tm> rmat(_rows,_cols);
+	 if(iop == 0){
+            for(int j=0; j<_cols; j++){
+               for(int i=0; i<_rows; i++){
+      	          rmat(i,j) = (*this)(idx1[i],idx2[j]);
+               }
+            }
+	 }else{
+            for(int j=0; j<_cols; j++){
+               for(int i=0; i<_rows; i++){
+      	          rmat(idx1[i],idx2[j]) = (*this)(i,j);
+               }
+            }
+	 }
+         return rmat;
+      }
       // =,*,+,- operations
       matrix& operator =(const Tm cval){
 	 std::fill_n(_data, _size, cval);

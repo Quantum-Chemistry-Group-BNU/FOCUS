@@ -119,6 +119,8 @@ void sweep_onedot(const input::schedule& schd,
    // 3. decimation & renormalize operators
    decimation_onedot(sweeps, isweep, ibond, icomb, vsol, wf, 
 		     cqops, lqops, rqops, int2e, int1e, schd.scratch);
+   
+   if(ibond == 0) exit(1);
 
    timing.t1 = tools::get_time();
    std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 
@@ -155,10 +157,13 @@ void sweep_rwfuns(const input::schedule& schd,
    for(int i=0; i<schd.nstates; i++){
       rdm += icomb.psi[i].merge_cr().get_rdm_col();
    }
+/*
    // decimation
    double dwt; 
    int deff;
-   auto qt2 = decimation_row(rdm, schd.nstates, dwt, deff).T(); // permute two lines for RCF
+   const bool ifkr = tools::is_complex<Km>();
+   auto qt2 = decimation_row(rdm, schd.nstates, dwt, deff,
+		    	     ifkr, wf.qmid, wf.qcol, dpt).T(); // permute two lines for RCF
    icomb.rsites[p0] = qt2.split_cr(wf.qmid, wf.qcol, dpt);
 
    // form rwfuns
@@ -176,6 +181,7 @@ void sweep_rwfuns(const input::schedule& schd,
       }
    }
    icomb.rwfuns = std::move(rwfuns);
+*/
 }
 
 /*
