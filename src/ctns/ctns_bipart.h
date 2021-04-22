@@ -387,7 +387,7 @@ void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbasis,
       auto rhor = wfs.get_rhor(lspace, rspace, qr);
       std::vector<double> eigs(dim); 
       linalg::matrix<std::complex<double>> U(dim,dim);
-      eig_solver_kr(qr, rhor, eigs, U, phases);
+      eig_solver_kr<std::complex<double>>(qr, rhor, eigs, U, phases);
       //
       // 4. select important renormalized states from (eigs,U) 
       //

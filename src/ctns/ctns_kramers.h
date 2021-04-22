@@ -334,7 +334,7 @@ void eig_solver_kr_odd(const linalg::matrix<Tm>& rhor,
    int dim1 = phases.size();
    assert(dim = 2*dim1);
    std::vector<int> partition = {dim1,dim1};
-   blockMatrix<std::complex<double>> rmat(partition,partition);
+   blockMatrix<Tm> rmat(partition,partition);
    rmat = rhor;
    rmat(0,1).colscale(phases);
    rmat(1,1).colscale(phases);
@@ -358,7 +358,7 @@ void eig_solver_kr_odd(const linalg::matrix<Tm>& rhor,
    zquatev(rhor_kr,eigs,U,1);
    std::copy(eigs.begin(), eigs.begin()+dim1, eigs.begin()+dim1); // duplicate eigs!
    // back to original basis {|D>,|Df>}
-   blockMatrix<std::complex<double>> umat(partition,{dim});
+   blockMatrix<Tm> umat(partition,{dim});
    umat = U;
    umat(1,0).rowscale(phases);
    U = umat.to_matrix();
@@ -438,6 +438,7 @@ void eig_solver_kr(const qsym& qr,
 		   std::vector<double>& eigs,
 		   linalg::matrix<Tm>& U,
 		   std::vector<double>& phases){
+   assert(tools::is_complex<Tm>());
    if(qr.parity() == 1){
       eig_solver_kr_odd(rhor,eigs,U,phases); 
    }else{

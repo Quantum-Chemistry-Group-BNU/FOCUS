@@ -127,14 +127,26 @@ qtensor2<Tm> decimation_row_kr(const qtensor2<Tm>& rdm,
  			       const qbond& qs1,
  			       const qbond& qs2,
  			       const qdpt& dpt){
+   std::cout << "error: decimation_row_kr just work for complex<double>!" << std::endl;
+   exit(1);
+}
+
+template <>
+qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<double>>& rdm,
+			       			 const int dcut,
+			       			 double& dwt,
+			       			 int& deff,
+ 			       			 const qbond& qs1,
+ 			       			 const qbond& qs2,
+ 			       			 const qdpt& dpt){
    if(debug_decimation) std::cout << "ctns::decimation_row_kr dcut=" << dcut << std::endl;
    const auto& qrow = rdm.qrow;
    // 0. normalize before diagonalization
-   Tm rfac = 1.0/rdm.trace();
+   std::complex<double> rfac = 1.0/rdm.trace();
    // 1. compute reduced basis
    std::map<int,int> idx2sector; 
    std::vector<double> sig2all;
-   std::map<int,linalg::matrix<Tm>> rbasis;
+   std::map<int,linalg::matrix<std::complex<double>>> rbasis;
    int idx = 0;
    for(int br=0; br<rdm.rows(); br++){
       const auto& blk = rdm(br,br);
@@ -142,7 +154,7 @@ qtensor2<Tm> decimation_row_kr(const qtensor2<Tm>& rdm,
       // compute renormalized basis
       int rdim = qrow.get_dim(br);
       std::vector<double> sig2(rdim);
-      linalg::matrix<Tm> rbas(rdim,rdim);
+      linalg::matrix<std::complex<double>> rbas(rdim,rdim);
       auto rblk = rfac*blk;
       //------------------------
       // KRS-adapted decimation
@@ -151,7 +163,7 @@ qtensor2<Tm> decimation_row_kr(const qtensor2<Tm>& rdm,
       std::vector<double> phases;
       mapping2krbasis(qr,qs1,qs2,dpt,idx_all,phases);
       auto rhor = rblk.reorder_rowcol(idx_all,idx_all);
-      eig_solver_kr(qr, rhor, sig2, rbas, phases);
+      eig_solver_kr<std::complex<double>>(qr, rhor, sig2, rbas, phases);
       rbas = rbas.reorder_row(idx_all,1);
       // save
       if(qr.parity() == 1){
@@ -229,7 +241,7 @@ qtensor2<Tm> decimation_row_kr(const qtensor2<Tm>& rdm,
       }
    }
    qbond qkept(dims);
-   qtensor2<Tm> qt2(qsym(), qrow, qkept);
+   qtensor2<std::complex<double>> qt2(qsym(), qrow, qkept);
    for(int bc=0; bc<qkept.size(); bc++){
       int br = br_matched[bc];
       const auto& rbas = rbasis[br];

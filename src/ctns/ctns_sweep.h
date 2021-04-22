@@ -59,6 +59,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
       sweeps.t_total[isweep] = tools::get_duration(tf-ti);
       sweeps.summary(isweep);
    } // isweep
+   
+   exit(1);
    sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
 
    auto t1 = tools::get_time();
