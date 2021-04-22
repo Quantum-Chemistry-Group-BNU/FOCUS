@@ -155,6 +155,8 @@ void sweep_rwfuns(const input::schedule& schd,
    for(int i=0; i<schd.nstates; i++){
       rdm += icomb.psi[i].merge_cr().get_rdm_col();
    }
+
+   exit(1);
 /*
    // decimation
    double dwt; 
