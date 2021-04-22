@@ -14,7 +14,7 @@ MATH = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm
 #MATH = -llapack -lblas
 
 BOOST = /usr/local
-FLAGS = -DGNU -std=c++11 -g -O0 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
+FLAGS = -DGNU -std=c++11 -g -O2 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
 #FLAGS = -DGNU -DNDEBUG -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
 #	-Wl,-no_pie -lprofiler # google profiler
 

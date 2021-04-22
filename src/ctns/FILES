@@ -86,7 +86,15 @@ Sweep algorithm: (1) onedot
  sweep_prdm.h
 
 
-Sweep algorithm: (2) twodot
+Sweep algorithm: (2) TRS
+---------------------------
+
+* time-reversal symmetry-adapted
+ * local CI
+ * decimation
+
+
+Sweep algorithm: (3) twodot
 ---------------------------
 
 * reshaping: working in the format of qt2 -> psi(L,R)! 
@@ -96,13 +104,6 @@ Sweep algorithm: (2) twodot
 * twodot
  tns_ham_twodot.cpp
 
-
-Sweep algorithm: (3) TRS
----------------------------
-
-* time-reversal symmetry-adapted
- * local CI
- * decimation
 
 
 

@@ -193,6 +193,258 @@ linalg::matrix<Tm> time_reversal(const linalg::matrix<Tm>& blk1,
    return blk;
 }
 
+// mapping from original PRODUCT basis to kramers paired basis
+// V[odd] = {|le,ro>,|lo,re>}
+inline void mapping2krbasis_odd(const qsym& qr,
+				const qbond& qs1,
+		                const qbond& qs2,
+		                const qdpt& dpt,
+		                std::vector<int>& idx_all,
+				std::vector<double>& phases){
+   std::vector<int> idx_up, idx_dw;
+   int ioff = 0;
+   const auto& comb = dpt.at(qr);
+   for(int i=0; i<comb.size(); i++){
+      int b1 = std::get<0>(comb[i]);
+      int b2 = std::get<1>(comb[i]);
+      int ioff = std::get<2>(comb[i]);
+      auto q1 = qs1.get_sym(b1);
+      auto q2 = qs2.get_sym(b2);
+      int  d1 = qs1.get_dim(b1);
+      int  d2 = qs2.get_dim(b2);
+      // |le,ro> 
+      if(q1.parity() == 0 && q2.parity() == 1){
+         assert(d2%2 == 0);
+         for(int i2=0; i2<d2/2; i2++){
+            for(int i1=0; i1<d1; i1++){
+               int idxA = ioff + i2*d1 + i1; // |le,ro>
+               idx_up.push_back(idxA);
+            }
+         }
+         for(int i2=0; i2<d2/2; i2++){
+            for(int i1=0; i1<d1; i1++){
+               int idxB = ioff + (i2+d2/2)*d1 + i1; // |le,ro_bar>
+               idx_dw.push_back(idxB);
+            }
+         }
+      // |lo,re>   
+      }else if(q1.parity() == 1 && q2.parity() == 0){
+         assert(d1%2 == 0);
+         for(int i2=0; i2<d2; i2++){
+            for(int i1=0; i1<d1/2; i1++){
+   	     int idxA = ioff + i2*d1 + i1; 
+               idx_up.push_back(idxA);
+            }
+            for(int i1=0; i1<d1/2; i1++){
+     	     int idxB = ioff + i2*d1 + i1 + d1/2;
+               idx_dw.push_back(idxB);
+            }
+         }
+      }else{
+         std::cout << "error: no such combination of parities!" << std::endl;
+         std::cout << "q1p,q2p=" << q1.parity() << "," << q2.parity() << std::endl;
+         exit(1);
+      } 
+      ioff += d1*d2;
+   }
+   idx_all.insert(idx_all.end(), idx_up.begin(), idx_up.end());
+   idx_all.insert(idx_all.end(), idx_dw.begin(), idx_dw.end());
+   phases.resize(idx_dw.size(),1.0);
+}
+
+// V[even] = {|le,re>,|lo,ro>}
+inline void mapping2krbasis_even(const qsym& qr,
+			         const qbond& qs1,
+			         const qbond& qs2,
+			         const qdpt& dpt,
+		                 std::vector<int>& idx_all,
+				 std::vector<double>& phases){
+   std::vector<int> idx_up, idx_dw, idx_ee;
+   int ioff = 0;
+   const auto& comb = dpt.at(qr);
+   for(int i=0; i<comb.size(); i++){
+      int b1 = std::get<0>(comb[i]);
+      int b2 = std::get<1>(comb[i]);
+      int ioff = std::get<2>(comb[i]);
+      auto q1 = qs1.get_sym(b1);
+      auto q2 = qs2.get_sym(b2);
+      int  d1 = qs1.get_dim(b1);
+      int  d2 = qs2.get_dim(b2);
+      // |le,re> 
+      if(q1.parity() == 0 && q2.parity() == 0){
+         for(int i2=0; i2<d2; i2++){
+            for(int i1=0; i1<d1; i1++){
+               int idx = ioff + i2*d1 + i1;
+               idx_ee.push_back(idx);
+            }
+         }
+      // |lo,ro> = {|lo,ro>,|lo_bar,ro>} + {|lo_bar,ro_bar>,|lo,ro_bar>}
+      }else if(q1.parity() == 1 && q2.parity() == 1){
+         assert(d1%2 == 0 & d2%2 == 0);
+         for(int i2=0; i2<d2/2; i2++){
+            for(int i1=0; i1<d1; i1++){
+               if(i1<d1/2){		  
+                  int idxA = ioff + i2*d1 + i1; // |lo,ro> 
+                  idx_up.push_back(idxA);
+                  int idxB = ioff + (i2+d2/2)*d1 + (i1+d1/2); // |lo_bar,ro_bar>
+     	        idx_dw.push_back(idxB);
+                  phases.push_back(1.0);
+               }else{
+                  int idxA = ioff + i2*d1 + i1; // |lo_bar,ro> 
+                  idx_up.push_back(idxA);
+                  int idxB = ioff + (i2+d2/2)*d1 + (i1-d1/2); // |lo,ro_bar>
+     	        idx_dw.push_back(idxB);
+                  phases.push_back(-1.0);
+               }
+            }
+         }
+      }else{
+         std::cout << "error: no such combination of parities!" << std::endl;
+         std::cout << "q1p,q2p=" << q1.parity() << "," << q2.parity() << std::endl;
+         exit(1);
+      }
+      ioff += d1*d2;
+   }
+   idx_all.insert(idx_all.end(), idx_up.begin(), idx_up.end());
+   idx_all.insert(idx_all.end(), idx_dw.begin(), idx_dw.end());
+   idx_all.insert(idx_all.end(), idx_ee.begin(), idx_ee.end());
+}
+
+inline void mapping2krbasis(const qsym& qr,
+		            const qbond& qs1,
+		            const qbond& qs2,
+		            const qdpt& dpt,
+		            std::vector<int>& idx_all,
+		            std::vector<double>& phases){
+   if(qr.parity() == 1){
+      mapping2krbasis_odd(qr,qs1,qs2,dpt,idx_all,phases);
+   }else{
+      mapping2krbasis_even(qr,qs1,qs2,dpt,idx_all,phases);
+   }
+}
+
+// Odd-electron subspace V[odd]=span{|D>,|Df>}
+// phase: from original bare basis {|D>,|Df>} to TR basis {|D>,|Dbar>}, |Dbar>=|Df>*phase
+template <typename Tm>
+void eig_solver_kr_odd(const linalg::matrix<Tm>& rhor,
+		       std::vector<double>& eigs,
+		       linalg::matrix<Tm>& U,
+		       std::vector<double>& phases){
+   int dim = rhor.rows();
+   int dim1 = phases.size();
+   assert(dim = 2*dim1);
+   std::vector<int> partition = {dim1,dim1};
+   blockMatrix<std::complex<double>> rmat(partition,partition);
+   rmat = rhor;
+   rmat(0,1).colscale(phases);
+   rmat(1,1).colscale(phases);
+   rmat(1,0).rowscale(phases);
+   rmat(1,1).rowscale(phases);
+   //
+   // Kramers symmetrization:
+   //
+   //  [ rho_AA rho_BA ]        [ rho_AA+rho_BB^*  rho_BA-rho_AB^* ]   [  A   B  ]
+   //  [	       ] -> 1/2 [				   ] = [         ]
+   //  [ rho_AB rho_BB ]        [ rho_AB-rho_BA^*  rho_BB+rho_AA^* ]   [ -B*  A* ]
+   //
+   auto A = 0.5*(rmat(0,0) + rmat(1,1).conj());
+   auto B = 0.5*(rmat(0,1) - rmat(1,0).conj()); 
+   rmat(0,0) = A;
+   rmat(0,1) = B;
+   rmat(1,0) = -B.conj();
+   rmat(1,1) = A.conj();
+   auto rhor_kr = rmat.to_matrix();
+   // TRS-preserving diagonalization (only half eigs are output) 
+   zquatev(rhor_kr,eigs,U,1);
+   std::copy(eigs.begin(), eigs.begin()+dim1, eigs.begin()+dim1); // duplicate eigs!
+   // back to original basis {|D>,|Df>}
+   blockMatrix<std::complex<double>> umat(partition,{dim});
+   umat = U;
+   umat(1,0).rowscale(phases);
+   U = umat.to_matrix();
+}
+
+// Even-electron case:
+// from original basis {|D>,|Df>,|D0>} to {|D>,|Dbar>,|D0>} to TR basis {|->,|+>,|0>}
+//  |-> = i(|D> - |Dbar>)/sqrt2 = i(|D> - s|Df>)/sqrt2
+//  |+> =  (|D> + |Dbar>)/sqrt2 =  (|D> + s|Df>)/sqrt2
+template <typename Tm>
+void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
+		        std::vector<double>& eigs,
+		        linalg::matrix<Tm>& U,
+		        std::vector<double>& phases){
+   int dim = rhor.rows();
+   int dim1 = phases.size();
+   int dim0 = dim-2*dim1;
+   assert(dim0 >= 0);
+   std::vector<int> partition = {dim1,dim1,dim0};
+   blockMatrix<std::complex<double>> rmat(partition,partition);
+   rmat = rhor;
+   // col-1 & row-1
+   rmat(0,1).colscale(phases);
+   rmat(1,1).colscale(phases);
+   rmat(2,1).colscale(phases);
+   rmat(1,0).rowscale(phases);
+   rmat(1,1).rowscale(phases);
+   rmat(1,2).rowscale(phases);
+   // Kramers projection
+   auto A = 0.5*(rmat(0,0) + rmat(1,1).conj());
+   auto B = 0.5*(rmat(0,1) + rmat(1,0).conj());
+   auto C = 0.5*(rmat(0,2) + rmat(1,2).conj());
+   auto E = 0.5*(rmat(2,2) + rmat(2,2).conj());
+   // real matrix representation in {|->,|+>,|0>}
+   //  [   (a-b)r   (a+b)i   sqrt2*ci ]
+   //  [  -(a-b)i   (a+b)r   sqrt2*cr ] 
+   //  [ sqrt2*ciT sqrt2*crT     e    ]
+   auto ApB = A+B;
+   auto AmB = A-B;
+   const double sqrt2 = sqrt(2.0), invsqrt2 = 1.0/sqrt2;
+   auto Cr = sqrt2*C.real();
+   auto Ci = sqrt2*C.imag();
+   blockMatrix<double> matr(partition,partition);
+   matr(0,0) = AmB.real();
+   matr(1,0) = -AmB.imag();
+   matr(2,0) = Ci.T();
+   matr(0,1) = ApB.imag();
+   matr(1,1) = ApB.real();
+   matr(2,1) = Cr.T();
+   matr(0,2) = Ci;
+   matr(1,2) = Cr;
+   matr(2,2) = E.real();
+   // diagonalization
+   linalg::matrix<double> rho = matr.to_matrix();
+   linalg::matrix<double> Ur;
+   linalg::eig_solver(rho,eigs,Ur,1);
+   // back to determinant basis {|D>,|Df>,|D0>} from {|->,|+>,|0>}
+   // [   i     1    0  ]       [ u[-] ]   [    u[+]+i*u[-]  ]
+   // [-s*i   s*1    0  ]/sqrt2 [ u[+] ] = [ s*(u[+]-i*u[-]) ]/sqrt2
+   // [   0     0  sqrt2]       [ u[0] ]   [   sqrt2*u[0]    ]
+   // where the sign comes from |Dbar>=|Df>*s
+   blockMatrix<double> matu(partition,{dim});
+   matu = Ur;
+   // back transformation to original basis
+   blockMatrix<std::complex<double>> umat(partition,{dim});
+   const std::complex<double> iunit(0.0,1.0);
+   umat(0,0) = (matu(1,0) + iunit*matu(0,0))*invsqrt2;
+   umat(1,0) = umat(0,0).conj();
+   umat(1,0).rowscale(phases);
+   umat(2,0) = matu(2,0).as_complex();
+   U = umat.to_matrix();
+}
+
+template <typename Tm>
+void eig_solver_kr(const qsym& qr,
+		   const linalg::matrix<Tm>& rhor,
+		   std::vector<double>& eigs,
+		   linalg::matrix<Tm>& U,
+		   std::vector<double>& phases){
+   if(qr.parity() == 1){
+      eig_solver_kr_odd(rhor,eigs,U,phases); 
+   }else{
+      eig_solver_kr_even(rhor,eigs,U,phases); 
+   }
+}
+
 } // ctns
 
 #endif

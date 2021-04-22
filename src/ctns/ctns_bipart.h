@@ -192,7 +192,9 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
 		   const bool debug){
    const bool debug_basis = false;
    int dim = rspace.dims.at(qr);
-   double sumBi = 0.0;
+
+   // selection of important states if sig2 > thresh
+   double sumBi = 0.0;   
    std::vector<int> kept;
    for(int i=0; i<dim; i++){
       if(eigs[i] > thresh){
@@ -208,6 +210,7 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
      std::cout << " qr=" << qr << " dimB,dimBi=" << dim << "," << dimBi 
                << " sumBi=" << sumBi << " sumBc=" << sumBc << std::endl;
    }
+
    // save sites 
    if(dimBi > 0){
       renorm_sector<Tm> rsec;
@@ -378,96 +381,13 @@ void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbasis,
 	    std::cout << " state=" << state << " index=" << rspace.index[qr][state] << std::endl;
          }
       }
-      auto rhor = wfs.get_rhor(lspace, rspace, qr);
       //
       // 3. diagonalized properly to yield rbasis (depending on qr)
       //
+      auto rhor = wfs.get_rhor(lspace, rspace, qr);
       std::vector<double> eigs(dim); 
       linalg::matrix<std::complex<double>> U(dim,dim);
-      // Odd-electron case: 
-      //    from det basis {|D>,|Df>} to TR basis {|D>,|Dbar>}
-      if(qr.parity() == 1){
-	 std::vector<int> partition = {dim1,dim1};
-	 blockMatrix<std::complex<double>> rmat(partition,partition);
-	 rmat = rhor;
-	 rmat(0,1).colscale(phases);
-	 rmat(1,1).colscale(phases);
-	 rmat(1,0).rowscale(phases);
-         rmat(1,1).rowscale(phases);
-	 // Kramers projection
-	 auto A = 0.5*(rmat(0,0) + rmat(1,1).conj());
-	 auto B = 0.5*(rmat(0,1) - rmat(1,0).conj()); 
-	 rmat(0,0) = A;
-	 rmat(0,1) = B;
-	 rmat(1,0) = -B.conj();
-	 rmat(1,1) = A.conj();
-	 rhor = rmat.to_matrix();
-	 // TRS-preserving diagonalization (only half eigs are output) 
-	 zquatev(rhor,eigs,U,1);
-	 std::copy(eigs.begin(), eigs.begin()+dim1, eigs.begin()+dim1); // duplicate eigs!
-	 // back to determinant basis {|D>,|Df>}
-	 blockMatrix<std::complex<double>> umat(partition,{dim});
-	 umat = U;
-	 umat(1,0).rowscale(phases);
-	 U = umat.to_matrix();
-      // Even-electron case:
-      //    from det basis {|D>,|Df>,|D0>} to {|D>,|Dbar>,|D0>} to TR basis {|->,|+>,|0>}
-      //    |-> = i(|D> - |Dbar>)/sqrt2 = i(|D> - s|Df>)/sqrt2
-      //    |+> =  (|D> + |Dbar>)/sqrt2 =  (|D> + s|Df>)/sqrt2
-      }else{
-	 std::vector<int> partition = {dim1,dim1,dim0};
-	 blockMatrix<std::complex<double>> rmat(partition,partition);
-	 rmat = rhor;
-	 // col-1 & row-1
-	 rmat(0,1).colscale(phases);
-	 rmat(1,1).colscale(phases);
-	 rmat(2,1).colscale(phases);
-	 rmat(1,0).rowscale(phases);
-         rmat(1,1).rowscale(phases);
-         rmat(1,2).rowscale(phases);
-	 // Kramers projection
-	 auto A = 0.5*(rmat(0,0) + rmat(1,1).conj());
-	 auto B = 0.5*(rmat(0,1) + rmat(1,0).conj());
-	 auto C = 0.5*(rmat(0,2) + rmat(1,2).conj());
-	 auto E = 0.5*(rmat(2,2) + rmat(2,2).conj());
-	 // real matrix representation in {|->,|+>,|0>}
-	 //  [   (a-b)r   (a+b)i   sqrt2*ci ]
-	 //  [  -(a-b)i   (a+b)r   sqrt2*cr ] 
-	 //  [ sqrt2*ciT sqrt2*crT     e    ]
-	 auto ApB = A+B;
-	 auto AmB = A-B;
-	 double sqrt2 = sqrt(2.0), invsqrt2 = 1.0/sqrt2;
-	 auto Cr = sqrt2*C.real();
-	 auto Ci = sqrt2*C.imag();
-	 blockMatrix<double> matr(partition,partition);
-	 matr(0,0) = AmB.real();
-	 matr(1,0) = -AmB.imag();
-	 matr(2,0) = Ci.T();
-	 matr(0,1) = ApB.imag();
-	 matr(1,1) = ApB.real();
-	 matr(2,1) = Cr.T();
-	 matr(0,2) = Ci;
-	 matr(1,2) = Cr;
-	 matr(2,2) = E.real();
-	 // diagonalization
-	 linalg::matrix<double> rho = matr.to_matrix();
-	 linalg::matrix<double> Ur;
-	 linalg::eig_solver(rho,eigs,Ur,1);
-	 // back to determinant basis {|D>,|Df>,|D0>} from {|->,|+>,|0>}
-	 // [   i     1    0  ]       [ u[-] ]   [    u[+]+i*u[-]  ]
-	 // [-s*i   s*1    0  ]/sqrt2 [ u[+] ] = [ s*(u[+]-i*u[-]) ]/sqrt2
-	 // [   0     0  sqrt2]       [ u[0] ]   [   sqrt2*u[0]    ]
-	 // where the sign comes from |Dbar>=|Df>*s
-	 blockMatrix<double> matu(partition,{dim});
-         matu = Ur;
-	 blockMatrix<std::complex<double>> umat(partition,{dim});
-	 const std::complex<double> iunit(0.0,1.0);
-	 umat(0,0) = (matu(1,0) + iunit*matu(0,0))*invsqrt2;
-	 umat(1,0) = umat(0,0).conj();
-	 umat(1,0).rowscale(phases);
-	 umat(2,0) = matu(2,0).as_complex();
-	 U = umat.to_matrix();
-      }
+      eig_solver_kr(qr, rhor, eigs, U, phases);
       //
       // 4. select important renormalized states from (eigs,U) 
       //

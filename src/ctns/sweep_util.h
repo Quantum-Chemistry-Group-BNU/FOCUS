@@ -119,8 +119,6 @@ void sweep_onedot(const input::schedule& schd,
    // 3. decimation & renormalize operators
    decimation_onedot(sweeps, isweep, ibond, icomb, vsol, wf, 
 		     cqops, lqops, rqops, int2e, int1e, schd.scratch);
-   
-   if(ibond == 0) exit(1);
 
    timing.t1 = tools::get_time();
    std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 
