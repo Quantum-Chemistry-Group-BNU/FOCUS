@@ -136,8 +136,10 @@ void sweep_rwfuns(const input::schedule& schd,
 		  const double ecore){
    std::cout << "ctns::sweep_rwfuns" << std::endl;
 
-   // perform additional onedot opt   
-   input::sweep_ctrl ctrl = {0, 1, 4*schd.nstates, 1.e-4, 0.0};
+   // perform an additional onedot opt  
+   const int dcut1 = -1;
+   const double eps = schd.combsweep[schd.maxsweep-1].eps; // take the last eps  
+   input::sweep_ctrl ctrl = {0, 1, dcut1, eps, 0.0};
    auto p0 = std::make_pair(0,0);
    auto p1 = std::make_pair(1,0);
    auto cturn = icomb.topo.is_cturn(p0,p1);
@@ -145,27 +147,24 @@ void sweep_rwfuns(const input::schedule& schd,
    sweep_data sweeps({dbond}, schd.nstates, schd.guess, 1, {ctrl});
    sweep_onedot(schd, sweeps, 0, 0, icomb, int2e, int1e, ecore);
    
-   std::cout << "deal with site-0 by decimation" << std::endl;
+   std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;
    auto wf = icomb.psi[0];
    auto qprod = qmerge(wf.qmid, wf.qcol);
    auto qcr = qprod.first;
    auto dpt = qprod.second;
+   // build RDM 
    qtensor2<typename Km::dtype> rdm(qsym(), qcr, qcr);
-   // build pRDM 
    for(int i=0; i<schd.nstates; i++){
       rdm += icomb.psi[i].merge_cr().get_rdm_col();
    }
-
-   exit(1);
-/*
    // decimation
+   const int dcut = schd.nstates;
    double dwt; 
    int deff;
    const bool ifkr = tools::is_complex<Km>();
-   auto qt2 = decimation_row(rdm, schd.nstates, dwt, deff,
+   auto qt2 = decimation_row(rdm, dcut, dwt, deff,
 		    	     ifkr, wf.qmid, wf.qcol, dpt).T(); // permute two lines for RCF
    icomb.rsites[p0] = qt2.split_cr(wf.qmid, wf.qcol, dpt);
-
    // form rwfuns
    auto& sym_state = icomb.psi[0].sym;
    qbond qrow({{sym_state, schd.nstates}});
@@ -181,7 +180,6 @@ void sweep_rwfuns(const input::schedule& schd,
       }
    }
    icomb.rwfuns = std::move(rwfuns);
-*/
 }
 
 /*

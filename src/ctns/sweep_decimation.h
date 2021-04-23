@@ -59,7 +59,7 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
    double sum = 0.0;
    double SvN = 0.0;
    for(int i=0; i<sig2all.size(); i++){
-      if(deff >= dcut) break; // discard rest
+      if(dcut > -1 && deff >= dcut) break; // discard rest
       int idx = index[i];
       if(sig2all[idx] < thresh_sig2) continue; // discard negative weights
       int br = idx2sector[idx];
@@ -200,7 +200,7 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
    double sum = 0.0;
    double SvN = 0.0;
    for(int i=0; i<sig2all.size(); i++){
-      if(deff >= dcut) break; // discard rest
+      if(dcut > -1 && deff >= dcut) break; // discard rest
       int idx = index[i];
       if(sig2all[idx] < thresh_sig2) continue; // discard negative weights
       int br = idx2sector[idx];
@@ -276,6 +276,7 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
    return qt2;
 }
 
+// if dcut=-1, no truncation is performed except for sig2 < thresh_sig2
 template <typename Tm>
 qtensor2<Tm> decimation_row(const qtensor2<Tm>& rdm,
 			    const int dcut,
@@ -438,10 +439,6 @@ void decimation_onedot_cr(sweep_data& sweeps,
    // 1. build pRDM 
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
-
-      // lzd: explicit symmetrizaiton for even
-      wf = wf + wf.K();
-
       rdm += wf.merge_cr().get_rdm_col();
       if(noise > thresh_noise) get_prdm_cr(wf, cqops, rqops, noise, rdm);
    }
