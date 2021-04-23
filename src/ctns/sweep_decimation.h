@@ -8,10 +8,10 @@ namespace ctns{
 const double thresh_noise = 1.e-10;
 extern const double thresh_noise;
 
-const double thresh_sig2 = 1.e-20;
+const double thresh_sig2 = 1.e-16;
 extern const double thresh_sig2;
 
-const bool debug_decimation = true;
+const bool debug_decimation = false;
 extern const bool debug_decimation;
 
 // wf[L,R] = U[L,l]*sl*Vh[l,R]
@@ -46,8 +46,8 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
 	 idx++;
       }
       if(debug_decimation){
-	 if(br == 0) std::cout << "diagonalization of rdm for each symmetry sector:" << std::endl;
-	 std::cout << " br=" << br << " qr=" << qrow.get_sym(br) << " rdim=" << rdim << " sig2=";
+	 if(br == 0) std::cout << " diagonalization of rdm for each symmetry sector:" << std::endl;
+	 std::cout << "  br=" << br << " qr=" << qrow.get_sym(br) << " rdim=" << rdim << " sig2=";
 	 for(auto s : sig2) std::cout << s << " ";
 	 std::cout << std::endl;
       }
@@ -63,6 +63,7 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
       int idx = index[i];
       if(sig2all[idx] < thresh_sig2) continue; // discard negative weights
       int br = idx2sector[idx];
+      auto qr = qrow.get_sym(br);
       auto it = kept.find(br);
       if(it == kept.end()){
          kept[br].first = 1;
@@ -75,13 +76,14 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
       sum += sig2all[idx];
       SvN += -sig2all[idx]*std::log2(sig2all[idx]);
       if(debug_decimation){
-	if(i == 0) std::cout << "sorted sig2:" << std::endl;     
-	std::cout << " i=" << i << " (br,ith)=" << br << "," << kept[br].first-1 
-             	  << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
+	 if(i == 0) std::cout << " sorted sig2:" << std::endl;
+	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr 
+		   << " ith=" << kept[br].first-1 << " sig2=" << sig2all[idx] 
+		   << " accum=" << sum << std::endl;
       }
    }
    dwt = 1.0-sum;
-   std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff
+   std::cout << " decimation summary: " << qrow.get_dimAll() << "->" << deff
      	     << "  dwt=" << dwt << "  SvN=" << SvN << std::endl;
    // 3. construct qbond and qt2 by assembling blocks
    sum = 0.0;
@@ -90,13 +92,13 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
    for(const auto& p : kept){
       const auto& br = p.first;
       const auto& dim = p.second.first;
+      const auto& wt = p.second.second;
       const auto& qr = qrow.get_sym(br);
       br_matched.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
       if(debug_decimation){
-         const auto& wt = p.second.second;
 	 sum += wt;     
-         std::cout << " br=" << p.first << " qr=" << qr << " dim=" 
+         std::cout << "  br=" << p.first << " qr=" << qr << " dim=" 
 		   << dim << " wt=" << wt << " accum=" << sum << std::endl;
       }
    }
@@ -109,8 +111,8 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
       std::copy(rbas.data(), rbas.data()+blk.size(), blk.data());
       if(debug_decimation){
          assert(qrow.get_sym(br) == qt2.qcol.get_sym(bc));
-         if(bc == 0) std::cout << "reduced basis:" << std::endl;
-         std::cout << " (br,bc)=" << br << "," << bc 
+         if(bc == 0) std::cout << " reduced basis:" << std::endl;
+         std::cout << "  (br,bc)=" << br << "," << bc 
 		   << " qsym=" << qt2.qcol.get_sym(bc)
 		   << " shape=(" << blk.rows() << "," << blk.cols() << ")"
      	           << std::endl;
@@ -130,7 +132,6 @@ qtensor2<Tm> decimation_row_kr(const qtensor2<Tm>& rdm,
    std::cout << "error: decimation_row_kr just work for complex<double>!" << std::endl;
    exit(1);
 }
-
 template <>
 qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<double>>& rdm,
 			       			 const int dcut,
@@ -166,10 +167,7 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
       assert(pos_new.size() == qrow.get_dim(br)); 
       auto rhor = rblk.reorder_rowcol(pos_new,pos_new);
       eig_solver_kr<std::complex<double>>(qr, rhor, sig2, rbas, phases);
-
-      rbas.print("rbas");
-      
-      // save
+      // save (for odd-electron subspace, only save half of sig2 for later sorting)
       rbasis[br] = rbas.reorder_row(pos_new,1);
       if(qr.parity() == 1){
 	 int dim1 = phases.size();
@@ -188,11 +186,12 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
       }
       //------------------------
       if(debug_decimation){
-	 if(br == 0) std::cout << "diagonalization of rdm for each symmetry sector:" << std::endl;
-	 std::cout << " br=" << br << " qr=" << qr << " rdim=" << rdim << " sig2=";
+	 if(br == 0) std::cout << " diagonalization of rdm for each symmetry sector:" << std::endl;
+	 std::cout << "  br=" << br << " qr=" << qr << " rdim=" << rdim << " sig2=";
 	 for(auto s : sig2) std::cout << s << " ";
 	 std::cout << std::endl;
       }
+
    }
    // 2. select important sig2
    auto index = tools::sort_index(sig2all, 1);
@@ -219,13 +218,14 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
       sum += nfac*sig2all[idx];
       SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
       if(debug_decimation){
-         if(i == 0) std::cout << "sorted sig2:" << std::endl;     
-	 std::cout << " i=" << i << " (br,ith)=" << br << "," << kept[br].first-1 
-              	   << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
+         if(i == 0) std::cout << " sorted sig2:" << std::endl;     
+	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr 
+		   << " ith=" << kept[br].first-1 << " sig2=" << sig2all[idx] 
+		   << " accum=" << sum << std::endl;
       }
    }
    dwt = 1.0-sum;
-   std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff
+   std::cout << " decimation summary: " << qrow.get_dimAll() << "->" << deff
      	     << "  dwt=" << dwt << "  SvN=" << SvN << std::endl;
    // 3. construct qbond and qt2 by assembling blocks
    sum = 0.0;
@@ -234,13 +234,13 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
    for(const auto& p : kept){ // br->(dim,wt)
       const auto& br = p.first;
       const auto& dim = p.second.first;
+      const auto& wt = p.second.second;
       const auto& qr = qrow.get_sym(br);
       br_matched.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
       if(debug_decimation){
-         const auto& wt = p.second.second;
 	 sum += wt;
-         std::cout << " br=" << p.first << " qr=" << qr << " dim=" << dim 
+         std::cout << "  br=" << p.first << " qr=" << qr << " dim=" << dim 
 		   << " wt=" << wt << " accum=" << sum << std::endl;
       }
    }
@@ -253,26 +253,21 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
       const auto& qr = qkept.get_sym(bc);
       int rdim = blk.rows();
       int cdim = blk.cols();
-      
       assert(qrow.get_sym(br) == qkept.get_sym(bc));
       assert(rbas.rows() == blk.rows());
-      
       if(qr.parity() == 1){
 	 assert(rdim%2 == 0 && cdim%2 == 0);
 	 int rdim1 = rdim/2;
 	 int cdim1 = cdim/2;
          std::copy(rbas.col(0), rbas.col(0)+rdim*cdim1, blk.col(0));
 	 std::copy(rbas.col(rdim1), rbas.col(rdim1)+rdim*cdim1, blk.col(cdim1));
-	 
-	 blk.print("blk");
-
       }else{
          std::copy(rbas.col(0), rbas.col(0)+rdim*cdim, blk.col(0));
       }
       if(debug_decimation){
          assert(qrow.get_sym(br) == qt2.qcol.get_sym(bc));
-         if(bc == 0) std::cout << "reduced basis:" << std::endl;
-         std::cout << " (br,bc)=" << br << "," << bc 
+         if(bc == 0) std::cout << " reduced basis:" << std::endl;
+         std::cout << "  (br,bc)=" << br << "," << bc 
 		   << " qsym=" << qt2.qcol.get_sym(bc)
 		   << " shape=(" << blk.rows() << "," << blk.cols() << ")"
      	           << std::endl;
@@ -443,6 +438,10 @@ void decimation_onedot_cr(sweep_data& sweeps,
    // 1. build pRDM 
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
+
+      // lzd: explicit symmetrizaiton for even
+      wf = wf + wf.K();
+
       rdm += wf.merge_cr().get_rdm_col();
       if(noise > thresh_noise) get_prdm_cr(wf, cqops, rqops, noise, rdm);
    }

@@ -115,7 +115,7 @@ class qbond{
 	 }
 	 return true;
       }
-      void print(const std::string name, const bool debug=false) const{
+      void print(const std::string name, const bool debug=true) const{
 	 std::cout << " qbond: " << name << " nsym=" << dims.size()
       	           << " dimAll=" << get_dimAll() << std::endl;
          // loop over symmetry sectors

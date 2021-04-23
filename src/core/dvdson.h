@@ -218,11 +218,11 @@ struct dvdsonSolver{
                          << " diff=" << Diag[i]-H(i,i)
                          << std::endl;
                diff += std::abs(Diag[i]-H(i,i));
+               if(diff>1.e-10){
+	          std::cout << "error: Diag[i]-H(i,i) is too large!" << std::endl;
+                  exit(1);
+               }
             } // i
-            if(diff>1.e-10){
-	       std::cout << "error: Diag[i]-H(i,i) is too large!" << std::endl;
-               exit(1);
-            }
 	    std::cout << "CheckDiag passed successfully!" << std::endl;
          }
          // copy results

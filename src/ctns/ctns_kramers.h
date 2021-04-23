@@ -328,6 +328,7 @@ void eig_solver_kr_odd(const linalg::matrix<Tm>& rhor,
 		       std::vector<double>& eigs,
 		       linalg::matrix<Tm>& U,
 		       std::vector<double>& phases){
+   const bool debug = false;
    int dim = rhor.rows();
    int dim1 = phases.size();
    assert(dim = 2*dim1);
@@ -338,6 +339,20 @@ void eig_solver_kr_odd(const linalg::matrix<Tm>& rhor,
    rmat(1,1).colscale(phases);
    rmat(1,0).rowscale(phases);
    rmat(1,1).rowscale(phases);
+   //  
+   // Check: time-reversal symmetric rhor in a kramers-paired basis 
+   //        should have the following structure
+   // 
+   //  [  A   B  ]
+   //  [ -B*  A* ]
+   //
+   if(debug){
+      rhor.print("rhor");
+      rmat(0,0).print("A");
+      rmat(1,1).print("A*");
+      rmat(0,1).print("B");
+      rmat(1,0).print("B*");
+   }
    //
    // Kramers symmetrization:
    //
@@ -371,6 +386,7 @@ void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
 		        std::vector<double>& eigs,
 		        linalg::matrix<Tm>& U,
 		        std::vector<double>& phases){
+   const bool debug = false;
    int dim = rhor.rows();
    int dim1 = phases.size();
    int dim0 = dim-2*dim1;
@@ -385,12 +401,36 @@ void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
    rmat(1,0).rowscale(phases);
    rmat(1,1).rowscale(phases);
    rmat(1,2).rowscale(phases);
-   // Kramers projection
+   //  
+   // Check: time-reversal symmetric rhor in a kramers-paired basis 
+   //        should have the following structure
+   // 
+   //  [  A   B   C  ]
+   //  [  B*  A*  C* ]
+   //  [  Cd  Ct  E  ]
+   //
+   if(debug){
+      rhor.print("rhor");
+      rmat(0,0).print("A");
+      rmat(1,1).print("A*");
+      rmat(0,1).print("B");
+      rmat(1,0).print("B*");
+      rmat(0,2).print("C");
+      rmat(1,2).print("C*");
+      rmat(2,0).print("Cd");
+      rmat(2,1).print("Ct");
+      rmat(2,2).print("E");
+   }
+   //
+   // Kramers symmetrization:
+   //
    auto A = 0.5*(rmat(0,0) + rmat(1,1).conj());
    auto B = 0.5*(rmat(0,1) + rmat(1,0).conj());
    auto C = 0.5*(rmat(0,2) + rmat(1,2).conj());
    auto E = 0.5*(rmat(2,2) + rmat(2,2).conj());
+   //
    // real matrix representation in {|->,|+>,|0>}
+   //
    //  [   (a-b)r   (a+b)i   sqrt2*ci ]
    //  [  -(a-b)i   (a+b)r   sqrt2*cr ] 
    //  [ sqrt2*ciT sqrt2*crT     e    ]
@@ -413,11 +453,13 @@ void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
    linalg::matrix<double> rho = matr.to_matrix();
    linalg::matrix<double> Ur;
    linalg::eig_solver(rho,eigs,Ur,1);
+   //
    // back to determinant basis {|D>,|Df>,|D0>} from {|->,|+>,|0>}
    // [   i     1    0  ]       [ u[-] ]   [    u[+]+i*u[-]  ]
    // [-s*i   s*1    0  ]/sqrt2 [ u[+] ] = [ s*(u[+]-i*u[-]) ]/sqrt2
    // [   0     0  sqrt2]       [ u[0] ]   [   sqrt2*u[0]    ]
    // where the sign comes from |Dbar>=|Df>*s
+   //
    blockMatrix<double> matu(partition,{dim});
    matu = Ur;
    // back transformation to original basis

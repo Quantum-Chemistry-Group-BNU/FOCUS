@@ -37,8 +37,8 @@ qtensor2<Tm> merge_qt3_qt2_lc(const qtensor3<Tm>& qt3,
 	       for(int ic=0; ic<cdim; ic++){
 	          for(int ir=0; ir<rdim; ir++){
 		     // qt3[l,c,r] -> qt2[lc,r]: storage l[fast]*c!
-	             int imr = ioff+im*rdim+ir;
-	             blk2(imr,ic) = blk3[im](ir,ic);
+	             int irm = ioff+im*rdim+ir;
+	             blk2(irm,ic) = blk3[im](ir,ic);
 	          } // ir
 	       } // ic
 	    } // im
@@ -75,8 +75,8 @@ qtensor3<Tm> split_qt3_qt2_lc(const qtensor2<Tm>& qt2,
 	       for(int ic=0; ic<cdim; ic++){
 	          for(int ir=0; ir<rdim; ir++){
 		     // qt2[lc,r] -> qt3[l,c,r], storage l[fast]c
-	             int imr = ioff+im*rdim+ir;
-	             blk3[im](ir,ic) = blk2(imr,ic); 
+	             int irm = ioff+im*rdim+ir;
+	             blk3[im](ir,ic) = blk2(irm,ic); 
 	          } // ir
 	       } // ic
 	    } // im
@@ -109,10 +109,10 @@ qtensor2<Tm> merge_qt3_qt2_cr(const qtensor3<Tm>& qt3,
 	    int cdim = qt3.qcol.get_dim(bc);
 	    const auto& blk3 = qt3(bm,br,bc);
 	    if(blk3.size() == 0) continue;
-	    for(int im=0; im<mdim; im++){
-	       for(int ic=0; ic<cdim; ic++){
+	    for(int ic=0; ic<cdim; ic++){
+	       for(int im=0; im<mdim; im++){
 		  // qt3[l,c,r] -> qt2[l,cr], storage c[fast]r
-	          int imc = ioff+im*cdim+ic;
+	          int imc = ioff+ic*mdim+im;
 	          for(int ir=0; ir<rdim; ir++){
 	             blk2(ir,imc) = blk3[im](ir,ic); 
 	          } // ir
@@ -147,10 +147,10 @@ qtensor3<Tm> split_qt3_qt2_cr(const qtensor2<Tm>& qt2,
 	    int cdim = qt3.qcol.get_dim(bc);
 	    auto& blk3 = qt3(bm,br,bc);
 	    if(blk3.size() == 0) continue;
-	    for(int im=0; im<mdim; im++){
-	       for(int ic=0; ic<cdim; ic++){
+	    for(int ic=0; ic<cdim; ic++){
+	       for(int im=0; im<mdim; im++){
 		  // qt2[l,cr] -> qt3[l,c,r], storage c[fast]r
-	          int imc = ioff+im*cdim+ic;
+	          int imc = ioff+ic*mdim+im;
 	          for(int ir=0; ir<rdim; ir++){
 		     blk3[im](ir,ic) = blk2(ir,imc); 
 	          } // ir
@@ -189,8 +189,8 @@ qtensor2<Tm> merge_qt3_qt2_lr(const qtensor3<Tm>& qt3,
 	          for(int ic=0; ic<cdim; ic++){
 		     for(int ir=0; ir<rdim; ir++){
 			// qt3[l,c,r] -> qt2[lr,c], storage l[fast]r
-		        int icr = ioff+ic*rdim+ir;
-		        blk2(icr,im) = blk3[im](ir,ic);
+		        int irc = ioff+ic*rdim+ir;
+		        blk2(irc,im) = blk3[im](ir,ic);
 		     } // ir
 		  } // ic
 	       } // im
@@ -227,8 +227,8 @@ qtensor3<Tm> split_qt3_qt2_lr(const qtensor2<Tm>& qt2,
 	          for(int ic=0; ic<cdim; ic++){
 		     for(int ir=0; ir<rdim; ir++){
 			// qt3[l,c,r] -> qt2[lr,c], storage l[fast]r
-		        int icr = ioff+ic*rdim+ir;
-		       	blk3[im](ir,ic) = blk2(icr,im);
+		        int irc = ioff+ic*rdim+ir;
+		       	blk3[im](ir,ic) = blk2(irc,im);
 		     } // ir
 		  } // ic
 	       } // im

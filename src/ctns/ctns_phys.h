@@ -15,9 +15,9 @@ inline qbond get_qbond_vac(){ return qbond({{qsym(0,0),1}}); }
 inline qbond get_qbond_phys(const int isym){
    qbond qphys;
    if(isym == 1){
-      qphys.dims = {{qsym(0,0),1},   // 0
-		    {qsym(2,0),1},   // 2
-		    {qsym(1,0),2}};  // a,b
+      qphys.dims = {{qsym(0),1},   // 0
+		    {qsym(2),1},   // 2
+		    {qsym(1),2}};  // a,b
    }else if(isym == 2){
       qphys.dims = {{qsym(0,0),1},
 		    {qsym(2,0),1},
@@ -35,15 +35,15 @@ inline renorm_basis<Tm> get_rbasis_phys(const int isym){
    if(isym == 1){
       rbasis.resize(3);
       // |00>
-      rbasis[0].sym = qsym(0,0);
+      rbasis[0].sym = qsym(0);
       rbasis[0].space.push_back(fock::onstate("00"));
       rbasis[0].coeff = linalg::identity_matrix<Tm>(1);
       // |11>
-      rbasis[1].sym = qsym(2,0);
+      rbasis[1].sym = qsym(2);
       rbasis[1].space.push_back(fock::onstate("11"));
       rbasis[1].coeff = linalg::identity_matrix<Tm>(1);
       // a=|01> & b=|10>
-      rbasis[2].sym = qsym(1,0);
+      rbasis[2].sym = qsym(1);
       rbasis[2].space.push_back(fock::onstate("01")); // a
       rbasis[2].space.push_back(fock::onstate("10")); // b
       rbasis[2].coeff = linalg::identity_matrix<Tm>(2);
