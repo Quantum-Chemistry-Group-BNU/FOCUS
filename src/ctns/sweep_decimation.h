@@ -90,11 +90,11 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
    for(const auto& p : kept){
       const auto& br = p.first;
       const auto& dim = p.second.first;
-      const auto& wt = p.second.second;
       const auto& qr = qrow.get_sym(br);
-      br_matched.push_back(br);
-      dims.push_back(std::make_pair(qr,dim));
+      br_matched.push_back( br );
+      dims.push_back( std::make_pair(qr,dim) );
       if(debug_decimation){
+         const auto& wt = p.second.second;
 	 sum += wt;     
          std::cout << " br=" << p.first << " qr=" << qr << " dim=" 
 		   << dim << " wt=" << wt << " accum=" << sum << std::endl;
@@ -159,13 +159,18 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
       //------------------------
       // KRS-adapted decimation
       auto qr = qrow.get_sym(br);
-      std::vector<int> idx_all;
+      std::vector<int> pos_new;
       std::vector<double> phases;
-      mapping2krbasis(qr,qs1,qs2,dpt,idx_all,phases);
-      auto rhor = rblk.reorder_rowcol(idx_all,idx_all);
+      // mapping product basis to kramers paired basis
+      mapping2krbasis(qr,qs1,qs2,dpt,pos_new,phases);
+      assert(pos_new.size() == qrow.get_dim(br)); 
+      auto rhor = rblk.reorder_rowcol(pos_new,pos_new);
       eig_solver_kr<std::complex<double>>(qr, rhor, sig2, rbas, phases);
-      rbas = rbas.reorder_row(idx_all,1);
+
+      rbas.print("rbas");
+      
       // save
+      rbasis[br] = rbas.reorder_row(pos_new,1);
       if(qr.parity() == 1){
 	 int dim1 = phases.size();
 	 assert(rdim == 2*dim1);
@@ -181,7 +186,6 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
 	    idx++;
          }
       }
-      rbasis[br] = rbas;
       //------------------------
       if(debug_decimation){
 	 if(br == 0) std::cout << "diagonalization of rdm for each symmetry sector:" << std::endl;
@@ -231,10 +235,10 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
       const auto& br = p.first;
       const auto& dim = p.second.first;
       const auto& qr = qrow.get_sym(br);
-      const auto& wt = p.second.second;
-      br_matched.push_back(br);
-      dims.push_back(std::make_pair(qr,dim));
+      br_matched.push_back( br );
+      dims.push_back( std::make_pair(qr,dim) );
       if(debug_decimation){
+         const auto& wt = p.second.second;
 	 sum += wt;
          std::cout << " br=" << p.first << " qr=" << qr << " dim=" << dim 
 		   << " wt=" << wt << " accum=" << sum << std::endl;
@@ -249,12 +253,19 @@ qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<dou
       const auto& qr = qkept.get_sym(bc);
       int rdim = blk.rows();
       int cdim = blk.cols();
+      
+      assert(qrow.get_sym(br) == qkept.get_sym(bc));
+      assert(rbas.rows() == blk.rows());
+      
       if(qr.parity() == 1){
 	 assert(rdim%2 == 0 && cdim%2 == 0);
 	 int rdim1 = rdim/2;
 	 int cdim1 = cdim/2;
          std::copy(rbas.col(0), rbas.col(0)+rdim*cdim1, blk.col(0));
 	 std::copy(rbas.col(rdim1), rbas.col(rdim1)+rdim*cdim1, blk.col(cdim1));
+	 
+	 blk.print("blk");
+
       }else{
          std::copy(rbas.col(0), rbas.col(0)+rdim*cdim, blk.col(0));
       }

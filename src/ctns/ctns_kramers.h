@@ -199,9 +199,9 @@ inline void mapping2krbasis_odd(const qsym& qr,
 				const qbond& qs1,
 		                const qbond& qs2,
 		                const qdpt& dpt,
-		                std::vector<int>& idx_all,
+		                std::vector<int>& pos_new,
 				std::vector<double>& phases){
-   std::vector<int> idx_up, idx_dw;
+   std::vector<int> pos_up, pos_dw;
    int ioff = 0;
    const auto& comb = dpt.at(qr);
    for(int i=0; i<comb.size(); i++){
@@ -218,13 +218,9 @@ inline void mapping2krbasis_odd(const qsym& qr,
          for(int i2=0; i2<d2/2; i2++){
             for(int i1=0; i1<d1; i1++){
                int idxA = ioff + i2*d1 + i1; // |le,ro>
-               idx_up.push_back(idxA);
-            }
-         }
-         for(int i2=0; i2<d2/2; i2++){
-            for(int i1=0; i1<d1; i1++){
+               pos_up.push_back(idxA);
                int idxB = ioff + (i2+d2/2)*d1 + i1; // |le,ro_bar>
-               idx_dw.push_back(idxB);
+               pos_dw.push_back(idxB);
             }
          }
       // |lo,re>   
@@ -232,24 +228,24 @@ inline void mapping2krbasis_odd(const qsym& qr,
          assert(d1%2 == 0);
          for(int i2=0; i2<d2; i2++){
             for(int i1=0; i1<d1/2; i1++){
-   	     int idxA = ioff + i2*d1 + i1; 
-               idx_up.push_back(idxA);
-            }
-            for(int i1=0; i1<d1/2; i1++){
-     	     int idxB = ioff + i2*d1 + i1 + d1/2;
-               idx_dw.push_back(idxB);
+   	       int idxA = ioff + i2*d1 + i1; 
+               pos_up.push_back(idxA);
+     	       int idxB = ioff + i2*d1 + (i1+d1/2);
+               pos_dw.push_back(idxB);
             }
          }
       }else{
          std::cout << "error: no such combination of parities!" << std::endl;
          std::cout << "q1p,q2p=" << q1.parity() << "," << q2.parity() << std::endl;
          exit(1);
-      } 
+      }
       ioff += d1*d2;
    }
-   idx_all.insert(idx_all.end(), idx_up.begin(), idx_up.end());
-   idx_all.insert(idx_all.end(), idx_dw.begin(), idx_dw.end());
-   phases.resize(idx_dw.size(),1.0);
+   assert(pos_up.size() == pos_dw.size());
+   pos_new.clear();
+   pos_new.insert(pos_new.end(), pos_up.begin(), pos_up.end());
+   pos_new.insert(pos_new.end(), pos_dw.begin(), pos_dw.end());
+   phases.resize(pos_dw.size(),1.0);
 }
 
 // V[even] = {|le,re>,|lo,ro>}
@@ -257,9 +253,9 @@ inline void mapping2krbasis_even(const qsym& qr,
 			         const qbond& qs1,
 			         const qbond& qs2,
 			         const qdpt& dpt,
-		                 std::vector<int>& idx_all,
+		                 std::vector<int>& pos_new,
 				 std::vector<double>& phases){
-   std::vector<int> idx_up, idx_dw, idx_ee;
+   std::vector<int> pos_up, pos_dw, pos_ee;
    int ioff = 0;
    const auto& comb = dpt.at(qr);
    for(int i=0; i<comb.size(); i++){
@@ -275,27 +271,26 @@ inline void mapping2krbasis_even(const qsym& qr,
          for(int i2=0; i2<d2; i2++){
             for(int i1=0; i1<d1; i1++){
                int idx = ioff + i2*d1 + i1;
-               idx_ee.push_back(idx);
+               pos_ee.push_back(idx);
             }
          }
       // |lo,ro> = {|lo,ro>,|lo_bar,ro>} + {|lo_bar,ro_bar>,|lo,ro_bar>}
       }else if(q1.parity() == 1 && q2.parity() == 1){
          assert(d1%2 == 0 & d2%2 == 0);
          for(int i2=0; i2<d2/2; i2++){
-            for(int i1=0; i1<d1; i1++){
-               if(i1<d1/2){		  
-                  int idxA = ioff + i2*d1 + i1; // |lo,ro> 
-                  idx_up.push_back(idxA);
-                  int idxB = ioff + (i2+d2/2)*d1 + (i1+d1/2); // |lo_bar,ro_bar>
-     	        idx_dw.push_back(idxB);
-                  phases.push_back(1.0);
-               }else{
-                  int idxA = ioff + i2*d1 + i1; // |lo_bar,ro> 
-                  idx_up.push_back(idxA);
-                  int idxB = ioff + (i2+d2/2)*d1 + (i1-d1/2); // |lo,ro_bar>
-     	        idx_dw.push_back(idxB);
-                  phases.push_back(-1.0);
-               }
+            for(int i1=0; i1<d1/2; i1++){
+               int idxA = ioff + i2*d1 + i1; // |lo,ro> 
+               pos_up.push_back(idxA);
+               int idxB = ioff + (i2+d2/2)*d1 + (i1+d1/2); // |lo_bar,ro_bar>
+     	       pos_dw.push_back(idxB);
+               phases.push_back(1.0);
+	    }
+            for(int i1=0; i1<d1/2; i1++){
+               int idxA = ioff + i2*d1 + (i1+d1/2); // |lo_bar,ro> 
+               pos_up.push_back(idxA);
+               int idxB = ioff + (i2+d2/2)*d1 + i1; // |lo,ro_bar>
+     	       pos_dw.push_back(idxB);
+               phases.push_back(-1.0);
             }
          }
       }else{
@@ -305,21 +300,24 @@ inline void mapping2krbasis_even(const qsym& qr,
       }
       ioff += d1*d2;
    }
-   idx_all.insert(idx_all.end(), idx_up.begin(), idx_up.end());
-   idx_all.insert(idx_all.end(), idx_dw.begin(), idx_dw.end());
-   idx_all.insert(idx_all.end(), idx_ee.begin(), idx_ee.end());
+   assert(pos_up.size() == pos_dw.size());
+   pos_new.clear();
+   pos_new.insert(pos_new.end(), pos_up.begin(), pos_up.end());
+   pos_new.insert(pos_new.end(), pos_dw.begin(), pos_dw.end());
+   pos_new.insert(pos_new.end(), pos_ee.begin(), pos_ee.end());
 }
 
+// mapping product basis to kramers paired basis 
 inline void mapping2krbasis(const qsym& qr,
 		            const qbond& qs1,
 		            const qbond& qs2,
 		            const qdpt& dpt,
-		            std::vector<int>& idx_all,
+		            std::vector<int>& pos_new,
 		            std::vector<double>& phases){
    if(qr.parity() == 1){
-      mapping2krbasis_odd(qr,qs1,qs2,dpt,idx_all,phases);
+      mapping2krbasis_odd(qr,qs1,qs2,dpt,pos_new,phases);
    }else{
-      mapping2krbasis_even(qr,qs1,qs2,dpt,idx_all,phases);
+      mapping2krbasis_even(qr,qs1,qs2,dpt,pos_new,phases);
    }
 }
 
