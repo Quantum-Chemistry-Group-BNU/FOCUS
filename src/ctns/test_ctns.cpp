@@ -79,7 +79,7 @@ int tests::test_ctns(){
    // 2. initialize right canonical form from SCI wavefunction
    //ctns::comb<ctns::kind::rNSz> icomb(topo);
    //ctns::comb<ctns::kind::cN> icomb(topo);
-   ctns::comb<ctns::kind::cNK> icomb(topo);
+   //ctns::comb<ctns::kind::cNK> icomb(topo);
 
    if(!schd.combload){
       ctns::rcanon_init(icomb, sci_space, vs, schd.thresh_proj);
