@@ -85,18 +85,18 @@ Sweep algorithm: (1) onedot
 * perturbed density matrix
  sweep_prdm.h
 
-
 Sweep algorithm: (2) TRS
 ---------------------------
-
 * time-reversal symmetry-adapted
- * local CI
  * decimation
+ * local CI
+ sweep_dvdson.h
+
+
 
 
 Sweep algorithm: (3) twodot
 ---------------------------
-
 * reshaping: working in the format of qt2 -> psi(L,R)! 
  tns_qtensor_reshape.cpp
  tns_qtensor4.cpp

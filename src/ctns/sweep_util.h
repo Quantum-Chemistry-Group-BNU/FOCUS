@@ -8,6 +8,7 @@
 #include "sweep_ham_onedot.h"
 #include "sweep_decimation.h"
 #include "sweep_guess.h"
+#include "sweep_dvdson.h"
 
 namespace ctns{
 
@@ -74,45 +75,75 @@ void sweep_onedot(const input::schedule& schd,
    diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
    timing.tb = tools::get_time();
    
-   // 2.2 Solve Hc=cE
-   linalg::dvdsonSolver<Tm> solver;
-   solver.iprt = 1;
-   solver.crit_v = sweeps.ctrls[isweep].eps;
-   solver.maxcycle = schd.maxcycle;
-   solver.ndim = nsub;
-   solver.neig = neig;
-   solver.Diag = diag.data();
-   using std::placeholders::_1;
-   using std::placeholders::_2;
-   solver.HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
-		      std::cref(isym), std::cref(ifkr), 
-		      std::ref(cqops), std::ref(lqops), std::ref(rqops), 
-		      std::cref(int2e), std::cref(int1e), std::cref(ecore), 
-		      std::ref(wf));
-   // solve local problem
+   // 2.2 Solve local problem: Hc=cE
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
-   if(schd.cisolver == 0){
-      solver.solve_diag(eopt.data(), vsol.data(), true); // debug
-   }else if(schd.cisolver == 1){ // davidson
-      // guess or not
-      if(!sweeps.guess){
-         solver.solve_iter(eopt.data(), vsol.data());
-      }else{     
-         // load initial guess from previous opt
-	 std::vector<Tm> v0(nsub*neig);
-         if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
-         assert(icomb.psi.size() == neig);
-         assert(icomb.psi[0].get_dim() == nsub);
-         for(int i=0; i<neig; i++){
-            icomb.psi[i].to_array(&v0[nsub*i]);
+   if(!ifkr){
+
+      linalg::dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle);
+      solver.Diag = diag.data();
+      using std::placeholders::_1;
+      using std::placeholders::_2;
+      solver.HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
+           	         std::cref(isym), std::cref(ifkr), 
+           	         std::ref(cqops), std::ref(lqops), std::ref(rqops), 
+           	         std::cref(int2e), std::cref(int1e), std::cref(ecore), 
+           	         std::ref(wf));
+      if(schd.cisolver == 0){
+         solver.solve_diag(eopt.data(), vsol.data(), true); // debug
+      }else if(schd.cisolver == 1){ // davidson
+         // guess or not
+         if(!sweeps.guess){
+            solver.solve_iter(eopt.data(), vsol.data());
+         }else{     
+            // load initial guess from previous opt
+            if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
+            assert(icomb.psi.size() == neig);
+            assert(icomb.psi[0].get_dim() == nsub);
+            std::vector<Tm> v0(nsub*neig);
+            for(int i=0; i<neig; i++){
+               icomb.psi[i].to_array(&v0[nsub*i]);
+            }
+            int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
+            assert(nindp == neig);
+            solver.solve_iter(eopt.data(), vsol.data(), v0.data());
          }
-         int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
-         assert(nindp == neig);
-         solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+      }else{
+         std::cout << "error: no such option for cisolver=" << schd.cisolver << std::endl;
       }
+
    }else{
-      std::cout << "error: no such option for cisolver=" << schd.cisolver << std::endl;
+
+      assert(schd.cisolver == 1 && sweeps.guess);
+      if(schd.nelec%2 == 1 && neig%2 == 0){
+         std::cout << "Due to Kramers degeneracy, odd-electron case requires even neig!" << std::endl;
+         exit(1);
+      }
+
+      dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle);
+      solver.Diag = diag.data();
+      using std::placeholders::_1;
+      using std::placeholders::_2;
+      solver.HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
+           	         std::cref(isym), std::cref(ifkr), 
+           	         std::ref(cqops), std::ref(lqops), std::ref(rqops), 
+           	         std::cref(int2e), std::cref(int1e), std::cref(ecore), 
+           	         std::ref(wf));
+      // load initial guess from previous opt
+      if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
+      assert(icomb.psi.size() == neig);
+      assert(icomb.psi[0].get_dim() == nsub);
+      std::vector<Tm> v0(nsub*neig);
+      for(int i=0; i<neig; i++){
+
+	 icomb.psi[i] = (icomb.psi[i] + icomb.psi[i].K())*(1.0/std::sqrt(2));
+
+         icomb.psi[i].to_array(&v0[nsub*i]);
+      }
+      int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
+      assert(nindp == neig);
+      solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+   
    }
    timing.tc = tools::get_time();
 

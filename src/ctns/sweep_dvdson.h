@@ -1,142 +1,15 @@
-#ifndef DVDSON_H
-#define DVDSON_H
+#ifndef SWEEP_DVDSON_H
+#define SWEEP_DVDSON_H
 
-#include <iostream>
-#include <iomanip>
-#include <vector>
-#include <functional> // for std::function
-#include "tools.h"
-#include "matrix.h"
-#include "linalg.h"
+#include "../core/dvdson.h"
 
-namespace linalg{
-
-// orthogonality of vbas(ndim,mstate) as in Fortran
-template <typename Tm>
-void check_orthogonality(const int n, const int m, 
-   	      	         const std::vector<Tm>& vbas,
-  		         const double thresh=1.e-10){
-   linalg::matrix<Tm> V(n,m,vbas.data());
-   linalg::matrix<Tm> Vh = V.H();
-   linalg::matrix<Tm> dev = xgemm("N","N",Vh,V) - identity_matrix<Tm>(m);
-   double diff = normF(dev);
-   if(diff > thresh){
-      std::cout << "error: deviation from orthonormal basis exceed thresh=" 
-	        << thresh << std::endl;
-      V.print("V");
-      dev.print("dev");
-      exit(1);
-   }
-}
-
-// modified Gram-Schmidt orthogonalization of 
-// rbas(ndim,nres) against vbas(ndim,neig)
-template <typename Tm>
-int get_ortho_basis(const int ndim,
-  	      	    const int neig,
-  		    const int nres,
-  		    const std::vector<Tm>& vbas,
-  		    std::vector<Tm>& rbas,
-  		    const double crit_indp=1.e-12){
-   const Tm one = 1.0, mone = -1.0, zero = 0.0;
-   const int maxtimes = 2;
-   // 1. projection (1-V*V^+)*R = R-V*(V^+R)
-   std::vector<Tm> vtr(neig*nres);
-   for(int repeat=0; repeat<maxtimes; repeat++){
-      linalg::xgemm("C","N",&neig,&nres,&ndim,
-	            &one,vbas.data(),&ndim,rbas.data(),&ndim,
-	            &zero,vtr.data(),&neig);
-      linalg::xgemm("N","N",&ndim,&nres,&neig,
-	            &mone,vbas.data(),&ndim,vtr.data(),&neig,
-	            &one,rbas.data(),&ndim);
-   };
-   // 2. form new basis from rbas by modified Gram-Schmidt procedure
-   std::vector<Tm> rtr(nres*nres/4);
-   int nindp = 0;
-   for(int i=0; i<nres; i++){
-      double rii = linalg::xnrm2(ndim, &rbas[i*ndim]); // normalization constant
-      if(rii < crit_indp) continue;
-      // normalized |r[i]> 
-      for(int repeat=0; repeat<maxtimes; repeat++){
-	 std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[i*ndim],
-		        [rii](const Tm& x){ return x/rii; });
-         rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
-      }
-      // copy
-      std::copy(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[nindp*ndim]);
-      nindp +=1;
-      // project out |r[i]>-component from other basis
-      // essentially equivalent to https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_procesis
-      // since [r[i+1:]> is changing when a new |r[i]> is find.  
-      int N = nres-1-i;
-      if(N == 0) continue;
-      for(int repeat=0; repeat<maxtimes; repeat++){
-         // R_rest = (1-V*V^+)*R_rest
-	 linalg::xgemm("C","N",&neig,&N,&ndim,
-                       &one,vbas.data(),&ndim,&rbas[(i+1)*ndim],&ndim,
-                       &zero,vtr.data(),&neig);
-         linalg::xgemm("N","N",&ndim,&N,&neig,
-                       &mone,vbas.data(),&ndim,vtr.data(),&neig,
-                       &one,&rbas[(i+1)*ndim],&ndim);
-         // R_rest = (1-Rnew*Rnew^+)*R_rest
-         linalg::xgemm("C","N",&nindp,&N,&ndim,
-                       &one,&rbas[0],&ndim,&rbas[(i+1)*ndim],&ndim,
-                       &zero,rtr.data(),&nindp);
-         linalg::xgemm("N","N",&ndim,&N,&nindp,
-                       &mone,&rbas[0],&ndim,rtr.data(),&nindp,
-                       &one,&rbas[(i+1)*ndim],&ndim);
-      } // repeat
-   } // i
-   return nindp;
-}
-
-// MGS for rbas of size rbas(ndim,nres)
-template <typename Tm>
-int get_ortho_basis(const int ndim,
-		    const int nres,
-		    std::vector<Tm>& rbas,
-		    const double crit_indp=1.e-12){
-   const Tm one = 1.0, mone = -1.0, zero = 0.0;
-   const int maxtimes = 2;
-   // 2. form new basis from rbas by modified Gram-Schmidt procedure
-   std::vector<Tm> rtr(nres*nres/4);
-   int nindp = 0;
-   for(int i=0; i<nres; i++){
-      double rii = linalg::xnrm2(ndim, &rbas[i*ndim]); // normalization constant
-      if(rii < crit_indp) continue;
-      // normalized |r[i]> 
-      for(int repeat=0; repeat<maxtimes; repeat++){
-	 std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[i*ndim],
-		        [rii](const Tm& x){ return x/rii; });
-         rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
-      }
-      // copy
-      std::copy(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[nindp*ndim]);
-      nindp +=1;
-      // project out |r[i]>-component from other basis
-      // essentially equivalent to https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_procesis
-      // since [r[i+1:]> is changing when a new |r[i]> is find.  
-      int N = nres-1-i;
-      if(N == 0) continue;
-      for(int repeat=0; repeat<maxtimes; repeat++){
-         // R_rest = (1-Rnew*Rnew^+)*R_rest
-	 linalg::xgemm("C","N",&nindp,&N,&ndim,
-               	       &one,&rbas[0],&ndim,&rbas[(i+1)*ndim],&ndim,
-               	       &zero,rtr.data(),&nindp);
-	 linalg::xgemm("N","N",&ndim,&N,&nindp,
-                       &mone,&rbas[0],&ndim,rtr.data(),&nindp,
-                       &one,&rbas[(i+1)*ndim],&ndim);
-      } // repeat
-   } // i
-   return nindp;
-}
+namespace ctns{
 
 // solver
 template <typename Tm>	
 struct dvdsonSolver{
    public:
       // simple constructor
-      dvdsonSolver(){};
       dvdsonSolver(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle){
          ndim = _ndim;
 	 neig = _neig;
@@ -189,51 +62,6 @@ struct dvdsonSolver{
                       << " for nstate = " << nstate << std::endl;
          }
       }
-      // check by full diag
-      void solve_diag(double* es, Tm* vs, const bool ifCheckDiag=false){
-	 std::cout << "linalg::dvdsonSolver:solve_diag" << std::endl;
-	 linalg::matrix<Tm> id = identity_matrix<Tm>(ndim);
-         linalg::matrix<Tm> H(ndim,ndim);
-         HVecs(ndim,H.data(),id.data());
-         // check symmetry
-         auto sdiff = linalg::symmetric_diff(H);
-	 std::cout << "|H-H.h|=" << sdiff << std::endl;
-         if(sdiff > 1.e-5){
-            (H-H.H()).print("H-H.h");
-	    std::cout << "error in linalg::dvdsonSolver::solve_diag: H is not symmetric!" << std::endl;
-            exit(1);
-         }
-         // solve eigenvalue problem by diagonalization
-	 std::vector<double> e(ndim);
-	 linalg::matrix<Tm> V;
-	 linalg::eig_solver(H, e, V);
-	 std::cout << "eigenvalues:\n" << std::setprecision(12);
-         for(int i=0; i<ndim; i++){
-	    std::cout << "i=" << i << " e=" << e[i] << std::endl;
-         }
-         // final check consistency with diag
-         if(ifCheckDiag){
-            std::cout << "ndim=" << ndim << std::endl;
-   	    std::cout << std::setprecision(12);
-            double diff = 0.0;
-            for(int i=0; i<ndim; i++){
-	       std::cout << "i=" << i 
-                         << " H(i,i)=" << H(i,i) 
-                         << " Diag[i]=" << Diag[i] 
-                         << " diff=" << Diag[i]-H(i,i)
-                         << std::endl;
-               diff += std::abs(Diag[i]-H(i,i));
-               if(diff>1.e-10){
-	          std::cout << "error: Diag[i]-H(i,i) is too large!" << std::endl;
-                  exit(1);
-               }
-            } // i
-	    std::cout << "CheckDiag passed successfully!" << std::endl;
-         }
-         // copy results
-	 std::copy(e.begin(), e.begin()+neig, es);
-         std::copy(V.data(), V.data()+ndim*neig, vs);
-      }
       // subspace problem
       void subspace_solver(const int ndim, 
 		      	   const int nsub,
@@ -252,7 +80,7 @@ struct dvdsonSolver{
          // 2. check symmetry property
          double diff = linalg::symmetric_diff(tmpH);
          if(diff > crit_skewH){
-            std::cout << "error in linalg::dvdsonSolver::subspace_solver: diff_skewH=" 
+            std::cout << "error in ctns::dvdsonSolver::subspace_solver: diff_skewH=" 
                       << diff << std::endl;
             tmpH.print("tmpH");
             exit(1);
@@ -280,7 +108,7 @@ struct dvdsonSolver{
       }
       // Davidson iterative algorithm for Hv=ve 
       void solve_iter(double* es, Tm* vs, Tm* vguess=nullptr){
-	 std::cout << "linalg::dvdsonSolver::solve_iter is_complex=" << tools::is_complex<Tm>() << std::endl;
+	 std::cout << "ctns::dvdsonSolver::solve_iter is_complex=" << tools::is_complex<Tm>() << std::endl;
          if(neig > ndim){
             std::cout << "error in dvdson: neig>ndim, neig/ndim=" << neig << "," << ndim << std::endl; 
             exit(1);
@@ -300,7 +128,7 @@ struct dvdsonSolver{
                vbas[i*ndim+index[i]] = 1.0;
             }
          }
-         check_orthogonality(ndim, neig, vbas);
+	 linalg::check_orthogonality(ndim, neig, vbas);
          HVecs(neig, wbas.data(), vbas.data());
 
          // Begin to solve
@@ -351,7 +179,7 @@ struct dvdsonSolver{
 	       std::copy(&tbas[index[i]*ndim], &tbas[index[i]*ndim]+ndim, &rbas[i*ndim]); 
             }
             // re-orthogonalization and get nindp
-            int nindp = get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
+            int nindp = linalg::get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
             if(nindp == 0){
 	       std::cout << "Convergence failure: unable to generate new direction: nindp=0!" << std::endl;
                exit(1);
@@ -361,7 +189,7 @@ struct dvdsonSolver{
 	       std::copy(&rbas[0],&rbas[0]+ndim*nindp,&vbas[ndim*neig]);
                HVecs(nindp, &wbas[ndim*neig], &vbas[ndim*neig]);
                nsub = neig+nindp;
-               check_orthogonality(ndim,nsub,vbas);
+               linalg::check_orthogonality(ndim,nsub,vbas);
             }
          } // iter
          if(!ifconv){
@@ -386,6 +214,6 @@ struct dvdsonSolver{
       int nmvp = 0;
 };
 
-} // linalg
+} // ctns
 
 #endif

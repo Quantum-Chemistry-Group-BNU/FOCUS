@@ -251,9 +251,15 @@ void onedot_Hx(Tm* y,
    if(not ifkr){
       Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
    }else{
+
+
+      auto tmp = (wf - wf.K());
+      std::cout << "normF=" << tmp.normF() << std::endl;
+
       Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
-      auto wfK = wf.K();
-      Hwf += onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wfK).K();
+//      auto wfK = wf.K();
+//      Hwf += onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wfK).K();
+      Hwf += Hwf.K();
    }
    Hwf.to_array(y);
 }
