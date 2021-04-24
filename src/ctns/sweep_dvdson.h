@@ -5,6 +5,13 @@
 
 namespace ctns{
 
+template <typename Tm> 
+void onedot_Proj(Tm* y, qtensor3<Tm>& wf){
+   wf.from_array(y);
+   wf = 0.5*(wf + wf.K());
+   wf.to_array(y);
+}
+
 // solver
 template <typename Tm>	
 struct dvdsonSolver{
@@ -121,6 +128,10 @@ struct dvdsonSolver{
          int nl = std::min(ndim,neig+nbuff); // maximal subspace size
 	 std::vector<Tm> vbas(ndim*nl), wbas(ndim*nl);
          if(vguess != nullptr){
+	  
+            // Kramers projection
+	    //Proj(vguess);
+
 	    std::copy(vguess, vguess+ndim*neig, vbas.data());
          }else{
             auto index = tools::sort_index(ndim, Diag);
@@ -169,6 +180,9 @@ struct dvdsonSolver{
 	       std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, Diag, &tbas[nres*ndim],
                               [i,&tmpE,&damp](const Tm& r, const double& d){
               	                              return r/(abs(d-tmpE[i])+damp);});
+
+	       Proj(&tbas[nres*ndim]);
+
                tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
                nres += 1;		
             }
@@ -202,6 +216,7 @@ struct dvdsonSolver{
       int neig = 0;
       double* Diag;
       std::function<void(Tm*, const Tm*)> HVec;
+      std::function<void(Tm*)> Proj;
       double crit_v = 1.e-5;  // used control parameter
       int maxcycle = 1000;
       // settings

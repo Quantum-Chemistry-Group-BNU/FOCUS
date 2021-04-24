@@ -129,6 +129,9 @@ void sweep_onedot(const input::schedule& schd,
            	         std::ref(cqops), std::ref(lqops), std::ref(rqops), 
            	         std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	         std::ref(wf));
+      
+      solver.Proj = bind(&ctns::onedot_Proj<Tm>, _1, std::ref(wf));
+      
       // load initial guess from previous opt
       if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
       assert(icomb.psi.size() == neig);
@@ -136,7 +139,8 @@ void sweep_onedot(const input::schedule& schd,
       std::vector<Tm> v0(nsub*neig);
       for(int i=0; i<neig; i++){
 
-	 icomb.psi[i] = (icomb.psi[i] + icomb.psi[i].K())*(1.0/std::sqrt(2));
+	 icomb.psi[i] += icomb.psi[i].K();
+	 std::cout << i << "NORMF=" << (icomb.psi[i]-icomb.psi[i].K()).normF() << std::endl;
 
          icomb.psi[i].to_array(&v0[nsub*i]);
       }
