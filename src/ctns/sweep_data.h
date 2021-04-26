@@ -58,12 +58,14 @@ struct sweep_data{
    sweep_data(const std::vector<directed_bond>& sweep_seq, 
 	      const int _nstates,
 	      const bool _guess,
+	      const int _inoise,
 	      const int _maxsweep,
 	      const std::vector<input::sweep_ctrl>& _ctrls){
       seq = sweep_seq; 
       seqsize = sweep_seq.size();
       guess = _guess;
       nstates = _nstates;
+      inoise = _inoise;
       maxsweep = _maxsweep;
       ctrls = _ctrls;
       // sweep results
@@ -94,7 +96,7 @@ struct sweep_data{
    void summary(const int isweep);
 public:
    bool guess;
-   int seqsize, nstates, maxsweep; 
+   int seqsize, nstates, maxsweep, inoise; 
    std::vector<directed_bond> seq; // sweep bond sequence 
    std::vector<input::sweep_ctrl> ctrls; // control parameters
    // energies

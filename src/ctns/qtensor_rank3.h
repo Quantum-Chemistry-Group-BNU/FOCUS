@@ -95,9 +95,9 @@ struct qtensor3{
       double normF() const;
       // for Davidson algorithm
       int get_dim() const;
-      void random();
       void from_array(const Tm* array);
       void to_array(Tm* array) const;
+      void add_noise(const double noise);
       // decimation
       inline qproduct dpt_lc() const{ return qmerge(qrow,qmid); }
       inline qproduct dpt_cr() const{ return qmerge(qmid,qcol); }
@@ -410,22 +410,18 @@ void qtensor3<Tm>::to_array(Tm* array) const{
    }
 }
 
-
-/*
-      // extract real & imag parts
-      matrix<double> real() const{
-	 matrix<double> matr(_rows,_cols);
-	 std::transform(_data, _data+_size, matr._data,
-			[](const Tm& x){ return std::real(x); });
-	 return matr;
+template <typename Tm>
+void qtensor3<Tm>::add_noise(const double noise){
+   for(auto& blk : _qblocks){
+      if(blk.size() > 0){
+         int rdim = blk[0].rows();
+         int cdim = blk[0].cols();
+         for(int im=0; im<blk.size(); im++){
+            blk[im] += noise*linalg::random_matrix<Tm>(rdim,cdim);
+         } // im
       }
-      matrix<double> imag() const{
-	 matrix<double> mati(_rows,_cols);
-	 std::transform(_data, _data+_size, mati._data,
-			[](const Tm& x){ return std::imag(x); });
-	 return mati;
-      }
-*/
+   }
+}
 
 } // ctns
 

@@ -115,11 +115,6 @@ void sweep_onedot(const input::schedule& schd,
    }else{
 
       assert(schd.cisolver == 1 && sweeps.guess);
-      if(schd.nelec%2 == 1 && neig%2 == 0){
-         std::cout << "Due to Kramers degeneracy, odd-electron case requires even neig!" << std::endl;
-         exit(1);
-      }
-
       dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle);
       solver.Diag = diag.data();
       using std::placeholders::_1;
@@ -131,23 +126,48 @@ void sweep_onedot(const input::schedule& schd,
            	         std::ref(wf));
       
       solver.Proj = bind(&ctns::onedot_Proj<Tm>, _1, std::ref(wf));
-      
+    
       // load initial guess from previous opt
       if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
       assert(icomb.psi.size() == neig);
       assert(icomb.psi[0].get_dim() == nsub);
-      std::vector<Tm> v0(nsub*neig);
-      for(int i=0; i<neig; i++){
+      std::vector<Tm> v0;
+      // even-electron case
+      if(schd.nelec%2 == 0){
+	 v0.resize(nsub*neig*2);
+         const std::complex<double> iunit(0.0,1.0);
+	 for(int i=0; i<neig; i++){
+            auto tmp1 = (icomb.psi[i] + icomb.psi[i].K());
+            tmp1.to_array(&v0[nsub*(2*i)]);
+	    auto tmp2 = (icomb.psi[i] - icomb.psi[i].K())*iunit; 
+            tmp2.to_array(&v0[nsub*(2*i+1)]);
+	    std::cout << "iguess=" << i << " |psi[i]-psi[i].K()|=" << (icomb.psi[i]-icomb.psi[i].K()).normF()
+		      << " |psi+psiK|=" << tmp1.normF() 
+		      << " |i(psi-psiK)|=" << tmp2.normF() 
+		      << std::endl;
+         }
+         int nindp = linalg::get_ortho_basis(nsub, neig*2, v0); // reorthogonalization
+         assert(nindp >= neig);
+         solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+      // odd-electron case
+      }else{
+	 if(neig%2 == 0){
+            std::cout << "Due to Kramers degeneracy, odd-electron case requires even neig!" << std::endl;
+            exit(1);
+	 }
 
-	 icomb.psi[i] += icomb.psi[i].K();
-	 std::cout << i << "NORMF=" << (icomb.psi[i]-icomb.psi[i].K()).normF() << std::endl;
+	 exit(1);
+	 for(int i=0; i<neig; i++){
+	    std::cout << i << "NORMF0=" << (icomb.psi[i]-icomb.psi[i].K()).normF() << std::endl;
+	    icomb.psi[i] += icomb.psi[i].K();
+	    std::cout << i << "NORMF1=" << (icomb.psi[i]-icomb.psi[i].K()).normF() << std::endl;
+            icomb.psi[i].to_array(&v0[nsub*i]);
+         }
+         int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
+         assert(nindp == neig);
+         solver.solve_iter(eopt.data(), vsol.data(), v0.data());
 
-         icomb.psi[i].to_array(&v0[nsub*i]);
-      }
-      int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
-      assert(nindp == neig);
-      solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-   
+      }   
    }
    timing.tc = tools::get_time();
 
@@ -173,15 +193,16 @@ void sweep_rwfuns(const input::schedule& schd,
 
    // perform an additional onedot opt  
    const int dcut1 = -1;
-   const double eps = schd.combsweep[schd.maxsweep-1].eps; // take the last eps  
-   input::sweep_ctrl ctrl = {0, 1, dcut1, eps, 0.0};
+   const double eps = schd.combsweep[schd.maxsweep-1].eps; // take the last eps 
+   const double noise = 0.0; 
+   input::sweep_ctrl ctrl = {0, 1, dcut1, eps, noise};
    auto p0 = std::make_pair(0,0);
    auto p1 = std::make_pair(1,0);
    auto cturn = icomb.topo.is_cturn(p0,p1);
    auto dbond = directed_bond(p0,p1,0,p1,cturn);
-   sweep_data sweeps({dbond}, schd.nstates, schd.guess, 1, {ctrl});
+   sweep_data sweeps({dbond}, schd.nstates, schd.guess, 0, 1, {ctrl});
    sweep_onedot(schd, sweeps, 0, 0, icomb, int2e, int1e, ecore);
-   
+
    std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;
    auto wf = icomb.psi[0];
    auto qprod = qmerge(wf.qmid, wf.qcol);
@@ -197,8 +218,7 @@ void sweep_rwfuns(const input::schedule& schd,
    double dwt; 
    int deff;
    const bool ifkr = tools::is_complex<Km>();
-   auto qt2 = decimation_row(rdm, dcut, dwt, deff,
-		    	     ifkr, wf.qmid, wf.qcol, dpt).T(); // permute two lines for RCF
+   auto qt2 = decimation_row(rdm, dcut, dwt, deff, ifkr, wf.qmid, wf.qcol, dpt).T(); 
    icomb.rsites[p0] = qt2.split_cr(wf.qmid, wf.qcol, dpt);
    // form rwfuns
    auto& sym_state = icomb.psi[0].sym;

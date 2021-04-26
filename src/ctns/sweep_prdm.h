@@ -3,9 +3,12 @@
 
 namespace ctns{
 
+const double thresh_noise = 1.e-10;
+extern const double thresh_noise;
+
 // ZL@20210420:	
 // Note that for perturbative noise, the signs are not properly treated as in 
-// see sweep_ham_onedot.h. We assume that they are not essential for recovering
+// sweep_ham_onedot.h. We assume that they are not essential for recovering
 // the losing quantum number! This proved to work for simple tests at least.
 
 template <typename Tm>
@@ -14,6 +17,7 @@ void get_prdm_lc(const qtensor3<Tm>& wf,
 		 oper_dict<Tm>& cqops, 
 		 const double noise, 
 		 qtensor2<Tm>& rdm){
+   if(noise < thresh_noise) return;
    const bool dagger = true;
    auto t0 = tools::get_time();
    std::cout << "ctns::get_prdm_lc noise=" << std::setprecision(2) << noise;
@@ -79,6 +83,7 @@ void get_prdm_lr(const qtensor3<Tm>& wf,
 		 oper_dict<Tm>& rqops, 
 		 const double noise, 
 		 qtensor2<Tm>& rdm){
+   if(noise < thresh_noise) return;
    const bool dagger = true;
    auto t0 = tools::get_time();
    std::cout << "ctns::get_prdm_lr noise=" << std::setprecision(2) << noise;
@@ -144,6 +149,7 @@ void get_prdm_cr(const qtensor3<Tm>& wf,
 		 oper_dict<Tm>& rqops, 
 		 const double noise, 
 		 qtensor2<Tm>& rdm){
+   if(noise < thresh_noise) return;
    const bool dagger = true;
    auto t0 = tools::get_time();
    std::cout << "ctns::get_prdm_cr noise=" << std::setprecision(2) << noise;

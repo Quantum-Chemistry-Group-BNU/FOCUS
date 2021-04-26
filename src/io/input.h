@@ -57,6 +57,7 @@ public:
    // sweep
    int nstates; // this can be smaller than nroots in CI 
    bool guess;
+   int inoise;
    int maxsweep;
    std::vector<sweep_ctrl> combsweep;
    // io

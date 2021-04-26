@@ -5,9 +5,6 @@
 
 namespace ctns{
 
-const double thresh_noise = 1.e-10;
-extern const double thresh_noise;
-
 const double thresh_sig2 = 1.e-16;
 extern const double thresh_sig2;
 
@@ -307,9 +304,12 @@ void decimation_onedot_lc(sweep_data& sweeps,
 	                  const integral::two_body<typename Km::dtype>& int2e, 
 	                  const integral::one_body<typename Km::dtype>& int1e,
 	                  const std::string scratch){
+   const auto& dbond = sweeps.seq[ibond];
    const auto& dcut  = sweeps.ctrls[isweep].dcut;
-   const auto& noise = sweeps.ctrls[isweep].noise; 
-   std::cout << " renormalize |lc> : (dcut,noise)=" << dcut << "," 
+   const auto& noise = sweeps.ctrls[isweep].noise;
+   std::cout << " |lc> (forward,cturn,dcut,inoise,noise)="
+	     << dbond.forward << "," << dbond.cturn << ","
+	     << dcut << "," << sweeps.inoise << ","
 	     << std::scientific << std::setprecision(1) << noise << std::endl;
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
@@ -320,8 +320,9 @@ void decimation_onedot_lc(sweep_data& sweeps,
    // 1. build pRDM 
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
+      if(sweeps.inoise > 1) wf.add_noise(noise);
       rdm += wf.merge_lc().get_rdm_row();
-      if(noise > thresh_noise) get_prdm_lc(wf, lqops, cqops, noise, rdm);
+      if(sweeps.inoise > 0) get_prdm_lc(wf, lqops, cqops, noise, rdm);
    }
    // 2. decimation
    const bool ifkr = kind::is_kramers<Km>();
@@ -366,9 +367,12 @@ void decimation_onedot_lr(sweep_data& sweeps,
 	                  const integral::two_body<typename Km::dtype>& int2e, 
 	                  const integral::one_body<typename Km::dtype>& int1e,
 	                  const std::string scratch){
+   const auto& dbond = sweeps.seq[ibond];
    const auto& dcut  = sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise; 
-   std::cout << " renormalize |lr> (comb) : (dcut,noise)=" << dcut << "," 
+   std::cout << " |lr>(comb) (forward,cturn,dcut,inoise,noise)=" 
+	     << dbond.forward << "," << dbond.cturn << "," 
+	     << dcut << "," << sweeps.inoise << ","
 	     << std::scientific << std::setprecision(1) << noise << std::endl;
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
@@ -379,9 +383,10 @@ void decimation_onedot_lr(sweep_data& sweeps,
    // 1. build pRDM 
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
+      if(sweeps.inoise > 1) wf.add_noise(noise);
       // Note: need to first bring two dimensions adjacent to each other before merge!
       rdm += wf.permCR_signed().merge_lr().get_rdm_row();
-      if(noise > thresh_noise) get_prdm_lr(wf, lqops, rqops, noise, rdm);
+      if(sweeps.inoise > 0) get_prdm_lr(wf, lqops, rqops, noise, rdm);
    }
    // 2. decimation
    const bool ifkr = kind::is_kramers<Km>();
@@ -426,9 +431,12 @@ void decimation_onedot_cr(sweep_data& sweeps,
 	                  const integral::two_body<typename Km::dtype>& int2e, 
 	                  const integral::one_body<typename Km::dtype>& int1e,
 	                  const std::string scratch){
+   const auto& dbond = sweeps.seq[ibond];
    const auto& dcut  = sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise; 
-   std::cout << " renormalize |cr> : (dcut,noise)=" << dcut << "," 
+   std::cout << " |cr> (forward,cturn,dcut,inoise,noise)="
+	     << dbond.forward << "," << dbond.cturn << "," 
+	     << dcut << "," << sweeps.inoise << ","
 	     << std::scientific << std::setprecision(1) << noise << std::endl;
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
@@ -439,8 +447,9 @@ void decimation_onedot_cr(sweep_data& sweeps,
    // 1. build pRDM 
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
+      if(sweeps.inoise > 1) wf.add_noise(noise);
       rdm += wf.merge_cr().get_rdm_col();
-      if(noise > thresh_noise) get_prdm_cr(wf, cqops, rqops, noise, rdm);
+      if(sweeps.inoise > 0) get_prdm_cr(wf, cqops, rqops, noise, rdm);
    }
    // 2. decimation
    const bool ifkr = kind::is_kramers<Km>();
@@ -495,8 +504,7 @@ void decimation_onedot(sweep_data& sweeps,
 	               const integral::one_body<typename Km::dtype>& int1e,
 	               const std::string scratch){
    const auto& dbond = sweeps.seq[ibond];
-   std::cout << "ctns::decimation_onedot (forward,cturn)=" 
-	     << dbond.forward << "," << dbond.cturn;
+   std::cout << "ctns::decimation_onedot";
    // build reduced density matrix & perform renormalization
    if(dbond.forward){
       // update lsites & ql

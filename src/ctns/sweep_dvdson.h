@@ -5,10 +5,15 @@
 
 namespace ctns{
 
+const bool debug_krsym = true;
+extern const bool debug_krsym;
+
 template <typename Tm> 
 void onedot_Proj(Tm* y, qtensor3<Tm>& wf){
    wf.from_array(y);
+   if(debug_krsym) std::cout << "deviation before=" << (wf-wf.K()).normF() << std::endl;
    wf = 0.5*(wf + wf.K());
+   if(debug_krsym) std::cout << "deviation after=" << (wf-wf.K()).normF() << std::endl;
    wf.to_array(y);
 }
 
@@ -84,7 +89,7 @@ struct dvdsonSolver{
 	 linalg::xgemm("C","N",&nsub,&nsub,&ndim,
                        &alpha,vbas.data(),&ndim,wbas.data(),&ndim,
                        &beta,tmpH.data(),&nsub);
-         // 2. check symmetry property
+       	 // 2. check symmetry property
          double diff = linalg::symmetric_diff(tmpH);
          if(diff > crit_skewH){
             std::cout << "error in ctns::dvdsonSolver::subspace_solver: diff_skewH=" 
@@ -92,10 +97,14 @@ struct dvdsonSolver{
             tmpH.print("tmpH");
             exit(1);
          }
-         // 3. solve eigenvalue problem
-	 linalg::matrix<Tm> tmpU;
-	 linalg::eig_solver(tmpH, tmpE, tmpU);
+	 //-------------------------------------------------------- 
+         // 3. solve eigenvalue problem [in real alrithemics]
+	 //-------------------------------------------------------- 
+	 linalg::matrix<double> tmpX;
+         linalg::eig_solver(tmpH.real(), tmpE, tmpX);
+	 auto tmpU = tmpX.as_complex();
 	 std::copy(tmpU.data(), tmpU.data()+nsub*nt, tmpV.data());
+	 //-------------------------------------------------------- 
          // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
          // vbas = X[i]
 	 std::copy(vbas.data(), vbas.data()+ndim*nsub, rbas.data()); 
@@ -114,7 +123,7 @@ struct dvdsonSolver{
          }
       }
       // Davidson iterative algorithm for Hv=ve 
-      void solve_iter(double* es, Tm* vs, Tm* vguess=nullptr){
+      void solve_iter(double* es, Tm* vs, Tm* vguess){
 	 std::cout << "ctns::dvdsonSolver::solve_iter is_complex=" << tools::is_complex<Tm>() << std::endl;
          if(neig > ndim){
             std::cout << "error in dvdson: neig>ndim, neig/ndim=" << neig << "," << ndim << std::endl; 
@@ -127,18 +136,8 @@ struct dvdsonSolver{
          // generate initial subspace - vbas
          int nl = std::min(ndim,neig+nbuff); // maximal subspace size
 	 std::vector<Tm> vbas(ndim*nl), wbas(ndim*nl);
-         if(vguess != nullptr){
 	  
-            // Kramers projection
-	    //Proj(vguess);
-
-	    std::copy(vguess, vguess+ndim*neig, vbas.data());
-         }else{
-            auto index = tools::sort_index(ndim, Diag);
-            for(int i=0; i<neig; i++){
-               vbas[i*ndim+index[i]] = 1.0;
-            }
-         }
+	 std::copy(vguess, vguess+ndim*neig, vbas.data());
 	 linalg::check_orthogonality(ndim, neig, vbas);
          HVecs(neig, wbas.data(), vbas.data());
 
@@ -178,13 +177,14 @@ struct dvdsonSolver{
             for(int i=0; i<neig; i++){
                if(rconv[i]) continue;
 	       std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, Diag, &tbas[nres*ndim],
-                              [i,&tmpE,&damp](const Tm& r, const double& d){
-              	                              return r/(abs(d-tmpE[i])+damp);});
-
+                              [i,&tmpE,&damp](const Tm& r, const double& d){ return r/(abs(d-tmpE[i])+damp); });
+	       //-----------------------
+	       // Kramers projection
+	       //-----------------------
 	       Proj(&tbas[nres*ndim]);
-
+	       //-----------------------
                tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
-               nres += 1;		
+               nres += 1;
             }
             // *** this part is critical for better performance ***
             // ordering the residual to be added from large to small
@@ -216,9 +216,10 @@ struct dvdsonSolver{
       int neig = 0;
       double* Diag;
       std::function<void(Tm*, const Tm*)> HVec;
-      std::function<void(Tm*)> Proj;
       double crit_v = 1.e-5;  // used control parameter
       int maxcycle = 1000;
+      // Kramers projection
+      std::function<void(Tm*)> Proj;
       // settings
       int iprt = 1;
       double crit_e = 1.e-12; // not used actually

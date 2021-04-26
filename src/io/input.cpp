@@ -24,8 +24,9 @@ void input::read(input::schedule& schd, string fname){
    schd.scratch = ".";
    schd.nelec = 0;
    schd.twoms = 0;
-   schd.nroots = 1;
-   schd.nstates = 1;
+   schd.nroots = 1; // sci
+   schd.nstates = 1; // comb
+   schd.inoise = 1;
    schd.nseeds = 0;
    schd.maxiter = 0;
    schd.cisolver = 0;
@@ -63,6 +64,8 @@ void input::read(input::schedule& schd, string fname){
 	 schd.nroots = stoi(line.substr(6));
       }else if(line.substr(0,7)=="nstates"){
 	 schd.nstates = stoi(line.substr(7));
+      }else if(line.substr(0,6)=="inoise"){
+	 schd.inoise = stoi(line.substr(6));
       }else if(line.substr(0,7)=="maxiter"){
          schd.maxiter = stoi(line.substr(7)); 
       }else if(line.substr(0,6)=="crit_v"){
@@ -219,6 +222,7 @@ void input::read(input::schedule& schd, string fname){
    cout << "thresh_proj = " << scientific << schd.thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << schd.thresh_ortho << endl;
    // sweep
+   cout << "inoise = " << schd.inoise << endl; 
    cout << "guess = " << schd.guess << endl;
    cout << "maxsweep = " << schd.maxsweep << endl;
    if(schd.maxsweep > 0){
