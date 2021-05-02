@@ -61,7 +61,7 @@ struct qtensor2{
       //	     This is used in taking Hermitian conjugate of operators
       qtensor2<Tm> H() const;
       // ZL20210401: generate matrix representation for Kramers paired operators
-      qtensor2<Tm> K(const int nbar) const;
+      qtensor2<Tm> K(const int nbar=0) const;
       // simple algorithmic operations
       qtensor2<Tm> operator -() const;
       qtensor2<Tm>& operator +=(const qtensor2<Tm>& qt);
@@ -195,8 +195,8 @@ double qtensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool 
                std::cout << "qsym=" << qr << " ndim=" << ndim << " |Sr-Id|_F=" << diff << std::endl;
 	    }
             if(diff > thresh_ortho){
-	       std::cout << "error: not an identity matrix at qsym! thresh_ortho=" 
-  	  	         << thresh_ortho << std::endl;
+	       std::cout << "error: not an identity matrix at qsym=" << qr
+		         << " diff=" << diff << std::endl;
 	       blk.print("diagonal block");
   	       exit(1);
 	    }

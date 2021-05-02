@@ -251,15 +251,14 @@ void onedot_Hx(Tm* y,
    if(not ifkr){
       Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
    }else{
-
-
-      auto tmp = (wf - wf.K());
-      std::cout << "normF=" << tmp.normF() << std::endl;
-
-      Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
-//      auto wfK = wf.K();
-//      Hwf += onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wfK).K();
-      Hwf += Hwf.K();
+      if(wf.sym.parity() == 0){
+         auto tmp = (wf - wf.K());
+         std::cout << "normF(wf - wf.K())=" << tmp.normF() << std::endl;
+         Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
+         Hwf += Hwf.K();
+      }else{
+         Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
+      }
    }
    Hwf.to_array(y);
 }
@@ -291,6 +290,7 @@ qtensor3<Tm> onedot_sigma(const int& isym,
       Hwf += scale*contract_qt3_qt2_l(wf,lqops['H'][0]);
       // 2. H^cr
       Hwf += scale*oper_compxwf_opH("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e);
+
       // 3. p1^l+*Sp1^cr + h.c.
       //    ol*or|lcr>psi[lcr] => ol|l>*or|cr>(-1)^{p(l)}psi[lcr]
       for(const auto& op1C : lqops['C']){

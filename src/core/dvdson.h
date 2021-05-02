@@ -21,9 +21,8 @@ void check_orthogonality(const int n, const int m,
    linalg::matrix<Tm> dev = xgemm("N","N",Vh,V) - identity_matrix<Tm>(m);
    double diff = normF(dev);
    if(diff > thresh){
-      std::cout << "error: deviation from orthonormal basis exceed thresh=" 
-	        << thresh << std::endl;
-      V.print("V");
+      std::cout << "error: too large deviation from orthonormal basis: diff="
+	        << diff << " thresh=" << thresh << std::endl;
       dev.print("dev");
       exit(1);
    }

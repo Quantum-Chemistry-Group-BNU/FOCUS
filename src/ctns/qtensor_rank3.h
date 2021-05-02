@@ -68,7 +68,7 @@ struct qtensor3{
       qtensor3<Tm> row_signed(const double fac=1.0) const; // wf[lcr](-1)^{p(l)}
       qtensor3<Tm> permCR_signed() const; // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
       // ZL20210413: application of time-reversal operation
-      qtensor3<Tm> K() const;
+      qtensor3<Tm> K(const int nbar=0) const;
       // simple algorithmic operations
       qtensor3<Tm>& operator +=(const qtensor3<Tm>& qt);
       qtensor3<Tm>& operator -=(const qtensor3<Tm>& qt);
@@ -277,36 +277,36 @@ qtensor3<Tm> qtensor3<Tm>::permCR_signed() const{
 
 // ZL20210413: application of time-reversal operation
 template <typename Tm>
-qtensor3<Tm> qtensor3<Tm>::K() const{
+qtensor3<Tm> qtensor3<Tm>::K(const int nbar) const{
+   const double fpo = (nbar%2==0)? 1.0 : -1.0;
    qtensor3<Tm> qt3(sym, qmid, qrow, qcol, dir); // assuming it only works for (N), no flip of symmetry is necessary
    for(int idx=0; idx<qt3._qblocks.size(); idx++){
       auto& blk = qt3._qblocks[idx];
-      if(blk.size() > 0){
-         int bm,br,bc;
-         _addr_unpack(idx,bm,br,bc);
-         // qt3[c](l,r) = blk[bar{c}](bar{l},bar{r})^*
-	 const auto& blk1 = _qblocks[idx];
-	 int pm = qmid.get_parity(bm);
-	 int pr = qrow.get_parity(br);
-	 int pc = qcol.get_parity(bc);
-	 if(pm == 0){
-            // c[e]
-            for(int im=0; im<blk.size(); im++){
-               blk[im] = time_reversal(blk1[im], pr, pc);
-            }
-	 }else{
-	    assert(blk.size()%2 == 0);
-	    int dm2 = blk.size()/2;
-	    // c[o],c[\bar{o}]
-            for(int im=0; im<dm2; im++){
-               blk[im] = time_reversal(blk1[im+dm2], pr, pc);
-            }
-	    for(int im=0; im<dm2; im++){
-	       blk[im+dm2] = -time_reversal(blk1[im], pr, pc);
-	    }
-	 }
-      }
-   }
+      if(blk.size() == 0) continue;
+      int bm,br,bc;
+      _addr_unpack(idx,bm,br,bc);
+      // qt3[c](l,r) = blk[bar{c}](bar{l},bar{r})^*
+      const auto& blk1 = _qblocks[idx];
+      int pm = qmid.get_parity(bm);
+      int pr = qrow.get_parity(br);
+      int pc = qcol.get_parity(bc);
+      if(pm == 0){
+         // c[e]
+         for(int im=0; im<blk.size(); im++){
+            blk[im] = fpo*time_reversal(blk1[im], pr, pc);
+         }
+      }else{
+         assert(blk.size()%2 == 0);
+         int dm2 = blk.size()/2;
+         // c[o],c[\bar{o}]
+         for(int im=0; im<dm2; im++){
+            blk[im] = fpo*time_reversal(blk1[im+dm2], pr, pc);
+         }
+         for(int im=0; im<dm2; im++){
+            blk[im+dm2] = -fpo*time_reversal(blk1[im], pr, pc);
+         }
+      } // pm
+   } // idx
    return qt3;
 }
 

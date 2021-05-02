@@ -134,6 +134,7 @@ void sweep_onedot(const input::schedule& schd,
       std::vector<Tm> v0;
       // even-electron case
       if(schd.nelec%2 == 0){
+
 	 v0.resize(nsub*neig*2);
          const std::complex<double> iunit(0.0,1.0);
 	 for(int i=0; i<neig; i++){
@@ -147,25 +148,30 @@ void sweep_onedot(const input::schedule& schd,
 		      << std::endl;
          }
          int nindp = linalg::get_ortho_basis(nsub, neig*2, v0); // reorthogonalization
+	 std::cout << "neig,nindp=" << neig << "," << nindp << std::endl;
          assert(nindp >= neig);
          solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+      
       // odd-electron case
       }else{
-	 if(neig%2 == 0){
-            std::cout << "Due to Kramers degeneracy, odd-electron case requires even neig!" << std::endl;
+
+	 if(neig%2 == 1){
+            std::cout << "Due to Kramers degeneracy, odd-electron case requires even neig=" 
+		      << neig << std::endl;
             exit(1);
 	 }
-
-	 exit(1);
+	 // needs to first generate Kramers paired basis
+	 v0.resize(nsub*neig*2);
 	 for(int i=0; i<neig; i++){
-	    std::cout << i << "NORMF0=" << (icomb.psi[i]-icomb.psi[i].K()).normF() << std::endl;
-	    icomb.psi[i] += icomb.psi[i].K();
-	    std::cout << i << "NORMF1=" << (icomb.psi[i]-icomb.psi[i].K()).normF() << std::endl;
-            icomb.psi[i].to_array(&v0[nsub*i]);
+	    std::cout << i << "NORMF0=" << icomb.psi[i].normF() << std::endl;
+            icomb.psi[i].to_array(&v0[nsub*(2*i)]);
+            icomb.psi[i].K().to_array(&v0[nsub*(2*i+1)]);
          }
-         int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
-         assert(nindp == neig);
-         solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+         int nindp = get_ortho_basis(nsub, neig*2, v0, wf); // reorthogonalization
+	 std::cout << "neig,nindp=" << neig << "," << nindp << std::endl;
+         assert(nindp >= neig);
+         solver.solve_iter2(eopt.data(), vsol.data(), v0.data(), wf);
+	 //exit(1);
 
       }   
    }

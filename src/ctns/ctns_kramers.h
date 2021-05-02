@@ -128,10 +128,10 @@ void zquatev(const linalg::matrix<std::complex<double>>& A,
    }
 }
 
-// A(l,r) = B(bar{l},bar{r})^*
+// A(l,r) = B(bar{l},bar{r})^* given parity of qr and qc
 template <typename Tm>
 linalg::matrix<Tm> time_reversal(const linalg::matrix<Tm>& blk1,
-		                 const int pr, 
+		                 const int pr,  
 				 const int pc){
    int dr = blk1.rows();
    int dc = blk1.cols();
