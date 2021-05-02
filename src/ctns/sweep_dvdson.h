@@ -20,8 +20,9 @@ void onedot_Proj(Tm* y, qtensor3<Tm>& wf){
 template <typename Tm> 
 void get_krvec(Tm* y, Tm* ykr, qtensor3<Tm>& wf, const int parity=1){
    wf.from_array(y);
-   auto wf2 = (parity==0)? wf.K() : wf.K(1);
-   wf2.to_array(ykr);
+//   wf = (parity==0)? wf.K() : wf.K(1);
+   wf = wf.K();
+   wf.to_array(ykr);
 }
 
 // modified Gram-Schmidt orthogonalization of 
@@ -131,7 +132,7 @@ int get_ortho_basis(const int ndim,
 		    std::vector<Tm>& rbas,
 		    qtensor3<Tm>& wf,
 		    const double crit_indp=1.e-12){
-   const bool debug = true;
+   const bool debug = false;
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
    // 2. form new basis from rbas by modified Gram-Schmidt procedure
@@ -526,12 +527,15 @@ struct dvdsonSolver{
 	    pos_new[i] = 2*i;
 	    pos_new[i+nsub2] = 2*i+1;
 	 }
-	 tmpH.print("tmpH");
-	 auto diffH = normF(htmp - tmpH);
-	 std::cout << "diffH =" << diffH << std::endl;
-	 if(diffH > thresh){
-	    std::cout << "error: diffH is too large!" << std::endl;
-	    exit(1);
+
+	 if(debug){
+	    tmpH.print("tmpH");
+	    auto diffH = normF(htmp - tmpH);
+	    std::cout << "diffH =" << diffH << std::endl;
+	    if(diffH > thresh){
+	       std::cout << "error: diffH is too large!" << std::endl;
+	       exit(1);
+	    }
 	 }
 
 	 //-------------------------------------------------------- 
@@ -551,8 +555,8 @@ struct dvdsonSolver{
 	 linalg::matrix<Tm> tmpU;
 	 zquatev(tmpH, tmpE, tmpU);
 	 
-	 tmpE = etmp;
-	 tmpU = vtmp; 
+	 //tmpE = etmp;
+	 //tmpU = vtmp; 
 	 
 	 for(int i=0; i<nsub2; i++){
 	    tmpE2[2*i] = tmpE[i];
@@ -575,110 +579,57 @@ struct dvdsonSolver{
 	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
                        &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
                        &beta,wbas.data(),&ndim);
-	 for(int i=0; i<nt; i++){
-	    std::vector<Tm> tmpHx(ndim), diffv(ndim);
-	    HVecs(1, tmpHx.data(), &vbas[i*ndim]);
-	    std::transform(tmpHx.begin(), tmpHx.end(), &wbas[i*ndim], diffv.data(),
-			   [](const Tm& x, const Tm& y){ return x - y; });
-	    auto diff = linalg::xnrm2(ndim,diffv.data());
-	    std::cout << "### i=" << i 
-		      << " |vi|=" << linalg::xnrm2(ndim,&vbas[i*ndim])
-		      << " |wi|=" << linalg::xnrm2(ndim,&wbas[i*ndim])
-		      << " |hvi|=" << linalg::xnrm2(ndim,tmpHx.data())
-		      << " diff(hvi-wi)=" << diff
-		      << std::endl;
-	 } // ieig
+
+	 if(debug){
+	    for(int i=0; i<nt; i++){
+	       std::vector<Tm> tmpHx(ndim), diffv(ndim);
+	       HVecs(1, tmpHx.data(), &vbas[i*ndim]);
+	       std::transform(tmpHx.begin(), tmpHx.end(), &wbas[i*ndim], diffv.data(),
+	           	   [](const Tm& x, const Tm& y){ return x - y; });
+	       auto diff = linalg::xnrm2(ndim,diffv.data());
+	       std::cout << "### i=" << i 
+	                 << " |vi|=" << linalg::xnrm2(ndim,&vbas[i*ndim])
+	                 << " |wi|=" << linalg::xnrm2(ndim,&wbas[i*ndim])
+	                 << " |hvi|=" << linalg::xnrm2(ndim,tmpHx.data())
+	                 << " diff(hvi-wi)=" << diff
+	                 << std::endl;
+	    } // ieig
+	 }
          
 	 // rbas = HX[i]-e[i]*X[i]
-         std::vector<Tm> krvec(ndim);
+	 std::vector<Tm> krvec(ndim);
          for(int i=0; i<nt/2; i++){
 	    int i0 = 2*i;
 	    int i1 = 2*i+1;
-
-	    get_krvec(&vbas[i0*ndim], krvec.data(), wf);
-	    std::transform(&vbas[i1*ndim],&vbas[i1*ndim]+ndim,krvec.data(),krvec.data(),
-			   [](const Tm& x, const Tm& y){ return x-y; });
-	    auto diff0 = linalg::xnrm2(ndim,krvec.data());
-	    std::cout << std::setprecision(8);
-	    std::cout << "diff(V0)=" << diff0 << std::endl; 
-
-	    get_krvec(&vbas[i1*ndim], krvec.data(), wf, 0);
-	    std::transform(&vbas[i0*ndim],&vbas[i0*ndim]+ndim,krvec.data(),krvec.data(),
-			   [](const Tm& x, const Tm& y){ return x-y; });
-	    auto diff1 = linalg::xnrm2(ndim,krvec.data());
-	    std::cout << "diff(V1)=" << diff1 << std::endl; 
-	    if(diff0 > thresh || diff1 > thresh){
-	       std::cout << "error: too large diff!" << std::endl;
-	       exit(1);
-	    }
-
-	    std::vector<Tm> hx0(ndim), hx1(ndim);
-	    HVecs(1, hx0.data(), &vbas[i0*ndim]);
-	    HVecs(1, hx1.data(), &vbas[i1*ndim]);
-            std::transform(hx0.begin(), hx0.end(), &wbas[i0*ndim], krvec.begin(),
-			   [](const Tm& x, const Tm& y){ return x - y; });
-	    auto diffhx0 = linalg::xnrm2(ndim,krvec.data());
-            std::cout << "diffHx0=" << diffhx0 << std::endl;
-            std::transform(hx1.begin(), hx1.end(), &wbas[i1*ndim], krvec.begin(),
-			   [](const Tm& x, const Tm& y){ return x - y; });
-	    auto diffhx1 = linalg::xnrm2(ndim,krvec.data());
-            std::cout << "diffHx1=" << diffhx1 << std::endl;
-	    if(diffhx0 > thresh || diffhx1 > thresh){
-	       std::cout << "error: too large diffhx!" << std::endl;
-	       exit(1);
-	    }
-
             //-------------------------------------------	    
-	    std::vector<Tm> krvec0(ndim), krvec1(ndim);
-	    std::vector<Tm> sigma0(ndim), sigma1(ndim);
-	    // sigma[o]
-	    get_krvec(&wbas[i1*ndim], krvec0.data(), wf, 0);
-            get_krvec(&wbas[i0*ndim], krvec1.data(), wf);
-            std::transform(&wbas[i0*ndim], &wbas[i0*ndim]+ndim, krvec0.begin(), sigma0.data(),
+	    // sigma[o] 
+	    get_krvec(&wbas[i1*ndim], krvec.data(), wf, 0);
+            std::transform(&wbas[i0*ndim], &wbas[i0*ndim]+ndim, krvec.begin(), &rbas[i0*ndim],
 			   [](const Tm& x, const Tm& y){ return x + y; });
-	    // sigma[o_bar] 
-            std::transform(&wbas[i1*ndim], &wbas[i1*ndim]+ndim, krvec1.begin(), sigma1.data(),
-			   [](const Tm& x, const Tm& y){ return x + y; });
-
-	    get_krvec(sigma0.data(), krvec.data(), wf);
-	    std::transform(sigma1.begin(),sigma1.end(),krvec.data(),krvec.data(),
-			   [](const Tm& x, const Tm& y){ return x-y; });
-	    auto diffw = linalg::xnrm2(ndim,krvec.data());
-	    std::cout << "diff(W)=" << diffw << std::endl; 
-	    if(diffw > thresh){
-	       std::cout << "error: too large diffw!" << std::endl;
-	       exit(1);
-	    }
-
-/*
-	    for(int k=0; k<ndim; k++){
-	       std::cout << "k=" << k 
-		         << " w0=" << wbas[i0*ndim+k] 
-			 << " w1=" << wbas[i1*ndim+k] 
-		         << " krvec=" << krvec[k]  
-	  	         << std::endl;
-	    }
-*/	    
-	    // rbas = HX[i]e[i]*X[i]
-            std::transform(sigma0.begin(),sigma0.end(),&vbas[i0*ndim],&rbas[i0*ndim],
+            std::transform(&rbas[i0*ndim], &rbas[i0*ndim]+ndim, &vbas[i0*ndim], &rbas[i0*ndim],
                            [i0,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i0]; }); 
-            std::transform(sigma1.begin(),sigma1.end(),&vbas[i1*ndim],&rbas[i1*ndim],
+	    // sigma[o_bar] 
+            get_krvec(&wbas[i0*ndim], krvec.data(), wf);
+            std::transform(&wbas[i1*ndim], &wbas[i1*ndim]+ndim, krvec.begin(), &rbas[i1*ndim], 
+			   [](const Tm& x, const Tm& y){ return x + y; });
+            std::transform(&rbas[i1*ndim], &rbas[i1*ndim]+ndim, &vbas[i1*ndim], &rbas[i1*ndim],
                            [i1,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i1]; }); 
-            
-	    get_krvec(&rbas[i0*ndim], krvec0.data(), wf);
-	    std::transform(&rbas[i1*ndim],&rbas[i1*ndim]+ndim,krvec0.data(),krvec1.data(),
-			   [](const Tm& x, const Tm& y){ return x-y; });
-	    auto diffr = linalg::xnrm2(ndim,krvec1.data());
-	    std::cout << "diff(R)=" << diffr << std::endl; 
-	    if(diffr > thresh){
-	       std::cout << "error: too large diffr!" << std::endl;
-	       exit(1);
+            //-------------------------------------------	    
+	    if(debug){
+	       get_krvec(&rbas[i0*ndim], krvec.data(), wf);
+	       std::transform(&rbas[i1*ndim],&rbas[i1*ndim]+ndim,krvec.data(),krvec.data(),
+	           	      [](const Tm& x, const Tm& y){ return x-y; });
+	       auto diffr = linalg::xnrm2(ndim,krvec.data());
+	       std::cout << "i=" << i << " : e=" << tmpE[i0] 
+	                 << " |r[o]|=" << linalg::xnrm2(ndim, &rbas[i0*ndim]) 
+	                 << " |r[o_bar]|=" << linalg::xnrm2(ndim, &rbas[i1*ndim])
+			 << " diff(R)=" << diffr 
+	                 << std::endl;
+	       if(diffr > thresh){
+	          std::cout << "error: too large diffr!" << std::endl;
+	          exit(1);
+	       }
 	    }
-
-	    std::cout << "i=" << i << " : e=" << tmpE[i0] 
-		      << " |r[o]|=" << linalg::xnrm2(ndim, &rbas[i0*ndim]) 
-		      << " |r[o_bar]|=" << linalg::xnrm2(ndim, &rbas[i1*ndim]) 
-		      << std::endl; 
          } // i
       }
  
@@ -762,8 +713,6 @@ struct dvdsonSolver{
                HVecs(nindp, &wbas[ndim*neig], &vbas[ndim*neig]);
                nsub = neig+nindp;
                linalg::check_orthogonality(ndim,nsub,vbas);
-
-	       std::cout << "nindp,nsub=" << nindp << "," << nsub << std::endl;
             }
          } // iter
          if(!ifconv){
