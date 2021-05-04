@@ -5,7 +5,7 @@ TODOs:
  
  2. redesign and decouple codes [DONE20210408]
     
- 3. implementation of CTNS with TRS
+ 3. implementation of CTNS with TRS [DONE20210508]
     - checked for kinds {rN,rNSz,cN,cNSz,cNK}
     - rewrite qtensor such that qt2/qt3/qt4 are just views
 

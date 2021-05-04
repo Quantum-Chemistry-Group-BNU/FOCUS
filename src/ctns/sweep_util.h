@@ -115,7 +115,7 @@ void sweep_onedot(const input::schedule& schd,
    }else{
 
       assert(schd.cisolver == 1 && sweeps.guess);
-      dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle);
+      kr_dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle, 0, wf);
       solver.Diag = diag.data();
       using std::placeholders::_1;
       using std::placeholders::_2;
@@ -132,6 +132,7 @@ void sweep_onedot(const input::schedule& schd,
       assert(icomb.psi.size() == neig);
       assert(icomb.psi[0].get_dim() == nsub);
       std::vector<Tm> v0;
+      
       // even-electron case
       if(schd.nelec%2 == 0){
 
@@ -150,7 +151,7 @@ void sweep_onedot(const input::schedule& schd,
          int nindp = linalg::get_ortho_basis(nsub, neig*2, v0); // reorthogonalization
 	 std::cout << "neig,nindp=" << neig << "," << nindp << std::endl;
          assert(nindp >= neig);
-         solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+         solver.solve_iter(eopt.data(), vsol.data(), v0.data(), 0);
       
       // odd-electron case
       }else{

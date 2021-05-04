@@ -37,17 +37,14 @@ OBJ_DIR = ./obj
 SRC_DIR_CORE = ./$(SRC)/core
 SRC_DIR_IO   = ./$(SRC)/io
 SRC_DIR_CI   = ./$(SRC)/ci
-SRC_DIR_TNS  = ./$(SRC)/tns
 SRC_DIR_CTNS = ./$(SRC)/ctns
 INCLUDE_DIR = -I$(SRC_DIR_CORE) \
 	      -I$(SRC_DIR_IO) \
 	      -I$(SRC_DIR_CI) \
-	      -I$(SRC_DIR_TNS) \
 	      -I$(SRC_DIR_CTNS)
 SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 	  	     $(SRC_DIR_IO)/*.cpp  \
 	  	     $(SRC_DIR_CI)/*.cpp \
-	  	     $(SRC_DIR_TNS)/*.cpp \
 	  	     $(SRC_DIR_CTNS)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
@@ -59,7 +56,6 @@ OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 all: depend \
      $(BIN_DIR)/test_core.x \
      $(BIN_DIR)/test_ci.x \
-     $(BIN_DIR)/test_tns.x \
      $(BIN_DIR)/test_ctns.x
 
 depend:
@@ -80,11 +76,6 @@ $(BIN_DIR)/test_core.x: $(OBJ_DIR)/main_core.o $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
 $(BIN_DIR)/test_ci.x: $(OBJ_DIR)/main_ci.o $(OBJ_DEP)
-	@echo "\n=== LINK $@"
-	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
-
-$(BIN_DIR)/test_tns.x: $(OBJ_DIR)/main_tns.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)

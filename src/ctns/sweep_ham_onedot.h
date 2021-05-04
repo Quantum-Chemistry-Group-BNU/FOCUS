@@ -247,19 +247,7 @@ void onedot_Hx(Tm* y,
 	       qtensor3<Tm>& wf){
    if(debug_ham_onedot) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
    wf.from_array(x);
-   qtensor3<Tm> Hwf;
-   if(not ifkr){
-      Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
-   }else{
-      if(wf.sym.parity() == 0){
-         auto tmp = (wf - wf.K());
-         std::cout << "normF(wf - wf.K())=" << tmp.normF() << std::endl;
-         Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
-         Hwf += Hwf.K();
-      }else{
-         Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
-      }
-   }
+   auto Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
    Hwf.to_array(y);
 }
 
