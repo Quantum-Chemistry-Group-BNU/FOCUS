@@ -5,35 +5,23 @@
 
 namespace ctns{
 
-const bool debug_krsym = true;
-extern const bool debug_krsym;
-
 const bool debug_ortho = false;
 extern const bool debug_ortho;
 
-template <typename Tm> 
-void onedot_Proj(Tm* y, qtensor3<Tm>& wf){
-   wf.from_array(y);
-   if(debug_krsym) std::cout << "deviation before=" << (wf-wf.K()).normF() << std::endl;
-   wf = 0.5*(wf + wf.K());
-   if(debug_krsym) std::cout << "deviation after=" << (wf-wf.K()).normF() << std::endl;
-   wf.to_array(y);
-}
-
-template <typename Tm> 
-void get_krvec(Tm* y, Tm* ykr, qtensor3<Tm>& wf, const int parity=1){
+template <typename Tm, typename QTm> 
+void get_krvec(Tm* y, Tm* ykr, QTm& wf, const int parity=1){
    wf.from_array(y);
    wf.K(parity).to_array(ykr);
 }
 
 // MGS orthogonalization of rbas(ndim,nres) against vbas(ndim,neig)
-template <typename Tm>
+template <typename Tm, typename QTm>
 int kr_get_ortho_basis(const int ndim,
   	      	       const int neig,
   		       const int nres,
   		       const std::vector<Tm>& vbas,
   		       std::vector<Tm>& rbas,
-		       qtensor3<Tm>& wf,
+		       QTm& wf,
   		       const double crit_indp=1.e-12){
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
@@ -61,7 +49,6 @@ int kr_get_ortho_basis(const int ndim,
 		        [rii](const Tm& x){ return x/rii; });
          rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
       }
-
       //-------------------------------------------------------------
       rbas_new.resize(ndim*(nindp+2));
       // copy
@@ -82,7 +69,6 @@ int kr_get_ortho_basis(const int ndim,
 	 std::cout << "diff=" << diff << std::endl;
       }
       //-------------------------------------------------------------
-
       // project out |r[i]>-component from other basis
       int N = nres-1-i;
       if(N == 0) continue;
@@ -109,11 +95,11 @@ int kr_get_ortho_basis(const int ndim,
 }
 
 // MGS for rbas of size rbas(ndim,nres)
-template <typename Tm>
+template <typename Tm, typename QTm>
 int kr_get_ortho_basis(const int ndim,
 		       const int nres,
 		       std::vector<Tm>& rbas,
-		       qtensor3<Tm>& wf,
+		       QTm& wf,
 		       const double crit_indp=1.e-12){
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
@@ -131,7 +117,6 @@ int kr_get_ortho_basis(const int ndim,
 		        [rii](const Tm& x){ return x/rii; });
          rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
       }
-
       //-------------------------------------------------------------
       rbas_new.resize(ndim*(nindp+2));
       // copy
@@ -141,7 +126,7 @@ int kr_get_ortho_basis(const int ndim,
       get_krvec(&rbas[i*ndim], krvec.data(), wf);
       std::copy(krvec.cbegin(), krvec.cend(), &rbas_new[nindp*ndim]);
       nindp += 1;
-      if(debug){
+      if(debug_ortho){
          // check psi[lr] = psi_bar[l_bar,r_bar]*
          std::vector<Tm> tmp(ndim);
          get_krvec(&rbas_new[(nindp-1)*ndim], tmp.data(), wf, 0);
@@ -158,7 +143,6 @@ int kr_get_ortho_basis(const int ndim,
          ova.print("ova");
       }
       //-------------------------------------------------------------
-
       // project out |r[i]>-component from other basis
       int N = nres-1-i;
       if(N == 0) break;
@@ -180,15 +164,24 @@ int kr_get_ortho_basis(const int ndim,
 }
 
 // solver
-template <typename Tm>	
+template <typename Tm, typename QTm>
 struct kr_dvdsonSolver{
    public:
       // simple constructor
-      kr_dvdsonSolver(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle){
+      kr_dvdsonSolver(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle, 
+		      const int _parity, QTm& _wf){
          ndim = _ndim;
 	 neig = _neig;
 	 crit_v = _crit_v;
 	 maxcycle = _maxcycle;
+	 parity = _parity;
+	 wf = _wf;
+	 // consistency check
+	 if(parity == 1 && neig%2 == 1){
+            std::cout << "error: due to Kramers degeneracy, odd-electron case requires even neig=" 
+		      << neig << std::endl;
+            exit(1);
+	 }
       }
       // iteration info
       void print_iter(const int iter,
@@ -221,17 +214,22 @@ struct kr_dvdsonSolver{
                  << std::setw(10) << std::setprecision(2) << std::scientific << t << std::endl;
          } // i
       } 
+
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, Tm* y, const Tm* x){
          auto t0 = tools::get_time();
          for(int istate=0; istate<nstate; istate++){
             HVec(y+istate*ndim, x+istate*ndim); // y = tilde{H}*x
+            //-------------------------------------------------------------
+            // Even-electron case: get full sigma vector from skeleton one
+            //-------------------------------------------------------------
 	    if(parity == 0){
-	       wf.from_array(y+istate*ndim);
+	       wf.from_array( y+istate*ndim );
 	       wf += wf.K();
-	       wf.to_rarray(y+istate*ndim);
+	       wf.to_array( y+istate*ndim );
 	    }
-         }
+            //-------------------------------------------------------------
+         } // istate
          nmvp += nstate;
          auto t1 = tools::get_time();
          bool debug = true;
@@ -241,6 +239,44 @@ struct kr_dvdsonSolver{
                       << " for nstate = " << nstate << std::endl;
          }
       }
+
+      // initialization
+      void init_guess(std::vector<QTm>& psi, std::vector<Tm>& v0){
+	 std::cout << "ctns::kr_dvdsonSolver::init_guess parity=" << parity << std::endl;
+	 assert(psi.size() == neig);
+         assert(psi[0].get_dim() == ndim);
+         v0.resize(ndim*neig*2);
+	 int nindp = 0;
+         if(parity == 0){
+            // even-electron case
+            const std::complex<double> iunit(0.0,1.0);
+            for(int i=0; i<neig; i++){
+               auto tmp1 = (psi[i] + psi[i].K());
+               auto tmp2 = (psi[i] - psi[i].K())*iunit; 
+               tmp1.to_array(&v0[ndim*(i)]); // put all plus combination before
+               tmp2.to_array(&v0[ndim*(i+neig)]);
+               std::cout << " iguess=" << i 
+           	         << " |psi+psiK|=" << tmp1.normF() 
+           	         << " |i(psi-psiK)|=" << tmp2.normF() 
+           	         << std::endl;
+            } // i
+            nindp = linalg::get_ortho_basis(ndim, neig*2, v0); // reorthogonalization
+         }else{
+            // odd-electron case: needs to first generate Kramers paired basis
+            for(int i=0; i<neig; i++){
+               psi[i].to_array(&v0[ndim*(2*i)]);
+               psi[i].K().to_array(&v0[ndim*(2*i+1)]);
+	       std::cout << " iguess=" << i 
+		         << " |psi|=" << psi[i].normF()
+			 << std::endl;
+            } // i
+            nindp = kr_get_ortho_basis(ndim, neig*2, v0, wf); // reorthogonalization
+         }
+         std::cout << " neig,nindp=" << neig << "," << nindp << std::endl;
+         assert(nindp >= neig);
+	 v0.resize(ndim*nindp);
+      }
+
       //-------------------------------------
       // Case 0: even-electron Hilbert space 
       //-------------------------------------
@@ -301,8 +337,7 @@ struct kr_dvdsonSolver{
       	       		    std::vector<Tm>& wbas,
       	       		    std::vector<double>& tmpE,
       	       		    std::vector<Tm>& tmpV,
-			    std::vector<Tm>& rbas,
-			    qtensor3<Tm>& wf){
+			    std::vector<Tm>& rbas){
          // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
          const Tm alpha = 1.0, beta=0.0;
 	 linalg::matrix<Tm> tmpH2(nsub,nsub);
@@ -374,7 +409,7 @@ struct kr_dvdsonSolver{
             //-------------------------------------------------------------------------
             // We need to first contruct full sigma vector from skeleton one using TRS
             //-------------------------------------------------------------------------
-	    // sigma[o] 
+	    // sigma[o]
 	    get_krvec(&wbas[i1*ndim], krvec.data(), wf, 0);
             std::transform(&wbas[i0*ndim], &wbas[i0*ndim]+ndim, krvec.begin(), &rbas[i0*ndim],
 			   [](const Tm& x, const Tm& y){ return x + y; });
@@ -390,7 +425,7 @@ struct kr_dvdsonSolver{
          } // i
       }
       // Davidson iterative algorithm for Hv=ve
-      void solve_iter(double* es, Tm* vs, Tm* vguess, const int parity, qtensor3<Tm>& wf){
+      void solve_iter(double* es, Tm* vs, Tm* vguess){
 	 std::cout << "ctns::kr_dvdsonSolver::solve_iter"
 		   << " is_complex=" << tools::is_complex<Tm>() 
 		   << " parity=" << parity << std::endl;
@@ -401,16 +436,15 @@ struct kr_dvdsonSolver{
          // clear counter
          nmvp = 0;
          auto t0 = tools::get_time();
-
-         // generate initial subspace - vbas
+         
+	 // 1. generate initial subspace - vbas 
          int nl = std::min(ndim,neig+nbuff); // maximal subspace size
 	 std::vector<Tm> vbas(ndim*nl), wbas(ndim*nl);
-	  
-	 std::copy(vguess, vguess+ndim*neig, vbas.data());
+	 std::copy(vguess, vguess+ndim*neig, vbas.data()); // copying neig states from vguess
 	 linalg::check_orthogonality(ndim, neig, vbas);
          HVecs(neig, wbas.data(), vbas.data());
-
-         // Begin to solve
+         
+	 // 2. begin to solve
 	 std::vector<Tm> rbas(ndim*nl), tbas(ndim*nl), tmpV(nl*nl);
 	 std::vector<double> tmpE(nl), tnorm(neig);
          std::vector<bool> rconv(neig);
@@ -421,12 +455,15 @@ struct kr_dvdsonSolver{
          int nsub = neig;
          for(int iter=1; iter<maxcycle+1; iter++){
            
+	    //------------------------------------------------------------------------
             // solve subspace problem and form full residuals: Res[i]=HX[i]-w[i]*X[i]
+	    //------------------------------------------------------------------------
 	    if(parity == 0){
                subspace_solver0(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
 	    }else{
-               subspace_solver1(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas,wf);
+               subspace_solver1(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
 	    }
+	    //------------------------------------------------------------------------
 
             // check convergence
             for(int i=0; i<neig; i++){
@@ -455,7 +492,11 @@ struct kr_dvdsonSolver{
 	       //-----------------------
 	       // Kramers projection
 	       //-----------------------
-	       if(parity == 0) Proj(&tbas[nres*ndim]);
+	       if(parity == 0){
+   		  wf.from_array( &tbas[nres*ndim] );
+   		  wf += wf.K();
+   		  wf.to_array( &tbas[nres*ndim] );
+	       }
 	       //-----------------------
                tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
                nres += 1;
@@ -466,13 +507,16 @@ struct kr_dvdsonSolver{
             for(int i=0; i<nres; i++){
 	       std::copy(&tbas[index[i]*ndim], &tbas[index[i]*ndim]+ndim, &rbas[i*ndim]); 
             }
-            // re-orthogonalization and get nindp
-            int nindp;
+	    //------------------------------------------------------------------
+            // re-orthogonalization and get nindp for different cases of parity
+	    //------------------------------------------------------------------
+            int nindp = 0;
 	    if(parity == 0){
 	       nindp = linalg::get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
 	    }else{
                nindp = kr_get_ortho_basis(ndim,neig,nres,vbas,rbas,wf,crit_indp);
 	    }
+	    //------------------------------------------------------------------
             if(nindp == 0){
 	       std::cout << "Convergence failure: unable to generate new direction: nindp=0!" << std::endl;
                exit(1);
@@ -498,9 +542,12 @@ struct kr_dvdsonSolver{
       std::function<void(Tm*, const Tm*)> HVec;
       double crit_v = 1.e-5;  // used control parameter
       int maxcycle = 1000;
+      //--------------------
       // Kramers projection
-      qtensor3<Tm>* pwf; 
-      std::function<void(Tm*)> Proj;
+      //--------------------
+      int parity = 0;
+      QTm wf; 
+      //--------------------
       // settings
       int iprt = 1;
       double crit_e = 1.e-12; // not used actually

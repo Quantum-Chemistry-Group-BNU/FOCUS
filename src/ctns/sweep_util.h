@@ -78,23 +78,23 @@ void sweep_onedot(const input::schedule& schd,
    // 2.2 Solve local problem: Hc=cE
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
+   using std::placeholders::_1;
+   using std::placeholders::_2;
+   auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
+           	    std::cref(isym), std::cref(ifkr), 
+           	    std::ref(cqops), std::ref(lqops), std::ref(rqops), 
+           	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
+           	    std::ref(wf));
    if(!ifkr){
-
+      // without kramers restriction
       linalg::dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle);
       solver.Diag = diag.data();
-      using std::placeholders::_1;
-      using std::placeholders::_2;
-      solver.HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
-           	         std::cref(isym), std::cref(ifkr), 
-           	         std::ref(cqops), std::ref(lqops), std::ref(rqops), 
-           	         std::cref(int2e), std::cref(int1e), std::cref(ecore), 
-           	         std::ref(wf));
+      solver.HVec = HVec;
       if(schd.cisolver == 0){
-         solver.solve_diag(eopt.data(), vsol.data(), true); // debug
+         solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
       }else if(schd.cisolver == 1){ // davidson
-         // guess or not
          if(!sweeps.guess){
-            solver.solve_iter(eopt.data(), vsol.data());
+            solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
          }else{     
             // load initial guess from previous opt
             if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
@@ -108,74 +108,20 @@ void sweep_onedot(const input::schedule& schd,
             assert(nindp == neig);
             solver.solve_iter(eopt.data(), vsol.data(), v0.data());
          }
-      }else{
-         std::cout << "error: no such option for cisolver=" << schd.cisolver << std::endl;
       }
-
    }else{
-
+      // kramers restricted (currently works only for iterative with guess!) 
       assert(schd.cisolver == 1 && sweeps.guess);
-      kr_dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle, 0, wf);
+      kr_dvdsonSolver<Tm,qtensor3<Tm>> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle, 
+		      			      (schd.nelec)%2, wf);
       solver.Diag = diag.data();
-      using std::placeholders::_1;
-      using std::placeholders::_2;
-      solver.HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
-           	         std::cref(isym), std::cref(ifkr), 
-           	         std::ref(cqops), std::ref(lqops), std::ref(rqops), 
-           	         std::cref(int2e), std::cref(int1e), std::cref(ecore), 
-           	         std::ref(wf));
-      
-      solver.Proj = bind(&ctns::onedot_Proj<Tm>, _1, std::ref(wf));
-    
+      solver.HVec = HVec;
       // load initial guess from previous opt
       if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
-      assert(icomb.psi.size() == neig);
-      assert(icomb.psi[0].get_dim() == nsub);
       std::vector<Tm> v0;
-      
-      // even-electron case
-      if(schd.nelec%2 == 0){
-
-	 v0.resize(nsub*neig*2);
-         const std::complex<double> iunit(0.0,1.0);
-	 for(int i=0; i<neig; i++){
-            auto tmp1 = (icomb.psi[i] + icomb.psi[i].K());
-            tmp1.to_array(&v0[nsub*(2*i)]);
-	    auto tmp2 = (icomb.psi[i] - icomb.psi[i].K())*iunit; 
-            tmp2.to_array(&v0[nsub*(2*i+1)]);
-	    std::cout << "iguess=" << i << " |psi[i]-psi[i].K()|=" << (icomb.psi[i]-icomb.psi[i].K()).normF()
-		      << " |psi+psiK|=" << tmp1.normF() 
-		      << " |i(psi-psiK)|=" << tmp2.normF() 
-		      << std::endl;
-         }
-         int nindp = linalg::get_ortho_basis(nsub, neig*2, v0); // reorthogonalization
-	 std::cout << "neig,nindp=" << neig << "," << nindp << std::endl;
-         assert(nindp >= neig);
-         solver.solve_iter(eopt.data(), vsol.data(), v0.data(), 0);
-      
-      // odd-electron case
-      }else{
-
-	 if(neig%2 == 1){
-            std::cout << "Due to Kramers degeneracy, odd-electron case requires even neig=" 
-		      << neig << std::endl;
-            exit(1);
-	 }
-	 // needs to first generate Kramers paired basis
-	 v0.resize(nsub*neig*2);
-	 for(int i=0; i<neig; i++){
-	    std::cout << i << "NORMF0=" << icomb.psi[i].normF() << std::endl;
-            icomb.psi[i].to_array(&v0[nsub*(2*i)]);
-            icomb.psi[i].K().to_array(&v0[nsub*(2*i+1)]);
-         }
-         int nindp = get_ortho_basis(nsub, neig*2, v0, wf); // reorthogonalization
-	 std::cout << "neig,nindp=" << neig << "," << nindp << std::endl;
-         assert(nindp >= neig);
-         solver.solve_iter2(eopt.data(), vsol.data(), v0.data(), wf);
-	 //exit(1);
-
-      }   
-   }
+      solver.init_guess(icomb.psi, v0);
+      solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+   } // ifkr
    timing.tc = tools::get_time();
 
    // 3. decimation & renormalize operators
