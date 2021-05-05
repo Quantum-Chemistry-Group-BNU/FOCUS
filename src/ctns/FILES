@@ -13,6 +13,7 @@ Initialization:
 Efficiency:
  1. use symmetry  
  2. parallelization
+
  
 Description of files:
 
@@ -69,41 +70,37 @@ Sweep algorithm: (1) onedot
  ctns_sweep.h
  sweep_data.h
  sweep_util.h
-
 * local CI: Hdiag & Hx
  sweep_onedot.h => ED works!
-
 * decimation & operator transformation
  ctns_dpt.h
  sweep_decimation.h
  qtensor_reshape.h
  sweep_renorm.h 
-
 * guess
  sweep_guess.h
-
 * perturbed density matrix
  sweep_prdm.h
 
 Sweep algorithm: (2) TRS
 ---------------------------
-* time-reversal symmetry-adapted
- * decimation
- * local CI
+* TRS-adapted decimation
+ sweep_decimation.h
+* TRS-adapted local CI
  sweep_dvdson.h
-
-
-
 
 Sweep algorithm: (3) twodot
 ---------------------------
+ sweep_util.h
+
+
+OLD
+---
 * reshaping: working in the format of qt2 -> psi(L,R)! 
  tns_qtensor_reshape.cpp
  tns_qtensor4.cpp
-
 * twodot
  tns_ham_twodot.cpp
-
 
 
 

@@ -190,8 +190,131 @@ void sweep_rwfuns(const input::schedule& schd,
    icomb.rwfuns = std::move(rwfuns);
 }
 
+template <typename Km>
+void sweep_twodot(const input::schedule& schd,
+		  sweep_data& sweeps,
+		  const int isweep,
+		  const int ibond,
+                  comb<Km>& icomb,
+                  const integral::two_body<typename Km::dtype>& int2e,
+                  const integral::one_body<typename Km::dtype>& int1e,
+                  const double ecore){
+   using Tm = typename Km::dtype;
+   const int isym = Km::isym;
+   const bool ifkr = kind::is_kramers<Km>();
+   auto& timing = sweeps.opt_timing[isweep][ibond];
+   timing.t0 = tools::get_time();
+   std::cout << "ctns::sweep_twodot" << std::endl;
+   exit(1);
+
 /*
-template <typename Tm>
+   // 0. preprocessing 
+   // processing partition & symmetry
+   auto dbond = sweeps.seq[ibond];
+   auto p = dbond.p;
+   auto suppc = icomb.get_suppc(p, debug_sweep); 
+   auto suppl = icomb.get_suppl(p, debug_sweep);
+   auto suppr = icomb.get_suppr(p, debug_sweep);
+   int sc = suppc.size();
+   int sl = suppl.size();
+   int sr = suppr.size();
+   // processing symmetry
+   qbond qc, ql, qr;
+   qc = icomb.get_qc(p); 
+   ql = icomb.get_ql(p);
+   qr = icomb.get_qr(p);
+   qc.print("qc", debug_sweep);
+   ql.print("ql", debug_sweep);
+   qr.print("qr", debug_sweep);
+   // wavefunction to be computed
+   qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
+   qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
+   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
+
+   // 1. load operators 
+   oper_dict<Tm> cqops, lqops, rqops;
+   oper_load_qops(icomb, p, schd.scratch, 'c', cqops);
+   oper_load_qops(icomb, p, schd.scratch, 'l', lqops);
+   oper_load_qops(icomb, p, schd.scratch, 'r', rqops);
+   if(debug_sweep){
+      const int level = 0;
+      oper_display(cqops, "cqops", level);
+      oper_display(lqops, "lqops", level);
+      oper_display(rqops, "rqops", level);
+   }
+   timing.ta = tools::get_time();
+
+   // 2. Davidson solver for wf
+   // 2.1 Hdiag 
+   int nsub = wf.get_dim();
+   int neig = sweeps.nstates;
+   std::vector<double> diag(nsub,1.0);
+   diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
+   timing.tb = tools::get_time();
+   
+   // 2.2 Solve local problem: Hc=cE
+   auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
+   linalg::matrix<Tm> vsol(nsub,neig);
+   using std::placeholders::_1;
+   using std::placeholders::_2;
+   auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
+           	    std::cref(isym), std::cref(ifkr), 
+           	    std::ref(cqops), std::ref(lqops), std::ref(rqops), 
+           	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
+           	    std::ref(wf));
+   if(!ifkr){
+      // without kramers restriction
+      linalg::dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle);
+      solver.Diag = diag.data();
+      solver.HVec = HVec;
+      if(schd.cisolver == 0){
+         solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
+      }else if(schd.cisolver == 1){ // davidson
+         if(!sweeps.guess){
+            solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
+         }else{     
+            // load initial guess from previous opt
+            if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
+            assert(icomb.psi.size() == neig);
+            assert(icomb.psi[0].get_dim() == nsub);
+            std::vector<Tm> v0(nsub*neig);
+            for(int i=0; i<neig; i++){
+               icomb.psi[i].to_array(&v0[nsub*i]);
+            }
+            int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
+            assert(nindp == neig);
+            solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+         }
+      }
+   }else{
+      // kramers restricted (currently works only for iterative with guess!) 
+      assert(schd.cisolver == 1 && sweeps.guess);
+      kr_dvdsonSolver<Tm,qtensor3<Tm>> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle, 
+		      			      (schd.nelec)%2, wf);
+      solver.Diag = diag.data();
+      solver.HVec = HVec;
+      // load initial guess from previous opt
+      if(icomb.psi.size() == 0) guess_onedot_psi0(icomb,neig); // starting guess 
+      std::vector<Tm> v0;
+      solver.init_guess(icomb.psi, v0);
+      solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+   } // ifkr
+   timing.tc = tools::get_time();
+
+   // 3. decimation & renormalize operators
+   decimation_onedot(sweeps, isweep, ibond, icomb, vsol, wf, 
+		     cqops, lqops, rqops, int2e, int1e, schd.scratch);
+
+   timing.t1 = tools::get_time();
+   std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 
+             << tools::get_duration(timing.t1-timing.t0) << " s" << std::endl;
+   timing.analysis();
+*/
+
+}
+
+/*
+template <typename Km>
 void sweep_twodot(const input::schedule& schd,
 		      const input::sweep_ctrl& ctrl,
                       comb<Tm>& icomb,
@@ -289,7 +412,6 @@ void sweep_twodot(const input::schedule& schd,
         << tools::get_duration(t1-t0) << " s" << endl;
    opt_timing_analysis({t0,ta,tb,tc,td,t1});
 }
-
 */
 
 } // ctns

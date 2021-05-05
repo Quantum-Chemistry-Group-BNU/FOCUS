@@ -52,7 +52,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
 	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }else{
-	    //sweep_twodot(schd, ctrl, icomb, dbond, int2e, int1e, ecore, sweep_result[i]);
+	    sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }
       } // ibond
       auto tf = tools::get_time();
