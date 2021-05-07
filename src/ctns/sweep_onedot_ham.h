@@ -1,10 +1,10 @@
-#ifndef SWEEP_HAM_ONEDOT_H
-#define SWEEP_HAM_ONEDOT_H
+#ifndef SWEEP_ONEDOT_HAM_H
+#define SWEEP_ONEDOT_HAM_H
 
 namespace ctns{
    
-const bool debug_ham_onedot = false;
-extern const bool debug_ham_onedot;
+const bool debug_onedot_ham = false;
+extern const bool debug_onedot_ham;
 
 // local 
 template <typename Tm>
@@ -132,7 +132,7 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
 			         oper_dict<Tm>& rqops,
 			         const double ecore,
 			         qtensor3<Tm>& wf){
-   if(debug_ham_onedot) std::cout << "ctns::onedot_Hdiag ifkr=" << ifkr << std::endl;
+   if(debug_onedot_ham) std::cout << "ctns::onedot_Hdiag ifkr=" << ifkr << std::endl;
    // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
    onedot_Hdiag_local(cqops, lqops, rqops, ecore, wf);
    // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
@@ -245,7 +245,7 @@ void onedot_Hx(Tm* y,
 	       const integral::one_body<Tm>& int1e,
 	       const double ecore,
 	       qtensor3<Tm>& wf){
-   if(debug_ham_onedot) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
+   if(debug_onedot_ham) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
    wf.from_array(x);
    auto Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
    Hwf.to_array(y);

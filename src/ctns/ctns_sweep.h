@@ -2,7 +2,8 @@
 #define CTNS_SWEEP_H
 
 #include "sweep_data.h"
-#include "sweep_util.h"
+#include "sweep_onedot.h"
+#include "sweep_twodot.h"
 
 namespace ctns{
 

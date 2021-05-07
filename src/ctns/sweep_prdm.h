@@ -8,7 +8,7 @@ extern const double thresh_noise;
 
 // ZL@20210420:	
 // Note that for perturbative noise, the signs are not properly treated as in 
-// sweep_ham_onedot.h. We assume that they are not essential for recovering
+// sweep_onedot_ham.h. We assume that they are not essential for recovering
 // the losing quantum number! This proved to work for simple tests at least.
 
 template <typename Tm>
