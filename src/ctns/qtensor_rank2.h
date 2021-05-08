@@ -62,7 +62,7 @@ struct qtensor2{
       qtensor2<Tm> H() const;
       // ZL20210401: generate matrix representation for Kramers paired operators
       qtensor2<Tm> K(const int nbar=0) const;
-      // simple algorithmic operations
+      // simple arithmetic operations
       qtensor2<Tm> operator -() const;
       qtensor2<Tm>& operator +=(const qtensor2<Tm>& qt);
       qtensor2<Tm>& operator -=(const qtensor2<Tm>& qt);
@@ -304,7 +304,7 @@ qtensor2<Tm> qtensor2<Tm>::K(const int nbar) const{
    return qt2;
 }
 
-// simple algorithmic operations
+// simple arithmetic operations
 template <typename Tm>
 qtensor2<Tm> qtensor2<Tm>::operator -() const{
    qtensor2<Tm> qt2 = *this;

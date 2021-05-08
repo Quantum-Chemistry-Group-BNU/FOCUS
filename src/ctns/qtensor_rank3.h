@@ -24,7 +24,7 @@ struct qtensor3{
 	    & _mids & _rows & _cols & _qblocks;     
       }
       // conservation pattern determined by dir
-      bool _ifconserve(const int bm, const int br, const int bc) const{
+      inline bool _ifconserve(const int bm, const int br, const int bc) const{
 	 auto qsum = -sym; // default in
 	 qsum += dir[0] ? qmid.get_sym(bm) : -qmid.get_sym(bm);
 	 qsum += dir[1] ? qrow.get_sym(br) : -qrow.get_sym(br);
@@ -36,10 +36,10 @@ struct qtensor3{
          return bm*_rows*_cols + br*_cols + bc;
       }
       inline void _addr_unpack(const int idx, int& bm, int& br, int& bc) const{
+ 	 bc = idx%_cols;
 	 int mr = idx/_cols;
 	 bm = mr/_rows;	    
          br = mr%_rows;
- 	 bc = idx%_cols;
       }
    public:
       // constructor
@@ -69,7 +69,7 @@ struct qtensor3{
       qtensor3<Tm> permCR_signed() const; // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
       // ZL20210413: application of time-reversal operation
       qtensor3<Tm> K(const int nbar=0) const;
-      // simple algorithmic operations
+      // simple arithmetic operations
       qtensor3<Tm>& operator +=(const qtensor3<Tm>& qt);
       qtensor3<Tm>& operator -=(const qtensor3<Tm>& qt);
       qtensor3<Tm>& operator *=(const Tm fac);
@@ -91,9 +91,8 @@ struct qtensor3{
       friend qtensor3<Tm> operator *(const qtensor3<Tm>& qt, const Tm fac){
          return fac*qt;
       }
-      // algebra
-      double normF() const;
       // for Davidson algorithm
+      double normF() const;
       int get_dim() const;
       void from_array(const Tm* array);
       void to_array(Tm* array) const;
@@ -115,11 +114,6 @@ struct qtensor3{
 	 auto qprod = dpt_lr();  
 	 return merge_qt3_qt2_lr(*this, qprod.first, qprod.second);
       }
-/*
-      // extract real & imag parts
-      matrix<double> real() const;
-      matrix<double> imag() const;
-*/
    public:
       std::vector<bool> dir = {1,0,1}; // =0,in; =1,out; {mid,row,col}
       				       // {1,0,1} - RCF (default)
@@ -310,7 +304,7 @@ qtensor3<Tm> qtensor3<Tm>::K(const int nbar) const{
    return qt3;
 }
 
-// simple algorithmic operations
+// simple arithmetic operations
 template <typename Tm>
 qtensor3<Tm>& qtensor3<Tm>::operator +=(const qtensor3<Tm>& qt){
    assert(dir == qt.dir); // direction must be the same

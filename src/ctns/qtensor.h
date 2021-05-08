@@ -4,6 +4,7 @@
 // qtensor: tensor with quantum numbers
 #include "qtensor_rank2.h"
 #include "qtensor_rank3.h"
+#include "qtensor_rank4.h"
 #include "qtensor_contract.h"
 #include "qtensor_reshape.h"
 

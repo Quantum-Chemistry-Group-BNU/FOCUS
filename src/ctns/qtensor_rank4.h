@@ -1,0 +1,306 @@
+#ifndef QTENSOR_RANK4_H
+#define QTENSOR_RANK4_H
+
+/*
+#include "../core/linalg.h"
+#include "tns_qtensor.h"
+#include <iostream>
+#include <algorithm>
+*/
+
+namespace ctns{
+
+// rank-4 tensor: only for holding two-dot wavefunction psi[l,c1,c2,r] 
+template <typename Tm>
+struct qtensor4{
+   private:
+      // serialize
+      friend class boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+         ar & sym & qmid & qver & qrow & qcol
+	    & _mids & _vers & _rows & _cols & _qblocks;
+      }
+      // conservation: dir={1,1,1,1} 
+      inline bool _ifconserve(const int bm, const int bv, const int br, const int bc) const{
+	 return sym == qmid.get_sym(bm) + qver.get_sym(bv) + qrow.get_sym(br) + qcol.get_sym(bc);
+      }
+      // address for storaging block data
+      inline int _addr(const int bm, const int bv, const int br, const int bc) const{
+	 return bm*_vers*_rows*_cols + bv*_rows*_cols + br*_cols + bc;
+      }
+      inline void _addr_unpack(const int idx, int& bm, int& bv, int& br, int& bc) const{
+	 bc = idx%_cols;
+	 int mvr = idx/_cols;
+	 br = mvr%_rows;
+	 int mv = mvr/_rows;
+	 bm = mv/_vers;
+	 bv = mv%_vers;
+      }
+   public:
+      // constructor
+      qtensor4(){};
+      qtensor4(const qsym& sym1, const qbond& qmid1, const qbond& qver1, const qbond& qrow1, const qbond& qcol1);
+      void init(const qsym& sym1, const qbond& qmid1, const qbond& qver1, const qbond& qrow1, const qbond& qcol1);
+      // helpers
+      inline int mids() const{ return _mids; }
+      inline int vers() const{ return _vers; }
+      inline int rows() const{ return _rows; }
+      inline int cols() const{ return _cols; }
+      // access: return a vector of matrices, vector size = dm*dv
+      std::vector<linalg::matrix<Tm>>& operator ()(const int bm, const int bv, const int br, const int bc){
+	 return _qblocks[_addr(bm,bv,br,bc)];
+      }
+      const std::vector<linalg::matrix<Tm>>& operator ()(const int bm, const int bv, const int br, const int bc){
+	 return _qblocks[_addr(bm,bv,br,bc)];
+      }
+      // print
+      void print(const std::string name, const int level=0) const;
+      // deal with fermionic sign in fermionic direct product
+      qtensor4<Tm> permCR_signed() const; // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}
+      // simple arithmetic operations
+      qtensor4<Tm>& operator +=(const qtensor4<Tm>& qt);
+      qtensor4<Tm>& operator -=(const qtensor4<Tm>& qt);
+      qtensor4<Tm>& operator *=(const Tm fac);
+      friend qtensor4<Tm> operator *(const Tm fac, const qtensor4<Tm>& qt){
+	 qtensor4<Tm> qt4 = qt;
+	 qt4 *= fac;
+	 return qt4;
+      }
+      friend qtensor4<Tm> operator *(const qtensor4<Tm>& qt, const Tm fac){
+	 return fac*qt;
+      }
+      // for Davidson algorithm
+      double normF() const;
+      int get_dim() const;
+      void from_array(const Tm* array);
+      void to_array(Tm* array) const;
+      // decimation
+      inline qproduct dpt_lc1()  const{ return qmerge(qrow,qmid); };
+      inline qproduct dpt_c2r()  const{ return qmerge(qver,qcol); };
+      inline qproduct dpt_lr()   const{ return qmerge(qrow,qcol); };
+      inline qproduct dpt_c1c2() const{ return qmerge(qmid,qver); };
+/*
+      // reshape
+      qtensor3<Tm> merge_lc1() const;
+      qtensor3<Tm> merge_c2r() const;
+      qtensor2<Tm> merge_lr_c1c2() const;
+*/
+   public:
+      qsym sym; 
+      qbond qmid, qver, qrow, qcol;
+   private:
+      int _mids, _vers, _rows, _cols;   
+      std::vector<std::vector<linalg::matrix<Tm>>> _qblocks;
+};
+
+template <typename Tm>
+void qtensor4<Tm>::init(const qsym& sym1, const qbond& qmid1, const qbond& qver1,
+		        const qbond& qrow1, const qbond& qcol1){
+   sym = sym1;
+   qmid = qmid1;
+   qver = qver1;
+   qrow = qrow1;
+   qcol = qcol1;
+   _mids = qmid.size();
+   _vers = qver.size();
+   _rows = qrow.size();
+   _cols = qcol.size();
+   _qblocks.resize(_mids*_vers*_rows*_cols);
+   for(int bm=0; bm<_mids; bm++){
+      for(int bv=0; bv<_vers; bv++){
+         for(int br=0; br<_rows; br++){
+            for(int bc=0; bc<_cols; bc++){
+  	       if(not _ifconserve(bm,bv,br,bc)) continue;
+	       int mdim = qmid.get_dim(bm);
+	       int vdim = qver.get_dim(bv);
+	       int rdim = qrow.get_dim(br);
+	       int cdim = qcol.get_dim(bc);
+	       int addr = _addr(bm,bv,br,bc);
+	       _qblocks[addr].resize(mdim*vdim); 
+	       for(int imv=0; imv<mdim*vdim; imv++){
+	          _qblocks[addr][imv].resize(rdim,cdim);
+	       }
+	    } // bc
+	 } // br
+      } // bv
+   } // bm
+}
+
+template <typename Tm>
+qtensor4<Tm>::qtensor4(const qsym& sym1, const qbond& qmid1, const qbond& qver1,
+		       const qbond& qrow1, const qbond& qcol1){
+   this->init(sym1, qmid1, qver1, qrow1, qcol1);
+}
+ 
+template <typename Tm>
+void qtensor4<Tm>::print(const std::string name, const int level) const{
+   std::cout << "\nqtensor4: " << name << " sym=" << sym << std::endl;
+   qmid.print("qmid");
+   qver.print("qver");
+   qrow.print("qrow");
+   qcol.print("qcol");
+   // qblocks
+   std::cout << "qblocks: nblocks=" << _qblocks.size() << std::endl;
+   int nnz = 0;
+   for(int idx=0; idx<_qblocks.size(); idx++){
+      auto& blk = _qblocks[idx];
+      if(blk.size() > 0){
+         nnz++;
+         if(level >= 1){
+	    int bm,bv,br,bc;
+	    _addr_unpack(idx,bm,bv,br,bc);
+	    std::cout << "idx=" << nnz 
+     	              << " block[" << qmid.get_sym(bm) << "," << qver.get_sym(bv) << ","
+		      << qrow.get_sym(br) << "," << qcol.get_sym(bc) << "]"
+                      << " size=" << blk.size() 
+                      << " rows,cols=(" << blk[0].rows() << "," << blk[0].cols() << ")" 
+                      << std::endl; 
+            if(level >= 2){
+               for(int imv=0; imv<blk.size(); imv++){		 
+                  blk[imv].print("mat"+std::to_string(imv));
+               }
+            } // level=2
+	 } // level>=1
+      }
+   }
+   std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
+}
+
+// wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}
+template <typename Tm>
+qtensor4<Tm> qtensor4<Tm>::permCR_signed() const{
+   qtensor4<Tm> qt4 = *this;
+   for(int idx=0; idx<qt4._qblocks.size(); idx++){
+      auto& blk = qt4._qblocks[idx];
+      if(blk.size() > 0){
+         int bm,bv,br,bc;
+         _addr_unpack(idx,bm,bv,br,bc);
+	 if(((qmid.get_parity(bm)+qver.get_parity(bv))*qcol.get_parity(bc))%2 == 0){
+            for(int im=0; im<blk.size(); im++){
+               blk[im] = -blk[im];
+            }
+	 }
+      }
+   }
+   return qt4;
+}
+
+//--------------------------------------------------------------
+// The following functions are the same as those for qtensor3 !
+//--------------------------------------------------------------
+     
+// simple arithmetic operations
+template <typename Tm>
+qtensor4<Tm>& qtensor4<Tm>::operator +=(const qtensor4<Tm>& qt){
+   assert(sym == qt.sym); // symmetry blocking must be the same
+   for(int i=0; i<_qblocks.size(); i++){
+      auto& blk = _qblocks[i];
+      assert(blk.size() == qt._qblocks[i].size());
+      if(blk.size() > 0){
+         for(int m=0; m<blk.size(); m++){
+            blk[m] += qt._qblocks[i][m];
+         } // m
+      }
+   } // i
+   return *this;
+}
+
+template <typename Tm>
+qtensor4<Tm>& qtensor4<Tm>::operator -=(const qtensor4<Tm>& qt){
+   assert(sym == qt.sym); // symmetry blocking must be the same
+   for(int i=0; i<_qblocks.size(); i++){
+      auto& blk = _qblocks[i];
+      assert(blk.size() == qt._qblocks[i].size());
+      if(blk.size() > 0){
+         for(int m=0; m<blk.size(); m++){
+  	    blk[m] -= qt._qblocks[i][m];
+         } // m
+      }
+   } // i
+   return *this;
+}
+
+template <typename Tm>
+qtensor4<Tm>& qtensor4<Tm>::operator *=(const Tm fac){
+   for(auto& blk : _qblocks){
+      if(blk.size() > 0){ 
+	 for(int m=0; m<blk.size(); m++){
+	    blk[m] *= fac;
+	 } // m
+      }
+   } // blk
+   return *this;
+}
+
+// for Davidson algorithm
+template <typename Tm>
+double qtensor4<Tm>::normF() const{
+   double sum = 0.0;
+   for(const auto& blk : _qblocks){
+      if(blk.size() > 0){
+         for(int m=0; m<blk.size(); m++){
+            sum += std::pow(linalg::normF(blk[m]),2);
+         }
+      }
+   }
+   return std::sqrt(sum);
+}
+
+template <typename Tm>
+int qtensor4<Tm>::get_dim() const{
+   int dim = 0;
+   for(const auto& blk : _qblocks){
+      if(blk.size() > 0) dim += blk.size()*blk[0].size(); // A[l,c1,c2,r] = A[c1*c2](l,r)
+   }
+   return dim;
+}
+
+template <typename Tm>
+void qtensor4<Tm>::from_array(const Tm* array){
+   int ioff = 0;
+   for(int idx=0; idx<_qblocks.size(); idx++){
+      auto& blk = _qblocks[idx];
+      if(blk.size() == 0) continue;
+      int size = blk[0].size();
+      for(int im=0; im<blk.size(); im++){
+         auto psta = array+ioff+im*size;
+	 // copy from array to blk
+	 std::copy(psta, psta+size, blk[im].data());
+      }
+      ioff += blk.size()*size;
+   }
+}
+
+template <typename Tm>
+void qtensor4<Tm>::to_array(Tm* array) const{
+   int ioff = 0;
+   for(int idx=0; idx<_qblocks.size(); idx++){
+      auto& blk = _qblocks[idx];
+      if(blk.size() == 0) continue;
+      int size = blk[0].size();
+      for(int im=0; im<blk.size(); im++){
+         auto psta = array+ioff+im*size;
+	 // copy from blk to array
+	 std::copy(blk[im].data(), blk[im].data()+size, psta);
+      }
+      ioff += blk.size()*size;
+   }
+}
+
+template <typename Tm>
+void qtensor4<Tm>::add_noise(const double noise){
+   for(auto& blk : _qblocks){
+      if(blk.size() > 0){
+         int rdim = blk[0].rows();
+         int cdim = blk[0].cols();
+         for(int im=0; im<blk.size(); im++){
+            blk[im] += noise*linalg::random_matrix<Tm>(rdim,cdim);
+         } // im
+      }
+   }
+}
+
+} // ctns
+
+#endif

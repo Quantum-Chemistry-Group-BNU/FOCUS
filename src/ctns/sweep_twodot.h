@@ -95,14 +95,14 @@ void sweep_twodot(const input::schedule& schd,
       oper_display(rqops, "rqops", level);
    }
    timing.ta = tools::get_time();
+
+   // 2. Davidson solver for wf
+   qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
+   qtensor4<Tm> wf(sym_state, qc1, qc2, ql, qr);
+   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
    exit(1);
 
 /*
-   // 2. Davidson solver for wf
-   qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
-   qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
-   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
-
    // 2.1 Hdiag 
    int nsub = wf.get_dim();
    int neig = sweeps.nstates;
@@ -171,14 +171,6 @@ void sweep_twodot(const input::schedule& schd,
 }
 
 /*
-
-   // wavefunction to be computed 
-   int nelec_a = (schd.nelec+schd.twoms)/2;
-   qsym sym_state(schd.nelec,nelec_a);
-   qtensor4 wf(sym_state,qc1,qc2,ql,qr);
-   cout << " dim=" << wf.get_dim() << info << endl;
-   auto ta = tools::get_time();
-
    // 2. Davidson solver 
    int nsub = wf.get_dim();
    int neig = sweeps.nstates;
