@@ -28,8 +28,7 @@ void sweep_twodot(const input::schedule& schd,
    timing.t0 = tools::get_time();
    std::cout << "ctns::sweep_twodot" << std::endl;
 
-   // 0. preprocessing 
-   // processing partition & symmetry
+   // 0. processing partition & symmetry
    auto dbond = sweeps.seq[ibond];
    auto p0 = dbond.p0;
    auto p1 = dbond.p1;
@@ -74,28 +73,36 @@ void sweep_twodot(const input::schedule& schd,
    qc2.print("qc2", debug_sweep);
    ql.print("ql", debug_sweep);
    qr.print("qr", debug_sweep);
-   exit(1);
-  
-/*
-   // wavefunction to be computed
-   qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
-   qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
-   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
 
    // 1. load operators 
-   oper_dict<Tm> cqops, lqops, rqops;
-   oper_load_qops(icomb, p, schd.scratch, 'c', cqops);
-   oper_load_qops(icomb, p, schd.scratch, 'l', lqops);
-   oper_load_qops(icomb, p, schd.scratch, 'r', rqops);
+   oper_dict<Tm> c1qops, c2qops, lqops, rqops;
+   if(!cturn){
+      oper_load_qops(icomb, p0, schd.scratch, 'c', c1qops);
+      oper_load_qops(icomb, p1, schd.scratch, 'c', c2qops);
+      oper_load_qops(icomb, p0, schd.scratch, 'l', lqops );
+      oper_load_qops(icomb, p1, schd.scratch, 'r', rqops );  
+   }else{
+      oper_load_qops(icomb, p1, schd.scratch, 'c', c1qops);
+      oper_load_qops(icomb, p1, schd.scratch, 'r', c2qops);
+      oper_load_qops(icomb, p0, schd.scratch, 'l', lqops );
+      oper_load_qops(icomb, p0, schd.scratch, 'r', rqops );  
+   }
    if(debug_sweep){
       const int level = 0;
-      oper_display(cqops, "cqops", level);
+      oper_display(c1qops, "c1qops", level);
+      oper_display(c2qops, "c2qops", level);
       oper_display(lqops, "lqops", level);
       oper_display(rqops, "rqops", level);
    }
    timing.ta = tools::get_time();
+   exit(1);
 
+/*
    // 2. Davidson solver for wf
+   qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
+   qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
+   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
+
    // 2.1 Hdiag 
    int nsub = wf.get_dim();
    int neig = sweeps.nstates;
@@ -164,31 +171,6 @@ void sweep_twodot(const input::schedule& schd,
 }
 
 /*
-   // 0. determine bond and site to be updated
-   auto p0 = std::get<0>(dbond);
-   auto p1 = std::get<1>(dbond);
-   auto forward = std::get<2>(dbond);
-   auto p = forward? p0 : p1;
-   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
-   
-   // 1. process symmetry information & operators for {|lmvr>}
-   qbond qc1, qc2, ql, qr;
-   oper_dict c1qops, c2qops, lqops, rqops;
-   if(!cturn){
-      c1qops = oper_get_cqops(icomb, p0, schd.scratch);
-      c2qops = oper_get_cqops(icomb, p1, schd.scratch);
-      lqops  = oper_get_lqops(icomb, p0, schd.scratch);
-      rqops  = oper_get_rqops(icomb, p1, schd.scratch);  
-   }else{
-      c1qops = oper_get_cqops(icomb, p1, schd.scratch);
-      c2qops = oper_get_rqops(icomb, p1, schd.scratch);
-      lqops  = oper_get_lqops(icomb, p0, schd.scratch);
-      rqops  = oper_get_rqops(icomb, p0, schd.scratch);  
-   }
-   string info = " c1:"+oper_dict_opnames(c1qops)+  
-	         " c2:"+oper_dict_opnames(c2qops)+
-	         " l:" +oper_dict_opnames(lqops)+
-	         " r:" +oper_dict_opnames(rqops);
 
    // wavefunction to be computed 
    int nelec_a = (schd.nelec+schd.twoms)/2;

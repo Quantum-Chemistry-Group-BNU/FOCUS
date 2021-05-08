@@ -12,7 +12,7 @@
 
 namespace ctns{
 
-const bool debug_sweep = false;
+const bool debug_sweep = true;
 extern const bool debug_sweep;
 
 template <typename Km>
@@ -31,8 +31,7 @@ void sweep_onedot(const input::schedule& schd,
    timing.t0 = tools::get_time();
    std::cout << "ctns::sweep_onedot" << std::endl;
    
-   // 0. preprocessing 
-   // processing partition & symmetry
+   // 0. processing partition
    auto dbond = sweeps.seq[ibond];
    auto p = dbond.p;
    auto suppc = icomb.get_suppc(p, debug_sweep); 
@@ -50,10 +49,6 @@ void sweep_onedot(const input::schedule& schd,
    qc.print("qc", debug_sweep);
    ql.print("ql", debug_sweep);
    qr.print("qr", debug_sweep);
-   // wavefunction to be computed
-   qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
-   qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
-   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
 
    // 1. load operators 
    oper_dict<Tm> cqops, lqops, rqops;
@@ -69,6 +64,10 @@ void sweep_onedot(const input::schedule& schd,
    timing.ta = tools::get_time();
 
    // 2. Davidson solver for wf
+   qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
+   qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
+   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
+
    // 2.1 Hdiag 
    int nsub = wf.get_dim();
    int neig = sweeps.nstates;

@@ -15,7 +15,10 @@ Efficiency:
  2. parallelization
 
  
-Description of files:
+# Description of files #
+
+V0: Relativistic CTNS
+=====================
 
 Test
 -------------------
@@ -92,29 +95,28 @@ Sweep algorithm: (2) TRS
 Sweep algorithm: (3) twodot
 ---------------------------
  sweep_twodot.h
- sweep_twodot_guess.h
- sweep_twodot_ham.h
- sweep_twodot_decimation.h
-
-OLD
----
-* reshaping: working in the format of qt2 -> psi(L,R)! 
+* qt4: reshaping
  tns_qtensor_reshape.cpp
  tns_qtensor4.cpp
-* twodot
+* Davidson
+ sweep_twodot_ham.h
  tns_ham_twodot.cpp
+* Guess
+ sweep_twodot_guess.h
+* Decimation
+ sweep_twodot_decimation.h
 
 
 
-Optimized/Advanced:
+V1: Parallelization & Opt
 =========================
+
+Parallelization
+-------------------------
 
 Low-level data structure
 -------------------------
 
 Tensor operations
--------------------------
-
-Parallelization
 -------------------------
 
