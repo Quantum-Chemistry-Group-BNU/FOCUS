@@ -41,34 +41,6 @@ void onedot_Hdiag_local(oper_dict<Tm>& cqops,
    } // bm
 }
 
-// Il*Oc*Or
-template <typename Tm>
-void onedot_Hdiag_OcOr(const qtensor2<Tm>& Oc,
-		       const qtensor2<Tm>& Or,
-		       qtensor3<Tm>& wf,
-		       const Tm wt=1.0){
-   for(int bm=0; bm<wf.mids(); bm++){
-      for(int br=0; br<wf.rows(); br++){
-         for(int bc=0; bc<wf.cols(); bc++){
-            auto& blk = wf(bm,br,bc);
-            if(blk.size() == 0) continue;
-            int mdim = wf.qmid.get_dim(bm);
-            int cdim = wf.qcol.get_dim(bc);
-            int rdim = wf.qrow.get_dim(br);  
-            const auto& cblk = Oc(bm,bm);
-            const auto& rblk = Or(bc,bc);
-            for(int m=0; m<mdim; m++){
-               for(int c=0; c<cdim; c++){
-                  for(int r=0; r<rdim; r++){
-                     blk[m](r,c) += wt*cblk(m,m)*rblk(c,c);
-                  } // r
-               } // c
-            } // m
-         } // bc
-      } // br
-   } // bm
-}
-
 // Ol*Oc*Ir
 template <typename Tm>
 void onedot_Hdiag_OlOc(const qtensor2<Tm>& Ol,
@@ -125,6 +97,34 @@ void onedot_Hdiag_OlOr(const qtensor2<Tm>& Ol,
    } // bm
 }
 
+// Il*Oc*Or
+template <typename Tm>
+void onedot_Hdiag_OcOr(const qtensor2<Tm>& Oc,
+		       const qtensor2<Tm>& Or,
+		       qtensor3<Tm>& wf,
+		       const Tm wt=1.0){
+   for(int bm=0; bm<wf.mids(); bm++){
+      for(int br=0; br<wf.rows(); br++){
+         for(int bc=0; bc<wf.cols(); bc++){
+            auto& blk = wf(bm,br,bc);
+            if(blk.size() == 0) continue;
+            int mdim = wf.qmid.get_dim(bm);
+            int cdim = wf.qcol.get_dim(bc);
+            int rdim = wf.qrow.get_dim(br);  
+            const auto& cblk = Oc(bm,bm);
+            const auto& rblk = Or(bc,bc);
+            for(int m=0; m<mdim; m++){
+               for(int c=0; c<cdim; c++){
+                  for(int r=0; r<rdim; r++){
+                     blk[m](r,c) += wt*cblk(m,m)*rblk(c,c);
+                  } // r
+               } // c
+            } // m
+         } // bc
+      } // br
+   } // bm
+}
+
 template <typename Tm>
 std::vector<double> onedot_Hdiag(const bool ifkr,
 				 oper_dict<Tm>& cqops,
@@ -133,21 +133,18 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
 			         const double ecore,
 			         qtensor3<Tm>& wf){
    if(debug_onedot_ham) std::cout << "ctns::onedot_Hdiag ifkr=" << ifkr << std::endl;
-   // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
+   //
+   // 1. local terms: <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
+   //
    onedot_Hdiag_local(cqops, lqops, rqops, ecore, wf);
+   //
    // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
+   //
    //         B^C
    //         |
    // B/Q^L---*---Q/B^R
+   // 
    if(not ifkr){
-      // B^C*Q^R 
-      for(const auto& p : cqops['B']){
-         const auto& Bc = p.second;
-         if(Bc.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qr = rqops['Q'].at(p.first);
-	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
-         onedot_Hdiag_OcOr(Bc,Qr,wf,wt);
-      } // op
       // Q^L*B^C 
       for(const auto& p : cqops['B']){
          const auto& Bc = p.second;
@@ -155,7 +152,15 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
          const auto& Ql = lqops['Q'].at(p.first);
 	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
          onedot_Hdiag_OlOc(Ql,Bc,wf,wt);
-      } // op
+      } 
+      // B^C*Q^R 
+      for(const auto& p : cqops['B']){
+         const auto& Bc = p.second;
+         if(Bc.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
+         const auto& Qr = rqops['Q'].at(p.first);
+	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
+         onedot_Hdiag_OcOr(Bc,Qr,wf,wt);
+      } 
       // B^L*Q^R or Q^L*B^R 
       if(lqops['B'].size() <= rqops['B'].size()){
          for(const auto& p : lqops['B']){
@@ -164,7 +169,7 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
             const auto& Qr = rqops['Q'].at(p.first);
 	    const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
             onedot_Hdiag_OlOr(Bl,Qr,wf,wt);
-         } // op
+         } 
       }else{
          for(const auto& p: rqops['B']){
             const auto& Br = p.second;
@@ -172,20 +177,9 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
             const auto& Ql = lqops['Q'].at(p.first);
 	    const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
             onedot_Hdiag_OlOr(Ql,Br,wf,wt);
-         } // op
+         } 
       }
    }else{
-      // B^C*Q^R 
-      for(const auto& p : cqops['B']){
-         const auto& Bc_A = p.second;
-         if(Bc_A.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qr_A = rqops['Q'].at(p.first);
-	 const auto& Bc_B = Bc_A.K(0);
-	 const auto& Qr_B = Qr_A.K(0);
-	 const Tm wt = 2.0*wfacBQ(p.first); 
-         onedot_Hdiag_OcOr(Bc_A,Qr_A,wf,wt);
-         onedot_Hdiag_OcOr(Bc_B,Qr_B,wf,wt);
-      } // op
       // Q^L*B^C 
       for(const auto& p : cqops['B']){
          const auto& Bc_A = p.second;
@@ -196,7 +190,18 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
 	 const Tm wt = 2.0*wfacBQ(p.first); 
          onedot_Hdiag_OlOc(Ql_A,Bc_A,wf,wt);
          onedot_Hdiag_OlOc(Ql_B,Bc_B,wf,wt);
-      } // op
+      } 
+      // B^C*Q^R 
+      for(const auto& p : cqops['B']){
+         const auto& Bc_A = p.second;
+         if(Bc_A.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
+         const auto& Qr_A = rqops['Q'].at(p.first);
+	 const auto& Bc_B = Bc_A.K(0);
+	 const auto& Qr_B = Qr_A.K(0);
+	 const Tm wt = 2.0*wfacBQ(p.first); 
+         onedot_Hdiag_OcOr(Bc_A,Qr_A,wf,wt);
+         onedot_Hdiag_OcOr(Bc_B,Qr_B,wf,wt);
+      } 
       // B^L*Q^R or Q^L*B^R 
       if(lqops['B'].size() <= rqops['B'].size()){
          for(const auto& p : lqops['B']){
@@ -208,7 +213,7 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
 	    const Tm wt = 2.0*wfacBQ(p.first); 
             onedot_Hdiag_OlOr(Bl_A,Qr_A,wf,wt);
             onedot_Hdiag_OlOr(Bl_B,Qr_B,wf,wt);
-         } // op
+         } 
       }else{
          for(const auto& p: rqops['B']){
             const auto& Br_A = p.second;
@@ -219,9 +224,9 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
 	    const Tm wt = 2.0*wfacBQ(p.first); 
             onedot_Hdiag_OlOr(Ql_A,Br_A,wf,wt);
             onedot_Hdiag_OlOr(Ql_B,Br_B,wf,wt);
-         } // op
+         }
       }
-   }
+   } // ifkr
    // save to real vector
    int ndim = wf.get_dim();
    std::vector<Tm> tmp(ndim);
@@ -246,23 +251,9 @@ void onedot_Hx(Tm* y,
 	       const double ecore,
 	       qtensor3<Tm>& wf){
    if(debug_onedot_ham) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
-   wf.from_array(x);
-   auto Hwf = onedot_sigma(isym, ifkr, cqops, lqops, rqops, int2e, int1e, ecore, wf);
-   Hwf.to_array(y);
-}
-
-template <typename Tm> 
-qtensor3<Tm> onedot_sigma(const int& isym,
-	                  const bool& ifkr,
-	                  oper_dict<Tm>& cqops,
-	                  oper_dict<Tm>& lqops,
-	                  oper_dict<Tm>& rqops,
-	                  const integral::two_body<Tm>& int2e,
-	                  const integral::one_body<Tm>& int1e,
-			  const double ecore,
-	                  qtensor3<Tm>& wf){
    const bool dagger = true;
    const Tm scale = ifkr? 0.5 : 1.0;
+   wf.from_array(x);
    // const term
    qtensor3<Tm> Hwf = (scale*ecore)*wf;
    // construct H*wf
@@ -273,7 +264,6 @@ qtensor3<Tm> onedot_sigma(const int& isym,
    bool ifMergeCR = (nl_opA + nl_opB <= nr_opA + nr_opB)? true : false;
    // Al*Pr+Bl*Qr => L=l, R=cr
    if(ifMergeCR){
-
       // 1. H^l 
       Hwf += scale*contract_qt3_qt2_l(wf,lqops['H'][0]);
       // 2. H^cr
@@ -326,10 +316,8 @@ qtensor3<Tm> onedot_sigma(const int& isym,
 	 Hwf += wt*oper_kernel_OIwf("lc",qt3n,op1);
 	 Hwf += wt*oper_kernel_OIwf("lc",qt3h,op1,dagger);
       }
-
    // Ar*Pl+Br*Ql => L=lc, R=r
    }else{
-
       // 1. H^lc
       Hwf += scale*oper_compxwf_opH("lc",wf,lqops,cqops,isym,ifkr,int2e,int1e);
       // 2. H^r
@@ -382,9 +370,8 @@ qtensor3<Tm> onedot_sigma(const int& isym,
 	 Hwf += oper_compxwf_opQ("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,index);
 	 Hwf += oper_compxwf_opQ("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,index,dagger);
       }
-   
    } // ifMergeCR
-   return Hwf;
+   Hwf.to_array(y);
 }
 
 } // ctns

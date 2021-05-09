@@ -6,9 +6,9 @@
 #include "../core/linalg.h"
 #include "ctns_qdpt.h"
 #include "sweep_dvdson.h"
-//#include "sweep_twodot_ham.h"
-//#include "sweep_twodot_guess.h"
+#include "sweep_twodot_ham.h"
 #include "sweep_twodot_decimation.h"
+//#include "sweep_twodot_guess.h"
 
 namespace ctns{
 
@@ -105,14 +105,11 @@ void sweep_twodot(const input::schedule& schd,
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
 
-   vsol = linalg::random_matrix<Tm>(nsub,neig);
-
-/*
    // 2.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
    diag = twodot_Hdiag(ifkr, c1qops, c2qops, lqops, rqops, ecore, wf);
    timing.tb = tools::get_time();
-   
+
    // 2.2 Solve local problem: Hc=cE
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -128,6 +125,7 @@ void sweep_twodot(const input::schedule& schd,
       solver.HVec = HVec;
       if(schd.cisolver == 0){
          solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
+/*
       }else if(schd.cisolver == 1){ // davidson
          if(!sweeps.guess){
             solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
@@ -148,8 +146,10 @@ void sweep_twodot(const input::schedule& schd,
             assert(nindp == neig);
             solver.solve_iter(eopt.data(), vsol.data(), v0.data());
          }
+*/
       }
    }else{
+/*
       // kramers restricted (currently works only for iterative with guess!) 
       assert(schd.cisolver == 1 && sweeps.guess);
       kr_dvdsonSolver<Tm,qtensor3<Tm>> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle, 
@@ -161,9 +161,9 @@ void sweep_twodot(const input::schedule& schd,
       std::vector<Tm> v0;
       solver.init_guess(icomb.psi, v0);
       solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+*/
    } // ifkr
    timing.tc = tools::get_time();
-*/
 
    // 3. decimation & renormalize operators
    twodot_decimation(sweeps, isweep, ibond, icomb, vsol, wf, 
