@@ -1,13 +1,6 @@
 #ifndef QTENSOR_RANK3_H
 #define QTENSOR_RANK3_H
 
-#include <vector>
-#include <string>
-#include <map>
-#include "../core/serialization.h"
-#include "../core/matrix.h"
-#include "ctns_qsym.h"
-#include "ctns_qdpt.h"
 #include "qtensor_rank2.h"
 
 namespace ctns{
@@ -29,7 +22,7 @@ struct qtensor3{
 	 qsum += dir[0] ? qmid.get_sym(bm) : -qmid.get_sym(bm);
 	 qsum += dir[1] ? qrow.get_sym(br) : -qrow.get_sym(br);
 	 qsum += dir[2] ? qcol.get_sym(bc) : -qcol.get_sym(bc);
-	 return qsum == qsym(0,0);
+	 return qsum == qsym();
       }
       // address for storaging block data 
       inline int _addr(const int bm, const int br, const int bc) const{
@@ -97,11 +90,11 @@ struct qtensor3{
       void from_array(const Tm* array);
       void to_array(Tm* array) const;
       void add_noise(const double noise);
-      // decimation
+      // for decimation
       inline qproduct dpt_lc() const{ return qmerge(qrow,qmid); }
       inline qproduct dpt_cr() const{ return qmerge(qmid,qcol); }
       inline qproduct dpt_lr() const{ return qmerge(qrow,qcol); }
-      // reshape
+      // reshape: merge
       qtensor2<Tm> merge_lc() const{ 
 	 auto qprod = dpt_lc();
 	 return merge_qt3_qt2_lc(*this, qprod.first, qprod.second);
@@ -113,6 +106,19 @@ struct qtensor3{
       qtensor2<Tm> merge_lr() const{
 	 auto qprod = dpt_lr();  
 	 return merge_qt3_qt2_lr(*this, qprod.first, qprod.second);
+      }
+      // reshape: split
+      qtensor4<Tm> split_lc1(const qbond& qlx, const qbond& qc1, const qdpt& dpt) const{
+	 return split_qt4_qt3_lc1(*this, qlx, qc1, dpt);
+      }
+      qtensor4<Tm> split_c2r(const qbond& qc2, const qbond& qrx, const qdpt& dpt) const{
+	 return split_qt4_qt3_c2r(*this, qc2, qrx, dpt); 
+      }
+      qtensor4<Tm> split_c1c2(const qbond& qc1, const qbond& qc2, const qdpt& dpt) const{
+	 return split_qt4_qt3_c1c2(*this, qc1, qc2, dpt);
+      }
+      qtensor4<Tm> split_lr(const qbond& qlx, const qbond& qrx, const qdpt& dpt) const{
+	 return split_qt4_qt3_lr(*this, qlx, qrx, dpt);
       }
    public:
       std::vector<bool> dir = {1,0,1}; // =0,in; =1,out; {mid,row,col}

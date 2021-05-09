@@ -34,9 +34,10 @@ void sweep_onedot(const input::schedule& schd,
    // 0. processing partition
    auto dbond = sweeps.seq[ibond];
    auto p = dbond.p;
-   auto suppc = icomb.get_suppc(p, debug_sweep); 
-   auto suppl = icomb.get_suppl(p, debug_sweep);
-   auto suppr = icomb.get_suppr(p, debug_sweep);
+   std::vector<int> suppc, suppl, suppr;
+   suppc = icomb.get_suppc(p, debug_sweep); 
+   suppl = icomb.get_suppl(p, debug_sweep);
+   suppr = icomb.get_suppr(p, debug_sweep);
    int sc = suppc.size();
    int sl = suppl.size();
    int sr = suppr.size();
@@ -125,7 +126,7 @@ void sweep_onedot(const input::schedule& schd,
    timing.tc = tools::get_time();
 
    // 3. decimation & renormalize operators
-   decimation_onedot(sweeps, isweep, ibond, icomb, vsol, wf, 
+   onedot_decimation(sweeps, isweep, ibond, icomb, vsol, wf, 
 		     cqops, lqops, rqops, int2e, int1e, schd.scratch);
 
    timing.t1 = tools::get_time();

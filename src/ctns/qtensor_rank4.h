@@ -1,13 +1,6 @@
 #ifndef QTENSOR_RANK4_H
 #define QTENSOR_RANK4_H
 
-/*
-#include "../core/linalg.h"
-#include "tns_qtensor.h"
-#include <iostream>
-#include <algorithm>
-*/
-
 namespace ctns{
 
 // rank-4 tensor: only for holding two-dot wavefunction psi[l,c1,c2,r] 
@@ -51,7 +44,7 @@ struct qtensor4{
       std::vector<linalg::matrix<Tm>>& operator ()(const int bm, const int bv, const int br, const int bc){
 	 return _qblocks[_addr(bm,bv,br,bc)];
       }
-      const std::vector<linalg::matrix<Tm>>& operator ()(const int bm, const int bv, const int br, const int bc){
+      const std::vector<linalg::matrix<Tm>>& operator ()(const int bm, const int bv, const int br, const int bc) const{
 	 return _qblocks[_addr(bm,bv,br,bc)];
       }
       // print
@@ -75,17 +68,29 @@ struct qtensor4{
       int get_dim() const;
       void from_array(const Tm* array);
       void to_array(Tm* array) const;
-      // decimation
+      void add_noise(const double noise);
+      // for decimation
       inline qproduct dpt_lc1()  const{ return qmerge(qrow,qmid); };
       inline qproduct dpt_c2r()  const{ return qmerge(qver,qcol); };
-      inline qproduct dpt_lr()   const{ return qmerge(qrow,qcol); };
       inline qproduct dpt_c1c2() const{ return qmerge(qmid,qver); };
-/*
-      // reshape
-      qtensor3<Tm> merge_lc1() const;
-      qtensor3<Tm> merge_c2r() const;
-      qtensor2<Tm> merge_lr_c1c2() const;
-*/
+      inline qproduct dpt_lr()   const{ return qmerge(qrow,qcol); };
+      // reshape: merge
+      qtensor3<Tm> merge_lc1() const{ // wf3[lc1,c2,r] 
+	 auto qprod = dpt_lc1();
+	 return merge_qt4_qt3_lc1(*this, qprod.first, qprod.second);
+      }
+      qtensor3<Tm> merge_c2r() const{ // wf3[l,c1,c2r]
+	 auto qprod = dpt_c2r();
+	 return merge_qt4_qt3_c2r(*this, qprod.first, qprod.second);
+      } 
+      qtensor3<Tm> merge_c1c2() const{ // wf3[l,c1c2,r]
+	 auto qprod = dpt_c1c2();
+	 return merge_qt4_qt3_c1c2(*this, qprod.first, qprod.second);
+      }
+      qtensor3<Tm> merge_lr() const{ // wf3[lr,c1,c2]
+	 auto qprod = dpt_lr();
+	 return merge_qt4_qt3_lr(*this, qprod.first, qprod.second);
+      }
    public:
       qsym sym; 
       qbond qmid, qver, qrow, qcol;

@@ -1,5 +1,5 @@
-#ifndef SWEEP_DECIMATION_H
-#define SWEEP_DECIMATION_H
+#ifndef SWEEP_ONEDOT_DECIMATION_H
+#define SWEEP_ONEDOT_DECIMATION_H
 
 #include "sweep_prdm.h"
 
@@ -293,7 +293,7 @@ qtensor2<Tm> decimation_row(const qtensor2<Tm>& rdm,
 }
 
 template <typename Km>
-void decimation_onedot_lc(sweep_data& sweeps,
+void onedot_decimation_lc(sweep_data& sweeps,
 		          const int isweep,
 		          const int ibond, 
 		          comb<Km>& icomb,
@@ -313,6 +313,7 @@ void decimation_onedot_lc(sweep_data& sweeps,
 	     << std::scientific << std::setprecision(1) << noise << std::endl;
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
+   // Renormalize superblock = lc
    auto qprod = qmerge(wf.qrow, wf.qmid);
    auto qlc = qprod.first;
    auto dpt = qprod.second;
@@ -356,7 +357,7 @@ void decimation_onedot_lc(sweep_data& sweeps,
 }
 
 template <typename Km>
-void decimation_onedot_lr(sweep_data& sweeps,
+void onedot_decimation_lr(sweep_data& sweeps,
 		          const int isweep,
 		          const int ibond, 
 		          comb<Km>& icomb,
@@ -376,6 +377,7 @@ void decimation_onedot_lr(sweep_data& sweeps,
 	     << std::scientific << std::setprecision(1) << noise << std::endl;
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
+   // Renormalize superblock = lr
    auto qprod = qmerge(wf.qrow, wf.qcol);
    auto qlr = qprod.first;
    auto dpt = qprod.second;
@@ -420,7 +422,7 @@ void decimation_onedot_lr(sweep_data& sweeps,
 }
 
 template <typename Km>
-void decimation_onedot_cr(sweep_data& sweeps,
+void onedot_decimation_cr(sweep_data& sweeps,
 		          const int isweep,
 		          const int ibond, 
 		          comb<Km>& icomb,
@@ -440,6 +442,7 @@ void decimation_onedot_cr(sweep_data& sweeps,
 	     << std::scientific << std::setprecision(1) << noise << std::endl;
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
+   // Renormalize superblock = cr
    auto qprod = qmerge(wf.qmid, wf.qcol);
    auto qcr = qprod.first;
    auto dpt = qprod.second;
@@ -491,7 +494,7 @@ void decimation_onedot_cr(sweep_data& sweeps,
 }
 
 template <typename Km>
-void decimation_onedot(sweep_data& sweeps,
+void onedot_decimation(sweep_data& sweeps,
 		       const int isweep,
 		       const int ibond, 
 		       comb<Km>& icomb,
@@ -504,207 +507,24 @@ void decimation_onedot(sweep_data& sweeps,
 	               const integral::one_body<typename Km::dtype>& int1e,
 	               const std::string scratch){
    const auto& dbond = sweeps.seq[ibond];
-   std::cout << "ctns::decimation_onedot";
+   std::cout << "ctns::onedot_decimation";
    // build reduced density matrix & perform renormalization
    if(dbond.forward){
       // update lsites & ql
       if(!dbond.cturn){
-	 decimation_onedot_lc(sweeps, isweep, ibond, icomb, vsol, wf, 
+	 onedot_decimation_lc(sweeps, isweep, ibond, icomb, vsol, wf, 
 			      lqops, cqops, int2e, int1e, scratch);
       }else{
 	 // special for comb
-         decimation_onedot_lr(sweeps, isweep, ibond, icomb, vsol, wf, 
+         onedot_decimation_lr(sweeps, isweep, ibond, icomb, vsol, wf, 
 			      lqops, rqops, int2e, int1e, scratch);
       } // cturn
    }else{
       // update rsites & qr
-      decimation_onedot_cr(sweeps, isweep, ibond, icomb, vsol, wf, 
+      onedot_decimation_cr(sweeps, isweep, ibond, icomb, vsol, wf, 
 		           cqops, rqops, int2e, int1e, scratch); 
    }
 }
-
-/*
-void tns::decimation_twodot(comb& icomb, 
-		            const directed_bond& dbond,
-		            const int dcut, 
-			    const matrix& vsol,
-			    qtensor4& wf,
-		            double& dwt,
-			    int& deff){
-   auto p0 = get<0>(dbond);
-   auto p1 = get<1>(dbond);
-   auto forward = get<2>(dbond);
-   auto p = forward? p0 : p1;
-   bool cturn = (icomb.type[p0] == 3 && p1.second == 1);
-   cout << "tns::decimation_twodot (fw,ct,dcut)=(" 
-	<< forward << "," << cturn << "," << dcut << ") "; 
-   qtensor2 rdm;
-   if(forward){
-      // update lsites & ql
-      if(!cturn){
-         cout << "renormalize |lc1>" << endl;
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-            auto wf3 = wf.merge_c2r();
-	    if(i == 0){
-	       rdm  = wf3.merge_lc().get_rdm_row();
-	    }else{
-	       rdm += wf3.merge_lc().get_rdm_row();
-	    }
-	 }
-	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
-         icomb.lsites[p] = qt2.split_lc(wf.qrow, wf.qmid, wf.dpt_lc1().second);
- 	 //-------------------------------------------------------------------	 
-	 assert((qt2-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
-	 auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
-	 assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
- 	 //-------------------------------------------------------------------	
-	 // initial guess for next site within the bond
-	 icomb.psi.clear();
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-	    auto wf3 = wf.merge_c2r();
-	    auto cwf = qt2.T().dot(wf3.merge_lc()); // <-W[alpha,r]->
-	    auto psi = cwf.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
-	    icomb.psi.push_back(psi);
-	 }
-      }else{
-         cout << "renormalize |lr> (comb)" << endl;
-	 for(int i=0; i<vsol.cols(); i++){
-            wf.from_array(vsol.col(i));
-	    if(i == 0){
-	       rdm  = wf.permCR_signed().merge_lr_c1c2().get_rdm_row();
-	    }else{
-	       rdm += wf.permCR_signed().merge_lr_c1c2().get_rdm_row();
-	    }
-	 }
-	 auto qt2 = decimation_row(rdm, dcut, dwt, deff);
-	 icomb.lsites[p]= qt2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
- 	 //-------------------------------------------------------------------	 
-	 assert((qt2-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
-	 auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
-	 assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
- 	 //-------------------------------------------------------------------	
-	 // initial guess for next site within the bond
-	 icomb.psi.clear();
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-	    auto cwf = qt2.T().dot(wf.permCR_signed().merge_lr_c1c2());
-	    auto psi = cwf.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
-	    icomb.psi.push_back(psi); // psi on branch
-	 }
-      }
-   }else{
-      // update rsites & qr
-      if(!cturn){
-         cout << "renormalize |c2r>" << endl;
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-	    auto wf3 = wf.merge_lc1();
-            if(i == 0){
-               rdm  = wf3.merge_cr().get_rdm_col();
-            }else{
-               rdm += wf3.merge_cr().get_rdm_col();
-            }
-         }
-         auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
-   
-	 if(permute) qt2 = qt2.P();
-	 
-	 
-	 
-	 icomb.rsites[p] = qt2.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
-         //-------------------------------------------------------------------	
-         assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
-         auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
-         assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
-         //-------------------------------------------------------------------	
-         // initial guess for next site within the bond
-	 icomb.psi.clear();
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-	    auto wf3 = wf.merge_lc1();
-	    auto cwf = wf3.merge_cr().dot(qt2.T()); // <-W[l,alpha]->
-	    auto psi = cwf.split_lc(wf.qrow, wf.qmid, wf.dpt_lc1().second);
-            icomb.psi.push_back(psi);
-	 }
-      }else{
-         cout << "renormalize |c1c2> (comb)" << endl;
-	 for(int i=0; i<vsol.cols(); i++){
-            wf.from_array(vsol.col(i));
-	    if(i == 0){
-	       rdm  = wf.permCR_signed().merge_lr_c1c2().get_rdm_col();
-	    }else{
-	       rdm += wf.permCR_signed().merge_lr_c1c2().get_rdm_col();
-	    }
-	 }
-	 auto qt2 = decimation_row(rdm, dcut, dwt, deff, true);
-	 icomb.rsites[p]= qt2.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
-         //-------------------------------------------------------------------	
-         assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
-         auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
-         assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
-         //-------------------------------------------------------------------	
-         // initial guess for next site within the bond
-	 icomb.psi.clear();
-	 for(int i=0; i<vsol.cols(); i++){
-	    wf.from_array(vsol.col(i));
-	    auto cwf = wf.permCR_signed().merge_lr_c1c2().dot(qt2.T()); 
-	    auto psi = cwf.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
-	    psi = psi.permCR_signed();
-            icomb.psi.push_back(psi); // psi on backbone
-	 }
-      }
-   }
-}
-*/
-
-/*
-template <typename Km>
-void renorm_twodot(const directed_bond& dbond,
-		   const comb<Km>& icomb, 
-	           oper_dict<typename Km::dtype>& c1qops,
-	           oper_dict<typename Km::dtype>& c2qops,
-	           oper_dict<typename Km::dtype>& lqops,
-	           oper_dict<typename Km::dtype>& rqops,	
-	           const integral::two_body<typename Km::dtype>& int2e, 
-	           const integral::one_body<typename Km::dtype>& int1e,
-	           const std::string scratch){
-   std::cout << "ctns::renorm_twodot superblock=";
-   const auto& p = dbond.p;
-   const auto& forward = dbond.forward;
-   const auto& cturn = dbond.cturn;
-   oper_dict<typename Km::dtype> qops;
-   if(forward){
-      if(!cturn){
-	 std::cout << "lc1" << std::endl;
-	 oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, c1qops, qops);
-      }else{
-	 std::cout << "lr" << std::endl;
-	 oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops);
-      }
-      std::string fname = oper_fname(scratch, p, "lop");
-      oper_save(fname, qops);
-   }else{
-      if(!cturn){
-         std::cout << "c2r" << std::endl;
-         oper_renorm_opAll("cr", icomb, p, int2e, int1e, c2qops, rqops, qops);
-      }else{
-	 //     
-	 //        c2      
-	 //        |
-	 //   c1---p
-	 //        |
-	 //    l---*---r
-	 //
-         std::cout << "c1c2" << std::endl;
-         oper_renorm_opAll("cr", icomb, p, int2e, int1e, c1qops, c2qops, qops);
-      }
-      std::string fname = oper_fname(scratch, p, "rop");
-      oper_save(fname, qops);
-   }
-}
-*/
 
 } // ctns
 

@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <string>
-#include <map>
 #include "../core/serialization.h"
 #include "../core/matrix.h"
 #include "../core/linalg.h"
@@ -30,7 +29,7 @@ struct qtensor2{
 	 auto qsum = -sym; // default in
 	 qsum += dir[0] ? qrow.get_sym(br) : -qrow.get_sym(br);
 	 qsum += dir[1] ? qcol.get_sym(bc) : -qcol.get_sym(bc);
-	 return qsum == qsym(0,0);
+	 return qsum == qsym();
       }
       // address for storaging block data 
       inline int _addr(const int br, const int bc) const{ return br*_cols + bc; }
@@ -95,7 +94,7 @@ struct qtensor2{
       // decimation: row/col rdm
       qtensor2<Tm> get_rdm_row() const;
       qtensor2<Tm> get_rdm_col() const;
-      // reshape
+      // reshape: split
       qtensor3<Tm> split_lc(const qbond& qlx, const qbond& qcx, const qdpt& dpt) const{
          return split_qt3_qt2_lc(*this, qlx, qcx, dpt);
       }
@@ -105,10 +104,6 @@ struct qtensor2{
       qtensor3<Tm> split_lr(const qbond& qlx, const qbond& qrx, const qdpt& dpt) const{
          return split_qt3_qt2_lr(*this, qlx, qrx, dpt);
       }
-/*     
-      qtensor4 split_lr_c1c2(const qbond&, const qbond&, const qdpt&,
-		      	     const qbond&, const qbond&, const qdpt&) const;
-*/
    public:
       std::vector<bool> dir = {1,0}; // {out,int} by usual convention for operators in diagrams
       qsym sym; // <row|op[in]|col>

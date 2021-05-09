@@ -34,7 +34,7 @@ void sweep_twodot(const input::schedule& schd,
    auto p1 = dbond.p1;
    auto p = dbond.p;
    auto cturn = dbond.cturn;
-   std::vector<int> suppc1,suppc2,suppl,suppr;
+   std::vector<int> suppc1, suppc2, suppl, suppr;
    qbond qc1, qc2, ql, qr;
    if(!cturn){
       //
@@ -100,7 +100,6 @@ void sweep_twodot(const input::schedule& schd,
    qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
    qtensor4<Tm> wf(sym_state, qc1, qc2, ql, qr);
    if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
-   exit(1);
 
 /*
    // 2.1 Hdiag 
@@ -158,18 +157,7 @@ void sweep_twodot(const input::schedule& schd,
       solver.solve_iter(eopt.data(), vsol.data(), v0.data());
    } // ifkr
    timing.tc = tools::get_time();
-
-   // 3. decimation & renormalize operators
-   decimation_onedot(sweeps, isweep, ibond, icomb, vsol, wf, 
-		     cqops, lqops, rqops, int2e, int1e, schd.scratch);
 */
-
-   timing.t1 = tools::get_time();
-   std::cout << "timing for ctns::sweep_twodot : " << std::setprecision(2) 
-             << tools::get_duration(timing.t1-timing.t0) << " s" << std::endl;
-   timing.analysis();
-}
-
 /*
    // 2. Davidson solver 
    int nsub = wf.get_dim();
@@ -198,21 +186,23 @@ void sweep_twodot(const input::schedule& schd,
    vector<double> v0(nsub*neig);
    if(icomb.psi.size() == 0) initial_onedot(icomb);
    assert(icomb.psi.size() == neig);
-   initial_twodot(icomb, dbond, wf, nsub, neig, v0);
+   initial_twodot(icomb, dbond, nsub, neig, wf, v0);
    int nindp = get_ortho_basis(nsub, neig, v0); // reorthogonalization
    assert(nindp == neig);
    //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());
    auto tc = tools::get_time();
-   
+
    // 3. decimation & renormalize operators
-   decimation_twodot(icomb, dbond, ctrl.dcut, vsol, wf, dwt, deff);
-   auto td = tools::get_time();
-   
-   oper_renorm_twodot(icomb, dbond, c1qops, c2qops, lqops, rqops, int2e, int1e, schd.scratch);
-   auto t1 = tools::get_time();
-}
+   twodot_decimation(sweeps, isweep, ibond, icomb, vsol, wf, 
+		     cqops, lqops, rqops, int2e, int1e, schd.scratch);
 */
+
+   timing.t1 = tools::get_time();
+   std::cout << "timing for ctns::sweep_twodot : " << std::setprecision(2) 
+             << tools::get_duration(timing.t1-timing.t0) << " s" << std::endl;
+   timing.analysis();
+}
 
 } // ctns
 
