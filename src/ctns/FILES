@@ -97,16 +97,15 @@ Sweep algorithm: (3) twodot
  sweep_twodot.h
 * qt4: reshaping
  qtensor_rank4.h
+ qtensor_reshape4.h
+* Decimation
+ sweep_twodot_decimation.h
 
- tns_qtensor_reshape.cpp
- tns_qtensor4.cpp
 * Davidson
  sweep_twodot_ham.h
  tns_ham_twodot.cpp
 * Guess
  sweep_twodot_guess.h
-* Decimation
- sweep_twodot_decimation.h
 
 Sweep algorithm: (4) TRS
 ---------------------------

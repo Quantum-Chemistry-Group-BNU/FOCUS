@@ -20,9 +20,9 @@ qtensor3<Tm> merge_qt4_qt3_lc1(const qtensor4<Tm>& qt4,
    qtensor3<Tm> qt3(sym, qver, qlc1, qcol, dir);
    for(int bv=0; bv<qver.size(); bv++){
       int vdim = qver.get_dim(bv);
-      for(int bc=0; br<qcol.size(); bc++){
+      for(int bc=0; bc<qcol.size(); bc++){
          int cdim = qcol.get_dim(bc);
-         for(int blc1=0; blc<qlc1.size(); blc1++){
+         for(int blc1=0; blc1<qlc1.size(); blc1++){
 	    auto& blk3 = qt3(bv,blc1,bc);
 	    if(blk3.size() == 0) continue;
 	    // loop over compatible l*c1 = lc1
@@ -65,14 +65,14 @@ qtensor4<Tm> split_qt4_qt3_lc1(const qtensor3<Tm>& qt3,
    qtensor4<Tm> qt4(sym, qc1, qver, qlx, qcol);
    for(int bv=0; bv<qver.size(); bv++){
       int vdim = qver.get_dim(bv);
-      for(int bc=0; br<qcol.size(); bc++){
+      for(int bc=0; bc<qcol.size(); bc++){
          int cdim = qcol.get_dim(bc);
-         for(int blc=0; blc<qlc1.size(); blc++){
-	    const auto& blk3 = qt3(bv,blc,bc);
+         for(int blc1=0; blc1<qlc1.size(); blc1++){
+	    const auto& blk3 = qt3(bv,blc1,bc);
 	    if(blk3.size() == 0) continue;
 	    // loop over compatible l*c = lc
-	    auto qsym_lc = qlc1.get_sym(blc);
-	    for(const auto& p12 : dpt.at(qsym_lc)){
+	    auto qsym_lc1 = qlc1.get_sym(blc1);
+	    for(const auto& p12 : dpt.at(qsym_lc1)){
 	       int br = std::get<0>(p12);
 	       int bm = std::get<1>(p12);
 	       int ioff = std::get<2>(p12);
@@ -107,7 +107,7 @@ qtensor3<Tm> merge_qt4_qt3_c2r(const qtensor4<Tm>& qt4,
    const auto& qrow = qt4.qrow; 
    const auto& qmid = qt4.qmid;
    std::vector<bool> dir = {1,1,1};
-   qtensor3 qt3(sym, qmid, qrow, qc2r, dir);
+   qtensor3<Tm> qt3(sym, qmid, qrow, qc2r, dir);
    for(int bm=0; bm<qmid.size(); bm++){
       int mdim = qmid.get_dim(bm);
       for(int br=0; br<qrow.size(); br++){

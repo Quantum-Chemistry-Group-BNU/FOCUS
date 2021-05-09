@@ -1,9 +1,12 @@
 #ifndef QTENSOR_RANK3_H
 #define QTENSOR_RANK3_H
 
-#include "qtensor_rank2.h"
-
 namespace ctns{
+
+template <typename Tm>
+struct qtensor2;
+template <typename Tm>
+struct qtensor4;
 
 // rank-3 tensor: (mid,row,col)
 template <typename Tm>

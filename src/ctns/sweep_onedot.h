@@ -8,7 +8,7 @@
 #include "sweep_dvdson.h"
 #include "sweep_onedot_ham.h"
 #include "sweep_onedot_guess.h"
-#include "sweep_decimation.h"
+#include "sweep_onedot_decimation.h"
 
 namespace ctns{
 
@@ -67,18 +67,18 @@ void sweep_onedot(const input::schedule& schd,
    // 2. Davidson solver for wf
    qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
    qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
-   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
-
-   // 2.1 Hdiag 
+   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;   
    int nsub = wf.get_dim();
    int neig = sweeps.nstates;
+   auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
+   linalg::matrix<Tm> vsol(nsub,neig);
+
+   // 2.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
    diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
    timing.tb = tools::get_time();
    
    // 2.2 Solve local problem: Hc=cE
-   auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
-   linalg::matrix<Tm> vsol(nsub,neig);
    using std::placeholders::_1;
    using std::placeholders::_2;
    auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 

@@ -3,7 +3,6 @@
 
 namespace ctns{
 
-/*
 template <typename Km>
 void twodot_decimation_lc1(sweep_data& sweeps,
 		           const int isweep,
@@ -62,8 +61,11 @@ void twodot_decimation_lc1(sweep_data& sweeps,
          //------------------------------------------
          // Two-dot case: simply use cwf[alpha,c2,r]
 	 //------------------------------------------
+	 // wf4[l,c1,c2,r]->wf3[l,c1,c2r]
 	 auto wf3 = wf.merge_c2r(); 
-	 auto cwf = qt2.H().dot(wf3.merge_lc()); // <-W[alpha,r]->
+	 // qt2.H()[alpha,lc1]*wf3[lc1,c2r]->cwf[alpha,c2r]
+	 auto cwf = qt2.H().dot(wf3.merge_lc()); 
+	 // cwf[alpha,c2r]->psi[alpha,c2,r]
 	 auto psi = cwf.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
 	 //------------------------------------------
 	 icomb.psi.push_back(psi);
@@ -135,8 +137,11 @@ void twodot_decimation_lr(sweep_data& sweeps,
          //-------------------------------------------
          // Two-dot case: simply use cwf[alpha,c1,c2]
 	 //-------------------------------------------
-         auto wf3 = wf.merge_c1c2();
-	 auto cwf = qt2.H().dot(wf3.permCR_signed().merge_lr()); // <-W[alpha,r]->
+         // wf4[l,c1,c2,r]->wf3[l,c1c2,r]
+	 auto wf3 = wf.merge_c1c2();
+	 // qt2.H()[alpha,lr]*wf3[lr,c1c2]->cwf[alpha,c1c2]
+	 auto cwf = qt2.H().dot(wf3.permCR_signed().merge_lr());
+	 // cwf[alpha,c1c2]->cwf[alpha,c1,c2] 
 	 auto psi = cwf.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
          //-------------------------------------------
          icomb.psi.push_back(psi);
@@ -191,10 +196,10 @@ void twodot_decimation_c2r(sweep_data& sweeps,
    // 2. decimation
    const bool ifkr = kind::is_kramers<Km>();
    auto qt2 = decimation_row(rdm, dcut, result.dwt, result.deff,
-		             ifkr, wf.qmid, wf.qcol, dpt).T(); // permute two lines for RCF
+		             ifkr, wf.qver, wf.qcol, dpt).T(); // permute two lines for RCF
    // 3. update site tensor
    const auto& p = sweeps.seq[ibond].p;
-   icomb.rsites[p] = qt2.split_cr(wf.qmid, wf.qcol, dpt);
+   icomb.rsites[p] = qt2.split_cr(wf.qver, wf.qcol, dpt);
    //-------------------------------------------------------------------	
    assert((qt2-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
    auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
@@ -208,8 +213,11 @@ void twodot_decimation_c2r(sweep_data& sweeps,
 	 //------------------------------------------
 	 // Two-dot case: simply use cwf[l,c1,alpha]
 	 //------------------------------------------
-         auto wf3 = wf.merge_lc1();
-	 auto cwf = wf3.merge_cr().dot(qt2.H()); // <-W[l,alpha]->
+         // wf4[l,c1,c2,r]->wf3[lc1,c2,r]
+	 auto wf3 = wf.merge_lc1();
+	 // wf3[lc1,c2r]*qt2.H()[c2r,alpha]->cwf[lc1,alpha]
+	 auto cwf = wf3.merge_cr().dot(qt2.H());
+	 // cwf[lc1,alpha]->cwf[l,c1,alpha]
 	 auto psi = cwf.split_lc(wf.qrow, wf.qmid, wf.dpt_lc1().second);
 	 //------------------------------------------
          icomb.psi.push_back(psi);
@@ -281,10 +289,15 @@ void twodot_decimation_c1c2(sweep_data& sweeps,
 	 //----------------------------------------------
          // Two-dot case: wf3[lr,c1,c2] = wf4[l,c1,c2,r]
          //----------------------------------------------
-         auto wf3 = wf.permCR_signed().merge_lr();
-         auto cwf = wf3.merge_cr().dot(qt2.H()); // cwf[lr,alpha] 
+         // wf4[l,c1,c2,r]->wf3[lr,c1,c2]
+	 auto wf3 = wf.permCR_signed().merge_lr();
+	 // wf3[lr,c1c2]*qt2.H()[c1c2,alpha]->cwf[lr,alpha]
+         auto cwf = wf3.merge_cr().dot(qt2.H());
+	 // cwf[lr,alpha]->psi[l,alpha,r] 
  	 auto psi = cwf.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
-	 psi = psi.permCR_signed(); // permute underlying basis
+	 // revert ordering of the underlying basis
+	 psi = psi.permCR_signed(); 
+         //----------------------------------------------
          icomb.psi.push_back(psi); // psi on backbone
       }
    }
@@ -340,7 +353,6 @@ void twodot_decimation(sweep_data& sweeps,
       } // cturn
    } // forward
 }
-*/
 
 } // ctns
 

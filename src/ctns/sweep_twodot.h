@@ -6,9 +6,9 @@
 #include "../core/linalg.h"
 #include "ctns_qdpt.h"
 #include "sweep_dvdson.h"
-//#include "sweep_onedot_ham.h"
-//#include "sweep_onedot_guess.h"
-//#include "sweep_decimation.h"
+//#include "sweep_twodot_ham.h"
+//#include "sweep_twodot_guess.h"
+#include "sweep_twodot_decimation.h"
 
 namespace ctns{
 
@@ -100,23 +100,25 @@ void sweep_twodot(const input::schedule& schd,
    qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
    qtensor4<Tm> wf(sym_state, qc1, qc2, ql, qr);
    if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
+   int nsub = wf.get_dim();
+   int neig = sweeps.nstates;
+   auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
+   linalg::matrix<Tm> vsol(nsub,neig);
+
+   vsol = linalg::random_matrix<Tm>(nsub,neig);
 
 /*
    // 2.1 Hdiag 
-   int nsub = wf.get_dim();
-   int neig = sweeps.nstates;
    std::vector<double> diag(nsub,1.0);
-   diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
+   diag = twodot_Hdiag(ifkr, c1qops, c2qops, lqops, rqops, ecore, wf);
    timing.tb = tools::get_time();
    
    // 2.2 Solve local problem: Hc=cE
-   auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
-   linalg::matrix<Tm> vsol(nsub,neig);
    using std::placeholders::_1;
    using std::placeholders::_2;
-   auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
+   auto HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, 
            	    std::cref(isym), std::cref(ifkr), 
-           	    std::ref(cqops), std::ref(lqops), std::ref(rqops), 
+           	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	    std::ref(wf));
    if(!ifkr){
@@ -132,13 +134,17 @@ void sweep_twodot(const input::schedule& schd,
          }else{     
             // load initial guess from previous opt
             if(icomb.psi.size() == 0) onedot_guess_psi0(icomb,neig); // starting guess 
-            assert(icomb.psi.size() == neig);
+            
+	    assert(icomb.psi.size() == neig);
             assert(icomb.psi[0].get_dim() == nsub);
-            std::vector<Tm> v0(nsub*neig);
-            for(int i=0; i<neig; i++){
-               icomb.psi[i].to_array(&v0[nsub*i]);
-            }
-            int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
+            
+	    // initial_twodot(icomb, dbond, nsub, neig, wf, v0);
+	    // std::vector<Tm> v0(nsub*neig);
+            // for(int i=0; i<neig; i++){
+            //    icomb.psi[i].to_array(&v0[nsub*i]);
+            // }
+            
+	    int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
             assert(nindp == neig);
             solver.solve_iter(eopt.data(), vsol.data(), v0.data());
          }
@@ -158,45 +164,10 @@ void sweep_twodot(const input::schedule& schd,
    } // ifkr
    timing.tc = tools::get_time();
 */
-/*
-   // 2. Davidson solver 
-   int nsub = wf.get_dim();
-   int neig = sweeps.nstates;
-   auto diag = tns::get_twodot_Hdiag(c1qops, c2qops, lqops, rqops, int2e, ecore, wf);
-   auto tb = tools::get_time();
-   
-   dvdsonSolver solver;
-   solver.iprt = 1;
-   solver.crit_v = ctrl.eps;
-   solver.maxcycle = schd.maxcycle;
-   solver.ndim = nsub;
-   solver.neig = neig;
-   solver.Diag = diag.data();
-   using std::placeholders::_1;
-   using std::placeholders::_2;
-   solver.HVec = bind(tns::get_twodot_Hx, _1, _2, 
-		      cref(icomb), cref(p),
-		      ref(c1qops), ref(c2qops), ref(lqops), ref(rqops), 
-		      cref(int2e), cref(int1e), cref(ecore), 
-		      ref(wf));
-   // solve
-   eopt.resize(neig);
-   matrix vsol(nsub,neig);
-   // load initial guess from previous opt
-   vector<double> v0(nsub*neig);
-   if(icomb.psi.size() == 0) initial_onedot(icomb);
-   assert(icomb.psi.size() == neig);
-   initial_twodot(icomb, dbond, nsub, neig, wf, v0);
-   int nindp = get_ortho_basis(nsub, neig, v0); // reorthogonalization
-   assert(nindp == neig);
-   //solver.solve_diag(eopt.data(), vsol.data(), true); // debug
-   solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-   auto tc = tools::get_time();
 
    // 3. decimation & renormalize operators
    twodot_decimation(sweeps, isweep, ibond, icomb, vsol, wf, 
-		     cqops, lqops, rqops, int2e, int1e, schd.scratch);
-*/
+		     c1qops, c2qops, lqops, rqops, int2e, int1e, schd.scratch);
 
    timing.t1 = tools::get_time();
    std::cout << "timing for ctns::sweep_twodot : " << std::setprecision(2) 
