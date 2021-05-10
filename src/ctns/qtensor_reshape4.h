@@ -234,7 +234,7 @@ qtensor3<Tm> merge_qt4_qt3_c1c2(const qtensor4<Tm>& qt4,
 }
 // psi4[l,c1,c2,r] <-> psi3[l,c1c2,r]
 template <typename Tm>
-qtensor4<Tm> split_qt4_qt3_c1c2(const qtensor4<Tm>& qt3,
+qtensor4<Tm> split_qt4_qt3_c1c2(const qtensor3<Tm>& qt3,
 			        const qbond& qc1,
 				const qbond& qc2,
 				const qdpt& dpt){

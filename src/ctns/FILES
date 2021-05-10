@@ -100,10 +100,9 @@ Sweep algorithm: (3) twodot
  qtensor_reshape4.h
 * Decimation
  sweep_twodot_decimation.h
-
 * Davidson
  sweep_twodot_ham.h
- tns_ham_twodot.cpp
+
 * Guess
  sweep_twodot_guess.h
 

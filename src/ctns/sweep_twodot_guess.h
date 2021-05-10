@@ -3,23 +3,24 @@
 
 namespace ctns{
 
-/*
+const bool debug_twodot_guess = true;
+extern const bool debug_twodot_guess;
+
 template <typename Km>
 void twodot_guess(comb<Km>& icomb, 
 		  const directed_bond& dbond,
 		  const int nsub,
 		  const int neig,
-		  std::vector<qtensor4<typename Km::dtype>>& wfs){
-   const bool debug = true;
-   if(debug) cout << "tns::guess_twodot ";
+		  qtensor4<typename Km::dtype>& wf,
+		  std::vector<typename Km::dtype>& v0){
+   if(debug_twodot_guess) std::cout << "ctns::twodot_guess ";
    auto p0 = dbond.p0;
    auto p1 = dbond.p1;
-   auto forward = dbond.forward;
-   bool cturn = dbond.cturn;
-   wfs.clear();
-   if(forward){
-      if(!cturn){
-         if(debug) cout << "|lc1>" << endl;
+   assert(icomb.psi.size() == neig);
+   v0.resize(nsub*neig);
+   if(dbond.forward){
+      if(!dbond.cturn){
+         if(debug_twodot_guess) std::cout << "|lc1>" << std::endl;
 	 for(int i=0; i<neig; i++){
 	    // psi[l,c1,a]->cwf[lc1,a]
 	    auto cwf = icomb.psi[i].merge_lc(); 
@@ -28,24 +29,32 @@ void twodot_guess(comb<Km>& icomb,
 	    // wf3[lc1,c2,r]->wf4[l,c1,c2,r]
 	    auto wf4 = wf3.split_lc1(wf.qrow, wf.qmid, wf.dpt_lc1().second);
 	    assert(wf4.get_dim() == nsub);
-	    wfs.append(wf4);
-         }
+	    wf4.to_array(&v0[nsub*i]);
+         } // i
       }else{
-	 if(debug) cout << "|lr>(comb)" << endl;
+	 if(debug_twodot_guess) std::cout << "|lr>(comb)" << std::endl;
+	 //
+	 //     c2
+	 //      |
+	 // c1---p1 
+	 //      |
+	 //  l---p0---r
+	 //     [psi]
+	 //
 	 for(int i=0; i<neig; i++){
             // psi[l,a,r]->cwf[lr,a]		 
 	    auto cwf = icomb.psi[i].merge_lr(); // on backone
-	    // cwf[lr,a]*r[a,c1,c2]->wf[lr,c1,c2]
-	    auto wf2 = cwf.dot(icomb.rsites[p1].merge_cr());
-	    auto wf4 = wf2.split_lr_c1c2(wf.qrow, wf.qcol, wf.dpt_lr().second,
-			    	         wf.qmid, wf.qver, wf.dpt_c1c2().second);
+	    // cwf[lr,a]*r[a,c1,c2]->wf3[lr,c1,c2]
+            auto wf3 = contract_qt3_qt2_l(icomb.rsites[p1],cwf); 
+	    // wf3[lr,c1,c2]->wf4[l,c1,c2,r]
+	    auto wf4 = wf3.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
 	    assert(wf4.get_dim() == nsub);
 	    wf4.to_array(&v0[nsub*i]);
-	 }
-      }
+	 } // i
+      } // cturn
    }else{
-      if(!cturn){
-	 if(debug) cout << "|c2r>" << endl;
+      if(!dbond.cturn){
+	 if(debug_twodot_guess) std::cout << "|c2r>" << std::endl;
 	 for(int i=0; i<neig; i++){
 	    // psi[a,c2,r]->cwf[a,c2r] 
 	    auto cwf = icomb.psi[i].merge_cr();
@@ -54,10 +63,11 @@ void twodot_guess(comb<Km>& icomb,
 	    // wf3[l,c1,c2r]->wf4[l,c1,c2,r]
 	    auto wf4 = wf3.split_c2r(wf.qver, wf.qcol, wf.dpt_c2r().second);
 	    assert(wf4.get_dim() == nsub);
-	    wfs.append(wf4);
-	 }
+	    wf4.to_array(&v0[nsub*i]);
+	 } // i
       }else{
-	 if(debug) cout << "|c1c2>(comb)" << endl;
+	 if(debug_twodot_guess) std::cout << "|c1c2>(comb)" << std::endl;
+	 //
 	 //     c2
 	 //      |
 	 // c1---p0 [psi]
@@ -69,16 +79,17 @@ void twodot_guess(comb<Km>& icomb,
 	    auto cwf = icomb.psi[i].merge_cr(); // on branch
 	    // l[l,a,r]->l[lr,a], l[lr,a]*cwf[a,c1c2]->wf2[lr,c1c2]
 	    auto wf2 = icomb.lsites[p0].merge_lr().dot(cwf);
-	    auto wf4 = wf2.split_lr_c1c2(wf.qrow, wf.qcol, wf.dpt_lr().second,
-			    	         wf.qmid, wf.qver, wf.dpt_c1c2().second);
+	    // wf2[lr,c1c2]->wf3[l,c1c2,r]
+	    auto wf3 = wf2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
+	    // wf3[l,c1c2,r]->wf4[l,c1,c2,r]
+	    auto wf4 = wf3.split_c1c2(wf.qmid, wf.qver, wf.dpt_c1c2().second);
 	    assert(wf4.get_dim() == nsub);
 	    wf4 = wf4.permCR_signed(); // back to backbone
 	    wf4.to_array(&v0[nsub*i]);
-	 }
-      }
-   }
+	 } // i
+      } // cturn
+   } // forward
 }
-*/
 
 } // ctns
 

@@ -380,7 +380,7 @@ struct dvdsonSolver{
       double crit_indp = 1.e-12;
       double crit_skewH = 1.e-8;
       double damping = 1.e-1;
-      int nbuff = 3; // maximal additional vectors
+      int nbuff = 4; // maximal additional vectors
       int nmvp = 0;
 };
 

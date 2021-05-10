@@ -8,7 +8,7 @@ namespace ctns{
 const double thresh_sig2 = 1.e-16;
 extern const double thresh_sig2;
 
-const bool debug_decimation = true; //false;
+const bool debug_decimation = false;
 extern const bool debug_decimation;
 
 // wf[L,R] = U[L,l]*sl*Vh[l,R]

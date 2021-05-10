@@ -8,7 +8,7 @@
 #include "sweep_dvdson.h"
 #include "sweep_twodot_ham.h"
 #include "sweep_twodot_decimation.h"
-//#include "sweep_twodot_guess.h"
+#include "sweep_twodot_guess.h"
 
 namespace ctns{
 
@@ -132,28 +132,18 @@ void sweep_twodot(const input::schedule& schd,
       solver.HVec = HVec;
       if(schd.cisolver == 0){
          solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
-/*
       }else if(schd.cisolver == 1){ // davidson
          if(!sweeps.guess){
             solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
          }else{     
             // load initial guess from previous opt
             if(icomb.psi.size() == 0) onedot_guess_psi0(icomb,neig); // starting guess 
-            
-	    assert(icomb.psi.size() == neig);
-            assert(icomb.psi[0].get_dim() == nsub);
-            
-	    // initial_twodot(icomb, dbond, nsub, neig, wf, v0);
-	    // std::vector<Tm> v0(nsub*neig);
-            // for(int i=0; i<neig; i++){
-            //    icomb.psi[i].to_array(&v0[nsub*i]);
-            // }
-            
+	    std::vector<Tm> v0;
+	    twodot_guess(icomb, dbond, nsub, neig, wf, v0);
 	    int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
             assert(nindp == neig);
             solver.solve_iter(eopt.data(), vsol.data(), v0.data());
          }
-*/
       }
    }else{
 /*
