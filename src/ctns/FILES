@@ -102,7 +102,6 @@ Sweep algorithm: (3) twodot
  sweep_twodot_decimation.h
 * Davidson
  sweep_twodot_ham.h
-
 * Guess
  sweep_twodot_guess.h
 
