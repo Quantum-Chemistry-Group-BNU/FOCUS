@@ -88,7 +88,7 @@ std::vector<int> comb<Km>::get_suppc(const comb_coord& p, const bool ifprt) cons
    bool physical = (pc == coord_phys);
    auto suppc = physical? std::vector<int>({topo.get_node(p).pindex}) : topo.get_node(pc).rsupport;
    if(ifprt){
-      std::cout << "suppc :";
+      std::cout << " suppc :";
       for(const auto& k : suppc) std::cout << " " << k;
       std::cout << std::endl; 
    }
@@ -112,7 +112,7 @@ template <typename Km>
 std::vector<int> comb<Km>::get_suppl(const comb_coord& p, const bool ifprt) const{
    auto suppl = topo.get_node(p).lsupport;
    if(ifprt){
-      std::cout << "suppl :";
+      std::cout << " suppl :";
       for(const auto& k : suppl) std::cout << " " << k;
       std::cout << std::endl; 
    }
@@ -135,7 +135,7 @@ std::vector<int> comb<Km>::get_suppr(const comb_coord& p, const bool ifprt) cons
    auto pr = topo.get_node(p).right;
    auto suppr = topo.get_node(pr).rsupport;
    if(ifprt){
-      std::cout << "suppr :";
+      std::cout << " suppr :";
       for(const auto& k : suppr) std::cout << " " << k;
       std::cout << std::endl; 
    }

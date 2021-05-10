@@ -36,6 +36,7 @@ void sweep_twodot(const input::schedule& schd,
    auto cturn = dbond.cturn;
    std::vector<int> suppc1, suppc2, suppl, suppr;
    qbond qc1, qc2, ql, qr;
+   if(debug_sweep) std::cout << "support info:" << std::endl;
    if(!cturn){
       //
       //       |    |
@@ -68,7 +69,12 @@ void sweep_twodot(const input::schedule& schd,
    int sc2 = suppc2.size();
    int sl = suppl.size();
    int sr = suppr.size();
+   const bool ifln = (sl+sc1 <= sc2+sr); // left normal
    assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
+   if(debug_sweep){
+      std::cout << " ifln=" << ifln << std::endl;
+      std::cout << "qbond info:" << std::endl;
+   }
    qc1.print("qc1", debug_sweep);
    qc2.print("qc2", debug_sweep);
    ql.print("ql", debug_sweep);
@@ -88,6 +94,7 @@ void sweep_twodot(const input::schedule& schd,
       oper_load_qops(icomb, p0, schd.scratch, 'r', rqops );  
    }
    if(debug_sweep){
+      std::cout << "qops info:" << std::endl;
       const int level = 0;
       oper_display(c1qops, "c1qops", level);
       oper_display(c2qops, "c2qops", level);
@@ -114,7 +121,7 @@ void sweep_twodot(const input::schedule& schd,
    using std::placeholders::_1;
    using std::placeholders::_2;
    auto HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, 
-           	    std::cref(isym), std::cref(ifkr), 
+           	    std::cref(isym), std::cref(ifkr), std::cref(ifln), 
            	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	    std::ref(wf));

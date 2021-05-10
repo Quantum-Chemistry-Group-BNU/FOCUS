@@ -31,22 +31,27 @@ void sweep_onedot(const input::schedule& schd,
    timing.t0 = tools::get_time();
    std::cout << "ctns::sweep_onedot" << std::endl;
    
-   // 0. processing partition
+   // 0. processing partition & symmetry
    auto dbond = sweeps.seq[ibond];
    auto p = dbond.p;
    std::vector<int> suppc, suppl, suppr;
+   qbond qc, ql, qr;
+   if(debug_sweep) std::cout << "support info:" << std::endl;
    suppc = icomb.get_suppc(p, debug_sweep); 
    suppl = icomb.get_suppl(p, debug_sweep);
    suppr = icomb.get_suppr(p, debug_sweep);
-   int sc = suppc.size();
-   int sl = suppl.size();
-   int sr = suppr.size();
-   assert(sc+sl+sr == icomb.topo.nphysical);
-   // processing symmetry
-   qbond qc, ql, qr;
    qc = icomb.get_qc(p); 
    ql = icomb.get_ql(p);
    qr = icomb.get_qr(p);
+   int sc = suppc.size();
+   int sl = suppl.size();
+   int sr = suppr.size();
+   const bool ifln = (sl <= sr); // left normal
+   assert(sc+sl+sr == icomb.topo.nphysical);
+   if(debug_sweep){
+      std::cout << " ifln=" << ifln << std::endl;
+      std::cout << "qbond info:" << std::endl;
+   }
    qc.print("qc", debug_sweep);
    ql.print("ql", debug_sweep);
    qr.print("qr", debug_sweep);
@@ -57,6 +62,7 @@ void sweep_onedot(const input::schedule& schd,
    oper_load_qops(icomb, p, schd.scratch, 'l', lqops);
    oper_load_qops(icomb, p, schd.scratch, 'r', rqops);
    if(debug_sweep){
+      std::cout << "qops info:" << std::endl;
       const int level = 0;
       oper_display(cqops, "cqops", level);
       oper_display(lqops, "lqops", level);
@@ -82,7 +88,7 @@ void sweep_onedot(const input::schedule& schd,
    using std::placeholders::_1;
    using std::placeholders::_2;
    auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
-           	    std::cref(isym), std::cref(ifkr), 
+           	    std::cref(isym), std::cref(ifkr), std::cref(ifln), 
            	    std::ref(cqops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	    std::ref(wf));

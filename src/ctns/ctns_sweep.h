@@ -61,6 +61,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
       sweeps.summary(isweep);
    } // isweep
 
+   exit(1);
+
    // get rwfuns, which is useful for later computing properties
    sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
 

@@ -53,7 +53,7 @@ template <typename Tm>
 void oper_display(oper_dict<Tm>& qops, const std::string sinfo, const int level=0){
    std::string oplist = "HCSABPQ";
    std::map<char,int> exist;
-   std::string s(sinfo + ": ");
+   std::string s = " "+ sinfo + ": ";
    for(const auto& key : oplist){
       if(qops.find(key) != qops.end()){ 
 	 s += key;

@@ -243,6 +243,7 @@ void onedot_Hx(Tm* y,
 	       const Tm* x,
 	       const int& isym,
 	       const bool& ifkr,
+	       const bool& ifln,
 	       oper_dict<Tm>& cqops,
 	       oper_dict<Tm>& lqops,
 	       oper_dict<Tm>& rqops,
@@ -252,23 +253,21 @@ void onedot_Hx(Tm* y,
 	       qtensor3<Tm>& wf){
    if(debug_onedot_ham) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
    const bool dagger = true;
+   //
+   // constant term
+   //
    const Tm scale = ifkr? 0.5 : 1.0;
    wf.from_array(x);
-   // const term
    qtensor3<Tm> Hwf = (scale*ecore)*wf;
-   // construct H*wf
-   int nl_opA = (lqops.find('A') != lqops.end())? lqops['A'].size() : 0;
-   int nl_opB = (lqops.find('B') != lqops.end())? lqops['B'].size() : 0;
-   int nr_opA = (rqops.find('A') != rqops.end())? rqops['A'].size() : 0;
-   int nr_opB = (rqops.find('B') != rqops.end())? rqops['B'].size() : 0;
-   bool ifMergeCR = (nl_opA + nl_opB <= nr_opA + nr_opB)? true : false;
+   //
+   // construct H*wf: if ifkr=True, construct skeleton sigma vector 
+   //
    // Al*Pr+Bl*Qr => L=l, R=cr
-   if(ifMergeCR){
+   if(ifln){
       // 1. H^l 
       Hwf += scale*contract_qt3_qt2_l(wf,lqops['H'][0]);
       // 2. H^cr
       Hwf += scale*oper_compxwf_opH("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e);
-
       // 3. p1^l+*Sp1^cr + h.c.
       //    ol*or|lcr>psi[lcr] => ol|l>*or|cr>(-1)^{p(l)}psi[lcr]
       for(const auto& op1C : lqops['C']){
@@ -370,7 +369,7 @@ void onedot_Hx(Tm* y,
 	 Hwf += oper_compxwf_opQ("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,index);
 	 Hwf += oper_compxwf_opQ("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,index,dagger);
       }
-   } // ifMergeCR
+   } // ifln
    Hwf.to_array(y);
 }
 
