@@ -17,6 +17,7 @@ Efficiency:
  
 # Description of files #
 
+
 V0: Relativistic CTNS
 =====================
 
@@ -107,6 +108,10 @@ Sweep algorithm: (3) twodot
 
 Sweep algorithm: (4) TRS
 ---------------------------
+* qt4: K()
+ qtensor_rank4.h
+* diag & ham:
+ sweep_twodot_ham.h
 
 
 V1: Parallelization & Opt

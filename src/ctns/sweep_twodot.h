@@ -161,7 +161,6 @@ void sweep_twodot(const input::schedule& schd,
       std::vector<Tm> v0;
       solver.init_guess(psi4, v0);
       solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-      //exit(1);
    } // ifkr
    timing.tc = tools::get_time();
 
