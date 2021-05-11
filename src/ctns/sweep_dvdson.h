@@ -214,7 +214,6 @@ struct kr_dvdsonSolver{
                  << std::setw(10) << std::setprecision(2) << std::scientific << t << std::endl;
          } // i
       } 
-
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, Tm* y, const Tm* x){
          auto t0 = tools::get_time();
@@ -239,7 +238,6 @@ struct kr_dvdsonSolver{
                       << " for nstate = " << nstate << std::endl;
          }
       }
-
       // initialization
       void init_guess(std::vector<QTm>& psi, std::vector<Tm>& v0){
 	 std::cout << "ctns::kr_dvdsonSolver::init_guess parity=" << parity << std::endl;
@@ -276,7 +274,6 @@ struct kr_dvdsonSolver{
          assert(nindp >= neig);
 	 v0.resize(ndim*nindp);
       }
-
       //-------------------------------------
       // Case 0: even-electron Hilbert space 
       //-------------------------------------

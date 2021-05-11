@@ -51,10 +51,22 @@ struct qtensor4{
       void print(const std::string name, const int level=0) const;
       // deal with fermionic sign in fermionic direct product
       qtensor4<Tm> permCR_signed() const; // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}
+      // ZL20210510: application of time-reversal operation
+      qtensor4<Tm> K(const int nbar=0) const;
       // simple arithmetic operations
       qtensor4<Tm>& operator +=(const qtensor4<Tm>& qt);
       qtensor4<Tm>& operator -=(const qtensor4<Tm>& qt);
       qtensor4<Tm>& operator *=(const Tm fac);
+      friend qtensor4<Tm> operator +(const qtensor4<Tm>& qta, const qtensor4<Tm>& qtb){
+         qtensor4<Tm> qt4 = qta;
+         qt4 += qtb;
+         return qt4;
+      }
+      friend qtensor4<Tm> operator -(const qtensor4<Tm>& qta, const qtensor4<Tm>& qtb){
+         qtensor4<Tm> qt4 = qta;
+         qt4 -= qtb;
+         return qt4;
+      }
       friend qtensor4<Tm> operator *(const Tm fac, const qtensor4<Tm>& qt){
 	 qtensor4<Tm> qt4 = qt;
 	 qt4 *= fac;
@@ -188,6 +200,93 @@ qtensor4<Tm> qtensor4<Tm>::permCR_signed() const{
 	 }
       }
    }
+   return qt4;
+}
+
+// ZL20210510: application of time-reversal operation
+template <typename Tm>
+qtensor4<Tm> qtensor4<Tm>::K(const int nbar) const{
+   const double fpo = (nbar%2==0)? 1.0 : -1.0;
+   qtensor4<Tm> qt4(sym, qmid, qver, qrow, qcol); 
+   for(int idx=0; idx<qt4._qblocks.size(); idx++){
+      auto& blk = qt4._qblocks[idx];
+      if(blk.size() == 0) continue;
+      int bm,bv,br,bc;
+      _addr_unpack(idx,bm,bv,br,bc);
+      // qt4_new(c1c2)[l,r] = qt4(c1c2_bar)[l_bar,r_bar]^*
+      const auto& blk1 = _qblocks[idx];
+      int pm = qmid.get_parity(bm);
+      int pv = qver.get_parity(bv);
+      int pr = qrow.get_parity(br);
+      int pc = qcol.get_parity(bc);
+      int mdim = qmid.get_dim(bm);
+      int vdim = qver.get_dim(bv);
+      if(pm == 0 && pv == 0){
+         for(int imv=0; imv<blk.size(); imv++){
+            blk[imv] = fpo*time_reversal(blk1[imv], pr, pc);
+         }
+      }else if(pm == 0 && pv == 1){
+	 assert(vdim%2 == 0);
+	 int vdim2 = vdim/2;
+	 for(int iv=0; iv<vdim2; iv++){
+	    for(int im=0; im<mdim; im++){
+               int imv  = iv*mdim + im;
+	       int imv2 = (iv+vdim2)*mdim + im;
+	       blk[imv] = fpo*time_reversal(blk1[imv2], pr, pc);
+	    }
+	 }
+	 for(int iv=0; iv<vdim2; iv++){
+	    for(int im=0; im<mdim; im++){
+	       int imv  = (iv+vdim2)*mdim + im;
+	       int imv2 = iv*mdim + im;
+	       blk[imv] = -fpo*time_reversal(blk1[imv2], pr, pc);
+	    }
+	 }
+      }else if(pm == 1 && pv == 0){
+	 assert(mdim%2 == 0);
+	 int mdim2 = mdim/2;
+	 for(int iv=0; iv<vdim; iv++){
+	    for(int im=0; im<mdim2; im++){
+               int imv  = iv*mdim + im;
+	       int imv2 = iv*mdim + (im+mdim2);
+	       blk[imv] = fpo*time_reversal(blk1[imv2], pr, pc);
+	    }
+	    for(int im=0; im<mdim2; im++){
+	       int imv  = iv*mdim + (im+mdim2);
+	       int imv2 = iv*mdim + im;
+	       blk[imv] = -fpo*time_reversal(blk1[imv2], pr, pc);
+	    }
+	 }
+      }else if(pm == 1 && pv == 1){
+	 assert(mdim%2 == 0 && vdim%2 == 0);
+	 int mdim2 = mdim/2;
+	 int vdim2 = vdim/2;
+	 for(int iv=0; iv<vdim2; iv++){
+	    for(int im=0; im<mdim2; im++){
+               int imv  = iv*mdim + im;
+	       int imv2 = (iv+vdim2)*mdim + (im+mdim2);
+	       blk[imv] = fpo*time_reversal(blk1[imv2], pr, pc);
+	    }
+	    for(int im=0; im<mdim2; im++){
+	       int imv  = iv*mdim + (im+mdim2);
+	       int imv2 = (iv+vdim2)*mdim + im;
+	       blk[imv] = -fpo*time_reversal(blk1[imv2], pr, pc);
+	    }
+	 }
+	 for(int iv=0; iv<vdim2; iv++){
+	    for(int im=0; im<mdim2; im++){
+	       int imv  = (iv+vdim2)*mdim + im;
+               int imv2 = iv*mdim + (im+mdim2);
+	       blk[imv] = -fpo*time_reversal(blk1[imv2], pr, pc);
+	    }
+	    for(int im=0; im<mdim2; im++){
+	       int imv  = (iv+vdim2)*mdim + (im+mdim2);
+	       int imv2 = iv*mdim + im;
+	       blk[imv] = fpo*time_reversal(blk1[imv2], pr, pc);
+	    }
+	 }
+      } // (pm,pv)
+   } // idx
    return qt4;
 }
 

@@ -7,17 +7,17 @@ const bool debug_twodot_guess = true;
 extern const bool debug_twodot_guess;
 
 template <typename Km>
-void twodot_guess(comb<Km>& icomb, 
-		  const directed_bond& dbond,
-		  const int nsub,
-		  const int neig,
-		  qtensor4<typename Km::dtype>& wf,
-		  std::vector<typename Km::dtype>& v0){
+std::vector<qtensor4<typename Km::dtype>> 
+twodot_guess(comb<Km>& icomb, 
+	     const directed_bond& dbond,
+	     const int nsub,
+	     const int neig,
+	     qtensor4<typename Km::dtype>& wf){
    if(debug_twodot_guess) std::cout << "ctns::twodot_guess ";
    auto p0 = dbond.p0;
    auto p1 = dbond.p1;
    assert(icomb.psi.size() == neig);
-   v0.resize(nsub*neig);
+   std::vector<qtensor4<typename Km::dtype>> psi4;
    if(dbond.forward){
       if(!dbond.cturn){
          if(debug_twodot_guess) std::cout << "|lc1>" << std::endl;
@@ -29,7 +29,7 @@ void twodot_guess(comb<Km>& icomb,
 	    // wf3[lc1,c2,r]->wf4[l,c1,c2,r]
 	    auto wf4 = wf3.split_lc1(wf.qrow, wf.qmid, wf.dpt_lc1().second);
 	    assert(wf4.get_dim() == nsub);
-	    wf4.to_array(&v0[nsub*i]);
+	    psi4.push_back(wf4);
          } // i
       }else{
 	 if(debug_twodot_guess) std::cout << "|lr>(comb)" << std::endl;
@@ -49,7 +49,7 @@ void twodot_guess(comb<Km>& icomb,
 	    // wf3[lr,c1,c2]->wf4[l,c1,c2,r]
 	    auto wf4 = wf3.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
 	    assert(wf4.get_dim() == nsub);
-	    wf4.to_array(&v0[nsub*i]);
+	    psi4.push_back(wf4);
 	 } // i
       } // cturn
    }else{
@@ -63,7 +63,7 @@ void twodot_guess(comb<Km>& icomb,
 	    // wf3[l,c1,c2r]->wf4[l,c1,c2,r]
 	    auto wf4 = wf3.split_c2r(wf.qver, wf.qcol, wf.dpt_c2r().second);
 	    assert(wf4.get_dim() == nsub);
-	    wf4.to_array(&v0[nsub*i]);
+	    psi4.push_back(wf4);
 	 } // i
       }else{
 	 if(debug_twodot_guess) std::cout << "|c1c2>(comb)" << std::endl;
@@ -85,10 +85,11 @@ void twodot_guess(comb<Km>& icomb,
 	    auto wf4 = wf3.split_c1c2(wf.qmid, wf.qver, wf.dpt_c1c2().second);
 	    assert(wf4.get_dim() == nsub);
 	    wf4 = wf4.permCR_signed(); // back to backbone
-	    wf4.to_array(&v0[nsub*i]);
+	    psi4.push_back(wf4);
 	 } // i
       } // cturn
    } // forward
+   return psi4;
 }
 
 } // ctns

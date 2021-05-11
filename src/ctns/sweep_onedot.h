@@ -104,7 +104,7 @@ void sweep_onedot(const input::schedule& schd,
             solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
          }else{     
             // load initial guess from previous opt
-            if(icomb.psi.size() == 0) onedot_guess_psi0(icomb,neig); // starting guess 
+            if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
             assert(icomb.psi.size() == neig);
             assert(icomb.psi[0].get_dim() == nsub);
             std::vector<Tm> v0(nsub*neig);
@@ -124,7 +124,7 @@ void sweep_onedot(const input::schedule& schd,
       solver.Diag = diag.data();
       solver.HVec = HVec;
       // load initial guess from previous opt
-      if(icomb.psi.size() == 0) onedot_guess_psi0(icomb,neig); // starting guess 
+      if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
       std::vector<Tm> v0;
       solver.init_guess(icomb.psi, v0);
       solver.solve_iter(eopt.data(), vsol.data(), v0.data());
