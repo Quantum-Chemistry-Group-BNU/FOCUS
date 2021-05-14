@@ -4,6 +4,7 @@
 #include <string>
 #include <cassert>
 #include "input.h"
+#include "../core/tools.h"
 
 using namespace std;
 using namespace input;
@@ -62,10 +63,7 @@ void params_sci::read(ifstream& istrm){
 	       det.insert( stoi(s) );	    
 	    }
 	    det_seeds.insert(det);
-	    if(ndet != det_seeds.size()){
-	       cout << "error: det is redundant!" << endl;	    
-	       exit(1);
-	    }
+	    if(ndet != det_seeds.size()) tools::exit("error: det is redundant!");
 	 }
 	 nseeds = det_seeds.size();
       }else if(line.substr(0,8)=="cisolver"){
@@ -87,9 +85,11 @@ void params_sci::read(ifstream& istrm){
 	    sweep_iter.push_back( stoi(iter) );
 	    sweep_eps.push_back( stod(eps) );
 	 }
+      }else if(line.substr(0,7)=="ci_file"){
+         istringstream is(line.substr(7));
+	 is >> ci_file;
       }else{
-         cout << "error: no matching key! line = " << line << endl;
-	 exit(1);
+	 tools::exit("error: no matching key! line = "+line);
       }
    }
    // set miniter & maxiter
@@ -140,6 +140,7 @@ void params_sci::print() const{
    cout << "ifpt2 = " << ifpt2 << " eps2=" << eps2 << endl;
    // io
    cout << "load = " << load << endl; 
+   cout << "ci_file = " << ci_file << endl; 
 }
 
 //
@@ -160,9 +161,15 @@ void params_ctns::read(ifstream& istrm){
 	 continue; // skip empty and comments    
       }else if(line.substr(0,4)=="$end"){ 
 	 break;
+      }else if(line.substr(0,4)=="kind"){
+         istringstream is(line.substr(4));
+	 is >> kind;
       }else if(line.substr(0,13)=="topology_file"){
          istringstream is(line.substr(13));
 	 is >> topology_file;
+      }else if(line.substr(0,11)=="rcanon_file"){
+         istringstream is(line.substr(11));
+	 is >> rcanon_file;
       }else if(line.substr(0,7)=="maxdets"){
          maxdets = stoi(line.substr(7)); 
       }else if(line.substr(0,11)=="thresh_proj"){
@@ -196,8 +203,7 @@ void params_ctns::read(ifstream& istrm){
 	    tmp_ctrls.push_back({stoi(iter),stoi(dots),stoi(dcut),stod(eps),stod(noise)});
 	 }
       }else{
-         cout << "error: no matching key! line = " << line << endl;
-	 exit(1);
+	 tools::exit("error: no matching key! line = "+line);
       }
    }
    istrm.close();
@@ -220,11 +226,14 @@ void params_ctns::read(ifstream& istrm){
 
 void params_ctns::print() const{
    cout << "### params_ctns::print ###" << endl;
+   cout << "kind = " << kind << endl;
    cout << "topology_file = " << topology_file << endl;
    cout << "nroots = " << nroots << endl;
    cout << "maxdets = " << maxdets << endl;
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;
+   cout << "cisolver = " << cisolver << endl;
+   cout << "maxcycle = " << maxcycle << endl;
    cout << "inoise = " << inoise << endl; 
    cout << "guess = " << guess << endl;
    cout << "maxsweep = " << maxsweep << endl;
@@ -237,6 +246,9 @@ void params_ctns::print() const{
 	      << tmp.noise << endl;
       } // i
    }
+   // io
+   cout << "load = " << load << endl; 
+   cout << "rcanon_file = " << rcanon_file << endl;
 }
 
 //
@@ -284,8 +296,7 @@ void schedule::read(string fname){
       }else if(line.substr(0,5)=="$ctns"){
 	 ctns.read(istrm);
       }else{
-         cout << "error: no matching key! line = " << line << endl;
-	 exit(1);
+	 tools::exit("error: no matching key! line = "+line);
       }
    }
    istrm.close();

@@ -102,7 +102,7 @@ public:
 };
 
 // analysis of the current sweep (eopt,dwt,deff) and timing
-void sweep_data::summary(const int isweep){
+inline void sweep_data::summary(const int isweep){
    std::cout << "\n" << tools::line_separator << std::endl;
    std::cout << "sweep_data::summary isweep=" << isweep << std::endl;
    std::cout << tools::line_separator << std::endl;

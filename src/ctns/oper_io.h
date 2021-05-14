@@ -10,13 +10,12 @@ const bool debug_oper_io = false;
 extern const bool debug_oper_io;
 
 // for qopers
-std::string oper_fname(const std::string scratch, 
-  	  	       const comb_coord& p,
-		       const std::string optype){
-   std::string fname = scratch + "/" + optype + "("
-	             + std::to_string(p.first) + ","
-	             + std::to_string(p.second) + ")";
-   return fname;
+inline std::string oper_fname(const std::string scratch, 
+  	  	       	      const comb_coord& p,
+		       	      const std::string optype){
+   return scratch + "/" + optype + "("
+        + std::to_string(p.first) + ","
+        + std::to_string(p.second) + ")";
 }
 
 // add individual operator in future

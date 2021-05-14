@@ -3,6 +3,8 @@
 
 #include "../../extlibs/zquatev/zquatev.h"
 #include "../core/matrix.h"
+#include "../core/linalg.h"
+#include "ctns_qdpt.h"
 
 namespace ctns{
 
@@ -113,19 +115,16 @@ class blockMatrix{
 };
 
 // interface to the zquatev library for diagonalizing a quaternion matrix
-void zquatev(const linalg::matrix<std::complex<double>>& A, 
-	     std::vector<double>& e,
-	     linalg::matrix<std::complex<double>>& U,
-	     const int order=0){
+inline void zquatev(const linalg::matrix<std::complex<double>>& A, 
+	     	    std::vector<double>& e,
+	     	    linalg::matrix<std::complex<double>>& U,
+	     	    const int order=0){
    U = (order == 0)? A : -A;
    int n2 = A.rows(); 
    int nld2 = n2;
    int info = ts::zquatev(n2, U.data(), nld2, e.data());
    if(order == 1){ std::transform(e.begin(),e.end(),e.begin(),[](const double& x){ return -x; }); }
-   if(info){
-      std::cout << "zquatev failed" << std::endl;
-      exit(1);
-   }
+   if(info) tools::exit("error: zquatev failed!");
 }
 
 // A(l,r) = B(bar{l},bar{r})^* given parity of qr and qc
@@ -235,9 +234,8 @@ inline void mapping2krbasis_odd(const qsym& qr,
             }
          }
       }else{
-         std::cout << "error: no such combination of parities!" << std::endl;
          std::cout << "q1p,q2p=" << q1.parity() << "," << q2.parity() << std::endl;
-         exit(1);
+	 tools::exit("error: no such combination of parities!");
       }
       ioff += d1*d2;
    }
@@ -294,9 +292,8 @@ inline void mapping2krbasis_even(const qsym& qr,
             }
          }
       }else{
-         std::cout << "error: no such combination of parities!" << std::endl;
          std::cout << "q1p,q2p=" << q1.parity() << "," << q2.parity() << std::endl;
-         exit(1);
+	 tools::exit("error: no such combination of parities!");
       }
       ioff += d1*d2;
    }

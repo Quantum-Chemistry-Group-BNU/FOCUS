@@ -195,11 +195,10 @@ void get_rwfuns(comb<Km>& icomb,
    for(int i=0; i<space.size(); i++){
       auto sym = get_qsym_onstate(Km::isym, space[i]);
       if(sym != sym_states){
-         std::cout << "error: symmetry is different in space!" << std::endl;
 	 std::cout << "sym_states=" << sym_states 
 		   << " det=" << space[i] << " sym=" << sym
 		   << std::endl;
-	 exit(1);
+	 tools::exit("error: symmetry is different in space!");
       }
    }
    int nroot = vs.size(); 
@@ -264,9 +263,9 @@ void get_rwfuns(comb<Km>& icomb,
       auto diff = linalg::normF(ova-ova0);
       std::cout << "diff of ova matrix = " << diff << std::endl;
       const double thresh = 1.e-8;
-      if(diff > thresh){
-         std::cout << "error: too large diff=" << diff << " thresh=" << thresh << std::endl;
-	 exit(1); 
+      if(diff > thresh){ 
+	 std::string msg = "error: too large diff=";
+	 tools::exit(msg+std::to_string(diff)+" with thresh="+std::to_string(thresh));
       }
    }
 }

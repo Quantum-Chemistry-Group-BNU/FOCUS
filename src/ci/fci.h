@@ -80,9 +80,8 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
    std::cout << "\nfci::ci_solver dim=" << space.size() << " Htype=" << Htype << std::endl; 
    // dimensionality check
    if(es.size() > space.size()){
-      std::cout << "error: too much roots are required! nroot,ndim=" 
-	   << es.size() << "," << space.size() << std::endl;
-      exit(1);
+      std::string msg = "error: too much roots are required! nroot,ndim=";
+      tools::exit(msg+std::to_string(es.size())+","+std::to_string(space.size()));
    }
    // compute sparse_hamiltonian
    sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype);
@@ -171,7 +170,7 @@ void ci_save(const fock::onspace& space,
 	     const std::vector<double>& es,
 	     const std::vector<std::vector<Tm>>& vs,
 	     const std::string fname="ci.info"){
-   std::cout << "\nfci::ci_save" << std::endl;
+   std::cout << "\nfci::ci_save fname=" << fname << std::endl;
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << space << es << vs;
@@ -182,7 +181,7 @@ void ci_load(fock::onspace& space,
 	     std::vector<double>& es,
 	     std::vector<std::vector<Tm>>& vs,
 	     const std::string fname="ci.info"){
-   std::cout << "\nfci::ci_load" << std::endl;
+   std::cout << "\nfci::ci_load fname=" << fname << std::endl;
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> space >> es >> vs;
@@ -219,9 +218,8 @@ void ci_truncate(fock::onspace& space,
    if(ifortho){
       int nindp = linalg::get_ortho_basis(nred,neig,vtmp);
       if(nindp != neig){
-	 std::cout << "error: thresh is too large for ci_truncate!" << std::endl;
-         std::cout << "nindp,neig=" << nindp << "," << neig << std::endl;
-         exit(1);
+         std::string msg = "error: thresh is too large for ci_truncate! nindp,neig=";
+	 tools::exit(msg+std::to_string(nindp)+","+std::to_string(neig));
       }
    }
    // copy basis and coefficients

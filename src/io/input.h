@@ -39,6 +39,7 @@ public:
    double eps2 = 1.e-8;
    // io
    bool load = false;
+   std::string ci_file = "ci.info"; 
 };
 
 //
@@ -66,7 +67,7 @@ public:
    void print() const;
 public:
    bool run = false;
-   // comb
+   std::string kind;
    std::string topology_file = "TOPOLOGY";
    // conversion of sci 
    int maxdets = 10000;
@@ -83,6 +84,7 @@ public:
    int maxcycle = 100;
    // io
    bool load = false;
+   std::string rcanon_file = "rcanon.info"; 
 };
 
 //

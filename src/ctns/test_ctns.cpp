@@ -100,10 +100,7 @@ int tests::test_ctns(){
    // check
    double diff_ctns = normF(Sij_ctns - Sij_ci);
    cout << "\ncheck diff_Sij[ctns] = " << diff_ctns << endl;
-   if(diff_ctns > thresh){
-      cout << "error: diff_Sij[ctns] > thresh=" << thresh << endl;
-      exit(1);
-   }
+   if(diff_ctns > thresh) tools::exit(string("error: diff_Sij[ctns] > thresh=")+to_string(thresh));
    // <CI|CTNS>
    ctns::rcanon_CIcoeff_check(icomb, sci_space, vs);
    auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
@@ -111,10 +108,7 @@ int tests::test_ctns(){
    // check
    double diff_mix = normF(Sij_mix - Sij_ci);
    cout << "\ncheck diff_Sij[mix] = " << diff_mix << endl;
-   if(diff_mix > thresh){
-      cout << "error: diff_Sij[mix] > thresh=" << thresh << endl;
-      exit(1);
-   }
+   if(diff_mix > thresh) tools::exit(string("error: diff_Sij[mix] > thresh=")+to_string(thresh));
 
    // 4. compute Sd by sampling 
    int istate = 0, nsample = 1.e5;
@@ -139,10 +133,7 @@ int tests::test_ctns(){
    Hij_ctns.print("Hij_ctns",8);
    double diffH = normF(Hij_ctns - Hij_ci);
    cout << "\ncheck diffH=" << diffH << endl;
-   if(diffH > thresh){ 
-      cout << "error: diffH > thresh=" << thresh << endl;
-      exit(1);
-   }
+   if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
  
    // 6. optimization from current RCF 
    ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);

@@ -21,6 +21,7 @@ load
 $end
 
 $ctns
+kind cNK
 nroots 4
 maxdets 50 #00 #000
 topology_file topology/topo1
@@ -37,4 +38,3 @@ schedule
 end
 maxsweep 4
 $end
-

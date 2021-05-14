@@ -405,8 +405,8 @@ void oper_renorm_opAll(const std::string& superblock,
    auto diffH = (H-H.H()).normF();
    if(diffH > 1.e-10){
       H.print("H",2);
-      std::cout << "error: H-H.H() is too large! diffH=" << diffH << std::endl;
-      exit(1);
+      std::string msg = "error: H-H.H() is too large! diffH=";
+      tools::exit(msg+std::to_string(diffH));
    }
 
    auto t1 = tools::get_time();

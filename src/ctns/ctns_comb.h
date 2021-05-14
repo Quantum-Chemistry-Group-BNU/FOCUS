@@ -20,10 +20,7 @@ class comb{
       // constructors
       comb(const topology& topo1): topo(topo1) 
       {
-         if(!kind::is_available<Km>()){
-            std::cout << "error: no such kind for CTNS!" << std::endl;
-	    exit(1);
-	 }
+         if(!kind::is_available<Km>()) tools::exit("error: no such kind for CTNS!");
       }
       // helpers
       int get_nphysical() const{ return topo.nphysical; }

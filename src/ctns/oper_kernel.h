@@ -25,9 +25,8 @@ qtensor3<Tm> oper_kernel_OIwf(const std::string& superblock,
          qt3 = contract_qt3_qt2_c(ksite,o1);
       }
    }else{
-      std::cout << "error: no such case in oper_kernel_OIwf!"
-	        << " superblock=" << superblock << std::endl;
-      exit(1);
+      std::string msg = "error: no such case in oper_kernel_OIwf!";
+      tools::exit(msg+" superblock="+superblock);
    }
    return qt3;
 }
@@ -64,9 +63,8 @@ qtensor3<Tm> oper_kernel_IOwf(const std::string& superblock,
       // Ic*Or|psi> => (-1)^{p(c)}Or[r',r']psi[l,c,r]
       if(po2) qt3 = qt3.mid_signed();
    }else{
-      std::cout << "error: no such case in oper_kernel_IOwf!"
-	        << " superblock=" << superblock << std::endl;
-      exit(1);
+      std::string msg = "error: no such case in oper_kernel_IOwf!";
+      tools::exit(msg+" superblock="+superblock);
    }
    return qt3;
 }
@@ -96,9 +94,8 @@ qtensor2<Tm> oper_kernel_renorm(const std::string& superblock,
    }else if(superblock == "cr"){
       qt2 = contract_qt3_qt3_cr(bsite,ksite);
    }else{
-      std::cout << "error: no such case in oper_kernel_renorm!"
-	        << " superblock=" << superblock << std::endl;
-      exit(1);
+      std::string msg = "error: no such case in oper_kernel_renorm!";
+      tools::exit(msg+" superblock="+superblock);
    }
    return qt2;
 }

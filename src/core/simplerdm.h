@@ -124,14 +124,10 @@ linalg::matrix<Tm> get_rdm1_from_rdm2(const linalg::matrix<Tm>& rdm2){
    int n2 = round(dn2);
    if(std::abs(dn2 - n2)>1.e-8){
       std::cout << std::scientific << std::setprecision(12);
-      std::cout << "error in get_rdm1_from_rdm2: non-integer electron number" << std::endl;
       std::cout << "n2=n(n-1)" << n2 << " while dn2=" << dn2 << " diff=" << dn2-n2 << std::endl;
-      exit(1);
+      tools::exit("error in get_rdm1_from_rdm2: non-integer electron number!");
    }
-   if(n2 == 0){
-      std::cout << "error in get_rdm1_from_rdm2: not work for ne = 1" << std::endl;
-      exit(1);
-   }
+   if(n2 == 0) tools::exit("error in get_rdm1_from_rdm2: not work for ne = 1");
    // find nelec
    auto pp = tools::inverse_pair0(n2/2-1);
    assert(pp.first == pp.second+1);

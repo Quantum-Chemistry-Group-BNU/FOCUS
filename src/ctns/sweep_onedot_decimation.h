@@ -2,6 +2,7 @@
 #define SWEEP_ONEDOT_DECIMATION_H
 
 #include "sweep_prdm.h"
+#include "oper_io.h"
 
 namespace ctns{
 
@@ -126,17 +127,16 @@ qtensor2<Tm> decimation_row_kr(const qtensor2<Tm>& rdm,
  			       const qbond& qs1,
  			       const qbond& qs2,
  			       const qdpt& dpt){
-   std::cout << "error: decimation_row_kr just work for complex<double>!" << std::endl;
-   exit(1);
+   tools::exit("error: decimation_row_kr only works for complex<double>!");
 }
 template <>
-qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<double>>& rdm,
-			       			 const int dcut,
-			       			 double& dwt,
-			       			 int& deff,
- 			       			 const qbond& qs1,
- 			       			 const qbond& qs2,
- 			       			 const qdpt& dpt){
+inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<double>>& rdm,
+			       const int dcut,
+			       double& dwt,
+			       int& deff,
+ 			       const qbond& qs1,
+ 			       const qbond& qs2,
+ 			       const qdpt& dpt){
    if(debug_decimation) std::cout << "ctns::decimation_row_kr dcut=" << dcut << std::endl;
    const auto& qrow = rdm.qrow;
    // 0. normalize before diagonalization

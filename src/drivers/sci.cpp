@@ -1,7 +1,6 @@
 #include <iostream>
 #include "../io/input.h"
 #include "../ci/fci.h"
-#include "../ci/fci_rdm.h"
 #include "../ci/sci.h"
 #include "../ci/sci_pt2.h"
 
@@ -17,15 +16,16 @@ int SCI(const input::schedule& schd){
    integral::load(int2e, int1e, ecore, schd.integral_file);
    // SCI
    int nroot = schd.sci.nroots;
-   vector<double> es(nroot, 0.0);
    onspace sci_space;
+   vector<double> es(nroot, 0.0);
    vector<vector<Tm>> vs(nroot);
+   auto ci_file = schd.scratch+"/"+schd.sci.ci_file;
    if(!schd.sci.load){
       fci::sparse_hamiltonian<Tm> sparseH;
       sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
-      fci::ci_save(sci_space, es, vs);
+      fci::ci_save(sci_space, es, vs, ci_file);
    }else{
-      fci::ci_load(sci_space, es, vs);
+      fci::ci_load(sci_space, es, vs, ci_file);
    }
    for(int i=0; i<nroot; i++){
       coeff_population(sci_space, vs[i]);
@@ -42,14 +42,14 @@ int main(int argc, char *argv[]){
    // read input
    string fname;
    if(argc == 1){
-      cout << "error: no input file is given!" << endl;
-      exit(1);
+      tools::exit("error: no input file is given!");
    }else{
       fname = argv[1];
       cout << "\ninput file = " << fname << endl;
    }
    input::schedule schd;
    schd.read(fname);
+   schd.create_scratch();
    // we will use Tm to control Hnr/Hrel 
    int info = 0;
    if(schd.dtype == 0){

@@ -21,10 +21,9 @@ void check_orthogonality(const int n, const int m,
    linalg::matrix<Tm> dev = xgemm("N","N",Vh,V) - identity_matrix<Tm>(m);
    double diff = normF(dev);
    if(diff > thresh){
-      std::cout << "error: too large deviation from orthonormal basis: diff="
-	        << diff << " thresh=" << thresh << std::endl;
       dev.print("dev");
-      exit(1);
+      std::string msg = "error: too large deviation from orthonormal basis!";
+      tools::exit(msg+" diff="+std::to_string(diff)+" thresh="+std::to_string(thresh));
    }
 }
 
@@ -199,8 +198,7 @@ struct dvdsonSolver{
 	 std::cout << "|H-H.h|=" << sdiff << std::endl;
          if(sdiff > 1.e-5){
             (H-H.H()).print("H-H.h");
-	    std::cout << "error in linalg::dvdsonSolver::solve_diag: H is not symmetric!" << std::endl;
-            exit(1);
+	    tools::exit("error: H is not symmetric in linalg::dvdsonSolver::solve_diag!");
          }
          // solve eigenvalue problem by diagonalization
 	 std::vector<double> e(ndim);
@@ -222,10 +220,7 @@ struct dvdsonSolver{
                          << " diff=" << Diag[i]-H(i,i)
                          << std::endl;
                diff += std::abs(Diag[i]-H(i,i));
-               if(diff>1.e-10){
-	          std::cout << "error: Diag[i]-H(i,i) is too large!" << std::endl;
-                  exit(1);
-               }
+               if(diff>1.e-10) tools::exit("error: |Diag[i]-H(i,i)| is too large!");
             } // i
 	    std::cout << "CheckDiag passed successfully!" << std::endl;
          }
@@ -251,10 +246,9 @@ struct dvdsonSolver{
          // 2. check symmetry property
          double diff = linalg::symmetric_diff(tmpH);
          if(diff > crit_skewH){
-            std::cout << "error in linalg::dvdsonSolver::subspace_solver: diff_skewH=" 
-                      << diff << std::endl;
             tmpH.print("tmpH");
-            exit(1);
+            std::string msg = "error: linalg::dvdsonSolver::subspace_solver: diff_skewH=";
+	    tools::exit(msg+std::to_string(diff)); 
          }
          // 3. solve eigenvalue problem
 	 linalg::matrix<Tm> tmpU;
@@ -279,11 +273,12 @@ struct dvdsonSolver{
       }
       // Davidson iterative algorithm for Hv=ve 
       void solve_iter(double* es, Tm* vs, Tm* vguess=nullptr){
-	 std::cout << "linalg::dvdsonSolver::solve_iter is_complex=" << tools::is_complex<Tm>() << std::endl;
+	 std::cout << "linalg::dvdsonSolver::solve_iter"
+		   << " is_complex=" << tools::is_complex<Tm>() << std::endl;
          if(neig > ndim){
-            std::cout << "error in dvdson: neig>ndim, neig/ndim=" << neig << "," << ndim << std::endl; 
-            exit(1);
-         }
+	    std::string msg = "error: neig>ndim in dvdson! neig/ndim=";	
+	    tools::exit(msg+std::to_string(neig)+","+std::to_string(ndim));
+	 }
          // clear counter
          nmvp = 0;
          auto t0 = tools::get_time();

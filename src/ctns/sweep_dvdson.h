@@ -134,9 +134,7 @@ int kr_get_ortho_basis(const int ndim,
                         [](const Tm& x, const Tm& y){ return x-y; }); 
 	 auto diff = linalg::xnrm2(ndim, krvec.data());
          std::cout << "diff[psi]=" << diff << std::endl;
-	 if(diff > 1.e-10){
-	    std::cout << "error: in consistent psi and psi_bar!" << std::endl;
-	 }
+	 if(diff > 1.e-10) tools::exit("error: in consistent psi and psi_bar!");
 	 // check overlap matrix for basis
          linalg::matrix<Tm> V(ndim,nindp,rbas_new.data());
          auto ova = xgemm("C","N",V,V);
@@ -178,9 +176,7 @@ struct kr_dvdsonSolver{
 	 wf = _wf;
 	 // consistency check
 	 if(parity == 1 && neig%2 == 1){
-            std::cout << "error: due to Kramers degeneracy, odd-electron case requires even neig=" 
-		      << neig << std::endl;
-            exit(1);
+	    tools::exit(std::string("error: odd-electron case requires even neig=")+std::to_string(neig));
 	 }
       }
       // iteration info
@@ -294,10 +290,9 @@ struct kr_dvdsonSolver{
        	 // 2. check symmetry property
          double diff = linalg::symmetric_diff(tmpH);
          if(diff > crit_skewH){
-            std::cout << "error in ctns::dvdsonSolver::subspace_solver: diff_skewH=" 
-                      << diff << std::endl;
             tmpH.print("tmpH");
-            exit(1);
+	    std::string msg = "error in ctns::dvdsonSolver::subspace_solver!";
+	    tools::exit(msg+" diff_skewH="+std::to_string(diff));
          }
 	 //-------------------------------------------------------- 
          // 3. solve eigenvalue problem [in real alrithemics]
@@ -367,10 +362,9 @@ struct kr_dvdsonSolver{
        	 // check symmetry property
          double diff = linalg::symmetric_diff(tmpH);
          if(diff > crit_skewH){
-            std::cout << "error in ctns::dvdsonSolver::subspace_solver: diff_skewH=" 
-                      << diff << std::endl;
             tmpH.print("tmpH");
-            exit(1);
+	    std::string msg = "error in ctns::dvdsonSolver::subspace_solver!";
+	    tools::exit(msg+" diff_skewH="+std::to_string(diff)); 
          }
 	 //-----------------------------------------------------------
          // 3. solve eigenvalue problem  
@@ -426,10 +420,8 @@ struct kr_dvdsonSolver{
 	 std::cout << "ctns::kr_dvdsonSolver::solve_iter"
 		   << " is_complex=" << tools::is_complex<Tm>() 
 		   << " parity=" << parity << std::endl;
-         if(neig > ndim){
-            std::cout << "error in dvdson: neig>ndim, neig/ndim=" << neig << "," << ndim << std::endl; 
-            exit(1);
-         }
+         if(neig > ndim) tools::exit(std::string("error: neig>ndim in dvdson! neig/ndim=")
+			            +std::to_string(neig)+","+std::to_string(ndim));
          // clear counter
          nmvp = 0;
          auto t0 = tools::get_time();

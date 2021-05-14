@@ -1,6 +1,8 @@
 #ifndef SWEEP_ONEDOT_HAM_H
 #define SWEEP_ONEDOT_HAM_H
 
+#include "oper_dict.h"
+
 namespace ctns{
    
 const bool debug_onedot_ham = false;

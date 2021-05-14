@@ -230,10 +230,7 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
          auto ova = linalg::xgemm("N","N",rsec.coeff.H(),rsec.coeff);
          double diff = linalg::normF(ova - linalg::identity_matrix<Tm>(dimBi));
          std::cout << " orthonormality=" << diff << std::endl;
-         if(diff > 1.e-10){
-            std::cout << " error: basis is not orthonormal!" << std::endl;
-            exit(1);
-         }
+         if(diff > 1.e-10) tools::exit("error: basis is not orthonormal!");
       }
    } // dimBi>0
 }
@@ -300,7 +297,7 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
 
 // time-reversal symmetry adapted right_projection
 template <> 
-void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbasis,
+inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbasis,
 		      	         const int bpos,
 		      	         const fock::onspace& space,
 		      	         const std::vector<std::vector<std::complex<double>>>& vs,

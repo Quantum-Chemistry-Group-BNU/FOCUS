@@ -2,6 +2,7 @@
 #define CTNS_OVLP_H
 
 #include "../core/onspace.h"
+#include "../core/analysis.h"
 #include "ctns_comb.h"
 
 namespace ctns{
@@ -32,8 +33,7 @@ void rcanon_check(const comb<Km>& icomb,
       std::cout << "idx=" << idx << " node=" << p << " Dtot=" << Dtot 
 		<< " maxdiff=" << std::scientific << maxdiff << std::endl;
       if((ifortho || (!ifortho && idx != ntotal-1)) && (maxdiff>thresh_ortho)){
-	 std::cout << "error: deviate from identity matrix!" << std::endl;
-         exit(1);
+	 tools::exit("error: deviate from identity matrix!");
       }
    } // idx
 }

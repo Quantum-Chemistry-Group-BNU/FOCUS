@@ -57,7 +57,8 @@ all: depend \
      $(BIN_DIR)/tests_core.x \
      $(BIN_DIR)/tests_ci.x \
      $(BIN_DIR)/tests_ctns.x \
-     $(BIN_DIR)/sci.x 
+     $(BIN_DIR)/sci.x \
+     $(BIN_DIR)/ctns.x 
 
 depend:
 	set -e; \
@@ -89,6 +90,11 @@ $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 
 $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(OBJ_DEP)
+	@echo "\n=== LINK $@"
+	@echo $(OBJ_DEP)
+	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
+
+$(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 

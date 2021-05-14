@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <numeric> // iota
 #include "ctns_topo.h"
+#include "../core/tools.h"
 
 using namespace std;
 using namespace ctns;
@@ -52,8 +53,7 @@ topology::topology(const string& fname){
    istrm.close();
    // consistency check
    if(tmp[0].size() != 1 || tmp[tmp.size()-1].size() != 1){
-      cout << "error: we assume the start and end nodes are leaves!" << endl;
-      exit(1);
+      tools::exit("error: we assume the start and end nodes are leaves!");
    }
 
    // initialize topo structure: type & neighbor of each site

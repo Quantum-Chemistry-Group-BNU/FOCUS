@@ -10,7 +10,7 @@ namespace ctns{
 using qdpt = std::map<qsym,std::vector<std::tuple<int,int,int>>>;
 using qproduct = std::pair<qbond,qdpt>;
 
-qproduct qmerge(const qbond& qs1, const qbond& qs2){
+inline qproduct qmerge(const qbond& qs1, const qbond& qs2){
    // init dpt
    qdpt dpt;
    for(int i1=0; i1<qs1.size(); i1++){

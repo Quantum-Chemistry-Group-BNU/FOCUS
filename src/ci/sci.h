@@ -54,10 +54,7 @@ void get_initial(std::vector<double>& es,
    expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.sci.flip);
    nsub = space.size();
    // set up initial states
-   if(schd.sci.nroots > nsub){
-      std::cout << "error in sci::ci_solver: subspace is too small!" << std::endl;
-      exit(1);
-   }
+   if(schd.sci.nroots > nsub) tools::exit("error: subspace is too small in sci::ci_solver!");
    linalg::matrix<Tm> H = fock::get_Ham(space, int2e, int1e, ecore);
    std::vector<double> esol(nsub);
    linalg::matrix<Tm> vsol;

@@ -24,6 +24,11 @@ inline void license(){
    std::cout << "-------------------------------------------------------------" << std::endl;
 }
 
+inline void exit(const std::string msg){
+   std::cout << "\n" << msg << std::endl;
+   std::exit(1);
+}
+
 // print
 const std::string line_separator(70,'-');
 extern const std::string line_separator;

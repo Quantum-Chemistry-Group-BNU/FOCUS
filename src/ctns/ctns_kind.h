@@ -11,7 +11,7 @@ namespace kind{
 
 // is_available
 template <typename Tm>
-bool is_available(){ return false; }
+inline bool is_available(){ return false; }
 
 // (N): real & complex 
 struct rN{
@@ -19,14 +19,14 @@ struct rN{
    static const int isym = 1;
 };
 template <>
-bool is_available<rN>(){ return true; } 
+inline bool is_available<rN>(){ return true; } 
 
 struct cN{
    using dtype = std::complex<double>;
    static const int isym = 1;
 };
 template <>
-bool is_available<cN>(){ return true; } 
+inline bool is_available<cN>(){ return true; } 
 
 // (N,Sz): real & complex
 struct rNSz{
@@ -34,14 +34,14 @@ struct rNSz{
    static const int isym = 2;
 };
 template <>
-bool is_available<rNSz>(){ return true; }
+inline bool is_available<rNSz>(){ return true; }
 
 struct cNSz{
    using dtype = std::complex<double>;
    static const int isym = 2;
 };
 template <>
-bool is_available<cNSz>(){ return true; }
+inline bool is_available<cNSz>(){ return true; }
 
 // (N,K): complex -> relativistic H with SOC
 struct cNK{
@@ -49,12 +49,12 @@ struct cNK{
    static const int isym = 1;
 };
 template <>
-bool is_available<cNK>(){ return true; }
+inline bool is_available<cNK>(){ return true; }
 
 template <typename>
-bool is_kramers(){ return false; }
+inline bool is_kramers(){ return false; }
 template <>
-bool is_kramers<cNK>(){ return true; }
+inline bool is_kramers<cNK>(){ return true; }
 
 } // kind
 

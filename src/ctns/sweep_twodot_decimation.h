@@ -1,6 +1,8 @@
 #ifndef SWEEP_TWODOT_DECIMATION_H
 #define SWEEP_TWODOT_DECIMATION_H
 
+#include "oper_io.h"
+
 namespace ctns{
 
 template <typename Km>

@@ -178,9 +178,8 @@ double qtensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool 
          const auto& blk = _qblocks[_addr(br,bc)];
          if(blk.size() > 0){
 	    if(br != bc){
-	       std::cout << "error: not a block-diagonal matrix! br,bc="
-  	    	         << br << "," << bc << std::endl;
-	       exit(1);
+	       std::string msg = "error: not a block-diagonal matrix! br,bc=";
+	       tools::exit(msg+std::to_string(br)+","+std::to_string(bc));
 	    }
             auto qr = qrow.get_sym(br);
             int ndim = qrow.get_dim(br);
@@ -190,10 +189,9 @@ double qtensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool 
                std::cout << "qsym=" << qr << " ndim=" << ndim << " |Sr-Id|_F=" << diff << std::endl;
 	    }
             if(diff > thresh_ortho){
-	       std::cout << "error: not an identity matrix at qsym=" << qr
-		         << " diff=" << diff << std::endl;
+	       std::cout << "qsym=" << qr << " diff=" << diff << std::endl;
 	       blk.print("diagonal block");
-  	       exit(1);
+	       tools::exit("error: not an identity matrix!"); 
 	    }
          } // blk
       } // bc
