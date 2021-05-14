@@ -92,7 +92,7 @@ void pt2_solver(const input::schedule& schd,
    // collect all contributions
    const int nmax = 50;
    int pdim = pt2Space.size();
-   double e2 = 0.0, z2 = 1.0, S_PT = 0.0;
+   double e2 = 0.0, z2 = 1.0, Sd_PT = 0.0;
    std::vector<double> e2max(nmax,0.0);   // e2a
    std::vector<fock::onstate> vmax(nmax); // onstate |Da>
    for(const auto& pr : pt2Space){
@@ -102,7 +102,7 @@ void pt2_solver(const input::schedule& schd,
       double pa = std::norm(va0/(e0-ea));
       e2 += e2tmp;
       z2 += pa;
-      if(pa > 1.e-12) S_PT += -pa*log2(pa);
+      if(pa > 1.e-12) Sd_PT += -pa*log2(pa);
       // check whether smaller e2tmp has been found
       for(int i=0; i<nmax; i++){
 	 if(e2tmp < e2max[i]){
@@ -139,15 +139,15 @@ void pt2_solver(const input::schedule& schd,
    std::cout << "vdim = " << std::setw(20) << vdim << std::endl;
    std::cout << "pdim = " << std::setw(20) << pdim << std::endl;
    // diagonal entropy
-   double S_CI = fock::coeff_entropy(v0);
-   double S_tot = (S_CI+S_PT)/z2 + log2(z2);
+   double Sd_CI = fock::coeff_entropy(v0);
+   double Sd_tot = (Sd_CI+Sd_PT)/z2 + log2(z2);
    std::cout << "z2   = " << std::fixed << std::setw(20) << std::setprecision(12) << z2 << std::endl;
    std::cout << "eCI  = " << std::fixed << std::setw(20) << std::setprecision(12) << e0 
-       	     << "     S_CI = " << S_CI << std::endl; 
+       	     << "     Sd_CI  = " << Sd_CI << std::endl; 
    std::cout << "ePT2 = " << std::fixed << std::setw(20) << std::setprecision(12) << e2 
-	     << "     S_PT = " << S_PT << std::endl;
+	     << "     Sd_PT  = " << Sd_PT << std::endl;
    std::cout << "etot = " << std::fixed << std::setw(20) << std::setprecision(12) << e0+e2 
-	     << "     Stot = " << S_tot << std::endl;
+	     << "     Sd_tot = " << Sd_tot << std::endl;
 
    auto t1 = tools::get_time();
    std::cout << "timing for sci::pt2_solver : " << std::setprecision(2) 

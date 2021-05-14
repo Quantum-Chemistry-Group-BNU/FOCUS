@@ -23,16 +23,16 @@ int SCI(const input::schedule& schd){
    if(!schd.sci.load){
       fci::sparse_hamiltonian<Tm> sparseH;
       sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
-      // pt2 for single root
-      if(schd.sci.ifpt2){
-         sci::pt2_solver(schd, es[0], vs[0], sci_space, int2e, int1e, ecore);
-      }
-      fci::ci_save(sci_space, vs);
+      fci::ci_save(sci_space, es, vs);
    }else{
-      fci::ci_load(sci_space, vs);
+      fci::ci_load(sci_space, es, vs);
    }
    for(int i=0; i<nroot; i++){
       coeff_population(sci_space, vs[i]);
+   }
+   // pt2 for single root
+   if(schd.sci.ifpt2){
+      sci::pt2_solver(schd, es[0], vs[0], sci_space, int2e, int1e, ecore);
    }
    return 0;
 }
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
    tools::license();
    // read input
    string fname;
-   if(argc == 0){
+   if(argc == 1){
       cout << "error: no input file is given!" << endl;
       exit(1);
    }else{

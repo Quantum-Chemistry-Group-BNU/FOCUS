@@ -1,3 +1,4 @@
+dtype 1
 nelec 6
 integral_file moleinfo/cmole.info 
 scratch ./scratch
@@ -12,9 +13,11 @@ nroots 4
 eps0 -1.e-6
 schedule
 0 1.e-2
-3 -1.e-3
+3 1.e-3
 end
 maxiter 10
+load
+#pt2
 $end
 
 $ctns
