@@ -15,9 +15,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	       const double ecore,
 	       const input::schedule& schd){
    auto t0 = tools::get_time();
-   std::cout << "\nctns::sweep_opt maxsweep=" << schd.maxsweep << std::endl;
+   std::cout << "\nctns::sweep_opt maxsweep=" << schd.ctns.maxsweep << std::endl;
 
-   if(schd.maxsweep == 0) return;
+   if(schd.ctns.maxsweep == 0) return;
    
    // prepare environmental operators 
    oper_env_right(icomb, int2e, int1e, schd.scratch);
@@ -26,12 +26,12 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    get_left_bsite(Km::isym, icomb.lsites[std::make_pair(0,0)]);
 
    // generate sweep sequence
-   sweep_data sweeps(icomb.topo.get_sweeps(), schd.nstates, schd.guess, 
-		     schd.inoise, schd.maxsweep, schd.combsweep); 
-   for(int isweep=0; isweep<schd.maxsweep; isweep++){
+   sweep_data sweeps(icomb.topo.get_sweeps(), schd.ctns.nroots, schd.ctns.guess, 
+		     schd.ctns.inoise, schd.ctns.maxsweep, schd.ctns.ctrls); 
+   for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
       std::cout << tools::line_separator2 << std::endl;
-      sweeps.print_ctrl(isweep);
+      sweeps.print_ctrls(isweep);
       std::cout << tools::line_separator2 << std::endl;
       // loop over sites
       auto ti = tools::get_time();

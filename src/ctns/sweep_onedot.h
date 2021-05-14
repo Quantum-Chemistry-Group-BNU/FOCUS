@@ -30,7 +30,7 @@ void sweep_onedot(const input::schedule& schd,
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
    std::cout << "ctns::sweep_onedot" << std::endl;
-   
+
    // 0. processing partition & symmetry
    auto dbond = sweeps.seq[ibond];
    auto p = dbond.p;
@@ -94,12 +94,12 @@ void sweep_onedot(const input::schedule& schd,
            	    std::ref(wf));
    if(!ifkr){
       // without kramers restriction
-      linalg::dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle);
+      linalg::dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.ctns.maxcycle);
       solver.Diag = diag.data();
       solver.HVec = HVec;
-      if(schd.cisolver == 0){
+      if(schd.ctns.cisolver == 0){
          solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
-      }else if(schd.cisolver == 1){ // davidson
+      }else if(schd.ctns.cisolver == 1){ // davidson
          if(!sweeps.guess){
             solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
          }else{     
@@ -118,8 +118,8 @@ void sweep_onedot(const input::schedule& schd,
       }
    }else{
       // kramers restricted (currently works only for iterative with guess!) 
-      assert(schd.cisolver == 1 && sweeps.guess);
-      kr_dvdsonSolver<Tm,qtensor3<Tm>> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle, 
+      assert(schd.ctns.cisolver == 1 && sweeps.guess);
+      kr_dvdsonSolver<Tm,qtensor3<Tm>> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.ctns.maxcycle, 
 		      			      (schd.nelec)%2, wf);
       solver.Diag = diag.data();
       solver.HVec = HVec;
@@ -152,15 +152,15 @@ void sweep_rwfuns(const input::schedule& schd,
    std::cout << "ctns::sweep_rwfuns" << std::endl;
 
    // perform an additional onedot opt  
-   const int dcut1 = -1;
-   const double eps = schd.combsweep[schd.maxsweep-1].eps; // take the last eps 
-   const double noise = 0.0; 
-   input::sweep_ctrl ctrl = {0, 1, dcut1, eps, noise};
    auto p0 = std::make_pair(0,0);
    auto p1 = std::make_pair(1,0);
    auto cturn = icomb.topo.is_cturn(p0,p1);
-   auto dbond = directed_bond(p0,p1,0,p1,cturn);
-   sweep_data sweeps({dbond}, schd.nstates, schd.guess, 0, 1, {ctrl});
+   auto dbond = directed_bond(p0,p1,0,p1,cturn); // fake dbond
+   const int dcut1 = -1;
+   const double eps = schd.ctns.ctrls[schd.ctns.maxsweep-1].eps; // take the last eps 
+   const double noise = 0.0; 
+   input::params_sweep ctrl = {0, 1, dcut1, eps, noise};
+   sweep_data sweeps({dbond}, schd.ctns.nroots, schd.ctns.guess, 0, 1, {ctrl});
    sweep_onedot(schd, sweeps, 0, 0, icomb, int2e, int1e, ecore);
 
    std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;
@@ -170,11 +170,11 @@ void sweep_rwfuns(const input::schedule& schd,
    auto dpt = qprod.second;
    // build RDM 
    qtensor2<typename Km::dtype> rdm(qsym(), qcr, qcr);
-   for(int i=0; i<schd.nstates; i++){
+   for(int i=0; i<schd.ctns.nroots; i++){
       rdm += icomb.psi[i].merge_cr().get_rdm_col();
    }
    // decimation
-   const int dcut = schd.nstates;
+   const int dcut = schd.ctns.nroots;
    double dwt; 
    int deff;
    const bool ifkr = tools::is_complex<Km>();
@@ -182,13 +182,13 @@ void sweep_rwfuns(const input::schedule& schd,
    icomb.rsites[p0] = qt2.split_cr(wf.qmid, wf.qcol, dpt);
    // form rwfuns
    auto& sym_state = icomb.psi[0].sym;
-   qbond qrow({{sym_state, schd.nstates}});
+   qbond qrow({{sym_state, schd.ctns.nroots}});
    auto& qcol = qt2.qrow; 
    qtensor2<typename Km::dtype> rwfuns(qsym(), qrow, qcol, {0, 1});
    assert(qcol.size() == 1);
    int rdim = qrow.get_dim(0);
    int cdim = qcol.get_dim(0);
-   for(int i=0; i<schd.nstates; i++){
+   for(int i=0; i<schd.ctns.nroots; i++){
       auto cwf = icomb.psi[i].merge_cr().dot(qt2.H()); // <-W[1,alpha]->
       for(int c=0; c<cdim; c++){
          rwfuns(0,0)(i,c) = cwf(0,0)(0,c);	      

@@ -60,7 +60,7 @@ struct sweep_data{
 	      const bool _guess,
 	      const int _inoise,
 	      const int _maxsweep,
-	      const std::vector<input::sweep_ctrl>& _ctrls){
+	      const std::vector<input::params_sweep>& _ctrls){
       seq = sweep_seq; 
       seqsize = sweep_seq.size();
       guess = _guess;
@@ -81,16 +81,10 @@ struct sweep_data{
       min_result.resize(maxsweep);
       t_total.resize(maxsweep);
    }
-   // print_ctrl
-   void print_ctrl(const int isweep) const{
+   // print
+   void print_ctrls(const int isweep) const{
       const auto& ctrl = ctrls[isweep];
-      std::cout << "sweep parameters:" 
-        	<< " isweep=" << ctrl.isweep
-        	<< " dots=" << ctrl.dots
-        	<< " dcut=" << ctrl.dcut
-        	<< " eps=" << ctrl.eps
-        	<< " noise=" << ctrl.noise
-        	<< std::endl;
+      ctrl.print();
    }
    // summary for a single sweep
    void summary(const int isweep);
@@ -98,7 +92,7 @@ public:
    bool guess;
    int seqsize, nstates, maxsweep, inoise; 
    std::vector<directed_bond> seq; // sweep bond sequence 
-   std::vector<input::sweep_ctrl> ctrls; // control parameters
+   std::vector<input::params_sweep> ctrls; // control parameters
    // energies
    std::vector<std::vector<dot_result>> opt_result; // (maxsweep,seqsize) 
    std::vector<dot_result> min_result;
@@ -112,7 +106,7 @@ void sweep_data::summary(const int isweep){
    std::cout << "\n" << tools::line_separator << std::endl;
    std::cout << "sweep_data::summary isweep=" << isweep << std::endl;
    std::cout << tools::line_separator << std::endl;
-   print_ctrl(isweep);
+   print_ctrls(isweep);
    // print results for each dot in a single sweep
    std::vector<double> emean(seqsize,0.0);
    for(int ibond=0; ibond<seqsize; ibond++){

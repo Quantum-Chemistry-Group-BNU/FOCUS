@@ -20,7 +20,7 @@ void get_initial(std::vector<double>& es,
    std::cout << "\nsci::get_initial" << std::endl;
    // space = {|Di>}
    int k = int1e.sorb;
-   for(const auto& det : schd.det_seeds){
+   for(const auto& det : schd.sci.det_seeds){
       fock::onstate state(k); // convert det to onstate
       for(int i : det) state[i] = 1;
       // search first
@@ -30,7 +30,7 @@ void get_initial(std::vector<double>& es,
 	 space.push_back(state);
       }
       // flip determinant 
-      if(schd.flip){
+      if(schd.sci.flip){
          auto state1 = state.flip();
          auto search1 = varSpace.find(state1);
          if(search1 == varSpace.end()){
@@ -49,12 +49,12 @@ void get_initial(std::vector<double>& es,
 	   << std::endl;
    }
    // selected CISD space
-   double eps1 = schd.eps0;
+   double eps1 = schd.sci.eps0;
    std::vector<double> cmax(nsub,1.0);
-   expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.flip);
+   expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.sci.flip);
    nsub = space.size();
    // set up initial states
-   if(schd.nroots > nsub){
+   if(schd.sci.nroots > nsub){
       std::cout << "error in sci::ci_solver: subspace is too small!" << std::endl;
       exit(1);
    }
@@ -63,7 +63,7 @@ void get_initial(std::vector<double>& es,
    linalg::matrix<Tm> vsol;
    eig_solver(H, esol, vsol);
    // save
-   int neig = schd.nroots;
+   int neig = schd.sci.nroots;
    es.resize(neig);
    vs.resize(nsub, neig);
    for(int j=0; j<neig; j++){
@@ -106,12 +106,12 @@ void ci_solver(const input::schedule& schd,
    // start increment
    bool ifconv = false;
    int nsub = space.size(); 
-   int neig = schd.nroots;
-   for(int iter=0; iter<schd.maxiter; iter++){
+   int neig = schd.sci.nroots;
+   for(int iter=0; iter<schd.sci.maxiter; iter++){
       std::cout << "\n---------------------" << std::endl;
-      std::cout << "iter=" << iter << " eps1=" << std::scientific << schd.eps1[iter] << std::endl;
+      std::cout << "iter=" << iter << " eps1=" << std::scientific << schd.sci.eps1[iter] << std::endl;
       std::cout << "---------------------" << std::endl;
-      double eps1 = schd.eps1[iter];
+      double eps1 = schd.sci.eps1[iter];
       // compute cmax[i] = \sqrt{\sum_j|vj[i]|^2} for screening
       std::vector<double> cmax(nsub,0.0);
       for(int j=0; j<neig; j++){
@@ -122,7 +122,7 @@ void ci_solver(const input::schedule& schd,
       std::transform(cmax.begin(), cmax.end(), cmax.begin(),
 		     [neig](const double& x){ return std::pow(x,0.5); });
       // expand 
-      expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.flip);
+      expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.sci.flip);
       int nsub0 = nsub;
       nsub = space.size();
       // update auxilliary data structure 
@@ -130,8 +130,8 @@ void ci_solver(const input::schedule& schd,
       // set up Davidson solver 
       linalg::dvdsonSolver<Tm> solver;
       solver.iprt = 1;
-      solver.crit_v = schd.crit_v;
-      solver.maxcycle = schd.maxcycle;
+      solver.crit_v = schd.sci.crit_v;
+      solver.maxcycle = schd.sci.maxcycle;
       solver.ndim = nsub;
       solver.neig = neig;
       solver.Diag = sparseH.diag.data();
@@ -155,11 +155,11 @@ void ci_solver(const input::schedule& schd,
       std::vector<bool> conv(neig);
       std::cout << std::endl;
       for(int i=0; i<neig; i++){
-	 conv[i] = std::abs(esol1[i]-esol[i]) < schd.deltaE; 
+	 conv[i] = std::abs(esol1[i]-esol[i]) < schd.sci.deltaE; 
 	 std::vector<Tm> vtmp(vsol1.col(i),vsol1.col(i)+nsub);
          double SvN = fock::coeff_entropy(vtmp); 
 	 std::cout << "sci: iter=" << iter
-	      << " eps1=" << std::scientific << std::setprecision(2) << schd.eps1[iter]
+	      << " eps1=" << std::scientific << std::setprecision(2) << schd.sci.eps1[iter]
 	      << " nsub=" << nsub 
 	      << " i=" << i 
 	      << " e=" << std::defaultfloat << std::setprecision(12) << esol1[i] 
@@ -172,13 +172,13 @@ void ci_solver(const input::schedule& schd,
       esol = esol1;
       vsol = vsol1;
       ifconv = (count(conv.begin(), conv.end(), true) == neig);
-      if(iter>=schd.miniter && ifconv){
+      if(iter>=schd.sci.miniter && ifconv){
 	 std::cout << "\nsci convergence is achieved!" << std::endl;
 	 break;
       }
    } // iter
    if(!ifconv){
-      std::cout << "\nsci convergence failure: out of maxiter=" << schd.maxiter << std::endl;
+      std::cout << "\nsci convergence failure: out of maxiter=" << schd.sci.maxiter << std::endl;
    }
    // finally save results
    copy_n(esol.begin(), neig, es.begin());

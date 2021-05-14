@@ -24,7 +24,7 @@ int tests::test_sci(){
    // read input
    string fname = "input.dat";
    input::schedule schd;
-   input::read(schd,fname);
+   schd.read(fname);
 
    using DTYPE = complex<double>;
    
@@ -34,7 +34,7 @@ int tests::test_sci(){
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
   
-   int nroot = schd.nroots;
+   int nroot = schd.sci.nroots;
    vector<double> es(nroot,0.0);
 
    // selected CI

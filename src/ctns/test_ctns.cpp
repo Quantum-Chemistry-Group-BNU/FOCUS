@@ -34,7 +34,7 @@ int tests::test_ctns(){
    // read input
    string fname = "input.dat";
    input::schedule schd;
-   input::read(schd,fname);
+   schd.read(fname);
 
    // we will use DTYPE to control Hnr/Hrel 
    //using DTYPE = double; // to do -> test more
@@ -47,16 +47,16 @@ int tests::test_ctns(){
    integral::load(int2e, int1e, ecore, schd.integral_file);
   
    // --- SCI ---
-   int nroot = schd.nroots;
+   int nroot = schd.sci.nroots;
    vector<double> es(nroot,0.0);
    onspace sci_space;
    vector<vector<DTYPE>> vs(nroot);
    
-   if(!schd.ciload){
+   if(!schd.sci.load){
       fci::sparse_hamiltonian<DTYPE> sparseH;
       sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
       // pt2 for single root
-      if(schd.ifpt2){
+      if(schd.sci.ifpt2){
          sci::pt2_solver(schd, es[0], vs[0], sci_space, int2e, int1e, ecore);
       }
       fci::ci_save(sci_space, vs);
@@ -66,14 +66,14 @@ int tests::test_ctns(){
    for(int i=0; i<nroot; i++){
       coeff_population(sci_space, vs[i]);
    }
-   // truncate CI coefficients
-   const bool ifortho = false; 
-   fci::ci_truncate(sci_space, vs, schd.maxdets, ifortho);
 
    // --- CTNS --- 
-   
+   // 0. truncate CI coefficients
+   const bool ifortho = false; 
+   fci::ci_truncate(sci_space, vs, schd.ctns.maxdets, ifortho);
+
    // 1. dealing with topology 
-   ctns::topology topo(schd.topology_file);
+   ctns::topology topo(schd.ctns.topology_file);
    topo.print();
 
    // 2. initialize right canonical form from SCI wavefunction
@@ -81,13 +81,13 @@ int tests::test_ctns(){
    //ctns::comb<ctns::kind::cN> icomb(topo);
    ctns::comb<ctns::kind::cNK> icomb(topo);
 
-   if(!schd.combload){
-      ctns::rcanon_init(icomb, sci_space, vs, schd.thresh_proj);
+   if(!schd.ctns.load){
+      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj);
       ctns::rcanon_save(icomb);
    }else{
       ctns::rcanon_load(icomb);
    }
-   ctns::rcanon_check(icomb, schd.thresh_ortho, ifortho);
+   ctns::rcanon_check(icomb, schd.ctns.thresh_ortho, ifortho);
 
    // 3. overlap
    const double thresh=1.e-6;

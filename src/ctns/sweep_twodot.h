@@ -127,12 +127,12 @@ void sweep_twodot(const input::schedule& schd,
            	    std::ref(wf));
    if(!ifkr){
       // without kramers restriction
-      linalg::dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle);
+      linalg::dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.ctns.maxcycle);
       solver.Diag = diag.data();
       solver.HVec = HVec;
-      if(schd.cisolver == 0){
+      if(schd.ctns.cisolver == 0){
          solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
-      }else if(schd.cisolver == 1){ // davidson
+      }else if(schd.ctns.cisolver == 1){ // davidson
          if(!sweeps.guess){
             solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
          }else{     
@@ -150,8 +150,8 @@ void sweep_twodot(const input::schedule& schd,
       }
    }else{
       // kramers restricted (currently works only for iterative with guess!) 
-      assert(schd.cisolver == 1 && sweeps.guess);
-      kr_dvdsonSolver<Tm,qtensor4<Tm>> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.maxcycle, 
+      assert(schd.ctns.cisolver == 1 && sweeps.guess);
+      kr_dvdsonSolver<Tm,qtensor4<Tm>> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.ctns.maxcycle, 
 		      			      (schd.nelec)%2, wf);
       solver.Diag = diag.data();
       solver.HVec = HVec;

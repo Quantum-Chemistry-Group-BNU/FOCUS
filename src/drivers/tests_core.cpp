@@ -1,7 +1,5 @@
 #include "../core/tests_core.h"
 
-using namespace std;
-
 int main(){
    
    // -- core ---

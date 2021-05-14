@@ -54,9 +54,9 @@ SRC_ALL += $(wildcard ./$(SRC)/drivers/*.cpp)
 OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend \
-     $(BIN_DIR)/test_core.x \
-     $(BIN_DIR)/test_ci.x \
-     $(BIN_DIR)/test_ctns.x
+     $(BIN_DIR)/tests_core.x \
+     $(BIN_DIR)/tests_ci.x \
+     $(BIN_DIR)/tests_ctns.x
 
 depend:
 	set -e; \
@@ -70,17 +70,17 @@ depend:
 #
 # Executables
 #
-$(BIN_DIR)/test_core.x: $(OBJ_DIR)/main_core.o $(OBJ_DEP)
+$(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
-$(BIN_DIR)/test_ci.x: $(OBJ_DIR)/main_ci.o $(OBJ_DEP)
+$(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
-$(BIN_DIR)/test_ctns.x: $(OBJ_DIR)/main_ctns.o $(OBJ_DEP)
+$(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 

@@ -4,14 +4,6 @@
 using namespace std;
 using namespace tools;
 
-void tools::license() {
-   cout << line_separator <<endl;
-   cout << "FOCUS: a platform for exploring FermiOniC qUantum Simulations" << endl;
-   cout << "Copyright (c) 2020 Zhendong Li" << endl;
-   cout << "Author: Zhendong Li <zhendongli2008@gmail.com>" << endl;
-   cout << line_separator <<endl;
-}
-
 double tools::mem_size(size_t sz, const int dfac){
    return sz*dfac/pow(1024.0,2); // in MB
 }

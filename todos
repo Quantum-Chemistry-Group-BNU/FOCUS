@@ -10,15 +10,18 @@ TODOs:
     - rewrite qtensor such that qt2/qt3/qt4 are just views
 
  4. parallelization [DONE2021XXXX]
-    1. openmp
+    1. cleanup (IO) & update tests 
     2. mpi
+    3. openmp
+    4. gpu?
 
- 5. applications:
+ 5. twordm for correlation functions
+
+ 6. applications:
     1. Small system like C2+/O2? [checked against FCI results]
     2. Fe2S2 [CAS(30e,20o)] - parallelized
     3. SOC within this active space
     4. G-tensor/GIAO for Ferric-Ferrous dimer [GREAT!]
-
 
 KNOWN PROBLEMs:
 

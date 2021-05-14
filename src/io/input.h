@@ -1,13 +1,58 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <set> 
+#include <sstream> // istringstream
 
 namespace input{
 
-struct sweep_ctrl{
+//
+// SCI
+//
+struct params_sci{
+public:
+   void read(std::ifstream& istrm);
+   void print() const;
+public:
+   bool run = false;
+   int nroots = 1;
+   // initial dets
+   std::set<std::set<int>> det_seeds;
+   int nseeds = 0;
+   bool flip = false;
+   // for initial guess
+   double eps0 = 1.e-2; 
+   std::vector<double> eps1;   
+   // sci
+   int miniter = 0;
+   int maxiter = 0;
+   double deltaE = 1.e-10;
+   // dvdson
+   int cisolver = 1;
+   int maxcycle = 100;
+   double crit_v = 1.e-6;
+   // pt2
+   bool ifpt2 = false;
+   double eps2 = 1.e-8;
+   // io
+   bool load = false;
+};
+
+//
+// CTNS
+//
+struct params_sweep{
+public:
+   inline void print() const{
+      std::cout << "sweep parameters: isweep=" << isweep
+         	<< " dots=" << dots << " dcut=" << dcut
+         	<< " eps=" << eps << " noise=" << noise
+         	<< std::endl;
+   }
+public:
    int isweep;
    int dots;
    int dcut;
@@ -15,64 +60,51 @@ struct sweep_ctrl{
    double noise; 
 };
 
+struct params_ctns{
+public:
+   void read(std::ifstream& istrm);
+   void print() const;
+public:
+   bool run = false;
+   // comb
+   std::string topology_file = "TOPOLOGY";
+   // conversion of sci 
+   int maxdets = 10000;
+   double thresh_proj = 1.e-16;
+   double thresh_ortho = 1.e-8;
+   // sweep
+   int nroots = 1; // this can be smaller than nroots in CI 
+   bool guess = true;
+   int inoise = 2;
+   int maxsweep;
+   std::vector<params_sweep> ctrls;
+   // dvdson
+   int cisolver = 1;
+   int maxcycle = 100;
+   // io
+   bool load = false;
+};
+
+//
+// General
+//
 struct schedule{
 public:
    void create_scratch();
    void remove_scratch();
+   void read(std::string fname="input.dat");
+   void print() const;
 public:
    // --- Generic ---
-   std::string scratch;
-   int nelec;
-   int twoms;
-   int nroots;
-   std::string integral_file;
-   // --- SCI --- 
-   // initial dets
-   std::set<std::set<int>> det_seeds;
-   int nseeds;
-   bool flip;
-   // for initial guess
-   double eps0; 
-   std::vector<double> eps1;
-   // sci
-   int miniter;
-   int maxiter;
-   double deltaE;
-   // dvdson
-   int cisolver;
-   int maxcycle;
-   double crit_v;
-   // pt2
-   bool ifpt2;
-   double eps2;
-   // io
-   bool ciload;
-   // --- CombTNS --- 
-   // comb
-   std::string topology_file;
-   // conversion of sci 
-   int maxdets;
-   double thresh_proj;
-   double thresh_ortho;
-   // sweep
-   int nstates; // this can be smaller than nroots in CI 
-   bool guess;
-   int inoise;
-   int maxsweep;
-   std::vector<sweep_ctrl> combsweep;
-   // io
-   bool combload;
+   std::string scratch = ".";
+   int dtype = 0;
+   int nelec = 0;
+   int twoms = 0;
+   std::string integral_file = "mole.info";
+   // --- Methods --- 
+   params_sci sci;
+   params_ctns ctns;
 };
-   
-void read(schedule& schd, std::string fname="input.dat");
-
-void combsweep_init(const int maxsweep,
-		    std::vector<sweep_ctrl>& combsweep);
-
-void combsweep_print(const int maxsweep,
-		     const std::vector<sweep_ctrl>& combsweep);
-
-void combsweep_print(const sweep_ctrl& ctrl);
 
 } // input
 

@@ -1,7 +1,5 @@
 #include "../ci/tests_ci.h"
 
-using namespace std;
-
 int main(){
    
    // --- sci ---

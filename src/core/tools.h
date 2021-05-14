@@ -16,8 +16,13 @@
 
 namespace tools{
 
-// useful functions
-void license();
+inline void license(){
+   std::cout << "-------------------------------------------------------------" << std::endl;
+   std::cout << "FOCUS: a platform for exploring FermiOniC qUantum Simulations" << std::endl;
+   std::cout << "Copyright (c) 2019 Zhendong Li	 	  	              " << std::endl;
+   std::cout << "Author: Zhendong Li <zhendongli2008@gmail.com>	              " << std::endl;
+   std::cout << "-------------------------------------------------------------" << std::endl;
+}
 
 // print
 const std::string line_separator(70,'-');
