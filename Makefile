@@ -56,7 +56,8 @@ OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 all: depend \
      $(BIN_DIR)/tests_core.x \
      $(BIN_DIR)/tests_ci.x \
-     $(BIN_DIR)/tests_ctns.x
+     $(BIN_DIR)/tests_ctns.x \
+     $(BIN_DIR)/sci.x 
 
 depend:
 	set -e; \
@@ -67,9 +68,11 @@ depend:
 	rm -f $$$$.depend # $$$$ id number 
 -include .depend
 
-#
+$(OBJ_ALL):
+	@echo "=== COMPILE $@ FROM $<" # just from *.cpp is sufficient	
+	$(CXX) $(FLAGS) -o $@ -c $< 
+
 # Executables
-#
 $(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
@@ -85,9 +88,10 @@ $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(OBJ_DEP)
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 
-$(OBJ_ALL):
-	@echo "=== COMPILE $@ FROM $<" # just from *.cpp is sufficient	
-	$(CXX) $(FLAGS) -o $@ -c $< 
+$(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(OBJ_DEP)
+	@echo "\n=== LINK $@"
+	@echo $(OBJ_DEP)
+	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 
 clean:
 	rm -f obj/*.o
