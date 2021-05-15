@@ -13,6 +13,74 @@
 namespace ctns{
 
 template <typename Km>
+void twodot_localCI(comb<Km>& icomb,
+		    const int nsub,
+		    const int neig,
+   		    std::vector<double>& diag,
+		    HVec_type<typename Km:: dtype> HVec,
+   		    std::vector<double>& eopt,
+   		    linalg::matrix<typename Km::dtype>& vsol,
+		    const int cisolver,
+		    const bool guess,
+		    const double eps,
+		    const int maxcycle,
+		    const int parity,
+		    const directed_bond& dbond,
+		    qtensor4<typename Km::dtype>& wf){
+   using Tm = typename Km::dtype;
+   // without kramers restriction
+   linalg::dvdsonSolver<Tm> solver(nsub, neig, eps, maxcycle);
+   solver.Diag = diag.data();
+   solver.HVec = HVec;
+   if(cisolver == 0){
+      solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
+   }else if(cisolver == 1){ // davidson
+      if(!guess){
+         solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
+      }else{     
+         // load initial guess from previous opt
+         if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
+         auto psi4 = twodot_guess(icomb, dbond, nsub, neig, wf);
+         std::vector<Tm> v0(nsub*neig);
+         for(int i=0; i<neig; i++){
+            psi4[i].to_array(&v0[nsub*i]);
+         }
+         int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
+         assert(nindp == neig);
+         solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+      }
+   }
+}
+template <>
+inline void twodot_localCI(comb<kind::cNK>& icomb,
+		    const int nsub,
+		    const int neig,
+   		    std::vector<double>& diag,
+		    HVec_type<std::complex<double>> HVec,
+   		    std::vector<double>& eopt,
+   		    linalg::matrix<std::complex<double>>& vsol,
+		    const int cisolver,
+		    const bool guess,
+		    const double eps,
+		    const int maxcycle,
+		    const int parity,
+		    const directed_bond& dbond,
+		    qtensor4<std::complex<double>>& wf){
+   using Tm = std::complex<double>;
+   // kramers restricted (currently works only for iterative with guess!) 
+   assert(cisolver == 1 && guess);
+   kr_dvdsonSolver<Tm,qtensor4<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
+   solver.Diag = diag.data();
+   solver.HVec = HVec;
+   // load initial guess from previous opt
+   if(icomb.psi.size() == 0) onedot_guess_psi0(icomb,neig); // starting guess 
+   auto psi4 = twodot_guess(icomb, dbond, nsub, neig, wf);
+   std::vector<Tm> v0;
+   solver.init_guess(psi4, v0);
+   solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+} // ifkr
+
+template <typename Km>
 void sweep_twodot(const input::schedule& schd,
 		  sweep_data& sweeps,
 		  const int isweep,
@@ -125,43 +193,9 @@ void sweep_twodot(const input::schedule& schd,
            	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	    std::ref(wf));
-   if(!ifkr){
-      // without kramers restriction
-      linalg::dvdsonSolver<Tm> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.ctns.maxcycle);
-      solver.Diag = diag.data();
-      solver.HVec = HVec;
-      if(schd.ctns.cisolver == 0){
-         solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
-      }else if(schd.ctns.cisolver == 1){ // davidson
-         if(!sweeps.guess){
-            solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
-         }else{     
-            // load initial guess from previous opt
-            if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
-	    auto psi4 = twodot_guess(icomb, dbond, nsub, neig, wf);
-            std::vector<Tm> v0(nsub*neig);
-            for(int i=0; i<neig; i++){
-               psi4[i].to_array(&v0[nsub*i]);
-            }
-	    int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
-            assert(nindp == neig);
-            solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-         }
-      }
-   }else{
-      // kramers restricted (currently works only for iterative with guess!) 
-      assert(schd.ctns.cisolver == 1 && sweeps.guess);
-      kr_dvdsonSolver<Tm,qtensor4<Tm>> solver(nsub, neig, sweeps.ctrls[isweep].eps, schd.ctns.maxcycle, 
-		      			      (schd.nelec)%2, wf);
-      solver.Diag = diag.data();
-      solver.HVec = HVec;
-      // load initial guess from previous opt
-      if(icomb.psi.size() == 0) onedot_guess_psi0(icomb,neig); // starting guess 
-      auto psi4 = twodot_guess(icomb, dbond, nsub, neig, wf);
-      std::vector<Tm> v0;
-      solver.init_guess(psi4, v0);
-      solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-   } // ifkr
+   twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol,
+		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
+		  schd.ctns.maxcycle, (schd.nelec)%2, dbond, wf);
    timing.tc = tools::get_time();
 
    // 3. decimation & renormalize operators

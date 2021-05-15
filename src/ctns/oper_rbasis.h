@@ -12,10 +12,10 @@ namespace ctns{
 const bool debug_rops = true;
 extern const bool debug_rops;
 
-void setup_orb2pos_map(const std::vector<int>& lsupp,
-		       const std::vector<int>& rsupp,
-		       std::vector<int>& rspinorbs,
-		       std::map<int,int>& orb2pos){
+inline void setup_orb2pos_map(const std::vector<int>& lsupp,
+		              const std::vector<int>& rsupp,
+		              std::vector<int>& rspinorbs,
+		              std::map<int,int>& orb2pos){
    int idx = 0;
    for(auto it=rsupp.begin(); it!=rsupp.end(); it++){
       int ks = *it;

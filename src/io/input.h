@@ -68,6 +68,7 @@ public:
 public:
    bool run = false;
    std::string kind;
+   std::string task = "opt";
    std::string topology_file = "TOPOLOGY";
    // conversion of sci 
    int maxdets = 10000;
