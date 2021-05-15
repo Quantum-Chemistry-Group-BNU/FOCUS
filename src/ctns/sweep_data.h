@@ -11,6 +11,7 @@ struct dot_result{
    std::vector<double> eopt; // eopt[nstates]
    double dwt;
    int deff;
+   int nmvp;
 };
 
 // timing
@@ -103,12 +104,13 @@ public:
 
 // analysis of the current sweep (eopt,dwt,deff) and timing
 inline void sweep_data::summary(const int isweep){
-   std::cout << "\n" << tools::line_separator << std::endl;
+   std::cout << "\n" << tools::line_separator2 << std::endl;
    std::cout << "sweep_data::summary isweep=" << isweep << std::endl;
    std::cout << tools::line_separator << std::endl;
    print_ctrls(isweep);
    // print results for each dot in a single sweep
    std::vector<double> emean(seqsize,0.0);
+   int nmvp = 0;
    for(int ibond=0; ibond<seqsize; ibond++){
       auto dbond = seq[ibond];
       auto p0 = dbond.p0;
@@ -119,14 +121,16 @@ inline void sweep_data::summary(const int isweep){
                 << " forward=" << forward
                 << " deff=" << opt_result[isweep][ibond].deff
                 << " dwt=" << std::showpos << std::scientific << std::setprecision(2) 
-	        << opt_result[isweep][ibond].dwt << std::noshowpos;
+	        << opt_result[isweep][ibond].dwt << std::noshowpos
+	        << " nmvp=" << opt_result[isweep][ibond].nmvp;
+      nmvp += opt_result[isweep][ibond].nmvp;      
       // print energy
       std::cout << std::defaultfloat << std::setprecision(12);
       const auto& eopt = opt_result[isweep][ibond].eopt;
       for(int j=0; j<nstates; j++){ 
          std::cout << " e[" << j << "]=" << eopt[j];
          emean[ibond] += eopt[j]; 
-      }
+      } // jstate
       emean[ibond] /= nstates;
       std::cout << std::endl;
    }
@@ -134,40 +138,46 @@ inline void sweep_data::summary(const int isweep){
    auto pos = std::min_element(emean.begin(), emean.end());
    auto minpos = std::distance(emean.begin(), pos);
    min_result[isweep] = opt_result[isweep][minpos];
-   std::cout << "min energies at pos=" << minpos << std::endl;
-   std::cout << "timing for sweep: " << std::setprecision(2) << t_total[isweep] << " s" << std::endl; 
-   std::cout << tools::line_separator << std::endl;
+   min_result[isweep].nmvp = nmvp;
+   std::cout << "min energies at pos=" << minpos << "   " 
+             << "timing for sweep: " << std::setprecision(2) << t_total[isweep] << " s" 
+	     << std::endl; 
    
    // print all previous optimized results - sweep_data
+   std::cout << tools::line_separator << std::endl;
    std::cout << "summary of sweep optimization up to isweep=" << isweep << std::endl;
-   std::cout << "schedule: iter, dots, dcut, eps, noise | timing/s (taccum/s)" << std::endl;
+   std::cout << "schedule: iter, dots, dcut, eps, noise | nmvp | timing/s | tav/s | taccum/s" << std::endl;
    std::cout << std::scientific << std::setprecision(2);
    // print previous ctrl parameters
    double taccum = 0.0;
    for(int jsweep=0; jsweep<=isweep; jsweep++){
       auto& ctrl = ctrls[jsweep];
       taccum += t_total[jsweep];
-      std::cout << " " << jsweep << " "
+      nmvp = min_result[jsweep].nmvp;
+      std::cout << std::setw(10) << jsweep << " "
            	<< ctrl.dots << " " << ctrl.dcut << " "
-           	<< ctrl.eps  << " " << ctrl.noise << " | "
-           	<< t_total[jsweep] << " (" << taccum << ")" << std::endl;
+           	<< ctrl.eps  << " " << ctrl.noise << " | " 
+		<< nmvp << " | " 
+           	<< t_total[jsweep] << " | " 
+		<< (t_total[jsweep]/nmvp) << " | " 
+	        << taccum << std::endl;
    } // jsweep
    std::cout << "results: iter, dwt, energies (delta_e)" << std::endl;
    const auto& eopt_isweep = min_result[isweep].eopt;
    for(int jsweep=0; jsweep<=isweep; jsweep++){
       const auto& dwt = min_result[jsweep].dwt;
       const auto& eopt_jsweep = min_result[jsweep].eopt;
-      std::cout << std::setw(3) << jsweep << " ";
-      std::cout << std::showpos << std::scientific << std::setprecision(2) << dwt;
-      std::cout << std::noshowpos << std::defaultfloat << std::setprecision(12);
+      std::cout << std::setw(10) << jsweep << " "
+      	        << std::showpos << std::scientific << std::setprecision(2) << dwt
+                << std::noshowpos << std::defaultfloat << std::setprecision(12);
       for(int j=0; j<nstates; j++){ 
-         std::cout << " e" << j << ":" 
-     	      << std::defaultfloat << std::setprecision(12) << eopt_jsweep[j] << " ("
-              << std::scientific << std::setprecision(2) << eopt_jsweep[j]-eopt_isweep[j] << ")";
+         std::cout << " e[" << j << "]=" 
+     	           << std::defaultfloat << std::setprecision(12) << eopt_jsweep[j] << " ("
+                   << std::scientific << std::setprecision(2) << eopt_jsweep[j]-eopt_isweep[j] << ")";
       } // jstate
       std::cout << std::endl;
    } // jsweep
-   std::cout << tools::line_separator << "\n" << std::endl;
+   std::cout << tools::line_separator2 << "\n" << std::endl;
 }
 
 } // ctns

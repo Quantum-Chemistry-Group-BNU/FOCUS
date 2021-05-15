@@ -261,7 +261,7 @@ struct kr_dvdsonSolver{
                psi[i].to_array(&v0[ndim*(2*i)]);
                psi[i].K().to_array(&v0[ndim*(2*i+1)]);
 	       std::cout << " iguess=" << i 
-		         << " |psi|=" << psi[i].normF()
+		         << " |psi(K)|=" << psi[i].normF()
 			 << std::endl;
             } // i
             nindp = kr_get_ortho_basis(ndim, neig*2, v0, wf); // reorthogonalization

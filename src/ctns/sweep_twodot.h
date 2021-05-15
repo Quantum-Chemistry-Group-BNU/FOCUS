@@ -20,6 +20,7 @@ void twodot_localCI(comb<Km>& icomb,
 		    HVec_type<typename Km:: dtype> HVec,
    		    std::vector<double>& eopt,
    		    linalg::matrix<typename Km::dtype>& vsol,
+		    int& nmvp,
 		    const int cisolver,
 		    const bool guess,
 		    const double eps,
@@ -50,6 +51,7 @@ void twodot_localCI(comb<Km>& icomb,
          solver.solve_iter(eopt.data(), vsol.data(), v0.data());
       }
    }
+   nmvp = solver.nmvp;
 }
 template <>
 inline void twodot_localCI(comb<kind::cNK>& icomb,
@@ -59,6 +61,7 @@ inline void twodot_localCI(comb<kind::cNK>& icomb,
 		    HVec_type<std::complex<double>> HVec,
    		    std::vector<double>& eopt,
    		    linalg::matrix<std::complex<double>>& vsol,
+		    int& nmvp,
 		    const int cisolver,
 		    const bool guess,
 		    const double eps,
@@ -78,6 +81,7 @@ inline void twodot_localCI(comb<kind::cNK>& icomb,
    std::vector<Tm> v0;
    solver.init_guess(psi4, v0);
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+   nmvp = solver.nmvp;
 } // ifkr
 
 template <typename Km>
@@ -177,14 +181,13 @@ void sweep_twodot(const input::schedule& schd,
    if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
    int nsub = wf.get_dim();
    int neig = sweeps.nstates;
+   auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
-
    // 2.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
    diag = twodot_Hdiag(ifkr, c1qops, c2qops, lqops, rqops, ecore, wf);
    timing.tb = tools::get_time();
-
    // 2.2 Solve local problem: Hc=cE
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -193,7 +196,7 @@ void sweep_twodot(const input::schedule& schd,
            	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	    std::ref(wf));
-   twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol,
+   twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, dbond, wf);
    timing.tc = tools::get_time();

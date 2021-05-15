@@ -44,8 +44,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
          bool cturn = dbond.cturn;
 	 auto dots = sweeps.ctrls[isweep].dots;
 	 std::cout << "\nisweep=" << isweep << " ibond=" << ibond << " bond=" << p0 << "-" << p1 
-	           << " (dots,forward,update,cturn)=(" << dots << ","
-		   << forward << "," << !forward << "," << cturn << ")" 
+	           << " (dots,forward,cturn)=(" << dots << "," << forward << "," << cturn << ")" 
 		   << std::endl;
          std::cout << tools::line_separator << std::endl;
 	 auto tp0 = icomb.topo.node_type(p0);
@@ -65,7 +64,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
 
    auto t1 = tools::get_time();
-   std::cout << "timing for ctns::opt_sweep : " << std::setprecision(2) 
+   std::cout << "\ntiming for ctns::opt_sweep : " << std::setprecision(2) 
              << tools::get_duration(t1-t0) << " s" << std::endl;
 }
 

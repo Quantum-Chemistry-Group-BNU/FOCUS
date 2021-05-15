@@ -27,6 +27,7 @@ void onedot_localCI(comb<Km>& icomb,
 		    HVec_type<typename Km:: dtype> HVec,
    		    std::vector<double>& eopt,
    		    linalg::matrix<typename Km::dtype>& vsol,
+		    int& nmvp,
 		    const int cisolver,
 		    const bool guess,
 		    const double eps,
@@ -57,6 +58,7 @@ void onedot_localCI(comb<Km>& icomb,
          solver.solve_iter(eopt.data(), vsol.data(), v0.data());
       }
    }
+   nmvp = solver.nmvp;
 }
 template <>
 inline void onedot_localCI(comb<kind::cNK>& icomb,
@@ -66,6 +68,7 @@ inline void onedot_localCI(comb<kind::cNK>& icomb,
 		    HVec_type<std::complex<double>> HVec,
    		    std::vector<double>& eopt,
    		    linalg::matrix<std::complex<double>>& vsol,
+		    int& nmvp,
 		    const int cisolver,
 		    const bool guess,
 		    const double eps,
@@ -83,6 +86,7 @@ inline void onedot_localCI(comb<kind::cNK>& icomb,
    std::vector<Tm> v0;
    solver.init_guess(icomb.psi, v0);
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+   nmvp = solver.nmvp;
 }
 
 template <typename Km>
@@ -146,6 +150,7 @@ void sweep_onedot(const input::schedule& schd,
    if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;   
    int nsub = wf.get_dim();
    int neig = sweeps.nstates;
+   auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
    // 2.1 Hdiag 
@@ -160,7 +165,7 @@ void sweep_onedot(const input::schedule& schd,
            	    std::ref(cqops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	    std::ref(wf));
-   onedot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol,
+   onedot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
    timing.tc = tools::get_time();
