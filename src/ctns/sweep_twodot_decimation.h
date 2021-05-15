@@ -77,7 +77,7 @@ void twodot_decimation_lc1(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<typename Km::dtype> qops;
    oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, cqops, qops);
-   auto fname = oper_fname(scratch, p, "lop");
+   auto fname = oper_fname(scratch, p, "l");
    oper_save(fname, qops);
 }
 
@@ -153,7 +153,7 @@ void twodot_decimation_lr(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<typename Km::dtype> qops;
    oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops);
-   auto fname = oper_fname(scratch, p, "lop");
+   auto fname = oper_fname(scratch, p, "l");
    oper_save(fname, qops);
 }
 
@@ -229,7 +229,7 @@ void twodot_decimation_c2r(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<typename Km::dtype> qops;
    oper_renorm_opAll("cr", icomb, p, int2e, int1e, cqops, rqops, qops);
-   auto fname = oper_fname(scratch, p, "rop");
+   auto fname = oper_fname(scratch, p, "r");
    oper_save(fname, qops);
 }
 
@@ -307,7 +307,7 @@ void twodot_decimation_c1c2(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<typename Km::dtype> qops;
    oper_renorm_opAll("cr", icomb, p, int2e, int1e, c1qops, c2qops, qops);
-   auto fname = oper_fname(scratch, p, "rop");
+   auto fname = oper_fname(scratch, p, "r");
    oper_save(fname, qops);
 }
 

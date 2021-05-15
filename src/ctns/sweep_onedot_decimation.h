@@ -352,7 +352,7 @@ void onedot_decimation_lc(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<typename Km::dtype> qops;
    oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, cqops, qops);
-   auto fname = oper_fname(scratch, p, "lop");
+   auto fname = oper_fname(scratch, p, "l");
    oper_save(fname, qops);
 }
 
@@ -417,7 +417,7 @@ void onedot_decimation_lr(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<typename Km::dtype> qops;
    oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops);
-   auto fname = oper_fname(scratch, p, "lop");
+   auto fname = oper_fname(scratch, p, "l");
    oper_save(fname, qops);
 }
 
@@ -489,7 +489,7 @@ void onedot_decimation_cr(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<typename Km::dtype> qops;
    oper_renorm_opAll("cr", icomb, p, int2e, int1e, cqops, rqops, qops);
-   auto fname = oper_fname(scratch, p, "rop");
+   auto fname = oper_fname(scratch, p, "r");
    oper_save(fname, qops);
 }
 

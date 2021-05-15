@@ -23,20 +23,20 @@ void oper_load_qops(const comb<Km>& icomb,
    const auto& node = icomb.topo.get_node(p);
    if(type == 'c'){
       if(node.type != 3){
-         auto fname0c = oper_fname(scratch, p, "cop"); // physical dofs
+         auto fname0c = oper_fname(scratch, p, "c"); // physical dofs
          oper_load(fname0c, qops);
       }else{
          auto pc = node.center;
-         auto fname0c = oper_fname(scratch, pc, "rop"); // branching site
+         auto fname0c = oper_fname(scratch, pc, "r"); // branching site
          oper_load(fname0c, qops);
       }
    }else if(type == 'r'){
       auto pr = node.right;
-      auto fname0r = oper_fname(scratch, pr, "rop");
+      auto fname0r = oper_fname(scratch, pr, "r");
       oper_load(fname0r, qops);
    }else if(type == 'l'){
       auto pl = node.left;
-      auto fname0l = oper_fname(scratch, pl, "lop");
+      auto fname0l = oper_fname(scratch, pl, "l");
       oper_load(fname0l, qops);
    }
 }
@@ -78,7 +78,7 @@ void oper_init(const comb<Km>& icomb,
          int kp = node.pindex;
          oper_dict<typename Km::dtype> qops;
 	 oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);
-	 std::string fname = oper_fname(scratch, p, "cop");
+	 std::string fname = oper_fname(scratch, p, "c");
          oper_save(fname, qops);
       }
       // rop: right boundary (exclude the start point)
@@ -86,7 +86,7 @@ void oper_init(const comb<Km>& icomb,
 	 int kp = node.pindex;
          oper_dict<typename Km::dtype> qops;
 	 oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);
-	 std::string fname = oper_fname(scratch, p, "rop");
+	 std::string fname = oper_fname(scratch, p, "r");
          oper_save(fname, qops);
       }
    }
@@ -95,7 +95,7 @@ void oper_init(const comb<Km>& icomb,
    int kp = icomb.topo.get_node(p).pindex;
    oper_dict<typename Km::dtype> qops;
    oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);
-   std::string fname = oper_fname(scratch, p, "lop");
+   std::string fname = oper_fname(scratch, p, "l");
    oper_save(fname, qops);
 }
 
@@ -121,7 +121,7 @@ void oper_env_right(const comb<Km>& icomb,
 	 // perform renormalization for superblock {|cr>}
 	 const std::string superblock = "cr"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e, qops1, qops2, qops);
-	 auto fname = oper_fname(scratch, p, "rop");
+	 auto fname = oper_fname(scratch, p, "r");
          oper_save(fname, qops);
       }
    } // idx
@@ -144,7 +144,7 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    // load operators from file
    oper_dict<typename Km::dtype> qops;
    auto p = std::make_pair(0,0); 
-   auto fname = oper_fname(scratch, p, "rop");
+   auto fname = oper_fname(scratch, p, "r");
    oper_load(fname, qops);
    auto Hmat = qops['H'][0].to_matrix();
    Hmat += ecore*linalg::identity_matrix<typename Km::dtype>(Hmat.rows());

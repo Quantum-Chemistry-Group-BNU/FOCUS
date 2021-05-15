@@ -16,7 +16,7 @@ schedule
 3 1.e-3
 end
 maxiter 10
-load
+#load
 #pt2
 $end
 
@@ -24,7 +24,7 @@ $ctns
 kind cNK
 nroots 4
 maxdets 50 #00 #000
-topology_file topology/topo1
+topology_file topology/topo0
 thresh_ortho 1.e-8
 thresh_proj 1.e-10
 schedule
@@ -37,4 +37,9 @@ schedule
 2 2 64 1.e-6 0.0
 end
 maxsweep 4
+#task opt
+#task ham
+task sdiag
+load
+rcanon_file rcanon_new.info
 $end

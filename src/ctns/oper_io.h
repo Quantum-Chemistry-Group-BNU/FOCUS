@@ -13,9 +13,9 @@ extern const bool debug_oper_io;
 inline std::string oper_fname(const std::string scratch, 
   	  	       	      const comb_coord& p,
 		       	      const std::string optype){
-   return scratch + "/" + optype + "("
-        + std::to_string(p.first) + ","
-        + std::to_string(p.second) + ")";
+   return scratch + "/" + optype + "_"
+        + std::to_string(p.first) + "_"
+        + std::to_string(p.second) + ".op";
 }
 
 // add individual operator in future
