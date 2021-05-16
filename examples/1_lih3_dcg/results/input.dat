@@ -1,3 +1,4 @@
+dtype 1
 nelec 6
 integral_file moleinfo/cmole.info 
 scratch ./scratch
@@ -12,15 +13,18 @@ nroots 4
 eps0 -1.e-6
 schedule
 0 1.e-2
-3 -1.e-3
+3 1.e-3
 end
 maxiter 10
+#load
+#pt2
 $end
 
 $ctns
+kind cNK
 nroots 4
 maxdets 50 #00 #000
-topology_file topology/topo1
+topology_file topology/topo0
 thresh_ortho 1.e-8
 thresh_proj 1.e-10
 schedule
@@ -29,9 +33,13 @@ schedule
 #2 1 10 1.e-4 1.e-4
 #4 1 10 1.e-5 0.0
 #0 1 20 1.e-2 1.e-4
-0 2 64 1.e-5 1.e-4 
-2 2 64 1.e-6 0.0
+0 2 64 1.e-4 1.e-4 
+1 2 64 1.e-4 0.0
 end
-maxsweep 4
+maxsweep 3
+task opt
+#task ham
+#task sdiag
+#load
+#rcanon_file rcanon_new.info
 $end
-

@@ -1,0 +1,1438 @@
+-------------------------------------------------------------
+FOCUS: a platform for exploring FermiOniC qUantum Simulations
+Copyright (c) 2019 Zhendong Li	 	  	              
+Author: Zhendong Li <zhendongli2008@gmail.com>	              
+-------------------------------------------------------------
+
+input file = cinput.dat
+
+schedule::read fname = cinput.dat
+dtype 1
+nelec 6
+twoms 0
+integral_file moleinfo/fmole.info
+scratch ./scratch
+
+$sci
+dets 
+#0 1 2 3 4 5 
+0 2 4 7 9 11
+end
+nroots 2
+schedule
+0 1.e-5
+end
+maxiter 3
+$end
+
+$ctns
+kind cNK
+nroots 2
+maxdets 10000
+thresh_proj 1.e-15
+thresh_ortho 1.e-8 
+topology_file topology/topo1
+schedule
+#0 2 10 1.e-4 0.0
+#2 1 10 1.e-4 1.e-4
+#4 1 10 1.e-5 0.0
+#0 1 20 1.e-2 1.e-4
+0 1 60 1.e-5 0.0
+end
+maxsweep 2
+task opt
+#load
+$end
+
+### schedule::print ###
+scratch = ./scratch
+dtype = 1
+nelec = 6
+twoms = 0
+integral_file = moleinfo/fmole.info
+### params_sci::print ###
+nroots = 2
+no. of unique seeds = 1
+0-th det: 0 2 4 7 9 11 
+flip = 0
+eps0 = 0.01
+miniter = 1
+maxiter = 3
+schedule: iter eps1
+0 1e-05
+1 1e-05
+2 1e-05
+convergence parameters
+deltaE = 1e-10
+cisolver = 1
+maxcycle = 100
+crit_v = 1e-06
+ifpt2 = 0 eps2=1e-08
+load = 0
+ci_file = ci.info
+### params_ctns::print ###
+kind = cNK
+task = opt
+topology_file = topology/topo1
+nroots = 2
+maxdets = 10000
+thresh_proj = 1.000000e-15
+thresh_ortho = 1.000000e-08
+cisolver = 1
+maxcycle = 100
+inoise = 2
+guess = 1
+maxsweep = 2
+schedule: iter, dots, dcut, eps, noise
+0 1 60 1.000000e-05 0.000000e+00
+1 1 60 1.000000e-05 0.000000e+00
+load = 0
+rcanon_file = rcanon.info
+
+schedule::create_scratch scratch=./scratch
+already exists scratch=./scratch
+
+integral::load fname = moleinfo/fmole.info
+sorb = 12
+timing for integral::load_integral : 1.00e-03 s
+
+topology::topology fname=topology/topo1
+0
+1
+2
+3
+4
+5
+
+topology::print nphysical=6 nbackbone=6
+topo:
+ i=0 : 0 
+ i=1 : 1 
+ i=2 : 2 
+ i=3 : 3 
+ i=4 : 4 
+ i=5 : 5 
+rcoord:
+ idx=0 coord=(5,0) node: pindex=5 type=0 center=(-1,-1) left=(4,0) right=(-2,-2)
+ idx=1 coord=(4,0) node: pindex=4 type=1 center=(-1,-1) left=(3,0) right=(5,0)
+ idx=2 coord=(3,0) node: pindex=3 type=1 center=(-1,-1) left=(2,0) right=(4,0)
+ idx=3 coord=(2,0) node: pindex=2 type=1 center=(-1,-1) left=(1,0) right=(3,0)
+ idx=4 coord=(1,0) node: pindex=1 type=1 center=(-1,-1) left=(0,0) right=(2,0)
+ idx=5 coord=(0,0) node: pindex=0 type=0 center=(-1,-1) left=(-2,-2) right=(1,0)
+rsupport/lsupport:
+ coord=(5,0) rsupport: 5 
+ coord=(5,0) lsupport: 0 1 2 3 4 
+ coord=(4,0) rsupport: 4 5 
+ coord=(4,0) lsupport: 0 1 2 3 
+ coord=(3,0) rsupport: 3 4 5 
+ coord=(3,0) lsupport: 0 1 2 
+ coord=(2,0) rsupport: 2 3 4 5 
+ coord=(2,0) lsupport: 0 1 
+ coord=(1,0) rsupport: 1 2 3 4 5 
+ coord=(1,0) lsupport: 0 
+ coord=(0,0) rsupport: 0 1 2 3 4 5 
+ coord=(0,0) lsupport: 
+image2:
+ 0 1 2 3 4 5 6 7 8 9 10 11
+
+topology::get_sweeps
+ ibond=0 bond=(1,0)-(2,0) (forward,cturn)=(1,0)
+ ibond=1 bond=(2,0)-(3,0) (forward,cturn)=(1,0)
+ ibond=2 bond=(3,0)-(4,0) (forward,cturn)=(1,0)
+ ibond=3 bond=(3,0)-(4,0) (forward,cturn)=(0,0)
+ ibond=4 bond=(2,0)-(3,0) (forward,cturn)=(0,0)
+ ibond=5 bond=(1,0)-(2,0) (forward,cturn)=(0,0)
+
+fci::ci_load fname=./scratch/ci.info
+
+fci::ci_truncate maxdets=10000 ifortho=1
+ reduction from 399 to 399 dets
+ iroot=0 ova=(1.000000000000e+00,0.000000000000e+00)
+ iroot=1 ova=(1.000000000000e+00,0.000000000000e+00)
+
+ctns::rcanon_init
+
+ctns::get_rbases thresh_proj=1.000000000000e-15
+
+idx=0 node=(5,0) type=0 rsupport=5 
+
+idx=1 node=(4,0) type=1 rsupport=4 5 
+ bpos=4 order=0 1 2 3 4 5 
+
+ctns::right_projection<cNK> thresh=1.0000e-15
+ qr=(0,0) dimB,dimBi=1,1 sumBi=1.2291e-04 sumBc=1.2291e-04
+ qr=(1,0) dimB,dimBi=4,4 sumBi=9.9229e-02 sumBc=9.9351e-02
+ qr=(2,0) dimB,dimBi=6,6 sumBi=8.2063e-01 sumBc=9.1998e-01
+ qr=(3,0) dimB,dimBi=4,4 sumBi=7.9650e-02 sumBc=9.9963e-01
+ qr=(4,0) dimB,dimBi=1,1 sumBi=3.6983e-04 sumBc=1.0000e+00
+dim(space,lspace,rspace)=399,196,16 dimBc=16 sumBc=1.0000e+00 SvN=1.9111e+00
+timing for ctns::right_projection<cNK> : 2.00e-03 s
+
+idx=2 node=(3,0) type=1 rsupport=3 4 5 
+ bpos=3 order=0 1 2 3 4 5 
+
+ctns::right_projection<cNK> thresh=1.0000e-15
+ qr=(0,0) dimB,dimBi=1,1 sumBi=2.5920e-12 sumBc=2.5920e-12
+ qr=(1,0) dimB,dimBi=6,6 sumBi=2.1078e-04 sumBc=2.1078e-04
+ qr=(2,0) dimB,dimBi=15,15 sumBi=1.6328e-01 sumBc=1.6349e-01
+ qr=(3,0) dimB,dimBi=20,20 sumBi=6.7301e-01 sumBc=8.3651e-01
+ qr=(4,0) dimB,dimBi=15,15 sumBi=1.6328e-01 sumBc=9.9979e-01
+ qr=(5,0) dimB,dimBi=6,6 sumBi=2.1078e-04 sumBc=1.0000e+00
+ qr=(6,0) dimB,dimBi=1,1 sumBi=2.5920e-12 sumBc=1.0000e+00
+dim(space,lspace,rspace)=399,64,64 dimBc=64 sumBc=1.0000e+00 SvN=2.7813e+00
+timing for ctns::right_projection<cNK> : 2.00e-03 s
+
+idx=3 node=(2,0) type=1 rsupport=2 3 4 5 
+ bpos=2 order=0 1 2 3 4 5 
+
+ctns::right_projection<cNK> thresh=1.0000e-15
+ qr=(2,0) dimB,dimBi=16,4 sumBi=3.6983e-04 sumBc=3.6983e-04
+ qr=(3,0) dimB,dimBi=48,16 sumBi=7.9650e-02 sumBc=8.0020e-02
+ qr=(4,0) dimB,dimBi=68,24 sumBi=8.2063e-01 sumBc=9.0065e-01
+ qr=(5,0) dimB,dimBi=48,16 sumBi=9.9229e-02 sumBc=9.9988e-01
+ qr=(6,0) dimB,dimBi=16,4 sumBi=1.2291e-04 sumBc=1.0000e+00
+dim(space,lspace,rspace)=399,16,196 dimBc=64 sumBc=1.0000e+00 SvN=2.1380e+00
+timing for ctns::right_projection<cNK> : 8.00e-03 s
+
+idx=4 node=(1,0) type=1 rsupport=1 2 3 4 5 
+ bpos=1 order=0 1 2 3 4 5 
+
+ctns::right_projection<cNK> thresh=1.0000e-15
+ qr=(4,0) dimB,dimBi=100,4 sumBi=1.5571e-01 sumBc=1.5571e-01
+ qr=(5,0) dimB,dimBi=200,8 sumBi=7.3123e-01 sumBc=8.8694e-01
+ qr=(6,0) dimB,dimBi=100,4 sumBi=1.1306e-01 sumBc=1.0000e+00
+dim(space,lspace,rspace)=399,4,400 dimBc=16 sumBc=1.0000e+00 SvN=2.5494e+00
+timing for ctns::right_projection<cNK> : 2.50e-02 s
+
+idx=5 node=(0,0) type=0 rsupport=0 1 2 3 4 5 
+ bpos=0 order=0 1 2 3 4 5 
+
+ctns::right_projection<cNK> thresh=1.0000e-15
+ qr=(6,0) dimB,dimBi=400,4 sumBi=1.0000e+00 sumBc=1.0000e+00
+dim(space,lspace,rspace)=399,1,400 dimBc=4 sumBc=1.0000e+00 SvN=1.0001e+00
+timing for ctns::right_projection<cNK> : 5.10e-02 s
+
+final rbases with thresh_proj=1.00e-15
+ idx=0 node=(5,0) shape=4,4
+ idx=1 node=(4,0) shape=16,16
+ idx=2 node=(3,0) shape=64,64
+ idx=3 node=(2,0) shape=196,64
+ idx=4 node=(1,0) shape=400,16
+ idx=5 node=(0,0) shape=400,4
+maximum bond dimension = 64
+
+timing for ctns::get_rbases : 9.30e-02 s
+
+ctns::get_rsites
+
+idx=0 node=(5,0) type 0: end or leaves
+
+qtensor3: rsites_0 sym=(0,0) dir=1 0 1 
+ qbond: qmid nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qrow nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qcol nsym=1 dimAll=1
+ (0,0):1
+qblocks: nblocks=9
+total no. of nonzero blocks=3
+
+idx=1 node=(4,0) type 1/2: physical site on backbone/branch
+
+qtensor3: rsites_1 sym=(0,0) dir=1 0 1 
+ qbond: qmid nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qrow nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+ qbond: qcol nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+qblocks: nblocks=45
+total no. of nonzero blocks=9
+
+idx=2 node=(3,0) type 1/2: physical site on backbone/branch
+
+qtensor3: rsites_2 sym=(0,0) dir=1 0 1 
+ qbond: qmid nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qrow nsym=7 dimAll=64
+ (0,0):1 (1,0):6 (2,0):15 (3,0):20 (4,0):15 (5,0):6 (6,0):1
+ qbond: qcol nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+qblocks: nblocks=105
+total no. of nonzero blocks=15
+
+idx=3 node=(2,0) type 1/2: physical site on backbone/branch
+
+qtensor3: rsites_3 sym=(0,0) dir=1 0 1 
+ qbond: qmid nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qrow nsym=5 dimAll=64
+ (2,0):4 (3,0):16 (4,0):24 (5,0):16 (6,0):4
+ qbond: qcol nsym=7 dimAll=64
+ (0,0):1 (1,0):6 (2,0):15 (3,0):20 (4,0):15 (5,0):6 (6,0):1
+qblocks: nblocks=105
+total no. of nonzero blocks=15
+
+idx=4 node=(1,0) type 1/2: physical site on backbone/branch
+
+qtensor3: rsites_4 sym=(0,0) dir=1 0 1 
+ qbond: qmid nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qrow nsym=3 dimAll=16
+ (4,0):4 (5,0):8 (6,0):4
+ qbond: qcol nsym=5 dimAll=64
+ (2,0):4 (3,0):16 (4,0):24 (5,0):16 (6,0):4
+qblocks: nblocks=45
+total no. of nonzero blocks=9
+
+idx=5 node=(0,0) type 1/2: physical site on backbone/branch
+
+qtensor3: rsites_5 sym=(0,0) dir=1 0 1 
+ qbond: qmid nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qrow nsym=1 dimAll=4
+ (6,0):4
+ qbond: qcol nsym=3 dimAll=16
+ (4,0):4 (5,0):8 (6,0):4
+qblocks: nblocks=9
+total no. of nonzero blocks=3
+
+timing for ctns::get_rsites : 1.01e-01 s
+
+ctns::get_rwfuns thresh_proj=1.00e-15
+
+qtensor2: rwfuns sym=(0,0) dir=0 1 
+ qbond: qrow nsym=1 dimAll=2
+ (6,0):2
+ qbond: qcol nsym=1 dimAll=4
+ (6,0):4
+qblocks: nblocks=1
+idx=0 block[(6,0),(6,0)] rows,cols=(2,4)
+matrix: blk size=(2,4)
+(0.0000e+00,-5.3743e-10) (-1.0000e+00,0.0000e+00) (0.0000e+00,-1.9040e-03) (-9.4728e-13,0.0000e+00) 
+(0.0000e+00,1.0000e+00) (-5.3743e-10,0.0000e+00) (0.0000e+00,-1.0233e-12) (1.7625e-03,0.0000e+00) 
+total no. of nonzero blocks=1
+
+check state overlaps
+matrix: ova_rwfuns size=(2,2)
+(1.0000e+00,0.0000e+00) (-1.4564e-16,0.0000e+00) 
+(-1.4564e-16,0.0000e+00) (1.0000e+00,0.0000e+00) 
+matrix: ova0_vs size=(2,2)
+(1.0000e+00,0.0000e+00) (-7.9699e-17,0.0000e+00) 
+(-7.9699e-17,0.0000e+00) (1.0000e+00,0.0000e+00) 
+diff of ova matrix = 1.941e-15
+
+timing for ctns::rcanon_init : 0.2 s
+
+ctns::rcanon_save fname=./scratch/rcanon.info
+
+ctns::rcanon_check thresh_ortho=1e-08
+idx=0 node=(5,0) Dtot=4 maxdiff=0.00e+00
+idx=1 node=(4,0) Dtot=16 maxdiff=1.08e-15
+idx=2 node=(3,0) Dtot=64 maxdiff=4.16e-15
+idx=3 node=(2,0) Dtot=64 maxdiff=4.19e-15
+idx=4 node=(1,0) Dtot=16 maxdiff=2.42e-12
+idx=5 node=(0,0) Dtot=4 maxdiff=1.55e-15
+
+### ctns.task=opt ###
+
+ctns::sweep_opt maxsweep=2
+ctns::oper_env_right
+ctns::oper_renorm_opAll coord=(4,0) superblock=cr ifkr=1
+ctns::oper_renorm_opAll coord=(3,0) superblock=cr ifkr=1
+ctns::oper_renorm_opAll coord=(2,0) superblock=cr ifkr=1
+ctns::oper_renorm_opAll coord=(1,0) superblock=cr ifkr=1
+ctns::oper_renorm_opAll coord=(0,0) superblock=cr ifkr=1
+timing for ctns::oper_env_right : 3.15e-01 s
+
+topology::get_sweeps
+ ibond=0 bond=(1,0)-(2,0) (forward,cturn)=(1,0)
+ ibond=1 bond=(2,0)-(3,0) (forward,cturn)=(1,0)
+ ibond=2 bond=(3,0)-(4,0) (forward,cturn)=(1,0)
+ ibond=3 bond=(3,0)-(4,0) (forward,cturn)=(0,0)
+ ibond=4 bond=(2,0)-(3,0) (forward,cturn)=(0,0)
+ ibond=5 bond=(1,0)-(2,0) (forward,cturn)=(0,0)
+======================================================================
+sweep parameters: isweep=0 dots=1 dcut=60 eps=1.00e-05 noise=0.00e+00
+======================================================================
+
+isweep=0 ibond=0 bond=(1,0)-(2,0) (dots,forward,cturn)=(1,1,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 1
+ suppl : 0
+ suppr : 2 3 4 5
+ ifln=1
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qr nsym=5 dimAll=64
+ (2,0):4 (3,0):16 (4,0):24 (5,0):16 (6,0):4
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ rqops: H:1 C:4 S:2 A:16 B:20 P:4 Q:6 
+dim(localCI)=280
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2.00e+00 |i(psi-psiK)|=3.81e-03
+ iguess=1 |psi+psiK|=3.52e-03 |i(psi-psiK)|=2.00e+00
+ neig,nindp=2,4
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 4.20e-02 s for nstate = 2
+settings: ndim=280 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 -      -3.236061706187  -1.00e+03   2.46e-03    2     2   4.20e-02
+    1   1 -      -2.795716323740  -1.00e+03   8.04e-03    2     2   4.20e-02
+timing for HVecs : 4.20e-02 s for nstate = 2
+    2   0 -      -3.236066185975  -4.48e-06   3.49e-04    4     4   4.20e-02
+    2   1 -      -2.795767909066  -5.16e-05   5.05e-03    4     4   4.20e-02
+timing for HVecs : 4.20e-02 s for nstate = 2
+    3   0 -      -3.236066263464  -7.75e-08   1.35e-04    4     6   4.20e-02
+    3   1 -      -2.795782339908  -1.44e-05   3.22e-03    4     6   4.20e-02
+timing for HVecs : 4.20e-02 s for nstate = 2
+    4   0 -      -3.236066274356  -1.09e-08   6.69e-05    4     8   4.20e-02
+    4   1 -      -2.795789182097  -6.84e-06   2.61e-03    4     8   4.20e-02
+timing for HVecs : 4.30e-02 s for nstate = 2
+    5   0 -      -3.236066277569  -3.21e-09   4.44e-05    4    10   4.30e-02
+    5   1 -      -2.795793163854  -3.98e-06   1.90e-03    4    10   4.30e-02
+timing for HVecs : 4.20e-02 s for nstate = 2
+    6   0 -      -3.236066278819  -1.25e-09   2.71e-05    4    12   4.20e-02
+    6   1 -      -2.795795533006  -2.37e-06   1.55e-03    4    12   4.20e-02
+timing for HVecs : 4.20e-02 s for nstate = 2
+    7   0 -      -3.236066279365  -5.47e-10   1.97e-05    4    14   4.20e-02
+    7   1 -      -2.795796962538  -1.43e-06   1.15e-03    4    14   4.20e-02
+timing for HVecs : 4.20e-02 s for nstate = 2
+    8   0 -      -3.236066279615  -2.49e-10   1.25e-05    4    16   4.20e-02
+    8   1 -      -2.795797840656  -8.78e-07   9.46e-04    4    16   4.20e-02
+timing for HVecs : 4.20e-02 s for nstate = 2
+    9   0 +      -3.236066279731  -1.16e-10   9.23e-06    4    18   4.30e-02
+    9   1 -      -2.795798385477  -5.45e-07   7.16e-04    4    18   4.30e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   10   0 +      -3.236066279732  -4.91e-13   9.12e-06    3    19   2.10e-02
+   10   1 -      -2.795798729003  -3.44e-07   5.92e-04    3    19   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   11   0 +      -3.236066279732  -5.15e-14   9.14e-06    3    20   2.10e-02
+   11   1 -      -2.795798950813  -2.22e-07   4.60e-04    3    20   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   12   0 +      -3.236066279732  -2.22e-15   9.14e-06    3    21   2.10e-02
+   12   1 -      -2.795799098586  -1.48e-07   3.85e-04    3    21   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   13   0 +      -3.236066279732  -2.80e-14   9.15e-06    3    22   2.10e-02
+   13   1 -      -2.795799199849  -1.01e-07   3.10e-04    3    22   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   14   0 +      -3.236066279732  -6.31e-14   9.14e-06    3    23   2.10e-02
+   14   1 -      -2.795799271707  -7.19e-08   2.65e-04    3    23   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   15   0 +      -3.236066279732  -1.11e-13   9.17e-06    3    24   2.10e-02
+   15   1 -      -2.795799324352  -5.26e-08   2.22e-04    3    24   2.10e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   16   0 +      -3.236066279732  -1.93e-13   9.14e-06    3    25   2.10e-02
+   16   1 -      -2.795799364355  -4.00e-08   1.94e-04    3    25   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   17   0 +      -3.236066279732  -2.61e-13   9.18e-06    3    26   2.10e-02
+   17   1 -      -2.795799395677  -3.13e-08   1.70e-04    3    26   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   18   0 +      -3.236066279733  -3.72e-13   9.14e-06    3    27   2.10e-02
+   18   1 -      -2.795799420984  -2.53e-08   1.52e-04    3    27   2.10e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   19   0 +      -3.236066279733  -4.42e-13   9.20e-06    3    28   2.20e-02
+   19   1 -      -2.795799441926  -2.09e-08   1.38e-04    3    28   2.20e-02
+timing for HVecs : 2.50e-02 s for nstate = 1
+   20   0 +      -3.236066279734  -5.68e-13   9.15e-06    3    29   2.50e-02
+   20   1 -      -2.795799459677  -1.78e-08   1.26e-04    3    29   2.50e-02
+timing for HVecs : 2.30e-02 s for nstate = 1
+   21   0 +      -3.236066279734  -6.20e-13   9.21e-06    3    30   2.40e-02
+   21   1 -      -2.795799474997  -1.53e-08   1.17e-04    3    30   2.40e-02
+timing for HVecs : 2.30e-02 s for nstate = 1
+   22   0 +      -3.236066279735  -7.47e-13   9.15e-06    3    31   2.30e-02
+   22   1 -      -2.795799488465  -1.35e-08   1.09e-04    3    31   2.30e-02
+timing for HVecs : 2.40e-02 s for nstate = 1
+   23   0 +      -3.236066279736  -7.75e-13   9.22e-06    3    32   2.50e-02
+   23   1 -      -2.795799500479  -1.20e-08   1.04e-04    3    32   2.50e-02
+timing for HVecs : 2.30e-02 s for nstate = 1
+   24   0 +      -3.236066279737  -8.94e-13   9.16e-06    3    33   2.30e-02
+   24   1 -      -2.795799511364  -1.09e-08   9.75e-05    3    33   2.30e-02
+timing for HVecs : 2.30e-02 s for nstate = 1
+   25   0 +      -3.236066279738  -9.02e-13   9.22e-06    3    34   2.30e-02
+   25   1 -      -2.795799521355  -9.99e-09   9.52e-05    3    34   2.30e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   26   0 +      -3.236066279739  -1.01e-12   9.17e-06    3    35   2.20e-02
+   26   1 -      -2.795799530658  -9.30e-09   9.03e-05    3    35   2.20e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   27   0 +      -3.236066279740  -9.92e-13   9.22e-06    3    36   2.20e-02
+   27   1 -      -2.795799539427  -8.77e-09   8.98e-05    3    36   2.20e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   28   0 +      -3.236066279741  -1.07e-12   9.17e-06    3    37   2.20e-02
+   28   1 -      -2.795799547806  -8.38e-09   8.62e-05    3    37   2.20e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   29   0 +      -3.236066279742  -1.04e-12   9.22e-06    3    38   2.10e-02
+   29   1 -      -2.795799555904  -8.10e-09   8.71e-05    3    38   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   30   0 +      -3.236066279743  -1.09e-12   9.17e-06    3    39   2.10e-02
+   30   1 -      -2.795799563828  -7.92e-09   8.45e-05    3    39   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   31   0 +      -3.236066279744  -1.03e-12   9.21e-06    3    40   2.10e-02
+   31   1 -      -2.795799571662  -7.83e-09   8.65e-05    3    40   2.10e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   32   0 +      -3.236066279745  -1.05e-12   9.17e-06    3    41   2.10e-02
+   32   1 -      -2.795799579490  -7.83e-09   8.47e-05    3    41   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   33   0 +      -3.236066279746  -9.68e-13   9.20e-06    3    42   2.10e-02
+   33   1 -      -2.795799587379  -7.89e-09   8.77e-05    3    42   2.10e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   34   0 +      -3.236066279747  -9.59e-13   9.16e-06    3    43   2.10e-02
+   34   1 -      -2.795799595399  -8.02e-09   8.66e-05    3    43   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   35   0 +      -3.236066279748  -8.67e-13   9.19e-06    3    44   2.10e-02
+   35   1 -      -2.795799603607  -8.21e-09   9.02e-05    3    44   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   36   0 +      -3.236066279748  -8.35e-13   9.16e-06    3    45   2.10e-02
+   36   1 -      -2.795799612063  -8.46e-09   8.97e-05    3    45   2.10e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   37   0 +      -3.236066279749  -7.38e-13   9.18e-06    3    46   2.10e-02
+   37   1 -      -2.795799620818  -8.76e-09   9.39e-05    3    46   2.10e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   38   0 +      -3.236066279750  -6.96e-13   9.15e-06    3    47   2.10e-02
+   38   1 -      -2.795799629928  -9.11e-09   9.38e-05    3    47   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   39   0 +      -3.236066279751  -6.05e-13   9.17e-06    3    48   2.10e-02
+   39   1 -      -2.795799639441  -9.51e-09   9.85e-05    3    48   2.10e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   40   0 +      -3.236066279751  -5.56e-13   9.15e-06    3    49   2.10e-02
+   40   1 -      -2.795799649407  -9.97e-09   9.87e-05    3    49   2.10e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   41   0 +      -3.236066279752  -4.75e-13   9.16e-06    3    50   2.10e-02
+   41   1 -      -2.795799659876  -1.05e-08   1.04e-04    3    50   2.10e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   42   0 +      -3.236066279752  -4.28e-13   9.15e-06    3    51   2.10e-02
+   42   1 -      -2.795799670899  -1.10e-08   1.04e-04    3    51   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   43   0 +      -3.236066279752  -3.64e-13   9.16e-06    3    52   2.10e-02
+   43   1 -      -2.795799682523  -1.16e-08   1.10e-04    3    52   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   44   0 +      -3.236066279753  -3.25e-13   9.14e-06    3    53   2.10e-02
+   44   1 -      -2.795799694803  -1.23e-08   1.11e-04    3    53   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   45   0 +      -3.236066279753  -2.68e-13   9.15e-06    3    54   2.10e-02
+   45   1 -      -2.795799707789  -1.30e-08   1.16e-04    3    54   2.10e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   46   0 +      -3.236066279753  -2.37e-13   9.14e-06    3    55   2.20e-02
+   46   1 -      -2.795799721537  -1.37e-08   1.17e-04    3    55   2.20e-02
+timing for HVecs : 2.30e-02 s for nstate = 1
+   47   0 +      -3.236066279753  -1.94e-13   9.15e-06    3    56   2.30e-02
+   47   1 -      -2.795799736103  -1.46e-08   1.24e-04    3    56   2.30e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   48   0 +      -3.236066279754  -1.72e-13   9.14e-06    3    57   2.10e-02
+   48   1 -      -2.795799751545  -1.54e-08   1.25e-04    3    57   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   49   0 +      -3.236066279754  -1.40e-13   9.15e-06    3    58   2.10e-02
+   49   1 -      -2.795799767927  -1.64e-08   1.31e-04    3    58   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   50   0 +      -3.236066279754  -1.18e-13   9.14e-06    3    59   2.20e-02
+   50   1 -      -2.795799785311  -1.74e-08   1.33e-04    3    59   2.20e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   51   0 +      -3.236066279754  -9.99e-14   9.14e-06    3    60   2.10e-02
+   51   1 -      -2.795799803768  -1.85e-08   1.40e-04    3    60   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   52   0 +      -3.236066279754  -8.26e-14   9.14e-06    3    61   2.10e-02
+   52   1 -      -2.795799823368  -1.96e-08   1.41e-04    3    61   2.10e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   53   0 +      -3.236066279754  -6.84e-14   9.14e-06    3    62   2.10e-02
+   53   1 -      -2.795799844188  -2.08e-08   1.48e-04    3    62   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   54   0 +      -3.236066279754  -5.73e-14   9.14e-06    3    63   2.10e-02
+   54   1 -      -2.795799866310  -2.21e-08   1.50e-04    3    63   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   55   0 +      -3.236066279754  -4.66e-14   9.14e-06    3    64   2.10e-02
+   55   1 -      -2.795799889821  -2.35e-08   1.58e-04    3    64   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   56   0 +      -3.236066279754  -3.82e-14   9.14e-06    3    65   2.20e-02
+   56   1 -      -2.795799914813  -2.50e-08   1.60e-04    3    65   2.20e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   57   0 +      -3.236066279754  -3.29e-14   9.14e-06    3    66   2.10e-02
+   57   1 -      -2.795799941389  -2.66e-08   1.68e-04    3    66   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   58   0 +      -3.236066279754  -2.75e-14   9.14e-06    3    67   2.10e-02
+   58   1 -      -2.795799969661  -2.83e-08   1.70e-04    3    67   2.10e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   59   0 +      -3.236066279754  -2.00e-14   9.14e-06    3    68   2.20e-02
+   59   1 -      -2.795799999755  -3.01e-08   1.79e-04    3    68   2.20e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   60   0 +      -3.236066279754  -1.73e-14   9.14e-06    3    69   2.10e-02
+   60   1 -      -2.795800031818  -3.21e-08   1.81e-04    3    69   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   61   0 +      -3.236066279754  -1.51e-14   9.14e-06    3    70   2.10e-02
+   61   1 -      -2.795800066022  -3.42e-08   1.91e-04    3    70   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   62   0 +      -3.236066279754  -1.29e-14   9.14e-06    3    71   2.10e-02
+   62   1 -      -2.795800102591  -3.66e-08   1.94e-04    3    71   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   63   0 +      -3.236066279754  -7.55e-15   9.14e-06    3    72   2.10e-02
+   63   1 -      -2.795800141809  -3.92e-08   2.05e-04    3    72   2.10e-02
+timing for HVecs : 2.30e-02 s for nstate = 1
+   64   0 +      -3.236066279754  -9.77e-15   9.14e-06    3    73   2.30e-02
+   64   1 -      -2.795800184091  -4.23e-08   2.09e-04    3    73   2.30e-02
+timing for HVecs : 2.40e-02 s for nstate = 1
+   65   0 +      -3.236066279754  -6.22e-15   9.15e-06    3    74   2.40e-02
+   65   1 -      -2.795800230011  -4.59e-08   2.22e-04    3    74   2.40e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   66   0 +      -3.236066279754  -7.11e-15   9.14e-06    3    75   2.10e-02
+   66   1 -      -2.795800280508  -5.05e-08   2.29e-04    3    75   2.10e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   67   0 +      -3.236066279754  -2.22e-15   9.15e-06    3    76   2.20e-02
+   67   1 -      -2.795800336963  -5.65e-08   2.47e-04    3    76   2.20e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   68   0 +      -3.236066279754  -8.88e-16   9.15e-06    3    77   2.10e-02
+   68   1 -      -2.795800401816  -6.49e-08   2.63e-04    3    77   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   69   0 +      -3.236066279754   0.00e+00   9.15e-06    3    78   2.10e-02
+   69   1 -      -2.795800478837  -7.70e-08   2.91e-04    3    78   2.10e-02
+timing for HVecs : 2.40e-02 s for nstate = 1
+   70   0 +      -3.236066279754  -2.22e-15   9.15e-06    3    79   2.40e-02
+   70   1 -      -2.795800574967  -9.61e-08   3.27e-04    3    79   2.40e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   71   0 +      -3.236066279754  -4.44e-16   9.15e-06    3    80   2.20e-02
+   71   1 -      -2.795800701452  -1.26e-07   3.78e-04    3    80   2.20e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   72   0 +      -3.236066279754  -4.44e-16   9.15e-06    3    81   2.10e-02
+   72   1 -      -2.795800879329  -1.78e-07   4.60e-04    3    81   2.10e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   73   0 +      -3.236066279754  -1.78e-15   9.15e-06    3    82   2.20e-02
+   73   1 -      -2.795801144202  -2.65e-07   5.55e-04    3    82   2.20e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   74   0 +      -3.236066279754   1.78e-15   9.15e-06    3    83   2.10e-02
+   74   1 -      -2.795801562199  -4.18e-07   7.26e-04    3    83   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   75   0 +      -3.236066279754  -3.55e-15   9.15e-06    3    84   2.10e-02
+   75   1 -      -2.795802248721  -6.87e-07   9.01e-04    3    84   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   76   0 +      -3.236066279754   8.88e-16   9.15e-06    3    85   2.10e-02
+   76   1 -      -2.795803414800  -1.17e-06   1.24e-03    3    85   2.10e-02
+timing for HVecs : 2.40e-02 s for nstate = 1
+   77   0 +      -3.236066279754   1.78e-15   9.15e-06    3    86   2.40e-02
+   77   1 -      -2.795805435079  -2.02e-06   1.55e-03    3    86   2.40e-02
+timing for HVecs : 2.60e-02 s for nstate = 1
+   78   0 +      -3.236066279754  -3.11e-15   9.15e-06    3    87   2.60e-02
+   78   1 -      -2.795808987214  -3.55e-06   2.18e-03    3    87   2.60e-02
+timing for HVecs : 2.40e-02 s for nstate = 1
+   79   0 +      -3.236066279754  -2.22e-15   9.15e-06    3    88   2.50e-02
+   79   1 -      -2.795815284508  -6.30e-06   2.74e-03    3    88   2.50e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   80   0 +      -3.236066279754   4.44e-16   9.15e-06    3    89   2.10e-02
+   80   1 -      -2.795826508820  -1.12e-05   3.89e-03    3    89   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   81   0 +      -3.236066279754  -4.44e-16   9.15e-06    3    90   2.10e-02
+   81   1 -      -2.795846582602  -2.01e-05   4.88e-03    3    90   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   82   0 +      -3.236066279754   1.78e-15   9.15e-06    3    91   2.10e-02
+   82   1 -      -2.795882530083  -3.59e-05   6.97e-03    3    91   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   83   0 +      -3.236066279754  -2.66e-15   9.15e-06    3    92   2.10e-02
+   83   1 -      -2.795947006022  -6.45e-05   8.75e-03    3    92   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   84   0 +      -3.236066279754  -4.44e-16   9.15e-06    3    93   2.10e-02
+   84   1 -      -2.796062536103  -1.16e-04   1.25e-02    3    93   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   85   0 +      -3.236066279754  -4.44e-16   9.15e-06    3    94   2.10e-02
+   85   1 -      -2.796269715809  -2.07e-04   1.57e-02    3    94   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   86   0 +      -3.236066279754   8.88e-16   9.15e-06    3    95   2.10e-02
+   86   1 -      -2.796639838052  -3.70e-04   2.24e-02    3    95   2.10e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   87   0 +      -3.236066279754  -8.88e-16   9.15e-06    3    96   2.20e-02
+   87   1 -      -2.797300683356  -6.61e-04   2.79e-02    3    96   2.20e-02
+timing for HVecs : 2.00e-02 s for nstate = 1
+   88   0 +      -3.236066279754  -4.44e-16   9.15e-06    3    97   2.10e-02
+   88   1 -      -2.798468827365  -1.17e-03   3.96e-02    3    97   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   89   0 +      -3.236066279754   4.44e-16   9.15e-06    3    98   2.10e-02
+   89   1 -      -2.800522200015  -2.05e-03   4.91e-02    3    98   2.10e-02
+timing for HVecs : 2.20e-02 s for nstate = 1
+   90   0 +      -3.236066279754  -8.88e-16   9.15e-06    3    99   2.30e-02
+   90   1 -      -2.804039992896  -3.52e-03   6.80e-02    3    99   2.30e-02
+timing for HVecs : 2.40e-02 s for nstate = 1
+   91   0 +      -3.236066279754   0.00e+00   9.15e-06    3   100   2.40e-02
+   91   1 -      -2.809941160569  -5.90e-03   8.22e-02    3   100   2.40e-02
+timing for HVecs : 2.40e-02 s for nstate = 1
+   92   0 +      -3.236066279754  -3.55e-15   9.15e-06    3   101   2.40e-02
+   92   1 -      -2.819265820517  -9.32e-03   1.08e-01    3   101   2.40e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   93   0 +      -3.236066279754  -1.78e-15   9.15e-06    3   102   2.10e-02
+   93   1 -      -2.833248396240  -1.40e-02   1.23e-01    3   102   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   94   0 +      -3.236066279754   0.00e+00   9.14e-06    3   103   2.10e-02
+   94   1 -      -2.852146230018  -1.89e-02   1.48e-01    3   103   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   95   0 +      -3.236066279754  -5.33e-15   9.15e-06    3   104   2.10e-02
+   95   1 -      -2.875753885537  -2.36e-02   1.54e-01    3   104   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   96   0 +      -3.236066279754  -7.11e-15   9.14e-06    3   105   2.10e-02
+   96   1 -      -2.902033263488  -2.63e-02   1.67e-01    3   105   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   97   0 +      -3.236066279754  -4.00e-15   9.14e-06    3   106   2.10e-02
+   97   1 -      -2.929182320910  -2.71e-02   1.60e-01    3   106   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   98   0 +      -3.236066279754  -8.44e-15   9.14e-06    3   107   2.10e-02
+   98   1 -      -2.954778477507  -2.56e-02   1.59e-01    3   107   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+   99   0 +      -3.236066279754  -2.22e-15   9.14e-06    3   108   2.10e-02
+   99   1 -      -2.977507366685  -2.27e-02   1.43e-01    3   108   2.10e-02
+timing for HVecs : 2.10e-02 s for nstate = 1
+  100   0 +      -3.236066279754  -1.33e-15   9.14e-06    3   109   2.10e-02
+  100   1 -      -2.996434289888  -1.89e-02   1.33e-01    3   109   2.10e-02
+convergence failure: out of maxcycle =100
+ctns::onedot_decimation |lc> (forward,cturn,dcut,inoise,noise)=1,0,60,2,0.0e+00
+ decimation summary: 16->16  dwt=-2.2e-16  SvN=2.2e+00
+ctns::oper_renorm_opAll coord=(1,0) superblock=lc ifkr=1
+timing for ctns::sweep_onedot : 2.45e+00 s
+ t(procs) = 2.90e-02 s  per = 1.2  per(accum) = 1.2
+ t(hdiag) = 0.00e+00 s  per = 0  per(accum) = 1.2
+ t(dvdsn) = 2.39e+00 s  per = 98  per(accum) = 99
+ t(decim) = 0.00e+00 s  per = 0  per(accum) = 99
+ t(renrm) = 2.30e-02 s  per = 0.94  per(accum) = 1e+02
+
+isweep=0 ibond=1 bond=(2,0)-(3,0) (dots,forward,cturn)=(1,1,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 2
+ suppl : 0 1
+ suppr : 3 4 5
+ ifln=1
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+ qbond: qr nsym=7 dimAll=64
+ (0,0):1 (1,0):6 (2,0):15 (3,0):20 (4,0):15 (5,0):6 (6,0):1
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:2 S:4 A:4 B:6 P:16 Q:20 
+ rqops: H:1 C:3 S:3 A:9 B:12 P:9 Q:12 
+dim(localCI)=924
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=2e-16
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=1.5e-16
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.12 s for nstate = 2
+settings: ndim=924 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 -      -3.236066279754  -1.00e+03   1.75e-05    2     2   1.26e-01
+    1   1 -      -2.996434289888  -1.00e+03   1.43e-01    2     2   1.26e-01
+timing for HVecs : 1.33e-01 s for nstate = 2
+    2   0 +      -3.236066279870  -1.16e-10   5.39e-06    4     4   1.33e-01
+    2   1 -      -3.030683276546  -3.42e-02   1.46e-01    4     4   1.33e-01
+timing for HVecs : 6.50e-02 s for nstate = 1
+    3   0 +      -3.236066279870  -2.51e-13   5.37e-06    3     5   6.50e-02
+    3   1 -      -3.044741823776  -1.41e-02   8.36e-02    3     5   6.50e-02
+timing for HVecs : 6.60e-02 s for nstate = 1
+    4   0 +      -3.236066279870  -8.17e-14   5.35e-06    3     6   6.60e-02
+    4   1 -      -3.050399592002  -5.66e-03   7.32e-02    3     6   6.60e-02
+timing for HVecs : 7.10e-02 s for nstate = 1
+    5   0 +      -3.236066279870  -9.46e-14   5.33e-06    3     7   7.20e-02
+    5   1 -      -3.054024098192  -3.62e-03   5.52e-02    3     7   7.20e-02
+timing for HVecs : 7.10e-02 s for nstate = 1
+    6   0 +      -3.236066279870  -4.44e-16   5.33e-06    3     8   7.20e-02
+    6   1 -      -3.056465971597  -2.44e-03   4.97e-02    3     8   7.20e-02
+timing for HVecs : 6.70e-02 s for nstate = 1
+    7   0 +      -3.236066279870  -1.33e-15   5.33e-06    3     9   6.70e-02
+    7   1 -      -3.058192751683  -1.73e-03   3.90e-02    3     9   6.70e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+    8   0 +      -3.236066279870  -8.88e-16   5.33e-06    3    10   6.40e-02
+    8   1 -      -3.059420304597  -1.23e-03   3.52e-02    3    10   6.40e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+    9   0 +      -3.236066279870  -4.44e-16   5.33e-06    3    11   6.20e-02
+    9   1 -      -3.060295534615  -8.75e-04   2.78e-02    3    11   6.20e-02
+timing for HVecs : 6.60e-02 s for nstate = 1
+   10   0 +      -3.236066279870  -3.11e-15   5.33e-06    3    12   6.70e-02
+   10   1 -      -3.060920605347  -6.25e-04   2.51e-02    3    12   6.70e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   11   0 +      -3.236066279870   4.44e-15   5.33e-06    3    13   6.30e-02
+   11   1 -      -3.061367334607  -4.47e-04   1.98e-02    3    13   6.30e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   12   0 +      -3.236066279870  -6.22e-15   5.33e-06    3    14   6.30e-02
+   12   1 -      -3.061687342682  -3.20e-04   1.79e-02    3    14   6.30e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   13   0 +      -3.236066279870   4.44e-16   5.33e-06    3    15   6.40e-02
+   13   1 -      -3.061916887515  -2.30e-04   1.42e-02    3    15   6.40e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   14   0 +      -3.236066279870  -1.78e-15   5.33e-06    3    16   6.30e-02
+   14   1 -      -3.062082007210  -1.65e-04   1.29e-02    3    16   6.30e-02
+timing for HVecs : 7.20e-02 s for nstate = 1
+   15   0 +      -3.236066279870  -4.44e-16   5.33e-06    3    17   7.30e-02
+   15   1 -      -3.062201008946  -1.19e-04   1.02e-02    3    17   7.30e-02
+timing for HVecs : 7.40e-02 s for nstate = 1
+   16   0 +      -3.236066279870  -4.44e-16   5.33e-06    3    18   7.40e-02
+   16   1 -      -3.062287037390  -8.60e-05   9.30e-03    3    18   7.40e-02
+timing for HVecs : 6.80e-02 s for nstate = 1
+   17   0 +      -3.236066279870  -2.66e-15   5.33e-06    3    19   6.90e-02
+   17   1 -      -3.062349364953  -6.23e-05   7.40e-03    3    19   6.90e-02
+timing for HVecs : 6.60e-02 s for nstate = 1
+   18   0 +      -3.236066279870   5.33e-15   5.33e-06    3    20   6.70e-02
+   18   1 -      -3.062394662622  -4.53e-05   6.75e-03    3    20   6.70e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   19   0 +      -3.236066279870  -8.88e-16   5.33e-06    3    21   6.40e-02
+   19   1 -      -3.062427658803  -3.30e-05   5.38e-03    3    21   6.40e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   20   0 +      -3.236066279870  -8.88e-16   5.33e-06    3    22   6.30e-02
+   20   1 -      -3.062451767322  -2.41e-05   4.92e-03    3    22   6.30e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   21   0 +      -3.236066279870  -3.55e-15   5.33e-06    3    23   6.40e-02
+   21   1 -      -3.062469421733  -1.77e-05   3.94e-03    3    23   6.40e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   22   0 +      -3.236066279870   0.00e+00   5.33e-06    3    24   6.40e-02
+   22   1 -      -3.062482386777  -1.30e-05   3.61e-03    3    24   6.40e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   23   0 +      -3.236066279870   1.78e-15   5.33e-06    3    25   6.30e-02
+   23   1 -      -3.062491928242  -9.54e-06   2.89e-03    3    25   6.30e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   24   0 +      -3.236066279870   4.00e-15   5.33e-06    3    26   6.20e-02
+   24   1 -      -3.062498968467  -7.04e-06   2.66e-03    3    26   6.20e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   25   0 +      -3.236066279870  -2.22e-15   5.33e-06    3    27   6.40e-02
+   25   1 -      -3.062504173205  -5.20e-06   2.14e-03    3    27   6.40e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   26   0 +      -3.236066279870  -3.55e-15   5.33e-06    3    28   6.40e-02
+   26   1 -      -3.062508029941  -3.86e-06   1.97e-03    3    28   6.40e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   27   0 +      -3.236066279870   2.66e-15   5.33e-06    3    29   6.50e-02
+   27   1 -      -3.062510892737  -2.86e-06   1.59e-03    3    29   6.50e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   28   0 +      -3.236066279870  -4.44e-16   5.33e-06    3    30   6.40e-02
+   28   1 -      -3.062513022069  -2.13e-06   1.47e-03    3    30   6.40e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   29   0 +      -3.236066279870  -8.88e-16   5.33e-06    3    31   6.30e-02
+   29   1 -      -3.062514608244  -1.59e-06   1.18e-03    3    31   6.30e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   30   0 +      -3.236066279870   2.66e-15   5.33e-06    3    32   6.30e-02
+   30   1 -      -3.062515791883  -1.18e-06   1.09e-03    3    32   6.30e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   31   0 +      -3.236066279870  -3.55e-15   5.33e-06    3    33   6.30e-02
+   31   1 -      -3.062516676283  -8.84e-07   8.82e-04    3    33   6.30e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   32   0 +      -3.236066279870   2.22e-15   5.33e-06    3    34   6.30e-02
+   32   1 -      -3.062517338079  -6.62e-07   8.18e-04    3    34   6.30e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   33   0 +      -3.236066279870   2.66e-15   5.33e-06    3    35   6.40e-02
+   33   1 -      -3.062517833844  -4.96e-07   6.60e-04    3    35   6.40e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   34   0 +      -3.236066279870  -4.44e-16   5.33e-06    3    36   6.40e-02
+   34   1 -      -3.062518205695  -3.72e-07   6.13e-04    3    36   6.40e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   35   0 +      -3.236066279870   0.00e+00   5.33e-06    3    37   6.40e-02
+   35   1 -      -3.062518484861  -2.79e-07   4.96e-04    3    37   6.40e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   36   0 +      -3.236066279870  -4.44e-16   5.33e-06    3    38   6.40e-02
+   36   1 -      -3.062518694661  -2.10e-07   4.61e-04    3    38   6.40e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   37   0 +      -3.236066279870   2.66e-15   5.33e-06    3    39   6.50e-02
+   37   1 -      -3.062518852451  -1.58e-07   3.73e-04    3    39   6.50e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   38   0 +      -3.236066279870  -5.33e-15   5.33e-06    3    40   6.30e-02
+   38   1 -      -3.062518971227  -1.19e-07   3.47e-04    3    40   6.30e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   39   0 +      -3.236066279870   0.00e+00   5.33e-06    3    41   6.20e-02
+   39   1 -      -3.062519060690  -8.95e-08   2.81e-04    3    41   6.20e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   40   0 +      -3.236066279870   3.55e-15   5.33e-06    3    42   6.20e-02
+   40   1 -      -3.062519128123  -6.74e-08   2.61e-04    3    42   6.20e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   41   0 +      -3.236066279870  -6.22e-15   5.33e-06    3    43   6.40e-02
+   41   1 -      -3.062519178977  -5.09e-08   2.12e-04    3    43   6.40e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   42   0 +      -3.236066279870   5.33e-15   5.33e-06    3    44   6.30e-02
+   42   1 -      -3.062519217349  -3.84e-08   1.97e-04    3    44   6.30e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   43   0 +      -3.236066279870  -1.33e-15   5.33e-06    3    45   6.20e-02
+   43   1 -      -3.062519246315  -2.90e-08   1.60e-04    3    45   6.20e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   44   0 +      -3.236066279870   1.78e-15   5.33e-06    3    46   6.20e-02
+   44   1 -      -3.062519268192  -2.19e-08   1.49e-04    3    46   6.20e-02
+timing for HVecs : 6.70e-02 s for nstate = 1
+   45   0 +      -3.236066279870  -2.22e-15   5.33e-06    3    47   6.80e-02
+   45   1 -      -3.062519284720  -1.65e-08   1.21e-04    3    47   6.80e-02
+timing for HVecs : 7.70e-02 s for nstate = 1
+   46   0 +      -3.236066279870  -2.66e-15   5.33e-06    3    48   7.80e-02
+   46   1 -      -3.062519297211  -1.25e-08   1.13e-04    3    48   7.80e-02
+timing for HVecs : 7.40e-02 s for nstate = 1
+   47   0 +      -3.236066279870   2.66e-15   5.33e-06    3    49   7.40e-02
+   47   1 -      -3.062519306654  -9.44e-09   9.13e-05    3    49   7.40e-02
+timing for HVecs : 6.70e-02 s for nstate = 1
+   48   0 +      -3.236066279870  -2.22e-15   5.33e-06    3    50   6.80e-02
+   48   1 -      -3.062519313795  -7.14e-09   8.52e-05    3    50   6.80e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   49   0 +      -3.236066279870   2.22e-15   5.33e-06    3    51   6.40e-02
+   49   1 -      -3.062519319197  -5.40e-09   6.91e-05    3    51   6.40e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   50   0 +      -3.236066279870  -2.22e-15   5.33e-06    3    52   6.30e-02
+   50   1 -      -3.062519323284  -4.09e-09   6.44e-05    3    52   6.30e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   51   0 +      -3.236066279870  -1.33e-15   5.33e-06    3    53   6.20e-02
+   51   1 -      -3.062519326376  -3.09e-09   5.23e-05    3    53   6.20e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   52   0 +      -3.236066279870   4.44e-16   5.33e-06    3    54   6.20e-02
+   52   1 -      -3.062519328717  -2.34e-09   4.88e-05    3    54   6.20e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   53   0 +      -3.236066279870  -2.22e-15   5.33e-06    3    55   6.20e-02
+   53   1 -      -3.062519330488  -1.77e-09   3.96e-05    3    55   6.20e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   54   0 +      -3.236066279870  -1.78e-15   5.33e-06    3    56   6.30e-02
+   54   1 -      -3.062519331830  -1.34e-09   3.69e-05    3    56   6.30e-02
+timing for HVecs : 6.50e-02 s for nstate = 1
+   55   0 +      -3.236066279870  -8.88e-16   5.33e-06    3    57   6.50e-02
+   55   1 -      -3.062519332845  -1.02e-09   3.00e-05    3    57   6.50e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   56   0 +      -3.236066279870   2.66e-15   5.33e-06    3    58   6.40e-02
+   56   1 -      -3.062519333615  -7.69e-10   2.80e-05    3    58   6.40e-02
+timing for HVecs : 7.60e-02 s for nstate = 1
+   57   0 +      -3.236066279870  -1.78e-15   5.33e-06    3    59   7.70e-02
+   57   1 -      -3.062519334197  -5.83e-10   2.27e-05    3    59   7.70e-02
+timing for HVecs : 7.10e-02 s for nstate = 1
+   58   0 +      -3.236066279870   1.78e-15   5.33e-06    3    60   7.20e-02
+   58   1 -      -3.062519334638  -4.41e-10   2.12e-05    3    60   7.20e-02
+timing for HVecs : 6.80e-02 s for nstate = 1
+   59   0 +      -3.236066279870  -2.66e-15   5.33e-06    3    61   6.80e-02
+   59   1 -      -3.062519334973  -3.34e-10   1.72e-05    3    61   6.80e-02
+timing for HVecs : 6.40e-02 s for nstate = 1
+   60   0 +      -3.236066279870   4.44e-15   5.33e-06    3    62   6.40e-02
+   60   1 -      -3.062519335226  -2.53e-10   1.60e-05    3    62   6.40e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+   61   0 +      -3.236066279870  -4.44e-15   5.33e-06    3    63   6.30e-02
+   61   1 -      -3.062519335418  -1.92e-10   1.30e-05    3    63   6.30e-02
+timing for HVecs : 6.50e-02 s for nstate = 1
+   62   0 +      -3.236066279870   1.78e-15   5.33e-06    3    64   6.60e-02
+   62   1 -      -3.062519335563  -1.45e-10   1.22e-05    3    64   6.60e-02
+timing for HVecs : 6.30e-02 s for nstate = 1
+   63   0 +      -3.236066279870   1.33e-15   5.33e-06    3    65   6.30e-02
+   63   1 +      -3.062519335673  -1.10e-10   9.87e-06    3    65   6.30e-02
+ctns::onedot_decimation |lc> (forward,cturn,dcut,inoise,noise)=1,0,60,2,0.0e+00
+ decimation summary: 64->60  dwt=1.6e-10  SvN=2.2e+00
+ctns::oper_renorm_opAll coord=(2,0) superblock=lc ifkr=1
+timing for ctns::sweep_onedot : 4.37e+00 s
+ t(procs) = 3.10e-02 s  per = 0.71  per(accum) = 0.71
+ t(hdiag) = 1.00e-03 s  per = 0.023  per(accum) = 0.73
+ t(dvdsn) = 4.28e+00 s  per = 98  per(accum) = 99
+ t(decim) = 1.00e-03 s  per = 0.023  per(accum) = 99
+ t(renrm) = 5.30e-02 s  per = 1.2  per(accum) = 1e+02
+
+isweep=0 ibond=2 bond=(3,0)-(4,0) (dots,forward,cturn)=(1,1,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 3
+ suppl : 0 1 2
+ suppr : 4 5
+ ifln=0
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=60
+ (1,0):6 (2,0):14 (3,0):20 (4,0):14 (5,0):6
+ qbond: qr nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:3 S:3 A:9 B:12 P:9 Q:12 
+ rqops: H:1 C:2 S:4 A:4 B:6 P:16 Q:20 
+dim(localCI)=892
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=1.8e-16
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=2e-16
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.12 s for nstate = 2
+settings: ndim=892 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 +      -3.236066278974  -1.00e+03   8.23e-06    2     2   1.18e-01
+    1   1 -      -3.062519335403  -1.00e+03   1.04e-05    2     2   1.18e-01
+timing for HVecs : 6.30e-02 s for nstate = 1
+    2   0 +      -3.236066278974  -3.51e-14   8.22e-06    3     3   6.40e-02
+    2   1 -      -3.062519335530  -1.27e-10   1.01e-05    3     3   6.40e-02
+timing for HVecs : 6.20e-02 s for nstate = 1
+    3   0 +      -3.236066278974  -7.02e-14   8.23e-06    3     4   6.20e-02
+    3   1 +      -3.062519335599  -6.84e-11   6.40e-06    3     4   6.20e-02
+ctns::onedot_decimation |lc> (forward,cturn,dcut,inoise,noise)=1,0,60,2,0.0e+00
+ decimation summary: 240->32  dwt=3.3e-16  SvN=2.3e+00
+ctns::oper_renorm_opAll coord=(3,0) superblock=lc ifkr=1
+timing for ctns::sweep_onedot : 3.36e-01 s
+ t(procs) = 2.60e-02 s  per = 7.7  per(accum) = 7.7
+ t(hdiag) = 1.00e-03 s  per = 0.3  per(accum) = 8
+ t(dvdsn) = 2.46e-01 s  per = 73  per(accum) = 81
+ t(decim) = 7.00e-03 s  per = 2.1  per(accum) = 83
+ t(renrm) = 5.50e-02 s  per = 16  per(accum) = 1e+02
+
+isweep=0 ibond=3 bond=(3,0)-(4,0) (dots,forward,cturn)=(1,0,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 4
+ suppl : 0 1 2 3
+ suppr : 5
+ ifln=0
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=32
+ (2,0):2 (3,0):8 (4,0):12 (5,0):8 (6,0):2
+ qbond: qr nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:4 S:2 A:16 B:20 P:4 Q:6 
+ rqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+dim(localCI)=140
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=2.3e-16
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=2.2e-16
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.029 s for nstate = 2
+settings: ndim=140 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 +      -3.236066278974  -1.00e+03   3.28e-06    2     2   2.90e-02
+    1   1 +      -3.062519335599  -1.00e+03   5.80e-06    2     2   2.90e-02
+ctns::onedot_decimation |cr> (forward,cturn,dcut,inoise,noise)=0,0,60,2,0.0e+00
+ decimation summary: 16->16  dwt=4.4e-16  SvN=1.9e+00
+ctns::oper_renorm_opAll coord=(4,0) superblock=cr ifkr=1
+timing for ctns::sweep_onedot : 6.90e-02 s
+ t(procs) = 1.40e-02 s  per = 20  per(accum) = 20
+ t(hdiag) = 0.00e+00 s  per = 0  per(accum) = 20
+ t(dvdsn) = 3.00e-02 s  per = 43  per(accum) = 64
+ t(decim) = 0.00e+00 s  per = 0  per(accum) = 64
+ t(renrm) = 2.30e-02 s  per = 33  per(accum) = 97
+
+isweep=0 ibond=4 bond=(2,0)-(3,0) (dots,forward,cturn)=(1,0,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 3
+ suppl : 0 1 2
+ suppr : 4 5
+ ifln=0
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=60
+ (1,0):6 (2,0):14 (3,0):20 (4,0):14 (5,0):6
+ qbond: qr nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:3 S:3 A:9 B:12 P:9 Q:12 
+ rqops: H:1 C:2 S:4 A:4 B:6 P:16 Q:20 
+dim(localCI)=892
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=6.1e-17
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=1.2e-16
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.11 s for nstate = 2
+settings: ndim=892 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 +      -3.236066278974  -1.00e+03   8.23e-06    2     2   1.13e-01
+    1   1 +      -3.062519335599  -1.00e+03   6.40e-06    2     2   1.13e-01
+ctns::onedot_decimation |cr> (forward,cturn,dcut,inoise,noise)=0,0,60,2,0.0e+00
+ decimation summary: 64->60  dwt=1.6e-10  SvN=2.2e+00
+ctns::oper_renorm_opAll coord=(3,0) superblock=cr ifkr=1
+timing for ctns::sweep_onedot : 1.99e-01 s
+ t(procs) = 2.80e-02 s  per = 14  per(accum) = 14
+ t(hdiag) = 1.00e-03 s  per = 0.5  per(accum) = 15
+ t(dvdsn) = 1.14e-01 s  per = 57  per(accum) = 72
+ t(decim) = 2.00e-03 s  per = 1  per(accum) = 73
+ t(renrm) = 5.30e-02 s  per = 27  per(accum) = 99
+
+isweep=0 ibond=5 bond=(1,0)-(2,0) (dots,forward,cturn)=(1,0,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 2
+ suppl : 0 1
+ suppr : 3 4 5
+ ifln=1
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+ qbond: qr nsym=5 dimAll=60
+ (1,0):6 (2,0):14 (3,0):20 (4,0):14 (5,0):6
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:2 S:4 A:4 B:6 P:16 Q:20 
+ rqops: H:1 C:3 S:3 A:9 B:12 P:9 Q:12 
+dim(localCI)=892
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=9.4e-17
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=1.4e-16
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.11 s for nstate = 2
+settings: ndim=892 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 -      -3.236066278127  -1.00e+03   5.69e-05    2     2   1.13e-01
+    1   1 -      -3.062519335329  -1.00e+03   3.05e-05    2     2   1.13e-01
+timing for HVecs : 1.08e-01 s for nstate = 2
+    2   0 +      -3.236066278985  -8.59e-10   7.60e-06    4     4   1.08e-01
+    2   1 +      -3.062519335639  -3.11e-10   6.98e-06    4     4   1.08e-01
+ctns::onedot_decimation |cr> (forward,cturn,dcut,inoise,noise)=0,0,60,2,0.0e+00
+ decimation summary: 240->32  dwt=0.0e+00  SvN=2.3e+00
+ctns::oper_renorm_opAll coord=(2,0) superblock=cr ifkr=1
+timing for ctns::sweep_onedot : 3.15e-01 s
+ t(procs) = 2.50e-02 s  per = 7.9  per(accum) = 7.9
+ t(hdiag) = 1.00e-03 s  per = 0.32  per(accum) = 8.3
+ t(dvdsn) = 2.23e-01 s  per = 71  per(accum) = 79
+ t(decim) = 7.00e-03 s  per = 2.2  per(accum) = 81
+ t(renrm) = 5.70e-02 s  per = 18  per(accum) = 99
+
+======================================================================
+sweep_data::summary isweep=0
+----------------------------------------------------------------------
+sweep parameters: isweep=0 dots=1 dcut=60 eps=1e-05 noise=0
+ ibond=0 bond=(1,0)-(2,0) forward=1 deff=16 dwt=-2.22e-16 nmvp=109 e[0]=-3.23606627975 e[1]=-2.99643428989
+ ibond=1 bond=(2,0)-(3,0) forward=1 deff=60 dwt=+1.62e-10 nmvp=65 e[0]=-3.23606627987 e[1]=-3.06251933567
+ ibond=2 bond=(3,0)-(4,0) forward=1 deff=32 dwt=+3.33e-16 nmvp=4 e[0]=-3.23606627897 e[1]=-3.0625193356
+ ibond=3 bond=(3,0)-(4,0) forward=0 deff=16 dwt=+4.44e-16 nmvp=2 e[0]=-3.23606627897 e[1]=-3.0625193356
+ ibond=4 bond=(2,0)-(3,0) forward=0 deff=60 dwt=+1.57e-10 nmvp=2 e[0]=-3.23606627897 e[1]=-3.0625193356
+ ibond=5 bond=(1,0)-(2,0) forward=0 deff=32 dwt=+0.00e+00 nmvp=4 e[0]=-3.23606627899 e[1]=-3.06251933564
+min energies at pos=1   timing for sweep: 7.7 s
+----------------------------------------------------------------------
+summary of sweep optimization up to isweep=0
+schedule: iter, dots, dcut, eps, noise | nmvp | timing/s | tav/s | taccum/s
+         0 1 60 1.00e-05 0.00e+00 | 186 | 7.74e+00 | 4.16e-02 | 7.74e+00
+results: iter, dwt, energies (delta_e)
+         0 +1.62e-10 e[0]=-3.23606627987 (0.00e+00) e[1]=-3.06251933567 (0.00e+00)
+======================================================================
+
+======================================================================
+sweep parameters: isweep=1 dots=1 dcut=60 eps=1.00e-05 noise=0.00e+00
+======================================================================
+
+isweep=1 ibond=0 bond=(1,0)-(2,0) (dots,forward,cturn)=(1,1,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 1
+ suppl : 0
+ suppr : 2 3 4 5
+ ifln=1
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qr nsym=5 dimAll=32
+ (2,0):2 (3,0):8 (4,0):12 (5,0):8 (6,0):2
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ rqops: H:1 C:4 S:2 A:16 B:20 P:4 Q:6 
+dim(localCI)=140
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2.00e+00 |i(psi-psiK)|=1.12e-16
+ iguess=1 |psi+psiK|=2.00e+00 |i(psi-psiK)|=1.97e-16
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 2.90e-02 s for nstate = 2
+settings: ndim=140 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 +      -3.236066278985  -1.00e+03   2.32e-06    2     2   3.00e-02
+    1   1 +      -3.062519335639  -1.00e+03   4.77e-06    2     2   3.00e-02
+ctns::onedot_decimation |lc> (forward,cturn,dcut,inoise,noise)=1,0,60,2,0.0e+00
+ decimation summary: 16->16  dwt=2.2e-16  SvN=1.9e+00
+ctns::oper_renorm_opAll coord=(1,0) superblock=lc ifkr=1
+timing for ctns::sweep_onedot : 6.90e-02 s
+ t(procs) = 1.40e-02 s  per = 20  per(accum) = 20
+ t(hdiag) = 0.00e+00 s  per = 0  per(accum) = 20
+ t(dvdsn) = 3.00e-02 s  per = 43  per(accum) = 64
+ t(decim) = 0.00e+00 s  per = 0  per(accum) = 64
+ t(renrm) = 2.20e-02 s  per = 32  per(accum) = 96
+
+isweep=1 ibond=1 bond=(2,0)-(3,0) (dots,forward,cturn)=(1,1,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 2
+ suppl : 0 1
+ suppr : 3 4 5
+ ifln=1
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+ qbond: qr nsym=5 dimAll=60
+ (1,0):6 (2,0):14 (3,0):20 (4,0):14 (5,0):6
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:2 S:4 A:4 B:6 P:16 Q:20 
+ rqops: H:1 C:3 S:3 A:9 B:12 P:9 Q:12 
+dim(localCI)=892
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=4.5e-17
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=2.2e-17
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.11 s for nstate = 2
+settings: ndim=892 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 +      -3.236066278985  -1.00e+03   7.60e-06    2     2   1.13e-01
+    1   1 +      -3.062519335639  -1.00e+03   6.98e-06    2     2   1.13e-01
+ctns::onedot_decimation |lc> (forward,cturn,dcut,inoise,noise)=1,0,60,2,0.0e+00
+ decimation summary: 64->60  dwt=1.5e-10  SvN=2.2e+00
+ctns::oper_renorm_opAll coord=(2,0) superblock=lc ifkr=1
+timing for ctns::sweep_onedot : 2.01e-01 s
+ t(procs) = 2.80e-02 s  per = 14  per(accum) = 14
+ t(hdiag) = 1.00e-03 s  per = 0.5  per(accum) = 14
+ t(dvdsn) = 1.14e-01 s  per = 57  per(accum) = 71
+ t(decim) = 1.00e-03 s  per = 0.5  per(accum) = 72
+ t(renrm) = 5.50e-02 s  per = 27  per(accum) = 99
+
+isweep=1 ibond=2 bond=(3,0)-(4,0) (dots,forward,cturn)=(1,1,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 3
+ suppl : 0 1 2
+ suppr : 4 5
+ ifln=0
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=60
+ (1,0):6 (2,0):14 (3,0):20 (4,0):14 (5,0):6
+ qbond: qr nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:3 S:3 A:9 B:12 P:9 Q:12 
+ rqops: H:1 C:2 S:4 A:4 B:6 P:16 Q:20 
+dim(localCI)=892
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=1.7e-16
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=3e-16
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.12 s for nstate = 2
+settings: ndim=892 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 -      -3.236066278146  -1.00e+03   5.55e-05    2     2   1.24e-01
+    1   1 -      -3.062519335391  -1.00e+03   3.03e-05    2     2   1.24e-01
+timing for HVecs : 1.14e-01 s for nstate = 2
+    2   0 +      -3.236066278972  -8.26e-10   7.75e-06    4     4   1.15e-01
+    2   1 +      -3.062519335685  -2.94e-10   6.24e-06    4     4   1.15e-01
+ctns::onedot_decimation |lc> (forward,cturn,dcut,inoise,noise)=1,0,60,2,0.0e+00
+ decimation summary: 240->34  dwt=-2.2e-16  SvN=2.3e+00
+ctns::oper_renorm_opAll coord=(3,0) superblock=lc ifkr=1
+timing for ctns::sweep_onedot : 3.36e-01 s
+ t(procs) = 3.10e-02 s  per = 9.2  per(accum) = 9.2
+ t(hdiag) = 1.00e-03 s  per = 0.3  per(accum) = 9.5
+ t(dvdsn) = 2.40e-01 s  per = 71  per(accum) = 81
+ t(decim) = 7.00e-03 s  per = 2.1  per(accum) = 83
+ t(renrm) = 5.40e-02 s  per = 16  per(accum) = 99
+
+isweep=1 ibond=3 bond=(3,0)-(4,0) (dots,forward,cturn)=(1,0,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 4
+ suppl : 0 1 2 3
+ suppr : 5
+ ifln=0
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=34
+ (2,0):2 (3,0):8 (4,0):14 (5,0):8 (6,0):2
+ qbond: qr nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:4 S:2 A:16 B:20 P:4 Q:6 
+ rqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+dim(localCI)=152
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=1.6e-16
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=9.6e-17
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.03 s for nstate = 2
+settings: ndim=152 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 +      -3.236066278972  -1.00e+03   1.73e-06    2     2   3.00e-02
+    1   1 +      -3.062519335685  -1.00e+03   4.07e-06    2     2   3.00e-02
+ctns::onedot_decimation |cr> (forward,cturn,dcut,inoise,noise)=0,0,60,2,0.0e+00
+ decimation summary: 16->16  dwt=2.2e-16  SvN=1.9e+00
+ctns::oper_renorm_opAll coord=(4,0) superblock=cr ifkr=1
+timing for ctns::sweep_onedot : 7.20e-02 s
+ t(procs) = 1.50e-02 s  per = 21  per(accum) = 21
+ t(hdiag) = 0.00e+00 s  per = 0  per(accum) = 21
+ t(dvdsn) = 3.00e-02 s  per = 42  per(accum) = 62
+ t(decim) = 0.00e+00 s  per = 0  per(accum) = 62
+ t(renrm) = 2.40e-02 s  per = 33  per(accum) = 96
+
+isweep=1 ibond=4 bond=(2,0)-(3,0) (dots,forward,cturn)=(1,0,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 3
+ suppl : 0 1 2
+ suppr : 4 5
+ ifln=0
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=60
+ (1,0):6 (2,0):14 (3,0):20 (4,0):14 (5,0):6
+ qbond: qr nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:3 S:3 A:9 B:12 P:9 Q:12 
+ rqops: H:1 C:2 S:4 A:4 B:6 P:16 Q:20 
+dim(localCI)=892
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=2.6e-17
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=1e-16
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.11 s for nstate = 2
+settings: ndim=892 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 +      -3.236066278972  -1.00e+03   7.75e-06    2     2   1.14e-01
+    1   1 +      -3.062519335685  -1.00e+03   6.24e-06    2     2   1.14e-01
+ctns::onedot_decimation |cr> (forward,cturn,dcut,inoise,noise)=0,0,60,2,0.0e+00
+ decimation summary: 64->60  dwt=1.5e-10  SvN=2.2e+00
+ctns::oper_renorm_opAll coord=(3,0) superblock=cr ifkr=1
+timing for ctns::sweep_onedot : 2.03e-01 s
+ t(procs) = 2.80e-02 s  per = 14  per(accum) = 14
+ t(hdiag) = 1.00e-03 s  per = 0.49  per(accum) = 14
+ t(dvdsn) = 1.15e-01 s  per = 57  per(accum) = 71
+ t(decim) = 1.00e-03 s  per = 0.49  per(accum) = 71
+ t(renrm) = 5.60e-02 s  per = 28  per(accum) = 99
+
+isweep=1 ibond=5 bond=(1,0)-(2,0) (dots,forward,cturn)=(1,0,0)
+----------------------------------------------------------------------
+ctns::sweep_onedot
+support info:
+ suppc : 2
+ suppl : 0 1
+ suppr : 3 4 5
+ ifln=1
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=5 dimAll=16
+ (0,0):1 (1,0):4 (2,0):6 (3,0):4 (4,0):1
+ qbond: qr nsym=5 dimAll=60
+ (1,0):6 (2,0):14 (3,0):20 (4,0):14 (5,0):6
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:2 S:4 A:4 B:6 P:16 Q:20 
+ rqops: H:1 C:3 S:3 A:9 B:12 P:9 Q:12 
+dim(localCI)=892
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2 |i(psi-psiK)|=1.3e-16
+ iguess=1 |psi+psiK|=2 |i(psi-psiK)|=1.9e-16
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 0.12 s for nstate = 2
+settings: ndim=892 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 -      -3.236066278139  -1.00e+03   5.59e-05    2     2   1.25e-01
+    1   1 -      -3.062519335433  -1.00e+03   2.93e-05    2     2   1.25e-01
+timing for HVecs : 1.11e-01 s for nstate = 2
+    2   0 +      -3.236066278975  -8.36e-10   8.02e-06    4     4   1.12e-01
+    2   1 +      -3.062519335704  -2.71e-10   5.68e-06    4     4   1.12e-01
+ctns::onedot_decimation |cr> (forward,cturn,dcut,inoise,noise)=0,0,60,2,0.0e+00
+ decimation summary: 240->33  dwt=-8.9e-16  SvN=2.3e+00
+ctns::oper_renorm_opAll coord=(2,0) superblock=cr ifkr=1
+timing for ctns::sweep_onedot : 3.34e-01 s
+ t(procs) = 3.00e-02 s  per = 9  per(accum) = 9
+ t(hdiag) = 1.00e-03 s  per = 0.3  per(accum) = 9.3
+ t(dvdsn) = 2.38e-01 s  per = 71  per(accum) = 81
+ t(decim) = 7.00e-03 s  per = 2.1  per(accum) = 83
+ t(renrm) = 5.70e-02 s  per = 17  per(accum) = 1e+02
+
+======================================================================
+sweep_data::summary isweep=1
+----------------------------------------------------------------------
+sweep parameters: isweep=1 dots=1 dcut=60 eps=1e-05 noise=0
+ ibond=0 bond=(1,0)-(2,0) forward=1 deff=16 dwt=+2.22e-16 nmvp=2 e[0]=-3.23606627899 e[1]=-3.06251933564
+ ibond=1 bond=(2,0)-(3,0) forward=1 deff=60 dwt=+1.52e-10 nmvp=2 e[0]=-3.23606627899 e[1]=-3.06251933564
+ ibond=2 bond=(3,0)-(4,0) forward=1 deff=34 dwt=-2.22e-16 nmvp=4 e[0]=-3.23606627897 e[1]=-3.06251933569
+ ibond=3 bond=(3,0)-(4,0) forward=0 deff=16 dwt=+2.22e-16 nmvp=2 e[0]=-3.23606627897 e[1]=-3.06251933569
+ ibond=4 bond=(2,0)-(3,0) forward=0 deff=60 dwt=+1.50e-10 nmvp=2 e[0]=-3.23606627897 e[1]=-3.06251933569
+ ibond=5 bond=(1,0)-(2,0) forward=0 deff=33 dwt=-8.88e-16 nmvp=4 e[0]=-3.23606627898 e[1]=-3.0625193357
+min energies at pos=5   timing for sweep: 1.2 s
+----------------------------------------------------------------------
+summary of sweep optimization up to isweep=1
+schedule: iter, dots, dcut, eps, noise | nmvp | timing/s | tav/s | taccum/s
+         0 1 60 1.00e-05 0.00e+00 | 186 | 7.74e+00 | 4.16e-02 | 7.74e+00
+         1 1 60 1.00e-05 0.00e+00 | 16 | 1.22e+00 | 7.61e-02 | 8.95e+00
+results: iter, dwt, energies (delta_e)
+         0 +1.62e-10 e[0]=-3.23606627987 (-8.95e-10) e[1]=-3.06251933567 (3.12e-11)
+         1 -8.88e-16 e[0]=-3.23606627898 (0.00e+00) e[1]=-3.0625193357 (0.00e+00)
+======================================================================
+
+ctns::sweep_rwfuns
+ctns::sweep_onedot
+support info:
+ suppc : 1
+ suppl : 0
+ suppr : 2 3 4 5
+ ifln=1
+qbond info:
+ qbond: qc nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: ql nsym=3 dimAll=4
+ (0,0):1 (2,0):1 (1,0):2
+ qbond: qr nsym=5 dimAll=33
+ (2,0):2 (3,0):8 (4,0):13 (5,0):8 (6,0):2
+qops info:
+ cqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ lqops: H:1 C:1 S:5 A:1 B:2 P:25 Q:30 
+ rqops: H:1 C:4 S:2 A:16 B:20 P:4 Q:6 
+dim(localCI)=146
+ctns::kr_dvdsonSolver::init_guess parity=0
+ iguess=0 |psi+psiK|=2.00e+00 |i(psi-psiK)|=1.27e-16
+ iguess=1 |psi+psiK|=2.00e+00 |i(psi-psiK)|=9.40e-17
+ neig,nindp=2,2
+ctns::kr_dvdsonSolver::solve_iter is_complex=1 parity=0
+timing for HVecs : 2.90e-02 s for nstate = 2
+settings: ndim=146 neig=2 nbuff=4 maxcycle= 100
+          damping=0.1 crit_v=1e-05 crit_e=1e-12 crit_indp=1e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s
+    1   0 +      -3.236066278975  -1.00e+03   1.34e-06    2     2   2.90e-02
+    1   1 +      -3.062519335704  -1.00e+03   3.43e-06    2     2   2.90e-02
+ctns::onedot_decimation |cr> (forward,cturn,dcut,inoise,noise)=0,0,-1,0,0.0e+00
+ decimation summary: 132->8  dwt=2.2e-16  SvN=2.5e+00
+ctns::oper_renorm_opAll coord=(1,0) superblock=cr ifkr=1
+timing for ctns::sweep_onedot : 6.30e-02 s
+ t(procs) = 1.50e-02 s  per = 24  per(accum) = 24
+ t(hdiag) = 0.00e+00 s  per = 0  per(accum) = 24
+ t(dvdsn) = 3.00e-02 s  per = 48  per(accum) = 71
+ t(decim) = 2.00e-03 s  per = 3.2  per(accum) = 75
+ t(renrm) = 1.50e-02 s  per = 24  per(accum) = 98
+deal with site0 by decimation for rsite0 & rwfuns
+ decimation summary: 32->2  dwt=-4.4e-16  SvN=1
+
+timing for ctns::opt_sweep : 9.3 s
+
+ctns::rcanon_save fname=./scratch/rcanon_new.info

@@ -16,6 +16,7 @@ maxiter 3
 $end
 
 $ctns
+kind rNSz
 nroots 2
 maxdets 10000
 thresh_proj 1.e-15
@@ -29,6 +30,6 @@ schedule
 0 1 60 1.e-5 0.0
 end
 maxsweep 2
-#combload
+task opt
+#load
 $end
-
