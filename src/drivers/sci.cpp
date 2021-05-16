@@ -1,8 +1,6 @@
 #include <iostream>
 #include "../io/input.h"
-#include "../ci/fci.h"
-#include "../ci/sci.h"
-#include "../ci/sci_pt2.h"
+#include "../ci/ci_header.h"
 
 using namespace std;
 using namespace fock;

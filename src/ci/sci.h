@@ -1,8 +1,8 @@
 #ifndef SCI_H
 #define SCI_H
 
+#include "fci_util.h"
 #include "sci_util.h"
-#include "fci.h"
 
 namespace sci{
 

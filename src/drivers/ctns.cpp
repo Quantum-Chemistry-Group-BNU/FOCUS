@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <string>
 #include "../io/input.h"
-#include "../ci/fci.h"
+#include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
 
 using namespace std;

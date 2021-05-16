@@ -5,9 +5,7 @@
 #include "../core/dvdson.h"
 #include "../core/simpleci.h"
 #include "../core/analysis.h"
-#include "fci.h"
-#include "fci_util.h"
-#include "fci_rdm.h"
+#include "ci_header.h"
 #include "tests_ci.h"
 
 using namespace std;

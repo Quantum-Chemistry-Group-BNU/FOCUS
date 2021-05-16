@@ -6,6 +6,6 @@
 #include "ctns_io.h"
 #include "ctns_sweep.h"
 #include "ctns_ovlp.h"
-#include "oper_util.h" // get_Hmat
+#include "ctns_oper.h" // get_Hmat
 
 #endif

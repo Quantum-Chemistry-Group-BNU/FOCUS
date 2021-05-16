@@ -1,14 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include "../core/onspace.h"
-#include "../core/integral.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
-#include "../core/tools.h"
 #include "../io/input.h"
-#include "sci.h"
-#include "sci_pt2.h"
+#include "ci_header.h"
 #include "tests_ci.h"
 
 using namespace std;

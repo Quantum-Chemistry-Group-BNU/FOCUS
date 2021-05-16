@@ -1,24 +1,9 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include "../core/onspace.h"
-#include "../core/integral.h"
-#include "../core/analysis.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
-#include "../core/tools.h"
-#include "../core/hamiltonian.h"
 #include "../io/input.h"
-#include "../ci/fci.h"
-#include "../ci/fci_rdm.h"
-#include "../ci/sci.h"
-#include "../ci/sci_pt2.h"
-#include "ctns_comb.h"
-#include "ctns_init.h"
-#include "ctns_io.h"
-#include "ctns_ovlp.h"
-#include "ctns_oper.h"
-#include "ctns_sweep.h"
+#include "../ci/ci_header.h"
+#include "ctns_header.h"
 #include "tests_ctns.h"
 
 using namespace std;

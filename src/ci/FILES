@@ -7,6 +7,7 @@ FCI
  ci/fci_util.cpp
  ci/fci.h
  ci/fci_rdm.h
+ ci/fci_io.h
  tests/test_fci.cpp
 
 SCI+PT2

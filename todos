@@ -11,7 +11,7 @@ TODOs:
 
  4. parallelization [DONE2021XXXX]
     1. cleanup (IO) & update tests
-    2. preparation: makefile 
+    2. preparation: makefile -> mpi 
     3. mpi
     4. hybrid: openmp/gpu?
 
