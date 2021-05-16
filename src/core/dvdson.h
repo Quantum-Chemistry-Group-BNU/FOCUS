@@ -333,7 +333,7 @@ struct dvdsonSolver{
             for(int i=0; i<neig; i++){
                if(rconv[i]) continue;
 	       std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, Diag, &tbas[nres*ndim],
-                              [i,&tmpE,&damp](const Tm& r, const double& d){ return r/(abs(d-tmpE[i])+damp); });
+                              [i,&tmpE,&damp](const Tm& r, const double& d){ return r/(std::abs(d-tmpE[i])+damp); });
                tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
                nres += 1;		
             }

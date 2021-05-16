@@ -15,12 +15,14 @@ ifeq ($(machine), lenovo)
    	-L./extlibs/zquatev -lzquatev
    BOOST = /home/lx/software/boost/install_1_59_0
    USE_GCC = no #yes
+   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 	
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    MATH = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
           -L./extlibs/zquatev -lzquatev 
    BOOST = /usr/local
    USE_GCC = yes
+   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 	
 endif 
 
 USE_MPI = no
@@ -38,7 +40,6 @@ else
       CC = icc
       FLAGS = -qopenmp -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
    endif
-   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 	
 endif
 
 SRC = src
