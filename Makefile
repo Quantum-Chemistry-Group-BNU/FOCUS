@@ -1,32 +1,44 @@
 
-## eigen
-#MATH = -I /usr/local/include/eigen3 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE \
-       -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
-## serial version of MKL
+machine = mac #lenovo
+
+# serial version of MKL
 #MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
 # parallel version of MKL
-MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
-MATH = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
-       -L./extlibs/zquatev -lzquatev 
-#MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
-#       -L./extlibs/zquatev -lzquatev 
+#MATH = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl 
 # mac framework Accelerate
 #MATH = -llapack -lblas
 
-BOOST = /usr/local
-FLAGS = -DGNU -std=c++11 -g -O0 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
-#FLAGS = -DGNU -DNDEBUG -std=c++11 -g -O3 -Wall ${MATH} -I${BOOST}/include ${INCLUDE_DIR} 
-#	-Wl,-no_pie -lprofiler # google profiler
+ifeq ($(machine), lenovo)
+   MATH =  -L/opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64 \
+   	-lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+   	-liomp5 \
+   	-L./extlibs/zquatev -lzquatev
+   BOOST = /home/lx/software/boost/install_1_59_0
+   USE_GCC = no #yes
+else
+   MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
+   MATH = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+          -L./extlibs/zquatev -lzquatev 
+   BOOST = /usr/local
+   USE_GCC = yes
+endif 
 
 USE_MPI = no
 ifeq ($(USE_MPI), yes) 
    CXX = mpig++
    CC = mpigcc
-   LFLAGS += -L${BOOST}/lib -lboost_serialization -lboost_mpi #-lrt
+   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_mpi-mt #-lrt
 else
-   CXX = g++
-   CC = gcc
-   LFLAGS = -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 	
+   ifeq ($(USE_GCC), yes)
+      CXX = g++
+      CC = gcc
+      FLAGS = -fopenmp -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   else
+      CXX = icpc
+      CC = icc
+      FLAGS = -qopenmp -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   endif
+   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 	
 endif
 
 SRC = src
@@ -64,14 +76,11 @@ depend:
 	set -e; \
 	mkdir -p $(BIN_DIR) $(OBJ_DIR); \
 	echo $(SRC_ALL); \
-	$(CXX) -MM $(SRC_ALL) > $$$$.depend; \
+	$(CXX) -I${BOOST}/include -MM $(SRC_ALL) > $$$$.depend; \
 	sed 's,\([^.]*\.o\),$(OBJ_DIR)/\1,' < $$$$.depend > .depend; \
+	echo 'finish dependency check!'; \
 	rm -f $$$$.depend # $$$$ id number 
 -include .depend
-
-$(OBJ_ALL):
-	@echo "=== COMPILE $@ FROM $<" # just from *.cpp is sufficient	
-	$(CXX) $(FLAGS) -o $@ -c $< 
 
 # Executables
 $(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(OBJ_DEP)
@@ -99,7 +108,13 @@ $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(OBJ_DEP)
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 
+# Needs to be here! 
+$(OBJ_ALL):
+	@echo "=== COMPILE $@ FROM $<" # just from *.cpp is sufficient	
+	$(CXX) $(FLAGS) -o $@ -c $< 
+
 clean:
 	rm -f obj/*.o
 	rm -f bin/*.x
 	rm -f *.depend
+:q

@@ -128,6 +128,7 @@ qtensor2<Tm> decimation_row_kr(const qtensor2<Tm>& rdm,
  			       const qbond& qs2,
  			       const qdpt& dpt){
    tools::exit("error: decimation_row_kr only works for complex<double>!");
+   return qtensor2<Tm>(); // return a fake object to avoid warning
 }
 template <>
 inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<double>>& rdm,
