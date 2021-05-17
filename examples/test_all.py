@@ -112,6 +112,8 @@ if __name__ == '__main__':
    #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
    dirs = ['0_h6_tns', '1_lih3_dcg', '2_lih3+_dcg', '3_h6+_kr', '4_h5_twodot']
    print(dirs)
+   t0 = time.time()
    testAll(dirs)
    compareAll(dirs)
-
+   t1 = time.time()
+   print('totol time =',t1-t0)
