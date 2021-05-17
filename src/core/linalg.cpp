@@ -12,7 +12,7 @@ void linalg::eig_solver(const matrix<double>& A, vector<double>& e,
 			matrix<double>& U, const int order){
    assert(A.rows() == A.cols());  
    assert(A.rows() <= e.size()); // allow larger space used for e 
-   int n = A.rows(), lwork = -1, liwork=-1, iworkopt, info;
+   int n = A.rows(), lwork = -1, liwork=-1, iworkopt, info = 0;
    double workopt;
    U.resize(A.rows(), A.cols());
    U = (order == 0)? A : -A;
@@ -33,7 +33,7 @@ void linalg::eig_solver(const matrix<complex<double>>& A, vector<double>& e,
 		        matrix<complex<double>>& U, const int order){
    assert(A.rows() == A.cols());  
    assert(A.rows() <= e.size()); // allow larger space used for e 
-   int n = A.rows(), lwork = -1, liwork=-1, lrwork = -1, iworkopt, info;
+   int n = A.rows(), lwork = -1, liwork=-1, lrwork = -1, iworkopt, info = 0;
    complex<double> workopt;
    double rworkopt;
    U.resize(A.rows(), A.cols());

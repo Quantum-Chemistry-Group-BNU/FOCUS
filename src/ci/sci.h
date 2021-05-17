@@ -58,7 +58,7 @@ void get_initial(std::vector<double>& es,
    linalg::matrix<Tm> H = fock::get_Ham(space, int2e, int1e, ecore);
    std::vector<double> esol(nsub);
    linalg::matrix<Tm> vsol;
-   eig_solver(H, esol, vsol);
+   linalg::eig_solver(H, esol, vsol);
    // save
    int neig = schd.sci.nroots;
    es.resize(neig);

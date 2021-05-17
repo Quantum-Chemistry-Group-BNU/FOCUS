@@ -1,35 +1,44 @@
 
 machine = mac #lenovo
 
-# serial version of MKL
-#MATH = -L./libmkl -Wl,-rpath,./libmkl -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
-# parallel version of MKL
-#MATH = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl 
-# mac framework Accelerate
-#MATH = -llapack -lblas
-
 ifeq ($(machine), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
-   MATH =  -L$(MATHLIB) \
-   	   -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
-   	   -liomp5 \
-   	   -L./extlibs/zquatev -lzquatev
    BOOST = /home/lx/software/boost/install_1_59_0
    USE_GCC = no #yes
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
-   MATH = -L$(MATHLIB) \
-	  -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
-          -L./extlibs/zquatev -lzquatev 
    BOOST = /usr/local
    USE_GCC = yes
-endif 
+endif
+
+# quaternion matrix diagonalization
+MATH = -L./extlibs/zquatev -lzquatev
+
+USE_OPENMP = no
+ifeq ($(USE_OPENMP), no)
+   # serial version of MKL
+   MATH += -L$(MATHLIB) \
+           -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
+   # mac framework Accelerate
+   #MATH = -llapack -lblas 
+else
+   ifeq ($(USE_GCC), yes)
+      FLAGS += -fopenmp
+   else
+      FLAGS += -qopenmp	
+   endif
+   # https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html	
+   # parallel version of MKL
+   MATH += -L$(MATHLIB) \
+   	   -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+   	   -liomp5
+   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
+endif
 
 USE_MPI = no
 ifeq ($(USE_GCC), yes)
-   #FLAGS = -fopenmp -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
-   FLAGS = -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
-   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
+   FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI), no)
       CXX = g++
       CC = gcc
@@ -39,8 +48,8 @@ ifeq ($(USE_GCC), yes)
       LFLAGS += -lboost_mpi
    endif
 else
-   FLAGS = -qopenmp -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
-   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 
+   FLAGS += -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 
    ifeq ($(USE_MPI), no)
       CXX = icpc
       CC = icc

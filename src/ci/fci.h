@@ -28,7 +28,7 @@ void get_initial(const fock::onspace& space,
    }
    std::vector<double> e(pdim);
    linalg::matrix<Tm> v;
-   eig_solver(Hpp, e, v);
+   linalg::eig_solver(Hpp, e, v);
    // copy back
    for(int j=0; j<neig; j++){
       for(int i=0; i<pdim; i++){
