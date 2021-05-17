@@ -3,6 +3,7 @@
 
 #include <tuple>
 #include <vector>
+#include "../core/serialization.h"
 
 namespace ctns{
 
@@ -23,6 +24,14 @@ extern const comb_coord coord_phys;
 //  l---*---r               |
 //		            l
 struct node{
+   private:
+      // serialize
+      friend class boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	 ar & pindex & type & center & left & right
+	    & rsupport & lsupport;
+      }
    public:
       friend std::ostream& operator <<(std::ostream& os, const node& nd);
    public:
@@ -57,8 +66,16 @@ struct directed_bond{
 
 // topology information of ctns
 struct topology{
+   private:
+      // serialize
+      friend class boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	 ar & nbackbone & nphysical & nodes & rcoord & image2;
+      }
    public:
-      topology(const std::string& topology_file); 
+      topology(){};
+      void read(const std::string& topology_file); 
       void print() const;
       // node
       const node& get_node(const comb_coord& p) const{ return nodes[p.first][p.second]; }

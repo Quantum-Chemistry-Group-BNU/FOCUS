@@ -58,7 +58,8 @@ int tests::test_ctns(){
    fci::ci_truncate(sci_space, vs, schd.ctns.maxdets, ifortho);
 
    // 1. dealing with topology 
-   ctns::topology topo(schd.ctns.topology_file);
+   ctns::topology topo;
+   topo.read(schd.ctns.topology_file);
    topo.print();
 
    // 2. initialize right canonical form from SCI wavefunction

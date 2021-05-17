@@ -21,7 +21,8 @@ int CTNS(const input::schedule& schd){
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
    // dealing with topology 
-   ctns::topology topo(schd.ctns.topology_file);
+   ctns::topology topo;
+   topo.read(schd.ctns.topology_file);
    ctns::comb<Km> icomb(topo);
    icomb.topo.print();
    // initialize RCF 

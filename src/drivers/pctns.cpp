@@ -33,10 +33,15 @@ int PCTNS(const input::schedule& schd){
    boost::mpi::broadcast(world, int1e, 0);
    boost::mpi::broadcast(world, int2e, 0);
    boost::mpi::broadcast(world, ecore, 0);
-#endif   
-/*
+#endif
    // dealing with topology 
-   ctns::topology topo(schd.ctns.topology_file);
+   ctns::topology topo;
+   if(rank == 0) topo.read(schd.ctns.topology_file);
+#ifndef SERIAL
+   boost::mpi::broadcast(world, topo, 0);
+   if(rank > 0) topo.print();
+#endif
+/*
    ctns::comb<Km> icomb(topo);
    icomb.topo.print();
    // initialize RCF 

@@ -26,8 +26,9 @@ ostream& ctns::operator <<(ostream& os, const node& nd){
 }
 
 // topology
-topology::topology(const string& fname){
-   cout << "\ntopology::topology fname=" << fname << endl;
+void topology::read(const string& fname){
+   cout << "\ntopology::read fname=" << fname << endl;
+   
    ifstream istrm(fname);
    if(!istrm){
       cout << "failed to open " << fname << '\n';
@@ -207,7 +208,7 @@ void topology::print() const{
    cout << "image2:" << endl;
    for(int i=0; i<2*nphysical; i++) cout << " " << image2[i];
    cout << endl;
-   // check sweep sequence 
+   // just check sweep sequence 
    get_sweeps();
 }
 

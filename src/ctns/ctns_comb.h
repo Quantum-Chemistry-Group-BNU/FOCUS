@@ -43,9 +43,10 @@ class comb{
       std::vector<int> get_suppr(const comb_coord& p, const bool ifprt=true) const;
    public:
       topology topo;
+      // -- CTNS ---
       sites_type<typename Km::dtype> rsites; // right canonical form 
       qtensor2<typename Km::dtype> rwfuns; // wavefunction at the left boundary -*-
-      //--- auxilliary data ---
+      // --- auxilliary data ---
       rbases_type<typename Km::dtype> rbases; // used in initialization & debug operators 
       sites_type<typename Km::dtype> lsites; // left canonical form 
       std::vector<qtensor3<typename Km::dtype>> psi; // propagation of initial guess 
