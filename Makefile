@@ -17,7 +17,7 @@ MATH = -L./extlibs/zquatev -lzquatev
 USE_OPENMP = no
 ifeq ($(USE_OPENMP), no)
    # serial version of MKL
-   MATH += -L$(MATHLIB) \
+   MATH += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
            -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
    # mac framework Accelerate
    #MATH = -llapack -lblas 
@@ -29,7 +29,7 @@ else
    endif
    # https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html	
    # parallel version of MKL
-   MATH += -L$(MATHLIB) \
+   MATH += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
    	   -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
    	   -liomp5
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
@@ -37,7 +37,7 @@ endif
 
 USE_MPI = no
 ifeq ($(USE_GCC), yes)
-   FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI), no)
       CXX = g++
@@ -48,7 +48,7 @@ ifeq ($(USE_GCC), yes)
       LFLAGS += -lboost_mpi
    endif
 else
-   FLAGS += -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   FLAGS += -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
    LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 
    ifeq ($(USE_MPI), no)
       CXX = icpc
