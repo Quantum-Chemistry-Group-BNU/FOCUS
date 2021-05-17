@@ -46,7 +46,7 @@ int CTNS(const input::schedule& schd){
    }
    ctns::rcanon_check(icomb, schd.ctns.thresh_ortho, ifortho);
    // optimization from current RCF
-   cout << "\n### ctns.task=" << schd.ctns.task << " ###" << endl; 
+   cout << "\n=== ctns.task=" << schd.ctns.task << " ===" << endl; 
    if(schd.ctns.task == "opt"){
       ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
       rcanon_file = schd.scratch+"/rcanon_new.info"; 
@@ -65,7 +65,7 @@ int CTNS(const input::schedule& schd){
 }
 
 int main(int argc, char *argv[]){
-
+   // setup MPI environment
    int size = 1, rank = 0;
 #ifndef SERIAL
    boost::mpi::environment env{argc, argv};
@@ -74,7 +74,6 @@ int main(int argc, char *argv[]){
    size = world.size();
 #endif
    if(rank == 0) tools::license();
-
    // read input
    string fname;
    if(argc == 1){
@@ -85,20 +84,14 @@ int main(int argc, char *argv[]){
    }
    input::schedule schd;
    if(rank == 0) schd.read(fname);
-
-   cout << "rank=" << rank << " size=" << size << endl;
-
-   world.barrier();
-   
+#ifndef SERIAL
    boost::mpi::broadcast(world, schd, 0);
-   
-   if(rank > 0){
-      schd.print();
-   }
-
+#endif
+   // setup scratch directory
+   if(rank > 0) schd.scratch += to_string(rank);
+   schd.create_scratch();
    int info = 0;
 /*
-   schd.create_scratch();
    // we will use Tm to control Hnr/Hrel 
    int info = 0;
    if(schd.ctns.kind == "rN"){
@@ -115,5 +108,6 @@ int main(int argc, char *argv[]){
       tools::exit("error: no such kind for ctns!");
    } // kind
 */
+   if(rank > 0) schd.remove_scratch();
    return info;
 }

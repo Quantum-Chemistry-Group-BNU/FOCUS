@@ -43,7 +43,7 @@ int CTNS(const input::schedule& schd){
    }
    ctns::rcanon_check(icomb, schd.ctns.thresh_ortho, ifortho);
    // optimization from current RCF
-   cout << "\n### ctns.task=" << schd.ctns.task << " ###" << endl; 
+   cout << "\n=== ctns.task=" << schd.ctns.task << " ===" << endl; 
    if(schd.ctns.task == "opt"){
       ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
       rcanon_file = schd.scratch+"/rcanon_new.info"; 

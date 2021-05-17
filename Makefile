@@ -1,5 +1,5 @@
 
-machine = lenovo
+machine = mac #lenovo
 
 ifeq ($(machine), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
