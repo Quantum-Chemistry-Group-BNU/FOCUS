@@ -1,5 +1,5 @@
 
-machine = mac #lenovo
+machine = lenovo
 
 ifeq ($(machine), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
@@ -35,13 +35,14 @@ else
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
 endif
 
-USE_MPI = no
+USE_MPI = yes
 ifeq ($(USE_GCC), yes)
    FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI), no)
       CXX = g++
       CC = gcc
+      FLAGS += -DSERIAL
    else
       CXX = mpic++
       CC = mpicc
@@ -53,9 +54,10 @@ else
    ifeq ($(USE_MPI), no)
       CXX = icpc
       CC = icc
+      FLAGS += -DSERIAL
    else
-      CXX = mpic++
-      CC = mpigcc
+      CXX = mpiicpc
+      CC = mpiicc
       LFLAGS += -lboost_mpi-mt
    endif
 endif
@@ -89,7 +91,8 @@ all: depend \
      $(BIN_DIR)/tests_ci.x \
      $(BIN_DIR)/tests_ctns.x \
      $(BIN_DIR)/sci.x \
-     $(BIN_DIR)/ctns.x 
+     $(BIN_DIR)/ctns.x \
+     $(BIN_DIR)/pctns.x 
 
 depend:
 	set -e; \
@@ -123,6 +126,11 @@ $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(OBJ_DEP)
+	@echo "\n=== LINK $@"
+	@echo $(OBJ_DEP)
+	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
+
+$(BIN_DIR)/pctns.x: $(OBJ_DIR)/pctns.o $(OBJ_DEP)
 	@echo "\n=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 

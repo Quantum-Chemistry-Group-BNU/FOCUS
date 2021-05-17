@@ -6,6 +6,7 @@
 #include <string>
 #include <set> 
 #include <sstream> // istringstream
+#include "../core/serialization.h"
 
 namespace input{
 
@@ -13,6 +14,16 @@ namespace input{
 // SCI
 //
 struct params_sci{
+private:
+   // serialize
+   friend class boost::serialization::access;
+   template<class Archive>
+   void serialize(Archive & ar, const unsigned int version){
+      ar & run & nroots & det_seeds & nseeds & flip
+	 & eps0 & eps1 & miniter & maxiter & deltaE
+         & cisolver & maxcycle & crit_v & ifpt2 & eps2
+	 & load & ci_file;
+   }
 public:
    void read(std::ifstream& istrm);
    void print() const;
@@ -46,6 +57,13 @@ public:
 // CTNS
 //
 struct params_sweep{
+private:
+   // serialize
+   friend class boost::serialization::access;
+   template<class Archive>
+   void serialize(Archive & ar, const unsigned int version){
+      ar & isweep & dots & dcut & eps & noise;
+   }
 public:
    inline void print() const{
       std::cout << "sweep parameters: isweep=" << isweep
@@ -62,6 +80,15 @@ public:
 };
 
 struct params_ctns{
+private:
+   // serialize
+   friend class boost::serialization::access;
+   template<class Archive>
+   void serialize(Archive & ar, const unsigned int version){
+      ar & run & kind & task & topology_file & maxdets & thresh_proj & thresh_ortho
+	 & nroots & guess & inoise & maxsweep & ctrls & cisolver & maxcycle
+         & load & rcanon_file; 
+   }
 public:
    void read(std::ifstream& istrm);
    void print() const;
@@ -92,6 +119,14 @@ public:
 // General
 //
 struct schedule{
+private:
+   // serialize
+   friend class boost::serialization::access;
+   template<class Archive>
+   void serialize(Archive & ar, const unsigned int version){
+      ar & scratch & dtype & nelec & twoms & integral_file
+         & sci & ctns;
+   }
 public:
    void create_scratch();
    void remove_scratch();

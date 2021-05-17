@@ -304,5 +304,7 @@ void schedule::read(string fname){
       }
    }
    istrm.close();
+   // consistency check
+   if(scratch == ".") tools::exit("error: scratch directory must be defined!");
    print();
 }

@@ -8,7 +8,6 @@ namespace fs = boost::filesystem;
 
 void schedule::create_scratch(){
    cout << "\nschedule::create_scratch scratch=" << scratch << endl;
-   if(scratch == ".") return;
    fs::path dir(scratch);
    if(fs::exists(dir)){
       cout << "already exists scratch=" << scratch << endl;
@@ -24,7 +23,6 @@ void schedule::create_scratch(){
 
 void schedule::remove_scratch(){
    cout << "\nschedule::remove_scratch scratch=" << scratch << endl;
-   if(scratch == ".") return;
    fs::path dir(scratch);
    if(fs::remove_all(dir)){
       cout << "successfully removed " << scratch << endl;

@@ -8,6 +8,7 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
 #include <boost/serialization/complex.hpp> // for complex 
 
 // for tuple: https://github.com/Sydius/serialize-tuple/blob/master/serialize_tuple.h
