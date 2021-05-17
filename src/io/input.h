@@ -8,6 +8,10 @@
 #include <sstream> // istringstream
 #include "../core/serialization.h"
 
+#ifndef SERIAL
+#include <boost/mpi.hpp>
+#endif
+
 namespace input{
 
 //
@@ -142,6 +146,9 @@ public:
    // --- Methods --- 
    params_sci sci;
    params_ctns ctns;
+#ifndef SERIAL
+   boost::mpi::communicator world;
+#endif
 };
 
 } // input

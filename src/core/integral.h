@@ -11,12 +11,20 @@
 #include <sstream>
 #include <algorithm>
 #include "tools.h"
+#include "serialization.h"
 
 namespace integral{
 
 // one-electron integral h[i,j] [full in column-major storage]	
 template <typename Tm>
 struct one_body{
+   private:
+      // serialize
+      friend class boost::serialization::access;	   
+      template <class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	 ar & sorb & data;
+      }
    public:
       void init_mem(){
 	 assert(sorb > 0);
@@ -36,7 +44,7 @@ struct one_body{
 	 fill_n(data.begin(), data.size(), 0.0);
       }
       void print() const{
-	 std::cout << "one_body:" << std::endl;
+	 std::cout << "integral::one_body sorb=" << sorb << std::endl;
 	 for(int i=0; i<sorb; i++){
 	    for(int j=0; j<sorb; j++){
 	       std::cout << i << " " << j << " " 
@@ -45,7 +53,7 @@ struct one_body{
 	 }
       }
    public:
-      int sorb;
+      int sorb = 0;
    private:
       std::vector<Tm> data; // Oij = <i|O|j>	
 };
@@ -54,12 +62,19 @@ struct one_body{
 // diagonal term Qij = <ij||ij> (i>j)
 template <typename Tm>
 struct two_body{
+   private:
+      // serialize
+      friend class boost::serialization::access;	   
+      template <class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	 ar & sorb & data & Q;
+      }
    public:
       void init_mem(){
 	 assert(sorb > 0);
-	 size_t p = sorb*(sorb-1)/2;
-	 data.resize(p*(p+1)/2,0.0);
-	 Q.resize(p);
+	 size_t pair = sorb*(sorb-1)/2;
+	 data.resize(pair*(pair+1)/2,0.0);
+	 Q.resize(pair);
       }
       // return <ij||kl> from packed storage
       Tm get(const size_t i, const size_t j, 
@@ -109,8 +124,7 @@ struct two_body{
 	 fill_n(Q.begin(), Q.size(), 0.0);
       }
       void print() const{
-	 std::cout << "two_body:" << std::endl;
-	 std::setprecision(12);
+	 std::cout << "integral::two_body sorb=" << sorb << std::endl;
 	 for(int i=0; i<sorb; i++){
 	    for(int j=0; j<i; j++){
 	       for(int k=0; k<sorb; k++){
@@ -119,6 +133,14 @@ struct two_body{
 			       << std::setprecision(12) << get(i,j,k,l) << std::endl;
 		  }
 	       }
+	    }
+	 }
+	 // Qij
+	 std::cout << "Qij:" << std::endl;
+	 for(int i=0; i<sorb; i++){
+	    for(int j=0; j<i; j++){
+	       int ij = i*(i-1)/2+j;
+	       std::cout << i << " " << j << " " << Q[ij] << std::endl;
 	    }
 	 }
       }
@@ -137,7 +159,7 @@ struct two_body{
 	 return Q[ij];
       }
    public:
-      int sorb; // no. of spin orbitals
+      int sorb = 0; // no. of spin orbitals
    private:   
       std::vector<Tm> data; // <ij||kl>
       std::vector<double> Q;  // Qij=<ij||ij> 

@@ -4,6 +4,7 @@
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
+
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
@@ -12,17 +13,28 @@ using namespace std;
 using namespace fock;
 
 template <typename Km>  
-int CTNS(const input::schedule& schd){
+int PCTNS(const input::schedule& schd){
    // consistency check for dtype
    using Tm = typename Km::dtype;
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
       tools::exit("error: inconsistent dtype in CTNS!");
    }
+   int rank = 0;
+#ifndef SERIAL
+   auto& world = schd.world;
+   rank = world.rank();
+#endif
    // read integral
    integral::two_body<Tm> int2e;
    integral::one_body<Tm> int1e;
    double ecore;
-   integral::load(int2e, int1e, ecore, schd.integral_file);
+   if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
+#ifndef SERIAL
+   boost::mpi::broadcast(world, int1e, 0);
+   boost::mpi::broadcast(world, int2e, 0);
+   boost::mpi::broadcast(world, ecore, 0);
+#endif   
+/*
    // dealing with topology 
    ctns::topology topo(schd.ctns.topology_file);
    ctns::comb<Km> icomb(topo);
@@ -61,6 +73,7 @@ int CTNS(const input::schedule& schd){
       double Sd = rcanon_Sdiag_sample(icomb,istate,nsample);
       cout << "\nistate=" << istate << " Sd(sample)=" << Sd << endl;
    }
+*/
    return 0;	
 }
 
@@ -85,29 +98,27 @@ int main(int argc, char *argv[]){
    input::schedule schd;
    if(rank == 0) schd.read(fname);
 #ifndef SERIAL
+   schd.world = world;
    boost::mpi::broadcast(world, schd, 0);
 #endif
    // setup scratch directory
    if(rank > 0) schd.scratch += to_string(rank);
    schd.create_scratch();
-   int info = 0;
-/*
    // we will use Tm to control Hnr/Hrel 
    int info = 0;
    if(schd.ctns.kind == "rN"){
-      info = CTNS<ctns::kind::rN>(schd);
+      info = PCTNS<ctns::kind::rN>(schd);
    }else if(schd.ctns.kind == "rNSz"){
-      info = CTNS<ctns::kind::rNSz>(schd);
+      info = PCTNS<ctns::kind::rNSz>(schd);
    }else if(schd.ctns.kind == "cN"){
-      info = CTNS<ctns::kind::cN>(schd);
+      info = PCTNS<ctns::kind::cN>(schd);
    }else if(schd.ctns.kind == "cNSz"){
-      info = CTNS<ctns::kind::cNSz>(schd);
+      info = PCTNS<ctns::kind::cNSz>(schd);
    }else if(schd.ctns.kind == "cNK"){
-      info = CTNS<ctns::kind::cNK>(schd);
+      info = PCTNS<ctns::kind::cNK>(schd);
    }else{
       tools::exit("error: no such kind for ctns!");
    } // kind
-*/
    if(rank > 0) schd.remove_scratch();
    return info;
 }

@@ -1,7 +1,6 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include "serialization.h"
 #include <iostream>
 #include <algorithm>
 #include <cassert>
@@ -11,6 +10,7 @@
 #include <complex>
 #include <fstream>
 #include "tools.h"
+#include "serialization.h"
 
 namespace linalg{
 
