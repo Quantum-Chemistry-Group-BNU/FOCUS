@@ -9,36 +9,45 @@ machine = mac #lenovo
 #MATH = -llapack -lblas
 
 ifeq ($(machine), lenovo)
-   MATH =  -L/opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64 \
-   	-lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
-   	-liomp5 \
-   	-L./extlibs/zquatev -lzquatev
+   MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
+   MATH =  -L$(MATHLIB) \
+   	   -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+   	   -liomp5 \
+   	   -L./extlibs/zquatev -lzquatev
    BOOST = /home/lx/software/boost/install_1_59_0
    USE_GCC = no #yes
-   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 	
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
-   MATH = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+   MATH = -L$(MATHLIB) \
+	  -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
           -L./extlibs/zquatev -lzquatev 
    BOOST = /usr/local
    USE_GCC = yes
-   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 	
 endif 
 
 USE_MPI = no
-ifeq ($(USE_MPI), yes) 
-   CXX = mpig++
-   CC = mpigcc
-   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_mpi-mt #-lrt
-else
-   ifeq ($(USE_GCC), yes)
+ifeq ($(USE_GCC), yes)
+   #FLAGS = -fopenmp -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   FLAGS = -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
+   ifeq ($(USE_MPI), no)
       CXX = g++
       CC = gcc
-      FLAGS = -fopenmp -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
    else
+      CXX = mpic++
+      CC = mpicc
+      LFLAGS += -lboost_mpi
+   endif
+else
+   FLAGS = -qopenmp -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   LFLAGS = ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 
+   ifeq ($(USE_MPI), no)
       CXX = icpc
       CC = icc
-      FLAGS = -qopenmp -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   else
+      CXX = mpic++
+      CC = mpigcc
+      LFLAGS += -lboost_mpi-mt
    endif
 endif
 
@@ -118,4 +127,3 @@ clean:
 	rm -f obj/*.o
 	rm -f bin/*.x
 	rm -f *.depend
-:q

@@ -10,10 +10,11 @@ TODOs:
     - rewrite qtensor such that qt2/qt3/qt4 are just views
 
  4. parallelization [DONE2021XXXX]
-    1. cleanup (IO) & update tests
-    2. preparation: makefile -> mpi 
-    3. mpi
-    4. hybrid: openmp/gpu?
+    1. cleanup (IO) [DONE20210517]
+    2. setup testing mechanism? 
+    3. preparation: makefile -> mpi 
+    4. mpi
+    5. hybrid: openmp/gpu?
 
  5. twordms 
 
