@@ -34,51 +34,41 @@ int PCTNS(const input::schedule& schd){
    boost::mpi::broadcast(world, int2e, 0);
    boost::mpi::broadcast(world, ecore, 0);
 #endif
-   // dealing with topology 
-   ctns::topology topo;
-   if(rank == 0) topo.read(schd.ctns.topology_file);
-#ifndef SERIAL
-   boost::mpi::broadcast(world, topo, 0);
-   if(rank > 0) topo.print();
-#endif
-/*
-   ctns::comb<Km> icomb(topo);
-   icomb.topo.print();
-   // initialize RCF 
-   const bool ifortho = true; 
-   auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-   if(!schd.ctns.load){
-      // from SCI wavefunction
-      onspace sci_space;
-      vector<double> es;
-      vector<vector<Tm>> vs;
-      auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
-      fci::ci_load(sci_space, es, vs, ci_file);
-      // truncate CI coefficients
-      fci::ci_truncate(sci_space, vs, schd.ctns.maxdets, ifortho);
-      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj);
-      ctns::rcanon_save(icomb, rcanon_file);
-   }else{
-      ctns::rcanon_load(icomb, rcanon_file);
+   // -- CTNS --- 
+   ctns::comb<Km> icomb;
+   if(rank == 0){
+      // dealing with topology 
+      icomb.topo.read(schd.ctns.topology_file);
+      icomb.topo.print();
+      // initialize RCF 
+      const bool ifortho = true; 
+      auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
+      if(!schd.ctns.load){
+         // from SCI wavefunction
+         onspace sci_space;
+         vector<double> es;
+         vector<vector<Tm>> vs;
+         auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
+         fci::ci_load(sci_space, es, vs, ci_file);
+         // truncate CI coefficients
+         fci::ci_truncate(sci_space, vs, schd.ctns.maxdets, ifortho);
+         ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj);
+         ctns::rcanon_save(icomb, rcanon_file);
+      }else{
+         ctns::rcanon_load(icomb, rcanon_file);
+      }
+      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho, ifortho);
    }
-   ctns::rcanon_check(icomb, schd.ctns.thresh_ortho, ifortho);
+#ifndef SERIAL
+   boost::mpi::broadcast(world, icomb, 0);
+#endif
    // optimization from current RCF
-   cout << "\n=== ctns.task=" << schd.ctns.task << " ===" << endl; 
-   if(schd.ctns.task == "opt"){
-      ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
+   assert(schd.ctns.task == "opt");
+   //ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
+   if(rank == 0){
       rcanon_file = schd.scratch+"/rcanon_new.info"; 
       ctns::rcanon_save(icomb, rcanon_file);
-   }else if(schd.ctns.task == "ham"){
-      auto Sij = ctns::get_Smat(icomb);
-      Sij.print("Sij");
-      auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
-      Hij.print("Hij",8);
-   }else if(schd.ctns.task == "sdiag"){
-      int istate = 0, nsample = 1.e5;
-      double Sd = rcanon_Sdiag_sample(icomb,istate,nsample);
-      cout << "\nistate=" << istate << " Sd(sample)=" << Sd << endl;
    }
-*/
    return 0;	
 }
 

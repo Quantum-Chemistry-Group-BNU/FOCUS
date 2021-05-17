@@ -53,20 +53,17 @@ int tests::test_ctns(){
    }
 
    // --- CTNS --- 
-   // 0. truncate CI coefficients
-   const bool ifortho = false; 
-   fci::ci_truncate(sci_space, vs, schd.ctns.maxdets, ifortho);
-
+   //ctns::comb<ctns::kind::rNSz> icomb;
+   //ctns::comb<ctns::kind::cN> icomb;
+   ctns::comb<ctns::kind::cNK> icomb;
+   
    // 1. dealing with topology 
-   ctns::topology topo;
-   topo.read(schd.ctns.topology_file);
-   topo.print();
+   icomb.topo.read(schd.ctns.topology_file);
+   icomb.topo.print();
 
    // 2. initialize right canonical form from SCI wavefunction
-   //ctns::comb<ctns::kind::rNSz> icomb(topo);
-   //ctns::comb<ctns::kind::cN> icomb(topo);
-   ctns::comb<ctns::kind::cNK> icomb(topo);
-
+   const bool ifortho = false; 
+   fci::ci_truncate(sci_space, vs, schd.ctns.maxdets, ifortho);
    if(!schd.ctns.load){
       ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj);
       ctns::rcanon_save(icomb);

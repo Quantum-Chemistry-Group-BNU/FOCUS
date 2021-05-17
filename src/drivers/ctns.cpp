@@ -20,10 +20,10 @@ int CTNS(const input::schedule& schd){
    integral::one_body<Tm> int1e;
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
+   // -- CTNS --- 
+   ctns::comb<Km> icomb;
    // dealing with topology 
-   ctns::topology topo;
-   topo.read(schd.ctns.topology_file);
-   ctns::comb<Km> icomb(topo);
+   icomb.topo.read(schd.ctns.topology_file);
    icomb.topo.print();
    // initialize RCF 
    const bool ifortho = true; 

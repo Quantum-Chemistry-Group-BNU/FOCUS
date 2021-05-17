@@ -1,6 +1,7 @@
 #ifndef CTNS_COMB_H
 #define CTNS_COMB_H
 
+#include "../core/serialization.h"
 #include "ctns_phys.h"
 #include "ctns_kind.h"
 #include "ctns_topo.h"
@@ -16,10 +17,16 @@ using sites_type = std::map<comb_coord,qtensor3<Tm>>;
 
 template <typename Km>
 class comb{
+   private:
+      // serialize
+      friend class boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	 ar & topo & rsites & rwfuns;
+      }
    public:
       // constructors
-      comb(const topology& topo1): topo(topo1) 
-      {
+      comb(){
          if(!kind::is_available<Km>()) tools::exit("error: no such kind for CTNS!");
       }
       // helpers
@@ -42,8 +49,8 @@ class comb{
       std::vector<int> get_suppl(const comb_coord& p, const bool ifprt=true) const;
       std::vector<int> get_suppr(const comb_coord& p, const bool ifprt=true) const;
    public:
-      topology topo;
       // -- CTNS ---
+      topology topo;
       sites_type<typename Km::dtype> rsites; // right canonical form 
       qtensor2<typename Km::dtype> rwfuns; // wavefunction at the left boundary -*-
       // --- auxilliary data ---
