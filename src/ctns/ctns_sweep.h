@@ -18,7 +18,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    std::cout << "\nctns::sweep_opt maxsweep=" << schd.ctns.maxsweep << std::endl;
 
    if(schd.ctns.maxsweep == 0) return;
-   
+
+   // ??? partition of operators ---> partition of integrals ???
+
    // prepare environmental operators 
    oper_env_right(icomb, int2e, int1e, schd.scratch);
 

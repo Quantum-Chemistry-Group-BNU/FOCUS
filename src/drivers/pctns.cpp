@@ -66,7 +66,7 @@ int PCTNS(const input::schedule& schd){
    assert(schd.ctns.task == "opt");
    //ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
    if(rank == 0){
-      rcanon_file = schd.scratch+"/rcanon_new.info"; 
+      auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
       ctns::rcanon_save(icomb, rcanon_file);
    }
    return 0;	
