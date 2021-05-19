@@ -18,7 +18,7 @@ template <typename Km>
 void oper_load_qops(const comb<Km>& icomb,
      		    const comb_coord& p,
      		    const std::string scratch,
-     		    const string block,
+		    const std::string block,
 		    oper_dict<typename Km::dtype>& qops){
    const auto& node = icomb.topo.get_node(p);
    if(block == "c"){
