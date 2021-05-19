@@ -132,9 +132,9 @@ void sweep_onedot(const input::schedule& schd,
 
    // 1. load operators 
    oper_dict<Tm> cqops, lqops, rqops;
-   oper_load_qops(icomb, p, schd.scratch, 'c', cqops);
-   oper_load_qops(icomb, p, schd.scratch, 'l', lqops);
-   oper_load_qops(icomb, p, schd.scratch, 'r', rqops);
+   oper_load_qops(icomb, p, schd.scratch, "c", cqops);
+   oper_load_qops(icomb, p, schd.scratch, "l", lqops);
+   oper_load_qops(icomb, p, schd.scratch, "r", rqops);
    if(debug_sweep){
       std::cout << "qops info:" << std::endl;
       const int level = 0;

@@ -155,15 +155,15 @@ void sweep_twodot(const input::schedule& schd,
    // 1. load operators 
    oper_dict<Tm> c1qops, c2qops, lqops, rqops;
    if(!cturn){
-      oper_load_qops(icomb, p0, schd.scratch, 'c', c1qops);
-      oper_load_qops(icomb, p1, schd.scratch, 'c', c2qops);
-      oper_load_qops(icomb, p0, schd.scratch, 'l', lqops );
-      oper_load_qops(icomb, p1, schd.scratch, 'r', rqops );  
+      oper_load_qops(icomb, p0, schd.scratch, "c", c1qops);
+      oper_load_qops(icomb, p1, schd.scratch, "c", c2qops);
+      oper_load_qops(icomb, p0, schd.scratch, "l", lqops );
+      oper_load_qops(icomb, p1, schd.scratch, "r", rqops );  
    }else{
-      oper_load_qops(icomb, p1, schd.scratch, 'c', c1qops);
-      oper_load_qops(icomb, p1, schd.scratch, 'r', c2qops);
-      oper_load_qops(icomb, p0, schd.scratch, 'l', lqops );
-      oper_load_qops(icomb, p0, schd.scratch, 'r', rqops );  
+      oper_load_qops(icomb, p1, schd.scratch, "c", c1qops);
+      oper_load_qops(icomb, p1, schd.scratch, "r", c2qops);
+      oper_load_qops(icomb, p0, schd.scratch, "l", lqops );
+      oper_load_qops(icomb, p0, schd.scratch, "r", rqops );  
    }
    if(debug_sweep){
       std::cout << "qops info:" << std::endl;

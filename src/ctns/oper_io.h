@@ -6,9 +6,6 @@
 
 namespace ctns{ 
 
-const bool debug_oper_io = false;
-extern const bool debug_oper_io;
-
 // for qopers
 inline std::string oper_fname(const std::string scratch, 
   	  	       	      const comb_coord& p,
@@ -24,6 +21,7 @@ void oper_save(const std::string fname,
 	       const oper_dict<Tm>& qops){
    if(debug_oper_io){
       std::cout << "ctns::oper_save fname=" << fname << " size=" << qops.size() << std::endl;
+      if(debug_oper_dict) oper_display(qops, fname, 1);
    }
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);

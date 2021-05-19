@@ -1,10 +1,18 @@
+
+machine = lenovo
+
 INCLUDE = -I.
-MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib  
-LIBS = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl 
+ifeq ($(machine), lenovo)
+   CXX = icpc
+   CXXFLAGS = -O2 -DNDEBUG -std=c++11 $(INCLUDE)
+   MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64 
+else
+   CXX = g++
+   CXXFLAGS = -O2 -DNDEBUG -std=c++11 $(INCLUDE)
+   MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib  
+endif
 
-CXX      = g++
-CXXFLAGS = -O3 -DNDEBUG -std=c++11 $(INCLUDE)
-
+LIBS = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl 
 LD       = $(CXX)
 LDFLAGS  = $(CXXFLAGS) $(LIBS)
 #LFLAGS = -shared -fPIC

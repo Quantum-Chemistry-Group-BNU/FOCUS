@@ -18,10 +18,10 @@ template <typename Km>
 void oper_load_qops(const comb<Km>& icomb,
      		    const comb_coord& p,
      		    const std::string scratch,
-     		    const char type,
+     		    const string block,
 		    oper_dict<typename Km::dtype>& qops){
    const auto& node = icomb.topo.get_node(p);
-   if(type == 'c'){
+   if(block == "c"){
       if(node.type != 3){
          auto fname0c = oper_fname(scratch, p, "c"); // physical dofs
          oper_load(fname0c, qops);
@@ -30,11 +30,11 @@ void oper_load_qops(const comb<Km>& icomb,
          auto fname0c = oper_fname(scratch, pc, "r"); // branching site
          oper_load(fname0c, qops);
       }
-   }else if(type == 'r'){
+   }else if(block == "r"){
       auto pr = node.right;
       auto fname0r = oper_fname(scratch, pr, "r");
       oper_load(fname0r, qops);
-   }else if(type == 'l'){
+   }else if(block == "l"){
       auto pl = node.left;
       auto fname0l = oper_fname(scratch, pl, "l");
       oper_load(fname0l, qops);
@@ -63,7 +63,9 @@ void oper_init_dot(const int isym,
    oper_dot_opH(isym, ifkr, kp, int2e, int1e, qops);
 }
 
-// construct for dot operators [cop] & boundary operators [lop/rop]
+// initialization of operators for 
+// (1) dot operators [c] 
+// (2) boundary operators [l/r]
 template <typename Km>
 void oper_init(const comb<Km>& icomb,
 	       const integral::two_body<typename Km::dtype>& int2e,
@@ -77,7 +79,7 @@ void oper_init(const comb<Km>& icomb,
       if(node.type != 3){
          int kp = node.pindex;
          oper_dict<typename Km::dtype> qops;
-	 oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);
+	 oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);	
 	 std::string fname = oper_fname(scratch, p, "c");
          oper_save(fname, qops);
       }
@@ -116,10 +118,14 @@ void oper_env_right(const comb<Km>& icomb,
       if(node.type != 0 || p.first == 0){
 	 oper_dict<typename Km::dtype> qops1, qops2, qops; 
          // load operators from disk    
-         oper_load_qops(icomb, p, scratch, 'c', qops1);
-         oper_load_qops(icomb, p, scratch, 'r', qops2);
-	 // perform renormalization for superblock {|cr>}
-	 const std::string superblock = "cr"; 
+         oper_load_qops(icomb, p, scratch, "c", qops1);
+         oper_load_qops(icomb, p, scratch, "r", qops2);
+	 if(debug_oper_dict){
+	    oper_display(qops1, "c", 1);
+	    oper_display(qops2, "r", 1);
+	 }
+         // perform renormalization for superblock {|cr>}
+	 std::string superblock = "cr"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e, qops1, qops2, qops);
 	 auto fname = oper_fname(scratch, p, "r");
          oper_save(fname, qops);

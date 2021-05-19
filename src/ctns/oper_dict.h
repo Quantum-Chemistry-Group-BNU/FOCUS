@@ -7,8 +7,12 @@
 
 namespace ctns{
 
+// debug options
 const bool debug_oper_dict = true;
 extern const bool debug_oper_dict;
+
+const bool debug_oper_io = true;
+extern const bool debug_oper_io;
 
 // container for operators
 template <typename Tm>
@@ -53,15 +57,15 @@ inline double wfacBQ(const int ij){
 
 // --- display ---
 template <typename Tm>
-void oper_display(oper_dict<Tm>& qops, const std::string sinfo, const int level=0){
+void oper_display(const oper_dict<Tm>& qops, const std::string sinfo, const int level=0){
    std::string oplist = "HCSABPQ";
    std::map<char,int> exist;
    std::string s = " "+ sinfo + ": ";
    for(const auto& key : oplist){
       if(qops.find(key) != qops.end()){ 
 	 s += key;
-	 s += ":"+std::to_string(qops[key].size())+ " ";
-	 exist[key] = qops[key].size();
+	 s += ":"+std::to_string(qops.at(key).size())+ " ";
+	 exist[key] = qops.at(key).size();
       }else{
 	 exist[key] = 0;
       }
@@ -73,11 +77,11 @@ void oper_display(oper_dict<Tm>& qops, const std::string sinfo, const int level=
          if(exist[key] > 0){
             std::cout << " " << key << ": ";
 	    if(key == 'H' || key == 'C' || key == 'S'){
-	       for(const auto& op : qops[key]){
+	       for(const auto& op : qops.at(key)){
 	          std::cout << op.first << " ";
 	       }
 	    }else{
-	       for(const auto& op : qops[key]){
+	       for(const auto& op : qops.at(key)){
 	          auto pq = oper_unpack(op.first);
 	          std::cout << "(" << pq.first << "," << pq.second << ") ";
 	       }

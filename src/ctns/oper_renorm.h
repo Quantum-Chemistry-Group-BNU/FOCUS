@@ -23,6 +23,7 @@ void oper_renorm_opC(const std::string& superblock,
       const auto& op1 = op1C.second;
       auto Hwf = oper_kernel_OIwf(superblock,site,op1);
       qops['C'][p1] = oper_kernel_renorm(superblock,site,Hwf);
+      if(debug_oper_dict) std::cout << "C: p1=" << p1 << std::endl;
    }
    // 2. I1*p2^+ 
    for(const auto& op2C : qops2['C']){
@@ -30,6 +31,7 @@ void oper_renorm_opC(const std::string& superblock,
       const auto& op2 = op2C.second;
       auto Hwf = oper_kernel_IOwf(superblock,site,op2,1);
       qops['C'][p2] = oper_kernel_renorm(superblock,site,Hwf); 
+      if(debug_oper_dict) std::cout << "C: p2=" << p2 << std::endl;
    }
    auto t1 = tools::get_time();
    if(debug){ 
@@ -351,9 +353,9 @@ void oper_renorm_opAll(const std::string& superblock,
 		       const integral::one_body<typename Km::dtype>& int1e,
 		       oper_dict<typename Km::dtype>& qops1,
 		       oper_dict<typename Km::dtype>& qops2,
-		       oper_dict<typename Km::dtype>& qops,
-		       const bool debug=false){
-   const bool ifcheck = false;
+		       oper_dict<typename Km::dtype>& qops){
+   const bool debug = debug_oper_dict; 
+   const bool ifcheck = false; // check operators against explicit construction
    auto t0 = tools::get_time();
    const bool ifkr = kind::is_kramers<Km>();
    const int isym = Km::isym;
@@ -377,29 +379,29 @@ void oper_renorm_opAll(const std::string& superblock,
       auto pc = node.center;
       ksupp = icomb.topo.get_node(pc).rsupport;
    }
-  
+ 
    // C
    oper_renorm_opC(superblock, site, qops1, qops2, qops, debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'C');
+   if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'C');
    // A
    oper_renorm_opA(superblock, site, qops1, qops2, qops, ifkr, debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'A');
+   if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'A');
    // B
    oper_renorm_opB(superblock, site, qops1, qops2, qops, ifkr, debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'B');
+   if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'B');
    // P
    oper_renorm_opP(superblock, site, qops1, qops2, qops, isym, ifkr, ksupp, int2e, int1e, debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'P', int2e, int1e);
+   if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'P', int2e, int1e);
    // Q
    oper_renorm_opQ(superblock, site, qops1, qops2, qops, isym, ifkr, ksupp, int2e, int1e, debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'Q', int2e, int1e);
+   if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'Q', int2e, int1e);
    // S
    oper_renorm_opS(superblock, site, qops1, qops2, qops, isym, ifkr, ksupp, int2e, int1e, debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'S', int2e, int1e);
+   if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'S', int2e, int1e);
    
    // H
    oper_renorm_opH(superblock, site, qops1, qops2, qops, isym, ifkr, int2e, int1e, debug);
-   if(debug && ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'H', int2e, int1e);
+   if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'H', int2e, int1e);
    // consistency check for Hamiltonian
    const auto& H = qops['H'].at(0);
    auto diffH = (H-H.H()).normF();
