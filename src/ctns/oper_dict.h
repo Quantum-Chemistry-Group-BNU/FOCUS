@@ -7,6 +7,9 @@
 
 namespace ctns{
 
+const bool debug_oper_dict = true;
+extern const bool debug_oper_dict;
+
 // container for operators
 template <typename Tm>
 using oper_map = std::map<int,qtensor2<Tm>>;

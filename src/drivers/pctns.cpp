@@ -63,11 +63,19 @@ int PCTNS(const input::schedule& schd){
    boost::mpi::broadcast(world, icomb, 0);
 #endif
    // optimization from current RCF
-   assert(schd.ctns.task == "opt");
-   //ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
-   if(rank == 0){
-      auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
-      ctns::rcanon_save(icomb, rcanon_file);
+   if(schd.ctns.task == "opt"){
+      ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
+      if(rank == 0){
+         auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
+         ctns::rcanon_save(icomb, rcanon_file);
+      }
+   }else if(schd.ctns.task == "ham"){
+      auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+      if(rank == 0){
+         Hij.print("Hij",8);
+         auto Sij = ctns::get_Smat(icomb);
+         Sij.print("Sij");
+      }
    }
    return 0;	
 }
