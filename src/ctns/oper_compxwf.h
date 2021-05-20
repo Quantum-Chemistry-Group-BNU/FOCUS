@@ -1,6 +1,8 @@
 #ifndef OPER_COMPXWF_H
 #define OPER_COMPXWF_H
 
+#include "oper_kernel.h"
+
 namespace ctns{
 
 /*

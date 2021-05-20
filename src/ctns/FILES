@@ -121,10 +121,12 @@ Parallelization
 -------------------------
 * operator related:
  oper_combine.h
+ oper_normxwf.h
+
  oper_util.h
- oper_dot.h
  oper_compxwf.h
  oper_renorm.h
+ oper_dot.h
 
 * sweep related:
 
