@@ -16,10 +16,10 @@ void twodot_Hdiag_local(oper_dict<Tm>& c1qops,
 		        oper_dict<Tm>& rqops,
 		        const double ecore,
 		        qtensor4<Tm>& wf){
-   const auto& Hc1 = c1qops['H'][0];
-   const auto& Hc2 = c2qops['H'][0];
-   const auto& Hl = lqops['H'][0];
-   const auto& Hr = rqops['H'][0];
+   const auto& Hc1 = c1qops('H')[0];
+   const auto& Hc2 = c2qops('H')[0];
+   const auto& Hl = lqops('H')[0];
+   const auto& Hr = rqops('H')[0];
    for(int bm=0; bm<wf.mids(); bm++){
       for(int bv=0; bv<wf.vers(); bv++){
          for(int br=0; br<wf.rows(); br++){
@@ -270,69 +270,69 @@ std::vector<double> twodot_Hdiag(const bool ifkr,
    //
    if(not ifkr){
       // Q^L*B^C1 
-      for(const auto& p : c1qops['B']){
+      for(const auto& p : c1qops('B')){
          const auto& Bc1 = p.second;
          if(Bc1.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Ql = lqops['Q'].at(p.first);
+         const auto& Ql = lqops('Q').at(p.first);
 	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
          twodot_Hdiag_OlOc1(Ql,Bc1,wf,wt);
       } 
       // Q^L*B^C2 
-      for(const auto& p : c2qops['B']){
+      for(const auto& p : c2qops('B')){
          const auto& Bc2 = p.second;
          if(Bc2.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Ql = lqops['Q'].at(p.first);
+         const auto& Ql = lqops('Q').at(p.first);
 	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
          twodot_Hdiag_OlOc2(Ql,Bc2,wf,wt);
       } 
       // B^C1*Q^R 
-      for(const auto& p : c1qops['B']){
+      for(const auto& p : c1qops('B')){
          const auto& Bc1 = p.second;
          if(Bc1.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qr = rqops['Q'].at(p.first);
+         const auto& Qr = rqops('Q').at(p.first);
 	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
          twodot_Hdiag_Oc1Or(Bc1,Qr,wf,wt);
       }
       // B^C1*Q^C2 
-      for(const auto& p : c1qops['B']){
+      for(const auto& p : c1qops('B')){
          const auto& Bc1 = p.second;
          if(Bc1.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qc2 = c2qops['Q'].at(p.first);
+         const auto& Qc2 = c2qops('Q').at(p.first);
 	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
          twodot_Hdiag_Oc1Oc2(Bc1,Qc2,wf,wt);
       }
       // B^C2*Q^R 
-      for(const auto& p : c2qops['B']){
+      for(const auto& p : c2qops('B')){
          const auto& Bc2 = p.second;
          if(Bc2.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qr = rqops['Q'].at(p.first);
+         const auto& Qr = rqops('Q').at(p.first);
 	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
          twodot_Hdiag_Oc2Or(Bc2,Qr,wf,wt);
       }
       // B^L*Q^R or Q^L*B^R 
-      if(lqops['B'].size() <= rqops['B'].size()){
-         for(const auto& p : lqops['B']){
+      if(lqops('B').size() <= rqops('B').size()){
+         for(const auto& p : lqops('B')){
             const auto& Bl = p.second;
             if(Bl.sym != qsym()) continue;
-            const auto& Qr = rqops['Q'].at(p.first);
+            const auto& Qr = rqops('Q').at(p.first);
 	    const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
             twodot_Hdiag_OlOr(Bl,Qr,wf,wt);
          } 
       }else{
-         for(const auto& p: rqops['B']){
+         for(const auto& p: rqops('B')){
             const auto& Br = p.second;
             if(Br.sym != qsym()) continue;
-            const auto& Ql = lqops['Q'].at(p.first);
+            const auto& Ql = lqops('Q').at(p.first);
 	    const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
             twodot_Hdiag_OlOr(Ql,Br,wf,wt);
          }
       }
    }else{
       // Q^L*B^C1 
-      for(const auto& p : c1qops['B']){
+      for(const auto& p : c1qops('B')){
          const auto& Bc1_A = p.second;
          if(Bc1_A.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Ql_A = lqops['Q'].at(p.first);
+         const auto& Ql_A = lqops('Q').at(p.first);
 	 const auto& Bc1_B = Bc1_A.K(0);
 	 const auto& Ql_B  = Ql_A.K(0);
 	 const Tm wt = 2.0*wfacBQ(p.first); // taking into account B^d*Q^d
@@ -340,10 +340,10 @@ std::vector<double> twodot_Hdiag(const bool ifkr,
          twodot_Hdiag_OlOc1(Ql_B,Bc1_B,wf,wt);
       }
       // Q^L*B^C2 
-      for(const auto& p : c2qops['B']){
+      for(const auto& p : c2qops('B')){
          const auto& Bc2_A = p.second;
          if(Bc2_A.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Ql_A = lqops['Q'].at(p.first);
+         const auto& Ql_A = lqops('Q').at(p.first);
 	 const auto& Bc2_B = Bc2_A.K(0);
 	 const auto& Ql_B  = Ql_A.K(0);
 	 const Tm wt = 2.0*wfacBQ(p.first); // taking into account B^d*Q^d
@@ -351,10 +351,10 @@ std::vector<double> twodot_Hdiag(const bool ifkr,
          twodot_Hdiag_OlOc2(Ql_B,Bc2_B,wf,wt);
       }
       // B^C1*Q^R 
-      for(const auto& p : c1qops['B']){
+      for(const auto& p : c1qops('B')){
          const auto& Bc1_A = p.second;
          if(Bc1_A.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qr_A = rqops['Q'].at(p.first);
+         const auto& Qr_A = rqops('Q').at(p.first);
 	 const auto& Bc1_B = Bc1_A.K(0);
 	 const auto& Qr_B  = Qr_A.K(0);
 	 const Tm wt = 2.0*wfacBQ(p.first); // taking into account B^d*Q^d
@@ -362,10 +362,10 @@ std::vector<double> twodot_Hdiag(const bool ifkr,
          twodot_Hdiag_Oc1Or(Bc1_B,Qr_B,wf,wt);
       }
       // B^C1*Q^C2 
-      for(const auto& p : c1qops['B']){
+      for(const auto& p : c1qops('B')){
          const auto& Bc1_A = p.second;
          if(Bc1_A.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qc2_A = c2qops['Q'].at(p.first);
+         const auto& Qc2_A = c2qops('Q').at(p.first);
 	 const auto& Bc1_B = Bc1_A.K(0);
 	 const auto& Qc2_B = Qc2_A.K(0);
 	 const Tm wt = 2.0*wfacBQ(p.first); // taking into account B^d*Q^d
@@ -373,10 +373,10 @@ std::vector<double> twodot_Hdiag(const bool ifkr,
          twodot_Hdiag_Oc1Oc2(Bc1_B,Qc2_B,wf,wt);
       }
       // B^C2*Q^R 
-      for(const auto& p : c2qops['B']){
+      for(const auto& p : c2qops('B')){
          const auto& Bc2_A = p.second;
          if(Bc2_A.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qr_A = rqops['Q'].at(p.first);
+         const auto& Qr_A = rqops('Q').at(p.first);
 	 const auto& Bc2_B = Bc2_A.K(0);
 	 const auto& Qr_B  = Qr_A.K(0);
 	 const Tm wt = 2.0*wfacBQ(p.first); // taking into account B^d*Q^d
@@ -384,11 +384,11 @@ std::vector<double> twodot_Hdiag(const bool ifkr,
          twodot_Hdiag_Oc2Or(Bc2_B,Qr_B,wf,wt);
       }
       // B^L*Q^R or Q^L*B^R 
-      if(lqops['B'].size() <= rqops['B'].size()){
-         for(const auto& p : lqops['B']){
+      if(lqops('B').size() <= rqops('B').size()){
+         for(const auto& p : lqops('B')){
             const auto& Bl_A = p.second;
             if(Bl_A.sym != qsym()) continue;
-            const auto& Qr_A = rqops['Q'].at(p.first);
+            const auto& Qr_A = rqops('Q').at(p.first);
 	    const auto& Bl_B = Bl_A.K(0);
 	    const auto& Qr_B = Qr_A.K(0);
 	    const Tm wt = 2.0*wfacBQ(p.first); // taking into account B^d*Q^d
@@ -396,10 +396,10 @@ std::vector<double> twodot_Hdiag(const bool ifkr,
             twodot_Hdiag_OlOr(Bl_B,Qr_B,wf,wt);
          } 
       }else{
-         for(const auto& p: rqops['B']){
+         for(const auto& p: rqops('B')){
             const auto& Br_A = p.second;
             if(Br_A.sym != qsym()) continue;
-            const auto& Ql_A = lqops['Q'].at(p.first);
+            const auto& Ql_A = lqops('Q').at(p.first);
 	    const auto& Br_B = Br_A.K(0);
 	    const auto& Ql_B = Ql_A.K(0);
 	    const Tm wt = 2.0*wfacBQ(p.first); // taking into account B^d*Q^d
@@ -689,23 +689,23 @@ void twodot_Hx(Tm* y,
    // 
    // One-index terms:
    //  3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
-   for(const auto& op1C : lqops['C']){
+   for(const auto& op1C : lqops('C')){
       int p1 = op1C.first;
       const auto& op1 = op1C.second;
       twodot_Hx_CS("l",p1,op1,wf2,c2qops,rqops,isym,ifkr,int2e,int1e,wf,Hwf1);
    }
-   for(const auto& op1C : c1qops['C']){
+   for(const auto& op1C : c1qops('C')){
       int p1 = op1C.first;
       const auto& op1 = op1C.second;
       twodot_Hx_CS("c",p1,op1,wf2,c2qops,rqops,isym,ifkr,int2e,int1e,wf,Hwf1);
    }
    //  4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
-   for(const auto& op2C : c2qops['C']){
+   for(const auto& op2C : c2qops('C')){
       int q2 = op2C.first;
       const auto& op2 = op2C.second;
       twodot_Hx_SC("c",q2,op2,wf2,lqops,c1qops,isym,ifkr,int2e,int1e,wf,Hwf1);
    }
-   for(const auto& op2C : rqops['C']){
+   for(const auto& op2C : rqops('C')){
       int q2 = op2C.first;
       const auto& op2 = op2C.second;
       twodot_Hx_SC("r",q2,op2,wf2,lqops,c1qops,isym,ifkr,int2e,int1e,wf,Hwf1);
@@ -719,14 +719,14 @@ void twodot_Hx(Tm* y,
 
       // 5. Apq^LC1*Ppq^C2R + h.c.
       // Apq^L*Ppq^C2R
-      for(const auto& op1A : lqops['A']){
+      for(const auto& op1A : lqops('A')){
 	 int index = op1A.first;
 	 const auto& op1 = op1A.second;
 	 const Tm wt = ifkr? wfacAP(index) : 1.0;
          twodot_Hx_AP("l",index,wt,op1,id2,wf2,c2qops,rqops,isym,ifkr,int2e,int1e,wf,Hwf1);
       }
       // Apq^C1*Ppq^C2R
-      for(const auto& op2A : c1qops['A']){
+      for(const auto& op2A : c1qops('A')){
 	 int index = op2A.first;
 	 const auto& op2 = op2A.second;
 	 const Tm wt = ifkr? wfacAP(index) : 1.0;
@@ -734,10 +734,10 @@ void twodot_Hx(Tm* y,
       }
       // Cross terms: should be consistent with oper_renorm.h
       // Apq = p^L+*q^C1+ (p<q) or p^C1+*q^L+ (p<q)
-      for(const auto& op1C : lqops['C']){
+      for(const auto& op1C : lqops('C')){
          int p1 = op1C.first;
          const auto& op1 = op1C.second;
-         for(const auto& op2C : c1qops['C']){
+         for(const auto& op2C : c1qops('C')){
             int p2 = op2C.first;
             const auto& op2 = op2C.second;
             assert(p1 != p2);
@@ -755,14 +755,14 @@ void twodot_Hx(Tm* y,
 
       // 6. Bps^LC1*Qps^C2R
       // Bps^L*Qps^C2R
-      for(const auto& op1B : lqops['B']){
+      for(const auto& op1B : lqops('B')){
 	 int index = op1B.first;
 	 const auto& op1 = op1B.second;
 	 const Tm wt = ifkr? wfacBQ(index) : wfac(index);
          twodot_Hx_BQ("l",index,wt,op1,id2,wf2,c2qops,rqops,isym,ifkr,int2e,int1e,wf,Hwf1);
       }
       // Bps^C1*Qps^C2R
-      for(const auto& op2B : c1qops['B']){
+      for(const auto& op2B : c1qops('B')){
 	 int index = op2B.first;
 	 const auto& op2 = op2B.second;
 	 const Tm wt = ifkr? wfacBQ(index) : wfac(index);
@@ -770,9 +770,9 @@ void twodot_Hx(Tm* y,
       }
       // Cross terms: should be consistent with oper_renorm.h
       // Bps = p^L+*s^C1 or p^C1+*s^L = -s^L*p^C1+ (p<s) 
-      for(const auto& op1C : lqops['C']){
+      for(const auto& op1C : lqops('C')){
          int p1 = op1C.first;
-         for(const auto& op2C : c1qops['C']){
+         for(const auto& op2C : c1qops('C')){
             int p2 = op2C.first;
             assert(p1 != p2);
             const Tm sgn = (p1<p2)? 1.0 : -1.0;
@@ -793,14 +793,14 @@ void twodot_Hx(Tm* y,
 
       // 5. Ars^C2R*Prs^LC1 + h.c.
       // Ars^C2*Prs^LC1 = Prs^LC1*Ars^C2
-      for(const auto& op1A : c2qops['A']){
+      for(const auto& op1A : c2qops('A')){
 	 int index = op1A.first;
 	 const auto& op1 = op1A.second;
          const Tm wt = ifkr? wfacAP(index) : 1.0;
          twodot_Hx_PA("c",index,wt,op1,id2,wf2,lqops,c1qops,isym,ifkr,int2e,int1e,wf,Hwf1);
       }
       // Ars^R*Prs^LC1 = Prs^LC1*Ars^R
-      for(const auto& op2A : rqops['A']){
+      for(const auto& op2A : rqops('A')){
 	 int index = op2A.first;
 	 const auto& op2 = op2A.second;
          const Tm wt = ifkr? wfacAP(index) : 1.0;
@@ -808,10 +808,10 @@ void twodot_Hx(Tm* y,
       }
       // Cross terms: should be consistent with oper_renorm.h
       // Ars = r^C2+s^R+ (r<s) or r^R+s^C2+ (r<s) 
-      for(const auto& op1C : c2qops['C']){
+      for(const auto& op1C : c2qops('C')){
          int p1 = op1C.first;
          const auto& op1 = op1C.second;
-         for(const auto& op2C : rqops['C']){
+         for(const auto& op2C : rqops('C')){
             int p2 = op2C.first;
             const auto& op2 = op2C.second;
             assert(p1 != p2);
@@ -829,14 +829,14 @@ void twodot_Hx(Tm* y,
 
       // 6. Qqr^LC1*Bqr^C2R
       // Qqr^LC1*Bqr^C2
-      for(const auto& op1B : c2qops['B']){
+      for(const auto& op1B : c2qops('B')){
 	 int index = op1B.first;
 	 const auto& op1 = op1B.second;
          const Tm wt = ifkr? wfacBQ(index) : wfac(index);
          twodot_Hx_QB("c",index,wt,op1,id2,wf2,lqops,c1qops,isym,ifkr,int2e,int1e,wf,Hwf1);
       }
       // Qqr^LC1*Bqr^R
-      for(const auto& op2B : rqops['B']){
+      for(const auto& op2B : rqops('B')){
 	 int index = op2B.first;
 	 const auto& op2 = op2B.second;
          const Tm wt = ifkr? wfacBQ(index) : wfac(index);
@@ -844,9 +844,9 @@ void twodot_Hx(Tm* y,
       }
       // Cross terms: should be consistent with oper_renorm.h
       // Bqr = q^C2+*r^R or q^R+*r^C2 = -r^C2*q^R+ (q<r)
-      for(const auto& op1C : c2qops['C']){
+      for(const auto& op1C : c2qops('C')){
          int p1 = op1C.first;
-         for(const auto& op2C : rqops['C']){
+         for(const auto& op2C : rqops('C')){
             int p2 = op2C.first;
             assert(p1 != p2);
             const Tm sgn = (p1<p2)? 1.0 : -1.0;

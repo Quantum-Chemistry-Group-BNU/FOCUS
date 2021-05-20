@@ -67,7 +67,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    // check for ap^+
    //----------------
    if(opname == 'C'){
-   for(const auto& opC: qops['C']){
+   for(const auto& opC: qops('C')){
       const auto& op = opC.second;
       int orb_p = opC.first;
       int pos = orb2pos.at(orb_p);
@@ -133,7 +133,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    // check for Apq = ap^+aq^+
    //--------------------------
    if(opname == 'A'){ 
-   for(const auto& opA : qops['A']){
+   for(const auto& opA : qops('A')){
       const auto& op = opA.second;
       auto pq = oper_unpack(opA.first);
       int orb_p = pq.first;
@@ -204,7 +204,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    // check for Bpq = ap^+aq
    //------------------------
    if(opname == 'B'){ 
-   for(const auto& opB : qops['B']){
+   for(const auto& opB : qops('B')){
       const auto& op = opB.second;
       auto pq = oper_unpack(opB.first);
       int orb_p = pq.first;
@@ -308,7 +308,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    // check for Ppq = <pq||sr> aras [r>s]
    //-------------------------------------
    if(opname == 'P'){
-   for(const auto& opP : qops['P']){
+   for(const auto& opP : qops('P')){
       const auto& op = opP.second;
       auto pq = oper_unpack(opP.first);
       int orb_p = pq.first;
@@ -383,7 +383,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    // check for Qps = <pq||sr> aq^+ar
    //---------------------------------
    if(opname == 'Q'){ 
-   for(const auto& opQ : qops['Q']){
+   for(const auto& opQ : qops('Q')){
       const auto& op = opQ.second;
       auto ps = oper_unpack(opQ.first);
       int orb_p = ps.first;
@@ -457,7 +457,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    // check for Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    //-----------------------------------------------------
    if(opname == 'S'){
-   for(const auto& opS : qops['S']){
+   for(const auto& opS : qops('S')){
       const auto& op = opS.second;
       int orb_p = opS.first;
       // build
@@ -542,7 +542,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    // check for H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
    //------------------------------------------------------------
    if(opname == 'H'){
-   for(const auto& opH : qops['H']){
+   for(const auto& opH : qops('H')){
       const auto& op = opH.second;
       // build
       int dim0 = bsite.qrow.get_dimAll();

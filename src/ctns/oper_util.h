@@ -18,10 +18,10 @@ template <typename Km>
 void oper_load_qops(const comb<Km>& icomb,
      		    const comb_coord& p,
      		    const std::string scratch,
-		    const std::string block,
+		    const std::string kind,
 		    oper_dict<typename Km::dtype>& qops){
    const auto& node = icomb.topo.get_node(p);
-   if(block == "c"){
+   if(kind == "c"){
       if(node.type != 3){
          auto fname0c = oper_fname(scratch, p, "c"); // physical dofs
          oper_load(fname0c, qops);
@@ -30,11 +30,11 @@ void oper_load_qops(const comb<Km>& icomb,
          auto fname0c = oper_fname(scratch, pc, "r"); // branching site
          oper_load(fname0c, qops);
       }
-   }else if(block == "r"){
+   }else if(kind == "r"){
       auto pr = node.right;
       auto fname0r = oper_fname(scratch, pr, "r");
       oper_load(fname0r, qops);
-   }else if(block == "l"){
+   }else if(kind == "l"){
       auto pl = node.left;
       auto fname0l = oper_fname(scratch, pl, "l");
       oper_load(fname0l, qops);
@@ -54,6 +54,9 @@ void oper_init_dot(const int isym,
       if(k == kp) continue;
       krest.push_back(k);
    }
+   qops.full = true;
+   qops.ksupp.push_back(2*kp);
+   if(not ifkr) qops.ksupp.push_back(2*kp+1);
    oper_dot_opC(isym, ifkr, kp, qops);
    oper_dot_opA(isym, ifkr, kp, qops);
    oper_dot_opB(isym, ifkr, kp, qops);
@@ -121,8 +124,8 @@ void oper_env_right(const comb<Km>& icomb,
          oper_load_qops(icomb, p, scratch, "c", qops1);
          oper_load_qops(icomb, p, scratch, "r", qops2);
 	 if(debug_oper_dict){
-	    oper_display(qops1, "c", 1);
-	    oper_display(qops2, "r", 1);
+	    qops1.print("qops_c", 1);
+	    qops2.print("qops_r", 1);
 	 }
          // perform renormalization for superblock {|cr>}
 	 std::string superblock = "cr"; 
@@ -146,13 +149,12 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    std::cout << "\nctns::get_Hmat" << std::endl;
    // build operators for environement
    oper_env_right(icomb, int2e, int1e, scratch);
-
    // load operators from file
    oper_dict<typename Km::dtype> qops;
    auto p = std::make_pair(0,0); 
    auto fname = oper_fname(scratch, p, "r");
    oper_load(fname, qops);
-   auto Hmat = qops['H'][0].to_matrix();
+   auto Hmat = qops('H')[0].to_matrix();
    Hmat += ecore*linalg::identity_matrix<typename Km::dtype>(Hmat.rows());
    // deal with rwfuns(istate,ibas):
    // Hij = w*[i,a] H[a,b] w[j,b] = (w^* H w^T) 

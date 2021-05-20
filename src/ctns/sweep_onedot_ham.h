@@ -15,9 +15,9 @@ void onedot_Hdiag_local(oper_dict<Tm>& cqops,
 		        oper_dict<Tm>& rqops,
 		        const double ecore,
 		        qtensor3<Tm>& wf){
-   const auto& Hc = cqops['H'][0];
-   const auto& Hl = lqops['H'][0];
-   const auto& Hr = rqops['H'][0];
+   const auto& Hc = cqops('H')[0];
+   const auto& Hl = lqops('H')[0];
+   const auto& Hr = rqops('H')[0];
    // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
    for(int bm=0; bm<wf.mids(); bm++){
       for(int br=0; br<wf.rows(); br++){
@@ -148,45 +148,45 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
    // 
    if(not ifkr){
       // Q^L*B^C 
-      for(const auto& p : cqops['B']){
+      for(const auto& p : cqops('B')){
          const auto& Bc = p.second;
          if(Bc.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Ql = lqops['Q'].at(p.first);
+         const auto& Ql = lqops('Q').at(p.first);
 	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
          onedot_Hdiag_OlOc(Ql,Bc,wf,wt);
       } 
       // B^C*Q^R 
-      for(const auto& p : cqops['B']){
+      for(const auto& p : cqops('B')){
          const auto& Bc = p.second;
          if(Bc.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qr = rqops['Q'].at(p.first);
+         const auto& Qr = rqops('Q').at(p.first);
 	 const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
          onedot_Hdiag_OcOr(Bc,Qr,wf,wt);
       } 
       // B^L*Q^R or Q^L*B^R 
-      if(lqops['B'].size() <= rqops['B'].size()){
-         for(const auto& p : lqops['B']){
+      if(lqops('B').size() <= rqops('B').size()){
+         for(const auto& p : lqops('B')){
             const auto& Bl = p.second;
             if(Bl.sym != qsym()) continue;
-            const auto& Qr = rqops['Q'].at(p.first);
+            const auto& Qr = rqops('Q').at(p.first);
 	    const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
             onedot_Hdiag_OlOr(Bl,Qr,wf,wt);
          } 
       }else{
-         for(const auto& p: rqops['B']){
+         for(const auto& p: rqops('B')){
             const auto& Br = p.second;
             if(Br.sym != qsym()) continue;
-            const auto& Ql = lqops['Q'].at(p.first);
+            const auto& Ql = lqops('Q').at(p.first);
 	    const Tm wt = 2.0*wfac(p.first); // taking into account B^d*Q^d
             onedot_Hdiag_OlOr(Ql,Br,wf,wt);
          } 
       }
    }else{
       // Q^L*B^C 
-      for(const auto& p : cqops['B']){
+      for(const auto& p : cqops('B')){
          const auto& Bc_A = p.second;
          if(Bc_A.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Ql_A = lqops['Q'].at(p.first);
+         const auto& Ql_A = lqops('Q').at(p.first);
 	 const auto& Bc_B = Bc_A.K(0);
 	 const auto& Ql_B = Ql_A.K(0);
 	 const Tm wt = 2.0*wfacBQ(p.first); 
@@ -194,10 +194,10 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
          onedot_Hdiag_OlOc(Ql_B,Bc_B,wf,wt);
       } 
       // B^C*Q^R 
-      for(const auto& p : cqops['B']){
+      for(const auto& p : cqops('B')){
          const auto& Bc_A = p.second;
          if(Bc_A.sym != qsym()) continue; // screening for <l|B^C_{pq}|l>
-         const auto& Qr_A = rqops['Q'].at(p.first);
+         const auto& Qr_A = rqops('Q').at(p.first);
 	 const auto& Bc_B = Bc_A.K(0);
 	 const auto& Qr_B = Qr_A.K(0);
 	 const Tm wt = 2.0*wfacBQ(p.first); 
@@ -205,11 +205,11 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
          onedot_Hdiag_OcOr(Bc_B,Qr_B,wf,wt);
       } 
       // B^L*Q^R or Q^L*B^R 
-      if(lqops['B'].size() <= rqops['B'].size()){
-         for(const auto& p : lqops['B']){
+      if(lqops('B').size() <= rqops('B').size()){
+         for(const auto& p : lqops('B')){
             const auto& Bl_A = p.second;
             if(Bl_A.sym != qsym()) continue;
-            const auto& Qr_A = rqops['Q'].at(p.first);
+            const auto& Qr_A = rqops('Q').at(p.first);
 	    const auto& Bl_B = Bl_A.K(0);
 	    const auto& Qr_B = Qr_A.K(0); 
 	    const Tm wt = 2.0*wfacBQ(p.first); 
@@ -217,10 +217,10 @@ std::vector<double> onedot_Hdiag(const bool ifkr,
             onedot_Hdiag_OlOr(Bl_B,Qr_B,wf,wt);
          } 
       }else{
-         for(const auto& p: rqops['B']){
+         for(const auto& p: rqops('B')){
             const auto& Br_A = p.second;
             if(Br_A.sym != qsym()) continue;
-            const auto& Ql_A = lqops['Q'].at(p.first);
+            const auto& Ql_A = lqops('Q').at(p.first);
 	    const auto& Br_B = Br_A.K(0);
 	    const auto& Ql_B = Ql_A.K(0);
 	    const Tm wt = 2.0*wfacBQ(p.first); 
@@ -267,12 +267,12 @@ void onedot_Hx(Tm* y,
    // Al*Pr+Bl*Qr => L=l, R=cr
    if(ifln){
       // 1. H^l 
-      Hwf += scale*contract_qt3_qt2_l(wf,lqops['H'][0]);
+      Hwf += scale*contract_qt3_qt2_l(wf,lqops('H')[0]);
       // 2. H^cr
       Hwf += scale*oper_compxwf_opH("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e);
       // 3. p1^l+*Sp1^cr + h.c.
       //    ol*or|lcr>psi[lcr] => ol|l>*or|cr>(-1)^{p(l)}psi[lcr]
-      for(const auto& op1C : lqops['C']){
+      for(const auto& op1C : lqops('C')){
 	 int p1 = op1C.first;
 	 const auto& op1 = op1C.second;
 	 auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1);
@@ -282,23 +282,23 @@ void onedot_Hx(Tm* y,
       }
       // 4. q2^cr+*Sq2^l + h.c.
       // 4.1 q2^c+*Sq2^l = -Sq2^l*q2^c+
-      for(const auto& op2C : cqops['C']){
+      for(const auto& op2C : cqops('C')){
 	 int q2 = op2C.first;
 	 const auto& op2 = op2C.second;
-	 const auto& op1S = lqops['S'].at(q2);
+	 const auto& op1S = lqops('S').at(q2);
 	 Hwf -= oper_kernel_OOwf("lc",wf,op1S,op2,1);
 	 Hwf += oper_kernel_OOwf("lc",wf,op1S,op2,1,dagger);
       }
       // 4.2 q2^r+*Sq2^l = -Sq2^l*q2^r+
-      for(const auto& op2C : rqops['C']){
+      for(const auto& op2C : rqops('C')){
 	 int q2 = op2C.first;
 	 const auto& op2 = op2C.second;
-	 const auto& op1S = lqops['S'].at(q2);
+	 const auto& op1S = lqops('S').at(q2);
 	 Hwf -= oper_kernel_OOwf("lr",wf.mid_signed(),op1S,op2,1);
 	 Hwf += oper_kernel_OOwf("lr",wf.mid_signed(),op1S,op2,1,dagger);
       }
       // 5. Apq^l*Ppq^cr + h.c.
-      for(const auto& op1A : lqops['A']){
+      for(const auto& op1A : lqops('A')){
 	 int index = op1A.first;
 	 const auto& op1 = op1A.second;
 	 auto qt3n = oper_compxwf_opP("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
@@ -308,7 +308,7 @@ void onedot_Hx(Tm* y,
 	 Hwf += wt*oper_kernel_OIwf("lc",qt3h,op1,dagger);
       }
       // 6. Bps^l*Qps^cr (using Hermicity)
-      for(const auto& op1B : lqops['B']){
+      for(const auto& op1B : lqops('B')){
 	 int index = op1B.first;
 	 const auto& op1 = op1B.second;
 	 auto qt3n = oper_compxwf_opQ("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
@@ -322,26 +322,26 @@ void onedot_Hx(Tm* y,
       // 1. H^lc
       Hwf += scale*oper_compxwf_opH("lc",wf,lqops,cqops,isym,ifkr,int2e,int1e);
       // 2. H^r
-      Hwf += scale*contract_qt3_qt2_r(wf,rqops['H'][0]);
+      Hwf += scale*contract_qt3_qt2_r(wf,rqops('H')[0]);
       // 3. p1^lc+*Sp1^r + h.c.
       // 3.1 p1^l+*Sp1^r
-      for(const auto& op1C : lqops['C']){
+      for(const auto& op1C : lqops('C')){
 	 int p1 = op1C.first;
 	 const auto& op1 = op1C.second;
-	 const auto& op2S = rqops['S'].at(p1);
+	 const auto& op2S = rqops('S').at(p1);
 	 Hwf += oper_kernel_OOwf("lr",wf.mid_signed(),op1,op2S,1); // special treatment of mid sign
 	 Hwf -= oper_kernel_OOwf("lr",wf.mid_signed(),op1,op2S,1,dagger);
       }
       // 3.2 p1^c+*Sp1^r
-      for(const auto& op1C : cqops['C']){
+      for(const auto& op1C : cqops('C')){
 	 int p1 = op1C.first;
 	 const auto& op1 = op1C.second;
-	 const auto& op2S = rqops['S'].at(p1);
+	 const auto& op2S = rqops('S').at(p1);
 	 Hwf += oper_kernel_OOwf("cr",wf,op1,op2S,1);
 	 Hwf -= oper_kernel_OOwf("cr",wf,op1,op2S,1,dagger);
       }
       // 4. q2^r+*Sq2^lc + h.c.
-      for(const auto& op2C : rqops['C']){
+      for(const auto& op2C : rqops('C')){
          int q2 = op2C.first;
   	 const auto& op2 = op2C.second;
 	 // q2^r+*Sq2^lc = -Sq2^lc*q2^r
@@ -351,7 +351,7 @@ void onedot_Hx(Tm* y,
 	 Hwf += oper_compxwf_opS("lc",qt3h.row_signed(),lqops,cqops,isym,ifkr,int2e,int1e,q2,dagger);
       }
       // 5. Ars^r*Prs^lc + h.c.
-      for(const auto& op2A : rqops['A']){
+      for(const auto& op2A : rqops('A')){
          int index = op2A.first;
 	 const auto& op2 = op2A.second;
 	 // Ars^r*Prs^lc = Prs^lc*Ars^r
@@ -362,7 +362,7 @@ void onedot_Hx(Tm* y,
 	 Hwf += oper_compxwf_opP("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,index,dagger);
       }
       // 6. Qqr^lc*Bqr^r (using Hermicity)
-      for(const auto& op2B : rqops['B']){
+      for(const auto& op2B : rqops('B')){
 	 int index = op2B.first;
 	 const auto& op2 = op2B.second;
 	 const Tm wt = ifkr? wfacBQ(index) : wfac(index);
