@@ -178,10 +178,10 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
    //     + <pq||s1r2> ar2*as1	   => -<pq||s1r2> as1*ar2
    //
    // 1. P1*I2
-   assert(qops1.find('P') != qops1.end());
+   //assert(qops1.find('P') != qops1.end());
    opwf += oper_kernel_OIwf(superblock,site,qops1('P').at(index),ifdagger);
    // 2. I1*P2
-   assert(qops2.find('P') != qops2.end());
+   //assert(qops2.find('P') != qops2.end());
    opwf += oper_kernel_IOwf(superblock,site,qops2('P').at(index),0,ifdagger);
    // 3. -<pq||s1r2> as1*ar2
    std::map<std::pair<int,int>,Tm> oij;
@@ -250,10 +250,10 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
    //     + <pq2||sr1> aq2^+ar1 => -<pq2||sr1> ar1*aq2^+
    //
    // 1. Q1*I2
-   assert(qops1.find('Q') != qops1.end());
+   //assert(qops1.find('Q') != qops1.end());
    opwf += oper_kernel_OIwf(superblock,site,qops1('Q').at(index),ifdagger);
    // 2. I1*Q2
-   assert(qops2.find('Q') != qops2.end());
+   //assert(qops2.find('Q') != qops2.end());
    opwf += oper_kernel_IOwf(superblock,site,qops2('Q').at(index),0,ifdagger);
    // 3. <pq1||sr2> aq1^+*ar2 &  4. -<pr2||sq1> aq1*ar2^+
    std::map<std::pair<int,int>,Tm> o1ij, o2ij;
@@ -324,10 +324,10 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
    // 2. I1*S2
    opwf += oper_kernel_IOwf(superblock,site,qops2('S').at(p),1,ifdagger);
    // cross terms
-   assert(qops1.find('P') != qops1.end());
-   assert(qops2.find('P') != qops2.end());
-   assert(qops1.find('Q') != qops1.end());
-   assert(qops2.find('Q') != qops2.end());
+   //assert(qops1.find('P') != qops1.end());
+   //assert(qops2.find('P') != qops2.end());
+   //assert(qops1.find('Q') != qops1.end());
+   //assert(qops2.find('Q') != qops2.end());
    if(not ifkr){
       // 3. sum_q aq^+[1]*Ppq[2] + aq[1]*Qpq[2]
       for(const auto& op1C : qops1('C')){
@@ -412,10 +412,10 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
    opwf += oper_kernel_IOwf(superblock,site,qops2('H').at(0),0);
    
    const bool dagger = true;
-   assert(qops1.find('A') != qops1.end() && qops2.find('P') != qops2.end()); 
-   assert(qops1.find('P') != qops1.end() && qops2.find('A') != qops2.end());
-   assert(qops1.find('B') != qops1.end() && qops2.find('Q') != qops2.end()); 
-   assert(qops1.find('Q') != qops1.end() && qops2.find('B') != qops2.end());
+   //assert(qops1.find('A') != qops1.end() && qops2.find('P') != qops2.end()); 
+   //assert(qops1.find('P') != qops1.end() && qops2.find('A') != qops2.end());
+   //assert(qops1.find('B') != qops1.end() && qops2.find('Q') != qops2.end()); 
+   //assert(qops1.find('Q') != qops1.end() && qops2.find('B') != qops2.end());
    if(not ifkr){
 
       // One-index operators

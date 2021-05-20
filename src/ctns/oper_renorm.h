@@ -42,6 +42,7 @@ void oper_renorm_opC(const std::string& superblock,
    }
 }
 
+/*
 // kernel for computing renormalized Apq=ap^+aq^+
 template <typename Tm>
 void oper_renorm_opA(const std::string& superblock,
@@ -70,12 +71,11 @@ void oper_renorm_opA(const std::string& superblock,
          qops('A')[index] = oper_kernel_renorm(superblock,site,Hwf);
       }else{
          auto pq = oper_unpack(index);	
-         int p = (iop == 3)? pq.first : pq.second;
-         int q = (iop == 3)? pq.second : pq.first;
-         int sp = p%2, sq = q%2;
+         int p = (iop == 3)? pq.first : pq.second, sp = p%2;
+         int q = (iop == 3)? pq.second : pq.first, sq = q%2;
          const Tm sgn = (iop == 3)? 1.0 : -1.0;
          const auto& op1 = qops1('C')[p];
-         const auto& op2 = qops1('C')[q];
+         const auto& op2 = qops2('C')[q];
 	 qtensor3<Tm> opwf;
 	 if(not ifkr && (ifkr && sp == sq)){
             opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
@@ -91,7 +91,7 @@ void oper_renorm_opA(const std::string& superblock,
 	 }
 	 auto qt2 = oper_kernel_renorm(superblock,site,opwf);
 	 qops('A')[index] = sgn*qt2; 
-      }
+      } // iop
    }
    auto t1 = tools::get_time();
    if(debug){
@@ -99,6 +99,118 @@ void oper_renorm_opA(const std::string& superblock,
                 << tools::get_duration(t1-t0) << " s" << std::endl;
    }
 }
+
+// kernel for computing renormalized ap^+
+template <typename Tm>
+void oper_renorm_opC(const std::string& superblock,
+		     const qtensor3<Tm>& site,
+		     oper_dict<Tm>& qops1,
+		     oper_dict<Tm>& qops2,
+		     oper_dict<Tm>& qops,
+		     const bool debug=false){
+   if(debug) std::cout << "\nctns::oper_renorm_opC" << std::endl;
+   auto t0 = tools::get_time();
+   // 1. p1^+*I2
+   for(const auto& op1C : qops1('C')){
+      int p1 = op1C.first;
+      const auto& op1 = op1C.second;
+      auto Hwf = oper_kernel_OIwf(superblock,site,op1);
+      qops('C')[p1] = oper_kernel_renorm(superblock,site,Hwf);
+   }
+   // 2. I1*p2^+
+   for(const auto& op2C : qops2('C')){
+      int p2 = op2C.first;
+      const auto& op2 = op2C.second;
+      auto Hwf = oper_kernel_IOwf(superblock,site,op2,1);
+      qops('C')[p2] = oper_kernel_renorm(superblock,site,Hwf);
+   }
+   auto t1 = tools::get_time();
+   if(debug){
+      std::cout << "timing for ctns::oper_renorm_opC : " << std::setprecision(2)
+                << tools::get_duration(t1-t0) << " s" << std::endl;
+   }
+}
+*/
+
+// kernel for computing renormalized Apq=ap^+aq^+
+template <typename Tm>
+void oper_renorm_opA(const std::string& superblock,
+		     const qtensor3<Tm>& site,
+		     oper_dict<Tm>& qops1,
+		     oper_dict<Tm>& qops2,
+		     oper_dict<Tm>& qops,
+		     const bool& ifkr,
+		     const bool debug=false){
+   if(debug) std::cout << "\nctns::oper_renorm_opA" << std::endl;
+   auto t0 = tools::get_time();
+   // 1. p1^+q1^+ * I2
+   for(const auto& op1A : qops1('A')){
+      int pq1 = op1A.first;
+      const auto& op1 = op1A.second;
+      auto Hwf = oper_kernel_OIwf(superblock,site,op1);
+      qops('A')[pq1] = oper_kernel_renorm(superblock,site,Hwf);
+   }
+   // 2. I1 * p2^+q2^+ (p<q)
+   for(const auto& op2A : qops2('A')){
+      int pq2 = op2A.first;
+      const auto& op2 = op2A.second;
+      auto Hwf = oper_kernel_IOwf(superblock,site,op2,0);
+      qops('A')[pq2] = oper_kernel_renorm(superblock,site,Hwf);
+   }
+   // 3. p1^+ * q2^+
+   for(const auto& op1C : qops1('C')){
+      int p1 = op1C.first;
+      const auto& op1 = op1C.second;
+      for(const auto& op2C : qops2('C')){
+	 int p2 = op2C.first;
+	 const auto& op2 = op2C.second;
+	 //
+	 // tricky part: determine the storage pattern for Apq
+	 //
+	 if(not ifkr){
+            auto Hwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
+	    auto qt2 = oper_kernel_renorm(superblock,site,Hwf);
+            // only store Apq where p<q: total number (2K)*(2K-1)/2 ~ O(2K^2)
+	    if(p1 < p2){
+	       qops('A')[oper_pack(p1,p2)] = qt2;
+	    }else{
+	       qops('A')[oper_pack(p2,p1)] = -qt2;
+	    }
+	 }else{
+	    int kp1 = p1/2;
+	    int kp2 = p2/2;
+            assert(p1%2 == 0 && p2%2 == 0 && kp1 != kp2);
+	    // If time-reversal symmetry adapted basis is used, Apq blocks:
+	    // pA+qA+ and pA+qB+: K*(K-1)/2+K*(K+1)/2=K^2 (reduction by half)
+            if(kp1 < kp2){
+	       // <a1^+a2^+> = [a1^+]*[a2^+]
+	       // storage: <a1A^+a2A^+>,<a1A^+a2B^+>
+               auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
+	       auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
+               auto Hwfab = oper_kernel_OOwf(superblock,site,op1,op2.K(1),1);
+	       auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab);
+	       qops('A')[oper_pack(p1,p2)] = qt2aa;
+	       qops('A')[oper_pack(p1,p2+1)] = qt2ab;
+	    }else{
+ 	       // <a2^+a1^+> = -<a1^+a2^+> = -[a1^+]*[a2^+]
+	       // storage <a2A^+a1A^+>,<a2A^+a1B^+>
+               auto Hwfaa = oper_kernel_OOwf(superblock,site,op1,op2,1);
+	       auto qt2aa = oper_kernel_renorm(superblock,site,Hwfaa);
+               auto Hwfab = oper_kernel_OOwf(superblock,site,op1.K(1),op2,1);
+	       auto qt2ab = oper_kernel_renorm(superblock,site,Hwfab);
+	       qops('A')[oper_pack(p2,p1)] = -qt2aa;
+	       qops('A')[oper_pack(p2,p1+1)] = -qt2ab;
+	    }
+	 }
+      }
+   }
+   auto t1 = tools::get_time();
+   if(debug){
+      std::cout << "timing for ctns::oper_renorm_opA : " << std::setprecision(2)
+                << tools::get_duration(t1-t0) << " s" << std::endl;
+   }
+}
+
 
 // kernel for computing renormalized ap^+aq
 template <typename Tm>
@@ -360,6 +472,9 @@ void oper_renorm_opAll(const std::string& superblock,
       auto pc = node.center;
       krest = icomb.topo.get_node(pc).rsupport;
    }
+
+//   // combine cindex first 
+//   qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
  
    // C
    oper_renorm_opC(superblock, site, qops1, qops2, qops, debug);
