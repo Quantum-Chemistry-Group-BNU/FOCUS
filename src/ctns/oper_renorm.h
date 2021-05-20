@@ -15,13 +15,12 @@ void oper_renorm_opC(const std::string& superblock,
 		     oper_dict<Tm>& qops1,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
-		     const bool& ifkr,
 		     const bool debug=false){
    if(debug) std::cout << "\nctns::oper_renorm_opC" << std::endl;
    auto t0 = tools::get_time();
    // preprocess
    std::vector<std::pair<int,int>> info;
-   oper_combine_opC(qops1.cindex, qops2.cindex, ifkr, info);
+   oper_combine_opC(qops1.cindex, qops2.cindex, info);
    // compute
    for(const auto p : info){
       int iop = p.first;
@@ -78,7 +77,7 @@ void oper_renorm_opA(const std::string& superblock,
          const auto& op1 = qops1('C')[p];
          const auto& op2 = qops1('C')[q];
 	 qtensor3<Tm> opwf;
-	 if(not ifkr && (ifkr && sp = sq)){
+	 if(not ifkr && (ifkr && sp == sq)){
             opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
          }else{
 	    // kr opposite spin case 
@@ -363,7 +362,7 @@ void oper_renorm_opAll(const std::string& superblock,
    }
  
    // C
-   oper_renorm_opC(superblock, site, qops1, qops2, qops, ifkr, debug);
+   oper_renorm_opC(superblock, site, qops1, qops2, qops, debug);
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'C');
    // A
    oper_renorm_opA(superblock, site, qops1, qops2, qops, ifkr, debug);

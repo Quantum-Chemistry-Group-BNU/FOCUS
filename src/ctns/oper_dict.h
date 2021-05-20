@@ -15,70 +15,6 @@ extern const bool debug_oper_dict;
 const bool debug_oper_io = true;
 extern const bool debug_oper_io;
 
-// container for operators
-template <typename Tm>
-using oper_map = std::map<int,qtensor2<Tm>>;
-
-template <typename Tm>
-class oper_dict{
-private:
-   // serialize
-   friend class boost::serialization::access;
-   template<class Archive>
-   void serialize(Archive & ar, const unsigned int version){
-      ar & full & ksupp & ops;
-   }
-public:
-   // access
-   const oper_map<Tm>& operator()(const char key) const{
-      assert(ops.find(key) != ops.end());
-      return ops.at(key);
-   }
-   oper_map<Tm>& operator()(const char key){
-      return ops[key];      
-   }
-   // print
-   void print(const std::string name, const int level=0) const{
-      std::string oplist = "HCSABPQ";
-      std::map<char,int> exist;
-      std::string s = " "+name+": ";
-      for(const auto& key : oplist){
-         if(ops.find(key) != ops.end()){ 
-            s += key;
-            s += ":"+std::to_string(ops.at(key).size())+ " ";
-            exist[key] = ops.at(key).size();
-         }else{
-            exist[key] = 0;
-         }
-      }
-      std::cout << s << std::endl;
-      // print each operator
-      if(level > 0){
-         for(const auto& key : oplist){
-            if(exist[key] > 0){
-               std::cout << " " << key << ": ";
-               if(key == 'H' || key == 'C' || key == 'S'){
-                  for(const auto& op : qops.at(key)){
-                     std::cout << op.first << " ";
-                  }
-               }else{
-                  for(const auto& op : qops.at(key)){
-                     auto pq = oper_unpack(op.first);
-                     std::cout << "(" << pq.first << "," << pq.second << ") ";
-                  }
-               }
-               std::cout << std::endl;
-            }
-         }
-      } // level
-   }
-public:
-   bool full = false;
-   std::vector<int> ksupp;
-private:
-   std::map<char,oper_map<Tm>> ops;
-}
-
 // --- packing ---
 // pack two indices
 const int kpack = 1000;
@@ -113,6 +49,70 @@ inline double wfacBQ(const int ij){
    int j = ij/kpack, kj = j/2, spin_j = j%2;
    return (ki==kj)? 0.5 : 1.0;
 }
+
+// --- container for operators --- 
+template <typename Tm>
+using oper_map = std::map<int,qtensor2<Tm>>;
+
+template <typename Tm>
+class oper_dict{
+private:
+   // serialize
+   friend class boost::serialization::access;
+   template<class Archive>
+   void serialize(Archive & ar, const unsigned int version){
+      ar & full & cindex & ops;
+   }
+public:
+   // access
+   const oper_map<Tm>& operator()(const char key) const{
+      assert(ops.find(key) != ops.end());
+      return ops.at(key);
+   }
+   oper_map<Tm>& operator()(const char key){
+      return ops[key];      
+   }
+   // print
+   void print(const std::string name, const int level=0) const{
+      std::string oplist = "HCSABPQ";
+      std::map<char,int> exist;
+      std::string s = " "+name+": ";
+      for(const auto& key : oplist){
+         if(ops.find(key) != ops.end()){ 
+            s += key;
+            s += ":"+std::to_string(ops.at(key).size())+ " ";
+            exist[key] = ops.at(key).size();
+         }else{
+            exist[key] = 0;
+         }
+      }
+      std::cout << s << std::endl;
+      // print each operator
+      if(level > 0){
+         for(const auto& key : oplist){
+            if(exist[key] > 0){
+               std::cout << " " << key << ": ";
+               if(key == 'H' || key == 'C' || key == 'S'){
+                  for(const auto& op : ops.at(key)){
+                     std::cout << op.first << " ";
+                  }
+               }else{
+                  for(const auto& op : ops.at(key)){
+                     auto pq = oper_unpack(op.first);
+                     std::cout << "(" << pq.first << "," << pq.second << ") ";
+                  }
+               }
+               std::cout << std::endl;
+            }
+         }
+      } // level
+   }
+public:
+   bool full = false;
+   std::vector<int> cindex;
+private:
+   std::map<char,oper_map<Tm>> ops;
+};
 
 } // ctns
 

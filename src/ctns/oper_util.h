@@ -55,8 +55,8 @@ void oper_init_dot(const int isym,
       krest.push_back(k);
    }
    qops.full = true;
-   qops.ksupp.push_back(2*kp);
-   if(not ifkr) qops.ksupp.push_back(2*kp+1);
+   qops.cindex.push_back(2*kp);
+   if(not ifkr) qops.cindex.push_back(2*kp+1);
    oper_dot_opC(isym, ifkr, kp, qops);
    oper_dot_opA(isym, ifkr, kp, qops);
    oper_dot_opB(isym, ifkr, kp, qops);

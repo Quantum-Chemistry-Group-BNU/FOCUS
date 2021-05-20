@@ -138,9 +138,9 @@ void sweep_onedot(const input::schedule& schd,
    if(debug_sweep){
       std::cout << "qops info:" << std::endl;
       const int level = 0;
-      oper_display(cqops, "cqops", level);
-      oper_display(lqops, "lqops", level);
-      oper_display(rqops, "rqops", level);
+      cqops.print("cqops", level);
+      lqops.print("lqops", level);
+      rqops.print("rqops", level);
    }
    timing.ta = tools::get_time();
 

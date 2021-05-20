@@ -166,8 +166,8 @@ void oper_dot_opS(const int isym, const bool ifkr, const int k0,
    if(ifkr){
       for(int kp : krest){
          int pa = 2*kp, pb = pa+1;
-         qops('S')[pa] = 0.5*int1e.get(pa,ka)*qops['C'][ka].H()
-                       + 0.5*int1e.get(pa,kb)*qops['C'][ka].K(1).H()
+         qops('S')[pa] = 0.5*int1e.get(pa,ka)*qops('C')[ka].H()
+                       + 0.5*int1e.get(pa,kb)*qops('C')[ka].K(1).H()
                        + int2e.get(pa,ka,ka,kb)*qt2aba       // a^+ba  		 
                        - int2e.get(pa,kb,ka,kb)*qt2aba.K(2); // b^+ba = (Kb^+ba)^* = a^+ab* = -a^+ba*
       }

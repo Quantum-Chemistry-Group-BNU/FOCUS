@@ -168,10 +168,10 @@ void sweep_twodot(const input::schedule& schd,
    if(debug_sweep){
       std::cout << "qops info:" << std::endl;
       const int level = 0;
-      oper_display(c1qops, "c1qops", level);
-      oper_display(c2qops, "c2qops", level);
-      oper_display(lqops, "lqops", level);
-      oper_display(rqops, "rqops", level);
+      c1qops.print("c1qops", level);
+      c2qops.print("c2qops", level);
+      lqops.print("lqops", level);
+      rqops.print("rqops", level);
    }
    timing.ta = tools::get_time();
 

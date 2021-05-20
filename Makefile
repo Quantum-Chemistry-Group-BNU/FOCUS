@@ -37,7 +37,7 @@ endif
 
 USE_MPI = yes
 ifeq ($(USE_GCC), yes)
-   FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI), no)
       CXX = g++
@@ -49,7 +49,7 @@ ifeq ($(USE_GCC), yes)
       LFLAGS += -lboost_mpi
    endif
 else
-   FLAGS += -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   FLAGS += -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
    LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 
    ifeq ($(USE_MPI), no)
       CXX = icpc
