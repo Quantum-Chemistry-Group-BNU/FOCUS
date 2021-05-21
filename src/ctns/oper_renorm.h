@@ -228,19 +228,25 @@ void oper_renorm_opS(const std::string& superblock,
 	             const integral::one_body<Tm>& int1e){
    if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opS" << std::endl;
    auto t0 = tools::get_time();
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif   
    // preprocess
    std::vector<int> info;
    oper_combine_opS(krest, ifkr, info);
-
-   std::cout << "info.size() = " << info.size() << std::endl;
-
    // compute
    for(const int index : info){
-
-      std::cout << "opS: index=" << index << std::endl;
-
+      int iproc = index%size;
+      if(iproc != rank) continue;
       auto opwf = oper_compxwf_opS(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
       qops('S')[index] = oper_kernel_renorm(superblock,site,opwf);
+   }
+   if(debug_oper_mpi){
+      std::cout << " opS: coord=" << p << " no.=" << info.size()
+	        << " size,rank=" << size << "," << rank 
+		<< " no.=" << qops('S').size() << std::endl;
    }
    auto t1 = tools::get_time();
    if(debug_oper_dict){
