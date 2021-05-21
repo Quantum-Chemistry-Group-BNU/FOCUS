@@ -7,6 +7,9 @@
 #include "ctns_topo.h"
 #include "ctns_rbasis.h"
 #include "qtensor.h"
+#ifndef SERIAL
+#include <boost/mpi.hpp>
+#endif
 
 namespace ctns{
 
@@ -57,6 +60,10 @@ class comb{
       rbases_type<typename Km::dtype> rbases; // used in initialization & debug operators 
       sites_type<typename Km::dtype> lsites; // left canonical form 
       std::vector<qtensor3<typename Km::dtype>> psi; // propagation of initial guess 
+      // --- MPI ---
+#ifndef SERIAL
+      boost::mpi::communicator world;
+#endif
 };
 
 // return rwfun for istate, extracted from rwfuns

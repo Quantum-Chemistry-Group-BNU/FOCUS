@@ -7,7 +7,6 @@
 #include <set> 
 #include <sstream> // istringstream
 #include "../core/serialization.h"
-
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
@@ -146,6 +145,7 @@ public:
    // --- Methods --- 
    params_sci sci;
    params_ctns ctns;
+   // --- MPI ---
 #ifndef SERIAL
    boost::mpi::communicator world;
 #endif

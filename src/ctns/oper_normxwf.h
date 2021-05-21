@@ -44,26 +44,20 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
       auto pq = oper_unpack(index);	
       int p = pq.first, sp = p%2;
       int q = pq.second, sq = q%2;
+      // kr opposite spin case: <a1A^+a2B^+> = [a1A^+]*[a2B^+]
+      const bool ifnos = !(ifkr && sp != sq);
       const auto& op1 = qops1('C')[p];
-      const auto& op2 = qops2('C')[q];
-      if(not ifkr && (ifkr && sp == sq)){
-         opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
-      }else{
-         // kr opposite spin case: <a1A^+a2B^+> = [a1^+]*[a2^+]
-         opwf = oper_kernel_OOwf(superblock,site,op1,op2.K(1),1);
-      }
+      const auto& op2 = ifnos? qops2('C')[q] : qops2('C')[q-1].K(1);
+      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
       int q = qp.first, sq = q%2;
-      const auto& op1 = -qops1('C')[p];
+      // kr opposite spin case: <a2A^+a1B^+> = -[a1B^+]*[a2A^+]
+      const bool ifnos = !(ifkr && sp != sq);
+      const auto& op1 = ifnos? -qops1('C')[p] : -qops1('C')[p-1].K(1);
       const auto& op2 = qops2('C')[q];
-      if(not ifkr && (ifkr && sp == sq)){
-         opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
-      }else{
-         // kr opposite spin case: <a2A^+a1B^+> = -[a1^+]*[a2^+]
-         opwf = oper_kernel_OOwf(superblock,site,op1.K(1),op2,1);
-      }
+      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
    } // iformula
    return opwf;
 }
@@ -88,26 +82,20 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
       auto pq = oper_unpack(index);	
       int p = pq.first, sp = p%2;
       int q = pq.second, sq = q%2;
+      // kr opposite spin case: <a1A^+a2B> = [a1A^+]*[a2B]
+      const bool ifnos = !(ifkr && sp != sq);
       const auto& op1 = qops1('C')[p];
-      const auto& op2 = qops2('C')[q].H();
-      if(not ifkr && (ifkr && sp == sq)){
-         opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
-      }else{
-         // kr opposite spin case: <a1A^+a2B> = [a1^+]*[a2^+]
-         opwf = oper_kernel_OOwf(superblock,site,op1,op2.K(1),1);
-      }
+      const auto& op2 = ifnos? qops2('C')[q].H() : qops2('C')[q-1].H().K(1);
+      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
       int q = qp.first, sq = q%2;
-      const auto& op1 = -qops1('C')[p].H();
+      // kr opposite spin case: <a2A^+a1B> = -[a1B]*[a2A^+]
+      const bool ifnos = !(ifkr && sp != sq);
+      const auto& op1 = ifnos? -qops1('C')[p].H() : -qops1('C')[p-1].H().K(1);
       const auto& op2 = qops2('C')[q];
-      if(not ifkr && (ifkr && sp == sq)){
-         opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
-      }else{
-         // kr opposite spin case: <a2A^+a1B> = -[a1^+]*[a2^+]
-         opwf = oper_kernel_OOwf(superblock,site,op1.K(1),op2,1);
-      }
+      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
    } // iformula
    return opwf;
 }

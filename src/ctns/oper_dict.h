@@ -15,6 +15,9 @@ extern const bool debug_oper_dict;
 const bool debug_oper_io = true;
 extern const bool debug_oper_io;
 
+const bool debug_oper_mpi = true;
+extern const bool debug_oper_mpi;
+
 // --- packing ---
 // pack two indices
 const int kpack = 1000;
@@ -25,6 +28,20 @@ inline int oper_pack(const int i, const int j){
 }
 inline std::pair<int,int> oper_unpack(const int ij){
    return std::make_pair(ij%kpack,ij/kpack);
+}
+
+// --- MPI-related distribution ---
+inline int distributeAP(const int index, const int size){
+   auto pq = oper_unpack(index);
+   int p = pq.first, q = pq.second;
+   int ipqAP = q*(q-1)/2+p, iproc = ipqAP%size;
+   return iproc;
+}
+inline int distributeBQ(const int index, const int size){
+   auto pq = oper_unpack(index);
+   int p = pq.first, q = pq.second;
+   int ipqBQ = q*(q+1)/2+p, iproc = ipqBQ%size;
+   return iproc;
 }
 
 // --- weight factor ---
@@ -64,9 +81,16 @@ private:
       ar & full & cindex & ops;
    }
 public:
+   // constructor
+   oper_dict(){
+      oper_map<Tm> opm; // empty operator map 
+      //std::map<char,oper_map<Tm>> 
+      ops = {{'C',opm},{'A',opm},{'B',opm},
+	     {'S',opm},{'P',opm},{'Q',opm},
+	     {'H',opm}};
+   }
    // access
    const oper_map<Tm>& operator()(const char key) const{
-      assert(ops.find(key) != ops.end());
       return ops.at(key);
    }
    oper_map<Tm>& operator()(const char key){

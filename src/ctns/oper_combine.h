@@ -15,9 +15,10 @@ inline std::vector<int> oper_combine_cindex(const std::vector<int>& cindex1,
    return cindex;
 }
 
-//
+//	 
 // Generate index for normal operators 
 //	 
+
 inline void oper_combine_opC(const std::vector<int>& cindex1,
 		      	     const std::vector<int>& cindex2,
 		      	     std::vector<std::pair<int,int>>& info){
@@ -141,6 +142,7 @@ inline void oper_combine_opB(const std::vector<int>& cindex1,
 //
 // Generate index for complementary operators 
 //	 
+
 // tricky part: determine the storage pattern for Ppq for p,q in krest
 inline void oper_combine_opP(const std::vector<int>& krest,
 		             const bool& ifkr,
