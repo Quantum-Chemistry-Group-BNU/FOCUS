@@ -5,34 +5,29 @@
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
 
-#ifndef SERIAL
-#include <boost/mpi.hpp>
-#endif
-
 using namespace std;
 using namespace fock;
 
 template <typename Km>  
 int PCTNS(const input::schedule& schd){
+   int rank = 0; 
+#ifndef SERIAL
+   rank = schd.world.rank();
+#endif
    // consistency check for dtype
    using Tm = typename Km::dtype;
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
       tools::exit("error: inconsistent dtype in CTNS!");
    }
-   int rank = 0;
-#ifndef SERIAL
-   auto& world = schd.world;
-   rank = world.rank();
-#endif
    // read integral
    integral::two_body<Tm> int2e;
    integral::one_body<Tm> int1e;
    double ecore;
    if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
 #ifndef SERIAL
-   boost::mpi::broadcast(world, int1e, 0);
-   boost::mpi::broadcast(world, int2e, 0);
-   boost::mpi::broadcast(world, ecore, 0);
+   boost::mpi::broadcast(schd.world, int1e, 0);
+   boost::mpi::broadcast(schd.world, int2e, 0);
+   boost::mpi::broadcast(schd.world, ecore, 0);
 #endif
    // -- CTNS --- 
    ctns::comb<Km> icomb;
@@ -60,7 +55,8 @@ int PCTNS(const input::schedule& schd){
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho, ifortho);
    }
 #ifndef SERIAL
-   boost::mpi::broadcast(world, icomb, 0);
+   boost::mpi::broadcast(schd.world, icomb, 0);
+   icomb.world = schd.world;
 #endif
    // optimization from current RCF
    if(schd.ctns.task == "opt"){
@@ -70,24 +66,28 @@ int PCTNS(const input::schedule& schd){
          ctns::rcanon_save(icomb, rcanon_file);
       }
    }else if(schd.ctns.task == "ham"){
+
+      std::cout << "RANK=" << icomb.world.rank() << std::endl;
+      ctns::oper_env_right(icomb, int2e, int1e, schd.scratch);
+/*
       auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
       if(rank == 0){
          Hij.print("Hij",8);
          auto Sij = ctns::get_Smat(icomb);
          Sij.print("Sij");
       }
+*/
    }
    return 0;	
 }
 
 int main(int argc, char *argv[]){
-   // setup MPI environment
-   int size = 1, rank = 0;
+   int rank = 0; 
 #ifndef SERIAL
+   // setup MPI environment 
    boost::mpi::environment env{argc, argv};
    boost::mpi::communicator world;
    rank = world.rank();
-   size = world.size();
 #endif
    if(rank == 0) tools::license();
    // read input
@@ -101,8 +101,8 @@ int main(int argc, char *argv[]){
    input::schedule schd;
    if(rank == 0) schd.read(fname);
 #ifndef SERIAL
-   schd.world = world;
    boost::mpi::broadcast(world, schd, 0);
+   schd.world = world;
 #endif
    // setup scratch directory
    if(rank > 0) schd.scratch += to_string(rank);

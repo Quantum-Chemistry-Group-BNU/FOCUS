@@ -330,11 +330,11 @@ void oper_renorm_opAll(const std::string& superblock,
    // Q
    oper_renorm_opQ(superblock, icomb, p, site, qops1, qops2, qops, isym, ifkr, krest, int2e, int1e);
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'Q', int2e, int1e);
+   return;
+   exit(1);
    // S
    oper_renorm_opS(superblock, icomb, p, site, qops1, qops2, qops, isym, ifkr, krest, int2e, int1e);
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'S', int2e, int1e);
-   return;
-   exit(1);
    
    // H
    oper_renorm_opH(superblock, icomb, p, site, qops1, qops2, qops, isym, ifkr, int2e, int1e);
