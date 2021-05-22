@@ -45,19 +45,20 @@ void oper_load_qops(const comb<Km>& icomb,
 }
 
 // init local operators
-template <typename Tm>
-void oper_init_dot(const int isym,
-		   const bool ifkr,
+template <typename Km>
+void oper_init_dot(const comb<Km>& icomb,
 		   const int kp,
-		   const integral::two_body<Tm>& int2e,
-		   const integral::one_body<Tm>& int1e,
-		   oper_dict<Tm>& qops){
+		   const integral::two_body<typename Km::dtype>& int2e,
+		   const integral::one_body<typename Km::dtype>& int1e,
+		   oper_dict<typename Km::dtype>& qops){
+   const int isym = Km::isym;
+   const bool ifkr = kind::is_kramers<Km>();
+   // rest of spatial orbital indices
    std::vector<int> krest;
    for(int k=0; k<int1e.sorb/2; k++){
       if(k == kp) continue;
       krest.push_back(k);
    }
-   qops.full = true;
    qops.cindex.push_back(2*kp);
    if(not ifkr) qops.cindex.push_back(2*kp+1);
    oper_dot_opC(isym, ifkr, kp, qops);
@@ -67,6 +68,19 @@ void oper_init_dot(const int isym,
    oper_dot_opQ(isym, ifkr, kp, int2e, krest, qops);
    oper_dot_opS(isym, ifkr, kp, int2e, int1e, krest, qops);
    oper_dot_opH(isym, ifkr, kp, int2e, int1e, qops);
+   // scale full {Sp,H} on dot to avoid repetition in parallelization
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+   if(size > 0){
+      const typename Km::dtype scale = 1.0/size;
+      qops('H')[0] = qops('H')[0]*scale;
+      for(auto& p : qops('S')){
+         p.second = p.second*scale;
+      }
+   }
+#endif
 }
 
 // initialization of operators for 
@@ -77,7 +91,6 @@ void oper_init(const comb<Km>& icomb,
 	       const integral::two_body<typename Km::dtype>& int2e,
 	       const integral::one_body<typename Km::dtype>& int1e,
 	       const std::string scratch){ 
-   const bool ifkr = kind::is_kramers<Km>();
    for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
       auto p = icomb.topo.rcoord[idx];
       auto& node = icomb.topo.get_node(p);
@@ -85,7 +98,7 @@ void oper_init(const comb<Km>& icomb,
       if(node.type != 3){
          int kp = node.pindex;
          oper_dict<typename Km::dtype> qops;
-	 oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);	
+	 oper_init_dot(icomb, kp, int2e, int1e, qops);	
 	 std::string fname = oper_fname(scratch, p, "c");
          oper_save(fname, qops);
       }
@@ -93,7 +106,7 @@ void oper_init(const comb<Km>& icomb,
       if(node.type == 0 && p.first != 0){
 	 int kp = node.pindex;
          oper_dict<typename Km::dtype> qops;
-	 oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);
+	 oper_init_dot(icomb, kp, int2e, int1e, qops);
 	 std::string fname = oper_fname(scratch, p, "r");
          oper_save(fname, qops);
       }
@@ -102,7 +115,7 @@ void oper_init(const comb<Km>& icomb,
    auto p = std::make_pair(0,0);
    int kp = icomb.topo.get_node(p).pindex;
    oper_dict<typename Km::dtype> qops;
-   oper_init_dot(Km::isym, ifkr, kp, int2e, int1e, qops);
+   oper_init_dot(icomb, kp, int2e, int1e, qops);
    std::string fname = oper_fname(scratch, p, "l");
    oper_save(fname, qops);
 }
@@ -113,8 +126,13 @@ void oper_env_right(const comb<Km>& icomb,
 		    const integral::two_body<typename Km::dtype>& int2e,
 		    const integral::one_body<typename Km::dtype>& int1e,
 		    const std::string scratch){
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif   
+   if(rank == 0) std::cout << "ctns::oper_env_right" << std::endl;
    auto t0 = tools::get_time();
-   std::cout << "ctns::oper_env_right" << std::endl;
    // construct for dot operators [cop] & boundary operators [lop/rop]
    oper_init(icomb, int2e, int1e, scratch);
    // successive renormalization process
@@ -138,8 +156,10 @@ void oper_env_right(const comb<Km>& icomb,
       }
    } // idx
    auto t1 = tools::get_time();
-   std::cout << "timing for ctns::oper_env_right : " << std::setprecision(2) 
-             << tools::get_duration(t1-t0) << " s" << std::endl;
+   if(rank == 0){
+      std::cout << "timing for ctns::oper_env_right : " << std::setprecision(2) 
+                << tools::get_duration(t1-t0) << " s" << std::endl;
+   }
 }
 
 // Hij = <CTNS[i]|H|CTNS[j]>
@@ -149,26 +169,28 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
 		            		    const integral::one_body<typename Km::dtype>& int1e,
 		            		    const double ecore,
 		            		    const std::string scratch){
-   using Tm = typename Km::dtype;
-   std::cout << "\nctns::get_Hmat" << std::endl;
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif   
+   if(rank == 0) std::cout << "\nctns::get_Hmat" << std::endl;
    // build operators for environement
    oper_env_right(icomb, int2e, int1e, scratch);
    // load operators from file
+   using Tm = typename Km::dtype;
    oper_dict<Tm> qops;
    auto p = std::make_pair(0,0); 
    auto fname = oper_fname(scratch, p, "r");
    oper_load(fname, qops);
-   // Add ecore 
    auto Hmat = qops('H')[0].to_matrix();
-   Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows());
-   // deal with rwfuns(istate,ibas):
-   // Hij = w*[i,a] H[a,b] w[j,b] = (w^* H w^T) 
+   if(rank == 0) Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows()); // avoid repetition
+   // deal with rwfuns(istate,ibas): Hij = w*[i,a] H[a,b] w[j,b] = (w^* H w^T) 
    auto wfmat = icomb.rwfuns.to_matrix();
    auto tmp = linalg::xgemm("N","T",Hmat,wfmat);
    Hmat = linalg::xgemm("N","N",wfmat.conj(),tmp);
-   // reduction of partial H formed on each processor
 #ifndef SERIAL
-   int size = icomb.world.size();
+   // reduction of partial H formed on each processor
    if(size > 0){
       linalg::matrix<Tm> Hmat2(Hmat.rows(),Hmat.cols());
       boost::mpi::reduce(icomb.world, Hmat, Hmat2, std::plus<linalg::matrix<Tm>>(), 0);

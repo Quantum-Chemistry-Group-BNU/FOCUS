@@ -66,22 +66,11 @@ int PCTNS(const input::schedule& schd){
          ctns::rcanon_save(icomb, rcanon_file);
       }
    }else if(schd.ctns.task == "ham"){
-
-      std::cout << "RANK=" << icomb.world.rank() << std::endl;
       auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
-
-      icomb.world.barrier();
-
-      //std::cout << "ranko=" << rank << " Hij=" << Hij.size() << std::endl;
-      //Hij.print("Hij"+std::to_string(rank),8);
-      
-      icomb.world.barrier();
       if(rank == 0){
          Hij.print("Hij_0",8);
-/*
          auto Sij = ctns::get_Smat(icomb);
          Sij.print("Sij");
-*/
       }
    }
    return 0;	

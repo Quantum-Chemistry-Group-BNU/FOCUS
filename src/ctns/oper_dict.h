@@ -12,7 +12,7 @@ namespace ctns{
 const bool debug_oper_dict = true;
 extern const bool debug_oper_dict;
 
-const bool debug_oper_io = true;
+const bool debug_oper_io = false;
 extern const bool debug_oper_io;
 
 const bool debug_oper_mpi = true;
@@ -31,13 +31,45 @@ inline std::pair<int,int> oper_unpack(const int ij){
 }
 
 // --- MPI-related distribution ---
-inline int distribute1(const int index, const int size){
-   return index%size;
-}
 inline int distribute2(const int index, const int size){
    auto pq = oper_unpack(index);
    int p = pq.first, q = pq.second;
+   assert(p <= q);
    return (p == q)? p%size : (q*(q-1)/2+p)%size;
+}
+
+inline std::vector<int> oper_aindex(const std::vector<int>& cindex1, 
+				    const bool& ifkr){
+   std::vector<int> aindex;
+   for(int p1 : cindex1){
+      for(int q1 : cindex1){
+         if(p1 < q1){
+            aindex.push_back( oper_pack(p1,q1) );
+	    if(ifkr) aindex.push_back( oper_pack(p1,q1+1) );
+	 }
+      }
+   }
+   int k = ifkr? cindex1.size() : cindex1.size()/2;
+   int na = ifkr? k*k : k*(2*k-1);
+   assert(aindex.size() == na);
+   return aindex;
+}
+
+inline std::vector<int> oper_bindex(const std::vector<int>& cindex1, 
+		 		    const bool& ifkr){
+   std::vector<int> bindex;
+   for(int p1 : cindex1){
+      for(int q1 : cindex1){
+         if(p1 <= q1){
+            bindex.push_back( oper_pack(p1,q1) );
+	    if(ifkr) bindex.push_back( oper_pack(p1,q1+1) );
+	 }
+      }
+   }
+   int k = ifkr? cindex1.size() : cindex1.size()/2;
+   int nb = ifkr? k*(k+1) : k*(2*k+1);
+   assert(bindex.size() == nb);
+   return bindex;
 }
 
 // --- weight factor ---
@@ -63,7 +95,7 @@ inline double wfacBQ(const int ij){
    return (ki==kj)? 0.5 : 1.0;
 }
 
-// --- container for operators --- 
+// --- oper_dict: container for operators --- 
 template <typename Tm>
 using oper_map = std::map<int,qtensor2<Tm>>;
 
@@ -74,13 +106,12 @@ private:
    friend class boost::serialization::access;
    template<class Archive>
    void serialize(Archive & ar, const unsigned int version){
-      ar & full & cindex & ops;
+      ar & cindex & ops;
    }
 public:
    // constructor
    oper_dict(){
       oper_map<Tm> opm; // empty operator map 
-      //std::map<char,oper_map<Tm>> 
       ops = {{'C',opm},{'A',opm},{'B',opm},
 	     {'S',opm},{'P',opm},{'Q',opm},
 	     {'H',opm}};
@@ -132,7 +163,6 @@ public:
       } // level
    }
 public:
-   bool full = false;
    std::vector<int> cindex;
 private:
    std::map<char,oper_map<Tm>> ops;

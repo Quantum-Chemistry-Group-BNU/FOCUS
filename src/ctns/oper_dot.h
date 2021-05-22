@@ -170,7 +170,7 @@ void oper_dot_opS(const int isym, const bool ifkr, const int k0,
                        + 0.5*int1e.get(pa,kb)*qops('C')[ka].K(1).H()
                        + int2e.get(pa,ka,ka,kb)*qt2aba       // a^+ba  		 
                        - int2e.get(pa,kb,ka,kb)*qt2aba.K(2); // b^+ba = (Kb^+ba)^* = a^+ab* = -a^+ba*
-      }
+      } // kp
    }else{
       // c[1].dot(a[1].dot(a[0]))
       // [[0. 0. 0. 0.]
@@ -197,7 +197,7 @@ void oper_dot_opS(const int isym, const bool ifkr, const int k0,
            	          + 0.5*int1e.get(pb,kb)*akB
            	          + int2e.get(pb,ka,ka,kb)*qt2aba 
            	          + int2e.get(pb,kb,ka,kb)*qt2bba; // zero in NR
-         }
+         } // kp
       }else if(isym == 2){
          for(int kp : krest){
             int pa = 2*kp, pb = pa+1;
@@ -205,9 +205,9 @@ void oper_dot_opS(const int isym, const bool ifkr, const int k0,
            	          + int2e.get(pa,kb,ka,kb)*qt2bba;
             qops('S')[pb] = 0.5*int1e.get(pb,kb)*akB
            	          + int2e.get(pb,ka,ka,kb)*qt2aba; 
-         }
+         } // kp
       } // isym
-   } // kp
+   } // ifkr
 }
 
 // build local H^C = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]

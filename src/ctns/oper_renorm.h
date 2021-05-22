@@ -46,13 +46,13 @@ void oper_renorm_opA(const std::string& superblock,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
 		     const bool& ifkr){
-   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opA" << std::endl;
-   auto t0 = tools::get_time();
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
+   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opA" << std::endl;
+   auto t0 = tools::get_time();
    // preprocess
    std::vector<std::pair<int,int>> info;
    oper_combine_opA(qops1.cindex, qops2.cindex, ifkr, info);
@@ -61,9 +61,10 @@ void oper_renorm_opA(const std::string& superblock,
       int iformula = pr.first;
       int index = pr.second;
       int iproc = distribute2(index, size);
-      if(iproc != rank) continue; 
-      auto opwf = oper_normxwf_opA(superblock,site,qops1,qops2,ifkr,iformula,index);
-      qops('A')[index] = oper_kernel_renorm(superblock,site,opwf);
+      if(iproc == rank){
+         auto opwf = oper_normxwf_opA(superblock,site,qops1,qops2,ifkr,iformula,index);
+         qops('A')[index] = oper_kernel_renorm(superblock,site,opwf);
+      }
    }
    if(debug_oper_mpi){
       std::cout << " opA: coord=" << p << " no.=" << info.size()
@@ -87,13 +88,13 @@ void oper_renorm_opB(const std::string& superblock,
 		     oper_dict<Tm>& qops2,
 		     oper_dict<Tm>& qops,
 		     const bool& ifkr){
-   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opB" << std::endl;
-   auto t0 = tools::get_time();
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
+   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opB" << std::endl;
+   auto t0 = tools::get_time();
    // preprocess
    std::vector<std::pair<int,int>> info;
    oper_combine_opB(qops1.cindex, qops2.cindex, ifkr, info);
@@ -102,9 +103,10 @@ void oper_renorm_opB(const std::string& superblock,
       int iformula = pr.first;
       int index = pr.second;
       int iproc = distribute2(index, size);
-      if(iproc != rank) continue; 
-      auto opwf = oper_normxwf_opB(superblock,site,qops1,qops2,ifkr,iformula,index);
-      qops('B')[index] = oper_kernel_renorm(superblock,site,opwf);
+      if(iproc == rank){
+         auto opwf = oper_normxwf_opB(superblock,site,qops1,qops2,ifkr,iformula,index);
+         qops('B')[index] = oper_kernel_renorm(superblock,site,opwf);
+      }
    }
    if(debug_oper_mpi){
       std::cout << " opB: coord=" << p << " no.=" << info.size()
@@ -132,22 +134,23 @@ void oper_renorm_opP(const std::string& superblock,
 		     const std::vector<int>& krest,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e){
-   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opP" << std::endl;
-   auto t0 = tools::get_time();
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
+   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opP" << std::endl;
+   auto t0 = tools::get_time();
    // preprocess
    std::vector<int> info;
    oper_combine_opP(krest, ifkr, info);
    // compute
    for(const auto index : info){
       int iproc = distribute2(index, size);
-      if(iproc != rank) continue; 
-      auto opwf = oper_compxwf_opP(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
-      qops('P')[index] = oper_kernel_renorm(superblock,site,opwf);
+      if(iproc == rank){
+         auto opwf = oper_compxwf_opP(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
+         qops('P')[index] = oper_kernel_renorm(superblock,site,opwf);
+      }
    }
    auto t1 = tools::get_time();
    if(debug_oper_mpi){
@@ -175,22 +178,23 @@ void oper_renorm_opQ(const std::string& superblock,
 		     const std::vector<int>& krest,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e){
-   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opQ" << std::endl;
-   auto t0 = tools::get_time();
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
+   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opQ" << std::endl;
+   auto t0 = tools::get_time();
    // preprocess
    std::vector<int> info;
    oper_combine_opQ(krest, ifkr, info);
    // compute
    for(const int index : info){
       int iproc = distribute2(index, size);
-      if(iproc != rank) continue; 
-      auto opwf = oper_compxwf_opQ(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
-      qops('Q')[index] = oper_kernel_renorm(superblock,site,opwf);
+      if(iproc == rank){
+         auto opwf = oper_compxwf_opQ(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
+         qops('Q')[index] = oper_kernel_renorm(superblock,site,opwf);
+      }
    }
    if(debug_oper_mpi){
       std::cout << " opQ: coord=" << p << " no.=" << info.size()
@@ -218,13 +222,13 @@ void oper_renorm_opS(const std::string& superblock,
 		     const std::vector<int>& krest,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e){
-   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opS" << std::endl;
-   auto t0 = tools::get_time();
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
+   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opS" << std::endl;
+   auto t0 = tools::get_time();
    // preprocess
    std::vector<int> info;
    oper_combine_opS(krest, ifkr, info);
@@ -257,13 +261,13 @@ void oper_renorm_opH(const std::string& superblock,
 		     const bool& ifkr,
 	             const integral::two_body<Tm>& int2e,
 	             const integral::one_body<Tm>& int1e){
-   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opH" << std::endl;
-   auto t0 = tools::get_time();
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
+   if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opH" << std::endl;
+   auto t0 = tools::get_time();
    // compute 
    auto opwf = oper_compxwf_opH(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,size,rank);
    qops('H')[0] = oper_kernel_renorm(superblock,site,opwf);
@@ -284,13 +288,19 @@ void oper_renorm_opAll(const std::string& superblock,
 		       oper_dict<Tm>& qops1,
 		       oper_dict<Tm>& qops2,
 		       oper_dict<Tm>& qops){
-   const bool ifcheck = false; // check operators against explicit construction
-   auto t0 = tools::get_time();
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif   
    const int isym = Km::isym;
    const bool ifkr = kind::is_kramers<Km>();
-   std::cout << "ctns::oper_renorm_opAll coord=" << p 
-             << " superblock=" << superblock 
-	     << " ifkr=" << ifkr << std::endl;
+   if(rank == 0){ 
+      std::cout << "ctns::oper_renorm_opAll coord=" << p 
+	        << " superblock=" << superblock 
+	     	<< " isym=" << isym << " ifkr=" << ifkr << std::endl;
+   }
+   auto t0 = tools::get_time();
   
    // support for index of complementary ops 
    auto& node = icomb.topo.get_node(p);
@@ -304,11 +314,11 @@ void oper_renorm_opAll(const std::string& superblock,
       auto pc = node.center;
       krest = icomb.topo.get_node(pc).rsupport;
    }
-   const auto& site = (superblock=="cr")? icomb.rsites.at(p) : icomb.lsites.at(p);
-
+   
    // combine cindex first 
    qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
-
+   const auto& site = (superblock=="cr")? icomb.rsites.at(p) : icomb.lsites.at(p);
+   const bool ifcheck = false; // check operators against explicit construction
    // C
    oper_renorm_opC(superblock, icomb, p, site, qops1, qops2, qops);
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'C');
@@ -327,13 +337,28 @@ void oper_renorm_opAll(const std::string& superblock,
    // S
    oper_renorm_opS(superblock, icomb, p, site, qops1, qops2, qops, isym, ifkr, krest, int2e, int1e);
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'S', int2e, int1e);
-   
    // H
    oper_renorm_opH(superblock, icomb, p, site, qops1, qops2, qops, isym, ifkr, int2e, int1e);
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'H', int2e, int1e);
+  
    // consistency check for Hamiltonian
-   const auto& H = qops('H').at(0);
+   auto H = qops('H').at(0);
    auto diffH = (H-H.H()).normF();
+  
+//   std::cout << "S=" << qops('S').begin()->first << std::endl;
+//   (qops('S').begin()->second).print("S",10);
+//
+//   H.print("H"+std::to_string(rank),10);
+//   icomb.world.barrier();
+//
+//   if(size > 0){
+//      qtensor2<Tm> qt2;
+//      boost::mpi::reduce(icomb.world, H, qt2, std::plus<qtensor2<Tm>>(), 0);
+//      H = qt2; 
+//   }
+//   if(rank == 0) H.print("Ham",10);
+//   exit(1);
+
    if(diffH > 1.e-10){
       H.print("H",2);
       std::string msg = "error: H-H.H() is too large! diffH=";
@@ -343,7 +368,8 @@ void oper_renorm_opAll(const std::string& superblock,
    auto t1 = tools::get_time();
    if(debug_oper_dict){
       std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 
-                << tools::get_duration(t1-t0) << " s" << std::endl;
+                << tools::get_duration(t1-t0) << " s" 
+		<< " size,rank=" << size << "," << rank << std::endl;
       std::cout << std::endl;
    }
 }

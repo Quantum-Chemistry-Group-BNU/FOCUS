@@ -50,10 +50,10 @@ int CTNS(const input::schedule& schd){
       rcanon_file = schd.scratch+"/rcanon_new.info"; 
       ctns::rcanon_save(icomb, rcanon_file);
    }else if(schd.ctns.task == "ham"){
-      auto Sij = ctns::get_Smat(icomb);
-      Sij.print("Sij");
       auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
       Hij.print("Hij",8);
+      auto Sij = ctns::get_Smat(icomb);
+      Sij.print("Sij");
    }else if(schd.ctns.task == "sdiag"){
       int istate = 0, nsample = 1.e5;
       double Sd = rcanon_Sdiag_sample(icomb,istate,nsample);
