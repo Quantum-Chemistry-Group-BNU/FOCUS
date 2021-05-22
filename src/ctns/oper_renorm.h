@@ -60,10 +60,8 @@ void oper_renorm_opA(const std::string& superblock,
    for(const auto pr : info){
       int iformula = pr.first;
       int index = pr.second;
-#ifndef SERIAL
-      int iproc = distributeAP(index, size);
+      int iproc = distribute2(index, size);
       if(iproc != rank) continue; 
-#endif 
       auto opwf = oper_normxwf_opA(superblock,site,qops1,qops2,ifkr,iformula,index);
       qops('A')[index] = oper_kernel_renorm(superblock,site,opwf);
    }
@@ -103,10 +101,8 @@ void oper_renorm_opB(const std::string& superblock,
    for(const auto pr : info){
       int iformula = pr.first;
       int index = pr.second;
-#ifndef SERIAL
-      int iproc = distributeBQ(index, size);
+      int iproc = distribute2(index, size);
       if(iproc != rank) continue; 
-#endif 
       auto opwf = oper_normxwf_opB(superblock,site,qops1,qops2,ifkr,iformula,index);
       qops('B')[index] = oper_kernel_renorm(superblock,site,opwf);
    }
@@ -148,10 +144,8 @@ void oper_renorm_opP(const std::string& superblock,
    oper_combine_opP(krest, ifkr, info);
    // compute
    for(const auto index : info){
-#ifndef SERIAL
-      int iproc = distributeAP(index, size);
+      int iproc = distribute2(index, size);
       if(iproc != rank) continue; 
-#endif 
       auto opwf = oper_compxwf_opP(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
       qops('P')[index] = oper_kernel_renorm(superblock,site,opwf);
    }
@@ -193,10 +187,8 @@ void oper_renorm_opQ(const std::string& superblock,
    oper_combine_opQ(krest, ifkr, info);
    // compute
    for(const int index : info){
-#ifndef SERIAL
-      int iproc = distributeBQ(index, size);
+      int iproc = distribute2(index, size);
       if(iproc != rank) continue; 
-#endif 
       auto opwf = oper_compxwf_opQ(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
       qops('Q')[index] = oper_kernel_renorm(superblock,site,opwf);
    }
@@ -238,9 +230,7 @@ void oper_renorm_opS(const std::string& superblock,
    oper_combine_opS(krest, ifkr, info);
    // compute
    for(const int index : info){
-      int iproc = index%size;
-      if(iproc != rank) continue;
-      auto opwf = oper_compxwf_opS(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
+      auto opwf = oper_compxwf_opS(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index,size,rank);
       qops('S')[index] = oper_kernel_renorm(superblock,site,opwf);
    }
    if(debug_oper_mpi){
@@ -269,8 +259,13 @@ void oper_renorm_opH(const std::string& superblock,
 	             const integral::one_body<Tm>& int1e){
    if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opH" << std::endl;
    auto t0 = tools::get_time();
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif   
    // compute 
-   auto opwf = oper_compxwf_opH(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e);
+   auto opwf = oper_compxwf_opH(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,size,rank);
    qops('H')[0] = oper_kernel_renorm(superblock,site,opwf);
    auto t1 = tools::get_time();
    if(debug_oper_dict){
@@ -311,7 +306,6 @@ void oper_renorm_opAll(const std::string& superblock,
    }
    const auto& site = (superblock=="cr")? icomb.rsites.at(p) : icomb.lsites.at(p);
 
-   std::cout << "RANKx=" << icomb.world.rank() << std::endl;
    // combine cindex first 
    qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
 
@@ -330,8 +324,6 @@ void oper_renorm_opAll(const std::string& superblock,
    // Q
    oper_renorm_opQ(superblock, icomb, p, site, qops1, qops2, qops, isym, ifkr, krest, int2e, int1e);
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'Q', int2e, int1e);
-   return;
-   exit(1);
    // S
    oper_renorm_opS(superblock, icomb, p, site, qops1, qops2, qops, isym, ifkr, krest, int2e, int1e);
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'S', int2e, int1e);
@@ -347,8 +339,6 @@ void oper_renorm_opAll(const std::string& superblock,
       std::string msg = "error: H-H.H() is too large! diffH=";
       tools::exit(msg+std::to_string(diffH));
    }
-
-   exit(1);
 
    auto t1 = tools::get_time();
    if(debug_oper_dict){

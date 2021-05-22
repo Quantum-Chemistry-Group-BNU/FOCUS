@@ -189,13 +189,14 @@ void sweep_twodot(const input::schedule& schd,
    diag = twodot_Hdiag(ifkr, c1qops, c2qops, lqops, rqops, ecore, wf);
    timing.tb = tools::get_time();
    // 2.2 Solve local problem: Hc=cE
+   int size = 1, rank = 0;
    using std::placeholders::_1;
    using std::placeholders::_2;
    auto HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, 
            	    std::cref(isym), std::cref(ifkr), std::cref(ifln), 
            	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
-           	    std::ref(wf));
+           	    std::ref(wf), std::cref(size), std::cref(rank));
    twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, dbond, wf);

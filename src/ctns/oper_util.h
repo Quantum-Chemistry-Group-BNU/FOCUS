@@ -5,6 +5,9 @@
 #include "oper_io.h"
 #include "oper_dot.h"
 #include "oper_renorm.h"
+#ifndef SERIAL
+#include <boost/mpi.hpp>
+#endif
 
 namespace ctns{
 
@@ -146,25 +149,33 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
 		            		    const integral::one_body<typename Km::dtype>& int1e,
 		            		    const double ecore,
 		            		    const std::string scratch){
+   using Tm = typename Km::dtype;
    std::cout << "\nctns::get_Hmat" << std::endl;
    // build operators for environement
    oper_env_right(icomb, int2e, int1e, scratch);
-   exit(1);
-/*
    // load operators from file
-   oper_dict<typename Km::dtype> qops;
+   oper_dict<Tm> qops;
    auto p = std::make_pair(0,0); 
    auto fname = oper_fname(scratch, p, "r");
    oper_load(fname, qops);
+   // Add ecore 
    auto Hmat = qops('H')[0].to_matrix();
-   Hmat += ecore*linalg::identity_matrix<typename Km::dtype>(Hmat.rows());
+   Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows());
    // deal with rwfuns(istate,ibas):
    // Hij = w*[i,a] H[a,b] w[j,b] = (w^* H w^T) 
    auto wfmat = icomb.rwfuns.to_matrix();
    auto tmp = linalg::xgemm("N","T",Hmat,wfmat);
    Hmat = linalg::xgemm("N","N",wfmat.conj(),tmp);
+   // reduction of partial H formed on each processor
+#ifndef SERIAL
+   int size = icomb.world.size();
+   if(size > 0){
+      linalg::matrix<Tm> Hmat2(Hmat.rows(),Hmat.cols());
+      boost::mpi::reduce(icomb.world, Hmat, Hmat2, std::plus<linalg::matrix<Tm>>(), 0);
+      Hmat = Hmat2;
+   }
+#endif  
    return Hmat;
-*/
 }
 
 } // ctns

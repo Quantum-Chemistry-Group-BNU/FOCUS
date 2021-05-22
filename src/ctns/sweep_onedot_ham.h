@@ -252,7 +252,9 @@ void onedot_Hx(Tm* y,
 	       const integral::two_body<Tm>& int2e,
 	       const integral::one_body<Tm>& int1e,
 	       const double ecore,
-	       qtensor3<Tm>& wf){
+	       qtensor3<Tm>& wf,
+	       const int size,
+	       const int rank){
    if(debug_onedot_ham) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
    const bool dagger = true;
    //
@@ -269,14 +271,14 @@ void onedot_Hx(Tm* y,
       // 1. H^l 
       Hwf += scale*contract_qt3_qt2_l(wf,lqops('H')[0]);
       // 2. H^cr
-      Hwf += scale*oper_compxwf_opH("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e);
+      Hwf += scale*oper_compxwf_opH("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,size,rank);
       // 3. p1^l+*Sp1^cr + h.c.
       //    ol*or|lcr>psi[lcr] => ol|l>*or|cr>(-1)^{p(l)}psi[lcr]
       for(const auto& op1C : lqops('C')){
 	 int p1 = op1C.first;
 	 const auto& op1 = op1C.second;
-	 auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1);
-	 auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1,dagger); 
+	 auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1,size,rank);
+	 auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1,size,rank,dagger); 
 	 Hwf += oper_kernel_OIwf("lc",qt3n.row_signed(),op1); // both lc/lr can work 
 	 Hwf -= oper_kernel_OIwf("lc",qt3h.row_signed(),op1,dagger);
       }
@@ -320,7 +322,7 @@ void onedot_Hx(Tm* y,
    // Ar*Pl+Br*Ql => L=lc, R=r
    }else{
       // 1. H^lc
-      Hwf += scale*oper_compxwf_opH("lc",wf,lqops,cqops,isym,ifkr,int2e,int1e);
+      Hwf += scale*oper_compxwf_opH("lc",wf,lqops,cqops,isym,ifkr,int2e,int1e,size,rank);
       // 2. H^r
       Hwf += scale*contract_qt3_qt2_r(wf,rqops('H')[0]);
       // 3. p1^lc+*Sp1^r + h.c.
@@ -347,8 +349,8 @@ void onedot_Hx(Tm* y,
 	 // q2^r+*Sq2^lc = -Sq2^lc*q2^r
 	 auto qt3n = oper_kernel_IOwf("cr",wf,op2,1); 
 	 auto qt3h = oper_kernel_IOwf("cr",wf,op2,1,dagger);
-	 Hwf -= oper_compxwf_opS("lc",qt3n.row_signed(),lqops,cqops,isym,ifkr,int2e,int1e,q2);
-	 Hwf += oper_compxwf_opS("lc",qt3h.row_signed(),lqops,cqops,isym,ifkr,int2e,int1e,q2,dagger);
+	 Hwf -= oper_compxwf_opS("lc",qt3n.row_signed(),lqops,cqops,isym,ifkr,int2e,int1e,q2,size,rank);
+	 Hwf += oper_compxwf_opS("lc",qt3h.row_signed(),lqops,cqops,isym,ifkr,int2e,int1e,q2,size,rank,dagger);
       }
       // 5. Ars^r*Prs^lc + h.c.
       for(const auto& op2A : rqops('A')){

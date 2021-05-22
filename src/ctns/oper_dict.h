@@ -31,17 +31,13 @@ inline std::pair<int,int> oper_unpack(const int ij){
 }
 
 // --- MPI-related distribution ---
-inline int distributeAP(const int index, const int size){
-   auto pq = oper_unpack(index);
-   int p = pq.first, q = pq.second;
-   int ipqAP = q*(q-1)/2+p, iproc = ipqAP%size;
-   return iproc;
+inline int distribute1(const int index, const int size){
+   return index%size;
 }
-inline int distributeBQ(const int index, const int size){
+inline int distribute2(const int index, const int size){
    auto pq = oper_unpack(index);
    int p = pq.first, q = pq.second;
-   int ipqBQ = q*(q+1)/2+p, iproc = ipqBQ%size;
-   return iproc;
+   return (p == q)? p%size : (q*(q-1)/2+p)%size;
 }
 
 // --- weight factor ---

@@ -36,7 +36,6 @@ struct matrix{
 	    ar & _data[i];
 	 }
       }
-
    public:
       // constructors
       matrix(): _rows(0), _cols(0), _size(0), _data(nullptr) {};

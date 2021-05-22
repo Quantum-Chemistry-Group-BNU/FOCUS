@@ -15,6 +15,46 @@ inline std::vector<int> oper_combine_cindex(const std::vector<int>& cindex1,
    return cindex;
 }
 
+inline std::vector<int> oper_gen_aindex(const std::vector<int>& cindex1, const bool& ifkr){
+   std::vector<int> aindex;
+   for(int p1 : cindex1){
+      for(int q1 : cindex1){
+         if(p1 < q1){
+	    int index = oper_pack(p1,q1);
+            aindex.push_back(index);
+	    if(ifkr){
+	       index = oper_pack(p1,q1+1);
+               aindex.push_back(index);
+	    }
+	 }
+      }
+   }
+   int k = ifkr? cindex1.size() : cindex1.size()/2;
+   int na = ifkr? k*k : k*(2*k-1);
+   assert(aindex.size() == na);
+   return aindex;
+}
+
+inline std::vector<int> oper_gen_bindex(const std::vector<int>& cindex1, const bool& ifkr){
+   std::vector<int> bindex;
+   for(int p1 : cindex1){
+      for(int q1 : cindex1){
+         if(p1 <= q1){
+	    int index = oper_pack(p1,q1);
+            bindex.push_back(index);
+	    if(ifkr){
+	       index = oper_pack(p1,q1+1);
+               bindex.push_back(index);
+	    }
+	 }
+      }
+   }
+   int k = ifkr? cindex1.size() : cindex1.size()/2;
+   int nb = ifkr? k*(k+1) : k*(2*k+1);
+   assert(bindex.size() == nb);
+   return bindex;
+}
+
 //	 
 // Generate index for normal operators 
 //	 

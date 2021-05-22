@@ -434,11 +434,13 @@ void twodot_Hx_CS(const std::string& block,
 	          const integral::two_body<Tm>& int2e,
 	          const integral::one_body<Tm>& int1e,
 		  const qtensor4<Tm>& wf,
-		  qtensor3<Tm>& Hwf1){
+		  qtensor3<Tm>& Hwf1,
+		  const int size,
+		  const int rank){
    const bool dagger = true;
    qtensor3<Tm> qt3n, qt3h;
    // p1^(L1/C1)+*Sp1^C2R
-   qt3n = oper_compxwf_opS("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index);
+   qt3n = oper_compxwf_opS("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,size,rank);
    qt3n = qt3n.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second);
    if(block == "l"){
       Hwf1 += oper_kernel_OIwf("lc",qt3n,op1); // both lc/lr can work 
@@ -446,7 +448,7 @@ void twodot_Hx_CS(const std::string& block,
       Hwf1 += oper_kernel_IOwf("lc",qt3n,op1,1);
    }
    // -Sp1^C2R+*p1^(L1/C1)
-   qt3h = oper_compxwf_opS("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,dagger); 
+   qt3h = oper_compxwf_opS("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,size,rank,dagger); 
    qt3h = qt3h.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second);
    if(block == "l"){
       Hwf1 -= oper_kernel_OIwf("lc",qt3h,op1,dagger);
@@ -545,7 +547,9 @@ void twodot_Hx_SC(const std::string& block,
 	          const integral::two_body<Tm>& int2e,
 	          const integral::one_body<Tm>& int1e,
 		  const qtensor4<Tm>& wf,
-		  qtensor3<Tm>& Hwf1){
+		  qtensor3<Tm>& Hwf1,
+		  const int size,
+		  const int rank){
    const bool dagger = true;
    qtensor3<Tm> qt3n, qt3h;
    // q2^(C2/R)+*Sq2^LC1 = -Sq2^LC1*q2^C2+
@@ -555,7 +559,7 @@ void twodot_Hx_SC(const std::string& block,
       qt3n = oper_kernel_IOwf("cr",wf2,op2,1); 
    }
    qt3n = qt3n.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second); // tmp[lc1,c2r]->tmp[l,c1,c2r]
-   Hwf1 -= oper_compxwf_opS("lc",qt3n,lqops,c1qops,isym,ifkr,int2e,int1e,index);
+   Hwf1 -= oper_compxwf_opS("lc",qt3n,lqops,c1qops,isym,ifkr,int2e,int1e,index,size,rank);
    // Sq2^LC1+*q2^(C2/R)
    if(block == "c"){
       qt3h = oper_kernel_OIwf("cr",wf2,op2,dagger);
@@ -563,7 +567,7 @@ void twodot_Hx_SC(const std::string& block,
       qt3h = oper_kernel_IOwf("cr",wf2,op2,1,dagger);
    }
    qt3h = qt3h.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second);
-   Hwf1 += oper_compxwf_opS("lc",qt3h,lqops,c1qops,isym,ifkr,int2e,int1e,index,dagger);
+   Hwf1 += oper_compxwf_opS("lc",qt3h,lqops,c1qops,isym,ifkr,int2e,int1e,index,size,rank,dagger);
 }
 
 template <typename Tm> 
@@ -657,7 +661,9 @@ void twodot_Hx(Tm* y,
 	       const integral::two_body<Tm>& int2e,
 	       const integral::one_body<Tm>& int1e,
 	       const double ecore,
-	       qtensor4<Tm>& wf){
+	       qtensor4<Tm>& wf,
+	       const int size,
+	       const int rank){
    if(debug_onedot_ham) std::cout << "ctns::twodot_Hx ifkr=" << ifkr << std::endl;
    const bool dagger = true;
    //
@@ -682,33 +688,33 @@ void twodot_Hx(Tm* y,
    // Local terms:
    //  1. H^LC1
    auto wf1 = wf.merge_c2r(); // wf1[l,c1,c2r]
-   auto Hwf1 = scale*oper_compxwf_opH("lc",wf1,lqops,c1qops,isym,ifkr,int2e,int1e); 
+   auto Hwf1 = scale*oper_compxwf_opH("lc",wf1,lqops,c1qops,isym,ifkr,int2e,int1e,size,rank); 
    //  2. H^C2R
    auto wf2 = wf.merge_lc1(); // wf2[lc1,c2,r]
-   auto Hwf2 = scale*oper_compxwf_opH("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e);
+   auto Hwf2 = scale*oper_compxwf_opH("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,size,rank);
    // 
    // One-index terms:
    //  3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
    for(const auto& op1C : lqops('C')){
       int p1 = op1C.first;
       const auto& op1 = op1C.second;
-      twodot_Hx_CS("l",p1,op1,wf2,c2qops,rqops,isym,ifkr,int2e,int1e,wf,Hwf1);
+      twodot_Hx_CS("l",p1,op1,wf2,c2qops,rqops,isym,ifkr,int2e,int1e,wf,Hwf1,size,rank);
    }
    for(const auto& op1C : c1qops('C')){
       int p1 = op1C.first;
       const auto& op1 = op1C.second;
-      twodot_Hx_CS("c",p1,op1,wf2,c2qops,rqops,isym,ifkr,int2e,int1e,wf,Hwf1);
+      twodot_Hx_CS("c",p1,op1,wf2,c2qops,rqops,isym,ifkr,int2e,int1e,wf,Hwf1,size,rank);
    }
    //  4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
    for(const auto& op2C : c2qops('C')){
       int q2 = op2C.first;
       const auto& op2 = op2C.second;
-      twodot_Hx_SC("c",q2,op2,wf2,lqops,c1qops,isym,ifkr,int2e,int1e,wf,Hwf1);
+      twodot_Hx_SC("c",q2,op2,wf2,lqops,c1qops,isym,ifkr,int2e,int1e,wf,Hwf1,size,rank);
    }
    for(const auto& op2C : rqops('C')){
       int q2 = op2C.first;
       const auto& op2 = op2C.second;
-      twodot_Hx_SC("r",q2,op2,wf2,lqops,c1qops,isym,ifkr,int2e,int1e,wf,Hwf1);
+      twodot_Hx_SC("r",q2,op2,wf2,lqops,c1qops,isym,ifkr,int2e,int1e,wf,Hwf1,size,rank);
    }
    //
    // Two-index terms:
