@@ -2,7 +2,6 @@
 #define SWEEP_ONEDOT_H
 
 #include "../core/tools.h"
-#include "../core/dvdson.h"
 #include "../core/linalg.h"
 #include "ctns_qdpt.h"
 #include "sweep_dvdson.h"
@@ -36,9 +35,12 @@ void onedot_localCI(comb<Km>& icomb,
 		    qtensor3<typename Km::dtype>& wf){
    using Tm = typename Km::dtype;
    // without kramers restriction
-   linalg::dvdsonSolver<Tm> solver(nsub, neig, eps, maxcycle);
+   dvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
    solver.Diag = diag.data();
    solver.HVec = HVec;
+#ifndef SERIAL
+   solver.world = icomb.world;
+#endif
    if(cisolver == 0){
       solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
    }else if(cisolver == 1){ // davidson
@@ -78,7 +80,7 @@ inline void onedot_localCI(comb<kind::cNK>& icomb,
    using Tm = std::complex<double>;
    // kramers restricted (currently works only for iterative with guess!)
    assert(cisolver == 1 && guess);
-   kr_dvdsonSolver<Tm,qtensor3<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
+   dvdsonSolver_kr<Tm,qtensor3<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
    solver.Diag = diag.data();
    solver.HVec = HVec;
    // load initial guess from previous opt
@@ -174,7 +176,7 @@ void sweep_onedot(const input::schedule& schd,
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
-   if(size > 0){
+   if(size > 1){
       std::vector<double> diag2(nsub);
       boost::mpi::reduce(icomb.world, diag, diag2, std::plus<double>(), 0);
       diag = diag2;

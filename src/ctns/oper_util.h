@@ -73,7 +73,7 @@ void oper_init_dot(const comb<Km>& icomb,
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
-   if(size > 0){
+   if(size > 1){
       const typename Km::dtype scale = 1.0/size;
       qops('H')[0] = qops('H')[0]*scale;
       for(auto& p : qops('S')){
@@ -191,7 +191,7 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    Hmat = linalg::xgemm("N","N",wfmat.conj(),tmp);
 #ifndef SERIAL
    // reduction of partial H formed on each processor
-   if(size > 0){
+   if(size > 1){
       linalg::matrix<Tm> Hmat2(Hmat.rows(),Hmat.cols());
       boost::mpi::reduce(icomb.world, Hmat, Hmat2, std::plus<linalg::matrix<Tm>>(), 0);
       Hmat = Hmat2;

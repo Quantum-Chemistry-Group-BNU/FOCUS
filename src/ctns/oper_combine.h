@@ -19,9 +19,9 @@ inline std::vector<int> oper_combine_cindex(const std::vector<int>& cindex1,
 // Generate index for normal operators 
 //	 
 
-inline void oper_combine_opC(const std::vector<int>& cindex1,
-		      	     const std::vector<int>& cindex2,
-		      	     std::vector<std::pair<int,int>>& info){
+inline std::vector<std::pair<int,int>> oper_combine_opC(const std::vector<int>& cindex1,
+		      	     				const std::vector<int>& cindex2){
+   std::vector<std::pair<int,int>> info;
    int iformula; 
    // 1. p1^+*I2
    iformula = 1;
@@ -33,16 +33,17 @@ inline void oper_combine_opC(const std::vector<int>& cindex1,
    for(int p2 : cindex2){
       info.push_back(std::make_pair(iformula,p2));
    }
+   return info;
 }
 
 // tricky part: determine the storage pattern for Apq
 // nkr: only store Apq where p<q: total number (2K)*(2K-1)/2 ~ O(2K^2)
 //  kr: time-reversal symmetry adapted basis is used, Apq blocks:
 //      pA+qA+ and pA+qB+: K*(K-1)/2+K*(K+1)/2=K^2 (reduction by half)
-inline void oper_combine_opA(const std::vector<int>& cindex1,
-		             const std::vector<int>& cindex2,
-		             const bool& ifkr,
-		             std::vector<std::pair<int,int>>& info){
+inline std::vector<std::pair<int,int>> oper_combine_opA(const std::vector<int>& cindex1,
+		             			        const std::vector<int>& cindex2,
+		             			        const bool& ifkr){
+   std::vector<std::pair<int,int>> info;
    int iformula; 
    // 1. p1<q1: A[p1,q1] = p1^+q1^+ * I2
    iformula = 1;
@@ -83,16 +84,17 @@ inline void oper_combine_opA(const std::vector<int>& cindex1,
    }
    int kc = cindex1.size()+cindex2.size();
    assert(info.size() == oper_num_opA(kc,ifkr));
+   return info;
 }
 
 // tricky part: determine the storage pattern for Bps
 // nkr: only store Bps (p<=s): (2K)*(2K+1)/2 ~ O(2K^2)
 //  kr: If time-reversal symmetry adapted basis is used, Bps blocks:
 //      pA+sA and pA+sB: K*(K+1)/2+K*(K+1)/2=K(K+1) (reduction by half)
-inline void oper_combine_opB(const std::vector<int>& cindex1,
-		             const std::vector<int>& cindex2,
-		             const bool& ifkr,
-		             std::vector<std::pair<int,int>>& info){
+inline std::vector<std::pair<int,int>> oper_combine_opB(const std::vector<int>& cindex1,
+		             			        const std::vector<int>& cindex2,
+		             			        const bool& ifkr){
+   std::vector<std::pair<int,int>> info;
    int iformula; 
    // 1. p1<q1: B[p1,q1] = p1^+q1 * I2
    iformula = 1;
@@ -129,6 +131,7 @@ inline void oper_combine_opB(const std::vector<int>& cindex1,
    }
    int kc = cindex1.size()+cindex2.size();
    assert(info.size() == oper_num_opB(kc,ifkr));
+   return info;
 }
 
 //
@@ -136,9 +139,9 @@ inline void oper_combine_opB(const std::vector<int>& cindex1,
 //	 
 
 // tricky part: determine the storage pattern for Ppq for p,q in krest
-inline void oper_combine_opP(const std::vector<int>& krest,
-		             const bool& ifkr,
-		             std::vector<int>& info){
+inline std::vector<int> oper_combine_opP(const std::vector<int>& krest,
+		             	         const bool& ifkr){
+   std::vector<int> info;
    for(int kp : krest){
       int pa = 2*kp, pb = pa+1;
       for(int kq : krest){
@@ -159,11 +162,12 @@ inline void oper_combine_opP(const std::vector<int>& krest,
    int k = krest.size();
    int nP = ifkr? k*k : k*(2*k-1);
    assert(info.size() == nP); 
+   return info;
 }
 
-inline void oper_combine_opQ(const std::vector<int>& krest,
-		             const bool& ifkr,
-		             std::vector<int>& info){
+inline std::vector<int> oper_combine_opQ(const std::vector<int>& krest,
+		             		 const bool& ifkr){
+   std::vector<int> info;
    for(int kp : krest){
       int pa = 2*kp, pb = pa+1;
       for(int ks : krest){
@@ -183,16 +187,18 @@ inline void oper_combine_opQ(const std::vector<int>& krest,
    int k = krest.size();
    int nQ = ifkr? k*(k+1) : k*(2*k+1);
    assert(info.size() == nQ); 
+   return info;
 }
 
-inline void oper_combine_opS(const std::vector<int>& krest,
-		             const bool& ifkr,
-		             std::vector<int>& info){
+inline std::vector<int> oper_combine_opS(const std::vector<int>& krest,
+		             		 const bool& ifkr){
+   std::vector<int> info;
    for(int kp: krest){
       int pa = 2*kp, pb = pa+1;
       info.push_back(pa);
       if(not ifkr) info.push_back(pb);
    }
+   return info;
 }
 
 } // ctns

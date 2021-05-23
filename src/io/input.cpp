@@ -182,7 +182,7 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,6)=="nroots"){
 	 nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){
-         guess = true;
+         guess = stoi(line.substr(5));
       }else if(line.substr(0,6)=="inoise"){
 	 inoise = stoi(line.substr(6));
       }else if(line.substr(0,4)=="load"){

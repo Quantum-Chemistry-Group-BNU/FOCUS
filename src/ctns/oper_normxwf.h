@@ -12,14 +12,15 @@ qtensor3<Tm> oper_normxwf_opC(const std::string& superblock,
 		              oper_dict<Tm>& qops1,
 		              oper_dict<Tm>& qops2,
 			      const int iformula,
-		              const int index){
+		              const int index,
+			      const bool ifdagger=false){
    qtensor3<Tm> opwf;
    if(iformula == 1){
       const auto& op1 = qops1('C')[index];
-      opwf = oper_kernel_OIwf(superblock,site,op1);
+      opwf = oper_kernel_OIwf(superblock,site,op1,ifdagger);
    }else if(iformula == 2){
       const auto& op2 = qops2('C')[index];
-      opwf = oper_kernel_IOwf(superblock,site,op2,1);
+      opwf = oper_kernel_IOwf(superblock,site,op2,1,ifdagger);
    } // iformula
    return opwf; 
 }
@@ -32,14 +33,15 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
 		              oper_dict<Tm>& qops2,
 			      const bool& ifkr,
 			      const int iformula,
-		              const int index){
+		              const int index,
+			      const bool ifdagger=false){
    qtensor3<Tm> opwf;
    if(iformula == 1){
       const auto& op1 = qops1('A')[index];
-      opwf = oper_kernel_OIwf(superblock,site,op1);
+      opwf = oper_kernel_OIwf(superblock,site,op1,ifdagger);
    }else if(iformula == 2){
       const auto& op2 = qops2('A')[index];
-      opwf = oper_kernel_IOwf(superblock,site,op2,0);
+      opwf = oper_kernel_IOwf(superblock,site,op2,0,ifdagger);
    }else if(iformula == 3){
       auto pq = oper_unpack(index);	
       int p = pq.first, sp = p%2;
@@ -48,7 +50,7 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
       const bool ifnos = !(ifkr && sp != sq);
       const auto& op1 = qops1('C')[p];
       const auto& op2 = ifnos? qops2('C')[q] : qops2('C')[q-1].K(1);
-      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
+      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
@@ -57,7 +59,7 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
       const bool ifnos = !(ifkr && sp != sq);
       const auto& op1 = ifnos? -qops1('C')[p] : -qops1('C')[p-1].K(1);
       const auto& op2 = qops2('C')[q];
-      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
+      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
    } // iformula
    return opwf;
 }
@@ -70,14 +72,15 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
 		              oper_dict<Tm>& qops2,
 			      const bool& ifkr,
 			      const int iformula,
-		              const int index){
+		              const int index,
+			      const bool ifdagger=false){
    qtensor3<Tm> opwf;
    if(iformula == 1){
       const auto& op1 = qops1('B')[index];
-      opwf = oper_kernel_OIwf(superblock,site,op1);
+      opwf = oper_kernel_OIwf(superblock,site,op1,ifdagger);
    }else if(iformula == 2){
       const auto& op2 = qops2('B')[index];
-      opwf = oper_kernel_IOwf(superblock,site,op2,0);
+      opwf = oper_kernel_IOwf(superblock,site,op2,0,ifdagger);
    }else if(iformula == 3){
       auto pq = oper_unpack(index);	
       int p = pq.first, sp = p%2;
@@ -86,7 +89,7 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
       const bool ifnos = !(ifkr && sp != sq);
       const auto& op1 = qops1('C')[p];
       const auto& op2 = ifnos? qops2('C')[q].H() : qops2('C')[q-1].H().K(1);
-      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
+      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
@@ -95,7 +98,7 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
       const bool ifnos = !(ifkr && sp != sq);
       const auto& op1 = ifnos? -qops1('C')[p].H() : -qops1('C')[p-1].H().K(1);
       const auto& op2 = qops2('C')[q];
-      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1);
+      opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
    } // iformula
    return opwf;
 }

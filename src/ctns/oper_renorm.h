@@ -20,8 +20,7 @@ void oper_renorm_opC(const std::string& superblock,
    if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opC" << std::endl;
    auto t0 = tools::get_time();
    // preprocess
-   std::vector<std::pair<int,int>> info;
-   oper_combine_opC(qops1.cindex, qops2.cindex, info);
+   auto info = oper_combine_opC(qops1.cindex, qops2.cindex);
    // compute
    for(const auto pr : info){
       int iformula = pr.first;
@@ -54,8 +53,7 @@ void oper_renorm_opA(const std::string& superblock,
    if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opA" << std::endl;
    auto t0 = tools::get_time();
    // preprocess
-   std::vector<std::pair<int,int>> info;
-   oper_combine_opA(qops1.cindex, qops2.cindex, ifkr, info);
+   auto info = oper_combine_opA(qops1.cindex, qops2.cindex, ifkr);
    // compute
    for(const auto pr : info){
       int iformula = pr.first;
@@ -96,8 +94,7 @@ void oper_renorm_opB(const std::string& superblock,
    if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opB" << std::endl;
    auto t0 = tools::get_time();
    // preprocess
-   std::vector<std::pair<int,int>> info;
-   oper_combine_opB(qops1.cindex, qops2.cindex, ifkr, info);
+   auto info = oper_combine_opB(qops1.cindex, qops2.cindex, ifkr);
    // compute
    for(const auto pr : info){
       int iformula = pr.first;
@@ -142,8 +139,7 @@ void oper_renorm_opP(const std::string& superblock,
    if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opP" << std::endl;
    auto t0 = tools::get_time();
    // preprocess
-   std::vector<int> info;
-   oper_combine_opP(krest, ifkr, info);
+   auto info = oper_combine_opP(krest, ifkr);
    // compute
    for(const auto index : info){
       int iproc = distribute2(index, size);
@@ -186,8 +182,7 @@ void oper_renorm_opQ(const std::string& superblock,
    if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opQ" << std::endl;
    auto t0 = tools::get_time();
    // preprocess
-   std::vector<int> info;
-   oper_combine_opQ(krest, ifkr, info);
+   auto info = oper_combine_opQ(krest, ifkr);
    // compute
    for(const int index : info){
       int iproc = distribute2(index, size);
@@ -230,8 +225,7 @@ void oper_renorm_opS(const std::string& superblock,
    if(debug_oper_dict) std::cout << "\nctns::oper_renorm_opS" << std::endl;
    auto t0 = tools::get_time();
    // preprocess
-   std::vector<int> info;
-   oper_combine_opS(krest, ifkr, info);
+   auto info = oper_combine_opS(krest, ifkr);
    // compute
    for(const int index : info){
       auto opwf = oper_compxwf_opS(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index,size,rank);

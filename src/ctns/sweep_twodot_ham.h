@@ -666,10 +666,10 @@ void twodot_Hx(Tm* y,
 	       const int rank){
    if(debug_onedot_ham) std::cout << "ctns::twodot_Hx ifkr=" << ifkr << std::endl;
    const bool dagger = true;
+   const Tm scale = ifkr? 0.5 : 1.0;
    //
    // constant term
    //
-   const Tm scale = ifkr? 0.5 : 1.0;
    wf.from_array(x);
    qtensor4<Tm> Hwf = (scale*ecore)*wf;
    //

@@ -193,21 +193,6 @@ struct dvdsonSolver{
 	 linalg::matrix<Tm> id = identity_matrix<Tm>(ndim);
          linalg::matrix<Tm> H(ndim,ndim);
          HVecs(ndim,H.data(),id.data());
-         // check symmetry
-         auto sdiff = linalg::symmetric_diff(H);
-	 std::cout << "|H-H.h|=" << sdiff << std::endl;
-         if(sdiff > 1.e-5){
-            (H-H.H()).print("H-H.h");
-	    tools::exit("error: H is not symmetric in linalg::dvdsonSolver::solve_diag!");
-         }
-         // solve eigenvalue problem by diagonalization
-	 std::vector<double> e(ndim);
-	 linalg::matrix<Tm> V;
-	 linalg::eig_solver(H, e, V);
-	 std::cout << "eigenvalues:\n" << std::setprecision(12);
-         for(int i=0; i<ndim; i++){
-	    std::cout << "i=" << i << " e=" << e[i] << std::endl;
-         }
          // final check consistency with diag
          if(ifCheckDiag){
             std::cout << "ndim=" << ndim << std::endl;
@@ -223,6 +208,21 @@ struct dvdsonSolver{
                if(diff>1.e-10) tools::exit("error: |Diag[i]-H(i,i)| is too large!");
             } // i
 	    std::cout << "CheckDiag passed successfully!" << std::endl;
+         }
+         // check symmetry
+         auto sdiff = linalg::symmetric_diff(H);
+	 std::cout << "|H-H.h|=" << sdiff << std::endl;
+         if(sdiff > 1.e-5){
+            (H-H.H()).print("H-H.h");
+	    tools::exit("error: H is not symmetric in linalg::dvdsonSolver::solve_diag!");
+         }
+         // solve eigenvalue problem by diagonalization
+	 std::vector<double> e(ndim);
+	 linalg::matrix<Tm> V;
+	 linalg::eig_solver(H, e, V);
+	 std::cout << "eigenvalues:\n" << std::setprecision(12);
+         for(int i=0; i<ndim; i++){
+	    std::cout << "i=" << i << " e=" << e[i] << std::endl;
          }
          // copy results
 	 std::copy(e.begin(), e.begin()+neig, es);
