@@ -154,25 +154,34 @@ void sweep_onedot(const input::schedule& schd,
 #ifndef SERIAL
 	  icomb.world.barrier();
 #endif
-      }
+      } // iproc
    }
    timing.ta = tools::get_time();
-   return;
-   exit(1);
 
    // 2. Davidson solver for wf
    qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
    qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
-   if(debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;   
+   if(rank == 0 && debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;   
    int nsub = wf.get_dim();
    int neig = sweeps.nstates;
    auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
+
    // 2.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
-   diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
+   diag = onedot_Hdiag(ifkr, ifNC, cqops, lqops, rqops, ecore, wf, size, rank);
+#ifndef SERIAL
+   // reduction of partial Hdiag: no need to broadcast, if only rank=0 
+   // executes the preconditioning in Davidson's algorithm
+   if(size > 0){
+      std::vector<double> diag2(nsub);
+      boost::mpi::reduce(icomb.world, diag, diag2, std::plus<double>(), 0);
+      diag = diag2;
+   }
+#endif 
    timing.tb = tools::get_time();
+
    // 2.2 Solve local problem: Hc=cE
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -185,6 +194,8 @@ void sweep_onedot(const input::schedule& schd,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
    timing.tc = tools::get_time();
+   return;
+   exit(1);
 
    // 3. decimation & renormalize operators
    onedot_decimation(sweeps, isweep, ibond, icomb, vsol, wf, 
