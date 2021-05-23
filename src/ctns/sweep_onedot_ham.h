@@ -245,7 +245,7 @@ void onedot_Hx(Tm* y,
 	       const Tm* x,
 	       const int& isym,
 	       const bool& ifkr,
-	       const bool& ifln,
+	       const bool& ifNC,
 	       oper_dict<Tm>& cqops,
 	       oper_dict<Tm>& lqops,
 	       oper_dict<Tm>& rqops,
@@ -267,7 +267,7 @@ void onedot_Hx(Tm* y,
    // construct H*wf: if ifkr=True, construct skeleton sigma vector 
    //
    // Al*Pr+Bl*Qr => L=l, R=cr
-   if(ifln){
+   if(ifNC){
       // 1. H^l 
       Hwf += scale*contract_qt3_qt2_l(wf,lqops('H')[0]);
       // 2. H^cr
@@ -373,7 +373,7 @@ void onedot_Hx(Tm* y,
 	 Hwf += oper_compxwf_opQ("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,index);
 	 Hwf += oper_compxwf_opQ("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,index,dagger);
       }
-   } // ifln
+   } // ifNC
    Hwf.to_array(y);
 }
 

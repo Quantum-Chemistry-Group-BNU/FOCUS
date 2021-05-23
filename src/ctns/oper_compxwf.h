@@ -514,9 +514,6 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       }
       // Two-index operators
       // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
-      std::cout << " aindex=" << aindex.size() 
-	        << " bindex=" << bindex.size()
-	        << std::endl;	
       for(const auto& index : aindex){
          int iproc = distribute2(index,size);
          if(iproc == rank){

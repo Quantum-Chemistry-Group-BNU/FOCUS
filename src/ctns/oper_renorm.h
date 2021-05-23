@@ -339,9 +339,6 @@ void oper_renorm_opAll(const std::string& superblock,
    // consistency check for Hamiltonian
    const auto& H = qops('H').at(0);
    auto diffH = (H-H.H()).normF();
-  
-   H.print("H",10);
-
    if(diffH > 1.e-10){
       H.print("H",2);
       std::string msg = "error: H-H.H() is too large! diffH=";

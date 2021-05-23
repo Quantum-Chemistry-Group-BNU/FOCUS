@@ -98,19 +98,23 @@ void sweep_onedot(const input::schedule& schd,
                   const integral::two_body<typename Km::dtype>& int2e,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore){
-   using Tm = typename Km::dtype;
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif   
+   if(rank == 0) std::cout << "ctns::sweep_onedot" << std::endl;
    const int isym = Km::isym;
    const bool ifkr = kind::is_kramers<Km>();
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
-   std::cout << "ctns::sweep_onedot" << std::endl;
 
    // 0. processing partition & symmetry
    auto dbond = sweeps.seq[ibond];
    auto p = dbond.p;
    std::vector<int> suppc, suppl, suppr;
    qbond qc, ql, qr;
-   if(debug_sweep) std::cout << "support info:" << std::endl;
+   if(rank == 0 && debug_sweep) std::cout << "support info:" << std::endl;
    suppc = icomb.get_suppc(p, debug_sweep); 
    suppl = icomb.get_suppl(p, debug_sweep);
    suppr = icomb.get_suppr(p, debug_sweep);
@@ -120,29 +124,41 @@ void sweep_onedot(const input::schedule& schd,
    int sc = suppc.size();
    int sl = suppl.size();
    int sr = suppr.size();
-   const bool ifln = (sl <= sr); // left normal
+   const bool ifNC = (sl <= sr); // left normal
    assert(sc+sl+sr == icomb.topo.nphysical);
-   if(debug_sweep){
-      std::cout << " ifln=" << ifln << std::endl;
-      std::cout << "qbond info:" << std::endl;
+   if(rank == 0){
+      if(debug_sweep){
+         std::cout << " ifNC=" << ifNC << std::endl;
+         std::cout << "qbond info:" << std::endl;
+      }
+      qc.print("qc", debug_sweep);
+      ql.print("ql", debug_sweep);
+      qr.print("qr", debug_sweep);
    }
-   qc.print("qc", debug_sweep);
-   ql.print("ql", debug_sweep);
-   qr.print("qr", debug_sweep);
 
    // 1. load operators 
+   using Tm = typename Km::dtype;
    oper_dict<Tm> cqops, lqops, rqops;
    oper_load_qops(icomb, p, schd.scratch, "c", cqops);
    oper_load_qops(icomb, p, schd.scratch, "l", lqops);
    oper_load_qops(icomb, p, schd.scratch, "r", rqops);
    if(debug_sweep){
-      std::cout << "qops info:" << std::endl;
-      const int level = 0;
-      cqops.print("cqops", level);
-      lqops.print("lqops", level);
-      rqops.print("rqops", level);
+      for(int iproc=0; iproc<size; iproc++){
+          if(rank == iproc){
+             std::cout << "qops info: rank=" << rank << std::endl;
+             const int level = 0;
+             cqops.print("cqops", level);
+             lqops.print("lqops", level);
+             rqops.print("rqops", level);
+	  }
+#ifndef SERIAL
+	  icomb.world.barrier();
+#endif
+      }
    }
    timing.ta = tools::get_time();
+   return;
+   exit(1);
 
    // 2. Davidson solver for wf
    qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
@@ -158,11 +174,10 @@ void sweep_onedot(const input::schedule& schd,
    diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf);
    timing.tb = tools::get_time();
    // 2.2 Solve local problem: Hc=cE
-   int size = 1, rank = 0;
    using std::placeholders::_1;
    using std::placeholders::_2;
    auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
-           	    std::cref(isym), std::cref(ifkr), std::cref(ifln), 
+           	    std::cref(isym), std::cref(ifkr), std::cref(ifNC), 
            	    std::ref(cqops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	    std::ref(wf), std::cref(size), std::cref(rank));

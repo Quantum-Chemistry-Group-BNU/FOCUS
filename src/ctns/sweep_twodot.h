@@ -93,12 +93,16 @@ void sweep_twodot(const input::schedule& schd,
                   const integral::two_body<typename Km::dtype>& int2e,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore){
-   using Tm = typename Km::dtype;
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif   
+   if(rank == 0) std::cout << "ctns::sweep_twodot" << std::endl;
    const int isym = Km::isym;
    const bool ifkr = kind::is_kramers<Km>();
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
-   std::cout << "ctns::sweep_twodot" << std::endl;
 
    // 0. processing partition & symmetry
    auto dbond = sweeps.seq[ibond];
@@ -108,7 +112,7 @@ void sweep_twodot(const input::schedule& schd,
    auto cturn = dbond.cturn;
    std::vector<int> suppc1, suppc2, suppl, suppr;
    qbond qc1, qc2, ql, qr;
-   if(debug_sweep) std::cout << "support info:" << std::endl;
+   if(rank == 0 && debug_sweep) std::cout << "support info:" << std::endl;
    if(!cturn){
       //
       //       |    |
@@ -141,18 +145,23 @@ void sweep_twodot(const input::schedule& schd,
    int sc2 = suppc2.size();
    int sl = suppl.size();
    int sr = suppr.size();
-   const bool ifln = (sl+sc1 <= sc2+sr); // left normal
+   const bool ifNC = (sl+sc1 <= sc2+sr); // left normal
    assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
-   if(debug_sweep){
-      std::cout << " ifln=" << ifln << std::endl;
-      std::cout << "qbond info:" << std::endl;
+   if(rank == 0){
+      if(debug_sweep){
+         std::cout << " ifNC=" << ifNC << std::endl;
+         std::cout << "qbond info:" << std::endl;
+      }
+      qc1.print("qc1", debug_sweep);
+      qc2.print("qc2", debug_sweep);
+      ql.print("ql", debug_sweep);
+      qr.print("qr", debug_sweep);
    }
-   qc1.print("qc1", debug_sweep);
-   qc2.print("qc2", debug_sweep);
-   ql.print("ql", debug_sweep);
-   qr.print("qr", debug_sweep);
+   return; 
+   exit(1);
 
    // 1. load operators 
+   using Tm = typename Km::dtype;
    oper_dict<Tm> c1qops, c2qops, lqops, rqops;
    if(!cturn){
       oper_load_qops(icomb, p0, schd.scratch, "c", c1qops);
@@ -189,11 +198,10 @@ void sweep_twodot(const input::schedule& schd,
    diag = twodot_Hdiag(ifkr, c1qops, c2qops, lqops, rqops, ecore, wf);
    timing.tb = tools::get_time();
    // 2.2 Solve local problem: Hc=cE
-   int size = 1, rank = 0;
    using std::placeholders::_1;
    using std::placeholders::_2;
    auto HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, 
-           	    std::cref(isym), std::cref(ifkr), std::cref(ifln), 
+           	    std::cref(isym), std::cref(ifkr), std::cref(ifNC), 
            	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	    std::ref(wf), std::cref(size), std::cref(rank));

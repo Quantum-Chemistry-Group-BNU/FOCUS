@@ -14,9 +14,9 @@ TODOs:
     2. setup testing mechanism? 
     3. preparation: makefile -> mpi 
     4. mpi [DONE202105XX]
-	- distribute AP & BQ
-	- compxwf & Hmat
-	- opt: HDiag, HVec, Davidson
+	- distribute AP & BQ, compxwf, Hmat [DONE20210523]
+	- opt: HDiag, HVec, Davidson, pRDM, rwfuns, twodot 
+ 	- load balance: adjust distribution 
     5. hybrid: openmp/gpu?
 
  5. applications:

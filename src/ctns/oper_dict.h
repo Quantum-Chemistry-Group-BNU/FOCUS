@@ -137,11 +137,10 @@ public:
    void print(const std::string name, const int level=0) const{
       std::cout << " oper_dict " << name << " : cindex = "; 
       for(auto p : cindex) std::cout << p << " ";
-      std::cout << std::endl;
       // count no. of operators in each class
       std::string oplist = "HCSABPQ";
       std::map<char,int> exist;
-      std::string s;
+      std::string s = " nops = ";
       for(const auto& key : oplist){
          if(ops.find(key) != ops.end()){ 
             s += key;
@@ -151,7 +150,7 @@ public:
             exist[key] = 0;
          }
       }
-      std::cout << " no. of ops in each class = " << s << std::endl;
+      std::cout << s << std::endl;
       // print each operator
       if(level > 0){
          for(const auto& key : oplist){

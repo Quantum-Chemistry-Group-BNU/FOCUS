@@ -653,7 +653,7 @@ void twodot_Hx(Tm* y,
 	       const Tm* x,
 	       const int& isym,
 	       const bool& ifkr,
-	       const bool& ifln,
+	       const bool& ifNC,
 	       oper_dict<Tm>& c1qops,
 	       oper_dict<Tm>& c2qops,
 	       oper_dict<Tm>& lqops,
@@ -721,7 +721,7 @@ void twodot_Hx(Tm* y,
    //  5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
    //  6. Bps^1*Qps^2 / Qqr^1*Bqr^2
    qtensor2<Tm> id1, id2;
-   if(ifln){
+   if(ifNC){
 
       // 5. Apq^LC1*Ppq^C2R + h.c.
       // Apq^L*Ppq^C2R
@@ -869,7 +869,7 @@ void twodot_Hx(Tm* y,
          }
       }
 
-   } // ifln
+   } // ifNC
    Hwf += Hwf1.split_c2r(wf.qver,wf.qcol,wf.dpt_c2r().second);
    Hwf += Hwf2.split_lc1(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
    Hwf.to_array(y);
