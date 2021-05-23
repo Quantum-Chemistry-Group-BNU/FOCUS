@@ -429,8 +429,8 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
    char BQ1 = ifNC? 'B' : 'Q';
    char BQ2 = ifNC? 'Q' : 'B';
    const auto& cindex = ifNC? cindex1 : cindex2;
-   auto aindex = oper_aindex(cindex, ifkr);
-   auto bindex = oper_bindex(cindex, ifkr);
+   auto aindex = oper_index_opA(cindex, ifkr);
+   auto bindex = oper_index_opB(cindex, ifkr);
    //
    // H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
    //   = H1 + H2
@@ -514,6 +514,9 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
       }
       // Two-index operators
       // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
+      std::cout << " aindex=" << aindex.size() 
+	        << " bindex=" << bindex.size()
+	        << std::endl;	
       for(const auto& index : aindex){
          int iproc = distribute2(index,size);
          if(iproc == rank){

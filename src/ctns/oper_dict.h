@@ -9,14 +9,14 @@
 namespace ctns{
 
 // debug options
-const bool debug_oper_dict = true;
+const bool debug_oper_dict = false;
 extern const bool debug_oper_dict;
 
 const bool debug_oper_io = false;
 extern const bool debug_oper_io;
 
-const bool debug_oper_mpi = true;
-extern const bool debug_oper_mpi;
+const bool debug_oper_para = false;
+extern const bool debug_oper_para;
 
 // --- packing ---
 // pack two indices
@@ -30,7 +30,7 @@ inline std::pair<int,int> oper_unpack(const int ij){
    return std::make_pair(ij%kpack,ij/kpack);
 }
 
-// --- MPI-related distribution ---
+// --- distribution ---
 inline int distribute2(const int index, const int size){
    auto pq = oper_unpack(index);
    int p = pq.first, q = pq.second;
@@ -38,25 +38,36 @@ inline int distribute2(const int index, const int size){
    return (p == q)? p%size : (q*(q-1)/2+p)%size;
 }
 
-inline std::vector<int> oper_aindex(const std::vector<int>& cindex1, 
-				    const bool& ifkr){
+inline int oper_num_opA(const int cindex1_size, const bool& ifkr){
+   int k = ifkr? cindex1_size : cindex1_size/2;
+   int num = ifkr? k*k : k*(2*k-1);
+   return num;
+}
+
+inline int oper_num_opB(const int cindex1_size, const bool& ifkr){
+   int k = ifkr? cindex1_size : cindex1_size/2;
+   int num = ifkr? k*(k+1) : k*(2*k+1);
+   return num;
+}
+
+inline std::vector<int> oper_index_opA(const std::vector<int>& cindex1, const bool& ifkr){
    std::vector<int> aindex;
    for(int p1 : cindex1){
       for(int q1 : cindex1){
-         if(p1 < q1){
+	 if(p1 < q1){ 
             aindex.push_back( oper_pack(p1,q1) );
-	    if(ifkr) aindex.push_back( oper_pack(p1,q1+1) );
+            if(ifkr) aindex.push_back( oper_pack(p1,q1+1) );
+	 }else if(p1 == q1){
+	    if(ifkr) aindex.push_back( oper_pack(p1,p1+1) );
 	 }
       }
    }
-   int k = ifkr? cindex1.size() : cindex1.size()/2;
-   int na = ifkr? k*k : k*(2*k-1);
-   assert(aindex.size() == na);
+   int kc = cindex1.size();
+   assert(aindex.size() == oper_num_opA(kc,ifkr));
    return aindex;
 }
 
-inline std::vector<int> oper_bindex(const std::vector<int>& cindex1, 
-		 		    const bool& ifkr){
+inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bool& ifkr){
    std::vector<int> bindex;
    for(int p1 : cindex1){
       for(int q1 : cindex1){
@@ -66,9 +77,8 @@ inline std::vector<int> oper_bindex(const std::vector<int>& cindex1,
 	 }
       }
    }
-   int k = ifkr? cindex1.size() : cindex1.size()/2;
-   int nb = ifkr? k*(k+1) : k*(2*k+1);
-   assert(bindex.size() == nb);
+   int kc = cindex1.size();
+   assert(bindex.size() == oper_num_opB(kc,ifkr));
    return bindex;
 }
 

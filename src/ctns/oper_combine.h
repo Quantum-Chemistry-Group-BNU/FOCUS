@@ -49,12 +49,10 @@ inline void oper_combine_opA(const std::vector<int>& cindex1,
    for(int p1 : cindex1){
       for(int q1 : cindex1){
          if(p1 < q1){
-	    int index = oper_pack(p1,q1);
-            info.push_back(std::make_pair(iformula,index));
-	    if(ifkr){
-	       index = oper_pack(p1,q1+1);
-               info.push_back(std::make_pair(iformula,index));
-	    }
+            info.push_back(std::make_pair(iformula,oper_pack(p1,q1)));
+            if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p1,q1+1)));
+	 }else if(p1 == q1){
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p1,p1+1)));
 	 }
       }
    }
@@ -63,12 +61,10 @@ inline void oper_combine_opA(const std::vector<int>& cindex1,
    for(int p2 : cindex2){
       for(int q2 : cindex2){
          if(p2 < q2){
-	    int index = oper_pack(p2,q2);
-            info.push_back(std::make_pair(iformula,index));
-	    if(ifkr){
-	       index = oper_pack(p2,q2+1);
-               info.push_back(std::make_pair(iformula,index));
-	    }
+            info.push_back(std::make_pair(iformula,oper_pack(p2,q2)));
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p2,q2+1)));
+	 }else if(p2 == q2){
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p2,p2+1)));
 	 }
       }
    }
@@ -85,6 +81,8 @@ inline void oper_combine_opA(const std::vector<int>& cindex1,
 	 }
       }
    }
+   int kc = cindex1.size()+cindex2.size();
+   assert(info.size() == oper_num_opA(kc,ifkr));
 }
 
 // tricky part: determine the storage pattern for Bps
@@ -101,12 +99,8 @@ inline void oper_combine_opB(const std::vector<int>& cindex1,
    for(int p1 : cindex1){
       for(int q1 : cindex1){
          if(p1 <= q1){
-	    int index = oper_pack(p1,q1);
-            info.push_back(std::make_pair(iformula,index));
-	    if(ifkr){
-	       index = oper_pack(p1,q1+1);
-               info.push_back(std::make_pair(iformula,index));
-	    }
+            info.push_back(std::make_pair(iformula,oper_pack(p1,q1)));
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p1,q1+1)));
 	 }
       }
    }
@@ -115,12 +109,8 @@ inline void oper_combine_opB(const std::vector<int>& cindex1,
    for(int p2 : cindex2){
       for(int q2 : cindex2){
          if(p2 <= q2){
-	    int index = oper_pack(p2,q2);
-            info.push_back(std::make_pair(iformula,index));
-	    if(ifkr){
-	       index = oper_pack(p2,q2+1);
-               info.push_back(std::make_pair(iformula,index));
-	    }
+            info.push_back(std::make_pair(iformula,oper_pack(p2,q2)));
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p2,q2+1)));
 	 }
       }
    }
@@ -137,6 +127,8 @@ inline void oper_combine_opB(const std::vector<int>& cindex1,
 	 }
       }
    }
+   int kc = cindex1.size()+cindex2.size();
+   assert(info.size() == oper_num_opB(kc,ifkr));
 }
 
 //
@@ -164,6 +156,9 @@ inline void oper_combine_opP(const std::vector<int>& krest,
 	 }
       } // kq
    } // kp
+   int k = krest.size();
+   int nP = ifkr? k*k : k*(2*k-1);
+   assert(info.size() == nP); 
 }
 
 inline void oper_combine_opQ(const std::vector<int>& krest,
@@ -183,8 +178,11 @@ inline void oper_combine_opQ(const std::vector<int>& krest,
 	       info.push_back(oper_pack(pb,sb));
 	    }
 	 }
-      }
-   }
+      } // ks
+   } // kp
+   int k = krest.size();
+   int nQ = ifkr? k*(k+1) : k*(2*k+1);
+   assert(info.size() == nQ); 
 }
 
 inline void oper_combine_opS(const std::vector<int>& krest,

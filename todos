@@ -10,19 +10,22 @@ TODOs:
     - rewrite qtensor such that qt2/qt3/qt4 are just views
 
  4. parallelization [DONE2021XXXX]
-    1. cleanup (IO) [DONE20210517]
+    1. cleanup (IO) 
     2. setup testing mechanism? 
     3. preparation: makefile -> mpi 
-    4. mpi
+    4. mpi [DONE202105XX]
+	- distribute AP & BQ
+	- compxwf & Hmat
+	- opt: HDiag, HVec, Davidson
     5. hybrid: openmp/gpu?
 
- 5. twordms 
-
- 6. applications:
+ 5. applications:
     1. Small system like C2+/O2? [checked against FCI results]
     2. Fe2S2 [CAS(30e,20o)] - parallelized
     3. SOC within this active space
     4. G-tensor/GIAO for Ferric-Ferrous dimer [GREAT!]
+ 
+ 6. twordms 
 
 KNOWN PROBLEMs:
 

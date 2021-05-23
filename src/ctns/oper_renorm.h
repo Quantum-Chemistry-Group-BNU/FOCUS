@@ -66,7 +66,7 @@ void oper_renorm_opA(const std::string& superblock,
          qops('A')[index] = oper_kernel_renorm(superblock,site,opwf);
       }
    }
-   if(debug_oper_mpi){
+   if(debug_oper_para){
       std::cout << " opA: coord=" << p << " no.=" << info.size()
 	        << " size,rank=" << size << "," << rank 
 		<< " no.=" << qops('A').size() << std::endl;
@@ -108,7 +108,7 @@ void oper_renorm_opB(const std::string& superblock,
          qops('B')[index] = oper_kernel_renorm(superblock,site,opwf);
       }
    }
-   if(debug_oper_mpi){
+   if(debug_oper_para){
       std::cout << " opB: coord=" << p << " no.=" << info.size()
 	        << " size,rank=" << size << "," << rank 
 		<< " no.=" << qops('B').size() << std::endl;
@@ -153,7 +153,7 @@ void oper_renorm_opP(const std::string& superblock,
       }
    }
    auto t1 = tools::get_time();
-   if(debug_oper_mpi){
+   if(debug_oper_para){
       std::cout << " opP: coord=" << p << " no.=" << info.size()
 	        << " size,rank=" << size << "," << rank 
 		<< " no.=" << qops('P').size() << std::endl;
@@ -196,7 +196,7 @@ void oper_renorm_opQ(const std::string& superblock,
          qops('Q')[index] = oper_kernel_renorm(superblock,site,opwf);
       }
    }
-   if(debug_oper_mpi){
+   if(debug_oper_para){
       std::cout << " opQ: coord=" << p << " no.=" << info.size()
 	        << " size,rank=" << size << "," << rank 
 		<< " no.=" << qops('Q').size() << std::endl;
@@ -236,11 +236,6 @@ void oper_renorm_opS(const std::string& superblock,
    for(const int index : info){
       auto opwf = oper_compxwf_opS(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index,size,rank);
       qops('S')[index] = oper_kernel_renorm(superblock,site,opwf);
-   }
-   if(debug_oper_mpi){
-      std::cout << " opS: coord=" << p << " no.=" << info.size()
-	        << " size,rank=" << size << "," << rank 
-		<< " no.=" << qops('S').size() << std::endl;
    }
    auto t1 = tools::get_time();
    if(debug_oper_dict){
@@ -342,22 +337,10 @@ void oper_renorm_opAll(const std::string& superblock,
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'H', int2e, int1e);
   
    // consistency check for Hamiltonian
-   auto H = qops('H').at(0);
+   const auto& H = qops('H').at(0);
    auto diffH = (H-H.H()).normF();
   
-//   std::cout << "S=" << qops('S').begin()->first << std::endl;
-//   (qops('S').begin()->second).print("S",10);
-//
-//   H.print("H"+std::to_string(rank),10);
-//   icomb.world.barrier();
-//
-//   if(size > 0){
-//      qtensor2<Tm> qt2;
-//      boost::mpi::reduce(icomb.world, H, qt2, std::plus<qtensor2<Tm>>(), 0);
-//      H = qt2; 
-//   }
-//   if(rank == 0) H.print("Ham",10);
-//   exit(1);
+   H.print("H",10);
 
    if(diffH > 1.e-10){
       H.print("H",2);
