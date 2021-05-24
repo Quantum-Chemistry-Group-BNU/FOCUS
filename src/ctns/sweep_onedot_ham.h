@@ -129,8 +129,42 @@ void onedot_Hdiag_OcOr(const qtensor2<Tm>& Oc,
 }
 
 template <typename Tm>
+std::vector<double> onedot_Hdiag_BQ(const std::string superblock,
+				    const bool& ifkr,
+			            oper_dict<Tm>& qops1,
+			            oper_dict<Tm>& qops2,
+			            qtensor3<Tm>& wf,
+	       	                    const int size,
+	       	                    const int rank){
+   const bool ifNC = qops1.cindex.size() <= qops2.cindex.size();
+   char BQ1 = ifNC? 'B' : 'Q';
+   char BQ2 = ifNC? 'Q' : 'B';
+   const auto& cindex = ifNC? qops1.cindex : qops2.cindex;
+   auto bindex = oper_index_opB(cindex, ifkr); 
+   // B^L*Q^R or Q^L*B^R 
+   for(const auto& index : bindex){
+      int iproc = distribute2(index,size);
+      if(iproc == rank){
+         const Tm wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 due to B^H*Q^H
+         const auto& O1 = qops1(BQ1).at(index);
+         const auto& O2 = qops2(BQ2).at(index);
+         if(O1.sym != qsym()) continue; // screening for <l|B/Q^l_{pq}|l>
+	 if(superblock == "lc"){ 
+            onedot_Hdiag_OlOc(O1,O2,wf,wt);
+	    if(ifkr) onedot_Hdiag_OlOc(O1.K(0),O2.K(0),wf,wt);
+	 }else if(superblock == "cr"){
+            onedot_Hdiag_OcOr(O1,O2,wf,wt);
+	    if(ifkr) onedot_Hdiag_OcOr(O1.K(0),O2.K(0),wf,wt);
+	 }else if(superblock == "lr"){
+            onedot_Hdiag_OlOr(O1,O2,wf,wt);
+	    if(ifkr) onedot_Hdiag_OlOr(O1.K(0),O2.K(0),wf,wt);
+	 }
+      }
+   } // index
+}
+	
+template <typename Tm>
 std::vector<double> onedot_Hdiag(const bool& ifkr,
-	       			 const bool& ifNC,
 				 oper_dict<Tm>& cqops,
 			         oper_dict<Tm>& lqops,
 			         oper_dict<Tm>& rqops,
@@ -146,74 +180,13 @@ std::vector<double> onedot_Hdiag(const bool& ifkr,
    //
    // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
    //
-   //         B^C
+   //         B/Q^C
    //         |
-   // B/Q^L---*---Q/B^R
-   // 
-   auto bindexC = oper_index_opB(cqops.cindex, ifkr);
-   char BQ1 = ifNC? 'B' : 'Q';
-   char BQ2 = ifNC? 'Q' : 'B';
-   const auto& cindex = ifNC? lqops.cindex : rqops.cindex;
-   auto bindex = oper_index_opB(cindex, ifkr); 
-   if(not ifkr){
-      // Q^L*B^C and B^C*Q^R
-      for(const auto& index : bindexC){
-         int iproc = distribute2(index,size);
- 	 if(iproc == rank){
-	    const auto& Oc = cqops('B').at(index);
-	    if(Oc.sym != qsym()) continue; // screening for <c|B^C_{pq}|c>
-	    const Tm wt = 2.0*wfac(index); // taking into account B^d*Q^d
-	    const auto& Ol = lqops('Q').at(index);
-	    onedot_Hdiag_OlOc(Ol,Oc,wf,wt);
-	    const auto& Or = rqops('Q').at(index);
-            onedot_Hdiag_OcOr(Oc,Or,wf,wt);
-	 }
-      } 
-      // B^L*Q^R or Q^L*B^R 
-      for(const auto& index : bindex){
-         int iproc = distribute2(index,size);
- 	 if(iproc == rank){
-            const auto& Ol = lqops(BQ1).at(index);
-	    if(Ol.sym != qsym()) continue; // screening for <l|B/Q^l_{pq}|l>
-	    const Tm wt = 2.0*wfac(index); // taking into account B^d*Q^d
-            const auto& Or = rqops(BQ2).at(index);
-            onedot_Hdiag_OlOr(Ol,Or,wf,wt);
-         } 
-      }
-   }else{
-      // Q^L*B^C and B^C*Q^R
-      for(const auto& index : bindexC){
-         int iproc = distribute2(index,size);
- 	 if(iproc == rank){
-            const auto& Oc_A = cqops('B').at(index); // Baa/Bab[skipped]
-            if(Oc_A.sym != qsym()) continue; // screening for <c|B^C_{pq}|c>
-	    const Tm wt = 2.0*wfacBQ(index); 
-	    const auto& Oc_B = Oc_A.K(0);
-            const auto& Ol_A = lqops('Q').at(index);
-	    const auto& Ol_B = Ol_A.K(0);
-            onedot_Hdiag_OlOc(Ol_A,Oc_A,wf,wt);
-            onedot_Hdiag_OlOc(Ol_B,Oc_B,wf,wt);
-            const auto& Or_A = rqops('Q').at(index);
-	    const auto& Or_B = Or_A.K(0);
-            onedot_Hdiag_OcOr(Oc_A,Or_A,wf,wt);
-            onedot_Hdiag_OcOr(Oc_B,Or_B,wf,wt);
-	 }
-      } 
-      // B^L*Q^R or Q^L*B^R 
-      for(const auto& index : bindex){
-         int iproc = distribute2(index,size);
- 	 if(iproc == rank){
-            const auto& Ol_A = lqops(BQ1).at(index);
-            if(Ol_A.sym != qsym()) continue;
-	    const Tm wt = 2.0*wfacBQ(index);
-	    const auto& Ol_B = Ol_A.K(0);
-	    const auto& Or_A = rqops(BQ2).at(index);
-	    const auto& Or_B = Or_A.K(0); 
-            onedot_Hdiag_OlOr(Ol_A,Or_A,wf,wt);
-            onedot_Hdiag_OlOr(Ol_B,Or_B,wf,wt);
-         }
-      }
-   } // ifkr
+   // B/Q^L---*---B/Q^R
+   //
+   onedot_Hdiag_BQ("lc",ifkr,lqops,cqops,wf,size,rank);
+   onedot_Hdiag_BQ("cr",ifkr,cqops,rqops,wf,size,rank);
+   onedot_Hdiag_BQ("lr",ifkr,lqops,rqops,wf,size,rank);
    // save to real vector
    int ndim = wf.get_dim();
    std::vector<Tm> tmp(ndim);
@@ -230,7 +203,6 @@ void onedot_Hx(Tm* y,
 	       const Tm* x,
 	       const int& isym,
 	       const bool& ifkr,
-	       const bool& ifNC,
 	       oper_dict<Tm>& cqops,
 	       oper_dict<Tm>& lqops,
 	       oper_dict<Tm>& rqops,
@@ -252,6 +224,7 @@ void onedot_Hx(Tm* y,
    //
    // construct H*wf: if ifkr=True, construct skeleton sigma vector 
    //
+   const bool ifNC = lqops.cindex.size() < rqops.cindex.size();
    if(ifNC){
       // L=l, R=cr: Al*Pr+Bl*Qr 
       // 1. H^l 

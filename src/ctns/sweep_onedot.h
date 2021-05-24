@@ -126,13 +126,9 @@ void sweep_onedot(const input::schedule& schd,
    int sc = suppc.size();
    int sl = suppl.size();
    int sr = suppr.size();
-   const bool ifNC = (sl <= sr); // left normal
    assert(sc+sl+sr == icomb.topo.nphysical);
    if(rank == 0){
-      if(debug_sweep){
-         std::cout << " ifNC=" << ifNC << std::endl;
-         std::cout << "qbond info:" << std::endl;
-      }
+      if(debug_sweep) std::cout << "qbond info:" << std::endl;
       qc.print("qc", debug_sweep);
       ql.print("ql", debug_sweep);
       qr.print("qr", debug_sweep);
@@ -172,7 +168,7 @@ void sweep_onedot(const input::schedule& schd,
 
    // 2.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
-   diag = onedot_Hdiag(ifkr, ifNC, cqops, lqops, rqops, ecore, wf, size, rank);
+   diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf, size, rank);
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
@@ -188,7 +184,7 @@ void sweep_onedot(const input::schedule& schd,
    using std::placeholders::_1;
    using std::placeholders::_2;
    auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
-           	    std::cref(isym), std::cref(ifkr), std::cref(ifNC), 
+           	    std::cref(isym), std::cref(ifkr), 
            	    std::ref(cqops), std::ref(lqops), std::ref(rqops), 
            	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
            	    std::ref(wf), std::cref(size), std::cref(rank));
