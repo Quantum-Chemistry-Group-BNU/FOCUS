@@ -16,7 +16,9 @@ TODOs:
     4. mpi [DONE202105XX]
 	- distribute AP & BQ, compxwf, Hmat [DONE20210523]
 	- opt: HDiag, HVec, Davidson, pRDM, rwfuns, twodot 
- 	- load balance: adjust distribution 
+ 	- load balance: adjust distribution
+ 	- careful check serial/parallel version against previous 
+          versions with different compilers
     5. hybrid: openmp/gpu?
 
  5. applications:

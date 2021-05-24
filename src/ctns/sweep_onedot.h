@@ -1,6 +1,7 @@
 #ifndef SWEEP_ONEDOT_H
 #define SWEEP_ONEDOT_H
 
+#include <functional> // for std::function
 #include "../core/tools.h"
 #include "../core/linalg.h"
 #include "ctns_qdpt.h"
@@ -8,7 +9,6 @@
 #include "sweep_onedot_ham.h"
 #include "sweep_onedot_decimation.h"
 #include "sweep_onedot_guess.h"
-#include <functional> // for std::function
 
 namespace ctns{
 
@@ -33,6 +33,7 @@ void onedot_localCI(comb<Km>& icomb,
 		    const int maxcycle,
 		    const int parity,
 		    qtensor3<typename Km::dtype>& wf){
+   int size = 1, rank = 0;
    using Tm = typename Km::dtype;
    // without kramers restriction
    dvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
@@ -40,23 +41,27 @@ void onedot_localCI(comb<Km>& icomb,
    solver.HVec = HVec;
 #ifndef SERIAL
    solver.world = icomb.world;
+   size = icomb.world.size();
+   rank = icomb.world.rank();
 #endif
    if(cisolver == 0){
       solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
    }else if(cisolver == 1){ // davidson
       if(!guess){
          solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
-      }else{     
-         // load initial guess from previous opt
-         if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
-         assert(icomb.psi.size() == neig);
-         assert(icomb.psi[0].get_dim() == nsub);
+      }else{    
          std::vector<Tm> v0(nsub*neig);
-         for(int i=0; i<neig; i++){
-            icomb.psi[i].to_array(&v0[nsub*i]);
-         }
-         int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
-         assert(nindp == neig);
+	 if(rank == 0){ 
+            if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
+            assert(icomb.psi.size() == neig);
+            assert(icomb.psi[0].get_dim() == nsub);
+            // load initial guess from previous opt
+            for(int i=0; i<neig; i++){
+               icomb.psi[i].to_array(&v0[nsub*i]);
+            }
+            int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
+            assert(nindp == neig);
+	 }
          solver.solve_iter(eopt.data(), vsol.data(), v0.data());
       }
    }
@@ -77,16 +82,24 @@ inline void onedot_localCI(comb<kind::cNK>& icomb,
 		    const int maxcycle,
 		    const int parity,
 		    qtensor3<std::complex<double>>& wf){
+   int size = 1, rank = 0;
    using Tm = std::complex<double>;
    // kramers restricted (currently works only for iterative with guess!)
    assert(cisolver == 1 && guess);
    dvdsonSolver_kr<Tm,qtensor3<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
    solver.Diag = diag.data();
    solver.HVec = HVec;
-   // load initial guess from previous opt
-   if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
+#ifndef SERIAL
+   solver.world = icomb.world;
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif
    std::vector<Tm> v0;
-   solver.init_guess(icomb.psi, v0);
+   if(rank == 0){
+      if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
+      // load initial guess from previous opt
+      solver.init_guess(icomb.psi, v0);
+   }
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());
    nmvp = solver.nmvp;
 }

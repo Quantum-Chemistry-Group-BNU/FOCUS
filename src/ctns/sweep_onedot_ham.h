@@ -6,7 +6,7 @@
 
 namespace ctns{
    
-const bool debug_onedot_ham = false;
+const bool debug_onedot_ham = true;
 extern const bool debug_onedot_ham;
 
 // local 
@@ -129,18 +129,23 @@ void onedot_Hdiag_OcOr(const qtensor2<Tm>& Oc,
 }
 
 template <typename Tm>
-std::vector<double> onedot_Hdiag_BQ(const std::string superblock,
-				    const bool& ifkr,
-			            oper_dict<Tm>& qops1,
-			            oper_dict<Tm>& qops2,
-			            qtensor3<Tm>& wf,
-	       	                    const int size,
-	       	                    const int rank){
+void onedot_Hdiag_BQ(const std::string& superblock,
+		     const bool& ifkr,
+		     oper_dict<Tm>& qops1,
+		     oper_dict<Tm>& qops2,
+		     qtensor3<Tm>& wf,
+       	             const int size,
+       	             const int rank){
    const bool ifNC = qops1.cindex.size() <= qops2.cindex.size();
    char BQ1 = ifNC? 'B' : 'Q';
    char BQ2 = ifNC? 'Q' : 'B';
    const auto& cindex = ifNC? qops1.cindex : qops2.cindex;
-   auto bindex = oper_index_opB(cindex, ifkr); 
+   auto bindex = oper_index_opB(cindex, ifkr);
+   if(rank == 0 && debug_onedot_ham){ 
+      std::cout << " superblock=" << superblock << " ifNC=" << ifNC 
+	        << " " << BQ1 << BQ2 << " size=" << bindex.size() 
+		<< std::endl;
+   }
    // B^L*Q^R or Q^L*B^R 
    for(const auto& index : bindex){
       int iproc = distribute2(index,size);
@@ -172,7 +177,10 @@ std::vector<double> onedot_Hdiag(const bool& ifkr,
 			         qtensor3<Tm>& wf,
 	       	                 const int size,
 	       	                 const int rank){
-   if(debug_onedot_ham) std::cout << "ctns::onedot_Hdiag ifkr=" << ifkr << std::endl;
+   if(rank == 0 && debug_onedot_ham){ 
+      std::cout << "ctns::onedot_Hdiag ifkr=" << ifkr 
+	        << " size=" << size << std::endl;
+   }
    //
    // 1. local terms: <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
    //
@@ -212,7 +220,10 @@ void onedot_Hx(Tm* y,
 	       qtensor3<Tm>& wf,
 	       const int size,
 	       const int rank){
-   if(debug_onedot_ham) std::cout << "ctns::onedot_Hx ifkr=" << ifkr << std::endl;
+   if(rank == 0 && debug_onedot_ham){ 
+      std::cout << "ctns::onedot_Hx ifkr=" << ifkr 
+	        << " size=" << size << std::endl;
+   }
    const bool dagger = true;
    const Tm scale = ifkr? 0.5 : 1.0;
    //
