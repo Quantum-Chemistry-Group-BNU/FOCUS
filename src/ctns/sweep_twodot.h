@@ -5,9 +5,9 @@
 #include "../core/linalg.h"
 #include "ctns_qdpt.h"
 #include "sweep_dvdson.h"
+#include "sweep_guess.h"
 #include "sweep_twodot_ham.h"
-#include "sweep_twodot_decimation.h"
-#include "sweep_twodot_guess.h"
+#include "sweep_twodot_renorm.h"
 
 namespace ctns{
 
@@ -210,8 +210,8 @@ void sweep_twodot(const input::schedule& schd,
    timing.tc = tools::get_time();
 
    // 3. decimation & renormalize operators
-   twodot_decimation(sweeps, isweep, ibond, icomb, vsol, wf, 
-		     c1qops, c2qops, lqops, rqops, int2e, int1e, schd.scratch);
+   twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
+		 c1qops, c2qops, lqops, rqops, int2e, int1e, schd.scratch);
 
    timing.t1 = tools::get_time();
    std::cout << "timing for ctns::sweep_twodot : " << std::setprecision(2) 

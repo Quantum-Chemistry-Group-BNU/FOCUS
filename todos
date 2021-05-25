@@ -1,15 +1,15 @@
 
 TODOs:
 
- 1. setup tests for NR & R [DONE20210324]
+ 1. Setup tests for NR & R [DONE20210324]
  
- 2. redesign and decouple codes [DONE20210408]
+ 2. Redesign and decouple codes [DONE20210408]
     
- 3. implementation of CTNS with TRS [DONE20210516]
+ 3. Implementation of CTNS with TRS [DONE20210516]
     - checked for kinds {rN,rNSz,cN,cNSz,cNK}
     - rewrite qtensor such that qt2/qt3/qt4 are just views
 
- 4. parallelization [DONE2021XXXX]
+ 4. Parallelization [DONE2021XXXX]
     1. cleanup (IO) 
     2. setup testing mechanism? 
     3. preparation: makefile -> mpi 
@@ -19,15 +19,16 @@ TODOs:
  	- load balance: adjust distribution
  	- careful check serial/parallel version against previous 
           versions with different compilers
-    5. hybrid: openmp/gpu?
 
- 5. applications:
+ 5. Applications:
     1. Small system like C2+/O2? [checked against FCI results]
     2. Fe2S2 [CAS(30e,20o)] - parallelized
     3. SOC within this active space
     4. G-tensor/GIAO for Ferric-Ferrous dimer [GREAT!]
  
- 6. twordms 
+ 6. Hybrid parallelizations: OpenMP & GPU?
+ 
+ 7. Twordms: CASSCF 
 
 KNOWN PROBLEMs:
 

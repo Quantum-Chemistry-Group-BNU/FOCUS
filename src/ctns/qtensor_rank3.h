@@ -110,6 +110,19 @@ struct qtensor3{
 	 auto qprod = dpt_lr();  
 	 return merge_qt3_qt2_lr(*this, qprod.first, qprod.second);
       }
+      // superblock rdm
+      inline qtensor2<Tm> get_rdm(const std::string& superblock) const{
+	 qtensor2<Tm> rdm;
+         if(superblock == "lc"){
+            rdm = (this->merge_lc()).get_rdm_row();
+         }else if(superblock == "cr"){
+            rdm = (this->merge_cr()).get_rdm_col();
+         }else if(superblock == "lr"){
+            // Need to first bring two dimensions adjacent to each other before merge!
+   	    rdm = (this->permCR_signed()).merge_lr().get_rdm_row();
+         }
+	 return rdm;
+      }
       // reshape: split
       qtensor4<Tm> split_lc1(const qbond& qlx, const qbond& qc1, const qdpt& dpt) const{
 	 return split_qt4_qt3_lc1(*this, qlx, qc1, dpt);

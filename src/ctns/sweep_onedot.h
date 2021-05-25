@@ -6,9 +6,9 @@
 #include "../core/linalg.h"
 #include "ctns_qdpt.h"
 #include "sweep_dvdson.h"
+#include "sweep_guess.h"
 #include "sweep_onedot_ham.h"
-#include "sweep_onedot_decimation.h"
-#include "sweep_onedot_guess.h"
+#include "sweep_onedot_renorm.h"
 
 namespace ctns{
 
@@ -205,12 +205,12 @@ void sweep_onedot(const input::schedule& schd,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
    timing.tc = tools::get_time();
-   return;
-   exit(1);
 
    // 3. decimation & renormalize operators
-   onedot_decimation(sweeps, isweep, ibond, icomb, vsol, wf, 
-		     cqops, lqops, rqops, int2e, int1e, schd.scratch);
+   onedot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
+		 cqops, lqops, rqops, int2e, int1e, schd.scratch);
+   return;
+   exit(1);
 
    timing.t1 = tools::get_time();
    std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 

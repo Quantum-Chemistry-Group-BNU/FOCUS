@@ -502,6 +502,13 @@ struct dvdsonSolver_kr{
             if(size > 1) boost::mpi::broadcast(world, ifconv, 0);
 #endif	  
             if(ifconv || iter == maxcycle){
+#ifndef SERIAL
+	       if(size > 1){
+                  // broadcast results to all processors
+		  boost::mpi::broadcast(world, tmpE.data(), neig, 0);
+                  boost::mpi::broadcast(world, vbas.data(), ndim*neig, 0);
+	       }
+#endif
 	       std::copy(tmpE.data(), tmpE.data()+neig, es);
                std::copy(vbas.data(), vbas.data()+ndim*neig, vs);
                break;
@@ -832,6 +839,13 @@ struct dvdsonSolver_nkr{
             if(size > 1) boost::mpi::broadcast(world, ifconv, 0);
 #endif	  
             if(ifconv || iter == maxcycle){
+#ifndef SERIAL
+	       if(size > 1){
+                  // broadcast results to all processors
+		  boost::mpi::broadcast(world, tmpE.data(), neig, 0);
+                  boost::mpi::broadcast(world, vbas.data(), ndim*neig, 0);
+	       }
+#endif
 	       std::copy(tmpE.data(), tmpE.data()+neig, es);
                std::copy(vbas.data(), vbas.data()+ndim*neig, vs);
                break;
