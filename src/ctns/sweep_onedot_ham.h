@@ -6,7 +6,7 @@
 
 namespace ctns{
    
-const bool debug_onedot_ham = true;
+const bool debug_onedot_ham = false;
 extern const bool debug_onedot_ham;
 
 // local 

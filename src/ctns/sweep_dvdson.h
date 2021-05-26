@@ -247,7 +247,8 @@ struct dvdsonSolver_kr{
          if(rank == 0 && debug){
 	    std::cout << "timing for HVecs : " << std::setprecision(2)  
                       << tools::get_duration(t1-t0) << " s" 
-                      << " for nstate = " << nstate << std::endl;
+                      << " for nstate = " << nstate 
+		      << " size = " << size << std::endl;
          }
       }
       // initialization
@@ -665,7 +666,8 @@ struct dvdsonSolver_nkr{
          if(rank == 0 && debug){
 	    std::cout << "timing for HVecs : " << std::setprecision(2)  
                       << tools::get_duration(t1-t0) << " s" 
-                      << " for nstate = " << nstate << std::endl;
+                      << " for nstate = " << nstate 
+		      << " size = " << size << std::endl;
          }
       }
       // check by full diag
