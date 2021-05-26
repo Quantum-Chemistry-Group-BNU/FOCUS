@@ -6,11 +6,6 @@ namespace ctns{
 const double thresh_noise = 1.e-10;
 extern const double thresh_noise;
 
-// ZL@20210420:	
-// Note that for perturbative noise, the signs are not properly treated as in 
-// sweep_onedot_ham.h. We assume that they are not essential for recovering
-// the losing quantum number! This proved to work for simple tests at least.
-
 template <typename Tm>
 void get_prdm(const std::string& superblock,
 	      const bool& ifkr,
@@ -23,7 +18,8 @@ void get_prdm(const std::string& superblock,
 	      const int rank){
    if(noise < thresh_noise) return;
    if(rank == 0){
-      std::cout << "ctns::get_prdm_"+superblock+" noise=" << std::setprecision(2) << noise;
+      std::cout << "ctns::get_prdm superblock=" << superblock
+	        << " noise=" << std::setprecision(2) << noise;
    }
    const bool dagger = true;
    auto t0 = tools::get_time();
@@ -35,8 +31,8 @@ void get_prdm(const std::string& superblock,
       int index = pr.second;
       int iproc = index%size;
       if(iproc == rank){
-         auto qt3n = oper_normxwf_opC(superblock,wf,qops1,qops1,iformula,index);
-         auto qt3h = oper_normxwf_opC(superblock,wf,qops2,qops2,iformula,index,dagger);
+         auto qt3n = oper_normxwf_opC(superblock,wf,qops1,qops2,iformula,index);
+         auto qt3h = oper_normxwf_opC(superblock,wf,qops1,qops2,iformula,index,dagger);
 	 rdm += noise*qt3n.get_rdm(superblock);
 	 rdm += noise*qt3h.get_rdm(superblock);
       }
@@ -70,7 +66,7 @@ void get_prdm(const std::string& superblock,
    auto t1 = tools::get_time();
    if(rank == 0){
       std::cout << " timing : " << tools::get_duration(t1-t0) << " s" << std::endl;
-   } 
+   }
 }
 
 } // ctns

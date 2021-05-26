@@ -66,8 +66,8 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    // 2. decimation
    qtensor2<Tm> rot;
    if(rank == 0){
-      rot == decimation_row(rdm, dcut, result.dwt, result.deff,
-		   	    ifkr, wf.qrow, wf.qmid, dpt);
+      rot = decimation_row(rdm, dcut, result.dwt, result.deff,
+		   	   ifkr, wf.qrow, wf.qmid, dpt);
    }
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 

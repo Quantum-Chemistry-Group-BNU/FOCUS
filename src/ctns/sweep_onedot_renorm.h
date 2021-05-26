@@ -48,7 +48,7 @@ void onedot_renorm_lc(sweep_data& sweeps,
       if(sweeps.inoise > 0) get_prdm("lc", ifkr, wf, lqops, cqops, noise, rdm, size, rank);
       if(rank == 0){
          if(sweeps.inoise > 1) wf.add_noise(noise);
-         rdm += wf.get_rdm("lc") // only rank-0 build RDM
+         rdm += wf.get_rdm("lc"); // only rank-0 build RDM
       }
    }
 #ifndef SERIAL

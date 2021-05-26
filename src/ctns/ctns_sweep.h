@@ -65,13 +65,12 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 auto tp1 = icomb.topo.node_type(p1);
 	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
 	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
-	    return;
-	    exit(1);
 	 }else{
 	    sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }
       } // ibond
       auto tf = tools::get_time();
+      exit(1);
       sweeps.t_total[isweep] = tools::get_duration(tf-ti);
       sweeps.summary(isweep);
    } // isweep

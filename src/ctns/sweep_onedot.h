@@ -209,13 +209,14 @@ void sweep_onedot(const input::schedule& schd,
    // 3. decimation & renormalize operators
    onedot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
 		 cqops, lqops, rqops, int2e, int1e, schd.scratch);
-   return;
-   exit(1);
 
    timing.t1 = tools::get_time();
-   std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 
-             << tools::get_duration(timing.t1-timing.t0) << " s" << std::endl;
-   timing.analysis();
+   if(rank == 0){
+      std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 
+                << tools::get_duration(timing.t1-timing.t0) << " s" 
+		<< " size=" << size << std::endl;
+      timing.analysis();
+   }
 }
 
 // use one dot algorithm to produce a final wavefunction
