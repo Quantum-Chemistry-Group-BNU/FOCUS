@@ -227,7 +227,12 @@ void sweep_rwfuns(const input::schedule& schd,
 		  const integral::two_body<typename Km::dtype>& int2e,
 	          const integral::one_body<typename Km::dtype>& int1e,
 		  const double ecore){
-   std::cout << "ctns::sweep_rwfuns" << std::endl;
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif   
+   if(rank == 0) std::cout << "ctns::sweep_rwfuns" << std::endl;
 
    // perform an additional onedot opt  
    auto p0 = std::make_pair(0,0);
@@ -236,43 +241,44 @@ void sweep_rwfuns(const input::schedule& schd,
    auto dbond = directed_bond(p0,p1,0,p1,cturn); // fake dbond
    const int dcut1 = -1;
    const double eps = schd.ctns.ctrls[schd.ctns.maxsweep-1].eps; // take the last eps 
-   const double noise = 0.0; 
-   input::params_sweep ctrl = {0, 1, dcut1, eps, noise};
+   input::params_sweep ctrl = {0, 1, dcut1, eps, 0.0};
    sweep_data sweeps({dbond}, schd.ctns.nroots, schd.ctns.guess, 0, 1, {ctrl});
    sweep_onedot(schd, sweeps, 0, 0, icomb, int2e, int1e, ecore);
 
-   std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;
-   auto wf = icomb.psi[0];
-   auto qprod = qmerge(wf.qmid, wf.qcol);
-   auto qcr = qprod.first;
-   auto dpt = qprod.second;
-   // build RDM 
-   qtensor2<typename Km::dtype> rdm(qsym(), qcr, qcr);
-   for(int i=0; i<schd.ctns.nroots; i++){
-      rdm += icomb.psi[i].merge_cr().get_rdm_col();
-   }
-   // decimation
-   const int dcut = schd.ctns.nroots;
-   double dwt; 
-   int deff;
-   const bool ifkr = tools::is_complex<Km>();
-   auto qt2 = decimation_row(rdm, dcut, dwt, deff, ifkr, wf.qmid, wf.qcol, dpt).T(); 
-   icomb.rsites[p0] = qt2.split_cr(wf.qmid, wf.qcol, dpt);
-   // form rwfuns
-   auto& sym_state = icomb.psi[0].sym;
-   qbond qrow({{sym_state, schd.ctns.nroots}});
-   auto& qcol = qt2.qrow; 
-   qtensor2<typename Km::dtype> rwfuns(qsym(), qrow, qcol, {0, 1});
-   assert(qcol.size() == 1);
-   int rdim = qrow.get_dim(0);
-   int cdim = qcol.get_dim(0);
-   for(int i=0; i<schd.ctns.nroots; i++){
-      auto cwf = icomb.psi[i].merge_cr().dot(qt2.H()); // <-W[1,alpha]->
-      for(int c=0; c<cdim; c++){
-         rwfuns(0,0)(i,c) = cwf(0,0)(0,c);	      
+   if(rank == 0){
+      std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;
+      const auto& wf = icomb.psi[0]; // only rank-0 has psi from renorm
+      auto qprod = qmerge(wf.qmid, wf.qcol);
+      auto qcr = qprod.first;
+      auto dpt = qprod.second;
+      // 1. build RDM 
+      qtensor2<typename Km::dtype> rdm(qsym(), qcr, qcr);
+      for(int i=0; i<schd.ctns.nroots; i++){
+         rdm += icomb.psi[i].get_rdm("cr");
       }
-   }
-   icomb.rwfuns = std::move(rwfuns);
+      // 2. decimation
+      const int dcut = schd.ctns.nroots;
+      double dwt; 
+      int deff;
+      const bool ifkr = tools::is_complex<Km>();
+      auto rot = decimation_row(rdm, dcut, dwt, deff, ifkr, wf.qmid, wf.qcol, dpt).T(); 
+      icomb.rsites[p0] = rot.split_cr(wf.qmid, wf.qcol, dpt);
+      // 3. form rwfuns(istate,irbas)
+      auto& sym_state = icomb.psi[0].sym;
+      qbond qrow({{sym_state, schd.ctns.nroots}});
+      auto& qcol = rot.qrow; 
+      qtensor2<typename Km::dtype> rwfuns(qsym(), qrow, qcol, {0, 1});
+      assert(qcol.size() == 1);
+      int rdim = qrow.get_dim(0);
+      int cdim = qcol.get_dim(0);
+      for(int i=0; i<schd.ctns.nroots; i++){
+         auto cwf = icomb.psi[i].merge_cr().dot(rot.H()); // <-W[1,alpha]->
+         for(int c=0; c<cdim; c++){
+            rwfuns(0,0)(i,c) = cwf(0,0)(0,c);	      
+         }
+      } // iroot
+      icomb.rwfuns = std::move(rwfuns);
+   } // rank-0
 }
    
 } // ctns
