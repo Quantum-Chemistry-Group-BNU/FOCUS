@@ -70,10 +70,11 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 }
       } // ibond
       auto tf = tools::get_time();
-      exit(1);
       sweeps.t_total[isweep] = tools::get_duration(tf-ti);
-      sweeps.summary(isweep);
+      if(rank == 0) sweeps.summary(isweep);
    } // isweep
+   return;
+   exit(1);
 
    // get rwfuns, which is useful for later computing properties
    sweep_rwfuns(schd, icomb, int2e, int1e, ecore);

@@ -6,7 +6,7 @@ namespace ctns{
 const double thresh_sig2 = 1.e-16;
 extern const double thresh_sig2;
 
-const bool debug_decimation = true;
+const bool debug_decimation = false;
 extern const bool debug_decimation;
 
 // wf[L,R] = U[L,l]*sl*Vh[l,R]
@@ -234,7 +234,8 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
       const auto& qr = qrow.get_sym(br);
       br_matched.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
-      if(debug_decimation){
+      //if(debug_decimation){
+      {
 	 sum += wt;
          std::cout << "  br=" << p.first << " qr=" << qr << " dim=" << dim 
 		   << " wt=" << wt << " accum=" << sum << std::endl;
