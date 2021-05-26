@@ -3,7 +3,7 @@
 
 namespace ctns{
 
-const double thresh_sig2 = 1.e-16;
+const double thresh_sig2 = 1.e-14;
 extern const double thresh_sig2;
 
 const bool debug_decimation = false;
@@ -42,7 +42,7 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
       }
       if(debug_decimation){
 	 if(br == 0) std::cout << " diagonalization of rdm for each symmetry sector:" << std::endl;
-	 std::cout << "  br=" << br << " qr=" << qrow.get_sym(br) << " rdim=" << rdim << " sig2=";
+	 std::cout << " br=" << br << " qr=" << qrow.get_sym(br) << " rdim=" << rdim << " sig2=";
 	 for(auto s : sig2) std::cout << s << " ";
 	 std::cout << std::endl;
       }
@@ -94,7 +94,7 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
       // if(debug_decimation){
       {
 	 sum += wt;     
-         std::cout << "  br=" << p.first << " qr=" << qr << " dim=" 
+         std::cout << " br=" << p.first << " qr=" << qr << " dim=" 
 		   << dim << " wt=" << wt << " accum=" << sum << std::endl;
       }
    }
@@ -183,7 +183,7 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
       //------------------------
       if(debug_decimation){
 	 if(br == 0) std::cout << " diagonalization of rdm for each symmetry sector:" << std::endl;
-	 std::cout << "  br=" << br << " qr=" << qr << " rdim=" << rdim << " sig2=";
+	 std::cout << " br=" << br << " qr=" << qr << " rdim=" << rdim << " sig2=";
 	 for(auto s : sig2) std::cout << s << " ";
 	 std::cout << std::endl;
       }
@@ -237,7 +237,7 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
       //if(debug_decimation){
       {
 	 sum += wt;
-         std::cout << "  br=" << p.first << " qr=" << qr << " dim=" << dim 
+         std::cout << " br=" << p.first << " qr=" << qr << " dim=" << dim 
 		   << " wt=" << wt << " accum=" << sum << std::endl;
       }
    }
