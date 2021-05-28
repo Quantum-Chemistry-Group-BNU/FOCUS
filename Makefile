@@ -35,9 +35,14 @@ else
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
 endif
 
+DEBUG = no
 USE_MPI = yes
 ifeq ($(USE_GCC), yes)
-   FLAGS += -DGNU -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   ifeq ($(DEBUG), yes)
+      FLAGS += -DGNU -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   else
+      FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   endif
    LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI), no)
       CXX = g++
@@ -49,7 +54,11 @@ ifeq ($(USE_GCC), yes)
       LFLAGS += -lboost_mpi
    endif
 else
-   FLAGS += -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR} 
+   ifeq ($(DEBUG), yes)
+      FLAGS += -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   else 
+      FLAGS += -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   endif 
    LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 
    ifeq ($(USE_MPI), no)
       CXX = icpc
