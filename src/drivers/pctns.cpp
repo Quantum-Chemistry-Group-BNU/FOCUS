@@ -117,6 +117,9 @@ int main(int argc, char *argv[]){
    }else{
       tools::exit("error: no such kind for ctns!");
    } // kind
+#ifndef SERIAL
+   world.barrier();
+#endif
    if(rank > 0) schd.remove_scratch();
    return info;
 }

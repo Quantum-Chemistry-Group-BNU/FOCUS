@@ -9,13 +9,13 @@ TODOs:
     - checked for kinds {rN,rNSz,cN,cNSz,cNK}
     - rewrite qtensor such that qt2/qt3/qt4 are just views
 
- 4. Parallelization [DONE2021XXXX]
+ 4. Parallelization [DONE20210530]
     1. cleanup (IO) 
     2. setup testing mechanism? 
     3. preparation: makefile -> mpi 
     4. mpi [DONE202105XX]
 	- distribute AP & BQ, compxwf, Hmat [DONE20210523]
-	- opt: HDiag, HVec, Davidson, pRDM, rwfuns, twodot 
+	- opt: HDiag, HVec, Davidson, pRDM, rwfuns, twodot [DONE20210528] 
  	- load balance: adjust distribution
  	- careful check serial/parallel version against previous 
           versions with different compilers

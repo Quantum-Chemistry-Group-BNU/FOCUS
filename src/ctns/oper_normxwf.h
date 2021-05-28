@@ -47,19 +47,21 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
       int p = pq.first, sp = p%2;
       int q = pq.second, sq = q%2;
       // kr opposite spin case: <a1A^+a2B^+> = [a1A^+]*[a2B^+]
-      const bool ifnos = !(ifkr && sp != sq);
+      const bool ifnot_kros = !(ifkr && sp != sq);
       const auto& op1 = qops1('C')[p];
-      const auto& op2 = ifnos? qops2('C')[q] : qops2('C')[q-1].K(1);
+      const auto& op2 = ifnot_kros? qops2('C')[q] : qops2('C')[q-1].K(1);
       opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
+      if(ifdagger) opwf = -opwf; // (c1*c2)^d = c2d*c1d = -c1d*c2d
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
       int q = qp.first, sq = q%2;
       // kr opposite spin case: <a2A^+a1B^+> = -[a1B^+]*[a2A^+]
-      const bool ifnos = !(ifkr && sp != sq);
-      const auto& op1 = ifnos? -qops1('C')[p] : -qops1('C')[p-1].K(1);
+      const bool ifnot_kros = !(ifkr && sp != sq);
+      const auto& op1 = ifnot_kros? -qops1('C')[p] : -qops1('C')[p-1].K(1);
       const auto& op2 = qops2('C')[q];
       opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
+      if(ifdagger) opwf = -opwf;
    } // iformula
    return opwf;
 }
@@ -86,19 +88,21 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
       int p = pq.first, sp = p%2;
       int q = pq.second, sq = q%2;
       // kr opposite spin case: <a1A^+a2B> = [a1A^+]*[a2B]
-      const bool ifnos = !(ifkr && sp != sq);
+      const bool ifnot_kros = !(ifkr && sp != sq);
       const auto& op1 = qops1('C')[p];
-      const auto& op2 = ifnos? qops2('C')[q].H() : qops2('C')[q-1].H().K(1);
+      const auto& op2 = ifnot_kros? qops2('C')[q].H() : qops2('C')[q-1].H().K(1);
       opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
+      if(ifdagger) opwf = -opwf;
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
       int q = qp.first, sq = q%2;
       // kr opposite spin case: <a2A^+a1B> = -[a1B]*[a2A^+]
-      const bool ifnos = !(ifkr && sp != sq);
-      const auto& op1 = ifnos? -qops1('C')[p].H() : -qops1('C')[p-1].H().K(1);
+      const bool ifnot_kros = !(ifkr && sp != sq);
+      const auto& op1 = ifnot_kros? -qops1('C')[p].H() : -qops1('C')[p-1].H().K(1);
       const auto& op2 = qops2('C')[q];
       opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
+      if(ifdagger) opwf = -opwf;
    } // iformula
    return opwf;
 }

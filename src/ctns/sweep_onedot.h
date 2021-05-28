@@ -34,6 +34,10 @@ void onedot_localCI(comb<Km>& icomb,
 		    const int parity,
 		    qtensor3<typename Km::dtype>& wf){
    int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif
    using Tm = typename Km::dtype;
    // without kramers restriction
    dvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
@@ -41,8 +45,6 @@ void onedot_localCI(comb<Km>& icomb,
    solver.HVec = HVec;
 #ifndef SERIAL
    solver.world = icomb.world;
-   size = icomb.world.size();
-   rank = icomb.world.rank();
 #endif
    if(cisolver == 0){
       solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
@@ -83,6 +85,10 @@ inline void onedot_localCI(comb<kind::cNK>& icomb,
 		    const int parity,
 		    qtensor3<std::complex<double>>& wf){
    int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif
    using Tm = std::complex<double>;
    // kramers restricted (currently works only for iterative with guess!)
    assert(cisolver == 1 && guess);
@@ -91,8 +97,6 @@ inline void onedot_localCI(comb<kind::cNK>& icomb,
    solver.HVec = HVec;
 #ifndef SERIAL
    solver.world = icomb.world;
-   size = icomb.world.size();
-   rank = icomb.world.rank();
 #endif
    std::vector<Tm> v0;
    if(rank == 0){

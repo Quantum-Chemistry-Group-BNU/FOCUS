@@ -66,6 +66,7 @@ struct qtensor3{
       // ZL20210413: application of time-reversal operation
       qtensor3<Tm> K(const int nbar=0) const;
       // simple arithmetic operations
+      qtensor3<Tm> operator -() const; 
       qtensor3<Tm>& operator +=(const qtensor3<Tm>& qt);
       qtensor3<Tm>& operator -=(const qtensor3<Tm>& qt);
       qtensor3<Tm>& operator *=(const Tm fac);
@@ -327,6 +328,19 @@ qtensor3<Tm> qtensor3<Tm>::K(const int nbar) const{
 }
 
 // simple arithmetic operations
+template <typename Tm>
+qtensor3<Tm> qtensor3<Tm>::operator -() const{
+   qtensor3<Tm> qt3 = *this;
+   for(auto& blk : qt3._qblocks){
+      if(blk.size() > 0){
+         for(int im=0; im<blk.size(); im++){
+            blk[im] *= -1;
+         } // im
+      }
+   }
+   return qt3;
+}
+
 template <typename Tm>
 qtensor3<Tm>& qtensor3<Tm>::operator +=(const qtensor3<Tm>& qt){
    assert(dir == qt.dir); // direction must be the same

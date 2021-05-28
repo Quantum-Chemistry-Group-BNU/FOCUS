@@ -164,7 +164,7 @@ void onedot_Hdiag_BQ(const std::string& superblock,
             onedot_Hdiag_OlOr(O1,O2,wf,wt);
 	    if(ifkr) onedot_Hdiag_OlOr(O1.K(0),O2.K(0),wf,wt);
 	 }
-      }
+      } // iproc
    } // index
 }
 	
@@ -193,8 +193,8 @@ std::vector<double> onedot_Hdiag(const bool& ifkr,
    // B/Q^L---*---B/Q^R
    //
    onedot_Hdiag_BQ("lc",ifkr,lqops,cqops,wf,size,rank);
-   onedot_Hdiag_BQ("cr",ifkr,cqops,rqops,wf,size,rank);
    onedot_Hdiag_BQ("lr",ifkr,lqops,rqops,wf,size,rank);
+   onedot_Hdiag_BQ("cr",ifkr,cqops,rqops,wf,size,rank);
    // save to real vector
    int ndim = wf.get_dim();
    std::vector<Tm> tmp(ndim);
@@ -235,13 +235,13 @@ void onedot_Hx(Tm* y,
    //
    // construct H*wf: if ifkr=True, construct skeleton sigma vector 
    //
-   const bool ifNC = lqops.cindex.size() < rqops.cindex.size();
+   const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
    if(ifNC){
-      /*
-         Generic formula: L=l, R=cr: A[l]*P[cr]+B[l]*Q[cr]
-         O^l*O^cr|lcr>psi[lcr]=O^l|l>O^cr|cr>(-1)^{p(l)*p(O^cr)}psi[lcr]
-			      =O^l|l>( (-1)^{p(l)*p(O^cr)} (O^cr|cr>psi[lcr]) )
-      */
+      //--------------------------------------------------------------------------
+      // Generic formula: L=l, R=cr: A[l]*P[cr]+B[l]*Q[cr]
+      // O^l*O^cr|lcr>psi[lcr] = O^l|l>O^cr|cr>(-1)^{p(l)*p(O^cr)}psi[lcr]
+      //		       = O^l|l>( (-1)^{p(l)*p(O^cr)} (O^cr|cr>psi[lcr]) )
+      //--------------------------------------------------------------------------
       // 1. H^l 
       Hwf += scale*contract_qt3_qt2_l(wf,lqops('H')[0]);
       // 2. H^cr
@@ -293,11 +293,11 @@ void onedot_Hx(Tm* y,
 	 }
       }
    }else{
-      /*
-         Generic formula: L=lc, R=r: A[lc]*P[r]+B[lc]*Q[r]
-         O^lc*O^r|lcr>psi[lcr]=O^lc|lc>O^r|r>(-1)^{p(lc)*p(O^r)}psi[lcr]
-			      =O^lc|lc>( (-1)^{p(l)*p(O^cr)} ((-1)^{p(c)*p(O^cr)} O^r|c>psi[lcr]) )
-      */
+      //----------------------------------------------------------------------------
+      // Generic formula: L=lc, R=r: A[lc]*P[r]+B[lc]*Q[r]
+      // O^lc*O^r|lcr>psi[lcr] = O^lc|lc>O^r|r>(-1)^{p(lc)*p(O^r)}psi[lcr]
+      //		       = O^lc|lc>( (-1)^{p(l)*p(O^cr)} ((-1)^{p(c)*p(O^cr)} O^r|c>psi[lcr]) )
+      //----------------------------------------------------------------------------
       // 1. H^lc
       Hwf += scale*oper_compxwf_opH("lc",wf,lqops,cqops,isym,ifkr,int2e,int1e,size,rank);
       // 2. H^r

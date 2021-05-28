@@ -9,7 +9,7 @@ namespace ctns{
 // Compute complementary operators in the superblock acting on a wavefunction
 //
  
-// opwf = (sum_{ij} oij*a1^(d)[i]*a2^(d)[i])*wf
+// opwf = (sum_{ij} oij*a1^(d1)[i]*a2^(d2)[i])^d*wf
 template <typename Tm>
 void oper_op1op2xwf_nkr(qtensor3<Tm>& opwf,
 		        const std::string& superblock,
@@ -471,7 +471,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
             const auto& op2 = qops2(AP2).at(index);
             opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
             opwf += oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
-         }
+         } // iproc
       }
       // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
       for(const auto& index : bindex){
@@ -482,7 +482,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
             const Tm wt = wfac(index);
             opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
             opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
-         }
+         } // iproc
       }
    }else{
       // One-index operators
@@ -529,7 +529,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
 	    const auto& op2_B = op2_A.K(0);
             opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
             opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
-         }
+         } // iproc
       }
       // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
       for(const auto& index : bindex){
@@ -545,7 +545,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
             const auto& op2_B = op2_A.K(0);
             opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
             opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
-         }
+         } // iproc
       }
    } // ifkr
    return opwf;

@@ -69,7 +69,8 @@ qtensor3<Tm> oper_kernel_IOwf(const std::string& superblock,
    return qt3;
 }
 
-// O1*O2|psi>
+// O1^d*O2^d|psi>: Note that it differs from (O1*O2)^d. 
+// The possible sign change needs to be taken into account outside this function.
 template <typename Tm> 
 qtensor3<Tm> oper_kernel_OOwf(const std::string& superblock,
 			      const qtensor3<Tm>& ksite,

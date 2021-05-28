@@ -420,9 +420,14 @@ void twodot_renorm(sweep_data& sweeps,
 	           const integral::two_body<typename Km::dtype>& int2e, 
 	           const integral::one_body<typename Km::dtype>& int1e,
 	           const std::string scratch){
-   const auto& dbond = sweeps.seq[ibond];
-   std::cout << "ctns::twodot_renorm";
+   int size = 1, rank = 0;
+#ifndef SERIAL
+   size = icomb.world.size();
+   rank = icomb.world.rank();
+#endif
+   if(rank == 0) std::cout << "ctns::twodot_renorm";
    // build reduced density matrix & perform renormalization
+   const auto& dbond = sweeps.seq[ibond];
    if(dbond.forward){
       // update lsites & ql
       if(!dbond.cturn){
