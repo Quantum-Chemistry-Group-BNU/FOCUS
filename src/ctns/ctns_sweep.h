@@ -33,8 +33,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    get_left_bsite(Km::isym, icomb.lsites[std::make_pair(0,0)]);
 
    // generate sweep sequence
-   sweep_data sweeps(icomb.topo.get_sweeps(), schd.ctns.nroots, schd.ctns.guess, 
-		     schd.ctns.inoise, schd.ctns.maxsweep, schd.ctns.ctrls); 
+   sweep_data sweeps(icomb.topo.get_sweeps(rank==0), 
+		     schd.ctns.nroots, schd.ctns.guess, schd.ctns.inoise, 
+		     schd.ctns.maxsweep, schd.ctns.ctrls); 
    for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
       if(rank == 0){

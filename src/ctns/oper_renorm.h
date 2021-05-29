@@ -287,7 +287,8 @@ void oper_renorm_opAll(const std::string& superblock,
    if(rank == 0){ 
       std::cout << "ctns::oper_renorm_opAll coord=" << p 
 	        << " superblock=" << superblock 
-	     	<< " isym=" << isym << " ifkr=" << ifkr << std::endl;
+	     	<< " isym=" << isym << " ifkr=" << ifkr
+		<< " size=" << size;
    }
    auto t0 = tools::get_time();
   
@@ -340,11 +341,9 @@ void oper_renorm_opAll(const std::string& superblock,
    }
 
    auto t1 = tools::get_time();
-   if(debug_oper_dict){
-      std::cout << "timing for ctns::oper_renorm_opAll : " << std::setprecision(2) 
-                << tools::get_duration(t1-t0) << " s" 
-		<< " size,rank=" << size << "," << rank << std::endl;
-      std::cout << std::endl;
+   if(rank == 0){
+      std::cout << " t=" << std::setprecision(2) 
+	        << tools::get_duration(t1-t0) << "s" << std::endl;
    }
 }
 

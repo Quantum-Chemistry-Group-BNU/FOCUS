@@ -188,18 +188,20 @@ struct dvdsonSolver_kr{
 		      const linalg::matrix<double>& eigs,
 		      const linalg::matrix<double>& rnorm,
 		      const double t){
-	 std::string ifconverge = "-+";
+	 const std::string line(87,'-');
+	 const std::string ifconverge = "-+";
          if(iter == 1){
             std::cout << std::defaultfloat; 
             std::cout << "settings: ndim=" << ndim 
                       << " neig=" << neig
                       << " nbuff=" << nbuff  
-                      << " maxcycle= " << maxcycle << std::endl; 
-	    std::cout << "          damping=" << damping 
+                      << " maxcycle=" << maxcycle << std::endl; 
+	    std::cout << "          damping=" << damping << std::scientific 
                       << " crit_v=" << crit_v 
                       << " crit_e=" << crit_e 
                       << " crit_indp=" << crit_indp << std::endl;
-	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s" << std::endl;
+	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s" << std::endl;
+            std::cout << line << std::endl;
          }
          for(int i=0; i<neig; i++){
             std::cout << std::setw(5) << iter << " " 
@@ -210,8 +212,11 @@ struct dvdsonSolver_kr{
                  << std::setw(10) << std::setprecision(2) << std::scientific << rnorm(i,iter) << " "
           	 << std::setw(4) << nsub << " " 
                  << std::setw(5) << nmvp << " "
-                 << std::setw(10) << std::setprecision(2) << std::scientific << t << std::endl;
+                 << std::setw(10) << std::setprecision(2) << std::scientific << t 
+                 << std::setw(10) << std::setprecision(2) << std::scientific << t/nmvp 
+		 << std::endl;
          } // i
+	 std::cout << line << std::endl;
       } 
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, Tm* y, const Tm* x){
@@ -243,13 +248,16 @@ struct dvdsonSolver_kr{
          } // istate
          nmvp += nstate;
          auto t1 = tools::get_time();
-         bool debug = true;
-         if(rank == 0 && debug){
+	 /*
+         if(rank == 0){
+            auto dt = tools::get_duration(t1-t0);
 	    std::cout << "timing for HVecs : " << std::setprecision(2)  
-                      << tools::get_duration(t1-t0) << " s" 
-                      << " for nstate = " << nstate 
+                      << dt << " s" 
+                      << " for nstate = " << nstate
+		      << " tav = " << dt/nstate << " s" 
 		      << " size = " << size << std::endl;
          }
+	 */
       }
       // initialization
       void init_guess(std::vector<QTm>& psi, std::vector<Tm>& v0){
@@ -495,7 +503,6 @@ struct dvdsonSolver_kr{
                }
                auto t1 = tools::get_time();
                if(iprt > 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-t0));
-               t0 = tools::get_time();
                // check convergence and return (e,v) if applied 
                ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
 	    }
@@ -616,18 +623,20 @@ struct dvdsonSolver_nkr{
 		      const linalg::matrix<double>& eigs,
 		      const linalg::matrix<double>& rnorm,
 		      const double t){
-	 std::string ifconverge = "-+";
+	 const std::string line(87,'-');
+	 const std::string ifconverge = "-+";
          if(iter == 1){
             std::cout << std::defaultfloat; 
             std::cout << "settings: ndim=" << ndim 
                       << " neig=" << neig
                       << " nbuff=" << nbuff  
-                      << " maxcycle= " << maxcycle << std::endl; 
-	    std::cout << "          damping=" << damping 
+                      << " maxcycle=" << maxcycle << std::endl; 
+	    std::cout << "          damping=" << damping << std::scientific 
                       << " crit_v=" << crit_v 
                       << " crit_e=" << crit_e 
                       << " crit_indp=" << crit_indp << std::endl;
-	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s" << std::endl;
+	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s" << std::endl;
+            std::cout << line << std::endl;
          }
          for(int i=0; i<neig; i++){
             std::cout << std::setw(5) << iter << " " 
@@ -638,8 +647,11 @@ struct dvdsonSolver_nkr{
                  << std::setw(10) << std::setprecision(2) << std::scientific << rnorm(i,iter) << " "
           	 << std::setw(4) << nsub << " " 
                  << std::setw(5) << nmvp << " "
-                 << std::setw(10) << std::setprecision(2) << std::scientific << t << std::endl;
+                 << std::setw(10) << std::setprecision(2) << std::scientific << t 
+                 << std::setw(10) << std::setprecision(2) << std::scientific << t/nmvp 
+		 << std::endl;
          } // i
+	 std::cout << line << std::endl;
       } 
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, Tm* y, const Tm* x){
@@ -662,13 +674,16 @@ struct dvdsonSolver_nkr{
          }
          nmvp += nstate;
          auto t1 = tools::get_time();
-         bool debug = true;
-         if(rank == 0 && debug){
+	 /*
+         if(rank == 0){
+            auto dt = tools::get_duration(t1-t0);
 	    std::cout << "timing for HVecs : " << std::setprecision(2)  
-                      << tools::get_duration(t1-t0) << " s" 
+                      << dt << " s" 
                       << " for nstate = " << nstate 
+		      << " tav = " << dt/nstate << " s" 
 		      << " size = " << size << std::endl;
          }
+	 */
       }
       // check by full diag
       void solve_diag(double* es, Tm* vs, const bool ifCheckDiag=false){
@@ -833,7 +848,6 @@ struct dvdsonSolver_nkr{
                }
                auto t1 = tools::get_time();
                if(iprt > 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-t0));
-               t0 = tools::get_time();
                // check convergence and return (e,v) if applied 
                ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
 	    }

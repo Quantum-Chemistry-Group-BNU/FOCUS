@@ -65,7 +65,7 @@ void get_prdm(const std::string& superblock,
    }
    auto t1 = tools::get_time();
    if(rank == 0){
-      std::cout << " timing : " << tools::get_duration(t1-t0) << " s" << std::endl;
+      std::cout << " t=" << tools::get_duration(t1-t0) << "s" << std::endl;
    }
 }
 

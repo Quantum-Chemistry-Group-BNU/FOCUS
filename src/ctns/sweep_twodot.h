@@ -137,10 +137,10 @@ void sweep_twodot(const input::schedule& schd,
       //       |    |
       //    ---p0---p1---
       //
-      suppc1 = icomb.get_suppc(p0, debug_sweep); 
-      suppc2 = icomb.get_suppc(p1, debug_sweep); 
-      suppl  = icomb.get_suppl(p0, debug_sweep);
-      suppr  = icomb.get_suppr(p1, debug_sweep);
+      suppc1 = icomb.get_suppc(p0, rank == 0 && debug_sweep); 
+      suppc2 = icomb.get_suppc(p1, rank == 0 && debug_sweep); 
+      suppl  = icomb.get_suppl(p0, rank == 0 && debug_sweep);
+      suppr  = icomb.get_suppr(p1, rank == 0 && debug_sweep);
       qc1 = icomb.get_qc(p0);
       qc2 = icomb.get_qc(p1);
       ql  = icomb.get_ql(p0);
@@ -151,10 +151,10 @@ void sweep_twodot(const input::schedule& schd,
       //       |
       //    ---p0---
       //
-      suppc1 = icomb.get_suppc(p1, debug_sweep); 
-      suppc2 = icomb.get_suppr(p1, debug_sweep); 
-      suppl  = icomb.get_suppl(p0, debug_sweep);
-      suppr  = icomb.get_suppr(p0, debug_sweep);
+      suppc1 = icomb.get_suppc(p1, rank == 0 && debug_sweep); 
+      suppc2 = icomb.get_suppr(p1, rank == 0 && debug_sweep); 
+      suppl  = icomb.get_suppl(p0, rank == 0 && debug_sweep);
+      suppr  = icomb.get_suppr(p0, rank == 0 && debug_sweep);
       qc1 = icomb.get_qc(p1);
       qc2 = icomb.get_qr(p1);
       ql  = icomb.get_ql(p0);
@@ -240,6 +240,7 @@ void sweep_twodot(const input::schedule& schd,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, dbond, wf);
    timing.tc = tools::get_time();
+   if(rank == 0) sweeps.print_eopt(isweep, ibond);
 
    // 3. decimation & renormalize operators
    twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 

@@ -1,27 +1,3 @@
-1. valgrind memcheck for simple example
-
-2. timing:
-ctns::sweep_opt maxsweep=1
-ctns::oper_env_right
-ctns::oper_renorm_opAll coord=(71,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(70,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(69,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(68,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(67,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(66,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(65,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(64,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(63,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(62,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(61,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(60,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(59,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(58,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(57,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(56,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(55,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(54,0) superblock=cr isym=2 ifkr=0
-ctns::oper_renorm_opAll coord=(53,0) superblock=cr isym=2 ifkr=0
 
 3. minmize print - print level
 

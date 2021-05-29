@@ -21,9 +21,10 @@ struct dot_timing{
       double dt1 = tools::get_duration(tb-ta); // t(hdiag)
       double dt2 = tools::get_duration(tc-tb); // t(dvdsn)
       double dt3 = tools::get_duration(td-tc); // t(decim)
-      double dt4 = tools::get_duration(t1-td); // t(renrm)
+      double dt4 = tools::get_duration(te-td); // t(renrm)
+      double dt5 = tools::get_duration(t1-te); // t(save)
       double dt  = tools::get_duration(t1-t0); // total
-      std::cout << " t(procs) = " << std::scientific << std::setprecision(2) << dt0 << " s"
+      std::cout << " t(load)  = " << std::scientific << std::setprecision(2) << dt0 << " s"
    	        << "  per = " << std::defaultfloat << dt0/dt*100 
 		<< "  per(accum) = " << dt0/dt*100 
 		<< std::endl;
@@ -43,15 +44,20 @@ struct dot_timing{
    	        << "  per = " << std::defaultfloat << dt4/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4)/dt*100 
 		<< std::endl;
+      std::cout << " t(save)  = " << std::scientific << std::setprecision(2) << dt5 << " s"
+   	        << "  per = " << std::defaultfloat << dt5/dt*100 
+		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4+dt5)/dt*100 
+		<< std::endl;
    }
 public:
    using tm = std::chrono::high_resolution_clock::time_point;
    tm t0;
-   tm ta; // ta-t0: t(procs) 
+   tm ta; // ta-t0: t(load) 
    tm tb; // tb-ta: t(hdiag)
    tm tc; // tc-ta: t(dvdson)
    tm td; // td-tc: t(decim)
-   tm t1; // t1-td: t(renrm)
+   tm te; // te-td: t(renrm)
+   tm t1; // t1-te: t(save)
 };
 
 struct sweep_data{
@@ -82,10 +88,23 @@ struct sweep_data{
       min_result.resize(maxsweep);
       t_total.resize(maxsweep);
    }
-   // print
+   // print control parameters
    void print_ctrls(const int isweep) const{
       const auto& ctrl = ctrls[isweep];
       ctrl.print();
+   }
+   // print optimized energies
+   void print_eopt(const int isweep, const int ibond) const{
+      const auto& eopt = opt_result[isweep][ibond].eopt;
+      int dots = ctrls[isweep].dots;
+      for(int i=0; i<nstates; i++){
+         std::cout << " optimized energies:"
+		   << " isweep=" << isweep 
+		   << " dots=" << dots
+		   << " ibond=" << ibond 
+                   << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
+		   << std::endl;
+      } // i
    }
    // summary for a single sweep
    void summary(const int isweep);
@@ -136,17 +155,29 @@ inline void sweep_data::summary(const int isweep){
    }
    // find the minimal energy
    auto pos = std::min_element(emean.begin(), emean.end());
-   auto minpos = std::distance(emean.begin(), pos);
-   min_result[isweep] = opt_result[isweep][minpos];
+   int mbond = std::distance(emean.begin(), pos);
+   min_result[isweep] = opt_result[isweep][mbond];
    min_result[isweep].nmvp = nmvp;
-   std::cout << "min energies at pos=" << minpos << "   " 
+   std::cout << "minimal energies at ibond=" << mbond << "  " 
              << "timing for sweep: " << std::setprecision(2) << t_total[isweep] << " s" 
-	     << std::endl; 
+	     << std::endl;
+   const auto& eopt = min_result[isweep].eopt; 
+   for(int i=0; i<nstates; i++){
+      std::cout << " sweep energies:"
+                << " isweep=" << isweep 
+	        << " dots=" << ctrls[isweep].dots
+		<< " dcut=" << ctrls[isweep].dcut
+		<< " deff=" << opt_result[isweep][mbond].deff
+		<< " dwts=" << std::showpos << std::scientific << std::setprecision(2) 
+		<< opt_result[isweep][mbond].dwt << std::noshowpos
+                << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
+                << std::endl;
+   } // i
    
    // print all previous optimized results - sweep_data
    std::cout << tools::line_separator << std::endl;
    std::cout << "summary of sweep optimization up to isweep=" << isweep << std::endl;
-   std::cout << "schedule: iter, dots, dcut, eps, noise | nmvp | timing/s | tav/s | taccum/s" << std::endl;
+   std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | timing/s | tav/s | taccum/s" << std::endl;
    std::cout << std::scientific << std::setprecision(2);
    // print previous ctrl parameters
    double taccum = 0.0;
@@ -162,7 +193,7 @@ inline void sweep_data::summary(const int isweep){
 		<< (t_total[jsweep]/nmvp) << " | " 
 	        << taccum << std::endl;
    } // jsweep
-   std::cout << "results: iter, dwt, energies (delta_e)" << std::endl;
+   std::cout << "results: isweep, dwt, energies (delta_e)" << std::endl;
    const auto& eopt_isweep = min_result[isweep].eopt;
    for(int jsweep=0; jsweep<=isweep; jsweep++){
       const auto& dwt = min_result[jsweep].dwt;

@@ -134,9 +134,9 @@ void sweep_onedot(const input::schedule& schd,
    std::vector<int> suppc, suppl, suppr;
    qbond qc, ql, qr;
    if(rank == 0 && debug_sweep) std::cout << "support info:" << std::endl;
-   suppc = icomb.get_suppc(p, debug_sweep); 
-   suppl = icomb.get_suppl(p, debug_sweep);
-   suppr = icomb.get_suppr(p, debug_sweep);
+   suppc = icomb.get_suppc(p, rank == 0 && debug_sweep); 
+   suppl = icomb.get_suppl(p, rank == 0 && debug_sweep);
+   suppr = icomb.get_suppr(p, rank == 0 && debug_sweep);
    qc = icomb.get_qc(p); 
    ql = icomb.get_ql(p);
    qr = icomb.get_qr(p);
@@ -209,6 +209,7 @@ void sweep_onedot(const input::schedule& schd,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
    timing.tc = tools::get_time();
+   if(rank == 0) sweeps.print_eopt(isweep, ibond);
 
    // 3. decimation & renormalize operators
    onedot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 

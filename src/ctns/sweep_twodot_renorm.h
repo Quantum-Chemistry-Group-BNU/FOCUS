@@ -102,6 +102,7 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<Tm> qops;
    oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, cqops, qops);
+   timing.te = tools::get_time();
    auto fname = oper_fname(scratch, p, "l");
    oper_save(fname, qops);
 }
@@ -201,6 +202,7 @@ void twodot_renorm_lr(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<Tm> qops;
    oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops);
+   timing.te = tools::get_time();
    auto fname = oper_fname(scratch, p, "l");
    oper_save(fname, qops);
 }
@@ -300,6 +302,7 @@ void twodot_renorm_c2r(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<Tm> qops;
    oper_renorm_opAll("cr", icomb, p, int2e, int1e, cqops, rqops, qops);
+   timing.te = tools::get_time();
    auto fname = oper_fname(scratch, p, "r");
    oper_save(fname, qops);
 }
@@ -402,6 +405,7 @@ void twodot_renorm_c1c2(sweep_data& sweeps,
    // 5. renorm operators	 
    oper_dict<Tm> qops;
    oper_renorm_opAll("cr", icomb, p, int2e, int1e, c1qops, c2qops, qops);
+   timing.te = tools::get_time();
    auto fname = oper_fname(scratch, p, "r");
    oper_save(fname, qops);
 }

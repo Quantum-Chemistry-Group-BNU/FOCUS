@@ -225,7 +225,7 @@ vector<int> topology::support_rest(const vector<int>& rsupp) const{
 }
 
 vector<directed_bond> topology::get_sweeps(const bool debug) const{
-   cout << "\ntopology::get_sweeps" << endl;
+   if(debug) cout << "\ntopology::get_sweeps" << endl;
    vector<directed_bond> sweeps;
    // sweep sequence: 
    for(int i=1; i<nbackbone-1; i++){
