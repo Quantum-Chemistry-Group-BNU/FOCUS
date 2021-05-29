@@ -1,10 +1,10 @@
 
-machine = mac #lenovo
+machine = lenovo
 
 ifeq ($(machine), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
    BOOST = /home/lx/software/boost/install_1_59_0
-   USE_GCC = no #yes
+   USE_GCC = yes
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    BOOST = /usr/local
@@ -35,7 +35,7 @@ else
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
 endif
 
-DEBUG = no
+DEBUG = yes
 USE_MPI = yes
 ifeq ($(USE_GCC), yes)
    ifeq ($(DEBUG), yes)
@@ -43,15 +43,15 @@ ifeq ($(USE_GCC), yes)
    else
       FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    endif
-   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
+   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 
    ifeq ($(USE_MPI), no)
       CXX = g++
       CC = gcc
       FLAGS += -DSERIAL
    else
-      CXX = mpic++
+      CXX = mpicxx
       CC = mpicc
-      LFLAGS += -lboost_mpi
+      LFLAGS += -lboost_mpi-mt
    endif
 else
    ifeq ($(DEBUG), yes)

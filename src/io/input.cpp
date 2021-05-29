@@ -94,19 +94,22 @@ void params_sci::read(ifstream& istrm){
    }
    // set miniter & maxiter
    int size = sweep_iter.size();
-   assert(size > 0);
-   miniter = sweep_iter[size-1]+1;
-   assert(maxiter >= miniter);
-   // put eps1 into array
-   eps1.resize(maxiter);
-   for(int i=1; i<size; i++){
-      for(int j=sweep_iter[i-1]; j<sweep_iter[i]; j++){
-	 eps1[j] = sweep_eps[i-1];
+   if(size == 0){
+      tools::exit("error: schedule is not specified!");
+   }else{
+      // put eps1 into array
+      eps1.resize(maxiter);
+      for(int i=1; i<size; i++){     
+         for(int j=sweep_iter[i-1]; j<sweep_iter[i]; j++){
+	    if(j < maxiter) eps1[j] = sweep_eps[i-1];
+         }
+         if(sweep_iter[i-1] < maxiter) miniter = sweep_iter[i-1];
       }
-   }
-   for(int j=sweep_iter[size-1]; j<maxiter; j++){
-      eps1[j] = sweep_eps[size-1];
-   }
+      for(int j=sweep_iter[size-1]; j<maxiter; j++){
+         eps1[j] = sweep_eps[size-1];
+      }
+      if(sweep_iter[size-1] < maxiter) miniter = sweep_iter[size-1];
+   } // size
 }
 
 void params_sci::print() const{
@@ -137,10 +140,11 @@ void params_sci::print() const{
    cout << "maxcycle = " << maxcycle << endl;
    cout << "crit_v = " << crit_v << endl;
    // pt2
-   cout << "ifpt2 = " << ifpt2 << " eps2=" << eps2 << endl;
+   cout << "ifpt2 = " << ifpt2 << endl;
+   cout << "eps2 = " << eps2 << endl;
    // io
    cout << "load = " << load << endl; 
-   cout << "ci_file = " << ci_file << endl; 
+   cout << "ci_file = " << ci_file << endl;
 }
 
 //
@@ -187,6 +191,9 @@ void params_ctns::read(ifstream& istrm){
 	 inoise = stoi(line.substr(6));
       }else if(line.substr(0,4)=="load"){
          load = true;
+      }else if(line.substr(0,7)=="verbose"){
+         istringstream is(line.substr(7));
+	 is >> verbose;
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
@@ -201,30 +208,34 @@ void params_ctns::read(ifstream& istrm){
 	    if(line.empty() || line[0]=='#') continue;
 	    if(line.substr(0,3)=="end") break;
 	    istringstream is(line);
-	    string iter, dots, dcut, eps, noise;
-	    is >> iter >> dots >> dcut >> eps >> noise;
-	    tmp_ctrls.push_back({stoi(iter),stoi(dots),stoi(dcut),stod(eps),stod(noise)});
+	    string isweep, dots, dcut, eps, noise;
+	    is >> isweep >> dots >> dcut >> eps >> noise;
+	    tmp_ctrls.push_back({stoi(isweep),stoi(dots),stoi(dcut),stod(eps),stod(noise)});
 	 }
       }else{
 	 tools::exit("error: no matching key! line = "+line);
       }
    }
-   istrm.close();
    // setup ctrls
-   if(maxsweep > 0){
+   int size = tmp_ctrls.size();
+   if(size == 0){
+      if(task == "opt") tools::exit("error: schedule is not specified!");
+   }else{
+      // put control parameters into ctrls
       ctrls.resize(maxsweep);
-      int size = tmp_ctrls.size();
       for(int i=1; i<size; i++){
          for(int j=tmp_ctrls[i-1].isweep; j<tmp_ctrls[i].isweep; j++){
-            ctrls[j] = tmp_ctrls[i-1];
-            ctrls[j].isweep = j;
+            if(j < maxsweep){
+               ctrls[j] = tmp_ctrls[i-1];
+               ctrls[j].isweep = j;
+	    }
          }
       }
       for(int j=tmp_ctrls[size-1].isweep; j<maxsweep; j++){
          ctrls[j] = tmp_ctrls[size-1];
          ctrls[j].isweep = j;
       }
-   }
+   } // size
 }
 
 void params_ctns::print() const{
@@ -242,7 +253,7 @@ void params_ctns::print() const{
    cout << "guess = " << guess << endl;
    cout << "maxsweep = " << maxsweep << endl;
    if(maxsweep > 0){
-      cout << "schedule: iter, dots, dcut, eps, noise" << endl;
+      cout << "schedule: isweep, dots, dcut, eps, noise" << endl;
       for(int i=0; i<maxsweep; i++){
          auto& tmp = ctrls[i];
          cout << tmp.isweep << " " << tmp.dots << " " 
@@ -253,6 +264,8 @@ void params_ctns::print() const{
    // io
    cout << "load = " << load << endl; 
    cout << "rcanon_file = " << rcanon_file << endl;
+   // debug level
+   cout << "verbose = " << verbose << endl;
 }
 
 //

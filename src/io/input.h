@@ -88,7 +88,7 @@ private:
    friend class boost::serialization::access;
    template<class Archive>
    void serialize(Archive & ar, const unsigned int version){
-      ar & run & kind & task & topology_file & maxdets & thresh_proj & thresh_ortho
+      ar & verbose & run & kind & task & topology_file & maxdets & thresh_proj & thresh_ortho
 	 & nroots & guess & inoise & maxsweep & ctrls & cisolver & maxcycle
          & load & rcanon_file; 
    }
@@ -115,7 +115,9 @@ public:
    int maxcycle = 100;
    // io
    bool load = false;
-   std::string rcanon_file = "rcanon.info"; 
+   std::string rcanon_file = "rcanon.info";
+   // debug level
+   int verbose = 0; 
 };
 
 //
