@@ -1,9 +1,9 @@
 #ifndef CTNS_KRAMERS_H
 #define CTNS_KRAMERS_H
 
-#include "../../extlibs/zquatev/zquatev.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
+#include "../../../extlibs/zquatev/zquatev.h"
+#include "../../core/matrix.h"
+#include "../../core/linalg.h"
 #include "ctns_qdpt.h"
 
 namespace ctns{

@@ -4,8 +4,7 @@
 #include <functional> // for std::function
 #include "../core/tools.h"
 #include "../core/linalg.h"
-#include "ctns_qdpt.h"
-#include "sweep_dvdson.h"
+#include "qtensor/qtensor.h"
 #include "sweep_guess.h"
 #include "sweep_onedot_ham.h"
 #include "sweep_onedot_renorm.h"

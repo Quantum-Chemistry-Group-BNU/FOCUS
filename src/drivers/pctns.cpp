@@ -91,7 +91,7 @@ int main(int argc, char *argv[]){
       tools::exit("error: no input file is given!");
    }else{
       fname = argv[1];
-      cout << "\ninput file = " << fname << endl;
+      if(rank == 0) cout << "\ninput file = " << fname << endl;
    }
    input::schedule schd;
    if(rank == 0) schd.read(fname);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]){
 #endif
    // setup scratch directory
    if(rank > 0) schd.scratch += to_string(rank);
-   schd.create_scratch();
+   schd.create_scratch((rank == 0));
    // we will use Tm to control Hnr/Hrel 
    int info = 0;
    if(schd.ctns.kind == "rN"){
@@ -120,6 +120,6 @@ int main(int argc, char *argv[]){
 #ifndef SERIAL
    world.barrier();
 #endif
-   if(rank > 0) schd.remove_scratch();
+   if(rank > 0) schd.remove_scratch((rank == 0));
    return info;
 }

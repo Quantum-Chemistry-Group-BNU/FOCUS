@@ -3,8 +3,7 @@
 
 #include "../core/tools.h"
 #include "../core/linalg.h"
-#include "ctns_qdpt.h"
-#include "sweep_dvdson.h"
+#include "qtensor/qtensor.h"
 #include "sweep_guess.h"
 #include "sweep_twodot_ham.h"
 #include "sweep_twodot_renorm.h"

@@ -3,7 +3,7 @@
 
 #include <map>
 #include <tuple>
-#include "qtensor.h"
+#include "qtensor/qtensor.h"
 #include "../core/serialization.h"
 
 namespace ctns{

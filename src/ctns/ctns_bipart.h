@@ -4,8 +4,8 @@
 #include <vector>
 #include <algorithm> // transform
 #include "../core/onspace.h"
+#include "qtensor/qtensor.h"
 #include "ctns_kind.h"
-#include "ctns_kramers.h"
 #include "ctns_rbasis.h"
 
 namespace ctns{

@@ -1,9 +1,6 @@
 #ifndef QTENSOR_RESHAPE3_H
 #define QTENSOR_RESHAPE3_H
 
-#include "qtensor.h"
-#include "ctns_qdpt.h"
-
 namespace ctns{
 
 // --- one-dot wavefunction: qt3[l,c,r] <-> qt2 ---

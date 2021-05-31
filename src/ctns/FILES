@@ -122,27 +122,21 @@ Parallelization
 * operator related:
  oper_combine.h
  oper_normxwf.h
-
- oper_util.h
  oper_compxwf.h
  oper_renorm.h
+ oper_util.h
  oper_dot.h
 
 * sweep related:
-
  sweep_dvdson.h
-
  sweep_onedot.h
- sweep_onedot_decimation.h
- sweep_onedot_guess.h
+ sweep_onedot_renorm.h
  sweep_onedot_ham.h
-
+ sweep_guess.h
  sweep_prdm.h
-
  sweep_twodot.h
- sweep_twodot_decimation.h
- sweep_twodot_guess.h
  sweep_twodot_ham.h
+ sweep_twodot_renorm.h
 
 Low-level data structure
 -------------------------

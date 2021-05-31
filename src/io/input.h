@@ -133,8 +133,8 @@ private:
          & sci & ctns;
    }
 public:
-   void create_scratch();
-   void remove_scratch();
+   void create_scratch(const bool debug=true);
+   void remove_scratch(const bool debug=true);
    void read(std::string fname="input.dat");
    void print() const;
 public:

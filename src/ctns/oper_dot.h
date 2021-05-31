@@ -1,6 +1,7 @@
 #ifndef OPER_DOT_H
 #define OPER_DOT_H
 
+#include <cassert>
 #include "ctns_phys.h"
 
 namespace ctns{
@@ -9,13 +10,13 @@ const bool debug_oper_dot = false;
 extern const bool debug_oper_dot;
 
 /*
- dot operators: C/A/B/P/Q/S/H
-
- The local basis is {|0>,|2>,|a>,|b>} in consistent with ctns_phys.h
-
- We use the convention that p1+*p2+*q2*q1 where p1<p2 and q2>q1, i.e., 
- The index in the middle is larger than that close to the boundary.
- This is different from the ordering used in onstate.h
+  dot operators: C/A/B/P/Q/S/H
+  
+  The local basis is {|0>,|2>,|a>,|b>} in consistent with ctns_phys.h
+  
+  We use the convention that p1+*p2+*q2*q1 where p1<p2 and q2>q1, i.e., 
+  The index in the middle is larger than that close to the boundary.
+  This is different from the ordering used in onstate.h
 */
 
 // kA^+
@@ -75,6 +76,8 @@ void oper_dot_opA(const int isym, const bool ifkr, const int k0,
    qt2.from_matrix(mat);
    qops('A')[oper_pack(ka,kb)] = qt2;
    if(debug_oper_dot) qops('A')[oper_pack(ka,kb)].to_matrix().print("c0^+c1^+");
+   // consistency check
+   assert(qops('A').size() == 1);
 }
 
 // B[kA,kA] = kA^+kA, B[kA,kB] = kA^+kB
@@ -140,6 +143,8 @@ void oper_dot_opB(const int isym, const bool ifkr, const int k0,
       qops('B')[oper_pack(kb,kb)] = qt2bb;
       if(debug_oper_dot) qops('B')[oper_pack(kb,kb)].to_matrix().print("c1^+c1");
    }
+   // consistency check
+   assert((ifkr && qops('B').size() == 2) || (!ifkr && qops('B').size() == 3));
 }
 
 // build local S_{p}^C = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
@@ -312,6 +317,10 @@ void oper_dot_opP(const int isym, const bool ifkr, const int k0,
          } // kp
       }
    }
+   // consistency check
+   int k = krest.size();  
+   int nP = ifkr? k*k : k*(2*k-1);
+   assert(qops('P').size() == nP); 
 }
 
 // Qps = <pq||sr> aq^+ar
@@ -369,10 +378,12 @@ void oper_dot_opQ(const int isym, const bool ifkr, const int k0,
                			              + int2e.get(pa,kb,sb,kb)*qt2bb
            				      + int2e.get(pa,ka,sb,kb)*qt2ab
            				      + int2e.get(pa,kb,sb,ka)*qt2ba;
-                  qops('Q')[oper_pack(pb,sa)] = int2e.get(pb,ka,sa,ka)*qt2aa 
-                     		              + int2e.get(pb,kb,sa,kb)*qt2bb
-         	                              + int2e.get(pb,ka,sa,kb)*qt2ab
-         	                              + int2e.get(pb,kb,sa,ka)*qt2ba;
+		  if(kp != ks){ // recovered by Hermicity for kp=ks, see oper_combine.h 
+                     qops('Q')[oper_pack(pb,sa)] = int2e.get(pb,ka,sa,ka)*qt2aa 
+                        		         + int2e.get(pb,kb,sa,kb)*qt2bb
+         	                                 + int2e.get(pb,ka,sa,kb)*qt2ab
+         	                                 + int2e.get(pb,kb,sa,ka)*qt2ba;
+		  }
                   qops('Q')[oper_pack(pb,sb)] = int2e.get(pb,ka,sb,ka)*qt2aa
                   			      + int2e.get(pb,kb,sb,kb)*qt2bb
                       			      + int2e.get(pb,ka,sb,kb)*qt2ab
@@ -391,7 +402,9 @@ void oper_dot_opQ(const int isym, const bool ifkr, const int k0,
                   qops('Q')[oper_pack(pa,sa)] = int2e.get(pa,ka,sa,ka)*qt2aa 
                   		              + int2e.get(pa,kb,sa,kb)*qt2bb;
                   qops('Q')[oper_pack(pa,sb)] = int2e.get(pa,kb,sb,ka)*qt2ba;
-                  qops('Q')[oper_pack(pb,sa)] = int2e.get(pb,ka,sa,kb)*qt2ab;
+		  if(kp != ks){ // recovered by Hermicity for kp=ks, see oper_combine.h 
+                     qops('Q')[oper_pack(pb,sa)] = int2e.get(pb,ka,sa,kb)*qt2ab;
+		  }
                   qops('Q')[oper_pack(pb,sb)] = int2e.get(pb,ka,sb,ka)*qt2aa
                   			      + int2e.get(pb,kb,sb,kb)*qt2bb;
 	       }
@@ -399,6 +412,10 @@ void oper_dot_opQ(const int isym, const bool ifkr, const int k0,
          } // kp
       } // isym
    } // ifkr
+   // consistency check
+   int k = krest.size();  
+   int nQ = ifkr? k*(k+1) : k*(2*k+1);
+   assert(qops('Q').size() == nQ); 
 }
 
 } // ctns

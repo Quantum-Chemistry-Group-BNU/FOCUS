@@ -1,9 +1,8 @@
 #ifndef CTNS_PHYS_H
 #define CTNS_PHYS_H
 
-#include "ctns_qsym.h"
 #include "ctns_rbasis.h"
-#include "qtensor.h"
+#include "qtensor/qtensor.h"
 
 namespace ctns{
 

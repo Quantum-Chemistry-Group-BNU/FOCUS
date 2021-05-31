@@ -1,7 +1,7 @@
 #ifndef SWEEP_DVDSON_KR_H
 #define SWEEP_DVDSON_KR_H
 
-#include "../core/dvdson.h"
+#include "../../core/dvdson.h"
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif

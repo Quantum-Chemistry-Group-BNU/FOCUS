@@ -6,7 +6,7 @@
 #include <tuple>
 #include "../core/onspace.h"
 #include "../core/matrix.h"
-#include "ctns_qsym.h"
+#include "qtensor/qtensor.h"
 
 namespace ctns{
 

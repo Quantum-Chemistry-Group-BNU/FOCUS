@@ -6,7 +6,7 @@
 #include "ctns_kind.h"
 #include "ctns_topo.h"
 #include "ctns_rbasis.h"
-#include "qtensor.h"
+#include "qtensor/qtensor.h"
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif

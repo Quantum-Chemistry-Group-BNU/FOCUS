@@ -1,7 +1,7 @@
 #ifndef OPER_KERNEL_H
 #define OPER_KERNEL_H
 
-#include "qtensor.h"
+#include "qtensor/qtensor.h"
 
 namespace ctns{
 

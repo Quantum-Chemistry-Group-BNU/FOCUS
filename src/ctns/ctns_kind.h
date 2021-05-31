@@ -2,7 +2,6 @@
 #define CTNS_KIND_H
 
 #include <complex>
-#include "ctns_qsym.h"
 
 namespace ctns{
 

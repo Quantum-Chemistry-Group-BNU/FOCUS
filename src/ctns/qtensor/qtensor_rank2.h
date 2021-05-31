@@ -3,9 +3,9 @@
 
 #include <vector>
 #include <string>
-#include "../core/serialization.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
+#include "../../core/serialization.h"
+#include "../../core/matrix.h"
+#include "../../core/linalg.h"
 #include "ctns_qsym.h"
 #include "ctns_qdpt.h"
 #include "ctns_kramers.h"
