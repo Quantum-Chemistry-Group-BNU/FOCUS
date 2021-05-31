@@ -8,6 +8,7 @@
 #include "sweep_guess.h"
 #include "sweep_onedot_ham.h"
 #include "sweep_onedot_renorm.h"
+#include "ctns_sys.h"
 
 namespace ctns{
 
@@ -220,6 +221,7 @@ void sweep_onedot(const input::schedule& schd,
                 << tools::get_duration(timing.t1-timing.t0) << " s" 
 		<< " size=" << size << std::endl;
       timing.analysis();
+      get_sys_status();
    }
 }
 

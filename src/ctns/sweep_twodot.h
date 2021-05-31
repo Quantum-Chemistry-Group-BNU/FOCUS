@@ -251,6 +251,7 @@ void sweep_twodot(const input::schedule& schd,
                 << tools::get_duration(timing.t1-timing.t0) << " s" 
 		<< " size=" << size << std::endl;
       timing.analysis();
+      get_sys_status();
    }
 }
 

@@ -115,8 +115,6 @@ void oper_init(const comb<Km>& icomb,
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
          t_save += tools::get_duration(tc-tb);
-         qops.print(fname);
-         exit(1);
       }
       // rop: right boundary (exclude the start point)
       if(node.type == 0 && p.first != 0){

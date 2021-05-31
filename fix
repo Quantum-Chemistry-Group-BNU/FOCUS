@@ -1,16 +1,4 @@
 
-3. minmize print - print level
-
-schedule::create_scratch scratch=./scratch17
-
-topology::get_sweeps
- ibond=0 bond=(1,0)-(2,0) (forward,cturn)=(1,0)
- ibond=1 bond=(2,0)-(3,0) (forward,cturn)=(1,0)
- ibond=2 bond=(3,0)-(4,0) (forward,cturn)=(1,0)
- ibond=3 bond=(4,0)-(5,0) (forward,cturn)=(1,0)
- ibond=4 bond=(5,0)-(6,0) (forward,cturn)=(1,0)
- ibond=5 bond=(6,0)-(7,0) (forward,cturn)=(1,0)
-
 4. ordered print?
  br=10 qr=(6,2) dim=15 wt=1.64e-06 accum=1.64e-06
  br=11 qr=(6,4) dim=12 wt=1.25e-06 accum=2.89e-06
@@ -39,3 +27,4 @@ topology::get_sweeps
 
 5. mpi error?
 
+6. check memory leak for CTNS?
