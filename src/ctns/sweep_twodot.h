@@ -7,6 +7,7 @@
 #include "sweep_guess.h"
 #include "sweep_twodot_ham.h"
 #include "sweep_twodot_renorm.h"
+#include "ctns_sys.h"
 
 namespace ctns{
 
@@ -111,6 +112,7 @@ void sweep_twodot(const input::schedule& schd,
                   const integral::two_body<typename Km::dtype>& int2e,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore){
+   const bool debug_sweep = (schd.ctns.verbose > 0);
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();

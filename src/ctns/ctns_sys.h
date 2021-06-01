@@ -41,10 +41,10 @@ inline void get_sys_status(){
    stat_stream.close();
 
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
-   double vm_usage     = vsize /(1024.0*1024.0);
-   double resident_set = rss * page_size_kb /(1024.0);
-   std::cout << "VM: " << vm_usage << " MB" 	      // Virtual Memory used
-             << "  RSS: " << resident_set << " MB";   // Actual Memory used
+   double vm_usage     = vsize /(1024.0*1024.0*1024.0);
+   double resident_set = rss * page_size_kb /(1024.0*1024.0);
+   std::cout << "VM: " << vm_usage << " GB" 	      // Virtual Memory used
+             << "  RSS: " << resident_set << " GB";   // Actual Memory used
 
    // Timing
    struct rusage usage;
@@ -55,6 +55,7 @@ inline void get_sys_status(){
              << "  Sys: " << sys << " s"   //  内核空间使用的时间
              << "  Total: " << user+sys << " s" // 总共使用的时钟
              << std::endl;
+
 }
 
 } // ctns
