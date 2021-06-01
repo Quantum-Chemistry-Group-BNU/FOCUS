@@ -43,6 +43,7 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    auto dpt = qprod.second;
    qtensor2<Tm> rdm(qsym(), qlc, qlc);
    // 1. build pRDM 
+   if(rank == 0) std::cout << "1. build pRDM" << std::endl;
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
       //----------------------------------------------
@@ -64,6 +65,7 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    }
 #endif 
    // 2. decimation
+   if(rank == 0) std::cout << "2. decimation" << std::endl;
    qtensor2<Tm> rot;
    if(rank == 0){
       rot = decimation_row(rdm, dcut, result.dwt, result.deff,
@@ -73,6 +75,7 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
    // 3. update site tensor
+   if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;
    icomb.lsites[p] = rot.split_lc(wf.qrow, wf.qmid, dpt);
    //-------------------------------------------------------------------	 
@@ -81,6 +84,7 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
    //-------------------------------------------------------------------
    // 4. initial guess for next site within the bond
+   if(rank == 0) std::cout << "4. initial guess" << std::endl;
    if(rank == 0 && sweeps.guess){
       icomb.psi.clear();
       for(int i=0; i<vsol.cols(); i++){
@@ -99,7 +103,8 @@ void twodot_renorm_lc1(sweep_data& sweeps,
       }
    }
    timing.td = tools::get_time();
-   // 5. renorm operators	 
+   // 5. renormalize operators	 
+   if(rank == 0) std::cout << "5. renormalize operators" << std::endl;
    oper_dict<Tm> qops;
    oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, cqops, qops);
    timing.te = tools::get_time();
@@ -160,14 +165,22 @@ void twodot_renorm_lr(sweep_data& sweeps,
       }
    }
    if(rank == 0) std::cout << "lzdB" << std::endl;
+   icomb.world.barrier();
+   std::cout << "lzdB: rank=" << rank << std::endl;
+   if(rank == 0){ 
+      std::cout << "row,col=" << rdm.rows() << "," << rdm.cols() << std::endl;
+      qlr.print("qlr");
+   }
 #ifndef SERIAL
    if(size > 1){
-      qtensor2<Tm> rdm2; 
+      qtensor2<Tm> rdm2;
       boost::mpi::reduce(icomb.world, rdm, rdm2, std::plus<qtensor2<Tm>>(), 0);
       rdm = rdm2;      
    }
 #endif
+   std::cout << "lzdC: rank=" << rank << std::endl;
    if(rank == 0) std::cout << "lzdC" << std::endl;
+   icomb.world.barrier();
    // 2. decimation
    qtensor2<Tm> rot;
    if(rank == 0){
@@ -175,6 +188,7 @@ void twodot_renorm_lr(sweep_data& sweeps,
 		            ifkr, wf.qrow, wf.qcol, dpt);
    }
    if(rank == 0) std::cout << "lzdD" << std::endl;
+   icomb.world.barrier();
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif

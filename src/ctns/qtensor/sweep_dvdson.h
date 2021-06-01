@@ -188,7 +188,7 @@ struct dvdsonSolver_kr{
 		      const linalg::matrix<double>& eigs,
 		      const linalg::matrix<double>& rnorm,
 		      const double t){
-	 const std::string line(87,'-');
+	 //const std::string line(87,'-');
 	 const std::string ifconverge = "-+";
          if(iter == 1){
             std::cout << std::defaultfloat; 
@@ -201,7 +201,7 @@ struct dvdsonSolver_kr{
                       << " crit_e=" << crit_e 
                       << " crit_indp=" << crit_indp << std::endl;
 	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s" << std::endl;
-            std::cout << line << std::endl;
+            //std::cout << line << std::endl;
          }
          for(int i=0; i<neig; i++){
             std::cout << std::setw(5) << iter << " " 
@@ -216,7 +216,7 @@ struct dvdsonSolver_kr{
                  << std::setw(10) << std::setprecision(2) << std::scientific << t/nmvp 
 		 << std::endl;
          } // i
-	 std::cout << line << std::endl;
+	 //std::cout << line << std::endl;
       } 
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, Tm* y, const Tm* x){
@@ -623,7 +623,7 @@ struct dvdsonSolver_nkr{
 		      const linalg::matrix<double>& eigs,
 		      const linalg::matrix<double>& rnorm,
 		      const double t){
-	 const std::string line(87,'-');
+	 //const std::string line(87,'-');
 	 const std::string ifconverge = "-+";
          if(iter == 1){
             std::cout << std::defaultfloat; 
@@ -636,7 +636,7 @@ struct dvdsonSolver_nkr{
                       << " crit_e=" << crit_e 
                       << " crit_indp=" << crit_indp << std::endl;
 	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s" << std::endl;
-            std::cout << line << std::endl;
+            //std::cout << line << std::endl;
          }
          for(int i=0; i<neig; i++){
             std::cout << std::setw(5) << iter << " " 
@@ -651,7 +651,7 @@ struct dvdsonSolver_nkr{
                  << std::setw(10) << std::setprecision(2) << std::scientific << t/nmvp 
 		 << std::endl;
          } // i
-	 std::cout << line << std::endl;
+	 //std::cout << line << std::endl;
       } 
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, Tm* y, const Tm* x){

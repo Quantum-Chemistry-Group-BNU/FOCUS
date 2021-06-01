@@ -166,8 +166,8 @@ void sweep_twodot(const input::schedule& schd,
    int sl = suppl.size();
    int sr = suppr.size();
    assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
-   if(rank == 0){
-      if(debug_sweep) std::cout << "qbond info:" << std::endl;
+   if(rank == 0 && debug_sweep){
+      std::cout << "qbond info:" << std::endl;
       qc1.print("qc1", debug_sweep);
       qc2.print("qc2", debug_sweep);
       ql.print("ql", debug_sweep);
