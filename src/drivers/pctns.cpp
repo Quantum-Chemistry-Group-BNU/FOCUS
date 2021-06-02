@@ -100,7 +100,7 @@ int main(int argc, char *argv[]){
    schd.world = world;
 #endif
    // setup scratch directory
-   if(rank > 0) schd.scratch += to_string(rank);
+   if(rank > 0) schd.scratch += "_"+to_string(rank);
    schd.create_scratch((rank == 0));
    // we will use Tm to control Hnr/Hrel 
    int info = 0;
