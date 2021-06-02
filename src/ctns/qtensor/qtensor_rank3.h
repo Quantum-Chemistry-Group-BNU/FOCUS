@@ -56,6 +56,8 @@ struct qtensor3{
          return _qblocks[_addr(bm,br,bc)];
       }
       // print
+      size_t get_size() const;
+      void print_size(const std::string name) const;
       void print(const std::string name, const int level=0) const;
       // fix middle index (bm,im) - bm-th block, im-idx - composite index!
       qtensor2<Tm> fix_mid(const std::pair<int,int> mdx) const;
@@ -198,7 +200,7 @@ void qtensor3<Tm>::print(const std::string name, const int level) const{
    std::cout << "qblocks: nblocks=" << _qblocks.size() << std::endl;
    int nnz = 0;
    for(int idx=0; idx<_qblocks.size(); idx++){
-      auto& blk = _qblocks[idx];
+      const auto& blk = _qblocks[idx];
       if(blk.size() > 0){
          nnz++;
          if(level >= 1){
@@ -219,6 +221,26 @@ void qtensor3<Tm>::print(const std::string name, const int level) const{
       }
    } // idx
    std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
+}
+
+template <typename Tm>
+size_t qtensor3<Tm>::get_size() const{
+   size_t size = 0;
+   for(int idx=0; idx<_qblocks.size(); idx++){
+      const auto& blk = _qblocks[idx];
+      for(int im=0; im<blk.size(); im++){
+         size += blk[im].size();
+      }
+   } // idx
+   return size;
+}
+
+template <typename Tm>
+void qtensor3<Tm>::print_size(const std::string name) const{
+   size_t size = this->get_size(); 
+   std::cout << "qtensor3: " << name << " size=" << size
+             << " sizeMB=" << tools::sizeMB<Tm>(size) 
+             << std::endl;
 }
 
 // fix middle index (bm,im) - bm-th block, im-idx - composite index!

@@ -48,6 +48,8 @@ struct qtensor4{
 	 return _qblocks[_addr(bm,bv,br,bc)];
       }
       // print
+      size_t get_size() const;
+      void print_size(const std::string name) const;
       void print(const std::string name, const int level=0) const;
       // deal with fermionic sign in fermionic direct product
       qtensor4<Tm> permCR_signed() const; // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}
@@ -161,7 +163,7 @@ void qtensor4<Tm>::print(const std::string name, const int level) const{
    std::cout << "qblocks: nblocks=" << _qblocks.size() << std::endl;
    int nnz = 0;
    for(int idx=0; idx<_qblocks.size(); idx++){
-      auto& blk = _qblocks[idx];
+      const auto& blk = _qblocks[idx];
       if(blk.size() > 0){
          nnz++;
          if(level >= 1){
@@ -182,6 +184,26 @@ void qtensor4<Tm>::print(const std::string name, const int level) const{
       }
    }
    std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
+}
+
+template <typename Tm>
+size_t qtensor4<Tm>::get_size() const{
+   size_t size = 0;
+   for(int idx=0; idx<_qblocks.size(); idx++){
+      const auto& blk = _qblocks[idx];
+      for(int im=0; im<blk.size(); im++){
+         size += blk[im].size();
+      }
+   } // idx
+   return size;
+}
+
+template <typename Tm>
+void qtensor4<Tm>::print_size(const std::string name) const{
+   size_t size = this->get_size(); 
+   std::cout << "qtensor4: " << name << " size=" << size
+             << " sizeMB=" << tools::sizeMB(size) 
+             << std::endl;
 }
 
 // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}

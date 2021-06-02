@@ -3,8 +3,9 @@ machine = lenovo
 
 ifeq ($(machine), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
-   BOOST = /home/lx/software/boost/install_1_59_0
-   USE_GCC = yes
+   #BOOST = /home/lx/software/boost/install_1_59_0
+   BOOST = /home/lx/software/boost/install_1_75_0
+   USE_GCC = no
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    BOOST = /usr/local
@@ -39,11 +40,11 @@ DEBUG = yes
 USE_MPI = yes
 ifeq ($(USE_GCC), yes)
    ifeq ($(DEBUG), yes)
-      FLAGS += -DGNU -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -DGNU -std=c++11 -pg -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    else
-      FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -DGNU -std=c++11 -pg -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    endif
-   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 
+   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI), no)
       CXX = g++
       CC = gcc
@@ -51,15 +52,15 @@ ifeq ($(USE_GCC), yes)
    else
       CXX = mpicxx
       CC = mpicc
-      LFLAGS += -lboost_mpi-mt
+      LFLAGS += -lboost_mpi
    endif
 else
    ifeq ($(DEBUG), yes)
       FLAGS += -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    else 
-      FLAGS += -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    endif 
-   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt 
+   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI), no)
       CXX = icpc
       CC = icc
@@ -67,7 +68,7 @@ else
    else
       CXX = mpiicpc
       CC = mpiicc
-      LFLAGS += -lboost_mpi-mt
+      LFLAGS += -lboost_mpi
    endif
 endif
 
@@ -79,14 +80,17 @@ OBJ_DIR = ./obj
 SRC_DIR_CORE = ./$(SRC)/core
 SRC_DIR_IO   = ./$(SRC)/io
 SRC_DIR_CI   = ./$(SRC)/ci
+SRC_DIR_QT   = ./$(SRC)/ctns/qtensor
 SRC_DIR_CTNS = ./$(SRC)/ctns
 INCLUDE_DIR = -I$(SRC_DIR_CORE) \
 	      -I$(SRC_DIR_IO) \
 	      -I$(SRC_DIR_CI) \
+	      -I$(SRC_DIR_QT) \
 	      -I$(SRC_DIR_CTNS)
 SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 	  	     $(SRC_DIR_IO)/*.cpp  \
 	  	     $(SRC_DIR_CI)/*.cpp \
+	  	     $(SRC_DIR_QT)/*.cpp \
 	  	     $(SRC_DIR_CTNS)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 

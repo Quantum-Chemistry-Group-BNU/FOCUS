@@ -4,10 +4,6 @@
 using namespace std;
 using namespace tools;
 
-double tools::mem_size(size_t sz, const int dfac){
-   return sz*dfac/pow(1024.0,2); // in MB
-}
-
 // timing
 chrono::high_resolution_clock::time_point tools::get_time(){
    return chrono::high_resolution_clock::now();

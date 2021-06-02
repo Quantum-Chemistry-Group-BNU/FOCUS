@@ -45,6 +45,8 @@ struct qtensor2{
       linalg::matrix<Tm>& operator ()(const int br, const int bc){ return _qblocks[_addr(br,bc)]; }
       const linalg::matrix<Tm>& operator ()(const int br, const int bc) const{ return _qblocks[_addr(br,bc)]; }
       // print
+      size_t get_size() const;
+      void print_size(const std::string name) const;
       void print(const std::string name, const int level=0) const;
       // check whether <l|o|r> is a faithful rep for o=I
       double check_identityMatrix(const double thresh_ortho, const bool debug) const;
@@ -167,6 +169,24 @@ void qtensor2<Tm>::print(const std::string name, const int level) const{
       }
    } // idx
    std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
+}
+
+template <typename Tm>
+size_t qtensor2<Tm>::get_size() const{
+   size_t size = 0;
+   for(int idx=0; idx<_qblocks.size(); idx++){
+      const auto& blk = _qblocks[idx];
+      size += blk.size();
+   } // idx
+   return size;
+}
+
+template <typename Tm>
+void qtensor2<Tm>::print_size(const std::string name) const{
+   size_t size = this->get_size(); 
+   std::cout << "qtensor2: " << name << " size=" << size
+             << " sizeMB=" << tools::sizeMB<Tm>(size) 
+             << std::endl;
 }
 
 template <typename Tm>
@@ -311,6 +331,8 @@ template <typename Tm>
 qtensor2<Tm>& qtensor2<Tm>::operator +=(const qtensor2<Tm>& qt){
    assert(dir == qt.dir);
    assert(sym == qt.sym); // symmetry blocking must be the same
+   assert(qrow == qt.qrow);
+   assert(qcol == qt.qcol);
    for(int i=0; i<_qblocks.size(); i++){
       auto& blk = _qblocks[i];
       assert(blk.size() == qt._qblocks[i].size());

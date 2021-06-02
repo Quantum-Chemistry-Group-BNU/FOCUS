@@ -34,14 +34,15 @@ extern const std::string line_separator;
 const std::string line_separator2(70,'=');
 extern const std::string line_separator2;
 
-// memory
-double mem_size(size_t sz, const int fac=8);
-
 // type information
 template <typename Tm>
 inline bool is_complex(){ return false; }
 template <>
 inline bool is_complex<std::complex<double>>(){ return true; }
+
+// memory
+template <typename Tm>
+inline double sizeMB(size_t sz){ return sz*sizeof(Tm)/std::pow(1024.0,2); }
 
 // conjugte
 inline double conjugate(const double x){ return x; }
