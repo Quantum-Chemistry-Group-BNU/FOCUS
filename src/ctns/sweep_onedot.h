@@ -155,7 +155,7 @@ void sweep_onedot(const input::schedule& schd,
    oper_load_qops(icomb, p, schd.scratch, "c", cqops);
    oper_load_qops(icomb, p, schd.scratch, "l", lqops);
    oper_load_qops(icomb, p, schd.scratch, "r", rqops);
-   if(debug_sweep){
+   if(schd.ctns.verbose > 1){
       for(int iproc=0; iproc<size; iproc++){
           if(rank == iproc){
              std::cout << "qops info: rank=" << rank << std::endl;

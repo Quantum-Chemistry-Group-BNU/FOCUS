@@ -15,7 +15,7 @@ namespace ctns{
 
 // attempts to read the system-dependent data for a process' virtual memory
 // size and resident set size, and return the results in KB.
-inline void get_sys_status(){
+inline void get_sys_status(const std::string msg=""){
    using std::ios_base;
    using std::ifstream;
    using std::string;
@@ -43,19 +43,20 @@ inline void get_sys_status(){
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
    double vm_usage     = vsize /(1024.0*1024.0*1024.0);
    double resident_set = rss * page_size_kb /(1024.0*1024.0);
-   std::cout << "VM: " << vm_usage << " GB" 	      // Virtual Memory used
-             << "  RSS: " << resident_set << " GB";   // Actual Memory used
 
    // Timing
    struct rusage usage;
    getrusage(RUSAGE_SELF, &usage);
    double user = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec/1.e6; // user time used
    double sys  = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec/1.e6; // sys time used
-   std::cout << "  User: " << user << " s" //  用户空间使用的时间
+
+   std::cout << msg
+             << "  VM: " << vm_usage << " GB" 	     // Virtual Memory used
+             << "  RSS: " << resident_set << " GB"   // Actual Memory used
+             << "  User: " << user << " s" //  用户空间使用的时间
              << "  Sys: " << sys << " s"   //  内核空间使用的时间
              << "  Total: " << user+sys << " s" // 总共使用的时钟
              << std::endl;
-
 }
 
 } // ctns

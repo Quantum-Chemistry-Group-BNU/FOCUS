@@ -51,54 +51,19 @@ void onedot_renorm_lc(sweep_data& sweeps,
    if(rank == 0) std::cout << "1. build pRDM" << std::endl;
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
-      
       if(sweeps.inoise > 0) get_prdm("lc", ifkr, wf, lqops, cqops, noise, rdm, size, rank);
-      
       if(rank == 0){
          if(sweeps.inoise > 1) wf.add_noise(noise);
          rdm += wf.get_rdm("lc"); // only rank-0 build RDM
       }
    }
-
-
 #ifndef SERIAL
-/*
    if(size > 1){
       qtensor2<Tm> rdm2;
-      icomb.world.barrier();
-      std::cout << "reduce rank=" << rank << std::endl;  
-      icomb.world.barrier();
-      //boost::mpi::reduce(icomb.world, rdm, rdm2, std::plus<qtensor2<Tm>>(), 0);
       boost::mpi::reduce(icomb.world, rdm, rdm2, std::plus<qtensor2<Tm>>(), 0);
-      std::cout << "finish rank=" << rank << std::endl;  
-      if(rank == 0){ 
-         rdm2.print_size("rdm2");
-         rdm2.print("rdm2");
-         rdm = rdm2;     
-      }
-      icomb.world.barrier(); 
+      if(rank == 0) rdm = rdm2;     
    }
-*/
-   icomb.world.barrier();
-   std::cout << "reduce rank=" << rank << std::endl;  
-/*   
-   if(rank == 0){
-      qtensor2<Tm> rdm2;
-      boost::mpi::reduce(icomb.world, rdm, rdm2, std::plus<qtensor2<Tm>>(), 0);
-      rdm = rdm2;     
-   }else{
-      boost::mpi::reduce(icomb.world, rdm, std::plus<qtensor2<Tm>>(), 0);
-   }
-*/
-   qtensor2<Tm> rdm2;
-   boost::mpi::all_reduce(icomb.world, rdm, rdm2, std::plus<qtensor2<Tm>>());
-   rdm = rdm2;
-
-   std::cout << "finish rank=" << rank << std::endl;  
-   icomb.world.barrier();
 #endif
-
- 
    // 2. decimation
    if(rank == 0) std::cout << "2. decimation" << std::endl;
    qtensor2<Tm> rot;
@@ -171,18 +136,20 @@ void onedot_renorm_lr(sweep_data& sweeps,
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
    // Renormalize superblock = lr
-   if(rank == 0) std::cout << "0. start renormalizing" << std::endl;
    auto qprod = qmerge(wf.qrow, wf.qcol);
    auto qlr = qprod.first;
    auto dpt = qprod.second;
    qtensor2<Tm> rdm(qsym(), qlr, qlr);
+   if(rank == 0){ 
+      std::cout << "0. start renormalizing" << std::endl;
+      qlr.print("qlr");
+      rdm.print_size("rdm");
+   }
    // 1. build pRDM 
    if(rank == 0) std::cout << "1. build pRDM" << std::endl;
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
-
       if(sweeps.inoise > 0) get_prdm("lr", ifkr, wf, lqops, rqops, noise, rdm, size, rank);
-      
       if(rank == 0){
 	 if(sweeps.inoise > 1) wf.add_noise(noise);
          rdm += wf.get_rdm("lr"); // only rank-0 build RDM
@@ -190,9 +157,9 @@ void onedot_renorm_lr(sweep_data& sweeps,
    }
 #ifndef SERIAL
    if(size > 1){
- //     qtensor2<Tm> rdm2; 
- //     boost::mpi::reduce(icomb.world, rdm, rdm2, std::plus<qtensor2<Tm>>(), 0);
- //     rdm = rdm2;      
+      qtensor2<Tm> rdm2; 
+      boost::mpi::reduce(icomb.world, rdm, rdm2, std::plus<qtensor2<Tm>>(), 0);
+      if(rank == 0) rdm = rdm2;      
    }
 #endif 
    // 2. decimation
@@ -267,18 +234,20 @@ void onedot_renorm_cr(sweep_data& sweeps,
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
    // Renormalize superblock = cr
-   if(rank == 0) std::cout << "0. start renormalizing" << std::endl;
    auto qprod = qmerge(wf.qmid, wf.qcol);
    auto qcr = qprod.first;
    auto dpt = qprod.second;
    qtensor2<Tm> rdm(qsym(), qcr, qcr);
+   if(rank == 0){ 
+      std::cout << "0. start renormalizing" << std::endl;
+      qcr.print("qcr");
+      rdm.print_size("rdm");
+   }
    // 1. build pRDM 
    if(rank == 0) std::cout << "1. build pRDM" << std::endl;
    for(int i=0; i<vsol.cols(); i++){
       wf.from_array(vsol.col(i));
-
       if(sweeps.inoise > 0) get_prdm("cr", ifkr, wf, cqops, rqops, noise, rdm, size, rank);
-      
       if(rank == 0){
          if(sweeps.inoise > 1) wf.add_noise(noise);
          rdm += wf.get_rdm("cr");
@@ -286,9 +255,9 @@ void onedot_renorm_cr(sweep_data& sweeps,
    }
 #ifndef SERIAL
    if(size > 1){
- //     qtensor2<Tm> rdm2; 
- //     boost::mpi::reduce(icomb.world, rdm, rdm2, std::plus<qtensor2<Tm>>(), 0);
- //     rdm = rdm2;      
+      qtensor2<Tm> rdm2; 
+      boost::mpi::reduce(icomb.world, rdm, rdm2, std::plus<qtensor2<Tm>>(), 0);
+      if(rank == 0) rdm = rdm2;      
    }
 #endif
    // 2. decimation

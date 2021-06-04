@@ -31,3 +31,8 @@ How to run:
  1. run sci.x to generate initial guess
  2. run ctns.x to optimize CTNS, see examples
 
+Known problems:
+ 1. mpi::reduce hangs on intel MPI 
+    https://github.com/boostorg/mpi/issues/124
+    edit BOOST_MPI_USE_IMPROBE in boost/mpi/config.hpp
+

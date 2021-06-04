@@ -30,7 +30,9 @@ TODOs:
     3. SOC within this active space
     4. G-tensor/GIAO for Ferric-Ferrous dimer [GREAT!]
  
- 7. Hybrid parallelizations: OpenMP & GPU?
+ 7. Optimized parallel version:
+    1. stack-like storage? 
+    2. OpenMP & GPU?
  
  8. Twordms: CASSCF 
 

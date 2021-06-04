@@ -1,6 +1,9 @@
 #ifndef SWEEP_PRDM_H
 #define SWEEP_PRDM_H
 
+#include <string>
+#include "ctns_sys.h"
+
 namespace ctns{
 
 const double thresh_noise = 1.e-10;
@@ -23,10 +26,6 @@ void get_prdm(const std::string& superblock,
    }
    const bool dagger = true;
    auto t0 = tools::get_time();
-
-   if(rank == 0){
-      rdm.print_size("rdm"); 
-   }
    // pRDM from a(+)^12|psi>: this part can also be parallelized,
    // 			      because all opC are stored locally.
    auto infoC = oper_combine_opC(qops1.cindex, qops2.cindex);
@@ -38,13 +37,9 @@ void get_prdm(const std::string& superblock,
          auto qt3n = oper_normxwf_opC(superblock,wf,qops1,qops2,iformula,index);
          auto qt3h = oper_normxwf_opC(superblock,wf,qops1,qops2,iformula,index,dagger);
          auto tmp = noise*qt3n.get_rdm(superblock);
-         rdm.print_size("rdm");
-         tmp.print_size("tmp");
-         std::cout << "sym=" << (rdm.qrow == tmp.qrow) << std::endl;
-         //rdm *= 1.0;
-         rdm += tmp;
-	 // rdm += noise*qt3n.get_rdm(superblock);
-	 // rdm += noise*qt3h.get_rdm(superblock);
+	 rdm += noise*qt3n.get_rdm(superblock);
+	 rdm += noise*qt3h.get_rdm(superblock);
+         if(rank == 0) get_sys_status("prdm:C"+std::to_string(index));
       }
    }
    // pRDM from A(+)^12|psi>:
@@ -56,8 +51,9 @@ void get_prdm(const std::string& superblock,
       if(iproc == rank){
          auto qt3n = oper_normxwf_opA(superblock,wf,qops1,qops2,ifkr,iformula,index);
          auto qt3h = oper_normxwf_opA(superblock,wf,qops1,qops2,ifkr,iformula,index,dagger);
-	 // rdm += noise*qt3n.get_rdm(superblock);
-	 // rdm += noise*qt3h.get_rdm(superblock);
+	 rdm += noise*qt3n.get_rdm(superblock);
+	 rdm += noise*qt3h.get_rdm(superblock);
+         if(rank == 0) get_sys_status("prdm:A"+std::to_string(index));
       }
    }
    // pRDM from B(+)^12|psi>:
@@ -69,8 +65,9 @@ void get_prdm(const std::string& superblock,
       if(iproc == rank){
          auto qt3n = oper_normxwf_opB(superblock,wf,qops1,qops2,ifkr,iformula,index);
          auto qt3h = oper_normxwf_opB(superblock,wf,qops1,qops2,ifkr,iformula,index,dagger);
-	 // rdm += noise*qt3n.get_rdm(superblock);
-	 // rdm += noise*qt3h.get_rdm(superblock);
+	 rdm += noise*qt3n.get_rdm(superblock);
+	 rdm += noise*qt3h.get_rdm(superblock);
+         if(rank == 0) get_sys_status("prdm:B"+std::to_string(index));
       }
    }
    auto t1 = tools::get_time();
