@@ -20,9 +20,9 @@ TODOs:
  	- careful check serial/parallel version against previous 
           versions with different compilers
 
- 5. Benchmark performances: Fe2S2
+ 5. Benchmark performances: Fe2S2 [DONE202106XX?] 
     1. different topologies
-    2. parallelization
+    2. parallelization - push to the limit!
 
  6. Applications:
     1. Small system like C2+/O2? [checked against FCI results]

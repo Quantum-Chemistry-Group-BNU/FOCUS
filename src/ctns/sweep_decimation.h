@@ -6,6 +6,9 @@ namespace ctns{
 const double thresh_sig2 = 1.e-14;
 extern const double thresh_sig2;
 
+const double thresh_sig2accum = 0.99;
+extern const double thresh_sig2accum;
+
 const bool debug_decimation = false;
 extern const bool debug_decimation;
 
@@ -70,10 +73,10 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
       deff += 1;
       sum += sig2all[idx];
       SvN += -sig2all[idx]*std::log2(sig2all[idx]);
-      if(debug_decimation){
-	 if(i == 0) std::cout << " sorted sig2:" << std::endl;
+      if(sum <= thresh_sig2accum){
+	 if(i == 0) std::cout << " important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
 	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr 
-		   << " ith=" << kept[br].first-1 << " sig2=" << sig2all[idx] 
+		   << "[" << kept[br].first-1 << "] sig2=" << sig2all[idx] 
 		   << " accum=" << sum << std::endl;
       }
    }
@@ -91,8 +94,7 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
       const auto& qr = qrow.get_sym(br);
       br_matched.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
-      // if(debug_decimation){
-      {
+      if(debug_decimation){
 	 sum += wt;     
          std::cout << " br=" << p.first << " qr=" << qr << " dim=" 
 		   << dim << " wt=" << wt << " accum=" << sum << std::endl;
@@ -213,10 +215,10 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
       deff += nfac;
       sum += nfac*sig2all[idx];
       SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
-      if(debug_decimation){
-         if(i == 0) std::cout << " sorted sig2:" << std::endl;     
+      if(sum <= thresh_sig2accum){
+	 if(i == 0) std::cout << " important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
 	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr 
-		   << " ith=" << kept[br].first-1 << " sig2=" << sig2all[idx] 
+		   << "[" << kept[br].first-1 << "] sig2=" << sig2all[idx] 
 		   << " accum=" << sum << std::endl;
       }
    }
@@ -234,8 +236,7 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
       const auto& qr = qrow.get_sym(br);
       br_matched.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
-      //if(debug_decimation){
-      {
+      if(debug_decimation){
 	 sum += wt;
          std::cout << " br=" << p.first << " qr=" << qr << " dim=" << dim 
 		   << " wt=" << wt << " accum=" << sum << std::endl;

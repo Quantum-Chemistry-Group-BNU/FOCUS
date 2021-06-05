@@ -46,6 +46,7 @@ void twodot_renorm_lc1(sweep_data& sweeps,
       std::cout << "0. start renormalizing" << std::endl;
       qlc.print("qlc1");
       rdm.print_size("rdm");
+      get_sys_status();
    }
    // 1. build pRDM 
    if(rank == 0) std::cout << "1. build pRDM" << std::endl;
@@ -156,6 +157,7 @@ void twodot_renorm_lr(sweep_data& sweeps,
       std::cout << "0. start renormalizing" << std::endl;
       qlr.print("qlr");
       rdm.print_size("rdm");
+      get_sys_status();
    }
    // 1. build pRDM 
    if(rank == 0) std::cout << "1. build pRDM" << std::endl;
@@ -266,6 +268,7 @@ void twodot_renorm_c2r(sweep_data& sweeps,
       std::cout << "0. start renormalizing" << std::endl;
       qcr.print("qcr");
       rdm.print_size("rdm");
+      get_sys_status();
    }
    // 1. build pRDM 
    if(rank == 0) std::cout << "1. build pRDM" << std::endl;
@@ -376,6 +379,7 @@ void twodot_renorm_c1c2(sweep_data& sweeps,
       std::cout << "0. start renormalizing" << std::endl;
       qc1c2.print("qc1c2");
       rdm.print_size("rdm");
+      get_sys_status();
    }
    // 1. build pRDM 
    if(rank == 0) std::cout << "1. build pRDM" << std::endl;
