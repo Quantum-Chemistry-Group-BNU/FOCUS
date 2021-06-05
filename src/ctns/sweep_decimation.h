@@ -75,9 +75,8 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
       SvN += -sig2all[idx]*std::log2(sig2all[idx]);
       if(sum <= thresh_sig2accum){
 	 if(i == 0) std::cout << " important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
-	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr 
-		   << "[" << kept[br].first-1 << "] sig2=" << sig2all[idx] 
-		   << " accum=" << sum << std::endl;
+	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr << "[" << kept[br].first-1 << "]"
+                   << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
       }
    }
    dwt = 1.0-sum;
@@ -217,9 +216,8 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
       SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
       if(sum <= thresh_sig2accum){
 	 if(i == 0) std::cout << " important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
-	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr 
-		   << "[" << kept[br].first-1 << "] sig2=" << sig2all[idx] 
-		   << " accum=" << sum << std::endl;
+	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr << "[" << kept[br].first-1 << "]"
+                   << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
       }
    }
    dwt = 1.0-sum;

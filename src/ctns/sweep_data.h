@@ -139,7 +139,7 @@ inline void sweep_data::summary(const int isweep){
       std::cout << " ibond=" << ibond << " bond=" << p0 << "-" << p1 
                 << " forward=" << forward
                 << " deff=" << opt_result[isweep][ibond].deff
-                << " dwt=" << std::showpos << std::scientific << std::setprecision(2) 
+                << " dwt=" << std::showpos << std::scientific << std::setprecision(3)
 	        << opt_result[isweep][ibond].dwt << std::noshowpos
 	        << " nmvp=" << opt_result[isweep][ibond].nmvp;
       nmvp += opt_result[isweep][ibond].nmvp;      
@@ -168,7 +168,7 @@ inline void sweep_data::summary(const int isweep){
 	        << " dots=" << ctrls[isweep].dots
 		<< " dcut=" << ctrls[isweep].dcut
 		<< " deff=" << opt_result[isweep][mbond].deff
-		<< " dwts=" << std::showpos << std::scientific << std::setprecision(2) 
+		<< " dwt=" << std::showpos << std::scientific << std::setprecision(3)
 		<< opt_result[isweep][mbond].dwt << std::noshowpos
                 << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
                 << std::endl;

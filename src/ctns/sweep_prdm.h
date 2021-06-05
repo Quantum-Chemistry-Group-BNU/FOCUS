@@ -22,7 +22,7 @@ void get_prdm(const std::string& superblock,
    if(noise < thresh_noise) return;
    if(rank == 0){
       std::cout << "ctns::get_prdm superblock=" << superblock
-	        << " noise=" << std::setprecision(2) << noise;
+	        << " noise=" << std::setprecision(1) << noise;
    }
    const bool dagger = true;
    auto t0 = tools::get_time();
