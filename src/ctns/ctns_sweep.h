@@ -35,7 +35,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    // generate sweep sequence
    sweep_data sweeps(icomb.topo.get_sweeps(rank==0), 
 		     schd.ctns.nroots, schd.ctns.guess, schd.ctns.inoise, 
-		     schd.ctns.maxsweep, schd.ctns.ctrls); 
+		     schd.ctns.maxsweep, schd.ctns.ctrls, schd.ctns.dbranch); 
    for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
       if(rank == 0){

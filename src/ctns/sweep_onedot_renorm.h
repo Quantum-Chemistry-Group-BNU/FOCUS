@@ -27,12 +27,12 @@ void onedot_renorm_lc(sweep_data& sweeps,
    using Tm = typename Km::dtype; 
    const bool ifkr = kind::is_kramers<Km>();
    const auto& dbond = sweeps.seq[ibond];
-   const auto& dcut  = sweeps.ctrls[isweep].dcut;
+   const int& dbranch = sweeps.dbranch;
+   const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise;
    if(rank == 0){
-      std::cout << " |lc> (forward,cturn,dcut,inoise,noise)="
-                << dbond.forward << "," << dbond.cturn << ","
-                << dcut << "," << sweeps.inoise << ","
+      std::cout << " |lc> (dbranch,dcut,inoise,noise)="
+                << dbranch << "," << dcut << "," << sweeps.inoise << ","
                 << std::scientific << std::setprecision(1) << noise << std::endl;
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
@@ -126,12 +126,12 @@ void onedot_renorm_lr(sweep_data& sweeps,
    using Tm = typename Km::dtype; 
    const bool ifkr = kind::is_kramers<Km>();
    const auto& dbond = sweeps.seq[ibond];
-   const auto& dcut  = sweeps.ctrls[isweep].dcut;
+   const int& dbranch = sweeps.dbranch;
+   const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise;
    if(rank == 0){ 
-      std::cout << " |lr>(comb) (forward,cturn,dcut,inoise,noise)=" 
-                << dbond.forward << "," << dbond.cturn << "," 
-                << dcut << "," << sweeps.inoise << ","
+      std::cout << " |lr>(comb) (dbranch,dcut,inoise,noise)=" 
+                << dbranch << "," << dcut << "," << sweeps.inoise << ","
                 << std::scientific << std::setprecision(1) << noise << std::endl;
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
@@ -225,12 +225,12 @@ void onedot_renorm_cr(sweep_data& sweeps,
    using Tm = typename Km::dtype; 
    const bool ifkr = kind::is_kramers<Km>();
    const auto& dbond = sweeps.seq[ibond];
-   const auto& dcut  = sweeps.ctrls[isweep].dcut;
+   const int& dbranch = sweeps.dbranch;
+   const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise;
    if(rank == 0){ 
-      std::cout << " |cr> (forward,cturn,dcut,inoise,noise)="
-   	        << dbond.forward << "," << dbond.cturn << "," 
-   	        << dcut << "," << sweeps.inoise << ","
+      std::cout << " |cr> (dbranch,dcut,inoise,noise)="
+   	        << dbranch << "," << dcut << "," << sweeps.inoise << ","
    	        << std::scientific << std::setprecision(1) << noise << std::endl;
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];

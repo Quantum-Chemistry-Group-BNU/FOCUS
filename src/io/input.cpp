@@ -197,7 +197,9 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
-         maxcycle = stoi(line.substr(8)); 
+         maxcycle = stoi(line.substr(8));
+      }else if(line.substr(0,7)=="dbranch"){
+	 dbranch = stoi(line.substr(7));
       }else if(line.substr(0,8)=="maxsweep"){
 	 maxsweep = stoi(line.substr(8));
       }else if(line.substr(0,8)=="schedule"){
@@ -249,8 +251,9 @@ void params_ctns::print() const{
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
-   cout << "inoise = " << inoise << endl; 
-   cout << "guess = " << guess << endl;
+   cout << "inoise   = " << inoise << endl; 
+   cout << "guess    = " << guess << endl;
+   cout << "dbranch  = " << dbranch << endl;
    cout << "maxsweep = " << maxsweep << endl;
    if(maxsweep > 0){
       cout << "schedule: isweep, dots, dcut, eps, noise" << endl;

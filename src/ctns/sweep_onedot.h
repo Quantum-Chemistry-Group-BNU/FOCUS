@@ -246,7 +246,7 @@ void sweep_rwfuns(const input::schedule& schd,
    const int dcut1 = -1;
    const double eps = schd.ctns.ctrls[schd.ctns.maxsweep-1].eps; // take the last eps 
    input::params_sweep ctrl = {0, 1, dcut1, eps, 0.0};
-   sweep_data sweeps({dbond}, schd.ctns.nroots, schd.ctns.guess, 0, 1, {ctrl});
+   sweep_data sweeps({dbond}, schd.ctns.nroots, schd.ctns.guess, 0, 1, {ctrl}, 0);
    sweep_onedot(schd, sweeps, 0, 0, icomb, int2e, int1e, ecore);
 
    if(rank == 0){

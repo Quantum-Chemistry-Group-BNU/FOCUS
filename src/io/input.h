@@ -106,9 +106,10 @@ public:
    double thresh_ortho = 1.e-8;
    // sweep
    int nroots = 1; // this can be smaller than nroots in CI 
-   bool guess = true;
    int inoise = 2;
-   int maxsweep;
+   bool guess = true;
+   int dbranch = 0;
+   int maxsweep = 0;
    std::vector<params_sweep> ctrls;
    // dvdson
    int cisolver = 1;

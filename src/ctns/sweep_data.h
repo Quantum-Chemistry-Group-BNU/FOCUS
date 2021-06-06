@@ -62,19 +62,21 @@ public:
 
 struct sweep_data{
    // constructor
-   sweep_data(const std::vector<directed_bond>& sweep_seq, 
-	      const int _nstates,
-	      const bool _guess,
-	      const int _inoise,
-	      const int _maxsweep,
-	      const std::vector<input::params_sweep>& _ctrls){
-      seq = sweep_seq; 
+   sweep_data(const std::vector<directed_bond>& sweep_seq,
+              const int _nstates,
+              const bool _guess,
+              const int _inoise,
+              const int _maxsweep,
+              const std::vector<input::params_sweep>& _ctrls,
+              const int _dbranch){
+      seq = sweep_seq;
       seqsize = sweep_seq.size();
       guess = _guess;
       nstates = _nstates;
       inoise = _inoise;
       maxsweep = _maxsweep;
       ctrls = _ctrls;
+      dbranch = _dbranch;
       // sweep results
       opt_result.resize(maxsweep);
       opt_timing.resize(maxsweep);
@@ -110,7 +112,7 @@ struct sweep_data{
    void summary(const int isweep);
 public:
    bool guess;
-   int seqsize, nstates, maxsweep, inoise; 
+   int seqsize, nstates, inoise, maxsweep, dbranch;
    std::vector<directed_bond> seq; // sweep bond sequence 
    std::vector<input::params_sweep> ctrls; // control parameters
    // energies
@@ -124,7 +126,8 @@ public:
 // analysis of the current sweep (eopt,dwt,deff) and timing
 inline void sweep_data::summary(const int isweep){
    std::cout << "\n" << tools::line_separator2 << std::endl;
-   std::cout << "sweep_data::summary isweep=" << isweep << std::endl;
+   std::cout << "sweep_data::summary isweep=" << isweep 
+             << " dbranch=" << dbranch << std::endl;
    std::cout << tools::line_separator << std::endl;
    print_ctrls(isweep);
    // print results for each dot in a single sweep
@@ -176,7 +179,8 @@ inline void sweep_data::summary(const int isweep){
    
    // print all previous optimized results - sweep_data
    std::cout << tools::line_separator << std::endl;
-   std::cout << "summary of sweep optimization up to isweep=" << isweep << std::endl;
+   std::cout << "summary of sweep optimization up to isweep=" << isweep
+             << " dbranch=" << dbranch << std::endl;
    std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | timing/s | tav/s | taccum/s" << std::endl;
    std::cout << std::scientific << std::setprecision(2);
    // print previous ctrl parameters
