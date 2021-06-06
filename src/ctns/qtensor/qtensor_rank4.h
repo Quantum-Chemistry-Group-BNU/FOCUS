@@ -202,7 +202,7 @@ template <typename Tm>
 void qtensor4<Tm>::print_size(const std::string name) const{
    size_t size = this->get_size(); 
    std::cout << "qtensor4: " << name << " size=" << size
-             << " sizeMB=" << tools::sizeMB(size) 
+             << " sizeMB=" << tools::sizeMB<Tm>(size) 
              << std::endl;
 }
 
