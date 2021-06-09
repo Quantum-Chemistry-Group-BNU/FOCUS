@@ -41,13 +41,25 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    auto qprod = qmerge(wf.qrow, wf.qmid);
    auto qlc = qprod.first;
    auto dpt = qprod.second;
+
+   get_sys_status("in-rank="+std::to_string(rank));
+
+   if(rank == 0) qlc.print("qlc");
    qtensor2<Tm> rdm(qsym(), qlc, qlc);
+  
+   if(rank == 0) rdm.print("rdm"); 
+   get_sys_status("out-rank="+std::to_string(rank));
+   icomb.world.barrier();
+   
    if(rank == 0){ 
       std::cout << "0. start renormalizing" << std::endl;
       qlc.print("qlc1");
       rdm.print_size("rdm");
       get_sys_status();
    }
+
+   icomb.world.barrier();
+
    // 1. build pRDM 
    if(rank == 0) std::cout << "1. build pRDM" << std::endl;
    for(int i=0; i<vsol.cols(); i++){

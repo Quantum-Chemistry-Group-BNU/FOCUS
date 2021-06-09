@@ -50,9 +50,22 @@ inline void get_sys_status(const std::string msg=""){
    double user = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec/1.e6; // user time used
    double sys  = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec/1.e6; // sys time used
 
+   // Available mem
+   std::ifstream meminfo("/proc/meminfo");
+   std::string token, key = "MemAvailable";
+   size_t value, memrest;
+   while(meminfo >> token){
+      if(token == key + ":"){
+         if(meminfo >> value){
+            memrest = value/(1024.0*1024);  
+         }
+      }
+   }
+ 
    std::cout << msg
              << "  VM: " << vm_usage << " GB" 	     // Virtual Memory used
              << "  RSS: " << resident_set << " GB"   // Actual Memory used
+             << " -->" << memrest  
              << "  User: " << user << " s" //  用户空间使用的时间
              << "  Sys: " << sys << " s"   //  内核空间使用的时间
              << "  Total: " << user+sys << " s" // 总共使用的时钟

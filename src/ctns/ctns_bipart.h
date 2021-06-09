@@ -29,8 +29,9 @@ void transform_coeff(const fock::onspace& space,
    std::vector<double> sgns;
    for(const auto& state : space){
       space2.push_back(state.permute(image2));
-      double sgn = state.permute_sgn(image2); // for multiplication with complex<double>
-      sgns.push_back(sgn);
+      auto sgn = state.permute_sgn(image2); 
+      // for later multiplication with complex<double>
+      sgns.push_back(static_cast<double>(sgn));
    }
    int dim = space.size();
    int nroot = vs.size();
