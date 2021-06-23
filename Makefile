@@ -5,16 +5,15 @@ ifeq ($(machine), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
    #BOOST = /home/lx/software/boost/install_1_59_0
    BOOST = /home/lx/software/boost/install_1_75_0
-   USE_GCC = no
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    BOOST = /usr/local
-   USE_GCC = yes
 endif
-
 # quaternion matrix diagonalization
 MATH = -L./extlibs/zquatev -lzquatev
+LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_filesystem-mt-x64 
 
+USE_GCC = yes
 USE_OPENMP = no
 ifeq ($(USE_OPENMP), no)
    # serial version of MKL
@@ -36,15 +35,17 @@ else
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
 endif
 
-DEBUG = yes
+DEBUG = no #yes
 USE_MPI = yes
 ifeq ($(USE_GCC), yes)
+   #
+   # GCC compiler
+   # 
    ifeq ($(DEBUG), yes)
       FLAGS += -DGNU -std=c++11 -pg -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    else
       FLAGS += -DGNU -std=c++11 -pg -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    endif
-   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI), no)
       CXX = g++
       CC = gcc
@@ -52,15 +53,17 @@ ifeq ($(USE_GCC), yes)
    else
       CXX = mpicxx
       CC = mpicc
-      LFLAGS += -lboost_mpi
+      LFLAGS += -lboost_mpi-mt-x64
    endif
 else
+   #
+   # Intel compiler
+   #
    ifeq ($(DEBUG), yes)
       FLAGS += -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    else 
       FLAGS += -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    endif 
-   LFLAGS += ${MATH} -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI), no)
       CXX = icpc
       CC = icc
@@ -68,7 +71,7 @@ else
    else
       CXX = mpiicpc
       CC = mpiicc
-      LFLAGS += -lboost_mpi
+      LFLAGS += -lboost_mpi-mt-x64
    endif
 endif
 

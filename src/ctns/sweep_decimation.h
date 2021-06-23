@@ -26,8 +26,8 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
    std::map<int,int> idx2sector; 
    std::vector<double> sig2all;
    std::map<int,linalg::matrix<Tm>> rbasis;
-   int idx = 0;
-   for(int br=0; br<rdm.rows(); br++){
+   int idx = 0, nqr = rdm.rows();
+   for(int br=0; br<nqr; br++){
       const auto& blk = rdm(br,br);
       if(blk.size() == 0) continue;
       // compute renormalized basis
@@ -52,30 +52,23 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
    }
    // 2. select important sig2
    auto index = tools::sort_index(sig2all, 1);
-   std::map<int,std::pair<int,double>> kept; // br->(dim,wt)
+   std::vector<int> kept_dim(nqr,0);
+   std::vector<double> kept_wts(nqr,0.0);
    deff = 0;
-   double sum = 0.0;
-   double SvN = 0.0;
+   double sum = 0.0, SvN = 0.0;
    for(int i=0; i<sig2all.size(); i++){
       if(dcut > -1 && deff >= dcut) break; // discard rest
       int idx = index[i];
       if(sig2all[idx] < thresh_sig2) continue; // discard negative weights
       int br = idx2sector[idx];
-      auto qr = qrow.get_sym(br);
-      auto it = kept.find(br);
-      if(it == kept.end()){
-         kept[br].first = 1;
-	 kept[br].second = sig2all[idx];
-      }else{
-	 kept[br].first += 1;
-	 kept[br].second += sig2all[idx];
-      }
+      kept_dim[br] += 1;
+      kept_wts[br] += sig2all[idx];
       deff += 1;
       sum += sig2all[idx];
       SvN += -sig2all[idx]*std::log2(sig2all[idx]);
       if(sum <= thresh_sig2accum){
 	 if(i == 0) std::cout << " important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
-	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr << "[" << kept[br].first-1 << "]"
+	 std::cout << "  i=" << i << " br=" << br << " qr=" << qrow.get_sym(br) << "[" << kept_dim[br]-1 << "]"
                    << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
       }
    }
@@ -84,25 +77,25 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
      	     << "  dwt=" << dwt << "  SvN=" << SvN << std::endl;
    // 3. construct qbond and qt2 by assembling blocks
    sum = 0.0;
-   std::vector<int> br_matched;
+   std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
-   for(const auto& p : kept){
-      const auto& br = p.first;
-      const auto& dim = p.second.first;
-      const auto& wt = p.second.second;
+   auto index2 = tools::sort_index(kept_wts, 1);
+   for(int i=0; i<nqr; i++){
+      int br = index2[i];
+      if(kept_dim[br] == 0) continue;
       const auto& qr = qrow.get_sym(br);
-      br_matched.push_back( br );
+      const auto& dim = kept_dim[br];
+      const auto& wts = kept_wts[br];
+      br_kept.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
-      if(debug_decimation){
-	 sum += wt;     
-         std::cout << " br=" << p.first << " qr=" << qr << " dim=" 
-		   << dim << " wt=" << wt << " accum=" << sum << std::endl;
-      }
+      sum += wts;     
+      std::cout << "  i=" << i << " br=" << br << " qr=" << qr << " dim=" 
+		<< dim << " wts=" << wts << " accum=" << sum << std::endl;
    }
    qbond qkept(dims);
    qtensor2<Tm> qt2(qsym(), qrow, qkept);
    for(int bc=0; bc<qkept.size(); bc++){
-      int br = br_matched[bc];
+      int br = br_kept[bc];
       const auto& rbas = rbasis[br];
       auto& blk = qt2(br,bc); 
       std::copy(rbas.data(), rbas.data()+blk.size(), blk.data());
@@ -145,8 +138,8 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
    std::map<int,int> idx2sector; 
    std::vector<double> sig2all;
    std::map<int,linalg::matrix<std::complex<double>>> rbasis;
-   int idx = 0;
-   for(int br=0; br<rdm.rows(); br++){
+   int idx = 0, nqr = rdm.rows();
+   for(int br=0; br<nqr; br++){
       const auto& blk = rdm(br,br);
       if(blk.size() == 0) continue;
       // compute renormalized basis
@@ -188,14 +181,13 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
 	 for(auto s : sig2) std::cout << s << " ";
 	 std::cout << std::endl;
       }
-
    }
    // 2. select important sig2
    auto index = tools::sort_index(sig2all, 1);
-   std::map<int,std::pair<int,double>> kept; // br->(dim,wt)
+   std::vector<int> kept_dim(nqr,0);   
+   std::vector<double> kept_wts(nqr,0.0);
    deff = 0;
-   double sum = 0.0;
-   double SvN = 0.0;
+   double sum = 0.0, SvN = 0.0;
    for(int i=0; i<sig2all.size(); i++){
       if(dcut > -1 && deff >= dcut) break; // discard rest
       int idx = index[i];
@@ -203,20 +195,14 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
       int br = idx2sector[idx];
       auto qr = qrow.get_sym(br);
       int nfac = (qr.parity() == 1)? 2 : 1;
-      auto it = kept.find(br);
-      if(it == kept.end()){
-         kept[br].first = nfac;
-	 kept[br].second = nfac*sig2all[idx];
-      }else{
-	 kept[br].first += nfac;
-	 kept[br].second += nfac*sig2all[idx];
-      }
+      kept_dim[br] += nfac;
+      kept_wts[br] += nfac*sig2all[idx];
       deff += nfac;
       sum += nfac*sig2all[idx];
       SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
       if(sum <= thresh_sig2accum){
 	 if(i == 0) std::cout << " important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
-	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr << "[" << kept[br].first-1 << "]"
+	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr << "[" << kept_dim[br]-1 << "]"
                    << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
       }
    }
@@ -225,25 +211,25 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
      	     << "  dwt=" << dwt << "  SvN=" << SvN << std::endl;
    // 3. construct qbond and qt2 by assembling blocks
    sum = 0.0;
-   std::vector<int> br_matched;
+   std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
-   for(const auto& p : kept){ // br->(dim,wt)
-      const auto& br = p.first;
-      const auto& dim = p.second.first;
-      const auto& wt = p.second.second;
+   auto index2 = tools::sort_index(kept_wts, 1);
+   for(int i=0; i<nqr; i++){
+      int br = index2[i];
+      if(kept_dim[br] == 0) continue;
       const auto& qr = qrow.get_sym(br);
-      br_matched.push_back( br );
+      const auto& dim = kept_dim[br];
+      const auto& wts = kept_wts[br];
+      br_kept.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
-      if(debug_decimation){
-	 sum += wt;
-         std::cout << " br=" << p.first << " qr=" << qr << " dim=" << dim 
-		   << " wt=" << wt << " accum=" << sum << std::endl;
-      }
+      sum += wts;
+      std::cout << "  i=" << i << " br=" << br << " qr=" << qr << " dim=" 
+		<< dim << " wts=" << wts << " accum=" << sum << std::endl;
    }
    qbond qkept(dims);
    qtensor2<std::complex<double>> qt2(qsym(), qrow, qkept);
    for(int bc=0; bc<qkept.size(); bc++){
-      int br = br_matched[bc];
+      int br = br_kept[bc];
       const auto& rbas = rbasis[br];
       auto& blk = qt2(br,bc); 
       const auto& qr = qkept.get_sym(bc);

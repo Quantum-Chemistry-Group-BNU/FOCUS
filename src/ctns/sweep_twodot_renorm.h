@@ -7,6 +7,19 @@
 
 namespace ctns{
 
+inline size_t get_rdm_size(const qbond& qrow, const qbond& qcol){
+   size_t size = 0;
+   for(int br=0; br<qrow.size(); br++){
+      for(int bc=0; bc<qcol.size(); bc++){
+         if(qrow.get_sym(br) != qcol.get_sym(bc)) continue;
+         int rdim = qrow.get_dim(br);
+         int cdim = qcol.get_dim(bc);
+         size += rdim*cdim;
+      } // bc
+   } // br
+   return size;
+}
+
 template <typename Km>
 void twodot_renorm_lc1(sweep_data& sweeps,
 		       const int isweep,
@@ -42,14 +55,15 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    auto qlc = qprod.first;
    auto dpt = qprod.second;
 
-   get_sys_status("in-rank="+std::to_string(rank));
-
-   if(rank == 0) qlc.print("qlc");
+   if(rank == 0){
+      qlc.print("qlc");
+      size_t size = get_rdm_size(qlc,qlc); 
+      std::cout << "rdm_size=" << size
+		<< " sizeMB=" << tools::sizeMB<Tm>(size)
+                << std::endl; 
+   }
    qtensor2<Tm> rdm(qsym(), qlc, qlc);
-  
-   if(rank == 0) rdm.print("rdm"); 
-   get_sys_status("out-rank="+std::to_string(rank));
-   icomb.world.barrier();
+   if(rank == 0) rdm.print_size("rdm"); 
    
    if(rank == 0){ 
       std::cout << "0. start renormalizing" << std::endl;
@@ -57,7 +71,6 @@ void twodot_renorm_lc1(sweep_data& sweeps,
       rdm.print_size("rdm");
       get_sys_status();
    }
-
    icomb.world.barrier();
 
    // 1. build pRDM 
@@ -90,6 +103,10 @@ void twodot_renorm_lc1(sweep_data& sweeps,
 		   	   ifkr, wf.qrow, wf.qmid, dpt);
    }
 #ifndef SERIAL
+
+   // LZD
+   if(rank == 0) rot.print_size("rot");
+
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
    // 3. update site tensor
