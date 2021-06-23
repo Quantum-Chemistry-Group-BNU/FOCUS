@@ -3,14 +3,15 @@ import time
 import numpy
 
 def parse_ctns(fname="ctns.out"):
-   debug = False
+   debug = True #False
    f = open(fname,"r")
    lines = f.readlines()
    # get nsweep
-   pattern = "results: iter, dwt, energies (delta_e)"
+   pattern0 = "results: iter, dwt, energies (delta_e)"
+   pattern1 = "results: isweep, dwt, energies (delta_e)"
    nsweep = 0
    for line in lines:
-      if pattern in line:
+      if pattern0 in line or pattern1 in line:
          nsweep += 1
    if(debug): print("nsweep=",nsweep)
    # process
@@ -18,7 +19,7 @@ def parse_ctns(fname="ctns.out"):
    iread = 0
    ene = []
    for line in lines:
-      if pattern in line:
+      if pattern0 in line or pattern1 in line:
          isweep += 1
          if isweep == nsweep:
             iread = 1
@@ -87,8 +88,12 @@ def compareAll(dirs,thresh=1.e-8):
          if(not exist): continue
          print('finput=',finput)
 	 # COMPARISON
-         elst0 = parse_ctns("results/"+prefix+"ctns.out")[-1]
-         elst1 = parse_ctns(tmpdir+"/"+prefix+"ctns.out")[-1]
+         fname = "results/"+prefix+"ctns.out"
+         print('fname[ref]=',fname)
+         elst0 = parse_ctns(fname)[-1]
+         fname = tmpdir+"/"+prefix+"ctns.out"
+         print('fname[cal]=',fname)
+         elst1 = parse_ctns(fname)[-1]
          ediff = numpy.linalg.norm(elst0 - elst1)
          print('eref=',elst0,' ecal=',elst1,' ediff=',ediff)
          if ediff < thresh:
