@@ -24,7 +24,7 @@ private:
    void serialize(Archive & ar, const unsigned int version){
       ar & run & nroots & det_seeds & nseeds & flip
 	 & eps0 & eps1 & miniter & maxiter & deltaE
-         & cisolver & maxcycle & crit_v & ifpt2 & eps2
+         & cisolver & maxcycle & crit_v & ifpt2 & eps2 & istate
 	 & load & ci_file;
    }
 public:
@@ -51,6 +51,7 @@ public:
    // pt2
    bool ifpt2 = false;
    double eps2 = 1.e-8;
+   int istate = 0;
    // io
    bool load = false;
    std::string ci_file = "ci.info"; 
@@ -88,9 +89,9 @@ private:
    friend class boost::serialization::access;
    template<class Archive>
    void serialize(Archive & ar, const unsigned int version){
-      ar & verbose & run & kind & task & topology_file & maxdets & thresh_proj & thresh_ortho
+      ar & run & kind & task & topology_file & maxdets & thresh_proj & thresh_ortho
 	 & nroots & guess & inoise & maxsweep & ctrls & cisolver & maxcycle
-         & load & rcanon_file; 
+         & load & rcanon_file & istate & nsample & verbose;  
    }
 public:
    void read(std::ifstream& istrm);
@@ -117,6 +118,9 @@ public:
    // io
    bool load = false;
    std::string rcanon_file = "rcanon.info";
+   // sampling
+   int istate = 0;
+   int nsample = 1.e5;
    // debug level
    int verbose = 0; 
 };

@@ -78,9 +78,9 @@ int CTNS(const input::schedule& schd){
          Sij.print("Sij");
       }
    }else if(schd.ctns.task == "sdiag"){
-      int istate = 0, nsample = 1.e5;
-      double Sd = rcanon_Sdiag_sample(icomb,istate,nsample);
-      cout << "\nistate=" << istate << " Sd(sample)=" << Sd << endl;
+      int istate  = schd.ctns.istate;
+      int nsample = schd.ctns.nsample;
+      double Sd = rcanon_Sdiag_sample(icomb, istate, nsample);
    }
    return 0;	
 }

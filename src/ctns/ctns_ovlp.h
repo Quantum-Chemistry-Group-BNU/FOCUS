@@ -9,10 +9,10 @@ namespace ctns{
 
 /*
  Algorithms for CTNS:
- 0. Check right canonical form
- 1. <CTNS[i]|CTNS[j]> 
- 2. <n|CTNS> and <CI|CTNS>
- 3. random sampling from distribution p(n)=|<n|CTNS>|^2 and Sdiag
+  0. check right canonical form
+  1. overlap: <CTNS[i]|CTNS[j]> 
+  2. overlap: <n|CTNS> and <CI|CTNS>
+  3. random sampling from distribution p(n)=|<n|CTNS>|^2 and Sdiag
 */
 
 // Check right canonical form
@@ -30,7 +30,7 @@ void rcanon_check(const comb<Km>& icomb,
       //qt2.to_matrix().print("qt2");
       double maxdiff = qt2.check_identityMatrix(thresh_ortho, false);
       int Dtot = qt2.qrow.get_dimAll();
-      std::cout << "idx=" << idx << " node=" << p << " Dtot=" << Dtot 
+      std::cout << " idx=" << idx << " node=" << p << " Dtot=" << Dtot 
 		<< " maxdiff=" << std::scientific << maxdiff << std::endl;
       if((ifortho || (!ifortho && idx != ntotal-1)) && (maxdiff>thresh_ortho)){
 	 tools::exit("error: deviate from identity matrix!");
@@ -226,7 +226,7 @@ double rcanon_Sdiag_exact(const comb<Km>& icomb,
       Sd = (Sd*i + s)*fac;
       Sd2 = (Sd2*i + s*s)*fac;
       if((i+1)%noff == 0){
-         std = sqrt((Sd2-Sd*Sd)/(i+1.e-10));
+         std = std::sqrt((Sd2-Sd*Sd)/(i+1.e-10));
 	 std::cout << " i=" << i << " Sd=" << Sd << " std=" << std << std::endl;
       }
    }
@@ -305,15 +305,16 @@ template <typename Km>
 double rcanon_Sdiag_sample(const comb<Km>& icomb,
 		           const int istate,
 		           const int nsample,  
-		           const int nprt=10){ // no. of largest states to be printed
+		           const int nprt=30){ // no. of largest states to be printed
    const double cutoff = 1.e-12;
    std::cout << "\nctns::rcanon_Sdiag_sample istate=" << istate 
 	     << " nsample=" << nsample << std::endl;
    auto t0 = tools::get_time();
-   int noff = nsample/10;
+   const int noff = nsample/10;
    // In case CTNS is not normalized 
    double ovlp = std::abs(get_Smat(icomb)(istate,istate));
    std::cout << "<CTNS[i]|CTNS[i]> = " << ovlp << std::endl; 
+   // start sampling
    double Sd = 0.0, Sd2 = 0.0, std = 0.0;
    std::map<fock::onstate,int> pop;
    for(int i=0; i<nsample; i++){
@@ -327,7 +328,7 @@ double rcanon_Sdiag_sample(const comb<Km>& icomb,
       Sd = (Sd*i + s)*fac;
       Sd2 = (Sd2*i + s*s)*fac;
       if((i+1)%noff == 0){
-         std = sqrt((Sd2-Sd*Sd)/(i+1.e-10));
+         std = std::sqrt((Sd2-Sd*Sd)/(i+1.e-10));
          auto t1 = tools::get_time();
 	 double dt = tools::get_duration(t1-t0);
 	 std::cout << " i=" << i << " Sd=" << Sd << " std=" << std
@@ -335,9 +336,11 @@ double rcanon_Sdiag_sample(const comb<Km>& icomb,
          t0 = tools::get_time();
       }
    }
+   // print important determinants
    if(nprt > 0){
       int size = pop.size();
-      std::cout << "sampled important determinants: size = " << size << std::endl;
+      std::cout << "sampled important determinants: nprt=" << nprt
+	        << " pop.size=" << size << std::endl; 
       std::vector<fock::onstate> states(size);
       std::vector<int> counts(size);
       int i = 0;
@@ -355,7 +358,9 @@ double rcanon_Sdiag_sample(const comb<Km>& icomb,
 	 std::cout << " i=" << i << " " << state
 	           << " counts=" << counts[idx] 
 	           << " p_i(sample)=" << counts[idx]/(1.0*nsample)
-	           << " p_i(exact)=" << std::norm(ci)/ovlp << std::endl;
+	           << " p_i(exact)=" << std::norm(ci)/ovlp 
+		   << " c_i(exact)=" << ci/std::sqrt(ovlp)
+		   << std::endl;
       }
    }
    return Sd;

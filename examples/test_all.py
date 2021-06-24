@@ -110,8 +110,8 @@ if __name__ == '__main__':
 
    HOME = os.path.dirname(os.getcwd())
    print('HOME=',HOME)
-   SCI = HOME+"/bin/sci.x"
-   CTNS = HOME+"/bin/pctns.x"
+   SCI  = HOME+"/bin/sci.x"
+   CTNS = HOME+"/bin/ctns.x"
 
    #cdir = os.getcwd()
    #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
