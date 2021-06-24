@@ -80,7 +80,8 @@ int CTNS(const input::schedule& schd){
    }else if(schd.ctns.task == "sdiag"){
       int istate  = schd.ctns.istate;
       int nsample = schd.ctns.nsample;
-      double Sd = rcanon_Sdiag_sample(icomb, istate, nsample);
+      int ndetprt = schd.ctns.ndetprt; 
+      double Sd = rcanon_Sdiag_sample(icomb, istate, nsample, ndetprt);
    }
    return 0;	
 }

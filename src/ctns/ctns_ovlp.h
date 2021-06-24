@@ -305,10 +305,11 @@ template <typename Km>
 double rcanon_Sdiag_sample(const comb<Km>& icomb,
 		           const int istate,
 		           const int nsample,  
-		           const int nprt=30){ // no. of largest states to be printed
+		           const int nprt=10){ // no. of largest states to be printed
    const double cutoff = 1.e-12;
    std::cout << "\nctns::rcanon_Sdiag_sample istate=" << istate 
-	     << " nsample=" << nsample << std::endl;
+	     << " nsample=" << nsample 
+	     << " nprt=" << nprt << std::endl;
    auto t0 = tools::get_time();
    const int noff = nsample/10;
    // In case CTNS is not normalized 
@@ -339,8 +340,7 @@ double rcanon_Sdiag_sample(const comb<Km>& icomb,
    // print important determinants
    if(nprt > 0){
       int size = pop.size();
-      std::cout << "sampled important determinants: nprt=" << nprt
-	        << " pop.size=" << size << std::endl; 
+      std::cout << "sampled important determinants: pop.size=" << size << std::endl; 
       std::vector<fock::onstate> states(size);
       std::vector<int> counts(size);
       int i = 0;
@@ -351,10 +351,12 @@ double rcanon_Sdiag_sample(const comb<Km>& icomb,
       }
       auto indx = tools::sort_index(counts,1);
       // compare the first n important dets by counts
+      int sum = 0;
       for(int i=0; i<std::min(size,nprt); i++){
 	 int idx = indx[i];
 	 fock::onstate state = states[idx];
 	 auto ci = rcanon_CIcoeff(icomb, state)[istate];
+	 sum += counts[idx];
 	 std::cout << " i=" << i << " " << state
 	           << " counts=" << counts[idx] 
 	           << " p_i(sample)=" << counts[idx]/(1.0*nsample)
@@ -362,6 +364,9 @@ double rcanon_Sdiag_sample(const comb<Km>& icomb,
 		   << " c_i(exact)=" << ci/std::sqrt(ovlp)
 		   << std::endl;
       }
+      std::cout << "accumulated counts=" << sum 
+	        << " nsample=" << nsample 
+		<< " per=" << 1.0*sum/nsample << std::endl;
    }
    return Sd;
 }

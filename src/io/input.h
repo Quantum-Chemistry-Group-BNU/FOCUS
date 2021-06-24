@@ -91,7 +91,8 @@ private:
    void serialize(Archive & ar, const unsigned int version){
       ar & run & kind & task & topology_file & maxdets & thresh_proj & thresh_ortho
 	 & nroots & guess & inoise & maxsweep & ctrls & cisolver & maxcycle
-         & load & rcanon_file & istate & nsample & verbose;  
+         & load & rcanon_file & istate & nsample & ndetprt 
+	 & verbose;  
    }
 public:
    void read(std::ifstream& istrm);
@@ -121,6 +122,7 @@ public:
    // sampling
    int istate = 0;
    int nsample = 1.e5;
+   int ndetprt = 10;
    // debug level
    int verbose = 0; 
 };

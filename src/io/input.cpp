@@ -198,6 +198,8 @@ void params_ctns::read(ifstream& istrm){
          istate = stoi(line.substr(6));
       }else if(line.substr(0,7)=="nsample"){
          nsample = stoi(line.substr(7));
+      }else if(line.substr(0,7)=="ndetprt"){
+         ndetprt = stoi(line.substr(7));
       }else if(line.substr(0,7)=="verbose"){
          verbose = stoi(line.substr(7));
       }else if(line.substr(0,8)=="cisolver"){
@@ -276,6 +278,7 @@ void params_ctns::print() const{
    // sampling
    cout << "istate = " << istate << endl;
    cout << "nsample = " << nsample << endl;
+   cout << "ndetprt = " << ndetprt << endl;
    // debug level
    cout << "verbose = " << verbose << endl;
 }
