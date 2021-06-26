@@ -28,12 +28,12 @@ int tests::test_sci(){
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
   
-   int nroot = schd.sci.nroots;
-   vector<double> es(nroot,0.0);
+   int nroots = schd.sci.nroots;
+   vector<double> es(nroots,0.0);
 
    // selected CI
    onspace sci_space;
-   vector<vector<DTYPE>> vs(nroot);
+   vector<vector<DTYPE>> vs(nroots);
    fci::sparse_hamiltonian<DTYPE> sparseH;
    sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
 

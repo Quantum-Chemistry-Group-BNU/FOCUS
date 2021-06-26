@@ -34,16 +34,16 @@ void transform_coeff(const fock::onspace& space,
       sgns.push_back(static_cast<double>(sgn));
    }
    int dim = space.size();
-   int nroot = vs.size();
-   vs2.resize(nroot);
-   for(int i=0; i<nroot; i++){
+   int nroots = vs.size();
+   vs2.resize(nroots);
+   for(int i=0; i<nroots; i++){
       vs2[i].resize(dim);
       std::transform(vs[i].begin(),vs[i].end(),sgns.begin(),vs2[i].begin(),
 	             [](const Tm& x, const double& y){ return x*y; });
    }
 }
 
-// bipartition representation of the determinant space
+// bipartition representation of the determinant space: lspace/rspace
 struct bipart_qspace{
    public:
       void init(const int isym, // choose qsym according to isym 
@@ -60,6 +60,7 @@ struct bipart_qspace{
                   uset.insert(lstate);
                   auto ql = get_qsym_onstate(isym,lstate);
                   basis[ql].push_back(lstate);
+		  // We also put flipped determinant into basis
                   if(lstate.norb_single() != 0) basis[ql.flip()].push_back(lstate.flip());
                }
 	    } // i
@@ -134,7 +135,15 @@ struct bipart_ciwfs{
 		   const std::vector<std::vector<Tm>>& vs,
 		   const bipart_qspace& lspace, 
 		   const bipart_qspace& rspace){
-         nroot = vs.size(); 
+	 lsyms = lspace.syms;
+         rsyms = rspace.syms;	
+	 for(const auto& ql : lsyms){
+            for(const auto& qr : rsyms){
+	       auto key = std::make_pair(ql,qr);	    
+	       qblocks[key].resize(0);
+	    }
+	 } 
+	 nroots = vs.size(); 
          for(int i=0; i<space.size(); i++){
             auto lstate = (bpos==0)? fock::onstate() : space[i].get_before(bpos);
             auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
@@ -145,19 +154,19 @@ struct bipart_ciwfs{
             int il = lspace.index.at(ql).at(lstate);
             int ir = rspace.index.at(qr).at(rstate);
             auto key = std::make_pair(ql,qr);
-            if(qblocks[key].size() == 0){
-               qblocks[key].resize(nroot); // init
-               for(int iroot=0; iroot<nroot; iroot++){
+	    if(qblocks[key].size() == 0){
+               qblocks[key].resize(nroots); // init
+               for(int iroot=0; iroot<nroots; iroot++){
 		  linalg::matrix<Tm> mat(nl,nr);		
                   mat(il,ir) = vs[iroot][i]; 
                   qblocks[key][iroot] = mat;
                }
             }else{
-               for(int iroot=0; iroot<nroot; iroot++){
+               for(int iroot=0; iroot<nroots; iroot++){
                   qblocks[key][iroot](il,ir) = vs[iroot][i]; 
                }
             }
-         }
+         } // idet
       }
       // rhor[r,r'] = psi[l,r]^T*psi[l,r']^*    
       linalg::matrix<Tm> get_rhor(const bipart_qspace& lspace, 
@@ -167,17 +176,34 @@ struct bipart_ciwfs{
 	 linalg::matrix<Tm> rhor(dim,dim);
          for(const auto& ql : lspace.syms){
             auto key = std::make_pair(ql,qr);
-            auto& blk = qblocks[key];
+            const auto& blk = qblocks[key];
             if(blk.size() == 0) continue;
-            for(int iroot=0; iroot<nroot; iroot++){
+            for(int iroot=0; iroot<nroots; iroot++){
                rhor += linalg::xgemm("T","N",blk[iroot],blk[iroot].conj());
             }
          }
-         rhor *= 1.0/nroot;   
+         rhor *= 1.0/nroots;   
 	 return rhor; 
       }
+      // debug
+      void print() const{
+	 std::cout << "bipart_ciwfs:" << std::endl;
+         for(int i=0; i<lsyms.size(); i++){
+            const auto& ql = lsyms[i];
+            for(int j=0; j<rsyms.size(); j++){
+	       const auto& qr = rsyms[j];
+	       auto key = std::make_pair(ql,qr);
+	       const auto& blk = qblocks.at(key);
+	       std::cout << " i,j=" << i << "," << j 
+		         << " ql=" << ql << " qr=" << qr
+			 << " blk=" << blk.size() 
+			 << std::endl; 
+	    } // j
+	 } // i
+      }
    public:
-      int nroot;
+      int nroots;
+      std::vector<qsym> lsyms, rsyms;
       std::map<std::pair<qsym,qsym>, std::vector<linalg::matrix<Tm>>> qblocks;
 };
 
@@ -193,11 +219,10 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
 		   const bool debug){
    const bool debug_basis = false;
    int dim = rspace.dims.at(qr);
-
    // selection of important states if sig2 > thresh
    double sumBi = 0.0;   
    std::vector<int> kept;
-   for(int i=0; i<dim; i++){
+   for(int i=0; i<eigs.size(); i++){ // enable reduced SVD
       if(eigs[i] > thresh){
          kept.push_back(i);
          sumBi += eigs[i];
@@ -211,8 +236,7 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
      std::cout << " qr=" << qr << " dimB,dimBi=" << dim << "," << dimBi 
                << " sumBi=" << sumBi << " sumBc=" << sumBc << std::endl;
    }
-
-   // save sites 
+   // save renormalized sector (sym,space,coeff)
    if(dimBi > 0){
       renorm_sector<Tm> rsec;
       rsec.sym = qr;
@@ -244,14 +268,15 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
 		      const std::vector<std::vector<typename Km::dtype>>& vs,
 		      const double thresh,
 		      const bool debug){
+   using Tm = typename Km::dtype;
    auto t0 = tools::get_time();
    const bool debug_basis = false;
    if(debug){
-      std::cout << "\nctns::right_projection<Km> thresh=" 
-                << std::scientific << std::setprecision(4) << thresh << std::endl;
+      std::cout << "ctns::right_projection<Km> thresh=" 
+                << std::scientific << std::setprecision(2) << thresh << std::endl;
    }
    //
-   // 1. bipartition form of psi
+   // 1. prepare bipartition form of psi
    //
    bipart_qspace lspace, rspace;
    lspace.init(Km::isym, bpos, space, 0);
@@ -260,39 +285,72 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
    lspace.update_maps();
    rspace.update_maps();
    // construct wfs
-   bipart_ciwfs<typename Km::dtype> wfs(Km::isym, bpos, space, vs, lspace, rspace);
+   bipart_ciwfs<Tm> wfs(Km::isym, bpos, space, vs, lspace, rspace);
    //
    // 2. form dm for each qr
    //
+   int nroots = vs.size();
    int dimBc = 0; 
    double sumBc = 0.0, SvN = 0.0;
    for(const auto& qr : rspace.syms){
-      int dim = rspace.dims[qr];
+      int dimr = rspace.dims[qr];
       if(debug_basis){
-	 std::cout << "qr=" << qr << " dim=" << dim << std::endl;
+	 std::cout << "qr=" << qr << " dimr=" << dimr << std::endl;
          for(const auto& state : rspace.basis[qr]){
 	    std::cout << " state=" << state << " index=" << rspace.index[qr][state] << std::endl;
          }
       }
-      auto rhor = wfs.get_rhor(lspace, rspace, qr);
       //
-      // 3. diagonalized properly to yield rbasis (depending on qr)
+      // 3. produce rbasis properly
       //
-      std::vector<double> eigs(dim); 
-      linalg::matrix<typename Km::dtype> U(dim,dim);
-      linalg::eig_solver(rhor,eigs,U,1);
+      std::cout << "-matching ql for qr=" << qr << std::endl;
+      std::vector<double> sigs2;
+      linalg::matrix<Tm> U;
+      int matched = 0;
+      for(const auto& ql : lspace.syms){
+         auto key = std::make_pair(ql,qr);
+	 const auto& blk = wfs.qblocks[key];
+	 if(blk.size() == 0) continue;
+	 std::cout << "ql=" << ql << " blk=" << blk.size() << std::endl;
+	 matched += 1;
+         if(matched > 1) tools::exit("multiple matched ql is not supported!");
+	 int diml = lspace.dims[ql];
+	 if(dimr <= static_cast<int>(1.5*diml)){ // 1.5 is an empirical factor based on performance
+            std::cout << " RDM-based decimation: diml,dimr=" << diml << "," << dimr << std::endl;
+            linalg::matrix<Tm> rhor(dimr,dimr);
+	    for(int iroot=0; iroot<nroots; iroot++){
+               rhor += linalg::xgemm("T","N",blk[iroot],blk[iroot].conj());
+            } // iroot
+            rhor *= 1.0/nroots;   
+	    sigs2.resize(dimr);
+            linalg::eig_solver(rhor, sigs2, U, 1);
+	 }else{
+            std::cout << " SVD-based decimation: diml,dimr=" << diml << "," << dimr << std::endl;
+	    linalg::matrix<Tm> vrl(dimr,diml*nroots);
+	    for(int iroot=0; iroot<nroots; iroot++){
+	       auto blkt = blk[iroot].T();
+	       std::copy(blkt.data(), blkt.data()+dimr*diml, vrl.col(iroot*diml));
+	    } // iroot
+	    vrl *= 1.0/std::sqrt(nroots);
+	    linalg::matrix<Tm> vt;
+	    linalg::svd_solver(vrl, sigs2, U, vt, 10);
+	    std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
+			   [](const double& x){ return x*x; });
+	 }
+      }
       //
-      // 4. select important renormalized states from (eigs,U) 
+      // 4. select important renormalized states from (sigs2,U) 
       //
-      update_rbasis(rbasis, qr, rspace, eigs, U, dimBc, sumBc, SvN, thresh, debug);
+      if(matched == 1){
+         update_rbasis(rbasis, qr, rspace, sigs2, U, dimBc, sumBc, SvN, thresh, debug);
+      }
    } // qr
    if(debug){
       std::cout << "dim(space,lspace,rspace)=" << space.size() << "," 
-           << lspace.get_dimAll() << "," << rspace.get_dimAll() 
-           << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << std::endl; 
+                << lspace.get_dimAll() << "," << rspace.get_dimAll() 
+                << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << std::endl; 
       auto t1 = tools::get_time();
-      std::cout << "timing for ctns::right_projection<Km> : " << std::setprecision(2) 
-           << tools::get_duration(t1-t0) << " s" << std::endl;
+      tools::timing("ctns::right_projection<Km>", t0, t1);
    }
 }
 
@@ -307,7 +365,7 @@ inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbas
    auto t0 = tools::get_time();
    const bool debug_basis = false;
    if(debug){
-      std::cout << "\nctns::right_projection<cNK> thresh=" 
+      std::cout << "ctns::right_projection<cNK> thresh=" 
                 << std::scientific << std::setprecision(4) << thresh << std::endl;
    }
    //
@@ -396,8 +454,7 @@ inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbas
            << lspace.get_dimAll() << "," << rspace.get_dimAll() 
            << " dimBc=" << dimBc << " sumBc=" << sumBc << " SvN=" << SvN << std::endl; 
       auto t1 = tools::get_time();
-      std::cout << "timing for ctns::right_projection<cNK> : " << std::setprecision(2) 
-           << tools::get_duration(t1-t0) << " s" << std::endl;
+      tools::timing("ctns::right_projection<cNK>", t0, t1);
    }
 }
 

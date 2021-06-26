@@ -150,8 +150,7 @@ void pt2_solver(const input::schedule& schd,
 	     << "     Sd_tot = " << Sd_tot << std::endl;
 
    auto t1 = tools::get_time();
-   std::cout << "timing for sci::pt2_solver : " << std::setprecision(2) 
-	     << tools::get_duration(t1-t0) << " s" << std::endl;
+   tools::timing("sci::pt2_solver", t0, t1);
 }
 
 } // sci

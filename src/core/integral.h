@@ -203,8 +203,7 @@ void load(two_body<Tm>& int2e, one_body<Tm>& int1e, double& ecore, const std::st
    istrm.close();
    int2e.initQ();
    auto t1 = tools::get_time();
-   std::cout << "timing for integral::load_integral : " << std::setprecision(2) 
-	     << tools::get_duration(t1-t0) << " s" << std::endl;
+   tools::timing("integral::load_integral", t0, t1);
 }
 
 } // integral

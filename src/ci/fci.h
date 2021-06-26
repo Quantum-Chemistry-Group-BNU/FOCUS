@@ -60,7 +60,7 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
    std::cout << "\nfci::ci_solver dim=" << space.size() << " Htype=" << Htype << std::endl; 
    // dimensionality check
    if(es.size() > space.size()){
-      std::string msg = "error: too much roots are required! nroot,ndim=";
+      std::string msg = "error: too much roots are required! nroots,ndim=";
       tools::exit(msg+std::to_string(es.size())+","+std::to_string(space.size()));
    }
    // compute sparse_hamiltonian
@@ -79,17 +79,14 @@ void ci_solver(sparse_hamiltonian<Tm>& sparseH,
    linalg::matrix<Tm> v0(solver.ndim, solver.neig);
    get_initial(space, int2e, int1e, ecore, sparseH.diag, v0);
    auto te = tools::get_time();
-   if(debug) std::cout << "timing for get_initial : " << std::setprecision(2) 
-		       << tools::get_duration(te-td) << " s" << std::endl;
+   if(debug) tools::timing("get_initial", td, te);
    // solve
    solver.solve_iter(es.data(), vs.data(), v0.data());
    //solver.solve_diag(es.data(), vs.data());
    auto tf = tools::get_time();
-   if(debug) std::cout << "timing for solve_iter : " << std::setprecision(2) 
-		  << tools::get_duration(tf-te) << " s" << std::endl;
+   if(debug) tools::timing("solve_iter", te, tf);
    auto t1 = tools::get_time();
-   std::cout << "timing for fci::ci_solver : " << std::setprecision(2) 
-	<< tools::get_duration(t1-t0) << " s" << std::endl;
+   tools::timing("fci::ci_solver", t0, t1);
 }
 
 // without sparseH as output

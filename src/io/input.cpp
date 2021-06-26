@@ -115,7 +115,7 @@ void params_sci::read(ifstream& istrm){
 }
 
 void params_sci::print() const{
-   cout << "=== params_sci::print ===" << endl;
+   cout << "===== params_sci::print =====" << endl;
    cout << "nroots = " << nroots << endl;
    cout << "no. of unique seeds = " << nseeds << endl;
    // print det_seeds = {|det>}
@@ -249,7 +249,7 @@ void params_ctns::read(ifstream& istrm){
 }
 
 void params_ctns::print() const{
-   cout << "=== params_ctns::print ===" << endl;
+   cout << "===== params_ctns::print =====" << endl;
    cout << "kind = " << kind << endl;
    cout << "task = " << task << endl;
    cout << "topology_file = " << topology_file << endl;
@@ -287,7 +287,7 @@ void params_ctns::print() const{
 // schedule
 //
 void schedule::print() const{
-   cout << "=== schedule::print ===" << endl;
+   cout << "===== schedule::print =====" << endl;
    cout << "scratch = " << scratch << endl;
    cout << "dtype = " << dtype << endl;
    cout << "nelec = " << nelec << endl;

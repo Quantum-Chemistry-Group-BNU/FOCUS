@@ -75,8 +75,7 @@ void ci_solver(std::vector<double>& es,
    solver.solve_iter(es.data(), vs.data());
    //solver.solve_diag(es.data(), vs.data());
    auto t1 = tools::get_time();
-   std::cout << "timing for fock::ci_solver : " << std::setprecision(2) 
-	     << tools::get_duration(t1-t0) << " s" << std::endl;
+   tools::timing("fock::ci_solver", t0, t1);
 }
 
 } // fock

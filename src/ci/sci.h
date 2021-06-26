@@ -184,8 +184,7 @@ void ci_solver(const input::schedule& schd,
       copy_n(vsol.col(i), nsub, vs[i].begin());
    }
    auto t1 = tools::get_time();
-   std::cout << "timing for sci::ci_solver : " << std::setprecision(2) 
-  	     << tools::get_duration(t1-t0) << " s" << std::endl;
+   tools::timing("sci::ci_solver", t0, t1);
 }
 
 } // sci

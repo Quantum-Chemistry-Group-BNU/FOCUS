@@ -45,22 +45,22 @@ int tests::test_fci(){
    assert(std::abs(e[0] + 6.766940567056) < thresh);
    assert(std::abs(e[1] + 6.68030079306 ) < thresh);
 
-   int nroot = 1;
-   vector<double> es(nroot), es1(nroot);
-   linalg::matrix<DTYPE> vs(dim,nroot), vs1(dim,nroot);
+   int nroots = 1;
+   vector<double> es(nroots), es1(nroots);
+   linalg::matrix<DTYPE> vs(dim,nroots), vs1(dim,nroots);
 
 /*
    // simpleci solver
    fock::ci_solver(es, vs, space2, int2e, int1e, ecore);
    assert(std::abs(es[0] - e[0]) < thresh); 
-   assert(std::abs(es[nroot-1] - e[nroot-1]) < thresh);
+   assert(std::abs(es[nroots-1] - e[nroots-1]) < thresh);
 */
 
    // directci solver
    fci::sparse_hamiltonian<DTYPE> sparseH;
    fci::ci_solver(sparseH, es1, vs1, space2, int2e, int1e, ecore);
    assert(std::abs(es1[0] - e[0]) < thresh);
-   assert(std::abs(es1[nroot-1] - e[nroot-1]) < thresh);
+   assert(std::abs(es1[nroots-1] - e[nroots-1]) < thresh);
 
    // --- rdm --- 
    vector<DTYPE> v0(vs1.col(0),vs1.col(0)+dim);

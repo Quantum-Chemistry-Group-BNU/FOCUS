@@ -80,8 +80,7 @@ public:
          }
       } // debug
       auto t1 = tools::get_time();
-      std::cout << "timing for heatbath_table::heatbath_table : " << std::setprecision(2) 
-                << tools::get_duration(t1-t0) << " s" << std::endl;
+      tools::timing("heatbath_table::heatbath_table", t0, t1);
    }
 public:
    int sorb;
@@ -236,8 +235,7 @@ void expand_varSpace(fock::onspace& space,
    std::cout << "dim = " << dim << " new = " << space.size()-dim 
 	     << " total = " << space.size() << std::endl;
    auto t1 = tools::get_time();
-   std::cout << "timing for sci::expand_varSpace : " << std::setprecision(2) 
-	     << tools::get_duration(t1-t0) << " s" << std::endl;
+   tools::timing("sci::expand_varSpace", t0, t1);
 }
 
 } // sci

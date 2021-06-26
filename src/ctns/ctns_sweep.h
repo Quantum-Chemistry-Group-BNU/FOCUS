@@ -79,10 +79,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
 
    auto t1 = tools::get_time();
-   if(rank == 0){
-      std::cout << "\ntiming for ctns::opt_sweep : " << std::setprecision(2) 
-                << tools::get_duration(t1-t0) << " s" << std::endl;
-   }
+   if(rank == 0) tools::timing("ctns::opt_sweep", t0, t1);
 }
 
 } // ctns

@@ -51,9 +51,9 @@ int tests::test_simpleci(){
    assert(std::abs(SvNx-0.176260153867) < thresh);
 
    // --- iterative algorithm --- 
-   int nroot = 3;
-   vector<double> es(nroot);
-   matrix<DTYPE> vs(dim,nroot);
+   int nroots = 3;
+   vector<double> es(nroots);
+   matrix<DTYPE> vs(dim,nroots);
    ci_solver(es, vs, space2, int2e, int1e, ecore);
    cout << "e0=" << setprecision(12) << es[0] << " e1=" << es[1] << endl;
    assert(std::abs(es[0] - e[0]) < thresh); 

@@ -7,7 +7,9 @@
 using namespace std;
 using namespace linalg;
 
-// eigendecomposition HU=Ue: order=0/1 small-large/large-small
+// eigen-decomposition HU=Ue: order=0/1 small-large/large-small
+
+// real symmetric A
 void linalg::eig_solver(const matrix<double>& A, vector<double>& e, 
 			matrix<double>& U, const int order){
    assert(A.rows() == A.cols());  
@@ -29,6 +31,7 @@ void linalg::eig_solver(const matrix<double>& A, vector<double>& e,
    }
 }
 
+// complex Hermitian A
 void linalg::eig_solver(const matrix<complex<double>>& A, vector<double>& e, 
 		        matrix<complex<double>>& U, const int order){
    assert(A.rows() == A.cols());  
@@ -53,7 +56,15 @@ void linalg::eig_solver(const matrix<complex<double>>& A, vector<double>& e,
    }
 }
 
-// A = U*s*Vt
+// singular value decomposition: 
+// iop =  0 : JOBU=A, JOBVT=A: all
+//     =  1 : JOBU=S, JOBVT=N: the first min(m,n) columns of U 
+//     =  2 : JOBU=N, JOBVT=S: the first min(m,n) rows of Vt
+//     =  3 : JOBU=S, JOBVT=S: both
+//     = 10 : JOBZ=A - divide-and-conquer version
+//     = 13 : JOBZ=S (default)
+
+// real A = U*s*Vt
 void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
 			matrix<double>& U, matrix<double>& Vt,
 			const int iop){
@@ -104,13 +115,14 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
    }
 }
 
+// complex A = U*s*Vh
 void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
 			matrix<complex<double>>& U, matrix<complex<double>>& Vt,
 			const int iop){
    int m = A.rows(), n = A.cols(), r = min(m,n);
    int lwork = -1, ldu = 1, ldvt = 1, info;
-   matrix<complex<double>> Atmp(A);
    char JOBU, JOBVT, JOBZ;
+   matrix<complex<double>> Atmp(A);
    s.resize(r);
    if(iop < 10){
       if(iop == 0){
@@ -141,12 +153,9 @@ void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
          JOBZ = 'S'; U.resize(m,r); ldu = m; Vt.resize(r,n); ldvt = r;
       }
       complex<double> workopt;
-      int mx = max(m,n), mn = min(m,n), lrwork;
-      if(mx > mn){
-	 lrwork = 5*mn*mn + 5*mn;
-      }else{
-         lrwork = max(5*mn*mn + 5*mn, 2*mx*mn + 2*mn*mn + mn); 
-      }
+      // lrwork: https://www.hpc.nec/documents/sdk/SDK_NLC/UsersGuide/man/zgesdd.html
+      int mx = max(m,n), mn = min(m,n);
+      int lrwork = mn*max(5*mn + 7, 2*mx + 2*mn + 1); 
       unique_ptr<double[]> rwork(new double[lrwork]);
       unique_ptr<int[]> iwork(new int[8*r]);
       zgesdd_(&JOBZ,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,

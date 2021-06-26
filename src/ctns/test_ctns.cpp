@@ -32,10 +32,10 @@ int tests::test_ctns(){
    integral::load(int2e, int1e, ecore, schd.integral_file);
   
    // --- SCI ---
-   int nroot = schd.sci.nroots;
-   vector<double> es(nroot,0.0);
+   int nroots = schd.sci.nroots;
+   vector<double> es(nroots,0.0);
    onspace sci_space;
-   vector<vector<DTYPE>> vs(nroot);
+   vector<vector<DTYPE>> vs(nroots);
    
    if(!schd.sci.load){
       fci::sparse_hamiltonian<DTYPE> sparseH;
@@ -48,7 +48,7 @@ int tests::test_ctns(){
    }else{
       fci::ci_load(sci_space, es, vs);
    }
-   for(int i=0; i<nroot; i++){
+   for(int i=0; i<nroots; i++){
       coeff_population(sci_space, vs[i]);
    }
 

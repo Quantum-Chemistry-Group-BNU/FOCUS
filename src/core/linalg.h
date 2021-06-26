@@ -155,18 +155,18 @@ void eig_solver(const matrix<std::complex<double>>& A, std::vector<double>& e,
 		matrix<std::complex<double>>& U, const int order=0);
 
 // singular value decomposition: 
-// iop =  0 : JOBU=A, JOBVT=A
-//     =  1 : JOBU=S, JOBVT=N
-//     =  2 : JOBU=N, JOBVT=S
-//     =  3 : JOBU=S, JOBVT=S 
+// iop =  0 : JOBU=A, JOBVT=A: all
+//     =  1 : JOBU=S, JOBVT=N: the first min(m,n) columns of U 
+//     =  2 : JOBU=N, JOBVT=S: the first min(m,n) rows of Vt
+//     =  3 : JOBU=S, JOBVT=S: both
 //     = 10 : JOBZ=A - divide-and-conquer version
-//     = 13 : JOBZ=S
+//     = 13 : JOBZ=S (default)
 void svd_solver(const matrix<double>& A, std::vector<double>& s, 
 		matrix<double>& U, matrix<double>& Vt, 
-		const int iop=1);
+		const int iop=13);
 void svd_solver(const matrix<std::complex<double>>& A, std::vector<double>& s, 
 		matrix<std::complex<double>>& U, matrix<std::complex<double>>& Vt, 
-		const int iop=1);
+		const int iop=13);
 
 } // linalg
 

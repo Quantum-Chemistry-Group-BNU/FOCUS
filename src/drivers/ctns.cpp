@@ -61,15 +61,16 @@ int CTNS(const input::schedule& schd){
    icomb.world = schd.world;
 #endif
 
-   if(rank == 0) cout << "\n=== ctns.task=" << schd.ctns.task << " ===" << endl;
-   // optimization from current RCF
+   if(rank == 0 && schd.ctns.task != ""){ 
+      cout << "\n===== ctns.task=" << schd.ctns.task << " =====" << endl;
+   }
    if(schd.ctns.task == "opt"){
+      // optimization from current RCF
       ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
       if(rank == 0){
          auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
          ctns::rcanon_save(icomb, rcanon_file);
       }
-   // compute Hamiltonian   
    }else if(schd.ctns.task == "ham"){
       auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
       if(rank == 0){
@@ -78,10 +79,13 @@ int CTNS(const input::schedule& schd){
          Sij.print("Sij");
       }
    }else if(schd.ctns.task == "sdiag"){
-      int istate  = schd.ctns.istate;
-      int nsample = schd.ctns.nsample;
-      int ndetprt = schd.ctns.ndetprt; 
-      double Sd = rcanon_Sdiag_sample(icomb, istate, nsample, ndetprt);
+      // parallel sampling can be implemented in future (very simple)!
+      if(rank == 0){
+         int istate  = schd.ctns.istate;
+         int nsample = schd.ctns.nsample;
+         int ndetprt = schd.ctns.ndetprt; 
+         double Sd = rcanon_Sdiag_sample(icomb, istate, nsample, ndetprt);
+      }
    }
    return 0;	
 }

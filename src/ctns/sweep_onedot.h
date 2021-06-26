@@ -215,9 +215,7 @@ void sweep_onedot(const input::schedule& schd,
 
    timing.t1 = tools::get_time();
    if(rank == 0){
-      std::cout << "timing for ctns::sweep_onedot : " << std::setprecision(2) 
-                << tools::get_duration(timing.t1-timing.t0) << " s" 
-		<< " size=" << size << std::endl;
+      tools::timing("ctns::sweep_onedot", timing.t0, timing.t1);
       timing.analysis();
       get_sys_status();
    }

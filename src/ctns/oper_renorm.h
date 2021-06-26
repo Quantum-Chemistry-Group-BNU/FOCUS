@@ -29,10 +29,7 @@ void oper_renorm_opC(const std::string& superblock,
       qops('C')[index] = oper_kernel_renorm(superblock,site,opwf); 
    }
    auto t1 = tools::get_time();
-   if(debug_oper_dict){ 
-      std::cout << "timing for ctns::oper_renorm_opC : " << std::setprecision(2) 
-                << tools::get_duration(t1-t0) << " s" << std::endl;
-   }
+   if(debug_oper_dict) tools::timing("ctns::oper_renorm_opC", t0, t1);
 }
 
 // kernel for computing renormalized Apq=ap^+aq^+
@@ -70,10 +67,7 @@ void oper_renorm_opA(const std::string& superblock,
 		<< " no.=" << qops('A').size() << std::endl;
    }
    auto t1 = tools::get_time();
-   if(debug_oper_dict){
-      std::cout << "timing for ctns::oper_renorm_opA : " << std::setprecision(2) 
-                << tools::get_duration(t1-t0) << " s" << std::endl;
-   }
+   if(debug_oper_dict) tools::timing("ctns::oper_renorm_opA", t0, t1);
 }
 
 // kernel for computing renormalized ap^+aq
@@ -111,10 +105,7 @@ void oper_renorm_opB(const std::string& superblock,
 		<< " no.=" << qops('B').size() << std::endl;
    }
    auto t1 = tools::get_time();
-   if(debug_oper_dict){ 
-      std::cout << "timing for tns::oper_renorm_opB : " << std::setprecision(2) 
-                << tools::get_duration(t1-t0) << " s" << std::endl;
-   }
+   if(debug_oper_dict) tools::timing("ctns::oper_renorm_opB", t0, t1);
 }
 
 // Ppq = <pq||sr> aras [r>s] (p<q)
@@ -154,10 +145,7 @@ void oper_renorm_opP(const std::string& superblock,
 	        << " size,rank=" << size << "," << rank 
 		<< " no.=" << qops('P').size() << std::endl;
    }
-   if(debug_oper_dict){
-      std::cout << "timing for ctns::oper_renorm_opP : " << std::setprecision(2) 
-	        << tools::get_duration(t1-t0) << " s" << std::endl;
-   }
+   if(debug_oper_dict) tools::timing("ctns::oper_renorm_opP", t0, t1);
 }
 
 // Qps = <pq||sr> aq^+ar
@@ -197,10 +185,7 @@ void oper_renorm_opQ(const std::string& superblock,
 		<< " no.=" << qops('Q').size() << std::endl;
    }
    auto t1 = tools::get_time();
-   if(debug_oper_dict){ 
-      std::cout << "timing for ctns::oper_renorm_opQ : " << std::setprecision(2) 
-	        << tools::get_duration(t1-t0) << " s" << std::endl;
-   }
+   if(debug_oper_dict) tools::timing("ctns::oper_renorm_opQ", t0, t1);
 }
 
 // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
@@ -232,10 +217,7 @@ void oper_renorm_opS(const std::string& superblock,
       qops('S')[index] = oper_kernel_renorm(superblock,site,opwf);
    }
    auto t1 = tools::get_time();
-   if(debug_oper_dict){
-      std::cout << "timing for ctns::oper_renorm_opS : " << std::setprecision(2) 
-	        << tools::get_duration(t1-t0) << " s" << std::endl;
-   }
+   if(debug_oper_dict) tools::timing("ctns::oper_renorm_opS", t0, t1);
 }
 
 template <typename Km, typename Tm>
@@ -261,10 +243,7 @@ void oper_renorm_opH(const std::string& superblock,
    auto opwf = oper_compxwf_opH(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,size,rank);
    qops('H')[0] = oper_kernel_renorm(superblock,site,opwf);
    auto t1 = tools::get_time();
-   if(debug_oper_dict){
-      std::cout << "timing for tns::oper_renorm_opH : " << std::setprecision(2) 
-	        << tools::get_duration(t1-t0) << " s" << std::endl;
-   }
+   if(debug_oper_dict) tools::timing("ctns::oper_renorm_opH", t0, t1);
 }
 
 // renormalize ops
@@ -341,10 +320,7 @@ void oper_renorm_opAll(const std::string& superblock,
    }
 
    auto t1 = tools::get_time();
-   if(rank == 0){
-      std::cout << " t=" << std::setprecision(2) 
-	        << tools::get_duration(t1-t0) << "s" << std::endl;
-   }
+   if(rank == 0) tools::timing("ctns::oper_renorm_opAll", t0, t1);
 }
 
 } // ctns

@@ -8,8 +8,10 @@ namespace ctns{
 
 inline qbond get_qbond_vac(){ return qbond({{qsym(0,0),1}}); }
 
+//
 // Physical degree of freedoms related:
 // stored order = {|0>,|up,dw>,|up>,|dw>}
+//
 
 inline qbond get_qbond_phys(const int isym){
    qbond qphys;

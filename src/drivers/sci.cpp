@@ -13,10 +13,10 @@ int SCI(const input::schedule& schd){
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
    // SCI
-   int nroot = schd.sci.nroots;
+   int nroots = schd.sci.nroots;
    onspace sci_space;
-   vector<double> es(nroot, 0.0);
-   vector<vector<Tm>> vs(nroot);
+   vector<double> es(nroots, 0.0);
+   vector<vector<Tm>> vs(nroots);
    auto ci_file = schd.scratch+"/"+schd.sci.ci_file;
    if(!schd.sci.load){
       fci::sparse_hamiltonian<Tm> sparseH;
@@ -25,13 +25,13 @@ int SCI(const input::schedule& schd){
    }else{
       fci::ci_load(sci_space, es, vs, ci_file);
    }
-   for(int i=0; i<nroot; i++){
+   for(int i=0; i<nroots; i++){
       coeff_population(sci_space, vs[i]);
    }
    // pt2 for single root
    if(schd.sci.ifpt2){
       int istate = schd.sci.istate;
-      assert(istate < nroot);
+      assert(istate < nroots);
       sci::pt2_solver(schd, es[istate], vs[istate], sci_space, int2e, int1e, ecore);
    }
    return 0;

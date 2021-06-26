@@ -117,8 +117,7 @@ void get_rdm1(const fock::onspace& space,
    Tm tr = rdm1.trace();
    std::cout << "tr(rdm1)=" << tr << " normalized to N" << std::endl;
    auto t1 = tools::get_time();
-   std::cout << "timing for fci:get_rdm1 : " << std::setprecision(2) 
-	     << tools::get_duration(t1-t0) << " s" << std::endl;
+   tools::timing("fci:get_rdm1", t0, t1);
    // debug by comparing against the brute-force implementation 
    if(debug){
       std::cout << "\ndebug fci::get_rdm1 ..." << std::endl;
@@ -190,8 +189,7 @@ void get_rdm2(const sparse_hamiltonian<Tm>& sparseH,
    Tm tr = 2.0*rdm2.trace();
    std::cout << "tr(rdm2)=" << tr << " normalized to N(N-1)" << std::endl;
    auto t1 = tools::get_time();
-   std::cout << "timing for fci:get_rdm2 : " << std::setprecision(2) 
-	     << tools::get_duration(t1-t0) << " s" << std::endl;
+   tools::timing("fci:get_rdm2", t0, t1);
    // debug by comparing against the brute-force implementation 
    if(debug){
       std::cout << "\ndebug fci::get_rdm2 ..." << std::endl;

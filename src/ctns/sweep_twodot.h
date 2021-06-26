@@ -249,9 +249,7 @@ void sweep_twodot(const input::schedule& schd,
 
    timing.t1 = tools::get_time();
    if(rank == 0){
-      std::cout << "timing for ctns::sweep_twodot : " << std::setprecision(2) 
-                << tools::get_duration(timing.t1-timing.t0) << " s" 
-		<< " size=" << size << std::endl;
+      tools::timing("ctns::sweep_twodot", timing.t0, timing.t1);
       timing.analysis();
       get_sys_status();
    }

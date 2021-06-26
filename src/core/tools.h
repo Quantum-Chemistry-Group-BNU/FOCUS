@@ -17,6 +17,7 @@
 namespace tools{
 
 inline void license(){
+   std::cout << std::endl;	
    std::cout << "===============================================================" << std::endl;
    std::cout << " FOCUS: a platform for exploring FermiOniC qUantum Simulations " << std::endl;
    std::cout << " Author: Zhendong Li <zhendongli2008@gmail.com> @ BNU2019      " << std::endl;
@@ -56,6 +57,12 @@ std::chrono::high_resolution_clock::time_point get_time();
 template<typename T>
 double get_duration(T t){
    return std::chrono::duration_cast<std::chrono::milliseconds>(t).count()*0.001; 
+}
+
+template<typename T>
+void timing(const std::string msg, const T& t0, const T& t1){
+   std::cout << "----- TIMING FOR " << msg << " : " << std::setprecision(2) 
+	     << get_duration(t1-t0) << " S -----" << std::endl;
 }
 
 // random

@@ -734,10 +734,7 @@ struct dvdsonSolver_nkr{
             std::copy(V.data(), V.data()+ndim*neig, vs);
 	 } // rank-0
          auto t1 = tools::get_time();
-         if(rank == 0){
-	    std::cout << "timing for solve_diag : " << std::setprecision(2)  
-                      << tools::get_duration(t1-t0) << " s" << std::endl;
-         }
+         if(rank == 0) tools::timing("solve_diag", t0, t1);
       }
       // subspace problem
       void subspace_solver(const int ndim, 

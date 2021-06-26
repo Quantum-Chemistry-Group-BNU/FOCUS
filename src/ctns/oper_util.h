@@ -144,10 +144,9 @@ void oper_init(const comb<Km>& icomb,
    t_save += tools::get_duration(tc-tb);
    auto t1 = tools::get_time();
    if(rank == 0){
-      std::cout << "timing for ctns::oper_init : " << std::setprecision(2) 
-                << tools::get_duration(t1-t0) << " s" << std::endl;
+      tools::timing("ctns::oper_init", t0, t1);
       std::cout << "detailed t[comp/save]= "
-                << t_comp << ", " << t_save
+	        << t_comp << ", " << t_save
                 << " t[total]=" << (t_comp + t_save)
                 << std::endl;
    }
@@ -202,8 +201,7 @@ void oper_env_right(const comb<Km>& icomb,
    } // idx
    auto t1 = tools::get_time();
    if(rank == 0){
-      std::cout << "timing for ctns::oper_env_right : " << std::setprecision(2) 
-                << tools::get_duration(t1-t0) << " s" << std::endl;
+      tools::timing("ctns::oper_env_right", t0, t1);
       std::cout << "detailed t[init/load/comp/save]= "
                 << t_init << ", " << t_load << ", " << t_comp << ", " << t_save
                 << " t[total]=" << (t_init + t_load + t_comp + t_save)
