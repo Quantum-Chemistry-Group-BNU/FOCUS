@@ -163,7 +163,7 @@ void oper_env_right(const comb<Km>& icomb,
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
-   if(rank == 0) std::cout << "ctns::oper_env_right" << std::endl;
+   if(rank == 0) std::cout << "\nctns::oper_env_right" << std::endl;
    double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
    // construct for dot operators [cop] & boundary operators [lop/rop]
    auto t0 = tools::get_time();
@@ -207,44 +207,6 @@ void oper_env_right(const comb<Km>& icomb,
                 << " t[total]=" << (t_init + t_load + t_comp + t_save)
                 << std::endl;
    }
-}
-
-// Hij = <CTNS[i]|H|CTNS[j]>
-template <typename Km>
-linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb, 
-		            		    const integral::two_body<typename Km::dtype>& int2e,
-		            		    const integral::one_body<typename Km::dtype>& int1e,
-		            		    const double ecore,
-		            		    const std::string scratch){
-   int size = 1, rank = 0;
-#ifndef SERIAL
-   size = icomb.world.size();
-   rank = icomb.world.rank();
-#endif   
-   if(rank == 0) std::cout << "\nctns::get_Hmat" << std::endl;
-   // build operators for environement
-   oper_env_right(icomb, int2e, int1e, scratch);
-   // load operators from file
-   using Tm = typename Km::dtype;
-   oper_dict<Tm> qops;
-   auto p = std::make_pair(0,0); 
-   auto fname = oper_fname(scratch, p, "r");
-   oper_load(fname, qops);
-   auto Hmat = qops('H')[0].to_matrix();
-   if(rank == 0) Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows()); // avoid repetition
-   // deal with rwfuns(istate,ibas): Hij = w*[i,a] H[a,b] w[j,b] = (w^* H w^T) 
-   auto wfmat = icomb.rwfuns.to_matrix();
-   auto tmp = linalg::xgemm("N","T",Hmat,wfmat);
-   Hmat = linalg::xgemm("N","N",wfmat.conj(),tmp);
-#ifndef SERIAL
-   // reduction of partial H formed on each processor
-   if(size > 1){
-      linalg::matrix<Tm> Hmat2(Hmat.rows(),Hmat.cols());
-      boost::mpi::reduce(icomb.world, Hmat, Hmat2, std::plus<linalg::matrix<Tm>>(), 0);
-      Hmat = Hmat2;
-   }
-#endif  
-   return Hmat;
 }
 
 } // ctns

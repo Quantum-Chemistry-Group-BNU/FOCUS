@@ -20,7 +20,7 @@ void rcanon_init(comb<Km>& icomb,
    
    // 1. compute renormalized bases {|r>} from SCI wavefunctions
    get_rbases(icomb, space, vs, thresh_proj);
-   exit(1);
+   //exit(1);
 
    // 2. build sites from rbases
    get_rsites(icomb); 
@@ -69,14 +69,14 @@ void get_rbases(comb<Km>& icomb,
          auto order = node.lsupport;
          int bpos = order.size(); // must be put here to account bipartition position
          copy(rsupp.begin(), rsupp.end(), back_inserter(order));
-         if(debug){
-            std::cout << "bpos=" << bpos;
-	    std::cout << " order=";
-            for(int k : order) std::cout << k << " ";
-	    std::cout << std::endl;
-         }
+         //if(debug){
+         //   std::cout << "bpos=" << bpos;
+	 //   std::cout << " order=";
+         //   for(int k : order) std::cout << k << " ";
+	 //   std::cout << std::endl;
+         //}
          
-	 // 2. transform SCI coefficient
+	 // 2. transform SCI coefficient to this ordering
 	 fock::onspace space2;
 	 std::vector<std::vector<Tm>> vs2;
          transform_coeff(space, vs, order, space2, vs2); 

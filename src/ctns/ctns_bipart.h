@@ -54,27 +54,27 @@ struct bipart_qspace{
          if(dir == 0){
             for(int i=0; i<space.size(); i++){
                auto lstate = (bpos==0)? fock::onstate() : space[i].get_before(bpos);
-               lstate = lstate.make_standard(); // key must be standard!
+               if(isym == 1) lstate = lstate.make_standard(); // key must be standard!
                auto itl = uset.find(lstate);
                if(itl == uset.end()){ // not found - new basis
                   uset.insert(lstate);
                   auto ql = get_qsym_onstate(isym,lstate);
                   basis[ql].push_back(lstate);
-		  // We also put flipped determinant into basis
-                  if(lstate.norb_single() != 0) basis[ql.flip()].push_back(lstate.flip());
+	          // We also put flipped determinant into basis [only for N, but not for NSz!]
+                  if(isym == 1 && lstate.norb_single() != 0) basis[ql.flip()].push_back(lstate.flip());
                }
 	    } // i
 	 // after bpos
          }else{
             for(int i=0; i<space.size(); i++){
                auto rstate = (bpos==0)? space[i] : space[i].get_after(bpos);
-               rstate = rstate.make_standard();
+               if(isym == 1) rstate = rstate.make_standard();
                auto itr = uset.find(rstate);
                if(itr == uset.end()){
                   uset.insert(rstate);
                   auto qr = get_qsym_onstate(isym,rstate);
                   basis[qr].push_back(rstate);
-                  if(rstate.norb_single() != 0) basis[qr.flip()].push_back(rstate.flip());
+                  if(isym == 1 && rstate.norb_single() != 0) basis[qr.flip()].push_back(rstate.flip());
                }
 	    } // i
 	 }
@@ -303,7 +303,7 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
       //
       // 3. produce rbasis properly
       //
-      std::cout << "-matching ql for qr=" << qr << std::endl;
+      if(debug_basis) std::cout << "-qr=" << qr << " find matched ql ..." << std::endl;
       std::vector<double> sigs2;
       linalg::matrix<Tm> U;
       int matched = 0;
@@ -311,12 +311,11 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
          auto key = std::make_pair(ql,qr);
 	 const auto& blk = wfs.qblocks[key];
 	 if(blk.size() == 0) continue;
-	 std::cout << "ql=" << ql << " blk=" << blk.size() << std::endl;
 	 matched += 1;
          if(matched > 1) tools::exit("multiple matched ql is not supported!");
 	 int diml = lspace.dims[ql];
 	 if(dimr <= static_cast<int>(1.5*diml)){ // 1.5 is an empirical factor based on performance
-            std::cout << " RDM-based decimation: diml,dimr=" << diml << "," << dimr << std::endl;
+            if(debug_basis) std::cout << " RDM-based decimation: ql=" << ql << " dim(l,r)=" << diml << "," << dimr << std::endl;
             linalg::matrix<Tm> rhor(dimr,dimr);
 	    for(int iroot=0; iroot<nroots; iroot++){
                rhor += linalg::xgemm("T","N",blk[iroot],blk[iroot].conj());
@@ -325,21 +324,23 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
 	    sigs2.resize(dimr);
             linalg::eig_solver(rhor, sigs2, U, 1);
 	 }else{
-            std::cout << " SVD-based decimation: diml,dimr=" << diml << "," << dimr << std::endl;
+            if(debug_basis) std::cout << " SVD-based decimation: ql=" << ql << " dim(l,r)=" << diml << "," << dimr << std::endl;
 	    linalg::matrix<Tm> vrl(dimr,diml*nroots);
 	    for(int iroot=0; iroot<nroots; iroot++){
 	       auto blkt = blk[iroot].T();
 	       std::copy(blkt.data(), blkt.data()+dimr*diml, vrl.col(iroot*diml));
 	    } // iroot
 	    vrl *= 1.0/std::sqrt(nroots);
-	    linalg::matrix<Tm> vt;
-	    linalg::svd_solver(vrl, sigs2, U, vt, 10);
+	    linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
+	    linalg::svd_solver(vrl, sigs2, U, vt, 1);
 	    std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
 			   [](const double& x){ return x*x; });
 	 }
       }
       //
       // 4. select important renormalized states from (sigs2,U) 
+      //    NOTE: it is possible that matched=0, when we add flipped det in bipart_qspace with sym=NSz!
+      //          then, this part needs to be skipped as no sig2 and U are generated in part 3.
       //
       if(matched == 1){
          update_rbasis(rbasis, qr, rspace, sigs2, U, dimBc, sumBc, SvN, thresh, debug);
