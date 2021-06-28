@@ -20,7 +20,6 @@ void rcanon_init(comb<Km>& icomb,
    
    // 1. compute renormalized bases {|r>} from SCI wavefunctions
    get_rbases(icomb, space, vs, thresh_proj);
-   //exit(1);
 
    // 2. build sites from rbases
    get_rsites(icomb); 
