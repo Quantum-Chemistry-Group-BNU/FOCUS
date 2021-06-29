@@ -265,6 +265,7 @@ struct matrix{
 	 }
       }
       // ZL@20210421: reorder row/col/rowcol 
+      // iop=0: i-th pos in mat[new] is the idx[i]-th pos in mat[old]
       matrix reorder_row(const std::vector<int>& idx, const bool iop=0){
 	 matrix<Tm> rmat(_rows,_cols);
 	 if(iop == 0){

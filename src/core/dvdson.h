@@ -13,18 +13,25 @@ namespace linalg{
 
 // orthogonality of vbas(ndim,mstate) as in Fortran
 template <typename Tm>
-void check_orthogonality(const int n, const int m, 
-   	      	         const std::vector<Tm>& vbas,
-  		         const double thresh=1.e-10){
-   linalg::matrix<Tm> V(n,m,vbas.data());
-   linalg::matrix<Tm> Vh = V.H();
-   linalg::matrix<Tm> dev = xgemm("N","N",Vh,V) - identity_matrix<Tm>(m);
+double check_orthogonality(const linalg::matrix<Tm>& V,
+  		           const double thresh=1.e-10){
+   int n = V.rows();
+   int m = V.cols();
+   linalg::matrix<Tm> dev = xgemm("C","N",V,V) - identity_matrix<Tm>(m);
    double diff = normF(dev);
    if(diff > thresh){
       dev.print("dev");
       std::string msg = "error: too large deviation from orthonormal basis!";
       tools::exit(msg+" diff="+std::to_string(diff)+" thresh="+std::to_string(thresh));
    }
+   return diff;
+}
+template <typename Tm>
+double check_orthogonality(const int n, const int m, 
+   	      	           const std::vector<Tm>& vbas,
+  		           const double thresh=1.e-10){
+   linalg::matrix<Tm> V(n,m,vbas.data());
+   return check_orthogonality(V, thresh);
 }
 
 // modified Gram-Schmidt orthogonalization of 

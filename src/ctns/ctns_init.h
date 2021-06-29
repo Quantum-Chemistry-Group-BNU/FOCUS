@@ -84,6 +84,9 @@ void get_rbases(comb<Km>& icomb,
 	 right_projection<Km>(icomb.rbases[p], 2*bpos, space2, vs2, thresh_proj, debug);
 
       } // node type
+
+      //if(idx == 4) exit(1);
+
    } // idx
    
    // print information for all renormalized basis {|r>} at each bond
@@ -102,6 +105,8 @@ void get_rbases(comb<Km>& icomb,
       } // idx
       std::cout << "maximum bond dimension = " << Dmax << std::endl;
    }
+
+   exit(1);
 
    auto t1 = tools::get_time();
    tools::timing("ctns::get_rbases", t0, t1);

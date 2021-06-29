@@ -8,6 +8,8 @@
 #include "ctns_kind.h"
 #include "ctns_rbasis.h"
 
+#include "../core/dvdson.h"
+
 namespace ctns{
 
 // transform space and coefficient upon permutation
@@ -370,18 +372,20 @@ template <typename Tm>
 int kr_get_ortho_basis(linalg::matrix<Tm>& rbas, 
 		       const int nres,
 		       std::vector<double>& phases,
-		       const double crit_indp=1.e-12){
+		       const double crit_indp=1.e-14){
    const bool debug_ortho = true;
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
-   // 2. form new basis from rbas by modified Gram-Schmidt procedure
+   if(debug_ortho) std::cout << "ctns::kr_get_ortho_basis crit_indp=" 
+	   		     << crit_indp << std::endl;
+   // form new basis from rbas by modified Gram-Schmidt procedure
    int ndim = rbas.rows();
    std::vector<Tm> krvec(ndim);
    std::vector<Tm> rbas_new;
    int nindp = 0;
    for(int i=0; i<nres; i++){
       double rii = linalg::xnrm2(ndim, rbas.col(i)); // normalization constant
-      if(debug_ortho) std::cout << "\ni=" << i << " rii=" << rii << std::endl;
+      if(debug_ortho) std::cout << "i=" << i << " rii=" << rii << std::endl;
       if(rii < crit_indp) continue;
       // normalized |r[i]> 
       for(int repeat=0; repeat<maxtimes; repeat++){
@@ -398,11 +402,6 @@ int kr_get_ortho_basis(linalg::matrix<Tm>& rbas,
       get_krpair(rbas.col(i), krvec.data(), phases);
       std::copy(krvec.cbegin(), krvec.cend(), &rbas_new[nindp*ndim]);
       nindp += 1;
-      //if(debug_ortho){
-      //   linalg::matrix<Tm> V(ndim,nindp,rbas_new.data());
-      //   auto ova = xgemm("C","N",V,V);
-      //   ova.print("ova");
-      //}
       //-------------------------------------------------------------
       // project out |r[i]>-component from other basis
       int N = nres-1-i;
@@ -423,13 +422,74 @@ int kr_get_ortho_basis(linalg::matrix<Tm>& rbas,
    assert(nindp%2 == 0);
    rbas.resize(ndim, nindp);
    std::copy(rbas_new.data(), rbas_new.data()+ndim*nindp, rbas.data());
+/*
    if(debug_ortho){
       rbas.print("rbas");
       auto ova = xgemm("C","N",rbas,rbas);
       ova.print("ova");
    }
+*/
    return nindp;
 }
+
+// MGS for rbas of size rbas(ndim,nres)
+template <typename Tm>
+int kr_get_ortho_basis2(linalg::matrix<Tm>& rbas, 
+		        const int nres,
+		        std::vector<double>& phases,
+		        const double crit_indp=1.e-12){
+   const bool debug_ortho = true;
+   const Tm one = 1.0, mone = -1.0, zero = 0.0;
+   const int maxtimes = 2;
+   if(debug_ortho) std::cout << "ctns::kr_get_ortho_basis crit_indp=" 
+	   		     << crit_indp << std::endl;
+   // form new basis from rbas by modified Gram-Schmidt procedure
+   int ndim = rbas.rows();
+   linalg::matrix<Tm> rbas_new(ndim,2*nres);
+   std::copy(rbas.data(), rbas.data()+ndim*nres, rbas_new.data());
+   for(int i=0; i<nres; i++){
+      get_krpair(rbas.col(i), rbas_new.col(i+nres), phases);
+   }
+   auto ova = linalg::xgemm("C","N",rbas_new,rbas_new);
+   std::vector<double> phases_fake(nres, 1.0);
+   std::vector<double> eigs(2*nres);
+   linalg::matrix<Tm> U(2*nres,2*nres);
+   auto qodd = qsym(1);
+   eig_solver_kr<std::complex<double>>(qodd, ova, eigs, U, phases_fake);
+
+   std::cout << "eig: ";
+   for(auto eig : eigs) std::cout << eig << " ";
+   std::cout << std::endl; 
+
+   // U*s[-1/2]
+   int nkept = 0;
+   for(int i=0; i<nres; i++){
+      if(eigs[i] >= 1.e-12){
+	 nkept += 1;
+      }else{
+	 break;
+      }	      
+   }
+   std::cout << ">>> nkept=" << nkept << std::endl;
+   linalg::matrix<Tm> Utmp(2*nres,2*nkept);
+   for(int i=0; i<nkept; i++){
+      double fac = 1.0/std::sqrt(eigs[i]);
+      std::transform(U.col(i), U.col(i)+2*nres, Utmp.col(i),
+		     [fac](const Tm& x){ return x*fac; });
+      std::transform(U.col(i+nres), U.col(i+nres)+2*nres, Utmp.col(i+nkept),
+		     [fac](const Tm& x){ return x*fac; });
+   }
+   rbas = linalg::xgemm("N","N",rbas_new,Utmp);
+   int ncol = 2*nkept;
+   double diff = linalg::check_orthogonality(rbas);
+   std::cout << "diff=" << diff 
+	     << " rbas.rows=" << rbas.rows() 
+	     << " rbas.cols=" << rbas.cols()
+	     << std::endl; 
+   
+   return 0;
+}
+
 
 // time-reversal symmetry adapted right_projection
 template <> 
@@ -542,11 +602,11 @@ inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbas
             linalg::eig_solver(rhor, sigs2, U, 1);
 
 	    std::cout << std::endl;
-	    rhor.print("rho[nkr]");
+	    //rhor.print("rho[nkr]");
 	    std::cout << " sigs2[nkr]: ";
 	    for(auto sig2 : sigs2) std::cout << sig2 << " ";
 	    std::cout << std::endl; 
-            U.print("U[nkr]");
+            //U.print("U[nkr]");
 	    
 	    std::cout << std::endl;
 	    eig_solver_kr<std::complex<double>>(qr, rhor, sigs2, U, phases);
@@ -554,7 +614,7 @@ inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbas
 	    std::cout << " sigs2[kr]: ";
 	    for(auto sig2 : sigs2) std::cout << sig2 << " ";
 	    std::cout << std::endl; 
-            U.print("U[kr]");
+            //U.print("U[kr]");
 
 	    if(qr.parity() == 1){
 
@@ -575,37 +635,62 @@ inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbas
 	    std::cout << " sigs2[SVD]: ";
 	    for(auto sig2 : sigs2) std::cout << sig2 << " ";
 	    std::cout << std::endl; 
-	    U.print("SVD");
+	    //U.print("SVD");
 
 	    int nkept = 0;
 	    for(int i=0; i<sigs2.size(); i++){
-	       if(sigs2[i] > 1.e-16){ 
+	       if(sigs2[i] > thresh){ 
 		  nkept += 1;
 	       }else{
 		  break;
 	       }
 	    }
 	    std::cout << "nkept=" << nkept << std::endl;
+	  
+            //----------------------------------------------
+	    /*
+	    auto Utmp = U;
+	    kr_get_ortho_basis2(Utmp, nkept, phases);
+	    U = Utmp;
+	    int n = U.cols();
+	    */
+            //----------------------------------------------
+
+            //----------------------------------------------
 	    kr_get_ortho_basis(U, nkept, phases);
-
-	    std::vector<int> pos_new(nkept);
-	    for(int i=0; i<nkept; i++){
-	       pos_new[i] = i%2==0? i/2 : i/2+nkept/2;
+	    std::cout << "pos_new:" << std::endl;
+	    int n = U.cols();
+	    assert(n%2 == 0);
+	    std::vector<int> pos_new(n);
+	    for(int i=0; i<n; i++){
+	       pos_new[i] = i%2==0? i/2 : i/2+n/2;
 	    }
-	    U = U.reorder_col(pos_new);
-	    U.print("U_reordered");
+	    for(auto pos : pos_new) std::cout << pos << " ";
+	    std::cout << std::endl;
+	    U = U.reorder_col(pos_new, 1);
+	    //U.print("U_reordered");
+            //----------------------------------------------
 
+	    std::cout << "n=" << n << std::endl;
 	    auto tmp1 = linalg::xgemm("C","N",U,rhor);
 	    auto tmp2 = linalg::xgemm("N","N",tmp1,U);
 	    linalg::matrix<Tm> Uc;
-	    phases.resize(nkept/2, 1.0);
+	    phases.resize(n/2, 1.0);
+	    
+	    std::cout << "r/c=" << tmp2.rows() << "," << tmp2.cols() << std::endl;
+	    std::cout << sigs2.size() << std::endl;
+
+	    sigs2.resize(n);
             eig_solver_kr<std::complex<double>>(qr, tmp2, sigs2, Uc, phases);
+
+	    std::cout << sigs2.size() << std::endl;
+
 	    std::cout << " sigs2[new]: ";
 	    for(auto sig2 : sigs2) std::cout << sig2 << " ";
 	    std::cout << std::endl; 
-	    Uc.print("Uc");
+	    //Uc.print("Uc");
 	    auto Ug = linalg::xgemm("N","N",U,Uc);
-	    Ug.print("Ug");
+	    //Ug.print("Ug");
 	    U = Ug;
 	    
 	    }

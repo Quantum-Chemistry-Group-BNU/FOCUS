@@ -28,7 +28,7 @@ int kr_get_ortho_basis(const int ndim,
   		       const double crit_indp=1.e-12){
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
-   // 1. projection (1-V*V^+)*R = R-V*(V^+R)
+   // projection (1-V*V^+)*R = R-V*(V^+R)
    std::vector<Tm> vtr(neig*nres);
    for(int repeat=0; repeat<maxtimes; repeat++){
       linalg::xgemm("C","N",&neig,&nres,&ndim,
@@ -38,7 +38,7 @@ int kr_get_ortho_basis(const int ndim,
 	            &mone,vbas.data(),&ndim,vtr.data(),&neig,
 	            &one,rbas.data(),&ndim);
    }
-   // 2. form new basis from rbas by modified Gram-Schmidt procedure
+   // form new basis from rbas by modified Gram-Schmidt procedure
    std::vector<Tm> krvec(ndim);
    std::vector<Tm> rbas_new;
    int nindp = 0;
@@ -106,7 +106,7 @@ int kr_get_ortho_basis(const int ndim,
 		       const double crit_indp=1.e-12){
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
-   // 2. form new basis from rbas by modified Gram-Schmidt procedure
+   // form new basis from rbas by modified Gram-Schmidt procedure
    std::vector<Tm> krvec(ndim);
    std::vector<Tm> rbas_new;
    int nindp = 0;

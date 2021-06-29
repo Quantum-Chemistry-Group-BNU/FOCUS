@@ -366,7 +366,8 @@ void eig_solver_kr_odd(const linalg::matrix<Tm>& rhor,
    auto rhor_kr = rmat.to_matrix();
    // TRS-preserving diagonalization (only half eigs are output)
 
-   rhor_kr.print("rhor_kr_odd");
+   //lzd
+   //rhor_kr.print("rhor_kr_odd");
 
    zquatev(rhor_kr,eigs,U,1);
    std::copy(eigs.begin(), eigs.begin()+dim1, eigs.begin()+dim1); // duplicate eigs!
@@ -453,7 +454,8 @@ void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
    linalg::matrix<double> rhor_kr = matr.to_matrix();
    linalg::matrix<double> Ur;
 
-   rhor_kr.print("rhor_kr_even");
+   //lzd
+   //rhor_kr.print("rhor_kr_even");
 
    linalg::eig_solver(rhor_kr,eigs,Ur,1);
    //
