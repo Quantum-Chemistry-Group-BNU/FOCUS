@@ -85,7 +85,7 @@ void get_rbases(comb<Km>& icomb,
 
       } // node type
 
-      //if(idx == 4) exit(1);
+      if(idx == 2) exit(1);
 
    } // idx
    

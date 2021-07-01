@@ -437,7 +437,7 @@ void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
    //  [ sqrt2*ciT sqrt2*crT     e    ]
    auto ApB = A+B;
    auto AmB = A-B;
-   const double sqrt2 = sqrt(2.0), invsqrt2 = 1.0/sqrt2;
+   const double sqrt2 = std::sqrt(2.0), isqrt2 = 1.0/sqrt2;
    auto Cr = sqrt2*C.real();
    auto Ci = sqrt2*C.imag();
    blockMatrix<double> matr(partition,partition);
@@ -470,7 +470,7 @@ void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
    // back transformation to original basis
    blockMatrix<std::complex<double>> umat(partition,{dim});
    const std::complex<double> iunit(0.0,1.0);
-   umat(0,0) = (matu(1,0) + iunit*matu(0,0))*invsqrt2;
+   umat(0,0) = (matu(1,0) + iunit*matu(0,0))*isqrt2;
    umat(1,0) = umat(0,0).conj();
    umat(1,0).rowscale(phases);
    umat(2,0) = matu(2,0).as_complex();
