@@ -1,173 +1,20 @@
-#ifndef SWEEP_DVDSON_KR_H
-#define SWEEP_DVDSON_KR_H
+#ifndef SWEEP_DVDSON_H
+#define SWEEP_DVDSON_H
 
 #include "../../core/dvdson.h"
+#include "kramers_basis.h"
+#include "kramers_linalg.h"
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
 
 namespace ctns{
 
-const bool debug_ortho = false;
-extern const bool debug_ortho;
-
-template <typename Tm, typename QTm> 
-void get_krvec(Tm* y, Tm* ykr, QTm& wf, const int parity=1){
-   wf.from_array(y);
-   wf.K(parity).to_array(ykr);
-}
-
-// MGS orthogonalization of rbas(ndim,nres) against vbas(ndim,neig)
-template <typename Tm, typename QTm>
-int kr_get_ortho_basis(const int ndim,
-  	      	       const int neig,
-  		       const int nres,
-  		       const std::vector<Tm>& vbas,
-  		       std::vector<Tm>& rbas,
-		       QTm& wf,
-  		       const double crit_indp=1.e-12){
-   const Tm one = 1.0, mone = -1.0, zero = 0.0;
-   const int maxtimes = 2;
-   // projection (1-V*V^+)*R = R-V*(V^+R)
-   std::vector<Tm> vtr(neig*nres);
-   for(int repeat=0; repeat<maxtimes; repeat++){
-      linalg::xgemm("C","N",&neig,&nres,&ndim,
-	            &one,vbas.data(),&ndim,rbas.data(),&ndim,
-	            &zero,vtr.data(),&neig);
-      linalg::xgemm("N","N",&ndim,&nres,&neig,
-	            &mone,vbas.data(),&ndim,vtr.data(),&neig,
-	            &one,rbas.data(),&ndim);
-   }
-   // form new basis from rbas by modified Gram-Schmidt procedure
-   std::vector<Tm> krvec(ndim);
-   std::vector<Tm> rbas_new;
-   int nindp = 0;
-   for(int i=0; i<nres; i++){
-      double rii = linalg::xnrm2(ndim, &rbas[i*ndim]); // normalization constant
-      if(debug_ortho) std::cout << "\ni=" << i << " rii=" << rii << std::endl;
-      if(rii < crit_indp) continue;
-      // normalized |r[i]> 
-      for(int repeat=0; repeat<maxtimes; repeat++){
-	 std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[i*ndim],
-		        [rii](const Tm& x){ return x/rii; });
-         rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
-      }
-      //-------------------------------------------------------------
-      rbas_new.resize(ndim*(nindp+2));
-      // copy
-      std::copy(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas_new[nindp*ndim]);
-      nindp += 1;
-      // add its time-reversal partner
-      get_krvec(&rbas[i*ndim], krvec.data(), wf);
-      std::copy(krvec.cbegin(), krvec.cend(), &rbas_new[nindp*ndim]);
-      nindp += 1;
-      if(debug_ortho){
-         linalg::matrix<Tm> V(ndim,neig+nindp);
-	 std::copy(vbas.begin(), vbas.begin()+ndim*neig, V.col(0));
-	 std::copy(rbas_new.begin(), rbas_new.begin()+ndim*nindp, V.col(neig));
-         auto ova = xgemm("C","N",V,V);
-         ova.print("ova");
-	 auto dev = ova - linalg::identity_matrix<Tm>(neig+nindp);
-	 double diff = normF(dev);
-	 std::cout << "diff=" << diff << std::endl;
-      }
-      //-------------------------------------------------------------
-      // project out |r[i]>-component from other basis
-      int N = nres-1-i;
-      if(N == 0) continue;
-      std::vector<Tm> vtr(neig*N), rtr(nindp*N);
-      for(int repeat=0; repeat<maxtimes; repeat++){
-         // R_rest = (1-V*V^+)*R_rest
-	 linalg::xgemm("C","N",&neig,&N,&ndim,
-                       &one,vbas.data(),&ndim,&rbas[(i+1)*ndim],&ndim,
-                       &zero,vtr.data(),&neig);
-         linalg::xgemm("N","N",&ndim,&N,&neig,
-                       &mone,vbas.data(),&ndim,vtr.data(),&neig,
-                       &one,&rbas[(i+1)*ndim],&ndim);
-         // R_rest = (1-Rnew*Rnew^+)*R_rest
-         linalg::xgemm("C","N",&nindp,&N,&ndim,
-                       &one,&rbas_new[0],&ndim,&rbas[(i+1)*ndim],&ndim,
-                       &zero,rtr.data(),&nindp);
-         linalg::xgemm("N","N",&ndim,&N,&nindp,
-                       &mone,&rbas_new[0],&ndim,rtr.data(),&nindp,
-                       &one,&rbas[(i+1)*ndim],&ndim);
-      } // repeat
-   } // i
-   rbas = rbas_new;
-   return nindp;
-}
-
-// MGS for rbas of size rbas(ndim,nres)
-template <typename Tm, typename QTm>
-int kr_get_ortho_basis(const int ndim,
-		       const int nres,
-		       std::vector<Tm>& rbas,
-		       QTm& wf,
-		       const double crit_indp=1.e-12){
-   const Tm one = 1.0, mone = -1.0, zero = 0.0;
-   const int maxtimes = 2;
-   // form new basis from rbas by modified Gram-Schmidt procedure
-   std::vector<Tm> krvec(ndim);
-   std::vector<Tm> rbas_new;
-   int nindp = 0;
-   for(int i=0; i<nres; i++){
-      double rii = linalg::xnrm2(ndim, &rbas[i*ndim]); // normalization constant
-      if(debug_ortho) std::cout << "\ni=" << i << " rii=" << rii << std::endl;
-      if(rii < crit_indp) continue;
-      // normalized |r[i]> 
-      for(int repeat=0; repeat<maxtimes; repeat++){
-	 std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[i*ndim],
-		        [rii](const Tm& x){ return x/rii; });
-         rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
-      }
-      //-------------------------------------------------------------
-      rbas_new.resize(ndim*(nindp+2));
-      // copy
-      std::copy(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas_new[nindp*ndim]);
-      nindp += 1;
-      // add its time-reversal partner
-      get_krvec(&rbas[i*ndim], krvec.data(), wf);
-      std::copy(krvec.cbegin(), krvec.cend(), &rbas_new[nindp*ndim]);
-      nindp += 1;
-      if(debug_ortho){
-         // check psi[lr] = psi_bar[l_bar,r_bar]*
-         std::vector<Tm> tmp(ndim);
-         get_krvec(&rbas_new[(nindp-1)*ndim], tmp.data(), wf, 0);
-         std::transform(tmp.begin(), tmp.end(), &rbas[i*ndim], krvec.begin(),
-                        [](const Tm& x, const Tm& y){ return x-y; }); 
-	 auto diff = linalg::xnrm2(ndim, krvec.data());
-         std::cout << "diff[psi]=" << diff << std::endl;
-	 if(diff > 1.e-10) tools::exit("error: in consistent psi and psi_bar!");
-	 // check overlap matrix for basis
-         linalg::matrix<Tm> V(ndim,nindp,rbas_new.data());
-         auto ova = xgemm("C","N",V,V);
-         ova.print("ova");
-      }
-      //-------------------------------------------------------------
-      // project out |r[i]>-component from other basis
-      int N = nres-1-i;
-      if(N == 0) break;
-      std::vector<Tm> rtr(nindp*N);
-      // R_rest = (1-Rnew*Rnew^+)*R_rest
-      for(int repeat=0; repeat<maxtimes; repeat++){
-	 // rtr = Rnew^+*R_rest
-	 linalg::xgemm("C","N",&nindp,&N,&ndim,
-               	       &one,&rbas_new[0],&ndim,&rbas[(i+1)*ndim],&ndim,
-               	       &zero,rtr.data(),&nindp);
-	 // R_rest -= Rnew*rtr
-	 linalg::xgemm("N","N",&ndim,&N,&nindp,
-                       &mone,&rbas_new[0],&ndim,rtr.data(),&nindp,
-                       &one,&rbas[(i+1)*ndim],&ndim);
-      } // repeat
-   } // i
-   rbas = rbas_new;
-   return nindp;
-}
-
 // solver
 template <typename Tm, typename QTm>
 struct dvdsonSolver_kr{
    public:
+
       // simple constructor
       dvdsonSolver_kr(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle, 
 		      const int _parity, QTm& _wf){
@@ -182,6 +29,7 @@ struct dvdsonSolver_kr{
 	    tools::exit(std::string("error: odd-electron case requires even neig=")+std::to_string(neig));
 	 }
       }
+
       // iteration info
       void print_iter(const int iter,
 		      const int nsub,
@@ -217,7 +65,8 @@ struct dvdsonSolver_kr{
 		 << std::endl;
          } // i
 	 //std::cout << line << std::endl;
-      } 
+      }
+
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, Tm* y, const Tm* x){
          int size = 1, rank = 0;
@@ -259,6 +108,7 @@ struct dvdsonSolver_kr{
          }
 	 */
       }
+
       // initialization
       void init_guess(std::vector<QTm>& psi, std::vector<Tm>& v0){
 	 std::cout << "ctns::dvdsonSolver_kr::init_guess parity=" << parity << std::endl;
@@ -289,23 +139,24 @@ struct dvdsonSolver_kr{
 		         << " |psi(K)|=" << psi[i].normF()
 			 << std::endl;
             } // i
-            nindp = kr_get_ortho_basis(ndim, neig*2, v0, wf); // reorthogonalization
+            nindp = kramers::get_ortho_basis_qt(ndim, neig*2, v0, wf); // reorthogonalization
          }
          std::cout << " neig,nindp=" << neig << "," << nindp << std::endl;
          assert(nindp >= neig);
 	 v0.resize(ndim*nindp);
       }
+
       //-------------------------------------
       // Case 0: even-electron Hilbert space 
       //-------------------------------------
-      void subspace_solver0(const int ndim, 
-		      	    const int nsub,
-		      	    const int nt,
-      	       		    std::vector<Tm>& vbas,
-      	       		    std::vector<Tm>& wbas,
-      	       		    std::vector<double>& tmpE,
-      	       		    std::vector<Tm>& tmpV,
-			    std::vector<Tm>& rbas){
+      void subspace_solver_even(const int ndim, 
+		      	        const int nsub,
+		      	        const int nt,
+      	       		        std::vector<Tm>& vbas,
+      	       		        std::vector<Tm>& wbas,
+      	       		        std::vector<double>& tmpE,
+      	       		        std::vector<Tm>& tmpV,
+			        std::vector<Tm>& rbas){
          // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
          const Tm alpha = 1.0, beta=0.0;
 	 linalg::matrix<Tm> tmpH(nsub,nsub);
@@ -316,7 +167,7 @@ struct dvdsonSolver_kr{
          double diff = linalg::symmetric_diff(tmpH);
          if(diff > crit_skewH){
             tmpH.print("tmpH");
-	    std::string msg = "error in ctns::dvdsonSolver_kr::subspace_solver0!";
+	    std::string msg = "error in ctns::dvdsonSolver_kr::subspace_solver_even!";
 	    tools::exit(msg+" diff_skewH="+std::to_string(diff));
          }
 	 //-------------------------------------------------------- 
@@ -344,17 +195,18 @@ struct dvdsonSolver_kr{
                            [i,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i]; }); 
          }
       }
+
       //-------------------------------------
       // Case 1: odd-electron Hilbert space 
       //-------------------------------------
-      void subspace_solver1(const int ndim, 
-		      	    const int nsub,
-		      	    const int nt,
-      	       		    std::vector<Tm>& vbas,
-      	       		    std::vector<Tm>& wbas,
-      	       		    std::vector<double>& tmpE,
-      	       		    std::vector<Tm>& tmpV,
-			    std::vector<Tm>& rbas){
+      void subspace_solver_odd(const int ndim, 
+		      	       const int nsub,
+		      	       const int nt,
+      	       		       std::vector<Tm>& vbas,
+      	       		       std::vector<Tm>& wbas,
+      	       		       std::vector<double>& tmpE,
+      	       		       std::vector<Tm>& tmpV,
+			       std::vector<Tm>& rbas){
          // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
          const Tm alpha = 1.0, beta=0.0;
 	 linalg::matrix<Tm> tmpH2(nsub,nsub);
@@ -388,7 +240,7 @@ struct dvdsonSolver_kr{
          double diff = linalg::symmetric_diff(tmpH);
          if(diff > crit_skewH){
             tmpH.print("tmpH");
-	    std::string msg = "error in ctns::dvdsonSolver_kr::subspace_solver1!";
+	    std::string msg = "error in ctns::dvdsonSolver_kr::subspace_solver_odd!";
 	    tools::exit(msg+" diff_skewH="+std::to_string(diff)); 
          }
 	 //-----------------------------------------------------------
@@ -397,7 +249,7 @@ struct dvdsonSolver_kr{
          // TRS-preserving diagonalization (only half eigs are output) 
 	 std::vector<double> tmpE2(nsub);
 	 linalg::matrix<Tm> tmpU;
-	 zquatev(tmpH, tmpE, tmpU);
+	 kramers::zquatev(tmpH, tmpE, tmpU);
 	 for(int i=0; i<nsub2; i++){
 	    tmpE2[2*i] = tmpE[i];
 	    tmpE2[2*i+1] = tmpE[i];
@@ -426,13 +278,13 @@ struct dvdsonSolver_kr{
             // We need to first contruct full sigma vector from skeleton one using TRS
             //-------------------------------------------------------------------------
 	    // sigma[o]
-	    get_krvec(&wbas[i1*ndim], krvec.data(), wf, 0);
+	    kramers::get_krvec(&wbas[i1*ndim], krvec.data(), wf, 0);
             std::transform(&wbas[i0*ndim], &wbas[i0*ndim]+ndim, krvec.begin(), &rbas[i0*ndim],
 			   [](const Tm& x, const Tm& y){ return x + y; });
             std::transform(&rbas[i0*ndim], &rbas[i0*ndim]+ndim, &vbas[i0*ndim], &rbas[i0*ndim],
                            [i0,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i0]; }); 
 	    // sigma[o_bar] 
-            get_krvec(&wbas[i0*ndim], krvec.data(), wf);
+	    kramers::get_krvec(&wbas[i0*ndim], krvec.data(), wf);
             std::transform(&wbas[i1*ndim], &wbas[i1*ndim]+ndim, krvec.begin(), &rbas[i1*ndim], 
 			   [](const Tm& x, const Tm& y){ return x + y; });
             std::transform(&rbas[i1*ndim], &rbas[i1*ndim]+ndim, &vbas[i1*ndim], &rbas[i1*ndim],
@@ -440,6 +292,7 @@ struct dvdsonSolver_kr{
             //-------------------------------------------------------------------------
          } // i
       }
+
       // Davidson iterative algorithm for Hv=ve
       void solve_iter(double* es, Tm* vs, Tm* vguess){
          int size = 1, rank = 0;
@@ -489,9 +342,9 @@ struct dvdsonSolver_kr{
                // solve subspace problem and form full residuals: Res[i]=HX[i]-w[i]*X[i]
 	       //------------------------------------------------------------------------
 	       if(parity == 0){
-                  subspace_solver0(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
+                  subspace_solver_even(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
 	       }else{
-                  subspace_solver1(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
+                  subspace_solver_odd(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
 	       }
 	       //------------------------------------------------------------------------
                // compute norm of residual
@@ -529,15 +382,15 @@ struct dvdsonSolver_kr{
                   if(rconv[i]) continue;
 	          std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, Diag, &tbas[nres*ndim],
                                  [i,&tmpE,&damp](const Tm& r, const double& d){ return r/(std::abs(d-tmpE[i])+damp); });
-	          //-----------------------
-	          // Kramers projection
-	          //-----------------------
+	          //-------------------------------------------
+	          // Kramers projection to ensure K|psi>=|psi>
+	          //-------------------------------------------
 	          if(parity == 0){
    	             wf.from_array( &tbas[nres*ndim] );
    	             wf += wf.K();
    	             wf.to_array( &tbas[nres*ndim] );
 	          }
-	          //-----------------------
+	          //-------------------------------------------
                   tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
                   nres += 1;
                }
@@ -553,7 +406,7 @@ struct dvdsonSolver_kr{
 	       if(parity == 0){
 	          nindp = linalg::get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
 	       }else{
-                  nindp = kr_get_ortho_basis(ndim,neig,nres,vbas,rbas,wf,crit_indp);
+                  nindp = kramers::get_ortho_basis_qt(ndim,neig,nres,vbas,rbas,wf,crit_indp);
 	       }
 	       //------------------------------------------------------------------
 	    }
@@ -579,6 +432,7 @@ struct dvdsonSolver_kr{
             std::cout << "convergence failure: out of maxcycle =" << maxcycle << std::endl;
          }
       }
+
    public:
       // basics
       int ndim = 0;
@@ -610,6 +464,7 @@ struct dvdsonSolver_kr{
 template <typename Tm>	
 struct dvdsonSolver_nkr{
    public:
+
       // simple constructor
       dvdsonSolver_nkr(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle){
          ndim = _ndim;
@@ -617,6 +472,7 @@ struct dvdsonSolver_nkr{
 	 crit_v = _crit_v;
 	 maxcycle = _maxcycle;
       }
+
       // iteration info
       void print_iter(const int iter,
 		      const int nsub,
@@ -652,7 +508,8 @@ struct dvdsonSolver_nkr{
 		 << std::endl;
          } // i
 	 //std::cout << line << std::endl;
-      } 
+      }
+
       // perform H*x for a set of input vectors: x(nstate,ndim)
       void HVecs(const int nstate, Tm* y, const Tm* x){
          int size = 1, rank = 0;
@@ -685,6 +542,7 @@ struct dvdsonSolver_nkr{
          }
 	 */
       }
+
       // check by full diag
       void solve_diag(double* es, Tm* vs, const bool ifCheckDiag=false){
          int size = 1, rank = 0;
@@ -736,6 +594,7 @@ struct dvdsonSolver_nkr{
          auto t1 = tools::get_time();
          if(rank == 0) tools::timing("solve_diag", t0, t1);
       }
+
       // subspace problem
       void subspace_solver(const int ndim, 
 		      	   const int nsub,
@@ -779,6 +638,7 @@ struct dvdsonSolver_nkr{
                            [i,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i]; }); 
          }
       }
+
       // Davidson iterative algorithm for Hv=ve 
       void solve_iter(double* es, Tm* vs, Tm* vguess=nullptr){
          int size = 1, rank = 0;
@@ -905,6 +765,7 @@ struct dvdsonSolver_nkr{
             std::cout << "convergence failure: out of maxcycle =" << maxcycle << std::endl;
          }
       }
+
    public:
       // basics
       int ndim = 0;

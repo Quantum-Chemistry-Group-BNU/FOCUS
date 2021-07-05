@@ -54,7 +54,7 @@ int get_ortho_basis(const int ndim,
       linalg::xgemm("N","N",&ndim,&nres,&neig,
 	            &mone,vbas.data(),&ndim,vtr.data(),&neig,
 	            &one,rbas.data(),&ndim);
-   };
+   }
    // 2. form new basis from rbas by modified Gram-Schmidt procedure
    std::vector<Tm> rtr(nres*nres/4);
    int nindp = 0;
@@ -74,7 +74,7 @@ int get_ortho_basis(const int ndim,
       // essentially equivalent to https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_procesis
       // since [r[i+1:]> is changing when a new |r[i]> is find.  
       int N = nres-1-i;
-      if(N == 0) continue;
+      if(N == 0) break;
       for(int repeat=0; repeat<maxtimes; repeat++){
          // R_rest = (1-V*V^+)*R_rest
 	 linalg::xgemm("C","N",&neig,&N,&ndim,
@@ -122,7 +122,7 @@ int get_ortho_basis(const int ndim,
       // essentially equivalent to https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_procesis
       // since [r[i+1:]> is changing when a new |r[i]> is find.  
       int N = nres-1-i;
-      if(N == 0) continue;
+      if(N == 0) break;
       for(int repeat=0; repeat<maxtimes; repeat++){
          // R_rest = (1-Rnew*Rnew^+)*R_rest
 	 linalg::xgemm("C","N",&nindp,&N,&ndim,

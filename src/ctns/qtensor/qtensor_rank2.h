@@ -8,7 +8,7 @@
 #include "../../core/linalg.h"
 #include "ctns_qsym.h"
 #include "ctns_qdpt.h"
-#include "ctns_kramers.h"
+#include "kramers_linalg.h"
 #include "qtensor_contract.h"
 
 namespace ctns{

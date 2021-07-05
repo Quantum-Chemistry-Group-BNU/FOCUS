@@ -1,12 +1,12 @@
-#ifndef CTNS_KRAMERS_H
-#define CTNS_KRAMERS_H
+#ifndef KRAMERS_LINALG_H
+#define KRAMERS_LINALG_H
 
 #include "../../../extlibs/zquatev/zquatev.h"
 #include "../../core/matrix.h"
 #include "../../core/linalg.h"
 #include "ctns_qdpt.h"
 
-namespace ctns{
+namespace kramers{
 
 // used in initial guess part 
 template <typename Tm>
@@ -192,132 +192,9 @@ linalg::matrix<Tm> time_reversal(const linalg::matrix<Tm>& blk1,
    return blk;
 }
 
-// mapping from original PRODUCT basis to kramers paired basis
-// V[odd] = {|le,ro>,|lo,re>}
-inline void mapping2krbasis_odd(const qsym& qr,
-				const qbond& qs1,
-		                const qbond& qs2,
-		                const qdpt& dpt,
-		                std::vector<int>& pos_new,
-				std::vector<double>& phases){
-   std::vector<int> pos_up, pos_dw;
-   int ioff = 0;
-   const auto& comb = dpt.at(qr);
-   for(int i=0; i<comb.size(); i++){
-      int b1 = std::get<0>(comb[i]);
-      int b2 = std::get<1>(comb[i]);
-      int ioff = std::get<2>(comb[i]);
-      auto q1 = qs1.get_sym(b1);
-      auto q2 = qs2.get_sym(b2);
-      int  d1 = qs1.get_dim(b1);
-      int  d2 = qs2.get_dim(b2);
-      // |le,ro> 
-      if(q1.parity() == 0 && q2.parity() == 1){
-         assert(d2%2 == 0);
-         for(int i2=0; i2<d2/2; i2++){
-            for(int i1=0; i1<d1; i1++){
-               int idxA = ioff + i2*d1 + i1; // |le,ro>
-               pos_up.push_back(idxA);
-               int idxB = ioff + (i2+d2/2)*d1 + i1; // |le,ro_bar>
-               pos_dw.push_back(idxB);
-            }
-         }
-      // |lo,re>   
-      }else if(q1.parity() == 1 && q2.parity() == 0){
-         assert(d1%2 == 0);
-         for(int i2=0; i2<d2; i2++){
-            for(int i1=0; i1<d1/2; i1++){
-   	       int idxA = ioff + i2*d1 + i1; 
-               pos_up.push_back(idxA);
-     	       int idxB = ioff + i2*d1 + (i1+d1/2);
-               pos_dw.push_back(idxB);
-            }
-         }
-      }else{
-         std::cout << "q1p,q2p=" << q1.parity() << "," << q2.parity() << std::endl;
-	 tools::exit("error: no such combination of parities!");
-      }
-      ioff += d1*d2;
-   }
-   assert(pos_up.size() == pos_dw.size());
-   pos_new.clear();
-   pos_new.insert(pos_new.end(), pos_up.begin(), pos_up.end());
-   pos_new.insert(pos_new.end(), pos_dw.begin(), pos_dw.end());
-   phases.resize(pos_dw.size(),1.0);
-}
-
-// V[even] = {|le,re>,|lo,ro>}
-inline void mapping2krbasis_even(const qsym& qr,
-			         const qbond& qs1,
-			         const qbond& qs2,
-			         const qdpt& dpt,
-		                 std::vector<int>& pos_new,
-				 std::vector<double>& phases){
-   std::vector<int> pos_up, pos_dw, pos_ee;
-   int ioff = 0;
-   const auto& comb = dpt.at(qr);
-   for(int i=0; i<comb.size(); i++){
-      int b1 = std::get<0>(comb[i]);
-      int b2 = std::get<1>(comb[i]);
-      int ioff = std::get<2>(comb[i]);
-      auto q1 = qs1.get_sym(b1);
-      auto q2 = qs2.get_sym(b2);
-      int  d1 = qs1.get_dim(b1);
-      int  d2 = qs2.get_dim(b2);
-      // |le,re> 
-      if(q1.parity() == 0 && q2.parity() == 0){
-         for(int i2=0; i2<d2; i2++){
-            for(int i1=0; i1<d1; i1++){
-               int idx = ioff + i2*d1 + i1;
-               pos_ee.push_back(idx);
-            }
-         }
-      // |lo,ro> = {|lo,ro>,|lo_bar,ro>} + {|lo_bar,ro_bar>,|lo,ro_bar>}
-      }else if(q1.parity() == 1 && q2.parity() == 1){
-         assert(d1%2 == 0 & d2%2 == 0);
-         for(int i2=0; i2<d2/2; i2++){
-            for(int i1=0; i1<d1/2; i1++){
-               int idxA = ioff + i2*d1 + i1; // |lo,ro> 
-               pos_up.push_back(idxA);
-               int idxB = ioff + (i2+d2/2)*d1 + (i1+d1/2); // |lo_bar,ro_bar>
-     	       pos_dw.push_back(idxB);
-               phases.push_back(1.0);
-	    }
-            for(int i1=0; i1<d1/2; i1++){
-               int idxA = ioff + i2*d1 + (i1+d1/2); // |lo_bar,ro> 
-               pos_up.push_back(idxA);
-               int idxB = ioff + (i2+d2/2)*d1 + i1; // |lo,ro_bar>
-     	       pos_dw.push_back(idxB);
-               phases.push_back(-1.0);
-            }
-         }
-      }else{
-         std::cout << "q1p,q2p=" << q1.parity() << "," << q2.parity() << std::endl;
-	 tools::exit("error: no such combination of parities!");
-      }
-      ioff += d1*d2;
-   }
-   assert(pos_up.size() == pos_dw.size());
-   pos_new.clear();
-   pos_new.insert(pos_new.end(), pos_up.begin(), pos_up.end());
-   pos_new.insert(pos_new.end(), pos_dw.begin(), pos_dw.end());
-   pos_new.insert(pos_new.end(), pos_ee.begin(), pos_ee.end());
-}
-
-// mapping product basis to kramers paired basis 
-inline void mapping2krbasis(const qsym& qr,
-		            const qbond& qs1,
-		            const qbond& qs2,
-		            const qdpt& dpt,
-		            std::vector<int>& pos_new,
-		            std::vector<double>& phases){
-   if(qr.parity() == 1){
-      mapping2krbasis_odd(qr,qs1,qs2,dpt,pos_new,phases);
-   }else{
-      mapping2krbasis_even(qr,qs1,qs2,dpt,pos_new,phases);
-   }
-}
-
+//
+// eig_solver with Kramers-Symmetry Adapation (Projection):
+//
 // Odd-electron subspace V[odd]=span{|D>,|Df>}
 // phase: from original bare basis {|D>,|Df>} to TR basis {|D>,|Dbar>}, |Dbar>=|Df>*phase
 template <typename Tm>
@@ -491,6 +368,6 @@ void eig_solver_kr(const qsym& qr,
    }
 }
 
-} // ctns
+} // kramers
 
 #endif
