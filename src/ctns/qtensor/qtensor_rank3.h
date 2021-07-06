@@ -332,17 +332,17 @@ qtensor3<Tm> qtensor3<Tm>::K(const int nbar) const{
       if(pm == 0){
          // c[e]
          for(int im=0; im<blk.size(); im++){
-            blk[im] = fpo*time_reversal(blk1[im], pr, pc);
+            blk[im] = fpo*kramers::time_reversal(blk1[im], pr, pc);
          }
       }else{
          assert(blk.size()%2 == 0);
          int dm2 = blk.size()/2;
          // c[o],c[\bar{o}]
          for(int im=0; im<dm2; im++){
-            blk[im] = fpo*time_reversal(blk1[im+dm2], pr, pc);
+            blk[im] = fpo*kramers::time_reversal(blk1[im+dm2], pr, pc);
          }
          for(int im=0; im<dm2; im++){
-            blk[im+dm2] = -fpo*time_reversal(blk1[im], pr, pc);
+            blk[im+dm2] = -fpo*kramers::time_reversal(blk1[im], pr, pc);
          }
       } // pm
    } // idx

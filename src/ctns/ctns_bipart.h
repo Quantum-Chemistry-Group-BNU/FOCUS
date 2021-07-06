@@ -262,6 +262,7 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
    } // dimBi>0
 }
 
+
 // compute {|r>} basis for a given bipartition specified by the position n 
 template <typename Km>
 void right_projection(renorm_basis<typename Km::dtype>& rbasis,
@@ -294,14 +295,13 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
    for(const auto& qr : rspace.syms){
       int dimr = rspace.dims[qr];
       if(debug_basis){
-	 std::cout << "qr=" << qr << " dimr=" << dimr << std::endl;
+	 std::cout << "\nqr=" << qr << " dimr=" << dimr << std::endl;
          for(const auto& state : rspace.basis[qr]){
 	    std::cout << " state=" << state << " index=" << rspace.index[qr][state] << std::endl;
          }
       }
       
       // 3. produce rbasis properly
-      if(debug_basis) std::cout << "-qr=" << qr << " find matched ql ..." << std::endl;
       std::vector<double> sigs2;
       linalg::matrix<Tm> U;
       int matched = 0;
@@ -309,41 +309,10 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
          auto key = std::make_pair(ql,qr);
 	 const auto& blk = wfs.qblocks[key];
 	 if(blk.size() == 0) continue;
+         if(debug_basis) std::cout << "find matched ql =" << ql << std::endl;
 	 matched += 1;
          if(matched > 1) tools::exit("multiple matched ql is not supported!");
-	 int diml = lspace.dims[ql];
-	 if(dimr <= static_cast<int>(1.5*diml)){ // 1.5 is an empirical factor based on performance
-
-            if(debug_basis){ 
-	       std::cout << " RDM-based decimation: ql=" << ql 
-		         << " dim(l,r)=" << diml << "," << dimr << std::endl;
-	    }
-            linalg::matrix<Tm> rhor(dimr,dimr);
-	    for(int iroot=0; iroot<nroots; iroot++){
-               rhor += linalg::xgemm("T","N",blk[iroot],blk[iroot].conj());
-            } // iroot
-            rhor *= 1.0/nroots;   
-	    sigs2.resize(dimr);
-            linalg::eig_solver(rhor, sigs2, U, 1);
-
-	 }else{
-
-            if(debug_basis){ 
-	       std::cout << " SVD-based decimation: ql=" << ql 
-		         << " dim(l,r)=" << diml << "," << dimr << std::endl;
-	    }
-	    linalg::matrix<Tm> vrl(dimr,diml*nroots);
-	    for(int iroot=0; iroot<nroots; iroot++){
-	       auto blkt = blk[iroot].T();
-	       std::copy(blkt.data(), blkt.data()+dimr*diml, vrl.col(iroot*diml));
-	    } // iroot
-	    vrl *= 1.0/std::sqrt(nroots);
-	    linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
-	    linalg::svd_solver(vrl, sigs2, U, vt, 1);
-	    std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
-			   [](const double& x){ return x*x; });
-
-	 }
+	 kramers::get_renorm_states_nkr(blk, sigs2, U, debug_basis);
       } // ql
       
       // 4. select important renormalized states from (sigs2,U) 
@@ -437,15 +406,13 @@ inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbas
          phases[i] = rspace.basis[qr][i].parity_flip();
       }
       if(debug_basis){
-	 std::cout << "qr=" << qr << " (dim,dim1,dim0)=" 
-	           << dimr << "," << dim1 << "," << dim0 << std::endl;
+	 std::cout << "\nqr=" << qr << " (dim,dim1,dim0)=" << dimr << "," << dim1 << "," << dim0 << std::endl;
          for(const auto& state : rspace.basis[qr]){
 	    std::cout << " state=" << state << " index=" << rspace.index[qr][state] << std::endl;
          }
       }
       
       // 3. diagonalized properly to yield rbasis (depending on qr)
-      if(debug_basis) std::cout << "-qr=" << qr << " find matched ql ..." << std::endl;
       std::vector<double> sigs2;
       linalg::matrix<Tm> U;
       int matched = 0;
@@ -453,72 +420,11 @@ inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbas
          auto key = std::make_pair(ql,qr);
 	 const auto& blk = wfs.qblocks[key];
 	 if(blk.size() == 0) continue;
+         if(debug_basis) std::cout << "find matched ql =" << ql << std::endl;
 	 matched += 1;
          if(matched > 1) tools::exit("multiple matched ql is not supported!");
-	 int diml = lspace.dims[ql];
-	 if(dimr <= static_cast<int>(1.5*diml)){ // 1.5 is an empirical factor based on performance
-	 
-            if(debug_basis){ 
-	       std::cout << " RDM-based decimation: ql=" << ql 
-		         << " dim(l,r)=" << diml << "," << dimr << std::endl;
-	    }
-            linalg::matrix<Tm> rhor(dimr,dimr);
-	    for(int iroot=0; iroot<nroots; iroot++){
-               rhor += linalg::xgemm("T","N",blk[iroot],blk[iroot].conj());
-            } // iroot
-            rhor *= 1.0/nroots;   
-	    sigs2.resize(dimr);
-	    eig_solver_kr<std::complex<double>>(qr, rhor, sigs2, U, phases);
-
-	 }else{
-
-            if(debug_basis){ 
-	       std::cout << " SVD-based decimation: ql=" << ql 
-		         << " dim(l,r)=" << diml << "," << dimr << std::endl;
-	    }
-	    linalg::matrix<Tm> vrl(dimr,diml*nroots);
-	    for(int iroot=0; iroot<nroots; iroot++){
-	       auto blkt = blk[iroot].T();
-	       std::copy(blkt.data(), blkt.data()+dimr*diml, vrl.col(iroot*diml));
-	    } // iroot
-	    vrl *= 1.0/std::sqrt(nroots);
-	    linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
-	    linalg::svd_solver(vrl, sigs2, U, vt, 1);
-
-	    int nkept = 0;
-	    for(int i=0; i<sigs2.size(); i++){
-	       if(sigs2[i] > thresh){ 
-	          nkept += 1;
-	       }else{
-	          break;
-	       }
-	    }
-	    std::cout << "nkept=" << nkept << std::endl;
-	    
-            //----------------------------------------------
-            // 1. Generate KRS-adapted basis
-	    //----------------------------------------------
-	    kr_get_ortho_basis(qr, U, nkept, phases);
-	    int n = U.cols();
-	    assert(n%2 == 0);
-	    std::vector<int> pos_new(n);
-	    for(int i=0; i<n; i++){
-	       pos_new[i] = i%2==0? i/2 : i/2+n/2;
-	    }
-	    U = U.reorder_col(pos_new, 1);
-            //----------------------------------------------
-            // 2. Re-diagonalize RDM in this basis
-	    //----------------------------------------------
-	    auto tmp1 = linalg::xgemm("C","N",U,rhor);
-	    auto tmp2 = linalg::xgemm("N","N",tmp1,U);
-	    sigs2.resize(n);
-	    linalg::matrix<Tm> Uc;
-	    phases.resize(n/2, 1.0);
-            eig_solver_kr<std::complex<double>>(qr, tmp2, sigs2, Uc, phases);
-	    U = linalg::xgemm("N","N",U,Uc);
-	    //----------------------------------------------
-	 }
-      }
+	 kramers::get_renorm_states_kr(qr, phases, blk, sigs2, U, debug_basis);
+      } // ql
       
       // 4. select important renormalized states from (sigs2,U) 
       if(matched == 1){

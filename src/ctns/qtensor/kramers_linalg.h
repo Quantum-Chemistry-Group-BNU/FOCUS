@@ -4,7 +4,8 @@
 #include "../../../extlibs/zquatev/zquatev.h"
 #include "../../core/matrix.h"
 #include "../../core/linalg.h"
-#include "ctns_qdpt.h"
+#include "ctns_qsym.h"
+#include "kramers_basis.h"
 
 namespace kramers{
 
@@ -192,78 +193,19 @@ linalg::matrix<Tm> time_reversal(const linalg::matrix<Tm>& blk1,
    return blk;
 }
 
-//
-// eig_solver with Kramers-Symmetry Adapation (Projection):
-//
-// Odd-electron subspace V[odd]=span{|D>,|Df>}
-// phase: from original bare basis {|D>,|Df>} to TR basis {|D>,|Dbar>}, |Dbar>=|Df>*phase
-template <typename Tm>
-void eig_solver_kr_odd(const linalg::matrix<Tm>& rhor,
-		       std::vector<double>& eigs,
-		       linalg::matrix<Tm>& U,
-		       std::vector<double>& phases){
-   const bool debug = false;
-   int dim = rhor.rows();
-   int dim1 = phases.size();
-   assert(dim = 2*dim1);
-   std::vector<int> partition = {dim1,dim1};
-   blockMatrix<Tm> rmat(partition,partition);
-   rmat = rhor;
-   rmat(0,1).colscale(phases);
-   rmat(1,1).colscale(phases);
-   rmat(1,0).rowscale(phases);
-   rmat(1,1).rowscale(phases);
-   //  
-   // Check: time-reversal symmetric rhor in a kramers-paired basis 
-   //        should have the following structure
-   // 
-   //  [  A   B  ]
-   //  [ -B*  A* ]
-   //
-   if(debug){
-      rhor.print("rhor");
-      rmat(0,0).print("A");
-      rmat(1,1).print("A*");
-      rmat(0,1).print("B");
-      rmat(1,0).print("B*");
-   }
-   //
-   // Kramers symmetrization:
-   //
-   //  [ rho_AA rho_BA ]        [ rho_AA+rho_BB^*  rho_BA-rho_AB^* ]   [  A   B  ]
-   //  [	       ] -> 1/2 [				   ] = [         ]
-   //  [ rho_AB rho_BB ]        [ rho_AB-rho_BA^*  rho_BB+rho_AA^* ]   [ -B*  A* ]
-   //
-   auto A = 0.5*(rmat(0,0) + rmat(1,1).conj());
-   auto B = 0.5*(rmat(0,1) - rmat(1,0).conj()); 
-   rmat(0,0) = A;
-   rmat(0,1) = B;
-   rmat(1,0) = -B.conj();
-   rmat(1,1) = A.conj();
-   auto rhor_kr = rmat.to_matrix();
-   // TRS-preserving diagonalization (only half eigs are output)
-
-   //lzd
-   //rhor_kr.print("rhor_kr_odd");
-
-   zquatev(rhor_kr,eigs,U,1);
-   std::copy(eigs.begin(), eigs.begin()+dim1, eigs.begin()+dim1); // duplicate eigs!
-   // back to original basis {|D>,|Df>}
-   blockMatrix<Tm> umat(partition,{dim});
-   umat = U;
-   umat(1,0).rowscale(phases);
-   U = umat.to_matrix();
-}
+//---------------------------------------------------------
+// eig_solver with Kramers-Symmetry Adapation (Projection)
+//---------------------------------------------------------
 
 // Even-electron case:
 // from original basis {|D>,|Df>,|D0>} to {|D>,|Dbar>,|D0>} to TR basis {|->,|+>,|0>}
 //  |-> = i(|D> - |Dbar>)/sqrt2 = i(|D> - s|Df>)/sqrt2
 //  |+> =  (|D> + |Dbar>)/sqrt2 =  (|D> + s|Df>)/sqrt2
 template <typename Tm>
-void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
-		        std::vector<double>& eigs,
-		        linalg::matrix<Tm>& U,
-		        std::vector<double>& phases){
+void eig_solver_even(const linalg::matrix<Tm>& rhor,
+		     const std::vector<double>& phases,
+		     std::vector<double>& eigs,
+		     linalg::matrix<Tm>& U){
    const bool debug = false;
    int dim = rhor.rows();
    int dim1 = phases.size();
@@ -330,10 +272,6 @@ void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
    // diagonalization
    linalg::matrix<double> rhor_kr = matr.to_matrix();
    linalg::matrix<double> Ur;
-
-   //lzd
-   //rhor_kr.print("rhor_kr_even");
-
    linalg::eig_solver(rhor_kr,eigs,Ur,1);
    //
    // back to determinant basis {|D>,|Df>,|D0>} from {|->,|+>,|0>}
@@ -354,18 +292,203 @@ void eig_solver_kr_even(const linalg::matrix<Tm>& rhor,
    U = umat.to_matrix();
 }
 
+// Odd-electron subspace V[odd]=span{|D>,|Df>}
+// phase: from original bare basis {|D>,|Df>} to TR basis {|D>,|Dbar>}, |Dbar>=|Df>*phase
 template <typename Tm>
-void eig_solver_kr(const qsym& qr,
-		   const linalg::matrix<Tm>& rhor,
-		   std::vector<double>& eigs,
-		   linalg::matrix<Tm>& U,
-		   std::vector<double>& phases){
-   assert(tools::is_complex<Tm>());
-   if(qr.parity() == 1){
-      eig_solver_kr_odd(rhor,eigs,U,phases); 
-   }else{
-      eig_solver_kr_even(rhor,eigs,U,phases); 
+void eig_solver_odd(const linalg::matrix<Tm>& rhor,
+		    const std::vector<double>& phases,
+		    std::vector<double>& eigs,
+		    linalg::matrix<Tm>& U){
+   const bool debug = false;
+   int dim = rhor.rows();
+   int dim1 = phases.size();
+   assert(dim = 2*dim1);
+   std::vector<int> partition = {dim1,dim1};
+   blockMatrix<Tm> rmat(partition,partition);
+   rmat = rhor;
+   rmat(0,1).colscale(phases);
+   rmat(1,1).colscale(phases);
+   rmat(1,0).rowscale(phases);
+   rmat(1,1).rowscale(phases);
+   //  
+   // Check: time-reversal symmetric rhor in a kramers-paired basis 
+   //        should have the following structure
+   // 
+   //  [  A   B  ]
+   //  [ -B*  A* ]
+   //
+   if(debug){
+      rhor.print("rhor");
+      rmat(0,0).print("A");
+      rmat(1,1).print("A*");
+      rmat(0,1).print("B");
+      rmat(1,0).print("B*");
    }
+   //
+   // Kramers symmetrization:
+   //
+   //  [ rho_AA rho_BA ]        [ rho_AA+rho_BB^*  rho_BA-rho_AB^* ]   [  A   B  ]
+   //  [	       ] -> 1/2 [				   ] = [         ]
+   //  [ rho_AB rho_BB ]        [ rho_AB-rho_BA^*  rho_BB+rho_AA^* ]   [ -B*  A* ]
+   //
+   auto A = 0.5*(rmat(0,0) + rmat(1,1).conj());
+   auto B = 0.5*(rmat(0,1) - rmat(1,0).conj()); 
+   rmat(0,0) = A;
+   rmat(0,1) = B;
+   rmat(1,0) = -B.conj();
+   rmat(1,1) = A.conj();
+   auto rhor_kr = rmat.to_matrix();
+   // TRS-preserving diagonalization (only half eigs are output)
+   zquatev(rhor_kr,eigs,U,1);
+   std::copy(eigs.begin(), eigs.begin()+dim1, eigs.begin()+dim1); // duplicate eigs!
+   // back to original basis {|D>,|Df>}
+   blockMatrix<Tm> umat(partition,{dim});
+   umat = U;
+   umat(1,0).rowscale(phases);
+   U = umat.to_matrix();
+}
+
+template <typename Tm>
+void eig_solver_kr(const ctns::qsym& qr,
+	           const std::vector<double>& phases,
+	           const linalg::matrix<Tm>& rhor,
+	           std::vector<double>& eigs,
+	           linalg::matrix<Tm>& U){
+   assert(tools::is_complex<Tm>());
+   if(qr.parity() == 0){
+      eig_solver_even(rhor,phases,eigs,U); 
+   }else{
+      eig_solver_odd(rhor,phases,eigs,U); 
+   }
+}
+
+//---------------------------------------------------------------
+// Compute right renormalized states from a set of wavefunctions
+//---------------------------------------------------------------
+const double rdm_vs_svd = 10; //1.5; // empirical factor based on performance tests
+extern const double rdm_vs_svd;
+
+template <typename Tm> 
+void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
+		           std::vector<double>& sigs2,
+		           linalg::matrix<Tm>& U,
+			   const bool debug_basis=false){
+   int nroots = clr.size();
+   int diml = clr[0].rows();
+   int dimr = clr[0].cols();
+   if(dimr <= static_cast<int>(rdm_vs_svd*diml)){ 
+      
+      if(debug_basis){ 
+         std::cout << " RDM-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
+      }
+      linalg::matrix<Tm> rhor(dimr,dimr);
+      for(int iroot=0; iroot<nroots; iroot++){
+         rhor += linalg::xgemm("T","N",clr[iroot],clr[iroot].conj());
+      } // iroot
+      rhor *= 1.0/nroots;   
+      sigs2.resize(dimr);
+      linalg::eig_solver(rhor, sigs2, U, 1);
+
+   }else{
+
+      if(debug_basis){ 
+         std::cout << " SVD-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
+      }
+      linalg::matrix<Tm> vrl(dimr,diml*nroots);
+      for(int iroot=0; iroot<nroots; iroot++){
+         auto crl = clr[iroot].T();
+         std::copy(crl.data(), crl.data()+dimr*diml, vrl.col(iroot*diml));
+      } // iroot
+      vrl *= 1.0/std::sqrt(nroots);
+      linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
+      linalg::svd_solver(vrl, sigs2, U, vt, 1);
+      std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
+  		     [](const double& x){ return x*x; });
+
+   }
+   if(debug_basis) linalg::check_orthogonality(U);
+}
+
+template <typename Tm> 
+void get_renorm_states_kr(const ctns::qsym& qr,
+	                  const std::vector<double>& phases,	
+      	                  const std::vector<linalg::matrix<Tm>>& clr,
+		          std::vector<double>& sigs2,
+		          linalg::matrix<Tm>& U,
+			  const bool debug_basis=false){
+   const double thresh_kept = 1.e-16;
+   assert(tools::is_complex<Tm>());
+   int nroots = clr.size();
+   int diml = clr[0].rows();
+   int dimr = clr[0].cols();
+   if(dimr <= static_cast<int>(rdm_vs_svd*diml)){ 
+      
+      if(debug_basis){ 
+         std::cout << " RDM-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
+      }
+      linalg::matrix<Tm> rhor(dimr,dimr);
+      for(int iroot=0; iroot<nroots; iroot++){
+         rhor += linalg::xgemm("T","N",clr[iroot],clr[iroot].conj());
+      } // iroot
+      rhor *= 1.0/nroots;   
+      sigs2.resize(dimr);
+      eig_solver_kr<std::complex<double>>(qr, phases, rhor, sigs2, U);
+
+   }else{
+   
+      if(debug_basis){ 
+         std::cout << " SVD-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
+      }
+      //----------------------------------------------
+      // 0. Perform usual SVD to get renorm_basis
+      //----------------------------------------------
+      linalg::matrix<Tm> vrl(dimr,diml*nroots);
+      for(int iroot=0; iroot<nroots; iroot++){
+         auto crl = clr[iroot].T();
+         std::copy(crl.data(), crl.data()+dimr*diml, vrl.col(iroot*diml));
+      } // iroot
+      vrl *= 1.0/std::sqrt(nroots);
+      linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
+      linalg::svd_solver(vrl, sigs2, U, vt, 1);
+      //----------------------------------------------
+      // 1. Generate KRS-adapted basis
+      //----------------------------------------------
+      int nkept = 0;
+      for(int i=0; i<sigs2.size(); i++){
+         if(sigs2[i] > thresh_kept){ 
+            nkept += 1;
+         }else{
+            break;
+         }
+      }
+      if(debug_basis) std::cout << "nkept=" << nkept << std::endl;
+      int nindp = get_ortho_basis_kr(qr, phases, U, nkept);
+      //----------------------------------------------
+      // 2. Re-diagonalize RDM in the KRS-basis
+      // rhor_proj = U^+ rho_r U
+      //           = U^+ psi^T psi^* U
+      //           = X^T X*  
+      // with X = psi U^*
+      //----------------------------------------------
+      linalg::matrix<Tm> rhor_proj(nindp,nindp);
+      for(int iroot=0; iroot<nroots; iroot++){
+         auto clru = linalg::xgemm("N","N",clr[iroot],U.conj());
+         rhor_proj += linalg::xgemm("T","N",clru,clru.conj());
+      } // iroot
+      rhor_proj *= 1.0/nroots;
+      sigs2.resize(nindp);
+      linalg::matrix<Tm> Urot;
+      std::vector<double> phases_fake;
+      if(qr.parity() == 0){ 
+         phases_fake.resize(0);
+      }else{
+	 phases_fake.resize(nindp/2, 1.0);
+      }
+      eig_solver_kr<std::complex<double>>(qr, phases_fake, rhor_proj, sigs2, Urot);
+      U = linalg::xgemm("N","N",U,Urot);
+
+   }
+   if(debug_basis) linalg::check_orthogonality(U);
 }
 
 } // kramers

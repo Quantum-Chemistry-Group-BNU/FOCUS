@@ -85,7 +85,7 @@ void get_rbases(comb<Km>& icomb,
 
       } // node type
 
-      //if(idx == 2) exit(1);
+      if(idx == 2) exit(1);
 
    } // idx
    
@@ -105,8 +105,6 @@ void get_rbases(comb<Km>& icomb,
       } // idx
       std::cout << "maximum bond dimension = " << Dmax << std::endl;
    }
-
-   exit(1);
 
    auto t1 = tools::get_time();
    tools::timing("ctns::get_rbases", t0, t1);

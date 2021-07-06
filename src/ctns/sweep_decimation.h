@@ -156,7 +156,7 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
       mapping2krbasis(qr,qs1,qs2,dpt,pos_new,phases);
       assert(pos_new.size() == qrow.get_dim(br)); 
       auto rhor = rblk.reorder_rowcol(pos_new,pos_new);
-      eig_solver_kr<std::complex<double>>(qr, rhor, sig2, rbas, phases);
+      kramers::eig_solver_kr<std::complex<double>>(qr, phases, rhor, sig2, rbas);
       // save (for odd-electron subspace, only save half of sig2 for later sorting)
       rbasis[br] = rbas.reorder_row(pos_new,1);
       if(qr.parity() == 1){

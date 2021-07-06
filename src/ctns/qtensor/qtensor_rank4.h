@@ -245,7 +245,7 @@ qtensor4<Tm> qtensor4<Tm>::K(const int nbar) const{
       int vdim = qver.get_dim(bv);
       if(pm == 0 && pv == 0){
          for(int imv=0; imv<blk.size(); imv++){
-            blk[imv] = fpo*time_reversal(blk1[imv], pr, pc);
+            blk[imv] = fpo*kramers::time_reversal(blk1[imv], pr, pc);
          }
       }else if(pm == 0 && pv == 1){
 	 assert(vdim%2 == 0);
@@ -254,14 +254,14 @@ qtensor4<Tm> qtensor4<Tm>::K(const int nbar) const{
 	    for(int im=0; im<mdim; im++){
                int imv  = iv*mdim + im;
 	       int imv2 = (iv+vdim2)*mdim + im;
-	       blk[imv] = fpo*time_reversal(blk1[imv2], pr, pc);
+	       blk[imv] = fpo*kramers::time_reversal(blk1[imv2], pr, pc);
 	    }
 	 }
 	 for(int iv=0; iv<vdim2; iv++){
 	    for(int im=0; im<mdim; im++){
 	       int imv  = (iv+vdim2)*mdim + im;
 	       int imv2 = iv*mdim + im;
-	       blk[imv] = -fpo*time_reversal(blk1[imv2], pr, pc);
+	       blk[imv] = -fpo*kramers::time_reversal(blk1[imv2], pr, pc);
 	    }
 	 }
       }else if(pm == 1 && pv == 0){
@@ -271,12 +271,12 @@ qtensor4<Tm> qtensor4<Tm>::K(const int nbar) const{
 	    for(int im=0; im<mdim2; im++){
                int imv  = iv*mdim + im;
 	       int imv2 = iv*mdim + (im+mdim2);
-	       blk[imv] = fpo*time_reversal(blk1[imv2], pr, pc);
+	       blk[imv] = fpo*kramers::time_reversal(blk1[imv2], pr, pc);
 	    }
 	    for(int im=0; im<mdim2; im++){
 	       int imv  = iv*mdim + (im+mdim2);
 	       int imv2 = iv*mdim + im;
-	       blk[imv] = -fpo*time_reversal(blk1[imv2], pr, pc);
+	       blk[imv] = -fpo*kramers::time_reversal(blk1[imv2], pr, pc);
 	    }
 	 }
       }else if(pm == 1 && pv == 1){
@@ -287,24 +287,24 @@ qtensor4<Tm> qtensor4<Tm>::K(const int nbar) const{
 	    for(int im=0; im<mdim2; im++){
                int imv  = iv*mdim + im;
 	       int imv2 = (iv+vdim2)*mdim + (im+mdim2);
-	       blk[imv] = fpo*time_reversal(blk1[imv2], pr, pc);
+	       blk[imv] = fpo*kramers::time_reversal(blk1[imv2], pr, pc);
 	    }
 	    for(int im=0; im<mdim2; im++){
 	       int imv  = iv*mdim + (im+mdim2);
 	       int imv2 = (iv+vdim2)*mdim + im;
-	       blk[imv] = -fpo*time_reversal(blk1[imv2], pr, pc);
+	       blk[imv] = -fpo*kramers::time_reversal(blk1[imv2], pr, pc);
 	    }
 	 }
 	 for(int iv=0; iv<vdim2; iv++){
 	    for(int im=0; im<mdim2; im++){
 	       int imv  = (iv+vdim2)*mdim + im;
                int imv2 = iv*mdim + (im+mdim2);
-	       blk[imv] = -fpo*time_reversal(blk1[imv2], pr, pc);
+	       blk[imv] = -fpo*kramers::time_reversal(blk1[imv2], pr, pc);
 	    }
 	    for(int im=0; im<mdim2; im++){
 	       int imv  = (iv+vdim2)*mdim + (im+mdim2);
 	       int imv2 = iv*mdim + im;
-	       blk[imv] = fpo*time_reversal(blk1[imv2], pr, pc);
+	       blk[imv] = fpo*kramers::time_reversal(blk1[imv2], pr, pc);
 	    }
 	 }
       } // (pm,pv)

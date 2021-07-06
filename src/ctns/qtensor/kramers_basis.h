@@ -54,9 +54,9 @@ void get_krvec_odd(Tm* y, Tm* ykr, const std::vector<double>& phases){
 
 // Plain version for matrix: MGS for rbas of size rbas(ndim,nres)
 template <typename Tm>
-int get_ortho_basis(linalg::matrix<Tm>& rbas,
-	            const int nres,	
-		    const double crit_indp=1.e-12){
+int get_ortho_basis_mat(linalg::matrix<Tm>& rbas,
+	                const int nres,	
+		        const double crit_indp=1.e-12){
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
    // 2. form new basis from rbas by modified Gram-Schmidt procedure
@@ -75,7 +75,7 @@ int get_ortho_basis(linalg::matrix<Tm>& rbas,
       std::copy(rbas.col(i), rbas.col(i)+ndim, rbas.col(nindp));
       nindp += 1;
       // project out |r[i]>-component from other basis
-      int N = ncols-1-i;
+      int N = nres-1-i;
       if(N == 0) break;
       std::vector<Tm> rtr(nindp*N);
       // R_rest = (1-Rnew*Rnew^+)*R_rest
@@ -97,7 +97,7 @@ int get_ortho_basis(linalg::matrix<Tm>& rbas,
 template <typename Tm>
 int get_ortho_basis_even(linalg::matrix<Tm>& rbas, 
 		         const int nres,
-		         std::vector<double>& phases,
+		         const std::vector<double>& phases,
 		         const double crit_indp=crit_indp_kr){
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const double isqrt2 = 1.0/std::sqrt(2.0);
@@ -121,7 +121,7 @@ int get_ortho_basis_even(linalg::matrix<Tm>& rbas,
 		     [iunit](const Tm& x, const Tm& y){ return (x-y)*iunit; }); 
    }
    // Orthonormalization
-   int nindp = get_ortho_basis(rbas_new, 2*nres, crit_indp);
+   int nindp = get_ortho_basis_mat(rbas_new, 2*nres, crit_indp);
    if(debug_ortho) std::cout << "nindp=" << nindp << std::endl;
    assert(nindp > 0);
    rbas.resize(ndim, nindp);
@@ -134,7 +134,7 @@ int get_ortho_basis_even(linalg::matrix<Tm>& rbas,
 template <typename Tm>
 int get_ortho_basis_odd(linalg::matrix<Tm>& rbas, 
 		        const int nres,
-		        std::vector<double>& phases,
+		        const std::vector<double>& phases,
 		        const double crit_indp=crit_indp_kr){
    const bool debug_ortho = true;
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
@@ -186,7 +186,30 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
    assert(nindp%2 == 0);
    rbas.resize(ndim, nindp);
    std::copy(rbas_new.data(), rbas_new.data()+ndim*nindp, rbas.data());
+   // reorder into {|b>,K|b>} structure
+   std::vector<int> pos_new(nindp);
+   for(int i=0; i<nindp; i++){
+      pos_new[i] = i%2==0? i/2 : i/2+nindp/2;
+   }
+   rbas = rbas.reorder_col(pos_new, 1);
    if(debug_ortho) linalg::check_orthogonality(rbas);
+   return nindp;
+}
+
+template <typename Tm>
+int get_ortho_basis_kr(const ctns::qsym& qr,
+		       const std::vector<double>& phases,
+		       linalg::matrix<Tm>& rbas, 
+		       const int nres,
+		       const double crit_indp=crit_indp_kr){
+   assert(tools::is_complex<Tm>());
+   int nindp = 0;
+   if(qr.parity() == 0){
+      nindp = get_ortho_basis_even(rbas, nres, phases, crit_indp);
+   }else{
+      nindp = get_ortho_basis_odd(rbas, nres, phases, crit_indp);
+   }
+   assert(nindp > 0);
    return nindp;
 }
 
@@ -316,7 +339,7 @@ int get_ortho_basis_qt(const int ndim,
       if(debug_ortho){
          // check psi[lr] = psi_bar[l_bar,r_bar]*
          std::vector<Tm> tmp(ndim);
-         get_krvec(&rbas_new[(nindp-1)*ndim], tmp.data(), wf, 0);
+         get_krvec_qt(&rbas_new[(nindp-1)*ndim], tmp.data(), wf, 0);
          std::transform(tmp.begin(), tmp.end(), &rbas[i*ndim], krvec.begin(),
                         [](const Tm& x, const Tm& y){ return x-y; }); 
 	 auto diff = linalg::xnrm2(ndim, krvec.data());

@@ -278,13 +278,13 @@ struct dvdsonSolver_kr{
             // We need to first contruct full sigma vector from skeleton one using TRS
             //-------------------------------------------------------------------------
 	    // sigma[o]
-	    kramers::get_krvec(&wbas[i1*ndim], krvec.data(), wf, 0);
+	    kramers::get_krvec_qt(&wbas[i1*ndim], krvec.data(), wf, 0);
             std::transform(&wbas[i0*ndim], &wbas[i0*ndim]+ndim, krvec.begin(), &rbas[i0*ndim],
 			   [](const Tm& x, const Tm& y){ return x + y; });
             std::transform(&rbas[i0*ndim], &rbas[i0*ndim]+ndim, &vbas[i0*ndim], &rbas[i0*ndim],
                            [i0,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i0]; }); 
 	    // sigma[o_bar] 
-	    kramers::get_krvec(&wbas[i0*ndim], krvec.data(), wf);
+	    kramers::get_krvec_qt(&wbas[i0*ndim], krvec.data(), wf);
             std::transform(&wbas[i1*ndim], &wbas[i1*ndim]+ndim, krvec.begin(), &rbas[i1*ndim], 
 			   [](const Tm& x, const Tm& y){ return x + y; });
             std::transform(&rbas[i1*ndim], &rbas[i1*ndim]+ndim, &vbas[i1*ndim], &rbas[i1*ndim],

@@ -311,7 +311,7 @@ qtensor2<Tm> qtensor2<Tm>::K(const int nbar) const{
 	 const auto& blk1 = _qblocks[_addr(br,bc)];
 	 int pr = qrow.get_parity(br);
 	 int pc = qcol.get_parity(bc);
-	 blk = fpo*time_reversal(blk1, pr, pc); 
+	 blk = fpo*kramers::time_reversal(blk1, pr, pc); 
       } // bc
    } // br
    return qt2;
