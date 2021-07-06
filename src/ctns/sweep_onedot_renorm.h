@@ -41,6 +41,18 @@ void onedot_renorm_lc(sweep_data& sweeps,
    auto qprod = qmerge(wf.qrow, wf.qmid);
    auto qlc = qprod.first;
    auto dpt = qprod.second;
+   
+   
+   
+/*  
+   setup tests for decimation? - only rank-0 does this! 
+
+   if(rank == 0){
+
+   }
+*/
+
+
    qtensor2<Tm> rdm(qsym(), qlc, qlc);
    if(rank == 0){ 
       std::cout << "0. start renormalizing" << std::endl;
@@ -75,6 +87,8 @@ void onedot_renorm_lc(sweep_data& sweeps,
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
+
+
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;

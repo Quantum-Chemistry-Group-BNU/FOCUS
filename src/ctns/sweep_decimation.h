@@ -9,7 +9,7 @@ extern const double thresh_sig2;
 const double thresh_sig2accum = 0.99;
 extern const double thresh_sig2accum;
 
-const bool debug_decimation = false;
+const bool debug_decimation = true;
 extern const bool debug_decimation;
 
 // wf[L,R] = U[L,l]*sl*Vh[l,R]
@@ -26,6 +26,8 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
    std::map<int,int> idx2sector; 
    std::vector<double> sig2all;
    std::map<int,linalg::matrix<Tm>> rbasis;
+   
+   
    int idx = 0, nqr = rdm.rows();
    for(int br=0; br<nqr; br++){
       const auto& blk = rdm(br,br);
@@ -50,6 +52,8 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
 	 std::cout << std::endl;
       }
    }
+
+
    // 2. select important sig2
    auto index = tools::sort_index(sig2all, 1);
    std::vector<int> kept_dim(nqr,0);
@@ -132,6 +136,7 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
  			       const qdpt& dpt){
    if(debug_decimation) std::cout << "ctns::decimation_row_kr dcut=" << dcut << std::endl;
    const auto& qrow = rdm.qrow;
+   
    // 0. normalize before diagonalization
    std::complex<double> rfac = 1.0/rdm.trace();
    // 1. compute reduced basis
@@ -182,6 +187,8 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
 	 std::cout << std::endl;
       }
    }
+
+
    // 2. select important sig2
    auto index = tools::sort_index(sig2all, 1);
    std::vector<int> kept_dim(nqr,0);   
