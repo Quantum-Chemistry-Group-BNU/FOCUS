@@ -59,14 +59,14 @@ void get_rbases(comb<Km>& icomb,
          for(int k : node.rsupport) std::cout << k << " ";
 	 std::cout << std::endl;
       }
+      // for boundary site, we simply choose to use identity
       if(node.type == 0 && p != std::make_pair(0,0)){
          
-         // for boundary site, we simply choose to use identity
 	 icomb.rbases[p] = get_rbasis_phys<Tm>(Km::isym);
 
+      // Generate {|r>} at the internal nodes
       }else{
 	 
-	 // Generate {|r>} at the internal nodes
 	 // 1. generate 1D ordering
          const auto& rsupp = node.rsupport; 
          auto order = node.lsupport;
@@ -119,28 +119,30 @@ void get_rsites(comb<Km>& icomb){
       auto p = topo.rcoord[idx];
       int i = p.first, j = p.second;
       const auto& node = topo.nodes[i][j];
-      if(debug) std::cout << "idx=" << idx << " node=" << p << " ";     
+      if(debug){ 
+	 std::cout << " idx=" << idx << " node=" << p << "[" << node.type << "]";   
+      } 
+      auto ti = tools::get_time(); 
+      // type=0: end or leaves
       if(node.type == 0 && p != std::make_pair(0,0)){
 	 
-	 if(debug) std::cout << "type 0: end or leaves" << std::endl;
          get_right_bsite(Km::isym, icomb.rsites[p]);
 
+      // physical/internal on backbone/branch
       }else{
 
-	 if(debug){
-	    if(node.type == 3){
-	       //    |u>(0)      
-	       //     |
-	       //  ---*---|r>(1) 
-	       std::cout << "type 3: internal site on backbone" << std::endl;
-	    }else{
-	       //     n            |u> 
-	       //     |             |
-	       //  ---*---|r>   n---*
-	       //                   |
-	       std::cout << "type 1/2: physical site on backbone/branch" << std::endl;
-	    }
-	 }
+	 /*
+	   node.type == 3: internal site on backbone
+	     |u>(0)      
+	      |
+	   ---*---|r>(1)
+
+	   node.type = 1/2: physical site on backbone/branch
+	      n            |u> 
+	      |             |
+	   ---*---|r>   n---*
+	                    |
+         */
          const auto& rbasis_l = icomb.rbases.at(p); 
 	 const auto& rbasis_c = (node.type==3)? icomb.rbases.at(node.center) : get_rbasis_phys<Tm>(Km::isym); 
 	 const auto& rbasis_r = icomb.rbases.at(node.right);
@@ -177,7 +179,16 @@ void get_rsites(comb<Km>& icomb){
          icomb.rsites[p] = std::move(qt3);
 
       } // node type
-      if(debug) icomb.rsites[p].print("rsites_"+std::to_string(idx));
+      auto tf = tools::get_time(); 
+      if(debug){ 
+         auto dt = tools::get_duration(tf-ti);
+         std::cout << " shape(l,c,r)=("
+                   << icomb.rsites[p].qrow.get_dimAll() << ","
+                   << icomb.rsites[p].qmid.get_dimAll() << ","
+                   << icomb.rsites[p].qcol.get_dimAll() << ")"
+	           << " TIMING=" << dt << " S"
+		   << std::endl;
+      }
    } // idx
 
    auto t1 = tools::get_time();
@@ -256,7 +267,7 @@ void get_rwfuns(comb<Km>& icomb,
    // check overlaps
    if(debug){
       icomb.rwfuns.print("rwfuns",2);
-      std::cout << "\ncheck state overlaps" << std::endl;
+      std::cout << "\ncheck state overlaps ..." << std::endl;
       // ova = <CTNS[i]|CTNS[j]>
       auto ova = xgemm("N","N",icomb.rwfuns(0,cpos).conj(),icomb.rwfuns(0,cpos).T());
       ova.print("ova_rwfuns");
@@ -269,7 +280,7 @@ void get_rwfuns(comb<Km>& icomb,
       }
       ova0.print("ova0_vs");
       auto diff = linalg::normF(ova-ova0);
-      std::cout << "diff of ova matrix = " << diff << std::endl;
+      std::cout << "diff of ova matrices = " << diff << std::endl;
       const double thresh = 1.e-8;
       if(diff > thresh){ 
 	 std::string msg = "error: too large diff=";

@@ -320,7 +320,10 @@ void oper_renorm_opAll(const std::string& superblock,
    }
 
    auto t1 = tools::get_time();
-   if(rank == 0) tools::timing("ctns::oper_renorm_opAll", t0, t1);
+   if(rank == 0){ 
+      auto dt = tools::get_duration(t1-t0);
+      std::cout << " TIMING=" << dt << " S" << std::endl;
+   }
 }
 
 } // ctns

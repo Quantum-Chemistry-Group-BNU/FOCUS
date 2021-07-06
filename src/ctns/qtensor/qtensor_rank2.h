@@ -205,11 +205,12 @@ double qtensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool 
             int ndim = qrow.get_dim(br);
             double diff = linalg::normF(blk - linalg::identity_matrix<Tm>(ndim));
 	    maxdiff = std::max(diff,maxdiff);
-	    if(debug || diff > thresh_ortho){
-               std::cout << "qsym=" << qr << " ndim=" << ndim << " |Sr-Id|_F=" << diff << std::endl;
+	    if(debug || (!debug && diff > thresh_ortho)){ 
+	       std::cout << " br=" << br << " qr=" << qr 
+		         << " ndim=" << ndim << " |Sr-Id|_F=" << diff 
+			 << std::endl;
 	    }
             if(diff > thresh_ortho){
-	       std::cout << "qsym=" << qr << " diff=" << diff << std::endl;
 	       blk.print("diagonal block");
 	       tools::exit("error: not an identity matrix!"); 
 	    }
