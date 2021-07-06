@@ -270,10 +270,11 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
 		      const fock::onspace& space,
 		      const std::vector<std::vector<typename Km::dtype>>& vs,
 		      const double thresh,
+		      const double rdm_vs_svd,
 		      const bool debug){
+   const bool debug_basis = false;
    using Tm = typename Km::dtype;
    auto t0 = tools::get_time();
-   const bool debug_basis = false;
    if(debug){
       std::cout << "ctns::right_projection<Km> thresh=" 
                 << std::scientific << std::setprecision(2) << thresh << std::endl;
@@ -312,7 +313,7 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
          if(debug_basis) std::cout << "find matched ql =" << ql << std::endl;
 	 matched += 1;
          if(matched > 1) tools::exit("multiple matched ql is not supported!");
-	 kramers::get_renorm_states_nkr(blk, sigs2, U, debug_basis);
+	 kramers::get_renorm_states_nkr(blk, sigs2, U, rdm_vs_svd, debug_basis);
       } // ql
       
       // 4. select important renormalized states from (sigs2,U) 
@@ -322,6 +323,7 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
          update_rbasis(rbasis, qr, rspace, sigs2, U, dimBc, sumBc, SvN, thresh, debug);
       }
    } // qr
+   assert(std::abs(sumBc-1.0) < 1.e-10);
    if(debug){
       std::cout << "dim(space,lspace,rspace)=" << space.size() << "," 
                 << lspace.get_dimAll() << "," << rspace.get_dimAll() 
@@ -334,14 +336,15 @@ void right_projection(renorm_basis<typename Km::dtype>& rbasis,
 // time-reversal symmetry adapted right_projection
 template <> 
 inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbasis,
-		      	         const int bpos,
-		      	         const fock::onspace& space,
-		      	         const std::vector<std::vector<std::complex<double>>>& vs,
-		      	         const double thresh,
-		      	         const bool debug){
+		      	                const int bpos,
+		      	                const fock::onspace& space,
+		      	                const std::vector<std::vector<std::complex<double>>>& vs,
+		      	                const double thresh,
+					const double rdm_vs_svd,
+		      	                const bool debug){
+   const bool debug_basis = false;
    using Tm = std::complex<double>;
    auto t0 = tools::get_time();
-   const bool debug_basis = true; //false;
    if(debug){
       std::cout << "ctns::right_projection<cNK> thresh=" 
                 << std::scientific << std::setprecision(4) << thresh << std::endl;
@@ -423,7 +426,7 @@ inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbas
          if(debug_basis) std::cout << "find matched ql =" << ql << std::endl;
 	 matched += 1;
          if(matched > 1) tools::exit("multiple matched ql is not supported!");
-	 kramers::get_renorm_states_kr(qr, phases, blk, sigs2, U, debug_basis);
+	 kramers::get_renorm_states_kr(qr, phases, blk, sigs2, U, rdm_vs_svd, debug_basis);
       } // ql
       
       // 4. select important renormalized states from (sigs2,U) 
@@ -431,6 +434,7 @@ inline void right_projection<kind::cNK>(renorm_basis<std::complex<double>>& rbas
          update_rbasis(rbasis, qr, rspace, sigs2, U, dimBc, sumBc, SvN, thresh, debug);
       }
    } // qr
+   assert(std::abs(sumBc-1.0) < 1.e-10);
    if(debug){
       std::cout << "dim(space,lspace,rspace)=" << space.size() << "," 
            << lspace.get_dimAll() << "," << rspace.get_dimAll() 

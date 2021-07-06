@@ -365,13 +365,11 @@ void eig_solver_kr(const ctns::qsym& qr,
 //---------------------------------------------------------------
 // Compute right renormalized states from a set of wavefunctions
 //---------------------------------------------------------------
-const double rdm_vs_svd = 10; //1.5; // empirical factor based on performance tests
-extern const double rdm_vs_svd;
-
 template <typename Tm> 
 void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
 		           std::vector<double>& sigs2,
 		           linalg::matrix<Tm>& U,
+			   const double rdm_vs_svd,
 			   const bool debug_basis=false){
    int nroots = clr.size();
    int diml = clr[0].rows();
@@ -406,7 +404,13 @@ void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
   		     [](const double& x){ return x*x; });
 
    }
-   if(debug_basis) linalg::check_orthogonality(U);
+   if(debug_basis){ 
+      std::cout << "final sigs2: ";
+      for(const auto sig2 : sigs2) std::cout << sig2 << " ";
+      std::cout << std::endl;                               
+      U.print("U"); 
+      linalg::check_orthogonality(U);
+   }
 }
 
 template <typename Tm> 
@@ -415,6 +419,7 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       	                  const std::vector<linalg::matrix<Tm>>& clr,
 		          std::vector<double>& sigs2,
 		          linalg::matrix<Tm>& U,
+			  const double rdm_vs_svd,
 			  const bool debug_basis=false){
    const double thresh_kept = 1.e-16;
    assert(tools::is_complex<Tm>());
@@ -439,9 +444,9 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       if(debug_basis){ 
          std::cout << " SVD-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
       }
-      //----------------------------------------------
+      //------------------------------------------
       // 0. Perform usual SVD to get renorm_basis
-      //----------------------------------------------
+      //------------------------------------------
       linalg::matrix<Tm> vrl(dimr,diml*nroots);
       for(int iroot=0; iroot<nroots; iroot++){
          auto crl = clr[iroot].T();
@@ -450,9 +455,17 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       vrl *= 1.0/std::sqrt(nroots);
       linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
       linalg::svd_solver(vrl, sigs2, U, vt, 1);
-      //----------------------------------------------
+      std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
+  		     [](const double& x){ return x*x; });
+      if(debug_basis){
+         std::cout << "sigs2[SVD]: ";
+         for(const auto sig2 : sigs2) std::cout << sig2 << " ";
+         std::cout << std::endl;                              
+	 U.print("U[SVD]"); 
+      }
+      //------------------------------------------
       // 1. Generate KRS-adapted basis
-      //----------------------------------------------
+      //------------------------------------------
       int nkept = 0;
       for(int i=0; i<sigs2.size(); i++){
          if(sigs2[i] > thresh_kept){ 
@@ -463,32 +476,40 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       }
       if(debug_basis) std::cout << "nkept=" << nkept << std::endl;
       int nindp = get_ortho_basis_kr(qr, phases, U, nkept);
-      //----------------------------------------------
+      if(debug_basis) U.print("U[ortho]");
+      //------------------------------------------
       // 2. Re-diagonalize RDM in the KRS-basis
       // rhor_proj = U^+ rho_r U
       //           = U^+ psi^T psi^* U
-      //           = X^T X*  
-      // with X = psi U^*
-      //----------------------------------------------
+      //           = X^T X*    with X = psi U^*
+      //------------------------------------------
       linalg::matrix<Tm> rhor_proj(nindp,nindp);
       for(int iroot=0; iroot<nroots; iroot++){
          auto clru = linalg::xgemm("N","N",clr[iroot],U.conj());
          rhor_proj += linalg::xgemm("T","N",clru,clru.conj());
       } // iroot
       rhor_proj *= 1.0/nroots;
-      sigs2.resize(nindp);
-      linalg::matrix<Tm> Urot;
+      // re-diagonalize rhor_proj 
       std::vector<double> phases_fake;
       if(qr.parity() == 0){ 
          phases_fake.resize(0);
       }else{
 	 phases_fake.resize(nindp/2, 1.0);
       }
+      sigs2.resize(nindp);
+      linalg::matrix<Tm> Urot;
       eig_solver_kr<std::complex<double>>(qr, phases_fake, rhor_proj, sigs2, Urot);
+      if(debug_basis) Urot.print("Urot");
       U = linalg::xgemm("N","N",U,Urot);
 
    }
-   if(debug_basis) linalg::check_orthogonality(U);
+   if(debug_basis){ 
+      std::cout << "final sigs2: ";
+      for(const auto sig2 : sigs2) std::cout << sig2 << " ";
+      std::cout << std::endl;                               
+      U.print("U"); 
+      linalg::check_orthogonality(U);
+   }
 }
 
 } // kramers

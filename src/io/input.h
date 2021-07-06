@@ -89,7 +89,8 @@ private:
    friend class boost::serialization::access;
    template<class Archive>
    void serialize(Archive & ar, const unsigned int version){
-      ar & run & kind & task & topology_file & maxdets & thresh_proj & thresh_ortho
+      ar & run & kind & task & topology_file 
+	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
 	 & nroots & guess & inoise & maxsweep & ctrls & cisolver & maxcycle
          & load & rcanon_file & istate & nsample & ndetprt 
 	 & verbose;  
@@ -106,6 +107,7 @@ public:
    int maxdets = 10000;
    double thresh_proj = 1.e-16;
    double thresh_ortho = 1.e-8;
+   double rdm_vs_svd = 1.5;
    // sweep
    int nroots = 1; // this can be smaller than nroots in CI 
    int inoise = 2;

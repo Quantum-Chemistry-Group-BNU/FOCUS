@@ -186,6 +186,8 @@ void params_ctns::read(ifstream& istrm){
          thresh_proj = stod(line.substr(11)); 
       }else if(line.substr(0,12)=="thresh_ortho"){
          thresh_ortho = stod(line.substr(12));
+      }else if(line.substr(0,10)=="rdm_vs_svd"){
+         rdm_vs_svd = stod(line.substr(10));
       }else if(line.substr(0,6)=="nroots"){
 	 nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){
@@ -257,6 +259,7 @@ void params_ctns::print() const{
    cout << "maxdets = " << maxdets << endl;
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;
+   cout << "rdm_vs_svd = " << scientific << rdm_vs_svd << endl;
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
    cout << "inoise   = " << inoise << endl; 

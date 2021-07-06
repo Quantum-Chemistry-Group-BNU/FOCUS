@@ -12,8 +12,8 @@ namespace kramers{
 const bool debug_ortho = false;
 extern const bool debug_ortho;
 
-const bool crit_indp_kr = 1.e-6;
-extern const bool crit_indp_kr;
+const double crit_indp_kr = 1.e-6;
+extern const double crit_indp_kr;
 
 //
 // Even-electron case: suppose |v> = |D>A + |Df>B + |D0>C
@@ -63,7 +63,7 @@ int get_ortho_basis_mat(linalg::matrix<Tm>& rbas,
    int ndim = rbas.rows(), nindp = 0;
    for(int i=0; i<nres; i++){
       double rii = linalg::xnrm2(ndim, rbas.col(i)); // normalization constant
-      if(debug_ortho) std::cout << "i=" << i << " rii=" << rii << std::endl;
+      if(debug_ortho) std::cout << " i=" << i << " rii=" << rii << std::endl;
       if(rii < crit_indp) continue;
       // normalized |r[i]> 
       for(int repeat=0; repeat<maxtimes; repeat++){
@@ -122,7 +122,7 @@ int get_ortho_basis_even(linalg::matrix<Tm>& rbas,
    }
    // Orthonormalization
    int nindp = get_ortho_basis_mat(rbas_new, 2*nres, crit_indp);
-   if(debug_ortho) std::cout << "nindp=" << nindp << std::endl;
+   if(debug_ortho) std::cout << "final nindp=" << nindp << std::endl;
    assert(nindp > 0);
    rbas.resize(ndim, nindp);
    std::copy(rbas_new.data(), rbas_new.data()+ndim*nindp, rbas.data());
@@ -136,7 +136,6 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
 		        const int nres,
 		        const std::vector<double>& phases,
 		        const double crit_indp=crit_indp_kr){
-   const bool debug_ortho = true;
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
    if(debug_ortho) std::cout << "kramers::get_ortho_basis_odd crit_indp=" << crit_indp << std::endl;
@@ -147,7 +146,7 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
    int nindp = 0;
    for(int i=0; i<nres; i++){
       double rii = linalg::xnrm2(ndim, rbas.col(i)); // normalization constant
-      if(debug_ortho) std::cout << "i=" << i << " rii=" << rii << std::endl;
+      if(debug_ortho) std::cout << " i=" << i << " rii=" << rii << std::endl;
       if(rii < crit_indp) continue;
       // normalized |r[i]> 
       for(int repeat=0; repeat<maxtimes; repeat++){
@@ -156,7 +155,6 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
          rii = linalg::xnrm2(ndim, rbas.col(i));
       }
       //-------------------------------------------------------------
-      if(debug_ortho) std::cout << "rbas_new.size=" << rbas_new.size()/ndim << std::endl;
       rbas_new.resize(ndim*(nindp+2));
       // copy
       std::copy(rbas.col(i), rbas.col(i)+ndim, &rbas_new[nindp*ndim]);
@@ -182,7 +180,7 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
                        &one,rbas.col(i+1),&ndim);
       } // repeat
    } // i
-   if(debug_ortho) std::cout << "final rbas_new.size=" << rbas_new.size()/ndim << std::endl;
+   if(debug_ortho) std::cout << "final nindp=" << nindp << std::endl;
    assert(nindp%2 == 0);
    rbas.resize(ndim, nindp);
    std::copy(rbas_new.data(), rbas_new.data()+ndim*nindp, rbas.data());
@@ -249,7 +247,7 @@ int get_ortho_basis_qt(const int ndim,
    int nindp = 0;
    for(int i=0; i<nres; i++){
       double rii = linalg::xnrm2(ndim, &rbas[i*ndim]); // normalization constant
-      if(debug_ortho) std::cout << "\ni=" << i << " rii=" << rii << std::endl;
+      if(debug_ortho) std::cout << " i=" << i << " rii=" << rii << std::endl;
       if(rii < crit_indp) continue;
       // normalized |r[i]> 
       for(int repeat=0; repeat<maxtimes; repeat++){
@@ -318,7 +316,7 @@ int get_ortho_basis_qt(const int ndim,
    int nindp = 0;
    for(int i=0; i<nres; i++){
       double rii = linalg::xnrm2(ndim, &rbas[i*ndim]); // normalization constant
-      if(debug_ortho) std::cout << "\ni=" << i << " rii=" << rii << std::endl;
+      if(debug_ortho) std::cout << " i=" << i << " rii=" << rii << std::endl;
       if(rii < crit_indp) continue;
       // normalized |r[i]> 
       for(int repeat=0; repeat<maxtimes; repeat++){

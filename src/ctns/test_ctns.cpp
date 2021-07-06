@@ -65,7 +65,7 @@ int tests::test_ctns(){
    const bool ifortho = false; 
    fci::ci_truncate(sci_space, vs, schd.ctns.maxdets, ifortho);
    if(!schd.ctns.load){
-      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj);
+      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
       ctns::rcanon_save(icomb);
    }else{
       ctns::rcanon_load(icomb);

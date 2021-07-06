@@ -14,12 +14,13 @@ template <typename Km>
 void rcanon_init(comb<Km>& icomb,
 		 const fock::onspace& space,
 		 const std::vector<std::vector<typename Km::dtype>>& vs,
-		 const double thresh_proj){
+		 const double thresh_proj,
+		 const double rdm_vs_svd=1.5){
    std::cout << "\nctns::rcanon_init" << std::endl;
    auto t0 = tools::get_time();
    
    // 1. compute renormalized bases {|r>} from SCI wavefunctions
-   get_rbases(icomb, space, vs, thresh_proj);
+   get_rbases(icomb, space, vs, thresh_proj, rdm_vs_svd);
 
    // 2. build sites from rbases
    get_rsites(icomb); 
@@ -36,10 +37,13 @@ template <typename Km>
 void get_rbases(comb<Km>& icomb,
 		const fock::onspace& space,
 		const std::vector<std::vector<typename Km::dtype>>& vs,
-		const double thresh_proj){
+		const double thresh_proj,
+		const double rdm_vs_svd){
    const bool debug = true;
-   std::cout << "\nctns::get_rbases thresh_proj=" << std::scientific << std::setprecision(2) 
-	     << thresh_proj << std::endl;
+   std::cout << "\nctns::get_rbases" << std::scientific << std::setprecision(2) 
+	     << " thresh_proj=" << thresh_proj 
+	     << " rdm_vs_svd=" << rdm_vs_svd
+	     << std::endl;
    auto t0 = tools::get_time();
    using Tm = typename Km::dtype;
    
@@ -68,12 +72,6 @@ void get_rbases(comb<Km>& icomb,
          auto order = node.lsupport;
          int bpos = order.size(); // must be put here to account bipartition position
          copy(rsupp.begin(), rsupp.end(), back_inserter(order));
-         //if(debug){
-         //   std::cout << "bpos=" << bpos;
-	 //   std::cout << " order=";
-         //   for(int k : order) std::cout << k << " ";
-	 //   std::cout << std::endl;
-         //}
          
 	 // 2. transform SCI coefficient to this ordering
 	 fock::onspace space2;
@@ -81,12 +79,9 @@ void get_rbases(comb<Km>& icomb,
          transform_coeff(space, vs, order, space2, vs2); 
          
 	 // 3. bipartition of space and compute renormalized states (time-consuming part!!!)
-	 right_projection<Km>(icomb.rbases[p], 2*bpos, space2, vs2, thresh_proj, debug);
+	 right_projection<Km>(icomb.rbases[p], 2*bpos, space2, vs2, thresh_proj, rdm_vs_svd, debug);
 
       } // node type
-
-      if(idx == 2) exit(1);
-
    } // idx
    
    // print information for all renormalized basis {|r>} at each bond
