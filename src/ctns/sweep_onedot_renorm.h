@@ -4,6 +4,7 @@
 #include "oper_io.h"
 #include "sweep_prdm.h"
 #include "sweep_decimation.h"
+#include "sweep_decimation2.h"
 
 namespace ctns{
 
@@ -30,10 +31,13 @@ void onedot_renorm_lc(sweep_data& sweeps,
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise;
+   const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){
-      std::cout << " |lc> (dbranch,dcut,inoise,noise)="
+      std::cout << " |lc> (dbranch,dcut,inoise,noise,rdm_vs_svd)="
                 << dbranch << "," << dcut << "," << sweeps.inoise << ","
-                << std::scientific << std::setprecision(1) << noise << std::endl;
+                << std::scientific << std::setprecision(1) << noise  << ","
+		<< rdm_vs_svd
+		<< std::endl;
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
@@ -41,18 +45,31 @@ void onedot_renorm_lc(sweep_data& sweeps,
    auto qprod = qmerge(wf.qrow, wf.qmid);
    auto qlc = qprod.first;
    auto dpt = qprod.second;
-   
-   
-   
-/*  
-   setup tests for decimation? - only rank-0 does this! 
 
+//
+// NEW VERSION:
+//
+   qtensor2<Tm> rot;
    if(rank == 0){
-
+      std::cout << "0. decimation" << std::endl;
+      std::vector<qtensor2<Tm>> wfs2;
+      for(int i=0; i<vsol.cols(); i++){
+         wf.from_array(vsol.col(i));
+	 if(noise > 1.e-10) wf.add_noise(noise);
+         auto wf2 = wf.merge_lc();
+	 wfs2.push_back(wf2);
+      }
+      decimation_row(ifkr, wf.qrow, wf.qmid, dcut, rdm_vs_svd, wfs2, 
+		     rot, result.dwt, result.deff);
    }
-*/
+#ifndef SERIAL
+   if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
+#endif
 
-
+//
+// OLD VERSION:
+//
+/*
    qtensor2<Tm> rdm(qsym(), qlc, qlc);
    if(rank == 0){ 
       std::cout << "0. start renormalizing" << std::endl;
@@ -87,7 +104,7 @@ void onedot_renorm_lc(sweep_data& sweeps,
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
-
+*/
 
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
@@ -150,11 +167,13 @@ void onedot_renorm_lr(sweep_data& sweeps,
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
+   
    // Renormalize superblock = lr
    auto qprod = qmerge(wf.qrow, wf.qcol);
    auto qlr = qprod.first;
    auto dpt = qprod.second;
    qtensor2<Tm> rdm(qsym(), qlr, qlr);
+   
    if(rank == 0){ 
       std::cout << "0. start renormalizing" << std::endl;
       qlr.print("qlr");
@@ -188,6 +207,7 @@ void onedot_renorm_lr(sweep_data& sweeps,
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
+
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;

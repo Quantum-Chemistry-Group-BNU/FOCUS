@@ -109,6 +109,8 @@ void twodot_renorm_lc1(sweep_data& sweeps,
 
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
+
+
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;
@@ -177,6 +179,8 @@ void twodot_renorm_lr(sweep_data& sweeps,
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
+   
+
    // Renormalize superblock = lr
    auto qprod = qmerge(wf.qrow, wf.qcol);
    auto qlr = qprod.first;
@@ -220,6 +224,8 @@ void twodot_renorm_lr(sweep_data& sweeps,
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
+
+
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;
@@ -288,6 +294,7 @@ void twodot_renorm_c2r(sweep_data& sweeps,
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
+   
    // Renormalize superblock = c2r
    auto qprod = qmerge(wf.qver, wf.qcol);
    auto qcr = qprod.first;
@@ -331,6 +338,7 @@ void twodot_renorm_c2r(sweep_data& sweeps,
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
+   
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;
@@ -399,6 +407,7 @@ void twodot_renorm_c1c2(sweep_data& sweeps,
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
+   
    // Renormalize superblock = c1c2
    auto qprod = qmerge(wf.qmid, wf.qver);
    auto qc1c2 = qprod.first;
@@ -443,6 +452,8 @@ void twodot_renorm_c1c2(sweep_data& sweeps,
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
+   
+   
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;
