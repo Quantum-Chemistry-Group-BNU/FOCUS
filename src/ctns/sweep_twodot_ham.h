@@ -404,11 +404,11 @@ void twodot_Hx(Tm* y,
       qtensor3<Tm> qt3n, qt3h;
       // p1^L1C1+*Sp1^C2R
       qt3n = oper_compxwf_opS("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,size,rank);
-      qt3n = qt3n.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second);
+      qt3n = qt3n.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid);
       Hwf1 += oper_normxwf_opC("lc",qt3n,lqops,c1qops,iformula,index); 
       // -Sp1^C2R+*p1^L1C1
       qt3h = oper_compxwf_opS("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,size,rank,dagger); 
-      qt3h = qt3h.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second);
+      qt3h = qt3h.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid);
       Hwf1 -= oper_normxwf_opC("lc",qt3h,lqops,c1qops,iformula,index,dagger);
    }
    // 4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
@@ -419,11 +419,11 @@ void twodot_Hx(Tm* y,
       qtensor3<Tm> qt3n, qt3h;
       // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+
       qt3n = oper_normxwf_opC("cr",wf2,c2qops,rqops,iformula,index);
-      qt3n = qt3n.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second);
+      qt3n = qt3n.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid);
       Hwf1 -= oper_compxwf_opS("lc",qt3n,lqops,c1qops,isym,ifkr,int2e,int1e,index,size,rank);
       // Sq2^LC1+*q2^C2R
       qt3h = oper_normxwf_opC("cr",wf2,c2qops,rqops,iformula,index,dagger);
-      qt3h = qt3h.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second);
+      qt3h = qt3h.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid);
       Hwf1 += oper_compxwf_opS("lc",qt3h,lqops,c1qops,isym,ifkr,int2e,int1e,index,size,rank,dagger);
    }
    //
@@ -444,11 +444,11 @@ void twodot_Hx(Tm* y,
 	    qtensor3<Tm> qt3n, qt3h;
    	    // Apq*Ppq
 	    qt3n = oper_compxwf_opP("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index);
-            qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
+            qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid); 
             Hwf1 += wt*oper_normxwf_opA("lc",qt3n,lqops,c1qops,ifkr,iformula,index);
 	    // (Apq*Ppq)^H
 	    qt3h = oper_compxwf_opP("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,dagger);
-            qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
+            qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid); 
             Hwf1 += wt*oper_normxwf_opA("lc",qt3h,lqops,c1qops,ifkr,iformula,index,dagger);
          } // iproc
       }
@@ -463,11 +463,11 @@ void twodot_Hx(Tm* y,
 	    qtensor3<Tm> qt3n, qt3h;
    	    // Bpq*Qpq
 	    qt3n = oper_compxwf_opQ("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index);
-            qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
+            qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid); 
             Hwf1 += wt*oper_normxwf_opB("lc",qt3n,lqops,c1qops,ifkr,iformula,index);
 	    // (Bpq*Qpq)^H
 	    qt3h = oper_compxwf_opQ("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,dagger);
-            qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
+            qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid); 
             Hwf1 += wt*oper_normxwf_opB("lc",qt3h,lqops,c1qops,ifkr,iformula,index,dagger);
          } // iproc
       }
@@ -483,11 +483,11 @@ void twodot_Hx(Tm* y,
 	    qtensor3<Tm> qt3n, qt3h;
 	    // Prs*Ars
             qt3n = oper_normxwf_opA("cr",wf2,c2qops,rqops,ifkr,iformula,index);
-            qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
+            qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid); 
 	    Hwf1 += wt*oper_compxwf_opP("lc",qt3n,lqops,c1qops,isym,ifkr,int2e,int1e,index);
 	    // (Prs*Ars)^H
             qt3h = oper_normxwf_opA("cr",wf2,c2qops,rqops,ifkr,iformula,index,dagger);
-            qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
+            qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid); 
 	    Hwf1 += wt*oper_compxwf_opP("lc",qt3h,lqops,c1qops,isym,ifkr,int2e,int1e,index,dagger);
 	 } // iproc
       }
@@ -502,17 +502,17 @@ void twodot_Hx(Tm* y,
 	    qtensor3<Tm> qt3n, qt3h;
 	    // Prs*Ars
             qt3n = oper_normxwf_opB("cr",wf2,c2qops,rqops,ifkr,iformula,index);
-            qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
+            qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid); 
 	    Hwf1 += wt*oper_compxwf_opQ("lc",qt3n,lqops,c1qops,isym,ifkr,int2e,int1e,index);
 	    // (Prs*Ars)^H
             qt3h = oper_normxwf_opB("cr",wf2,c2qops,rqops,ifkr,iformula,index,dagger);
-            qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
+            qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid); 
 	    Hwf1 += wt*oper_compxwf_opQ("lc",qt3h,lqops,c1qops,isym,ifkr,int2e,int1e,index,dagger);
 	 } // iproc
       }
    } // ifNC
-   Hwf += Hwf1.split_c2r(wf.qver,wf.qcol,wf.dpt_c2r().second);
-   Hwf += Hwf2.split_lc1(wf.qrow,wf.qmid,wf.dpt_lc1().second); 
+   Hwf += Hwf1.split_c2r(wf.qver,wf.qcol);
+   Hwf += Hwf2.split_lc1(wf.qrow,wf.qmid); 
    Hwf.to_array(y);
 }
 

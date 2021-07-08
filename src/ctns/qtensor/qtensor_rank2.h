@@ -97,13 +97,16 @@ struct qtensor2{
       qtensor2<Tm> get_rdm_row() const;
       qtensor2<Tm> get_rdm_col() const;
       // reshape: split
-      qtensor3<Tm> split_lc(const qbond& qlx, const qbond& qcx, const qdpt& dpt) const{
+      qtensor3<Tm> split_lc(const qbond& qlx, const qbond& qcx) const{
+         auto dpt = qmerge(qlx, qcx).second;
          return split_qt3_qt2_lc(*this, qlx, qcx, dpt);
       }
-      qtensor3<Tm> split_cr(const qbond& qcx, const qbond& qrx, const qdpt& dpt) const{
+      qtensor3<Tm> split_cr(const qbond& qcx, const qbond& qrx) const{
+	 auto dpt = qmerge(qcx, qrx).second;
          return split_qt3_qt2_cr(*this, qcx, qrx, dpt);
       }
-      qtensor3<Tm> split_lr(const qbond& qlx, const qbond& qrx, const qdpt& dpt) const{
+      qtensor3<Tm> split_lr(const qbond& qlx, const qbond& qrx) const{
+	 auto dpt = qmerge(qlx, qrx).second;
          return split_qt3_qt2_lr(*this, qlx, qrx, dpt);
       }
    public:

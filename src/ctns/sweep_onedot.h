@@ -229,6 +229,7 @@ void sweep_rwfuns(const input::schedule& schd,
 		  const integral::two_body<typename Km::dtype>& int2e,
 	          const integral::one_body<typename Km::dtype>& int1e,
 		  const double ecore){
+   using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -251,22 +252,22 @@ void sweep_rwfuns(const input::schedule& schd,
    if(rank == 0){
       std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;
       const auto& wf = icomb.psi[0]; // only rank-0 has psi from renorm
-      auto qprod = qmerge(wf.qmid, wf.qcol);
-      auto qcr = qprod.first;
-      auto dpt = qprod.second;
-      // 1. build RDM 
-      qtensor2<typename Km::dtype> rdm(qsym(), qcr, qcr);
+      // decimation
+      qtensor2<Tm> rot;
+      std::vector<qtensor2<Tm>> wfs2;
       for(int i=0; i<schd.ctns.nroots; i++){
-         rdm += icomb.psi[i].get_rdm("cr");
+         auto wf2 = icomb.psi[i].merge_cr().T();
+	 wfs2.push_back(wf2);
       }
-      // 2. decimation
       const int dcut = schd.ctns.nroots;
       double dwt; 
       int deff;
       const bool ifkr = tools::is_complex<Km>();
-      auto rot = decimation_row(rdm, dcut, dwt, deff, ifkr, wf.qmid, wf.qcol, dpt).T(); 
-      icomb.rsites[p0] = rot.split_cr(wf.qmid, wf.qcol, dpt);
-      // 3. form rwfuns(istate,irbas)
+      decimation_row(ifkr, wf.qmid, wf.qcol, dcut, schd.ctns.rdm_vs_svd, wfs2,
+		     rot, dwt, deff);
+      rot = rot.T(); 
+      icomb.rsites[p0] = rot.split_cr(wf.qmid, wf.qcol);
+      // form rwfuns(istate,irbas)
       auto& sym_state = icomb.psi[0].sym;
       qbond qrow({{sym_state, schd.ctns.nroots}});
       auto& qcol = rot.qrow; 
@@ -281,7 +282,7 @@ void sweep_rwfuns(const input::schedule& schd,
          }
       } // iroot
       icomb.rwfuns = std::move(rwfuns);
-   } // rank-0
+   } // rank0
 }
    
 } // ctns

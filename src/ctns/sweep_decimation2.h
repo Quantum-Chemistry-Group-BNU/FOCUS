@@ -80,8 +80,8 @@ void decimation_row_nkr(const qbond& qs1,
          idx++;
       }
    } // br
+   // renormalize
    double sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
-   std::cout << sig2sum << std::endl;
    sig2sum = 1.0/sig2sum;
    std::transform(sig2all.begin(), sig2all.end(), sig2all.begin(),
 		  [sig2sum](const double& x){ return x*sig2sum; });

@@ -59,7 +59,7 @@ twodot_guess(comb<Km>& icomb,
 	    // cwf[lc1,a]*r[a,c2,r]->wf3[lc1,c2,r]
             auto wf3 = contract_qt3_qt2_l(icomb.rsites[p1],cwf); 
 	    // wf3[lc1,c2,r]->wf4[l,c1,c2,r]
-	    auto wf4 = wf3.split_lc1(wf.qrow, wf.qmid, wf.dpt_lc1().second);
+	    auto wf4 = wf3.split_lc1(wf.qrow, wf.qmid);
 	    assert(wf4.get_dim() == nsub);
 	    psi4.push_back(wf4);
          } // i
@@ -79,7 +79,7 @@ twodot_guess(comb<Km>& icomb,
 	    // cwf[lr,a]*r[a,c1,c2]->wf3[lr,c1,c2]
             auto wf3 = contract_qt3_qt2_l(icomb.rsites[p1],cwf); 
 	    // wf3[lr,c1,c2]->wf4[l,c1,c2,r]
-	    auto wf4 = wf3.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
+	    auto wf4 = wf3.split_lr(wf.qrow, wf.qcol);
 	    assert(wf4.get_dim() == nsub);
 	    psi4.push_back(wf4);
 	 } // i
@@ -93,7 +93,7 @@ twodot_guess(comb<Km>& icomb,
 	    // l[l,c1,a]*cwf[a,c2r]->wf3[l,c1,c2r] 
 	    auto wf3 = contract_qt3_qt2_r(icomb.lsites[p0],cwf.T());
 	    // wf3[l,c1,c2r]->wf4[l,c1,c2,r]
-	    auto wf4 = wf3.split_c2r(wf.qver, wf.qcol, wf.dpt_c2r().second);
+	    auto wf4 = wf3.split_c2r(wf.qver, wf.qcol);
 	    assert(wf4.get_dim() == nsub);
 	    psi4.push_back(wf4);
 	 } // i
@@ -112,9 +112,9 @@ twodot_guess(comb<Km>& icomb,
 	    // l[l,a,r]->l[lr,a], l[lr,a]*cwf[a,c1c2]->wf2[lr,c1c2]
 	    auto wf2 = icomb.lsites[p0].merge_lr().dot(cwf);
 	    // wf2[lr,c1c2]->wf3[l,c1c2,r]
-	    auto wf3 = wf2.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
+	    auto wf3 = wf2.split_lr(wf.qrow, wf.qcol);
 	    // wf3[l,c1c2,r]->wf4[l,c1,c2,r]
-	    auto wf4 = wf3.split_c1c2(wf.qmid, wf.qver, wf.dpt_c1c2().second);
+	    auto wf4 = wf3.split_c1c2(wf.qmid, wf.qver);
 	    assert(wf4.get_dim() == nsub);
 	    wf4 = wf4.permCR_signed(); // back to backbone
 	    psi4.push_back(wf4);

@@ -43,18 +43,62 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise;
+   const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){
-      std::cout << " |lc1> (dbranch,dcut,inoise,noise)="
+      std::cout << " |lc1> (dbranch,dcut,inoise,noise,rdm_vs_svd)="
                 << dbranch << "," << dcut << "," << sweeps.inoise << ","
-                << std::scientific << std::setprecision(1) << noise << std::endl;
+                << std::scientific << std::setprecision(1) << noise << ","
+		<< rdm_vs_svd
+		<< std::endl;
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
-   // Renormalize superblock = lc1
-   auto qprod = qmerge(wf.qrow, wf.qmid);
-   auto qlc = qprod.first;
-   auto dpt = qprod.second;
 
+   // Renormalize superblock = lc1
+   qtensor2<Tm> rot;
+   if(rank == 0){
+      std::cout << "0. decimation" << std::endl;
+      std::vector<qtensor2<Tm>> wfs2;
+      for(int i=0; i<vsol.cols(); i++){
+         wf.from_array(vsol.col(i));
+	 if(noise > 1.e-10) wf.add_noise(noise);
+         //----------------------------------------------
+         // Two-dot case: wf3[l,c1,c2r] = wf4[l,c1,c2,r]
+	 // 	          wf2[lc1,c2r] = wf3[l,c1,c2r]
+         //----------------------------------------------
+         auto wf2 = wf.merge_c2r().merge_lc();
+	 wfs2.push_back(wf2);
+      }
+      decimation_row(ifkr, wf.qrow, wf.qmid, dcut, rdm_vs_svd, wfs2, 
+		     rot, result.dwt, result.deff);
+
+      // 4. initial guess for next site within the bond
+      if(sweeps.guess){
+         std::cout << "4. initial guess" << std::endl;
+         icomb.psi.clear();
+         for(int i=0; i<vsol.cols(); i++){
+            wf.from_array(vsol.col(i));
+            //------------------------------------------
+            // Two-dot case: simply use cwf[alpha,c2,r]
+            //------------------------------------------
+            // wf4[l,c1,c2,r]->wf3[l,c1,c2r]->wf2[lc1,c2r]
+            auto wf2 = wf.merge_c2r().merge_lc(); 
+            // rot.H()[alpha,lc1]*wf2[lc1,c2r]->cwf[alpha,c2r]
+            auto cwf = rot.H().dot(wf2); 
+            // cwf[alpha,c2r]->psi[alpha,c2,r]
+            auto psi = cwf.split_cr(wf.qver, wf.qcol);
+            //------------------------------------------
+            icomb.psi.push_back(psi);
+         }
+      }
+
+   }
+#ifndef SERIAL
+   if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
+#endif
+
+
+/*
    if(rank == 0){
       qlc.print("qlc");
       size_t size = get_rdm_size(qlc,qlc); 
@@ -109,36 +153,17 @@ void twodot_renorm_lc1(sweep_data& sweeps,
 
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
-
+*/
 
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;
-   icomb.lsites[p] = rot.split_lc(wf.qrow, wf.qmid, dpt);
+   icomb.lsites[p] = rot.split_lc(wf.qrow, wf.qmid);
    //-------------------------------------------------------------------	 
    assert((rot-icomb.lsites[p].merge_lc()).normF() < 1.e-10);
    auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
    assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
    //-------------------------------------------------------------------
-   // 4. initial guess for next site within the bond
-   if(rank == 0) std::cout << "4. initial guess" << std::endl;
-   if(rank == 0 && sweeps.guess){
-      icomb.psi.clear();
-      for(int i=0; i<vsol.cols(); i++){
-         wf.from_array(vsol.col(i));
-         //------------------------------------------
-         // Two-dot case: simply use cwf[alpha,c2,r]
-	 //------------------------------------------
-	 // wf4[l,c1,c2,r]->wf3[l,c1,c2r]
-	 auto wf3 = wf.merge_c2r(); 
-	 // rot.H()[alpha,lc1]*wf3[lc1,c2r]->cwf[alpha,c2r]
-	 auto cwf = rot.H().dot(wf3.merge_lc()); 
-	 // cwf[alpha,c2r]->psi[alpha,c2,r]
-	 auto psi = cwf.split_cr(wf.qver, wf.qcol, wf.dpt_c2r().second);
-	 //------------------------------------------
-	 icomb.psi.push_back(psi);
-      }
-   }
    timing.td = tools::get_time();
    // 5. renormalize operators	 
    if(rank == 0) std::cout << "5. renormalize operators" << std::endl;
@@ -172,19 +197,63 @@ void twodot_renorm_lr(sweep_data& sweeps,
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise;
+   const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){ 
-      std::cout << " |lr>(comb) (dbranch,dcut,inoise,noise)=" 
+      std::cout << " |lr>(comb) (dbranch,dcut,inoise,noise,rdm_vs_svd)=" 
                 << dbranch << "," << dcut << "," << sweeps.inoise << ","
-                << std::scientific << std::setprecision(1) << noise << std::endl;
+                << std::scientific << std::setprecision(1) << noise << ","
+		<< rdm_vs_svd
+		<< std::endl;
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
    
-
    // Renormalize superblock = lr
-   auto qprod = qmerge(wf.qrow, wf.qcol);
-   auto qlr = qprod.first;
-   auto dpt = qprod.second;
+   qtensor2<Tm> rot;
+   if(rank == 0){
+      std::cout << "0. decimation" << std::endl;
+      std::vector<qtensor2<Tm>> wfs2;
+      for(int i=0; i<vsol.cols(); i++){
+         wf.from_array(vsol.col(i));
+	 if(noise > 1.e-10) wf.add_noise(noise);
+         //----------------------------------------------
+         // Two-dot case: wf3[l,c1c2,r] = wf4[l,c1,c2,r]
+	 // 		  wf2[lr,c1c2] = wf3[l,c1c2,r]
+         //----------------------------------------------
+	 auto wf2 = wf.merge_c1c2().permCR_signed().merge_lr();
+	 wfs2.push_back(wf2);
+      }
+      decimation_row(ifkr, wf.qrow, wf.qcol, dcut, rdm_vs_svd, wfs2, 
+		     rot, result.dwt, result.deff);
+
+      // 4. initial guess for next site within the bond
+      if(sweeps.guess){
+         std::cout << "4. initial guess" << std::endl;
+         icomb.psi.clear();
+         for(int i=0; i<vsol.cols(); i++){
+            wf.from_array(vsol.col(i));
+            //-------------------------------------------
+            // Two-dot case: simply use cwf[alpha,c1,c2]
+            //-------------------------------------------
+            // wf4[l,c1,c2,r]->wf3[l,c1c2,r]->wf2[lr,c1c2]
+            auto wf2 = wf.merge_c1c2().permCR_signed().merge_lr();
+            // rot.H()[alpha,lr]*wf3[lr,c1c2]->cwf[alpha,c1c2]
+            auto cwf = rot.H().dot(wf2);
+            // cwf[alpha,c1c2]->cwf[alpha,c1,c2] 
+            auto psi = cwf.split_cr(wf.qmid, wf.qver);
+            //-------------------------------------------
+            icomb.psi.push_back(psi);
+         }
+      }
+
+   }
+#ifndef SERIAL
+   if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
+#endif
+
+
+
+/*
    qtensor2<Tm> rdm(qsym(), qlr, qlr);
    if(rank == 0){ 
       std::cout << "0. start renormalizing" << std::endl;
@@ -224,36 +293,17 @@ void twodot_renorm_lr(sweep_data& sweeps,
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
-
+*/
 
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;
-   icomb.lsites[p]= rot.split_lr(wf.qrow, wf.qcol, dpt);
+   icomb.lsites[p]= rot.split_lr(wf.qrow, wf.qcol);
    //-------------------------------------------------------------------	 
    assert((rot-icomb.lsites[p].merge_lr()).normF() < 1.e-10);
    auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
    assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
    //-------------------------------------------------------------------	
-   // 4. initial guess for next site within the bond
-   if(rank == 0) std::cout << "4. initial guess" << std::endl;
-   if(rank == 0 && sweeps.guess){	
-      icomb.psi.clear();
-      for(int i=0; i<vsol.cols(); i++){
-         wf.from_array(vsol.col(i));
-         //-------------------------------------------
-         // Two-dot case: simply use cwf[alpha,c1,c2]
-	 //-------------------------------------------
-         // wf4[l,c1,c2,r]->wf3[l,c1c2,r]
-	 auto wf3 = wf.merge_c1c2();
-	 // rot.H()[alpha,lr]*wf3[lr,c1c2]->cwf[alpha,c1c2]
-	 auto cwf = rot.H().dot(wf3.permCR_signed().merge_lr());
-	 // cwf[alpha,c1c2]->cwf[alpha,c1,c2] 
-	 auto psi = cwf.split_cr(wf.qmid, wf.qver, wf.dpt_c1c2().second);
-         //-------------------------------------------
-         icomb.psi.push_back(psi);
-      }
-   }
    timing.td = tools::get_time();
    // 5. renorm operators	 
    if(rank == 0) std::cout << "5. renormalize operators" << std::endl;
@@ -287,18 +337,62 @@ void twodot_renorm_c2r(sweep_data& sweeps,
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise;
+   const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){ 
-      std::cout << " |c2r> (dbranch,dcut,inoise,noise)="
+      std::cout << " |c2r> (dbranch,dcut,inoise,noise,rdm_vs_svd)="
                 << dbranch << "," << dcut << "," << sweeps.inoise << ","
-                << std::scientific << std::setprecision(1) << noise << std::endl;
+                << std::scientific << std::setprecision(1) << noise << ","
+		<< rdm_vs_svd
+		<< std::endl;
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
    
    // Renormalize superblock = c2r
-   auto qprod = qmerge(wf.qver, wf.qcol);
-   auto qcr = qprod.first;
-   auto dpt = qprod.second;
+   qtensor2<Tm> rot;
+   if(rank == 0){
+      std::cout << "0. decimation" << std::endl;
+      std::vector<qtensor2<Tm>> wfs2;
+      for(int i=0; i<vsol.cols(); i++){
+         wf.from_array(vsol.col(i));
+	 if(noise > 1.e-10) wf.add_noise(noise);
+         //----------------------------------------------
+         // Two-dot case: wf3[lc1,c2,r] = wf4[l,c1,c2,r]
+	 // 		  wf2[lc1,c2r] = wf3[lc1,c2,r]
+         //----------------------------------------------
+         auto wf2 = wf.merge_lc1().merge_cr().T();
+	 wfs2.push_back(wf2);
+      }
+      decimation_row(ifkr, wf.qver, wf.qcol, dcut, rdm_vs_svd, wfs2, 
+		     rot, result.dwt, result.deff);
+      rot = rot.T(); // rot[alpha,r] = (V^+)
+
+      // 4. initial guess for next site within the bond
+      if(sweeps.guess){
+         std::cout << "4. initial guess" << std::endl;
+         icomb.psi.clear();
+         for(int i=0; i<vsol.cols(); i++){
+            wf.from_array(vsol.col(i));
+            //------------------------------------------
+            // Two-dot case: simply use cwf[l,c1,alpha]
+            //------------------------------------------
+            // wf4[l,c1,c2,r]->wf3[lc1,c2,r]->wf2[lc1,c2r]
+            auto wf2 = wf.merge_lc1().merge_cr();
+            // wf2[lc1,c2r]*rot.H()[c2r,alpha]->cwf[lc1,alpha]
+            auto cwf = wf2.dot(rot.H());
+            // cwf[lc1,alpha]->cwf[l,c1,alpha]
+            auto psi = cwf.split_lc(wf.qrow, wf.qmid);
+            //------------------------------------------
+            icomb.psi.push_back(psi);
+         }
+      }
+
+   }
+#ifndef SERIAL
+   if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
+#endif
+
+/*
    qtensor2<Tm> rdm(qsym(), qcr, qcr);
    if(rank == 0){ 
       std::cout << "0. start renormalizing" << std::endl;
@@ -338,35 +432,17 @@ void twodot_renorm_c2r(sweep_data& sweeps,
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
-   
+*/
+
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;
-   icomb.rsites[p] = rot.split_cr(wf.qver, wf.qcol, dpt);
+   icomb.rsites[p] = rot.split_cr(wf.qver, wf.qcol);
    //-------------------------------------------------------------------	
    assert((rot-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
    auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
    assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
    //-------------------------------------------------------------------	
-   // 4. initial guess for next site within the bond
-   if(rank == 0) std::cout << "4. initial guess" << std::endl;
-   if(rank == 0 && sweeps.guess){
-      icomb.psi.clear();
-      for(int i=0; i<vsol.cols(); i++){
-         wf.from_array(vsol.col(i));
-	 //------------------------------------------
-	 // Two-dot case: simply use cwf[l,c1,alpha]
-	 //------------------------------------------
-         // wf4[l,c1,c2,r]->wf3[lc1,c2,r]
-	 auto wf3 = wf.merge_lc1();
-	 // wf3[lc1,c2r]*rot.H()[c2r,alpha]->cwf[lc1,alpha]
-	 auto cwf = wf3.merge_cr().dot(rot.H());
-	 // cwf[lc1,alpha]->cwf[l,c1,alpha]
-	 auto psi = cwf.split_lc(wf.qrow, wf.qmid, wf.dpt_lc1().second);
-	 //------------------------------------------
-         icomb.psi.push_back(psi);
-      }
-   }
    timing.td = tools::get_time();
    // 5. renorm operators	 
    if(rank == 0) std::cout << "5. renormalize operators" << std::endl;
@@ -400,18 +476,18 @@ void twodot_renorm_c1c2(sweep_data& sweeps,
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise;
+   const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){ 
-      std::cout << " |c1c2>(comb) (dbranch,dcut,inoise,noise)="
+      std::cout << " |c1c2>(comb) (dbranch,dcut,inoise,noise,rdm_vs_svd)="
                 << dbranch << "," << dcut << "," << sweeps.inoise << ","
-                << std::scientific << std::setprecision(1) << noise << std::endl;
+                << std::scientific << std::setprecision(1) << noise << ","
+		<< rdm_vs_svd
+		<< std::endl;
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    auto& result = sweeps.opt_result[isweep][ibond];
    
-   // Renormalize superblock = c1c2
-   auto qprod = qmerge(wf.qmid, wf.qver);
-   auto qc1c2 = qprod.first;
-   auto dpt = qprod.second;
+/*
    qtensor2<Tm> rdm(qsym(), qc1c2, qc1c2);
    if(rank == 0){ 
       std::cout << "0. start renormalizing" << std::endl;
@@ -452,38 +528,64 @@ void twodot_renorm_c1c2(sweep_data& sweeps,
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
-   
-   
+*/
+
+   // Renormalize superblock = c1c2
+   qtensor2<Tm> rot;
+   if(rank == 0){
+      std::cout << "0. decimation" << std::endl;
+      std::vector<qtensor2<Tm>> wfs2;
+      for(int i=0; i<vsol.cols(); i++){
+	 wf.from_array(vsol.col(i));
+	 if(noise > 1.e-10) wf.add_noise(noise);
+         //----------------------------------------------
+         // Two-dot case: wf3[lr,c1,c2] = wf4[l,c1,c2,r]
+	 //               wf2[lr,c1c2] = wf3[lr,c1,c2]
+         //----------------------------------------------
+	 auto wf2 = wf.permCR_signed().merge_lr().merge_cr().T();
+	 wfs2.push_back(wf2);
+      } // i
+      decimation_row(ifkr, wf.qmid, wf.qver, dcut, rdm_vs_svd, wfs2,
+		     rot, result.dwt, result.deff);
+      rot = rot.T(); // permute two lines for RCF
+
+      // 4. initial guess for next site within the bond
+      if(sweeps.guess){
+         std::cout << "4. initial guess" << std::endl;
+         icomb.psi.clear();
+         for(int i=0; i<vsol.cols(); i++){
+            wf.from_array(vsol.col(i));
+            //----------------------------------------------
+            // Two-dot case: wf3[lr,c1,c2] = wf4[l,c1,c2,r]
+            //----------------------------------------------
+            // wf4[l,c1,c2,r]->wf3[lr,c1,c2]->wf2[lr,c1c2]
+            auto wf2 = wf.permCR_signed().merge_lr().merge_cr();
+            // wf2[lr,c1c2]*rot.H()[c1c2,alpha]->cwf[lr,alpha]
+            auto cwf = wf2.dot(rot.H());
+            // cwf[lr,alpha]->psi[l,alpha,r] 
+            auto psi = cwf.split_lr(wf.qrow, wf.qcol);
+            // revert ordering of the underlying basis
+            psi = psi.permCR_signed(); 
+            //----------------------------------------------
+            icomb.psi.push_back(psi); // psi on backbone
+         }
+      }
+  
+   }
+#ifndef SERIAL
+   if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
+#endif
+
+
    // 3. update site tensor
    if(rank == 0) std::cout << "3. update site tensor" << std::endl;
    const auto& p = sweeps.seq[ibond].p;
-   icomb.rsites[p] = rot.split_cr(wf.qmid, wf.qver, dpt);
+   icomb.rsites[p] = rot.split_cr(wf.qmid, wf.qver);
    //-------------------------------------------------------------------	
    assert((rot-icomb.rsites[p].merge_cr()).normF() < 1.e-10);	 
    auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
    assert(ovlp.check_identityMatrix(1.e-10,false)<1.e-10);
    //-------------------------------------------------------------------	
-   // 4. initial guess for next site within the bond
-   if(rank == 0) std::cout << "4. initial guess" << std::endl;
-   if(rank == 0 && sweeps.guess){
-      icomb.psi.clear();
-      for(int i=0; i<vsol.cols(); i++){
-         wf.from_array(vsol.col(i));
-	 //----------------------------------------------
-         // Two-dot case: wf3[lr,c1,c2] = wf4[l,c1,c2,r]
-         //----------------------------------------------
-         // wf4[l,c1,c2,r]->wf3[lr,c1,c2]
-	 auto wf3 = wf.permCR_signed().merge_lr();
-	 // wf3[lr,c1c2]*rot.H()[c1c2,alpha]->cwf[lr,alpha]
-         auto cwf = wf3.merge_cr().dot(rot.H());
-	 // cwf[lr,alpha]->psi[l,alpha,r] 
- 	 auto psi = cwf.split_lr(wf.qrow, wf.qcol, wf.dpt_lr().second);
-	 // revert ordering of the underlying basis
-	 psi = psi.permCR_signed(); 
-         //----------------------------------------------
-         icomb.psi.push_back(psi); // psi on backbone
-      }
-   }
    timing.td = tools::get_time();
    // 5. renorm operators	 
    if(rank == 0) std::cout << "5. renormalize operators" << std::endl;

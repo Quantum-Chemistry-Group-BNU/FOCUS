@@ -145,9 +145,9 @@ void oper_init(const comb<Km>& icomb,
    auto t1 = tools::get_time();
    if(rank == 0){
       tools::timing("ctns::oper_init", t0, t1);
-      std::cout << "detailed t[comp/save]= "
+      std::cout << "detailed T(comp/save)= "
 	        << t_comp << ", " << t_save
-                << " t[total]=" << (t_comp + t_save)
+                << " T(total)=" << (t_comp + t_save) << " S"
                 << std::endl;
    }
 }
@@ -202,9 +202,9 @@ void oper_env_right(const comb<Km>& icomb,
    auto t1 = tools::get_time();
    if(rank == 0){
       tools::timing("ctns::oper_env_right", t0, t1);
-      std::cout << "detailed t[init/load/comp/save]= "
+      std::cout << "detailed T(init/load/comp/save)= "
                 << t_init << ", " << t_load << ", " << t_comp << ", " << t_save
-                << " t[total]=" << (t_init + t_load + t_comp + t_save)
+                << " T(total)=" << (t_init + t_load + t_comp + t_save) << " S"
                 << std::endl;
    }
 }

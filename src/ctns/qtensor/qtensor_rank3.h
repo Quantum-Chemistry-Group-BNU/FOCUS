@@ -127,16 +127,20 @@ struct qtensor3{
 	 return rdm;
       }
       // reshape: split
-      qtensor4<Tm> split_lc1(const qbond& qlx, const qbond& qc1, const qdpt& dpt) const{
+      qtensor4<Tm> split_lc1(const qbond& qlx, const qbond& qc1) const{
+         auto dpt = qmerge(qlx, qc1).second;
 	 return split_qt4_qt3_lc1(*this, qlx, qc1, dpt);
       }
-      qtensor4<Tm> split_c2r(const qbond& qc2, const qbond& qrx, const qdpt& dpt) const{
+      qtensor4<Tm> split_c2r(const qbond& qc2, const qbond& qrx) const{
+         auto dpt = qmerge(qc2, qrx).second;
 	 return split_qt4_qt3_c2r(*this, qc2, qrx, dpt); 
       }
-      qtensor4<Tm> split_c1c2(const qbond& qc1, const qbond& qc2, const qdpt& dpt) const{
+      qtensor4<Tm> split_c1c2(const qbond& qc1, const qbond& qc2) const{
+	 auto dpt = qmerge(qc1, qc2).second;     
 	 return split_qt4_qt3_c1c2(*this, qc1, qc2, dpt);
       }
-      qtensor4<Tm> split_lr(const qbond& qlx, const qbond& qrx, const qdpt& dpt) const{
+      qtensor4<Tm> split_lr(const qbond& qlx, const qbond& qrx) const{
+         auto dpt = qmerge(qlx, qrx).second;
 	 return split_qt4_qt3_lr(*this, qlx, qrx, dpt);
       }
    public:
@@ -296,6 +300,9 @@ qtensor3<Tm> qtensor3<Tm>::row_signed(const double fac) const{
    return qt3;
 }
 
+// Generate the sign for wf[lcr]|lcr> = wf3[lcr]|lrc> 
+// with wf3[lcr] = wf[lcr]*(-1)^{p[c]*p[r]}|lrc>
+// which is later used for wf3[l,c,r] <-> wf2[lr,c] (merge_lr)
 template <typename Tm>
 qtensor3<Tm> qtensor3<Tm>::permCR_signed() const{
    qtensor3<Tm> qt3 = *this;

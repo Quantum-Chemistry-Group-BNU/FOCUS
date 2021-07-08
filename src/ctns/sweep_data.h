@@ -24,27 +24,27 @@ struct dot_timing{
       double dt4 = tools::get_duration(te-td); // t(renrm)
       double dt5 = tools::get_duration(t1-te); // t(save)
       double dt  = tools::get_duration(t1-t0); // total
-      std::cout << " t(load)  = " << std::scientific << std::setprecision(2) << dt0 << " s"
+      std::cout << " T(load)  = " << std::scientific << std::setprecision(2) << dt0 << " S"
    	        << "  per = " << std::defaultfloat << dt0/dt*100 
 		<< "  per(accum) = " << dt0/dt*100 
 		<< std::endl;
-      std::cout << " t(hdiag) = " << std::scientific << std::setprecision(2) << dt1 << " s"
+      std::cout << " T(hdiag) = " << std::scientific << std::setprecision(2) << dt1 << " S"
    	        << "  per = " << std::defaultfloat << dt1/dt*100 
 		<< "  per(accum) = " << (dt0+dt1)/dt*100 
 		<< std::endl;
-      std::cout << " t(dvdsn) = " << std::scientific << std::setprecision(2) << dt2 << " s"
+      std::cout << " T(dvdsn) = " << std::scientific << std::setprecision(2) << dt2 << " S"
    	        << "  per = " << std::defaultfloat << dt2/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2)/dt*100 
 		<< std::endl;
-      std::cout << " t(decim) = " << std::scientific << std::setprecision(2) << dt3 << " s"
+      std::cout << " T(decim) = " << std::scientific << std::setprecision(2) << dt3 << " S"
    	        << "  per = " << std::defaultfloat << dt3/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2+dt3)/dt*100 
 		<< std::endl;
-      std::cout << " t(renrm) = " << std::scientific << std::setprecision(2) << dt4 << " s"
+      std::cout << " T(renrm) = " << std::scientific << std::setprecision(2) << dt4 << " S"
    	        << "  per = " << std::defaultfloat << dt4/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4)/dt*100 
 		<< std::endl;
-      std::cout << " t(save)  = " << std::scientific << std::setprecision(2) << dt5 << " s"
+      std::cout << " T(save)  = " << std::scientific << std::setprecision(2) << dt5 << " S"
    	        << "  per = " << std::defaultfloat << dt5/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4+dt5)/dt*100 
 		<< std::endl;
@@ -164,8 +164,8 @@ inline void sweep_data::summary(const int isweep){
    int mbond = std::distance(emean.begin(), pos);
    min_result[isweep] = opt_result[isweep][mbond];
    min_result[isweep].nmvp = nmvp;
-   std::cout << "minimal energies at ibond=" << mbond << "  " 
-             << "timing for sweep: " << std::setprecision(2) << t_total[isweep] << " s" 
+   std::cout << "minimal energies at ibond=" << mbond << " " 
+             << "TIMING for sweep: " << std::setprecision(2) << t_total[isweep] << " S" 
 	     << std::endl;
    const auto& eopt = min_result[isweep].eopt; 
    for(int i=0; i<nstates; i++){
@@ -184,7 +184,7 @@ inline void sweep_data::summary(const int isweep){
    std::cout << tools::line_separator << std::endl;
    std::cout << "summary of sweep optimization up to isweep=" << isweep
              << " dbranch=" << dbranch << std::endl;
-   std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | timing/s | tav/s | taccum/s" << std::endl;
+   std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | TIMING/S | Tav/S | Taccum/S" << std::endl;
    std::cout << std::scientific << std::setprecision(2);
    // print previous ctrl parameters
    double taccum = 0.0;
