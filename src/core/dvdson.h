@@ -18,11 +18,13 @@ double check_orthogonality(const linalg::matrix<Tm>& V,
    int n = V.rows();
    int m = V.cols();
    linalg::matrix<Tm> dev = xgemm("C","N",V,V) - identity_matrix<Tm>(m);
-   double diff = normF(dev);
+   double diff = normF(dev)/static_cast<double>(m);
    if(diff > thresh){
       dev.print("dev");
-      std::string msg = "error: too large deviation from orthonormal basis!";
-      tools::exit(msg+" diff="+std::to_string(diff)+" thresh="+std::to_string(thresh));
+      std::string msg = "error: too large deviation! m=" + std::to_string(m)
+		      + " diff="+std::to_string(diff)
+		      + " thresh="+std::to_string(thresh);
+      tools::exit(msg);
    }
    return diff;
 }

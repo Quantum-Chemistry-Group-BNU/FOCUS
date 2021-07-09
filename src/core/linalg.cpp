@@ -4,6 +4,8 @@
 #include <string>
 #include <cctype>
 
+#include "dvdson.h"
+
 using namespace std;
 using namespace linalg;
 
@@ -94,6 +96,9 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
       unique_ptr<double[]> work(new double[lwork]);
       dgesvd_(&JOBU,&JOBVT,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,work.get(),&lwork,&info);
+      //fail sometimes on lenovo/mkl2020
+      //std::cout << "U.shape=" << U.rows() << "," << U.cols() << std::endl;
+      //auto diff = linalg::check_orthogonality(U);
    }else{
       if(iop == 10){
          JOBZ = 'A'; U.resize(m,m); ldu = m; Vt.resize(n,n); ldvt = n;

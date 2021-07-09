@@ -2,8 +2,6 @@
 #define KRAMERS_LINALG_H
 
 #include "../../../extlibs/zquatev/zquatev.h"
-#include "../../core/matrix.h"
-#include "../../core/linalg.h"
 #include "ctns_qsym.h"
 #include "kramers_basis.h"
 
@@ -365,6 +363,9 @@ void eig_solver_kr(const ctns::qsym& qr,
 //---------------------------------------------------------------
 // Compute right renormalized states from a set of wavefunctions
 //---------------------------------------------------------------
+const int svd_iop = 13;
+extern const int svd_iop;
+
 template <typename Tm> 
 void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
 		           std::vector<double>& sigs2,
@@ -399,7 +400,7 @@ void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
       } // iroot
       vrl *= 1.0/std::sqrt(nroots);
       linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
-      linalg::svd_solver(vrl, sigs2, U, vt, 1);
+      linalg::svd_solver(vrl, sigs2, U, vt, svd_iop);
       std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
   		     [](const double& x){ return x*x; });
 
@@ -408,9 +409,9 @@ void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
       std::cout << "final sigs2: ";
       for(const auto sig2 : sigs2) std::cout << sig2 << " ";
       std::cout << std::endl;                               
-      U.print("U"); 
-      linalg::check_orthogonality(U);
+      //U.print("U"); 
    }
+   linalg::check_orthogonality(U); // orthonormality is essential for variational calculations
 }
 
 template <typename Tm> 
@@ -454,14 +455,14 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       } // iroot
       vrl *= 1.0/std::sqrt(nroots);
       linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
-      linalg::svd_solver(vrl, sigs2, U, vt, 1);
+      linalg::svd_solver(vrl, sigs2, U, vt, svd_iop);
       std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
   		     [](const double& x){ return x*x; });
       if(debug_basis){
          std::cout << "sigs2[SVD]: ";
          for(const auto sig2 : sigs2) std::cout << sig2 << " ";
          std::cout << std::endl;                              
-	 U.print("U[SVD]"); 
+	 //U.print("U[SVD]"); 
       }
       //------------------------------------------
       // 1. Generate KRS-adapted basis
@@ -476,7 +477,9 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       }
       if(debug_basis) std::cout << "nkept=" << nkept << std::endl;
       int nindp = get_ortho_basis_kr(qr, phases, U, nkept);
-      if(debug_basis) U.print("U[ortho]");
+      if(debug_basis){ 
+         //U.print("U[ortho]");
+      }
       //------------------------------------------
       // 2. Re-diagonalize RDM in the KRS-basis
       // rhor_proj = U^+ rho_r U
@@ -507,9 +510,9 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       std::cout << "final sigs2: ";
       for(const auto sig2 : sigs2) std::cout << sig2 << " ";
       std::cout << std::endl;                               
-      U.print("U"); 
-      linalg::check_orthogonality(U);
+      //U.print("U"); 
    }
+   linalg::check_orthogonality(U);
 }
 
 } // kramers

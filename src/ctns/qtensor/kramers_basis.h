@@ -1,6 +1,8 @@
 #ifndef KRAMERS_BASIS_H
 #define KRAMERS_BASIS_H
 
+#include "../../core/dvdson.h"
+
 namespace kramers{
 
 //
@@ -126,7 +128,8 @@ int get_ortho_basis_even(linalg::matrix<Tm>& rbas,
    assert(nindp > 0);
    rbas.resize(ndim, nindp);
    std::copy(rbas_new.data(), rbas_new.data()+ndim*nindp, rbas.data());
-   if(debug_ortho) linalg::check_orthogonality(rbas);
+   // Orthonormality is essential
+   linalg::check_orthogonality(rbas);
    return nindp;
 }
 
@@ -190,7 +193,8 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
       pos_new[i] = i%2==0? i/2 : i/2+nindp/2;
    }
    rbas = rbas.reorder_col(pos_new, 1);
-   if(debug_ortho) linalg::check_orthogonality(rbas);
+   // Orthonormality is essential
+   linalg::check_orthogonality(rbas);
    return nindp;
 }
 
@@ -298,6 +302,8 @@ int get_ortho_basis_qt(const int ndim,
       } // repeat
    } // i
    rbas = rbas_new;
+   // Orthonormality is essential
+   linalg::check_orthogonality(ndim, nindp, rbas);
    return nindp;
 }
 
@@ -366,6 +372,8 @@ int get_ortho_basis_qt(const int ndim,
       } // repeat
    } // i
    rbas = rbas_new;
+   // Orthonormality is essential
+   linalg::check_orthogonality(ndim, nindp, rbas);
    return nindp;
 }
 
