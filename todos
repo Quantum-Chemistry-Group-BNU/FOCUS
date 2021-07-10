@@ -1,5 +1,7 @@
 
-TODOs:
+-----
+TODOs
+-----
 
  1. Setup tests for NR & R [DONE20210324]
  
@@ -24,11 +26,17 @@ TODOs:
     1. different topologies:
         - problem: TRS-adapted SVD decimation is necessary in initialization [DONE20210706] 
         - problem: decimation in sweep -> have to give up perturbative noise for CTNS! [DONE202107XX]
+		   - decimation_row_nkr [DONE20210709]
+		   - decimation_row_kr [DONE202107XX]
     2. parallelization - push to the limit!
         - problem: bypass the 2GB limit in MPI_COUNT?
     3. optimized parallel version
        1. stack-like storage? 
        2. OpenMP & GPU?
+
+------
+FUTURE
+------
 
  6. Applications:
     1. Small system like C2+/O2? [checked against FCI results]

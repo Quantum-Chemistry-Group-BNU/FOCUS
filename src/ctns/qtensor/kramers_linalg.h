@@ -366,6 +366,8 @@ void eig_solver_kr(const ctns::qsym& qr,
 const int svd_iop = 13;
 extern const int svd_iop;
 
+// Input: a vector of matrices {c[l,r]}
+// Output: the reduced basis U[r,alpha]
 template <typename Tm> 
 void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
 		           std::vector<double>& sigs2,
@@ -477,9 +479,7 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       }
       if(debug_basis) std::cout << "nkept=" << nkept << std::endl;
       int nindp = get_ortho_basis_kr(qr, phases, U, nkept);
-      if(debug_basis){ 
-         //U.print("U[ortho]");
-      }
+      //if(debug_basis) U.print("U[ortho]");
       //------------------------------------------
       // 2. Re-diagonalize RDM in the KRS-basis
       // rhor_proj = U^+ rho_r U
@@ -502,7 +502,7 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       sigs2.resize(nindp);
       linalg::matrix<Tm> Urot;
       eig_solver_kr<std::complex<double>>(qr, phases_fake, rhor_proj, sigs2, Urot);
-      if(debug_basis) Urot.print("Urot");
+      //if(debug_basis) Urot.print("Urot");
       U = linalg::xgemm("N","N",U,Urot);
 
    }
