@@ -1,6 +1,8 @@
 #ifndef SWEEP_DECIMATION_H
 #define SWEEP_DECIMATION_H
 
+#include <numeric>
+
 namespace ctns{
 
 const double thresh_sig2 = 1.e-14;
@@ -12,48 +14,75 @@ extern const double thresh_sig2accum;
 const bool debug_decimation = true;
 extern const bool debug_decimation;
 
-// wf[L,R] = U[L,l]*sl*Vh[l,R]
 template <typename Tm>
-qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
-			        const int dcut,
-			        double& dwt,
-			        int& deff){
+void decimation_row_nkr(const qbond& qs1,
+		        const qbond& qs2,
+		        const int dcut,
+			const double rdm_vs_svd,
+		        const std::vector<qtensor2<Tm>>& wfs2,
+		        qtensor2<Tm>& rot,
+		        double& dwt,
+		        int& deff){
    if(debug_decimation) std::cout << "ctns::decimation_row_nkr dcut=" << dcut << std::endl;
-   const auto& qrow = rdm.qrow;
-   // 0. normalize before diagonalization
-   Tm rfac = 1.0/rdm.trace();
+   auto qprod = qmerge(qs1, qs2);
+   auto qrow = qprod.first;
+   auto dpt = qprod.second;
+   assert(qrow == wfs2[0].qrow);
+   auto qcol = wfs2[0].qcol;
+   int nroots = wfs2.size();
    // 1. compute reduced basis
-   std::map<int,int> idx2sector; 
+   double sig2sum = 0.0;
    std::vector<double> sig2all;
+   std::map<int,int> idx2sector; 
    std::map<int,linalg::matrix<Tm>> rbasis;
-   int idx = 0, nqr = rdm.rows();
+   int idx = 0, nqr = qrow.size();
    for(int br=0; br<nqr; br++){
-      const auto& blk = rdm(br,br);
-      if(blk.size() == 0) continue;
-      // compute renormalized basis
-      int rdim = qrow.get_dim(br);
-      std::vector<double> sig2(rdim);
-      linalg::matrix<Tm> rbas(rdim,rdim);
-      auto rblk = rfac*blk;
-      linalg::eig_solver(rblk, sig2, rbas, 1);
+      const auto& qr = qrow.get_sym(br);
+      const int rdim = qrow.get_dim(br);
+      if(debug_decimation){ 
+         if(br == 0) std::cout << " decimation for each symmetry sector:" << std::endl;
+	 std::cout << " br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
+      }
+      // search for matched block 
+      std::vector<double> sigs2;
+      linalg::matrix<Tm> U;
+      int matched = 0;
+      for(int bc=0; bc<qcol.size(); bc++){
+	 const auto& qc = qcol.get_sym(bc);     
+	 const auto& blk = wfs2[0](br,bc);
+	 if(blk.size() == 0) continue;
+	 if(debug_decimation) std::cout << "find matched qc =" << qc << std::endl;
+	 matched += 1;
+	 if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
+         // compute renormalized basis
+	 std::vector<linalg::matrix<Tm>> blks;
+         for(int iroot=0; iroot<nroots; iroot++){
+	    const auto& clr = wfs2[iroot](br,bc);
+	    blks.push_back(clr.T());
+	 }
+	 kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_vs_svd, debug_decimation);
+      } // qc
       // save
-      std::copy(sig2.begin(), sig2.end(), std::back_inserter(sig2all));
-      rbasis[br] = rbas;
-      for(int i=0; i<rdim; i++){
-	 idx2sector[idx] = br;
-	 idx++;
+      if(matched == 1){
+         std::copy(sigs2.begin(), sigs2.end(), std::back_inserter(sig2all));
+	 sig2sum += std::accumulate(sigs2.begin(), sigs2.end(), 0.0);
+         rbasis[br] = U;
+         for(int i=0; i<sigs2.size(); i++){
+            idx2sector[idx] = br;
+            idx++;
+         }
       }
-      if(debug_decimation){
-	 if(br == 0) std::cout << " diagonalization of rdm for each symmetry sector:" << std::endl;
-	 std::cout << " br=" << br << " qr=" << qrow.get_sym(br) << " rdim=" << rdim << " sig2=";
-	 for(auto s : sig2) std::cout << s << " ";
-	 std::cout << std::endl;
-      }
-   }
+   } // br
+   // renormalize
+   sig2sum = 1.0/sig2sum;
+   std::transform(sig2all.begin(), sig2all.end(), sig2all.begin(),
+		  [sig2sum](const double& x){ return x*sig2sum; });
+   sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
+   assert(std::abs(sig2sum - 1.0) < 1.e-10);
    // 2. select important sig2
    auto index = tools::sort_index(sig2all, 1);
-   std::vector<int> kept_dim(nqr,0);
-   std::vector<double> kept_wts(nqr,0.0);
+   std::vector<int> kept_dim(nqr,0); // no. of states kept in each symmetry sector
+   std::vector<double> kept_wts(nqr,0.0); // weights kept in each symmetry sector
    deff = 0;
    double sum = 0.0, SvN = 0.0;
    for(int i=0; i<sig2all.size(); i++){
@@ -79,7 +108,7 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
    sum = 0.0;
    std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
-   auto index2 = tools::sort_index(kept_wts, 1);
+   auto index2 = tools::sort_index(kept_wts, 1); // order symmetry sectors by kept weights
    for(int i=0; i<nqr; i++){
       int br = index2[i];
       if(kept_dim[br] == 0) continue;
@@ -97,6 +126,7 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
    for(int bc=0; bc<qkept.size(); bc++){
       int br = br_kept[bc];
       const auto& rbas = rbasis[br];
+      // copy the kept portion of rbas into blk
       auto& blk = qt2(br,bc); 
       std::copy(rbas.data(), rbas.data()+blk.size(), blk.data());
       if(debug_decimation){
@@ -108,87 +138,128 @@ qtensor2<Tm> decimation_row_nkr(const qtensor2<Tm>& rdm,
      	           << std::endl;
       }
    } // bc
-   return qt2;
+   rot = std::move(qt2);
 }
 
 template <typename Tm>
-qtensor2<Tm> decimation_row_kr(const qtensor2<Tm>& rdm,
-			       const int dcut,
-			       double& dwt,
-			       int& deff,
- 			       const qbond& qs1,
- 			       const qbond& qs2,
- 			       const qdpt& dpt){
+void decimation_row_kr(const qbond& qs1,
+		       const qbond& qs2,
+		       const int dcut,
+		       const double rdm_vs_svd,
+		       const std::vector<qtensor2<Tm>>& wfs2,
+		       qtensor2<Tm>& rot,
+		       double& dwt,
+		       int& deff){
    tools::exit("error: decimation_row_kr only works for complex<double>!");
-   return qtensor2<Tm>(); // return a fake object to avoid warning
 }
 template <>
-inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::complex<double>>& rdm,
-			       const int dcut,
-			       double& dwt,
-			       int& deff,
- 			       const qbond& qs1,
- 			       const qbond& qs2,
- 			       const qdpt& dpt){
+inline void decimation_row_kr(const qbond& qs1,
+		              const qbond& qs2,
+		              const int dcut,
+		              const double rdm_vs_svd,
+		              const std::vector<qtensor2<std::complex<double>>>& wfs2,
+		              qtensor2<std::complex<double>>& rot,
+		              double& dwt,
+		              int& deff){
+   using Tm = std::complex<double>;
    if(debug_decimation) std::cout << "ctns::decimation_row_kr dcut=" << dcut << std::endl;
-   const auto& qrow = rdm.qrow;
-   
-   // 0. normalize before diagonalization
-   std::complex<double> rfac = 1.0/rdm.trace();
+   auto qprod = qmerge(qs1, qs2);
+   auto qrow = qprod.first;
+   auto dpt = qprod.second;
+   assert(qrow == wfs2[0].qrow);
+   auto qcol = wfs2[0].qcol;
+   int nroots = wfs2.size();
    // 1. compute reduced basis
-   std::map<int,int> idx2sector; 
+   double sig2sum = 0.0;
    std::vector<double> sig2all;
-   std::map<int,linalg::matrix<std::complex<double>>> rbasis;
-   int idx = 0, nqr = rdm.rows();
+   std::map<int,int> idx2sector; 
+   std::map<int,linalg::matrix<Tm>> rbasis;
+   int idx = 0, nqr = qrow.size();
    for(int br=0; br<nqr; br++){
-      const auto& blk = rdm(br,br);
-      if(blk.size() == 0) continue;
-      // compute renormalized basis
-      int rdim = qrow.get_dim(br);
-      std::vector<double> sig2(rdim);
-      linalg::matrix<std::complex<double>> rbas(rdim,rdim);
-      auto rblk = rfac*blk;
-      //------------------------
-      // KRS-adapted decimation
-      auto qr = qrow.get_sym(br);
+      const auto& qr = qrow.get_sym(br);
+      const int rdim = qrow.get_dim(br);
+      if(debug_decimation){ 
+         if(br == 0) std::cout << " decimation for each symmetry sector:" << std::endl;
+	 std::cout << " br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
+      }
+      // mapping product basis to kramers paired basis
       std::vector<int> pos_new;
       std::vector<double> phases;
-      // mapping product basis to kramers paired basis
       mapping2krbasis(qr,qs1,qs2,dpt,pos_new,phases);
-      assert(pos_new.size() == qrow.get_dim(br)); 
-      auto rhor = rblk.reorder_rowcol(pos_new,pos_new);
-      kramers::eig_solver_kr<std::complex<double>>(qr, phases, rhor, sig2, rbas);
-      // save (for odd-electron subspace, only save half of sig2 for later sorting)
-      rbasis[br] = rbas.reorder_row(pos_new,1);
-      if(qr.parity() == 1){
-	 int dim1 = phases.size();
-	 assert(rdim == 2*dim1);
-         std::copy(sig2.begin(), sig2.begin()+dim1, std::back_inserter(sig2all));
-         for(int i=0; i<dim1; i++){
-            idx2sector[idx] = br;
-	    idx++;
-         }
-      }else{
-         std::copy(sig2.begin(), sig2.end(), std::back_inserter(sig2all));
-         for(int i=0; i<rdim; i++){
-            idx2sector[idx] = br;
-	    idx++;
-         }
-      }
-      //------------------------
-      if(debug_decimation){
-	 if(br == 0) std::cout << " diagonalization of rdm for each symmetry sector:" << std::endl;
-	 std::cout << " br=" << br << " qr=" << qr << " rdim=" << rdim << " sig2=";
-	 for(auto s : sig2) std::cout << s << " ";
-	 std::cout << std::endl;
-      }
-   }
+      assert(pos_new.size() == rdim);
+      // search for matched block 
+      std::vector<double> sigs2;
+      linalg::matrix<Tm> U;
+      int matched = 0;
+      for(int bc=0; bc<qcol.size(); bc++){
+	 const auto& qc = qcol.get_sym(bc);     
+	 const auto& blk = wfs2[0](br,bc);
+	 if(blk.size() == 0) continue;
+	 if(debug_decimation) std::cout << "find matched qc =" << qc << std::endl;
+	 matched += 1;
+	 if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
+	 // compute KRS-adapted renormalized basis
+	 std::vector<linalg::matrix<Tm>> blks;
+         for(int iroot=0; iroot<nroots; iroot++){
+	    auto clr = wfs2[iroot](br,bc);
+	    clr = clr.reorder_row(pos_new);
+	    blks.push_back(clr.T());
+	 }
+	 
+	 std::cout << "rdm_vs_svd=" << rdm_vs_svd << std::endl;
+
+	 kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_vs_svd, debug_decimation);
+      } // qc
+      // save
+      if(matched == 1){
+         rbasis[br] = U.reorder_row(pos_new, 1);
+         int nkept = U.cols();
+	 std::cout << "qr=" << qr 
+		   << " U.shape=" << U.rows() << "," << U.cols() << std::endl;
+	    
+	 std::cout << "sig2.size=" << sigs2.size() << std::endl;
 
 
+         if(qr.parity() == 0){
+            std::copy(sigs2.begin(), sigs2.end(), std::back_inserter(sig2all));
+	    sig2sum += std::accumulate(sigs2.begin(), sigs2.end(), 0.0);
+
+            for(int i=0; i<nkept; i++){
+               idx2sector[idx] = br;
+               idx++;
+	       std::cout << "i=" << i << " idx=" << idx
+		         << " even sigs2=" << sigs2[i] << std::endl;
+            }
+	 }else{
+            // for odd-electron subspace, only save half of sig2 for later sorting
+            
+	    //int dim1 = phases.size();
+            //assert(rdim == 2*dim1);
+	    assert(nkept%2 == 0);
+	    int nkept2 = nkept/2;
+            
+	    std::copy(sigs2.begin(), sigs2.begin()+nkept2, std::back_inserter(sig2all));
+	    sig2sum += 2.0*std::accumulate(sigs2.begin(), sigs2.begin()+nkept2, 0.0);
+            for(int i=0; i<nkept2; i++){
+               idx2sector[idx] = br;
+               idx++;
+	       std::cout << "i=" << i << " idx=" << idx
+		         << " odd sigs2=" << sigs2[i] << std::endl;
+            }
+         } // parity
+      }
+   } // br
+   // renormalize
+   sig2sum = 1.0/sig2sum;
+   std::transform(sig2all.begin(), sig2all.end(), sig2all.begin(),
+		  [sig2sum](const double& x){ return x*sig2sum; });
+   //NOTE: in kr case, sig2all only contain partial sigs2, thus no check is applied
+   //sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
+   //assert(std::abs(sig2sum - 1.0) < 1.e-10); 
    // 2. select important sig2
    auto index = tools::sort_index(sig2all, 1);
-   std::vector<int> kept_dim(nqr,0);   
-   std::vector<double> kept_wts(nqr,0.0);
+   std::vector<int> kept_dim(nqr,0); // no. of states kept in each symmetry sector
+   std::vector<double> kept_wts(nqr,0.0); // weights kept in each symmetry sector
    deff = 0;
    double sum = 0.0, SvN = 0.0;
    for(int i=0; i<sig2all.size(); i++){
@@ -197,17 +268,25 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
       if(sig2all[idx] < thresh_sig2) continue; // discard negative weights
       int br = idx2sector[idx];
       auto qr = qrow.get_sym(br);
-      int nfac = (qr.parity() == 1)? 2 : 1;
+      int nfac = (qr.parity() == 0)? 1 : 2; // odd case: kept KR-pair
       kept_dim[br] += nfac;
       kept_wts[br] += nfac*sig2all[idx];
       deff += nfac;
       sum += nfac*sig2all[idx];
       SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
+      /*
       if(sum <= thresh_sig2accum){
 	 if(i == 0) std::cout << " important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
 	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr << "[" << kept_dim[br]-1 << "]"
                    << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
       }
+      */
+      if(i == 0) std::cout << "KEPT:" << std::endl;
+      std::cout << " i=" << i << " idx=" << idx << " br=" << br << " qr=" << qr
+	        << " kept=" << kept_dim[br]-1
+		<< " sig2=" << sig2all[idx]
+		<< std::endl;
+
    }
    dwt = 1.0-sum;
    std::cout << " decimation summary: " << qrow.get_dimAll() << "->" << deff
@@ -216,7 +295,7 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
    sum = 0.0;
    std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
-   auto index2 = tools::sort_index(kept_wts, 1);
+   auto index2 = tools::sort_index(kept_wts, 1); // order symmetry sectors by kept weights
    for(int i=0; i<nqr; i++){
       int br = index2[i];
       if(kept_dim[br] == 0) continue;
@@ -230,24 +309,29 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
 		<< dim << " wts=" << wts << " accum=" << sum << std::endl;
    }
    qbond qkept(dims);
-   qtensor2<std::complex<double>> qt2(qsym(), qrow, qkept);
+   qtensor2<Tm> qt2(qsym(), qrow, qkept);
    for(int bc=0; bc<qkept.size(); bc++){
       int br = br_kept[bc];
       const auto& rbas = rbasis[br];
+      // copy rbas into blk
       auto& blk = qt2(br,bc); 
-      const auto& qr = qkept.get_sym(bc);
       int rdim = blk.rows();
       int cdim = blk.cols();
+      const auto& qr = qkept.get_sym(bc);
       assert(qrow.get_sym(br) == qkept.get_sym(bc));
       assert(rbas.rows() == blk.rows());
-      if(qr.parity() == 1){
-	 assert(rdim%2 == 0 && cdim%2 == 0);
-	 int rdim1 = rdim/2;
+      if(qr.parity() == 0){
+
+         std::copy(rbas.col(0), rbas.col(0)+rdim*cdim, blk.col(0));
+
+      }else{
+
+	 assert(rdim%2 == 0 && cdim%2 == 0 && rbas.cols()%2==0);
+	 int cdim0 = rbas.cols()/2;
 	 int cdim1 = cdim/2;
          std::copy(rbas.col(0), rbas.col(0)+rdim*cdim1, blk.col(0));
-	 std::copy(rbas.col(rdim1), rbas.col(rdim1)+rdim*cdim1, blk.col(cdim1));
-      }else{
-         std::copy(rbas.col(0), rbas.col(0)+rdim*cdim, blk.col(0));
+	 std::copy(rbas.col(cdim0), rbas.col(cdim0)+rdim*cdim1, blk.col(cdim1));
+
       }
       if(debug_decimation){
          assert(qrow.get_sym(br) == qt2.qcol.get_sym(bc));
@@ -258,26 +342,25 @@ inline qtensor2<std::complex<double>> decimation_row_kr(const qtensor2<std::comp
      	           << std::endl;
       }
    } // bc
-   return qt2;
+   rot = std::move(qt2);
 }
 
 // if dcut=-1, no truncation is performed except for sig2 < thresh_sig2
 template <typename Tm>
-qtensor2<Tm> decimation_row(const qtensor2<Tm>& rdm,
-			    const int dcut,
-			    double& dwt,
-			    int& deff,
-			    const bool ifkr,
-			    const qbond& qs1,
-			    const qbond& qs2,
-			    const qdpt& dpt){
-   qtensor2<Tm> qt2;
+void decimation_row(const bool ifkr,
+                    const qbond& qs1,
+		    const qbond& qs2,
+		    const int dcut,
+		    const double rdm_vs_svd,
+		    const std::vector<qtensor2<Tm>>& wfs2,
+		    qtensor2<Tm>& rot,
+		    double& dwt,
+		    int& deff){
    if(!ifkr){
-      qt2 = decimation_row_nkr(rdm, dcut, dwt, deff);
+      decimation_row_nkr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff);
    }else{
-      qt2 = decimation_row_kr(rdm, dcut, dwt, deff, qs1, qs2, dpt);
+      decimation_row_kr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff);
    }
-   return qt2;
 }
 
 } // ctns
