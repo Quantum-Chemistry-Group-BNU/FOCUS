@@ -408,7 +408,7 @@ void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
 
    }
    if(debug_basis){ 
-      std::cout << "final sigs2: ";
+      std::cout << " sigs2[final]: ";
       for(const auto sig2 : sigs2) std::cout << sig2 << " ";
       std::cout << std::endl;                               
       //U.print("U"); 
@@ -461,7 +461,7 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
   		     [](const double& x){ return x*x; });
       if(debug_basis){
-         std::cout << "sigs2[SVD]: ";
+         std::cout << " sigs2[SVD]: ";
          for(const auto sig2 : sigs2) std::cout << sig2 << " ";
          std::cout << std::endl;                              
 	 //U.print("U[SVD]"); 
@@ -477,7 +477,7 @@ void get_renorm_states_kr(const ctns::qsym& qr,
             break;
          }
       }
-      if(debug_basis) std::cout << "nkept=" << nkept << std::endl;
+      if(debug_basis) std::cout << " nkept=" << nkept << std::endl;
       int nindp = get_ortho_basis_kr(qr, phases, U, nkept);
       //if(debug_basis) U.print("U[ortho]");
       //------------------------------------------
@@ -507,7 +507,7 @@ void get_renorm_states_kr(const ctns::qsym& qr,
 
    }
    if(debug_basis){ 
-      std::cout << "final sigs2: ";
+      std::cout << " sigs2[final]: ";
       for(const auto sig2 : sigs2) std::cout << sig2 << " ";
       std::cout << std::endl;                               
       //U.print("U"); 

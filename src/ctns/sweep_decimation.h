@@ -11,7 +11,7 @@ extern const double thresh_sig2;
 const double thresh_sig2accum = 0.99;
 extern const double thresh_sig2accum;
 
-const bool debug_decimation = true;
+const bool debug_decimation = false;
 extern const bool debug_decimation;
 
 template <typename Tm>
@@ -40,8 +40,8 @@ void decimation_row_nkr(const qbond& qs1,
       const auto& qr = qrow.get_sym(br);
       const int rdim = qrow.get_dim(br);
       if(debug_decimation){ 
-         if(br == 0) std::cout << " decimation for each symmetry sector:" << std::endl;
-	 std::cout << " br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
+         if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
+	 std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
       }
       // search for matched block 
       std::vector<double> sigs2;
@@ -51,7 +51,7 @@ void decimation_row_nkr(const qbond& qs1,
 	 const auto& qc = qcol.get_sym(bc);     
 	 const auto& blk = wfs2[0](br,bc);
 	 if(blk.size() == 0) continue;
-	 if(debug_decimation) std::cout << "find matched qc =" << qc << std::endl;
+	 if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
 	 matched += 1;
 	 if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
          // compute renormalized basis
@@ -96,13 +96,13 @@ void decimation_row_nkr(const qbond& qs1,
       sum += sig2all[idx];
       SvN += -sig2all[idx]*std::log2(sig2all[idx]);
       if(sum <= thresh_sig2accum){
-	 if(i == 0) std::cout << " important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
-	 std::cout << "  i=" << i << " br=" << br << " qr=" << qrow.get_sym(br) << "[" << kept_dim[br]-1 << "]"
+	 if(i == 0) std::cout << "important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
+	 std::cout << " i=" << i << " br=" << br << " qr=" << qrow.get_sym(br) << "[" << kept_dim[br]-1 << "]"
                    << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
       }
    }
    dwt = 1.0-sum;
-   std::cout << " decimation summary: " << qrow.get_dimAll() << "->" << deff
+   std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff
      	     << "  dwt=" << dwt << "  SvN=" << SvN << std::endl;
    // 3. construct qbond and qt2 by assembling blocks
    sum = 0.0;
@@ -118,7 +118,7 @@ void decimation_row_nkr(const qbond& qs1,
       br_kept.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
       sum += wts;     
-      std::cout << "  i=" << i << " br=" << br << " qr=" << qr << " dim=" 
+      std::cout << " i=" << i << " br=" << br << " qr=" << qr << " dim=" 
 		<< dim << " wts=" << wts << " accum=" << sum << std::endl;
    }
    qbond qkept(dims);
@@ -131,8 +131,8 @@ void decimation_row_nkr(const qbond& qs1,
       std::copy(rbas.data(), rbas.data()+blk.size(), blk.data());
       if(debug_decimation){
          assert(qrow.get_sym(br) == qt2.qcol.get_sym(bc));
-         if(bc == 0) std::cout << " reduced basis:" << std::endl;
-         std::cout << "  (br,bc)=" << br << "," << bc 
+         if(bc == 0) std::cout << "reduced basis:" << std::endl;
+         std::cout << " (br,bc)=" << br << "," << bc 
 		   << " qsym=" << qt2.qcol.get_sym(bc)
 		   << " shape=(" << blk.rows() << "," << blk.cols() << ")"
      	           << std::endl;
@@ -179,8 +179,8 @@ inline void decimation_row_kr(const qbond& qs1,
       const auto& qr = qrow.get_sym(br);
       const int rdim = qrow.get_dim(br);
       if(debug_decimation){ 
-         if(br == 0) std::cout << " decimation for each symmetry sector:" << std::endl;
-	 std::cout << " br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
+         if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
+	 std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
       }
       // mapping product basis to kramers paired basis
       std::vector<int> pos_new;
@@ -195,7 +195,7 @@ inline void decimation_row_kr(const qbond& qs1,
 	 const auto& qc = qcol.get_sym(bc);     
 	 const auto& blk = wfs2[0](br,bc);
 	 if(blk.size() == 0) continue;
-	 if(debug_decimation) std::cout << "find matched qc =" << qc << std::endl;
+	 if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
 	 matched += 1;
 	 if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
 	 // compute KRS-adapted renormalized basis
@@ -205,46 +205,28 @@ inline void decimation_row_kr(const qbond& qs1,
 	    clr = clr.reorder_row(pos_new);
 	    blks.push_back(clr.T());
 	 }
-	 
-	 std::cout << "rdm_vs_svd=" << rdm_vs_svd << std::endl;
-
 	 kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_vs_svd, debug_decimation);
       } // qc
       // save
       if(matched == 1){
          rbasis[br] = U.reorder_row(pos_new, 1);
          int nkept = U.cols();
-	 std::cout << "qr=" << qr 
-		   << " U.shape=" << U.rows() << "," << U.cols() << std::endl;
-	    
-	 std::cout << "sig2.size=" << sigs2.size() << std::endl;
-
-
          if(qr.parity() == 0){
             std::copy(sigs2.begin(), sigs2.end(), std::back_inserter(sig2all));
 	    sig2sum += std::accumulate(sigs2.begin(), sigs2.end(), 0.0);
-
             for(int i=0; i<nkept; i++){
                idx2sector[idx] = br;
                idx++;
-	       std::cout << "i=" << i << " idx=" << idx
-		         << " even sigs2=" << sigs2[i] << std::endl;
             }
 	 }else{
             // for odd-electron subspace, only save half of sig2 for later sorting
-            
-	    //int dim1 = phases.size();
-            //assert(rdim == 2*dim1);
 	    assert(nkept%2 == 0);
 	    int nkept2 = nkept/2;
-            
 	    std::copy(sigs2.begin(), sigs2.begin()+nkept2, std::back_inserter(sig2all));
 	    sig2sum += 2.0*std::accumulate(sigs2.begin(), sigs2.begin()+nkept2, 0.0);
             for(int i=0; i<nkept2; i++){
                idx2sector[idx] = br;
                idx++;
-	       std::cout << "i=" << i << " idx=" << idx
-		         << " odd sigs2=" << sigs2[i] << std::endl;
             }
          } // parity
       }
@@ -274,22 +256,14 @@ inline void decimation_row_kr(const qbond& qs1,
       deff += nfac;
       sum += nfac*sig2all[idx];
       SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
-      /*
       if(sum <= thresh_sig2accum){
-	 if(i == 0) std::cout << " important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
-	 std::cout << "  i=" << i << " br=" << br << " qr=" << qr << "[" << kept_dim[br]-1 << "]"
+	 if(i == 0) std::cout << "important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
+	 std::cout << " i=" << i << " br=" << br << " qr=" << qr << "[" << kept_dim[br]-1 << "]"
                    << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
       }
-      */
-      if(i == 0) std::cout << "KEPT:" << std::endl;
-      std::cout << " i=" << i << " idx=" << idx << " br=" << br << " qr=" << qr
-	        << " kept=" << kept_dim[br]-1
-		<< " sig2=" << sig2all[idx]
-		<< std::endl;
-
    }
    dwt = 1.0-sum;
-   std::cout << " decimation summary: " << qrow.get_dimAll() << "->" << deff
+   std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff
      	     << "  dwt=" << dwt << "  SvN=" << SvN << std::endl;
    // 3. construct qbond and qt2 by assembling blocks
    sum = 0.0;
@@ -305,7 +279,7 @@ inline void decimation_row_kr(const qbond& qs1,
       br_kept.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
       sum += wts;
-      std::cout << "  i=" << i << " br=" << br << " qr=" << qr << " dim=" 
+      std::cout << " i=" << i << " br=" << br << " qr=" << qr << " dim=" 
 		<< dim << " wts=" << wts << " accum=" << sum << std::endl;
    }
    qbond qkept(dims);
@@ -321,22 +295,18 @@ inline void decimation_row_kr(const qbond& qs1,
       assert(qrow.get_sym(br) == qkept.get_sym(bc));
       assert(rbas.rows() == blk.rows());
       if(qr.parity() == 0){
-
          std::copy(rbas.col(0), rbas.col(0)+rdim*cdim, blk.col(0));
-
       }else{
-
 	 assert(rdim%2 == 0 && cdim%2 == 0 && rbas.cols()%2==0);
 	 int cdim0 = rbas.cols()/2;
 	 int cdim1 = cdim/2;
          std::copy(rbas.col(0), rbas.col(0)+rdim*cdim1, blk.col(0));
 	 std::copy(rbas.col(cdim0), rbas.col(cdim0)+rdim*cdim1, blk.col(cdim1));
-
       }
       if(debug_decimation){
          assert(qrow.get_sym(br) == qt2.qcol.get_sym(bc));
-         if(bc == 0) std::cout << " reduced basis:" << std::endl;
-         std::cout << "  (br,bc)=" << br << "," << bc 
+         if(bc == 0) std::cout << "reduced basis:" << std::endl;
+         std::cout << " (br,bc)=" << br << "," << bc 
 		   << " qsym=" << qt2.qcol.get_sym(bc)
 		   << " shape=(" << blk.rows() << "," << blk.cols() << ")"
      	           << std::endl;
