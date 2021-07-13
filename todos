@@ -3,50 +3,53 @@
 TODOs
 -----
 
- 1. Setup tests for NR & R [DONE20210324]
+ * Setup tests for NR & R [DONE20210324]
  
- 2. Redesign and decouple codes [DONE20210408]
+ * Redesign and decouple codes [DONE20210408]
     
- 3. Implementation of CTNS with TRS [DONE20210516]
+ * Implementation of CTNS with TRS [DONE20210516]
     - checked for kinds {rN,rNSz,cN,cNSz,cNK}
     - rewrite qtensor such that qt2/qt3/qt4 are just views
 
- 4. Parallelization [DONE20210530]
-    1. cleanup (IO) 
-    2. setup testing mechanism? 
-    3. preparation: makefile -> mpi 
-    4. mpi [DONE202105XX]
-	- distribute AP & BQ, compxwf, Hmat [DONE20210523]
-	- opt: HDiag, HVec, Davidson, pRDM, rwfuns, twodot [DONE20210528] 
- 	- load balance: adjust distribution
- 	- careful check serial/parallel version against previous 
-          versions with different compilers
+ * Parallelization [DONE20210530]
+    - cleanup (IO) 
+    - setup testing mechanism? 
+    - preparation: makefile -> mpi 
+    - mpi version 
+       - distribute AP & BQ, compxwf, Hmat [DONE20210523]
+       - opt: HDiag, HVec, Davidson, pRDM, rwfuns, twodot [DONE20210528] 
+       - load balance: adjust distribution
+       - careful check serial/parallel version against previous 
+         versions with different compilers
 
- 5. Benchmark performances: Fe2S2 [DONE202108XX?]
-    1. different topologies:
-        - problem: TRS-adapted SVD decimation is necessary in initialization [DONE20210706] 
-        - problem: decimation in sweep -> have to give up perturbative noise for CTNS! 
+ * Benchmark performances: Fe2S2 [DONE202108XX?]
+    - different topologies: -> SVD-based decimation
+       - problem: TRS-adapted SVD decimation is necessary in initialization [DONE20210706] 
+       - problem: decimation in sweep -> have to give up perturbative noise for CTNS! 
 		   - decimation_row_nkr [DONE20210709]
 		   - decimation_row_kr [DONE20210711]
-    2. parallelization - push to the limit!
-        - problem: bypass the 2GB limit in MPI_COUNT?
-    3. optimized parallel version
-       1. stack-like storage? 
-       2. OpenMP & GPU?
+    - parallelization - push to the limit!
+       - problem: bypass the 2GB limit in MPI_COUNT?: -> Native MPI support [DONE2021XXXX]
+
+ * Optimized parallel version
+    - stack-like storage? 
+    - OpenMP & GPU?
 
 ------
 FUTURE
 ------
 
- 6. Applications:
-    1. Small system like C2+/O2? [checked against FCI results]
-    2. Fe2S2 [CAS(30e,20o)] - parallelized
-    3. SOC within this active space
-    4. G-tensor/GIAO for Ferric-Ferrous dimer [THIS WOULD BE GREAT!]
+ * Applications:
+    - Small system like C2+/O2? [checked against FCI results]
+    - Fe2S2 [CAS(30e,20o)] - parallelized
+    - SOC within this active space
+    - G-tensor/GIAO for Ferric-Ferrous dimer [THIS WOULD BE GREAT!]
  
- 7. Twordms: enable CASSCF 
+ * Twordms: enable Rel-CASSCF with interface to other codes 
 
-KNOWN PROBLEMs:
+--------------
+KNOWN PROBLEMS
+--------------
 
  1. thresh_proj & thresh_ortho sensitivity in SCI projection [theoretical/numerical problem?]
 
