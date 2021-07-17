@@ -192,8 +192,6 @@ void params_ctns::read(ifstream& istrm){
 	 nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){
          guess = stoi(line.substr(5));
-      }else if(line.substr(0,6)=="inoise"){
-	 inoise = stoi(line.substr(6));
       }else if(line.substr(0,4)=="load"){
          load = true;
       }else if(line.substr(0,6)=="istate"){
@@ -262,7 +260,6 @@ void params_ctns::print() const{
    cout << "rdm_vs_svd = " << scientific << rdm_vs_svd << endl;
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
-   cout << "inoise   = " << inoise << endl; 
    cout << "guess    = " << guess << endl;
    cout << "dbranch  = " << dbranch << endl;
    cout << "maxsweep = " << maxsweep << endl;

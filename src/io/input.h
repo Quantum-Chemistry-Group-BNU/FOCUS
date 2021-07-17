@@ -91,7 +91,7 @@ private:
    void serialize(Archive & ar, const unsigned int version){
       ar & run & kind & task & topology_file 
 	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
-	 & nroots & guess & inoise & maxsweep & ctrls & cisolver & maxcycle
+	 & nroots & guess & maxsweep & ctrls & cisolver & maxcycle
          & load & rcanon_file & istate & nsample & ndetprt 
 	 & verbose;  
    }
@@ -110,7 +110,6 @@ public:
    double rdm_vs_svd = 1.5;
    // sweep
    int nroots = 1; // this can be smaller than nroots in CI 
-   int inoise = 2;
    bool guess = true;
    int dbranch = 0;
    int maxsweep = 0;

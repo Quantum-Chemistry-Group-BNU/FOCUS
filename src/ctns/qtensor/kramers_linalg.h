@@ -478,6 +478,12 @@ void get_renorm_states_kr(const ctns::qsym& qr,
          }
       }
       if(debug_basis) std::cout << " nkept=" << nkept << std::endl;
+      // in case no state in this symmetry sector
+      if(nkept == 0){
+         sigs2.resize(0);
+         U.resize(dimr,0);
+         return;
+      }
       int nindp = get_ortho_basis_kr(qr, phases, U, nkept);
       //if(debug_basis) U.print("U[ortho]");
       //------------------------------------------

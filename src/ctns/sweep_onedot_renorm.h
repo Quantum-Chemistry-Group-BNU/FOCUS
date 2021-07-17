@@ -37,8 +37,8 @@ void onedot_renorm_lc(sweep_data& sweeps,
    const auto& noise = sweeps.ctrls[isweep].noise;
    const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){
-      std::cout << " |lc> (dbranch,dcut,inoise,noise,rdm_vs_svd)="
-                << dbranch << "," << dcut << "," << sweeps.inoise << ","
+      std::cout << " |lc> (dbranch,dcut,noise,rdm_vs_svd)="
+                << dbranch << "," << dcut << ","
                 << std::scientific << std::setprecision(1) << noise << ","
 		<< rdm_vs_svd
 		<< std::endl;
@@ -118,8 +118,8 @@ void onedot_renorm_lr(sweep_data& sweeps,
    const auto& noise = sweeps.ctrls[isweep].noise;
    const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){ 
-      std::cout << " |lr>(comb) (dbranch,dcut,inoise,noise,rdm_vs_svd)=" 
-                << dbranch << "," << dcut << "," << sweeps.inoise << ","
+      std::cout << " |lr>(comb) (dbranch,dcut,noise,rdm_vs_svd)=" 
+                << dbranch << "," << dcut << ","
                 << std::scientific << std::setprecision(1) << noise << ","
 		<< rdm_vs_svd
 		<< std::endl;
@@ -200,8 +200,8 @@ void onedot_renorm_cr(sweep_data& sweeps,
    const auto& noise = sweeps.ctrls[isweep].noise;
    const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){ 
-      std::cout << " |cr> (dbranch,dcut,inoise,noise,rdm_vs_svd)="
-   	        << dbranch << "," << dcut << "," << sweeps.inoise << ","
+      std::cout << " |cr> (dbranch,dcut,noise,rdm_vs_svd)="
+   	        << dbranch << "," << dcut << ","
    	        << std::scientific << std::setprecision(1) << noise << ","
 		<< rdm_vs_svd
 		<< std::endl;

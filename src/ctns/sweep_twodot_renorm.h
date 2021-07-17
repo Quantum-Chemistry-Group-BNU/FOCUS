@@ -31,8 +31,8 @@ void twodot_renorm_lc1(sweep_data& sweeps,
    const auto& noise = sweeps.ctrls[isweep].noise;
    const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){
-      std::cout << " |lc1> (dbranch,dcut,inoise,noise,rdm_vs_svd)="
-                << dbranch << "," << dcut << "," << sweeps.inoise << ","
+      std::cout << " |lc1> (dbranch,dcut,noise,rdm_vs_svd)="
+                << dbranch << "," << dcut << ","
                 << std::scientific << std::setprecision(1) << noise << ","
 		<< rdm_vs_svd
 		<< std::endl;
@@ -123,8 +123,8 @@ void twodot_renorm_lr(sweep_data& sweeps,
    const auto& noise = sweeps.ctrls[isweep].noise;
    const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){ 
-      std::cout << " |lr>(comb) (dbranch,dcut,inoise,noise,rdm_vs_svd)=" 
-                << dbranch << "," << dcut << "," << sweeps.inoise << ","
+      std::cout << " |lr>(comb) (dbranch,dcut,noise,rdm_vs_svd)=" 
+                << dbranch << "," << dcut << ","
                 << std::scientific << std::setprecision(1) << noise << ","
 		<< rdm_vs_svd
 		<< std::endl;
@@ -215,8 +215,8 @@ void twodot_renorm_c2r(sweep_data& sweeps,
    const auto& noise = sweeps.ctrls[isweep].noise;
    const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){ 
-      std::cout << " |c2r> (dbranch,dcut,inoise,noise,rdm_vs_svd)="
-                << dbranch << "," << dcut << "," << sweeps.inoise << ","
+      std::cout << " |c2r> (dbranch,dcut,noise,rdm_vs_svd)="
+                << dbranch << "," << dcut << ","
                 << std::scientific << std::setprecision(1) << noise << ","
 		<< rdm_vs_svd
 		<< std::endl;
@@ -308,8 +308,8 @@ void twodot_renorm_c1c2(sweep_data& sweeps,
    const auto& noise = sweeps.ctrls[isweep].noise;
    const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
    if(rank == 0){ 
-      std::cout << " |c1c2>(comb) (dbranch,dcut,inoise,noise,rdm_vs_svd)="
-                << dbranch << "," << dcut << "," << sweeps.inoise << ","
+      std::cout << " |c1c2>(comb) (dbranch,dcut,noise,rdm_vs_svd)="
+                << dbranch << "," << dcut << ","
                 << std::scientific << std::setprecision(1) << noise << ","
 		<< rdm_vs_svd
 		<< std::endl;

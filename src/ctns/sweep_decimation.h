@@ -11,7 +11,7 @@ extern const double thresh_sig2;
 const double thresh_sig2accum = 0.99;
 extern const double thresh_sig2accum;
 
-const bool debug_decimation = false;
+const bool debug_decimation = true; //false;
 extern const bool debug_decimation;
 
 template <typename Tm>
@@ -208,9 +208,9 @@ inline void decimation_row_kr(const qbond& qs1,
 	 kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_vs_svd, debug_decimation);
       } // qc
       // save
-      if(matched == 1){
+      int nkept = U.cols();
+      if(nkept > 0){
          rbasis[br] = U.reorder_row(pos_new, 1);
-         int nkept = U.cols();
          if(qr.parity() == 0){
             std::copy(sigs2.begin(), sigs2.end(), std::back_inserter(sig2all));
 	    sig2sum += std::accumulate(sigs2.begin(), sigs2.end(), 0.0);
