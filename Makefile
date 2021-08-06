@@ -1,10 +1,13 @@
 
-machine = lenovo
+machine = mac
 
-DEBUG = no #yes
-USE_GCC = no
-USE_OPENMP = no
+DEBUG = no 
+USE_GCC = yes
 USE_MPI = yes
+USE_OPENMP = no
+
+# quaternion matrix diagonalization
+MATH = -L./extlibs/zquatev -lzquatev
 
 ifeq ($(machine), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
@@ -22,29 +25,6 @@ else
       LFLAGS += -lboost_mpi
    endif
 endif
-
-# quaternion matrix diagonalization
-MATH = -L./extlibs/zquatev -lzquatev
-ifeq ($(USE_OPENMP), no)
-   # serial version of MKL
-   MATH += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-           -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
-   # mac framework Accelerate
-   #MATH = -llapack -lblas 
-else
-   ifeq ($(USE_GCC), yes)
-      FLAGS += -fopenmp
-   else
-      FLAGS += -qopenmp	
-   endif
-   # https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html	
-   # parallel version of MKL
-   MATH += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-   	   -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
-   	   -liomp5
-   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
-endif
-LFLAGS += ${MATH}
 
 ifeq ($(USE_GCC), yes)
    # GCC compiler
@@ -77,6 +57,27 @@ else
       CC = mpiicc
    endif
 endif
+
+ifeq ($(USE_OPENMP), no)
+   # serial version of MKL
+   MATH += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+           -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
+   # mac framework Accelerate
+   #MATH = -llapack -lblas 
+else
+   ifeq ($(USE_GCC), yes)
+      FLAGS += -fopenmp
+   else
+      FLAGS += -qopenmp	
+   endif
+   # https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html	
+   # parallel version of MKL
+   MATH += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+   	   -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+   	   -liomp5
+   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
+endif
+LFLAGS += ${MATH}
 
 SRC = src
 BIN_DIR = ./bin
@@ -113,6 +114,13 @@ all: depend \
      $(BIN_DIR)/ctns.x 
 
 depend:
+	echo "Check compilation options:"; \
+	echo " DEBUG = " $(DEBUG); \
+	echo " USE_GCC = " $(USE_GCC); \
+	echo " USE_OPENMP = " $(USE_OPENMP); \
+	echo " USE_MPI = " $(USE_MPI); \
+	echo " CXX = " $(CXX); \
+	echo " CC = " $(CC); \
 	set -e; \
 	mkdir -p $(BIN_DIR) $(OBJ_DIR); \
 	echo $(SRC_ALL); \
