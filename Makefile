@@ -1,8 +1,8 @@
 
-machine = mac
+machine = lenovo
 
 DEBUG = no 
-USE_GCC = yes
+USE_GCC = no #yes
 USE_MPI = yes
 USE_OPENMP = no
 

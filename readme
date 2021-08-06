@@ -8,24 +8,19 @@ Goals:
  2. Predict magnetic parameters (g-/A-tensors) of transition metal compounds 
 
 Features:
- 1. Support NR and R Hamiltonians
- 2. Parallelization
-
-Special functionalities: 
  1. FCI and SCI for benchmarking & preparing initial guesses for TNS
- 2. DMRG and CTNS with time-reversal symmetry adaptation
-
-Requirements:
- 1. C++ compiler
- 2. BOOST
-
-Tested compilations:
- 1. GCC 9.2.0_2 + boost 1_56_0 (my macbook pro) 
- 2. ICC 19.1.3.304 + boost 1_59_0 (lenovo@BNU)
+ 2. DMRG and CTNS (NR and R with time-reversal symmetry adaptation)
 
 How to install:
- 1. Edit makefile in extlibs/zquatev/ & make for diagonalizing quaternion matrix
- 2. Edit makefile & make
+ - Requirements:
+      1. C++ compiler
+      2. BOOST
+ - Install:
+      1. Edit makefile in extlibs/zquatev/ & make for diagonalizing quaternion matrix
+      2. Edit makefile & make
+ - Tested compilations:
+      1. ICC 19.1.3.304 + boost 1_59_0 (lenovo@BNU)
+      2. GCC 9.2.0_2 + boost 1_56_0 (my macbook pro) 
 
 How to run:
  1. run sci.x to generate initial guess
