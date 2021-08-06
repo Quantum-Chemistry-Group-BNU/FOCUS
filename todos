@@ -57,7 +57,8 @@ KNOWN PROBLEMS
 
  1. thresh_proj & thresh_ortho sensitivity in SCI projection [theoretical/numerical problem?]
 
- 2. to work with ctns, pRDM is removed which will make onedot opt prone to local minimum
+ 2. to work with ctns, pRDM is removed which will make onedot opt prone to local minimum:
+    implementing decimation for {|psi>, sum_k a_k|psi>, sum_l b_l|psi>} may help.
     /home/lx/lzd/focus_repo/FOCUS/examples/3_h6+_kr
     finput= results/rinput.dat
     fname[ref]= results/rctns.out
@@ -66,4 +67,3 @@ KNOWN PROBLEMS
     nsweep= 2
     eref= [-2.89565156 -2.74390766]  ecal= [-2.89503561 -2.74089796]  ediff= 0.0030720814731275076
     fail
-
