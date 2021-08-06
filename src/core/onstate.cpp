@@ -129,18 +129,7 @@ void onstate::diff_orb(const onstate& ket,
       idiff = _repr[i] ^ ket._repr[i];
       icre = idiff & _repr[i];
       iann = idiff & ket._repr[i];
-#ifdef GNU
-      while(icre != 0){
-         int j = 63-__builtin_clzl(icre);
-         cre.push_back(i*64+j);
-         icre &= ~(1ULL<<j);
-      }
-      while(iann != 0){
-	 int j = 63-__builtin_clzl(iann);
-	 ann.push_back(i*64+j);
-	 iann &= ~(1ULL<<j);
-      }
-#else
+#ifdef DEBUG
       for(int j=63; j>=0; j--){
          if(icre & 1ULL<<j){
 	    cre.push_back(i*64+j);
@@ -150,6 +139,17 @@ void onstate::diff_orb(const onstate& ket,
 	 if(iann & 1ULL<<j){
 	    ann.push_back(i*64+j);
 	 }
+      }
+#else
+      while(icre != 0){
+         int j = 63-__builtin_clzl(icre);
+         cre.push_back(i*64+j);
+         icre &= ~(1ULL<<j);
+      }
+      while(iann != 0){
+	 int j = 63-__builtin_clzl(iann);
+	 ann.push_back(i*64+j);
+	 iann &= ~(1ULL<<j);
       }
 #endif
    } // i
@@ -164,20 +164,7 @@ void onstate::diff_orb(const onstate& ket,
       idiff = _repr[i] ^ ket._repr[i];
       icre = idiff & _repr[i];
       iann = idiff & ket._repr[i];
-#ifdef GNU
-      while(icre != 0){
-         int j = 63-__builtin_clzl(icre);
-	 cre[ic] = i*64+j;
-	 ic++;
-         icre &= ~(1ULL<<j);
-      }
-      while(iann != 0){
-	 int j = 63-__builtin_clzl(iann);
-	 ann[ia] = i*64+j;
-	 ia++;
-	 iann &= ~(1ULL<<j);
-      }
-#else
+#ifdef DEBUG
       for(int j=63; j>=0; j--){
          if(icre & 1ULL<<j){
 	    cre[ic] = i*64+j;
@@ -190,6 +177,19 @@ void onstate::diff_orb(const onstate& ket,
 	    ia++;
 	 }
       }
+#else
+      while(icre != 0){
+         int j = 63-__builtin_clzl(icre);
+	 cre[ic] = i*64+j;
+	 ic++;
+         icre &= ~(1ULL<<j);
+      }
+      while(iann != 0){
+	 int j = 63-__builtin_clzl(iann);
+	 ann[ia] = i*64+j;
+	 ia++;
+	 iann &= ~(1ULL<<j);
+      }
 #endif
    } // i
 }
@@ -197,7 +197,11 @@ void onstate::diff_orb(const onstate& ket,
 // vector version
 void onstate::get_olst(std::vector<int>& olst) const{
    olst.clear();
-#ifdef GNU
+#ifdef DEBUG
+   for(int i=0; i<_size; i++){
+      if((*this)[i]) olst.push_back(i);
+   }
+#else
    unsigned long tmp;
    for(int i=0; i<_len; i++){
       tmp = _repr[i];
@@ -207,18 +211,20 @@ void onstate::get_olst(std::vector<int>& olst) const{
          tmp &= ~(1ULL<<j);
       }
    }
-#else
-   for(int i=0; i<_size; i++){
-      if((*this)[i])
-         olst.push_back(i);
-   }
 #endif   
 }
 
 // array version
 void onstate::get_olst(int* olst) const{
    int ic = 0;
-#ifdef GNU
+#ifdef DEBUG
+   for(int i=0; i<_size; i++){
+      if((*this)[i]){
+         olst[ic] = i;
+	 ic++;
+      }
+   }
+#else
    unsigned long tmp;
    for(int i=0; i<_len; i++){
       tmp = _repr[i];
@@ -229,20 +235,17 @@ void onstate::get_olst(int* olst) const{
          tmp &= ~(1ULL<<j);
       }
    }
-#else
-   for(int i=0; i<_size; i++){
-      if((*this)[i]){
-         olst[ic] = i;
-	 ic++;
-      }
-   }
 #endif  
 }
 
 // vector version
 void onstate::get_vlst(std::vector<int>& vlst) const{
    vlst.clear();
-#ifdef GNU
+#ifdef DEBUG
+   for(int i=0; i<_size; i++){
+      if(!(*this)[i]) vlst.push_back(i);
+   }
+#else
    unsigned long tmp;
    for(int i=0; i<_len; i++){
       // be careful about the virtual orbital case 
@@ -253,18 +256,20 @@ void onstate::get_vlst(std::vector<int>& vlst) const{
          tmp &= ~(1ULL<<j);
       }
    }
-#else
-   for(int i=0; i<_size; i++){
-      if(!(*this)[i])
-         vlst.push_back(i);
-   }
 #endif   
 }
 
 // array version
 void onstate::get_vlst(int* vlst) const{
    int ic = 0;
-#ifdef GNU
+#ifdef DEBUG
+   for(int i=0; i<_size; i++){
+      if(!(*this)[i]){
+         vlst[ic] = i;
+	 ic++;
+      }
+   }
+#else
    unsigned long tmp;
    for(int i=0; i<_len; i++){
       // be careful about the virtual orbital case 
@@ -274,13 +279,6 @@ void onstate::get_vlst(int* vlst) const{
          vlst[ic] = i*64+j;
 	 ic++;
          tmp &= ~(1ULL<<j);
-      }
-   }
-#else
-   for(int i=0; i<_size; i++){
-      if(!(*this)[i]){
-         vlst[ic] = i;
-	 ic++;
       }
    }
 #endif  

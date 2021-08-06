@@ -38,7 +38,13 @@ std::pair<Tm,long> get_HijS(const onstate& state1,
    state1.diff_orb(state2,p,q);
    Tm Hij = int1e.get(p[0],q[0]); // hpq
    // loop over occupied state in state2
-#ifdef GNU
+#ifdef DEBUG
+   for(int k=0; k<state2.size(); k++){
+      if(state2[k]){
+         Hij += int2e.get(p[0],k,q[0],k);
+      }
+   }
+#else
    for(int i=0; i<state2.len(); i++){
       unsigned long repr = state2.repr(i);
       while(repr != 0){
@@ -46,12 +52,6 @@ std::pair<Tm,long> get_HijS(const onstate& state1,
 	 int k = i*64+j;
 	 Hij += int2e.get(p[0],k,q[0],k); // <pk||qk>
 	 repr &= ~(1ULL<<j);
-      }
-   }
-#else
-   for(int k=0; k<state2.size(); k++){
-      if(state2[k]){
-         Hij += int2e.get(p[0],k,q[0],k);
       }
    }
 #endif

@@ -37,8 +37,9 @@ public:
    std::set<std::set<int>> det_seeds;
    int nseeds = 0;
    bool flip = false;
-   // for initial guess
-   double eps0 = 1.e-2; 
+   // selection threshold |HAI*CI|>eps for initial guess
+   double eps0 = 1.e-2;
+   // selection threshold |HAI*CI|>eps for iteration in SCI
    std::vector<double> eps1;   
    // sci
    int miniter = 0;
@@ -47,7 +48,7 @@ public:
    // dvdson
    int cisolver = 1;
    int maxcycle = 100;
-   double crit_v = 1.e-6;
+   double crit_v = 1.e-4;
    // pt2
    bool ifpt2 = false;
    double eps2 = 1.e-8;

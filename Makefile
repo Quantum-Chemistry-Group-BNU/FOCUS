@@ -1,8 +1,8 @@
 
-machine = mac #lenovo
+machine = lenovo
 
-DEBUG = yes
-USE_GCC = yes
+DEBUG = no #yes
+USE_GCC = no
 USE_OPENMP = no
 USE_MPI = yes
 
@@ -49,9 +49,9 @@ LFLAGS += ${MATH}
 ifeq ($(USE_GCC), yes)
    # GCC compiler
    ifeq ($(DEBUG), yes)
-      FLAGS += -DGNU -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -DDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    else
-      FLAGS += -DGNU -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    endif
    ifeq ($(USE_MPI), no)
       CXX = g++
@@ -64,7 +64,7 @@ ifeq ($(USE_GCC), yes)
 else
    # Intel compiler
    ifeq ($(DEBUG), yes)
-      FLAGS += -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -DDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    else 
       FLAGS += -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    endif 

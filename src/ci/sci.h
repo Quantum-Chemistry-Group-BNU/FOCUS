@@ -125,12 +125,7 @@ void ci_solver(const input::schedule& schd,
       // update auxilliary data structure 
       sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype, nsub0);
       // set up Davidson solver 
-      linalg::dvdsonSolver<Tm> solver;
-      solver.iprt = 1;
-      solver.crit_v = schd.sci.crit_v;
-      solver.maxcycle = schd.sci.maxcycle;
-      solver.ndim = nsub;
-      solver.neig = neig;
+      linalg::dvdsonSolver<Tm> solver(nsub, neig, schd.sci.crit_v, schd.sci.maxcycle);
       solver.Diag = sparseH.diag.data();
       using std::placeholders::_1;
       using std::placeholders::_2;

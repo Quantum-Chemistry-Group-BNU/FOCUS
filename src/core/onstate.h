@@ -20,9 +20,7 @@ inline unsigned long get_ones(const int& n){
 
 // count the number of nonzero bits
 inline int popcnt(unsigned long x){
-#ifdef GNU
-   return __builtin_popcountl(x);
-#else
+#ifdef DEBUG
    // https://en.wikipedia.org/wiki/Hamming_weight
    const uint64_t m1  = 0x5555555555555555; //binary: 0101...
    const uint64_t m2  = 0x3333333333333333; //binary: 00110011..
@@ -32,14 +30,16 @@ inline int popcnt(unsigned long x){
    x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
    x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
    return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+#else
+   return __builtin_popcountl(x);
 #endif
 }
 
 inline int get_parity(unsigned long x){
-#ifdef GNU
-   return __builtin_parityl(x);
-#else
+#ifdef DEBUG
    return popcnt(x)%2;
+#else
+   return __builtin_parityl(x);
 #endif
 }
 
