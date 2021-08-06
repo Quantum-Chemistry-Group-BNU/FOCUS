@@ -1,0 +1,54 @@
+dtype 0
+nelec 30
+twoms 0 
+integral_file moleinfo/fmole.info
+scratch ./scratch
+
+$sci
+dets
+0 2 4 6 8 10 12 14 16 18 20 22 24 36 38   1 3 15 17 19 21 23 25 27 29 31 33 35 37 39
+end
+flip
+nroots 2 
+schedule
+0 1.e-3
+#3 5.e-4
+#6 1.e-4
+#9 5.e-5
+end
+maxiter 3
+$end
+
+$ctns
+verbose 1
+kind rNSz
+maxdets 1000 # keep dets as much as possible
+topology_file topology/topo0
+thresh_proj 1.e-14
+thresh_ortho 1.e-10 
+schedule
+0  2  500 1.e-4 0.e0 
+2  2  500 1.e-4 0.e0 
+4  2 1000 1.e-4 0.e0 
+6  2 1000 1.e-4 0.e0 
+8  2 2000 1.e-4 0.e0  
+10 2 2000 1.e-4 0.e0  
+12 2 3000 1.e-4 0.e0  
+14 2 3000 1.e-4 0.e0  
+16 2 4000 1.e-4 0.e0  
+18 2 4000 1.e-4 0.e0  
+20 2 5000 1.e-4 0.e0 
+22 2 5000 1.e-4 0.e0 
+24 2 6000 1.e-4 0.e0 
+26 2 6000 1.e-4 0.e0 
+28 2 7000 1.e-4 0.e0 
+30 2 7000 1.e-4 0.e0 
+32 2 8000 1.e-4 0.e0 
+34 2 8000 1.e-4 0.e0 
+36 2 9000 1.e-4 0.e0 
+38 2 9000 1.e-4 0.e0 
+end
+maxsweep 40
+maxcycle 6
+task opt
+$end
