@@ -23,8 +23,13 @@ How to install:
       2. GCC 9.2.0_2 + boost 1_56_0 (my macbook pro) 
 
 How to run:
- 1. run sci.x to generate initial guess
- 2. run ctns.x to optimize CTNS, see examples
+ - General procedure:	
+      1. run sci.x to generate initial guess
+      2. run ctns.x to optimize CTNS, see examples
+ - Examples:
+      0. go to examples/fe2s2
+      1. ../../bin/sci.x input.dat
+      2. mpirun -np 10 ../../bin/ctns.x input.dat
 
 Known problems:
  1. mpi::reduce hangs on intel MPI 

@@ -5,6 +5,10 @@
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 using namespace std;
 using namespace fock;
 
@@ -91,12 +95,13 @@ int CTNS(const input::schedule& schd){
 }
 
 int main(int argc, char *argv[]){
-   int rank = 0; 
+   int rank = 0, size = 1; 
 #ifndef SERIAL
    // setup MPI environment 
    boost::mpi::environment env{argc, argv};
    boost::mpi::communicator world;
    rank = world.rank();
+   size = world.size();
 #endif
    if(rank == 0) tools::license();
 
@@ -117,6 +122,18 @@ int main(int argc, char *argv[]){
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    schd.create_scratch((rank == 0));
+
+
+   std::cout << "MAX_THREADS=" << omp_get_max_threads() << std::endl;
+
+   #pragma omp parallel
+   {
+   std::cout << "rank=" << rank << " size=" << size
+             << " thread_num=" << omp_get_thread_num() 
+             << " num_threads=" << omp_get_num_threads() 
+             << std::endl;
+   }
+   exit(1);
 
    int info = 0;
    if(schd.ctns.kind == "rN"){

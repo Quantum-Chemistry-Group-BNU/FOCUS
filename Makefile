@@ -4,7 +4,7 @@ machine = lenovo
 DEBUG = no 
 USE_GCC = no #yes
 USE_MPI = yes
-USE_OPENMP = no
+USE_OPENMP = yes
 
 # quaternion matrix diagonalization
 MATH = -L./extlibs/zquatev -lzquatev

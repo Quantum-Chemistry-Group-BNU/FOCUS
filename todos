@@ -3,7 +3,7 @@
 TODOs
 -----
 
- * Setup tests for NR & R [DONE20210324]
+ * Setup tests for NR & R integrals [DONE20210324]
  
  * Redesign and decouple codes [DONE20210408]
     
@@ -11,7 +11,7 @@ TODOs
     - checked for kinds {rN,rNSz,cN,cNSz,cNK}
     - rewrite qtensor such that qt2/qt3/qt4 are just views
 
- * Parallelization [DONE20210530]
+ * Parallelization: MPI [DONE20210530]
     - cleanup (IO) 
     - setup testing mechanism? 
     - preparation: makefile -> mpi 
@@ -22,22 +22,23 @@ TODOs
        - careful check serial/parallel version against previous 
          versions with different compilers
 
- * Benchmark performances: Fe2S2 [DONE202108XX?]
+ * Benchmark performances: Fe2S2 [DONE20210811]
     - different topologies: -> SVD-based decimation
        - problem: TRS-adapted SVD decimation is necessary in initialization [DONE20210706] 
        - problem: decimation in sweep -> have to give up perturbative noise for CTNS! 
 		   - decimation_row_nkr [DONE20210709]
 		   - decimation_row_kr [DONE20210711]
+
+ * Optimized parallel version [XXXX202109XX]
+    - OpenMP support 
+    - stack-like storage? 
     - parallelization - push to the limit!
        - monitor peak memory usage
        - problem: bypass the 2GB limit in MPI_COUNT?: -> Native MPI support [DONE2021XXXX]
 	 see /Users/zhendongli/Desktop/FOCUS_program/FOCUS_reference/dmrg_codes
 	 - block_learning/
 	 - block2-preview-master/
-
- * Optimized parallel version
-    - stack-like storage? 
-    - OpenMP & GPU?
+    - GPU?
 
 ------
 FUTURE
@@ -59,11 +60,12 @@ KNOWN PROBLEMS
 
  2. to work with ctns, pRDM is removed which will make onedot opt prone to local minimum:
     implementing decimation for {|psi>, sum_k a_k|psi>, sum_l b_l|psi>} may help.
-    /home/lx/lzd/focus_repo/FOCUS/examples/3_h6+_kr
-    finput= results/rinput.dat
-    fname[ref]= results/rctns.out
-    nsweep= 2
-    fname[cal]= ./tmp/rctns.out
-    nsweep= 2
-    eref= [-2.89565156 -2.74390766]  ecal= [-2.89503561 -2.74089796]  ediff= 0.0030720814731275076
-    fail
+
+       /home/lx/lzd/focus_repo/FOCUS/examples/3_h6+_kr
+       finput= results/rinput.dat
+       fname[ref]= results/rctns.out
+       nsweep= 2
+       fname[cal]= ./tmp/rctns.out
+       nsweep= 2
+       eref= [-2.89565156 -2.74390766]  ecal= [-2.89503561 -2.74089796]  ediff= 0.0030720814731275076
+       fail
