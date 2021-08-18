@@ -4,6 +4,11 @@
 #include "oper_dict.h" 
 #include "oper_combine.h"
 
+#include <functional> // for std::function
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace ctns{
    
 const bool debug_twodot_ham = false;
@@ -351,7 +356,8 @@ std::vector<double> twodot_Hdiag(const bool ifkr,
 //  Two-index operators
 //   5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
 //   6. Bps^1*Qps^2 / Qqr^1*Bqr^2
-// 
+//
+/* 
 template <typename Tm> 
 void twodot_Hx(Tm* y,
 	       const Tm* x,
@@ -511,6 +517,343 @@ void twodot_Hx(Tm* y,
 	 } // iproc
       }
    } // ifNC
+   Hwf += Hwf1.split_c2r(wf.qver,wf.qcol);
+   Hwf += Hwf2.split_lc1(wf.qrow,wf.qmid); 
+   Hwf.to_array(y);
+}
+*/
+
+
+template <typename Tm>
+qtensor3<Tm> twodot_Hx_CS(const int iformula,
+		  	  const int index,
+	          	  const int& isym,
+	          	  const bool& ifkr,
+	          	  oper_dict<Tm>& c1qops,
+	          	  oper_dict<Tm>& c2qops,
+	          	  oper_dict<Tm>& lqops,
+	          	  oper_dict<Tm>& rqops,
+	          	  const integral::two_body<Tm>& int2e,
+	          	  const integral::one_body<Tm>& int1e,
+	          	  const qtensor4<Tm>& wf,
+	          	  const qtensor3<Tm>& wf2,
+	          	  const int size,
+	          	  const int rank){
+   const bool dagger = true;
+   qtensor3<Tm> qt3n, qt3h;
+   // p1^L1C1+*Sp1^C2R
+   qt3n = oper_compxwf_opS("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,size,rank);
+   qt3n = qt3n.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid);
+   auto Hwf1 = oper_normxwf_opC("lc",qt3n,lqops,c1qops,iformula,index); 
+   // -Sp1^C2R+*p1^L1C1
+   qt3h = oper_compxwf_opS("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,size,rank,dagger); 
+   qt3h = qt3h.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid);
+   Hwf1 -= oper_normxwf_opC("lc",qt3h,lqops,c1qops,iformula,index,dagger);
+   return Hwf1;
+}
+ 
+template <typename Tm>
+qtensor3<Tm> twodot_Hx_SC(const int iformula,
+		  	  const int index,
+	          	  const int& isym,
+	          	  const bool& ifkr,
+	          	  oper_dict<Tm>& c1qops,
+	          	  oper_dict<Tm>& c2qops,
+	          	  oper_dict<Tm>& lqops,
+	          	  oper_dict<Tm>& rqops,
+	          	  const integral::two_body<Tm>& int2e,
+	          	  const integral::one_body<Tm>& int1e,
+	          	  const qtensor4<Tm>& wf,
+	          	  const qtensor3<Tm>& wf2,
+	          	  const int size,
+	          	  const int rank){
+   const bool dagger = true;
+   qtensor3<Tm> qt3n, qt3h;
+   // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+
+   qt3n = oper_normxwf_opC("cr",wf2,c2qops,rqops,iformula,index);
+   qt3n = qt3n.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid);
+   auto Hwf1 = -oper_compxwf_opS("lc",qt3n,lqops,c1qops,isym,ifkr,int2e,int1e,index,size,rank);
+   // Sq2^LC1+*q2^C2R
+   qt3h = oper_normxwf_opC("cr",wf2,c2qops,rqops,iformula,index,dagger);
+   qt3h = qt3h.row_signed().merge_cr().split_lc(wf.qrow,wf.qmid);
+   Hwf1 += oper_compxwf_opS("lc",qt3h,lqops,c1qops,isym,ifkr,int2e,int1e,index,size,rank,dagger);
+   return Hwf1;
+}
+
+template <typename Tm>
+qtensor3<Tm> twodot_Hx_AP(const int iformula,
+		  	  const int index,
+	          	  const int& isym,
+	          	  const bool& ifkr,
+	          	  oper_dict<Tm>& c1qops,
+	          	  oper_dict<Tm>& c2qops,
+	          	  oper_dict<Tm>& lqops,
+	          	  oper_dict<Tm>& rqops,
+	          	  const integral::two_body<Tm>& int2e,
+	          	  const integral::one_body<Tm>& int1e,
+	          	  const qtensor4<Tm>& wf,
+	          	  const qtensor3<Tm>& wf2,
+	          	  const int size,
+	          	  const int rank){
+   const bool dagger = true;
+   const Tm wt = ifkr? wfacAP(index) : 1.0;
+   qtensor3<Tm> qt3n, qt3h;
+   // Apq*Ppq
+   qt3n = oper_compxwf_opP("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index);
+   qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid); 
+   auto Hwf1 = wt*oper_normxwf_opA("lc",qt3n,lqops,c1qops,ifkr,iformula,index);
+   // (Apq*Ppq)^H
+   qt3h = oper_compxwf_opP("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,dagger);
+   qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid); 
+   Hwf1 += wt*oper_normxwf_opA("lc",qt3h,lqops,c1qops,ifkr,iformula,index,dagger);
+   return Hwf1;
+}
+
+template <typename Tm>
+qtensor3<Tm> twodot_Hx_BQ(const int iformula,
+		  	  const int index,
+	          	  const int& isym,
+	          	  const bool& ifkr,
+	          	  oper_dict<Tm>& c1qops,
+	          	  oper_dict<Tm>& c2qops,
+	          	  oper_dict<Tm>& lqops,
+	          	  oper_dict<Tm>& rqops,
+	          	  const integral::two_body<Tm>& int2e,
+	          	  const integral::one_body<Tm>& int1e,
+	          	  const qtensor4<Tm>& wf,
+	          	  const qtensor3<Tm>& wf2,
+	          	  const int size,
+	          	  const int rank){
+   const bool dagger = true;
+   const Tm wt = ifkr? wfacBQ(index) : wfac(index);
+   qtensor3<Tm> qt3n, qt3h;
+   // Bpq*Qpq
+   qt3n = oper_compxwf_opQ("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index);
+   qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid); 
+   auto Hwf1 = wt*oper_normxwf_opB("lc",qt3n,lqops,c1qops,ifkr,iformula,index);
+   // (Bpq*Qpq)^H
+   qt3h = oper_compxwf_opQ("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index,dagger);
+   qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid); 
+   Hwf1 += wt*oper_normxwf_opB("lc",qt3h,lqops,c1qops,ifkr,iformula,index,dagger);
+   return Hwf1;
+}
+
+template <typename Tm>
+qtensor3<Tm> twodot_Hx_PA(const int iformula,
+		  	  const int index,
+	          	  const int& isym,
+	          	  const bool& ifkr,
+	          	  oper_dict<Tm>& c1qops,
+	          	  oper_dict<Tm>& c2qops,
+	          	  oper_dict<Tm>& lqops,
+	          	  oper_dict<Tm>& rqops,
+	          	  const integral::two_body<Tm>& int2e,
+	          	  const integral::one_body<Tm>& int1e,
+	          	  const qtensor4<Tm>& wf,
+	          	  const qtensor3<Tm>& wf2,
+	          	  const int size,
+	          	  const int rank){
+   const bool dagger = true;
+   const Tm wt = ifkr? wfacAP(index) : 1.0;
+   qtensor3<Tm> qt3n, qt3h;
+   // Prs*Ars
+   qt3n = oper_normxwf_opA("cr",wf2,c2qops,rqops,ifkr,iformula,index);
+   qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid); 
+   auto Hwf1 = wt*oper_compxwf_opP("lc",qt3n,lqops,c1qops,isym,ifkr,int2e,int1e,index);
+   // (Prs*Ars)^H
+   qt3h = oper_normxwf_opA("cr",wf2,c2qops,rqops,ifkr,iformula,index,dagger);
+   qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid); 
+   Hwf1 += wt*oper_compxwf_opP("lc",qt3h,lqops,c1qops,isym,ifkr,int2e,int1e,index,dagger);
+   return Hwf1;
+}
+
+template <typename Tm>
+qtensor3<Tm> twodot_Hx_QB(const int iformula,
+		  	  const int index,
+	          	  const int& isym,
+	          	  const bool& ifkr,
+	          	  oper_dict<Tm>& c1qops,
+	          	  oper_dict<Tm>& c2qops,
+	          	  oper_dict<Tm>& lqops,
+	          	  oper_dict<Tm>& rqops,
+	          	  const integral::two_body<Tm>& int2e,
+	          	  const integral::one_body<Tm>& int1e,
+	          	  const qtensor4<Tm>& wf,
+	          	  const qtensor3<Tm>& wf2,
+	          	  const int size,
+	          	  const int rank){
+   const bool dagger = true;
+   const Tm wt = ifkr? wfacBQ(index) : wfac(index);
+   qtensor3<Tm> qt3n, qt3h;
+   // Prs*Ars
+   qt3n = oper_normxwf_opB("cr",wf2,c2qops,rqops,ifkr,iformula,index);
+   qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid); 
+   auto Hwf1 = wt*oper_compxwf_opQ("lc",qt3n,lqops,c1qops,isym,ifkr,int2e,int1e,index);
+   // (Prs*Ars)^H
+   qt3h = oper_normxwf_opB("cr",wf2,c2qops,rqops,ifkr,iformula,index,dagger);
+   qt3h = qt3h.merge_cr().split_lc(wf.qrow,wf.qmid); 
+   Hwf1 += wt*oper_compxwf_opQ("lc",qt3h,lqops,c1qops,isym,ifkr,int2e,int1e,index,dagger);
+   return Hwf1;
+}
+
+template <typename Tm>
+struct Hx_functor{
+   public:
+      Hx_functor(const int _iformula, const int _index): iformula(_iformula), index(_index) {}
+      // compute
+      qtensor3<Tm> operator ()(){
+         return opxwf(iformula,index);
+      }
+   public:
+      const int iformula;
+      const int index;
+      std::function<qtensor3<Tm>(const int,const int)> opxwf;
+};
+
+template <typename Tm> 
+void twodot_Hx(Tm* y,
+	       const Tm* x,
+	       const int& isym,
+	       const bool& ifkr,
+	       oper_dict<Tm>& c1qops,
+	       oper_dict<Tm>& c2qops,
+	       oper_dict<Tm>& lqops,
+	       oper_dict<Tm>& rqops,
+	       const integral::two_body<Tm>& int2e,
+	       const integral::one_body<Tm>& int1e,
+	       const double ecore,
+	       qtensor4<Tm>& wf,
+	       const int size,
+	       const int rank){
+   const bool dagger = true;
+   const Tm scale = ifkr? 0.5 : 1.0;
+   const Tm fac = scale*(ecore/size);
+   int slc1 = lqops.cindex.size() + c1qops.cindex.size();
+   int sc2r = c2qops.cindex.size() + rqops.cindex.size();
+   const bool ifNC = (slc1 <= sc2r);
+   const int maxthreads = omp_get_max_threads();
+   if(rank == 0 && debug_twodot_ham){ 
+      std::cout << "ctns::twodot_Hx ifkr=" << ifkr 
+	        << " size=" << size
+		<< " maxthreads=" << maxthreads
+                << std::endl;
+   }
+   // constant term
+   wf.from_array(x);
+   auto wf1 = wf.merge_c2r(); // wf1[l,c1,c2r]
+   auto wf2 = wf.merge_lc1(); // wf2[lc1,c2,r]
+   qtensor4<Tm> Hwf = fac*wf;
+   // Local terms:
+   //  1. H^LC1
+   auto Hwf1 = scale*oper_compxwf_opH("lc",wf1,lqops,c1qops,isym,ifkr,int2e,int1e,size,rank); 
+   //  2. H^C2R
+   auto Hwf2 = scale*oper_compxwf_opH("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,size,rank);
+   // Collect all Hx_funs 
+   std::vector<Hx_functor<Tm>> Hx_funs;
+   using std::placeholders::_1;
+   using std::placeholders::_2;
+   // One-index terms:
+   // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
+   auto infoC1 = oper_combine_opC(lqops.cindex, c1qops.cindex);
+   for(const auto& pr : infoC1){
+      int iformula = pr.first;
+      int index = pr.second;
+      Hx_functor<Tm> Hx(iformula,index);
+      Hx.opxwf = bind(&twodot_Hx_CS<Tm>, _1, _2, std::cref(isym), std::cref(ifkr),
+           	      std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
+           	      std::cref(int2e), std::cref(int1e), std::cref(wf), std::cref(wf2), std::cref(size), std::cref(rank));
+      Hx_funs.push_back(Hx); 
+   }
+   // 4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
+   auto infoC2 = oper_combine_opC(c2qops.cindex, rqops.cindex);
+   for(const auto& pr : infoC2){
+      int iformula = pr.first;
+      int index = pr.second;
+      Hx_functor<Tm> Hx(iformula,index);
+      Hx.opxwf = bind(&twodot_Hx_SC<Tm>, _1, _2, std::cref(isym), std::cref(ifkr),
+           	      std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
+           	      std::cref(int2e), std::cref(int1e), std::cref(wf), std::cref(wf2), std::cref(size), std::cref(rank));
+      Hx_funs.push_back(Hx); 
+   }
+   // Two-index terms:
+   if(ifNC){
+      // 5. Apq^LC1*Ppq^C2R + h.c.
+      auto ainfo = oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr);
+      for(const auto pr : ainfo){
+	 int iformula = pr.first;
+	 int index = pr.second;
+         int iproc = distribute2(index,size);
+	 if(iproc == rank){
+            Hx_functor<Tm> Hx(iformula,index);
+            Hx.opxwf = bind(&twodot_Hx_AP<Tm>, _1, _2, std::cref(isym), std::cref(ifkr),
+                 	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
+                 	    std::cref(int2e), std::cref(int1e), std::cref(wf), std::cref(wf2), std::cref(size), std::cref(rank));
+            Hx_funs.push_back(Hx); 
+         } // iproc
+      }
+      // 6. Bps^LC1*Qps^C2R + h.c.
+      auto binfo = oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr);
+      for(const auto pr : binfo){
+	 int iformula = pr.first;
+	 int index = pr.second;
+         int iproc = distribute2(index,size);
+	 if(iproc == rank){
+            Hx_functor<Tm> Hx(iformula,index);
+            Hx.opxwf = bind(&twodot_Hx_BQ<Tm>, _1, _2, std::cref(isym), std::cref(ifkr),
+                 	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
+                 	    std::cref(int2e), std::cref(int1e), std::cref(wf), std::cref(wf2), std::cref(size), std::cref(rank));
+            Hx_funs.push_back(Hx);
+         } // iproc
+      }
+   }else{
+      // 5. Ars^C2R*Prs^LC1 + h.c.
+      auto ainfo = oper_combine_opA(c2qops.cindex, rqops.cindex, ifkr);
+      for(const auto pr : ainfo){
+	 int iformula = pr.first;
+	 int index = pr.second;
+         int iproc = distribute2(index,size);
+	 if(iproc == rank){
+            Hx_functor<Tm> Hx(iformula,index);
+            Hx.opxwf = bind(&twodot_Hx_PA<Tm>, _1, _2, std::cref(isym), std::cref(ifkr),
+                 	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
+                 	    std::cref(int2e), std::cref(int1e), std::cref(wf), std::cref(wf2), std::cref(size), std::cref(rank));
+            Hx_funs.push_back(Hx); 
+	 } // iproc
+      }
+      // 6. Qqr^LC1*Bqr^C2R
+      auto binfo = oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr);
+      for(const auto pr : binfo){
+	 int iformula = pr.first;
+	 int index = pr.second;
+         int iproc = distribute2(index,size);
+	 if(iproc == rank){
+            Hx_functor<Tm> Hx(iformula,index);
+            Hx.opxwf = bind(&twodot_Hx_QB<Tm>, _1, _2, std::cref(isym), std::cref(ifkr),
+                 	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
+                 	    std::cref(int2e), std::cref(int1e), std::cref(wf), std::cref(wf2), std::cref(size), std::cref(rank));
+            Hx_funs.push_back(Hx); 
+	 } // iproc
+      }
+   } // ifNC
+   //=======================
+   // Parallel evaluation
+   //=======================
+   // initialization
+   std::vector<qtensor3<Tm>> Hwf1_lst(maxthreads);
+   for(int i=0; i<maxthreads; i++){
+      Hwf1_lst[i].init(Hwf1.sym, Hwf1.qmid, Hwf1.qrow, Hwf1.qcol, Hwf1.dir);
+   }
+   // compute
+   #pragma omp parallel for schedule(dynamic)
+   for(int i=0; i<Hx_funs.size(); i++){
+      int omprank = omp_get_thread_num();
+      Hwf1_lst[omprank] += Hx_funs[i]();
+   }
+   // reduction
+   for(int i=0; i<maxthreads; i++){
+      Hwf1 += Hwf1_lst[i];
+   }
+   // final save
    Hwf += Hwf1.split_c2r(wf.qver,wf.qcol);
    Hwf += Hwf2.split_lc1(wf.qrow,wf.qmid); 
    Hwf.to_array(y);

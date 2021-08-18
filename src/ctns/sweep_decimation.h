@@ -3,6 +3,10 @@
 
 #include <numeric>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace ctns{
 
 const double thresh_sig2 = 1.e-14;
@@ -30,12 +34,15 @@ void decimation_row_nkr(const qbond& qs1,
    assert(qrow == wfs2[0].qrow);
    auto qcol = wfs2[0].qcol;
    int nroots = wfs2.size();
+
    // 1. compute reduced basis
-   double sig2sum = 0.0;
-   std::vector<double> sig2all;
-   std::map<int,int> idx2sector; 
-   std::map<int,linalg::matrix<Tm>> rbasis;
-   int idx = 0, nqr = qrow.size();
+   const int nqr = qrow.size();
+   const int maxthreads = omp_get_max_threads();
+   std::cout << "maxthreads=" << maxthreads << " nqr=" << nqr << std::endl;
+   std::vector<std::vector<int>> tbr(maxthreads);
+   std::vector<std::vector<std::vector<double>>> tsigs2(maxthreads);
+   std::vector<std::vector<linalg::matrix<Tm>>> tU(maxthreads); 
+   #pragma omp parallel for schedule(dynamic)
    for(int br=0; br<nqr; br++){
       const auto& qr = qrow.get_sym(br);
       const int rdim = qrow.get_dim(br);
@@ -53,6 +60,7 @@ void decimation_row_nkr(const qbond& qs1,
 	 if(blk.size() == 0) continue;
 	 if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
 	 matched += 1;
+
 	 if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
          // compute renormalized basis
 	 std::vector<linalg::matrix<Tm>> blks;
@@ -61,18 +69,44 @@ void decimation_row_nkr(const qbond& qs1,
 	    blks.push_back(clr.T());
 	 }
 	 kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_vs_svd, debug_decimation);
+
       } // qc
+
       // save
       if(matched == 1){
+         int omprank = omp_get_thread_num();
+         tbr[omprank].push_back(br);
+         tsigs2[omprank].push_back(sigs2); 
+         tU[omprank].push_back(U); 
+      }
+   } // br
+
+   int idx = 0;
+   double sig2sum = 0.0;
+   std::vector<double> sig2all;
+   std::map<int,int> idx2sector; 
+   std::map<int,linalg::matrix<Tm>> rbasis;
+   for(int i=0; i<maxthreads; i++){
+      for(int j=0; j<tbr[i].size(); j++){
+         int br = tbr[i][j];
+         const auto& sigs2 = tsigs2[i][j];
          std::copy(sigs2.begin(), sigs2.end(), std::back_inserter(sig2all));
-	 sig2sum += std::accumulate(sigs2.begin(), sigs2.end(), 0.0);
-         rbasis[br] = U;
-         for(int i=0; i<sigs2.size(); i++){
+         sig2sum += std::accumulate(sigs2.begin(), sigs2.end(), 0.0);
+	 for(int k=0; k<sigs2.size(); k++){
             idx2sector[idx] = br;
             idx++;
          }
+/*
+         std::cout << "i=" << i << " j=" << j 
+                   << " r,c=" << tU[i][j].rows() << "," << tU[i][j].cols()
+	           << " sig2sum=" << sig2sum 
+		   << std::endl;
+*/
+         rbasis[br] = tU[i][j];
       }
-   } // br
+   }
+   //exit(1);
+
    // renormalize
    sig2sum = 1.0/sig2sum;
    std::transform(sig2all.begin(), sig2all.end(), sig2all.begin(),
@@ -169,6 +203,8 @@ inline void decimation_row_kr(const qbond& qs1,
    assert(qrow == wfs2[0].qrow);
    auto qcol = wfs2[0].qcol;
    int nroots = wfs2.size();
+
+
    // 1. compute reduced basis
    double sig2sum = 0.0;
    std::vector<double> sig2all;
@@ -231,6 +267,8 @@ inline void decimation_row_kr(const qbond& qs1,
          } // parity
       }
    } // br
+
+
    // renormalize
    sig2sum = 1.0/sig2sum;
    std::transform(sig2all.begin(), sig2all.end(), sig2all.begin(),

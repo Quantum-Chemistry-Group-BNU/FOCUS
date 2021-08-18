@@ -1,7 +1,7 @@
 
 machine = lenovo
 
-DEBUG = no 
+DEBUG = yes 
 USE_GCC = no #yes
 USE_MPI = yes
 USE_OPENMP = yes

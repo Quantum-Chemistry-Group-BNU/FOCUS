@@ -6,6 +6,10 @@
 #include "oper_normxwf.h"
 #include "oper_compxwf.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace ctns{
 
 // kernel for computing renormalized ap^+
@@ -21,13 +25,36 @@ void oper_renorm_opC(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opC(qops1.cindex, qops2.cindex);
+
    // compute
+   const int maxthreads = omp_get_max_threads();
+   std::vector<std::vector<int>> indices(maxthreads);
+   std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
+   #pragma omp parallel for schedule(dynamic) 
    for(const auto pr : info){
       int iformula = pr.first;
       int index = pr.second;
       auto opwf = oper_normxwf_opC(superblock,site,qops1,qops2,iformula,index); 
-      qops('C')[index] = oper_kernel_renorm(superblock,site,opwf); 
+      auto tmp = oper_kernel_renorm(superblock,site,opwf); 
+      
+      int omprank = omp_get_thread_num();
+      indices[omprank].push_back(index);
+      tops[omprank].push_back(tmp);
+/* 
+      std::cout << "id=" << omp_get_thread_num() 
+                << " iformula/index=" << iformula << "," << index 
+                << std::endl; 
+*/
    }
+
+   for(int i=0; i<maxthreads; i++){
+      for(int j=0; j<indices[i].size(); j++){
+         int index = indices[i][j];
+         qops('C')[index] = tops[i][j];
+      }
+   }
+   //exit(1);
+
    auto t1 = tools::get_time();
    if(debug_oper_dict) tools::timing("ctns::oper_renorm_opC", t0, t1);
 }
@@ -51,16 +78,35 @@ void oper_renorm_opA(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opA(qops1.cindex, qops2.cindex, ifkr);
+
    // compute
+   const int maxthreads = omp_get_max_threads();
+   std::vector<std::vector<int>> indices(maxthreads);
+   std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
+   #pragma omp parallel for schedule(dynamic) 
    for(const auto pr : info){
       int iformula = pr.first;
       int index = pr.second;
       int iproc = distribute2(index, size);
       if(iproc == rank){
          auto opwf = oper_normxwf_opA(superblock,site,qops1,qops2,ifkr,iformula,index);
-         qops('A')[index] = oper_kernel_renorm(superblock,site,opwf);
+         auto tmp = oper_kernel_renorm(superblock,site,opwf);
+
+         //qops('A')[index] = oper_kernel_renorm(superblock,site,opwf);
+         int omprank = omp_get_thread_num();
+         indices[omprank].push_back(index);
+         tops[omprank].push_back(tmp);
       }
    }
+
+   for(int i=0; i<maxthreads; i++){
+      for(int j=0; j<indices[i].size(); j++){
+         int index = indices[i][j];
+         qops('A')[index] = tops[i][j];
+      }
+   }
+   //exit(1);
+
    if(debug_oper_para){
       std::cout << " opA: coord=" << p << " no.=" << info.size()
 	        << " size,rank=" << size << "," << rank 
@@ -89,16 +135,34 @@ void oper_renorm_opB(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opB(qops1.cindex, qops2.cindex, ifkr);
+   
    // compute
+   const int maxthreads = omp_get_max_threads();
+   std::vector<std::vector<int>> indices(maxthreads);
+   std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
+   #pragma omp parallel for schedule(dynamic) 
    for(const auto pr : info){
       int iformula = pr.first;
       int index = pr.second;
       int iproc = distribute2(index, size);
       if(iproc == rank){
          auto opwf = oper_normxwf_opB(superblock,site,qops1,qops2,ifkr,iformula,index);
-         qops('B')[index] = oper_kernel_renorm(superblock,site,opwf);
+         auto tmp = oper_kernel_renorm(superblock,site,opwf);
+         
+         int omprank = omp_get_thread_num();
+         indices[omprank].push_back(index);
+         tops[omprank].push_back(tmp);
       }
    }
+
+   for(int i=0; i<maxthreads; i++){
+      for(int j=0; j<indices[i].size(); j++){
+         int index = indices[i][j];
+         qops('B')[index] = tops[i][j];
+      }
+   }
+   //exit(1);
+
    if(debug_oper_para){
       std::cout << " opB: coord=" << p << " no.=" << info.size()
 	        << " size,rank=" << size << "," << rank 
@@ -131,14 +195,32 @@ void oper_renorm_opP(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opP(krest, ifkr);
+  
    // compute
+   const int maxthreads = omp_get_max_threads();
+   std::vector<std::vector<int>> indices(maxthreads);
+   std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
+   #pragma omp parallel for schedule(dynamic) 
    for(const auto index : info){
       int iproc = distribute2(index, size);
       if(iproc == rank){
          auto opwf = oper_compxwf_opP(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
-         qops('P')[index] = oper_kernel_renorm(superblock,site,opwf);
+         auto tmp = oper_kernel_renorm(superblock,site,opwf);
+         
+         int omprank = omp_get_thread_num();
+         indices[omprank].push_back(index);
+         tops[omprank].push_back(tmp);
       }
    }
+
+   for(int i=0; i<maxthreads; i++){
+      for(int j=0; j<indices[i].size(); j++){
+         int index = indices[i][j];
+         qops('P')[index] = tops[i][j];
+      }
+   }
+   //exit(1);
+ 
    auto t1 = tools::get_time();
    if(debug_oper_para){
       std::cout << " opP: coord=" << p << " no.=" << info.size()
@@ -171,14 +253,32 @@ void oper_renorm_opQ(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opQ(krest, ifkr);
+   
    // compute
+   const int maxthreads = omp_get_max_threads();
+   std::vector<std::vector<int>> indices(maxthreads);
+   std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
+   #pragma omp parallel for schedule(dynamic) 
    for(const int index : info){
       int iproc = distribute2(index, size);
       if(iproc == rank){
          auto opwf = oper_compxwf_opQ(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
-         qops('Q')[index] = oper_kernel_renorm(superblock,site,opwf);
+         auto tmp = oper_kernel_renorm(superblock,site,opwf);
+         
+         int omprank = omp_get_thread_num();
+         indices[omprank].push_back(index);
+         tops[omprank].push_back(tmp);
       }
    }
+
+   for(int i=0; i<maxthreads; i++){
+      for(int j=0; j<indices[i].size(); j++){
+         int index = indices[i][j];
+         qops('Q')[index] = tops[i][j];
+      }
+   }
+   //exit(1);
+ 
    if(debug_oper_para){
       std::cout << " opQ: coord=" << p << " no.=" << info.size()
 	        << " size,rank=" << size << "," << rank 
@@ -211,11 +311,29 @@ void oper_renorm_opS(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opS(krest, ifkr);
+   
    // compute
+   const int maxthreads = omp_get_max_threads();
+   std::vector<std::vector<int>> indices(maxthreads);
+   std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
+   #pragma omp parallel for schedule(dynamic) 
    for(const int index : info){
       auto opwf = oper_compxwf_opS(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index,size,rank);
-      qops('S')[index] = oper_kernel_renorm(superblock,site,opwf);
+      auto tmp = oper_kernel_renorm(superblock,site,opwf);
+      
+      int omprank = omp_get_thread_num();
+      indices[omprank].push_back(index);
+      tops[omprank].push_back(tmp);
    }
+
+   for(int i=0; i<maxthreads; i++){
+      for(int j=0; j<indices[i].size(); j++){
+         int index = indices[i][j];
+         qops('S')[index] = tops[i][j];
+      }
+   }
+   //exit(1);
+
    auto t1 = tools::get_time();
    if(debug_oper_dict) tools::timing("ctns::oper_renorm_opS", t0, t1);
 }
