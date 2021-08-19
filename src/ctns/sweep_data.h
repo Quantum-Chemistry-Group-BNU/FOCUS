@@ -162,9 +162,7 @@ inline void sweep_data::summary(const int isweep){
    int mbond = std::distance(emean.begin(), pos);
    min_result[isweep] = opt_result[isweep][mbond];
    min_result[isweep].nmvp = nmvp;
-   std::cout << "minimal energies at ibond=" << mbond << " " 
-             << "TIMING for sweep: " << std::setprecision(2) << t_total[isweep] << " S" 
-	     << std::endl;
+   std::cout << "minimal energies at ibond=" << mbond << std::endl;
    const auto& eopt = min_result[isweep].eopt; 
    for(int i=0; i<nstates; i++){
       std::cout << " sweep energies:"
