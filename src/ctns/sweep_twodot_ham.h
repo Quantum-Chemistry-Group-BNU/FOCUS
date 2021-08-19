@@ -536,8 +536,8 @@ qtensor3<Tm> twodot_Hx_CS(const int iformula,
 	          	  const integral::two_body<Tm>& int2e,
 	          	  const integral::one_body<Tm>& int1e,
 	          	  const qtensor4<Tm>& wf,
-	          	  const int size,
-	          	  const int rank){
+	          	  const int& size,
+	          	  const int& rank){
    auto wf2 = wf.merge_lc1(); // wf2[lc1,c2,r]
    const bool dagger = true;
    qtensor3<Tm> qt3n, qt3h;
@@ -564,8 +564,8 @@ qtensor3<Tm> twodot_Hx_SC(const int iformula,
 	          	  const integral::two_body<Tm>& int2e,
 	          	  const integral::one_body<Tm>& int1e,
 	          	  const qtensor4<Tm>& wf,
-	          	  const int size,
-	          	  const int rank){
+	          	  const int& size,
+	          	  const int& rank){
    auto wf2 = wf.merge_lc1(); // wf2[lc1,c2,r]
    const bool dagger = true;
    qtensor3<Tm> qt3n, qt3h;
@@ -592,8 +592,8 @@ qtensor3<Tm> twodot_Hx_AP(const int iformula,
 	          	  const integral::two_body<Tm>& int2e,
 	          	  const integral::one_body<Tm>& int1e,
 	          	  const qtensor4<Tm>& wf,
-	          	  const int size,
-	          	  const int rank){
+	          	  const int& size,
+	          	  const int& rank){
    auto wf2 = wf.merge_lc1(); // wf2[lc1,c2,r]
    const bool dagger = true;
    const Tm wt = ifkr? wfacAP(index) : 1.0;
@@ -621,8 +621,8 @@ qtensor3<Tm> twodot_Hx_BQ(const int iformula,
 	          	  const integral::two_body<Tm>& int2e,
 	          	  const integral::one_body<Tm>& int1e,
 	          	  const qtensor4<Tm>& wf,
-	          	  const int size,
-	          	  const int rank){
+	          	  const int& size,
+	          	  const int& rank){
    auto wf2 = wf.merge_lc1(); // wf2[lc1,c2,r]
    const bool dagger = true;
    const Tm wt = ifkr? wfacBQ(index) : wfac(index);
@@ -650,8 +650,8 @@ qtensor3<Tm> twodot_Hx_PA(const int iformula,
 	          	  const integral::two_body<Tm>& int2e,
 	          	  const integral::one_body<Tm>& int1e,
 	          	  const qtensor4<Tm>& wf,
-	          	  const int size,
-	          	  const int rank){
+	          	  const int& size,
+	          	  const int& rank){
    auto wf2 = wf.merge_lc1(); // wf2[lc1,c2,r]
    const bool dagger = true;
    const Tm wt = ifkr? wfacAP(index) : 1.0;
@@ -679,8 +679,8 @@ qtensor3<Tm> twodot_Hx_QB(const int iformula,
 	          	  const integral::two_body<Tm>& int2e,
 	          	  const integral::one_body<Tm>& int1e,
 	          	  const qtensor4<Tm>& wf,
-	          	  const int size,
-	          	  const int rank){
+	          	  const int& size,
+	          	  const int& rank){
    auto wf2 = wf.merge_lc1(); // wf2[lc1,c2,r]
    const bool dagger = true;
    const Tm wt = ifkr? wfacBQ(index) : wfac(index);
@@ -706,8 +706,8 @@ qtensor3<Tm> twodot_Hx_local(const int& isym,
 	          	     const integral::two_body<Tm>& int2e,
 	          	     const integral::one_body<Tm>& int1e,
 			     const qtensor4<Tm>& wf,
-	          	     const int size,
-	          	     const int rank){
+	          	     const int& size,
+	          	     const int& rank){
    const Tm scale = ifkr? 0.5 : 1.0;
    auto wf1 = wf.merge_c2r(); // wf1[l,c1,c2r]
    auto wf2 = wf.merge_lc1(); // wf2[lc1,c2,r]
@@ -730,41 +730,35 @@ Hx_functors<Tm> twodot_Hx_functors(const int& isym,
 	                           const integral::two_body<Tm>& int2e,
 	                           const integral::one_body<Tm>& int1e,
 	                           const qtensor4<Tm>& wf,
-	                           const int size,
-	                           const int rank){
+	                           const int& size,
+	                           const int& rank){
    Hx_functors<Tm> Hx_funs;
    // Local terms:
-   Hx_functor<Tm> Hx;
+   Hx_functor<Tm> Hx("Hloc", 0, 0);
    Hx.opxwf = bind(&twodot_Hx_local<Tm>, std::cref(isym), std::cref(ifkr),
 		   std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops),
 		   std::cref(int2e), std::cref(int1e), std::cref(wf),
 		   std::cref(size), std::cref(rank));
-   auto tmp = Hx();
-   std::cout << "tmp.sym=" << tmp.sym << std::endl;
    Hx_funs.push_back(Hx); 
-
-/*
    // One-index terms:
    // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
    auto infoC1 = oper_combine_opC(lqops.cindex, c1qops.cindex);
    for(const auto& pr : infoC1){
       int iformula = pr.first;
       int index = pr.second;
-      Hx_functor<Tm> Hx;
+      Hx_functor<Tm> Hx("CS", iformula, index);
       Hx.opxwf = bind(&twodot_Hx_CS<Tm>, iformula, index, std::cref(isym), std::cref(ifkr),
            	      std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
            	      std::cref(int2e), std::cref(int1e), std::cref(wf),
                       std::cref(size), std::cref(rank));
       Hx_funs.push_back(Hx); 
    }
-*/
-/*
    // 4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
    auto infoC2 = oper_combine_opC(c2qops.cindex, rqops.cindex);
    for(const auto& pr : infoC2){
       int iformula = pr.first;
       int index = pr.second;
-      Hx_functor<Tm> Hx;
+      Hx_functor<Tm> Hx("SC", iformula, index);
       Hx.opxwf = bind(&twodot_Hx_SC<Tm>, iformula, index, std::cref(isym), std::cref(ifkr),
            	      std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
            	      std::cref(int2e), std::cref(int1e), std::cref(wf), 
@@ -780,14 +774,16 @@ Hx_functors<Tm> twodot_Hx_functors(const int& isym,
    auto binfo = ifNC? oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr) :
       		      oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr);
    auto afun = ifNC? &twodot_Hx_AP<Tm> : &twodot_Hx_PA<Tm>; 
-   auto bfun = ifNC? &twodot_Hx_BQ<Tm> : &twodot_Hx_QB<Tm>; 
+   auto bfun = ifNC? &twodot_Hx_BQ<Tm> : &twodot_Hx_QB<Tm>;
+   auto alabel = ifNC? "AP" : "PA";
+   auto blabel = ifNC? "BQ" : "QB"; 
    // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
    for(const auto pr : ainfo){
       int iformula = pr.first;
       int index = pr.second;
       int iproc = distribute2(index,size);
       if(iproc == rank){
-         Hx_functor<Tm> Hx;
+         Hx_functor<Tm> Hx(alabel, iformula, index);
          Hx.opxwf = bind(afun, iformula, index, std::cref(isym), std::cref(ifkr),
               	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
               	    std::cref(int2e), std::cref(int1e), std::cref(wf),
@@ -801,7 +797,7 @@ Hx_functors<Tm> twodot_Hx_functors(const int& isym,
       int index = pr.second;
       int iproc = distribute2(index,size);
       if(iproc == rank){
-         Hx_functor<Tm> Hx;
+         Hx_functor<Tm> Hx(blabel, iformula, index);
          Hx.opxwf = bind(bfun, iformula, index, std::cref(isym), std::cref(ifkr),
               	    std::ref(c1qops), std::ref(c2qops), std::ref(lqops), std::ref(rqops), 
               	    std::cref(int2e), std::cref(int1e), std::cref(wf),
@@ -809,7 +805,21 @@ Hx_functors<Tm> twodot_Hx_functors(const int& isym,
          Hx_funs.push_back(Hx);
       } // iproc
    }
-*/
+   // debug
+   if(rank == 0){
+      std::cout << "twodot_Hx_functors: size=" << Hx_funs.size() 
+                << " CS:" << infoC1.size()
+                << " SC:" << infoC2.size()
+                << " " << alabel << ":" << ainfo.size()
+                << " " << blabel << ":" << binfo.size()
+                << std::endl; 
+      const bool debug = false;
+      if(debug){
+         for(int i=0; i<Hx_funs.size(); i++){
+            std::cout << "i=" << i << Hx_funs[i] << std::endl;
+         } // i
+      }
+   }
    return Hx_funs;
 }
 
