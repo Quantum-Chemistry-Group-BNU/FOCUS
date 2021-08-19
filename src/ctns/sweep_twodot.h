@@ -239,7 +239,8 @@ void sweep_twodot(const input::schedule& schd,
 	                             int2e, int1e, wf, size, rank);
    std::cout << "Hx_funs.size()=" << Hx_funs.size() << std::endl; 
    auto Hx = Hx_funs[0];
-   Hx();
+   auto tmp = Hx();
+   std::cout << "TMP.SYM=" << tmp.sym << std::endl;
    exit(1);
 
    using std::placeholders::_1;
