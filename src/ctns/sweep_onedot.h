@@ -1,19 +1,16 @@
 #ifndef SWEEP_ONEDOT_H
 #define SWEEP_ONEDOT_H
 
-#include <functional> // for std::function
 #include "../core/tools.h"
 #include "../core/linalg.h"
 #include "qtensor/qtensor.h"
+#include "sweep_ham.h"
 #include "sweep_guess.h"
 #include "sweep_onedot_ham.h"
 #include "sweep_onedot_renorm.h"
 #include "ctns_sys.h"
 
 namespace ctns{
-
-template <typename Tm>
-using HVec_type = std::function<void(Tm*, const Tm*)>;
 
 template <typename Km>
 void onedot_localCI(comb<Km>& icomb,
