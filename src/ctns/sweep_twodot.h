@@ -9,6 +9,7 @@
 #include "sweep_twodot_ham.h"
 #include "sweep_twodot_renorm.h"
 #include "ctns_sys.h"
+#include "oper_timer.h"
 
 namespace ctns{
 
@@ -240,11 +241,16 @@ void sweep_twodot(const input::schedule& schd,
 		    std::cref(ifkr), std::cref(ecore), 
 		    std::cref(size), std::cref(rank));
 
+   oper_timer.clear();
+
    twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, dbond, wf);
    timing.tc = tools::get_time();
-   if(rank == 0) sweeps.print_eopt(isweep, ibond);
+   if(rank == 0){ 
+      sweeps.print_eopt(isweep, ibond);
+      oper_timer.analysis();
+   }
 
    // 3. decimation & renormalize operators
    twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 

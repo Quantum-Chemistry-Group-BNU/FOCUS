@@ -5,6 +5,7 @@
 #include "oper_combine.h"
 #include "oper_normxwf.h"
 #include "oper_compxwf.h"
+#include "oper_timer.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -401,6 +402,8 @@ void oper_renorm_opAll(const std::string& superblock,
       auto pc = node.center;
       krest = icomb.topo.get_node(pc).rsupport;
    }
+
+   oper_timer.clear();
    
    // combine cindex first 
    qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
@@ -441,6 +444,9 @@ void oper_renorm_opAll(const std::string& superblock,
    if(rank == 0){ 
       auto dt = tools::get_duration(t1-t0);
       std::cout << " TIMING=" << dt << " S" << std::endl;
+   
+      oper_timer.analysis();
+
    }
 }
 

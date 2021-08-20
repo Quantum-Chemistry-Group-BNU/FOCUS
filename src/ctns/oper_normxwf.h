@@ -2,6 +2,7 @@
 #define OPER_NORMXWF_H
 
 #include "oper_kernel.h"
+#include "oper_timer.h"
 
 namespace ctns{
 
@@ -14,6 +15,9 @@ qtensor3<Tm> oper_normxwf_opC(const std::string& superblock,
 			      const int iformula,
 		              const int index,
 			      const bool ifdagger=false){
+   oper_timer.nC += 1;
+   auto t0 = tools::get_time();
+    
    qtensor3<Tm> opwf;
    if(iformula == 1){
       const auto& op1 = qops1('C')[index];
@@ -22,6 +26,9 @@ qtensor3<Tm> oper_normxwf_opC(const std::string& superblock,
       const auto& op2 = qops2('C')[index];
       opwf = oper_kernel_IOwf(superblock,site,op2,1,ifdagger);
    } // iformula
+
+   auto t1 = tools::get_time();
+   oper_timer.tC += tools::get_duration(t1-t0);
    return opwf; 
 }
 
@@ -35,6 +42,9 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
 			      const int iformula,
 		              const int index,
 			      const bool ifdagger=false){
+   oper_timer.nA += 1;
+   auto t0 = tools::get_time();
+
    qtensor3<Tm> opwf;
    if(iformula == 1){
       const auto& op1 = qops1('A')[index];
@@ -63,6 +73,9 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
       opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
       if(ifdagger) opwf = -opwf;
    } // iformula
+
+   auto t1 = tools::get_time();
+   oper_timer.tA += tools::get_duration(t1-t0);
    return opwf;
 }
 
@@ -76,6 +89,9 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
 			      const int iformula,
 		              const int index,
 			      const bool ifdagger=false){
+   oper_timer.nB += 1;
+   auto t0 = tools::get_time();
+
    qtensor3<Tm> opwf;
    if(iformula == 1){
       const auto& op1 = qops1('B')[index];
@@ -104,6 +120,9 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
       opwf = oper_kernel_OOwf(superblock,site,op1,op2,1,ifdagger);
       if(ifdagger) opwf = -opwf;
    } // iformula
+
+   auto t1 = tools::get_time();
+   oper_timer.tB += tools::get_duration(t1-t0);
    return opwf;
 }
 
