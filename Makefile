@@ -13,14 +13,14 @@ ifeq ($(machine), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
    #BOOST = /home/lx/software/boost/install_1_59_0
    BOOST = /home/lx/software/boost/install_1_75_0
-   LFLAGS = -L${BOOST}/lib -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_filesystem-mt-x64 
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_filesystem-mt-x64 
    ifeq ($(USE_MPI) ,yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    BOOST = /usr/local
-   LFLAGS = -L${BOOST}/lib -lboost_serialization -lboost_system -lboost_filesystem 
+   LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system -lboost_filesystem 
    ifeq ($(USE_MPI) ,yes)   
       LFLAGS += -lboost_mpi
    endif

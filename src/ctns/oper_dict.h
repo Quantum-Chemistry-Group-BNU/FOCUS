@@ -137,7 +137,7 @@ public:
    void print(const std::string name, const int level=0) const{
       std::cout << " " << name << " : size[cindex]=" << cindex.size(); 
       // count no. of operators in each class
-      std::string oplist = "HCSABPQ";
+      std::string oplist = "CABHSPQ";
       std::map<char,int> exist;
       std::string s = " nops=";
       for(const auto& key : oplist){

@@ -3,8 +3,8 @@
 
 #include "oper_dict.h" 
 #include "oper_combine.h"
+#include "oper_timer.h"
 
-#include <functional> // for std::function
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -832,6 +832,7 @@ void twodot_Hx(Tm* y,
 	       const double ecore,
 	       const int size,
 	       const int rank){
+   auto t0 = tools::get_time();
    const int maxthreads = omp_get_max_threads();
    if(rank == 0 && debug_twodot_ham){ 
       std::cout << "ctns::twodot_Hx size=" << size 
@@ -851,17 +852,23 @@ void twodot_Hx(Tm* y,
    for(int i=0; i<maxthreads; i++){
       Hwf1_lst[i].init(wf1.sym, wf1.qmid, wf1.qrow, wf1.qcol, wf1.dir);
    }
+   auto t1 = tools::get_time();
    // compute
    #pragma omp parallel for schedule(dynamic)
    for(int i=0; i<Hx_funs.size(); i++){
       int omprank = omp_get_thread_num();
       Hwf1_lst[omprank] += Hx_funs[i]();
    }
+   auto t2 = tools::get_time();
    // reduction & save
    for(int i=0; i<maxthreads; i++){
       Hwf += Hwf1_lst[i].split_c2r(wf.qver,wf.qcol);
    }
    Hwf.to_array(y);
+   auto t3 = tools::get_time();
+   oper_timer.tHxInit += tools::get_duration(t1-t0);
+   oper_timer.tHxCalc += tools::get_duration(t2-t1);
+   oper_timer.tHxFinl += tools::get_duration(t3-t2);
 }
 
 } // ctns

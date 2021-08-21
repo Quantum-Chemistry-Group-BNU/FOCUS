@@ -2,6 +2,7 @@
 #define OPER_KERNEL_H
 
 #include "qtensor/qtensor.h"
+#include "oper_timer.h"
 
 namespace ctns{
 
@@ -87,6 +88,9 @@ template <typename Tm>
 qtensor2<Tm> oper_kernel_renorm(const std::string& superblock,
 			        const qtensor3<Tm>& bsite,
 				const qtensor3<Tm>& ksite){
+   oper_timer.nR += 1;
+   auto t0 = tools::get_time();
+
    qtensor2<Tm> qt2;
    if(superblock == "lc"){
       qt2 = contract_qt3_qt3_lc(bsite,ksite);
@@ -98,6 +102,9 @@ qtensor2<Tm> oper_kernel_renorm(const std::string& superblock,
       std::string msg = "error: no such case in oper_kernel_renorm!";
       tools::exit(msg+" superblock="+superblock);
    }
+   
+   auto t1 = tools::get_time();
+   oper_timer.tR += tools::get_duration(t1-t0);
    return qt2;
 }
 

@@ -190,6 +190,7 @@ void sweep_twodot(const input::schedule& schd,
       oper_load_qops(icomb, p0, schd.scratch, "l", lqops );
       oper_load_qops(icomb, p0, schd.scratch, "r", rqops );  
    }
+/*
    if(schd.ctns.verbose > 1){
       for(int iproc=0; iproc<size; iproc++){
           if(rank == iproc){
@@ -204,6 +205,15 @@ void sweep_twodot(const input::schedule& schd,
 	  icomb.world.barrier();
 #endif
       } // iproc
+   }
+*/
+   if(rank == 0){
+      std::cout << "qops info: rank=" << rank << std::endl;
+      const int level = 0;
+      c1qops.print("c1qops", level);
+      c2qops.print("c2qops", level);
+      lqops.print(  "lqops", level);
+      rqops.print(  "rqops", level);
    }
    timing.ta = tools::get_time();
 

@@ -430,7 +430,7 @@ void oper_renorm_opAll(const std::string& superblock,
    // H
    oper_renorm_opH(superblock, icomb, p, site, qops1, qops2, qops, isym, ifkr, int2e, int1e);
    if(ifcheck) oper_check_rbasis(icomb, icomb, p, qops, 'H', int2e, int1e);
-  
+
    // consistency check for Hamiltonian
    const auto& H = qops('H').at(0);
    auto diffH = (H-H.H()).normF();
@@ -444,9 +444,10 @@ void oper_renorm_opAll(const std::string& superblock,
    if(rank == 0){ 
       auto dt = tools::get_duration(t1-t0);
       std::cout << " TIMING=" << dt << " S" << std::endl;
-   
+      qops1.print("qops1");
+      qops2.print("qops2");
+      qops.print("qops");
       oper_timer.analysis();
-
    }
 }
 
