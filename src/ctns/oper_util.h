@@ -196,7 +196,7 @@ void oper_env_right(const comb<Km>& icomb,
          oper_save(fname, qops);
          auto te = tools::get_time();
 	 t_save += tools::get_duration(te-td);
-         if(rank == 0) qops.print(fname);
+         //if(rank == 0) qops.print(fname);
       }
    } // idx
    auto t1 = tools::get_time();

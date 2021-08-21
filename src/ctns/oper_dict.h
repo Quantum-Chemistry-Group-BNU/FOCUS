@@ -9,7 +9,7 @@
 namespace ctns{
 
 // debug options
-const bool debug_oper_dict = false;
+const bool debug_oper_dict = true; //false;
 extern const bool debug_oper_dict;
 
 const bool debug_oper_io = false;

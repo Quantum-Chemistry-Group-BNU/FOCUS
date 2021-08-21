@@ -155,7 +155,6 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
 	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 		              const bool ifdagger=false){
-   oper_timer.nP += 1;
    auto t0 = tools::get_time();
     
    auto pq = oper_unpack(index);
@@ -212,7 +211,11 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
 		  sym_op,oij,0,0,ifdagger); // as1*ar2
 
    auto t1 = tools::get_time();
-   oper_timer.tP += tools::get_duration(t1-t0);
+   #pragma omp critical
+   {
+      oper_timer.nP += 1;
+      oper_timer.tP += tools::get_duration(t1-t0);
+   }
    return opwf;
 }
 
@@ -228,7 +231,6 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
 	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 			      const bool ifdagger=false){
-   oper_timer.nQ += 1;
    auto t0 = tools::get_time();
 
    auto ps = oper_unpack(index);
@@ -295,7 +297,11 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
 		  sym_op,o2ij,0,1,ifdagger); // aq1*ar2^+
 
    auto t1 = tools::get_time();
-   oper_timer.tQ += tools::get_duration(t1-t0);
+   #pragma omp critical
+   {
+      oper_timer.nQ += 1;
+      oper_timer.tQ += tools::get_duration(t1-t0);
+   }
    return opwf;
 }
 
@@ -313,7 +319,6 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 			      const int size,
 			      const int rank,
 			      const bool ifdagger=false){
-   oper_timer.nS += 1;
    auto t0 = tools::get_time();
 
    int p = index, kp = p/2, spin_p = p%2;
@@ -421,7 +426,11 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
    } // ifkr
 
    auto t1 = tools::get_time();
-   oper_timer.tS += tools::get_duration(t1-t0);
+   #pragma omp critical
+   {
+      oper_timer.nS += 1;
+      oper_timer.tS += tools::get_duration(t1-t0);
+   }
    return opwf;
 }
 
@@ -437,7 +446,6 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
 	                      const integral::one_body<Tm>& int1e,
 			      const int size,
 			      const int rank){
-   oper_timer.nH += 1;
    auto t0 = tools::get_time();
 
    const bool dagger = true;
@@ -571,7 +579,11 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
    } // ifkr
 
    auto t1 = tools::get_time();
-   oper_timer.tH += tools::get_duration(t1-t0);
+   #pragma omp critical
+   {
+      oper_timer.nH += 1;
+      oper_timer.tH += tools::get_duration(t1-t0);
+   }
    return opwf;
 }
 

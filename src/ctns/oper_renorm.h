@@ -444,8 +444,8 @@ void oper_renorm_opAll(const std::string& superblock,
    if(rank == 0){ 
       auto dt = tools::get_duration(t1-t0);
       std::cout << " TIMING=" << dt << " S" << std::endl;
-      qops1.print("qops1");
-      qops2.print("qops2");
+      //qops1.print("qops1");
+      //qops2.print("qops2");
       qops.print("qops");
       oper_timer.analysis();
    }

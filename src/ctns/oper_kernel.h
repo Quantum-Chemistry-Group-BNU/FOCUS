@@ -88,7 +88,6 @@ template <typename Tm>
 qtensor2<Tm> oper_kernel_renorm(const std::string& superblock,
 			        const qtensor3<Tm>& bsite,
 				const qtensor3<Tm>& ksite){
-   oper_timer.nR += 1;
    auto t0 = tools::get_time();
 
    qtensor2<Tm> qt2;
@@ -104,7 +103,11 @@ qtensor2<Tm> oper_kernel_renorm(const std::string& superblock,
    }
    
    auto t1 = tools::get_time();
-   oper_timer.tR += tools::get_duration(t1-t0);
+   #pragma omp critical
+   {
+      oper_timer.nR += 1;
+      oper_timer.tR += tools::get_duration(t1-t0);
+   }
    return qt2;
 }
 

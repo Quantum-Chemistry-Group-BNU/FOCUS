@@ -15,7 +15,6 @@ qtensor3<Tm> oper_normxwf_opC(const std::string& superblock,
 			      const int iformula,
 		              const int index,
 			      const bool ifdagger=false){
-   oper_timer.nC += 1;
    auto t0 = tools::get_time();
     
    qtensor3<Tm> opwf;
@@ -28,7 +27,11 @@ qtensor3<Tm> oper_normxwf_opC(const std::string& superblock,
    } // iformula
 
    auto t1 = tools::get_time();
-   oper_timer.tC += tools::get_duration(t1-t0);
+   #pragma omp critical
+   { 
+      oper_timer.nC += 1;
+      oper_timer.tC += tools::get_duration(t1-t0);
+   }
    return opwf; 
 }
 
@@ -42,7 +45,6 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
 			      const int iformula,
 		              const int index,
 			      const bool ifdagger=false){
-   oper_timer.nA += 1;
    auto t0 = tools::get_time();
 
    qtensor3<Tm> opwf;
@@ -75,7 +77,11 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
    } // iformula
 
    auto t1 = tools::get_time();
-   oper_timer.tA += tools::get_duration(t1-t0);
+   #pragma omp critical
+   { 
+      oper_timer.nA += 1;
+      oper_timer.tA += tools::get_duration(t1-t0);
+   }
    return opwf;
 }
 
@@ -89,7 +95,6 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
 			      const int iformula,
 		              const int index,
 			      const bool ifdagger=false){
-   oper_timer.nB += 1;
    auto t0 = tools::get_time();
 
    qtensor3<Tm> opwf;
@@ -122,7 +127,11 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
    } // iformula
 
    auto t1 = tools::get_time();
-   oper_timer.tB += tools::get_duration(t1-t0);
+   #pragma omp critical
+   {
+      oper_timer.nB += 1;
+      oper_timer.tB += tools::get_duration(t1-t0);
+   }
    return opwf;
 }
 
