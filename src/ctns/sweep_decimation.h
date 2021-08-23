@@ -18,6 +18,9 @@ extern const double thresh_sig2accum;
 const bool debug_decimation = false;
 extern const bool debug_decimation;
 
+const bool debug_sig2 = false;
+extern const bool debug_sig2;
+
 template <typename Tm>
 void decimation_row_nkr(const qbond& qs1,
 		        const qbond& qs2,
@@ -27,7 +30,6 @@ void decimation_row_nkr(const qbond& qs1,
 		        qtensor2<Tm>& rot,
 		        double& dwt,
 		        int& deff){
-   if(debug_decimation) std::cout << "ctns::decimation_row_nkr dcut=" << dcut << std::endl;
    auto qprod = qmerge(qs1, qs2);
    auto qrow = qprod.first;
    auto dpt = qprod.second;
@@ -38,7 +40,12 @@ void decimation_row_nkr(const qbond& qs1,
    // 1. compute reduced basis
    const int nqr = qrow.size();
    const int maxthreads = omp_get_max_threads();
-   std::cout << "maxthreads=" << maxthreads << " nqr=" << nqr << std::endl;
+   if(debug_decimation){
+      std::cout << "ctns::decimation_row_nkr dcut=" << dcut 
+	        << " nqr=" << nqr 
+   		<< " maxthreads=" << maxthreads
+		<< std::endl;
+   }
    std::vector<std::vector<int>> tbr(maxthreads);
    std::vector<std::vector<std::vector<double>>> tsigs2(maxthreads);
    std::vector<std::vector<linalg::matrix<Tm>>> tU(maxthreads); 
@@ -129,7 +136,7 @@ void decimation_row_nkr(const qbond& qs1,
       deff += 1;
       sum += sig2all[idx];
       SvN += -sig2all[idx]*std::log2(sig2all[idx]);
-      if(sum <= thresh_sig2accum){
+      if(debug_sig2 && sum <= thresh_sig2accum){
 	 if(i == 0) std::cout << "important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
 	 std::cout << " i=" << i << " br=" << br << " qr=" << qrow.get_sym(br) << "[" << kept_dim[br]-1 << "]"
                    << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
@@ -151,9 +158,11 @@ void decimation_row_nkr(const qbond& qs1,
       const auto& wts = kept_wts[br];
       br_kept.push_back( br );
       dims.push_back( std::make_pair(qr,dim) );
-      sum += wts;     
-      std::cout << " i=" << i << " br=" << br << " qr=" << qr << " dim=" 
-		<< dim << " wts=" << wts << " accum=" << sum << std::endl;
+      sum += wts;    
+      if(debug_sig2){ 
+         std::cout << " i=" << i << " br=" << br << " qr=" << qr << " dim=" 
+                   << dim << " wts=" << wts << " accum=" << sum << std::endl;
+      }
    }
    qbond qkept(dims);
    qtensor2<Tm> qt2(qsym(), qrow, qkept);

@@ -26,6 +26,7 @@ void oper_renorm_opC(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opC(qops1.cindex, qops2.cindex);
+   auto ta = tools::get_time();
 
    // compute
    const int maxthreads = omp_get_max_threads();
@@ -47,6 +48,7 @@ void oper_renorm_opC(const std::string& superblock,
                 << std::endl; 
 */
    }
+   auto tb = tools::get_time();
 
    for(int i=0; i<maxthreads; i++){
       for(int j=0; j<indices[i].size(); j++){
@@ -54,10 +56,18 @@ void oper_renorm_opC(const std::string& superblock,
          qops('C')[index] = tops[i][j];
       }
    }
+   auto tc = tools::get_time();
    //exit(1);
 
    auto t1 = tools::get_time();
    if(debug_oper_dict) tools::timing("ctns::oper_renorm_opC", t0, t1);
+
+   std::cout << "opC: n=" << info.size() 
+             << " tot=" << tools::get_duration(t1-t0) << " S"
+             << " info=" << tools::get_duration(ta-t0) << " S"
+             << " calc=" << tools::get_duration(tb-ta) << " S"
+             << " save=" << tools::get_duration(tc-tb) << " S"
+             << std::endl; 
 }
 
 // kernel for computing renormalized Apq=ap^+aq^+
@@ -79,6 +89,7 @@ void oper_renorm_opA(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opA(qops1.cindex, qops2.cindex, ifkr);
+   auto ta = tools::get_time();
 
    // compute
    const int maxthreads = omp_get_max_threads();
@@ -99,6 +110,7 @@ void oper_renorm_opA(const std::string& superblock,
          tops[omprank].push_back(tmp);
       }
    }
+   auto tb = tools::get_time();
 
    for(int i=0; i<maxthreads; i++){
       for(int j=0; j<indices[i].size(); j++){
@@ -106,6 +118,7 @@ void oper_renorm_opA(const std::string& superblock,
          qops('A')[index] = tops[i][j];
       }
    }
+   auto tc = tools::get_time();
    //exit(1);
 
    if(debug_oper_para){
@@ -115,6 +128,13 @@ void oper_renorm_opA(const std::string& superblock,
    }
    auto t1 = tools::get_time();
    if(debug_oper_dict) tools::timing("ctns::oper_renorm_opA", t0, t1);
+
+   std::cout << "opA: n=" << info.size() 
+             << " tot=" << tools::get_duration(t1-t0) << " S"
+             << " info=" << tools::get_duration(ta-t0) << " S"
+             << " calc=" << tools::get_duration(tb-ta) << " S"
+             << " save=" << tools::get_duration(tc-tb) << " S"
+             << std::endl; 
 }
 
 // kernel for computing renormalized ap^+aq
@@ -136,6 +156,7 @@ void oper_renorm_opB(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opB(qops1.cindex, qops2.cindex, ifkr);
+   auto ta = tools::get_time();
    
    // compute
    const int maxthreads = omp_get_max_threads();
@@ -155,6 +176,7 @@ void oper_renorm_opB(const std::string& superblock,
          tops[omprank].push_back(tmp);
       }
    }
+   auto tb = tools::get_time();
 
    for(int i=0; i<maxthreads; i++){
       for(int j=0; j<indices[i].size(); j++){
@@ -162,6 +184,7 @@ void oper_renorm_opB(const std::string& superblock,
          qops('B')[index] = tops[i][j];
       }
    }
+   auto tc = tools::get_time();
    //exit(1);
 
    if(debug_oper_para){
@@ -171,6 +194,13 @@ void oper_renorm_opB(const std::string& superblock,
    }
    auto t1 = tools::get_time();
    if(debug_oper_dict) tools::timing("ctns::oper_renorm_opB", t0, t1);
+   
+   std::cout << "opB: n=" << info.size() 
+             << " tot=" << tools::get_duration(t1-t0) << " S"
+             << " info=" << tools::get_duration(ta-t0) << " S"
+             << " calc=" << tools::get_duration(tb-ta) << " S"
+             << " save=" << tools::get_duration(tc-tb) << " S"
+             << std::endl; 
 }
 
 // Ppq = <pq||sr> aras [r>s] (p<q)
@@ -196,6 +226,7 @@ void oper_renorm_opP(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opP(krest, ifkr);
+   auto ta = tools::get_time();
   
    // compute
    const int maxthreads = omp_get_max_threads();
@@ -213,6 +244,7 @@ void oper_renorm_opP(const std::string& superblock,
          tops[omprank].push_back(tmp);
       }
    }
+   auto tb = tools::get_time();
 
    for(int i=0; i<maxthreads; i++){
       for(int j=0; j<indices[i].size(); j++){
@@ -220,6 +252,7 @@ void oper_renorm_opP(const std::string& superblock,
          qops('P')[index] = tops[i][j];
       }
    }
+   auto tc = tools::get_time();
    //exit(1);
  
    auto t1 = tools::get_time();
@@ -229,6 +262,13 @@ void oper_renorm_opP(const std::string& superblock,
 		<< " no.=" << qops('P').size() << std::endl;
    }
    if(debug_oper_dict) tools::timing("ctns::oper_renorm_opP", t0, t1);
+   
+   std::cout << "opP: n=" << info.size() 
+             << " tot=" << tools::get_duration(t1-t0) << " S"
+             << " info=" << tools::get_duration(ta-t0) << " S"
+             << " calc=" << tools::get_duration(tb-ta) << " S"
+             << " save=" << tools::get_duration(tc-tb) << " S"
+             << std::endl; 
 }
 
 // Qps = <pq||sr> aq^+ar
@@ -254,6 +294,7 @@ void oper_renorm_opQ(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opQ(krest, ifkr);
+   auto ta = tools::get_time();
    
    // compute
    const int maxthreads = omp_get_max_threads();
@@ -271,6 +312,7 @@ void oper_renorm_opQ(const std::string& superblock,
          tops[omprank].push_back(tmp);
       }
    }
+   auto tb = tools::get_time();
 
    for(int i=0; i<maxthreads; i++){
       for(int j=0; j<indices[i].size(); j++){
@@ -278,6 +320,7 @@ void oper_renorm_opQ(const std::string& superblock,
          qops('Q')[index] = tops[i][j];
       }
    }
+   auto tc = tools::get_time();
    //exit(1);
  
    if(debug_oper_para){
@@ -287,6 +330,13 @@ void oper_renorm_opQ(const std::string& superblock,
    }
    auto t1 = tools::get_time();
    if(debug_oper_dict) tools::timing("ctns::oper_renorm_opQ", t0, t1);
+   
+   std::cout << "opQ: n=" << info.size() 
+             << " tot=" << tools::get_duration(t1-t0) << " S"
+             << " info=" << tools::get_duration(ta-t0) << " S"
+             << " calc=" << tools::get_duration(tb-ta) << " S"
+             << " save=" << tools::get_duration(tc-tb) << " S"
+             << std::endl; 
 }
 
 // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
@@ -312,6 +362,7 @@ void oper_renorm_opS(const std::string& superblock,
    auto t0 = tools::get_time();
    // preprocess
    auto info = oper_combine_opS(krest, ifkr);
+   auto ta = tools::get_time();
    
    // compute
    const int maxthreads = omp_get_max_threads();
@@ -326,6 +377,7 @@ void oper_renorm_opS(const std::string& superblock,
       indices[omprank].push_back(index);
       tops[omprank].push_back(tmp);
    }
+   auto tb = tools::get_time();
 
    for(int i=0; i<maxthreads; i++){
       for(int j=0; j<indices[i].size(); j++){
@@ -333,10 +385,18 @@ void oper_renorm_opS(const std::string& superblock,
          qops('S')[index] = tops[i][j];
       }
    }
+   auto tc = tools::get_time();
    //exit(1);
 
    auto t1 = tools::get_time();
    if(debug_oper_dict) tools::timing("ctns::oper_renorm_opS", t0, t1);
+   
+   std::cout << "opS: n=" << info.size() 
+             << " tot=" << tools::get_duration(t1-t0) << " S"
+             << " info=" << tools::get_duration(ta-t0) << " S"
+             << " calc=" << tools::get_duration(tb-ta) << " S"
+             << " save=" << tools::get_duration(tc-tb) << " S"
+             << std::endl; 
 }
 
 template <typename Km, typename Tm>
