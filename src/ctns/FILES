@@ -140,7 +140,33 @@ Parallelization
 
 Low-level data structure
 -------------------------
+ qtensor2 - operator/density matrix
+ qtensor3 - onedot wf
+ qtensor4 - twodot wf
 
 Tensor operations
 -------------------------
 
+realization of rZ2 and cZ2?
+
+ 1. allocate temporary work space!
+ 2. in place operation:
+    opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1); 
+
+ sweep_twodot_ham.h:
+    // Apq*Ppq
+    qt3n = oper_compxwf_opP("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index);
+    qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid);
+    auto Hwf1 = wt*oper_normxwf_opA("lc",qt3n,lqops,c1qops,ifkr,iformula,index);
+
+ oper_normxwf.h:
+ oper_compxwf.h:
+    qtensor3<Tm> opwf(site.sym, site.qmid, site.qrow, site.qcol, site.dir); -> working space
+    opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1); -> inplace
+    opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
+
+ oper_kernel.h:
+    oper_kernel_OIwf
+    oper_kernel_IOwf
+    oper_kernel_OOwf
+ 
