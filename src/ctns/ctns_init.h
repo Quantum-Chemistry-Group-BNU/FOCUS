@@ -48,7 +48,6 @@ void init_rbases(comb<Km>& icomb,
 		const double thresh_proj,
 		const double rdm_vs_svd){
    using Tm = typename Km::dtype;
-   const bool debug_init = true;
    std::cout << "\nctns::init_rbases" << std::scientific << std::setprecision(2) 
 	     << " thresh_proj=" << thresh_proj << " rdm_vs_svd=" << rdm_vs_svd
 	     << std::endl;
@@ -121,7 +120,6 @@ void init_rbases(comb<Km>& icomb,
 template <typename Km>
 void init_rsites(comb<Km>& icomb){
    using Tm = typename Km::dtype;
-   const bool debug_init = true;
    std::cout << "\nctns::init_rsites Km=" << qkind::get_name<Km>() << std::endl;
    auto t0 = tools::get_time();
    
@@ -238,15 +236,14 @@ void init_rsites(comb<Km>& icomb){
    tools::timing("ctns::init_rsites", t0, t1);
 }
 
-/*
+
 // compute wave function at the start for right canonical form
 template <typename Km>
 void init_rwfuns(comb<Km>& icomb,
 		const fock::onspace& space,
 		const std::vector<std::vector<typename Km::dtype>>& vs){
    using Tm = typename Km::dtype;
-   const bool debug_init = true;
-   std::cout << "\nctns::init_rwfuns" << std::endl;
+   std::cout << "\nctns::init_rwfuns Km=" << qkind::get_name<Km>() << std::endl;
    auto t0 = tools::get_time();
    
    // determine symmetry of rwfuns
@@ -335,7 +332,7 @@ void init_rwfuns(comb<Km>& icomb,
    auto t1 = tools::get_time();
    tools::timing("ctns::init_rwfuns", t0, t1);
 }
-*/
+
 
 } // ctns
 

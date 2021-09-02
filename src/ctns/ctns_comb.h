@@ -38,7 +38,7 @@ class comb{
 /*
       // helpers
       int get_nphysical() const{ return topo.nphysical; }
-      int get_nstates() const{
+      int get_nroots() const{
 	 assert(rwfuns.rows() == 1); // currently, only allow one symmetry sector
 	 return rwfuns.qrow.get_dim(0);
       }
