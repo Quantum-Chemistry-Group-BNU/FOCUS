@@ -18,7 +18,7 @@ maxiter 2
 $end
 
 $ctns
-kind rNSz
+qkind rNSz
 nroots 2
 maxdets 500 #8 #500 #000
 topology_file topology/topo4

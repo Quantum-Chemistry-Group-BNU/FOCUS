@@ -577,7 +577,7 @@ template <typename Tm>
 void ci_truncate(fock::onspace& space,
 		 std::vector<std::vector<Tm>>& vs,
 		 const int maxdets,
-		 const bool ifortho=false){
+		 const bool ifortho=true){
    const bool debug = true;
    std::cout << "\nfci::ci_truncate maxdets=" << maxdets 
 	     << " ifortho=" << ifortho << std::endl;

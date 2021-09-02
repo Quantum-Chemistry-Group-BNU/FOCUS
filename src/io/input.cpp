@@ -168,9 +168,9 @@ void params_ctns::read(ifstream& istrm){
 	 continue; // skip empty and comments    
       }else if(line.substr(0,4)=="$end"){ 
 	 break;
-      }else if(line.substr(0,4)=="kind"){
-         istringstream is(line.substr(4));
-	 is >> kind;
+      }else if(line.substr(0,5)=="qkind"){
+         istringstream is(line.substr(5));
+	 is >> qkind;
       }else if(line.substr(0,4)=="task"){
          istringstream is(line.substr(4));
 	 is >> task;
@@ -250,7 +250,7 @@ void params_ctns::read(ifstream& istrm){
 
 void params_ctns::print() const{
    cout << "===== params_ctns::print =====" << endl;
-   cout << "kind = " << kind << endl;
+   cout << "qkind = " << qkind << endl;
    cout << "task = " << task << endl;
    cout << "topology_file = " << topology_file << endl;
    cout << "nroots = " << nroots << endl;

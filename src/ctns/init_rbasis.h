@@ -1,5 +1,5 @@
-#ifndef CTNS_RBASIS_H
-#define CTNS_RBASIS_H
+#ifndef INIT_RBASIS_H
+#define INIT_RBASIS_H
 
 #include <string>
 #include <vector>
@@ -14,31 +14,27 @@ namespace ctns{
 template <typename Tm>
 struct renorm_sector{
    public:
-      void print(const std::string name, const int level=0) const;      
+      void print(const std::string name, const int level=0) const{
+         std::cout << "renorm_sector: " << name << " qsym=" << sym 
+                   << " shape=" << coeff.rows() << "," << coeff.cols() 
+		   << std::endl; 
+         if(level >= 1){
+            for(int i=0; i<space.size(); i++){
+               std::cout << " idx=" << i << " state=" << space[i] << std::endl;
+            }
+            if(level >= 2) coeff.print("coeff");
+         }
+      } 
    public:
       qsym sym;
       fock::onspace space;
       linalg::matrix<Tm> coeff;
 };
-
-template <typename Tm>
-void renorm_sector<Tm>::print(const std::string name, const int level) const
-{
-   std::cout << "renorm_sector: " << name << " qsym=" << sym 
-             << " shape=" << coeff.rows() << "," << coeff.cols() << std::endl; 
-   if(level >= 1){
-      for(int i=0; i<space.size(); i++){
-         std::cout << " idx=" << i << " state=" << space[i] << std::endl;
-      }
-      if(level >= 2) coeff.print("coeff");
-   }
-}
-
 // renorm_basis: just like atomic basis (vector of symmetry sectors)
 template <typename Tm>
 using renorm_basis = std::vector<renorm_sector<Tm>>;
 
-// rows,cols of rbasis
+// count rows,cols of rbasis
 template <typename Tm>
 std::pair<int,int> get_shape(const renorm_basis<Tm>& rbasis){
    int rows = 0, cols = 0;

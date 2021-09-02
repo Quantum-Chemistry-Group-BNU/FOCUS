@@ -3,7 +3,6 @@
 
 #include "../../../extlibs/zquatev/zquatev.h"
 #include "ctns_qsym.h"
-#include "kramers_basis.h"
 
 namespace kramers{
 
@@ -124,71 +123,6 @@ inline void zquatev(const linalg::matrix<std::complex<double>>& A,
    int info = ts::zquatev(n2, U.data(), nld2, e.data());
    if(order == 1){ std::transform(e.begin(),e.end(),e.begin(),[](const double& x){ return -x; }); }
    if(info) tools::exit("error: zquatev failed!");
-}
-
-// A(l,r) = B(bar{l},bar{r})^* given parity of qr and qc
-template <typename Tm>
-linalg::matrix<Tm> time_reversal(const linalg::matrix<Tm>& blk1,
-		                 const int pr,  
-				 const int pc){
-   int dr = blk1.rows();
-   int dc = blk1.cols();
-   linalg::matrix<Tm> blk(dr,dc);
-   // even-even block:
-   //    <e|\bar{O}|e> = p{O} <e|O|e>^*
-   if(pr == 0 && pc == 0){
-      blk = blk1.conj();
-   // even-odd block:
-   //    <e|\bar{O}|o> = p{O} <e|O|\bar{o}>^*
-   //    <e|\bar{O}|\bar{o}> = p{O} <e|O|o>^* (-1)
-   //    [A,B] -> p{O}[B*,-A*]  
-   }else if(pr == 0 && pc == 1){
-      assert(dc%2 == 0);
-      int dc2 = dc/2;
-      // copy blocks <e|O|o>^*
-      for(int ic=0; ic<dc2; ic++){
-         std::transform(blk1.col(ic),blk1.col(ic)+dr,blk.col(ic+dc2),
-          	        [](const Tm& x){ return -tools::conjugate(x); });
-      }
-      // copy blocks <e|O|\bar{o}>
-      for(int ic=0; ic<dc2; ic++){
-         std::transform(blk1.col(ic+dc2),blk1.col(ic+dc2)+dr,blk.col(ic),
-         	        [](const Tm& x){ return tools::conjugate(x); });
-      }
-   // odd-even block:
-   //    [A]        [ B*]
-   //    [ ] -> p{O}[   ]
-   //    [B]        [-A*] 
-   }else if(pr == 1 && pc == 0){
-      assert(dr%2 == 0);
-      int dr2 = dr/2;
-      for(int ic=0; ic<dc; ic++){
-         std::transform(blk1.col(ic),blk1.col(ic)+dr2,blk.col(ic)+dr2,
-         	        [](const Tm& x){ return -tools::conjugate(x); });
-         std::transform(blk1.col(ic)+dr2,blk1.col(ic)+dr,blk.col(ic),
-         	        [](const Tm& x){ return tools::conjugate(x); });
-      }
-   // odd-odd block:
-   //    [A B]        [ D* -C*]
-   //    [   ] -> p{O}[       ]
-   //    [C D]        [-B*  A*]
-   }else if(pr == 1 && pc == 1){
-      assert(dr%2 == 0 && dc%2 == 0);
-      int dr2 = dr/2, dc2 = dc/2;
-      for(int ic=0; ic<dc2; ic++){
-         std::transform(blk1.col(ic),blk1.col(ic)+dr2,blk.col(ic+dc2)+dr2,
-         	        [](const Tm& x){ return tools::conjugate(x); });
-         std::transform(blk1.col(ic)+dr2,blk1.col(ic)+dr,blk.col(ic+dc2),
-         	        [](const Tm& x){ return -tools::conjugate(x); });
-      }
-      for(int ic=0; ic<dc2; ic++){
-         std::transform(blk1.col(ic+dc2),blk1.col(ic+dc2)+dr2,blk.col(ic)+dr2,
-         	        [](const Tm& x){ return -tools::conjugate(x); });
-         std::transform(blk1.col(ic+dc2)+dr2,blk1.col(ic+dc2)+dr,blk.col(ic),
-         	        [](const Tm& x){ return tools::conjugate(x); });
-      }
-   } // (pr,pc)
-   return blk;
 }
 
 //---------------------------------------------------------

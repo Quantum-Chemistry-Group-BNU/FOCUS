@@ -215,6 +215,7 @@ int get_ortho_basis_kr(const ctns::qsym& qr,
    return nindp;
 }
 
+/*
 //-----------------------------------------
 // QTensor-related, used in sweep_dvdson.h
 //-----------------------------------------
@@ -376,6 +377,7 @@ int get_ortho_basis_qt(const int ndim,
    linalg::check_orthogonality(ndim, nindp, rbas);
    return nindp;
 }
+*/
 
 } // kramers
 

@@ -88,7 +88,7 @@ struct topology{
       //       |      I      |
       //    ---*------*------*---
       //               (i,0)
-      inline bool is_cturn(const comb_coord& p0, const comb_coord& p1) const{
+      bool is_cturn(const comb_coord& p0, const comb_coord& p1) const{
 	 return p0.second == 0 && p1.second == 1;
       }
       // helper for support 

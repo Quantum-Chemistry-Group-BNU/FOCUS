@@ -20,11 +20,12 @@ double check_orthogonality(const linalg::matrix<Tm>& V,
    linalg::matrix<Tm> dev = xgemm("C","N",V,V) - identity_matrix<Tm>(m);
    double diff = normF(dev)/static_cast<double>(m);
    if(diff > thresh){
-      dev.print("dev");
-      std::string msg = "error: too large deviation! m=" + std::to_string(m)
-		      + " diff="+std::to_string(diff)
-		      + " thresh="+std::to_string(thresh);
-      tools::exit(msg);
+      //dev.print("dev");
+      std::cout << "error in check_orthogonality: dim=" << m 
+	        << " diff=" << std::scientific << diff 
+		<< " thresh=" << thresh
+	        << std::endl;
+      std::exit(1);
    }
    return diff;
 }

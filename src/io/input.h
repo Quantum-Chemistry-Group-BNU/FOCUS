@@ -7,6 +7,7 @@
 #include <set> 
 #include <sstream> // istringstream
 #include "../core/serialization.h"
+
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
@@ -90,7 +91,7 @@ private:
    friend class boost::serialization::access;
    template<class Archive>
    void serialize(Archive & ar, const unsigned int version){
-      ar & run & kind & task & topology_file 
+      ar & run & qkind & task & topology_file 
 	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
 	 & nroots & guess & maxsweep & ctrls & cisolver & maxcycle
          & load & rcanon_file & istate & nsample & ndetprt 
@@ -101,7 +102,7 @@ public:
    void print() const;
 public:
    bool run = false;
-   std::string kind;
+   std::string qkind;
    std::string task = ""; // default
    std::string topology_file = "TOPOLOGY";
    // conversion of sci 

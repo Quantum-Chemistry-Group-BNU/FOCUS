@@ -29,7 +29,7 @@ struct qtensor2{
 	 auto qsum = -sym; // default in
 	 qsum += dir[0] ? qrow.get_sym(br) : -qrow.get_sym(br);
 	 qsum += dir[1] ? qcol.get_sym(bc) : -qcol.get_sym(bc);
-	 return qsum == qsym();
+	 return qsum.is_zero();
       }
       // address for storaging block data 
       inline int _addr(const int br, const int bc) const{ return br*_cols + bc; }
@@ -299,28 +299,6 @@ qtensor2<Tm> qtensor2<Tm>::H() const{
    return qt2; 
 }
 
-// generate matrix representation for Kramers paired operators
-// suppose row and col are KRS-adapted basis, then
-//    <r|\bar{O}|c> = (K<r|\bar{O}|c>)*
-//    		    = p{O} <\bar{r}|O|\bar{c}>*
-// using \bar{\bar{O}} = p{O} O (p{O}: 'parity' of operator)
-template <typename Tm>
-qtensor2<Tm> qtensor2<Tm>::K(const int nbar) const{
-   const double fpo = (nbar%2==0)? 1.0 : -1.0;
-   qtensor2<Tm> qt2(sym.flip(), qrow, qcol, dir); // the symmetry is flipped
-   for(int br=0; br<qt2.rows(); br++){
-      for(int bc=0; bc<qt2.cols(); bc++){
-         auto& blk = qt2(br,bc);
-         if(blk.size() == 0) continue;
-	 const auto& blk1 = _qblocks[_addr(br,bc)];
-	 int pr = qrow.get_parity(br);
-	 int pc = qcol.get_parity(bc);
-	 blk = fpo*kramers::time_reversal(blk1, pr, pc); 
-      } // bc
-   } // br
-   return qt2;
-}
-
 // simple arithmetic operations
 template <typename Tm>
 qtensor2<Tm> qtensor2<Tm>::operator -() const{
@@ -417,7 +395,8 @@ void qtensor2<Tm>::random(){
 // row rdm from wf: rdm[r1,r2] += wf[r1,c]*wf[r2,c]^* = M.M^d
 template<typename Tm>
 qtensor2<Tm> qtensor2<Tm>::get_rdm_row() const{
-   qtensor2<Tm> rdm(qsym(), qrow, qrow);
+   auto isym = qrow.get_sym(0).isym();
+   qtensor2<Tm> rdm(qsym(isym), qrow, qrow);
    for(int br=0; br<_rows; br++){
       for(int bc=0; bc<_cols; bc++){
          const auto& blk = _qblocks[_addr(br,bc)];
@@ -431,7 +410,8 @@ qtensor2<Tm> qtensor2<Tm>::get_rdm_row() const{
 // col rdm from wf: rdm[c1,c2] += wf[r,c1]*wf[r,c2]^* = M^t.M^*
 template<typename Tm>
 qtensor2<Tm> qtensor2<Tm>::get_rdm_col() const{
-   qtensor2<Tm> rdm(qsym(), qcol, qcol);
+   auto isym = qcol.get_sym(0).isym();
+   qtensor2<Tm> rdm(qsym(isym), qcol, qcol);
    for(int bc=0; bc<_cols; bc++){
       for(int br=0; br<_rows; br++){
          const auto& blk = _qblocks[_addr(br,bc)];

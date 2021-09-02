@@ -17,7 +17,7 @@ maxiter 2
 $end
 
 $ctns
-kind cNK
+qkind cNK
 maxdets 500 #8 #500 #000
 topology_file topology/topo0
 thresh_ortho 1.e-8

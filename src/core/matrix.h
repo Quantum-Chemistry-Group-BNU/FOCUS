@@ -369,6 +369,65 @@ struct matrix{
               	        [](const Tm& x, const Tm& y){ return x-y; });
          return mat;
       }
+      // M(l,r) = M1(bar{l},bar{r})^* given parity of qr and qc
+      matrix time_reversal(const int pr, const int pc){
+         matrix<Tm> blk(_rows,_cols);
+         // even-even block:
+         //    <e|\bar{O}|e> = p{O} <e|O|e>^*
+         if(pr == 0 && pc == 0){
+            blk = this->conj();
+         // even-odd block:
+         //    [A,B] -> p{O}[B*,-A*]  
+         // tA = <e|\bar{O}|o> = p{O} <e|O|\bar{o}>^*
+         // tB = <e|\bar{O}|\bar{o}> = p{O} <e|O|o>^* (-1)
+         }else if(pr == 0 && pc == 1){
+            assert(_cols%2 == 0);
+            int dc2 = _cols/2;
+            // copy blocks <e|O|o>^*
+            for(int ic=0; ic<dc2; ic++){
+               std::transform(this->col(ic),this->col(ic)+_rows,blk.col(ic+dc2),
+                	      [](const Tm& x){ return -tools::conjugate(x); });
+            }
+            // copy blocks <e|O|\bar{o}>
+            for(int ic=0; ic<dc2; ic++){
+               std::transform(this->col(ic+dc2),this->col(ic+dc2)+_rows,blk.col(ic),
+               	              [](const Tm& x){ return tools::conjugate(x); });
+            }
+         // odd-even block:
+         //    [A]        [ B*]
+         //    [ ] -> p{O}[   ]
+         //    [B]        [-A*] 
+         }else if(pr == 1 && pc == 0){
+            assert(_rows%2 == 0);
+            int dr2 = _rows/2;
+            for(int ic=0; ic<_cols; ic++){
+               std::transform(this->col(ic),this->col(ic)+dr2,blk.col(ic)+dr2,
+               	              [](const Tm& x){ return -tools::conjugate(x); });
+               std::transform(this->col(ic)+dr2,this->col(ic)+_rows,blk.col(ic),
+               	              [](const Tm& x){ return tools::conjugate(x); });
+            }
+         // odd-odd block:
+         //    [A B]        [ D* -C*]
+         //    [   ] -> p{O}[       ]
+         //    [C D]        [-B*  A*]
+         }else if(pr == 1 && pc == 1){
+            assert(_rows%2 == 0 && _cols%2 == 0);
+            int dr2 = _rows/2, dc2 = _cols/2;
+            for(int ic=0; ic<dc2; ic++){
+               std::transform(this->col(ic),this->col(ic)+dr2,blk.col(ic+dc2)+dr2,
+               	              [](const Tm& x){ return tools::conjugate(x); });
+               std::transform(this->col(ic)+dr2,this->col(ic)+_rows,blk.col(ic+dc2),
+               	              [](const Tm& x){ return -tools::conjugate(x); });
+            }
+            for(int ic=0; ic<dc2; ic++){
+               std::transform(this->col(ic+dc2),this->col(ic+dc2)+dr2,blk.col(ic)+dr2,
+               	              [](const Tm& x){ return -tools::conjugate(x); });
+               std::transform(this->col(ic+dc2)+dr2,this->col(ic+dc2)+_rows,blk.col(ic),
+               	              [](const Tm& x){ return tools::conjugate(x); });
+            }
+         } // (pr,pc)
+         return blk;
+      }
    public:
       int _rows, _cols, _size;
       Tm* _data;

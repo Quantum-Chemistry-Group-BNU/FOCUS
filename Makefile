@@ -1,39 +1,37 @@
 
 machine = lenovo
 
-DEBUG = no #yes 
-USE_GCC = no #yes
+DEBUG = yes
+USE_GCC = no
 USE_MPI = yes
 USE_OPENMP = yes
 
-# quaternion matrix diagonalization
-MATH = -L./extlibs/zquatev -lzquatev
-
+# set library
 ifeq ($(machine), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
    #BOOST = /home/lx/software/boost/install_1_59_0
    BOOST = /home/lx/software/boost/install_1_75_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_filesystem-mt-x64 
-   ifeq ($(USE_MPI) ,yes)   
+   ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    BOOST = /usr/local
    LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system -lboost_filesystem 
-   ifeq ($(USE_MPI) ,yes)   
+   ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi
    endif
 endif
 
-ifeq ($(USE_GCC), yes)
+ifeq ($(USE_GCC),yes)
    # GCC compiler
-   ifeq ($(DEBUG), yes)
-      FLAGS += -DDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   ifeq ($(strip $(DEBUG)),yes)
+      FLAGS = -DDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    else
-      FLAGS += -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS = -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    endif
-   ifeq ($(USE_MPI), no)
+   ifeq ($(strip $(USE_MPI)),no)
       CXX = g++
       CC = gcc
       FLAGS += -DSERIAL
@@ -43,12 +41,12 @@ ifeq ($(USE_GCC), yes)
    endif
 else
    # Intel compiler
-   ifeq ($(DEBUG), yes)
-      FLAGS += -DDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+   ifeq ($(strip $(DEBUG)), yes)
+      FLAGS = -DDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    else 
-      FLAGS += -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS = -DNDEBUG -std=c++11 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
    endif 
-   ifeq ($(USE_MPI), no)
+   ifeq ($(strip $(USE_MPI)),no)
       CXX = icpc
       CC = icc
       FLAGS += -DSERIAL
@@ -58,25 +56,28 @@ else
    endif
 endif
 
-ifeq ($(USE_OPENMP), no)
+ifeq ($(USE_OPENMP),no)
    # serial version of MKL
-   MATH += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-           -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
+   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+          -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
    # mac framework Accelerate
    #MATH = -llapack -lblas 
 else
-   ifeq ($(USE_GCC), yes)
+   ifeq ($(strip $(USE_GCC)),yes)
       FLAGS += -fopenmp
    else
       FLAGS += -qopenmp	
    endif
    # https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html	
    # parallel version of MKL
-   MATH += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-   	   -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
-   	   -liomp5
+   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+          -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+   	  -liomp5
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
 endif
+# quaternion matrix diagonalization
+MATH += -L./extlibs/zquatev -lzquatev
+
 LFLAGS += ${MATH}
 
 SRC = src
@@ -124,7 +125,7 @@ depend:
 	set -e; \
 	mkdir -p $(BIN_DIR) $(OBJ_DIR); \
 	echo $(SRC_ALL); \
-	$(CXX) -I${BOOST}/include -MM $(SRC_ALL) > $$$$.depend; \
+	$(CXX) $(FLAGS) -I${BOOST}/include -MM $(SRC_ALL) > $$$$.depend; \
 	sed 's,\([^.]*\.o\),$(OBJ_DIR)/\1,' < $$$$.depend > .depend; \
 	echo 'finish dependency check!'; \
 	rm -f $$$$.depend # $$$$ id number 

@@ -30,7 +30,7 @@ int CTNS(const input::schedule& schd){
    boost::mpi::broadcast(schd.world, int2e, 0);
    boost::mpi::broadcast(schd.world, ecore, 0);
 #endif
-   
+ 
    // CTNS 
    ctns::comb<Km> icomb;
    if(rank == 0){
@@ -38,7 +38,6 @@ int CTNS(const input::schedule& schd){
       icomb.topo.read(schd.ctns.topology_file);
       icomb.topo.print();
       // initialize RCF 
-      const bool ifortho = true; 
       auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
       if(!schd.ctns.load){
          // from SCI wavefunction
@@ -48,14 +47,20 @@ int CTNS(const input::schedule& schd){
          auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
          fci::ci_load(sci_space, es, vs, ci_file);
          // truncate CI coefficients
-         fci::ci_truncate(sci_space, vs, schd.ctns.maxdets, ifortho);
+         fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
          ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
+      }
+   }
+/*
          ctns::rcanon_save(icomb, rcanon_file);
       }else{
          ctns::rcanon_load(icomb, rcanon_file);
       }
-      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho, ifortho);
+      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
    }
+*/
+
+/*  
 #ifndef SERIAL
    boost::mpi::broadcast(schd.world, icomb, 0);
    icomb.world = schd.world;
@@ -87,6 +92,7 @@ int CTNS(const input::schedule& schd){
          double Sd = rcanon_Sdiag_sample(icomb, istate, nsample, ndetprt);
       }
    }
+*/
    return 0;	
 }
 
@@ -121,19 +127,23 @@ int main(int argc, char *argv[]){
    schd.create_scratch((rank == 0));
 
    int info = 0;
-   if(schd.ctns.kind == "rN"){
-      info = CTNS<ctns::kind::rN>(schd);
-   }else if(schd.ctns.kind == "rNSz"){
-      info = CTNS<ctns::kind::rNSz>(schd);
-   }else if(schd.ctns.kind == "cN"){
-      info = CTNS<ctns::kind::cN>(schd);
-   }else if(schd.ctns.kind == "cNSz"){
-      info = CTNS<ctns::kind::cNSz>(schd);
-   }else if(schd.ctns.kind == "cNK"){
-      info = CTNS<ctns::kind::cNK>(schd);
+   if(schd.ctns.qkind == "rZ2"){
+      info = CTNS<ctns::qkind::rZ2>(schd);
+   }else if(schd.ctns.qkind == "cZ2"){
+      info = CTNS<ctns::qkind::cZ2>(schd);
+   }else if(schd.ctns.qkind == "rN"){
+      info = CTNS<ctns::qkind::rN>(schd);
+   }else if(schd.ctns.qkind == "cN"){
+      info = CTNS<ctns::qkind::cN>(schd);
+   }else if(schd.ctns.qkind == "rNSz"){
+      info = CTNS<ctns::qkind::rNSz>(schd);
+   }else if(schd.ctns.qkind == "cNSz"){
+      info = CTNS<ctns::qkind::cNSz>(schd);
+   }else if(schd.ctns.qkind == "cNK"){
+      info = CTNS<ctns::qkind::cNK>(schd);
    }else{
-      tools::exit("error: no such kind for ctns!");
-   } // kind
+      tools::exit("error: no such qkind for ctns!");
+   } // qkind
 
 #ifndef SERIAL
    world.barrier();

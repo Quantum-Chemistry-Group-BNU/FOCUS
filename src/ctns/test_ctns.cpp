@@ -53,24 +53,36 @@ int tests::test_ctns(){
    }
 
    // --- CTNS --- 
-   //ctns::comb<ctns::kind::rNSz> icomb;
-   //ctns::comb<ctns::kind::cN> icomb;
-   ctns::comb<ctns::kind::cNK> icomb;
+   //ctns::comb<ctns::qkind::rNSz> icomb;
+   //ctns::comb<ctns::qkind::cN> icomb;
+   ctns::comb<ctns::qkind::cNK> icomb;
+   //ctns::comb<ctns::qkind::cZ2> icomb;
    
    // 1. dealing with topology 
    icomb.topo.read(schd.ctns.topology_file);
    icomb.topo.print();
 
    // 2. initialize right canonical form from SCI wavefunction
-   const bool ifortho = false; 
-   fci::ci_truncate(sci_space, vs, schd.ctns.maxdets, ifortho);
+   fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
+
+   if(!schd.ctns.load){
+      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
+//      ctns::rcanon_save(icomb);
+//   }else{
+//      ctns::rcanon_load(icomb);
+   }
+//   ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+
+
+
+/*
    if(!schd.ctns.load){
       ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
       ctns::rcanon_save(icomb);
    }else{
       ctns::rcanon_load(icomb);
    }
-   ctns::rcanon_check(icomb, schd.ctns.thresh_ortho, ifortho);
+   ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
 
    // 3. overlap
    const double thresh=1.e-6;
@@ -130,6 +142,6 @@ int tests::test_ctns(){
    ovlp.print("ovlp");
 
    schd.remove_scratch();
-
+*/
    return 0;
 }

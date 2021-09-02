@@ -1,15 +1,17 @@
 #ifndef CTNS_COMB_H
 #define CTNS_COMB_H
 
-#include "../core/serialization.h"
-#include "ctns_phys.h"
-#include "ctns_kind.h"
-#include "ctns_topo.h"
-#include "ctns_rbasis.h"
-#include "qtensor/qtensor.h"
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+
+#include "../core/serialization.h"
+#include "qtensor/qtensor.h"
+#include "ctns_topo.h"
+#include "init_rbasis.h"
+/*
+#include "ctns_phys.h"
+*/
 
 namespace ctns{
 
@@ -21,17 +23,19 @@ using sites_type = std::map<comb_coord,qtensor3<Tm>>;
 template <typename Km>
 class comb{
    private:
-      // serialize
+      // serialize [for MPI]
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-	 ar & topo & rsites & rwfuns;
+//	 ar & topo & rsites & rwfuns;
       }
    public:
       // constructors
       comb(){
-         if(!kind::is_available<Km>()) tools::exit("error: no such kind for CTNS!");
+	 std::cout << "\ncomb: qkind=" << qkind::get_name<Km>() << std::endl;
+         if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
       }
+/*
       // helpers
       int get_nphysical() const{ return topo.nphysical; }
       int get_nstates() const{
@@ -42,7 +46,7 @@ class comb{
 	 assert(rwfuns.rows() == 1); // only one symmetry sector
          return rwfuns.qrow.get_sym(0);
       }
-      // return rwfun for istate, extracted from rwfuns
+      // return rwavefun for istate, extracted from rwfuns
       qtensor2<typename Km::dtype> get_istate(const int istate) const;
       // get_qc/ql/qr used in setting up optimization
       qbond get_qc(const comb_coord& p) const;
@@ -51,6 +55,7 @@ class comb{
       std::vector<int> get_suppc(const comb_coord& p, const bool ifprt=true) const;
       std::vector<int> get_suppl(const comb_coord& p, const bool ifprt=true) const;
       std::vector<int> get_suppr(const comb_coord& p, const bool ifprt=true) const;
+*/
    public:
       // -- CTNS ---
       topology topo;
@@ -58,26 +63,30 @@ class comb{
       qtensor2<typename Km::dtype> rwfuns; // wavefunction at the left boundary -*-
       // --- auxilliary data ---
       rbases_type<typename Km::dtype> rbases; // used in initialization & debug operators 
+/*
       sites_type<typename Km::dtype> lsites; // left canonical form 
       std::vector<qtensor3<typename Km::dtype>> psi; // propagation of initial guess 
+*/
       // --- MPI ---
 #ifndef SERIAL
       boost::mpi::communicator world;
 #endif
 };
 
-// return rwfun for istate, extracted from rwfuns
+/*
+
+// return rwavefun for istate, extracted from rwfuns
 template <typename Km>
 qtensor2<typename Km::dtype> comb<Km>::get_istate(const int istate) const{
    assert(rwfuns.rows() == 1);
    qbond qrow({{rwfuns.qrow.get_sym(0),1}});
-   qtensor2<typename Km::dtype> rwfun(rwfuns.sym, qrow, rwfuns.qcol, rwfuns.dir);
+   qtensor2<typename Km::dtype> rwavefun(rwfuns.sym, qrow, rwfuns.qcol, rwfuns.dir);
    const auto& blk0 = rwfuns(0,0);
-   auto& blk = rwfun(0,0);
+   auto& blk = rwavefun(0,0);
    for(int ic=0; ic<rwfuns.qcol.get_dim(0); ic++){
       blk(0,ic) = blk0(istate,ic);
    }
-   return rwfun;
+   return rwavefun;
 }
 
 // symmetry information used in opt_sweep
@@ -153,6 +162,7 @@ std::vector<int> comb<Km>::get_suppr(const comb_coord& p, const bool ifprt) cons
    }
    return suppr;
 }
+*/
 
 } // ctns
 
