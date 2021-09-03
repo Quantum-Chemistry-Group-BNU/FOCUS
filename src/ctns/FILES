@@ -1,5 +1,7 @@
 
+########
 # CTNS #
+########
 
 Basic tasks:
  1. algebra -> <n|ctns>, <ctns1|ctns2>, <ctns1|H|ctns2>, etc.
@@ -15,7 +17,9 @@ Efficiency:
  2. parallelization
 
  
+#########################
 # V0: Relativistic CTNS #
+#########################
 
 Test
 -------------------
@@ -110,7 +114,9 @@ Sweep algorithm: (4) TRS
  sweep_twodot_ham.h
 
 
+#######################
 # V1: Parallelization # 
+#######################
 
 Operator related:
 -------------------
@@ -134,41 +140,15 @@ Sweep related:
  sweep_twodot_renorm.h
 
 
+################################
 # V2: Optimized data structure #
-
-Low-level data structure
--------------------------
- qtensor2 - operator/density matrix
- qtensor3 - onedot wf
- qtensor4 - twodot wf
-
-Tensor operations
--------------------------
- 1. allocate temporary work space!
- 2. in place operation:
-    opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1); 
-
- sweep_twodot_ham.h:
-    // Apq*Ppq
-    qt3n = oper_compxwf_opP("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index);
-    qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid);
-    auto Hwf1 = wt*oper_normxwf_opA("lc",qt3n,lqops,c1qops,ifkr,iformula,index);
-
- oper_normxwf.h:
- oper_compxwf.h:
-    qtensor3<Tm> opwf(site.sym, site.qmid, site.qrow, site.qcol, site.dir); -> working space
-    opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1); -> inplace
-    opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
-
- oper_kernel.h:
-    oper_kernel_OIwf
-    oper_kernel_IOwf
-    oper_kernel_OOwf
+################################
 
 Reorganized files:
--------------------
+-------------------------
+Tests:
  tests_ctns.h
- test_ctns.cpp  
+ test_ctns.cpp 
 Symmetry:
  ctns_qkind.h -> kind of CTNS
  ctns_qsym.h -> quantum number class: qsym 
@@ -191,16 +171,15 @@ Qtensor:
  qtensor_reshape3.h
  qtensor_reshape4.h
  qtensor_contract.h
-
-
-
-Initialization 
--------------------
+IO:
  ctns_io.h
+Algorithms:
+ ctns_alg.h -> basic algorithms for <I|J>,<n|CTNS>,sampling
+Operators:
 
-Compute <I|J>,<n|CTNS>
--------------------
- ctns_ovlp.h -> basic algorithms
+Sweep:
+
+#################################################################
 
 Compute <I|H|J>
 -------------------
@@ -213,6 +192,14 @@ Compute <I|H|J>
  oper_compxwf.h -> essential: Oc*qt3
  oper_kernel.h -> for tensor operations
  oper_rbasis.h -> debug
+
+ oper_combine.h
+ oper_normxwf.h
+ oper_compxwf.h
+ oper_renorm.h
+ oper_util.h
+ oper_dot.h
+
 
 Sweep algorithm: (1) onedot
 ---------------------------
@@ -265,12 +252,6 @@ V1: Parallelization & Opt
 Parallelization
 -------------------------
 * operator related:
- oper_combine.h
- oper_normxwf.h
- oper_compxwf.h
- oper_renorm.h
- oper_util.h
- oper_dot.h
 
 * sweep related:
  sweep_dvdson.h
@@ -283,35 +264,32 @@ Parallelization
  sweep_twodot_ham.h
  sweep_twodot_renorm.h
 
+
 Low-level data structure
 -------------------------
  qtensor2 - operator/density matrix
  qtensor3 - onedot wf
  qtensor4 - twodot wf
 
-Tensor operations
+TODOs: Tensor operations
 -------------------------
-
-realization of rZ2 and cZ2?
-
  1. allocate temporary work space!
  2. in place operation:
     opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1); 
-
  sweep_twodot_ham.h:
     // Apq*Ppq
     qt3n = oper_compxwf_opP("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index);
     qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid);
     auto Hwf1 = wt*oper_normxwf_opA("lc",qt3n,lqops,c1qops,ifkr,iformula,index);
-
  oper_normxwf.h:
  oper_compxwf.h:
     qtensor3<Tm> opwf(site.sym, site.qmid, site.qrow, site.qcol, site.dir); -> working space
     opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1); -> inplace
     opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
-
  oper_kernel.h:
     oper_kernel_OIwf
     oper_kernel_IOwf
     oper_kernel_OOwf
+
+
  

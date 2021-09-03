@@ -25,7 +25,7 @@ private:
    void serialize(Archive & ar, const unsigned int version){
       ar & run & nroots & det_seeds & nseeds & flip
 	 & eps0 & eps1 & miniter & maxiter & deltaE
-         & cisolver & maxcycle & crit_v & ifpt2 & eps2 & istate
+         & cisolver & maxcycle & crit_v & ifpt2 & eps2 & iroot
 	 & load & ci_file;
    }
 public:
@@ -53,7 +53,7 @@ public:
    // pt2
    bool ifpt2 = false;
    double eps2 = 1.e-8;
-   int istate = 0;
+   int iroot = 0;
    // io
    bool load = false;
    std::string ci_file = "ci.info"; 
@@ -94,7 +94,7 @@ private:
       ar & run & qkind & task & topology_file 
 	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
 	 & nroots & guess & maxsweep & ctrls & cisolver & maxcycle
-         & load & rcanon_file & istate & nsample & ndetprt 
+         & load & rcanon_file & iroot & nsample & ndetprt 
 	 & verbose;  
    }
 public:
@@ -123,7 +123,7 @@ public:
    bool load = false;
    std::string rcanon_file = "rcanon.info";
    // sampling
-   int istate = 0;
+   int iroot = 0;
    int nsample = 1.e5;
    int ndetprt = 10;
    // debug level

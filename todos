@@ -30,7 +30,9 @@ TODOs
 		   - decimation_row_kr [DONE20210711]
 
  * Optimized parallel version [XXXX202109XX]
-    - OpenMP support [DONE20210820]
+    - OpenMP support [DONE20210903]:
+	- Hx & decimation
+	- Initialization of CTNS
     - stack-like storage? 
     - parallelization - push to the limit!
        - monitor peak memory usage

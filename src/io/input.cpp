@@ -44,8 +44,8 @@ void params_sci::read(ifstream& istrm){
          ifpt2 = true;
       }else if(line.substr(0,4)=="eps2"){
          eps2 = stod(line.substr(4)); 
-      }else if(line.substr(0,6)=="istate"){
-         istate = stoi(line.substr(6));
+      }else if(line.substr(0,5)=="iroot"){
+         iroot = stoi(line.substr(5));
       }else if(line.substr(0,4)=="load"){
          load = true;
       }else if(line.substr(0,4)=="dets"){
@@ -144,7 +144,7 @@ void params_sci::print() const{
    // pt2
    cout << "ifpt2 = " << ifpt2 << endl;
    cout << "eps2 = " << eps2 << endl;
-   cout << "istate = " << istate << endl;
+   cout << "iroot = " << iroot << endl;
    // io
    cout << "load = " << load << endl; 
    cout << "ci_file = " << ci_file << endl;
@@ -194,8 +194,8 @@ void params_ctns::read(ifstream& istrm){
          guess = stoi(line.substr(5));
       }else if(line.substr(0,4)=="load"){
          load = true;
-      }else if(line.substr(0,6)=="istate"){
-         istate = stoi(line.substr(6));
+      }else if(line.substr(0,5)=="iroot"){
+         iroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
          nsample = stoi(line.substr(7));
       }else if(line.substr(0,7)=="ndetprt"){
@@ -276,7 +276,7 @@ void params_ctns::print() const{
    cout << "load = " << load << endl; 
    cout << "rcanon_file = " << rcanon_file << endl;
    // sampling
-   cout << "istate = " << istate << endl;
+   cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;
    cout << "ndetprt = " << ndetprt << endl;
    // debug level

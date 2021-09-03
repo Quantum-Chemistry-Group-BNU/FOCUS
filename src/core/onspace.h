@@ -13,6 +13,8 @@ using onspace = std::vector<onstate>;
 void check_space(onspace& space);
 
 // --- FCI space ---
+// Fock space
+onspace get_fci_space(const int k);
 // spinless case
 onspace get_fci_space(const int k, const int n);
 // k - number of spatial orbitals 

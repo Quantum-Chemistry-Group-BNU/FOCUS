@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include <functional>
+#include <bitset>
 #include "onspace.h"
 
 using namespace std;
@@ -14,6 +15,19 @@ void fock::check_space(onspace& space){
    for(size_t i=0; i<space.size(); i++){
        cout << "i=" << i << " : " << space[i] << endl;
    }
+}
+
+onspace fock::get_fci_space(const int k){
+   const int kmax = 64; // [in fact it only works for much smaller k!]
+   assert(k <= kmax);
+   onspace space;
+   for(size_t i=0; i<std::pow(2,k); i++){
+      std::string s = std::bitset<kmax>(i).to_string(); // string conversion
+      auto sub = s.substr(kmax-k,kmax); // 00000a
+      auto state = onstate(sub);
+      space.push_back(state);
+   }
+   return space;
 }
 
 onspace fock::get_fci_space(const int k, const int n){

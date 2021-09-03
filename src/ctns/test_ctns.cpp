@@ -67,17 +67,6 @@ int tests::test_ctns(){
 
    if(!schd.ctns.load){
       ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
-//      ctns::rcanon_save(icomb);
-//   }else{
-//      ctns::rcanon_load(icomb);
-   }
-//   ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
-
-
-
-/*
-   if(!schd.ctns.load){
-      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
       ctns::rcanon_save(icomb);
    }else{
       ctns::rcanon_load(icomb);
@@ -86,17 +75,17 @@ int tests::test_ctns(){
 
    // 3. overlap
    const double thresh=1.e-6;
-   // <CI|CI>
+   // 3.0 <CI|CI>
    auto Sij_ci = fci::get_Smat(sci_space, vs);
    Sij_ci.print("Sij_ci");
-   // <CTNS|CTNS>
+   // 3.1 <CTNS|CTNS>
    auto Sij_ctns = ctns::get_Smat(icomb);
    Sij_ctns.print("Sij");
    // check
    double diff_ctns = normF(Sij_ctns - Sij_ci);
    cout << "\ncheck diff_Sij[ctns] = " << diff_ctns << endl;
    if(diff_ctns > thresh) tools::exit(string("error: diff_Sij[ctns] > thresh=")+to_string(thresh));
-   // <CI|CTNS>
+   // 3.2 <CI|CTNS>
    ctns::rcanon_CIcoeff_check(icomb, sci_space, vs);
    auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
    Sij_mix.print("Sij_mix");
@@ -106,13 +95,14 @@ int tests::test_ctns(){
    if(diff_mix > thresh) tools::exit(string("error: diff_Sij[mix] > thresh=")+to_string(thresh));
 
    // 4. compute Sd by sampling 
-   int istate = 0, nsample = 1.e5;
-   double Sdiag0 = fock::coeff_entropy(vs[istate]);
-   double Sdiag1 = rcanon_Sdiag_exact(icomb,istate);
-   bool ifsample = false;
+   int iroot = 0;
+   double Sdiag0 = fock::coeff_entropy(vs[iroot]);
+   double Sdiag1 = rcanon_Sdiag_exact(icomb,iroot);
+   bool ifsample = true;
    if(ifsample){
-      double Sdiag2 = rcanon_Sdiag_sample(icomb,istate,nsample);
-      cout << "\nistate=" << istate 
+      int nsample = 1.e5;
+      double Sdiag2 = rcanon_Sdiag_sample(icomb,iroot,nsample);
+      cout << "\niroot=" << iroot 
            << " Sdiag(exact)=" << Sdiag0
            << " Sdiag(brute-force)=" << Sdiag1 
            << " Sdiag(sample)=" << Sdiag2
@@ -120,7 +110,8 @@ int tests::test_ctns(){
    }
 
    schd.create_scratch();
-   
+
+/*   
    // 5. Hij
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hij_ci.print("Hij_ci",8);

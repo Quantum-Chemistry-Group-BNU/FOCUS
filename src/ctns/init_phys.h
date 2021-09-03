@@ -92,12 +92,10 @@ inline qbond get_qbond_phys(const int isym){
    return qphys;
 }
 
-//
 //        n             |vac>
 //        |               |
 //     ---*---|vac>   n---*
 //  |out> 	          |
-//
 template <typename Tm>
 void get_right_bsite(const int isym, qtensor3<Tm>& qt3){
    auto qvac = get_qbond_vac(isym);
@@ -129,9 +127,13 @@ inline void get_left_bsite(const int isym, qtensor3<Tm>& qt3){
    }
 }
 
-/*
-// relations among (idx,occ,mdx), used when physical degree is specified
-
+//
+// relations among (idx->occ->mdx), used when physical degree is specified in ctns_alg.h
+//
+//  idx = 0,1,2,3
+//  occ = 00,11,01,10
+//  mdx = (qi,iq) [qi-th symmetry block, iq-th state]
+//
 inline void idx2occ(fock::onstate& state,
 		    const int k, 
 		    const int idx){
@@ -148,9 +150,39 @@ inline void idx2occ(fock::onstate& state,
 
 // block index (bm,im) for middle physical index mdx=(qi,iq)
 inline std::pair<int,int> idx2mdx(const int isym, const int idx){
-   int qi = (isym==1 and idx==3)? 2 : idx;
-   int iq = (isym==1 and idx==3)? 1 : 0;
-   return std::make_pair(qi, iq);
+   std::pair<int,int> mdx;
+   if(isym == 0){
+      if(idx == 0){
+         mdx = std::make_pair(0,0);
+      }else if(idx == 1){
+         mdx = std::make_pair(0,1);
+      }else if(idx == 2){
+         mdx = std::make_pair(1,0);
+      }else if(idx == 3){
+         mdx = std::make_pair(1,1);
+      }
+   }else if(isym == 1){
+      if(idx == 0){
+         mdx = std::make_pair(0,0);
+      }else if(idx == 1){
+         mdx = std::make_pair(1,0);
+      }else if(idx == 2){
+         mdx = std::make_pair(2,0);
+      }else if(idx == 3){
+         mdx = std::make_pair(2,1);
+      }
+   }else if(isym == 2){
+      if(idx == 0){
+         mdx = std::make_pair(0,0);
+      }else if(idx == 1){
+         mdx = std::make_pair(1,0);
+      }else if(idx == 2){
+         mdx = std::make_pair(2,0);
+      }else if(idx == 3){
+         mdx = std::make_pair(3,0);
+      }
+   }
+   return mdx;
 }
 
 inline std::pair<int,int> occ2mdx(const int isym,
@@ -158,17 +190,16 @@ inline std::pair<int,int> occ2mdx(const int isym,
 				  const int k){
    std::pair<int,int> mdx;
    if(state[2*k] == 0 and state[2*k+1] == 0){ 	    // 0
-      mdx = std::make_pair(0,0);
+      mdx = idx2mdx(isym, 0);
    }else if(state[2*k] == 1 and state[2*k+1] == 1){ // 2
-      mdx = std::make_pair(1,0);
+      mdx = idx2mdx(isym, 1);
    }else if(state[2*k] == 1 and state[2*k+1] == 0){ // a
-      mdx = std::make_pair(2,0);
+      mdx = idx2mdx(isym, 2);
    }else if(state[2*k] == 0 and state[2*k+1] == 1){ // b
-      mdx = (isym == 1)? std::make_pair(2,1) : std::make_pair(3,0);
+      mdx = idx2mdx(isym, 3);
    }
    return mdx;
 }
-*/
 
 } // ctns
 

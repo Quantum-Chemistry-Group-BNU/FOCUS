@@ -27,7 +27,7 @@ class comb{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-//	 ar & topo & rsites & rwfuns;
+	 ar & topo & rsites & rwfuns;
       }
    public:
       // constructors
@@ -35,7 +35,6 @@ class comb{
 	 std::cout << "\ncomb: qkind=" << qkind::get_name<Km>() << std::endl;
          if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
       }
-/*
       // helpers
       int get_nphysical() const{ return topo.nphysical; }
       int get_nroots() const{
@@ -46,8 +45,9 @@ class comb{
 	 assert(rwfuns.rows() == 1); // only one symmetry sector
          return rwfuns.qrow.get_sym(0);
       }
-      // return rwavefun for istate, extracted from rwfuns
-      qtensor2<typename Km::dtype> get_istate(const int istate) const;
+      // return rwfun for iroot, extracted from rwfuns
+      qtensor2<typename Km::dtype> get_iroot(const int iroot) const;
+/*
       // get_qc/ql/qr used in setting up optimization
       qbond get_qc(const comb_coord& p) const;
       qbond get_ql(const comb_coord& p) const;
@@ -73,22 +73,21 @@ class comb{
 #endif
 };
 
-/*
-
-// return rwavefun for istate, extracted from rwfuns
+// return rwfun for iroot, extracted from rwfuns
 template <typename Km>
-qtensor2<typename Km::dtype> comb<Km>::get_istate(const int istate) const{
+qtensor2<typename Km::dtype> comb<Km>::get_iroot(const int iroot) const{
    assert(rwfuns.rows() == 1);
    qbond qrow({{rwfuns.qrow.get_sym(0),1}});
-   qtensor2<typename Km::dtype> rwavefun(rwfuns.sym, qrow, rwfuns.qcol, rwfuns.dir);
+   qtensor2<typename Km::dtype> rwfun(rwfuns.sym, qrow, rwfuns.qcol, rwfuns.dir);
    const auto& blk0 = rwfuns(0,0);
-   auto& blk = rwavefun(0,0);
+   auto& blk = rwfun(0,0);
    for(int ic=0; ic<rwfuns.qcol.get_dim(0); ic++){
-      blk(0,ic) = blk0(istate,ic);
+      blk(0,ic) = blk0(iroot,ic);
    }
-   return rwavefun;
+   return rwfun;
 }
 
+/*
 // symmetry information used in opt_sweep
 template <typename Km>
 qbond comb<Km>::get_qc(const comb_coord& p) const{

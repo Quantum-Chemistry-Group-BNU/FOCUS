@@ -49,16 +49,12 @@ int CTNS(const input::schedule& schd){
          // truncate CI coefficients
          fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
          ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
-      }
-   }
-/*
          ctns::rcanon_save(icomb, rcanon_file);
       }else{
          ctns::rcanon_load(icomb, rcanon_file);
       }
-      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+      //ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
    }
-*/
 
 /*  
 #ifndef SERIAL
@@ -86,10 +82,10 @@ int CTNS(const input::schedule& schd){
    }else if(schd.ctns.task == "sdiag"){
       // parallel sampling can be implemented in future (very simple)!
       if(rank == 0){
-         int istate  = schd.ctns.istate;
+         int iroot  = schd.ctns.iroot;
          int nsample = schd.ctns.nsample;
          int ndetprt = schd.ctns.ndetprt; 
-         double Sd = rcanon_Sdiag_sample(icomb, istate, nsample, ndetprt);
+         double Sd = rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
       }
    }
 */

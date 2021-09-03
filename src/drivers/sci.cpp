@@ -30,9 +30,9 @@ int SCI(const input::schedule& schd){
    }
    // pt2 for single root
    if(schd.sci.ifpt2){
-      int istate = schd.sci.istate;
-      assert(istate < nroots);
-      sci::pt2_solver(schd, es[istate], vs[istate], sci_space, int2e, int1e, ecore);
+      int iroot = schd.sci.iroot;
+      assert(iroot < nroots);
+      sci::pt2_solver(schd, es[iroot], vs[iroot], sci_space, int2e, int1e, ecore);
    }
    return 0;
 }
