@@ -51,9 +51,47 @@ struct bipart_space{
 		  }
                }
 	    } // i
-	 }
+	 } // dir
       }
-      // get syms,dims,index
+      // reorder basis to form Kramers-paired structure & compute dim0
+      void kramers_basis_reorder(){
+         for(const auto& pr : basis){
+            const auto& qr = pr.first;
+            const auto& qr_space = pr.second;
+            int dim = qr_space.size();
+            // odd electron case {|D>,|Df>}
+            if(qr.parity() == 1){
+               assert(dim%2 == 0);
+               fock::onspace rdets(dim);
+               for(int i=0; i<dim/2; i++){
+                  rdets[i] = qr_space[2*i];
+                  rdets[i+dim/2] = qr_space[2*i+1];
+               }
+               basis[qr] = rdets;
+	       dim0[qr] = 0;
+            // even electron case {|D>,|Df>,|D0>} 
+            }else{
+               fock::onspace rdets0, rdets1, rdets;
+               for(int i=0; i<dim; i++){
+                  auto& state = qr_space[i];
+                  if(state.norb_single() == 0){
+                     rdets0.push_back(state);
+                  }else{
+                     if(state.is_standard()) rdets1.push_back(state);
+                  }
+               }
+               dim0[qr] = rdets0.size();
+               assert(2*rdets1.size()+rdets0.size() == dim);
+               rdets = rdets1;
+               std::transform(rdets1.begin(),rdets1.end(),rdets1.begin(),
+                              [](const fock::onstate& state){ return state.flip(); });		 
+               std::copy(rdets1.begin(),rdets1.end(),back_inserter(rdets));
+               std::copy(rdets0.begin(),rdets0.end(),back_inserter(rdets));
+               basis[qr] = rdets;
+            }
+         }
+      }
+      // compute syms,dims,index
       void update_maps(){
          for(const auto& p : basis){
             const auto& sym = p.first;
@@ -334,40 +372,7 @@ inline void right_projection<qkind::cNK>(renorm_basis<std::complex<double>>& rba
    lspace.init(qkind::cNK::isym, bpos, space, 0);
    rspace.init(qkind::cNK::isym, bpos, space, 1);
    // reorder rspace.basis to form Kramers-paired structure
-   for(const auto& pr : rspace.basis){
-      const auto& qr = pr.first;
-      const auto& qr_space = pr.second;
-      int dim = qr_space.size();
-      // odd electron case {|D>,|Df>}
-      if(qr.ne()%2 == 1){
-         assert(dim%2 == 0);
-	 fock::onspace rdets(dim);
-         for(int i=0; i<dim/2; i++){
-            rdets[i] = qr_space[2*i];
-            rdets[i+dim/2] = qr_space[2*i+1];
-         }
-         rspace.basis[qr] = rdets;
-      // even electron case {|D>,|Df>,|D0>} 
-      }else{
-	 fock::onspace rdets0, rdets1, rdets;
-	 for(int i=0; i<dim; i++){
-	    auto& state = qr_space[i];
-	    if(state.norb_single() == 0){
-	       rdets0.push_back(state);
-	    }else{
-	       if(state.is_standard()) rdets1.push_back(state);
-	    }
-	 }
-	 rspace.dim0[qr] = rdets0.size();
-         assert(2*rdets1.size()+rdets0.size() == dim);
-	 rdets = rdets1;
-	 std::transform(rdets1.begin(),rdets1.end(),rdets1.begin(),
-	                [](const fock::onstate& state){ return state.flip(); });		 
-	 std::copy(rdets1.begin(),rdets1.end(),back_inserter(rdets));
-	 std::copy(rdets0.begin(),rdets0.end(),back_inserter(rdets));
-         rspace.basis[qr] = rdets;
-      }
-   }
+   rspace.kramers_basis_reorder();
    // update space info
    lspace.update_maps();
    rspace.update_maps();
@@ -379,7 +384,7 @@ inline void right_projection<qkind::cNK>(renorm_basis<std::complex<double>>& rba
    int dimBc = 0; double popBc = 0.0, SvN = 0.0;
    for(const auto& qr : rspace.syms){
       int dimr = rspace.dims[qr];
-      int dim0 = (qr.ne()%2 == 1)? 0 : rspace.dim0[qr];
+      int dim0 = rspace.dim0[qr];
       int dim1 = (dimr-dim0)/2;
       assert(dim0 + dim1*2 == dimr);
       if(debug_basis){

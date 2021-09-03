@@ -249,7 +249,7 @@ void init_rwfuns(comb<Km>& icomb,
    // determine symmetry of rwfuns
    const auto& det = space[0];
    auto sym_states = get_qsym_onstate(Km::isym, space[0]);
-   // determine qrow: we assume all the dets are of the same symmetry!
+   // check symmetry: we assume all the dets are of the same symmetry!
    for(int i=0; i<space.size(); i++){
       auto sym = get_qsym_onstate(Km::isym, space[i]);
       if(sym != sym_states){
@@ -261,10 +261,9 @@ void init_rwfuns(comb<Km>& icomb,
    }
    int nroots = vs.size(); 
    qbond qrow({{sym_states, nroots}});
-   // qcol
    const auto& rbasis = icomb.rbases.at(std::make_pair(0,0));
    auto qcol = get_qbond(rbasis);
-   
+   if(qcol.size() != 1) tools::exit("error: multiple symmetries in qcol!"); 
    //
    // construct the boundary matrix: |psi[i]> = \sum_a |rbas[a]>(<rbas[a]|psi[i]>)
    // In RCF the site is defined as 
@@ -272,37 +271,30 @@ void init_rwfuns(comb<Km>& icomb,
    // such that W*[i,a]W[j,a] = delta[i,j]
    //
    qtensor2<Tm> rwfuns(qsym(Km::isym), qrow, qcol, {0, 1}); // rwfuns[l,r] for RCF
-   
-   // find the match position for qcol in qrow
-   int cpos = -1; 
-   for(int bc=0; bc<qcol.size(); bc++){
-      if(sym_states == qcol.get_sym(bc)){
-	 cpos = bc;
-	 break;
-      }
-   }
-   assert(cpos != -1);
-   std::map<fock::onstate,int> index; // index of a state
-   int idx = 0;
-   for(const auto& state : rbasis[cpos].space){
-      index[state] = idx;
-      idx++;
-   }
    // setup wavefunction: map vs2 to correct position
    fock::onspace space2;
    std::vector<std::vector<Tm>> vs2;
    const auto& order = icomb.topo.nodes[0][0].rsupport;
-   // transform SCI coefficient to order
-   transform_coeff(space, vs, order, space2, vs2); 
-   const auto& rbas = rbasis[cpos].coeff;
-   linalg::matrix<Tm> wfs(rbas.rows(), nroots);
+   fock::transform_coeff(space, vs, order, space2, vs2);
+   //
+   // Needs to locate position of space2[i] in rbasis[0].space
+   // NOTE: for isym=1, ndet can be larger than space.size()
+   //       due to the possible reorder of basis in init_bipart.h
+   //
+   std::map<fock::onstate,int> index; // index of a state
+   int ndet = rbasis[0].space.size();
+   for(int i=0; i<ndet; i++){
+      const auto& state = rbasis[0].space[i];
+      index[state] = i;
+   }
+   linalg::matrix<Tm> wfs(ndet, nroots);
    for(int i=0; i<space2.size(); i++){
       int ir = index.at(space2[i]);
       for(int iroot=0; iroot<nroots; iroot++){
          wfs(ir,iroot) = vs2[iroot][i];
       } // iroot
    } // i
-   rwfuns(0,cpos) = linalg::xgemm("T","N",wfs,rbas.conj());
+   rwfuns(0,0) = linalg::xgemm("T","N",wfs,rbasis[0].coeff.conj());
    icomb.rwfuns = std::move(rwfuns);
 
    // check overlaps
@@ -310,7 +302,7 @@ void init_rwfuns(comb<Km>& icomb,
       icomb.rwfuns.print("rwfuns",2);
       std::cout << "\ncheck state overlaps ..." << std::endl;
       // ova = <CTNS[i]|CTNS[j]>
-      auto ova = xgemm("N","N",icomb.rwfuns(0,cpos).conj(),icomb.rwfuns(0,cpos).T());
+      auto ova = xgemm("N","N",icomb.rwfuns(0,0).conj(),icomb.rwfuns(0,0).T());
       ova.print("ova_rwfuns");
       // ova0 = <CI[i]|CI[j]>
       linalg::matrix<Tm> ova0(nroots,nroots);

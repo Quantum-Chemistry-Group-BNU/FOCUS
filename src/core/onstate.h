@@ -428,6 +428,7 @@ class onstate{
 	 return state;
       }
       // check standard representative for {|state>,flip|state>} defined by lexicographical ordering 
+      // we define the det with LARGER integer rep as standard!
       bool is_standard() const{
          if(norb_single() == 0) return true;
 	 unsigned long even = 0x5555555555555555, odd = 0xAAAAAAAAAAAAAAAA;
