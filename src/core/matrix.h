@@ -370,7 +370,7 @@ struct matrix{
          return mat;
       }
       // M(l,r) = M1(bar{l},bar{r})^* given parity of qr and qc
-      matrix time_reversal(const int pr, const int pc){
+      matrix time_reversal(const int pr, const int pc) const{
          matrix<Tm> blk(_rows,_cols);
          // even-even block:
          //    <e|\bar{O}|e> = p{O} <e|O|e>^*

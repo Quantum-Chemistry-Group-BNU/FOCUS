@@ -1,14 +1,15 @@
 #ifndef OPER_RBASIS_H
 #define OPER_RBASIS_H
 
+/*
+ Construct renormalized operator <r|O|r'> using determinant expansion 
+*/
+
 #include "ctns_comb.h" 
 #include "oper_dict.h"
 
 namespace ctns{
 
-/*
- Construct renormalized operator <r|O|r'> using determinant expansion 
-*/
 const bool debug_rops = true;
 extern const bool debug_rops;
 

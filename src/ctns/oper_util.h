@@ -53,7 +53,7 @@ void oper_init_dot(const comb<Km>& icomb,
 		   const integral::one_body<typename Km::dtype>& int1e,
 		   oper_dict<typename Km::dtype>& qops){
    const int isym = Km::isym;
-   const bool ifkr = kind::is_kramers<Km>();
+   const bool ifkr = qkind::is_kramers<Km>();
    // rest of spatial orbital indices
    std::vector<int> krest;
    for(int k=0; k<int1e.sorb/2; k++){
@@ -89,10 +89,10 @@ void oper_init_dot(const comb<Km>& icomb,
 // (1) dot operators [c] 
 // (2) boundary operators [l/r]
 template <typename Km>
-void oper_init(const comb<Km>& icomb,
-	       const integral::two_body<typename Km::dtype>& int2e,
-	       const integral::one_body<typename Km::dtype>& int1e,
-	       const std::string scratch){
+void oper_init_dotAll(const comb<Km>& icomb,
+         	      const integral::two_body<typename Km::dtype>& int2e,
+         	      const integral::one_body<typename Km::dtype>& int1e,
+         	      const std::string scratch){
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -163,11 +163,13 @@ void oper_env_right(const comb<Km>& icomb,
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
-   if(rank == 0) std::cout << "\nctns::oper_env_right" << std::endl;
+   if(rank == 0){ 
+      std::cout << "\nctns::oper_env_right Km=" << qkind::get_name<Km>() << std::endl;
+   }
    double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
    // construct for dot operators [cop] & boundary operators [lop/rop]
    auto t0 = tools::get_time();
-   oper_init(icomb, int2e, int1e, scratch);
+   oper_init_dotAll(icomb, int2e, int1e, scratch);
    auto ta = tools::get_time();
    t_init = tools::get_duration(ta-t0);
    // successive renormalization process

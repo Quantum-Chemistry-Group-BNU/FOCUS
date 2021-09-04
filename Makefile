@@ -3,7 +3,7 @@ machine = lenovo
 
 DEBUG = yes
 USE_GCC = no
-USE_MPI = yes
+USE_MPI = no 
 USE_OPENMP = yes
 
 # set library

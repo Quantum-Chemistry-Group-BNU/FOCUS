@@ -9,9 +9,6 @@
 #include "qtensor/qtensor.h"
 #include "ctns_topo.h"
 #include "init_rbasis.h"
-/*
-#include "ctns_phys.h"
-*/
 
 namespace ctns{
 
@@ -57,16 +54,15 @@ class comb{
       std::vector<int> get_suppr(const comb_coord& p, const bool ifprt=true) const;
 */
    public:
+      using Tm = typename Km::dtype;
       // -- CTNS ---
       topology topo;
-      sites_type<typename Km::dtype> rsites; // right canonical form 
-      qtensor2<typename Km::dtype> rwfuns; // wavefunction at the left boundary -*-
+      sites_type<Tm> rsites; // right canonical form 
+      qtensor2<Tm> rwfuns; // wavefunction at the left boundary -*-
       // --- auxilliary data ---
-      rbases_type<typename Km::dtype> rbases; // used in initialization & debug operators 
-/*
-      sites_type<typename Km::dtype> lsites; // left canonical form 
-      std::vector<qtensor3<typename Km::dtype>> psi; // propagation of initial guess 
-*/
+      rbases_type<Tm> rbases; // used in initialization & debug operators 
+      sites_type<Tm> lsites; // left canonical form 
+      std::vector<qtensor3<Tm>> psi; // propagation of initial guess 
       // --- MPI ---
 #ifndef SERIAL
       boost::mpi::communicator world;

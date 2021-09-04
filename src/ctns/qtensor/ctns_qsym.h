@@ -109,6 +109,59 @@ inline qsym get_qsym_onstate(const short isym, const fock::onstate& state){
    return qsym(isym, ne, tm);
 }
 
+// kA+/kB+
+inline qsym get_qsym_opC(const short isym, const int spin){
+   qsym sym_op;
+   if(isym == 0 or isym == 1){
+      sym_op = qsym(isym,1,0);
+   }else if(isym == 2){ 
+      sym_op = (spin==0)? qsym(isym,1,1) : qsym(isym,1,-1);
+   }
+   return sym_op;
+}
+// Apq = p^+q^+
+inline qsym get_qsym_opA(const short isym, const int spin1, const int spin2){
+   qsym sym_op;
+   if(isym == 0){
+      sym_op = qsym(isym,0,0);
+   }else if(isym == 1){
+      sym_op = qsym(isym,2,0);
+   }else if(isym == 2){
+      if(spin1 != spin2){
+         sym_op = qsym(isym,2,0);
+      }else{
+         sym_op = (spin1==0)? qsym(isym,2,2) : qsym(isym,2,-2);
+      }
+   }
+   return sym_op;
+}
+// Bps = p^+s
+inline qsym get_qsym_opB(const short isym, const int spin1, const int spin2){
+   qsym sym_op;
+   if(isym == 0 or isym == 1){
+      sym_op = qsym(isym,0,0);
+   }else if(isym == 2){
+      if(spin1 == spin2){
+         sym_op = qsym(isym,0,0);
+      }else{
+         sym_op = (spin1==0)? qsym(isym,0,2) : qsym(isym,0,-2);
+      }
+   }
+   return sym_op;
+}
+// Sp: qsym of ap^+Sp must be zero
+inline qsym get_qsym_opS(const short isym, const int spin){
+   return -get_qsym_opC(isym, spin);
+}
+// Ppq: qsym of ApqPpq must be zero
+inline qsym get_qsym_opP(const short isym, const int spin1, const int spin2){
+   return -get_qsym_opA(isym, spin1, spin2);
+}
+// Qps: qsym of BpsQps must be zero
+inline qsym get_qsym_opQ(const short isym, const int spin1, const int spin2){
+   return -get_qsym_opB(isym, spin1, spin2);
+}
+
 } // ctns
 
 #endif

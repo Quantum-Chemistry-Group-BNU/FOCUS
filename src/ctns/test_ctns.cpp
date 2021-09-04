@@ -53,10 +53,9 @@ int tests::test_ctns(){
    }
 
    // --- CTNS --- 
-   //ctns::comb<ctns::qkind::rNSz> icomb;
    //ctns::comb<ctns::qkind::cN> icomb;
-   ctns::comb<ctns::qkind::cNK> icomb;
-   //ctns::comb<ctns::qkind::cZ2> icomb;
+   //ctns::comb<ctns::qkind::cNK> icomb;
+   ctns::comb<ctns::qkind::cZ2> icomb;
    
    // 1. dealing with topology 
    icomb.topo.read(schd.ctns.topology_file);
@@ -98,7 +97,7 @@ int tests::test_ctns(){
    int iroot = 0;
    double Sdiag0 = fock::coeff_entropy(vs[iroot]);
    double Sdiag1 = rcanon_Sdiag_exact(icomb,iroot);
-   bool ifsample = true;
+   bool ifsample = false;
    if(ifsample){
       int nsample = 1.e5;
       double Sdiag2 = rcanon_Sdiag_sample(icomb,iroot,nsample);
@@ -111,7 +110,6 @@ int tests::test_ctns(){
 
    schd.create_scratch();
 
-/*   
    // 5. Hij
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hij_ci.print("Hij_ci",8);
@@ -121,6 +119,7 @@ int tests::test_ctns(){
    cout << "\ncheck diffH=" << diffH << endl;
    if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
  
+/*   
    // 6. optimization from current RCF 
    ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
 

@@ -227,7 +227,7 @@ double rcanon_Sdiag_exact(const comb<Km>& icomb,
    }
    double Sdiag = fock::coeff_entropy(coeff);
    double ovlp = std::pow(linalg::xnrm2(dim,&coeff[0]),2); 
-   std::cout << "ovlp = " << ovlp << " Sdiag(exact) = " << Sdiag << std::endl;
+   std::cout << "ovlp=" << ovlp << " Sdiag(exact)=" << Sdiag << std::endl;
    
    // check: computation by sampling CI vector
    std::vector<double> weights(dim,0.0);

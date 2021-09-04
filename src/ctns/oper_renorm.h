@@ -29,17 +29,26 @@ void oper_renorm_opC(const std::string& superblock,
    auto ta = tools::get_time();
 
    // compute
-   const int maxthreads = omp_get_max_threads();
+#ifdef _OPENMP
+   int maxthreads = omp_get_max_threads();
+#else
+   int maxthreads = 1;
+#endif
    std::vector<std::vector<int>> indices(maxthreads);
    std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
-   #pragma omp parallel for schedule(dynamic) 
+#ifdef _OPENMP
+   #pragma omp parallel for schedule(dynamic)
+#endif 
    for(const auto pr : info){
       int iformula = pr.first;
       int index = pr.second;
       auto opwf = oper_normxwf_opC(superblock,site,qops1,qops2,iformula,index); 
       auto tmp = oper_kernel_renorm(superblock,site,opwf); 
-      
+#ifdef _OPENMP
       int omprank = omp_get_thread_num();
+#else 
+      int omprank = 0;
+#endif
       indices[omprank].push_back(index);
       tops[omprank].push_back(tmp);
 /* 
@@ -92,10 +101,16 @@ void oper_renorm_opA(const std::string& superblock,
    auto ta = tools::get_time();
 
    // compute
-   const int maxthreads = omp_get_max_threads();
+#ifdef _OPENMP
+   int maxthreads = omp_get_max_threads();
+#else
+   int maxthreads = 1;
+#endif
    std::vector<std::vector<int>> indices(maxthreads);
    std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
-   #pragma omp parallel for schedule(dynamic) 
+#ifdef _OPENMP
+   #pragma omp parallel for schedule(dynamic)
+#endif 
    for(const auto pr : info){
       int iformula = pr.first;
       int index = pr.second;
@@ -103,9 +118,11 @@ void oper_renorm_opA(const std::string& superblock,
       if(iproc == rank){
          auto opwf = oper_normxwf_opA(superblock,site,qops1,qops2,ifkr,iformula,index);
          auto tmp = oper_kernel_renorm(superblock,site,opwf);
-
-         //qops('A')[index] = oper_kernel_renorm(superblock,site,opwf);
+#ifdef _OPENMP
          int omprank = omp_get_thread_num();
+#else
+	 int omprank = 0;
+#endif
          indices[omprank].push_back(index);
          tops[omprank].push_back(tmp);
       }
@@ -159,10 +176,16 @@ void oper_renorm_opB(const std::string& superblock,
    auto ta = tools::get_time();
    
    // compute
-   const int maxthreads = omp_get_max_threads();
+#ifdef _OPENMP
+   int maxthreads = omp_get_max_threads();
+#else
+   int maxthreads = 1;
+#endif
    std::vector<std::vector<int>> indices(maxthreads);
    std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
-   #pragma omp parallel for schedule(dynamic) 
+#ifdef _OPENMP
+   #pragma omp parallel for schedule(dynamic)
+#endif 
    for(const auto pr : info){
       int iformula = pr.first;
       int index = pr.second;
@@ -170,8 +193,11 @@ void oper_renorm_opB(const std::string& superblock,
       if(iproc == rank){
          auto opwf = oper_normxwf_opB(superblock,site,qops1,qops2,ifkr,iformula,index);
          auto tmp = oper_kernel_renorm(superblock,site,opwf);
-         
+#ifdef _OPENMP
          int omprank = omp_get_thread_num();
+#else
+ 	 int omprank = 0;
+#endif
          indices[omprank].push_back(index);
          tops[omprank].push_back(tmp);
       }
@@ -229,17 +255,26 @@ void oper_renorm_opP(const std::string& superblock,
    auto ta = tools::get_time();
   
    // compute
-   const int maxthreads = omp_get_max_threads();
+#ifdef _OPENMP
+   int maxthreads = omp_get_max_threads();
+#else 
+   int maxthreads = 1;
+#endif
    std::vector<std::vector<int>> indices(maxthreads);
    std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
-   #pragma omp parallel for schedule(dynamic) 
+#ifdef _OPENMP
+   #pragma omp parallel for schedule(dynamic)
+#endif 
    for(const auto index : info){
       int iproc = distribute2(index, size);
       if(iproc == rank){
          auto opwf = oper_compxwf_opP(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
          auto tmp = oper_kernel_renorm(superblock,site,opwf);
-         
+#ifdef _OPENMP
          int omprank = omp_get_thread_num();
+#else
+	 int omprank = 0;
+#endif
          indices[omprank].push_back(index);
          tops[omprank].push_back(tmp);
       }
@@ -297,17 +332,26 @@ void oper_renorm_opQ(const std::string& superblock,
    auto ta = tools::get_time();
    
    // compute
-   const int maxthreads = omp_get_max_threads();
+#ifdef _OPENMP
+   int maxthreads = omp_get_max_threads();
+#else
+   int maxthreads = 1;
+#endif
    std::vector<std::vector<int>> indices(maxthreads);
    std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
-   #pragma omp parallel for schedule(dynamic) 
+#ifdef _OPENMP
+   #pragma omp parallel for schedule(dynamic)
+#endif 
    for(const int index : info){
       int iproc = distribute2(index, size);
       if(iproc == rank){
          auto opwf = oper_compxwf_opQ(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index);
          auto tmp = oper_kernel_renorm(superblock,site,opwf);
-         
+#ifdef _OPENMP
          int omprank = omp_get_thread_num();
+#else
+	 int omprank = 0;
+#endif
          indices[omprank].push_back(index);
          tops[omprank].push_back(tmp);
       }
@@ -365,15 +409,24 @@ void oper_renorm_opS(const std::string& superblock,
    auto ta = tools::get_time();
    
    // compute
-   const int maxthreads = omp_get_max_threads();
+#ifdef _OPENMP
+   int maxthreads = omp_get_max_threads();
+#else
+   int maxthreads = 1; 
+#endif
    std::vector<std::vector<int>> indices(maxthreads);
    std::vector<std::vector<qtensor2<Tm>>> tops(maxthreads);
-   #pragma omp parallel for schedule(dynamic) 
+#ifdef _OPENMP
+   #pragma omp parallel for schedule(dynamic)
+#endif 
    for(const int index : info){
       auto opwf = oper_compxwf_opS(superblock,site,qops1,qops2,isym,ifkr,int2e,int1e,index,size,rank);
       auto tmp = oper_kernel_renorm(superblock,site,opwf);
-      
+#ifdef _OPENMP
       int omprank = omp_get_thread_num();
+#else
+      int omprank = 0;
+#endif
       indices[omprank].push_back(index);
       tops[omprank].push_back(tmp);
    }
@@ -441,7 +494,7 @@ void oper_renorm_opAll(const std::string& superblock,
    rank = icomb.world.rank();
 #endif   
    const int isym = Km::isym;
-   const bool ifkr = kind::is_kramers<Km>();
+   const bool ifkr = qkind::is_kramers<Km>();
    if(rank == 0){ 
       std::cout << "ctns::oper_renorm_opAll coord=" << p 
 	        << " superblock=" << superblock 
@@ -504,8 +557,6 @@ void oper_renorm_opAll(const std::string& superblock,
    if(rank == 0){ 
       auto dt = tools::get_duration(t1-t0);
       std::cout << " TIMING=" << dt << " S" << std::endl;
-      //qops1.print("qops1");
-      //qops2.print("qops2");
       qops.print("qops");
       oper_timer.analysis();
    }

@@ -162,7 +162,7 @@ Initialization: Schmidt decomposition
  init_rbasis.h -> renorm_basis class 
  init_phys.h
  init_bipart.h => challenging part with TRS!
-Qtensor:
+Qtensor: [to be optimized]
  qtensor/kramers_basis.h -> ortho_basis
  qtensor/kramers_linalg.h -> decimation
  qtensor_rank2.h -> rwfuns
@@ -175,95 +175,38 @@ IO:
  ctns_io.h
 Algorithms:
  ctns_alg.h -> basic algorithms for <I|J>,<n|CTNS>,sampling
-Operators:
-
+Operators: [to be optimized]
+ ctns_oper.h -> Hmat
+ oper_util.h
+ oper_dict.h
+ oper_io.h
+ oper_dot.h -> local operators
+ oper_renorm.h -> <r|O|r'> [to be optimized] 
+ oper_combine.h
+ oper_normxwf.h
+ oper_compxwf.h
+ oper_kernel.h
+ oper_timer.cpp
+ oper_timer.h
+ oper_rbasis.h -> debug
 Sweep:
 
 #################################################################
 
-Compute <I|H|J>
--------------------
- ctns_oper.h -> operators
- oper_dict.h
- oper_io.h 
- oper_util.h
- oper_dot.h -> essential: dot op
- oper_renorm.h -> renormalization rules
- oper_compxwf.h -> essential: Oc*qt3
- oper_kernel.h -> for tensor operations
- oper_rbasis.h -> debug
-
- oper_combine.h
- oper_normxwf.h
- oper_compxwf.h
- oper_renorm.h
- oper_util.h
- oper_dot.h
-
-
-Sweep algorithm: (1) onedot
----------------------------
+ 
  ctns_sweep.h
  sweep_data.h
- sweep_util.h
-* local CI: Hdiag & Hx
- sweep_onedot.h => ED works!
-* decimation & operator transformation
- ctns_dpt.h
  sweep_decimation.h
- qtensor_reshape.h
- sweep_renorm.h 
-* guess
  sweep_guess.h
-* perturbed density matrix
- sweep_prdm.h
-
-Sweep algorithm: (2) TRS
----------------------------
-* TRS-adapted decimation
- sweep_decimation.h
-* TRS-adapted local CI
- sweep_dvdson.h
-
-Sweep algorithm: (3) twodot
----------------------------
- sweep_twodot.h
-* qt4: reshaping
- qtensor_rank4.h
- qtensor_reshape4.h
-* Decimation
- sweep_twodot_decimation.h
-* Davidson
- sweep_twodot_ham.h
-* Guess
- sweep_twodot_guess.h
-
-Sweep algorithm: (4) TRS
----------------------------
-* qt4: K()
- qtensor_rank4.h
-* diag & ham:
- sweep_twodot_ham.h
-
-
-V1: Parallelization & Opt
-=========================
-
-Parallelization
--------------------------
-* operator related:
-
-* sweep related:
- sweep_dvdson.h
+ sweep_ham.h
  sweep_onedot.h
- sweep_onedot_renorm.h
  sweep_onedot_ham.h
- sweep_guess.h
- sweep_prdm.h
+ sweep_onedot_renorm.h
  sweep_twodot.h
  sweep_twodot_ham.h
  sweep_twodot_renorm.h
-
+ qtensor/sweep_dvdson.h
+ ctns_sys.h
 
 Low-level data structure
 -------------------------
