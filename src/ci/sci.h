@@ -19,9 +19,20 @@ void get_initial(std::vector<double>& es,
 	         const double ecore){
    std::cout << "\nsci::get_initial" << std::endl;
    // space = {|Di>}
-   int k = int1e.sorb;
+   const int k = int1e.sorb;
+   int ndet = 0;
    for(const auto& det : schd.sci.det_seeds){
-      fock::onstate state(k); // convert det to onstate
+      // consistency check
+      std::cout << ndet << "-th det: ";
+      for(auto k : det) std::cout << k << " ";
+      std::cout << std::endl;
+      ndet += 1;
+      if(det.size() != schd.nelec){
+         std::cout << "det.size=" << det.size() << " schd.nelec=" << schd.nelec << std::endl;
+         tools::exit("error: det.size is inconsistent with schd.nelec!");
+      }
+      // convert det to onstate
+      fock::onstate state(k); 
       for(int i : det) state[i] = 1;
       // search first
       auto search = varSpace.find(state);
@@ -54,7 +65,7 @@ void get_initial(std::vector<double>& es,
    expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.sci.flip);
    nsub = space.size();
    // set up initial states
-   if(schd.sci.nroots > nsub) tools::exit("error: subspace is too small in sci::ci_solver!");
+   if(schd.sci.nroots > nsub) tools::exit("error: subspace is too small in sci::get_initial!");
    linalg::matrix<Tm> H = fock::get_Hmat(space, int2e, int1e, ecore);
    std::vector<double> esol(nsub);
    linalg::matrix<Tm> vsol;

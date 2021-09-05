@@ -26,6 +26,7 @@ int SCI(const input::schedule& schd){
       fci::ci_load(sci_space, es, vs, ci_file);
    }
    for(int i=0; i<nroots; i++){
+      std::cout << "\nstate " << i << ":" << std::endl;
       coeff_population(sci_space, vs[i]);
    }
    // pt2 for single root

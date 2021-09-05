@@ -53,10 +53,8 @@ int CTNS(const input::schedule& schd){
       }else{
          ctns::rcanon_load(icomb, rcanon_file);
       }
-      //ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
    }
-
-/*  
 #ifndef SERIAL
    boost::mpi::broadcast(schd.world, icomb, 0);
    icomb.world = schd.world;
@@ -88,7 +86,6 @@ int CTNS(const input::schedule& schd){
          double Sd = rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
       }
    }
-*/
    return 0;	
 }
 

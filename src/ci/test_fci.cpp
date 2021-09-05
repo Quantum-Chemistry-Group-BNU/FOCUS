@@ -28,7 +28,7 @@ int tests::test_fci(){
    
    // for LiH3/sto-3g DHF [nfrozen=4]; compared against DIRAC/KRCI
    integral::load(int2e, int1e, ecore, "./cmole2.info");
-   onspace space2 = get_fci_space(int1e.sorb,6);
+   onspace space2 = get_fci_space(int1e.sorb, 6);
    
    int dim = space2.size();
    auto eHF = get_Hii(space2[0], int2e, int1e) + ecore;

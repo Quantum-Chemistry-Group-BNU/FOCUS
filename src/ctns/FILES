@@ -206,7 +206,6 @@ Sweep:
  sweep_ham.h
  sweep_decimation.h
  sweep_guess.h
- qtensor/sweep_dvdson.h
  ctns_sys.h
 
 #################################################################

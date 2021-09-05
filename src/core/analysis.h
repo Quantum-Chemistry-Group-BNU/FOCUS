@@ -43,7 +43,7 @@ template <typename Tm>
 void coeff_population(const onspace& space, 
 	   	      const std::vector<Tm>& civec, 
 	   	      const double thresh=1.e-2){
-   std::cout << "\nfock::coeff_population dim=" << space.size() << " thresh=" << thresh << std::endl;
+   std::cout << "fock::coeff_population dim=" << space.size() << " thresh=" << thresh << std::endl;
    std::cout << "  i-th  /  idx  /  coeff  /  pop  /  rank  /  seniority  /  onstate  /  nelec" << std::endl;
    std::cout << std::setprecision(12);
    double ne = 0.0, na = 0.0, nb = 0.0;
