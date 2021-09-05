@@ -5,13 +5,13 @@ namespace ctns{
 
 // generate initial guess for initial sweep optimization 
 template <typename Km>
-void onedot_guess_psi0(comb<Km>& icomb, const int nstates){
+void onedot_guess_psi0(comb<Km>& icomb, const int nroots){
    const auto& rsite0 = icomb.rsites.at(std::make_pair(0,0));
    const auto& rsite1 = icomb.rsites.at(std::make_pair(1,0));
    assert(icomb.rwfuns.qrow.size() == 1); // only same symmetry of wfs
    auto state_sym = icomb.rwfuns.qrow.get_sym(0);
-   for(int istate=0; istate<nstates; istate++){
-      auto qt2 = icomb.get_istate(istate);
+   for(int iroot=0; iroot<nroots; iroot++){
+      auto qt2 = icomb.get_iroot(iroot);
       auto qt3 = contract_qt3_qt2_l(rsite0,qt2);
       // qt3[n0](1,r0) -> cwf(n0,r0)
       qtensor2<typename Km::dtype> cwf(state_sym, rsite0.qmid, rsite0.qcol, {1,1});
@@ -32,7 +32,7 @@ void onedot_guess_psi0(comb<Km>& icomb, const int nstates){
       // psi[n1](n0,r1) = cwf(n0,r0)*rsite1[n1](r0,r1)
       auto psi = contract_qt3_qt2_l(rsite1,cwf);
       icomb.psi.push_back(psi);
-   } // istate
+   } // iroot
 }
 
 const bool debug_twodot_guess = true;

@@ -133,27 +133,27 @@ depend:
 
 # Executables
 $(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(OBJ_DEP)
-	@echo "\n=== LINK $@"
+	@echo "=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
 $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(OBJ_DEP)
-	@echo "\n=== LINK $@"
+	@echo "=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
 $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(OBJ_DEP)
-	@echo "\n=== LINK $@"
+	@echo "=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 
 $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(OBJ_DEP)
-	@echo "\n=== LINK $@"
+	@echo "=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(OBJ_DEP)
-	@echo "\n=== LINK $@"
+	@echo "=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 

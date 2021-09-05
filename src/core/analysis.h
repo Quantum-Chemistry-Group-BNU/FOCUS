@@ -13,26 +13,28 @@ void coeff_analysis(const std::vector<Tm>& civec,
 		    const double thresh=1.e-8){
    std::cout << "fock::coeff_analysis dim=" << civec.size() << std::endl;
    std::map<int,int,std::greater<int>> bucket;
-   auto size = civec.size();
+   std::map<int,double> population;
+   int size = civec.size();
    for(int i=0; i<size; i++){
       double aval = std::abs(civec[i]);
       if(aval > thresh){
          int n = floor(log10(aval));
          bucket[n] += 1;
+	 population[n] += std::norm(civec[i]);
       }
    }
    // print statistics by magnitude
    double accum = 0.0;
    for(const auto& pr : bucket){
-      double per = static_cast<double>(pr.second)/size*100.0;
       int n = pr.first;
-      accum += per;
-      std::cout << " |ci| in 10^" << std::showpos << n+1 << "-10^" << n << " : "
-               << "  per=" << std::defaultfloat << std::noshowpos << std::fixed 
-	       << std::setw(5) << std::setprecision(1) << per
-               << "  accum=" << std::defaultfloat << std::noshowpos << std::fixed 
-	       << std::setw(5) << std::setprecision(1) << accum
-	       << "  counts=" << pr.second
+      double pop = population[n];
+      accum += pop;
+      std::cout << " |c[i]| in 10^" << std::showpos << n+1 << "-10^" << n << " :"
+               << " pop=" << std::defaultfloat << std::noshowpos << std::fixed 
+	       << std::setprecision(3) << pop
+               << " accum=" << std::defaultfloat << std::noshowpos << std::fixed 
+	       << std::setprecision(3) << accum
+	       << " counts=" << pr.second
                << std::endl;
    }
 }
@@ -82,6 +84,14 @@ void coeff_population(const onspace& space,
    std::cout << "<Nb>=" << nb << " std=" << std::pow(std::abs(nb2-nb*nb),0.5) << std::endl;
    coeff_analysis(civec);
 }
+template <typename Tm>	
+void coeff_population(const onspace& space, 
+	   	      const Tm* civec_ptr,
+	   	      const double thresh=1.e-2){
+   int size = space.size();
+   std::vector<Tm> civec(civec_ptr, civec_ptr+size);
+   coeff_population(space, civec, thresh);
+} 
 
 inline double entropy(const std::vector<double>& p, 
 	              const double cutoff=1.e-12){

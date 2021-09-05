@@ -52,10 +52,28 @@ int tests::test_ctns(){
       coeff_population(sci_space, vs[i]);
    }
 
+   // --- Diagonalization in Fock space ---
+   /*
+   onspace fockSpace = get_fci_space(int1e.sorb);
+   auto Hmat = fock::get_Hmat(fockSpace, int2e, int1e, ecore);
+   vector<double> e(Hmat.rows());
+   auto v(Hmat);
+   eig_solver(Hmat, e, v); // Hc=ce
+   for(int i=0; i<nroots; i++){
+      std::cout << "e[" << i << "]=" << std::setprecision(10) << e[i] << std::endl;
+      //coeff_population(fockSpace, v.col(i));
+   } 
+   // lih: parity=0 case
+   // e[0]=-8.8890690229 
+   // e[1]=-8.7645864467 
+   // e[2]=-8.7645864425
+   // e[3]=-8.7645864422
+   */ 
+ 
    // --- CTNS --- 
    //ctns::comb<ctns::qkind::cN> icomb;
-   //ctns::comb<ctns::qkind::cNK> icomb;
-   ctns::comb<ctns::qkind::cZ2> icomb;
+   ctns::comb<ctns::qkind::cNK> icomb;
+   //ctns::comb<ctns::qkind::cZ2> icomb;
    
    // 1. dealing with topology 
    icomb.topo.read(schd.ctns.topology_file);
@@ -119,7 +137,6 @@ int tests::test_ctns(){
    cout << "\ncheck diffH=" << diffH << endl;
    if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
  
-/*   
    // 6. optimization from current RCF 
    ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
 
@@ -132,6 +149,6 @@ int tests::test_ctns(){
    ovlp.print("ovlp");
 
    schd.remove_scratch();
-*/
+
    return 0;
 }

@@ -153,7 +153,7 @@ void onedot_Hdiag_BQ(const std::string& superblock,
          const Tm wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 due to B^H*Q^H
          const auto& O1 = qops1(BQ1).at(index);
          const auto& O2 = qops2(BQ2).at(index);
-         if(O1.sym != qsym()) continue; // screening for <l|B/Q^l_{pq}|l>
+         if(O1.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
 	 if(superblock == "lc"){ 
             onedot_Hdiag_OlOc(O1,O2,wf,wt);
 	    if(ifkr) onedot_Hdiag_OlOc(O1.K(0),O2.K(0),wf,wt);

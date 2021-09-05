@@ -30,7 +30,7 @@ void onedot_renorm_lc(sweep_data& sweeps,
    rank = icomb.world.rank();
 #endif
    using Tm = typename Km::dtype; 
-   const bool ifkr = kind::is_kramers<Km>();
+   const bool ifkr = qkind::is_kramers<Km>();
    const auto& dbond = sweeps.seq[ibond];
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
@@ -111,7 +111,7 @@ void onedot_renorm_lr(sweep_data& sweeps,
    rank = icomb.world.rank();
 #endif
    using Tm = typename Km::dtype; 
-   const bool ifkr = kind::is_kramers<Km>();
+   const bool ifkr = qkind::is_kramers<Km>();
    const auto& dbond = sweeps.seq[ibond];
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
@@ -193,7 +193,7 @@ void onedot_renorm_cr(sweep_data& sweeps,
    rank = icomb.world.rank();
 #endif
    using Tm = typename Km::dtype; 
-   const bool ifkr = kind::is_kramers<Km>();
+   const bool ifkr = qkind::is_kramers<Km>();
    const auto& dbond = sweeps.seq[ibond];
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;

@@ -27,7 +27,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    if(schd.ctns.maxsweep == 0) return;
 
    // prepare environmental operators 
-   oper_env_right(icomb, int2e, int1e, schd.scratch);
+   auto Hmat = get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+   if(rank == 0) Hmat.print("Hmat",8);
 
    // init left boundary site
    get_left_bsite(Km::isym, icomb.lsites[std::make_pair(0,0)]);

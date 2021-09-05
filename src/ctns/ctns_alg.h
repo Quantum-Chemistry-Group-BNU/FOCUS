@@ -247,7 +247,9 @@ double rcanon_Sdiag_exact(const comb<Km>& icomb,
       Sd2 = (Sd2*i + s*s)*fac;
       if((i+1)%noff == 0){
          std = std::sqrt((Sd2-Sd*Sd)/(i+1.e-10));
-	 std::cout << " i=" << i << " Sd=" << Sd << " std=" << std << std::endl;
+	 std::cout << " i=" << i << " Sd=" << Sd << " std=" << std 
+		   << " range=(" << Sd-std << "," << Sd+std << ")"
+		   << std::endl;
       }
    }
    return Sdiag;

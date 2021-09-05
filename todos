@@ -33,6 +33,9 @@ TODOs
     - OpenMP support [DONE20210903]:
 	- Hx & decimation
 	- Initialization of CTNS
+    - Z2 symmetry:
+        - Checked by diagonalizing fock::Hmat
+
     - stack-like storage? 
     - parallelization - push to the limit!
        - monitor peak memory usage

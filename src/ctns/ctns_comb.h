@@ -44,15 +44,13 @@ class comb{
       }
       // return rwfun for iroot, extracted from rwfuns
       qtensor2<typename Km::dtype> get_iroot(const int iroot) const;
-/*
-      // get_qc/ql/qr used in setting up optimization
+      // setting up sweep information: get_qc/ql/qr 
       qbond get_qc(const comb_coord& p) const;
       qbond get_ql(const comb_coord& p) const;
       qbond get_qr(const comb_coord& p) const;
       std::vector<int> get_suppc(const comb_coord& p, const bool ifprt=true) const;
       std::vector<int> get_suppl(const comb_coord& p, const bool ifprt=true) const;
       std::vector<int> get_suppr(const comb_coord& p, const bool ifprt=true) const;
-*/
    public:
       using Tm = typename Km::dtype;
       // -- CTNS ---
@@ -83,21 +81,20 @@ qtensor2<typename Km::dtype> comb<Km>::get_iroot(const int iroot) const{
    return rwfun;
 }
 
-/*
-// symmetry information used in opt_sweep
+// setting up sweep information: get_qc/ql/qr 
+
+//
+//				  |
+//    MPS-like:	    Additional: --pc
+//     \|/			 \|/
+//    --p--			--p--
+//
 template <typename Km>
 qbond comb<Km>::get_qc(const comb_coord& p) const{
-   //
-   //				  |
-   // MPS-like:	    Additional: --pc
-   //  \|/			 \|/
-   // --p--			--p--
-   //
    auto pc = topo.get_node(p).center;
    bool physical = (pc == coord_phys);
    return physical? get_qbond_phys(Km::isym) : rsites.at(pc).qrow; 
 }
-
 template <typename Km>
 std::vector<int> comb<Km>::get_suppc(const comb_coord& p, const bool ifprt) const{
    auto pc = topo.get_node(p).center;
@@ -111,19 +108,18 @@ std::vector<int> comb<Km>::get_suppc(const comb_coord& p, const bool ifprt) cons
    return suppc;
 }
 
+//
+// 			          |
+//    MPS-like:     Additional: --p 
+//      |      |                 /|\
+//    --pl-->--p--     	        --pl--
+//
 template <typename Km>
 qbond comb<Km>::get_ql(const comb_coord& p) const{
-   //
-   // 			          |
-   // MPS-like:     Additional: --p 
-   //   |      |                 /|\
-   // --pl-->--p--     	        --pl--
-   //
    auto pl = topo.get_node(p).left;
    bool cturn = topo.is_cturn(pl,p);
    return cturn? lsites.at(pl).qmid : lsites.at(pl).qcol;
 }
-
 template <typename Km>
 std::vector<int> comb<Km>::get_suppl(const comb_coord& p, const bool ifprt) const{
    auto suppl = topo.get_node(p).lsupport;
@@ -135,17 +131,16 @@ std::vector<int> comb<Km>::get_suppl(const comb_coord& p, const bool ifprt) cons
    return suppl;
 }
 
+//
+// MPS-like:
+//    |     |
+//  --p--<--pr-- : qrow of rsites[pr]
+//
 template <typename Km>
 qbond comb<Km>::get_qr(const comb_coord& p) const{
-   //
-   // MPS-like:
-   //    |     |
-   //  --p--<--pr-- : qrow of rsites[pr]
-   //
    auto pr = topo.get_node(p).right;
    return rsites.at(pr).qrow;
 }
-
 template <typename Km>
 std::vector<int> comb<Km>::get_suppr(const comb_coord& p, const bool ifprt) const{
    auto pr = topo.get_node(p).right;
@@ -157,7 +152,6 @@ std::vector<int> comb<Km>::get_suppr(const comb_coord& p, const bool ifprt) cons
    }
    return suppr;
 }
-*/
 
 } // ctns
 

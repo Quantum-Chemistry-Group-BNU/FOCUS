@@ -1,11 +1,11 @@
 #ifndef SWEEP_DECIMATION_H
 #define SWEEP_DECIMATION_H
 
-#include <numeric>
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+#include <numeric>
 
 namespace ctns{
 
@@ -15,10 +15,10 @@ extern const double thresh_sig2;
 const double thresh_sig2accum = 0.99;
 extern const double thresh_sig2accum;
 
-const bool debug_decimation = false;
+const bool debug_decimation = true; //false;
 extern const bool debug_decimation;
 
-const bool debug_sig2 = false;
+const bool debug_sig2 = true; //false;
 extern const bool debug_sig2;
 
 template <typename Tm>
@@ -39,7 +39,11 @@ void decimation_row_nkr(const qbond& qs1,
 
    // 1. compute reduced basis
    const int nqr = qrow.size();
-   const int maxthreads = omp_get_max_threads();
+#ifdef _OPENMP
+   int maxthreads = omp_get_max_threads();
+#else
+   int maxthreads = 1;
+#endif
    if(debug_decimation){
       std::cout << "ctns::decimation_row_nkr dcut=" << dcut 
 	        << " nqr=" << nqr 
@@ -49,7 +53,9 @@ void decimation_row_nkr(const qbond& qs1,
    std::vector<std::vector<int>> tbr(maxthreads);
    std::vector<std::vector<std::vector<double>>> tsigs2(maxthreads);
    std::vector<std::vector<linalg::matrix<Tm>>> tU(maxthreads); 
+#ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
+#endif
    for(int br=0; br<nqr; br++){
       const auto& qr = qrow.get_sym(br);
       const int rdim = qrow.get_dim(br);
@@ -81,7 +87,11 @@ void decimation_row_nkr(const qbond& qs1,
 
       // save
       if(matched == 1){
+#ifdef _OPENMP
          int omprank = omp_get_thread_num();
+#else
+	 int omprank = 0;
+#endif
          tbr[omprank].push_back(br);
          tsigs2[omprank].push_back(sigs2); 
          tU[omprank].push_back(U); 
@@ -165,7 +175,8 @@ void decimation_row_nkr(const qbond& qs1,
       }
    }
    qbond qkept(dims);
-   qtensor2<Tm> qt2(qsym(), qrow, qkept);
+   auto isym = qkept.get_sym(0).isym();
+   qtensor2<Tm> qt2(qsym(isym), qrow, qkept);
    for(int bc=0; bc<qkept.size(); bc++){
       int br = br_kept[bc];
       const auto& rbas = rbasis[br];
@@ -330,7 +341,8 @@ inline void decimation_row_kr(const qbond& qs1,
 		<< dim << " wts=" << wts << " accum=" << sum << std::endl;
    }
    qbond qkept(dims);
-   qtensor2<Tm> qt2(qsym(), qrow, qkept);
+   auto isym = qkept.get_sym(0).isym();
+   qtensor2<Tm> qt2(qsym(isym), qrow, qkept);
    for(int bc=0; bc<qkept.size(); bc++){
       int br = br_kept[bc];
       const auto& rbas = rbasis[br];

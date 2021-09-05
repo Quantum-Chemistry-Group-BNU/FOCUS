@@ -1,9 +1,8 @@
-#ifndef SWEEP_DVDSON_H
-#define SWEEP_DVDSON_H
+#ifndef PDVDSON_KRAMERS_H
+#define PDVDSON_KRAMERS_H
 
-#include "../../core/dvdson.h"
-#include "kramers_basis.h"
-#include "kramers_linalg.h"
+#include "../../core/ortho.h"
+
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
@@ -12,11 +11,11 @@ namespace ctns{
 
 // solver
 template <typename Tm, typename QTm>
-struct dvdsonSolver_kr{
+struct pdvdsonSolver_kr{
    public:
 
       // simple constructor
-      dvdsonSolver_kr(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle, 
+      pdvdsonSolver_kr(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle, 
 		      const int _parity, QTm& _wf){
          ndim = _ndim;
 	 neig = _neig;
@@ -111,7 +110,7 @@ struct dvdsonSolver_kr{
 
       // initialization
       void init_guess(std::vector<QTm>& psi, std::vector<Tm>& v0){
-	 std::cout << "ctns::dvdsonSolver_kr::init_guess parity=" << parity << std::endl;
+	 std::cout << "ctns::pdvdsonSolver_kr::init_guess parity=" << parity << std::endl;
 	 assert(psi.size() == neig);
          assert(psi[0].get_dim() == ndim);
          v0.resize(ndim*neig*2);
@@ -167,7 +166,7 @@ struct dvdsonSolver_kr{
          double diff = linalg::symmetric_diff(tmpH);
          if(diff > crit_skewH){
             tmpH.print("tmpH");
-	    std::string msg = "error in ctns::dvdsonSolver_kr::subspace_solver_even!";
+	    std::string msg = "error in ctns::pdvdsonSolver_kr::subspace_solver_even!";
 	    tools::exit(msg+" diff_skewH="+std::to_string(diff));
          }
 	 //-------------------------------------------------------- 
@@ -240,7 +239,7 @@ struct dvdsonSolver_kr{
          double diff = linalg::symmetric_diff(tmpH);
          if(diff > crit_skewH){
             tmpH.print("tmpH");
-	    std::string msg = "error in ctns::dvdsonSolver_kr::subspace_solver_odd!";
+	    std::string msg = "error in ctns::pdvdsonSolver_kr::subspace_solver_odd!";
 	    tools::exit(msg+" diff_skewH="+std::to_string(diff)); 
          }
 	 //-----------------------------------------------------------
@@ -301,13 +300,13 @@ struct dvdsonSolver_kr{
 	 rank = world.rank();
 #endif
 	 if(rank == 0){
-	    std::cout << "ctns::dvdsonSolver_kr::solve_iter"
+	    std::cout << "ctns::pdvdsonSolver_kr::solve_iter"
 	              << " is_complex=" << tools::is_complex<Tm>()
 		      << " size=" << size 
 	              << " parity=" << parity << std::endl;
 	 }
          if(neig > ndim){
-	    std::string msg = "error: neig>ndim in dvdson! neig/ndim=";
+	    std::string msg = "error: neig>ndim in pdvdson! neig/ndim=";
             tools::exit(msg+std::to_string(neig)+","+std::to_string(ndim));
 	 }
          // clear counter
@@ -447,333 +446,6 @@ struct dvdsonSolver_kr{
       int parity = 0;
       QTm wf; 
       //--------------------
-      // settings
-      int iprt = 1;
-      double crit_e = 1.e-12; // not used actually
-      double crit_indp = 1.e-12;
-      double crit_skewH = 1.e-8;
-      double damping = 1.e-1;
-      int nbuff = 4; // maximal additional vectors
-      int nmvp = 0;
-#ifndef SERIAL
-      boost::mpi::communicator world;
-#endif
-};
-
-// solver
-template <typename Tm>	
-struct dvdsonSolver_nkr{
-   public:
-
-      // simple constructor
-      dvdsonSolver_nkr(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle){
-         ndim = _ndim;
-	 neig = _neig;
-	 crit_v = _crit_v;
-	 maxcycle = _maxcycle;
-      }
-
-      // iteration info
-      void print_iter(const int iter,
-		      const int nsub,
-		      const linalg::matrix<double>& eigs,
-		      const linalg::matrix<double>& rnorm,
-		      const double t){
-	 //const std::string line(87,'-');
-	 const std::string ifconverge = "-+";
-         if(iter == 1){
-            std::cout << std::defaultfloat; 
-            std::cout << "settings: ndim=" << ndim 
-                      << " neig=" << neig
-                      << " nbuff=" << nbuff  
-                      << " maxcycle=" << maxcycle << std::endl; 
-	    std::cout << "          damping=" << damping << std::scientific 
-                      << " crit_v=" << crit_v 
-                      << " crit_e=" << crit_e 
-                      << " crit_indp=" << crit_indp << std::endl;
-	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s" << std::endl;
-            //std::cout << line << std::endl;
-         }
-         for(int i=0; i<neig; i++){
-            std::cout << std::setw(5) << iter << " " 
-                 << std::setw(3) << i << " "
-                 << std::setw(1) << ifconverge[(rnorm(i,iter)<crit_v)] << " "
-                 << std::setw(20) << std::setprecision(12) << std::fixed << eigs(i,iter) << " "
-                 << std::setw(10) << std::setprecision(2) << std::scientific << eigs(i,iter)-eigs(i,iter-1) << " "
-                 << std::setw(10) << std::setprecision(2) << std::scientific << rnorm(i,iter) << " "
-          	 << std::setw(4) << nsub << " " 
-                 << std::setw(5) << nmvp << " "
-                 << std::setw(10) << std::setprecision(2) << std::scientific << t 
-                 << std::setw(10) << std::setprecision(2) << std::scientific << t/nmvp 
-		 << std::endl;
-         } // i
-	 //std::cout << line << std::endl;
-      }
-
-      // perform H*x for a set of input vectors: x(nstate,ndim)
-      void HVecs(const int nstate, Tm* y, const Tm* x){
-         int size = 1, rank = 0;
-#ifndef SERIAL
-         size = world.size();
-	 rank = world.rank();
-	 world.barrier();
-#endif
-         auto t0 = tools::get_time();
-         for(int istate=0; istate<nstate; istate++){
-            HVec(y+istate*ndim, x+istate*ndim); // y=H*x
-#ifndef SERIAL
-	    if(size > 1){
-	       std::vector<Tm> y_sum(ndim);
-	       boost::mpi::reduce(world, y+istate*ndim, ndim, y_sum.data(), std::plus<Tm>(), 0);
-	       std::copy(y_sum.begin(), y_sum.end(), y+istate*ndim);
-	    }
-#endif
-         }
-         nmvp += nstate;
-         auto t1 = tools::get_time();
-	 /*
-         if(rank == 0){
-            auto dt = tools::get_duration(t1-t0);
-	    std::cout << "timing for HVecs : " << std::setprecision(2)  
-                      << dt << " s" 
-                      << " for nstate = " << nstate 
-		      << " tav = " << dt/nstate << " s" 
-		      << " size = " << size << std::endl;
-         }
-	 */
-      }
-
-      // check by full diag
-      void solve_diag(double* es, Tm* vs, const bool ifCheckDiag=false){
-         int size = 1, rank = 0;
-#ifndef SERIAL
-         size = world.size();
-	 rank = world.rank();
-#endif
-	 if(rank == 0) std::cout << "ctns::dvdsonSolver_nkr:solve_diag" << std::endl;
-         auto t0 = tools::get_time();
-	 linalg::matrix<Tm> id = linalg::identity_matrix<Tm>(ndim);
-         linalg::matrix<Tm> H(ndim,ndim);
-         HVecs(ndim,H.data(),id.data());
-	 if(rank == 0){
-            // check consistency with diag
-            if(ifCheckDiag){
-               std::cout << "ndim=" << ndim << std::endl;
-   	       std::cout << std::setprecision(12);
-               double diff = 0.0;
-               for(int i=0; i<ndim; i++){
-	          std::cout << "i=" << i 
-                            << " H(i,i)=" << H(i,i) 
-                            << " Diag[i]=" << Diag[i] 
-                            << " diff=" << Diag[i]-H(i,i)
-                            << std::endl;
-                  diff += std::abs(Diag[i]-H(i,i));
-                  if(diff>1.e-10) tools::exit("error: |Diag[i]-H(i,i)| is too large!");
-               } // i
-	       std::cout << "CheckDiag passed successfully!" << std::endl;
-            }
-            // check symmetry
-            auto sdiff = linalg::symmetric_diff(H);
-	    std::cout << "|H-H.h|=" << sdiff << std::endl;
-            if(sdiff > 1.e-5){
-               (H-H.H()).print("H-H.h");
-	       tools::exit("error: H is not symmetric in ctns::dvdsonSolver_nkr::solve_diag!");
-            }
-            // solve eigenvalue problem by diagonalization
-	    std::vector<double> e(ndim);
-	    linalg::matrix<Tm> V;
-	    linalg::eig_solver(H, e, V);
-	    std::cout << "eigenvalues:\n" << std::setprecision(12);
-            for(int i=0; i<ndim; i++){
-	       std::cout << "i=" << i << " e=" << e[i] << std::endl;
-            }
-            // copy results
-	    std::copy(e.begin(), e.begin()+neig, es);
-            std::copy(V.data(), V.data()+ndim*neig, vs);
-	 } // rank-0
-         auto t1 = tools::get_time();
-         if(rank == 0) tools::timing("solve_diag", t0, t1);
-      }
-
-      // subspace problem
-      void subspace_solver(const int ndim, 
-		      	   const int nsub,
-		      	   const int nt,
-      	       		   std::vector<Tm>& vbas,
-      	       		   std::vector<Tm>& wbas,
-      	       		   std::vector<double>& tmpE,
-      	       		   std::vector<Tm>& tmpV,
-			   std::vector<Tm>& rbas){
-         // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
-         const Tm alpha = 1.0, beta=0.0;
-	 linalg::matrix<Tm> tmpH(nsub,nsub);
-	 linalg::xgemm("C","N",&nsub,&nsub,&ndim,
-                       &alpha,vbas.data(),&ndim,wbas.data(),&ndim,
-                       &beta,tmpH.data(),&nsub);
-         // 2. check symmetry property
-         double diff = linalg::symmetric_diff(tmpH);
-         if(diff > crit_skewH){
-            tmpH.print("tmpH");
-            std::string msg = "error: ctns::dvdsonSolver_nkr::subspace_solver: diff_skewH=";
-	    tools::exit(msg+std::to_string(diff)); 
-         }
-         // 3. solve eigenvalue problem
-	 linalg::matrix<Tm> tmpU;
-	 linalg::eig_solver(tmpH, tmpE, tmpU);
-	 std::copy(tmpU.data(), tmpU.data()+nsub*nt, tmpV.data());
-         // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
-         // vbas = X[i]
-	 std::copy(vbas.data(), vbas.data()+ndim*nsub, rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                       &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
-                       &beta,vbas.data(),&ndim);
-         // wbas = HX[i]
-	 std::copy(wbas.data(), wbas.data()+ndim*nsub, rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                       &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
-                       &beta,wbas.data(),&ndim);
-         // rbas = HX[i]-e[i]*X[i]
-         for(int i=0; i<nt; i++){
-            std::transform(&wbas[i*ndim],&wbas[i*ndim]+ndim,&vbas[i*ndim],&rbas[i*ndim],
-                           [i,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i]; }); 
-         }
-      }
-
-      // Davidson iterative algorithm for Hv=ve 
-      void solve_iter(double* es, Tm* vs, Tm* vguess=nullptr){
-         int size = 1, rank = 0;
-#ifndef SERIAL
-         size = world.size();
-	 rank = world.rank();
-#endif
-	 if(rank == 0){
-	    std::cout << "ctns::dvdsonSolver_nkr::solve_iter"
-	              << " is_complex=" << tools::is_complex<Tm>() 
-		      << " size=" << size
-		      << std::endl;
-	 }
-         if(neig > ndim){
-	    std::string msg = "error: neig>ndim in dvdson! neig/ndim=";	
-	    tools::exit(msg+std::to_string(neig)+","+std::to_string(ndim));
-	 }
-         // clear counter
-         nmvp = 0;
-         auto t0 = tools::get_time();
-
-         // 1. generate initial subspace - vbas
-         int nl = std::min(ndim,neig+nbuff); // maximal subspace size
-	 std::vector<Tm> vbas(ndim*nl), wbas(ndim*nl);
-	 if(rank == 0){
-            if(vguess != nullptr){
-	       std::copy(vguess, vguess+ndim*neig, vbas.data());
-            }else{
-               auto index = tools::sort_index(ndim, Diag);
-               for(int i=0; i<neig; i++){
-                  vbas[i*ndim+index[i]] = 1.0;
-               }
-            }
-	    linalg::check_orthogonality(ndim, neig, vbas);
-	 }
-#ifndef SERIAL
-	 if(size > 1) boost::mpi::broadcast(world, vbas, 0);
-#endif
-         HVecs(neig, wbas.data(), vbas.data());
-
-         // 2. begin to solve
-	 std::vector<Tm> rbas(ndim*nl), tbas(ndim*nl), tmpV(nl*nl);
-	 std::vector<double> tmpE(nl), tnorm(neig);
-         std::vector<bool> rconv(neig);
-	 // record history
-	 linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); 
-         double damp = damping;
-         bool ifconv = false;
-         int nsub = neig;
-         for(int iter=1; iter<maxcycle+1; iter++){
-	    // ONLY rank-0 solve the subspace problem
-	    if(rank == 0){
-	       //------------------------------------------------------------------------
-               // solve subspace problem and form full residuals: Res[i]=HX[i]-w[i]*X[i]
-	       //------------------------------------------------------------------------
-               subspace_solver(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
-	       //------------------------------------------------------------------------
-	       // compute norm of residual
-               for(int i=0; i<neig; i++){
-                  auto norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
-                  eigs(i,iter) = tmpE[i];
-                  rnorm(i,iter) = norm;
-                  rconv[i] = (norm < crit_v)? true : false;
-               }
-               auto t1 = tools::get_time();
-               if(iprt > 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-t0));
-               // check convergence and return (e,v) if applied 
-               ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
-	    }
-#ifndef SERIAL
-            if(size > 1) boost::mpi::broadcast(world, ifconv, 0);
-#endif	  
-            if(ifconv || iter == maxcycle){
-#ifndef SERIAL
-	       if(size > 1){
-                  // broadcast results to all processors
-		  boost::mpi::broadcast(world, tmpE.data(), neig, 0);
-                  boost::mpi::broadcast(world, vbas.data(), ndim*neig, 0);
-	       }
-#endif
-	       std::copy(tmpE.data(), tmpE.data()+neig, es);
-               std::copy(vbas.data(), vbas.data()+ndim*neig, vs);
-               break;
-            }
-            // if not converged, improve the subspace by ri/(abs(D-ei)+damp) 
-	    int nindp = 0;
-	    if(rank == 0){
-               int nres = 0;
-               for(int i=0; i<neig; i++){
-                  if(rconv[i]) continue;
-	          std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, Diag, &tbas[nres*ndim],
-                                 [i,&tmpE,&damp](const Tm& r, const double& d){ return r/(std::abs(d-tmpE[i])+damp); });
-                  tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
-                  nres += 1;		
-               }
-               // *** this part is critical for better performance ***
-               // ordering the residual to be added from large to small
-               auto index = tools::sort_index(nres, tnorm.data(), 1);
-               for(int i=0; i<nres; i++){
-	          std::copy(&tbas[index[i]*ndim], &tbas[index[i]*ndim]+ndim, &rbas[i*ndim]); 
-               }
-               // re-orthogonalization and get nindp
-               nindp = linalg::get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
-	    }
-#ifndef SERIAL
-            if(size > 1) boost::mpi::broadcast(world, nindp, 0);	    
-#endif
-            if(nindp == 0){
-	       std::cout << "Convergence failure: unable to generate new direction: nindp=0!" << std::endl;
-               exit(1);
-            }else{
-               // expand V and W
-               nindp = std::min(nindp,nbuff);
-#ifndef SERIAL
-	       if(size > 1) boost::mpi::broadcast(world, &rbas[0], ndim*nindp, 0);
-#endif	       
-	       std::copy(&rbas[0],&rbas[0]+ndim*nindp,&vbas[ndim*neig]);
-	       HVecs(nindp, &wbas[ndim*neig], &vbas[ndim*neig]);
-               nsub = neig+nindp;
-	       if(rank == 0) linalg::check_orthogonality(ndim,nsub,vbas);
-            }
-         } // iter
-         if(rank == 0 && !ifconv){
-            std::cout << "convergence failure: out of maxcycle =" << maxcycle << std::endl;
-         }
-      }
-
-   public:
-      // basics
-      int ndim = 0;
-      int neig = 0;
-      double* Diag;
-      std::function<void(Tm*, const Tm*)> HVec;
-      double crit_v = 1.e-5;  // used control parameter
-      int maxcycle = 1000;
       // settings
       int iprt = 1;
       double crit_e = 1.e-12; // not used actually

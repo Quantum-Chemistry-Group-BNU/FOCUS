@@ -5,11 +5,11 @@
 #include "../core/linalg.h"
 #include "qtensor/qtensor.h"
 #include "sweep_ham.h"
-#include "sweep_guess.h"
 #include "sweep_twodot_ham.h"
 #include "sweep_twodot_renorm.h"
-#include "ctns_sys.h"
+#include "sweep_guess.h"
 #include "oper_timer.h"
+//#include "ctns_sys.h"
 
 namespace ctns{
 
@@ -36,7 +36,7 @@ void twodot_localCI(comb<Km>& icomb,
 #endif
    using Tm = typename Km::dtype;
    // without kramers restriction
-   dvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
+   pdvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL
@@ -65,7 +65,7 @@ void twodot_localCI(comb<Km>& icomb,
    nmvp = solver.nmvp;
 }
 template <>
-inline void twodot_localCI(comb<kind::cNK>& icomb,
+inline void twodot_localCI(comb<qkind::cNK>& icomb,
 		    const int nsub,
 		    const int neig,
    		    std::vector<double>& diag,
@@ -88,7 +88,7 @@ inline void twodot_localCI(comb<kind::cNK>& icomb,
    using Tm = std::complex<double>;
    // kramers restricted (currently works only for iterative with guess!) 
    assert(cisolver == 1 && guess);
-   dvdsonSolver_kr<Tm,qtensor4<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
+   pdvdsonSolver_kr<Tm,qtensor4<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL
@@ -122,7 +122,7 @@ void sweep_twodot(const input::schedule& schd,
 #endif   
    if(rank == 0) std::cout << "ctns::sweep_twodot" << std::endl;
    const int isym = Km::isym;
-   const bool ifkr = kind::is_kramers<Km>();
+   const bool ifkr = qkind::is_kramers<Km>();
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
 
@@ -218,11 +218,13 @@ void sweep_twodot(const input::schedule& schd,
    timing.ta = tools::get_time();
 
    // 2. Davidson solver for wf
-   qsym sym_state = (isym == 1)? qsym(schd.nelec) : qsym(schd.nelec, schd.twoms);
+   auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
    qtensor4<Tm> wf(sym_state, qc1, qc2, ql, qr);
-   if(rank == 0 && debug_sweep) std::cout << "dim(localCI)=" << wf.get_dim() << std::endl;
+   if(rank == 0 && debug_sweep){ 
+      std::cout << "sym_state=" << sym_state << " dim(localCI)=" << wf.get_dim() << std::endl;
+   }
    int nsub = wf.get_dim();
-   int neig = sweeps.nstates;
+   int neig = sweeps.nroots;
    auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
@@ -250,9 +252,7 @@ void sweep_twodot(const input::schedule& schd,
                     std::ref(wf), std::ref(Hx_funs),
 		    std::cref(ifkr), std::cref(ecore), 
 		    std::cref(size), std::cref(rank));
-
    oper_timer.clear();
-
    twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, dbond, wf);
@@ -270,7 +270,7 @@ void sweep_twodot(const input::schedule& schd,
    if(rank == 0){
       tools::timing("ctns::sweep_twodot", timing.t0, timing.t1);
       timing.analysis();
-      get_sys_status();
+      //get_sys_status();
    }
 }
 

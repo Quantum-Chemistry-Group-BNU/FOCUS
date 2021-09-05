@@ -34,7 +34,7 @@ int tests::test_simpleci(){
    // --- full diag ---
    auto eHF = get_Hii(space2[0], int2e, int1e) + ecore;
    cout << "ref=" << space2[0] << " eHF=" << setprecision(12) << eHF << endl;
-   auto H = get_Ham(space2,int2e,int1e,ecore);
+   auto H = get_Hmat(space2,int2e,int1e,ecore);
    cout << H.rows() << " diff=" << symmetric_diff(H) << endl;
    vector<double> e(H.rows());
    auto v(H);

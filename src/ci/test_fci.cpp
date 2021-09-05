@@ -35,7 +35,7 @@ int tests::test_fci(){
    cout << "\nref=" << space2[0] << " eHF=" << setprecision(12) << eHF << endl;
 
    // full diag
-   auto H = get_Ham(space2,int2e,int1e,ecore);
+   auto H = get_Hmat(space2,int2e,int1e,ecore);
    cout << "diff(H-H.h)=" << symmetric_diff(H) << endl;
    vector<double> e(H.rows());
    auto v(H);

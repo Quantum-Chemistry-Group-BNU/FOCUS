@@ -8,7 +8,7 @@ namespace ctns{
 
 // computed results at a given dot	
 struct dot_result{
-   std::vector<double> eopt; // eopt[nstates]
+   std::vector<double> eopt; // eopt[nroots]
    double dwt;
    int deff;
    int nmvp;
@@ -63,7 +63,7 @@ public:
 struct sweep_data{
    // constructor
    sweep_data(const std::vector<directed_bond>& sweep_seq,
-              const int _nstates,
+              const int _nroots,
               const bool _guess,
               const int _maxsweep,
               const std::vector<input::params_sweep>& _ctrls,
@@ -72,7 +72,7 @@ struct sweep_data{
       seq = sweep_seq;
       seqsize = sweep_seq.size();
       guess = _guess;
-      nstates = _nstates;
+      nroots = _nroots;
       maxsweep = _maxsweep;
       ctrls = _ctrls;
       dbranch = _dbranch;
@@ -84,7 +84,7 @@ struct sweep_data{
 	 opt_result[i].resize(seqsize);
 	 opt_timing[i].resize(seqsize);
 	 for(int j=0; j<seqsize; j++){
-	    opt_result[i][j].eopt.resize(nstates);
+	    opt_result[i][j].eopt.resize(nroots);
 	 }
       }
       min_result.resize(maxsweep);
@@ -99,7 +99,7 @@ struct sweep_data{
    void print_eopt(const int isweep, const int ibond) const{
       const auto& eopt = opt_result[isweep][ibond].eopt;
       int dots = ctrls[isweep].dots;
-      for(int i=0; i<nstates; i++){
+      for(int i=0; i<nroots; i++){
          std::cout << " optimized energies:"
 		   << " isweep=" << isweep 
 		   << " dots=" << dots
@@ -112,7 +112,7 @@ struct sweep_data{
    void summary(const int isweep);
 public:
    bool guess;
-   int seqsize, nstates, maxsweep, dbranch;
+   int seqsize, nroots, maxsweep, dbranch;
    double rdm_vs_svd;
    std::vector<directed_bond> seq; // sweep bond sequence 
    std::vector<input::params_sweep> ctrls; // control parameters
@@ -150,11 +150,11 @@ inline void sweep_data::summary(const int isweep){
       // print energy
       std::cout << std::defaultfloat << std::setprecision(12);
       const auto& eopt = opt_result[isweep][ibond].eopt;
-      for(int j=0; j<nstates; j++){ 
+      for(int j=0; j<nroots; j++){ 
          std::cout << " e[" << j << "]=" << eopt[j];
          emean[ibond] += eopt[j]; 
       } // jstate
-      emean[ibond] /= nstates;
+      emean[ibond] /= nroots;
       std::cout << std::endl;
    }
    // find the minimal energy
@@ -164,7 +164,7 @@ inline void sweep_data::summary(const int isweep){
    min_result[isweep].nmvp = nmvp;
    std::cout << "minimal energies at ibond=" << mbond << std::endl;
    const auto& eopt = min_result[isweep].eopt; 
-   for(int i=0; i<nstates; i++){
+   for(int i=0; i<nroots; i++){
       std::cout << " sweep energies:"
                 << " isweep=" << isweep 
 	        << " dots=" << ctrls[isweep].dots
@@ -204,7 +204,7 @@ inline void sweep_data::summary(const int isweep){
       std::cout << std::setw(10) << jsweep << " "
       	        << std::showpos << std::scientific << std::setprecision(2) << dwt
                 << std::noshowpos << std::defaultfloat << std::setprecision(12);
-      for(int j=0; j<nstates; j++){ 
+      for(int j=0; j<nroots; j++){ 
          std::cout << " e[" << j << "]=" 
      	           << std::defaultfloat << std::setprecision(12) << eopt_jsweep[j] << " ("
                    << std::scientific << std::setprecision(2) << eopt_jsweep[j]-eopt_isweep[j] << ")";

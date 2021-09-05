@@ -43,7 +43,7 @@ int tests::test_hamiltonian(){
 
    // build H and check symmetry
    cout << "\nCheck Hamiltonian & eigenvalue problem" << endl;
-   auto H = get_Ham(space2,int2e,int1e,ecore);
+   auto H = get_Hmat(space2,int2e,int1e,ecore);
    auto t0 = tools::get_time();
    cout << setprecision(12);
    int ndiff = 0;

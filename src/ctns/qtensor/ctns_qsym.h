@@ -109,6 +109,19 @@ inline qsym get_qsym_onstate(const short isym, const fock::onstate& state){
    return qsym(isym, ne, tm);
 }
 
+// set qsym for state
+inline qsym get_qsym_state(const short isym, const int nelec, const int twoms){
+   qsym sym_state;
+   if(isym == 0){
+      sym_state = qsym(isym, nelec%2, 0);
+   }else if(isym == 1){
+      sym_state = qsym(isym, nelec, 0);
+   }else if(isym == 2){
+      sym_state = qsym(isym, nelec, twoms);
+   }
+   return sym_state;
+}
+
 // kA+/kB+
 inline qsym get_qsym_opC(const short isym, const int spin){
    qsym sym_op;

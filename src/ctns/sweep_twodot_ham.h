@@ -278,7 +278,7 @@ void twodot_Hdiag_BQ(const std::string& superblock,
          const Tm wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 due to B^H*Q^H
          const auto& O1 = qops1(BQ1).at(index);
          const auto& O2 = qops2(BQ2).at(index);
-         if(O1.sym != qsym()) continue; // screening for <l|B/Q^l_{pq}|l>
+         if(O1.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
 	 if(superblock == "lc1"){ 
             twodot_Hdiag_OlOc1(O1,O2,wf,wt);
 	    if(ifkr) twodot_Hdiag_OlOc1(O1.K(0),O2.K(0),wf,wt);
@@ -833,7 +833,11 @@ void twodot_Hx(Tm* y,
 	       const int size,
 	       const int rank){
    auto t0 = tools::get_time();
-   const int maxthreads = omp_get_max_threads();
+#ifdef _OPENMP
+   int maxthreads = omp_get_max_threads();
+#else
+   int maxthreads = 1;
+#endif
    if(rank == 0 && debug_twodot_ham){ 
       std::cout << "ctns::twodot_Hx size=" << size 
                 << " maxthreads=" << maxthreads
@@ -854,9 +858,15 @@ void twodot_Hx(Tm* y,
    }
    auto t1 = tools::get_time();
    // compute
+#ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
+#endif
    for(int i=0; i<Hx_funs.size(); i++){
+#ifdef _OPENMP
       int omprank = omp_get_thread_num();
+#else
+      int omprank = 0;
+#endif
       Hwf1_lst[omprank] += Hx_funs[i]();
    }
    auto t2 = tools::get_time();
