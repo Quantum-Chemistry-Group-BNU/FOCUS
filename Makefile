@@ -4,7 +4,7 @@ machine = lenovo
 DEBUG = yes
 USE_GCC = no
 USE_MPI = no 
-USE_OPENMP = yes
+USE_OPENMP = no
 
 # set library
 ifeq ($(machine), lenovo)

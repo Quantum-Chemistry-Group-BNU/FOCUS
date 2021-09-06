@@ -1,6 +1,10 @@
 #ifndef OPER_COMPXWF_H
 #define OPER_COMPXWF_H
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "oper_kernel.h"
 
 namespace ctns{
@@ -199,7 +203,9 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
 		  sym_op,oij,0,0,ifdagger); // as1*ar2
 
    auto t1 = tools::get_time();
+#ifdef _OPENMP
    #pragma omp critical
+#endif
    {
       oper_timer.nP += 1;
       oper_timer.tP += tools::get_duration(t1-t0);
@@ -271,7 +277,9 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
 		  sym_op,o2ij,0,1,ifdagger); // aq1*ar2^+
 
    auto t1 = tools::get_time();
+#ifdef _OPENMP
    #pragma omp critical
+#endif
    {
       oper_timer.nQ += 1;
       oper_timer.tQ += tools::get_duration(t1-t0);
@@ -394,7 +402,9 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
    } // ifkr
 
    auto t1 = tools::get_time();
+#ifdef _OPENMP
    #pragma omp critical
+#endif
    {
       oper_timer.nS += 1;
       oper_timer.tS += tools::get_duration(t1-t0);
@@ -547,7 +557,9 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
    } // ifkr
 
    auto t1 = tools::get_time();
+#ifdef _OPENMP
    #pragma omp critical
+#endif
    {
       oper_timer.nH += 1;
       oper_timer.tH += tools::get_duration(t1-t0);

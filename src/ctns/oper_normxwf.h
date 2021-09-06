@@ -1,6 +1,10 @@
 #ifndef OPER_NORMXWF_H
 #define OPER_NORMXWF_H
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "oper_kernel.h"
 #include "oper_timer.h"
 
@@ -27,7 +31,9 @@ qtensor3<Tm> oper_normxwf_opC(const std::string& superblock,
    } // iformula
 
    auto t1 = tools::get_time();
+#ifdef _OPENMP
    #pragma omp critical
+#endif
    { 
       oper_timer.nC += 1;
       oper_timer.tC += tools::get_duration(t1-t0);
@@ -77,7 +83,9 @@ qtensor3<Tm> oper_normxwf_opA(const std::string& superblock,
    } // iformula
 
    auto t1 = tools::get_time();
+#ifdef _OPENMP
    #pragma omp critical
+#endif
    { 
       oper_timer.nA += 1;
       oper_timer.tA += tools::get_duration(t1-t0);
@@ -127,7 +135,9 @@ qtensor3<Tm> oper_normxwf_opB(const std::string& superblock,
    } // iformula
 
    auto t1 = tools::get_time();
+#ifdef _OPENMP
    #pragma omp critical
+#endif
    {
       oper_timer.nB += 1;
       oper_timer.tB += tools::get_duration(t1-t0);

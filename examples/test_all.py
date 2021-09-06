@@ -42,11 +42,11 @@ def parse_ctns(fname="ctns.out"):
    return elst
 
 def testAll(dirs):
-   print("\ntestAll")
-   print("dirs=",dirs)
+   #print("\ntestAll")
+   #print("dirs=",dirs)
    tmpdir = "./tmp"
    for fdir in dirs:
-      print('\n###',fdir,'###')
+      print('\n### run:',fdir,'###')
       os.chdir(fdir)
       os.system("pwd")
       if(not os.path.exists(tmpdir)): os.mkdir(tmpdir)
@@ -74,12 +74,12 @@ def testAll(dirs):
    return 0
 
 def compareAll(dirs,thresh=1.e-8): 
-   print("\ncompareAll with thresh=",thresh)
-   print("dirs=",dirs)
+   #print("\ncompareAll with thresh=",thresh)
+   #print("dirs=",dirs)
    tmpdir = "./tmp"
    nfail = 0
    for fdir in dirs:
-      print('\n###',fdir,'###')
+      print('\n### check:',fdir,'###')
       os.chdir(fdir)
       os.system("pwd")
       for prefix in ['','r','c']:
@@ -95,7 +95,9 @@ def compareAll(dirs,thresh=1.e-8):
          print('fname[cal]=',fname)
          elst1 = parse_ctns(fname)[-1]
          ediff = numpy.linalg.norm(elst0 - elst1)
-         print('eref=',elst0,' ecal=',elst1,' ediff=',ediff)
+         print('eref=',elst0)
+         print('ecal=',elst1)
+         print('ediff=',ediff)
          if ediff < thresh:
             print("pass")
          else:
@@ -116,9 +118,10 @@ if __name__ == '__main__':
    #cdir = os.getcwd()
    #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
    dirs = ['0_h6_tns', '1_lih3_dcg', '2_lih3+_dcg', '3_h6+_kr', '4_h5_twodot']
-   print(dirs)
    t0 = time.time()
-   testAll(dirs)
-   compareAll(dirs)
+   for fname in dirs:
+      fdir = [fname]
+      testAll(fdir)
+      compareAll(fdir)
    t1 = time.time()
    print('totol time =',t1-t0)

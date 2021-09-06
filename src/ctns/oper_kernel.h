@@ -1,6 +1,10 @@
 #ifndef OPER_KERNEL_H
 #define OPER_KERNEL_H
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "qtensor/qtensor.h"
 #include "oper_timer.h"
 
@@ -103,7 +107,9 @@ qtensor2<Tm> oper_kernel_renorm(const std::string& superblock,
    }
    
    auto t1 = tools::get_time();
+#ifdef _OPENMP
    #pragma omp critical
+#endif
    {
       oper_timer.nR += 1;
       oper_timer.tR += tools::get_duration(t1-t0);

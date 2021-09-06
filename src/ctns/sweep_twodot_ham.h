@@ -1,13 +1,13 @@
 #ifndef SWEEP_TWODOT_HAM_H
 #define SWEEP_TWODOT_HAM_H
 
-#include "oper_dict.h" 
-#include "oper_combine.h"
-#include "oper_timer.h"
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+#include "oper_dict.h" 
+#include "oper_combine.h"
+#include "oper_timer.h"
 
 namespace ctns{
    

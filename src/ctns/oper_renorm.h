@@ -1,15 +1,15 @@
 #ifndef OPER_RENORM_H
 #define OPER_RENORM_H
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "oper_rbasis.h"
 #include "oper_combine.h"
 #include "oper_normxwf.h"
 #include "oper_compxwf.h"
 #include "oper_timer.h"
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 namespace ctns{
 
