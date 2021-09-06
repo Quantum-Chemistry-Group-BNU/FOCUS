@@ -2,6 +2,7 @@
 #define DVDSON_H
 
 #include "ortho.h"
+#include <functional>
 
 namespace linalg{
 
