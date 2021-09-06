@@ -97,10 +97,10 @@ inline qbond get_qbond_phys(const int isym){
 //     ---*---|vac>   n---*
 //  |out> 	          |
 template <typename Tm>
-void get_right_bsite(const int isym, qtensor3<Tm>& qt3){
+qtensor3<Tm> get_right_bsite(const int isym){
    auto qvac = get_qbond_vac(isym);
    auto qphys = get_qbond_phys(isym);
-   qt3.init(qsym(isym), qphys, qphys, qvac);
+   qtensor3<Tm> qt3(qsym(isym), qphys, qphys, qvac);
    for(int bk=0; bk<qphys.size(); bk++){
       int pdim = qphys.get_dim(bk);
       for(int im=0; im<pdim; im++){
@@ -109,14 +109,15 @@ void get_right_bsite(const int isym, qtensor3<Tm>& qt3){
          qt3(bk,bk,0)[im] = mat;
       }
    }
+   return qt3;
 }
 
 template <typename Tm>
-inline void get_left_bsite(const int isym, qtensor3<Tm>& qt3){
+qtensor3<Tm> get_left_bsite(const int isym){
    std::vector<bool> dir = {1,1,0};
    auto qvac = get_qbond_vac(isym);
    auto qphys = get_qbond_phys(isym);
-   qt3.init(qsym(isym), qphys, qvac, qphys, dir);
+   qtensor3<Tm> qt3(qsym(isym), qphys, qvac, qphys, dir);
    for(int bk=0; bk<qphys.size(); bk++){
       int pdim = qphys.get_dim(bk);
       for(int im=0; im<pdim; im++){
@@ -125,6 +126,7 @@ inline void get_left_bsite(const int isym, qtensor3<Tm>& qt3){
          qt3(bk,0,bk)[im] = mat;
       }
    }
+   return qt3;
 }
 
 //

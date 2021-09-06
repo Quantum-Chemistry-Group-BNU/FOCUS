@@ -14,6 +14,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	       const integral::one_body<typename Km::dtype>& int1e,
 	       const double ecore,
 	       const input::schedule& schd){
+   using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -31,7 +32,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    if(rank == 0) Hmat.print("Hmat",8);
 
    // init left boundary site
-   get_left_bsite(Km::isym, icomb.lsites[std::make_pair(0,0)]);
+   icomb.lsites[std::make_pair(0,0)] = get_left_bsite<Tm>(Km::isym);
 
    // generate sweep sequence
    sweep_data sweeps(icomb.topo.get_sweeps(rank==0), 

@@ -110,7 +110,7 @@ def compareAll(dirs,thresh=1.e-8):
 
 if __name__ == '__main__':
 
-   os.environ['OMP_NUM_THREADS'] = "3"
+   os.environ['OMP_NUM_THREADS'] = "4"
    print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
 
    HOME = os.path.dirname(os.getcwd())

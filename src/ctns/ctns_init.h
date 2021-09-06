@@ -68,10 +68,11 @@ void init_rbases(comb<Km>& icomb,
          for(int k : node.rsupport) std::cout << k << " ";
 	 std::cout << std::endl;
       }
+      renorm_basis<Tm> rbasis;
       // for boundary site, we simply choose to use identity
       if(node.type == 0 && p != std::make_pair(0,0)){
          
-	 icomb.rbases[p] = get_rbasis_phys<Tm>(Km::isym);
+	 rbasis = get_rbasis_phys<Tm>(Km::isym);
 
       // Generate {|r>} at the internal nodes
       }else{
@@ -88,10 +89,16 @@ void init_rbases(comb<Km>& icomb,
          fock::transform_coeff(space, vs, order, space2, vs2); 
 
 	 // 3. bipartition of space and compute renormalized states [time-consuming part!]
-	 right_projection<Km>(icomb.rbases[p], 2*bpos, space2, vs2, 
+	 right_projection<Km>(rbasis, 2*bpos, space2, vs2, 
 			      thresh_proj, rdm_vs_svd, debug_init);
 
       } // node type
+#ifdef _OPENMP
+      #pragma omp critical
+#endif
+      icomb.rbases[p] = std::move(rbasis); // avoid concurrently writing map
+      auto shape = get_shape(icomb.rbases[p]); 
+      assert(shape.first > 0 && shape.second > 0);
    } // idx
 
    // print information for all renormalized basis {|r>} at each bond
@@ -103,7 +110,7 @@ void init_rbases(comb<Km>& icomb,
          int i = p.first, j = p.second;
          // shape can be different from dim(rspace) if associated weight is zero!
          auto shape = get_shape(icomb.rbases[p]);
-         std::cout << " idx=" << idx << " node=" << p
+         std::cout << " idx=" << idx << " node=" << p << " type=" << topo.node_type(p)
                    << " shape=" << shape.first << "," << shape.second 
                    << std::endl;
          Dmax = std::max(Dmax,shape.second);
@@ -137,7 +144,7 @@ void init_rsites(comb<Km>& icomb){
       // type=0: end or leaves
       if(node.type == 0 && p != std::make_pair(0,0)){
 	
-         get_right_bsite(Km::isym, icomb.rsites[p]);
+         icomb.rsites[p] = get_right_bsite<Tm>(Km::isym);
 
       // physical/internal on backbone/branch
       }else{
@@ -245,8 +252,8 @@ void init_rsites(comb<Km>& icomb){
 // compute wave function at the start for right canonical form
 template <typename Km>
 void init_rwfuns(comb<Km>& icomb,
-		const fock::onspace& space,
-		const std::vector<std::vector<typename Km::dtype>>& vs){
+		 const fock::onspace& space,
+		 const std::vector<std::vector<typename Km::dtype>>& vs){
    using Tm = typename Km::dtype;
    std::cout << "\nctns::init_rwfuns Km=" << qkind::get_name<Km>() << std::endl;
    auto t0 = tools::get_time();
