@@ -77,7 +77,7 @@ def compareAll(dirs,thresh=1.e-8):
    #print("\ncompareAll with thresh=",thresh)
    #print("dirs=",dirs)
    tmpdir = "./tmp"
-   nfail = 0
+   global nfail
    for fdir in dirs:
       print('\n### check:',fdir,'###')
       os.chdir(fdir)
@@ -110,6 +110,9 @@ def compareAll(dirs,thresh=1.e-8):
 
 if __name__ == '__main__':
 
+   os.environ['OMP_NUM_THREADS'] = "3"
+   print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
+
    HOME = os.path.dirname(os.getcwd())
    print('HOME=',HOME)
    SCI  = HOME+"/bin/sci.x"
@@ -117,7 +120,9 @@ if __name__ == '__main__':
 
    #cdir = os.getcwd()
    #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
+   nfail = 0
    dirs = ['0_h6_tns', '1_lih3_dcg', '2_lih3+_dcg', '3_h6+_kr', '4_h5_twodot']
+   #dirs = ['3_h6+_kr']
    t0 = time.time()
    for fname in dirs:
       fdir = [fname]

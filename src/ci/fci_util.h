@@ -439,7 +439,7 @@ struct sparse_hamiltonian{
 	    H1(i,i) += diag[i];
          }
          // compared againts construction by Slater-Condon rule
-         auto H0 = fock::get_Ham(space,int2e,int1e,ecore);
+         auto H0 = fock::get_Hmat(space,int2e,int1e,ecore);
 	 std::cout << std::setprecision(6);
          for(int i=0; i<dim; i++){
             for(int j=0; j<dim; j++){

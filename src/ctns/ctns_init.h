@@ -222,13 +222,18 @@ void init_rsites(comb<Km>& icomb){
 
       auto tf = tools::get_time(); 
       if(debug_init){ 
+         const double thresh_ortho = 1.e-10;
+         auto ova = contract_qt3_qt3_cr(icomb.rsites.at(p),icomb.rsites.at(p));
+         double maxdiff = ova.check_identityMatrix(thresh_ortho, false);
          auto dt = tools::get_duration(tf-ti);
          std::cout << " shape(l,c,r)=("
                    << icomb.rsites[p].qrow.get_dimAll() << ","
                    << icomb.rsites[p].qmid.get_dimAll() << ","
                    << icomb.rsites[p].qcol.get_dimAll() << ")"
+                   << " maxdiff=" << std::scientific << maxdiff 
 	           << " TIMING=" << dt << " S"
 		   << std::endl;
+         if(maxdiff>thresh_ortho) tools::exit("error: deviate from identity matrix!");
       }
    } // idx
 

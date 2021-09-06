@@ -9,6 +9,7 @@
 #include "qtensor/qtensor.h"
 #include "ctns_topo.h"
 #include "init_rbasis.h"
+#include "init_phys.h" // get_qbond_phys
 
 namespace ctns{
 
