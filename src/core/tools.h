@@ -41,7 +41,7 @@ inline bool is_complex(){ return false; }
 template <>
 inline bool is_complex<std::complex<double>>(){ return true; }
 
-// memory
+// memory in MB
 template <typename Tm>
 inline double sizeMB(size_t sz){ return sz*sizeof(Tm)/std::pow(1024.0,2); }
 
@@ -144,36 +144,6 @@ template <typename T>
 std::vector<int> sort_index_abs(const std::vector<T>& v, const int iop=0){
    return sort_index_abs(v.size(), v.data(), iop);
 }
-
-// permutations
-struct perm{
-   public:
-      perm(const int k): size(k){
-         image.resize(k);
-	 std::iota(image.begin(), image.end(), 0);
-      }
-      perm(std::vector<int>& order){
-	 size = order.size();
-	 image.resize(size);
-	 std::copy(order.begin(),order.end(),image.begin());
-      }
-      void shuffle(){
-	 std::shuffle(image.begin(), image.end(), generator);
-      }
-      // to spin orbital sites
-      std::vector<int> to_image2(){
-	 std::vector<int> image2(size*2);
-	 for(int i=0; i<size; i++){
-	    image2[2*i] = 2*image[i];
-	    image2[2*i+1] = 2*image[i]+1;
-	 }
-	 return image2;
-      }
-      friend std::ostream& operator <<(std::ostream& os, const perm& p);
-   public:
-      int size;
-      std::vector<int> image;
-};
 
 } // tools
 

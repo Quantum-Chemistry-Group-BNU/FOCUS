@@ -212,9 +212,12 @@ Sweep:
 
 Low-level data structure
 -------------------------
- qtensor2 - operator/density matrix
- qtensor3 - onedot wf
- qtensor4 - twodot wf
+ qtensor2 - operator / density matrix - o[l,r]
+ qtensor3 - onedot wf[l,c,r] / site
+ qtensor4 - twodot wf[l,c1,c2,r]->wf[lc1,c2,r],wf[l,c1,c2r]
+
+KEY: storage pattern -> affect low-level contraction efficiency! => HOW???
+     =, copy [same size -> just copy data -> no memory reallocation]
 
 TODOs: Tensor operations
 -------------------------
