@@ -2,6 +2,7 @@
 #define CTNS_QDPT_H
 
 #include "ctns_qsym.h"
+#include "../../core/tools.h"
 
 namespace ctns{
 

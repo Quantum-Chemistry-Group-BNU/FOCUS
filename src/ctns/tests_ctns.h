@@ -3,6 +3,8 @@
 
 namespace tests{
 
+int test_tensor();
+
 int test_ctns();
 
 }
