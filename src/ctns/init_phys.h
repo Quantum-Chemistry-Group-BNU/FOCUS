@@ -2,7 +2,6 @@
 #define INIT_PHYS_H
 
 #include "init_rbasis.h"
-#include "qtensor/qtensor.h"
 
 namespace ctns{
 
@@ -97,33 +96,28 @@ inline qbond get_qbond_phys(const int isym){
 //     ---*---|vac>   n---*
 //  |out> 	          |
 template <typename Tm>
-qtensor3<Tm> get_right_bsite(const int isym){
+stensor3<Tm> get_right_bsite(const int isym){
    auto qvac = get_qbond_vac(isym);
    auto qphys = get_qbond_phys(isym);
-   qtensor3<Tm> qt3(qsym(isym), qphys, qphys, qvac);
+   stensor3<Tm> qt3(qsym(isym), qphys, qvac, qphys); // lrc
    for(int bk=0; bk<qphys.size(); bk++){
-      int pdim = qphys.get_dim(bk);
-      for(int im=0; im<pdim; im++){
-	 linalg::matrix<Tm> mat(pdim,1);
-	 mat(im,0) = 1.0;
-         qt3(bk,bk,0)[im] = mat;
+      auto& blk = qt3(bk,0,bk);
+      for(int im=0; im<qphys.get_dim(bk); im++){
+	 blk(im,0,im) = 1.0;
       }
    }
    return qt3;
 }
 
 template <typename Tm>
-qtensor3<Tm> get_left_bsite(const int isym){
-   std::vector<bool> dir = {1,1,0};
+stensor3<Tm> get_left_bsite(const int isym){
    auto qvac = get_qbond_vac(isym);
    auto qphys = get_qbond_phys(isym);
-   qtensor3<Tm> qt3(qsym(isym), qphys, qvac, qphys, dir);
+   stensor3<Tm> qt3(qsym(isym), qvac, qphys, qphys, dir_LCF);
    for(int bk=0; bk<qphys.size(); bk++){
-      int pdim = qphys.get_dim(bk);
-      for(int im=0; im<pdim; im++){
-	 linalg::matrix<Tm> mat(1,pdim);
-	 mat(0,im) = 1.0;
-         qt3(bk,0,bk)[im] = mat;
+      auto& blk = qt3(bk,0,bk);	   
+      for(int im=0; im<qphys.get_dim(bk); im++){
+	 blk(0,im,im) = 1.0;
       }
    }
    return qt3;

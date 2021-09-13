@@ -13,11 +13,6 @@
 
 namespace ctns{
 
-template <typename Tm>
-using rbases_type = std::map<comb_coord,renorm_basis<Tm>>;
-template <typename Tm>
-using sites_type = std::map<comb_coord,qtensor3<Tm>>;
-
 template <typename Km>
 class comb{
    private:
@@ -25,7 +20,7 @@ class comb{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-	 ar & topo & rsites & rwfuns;
+//	 ar & topo & rsites & rwfuns;
       }
    public:
       // constructors
@@ -33,6 +28,7 @@ class comb{
 	 std::cout << "\ncomb: qkind=" << qkind::get_name<Km>() << std::endl;
          if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
       }
+/*
       // helpers
       int get_nphysical() const{ return topo.nphysical; }
       int get_nroots() const{
@@ -45,29 +41,60 @@ class comb{
       }
       // return rwfun for iroot, extracted from rwfuns
       qtensor2<typename Km::dtype> get_iroot(const int iroot) const;
-      // setting up sweep information: get_qc/ql/qr 
-      qbond get_qc(const comb_coord& p) const;
-      qbond get_ql(const comb_coord& p) const;
-      qbond get_qr(const comb_coord& p) const;
-      std::vector<int> get_suppc(const comb_coord& p, const bool ifprt=true) const;
-      std::vector<int> get_suppl(const comb_coord& p, const bool ifprt=true) const;
-      std::vector<int> get_suppr(const comb_coord& p, const bool ifprt=true) const;
+      //
+      //				  |
+      //    MPS-like:	    Additional: --pc
+      //     \|/			 \|/
+      //    --p--			--p--
+      //
+      qbond get_qc(const comb_coord& p) const{
+         auto pc = topo.get_node(p).center;
+         bool physical = (pc == coord_phys);
+         return physical? get_qbond_phys(Km::isym) : rsites.at(pc).qrow; 
+      }
+      //
+      // 			          |
+      //    MPS-like:     Additional: --p 
+      //      |      |                 /|\
+      //    --pl-->--p--     	        --pl--
+      //
+      qbond get_ql(const comb_coord& p) const{
+         auto pl = topo.get_node(p).left;
+         bool cturn = topo.is_cturn(pl,p);
+         return cturn? lsites.at(pl).qmid : lsites.at(pl).qcol;
+      }
+      //
+      // MPS-like:
+      //    |     |
+      //  --p--<--pr-- : qrow of rsites[pr]
+      //
+      template <typename Km>
+      qbond get_qr(const comb_coord& p) const{
+         auto pr = topo.get_node(p).right;
+         return rsites.at(pr).qrow;
+      }
+*/
    public:
       using Tm = typename Km::dtype;
       // -- CTNS ---
       topology topo;
-      sites_type<Tm> rsites; // right canonical form 
-      qtensor2<Tm> rwfuns; // wavefunction at the left boundary -*-
-      // --- auxilliary data ---
-      rbases_type<Tm> rbases; // used in initialization & debug operators 
-      sites_type<Tm> lsites; // left canonical form 
-      std::vector<qtensor3<Tm>> psi; // propagation of initial guess 
+      // used in initialization & debug operators 
+      std::vector<renorm_basis<Tm>> rbases;
+      // right canonical form 
+      std::vector<stensor3<Tm>> rsites;
+      // wavefunction at the left boundary -*-
+      stensor2<Tm> rwfuns; 
+      // left canonical form 
+      std::vector<stensor3<Tm>> lsites;
+      // propagation of initial guess 
+      std::vector<stensor3<Tm>> psi; 
       // --- MPI ---
 #ifndef SERIAL
       boost::mpi::communicator world;
 #endif
 };
 
+/*
 // return rwfun for iroot, extracted from rwfuns
 template <typename Km>
 qtensor2<typename Km::dtype> comb<Km>::get_iroot(const int iroot) const{
@@ -81,78 +108,7 @@ qtensor2<typename Km::dtype> comb<Km>::get_iroot(const int iroot) const{
    }
    return rwfun;
 }
-
-// setting up sweep information: get_qc/ql/qr 
-
-//
-//				  |
-//    MPS-like:	    Additional: --pc
-//     \|/			 \|/
-//    --p--			--p--
-//
-template <typename Km>
-qbond comb<Km>::get_qc(const comb_coord& p) const{
-   auto pc = topo.get_node(p).center;
-   bool physical = (pc == coord_phys);
-   return physical? get_qbond_phys(Km::isym) : rsites.at(pc).qrow; 
-}
-template <typename Km>
-std::vector<int> comb<Km>::get_suppc(const comb_coord& p, const bool ifprt) const{
-   auto pc = topo.get_node(p).center;
-   bool physical = (pc == coord_phys);
-   auto suppc = physical? std::vector<int>({topo.get_node(p).pindex}) : topo.get_node(pc).rsupport;
-   if(ifprt){
-      std::cout << " suppc :";
-      for(const auto& k : suppc) std::cout << " " << k;
-      std::cout << std::endl; 
-   }
-   return suppc;
-}
-
-//
-// 			          |
-//    MPS-like:     Additional: --p 
-//      |      |                 /|\
-//    --pl-->--p--     	        --pl--
-//
-template <typename Km>
-qbond comb<Km>::get_ql(const comb_coord& p) const{
-   auto pl = topo.get_node(p).left;
-   bool cturn = topo.is_cturn(pl,p);
-   return cturn? lsites.at(pl).qmid : lsites.at(pl).qcol;
-}
-template <typename Km>
-std::vector<int> comb<Km>::get_suppl(const comb_coord& p, const bool ifprt) const{
-   auto suppl = topo.get_node(p).lsupport;
-   if(ifprt){
-      std::cout << " suppl :";
-      for(const auto& k : suppl) std::cout << " " << k;
-      std::cout << std::endl; 
-   }
-   return suppl;
-}
-
-//
-// MPS-like:
-//    |     |
-//  --p--<--pr-- : qrow of rsites[pr]
-//
-template <typename Km>
-qbond comb<Km>::get_qr(const comb_coord& p) const{
-   auto pr = topo.get_node(p).right;
-   return rsites.at(pr).qrow;
-}
-template <typename Km>
-std::vector<int> comb<Km>::get_suppr(const comb_coord& p, const bool ifprt) const{
-   auto pr = topo.get_node(p).right;
-   auto suppr = topo.get_node(pr).rsupport;
-   if(ifprt){
-      std::cout << " suppr :";
-      for(const auto& k : suppr) std::cout << " " << k;
-      std::cout << std::endl; 
-   }
-   return suppr;
-}
+*/
 
 } // ctns
 

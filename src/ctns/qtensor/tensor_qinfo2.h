@@ -31,7 +31,7 @@ struct qinfo2{
       int _addr(const int br, const int bc) const{ 
 	 return br*_cols + bc; 
       }
-      void _addr_unpack(const int idx2, int& br, int& bc){
+      void _addr_unpack(const int idx2, int& br, int& bc) const{
 	 bc = idx2%_cols;
          br = idx2/_cols;
       }

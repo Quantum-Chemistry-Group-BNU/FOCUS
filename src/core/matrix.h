@@ -14,9 +14,20 @@
 
 namespace linalg{
 
+template <typename Tm>
+struct BaseMatrix{
+   public:
+      virtual int rows() const = 0;
+      virtual int cols() const = 0;
+      virtual size_t size() const = 0;
+      virtual Tm* data() const = 0;
+      virtual const Tm operator()(const int i, const int j) const = 0;
+      virtual Tm& operator()(const int i, const int j) = 0;
+};
+
 // column-major matrix
 template <typename Tm>
-struct matrix{
+struct matrix : public BaseMatrix<Tm> {
    private:
       friend class boost::serialization::access;	   
       template <class Archive>
@@ -172,7 +183,7 @@ struct matrix{
       // helpers
       int rows() const{ return _rows; }
       int cols() const{ return _cols; }
-      int size() const{ return _size; }
+      size_t size() const{ return _size; }
       Tm* data() const{ return _data; }
       // basic mathematics of matrices
       std::vector<Tm> diagonal() const{
@@ -429,7 +440,8 @@ struct matrix{
          return blk;
       }
    public:
-      int _rows, _cols, _size;
+      int _rows, _cols;
+      size_t _size;
       Tm* _data;
 };
 

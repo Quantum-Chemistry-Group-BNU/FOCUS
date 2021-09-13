@@ -4,7 +4,8 @@
 #include <vector>
 #include <algorithm> // transform
 #include "../core/onspace.h"
-#include "qtensor/qtensor.h"
+#include "qtensor/qnum_qsym.h" 
+#include "qtensor/kramers_linalg.h"
 #include "init_rbasis.h"
 
 namespace ctns{

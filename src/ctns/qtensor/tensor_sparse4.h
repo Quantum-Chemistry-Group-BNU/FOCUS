@@ -85,10 +85,10 @@ struct stensor4{
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }
       // access
-      dtensor4<Tm>& operator ()(const int br, const int bc, const int bm, const int bv){ 
+      const dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv) const{ 
 	 return info._qblocks[info._addr(br,bc,bm,bv)]; 
       }
-      const dtensor4<Tm>& operator ()(const int br, const int bc, const int bm, const int bv) const{ 
+      dtensor4<Tm>& operator()(const int br, const int bc, const int bm, const int bv){ 
 	 return info._qblocks[info._addr(br,bc,bm,bv)]; 
       }
       // --- SPECIFIC FUNCTIONS ---

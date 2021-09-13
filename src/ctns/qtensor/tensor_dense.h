@@ -14,7 +14,7 @@ namespace ctns{
 	
 // O[l,r]
 template <typename Tm>   
-struct dtensor2{
+struct dtensor2 : public linalg::BaseMatrix<Tm> {
    private:
       // serialize
       friend class boost::serialization::access;

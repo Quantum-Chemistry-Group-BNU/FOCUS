@@ -4,6 +4,7 @@
 #include <tuple>
 #include <vector>
 #include "../core/serialization.h"
+#include "../core/tools.h"
 
 namespace ctns{
 
@@ -17,6 +18,7 @@ extern const comb_coord coord_vac;
 const comb_coord coord_phys = std::make_pair(-1,-1);  
 extern const comb_coord coord_phys;
 
+//
 // node information for sites of ctns in right 
 //		            r
 //      c		    |
@@ -48,20 +50,12 @@ struct node{
 // directed_bond used in sweep sequence for optimization of ctns: (p0,p1,forward,p,cturn)
 struct directed_bond{
    public:
-      directed_bond(const comb_coord p0_, const comb_coord p1_, const bool forward_, 
-		    const comb_coord p_, const bool cturn_){
-         p0 = p0_;
-	 p1 = p1_;
-	 forward = forward_;
-	 p = p_;
-	 cturn = cturn_;
-      }
+      directed_bond(const comb_coord _p0, const comb_coord _p1, const bool _forward, 
+		    const comb_coord _p, const bool _cturn):
+	p0(_p0), p1(_p1), forward(_forward), p(_p), cturn(_cturn) {}
    public:
-      comb_coord p0;
-      comb_coord p1;
-      bool forward;
-      comb_coord p; 
-      bool cturn;
+      comb_coord p0, p1, p;
+      bool forward, cturn;
 };
 
 // topology information of ctns
@@ -71,16 +65,49 @@ struct topology{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-	 ar & nbackbone & nphysical & nodes & rcoord & image2;
+	 ar & ntotal & nbackbone & nphysical 
+            & nodes & rcoord & rindex & image2;
       }
    public:
       topology(){};
       void read(const std::string& topology_file); 
       void print() const;
-      // node
+      // helpers
       const node& get_node(const comb_coord& p) const{ return nodes[p.first][p.second]; }
-      // type
-      int node_type(const comb_coord& p) const{ return nodes[p.first][p.second].type; }
+      int get_type(const comb_coord& p) const{ return nodes[p.first][p.second].type; }
+      //				  |
+      //    MPS-like:	    Additional: --pc
+      //     \|/			 \|/
+      //    --p--			--p--
+      //
+      std::vector<int> get_suppc(const comb_coord& p, const bool ifprt=true) const{
+         auto pc = get_node(p).center;
+         bool physical = (pc == coord_phys);
+         auto suppc = physical? std::vector<int>({get_node(p).pindex}) : get_node(pc).rsupport;
+         if(ifprt) tools::print_vector(suppc, "suppc");
+         return suppc;
+      }
+      // 			        |
+      //    MPS-like:     Additional: --p 
+      //      |      |                 /|\
+      //    --pl-->--p--     	      --pl--
+      //
+      std::vector<int> get_suppl(const comb_coord& p, const bool ifprt=true) const{
+         auto suppl = get_node(p).lsupport;
+         if(ifprt) tools::print_vector(suppl, "suppl");
+         return suppl;
+      }
+      //
+      // MPS-like:
+      //    |     |
+      //  --p--<--pr-- : qrow of rsites[pr]
+      //
+      std::vector<int> get_suppr(const comb_coord& p, const bool ifprt=true) const{
+         auto pr = get_node(p).right;
+         auto suppr = get_node(pr).rsupport;
+         if(ifprt) tools::print_vector(suppr, "suppr");
+         return suppr;
+      }
       //
       // cturn: bond that at the turning points to branches
       //              |
@@ -88,6 +115,7 @@ struct topology{
       //       |      I      |
       //    ---*------*------*---
       //               (i,0)
+      //
       bool is_cturn(const comb_coord& p0, const comb_coord& p1) const{
 	 return p0.second == 0 && p1.second == 1;
       }
@@ -96,11 +124,15 @@ struct topology{
       // sweep sequence 
       std::vector<directed_bond> get_sweeps(const bool debug=true) const;
    public:
-      int nbackbone, nphysical;
-      std::vector<std::vector<node>> nodes; // nodes on comb
-      std::vector<comb_coord> rcoord; // coordinate of each node in rvisit order ("sliced from right")
-      				      // used in constructing right environment
-      std::vector<int> image2; // 1D ordering of CTNS for mapping |n_p...> 
+      int ntotal, nbackbone, nphysical;
+      // nodes on comb
+      std::vector<std::vector<node>> nodes; 
+      // coordinate of each node in rvisit order ("sliced from right")
+      // used in constructing right environment
+      std::vector<comb_coord> rcoord;  // idx->(i,j) 
+      std::map<comb_coord,int> rindex; // (i,j)->idx
+      // 1D ordering of CTNS for mapping |n_p...> in ctns_alg 
+      std::vector<int> image2; 
 };
 
 } // ctns

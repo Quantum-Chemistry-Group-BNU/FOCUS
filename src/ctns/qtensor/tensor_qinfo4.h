@@ -26,7 +26,7 @@ struct qinfo4{
       int _addr(const int br, const int bc, const int bm, const int bv) const{
 	 return ((br*_cols + bc)*_mids + bm)*_vers + bv;
       }
-      int _addr_unpack(const int idx4, int& br, int& bc, int& bm, int& bv) const{
+      void _addr_unpack(const int idx4, int& br, int& bc, int& bm, int& bv) const{
          bv = idx4%_vers;
          int idx3 = idx4/_vers;
 	 bm = idx3%_mids;
