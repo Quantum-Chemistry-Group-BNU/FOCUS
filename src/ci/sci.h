@@ -98,7 +98,6 @@ void ci_solver(const input::schedule& schd,
 	       const integral::one_body<Tm>& int1e,
 	       const double ecore){
    const bool Htype = tools::is_complex<Tm>();
-   bool debug = false;
    auto t0 = tools::get_time();
    std::cout << "\nsci::ci_solver Htype=" << Htype << std::endl; 
    // set up head-bath table

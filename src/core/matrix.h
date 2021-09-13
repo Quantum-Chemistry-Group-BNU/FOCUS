@@ -170,10 +170,10 @@ struct matrix{
          loader >> *this;
       }
       // helpers
-      inline int rows() const{ return _rows; }
-      inline int cols() const{ return _cols; }
-      inline int size() const{ return _size; }
-      inline Tm* data() const{ return _data; }
+      int rows() const{ return _rows; }
+      int cols() const{ return _cols; }
+      int size() const{ return _size; }
+      Tm* data() const{ return _data; }
       // basic mathematics of matrices
       std::vector<Tm> diagonal() const{
 	 assert(_rows == _cols);

@@ -14,13 +14,12 @@ namespace linalg{
 template <typename Tm>
 double check_orthogonality(const linalg::matrix<Tm>& V,
   		           const double thresh=1.e-10){
-   int n = V.rows();
-   int m = V.cols();
-   linalg::matrix<Tm> dev = xgemm("C","N",V,V) - identity_matrix<Tm>(m);
-   double diff = normF(dev)/static_cast<double>(m);
+   int n = V.cols();
+   linalg::matrix<Tm> dev = xgemm("C","N",V,V) - identity_matrix<Tm>(n);
+   double diff = normF(dev)/static_cast<double>(n);
    if(diff > thresh){
       //dev.print("dev");
-      std::cout << "error in check_orthogonality: dim=" << m 
+      std::cout << "error in check_orthogonality: dim=" << n 
 	        << " diff=" << std::scientific << diff 
 		<< " thresh=" << thresh
 	        << std::endl;
@@ -29,11 +28,11 @@ double check_orthogonality(const linalg::matrix<Tm>& V,
    return diff;
 }
 template <typename Tm>
-double check_orthogonality(const int n, const int m, 
+double check_orthogonality(const int m, const int n,
    	      	           const std::vector<Tm>& vbas,
   		           const double thresh=1.e-10){
-   linalg::matrix<Tm> V(n,m,vbas.data());
-   return check_orthogonality(V, thresh);
+   linalg::matrix<Tm> V(m,n,vbas.data());
+   return check_orthogonality(V,thresh);
 }
 
 // modified Gram-Schmidt orthogonalization of 

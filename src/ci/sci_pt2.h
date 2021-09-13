@@ -15,7 +15,6 @@ void pt2_solver(const input::schedule& schd,
 	        const integral::two_body<Tm>& int2e,
 	        const integral::one_body<Tm>& int1e,
 	        const double ecore){
-   const bool debug = true;
    auto t0 = tools::get_time();
    std::cout << "\nsci::pt2_solver" << std::endl;  
    // set up head-bath table

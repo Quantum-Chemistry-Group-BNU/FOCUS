@@ -35,6 +35,13 @@ extern const std::string line_separator;
 const std::string line_separator2(70,'=');
 extern const std::string line_separator2;
 
+template <typename Tm>
+void print_vector(const std::vector<Tm>& vec, const std::string name){
+   std::cout << " " << name << "=";
+   for(const auto& k : vec) std::cout << " " << k;
+   std::cout << std::endl;
+}	
+
 // type information
 template <typename Tm>
 inline bool is_complex(){ return false; }

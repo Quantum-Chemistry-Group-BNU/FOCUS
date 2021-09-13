@@ -1,10 +1,8 @@
-#include "linalg.h"
 #include <cassert>
 #include <memory>
 #include <string>
 #include <cctype>
-
-#include "dvdson.h"
+#include "linalg.h"
 
 using namespace std;
 using namespace linalg;
