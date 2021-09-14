@@ -219,9 +219,10 @@ void init_rsites(comb<Km>& icomb){
 	             } // i
 		     // tmp3[c'](l,r)= Wr*[r'r]tmp2[c'][r'l] = tmp2^T*Wr.conj() 
 		     auto tmp3 = linalg::xgemm("T","N",tmp12,Wr);
+		     int N = tmp3.size();
 		     // R[c][lr] = sum_c' Wc*[c'c]tmp3[c'][lr]
 		     for(int ic=0; ic<Wc.rows(); ic++){
-		        blk.get(ic) += Wc(ic,dc)*tmp3;
+			linalg::xaxpy(N, Wc(ic,dc), tmp3.data(), blk.get(ic).data());
 		     } // ic
 		  } // ibas
 	       } // kc

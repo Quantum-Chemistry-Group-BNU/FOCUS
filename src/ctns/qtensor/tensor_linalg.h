@@ -10,7 +10,7 @@ namespace ctns{
 template <typename Tm, typename Km>
 void xgemm(const char* TRANSA, const char* TRANSB,
 	   const Km alpha, const linalg::BaseMatrix<Tm>& A, const linalg::BaseMatrix<Tm>& B,
-           const Km beta, dtensor2<Tm>& C){
+           const Km beta, dtensor2<Tm> C){
    int M, N, K;
    int LDA, LDB, LDC;
    // TRANS is c-type string (character array), input "N" not 'N' 

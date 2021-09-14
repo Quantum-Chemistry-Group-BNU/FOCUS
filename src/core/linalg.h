@@ -5,6 +5,20 @@
 #include "matrix.h"
 
 extern "C" {
+// copy
+void dcopy_(const int* N,
+	    const double* X, const int* INCX,
+	    double* Y, const int* INCY);
+void zcopy_(const int* N,
+	    const std::complex<double>* X, const int* INCX,
+	    std::complex<double>* Y, const int* INCY);
+// axpy
+void daxpy_(const int* N, const double* alpha, 
+	    const double* X, const int* INCX,
+	    double* Y, const int* INCY);
+void zaxpy_(const int* N, const std::complex<double>* alpha,
+	    const std::complex<double>* X, const int* INCX,
+	    std::complex<double>* Y, const int* INCY);
 // nrm2
 double dnrm2_(const int* N, const double* X, const int* INCX);
 double dznrm2_(const int* N, const std::complex<double>* X, const int* INCX);
@@ -63,6 +77,28 @@ void zgesdd_(const char* JOBZ, const int* M, const int* N,
 
 // wrapper for BLAS/LAPACK with matrix<Tm> and vector<Tm> 
 namespace linalg{
+
+// copy
+inline void xcopy(const int N, const double*X, double* Y){
+   int INCX = 1, INCY = 1;
+   ::dcopy_(&N, X, &INCX, Y, &INCY);
+}
+inline void xcopy(const int N, const std::complex<double>*X, std::complex<double>* Y){
+   int INCX = 1, INCY = 1;
+   ::zcopy_(&N, X, &INCX, Y, &INCY);
+}
+
+// xaxpy
+inline void xaxpy(const int N, const double alpha, 
+		  const double*X, double* Y){
+   int INCX = 1, INCY = 1;
+   ::daxpy_(&N, &alpha, X, &INCX, Y, &INCY);
+}
+inline void xaxpy(const int N, const std::complex<double> alpha, 
+		  const std::complex<double>*X, std::complex<double>* Y){
+   int INCX = 1, INCY = 1;
+   ::zaxpy_(&N, &alpha, X, &INCX, Y, &INCY);
+}
 
 // xnrm2
 inline double xnrm2(const int N, const double* X){

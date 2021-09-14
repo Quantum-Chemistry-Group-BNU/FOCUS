@@ -21,13 +21,13 @@ int tests::test_ctns(){
    input::schedule schd;
    schd.read(fname);
 
-   // we will use DTYPE to control Hnr/Hrel 
-   //using DTYPE = double; // to do -> test more
-   using DTYPE = complex<double>;
+   // we will use Tm to control Hnr/Hrel 
+   //using Tm = double; // to do -> test more
+   using Tm = complex<double>;
   
    // read integral
-   integral::two_body<DTYPE> int2e;
-   integral::one_body<DTYPE> int1e;
+   integral::two_body<Tm> int2e;
+   integral::one_body<Tm> int1e;
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
   
@@ -35,10 +35,10 @@ int tests::test_ctns(){
    int nroots = schd.sci.nroots;
    vector<double> es(nroots,0.0);
    onspace sci_space;
-   vector<vector<DTYPE>> vs(nroots);
+   vector<vector<Tm>> vs(nroots);
    
    if(!schd.sci.load){
-      fci::sparse_hamiltonian<DTYPE> sparseH;
+      fci::sparse_hamiltonian<Tm> sparseH;
       sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
       // pt2 for single root
       if(schd.sci.ifpt2){
@@ -92,13 +92,11 @@ int tests::test_ctns(){
 
    // 3. overlap
    const double thresh=1.e-6;
-   // 3.0 <CI|CI>
+   // 3.1 <CTNS|CTNS>
    auto Sij_ci = fci::get_Smat(sci_space, vs);
    Sij_ci.print("Sij_ci");
-   // 3.1 <CTNS|CTNS>
    auto Sij_ctns = ctns::get_Smat(icomb);
    Sij_ctns.print("Sij");
-   // check
    double diff_ctns = normF(Sij_ctns - Sij_ci);
    cout << "\ncheck diff_Sij[ctns] = " << diff_ctns << endl;
    if(diff_ctns > thresh) tools::exit(string("error: diff_Sij[ctns] > thresh=")+to_string(thresh));
@@ -111,6 +109,7 @@ int tests::test_ctns(){
    cout << "\ncheck diff_Sij[mix] = " << diff_mix << endl;
    if(diff_mix > thresh) tools::exit(string("error: diff_Sij[mix] > thresh=")+to_string(thresh));
 
+/*
    // 4. compute Sd by sampling 
    int iroot = 0;
    double Sdiag0 = fock::coeff_entropy(vs[iroot]);
@@ -149,6 +148,6 @@ int tests::test_ctns(){
    ovlp.print("ovlp");
 
    schd.remove_scratch();
-
+*/
    return 0;
 }

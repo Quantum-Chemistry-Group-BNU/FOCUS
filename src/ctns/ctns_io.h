@@ -13,7 +13,11 @@ void rcanon_save(const comb<Km>& icomb,
    std::cout << "\nctns::rcanon_save fname=" << fname << std::endl;
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
-   save << icomb.rsites << icomb.rwfuns;
+   // save rsites & rwfuns
+   for(int idx=0; idx<icomb.topo.ntotal; idx++){
+      save << icomb.rsites[idx];
+   }
+   save << icomb.rwfuns;
 }
 
 template <typename Km>
@@ -22,7 +26,12 @@ void rcanon_load(comb<Km>& icomb, // no const!
    std::cout << "\nctns:rcanon_load fname=" << fname << std::endl;
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
-   load >> icomb.rsites >> icomb.rwfuns;
+   // load rsites & rwfuns
+   icomb.rsites.resize(icomb.topo.ntotal);
+   for(int idx=0; idx<icomb.topo.ntotal; idx++){
+      load >> icomb.rsites[idx]; // this save calls to copy constructor for vector<st3>
+   }
+   load >> icomb.rwfuns;
 }
 
 } // ctns

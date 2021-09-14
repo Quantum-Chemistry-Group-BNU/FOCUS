@@ -26,12 +26,9 @@ struct stensor4{
       }
       // desctructors
       ~stensor4(){ delete[] _data; }
-      stensor4(const stensor4& st) = delete;
-      stensor4& operator =(const stensor4& st) = delete;
-      /*
       // copy constructor
       stensor4(const stensor4& st){
-	 //std::cout << "stensor4: copy constructor" << std::endl;     
+	 std::cout << "stensor4: copy constructor" << std::endl;     
          info = st.info;
 	 _data = new Tm[info._size];
 	 std::copy_n(st._data, info._size, _data);
@@ -39,7 +36,7 @@ struct stensor4{
       }
       // copy assignment
       stensor4& operator =(const stensor4& st){
-	 //std::cout << "stensor4: copy assignment" << std::endl;     
+	 std::cout << "stensor4: copy assignment" << std::endl;     
          if(this != &st){
             info = st.info;
 	    delete[] _data;
@@ -49,17 +46,16 @@ struct stensor4{
 	 }
 	 return *this;
       }
-      */
       // move constructor
       stensor4(stensor4&& st){
-	 //std::cout << "stensor4: move constructor" << std::endl;     
+	 std::cout << "stensor4: move constructor" << std::endl;     
          info = std::move(st.info);
          _data = st._data;
 	 st._data = nullptr;
       }
       // move assignment
       stensor4& operator =(stensor4&& st){
-	 //std::cout << "stensor4: move assignment" << std::endl;     
+	 std::cout << "stensor4: move assignment" << std::endl;     
          if(this != &st){
             info = std::move(st.info);
 	    delete[] _data;
@@ -73,14 +69,18 @@ struct stensor4{
       int cols() const{ return info._cols; }
       int mids() const{ return info._mids; }
       int vers() const{ return info._vers; }
-      int row_dim(const int br) const{ return info.qrow.get_dim(br); }
-      int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
-      int mid_dim(const int bm) const{ return info.qmid.get_dim(bm); }
-      int ver_dim(const int bv) const{ return info.qver.get_dim(bv); }
       int row_dimAll() const{ return info.qrow.get_dimAll(); }
       int col_dimAll() const{ return info.qcol.get_dimAll(); } 
       int mid_dimAll() const{ return info.qmid.get_dimAll(); }
       int ver_dimAll() const{ return info.qver.get_dimAll(); }
+      int row_dim(const int br) const{ return info.qrow.get_dim(br); }
+      int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
+      int mid_dim(const int bm) const{ return info.qmid.get_dim(bm); }
+      int ver_dim(const int bv) const{ return info.qver.get_dim(bv); }
+      int row_sym(const int br) const{ return info.qrow.get_sym(br); }
+      int col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
+      int mid_sym(const int bm) const{ return info.qmid.get_sym(bm); }
+      int ver_sym(const int bv) const{ return info.qver.get_sym(bv); }
       size_t size() const{ return info._size; }
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }

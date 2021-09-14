@@ -28,18 +28,19 @@ template <typename Km>
 void rcanon_check(const comb<Km>& icomb,
 		  const double thresh_ortho,
 		  const bool ifortho=true){
-   std::cout << "\nctns::rcanon_check thresh_ortho=" << thresh_ortho << std::endl;
+   std::cout << "\nctns::rcanon_check thresh_ortho=" 
+	     << std::scientific << std::setprecision(2) << thresh_ortho 
+	     << std::endl;
    // loop over all sites
-   int ntotal = icomb.topo.rcoord.size();
-   for(int idx=0; idx<ntotal; idx++){
+   for(int idx=0; idx<icomb.topo.ntotal; idx++){
       auto p = icomb.topo.rcoord[idx];
       // check right canonical form -> A*[l'cr]A[lcr] = w[l'l] = Id
-      auto qt2 = contract_qt3_qt3_cr(icomb.rsites.at(p),icomb.rsites.at(p));
+      auto qt2 = contract_qt3_qt3_cr(icomb.rsites[idx],icomb.rsites[idx]);
       double maxdiff = qt2.check_identityMatrix(thresh_ortho, false);
-      int Dtot = qt2.qrow.get_dimAll();
+      int Dtot = qt2.row_dimAll();
       std::cout << " idx=" << idx << " node=" << p << " Dtot=" << Dtot 
 		<< " maxdiff=" << std::scientific << maxdiff << std::endl;
-      if((ifortho || (!ifortho && idx != ntotal-1)) && (maxdiff>thresh_ortho)){
+      if((ifortho || (!ifortho && idx != icomb.topo.ntotal-1)) && (maxdiff>thresh_ortho)){
 	 tools::exit("error: deviate from identity matrix!");
       }
    } // idx
@@ -49,15 +50,15 @@ void rcanon_check(const comb<Km>& icomb,
 // <CTNS[i]|CTNS[j]>: compute by a typical loop for right canonical form 
 template <typename Km>
 linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){ 
-   //std::cout << "\nctns::get_Smat" << std::endl;
    // loop over sites on backbone
    const auto& nodes = icomb.topo.nodes;
-   qtensor2<typename Km::dtype> qt2_r, qt2_u;
+   const auto& rindex = icomb.topo.rindex;
+   stensor2<typename Km::dtype> qt2_r, qt2_u;
    for(int i=icomb.topo.nbackbone-1; i>0; i--){
       const auto& node = nodes[i][0];
       int tp = node.type;
       if(tp == 0 || tp == 1){
-	 const auto& site = icomb.rsites.at(std::make_pair(i,0));
+	 const auto& site = icomb.rsites[rindex.at(std::make_pair(i,0))];
 	 if(i == icomb.topo.nbackbone-1){
 	    qt2_r = contract_qt3_qt3_cr(site,site);
 	 }else{
@@ -66,7 +67,7 @@ linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){
 	 }
       }else if(tp == 3){
          for(int j=nodes[i].size()-1; j>=1; j--){
-	    const auto& site = icomb.rsites.at(std::make_pair(i,j));
+	    const auto& site = icomb.rsites[rindex.at(std::make_pair(i,j))];
             if(j == nodes[i].size()-1){
 	       qt2_u = contract_qt3_qt3_cr(site,site);
 	    }else{
@@ -75,14 +76,14 @@ linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){
 	    }
 	 } // j
 	 // internal site without physical index
-	 const auto& site = icomb.rsites.at(std::make_pair(i,0));
+	 const auto& site = icomb.rsites[rindex.at(std::make_pair(i,0))];
 	 auto qtmp = contract_qt3_qt2_r(site,qt2_r); // ket
 	 qtmp = contract_qt3_qt2_c(qtmp,qt2_u); // upper branch
 	 qt2_r = contract_qt3_qt3_cr(site,qtmp); // bra
       }
    } // i
-   // first merge: sum_l wfuns[j,l]*S[n,l,r] => tmp[n,j,r]
-   const auto& site0 = icomb.rsites.at(std::make_pair(0,0));
+   // first merge: sum_l rwfuns[j,l]*site0[l,r,n] => site[j,r,n]
+   const auto& site0 = icomb.rsites[rindex.at(std::make_pair(0,0))];
    auto site = contract_qt3_qt2_l(site0,icomb.rwfuns); 
    auto qtmp = contract_qt3_qt2_r(site,qt2_r);
    qt2_r = contract_qt3_qt3_cr(site,qtmp);
@@ -96,81 +97,65 @@ template <typename Km>
 std::vector<typename Km::dtype> rcanon_CIcoeff(const comb<Km>& icomb,
 			       		       const fock::onstate& state){
    using Tm = typename Km::dtype;
-   int n = icomb.get_nroots(); 
-   std::vector<typename Km::dtype> coeff(n,0.0);
    // compute <n|CTNS> by contracting all sites
    const auto& nodes = icomb.topo.nodes;
-   qtensor2<Tm> qt2_r, qt2_u;
+   const auto& rindex = icomb.topo.rindex;
+   stensor2<Tm> qt2_r, qt2_u;
    for(int i=icomb.topo.nbackbone-1; i>=0; i--){
       const auto& node = nodes[i][0];
       int tp = node.type;
       if(tp == 0 || tp == 1){
          // site on backbone with physical index
-	 const auto& site = icomb.rsites.at(std::make_pair(i,0));
+	 const auto& site = icomb.rsites[rindex.at(std::make_pair(i,0))];
          // given occ pattern, extract the corresponding qblock
 	 auto qt2 = site.fix_mid( occ2mdx(Km::isym, state, node.pindex) ); 
 	 if(i == icomb.topo.nbackbone-1){
-	    qt2_r = qt2;
+	    qt2_r = std::move(qt2);
          }else{
 	    qt2_r = qt2.dot(qt2_r); // (out,x)*(x,in)->(out,in)
 	 }
       }else if(tp == 3){
 	 // propogate symmetry from leaves down to backbone
          for(int j=nodes[i].size()-1; j>=1; j--){
-	    const auto& site = icomb.rsites.at(std::make_pair(i,j));		 
+	    const auto& site = icomb.rsites[rindex.at(std::make_pair(i,j))];
 	    const auto& nodej = nodes[i][j];
 	    auto qt2 = site.fix_mid( occ2mdx(Km::isym, state, nodej.pindex) );
 	    if(j == nodes[i].size()-1){
-	       qt2_u = qt2;
+	       qt2_u = std::move(qt2);
 	    }else{
 	       qt2_u = qt2.dot(qt2_u);
 	    }
          } // j
 	 // internal site without physical index
-	 const auto& site = icomb.rsites.at(std::make_pair(i,0));
+	 const auto& site = icomb.rsites[rindex.at(std::make_pair(i,0))];
 	 qt2_u = qt2_u.T(); // permute row and col for contract_qt3_qt2_c
+	 exit(1);
 	 auto qt3 = contract_qt3_qt2_c(site,qt2_u); // contract upper sites
 	 auto qt2 = qt3.fix_mid( std::make_pair(0,0) );
 	 qt2_r = qt2.dot(qt2_r); // contract right matrix
-      }
+      } // tp
    } // i
    auto wfcoeff = icomb.rwfuns.dot(qt2_r);
    assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
-   const auto& blk = wfcoeff(0,0);
-   if(blk.size() == 0) return coeff; // in case this CTNS does not encode this det 
+   const auto& blk2 = wfcoeff(0,0);
+   // finally return coeff = <n|CTNS> 
+   int n = icomb.get_nroots(); 
+   std::vector<Tm> coeff(n,0.0);
+   // in case this CTNS does not encode this det, no such block 
+   if(blk2.size() == 0) return coeff; 
+   assert(blk2.size() == n);
    // compute fermionic sign changes to match ordering of orbitals
    double sgn = state.permute_sgn(icomb.topo.image2);
-   std::transform(blk.col(0), blk.col(0)+n, coeff.begin(),
-		  [sgn](const Tm& x){ return sgn*x; });
+   linalg::xaxpy(n, sgn, blk2.data(), coeff.data());
    return coeff;
-}
-
-// ovlp[i,j] = <SCI[i]|CTNS[j]>
-template <typename Km>
-linalg::matrix<typename Km::dtype> rcanon_CIovlp(const comb<Km>& icomb,
-				 		 const fock::onspace& space,
-	                         		 const std::vector<std::vector<typename Km::dtype>>& vs){
-   using Tm = typename Km::dtype;
-   std::cout << "\nctns::rcanon_CIovlp" << std::endl;
-   int n = icomb.get_nroots(); 
-   int dim = space.size();
-   // cmat[j,i] = <D[i]|CTNS[j]>
-   linalg::matrix<Tm> cmat(n,dim);
-   for(int i=0; i<dim; i++){
-      auto coeff = rcanon_CIcoeff(icomb, space[i]);
-      std::copy(coeff.begin(),coeff.end(),cmat.col(i));
-   };
-   // ovlp[i,j] = vs*[k,i] cmat[j,k] = (cmat[j,k] vs*[k,i])^T
-   linalg::matrix<Tm> vmat(vs);
-   auto ovlp = linalg::xgemm("N","N",cmat,vmat.conj());
-   return ovlp.T();
 }
 
 // check rcanon_CIcoeff
 template <typename Km>
 int rcanon_CIcoeff_check(const comb<Km>& icomb,
 		         const fock::onspace& space,
-	                 const std::vector<std::vector<typename Km::dtype>>& vs){
+	                 const std::vector<std::vector<typename Km::dtype>>& vs,
+			 const double thresh=1.e-8){
    std::cout << "\nctns::rcanon_CIcoeff_check" << std::endl;
    int n = icomb.get_nroots(); 
    int dim = space.size();
@@ -187,10 +172,33 @@ int rcanon_CIcoeff_check(const comb<Km>& icomb,
 	 maxdiff = std::max(maxdiff, diff);
       }
    }
-   std::cout << "maxdiff = " << maxdiff << std::endl;
+   std::cout << "maxdiff = " << maxdiff << " thresh=" << thresh << std::endl;
+   if(maxdiff > thresh) tools::exit("error: too large maxdiff in rcanon_CIcoeff_check!");
    return 0;
 }
 
+// ovlp[i,n] = <SCI[i]|CTNS[n]>
+template <typename Km>
+linalg::matrix<typename Km::dtype> rcanon_CIovlp(const comb<Km>& icomb,
+				 		 const fock::onspace& space,
+	                         		 const std::vector<std::vector<typename Km::dtype>>& vs){
+   using Tm = typename Km::dtype;
+   std::cout << "\nctns::rcanon_CIovlp" << std::endl;
+   int n = icomb.get_nroots(); 
+   int dim = space.size();
+   // cmat[n,i] = <D[i]|CTNS[n]>
+   linalg::matrix<Tm> cmat(n,dim);
+   for(int i=0; i<dim; i++){
+      auto coeff = rcanon_CIcoeff(icomb, space[i]);
+      linalg::xcopy(n, coeff.data(), cmat.col(i));
+   }
+   // ovlp[i,n] = vs*[k,i] cmat[n,k]
+   linalg::matrix<Tm> vmat(vs);
+   auto ovlp = linalg::xgemm("C","T",vmat,cmat);
+   return ovlp;
+}
+
+/*
 // Algorithm 3:
 // exact computation of Sdiag, only for small system
 template <typename Km>
@@ -391,6 +399,7 @@ double rcanon_Sdiag_sample(const comb<Km>& icomb,
    }
    return Sd;
 }
+*/
 
 } // ctns
 

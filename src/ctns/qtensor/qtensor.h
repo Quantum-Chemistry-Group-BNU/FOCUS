@@ -20,6 +20,7 @@
 #include "tensor_sparse2.h"
 #include "tensor_sparse3.h"
 #include "tensor_sparse4.h"
+#include "tensor_linalg.h"
 #include "tensor_contract.h"
 
 /*

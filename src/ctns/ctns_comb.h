@@ -28,19 +28,31 @@ class comb{
 	 std::cout << "\ncomb: qkind=" << qkind::get_name<Km>() << std::endl;
          if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
       }
-/*
       // helpers
       int get_nphysical() const{ return topo.nphysical; }
       int get_nroots() const{
 	 assert(rwfuns.rows() == 1); // currently, only allow one symmetry sector
-	 return rwfuns.qrow.get_dim(0);
+	 return rwfuns.row_dim(0);
       }
       qsym get_sym_state() const{
 	 assert(rwfuns.rows() == 1); // only one symmetry sector
-         return rwfuns.qrow.get_sym(0);
+         return rwfuns.row_sym(0);
       }
       // return rwfun for iroot, extracted from rwfuns
-      qtensor2<typename Km::dtype> get_iroot(const int iroot) const;
+      stensor2<typename Km::dtype> get_iroot(const int iroot) const{
+         assert(rwfuns.rows() == 1);
+         qbond qrow({{rwfuns.row_sym(0),1}});
+         stensor2<typename Km::dtype> rwfun(rwfuns.info.sym, qrow, rwfuns.info.qcol, rwfuns.info.dir);
+	 // copy data from blk0 to blk
+         const auto& blk0 = rwfuns(0,0);
+         auto& blk = rwfun(0,0);
+         for(int ic=0; ic<rwfuns.col_dim(0); ic++){
+            blk(0,ic) = blk0(iroot,ic);
+         }
+         return rwfun;
+      }
+/*
+      // sweep info:
       //
       //				  |
       //    MPS-like:	    Additional: --pc
@@ -93,22 +105,6 @@ class comb{
       boost::mpi::communicator world;
 #endif
 };
-
-/*
-// return rwfun for iroot, extracted from rwfuns
-template <typename Km>
-qtensor2<typename Km::dtype> comb<Km>::get_iroot(const int iroot) const{
-   assert(rwfuns.rows() == 1);
-   qbond qrow({{rwfuns.qrow.get_sym(0),1}});
-   qtensor2<typename Km::dtype> rwfun(rwfuns.sym, qrow, rwfuns.qcol, rwfuns.dir);
-   const auto& blk0 = rwfuns(0,0);
-   auto& blk = rwfun(0,0);
-   for(int ic=0; ic<rwfuns.qcol.get_dim(0); ic++){
-      blk(0,ic) = blk0(iroot,ic);
-   }
-   return rwfun;
-}
-*/
 
 } // ctns
 

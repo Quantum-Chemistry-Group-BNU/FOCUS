@@ -122,9 +122,12 @@ void topology::read(const string& fname){
    }
 
    // coordinate of nodes in right canonical form
+   ntotal = 0;
    for(int i=nbackbone-1; i>=0; i--){
       for(int j=nodes[i].size()-1; j>=0; j--){
          rcoord.push_back(make_pair(i,j));
+	 rindex[make_pair(i,j)] = ntotal;
+	 ntotal++;
       }
    }
 
@@ -161,7 +164,7 @@ void topology::read(const string& fname){
       }
    }
    // lsupport
-   for(int idx=0; idx<rcoord.size(); idx++){
+   for(int idx=0; idx<ntotal; idx++){
       auto p = rcoord[idx];
       int i = p.first, j = p.second;
       nodes[i][j].lsupport = support_rest(nodes[i][j].rsupport);
@@ -177,6 +180,7 @@ void topology::read(const string& fname){
 
 void topology::print() const{
    cout << "\ntopology::print"
+	<< " ntotal=" << ntotal
 	<< " nphysical=" << nphysical 
         << " nbackbone=" << nbackbone
 	<< endl;
@@ -189,19 +193,20 @@ void topology::print() const{
       cout << endl; 
    } 
    cout << "rcoord:" << endl;
-   for(int idx=0; idx<rcoord.size(); idx++){
+   for(int idx=0; idx<ntotal; idx++){
       auto p = rcoord[idx];
       auto& node = nodes[p.first][p.second];
       cout << " idx=" << idx << " coord=" << p << " " << node << endl;
+      assert(idx == rindex.at(p));
    }
    cout << "rsupport/lsupport:" << endl;
-   for(int idx=0; idx<rcoord.size(); idx++){
+   for(int idx=0; idx<ntotal; idx++){
       auto p = rcoord[idx];
       int i = p.first, j = p.second;
-      cout << " coord=" << p << " rsupport: ";
+      cout << " idx=" << idx << " coord=" << p;
+      cout << " rsupport: ";
       for(int k : nodes[i][j].rsupport) cout << k << " ";
-      cout << endl;
-      cout << " coord=" << p << " lsupport: ";
+      cout << "; lsupport: ";
       for(int k : nodes[i][j].lsupport) cout << k << " ";
       cout << endl;
    }

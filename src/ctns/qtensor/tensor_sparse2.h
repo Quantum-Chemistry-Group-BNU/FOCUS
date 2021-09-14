@@ -9,6 +9,25 @@ namespace ctns{
 
 template <typename Tm>
 struct stensor2{
+   private:
+      friend class boost::serialization::access;	   
+      template <class Archive>
+      void save(Archive & ar, const unsigned int version) const{
+	 ar & info;
+         for(int i=0; i<info._size; i++){
+	    ar & _data[i];
+	 }
+      }
+      template <class Archive>
+      void load(Archive & ar, const unsigned int version){
+	 ar & info;
+	 _data = new Tm[info._size];
+         for(int i=0; i<info._size; i++){
+	    ar & _data[i];
+	 }
+	 info.setup_data(_data);
+      }
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
    public:
       // --- GENERAL FUNCTIONS ---
       // constructors
@@ -25,12 +44,9 @@ struct stensor2{
       }
       // desctructors
       ~stensor2(){ delete[] _data; }
-      stensor2(const stensor2& st) = delete;
-      stensor2& operator =(const stensor2& st) = delete;
-      /*
       // copy constructor
       stensor2(const stensor2& st){
-	 //std::cout << "stensor2: copy constructor" << std::endl;     
+	 std::cout << "stensor2: copy constructor" << std::endl;     
          info = st.info;
 	 _data = new Tm[info._size];
 	 std::copy_n(st._data, info._size, _data);
@@ -38,7 +54,7 @@ struct stensor2{
       }
       // copy assignment
       stensor2& operator =(const stensor2& st){
-	 //std::cout << "stensor2: copy assignment" << std::endl;     
+	 std::cout << "stensor2: copy assignment" << std::endl;     
          if(this != &st){
             info = st.info;
 	    delete[] _data;
@@ -48,17 +64,16 @@ struct stensor2{
 	 }
 	 return *this;
       }
-      */
       // move constructor
       stensor2(stensor2&& st){
-	 //std::cout << "stensor2: move constructor" << std::endl;     
+	 std::cout << "stensor2: move constructor" << std::endl;     
          info = std::move(st.info);
          _data = st._data;
 	 st._data = nullptr;
       }
       // move assignment
       stensor2& operator =(stensor2&& st){
-	 //std::cout << "stensor2: move assignment" << std::endl;     
+	 std::cout << "stensor2: move assignment" << std::endl;     
          if(this != &st){
             info = std::move(st.info);
 	    delete[] _data;
@@ -70,10 +85,12 @@ struct stensor2{
       // helpers
       int rows() const{ return info._rows; }
       int cols() const{ return info._cols; }
-      int row_dim(const int br) const{ return info.qrow.get_dim(br); }
-      int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
       int row_dimAll() const{ return info.qrow.get_dimAll(); }
       int col_dimAll() const{ return info.qcol.get_dimAll(); } 
+      int row_dim(const int br) const{ return info.qrow.get_dim(br); }
+      int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
+      int row_sym(const int br) const{ return info.qrow.get_sym(br); }
+      int col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
       size_t size() const{ return info._size; }
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }
@@ -85,12 +102,16 @@ struct stensor2{
 	 return info._qblocks[info._addr(br,bc)]; 
       }
       // --- SPECIFIC FUNCTIONS ---
-      // convert to matrix class
+      // from/to dense matrix: assign block to proper place
+      void from_matrix(const linalg::matrix<Tm>& mat); 
       linalg::matrix<Tm> to_matrix() const;
-      // from dense matrix: assign block to proper place
-      void from_matrix(const linalg::matrix<Tm>& mat);
       // check whether <l|o|r> is a faithful rep for o=I
       double check_identityMatrix(const double thresh_ortho, const bool debug) const;
+      // algebra
+      stensor2<Tm> dot(const stensor2<Tm>& qt) const{ return contract_qt2_qt2(*this, qt); }
+      // ZL20200531: permute the line of diagrams, while maintaining their directions
+      // 	     This does not change the tensor, but just permute order of index
+      stensor2<Tm> T() const;
    public:
       qinfo2<Tm> info;
    private:   
@@ -168,6 +189,22 @@ double stensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool 
       } // bc
    } // br
    return maxdiff;
+}
+
+// ZL20200531: permute the line of diagrams, while maintaining their directions
+// 	       This does not change the tensor, but just permute order of index
+template <typename Tm>
+stensor2<Tm> stensor2<Tm>::T() const{
+   std::cout << "stensor2: T()" << std::endl;
+   stensor2<Tm> qt2(info.sym, info.qcol, info.qrow, {info.dir[1],info.dir[0]});
+   for(int br=0; br<qt2.rows(); br++){
+      for(int bc=0; bc<qt2.cols(); bc++){
+         auto& blk = qt2(br,bc);
+         if(blk.size() == 0) continue;
+         //blk = (*this)(bc,br).T();
+      }
+   }
+   return qt2; 
 }
 
 } // ctns

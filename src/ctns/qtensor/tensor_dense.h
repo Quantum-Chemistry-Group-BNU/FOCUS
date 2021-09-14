@@ -4,6 +4,7 @@
 #include <cassert>
 #include "../../core/serialization.h"
 #include "../../core/matrix.h"
+#include "../../core/linalg.h"
 
 namespace ctns{
 
@@ -74,17 +75,20 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
       // assignment
       dtensor2<Tm>& operator =(const linalg::matrix<Tm>& mat){
          assert(dim0 == mat.rows() && dim1 == mat.cols());
-         std::copy_n(mat.data(), _size, _data+_off);
+	 Tm* ptr = _data+_off;
+	 int N = _size;
+	 linalg::xcopy(N, mat.data(), ptr);
          return *this;
       }
-      // not allowed
-      dtensor2<Tm>& operator =(linalg::matrix<Tm>&& mat) = delete;
       dtensor2<Tm>& operator +=(const linalg::matrix<Tm>& mat){
          assert(dim0 == mat.rows() && dim1 == mat.cols());
-         std::transform(_data+_off, _data+_off+_size, mat.data(), _data+_off,
-			[](const Tm& x, const Tm& y){ return x+y; });
+	 Tm* ptr = _data+_off;
+	 int N = _size;
+	 linalg::xaxpy(N, 1.0, mat.data(), ptr);
          return *this;
       }
+      dtensor2<Tm>& operator =(linalg::matrix<Tm>&& mat) = delete;
+      dtensor2<Tm>& operator +=(linalg::matrix<Tm>&& mat) = delete;
       // interface with xgemm
       int rows() const{ return dim0; }
       int cols() const{ return dim1; }

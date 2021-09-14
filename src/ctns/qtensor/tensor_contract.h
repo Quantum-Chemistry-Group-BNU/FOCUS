@@ -12,33 +12,31 @@ namespace ctns{
 //template <typename Tm>
 //struct stensor3;
 
-/*
 // xgemm : C[i,k] = A[i,j] B[j,k]
 template <typename Tm>
 stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a, 
 			      const stensor2<Tm>& qt2b){
-   assert(qt2a.dir[1] == !qt2b.dir[0]);
-   assert(qt2a.qcol == qt2b.qrow);
-   qsym sym = qt2a.sym + qt2b.sym;
-   std::vector<bool> dir = {qt2a.dir[0], qt2b.dir[1]};
-   stensor2<Tm> qt2(sym, qt2a.qrow, qt2b.qcol, dir); 
+   assert(qt2a.info.dir[1] == !qt2b.info.dir[0]);
+   assert(qt2a.info.qcol == qt2b.info.qrow);
+   qsym sym = qt2a.info.sym + qt2b.info.sym;
+   std::vector<bool> dir = {qt2a.info.dir[0], qt2b.info.dir[1]};
+   stensor2<Tm> qt2(sym, qt2a.info.qrow, qt2b.info.qcol, dir); 
    // loop over external indices
    for(int br=0; br<qt2.rows(); br++){
       for(int bc=0; bc<qt2.cols(); bc++){
-         auto& blk = qt2(br,bc);
-	 if(blk.size() == 0) continue;
+         auto& blk2 = qt2(br,bc);
+	 if(blk2.size() == 0) continue;
 	 // loop over contracted indices
 	 for(int bx=0; bx<qt2a.cols(); bx++){
-	    const auto& blka = qt2a(br,bx);
-	    const auto& blkb = qt2b(bx,bc);
-	    if(blka.size() == 0 || blkb.size() == 0) continue;
-	    blk += linalg::xgemm("N","N",blka,blkb);
+	    const auto& blk2a = qt2a(br,bx);
+	    const auto& blk2b = qt2b(bx,bc);
+	    if(blk2a.size() == 0 || blk2b.size() == 0) continue;
+	    xgemm("N","N",1.0,blk2a,blk2b,1.0,blk2);
 	 } // bx
       } // bc
    } // br
    return qt2;
 }
-*/
 
 //          r--*--\ qt3a
 // q(r,c) =    |m |x	  = <r|c> = \sum_n An^* Bn^T [conjugation is taken on qt3a!]
@@ -54,20 +52,20 @@ stensor2<Tm> contract_qt3_qt3_cr(const stensor3<Tm>& qt3a,
    // loop over external indices
    for(int br=0; br<qt2.rows(); br++){
       for(int bc=0; bc<qt2.cols(); bc++){
-         auto& blk = qt2(br,bc);
-	 if(blk.size() == 0) continue;
+         auto& blk2 = qt2(br,bc);
+	 if(blk2.size() == 0) continue;
 	 // loop over contracted indices
 	 for(int bx=0; bx<qt3a.cols(); bx++){
 	    for(int bm=0; bm<qt3a.mids(); bm++){
-	       const auto& blka = qt3a(br,bx,bm);
-	       const auto& blkb = qt3b(bc,bx,bm);
-	       if(blka.size() == 0 || blkb.size() == 0) continue;
+	       const auto& blk3a = qt3a(br,bx,bm);
+	       const auto& blk3b = qt3b(bc,bx,bm);
+	       if(blk3a.size() == 0 || blk3b.size() == 0) continue;
 	       for(int im=0; im<qt3a.mid_dim(bm); im++){
-		  xgemm("N","C",1.0,blka.get(im),blkb.get(im),1.0,blk);
+		  xgemm("N","C",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
 	       } // im	       
 	    } // bm
 	 } // bx
-	 blk.conjugate();
+	 blk2.conjugate();
       } // bc
    } // br
    return qt2;
@@ -141,6 +139,7 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
    } // br
    return qt2;
 }
+*/
 
 //     |m/r
 //     *	 
@@ -149,33 +148,32 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
 template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a, 
 			 	const stensor2<Tm>& qt2b){
-   assert(qt3a.dir[0] == !qt2b.dir[1]);
-   assert(qt3a.qmid == qt2b.qcol);
-   qsym sym = qt3a.sym + qt2b.sym;
-   std::vector<bool> dir = {qt2b.dir[0], qt3a.dir[1], qt3a.dir[2]};
-   stensor3<Tm> qt3(sym, qt2b.qrow, qt3a.qrow, qt3a.qcol, dir);
+   assert(qt3a.info.dir[2] == !qt2b.info.dir[1]);
+   assert(qt3a.info.qmid == qt2b.info.qcol);
+   qsym sym = qt3a.info.sym + qt2b.info.sym;
+   std::vector<bool> dir = {qt3a.info.dir[0], qt3a.info.dir[1], qt2b.info.dir[0]};
+   stensor3<Tm> qt3(sym, qt3a.info.qrow, qt3a.info.qcol, qt2b.info.qrow, dir);
    // loop over external indices
-   for(int bm=0; bm<qt3.mids(); bm++){
-      int mdim = qt3.qmid.get_dim(bm);
-      for(int br=0; br<qt3.rows(); br++){
-         for(int bc=0; bc<qt3.cols(); bc++){
-	    auto& blk = qt3(bm,br,bc);
-	    if(blk.size() == 0) continue;
+   for(int br=0; br<qt3.rows(); br++){
+      for(int bc=0; bc<qt3.cols(); bc++){
+         for(int bm=0; bm<qt3.mids(); bm++){
+	    auto& blk3 = qt3(br,bc,bm);
+	    if(blk3.size() == 0) continue;
 	    // loop over contracted indices
 	    for(int bx=0; bx<qt3a.mids(); bx++){
-	       const auto& blka = qt3a(bx,br,bc);
-	       const auto& blkb = qt2b(bm,bx);
-	       if(blka.size() == 0 || blkb.size() == 0) continue;
-	       int xdim = qt3a.qmid.get_dim(bx);
-	       for(int x=0; x<xdim; x++){
-	          for(int m=0; m<mdim; m++){
-	             blk[m] += blkb(m,x)*blka[x];
-	          } // m
-	       } // x 
+	       const auto& blk3a = qt3a(br,bc,bx);
+	       const auto& blk2b = qt2b(bm,bx);
+	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+	       int N = blk3.dim0*blk3.dim1;
+	       for(int ix=0; ix<qt3a.mid_dim(bx); ix++){
+	          for(int im=0; im<qt3.mid_dim(bm); im++){
+		     linalg::xaxpy(N, blk2b(im,ix), blk3a.get(ix).data(), blk3.get(im).data());
+	          } // im
+	       } // ix 
 	    } // bx
-	 } // bc
-      } // br
-   } // bm
+	 } // bm
+      } // bc
+   } // br
    return qt3;
 }
 
@@ -185,30 +183,29 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
 template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a, 
 				const stensor2<Tm>& qt2b){
-   assert(qt3a.dir[1] == !qt2b.dir[1]);
-   assert(qt3a.qrow == qt2b.qcol);
-   qsym sym = qt3a.sym + qt2b.sym;
-   std::vector<bool> dir = {qt3a.dir[0], qt2b.dir[0], qt3a.dir[2]};
-   stensor3<Tm> qt3(sym, qt3a.qmid, qt2b.qrow, qt3a.qcol, dir);
+   assert(qt3a.info.dir[0] == !qt2b.info.dir[1]);
+   assert(qt3a.info.qrow == qt2b.info.qcol);
+   qsym sym = qt3a.info.sym + qt2b.info.sym;
+   std::vector<bool> dir = {qt2b.info.dir[0], qt3a.info.dir[1], qt3a.info.dir[2]};
+   stensor3<Tm> qt3(sym, qt2b.info.qrow, qt3a.info.qcol, qt3a.info.qmid, dir);
    // loop over external indices
-   for(int bm=0; bm<qt3.mids(); bm++){
-      int mdim = qt3.qmid.get_dim(bm);
-      for(int br=0; br<qt3.rows(); br++){
-         for(int bc=0; bc<qt3.cols(); bc++){
-	    auto& blk = qt3(bm,br,bc);
-	    if(blk.size() == 0) continue;
+   for(int br=0; br<qt3.rows(); br++){
+      for(int bc=0; bc<qt3.cols(); bc++){
+         for(int bm=0; bm<qt3.mids(); bm++){
+	    auto& blk3 = qt3(br,bc,bm);
+	    if(blk3.size() == 0) continue;
 	    // loop over contracted indices
 	    for(int bx=0; bx<qt3a.rows(); bx++){
-	       const auto& blka = qt3a(bm,bx,bc);
-	       const auto& blkb = qt2b(br,bx);
-	       if(blka.size() == 0 || blkb.size() == 0) continue;
-	       for(int m=0; m<mdim; m++){
-	          blk[m] += linalg::xgemm("N","N",blkb,blka[m]);
-	       } // m
+	       const auto& blk3a = qt3a(bx,bc,bm);
+	       const auto& blk2b = qt2b(br,bx);
+	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+	       for(int im=0; im<qt3.mid_dim(bm); im++){
+		  xgemm("N","N",1.0,blk2b,blk3a.get(im),1.0,blk3.get(im));
+	       } // im
 	    } // bx
-	 } // bc
-      } // br
-   } // bm
+	 } // bm
+      } // bc
+   } // br
    return qt3;
 }
 
@@ -218,33 +215,31 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
 template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a, 
 				const stensor2<Tm>& qt2b){
-   assert(qt3a.dir[2] == !qt2b.dir[1]); // each line is associated with one dir
-   assert(qt3a.qcol == qt2b.qcol);
-   qsym sym = qt3a.sym + qt2b.sym;
-   std::vector<bool> dir = {qt3a.dir[0], qt3a.dir[1], qt2b.dir[0]};
-   stensor3<Tm> qt3(sym, qt3a.qmid, qt3a.qrow, qt2b.qrow, dir);
+   assert(qt3a.info.dir[1] == !qt2b.info.dir[1]); // each line is associated with one dir
+   assert(qt3a.info.qcol == qt2b.info.qcol);
+   qsym sym = qt3a.info.sym + qt2b.info.sym;
+   std::vector<bool> dir = {qt3a.info.dir[0], qt2b.info.dir[0], qt3a.info.dir[2]};
+   stensor3<Tm> qt3(sym, qt3a.info.qrow, qt2b.info.qrow, qt3a.info.qmid, dir);
    // loop over external indices
-   for(int bm=0; bm<qt3.mids(); bm++){
-      int mdim = qt3.qmid.get_dim(bm);
-      for(int br=0; br<qt3.rows(); br++){
-         for(int bc=0; bc<qt3.cols(); bc++){
-	    auto& blk = qt3(bm,br,bc);
-	    if(blk.size() == 0) continue;
+   for(int br=0; br<qt3.rows(); br++){
+      for(int bc=0; bc<qt3.cols(); bc++){
+         for(int bm=0; bm<qt3.mids(); bm++){
+	    auto& blk3 = qt3(br,bc,bm);
+	    if(blk3.size() == 0) continue;
 	    // loop over contracted indices
 	    for(int bx=0; bx<qt3a.cols(); bx++){
-	       const auto& blka = qt3a(bm,br,bx);
-	       const auto& blkb = qt2b(bc,bx);
-	       if(blka.size() == 0 || blkb.size() == 0) continue;
-	       for(int m=0; m<mdim; m++){
-	          blk[m] += linalg::xgemm("N","T",blka[m],blkb);
-	       } // m
+	       const auto& blk3a = qt3a(br,bx,bm);
+	       const auto& blk2b = qt2b(bc,bx);
+	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+	       for(int im=0; im<qt3.mid_dim(bm); im++){
+		  xgemm("N","T",1.0,blk3a.get(im),blk2b,1.0,blk3.get(im));
+	       } // im
 	    } // bx
-	 } // bc
-      } // br
-   } // bm
+	 } // bm
+      } // bc
+   } // br
    return qt3;
 }
-*/
 
 } // ctns
 
