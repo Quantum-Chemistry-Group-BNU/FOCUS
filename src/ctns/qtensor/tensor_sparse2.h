@@ -54,7 +54,8 @@ struct stensor2{
       }
       // copy assignment
       stensor2& operator =(const stensor2& st){
-	 std::cout << "stensor2: copy assignment" << std::endl;     
+	 std::cout << "stensor2: copy assignment" << std::endl;    
+	 exit(1); 
          if(this != &st){
             info = st.info;
 	    delete[] _data;
@@ -66,14 +67,14 @@ struct stensor2{
       }
       // move constructor
       stensor2(stensor2&& st){
-	 std::cout << "stensor2: move constructor" << std::endl;     
+	 //std::cout << "stensor2: move constructor" << std::endl;     
          info = std::move(st.info);
          _data = st._data;
 	 st._data = nullptr;
       }
       // move assignment
       stensor2& operator =(stensor2&& st){
-	 std::cout << "stensor2: move assignment" << std::endl;     
+	 //std::cout << "stensor2: move assignment" << std::endl;     
          if(this != &st){
             info = std::move(st.info);
 	    delete[] _data;
@@ -89,8 +90,8 @@ struct stensor2{
       int col_dimAll() const{ return info.qcol.get_dimAll(); } 
       int row_dim(const int br) const{ return info.qrow.get_dim(br); }
       int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
-      int row_sym(const int br) const{ return info.qrow.get_sym(br); }
-      int col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
+      qsym row_sym(const int br) const{ return info.qrow.get_sym(br); }
+      qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
       size_t size() const{ return info._size; }
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }
@@ -109,9 +110,13 @@ struct stensor2{
       double check_identityMatrix(const double thresh_ortho, const bool debug) const;
       // algebra
       stensor2<Tm> dot(const stensor2<Tm>& qt) const{ return contract_qt2_qt2(*this, qt); }
-      // ZL20200531: permute the line of diagrams, while maintaining their directions
+      // ZL20200531: Permute the line of diagrams, while maintaining their directions
       // 	     This does not change the tensor, but just permute order of index
       stensor2<Tm> T() const;
+      // ZL20200531: This is used in taking Hermitian conjugate of operators.
+      // 	     If row/col is permuted while dir fixed, this effectively changes 
+      // 	     the direction of lines in diagrams
+      stensor2<Tm> H() const;
    public:
       qinfo2<Tm> info;
    private:   
@@ -191,19 +196,49 @@ double stensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool 
    return maxdiff;
 }
 
-// ZL20200531: permute the line of diagrams, while maintaining their directions
+// ZL20200531: Permute the line of diagrams, while maintaining their directions
 // 	       This does not change the tensor, but just permute order of index
 template <typename Tm>
 stensor2<Tm> stensor2<Tm>::T() const{
-   std::cout << "stensor2: T()" << std::endl;
-   stensor2<Tm> qt2(info.sym, info.qcol, info.qrow, {info.dir[1],info.dir[0]});
+   //std::cout << "stensor2: T()" << std::endl;
+   stensor2<Tm> qt2(info.sym, info.qcol, info.qrow, {info.dir[1], info.dir[0]});
    for(int br=0; br<qt2.rows(); br++){
       for(int bc=0; bc<qt2.cols(); bc++){
          auto& blk = qt2(br,bc);
          if(blk.size() == 0) continue;
-         //blk = (*this)(bc,br).T();
-      }
-   }
+	 const auto& blkt = (*this)(bc,br);
+	 // transpose
+	 for(int ic=0; ic<blk.dim1; ic++){
+	    for(int ir=0; ir<blk.dim0; ir++){
+	       blk(ir,ic) = blkt(ic,ir);
+	    } // ir
+	 } // ic
+      } // bc
+   } // br
+   return qt2; 
+}
+
+// ZL20200531: This is used in taking Hermitian conjugate of operators.
+// 	       If row/col is permuted while dir fixed, this effectively changes 
+// 	       the direction of lines in diagrams
+template <typename Tm>
+stensor2<Tm> stensor2<Tm>::H() const{
+   //std::cout << "stensor2: H()" << std::endl;
+   // symmetry of operator get changed in consistency with line changes
+   stensor2<Tm> qt2(-info.sym, info.qcol, info.qrow, info.dir);
+   for(int br=0; br<qt2.rows(); br++){
+      for(int bc=0; bc<qt2.cols(); bc++){
+         auto& blk = qt2(br,bc);
+         if(blk.size() == 0) continue;
+	 const auto& blkh = (*this)(bc,br);
+	 // transpose
+	 for(int ic=0; ic<blk.dim1; ic++){
+	    for(int ir=0; ir<blk.dim0; ir++){
+	       blk(ir,ic) = tools::conjugate(blkh(ic,ir));
+	    } // ir
+	 } // ic
+      } // bc
+   } // br
    return qt2; 
 }
 

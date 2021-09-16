@@ -7,11 +7,6 @@ namespace ctns{
 
 // --- tensor linear algebra : contractions ---
 
-//template <typename Tm>
-//struct stensor2;
-//template <typename Tm>
-//struct stensor3;
-
 // xgemm : C[i,k] = A[i,j] B[j,k]
 template <typename Tm>
 stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a, 

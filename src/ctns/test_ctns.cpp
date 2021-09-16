@@ -109,12 +109,11 @@ int tests::test_ctns(){
    cout << "\ncheck diff_Sij[mix] = " << diff_mix << endl;
    if(diff_mix > thresh) tools::exit(string("error: diff_Sij[mix] > thresh=")+to_string(thresh));
 
-/*
    // 4. compute Sd by sampling 
    int iroot = 0;
    double Sdiag0 = fock::coeff_entropy(vs[iroot]);
    double Sdiag1 = rcanon_Sdiag_exact(icomb,iroot);
-   bool ifsample = false;
+   bool ifsample = true;
    if(ifsample){
       int nsample = 1.e5;
       double Sdiag2 = rcanon_Sdiag_sample(icomb,iroot,nsample);
@@ -125,6 +124,7 @@ int tests::test_ctns(){
            << endl;
    }
 
+/*
    schd.create_scratch();
 
    // 5. Hij

@@ -262,7 +262,6 @@ void init_rwfuns(comb<Km>& icomb,
    auto t0 = tools::get_time();
    
    // determine symmetry of rwfuns
-   const auto& det = space[0];
    auto sym_states = get_qsym_onstate(Km::isym, space[0]);
    // check symmetry: we assume all the dets are of the same symmetry!
    for(int i=0; i<space.size(); i++){

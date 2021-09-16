@@ -37,6 +37,7 @@ struct stensor4{
       // copy assignment
       stensor4& operator =(const stensor4& st){
 	 std::cout << "stensor4: copy assignment" << std::endl;     
+	 exit(1); 
          if(this != &st){
             info = st.info;
 	    delete[] _data;
@@ -48,14 +49,14 @@ struct stensor4{
       }
       // move constructor
       stensor4(stensor4&& st){
-	 std::cout << "stensor4: move constructor" << std::endl;     
+	 //std::cout << "stensor4: move constructor" << std::endl;     
          info = std::move(st.info);
          _data = st._data;
 	 st._data = nullptr;
       }
       // move assignment
       stensor4& operator =(stensor4&& st){
-	 std::cout << "stensor4: move assignment" << std::endl;     
+	 //std::cout << "stensor4: move assignment" << std::endl;     
          if(this != &st){
             info = std::move(st.info);
 	    delete[] _data;
@@ -77,10 +78,10 @@ struct stensor4{
       int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
       int mid_dim(const int bm) const{ return info.qmid.get_dim(bm); }
       int ver_dim(const int bv) const{ return info.qver.get_dim(bv); }
-      int row_sym(const int br) const{ return info.qrow.get_sym(br); }
-      int col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
-      int mid_sym(const int bm) const{ return info.qmid.get_sym(bm); }
-      int ver_sym(const int bv) const{ return info.qver.get_sym(bv); }
+      qsym row_sym(const int br) const{ return info.qrow.get_sym(br); }
+      qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
+      qsym mid_sym(const int bm) const{ return info.qmid.get_sym(bm); }
+      qsym ver_sym(const int bv) const{ return info.qver.get_sym(bv); }
       size_t size() const{ return info._size; }
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }

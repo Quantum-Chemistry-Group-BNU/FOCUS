@@ -1,16 +1,20 @@
 #ifndef OPER_UTIL_H
 #define OPER_UTIL_H
 
-#include "oper_dict.h"
-#include "oper_io.h"
-#include "oper_dot.h"
-#include "oper_renorm.h"
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
 
+/*
+#include "oper_io.h"
+#include "oper_dot.h"
+#include "oper_renorm.h"
+*/
+#include "oper_dict.h"
+
 namespace ctns{
 
+/*
 //
 // load operators from disk for site p
 //
@@ -44,7 +48,9 @@ void oper_load_qops(const comb<Km>& icomb,
       oper_load(fname0l, qops);
    }
 }
+*/
 
+/*
 // init local operators
 template <typename Km>
 void oper_init_dot(const comb<Km>& icomb,
@@ -84,6 +90,7 @@ void oper_init_dot(const comb<Km>& icomb,
    }
 #endif
 }
+*/
 
 // initialization of operators for 
 // (1) dot operators [c] 
@@ -93,34 +100,46 @@ void oper_init_dotAll(const comb<Km>& icomb,
          	      const integral::two_body<typename Km::dtype>& int2e,
          	      const integral::one_body<typename Km::dtype>& int1e,
          	      const std::string scratch){
+   using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif  
    double t_comp = 0.0, t_save = 0.0; 
+
    auto t0 = tools::get_time();
-   for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
+   for(int idx=0; idx<icomb.topo.ntotal; idx++){
       auto p = icomb.topo.rcoord[idx];
       auto& node = icomb.topo.get_node(p);
       // cop: local operators on physical sites
       if(node.type != 3){
          int kp = node.pindex;
          auto ta = tools::get_time();
-         oper_dict<typename Km::dtype> qops;
-	 oper_init_dot(icomb, kp, int2e, int1e, qops);	
+	 //---------------------------------------------
+         oper_dict<Tm> qops;
+	 qops.print("qops",1);
+	 //qops.init_dot(icomb, kp, int2e, int1e);
+	 qops.init_dot(icomb, kp, int2e, int1e);
+	 qops.print("qops",1);
+	 exit(1);
+	 //---------------------------------------------
          auto tb = tools::get_time();
-	 std::string fname = oper_fname(scratch, p, "c");
-         oper_save(fname, qops);
+	 //---------------------------------------------
+	 //std::string fname = oper_fname(scratch, p, "c");
+         //oper_save(fname, qops);
+	 //qops.save(fname);
+	 //---------------------------------------------
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
          t_save += tools::get_duration(tc-tb);
       }
+/*
       // rop: right boundary (exclude the start point)
       if(node.type == 0 && p.first != 0){
 	 int kp = node.pindex;
          auto ta = tools::get_time();
-         oper_dict<typename Km::dtype> qops;
+         oper_dict<Tm> qops;
 	 oper_init_dot(icomb, kp, int2e, int1e, qops);
          auto tb = tools::get_time();
 	 std::string fname = oper_fname(scratch, p, "r");
@@ -129,12 +148,14 @@ void oper_init_dotAll(const comb<Km>& icomb,
          t_comp += tools::get_duration(tb-ta);
          t_save += tools::get_duration(tc-tb);
       }
+*/
    }
+/*
    // left boundary at the start (0,0)
    auto p = std::make_pair(0,0);
    int kp = icomb.topo.get_node(p).pindex;
    auto ta = tools::get_time();
-   oper_dict<typename Km::dtype> qops;
+   oper_dict<Tm> qops;
    oper_init_dot(icomb, kp, int2e, int1e, qops);
    auto tb = tools::get_time();
    std::string fname = oper_fname(scratch, p, "l");
@@ -142,6 +163,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
    auto tc = tools::get_time();
    t_comp += tools::get_duration(tb-ta);
    t_save += tools::get_duration(tc-tb);
+*/
    auto t1 = tools::get_time();
    if(rank == 0){
       tools::timing("ctns::oper_init", t0, t1);
@@ -167,13 +189,16 @@ void oper_env_right(const comb<Km>& icomb,
       std::cout << "\nctns::oper_env_right Km=" << qkind::get_name<Km>() << std::endl;
    }
    double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
+   
    // construct for dot operators [cop] & boundary operators [lop/rop]
    auto t0 = tools::get_time();
    oper_init_dotAll(icomb, int2e, int1e, scratch);
    auto ta = tools::get_time();
    t_init = tools::get_duration(ta-t0);
+
+/*
    // successive renormalization process
-   for(int idx=0; idx<icomb.topo.rcoord.size(); idx++){
+   for(int idx=0; idx<icomb.topo.ntotal; idx++){
       auto p = icomb.topo.rcoord[idx];
       const auto& node = icomb.topo.get_node(p);
       if(node.type != 0 || p.first == 0){
@@ -201,6 +226,7 @@ void oper_env_right(const comb<Km>& icomb,
          //if(rank == 0) qops.print(fname);
       }
    } // idx
+*/
    auto t1 = tools::get_time();
    if(rank == 0){
       tools::timing("ctns::oper_env_right", t0, t1);
