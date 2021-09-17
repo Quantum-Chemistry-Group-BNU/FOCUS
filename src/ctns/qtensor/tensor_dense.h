@@ -11,6 +11,7 @@ namespace ctns{
 //
 // Dense tensor stored in FORTRAN ORDER to interface with BLAS/LAPACK
 // They are just wrapper for data, so they are free to be copied/moved. 
+// Move: e.g., xgemm("N","T",1.0,blk3a.get(im),blk2b,1.0,blk3.get(im));
 //
 	
 // O[l,r]

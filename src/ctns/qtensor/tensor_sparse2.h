@@ -13,17 +13,21 @@ struct stensor2{
       friend class boost::serialization::access;	   
       template <class Archive>
       void save(Archive & ar, const unsigned int version) const{
-	 ar & info;
-         for(int i=0; i<info._size; i++){
-	    ar & _data[i];
+	 ar & own & info;
+	 if(own){
+            for(int i=0; i<info._size; i++){
+	       ar & _data[i];
+	    }
 	 }
       }
       template <class Archive>
       void load(Archive & ar, const unsigned int version){
-	 ar & info;
-	 _data = new Tm[info._size];
-         for(int i=0; i<info._size; i++){
-	    ar & _data[i];
+	 ar & own & info;
+	 if(own){
+	    _data = new Tm[info._size];
+            for(int i=0; i<info._size; i++){
+	       ar & _data[i];
+	    }
 	 }
 	 info.setup_data(_data);
       }
@@ -33,20 +37,32 @@ struct stensor2{
       // constructors
       stensor2(): _data(nullptr) {};
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-	        const std::vector<bool> _dir={1,0}){
+	        const std::vector<bool> _dir={1,0}, const bool _own=true){
          info.init(_sym, _qrow, _qcol, _dir);
-         _data = new Tm[info._size];
+         own = _own;
+         if(own){
+            _data = new Tm[info._size];
+	    info.setup_data(_data);
+	 }
+      }
+      void setup_data(Tm* data){
+         assert(own == false);
+	 _data = data;
 	 info.setup_data(_data);
       }
       stensor2(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-	       const std::vector<bool> _dir={1,0}){
-	 this->init(_sym, _qrow, _qcol, _dir);     
+	       const std::vector<bool> _dir={1,0}, const bool _own=true){
+	 this->init(_sym, _qrow, _qcol, _dir, _own);
       }
       // desctructors
-      ~stensor2(){ delete[] _data; }
+      ~stensor2(){ 
+	 if(own) delete[] _data; 
+      }
+/*
       // copy constructor
       stensor2(const stensor2& st){
-	 std::cout << "stensor2: copy constructor" << std::endl;     
+	 std::cout << "stensor2: copy constructor - exit" << std::endl;     
+	 exit(1); 
          info = st.info;
 	 _data = new Tm[info._size];
 	 std::copy_n(st._data, info._size, _data);
@@ -54,7 +70,7 @@ struct stensor2{
       }
       // copy assignment
       stensor2& operator =(const stensor2& st){
-	 std::cout << "stensor2: copy assignment" << std::endl;    
+	 std::cout << "stensor2: copy assignment - exit" << std::endl;    
 	 exit(1); 
          if(this != &st){
             info = st.info;
@@ -65,16 +81,19 @@ struct stensor2{
 	 }
 	 return *this;
       }
+*/
       // move constructor
       stensor2(stensor2&& st){
-	 //std::cout << "stensor2: move constructor" << std::endl;     
+	 std::cout << "stensor2: move constructor" << std::endl;     
+	 assert(own == true);
          info = std::move(st.info);
          _data = st._data;
 	 st._data = nullptr;
       }
       // move assignment
       stensor2& operator =(stensor2&& st){
-	 //std::cout << "stensor2: move assignment" << std::endl;     
+	 std::cout << "stensor2: move assignment" << std::endl;     
+	 assert(own == true);
          if(this != &st){
             info = std::move(st.info);
 	    delete[] _data;
@@ -118,8 +137,9 @@ struct stensor2{
       // 	     the direction of lines in diagrams
       stensor2<Tm> H() const;
    public:
+      bool own = true;
       qinfo2<Tm> info;
-   private:   
+   private:  
       Tm* _data;
 };
 

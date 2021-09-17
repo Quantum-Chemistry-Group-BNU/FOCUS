@@ -124,7 +124,8 @@ inline qsym get_qsym_state(const short isym, const int nelec, const int twoms){
 }
 
 // kA+/kB+
-inline qsym get_qsym_opC(const short isym, const int spin){
+inline qsym get_qsym_opC(const short isym, const int p){
+   int spin = p%2;
    qsym sym_op;
    if(isym == 0 or isym == 1){
       sym_op = qsym(isym,1,0);
@@ -134,7 +135,8 @@ inline qsym get_qsym_opC(const short isym, const int spin){
    return sym_op;
 }
 // Apq = p^+q^+
-inline qsym get_qsym_opA(const short isym, const int spin1, const int spin2){
+inline qsym get_qsym_opA(const short isym, const int p, const int q){
+   int spin1 = p%2, spin2 = q%2;
    qsym sym_op;
    if(isym == 0){
       sym_op = qsym(isym,0,0);
@@ -150,7 +152,8 @@ inline qsym get_qsym_opA(const short isym, const int spin1, const int spin2){
    return sym_op;
 }
 // Bps = p^+s
-inline qsym get_qsym_opB(const short isym, const int spin1, const int spin2){
+inline qsym get_qsym_opB(const short isym, const int p, const int s){
+   int spin1 = p%2, spin2 = s%2;
    qsym sym_op;
    if(isym == 0 or isym == 1){
       sym_op = qsym(isym,0,0);
@@ -164,16 +167,16 @@ inline qsym get_qsym_opB(const short isym, const int spin1, const int spin2){
    return sym_op;
 }
 // Sp: qsym of ap^+Sp must be zero
-inline qsym get_qsym_opS(const short isym, const int spin){
-   return -get_qsym_opC(isym, spin);
+inline qsym get_qsym_opS(const short isym, const int p){
+   return -get_qsym_opC(isym, p);
 }
 // Ppq: qsym of ApqPpq must be zero
-inline qsym get_qsym_opP(const short isym, const int spin1, const int spin2){
-   return -get_qsym_opA(isym, spin1, spin2);
+inline qsym get_qsym_opP(const short isym, const int p, const int q){
+   return -get_qsym_opA(isym, p, q);
 }
 // Qps: qsym of BpsQps must be zero
-inline qsym get_qsym_opQ(const short isym, const int spin1, const int spin2){
-   return -get_qsym_opB(isym, spin1, spin2);
+inline qsym get_qsym_opQ(const short isym, const int p, const int s){
+   return -get_qsym_opB(isym, p, s);
 }
 
 } // ctns

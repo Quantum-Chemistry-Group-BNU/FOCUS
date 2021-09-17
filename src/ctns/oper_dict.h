@@ -48,10 +48,6 @@ class oper_dict{
    public:
       // constructor
       oper_dict(){
-//         oper_map<Tm> opm; // empty operator map 
-//         ops = {{'C',opm},{'A',opm},{'B',opm},
-//   	        {'S',opm},{'P',opm},{'Q',opm},
-//   	        {'H',opm}};
 	 _size = 0;
 	 _data = nullptr;
       }
@@ -73,6 +69,8 @@ class oper_dict{
 		    const integral::two_body<Tm>& int2e,
 		    const integral::one_body<Tm>& int1e);
       // precompute memory required
+      std::vector<int> oper_index_op(const char key) const;
+      qsym get_qsym_op(const char key, const int idx) const;
       void allocate_memory();
    public:
       int isym;
@@ -89,7 +87,12 @@ class oper_dict{
 
 template <typename Tm>
 void oper_dict<Tm>::print(const std::string name, const int level) const{
-   std::cout << " " << name << " : size[cindex]=" << cindex.size(); 
+   std::cout << name << ": oplist=" << oplist 
+	     << " isym=" << isym << " ifkr=" << ifkr 
+             << " size[cindex]=" << cindex.size()
+	     << " size[krest]=" << krest.size() << std::endl; 
+   qbra.print("qbra");
+   qket.print("qket");
    // count no. of operators in each class
    std::string opseq = "CABHSPQ";
    std::map<char,int> exist;
@@ -122,71 +125,90 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
 	 std::cout << std::endl;
       }
    } // level
+   std::cout << "total size=" << _size << " sizeMB=" << tools::sizeMB<Tm>(_size) << std::endl; 
 }
 
+template <typename Tm>
+std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
+   std::vector<int> index;
+   if(key == 'C'){
+      index = cindex;
+   }else if(key == 'A'){
+      index = oper_index_opA(cindex, ifkr);
+   }else if(key == 'B'){
+      index = oper_index_opB(cindex, ifkr);
+   }else if(key == 'H'){
+      index.push_back(0);
+   }else if(key == 'S'){
+      index = oper_index_opS(krest, ifkr);
+   }else if(key == 'P'){
+      index = oper_index_opP(krest, ifkr);
+   }else if(key == 'Q'){
+      index = oper_index_opQ(krest, ifkr);
+   }
+   return index;
+}
+      
+template <typename Tm>
+qsym oper_dict<Tm>::get_qsym_op(const char key, const int idx) const{
+   qsym sym_op;
+   if(key == 'C'){
+      sym_op = get_qsym_opC(isym, idx);
+   }else if(key == 'A'){
+      auto pr = oper_unpack(idx);
+      sym_op = get_qsym_opA(isym, pr.first, pr.second);
+   }else if(key == 'B'){
+      auto pr = oper_unpack(idx);
+      sym_op = get_qsym_opB(isym, pr.first, pr.second);
+   }else if(key == 'H'){
+      sym_op = qsym(isym,0,0);	   
+   }else if(key == 'S'){
+      sym_op = get_qsym_opS(isym, idx);
+   }else if(key == 'P'){
+      auto pr = oper_unpack(idx);
+      sym_op = get_qsym_opP(isym, pr.first, pr.second);
+   }else if(key == 'Q'){
+      auto pr = oper_unpack(idx);
+      sym_op = get_qsym_opQ(isym, pr.first, pr.second);
+   }
+   return sym_op;
+}
+ 
 template <typename Tm>
 void oper_dict<Tm>::allocate_memory(){
    const bool debug = true;
    std::cout << "ctns::oper_dict<Tm>:allocate_memory for oplist=" << oplist << std::endl;
-   if(oplist.find("C") != std::string::npos){
-      if(debug) std::cout << " allocate_memory for opC" << std::endl;
-      for(int p1 : cindex){
-         auto sym_op = get_qsym_opC(isym, p1);
-	 ops['C'][p1].init(sym_op, qbra, qket, {1,0}, false);
+   // count the size
+   _size = 0;
+   std::map<char,size_t> sizes;
+   for(const auto& key : oplist){
+      sizes[key] = 0; 
+      if(debug) std::cout << " allocate_memory for op" << key << ":";
+      auto op_index = this->oper_index_op(key);
+      for(int idx : op_index){
+	 auto sym_op = this->get_qsym_op(key,idx);
+	 ops[key][idx].init(sym_op, qbra, qket, {1,0}, false);
+	 sizes[key] += ops[key][idx].size();
+      }
+      _size += sizes[key];
+      std::cout << " size=" << sizes[key] 
+	        << " sizeMB=" << tools::sizeMB<Tm>(sizes[key]) 
+		<< std::endl; 
+   }
+   std::cout << "total size=" << _size << " sizeMB=" << tools::sizeMB<Tm>(_size) << std::endl;
+   // allocate & assign pointer
+   _data = new Tm[_size];
+   size_t off = 0;
+   for(const auto& key : oplist){
+      for(auto& pr : ops.at(key)){
+	 auto& op = pr.second;
+	 op.setup_data(_data+off);
+	 off += op.size();
       }
    }
-   if(oplist.find("A") != std::string::npos){
-      if(debug) std::cout << " allocate_memory for opA" << std::endl;
-      auto aindex = oper_index_opA(cindex, ifkr);
-      for(int pq : aindex){
-         auto pr = oper_unpack(pq);
-	 auto sym_op = get_qsym_opA(isym, pr.first, pr.second);
-	 ops['A'][pq].init(sym_op, qbra, qket, {1,0}, false);
-      }
-   }
-   if(oplist.find("B") != std::string::npos){
-      if(debug) std::cout << " allocate_memory for opB" << std::endl;
-      auto bindex = oper_index_opB(cindex, ifkr);
-      for(int pq : bindex){
-         auto pr = oper_unpack(pq);
-	 auto sym_op = get_qsym_opB(isym, pr.first, pr.second);
-	 ops['A'][pq].init(sym_op, qbra, qket, {1,0}, false);
-      }
-   }
-   if(oplist.find("H") != std::string::npos){
-      if(debug) std::cout << " allocate_memory for opH" << std::endl;
-      ops['H'][0].init(qsym(isym,0,0), qbra, qket, {1,0}, false);
-   }
-   if(oplist.find("S") != std::string::npos){
-      if(debug) std::cout << " allocate_memory for opS" << std::endl;
-      sindex = oper_index_opS(krest, ifkr);
-      for(int p1 : sindex){
-         auto sym_op = get_qsym_opS(isym, p1);
-	 ops['S'][p1].init(sym_op, qbra, qket, {1,0}, false);
-      }
-   }
-   if(oplist.find("P") != std::string::npos){
-      if(debug) std::cout << " allocate_memory for opP" << std::endl;
-      pindex = oper_index_opP(krest, ifkr);
-      for(int pq : pindex){
-	 auto pr = oper_unpack(pq);
-	 auto sym_op = get_qsym_opP(isym, pr.first, pr.second);
-	 ops['P'][pq].init(sym_op, qbra, qket, {1,0}, false);
-      }
-   }
-   if(oplist.find("Q") != std::string::npos){
-      if(debug) std::cout << " allocate_memory for opQ" << std::endl;
-      qindex = oper_index_opQ(krest, ifkr);
-      for(int ps : qindex){
-	 auto ps = oper_unpack(ps);
-	 auto sym_op = get_qsym_opQ(isym, pr.first, pr.second);
-	 ops['Q'][ps].init(sym_op, qbra, qket, {1,0}, false);
-      }
-   }
+   // check
    this->print("qops",1);
-   exit(1);
 }
-
 
 // init local operators on dot
 // Member templates: https://en.cppreference.com/w/cpp/language/member_template
