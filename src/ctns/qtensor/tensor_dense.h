@@ -73,26 +73,27 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
 	 linalg::matrix<Tm> mat(dim0,dim1,_data+_off);
 	 return mat;
       }
+      linalg::matrix<Tm> time_reversal(const int pr, const int pc) const;
+/*
+      // Convention: matrix must be explicitly copied!
       // assignment
       dtensor2<Tm>& operator =(const linalg::matrix<Tm>& mat){
          assert(dim0 == mat.rows() && dim1 == mat.cols());
 	 Tm* ptr = _data+_off;
-	 int N = _size;
-	 linalg::xcopy(N, mat.data(), ptr);
+	 linalg::xcopy(_size, mat.data(), ptr);
          return *this;
       }
       dtensor2<Tm>& operator +=(const linalg::matrix<Tm>& mat){
          assert(dim0 == mat.rows() && dim1 == mat.cols());
 	 Tm* ptr = _data+_off;
-	 int N = _size;
-	 linalg::xaxpy(N, 1.0, mat.data(), ptr);
+	 linalg::xaxpy(_size, 1.0, mat.data(), ptr);
          return *this;
       }
-      dtensor2<Tm>& operator =(linalg::matrix<Tm>&& mat) = delete;
-      dtensor2<Tm>& operator +=(linalg::matrix<Tm>&& mat) = delete;
-      // interface with xgemm
+*/
+      // interface with xgemm, similar to linalg::matrix 
       int rows() const{ return dim0; }
       int cols() const{ return dim1; }
+      Tm* col(const int j) const{ return &_data[_addr(0,j)]; }; 
    public:
       int dim0, dim1;
    private:   
@@ -248,6 +249,74 @@ struct dtensor4{
       size_t _off, _size;
       Tm* _data;
 };
+
+// 
+// Functions
+//
+
+// M(l,r) = M1(bar{l},bar{r})^* given parity of qr and qc
+template <typename Tm>
+linalg::matrix<Tm> dtensor2<Tm>::time_reversal(const int pr, const int pc) const{
+   const int& _rows = dim0;
+   const int& _cols = dim1;
+   linalg::matrix<Tm> blk(_rows,_cols);
+   // even-even block:
+   //    <e|\bar{O}|e> = p{O} <e|O|e>^*
+   if(pr == 0 && pc == 0){
+      std::transform(this->data(), this->data()+this->size(), blk.data(),
+		     [](const Tm& x){ return tools::conjugate(x); });
+   // even-odd block:
+   //    [A,B] -> p{O}[B*,-A*]  
+   // tA = <e|\bar{O}|o> = p{O} <e|O|\bar{o}>^*
+   // tB = <e|\bar{O}|\bar{o}> = p{O} <e|O|o>^* (-1)
+   }else if(pr == 0 && pc == 1){
+      assert(_cols%2 == 0);
+      int dc2 = _cols/2;
+      // copy blocks <e|O|o>^*
+      for(int ic=0; ic<dc2; ic++){
+         std::transform(this->col(ic),this->col(ic)+_rows,blk.col(ic+dc2),
+          	        [](const Tm& x){ return -tools::conjugate(x); });
+      }
+      // copy blocks <e|O|\bar{o}>
+      for(int ic=0; ic<dc2; ic++){
+         std::transform(this->col(ic+dc2),this->col(ic+dc2)+_rows,blk.col(ic),
+         	        [](const Tm& x){ return tools::conjugate(x); });
+      }
+   // odd-even block:
+   //    [A]        [ B*]
+   //    [ ] -> p{O}[   ]
+   //    [B]        [-A*] 
+   }else if(pr == 1 && pc == 0){
+      assert(_rows%2 == 0);
+      int dr2 = _rows/2;
+      for(int ic=0; ic<_cols; ic++){
+         std::transform(this->col(ic),this->col(ic)+dr2,blk.col(ic)+dr2,
+         	        [](const Tm& x){ return -tools::conjugate(x); });
+         std::transform(this->col(ic)+dr2,this->col(ic)+_rows,blk.col(ic),
+         	        [](const Tm& x){ return tools::conjugate(x); });
+      }
+   // odd-odd block:
+   //    [A B]        [ D* -C*]
+   //    [   ] -> p{O}[       ]
+   //    [C D]        [-B*  A*]
+   }else if(pr == 1 && pc == 1){
+      assert(_rows%2 == 0 && _cols%2 == 0);
+      int dr2 = _rows/2, dc2 = _cols/2;
+      for(int ic=0; ic<dc2; ic++){
+         std::transform(this->col(ic),this->col(ic)+dr2,blk.col(ic+dc2)+dr2,
+         	        [](const Tm& x){ return tools::conjugate(x); });
+         std::transform(this->col(ic)+dr2,this->col(ic)+_rows,blk.col(ic+dc2),
+         	        [](const Tm& x){ return -tools::conjugate(x); });
+      }
+      for(int ic=0; ic<dc2; ic++){
+         std::transform(this->col(ic+dc2),this->col(ic+dc2)+dr2,blk.col(ic)+dr2,
+         	        [](const Tm& x){ return -tools::conjugate(x); });
+         std::transform(this->col(ic+dc2)+dr2,this->col(ic+dc2)+_rows,blk.col(ic),
+         	        [](const Tm& x){ return tools::conjugate(x); });
+      }
+   } // (pr,pc)
+   return blk;
+}
 
 } // ctns
 

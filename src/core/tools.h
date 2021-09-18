@@ -54,9 +54,7 @@ inline double sizeMB(size_t sz){ return sz*sizeof(Tm)/std::pow(1024.0,2); }
 
 // conjugte
 inline double conjugate(const double x){ return x; }
-inline std::complex<double> conjugate(const std::complex<double> x){ 
-   return std::conj(x); 
-};
+inline std::complex<double> conjugate(const std::complex<double> x){ return std::conj(x); }
 
 // timing 
 std::chrono::high_resolution_clock::time_point get_time();

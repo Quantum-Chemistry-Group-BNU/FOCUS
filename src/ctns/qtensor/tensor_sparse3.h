@@ -36,6 +36,7 @@ struct stensor3{
 	        const std::vector<bool> _dir={0,1,1}){
          info.init(_sym, _qrow, _qcol, _qmid, _dir);
          _data = new Tm[info._size];
+	 memset(_data, 0, info._size*sizeof(Tm));
 	 info.setup_data(_data);
       }
       stensor3(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
@@ -49,7 +50,7 @@ struct stensor3{
 	 std::cout << "stensor3: copy constructor" << std::endl;     
          info = st.info;
 	 _data = new Tm[info._size];
-	 std::copy_n(st._data, info._size, _data);
+	 linalg::xcopy(info._size, st._data, _data);
 	 info.setup_data(_data);
       }
       // copy assignment
@@ -60,7 +61,7 @@ struct stensor3{
             info = st.info;
 	    delete[] _data;
 	    _data = new Tm[info._size];
-	    std::copy_n(st._data, info._size, _data);
+	    linalg::xcopy(info._size, st._data, _data);
 	    info.setup_data(_data);
 	 }
 	 return *this;
@@ -97,6 +98,7 @@ struct stensor3{
       qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
       qsym mid_sym(const int bm) const{ return info.qmid.get_sym(bm); }
       size_t size() const{ return info._size; }
+      Tm* data() const{ return _data; }
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }
       // access

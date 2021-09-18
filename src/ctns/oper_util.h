@@ -5,12 +5,12 @@
 #include <boost/mpi.hpp>
 #endif
 
-/*
-#include "oper_io.h"
+#include "oper_dict.h"
 #include "oper_dot.h"
+#include "oper_io.h"
+/*
 #include "oper_renorm.h"
 */
-#include "oper_dict.h"
 
 namespace ctns{
 
@@ -50,48 +50,6 @@ void oper_load_qops(const comb<Km>& icomb,
 }
 */
 
-/*
-// init local operators
-template <typename Km>
-void oper_init_dot(const comb<Km>& icomb,
-		   const int kp,
-		   const integral::two_body<typename Km::dtype>& int2e,
-		   const integral::one_body<typename Km::dtype>& int1e,
-		   oper_dict<typename Km::dtype>& qops){
-   const int isym = Km::isym;
-   const bool ifkr = qkind::is_kramers<Km>();
-   // rest of spatial orbital indices
-   std::vector<int> krest;
-   for(int k=0; k<int1e.sorb/2; k++){
-      if(k == kp) continue;
-      krest.push_back(k);
-   }
-   qops.cindex.push_back(2*kp);
-   if(not ifkr) qops.cindex.push_back(2*kp+1);
-   // compute
-   oper_dot_opC(isym, ifkr, kp, qops);
-   oper_dot_opA(isym, ifkr, kp, qops);
-   oper_dot_opB(isym, ifkr, kp, qops);
-   oper_dot_opP(isym, ifkr, kp, int2e, krest, qops);
-   oper_dot_opQ(isym, ifkr, kp, int2e, krest, qops);
-   oper_dot_opS(isym, ifkr, kp, int2e, int1e, krest, qops);
-   oper_dot_opH(isym, ifkr, kp, int2e, int1e, qops);
-   // scale full {Sp,H} on dot to avoid repetition in parallelization
-   int size = 1, rank = 0;
-#ifndef SERIAL
-   size = icomb.world.size();
-   rank = icomb.world.rank();
-   if(size > 1){
-      const typename Km::dtype scale = 1.0/size;
-      qops('H')[0] = qops('H')[0]*scale;
-      for(auto& p : qops('S')){
-         p.second = p.second*scale;
-      }
-   }
-#endif
-}
-*/
-
 // initialization of operators for 
 // (1) dot operators [c] 
 // (2) boundary operators [l/r]
@@ -101,6 +59,8 @@ void oper_init_dotAll(const comb<Km>& icomb,
          	      const integral::one_body<typename Km::dtype>& int1e,
          	      const std::string scratch){
    using Tm = typename Km::dtype;
+   const int isym = Km::isym;
+   const bool ifkr = qkind::is_kramers<Km>();
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -112,58 +72,64 @@ void oper_init_dotAll(const comb<Km>& icomb,
    for(int idx=0; idx<icomb.topo.ntotal; idx++){
       auto p = icomb.topo.rcoord[idx];
       auto& node = icomb.topo.get_node(p);
+      //
       // cop: local operators on physical sites
+      //
       if(node.type != 3){
-         int kp = node.pindex;
          auto ta = tools::get_time();
 	 //---------------------------------------------
+         int kp = node.pindex;
          oper_dict<Tm> qops;
-	 qops.print("qops",1);
-	 //qops.init_dot(icomb, kp, int2e, int1e);
-	 qops.init_dot(icomb, kp, int2e, int1e);
-	 qops.print("qops",1);
-	 exit(1);
+	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size);
 	 //---------------------------------------------
          auto tb = tools::get_time();
 	 //---------------------------------------------
-	 //std::string fname = oper_fname(scratch, p, "c");
-         //oper_save(fname, qops);
-	 //qops.save(fname);
+	 std::string fname = oper_fname(scratch, p, "c");
+         oper_save(fname, qops);
 	 //---------------------------------------------
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
          t_save += tools::get_duration(tc-tb);
       }
-/*
+      //
       // rop: right boundary (exclude the start point)
+      //
       if(node.type == 0 && p.first != 0){
-	 int kp = node.pindex;
          auto ta = tools::get_time();
+	 //---------------------------------------------
+	 int kp = node.pindex;
          oper_dict<Tm> qops;
-	 oper_init_dot(icomb, kp, int2e, int1e, qops);
+	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size);
+	 //---------------------------------------------
          auto tb = tools::get_time();
+	 //---------------------------------------------
 	 std::string fname = oper_fname(scratch, p, "r");
          oper_save(fname, qops);
+	 //---------------------------------------------
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
          t_save += tools::get_duration(tc-tb);
       }
-*/
    }
-/*
-   // left boundary at the start (0,0)
+   //
+   // lop: left boundary at the start (0,0)
+   //
    auto p = std::make_pair(0,0);
-   int kp = icomb.topo.get_node(p).pindex;
    auto ta = tools::get_time();
+   //---------------------------------------------
+   int kp = icomb.topo.get_node(p).pindex;
    oper_dict<Tm> qops;
-   oper_init_dot(icomb, kp, int2e, int1e, qops);
+   oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size);
+   //---------------------------------------------
    auto tb = tools::get_time();
+   //---------------------------------------------
    std::string fname = oper_fname(scratch, p, "l");
    oper_save(fname, qops);
+   //---------------------------------------------
    auto tc = tools::get_time();
    t_comp += tools::get_duration(tb-ta);
    t_save += tools::get_duration(tc-tb);
-*/
+
    auto t1 = tools::get_time();
    if(rank == 0){
       tools::timing("ctns::oper_init", t0, t1);

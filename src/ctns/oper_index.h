@@ -13,9 +13,6 @@ extern const bool debug_oper_io;
 const bool debug_oper_para = false;
 extern const bool debug_oper_para;
 
-const bool debug_oper_dot = false;
-extern const bool debug_oper_dot;
-
 // --- packing (i,j) into ij ---
 const int kpack = 1000;
 extern const int kpack;

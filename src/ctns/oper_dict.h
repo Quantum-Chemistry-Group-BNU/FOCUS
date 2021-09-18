@@ -6,7 +6,6 @@
 #include "../core/integral.h"
 #include "qtensor/qtensor.h"
 #include "oper_index.h"
-#include "ctns_comb.h"
 
 namespace ctns{
 
@@ -36,23 +35,24 @@ class oper_dict{
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
 	 }
-	 // setup the mapping to physical address
-	 for(auto& pr_opmap : ops){
-            for(auto& pr_op : pr_opmap.second){
-	       auto& op = pr_op.second;
-	       op.setup_data(_data);
-	    }
-	 }
+	 this->setup_data(_data);
       }
       BOOST_SERIALIZATION_SPLIT_MEMBER()
    public:
       // constructor
-      oper_dict(){
-	 _size = 0;
-	 _data = nullptr;
-      }
-      ~oper_dict(){
-	 delete[] _data;
+      oper_dict(): _size(0), _data(nullptr) {}
+      ~oper_dict(){ delete[] _data; }
+      // setup the mapping to physical address
+      void setup_data(Tm* data){
+         size_t off = 0;
+         for(const auto& key : oplist){
+            for(auto& pr : ops[key]){
+	       auto& op = pr.second;
+	       op.setup_data(_data+off);
+	       off += op.size();
+            }
+         }
+	 assert(off == _size);
       }
       // access
       const oper_map<Tm>& operator()(const char key) const{
@@ -63,11 +63,6 @@ class oper_dict{
       }
       // helpers
       void print(const std::string name, const int level=0) const;
-      // construction of operators
-      template <typename Km>
-      void init_dot(const comb<Km>& icomb, const int kp,
-		    const integral::two_body<Tm>& int2e,
-		    const integral::one_body<Tm>& int1e);
       // precompute memory required
       std::vector<int> oper_index_op(const char key) const;
       qsym get_qsym_op(const char key, const int idx) const;
@@ -176,7 +171,7 @@ qsym oper_dict<Tm>::get_qsym_op(const char key, const int idx) const{
  
 template <typename Tm>
 void oper_dict<Tm>::allocate_memory(){
-   const bool debug = true;
+   const bool debug = false;
    std::cout << "ctns::oper_dict<Tm>:allocate_memory for oplist=" << oplist << std::endl;
    // count the size
    _size = 0;
@@ -191,48 +186,17 @@ void oper_dict<Tm>::allocate_memory(){
 	 sizes[key] += ops[key][idx].size();
       }
       _size += sizes[key];
-      std::cout << " size=" << sizes[key] 
-	        << " sizeMB=" << tools::sizeMB<Tm>(sizes[key]) 
-		<< std::endl; 
+      if(debug){
+         std::cout << " size=" << sizes[key] 
+                   << " sizeMB=" << tools::sizeMB<Tm>(sizes[key]) 
+           	   << std::endl;
+      } 
    }
    std::cout << "total size=" << _size << " sizeMB=" << tools::sizeMB<Tm>(_size) << std::endl;
    // allocate & assign pointer
    _data = new Tm[_size];
-   size_t off = 0;
-   for(const auto& key : oplist){
-      for(auto& pr : ops.at(key)){
-	 auto& op = pr.second;
-	 op.setup_data(_data+off);
-	 off += op.size();
-      }
-   }
-   // check
-   this->print("qops",1);
-}
-
-// init local operators on dot
-// Member templates: https://en.cppreference.com/w/cpp/language/member_template
-template <typename Tm> template<typename Km>
-void oper_dict<Tm>::init_dot(const comb<Km>& icomb, const int kp,
-                             const integral::two_body<Tm>& int2e,
-                             const integral::one_body<Tm>& int1e){
-   std::cout << "init_dot" << std::endl;
-   // setup basic information
-   isym = Km::isym;
-   ifkr = qkind::is_kramers<Km>();
-   cindex.push_back(2*kp);
-   if(not ifkr) cindex.push_back(2*kp+1);
-   // rest of spatial orbital indices
-   for(int k=0; k<int1e.sorb/2; k++){
-      if(k == kp) continue;
-      krest.push_back(k);
-   }
-   auto qphys = get_qbond_phys(isym);
-   qbra = qphys;
-   qket = qphys;
-   oplist = "CABHSPQ";
-   // initialize memory
-   this->allocate_memory();
+   memset(_data, 0, _size*sizeof(Tm));
+   this->setup_data(_data);
 }
 
 } // ctns

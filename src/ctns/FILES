@@ -238,4 +238,105 @@ TODOs: Tensor operations
     oper_kernel_OIwf
     oper_kernel_IOwf
     oper_kernel_OOwf
+ 3. remove T() and H() in contract_qt_qt...
+
+#################################################################
+
+Symmetry:
+ qnum_qkind.h -> kind of CTNS
+ qnum_qsym.h -> quantum number class: qsym 
+ qnum_qbond.h -> bond space
+ qnum_qdpt.h
+Tests:
+ tests_ctns.h
+ test_ctns.cpp 
+Tensor: [to be optimized]
+ tensor.h
+ tensor_dense.h
+ tensor_qinfo2.h
+ tensor_qinfo3.h
+ tensor_qinfo4.h
+ tensor_sparse2.h -> rwfuns
+ tensor_sparse3.h -> rsites
+ tensor_sparse4.h
+ tensor_linalg.h
+ tensor_contract.h
+Topology:
+ ctns_comb.h
+ ctns_topo.h  
+ ctns_topo.cpp  
+Kramers:
+ kramers_ortho.h -> ortho_basis
+ kramers_linalg.h -> decimation
+Initialization: Schmidt decomposition
+ ctns_init.h -> init CTNS from SCI
+ init_rbasis.h -> renorm_basis class 
+ init_phys.h
+ init_bipart.h => challenging part with TRS!
+IO:
+ ctns_io.h
+Algorithms:
+ ctns_alg.h -> basic algorithms for <I|J>,<n|CTNS>,sampling
+ alg_ova.h
+
+
+Operators: [to be optimized]
+ ctns_oper.h -> Hmat
+ oper_util.h
+ //--- data structure ---
+ oper_index.h 
+ oper_dict.h -> KEY: design a good container for renormalized operators: 
+		construction, IO, dot, renormalization, etc.
+	        We can use a label to distinguish memory owner.
+		qinfo2 -> qtensor()
+ oper_dot.h -> local operators
+ oper_io.h
+ //--- renorm ---
+
+
+
+ 
+ oper_renorm.h -> <r|O|r'> [to be optimized] 
+ oper_combine.h
+
+ oper_normxwf.h
+ oper_compxwf.h
+
+ oper_kernel.h
+
+ oper_timer.cpp
+ oper_timer.h
+ oper_rbasis.h -> for debugging renormalized operators
+
+	deleted:    oper_combine.h
+	deleted:    oper_compxwf.h
+	deleted:    oper_kernel.h
+	deleted:    oper_normxwf.h
+	deleted:    oper_rbasis.h
+	deleted:    oper_renorm.h
+	deleted:    oper_timer.cpp
+	deleted:    oper_timer.h
+
+#################################################################
+
+Qtensor: [to be optimized]
+ qtensor_reshape3.h
+ qtensor_reshape4.h
+ qtensor_kramers.h
+ pdvdson.h
+ pdvdson_kramers.h
+
+Sweep: [to be optimized]
+ ctns_sweep.h
+ sweep_data.h
+ sweep_onedot.h
+ sweep_onedot_ham.h
+ sweep_onedot_renorm.h
+ sweep_twodot.h
+ sweep_twodot_ham.h
+ sweep_twodot_renorm.h
+ sweep_ham.h
+ sweep_decimation.h
+ sweep_guess.h
+ ctns_sys.h
 

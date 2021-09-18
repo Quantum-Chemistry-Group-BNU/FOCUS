@@ -5,14 +5,17 @@
 #include "matrix.h"
 
 extern "C" {
-// copy
+// scal: x = a*x
+void dscal_(const int* N, const double* alpha, double* X, const int* INCX);
+void zscal_(const int* N, const std::complex<double>* alpha, std::complex<double>* X, const int* INCX);
+// copy: y = x
 void dcopy_(const int* N,
 	    const double* X, const int* INCX,
 	    double* Y, const int* INCY);
 void zcopy_(const int* N,
 	    const std::complex<double>* X, const int* INCX,
 	    std::complex<double>* Y, const int* INCY);
-// axpy
+// axpy: y += a*x
 void daxpy_(const int* N, const double* alpha, 
 	    const double* X, const int* INCX,
 	    double* Y, const int* INCY);
@@ -78,24 +81,34 @@ void zgesdd_(const char* JOBZ, const int* M, const int* N,
 // wrapper for BLAS/LAPACK with matrix<Tm> and vector<Tm> 
 namespace linalg{
 
+// scal
+inline void xscal(const int N, const double alpha, double* X){
+   int INCX = 1;
+   ::dscal_(&N, &alpha, X, &INCX);
+}
+inline void xscal(const int N, const std::complex<double> alpha, std::complex<double>* X){
+   int INCX = 1;
+   ::zscal_(&N, &alpha, X, &INCX);
+}
+
 // copy
-inline void xcopy(const int N, const double*X, double* Y){
+inline void xcopy(const int N, const double* X, double* Y){
    int INCX = 1, INCY = 1;
    ::dcopy_(&N, X, &INCX, Y, &INCY);
 }
-inline void xcopy(const int N, const std::complex<double>*X, std::complex<double>* Y){
+inline void xcopy(const int N, const std::complex<double>* X, std::complex<double>* Y){
    int INCX = 1, INCY = 1;
    ::zcopy_(&N, X, &INCX, Y, &INCY);
 }
 
 // xaxpy
 inline void xaxpy(const int N, const double alpha, 
-		  const double*X, double* Y){
+		  const double* X, double* Y){
    int INCX = 1, INCY = 1;
    ::daxpy_(&N, &alpha, X, &INCX, Y, &INCY);
 }
 inline void xaxpy(const int N, const std::complex<double> alpha, 
-		  const std::complex<double>*X, std::complex<double>* Y){
+		  const std::complex<double>* X, std::complex<double>* Y){
    int INCX = 1, INCY = 1;
    ::zaxpy_(&N, &alpha, X, &INCX, Y, &INCY);
 }

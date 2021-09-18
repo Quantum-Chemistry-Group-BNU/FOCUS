@@ -42,6 +42,7 @@ struct stensor2{
          own = _own;
          if(own){
             _data = new Tm[info._size];
+	    memset(_data, 0, info._size*sizeof(Tm));
 	    info.setup_data(_data);
 	 }
       }
@@ -58,16 +59,15 @@ struct stensor2{
       ~stensor2(){ 
 	 if(own) delete[] _data; 
       }
-/*
       // copy constructor
       stensor2(const stensor2& st){
-	 std::cout << "stensor2: copy constructor - exit" << std::endl;     
-	 exit(1); 
+	 std::cout << "stensor2: copy constructor" << std::endl;     
          info = st.info;
 	 _data = new Tm[info._size];
-	 std::copy_n(st._data, info._size, _data);
+	 linalg::xcopy(info._size, st._data, _data);
 	 info.setup_data(_data);
       }
+/*
       // copy assignment
       stensor2& operator =(const stensor2& st){
 	 std::cout << "stensor2: copy assignment - exit" << std::endl;    
@@ -76,7 +76,7 @@ struct stensor2{
             info = st.info;
 	    delete[] _data;
 	    _data = new Tm[info._size];
-	    std::copy_n(st._data, info._size, _data);
+	    linalg::xcopy(info._size, st._data, _data);
 	    info.setup_data(_data);
 	 }
 	 return *this;
@@ -92,8 +92,11 @@ struct stensor2{
       }
       // move assignment
       stensor2& operator =(stensor2&& st){
-	 std::cout << "stensor2: move assignment" << std::endl;     
-	 assert(own == true);
+	 std::cout << "stensor2: move assignment" << std::endl;    
+	 // only move if the data is owned by the object, 
+	 // otherwise data needs to be copied explicitly!
+	 // e.g., linalg::xcopy(info._size, st._data, _data);
+	 assert(own == true); 
          if(this != &st){
             info = std::move(st.info);
 	    delete[] _data;
@@ -112,6 +115,7 @@ struct stensor2{
       qsym row_sym(const int br) const{ return info.qrow.get_sym(br); }
       qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
       size_t size() const{ return info._size; }
+      Tm* data() const{ return _data; }
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }
       // access
@@ -136,6 +140,18 @@ struct stensor2{
       // 	     If row/col is permuted while dir fixed, this effectively changes 
       // 	     the direction of lines in diagrams
       stensor2<Tm> H() const;
+      // ZL20210401: generate matrix representation for Kramers paired operators
+      stensor2<Tm> K(const int nbar=0) const;
+      stensor2<Tm> operator -() const{
+         stensor2<Tm> st(*this);
+	 linalg::xscal(info._size, -1.0, st._data);
+	 return st;
+      }
+      // simple arithmetic operations
+      stensor2<Tm>& operator *=(const Tm fac){
+         linalg::xscal(info._size, fac, _data);
+         return *this;
+      }
    public:
       bool own = true;
       qinfo2<Tm> info;
@@ -257,6 +273,30 @@ stensor2<Tm> stensor2<Tm>::H() const{
 	       blk(ir,ic) = tools::conjugate(blkh(ic,ir));
 	    } // ir
 	 } // ic
+      } // bc
+   } // br
+   return qt2; 
+}
+
+// generate matrix representation for Kramers paired operators
+// suppose row and col are KRS-adapted basis, then
+//    <r|\bar{O}|c> = (K<r|\bar{O}|c>)*
+//    		    = p{O} <\bar{r}|O|\bar{c}>*
+// using \bar{\bar{O}} = p{O} O (p{O}: 'parity' of operator)
+template <typename Tm>
+stensor2<Tm> stensor2<Tm>::K(const int nbar) const{
+   const double fpo = (nbar%2==0)? 1.0 : -1.0;
+   // the symmetry is flipped
+   stensor2<Tm> qt2(info.sym.flip(), info.qrow, info.qcol, info.dir); 
+   for(int br=0; br<qt2.rows(); br++){
+      for(int bc=0; bc<qt2.cols(); bc++){
+         auto& blk = qt2(br,bc);
+         if(blk.size() == 0) continue;
+	 const auto& blkk = (*this)(br,bc);
+	 int pr = info.qrow.get_parity(br);
+	 int pc = info.qcol.get_parity(bc);
+	 auto mat = blkk.time_reversal(pr, pc);
+	 linalg::xaxpy(blk.size(), fpo, mat.data(), blk.data());
       } // bc
    } // br
    return qt2; 

@@ -63,12 +63,13 @@ int CTNS(const input::schedule& schd){
    if(rank == 0 && schd.ctns.task != ""){ 
       cout << "\n===== ctns.task=" << schd.ctns.task << " =====" << endl;
    }
-   if(schd.ctns.task == "opt"){
-      // optimization from current RCF
-      ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
+   if(schd.ctns.task == "sdiag"){
+      // parallel sampling can be implemented in future (very simple)!
       if(rank == 0){
-         auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
-         ctns::rcanon_save(icomb, rcanon_file);
+         int iroot  = schd.ctns.iroot;
+         int nsample = schd.ctns.nsample;
+         int ndetprt = schd.ctns.ndetprt; 
+         double Sd = rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
       }
    }else if(schd.ctns.task == "ham"){
       auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
@@ -77,21 +78,21 @@ int CTNS(const input::schedule& schd){
          auto Sij = ctns::get_Smat(icomb);
          Sij.print("Sij");
       }
-   }else if(schd.ctns.task == "sdiag"){
-      // parallel sampling can be implemented in future (very simple)!
+   }else if(schd.ctns.task == "opt"){
+/*
+      // optimization from current RCF
+      ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
       if(rank == 0){
-         int iroot  = schd.ctns.iroot;
-         int nsample = schd.ctns.nsample;
-         int ndetprt = schd.ctns.ndetprt; 
-         double Sd = rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
+         auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
+         ctns::rcanon_save(icomb, rcanon_file);
       }
+*/
    }
    return 0;	
 }
 
-
 int main(int argc, char *argv[]){
-   int rank = 0, size = 1; 
+   int rank = 0, size = 1;
 #ifndef SERIAL
    // setup MPI environment 
    boost::mpi::environment env{argc, argv};
