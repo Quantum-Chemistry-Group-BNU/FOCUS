@@ -31,26 +31,37 @@ void oper_renorm_opAll(const std::string& superblock,
 		<< " mpisize=" << size << std::endl;
    }
    auto t0 = tools::get_time();
-   exit(1);
-/*  
-   // support for index of complementary ops 
-   auto& node = icomb.topo.get_node(p);
-   std::vector<int> krest; 
+   // setup basic information
+   qops.isym = isym;
+   qops.ifkr = ifkr;
+   qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
+   // rest of spatial orbital indices
+   const auto& node = icomb.topo.get_node(p);
+   const auto& rindex = icomb.topo.rindex;
+   const auto& site = (superblock=="cr")? icomb.rsites[rindex.at(p)] : 
+	   				  icomb.lsites[rindex.at(p)];
    if(superblock == "cr"){
-      krest = node.lsupport;
+      qops.krest = node.lsupport;
+      qops.qbra = site.info.qrow;
+      qops.qket = site.info.qrow; 
    }else if(superblock == "lc"){
       auto pr = node.right;
-      krest = icomb.topo.get_node(pr).rsupport;
+      qops.krest = icomb.topo.get_node(pr).rsupport;
+      qops.qbra = site.info.qcol;
+      qops.qket = site.info.qcol;
    }else if(superblock == "lr"){
       auto pc = node.center;
-      krest = icomb.topo.get_node(pc).rsupport;
+      qops.krest = icomb.topo.get_node(pc).rsupport;
+      qops.qbra = site.info.qmid;
+      qops.qbra = site.info.qmid;
    }
+   qops.oplist = "CABHSPQ";
+   // initialize memory 
+   qops.allocate_memory();
 
+/*
    oper_timer.clear();
    
-   // combine cindex first 
-   qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
-   const auto& site = (superblock=="cr")? icomb.rsites.at(p) : icomb.lsites.at(p);
    const bool ifcheck = false; // check operators against explicit construction
    // C
    oper_renorm_opC(superblock, icomb, p, site, qops1, qops2, qops);
@@ -90,7 +101,6 @@ void oper_renorm_opAll(const std::string& superblock,
       tools::timing("ctns::oper_renorm_opAll", t0, t1);
    }
 */
-   exit(1);
 }
 
 } // ctns

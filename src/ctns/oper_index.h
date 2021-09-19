@@ -108,7 +108,7 @@ inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bo
    return bindex;
 }
 
-//--- generate index for complementary operators: P,Q,S ---
+// --- generate index for complementary operators: P,Q,S ---
 // tricky part: determine the storage pattern for Ppq for p,q in krest
 inline std::vector<int> oper_index_opP(const std::vector<int>& krest, const bool& ifkr){
    std::vector<int> index;
@@ -163,6 +163,131 @@ inline std::vector<int> oper_index_opS(const std::vector<int>& krest, const bool
       if(not ifkr) index.push_back(pb);
    }
    return index;
+}
+
+// --- combination of two sets of indices ---
+inline std::vector<int> oper_combine_cindex(const std::vector<int>& cindex1,
+		                            const std::vector<int>& cindex2){
+   std::vector<int> cindex;
+   cindex.insert(cindex.end(), cindex1.begin(), cindex1.end());
+   cindex.insert(cindex.end(), cindex2.begin(), cindex2.end());
+   return cindex;
+}
+
+// --- formula for combinations --- 
+inline std::vector<std::pair<int,int>> oper_combine_opC(const std::vector<int>& cindex1,
+		      	     				const std::vector<int>& cindex2){
+   std::vector<std::pair<int,int>> info;
+   int iformula; 
+   // 1. p1^+*I2
+   iformula = 1;
+   for(int p1 : cindex1){
+      info.push_back(std::make_pair(iformula,p1));
+   }
+   // 2. I1*p2^+ 
+   iformula = 2;
+   for(int p2 : cindex2){
+      info.push_back(std::make_pair(iformula,p2));
+   }
+   return info;
+}
+
+// tricky part: determine the storage pattern for Apq
+// nkr: only store Apq where p<q: total number (2K)*(2K-1)/2 ~ O(2K^2)
+//  kr: time-reversal symmetry adapted basis is used, Apq blocks:
+//      pA+qA+ and pA+qB+: K*(K-1)/2+K*(K+1)/2=K^2 (reduction by half)
+inline std::vector<std::pair<int,int>> oper_combine_opA(const std::vector<int>& cindex1,
+		             			        const std::vector<int>& cindex2,
+		             			        const bool& ifkr){
+   std::vector<std::pair<int,int>> info;
+   int iformula; 
+   // 1. p1<q1: A[p1,q1] = p1^+q1^+ * I2
+   iformula = 1;
+   for(int p1 : cindex1){
+      for(int q1 : cindex1){
+         if(p1 < q1){
+            info.push_back(std::make_pair(iformula,oper_pack(p1,q1)));
+            if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p1,q1+1)));
+	 }else if(p1 == q1){
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p1,p1+1)));
+	 }
+      }
+   }
+   // 2. p2<q2: A[p2,q2] = I1 * p2^+q2^+ 
+   iformula = 2;
+   for(int p2 : cindex2){
+      for(int q2 : cindex2){
+         if(p2 < q2){
+            info.push_back(std::make_pair(iformula,oper_pack(p2,q2)));
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p2,q2+1)));
+	 }else if(p2 == q2){
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p2,p2+1)));
+	 }
+      }
+   }
+   // 3. p1<q2: A[p1,q2] = p1^+ * q2^+ 
+   // 4. p1>q2: A[q2,p1] = q2^+ * p1^+ = -p1^+ * q2^+
+   for(int p1 : cindex1){
+      for(int q2 : cindex2){
+	 iformula = (p1<q2)? 3 : 4;
+         int index = (p1<q2)? oper_pack(p1,q2) : oper_pack(q2,p1);
+	 info.push_back(std::make_pair(iformula,index));
+         if(ifkr){ // Opposite-spin part:
+	    index = (p1<q2)? oper_pack(p1,q2+1) : oper_pack(q2,p1+1);
+	    info.push_back(std::make_pair(iformula,index));
+	 }
+      }
+   }
+   int kc = cindex1.size()+cindex2.size();
+   assert(info.size() == oper_num_opA(kc,ifkr));
+   return info;
+}
+
+// tricky part: determine the storage pattern for Bps
+// nkr: only store Bps (p<=s): (2K)*(2K+1)/2 ~ O(2K^2)
+//  kr: If time-reversal symmetry adapted basis is used, Bps blocks:
+//      pA+sA and pA+sB: K*(K+1)/2+K*(K+1)/2=K(K+1) (reduction by half)
+inline std::vector<std::pair<int,int>> oper_combine_opB(const std::vector<int>& cindex1,
+		             			        const std::vector<int>& cindex2,
+		             			        const bool& ifkr){
+   std::vector<std::pair<int,int>> info;
+   int iformula; 
+   // 1. p1<q1: B[p1,q1] = p1^+q1 * I2
+   iformula = 1;
+   for(int p1 : cindex1){
+      for(int q1 : cindex1){
+         if(p1 <= q1){
+            info.push_back(std::make_pair(iformula,oper_pack(p1,q1)));
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p1,q1+1)));
+	 }
+      }
+   }
+   // 2. p2<=q2: B[p2,q2] = I1 * p2^+q2
+   iformula = 2;
+   for(int p2 : cindex2){
+      for(int q2 : cindex2){
+         if(p2 <= q2){
+            info.push_back(std::make_pair(iformula,oper_pack(p2,q2)));
+	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p2,q2+1)));
+	 }
+      }
+   }
+   // 3. p1<q2: B[p1,q2] = p1^+ * q2
+   // 4. p1>q2: B[q2,p1] = q2 * p1^+ = -p1^+ * q2
+   for(int p1 : cindex1){
+      for(int q2 : cindex2){
+	 iformula = (p1<q2)? 3 : 4;
+         int index = (p1<q2)? oper_pack(p1,q2) : oper_pack(q2,p1);
+	 info.push_back(std::make_pair(iformula,index));
+         if(ifkr){ // Opposite-spin part:
+	    index = (p1<q2)? oper_pack(p1,q2+1) : oper_pack(q2,p1+1);
+	    info.push_back(std::make_pair(iformula,index));
+	 }
+      }
+   }
+   int kc = cindex1.size()+cindex2.size();
+   assert(info.size() == oper_num_opB(kc,ifkr));
+   return info;
 }
 
 } // ctns

@@ -278,12 +278,10 @@ IO:
 Algorithms:
  ctns_alg.h -> basic algorithms for <I|J>,<n|CTNS>,sampling
  alg_ova.h
-
-
 Operators: [to be optimized]
  ctns_oper.h -> Hmat
- oper_util.h
- //--- data structure ---
+ oper_env.h
+ --- basic data structure ---
  oper_index.h 
  oper_dict.h -> KEY: design a good container for renormalized operators: 
 		construction, IO, dot, renormalization, etc.
@@ -291,13 +289,13 @@ Operators: [to be optimized]
 		qinfo2 -> qtensor()
  oper_dot.h -> local operators
  oper_io.h
- //--- renorm ---
+ --- renormalization ---
 
 
 
  
- oper_renorm.h -> <r|O|r'> [to be optimized] 
- oper_combine.h
+ oper_renorm.h -> <r|O|r'> [to be optimized]
+ 
 
  oper_normxwf.h
  oper_compxwf.h
@@ -307,15 +305,6 @@ Operators: [to be optimized]
  oper_timer.cpp
  oper_timer.h
  oper_rbasis.h -> for debugging renormalized operators
-
-	deleted:    oper_combine.h
-	deleted:    oper_compxwf.h
-	deleted:    oper_kernel.h
-	deleted:    oper_normxwf.h
-	deleted:    oper_rbasis.h
-	deleted:    oper_renorm.h
-	deleted:    oper_timer.cpp
-	deleted:    oper_timer.h
 
 #################################################################
 

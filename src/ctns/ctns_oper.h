@@ -20,18 +20,19 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    
    // build operators for environement
    oper_env_right(icomb, int2e, int1e, scratch);
-   exit(1);
-/*   
+
    // load operators from file
    using Tm = typename Km::dtype;
    oper_dict<Tm> qops;
    auto p = std::make_pair(0,0); 
    auto fname = oper_fname(scratch, p, "r");
    oper_load(fname, qops);
-   
+ 
    //if(rank == 0) std::cout << "\nctns::get_Hmat" << std::endl;
    auto Hmat = qops('H')[0].to_matrix();
-   if(rank == 0) Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows()); // avoid repetition
+   if(rank == 0){ 
+      Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows()); // avoid repetition
+   }
    // deal with rwfuns(istate,ibas): Hij = w*[i,a] H[a,b] w[j,b] = (w^* H w^T) 
    auto wfmat = icomb.rwfuns.to_matrix();
    auto tmp = linalg::xgemm("N","T",Hmat,wfmat);
@@ -45,7 +46,6 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    }
 #endif  
    return Hmat;
-*/
 }
 
 } // ctns
