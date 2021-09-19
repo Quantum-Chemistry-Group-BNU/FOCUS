@@ -21,16 +21,18 @@ class oper_dict{
       friend class boost::serialization::access;	   
       template <class Archive>
       void save(Archive & ar, const unsigned int version) const{
+	 std::cout << "oper_dict<Tm>::save" << std::endl;
 	 ar & isym & ifkr & qbra & qket 
-            & cindex & krest & ops & _size;
+	    & cindex & krest & oplist & ops & _size;
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
 	 }
       }
       template <class Archive>
       void load(Archive & ar, const unsigned int version){
+	 std::cout << "oper_dict<Tm>::load" << std::endl;
 	 ar & isym & ifkr & qbra & qket 
-            & cindex & krest & ops & _size;
+            & cindex & krest & oplist & ops & _size;
 	 _data = new Tm[_size];
          for(int i=0; i<_size; i++){
 	    ar & _data[i];

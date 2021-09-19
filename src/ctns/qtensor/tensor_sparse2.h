@@ -28,10 +28,16 @@ struct stensor2{
             for(int i=0; i<info._size; i++){
 	       ar & _data[i];
 	    }
+	    info.setup_data(_data);
 	 }
-	 info.setup_data(_data);
       }
       BOOST_SERIALIZATION_SPLIT_MEMBER()
+      // memory allocation
+      void allocate(){
+         _data = new Tm[info._size];
+	 memset(_data, 0, info._size*sizeof(Tm));
+	 info.setup_data(_data);
+      }
    public:
       // --- GENERAL FUNCTIONS ---
       // constructors
@@ -40,11 +46,7 @@ struct stensor2{
 	        const std::vector<bool> _dir={1,0}, const bool _own=true){
          info.init(_sym, _qrow, _qcol, _dir);
          own = _own;
-         if(own){
-            _data = new Tm[info._size];
-	    memset(_data, 0, info._size*sizeof(Tm));
-	    info.setup_data(_data);
-	 }
+         if(own) this->allocate();
       }
       void setup_data(Tm* data){
          assert(own == false);
@@ -55,18 +57,25 @@ struct stensor2{
 	       const std::vector<bool> _dir={1,0}, const bool _own=true){
 	 this->init(_sym, _qrow, _qcol, _dir, _own);
       }
+      // simple constructor from qinfo2
+      stensor2(const qinfo2<Tm>& _info, const bool _own=true){
+	 info = _info;
+	 own = _own;
+         if(own) this->allocate();
+      }
       // desctructors
       ~stensor2(){ 
 	 if(own) delete[] _data; 
       }
-      // copy constructor
+      // copy constructor -> just copy wrapper used in serialization of ops in oper_dict!
       stensor2(const stensor2& st){
-	 std::cout << "stensor2: copy constructor" << std::endl;     
-         info = st.info;
-	 _data = new Tm[info._size];
-	 linalg::xcopy(info._size, st._data, _data);
-	 info.setup_data(_data);
+	 //std::cout << "stensor2: copy constructor" << std::endl;   
+	 assert(st.own == false);
+	 own = st.own;
+	 info = st.info;
       }
+      // copy assignment
+      stensor2& operator =(const stensor2& st) = delete;
 /*
       // copy assignment
       stensor2& operator =(const stensor2& st){
@@ -143,7 +152,7 @@ struct stensor2{
       // ZL20210401: generate matrix representation for Kramers paired operators
       stensor2<Tm> K(const int nbar=0) const;
       stensor2<Tm> operator -() const{
-         stensor2<Tm> st(*this);
+         stensor2<Tm> st(info);
 	 linalg::xscal(info._size, -1.0, st._data);
 	 return st;
       }

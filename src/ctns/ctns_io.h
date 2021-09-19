@@ -29,7 +29,8 @@ void rcanon_load(comb<Km>& icomb, // no const!
    // load rsites & rwfuns
    icomb.rsites.resize(icomb.topo.ntotal);
    for(int idx=0; idx<icomb.topo.ntotal; idx++){
-      load >> icomb.rsites[idx]; // this save calls to copy constructor for vector<st3>
+      // this save calls to copy constructor for vector<st3>
+      load >> icomb.rsites[idx]; 
    }
    load >> icomb.rwfuns;
 }

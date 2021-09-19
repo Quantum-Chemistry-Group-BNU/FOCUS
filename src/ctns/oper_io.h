@@ -3,10 +3,10 @@
 
 #include "../core/serialization.h"
 #include "oper_dict.h"
+#include "ctns_comb.h"
 
 namespace ctns{ 
 
-// for qopers
 inline std::string oper_fname(const std::string scratch, 
   	  	       	      const comb_coord& p,
 		       	      const std::string kind){
@@ -15,7 +15,6 @@ inline std::string oper_fname(const std::string scratch,
         + std::to_string(p.second) + ".op";
 }
 
-// add individual operator in future
 template <typename Tm>
 void oper_save(const std::string fname, 
 	       const oper_dict<Tm>& qops){
@@ -32,6 +31,41 @@ void oper_load(const std::string fname,
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> qops;
+}
+
+//
+// load operators from disk for site p
+//
+//       cop
+//        |
+// lop ---*--- rop
+//	  p
+//
+template <typename Km>
+void oper_load_qops(const comb<Km>& icomb,
+     		    const comb_coord& p,
+     		    const std::string scratch,
+		    const std::string kind,
+		    oper_dict<typename Km::dtype>& qops){
+   const auto& node = icomb.topo.get_node(p);
+   if(kind == "c"){
+      if(node.type != 3){
+         auto fname0c = oper_fname(scratch, p, "c"); // physical dofs
+         oper_load(fname0c, qops);
+      }else{
+         auto pc = node.center;
+         auto fname0c = oper_fname(scratch, pc, "r"); // branching site
+         oper_load(fname0c, qops);
+      }
+   }else if(kind == "r"){
+      auto pr = node.right;
+      auto fname0r = oper_fname(scratch, pr, "r");
+      oper_load(fname0r, qops);
+   }else if(kind == "l"){
+      auto pl = node.left;
+      auto fname0l = oper_fname(scratch, pl, "l");
+      oper_load(fname0l, qops);
+   }
 }
 
 } // ctns
