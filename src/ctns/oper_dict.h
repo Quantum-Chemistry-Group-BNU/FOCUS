@@ -23,7 +23,9 @@ class oper_dict{
       void save(Archive & ar, const unsigned int version) const{
 	 std::cout << "oper_dict<Tm>::save" << std::endl;
 	 ar & isym & ifkr & qbra & qket 
-	    & cindex & krest & oplist & ops & _size;
+	    & cindex & krest & oplist 
+	    & mpisize & mpirank & ifdist2 
+	    & ops & _size;
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
 	 }
@@ -32,7 +34,9 @@ class oper_dict{
       void load(Archive & ar, const unsigned int version){
 	 std::cout << "oper_dict<Tm>::load" << std::endl;
 	 ar & isym & ifkr & qbra & qket 
-            & cindex & krest & oplist & ops & _size;
+            & cindex & krest & oplist
+	    & mpisize & mpirank & ifdist2 
+	    & ops & _size;
 	 _data = new Tm[_size];
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
@@ -76,6 +80,9 @@ class oper_dict{
       std::vector<int> cindex;
       std::vector<int> krest;
       std::string oplist;
+      int mpisize = 1;
+      int mpirank = 0;
+      bool ifdist2 = false;
    private:
       std::map<char,oper_map<Tm>> ops;
       size_t _size;
@@ -130,18 +137,29 @@ std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
    std::vector<int> index;
    if(key == 'C'){
       index = cindex;
-   }else if(key == 'A'){
-      index = oper_index_opA(cindex, ifkr);
-   }else if(key == 'B'){
-      index = oper_index_opB(cindex, ifkr);
    }else if(key == 'H'){
       index.push_back(0);
    }else if(key == 'S'){
       index = oper_index_opS(krest, ifkr);
-   }else if(key == 'P'){
-      index = oper_index_opP(krest, ifkr);
-   }else if(key == 'Q'){
-      index = oper_index_opQ(krest, ifkr);
+   }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q'){
+      std::vector<int> index2;
+      if(key == 'A'){
+         index2 = oper_index_opA(cindex, ifkr);
+      }else if(key == 'B'){
+         index2 = oper_index_opB(cindex, ifkr);
+      }else if(key == 'P'){
+         index2 = oper_index_opP(krest, ifkr);
+      }else if(key == 'Q'){
+         index2 = oper_index_opQ(krest, ifkr);
+      }
+      if(not ifdist2){ 
+	 index = std::move(index2);
+      }else{
+         for(int idx : index2){
+            int iproc = distribute2(idx, mpisize);
+            if(iproc == mpirank) index.push_back(idx);
+         }
+      }
    }
    return index;
 }

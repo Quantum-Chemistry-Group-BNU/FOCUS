@@ -290,20 +290,16 @@ Operators: [to be optimized]
  oper_dot.h -> local operators
  oper_io.h
  --- renormalization ---
-
-
-
+ oper_timer.h -> timing for opxwf
+ oper_timer.cpp
  
  oper_renorm.h -> <r|O|r'> [to be optimized]
- 
 
  oper_normxwf.h
  oper_compxwf.h
 
  oper_kernel.h
 
- oper_timer.cpp
- oper_timer.h
  oper_rbasis.h -> for debugging renormalized operators
 
 #################################################################
