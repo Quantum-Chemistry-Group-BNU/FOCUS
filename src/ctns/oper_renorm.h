@@ -31,6 +31,7 @@ void oper_renorm_opAll(const std::string& superblock,
 		<< " mpisize=" << size << std::endl;
    }
    auto t0 = tools::get_time();
+   exit(1);
 /*  
    // support for index of complementary ops 
    auto& node = icomb.topo.get_node(p);

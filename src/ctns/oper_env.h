@@ -131,12 +131,8 @@ void oper_env_right(const comb<Km>& icomb,
          auto tb = tools::get_time();
          //---------------------------------------------
          // load operators from disk    
+         //---------------------------------------------
 	 oper_dict<typename Km::dtype> qops1, qops2, qops;
-
-         auto fname0c = oper_fname(scratch, p, "c"); // physical dofs
-         oper_load(fname0c, qops);
-	 exit(1);
-
          oper_load_qops(icomb, p, scratch, "c", qops1);
          oper_load_qops(icomb, p, scratch, "r", qops2);
          //---------------------------------------------
@@ -144,6 +140,7 @@ void oper_env_right(const comb<Km>& icomb,
          t_load += tools::get_duration(tc-tb); 
          //---------------------------------------------
          // perform renormalization for superblock {|cr>}
+         //---------------------------------------------
 	 std::string superblock = "cr"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e, qops1, qops2, qops);
          //---------------------------------------------
@@ -151,12 +148,12 @@ void oper_env_right(const comb<Km>& icomb,
          t_comp += tools::get_duration(td-tc);
          //---------------------------------------------
 	 // save operators to disk
+         //---------------------------------------------
 	 std::string fname = oper_fname(scratch, p, "r");
          oper_save(fname, qops);
          //---------------------------------------------
          auto te = tools::get_time();
 	 t_save += tools::get_duration(te-td);
-         //if(rank == 0) qops.print(fname);
       }
    } // idx
 
