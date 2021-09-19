@@ -28,6 +28,11 @@ struct stensor4{
       // desctructors
       ~stensor4(){ delete[] _data; }
       // copy constructor
+      stensor4(const stensor4& st) = delete;
+      // copy assignment
+      stensor4& operator =(const stensor4& st) = delete;
+/*
+      // copy constructor
       stensor4(const stensor4& st){
 	 std::cout << "stensor4: copy constructor" << std::endl;     
          info = st.info;
@@ -48,6 +53,7 @@ struct stensor4{
 	 }
 	 return *this;
       }
+*/
       // move constructor
       stensor4(stensor4&& st){
 	 //std::cout << "stensor4: move constructor" << std::endl;     
