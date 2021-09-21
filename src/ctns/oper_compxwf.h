@@ -5,168 +5,34 @@
 #include <omp.h>
 #endif
 
-#include "oper_kernel.h"
+#include "oper_op1op2xwf.h"
+#include "oper_timer.h"
 
 namespace ctns{
 
 // 
-// Compute complementary operators in the superblock acting on a wavefunction
+// Compute complementary operators (PQSH) in the superblock acting on a wavefunction
 //
- 
-// opwf = (sum_{ij} oij*a1^(d1)[i]*a2^(d2)[i])^d*wf
-template <typename Tm>
-void oper_op1op2xwf_nkr(qtensor3<Tm>& opwf,
-		        const std::string& superblock,
-		        const qtensor3<Tm>& site,
-		        oper_map<Tm>& qops1C,
-		        oper_map<Tm>& qops2C,
-			qsym& sym_op,
-		        std::map<std::pair<int,int>,Tm>& oij,
-			const bool ifdagger1,
-			const bool ifdagger2,
-			const bool ifdagger){
-   const Tm sgn = ifdagger? -1.0 : 1.0;
-   const auto& qrow1 = (qops1C.begin()->second).qrow;
-   const auto& qcol1 = (qops1C.begin()->second).qcol;
-   const auto& qrow2 = (qops2C.begin()->second).qrow;
-   const auto& qcol2 = (qops2C.begin()->second).qcol;
-   // sum_i a1[i] * (sum_j oij a2[j])
-   if(qops1C.size() <= qops2C.size()){
-      for(const auto& op1C : qops1C){
-         int i = op1C.first;
-	 const auto& op1 = ifdagger1? op1C.second : op1C.second.H();
-	 // tmp_op2 = sum_j oij a2[j]
-	 qtensor2<Tm> tmp_op2(sym_op-op1.sym, qrow2, qcol2);
-	 for(const auto& op2C : qops2C){
-	    bool symAllowed = tmp_op2.sym == (ifdagger2? op2C.second.sym : -op2C.second.sym); 
-	    if(not symAllowed) continue;
-	    int j = op2C.first;
-	    const auto& op2 = ifdagger2? op2C.second : op2C.second.H();	
-	    tmp_op2 += oij[std::make_pair(i,j)]*op2;
-	 }
-	 opwf += sgn*oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger); 
-      }
-   // sum_j (sum_i oij a1[i]) * a2[j]
-   }else{
-      // this part appears when the branch is larger 
-      for(const auto& op2C : qops2C){
-	 int j = op2C.first;
-	 const auto& op2 = ifdagger2? op2C.second : op2C.second.H();
-	 // tmp_op1 = sum_i oij a1[i]
-	 qtensor2<Tm> tmp_op1(sym_op-op2.sym, qrow1, qcol1);
-         for(const auto& op1C : qops1C){
-	    bool symAllowed = tmp_op1.sym == (ifdagger1? op1C.second.sym : -op1C.second.sym);
-	    if(not symAllowed) continue;
-	    int i = op1C.first;
-	    const auto& op1 = ifdagger1? op1C.second : op1C.second.H();
-	    tmp_op1 += oij[std::make_pair(i,j)]*op1;
-	 }
-	 opwf += sgn*oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
-      }
-   }
-}
-
-// TRS version: only unbar part of creation ops is stored
-// opwf = (sum_{ij}oij*a1^(d)[i]*a2^(d)[i])*wf
-template <typename Tm>
-void oper_op1op2xwf_kr(qtensor3<Tm>& opwf,
-		       const std::string& superblock,
-		       const qtensor3<Tm>& site,
-		       oper_map<Tm>& qops1C,
-		       oper_map<Tm>& qops2C,
-		       qsym& sym_op,
-		       std::map<std::pair<int,int>,Tm>& oij,
-		       const bool ifdagger1,
-		       const bool ifdagger2,
-		       const bool ifdagger){
-   const Tm sgn = ifdagger? -1.0 : 1.0;
-   const auto& qrow1 = (qops1C.begin()->second).qrow;
-   const auto& qcol1 = (qops1C.begin()->second).qcol;
-   const auto& qrow2 = (qops2C.begin()->second).qrow;
-   const auto& qcol2 = (qops2C.begin()->second).qcol;
-   // sum_i a1[i] * (sum_j oij a2[j])
-   if(qops1C.size() <= qops2C.size()){
-      for(const auto& op1C : qops1C){
-         int ia = op1C.first, ib = ia+1;
-	 const auto& op1a = ifdagger1? op1C.second : op1C.second.H();
-	 const auto& op1b = op1a.K(1);
-	 // top2 = sum_j oij a2[j]
-	 qtensor2<Tm> top2a(sym_op-op1a.sym, qrow2, qcol2);
-	 qtensor2<Tm> top2b(sym_op-op1b.sym, qrow2, qcol2);
-	 for(const auto& op2C : qops2C){
-	    int ja = op2C.first, jb = ja+1;
-	    const auto& op2a = ifdagger2? op2C.second : op2C.second.H();
-            const auto& op2b = op2a.K(1);	    
-	    top2a += oij[std::make_pair(ia,ja)]*op2a + oij[std::make_pair(ia,jb)]*op2b;
-	    top2b += oij[std::make_pair(ib,ja)]*op2a + oij[std::make_pair(ib,jb)]*op2b;
-	 }
-	 opwf += sgn*(oper_kernel_OOwf(superblock,site,op1a,top2a,1,ifdagger)
-		     +oper_kernel_OOwf(superblock,site,op1b,top2b,1,ifdagger));
-      }
-   // sum_j (sum_i oij a1[i]) * a2[j]
-   }else{
-      // this part appears when the branch is larger 
-      for(const auto& op2C : qops2C){
-	 int ja = op2C.first, jb = ja+1;
-	 const auto& op2a = ifdagger2? op2C.second : op2C.second.H();
-	 const auto& op2b = op2a.K(1);
-	 // top1 = sum_i oij a1[i]
-	 qtensor2<Tm> top1a(sym_op-op2a.sym, qrow1, qcol1);
-	 qtensor2<Tm> top1b(sym_op-op2b.sym, qrow1, qcol1);
-         for(const auto& op1C : qops1C){
-	    int ia = op1C.first, ib = ia+1;
-	    const auto& op1a = ifdagger1? op1C.second : op1C.second.H();
-	    const auto& op1b = op1a.K(1);
-	    top1a += oij[std::make_pair(ia,ja)]*op1a + oij[std::make_pair(ib,ja)]*op1b;
-	    top1b += oij[std::make_pair(ia,jb)]*op1a + oij[std::make_pair(ib,jb)]*op1b;
-	 }
-	 opwf += sgn*(oper_kernel_OOwf(superblock,site,top1a,op2a,1,ifdagger)
-	             +oper_kernel_OOwf(superblock,site,top1b,op2b,1,ifdagger));
-      }
-   }
-}
-
-template <typename Tm>
-void oper_op1op2xwf(const bool& ifkr,
-		    qtensor3<Tm>& opwf,
-		    const std::string& superblock,
-		    const qtensor3<Tm>& site,
-		    oper_map<Tm>& qops1C,
-		    oper_map<Tm>& qops2C,
-		    qsym& sym_op,
-		    std::map<std::pair<int,int>,Tm>& oij,
-		    const bool ifdagger1,
-		    const bool ifdagger2,
-		    const bool ifdagger){
-   if(not ifkr){
-      oper_op1op2xwf_nkr(opwf, superblock, site, qops1C, qops2C, 
-		         sym_op, oij, ifdagger1, ifdagger2, ifdagger);
-   }else{
-      oper_op1op2xwf_kr(opwf, superblock, site, qops1C, qops2C, 
-		        sym_op, oij, ifdagger1, ifdagger2, ifdagger);
-   }
-}
 
 // kernel for computing renormalized P|ket> or P^+|ket> 
 template <typename Tm>
-qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
-		              const qtensor3<Tm>& site,
+stensor3<Tm> oper_compxwf_opP(const std::string& superblock,
+		              const stensor3<Tm>& site,
 		              oper_dict<Tm>& qops1,
 		              oper_dict<Tm>& qops2,
-			      const int& isym,
-			      const bool& ifkr,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 		              const bool ifdagger=false){
    auto t0 = tools::get_time();
-    
+   
+   const int  isym = qops1.isym;
+   const bool ifkr = qops1.ifkr;
    auto pq = oper_unpack(index);
-   int p = pq.first,  kp = p/2, spin_p = p%2;
-   int q = pq.second, kq = q/2, spin_q = q%2;
-   auto sym_op = get_qsym_opP(isym, spin_p, spin_q);
-   auto sym_opwf = ifdagger? -sym_op+site.sym : sym_op+site.sym;
-   qtensor3<Tm> opwf(sym_opwf, site.qmid, site.qrow, site.qcol, site.dir);
+   int p = pq.first, q = pq.second;
+   auto sym_op = get_qsym_opP(isym, p, q);
+   auto sym_opwf = ifdagger? -sym_op+site.info.sym : sym_op+site.info.sym;
+   stensor3<Tm> opwf(sym_opwf, site.info.qrow, site.info.qcol, site.info.qmid, site.info.dir);
    // 
    // Ppq = 1/2<pq||sr> aras  (p<q)
    //     = <pq||s1r1> As1r1 [r>s] => Ppq^1
@@ -215,24 +81,23 @@ qtensor3<Tm> oper_compxwf_opP(const std::string& superblock,
 
 // kernel for computing renormalized Q|ket> or Q^+|ket>
 template <typename Tm>
-qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
-		              const qtensor3<Tm>& site,
+stensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
+		              const stensor3<Tm>& site,
 			      oper_dict<Tm>& qops1,
 			      oper_dict<Tm>& qops2,
-			      const int& isym,
-			      const bool& ifkr,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 			      const bool ifdagger=false){
    auto t0 = tools::get_time();
 
+   const int  isym = qops1.isym;
+   const bool ifkr = qops1.ifkr;
    auto ps = oper_unpack(index);
-   int p = ps.first,  kp = p/2, spin_p = p%2;
-   int s = ps.second, ks = s/2, spin_s = s%2;
-   auto sym_op = get_qsym_opQ(isym, spin_p, spin_s);
-   auto sym_opwf = ifdagger? -sym_op+site.sym : sym_op+site.sym;
-   qtensor3<Tm> opwf(sym_opwf, site.qmid, site.qrow, site.qcol, site.dir);
+   int p = ps.first, s = ps.second;
+   auto sym_op = get_qsym_opQ(isym, p, s);
+   auto sym_opwf = ifdagger? -sym_op+site.info.sym : sym_op+site.info.sym;
+   stensor3<Tm> opwf(sym_opwf, site.info.qrow, site.info.qcol, site.info.qmid, site.info.dir);
    //
    // Qps = <pq||sr> aq^+ar
    //     = <pq1||sr1> Bq1r1 	=> Qps^1
@@ -289,12 +154,10 @@ qtensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
 
 // kernel for computing renormalized Sp|ket> [6 terms]
 template <typename Tm>
-qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
-		              const qtensor3<Tm>& site,
-			      oper_dict<Tm>& qops1,
-			      oper_dict<Tm>& qops2,
-			      const int& isym,
-			      const bool& ifkr,
+stensor3<Tm> oper_compxwf_opS(const std::string& superblock,
+		              const stensor3<Tm>& site,
+			      const oper_dict<Tm>& qops1,
+			      const oper_dict<Tm>& qops2,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e,
 		              const int index,
@@ -303,10 +166,12 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 			      const bool ifdagger=false){
    auto t0 = tools::get_time();
 
-   int p = index, kp = p/2, spin_p = p%2;
-   auto sym_op = get_qsym_opS(isym, spin_p);
-   auto sym_opwf = ifdagger? -sym_op+site.sym : sym_op+site.sym;  
-   qtensor3<Tm> opwf(sym_opwf, site.qmid, site.qrow, site.qcol, site.dir);
+   const int  isym = qops1.isym;
+   const bool ifkr = qops1.ifkr;
+   int p = index, kp = p/2;
+   auto sym_op = get_qsym_opS(isym, index);
+   auto sym_opwf = ifdagger? -sym_op+site.info.sym : sym_op+site.info.sym;  
+   stensor3<Tm> opwf(sym_opwf, site.info.qrow, site.info.qcol, site.info.qmid, site.info.dir);
    //
    // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    //    = Sp^1 + Sp^2 (S exists in both blocks)
@@ -361,8 +226,8 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 	 if(iproc_aa == rank){
 	    const auto& op2P_AA = (kp<kq)? qops2('P').at(ipq_aa) : -qops2('P').at(ipq_aa);
             const auto& op2Q_AA = (kp<kq)? qops2('Q').at(ipq_aa) :  qops2('Q').at(ipq_aa).H();
-            opwf += oper_kernel_OOwf(superblock,site,op1c_A,op2P_AA,0,ifdagger)
-            	  + oper_kernel_OOwf(superblock,site,op1a_A,op2Q_AA,0,ifdagger);
+            opwf += oper_kernel_OOwf(superblock,site,op1c_A,op2P_AA,0,ifdagger);
+            opwf += oper_kernel_OOwf(superblock,site,op1a_A,op2Q_AA,0,ifdagger);
 	 } 
          const auto& op1c_B = op1c_A.K(1);
 	 const auto& op1a_B = op1a_A.K(1);
@@ -371,8 +236,8 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 	 if(iproc_ab == rank){
 	    const auto& op2P_AB = (kp<kq)? qops2('P').at(ipq_ab) : -qops2('P').at(ipq_ab).K(1);
             const auto& op2Q_AB = (kp<kq)? qops2('Q').at(ipq_ab) :  qops2('Q').at(ipq_ab).K(1).H();
-            opwf += oper_kernel_OOwf(superblock,site,op1c_B,op2P_AB,0,ifdagger)
-                  + oper_kernel_OOwf(superblock,site,op1a_B,op2Q_AB,0,ifdagger);
+            opwf += oper_kernel_OOwf(superblock,site,op1c_B,op2P_AB,0,ifdagger);
+            opwf += oper_kernel_OOwf(superblock,site,op1a_B,op2Q_AB,0,ifdagger);
 	 }
       }
       // 4. sum_q Ppq[1]*aq^+[2] + Qpq^[1]*aq[2]
@@ -385,8 +250,8 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 	 if(iproc_aa == rank){
 	    const auto& op1P_AA = (kp<kq)? qops1('P').at(ipq_aa) : -qops1('P').at(ipq_aa);
             const auto& op1Q_AA = (kp<kq)? qops1('Q').at(ipq_aa) :  qops1('Q').at(ipq_aa).H();
-            opwf += oper_kernel_OOwf(superblock,site,op1P_AA,op2c_A,1,ifdagger)
-                  + oper_kernel_OOwf(superblock,site,op1Q_AA,op2a_A,1,ifdagger);
+            opwf += oper_kernel_OOwf(superblock,site,op1P_AA,op2c_A,1,ifdagger);
+            opwf += oper_kernel_OOwf(superblock,site,op1Q_AA,op2a_A,1,ifdagger);
          } 
 	 const auto& op2c_B = op2c_A.K(1);
          const auto& op2a_B = op2a_A.K(1);
@@ -395,8 +260,8 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 	 if(iproc_ab == rank){
             const auto& op1P_AB = (kp<kq)? qops1('P').at(ipq_ab) : -qops1('P').at(ipq_ab).K(1);
             const auto& op1Q_AB = (kp<kq)? qops1('Q').at(ipq_ab) :  qops1('Q').at(ipq_ab).K(1).H();
-            opwf += oper_kernel_OOwf(superblock,site,op1P_AB,op2c_B,1,ifdagger)
-                  + oper_kernel_OOwf(superblock,site,op1Q_AB,op2a_B,1,ifdagger);
+            opwf += oper_kernel_OOwf(superblock,site,op1P_AB,op2c_B,1,ifdagger);
+            opwf += oper_kernel_OOwf(superblock,site,op1Q_AB,op2a_B,1,ifdagger);
 	 }
       }
    } // ifkr
@@ -414,18 +279,18 @@ qtensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 
 // kernel for computing renormalized H|ket>
 template <typename Tm>
-qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
-		              const qtensor3<Tm>& site,
-		              oper_dict<Tm>& qops1,
-		              oper_dict<Tm>& qops2,
-			      const int& isym,
-			      const bool& ifkr,
+stensor3<Tm> oper_compxwf_opH(const std::string& superblock,
+		              const stensor3<Tm>& site,
+		              const oper_dict<Tm>& qops1,
+		              const oper_dict<Tm>& qops2,
 	                      const integral::two_body<Tm>& int2e,
 	                      const integral::one_body<Tm>& int1e,
 			      const int size,
 			      const int rank){
    auto t0 = tools::get_time();
 
+   const int  isym = qops1.isym;
+   const bool ifkr = qops1.ifkr;
    const bool dagger = true;
    // for AP,BQ terms
    const auto& cindex1 = qops1.cindex;
@@ -446,7 +311,7 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
    //   + <p1q1||s2r2> p1^+q1^+r2s2 + h.c.
    //   + <p1q2||s1r2> p1^+q2^+r2s1 
    //
-   qtensor3<Tm> opwf(site.sym, site.qmid, site.qrow, site.qcol, site.dir);
+   stensor3<Tm> opwf(site.info.sym, site.info.qrow, site.info.qcol, site.info.qmid, site.info.dir);
    // 1. H1*I2
    opwf += oper_kernel_OIwf(superblock,site,qops1('H').at(0));
    // 2. I1*H2
@@ -487,8 +352,12 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
             const auto& op1 = qops1(BQ1).at(index);
             const auto& op2 = qops2(BQ2).at(index);
             const Tm wt = wfac(index);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
+	    auto tmp1 = oper_kernel_OOwf(superblock,site,op1,op2,0);
+            auto tmp2 = oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
+	    linalg::xaxpy(opwf.size(), wt, tmp1.data(), opwf.data());
+	    linalg::xaxpy(opwf.size(), wt, tmp2.data(), opwf.data());
          } // iproc
       }
    }else{
@@ -527,15 +396,23 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
             const Tm wt = wfacAP(index);
             const auto& op1_A = qops1(AP1).at(index);
             const auto& op2_A = qops2(AP2).at(index);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+            auto tmp1a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
+            auto tmp2a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+	    linalg::xaxpy(opwf.size(), wt, tmp1a.data(), opwf.data());
+	    linalg::xaxpy(opwf.size(), wt, tmp2a.data(), opwf.data());
 	    // NOTE: the following lines work for A_{pq} & A_{p\bqr{q}}, because 
 	    // the global sign in K() does not matter as the pair AP has even no. of barred indices!
             // That is, the phases will get cancelled in op1 and op2 after time-reversal op.
 	    const auto& op1_B = op1_A.K(0); 
 	    const auto& op2_B = op2_A.K(0);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+            auto tmp1b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
+            auto tmp2b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+	    linalg::xaxpy(opwf.size(), wt, tmp1b.data(), opwf.data());
+	    linalg::xaxpy(opwf.size(), wt, tmp2b.data(), opwf.data());
          } // iproc
       }
       // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
@@ -545,13 +422,21 @@ qtensor3<Tm> oper_compxwf_opH(const std::string& superblock,
             const Tm wt = wfacBQ(index);
             const auto& op1_A = qops1(BQ1).at(index);
             const auto& op2_A = qops2(BQ2).at(index);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+            auto tmp1a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
+            auto tmp2a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+	    linalg::xaxpy(opwf.size(), wt, tmp1a.data(), opwf.data());
+	    linalg::xaxpy(opwf.size(), wt, tmp2a.data(), opwf.data());
             // KR part
             const auto& op1_B = op1_A.K(0);
             const auto& op2_B = op2_A.K(0);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
-            opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
+            //opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+            auto tmp1b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
+            auto tmp2b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+	    linalg::xaxpy(opwf.size(), wt, tmp1b.data(), opwf.data());
+	    linalg::xaxpy(opwf.size(), wt, tmp2b.data(), opwf.data());
          } // iproc
       }
    } // ifkr

@@ -100,6 +100,22 @@ struct stensor4{
       dtensor4<Tm>& operator()(const int br, const int bc, const int bm, const int bv){ 
 	 return info._qblocks[info._addr(br,bc,bm,bv)]; 
       }
+      // simple arithmetic operations
+      stensor4<Tm>& operator *=(const Tm fac){
+         linalg::xscal(info._size, fac, _data);
+         return *this;
+      }
+      stensor4<Tm>& operator +=(const stensor4<Tm>& st){
+	 assert(info == st.info);
+	 linalg::xaxpy(info._size, 1.0, st.data(), _data);
+         return *this;
+      }
+      stensor4<Tm>& operator -=(const stensor4<Tm>& st){
+	 assert(info == st.info);
+	 linalg::xaxpy(info._size, -1.0, st.data(), _data);
+         return *this;
+      }
+      // --- SPECIFIC FUNCTIONS ---
       // --- SPECIFIC FUNCTIONS ---
    public:
       qinfo4<Tm> info;

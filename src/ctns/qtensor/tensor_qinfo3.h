@@ -52,6 +52,10 @@ struct qinfo3{
       // print
       void print(const std::string name, const int level=0) const;
       // --- SPECIFIC FUNCTIONS ---
+      bool operator ==(const qinfo3& info) const{
+         return sym==info.sym && qrow==info.qrow && qcol==info.qcol 
+		 && qmid==info.qmid && dir==info.dir;
+      }
    public:
       qsym sym;
       qbond qrow, qcol, qmid;

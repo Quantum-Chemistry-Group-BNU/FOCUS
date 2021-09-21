@@ -3,16 +3,6 @@
 
 namespace ctns{
 
-// --- debug options ---
-const bool debug_oper_dict = false;
-extern const bool debug_oper_dict;
-
-const bool debug_oper_io = false;
-extern const bool debug_oper_io;
-
-const bool debug_oper_para = false;
-extern const bool debug_oper_para;
-
 // --- packing (i,j) into ij ---
 const int kpack = 1000;
 extern const int kpack;
@@ -182,12 +172,12 @@ inline std::vector<std::pair<int,int>> oper_combine_opC(const std::vector<int>& 
    // 1. p1^+*I2
    iformula = 1;
    for(int p1 : cindex1){
-      info.push_back(std::make_pair(iformula,p1));
+      info.emplace_back(p1,iformula);
    }
    // 2. I1*p2^+ 
    iformula = 2;
    for(int p2 : cindex2){
-      info.push_back(std::make_pair(iformula,p2));
+      info.emplace_back(p2,iformula);
    }
    return info;
 }
@@ -206,10 +196,10 @@ inline std::vector<std::pair<int,int>> oper_combine_opA(const std::vector<int>& 
    for(int p1 : cindex1){
       for(int q1 : cindex1){
          if(p1 < q1){
-            info.push_back(std::make_pair(iformula,oper_pack(p1,q1)));
-            if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p1,q1+1)));
-	 }else if(p1 == q1){
-	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p1,p1+1)));
+            info.emplace_back(oper_pack(p1,q1),iformula);
+            if(ifkr) info.emplace_back(oper_pack(p1,q1+1),iformula);
+	 }else if(p1 == q1){                                      
+	    if(ifkr) info.emplace_back(oper_pack(p1,p1+1),iformula);
 	 }
       }
    }
@@ -218,10 +208,10 @@ inline std::vector<std::pair<int,int>> oper_combine_opA(const std::vector<int>& 
    for(int p2 : cindex2){
       for(int q2 : cindex2){
          if(p2 < q2){
-            info.push_back(std::make_pair(iformula,oper_pack(p2,q2)));
-	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p2,q2+1)));
-	 }else if(p2 == q2){
-	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p2,p2+1)));
+            info.emplace_back(oper_pack(p2,q2),iformula);
+	    if(ifkr) info.emplace_back(oper_pack(p2,q2+1),iformula);
+	 }else if(p2 == q2){                            
+	    if(ifkr) info.emplace_back(oper_pack(p2,p2+1),iformula);
 	 }
       }
    }
@@ -229,12 +219,12 @@ inline std::vector<std::pair<int,int>> oper_combine_opA(const std::vector<int>& 
    // 4. p1>q2: A[q2,p1] = q2^+ * p1^+ = -p1^+ * q2^+
    for(int p1 : cindex1){
       for(int q2 : cindex2){
-	 iformula = (p1<q2)? 3 : 4;
          int index = (p1<q2)? oper_pack(p1,q2) : oper_pack(q2,p1);
-	 info.push_back(std::make_pair(iformula,index));
+	 iformula = (p1<q2)? 3 : 4;
+	 info.emplace_back(index,iformula);
          if(ifkr){ // Opposite-spin part:
 	    index = (p1<q2)? oper_pack(p1,q2+1) : oper_pack(q2,p1+1);
-	    info.push_back(std::make_pair(iformula,index));
+	    info.emplace_back(index,iformula);
 	 }
       }
    }
@@ -257,8 +247,8 @@ inline std::vector<std::pair<int,int>> oper_combine_opB(const std::vector<int>& 
    for(int p1 : cindex1){
       for(int q1 : cindex1){
          if(p1 <= q1){
-            info.push_back(std::make_pair(iformula,oper_pack(p1,q1)));
-	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p1,q1+1)));
+            info.emplace_back(oper_pack(p1,q1),iformula);
+	    if(ifkr) info.emplace_back(oper_pack(p1,q1+1),iformula);
 	 }
       }
    }
@@ -267,8 +257,8 @@ inline std::vector<std::pair<int,int>> oper_combine_opB(const std::vector<int>& 
    for(int p2 : cindex2){
       for(int q2 : cindex2){
          if(p2 <= q2){
-            info.push_back(std::make_pair(iformula,oper_pack(p2,q2)));
-	    if(ifkr) info.push_back(std::make_pair(iformula,oper_pack(p2,q2+1)));
+            info.emplace_back(oper_pack(p2,q2),iformula);
+	    if(ifkr) info.emplace_back(oper_pack(p2,q2+1),iformula);
 	 }
       }
    }
@@ -276,12 +266,12 @@ inline std::vector<std::pair<int,int>> oper_combine_opB(const std::vector<int>& 
    // 4. p1>q2: B[q2,p1] = q2 * p1^+ = -p1^+ * q2
    for(int p1 : cindex1){
       for(int q2 : cindex2){
-	 iformula = (p1<q2)? 3 : 4;
          int index = (p1<q2)? oper_pack(p1,q2) : oper_pack(q2,p1);
-	 info.push_back(std::make_pair(iformula,index));
+	 iformula = (p1<q2)? 3 : 4;
+	 info.emplace_back(index,iformula);
          if(ifkr){ // Opposite-spin part:
 	    index = (p1<q2)? oper_pack(p1,q2+1) : oper_pack(q2,p1+1);
-	    info.push_back(std::make_pair(iformula,index));
+	    info.emplace_back(index,iformula);
 	 }
       }
    }

@@ -3,7 +3,7 @@
 
 /*
 
-  Dot operators: CABHSPQ
+  Dot operators: CABPQSH
   
   The local basis is {|0>,|2>,|a>,|b>} in consistent with ctns_phys.h
   
@@ -43,17 +43,17 @@ void oper_init_dot(oper_dict<Tm>& qops,
    auto qphys = get_qbond_phys(isym);
    qops.qbra = qphys;
    qops.qket = qphys;
-   qops.oplist = "CABHSPQ";
+   qops.oplist = "CABPQSH";
    // initialize memory
    qops.allocate_memory();
    // compute local operators on dot
    oper_dot_opC(qops, kp);
    oper_dot_opA(qops, kp);
    oper_dot_opB(qops, kp);
-   oper_dot_opH(qops, kp, int2e, int1e);
-   oper_dot_opS(qops, kp, int2e, int1e);
    oper_dot_opP(qops, kp, int2e);
    oper_dot_opQ(qops, kp, int2e);
+   oper_dot_opS(qops, kp, int2e, int1e);
+   oper_dot_opH(qops, kp, int2e, int1e);
    // scale full {Sp,H} on dot to avoid repetition in parallelization
 #ifndef SERIAL
    if(size > 1){

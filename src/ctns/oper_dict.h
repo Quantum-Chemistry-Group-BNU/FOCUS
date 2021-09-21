@@ -98,7 +98,7 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
    qbra.print("qbra");
    qket.print("qket");
    // count no. of operators in each class
-   std::string opseq = "CABHSPQ";
+   std::string opseq = "CABPQSH";
    std::map<char,int> exist;
    std::string s = " nops=";
    for(const auto& key : opseq){
@@ -152,13 +152,13 @@ std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
       }else if(key == 'Q'){
          index2 = oper_index_opQ(krest, ifkr);
       }
-      if(not ifdist2){ 
-	 index = std::move(index2);
-      }else{
+      if(ifdist2 && mpisize > 1){ 
          for(int idx : index2){
             int iproc = distribute2(idx, mpisize);
             if(iproc == mpirank) index.push_back(idx);
          }
+      }else{
+	 index = std::move(index2);
       }
    }
    return index;

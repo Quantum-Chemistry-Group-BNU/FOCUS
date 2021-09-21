@@ -69,7 +69,7 @@ struct stensor2{
       }
       // copy constructor -> just copy wrapper used in serialization of ops in oper_dict!
       stensor2(const stensor2& st){
-	 //std::cout << "stensor2: copy constructor" << std::endl;   
+	 std::cout << "stensor2: copy constructor" << std::endl;   
 	 assert(st.own == false);
 	 own = st.own;
 	 info = st.info;
@@ -134,6 +134,21 @@ struct stensor2{
       dtensor2<Tm>& operator()(const int br, const int bc){ 
 	 return info._qblocks[info._addr(br,bc)]; 
       }
+      // simple arithmetic operations
+      stensor2<Tm>& operator *=(const Tm fac){
+         linalg::xscal(info._size, fac, _data);
+         return *this;
+      }
+      stensor2<Tm>& operator +=(const stensor2<Tm>& st){
+	 assert(info == st.info);
+	 linalg::xaxpy(info._size, 1.0, st.data(), _data);
+         return *this;
+      }
+      stensor2<Tm>& operator -=(const stensor2<Tm>& st){
+	 assert(info == st.info);
+	 linalg::xaxpy(info._size, -1.0, st.data(), _data);
+         return *this;
+      }
       // --- SPECIFIC FUNCTIONS ---
       // from/to dense matrix: assign block to proper place
       void from_matrix(const linalg::matrix<Tm>& mat); 
@@ -153,13 +168,8 @@ struct stensor2{
       stensor2<Tm> K(const int nbar=0) const;
       stensor2<Tm> operator -() const{
          stensor2<Tm> st(info);
-	 linalg::xscal(info._size, -1.0, st._data);
+	 linalg::xaxpy(info._size, -1.0, _data, st._data);
 	 return st;
-      }
-      // simple arithmetic operations
-      stensor2<Tm>& operator *=(const Tm fac){
-         linalg::xscal(info._size, fac, _data);
-         return *this;
       }
    public:
       bool own = true;

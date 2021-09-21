@@ -54,10 +54,11 @@ void oper_check_rbasis(const comb<Km>& bra,
    int nop = 0, nfail = 0; 
    double maxdiff = -1.0;
    const auto& node = bra.topo.get_node(p);
-   const auto& bsite = bra.rsites.at(p);
-   const auto& ksite = ket.rsites.at(p);
-   const auto& rbasis0 = bra.rbases.at(p);
-   const auto& rbasis1 = ket.rbases.at(p);
+   const auto& rindex = bra.topo.rindex;
+   const auto& bsite = bra.rsites[rindex.at(p)];
+   const auto& ksite = ket.rsites[rindex.at(p)];
+   const auto& rbasis0 = bra.rbases[rindex.at(p)];
+   const auto& rbasis1 = ket.rbases[rindex.at(p)];
    // setup mapping for orbitals to local support
    const auto& lsupp = node.lsupport;
    const auto& rsupp = node.rsupport;
@@ -73,8 +74,8 @@ void oper_check_rbasis(const comb<Km>& bra,
       int orb_p = opC.first;
       int pos = orb2pos.at(orb_p);
       // build
-      int dim0 = bsite.qrow.get_dimAll();
-      int dim1 = ksite.qrow.get_dimAll();
+      int dim0 = bsite.info.qrow.get_dimAll();
+      int dim1 = ksite.info.qrow.get_dimAll();
       linalg::matrix<Tm> tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -142,8 +143,8 @@ void oper_check_rbasis(const comb<Km>& bra,
       int pos_p = orb2pos.at(orb_p);
       int pos_q = orb2pos.at(orb_q);
       // build
-      int dim0 = bsite.qrow.get_dimAll();
-      int dim1 = ksite.qrow.get_dimAll();
+      int dim0 = bsite.info.qrow.get_dimAll();
+      int dim1 = ksite.info.qrow.get_dimAll();
       linalg::matrix<Tm> tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -213,8 +214,8 @@ void oper_check_rbasis(const comb<Km>& bra,
       int pos_p = orb2pos.at(orb_p);
       int pos_q = orb2pos.at(orb_q);
       // build
-      int dim0 = bsite.qrow.get_dimAll();
-      int dim1 = ksite.qrow.get_dimAll();
+      int dim0 = bsite.info.qrow.get_dimAll();
+      int dim1 = ksite.info.qrow.get_dimAll();
       linalg::matrix<Tm> tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -295,10 +296,11 @@ void oper_check_rbasis(const comb<Km>& bra,
    int nop = 0, nfail = 0;
    double maxdiff = -1.0;
    const auto& node = bra.topo.get_node(p);
-   const auto& bsite = bra.rsites.at(p);
-   const auto& ksite = ket.rsites.at(p);
-   const auto& rbasis0 = bra.rbases.at(p);
-   const auto& rbasis1 = ket.rbases.at(p);
+   const auto& rindex = bra.topo.rindex;
+   const auto& bsite = bra.rsites[rindex.at(p)];
+   const auto& ksite = ket.rsites[rindex.at(p)];
+   const auto& rbasis0 = bra.rbases[rindex.at(p)];
+   const auto& rbasis1 = ket.rbases[rindex.at(p)];
    // setup mapping for orbitals to local support
    const auto& lsupp = node.lsupport;
    const auto& rsupp = node.rsupport;
@@ -315,8 +317,8 @@ void oper_check_rbasis(const comb<Km>& bra,
       int orb_p = pq.first;
       int orb_q = pq.second;
       // build
-      int dim0 = bsite.qrow.get_dimAll();
-      int dim1 = ksite.qrow.get_dimAll();
+      int dim0 = bsite.info.qrow.get_dimAll();
+      int dim1 = ksite.info.qrow.get_dimAll();
       linalg::matrix<Tm> tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -390,8 +392,8 @@ void oper_check_rbasis(const comb<Km>& bra,
       int orb_p = ps.first;
       int orb_s = ps.second;
       // build
-      int dim0 = bsite.qrow.get_dimAll();
-      int dim1 = ksite.qrow.get_dimAll();
+      int dim0 = bsite.info.qrow.get_dimAll();
+      int dim1 = ksite.info.qrow.get_dimAll();
       linalg::matrix<Tm> tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -441,7 +443,7 @@ void oper_check_rbasis(const comb<Km>& bra,
       auto opmat = op.to_matrix();
       double diff = linalg::normF(opmat-tmat);
       maxdiff = std::max(diff,maxdiff);
-      if(diff > thresh) nfail++;
+      //if(diff > thresh) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " Q: p,s=" << orb_p << "," << orb_s
@@ -450,6 +452,11 @@ void oper_check_rbasis(const comb<Km>& bra,
                    << " diff=" << diff 
                    << " fail=" << (diff > thresh)	
            	   << std::endl;
+	 if(diff > thresh){
+	    opmat.print("opmat");
+	    tmat.print("tmat");
+	    exit(1);
+	 }
       }
       nop++;
    } // op
@@ -462,8 +469,8 @@ void oper_check_rbasis(const comb<Km>& bra,
       const auto& op = opS.second;
       int orb_p = opS.first;
       // build
-      int dim0 = bsite.qrow.get_dimAll();
-      int dim1 = ksite.qrow.get_dimAll();
+      int dim0 = bsite.info.qrow.get_dimAll();
+      int dim1 = ksite.info.qrow.get_dimAll();
       linalg::matrix<Tm> tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){
@@ -546,8 +553,8 @@ void oper_check_rbasis(const comb<Km>& bra,
    for(const auto& opH : qops('H')){
       const auto& op = opH.second;
       // build
-      int dim0 = bsite.qrow.get_dimAll();
-      int dim1 = ksite.qrow.get_dimAll();
+      int dim0 = bsite.info.qrow.get_dimAll();
+      int dim1 = ksite.info.qrow.get_dimAll();
       linalg::matrix<Tm> tmat(dim0,dim1);
       int ioff0 = 0;
       for(const auto& rsec0 : rbasis0){

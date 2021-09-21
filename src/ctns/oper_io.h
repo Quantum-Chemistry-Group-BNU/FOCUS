@@ -7,6 +7,9 @@
 
 namespace ctns{ 
 
+const bool debug_oper_io = true;
+extern const bool debug_oper_io;
+
 inline std::string oper_fname(const std::string scratch, 
   	  	       	      const comb_coord& p,
 		       	      const std::string kind){

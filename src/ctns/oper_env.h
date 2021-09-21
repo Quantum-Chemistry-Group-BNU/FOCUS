@@ -28,13 +28,13 @@ void oper_init_dotAll(const comb<Km>& icomb,
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif  
-   double t_comp = 0.0, t_save = 0.0; 
+   double t_comp = 0.0, t_save = 0.0;
 
    auto t0 = tools::get_time();
    for(int idx=0; idx<icomb.topo.ntotal; idx++){
       auto p = icomb.topo.rcoord[idx];
-      auto& node = icomb.topo.get_node(p);
-      
+      const auto& node = icomb.topo.get_node(p);
+   
       // cop: local operators on physical sites
       if(node.type != 3){
          auto ta = tools::get_time();

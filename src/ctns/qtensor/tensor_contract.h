@@ -66,34 +66,33 @@ stensor2<Tm> contract_qt3_qt3_cr(const stensor3<Tm>& qt3a,
    return qt2;
 }
 
-/*
 //          /--*--r qt3a
 // q(r,c) = |x |m  	  = <r|c> = \sum_n An^H*Bn
 //          \--*--c qt3b
 template <typename Tm>
 stensor2<Tm> contract_qt3_qt3_lc(const stensor3<Tm>& qt3a, 
 				 const stensor3<Tm>& qt3b){
-   assert(qt3a.dir == qt3b.dir); // bra dir fliped
-   assert(qt3a.qrow == qt3b.qrow);
-   assert(qt3a.qmid == qt3b.qmid);
-   qsym sym = -qt3a.sym + qt3b.sym;
-   stensor2<Tm> qt2(sym, qt3a.qcol, qt3b.qcol); 
+   assert(qt3a.info.dir == qt3b.info.dir); // bra dir fliped
+   assert(qt3a.info.qrow == qt3b.info.qrow);
+   assert(qt3a.info.qmid == qt3b.info.qmid);
+   qsym sym = -qt3a.info.sym + qt3b.info.sym;
+   stensor2<Tm> qt2(sym, qt3a.info.qcol, qt3b.info.qcol); 
    // loop over external indices
    for(int br=0; br<qt2.rows(); br++){
       for(int bc=0; bc<qt2.cols(); bc++){
-	 auto& blk = qt2(br,bc);
-	 if(blk.size() == 0) continue;
+	 auto& blk2 = qt2(br,bc);
+	 if(blk2.size() == 0) continue;
 	 // loop over contracted indices
-         for(int bm=0; bm<qt3a.mids(); bm++){
-	    for(int bx=0; bx<qt3a.rows(); bx++){
-	       const auto& blka = qt3a(bm,bx,br);
-	       const auto& blkb = qt3b(bm,bx,bc);
-	       if(blka.size() == 0 || blkb.size() == 0) continue;
-               for(int im=0; im<qt3a.qmid.get_dim(bm); im++){
-	          blk += linalg::xgemm("C","N",blka[im],blkb[im]); 
+	 for(int bx=0; bx<qt3a.rows(); bx++){
+            for(int bm=0; bm<qt3a.mids(); bm++){
+	       const auto& blk3a = qt3a(bx,br,bm);
+	       const auto& blk3b = qt3b(bx,bc,bm);
+	       if(blk3a.size() == 0 || blk3b.size() == 0) continue;
+               for(int im=0; im<qt3a.mid_dim(bm); im++){
+		  xgemm("C","N",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
 	       } // im
-	    } // bx
-	 } // bm
+	    } // bm
+	 } // bx
       } // bc
    } // br
    return qt2;
@@ -107,34 +106,34 @@ stensor2<Tm> contract_qt3_qt3_lc(const stensor3<Tm>& qt3a,
 template <typename Tm>
 stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a, 
 				 const stensor3<Tm>& qt3b){
-   assert(qt3a.dir == qt3b.dir); // bra dir fliped
-   assert(qt3a.qrow == qt3b.qrow);
-   assert(qt3a.qcol == qt3b.qcol);
-   qsym sym = -qt3a.sym + qt3b.sym;
-   stensor2<Tm> qt2(sym, qt3a.qmid, qt3b.qmid);
-   // loop over external indices
-   for(int br=0; br<qt2.rows(); br++){
-      for(int bc=0; bc<qt2.cols(); bc++){
-         auto& blk = qt2(br,bc);
-	 if(blk.size() == 0) continue;
-	 // loop over contracted indices
-         for(int bx=0; bx<qt3a.rows(); bx++){
-	    for(int by=0; by<qt3a.cols(); by++){
-	       const auto& blka = qt3a(br,bx,by);
-	       const auto& blkb = qt3b(bc,bx,by);
-	       if(blka.size() == 0 || blkb.size() == 0) continue;
-	       for(int ic=0; ic<qt2.qcol.get_dim(bc); ic++){
-                  for(int ir=0; ir<qt2.qrow.get_dim(br); ir++){
-	             blk(ir,ic) += linalg::xgemm("N","T",blka[ir].conj(),blkb[ic]).trace();
+   assert(qt3a.info.dir == qt3b.info.dir); // bra dir fliped
+   assert(qt3a.info.qrow == qt3b.info.qrow);
+   assert(qt3a.info.qcol == qt3b.info.qcol);
+   qsym sym = -qt3a.info.sym + qt3b.info.sym;
+   stensor2<Tm> qt2(sym, qt3a.info.qmid, qt3b.info.qmid);
+   // loop over contracted indices
+   for(int bx=0; bx<qt3a.rows(); bx++){
+      for(int by=0; by<qt3a.cols(); by++){
+         // loop over external indices
+         for(int br=0; br<qt2.rows(); br++){
+	    const auto& blk3a = qt3a(bx,by,br);
+	    if(blk3a.size() == 0) continue;
+            for(int bc=0; bc<qt2.cols(); bc++){
+               auto& blk2 = qt2(br,bc);
+	       const auto& blk3b = qt3b(bx,by,bc);
+	       if(blk2.size() == 0 || blk3b.size() == 0) continue;
+	       for(int ic=0; ic<qt2.col_dim(bc); ic++){
+                  for(int ir=0; ir<qt2.row_dim(br); ir++){
+		     auto tmp = xgemm("N","C",blk3a.get(ir),blk3b.get(ic));
+		     blk2(ir,ic) += tools::conjugate(tmp.trace());
 		  } // ir 
 	       } // ic
-	    } // by
-	 } // bx
-      } // bc
-   } // br
+            } // bc
+         } // br
+      } // by
+   } // bx
    return qt2;
 }
-*/
 
 //     |m/r
 //     *	 

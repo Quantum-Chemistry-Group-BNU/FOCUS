@@ -16,12 +16,24 @@ namespace ctns{
 template <typename Km>
 class comb{
    private:
-      // serialize [for MPI]
-      friend class boost::serialization::access;
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version){
-//	 ar & topo & rsites & rwfuns;
+      // serialize [for MPI] in src/drivers/ctns.cpp
+      friend class boost::serialization::access;	   
+      template <class Archive>
+      void save(Archive & ar, const unsigned int version) const{
+	 ar & topo & rwfuns;
+	 for(int idx=0; idx<topo.ntotal; idx++){
+	    ar & rsites[idx];
+	 }
       }
+      template <class Archive>
+      void load(Archive & ar, const unsigned int version){
+	 ar & topo & rwfuns;
+	 rsites.resize(topo.ntotal);
+	 for(int idx=0; idx<topo.ntotal; idx++){
+	    ar & rsites[idx];
+	 }
+      }
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
    public:
       // constructors
       comb(){

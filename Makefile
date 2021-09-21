@@ -1,15 +1,14 @@
 
-machine = lenovo
+machine = mac
 
 DEBUG = yes
-USE_GCC = no
-USE_MPI = no 
+USE_GCC = yes
+USE_MPI = no
 USE_OPENMP = no
 
 # set library
-ifeq ($(machine), lenovo)
+ifeq ($(strip $(machine)), lenovo)
    MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
-   #BOOST = /home/lx/software/boost/install_1_59_0
    BOOST = /home/lx/software/boost/install_1_75_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_filesystem-mt-x64 
    ifeq ($(strip $(USE_MPI)), yes)   
@@ -24,7 +23,7 @@ else
    endif
 endif
 
-ifeq ($(USE_GCC),yes)
+ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
       FLAGS = -DDEBUG -std=c++11 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
@@ -56,7 +55,7 @@ else
    endif
 endif
 
-ifeq ($(USE_OPENMP),no)
+ifeq ($(strip $(USE_OPENMP)),no)
    # serial version of MKL
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
           -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
@@ -116,6 +115,7 @@ all: depend \
 
 depend:
 	echo "Check compilation options:"; \
+	echo " machine = " $(machine); \
 	echo " DEBUG = " $(DEBUG); \
 	echo " USE_GCC = " $(USE_GCC); \
 	echo " USE_OPENMP = " $(USE_OPENMP); \

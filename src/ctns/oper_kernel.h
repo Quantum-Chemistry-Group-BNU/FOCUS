@@ -12,11 +12,11 @@ namespace ctns{
 
 // O1*I2|psi> 
 template <typename Tm> 
-qtensor3<Tm> oper_kernel_OIwf(const std::string& superblock,
-			      const qtensor3<Tm>& ksite,
- 			      const qtensor2<Tm>& o1,
+stensor3<Tm> oper_kernel_OIwf(const std::string& superblock,
+			      const stensor3<Tm>& ksite,
+ 			      const stensor2<Tm>& o1,
 			      const bool ifdagger=false){
-   qtensor3<Tm> qt3;
+   stensor3<Tm> qt3;
    if(superblock == "lc" || superblock == "lr"){
       if(ifdagger){
          qt3 = contract_qt3_qt2_l(ksite,o1.H());
@@ -33,17 +33,18 @@ qtensor3<Tm> oper_kernel_OIwf(const std::string& superblock,
       std::string msg = "error: no such case in oper_kernel_OIwf!";
       tools::exit(msg+" superblock="+superblock);
    }
+
    return qt3;
 }
 
 // I1*O2|psi> 
 template <typename Tm> 
-qtensor3<Tm> oper_kernel_IOwf(const std::string& superblock,
-			      const qtensor3<Tm>& ksite,
- 			      const qtensor2<Tm>& o2,
+stensor3<Tm> oper_kernel_IOwf(const std::string& superblock,
+			      const stensor3<Tm>& ksite,
+ 			      const stensor2<Tm>& o2,
 			      const bool po2, // parity of O2
 			      const bool ifdagger=false){
-   qtensor3<Tm> qt3;
+   stensor3<Tm> qt3;
    if(superblock == "lc"){
       if(ifdagger){
 	 qt3 = contract_qt3_qt2_c(ksite,o2.H());
@@ -51,36 +52,31 @@ qtensor3<Tm> oper_kernel_IOwf(const std::string& superblock,
 	 qt3 = contract_qt3_qt2_c(ksite,o2);
       }
       // Il*Oc|psi> => (-1)^{p(l)}Oc[c',c]psi[l,c,r]
-      if(po2) qt3 = qt3.row_signed();
-   }else if(superblock == "lr"){
+      if(po2) qt3.row_signed();
+   }else if(superblock == "lr" || superblock == "cr"){
       if(ifdagger){
          qt3 = contract_qt3_qt2_r(ksite,o2.H());
       }else{
          qt3 = contract_qt3_qt2_r(ksite,o2);
       }
-      if(po2) qt3 = qt3.row_signed();
-   }else if(superblock == "cr"){
-      if(ifdagger){
-	 qt3 = contract_qt3_qt2_r(ksite,o2.H());
-      }else{
-	 qt3 = contract_qt3_qt2_r(ksite,o2);
-      }
+      if(po2 && superblock == "lr") qt3.row_signed();
       // Ic*Or|psi> => (-1)^{p(c)}Or[r',r']psi[l,c,r]
-      if(po2) qt3 = qt3.mid_signed();
+      if(po2 && superblock == "cr") qt3.mid_signed();
    }else{
       std::string msg = "error: no such case in oper_kernel_IOwf!";
       tools::exit(msg+" superblock="+superblock);
    }
+
    return qt3;
 }
 
 // O1^d*O2^d|psi>: Note that it differs from (O1*O2)^d. 
 // The possible sign change needs to be taken into account outside this function.
 template <typename Tm> 
-qtensor3<Tm> oper_kernel_OOwf(const std::string& superblock,
-			      const qtensor3<Tm>& ksite,
- 			      const qtensor2<Tm>& o1,
- 			      const qtensor2<Tm>& o2,
+stensor3<Tm> oper_kernel_OOwf(const std::string& superblock,
+			      const stensor3<Tm>& ksite,
+ 			      const stensor2<Tm>& o1,
+ 			      const stensor2<Tm>& o2,
 			      const bool po2,
 			      const bool ifdagger=false){
    auto qt3 = oper_kernel_IOwf(superblock, ksite, o2, po2, ifdagger);
@@ -89,12 +85,12 @@ qtensor3<Tm> oper_kernel_OOwf(const std::string& superblock,
 
 // <bra|[O|ket>]
 template <typename Tm> 
-qtensor2<Tm> oper_kernel_renorm(const std::string& superblock,
-			        const qtensor3<Tm>& bsite,
-				const qtensor3<Tm>& ksite){
+stensor2<Tm> oper_kernel_renorm(const std::string& superblock,
+			        const stensor3<Tm>& bsite,
+				const stensor3<Tm>& ksite){
    auto t0 = tools::get_time();
 
-   qtensor2<Tm> qt2;
+   stensor2<Tm> qt2;
    if(superblock == "lc"){
       qt2 = contract_qt3_qt3_lc(bsite,ksite);
    }else if(superblock == "lr"){
@@ -105,7 +101,7 @@ qtensor2<Tm> oper_kernel_renorm(const std::string& superblock,
       std::string msg = "error: no such case in oper_kernel_renorm!";
       tools::exit(msg+" superblock="+superblock);
    }
-   
+
    auto t1 = tools::get_time();
 #ifdef _OPENMP
    #pragma omp critical

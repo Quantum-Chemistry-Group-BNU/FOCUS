@@ -114,9 +114,29 @@ struct stensor3{
       dtensor3<Tm>& operator()(const int br, const int bc, const int bm){ 
 	 return info._qblocks[info._addr(br,bc,bm)]; 
       }
+      // simple arithmetic operations
+      stensor3<Tm>& operator *=(const Tm fac){
+         linalg::xscal(info._size, fac, _data);
+         return *this;
+      }
+      stensor3<Tm>& operator +=(const stensor3<Tm>& st){
+	 assert(info == st.info);
+	 linalg::xaxpy(info._size, 1.0, st.data(), _data);
+         return *this;
+      }
+      stensor3<Tm>& operator -=(const stensor3<Tm>& st){
+	 assert(info == st.info);
+	 linalg::xaxpy(info._size, -1.0, st.data(), _data);
+         return *this;
+      }
+      // --- SPECIFIC FUNCTIONS ---
       // --- SPECIFIC FUNCTIONS ---
       // fix middle index (bm,im) - bm-th block, im-idx - composite index!
       stensor2<Tm> fix_mid(const std::pair<int,int> mdx) const;
+      // deal with fermionic sign in fermionic direct product
+      void mid_signed(const double fac=1.0); // wf[lcr](-1)^{p(c)}
+      void row_signed(const double fac=1.0); // wf[lcr](-1)^{p(l)}
+      void permCR_signed(); // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
    public:
       qinfo3<Tm> info;
    private:   
@@ -141,6 +161,49 @@ stensor2<Tm> stensor3<Tm>::fix_mid(const std::pair<int,int> mdx) const{
       } // bc
    } // br
    return qt2;
+}
+
+// deal with fermionic sign in fermionic direct product
+// wf[lcr](-1)^{p(c)}
+template <typename Tm>
+void stensor3<Tm>::mid_signed(const double fac){
+   int br,bc,bm;
+   for(int idx=0; idx<info._qblocks.size(); idx++){
+      auto& blk3 = info._qblocks[idx];
+      if(blk3.size() == 0) continue;
+      info._addr_unpack(idx,br,bc,bm);
+      double fac2 = (info.qmid.get_parity(bm)==0)? fac : -fac;
+      linalg::xscal(blk3.size(), fac2, blk3.data());  
+   }
+}
+
+// wf[lcr](-1)^{p(l)}
+template <typename Tm>
+void stensor3<Tm>::row_signed(const double fac){
+   int br,bc,bm;
+   for(int idx=0; idx<info._qblocks.size(); idx++){
+      auto& blk3 = info._qblocks[idx];
+      if(blk3.size() == 0) continue;
+      info._addr_unpack(idx,br,bc,bm);
+      double fac2 = (info.qrow.get_parity(br)==0)? fac : -fac;
+      linalg::xscal(blk3.size(), fac2, blk3.data());  
+   }
+}
+
+// Generate the sign for wf[lcr]|lcr> = wf3[lcr]|lrc> 
+// with wf3[lcr] = wf[lcr]*(-1)^{p[c]*p[r]}|lrc>
+// which is later used for wf3[l,c,r] <-> wf2[lr,c] (merge_lr)
+template <typename Tm>
+void stensor3<Tm>::permCR_signed(){
+   int br,bc,bm;
+   for(int idx=0; idx<info._qblocks.size(); idx++){
+      auto& blk3 = info._qblocks[idx];
+      if(blk3.size() == 0) continue;
+      info._addr_unpack(idx,br,bc,bm);
+      if(info.qmid.get_parity(bm)*info.qcol.get_parity(bc) == 1){
+         linalg::xscal(blk3.size(), -1.0, blk3.data());
+      }
+   }
 }
 
 } // ctns
