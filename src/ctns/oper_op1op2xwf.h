@@ -29,7 +29,7 @@ void oper_op1op2xwf_nkr(stensor3<Tm>& opwf,
       // sum_i a1[i] * (sum_j oij a2[j])
       for(const auto& op1C : qops1C){
          int i = op1C.first;
-	 const auto op1 = ifdagger1? op1C.second : op1C.second.H();
+         const auto& op1 = ifdagger1? op1C.second : op1C.second.H();
 	 // tmp_op2 = sum_j oij a2[j]
 	 stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
 	 int N = tmp_op2.size();

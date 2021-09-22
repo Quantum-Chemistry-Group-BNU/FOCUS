@@ -21,22 +21,22 @@ class oper_dict{
       friend class boost::serialization::access;	   
       template <class Archive>
       void save(Archive & ar, const unsigned int version) const{
-	 std::cout << "oper_dict<Tm>::save" << std::endl;
+	 //std::cout << "oper_dict<Tm>::save" << std::endl;
 	 ar & isym & ifkr & qbra & qket 
 	    & cindex & krest & oplist 
 	    & mpisize & mpirank & ifdist2 
-	    & ops & _size;
+	    & _opdict & _size;
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
 	 }
       }
       template <class Archive>
       void load(Archive & ar, const unsigned int version){
-	 std::cout << "oper_dict<Tm>::load" << std::endl;
+	 //std::cout << "oper_dict<Tm>::load" << std::endl;
 	 ar & isym & ifkr & qbra & qket 
             & cindex & krest & oplist
 	    & mpisize & mpirank & ifdist2 
-	    & ops & _size;
+	    & _opdict & _size;
 	 _data = new Tm[_size];
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
@@ -46,14 +46,15 @@ class oper_dict{
       BOOST_SERIALIZATION_SPLIT_MEMBER()
    public:
       // constructor
-      oper_dict(): _size(0), _data(nullptr) {}
+      oper_dict(){}
       ~oper_dict(){ delete[] _data; }
       // setup the mapping to physical address
       void setup_data(Tm* data){
          size_t off = 0;
          for(const auto& key : oplist){
-            for(auto& pr : ops[key]){
+            for(auto& pr : _opdict[key]){
 	       auto& op = pr.second;
+	       assert(op.own == false);
 	       op.setup_data(_data+off);
 	       off += op.size();
             }
@@ -62,17 +63,17 @@ class oper_dict{
       }
       // access
       const oper_map<Tm>& operator()(const char key) const{
-         return ops.at(key);
+         return _opdict.at(key);
       }
       oper_map<Tm>& operator()(const char key){
-         return ops[key];      
+         return _opdict[key];      
       }
       // helpers
       void print(const std::string name, const int level=0) const;
       // precompute memory required
       std::vector<int> oper_index_op(const char key) const;
       qsym get_qsym_op(const char key, const int idx) const;
-      void allocate_memory();
+      void allocate_memory(const bool debug=false);
    public:
       int isym;
       bool ifkr;
@@ -84,9 +85,9 @@ class oper_dict{
       int mpirank = 0;
       bool ifdist2 = false;
    private:
-      std::map<char,oper_map<Tm>> ops;
-      size_t _size;
-      Tm* _data;
+      std::map<char,oper_map<Tm>> _opdict;
+      size_t _size = 0;
+      Tm* _data = nullptr;
 };
 
 template <typename Tm>
@@ -102,10 +103,10 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
    std::map<char,int> exist;
    std::string s = " nops=";
    for(const auto& key : opseq){
-      if(ops.find(key) != ops.end()){ 
+      if(_opdict.find(key) != _opdict.end()){ 
          s += key;
-         s += ":"+std::to_string(ops.at(key).size())+ " ";
-         exist[key] = ops.at(key).size(); // size of dictionary
+         s += ":"+std::to_string(_opdict.at(key).size())+ " ";
+         exist[key] = _opdict.at(key).size(); // size of dictionary
       }else{
          exist[key] = 0;
       }
@@ -117,11 +118,11 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
          if(exist[key] == 0) continue;
          std::cout << " " << key << ": ";
          if(key == 'H' || key == 'C' || key == 'S'){
-            for(const auto& op : ops.at(key)){
+            for(const auto& op : _opdict.at(key)){
                std::cout << "(" << op.first << ") ";
             }
          }else{
-            for(const auto& op : ops.at(key)){
+            for(const auto& op : _opdict.at(key)){
                auto pq = oper_unpack(op.first);
                std::cout << "(" << pq.first << "," << pq.second << ") ";
             }
@@ -129,7 +130,9 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
 	 std::cout << std::endl;
       }
    } // level
-   std::cout << "total size=" << _size << " sizeMB=" << tools::sizeMB<Tm>(_size) << std::endl; 
+   std::cout << "total size=" << _size 
+	     << " sizeMB=" << tools::sizeMB<Tm>(_size) 
+	     << std::endl; 
 }
 
 template <typename Tm>
@@ -190,9 +193,11 @@ qsym oper_dict<Tm>::get_qsym_op(const char key, const int idx) const{
 }
  
 template <typename Tm>
-void oper_dict<Tm>::allocate_memory(){
-   const bool debug = true;
-   std::cout << "ctns::oper_dict<Tm>:allocate_memory for oplist=" << oplist << std::endl;
+void oper_dict<Tm>::allocate_memory(const bool debug){
+   if(debug){
+      std::cout << "ctns::oper_dict<Tm>:allocate_memory oplist=" 
+	        << oplist << std::endl;
+   }
    // count the size
    _size = 0;
    std::map<char,size_t> sizes;
@@ -202,8 +207,8 @@ void oper_dict<Tm>::allocate_memory(){
       auto op_index = this->oper_index_op(key);
       for(int idx : op_index){
 	 auto sym_op = this->get_qsym_op(key,idx);
-	 ops[key][idx].init(sym_op, qbra, qket, {1,0}, false);
-	 sizes[key] += ops[key][idx].size();
+	 _opdict[key][idx].init(sym_op, qbra, qket, {1,0}, false);
+	 sizes[key] += _opdict[key][idx].size();
       }
       _size += sizes[key];
       if(debug){
@@ -213,12 +218,11 @@ void oper_dict<Tm>::allocate_memory(){
            	   << std::endl;
       }
    }
-   std::cout << "total size=" << _size << " sizeMB=" << tools::sizeMB<Tm>(_size) << std::endl;
-   
-   if(_size == 0){
-   //   tools::exit("error in oper_dict<Tm>::allocate_memory: size cannot be zero!");
+   if(debug){
+      std::cout << "total size=" << _size 
+                << " sizeMB=" << tools::sizeMB<Tm>(_size) 
+                << std::endl;
    }
-
    // allocate & assign pointer
    _data = new Tm[_size];
    memset(_data, 0, _size*sizeof(Tm));

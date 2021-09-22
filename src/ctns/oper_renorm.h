@@ -67,6 +67,14 @@ void oper_renorm_opAll(const std::string& superblock,
    qops.ifdist2 = true;
    // initialize memory 
    qops.allocate_memory();
+
+/*
+   std::cout << "try save start" << std::endl;
+   std::string fname = oper_fname("./scratch", p, "r");
+   oper_save(fname, qops);
+   std::cout << "try save end" << std::endl;
+*/
+        
    // compute renormalized operators 
    oper_timer.clear();
    auto Hx_funs = oper_renorm_functors(superblock, site, qops1, qops2,
@@ -83,6 +91,7 @@ void oper_renorm_opAll(const std::string& superblock,
    for(int i=0; i<Hx_funs.size(); i++){
       char key = Hx_funs[i].label[0];
       int index = Hx_funs[i].index; 
+      //std::cout << "i=" << i << " key=" << key << " index=" << index << std::endl;
       auto opxwf = Hx_funs[i]();
       auto op = oper_kernel_renorm(superblock, site, opxwf);
       linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
@@ -98,15 +107,16 @@ void oper_renorm_opAll(const std::string& superblock,
 	 }
       }
    }
+
 /*
-   // consistency check for Hamiltonian
-   const auto& H = qops('H').at(0);
-   auto diffH = (H-H.H()).normF();
-   if(diffH > 1.e-10){
-      H.print("H",2);
-      std::string msg = "error: H-H.H() is too large! diffH=";
-      tools::exit(msg+std::to_string(diffH));
-   }
+   // // consistency check for Hamiltonian
+   // const auto& H = qops('H').at(0);
+   // auto diffH = (H-H.H()).normF();
+   // if(diffH > 1.e-10){
+   //    H.print("H",2);
+   //    std::string msg = "error: H-H.H() is too large! diffH=";
+   //    tools::exit(msg+std::to_string(diffH));
+   // }
 */
    auto t1 = tools::get_time();
    if(rank == 0){ 

@@ -70,13 +70,21 @@ struct stensor2{
       ~stensor2(){ 
 	 if(own) delete[] _data; 
       }
-      // copy constructor -> just copy wrapper used in serialization of ops in oper_dict!
+      // copy constructor 
       stensor2(const stensor2& st){
 	 if(debug_sparse2) std::cout << "stensor2: copy constructor - st.own=" << st.own << std::endl;   
-	 assert(st.own == false);
+	 //assert(st.own == false);
 	 own = st.own;
 	 info = st.info;
-	 _data = st._data; // needs to be here for direct manipulations of data in xaxpy
+	 if(st.own){
+	    _data = new Tm[info._size];
+	    linalg::xcopy(info._size, st._data, _data);
+	    info.setup_data(_data);
+	 }else{
+	    // shalow copy of the wrapper in case st.own = false;
+	    // needs to be here for direct manipulations of data in xaxpy
+	    _data = st._data; 
+	 }
       }
       // copy assignment
       stensor2& operator =(const stensor2& st) = delete;
@@ -99,6 +107,7 @@ struct stensor2{
       stensor2(stensor2&& st){
 	 if(debug_sparse2) std::cout << "stensor2: move constructor - st.own=" << st.own << std::endl;     
 	 assert(own == true);
+	 own = st.own;
          info = std::move(st.info);
          _data = st._data;
 	 st._data = nullptr;
@@ -109,7 +118,7 @@ struct stensor2{
 	 // only move if the data is owned by the object, 
 	 // otherwise data needs to be copied explicitly!
 	 // e.g., linalg::xcopy(info._size, st._data, _data);
-	 assert(own == true); 
+	 assert(own == true && st.own == true);
          if(this != &st){
             info = std::move(st.info);
 	    delete[] _data;
