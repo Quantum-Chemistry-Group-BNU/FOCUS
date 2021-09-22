@@ -191,7 +191,7 @@ qsym oper_dict<Tm>::get_qsym_op(const char key, const int idx) const{
  
 template <typename Tm>
 void oper_dict<Tm>::allocate_memory(){
-   const bool debug = false;
+   const bool debug = true;
    std::cout << "ctns::oper_dict<Tm>:allocate_memory for oplist=" << oplist << std::endl;
    // count the size
    _size = 0;
@@ -207,12 +207,18 @@ void oper_dict<Tm>::allocate_memory(){
       }
       _size += sizes[key];
       if(debug){
-         std::cout << " size=" << sizes[key] 
+         std::cout << " nop=" << op_index.size()
+		   << " size=" << sizes[key] 
                    << " sizeMB=" << tools::sizeMB<Tm>(sizes[key]) 
            	   << std::endl;
-      } 
+      }
    }
    std::cout << "total size=" << _size << " sizeMB=" << tools::sizeMB<Tm>(_size) << std::endl;
+   
+   if(_size == 0){
+   //   tools::exit("error in oper_dict<Tm>::allocate_memory: size cannot be zero!");
+   }
+
    // allocate & assign pointer
    _data = new Tm[_size];
    memset(_data, 0, _size*sizeof(Tm));

@@ -40,6 +40,10 @@ void oper_renorm_opAll(const std::string& superblock,
    // setup basic information
    qops.isym = isym;
    qops.ifkr = ifkr;
+
+   qops1.print("qops1");
+   qops2.print("qops2");
+
    qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
    // rest of spatial orbital indices
    const auto& node = icomb.topo.get_node(p);
@@ -61,10 +65,14 @@ void oper_renorm_opAll(const std::string& superblock,
       qops.qbra = site.info.qmid;
       qops.qbra = site.info.qmid;
    }
-   qops.oplist = "CABPQSH";
+   qops.oplist = "C"; //ABPQSH";
    qops.mpisize = size;
    qops.mpirank = rank;
    qops.ifdist2 = true;
+
+   site.print("SITE");
+   qops.print("qops");
+
    // initialize memory 
    qops.allocate_memory();
    // compute local operators on dot
@@ -85,6 +93,12 @@ void oper_renorm_opAll(const std::string& superblock,
       int index = Hx_funs[i].index; 
       auto opxwf = Hx_funs[i]();
       auto op = oper_kernel_renorm(superblock, site, opxwf);
+
+      std::cout << "op.size()=" << op.size()
+	        << " qops:key/index/size=" << key << " " << index << " " 
+		<< qops(key)[index].size()
+		<< std::endl;
+
       int N = op.size();
       linalg::xcopy(N, op.data(), qops(key)[index].data());
    }

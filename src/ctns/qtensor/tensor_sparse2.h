@@ -69,7 +69,7 @@ struct stensor2{
       }
       // copy constructor -> just copy wrapper used in serialization of ops in oper_dict!
       stensor2(const stensor2& st){
-	 std::cout << "stensor2: copy constructor" << std::endl;   
+	 std::cout << "stensor2: copy constructor - st.own=" << st.own << std::endl;   
 	 assert(st.own == false);
 	 own = st.own;
 	 info = st.info;
@@ -93,7 +93,7 @@ struct stensor2{
 */
       // move constructor
       stensor2(stensor2&& st){
-	 std::cout << "stensor2: move constructor" << std::endl;     
+	 std::cout << "stensor2: move constructor - st.own=" << st.own << std::endl;     
 	 assert(own == true);
          info = std::move(st.info);
          _data = st._data;
@@ -101,7 +101,7 @@ struct stensor2{
       }
       // move assignment
       stensor2& operator =(stensor2&& st){
-	 std::cout << "stensor2: move assignment" << std::endl;    
+	 std::cout << "stensor2: move assignment - st.own=" << st.own << std::endl;    
 	 // only move if the data is owned by the object, 
 	 // otherwise data needs to be copied explicitly!
 	 // e.g., linalg::xcopy(info._size, st._data, _data);
