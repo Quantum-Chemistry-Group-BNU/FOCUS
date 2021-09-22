@@ -2,8 +2,8 @@
 #define CTNS_SWEEP_H
 
 #include "sweep_data.h"
-#include "sweep_onedot.h"
-#include "sweep_twodot.h"
+//#include "sweep_onedot.h"
+//#include "sweep_twodot.h"
 
 namespace ctns{
 
@@ -32,13 +32,13 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    if(rank == 0) Hmat.print("Hmat",8);
 
    // init left boundary site
-   icomb.lsites[std::make_pair(0,0)] = get_left_bsite<Tm>(Km::isym);
+   int idx = icomb.topo.rindex.at(std::make_pair(0,0));
+   icomb.lsites[idx] = get_left_bsite<Tm>(Km::isym);
 
    // generate sweep sequence
    sweep_data sweeps(icomb.topo.get_sweeps(rank==0), 
-		     schd.ctns.nroots, schd.ctns.guess, 
-		     schd.ctns.maxsweep, schd.ctns.ctrls, schd.ctns.dbranch,
-		     schd.ctns.rdm_vs_svd); 
+		     schd.ctns.nroots, schd.ctns.guess, schd.ctns.maxsweep, 
+		     schd.ctns.ctrls, schd.ctns.dbranch, schd.ctns.rdm_vs_svd); 
    for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
       if(rank == 0){
@@ -65,12 +65,12 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	              << std::endl;
             std::cout << tools::line_separator << std::endl;
 	 }
-	 auto tp0 = icomb.topo.node_type(p0);
-	 auto tp1 = icomb.topo.node_type(p1);
+	 auto tp0 = icomb.topo.get_type(p0);
+	 auto tp1 = icomb.topo.get_type(p1);
 	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
-	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
+	    //sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }else{
-	    sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
+	    //sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }
       } // ibond
       auto tf = tools::get_time();
@@ -79,7 +79,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    } // isweep
 
    // get rwfuns, which is useful for later computing properties
-   sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
+   //sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
 
    auto t1 = tools::get_time();
    if(rank == 0) tools::timing("ctns::opt_sweep", t0, t1);

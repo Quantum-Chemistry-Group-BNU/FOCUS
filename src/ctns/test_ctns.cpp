@@ -134,8 +134,7 @@ int tests::test_ctns(){
    double diffH = normF(Hij_ctns - Hij_ci);
    cout << "\ncheck diffH=" << diffH << endl;
    if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
- 
-/*
+
    // 6. sweep optimization from current RCF 
    ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
 
@@ -148,6 +147,6 @@ int tests::test_ctns(){
    ovlp.print("ovlp");
 
    schd.remove_scratch();
-*/
+
    return 0;
 }

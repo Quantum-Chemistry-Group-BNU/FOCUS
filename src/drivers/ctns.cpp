@@ -79,14 +79,12 @@ int CTNS(const input::schedule& schd){
          Sij.print("Sij");
       }
    }else if(schd.ctns.task == "opt"){
-/*
       // optimization from current RCF
       ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
       if(rank == 0){
          auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
          ctns::rcanon_save(icomb, rcanon_file);
       }
-*/
    }
    return 0;	
 }

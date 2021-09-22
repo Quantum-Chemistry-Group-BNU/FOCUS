@@ -1,8 +1,8 @@
 #ifndef SWEEP_DATA_H
 #define SWEEP_DATA_H
 
-#include "../io/input.h"
 #include <vector>
+#include "../io/input.h"
 
 namespace ctns{
 

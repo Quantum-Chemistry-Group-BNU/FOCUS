@@ -300,6 +300,9 @@ Operators: [to be optimized]
  oper_compxwf.h
  oper_op1op2xwf.h 
  oper_kernel.h -> qtensor/tensor_contract.h 
+Sweep optimization:
+ ctns_sweep.h
+ sweep_data.h
 
 #################################################################
 
@@ -311,8 +314,6 @@ Qtensor: [to be optimized]
  pdvdson_kramers.h
 
 Sweep: [to be optimized]
- ctns_sweep.h
- sweep_data.h
  sweep_onedot.h
  sweep_onedot_ham.h
  sweep_onedot_renorm.h
@@ -323,4 +324,6 @@ Sweep: [to be optimized]
  sweep_decimation.h
  sweep_guess.h
  ctns_sys.h
+
+MPI version
 
