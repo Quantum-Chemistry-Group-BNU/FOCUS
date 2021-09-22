@@ -40,10 +40,6 @@ void oper_renorm_opAll(const std::string& superblock,
    // setup basic information
    qops.isym = isym;
    qops.ifkr = ifkr;
-
-   qops1.print("qops1");
-   qops2.print("qops2");
-
    qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
    // rest of spatial orbital indices
    const auto& node = icomb.topo.get_node(p);
@@ -65,26 +61,22 @@ void oper_renorm_opAll(const std::string& superblock,
       qops.qbra = site.info.qmid;
       qops.qbra = site.info.qmid;
    }
-   qops.oplist = "C"; //ABPQSH";
+   qops.oplist = "CABPQSH";
    qops.mpisize = size;
    qops.mpirank = rank;
    qops.ifdist2 = true;
-
-   site.print("SITE");
-   qops.print("qops");
-
    // initialize memory 
    qops.allocate_memory();
-   // compute local operators on dot
+   // compute renormalized operators 
    oper_timer.clear();
    auto Hx_funs = oper_renorm_functors(superblock, site, qops1, qops2,
 		   		       qops, int2e, int1e);
-
+/*
    std::cout << "size=" << Hx_funs.size() << std::endl;
    for(int i=0; i<Hx_funs.size(); i++){
       std::cout << "i=" << i << Hx_funs[i] << std::endl;
    }
-
+*/
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
@@ -93,17 +85,10 @@ void oper_renorm_opAll(const std::string& superblock,
       int index = Hx_funs[i].index; 
       auto opxwf = Hx_funs[i]();
       auto op = oper_kernel_renorm(superblock, site, opxwf);
-
-      std::cout << "op.size()=" << op.size()
-	        << " qops:key/index/size=" << key << " " << index << " " 
-		<< qops(key)[index].size()
-		<< std::endl;
-
-      int N = op.size();
-      linalg::xcopy(N, op.data(), qops(key)[index].data());
+      linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
    }
    // check operators against explicit construction
-   const bool ifcheck = true;
+   const bool ifcheck = false;
    if(ifcheck){
       for(const auto& key : qops.oplist){
 	 if(key == 'C' || key == 'A' || key == 'B'){
@@ -122,13 +107,13 @@ void oper_renorm_opAll(const std::string& superblock,
       std::string msg = "error: H-H.H() is too large! diffH=";
       tools::exit(msg+std::to_string(diffH));
    }
+*/
    auto t1 = tools::get_time();
    if(rank == 0){ 
       qops.print("qops");
       oper_timer.analysis();
       tools::timing("ctns::oper_renorm_opAll", t0, t1);
    }
-*/
 }
 
 template <typename Tm>

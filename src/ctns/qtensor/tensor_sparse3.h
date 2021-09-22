@@ -31,7 +31,7 @@ struct stensor3{
    public:
       // --- GENERAL FUNCTIONS ---
       // constructors
-      stensor3(): _data(nullptr) {}
+      stensor3(){}
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
 	        const std::vector<bool> _dir={0,1,1}){
          info.init(_sym, _qrow, _qcol, _qmid, _dir);
@@ -140,7 +140,7 @@ struct stensor3{
    public:
       qinfo3<Tm> info;
    private:   
-      Tm* _data;
+      Tm* _data = nullptr;
 };
 
 // fix middle index (bm,im) - bm-th block, im-idx - composite index!

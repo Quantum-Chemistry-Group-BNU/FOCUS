@@ -11,7 +11,7 @@ struct stensor4{
    public:
       // --- GENERAL FUNCTIONS ---
       // constructors
-      stensor4(): _data(nullptr) {};
+      stensor4(){}
       void init(const qsym& _sym, 
 	        const qbond& _qrow, const qbond& _qcol, 
 	        const qbond& _qmid, const qbond& _qver){
@@ -116,11 +116,10 @@ struct stensor4{
          return *this;
       }
       // --- SPECIFIC FUNCTIONS ---
-      // --- SPECIFIC FUNCTIONS ---
    public:
       qinfo4<Tm> info;
    private:   
-      Tm* _data;
+      Tm* _data = nullptr;
 };
 
 } // ctns

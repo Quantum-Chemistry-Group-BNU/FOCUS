@@ -25,12 +25,11 @@ void oper_op1op2xwf_nkr(stensor3<Tm>& opwf,
    const auto& qcol1 = (qops1C.begin()->second).info.qcol;
    const auto& qrow2 = (qops2C.begin()->second).info.qrow;
    const auto& qcol2 = (qops2C.begin()->second).info.qcol;
-   std::cout << "\n === SIZE=" << qops1C.size() << "," << qops2C.size() << std::endl;
    if(qops1C.size() <= qops2C.size()){
       // sum_i a1[i] * (sum_j oij a2[j])
       for(const auto& op1C : qops1C){
          int i = op1C.first;
-	 const auto& op1 = ifdagger1? op1C.second : op1C.second.H();
+	 const auto op1 = ifdagger1? op1C.second : op1C.second.H();
 	 // tmp_op2 = sum_j oij a2[j]
 	 stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
 	 int N = tmp_op2.size();
@@ -63,25 +62,10 @@ void oper_op1op2xwf_nkr(stensor3<Tm>& opwf,
 	    int i = op1C.first;
 	    const auto& op1 = ifdagger1? op1C.second : op1C.second.H();
 	    //tmp_op1 += oij[std::make_pair(i,j)]*op1;
-	    std::cout << "op1:" << op1.size() << " N=" << N 
-		      << " oij=" << oij.at(std::make_pair(i,j))
-		      << " ifdagger1=" << ifdagger1 
-		      << std::endl;
-	    op1.print("==op1==",2);
-	    tmp_op1.print("==tmp_op1==",2);
-	    assert(op1.info == tmp_op1.info);
-
-	    std::cout << "\nlzd-X" << std::endl;
 	    linalg::xaxpy(N, oij.at(std::make_pair(i,j)), op1.data(), tmp_op1.data());
-	    std::cout << "\nlzd-Y" << std::endl;
-
-	    tmp_op1.print("==tmp_op1x==",2);
 	 }
 	 //opwf += sgn*oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
 	 auto tmp = oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
-	 tmp.print("tmp",2);
-	 tmp_op1.print("tmp_op1",2);
-	 op2.print("tmp_op2",2);
 	 linalg::xaxpy(opwf.size(), sgn, tmp.data(), opwf.data());
       }
    }

@@ -7,6 +7,9 @@
 
 namespace ctns{
 
+const bool debug_sparse2 = false;
+extern const bool debug_sparse2; 
+
 template <typename Tm>
 struct stensor2{
    private:
@@ -41,7 +44,7 @@ struct stensor2{
    public:
       // --- GENERAL FUNCTIONS ---
       // constructors
-      stensor2(): _data(nullptr) {};
+      stensor2(){};
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
 	        const std::vector<bool> _dir={1,0}, const bool _own=true){
          info.init(_sym, _qrow, _qcol, _dir);
@@ -69,10 +72,11 @@ struct stensor2{
       }
       // copy constructor -> just copy wrapper used in serialization of ops in oper_dict!
       stensor2(const stensor2& st){
-	 std::cout << "stensor2: copy constructor - st.own=" << st.own << std::endl;   
+	 if(debug_sparse2) std::cout << "stensor2: copy constructor - st.own=" << st.own << std::endl;   
 	 assert(st.own == false);
 	 own = st.own;
 	 info = st.info;
+	 _data = st._data; // needs to be here for direct manipulations of data in xaxpy
       }
       // copy assignment
       stensor2& operator =(const stensor2& st) = delete;
@@ -93,7 +97,7 @@ struct stensor2{
 */
       // move constructor
       stensor2(stensor2&& st){
-	 std::cout << "stensor2: move constructor - st.own=" << st.own << std::endl;     
+	 if(debug_sparse2) std::cout << "stensor2: move constructor - st.own=" << st.own << std::endl;     
 	 assert(own == true);
          info = std::move(st.info);
          _data = st._data;
@@ -101,7 +105,7 @@ struct stensor2{
       }
       // move assignment
       stensor2& operator =(stensor2&& st){
-	 std::cout << "stensor2: move assignment - st.own=" << st.own << std::endl;    
+	 if(debug_sparse2) std::cout << "stensor2: move assignment - st.own=" << st.own << std::endl;    
 	 // only move if the data is owned by the object, 
 	 // otherwise data needs to be copied explicitly!
 	 // e.g., linalg::xcopy(info._size, st._data, _data);
@@ -172,10 +176,10 @@ struct stensor2{
 	 return st;
       }
    public:
-      bool own = true;
+      bool own = true; // whether the object owns its data
       qinfo2<Tm> info;
-   private:  
-      Tm* _data;
+   public:
+      Tm* _data = nullptr;
 };
 
 template <typename Tm>

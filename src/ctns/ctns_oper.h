@@ -20,7 +20,6 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    
    // build operators for environement
    oper_env_right(icomb, int2e, int1e, scratch);
-   exit(1);
 
    // load operators from file
    using Tm = typename Km::dtype;
