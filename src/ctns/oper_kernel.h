@@ -10,30 +10,24 @@
 
 namespace ctns{
 
+template <typename Tm>
+using cqt3qt2 = std::function<stensor3<Tm>(const stensor3<Tm>&, const stensor2<Tm>&)>;
+
 // O1*I2|psi> 
 template <typename Tm> 
 stensor3<Tm> oper_kernel_OIwf(const std::string& superblock,
 			      const stensor3<Tm>& ksite,
  			      const stensor2<Tm>& o1,
 			      const bool ifdagger=false){
+   std::map<char,cqt3qt2<Tm>> fdict = {{'l',&contract_qt3_qt2_l<Tm>}, 
+	    	   	 	       {'c',&contract_qt3_qt2_c<Tm>},
+	     	       		       {'r',&contract_qt3_qt2_r<Tm>}};
    stensor3<Tm> qt3;
-   if(superblock == "lc" || superblock == "lr"){
-      if(ifdagger){
-         qt3 = contract_qt3_qt2_l(ksite,o1.H());
-      }else{
-         qt3 = contract_qt3_qt2_l(ksite,o1);
-      }
-   }else if(superblock == "cr"){
-      if(ifdagger){
-         qt3 = contract_qt3_qt2_c(ksite,o1.H());
-      }else{
-         qt3 = contract_qt3_qt2_c(ksite,o1);
-      }
+   if(ifdagger){
+      qt3 = fdict[superblock[0]](ksite, o1.H());
    }else{
-      std::string msg = "error: no such case in oper_kernel_OIwf!";
-      tools::exit(msg+" superblock="+superblock);
+      qt3 = fdict[superblock[0]](ksite, o1);
    }
-
    return qt3;
 }
 
@@ -44,29 +38,20 @@ stensor3<Tm> oper_kernel_IOwf(const std::string& superblock,
  			      const stensor2<Tm>& o2,
 			      const bool po2, // parity of O2
 			      const bool ifdagger=false){
+   std::map<char,cqt3qt2<Tm>> fdict = {{'l',&contract_qt3_qt2_l<Tm>}, 
+	    	   	 	       {'c',&contract_qt3_qt2_c<Tm>},
+	     	       		       {'r',&contract_qt3_qt2_r<Tm>}};
    stensor3<Tm> qt3;
-   if(superblock == "lc"){
-      if(ifdagger){
-	 qt3 = contract_qt3_qt2_c(ksite,o2.H());
-      }else{
-	 qt3 = contract_qt3_qt2_c(ksite,o2);
-      }
-      // Il*Oc|psi> => (-1)^{p(l)}Oc[c',c]psi[l,c,r]
-      if(po2) qt3.row_signed();
-   }else if(superblock == "lr" || superblock == "cr"){
-      if(ifdagger){
-         qt3 = contract_qt3_qt2_r(ksite,o2.H());
-      }else{
-         qt3 = contract_qt3_qt2_r(ksite,o2);
-      }
-      if(po2 && superblock == "lr") qt3.row_signed();
-      // Ic*Or|psi> => (-1)^{p(c)}Or[r',r']psi[l,c,r]
-      if(po2 && superblock == "cr") qt3.mid_signed();
+   if(ifdagger){
+      qt3 = fdict[superblock[1]](ksite, o2.H());
    }else{
-      std::string msg = "error: no such case in oper_kernel_IOwf!";
-      tools::exit(msg+" superblock="+superblock);
+      qt3 = fdict[superblock[1]](ksite, o2);
    }
-
+   // Il*Oc|psi> => (-1)^{p(l)}Oc[c',c]psi[l,c,r]
+   if(po2 && superblock == "lc") qt3.row_signed();
+   if(po2 && superblock == "lr") qt3.row_signed();
+   // Ic*Or|psi> => (-1)^{p(c)}Or[r',r']psi[l,c,r]
+   if(po2 && superblock == "cr") qt3.mid_signed();
    return qt3;
 }
 

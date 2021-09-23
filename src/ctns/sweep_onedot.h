@@ -4,105 +4,18 @@
 #include "../core/tools.h"
 #include "../core/linalg.h"
 #include "qtensor/qtensor.h"
+#include "sweep_onedot_renorm.h"
+/*
 #include "sweep_ham.h"
 #include "sweep_onedot_ham.h"
-#include "sweep_onedot_renorm.h"
 #include "sweep_guess.h"
-#include "oper_timer.h"
-//#include "ctns_sys.h"
+*/
 
 namespace ctns{
 
-template <typename Km>
-void onedot_localCI(comb<Km>& icomb,
-		    const int nsub,
-		    const int neig,
-   		    std::vector<double>& diag,
-		    HVec_type<typename Km:: dtype> HVec,
-   		    std::vector<double>& eopt,
-   		    linalg::matrix<typename Km::dtype>& vsol,
-		    int& nmvp,
-		    const int cisolver,
-		    const bool guess,
-		    const double eps,
-		    const int maxcycle,
-		    const int parity,
-		    qtensor3<typename Km::dtype>& wf){
-   int size = 1, rank = 0;
-#ifndef SERIAL
-   size = icomb.world.size();
-   rank = icomb.world.rank();
-#endif
-   using Tm = typename Km::dtype;
-   // without kramers restriction
-   pdvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
-   solver.Diag = diag.data();
-   solver.HVec = HVec;
-#ifndef SERIAL
-   solver.world = icomb.world;
-#endif
-   if(cisolver == 0){
-      solver.solve_diag(eopt.data(), vsol.data(), true); // full diagonalization for debug
-   }else if(cisolver == 1){ // davidson
-      if(!guess){
-         solver.solve_iter(eopt.data(), vsol.data()); // davidson without initial guess
-      }else{    
-         std::vector<Tm> v0(nsub*neig);
-	 if(rank == 0){ 
-            if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
-            assert(icomb.psi.size() == neig);
-            assert(icomb.psi[0].get_dim() == nsub);
-            // load initial guess from previous opt
-            for(int i=0; i<neig; i++){
-               icomb.psi[i].to_array(&v0[nsub*i]);
-            }
-            int nindp = linalg::get_ortho_basis(nsub, neig, v0); // reorthogonalization
-            assert(nindp == neig);
-	 }
-         solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-      }
-   }
-   nmvp = solver.nmvp;
-}
-template <>
-inline void onedot_localCI(comb<qkind::cNK>& icomb,
-		    const int nsub,
-		    const int neig,
-   		    std::vector<double>& diag,
-		    HVec_type<std::complex<double>> HVec,
-   		    std::vector<double>& eopt,
-   		    linalg::matrix<std::complex<double>>& vsol,
-		    int& nmvp,
-		    const int cisolver,
-		    const bool guess,
-		    const double eps,
-		    const int maxcycle,
-		    const int parity,
-		    qtensor3<std::complex<double>>& wf){
-   int size = 1, rank = 0;
-#ifndef SERIAL
-   size = icomb.world.size();
-   rank = icomb.world.rank();
-#endif
-   using Tm = std::complex<double>;
-   // kramers restricted (currently works only for iterative with guess!)
-   assert(cisolver == 1 && guess);
-   pdvdsonSolver_kr<Tm,qtensor3<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
-   solver.Diag = diag.data();
-   solver.HVec = HVec;
-#ifndef SERIAL
-   solver.world = icomb.world;
-#endif
-   std::vector<Tm> v0;
-   if(rank == 0){
-      if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
-      // load initial guess from previous opt
-      solver.init_guess(icomb.psi, v0);
-   }
-   solver.solve_iter(eopt.data(), vsol.data(), v0.data());
-   nmvp = solver.nmvp;
-}
-
+//
+// onddot optimization algorithm
+//
 template <typename Km>
 void sweep_onedot(const input::schedule& schd,
 		  sweep_data& sweeps,
@@ -124,28 +37,18 @@ void sweep_onedot(const input::schedule& schd,
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
 
-   // 0. processing partition & symmetry
-   auto dbond = sweeps.seq[ibond];
-   auto p = dbond.p;
+   // check partition 
+   const auto& dbond = sweeps.seq[ibond];
+   const auto& p = dbond.p;
    std::vector<int> suppc, suppl, suppr;
-   qbond qc, ql, qr;
    if(rank == 0 && debug_sweep) std::cout << "support info:" << std::endl;
-   suppc = icomb.get_suppc(p, rank == 0 && debug_sweep); 
-   suppl = icomb.get_suppl(p, rank == 0 && debug_sweep);
-   suppr = icomb.get_suppr(p, rank == 0 && debug_sweep);
-   qc = icomb.get_qc(p); 
-   ql = icomb.get_ql(p);
-   qr = icomb.get_qr(p);
+   suppc = icomb.topo.get_suppc(p, rank == 0 && debug_sweep); 
+   suppl = icomb.topo.get_suppl(p, rank == 0 && debug_sweep);
+   suppr = icomb.topo.get_suppr(p, rank == 0 && debug_sweep);
    int sc = suppc.size();
    int sl = suppl.size();
    int sr = suppr.size();
    assert(sc+sl+sr == icomb.topo.nphysical);
-   if(rank == 0){
-      if(debug_sweep) std::cout << "qbond info:" << std::endl;
-      qc.print("qc", debug_sweep);
-      ql.print("ql", debug_sweep);
-      qr.print("qr", debug_sweep);
-   }
 
    // 1. load operators 
    using Tm = typename Km::dtype;
@@ -169,19 +72,36 @@ void sweep_onedot(const input::schedule& schd,
    }
    timing.ta = tools::get_time();
 
-   // 2. Davidson solver for wf
+   // 2. onedot wavefunction
+   //	  |
+   //   --*--
+   // qc = icomb.get_qc(p); 
+   // ql = icomb.get_ql(p);
+   // qr = icomb.get_qr(p);
+   const auto& qc = cqops.qbra;
+   const auto& ql = lqops.qbra;
+   const auto& qr = rqops.qbra;
+   if(rank == 0){
+      if(debug_sweep) std::cout << "qbond info:" << std::endl;
+      qc.print("qc", debug_sweep);
+      ql.print("ql", debug_sweep);
+      qr.print("qr", debug_sweep);
+   }
    auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
-   qtensor3<Tm> wf(sym_state, qc, ql, qr, {1,1,1});
+   stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
    if(rank == 0 && debug_sweep){ 
-      std::cout << "sym_state=" << sym_state << " dim(localCI)=" << wf.get_dim() << std::endl;
-   }   
-   int nsub = wf.get_dim();
+      std::cout << "sym_state=" << sym_state << " dim(localCI)=" << wf.size() << std::endl;
+   }
+
+   // 3. Davidson solver for wf
+   int nsub = wf.size();
    int neig = sweeps.nroots;
    auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
 
-   // 2.1 Hdiag 
+/*
+   // 3.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
    diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf, size, rank);
 #ifndef SERIAL
@@ -195,7 +115,7 @@ void sweep_onedot(const input::schedule& schd,
 #endif 
    timing.tb = tools::get_time();
 
-   // 2.2 Solve local problem: Hc=cE
+   // 3.2 Solve local problem: Hc=cE
    using std::placeholders::_1;
    using std::placeholders::_2;
    auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
@@ -208,10 +128,12 @@ void sweep_onedot(const input::schedule& schd,
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
    timing.tc = tools::get_time();
    if(rank == 0) sweeps.print_eopt(isweep, ibond);
+*/
 
-   // 3. decimation & renormalize operators
+   // 4. decimation & renormalize operators
    onedot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
 		 cqops, lqops, rqops, int2e, int1e, schd.scratch);
+   exit(1);
 
    timing.t1 = tools::get_time();
    if(rank == 0){
@@ -221,6 +143,7 @@ void sweep_onedot(const input::schedule& schd,
    }
 }
 
+/*
 // use one dot algorithm to produce a final wavefunction
 // in right canonical form for later usage 
 template <typename Km>
@@ -284,6 +207,7 @@ void sweep_rwfuns(const input::schedule& schd,
       icomb.rwfuns = std::move(rwfuns);
    } // rank0
 }
+*/
    
 } // ctns
 

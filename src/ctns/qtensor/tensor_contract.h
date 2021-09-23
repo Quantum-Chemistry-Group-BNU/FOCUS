@@ -11,10 +11,10 @@ namespace ctns{
 template <typename Tm>
 stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a, 
 			      const stensor2<Tm>& qt2b){
-   assert(qt2a.info.dir[1] == !qt2b.info.dir[0]);
+   assert(qt2a.dir_col() == !qt2b.dir_row());
    assert(qt2a.info.qcol == qt2b.info.qrow);
    qsym sym = qt2a.info.sym + qt2b.info.sym;
-   std::vector<bool> dir = {qt2a.info.dir[0], qt2b.info.dir[1]};
+   std::vector<bool> dir = {qt2a.dir_row(), qt2b.dir_col()};
    stensor2<Tm> qt2(sym, qt2a.info.qrow, qt2b.info.qcol, dir); 
    // loop over external indices
    for(int br=0; br<qt2.rows(); br++){
@@ -142,10 +142,10 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
 template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a, 
 			 	const stensor2<Tm>& qt2b){
-   assert(qt3a.info.dir[2] == !qt2b.info.dir[1]);
+   assert(qt3a.dir_mid() == !qt2b.dir_col());
    assert(qt3a.info.qmid == qt2b.info.qcol);
    qsym sym = qt3a.info.sym + qt2b.info.sym;
-   std::vector<bool> dir = {qt3a.info.dir[0], qt3a.info.dir[1], qt2b.info.dir[0]};
+   std::vector<bool> dir = {qt3a.dir_row(), qt3a.dir_col(), qt2b.dir_row()};
    stensor3<Tm> qt3(sym, qt3a.info.qrow, qt3a.info.qcol, qt2b.info.qrow, dir);
    // loop over external indices
    for(int br=0; br<qt3.rows(); br++){
@@ -177,10 +177,10 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
 template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a, 
 				const stensor2<Tm>& qt2b){
-   assert(qt3a.info.dir[0] == !qt2b.info.dir[1]);
+   assert(qt3a.dir_row() == !qt2b.dir_col());
    assert(qt3a.info.qrow == qt2b.info.qcol);
    qsym sym = qt3a.info.sym + qt2b.info.sym;
-   std::vector<bool> dir = {qt2b.info.dir[0], qt3a.info.dir[1], qt3a.info.dir[2]};
+   std::vector<bool> dir = {qt2b.dir_row(), qt3a.dir_col(), qt3a.dir_mid()};
    stensor3<Tm> qt3(sym, qt2b.info.qrow, qt3a.info.qcol, qt3a.info.qmid, dir);
    // loop over external indices
    for(int br=0; br<qt3.rows(); br++){
@@ -209,10 +209,10 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
 template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a, 
 				const stensor2<Tm>& qt2b){
-   assert(qt3a.info.dir[1] == !qt2b.info.dir[1]); // each line is associated with one dir
+   assert(qt3a.dir_col() == !qt2b.dir_col()); // each line is associated with one dir
    assert(qt3a.info.qcol == qt2b.info.qcol);
    qsym sym = qt3a.info.sym + qt2b.info.sym;
-   std::vector<bool> dir = {qt3a.info.dir[0], qt2b.info.dir[0], qt3a.info.dir[2]};
+   std::vector<bool> dir = {qt3a.dir_row(), qt2b.dir_row(), qt3a.dir_mid()};
    stensor3<Tm> qt3(sym, qt3a.info.qrow, qt2b.info.qrow, qt3a.info.qmid, dir);
    // loop over external indices
    for(int br=0; br<qt3.rows(); br++){

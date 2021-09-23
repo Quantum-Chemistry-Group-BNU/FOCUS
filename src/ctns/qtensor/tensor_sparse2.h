@@ -7,6 +7,9 @@
 
 namespace ctns{
 
+template <typename Tm>
+struct stensor3;
+
 const bool debug_sparse2 = false;
 extern const bool debug_sparse2; 
 
@@ -60,7 +63,7 @@ struct stensor2{
 	       const std::vector<bool> _dir={1,0}, const bool _own=true){
 	 this->init(_sym, _qrow, _qcol, _dir, _own);
       }
-      // simple constructor from qinfo2
+      // simple constructor from qinfo
       stensor2(const qinfo2<Tm>& _info, const bool _own=true){
 	 info = _info;
 	 own = _own;
@@ -135,7 +138,9 @@ struct stensor2{
       int row_dim(const int br) const{ return info.qrow.get_dim(br); }
       int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
       qsym row_sym(const int br) const{ return info.qrow.get_sym(br); }
-      qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
+      qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); }
+      bool dir_row() const{ return info.dir[0]; } 
+      bool dir_col() const{ return info.dir[1]; } 
       size_t size() const{ return info._size; }
       Tm* data() const{ return _data; }
       // print
@@ -167,7 +172,7 @@ struct stensor2{
       void from_matrix(const linalg::matrix<Tm>& mat); 
       linalg::matrix<Tm> to_matrix() const;
       // check whether <l|o|r> is a faithful rep for o=I
-      double check_identityMatrix(const double thresh_ortho, const bool debug) const;
+      double check_identityMatrix(const double thresh_ortho, const bool debug=false) const;
       // algebra
       stensor2<Tm> dot(const stensor2<Tm>& qt) const{ return contract_qt2_qt2(*this, qt); }
       // ZL20200531: Permute the line of diagrams, while maintaining their directions
@@ -183,6 +188,24 @@ struct stensor2{
          stensor2<Tm> st(info);
 	 linalg::xaxpy(info._size, -1.0, _data, st._data);
 	 return st;
+      }
+      // for sweep algorithm
+      void add_noise(const double noise){
+         auto rand = linalg::random_matrix<Tm>(info._size,1);
+	 linalg::xaxpy(info._size, 1.0, rand.data(), _data);
+      }
+      // reshape: split into stensor3
+      stensor3<Tm> split_lc(const qbond& qlx, const qbond& qcx) const{
+         auto dpt = qmerge(qlx, qcx).second;
+         return split_qt3_qt2_lc(*this, qlx, qcx, dpt);
+      }
+      stensor3<Tm> split_cr(const qbond& qcx, const qbond& qrx) const{
+	 auto dpt = qmerge(qcx, qrx).second;
+         return split_qt3_qt2_cr(*this, qcx, qrx, dpt);
+      }
+      stensor3<Tm> split_lr(const qbond& qlx, const qbond& qrx) const{
+	 auto dpt = qmerge(qlx, qrx).second;
+         return split_qt3_qt2_lr(*this, qlx, qrx, dpt);
       }
    public:
       bool own = true; // whether the object owns its data

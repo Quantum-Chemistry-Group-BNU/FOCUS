@@ -48,7 +48,8 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
 	 return _data[_addr(i0,i1)];
       } 
       size_t size() const{ return _size; };
-      Tm* data() const{ return _data+_off; }
+      const Tm* data() const{ return _data+_off; }
+      Tm* data(){ return _data+_off; }
       // in-place operation
       void conjugate(){
          std::transform(_data+_off, _data+_off+_size, _data+_off,
@@ -93,7 +94,8 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
       // interface with xgemm, similar to linalg::matrix 
       int rows() const{ return dim0; }
       int cols() const{ return dim1; }
-      Tm* col(const int j) const{ return &_data[_addr(0,j)]; }; 
+      const Tm* col(const int j) const{ return &_data[_addr(0,j)]; }; 
+      Tm* col(const int j){ return &_data[_addr(0,j)]; }; 
    public:
       int dim0, dim1;
    private:   
@@ -138,7 +140,8 @@ struct dtensor3{
 	 return _data[_addr(i0,i1,i2)];
       }
       size_t size() const{ return _size; };
-      Tm* data() const{ return _data+_off; }
+      const Tm* data() const{ return _data+_off; }
+      Tm* data(){ return _data+_off; }
       // in-place operation
       void conjugate(){
          std::transform(_data+_off, _data+_off+_size, _data+_off,
@@ -213,7 +216,8 @@ struct dtensor4{
 	 return _data[_addr(i0,i1,i2,i3)];
       }
       size_t size() const{ return _size; }
-      Tm* data() const{ return _data+_off; }
+      const Tm* data() const{ return _data+_off; }
+      Tm* data(){ return _data+_off; }
       // in-place operation
       void conjugate(){
          std::transform(_data+_off, _data+_off+_size, _data+_off,

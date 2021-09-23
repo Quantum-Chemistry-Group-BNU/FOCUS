@@ -2,7 +2,7 @@
 #define CTNS_SWEEP_H
 
 #include "sweep_data.h"
-//#include "sweep_onedot.h"
+#include "sweep_onedot.h"
 //#include "sweep_twodot.h"
 
 namespace ctns{
@@ -69,7 +69,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 auto tp0 = icomb.topo.get_type(p0);
 	 auto tp1 = icomb.topo.get_type(p1);
 	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
-	    //sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
+	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }else{
 	    //sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }

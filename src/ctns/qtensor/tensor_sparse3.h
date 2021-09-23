@@ -1,11 +1,16 @@
 #ifndef TENSOR_SPARSE3_H
 #define TENSOR_SPARSE3_H
 
-#include <boost/serialization/split_member.hpp>
 #include "../../core/serialization.h"
 #include "../../core/matrix.h"
 
 namespace ctns{
+
+template <typename Tm>
+struct stensor2;
+
+const bool debug_sparse3 = false;
+extern const bool debug_sparse3;
 
 template <typename Tm>
 struct stensor3{
@@ -13,38 +18,60 @@ struct stensor3{
       friend class boost::serialization::access;	   
       template <class Archive>
       void save(Archive & ar, const unsigned int version) const{
-	 ar & info;
-         for(int i=0; i<info._size; i++){
-	    ar & _data[i];
+	 ar & own & info;
+	 if(own){
+            for(int i=0; i<info._size; i++){
+	       ar & _data[i];
+	    }
 	 }
       }
       template <class Archive>
       void load(Archive & ar, const unsigned int version){
-	 ar & info;
-	 _data = new Tm[info._size];
-         for(int i=0; i<info._size; i++){
-	    ar & _data[i];
+	 ar & own & info;
+	 if(own){
+	    _data = new Tm[info._size];
+            for(int i=0; i<info._size; i++){
+	       ar & _data[i];
+	    }
+	    info.setup_data(_data);
 	 }
-	 info.setup_data(_data);
       }
       BOOST_SERIALIZATION_SPLIT_MEMBER()
+      // memory allocation
+      void allocate(){
+         _data = new Tm[info._size];
+	 memset(_data, 0, info._size*sizeof(Tm));
+	 info.setup_data(_data);
+      }
    public:
       // --- GENERAL FUNCTIONS ---
       // constructors
       stensor3(){}
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
-	        const std::vector<bool> _dir={0,1,1}){
+	        const std::vector<bool> _dir={0,1,1}, const bool _own=true){
          info.init(_sym, _qrow, _qcol, _qmid, _dir);
-         _data = new Tm[info._size];
-	 memset(_data, 0, info._size*sizeof(Tm));
+	 own = _own;
+	 if(own) this->allocate();
+      }
+      void setup_data(Tm* data){
+         assert(own == false);
+	 _data = data;
 	 info.setup_data(_data);
       }
       stensor3(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
-	       const std::vector<bool> _dir={0,1,1}){
-	 this->init(_sym, _qrow, _qcol, _qmid, _dir);     
+	       const std::vector<bool> _dir={0,1,1}, const bool _own=true){
+	 this->init(_sym, _qrow, _qcol, _qmid, _dir, _own);
+      }
+      // simple constructor from qinfo
+      stensor3(const qinfo3<Tm>& _info, const bool _own=true){
+	 info = _info;
+	 own = _own;
+         if(own) this->allocate();
       }
       // desctructors
-      ~stensor3(){ delete[] _data; }
+      ~stensor3(){ 
+	 if(own) delete[] _data; 
+      }
       // copy constructor
       stensor3(const stensor3& st) = delete;
       // copy assignment
@@ -74,14 +101,17 @@ struct stensor3{
 */
       // move constructor
       stensor3(stensor3&& st){
-	 //std::cout << "stensor3: move constructor" << std::endl;     
+	 if(debug_sparse3) std::cout << "stensor3: move constructor - st.own=" << st.own << std::endl;    
+	 assert(own == true);
+	 own = st.own; 
          info = std::move(st.info);
          _data = st._data;
 	 st._data = nullptr;
       }
       // move assignment
       stensor3& operator =(stensor3&& st){
-	 //std::cout << "stensor3: move assignment" << std::endl;     
+	 if(debug_sparse3) std::cout << "stensor3: move assignment - st.own=" << st.own << std::endl;
+	 assert(own == true && st.own == true); 
          if(this != &st){
             info = std::move(st.info);
 	    delete[] _data;
@@ -103,6 +133,9 @@ struct stensor3{
       qsym row_sym(const int br) const{ return info.qrow.get_sym(br); }
       qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
       qsym mid_sym(const int bm) const{ return info.qmid.get_sym(bm); }
+      bool dir_row() const{ return info.dir[0]; } 
+      bool dir_col() const{ return info.dir[1]; }
+      bool dir_mid() const{ return info.dir[2]; } 
       size_t size() const{ return info._size; }
       Tm* data() const{ return _data; }
       // print
@@ -130,14 +163,40 @@ struct stensor3{
          return *this;
       }
       // --- SPECIFIC FUNCTIONS ---
-      // --- SPECIFIC FUNCTIONS ---
       // fix middle index (bm,im) - bm-th block, im-idx - composite index!
       stensor2<Tm> fix_mid(const std::pair<int,int> mdx) const;
       // deal with fermionic sign in fermionic direct product
       void mid_signed(const double fac=1.0); // wf[lcr](-1)^{p(c)}
       void row_signed(const double fac=1.0); // wf[lcr](-1)^{p(l)}
       void permCR_signed(); // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
+      // for sweep algorithm
+      void from_array(const Tm* array){
+	 linalg::xcopy(info._size, array, _data);
+      }
+      void to_array(Tm* array) const{
+         linalg::xcopy(info._size, _data, array);
+      }
+/*
+      // for decimation
+      qproduct dpt_lc() const{ return qmerge(info.qrow, info.qmid); }
+      qproduct dpt_cr() const{ return qmerge(info.qmid, info.qcol); }
+      qproduct dpt_lr() const{ return qmerge(info.qrow, info.qcol); }
+      // reshape: merge
+      stensor2<Tm> merge_lc() const{ 
+	 auto qprod = dpt_lc();
+	 return merge_qt3_qt2_lc(*this, qprod.first, qprod.second);
+      }
+      stensor2<Tm> merge_cr() const{
+	 auto qprod = dpt_cr(); 
+	 return merge_qt3_qt2_cr(*this, qprod.first, qprod.second);
+      }
+      stensor2<Tm> merge_lr() const{
+	 auto qprod = dpt_lr();  
+	 return merge_qt3_qt2_lr(*this, qprod.first, qprod.second);
+      }
+*/
    public:
+      bool own = true; // whether the object owns its data
       qinfo3<Tm> info;
    private:   
       Tm* _data = nullptr;

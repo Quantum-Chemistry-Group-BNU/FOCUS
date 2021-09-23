@@ -20,7 +20,8 @@ struct BaseMatrix{
       virtual int rows() const = 0;
       virtual int cols() const = 0;
       virtual size_t size() const = 0;
-      virtual Tm* data() const = 0;
+      virtual const Tm* data() const = 0;
+      virtual Tm* data() = 0;
       virtual const Tm operator()(const int i, const int j) const = 0;
       virtual Tm& operator()(const int i, const int j) = 0;
 };
@@ -184,7 +185,8 @@ struct matrix : public BaseMatrix<Tm> {
       int rows() const{ return _rows; }
       int cols() const{ return _cols; }
       size_t size() const{ return _size; }
-      Tm* data() const{ return _data; }
+      const Tm* data() const{ return _data; }
+      Tm* data(){ return _data; }
       // basic mathematics of matrices
       std::vector<Tm> diagonal() const{
 	 assert(_rows == _cols);

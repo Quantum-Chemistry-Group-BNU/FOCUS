@@ -22,12 +22,9 @@
 #include "tensor_sparse4.h"
 #include "tensor_linalg.h"
 #include "tensor_contract.h"
+#include "tensor_reshape3.h"
 
 /*
-#include "qtensor_rank2.h"
-#include "qtensor_rank3.h"
-#include "qtensor_rank4.h"
-#include "qtensor_reshape3.h"
 #include "qtensor_reshape4.h"
 #include "qtensor_kramers.h"
 
