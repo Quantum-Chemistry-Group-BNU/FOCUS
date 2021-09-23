@@ -32,8 +32,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    if(rank == 0) Hmat.print("Hmat",8);
 
    // init left boundary site
-   int idx = icomb.topo.rindex.at(std::make_pair(0,0));
-   icomb.lsites[idx] = get_left_bsite<Tm>(Km::isym);
+   auto& ntotal = icomb.topo.ntotal;
+   icomb.lsites.resize(ntotal);
+   icomb.lsites[ntotal-1] = get_left_bsite<Tm>(Km::isym);
 
    // generate sweep sequence
    sweep_data sweeps(icomb.topo.get_sweeps(rank==0), 
