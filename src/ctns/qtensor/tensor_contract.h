@@ -1,8 +1,6 @@
 #ifndef TENSOR_CONTRACT_H
 #define TENSOR_CONTRACT_H
 
-#include "tensor_linalg.h"
-
 namespace ctns{
 
 // --- tensor linear algebra : contractions ---
@@ -33,6 +31,46 @@ stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a,
    return qt2;
 }
 
+template <typename Tm>
+stensor2<Tm> contract_qt3_qt3(const std::string superblock,
+		 	      const stensor3<Tm>& qt3a, 
+			      const stensor3<Tm>& qt3b){
+   stensor2<Tm> qt2;
+   if(superblock == "lc"){
+      qt2 = contract_qt3_qt3_lc(qt3a, qt3b);
+   }else if(superblock == "lr"){
+      qt2 = contract_qt3_qt3_lr(qt3a, qt3b);
+   }else if(superblock == "cr"){
+      qt2 = contract_qt3_qt3_cr(qt3a, qt3b);
+   }else{
+      std::cout << "error: no such case in contract_qt3_qt3! superblock=" << superblock << std::endl;
+      exit(1);
+   }
+   return qt2;
+}
+
+template <typename Tm>
+stensor3<Tm> contract_qt3_qt2(const char cpos,
+		 	      const stensor3<Tm>& qt3a, 
+			      const stensor2<Tm>& qt2b,
+			      const bool ifdagger=false){
+   const auto& qt2 = ifdagger? qt2b.H() : qt2b;
+   stensor3<Tm> qt3;
+   if(cpos == 'l'){
+      qt3 = contract_qt3_qt2_l(qt3a, qt2);
+   }else if(cpos == 'c'){
+      qt3 = contract_qt3_qt2_c(qt3a, qt2);
+   }else if(cpos == 'r'){
+      qt3 = contract_qt3_qt2_r(qt3a, qt2);
+   }else{
+      std::cout << "error: no such case in contract_qt3_qt2! cpos=" << cpos << std::endl;
+      exit(1);
+   }
+   return qt3;
+}
+
+// --- IMPLEMENTATIONS ---
+
 //          r--*--\ qt3a
 // q(r,c) =    |m |x	  = <r|c> = \sum_n An^* Bn^T [conjugation is taken on qt3a!]
 //          c--*--/ qt3b
@@ -55,7 +93,8 @@ stensor2<Tm> contract_qt3_qt3_cr(const stensor3<Tm>& qt3a,
 	       const auto& blk3a = qt3a(br,bx,bm);
 	       const auto& blk3b = qt3b(bc,bx,bm);
 	       if(blk3a.size() == 0 || blk3b.size() == 0) continue;
-	       for(int im=0; im<qt3a.mid_dim(bm); im++){
+	       int mdim = qt3a.info.qmid.get_dim(bm);
+	       for(int im=0; im<mdim; im++){
 		  xgemm("N","C",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
 	       } // im	       
 	    } // bm
@@ -88,7 +127,8 @@ stensor2<Tm> contract_qt3_qt3_lc(const stensor3<Tm>& qt3a,
 	       const auto& blk3a = qt3a(bx,br,bm);
 	       const auto& blk3b = qt3b(bx,bc,bm);
 	       if(blk3a.size() == 0 || blk3b.size() == 0) continue;
-               for(int im=0; im<qt3a.mid_dim(bm); im++){
+	       int mdim = qt3a.info.qmid.get_dim(bm);
+               for(int im=0; im<mdim; im++){
 		  xgemm("C","N",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
 	       } // im
 	    } // bm
@@ -122,8 +162,10 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
                auto& blk2 = qt2(br,bc);
 	       const auto& blk3b = qt3b(bx,by,bc);
 	       if(blk2.size() == 0 || blk3b.size() == 0) continue;
-	       for(int ic=0; ic<qt2.col_dim(bc); ic++){
-                  for(int ir=0; ir<qt2.row_dim(br); ir++){
+	       int cdim = qt2.info.qcol.get_dim(bc);
+	       int rdim = qt2.info.qrow.get_dim(br);
+	       for(int ic=0; ic<cdim; ic++){
+                  for(int ir=0; ir<rdim; ir++){
 		     auto tmp = xgemm("N","C",blk3a.get(ir),blk3b.get(ic));
 		     blk2(ir,ic) += tools::conjugate(tmp.trace());
 		  } // ir 
@@ -159,8 +201,10 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
 	       const auto& blk2b = qt2b(bm,bx);
 	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
 	       int N = blk3.dim0*blk3.dim1;
-	       for(int ix=0; ix<qt3a.mid_dim(bx); ix++){
-	          for(int im=0; im<qt3.mid_dim(bm); im++){
+	       int xdim = qt3a.info.qmid.get_dim(bx);
+	       int mdim = qt3.info.qmid.get_dim(bm);
+	       for(int ix=0; ix<xdim; ix++){
+	          for(int im=0; im<mdim; im++){
 		     linalg::xaxpy(N, blk2b(im,ix), blk3a.get(ix).data(), blk3.get(im).data());
 	          } // im
 	       } // ix 
@@ -193,7 +237,8 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
 	       const auto& blk3a = qt3a(bx,bc,bm);
 	       const auto& blk2b = qt2b(br,bx);
 	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
-	       for(int im=0; im<qt3.mid_dim(bm); im++){
+	       int mdim = qt3.info.qmid.get_dim(bm);
+	       for(int im=0; im<mdim; im++){
 		  xgemm("N","N",1.0,blk2b,blk3a.get(im),1.0,blk3.get(im));
 	       } // im
 	    } // bx
@@ -225,7 +270,8 @@ stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a,
 	       const auto& blk3a = qt3a(br,bx,bm);
 	       const auto& blk2b = qt2b(bc,bx);
 	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
-	       for(int im=0; im<qt3.mid_dim(bm); im++){
+	       int mdim = qt3.info.qmid.get_dim(bm);
+	       for(int im=0; im<mdim; im++){
 		  xgemm("N","T",1.0,blk3a.get(im),blk2b,1.0,blk3.get(im));
 	       } // im
 	    } // bx

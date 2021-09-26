@@ -10,7 +10,7 @@ namespace ctns{
 template <typename Tm>
 struct stensor3;
 
-const bool debug_sparse2 = false;
+const bool debug_sparse2 = true;
 extern const bool debug_sparse2; 
 
 template <typename Tm>
@@ -133,12 +133,6 @@ struct stensor2{
       // helpers
       int rows() const{ return info._rows; }
       int cols() const{ return info._cols; }
-      int row_dimAll() const{ return info.qrow.get_dimAll(); }
-      int col_dimAll() const{ return info.qcol.get_dimAll(); } 
-      int row_dim(const int br) const{ return info.qrow.get_dim(br); }
-      int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
-      qsym row_sym(const int br) const{ return info.qrow.get_sym(br); }
-      qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); }
       bool dir_row() const{ return info.dir[0]; } 
       bool dir_col() const{ return info.dir[1]; } 
       size_t size() const{ return info._size; }
@@ -167,6 +161,7 @@ struct stensor2{
 	 linalg::xaxpy(info._size, -1.0, st.data(), _data);
          return *this;
       }
+      double normF() const{ return linalg::xnrm2(info._size, _data); }
       // --- SPECIFIC FUNCTIONS ---
       // from/to dense matrix: assign block to proper place
       void from_matrix(const linalg::matrix<Tm>& mat); 

@@ -12,7 +12,7 @@ namespace ctns{
 
 // kernel for computing Cp|ket>
 template <typename Tm>
-stensor3<Tm> oper_normxwf_opC(const std::string& superblock,
+stensor3<Tm> oper_normxwf_opC(const std::string superblock,
 		              const stensor3<Tm>& site,
 		              const oper_dict<Tm>& qops1,
 		              const oper_dict<Tm>& qops2,
@@ -43,7 +43,7 @@ stensor3<Tm> oper_normxwf_opC(const std::string& superblock,
 
 // kernel for computing Apq|ket> 
 template <typename Tm>
-stensor3<Tm> oper_normxwf_opA(const std::string& superblock,
+stensor3<Tm> oper_normxwf_opA(const std::string superblock,
 		              const stensor3<Tm>& site,
 		              const oper_dict<Tm>& qops1,
 		              const oper_dict<Tm>& qops2,
@@ -95,7 +95,7 @@ stensor3<Tm> oper_normxwf_opA(const std::string& superblock,
 
 // kernel for computing Bps|ket> 
 template <typename Tm>
-stensor3<Tm> oper_normxwf_opB(const std::string& superblock,
+stensor3<Tm> oper_normxwf_opB(const std::string superblock,
 		              const stensor3<Tm>& site,
 		              const oper_dict<Tm>& qops1,
 		              const oper_dict<Tm>& qops2,

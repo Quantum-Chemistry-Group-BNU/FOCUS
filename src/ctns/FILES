@@ -303,27 +303,35 @@ Operators: [to be optimized]
 Sweep optimization:
  ctns_sweep.h
  sweep_data.h
+ --- onedot ---
+ sweep_onedot.h
+ sweep_onedot_renorm.h
+ tensor_reshape3.h -> reshaping qt3 for decimation
+ sweep_decimation.h
+
+ --- twodot ---
+
+
+Comments:
+ 1. probably change to shared_ptr to share data instead of raw pointer & own?
 
 #################################################################
 
 Qtensor: [to be optimized]
- qtensor_reshape3.h
  qtensor_reshape4.h
  qtensor_kramers.h
  pdvdson.h
  pdvdson_kramers.h
 
 Sweep: [to be optimized]
- sweep_onedot.h
  sweep_onedot_ham.h
- sweep_onedot_renorm.h
  sweep_twodot.h
  sweep_twodot_ham.h
  sweep_twodot_renorm.h
  sweep_ham.h
- sweep_decimation.h
  sweep_guess.h
  ctns_sys.h
 
+OpenMP version
 MPI version
 

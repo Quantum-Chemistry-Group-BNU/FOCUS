@@ -124,15 +124,6 @@ struct stensor3{
       int rows() const{ return info._rows; }
       int cols() const{ return info._cols; }
       int mids() const{ return info._mids; }
-      int row_dimAll() const{ return info.qrow.get_dimAll(); }
-      int col_dimAll() const{ return info.qcol.get_dimAll(); } 
-      int mid_dimAll() const{ return info.qmid.get_dimAll(); }
-      int row_dim(const int br) const{ return info.qrow.get_dim(br); }
-      int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
-      int mid_dim(const int bm) const{ return info.qmid.get_dim(bm); }
-      qsym row_sym(const int br) const{ return info.qrow.get_sym(br); }
-      qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
-      qsym mid_sym(const int bm) const{ return info.qmid.get_sym(bm); }
       bool dir_row() const{ return info.dir[0]; } 
       bool dir_col() const{ return info.dir[1]; }
       bool dir_mid() const{ return info.dir[2]; } 
@@ -162,6 +153,7 @@ struct stensor3{
 	 linalg::xaxpy(info._size, -1.0, st.data(), _data);
          return *this;
       }
+      double normF() const{ return linalg::xnrm2(info._size, _data); }
       // --- SPECIFIC FUNCTIONS ---
       // fix middle index (bm,im) - bm-th block, im-idx - composite index!
       stensor2<Tm> fix_mid(const std::pair<int,int> mdx) const;
@@ -176,7 +168,6 @@ struct stensor3{
       void to_array(Tm* array) const{
          linalg::xcopy(info._size, _data, array);
       }
-/*
       // for decimation
       qproduct dpt_lc() const{ return qmerge(info.qrow, info.qmid); }
       qproduct dpt_cr() const{ return qmerge(info.qmid, info.qcol); }
@@ -194,7 +185,6 @@ struct stensor3{
 	 auto qprod = dpt_lr();  
 	 return merge_qt3_qt2_lr(*this, qprod.first, qprod.second);
       }
-*/
    public:
       bool own = true; // whether the object owns its data
       qinfo3<Tm> info;

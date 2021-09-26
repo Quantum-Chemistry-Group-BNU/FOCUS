@@ -44,21 +44,21 @@ class comb{
       int get_nphysical() const{ return topo.nphysical; }
       int get_nroots() const{
 	 assert(rwfuns.rows() == 1); // currently, only allow one symmetry sector
-	 return rwfuns.row_dim(0);
+	 return rwfuns.info.qrow.get_dim(0);
       }
       qsym get_sym_state() const{
 	 assert(rwfuns.rows() == 1); // only one symmetry sector
-         return rwfuns.row_sym(0);
+         return rwfuns.info.qrow.get_sym(0);
       }
       // return rwfun for iroot, extracted from rwfuns
       stensor2<typename Km::dtype> get_iroot(const int iroot) const{
          assert(rwfuns.rows() == 1);
-         qbond qrow({{rwfuns.row_sym(0),1}});
+         qbond qrow({{rwfuns.info.qrow.get_sym(0),1}});
          stensor2<typename Km::dtype> rwfun(rwfuns.info.sym, qrow, rwfuns.info.qcol, rwfuns.info.dir);
 	 // copy data from blk0 to blk
          const auto& blk0 = rwfuns(0,0);
          auto& blk = rwfun(0,0);
-         for(int ic=0; ic<rwfuns.col_dim(0); ic++){
+         for(int ic=0; ic<rwfuns.info.qcol.get_dim(0); ic++){
             blk(0,ic) = blk0(iroot,ic);
          }
          return rwfun;

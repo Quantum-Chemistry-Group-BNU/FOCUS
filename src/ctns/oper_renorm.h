@@ -15,7 +15,7 @@ namespace ctns{
 
 // renormalize ops
 template <typename Km, typename Tm>
-void oper_renorm_opAll(const std::string& superblock,
+void oper_renorm_opAll(const std::string superblock,
 		       const comb<Km>& icomb,
 		       const comb_coord& p,
 		       const integral::two_body<Tm>& int2e,
@@ -23,6 +23,7 @@ void oper_renorm_opAll(const std::string& superblock,
 		       oper_dict<Tm>& qops1,
 		       oper_dict<Tm>& qops2,
 		       oper_dict<Tm>& qops){
+   const bool debug = true;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -61,7 +62,7 @@ void oper_renorm_opAll(const std::string& superblock,
       qops.qbra = site.info.qmid;
       qops.qbra = site.info.qmid;
    }
-   qops.oplist = "CABPQSH";
+   qops.oplist = "C"; //ABPQSH";
    qops.mpisize = size;
    qops.mpirank = rank;
    qops.ifdist2 = true;
@@ -79,21 +80,22 @@ void oper_renorm_opAll(const std::string& superblock,
    oper_timer.clear();
    auto Hx_funs = oper_renorm_functors(superblock, site, qops1, qops2,
 		   		       qops, int2e, int1e);
-/*
-   std::cout << "size=" << Hx_funs.size() << std::endl;
-   for(int i=0; i<Hx_funs.size(); i++){
-      std::cout << "i=" << i << Hx_funs[i] << std::endl;
+   if(debug){
+      std::cout << "Hx_funs: size=" << Hx_funs.size() << std::endl;
+      for(int i=0; i<Hx_funs.size(); i++){
+         std::cout << "i=" << i << Hx_funs[i] << std::endl;
+      }
    }
-*/
+
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
    for(int i=0; i<Hx_funs.size(); i++){
       char key = Hx_funs[i].label[0];
       int index = Hx_funs[i].index; 
-      //std::cout << "i=" << i << " key=" << key << " index=" << index << std::endl;
+      if(debug) std::cout << "cal: i=" << i << " key=" << key << " index=" << index << std::endl;
       auto opxwf = Hx_funs[i]();
-      auto op = oper_kernel_renorm(superblock, site, opxwf);
+      auto op = contract_qt3_qt3(superblock, site, opxwf);
       linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
    }
    // check operators against explicit construction
@@ -127,7 +129,7 @@ void oper_renorm_opAll(const std::string& superblock,
 }
 
 template <typename Tm>
-Hx_functors<Tm> oper_renorm_functors(const std::string& superblock, 
+Hx_functors<Tm> oper_renorm_functors(const std::string superblock, 
 				     const stensor3<Tm>& site, 
 				     oper_dict<Tm>& qops1, 
 				     oper_dict<Tm>& qops2, 

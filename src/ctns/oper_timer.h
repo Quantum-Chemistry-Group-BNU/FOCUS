@@ -47,17 +47,17 @@ struct oper_timing{
 	        << " Calc=" << tHxCalc << " S"
 		<< " Finl=" << tHxFinl << " S"
 	        << std::endl; 
-      std::cout << " renorm: t=" << tR << " S" 
-		<< " n=" << nR << " tav=" << tR/nR << " S"
-		<< std::endl;
+      // std::cout << " renorm: t=" << tR << " S" 
+      //   	<< " n=" << nR << " tav=" << tR/nR << " S"
+      //   	<< std::endl;
    }
    void clear(){
       timer.start();
       nC=0; nA=0; nB=0; nH=0; nS=0; nP=0; nQ=0;
       tC=0.0; tA=0.0; tB=0.0; tH=0.0; tS=0.0; tP=0.0; tQ=0.0;
       tHxInit=0.0; tHxCalc=0.0; tHxFinl=0.0;
-      nR=0;
-      tR=0.0;
+      // nR=0;
+      // tR=0.0;
    }
 public:
    boost::timer::cpu_timer timer;
@@ -66,9 +66,9 @@ public:
    double tC=0.0, tA=0.0, tB=0.0, tH=0.0, tS=0.0, tP=0.0, tQ=0.0;
    // Hx
    double tHxInit=0.0, tHxCalc=0.0, tHxFinl=0.0;
-   // renorm
-   int nR=0;
-   double tR=0.0; 
+   // // renorm
+   // int nR=0;
+   // double tR=0.0; 
 };
 
 extern oper_timing oper_timer;

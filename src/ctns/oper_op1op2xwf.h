@@ -11,7 +11,7 @@ namespace ctns{
 
 template <typename Tm>
 void oper_op1op2xwf_nkr(stensor3<Tm>& opwf,
-		        const std::string& superblock,
+		        const std::string superblock,
 		        const stensor3<Tm>& site,
 		        const oper_map<Tm>& qops1C,
 		        const oper_map<Tm>& qops2C,
@@ -74,7 +74,7 @@ void oper_op1op2xwf_nkr(stensor3<Tm>& opwf,
 // TRS version: only unbar part of creation ops is stored
 template <typename Tm>
 void oper_op1op2xwf_kr(stensor3<Tm>& opwf,
-		       const std::string& superblock,
+		       const std::string superblock,
 		       const stensor3<Tm>& site,
 		       const oper_map<Tm>& qops1C,
 		       const oper_map<Tm>& qops2C,
@@ -152,7 +152,7 @@ void oper_op1op2xwf_kr(stensor3<Tm>& opwf,
 template <typename Tm>
 void oper_op1op2xwf(const bool& ifkr,
 		    stensor3<Tm>& opwf,
-		    const std::string& superblock,
+		    const std::string superblock,
 		    const stensor3<Tm>& site,
 		    const oper_map<Tm>& qops1C,
 		    const oper_map<Tm>& qops2C,

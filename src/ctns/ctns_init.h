@@ -238,9 +238,9 @@ void init_rsites(comb<Km>& icomb){
          const double thresh_ortho = 1.e-10;
          double maxdiff = ova.check_identityMatrix(thresh_ortho, false);
          std::cout << " shape(l,r,c)=("
-                   << icomb.rsites[idx].row_dimAll() << ","
-                   << icomb.rsites[idx].col_dimAll() << ","
-                   << icomb.rsites[idx].mid_dimAll() << ")"
+                   << icomb.rsites[idx].info.qrow.get_dimAll() << ","
+                   << icomb.rsites[idx].info.qcol.get_dimAll() << ","
+                   << icomb.rsites[idx].info.qmid.get_dimAll() << ")"
                    << " maxdiff=" << std::scientific << maxdiff 
 	           << " TIMING=" << dt << " S"
 		   << std::endl;

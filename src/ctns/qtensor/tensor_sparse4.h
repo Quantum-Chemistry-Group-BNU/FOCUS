@@ -126,18 +126,6 @@ struct stensor4{
       int cols() const{ return info._cols; }
       int mids() const{ return info._mids; }
       int vers() const{ return info._vers; }
-      int row_dimAll() const{ return info.qrow.get_dimAll(); }
-      int col_dimAll() const{ return info.qcol.get_dimAll(); } 
-      int mid_dimAll() const{ return info.qmid.get_dimAll(); }
-      int ver_dimAll() const{ return info.qver.get_dimAll(); }
-      int row_dim(const int br) const{ return info.qrow.get_dim(br); }
-      int col_dim(const int bc) const{ return info.qcol.get_dim(bc); } 
-      int mid_dim(const int bm) const{ return info.qmid.get_dim(bm); }
-      int ver_dim(const int bv) const{ return info.qver.get_dim(bv); }
-      qsym row_sym(const int br) const{ return info.qrow.get_sym(br); }
-      qsym col_sym(const int bc) const{ return info.qcol.get_sym(bc); } 
-      qsym mid_sym(const int bm) const{ return info.qmid.get_sym(bm); }
-      qsym ver_sym(const int bv) const{ return info.qver.get_sym(bv); }
       bool dir_row() const{ return info.dir[0]; } 
       bool dir_col() const{ return info.dir[1]; }
       bool dir_mid() const{ return info.dir[2]; } 
@@ -168,6 +156,7 @@ struct stensor4{
 	 linalg::xaxpy(info._size, -1.0, st.data(), _data);
          return *this;
       }
+      double normF() const{ return linalg::xnrm2(info._size, _data); }
       // --- SPECIFIC FUNCTIONS ---
       // for sweep algorithm
       void from_array(const Tm* array){

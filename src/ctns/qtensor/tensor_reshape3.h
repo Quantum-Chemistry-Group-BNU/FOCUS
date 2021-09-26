@@ -131,7 +131,7 @@ stensor3<Tm> split_qt3_qt2_cr(const stensor2<Tm>& qt2,
    const auto& qrow = qt2.info.qrow;
    const auto& qcr  = qt2.info.qcol;
    std::vector<bool> dir = {qt2.dir_row(),qt2.dir_col(),qt2.dir_col()};
-   stensor3<Tm> qt3(qt2.info.sym, qcx, qrow, qrx, dir);
+   stensor3<Tm> qt3(qt2.info.sym, qrow, qrx, qcx, dir);
    for(int br=0; br<qt3.rows(); br++){
       int rdim = qt3.info.qrow.get_dim(br);
       for(int bcr=0; bcr<qcr.size(); bcr++){
@@ -209,7 +209,7 @@ stensor3<Tm> split_qt3_qt2_lr(const stensor2<Tm>& qt2,
    const auto& qlr  = qt2.info.qrow;
    const auto& qmid = qt2.info.qcol;
    std::vector<bool> dir = {qt2.dir_row(),qt2.dir_row(),qt2.dir_col()};
-   stensor3<Tm> qt3(qt2.info.sym, qmid, qlx, qrx, dir);
+   stensor3<Tm> qt3(qt2.info.sym, qlx, qrx, qmid, dir);
    for(int bm=0; bm<qt3.mids(); bm++){
       int mdim = qt3.info.qmid.get_dim(bm);
       for(int blr=0; blr<qlr.size(); blr++){

@@ -16,7 +16,7 @@ namespace ctns{
 
 // kernel for computing renormalized P|ket> or P^+|ket> 
 template <typename Tm>
-stensor3<Tm> oper_compxwf_opP(const std::string& superblock,
+stensor3<Tm> oper_compxwf_opP(const std::string superblock,
 		              const stensor3<Tm>& site,
 		              oper_dict<Tm>& qops1,
 		              oper_dict<Tm>& qops2,
@@ -81,7 +81,7 @@ stensor3<Tm> oper_compxwf_opP(const std::string& superblock,
 
 // kernel for computing renormalized Q|ket> or Q^+|ket>
 template <typename Tm>
-stensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
+stensor3<Tm> oper_compxwf_opQ(const std::string superblock,
 		              const stensor3<Tm>& site,
 			      oper_dict<Tm>& qops1,
 			      oper_dict<Tm>& qops2,
@@ -154,7 +154,7 @@ stensor3<Tm> oper_compxwf_opQ(const std::string& superblock,
 
 // kernel for computing renormalized Sp|ket> [6 terms]
 template <typename Tm>
-stensor3<Tm> oper_compxwf_opS(const std::string& superblock,
+stensor3<Tm> oper_compxwf_opS(const std::string superblock,
 		              const stensor3<Tm>& site,
 			      const oper_dict<Tm>& qops1,
 			      const oper_dict<Tm>& qops2,
@@ -279,7 +279,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string& superblock,
 
 // kernel for computing renormalized H|ket>
 template <typename Tm>
-stensor3<Tm> oper_compxwf_opH(const std::string& superblock,
+stensor3<Tm> oper_compxwf_opH(const std::string superblock,
 		              const stensor3<Tm>& site,
 		              const oper_dict<Tm>& qops1,
 		              const oper_dict<Tm>& qops2,

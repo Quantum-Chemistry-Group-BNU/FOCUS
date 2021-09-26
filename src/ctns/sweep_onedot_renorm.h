@@ -2,7 +2,7 @@
 #define SWEEP_ONEDOT_RENORM_H
 
 #include "oper_io.h"
-//#include "sweep_decimation.h"
+#include "sweep_decimation.h"
 
 namespace ctns{
 
@@ -31,45 +31,47 @@ void onedot_decimation(sweep_data& sweeps,
 	     << std::endl;
    if(debug_renorm) std::cout << "> onedot_decimation" << std::endl;
    auto& result = sweeps.opt_result[isweep][ibond];
-
-   std::vector<stensor2<Tm>> wfs2;
+   int nroots = vsol.cols();
+   std::vector<stensor2<Tm>> wfs2(nroots);
    if(superblock == "lc"){
 
-      for(int i=0; i<vsol.cols(); i++){
+      for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
-         //auto wf2 = wf.merge_lc();
-	 //if(noise > thresh_noise) wf2.add_noise(noise);
-	 //wfs2.push_back(wf2);
+         auto wf2 = wf.merge_lc();
+	 if(noise > thresh_noise) wf2.add_noise(noise);
+	 wfs2[i] = std::move(wf2);
       }
-/*
-      decimation_row(ifkr, wf.qrow, wf.qmid, dcut, rdm_vs_svd, wfs2, 
+      decimation_row(ifkr, wf.info.qrow, wf.info.qmid, 
+		     dcut, rdm_vs_svd, wfs2, 
 		     rot, result.dwt, result.deff);
 
    }else if(superblock == "lr"){
 
-      for(int i=0; i<vsol.cols(); i++){
+      for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
          // Need to first bring two dimensions adjacent to each other before merge!
-   	 auto wf2 = wf.permCR_signed().merge_lr();
+	 wf.permCR_signed();
+   	 auto wf2 = wf.merge_lr();
 	 if(noise > thresh_noise) wf2.add_noise(noise);
-	 wfs2.push_back(wf2);
+	 wfs2[i] = std::move(wf2);
       }
-      decimation_row(ifkr, wf.qrow, wf.qcol, dcut, rdm_vs_svd, wfs2, 
+      decimation_row(ifkr, wf.info.qrow, wf.info.qcol, 
+      		     dcut, rdm_vs_svd, wfs2, 
 		     rot, result.dwt, result.deff);
 
    }else if(superblock == "cr"){
 
-      for(int i=0; i<vsol.cols(); i++){
+      for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
          auto wf2 = wf.merge_cr().T();
 	 if(noise > thresh_noise) wf2.add_noise(noise);
-	 wfs2.push_back(wf2);
+	 wfs2[i] = std::move(wf2);
       }
-      decimation_row(ifkr, wf.qmid, wf.qcol, dcut, rdm_vs_svd, wfs2, 
+      decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
+      		     dcut, rdm_vs_svd, wfs2, 
 		     rot, result.dwt, result.deff);
       rot = rot.T(); // rot[alpha,r] = (V^+)
 
-*/
    } // superblock
 }
 
@@ -82,47 +84,48 @@ void onedot_guess_psi(const std::string superblock,
 		      stensor3<typename Km::dtype>& wf,
 		      const stensor2<typename Km::dtype>& rot){
    if(debug_renorm) std::cout << "> onedot_guess_psi" << std::endl;
+   const auto& pdx0 = icomb.topo.rindex.at(dbond.p0);
+   const auto& pdx1 = icomb.topo.rindex.at(dbond.p1);
+   int nroots = vsol.cols();
    icomb.psi.clear();
-   const auto& p0 = dbond.p0;
-   const auto& p1 = dbond.p1;
-/*
+   icomb.psi.resize(nroots);
    if(superblock == "lc"){
 
-      for(int i=0; i<vsol.cols(); i++){
+      for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
          auto cwf = rot.H().dot(wf.merge_lc()); // <-W[alpha,r]->
-         auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
-         icomb.psi.push_back(psi);
+         auto psi = contract_qt3_qt2_l(icomb.rsites[pdx1],cwf);
+         icomb.psi[i] = std::move(psi);
       }
 
    }else if(superblock == "lr"){
 
-      for(int i=0; i<vsol.cols(); i++){
+      for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
 	 wf.permCR_signed();
          auto cwf = rot.H().dot(wf.merge_lr()); // <-W[alpha,r]->
-         auto psi = contract_qt3_qt2_l(icomb.rsites[p1],cwf);
-         icomb.psi.push_back(psi);
+         auto psi = contract_qt3_qt2_l(icomb.rsites[pdx1],cwf);
+         icomb.psi[i] = std::move(psi);
       }
       
    }else if(superblock == "cr"){
 
-      const auto& cturn = sweeps.seq[ibond].cturn; 
-      for(int i=0; i<vsol.cols(); i++){
+      const auto& cturn = dbond.cturn; 
+      for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
          auto cwf = wf.merge_cr().dot(rot.H()); // <-W[l,alpha]->
          if(!cturn){
-            auto psi = contract_qt3_qt2_r(icomb.lsites[p0],cwf.T());
+            auto psi = contract_qt3_qt2_r(icomb.lsites[pdx0],cwf.T());
+	    icomb.psi[i] = std::move(psi);
          }else{
             // special treatment of the propagation downside to backbone
-            auto psi = contract_qt3_qt2_c(icomb.lsites[p0],cwf.T());
+            auto psi = contract_qt3_qt2_c(icomb.lsites[pdx0],cwf.T());
             psi.permCR_signed(); // |(lr)c> back to |lcr> order on backbone
-            icomb.psi.push_back(psi);
+            icomb.psi[i] = std::move(psi);
          }
       }
 
    } // superblock
-*/
 }
 
 template <typename Km>
@@ -146,7 +149,6 @@ void onedot_renorm(sweep_data& sweeps,
 #endif
    const bool ifkr = qkind::is_kramers<Km>();
    const auto& dbond = sweeps.seq[ibond];
-   const auto& p = dbond.p;
    std::string superblock;
    if(dbond.forward){
       superblock = dbond.cturn? "lr" : "lc";
@@ -170,45 +172,48 @@ void onedot_renorm(sweep_data& sweeps,
    if(rank == 0 && sweeps.guess){
       onedot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
    }
+   timing.te = tools::get_time();
 
    // renorm operators	 
    if(rank == 0 && debug_renorm) std::cout << "> renormalize operators" << std::endl;
    const bool thresh = 1.e-10;
+   const auto& p = dbond.p;
+   const auto& pdx = icomb.topo.rindex.at(p); 
    oper_dict<Tm> qops;
    std::string fname;
-/*
    if(superblock == "lc"){
-      icomb.lsites[p] = rot.split_lc(wf.qrow, wf.qmid);
-      //-------------------------------------------------------------------	 
-      assert((rot-icomb.lsites[p].merge_lc()).normF() < thresh);
-      auto ovlp = contract_qt3_qt3_lc(icomb.lsites[p],icomb.lsites[p]);
+      icomb.lsites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
+      //-------------------------------------------------------------------
+      rot -= icomb.lsites[pdx].merge_lc();
+      assert(rot.normF() < thresh);
+      auto ovlp = contract_qt3_qt3("lc", icomb.lsites[pdx], icomb.lsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, cqops, qops);
       fname = oper_fname(scratch, p, "l");
    }else if(superblock == "lr"){
-      icomb.lsites[p]= rot.split_lr(wf.qrow, wf.qcol);
-      //-------------------------------------------------------------------	 
-      assert((rot-icomb.lsites[p].merge_lr()).normF() < thresh);
-      auto ovlp = contract_qt3_qt3_lr(icomb.lsites[p],icomb.lsites[p]);
+      icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
+      //-------------------------------------------------------------------
+      rot -= icomb.lsites[pdx].merge_lr();
+      assert(rot.normF() < thresh);
+      auto ovlp = contract_qt3_qt3("lr", icomb.lsites[pdx],icomb.lsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
-      //-------------------------------------------------------------------	
+      //-------------------------------------------------------------------
       oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops);
       fname = oper_fname(scratch, p, "l");
    }else if(superblock == "cr"){
-      // update site tensor
-      icomb.rsites[p] = rot.split_cr(wf.qmid, wf.qcol);
-      //-------------------------------------------------------------------	
-      assert((rot-icomb.rsites[p].merge_cr()).normF() < thresh);	 
-      auto ovlp = contract_qt3_qt3_cr(icomb.rsites[p],icomb.rsites[p]);
+      icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
+      //-------------------------------------------------------------------
+      rot -= icomb.rsites[pdx].merge_cr();
+      assert(rot.normF() < thresh);
+      auto ovlp = contract_qt3_qt3("cr", icomb.rsites[pdx],icomb.rsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("cr", icomb, p, int2e, int1e, cqops, rqops, qops);
       fname = oper_fname(scratch, p, "r");
    }
-   timing.te = tools::get_time();
+   timing.tf = tools::get_time();
    oper_save(fname, qops);
-*/
 }
 
 } // ctns
