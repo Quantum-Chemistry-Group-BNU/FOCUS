@@ -20,10 +20,10 @@ void oper_renorm_opAll(const std::string superblock,
 		       const comb_coord& p,
 		       const integral::two_body<Tm>& int2e,
 		       const integral::one_body<Tm>& int1e,
-		       oper_dict<Tm>& qops1,
-		       oper_dict<Tm>& qops2,
+		       const oper_dict<Tm>& qops1,
+		       const oper_dict<Tm>& qops2,
 		       oper_dict<Tm>& qops){
-   const bool debug = true;
+   const bool debug = false;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -60,9 +60,9 @@ void oper_renorm_opAll(const std::string superblock,
       auto pc = node.center;
       qops.krest = icomb.topo.get_node(pc).rsupport;
       qops.qbra = site.info.qmid;
-      qops.qbra = site.info.qmid;
+      qops.qket = site.info.qmid;
    }
-   qops.oplist = "C"; //ABPQSH";
+   qops.oplist = "CABPQSH";
    qops.mpisize = size;
    qops.mpirank = rank;
    qops.ifdist2 = true;
@@ -131,9 +131,9 @@ void oper_renorm_opAll(const std::string superblock,
 template <typename Tm>
 Hx_functors<Tm> oper_renorm_functors(const std::string superblock, 
 				     const stensor3<Tm>& site, 
-				     oper_dict<Tm>& qops1, 
-				     oper_dict<Tm>& qops2, 
-				     oper_dict<Tm>& qops, 
+				     const oper_dict<Tm>& qops1, 
+				     const oper_dict<Tm>& qops2, 
+				     const oper_dict<Tm>& qops, 
 	             		     const integral::two_body<Tm>& int2e,
 	             		     const integral::one_body<Tm>& int1e){
    Hx_functors<Tm> Hx_funs;
@@ -144,9 +144,9 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
          int index = pr.first, iformula = pr.second;
          Hx_functor<Tm> Hx("C", index, iformula);
          Hx.opxwf = bind(&oper_normxwf_opC<Tm>, 
-           	      std::cref(superblock), std::cref(site), 
-           	      std::ref(qops1), std::ref(qops2),
-           	      index, iformula, false);
+           	         std::cref(superblock), std::cref(site), 
+           	         std::ref(qops1), std::ref(qops2),
+           	         index, iformula, false);
          Hx_funs.push_back(Hx);
       }
    }
@@ -159,9 +159,9 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
          if(iproc == qops.mpirank){
             Hx_functor<Tm> Hx("A", index, iformula);
             Hx.opxwf = bind(&oper_normxwf_opA<Tm>, 
-           	         std::cref(superblock), std::cref(site), 
-           	         std::ref(qops1), std::ref(qops2),
-           		 index, iformula, false);
+           	            std::cref(superblock), std::cref(site), 
+           	            std::ref(qops1), std::ref(qops2),
+           		    index, iformula, false);
             Hx_funs.push_back(Hx);
          }
       }
@@ -175,9 +175,9 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
          if(iproc == qops.mpirank){
             Hx_functor<Tm> Hx("B", index, iformula);
             Hx.opxwf = bind(&oper_normxwf_opB<Tm>, 
-           	         std::cref(superblock), std::cref(site), 
-           	         std::ref(qops1), std::ref(qops2),
-           		 index, iformula, false);
+           	            std::cref(superblock), std::cref(site), 
+           	            std::ref(qops1), std::ref(qops2),
+           		    index, iformula, false);
             Hx_funs.push_back(Hx);
          }
       }
@@ -188,10 +188,10 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
          int index = pr.first;
          Hx_functor<Tm> Hx("P", index);
          Hx.opxwf = bind(&oper_compxwf_opP<Tm>,
-           	      std::cref(superblock), std::cref(site),
-           	      std::ref(qops1), std::ref(qops2),
-           	      std::cref(int2e), std::cref(int1e),
-           	      index, false);
+           	         std::cref(superblock), std::cref(site),
+           	         std::ref(qops1), std::ref(qops2),
+           	         std::cref(int2e), std::cref(int1e),
+           	         index, false);
          Hx_funs.push_back(Hx);
       }
    }
@@ -201,10 +201,10 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
          int index = pr.first;
          Hx_functor<Tm> Hx("Q", index);
          Hx.opxwf = bind(&oper_compxwf_opQ<Tm>,
-           	      std::cref(superblock), std::cref(site),
-           	      std::ref(qops1), std::ref(qops2),
-           	      std::cref(int2e), std::cref(int1e),
-           	      index, false);
+           	         std::cref(superblock), std::cref(site),
+           	         std::ref(qops1), std::ref(qops2),
+           	         std::cref(int2e), std::cref(int1e),
+           	         index, false);
          Hx_funs.push_back(Hx);
       }
    }
@@ -214,10 +214,10 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
          int index = pr.first;
          Hx_functor<Tm> Hx("S", index);
          Hx.opxwf = bind(&oper_compxwf_opS<Tm>,
-           	      std::cref(superblock), std::cref(site),
-           	      std::ref(qops1), std::ref(qops2),
-           	      std::cref(int2e), std::cref(int1e),
-           	      index, qops.mpisize, qops.mpirank, false);
+           	         std::cref(superblock), std::cref(site),
+           	         std::ref(qops1), std::ref(qops2),
+           	         std::cref(int2e), std::cref(int1e),
+           	         index, qops.mpisize, qops.mpirank, false);
          Hx_funs.push_back(Hx);
       }
    }
@@ -225,10 +225,10 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
    if(qops.oplist.find('H') != std::string::npos){
       Hx_functor<Tm> Hx("H");
       Hx.opxwf = bind(&oper_compxwf_opH<Tm>, 
-           	   std::cref(superblock), std::cref(site),
-           	   std::ref(qops1), std::ref(qops2),
-           	   std::cref(int2e), std::cref(int1e),
-           	   qops.mpisize, qops.mpirank);
+           	      std::cref(superblock), std::cref(site),
+           	      std::ref(qops1), std::ref(qops2),
+           	      std::cref(int2e), std::cref(int1e),
+           	      qops.mpisize, qops.mpirank);
       Hx_funs.push_back(Hx);
    }
    return Hx_funs;

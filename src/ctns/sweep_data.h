@@ -9,55 +9,53 @@ namespace ctns{
 // timing
 struct dot_timing{
    void analysis(){
-      dt  = tools::get_duration(t1-t0); // total
-      dt0 = tools::get_duration(ta-t0); // t(procs)
+      double dt  = tools::get_duration(t1-t0); // total
+      double dt0 = tools::get_duration(ta-t0); // t(procs)
       std::cout << " T(load)  = " << std::scientific << std::setprecision(2) << dt0 << " S"
    	        << "  per = " << std::defaultfloat << dt0/dt*100 
 		<< "  per(accum) = " << dt0/dt*100 
 		<< std::endl;
-      dt1 = tools::get_duration(tb-ta); // t(hdiag)
+      double dt1 = tools::get_duration(tb-ta); // t(hdiag)
       std::cout << " T(hdiag) = " << std::scientific << std::setprecision(2) << dt1 << " S"
    	        << "  per = " << std::defaultfloat << dt1/dt*100 
 		<< "  per(accum) = " << (dt0+dt1)/dt*100 
 		<< std::endl;
-      dt2 = tools::get_duration(tc-tb); // t(dvdsn)
+      double dt2 = tools::get_duration(tc-tb); // t(dvdsn)
       std::cout << " T(dvdsn) = " << std::scientific << std::setprecision(2) << dt2 << " S"
    	        << "  per = " << std::defaultfloat << dt2/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2)/dt*100 
 		<< std::endl;
-      dt3 = tools::get_duration(td-tc); // t(decim)
+      double dt3 = tools::get_duration(td-tc); // t(decim)
       std::cout << " T(decim) = " << std::scientific << std::setprecision(2) << dt3 << " S"
    	        << "  per = " << std::defaultfloat << dt3/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2+dt3)/dt*100 
 		<< std::endl;
-      dt4 = tools::get_duration(te-td); // t(guess)
+      double dt4 = tools::get_duration(te-td); // t(guess)
       std::cout << " T(guess) = " << std::scientific << std::setprecision(2) << dt4 << " S"
    	        << "  per = " << std::defaultfloat << dt4/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4)/dt*100 
 		<< std::endl;
-      dt5 = tools::get_duration(tf-te); // t(renrm)
+      double dt5 = tools::get_duration(tf-te); // t(renrm)
       std::cout << " T(renrm) = " << std::scientific << std::setprecision(2) << dt5 << " S"
    	        << "  per = " << std::defaultfloat << dt5/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4+dt5)/dt*100 
 		<< std::endl;
-      dt6 = tools::get_duration(t1-tf); // t(save)
+      double dt6 = tools::get_duration(t1-tf); // t(save)
       std::cout << " T(save)  = " << std::scientific << std::setprecision(2) << dt6 << " S"
    	        << "  per = " << std::defaultfloat << dt6/dt*100 
 		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4+dt5+dt6)/dt*100 
 		<< std::endl;
    }
 public:
-   using tm = std::chrono::high_resolution_clock::time_point;
-   tm t0, ta, tb, tc, td, te, tf, t1;
-private:
-   double dt0 = 0.0; // ta-t0: t(load) 
-   double dt1 = 0.0; // tb-ta: t(hdiag)
-   double dt2 = 0.0; // tc-ta: t(dvdson)
-   double dt3 = 0.0; // td-tc: t(decim)
-   double dt4 = 0.0; // te-td: t(guess)
-   double dt5 = 0.0; // tf-te: t(renrm)
-   double dt6 = 0.0; // t1-tf: t(save)
-   double dt  = 0.0; // t1-t0: total
+   using Tm = std::chrono::high_resolution_clock::time_point;
+   Tm t0;
+   Tm ta; // ta-t0: t(load) 
+   Tm tb; // tb-ta: t(hdiag)
+   Tm tc; // tc-ta: t(dvdson)
+   Tm td; // td-tc: t(decim)
+   Tm te; // te-td: t(guess)
+   Tm tf; // tf-te: t(renrm)
+   Tm t1; // t1-tf: t(save)
 };
 
 // computed results at a given dot	

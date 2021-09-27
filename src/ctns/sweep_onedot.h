@@ -5,11 +5,9 @@
 #include "../core/linalg.h"
 #include "qtensor/qtensor.h"
 #include "sweep_onedot_renorm.h"
-/*
-#include "sweep_ham.h"
-#include "sweep_onedot_ham.h"
-#include "sweep_guess.h"
-*/
+#include "sweep_onedot_hdiag.h"
+#include "sweep_onedot_local.h"
+#include "sweep_onedot_sigma.h"
 
 namespace ctns{
 
@@ -100,35 +98,38 @@ void sweep_onedot(const input::schedule& schd,
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
 
-/*
    // 3.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
-   diag = onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf, size, rank);
+   onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf, diag, size, rank);
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
    if(size > 1){
       std::vector<double> diag2(nsub);
       boost::mpi::reduce(icomb.world, diag, diag2, std::plus<double>(), 0);
-      diag = diag2;
+      diag = std::move(diag2);
    }
 #endif 
    timing.tb = tools::get_time();
 
    // 3.2 Solve local problem: Hc=cE
+   auto Hx_funs = onedot_Hx_functors(isym, ifkr, cqops, lqops, rqops,
+	                             int2e, int1e, wf, size, rank);
    using std::placeholders::_1;
    using std::placeholders::_2;
    auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
-           	    std::cref(isym), std::cref(ifkr), 
-           	    std::ref(cqops), std::ref(lqops), std::ref(rqops), 
-           	    std::cref(int2e), std::cref(int1e), std::cref(ecore), 
-           	    std::ref(wf), std::cref(size), std::cref(rank));
+           	    std::ref(wf), std::ref(Hx_funs),
+           	    std::cref(ifkr), std::cref(ecore),
+		    std::cref(size), std::cref(rank));
+   oper_timer.clear();
    onedot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
    timing.tc = tools::get_time();
-   if(rank == 0) sweeps.print_eopt(isweep, ibond);
-*/
+   if(rank == 0){ 
+      sweeps.print_eopt(isweep, ibond);
+      oper_timer.analysis();
+   }
 
    // 4. decimation & renormalize operators
    onedot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
