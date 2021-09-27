@@ -34,6 +34,7 @@ void onedot_decimation(sweep_data& sweeps,
    int nroots = vsol.cols();
    std::vector<stensor2<Tm>> wfs2(nroots);
    if(superblock == "lc"){
+
       for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
          auto wf2 = wf.merge_lc();

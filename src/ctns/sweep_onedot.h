@@ -143,7 +143,6 @@ void sweep_onedot(const input::schedule& schd,
    }
 }
 
-/*
 // use one dot algorithm to produce a final wavefunction
 // in right canonical form for later usage 
 template <typename Km>
@@ -174,40 +173,41 @@ void sweep_rwfuns(const input::schedule& schd,
 
    if(rank == 0){
       std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;
+      // decimation to get site0
       const auto& wf = icomb.psi[0]; // only rank-0 has psi from renorm
-      // decimation
-      qtensor2<Tm> rot;
-      std::vector<qtensor2<Tm>> wfs2;
-      for(int i=0; i<schd.ctns.nroots; i++){
+      stensor2<Tm> rot;
+      int nroots = schd.ctns.nroots;
+      std::vector<stensor2<Tm>> wfs2(nroots);
+      for(int i=0; i<nroots; i++){
          auto wf2 = icomb.psi[i].merge_cr().T();
-	 wfs2.push_back(wf2);
+	 wfs2[i] = std::move(wf2);
       }
-      const int dcut = schd.ctns.nroots;
+      const int dcut = nroots;
       double dwt; 
       int deff;
       const bool ifkr = tools::is_complex<Km>();
-      decimation_row(ifkr, wf.qmid, wf.qcol, dcut, schd.ctns.rdm_vs_svd, wfs2,
+      decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
+		     dcut, schd.ctns.rdm_vs_svd, wfs2,
 		     rot, dwt, deff);
       rot = rot.T(); 
-      icomb.rsites[p0] = rot.split_cr(wf.qmid, wf.qcol);
+      icomb.rsites[icomb.topo.rindex.at(p0)] = rot.split_cr(wf.info.qmid, wf.info.qcol);
       // form rwfuns(iroot,irbas)
-      auto& sym_state = icomb.psi[0].sym;
-      qbond qrow({{sym_state, schd.ctns.nroots}});
-      auto& qcol = rot.qrow; 
-      qtensor2<typename Km::dtype> rwfuns(qsym(Km::isym), qrow, qcol, {0, 1});
+      auto& sym_state = icomb.psi[0].info.sym;
+      qbond qrow({{sym_state, nroots}});
+      auto& qcol = rot.info.qrow; 
+      stensor2<typename Km::dtype> rwfuns(qsym(Km::isym), qrow, qcol, {0,1});
       assert(qcol.size() == 1);
       int rdim = qrow.get_dim(0);
       int cdim = qcol.get_dim(0);
-      for(int i=0; i<schd.ctns.nroots; i++){
+      for(int i=0; i<nroots; i++){
          auto cwf = icomb.psi[i].merge_cr().dot(rot.H()); // <-W[1,alpha]->
-         for(int c=0; c<cdim; c++){
-            rwfuns(0,0)(i,c) = cwf(0,0)(0,c);	      
+         for(int ic=0; ic<cdim; ic++){
+            rwfuns(0,0)(i,ic) = cwf(0,0)(0,ic);
          }
       } // iroot
       icomb.rwfuns = std::move(rwfuns);
    } // rank0
 }
-*/
    
 } // ctns
 

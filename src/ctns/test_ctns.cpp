@@ -72,8 +72,8 @@ int tests::test_ctns(){
  
    // --- CTNS --- 
    //ctns::comb<ctns::qkind::cZ2> icomb;
-   //ctns::comb<ctns::qkind::cN> icomb;
-   ctns::comb<ctns::qkind::cNK> icomb;
+   ctns::comb<ctns::qkind::cN> icomb;
+   //ctns::comb<ctns::qkind::cNK> icomb;
    
    // 1. dealing with topology 
    icomb.topo.read(schd.ctns.topology_file);

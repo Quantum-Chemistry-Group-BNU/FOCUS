@@ -78,8 +78,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
       if(rank == 0) sweeps.summary(isweep);
    } // isweep
 
-   // get rwfuns, which is useful for later computing properties
-   //sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
+   // useful for later computing properties
+   sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
 
    auto t1 = tools::get_time();
    if(rank == 0) tools::timing("ctns::opt_sweep", t0, t1);
