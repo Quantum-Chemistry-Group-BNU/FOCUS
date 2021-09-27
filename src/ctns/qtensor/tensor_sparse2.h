@@ -187,7 +187,7 @@ struct stensor2{
       // for sweep algorithm
       void add_noise(const double noise){
          auto rand = linalg::random_matrix<Tm>(info._size,1);
-	 linalg::xaxpy(info._size, 1.0, rand.data(), _data);
+	 linalg::xaxpy(info._size, noise, rand.data(), _data);
       }
       // reshape: split into stensor3
       stensor3<Tm> split_lc(const qbond& qlx, const qbond& qcx) const{
