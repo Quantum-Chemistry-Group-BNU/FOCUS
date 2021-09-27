@@ -13,9 +13,7 @@ namespace ctns{
 const bool debug_onedot_sigma = false;
 extern const bool debug_onedot_sigma;
 
-//
 // construct H*wf: if ifkr=True, construct skeleton sigma vector 
-//
 
 // --- NC partition ---
 // Generic formula: L=l, R=cr: A[l]*P[cr]+B[l]*Q[cr]
@@ -33,12 +31,13 @@ stensor3<Tm> onedot_Hx_CSnc(const int index,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_CSnc index=" << index << std::endl;
    const bool dagger = true;
    const int& p1 = index;
    const auto& op1 = lqops('C').at(p1);
-   auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1,size,rank);
+   auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,int1e,p1,size,rank);
    qt3n.row_signed();
-   auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,p1,size,rank,dagger);
+   auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,int1e,p1,size,rank,dagger);
    qt3h.row_signed();
    auto Hwf = oper_kernel_OIwf("lc",qt3n,op1); // both lc/lr can work 
    Hwf -= oper_kernel_OIwf("lc",qt3h,op1,dagger);
@@ -58,11 +57,12 @@ stensor3<Tm> onedot_Hx_SCnc(const int index,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_SCnc index=" << index << std::endl;
    const bool dagger = true;
    const auto& op1 = lqops('S').at(index);
-   auto qt3n = oper_normxwf_opC("cr",wf,cqops,rqops,iformula,index);
+   auto qt3n = oper_normxwf_opC("cr",wf,cqops,rqops,index,iformula);
    qt3n.row_signed();
-   auto qt3h = oper_normxwf_opC("cr",wf,cqops,rqops,iformula,index,dagger);
+   auto qt3h = oper_normxwf_opC("cr",wf,cqops,rqops,index,iformula,dagger);
    qt3h.row_signed();
    auto Hwf = oper_kernel_OIwf("lc",qt3h,op1,dagger); 
    Hwf -= oper_kernel_OIwf("lc",qt3n,op1); 
@@ -81,10 +81,12 @@ stensor3<Tm> onedot_Hx_APnc(const int index,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_APnc index=" << index << std::endl;
+   const bool dagger = true;
    const Tm wt = ifkr? wfacAP(index) : 1.0;
    const auto& op1 = lqops('A').at(index);
-   auto qt3n = oper_compxwf_opP("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
-   auto qt3h = oper_compxwf_opP("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index,dagger);
+   auto qt3n = oper_compxwf_opP("cr",wf,cqops,rqops,int2e,int1e,index);
+   auto qt3h = oper_compxwf_opP("cr",wf,cqops,rqops,int2e,int1e,index,dagger);
    auto Hwf = oper_kernel_OIwf("lc",qt3n,op1);
    Hwf += oper_kernel_OIwf("lc",qt3h,op1,dagger);
    Hwf *= wt;
@@ -92,7 +94,7 @@ stensor3<Tm> onedot_Hx_APnc(const int index,
 }
 
 template <typename Tm>
-stensor3<Tm> onedot_Hx_APnc(const int index,
+stensor3<Tm> onedot_Hx_BQnc(const int index,
 	          	    const int& isym,
 	          	    const bool& ifkr,
 	          	    const oper_dict<Tm>& cqops,
@@ -103,10 +105,12 @@ stensor3<Tm> onedot_Hx_APnc(const int index,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_BQnc index=" << index << std::endl;
+   const bool dagger = true;
    const Tm wt = ifkr? wfacBQ(index) : wfac(index);
    const auto& op1 = lqops('B').at(index);
-   auto qt3n = oper_compxwf_opQ("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index);
-   auto qt3h = oper_compxwf_opQ("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,index,dagger);
+   auto qt3n = oper_compxwf_opQ("cr",wf,cqops,rqops,int2e,int1e,index);
+   auto qt3h = oper_compxwf_opQ("cr",wf,cqops,rqops,int2e,int1e,index,dagger);
    auto Hwf = oper_kernel_OIwf("lc",qt3n,op1);
    Hwf += oper_kernel_OIwf("lc",qt3h,op1,dagger);
    Hwf *= wt;
@@ -130,14 +134,15 @@ stensor3<Tm> onedot_Hx_CScn(const int index,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_CScn index=" << index << std::endl;
    const bool dagger = true;
    const auto& op2 = rqops('S').at(index);
    auto qt3n = oper_kernel_IOwf("cr",wf,op2,1); // p(c) is taken into account in IOwf
    qt3n.row_signed();
    auto qt3h = oper_kernel_IOwf("cr",wf,op2,1,dagger);
    qt3h.row_signed();
-   auto Hwf = oper_normxwf_opC("lc",qt3n,lqops,cqops,iformula,index); // p(l) is taken into account
-   Hwf -= oper_normxwf_opC("lc",qt3h,lqops,cqops,iformula,index,dagger);
+   auto Hwf = oper_normxwf_opC("lc",qt3n,lqops,cqops,index,iformula); // p(l) is taken into account
+   Hwf -= oper_normxwf_opC("lc",qt3h,lqops,cqops,index,iformula,dagger);
    return Hwf;
 }
 
@@ -153,6 +158,7 @@ stensor3<Tm> onedot_Hx_SCcn(const int index,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_SCcn index=" << index << std::endl;
    const bool dagger = true;
    const int& q2 = index;
    const auto& op2 = rqops('C').at(q2);
@@ -160,8 +166,8 @@ stensor3<Tm> onedot_Hx_SCcn(const int index,
    qt3n.row_signed(); 
    auto qt3h = oper_kernel_IOwf("cr",wf,op2,1,dagger);
    qt3h.row_signed();
-   auto Hwf = oper_compxwf_opS("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,q2,size,rank,dagger);
-   Hwf -= oper_compxwf_opS("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,q2,size,rank);
+   auto Hwf = oper_compxwf_opS("lc",qt3h,lqops,cqops,int2e,int1e,q2,size,rank,dagger);
+   Hwf -= oper_compxwf_opS("lc",qt3n,lqops,cqops,int2e,int1e,q2,size,rank);
    return Hwf;
 }
 
@@ -177,13 +183,14 @@ stensor3<Tm> onedot_Hx_PAcn(const int index,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_PAcn index=" << index << std::endl;
    const bool dagger = true;
    const Tm wt = ifkr? wfacAP(index) : 1.0;
    const auto& op2 = rqops('A').at(index); 
    auto qt3n = oper_kernel_IOwf("cr",wf,op2,0);
    auto qt3h = oper_kernel_IOwf("cr",wf,op2,0,dagger);
-   auto Hwf = oper_compxwf_opP("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,index);
-   Hwf += oper_compxwf_opP("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,index,dagger);
+   auto Hwf = oper_compxwf_opP("lc",qt3n,lqops,cqops,int2e,int1e,index);
+   Hwf += oper_compxwf_opP("lc",qt3h,lqops,cqops,int2e,int1e,index,dagger);
    Hwf *= wt;
    return Hwf;
 }
@@ -200,13 +207,14 @@ stensor3<Tm> onedot_Hx_QBcn(const int index,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_QBcn index=" << index << std::endl;
    const bool dagger = true;
    const Tm wt = ifkr? wfacBQ(index) : wfac(index);
    const auto& op2 = rqops('B').at(index);
    auto qt3n = oper_kernel_IOwf("cr",wf,op2,0);
    auto qt3h = oper_kernel_IOwf("cr",wf,op2,0,dagger);
-   auto Hwf = oper_compxwf_opQ("lc",qt3n,lqops,cqops,isym,ifkr,int2e,int1e,index);
-   Hwf += oper_compxwf_opQ("lc",qt3h,lqops,cqops,isym,ifkr,int2e,int1e,index,dagger);
+   auto Hwf = oper_compxwf_opQ("lc",qt3n,lqops,cqops,int2e,int1e,index);
+   Hwf += oper_compxwf_opQ("lc",qt3h,lqops,cqops,int2e,int1e,index,dagger);
    Hwf *= wt;
    return Hwf;
 }
@@ -224,16 +232,17 @@ stensor3<Tm> onedot_Hx_local(const int& isym,
 			     const stensor3<Tm>& wf,
 	          	     const int& size,
 	          	     const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_local" << std::endl;
    const Tm scale = ifkr? 0.5 : 1.0;
    const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
    stensor3<Tm> Hwf;
    if(ifNC){
       // 1. H^l + 2. H^cr
       Hwf = contract_qt3_qt2_l(wf,lqops('H').at(0));
-      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,isym,ifkr,int2e,int1e,size,rank);
+      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,int2e,int1e,size,rank);
    }else{
       // 1. H^lc + 2. H^r
-      Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,isym,ifkr,int2e,int1e,size,rank);
+      Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,int2e,int1e,size,rank);
       Hwf += contract_qt3_qt2_r(wf,rqops('H').at(0));
    }
    Hwf *= scale;
@@ -252,6 +261,7 @@ Hx_functors<Tm> onedot_Hx_functors(const int& isym,
 	                           const stensor3<Tm>& wf,
 	                           const int& size,
 	                           const int& rank){
+   const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
    Hx_functors<Tm> Hx_funs;
    // Local terms:
    Hx_functor<Tm> Hx("Hloc", 0, 0);
@@ -261,11 +271,11 @@ Hx_functors<Tm> onedot_Hx_functors(const int& isym,
 		   std::cref(size), std::cref(rank));
    Hx_funs.push_back(Hx); 
    // One-index terms:
-   const auto& cindex = ifNC? lqops('C').cindex : rqops('C').cindex;
+   // 3. p1^l+*Sp1^cr + h.c. or 4. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
+   const auto& cnindex = ifNC? lqops.cindex : rqops.cindex;
    auto cnlabel = ifNC? "CSnc" : "SCcn";
    auto cnfun = ifNC? &onedot_Hx_CSnc<Tm> : &onedot_Hx_SCcn<Tm>;
-   // 3. p1^l+*Sp1^cr + h.c. or 4. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
-   for(const auto& index : cindex){
+   for(const auto& index : cnindex){
       Hx_functor<Tm> Hx(cnlabel, index, 0);
       Hx.opxwf = bind(cnfun, index, std::cref(isym), std::cref(ifkr),
         	      std::cref(cqops), std::cref(lqops), std::cref(rqops), 
@@ -273,12 +283,12 @@ Hx_functors<Tm> onedot_Hx_functors(const int& isym,
                       std::cref(size), std::cref(rank));
       Hx_funs.push_back(Hx); 
    }
-   const auto& ccinfo = ifNC? oper_combine_opC(lqops.cindex, cqops.cindex) : 
-	   		      oper_combine_opC(cqops.cindex, rqops.cindex);
-   auto cclabel = ifNC? "SCnc" : "CScn";
-   auto ccfun = ifNC? &onedot_Hx_CScn<Tm> : &onedot_Hx_SCnc<Tm>;
    // 4. q2^cr+*Sq2^l + h.c. or 3. p1^lc+*Sp1^r + h.c.
-   for(const auto& pr : infoC){
+   auto ccinfo = ifNC? oper_combine_opC(cqops.cindex, rqops.cindex) :
+		       oper_combine_opC(lqops.cindex, cqops.cindex); 
+   auto cclabel = ifNC? "SCnc" : "CScn";
+   auto ccfun = ifNC? &onedot_Hx_SCnc<Tm> : &onedot_Hx_CScn<Tm>;
+   for(const auto& pr : ccinfo){
       int index = pr.first;
       int iformula = pr.second;
       Hx_functor<Tm> Hx(cclabel, index, iformula);
@@ -306,7 +316,7 @@ Hx_functors<Tm> onedot_Hx_functors(const int& isym,
                          std::cref(size), std::cref(rank));
          Hx_funs.push_back(Hx);
       }
-   } 
+   }
    // 6. Bps^l*Qps^cr (using Hermicity) or Qqr^lc*Bqr^r (using Hermicity)
    for(const auto& index : bindex){
       int iproc = distribute2(index,size);
@@ -321,10 +331,10 @@ Hx_functors<Tm> onedot_Hx_functors(const int& isym,
    }
    if(rank == 0){
       std::cout << "onedot_Hx_functors: size=" << Hx_funs.size() 
-                << " " << cnlabel << ":" << cnindex.size();
-                << " " << cclabel << ":" << ccinfo.size();
-                << " " << alabel << ":" << ainfo.size()
-                << " " << blabel << ":" << binfo.size()
+                << " " << cnlabel << ":" << cnindex.size()
+                << " " << cclabel << ":" << ccinfo.size()
+                << " " << alabel << ":" << aindex.size()
+                << " " << blabel << ":" << bindex.size()
                 << std::endl; 
       const bool debug = false;
       if(debug){
@@ -361,12 +371,12 @@ void onedot_Hx(Tm* y,
    //=======================
    wf.from_array(x);
    // initialization
-   std::vector<stensor3<Tm>> Hwf_lst(maxthreads);
+   std::vector<stensor3<Tm>> Hwfs(maxthreads);
    for(int i=0; i<maxthreads; i++){
-      Hwf_lst[i].init(wf.sym, wf.qrow, wf.qcol, wf.qmid, wf.dir);
+      Hwfs[i].init(wf.info.sym, wf.info.qrow, wf.info.qcol, wf.info.qmid, wf.info.dir);
    }
-   auto t1 = tools::get_time();
    // compute
+   auto t1 = tools::get_time();
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
@@ -376,18 +386,18 @@ void onedot_Hx(Tm* y,
 #else
       int omprank = 0;
 #endif
-      Hwf_lst[omprank] += Hx_funs[i]();
+      Hwfs[omprank] += Hx_funs[i]();
    }
    auto t2 = tools::get_time();
    // reduction & save
    for(int i=1; i<maxthreads; i++){
-      Hwf_list[0] += Hwf_lst[i];
+      Hwfs[0] += Hwfs[i];
    }
    // add const term
    const Tm scale = ifkr? 0.5 : 1.0;
    const Tm fac = scale*(ecore/size);
-   linalg::xaxpy(wf.size(), fac, wf.data(), Hwf_list[0].data());
-   Hwf_list[0].to_array(y);
+   linalg::xaxpy(wf.size(), fac, wf.data(), Hwfs[0].data());
+   Hwfs[0].to_array(y);
    auto t3 = tools::get_time();
    oper_timer.tHxInit += tools::get_duration(t1-t0);
    oper_timer.tHxCalc += tools::get_duration(t2-t1);

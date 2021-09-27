@@ -1,6 +1,8 @@
 #ifndef SWEEP_ONEDOT_LOCAL_H
 #define SWEEP_ONEDOT_LOCAL_H
 
+#include "oper_functors.h"
+
 namespace ctns{
 
 // generate initial guess for initial sweep optimization at p=(1,0)
@@ -23,7 +25,7 @@ void onedot_guess_psi0(comb<Km>& icomb, const int nroots){
       // qt2(1,r)*rsite0(r,r0,n0) = qt3(1,r0,n0)
       auto qt3 = contract_qt3_qt2_l(rsite0,qt2); 
       // qt3(1,r0,n0) -> cwf(n0,r0)
-      qtensor2<typename Km::dtype> cwf(state_sym, rsite0.qmid, rsite0.qcol, {1,1});
+      stensor2<typename Km::dtype> cwf(state_sym, rsite0.info.qmid, rsite0.info.qcol, {1,1});
       for(int br=0; br<cwf.rows(); br++){
 	 for(int bc=0; bc<cwf.cols(); bc++){
 	    auto& blk = cwf(br,bc);
@@ -32,7 +34,7 @@ void onedot_guess_psi0(comb<Km>& icomb, const int nroots){
 	    int rdim = cwf.info.qrow.get_dim(br); 
 	    int cdim = cwf.info.qcol.get_dim(bc);
 	    for(int ir=0; ir<rdim; ir++){
-	       for(int ic=0; ic<cdim; c++){
+	       for(int ic=0; ic<cdim; ic++){
 	     	  blk(ir,ic) = blk0(0,ic,ir); 
 	       } // ic
 	    } // ir
@@ -58,7 +60,7 @@ void onedot_localCI(comb<Km>& icomb,
 		    const double eps,
 		    const int maxcycle,
 		    const int parity,
-		    qtensor3<typename Km::dtype>& wf){
+		    stensor3<typename Km::dtype>& wf){
    using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -67,6 +69,7 @@ void onedot_localCI(comb<Km>& icomb,
 #endif
 
    // without kramers restriction
+   assert(!qkind::is_kramers<Km>());
    pdvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
    solver.Diag = diag.data();
    solver.HVec = HVec;
@@ -93,7 +96,7 @@ void onedot_localCI(comb<Km>& icomb,
 	    // starting guess 
             if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); 
             assert(icomb.psi.size() == neig);
-            assert(icomb.psi[0].get_dim() == nsub);
+            assert(icomb.psi[0].size() == nsub);
             // load initial guess from previous opt
             for(int i=0; i<neig; i++){
                icomb.psi[i].to_array(&v0[nsub*i]);
@@ -125,7 +128,7 @@ inline void onedot_localCI(comb<qkind::cNK>& icomb,
 		    const double eps,
 		    const int maxcycle,
 		    const int parity,
-		    qtensor3<std::complex<double>>& wf){
+		    stensor3<std::complex<double>>& wf){
    using Tm = std::complex<double>;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -134,8 +137,9 @@ inline void onedot_localCI(comb<qkind::cNK>& icomb,
 #endif
 
    // kramers restricted (currently works only for iterative with guess!)
+   assert(qkind::is_kramers<Km>());
    assert(cisolver == 1 && guess);
-   pdvdsonSolver_kr<Tm,qtensor3<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
+   pdvdsonSolver_kr<Tm,stensor3<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL

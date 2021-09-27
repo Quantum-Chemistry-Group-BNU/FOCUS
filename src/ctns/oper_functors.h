@@ -33,6 +33,10 @@ struct Hx_functor{
 template <typename Tm>
 using Hx_functors = std::vector<Hx_functor<Tm>>;
 
+// for Davidson algorithm
+template <typename Tm>
+using HVec_type = std::function<void(Tm*, const Tm*)>;
+
 } // ctns
 
 #endif

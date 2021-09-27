@@ -1,11 +1,11 @@
 #ifndef PDVDSON_H
 #define PDVDSON_H
 
-#include "../../core/ortho.h"
-
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+
+#include "../../core/ortho.h"
 
 namespace ctns{
 

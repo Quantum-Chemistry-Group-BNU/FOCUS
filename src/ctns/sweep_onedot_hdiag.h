@@ -5,7 +5,7 @@
 
 namespace ctns{
 
-const bool debug_onedot_hdiag = true;
+const bool debug_onedot_hdiag = false;
 extern const bool debug_onedot_hdiag;
 
 template <typename Tm>

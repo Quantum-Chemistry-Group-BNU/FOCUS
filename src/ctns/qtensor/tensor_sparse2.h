@@ -10,7 +10,7 @@ namespace ctns{
 template <typename Tm>
 struct stensor3;
 
-const bool debug_sparse2 = true;
+const bool debug_sparse2 = false;
 extern const bool debug_sparse2; 
 
 template <typename Tm>
