@@ -3,7 +3,7 @@
 
 #include "sweep_data.h"
 #include "sweep_onedot.h"
-//#include "sweep_twodot.h"
+#include "sweep_twodot.h"
 
 namespace ctns{
 
@@ -70,7 +70,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
 	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }else{
-	    //sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
+	    sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
 	 }
       } // ibond
       auto tf = tools::get_time();
@@ -78,7 +78,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
       if(rank == 0) sweeps.summary(isweep);
    } // isweep
 
-   // useful for later computing properties
+   // for later computing properties
    sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
 
    auto t1 = tools::get_time();

@@ -12,7 +12,7 @@
 namespace ctns{
 
 //
-// onddot optimization algorithm
+// onedot optimization algorithm
 //
 template <typename Km>
 void sweep_onedot(const input::schedule& schd,
@@ -23,7 +23,7 @@ void sweep_onedot(const input::schedule& schd,
                   const integral::two_body<typename Km::dtype>& int2e,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore){
-   const bool debug_sweep = schd.ctns.verbose > 0; 
+   const bool debug_sweep = (schd.ctns.verbose > 0);
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -54,19 +54,12 @@ void sweep_onedot(const input::schedule& schd,
    oper_load_qops(icomb, p, schd.scratch, "c", cqops);
    oper_load_qops(icomb, p, schd.scratch, "l", lqops);
    oper_load_qops(icomb, p, schd.scratch, "r", rqops);
-   if(schd.ctns.verbose > 1){
-      for(int iproc=0; iproc<size; iproc++){
-          if(rank == iproc){
-             std::cout << "qops info: rank=" << rank << std::endl;
-             const int level = 0;
-             cqops.print("cqops", level);
-             lqops.print("lqops", level);
-             rqops.print("rqops", level);
-	  }
-#ifndef SERIAL
-	  icomb.world.barrier();
-#endif
-      } // iproc
+   if(rank == 0){
+      std::cout << "qops info: rank=" << rank << std::endl;
+      const int level = 0;
+      cqops.print("cqops", level);
+      lqops.print("lqops", level);
+      rqops.print("rqops", level);
    }
    timing.ta = tools::get_time();
 
