@@ -63,36 +63,6 @@ class comb{
          }
          return rwfun;
       }
-/*
-      // sweep info:
-      //				  |
-      //    MPS-like:	    Additional: --pc
-      //     \|/			 \|/
-      //    --p--			--p--
-      qbond get_qc(const comb_coord& p) const{
-         auto pc = topo.get_node(p).center;
-         bool physical = (pc == coord_phys);
-         return physical? get_qbond_phys(Km::isym) : 
-		 rsites[topo.rindex.at(pc)].info.qrow; 
-      }
-      // 			        |
-      //    MPS-like:     Additional: --p 
-      //      |      |                 /|\
-      //    --pl-->--p--     	      --pl--
-      qbond get_ql(const comb_coord& p) const{
-         auto pl = topo.get_node(p).left;
-         bool cturn = topo.is_cturn(pl,p);
-         return cturn? lsites[topo.rindex.at(pl)].info.qmid : 
-		 lsites[topo.rindex.at(pl)].info.qcol;
-      }
-      // MPS-like:
-      //    |     |
-      //  --p--<--pr-- : qrow of rsites[pr]
-      qbond get_qr(const comb_coord& p) const{
-         auto pr = topo.get_node(p).right;
-         return rsites[topo.rindex.at(pr)].info.qrow;
-      }
-*/
    public:
       using Tm = typename Km::dtype;
       // -- CTNS ---

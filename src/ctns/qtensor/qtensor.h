@@ -23,11 +23,11 @@
 #include "tensor_linalg.h"
 #include "tensor_contract.h"
 #include "tensor_reshape3.h"
+#include "tensor_reshape4.h"
 
 #include "pdvdson.h"
 
 /*
-#include "qtensor_reshape4.h"
 #include "qtensor_kramers.h"
 #include "pdvdson_kramers.h"
 */

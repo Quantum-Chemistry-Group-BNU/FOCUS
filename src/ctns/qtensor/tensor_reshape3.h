@@ -3,7 +3,10 @@
 
 namespace ctns{
 
-// --- one-dot wavefunction: qt3[l,c,r] <-> qt2 ---
+// --- one-dot wavefunction: qt3[l,r,r] <-> qt2 ---
+// merge_lc: psi3[l,r,c] => psi2[lc,r]
+// merge_cr: psi3[l,r,c] => psi2[l,cr]
+// merge_lr: psi3[l,r,c] => psi2[lr,c]
 
 // psi3[l,r,c] -> psi2[lc,r]
 template <typename Tm> 

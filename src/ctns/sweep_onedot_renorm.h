@@ -37,6 +37,7 @@ void onedot_decimation(sweep_data& sweeps,
 
       for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
+	 // wf3[l,r,c] => wf2[lc,r]
          auto wf2 = wf.merge_lc();
 	 if(noise > thresh_noise) wf2.add_noise(noise);
 	 wfs2[i] = std::move(wf2);
@@ -51,6 +52,7 @@ void onedot_decimation(sweep_data& sweeps,
          wf.from_array(vsol.col(i));
          // Need to first bring two dimensions adjacent to each other before merge!
 	 wf.permCR_signed();
+	 // wf3[l,r,c] => wf2[lr,c]
    	 auto wf2 = wf.merge_lr();
 	 if(noise > thresh_noise) wf2.add_noise(noise);
 	 wfs2[i] = std::move(wf2);
@@ -63,6 +65,7 @@ void onedot_decimation(sweep_data& sweeps,
 
       for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
+	 // wf3[l,r,c] => wf2[l,cr]
          auto wf2 = wf.merge_cr().T();
 	 if(noise > thresh_noise) wf2.add_noise(noise);
 	 wfs2[i] = std::move(wf2);
@@ -135,9 +138,9 @@ void onedot_renorm(sweep_data& sweeps,
 		   comb<Km>& icomb,
 		   const linalg::matrix<typename Km::dtype>& vsol,
 		   stensor3<typename Km::dtype>& wf,
-		   oper_dict<typename Km::dtype>& cqops,
-		   oper_dict<typename Km::dtype>& lqops,
-		   oper_dict<typename Km::dtype>& rqops,
+		   const oper_dict<typename Km::dtype>& cqops,
+		   const oper_dict<typename Km::dtype>& lqops,
+		   const oper_dict<typename Km::dtype>& rqops,
 	           const integral::two_body<typename Km::dtype>& int2e, 
 	           const integral::one_body<typename Km::dtype>& int1e,
 	           const std::string scratch){

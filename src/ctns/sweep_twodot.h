@@ -4,7 +4,7 @@
 #include "../core/tools.h"
 #include "../core/linalg.h"
 #include "qtensor/qtensor.h"
-//#include "sweep_twodot_renorm.h"
+#include "sweep_twodot_renorm.h"
 //#include "sweep_twodot_hdiag.h"
 //#include "sweep_twodot_local.h"
 //#include "sweep_twodot_sigma.h"
@@ -93,31 +93,35 @@ void sweep_twodot(const input::schedule& schd,
    }
    timing.ta = tools::get_time();
 
-/*
-   // 2. onedot wavefunction
-   //	  |
+   // 2. twodot wavefunction
+   //	 \ /
    //   --*--
-   // qc = icomb.get_qc(p); 
-   // ql = icomb.get_ql(p);
-   // qr = icomb.get_qr(p);
-   const auto& qc = cqops.qbra;
+   const auto& qc1 = c1qops.qbra;
+   const auto& qc2 = c2qops.qbra;
    const auto& ql = lqops.qbra;
    const auto& qr = rqops.qbra;
- 
-
-   // 2. Davidson solver for wf
-   auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
-   qtensor4<Tm> wf(sym_state, qc1, qc2, ql, qr);
-   if(rank == 0 && debug_sweep){ 
-      std::cout << "sym_state=" << sym_state << " dim(localCI)=" << wf.get_dim() << std::endl;
+   if(rank == 0){
+      if(debug_sweep) std::cout << "qbond info:" << std::endl;
+      qc1.print("qc1", debug_sweep);
+      qc2.print("qc2", debug_sweep);
+      ql.print("ql", debug_sweep);
+      qr.print("qr", debug_sweep);
    }
-   int nsub = wf.get_dim();
+   auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
+   stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
+   if(rank == 0 && debug_sweep){ 
+      std::cout << "sym_state=" << sym_state << " dim(localCI)=" << wf.size() << std::endl;
+   }
+ 
+   // 3. Davidson solver for wf
+   int nsub = wf.size();
    int neig = sweeps.nroots;
    auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
    
-   // 2.1 Hdiag 
+/*
+   // 3.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
    diag = twodot_Hdiag(ifkr, c1qops, c2qops, lqops, rqops, ecore, wf, size, rank);
 #ifndef SERIAL
@@ -131,7 +135,7 @@ void sweep_twodot(const input::schedule& schd,
 #endif 
    timing.tb = tools::get_time();
 
-   // 2.2 Solve local problem: Hc=cE
+   // 3.2 Solve local problem: Hc=cE
    auto Hx_funs = twodot_Hx_functors(isym, ifkr, c1qops, c2qops, lqops, rqops,
 	                             int2e, int1e, wf, size, rank);
    using std::placeholders::_1;
@@ -149,6 +153,7 @@ void sweep_twodot(const input::schedule& schd,
       sweeps.print_eopt(isweep, ibond);
       oper_timer.analysis();
    }
+*/
 
    // 3. decimation & renormalize operators
    twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
@@ -158,9 +163,7 @@ void sweep_twodot(const input::schedule& schd,
    if(rank == 0){
       tools::timing("ctns::sweep_twodot", timing.t0, timing.t1);
       timing.analysis();
-      //get_sys_status();
    }
-*/
    exit(1);
 }
 

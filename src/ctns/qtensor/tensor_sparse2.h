@@ -190,14 +190,17 @@ struct stensor2{
 	 linalg::xaxpy(info._size, noise, rand.data(), _data);
       }
       // reshape: split into stensor3
+      // wf2[lc,r] -> wf3[l,r,c]
       stensor3<Tm> split_lc(const qbond& qlx, const qbond& qcx) const{
          auto dpt = qmerge(qlx, qcx).second;
          return split_qt3_qt2_lc(*this, qlx, qcx, dpt);
       }
+      // wf2[l,cr] -> wf3[l,r,c]
       stensor3<Tm> split_cr(const qbond& qcx, const qbond& qrx) const{
 	 auto dpt = qmerge(qcx, qrx).second;
          return split_qt3_qt2_cr(*this, qcx, qrx, dpt);
       }
+      // wf2[lr,c] -> wf3[l,r,c]
       stensor3<Tm> split_lr(const qbond& qlx, const qbond& qrx) const{
 	 auto dpt = qmerge(qlx, qrx).second;
          return split_qt3_qt2_lr(*this, qlx, qrx, dpt);

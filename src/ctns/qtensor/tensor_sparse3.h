@@ -172,18 +172,34 @@ struct stensor3{
       qproduct dpt_lc() const{ return qmerge(info.qrow, info.qmid); }
       qproduct dpt_cr() const{ return qmerge(info.qmid, info.qcol); }
       qproduct dpt_lr() const{ return qmerge(info.qrow, info.qcol); }
-      // reshape: merge
-      stensor2<Tm> merge_lc() const{ 
+      // reshape: merge wf3[l,r,c]
+      stensor2<Tm> merge_lc() const{ // wf2[lc,r] 
 	 auto qprod = dpt_lc();
 	 return merge_qt3_qt2_lc(*this, qprod.first, qprod.second);
       }
-      stensor2<Tm> merge_cr() const{
+      stensor2<Tm> merge_cr() const{ // wf2[l,cr]
 	 auto qprod = dpt_cr(); 
 	 return merge_qt3_qt2_cr(*this, qprod.first, qprod.second);
       }
-      stensor2<Tm> merge_lr() const{
+      stensor2<Tm> merge_lr() const{ // wf2[lr,c]
 	 auto qprod = dpt_lr();  
 	 return merge_qt3_qt2_lr(*this, qprod.first, qprod.second);
+      }
+      // reshape: split
+      // wf3[lc1,r,c2] -> wf4[l,r,c1,c2]
+      stensor4<Tm> split_lc1(const qbond& qlx, const qbond& qc1) const{
+         auto dpt = qmerge(qlx, qc1).second;
+	 return split_qt4_qt3_lc1(*this, qlx, qc1, dpt);
+      }
+      // wf3[l,c2r,c1] -> wf4[l,r,c1,c2]
+      stensor4<Tm> split_c2r(const qbond& qc2, const qbond& qrx) const{
+         auto dpt = qmerge(qc2, qrx).second;
+	 return split_qt4_qt3_c2r(*this, qc2, qrx, dpt); 
+      }
+      // wf3[l,r,c1c2] -> wf4[l,r,c1,c2]
+      stensor4<Tm> split_c1c2(const qbond& qc1, const qbond& qc2) const{
+	 auto dpt = qmerge(qc1, qc2).second;     
+	 return split_qt4_qt3_c1c2(*this, qc1, qc2, dpt);
       }
    public:
       bool own = true; // whether the object owns its data

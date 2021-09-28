@@ -66,9 +66,6 @@ void sweep_onedot(const input::schedule& schd,
    // 2. onedot wavefunction
    //	  |
    //   --*--
-   // qc = icomb.get_qc(p); 
-   // ql = icomb.get_ql(p);
-   // qr = icomb.get_qr(p);
    const auto& qc = cqops.qbra;
    const auto& ql = lqops.qbra;
    const auto& qr = rqops.qbra;
@@ -132,7 +129,6 @@ void sweep_onedot(const input::schedule& schd,
    if(rank == 0){
       tools::timing("ctns::sweep_onedot", timing.t0, timing.t1);
       timing.analysis();
-      //get_sys_status();
    }
 }
 
