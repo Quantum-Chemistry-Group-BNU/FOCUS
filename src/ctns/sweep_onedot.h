@@ -38,42 +38,42 @@ void sweep_onedot(const input::schedule& schd,
    // check partition 
    const auto& dbond = sweeps.seq[ibond];
    const auto& p = dbond.p;
-   std::vector<int> suppc, suppl, suppr;
+   std::vector<int> suppl, suppr, suppc;
    if(rank == 0 && debug_sweep) std::cout << "support info:" << std::endl;
-   suppc = icomb.topo.get_suppc(p, rank == 0 && debug_sweep); 
    suppl = icomb.topo.get_suppl(p, rank == 0 && debug_sweep);
    suppr = icomb.topo.get_suppr(p, rank == 0 && debug_sweep);
-   int sc = suppc.size();
+   suppc = icomb.topo.get_suppc(p, rank == 0 && debug_sweep); 
    int sl = suppl.size();
    int sr = suppr.size();
+   int sc = suppc.size();
    assert(sc+sl+sr == icomb.topo.nphysical);
 
    // 1. load operators 
    using Tm = typename Km::dtype;
-   oper_dict<Tm> cqops, lqops, rqops;
-   oper_load_qops(icomb, p, schd.scratch, "c", cqops);
+   oper_dict<Tm> lqops, rqops, cqops;
    oper_load_qops(icomb, p, schd.scratch, "l", lqops);
    oper_load_qops(icomb, p, schd.scratch, "r", rqops);
+   oper_load_qops(icomb, p, schd.scratch, "c", cqops);
    if(rank == 0){
       std::cout << "qops info: rank=" << rank << std::endl;
       const int level = 0;
-      cqops.print("cqops", level);
       lqops.print("lqops", level);
       rqops.print("rqops", level);
+      cqops.print("cqops", level);
    }
    timing.ta = tools::get_time();
 
    // 2. onedot wavefunction
    //	  |
    //   --*--
-   const auto& qc = cqops.qbra;
    const auto& ql = lqops.qbra;
    const auto& qr = rqops.qbra;
+   const auto& qc = cqops.qbra;
    if(rank == 0){
       if(debug_sweep) std::cout << "qbond info:" << std::endl;
-      qc.print("qc", debug_sweep);
       ql.print("ql", debug_sweep);
       qr.print("qr", debug_sweep);
+      qc.print("qc", debug_sweep);
    }
    auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
    stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
@@ -90,7 +90,7 @@ void sweep_onedot(const input::schedule& schd,
 
    // 3.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
-   onedot_Hdiag(ifkr, cqops, lqops, rqops, ecore, wf, diag, size, rank);
+   onedot_Hdiag(ifkr, lqops, rqops, cqops, ecore, wf, diag, size, rank);
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
@@ -103,7 +103,7 @@ void sweep_onedot(const input::schedule& schd,
    timing.tb = tools::get_time();
 
    // 3.2 Solve local problem: Hc=cE
-   auto Hx_funs = onedot_Hx_functors(isym, ifkr, cqops, lqops, rqops,
+   auto Hx_funs = onedot_Hx_functors(isym, ifkr, lqops, rqops, cqops,
 	                             int2e, int1e, wf, size, rank);
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -123,7 +123,7 @@ void sweep_onedot(const input::schedule& schd,
 
    // 4. decimation & renormalize operators
    onedot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
-		 cqops, lqops, rqops, int2e, int1e, schd.scratch);
+		 lqops, rqops, cqops, int2e, int1e, schd.scratch);
 
    timing.t1 = tools::get_time();
    if(rank == 0){

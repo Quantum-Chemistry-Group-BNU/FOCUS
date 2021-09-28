@@ -1,0 +1,344 @@
+#ifndef SWEEP_TWODOT_DIAG_H
+#define SWEEP_TWODOT_DIAG_H
+
+#include "oper_dict.h"
+
+namespace ctns{
+
+const bool debug_twodot_hdiag = false;
+extern const bool debug_twodot_hdiag;
+
+template <typename Tm>
+void twodot_Hdiag(const bool& ifkr,
+		  const oper_dict<Tm>& lqops,
+		  const oper_dict<Tm>& rqops,
+		  const oper_dict<Tm>& c1qops,
+		  const oper_dict<Tm>& c2qops,
+		  const double ecore,
+		  stensor4<Tm>& wf,
+		  std::vector<double>& diag,
+	       	  const int size,
+	       	  const int rank){
+   if(rank == 0 && debug_twodot_hdiag){
+      std::cout << "ctns::twodot_Hdiag ifkr=" << ifkr 
+	        << " size=" << size << std::endl;
+   }
+   
+   // 1. local terms: <lc1c2r|H|lc1c2r> = Hll + Hc1c1 + Hc2c2 + Hrr
+   twodot_Hdiag_local(lqops, rqops, c1qops, c2qops, ecore/size, wf, size, rank);
+
+   // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
+   //        B/Q^C1 B/Q^C2
+   //         |      |
+   // B/Q^L---*------*---B/Q^R
+   twodot_Hdiag_BQ("lc1" , ifkr,  lqops, c1qops, wf, size, rank);
+   twodot_Hdiag_BQ("lc2" , ifkr,  lqops, c2qops, wf, size, rank);
+   twodot_Hdiag_BQ("lr"  , ifkr,  lqops,  rqops, wf, size, rank);
+   twodot_Hdiag_BQ("c1c2", ifkr, c1qops, c2qops, wf, size, rank);
+   twodot_Hdiag_BQ("c1r" , ifkr, c1qops,  rqops, wf, size, rank);
+   twodot_Hdiag_BQ("c2r" , ifkr, c2qops,  rqops, wf, size, rank);
+
+   // save to real vector
+   std::transform(wf.data(), wf.data()+wf.size(), diag.begin(),
+                  [](const Tm& x){ return std::real(x); });
+}
+
+// H[loc] 
+template <typename Tm>
+void twodot_Hdiag_local(const oper_dict<Tm>& lqops,
+		        const oper_dict<Tm>& rqops,
+		        const oper_dict<Tm>& c1qops,
+		        const oper_dict<Tm>& c2qops,
+			const double ecore,
+		        stensor4<Tm>& wf,
+			const int size,
+			const int rank){
+   if(rank == 0 && debug_twodot_hdiag){ 
+      std::cout << "twodot_Hdiag_local" << std::endl;
+   }
+   const auto& Hl  = lqops('H').at(0);
+   const auto& Hr  = rqops('H').at(0);
+   const auto& Hc1 = c1qops('H').at(0);
+   const auto& Hc2 = c2qops('H').at(0);
+   for(int br=0; br<wf.rows(); br++){
+      int rdim = wf.info.qrow.get_dim(br);  
+      for(int bc=0; bc<wf.cols(); bc++){
+	 int cdim = wf.info.qcol.get_dim(bc);
+         for(int bm=0; bm<wf.mids(); bm++){
+	    int mdim = wf.info.qmid.get_dim(bm);
+            for(int bv=0; bv<wf.vers(); bv++){
+	       int vdim = wf.info.qver.get_dim(bv);
+               auto& blk = wf(br,bc,bm,bv);
+	       if(blk.size() == 0) continue;
+	       const auto& lblk = Hl(br,br); // left->row 
+	       const auto& rblk = Hr(bc,bc); // row->col
+	       const auto& c1blk = Hc1(bm,bm); // central->mid 
+	       const auto& c2blk = Hc2(bv,bv); // 
+	       for(int iv=0; iv<vdim; iv++){
+                  for(int im=0; im<mdim; im++){
+                     for(int ic=0; ic<cdim; ic++){
+                        for(int ir=0; ir<rdim; ir++){
+                           blk(ir,ic,im,iv) = ecore + lblk(ir,ir) + rblk(ic,ic) + c1blk(im,im) + c2blk(iv,iv);
+                        } // ir
+                     } // ic
+                  } // im
+	       } // iv
+	    } // bc
+	 } // br
+      } // bv
+   } // bm
+}
+
+template <typename Tm>
+void twodot_Hdiag_BQ(const std::string superblock,
+		     const bool& ifkr,
+		     const oper_dict<Tm>& qops1,
+		     const oper_dict<Tm>& qops2,
+		     stensor4<Tm>& wf,
+       	             const int size,
+       	             const int rank){
+   if(rank == 0 && debug_twodot_hdiag){
+      std::cout << "twodot_Hdiag_BQ superblock=" << superblock << std::endl;
+   }
+   const bool ifNC = qops1.cindex.size() <= qops2.cindex.size();
+   char BQ1 = ifNC? 'B' : 'Q';
+   char BQ2 = ifNC? 'Q' : 'B';
+   const auto& cindex = ifNC? qops1.cindex : qops2.cindex;
+   auto bindex = oper_index_opB(cindex, ifkr);
+   if(rank == 0 && debug_twodot_hdiag){ 
+      std::cout << " superblock=" << superblock << " ifNC=" << ifNC 
+	        << " " << BQ1 << BQ2 << " size=" << bindex.size() 
+		<< std::endl;
+   }
+   // B^L*Q^R or Q^L*B^R 
+   for(const auto& index : bindex){
+      int iproc = distribute2(index,size);
+      if(iproc == rank){
+         const Tm wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
+         const auto& O1 = qops1(BQ1).at(index);
+         const auto& O2 = qops2(BQ2).at(index);
+         if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
+	 if(superblock == "lc1"){ 
+            twodot_Hdiag_OlOc1(O1,O2,wf,wt);
+	    if(ifkr) twodot_Hdiag_OlOc1(O1.K(0),O2.K(0),wf,wt);
+	 }else if(superblock == "lc2"){ 
+            twodot_Hdiag_OlOc2(O1,O2,wf,wt);
+	    if(ifkr) twodot_Hdiag_OlOc2(O1.K(0),O2.K(0),wf,wt);
+	 }else if(superblock == "lr"){
+            twodot_Hdiag_OlOr(O1,O2,wf,wt);
+	    if(ifkr) twodot_Hdiag_OlOr(O1.K(0),O2.K(0),wf,wt);
+	 }else if(superblock == "c1c2"){
+            twodot_Hdiag_Oc1Oc2(O1,O2,wf,wt);
+	    if(ifkr) twodot_Hdiag_Oc1Oc2(O1.K(0),O2.K(0),wf,wt);
+	 }else if(superblock == "c1r"){
+            twodot_Hdiag_Oc1Or(O1,O2,wf,wt);
+	    if(ifkr) twodot_Hdiag_Oc1Or(O1.K(0),O2.K(0),wf,wt);
+	 }else if(superblock == "c2r"){
+            twodot_Hdiag_Oc2Or(O1,O2,wf,wt);
+	    if(ifkr) twodot_Hdiag_Oc2Or(O1.K(0),O2.K(0),wf,wt);
+	 }
+      } // iproc
+   } // index
+}
+
+// Ol*Oc1
+template <typename Tm>
+void twodot_Hdiag_OlOc1(const stensor2<Tm>& Ol,
+		        const stensor2<Tm>& Oc1,
+		        stensor4<Tm>& wf,
+		        const Tm wt=1.0){
+   for(int br=0; br<wf.rows(); br++){
+      int rdim = wf.info.qrow.get_dim(br);  
+      for(int bc=0; bc<wf.cols(); bc++){
+         int cdim = wf.info.qcol.get_dim(bc);
+         for(int bm=0; bm<wf.mids(); bm++){
+            int mdim = wf.info.qmid.get_dim(bm);
+            for(int bv=0; bv<wf.vers(); bv++){
+	       int vdim = wf.info.qver.get_dim(bv);
+               auto& blk = wf(br,bc,bm,bv);
+	       if(blk.size() == 0) continue;
+	       const auto& lblk  = Ol(br,br); 
+	       const auto& c1blk = Oc1(bm,bm); 
+	       for(int iv=0; iv<vdim; iv++){
+                  for(int im=0; im<mdim; im++){
+                     for(int ic=0; ic<cdim; ic++){
+                        for(int ir=0; ir<rdim; ir++){
+                           blk(ir,ic,im,iv) += wt*lblk(ir,ir)*c1blk(im,im);
+                        } // ir
+                     } // ic
+                  } // im
+	       } // iv
+	    } // bv
+	 } // bm
+      } // bc
+   } // br
+}
+
+// Ol*Oc2
+template <typename Tm>
+void twodot_Hdiag_OlOc2(const stensor2<Tm>& Ol,
+		        const stensor2<Tm>& Oc2,
+		        stensor4<Tm>& wf,
+		        const Tm wt=1.0){
+   for(int br=0; br<wf.rows(); br++){
+      int rdim = wf.info.qrow.get_dim(br);  
+      for(int bc=0; bc<wf.cols(); bc++){
+         int cdim = wf.info.qcol.get_dim(bc);
+         for(int bm=0; bm<wf.mids(); bm++){
+            int mdim = wf.info.qmid.get_dim(bm);
+            for(int bv=0; bv<wf.vers(); bv++){
+	       int vdim = wf.info.qver.get_dim(bv);
+               auto& blk = wf(br,bc,bm,bv);
+	       if(blk.size() == 0) continue;
+	       const auto& lblk  = Ol(br,br); 
+	       const auto& c2blk = Oc2(bv,bv); 
+	       for(int iv=0; iv<vdim; iv++){
+                  for(int im=0; im<mdim; im++){
+                     for(int ic=0; ic<cdim; ic++){
+                        for(int ir=0; ir<rdim; ir++){
+                           blk(ir,ic,im,iv) += wt*lblk(ir,ir)*c2blk(iv,iv);
+                        } // ir
+                     } // ic
+                  } // im
+	       } // iv
+	    } // bv
+	 } // bm
+      } // bc
+   } // br
+}
+
+// Ol*Or
+template <typename Tm>
+void twodot_Hdiag_OlOr(const stensor2<Tm>& Ol,
+		       const stensor2<Tm>& Or,
+		       stensor4<Tm>& wf,
+		       const Tm wt=1.0){
+   for(int br=0; br<wf.rows(); br++){
+      int rdim = wf.info.qrow.get_dim(br);  
+      for(int bc=0; bc<wf.cols(); bc++){
+         int cdim = wf.info.qcol.get_dim(bc);
+         for(int bm=0; bm<wf.mids(); bm++){
+            int mdim = wf.info.qmid.get_dim(bm);
+            for(int bv=0; bv<wf.vers(); bv++){
+	       int vdim = wf.info.qver.get_dim(bv);
+               auto& blk = wf(br,bc,bm,bv);
+	       if(blk.size() == 0) continue;
+	       const auto& lblk = Ol(br,br); 
+	       const auto& rblk = Or(bc,bc); 
+	       for(int iv=0; iv<vdim; iv++){
+                  for(int im=0; im<mdim; im++){
+                     for(int ic=0; ic<cdim; ic++){
+                        for(int ir=0; ir<rdim; ir++){
+                           blk(ir,ic,im,iv) += wt*lblk(ir,ir)*rblk(ic,ic);
+                        } // ir
+                     } // ic
+                  } // im
+	       } // iv
+	    } // bv
+	 } // bm
+      } // bc
+   } // br
+}
+
+// Oc1*Oc2
+template <typename Tm>
+void twodot_Hdiag_Oc1Oc2(const stensor2<Tm>& Oc1,
+		         const stensor2<Tm>& Oc2,
+		         stensor4<Tm>& wf,
+		         const Tm wt=1.0){
+   for(int br=0; br<wf.rows(); br++){
+      int rdim = wf.info.qrow.get_dim(br);  
+      for(int bc=0; bc<wf.cols(); bc++){
+         int cdim = wf.info.qcol.get_dim(bc);
+         for(int bm=0; bm<wf.mids(); bm++){
+            int mdim = wf.info.qmid.get_dim(bm);
+            for(int bv=0; bv<wf.vers(); bv++){
+	       int vdim = wf.info.qver.get_dim(bv);
+               auto& blk = wf(br,bc,bm,bv);
+	       if(blk.size() == 0) continue;
+	       const auto& c1blk = Oc1(bm,bm); 
+	       const auto& c2blk = Oc2(bv,bv); 
+	       for(int iv=0; iv<vdim; iv++){
+                  for(int im=0; im<mdim; im++){
+                     for(int ic=0; ic<cdim; ic++){
+                        for(int ir=0; ir<rdim; ir++){
+                           blk(ir,ic,im,iv) += wt*c1blk(im,im)*c2blk(iv,iv);
+                        } // ir
+                     } // ic
+                  } // im
+	       } // iv
+	    } // bv
+	 } // bm
+      } // bc
+   } // br
+}
+
+// Oc1*Or
+template <typename Tm>
+void twodot_Hdiag_Oc1Or(const stensor2<Tm>& Oc1,
+		        const stensor2<Tm>& Or,
+		        stensor4<Tm>& wf,
+		        const Tm wt=1.0){
+   for(int br=0; br<wf.rows(); br++){
+      int rdim = wf.info.qrow.get_dim(br);  
+      for(int bc=0; bc<wf.cols(); bc++){
+         int cdim = wf.info.qcol.get_dim(bc);
+         for(int bm=0; bm<wf.mids(); bm++){
+            int mdim = wf.info.qmid.get_dim(bm);
+            for(int bv=0; bv<wf.vers(); bv++){
+	       int vdim = wf.info.qver.get_dim(bv);
+               auto& blk = wf(br,bc,bm,bv);
+	       if(blk.size() == 0) continue;
+	       const auto& c1blk = Oc1(bm,bm); 
+	       const auto& rblk  = Or(bc,bc); 
+	       for(int iv=0; iv<vdim; iv++){
+                  for(int im=0; im<mdim; im++){
+                     for(int ic=0; ic<cdim; ic++){
+                        for(int ir=0; ir<rdim; ir++){
+                           blk(ir,ic,im,iv) += wt*c1blk(im,im)*rblk(ic,ic);
+                        } // ir
+                     } // ic
+                  } // im
+	       } // iv
+	    } // bv
+	 } // bm
+      } // bc
+   } // br
+}
+
+// Oc2*Or
+template <typename Tm>
+void twodot_Hdiag_Oc2Or(const stensor2<Tm>& Oc2,
+		        const stensor2<Tm>& Or,
+		        stensor4<Tm>& wf,
+		        const Tm wt=1.0){
+   for(int br=0; br<wf.rows(); br++){
+      int rdim = wf.info.qrow.get_dim(br);  
+      for(int bc=0; bc<wf.cols(); bc++){
+         int cdim = wf.info.qcol.get_dim(bc);
+         for(int bm=0; bm<wf.mids(); bm++){
+            int mdim = wf.info.qmid.get_dim(bm);
+            for(int bv=0; bv<wf.vers(); bv++){
+	       int vdim = wf.info.qver.get_dim(bv);
+               auto& blk = wf(br,bc,bm,bv);
+	       if(blk.size() == 0) continue;
+	       const auto& c2blk = Oc2(bv,bv); 
+	       const auto& rblk  = Or(bc,bc); 
+	       for(int iv=0; iv<vdim; iv++){
+                  for(int im=0; im<mdim; im++){
+                     for(int ic=0; ic<cdim; ic++){
+                        for(int ir=0; ir<rdim; ir++){
+                           blk(ir,ic,im,iv) += wt*c2blk(iv,iv)*rblk(ic,ic);
+                        } // ir
+                     } // ic
+                  } // im
+	       } // iv
+	    } // bv
+	 } // bm
+      } // bc
+   } // br
+}
+
+} // ctns
+
+#endif

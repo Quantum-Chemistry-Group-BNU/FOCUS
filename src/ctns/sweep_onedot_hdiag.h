@@ -10,9 +10,9 @@ extern const bool debug_onedot_hdiag;
 
 template <typename Tm>
 void onedot_Hdiag(const bool& ifkr,
-		  const oper_dict<Tm>& cqops,
 		  const oper_dict<Tm>& lqops,
 		  const oper_dict<Tm>& rqops,
+		  const oper_dict<Tm>& cqops,
 		  const double ecore,
 		  stensor3<Tm>& wf,
 		  std::vector<double>& diag,
@@ -24,7 +24,7 @@ void onedot_Hdiag(const bool& ifkr,
    }
    
    // 1. local terms: <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
-   onedot_Hdiag_local(cqops, lqops, rqops, ecore/size, wf, size, rank);
+   onedot_Hdiag_local(lqops, rqops, cqops, ecore/size, wf, size, rank);
 
    // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
    //         B/Q^C
@@ -41,9 +41,9 @@ void onedot_Hdiag(const bool& ifkr,
 
 // H[loc] = H[l]I[c]I[r] + I[l]H[c]I[r] + I[l]I[c]H[r]
 template <typename Tm>
-void onedot_Hdiag_local(const oper_dict<Tm>& cqops,
-		        const oper_dict<Tm>& lqops,
+void onedot_Hdiag_local(const oper_dict<Tm>& lqops,
 		        const oper_dict<Tm>& rqops,
+		        const oper_dict<Tm>& cqops,
 			const double ecore,
 		        stensor3<Tm>& wf,
 			const int size,
@@ -51,9 +51,9 @@ void onedot_Hdiag_local(const oper_dict<Tm>& cqops,
    if(rank == 0 && debug_onedot_hdiag){ 
       std::cout << "onedot_Hdiag_local" << std::endl;
    }
-   const auto& Hc = cqops('H').at(0);
    const auto& Hl = lqops('H').at(0);
    const auto& Hr = rqops('H').at(0);
+   const auto& Hc = cqops('H').at(0);
    // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
    for(int br=0; br<wf.rows(); br++){
       int rdim = wf.info.qrow.get_dim(br);  
@@ -64,13 +64,13 @@ void onedot_Hdiag_local(const oper_dict<Tm>& cqops,
             auto& blk = wf(br,bc,bm);
 	    if(blk.size() == 0) continue;
 	    // 1. local contributions: all four indices in c/l/r
-	    const auto& cblk = Hc(bm,bm); // central->mid 
 	    const auto& lblk = Hl(br,br); // left->row 
 	    const auto& rblk = Hr(bc,bc); // row->col
+	    const auto& cblk = Hc(bm,bm); // central->mid 
             for(int im=0; im<mdim; im++){
                for(int ic=0; ic<cdim; ic++){
                   for(int ir=0; ir<rdim; ir++){
-                     blk(ir,ic,im) = ecore + lblk(ir,ir) + cblk(im,im) + rblk(ic,ic);
+                     blk(ir,ic,im) = ecore + lblk(ir,ir) + rblk(ic,ic) + cblk(im,im);
                   } // ir
                } // ic
             } // im
@@ -145,9 +145,9 @@ void onedot_Hdiag_OlOc(const stensor2<Tm>& Ol,
                   } // ir
                } // ic
             } // im
-         } // bc
-      } // br
-   } // bm
+         } // bm
+      } // bc
+   } // br
 }
 
 // Ol*Ic*Or
@@ -173,9 +173,9 @@ void onedot_Hdiag_OlOr(const stensor2<Tm>& Ol,
                   } // ir
                } // ic
             } // im
-         } // bc
-      } // br
-   } // bm
+         } // bm
+      } // bc
+   } // br
 }
 
 // Il*Oc*Or
@@ -201,9 +201,9 @@ void onedot_Hdiag_OcOr(const stensor2<Tm>& Oc,
                   } // r
                } // c
             } // m
-         } // bc
-      } // br
-   } // bm
+         } // bm
+      } // bc
+   } // br
 }
 
 } // ctns

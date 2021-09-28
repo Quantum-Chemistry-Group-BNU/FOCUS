@@ -5,7 +5,7 @@
 #include "../core/linalg.h"
 #include "qtensor/qtensor.h"
 #include "sweep_twodot_renorm.h"
-//#include "sweep_twodot_hdiag.h"
+#include "sweep_twodot_hdiag.h"
 //#include "sweep_twodot_local.h"
 //#include "sweep_twodot_sigma.h"
 
@@ -71,41 +71,41 @@ void sweep_twodot(const input::schedule& schd,
 
    // 1. load operators 
    using Tm = typename Km::dtype;
-   oper_dict<Tm> c1qops, c2qops, lqops, rqops;
+   oper_dict<Tm> lqops, rqops, c1qops, c2qops;
    if(!cturn){
-      oper_load_qops(icomb, p0, schd.scratch, "c", c1qops);
-      oper_load_qops(icomb, p1, schd.scratch, "c", c2qops);
       oper_load_qops(icomb, p0, schd.scratch, "l", lqops );
       oper_load_qops(icomb, p1, schd.scratch, "r", rqops );  
+      oper_load_qops(icomb, p0, schd.scratch, "c", c1qops);
+      oper_load_qops(icomb, p1, schd.scratch, "c", c2qops);
    }else{
-      oper_load_qops(icomb, p1, schd.scratch, "c", c1qops);
-      oper_load_qops(icomb, p1, schd.scratch, "r", c2qops);
       oper_load_qops(icomb, p0, schd.scratch, "l", lqops );
       oper_load_qops(icomb, p0, schd.scratch, "r", rqops );  
+      oper_load_qops(icomb, p1, schd.scratch, "c", c1qops);
+      oper_load_qops(icomb, p1, schd.scratch, "r", c2qops);
    }
    if(rank == 0){
       std::cout << "qops info: rank=" << rank << std::endl;
       const int level = 0;
-      c1qops.print("c1qops", level);
-      c2qops.print("c2qops", level);
       lqops.print("lqops", level);
       rqops.print("rqops", level);
+      c1qops.print("c1qops", level);
+      c2qops.print("c2qops", level);
    }
    timing.ta = tools::get_time();
 
    // 2. twodot wavefunction
    //	 \ /
    //   --*--
-   const auto& qc1 = c1qops.qbra;
-   const auto& qc2 = c2qops.qbra;
    const auto& ql = lqops.qbra;
    const auto& qr = rqops.qbra;
+   const auto& qc1 = c1qops.qbra;
+   const auto& qc2 = c2qops.qbra;
    if(rank == 0){
       if(debug_sweep) std::cout << "qbond info:" << std::endl;
-      qc1.print("qc1", debug_sweep);
-      qc2.print("qc2", debug_sweep);
       ql.print("ql", debug_sweep);
       qr.print("qr", debug_sweep);
+      qc1.print("qc1", debug_sweep);
+      qc2.print("qc2", debug_sweep);
    }
    auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
    stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
@@ -120,23 +120,23 @@ void sweep_twodot(const input::schedule& schd,
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(nsub,neig);
    
-/*
    // 3.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
-   diag = twodot_Hdiag(ifkr, c1qops, c2qops, lqops, rqops, ecore, wf, size, rank);
+   twodot_Hdiag(ifkr, lqops, rqops, c1qops, c2qops, ecore, wf, diag, size, rank);
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
    if(size > 1){
       std::vector<double> diag2(nsub);
       boost::mpi::reduce(icomb.world, diag, diag2, std::plus<double>(), 0);
-      diag = diag2;
+      diag = std::move(diag2);
    }
 #endif 
    timing.tb = tools::get_time();
 
+/*
    // 3.2 Solve local problem: Hc=cE
-   auto Hx_funs = twodot_Hx_functors(isym, ifkr, c1qops, c2qops, lqops, rqops,
+   auto Hx_funs = twodot_Hx_functors(isym, ifkr, lqops, rqops, c1qops, c2qops, 
 	                             int2e, int1e, wf, size, rank);
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -157,7 +157,7 @@ void sweep_twodot(const input::schedule& schd,
 
    // 3. decimation & renormalize operators
    twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
-		 c1qops, c2qops, lqops, rqops, int2e, int1e, schd.scratch);
+		 lqops, rqops, c1qops, c2qops, int2e, int1e, schd.scratch);
 
    timing.t1 = tools::get_time();
    if(rank == 0){

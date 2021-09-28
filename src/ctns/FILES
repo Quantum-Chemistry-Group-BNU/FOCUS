@@ -308,17 +308,17 @@ Sweep optimization:
  tensor_reshape3.h -> reshaping qt3 for decimation
  sweep_onedot_renorm.h
  sweep_decimation.h
+ sweep_onedot_hdiag.h
  sweep_onedot_local.h
  pdvdson.h
- sweep_onedot_hdiag.h
  sweep_onedot_sigma.h => costly part!
  --- twodot ---
  sweep_onedot.h
  qtensor_reshape4.h
  sweep_twodot_renorm.h
+ sweep_twodot_hdiag.h
 
  sweep_twodot_local.h
- sweep_twodot_hdiag.h
  sweep_twodot_sigma.h
 
 #################################################################
