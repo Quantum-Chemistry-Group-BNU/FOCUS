@@ -151,7 +151,6 @@ void sweep_twodot(const input::schedule& schd,
       sweeps.print_eopt(isweep, ibond);
       oper_timer.analysis();
    }
-   exit(1);
 
    // 3. decimation & renormalize operators
    twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
