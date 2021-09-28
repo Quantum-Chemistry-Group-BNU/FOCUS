@@ -9,8 +9,7 @@ const bool debug_onedot_hdiag = false;
 extern const bool debug_onedot_hdiag;
 
 template <typename Tm>
-void onedot_Hdiag(const bool& ifkr,
-		  const oper_dict<Tm>& lqops,
+void onedot_Hdiag(const oper_dict<Tm>& lqops,
 		  const oper_dict<Tm>& rqops,
 		  const oper_dict<Tm>& cqops,
 		  const double ecore,
@@ -19,7 +18,7 @@ void onedot_Hdiag(const bool& ifkr,
 	       	  const int size,
 	       	  const int rank){
    if(rank == 0 && debug_onedot_hdiag){
-      std::cout << "ctns::onedot_Hdiag ifkr=" << ifkr 
+      std::cout << "ctns::onedot_Hdiag ifkr=" << lqops.ifkr 
 	        << " size=" << size << std::endl;
    }
    
@@ -30,9 +29,9 @@ void onedot_Hdiag(const bool& ifkr,
    //         B/Q^C
    //         |
    // B/Q^L---*---B/Q^R
-   onedot_Hdiag_BQ("lc", ifkr, lqops, cqops, wf, size, rank);
-   onedot_Hdiag_BQ("lr", ifkr, lqops, rqops, wf, size, rank);
-   onedot_Hdiag_BQ("cr", ifkr, cqops, rqops, wf, size, rank);
+   onedot_Hdiag_BQ("lc", lqops, cqops, wf, size, rank);
+   onedot_Hdiag_BQ("lr", lqops, rqops, wf, size, rank);
+   onedot_Hdiag_BQ("cr", cqops, rqops, wf, size, rank);
 
    // save to real vector
    std::transform(wf.data(), wf.data()+wf.size(), diag.begin(),
@@ -81,7 +80,6 @@ void onedot_Hdiag_local(const oper_dict<Tm>& lqops,
 
 template <typename Tm>
 void onedot_Hdiag_BQ(const std::string superblock,
-		     const bool& ifkr,
 		     const oper_dict<Tm>& qops1,
 		     const oper_dict<Tm>& qops2,
 		     stensor3<Tm>& wf,
@@ -90,6 +88,7 @@ void onedot_Hdiag_BQ(const std::string superblock,
    if(rank == 0 && debug_onedot_hdiag){
       std::cout << "onedot_Hdiag_BQ superblock=" << superblock << std::endl;
    }
+   const bool ifkr = qops1.ifkr;
    const bool ifNC = qops1.cindex.size() <= qops2.cindex.size();
    char BQ1 = ifNC? 'B' : 'Q';
    char BQ2 = ifNC? 'Q' : 'B';

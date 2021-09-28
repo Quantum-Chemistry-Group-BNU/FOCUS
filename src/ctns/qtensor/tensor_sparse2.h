@@ -9,6 +9,8 @@ namespace ctns{
 
 template <typename Tm>
 struct stensor3;
+template <typename Tm>
+struct stensor4;
 
 const bool debug_sparse2 = false;
 extern const bool debug_sparse2; 
@@ -204,6 +206,11 @@ struct stensor2{
       stensor3<Tm> split_lr(const qbond& qlx, const qbond& qrx) const{
 	 auto dpt = qmerge(qlx, qrx).second;
          return split_qt3_qt2_lr(*this, qlx, qrx, dpt);
+      }
+      // shorthand function
+      // wf2[lr,c1c2] => wf3[l,r,c1c2] => wf4[l,r,c1,c2] 
+      stensor4<Tm> split_lr_c1c2(const qbond& qlx, const qbond& qrx, const qbond& qc1, const qbond& qc2) const{
+         return (this->split_lr(qlx, qrx)).split_c1c2(qc1, qc2);
       }
    public:
       bool own = true; // whether the object owns its data

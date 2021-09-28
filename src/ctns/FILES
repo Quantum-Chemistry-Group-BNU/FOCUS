@@ -317,12 +317,10 @@ Sweep optimization:
  qtensor_reshape4.h
  sweep_twodot_renorm.h
  sweep_twodot_hdiag.h
-
  sweep_twodot_local.h
  sweep_twodot_sigma.h
 
 #################################################################
-
 
  --- kramers ---
  qtensor_kramers.h
@@ -333,4 +331,4 @@ Sweep optimization:
 
 Comments:
  1. probably change to shared_ptr to share data instead of raw pointer & own?
-
+ 2. direct operating wf4 in sweep_twodot_sigma.h without temporary stensor3

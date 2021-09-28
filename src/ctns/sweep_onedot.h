@@ -90,7 +90,7 @@ void sweep_onedot(const input::schedule& schd,
 
    // 3.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
-   onedot_Hdiag(ifkr, lqops, rqops, cqops, ecore, wf, diag, size, rank);
+   onedot_Hdiag(lqops, rqops, cqops, ecore, wf, diag, size, rank);
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
@@ -103,14 +103,13 @@ void sweep_onedot(const input::schedule& schd,
    timing.tb = tools::get_time();
 
    // 3.2 Solve local problem: Hc=cE
-   auto Hx_funs = onedot_Hx_functors(isym, ifkr, lqops, rqops, cqops,
-	                             int2e, int1e, wf, size, rank);
+   auto Hx_funs = onedot_Hx_functors(lqops, rqops, cqops, 
+		   		     int2e, int1e, ecore, 
+		                     wf, size, rank);
    using std::placeholders::_1;
    using std::placeholders::_2;
-   auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, 
-           	    std::ref(wf), std::ref(Hx_funs),
-           	    std::cref(ifkr), std::cref(ecore),
-		    std::cref(size), std::cref(rank));
+   auto HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
+           	    std::ref(wf), std::cref(size), std::cref(rank));
    oper_timer.clear();
    onedot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 

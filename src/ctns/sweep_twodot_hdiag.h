@@ -9,8 +9,7 @@ const bool debug_twodot_hdiag = false;
 extern const bool debug_twodot_hdiag;
 
 template <typename Tm>
-void twodot_Hdiag(const bool& ifkr,
-		  const oper_dict<Tm>& lqops,
+void twodot_Hdiag(const oper_dict<Tm>& lqops,
 		  const oper_dict<Tm>& rqops,
 		  const oper_dict<Tm>& c1qops,
 		  const oper_dict<Tm>& c2qops,
@@ -20,7 +19,7 @@ void twodot_Hdiag(const bool& ifkr,
 	       	  const int size,
 	       	  const int rank){
    if(rank == 0 && debug_twodot_hdiag){
-      std::cout << "ctns::twodot_Hdiag ifkr=" << ifkr 
+      std::cout << "ctns::twodot_Hdiag ifkr=" << lqops.ifkr 
 	        << " size=" << size << std::endl;
    }
    
@@ -31,12 +30,12 @@ void twodot_Hdiag(const bool& ifkr,
    //        B/Q^C1 B/Q^C2
    //         |      |
    // B/Q^L---*------*---B/Q^R
-   twodot_Hdiag_BQ("lc1" , ifkr,  lqops, c1qops, wf, size, rank);
-   twodot_Hdiag_BQ("lc2" , ifkr,  lqops, c2qops, wf, size, rank);
-   twodot_Hdiag_BQ("lr"  , ifkr,  lqops,  rqops, wf, size, rank);
-   twodot_Hdiag_BQ("c1c2", ifkr, c1qops, c2qops, wf, size, rank);
-   twodot_Hdiag_BQ("c1r" , ifkr, c1qops,  rqops, wf, size, rank);
-   twodot_Hdiag_BQ("c2r" , ifkr, c2qops,  rqops, wf, size, rank);
+   twodot_Hdiag_BQ("lc1" ,  lqops, c1qops, wf, size, rank);
+   twodot_Hdiag_BQ("lc2" ,  lqops, c2qops, wf, size, rank);
+   twodot_Hdiag_BQ("lr"  ,  lqops,  rqops, wf, size, rank);
+   twodot_Hdiag_BQ("c1c2", c1qops, c2qops, wf, size, rank);
+   twodot_Hdiag_BQ("c1r" , c1qops,  rqops, wf, size, rank);
+   twodot_Hdiag_BQ("c2r" , c2qops,  rqops, wf, size, rank);
 
    // save to real vector
    std::transform(wf.data(), wf.data()+wf.size(), diag.begin(),
@@ -91,7 +90,6 @@ void twodot_Hdiag_local(const oper_dict<Tm>& lqops,
 
 template <typename Tm>
 void twodot_Hdiag_BQ(const std::string superblock,
-		     const bool& ifkr,
 		     const oper_dict<Tm>& qops1,
 		     const oper_dict<Tm>& qops2,
 		     stensor4<Tm>& wf,
@@ -100,6 +98,7 @@ void twodot_Hdiag_BQ(const std::string superblock,
    if(rank == 0 && debug_twodot_hdiag){
       std::cout << "twodot_Hdiag_BQ superblock=" << superblock << std::endl;
    }
+   const bool ifkr = qops1.ifkr;
    const bool ifNC = qops1.cindex.size() <= qops2.cindex.size();
    char BQ1 = ifNC? 'B' : 'Q';
    char BQ2 = ifNC? 'Q' : 'B';

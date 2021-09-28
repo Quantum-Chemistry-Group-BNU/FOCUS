@@ -6,8 +6,8 @@
 #include "qtensor/qtensor.h"
 #include "sweep_twodot_renorm.h"
 #include "sweep_twodot_hdiag.h"
-//#include "sweep_twodot_local.h"
-//#include "sweep_twodot_sigma.h"
+#include "sweep_twodot_local.h"
+#include "sweep_twodot_sigma.h"
 
 namespace ctns{
 
@@ -122,7 +122,7 @@ void sweep_twodot(const input::schedule& schd,
    
    // 3.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
-   twodot_Hdiag(ifkr, lqops, rqops, c1qops, c2qops, ecore, wf, diag, size, rank);
+   twodot_Hdiag(lqops, rqops, c1qops, c2qops, ecore, wf, diag, size, rank);
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
@@ -134,16 +134,14 @@ void sweep_twodot(const input::schedule& schd,
 #endif 
    timing.tb = tools::get_time();
 
-/*
    // 3.2 Solve local problem: Hc=cE
-   auto Hx_funs = twodot_Hx_functors(isym, ifkr, lqops, rqops, c1qops, c2qops, 
-	                             int2e, int1e, wf, size, rank);
+   auto Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
+	                             int2e, int1e, ecore,
+				     wf, size, rank);
    using std::placeholders::_1;
    using std::placeholders::_2;
-   auto HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2,
-                    std::ref(wf), std::ref(Hx_funs),
-		    std::cref(ifkr), std::cref(ecore), 
-		    std::cref(size), std::cref(rank));
+   auto HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
+                    std::ref(wf), std::cref(size), std::cref(rank));
    oper_timer.clear();
    twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
@@ -153,7 +151,7 @@ void sweep_twodot(const input::schedule& schd,
       sweeps.print_eopt(isweep, ibond);
       oper_timer.analysis();
    }
-*/
+   exit(1);
 
    // 3. decimation & renormalize operators
    twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
