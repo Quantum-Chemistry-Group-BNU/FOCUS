@@ -164,7 +164,6 @@ void sweep_twodot(const input::schedule& schd,
       tools::timing("ctns::sweep_twodot", timing.t0, timing.t1);
       timing.analysis();
    }
-   exit(1);
 }
 
 } // ctns

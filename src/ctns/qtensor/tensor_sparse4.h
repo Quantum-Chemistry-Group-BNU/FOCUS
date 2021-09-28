@@ -6,6 +6,11 @@
 
 namespace ctns{
 
+template <typename Tm>
+struct stensor2;
+template <typename Tm>
+struct stensor3;
+
 const bool debug_sparse4 = false;
 extern const bool debug_sparse4;
 

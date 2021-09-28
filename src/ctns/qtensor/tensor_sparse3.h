@@ -8,6 +8,8 @@ namespace ctns{
 
 template <typename Tm>
 struct stensor2;
+template <typename Tm>
+struct stensor4;
 
 const bool debug_sparse3 = false;
 extern const bool debug_sparse3;

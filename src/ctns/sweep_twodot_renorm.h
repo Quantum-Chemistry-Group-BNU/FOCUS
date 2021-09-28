@@ -11,6 +11,7 @@ template <typename Tm>
 void twodot_decimation(sweep_data& sweeps,
 		       const int isweep,
 		       const int ibond,
+		       const bool ifkr,
 		       const std::string superblock,
 		       const linalg::matrix<Tm>& vsol, 
 		       stensor4<Tm>& wf,
@@ -72,7 +73,7 @@ void twodot_decimation(sweep_data& sweeps,
 	 wf.permCR_signed();
 	 auto wf2 = wf.merge_lr_c1c2().T();
 	 if(noise > thresh_noise) wf2.add_noise(noise);
-	 wfs2.push_back(wf2);
+	 wfs2[i] = std::move(wf2);
       } // i
       decimation_row(ifkr, wf.info.qmid, wf.info.qver, 
 		     dcut, rdm_vs_svd, wfs2,
@@ -88,7 +89,7 @@ void twodot_guess_psi(const std::string superblock,
 		      comb<Km>& icomb,
 		      const directed_bond& dbond,
 		      const linalg::matrix<typename Km::dtype>& vsol,
-		      stensor3<typename Km::dtype>& wf,
+		      stensor4<typename Km::dtype>& wf,
 		      const stensor2<typename Km::dtype>& rot){
    if(debug_renorm) std::cout << "> twodot_guess_psi" << std::endl;
    int nroots = vsol.cols();
@@ -106,7 +107,7 @@ void twodot_guess_psi(const std::string superblock,
          // rot.H()[alpha,lc1]*wf2[lc1,c2r] => cwf[alpha,c2r]
          auto cwf = rot.H().dot(wf2); 
          // cwf[alpha,c2r] => psi[alpha,r,c2]
-         auto psi = cwf.split_cr(wf.qver, wf.qcol);
+         auto psi = cwf.split_cr(wf.info.qver, wf.info.qcol);
          //------------------------------------------
          icomb.psi[i] = std::move(psi);
       }
@@ -124,7 +125,7 @@ void twodot_guess_psi(const std::string superblock,
          // rot.H()[alpha,lr]*wf3[lr,c1c2] => cwf[alpha,c1c2]
          auto cwf = rot.H().dot(wf2);
          // cwf[alpha,c1c2] => cwf[alpha,c2,c1] 
-         auto psi = cwf.split_cr(wf.qmid, wf.qver);
+         auto psi = cwf.split_cr(wf.info.qmid, wf.info.qver);
 	 //-------------------------------------------
          icomb.psi[i] = std::move(psi);
       }
@@ -141,7 +142,7 @@ void twodot_guess_psi(const std::string superblock,
          // wf2[lc1,c2r]*rot.H()[c2r,alpha] => cwf[lc1,alpha]
          auto cwf = wf2.dot(rot.H());
          // cwf[lc1,alpha] => cwf[l,alpha,c1]
-         auto psi = cwf.split_lc(wf.qrow, wf.qmid);
+         auto psi = cwf.split_lc(wf.info.qrow, wf.info.qmid);
          //------------------------------------------
          icomb.psi[i] = std::move(psi);
       }
@@ -159,7 +160,7 @@ void twodot_guess_psi(const std::string superblock,
          // wf2[lr,c1c2]*rot.H()[c1c2,alpha] => cwf[lr,alpha]
          auto cwf = wf2.dot(rot.H());
          // cwf[lr,alpha] => psi[l,r,alpha]
-         auto psi = cwf.split_lr(wf.qrow, wf.qcol);
+         auto psi = cwf.split_lr(wf.info.qrow, wf.info.qcol);
          // revert ordering of the underlying basis
          psi.permCR_signed(); 
          //----------------------------------------------

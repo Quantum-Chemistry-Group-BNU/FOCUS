@@ -31,8 +31,8 @@ stensor3<Tm> merge_qt4_qt3_lc1(const stensor4<Tm>& qt4,
 	       int br = std::get<0>(p12);
 	       int bm = std::get<1>(p12);
 	       int ioff = std::get<2>(p12);
-	       int rdim = qt4.qrow.get_dim(br);
-	       int mdim = qt4.qmid.get_dim(bm); 
+	       int rdim = qt4.info.qrow.get_dim(br);
+	       int mdim = qt4.info.qmid.get_dim(bm); 
 	       const auto& blk4 = qt4(br,bc,bm,bv);
 	       if(blk4.size() == 0) continue; 
 	       for(int iv=0; iv<vdim; iv++){
@@ -76,8 +76,8 @@ stensor4<Tm> split_qt4_qt3_lc1(const stensor3<Tm>& qt3,
 	       int br = std::get<0>(p12);
 	       int bm = std::get<1>(p12);
 	       int ioff = std::get<2>(p12);
-	       int rdim = qt4.qrow.get_dim(br);
-	       int mdim = qt4.qmid.get_dim(bm); 
+	       int rdim = qt4.info.qrow.get_dim(br);
+	       int mdim = qt4.info.qmid.get_dim(bm); 
 	       auto& blk4 = qt4(br,bc,bm,bv);
 	       if(blk4.size() == 0) continue; 
 	       for(int iv=0; iv<vdim; iv++){
@@ -121,8 +121,8 @@ stensor3<Tm> merge_qt4_qt3_c2r(const stensor4<Tm>& qt4,
 	       int bv = std::get<0>(p12);
 	       int bc = std::get<1>(p12);
 	       int ioff = std::get<2>(p12);
-	       int vdim = qt4.qver.get_dim(bv);
-	       int cdim = qt4.qcol.get_dim(bc);
+	       int vdim = qt4.info.qver.get_dim(bv);
+	       int cdim = qt4.info.qcol.get_dim(bc);
 	       const auto& blk4 = qt4(br,bc,bm,bv);
 	       if(blk4.size() == 0) continue;
 	       for(int iv=0; iv<vdim; iv++){
@@ -166,8 +166,8 @@ stensor4<Tm> split_qt4_qt3_c2r(const stensor3<Tm>& qt3,
 	       int bv = std::get<0>(p12);
 	       int bc = std::get<1>(p12);
 	       int ioff = std::get<2>(p12);
-	       int vdim = qt4.qver.get_dim(bv);
-	       int cdim = qt4.qcol.get_dim(bc);
+	       int vdim = qt4.info.qver.get_dim(bv);
+	       int cdim = qt4.info.qcol.get_dim(bc);
 	       auto& blk4 = qt4(br,bc,bm,bv);
 	       if(blk4.size() == 0) continue;
 	       for(int iv=0; iv<vdim; iv++){
@@ -211,8 +211,8 @@ stensor3<Tm> merge_qt4_qt3_c1c2(const stensor4<Tm>& qt4,
 	       int bm = std::get<0>(p12);
 	       int bv = std::get<1>(p12);
 	       int ioff = std::get<2>(p12);
-	       int mdim = qt4.qmid.get_dim(bm);
-	       int vdim = qt4.qver.get_dim(bv);
+	       int mdim = qt4.info.qmid.get_dim(bm);
+	       int vdim = qt4.info.qver.get_dim(bv);
 	       const auto& blk4 = qt4(br,bc,bm,bv);
 	       if(blk4.size() == 0) continue;
 	       for(int iv=0; iv<vdim; iv++){
@@ -256,8 +256,8 @@ stensor4<Tm> split_qt4_qt3_c1c2(const stensor3<Tm>& qt3,
 	       int bm = std::get<0>(p12);
 	       int bv = std::get<1>(p12);
 	       int ioff = std::get<2>(p12);
-	       int mdim = qt4.qmid.get_dim(bm);
-	       int vdim = qt4.qver.get_dim(bv);
+	       int mdim = qt4.info.qmid.get_dim(bm);
+	       int vdim = qt4.info.qver.get_dim(bv);
 	       auto& blk4 = qt4(br,bc,bm,bv);
 	       if(blk4.size() == 0) continue;
 	       for(int iv=0; iv<vdim; iv++){
