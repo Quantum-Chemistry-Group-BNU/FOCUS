@@ -161,9 +161,35 @@ struct stensor4{
 	 linalg::xaxpy(info._size, -1.0, st.data(), _data);
          return *this;
       }
+      // algebra
+      friend stensor4<Tm> operator +(const stensor4<Tm>& qta, const stensor4<Tm>& qtb){
+	 assert(qta.info == qtb.info); 
+         stensor4<Tm> qt(qta.info);
+	 linalg::xcopy(qt.info._size, qta._data, qt._data);
+         qt += qtb;
+         return qt;
+      }
+      friend stensor4<Tm> operator -(const stensor4<Tm>& qta, const stensor4<Tm>& qtb){
+	 assert(qta.info == qtb.info); 
+         stensor4<Tm> qt(qta.info);
+	 linalg::xcopy(qt.info._size, qta._data, qt._data);
+         qt -= qtb;
+         return qt;
+      }
+      friend stensor4<Tm> operator *(const Tm fac, const stensor4<Tm>& qta){
+         stensor4<Tm> qt(qta.info);
+	 linalg::xcopy(qt.info._size, qta._data, qt._data);
+         qt *= fac;
+         return qt;
+      }
+      friend stensor4<Tm> operator *(const stensor4<Tm>& qt, const Tm fac){
+         return fac*qt;
+      }
       double normF() const{ return linalg::xnrm2(info._size, _data); }
       // --- SPECIFIC FUNCTIONS ---
       void permCR_signed(); // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]} 
+      // ZL20210413: application of time-reversal operation
+      stensor4<Tm> K(const int nbar=0) const;
       // for sweep algorithm
       void from_array(const Tm* array){
          linalg::xcopy(info._size, array, _data);
@@ -217,6 +243,88 @@ void stensor4<Tm>::permCR_signed(){
          linalg::xscal(blk4.size(), -1.0, blk4.data());
       }
    }
+}
+
+// ZL20210510: application of time-reversal operation
+template <typename Tm>
+stensor4<Tm> stensor4<Tm>::K(const int nbar) const{
+   const double fpo = (nbar%2==0)? 1.0 : -1.0;
+   stensor4<Tm> qt4(info.sym.flip(), info.qrow, info.qcol, info.qmid, info.qver);
+   int br,bc,bm,bv;
+   for(int idx=0; idx<info._qblocks.size(); idx++){
+      auto& blk = qt4.info._qblocks[idx];
+      if(blk.size() == 0) continue;
+      const auto& blkk = info._qblocks[idx];
+      info._addr_unpack(idx,br,bc,bm,bv);
+      int pr = info.qrow.get_parity(br);
+      int pc = info.qcol.get_parity(bc);
+      int pm = info.qmid.get_parity(bm);
+      int pv = info.qver.get_parity(bv);
+      int mdim = info.qmid.get_dim(bm);
+      int vdim = info.qver.get_dim(bv);
+      // qt4_new(c1c2)[l,r] = qt4(c1c2_bar)[l_bar,r_bar]^*
+      if(pm == 0 && pv == 0){
+	 for(int iv=0; iv<vdim; iv++){
+	    for(int im=0; im<mdim; im++){
+	       auto mat = blkk.get(im,iv).time_reversal(pr, pc);
+	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im,iv).data());
+            }
+	 }
+      }else if(pm == 0 && pv == 1){
+	 assert(vdim%2 == 0);
+	 int vdim2 = vdim/2;
+	 for(int iv=0; iv<vdim2; iv++){
+	    for(int im=0; im<mdim; im++){
+	       auto mat = blkk.get(im,iv+vdim2).time_reversal(pr, pc);
+	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im,iv).data());
+	    }
+	 }
+	 for(int iv=0; iv<vdim2; iv++){
+	    for(int im=0; im<mdim; im++){
+	       auto mat = blkk.get(im,iv).time_reversal(pr, pc);
+	       linalg::xaxpy(mat.size(), -fpo, mat.data(), blk.get(im,iv+vdim2).data());
+	    }
+	 }
+      }else if(pm == 1 && pv == 0){
+	 assert(mdim%2 == 0);
+	 int mdim2 = mdim/2;
+	 for(int iv=0; iv<vdim; iv++){
+	    for(int im=0; im<mdim2; im++){
+	       auto mat = blkk.get(im+mdim2,iv).time_reversal(pr, pc);
+	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im,iv).data());
+	    }
+	    for(int im=0; im<mdim2; im++){
+	       auto mat = blkk.get(im,iv).time_reversal(pr, pc);
+	       linalg::xaxpy(mat.size(), -fpo, mat.data(), blk.get(im+mdim2,iv).data());
+	    }
+	 }
+      }else if(pm == 1 && pv == 1){
+	 assert(mdim%2 == 0 && vdim%2 == 0);
+	 int mdim2 = mdim/2;
+	 int vdim2 = vdim/2;
+	 for(int iv=0; iv<vdim2; iv++){
+	    for(int im=0; im<mdim2; im++){
+	       auto mat = blkk.get(im+mdim2,iv+vdim2).time_reversal(pr, pc);
+	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im,iv).data());
+	    }
+	    for(int im=0; im<mdim2; im++){
+	       auto mat = blkk.get(im,iv+vdim2).time_reversal(pr, pc);
+	       linalg::xaxpy(mat.size(), -fpo, mat.data(), blk.get(im+mdim2,iv).data());
+	    }
+	 }
+	 for(int iv=0; iv<vdim2; iv++){
+	    for(int im=0; im<mdim2; im++){
+	       auto mat = blkk.get(im+mdim2,iv).time_reversal(pr, pc);
+	       linalg::xaxpy(mat.size(), -fpo, mat.data(), blk.get(im,iv+vdim2).data());
+	    }
+	    for(int im=0; im<mdim2; im++){
+	       auto mat = blkk.get(im,iv).time_reversal(pr, pc);
+	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im+mdim2,iv+vdim2).data());
+	    }
+	 }
+      } // (pm,pv)
+   } // idx
+   return qt4;
 }
 
 } // ctns

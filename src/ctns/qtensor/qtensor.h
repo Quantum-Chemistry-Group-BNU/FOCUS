@@ -8,10 +8,8 @@
 #include "qnum_qbond.h"
 #include "qnum_qdpt.h"
 
-/*
 #include "kramers_ortho.h"
 #include "kramers_linalg.h"
-*/
 
 #include "tensor_dense.h"
 #include "tensor_qinfo2.h"
@@ -26,10 +24,6 @@
 #include "tensor_reshape4.h"
 
 #include "pdvdson.h"
-
-/*
-#include "qtensor_kramers.h"
 #include "pdvdson_kramers.h"
-*/
 
 #endif

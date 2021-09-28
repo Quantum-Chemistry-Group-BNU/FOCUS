@@ -22,7 +22,7 @@ struct pdvdsonSolver_kr{
 	 crit_v = _crit_v;
 	 maxcycle = _maxcycle;
 	 parity = _parity;
-	 wf = _wf;
+	 pwf = &_wf;
 	 // consistency check
 	 if(parity == 1 && neig%2 == 1){
 	    tools::exit(std::string("error: odd-electron case requires even neig=")+std::to_string(neig));
@@ -88,9 +88,9 @@ struct pdvdsonSolver_kr{
             // Even-electron case: get full sigma vector from skeleton one
             //-------------------------------------------------------------
 	    if(parity == 0){
-	       wf.from_array( y+istate*ndim );
-	       wf += wf.K();
-	       wf.to_array( y+istate*ndim );
+	       pwf->from_array( y+istate*ndim );
+	       *pwf += pwf->K();
+	       pwf->to_array( y+istate*ndim );
 	    }
             //-------------------------------------------------------------
          } // istate
@@ -111,19 +111,21 @@ struct pdvdsonSolver_kr{
       // initialization
       void init_guess(std::vector<QTm>& psi, std::vector<Tm>& v0){
 	 std::cout << "ctns::pdvdsonSolver_kr::init_guess parity=" << parity << std::endl;
-	 assert(psi.size() == neig);
-         assert(psi[0].get_dim() == ndim);
+	 assert(psi.size() == neig && psi[0].size() == ndim);
          v0.resize(ndim*neig*2);
 	 int nindp = 0;
          if(parity == 0){
             // even-electron case
             const std::complex<double> iunit(0.0,1.0);
             for(int i=0; i<neig; i++){
-               auto tmp1 = (psi[i] + psi[i].K());
-               auto tmp2 = (psi[i] - psi[i].K())*iunit; 
+	       auto psiK = psi[i].K();
+               auto tmp1 = (psi[i] + psiK);
+               auto tmp2 = (psi[i] - psiK)*iunit; 
                tmp1.to_array(&v0[ndim*(i)]); // put all plus combination before
                tmp2.to_array(&v0[ndim*(i+neig)]);
                std::cout << " iguess=" << i 
+		         << " |psi|=" << psi[i].normF()
+		         << " |psiK|=" << psiK.normF()
            	         << " |psi+psiK|=" << tmp1.normF() 
            	         << " |i(psi-psiK)|=" << tmp2.normF() 
            	         << std::endl;
@@ -138,7 +140,7 @@ struct pdvdsonSolver_kr{
 		         << " |psi(K)|=" << psi[i].normF()
 			 << std::endl;
             } // i
-            nindp = kramers::get_ortho_basis_qt(ndim, neig*2, v0, wf); // reorthogonalization
+            nindp = kramers::get_ortho_basis_qt(ndim, neig*2, v0, *pwf); // reorthogonalization
          }
          std::cout << " neig,nindp=" << neig << "," << nindp << std::endl;
          assert(nindp >= neig);
@@ -277,13 +279,13 @@ struct pdvdsonSolver_kr{
             // We need to first contruct full sigma vector from skeleton one using TRS
             //-------------------------------------------------------------------------
 	    // sigma[o]
-	    kramers::get_krvec_qt(&wbas[i1*ndim], krvec.data(), wf, 0);
+	    kramers::get_krvec_qt(&wbas[i1*ndim], krvec.data(), *pwf, 0);
             std::transform(&wbas[i0*ndim], &wbas[i0*ndim]+ndim, krvec.begin(), &rbas[i0*ndim],
 			   [](const Tm& x, const Tm& y){ return x + y; });
             std::transform(&rbas[i0*ndim], &rbas[i0*ndim]+ndim, &vbas[i0*ndim], &rbas[i0*ndim],
                            [i0,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i0]; }); 
 	    // sigma[o_bar] 
-	    kramers::get_krvec_qt(&wbas[i0*ndim], krvec.data(), wf);
+	    kramers::get_krvec_qt(&wbas[i0*ndim], krvec.data(), *pwf);
             std::transform(&wbas[i1*ndim], &wbas[i1*ndim]+ndim, krvec.begin(), &rbas[i1*ndim], 
 			   [](const Tm& x, const Tm& y){ return x + y; });
             std::transform(&rbas[i1*ndim], &rbas[i1*ndim]+ndim, &vbas[i1*ndim], &rbas[i1*ndim],
@@ -385,9 +387,9 @@ struct pdvdsonSolver_kr{
 	          // Kramers projection to ensure K|psi>=|psi>
 	          //-------------------------------------------
 	          if(parity == 0){
-   	             wf.from_array( &tbas[nres*ndim] );
-   	             wf += wf.K();
-   	             wf.to_array( &tbas[nres*ndim] );
+   	             pwf->from_array( &tbas[nres*ndim] );
+   	             *pwf += pwf->K();
+   	             pwf->to_array( &tbas[nres*ndim] );
 	          }
 	          //-------------------------------------------
                   tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
@@ -405,7 +407,7 @@ struct pdvdsonSolver_kr{
 	       if(parity == 0){
 	          nindp = linalg::get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
 	       }else{
-                  nindp = kramers::get_ortho_basis_qt(ndim,neig,nres,vbas,rbas,wf,crit_indp);
+                  nindp = kramers::get_ortho_basis_qt(ndim,neig,nres,vbas,rbas,*pwf,crit_indp);
 	       }
 	       //------------------------------------------------------------------
 	    }
@@ -444,7 +446,7 @@ struct pdvdsonSolver_kr{
       // Kramers projection
       //--------------------
       int parity = 0;
-      QTm wf; 
+      QTm* pwf; 
       //--------------------
       // settings
       int iprt = 1;

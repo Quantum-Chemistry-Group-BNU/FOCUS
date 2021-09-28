@@ -91,13 +91,13 @@ void onedot_localCI(comb<Km>& icomb,
 	 //------------------------------------
 	 // prepare initial guess     
 	 //------------------------------------
-         std::vector<Tm> v0(nsub*neig);
+         std::vector<Tm> v0;
 	 if(rank == 0){ 
 	    // starting guess 
             if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); 
-            assert(icomb.psi.size() == neig);
-            assert(icomb.psi[0].size() == nsub);
+            assert(icomb.psi.size() == neig && icomb.psi[0].size() == nsub);
             // load initial guess from previous opt
+	    v0.resize(nsub*neig);
             for(int i=0; i<neig; i++){
                icomb.psi[i].to_array(&v0[nsub*i]);
             }
@@ -113,7 +113,6 @@ void onedot_localCI(comb<Km>& icomb,
    nmvp = solver.nmvp;
 }
 
-/*
 template <>
 inline void onedot_localCI(comb<qkind::cNK>& icomb,
 		    const int nsub,
@@ -137,7 +136,6 @@ inline void onedot_localCI(comb<qkind::cNK>& icomb,
 #endif
 
    // kramers restricted (currently works only for iterative with guess!)
-   assert(qkind::is_kramers<Km>());
    assert(cisolver == 1 && guess);
    pdvdsonSolver_kr<Tm,stensor3<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
    solver.Diag = diag.data();
@@ -158,7 +156,6 @@ inline void onedot_localCI(comb<qkind::cNK>& icomb,
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());
    nmvp = solver.nmvp;
 }
-*/
 
 } // ctns
 

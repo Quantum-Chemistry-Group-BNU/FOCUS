@@ -155,6 +155,30 @@ struct stensor3{
 	 linalg::xaxpy(info._size, -1.0, st.data(), _data);
          return *this;
       }
+      // algebra
+      friend stensor3<Tm> operator +(const stensor3<Tm>& qta, const stensor3<Tm>& qtb){
+	 assert(qta.info == qtb.info); 
+         stensor3<Tm> qt(qta.info);
+	 linalg::xcopy(qt.info._size, qta._data, qt._data);
+         qt += qtb;
+         return qt;
+      }
+      friend stensor3<Tm> operator -(const stensor3<Tm>& qta, const stensor3<Tm>& qtb){
+	 assert(qta.info == qtb.info); 
+         stensor3<Tm> qt(qta.info);
+	 linalg::xcopy(qt.info._size, qta._data, qt._data);
+         qt -= qtb;
+         return qt;
+      }
+      friend stensor3<Tm> operator *(const Tm fac, const stensor3<Tm>& qta){
+         stensor3<Tm> qt(qta.info);
+	 linalg::xcopy(qt.info._size, qta._data, qt._data);
+         qt *= fac;
+         return qt;
+      }
+      friend stensor3<Tm> operator *(const stensor3<Tm>& qt, const Tm fac){
+         return fac*qt;
+      }
       double normF() const{ return linalg::xnrm2(info._size, _data); }
       // --- SPECIFIC FUNCTIONS ---
       // fix middle index (bm,im) - bm-th block, im-idx - composite index!
@@ -163,6 +187,8 @@ struct stensor3{
       void mid_signed(const double fac=1.0); // wf[lcr](-1)^{p(c)}
       void row_signed(const double fac=1.0); // wf[lcr](-1)^{p(l)}
       void permCR_signed(); // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
+      // ZL20210413: application of time-reversal operation
+      stensor3<Tm> K(const int nbar=0) const;
       // for sweep algorithm
       void from_array(const Tm* array){
 	 linalg::xcopy(info._size, array, _data);
@@ -271,6 +297,45 @@ void stensor3<Tm>::permCR_signed(){
          linalg::xscal(blk3.size(), -1.0, blk3.data());
       }
    }
+}
+
+template <typename Tm>
+stensor3<Tm> stensor3<Tm>::K(const int nbar) const{
+   const double fpo = (nbar%2==0)? 1.0 : -1.0;
+   // the symmetry is flipped
+   stensor3<Tm> qt3(info.sym.flip(), info.qrow, info.qcol, info.qmid, info.dir);
+   int br,bc,bm;
+   for(int idx=0; idx<info._qblocks.size(); idx++){
+      auto& blk = qt3.info._qblocks[idx];
+      if(blk.size() == 0) continue;
+      const auto& blkk = info._qblocks[idx];
+      info._addr_unpack(idx,br,bc,bm);
+      int pr = info.qrow.get_parity(br);
+      int pc = info.qcol.get_parity(bc);
+      int pm = info.qmid.get_parity(bm);
+      int mdim = info.qmid.get_dim(bm);
+      // qt3[c](l,r) = blk[bar{c}](bar{l},bar{r})^*
+      if(pm == 0){
+         // c[e]
+         for(int im=0; im<mdim; im++){
+	    auto mat = blkk.get(im).time_reversal(pr, pc);
+	    linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im).data());
+         }
+      }else{
+         assert(mdim%2 == 0);
+         int mdim2 = mdim/2;
+         // c[o],c[\bar{o}]
+         for(int im=0; im<mdim2; im++){
+	    auto mat = blkk.get(im+mdim2).time_reversal(pr, pc);
+	    linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im).data());
+         }
+         for(int im=0; im<mdim2; im++){
+            auto mat = blkk.get(im).time_reversal(pr, pc);
+	    linalg::xaxpy(mat.size(), -fpo, mat.data(), blk.get(im+mdim2).data());
+         }
+      } // pm
+   } // idx
+   return qt3;
 }
 
 } // ctns

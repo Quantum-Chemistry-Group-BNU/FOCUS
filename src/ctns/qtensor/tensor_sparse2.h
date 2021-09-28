@@ -163,6 +163,35 @@ struct stensor2{
 	 linalg::xaxpy(info._size, -1.0, st.data(), _data);
          return *this;
       }
+      stensor2<Tm> operator -() const{
+         stensor2<Tm> st(info);
+	 linalg::xaxpy(info._size, -1.0, _data, st._data);
+	 return st;
+      }
+      // algebra
+      friend stensor2<Tm> operator +(const stensor2<Tm>& qta, const stensor2<Tm>& qtb){
+	 assert(qta.info == qtb.info); 
+         stensor2<Tm> qt(qta.info);
+	 linalg::xcopy(qt.info._size, qta._data, qt._data);
+         qt += qtb;
+         return qt;
+      }
+      friend stensor2<Tm> operator -(const stensor2<Tm>& qta, const stensor2<Tm>& qtb){
+	 assert(qta.info == qtb.info); 
+         stensor2<Tm> qt(qta.info);
+	 linalg::xcopy(qt.info._size, qta._data, qt._data);
+         qt -= qtb;
+         return qt;
+      }
+      friend stensor2<Tm> operator *(const Tm fac, const stensor2<Tm>& qta){
+         stensor2<Tm> qt(qta.info);
+	 linalg::xcopy(qt.info._size, qta._data, qt._data);
+         qt *= fac;
+         return qt;
+      }
+      friend stensor2<Tm> operator *(const stensor2<Tm>& qt, const Tm fac){
+         return fac*qt;
+      }
       double normF() const{ return linalg::xnrm2(info._size, _data); }
       // --- SPECIFIC FUNCTIONS ---
       // from/to dense matrix: assign block to proper place
@@ -181,11 +210,6 @@ struct stensor2{
       stensor2<Tm> H() const;
       // ZL20210401: generate matrix representation for Kramers paired operators
       stensor2<Tm> K(const int nbar=0) const;
-      stensor2<Tm> operator -() const{
-         stensor2<Tm> st(info);
-	 linalg::xaxpy(info._size, -1.0, _data, st._data);
-	 return st;
-      }
       // for sweep algorithm
       void add_noise(const double noise){
          auto rand = linalg::random_matrix<Tm>(info._size,1);

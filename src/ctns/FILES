@@ -243,31 +243,31 @@ TODOs: Tensor operations
 #################################################################
 
 Symmetry:
- qnum_qkind.h -> kind of CTNS
- qnum_qsym.h -> quantum number class: qsym 
- qnum_qbond.h -> bond space
- qnum_qdpt.h
+ qtensor/qnum_qkind.h -> kind of CTNS
+ qtensor/qnum_qsym.h -> quantum number class: qsym 
+ qtensor/qnum_qbond.h -> bond space
+ qtensor/qnum_qdpt.h
 Tests:
  tests_ctns.h
  test_ctns.cpp 
 Tensor: [to be optimized]
- tensor.h
- tensor_dense.h
- tensor_qinfo2.h
- tensor_qinfo3.h
- tensor_qinfo4.h
- tensor_sparse2.h -> rwfuns
- tensor_sparse3.h -> rsites
- tensor_sparse4.h
- tensor_linalg.h
- tensor_contract.h
+ qtensor/qtensor.h
+ qtensor/tensor_dense.h
+ qtensor/tensor_qinfo2.h
+ qtensor/tensor_qinfo3.h
+ qtensor/tensor_qinfo4.h
+ qtensor/tensor_sparse2.h -> rwfuns
+ qtensor/tensor_sparse3.h -> rsites
+ qtensor/tensor_sparse4.h
+ qtensor/tensor_linalg.h
+ qtensor/tensor_contract.h
 Topology:
  ctns_comb.h
  ctns_topo.h  
  ctns_topo.cpp  
 Kramers:
- kramers_ortho.h -> ortho_basis
- kramers_linalg.h -> decimation
+ qtensor/kramers_ortho.h -> ortho_basis
+ qtensor/kramers_linalg.h -> decimation
 Initialization: Schmidt decomposition
  ctns_init.h -> init CTNS from SCI
  init_rbasis.h -> renorm_basis class 
@@ -305,26 +305,27 @@ Sweep optimization:
  sweep_data.h
  --- onedot ---
  sweep_onedot.h
- tensor_reshape3.h -> reshaping qt3 for decimation
+ qtensor/tensor_reshape3.h -> reshaping qt3 for decimation
  sweep_onedot_renorm.h
  sweep_decimation.h
  sweep_onedot_hdiag.h
  sweep_onedot_local.h
- pdvdson.h
+ qtensor/pdvdson.h
  sweep_onedot_sigma.h => costly part!
  --- twodot ---
  sweep_onedot.h
- qtensor_reshape4.h
+ qtensor/qtensor_reshape4.h
  sweep_twodot_renorm.h
  sweep_twodot_hdiag.h
  sweep_twodot_local.h
  sweep_twodot_sigma.h
+ --- kramers ---
+ qtensor/kramers_ortho.h
+ qtensor/tensor_sparse3.h
+ qtensor/tensor_sparse4.h
+ qtensor/pdvdson_kramers.h
 
 #################################################################
-
- --- kramers ---
- qtensor_kramers.h
- pdvdson_kramers.h
 
  --- OpenMP ---
  --- MPI version ---

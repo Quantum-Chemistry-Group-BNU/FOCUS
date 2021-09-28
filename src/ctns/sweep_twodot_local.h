@@ -17,6 +17,7 @@ void twodot_guess(comb<Km>& icomb,
    auto pdx0 = icomb.topo.rindex.at(dbond.p0);
    auto pdx1 = icomb.topo.rindex.at(dbond.p1);
    assert(icomb.psi.size() == neig);
+   v0.resize(nsub*neig);
    if(dbond.forward){
       if(!dbond.cturn){
 
@@ -143,7 +144,7 @@ void twodot_localCI(comb<Km>& icomb,
 	 //------------------------------------
 	 // prepare initial guess     
 	 //------------------------------------
-         std::vector<Tm> v0(nsub*neig);
+         std::vector<Tm> v0;
 	 if(rank == 0){
 	    // starting guess 
             if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig);
@@ -161,7 +162,6 @@ void twodot_localCI(comb<Km>& icomb,
    nmvp = solver.nmvp;
 }
 
-/*
 template <>
 inline void twodot_localCI(comb<qkind::cNK>& icomb,
 		    const int nsub,
@@ -186,7 +186,6 @@ inline void twodot_localCI(comb<qkind::cNK>& icomb,
 #endif
 
    // kramers restricted (currently works only for iterative with guess!) 
-   assert(qkind::is_kramers<Km>());
    assert(cisolver == 1 && guess);
    pdvdsonSolver_kr<Tm,stensor4<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
    solver.Diag = diag.data();
@@ -200,15 +199,21 @@ inline void twodot_localCI(comb<qkind::cNK>& icomb,
    std::vector<Tm> v0;
    if(rank == 0){
       if(icomb.psi.size() == 0) onedot_guess_psi0(icomb,neig); // starting guess 
-      auto psi4 = twodot_guess(icomb, dbond, nsub, neig, wf);
+      // specific to twodot 
+      twodot_guess(icomb, dbond, nsub, neig, wf, v0);
       // load initial guess from previous opt
+      std::vector<stensor4<Tm>> psi4(neig);
+      for(int i=0; i<neig; i++){
+         psi4[i].init(wf.info.sym, wf.info.qrow, wf.info.qcol,
+		      wf.info.qmid, wf.info.qver, false);
+         psi4[i].setup_data(&v0[nsub*i]);
+      }
       solver.init_guess(psi4, v0);
    }
    //------------------------------------
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());
    nmvp = solver.nmvp;
 }
-*/
 
 } // ctns
 
