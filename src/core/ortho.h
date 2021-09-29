@@ -57,7 +57,6 @@ int get_ortho_basis(const int ndim,
 	            &one,rbas.data(),&ndim);
    }
    // 2. form new basis from rbas by modified Gram-Schmidt procedure
-   std::vector<Tm> rtr(nres*nres/4);
    int nindp = 0;
    for(int i=0; i<nres; i++){
       double rii = linalg::xnrm2(ndim, &rbas[i*ndim]); // normalization constant
@@ -70,13 +69,14 @@ int get_ortho_basis(const int ndim,
          rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
       }
       // copy
-      std::copy(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[nindp*ndim]);
+      linalg::xcopy(ndim, &rbas[i*ndim], &rbas[nindp*ndim]); 
       nindp +=1;
       // project out |r[i]>-component from other basis
       // essentially equivalent to https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_procesis
       // since [r[i+1:]> is changing when a new |r[i]> is find.  
       int N = nres-1-i;
       if(N == 0) break;
+      std::vector<Tm> rtr(nindp*N);
       for(int repeat=0; repeat<maxtimes; repeat++){
          // R_rest = (1-V*V^+)*R_rest
 	 linalg::xgemm("C","N",&neig,&N,&ndim,
@@ -106,7 +106,6 @@ int get_ortho_basis(const int ndim,
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
    // 2. form new basis from rbas by modified Gram-Schmidt procedure
-   std::vector<Tm> rtr(nres*nres/4);
    int nindp = 0;
    for(int i=0; i<nres; i++){
       double rii = linalg::xnrm2(ndim, &rbas[i*ndim]); // normalization constant
@@ -119,13 +118,14 @@ int get_ortho_basis(const int ndim,
          rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
       }
       // copy
-      std::copy(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[nindp*ndim]);
+      linalg::xcopy(ndim, &rbas[i*ndim], &rbas[nindp*ndim]);
       nindp +=1;
       // project out |r[i]>-component from other basis
       // essentially equivalent to https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_procesis
       // since [r[i+1:]> is changing when a new |r[i]> is find.  
       int N = nres-1-i;
       if(N == 0) break;
+      std::vector<Tm> rtr(nindp*N);
       for(int repeat=0; repeat<maxtimes; repeat++){
          // R_rest = (1-Rnew*Rnew^+)*R_rest
 	 linalg::xgemm("C","N",&nindp,&N,&ndim,
@@ -139,7 +139,7 @@ int get_ortho_basis(const int ndim,
    return nindp;
 }
 
-// Plain version for matrix: MGS for rbas of size rbas(ndim,nres)
+// Plain version for matrix
 template <typename Tm>
 int get_ortho_basis(linalg::matrix<Tm>& rbas,
 	            const int nres,	
@@ -159,7 +159,7 @@ int get_ortho_basis(linalg::matrix<Tm>& rbas,
          rii = linalg::xnrm2(ndim, rbas.col(i));
       }
       // copy
-      std::copy(rbas.col(i), rbas.col(i)+ndim, rbas.col(nindp));
+      linalg::xcopy(ndim, rbas.col(i), rbas.col(nindp));
       nindp += 1;
       // project out |r[i]>-component from other basis
       int N = nres-1-i;

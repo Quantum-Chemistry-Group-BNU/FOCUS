@@ -23,21 +23,12 @@ void twodot_guess(comb<Km>& icomb,
 
          if(debug_twodot_guess) std::cout << "|lc1>" << std::endl;
 	 for(int i=0; i<neig; i++){
-
-	    std::cout << "icomb i=" << i << " " << icomb.psi[i].normF() << std::endl;
-
 	    // psi[l,a,c1] => cwf[lc1,a]
 	    auto cwf = icomb.psi[i].merge_lc(); 
-	    std::cout << "icomb i=" << i << " " << cwf.normF() << std::endl;
 	    // cwf[lc1,a]*r[a,r,c2] => wf3[lc1,r,c2]
             auto wf3 = contract_qt3_qt2_l(icomb.rsites[pdx1],cwf); 
-	    std::cout << "icomb i=" << i << " " << wf3.normF() << std::endl;
 	    // wf3[lc1,r,c2] => wf4[l,r,c1,c2]
 	    auto wf4 = wf3.split_lc1(wf.info.qrow, wf.info.qmid);
-	    std::cout << "icomb i=" << i << " " << wf4.normF() << std::endl;
-
-	    if(i==0) wf4.print("wf4",2);
-
 	    assert(wf4.size() == nsub);
             wf4.to_array(&v0[nsub*i]);
          }
@@ -208,8 +199,10 @@ inline void twodot_localCI(comb<qkind::cNK>& icomb,
    std::vector<Tm> v0;
    if(rank == 0){
       if(icomb.psi.size() == 0) onedot_guess_psi0(icomb,neig); // starting guess 
+      exit(1);
       // specific to twodot 
       twodot_guess(icomb, dbond, nsub, neig, wf, v0);
+      exit(1);
       // load initial guess from previous opt
       std::vector<stensor4<Tm>> psi4(neig);
       for(int i=0; i<neig; i++){

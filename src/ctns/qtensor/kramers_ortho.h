@@ -88,7 +88,7 @@ int get_ortho_basis_even(linalg::matrix<Tm>& rbas,
    if(debug_ortho) std::cout << "final nindp=" << nindp << std::endl;
    assert(nindp > 0);
    rbas.resize(ndim, nindp);
-   std::copy(rbas_new.data(), rbas_new.data()+ndim*nindp, rbas.data());
+   linalg::xcopy(ndim*nindp, rbas_new.data(), rbas.data());
    // Orthonormality is essential
    linalg::check_orthogonality(rbas);
    return nindp;
@@ -121,11 +121,11 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
       //-------------------------------------------------------------
       rbas_new.resize(ndim*(nindp+2));
       // copy
-      std::copy(rbas.col(i), rbas.col(i)+ndim, &rbas_new[nindp*ndim]);
+      linalg::xcopy(ndim, rbas.col(i), &rbas_new[nindp*ndim]);
       nindp += 1;
       // add its time-reversal partner
       get_krvec_odd(rbas.col(i), krvec.data(), phases);
-      std::copy(krvec.cbegin(), krvec.cend(), &rbas_new[nindp*ndim]);
+      linalg::xcopy(ndim, krvec.data(), &rbas_new[nindp*ndim]);
       nindp += 1;
       //-------------------------------------------------------------
       // project out |r[i]>-component from other basis
@@ -147,7 +147,7 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
    if(debug_ortho) std::cout << "final nindp=" << nindp << std::endl;
    assert(nindp%2 == 0);
    rbas.resize(ndim, nindp);
-   std::copy(rbas_new.data(), rbas_new.data()+ndim*nindp, rbas.data());
+   linalg::xcopy(ndim*nindp, rbas_new.data(), rbas.data());
    // reorder into {|b>,K|b>} structure
    std::vector<int> pos_new(nindp);
    for(int i=0; i<nindp; i++){
@@ -223,17 +223,17 @@ int get_ortho_basis_qt(const int ndim,
       //-------------------------------------------------------------
       rbas_new.resize(ndim*(nindp+2));
       // copy
-      std::copy(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas_new[nindp*ndim]);
+      linalg::xcopy(ndim, &rbas[i*ndim], &rbas_new[nindp*ndim]);
       nindp += 1;
       // add its time-reversal partner
       get_krvec_qt(&rbas[i*ndim], krvec.data(), wf);
-      std::copy(krvec.cbegin(), krvec.cend(), &rbas_new[nindp*ndim]);
+      linalg::xcopy(ndim, krvec.data(), &rbas_new[nindp*ndim]);
       nindp += 1;
       // debug
       if(debug_ortho){
          linalg::matrix<Tm> V(ndim,neig+nindp);
-	 std::copy(vbas.begin(), vbas.begin()+ndim*neig, V.col(0));
-	 std::copy(rbas_new.begin(), rbas_new.begin()+ndim*nindp, V.col(neig));
+	 linalg::xcopy(ndim*neig, vbas.data(), V.col(0));
+	 linalg::xcopy(ndim*nindp, rbas_new.data(), V.col(neig));
          auto ova = xgemm("C","N",V,V);
          ova.print("ova");
 	 auto dev = ova - linalg::identity_matrix<Tm>(neig+nindp);
@@ -294,11 +294,11 @@ int get_ortho_basis_qt(const int ndim,
       //-------------------------------------------------------------
       rbas_new.resize(ndim*(nindp+2));
       // copy
-      std::copy(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas_new[nindp*ndim]);
+      linalg::xcopy(ndim, &rbas[i*ndim], &rbas_new[nindp*ndim]);
       nindp += 1;
       // add its time-reversal partner
       get_krvec_qt(&rbas[i*ndim], krvec.data(), wf);
-      std::copy(krvec.cbegin(), krvec.cend(), &rbas_new[nindp*ndim]);
+      linalg::xcopy(ndim, krvec.data(), &rbas_new[nindp*ndim]);
       nindp += 1;
       // debug
       if(debug_ortho){

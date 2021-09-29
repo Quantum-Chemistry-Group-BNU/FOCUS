@@ -594,14 +594,14 @@ void ci_truncate(fock::onspace& space,
    }
    auto index = tools::sort_index(cmax, 1); 
    // orthogonalization if required
-   std::vector<Tm> vtmp(nred*neig);
+   linalg::matrix<Tm> vtmp(nred,neig);
    for(int j=0; j<neig; j++){
       for(int i=0; i<nred; i++){
-	 vtmp[i+nred*j] = vs[j][index[i]];
+	 vtmp(i,j) = vs[j][index[i]];
       }
    }
    if(ifortho){
-      int nindp = linalg::get_ortho_basis(nred,neig,vtmp);
+      int nindp = linalg::get_ortho_basis(vtmp,neig);
       if(nindp != neig){
          std::string msg = "error: thresh is too large for ci_truncate! nindp,neig=";
 	 tools::exit(msg+std::to_string(nindp)+","+std::to_string(neig));
@@ -615,7 +615,7 @@ void ci_truncate(fock::onspace& space,
    std::vector<std::vector<Tm>> vs2(neig);
    for(int j=0; j<neig; j++){
       vs2[j].resize(nred);
-      std::copy(&vtmp[nred*j],&vtmp[nred*j]+nred,vs2[j].begin());
+      linalg::xcopy(nred, vtmp.col(j), vs2[j].data());
    }
    // check the quality of truncated states
    if(debug){

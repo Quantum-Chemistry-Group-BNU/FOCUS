@@ -324,10 +324,10 @@ Sweep optimization:
  qtensor/tensor_sparse3.h
  qtensor/tensor_sparse4.h
  qtensor/pdvdson_kramers.h
+ --- OpenMP ---
 
 #################################################################
 
- --- OpenMP ---
  --- MPI version ---
 
 Comments:

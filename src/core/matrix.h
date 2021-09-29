@@ -11,6 +11,7 @@
 #include <fstream>
 #include "tools.h"
 #include "serialization.h"
+#include "blas.h"
 
 namespace linalg{
 
@@ -57,19 +58,19 @@ struct matrix : public BaseMatrix<Tm> {
 	 _size = m*n;
 	 delete[] _data;
          _data = new Tm[_size];
-	 std::fill_n(_data, _size, 0.0);
+         memset(_data, 0, _size*sizeof(Tm));
       }
       matrix(const int m, const int n): _rows(m), _cols(n){
 	 _size = m*n;     
          _data = new Tm[_size];
-	 std::fill_n(_data, _size, 0.0);
+         memset(_data, 0, _size*sizeof(Tm));
       }
       // some special constructors: 
       // 1. copied from raw data
       matrix(const int m, const int n, const Tm* pdata): _rows(m), _cols(n){
 	 _size = m*n;
  	 _data = new Tm[_size];
-	 std::copy(pdata, pdata+_size, _data);
+	 xcopy(_size, pdata, _data);
       }
       // 2. from constant value
       matrix(const int m, const int n, const Tm cval): _rows(m), _cols(n){
@@ -84,7 +85,7 @@ struct matrix : public BaseMatrix<Tm> {
 	 _size = _rows*_cols;
 	 _data = new Tm[_size];
 	 for(int j=0; j<_cols; j++){
-	    std::copy(vs[j].cbegin(), vs[j].cend(), &_data[j*_rows]);
+	    xcopy(_rows, vs[j].data(), &_data[_rows*j]);
 	 }
       }
       // desctructors
@@ -95,7 +96,7 @@ struct matrix : public BaseMatrix<Tm> {
 	 _cols = mat._cols;
 	 _size = mat._size;
          _data = new Tm[_size];
-	 std::copy_n(mat._data, _size, _data);
+	 xcopy(_size, mat._data, _data);
       }
       // copy assignment 
       matrix& operator =(const matrix& mat){
@@ -105,7 +106,7 @@ struct matrix : public BaseMatrix<Tm> {
 	    _size = mat._size;
 	    delete[] _data;
 	    _data = new Tm[_size];
-	    std::copy_n(mat._data, _size, _data);
+	    xcopy(_size, mat._data, _data);
 	 }
 	 return *this;
       }

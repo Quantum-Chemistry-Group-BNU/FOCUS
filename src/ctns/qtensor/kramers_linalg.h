@@ -71,7 +71,7 @@ class blockMatrix{
 	       linalg::matrix<Tm> blk(ni,nj);
 	       for(int j=0; j<nj; j++){
 		  auto p = mat.col(joff+j)+ioff;
-	 	  std::copy(p, p+ni, blk.col(j));
+		  linalg::xcopy(ni, p, blk.col(j));
 	       }
 	       _blocks[iblk][jblk] = blk;
 	    }
@@ -91,7 +91,7 @@ class blockMatrix{
 	       int joff = _offs2[jblk];
 	       const auto& blk = _blocks[iblk][jblk];
 	       for(int j=0; j<nj; j++){
-	 	  std::copy(blk.col(j), blk.col(j)+ni, mat.col(joff+j)+ioff);
+		  linalg::xcopy(ni, blk.col(j), mat.col(joff+j)+ioff);
 	       }
 	    }
 	 }
@@ -273,7 +273,7 @@ void eig_solver_odd(const linalg::matrix<Tm>& rhor,
    auto rhor_kr = rmat.to_matrix();
    // TRS-preserving diagonalization (only half eigs are output)
    zquatev(rhor_kr,eigs,U,1);
-   std::copy(eigs.begin(), eigs.begin()+dim1, eigs.begin()+dim1); // duplicate eigs!
+   linalg::xcopy(dim1, eigs.data(), eigs.data()+dim1); // duplicate eigs!
    // back to original basis {|D>,|Df>}
    blockMatrix<Tm> umat(partition,{dim});
    umat = U;
@@ -333,7 +333,7 @@ void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
       linalg::matrix<Tm> vrl(dimr,diml*nroots);
       for(int iroot=0; iroot<nroots; iroot++){
          auto crl = clr[iroot].T();
-         std::copy(crl.data(), crl.data()+dimr*diml, vrl.col(iroot*diml));
+         linalg::xcopy(dimr*diml, crl.data(), vrl.col(iroot*diml));
       } // iroot
       vrl *= 1.0/std::sqrt(nroots);
       linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
@@ -388,7 +388,7 @@ void get_renorm_states_kr(const ctns::qsym& qr,
       linalg::matrix<Tm> vrl(dimr,diml*nroots);
       for(int iroot=0; iroot<nroots; iroot++){
          auto crl = clr[iroot].T();
-         std::copy(crl.data(), crl.data()+dimr*diml, vrl.col(iroot*diml));
+         linalg::xcopy(dimr*diml, crl.data(), vrl.col(iroot*diml));
       } // iroot
       vrl *= 1.0/std::sqrt(nroots);
       linalg::matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!

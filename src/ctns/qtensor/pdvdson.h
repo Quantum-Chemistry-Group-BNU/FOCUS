@@ -74,7 +74,7 @@ struct pdvdsonSolver_nkr{
 	    if(size > 1){
 	       std::vector<Tm> y_sum(ndim);
 	       boost::mpi::reduce(world, y+istate*ndim, ndim, y_sum.data(), std::plus<Tm>(), 0);
-	       std::copy(y_sum.begin(), y_sum.end(), y+istate*ndim);
+	       linalg::xcopy(ndim, y_sum.data(), y+istate*ndim);
 	    }
 #endif
          }
@@ -137,8 +137,8 @@ struct pdvdsonSolver_nkr{
 	       std::cout << "i=" << i << " e=" << e[i] << std::endl;
             }
             // copy results
-	    std::copy(e.begin(), e.begin()+neig, es);
-            std::copy(V.data(), V.data()+ndim*neig, vs);
+	    linalg::xcopy(neig, e.data(), es);
+            linalg::xcopy(ndim*neig, V.data(), vs);
 	 } // rank-0
          auto t1 = tools::get_time();
          if(rank == 0) tools::timing("solve_diag", t0, t1);
@@ -169,15 +169,15 @@ struct pdvdsonSolver_nkr{
          // 3. solve eigenvalue problem
 	 linalg::matrix<Tm> tmpU;
 	 linalg::eig_solver(tmpH, tmpE, tmpU);
-	 std::copy(tmpU.data(), tmpU.data()+nsub*nt, tmpV.data());
+	 linalg::xcopy(nsub*nt, tmpU.data(), tmpV.data());
          // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
          // vbas = X[i]
-	 std::copy(vbas.data(), vbas.data()+ndim*nsub, rbas.data()); 
+	 linalg::xcopy(ndim*nsub, vbas.data(), rbas.data()); 
 	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
                        &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
                        &beta,vbas.data(),&ndim);
          // wbas = HX[i]
-	 std::copy(wbas.data(), wbas.data()+ndim*nsub, rbas.data()); 
+	 linalg::xcopy(ndim*nsub, wbas.data(), rbas.data()); 
 	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
                        &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
                        &beta,wbas.data(),&ndim);
@@ -214,7 +214,7 @@ struct pdvdsonSolver_nkr{
 	 std::vector<Tm> vbas(ndim*nl), wbas(ndim*nl);
 	 if(rank == 0){
             if(vguess != nullptr){
-	       std::copy(vguess, vguess+ndim*neig, vbas.data());
+	       linalg::xcopy(ndim*neig, vguess, vbas.data());
             }else{
                auto index = tools::sort_index(ndim, Diag);
                for(int i=0; i<neig; i++){
@@ -268,8 +268,8 @@ struct pdvdsonSolver_nkr{
                   boost::mpi::broadcast(world, vbas.data(), ndim*neig, 0);
 	       }
 #endif
-	       std::copy(tmpE.data(), tmpE.data()+neig, es);
-               std::copy(vbas.data(), vbas.data()+ndim*neig, vs);
+	       linalg::xcopy(neig, tmpE.data(), es);
+               linalg::xcopy(ndim*neig, vbas.data(), vs);
                break;
             }
             // if not converged, improve the subspace by ri/(abs(D-ei)+damp) 
@@ -287,7 +287,7 @@ struct pdvdsonSolver_nkr{
                // ordering the residual to be added from large to small
                auto index = tools::sort_index(nres, tnorm.data(), 1);
                for(int i=0; i<nres; i++){
-	          std::copy(&tbas[index[i]*ndim], &tbas[index[i]*ndim]+ndim, &rbas[i*ndim]); 
+	          linalg::xcopy(ndim, &tbas[index[i]*ndim], &rbas[i*ndim]); 
                }
                // re-orthogonalization and get nindp
                nindp = linalg::get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
@@ -304,7 +304,7 @@ struct pdvdsonSolver_nkr{
 #ifndef SERIAL
 	       if(size > 1) boost::mpi::broadcast(world, &rbas[0], ndim*nindp, 0);
 #endif	       
-	       std::copy(&rbas[0],&rbas[0]+ndim*nindp,&vbas[ndim*neig]);
+	       linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*neig]);
 	       HVecs(nindp, &wbas[ndim*neig], &vbas[ndim*neig]);
                nsub = neig+nindp;
 	       if(rank == 0) linalg::check_orthogonality(ndim,nsub,vbas);

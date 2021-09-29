@@ -265,7 +265,7 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
          if(debug_basis) std::cout << " i=" << i << " idx=" << idx 
 			           << " eig=" << std::scientific << eigs[idx] 
 				   << std::endl; 
-	 std::copy(U.col(idx), U.col(idx)+dim, rsec.coeff.col(i)); // copy U[i] to coeff
+         linalg::xcopy(dim, U.col(idx), rsec.coeff.col(i)); // copy U[i] to coeff
       }
       rbasis.push_back(rsec);
       // check orthogonality
