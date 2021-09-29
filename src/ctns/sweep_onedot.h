@@ -39,14 +39,19 @@ void sweep_onedot(const input::schedule& schd,
    const auto& dbond = sweeps.seq[ibond];
    const auto& p = dbond.p;
    std::vector<int> suppl, suppr, suppc;
-   if(rank == 0 && debug_sweep) std::cout << "support info:" << std::endl;
-   suppl = icomb.topo.get_suppl(p, rank == 0 && debug_sweep);
-   suppr = icomb.topo.get_suppr(p, rank == 0 && debug_sweep);
-   suppc = icomb.topo.get_suppc(p, rank == 0 && debug_sweep); 
+   suppl = icomb.topo.get_suppl(p);
+   suppr = icomb.topo.get_suppr(p);
+   suppc = icomb.topo.get_suppc(p); 
    int sl = suppl.size();
    int sr = suppr.size();
    int sc = suppc.size();
    assert(sc+sl+sr == icomb.topo.nphysical);
+   if(rank == 0 && debug_sweep){ 
+      std::cout << "support info:" << std::endl;
+      tools::print_vector(suppl, "suppl");
+      tools::print_vector(suppr, "suppr");
+      tools::print_vector(suppc, "suppc");
+   }
 
    // 1. load operators 
    using Tm = typename Km::dtype;
@@ -56,10 +61,9 @@ void sweep_onedot(const input::schedule& schd,
    oper_load_qops(icomb, p, schd.scratch, "c", cqops);
    if(rank == 0){
       std::cout << "qops info: rank=" << rank << std::endl;
-      const int level = 0;
-      lqops.print("lqops", level);
-      rqops.print("rqops", level);
-      cqops.print("cqops", level);
+      lqops.print("lqops");
+      rqops.print("rqops");
+      cqops.print("cqops");
    }
    timing.ta = tools::get_time();
 

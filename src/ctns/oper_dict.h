@@ -92,12 +92,7 @@ class oper_dict{
 
 template <typename Tm>
 void oper_dict<Tm>::print(const std::string name, const int level) const{
-   std::cout << name << ": oplist=" << oplist 
-	     << " isym=" << isym << " ifkr=" << ifkr 
-             << " size[cindex]=" << cindex.size()
-	     << " size[krest]=" << krest.size() << std::endl; 
-   qbra.print("qbra");
-   qket.print("qket");
+   std::cout << " " << name << ": oplist=" << oplist;
    // count no. of operators in each class
    std::string opseq = "CABPQSH";
    std::map<char,int> exist;
@@ -114,25 +109,34 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
    std::cout << s << std::endl;
    // print each operator
    if(level > 0){
-      for(const auto& key : opseq){
-         if(exist[key] == 0) continue;
-         std::cout << " " << key << ": ";
-         if(key == 'H' || key == 'C' || key == 'S'){
-            for(const auto& op : _opdict.at(key)){
-               std::cout << "(" << op.first << ") ";
+      std::cout << " isym=" << isym << " ifkr=" << ifkr 
+                << " size[cindex]=" << cindex.size()
+	        << " size[krest]=" << krest.size() << std::endl;
+      tools::print_vector(cindex, "cindex"); 
+      tools::print_vector(krest, "krest"); 
+      qbra.print("qbra");
+      qket.print("qket");
+      if(level > 1){
+         for(const auto& key : opseq){
+            if(exist[key] == 0) continue;
+            std::cout << " " << key << ": ";
+            if(key == 'H' || key == 'C' || key == 'S'){
+               for(const auto& op : _opdict.at(key)){
+                  std::cout << "(" << op.first << ") ";
+               }
+            }else{
+               for(const auto& op : _opdict.at(key)){
+                  auto pq = oper_unpack(op.first);
+                  std::cout << "(" << pq.first << "," << pq.second << ") ";
+               }
             }
-         }else{
-            for(const auto& op : _opdict.at(key)){
-               auto pq = oper_unpack(op.first);
-               std::cout << "(" << pq.first << "," << pq.second << ") ";
-            }
+            std::cout << std::endl;
          }
-	 std::cout << std::endl;
-      }
-   } // level
-   std::cout << "total size=" << _size 
-	     << " sizeMB=" << tools::sizeMB<Tm>(_size) 
-	     << std::endl; 
+      } // level>1	 
+      std::cout << " total size=" << _size 
+	        << " sizeMB=" << tools::sizeMB<Tm>(_size) 
+	        << std::endl; 
+   } // level>0
 }
 
 template <typename Tm>

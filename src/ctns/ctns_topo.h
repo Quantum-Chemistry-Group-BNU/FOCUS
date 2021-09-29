@@ -80,11 +80,10 @@ struct topology{
       //     \|/			 \|/
       //    --p--			--p--
       //
-      std::vector<int> get_suppc(const comb_coord& p, const bool ifprt=true) const{
+      std::vector<int> get_suppc(const comb_coord& p) const{
          auto pc = get_node(p).center;
          bool physical = (pc == coord_phys);
          auto suppc = physical? std::vector<int>({get_node(p).pindex}) : get_node(pc).rsupport;
-         if(ifprt) tools::print_vector(suppc, "suppc");
          return suppc;
       }
       // 			        |
@@ -92,9 +91,8 @@ struct topology{
       //      |      |                 /|\
       //    --pl-->--p--     	      --pl--
       //
-      std::vector<int> get_suppl(const comb_coord& p, const bool ifprt=true) const{
+      std::vector<int> get_suppl(const comb_coord& p) const{
          auto suppl = get_node(p).lsupport;
-         if(ifprt) tools::print_vector(suppl, "suppl");
          return suppl;
       }
       //
@@ -102,10 +100,9 @@ struct topology{
       //    |     |
       //  --p--<--pr-- : qrow of rsites[pr]
       //
-      std::vector<int> get_suppr(const comb_coord& p, const bool ifprt=true) const{
+      std::vector<int> get_suppr(const comb_coord& p) const{
          auto pr = get_node(p).right;
          auto suppr = get_node(pr).rsupport;
-         if(ifprt) tools::print_vector(suppr, "suppr");
          return suppr;
       }
       //

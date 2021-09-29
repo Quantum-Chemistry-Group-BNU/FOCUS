@@ -42,32 +42,38 @@ void sweep_twodot(const input::schedule& schd,
    const auto& p = dbond.p;
    const auto& cturn = dbond.cturn;
    std::vector<int> suppc1, suppc2, suppl, suppr;
-   if(rank == 0 && debug_sweep) std::cout << "support info:" << std::endl;
    if(!cturn){
       //
       //       |    |
       //    ---p0---p1---
       //
-      suppc1 = icomb.topo.get_suppc(p0, rank == 0 && debug_sweep); 
-      suppc2 = icomb.topo.get_suppc(p1, rank == 0 && debug_sweep); 
-      suppl  = icomb.topo.get_suppl(p0, rank == 0 && debug_sweep);
-      suppr  = icomb.topo.get_suppr(p1, rank == 0 && debug_sweep);
+      suppl  = icomb.topo.get_suppl(p0);
+      suppr  = icomb.topo.get_suppr(p1);
+      suppc1 = icomb.topo.get_suppc(p0);
+      suppc2 = icomb.topo.get_suppc(p1);
    }else{
       //       |
       //    ---p1
       //       |
       //    ---p0---
       //
-      suppc1 = icomb.topo.get_suppc(p1, rank == 0 && debug_sweep); 
-      suppc2 = icomb.topo.get_suppr(p1, rank == 0 && debug_sweep); 
-      suppl  = icomb.topo.get_suppl(p0, rank == 0 && debug_sweep);
-      suppr  = icomb.topo.get_suppr(p0, rank == 0 && debug_sweep);
+      suppl  = icomb.topo.get_suppl(p0);
+      suppr  = icomb.topo.get_suppr(p0);
+      suppc1 = icomb.topo.get_suppc(p1);
+      suppc2 = icomb.topo.get_suppr(p1);
    }
    int sc1 = suppc1.size();
    int sc2 = suppc2.size();
    int sl = suppl.size();
    int sr = suppr.size();
    assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
+   if(rank == 0 && debug_sweep){
+      std::cout << "support info:" << std::endl;
+      tools::print_vector(suppl, "suppl");
+      tools::print_vector(suppr, "suppr");
+      tools::print_vector(suppc1, "suppc1");
+      tools::print_vector(suppc2, "suppc2");
+   }
 
    // 1. load operators 
    using Tm = typename Km::dtype;
@@ -85,11 +91,10 @@ void sweep_twodot(const input::schedule& schd,
    }
    if(rank == 0){
       std::cout << "qops info: rank=" << rank << std::endl;
-      const int level = 0;
-      lqops.print("lqops", level);
-      rqops.print("rqops", level);
-      c1qops.print("c1qops", level);
-      c2qops.print("c2qops", level);
+      lqops.print("lqops");
+      rqops.print("rqops");
+      c1qops.print("c1qops");
+      c2qops.print("c2qops");
    }
    timing.ta = tools::get_time();
 
