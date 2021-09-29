@@ -73,11 +73,13 @@ int CTNS(const input::schedule& schd){
       }
    }else if(schd.ctns.task == "ham"){
       auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+/*
       if(rank == 0){
          Hij.print("Hij",8);
          auto Sij = ctns::get_Smat(icomb);
          Sij.print("Sij");
       }
+*/
    }else if(schd.ctns.task == "opt"){
       // optimization from current RCF
       ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);

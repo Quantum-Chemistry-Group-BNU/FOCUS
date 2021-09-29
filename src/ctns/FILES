@@ -319,16 +319,15 @@ Sweep optimization:
  sweep_twodot_hdiag.h
  sweep_twodot_local.h
  sweep_twodot_sigma.h
+ --- OpenMP version ---
+ --- MPI version ---
  --- kramers ---
  qtensor/kramers_ortho.h
  qtensor/tensor_sparse3.h
  qtensor/tensor_sparse4.h
  qtensor/pdvdson_kramers.h
- --- OpenMP ---
 
 #################################################################
-
- --- MPI version ---
 
 Comments:
  1. probably change to shared_ptr to share data instead of raw pointer & own?

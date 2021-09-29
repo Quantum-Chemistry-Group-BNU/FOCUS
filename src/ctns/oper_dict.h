@@ -75,8 +75,8 @@ class oper_dict{
       qsym get_qsym_op(const char key, const int idx) const;
       void allocate_memory(const bool debug=false);
    public:
-      int isym;
-      bool ifkr;
+      int isym = 0;
+      bool ifkr = false;
       qbond qbra, qket;
       std::vector<int> cindex;
       std::vector<int> krest;

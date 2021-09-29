@@ -23,7 +23,7 @@ void oper_renorm_opAll(const std::string superblock,
 		       const oper_dict<Tm>& qops1,
 		       const oper_dict<Tm>& qops2,
 		       oper_dict<Tm>& qops){
-   const bool debug = false;
+   const bool debug = true;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -62,12 +62,14 @@ void oper_renorm_opAll(const std::string superblock,
       qops.qbra = site.info.qmid;
       qops.qket = site.info.qmid;
    }
-   qops.oplist = "CABPQSH";
+   qops.oplist = "C"; //ABPQSH";
    qops.mpisize = size;
    qops.mpirank = rank;
    qops.ifdist2 = true;
    // initialize memory 
    qops.allocate_memory();
+
+   qops.print("qops");
 
 /*
    std::cout << "try save start" << std::endl;
@@ -75,15 +77,18 @@ void oper_renorm_opAll(const std::string superblock,
    oper_save(fname, qops);
    std::cout << "try save end" << std::endl;
 */
-        
+
+   qops1.print("qops1");
+   qops2.print("qops2");
+
    // compute renormalized operators 
    oper_timer.clear();
    auto Hx_funs = oper_renorm_functors(superblock, site, qops1, qops2,
 		   		       qops, int2e, int1e);
    if(debug){
-      std::cout << "Hx_funs: size=" << Hx_funs.size() << std::endl;
+      std::cout << "rank=" << rank << " size[Hx_funs]=" << Hx_funs.size() << std::endl;
       for(int i=0; i<Hx_funs.size(); i++){
-         std::cout << "i=" << i << Hx_funs[i] << std::endl;
+         std::cout << "rank=" << rank << " i=" << i << Hx_funs[i] << std::endl;
       }
    }
 
@@ -93,11 +98,17 @@ void oper_renorm_opAll(const std::string superblock,
    for(int i=0; i<Hx_funs.size(); i++){
       char key = Hx_funs[i].label[0];
       int index = Hx_funs[i].index; 
-      if(debug) std::cout << "cal: i=" << i << " key=" << key << " index=" << index << std::endl;
+      if(debug) std::cout << "cal: rank=" << rank << " i=" << i << " key=" << key << " index=" << index << std::endl;
       auto opxwf = Hx_funs[i]();
+/*
+      std::cout << "lzdX" << std::endl;
       auto op = contract_qt3_qt3(superblock, site, opxwf);
+      std::cout << "lzdY" << std::endl;
       linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
+      std::cout << "lzdZ" << std::endl;
+*/
    }
+
    // check operators against explicit construction
    const bool ifcheck = false;
    if(ifcheck){
