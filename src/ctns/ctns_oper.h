@@ -21,8 +21,6 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    // build operators for environement
    oper_env_right(icomb, int2e, int1e, scratch);
 
-   linalg::matrix<typename Km::dtype> Hmat;
-/*
    // load operators from file
    using Tm = typename Km::dtype;
    oper_dict<Tm> qops;
@@ -47,7 +45,6 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
       Hmat = Hmat2;
    }
 #endif 
-*/ 
    return Hmat;
 }
 

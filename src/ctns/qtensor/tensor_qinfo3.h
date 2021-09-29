@@ -22,7 +22,7 @@ struct qinfo3{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-	 ar & sym & qrow & qcol & qmid
+	 ar & sym & qrow & qcol & qmid & dir
 	    & _rows & _cols & _mids & _size & _qblocks;
       }
    public:

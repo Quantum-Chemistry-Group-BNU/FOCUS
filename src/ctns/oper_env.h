@@ -162,9 +162,6 @@ void oper_env_right(const comb<Km>& icomb,
          //---------------------------------------------
          auto te = tools::get_time();
 	 t_save += tools::get_duration(te-td);
-
-	 break;
-
       }
    } // idx
 

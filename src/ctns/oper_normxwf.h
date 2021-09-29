@@ -10,6 +10,9 @@
 
 namespace ctns{
 
+const bool debug_normxwf = false;
+extern const bool debug_normxwf;
+
 // kernel for computing Cp|ket>
 template <typename Tm>
 stensor3<Tm> oper_normxwf_opC(const std::string superblock,
@@ -20,25 +23,17 @@ stensor3<Tm> oper_normxwf_opC(const std::string superblock,
 			      const int iformula,
 		              const bool ifdagger=false){
    auto t0 = tools::get_time();
-   std::cout << "oper_normxwf_opC index=" << index << " iformula=" << iformula << std::endl;
+   if(debug_normxwf){
+      std::cout << "oper_normxwf_opC index=" << index << " iformula=" << iformula << std::endl;
+   }
  
    stensor3<Tm> opwf;
    if(iformula == 1){
       const auto& op1 = qops1('C').at(index);
-
-      site.print("site",2);
-      op1.print("op1",2);
-      //opwf = oper_kernel_OIwf(superblock, site, op1, ifdagger);
-      //opwf.print("opwf",2);
-
+      opwf = oper_kernel_OIwf(superblock, site, op1, ifdagger);
    }else if(iformula == 2){
       const auto& op2 = qops2('C').at(index);
-      
-      site.print("site",2);
-      op2.print("op2",2);
-      //opwf = oper_kernel_IOwf(superblock, site, op2, 1, ifdagger);
-      //opwf.print("opwf",2);
-
+      opwf = oper_kernel_IOwf(superblock, site, op2, 1, ifdagger);
    } // iformula
 
    auto t1 = tools::get_time();
@@ -62,7 +57,9 @@ stensor3<Tm> oper_normxwf_opA(const std::string superblock,
 			      const int iformula,
 			      const bool ifdagger=false){
    auto t0 = tools::get_time();
-   std::cout << "oper_normxwf_opA index=" << index << " iformula=" << iformula << std::endl;
+   if(debug_normxwf){
+      std::cout << "oper_normxwf_opA index=" << index << " iformula=" << iformula << std::endl;
+   }
 
    const bool ifkr = qops1.ifkr;
    stensor3<Tm> opwf;
@@ -115,7 +112,9 @@ stensor3<Tm> oper_normxwf_opB(const std::string superblock,
 			      const int iformula,
 			      const bool ifdagger=false){
    auto t0 = tools::get_time();
-   std::cout << "oper_normxwf_opB index=" << index << " iformula=" << iformula << std::endl;
+   if(debug_normxwf){
+      std::cout << "oper_normxwf_opB index=" << index << " iformula=" << iformula << std::endl;
+   }
 
    const bool ifkr = qops1.ifkr;
    stensor3<Tm> opwf;
