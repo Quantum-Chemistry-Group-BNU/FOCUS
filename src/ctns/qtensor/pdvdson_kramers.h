@@ -109,7 +109,8 @@ struct pdvdsonSolver_kr{
       }
 
       // initialization
-      void init_guess(std::vector<QTm>& psi, std::vector<Tm>& v0){
+      void init_guess(const std::vector<QTm>& psi, 
+		      std::vector<Tm>& v0){
 	 std::cout << "ctns::pdvdsonSolver_kr::init_guess parity=" << parity << std::endl;
 	 assert(psi.size() == neig && psi[0].size() == ndim);
          v0.resize(ndim*neig*2);
@@ -118,7 +119,17 @@ struct pdvdsonSolver_kr{
             // even-electron case
             const std::complex<double> iunit(0.0,1.0);
             for(int i=0; i<neig; i++){
+	       std::cout << "I=" << i << " - " << psi[i].normF() << std::endl;
 	       auto psiK = psi[i].K();
+	       std::cout << "I=" << i << " - " << psi[i].normF() << " - " << psiK.normF() << std::endl;
+	       exit(1);
+	    }
+    	    exit(1);	    
+            for(int i=0; i<neig; i++){
+
+     		    std::cout << "I=" << i << " - " << psi[i].normF() << std::endl;
+	       auto psiK = psi[i].K();
+
                auto tmp1 = (psi[i] + psiK);
                auto tmp2 = (psi[i] - psiK)*iunit; 
                tmp1.to_array(&v0[ndim*(i)]); // put all plus combination before

@@ -166,7 +166,7 @@ struct dtensor3{
 		   << " size=(" << dim0 << "," << dim1 << "," << dim2 << ")" 
 		   << std::endl;
 	 for(int i2=0; i2<dim2; i2++){
-	    (*this).get(i2).print("i2="+std::to_string(i2));
+	    (*this).get(i2).print("i2="+std::to_string(i2),prec);
 	 } // i2
       }
    public:
@@ -243,7 +243,7 @@ struct dtensor4{
 		   << std::endl;
 	 for(int i3=0; i3<dim3; i3++){
 	    for(int i2=0; i2<dim2; i2++){
-	       (*this).get(i2,i3).print("i3,i2="+std::to_string(i3)+","+std::to_string(i2));
+	       (*this).get(i2,i3).print("i2,i3="+std::to_string(i2)+","+std::to_string(i3),prec);
 	    } // i2
 	 } // i3
       }

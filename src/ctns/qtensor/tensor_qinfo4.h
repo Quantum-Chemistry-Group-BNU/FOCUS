@@ -95,7 +95,7 @@ void qinfo4<Tm>::setup_data(Tm* data){
 
 template <typename Tm>
 void qinfo4<Tm>::print(const std::string name, const int level) const{
-   std::cout << "\nqinfo2: " << name << " sym=" << sym;
+   std::cout << "\nqinfo4: " << name << " sym=" << sym;
    qrow.print("qrow");
    qcol.print("qcol");
    qmid.print("qmid");
@@ -115,7 +115,7 @@ void qinfo4<Tm>::print(const std::string name, const int level) const{
                       << " dim0,dim1,dim2,dim3=(" << blk.dim0 << "," << blk.dim1 << "," 
 		      << blk.dim2 << "," << blk.dim3 << ")" 
                       << std::endl; 
-            //if(level >= 2) blk.print("blk_"+std::to_string(idx));
+            if(level >= 2) blk.print("blk_"+std::to_string(idx));
 	 } // level>=1
       }
    } // idx
