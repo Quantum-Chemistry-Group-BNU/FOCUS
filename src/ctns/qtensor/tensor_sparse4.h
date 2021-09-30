@@ -250,11 +250,6 @@ template <typename Tm>
 stensor4<Tm> stensor4<Tm>::K(const int nbar) const{
    const double fpo = (nbar%2==0)? 1.0 : -1.0;
    stensor4<Tm> qt4(info.sym.flip(), info.qrow, info.qcol, info.qmid, info.qver);
-   
-   this->print("QW",2);
-   std::cout << "=======" << std::endl;
-   std::cout << std::endl;
-
    int br,bc,bm,bv;
    for(int idx=0; idx<info._qblocks.size(); idx++){
       auto& blk = qt4.info._qblocks[idx];
@@ -272,8 +267,6 @@ stensor4<Tm> stensor4<Tm>::K(const int nbar) const{
 	 for(int iv=0; iv<vdim; iv++){
 	    for(int im=0; im<mdim; im++){
 	       auto mat = blkk.get(im,iv).time_reversal(pr, pc);
-	       blkk.get(im,iv).print("blkk");
-	       mat.print("mat_ee");
 	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im,iv).data());
             }
 	 }

@@ -199,19 +199,16 @@ inline void twodot_localCI(comb<qkind::cNK>& icomb,
    std::vector<Tm> v0;
    if(rank == 0){
       if(icomb.psi.size() == 0) onedot_guess_psi0(icomb,neig); // starting guess 
-      exit(1);
       // specific to twodot 
       twodot_guess(icomb, dbond, nsub, neig, wf, v0);
-      exit(1);
       // load initial guess from previous opt
       std::vector<stensor4<Tm>> psi4(neig);
       for(int i=0; i<neig; i++){
-	 std::cout << "i=" << i << " " << linalg::xnrm2(nsub, &v0[nsub*i]) << std::endl;
          psi4[i].init(wf.info.sym, wf.info.qrow, wf.info.qcol,
-		      wf.info.qmid, wf.info.qver, false);
-         psi4[i].setup_data(&v0[nsub*i]);
-	 if(i==0) psi4[i].print("psi4",2);
-	 std::cout << "norm=" << nsub << " " << psi4[i].size() << " " << psi4[i].normF() << std::endl;
+		      wf.info.qmid, wf.info.qver, true);
+	 assert(psi4[i].size() == nsub);
+         //psi4[i].setup_data(&v0[nsub*i]);
+	 psi4[i].from_array(&v0[nsub*i]);
       }
       solver.init_guess(psi4, v0);
    }
