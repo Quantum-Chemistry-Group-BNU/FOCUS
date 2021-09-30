@@ -118,16 +118,19 @@ struct pdvdsonSolver_kr{
          if(parity == 0){
             // even-electron case
             const std::complex<double> iunit(0.0,1.0);
+/*
             for(int i=0; i<neig; i++){
 	       std::cout << "I=" << i << " - " << psi[i].normF() << std::endl;
 	       auto psiK = psi[i].K();
 	       std::cout << "I=" << i << " - " << psi[i].normF() << " - " << psiK.normF() << std::endl;
 	       exit(1);
 	    }
-    	    exit(1);	    
+    	    exit(1);	   
+*/ 
             for(int i=0; i<neig; i++){
-
+/*
      		    std::cout << "I=" << i << " - " << psi[i].normF() << std::endl;
+*/
 	       auto psiK = psi[i].K();
 
                auto tmp1 = (psi[i] + psiK);

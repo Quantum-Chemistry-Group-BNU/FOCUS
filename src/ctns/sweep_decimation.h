@@ -15,10 +15,10 @@ extern const double thresh_sig2;
 const double thresh_sig2accum = 0.99;
 extern const double thresh_sig2accum;
 
-const bool debug_decimation = true; //false;
+const bool debug_decimation = false;
 extern const bool debug_decimation;
 
-const bool debug_sig2 = true; //false;
+const bool debug_sig2 = true;
 extern const bool debug_sig2;
 
 // select important sigs
