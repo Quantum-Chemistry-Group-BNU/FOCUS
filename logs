@@ -1,7 +1,7 @@
 
------
-TODOs
------
+----
+LOGS
+----
 
  * Setup tests for NR & R integrals [DONE20210324]
  
@@ -29,20 +29,18 @@ TODOs
 		   - decimation_row_nkr [DONE20210709]
 		   - decimation_row_kr [DONE20210711]
 
- * Optimized parallel version [XXXX202109XX]
-    - OpenMP support [DONE20210903]:
+ * Optimized parallel version [DONE20211002]
+    - OpenMP support [DONE20210903]
 	- Hx & decimation
 	- Initialization of CTNS
-    - Z2 symmetry:
+    - Z2 symmetry: {rZ2,cZ2}
         - Checked by diagonalizing fock::Hmat
+    - better data structure for qtensor & oper_dict [DONE20211002]
+        - problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
 
-    - stack-like storage? 
+ * Optimized twodot algorithm [DONEXXXXXXXX]
+    - optimized formation of sigma vector by direct contraction with qt4 (without intermediate)
     - parallelization - push to the limit!
-       - monitor peak memory usage
-       - problem: bypass the 2GB limit in MPI_COUNT?: -> Native MPI support [DONE2021XXXX]
-	 see /Users/zhendongli/Desktop/FOCUS_program/FOCUS_reference/dmrg_codes
-	 - block_learning/
-	 - block2-preview-master/
     - GPU?
 
 ------
@@ -63,7 +61,7 @@ KNOWN PROBLEMS
 
  1. thresh_proj & thresh_ortho sensitivity in SCI projection [theoretical/numerical problem?]
 
- 2. to work with ctns, pRDM is removed which will make onedot opt prone to local minimum:
+ 2. to work with ctns, pRDM is removed which makes onedot opt prone to local minimum:
     implementing decimation for {|psi>, sum_k a_k|psi>, sum_l b_l|psi>} may help.
 
        /home/lx/lzd/focus_repo/FOCUS/examples/3_h6+_kr
@@ -74,3 +72,4 @@ KNOWN PROBLEMS
        nsweep= 2
        eref= [-2.89565156 -2.74390766]  ecal= [-2.89503561 -2.74089796]  ediff= 0.0030720814731275076
        fail
+
