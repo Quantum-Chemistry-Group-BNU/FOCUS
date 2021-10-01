@@ -24,7 +24,6 @@ void twodot_decimation(sweep_data& sweeps,
    std::cout <<" (dbranch,dcut,noise,rdm_vs_svd)=" << dbranch << "," << dcut << ","
              << std::scientific << std::setprecision(1) << noise << "," << rdm_vs_svd
 	     << std::endl;
-   if(debug_renorm) std::cout << "> twodot_decimation" << std::endl;
    auto& result = sweeps.opt_result[isweep][ibond];
    int nroots = vsol.cols();
    std::vector<stensor2<Tm>> wfs2(nroots);
@@ -91,7 +90,7 @@ void twodot_guess_psi(const std::string superblock,
 		      const linalg::matrix<typename Km::dtype>& vsol,
 		      stensor4<typename Km::dtype>& wf,
 		      const stensor2<typename Km::dtype>& rot){
-   if(debug_renorm) std::cout << "> twodot_guess_psi" << std::endl;
+   if(debug_renorm) std::cout << "ctns::twodot_guess_psi" << std::endl;
    int nroots = vsol.cols();
    icomb.psi.clear();
    icomb.psi.resize(nroots);
@@ -218,7 +217,6 @@ void twodot_renorm(sweep_data& sweeps,
    timing.te = tools::get_time();
 
    // renorm operators	 
-   if(rank == 0 && debug_renorm) std::cout << "> renormalize operators" << std::endl;
    const bool thresh = 1.e-10;
    const auto& p = dbond.p;
    const auto& pdx = icomb.topo.rindex.at(p); 

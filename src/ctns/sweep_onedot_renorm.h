@@ -29,7 +29,6 @@ void onedot_decimation(sweep_data& sweeps,
    std::cout <<" (dbranch,dcut,noise,rdm_vs_svd)=" << dbranch << "," << dcut << ","
              << std::scientific << std::setprecision(1) << noise << "," << rdm_vs_svd
 	     << std::endl;
-   if(debug_renorm) std::cout << "> onedot_decimation" << std::endl;
    auto& result = sweeps.opt_result[isweep][ibond];
    int nroots = vsol.cols();
    std::vector<stensor2<Tm>> wfs2(nroots);
@@ -86,7 +85,7 @@ void onedot_guess_psi(const std::string superblock,
 		      const linalg::matrix<typename Km::dtype>& vsol,
 		      stensor3<typename Km::dtype>& wf,
 		      const stensor2<typename Km::dtype>& rot){
-   if(debug_renorm) std::cout << "> onedot_guess_psi" << std::endl;
+   if(debug_renorm) std::cout << "ctns::onedot_guess_psi" << std::endl;
    const auto& pdx0 = icomb.topo.rindex.at(dbond.p0);
    const auto& pdx1 = icomb.topo.rindex.at(dbond.p1);
    int nroots = vsol.cols();
@@ -178,7 +177,6 @@ void onedot_renorm(sweep_data& sweeps,
    timing.te = tools::get_time();
 
    // renorm operators	 
-   if(rank == 0 && debug_renorm) std::cout << "> renormalize operators" << std::endl;
    const bool thresh = 1.e-10;
    const auto& p = dbond.p;
    const auto& pdx = icomb.topo.rindex.at(p); 

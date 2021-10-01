@@ -24,6 +24,7 @@ extern const bool debug_sig2;
 // select important sigs
 inline void decimation_selection(const bool ifkr,
 			         const qbond& qrow,
+				 const std::vector<bool>& ifmatched,
 			         const std::vector<double>& sig2all,
 			         const std::map<int,int>& idx2sector,
 		                 const int& dcut,
@@ -34,48 +35,73 @@ inline void decimation_selection(const bool ifkr,
    // sort all sigs
    const int nqr = qrow.size();
    auto index = tools::sort_index(sig2all, 1);
+   deff = 0;
    std::vector<int> kept_dim(nqr,0); // no. of states kept in each symmetry sector
    std::vector<double> kept_wts(nqr,0.0); // weights kept in each symmetry sector
-   deff = 0;
-   double sum = 0.0, SvN = 0.0;
+   double accum = 0.0, SvN = 0.0;
    for(int i=0; i<sig2all.size(); i++){
       if(dcut > -1 && deff >= dcut) break; // discard rest
       int idx = index[i];
       if(sig2all[idx] < thresh_sig2) continue; // discard negative weights
       int br = idx2sector.at(idx);
       auto qr = qrow.get_sym(br);
-      int nfac = (ifkr && qr.parity() == 1)? 2 : 1; // odd case: kept KR-pair
+      int nfac = (ifkr && qr.parity()==1)? 2 : 1; // odd case: kept KR-pair
+      deff += nfac;
       kept_dim[br] += nfac;
       kept_wts[br] += nfac*sig2all[idx];
-      deff += nfac;
-      sum += nfac*sig2all[idx];
+      accum += nfac*sig2all[idx];
       SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
-      if(debug_sig2 && sum <= thresh_sig2accum){
-	 if(i == 0) std::cout << "important sig2: thresh_sig2accum=" << thresh_sig2accum << std::endl;
-	 std::cout << " i=" << i << " br=" << br << " qr=" << qr << "[" << kept_dim[br]-1 << "]"
-                   << " sig2=" << sig2all[idx] << " accum=" << sum << std::endl;
+      if(debug_sig2 && accum <= thresh_sig2accum){
+	 if(i == 0) std::cout << "important sig2 with thresh_sig2accum=" 
+		              << thresh_sig2accum << std::endl;
+	 std::cout << " i=" << i << " br=" << br << " qr=" << qr 
+		   << " " << kept_dim[br]/nfac-1 << "-th"
+                   << " sig2=" << sig2all[idx] 
+		   << " accum=" << accum << std::endl;
       }
-   }
-   dwt = 1.0-sum;
-   std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff
-     	     << "  dwt=" << dwt << "  SvN=" << SvN << std::endl;
-   // construct qbond 
-   sum = 0.0;
+   } // i
+   dwt = 1.0-accum;
+   // construct qbond & recompute deff including additional states 
+   deff = 0;
+   accum = 0.0;
    auto index2 = tools::sort_index(kept_wts, 1); // order symmetry sectors by kept weights
+   std::cout << "select renormalized states per symmetry sector:" << std::endl;
    for(int i=0; i<nqr; i++){
       int br = index2[i];
-      if(kept_dim[br] == 0) continue;
       const auto& qr = qrow.get_sym(br);
+      const auto& dim0 = qrow.get_dim(br);
       const auto& dim = kept_dim[br];
       const auto& wts = kept_wts[br];
-      br_kept.push_back(br);
-      dims.emplace_back(qr,dim);
-      sum += wts;    
-      if(debug_sig2){ 
-         std::cout << " i=" << i << " br=" << br << " qr=" << qr << " dim=" 
-                   << dim << " wts=" << wts << " accum=" << sum << std::endl;
-      }
-   }
+      if(dim != 0){
+         br_kept.push_back(br);
+         dims.emplace_back(qr,dim);
+         accum += wts;    
+         deff += dim;
+         if(debug_sig2){ 
+            std::cout << " i=" << i << " br=" << br << " qr=" << qr
+		      << " dim[full,kept]=" << dim0 << "," << dim 
+                      << " wts=" << wts << " accum=" << accum << " deff=" << deff 
+		      << std::endl;
+         }
+      }else{
+	 // kept at least one state per sector
+	 if(!ifmatched[br]) continue;
+	 br_kept.push_back(br);
+	 int dmin = (ifkr && qr.parity()==1)? 2 : 1;
+         dims.emplace_back(qr,dmin);
+         deff += dmin;
+         if(debug_sig2){ 
+            std::cout << " i=" << i << " br=" << br << " qr=" << qr
+		      << " dim[full,kept]=" << dim0 << "," << dmin 
+                      << " wts=" << wts << " accum=" << accum << " deff=" << deff
+		      << " (additional)" << std::endl;
+	 }
+      } // kept_dim
+   } // i
+   std::cout << "decimation summary: "
+             << qrow.get_dimAll() << "->" << deff  
+	     << " dwt=" << dwt << " SvN=" << SvN 
+	     << std::endl;
 }
 
 // generate renormalized basis from wfs2[row,col] for row
@@ -135,20 +161,20 @@ void decimation_row_nkr(const qbond& qs1,
 	 }
 	 kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_vs_svd, debug_decimation);
       } // qc
-      // save
-      if(matched == 1){
 #ifdef _OPENMP
-         #pragma omp critical
+      #pragma omp critical
 #endif
-         results[br] = std::make_pair(sigs2, U);
-      }
+      results[br] = std::make_pair(sigs2, U);
    } // br
    int idx = 0;
    double sig2sum = 0.0;
+   std::vector<bool> ifmatched(nqr);
    std::vector<double> sig2all;
    std::map<int,int> idx2sector;
    for(int br=0; br<nqr; br++){
       const auto& sigs2 = results[br].first;
+      ifmatched[br] = (sigs2.size() > 0);
+      if(!ifmatched[br]) continue;
       std::copy(sigs2.begin(), sigs2.end(), std::back_inserter(sig2all));
       sig2sum += std::accumulate(sigs2.begin(), sigs2.end(), 0.0);
       for(int k=0; k<sigs2.size(); k++){
@@ -164,7 +190,8 @@ void decimation_row_nkr(const qbond& qs1,
    // 2. select important sig2 & form rot
    std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
-   decimation_selection(false, qrow, sig2all, idx2sector, dcut, dwt, deff, br_kept, dims);
+   decimation_selection(false, qrow, ifmatched, sig2all, idx2sector, dcut, 
+		        dwt, deff, br_kept, dims);
    qbond qkept(dims);
    auto isym = qkept.get_sym(0).isym();
    stensor2<Tm> qt2(qsym(isym), qrow, qkept);
@@ -236,11 +263,6 @@ inline void decimation_row_kr(const qbond& qs1,
          if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
 	 std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
       }
-      // mapping product basis to kramers paired basis
-      std::vector<int> pos_new;
-      std::vector<double> phases;
-      mapping2krbasis(qr, qs1, qs2, dpt, pos_new, phases);
-      assert(pos_new.size() == rdim);
       // search for matched block 
       std::vector<double> sigs2;
       linalg::matrix<Tm> U;
@@ -252,30 +274,37 @@ inline void decimation_row_kr(const qbond& qs1,
 	 if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
 	 matched += 1;
 	 if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
+         // mapping product basis to kramers paired basis
+         std::vector<int> pos_new;
+         std::vector<double> phases;
+         mapping2krbasis(qr, qs1, qs2, dpt, pos_new, phases);
+         assert(pos_new.size() == rdim);
 	 // compute KRS-adapted renormalized basis
 	 std::vector<linalg::matrix<Tm>> blks(nroots);
          for(int iroot=0; iroot<nroots; iroot++){
 	    blks[iroot] = wfs2[iroot](br,bc).to_matrix().reorder_row(pos_new).T();
 	 }
 	 kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_vs_svd, debug_decimation);
+	 // convert back to the original product basis
+         U = U.reorder_row(pos_new,1);
       } // qc
-      // save 
-      int nkept = U.cols();
-      if(nkept > 0){
 #ifdef _OPENMP
-         #pragma omp critical
+      #pragma omp critical
 #endif
-         results[br] = std::make_pair(sigs2, U.reorder_row(pos_new,1));
-      }
+      results[br] = std::make_pair(sigs2, U);
    } // br
    int idx = 0;
    double sig2sum = 0.0;
+   std::vector<bool> ifmatched(nqr);
    std::vector<double> sig2all;
    std::map<int,int> idx2sector;
    for(int br=0; br<nqr; br++){
       const auto& qr = qrow.get_sym(br);
       const auto& sigs2 = results[br].first;
+      ifmatched[br] = (sigs2.size() > 0);
+      if(!ifmatched[br]) continue; 
       int nkept = results[br].second.cols();
+      assert(nkept == sigs2.size());
       if(qr.parity() == 0){
          std::copy(sigs2.begin(), sigs2.end(), std::back_inserter(sig2all));
          sig2sum += std::accumulate(sigs2.begin(), sigs2.end(), 0.0);
@@ -304,7 +333,8 @@ inline void decimation_row_kr(const qbond& qs1,
    // 2. select important sig2 & form rot
    std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
-   decimation_selection(true, qrow, sig2all, idx2sector, dcut, dwt, deff, br_kept, dims);
+   decimation_selection(true, qrow, ifmatched, sig2all, idx2sector, dcut, 
+		        dwt, deff, br_kept, dims);
    qbond qkept(dims);
    auto isym = qkept.get_sym(0).isym();
    stensor2<Tm> qt2(qsym(isym), qrow, qkept);

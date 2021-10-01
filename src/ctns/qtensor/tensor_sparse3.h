@@ -55,20 +55,24 @@ struct stensor3{
 	 own = _own;
 	 if(own) this->allocate();
       }
-      void setup_data(Tm* data){
-         assert(own == false);
-	 _data = data;
-	 info.setup_data(_data);
-      }
       stensor3(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
 	       const std::vector<bool> _dir={0,1,1}, const bool _own=true){
 	 this->init(_sym, _qrow, _qcol, _qmid, _dir, _own);
       }
       // simple constructor from qinfo
-      stensor3(const qinfo3<Tm>& _info, const bool _own=true){
+      void init(const qinfo3<Tm>& _info, const bool _own=true){
 	 info = _info;
 	 own = _own;
          if(own) this->allocate();
+      }
+      stensor3(const qinfo3<Tm>& _info, const bool _own=true){
+	 this->init(_info, _own);
+      }
+      // used to for setup ptr, if own=false
+      void setup_data(Tm* data){
+         assert(own == false);
+	 _data = data;
+	 info.setup_data(_data);
       }
       // desctructors
       ~stensor3(){ 

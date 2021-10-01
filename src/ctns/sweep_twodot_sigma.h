@@ -354,7 +354,7 @@ void twodot_Hx(Tm* y,
    auto wf1 = wf.merge_c2r(); // wf1[l,c1,c2r]
    std::vector<stensor3<Tm>> Hwfs(maxthreads);
    for(int i=0; i<maxthreads; i++){
-      Hwfs[i].init(wf1.info.sym, wf1.info.qrow, wf1.info.qcol, wf1.info.qmid, wf1.info.dir);
+      Hwfs[i].init(wf1.info);
    }
    auto t1 = tools::get_time();
    // compute

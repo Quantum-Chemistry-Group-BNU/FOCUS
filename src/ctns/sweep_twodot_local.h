@@ -204,13 +204,12 @@ inline void twodot_localCI(comb<qkind::cNK>& icomb,
       // load initial guess from previous opt
       std::vector<stensor4<Tm>> psi4(neig);
       for(int i=0; i<neig; i++){
-         psi4[i].init(wf.info.sym, wf.info.qrow, wf.info.qcol,
-		      wf.info.qmid, wf.info.qver, true);
-	 assert(psi4[i].size() == nsub);
-         //psi4[i].setup_data(&v0[nsub*i]);
-	 psi4[i].from_array(&v0[nsub*i]);
+         psi4[i].init(wf.info);
+	 // need to copy, as v0 will be modified in solver.init_guess
+	 psi4[i].from_array(&v0[nsub*i]); 
       }
       solver.init_guess(psi4, v0);
+      psi4.clear();
    }
    //------------------------------------
    solver.solve_iter(eopt.data(), vsol.data(), v0.data());

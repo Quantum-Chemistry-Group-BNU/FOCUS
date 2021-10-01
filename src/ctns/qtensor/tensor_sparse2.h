@@ -56,20 +56,24 @@ struct stensor2{
          own = _own;
          if(own) this->allocate();
       }
-      void setup_data(Tm* data){
-         assert(own == false);
-	 _data = data;
-	 info.setup_data(_data);
-      }
       stensor2(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
 	       const std::vector<bool> _dir={1,0}, const bool _own=true){
 	 this->init(_sym, _qrow, _qcol, _dir, _own);
       }
       // simple constructor from qinfo
-      stensor2(const qinfo2<Tm>& _info, const bool _own=true){
+      void init(const qinfo2<Tm>& _info, const bool _own=true){
 	 info = _info;
 	 own = _own;
          if(own) this->allocate();
+      }
+      stensor2(const qinfo2<Tm>& _info, const bool _own=true){
+	 this->init(_info, _own);
+      }
+      // used to for setup ptr, if own=false
+      void setup_data(Tm* data){
+         assert(own == false);
+	 _data = data;
+	 info.setup_data(_data);
       }
       // desctructors
       ~stensor2(){ 

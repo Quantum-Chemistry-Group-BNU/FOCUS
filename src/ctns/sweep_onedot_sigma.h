@@ -359,7 +359,7 @@ void onedot_Hx(Tm* y,
    // initialization
    std::vector<stensor3<Tm>> Hwfs(maxthreads);
    for(int i=0; i<maxthreads; i++){
-      Hwfs[i].init(wf.info.sym, wf.info.qrow, wf.info.qcol, wf.info.qmid, wf.info.dir);
+      Hwfs[i].init(wf.info);
    }
    auto t1 = tools::get_time();
    // compute
