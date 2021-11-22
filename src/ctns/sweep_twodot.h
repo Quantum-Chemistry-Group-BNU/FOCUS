@@ -140,13 +140,27 @@ void sweep_twodot(const input::schedule& schd,
    timing.tb = tools::get_time();
 
    // 3.2 Solve local problem: Hc=cE
-   auto Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
-	                             int2e, int1e, ecore,
-				     wf, size, rank);
    using std::placeholders::_1;
    using std::placeholders::_2;
+/*
+   HVec_type<Tm> HVec; 
+   if(schd.ctns.algorithm == 0){
+      auto Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
+                                        int2e, int1e, ecore,
+           			        wf, size, rank);
+      HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
+                  std::ref(wf), std::cref(size), std::cref(rank));
+   }else{
+
+   }
+*/
+
+   auto Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
+                                        int2e, int1e, ecore,
+           			        wf, size, rank);
    auto HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
-                    std::ref(wf), std::cref(size), std::cref(rank));
+                  std::ref(wf), std::cref(size), std::cref(rank));
+
    oper_timer.clear();
    twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
@@ -156,6 +170,7 @@ void sweep_twodot(const input::schedule& schd,
       sweeps.print_eopt(isweep, ibond);
       oper_timer.analysis();
    }
+   exit(1);
 
    // 3. decimation & renormalize operators
    twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 

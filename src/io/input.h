@@ -116,6 +116,7 @@ public:
    int dbranch = 0;
    int maxsweep = 0;
    std::vector<params_sweep> ctrls;
+   int algorithm = 0;
    // dvdson
    int cisolver = 1;
    int maxcycle = 100;

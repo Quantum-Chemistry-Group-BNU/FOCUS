@@ -300,7 +300,10 @@ Sweep optimization:
  qtensor/tensor_sparse4.h
  qtensor/pdvdson_kramers.h
 
-#################################################################
+
+############################
+# V3: Optimized twodot H*x #
+############################
 
 优化方向: twodot算法
 
