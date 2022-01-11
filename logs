@@ -38,8 +38,10 @@ LOGS
     - better data structure for qtensor & oper_dict [DONE20211002]
         - problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
 
- * Optimized twodot algorithm [DONEXXXXXXXX]
+ * Optimized twodot algorithm [DONE2022XXXX]
     - optimized formation of sigma vector by direct contraction with qt4 (without intermediate)
+
+ * Large-scale parallelization
     - parallelization - push to the limit!
     - GPU?
 

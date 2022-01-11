@@ -305,6 +305,11 @@ Sweep optimization:
 # V3: Optimized twodot H*x #
 ############################
 
+Better twodot implementation: direct work with qt4_qt2 without reshaping
+ symbolic_oper.h
+
+#################################################################
+
 优化方向: twodot算法
 
  0. intel VTune for Fe4S4 test -> cost of single Hx for D=1000
@@ -378,11 +383,9 @@ Sweep optimization:
 
  2. 提升并行效率
 
- 3. 异构计算 -> further accelerate contract_qt_qt
-
-#################################################################
+ 3. 异构计算 -> further accelerate contract_qt4_qt2?
 
 Comments:
- 1. probably change to shared_ptr to share data instead of raw pointer & own?
- 2. direct operating wf4 in sweep_twodot_sigma.h without temporary stensor3
+ 1. direct operating wf4 in sweep_twodot_sigma.h without temporary stensor3
+ 2. probably change to shared_ptr to share data instead of raw pointer & own?
 

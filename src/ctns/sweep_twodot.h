@@ -8,6 +8,7 @@
 #include "sweep_twodot_hdiag.h"
 #include "sweep_twodot_local.h"
 #include "sweep_twodot_sigma.h"
+#include "sweep_twodot_sigma2.h"
 
 namespace ctns{
 
@@ -140,27 +141,29 @@ void sweep_twodot(const input::schedule& schd,
    timing.tb = tools::get_time();
 
    // 3.2 Solve local problem: Hc=cE
+   std::cout << "schd.ctns.algorithm=" << schd.ctns.algorithm << std::endl;
    using std::placeholders::_1;
    using std::placeholders::_2;
-/*
-   HVec_type<Tm> HVec; 
+   Hx_functors<Tm> Hx_funs;
+   HVec_type<Tm> HVec;
    if(schd.ctns.algorithm == 0){
-      auto Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
-                                        int2e, int1e, ecore,
-           			        wf, size, rank);
+      Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
+                                   int2e, int1e, ecore,
+              			   wf, size, rank);
       HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else{
-
-   }
-*/
-
-   auto Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
-                                        int2e, int1e, ecore,
-           			        wf, size, rank);
-   auto HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
+      symbolic_twodot_Hx(lqops, rqops, c1qops, c2qops, size, rank);
+/*
+      Hx_funs = twodot_Hx_functors2(lqops, rqops, c1qops, c2qops, 
+                                    int2e, int1e, ecore,
+              			    wf, size, rank);
+      HVec = bind(&ctns::twodot_Hx2<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
-
+*/
+      std::cout << "exit!" << std::endl;
+      exit(1);
+   }
    oper_timer.clear();
    twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
