@@ -212,7 +212,7 @@ class onstate{
 	 }
 	 return -2*(ff%2)+1;
       }
-      // parity: = sum_k(-1)^fk for k in [0,n) 
+      // parity: = (-1)^sum_k fk for k in [0,n) 
       int parity(const int& n) const{
 	 assert(n>=0 && n<_size);    
 	 int p = 0;
@@ -224,7 +224,7 @@ class onstate{
 	 p ^= get_parity( (_repr[n/64] & get_ones(n%64)) ); 
 	 return -2*p+1;
       }
-      // parity: = sum_k(-1)^fk for k in [start,end) 
+      // parity: = (-1)^sum_k fk for k in [start,end) 
       int parity(const int& start, const int& end) const{
 	 assert(start>=0 && start<_size);
          assert(end>=0 && start<_size);

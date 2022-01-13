@@ -21,9 +21,9 @@ struct symbolic_oper{
 	 index = _index;
 	 dagger = _dagger;
 	 if(label == "a" || label == "S"){
-	    parity = 1;
+	    parity = true;
 	 }else{
-	    parity = 0;
+	    parity = false;
 	 }
       }
       // string format
@@ -39,7 +39,7 @@ struct symbolic_oper{
       // print
       friend std::ostream& operator <<(std::ostream& os, const symbolic_oper& op){
          os << op.label;
-	 if(op.dagger) os << "+";
+	 if(op.dagger) os << "dag";
 	 os << "[" << op.block << "]";
 	 if(op.label == "H" || op.label == "C" || op.label == "S"){
             os << "(" << op.index << ")";
@@ -55,36 +55,80 @@ struct symbolic_oper{
       }
    public:
       std::string block, label;
-      int index, parity;
-      bool dagger;
+      int index;
+      bool dagger, parity;
 };
 
-/*
- product of operators: wt*o[l]*o[c1], wt*o[l]*o[c1]*o[r]
-*/
+// sum of weighted symbolic operators: wa*opa + wb*opb + ...
+template <typename Tm>
+struct symbolic_sum{
+   public:
+      // constructor
+      symbolic_sum(){}
+      symbolic_sum(const symbolic_oper& op1){
+         sums.push_back(std::make_pair(1.0,op1));
+      }
+      symbolic_sum(const symbolic_oper& op1, const Tm& wt){
+         sums.push_back(std::make_pair(wt,op1));
+      }
+      // append a term
+      void push_back(const std::pair<Tm,symbolic_oper> s){
+         sums.push_back(s);
+      }
+      // print
+      friend std::ostream& operator <<(std::ostream& os, const symbolic_sum& ops){
+	 int n = ops.sums.size();
+	 os << "{" << ops.sums[0].first << "*" << ops.sums[0].second;
+	 for(int i=1; i<n; i++){
+            os << "+" << ops.sums[i].first << "*" << ops.sums[i].second;
+	 }
+	 os << "}";
+         return os;
+      }
+      // scale by a factor
+      void scale(const double fac){ 
+	 for(auto& pr : sums){
+	    pr.first *= fac; 	 
+	 }
+      }
+      // operations
+      symbolic_sum H() const{
+	 symbolic_sum<Tm> sH;
+	 int n = sums.size();
+	 sH.sums.resize(n);
+	 for(int i=0; i<n; i++){
+	    auto wt = tools::conjugate(sums[i].first);
+	    auto op = sums[i].second.H();
+            sH.sums[i] = std::make_pair(wt,op);
+	 }
+	 return sH;
+      }
+   public:
+      std::vector<std::pair<Tm,symbolic_oper>> sums;
+};
+
+// product of operators: o[l]*o[c1], o[l]*o[c1]*o[r]
+template <typename Tm>
 struct symbolic_term{
    public:
       // constructor
       symbolic_term(){}
       symbolic_term(const symbolic_oper& op1, const double _wt=1.0){
-         terms.push_back(op1);
-	 wt = _wt;
+         terms.push_back(symbolic_sum<Tm>(op1,_wt));
       }
       symbolic_term(const symbolic_oper& op1, 
 		    const symbolic_oper& op2,
 		    const double _wt=1.0){
-         terms.push_back(op1);
-         terms.push_back(op2);
-	 wt = _wt;
+         terms.push_back(symbolic_sum<Tm>(op1,_wt));
+         terms.push_back(symbolic_sum<Tm>(op2));
       }
       symbolic_term(const symbolic_oper& op1, 
 		    const symbolic_oper& op2,
 		    const symbolic_oper& op3,
 		    const double _wt=1.0){
-         terms.push_back(op1);
-         terms.push_back(op2);
-         terms.push_back(op3);
-	 wt = _wt;
+         terms.push_back(symbolic_sum<Tm>(op1,_wt));
+         terms.push_back(symbolic_sum<Tm>(op2));
+         terms.push_back(symbolic_sum<Tm>(op3));
       }
       // o[l]o[c1]o[c2]o[r]
       symbolic_term(const symbolic_oper& op1, 
@@ -92,42 +136,72 @@ struct symbolic_term{
 		    const symbolic_oper& op3,
 		    const symbolic_oper& op4,
 		    const double _wt=1.0){
-         terms.push_back(op1);
-         terms.push_back(op2);
-         terms.push_back(op3);
-         terms.push_back(op4);
-	 wt = _wt;
+         terms.push_back(symbolic_sum<Tm>(op1,_wt));
+         terms.push_back(symbolic_sum<Tm>(op2));
+         terms.push_back(symbolic_sum<Tm>(op3));
+         terms.push_back(symbolic_sum<Tm>(op4));
+      }
+      // oper & sum
+      symbolic_term(const symbolic_oper& op1,
+		    const symbolic_sum<Tm>& ops2){
+         terms.push_back(symbolic_sum<Tm>(op1));
+	 terms.push_back(ops2);
+      }
+      symbolic_term(const symbolic_sum<Tm>& ops1,
+		    const symbolic_oper& op2){
+         terms.push_back(ops1);
+	 terms.push_back(symbolic_sum<Tm>(op2));
       }
       // print
       friend std::ostream& operator <<(std::ostream& os, const symbolic_term& ops){
-	 os << ops.wt;
-	 for(const auto& op : ops.terms){
-            os << "*" << op;
+         int n = ops.terms.size();
+	 os << ops.terms[0];
+	 for(int i=1; i<n; i++){
+	    os << " * " << ops.terms[i];
 	 }
          return os;
       }
       // scale by a factor
-      void scale(const double fac){ wt *= fac; }
+      void scale(const double fac){ 
+	 terms[0].scale(fac);
+      }
+      // operations
+      symbolic_term H() const{
+	 symbolic_term<Tm> tH;
+         int n = terms.size();
+	 tH.terms.resize(n);
+	 for(int i=0; i<n; i++){
+	    tH.terms[i] = terms[i].H();
+	 }
+	 // (o0o1o2)^H = (-1)^{p0*p1+p0*p2+p1*p2}*o0Ho1Ho2H 
+	 bool parity = false;
+	 for(int i=0; i<n; i++){
+	    const auto& op1 = terms[i].sums[0].second;
+	    for(int j=0; j<i; j++){
+	       const auto& op2 = terms[j].sums[0].second; 
+	       parity ^= (op1.parity & op2.parity); 
+	    }
+	 }
+	 if(parity) tH.scale(-1.0);
+	 return tH;
+      }
       // t1*t2 
       symbolic_term product(const symbolic_term& t) const{
          symbolic_term t12;
-         t12.wt = wt*t.wt;
 	 t12.terms = terms;
          std::copy(t.terms.begin(), t.terms.end(), std::back_inserter(t12.terms));
 	 return t12;
       }
    public:
-      std::vector<symbolic_oper> terms;	   
-      double wt = 1.0;
+      std::vector<symbolic_sum<Tm>> terms;
 };
 
-/*
- list of terms to be computed distributedly
-*/
+// list of terms to be computed distributedly
+template <typename Tm>
 struct symbolic_task{
    public:
       // append a term
-      void push_back(const symbolic_term& t){
+      void append(const symbolic_term<Tm> t){
          tasks.push_back(t);
       }
       // joint a task	   
@@ -154,7 +228,7 @@ struct symbolic_task{
 	 }
       }
    public:
-      std::vector<symbolic_term> tasks;
+      std::vector<symbolic_term<Tm>> tasks;
 }; 
 
 } // ctns

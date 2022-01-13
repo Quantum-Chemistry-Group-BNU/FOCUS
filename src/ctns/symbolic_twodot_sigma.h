@@ -16,23 +16,26 @@ void symbolic_twodot_Hx_functors(const oper_dict<Tm>& lqops,
 	                         const oper_dict<Tm>& rqops,
 			         const oper_dict<Tm>& c1qops,
 	                         const oper_dict<Tm>& c2qops,
+	                         const integral::two_body<Tm>& int2e,
 	                         const int& size,
 	                         const int& rank){
    const bool debug = true;
    std::cout << "symbolic_twodot_Hx_functors" << std::endl;
-   symbolic_task formulae;
+
+   const bool ifkr = lqops.ifkr;
+   const int isym = lqops.isym;
+   symbolic_task<Tm> formulae;
 
    // Local terms:
-   const bool ifkr = lqops.ifkr;
    const double scale = ifkr? 0.5 : 1.0;
    // H[lc1]
-   auto Hlc1 = symbolic_compxwf_opH("l", "c1", lqops.cindex, c1qops.cindex, 
-		                    ifkr, size, rank, scale);
+   auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
+		                        ifkr, size, rank, scale);
    if(rank == 0) Hlc1.display("Hlc1", debug);
    formulae.join(Hlc1);
    // H[c2r]
-   auto Hc2r = symbolic_compxwf_opH("c2", "r", c2qops.cindex, rqops.cindex, 
-		                    ifkr, size, rank, scale);
+   auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", c2qops.cindex, rqops.cindex, 
+		                        ifkr, size, rank, scale);
    if(rank == 0) Hc2r.display("Hc2r", debug);
    formulae.join(Hc2r);
 
@@ -43,9 +46,9 @@ void symbolic_twodot_Hx_functors(const oper_dict<Tm>& lqops,
       int index = pr.first;
       int iformula = pr.second;
       // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
-      auto Clc1 = symbolic_normxwf_opC("l", "c1", index, iformula);
-      auto Sc2r = symbolic_compxwf_opS("c2", "r", c2qops.cindex, rqops.cindex,
-		                       index, ifkr, size, rank);
+      auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
+      auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+		                           index, ifkr, size, rank);
       auto Clc1_Sc2r = Clc1.outer_product(Sc2r);
       if(rank == 0) Clc1_Sc2r.display("Clc1_Sc2r : "+std::to_string(index), debug);
       formulae.join(Clc1_Sc2r);
@@ -56,9 +59,9 @@ void symbolic_twodot_Hx_functors(const oper_dict<Tm>& lqops,
       int index = pr.first;
       int iformula = pr.second;
       // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
-      auto Slc1 = symbolic_compxwf_opS("l", "c1", lqops.cindex, c1qops.cindex,
-		                       index, ifkr, size, rank);
-      auto Cc2r = symbolic_normxwf_opC("c2", "r", index, iformula);
+      auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
+		                           index, ifkr, size, rank);
+      auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
       auto Slc1_Cc2r = Slc1.outer_product(Cc2r);
       if(rank == 0) Slc1_Cc2r.display("Slc1_Cc2r : "+std::to_string(index), debug);
       formulae.join(Slc1_Cc2r);
@@ -84,9 +87,9 @@ void symbolic_twodot_Hx_functors(const oper_dict<Tm>& lqops,
       if(iproc == rank){
 	 const double wt = ifkr? wfacAP(index) : 1.0;    
 	 // Apq*Ppq + Apq^+*Ppq^+
-         auto Alc1 = symbolic_normxwf_opA("l", "c1", index, iformula);
-         auto Pc2r = symbolic_compxwf_opP("c2", "r", c2qops.cindex, rqops.cindex,
-	 				  index, ifkr, size, rank);
+         auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula);
+         auto Pc2r = symbolic_compxwf_opP<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+	 				      int2e, index, isym, ifkr);
 	 Pc2r.display("Pc2r",1);
 	 auto Alc1_Pc2r = Alc1.outer_product(Pc2r);
          if(rank == 0) Alc1_Pc2r.display("Alc1_Pc2r : "+std::to_string(index), debug);
@@ -94,6 +97,7 @@ void symbolic_twodot_Hx_functors(const oper_dict<Tm>& lqops,
          exit(1);
       } // iproc
    }
+/*
    // 6. Bps^LC1*Qps^C2R + h.c. or Qqr^LC1*Bqr^C2R
    for(const auto pr : binfo){
       int index = pr.first;
@@ -102,16 +106,15 @@ void symbolic_twodot_Hx_functors(const oper_dict<Tm>& lqops,
       if(iproc == rank){
          const double wt = ifkr? wfacBQ(index) : wfac(index);
 	 // Bpq*Qpq + Bpq^+*Qpq^+
-	 auto Blc1 = symbolic_normxwf_opB("l", "c1", index, iformula);
-	 auto Qc2r = symbolic_compxwf_opQ("c2", "r", c2qops.cindex, rqops.cindex,
-			                  index, ifkr, size, rank);
+	 auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula);
+	 auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+			                      int2e, index, isym, ifkr);
 	 auto Blc1_Qc2r = Blc1.outer_product(Qc2r);
 	 if(rank == 0) Blc1_Qc2r.display("Blc1_Qc2r : "+std::to_string(index), debug);
-/*
-	 symbolic_task_join(formulae, Blc1_Qc2r);
-*/
+	 formulae.join(Blc1_Qc2r);
       } // iproc
    }
+*/
    exit(1);
    // debug
    if(rank == 0) formulae.display("total", debug);

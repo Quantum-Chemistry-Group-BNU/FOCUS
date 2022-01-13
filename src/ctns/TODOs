@@ -305,8 +305,14 @@ Sweep optimization:
 # V3: Optimized twodot H*x #
 ############################
 
-Better twodot implementation: direct work with qt4_qt2 without reshaping
+Symbolic derivations: expansion of formulae
  symbolic_oper.h
+ symbolic_normxwf.h
+ symbolic_compxwf.h
+ symbolic_twodot_sigma.h
+Better twodot implementation: direct work with qt4_qt2 without reshaping
+
+
 
 #################################################################
 

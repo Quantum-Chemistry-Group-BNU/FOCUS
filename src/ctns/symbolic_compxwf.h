@@ -2,29 +2,25 @@
 #define SYMBOLIC_COMPXWF_H
 
 #include "symbolic_oper.h"
+#include "symbolic_op1op2xwf.h"
 
 namespace ctns{
 
-/*
 // kernel for computing renormalized P|ket> or P^+|ket> 
 template <typename Tm>
-stensor3<Tm> oper_compxwf_opP(const std::string superblock,
-		              const stensor3<Tm>& site,
-		              const oper_dict<Tm>& qops1,
-		              const oper_dict<Tm>& qops2,
-	                      const integral::two_body<Tm>& int2e,
-	                      const integral::one_body<Tm>& int1e,
-		              const int index,
-		              const bool ifdagger=false){
-   auto t0 = tools::get_time();
-   
-   const int  isym = qops1.isym;
-   const bool ifkr = qops1.ifkr;
+symbolic_task<Tm> symbolic_compxwf_opP(const std::string block1,
+				       const std::string block2,
+				       const std::vector<int>& cindex1,
+				       const std::vector<int>& cindex2,
+	                               const integral::two_body<Tm>& int2e,
+				       const int index,
+				       const int isym,
+				       const bool ifkr,
+				       const bool ifdagger=false){
+   symbolic_task<Tm> formulae; 
    auto pq = oper_unpack(index);
    int p = pq.first, q = pq.second;
    auto sym_op = get_qsym_opP(isym, p, q);
-   auto sym_opwf = ifdagger? -sym_op+site.info.sym : sym_op+site.info.sym;
-   stensor3<Tm> opwf(sym_opwf, site.info.qrow, site.info.qcol, site.info.qmid, site.info.dir);
    // 
    // Ppq = 1/2<pq||sr> aras  (p<q)
    //     = <pq||s1r1> As1r1 [r>s] => Ppq^1
@@ -32,24 +28,24 @@ stensor3<Tm> oper_compxwf_opP(const std::string superblock,
    //     + <pq||s1r2> ar2*as1	   => -<pq||s1r2> as1*ar2
    //
    // 1. P1*I2
-   opwf += oper_kernel_OIwf(superblock,site,qops1('P').at(index),ifdagger);
+   auto P1pq = symbolic_term<Tm>(symbolic_oper(block1,"P",index,ifdagger));
+   formulae.append(P1pq);
    // 2. I1*P2
-   opwf += oper_kernel_IOwf(superblock,site,qops2('P').at(index),0,ifdagger);
-   // 3. -<pq||s1r2> as1*ar2
+   auto P2pq = symbolic_term<Tm>(symbolic_oper(block2,"P",index,ifdagger));
+   formulae.append(P2pq);
+   // 3. sum_{s1} sum_{r2} -<pq||s1r2> as1*ar2
    std::map<std::pair<int,int>,Tm> oij;
    if(not ifkr){
-      for(const auto& op1C : qops1('C')){
-         int s1 = op1C.first;
-         for(const auto& op2C : qops2('C')){
-	    int r2 = op2C.first;
+      for(const auto& s1 : cindex1){
+         for(const auto& r2 : cindex2){
 	    oij[std::make_pair(s1,r2)] = -int2e.get(p,q,s1,r2);
 	 }
       }
    }else{
-      for(const auto& op1C : qops1('C')){
-         int s1a = op1C.first, s1b = s1a+1;
-         for(const auto& op2C : qops2('C')){
-	    int r2a = op2C.first, r2b = r2a+1;
+      for(const auto& s1a : cindex1){
+         int s1b = s1a+1;
+         for(const auto& r2a : cindex2){
+	    int r2b = r2a+1;
 	    oij[std::make_pair(s1a,r2a)] = -int2e.get(p,q,s1a,r2a);
 	    oij[std::make_pair(s1a,r2b)] = -int2e.get(p,q,s1a,r2b);
 	    oij[std::make_pair(s1b,r2a)] = -int2e.get(p,q,s1b,r2a);
@@ -57,39 +53,26 @@ stensor3<Tm> oper_compxwf_opP(const std::string superblock,
 	 }
       }
    }
-   oper_op1op2xwf(ifkr,opwf,superblock,site,qops1('C'),qops2('C'),
-		  sym_op,oij,0,0,ifdagger); // as1*ar2
-
-   auto t1 = tools::get_time();
-#ifdef _OPENMP
-   #pragma omp critical
-#endif
-   {
-      oper_timer.nP += 1;
-      oper_timer.tP += tools::get_duration(t1-t0);
-   }
-   return opwf;
+   symbolic_op1op2xwf<Tm>(ifkr,formulae,block1,block2,cindex1,cindex2,
+		          isym,sym_op,oij,0,0,ifdagger); // as1*ar2
+   return formulae;
 }
 
 // kernel for computing renormalized Q|ket> or Q^+|ket>
 template <typename Tm>
-stensor3<Tm> oper_compxwf_opQ(const std::string superblock,
-		              const stensor3<Tm>& site,
-			      const oper_dict<Tm>& qops1,
-			      const oper_dict<Tm>& qops2,
-	                      const integral::two_body<Tm>& int2e,
-	                      const integral::one_body<Tm>& int1e,
-		              const int index,
-			      const bool ifdagger=false){
-   auto t0 = tools::get_time();
-
-   const int  isym = qops1.isym;
-   const bool ifkr = qops1.ifkr;
+symbolic_task<Tm> symbolic_compxwf_opQ(const std::string block1,
+				       const std::string block2,
+				       const std::vector<int>& cindex1,
+				       const std::vector<int>& cindex2,
+	                               const integral::two_body<Tm>& int2e,
+		                       const int index,
+				       const int isym,
+				       const bool ifkr,
+			               const bool ifdagger=false){
+   symbolic_task<Tm> formulae; 
    auto ps = oper_unpack(index);
    int p = ps.first, s = ps.second;
    auto sym_op = get_qsym_opQ(isym, p, s);
-   auto sym_opwf = ifdagger? -sym_op+site.info.sym : sym_op+site.info.sym;
-   stensor3<Tm> opwf(sym_opwf, site.info.qrow, site.info.qcol, site.info.qmid, site.info.dir);
    //
    // Qps = <pq||sr> aq^+ar
    //     = <pq1||sr1> Bq1r1 	=> Qps^1
@@ -98,25 +81,25 @@ stensor3<Tm> oper_compxwf_opQ(const std::string superblock,
    //     + <pq2||sr1> aq2^+ar1 => -<pq2||sr1> ar1*aq2^+
    //
    // 1. Q1*I2
-   opwf += oper_kernel_OIwf(superblock,site,qops1('Q').at(index),ifdagger);
+   auto Q1ps = symbolic_term<Tm>(symbolic_oper(block1,"Q",index,ifdagger));
+   formulae.append(Q1ps);
    // 2. I1*Q2
-   opwf += oper_kernel_IOwf(superblock,site,qops2('Q').at(index),0,ifdagger);
+   auto Q2ps = symbolic_term<Tm>(symbolic_oper(block2,"Q",index,ifdagger));
+   formulae.append(Q2ps);
    // 3. <pq1||sr2> aq1^+*ar2 &  4. -<pr2||sq1> aq1*ar2^+
    std::map<std::pair<int,int>,Tm> o1ij, o2ij;
    if(not ifkr){
-      for(const auto& op1C : qops1('C')){
-         int q1 = op1C.first;
-         for(const auto& op2C : qops2('C')){
-            int r2 = op2C.first;
+      for(const auto& q1 : cindex1){
+         for(const auto& r2 : cindex2){
             o1ij[std::make_pair(q1,r2)] =  int2e.get(p,q1,s,r2);
 	    o2ij[std::make_pair(q1,r2)] = -int2e.get(p,r2,s,q1);
          }
-      }	
+      }
    }else{
-      for(const auto& op1C : qops1('C')){
-         int q1a = op1C.first, q1b = q1a+1;
-         for(const auto& op2C : qops2('C')){
-            int r2a = op2C.first, r2b = r2a+1;
+      for(const auto& q1a : cindex1){
+         int q1b = q1a+1;
+         for(const auto& r2a : cindex2){
+            int r2b = r2a+1;
             o1ij[std::make_pair(q1a,r2a)] =  int2e.get(p,q1a,s,r2a);
             o1ij[std::make_pair(q1a,r2b)] =  int2e.get(p,q1a,s,r2b);
             o1ij[std::make_pair(q1b,r2a)] =  int2e.get(p,q1b,s,r2a);
@@ -126,36 +109,27 @@ stensor3<Tm> oper_compxwf_opQ(const std::string superblock,
 	    o2ij[std::make_pair(q1b,r2a)] = -int2e.get(p,r2a,s,q1b);
 	    o2ij[std::make_pair(q1b,r2b)] = -int2e.get(p,r2b,s,q1b);
          }
-      }	
+      }
    }
-   oper_op1op2xwf(ifkr,opwf,superblock,site,qops1('C'),qops2('C'),
-		  sym_op,o1ij,1,0,ifdagger); // aq1^+*ar2
-   oper_op1op2xwf(ifkr,opwf,superblock,site,qops1('C'),qops2('C'),
-		  sym_op,o2ij,0,1,ifdagger); // aq1*ar2^+
-
-   auto t1 = tools::get_time();
-#ifdef _OPENMP
-   #pragma omp critical
-#endif
-   {
-      oper_timer.nQ += 1;
-      oper_timer.tQ += tools::get_duration(t1-t0);
-   }
-   return opwf;
+   symbolic_op1op2xwf<Tm>(ifkr,formulae,block1,block2,cindex1,cindex2,
+ 		          isym,sym_op,o1ij,1,0,ifdagger); // aq1^+*ar2
+   symbolic_op1op2xwf<Tm>(ifkr,formulae,block1,block2,cindex1,cindex2,
+ 		          isym,sym_op,o2ij,0,1,ifdagger); // aq1*ar2^+
+   return formulae;
 }
-*/
 
 // kernel for computing renormalized Sp|ket> [6 terms]
-inline symbolic_task symbolic_compxwf_opS(const std::string block1,
-					  const std::string block2,
-					  const std::vector<int>& cindex1,
-					  const std::vector<int>& cindex2,
-		                          const int index,
-					  const bool ifkr,
-			                  const int size,
-			                  const int rank,
-			                  const bool ifdagger=false){
-   symbolic_task formulae;
+template <typename Tm>
+symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
+				       const std::string block2,
+				       const std::vector<int>& cindex1,
+				       const std::vector<int>& cindex2,
+		                       const int index,
+				       const bool ifkr,
+			               const int size,
+			               const int rank,
+			               const bool ifdagger=false){
+   symbolic_task<Tm> formulae;
    int p = index, kp = p/2;
    //
    // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
@@ -166,11 +140,11 @@ inline symbolic_task symbolic_compxwf_opS(const std::string block1,
    //    + <pq1||s1r2> aq[1]^+ar[2]as[1] => Qpr2[1]*ar[2]    = sum_q Qpq[1]*aq[2]
    //
    // 1. S1*I2
-   auto S1p = symbolic_term(symbolic_oper(block1,"S",index,ifdagger));
-   formulae.push_back(S1p);
+   auto S1p = symbolic_term<Tm>(symbolic_oper(block1,"S",index,ifdagger));
+   formulae.append(S1p);
    // 2. I1*S2
-   auto S2p = symbolic_term(symbolic_oper(block2,"S",index,ifdagger));
-   formulae.push_back(S2p);
+   auto S2p = symbolic_term<Tm>(symbolic_oper(block2,"S",index,ifdagger));
+   formulae.append(S2p);
    // cross terms
    if(not ifkr){
       // 3. sum_q aq^+[1]*Ppq[2] + aq[1]*Qpq[2]
@@ -180,12 +154,12 @@ inline symbolic_task symbolic_compxwf_opS(const std::string block1,
 	 if(iproc == rank){
 	    auto op1c = symbolic_oper(block1,"C",q);
 	    auto op2P = symbolic_oper(block2,"P",ipq);
-	    auto op12a = (p<q)? symbolic_term(op1c,op2P) : symbolic_term(op1c,op2P,-1.0);
-            formulae.push_back(op12a);
+	    auto op12a = (p<q)? symbolic_term<Tm>(op1c,op2P) : symbolic_term<Tm>(op1c,op2P,-1.0);
+            formulae.append(op12a);
 	    auto op1a = op1c.H();
 	    auto op2Q = symbolic_oper(block2,"Q",ipq);
-	    auto op12b = (p<q)? symbolic_term(op1a,op2Q) : symbolic_term(op1a,op2Q.H());
-	    formulae.push_back(op12b);
+	    auto op12b = (p<q)? symbolic_term<Tm>(op1a,op2Q) : symbolic_term<Tm>(op1a,op2Q.H());
+	    formulae.append(op12b);
 	 }
       }
       // 4. sum_q Ppq[1]*aq^+[2] + Qpq^[1]*aq[2]
@@ -195,12 +169,12 @@ inline symbolic_task symbolic_compxwf_opS(const std::string block1,
 	 if(iproc == rank){
 	    auto op2c = symbolic_oper(block2,"C",q);
 	    auto op1P = symbolic_oper(block1,"P",ipq);
-	    auto op12a = (p<q)? symbolic_term(op1P,op2c) : symbolic_term(op1P,op2c,-1.0);
-	    formulae.push_back(op12a);
+	    auto op12a = (p<q)? symbolic_term<Tm>(op1P,op2c) : symbolic_term<Tm>(op1P,op2c,-1.0);
+	    formulae.append(op12a);
             auto op2a = op2c.H();
 	    auto op1Q = symbolic_oper(block1,"Q",ipq);
-	    auto op12b = (p<q)? symbolic_term(op1Q,op2a) : symbolic_term(op1Q.H(),op2a);
-            formulae.push_back(op12b);
+	    auto op12b = (p<q)? symbolic_term<Tm>(op1Q,op2a) : symbolic_term<Tm>(op1Q.H(),op2a);
+            formulae.append(op12b);
 	 }
       }
    }else{
@@ -260,16 +234,16 @@ inline symbolic_task symbolic_compxwf_opS(const std::string block1,
 }
 
 // kernel for computing renormalized H|ket>: 
-// following twodot_Hx_functors in sweep_twodot_sigma.h
-inline symbolic_task symbolic_compxwf_opH(const std::string block1,
-			                  const std::string block2,
-			                  const std::vector<int>& cindex1,
-			                  const std::vector<int>& cindex2,
-			                  const bool ifkr,
-			                  const int size,
-			                  const int rank,
-			                  const double scale){
-   symbolic_task formulae;
+template <typename Tm>
+symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
+			               const std::string block2,
+			               const std::vector<int>& cindex1,
+			               const std::vector<int>& cindex2,
+			               const bool ifkr,
+			               const int size,
+			               const int rank,
+			               const double scale){
+   symbolic_task<Tm> formulae;
    // for AP,BQ terms
    const bool ifNC = cindex1.size() <= cindex2.size(); 
    auto AP1 = ifNC? "A" : "P";
@@ -288,19 +262,19 @@ inline symbolic_task symbolic_compxwf_opH(const std::string block1,
    //   + <p1q2||s1r2> p1^+q2^+r2s1 
    //
    // 1. H1*I2
-   auto H1 = symbolic_term(symbolic_oper(block1,"H",0), scale);
-   formulae.push_back(H1);
+   auto H1 = symbolic_term<Tm>(symbolic_oper(block1,"H",0), scale);
+   formulae.append(H1);
    // 2. I1*H2
-   auto H2 = symbolic_term(symbolic_oper(block2,"H",0), scale);
-   formulae.push_back(H2);
+   auto H2 = symbolic_term<Tm>(symbolic_oper(block2,"H",0), scale);
+   formulae.append(H2);
    if(not ifkr){
       // One-index operators
       // 3. sum_p1 p1^+ Sp1^2 + h.c. 
       for(const auto& p1 : cindex1){
 	 auto op1C = symbolic_oper(block1,"C",p1);
 	 auto op2S = symbolic_oper(block2,"S",p1);
-	 auto C1S2 = symbolic_term(op1C, op2S, scale);
-	 formulae.push_back(C1S2);
+	 auto C1S2 = symbolic_term<Tm>(op1C, op2S, scale);
+	 formulae.append(C1S2);
          //opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1);
          //opwf -= oper_kernel_OOwf(superblock,site,op1c,op2S,1,dagger);
       }
@@ -308,8 +282,8 @@ inline symbolic_task symbolic_compxwf_opH(const std::string block1,
       for(const auto& q2 : cindex2){
 	 auto op1S = symbolic_oper(block1,"S",q2);
 	 auto op2C = symbolic_oper(block2,"C",q2);
-	 auto S1C2 = symbolic_term(op1S, op2C, -scale);
-	 formulae.push_back(S1C2);
+	 auto S1C2 = symbolic_term<Tm>(op1S, op2C, -scale);
+	 formulae.append(S1C2);
          //opwf -= oper_kernel_OOwf(superblock,site,op1S,op2c,1);
          //opwf += oper_kernel_OOwf(superblock,site,op1S,op2c,1,dagger);
       }
@@ -320,8 +294,8 @@ inline symbolic_task symbolic_compxwf_opH(const std::string block1,
          if(iproc == rank){
 	    auto op1 = symbolic_oper(block1,AP1,index);
 	    auto op2 = symbolic_oper(block2,AP2,index);
-            auto AP = symbolic_term(op1, op2, scale);
-	    formulae.push_back(AP);
+            auto AP = symbolic_term<Tm>(op1, op2, scale);
+	    formulae.append(AP);
 	    //opwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
             //opwf += oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
          } // iproc
@@ -333,8 +307,8 @@ inline symbolic_task symbolic_compxwf_opH(const std::string block1,
             const double wt = wfac(index);
 	    auto op1 = symbolic_oper(block1,BQ1,index);
  	    auto op2 = symbolic_oper(block2,BQ2,index);
-	    auto BQ = symbolic_term(op1, op2, wt*scale);
-	    formulae.push_back(BQ);
+	    auto BQ = symbolic_term<Tm>(op1, op2, wt*scale);
+	    formulae.append(BQ);
             //opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
             //opwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
          } // iproc

@@ -153,7 +153,8 @@ void sweep_twodot(const input::schedule& schd,
       HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else{
-      symbolic_twodot_Hx(lqops, rqops, c1qops, c2qops, size, rank);
+      symbolic_twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
+		                  int2e, size, rank);
 /*
       Hx_funs = twodot_Hx_functors2(lqops, rqops, c1qops, c2qops, 
                                     int2e, int1e, ecore,
