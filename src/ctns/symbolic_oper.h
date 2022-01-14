@@ -6,7 +6,7 @@ namespace ctns{
 /*
  symbolic operator: op(block,label,index,dagger,parity) 
    block=l,c1,c2,r
-   label=H,A,P,B,Q,a,S
+   label=H,A,P,B,Q,C,S
    index=integer
 */
 struct symbolic_oper{
@@ -21,7 +21,7 @@ struct symbolic_oper{
          label = _label;
 	 index = _index;
 	 dagger = _dagger;
-	 if(label == "a" || label == "S"){
+	 if(label == "C" || label == "S"){
 	    parity = true;
 	 }else{
 	    parity = false;
@@ -105,6 +105,8 @@ struct symbolic_sum{
 	 }
 	 return sH;
       }
+      // helper
+      int size() const{ return sums.size(); } 
    public:
       std::vector<std::pair<Tm,symbolic_oper>> sums;
 };
@@ -194,6 +196,8 @@ struct symbolic_term{
          std::copy(t.terms.begin(), t.terms.end(), std::back_inserter(t12.terms));
 	 return t12;
       }
+      // helper
+      int size() const{ return terms.size(); } 
    public:
       std::vector<symbolic_sum<Tm>> terms;
 };
@@ -240,6 +244,8 @@ struct symbolic_task{
 	    }
 	 }
       }
+      // helper
+      int size() const{ return tasks.size(); } 
    public:
       std::vector<symbolic_term<Tm>> tasks;
 }; 

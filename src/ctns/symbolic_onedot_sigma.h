@@ -12,13 +12,30 @@
 namespace ctns{
       
 template <typename Tm> 
-void symbolic_onedot_HxTerm(const oper_dict<Tm>& lqops,
+void symbolic_onedot_HxTerm(const int iop,
+		            const oper_dict<Tm>& lqops,
 	          	    const oper_dict<Tm>& rqops,
 	          	    const oper_dict<Tm>& cqops,
 		            const symbolic_term<Tm> HTerm,
 			    const stensor3<Tm>& wf,
 		            stensor3<Tm>& Hwf){
-
+   const int debug = true;
+   if(debug) std::cout << "HTerm=" << HTerm << std::endl;
+   for(int i=0; i<HTerm.size(); i++){
+      const auto& op = HTerm.terms[i];
+      auto label  = op.sums[0].second.label;
+      auto block  = op.sums[0].second.block;
+      auto dagger = op.sums[0].second.dagger;
+      auto parity = op.sums[0].second.parity;
+      if(debug){
+         std::cout << " i=" << i << " op=" << op << std::endl;
+	 std::cout << " len=" << op.size()
+		   << " op_label=" << label
+		   << " block=" << block
+		   << " dagger=" << dagger
+		   << " parity=" << parity << std::endl;
+      }
+   }
 }
 
 template <typename Tm> 
@@ -58,14 +75,14 @@ void symbolic_onedot_Hx(Tm* y,
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
-   for(int i=0; i<H_formulae.tasks.size(); i++){
+   for(int i=0; i<H_formulae.size(); i++){
 #ifdef _OPENMP
       int omprank = omp_get_thread_num();
 #else
       int omprank = 0;
 #endif
       const auto& HTerm = H_formulae.tasks[i];
-      symbolic_onedot_HxTerm(lqops,cqops,rqops,HTerm,wf,Hwfs[omprank]);
+      symbolic_onedot_HxTerm(2,lqops,cqops,rqops,HTerm,wf,Hwfs[omprank]);
    }
    auto t2 = tools::get_time();
    // reduction & save
