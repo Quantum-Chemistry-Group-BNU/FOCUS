@@ -12,6 +12,7 @@ namespace ctns{
 struct symbolic_oper{
    public:
       // constructor
+      symbolic_oper(){}
       symbolic_oper(const std::string _block, 
 		    const std::string _label, 
 		    const int _index, 
@@ -56,7 +57,8 @@ struct symbolic_oper{
    public:
       std::string block, label;
       int index;
-      bool dagger, parity;
+      bool dagger = false;
+      bool parity = false;
 };
 
 // sum of weighted symbolic operators: wa*opa + wb*opb + ...
@@ -72,7 +74,7 @@ struct symbolic_sum{
          sums.push_back(std::make_pair(wt,op1));
       }
       // append a term
-      void push_back(const std::pair<Tm,symbolic_oper> s){
+      void add(const std::pair<Tm,symbolic_oper> s){
          sums.push_back(s);
       }
       // print
@@ -200,13 +202,24 @@ struct symbolic_term{
 template <typename Tm>
 struct symbolic_task{
    public:
+      // constructor
+      symbolic_task(){}
+      symbolic_task(const symbolic_term<Tm> t){
+         tasks.push_back(t);
+      }
       // append a term
-      void append(const symbolic_term<Tm> t){
+      void add(const symbolic_term<Tm> t){
          tasks.push_back(t);
       }
       // joint a task	   
       void join(const symbolic_task& st){
          std::copy(st.tasks.begin(), st.tasks.end(), std::back_inserter(tasks));
+      }
+      // scale by a factor
+      void scale(const double fac){ 
+         for(auto& task : tasks){
+            task.scale(fac);	 
+         }
       }
       // outer_product of two tasks
       symbolic_task outer_product(const symbolic_task& st) const{

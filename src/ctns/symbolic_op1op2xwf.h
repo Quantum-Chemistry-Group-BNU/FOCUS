@@ -19,6 +19,7 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 		            const bool ifdagger1,
 		            const bool ifdagger2,
 		            const bool ifdagger){
+   symbolic_term<Tm> term;
    if(cindex1.size() <= cindex2.size()){
       // sum_i a1[i] * (sum_j oij a2[j])
       for(const auto& i : cindex1){
@@ -32,40 +33,33 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 	    auto op2 = ifdagger2? op2C : op2C.H();
 	    auto sym_op2 = ifdagger2? get_qsym_opC(isym,j) : -get_qsym_opC(isym,j);
 	    if(sym_op != sym_op1 + sym_op2) continue;
-	    tmp_op2.push_back(std::make_pair(oij.at(std::make_pair(i,j)),op2));
+	    tmp_op2.add(std::make_pair(oij.at(std::make_pair(i,j)),op2));
 	 }
-	 auto term = symbolic_term<Tm>(op1,tmp_op2);
-         if(!ifdagger){
-	    formulae.append(term);
-	 }else{
-	    formulae.append(term.H());
-	 }
+	 term = symbolic_term<Tm>(op1,tmp_op2);
       }
    }else{
-      exit(1);
-/*
       // this part appears when the branch is larger 
       // sum_j (sum_i oij a1[i]) * a2[j]
-      for(const auto& op2C : qops2C){
-	 int j = op2C.first;
-	 const auto& op2 = ifdagger2? op2C.second : op2C.second.H();
+      for(const auto& j : cindex2){
+	 auto op2C = symbolic_oper(block2,"C",j);
+	 auto op2 = ifdagger2? op2C : op2C.H();
+	 auto sym_op2 = ifdagger2? get_qsym_opC(isym,j) : -get_qsym_opC(isym,j);
 	 // tmp_op1 = sum_i oij a1[i]
-	 stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
-	 int N = tmp_op1.size();
-         for(const auto& op1C : qops1C){
-	    bool symAllowed = tmp_op1.info.sym == (ifdagger1? op1C.second.info.sym : 
-			    				     -op1C.second.info.sym);
-	    if(not symAllowed) continue;
-	    int i = op1C.first;
-	    const auto& op1 = ifdagger1? op1C.second : op1C.second.H();
-	    //tmp_op1 += oij[std::make_pair(i,j)]*op1;
-	    linalg::xaxpy(N, oij.at(std::make_pair(i,j)), op1.data(), tmp_op1.data());
+	 symbolic_sum<Tm> tmp_op1;
+         for(const auto& i : cindex1){
+	    auto op1C = symbolic_oper(block1,"C",i);
+	    auto op1 = ifdagger1? op1C : op1C.H();
+	    auto sym_op1 = ifdagger1? get_qsym_opC(isym,i) : -get_qsym_opC(isym,i); 
+	    if(sym_op != sym_op1 + sym_op2) continue;
+	    tmp_op1.add(std::make_pair(oij.at(std::make_pair(i,j)),op1));
 	 }
-	 //opwf += sgn*oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
-	 auto tmp = oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
-	 linalg::xaxpy(opwf.size(), sgn, tmp.data(), opwf.data());
+	 term = symbolic_term<Tm>(tmp_op1,op2);
       }
-*/
+   }
+   if(!ifdagger){
+      formulae.add(term);
+   }else{
+      formulae.add(term.H());
    }
 }
 

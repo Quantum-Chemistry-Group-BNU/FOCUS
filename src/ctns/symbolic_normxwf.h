@@ -15,10 +15,10 @@ symbolic_task<Tm> symbolic_normxwf_opC(const std::string block1,
    symbolic_task<Tm> formulae;
    if(iformula == 1){
       auto op1 = symbolic_term<Tm>(symbolic_oper(block1,"C",index,ifdagger));
-      formulae.append(op1);
+      formulae.add(op1);
    }else if(iformula == 2){
       auto op2 = symbolic_term<Tm>(symbolic_oper(block2,"C",index,ifdagger));
-      formulae.append(op2);
+      formulae.add(op2);
    } // iformula
    return formulae;
 }
@@ -33,10 +33,10 @@ symbolic_task<Tm> symbolic_normxwf_opA(const std::string block1,
    symbolic_task<Tm> formulae;
    if(iformula == 1){
       auto op1 = symbolic_term<Tm>(symbolic_oper(block1,"A",index,ifdagger));
-      formulae.append(op1);
+      formulae.add(op1);
    }else if(iformula == 2){
       auto op2 = symbolic_term<Tm>(symbolic_oper(block2,"A",index,ifdagger));
-      formulae.append(op2);
+      formulae.add(op2);
    }else if(iformula == 3){
       auto pq = oper_unpack(index);	
       int p = pq.first, sp = p%2;
@@ -47,7 +47,7 @@ symbolic_task<Tm> symbolic_normxwf_opA(const std::string block1,
       auto op12 = symbolic_term<Tm>(op1,op2);
       // (c1*c2)^d = c2d*c1d = -c1d*c2d
       if(ifdagger) op12.scale(-1.0);
-      formulae.append(op12);
+      formulae.add(op12);
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
@@ -57,7 +57,7 @@ symbolic_task<Tm> symbolic_normxwf_opA(const std::string block1,
       auto op2 = symbolic_oper(block2,"C",q,ifdagger);
       auto op12 = symbolic_term<Tm>(op1,op2,-1.0);
       if(ifdagger) op12.scale(-1.0);
-      formulae.append(op12);
+      formulae.add(op12);
    } // iformula
    return formulae;
 }
@@ -72,10 +72,10 @@ symbolic_task<Tm> symbolic_normxwf_opB(const std::string block1,
    symbolic_task<Tm> formulae;
    if(iformula == 1){
       auto op1 = symbolic_term<Tm>(symbolic_oper(block1,"B",index,ifdagger));
-      formulae.append(op1);
+      formulae.add(op1);
    }else if(iformula == 2){
       auto op1 = symbolic_term<Tm>(symbolic_oper(block2,"B",index,ifdagger));
-      formulae.append(op1);
+      formulae.add(op1);
    }else if(iformula == 3){
       auto pq = oper_unpack(index);	
       int p = pq.first, sp = p%2;
@@ -84,7 +84,7 @@ symbolic_task<Tm> symbolic_normxwf_opB(const std::string block1,
       auto op2 = symbolic_oper(block2,"C",q,!ifdagger);
       auto op12 = symbolic_term<Tm>(op1,op2);
       if(ifdagger) op12.scale(-1.0);
-      formulae.append(op12);
+      formulae.add(op12);
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
@@ -93,7 +93,7 @@ symbolic_task<Tm> symbolic_normxwf_opB(const std::string block1,
       auto op2 = symbolic_oper(block2,"C",q,!ifdagger);
       auto op12 = symbolic_term<Tm>(op1,op2,-1.0);
       if(ifdagger) op12.scale(-1.0);
-      formulae.append(op12);
+      formulae.add(op12);
    } // iformula
    return formulae;
 }
