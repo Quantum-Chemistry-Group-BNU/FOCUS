@@ -236,7 +236,7 @@ struct symbolic_task{
          std::cout << "formulae " << name << " : size=" << tasks.size() << std::endl;
 	 if(level > 0){
             for(int i=0; i<tasks.size(); i++){
-	       std::cout << " i=" << i << " " << tasks[i] << std::endl; 
+	       std::cout << "  i=" << i << " " << tasks[i] << std::endl; 
 	    }
 	 }
       }

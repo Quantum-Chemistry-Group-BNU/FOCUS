@@ -8,6 +8,7 @@
 #include "sweep_onedot_hdiag.h"
 #include "sweep_onedot_local.h"
 #include "sweep_onedot_sigma.h"
+#include "symbolic_onedot_formulae.h"
 #include "symbolic_onedot_sigma.h"
 
 namespace ctns{
@@ -121,14 +122,11 @@ void sweep_onedot(const input::schedule& schd,
       HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
            	  std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.algorithm == 1){
-      H_formulae = symbolic_onedot_Hx_functors(lqops, rqops, cqops, 
-		                               int2e, size, rank);
-/*
-      HVec = bind(&ctns::onedot_Hx1<Tm>, _1, _2, std::ref(Hx_funs),
+      H_formulae = symbolic_onedot_formulae(lqops, rqops, cqops, 
+		                            int2e, size, rank);
+      HVec = bind(&ctns::symbolic_onedot_Hx<Tm>, _1, _2, std::cref(H_formulae),
+		  std::cref(lqops), std::cref(rqops), std::cref(cqops), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
-*/
-      std::cout << "exit!" << std::endl;
-      exit(1);
    }
    oper_timer.clear();
    onedot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,

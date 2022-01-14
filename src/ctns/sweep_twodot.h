@@ -8,6 +8,7 @@
 #include "sweep_twodot_hdiag.h"
 #include "sweep_twodot_local.h"
 #include "sweep_twodot_sigma.h"
+#include "symbolic_twodot_formulae.h"
 #include "symbolic_twodot_sigma.h"
 
 namespace ctns{
@@ -154,8 +155,8 @@ void sweep_twodot(const input::schedule& schd,
       HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.algorithm == 1){
-      H_formulae = symbolic_twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
-		                               int2e, size, rank);
+      H_formulae = symbolic_twodot_formulae(lqops, rqops, c1qops, c2qops, 
+		                            int2e, size, rank);
 /*
       HVec = bind(&ctns::twodot_Hx1<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
