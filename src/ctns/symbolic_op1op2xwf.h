@@ -21,8 +21,6 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 		            const bool ifdagger1,
 		            const bool ifdagger2,
 		            const bool ifdagger){
-   const bool debug = true;
-   if(debug) std::cout << "symbolic_op1op2xwf_nkr" << std::endl;
    symbolic_term<Tm> term;
    if(cindex1.size() <= cindex2.size()){
       // sum_i a1[i] * (sum_j oij a2[j])
