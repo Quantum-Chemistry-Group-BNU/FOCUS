@@ -28,7 +28,7 @@ void symbolic_onedot_HxTerm(const oper_dict<Tm>& lqops,
 	   			 	                 	 {"c",cqops}};
    // compute (HTerm+HTerm.H)*|wf>
    stensor3<Tm> opNxwf = wf, opHxwf = wf;
-   for(int idx=HTerm.size()-1; i>=0; i--){
+   for(int idx=HTerm.size()-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];
       int len = sop.size();
       auto wt0 = sop.sums[0].first;

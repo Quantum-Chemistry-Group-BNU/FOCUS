@@ -16,31 +16,31 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
 	                                   const integral::two_body<Tm>& int2e,
 	                                   const int& size,
 	                                   const int& rank){
-   const int level = 0;
    const bool debug = true;
-   std::cout << "symbolic_onedot_formulae" << std::endl;
-
-   const bool ifkr = lqops.ifkr;
+   const int print_level = 0;
    const int isym = lqops.isym;
-   symbolic_task<Tm> formulae;
-
-   // Local terms:
-   const double scale = ifkr? 0.5 : 1.0;
+   const bool ifkr = lqops.ifkr;
+   const double scale = ifkr? 0.5 : 1.0; // for local terms
    const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
-   auto aindex = ifNC? oper_index_opA(lqops.cindex, ifkr) : oper_index_opA(rqops.cindex, ifkr);
-   auto bindex = ifNC? oper_index_opB(lqops.cindex, ifkr) : oper_index_opB(rqops.cindex, ifkr);
+   const auto& cindex = ifNC? lqops.cindex : rqops.cindex;
+   auto aindex = oper_index_opA(cindex, ifkr);
+   auto bindex = oper_index_opB(cindex, ifkr);
+   if(debug) std::cout << "symbolic_onedot_formulae ifNC=" << ifNC << std::endl;
+
+   symbolic_task<Tm> formulae;
    int idx = 0;
    if(ifNC){
       // partition = l|cr
-      // 1. H^l + 2. H^cr
+      // 1. H^l 
       auto Hl = symbolic_term<Tm>(symbolic_oper("l",'H',0), 0.5*scale);
       formulae.append(Hl);
+      // 2. H^cr
       auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cqops.cindex, rqops.cindex, 
 		                          ifkr, size, rank, scale);
       formulae.join(Hcr);
       if(rank == 0){
 	 std::cout << " idx=" << idx++ << " ";
-	 formulae.display("Hl+Hcr", level);
+	 formulae.display("Hl+Hcr", print_level);
       }
       // One-index terms:
       // 3. p1^l+*Sp1^cr + h.c.
@@ -52,7 +52,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
          formulae.join(Cl_Scr);
          if(rank == 0){ 
 	    std::cout << " idx=" << idx++ << " ";
-            Cl_Scr.display("Cl_Scr["+std::to_string(index)+"]", level);
+            Cl_Scr.display("Cl_Scr["+std::to_string(index)+"]", print_level);
 	 }
       }
       // 4. q2^cr+*Sq2^l + h.c. = -Sq2^l*q2^cr + h.c.
@@ -67,14 +67,13 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
          formulae.join(Sl_Ccr);
          if(rank == 0){ 
 	    std::cout << " idx=" << idx++ << " ";
-            Sl_Ccr.display("Sl_Ccr["+std::to_string(index)+"]", level);
+            Sl_Ccr.display("Sl_Ccr["+std::to_string(index)+"]", print_level);
 	 }
       }
       // 5. Apq^l*Ppq^cr + h.c.
       for(const auto& index : aindex){
          int iproc = distribute2(index,size);
          if(iproc == rank){
-            std::cout << "\nindex=" << index << std::endl;
             auto Al = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("l",'A',index)));
             auto Pcr = symbolic_compxwf_opP<Tm>("c", "r", cqops.cindex, rqops.cindex,
 	 				        int2e, index, isym, ifkr);
@@ -84,7 +83,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
             formulae.join(Al_Pcr);
             if(rank == 0){ 
 	       std::cout << " idx=" << idx++ << " ";
-	       Al_Pcr.display("Al_Pcr["+std::to_string(index)+"]", level);
+	       Al_Pcr.display("Al_Pcr["+std::to_string(index)+"]", print_level);
 	    }
          } // iproc
       }
@@ -101,20 +100,22 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
 	    formulae.join(Bl_Qcr);
 	    if(rank == 0){ 
 	       std::cout << " idx=" << idx++ << " ";
-	       Bl_Qcr.display("Bl_Qcr["+std::to_string(index)+"]", level);
+	       Bl_Qcr.display("Bl_Qcr["+std::to_string(index)+"]", print_level);
 	    }
 	 } // iproc
       }
    }else{
       // partition = lc|r
-      // 1. H^lc + 2. H^r
+      // 1. H^lc 
       auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", lqops.cindex, cqops.cindex, 
            	                          ifkr, size, rank, scale);
       formulae.join(Hlc);
+      // 2. H^r
       auto Hr = symbolic_term<Tm>(symbolic_oper("r",'H',0), 0.5*scale);
+      formulae.append(Hr);
       if(rank == 0){ 
 	 std::cout << " idx=" << idx++ << " ";
-	 formulae.display("Hlc+Hr", level);
+	 formulae.display("Hlc+Hr", print_level);
       }
       // One-index terms:
       // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
@@ -127,7 +128,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
 	 formulae.join(Slc_Cr);
 	 if(rank == 0){ 
 	    std::cout << " idx=" << idx++ << " ";
-            Slc_Cr.display("Slc_Cr["+std::to_string(index)+"]", level);
+            Slc_Cr.display("Slc_Cr["+std::to_string(index)+"]", print_level);
 	 }
       }
       // 4. p1^lc+*Sp1^r + h.c.
@@ -141,7 +142,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
          formulae.join(Clc_Sr);
          if(rank == 0){ 
 	    std::cout << " idx=" << idx++ << " ";
-	    Clc_Sr.display("Clc_Sr["+std::to_string(index)+"]", level);
+	    Clc_Sr.display("Clc_Sr["+std::to_string(index)+"]", print_level);
 	 }
       }
       // 5. Ars^r*Prs^lc + h.c.
@@ -157,7 +158,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
             formulae.join(Plc_Ar);
             if(rank == 0){ 
 	       std::cout << " idx=" << idx++ << " ";
-	       Plc_Ar.display("Plc_Ar["+std::to_string(index)+"]", level);
+	       Plc_Ar.display("Plc_Ar["+std::to_string(index)+"]", print_level);
 	    }
          } // iproc
       }
@@ -174,12 +175,11 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
 	    formulae.join(Qlc_Br);
 	    if(rank == 0){ 
 	       std::cout << " idx=" << idx++ << " ";
-	       Qlc_Br.display("Qlc_Br["+std::to_string(index)+"]", level);
+	       Qlc_Br.display("Qlc_Br["+std::to_string(index)+"]", print_level);
 	    }
 	 } // iproc
       }
-   }
-
+   } // ifNC
    if(rank == 0) formulae.display("total", debug);
    return formulae;
 }
