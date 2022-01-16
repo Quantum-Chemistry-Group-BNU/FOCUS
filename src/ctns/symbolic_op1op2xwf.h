@@ -5,7 +5,9 @@
 
 namespace ctns{
 
+//
 // opwf = (sum_{ij} oij*a1^(d1)[i]*a2^(d2)[i])^d*wf
+//
 
 template <typename Tm>
 void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
@@ -23,43 +25,42 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
    if(cindex1.size() <= cindex2.size()){
       // sum_i a1[i] * (sum_j oij a2[j])
       for(const auto& i : cindex1){
-	 auto op1C = symbolic_oper(block1,"C",i);      
+	 auto op1C = symbolic_oper(block1,'C',i);      
          auto op1 = ifdagger1? op1C : op1C.H();
-	 auto sym_op1 = ifdagger1? get_qsym_opC(isym,i) : -get_qsym_opC(isym,i);
+	 auto sym_op1 = op1.get_qsym(isym); 
 	 // tmp_op2 = sum_j oij a2[j]
 	 symbolic_sum<Tm> tmp_op2;
 	 for(const auto& j : cindex2){
-            auto op2C = symbolic_oper(block2,"C",j);		 
+            auto op2C = symbolic_oper(block2,'C',j);		 
 	    auto op2 = ifdagger2? op2C : op2C.H();
-	    auto sym_op2 = ifdagger2? get_qsym_opC(isym,j) : -get_qsym_opC(isym,j);
+	    auto sym_op2 = op2.get_qsym(isym);
 	    if(sym_op != sym_op1 + sym_op2) continue;
-	    tmp_op2.add(std::make_pair(oij.at(std::make_pair(i,j)),op2));
+	    tmp_op2.sum(oij.at(std::make_pair(i,j)),op2);
 	 }
 	 term = symbolic_term<Tm>(op1,tmp_op2);
+	 if(ifdagger) term = term.H();
+	 formulae.append(term);
       }
    }else{
       // this part appears when the branch is larger 
       // sum_j (sum_i oij a1[i]) * a2[j]
       for(const auto& j : cindex2){
-	 auto op2C = symbolic_oper(block2,"C",j);
+	 auto op2C = symbolic_oper(block2,'C',j);
 	 auto op2 = ifdagger2? op2C : op2C.H();
 	 auto sym_op2 = ifdagger2? get_qsym_opC(isym,j) : -get_qsym_opC(isym,j);
 	 // tmp_op1 = sum_i oij a1[i]
 	 symbolic_sum<Tm> tmp_op1;
          for(const auto& i : cindex1){
-	    auto op1C = symbolic_oper(block1,"C",i);
+	    auto op1C = symbolic_oper(block1,'C',i);
 	    auto op1 = ifdagger1? op1C : op1C.H();
 	    auto sym_op1 = ifdagger1? get_qsym_opC(isym,i) : -get_qsym_opC(isym,i); 
 	    if(sym_op != sym_op1 + sym_op2) continue;
-	    tmp_op1.add(std::make_pair(oij.at(std::make_pair(i,j)),op1));
+	    tmp_op1.sum(oij.at(std::make_pair(i,j)),op1);
 	 }
 	 term = symbolic_term<Tm>(tmp_op1,op2);
+	 if(ifdagger) term = term.H();
+	 formulae.append(term);
       }
-   }
-   if(!ifdagger){
-      formulae.add(term);
-   }else{
-      formulae.add(term.H());
    }
 }
 

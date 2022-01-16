@@ -50,18 +50,18 @@ stensor2<Tm> contract_qt3_qt3(const std::string superblock,
 }
 
 template <typename Tm>
-stensor3<Tm> contract_qt3_qt2(const char cpos,
+stensor3<Tm> contract_qt3_qt2(const std::string cpos,
 		 	      const stensor3<Tm>& qt3a, 
 			      const stensor2<Tm>& qt2b,
 			      const bool ifdagger=false){
    const auto& qt2 = ifdagger? qt2b.H() : qt2b;
    stensor3<Tm> qt3;
-   if(cpos == 'l'){
+   if(cpos == "l"){
       qt3 = contract_qt3_qt2_l(qt3a, qt2);
-   }else if(cpos == 'c'){
-      qt3 = contract_qt3_qt2_c(qt3a, qt2);
-   }else if(cpos == 'r'){
+   }else if(cpos == "r"){
       qt3 = contract_qt3_qt2_r(qt3a, qt2);
+   }else if(cpos == "c"){
+      qt3 = contract_qt3_qt2_c(qt3a, qt2);
    }else{
       std::cout << "error: no such case in contract_qt3_qt2! cpos=" << cpos << std::endl;
       exit(1);

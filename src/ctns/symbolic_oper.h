@@ -1,6 +1,8 @@
 #ifndef SYMBOLIC_OPER_H
 #define SYMBOLIC_OPER_H
 
+#include "oper_dict.h"
+
 namespace ctns{
 
 /*
@@ -14,14 +16,14 @@ struct symbolic_oper{
       // constructor
       symbolic_oper(){}
       symbolic_oper(const std::string _block, 
-		    const std::string _label, 
+		    const char _label, 
 		    const int _index, 
 		    const bool _dagger=false){
 	 block = _block;
          label = _label;
 	 index = _index;
 	 dagger = _dagger;
-	 if(label == "C" || label == "S"){
+	 if(label == 'C' || label == 'S'){
 	    parity = true;
 	 }else{
 	    parity = false;
@@ -31,7 +33,7 @@ struct symbolic_oper{
       std::string to_string() const{
          std::string str = "";
          str += "op(block=" + block + ",";
-	 str += " label=" + label + ",";
+	 str += " label=" + std::to_string(label) + ",";
 	 str += " index=" + std::to_string(index) + ",";
 	 str += " dagger=" + std::to_string(dagger) + ",";
 	 str += " parity=" + std::to_string(parity) + ")";
@@ -42,7 +44,7 @@ struct symbolic_oper{
          os << op.label;
 	 if(op.dagger) os << "dag";
 	 os << "[" << op.block << "]";
-	 if(op.label == "H" || op.label == "C" || op.label == "S"){
+	 if(op.label == 'H' || op.label == 'C' || op.label == 'S'){
             os << "(" << op.index << ")";
 	 }else{
             auto pr = oper_unpack(op.index);
@@ -54,8 +56,14 @@ struct symbolic_oper{
       symbolic_oper H() const{
 	 return symbolic_oper(block,label,index,!dagger);
       }
+      // qsym
+      qsym get_qsym(const short isym) const{
+         auto sym = get_qsym_op(label, isym, index);
+	 return (dagger? -sym : sym);
+      }
    public:
-      std::string block, label;
+      std::string block;
+      char label;
       int index;
       bool dagger = false;
       bool parity = false;
@@ -67,15 +75,15 @@ struct symbolic_sum{
    public:
       // constructor
       symbolic_sum(){}
-      symbolic_sum(const symbolic_oper& op1){
-         sums.push_back(std::make_pair(1.0,op1));
+      symbolic_sum(const symbolic_oper& sop){
+         sums.push_back(std::make_pair(1.0,sop));
       }
-      symbolic_sum(const symbolic_oper& op1, const Tm& wt){
-         sums.push_back(std::make_pair(wt,op1));
+      symbolic_sum(const symbolic_oper& sop, const Tm& wt){
+         sums.push_back(std::make_pair(wt,sop));
       }
-      // append a term
-      void add(const std::pair<Tm,symbolic_oper> s){
-         sums.push_back(s);
+      // sum a term
+      void sum(const Tm& wt, const symbolic_oper& sop){
+         sums.push_back(std::make_pair(wt,sop));
       }
       // print
       friend std::ostream& operator <<(std::ostream& os, const symbolic_sum& ops){
@@ -169,15 +177,9 @@ struct symbolic_term{
       void scale(const double fac){ 
 	 terms[0].scale(fac);
       }
-      // operations
-      symbolic_term H() const{
-	 symbolic_term<Tm> tH;
+      // (o0o1o2)^H = (-1)^{p0*p1+p0*p2+p1*p2}*o0Ho1Ho2H 
+      double Hsign() const{
          int n = terms.size();
-	 tH.terms.resize(n);
-	 for(int i=0; i<n; i++){
-	    tH.terms[i] = terms[i].H();
-	 }
-	 // (o0o1o2)^H = (-1)^{p0*p1+p0*p2+p1*p2}*o0Ho1Ho2H 
 	 bool parity = false;
 	 for(int i=0; i<n; i++){
 	    const auto& op1 = terms[i].sums[0].second;
@@ -186,7 +188,18 @@ struct symbolic_term{
 	       parity ^= (op1.parity & op2.parity); 
 	    }
 	 }
-	 if(parity) tH.scale(-1.0);
+	 double sgn = parity? -1.0 : 1.0;
+	 return sgn;
+      }
+      // operations
+      symbolic_term H() const{
+	 symbolic_term<Tm> tH;
+         int n = terms.size();
+	 tH.terms.resize(n);
+	 for(int i=0; i<n; i++){
+	    tH.terms[i] = terms[i].H();
+	 }
+	 tH.scale(tH.Hsign());
 	 return tH;
       }
       // t1*t2 
@@ -208,14 +221,14 @@ struct symbolic_task{
    public:
       // constructor
       symbolic_task(){}
-      symbolic_task(const symbolic_term<Tm> t){
+      symbolic_task(const symbolic_term<Tm>& t){
          tasks.push_back(t);
       }
       // append a term
-      void add(const symbolic_term<Tm> t){
+      void append(const symbolic_term<Tm>& t){
          tasks.push_back(t);
       }
-      // joint a task	   
+      // join a task	   
       void join(const symbolic_task& st){
          std::copy(st.tasks.begin(), st.tasks.end(), std::back_inserter(tasks));
       }

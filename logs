@@ -38,11 +38,16 @@ LOGS
     - better data structure for qtensor & oper_dict [DONE20211002]
         - problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
 
- * Optimized twodot algorithm [DONE202201XX]
-    - generation of onedot_Hx formulae
-    - implemenation of onedot_Hx contraction
-    - generation of twodot_Hx formulae
-    - optimized formation of sigma vector by contract_qt4_qt2 (without intermediate)
+ * Optimized Hx algorithm [DONE202201XX]
+    - onedot algorithm:
+    	- generation of onedot_Hx formulae
+    	- implemenation of onedot_Hx contraction [DONE20220116]
+    	- optimal intermediate?
+	- profiling?
+    - twodot algorithm:
+    	- generation of twodot_Hx formulae
+    	- optimized formation of sigma vector by contract_qt4_qt2 (without intermediate)
+	- profiling?
     - renormalization formulae
 
  * Large-scale parallelization

@@ -79,7 +79,20 @@ struct stensor3{
 	 if(own) delete[] _data; 
       }
       // copy constructor
-      stensor3(const stensor3& st) = delete;
+      stensor3(const stensor3& st){;
+	 if(debug_sparse3) std::cout << "stensor3: copy constructor - st.own=" << st.own << std::endl;   
+	 own = st.own;
+	 info = st.info;
+	 if(st.own){
+	    _data = new Tm[info._size];
+	    linalg::xcopy(info._size, st._data, _data);
+	    info.setup_data(_data);
+	 }else{
+	    // shalow copy of the wrapper in case st.own = false;
+	    // needs to be here for direct manipulations of data in xaxpy
+	    _data = st._data;
+	 }
+      }
       // copy assignment
       stensor3& operator =(const stensor3& st) = delete;
 /*
@@ -190,6 +203,7 @@ struct stensor3{
       // deal with fermionic sign in fermionic direct product
       void mid_signed(const double fac=1.0); // wf[lcr](-1)^{p(c)}
       void row_signed(const double fac=1.0); // wf[lcr](-1)^{p(l)}
+      void cntr_signed(const std::string block);
       void permCR_signed(); // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
       // ZL20210413: application of time-reversal operation
       stensor3<Tm> K(const int nbar=0) const;
@@ -284,6 +298,36 @@ void stensor3<Tm>::row_signed(const double fac){
       info._addr_unpack(idx,br,bc,bm);
       double fac2 = (info.qrow.get_parity(br)==0)? fac : -fac;
       linalg::xscal(blk3.size(), fac2, blk3.data());  
+   }
+}
+
+template <typename Tm>
+void stensor3<Tm>::cntr_signed(const std::string block){
+   if(block == "r"){
+      int br,bc,bm;
+      for(int idx=0; idx<info._qblocks.size(); idx++){
+         auto& blk3 = info._qblocks[idx];
+         if(blk3.size() == 0) continue;
+         info._addr_unpack(idx,br,bc,bm);
+	 // (-1)^{p(l)+p(c)}wf[l,c,r]
+	 int prm = info.qrow.get_parity(br) 
+		 + info.qmid.get_parity(bm);
+	 if(prm%2 == 1){
+            linalg::xscal(blk3.size(), -1.0, blk3.data());
+	 } 
+      }
+   }else if(block == "c"){
+      int br,bc,bm;
+      for(int idx=0; idx<info._qblocks.size(); idx++){
+         auto& blk3 = info._qblocks[idx];
+         if(blk3.size() == 0) continue;
+         info._addr_unpack(idx,br,bc,bm);
+	 // (-1)^{p(l)}wf[l,c,r]
+	 int pr = info.qrow.get_parity(br);
+         if(pr%2 == 1){
+	    linalg::xscal(blk3.size(), -1.0, blk3.data());
+	 }
+      }
    }
 }
 

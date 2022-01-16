@@ -83,7 +83,20 @@ struct stensor4{
 	 if(own) delete[] _data; 
       }
       // copy constructor
-      stensor4(const stensor4& st) = delete;
+      stensor4(const stensor4& st){
+	 if(debug_sparse4) std::cout << "stensor4: copy constructor - st.own=" << st.own << std::endl;   
+	 own = st.own;
+	 info = st.info;
+	 if(st.own){
+	    _data = new Tm[info._size];
+	    linalg::xcopy(info._size, st._data, _data);
+	    info.setup_data(_data);
+	 }else{
+	    // shalow copy of the wrapper in case st.own = false;
+	    // needs to be here for direct manipulations of data in xaxpy
+	    _data = st._data;
+	 }
+      }
       // copy assignment
       stensor4& operator =(const stensor4& st) = delete;
 /*

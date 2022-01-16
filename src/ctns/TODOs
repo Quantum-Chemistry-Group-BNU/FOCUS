@@ -310,8 +310,10 @@ Symbolic derivations: expansion of formulae
  symbolic_normxwf.h
  symbolic_compxwf.h
  symbolic_op1op2xwf.h
- symbolic_twodot_sigma.h
+ symbolic_onedot_formulae.h
  symbolic_onedot_sigma.h
+ symbolic_twodot_formulae.h
+ symbolic_twodot_sigma.h
 Better twodot implementation: direct work with qt4_qt2 without reshaping
 
 

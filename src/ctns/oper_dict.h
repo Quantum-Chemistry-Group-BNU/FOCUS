@@ -139,6 +139,7 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
    } // level>0
 }
 
+// indices for key
 template <typename Tm>
 std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
    std::vector<int> index;
@@ -170,9 +171,9 @@ std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
    }
    return index;
 }
-      
-template <typename Tm>
-qsym oper_dict<Tm>::get_qsym_op(const char key, const int idx) const{
+
+// Qsym
+inline qsym get_qsym_op(const char key, const short isym, const int idx){
    qsym sym_op;
    if(key == 'C'){
       sym_op = get_qsym_opC(isym, idx);
@@ -194,6 +195,10 @@ qsym oper_dict<Tm>::get_qsym_op(const char key, const int idx) const{
       sym_op = get_qsym_opQ(isym, pr.first, pr.second);
    }
    return sym_op;
+} 
+template <typename Tm>
+qsym oper_dict<Tm>::get_qsym_op(const char key, const int idx) const{
+   return ctns::get_qsym_op(key, isym, idx);
 }
  
 template <typename Tm>

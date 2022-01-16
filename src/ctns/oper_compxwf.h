@@ -39,10 +39,12 @@ stensor3<Tm> oper_compxwf_opP(const std::string superblock,
    //     + <pq||s2r2> As2r2 [r>s] => Ppq^2
    //     + <pq||s1r2> ar2*as1	   => -<pq||s1r2> as1*ar2
    //
+/*
    // 1. P1*I2
    opwf += oper_kernel_OIwf(superblock,site,qops1('P').at(index),ifdagger);
    // 2. I1*P2
    opwf += oper_kernel_IOwf(superblock,site,qops2('P').at(index),0,ifdagger);
+*/
    // 3. -<pq||s1r2> as1*ar2
    std::map<std::pair<int,int>,Tm> oij;
    if(not ifkr){

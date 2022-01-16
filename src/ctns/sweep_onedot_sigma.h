@@ -256,7 +256,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dict<Tm>& lqops,
 		   std::cref(lqops), std::cref(rqops), std::cref(cqops),
 		   std::cref(int2e), std::cref(int1e), std::cref(ecore),
 		   std::cref(wf), std::cref(size), std::cref(rank));
-   Hx_funs.push_back(Hx); 
+   Hx_funs.push_back(Hx);
    // One-index terms:
    // 3. p1^l+*Sp1^cr + h.c. or 4. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
    const auto& cnindex = ifNC? lqops.cindex : rqops.cindex;
@@ -317,6 +317,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dict<Tm>& lqops,
          Hx_funs.push_back(Hx);
       }
    }
+   // debug
    if(rank == 0){
       std::cout << "onedot_Hx_functors: size=" << Hx_funs.size() 
                 << " " << cnlabel << ":" << cnindex.size()
