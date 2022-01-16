@@ -88,11 +88,13 @@ struct symbolic_sum{
       // print
       friend std::ostream& operator <<(std::ostream& os, const symbolic_sum& ops){
 	 int n = ops.sums.size();
-	 os << "{" << ops.sums[0].first << "*" << ops.sums[0].second;
-	 for(int i=1; i<n; i++){
-            os << "+" << ops.sums[i].first << "*" << ops.sums[i].second;
+	 if(n > 0){
+	    os << "{" << ops.sums[0].first << "*" << ops.sums[0].second;
+	    for(int i=1; i<n; i++){
+               os << " + " << ops.sums[i].first << "*" << ops.sums[i].second;
+	    }
+	    os << "}";
 	 }
-	 os << "}";
          return os;
       }
       // scale by a factor
@@ -167,15 +169,17 @@ struct symbolic_term{
       // print
       friend std::ostream& operator <<(std::ostream& os, const symbolic_term& ops){
          int n = ops.terms.size();
-	 os << ops.terms[0];
-	 for(int i=1; i<n; i++){
-	    os << " * " << ops.terms[i];
+	 if(n > 0){
+	    os << ops.terms[0];
+	    for(int i=1; i<n; i++){
+	       os << " * " << ops.terms[i];
+	    }
 	 }
          return os;
       }
       // scale by a factor
       void scale(const double fac){ 
-	 terms[0].scale(fac);
+	 if(terms.size() > 0) terms[0].scale(fac);
       }
       // (o0o1o2)^H = (-1)^{p0*p1+p0*p2+p1*p2}*o0Ho1Ho2H 
       double Hsign() const{

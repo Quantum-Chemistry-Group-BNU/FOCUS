@@ -21,6 +21,8 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 		            const bool ifdagger1,
 		            const bool ifdagger2,
 		            const bool ifdagger){
+   const bool debug = true;
+   if(debug) std::cout << "symbolic_op1op2xwf_nkr" << std::endl;
    symbolic_term<Tm> term;
    if(cindex1.size() <= cindex2.size()){
       // sum_i a1[i] * (sum_j oij a2[j])
@@ -36,11 +38,13 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 	    auto sym_op2 = op2.get_qsym(isym);
 	    if(sym_op != sym_op1 + sym_op2) continue;
 	    tmp_op2.sum(oij.at(std::make_pair(i,j)),op2);
-	 }
+	 } // j
+	 // skip if its size is zero, which is possible for some i
+         if(tmp_op2.size() == 0) continue;
 	 term = symbolic_term<Tm>(op1,tmp_op2);
 	 if(ifdagger) term = term.H();
 	 formulae.append(term);
-      }
+      } // i
    }else{
       // this part appears when the branch is larger 
       // sum_j (sum_i oij a1[i]) * a2[j]
@@ -56,12 +60,13 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 	    auto sym_op1 = ifdagger1? get_qsym_opC(isym,i) : -get_qsym_opC(isym,i); 
 	    if(sym_op != sym_op1 + sym_op2) continue;
 	    tmp_op1.sum(oij.at(std::make_pair(i,j)),op1);
-	 }
+	 } // i
+         if(tmp_op1.size() == 0) continue;
 	 term = symbolic_term<Tm>(tmp_op1,op2);
 	 if(ifdagger) term = term.H();
 	 formulae.append(term);
-      }
-   }
+      } // j
+   } // cindex1.size() <= cindex2.size() 
 }
 
 /*

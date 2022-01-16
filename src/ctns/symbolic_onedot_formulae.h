@@ -17,7 +17,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
 	                                   const int& size,
 	                                   const int& rank){
    const bool debug = true;
-   const int print_level = 0;
+   const int print_level = 1;
    const int isym = lqops.isym;
    const bool ifkr = lqops.ifkr;
    const double scale = ifkr? 0.5 : 1.0; // for local terms
@@ -91,6 +91,9 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       for(const auto& index : bindex){
          int iproc = distribute2(index,size);
          if(iproc == rank){
+	    
+	    std::cout << "\nbindex=" << index << std::endl;
+
             auto Bl = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("l",'B',index)));
 	    auto Qcr = symbolic_compxwf_opQ<Tm>("c", "r", cqops.cindex, rqops.cindex,
 	           	                        int2e, index, isym, ifkr);

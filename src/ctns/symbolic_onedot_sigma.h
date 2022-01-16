@@ -20,9 +20,8 @@ void symbolic_onedot_HxTerm(const oper_dict<Tm>& lqops,
 			    const stensor3<Tm>& wf,
 		            stensor3<Tm>& Hwf){
    const bool debug = false;
-   if(debug){ 
-      std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
-   }
+   if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
+   
    const std::map<std::string,const oper_dict<Tm>&> qops_dict = {{"l",lqops},
 	   		 	                                 {"r",rqops},
 	   			 	                 	 {"c",cqops}};
@@ -59,7 +58,7 @@ void symbolic_onedot_HxTerm(const oper_dict<Tm>& lqops,
 	 int indexk = sopk.index;
 	 const auto& opk = qops(label).at(indexk);
          optmp += wtk*(dagger? opk.H() : opk);
-      }
+      } // k
       // impose antisymmetry here
       if(parity){ 
          opNxwf.cntr_signed(block);
@@ -68,7 +67,7 @@ void symbolic_onedot_HxTerm(const oper_dict<Tm>& lqops,
       // (opN+opH)*|wf> 
       opNxwf = contract_qt3_qt2(block,opNxwf,optmp);
       opHxwf = contract_qt3_qt2(block,opHxwf,optmp,true);
-   }
+   } // idx
    int N = Hwf.size();
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
    linalg::xaxpy(N, 1.0, opNxwf.data(), Hwf.data()); 
