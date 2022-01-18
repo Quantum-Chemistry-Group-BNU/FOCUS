@@ -204,6 +204,7 @@ struct stensor4{
       }
       double normF() const{ return linalg::xnrm2(info._size, _data); }
       // --- SPECIFIC FUNCTIONS ---
+      void cntr_signed(const std::string block);
       void permCR_signed(); // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]} 
       // ZL20210413: application of time-reversal operation
       stensor4<Tm> K(const int nbar=0) const;
@@ -247,6 +248,49 @@ struct stensor4{
    private:   
       Tm* _data = nullptr;
 };
+
+// wf[lc1c2r] = wf(row,col,mid,ver)
+template <typename Tm>
+void stensor4<Tm>::cntr_signed(const std::string block){
+   int br,bc,bm,bv;
+   if(block == "r"){
+      for(int idx=0; idx<info._qblocks.size(); idx++){
+         auto& blk4 = info._qblocks[idx];
+         if(blk4.size() == 0) continue;
+         info._addr_unpack(idx,br,bc,bm,bv);
+	 // (-1)^{p(l)+p(c1)+p(c2)}wf[lc1c2r]
+	 int pt = info.qrow.get_parity(br)
+		+ info.qmid.get_parity(bm)
+		+ info.qver.get_parity(bv);
+         if(pt%2 == 1){
+            linalg::xscal(blk4.size(), -1.0, blk4.data());
+	 }
+      } // idx
+   }else if(block == "c2"){
+      for(int idx=0; idx<info._qblocks.size(); idx++){
+         auto& blk4 = info._qblocks[idx];
+         if(blk4.size() == 0) continue;
+         info._addr_unpack(idx,br,bc,bm,bv);
+	 // (-1)^{p(l)+p(c1)}wf[lc1c2r]
+	 int pt = info.qrow.get_parity(br)
+		+ info.qmid.get_parity(bm);
+         if(pt%2 == 1){
+            linalg::xscal(blk4.size(), -1.0, blk4.data());
+	 }
+      } // idx
+   }else if(block == "c1"){
+      for(int idx=0; idx<info._qblocks.size(); idx++){
+         auto& blk4 = info._qblocks[idx];
+         if(blk4.size() == 0) continue;
+         info._addr_unpack(idx,br,bc,bm,bv);
+	 // (-1)^{p(l)}wf[lc1c2r]
+	 int pt = info.qrow.get_parity(br);
+         if(pt%2 == 1){
+            linalg::xscal(blk4.size(), -1.0, blk4.data());
+	 }
+      } // idx
+   } // block 
+}
 
 // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}
 template <typename Tm>

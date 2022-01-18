@@ -5,135 +5,111 @@
 #include <omp.h>
 #endif
 
+#include "oper_dict.h"
+#include "oper_timer.h"
 #include "symbolic_oper.h"
-#include "symbolic_normxwf.h"
-#include "symbolic_compxwf.h"
 
 namespace ctns{
 
 // generate all formulea for constructing H*x as a list of terms
 // organizing principle: recursive partition
 template <typename Tm>
-symbolic_task<Tm> symbolic_twodot_Hx_functors(const oper_dict<Tm>& lqops,
-	                                      const oper_dict<Tm>& rqops,
-			                      const oper_dict<Tm>& c1qops,
-	                                      const oper_dict<Tm>& c2qops,
-	                                      const integral::two_body<Tm>& int2e,
-	                                      const int& size,
-	                                      const int& rank){
-   const int level = 0;
-   const bool debug = true;
-   std::cout << "symbolic_twodot_Hx_functors" << std::endl;
-
-   const bool ifkr = lqops.ifkr;
-   const int isym = lqops.isym;
-   symbolic_task<Tm> formulae;
-
-   // Local terms:
-   // H[lc1]
-   auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
-		                        ifkr, size, rank);
-   if(rank == 0) Hlc1.display("Hlc1", level);
-   formulae.join(Hlc1);
-   // H[c2r]
-   auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", c2qops.cindex, rqops.cindex, 
-		                        ifkr, size, rank);
-   if(rank == 0) Hc2r.display("Hc2r", level);
-   formulae.join(Hc2r);
-
-   // One-index terms:
-   // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
-   auto infoC1 = oper_combine_opC(lqops.cindex, c1qops.cindex);
-   for(const auto& pr : infoC1){
-      int index = pr.first;
-      int iformula = pr.second;
-      // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
-      auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
-      auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
-		                           index, ifkr, size, rank);
-      auto Clc1_Sc2r = Clc1.outer_product(Sc2r);
-      if(rank == 0) Clc1_Sc2r.display("Clc1_Sc2r : "+std::to_string(index), level);
-      formulae.join(Clc1_Sc2r);
-   }
-   // 4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
-   auto infoC2 = oper_combine_opC(c2qops.cindex, rqops.cindex);
-   for(const auto& pr : infoC2){
-      int index = pr.first;
-      int iformula = pr.second;
-      // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
-      auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
-		                           index, ifkr, size, rank);
-      auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
-      auto Slc1_Cc2r = Slc1.outer_product(Cc2r);
-      if(rank == 0) Slc1_Cc2r.display("Slc1_Cc2r : "+std::to_string(index), level);
-      formulae.join(Slc1_Cc2r);
-   }
-
-   // Two-index terms:
-   int slc1 = lqops.cindex.size() + c1qops.cindex.size();
-   int sc2r = c2qops.cindex.size() + rqops.cindex.size();
-   const bool ifNC = (slc1 <= sc2r);
-   auto ainfo = ifNC? oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr) :
-      		      oper_combine_opA(c2qops.cindex, rqops.cindex, ifkr);
-   auto binfo = ifNC? oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr) :
-      		      oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr);
-   // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
-   for(const auto pr : ainfo){
-      int index = pr.first;
-      int iformula = pr.second;
-      int iproc = distribute2(index,size);
-      if(iproc == rank){
-	 // Apq*Ppq + Apq^+*Ppq^+
-         auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula);
-         auto Pc2r = symbolic_compxwf_opP<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
-	 				      int2e, index, isym, ifkr);
-	 const double wt = ifkr? wfacAP(index) : 1.0;
-	 Pc2r.scale(wt);
-	 auto Alc1_Pc2r = Alc1.outer_product(Pc2r);
-         if(rank == 0) Alc1_Pc2r.display("Alc1_Pc2r : "+std::to_string(index), level);
-	 formulae.join(Alc1_Pc2r);
-      } // iproc
-   }
-   // 6. Bps^LC1*Qps^C2R + h.c. or Qqr^LC1*Bqr^C2R
-   for(const auto pr : binfo){
-      int index = pr.first;
-      int iformula = pr.second;
-      int iproc = distribute2(index,size);
-      if(iproc == rank){
-	 auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula);
-	 auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
-			                      int2e, index, isym, ifkr);
-	 // Bpq*Qpq + Bpq^+*Qpq^+
-         const double wt = ifkr? wfacBQ(index) : wfac(index);
-	 Qc2r.scale(wt);
-	 auto Blc1_Qc2r = Blc1.outer_product(Qc2r);
-	 if(rank == 0) Blc1_Qc2r.display("Blc1_Qc2r : "+std::to_string(index), level);
-	 formulae.join(Blc1_Qc2r);
-      } // iproc
-   }
-
-   if(rank == 0) formulae.display("total", debug);
-   return formulae;
+void symbolic_twodot_HxTerm(const oper_dict<Tm>& lqops,
+	                    const oper_dict<Tm>& rqops,
+			    const oper_dict<Tm>& c1qops,
+	                    const oper_dict<Tm>& c2qops,
+	                    const int it,
+			    const symbolic_term<Tm> HTerm,
+			    const stensor4<Tm>& wf,
+			    stensor4<Tm>& Hwf){
+   const bool debug = false;
+   if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
+   
+   const std::map<std::string,const oper_dict<Tm>&> qops_dict = {{"l",lqops},
+	   		 	                                 {"r",rqops},
+	   			 	                 	 {"c1",c1qops},
+   								 {"c2",c2qops}};
+   // compute (HTerm+HTerm.H)*|wf>
+   stensor4<Tm> opNxwf = wf, opHxwf = wf;
+   for(int idx=HTerm.size()-1; idx>=0; idx--){
+      const auto& sop = HTerm.terms[idx];
+      int len = sop.size();
+      auto wt0 = sop.sums[0].first;
+      auto sop0 = sop.sums[0].second;
+      // we assume the rest of terms have the same label/dagger/parity
+      auto block  = sop0.block;
+      char label  = sop0.label;
+      bool dagger = sop0.dagger;
+      bool parity = sop0.parity;
+      int  index0 = sop0.index;
+      int  nbar0  = sop0.nbar;
+      if(debug){
+         std::cout << " idx=" << idx
+		   << " len=" << len
+		   << " block=" << block
+		   << " label=" << label
+		   << " dagger=" << dagger
+		   << " parity=" << parity
+		   << " index0=" << index0 
+		   << std::endl;
+      }
+      const auto& qops = qops_dict.at(block);
+      // form opsum = wt0*op0 + wt1*op1 + ...
+      const auto& op0 = qops(label).at(index0);
+      stensor2<Tm> optmp;
+      if(nbar0 == 0){
+       	 optmp = wt0*(dagger? op0.H() : op0); 
+      }else{
+         optmp = wt0*(dagger? op0.K(nbar0).H() : op0.K(nbar0));
+      }
+      for(int k=1; k<len; k++){
+         auto wtk = sop.sums[k].first;
+	 auto sopk = sop.sums[k].second;
+	 int indexk = sopk.index;
+	 int nbark  = sopk.nbar;
+	 const auto& opk = qops(label).at(indexk);
+	 if(nbark == 0){
+	    optmp += wtk*(dagger? opk.H() : opk);
+	 }else{
+            optmp += wtk*(dagger? opk.K(nbark).H() : opk.K(nbark));
+	 } 
+      } // k
+      // impose antisymmetry here
+      if(parity){ 
+         opNxwf.cntr_signed(block);
+         opHxwf.cntr_signed(block);
+      }
+      // (opN+opH)*|wf> 
+      opNxwf = contract_qt4_qt2(block,opNxwf,optmp);
+      opHxwf = contract_qt4_qt2(block,opHxwf,optmp,true);
+   } // idx
+   int N = Hwf.size();
+   double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
+   linalg::xaxpy(N, 1.0, opNxwf.data(), Hwf.data()); 
+   linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data());  
 }
 
-const bool debug_twodot_sigma1 = false; 
-extern const bool debug_twodot_sigma1;
-
 template <typename Tm> 
-void twodot_Hx1(Tm* y,
-	        const Tm* x,
-	        Hx_functors<Tm>& Hx_funs,
-	        stensor4<Tm>& wf,
-	        const int size,
-	        const int rank){
+void symbolic_twodot_Hx(Tm* y,
+	                const Tm* x,
+	                const symbolic_task<Tm>& H_formulae,
+	          	const oper_dict<Tm>& lqops,
+	          	const oper_dict<Tm>& rqops,
+	          	const oper_dict<Tm>& c1qops,
+	          	const oper_dict<Tm>& c2qops,
+			const double& ecore,
+	                stensor4<Tm>& wf,
+	                const int size,
+	                const int rank){
+   const bool debug = true;
    auto t0 = tools::get_time();
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
 #else
    int maxthreads = 1;
 #endif
-   if(rank == 0 && debug_twodot_sigma1){ 
-      std::cout << "ctns::twodot_Hx1 size=" << size 
+   if(rank == 0 && debug){ 
+      std::cout << "ctns::symbolic_twodot_Hx size=" << size 
                 << " maxthreads=" << maxthreads
                 << std::endl;
    }
@@ -142,31 +118,35 @@ void twodot_Hx1(Tm* y,
    //=======================
    wf.from_array(x);
    // initialization
-   auto wf1 = wf.merge_c2r(); // wf1[l,c1,c2r]
-   std::vector<stensor3<Tm>> Hwfs(maxthreads);
+   std::vector<stensor4<Tm>> Hwfs(maxthreads);
    for(int i=0; i<maxthreads; i++){
-      Hwfs[i].init(wf1.info);
+      Hwfs[i].init(wf.info);
    }
    auto t1 = tools::get_time();
    // compute
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
-   for(int i=0; i<Hx_funs.size(); i++){
+   for(int it=0; it<H_formulae.size(); it++){
 #ifdef _OPENMP
       int omprank = omp_get_thread_num();
 #else
       int omprank = 0;
 #endif
-      Hwfs[omprank] += Hx_funs[i]();
+      const auto& HTerm = H_formulae.tasks[it];
+      symbolic_twodot_HxTerm(lqops,rqops,c1qops,c2qops,it,HTerm,wf,Hwfs[omprank]);
    }
    auto t2 = tools::get_time();
    // reduction & save
    for(int i=1; i<maxthreads; i++){
       Hwfs[0] += Hwfs[i];
    }
-   auto Hwf = Hwfs[0].split_c2r(wf.info.qver, wf.info.qcol);
-   Hwf.to_array(y);
+   Hwfs[0].to_array(y);
+   // add const term
+   if(rank == 0){
+      const Tm scale = lqops.ifkr? 0.5 : 1.0;
+      linalg::xaxpy(wf.size(), scale*ecore, x, y);
+   }
    auto t3 = tools::get_time();
    oper_timer.tHxInit += tools::get_duration(t1-t0);
    oper_timer.tHxCalc += tools::get_duration(t2-t1);

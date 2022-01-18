@@ -5,6 +5,7 @@ namespace ctns{
 
 // --- tensor linear algebra : contractions ---
 
+// --- contract_qt2_qt2 ---
 // xgemm : C[i,k] = A[i,j] B[j,k]
 template <typename Tm>
 stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a, 
@@ -31,6 +32,7 @@ stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a,
    return qt2;
 }
 
+// --- contract_qt3_qt3 ---
 template <typename Tm>
 stensor2<Tm> contract_qt3_qt3(const std::string superblock,
 		 	      const stensor3<Tm>& qt3a, 
@@ -43,33 +45,12 @@ stensor2<Tm> contract_qt3_qt3(const std::string superblock,
    }else if(superblock == "cr"){
       qt2 = contract_qt3_qt3_cr(qt3a, qt3b);
    }else{
-      std::cout << "error: no such case in contract_qt3_qt3! superblock=" << superblock << std::endl;
+      std::cout << "error: no such case in contract_qt3_qt3! superblock=" 
+	        << superblock << std::endl;
       exit(1);
    }
    return qt2;
 }
-
-template <typename Tm>
-stensor3<Tm> contract_qt3_qt2(const std::string cpos,
-		 	      const stensor3<Tm>& qt3a, 
-			      const stensor2<Tm>& qt2b,
-			      const bool ifdagger=false){
-   const auto& qt2 = ifdagger? qt2b.H() : qt2b;
-   stensor3<Tm> qt3;
-   if(cpos == "l"){
-      qt3 = contract_qt3_qt2_l(qt3a, qt2);
-   }else if(cpos == "r"){
-      qt3 = contract_qt3_qt2_r(qt3a, qt2);
-   }else if(cpos == "c"){
-      qt3 = contract_qt3_qt2_c(qt3a, qt2);
-   }else{
-      std::cout << "error: no such case in contract_qt3_qt2! cpos=" << cpos << std::endl;
-      exit(1);
-   }
-   return qt3;
-}
-
-// --- IMPLEMENTATIONS ---
 
 //          r--*--\ qt3a
 // q(r,c) =    |m |x	  = <r|c> = \sum_n An^* Bn^T [conjugation is taken on qt3a!]
@@ -177,41 +158,25 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
    return qt2;
 }
 
-//     |m/r
-//     *	 
-//     |x/c  = [m](r,c) = B(m,x) A[x](r,c) [mostly used for op*wf]
-//  r--*--c
+// --- contract_qt3_qt2 ---
 template <typename Tm>
-stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a, 
-			 	const stensor2<Tm>& qt2b){
-   assert(qt3a.dir_mid() == !qt2b.dir_col());
-   assert(qt3a.info.qmid == qt2b.info.qcol);
-   qsym sym = qt3a.info.sym + qt2b.info.sym;
-   std::vector<bool> dir = {qt3a.dir_row(), qt3a.dir_col(), qt2b.dir_row()};
-   stensor3<Tm> qt3(sym, qt3a.info.qrow, qt3a.info.qcol, qt2b.info.qrow, dir);
-   // loop over external indices
-   for(int br=0; br<qt3.rows(); br++){
-      for(int bc=0; bc<qt3.cols(); bc++){
-         for(int bm=0; bm<qt3.mids(); bm++){
-	    auto& blk3 = qt3(br,bc,bm);
-	    if(blk3.size() == 0) continue;
-	    // loop over contracted indices
-	    for(int bx=0; bx<qt3a.mids(); bx++){
-	       const auto& blk3a = qt3a(br,bc,bx);
-	       const auto& blk2b = qt2b(bm,bx);
-	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
-	       int N = blk3.dim0*blk3.dim1;
-	       int xdim = qt3a.info.qmid.get_dim(bx);
-	       int mdim = qt3.info.qmid.get_dim(bm);
-	       for(int ix=0; ix<xdim; ix++){
-	          for(int im=0; im<mdim; im++){
-		     linalg::xaxpy(N, blk2b(im,ix), blk3a.get(ix).data(), blk3.get(im).data());
-	          } // im
-	       } // ix 
-	    } // bx
-	 } // bm
-      } // bc
-   } // br
+stensor3<Tm> contract_qt3_qt2(const std::string cpos,
+		 	      const stensor3<Tm>& qt3a, 
+			      const stensor2<Tm>& qt2b,
+			      const bool ifdagger=false){
+   const auto& qt2 = ifdagger? qt2b.H() : qt2b;
+   stensor3<Tm> qt3;
+   if(cpos == "l"){
+      qt3 = contract_qt3_qt2_l(qt3a, qt2);
+   }else if(cpos == "r"){
+      qt3 = contract_qt3_qt2_r(qt3a, qt2);
+   }else if(cpos == "c"){
+      qt3 = contract_qt3_qt2_c(qt3a, qt2);
+   }else{
+      std::cout << "error: no such case in contract_qt3_qt2! cpos=" 
+	        << cpos << std::endl;
+      exit(1);
+   }
    return qt3;
 }
 
@@ -279,6 +244,70 @@ stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a,
       } // bc
    } // br
    return qt3;
+}
+
+//     |m/r
+//     *	 
+//     |x/c  = [m](r,c) = B(m,x) A[x](r,c) [mostly used for op*wf]
+//  r--*--c
+template <typename Tm>
+stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a, 
+			 	const stensor2<Tm>& qt2b){
+   assert(qt3a.dir_mid() == !qt2b.dir_col());
+   assert(qt3a.info.qmid == qt2b.info.qcol);
+   qsym sym = qt3a.info.sym + qt2b.info.sym;
+   std::vector<bool> dir = {qt3a.dir_row(), qt3a.dir_col(), qt2b.dir_row()};
+   stensor3<Tm> qt3(sym, qt3a.info.qrow, qt3a.info.qcol, qt2b.info.qrow, dir);
+   // loop over external indices
+   for(int br=0; br<qt3.rows(); br++){
+      for(int bc=0; bc<qt3.cols(); bc++){
+         for(int bm=0; bm<qt3.mids(); bm++){
+	    auto& blk3 = qt3(br,bc,bm);
+	    if(blk3.size() == 0) continue;
+	    // loop over contracted indices
+	    for(int bx=0; bx<qt3a.mids(); bx++){
+	       const auto& blk3a = qt3a(br,bc,bx);
+	       const auto& blk2b = qt2b(bm,bx);
+	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+	       int N = blk3.dim0*blk3.dim1;
+	       int xdim = qt3a.info.qmid.get_dim(bx);
+	       int mdim = qt3.info.qmid.get_dim(bm);
+	       for(int ix=0; ix<xdim; ix++){
+	          for(int im=0; im<mdim; im++){
+		     linalg::xaxpy(N, blk2b(im,ix), blk3a.get(ix).data(), blk3.get(im).data());
+	          } // im
+	       } // ix 
+	    } // bx
+	 } // bm
+      } // bc
+   } // br
+   return qt3;
+}
+
+// --- contract_qt4_qt2 ---
+template <typename Tm>
+stensor4<Tm> contract_qt4_qt2(const std::string cpos,
+		 	      const stensor4<Tm>& qt4a, 
+			      const stensor2<Tm>& qt2b,
+			      const bool ifdagger=false){
+   const auto& qt2 = ifdagger? qt2b.H() : qt2b;
+   stensor4<Tm> qt4 = qt4a;
+/*
+   if(cpos == "l"){
+      qt4 = contract_qt4_qt2_l(qt4a, qt2);
+   }else if(cpos == "r"){
+      qt4 = contract_qt4_qt2_r(qt4a, qt2);
+   }else if(cpos == "c1"){
+      qt4 = contract_qt4_qt2_c1(qt4a, qt2);
+   }else if(cpos == "c2"){
+      qt4 = contract_qt4_qt2_c2(qt4a, qt2);
+   }else{
+      std::cout << "error: no such case in contract_qt4_qt2! cpos=" 
+                << cpos << std::endl;
+      exit(1);
+   }
+*/
+   return qt4;
 }
 
 } // ctns

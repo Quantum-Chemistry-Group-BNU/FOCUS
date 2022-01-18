@@ -154,12 +154,10 @@ void sweep_twodot(const input::schedule& schd,
    }else if(schd.ctns.algorithm == 1){
       H_formulae = symbolic_twodot_formulae(lqops, rqops, c1qops, c2qops, 
 		                            int2e, size, rank);
-/*
-      HVec = bind(&ctns::twodot_Hx1<Tm>, _1, _2, std::ref(Hx_funs),
+      HVec = bind(&ctns::symbolic_twodot_Hx<Tm>, _1, _2, std::cref(H_formulae),
+		  std::cref(lqops), std::cref(rqops), std::cref(c1qops), 
+		  std::cref(c2qops), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
-*/
-      std::cout << "exit!" << std::endl;
-      exit(1);
    }
    oper_timer.clear();
    twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,

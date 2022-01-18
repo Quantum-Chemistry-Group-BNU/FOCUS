@@ -77,6 +77,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
 		                           index, ifkr, size, rank);
       auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
+      Cc2r.scale(-1.0);
       auto Slc1_Cc2r = Slc1.outer_product(Cc2r);
       formulae.join(Slc1_Cc2r);
       if(rank == 0){ 

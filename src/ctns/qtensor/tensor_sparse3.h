@@ -303,32 +303,31 @@ void stensor3<Tm>::row_signed(const double fac){
 
 template <typename Tm>
 void stensor3<Tm>::cntr_signed(const std::string block){
+   int br,bc,bm;
    if(block == "r"){
-      int br,bc,bm;
       for(int idx=0; idx<info._qblocks.size(); idx++){
          auto& blk3 = info._qblocks[idx];
          if(blk3.size() == 0) continue;
          info._addr_unpack(idx,br,bc,bm);
 	 // (-1)^{p(l)+p(c)}wf[l,c,r]
-	 int prm = info.qrow.get_parity(br) 
-		 + info.qmid.get_parity(bm);
-	 if(prm%2 == 1){
+	 int pt = info.qrow.get_parity(br) 
+	        + info.qmid.get_parity(bm);
+	 if(pt%2 == 1){
             linalg::xscal(blk3.size(), -1.0, blk3.data());
 	 } 
-      }
+      } // idx
    }else if(block == "c"){
-      int br,bc,bm;
       for(int idx=0; idx<info._qblocks.size(); idx++){
          auto& blk3 = info._qblocks[idx];
          if(blk3.size() == 0) continue;
          info._addr_unpack(idx,br,bc,bm);
 	 // (-1)^{p(l)}wf[l,c,r]
-	 int pr = info.qrow.get_parity(br);
-         if(pr%2 == 1){
+	 int pt = info.qrow.get_parity(br);
+         if(pt%2 == 1){
 	    linalg::xscal(blk3.size(), -1.0, blk3.data());
 	 }
-      }
-   }
+      } // idx
+   } // block
 }
 
 // Generate the sign for wf[lcr]|lcr> = wf3[lcr]|lrc> 
