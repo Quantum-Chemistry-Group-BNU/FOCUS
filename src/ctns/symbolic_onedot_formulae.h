@@ -20,7 +20,6 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
    const int print_level = 0;
    const int isym = lqops.isym;
    const bool ifkr = lqops.ifkr;
-   const double scale = ifkr? 0.5 : 1.0; // for local terms
    const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
    const auto& cindex = ifNC? lqops.cindex : rqops.cindex;
    auto aindex = oper_index_opA(cindex, ifkr);
@@ -32,11 +31,12 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
    if(ifNC){
       // partition = l|cr
       // 1. H^l 
-      auto Hl = symbolic_term<Tm>(symbolic_oper("l",'H',0), 0.5*scale);
+      const double scale = ifkr? 0.25 : 0.5;
+      auto Hl = symbolic_term<Tm>(symbolic_oper("l",'H',0), scale);
       formulae.append(Hl);
       // 2. H^cr
       auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cqops.cindex, rqops.cindex, 
-		                          ifkr, size, rank, scale);
+		                          ifkr, size, rank);
       formulae.join(Hcr);
       if(rank == 0){
 	 std::cout << " idx=" << idx++ << " ";
@@ -108,10 +108,11 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       // partition = lc|r
       // 1. H^lc 
       auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", lqops.cindex, cqops.cindex, 
-           	                          ifkr, size, rank, scale);
+           	                          ifkr, size, rank);
       formulae.join(Hlc);
       // 2. H^r
-      auto Hr = symbolic_term<Tm>(symbolic_oper("r",'H',0), 0.5*scale);
+      const double scale = ifkr? 0.25 : 0.5;
+      auto Hr = symbolic_term<Tm>(symbolic_oper("r",'H',0), scale);
       formulae.append(Hr);
       if(rank == 0){ 
 	 std::cout << " idx=" << idx++ << " ";

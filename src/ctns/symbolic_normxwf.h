@@ -29,6 +29,7 @@ symbolic_task<Tm> symbolic_normxwf_opA(const std::string block1,
 				       const std::string block2,
 		                       const int index,
 			               const int iformula,
+				       const bool ifkr,
 			               const bool ifdagger=false){
    symbolic_task<Tm> formulae;
    if(iformula == 1){
@@ -41,19 +42,25 @@ symbolic_task<Tm> symbolic_normxwf_opA(const std::string block1,
       formulae.append(op2);
    }else if(iformula == 3){
       auto pq = oper_unpack(index);	
-      int p = pq.first, q = pq.second;
+      int p = pq.first, sp = p%2;
+      int q = pq.second, sq = q%2;
       // A[p1<q2] = p1+q2+
       auto op1 = symbolic_oper(block1,'C',p,ifdagger);
-      auto op2 = symbolic_oper(block2,'C',q,ifdagger);
+      const bool ifnot_kros = !(ifkr && sp != sq);
+      auto op2 = ifnot_kros? symbolic_oper(block2,'C',q,ifdagger) : 
+	      		     symbolic_oper(block2,'C',q-1,ifdagger).K(1);
       auto op12 = symbolic_term<Tm>(op1,op2);
       // (c1*c2)^d = c2d*c1d = -c1d*c2d
       if(ifdagger) op12.scale(-1.0);
       formulae.append(op12);
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
-      int p = qp.second, q = qp.first;
+      int p = qp.second, sp = p%2;
+      int q = qp.first, sq = q%2;
       // A[q2<p1] = q2+p1+ = -p1+q2+
-      auto op1 = symbolic_oper(block1,'C',p,ifdagger);
+      const bool ifnot_kros = !(ifkr && sp != sq);
+      auto op1 = ifnot_kros? symbolic_oper(block1,'C',p,ifdagger) :
+	      	             symbolic_oper(block1,'C',p-1,ifdagger).K(1);
       auto op2 = symbolic_oper(block2,'C',q,ifdagger);
       auto op12 = symbolic_term<Tm>(op1,op2,-1.0);
       if(ifdagger) op12.scale(-1.0);
@@ -68,6 +75,7 @@ symbolic_task<Tm> symbolic_normxwf_opB(const std::string block1,
 				       const std::string block2,
 		              	       const int index,
 			      	       const int iformula,
+				       const bool ifkr,
 			      	       const bool ifdagger=false){
    symbolic_task<Tm> formulae;
    if(iformula == 1){
@@ -80,18 +88,24 @@ symbolic_task<Tm> symbolic_normxwf_opB(const std::string block1,
       formulae.append(op1);
    }else if(iformula == 3){
       auto pq = oper_unpack(index);	
-      int p = pq.first, q = pq.second;
+      int p = pq.first, sp = p%2;
+      int q = pq.second, sq = q%2;
       // B[p1q2] = p1+q2
       auto op1 = symbolic_oper(block1,'C',p,ifdagger);
-      auto op2 = symbolic_oper(block2,'C',q,!ifdagger);
+      const bool ifnot_kros = !(ifkr && sp != sq);
+      auto op2 = ifnot_kros? symbolic_oper(block2,'C',q,!ifdagger) :
+	      		     symbolic_oper(block2,'C',q,!ifdagger).K(1);
       auto op12 = symbolic_term<Tm>(op1,op2);
       if(ifdagger) op12.scale(-1.0);
       formulae.append(op12);
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
-      int p = qp.second, q = qp.first;
+      int p = qp.second, sp = p%2;
+      int q = qp.first, sq = q%2;
       // B[q2p1] = q2+p1 = -p1q2+
-      auto op1 = symbolic_oper(block1,'C',p,!ifdagger);
+      const bool ifnot_kros = !(ifkr && sp != sq);
+      auto op1 = ifnot_kros? symbolic_oper(block1,'C',p,!ifdagger) : 
+	      	 	     symbolic_oper(block1,'C',p-1,!ifdagger).K(1);
       auto op2 = symbolic_oper(block2,'C',q,ifdagger);
       auto op12 = symbolic_term<Tm>(op1,op2,-1.0);
       if(ifdagger) op12.scale(-1.0);

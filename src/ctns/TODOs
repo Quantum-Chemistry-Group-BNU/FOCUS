@@ -305,7 +305,7 @@ Sweep optimization:
 # V3: Optimized twodot H*x #
 ############################
 
-Symbolic derivations: expansion of formulae
+Symbolic derivations: expansion of formulae:
  symbolic_oper.h
  symbolic_normxwf.h
  symbolic_compxwf.h
@@ -314,7 +314,13 @@ Symbolic derivations: expansion of formulae
  symbolic_onedot_sigma.h
  symbolic_twodot_formulae.h
  symbolic_twodot_sigma.h
-Better twodot implementation: direct work with qt4_qt2 without reshaping
+
+Kramers symmetry-adapted version:
+ oper_normxwf.h - line79,88 in opA; line132,142 in opB;
+ oper_compxwf.h - line220 in opS(); line366 in opH(); 
+ oper_op1op2xwf.h - line76 in oper_op1op2xwf_kr(); 
+
+Twodot implementation: work with qt4_qt2 without reshaping
 
 
 

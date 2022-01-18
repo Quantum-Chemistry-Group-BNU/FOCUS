@@ -109,7 +109,7 @@ inline std::vector<int> oper_index_opP(const std::vector<int>& krest, const bool
 	 if(kp < kq){
             index.push_back(oper_pack(pa,qa)); // Paa 
 	    index.push_back(oper_pack(pa,qb)); // Pab
-	    if(not ifkr){
+	    if(!ifkr){
 	       // since if kp<kq, pb<qa and pb<qb hold
 	       index.push_back(oper_pack(pb,qa));
 	       index.push_back(oper_pack(pb,qb));
@@ -132,7 +132,7 @@ inline std::vector<int> oper_index_opQ(const std::vector<int>& krest, const bool
 	 if(kp <= ks){ 
 	    index.push_back(oper_pack(pa,sa));
 	    index.push_back(oper_pack(pa,sb));
-	    if(not ifkr){
+	    if(!ifkr){
 	       // if kp=ks, QpApB is stored while QpBpA is redundant,
 	       // because it can be related with QpApB using Hermiticity if bra=ket.
 	       if(kp != ks) index.push_back(oper_pack(pb,sa));
@@ -150,7 +150,7 @@ inline std::vector<int> oper_index_opS(const std::vector<int>& krest, const bool
    for(int kp: krest){
       int pa = 2*kp, pb = pa+1;
       index.push_back(pa);
-      if(not ifkr) index.push_back(pb);
+      if(!ifkr) index.push_back(pb);
    }
    return index;
 }

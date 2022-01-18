@@ -161,7 +161,7 @@ void oper_op1op2xwf(const bool& ifkr,
 		    const bool ifdagger1,
 		    const bool ifdagger2,
 		    const bool ifdagger){
-   if(not ifkr){
+   if(!ifkr){
       oper_op1op2xwf_nkr(opwf, superblock, site, qops1C, qops2C, 
 		         sym_op, oij, ifdagger1, ifdagger2, ifdagger);
    }else{

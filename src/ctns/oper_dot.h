@@ -34,7 +34,7 @@ void oper_init_dot(oper_dict<Tm>& qops,
    qops.isym = isym;
    qops.ifkr = ifkr;
    qops.cindex.push_back(2*kp);
-   if(not ifkr) qops.cindex.push_back(2*kp+1);
+   if(!ifkr) qops.cindex.push_back(2*kp+1);
    // rest of spatial orbital indices
    for(int k=0; k<int1e.sorb/2; k++){
       if(k == kp) continue;

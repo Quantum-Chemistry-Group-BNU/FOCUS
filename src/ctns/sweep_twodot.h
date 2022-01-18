@@ -13,9 +13,7 @@
 
 namespace ctns{
 
-//
 // twodot optimization algorithm
-//
 template <typename Km>
 void sweep_twodot(const input::schedule& schd,
 		  sweep_data& sweeps,
@@ -33,7 +31,6 @@ void sweep_twodot(const input::schedule& schd,
 #endif   
    if(rank == 0) std::cout << "ctns::sweep_twodot" << std::endl;
    const int isym = Km::isym;
-   const bool ifkr = qkind::is_kramers<Km>();
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
 

@@ -15,7 +15,37 @@ extern const bool debug_onedot_sigma;
 
 // construct H*wf: if ifkr=True, construct skeleton sigma vector 
 
-// --- NC partition ---
+template <typename Tm>
+stensor3<Tm> onedot_Hx_local(const oper_dict<Tm>& lqops,
+	          	     const oper_dict<Tm>& rqops,
+	          	     const oper_dict<Tm>& cqops,
+	          	     const integral::two_body<Tm>& int2e,
+	          	     const integral::one_body<Tm>& int1e,
+			     const double& ecore,
+			     const stensor3<Tm>& wf,
+	          	     const int& size,
+	          	     const int& rank){
+   if(debug_onedot_sigma) std::cout << "onedot_Hx_local" << std::endl;
+   const Tm scale = lqops.ifkr? 0.5 : 1.0;
+   const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
+   stensor3<Tm> Hwf;
+   if(ifNC){
+      // 1. H^l + 2. H^cr
+      Hwf = contract_qt3_qt2_l(wf,lqops('H').at(0));
+      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,int2e,int1e,size,rank);
+   }else{
+      // 1. H^lc + 2. H^r
+      Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,int2e,int1e,size,rank);
+      Hwf += contract_qt3_qt2_r(wf,rqops('H').at(0));
+   }
+   Hwf *= scale;
+   // add const term
+   const Tm fac = scale*(ecore/size);
+   linalg::xaxpy(wf.size(), fac, wf.data(), Hwf.data());
+   return Hwf;
+}
+
+// --- Normal-Complementary partition ---
 // Generic formula: L=l, R=cr: A[l]*P[cr]+B[l]*Q[cr]
 // O^l*O^cr|lcr>psi[lcr] = O^l|l>O^cr|cr>(-1)^{p(l)*p(O^cr)}psi[lcr]
 //		         = O^l|l>( (-1)^{p(l)*p(O^cr)} (O^cr|cr>psi[lcr]) )
@@ -111,7 +141,7 @@ stensor3<Tm> onedot_Hx_BQnc(const int index,
    return Hwf;
 }
 
-// --- CN partition ---
+// --- Complementary-Normal partition ---
 // Generic formula: L=lc, R=r: A[lc]*P[r]+B[lc]*Q[r]
 // O^lc*O^r|lcr>psi[lcr] = O^lc|lc>O^r|r>(-1)^{p(lc)*p(O^r)}psi[lcr]
 //		         = O^lc|lc>( (-1)^{p(l)*p(O^cr)} ((-1)^{p(c)*p(O^cr)} O^r|c>psi[lcr]) )
@@ -206,36 +236,6 @@ stensor3<Tm> onedot_Hx_QBcn(const int index,
 }
 
 // --- driver ---
-
-template <typename Tm>
-stensor3<Tm> onedot_Hx_local(const oper_dict<Tm>& lqops,
-	          	     const oper_dict<Tm>& rqops,
-	          	     const oper_dict<Tm>& cqops,
-	          	     const integral::two_body<Tm>& int2e,
-	          	     const integral::one_body<Tm>& int1e,
-			     const double& ecore,
-			     const stensor3<Tm>& wf,
-	          	     const int& size,
-	          	     const int& rank){
-   if(debug_onedot_sigma) std::cout << "onedot_Hx_local" << std::endl;
-   const Tm scale = lqops.ifkr? 0.5 : 1.0;
-   const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
-   stensor3<Tm> Hwf;
-   if(ifNC){
-      // 1. H^l + 2. H^cr
-      Hwf = contract_qt3_qt2_l(wf,lqops('H').at(0));
-      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,int2e,int1e,size,rank);
-   }else{
-      // 1. H^lc + 2. H^r
-      Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,int2e,int1e,size,rank);
-      Hwf += contract_qt3_qt2_r(wf,rqops('H').at(0));
-   }
-   Hwf *= scale;
-   // add const term
-   const Tm fac = scale*(ecore/size);
-   linalg::xaxpy(wf.size(), fac, wf.data(), Hwf.data());
-   return Hwf;
-}
 
 // Collect all Hx_funs 
 template <typename Tm>

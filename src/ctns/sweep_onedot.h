@@ -13,9 +13,7 @@
 
 namespace ctns{
 
-//
 // onedot optimization algorithm
-//
 template <typename Km>
 void sweep_onedot(const input::schedule& schd,
 		  sweep_data& sweeps,
@@ -33,7 +31,6 @@ void sweep_onedot(const input::schedule& schd,
 #endif   
    if(rank == 0) std::cout << "ctns::sweep_onedot" << std::endl;
    const int isym = Km::isym;
-   const bool ifkr = qkind::is_kramers<Km>();
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
 
@@ -150,7 +147,7 @@ void sweep_onedot(const input::schedule& schd,
 }
 
 // use one dot algorithm to produce a final wavefunction
-// in right canonical form for later usage 
+// in right canonical form (RCF) for later usage
 template <typename Km>
 void sweep_rwfuns(const input::schedule& schd,
 		  comb<Km>& icomb,

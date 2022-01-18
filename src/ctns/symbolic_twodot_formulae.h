@@ -21,7 +21,6 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
    const int print_level = 0;
    const int isym = lqops.isym;
    const bool ifkr = lqops.ifkr;
-   const double scale = ifkr? 0.5 : 1.0;
    int slc1 = lqops.cindex.size() + c1qops.cindex.size();
    int sc2r = c2qops.cindex.size() + rqops.cindex.size();
    const bool ifNC = (slc1 <= sc2r);
@@ -37,7 +36,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
    // Local terms:
    // H[lc1]
    auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
-		                        ifkr, size, rank, scale);
+		                        ifkr, size, rank);
    formulae.join(Hlc1);
    if(rank == 0){ 
       std::cout << " idx=" << idx++ << " "; 
@@ -45,7 +44,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
    }
    // H[c2r]
    auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", c2qops.cindex, rqops.cindex, 
-		                        ifkr, size, rank, scale);
+		                        ifkr, size, rank);
    formulae.join(Hc2r);
    if(rank == 0){ 
       std::cout << " idx=" << idx++ << " ";
@@ -94,7 +93,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       int iproc = distribute2(index,size);
       if(iproc == rank){
 	 // Apq*Ppq + Apq^+*Ppq^+
-         auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula);
+         auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula, ifkr);
          auto Pc2r = symbolic_compxwf_opP<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
 	 				      int2e, index, isym, ifkr);
 	 const double wt = ifkr? wfacAP(index) : 1.0;
@@ -113,7 +112,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       int iformula = pr.second;
       int iproc = distribute2(index,size);
       if(iproc == rank){
-	 auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula);
+	 auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula, ifkr);
 	 auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
 			                      int2e, index, isym, ifkr);
 	 // Bpq*Qpq + Bpq^+*Qpq^+

@@ -30,15 +30,14 @@ symbolic_task<Tm> symbolic_twodot_Hx_functors(const oper_dict<Tm>& lqops,
    symbolic_task<Tm> formulae;
 
    // Local terms:
-   const double scale = ifkr? 0.5 : 1.0;
    // H[lc1]
    auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
-		                        ifkr, size, rank, scale);
+		                        ifkr, size, rank);
    if(rank == 0) Hlc1.display("Hlc1", level);
    formulae.join(Hlc1);
    // H[c2r]
    auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", c2qops.cindex, rqops.cindex, 
-		                        ifkr, size, rank, scale);
+		                        ifkr, size, rank);
    if(rank == 0) Hc2r.display("Hc2r", level);
    formulae.join(Hc2r);
 

@@ -18,11 +18,13 @@ struct symbolic_oper{
       symbolic_oper(const std::string _block, 
 		    const char _label, 
 		    const int _index, 
-		    const bool _dagger=false){
+		    const bool _dagger=false,
+		    const int _nbar=0){
 	 block = _block;
          label = _label;
 	 index = _index;
 	 dagger = _dagger;
+	 nbar = _nbar;
 	 if(label == 'C' || label == 'S'){
 	    parity = true;
 	 }else{
@@ -50,11 +52,17 @@ struct symbolic_oper{
             auto pr = oper_unpack(op.index);
 	    os << "(" << pr.first << "," << pr.second << ")";
 	 }
+	 if(op.nbar > 0){
+	    os << ".K(" << op.nbar << ")";
+	 }
          return os;
       }
       // operations
       symbolic_oper H() const{
-	 return symbolic_oper(block,label,index,!dagger);
+	 return symbolic_oper(block,label,index,!dagger,nbar);
+      }
+      symbolic_oper K(const int nbar) const{
+	 return symbolic_oper(block,label,index,dagger,nbar);
       }
       // qsym
       qsym get_qsym(const short isym) const{
@@ -67,6 +75,7 @@ struct symbolic_oper{
       int index;
       bool dagger = false;
       bool parity = false;
+      int nbar = 0; // for kramers operations
 };
 
 // sum of weighted symbolic operators: wa*opa + wb*opb + ...

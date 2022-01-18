@@ -39,15 +39,13 @@ stensor3<Tm> oper_compxwf_opP(const std::string superblock,
    //     + <pq||s2r2> As2r2 [r>s] => Ppq^2
    //     + <pq||s1r2> ar2*as1	   => -<pq||s1r2> as1*ar2
    //
-/*
    // 1. P1*I2
    opwf += oper_kernel_OIwf(superblock,site,qops1('P').at(index),ifdagger);
    // 2. I1*P2
    opwf += oper_kernel_IOwf(superblock,site,qops2('P').at(index),0,ifdagger);
-*/
    // 3. -<pq||s1r2> as1*ar2
    std::map<std::pair<int,int>,Tm> oij;
-   if(not ifkr){
+   if(!ifkr){
       for(const auto& op1C : qops1('C')){
          int s1 = op1C.first;
          for(const auto& op2C : qops2('C')){
@@ -113,7 +111,7 @@ stensor3<Tm> oper_compxwf_opQ(const std::string superblock,
    opwf += oper_kernel_IOwf(superblock,site,qops2('Q').at(index),0,ifdagger);
    // 3. <pq1||sr2> aq1^+*ar2 &  4. -<pr2||sq1> aq1*ar2^+
    std::map<std::pair<int,int>,Tm> o1ij, o2ij;
-   if(not ifkr){
+   if(!ifkr){
       for(const auto& op1C : qops1('C')){
          int q1 = op1C.first;
          for(const auto& op2C : qops2('C')){
@@ -187,7 +185,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
    // 2. I1*S2
    opwf += oper_kernel_IOwf(superblock,site,qops2('S').at(index),1,ifdagger);
    // cross terms
-   if(not ifkr){
+   if(!ifkr){
       // 3. sum_q aq^+[1]*Ppq[2] + aq[1]*Qpq[2]
       for(const auto& op1C : qops1('C')){
          int q = op1C.first;
@@ -318,7 +316,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
    opwf += oper_kernel_OIwf(superblock,site,qops1('H').at(0));
    // 2. I1*H2
    opwf += oper_kernel_IOwf(superblock,site,qops2('H').at(0),0);
-   if(not ifkr){
+   if(!ifkr){
       // One-index operators
       // 3. sum_p1 p1^+ Sp1^2 + h.c. 
       for(const auto& op1C : qops1('C')){
@@ -404,11 +402,12 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
             auto tmp2a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
 	    linalg::xaxpy(opwf.size(), wt, tmp1a.data(), opwf.data());
 	    linalg::xaxpy(opwf.size(), wt, tmp2a.data(), opwf.data());
-	    // NOTE: the following lines work for A_{pq} & A_{p\bqr{q}}, because 
-	    // the global sign in K() does not matter as the pair AP has even no. of barred indices!
-            // That is, the phases will get cancelled in op1 and op2 after time-reversal op.
-	    const auto& op1_B = op1_A.K(0); 
-	    const auto& op2_B = op2_A.K(0);
+	    // NOTE: the following lines work for A_{pq} & A_{p\bqr{q}}, 
+	    // because the global sign in K() does not matter as the pair AP 
+	    // has even no. of barred indices! That is, the phases will get 
+	    // cancelled in op1 and op2 after the time-reversal operation!
+	    const auto& op1_B = op1_A.K(0);  
+	    const auto& op2_B = op2_A.K(0); 
             //opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
             //opwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
             auto tmp1b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);

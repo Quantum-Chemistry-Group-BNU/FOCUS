@@ -3,60 +3,57 @@
 LOGS
 ----
 
- * Setup tests for NR & R integrals [DONE20210324]
+ * Setup tests for NR & R integrals [DONE2021/03/24]
  
- * Redesign and decouple codes [DONE20210408]
+ * Redesign and decouple codes [DONE2021/04/08]
     
- * Implementation of CTNS with TRS [DONE20210516]
+ * Implementation of CTNS with TRS [DONE2021/05/16]
     - checked for kinds {rN,rNSz,cN,cNSz,cNK}
     - rewrite qtensor such that qt2/qt3/qt4 are just views
 
- * Parallelization: MPI [DONE20210530]
+ * Parallelization: MPI [DONE2021/05/30]
     - cleanup (IO) 
     - setup testing mechanism? 
     - preparation: makefile -> mpi 
     - mpi version 
-       - distribute AP & BQ, compxwf, Hmat [DONE20210523]
-       - opt: HDiag, HVec, Davidson, pRDM, rwfuns, twodot [DONE20210528] 
+       - distribute AP & BQ, compxwf, Hmat [DONE2021/05/23]
+       - opt: HDiag, HVec, Davidson, pRDM, rwfuns, twodot [DONE2021/05/28] 
        - load balance: adjust distribution
        - careful check serial/parallel version against previous 
          versions with different compilers
 
- * Benchmark performances: Fe2S2 [DONE20210811]
+ * Benchmark performances: Fe2S2 [DONE2021/08/11]
     - different topologies: -> SVD-based decimation
-       - problem: TRS-adapted SVD decimation is necessary in initialization [DONE20210706] 
+       - problem: TRS-adapted SVD decimation is necessary in initialization [DONE2021/07/06] 
        - problem: decimation in sweep -> have to give up perturbative noise for CTNS! 
-		   - decimation_row_nkr [DONE20210709]
-		   - decimation_row_kr [DONE20210711]
+		   - decimation_row_nkr [DONE2021/07/09]
+		   - decimation_row_kr [DONE2021/07/11]
 
- * Optimized parallel version [DONE20211002]
-    - OpenMP support [DONE20210903]
+ * Optimized parallel version [DONE2021/10/02]
+    - OpenMP support [DONE2021/09/03]
 	- Hx & decimation
 	- Initialization of CTNS
     - Z2 symmetry: {rZ2,cZ2}
         - Checked by diagonalizing fock::Hmat
-    - better data structure for qtensor & oper_dict [DONE20211002]
+    - better data structure for qtensor & oper_dict [DONE2021/10/02]
         - problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
 
- * Optimized Hx algorithm [DONE202201XX]
+ * Optimized Hx algorithm [DONE2022/01/XX]
     - onedot algorithm:
     	- generation of onedot_Hx formulae
-    	- implemenation of onedot_Hx contraction [DONE20220116]
-    	- optimal intermediate?
-	- profiling?
+    	- implemenation of onedot_Hx contraction [DONE2022/01/16]
+	  - adjoint of Hterm is treated in symbolic_onedot_Hx
+	- implementation of Kramers version of Hx [DONE2022/01/18]
+	  - different treatment of Hl,Hcr,{CS/SC,AP,BQ}
     - twodot algorithm:
-    	- generation of twodot_Hx formulae
-    	- optimized formation of sigma vector by contract_qt4_qt2 (without intermediate)
-	- profiling?
+    	- generation of twodot_Hx formulae [DONE2022/01/18]
+    	- optimized formation of sigma vector [DONE2022/xx/xx]
+          - contract_qt4_qt2 (without intermediate/reshaping)
+    - profiling for [Fe4S4] system?
     - renormalization formulae
 
- * Large-scale parallelization
-    - parallelization - push to the limit!
-    - GPU?
-
-------
-FUTURE
-------
+ * Large-scale parallelization: push to the limit!
+    - GPU for contractions?
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]

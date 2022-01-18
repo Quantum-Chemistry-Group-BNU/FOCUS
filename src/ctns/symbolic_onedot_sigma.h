@@ -38,6 +38,7 @@ void symbolic_onedot_HxTerm(const oper_dict<Tm>& lqops,
       bool dagger = sop0.dagger;
       bool parity = sop0.parity;
       int  index0 = sop0.index;
+      int  nbar0  = sop0.nbar;
       if(debug){
          std::cout << " idx=" << idx
 		   << " len=" << len
@@ -49,15 +50,25 @@ void symbolic_onedot_HxTerm(const oper_dict<Tm>& lqops,
 		   << std::endl;
       }
       const auto& qops = qops_dict.at(block);
-      // opsum = wt0*op0 + wt1*op1 + ...
+      // form opsum = wt0*op0 + wt1*op1 + ...
       const auto& op0 = qops(label).at(index0);
-      stensor2<Tm> optmp = wt0*(dagger? op0.H() : op0); 
+      stensor2<Tm> optmp;
+      if(nbar0 == 0){
+       	 optmp = wt0*(dagger? op0.H() : op0); 
+      }else{
+         optmp = wt0*(dagger? op0.K(nbar0).H() : op0.K(nbar0));
+      }
       for(int k=1; k<len; k++){
          auto wtk = sop.sums[k].first;
 	 auto sopk = sop.sums[k].second;
 	 int indexk = sopk.index;
+	 int nbark  = sopk.nbar;
 	 const auto& opk = qops(label).at(indexk);
-         optmp += wtk*(dagger? opk.H() : opk);
+	 if(nbark == 0){
+	    optmp += wtk*(dagger? opk.H() : opk);
+	 }else{
+            optmp += wtk*(dagger? opk.K(nbark).H() : opk.K(nbark));
+	 } 
       } // k
       // impose antisymmetry here
       if(parity){ 
