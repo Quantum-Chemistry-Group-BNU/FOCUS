@@ -19,7 +19,9 @@
 #include "tensor_sparse3.h"
 #include "tensor_sparse4.h"
 #include "tensor_linalg.h"
-#include "tensor_contract.h"
+#include "tensor_contract2.h"
+#include "tensor_contract3.h"
+#include "tensor_contract4.h"
 #include "tensor_reshape3.h"
 #include "tensor_reshape4.h"
 

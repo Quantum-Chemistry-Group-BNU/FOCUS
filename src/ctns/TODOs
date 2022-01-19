@@ -321,7 +321,9 @@ Kramers symmetry-adapted version:
  oper_op1op2xwf.h - line76 in oper_op1op2xwf_kr(); 
 
 Twodot implementation: work with qt4_qt2 without reshaping
-
+ qtensor/tensor_contract2.h
+ qtensor/tensor_contract3.h
+ qtensor/tensor_contract4.h
 
 
 #################################################################
