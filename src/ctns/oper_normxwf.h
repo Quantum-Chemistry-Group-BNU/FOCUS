@@ -24,7 +24,8 @@ stensor3<Tm> oper_normxwf_opC(const std::string superblock,
 		              const bool ifdagger=false){
    auto t0 = tools::get_time();
    if(debug_normxwf){
-      std::cout << "oper_normxwf_opC index=" << index << " iformula=" << iformula << std::endl;
+      std::cout << "oper_normxwf_opC index=" << index 
+	        << " iformula=" << iformula << std::endl;
    }
  
    stensor3<Tm> opwf;
@@ -58,7 +59,8 @@ stensor3<Tm> oper_normxwf_opA(const std::string superblock,
 			      const bool ifdagger=false){
    auto t0 = tools::get_time();
    if(debug_normxwf){
-      std::cout << "oper_normxwf_opA index=" << index << " iformula=" << iformula << std::endl;
+      std::cout << "oper_normxwf_opA index=" << index 
+	        << " iformula=" << iformula << std::endl;
    }
 
    const bool ifkr = qops1.ifkr;
@@ -113,7 +115,8 @@ stensor3<Tm> oper_normxwf_opB(const std::string superblock,
 			      const bool ifdagger=false){
    auto t0 = tools::get_time();
    if(debug_normxwf){
-      std::cout << "oper_normxwf_opB index=" << index << " iformula=" << iformula << std::endl;
+      std::cout << "oper_normxwf_opB index=" << index 
+	        << " iformula=" << iformula << std::endl;
    }
 
    const bool ifkr = qops1.ifkr;
@@ -131,7 +134,8 @@ stensor3<Tm> oper_normxwf_opB(const std::string superblock,
       // kr opposite spin case: <a1A^+a2B> = [a1A^+]*[a2B]
       const bool ifnot_kros = !(ifkr && sp != sq);
       const auto& op1 = qops1('C').at(p);
-      const auto& op2 = ifnot_kros? qops2('C').at(q).H() : qops2('C').at(q-1).H().K(1);
+      const auto& op2 = ifnot_kros? qops2('C').at(q).H() : 
+	                            qops2('C').at(q-1).H().K(1);
       opwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
       if(ifdagger) opwf *= -1.0;
    }else if(iformula == 4){
@@ -140,7 +144,8 @@ stensor3<Tm> oper_normxwf_opB(const std::string superblock,
       int q = qp.first, sq = q%2;
       // kr opposite spin case: <a2A^+a1B> = -[a1B]*[a2A^+]
       const bool ifnot_kros = !(ifkr && sp != sq);
-      const auto& op1 = ifnot_kros? -qops1('C').at(p).H() : -qops1('C').at(p-1).H().K(1);
+      const auto& op1 = ifnot_kros? -qops1('C').at(p).H() : 
+	                            -qops1('C').at(p-1).H().K(1);
       const auto& op2 = qops2('C').at(q);
       opwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
       if(ifdagger) opwf *= -1.0;

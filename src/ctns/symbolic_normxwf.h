@@ -94,7 +94,7 @@ symbolic_task<Tm> symbolic_normxwf_opB(const std::string block1,
       auto op1 = symbolic_oper(block1,'C',p,ifdagger);
       const bool ifnot_kros = !(ifkr && sp != sq);
       auto op2 = ifnot_kros? symbolic_oper(block2,'C',q,!ifdagger) :
-	      		     symbolic_oper(block2,'C',q,!ifdagger).K(1);
+	      		     symbolic_oper(block2,'C',q-1,!ifdagger).K(1);
       auto op12 = symbolic_term<Tm>(op1,op2);
       if(ifdagger) op12.scale(-1.0);
       formulae.append(op12);
