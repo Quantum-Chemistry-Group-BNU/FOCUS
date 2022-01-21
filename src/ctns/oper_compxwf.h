@@ -316,7 +316,6 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
    opwf += oper_kernel_OIwf(superblock,site,qops1('H').at(0));
    // 2. I1*H2
    opwf += oper_kernel_IOwf(superblock,site,qops2('H').at(0),0);
-/*
    if(!ifkr){
       // One-index operators
       // 3. sum_p1 p1^+ Sp1^2 + h.c. 
@@ -442,7 +441,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
          } // iproc
       }
    } // ifkr
-*/
+
    auto t1 = tools::get_time();
 #ifdef _OPENMP
    #pragma omp critical

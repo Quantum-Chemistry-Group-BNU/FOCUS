@@ -49,8 +49,11 @@ LOGS
     	- generation of twodot_Hx formulae [DONE2022/01/18]
     	- optimized formation of sigma vector [DONE2022/01/XX]
           - contract_qt4_qt2 (without intermediate/reshaping)
-    - profiling for [Fe4S4] system?
-    - renormalization formulae
+    - profiling:
+	- benchmark for small systems
+	- minimize memory allocation / intermediates?
+	- benchmark for [Fe4S4] systems
+    - renormalization formulae?
 
  * Large-scale parallelization: push to the limit!
     - GPU for contractions?

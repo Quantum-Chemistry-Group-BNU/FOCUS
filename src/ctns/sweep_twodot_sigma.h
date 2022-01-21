@@ -244,7 +244,6 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dict<Tm>& lqops,
 		   std::cref(int2e), std::cref(int1e), std::cref(ecore), 
 		   std::cref(wf), std::cref(size), std::cref(rank));
    Hx_funs.push_back(Hx);
-/*
    // One-index terms:
    // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
    auto infoC1 = oper_combine_opC(lqops.cindex, c1qops.cindex);
@@ -326,7 +325,6 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dict<Tm>& lqops,
          } // i
       }
    }
-*/
    return Hx_funs;
 }
 

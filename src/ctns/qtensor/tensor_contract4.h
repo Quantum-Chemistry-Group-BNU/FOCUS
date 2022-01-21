@@ -171,7 +171,7 @@ stensor4<Tm> contract_qt4_qt2_c2(const stensor4<Tm>& qt4a,
 	       if(blk4.size() == 0) continue;
 	       // loop over contracted indices
 	       for(int bx=0; bx<qt4a.mids(); bx++){
-	          const auto& blk4a = qt4a(br,bc,bx,bv);
+	          const auto& blk4a = qt4a(br,bc,bm,bx);
 	          const auto& blk2b = qt2b(bv,bx);
 	          if(blk4a.size() == 0 || blk2b.size() == 0) continue;
 		  // sigma(rcm,v) = op(v,x)*wf(rcm,x)

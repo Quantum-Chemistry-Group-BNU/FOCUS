@@ -36,6 +36,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
 
    symbolic_task<Tm> formulae;
    int idx = 0;
+
    // Local terms:
    // H[lc1]
    auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
@@ -53,7 +54,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       std::cout << " idx=" << idx++ << " ";
       Hc2r.display("Hc2r", print_level);
    }
-/*
+
    // One-index terms:
    // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
    auto infoC1 = oper_combine_opC(lqops.cindex, c1qops.cindex);
@@ -130,7 +131,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
 	 formulae.join(Blc1_Qc2r);
       } // iproc
    }
-*/
+
    if(rank == 0) formulae.display("total", debug);
    return formulae;
 }
