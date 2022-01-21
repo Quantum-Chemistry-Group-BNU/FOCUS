@@ -236,6 +236,18 @@ struct dtensor4{
 	 dt2.setup_data(_data);
          return dt2;
       }
+      const dtensor3<Tm> get(const int i3) const{
+         dtensor3<Tm> dt3;
+	 dt3.setup_dims(dim0,dim1,dim2,_addr(0,0,0,i3));
+	 dt3.setup_data(_data);
+         return dt3;
+      }
+      dtensor3<Tm> get(const int i3){
+         dtensor3<Tm> dt3;
+	 dt3.setup_dims(dim0,dim1,dim2,_addr(0,0,0,i3));
+	 dt3.setup_data(_data);
+         return dt3;
+      }
       // print
       void print(std::string name="", const int prec=4) const{
          std::cout << " dtensor4: " << name 

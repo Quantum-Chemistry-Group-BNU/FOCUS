@@ -285,6 +285,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    // 2. I1*H2
    auto H2 = symbolic_term<Tm>(symbolic_oper(block2,'H',0), scale);
    formulae.append(H2);
+/*
    // One-index operators
    // 3. sum_p1 p1^+ Sp1^2 + h.c. 
    for(const auto& p1 : cindex1){
@@ -323,6 +324,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
          formulae.append(BQ);
       } // iproc
    }
+*/
    return formulae;
 }
 

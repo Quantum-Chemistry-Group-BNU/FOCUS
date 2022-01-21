@@ -210,15 +210,15 @@ stensor3<Tm> twodot_Hx_local(const oper_dict<Tm>& lqops,
 	          	     const int& rank){
    if(debug_twodot_sigma) std::cout << "twodot_Hx_local" << std::endl;
    const Tm scale = lqops.ifkr? 0.5 : 1.0;
-   // H^LC1
+   // 1. H^LC1
    auto wf1 = wf.merge_c2r(); // wf1[l,c1,c2r]
-   auto Hwf1 = oper_compxwf_opH("lc",wf1,lqops,c1qops,int2e,int1e,size,rank); 
-   // H^C2R
+   auto Hwf1 = oper_compxwf_opH("lc",wf1,lqops,c1qops,int2e,int1e,size,rank);
+   // 2. H^C2R
    auto wf2 = wf.merge_lc1(); // wf2[lc1,r,c2]
    auto Hwf2 = oper_compxwf_opH("cr",wf2,c2qops,rqops,int2e,int1e,size,rank);
    Hwf1 += Hwf2.split_lc1(wf.info.qrow, wf.info.qmid).merge_c2r();
    Hwf1 *= scale; 
-   // add const term
+   // 3. add const term
    const Tm fac = scale*(ecore/size);
    linalg::xaxpy(wf1.size(), fac, wf1.data(), Hwf1.data());
    return Hwf1; 
@@ -243,7 +243,8 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dict<Tm>& lqops,
 		   std::cref(lqops), std::cref(rqops), std::cref(c1qops), std::cref(c2qops), 
 		   std::cref(int2e), std::cref(int1e), std::cref(ecore), 
 		   std::cref(wf), std::cref(size), std::cref(rank));
-   Hx_funs.push_back(Hx); 
+   Hx_funs.push_back(Hx);
+/*
    // One-index terms:
    // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
    auto infoC1 = oper_combine_opC(lqops.cindex, c1qops.cindex);
@@ -325,6 +326,7 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dict<Tm>& lqops,
          } // i
       }
    }
+*/
    return Hx_funs;
 }
 

@@ -100,14 +100,6 @@ struct stensor4{
       // copy assignment
       stensor4& operator =(const stensor4& st) = delete;
 /*
-      // copy constructor
-      stensor4(const stensor4& st){
-	 std::cout << "stensor4: copy constructor" << std::endl;     
-         info = st.info;
-	 _data = new Tm[info._size];
-	 linalg::xcopy(info._size, st._data, _data);
-	 info.setup_data(_data);
-      }
       // copy assignment
       stensor4& operator =(const stensor4& st){
 	 std::cout << "stensor4: copy assignment" << std::endl;     
@@ -148,10 +140,10 @@ struct stensor4{
       int cols() const{ return info._cols; }
       int mids() const{ return info._mids; }
       int vers() const{ return info._vers; }
-      bool dir_row() const{ return info.dir[0]; } 
-      bool dir_col() const{ return info.dir[1]; }
-      bool dir_mid() const{ return info.dir[2]; } 
-      bool dir_ver() const{ return info.dir[3]; } 
+      bool dir_row() const{ return true; } 
+      bool dir_col() const{ return true; }
+      bool dir_mid() const{ return true; } 
+      bool dir_ver() const{ return true; } 
       size_t size() const{ return info._size; }
       Tm* data() const{ return _data; }
       // print

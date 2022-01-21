@@ -24,7 +24,11 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
    const auto& cindex = ifNC? lqops.cindex : rqops.cindex;
    auto aindex = oper_index_opA(cindex, ifkr);
    auto bindex = oper_index_opB(cindex, ifkr);
-   if(debug) std::cout << "symbolic_onedot_formulae ifNC=" << ifNC << std::endl;
+   if(debug) std::cout << "symbolic_onedot_formulae"
+	               << " isym=" << isym
+		       << " ifkr=" << ifkr
+		       << " ifNC=" << ifNC
+	               << std::endl;
 
    symbolic_task<Tm> formulae;
    int idx = 0;

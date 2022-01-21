@@ -96,14 +96,6 @@ struct stensor3{
       // copy assignment
       stensor3& operator =(const stensor3& st) = delete;
 /*
-      // copy constructor
-      stensor3(const stensor3& st){
-	 std::cout << "stensor3: copy constructor" << std::endl;     
-         info = st.info;
-	 _data = new Tm[info._size];
-	 linalg::xcopy(info._size, st._data, _data);
-	 info.setup_data(_data);
-      }
       // copy assignment
       stensor3& operator =(const stensor3& st){
 	 std::cout << "stensor3: copy assignment" << std::endl;    
