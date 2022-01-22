@@ -47,7 +47,7 @@ LOGS
 	  - different treatment of Hl,Hcr,{CS/SC,AP,BQ}
     - twodot algorithm:
     	- generation of twodot_Hx formulae [DONE2022/01/18]
-    	- optimized formation of sigma vector [DONE2022/01/XX]
+    	- optimized formation of sigma vector [DONE2022/01/22]
           - contract_qt4_qt2 (without intermediate/reshaping)
     - profiling:
 	- benchmark for small systems
