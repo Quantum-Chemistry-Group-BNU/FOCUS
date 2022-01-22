@@ -24,10 +24,6 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
    int slc1 = lqops.cindex.size() + c1qops.cindex.size();
    int sc2r = c2qops.cindex.size() + rqops.cindex.size();
    const bool ifNC = (slc1 <= sc2r);
-   auto ainfo = ifNC? oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr) :
-      		      oper_combine_opA(c2qops.cindex, rqops.cindex, ifkr);
-   auto binfo = ifNC? oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr) :
-      		      oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr);
    if(debug) std::cout << "symbolic_twodot_formulae"
 	               << " isym=" << isym
 		       << " ifkr=" << ifkr
@@ -91,46 +87,93 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
    }
 
    // Two-index terms:
-   // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
-   for(const auto pr : ainfo){
-      int index = pr.first;
-      int iformula = pr.second;
-      int iproc = distribute2(index,size);
-      if(iproc == rank){
-	 // Apq*Ppq + Apq^+*Ppq^+
-         auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula, ifkr);
-         auto Pc2r = symbolic_compxwf_opP<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
-	 				      int2e, index, isym, ifkr);
-	 const double wt = ifkr? wfacAP(index) : 1.0;
-	 Pc2r.scale(wt);
-	 auto Alc1_Pc2r = Alc1.outer_product(Pc2r);
-	 formulae.join(Alc1_Pc2r);
-         if(rank == 0){ 
-	    std::cout << " idx=" << idx++ << " ";
-	    Alc1_Pc2r.display("Alc1_Pc2r["+std::to_string(index)+"]", print_level);
-	 }
-      } // iproc
-   }
-   // 6. Bps^LC1*Qps^C2R + h.c. or Qqr^LC1*Bqr^C2R
-   for(const auto pr : binfo){
-      int index = pr.first;
-      int iformula = pr.second;
-      int iproc = distribute2(index,size);
-      if(iproc == rank){
-	 auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula, ifkr);
-	 auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
-			                      int2e, index, isym, ifkr);
-	 // Bpq*Qpq + Bpq^+*Qpq^+
-         const double wt = ifkr? wfacBQ(index) : wfac(index);
-	 Qc2r.scale(wt);
-	 auto Blc1_Qc2r = Blc1.outer_product(Qc2r);
-	 if(rank == 0){ 
-	    std::cout << " idx=" << idx++ << " ";
-            Blc1_Qc2r.display("Blc1_Qc2r["+std::to_string(index)+"]", print_level);
-	 }
-	 formulae.join(Blc1_Qc2r);
-      } // iproc
-   }
+   if(ifNC){
+      auto ainfo = oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr);
+      auto binfo = oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr);
+      // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
+      for(const auto pr : ainfo){
+         int index = pr.first;
+         int iformula = pr.second;
+         int iproc = distribute2(index,size);
+         if(iproc == rank){
+            // Apq*Ppq + Apq^+*Ppq^+
+            auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula, ifkr);
+            auto Pc2r = symbolic_compxwf_opP<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+            				         int2e, index, isym, ifkr);
+            const double wt = ifkr? wfacAP(index) : 1.0;
+            Pc2r.scale(wt);
+            auto Alc1_Pc2r = Alc1.outer_product(Pc2r);
+            formulae.join(Alc1_Pc2r);
+            if(rank == 0){ 
+               std::cout << " idx=" << idx++ << " ";
+               Alc1_Pc2r.display("Alc1_Pc2r["+std::to_string(index)+"]", print_level);
+            }
+         } // iproc
+      }
+      // 6. Bps^LC1*Qps^C2R + h.c. or Qqr^LC1*Bqr^C2R
+      for(const auto pr : binfo){
+         int index = pr.first;
+         int iformula = pr.second;
+         int iproc = distribute2(index,size);
+         if(iproc == rank){
+            auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula, ifkr);
+            auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+           		                         int2e, index, isym, ifkr);
+            // Bpq*Qpq + Bpq^+*Qpq^+
+            const double wt = ifkr? wfacBQ(index) : wfac(index);
+            Qc2r.scale(wt);
+            auto Blc1_Qc2r = Blc1.outer_product(Qc2r);
+            if(rank == 0){ 
+               std::cout << " idx=" << idx++ << " ";
+               Blc1_Qc2r.display("Blc1_Qc2r["+std::to_string(index)+"]", print_level);
+            }
+            formulae.join(Blc1_Qc2r);
+         } // iproc
+      }
+   }else{
+      auto ainfo = oper_combine_opA(c2qops.cindex, rqops.cindex, ifkr);
+      auto binfo = oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr);
+      // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
+      for(const auto pr : ainfo){
+         int index = pr.first;
+         int iformula = pr.second;
+         int iproc = distribute2(index,size);
+         if(iproc == rank){
+            // Apq*Ppq + Apq^+*Ppq^+
+            auto Plc1 = symbolic_compxwf_opP<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
+            				         int2e, index, isym, ifkr);
+            auto Ac2r = symbolic_normxwf_opA<Tm>("c2", "r", index, iformula, ifkr);
+            const double wt = ifkr? wfacAP(index) : 1.0;
+            Plc1.scale(wt);
+            auto Plc1_Ac2r = Plc1.outer_product(Ac2r);
+            formulae.join(Plc1_Ac2r);
+            if(rank == 0){ 
+               std::cout << " idx=" << idx++ << " ";
+               Plc1_Ac2r.display("Plc1_Ac2r["+std::to_string(index)+"]", print_level);
+            }
+         } // iproc
+      }
+      // 6. Bps^LC1*Qps^C2R + h.c. or Qqr^LC1*Bqr^C2R
+      for(const auto pr : binfo){
+         int index = pr.first;
+         int iformula = pr.second;
+         int iproc = distribute2(index,size);
+         if(iproc == rank){
+            auto Qlc1 = symbolic_compxwf_opQ<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
+           		                         int2e, index, isym, ifkr);
+            auto Bc2r = symbolic_normxwf_opB<Tm>("c2", "r", index, iformula, ifkr);
+            // Bpq*Qpq + Bpq^+*Qpq^+
+            const double wt = ifkr? wfacBQ(index) : wfac(index);
+            Qlc1.scale(wt);
+            auto Qlc1_Bc2r = Qlc1.outer_product(Bc2r);
+            if(rank == 0){ 
+               std::cout << " idx=" << idx++ << " ";
+               Qlc1_Bc2r.display("Qlc1_Bc2r["+std::to_string(index)+"]", print_level);
+            }
+            formulae.join(Qlc1_Bc2r);
+         } // iproc
+      }
+   } // ifNC
 
    if(rank == 0) formulae.display("total", debug);
    return formulae;
