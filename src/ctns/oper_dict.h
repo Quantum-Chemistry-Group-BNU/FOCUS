@@ -25,7 +25,7 @@ class oper_dict{
 	 ar & isym & ifkr & qbra & qket 
 	    & cindex & krest & oplist 
 	    & mpisize & mpirank & ifdist2 
-	    & _opdict & _size;
+	    & _opdict & _size & _opsize;
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
 	 }
@@ -36,7 +36,7 @@ class oper_dict{
 	 ar & isym & ifkr & qbra & qket 
             & cindex & krest & oplist
 	    & mpisize & mpirank & ifdist2 
-	    & _opdict & _size;
+	    & _opdict & _size & _opsize;
 	 _data = new Tm[_size];
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
@@ -86,7 +86,7 @@ class oper_dict{
       bool ifdist2 = false;
    private:
       std::map<char,oper_map<Tm>> _opdict;
-      size_t _size = 0;
+      size_t _size = 0, _opsize = 0;
       Tm* _data = nullptr;
 };
 
@@ -107,6 +107,13 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
       }
    }
    std::cout << s << std::endl;
+   // memory information
+   std::cout << "        size = " << _size << "   " 
+             << tools::sizeMB<Tm>(_size) << " MB" 
+	     << std::endl;
+   std::cout << "        opsize = " << _opsize << "   "
+             << tools::sizeMB<Tm>(_opsize) << " MB" 
+             << std::endl;
    // print each operator
    if(level > 0){
       std::cout << " isym=" << isym << " ifkr=" << ifkr 
@@ -133,9 +140,6 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
             std::cout << std::endl;
          }
       } // level>1	 
-      std::cout << " total size=" << _size 
-	        << " sizeMB=" << tools::sizeMB<Tm>(_size) 
-	        << std::endl; 
    } // level>0
 }
 
@@ -210,14 +214,19 @@ void oper_dict<Tm>::allocate_memory(const bool debug){
    // count the size
    _size = 0;
    std::map<char,size_t> sizes;
+   // loop over different types of operators
    for(const auto& key : oplist){
       sizes[key] = 0; 
       if(debug) std::cout << " allocate_memory for op" << key << ":";
+      // loop over indices
       auto op_index = this->oper_index_op(key);
       for(int idx : op_index){
 	 auto sym_op = this->get_qsym_op(key,idx);
+         // only compute size 
 	 _opdict[key][idx].init(sym_op, qbra, qket, {1,0}, false);
-	 sizes[key] += _opdict[key][idx].size();
+         size_t sz = _opdict[key][idx].size();
+	 sizes[key] += sz;
+         _opsize = std::max(_opsize, sz);
       }
       _size += sizes[key];
       if(debug){

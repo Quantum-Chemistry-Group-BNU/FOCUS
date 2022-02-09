@@ -66,8 +66,8 @@ double get_duration(T t){
 
 template<typename T>
 void timing(const std::string msg, const T& t0, const T& t1){
-   std::cout << "----- TIMING FOR " << msg << " : " << std::setprecision(2) 
-	     << get_duration(t1-t0) << " S -----" << std::endl;
+   std::cout << "----- TIMING FOR " << msg << " : " << std::scientific << std::setprecision(3) 
+	     << get_duration(t1-t0) << std::defaultfloat << " S -----" << std::endl;
 }
 
 // random

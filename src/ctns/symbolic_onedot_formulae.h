@@ -4,6 +4,7 @@
 #include "symbolic_oper.h"
 #include "symbolic_normxwf.h"
 #include "symbolic_compxwf.h"
+#include "../core/tools.h"
 
 namespace ctns{
 
@@ -16,6 +17,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
 	                                   const integral::two_body<Tm>& int2e,
 	                                   const int& size,
 	                                   const int& rank){
+   auto t0 = tools::get_time();
    const bool debug = true;
    const int print_level = 0;
    const int isym = lqops.isym;
@@ -185,7 +187,12 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
 	 } // iproc
       }
    } // ifNC
-   if(rank == 0) formulae.display("total", debug);
+
+   if(rank == 0){
+      formulae.display("total", debug);
+      auto t1 = tools::get_time();
+      tools::timing("symbolic_onedot_formulae", t0, t1);
+   }
    return formulae;
 }
 
