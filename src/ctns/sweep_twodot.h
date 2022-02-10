@@ -90,10 +90,10 @@ void sweep_twodot(const input::schedule& schd,
    }
    if(rank == 0){
       std::cout << "qops info: rank=" << rank << std::endl;
-      lqops.print("lqops");
-      rqops.print("rqops");
-      c1qops.print("c1qops");
-      c2qops.print("c2qops");
+      lqops.print("lqops", 2);
+      rqops.print("rqops", 2);
+      c1qops.print("c1qops", 2);
+      c2qops.print("c2qops", 2);
    }
    timing.ta = tools::get_time();
 
@@ -168,6 +168,9 @@ void sweep_twodot(const input::schedule& schd,
       sweeps.print_eopt(isweep, ibond);
       oper_timer.analysis();
    }
+
+   //exit(1);
+   //if(ibond == 16) exit(1);
 
    // 3. decimation & renormalize operators
    twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 

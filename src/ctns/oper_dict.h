@@ -108,10 +108,10 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
    }
    std::cout << s << std::endl;
    // memory information
-   std::cout << "        size = " << _size << "   " 
+   std::cout << "        size = " << _size << "  "
              << tools::sizeMB<Tm>(_size) << " MB" 
 	     << std::endl;
-   std::cout << "        opsize = " << _opsize << "   "
+   std::cout << "        opsize = " << _opsize << "  "
              << tools::sizeMB<Tm>(_opsize) << " MB" 
              << std::endl;
    // print each operator
@@ -173,6 +173,17 @@ std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
 	 index = std::move(index2);
       }
    }
+/*
+   // ZL@20220210
+   // reorder index by symmetry
+   std::vector<int> index_new;
+   std::map<qsym,std::vector<int>> index_dic;
+   std::cout << "key=" << key << std::endl;
+   for(const auto& idx : index){
+      auto qs = this->get_qsym_op(key, idx);
+      std::cout << "qs=" << qs << " idx=" << idx << std::endl;
+   }
+*/
    return index;
 }
 

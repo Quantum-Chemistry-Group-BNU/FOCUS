@@ -171,9 +171,17 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,5)=="qkind"){
          istringstream is(line.substr(5));
 	 is >> qkind;
-      }else if(line.substr(0,4)=="task"){
-         istringstream is(line.substr(4));
-	 is >> task;
+      }else if(line.substr(0,10)=="task_sdiag"){
+         task_sdiag = true;
+      }else if(line.substr(0,8)=="task_ham"){
+         task_ham = true;
+      }else if(line.substr(0,8)=="task_opt"){
+         task_opt = true;
+      }else if(line.substr(0,9)=="task_dmrg"){
+         task_ham = true;
+         task_opt = true;
+      }else if(line.substr(0,4)=="load"){
+         load = true;
       }else if(line.substr(0,13)=="topology_file"){
          istringstream is(line.substr(13));
 	 is >> topology_file;
@@ -192,8 +200,6 @@ void params_ctns::read(ifstream& istrm){
 	 nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){
          guess = stoi(line.substr(5));
-      }else if(line.substr(0,4)=="load"){
-         load = true;
       }else if(line.substr(0,5)=="iroot"){
          iroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
@@ -231,7 +237,7 @@ void params_ctns::read(ifstream& istrm){
    // setup ctrls
    int size = tmp_ctrls.size();
    if(size == 0){
-      if(task == "opt") tools::exit("error: schedule is not specified!");
+      if(task_opt) tools::exit("error: schedule is not specified!");
    }else{
       // put control parameters into ctrls
       ctrls.resize(maxsweep);
@@ -253,7 +259,6 @@ void params_ctns::read(ifstream& istrm){
 void params_ctns::print() const{
    cout << "===== params_ctns::print =====" << endl;
    cout << "qkind = " << qkind << endl;
-   cout << "task = " << task << endl;
    cout << "topology_file = " << topology_file << endl;
    cout << "nroots = " << nroots << endl;
    cout << "maxdets = " << maxdets << endl;
@@ -284,6 +289,10 @@ void params_ctns::print() const{
    cout << "ndetprt = " << ndetprt << endl;
    // debug level
    cout << "verbose = " << verbose << endl;
+   // ZL@20220210 new task structure
+   cout << "task_sdiag = " << task_sdiag << endl;
+   cout << "task_ham = " << task_ham << endl;
+   cout << "task_opt = " << task_opt << endl;
 }
 
 //

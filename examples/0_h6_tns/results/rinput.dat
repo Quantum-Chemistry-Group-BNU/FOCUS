@@ -30,6 +30,6 @@ schedule
 0 1 60 1.e-5 0.0
 end
 maxsweep 2
-task opt
+task_dmrg
 #load
 $end

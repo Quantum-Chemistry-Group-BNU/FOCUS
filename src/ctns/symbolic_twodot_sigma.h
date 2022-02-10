@@ -22,6 +22,7 @@ void symbolic_twodot_HxTerm(const oper_dict<Tm>& lqops,
 			    const symbolic_term<Tm> HTerm,
 			    const stensor4<Tm>& wf,
 			    stensor4<Tm>& Hwf){
+   auto t0 = tools::get_time();
    const bool debug = false;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    
@@ -62,6 +63,7 @@ void symbolic_twodot_HxTerm(const oper_dict<Tm>& lqops,
       }else{
          optmp = wt0*(dagger? op0.K(nbar0).H() : op0.K(nbar0));
       }
+/*
       for(int k=1; k<len; k++){
          auto wtk = sop.sums[k].first;
 	 auto sopk = sop.sums[k].second;
@@ -74,6 +76,7 @@ void symbolic_twodot_HxTerm(const oper_dict<Tm>& lqops,
             optmp += wtk*(dagger? opk.K(nbark).H() : opk.K(nbark));
 	 } 
       } // k
+*/
       // impose antisymmetry here
       if(parity){ 
          opNxwf.cntr_signed(block);
@@ -86,7 +89,13 @@ void symbolic_twodot_HxTerm(const oper_dict<Tm>& lqops,
    int N = Hwf.size();
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
    linalg::xaxpy(N, 1.0, opNxwf.data(), Hwf.data()); 
-   linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data());  
+   linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data());
+
+   // debug 
+   std::cout << "iterm=" << it << " HTerm=" << HTerm << std::endl;
+   auto t1 = tools::get_time();
+   tools::timing("iterm="+std::to_string(it), t0, t1);
+   
 }
 
 template <typename Tm> 

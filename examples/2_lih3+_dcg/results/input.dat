@@ -37,6 +37,6 @@ schedule
 #2 1 100 1.e-5 0.0
 end
 maxsweep 3
-task opt
+task_dmrg
 $end
 

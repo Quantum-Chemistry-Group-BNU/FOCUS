@@ -20,7 +20,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
 	                                   const int& rank){
    auto t0 = tools::get_time();
    const bool debug = true;
-   const int print_level = 0;
+   const int print_level = 1;
    const int isym = lqops.isym;
    const bool ifkr = lqops.ifkr;
    int slc1 = lqops.cindex.size() + c1qops.cindex.size();
@@ -182,6 +182,8 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       auto t1 = tools::get_time();
       tools::timing("symbolic_twodot_formulae", t0, t1);
    }
+   exit(1);
+
    return formulae;
 }
 

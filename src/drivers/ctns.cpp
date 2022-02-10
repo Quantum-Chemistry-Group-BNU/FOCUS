@@ -20,19 +20,9 @@ int CTNS(const input::schedule& schd){
       tools::exit("error: inconsistent dtype in CTNS!");
    }
    
-   // read integral
-   integral::two_body<Tm> int2e;
-   integral::one_body<Tm> int1e;
-   double ecore;
-   if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
-#ifndef SERIAL
-   boost::mpi::broadcast(schd.world, int1e, 0);
-   boost::mpi::broadcast(schd.world, int2e, 0);
-   boost::mpi::broadcast(schd.world, ecore, 0);
-#endif
- 
    // CTNS 
    ctns::comb<Km> icomb;
+   // convert from SCI or load from files
    if(rank == 0){
       // dealing with topology 
       icomb.topo.read(schd.ctns.topology_file);
@@ -60,10 +50,7 @@ int CTNS(const input::schedule& schd){
    icomb.world = schd.world;
 #endif
 
-   if(rank == 0 && schd.ctns.task != ""){ 
-      cout << "\n===== ctns.task=" << schd.ctns.task << " =====" << endl;
-   }
-   if(schd.ctns.task == "sdiag"){
+   if(schd.ctns.task_sdiag){
       // parallel sampling can be implemented in future (very simple)!
       if(rank == 0){
          int iroot  = schd.ctns.iroot;
@@ -71,21 +58,38 @@ int CTNS(const input::schedule& schd){
          int ndetprt = schd.ctns.ndetprt; 
          double Sd = rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
       }
-   }else if(schd.ctns.task == "ham"){
-      auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
-      if(rank == 0){
-         Hij.print("Hij",8);
-         auto Sij = ctns::get_Smat(icomb);
-         Sij.print("Sij");
-      }
-   }else if(schd.ctns.task == "opt"){
-      // optimization from current RCF
-      ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
-      if(rank == 0){
-         auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
-         ctns::rcanon_save(icomb, rcanon_file);
-      }
    }
+   
+   if(schd.ctns.task_ham or schd.ctns.task_opt){
+      // read integral
+      integral::two_body<Tm> int2e;
+      integral::one_body<Tm> int1e;
+      double ecore;
+      if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
+#ifndef SERIAL
+      boost::mpi::broadcast(schd.world, int1e, 0);
+      boost::mpi::broadcast(schd.world, int2e, 0);
+      boost::mpi::broadcast(schd.world, ecore, 0);
+#endif
+      // compute hamiltonian 
+      if(schd.ctns.task_ham){
+         auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+         if(rank == 0){
+            Hij.print("Hij",8);
+            auto Sij = ctns::get_Smat(icomb);
+            Sij.print("Sij");
+         }
+      }
+      // optimization from current RCF
+      if(schd.ctns.task_opt){
+         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
+         if(rank == 0){
+            auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
+            ctns::rcanon_save(icomb, rcanon_file);
+         }
+      }
+   } // ham || opt
+
    return 0;	
 }
 
