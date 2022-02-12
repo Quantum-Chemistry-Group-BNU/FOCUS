@@ -13,7 +13,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	       const integral::two_body<typename Km::dtype>& int2e,
 	       const integral::one_body<typename Km::dtype>& int1e,
 	       const double ecore,
-	       const input::schedule& schd){
+	       const input::schedule& schd,
+	       const std::string scratch){
    using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -29,8 +30,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 
    // ZL@20220210: this should be done by calling task=ham
    // prepare environmental operators 
-   // //oper_env_right(icomb, int2e, int1e, schd.scratch);
-   // auto Hmat = get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+   // //oper_env_right(icomb, int2e, int1e, scratch);
+   // auto Hmat = get_Hmat(icomb, int2e, int1e, ecore, scratch);
    // if(rank == 0) Hmat.print("Hmat",8);
 
    // init left boundary site
@@ -71,9 +72,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 auto tp0 = icomb.topo.get_type(p0);
 	 auto tp1 = icomb.topo.get_type(p1);
 	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
-	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
+	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore, scratch);
 	 }else{
-	    sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore);
+	    sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore, scratch);
 	 }
       } // ibond
       auto tf = tools::get_time();
@@ -82,7 +83,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    } // isweep
 
    // for later computing properties
-   sweep_rwfuns(schd, icomb, int2e, int1e, ecore);
+   sweep_rwfuns(schd, icomb, int2e, int1e, ecore, scratch);
 
    auto t1 = tools::get_time();
    if(rank == 0) tools::timing("ctns::opt_sweep", t0, t1);

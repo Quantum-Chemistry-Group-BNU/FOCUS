@@ -22,7 +22,8 @@ void sweep_onedot(const input::schedule& schd,
                   comb<Km>& icomb,
                   const integral::two_body<typename Km::dtype>& int2e,
                   const integral::one_body<typename Km::dtype>& int1e,
-                  const double ecore){
+                  const double ecore,
+		  const std::string scratch){
    const bool debug_sweep = (schd.ctns.verbose > 0);
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -55,9 +56,9 @@ void sweep_onedot(const input::schedule& schd,
    // 1. load operators 
    using Tm = typename Km::dtype;
    oper_dict<Tm> lqops, rqops, cqops;
-   oper_load_qops(icomb, p, schd.scratch, "l", lqops);
-   oper_load_qops(icomb, p, schd.scratch, "r", rqops);
-   oper_load_qops(icomb, p, schd.scratch, "c", cqops);
+   oper_load_qops(icomb, p, scratch, "l", lqops);
+   oper_load_qops(icomb, p, scratch, "r", rqops);
+   oper_load_qops(icomb, p, scratch, "c", cqops);
    if(rank == 0){
       std::cout << "qops info: rank=" << rank << std::endl;
       lqops.print("lqops");
@@ -135,13 +136,9 @@ void sweep_onedot(const input::schedule& schd,
       oper_timer.analysis();
    }
 
-   // lzd
-   if(ibond == 19) exit(1);
-
-
    // 4. decimation & renormalize operators
    onedot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
-		 lqops, rqops, cqops, int2e, int1e, schd.scratch);
+		 lqops, rqops, cqops, int2e, int1e, scratch);
 
    timing.t1 = tools::get_time();
    if(rank == 0){
@@ -157,7 +154,8 @@ void sweep_rwfuns(const input::schedule& schd,
 		  comb<Km>& icomb,
 		  const integral::two_body<typename Km::dtype>& int2e,
 	          const integral::one_body<typename Km::dtype>& int1e,
-		  const double ecore){
+		  const double ecore,
+		  const std::string scratch){
    using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -176,7 +174,7 @@ void sweep_rwfuns(const input::schedule& schd,
    input::params_sweep ctrl = {0, 1, dcut1, eps, 0.0};
    sweep_data sweeps({dbond}, schd.ctns.nroots, schd.ctns.guess, 
 		      1, {ctrl}, 0, schd.ctns.rdm_vs_svd);
-   sweep_onedot(schd, sweeps, 0, 0, icomb, int2e, int1e, ecore);
+   sweep_onedot(schd, sweeps, 0, 0, icomb, int2e, int1e, ecore, scratch);
 
    if(rank == 0){
       std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;

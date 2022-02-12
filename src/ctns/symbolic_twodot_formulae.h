@@ -182,8 +182,6 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       auto t1 = tools::get_time();
       tools::timing("symbolic_twodot_formulae", t0, t1);
    }
-   exit(1);
-
    return formulae;
 }
 

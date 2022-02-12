@@ -148,10 +148,11 @@ private:
          & sci & ctns;
    }
 public:
-   void create_scratch(const bool debug=true);
-   void remove_scratch(const bool debug=true);
    void read(std::string fname="input.dat");
    void print() const;
+   void create_scratch(const std::string sdir, const bool debug=true) const;
+   void remove_scratch(const std::string sdir, const bool debug=true) const;
+   void copy_scratch(const std::string sfrom, const std::string to, const bool debug=true) const;
 public:
    // --- Generic ---
    std::string scratch = ".";

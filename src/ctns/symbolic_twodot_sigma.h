@@ -63,7 +63,6 @@ void symbolic_twodot_HxTerm(const oper_dict<Tm>& lqops,
       }else{
          optmp = wt0*(dagger? op0.K(nbar0).H() : op0.K(nbar0));
       }
-/*
       for(int k=1; k<len; k++){
          auto wtk = sop.sums[k].first;
 	 auto sopk = sop.sums[k].second;
@@ -76,7 +75,6 @@ void symbolic_twodot_HxTerm(const oper_dict<Tm>& lqops,
             optmp += wtk*(dagger? opk.K(nbark).H() : opk.K(nbark));
 	 } 
       } // k
-*/
       // impose antisymmetry here
       if(parity){ 
          opNxwf.cntr_signed(block);

@@ -22,7 +22,8 @@ void sweep_twodot(const input::schedule& schd,
                   comb<Km>& icomb,
                   const integral::two_body<typename Km::dtype>& int2e,
                   const integral::one_body<typename Km::dtype>& int1e,
-                  const double ecore){
+                  const double ecore,
+		  const std::string scratch){
    const bool debug_sweep = (schd.ctns.verbose > 0);
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -78,15 +79,15 @@ void sweep_twodot(const input::schedule& schd,
    using Tm = typename Km::dtype;
    oper_dict<Tm> lqops, rqops, c1qops, c2qops;
    if(!cturn){
-      oper_load_qops(icomb, p0, schd.scratch, "l", lqops );
-      oper_load_qops(icomb, p1, schd.scratch, "r", rqops );  
-      oper_load_qops(icomb, p0, schd.scratch, "c", c1qops);
-      oper_load_qops(icomb, p1, schd.scratch, "c", c2qops);
+      oper_load_qops(icomb, p0, scratch, "l", lqops );
+      oper_load_qops(icomb, p1, scratch, "r", rqops );  
+      oper_load_qops(icomb, p0, scratch, "c", c1qops);
+      oper_load_qops(icomb, p1, scratch, "c", c2qops);
    }else{
-      oper_load_qops(icomb, p0, schd.scratch, "l", lqops );
-      oper_load_qops(icomb, p0, schd.scratch, "r", rqops );  
-      oper_load_qops(icomb, p1, schd.scratch, "c", c1qops);
-      oper_load_qops(icomb, p1, schd.scratch, "r", c2qops);
+      oper_load_qops(icomb, p0, scratch, "l", lqops );
+      oper_load_qops(icomb, p0, scratch, "r", rqops );  
+      oper_load_qops(icomb, p1, scratch, "c", c1qops);
+      oper_load_qops(icomb, p1, scratch, "r", c2qops);
    }
    if(rank == 0){
       std::cout << "qops info: rank=" << rank << std::endl;
@@ -169,12 +170,9 @@ void sweep_twodot(const input::schedule& schd,
       oper_timer.analysis();
    }
 
-   //exit(1);
-   //if(ibond == 16) exit(1);
-
    // 3. decimation & renormalize operators
    twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
-		 lqops, rqops, c1qops, c2qops, int2e, int1e, schd.scratch);
+		 lqops, rqops, c1qops, c2qops, int2e, int1e, scratch);
 
    timing.t1 = tools::get_time();
    if(rank == 0){

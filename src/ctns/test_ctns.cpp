@@ -124,7 +124,7 @@ int tests::test_ctns(){
            << endl;
    }
 
-   schd.create_scratch();
+   schd.create_scratch(schd.scratch);
 
    // 5. Hij: construct renormalized operators
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
@@ -136,7 +136,7 @@ int tests::test_ctns(){
    if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
 
    // 6. sweep optimization from current RCF 
-   ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
+   ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, schd.scratch);
 
    // re-compute expectation value for optimized TNS
    auto Sij = ctns::get_Smat(icomb);
@@ -146,7 +146,7 @@ int tests::test_ctns(){
    auto ovlp = rcanon_CIovlp(icomb, sci_space, vs);
    ovlp.print("ovlp");
 
-   schd.remove_scratch();
+   schd.remove_scratch(schd.scratch);
 
    return 0;
 }

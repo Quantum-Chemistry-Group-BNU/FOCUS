@@ -73,7 +73,9 @@ int CTNS(const input::schedule& schd){
 #endif
       // compute hamiltonian 
       if(schd.ctns.task_ham){
-         auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+	 auto scratch = schd.scratch+"/ham";
+         schd.create_scratch(scratch, (rank == 0));
+         auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, scratch);
          if(rank == 0){
             Hij.print("Hij",8);
             auto Sij = ctns::get_Smat(icomb);
@@ -82,7 +84,10 @@ int CTNS(const input::schedule& schd){
       }
       // optimization from current RCF
       if(schd.ctns.task_opt){
-         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd);
+         auto scratch = schd.scratch+"/opt";
+         schd.remove_scratch(scratch, (rank == 0));
+         schd.copy_scratch(schd.scratch+"/ham", scratch);
+         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
          if(rank == 0){
             auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
             ctns::rcanon_save(icomb, rcanon_file);
@@ -120,7 +125,7 @@ int main(int argc, char *argv[]){
 #endif
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);
-   schd.create_scratch((rank == 0));
+   schd.create_scratch(schd.scratch, (rank == 0));
 
    int info = 0;
    if(schd.ctns.qkind == "rZ2"){
@@ -144,6 +149,6 @@ int main(int argc, char *argv[]){
 #ifndef SERIAL
    world.barrier();
 #endif
-   if(rank > 0) schd.remove_scratch((rank == 0));
+   if(rank > 0) schd.remove_scratch(schd.scratch, (rank == 0));
    return info;
 }
