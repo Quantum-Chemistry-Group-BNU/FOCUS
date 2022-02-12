@@ -61,7 +61,7 @@ void symbolic_twodot_HxTerm(const oper_dictmap<Tm>& qops_dict,
 	 optmp += wtk*((nbark==0)? opk : opk.K(nbark));
       } // k
       // (opN+opH)*|wf>
-      if(idx = HTerm.size()-1){
+      if(idx == HTerm.size()-1){
          opNxwf = contract_qt4_qt2(block,wf,optmp,dagger);
          opHxwf = contract_qt4_qt2(block,wf,optmp,!dagger);
       }else{
@@ -138,7 +138,7 @@ void symbolic_twodot_Hx(Tm* y,
    Hwfs[0].to_array(y);
    // add const term
    if(rank == 0){
-      const Tm scale = lqops.ifkr? 0.5 : 1.0;
+      const Tm scale = qops_dict.at("l").ifkr? 0.5 : 1.0;
       linalg::xaxpy(wf.size(), scale*ecore, x, y);
    }
    auto t3 = tools::get_time();

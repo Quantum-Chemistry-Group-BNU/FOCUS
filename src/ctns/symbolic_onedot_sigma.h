@@ -18,7 +18,7 @@ void symbolic_onedot_HxTerm(const oper_dictmap<Tm>& qops_dict,
 			    const stensor3<Tm>& wf,
 		            stensor3<Tm>& Hwf){
    const bool debug = false;
-   if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl; 
+   if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    // compute (HTerm+HTerm.H)*|wf>
    stensor3<Tm> opNxwf, opHxwf;
    for(int idx=HTerm.size()-1; idx>=0; idx--){
@@ -58,7 +58,7 @@ void symbolic_onedot_HxTerm(const oper_dictmap<Tm>& qops_dict,
 	 optmp += wtk*((nbark==0)? opk : opk.K(nbark));
       } // k
       // (opN+opH)*|wf>
-      if(idx = HTerm.size()-1){
+      if(idx == HTerm.size()-1){
          opNxwf = contract_qt3_qt2(block,wf,optmp,dagger);
          opHxwf = contract_qt3_qt2(block,wf,optmp,!dagger);
       }else{
@@ -74,7 +74,7 @@ void symbolic_onedot_HxTerm(const oper_dictmap<Tm>& qops_dict,
    int N = Hwf.size();
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
    linalg::xaxpy(N, 1.0, opNxwf.data(), Hwf.data()); 
-   linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data());  
+   linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data()); 
 }
 
 template <typename Tm> 
@@ -129,7 +129,7 @@ void symbolic_onedot_Hx(Tm* y,
    Hwfs[0].to_array(y);
    // add const term
    if(rank == 0){
-      const Tm scale = lqops.ifkr? 0.5 : 1.0;
+      const Tm scale = qops_dict.at("l").ifkr? 0.5 : 1.0;
       linalg::xaxpy(wf.size(), scale*ecore, x, y);
    }
    auto t3 = tools::get_time();
