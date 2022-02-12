@@ -14,24 +14,16 @@ namespace ctns{
 // generate all formulea for constructing H*x as a list of terms
 // organizing principle: recursive partition
 template <typename Tm>
-void symbolic_twodot_HxTerm(const oper_dict<Tm>& lqops,
-	                    const oper_dict<Tm>& rqops,
-			    const oper_dict<Tm>& c1qops,
-	                    const oper_dict<Tm>& c2qops,
+void symbolic_twodot_HxTerm(const oper_dictmap<Tm>& qops_dict,
 	                    const int it,
-			    const symbolic_term<Tm> HTerm,
+			    const symbolic_term<Tm>& HTerm,
 			    const stensor4<Tm>& wf,
 			    stensor4<Tm>& Hwf){
    auto t0 = tools::get_time();
    const bool debug = false;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
-   
-   const std::map<std::string,const oper_dict<Tm>&> qops_dict = {{"l",lqops},
-	   		 	                                 {"r",rqops},
-	   			 	                 	 {"c1",c1qops},
-   								 {"c2",c2qops}};
    // compute (HTerm+HTerm.H)*|wf>
-   stensor4<Tm> opNxwf = wf, opHxwf = wf;
+   stensor4<Tm> opNxwf, opHxwf;
    for(int idx=HTerm.size()-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];
       int len = sop.size();
@@ -57,32 +49,30 @@ void symbolic_twodot_HxTerm(const oper_dict<Tm>& lqops,
       const auto& qops = qops_dict.at(block);
       // form opsum = wt0*op0 + wt1*op1 + ...
       const auto& op0 = qops(label).at(index0);
-      stensor2<Tm> optmp;
-      if(nbar0 == 0){
-       	 optmp = wt0*(dagger? op0.H() : op0); 
-      }else{
-         optmp = wt0*(dagger? op0.K(nbar0).H() : op0.K(nbar0));
-      }
+      if(dagger) wt0 = tools::conjugate(wt0);
+      auto optmp = wt0*((nbar0==0)? op0 : op0.K(nbar0)); 
       for(int k=1; k<len; k++){
          auto wtk = sop.sums[k].first;
 	 auto sopk = sop.sums[k].second;
 	 int indexk = sopk.index;
 	 int nbark  = sopk.nbar;
 	 const auto& opk = qops(label).at(indexk);
-	 if(nbark == 0){
-	    optmp += wtk*(dagger? opk.H() : opk);
-	 }else{
-            optmp += wtk*(dagger? opk.K(nbark).H() : opk.K(nbark));
-	 } 
+         if(dagger) wtk = tools::conjugate(wtk);
+	 optmp += wtk*((nbark==0)? opk : opk.K(nbark));
       } // k
+      // (opN+opH)*|wf>
+      if(idx = HTerm.size()-1){
+         opNxwf = contract_qt4_qt2(block,wf,optmp,dagger);
+         opHxwf = contract_qt4_qt2(block,wf,optmp,!dagger);
+      }else{
+         opNxwf = contract_qt4_qt2(block,opNxwf,optmp,dagger);
+         opHxwf = contract_qt4_qt2(block,opHxwf,optmp,!dagger);
+      }
       // impose antisymmetry here
       if(parity){ 
          opNxwf.cntr_signed(block);
          opHxwf.cntr_signed(block);
       }
-      // (opN+opH)*|wf> 
-      opNxwf = contract_qt4_qt2(block,opNxwf,optmp);
-      opHxwf = contract_qt4_qt2(block,opHxwf,optmp,true);
    } // idx
    int N = Hwf.size();
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
@@ -100,10 +90,7 @@ template <typename Tm>
 void symbolic_twodot_Hx(Tm* y,
 	                const Tm* x,
 	                const symbolic_task<Tm>& H_formulae,
-	          	const oper_dict<Tm>& lqops,
-	          	const oper_dict<Tm>& rqops,
-	          	const oper_dict<Tm>& c1qops,
-	          	const oper_dict<Tm>& c2qops,
+	          	const oper_dictmap<Tm>& qops_dict,
 			const double& ecore,
 	                stensor4<Tm>& wf,
 	                const int size,
@@ -141,7 +128,7 @@ void symbolic_twodot_Hx(Tm* y,
       int omprank = 0;
 #endif
       const auto& HTerm = H_formulae.tasks[it];
-      symbolic_twodot_HxTerm(lqops,rqops,c1qops,c2qops,it,HTerm,wf,Hwfs[omprank]);
+      symbolic_twodot_HxTerm(qops_dict,it,HTerm,wf,Hwfs[omprank]);
    }
    auto t2 = tools::get_time();
    // reduction & save

@@ -89,6 +89,9 @@ class oper_dict{
       size_t _size = 0, _opsize = 0;
       Tm* _data = nullptr;
 };
+template <typename Tm>
+using oper_dictmap = std::map<std::string,const oper_dict<Tm>&>; 
+
 
 template <typename Tm>
 void oper_dict<Tm>::print(const std::string name, const int level) const{

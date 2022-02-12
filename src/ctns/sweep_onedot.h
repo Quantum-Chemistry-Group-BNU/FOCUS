@@ -65,6 +65,9 @@ void sweep_onedot(const input::schedule& schd,
       rqops.print("rqops");
       cqops.print("cqops");
    }
+   const oper_dictmap<Tm> qops_dict = {{"l",lqops},
+	   		 	       {"r",rqops},
+	   			       {"c",cqops}};
    timing.ta = tools::get_time();
 
    // 2. onedot wavefunction
@@ -123,7 +126,7 @@ void sweep_onedot(const input::schedule& schd,
       H_formulae = symbolic_onedot_formulae(lqops, rqops, cqops, 
 		                            int2e, size, rank);
       HVec = bind(&ctns::symbolic_onedot_Hx<Tm>, _1, _2, std::cref(H_formulae),
-		  std::cref(lqops), std::cref(rqops), std::cref(cqops), std::cref(ecore),
+		  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }
    oper_timer.clear();

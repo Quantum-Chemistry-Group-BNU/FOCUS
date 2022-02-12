@@ -96,6 +96,10 @@ void sweep_twodot(const input::schedule& schd,
       c1qops.print("c1qops", 2);
       c2qops.print("c2qops", 2);
    }
+   const oper_dictmap<Tm> qops_dict = {{"l",lqops},
+	   		 	       {"r",rqops},
+	   			       {"c1",c1qops},
+				       {"c2",c2qops}};
    timing.ta = tools::get_time();
 
    // 2. twodot wavefunction
@@ -156,8 +160,7 @@ void sweep_twodot(const input::schedule& schd,
       H_formulae = symbolic_twodot_formulae(lqops, rqops, c1qops, c2qops, 
 		                            int2e, size, rank);
       HVec = bind(&ctns::symbolic_twodot_Hx<Tm>, _1, _2, std::cref(H_formulae),
-		  std::cref(lqops), std::cref(rqops), std::cref(c1qops), 
-		  std::cref(c2qops), std::cref(ecore),
+		  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }
    oper_timer.clear();
