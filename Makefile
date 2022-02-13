@@ -1,14 +1,14 @@
 
-machine = mac
+machine = lenovo
 
-DEBUG = yes
-USE_GCC = yes
-USE_MPI = no
-USE_OPENMP = no
+DEBUG = no
+USE_GCC = no
+USE_MPI = no #yes
+USE_OPENMP = no #yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
-   MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64
+   MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
    BOOST = /home/lx/software/boost/install_1_75_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
