@@ -174,7 +174,7 @@ void sweep_twodot(const input::schedule& schd,
    }
 
    // 3. decimation & renormalize operators
-   twodot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
+   twodot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, 
 		 lqops, rqops, c1qops, c2qops, int2e, int1e, scratch);
 
    timing.t1 = tools::get_time();

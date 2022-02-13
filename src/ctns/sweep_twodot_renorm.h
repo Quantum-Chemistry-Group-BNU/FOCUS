@@ -170,7 +170,8 @@ void twodot_guess_psi(const std::string superblock,
 }
 
 template <typename Km>
-void twodot_renorm(sweep_data& sweeps,
+void twodot_renorm(const input::schedule& schd,
+		   sweep_data& sweeps,
 		   const int isweep,
 		   const int ibond, 
 		   comb<Km>& icomb,
@@ -230,7 +231,8 @@ void twodot_renorm(sweep_data& sweeps,
       auto ovlp = contract_qt3_qt3("lc", icomb.lsites[pdx], icomb.lsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
-      oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, c1qops, qops);
+      oper_renorm_opAll("lc", icomb, p, int2e, int1e, 
+		        lqops, c1qops, qops, schd.ctns.algorithm);
       fname = oper_fname(scratch, p, "l");
    }else if(superblock == "lr"){
       icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
@@ -240,7 +242,8 @@ void twodot_renorm(sweep_data& sweeps,
       auto ovlp = contract_qt3_qt3("lr", icomb.lsites[pdx],icomb.lsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
-      oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops);
+      oper_renorm_opAll("lr", icomb, p, int2e, int1e, 
+		        lqops, rqops, qops, schd.ctns.algorithm);
       fname = oper_fname(scratch, p, "l");
    }else if(superblock == "c2r"){
       icomb.rsites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
@@ -250,7 +253,8 @@ void twodot_renorm(sweep_data& sweeps,
       auto ovlp = contract_qt3_qt3("cr", icomb.rsites[pdx],icomb.rsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
-      oper_renorm_opAll("cr", icomb, p, int2e, int1e, c2qops, rqops, qops);
+      oper_renorm_opAll("cr", icomb, p, int2e, int1e, 
+		        c2qops, rqops, qops, schd.ctns.algorithm);
       fname = oper_fname(scratch, p, "r");
    }else if(superblock == "c1c2"){
       icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
@@ -260,7 +264,8 @@ void twodot_renorm(sweep_data& sweeps,
       auto ovlp = contract_qt3_qt3("cr", icomb.rsites[pdx],icomb.rsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
-      oper_renorm_opAll("cr", icomb, p, int2e, int1e, c1qops, c2qops, qops);
+      oper_renorm_opAll("cr", icomb, p, int2e, int1e, 
+		        c1qops, c2qops, qops, schd.ctns.algorithm);
       fname = oper_fname(scratch, p, "r");
    }
    timing.tf = tools::get_time();

@@ -41,8 +41,8 @@ void schedule::remove_scratch(const std::string sdir,
 void schedule::copy_scratch(const std::string sfrom,
 	 	            const std::string sto,
 		            const bool debug) const{
-   if(debug) cout << "\nschedule::copy from=" << sfrom
-                  << " to=" << sto << endl;
+   if(debug) cout << "\nschedule::copy from " << sfrom
+                  << " to " << sto << endl;
    fs::path pfrom(sfrom);
    fs::path pto(sto);
    fs::copy(pfrom, pto);

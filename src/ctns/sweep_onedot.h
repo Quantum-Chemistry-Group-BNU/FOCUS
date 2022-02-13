@@ -140,7 +140,7 @@ void sweep_onedot(const input::schedule& schd,
    }
 
    // 4. decimation & renormalize operators
-   onedot_renorm(sweeps, isweep, ibond, icomb, vsol, wf, 
+   onedot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, 
 		 lqops, rqops, cqops, int2e, int1e, scratch);
 
    timing.t1 = tools::get_time();

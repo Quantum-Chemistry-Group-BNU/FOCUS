@@ -22,7 +22,8 @@ void oper_renorm_opAll(const std::string superblock,
 		       const integral::one_body<Tm>& int1e,
 		       const oper_dict<Tm>& qops1,
 		       const oper_dict<Tm>& qops2,
-		       oper_dict<Tm>& qops){
+		       oper_dict<Tm>& qops,
+		       const int algorithm){
    const bool debug = false;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -35,7 +36,9 @@ void oper_renorm_opAll(const std::string superblock,
       std::cout << "ctns::oper_renorm_opAll coord=" << p 
 	        << " superblock=" << superblock 
 	     	<< " isym=" << isym << " ifkr=" << ifkr
-		<< " mpisize=" << size << std::endl;
+		<< " mpisize=" << size
+	        << " algorithm=" << algorithm	
+		<< std::endl;
    }
    auto t0 = tools::get_time();
    // setup basic information
