@@ -1,14 +1,15 @@
 #include <iostream>
-#include <boost/filesystem.hpp>
 #include "input.h"
+#include <filesystem> // c++17
+namespace fs = std::filesystem;
+
+// boost fs::copy does not work properly on mac
+// #include <boost/filesystem.hpp>
+// // https://www.boost.org/doc/libs/1_68_0/libs/filesystem/doc/reference.html
+// namespace fs = boost::filesystem;
 
 using namespace std;
 using namespace input;
-
-//
-// https://www.boost.org/doc/libs/1_68_0/libs/filesystem/doc/reference.html
-//
-namespace fs = boost::filesystem;
 
 void schedule::create_scratch(const std::string sdir,
 			      const bool debug) const{
