@@ -50,6 +50,9 @@ LOGS
     	- optimized formation of sigma vector [DONE2022/01/22]
           - contract_qt4_qt2 (without intermediate/reshaping)
     - renormalization formulae? [DONE2022/02/XX]
+    - optimization:
+	- avoid H() & K()
+	- int1e only appears in oper_dot.h 
     - profiling:
 	- benchmark for small systems
 	- minimize memory allocation / intermediates?
