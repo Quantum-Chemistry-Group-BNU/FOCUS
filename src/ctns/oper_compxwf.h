@@ -21,7 +21,6 @@ stensor3<Tm> oper_compxwf_opP(const std::string superblock,
 		              const oper_dict<Tm>& qops1,
 		              const oper_dict<Tm>& qops2,
 	                      const integral::two_body<Tm>& int2e,
-	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 		              const bool ifdagger=false){
    auto t0 = tools::get_time();
@@ -86,7 +85,6 @@ stensor3<Tm> oper_compxwf_opQ(const std::string superblock,
 			      const oper_dict<Tm>& qops1,
 			      const oper_dict<Tm>& qops2,
 	                      const integral::two_body<Tm>& int2e,
-	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 			      const bool ifdagger=false){
    auto t0 = tools::get_time();
@@ -159,7 +157,6 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
 			      const oper_dict<Tm>& qops1,
 			      const oper_dict<Tm>& qops2,
 	                      const integral::two_body<Tm>& int2e,
-	                      const integral::one_body<Tm>& int1e,
 		              const int index,
 			      const int size,
 			      const int rank,
@@ -284,7 +281,6 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
 		              const oper_dict<Tm>& qops1,
 		              const oper_dict<Tm>& qops2,
 	                      const integral::two_body<Tm>& int2e,
-	                      const integral::one_body<Tm>& int1e,
 			      const int size,
 			      const int rank){
    auto t0 = tools::get_time();

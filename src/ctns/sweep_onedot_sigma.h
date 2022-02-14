@@ -20,7 +20,6 @@ stensor3<Tm> onedot_Hx_local(const oper_dict<Tm>& lqops,
 	          	     const oper_dict<Tm>& rqops,
 	          	     const oper_dict<Tm>& cqops,
 	          	     const integral::two_body<Tm>& int2e,
-	          	     const integral::one_body<Tm>& int1e,
 			     const double& ecore,
 			     const stensor3<Tm>& wf,
 	          	     const int& size,
@@ -32,10 +31,10 @@ stensor3<Tm> onedot_Hx_local(const oper_dict<Tm>& lqops,
    if(ifNC){
       // 1. H^l + 2. H^cr
       Hwf = contract_qt3_qt2_l(wf,lqops('H').at(0));
-      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,int2e,int1e,size,rank);
+      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,int2e,size,rank);
    }else{
       // 1. H^lc + 2. H^r
-      Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,int2e,int1e,size,rank);
+      Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,int2e,size,rank);
       Hwf += contract_qt3_qt2_r(wf,rqops('H').at(0));
    }
    Hwf *= scale;
@@ -55,7 +54,6 @@ stensor3<Tm> onedot_Hx_CSnc(const int index,
 	          	    const oper_dict<Tm>& rqops,
 	          	    const oper_dict<Tm>& cqops,
 	          	    const integral::two_body<Tm>& int2e,
-	          	    const integral::one_body<Tm>& int1e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
@@ -64,11 +62,11 @@ stensor3<Tm> onedot_Hx_CSnc(const int index,
    const int& p1 = index;
    const auto& op1 = lqops('C').at(p1);
    // p^L+*S^CR
-   auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,int1e,p1,size,rank);
+   auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,p1,size,rank);
    qt3n.row_signed();
    auto Hwf = oper_kernel_OIwf("lc",qt3n,op1); // both lc/lr can work 
    // h.c.
-   auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,int1e,p1,size,rank,dagger);
+   auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,p1,size,rank,dagger);
    qt3h.row_signed();
    Hwf -= oper_kernel_OIwf("lc",qt3h,op1,dagger);
    return Hwf;
@@ -81,7 +79,6 @@ stensor3<Tm> onedot_Hx_SCnc(const int index,
 	          	    const oper_dict<Tm>& rqops,
 	          	    const oper_dict<Tm>& cqops,
 	          	    const integral::two_body<Tm>& int2e,
-	          	    const integral::one_body<Tm>& int1e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
@@ -103,14 +100,13 @@ stensor3<Tm> onedot_Hx_APnc(const int index,
 	          	    const oper_dict<Tm>& rqops,
 	          	    const oper_dict<Tm>& cqops,
 	          	    const integral::two_body<Tm>& int2e,
-	          	    const integral::one_body<Tm>& int1e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
    if(debug_onedot_sigma) std::cout << "onedot_Hx_APnc index=" << index << std::endl;
    const bool dagger = true;
-   auto qt3n = oper_compxwf_opP("cr",wf,cqops,rqops,int2e,int1e,index);
-   auto qt3h = oper_compxwf_opP("cr",wf,cqops,rqops,int2e,int1e,index,dagger);
+   auto qt3n = oper_compxwf_opP("cr",wf,cqops,rqops,int2e,index);
+   auto qt3h = oper_compxwf_opP("cr",wf,cqops,rqops,int2e,index,dagger);
    const auto& op1 = lqops('A').at(index);
    auto Hwf = oper_kernel_OIwf("lc",qt3n,op1);
    Hwf += oper_kernel_OIwf("lc",qt3h,op1,dagger);
@@ -125,14 +121,13 @@ stensor3<Tm> onedot_Hx_BQnc(const int index,
 	          	    const oper_dict<Tm>& rqops,
 	          	    const oper_dict<Tm>& cqops,
 	          	    const integral::two_body<Tm>& int2e,
-	          	    const integral::one_body<Tm>& int1e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
    if(debug_onedot_sigma) std::cout << "onedot_Hx_BQnc index=" << index << std::endl;
    const bool dagger = true;
-   auto qt3n = oper_compxwf_opQ("cr",wf,cqops,rqops,int2e,int1e,index);
-   auto qt3h = oper_compxwf_opQ("cr",wf,cqops,rqops,int2e,int1e,index,dagger);
+   auto qt3n = oper_compxwf_opQ("cr",wf,cqops,rqops,int2e,index);
+   auto qt3h = oper_compxwf_opQ("cr",wf,cqops,rqops,int2e,index,dagger);
    const auto& op1 = lqops('B').at(index);
    auto Hwf = oper_kernel_OIwf("lc",qt3n,op1);
    Hwf += oper_kernel_OIwf("lc",qt3h,op1,dagger);
@@ -152,7 +147,6 @@ stensor3<Tm> onedot_Hx_CScn(const int index,
 	          	    const oper_dict<Tm>& rqops,
 	          	    const oper_dict<Tm>& cqops,
 	          	    const integral::two_body<Tm>& int2e,
-	          	    const integral::one_body<Tm>& int1e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
@@ -174,7 +168,6 @@ stensor3<Tm> onedot_Hx_SCcn(const int index,
 	          	    const oper_dict<Tm>& rqops,
 	          	    const oper_dict<Tm>& cqops,
 	          	    const integral::two_body<Tm>& int2e,
-	          	    const integral::one_body<Tm>& int1e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
@@ -186,8 +179,8 @@ stensor3<Tm> onedot_Hx_SCcn(const int index,
    qt3n.row_signed(); 
    auto qt3h = oper_kernel_IOwf("cr",wf,op2,1,dagger);
    qt3h.row_signed();
-   auto Hwf = oper_compxwf_opS("lc",qt3h,lqops,cqops,int2e,int1e,q2,size,rank,dagger);
-   Hwf -= oper_compxwf_opS("lc",qt3n,lqops,cqops,int2e,int1e,q2,size,rank);
+   auto Hwf = oper_compxwf_opS("lc",qt3h,lqops,cqops,int2e,q2,size,rank,dagger);
+   Hwf -= oper_compxwf_opS("lc",qt3n,lqops,cqops,int2e,q2,size,rank);
    return Hwf;
 }
 
@@ -197,7 +190,6 @@ stensor3<Tm> onedot_Hx_PAcn(const int index,
 	          	    const oper_dict<Tm>& rqops,
 	          	    const oper_dict<Tm>& cqops,
 	          	    const integral::two_body<Tm>& int2e,
-	          	    const integral::one_body<Tm>& int1e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
@@ -206,8 +198,8 @@ stensor3<Tm> onedot_Hx_PAcn(const int index,
    const auto& op2 = rqops('A').at(index); 
    auto qt3n = oper_kernel_IOwf("cr",wf,op2,0);
    auto qt3h = oper_kernel_IOwf("cr",wf,op2,0,dagger);
-   auto Hwf = oper_compxwf_opP("lc",qt3n,lqops,cqops,int2e,int1e,index);
-   Hwf += oper_compxwf_opP("lc",qt3h,lqops,cqops,int2e,int1e,index,dagger);
+   auto Hwf = oper_compxwf_opP("lc",qt3n,lqops,cqops,int2e,index);
+   Hwf += oper_compxwf_opP("lc",qt3h,lqops,cqops,int2e,index,dagger);
    const Tm wt = lqops.ifkr? wfacAP(index) : 1.0;
    Hwf *= wt;
    return Hwf;
@@ -219,7 +211,6 @@ stensor3<Tm> onedot_Hx_QBcn(const int index,
 	          	    const oper_dict<Tm>& rqops,
 	          	    const oper_dict<Tm>& cqops,
 	          	    const integral::two_body<Tm>& int2e,
-	          	    const integral::one_body<Tm>& int1e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
 	          	    const int& rank){
@@ -228,8 +219,8 @@ stensor3<Tm> onedot_Hx_QBcn(const int index,
    const auto& op2 = rqops('B').at(index);
    auto qt3n = oper_kernel_IOwf("cr",wf,op2,0);
    auto qt3h = oper_kernel_IOwf("cr",wf,op2,0,dagger);
-   auto Hwf = oper_compxwf_opQ("lc",qt3n,lqops,cqops,int2e,int1e,index);
-   Hwf += oper_compxwf_opQ("lc",qt3h,lqops,cqops,int2e,int1e,index,dagger);
+   auto Hwf = oper_compxwf_opQ("lc",qt3n,lqops,cqops,int2e,index);
+   Hwf += oper_compxwf_opQ("lc",qt3h,lqops,cqops,int2e,index,dagger);
    const Tm wt = lqops.ifkr? wfacBQ(index) : wfac(index);
    Hwf *= wt;
    return Hwf;
@@ -243,7 +234,6 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dict<Tm>& lqops,
 	                           const oper_dict<Tm>& rqops,
 	                           const oper_dict<Tm>& cqops,
 	                           const integral::two_body<Tm>& int2e,
-	                           const integral::one_body<Tm>& int1e,
 				   const double& ecore,
 	                           const stensor3<Tm>& wf,
 	                           const int& size,
@@ -254,8 +244,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dict<Tm>& lqops,
    Hx_functor<Tm> Hx("Hloc", 0, 0);
    Hx.opxwf = bind(&onedot_Hx_local<Tm>,
 		   std::cref(lqops), std::cref(rqops), std::cref(cqops),
-		   std::cref(int2e), std::cref(int1e), std::cref(ecore),
-		   std::cref(wf), std::cref(size), std::cref(rank));
+		   std::cref(int2e), std::cref(ecore), std::cref(wf), std::cref(size), std::cref(rank));
    Hx_funs.push_back(Hx);
    // One-index terms:
    // 3. p1^l+*Sp1^cr + h.c. or 4. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
@@ -266,8 +255,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dict<Tm>& lqops,
       Hx_functor<Tm> Hx(cnlabel, index, 0);
       Hx.opxwf = bind(cnfun, index,
         	      std::cref(lqops), std::cref(rqops), std::cref(cqops), 
-        	      std::cref(int2e), std::cref(int1e), 
-		      std::cref(wf), std::cref(size), std::cref(rank));
+        	      std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
       Hx_funs.push_back(Hx); 
    }
    // 4. q2^cr+*Sq2^l + h.c. or 3. p1^lc+*Sp1^r + h.c.
@@ -281,8 +269,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dict<Tm>& lqops,
       Hx_functor<Tm> Hx(cclabel, index, iformula);
       Hx.opxwf = bind(ccfun, index, iformula, 
         	      std::cref(lqops), std::cref(rqops), std::cref(cqops), 
-        	      std::cref(int2e), std::cref(int1e), 
-		      std::cref(wf), std::cref(size), std::cref(rank));
+        	      std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
       Hx_funs.push_back(Hx); 
    }
    // Two-index terms:
@@ -300,8 +287,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dict<Tm>& lqops,
          Hx_functor<Tm> Hx(alabel, index, 0);
          Hx.opxwf = bind(afun, index, 
            	         std::cref(lqops), std::cref(rqops), std::cref(cqops), 
-           	         std::cref(int2e), std::cref(int1e),
-			 std::cref(wf), std::cref(size), std::cref(rank));
+           	         std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
          Hx_funs.push_back(Hx);
       }
    }
@@ -312,8 +298,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dict<Tm>& lqops,
          Hx_functor<Tm> Hx(blabel, index, 0);
          Hx.opxwf = bind(bfun, index, 
            	         std::cref(lqops), std::cref(rqops), std::cref(cqops), 
-           	         std::cref(int2e), std::cref(int1e), 
-			 std::cref(wf), std::cref(size), std::cref(rank));
+           	         std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
          Hx_funs.push_back(Hx);
       }
    }

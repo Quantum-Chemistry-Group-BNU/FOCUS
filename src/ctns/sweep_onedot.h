@@ -118,8 +118,7 @@ void sweep_onedot(const input::schedule& schd,
    HVec_type<Tm> HVec;
    if(schd.ctns.algorithm == 0){
       Hx_funs = onedot_Hx_functors(lqops, rqops, cqops, 
-		   		   int2e, int1e, ecore, 
-		                   wf, size, rank);
+		                   int2e, ecore, wf, size, rank);
       HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
            	  std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.algorithm == 1){
