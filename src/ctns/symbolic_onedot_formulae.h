@@ -34,6 +34,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
 
    symbolic_task<Tm> formulae;
    int idx = 0;
+
    if(ifNC){
       // partition = l|cr
       // 1. H^l 
@@ -188,9 +189,9 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       }
    } // ifNC
 
+   auto t1 = tools::get_time();
    if(rank == 0){
       formulae.display("total", debug);
-      auto t1 = tools::get_time();
       tools::timing("symbolic_onedot_formulae", t0, t1);
    }
    return formulae;

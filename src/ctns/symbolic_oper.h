@@ -263,7 +263,7 @@ struct symbolic_task{
       }
       // display
       void display(const std::string& name, const int level=0) const{
-         std::cout << "formulae " << name << " : size=" << tasks.size() << std::endl;
+         std::cout << " formulae " << name << " : size=" << tasks.size() << std::endl;
 	 if(level > 0){
             for(int i=0; i<tasks.size(); i++){
 	       std::cout << "  i=" << i << " " << tasks[i] << std::endl; 
@@ -275,6 +275,9 @@ struct symbolic_task{
    public:
       std::vector<symbolic_term<Tm>> tasks;
 }; 
+
+template <typename Tm>
+using renorm_tasks = std::vector<std::tuple<char,int,symbolic_task<Tm>>>;
 
 } // ctns
 

@@ -177,9 +177,9 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       }
    } // ifNC
 
+   auto t1 = tools::get_time();
    if(rank == 0){
       formulae.display("total", debug);
-      auto t1 = tools::get_time();
       tools::timing("symbolic_twodot_formulae", t0, t1);
    }
    return formulae;

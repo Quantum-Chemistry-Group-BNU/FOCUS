@@ -10,7 +10,7 @@
 #include "oper_normxwf.h"
 #include "oper_compxwf.h"
 #include "oper_rbasis.h"
-#include "symbolic_renorm.h"
+#include "symbolic_renorm_kernel.h"
 
 namespace ctns{
 
@@ -76,7 +76,7 @@ void oper_renorm_opAll(const std::string superblock,
    // 1. start renormalization
    if(algorithm == 0){
       oper_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, rank, debug);
-   }else if(algorithm == 1){
+   //}else if(algorithm == 1){
       symbolic_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, rank, debug);
    }
 
@@ -227,7 +227,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
          Hx_functor<Tm> Hx("S", index);
          Hx.opxwf = bind(&oper_compxwf_opS<Tm>,
            	         std::cref(superblock), std::cref(site),
-           	         std::cref(qops1), std::cref(qops2), std::cref(int2e), 
+           	         std::cref(qops1), std::cref(qops2),
 			 index, qops.mpisize, qops.mpirank, false);
          Hx_funs.push_back(Hx);
       }
@@ -237,7 +237,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
       Hx_functor<Tm> Hx("H");
       Hx.opxwf = bind(&oper_compxwf_opH<Tm>, 
            	      std::cref(superblock), std::cref(site),
-           	      std::cref(qops1), std::cref(qops2), std::cref(int2e),
+           	      std::cref(qops1), std::cref(qops2),
            	      qops.mpisize, qops.mpirank);
       Hx_funs.push_back(Hx);
    }
