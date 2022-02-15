@@ -14,7 +14,7 @@
 
 namespace ctns{
 
-// renormalize ops
+// renormalize operators
 template <typename Km, typename Tm>
 void oper_renorm_opAll(const std::string superblock,
 		       const comb<Km>& icomb,
@@ -74,6 +74,7 @@ void oper_renorm_opAll(const std::string superblock,
    qops.allocate_memory();
 
    // 1. start renormalization
+   oper_timer.clear();
    if(algorithm == 0){
       oper_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, rank, debug);
    //}else if(algorithm == 1){
@@ -118,29 +119,25 @@ void oper_renorm_kernel(const std::string superblock,
 		        oper_dict<Tm>& qops,
 			const int rank,
 			const bool debug){
-   oper_timer.clear();
    auto Hx_funs = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops);
-   if(debug){
-      std::cout << "rank=" << rank << " size[Hx_funs]=" << Hx_funs.size() << std::endl;
-      for(int i=0; i<Hx_funs.size(); i++){
-         std::cout << "rank=" << rank << " i=" << i << Hx_funs[i] << std::endl;
-      }
-   }
+   if(debug) std::cout << "rank=" << rank << " size[Hx_funs]=" << Hx_funs.size() << std::endl;
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
    for(int i=0; i<Hx_funs.size(); i++){
       char key = Hx_funs[i].label[0];
       int index = Hx_funs[i].index; 
-      if(debug) std::cout << "cal: rank=" << rank 
-	                  << " i=" << i 
-	                  << " key=" << key 
-			  << " index=" << index 
-			  << std::endl;
+      if(debug){
+         std::cout << "cal: rank=" << rank 
+                   << " i=" << i 
+                   << " key=" << key 
+		   << " index=" << index 
+		   << std::endl;
+      }
       auto opxwf = Hx_funs[i]();
       auto op = contract_qt3_qt3(superblock, site, opxwf);
       linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
-   }
+   } // i
 }
 
 template <typename Tm>
