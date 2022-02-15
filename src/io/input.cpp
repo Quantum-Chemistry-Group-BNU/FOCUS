@@ -208,8 +208,10 @@ void params_ctns::read(ifstream& istrm){
          ndetprt = stoi(line.substr(7));
       }else if(line.substr(0,7)=="verbose"){
          verbose = stoi(line.substr(7));
-      }else if(line.substr(0,9)=="algorithm"){
-         algorithm = stoi(line.substr(9));
+      }else if(line.substr(0,8)=="alg_hvec"){
+         alg_hvec = stoi(line.substr(8));
+      }else if(line.substr(0,10)=="alg_renorm"){
+         alg_renorm = stoi(line.substr(10));
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
@@ -265,7 +267,8 @@ void params_ctns::print() const{
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;
    cout << "rdm_vs_svd = " << scientific << rdm_vs_svd << endl;
-   cout << "algorithm = " << algorithm << endl;
+   cout << "alg_hvec = " << alg_hvec << endl;
+   cout << "alg_renorm = " << alg_renorm << endl;
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
    cout << "guess    = " << guess << endl;

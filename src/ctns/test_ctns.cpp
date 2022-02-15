@@ -127,9 +127,10 @@ int tests::test_ctns(){
    schd.create_scratch(schd.scratch);
 
    // 5. Hij: construct renormalized operators
+   const int alg_renorm = 0;
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hij_ci.print("Hij_ci",8);
-   auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+   auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch, alg_renorm);
    Hij_ctns.print("Hij_ctns",8);
    double diffH = normF(Hij_ctns - Hij_ci);
    cout << "\ncheck diffH=" << diffH << endl;
@@ -141,7 +142,7 @@ int tests::test_ctns(){
    // re-compute expectation value for optimized TNS
    auto Sij = ctns::get_Smat(icomb);
    Sij.print("Sij");
-   auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch);
+   auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch, alg_renorm);
    Hij.print("Hij",8);
    auto ovlp = rcanon_CIovlp(icomb, sci_space, vs);
    ovlp.print("ovlp");

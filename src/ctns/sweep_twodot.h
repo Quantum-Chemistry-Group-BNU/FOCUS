@@ -144,18 +144,17 @@ void sweep_twodot(const input::schedule& schd,
    timing.tb = tools::get_time();
 
    // 3.2 Solve local problem: Hc=cE
-   std::cout << "schd.ctns.algorithm=" << schd.ctns.algorithm << std::endl;
    using std::placeholders::_1;
    using std::placeholders::_2;
    symbolic_task<Tm> H_formulae;
    Hx_functors<Tm> Hx_funs;
    HVec_type<Tm> HVec;
-   if(schd.ctns.algorithm == 0){
+   if(schd.ctns.alg_hvec == 0){
       Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
                                    int2e, ecore, wf, size, rank);
       HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
-   }else if(schd.ctns.algorithm == 1){
+   }else if(schd.ctns.alg_hvec == 1){
       H_formulae = symbolic_twodot_formulae(lqops, rqops, c1qops, c2qops, 
 		                            int2e, size, rank);
       HVec = bind(&ctns::symbolic_twodot_Hx<Tm>, _1, _2, std::cref(H_formulae),

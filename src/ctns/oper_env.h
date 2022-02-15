@@ -105,7 +105,7 @@ void oper_env_right(const comb<Km>& icomb,
 		    const integral::two_body<typename Km::dtype>& int2e,
 		    const integral::one_body<typename Km::dtype>& int1e,
 		    const std::string scratch,
-		    const int algorithm){
+		    const int alg_renorm){
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -150,7 +150,7 @@ void oper_env_right(const comb<Km>& icomb,
          //---------------------------------------------
 	 std::string superblock = "cr"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e,
-			   qops1, qops2, qops, algorithm);
+			   qops1, qops2, qops, alg_renorm);
          //qops.print("qops");
          //std::cout << "data=" << qops._data << std::endl; 
          //---------------------------------------------

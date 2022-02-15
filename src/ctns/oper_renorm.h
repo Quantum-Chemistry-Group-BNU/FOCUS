@@ -24,7 +24,7 @@ void oper_renorm_opAll(const std::string superblock,
 		       const oper_dict<Tm>& qops1,
 		       const oper_dict<Tm>& qops2,
 		       oper_dict<Tm>& qops,
-		       const int algorithm){
+		       const int alg_renorm){
    const bool debug = false;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -38,7 +38,7 @@ void oper_renorm_opAll(const std::string superblock,
 	        << " superblock=" << superblock 
 	     	<< " isym=" << isym << " ifkr=" << ifkr
 		<< " mpisize=" << size
-	        << " algorithm=" << algorithm	
+	        << " alg_renorm=" << alg_renorm	
 		<< std::endl;
    }
    auto t0 = tools::get_time();
@@ -75,9 +75,9 @@ void oper_renorm_opAll(const std::string superblock,
 
    // 1. start renormalization
    oper_timer.clear();
-   if(algorithm == 0){
+   if(alg_renorm == 0){
       oper_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, rank, debug);
-   //}else if(algorithm == 1){
+   }else if(alg_renorm == 1){
       symbolic_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, rank, debug);
    }
 

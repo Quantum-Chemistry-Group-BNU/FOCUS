@@ -94,7 +94,9 @@ private:
       ar & run & qkind & topology_file
          & task_sdiag & task_ham & task_opt 
 	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
-	 & nroots & guess & maxsweep & ctrls & cisolver & maxcycle
+	 & nroots & guess & maxsweep & ctrls 
+	 & alg_hvec & alg_renorm
+	 & cisolver & maxcycle
          & load & rcanon_file & iroot & nsample & ndetprt 
 	 & verbose;  
    }
@@ -120,7 +122,9 @@ public:
    int dbranch = 0;
    int maxsweep = 0;
    std::vector<params_sweep> ctrls;
-   int algorithm = 0;
+   // algorithm
+   int alg_hvec = 0;
+   int alg_renorm = 0;
    // dvdson
    int cisolver = 1;
    int maxcycle = 100;

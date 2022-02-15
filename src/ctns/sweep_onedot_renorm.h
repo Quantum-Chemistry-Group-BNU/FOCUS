@@ -192,7 +192,7 @@ void onedot_renorm(const input::schedule& schd,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("lc", icomb, p, int2e, int1e, 
-		        lqops, cqops, qops, schd.ctns.algorithm);
+		        lqops, cqops, qops, schd.ctns.alg_renorm);
       fname = oper_fname(scratch, p, "l");
    }else if(superblock == "lr"){
       icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
@@ -203,7 +203,7 @@ void onedot_renorm(const input::schedule& schd,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("lr", icomb, p, int2e, int1e, 
-		        lqops, rqops, qops, schd.ctns.algorithm);
+		        lqops, rqops, qops, schd.ctns.alg_renorm);
       fname = oper_fname(scratch, p, "l");
    }else if(superblock == "cr"){
       icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
@@ -214,7 +214,7 @@ void onedot_renorm(const input::schedule& schd,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("cr", icomb, p, int2e, int1e, 
-		        cqops, rqops, qops, schd.ctns.algorithm);
+		        cqops, rqops, qops, schd.ctns.alg_renorm);
       fname = oper_fname(scratch, p, "r");
    }
    timing.tf = tools::get_time();
