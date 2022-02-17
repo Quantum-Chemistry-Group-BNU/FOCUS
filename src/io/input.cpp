@@ -180,6 +180,14 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,9)=="task_dmrg"){
          task_ham = true;
          task_opt = true;
+      }else if(line.substr(0,8)=="alg_hvec"){
+         alg_hvec = stoi(line.substr(8));
+      }else if(line.substr(0,10)=="alg_renorm"){
+         alg_renorm = stoi(line.substr(10));
+      }else if(line.substr(0,8)=="alg_dmrg"){
+         int algorithm = stoi(line.substr(8));
+	 alg_hvec = algorithm;
+	 alg_renorm = algorithm;
       }else if(line.substr(0,4)=="load"){
          load = true;
       }else if(line.substr(0,13)=="topology_file"){
@@ -208,10 +216,6 @@ void params_ctns::read(ifstream& istrm){
          ndetprt = stoi(line.substr(7));
       }else if(line.substr(0,7)=="verbose"){
          verbose = stoi(line.substr(7));
-      }else if(line.substr(0,8)=="alg_hvec"){
-         alg_hvec = stoi(line.substr(8));
-      }else if(line.substr(0,10)=="alg_renorm"){
-         alg_renorm = stoi(line.substr(10));
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){

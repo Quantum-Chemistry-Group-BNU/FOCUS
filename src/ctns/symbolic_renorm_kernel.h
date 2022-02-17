@@ -119,7 +119,8 @@ void symbolic_renorm_kernel(const std::string superblock,
 	 formula.display("formula", 1);
       }
       auto opxwf = symbolic_renorm_single(block1,block2,qops_dict,key,formula,site);
-      auto op = contract_qt3_qt3(superblock, site, opxwf); 
+      auto op = contract_qt3_qt3(superblock, site, opxwf);
+      if(key == 'H' && qops.ifkr) op += op.K();
       linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
    } // i
 }
