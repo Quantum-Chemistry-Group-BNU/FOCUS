@@ -82,8 +82,8 @@ void oper_renorm_opAll(const std::string superblock,
    }
 
    // 2. check operators against explicit construction
-   const bool ifcheck = false;
-   if(ifcheck){
+   const bool ifcheck_rbasis = false;
+   if(ifcheck_rbasis){
       for(const auto& key : qops.oplist){
 	 if(key == 'C' || key == 'A' || key == 'B'){
 	    oper_check_rbasis(icomb, icomb, p, qops, key);

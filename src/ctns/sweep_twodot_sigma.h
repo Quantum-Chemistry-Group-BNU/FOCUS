@@ -207,6 +207,7 @@ stensor3<Tm> twodot_Hx_local(const oper_dict<Tm>& lqops,
    auto wf2 = wf.merge_lc1(); // wf2[lc1,r,c2]
    auto Hwf2 = oper_compxwf_opH("cr",wf2,c2qops,rqops,size,rank);
    Hwf1 += Hwf2.split_lc1(wf.info.qrow, wf.info.qmid).merge_c2r();
+   // scale for kr case
    Hwf1 *= scale; 
    // 3. add const term
    const Tm fac = scale*(ecore/size);

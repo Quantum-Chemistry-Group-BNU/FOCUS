@@ -197,6 +197,7 @@ struct stensor2{
          return fac*qt;
       }
       double normF() const{ return linalg::xnrm2(info._size, _data); }
+      void clear(){ memset(_data, 0, info._size*sizeof(Tm)); }
       // --- SPECIFIC FUNCTIONS ---
       // from/to dense matrix: assign block to proper place
       void from_matrix(const linalg::matrix<Tm>& mat); 

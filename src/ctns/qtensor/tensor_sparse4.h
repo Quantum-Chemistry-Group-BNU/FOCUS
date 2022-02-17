@@ -195,6 +195,7 @@ struct stensor4{
          return fac*qt;
       }
       double normF() const{ return linalg::xnrm2(info._size, _data); }
+      void clear(){ memset(_data, 0, info._size*sizeof(Tm)); }
       // --- SPECIFIC FUNCTIONS ---
       void cntr_signed(const std::string block);
       void permCR_signed(); // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]} 

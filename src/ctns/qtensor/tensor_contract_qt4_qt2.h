@@ -10,7 +10,7 @@ stensor4<Tm> contract_qt4_qt2(const std::string cpos,
 			      const stensor2<Tm>& qt2b,
 			      const bool ifdagger=false){
    const auto& qt2 = ifdagger? qt2b.H() : qt2b;
-   stensor4<Tm> qt4 = qt4a;
+   stensor4<Tm> qt4;
    if(cpos == "l"){
       qt4 = contract_qt4_qt2_l(qt4a, qt2);
    }else if(cpos == "r"){
@@ -170,7 +170,7 @@ stensor4<Tm> contract_qt4_qt2_c2(const stensor4<Tm>& qt4a,
 	       auto& blk4 = qt4(br,bc,bm,bv);
 	       if(blk4.size() == 0) continue;
 	       // loop over contracted indices
-	       for(int bx=0; bx<qt4a.mids(); bx++){
+	       for(int bx=0; bx<qt4a.vers(); bx++){
 	          const auto& blk4a = qt4a(br,bc,bm,bx);
 	          const auto& blk2b = qt2b(bv,bx);
 	          if(blk4a.size() == 0 || blk2b.size() == 0) continue;

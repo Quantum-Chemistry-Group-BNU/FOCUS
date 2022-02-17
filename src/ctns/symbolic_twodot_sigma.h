@@ -80,10 +80,9 @@ void symbolic_twodot_HxTerm(const oper_dictmap<Tm>& qops_dict,
    linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data());
 
    // debug 
-   std::cout << "iterm=" << it << " HTerm=" << HTerm << std::endl;
+   //std::cout << "iterm=" << it << " HTerm=" << HTerm << std::endl;
    auto t1 = tools::get_time();
-   tools::timing("iterm="+std::to_string(it), t0, t1);
-   
+   //tools::timing("iterm="+std::to_string(it), t0, t1);
 }
 
 template <typename Tm> 

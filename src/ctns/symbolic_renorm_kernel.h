@@ -78,7 +78,10 @@ stensor3<Tm> symbolic_renorm_single(const std::string& block1,
       } // idx
       if(it == 0) opxwf.init(opNxwf.info);
       linalg::xaxpy(opxwf.size(), 1.0, opNxwf.data(), opxwf.data());
-      if(key == 'H') linalg::xaxpy(opxwf.size(), 1.0, opHxwf.data(), opxwf.data());
+      if(key == 'H'){
+         double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
+         linalg::xaxpy(opxwf.size(), fac, opHxwf.data(), opxwf.data());
+      }
    } // it
    return opxwf;
 }
