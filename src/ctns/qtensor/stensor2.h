@@ -43,8 +43,8 @@ struct stensor2{
       // memory allocation
       void allocate(){
          _data = new Tm[info._size];
-	 memset(_data, 0, info._size*sizeof(Tm));
 	 info.setup_data(_data);
+	 memset(_data, 0, info._size*sizeof(Tm));
       }
    public:
       // --- GENERAL FUNCTIONS ---
@@ -87,8 +87,8 @@ struct stensor2{
 	 info = st.info;
 	 if(st.own){
 	    _data = new Tm[info._size];
-	    linalg::xcopy(info._size, st._data, _data);
 	    info.setup_data(_data);
+	    linalg::xcopy(info._size, st._data, _data);
 	 }else{
 	    // shalow copy of the wrapper in case st.own = false;
 	    // needs to be here for direct manipulations of data in xaxpy
@@ -106,8 +106,8 @@ struct stensor2{
             info = st.info;
 	    delete[] _data;
 	    _data = new Tm[info._size];
-	    linalg::xcopy(info._size, st._data, _data);
 	    info.setup_data(_data);
+	    linalg::xcopy(info._size, st._data, _data);
 	 }
 	 return *this;
       }
@@ -189,8 +189,7 @@ struct stensor2{
       }
       friend stensor2<Tm> operator *(const Tm fac, const stensor2<Tm>& qta){
          stensor2<Tm> qt(qta.info);
-	 linalg::xcopy(qt.info._size, qta._data, qt._data);
-         qt *= fac;
+	 linalg::xaxpy(qt.info._size, fac, qta._data, qt._data);
          return qt;
       }
       friend stensor2<Tm> operator *(const stensor2<Tm>& qt, const Tm fac){

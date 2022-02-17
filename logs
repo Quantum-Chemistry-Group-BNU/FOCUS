@@ -58,7 +58,9 @@ LOGS
 	- benchmark for [Fe4S4] systems
     - optimization:
 	- avoid H() & K()
-	- int1e only appears in oper_dot.h 
+	- int1e only appears in oper_dot.h
+        - onedot opt
+	- twodot opt 
 
  * Large-scale parallelization: push to the limit!
     - GPU for contractions?

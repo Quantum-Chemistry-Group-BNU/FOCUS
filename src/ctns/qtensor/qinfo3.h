@@ -63,6 +63,7 @@ struct qinfo3{
       // --- derived --- 
       int _rows, _cols, _mids;
       size_t _size = 0;
+      std::vector<int> _nnzaddr;
       std::vector<dtensor3<Tm>> _qblocks;
 };
 
@@ -85,7 +86,9 @@ void qinfo3<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
 	 for(int bm=0; bm<qmid.size(); bm++){
 	    int mdim = qmid.get_dim(bm);
 	    if(not _ifconserve(br,bc,bm)) continue;
-	    _qblocks[_addr(br,bc,bm)].setup_dims(rdim,cdim,mdim,_size);
+            int addr = _addr(br,bc,bm);
+	    _nnzaddr.push_back(addr);
+	    _qblocks[addr].setup_dims(rdim,cdim,mdim,_size);
 	    _size += rdim*cdim*mdim;
 	 } // bm 
       } // bc
@@ -94,10 +97,10 @@ void qinfo3<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
 
 template <typename Tm>
 void qinfo3<Tm>::setup_data(Tm* data){
-   for(auto& blk : _qblocks){
-      if(blk.size() == 0) continue;
-      blk.setup_data(data);
-   } // blk
+   for(int i=0; i<_nnzaddr.size(); i++){
+      int addr = _nnzaddr[i];
+      _qblocks[addr].setup_data(data);
+   }
 }
 
 template <typename Tm>
@@ -109,24 +112,22 @@ void qinfo3<Tm>::print(const std::string name, const int level) const{
    qmid.print("qmid");
    // qblocks
    std::cout << "qblocks: nblocks=" << _qblocks.size() << std::endl;
-   int nnz = 0, br, bc, bm;
-   for(int idx=0; idx<_qblocks.size(); idx++){
+   int br, bc, bm;
+   for(int i=0; i<_nnzaddr.size(); i++){
+      int idx = _nnzaddr[i];
       _addr_unpack(idx,br,bc,bm);
       const auto& blk = _qblocks[idx];
-      if(blk.size() > 0){
-         nnz++;
-         if(level >= 1){
-            std::cout << "idx=" << idx 
-     	    	      << " block[" << qrow.get_sym(br) << "," << qcol.get_sym(bc) << "," 
-		      << qmid.get_sym(bm) << "]" 
-                      << " dim0,dim1,dim2=(" << blk.dim0 << "," << blk.dim1 << ","
-		      << blk.dim2 << ")" 
-                      << std::endl; 
-            if(level >= 2) blk.print("blk_"+std::to_string(idx));
-	 } // level>=1
-      }
+      if(level >= 1){
+         std::cout << "idx=" << idx 
+         	   << " block[" << qrow.get_sym(br) << "," << qcol.get_sym(bc) << "," 
+                   << qmid.get_sym(bm) << "]" 
+                   << " dim0,dim1,dim2=(" << blk.dim0 << "," << blk.dim1 << ","
+                   << blk.dim2 << ")" 
+                   << std::endl; 
+         if(level >= 2) blk.print("blk_"+std::to_string(idx));
+      } // level>=1
    } // idx
-   std::cout << "total no. of nonzero blocks=" << nnz << std::endl;
+   std::cout << "total no. of nonzero blocks=" << _nnzaddr() << std::endl;
    std::cout << "total size=" << _size << " sizeMB=" << tools::sizeMB<Tm>(_size) << std::endl; 
 }
 
