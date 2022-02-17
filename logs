@@ -49,14 +49,16 @@ LOGS
     	- generation of twodot_Hx formulae [DONE2022/01/18]
     	- optimized formation of sigma vector [DONE2022/01/22]
           - contract_qt4_qt2 (without intermediate/reshaping)
-    - renormalization formulae? [DONE2022/02/XX]
-    - optimization:
-	- avoid H() & K()
-	- int1e only appears in oper_dot.h 
+    - renormalization algorithm
+	 - generation of formulae 
+         - optimized renormalization [DONE2022/02/17]
     - profiling:
 	- benchmark for small systems
 	- minimize memory allocation / intermediates?
 	- benchmark for [Fe4S4] systems
+    - optimization:
+	- avoid H() & K()
+	- int1e only appears in oper_dot.h 
 
  * Large-scale parallelization: push to the limit!
     - GPU for contractions?
