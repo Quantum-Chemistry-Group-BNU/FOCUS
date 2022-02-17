@@ -1,5 +1,5 @@
-#ifndef TENSOR_SPARSE4_H
-#define TENSOR_SPARSE4_H
+#ifndef TENSOR_STENSOR4_H
+#define TENSOR_STENSOR4_H
 
 #include "../../core/serialization.h"
 #include "../../core/matrix.h"
@@ -11,8 +11,8 @@ struct stensor2;
 template <typename Tm>
 struct stensor3;
 
-const bool debug_sparse4 = false;
-extern const bool debug_sparse4;
+const bool debug_stensor4 = false;
+extern const bool debug_stensor4;
 
 template <typename Tm>
 struct stensor4{
@@ -84,7 +84,7 @@ struct stensor4{
       }
       // copy constructor
       stensor4(const stensor4& st){
-	 if(debug_sparse4) std::cout << "stensor4: copy constructor - st.own=" << st.own << std::endl;   
+	 if(debug_stensor4) std::cout << "stensor4: copy constructor - st.own=" << st.own << std::endl;   
 	 own = st.own;
 	 info = st.info;
 	 if(st.own){
@@ -116,7 +116,7 @@ struct stensor4{
 */
       // move constructor
       stensor4(stensor4&& st){
-	 if(debug_sparse4) std::cout << "stensor4: move constructor - st.own=" << st.own << std::endl;
+	 if(debug_stensor4) std::cout << "stensor4: move constructor - st.own=" << st.own << std::endl;
 	 assert(own == true);
 	 own = st.own; 
          info = std::move(st.info);
@@ -125,7 +125,7 @@ struct stensor4{
       }
       // move assignment
       stensor4& operator =(stensor4&& st){
-	 if(debug_sparse4) std::cout << "stensor4: move assignment - st.own=" << st.own << std::endl;     
+	 if(debug_stensor4) std::cout << "stensor4: move assignment - st.own=" << st.own << std::endl;     
 	 assert(own == true && st.own == true); 
          if(this != &st){
             info = std::move(st.info);

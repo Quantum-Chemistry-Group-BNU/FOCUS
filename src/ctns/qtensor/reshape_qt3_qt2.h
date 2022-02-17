@@ -1,5 +1,5 @@
-#ifndef TENSOR_RESHAPE3_H
-#define TENSOR_RESHAPE3_H
+#ifndef RESHAPE_QT3_QT2_H
+#define RESHAPE_QT3_QT2_H
 
 namespace ctns{
 

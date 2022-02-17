@@ -1,5 +1,5 @@
-#ifndef TENSOR_CONTRACT_QT3_QT3_H
-#define TENSOR_CONTRACT_QT3_QT3_H
+#ifndef CONTRACT_QT3_QT3_H
+#define CONTRACT_QT3_QT3_H
 
 namespace ctns{
 

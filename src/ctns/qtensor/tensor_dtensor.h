@@ -1,5 +1,5 @@
-#ifndef TENSOR_DENSE_H
-#define TENSOR_DENSE_H
+#ifndef TENSOR_DTENSOR_H
+#define TENSOR_DTENSOR_H
 
 #include <cassert>
 #include "../../core/serialization.h"
