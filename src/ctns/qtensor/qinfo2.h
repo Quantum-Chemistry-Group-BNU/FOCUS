@@ -16,7 +16,8 @@ struct qinfo2{
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
 	 ar & sym & qrow & qcol & dir 
-	    & _rows & _cols & _size & _qblocks;
+	    & _rows & _cols & _size 
+	    & _nnzaddr & _qblocks;
       }
    public:
       // --- GENERAL FUNCTIONS ---

@@ -23,7 +23,8 @@ struct qinfo3{
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
 	 ar & sym & qrow & qcol & qmid & dir
-	    & _rows & _cols & _mids & _size & _qblocks;
+	    & _rows & _cols & _mids & _size
+	    & _nnzaddr & _qblocks;
       }
    public:
       // --- GENERAL FUNCTIONS ---
@@ -127,7 +128,7 @@ void qinfo3<Tm>::print(const std::string name, const int level) const{
          if(level >= 2) blk.print("blk_"+std::to_string(idx));
       } // level>=1
    } // idx
-   std::cout << "total no. of nonzero blocks=" << _nnzaddr() << std::endl;
+   std::cout << "total no. of nonzero blocks=" << _nnzaddr.size() << std::endl;
    std::cout << "total size=" << _size << " sizeMB=" << tools::sizeMB<Tm>(_size) << std::endl; 
 }
 

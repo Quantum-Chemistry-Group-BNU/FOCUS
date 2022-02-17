@@ -42,6 +42,7 @@ void oper_renorm_opAll(const std::string superblock,
 		<< std::endl;
    }
    auto t0 = tools::get_time();
+   
    // 0. setup basic information for qops
    qops.isym = isym;
    qops.ifkr = ifkr;
@@ -80,7 +81,7 @@ void oper_renorm_opAll(const std::string superblock,
    }else if(alg_renorm == 1){
       symbolic_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, rank, debug);
    }
-
+   
    // 2. check operators against explicit construction
    const bool ifcheck_rbasis = false;
    if(ifcheck_rbasis){
