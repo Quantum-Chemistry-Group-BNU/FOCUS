@@ -1,5 +1,5 @@
-#ifndef TENSOR_QINFO3_H
-#define TENSOR_QINFO3_H
+#ifndef QINFO3_H
+#define QINFO3_H
 
 #include "../../core/serialization.h"
 #include "../../core/tools.h"
@@ -60,7 +60,7 @@ struct qinfo3{
       qsym sym;
       qbond qrow, qcol, qmid;
       std::vector<bool> dir;
-   public:
+      // --- derived --- 
       int _rows, _cols, _mids;
       size_t _size = 0;
       std::vector<dtensor3<Tm>> _qblocks;

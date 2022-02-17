@@ -1,5 +1,5 @@
-#ifndef TENSOR_QINFO2_H
-#define TENSOR_QINFO2_H
+#ifndef QINFO2_H
+#define QINFO2_H
 
 #include "../../core/serialization.h"
 #include "../../core/tools.h"
@@ -49,7 +49,7 @@ struct qinfo2{
       qsym sym; // <row|op[in]|col>
       qbond qrow, qcol;
       std::vector<bool> dir={1,0}; // {out,int} by usual convention for operators in diagrams 
-   public:
+      // --- derived --- 
       int _rows, _cols;
       size_t _size = 0;
       std::vector<dtensor2<Tm>> _qblocks;

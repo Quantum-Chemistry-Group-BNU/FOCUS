@@ -1,5 +1,5 @@
-#ifndef TENSOR_DTENSOR_H
-#define TENSOR_DTENSOR_H
+#ifndef DTENSOR_H
+#define DTENSOR_H
 
 #include <cassert>
 #include "../../core/serialization.h"
@@ -22,19 +22,18 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-	 ar & dim0 & dim1 & _off & _size;
+	 ar & dim0 & dim1 & _off;
       }
       int _addr(const int i0, const int i1) const{ 
 	 return _off+i0+dim0*i1; 
       }
    public:
       // --- GENERAL FUNCTIONS ---
-      dtensor2(): dim0(0), dim1(0), _off(0), _size(0), _data(nullptr) {}
+      dtensor2(){}
       void setup_dims(const int _dim0, const int _dim1, const size_t off){
 	 dim0 = _dim0;
 	 dim1 = _dim1; 
 	 _off = off;
-	 _size = dim0*dim1; 
       }
       void setup_data(Tm* data){ _data = data; }
       const Tm operator()(const int i0, const int i1) const{
@@ -47,11 +46,12 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
 	 assert(i1>=0 && i1<dim1);
 	 return _data[_addr(i0,i1)];
       } 
-      size_t size() const{ return _size; };
+      size_t size() const{ return dim0*dim1; };
       const Tm* data() const{ return _data+_off; }
       Tm* data(){ return _data+_off; }
       // in-place operation
       void conjugate(){
+	 size_t _size = this->size();
          std::transform(_data+_off, _data+_off+_size, _data+_off,
 			[](const Tm& x){ return tools::conjugate(x); });
       }
@@ -75,32 +75,15 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
 	 return mat;
       }
       linalg::matrix<Tm> time_reversal(const int pr, const int pc) const;
-/*
-      // Convention: matrix must be explicitly copied!
-      // assignment
-      dtensor2<Tm>& operator =(const linalg::matrix<Tm>& mat){
-         assert(dim0 == mat.rows() && dim1 == mat.cols());
-	 Tm* ptr = _data+_off;
-	 linalg::xcopy(_size, mat.data(), ptr);
-         return *this;
-      }
-      dtensor2<Tm>& operator +=(const linalg::matrix<Tm>& mat){
-         assert(dim0 == mat.rows() && dim1 == mat.cols());
-	 Tm* ptr = _data+_off;
-	 linalg::xaxpy(_size, 1.0, mat.data(), ptr);
-         return *this;
-      }
-*/
       // interface with xgemm, similar to linalg::matrix 
       int rows() const{ return dim0; }
       int cols() const{ return dim1; }
       const Tm* col(const int j) const{ return &_data[_addr(0,j)]; }; 
       Tm* col(const int j){ return &_data[_addr(0,j)]; }; 
    public:
-      int dim0, dim1;
-   private:   
-      size_t _off, _size;
-      Tm* _data;
+      int dim0=0, dim1=0;
+      size_t _off=0;
+      Tm* _data=nullptr;
 };
 
 // O[l,r,c]
@@ -111,20 +94,19 @@ struct dtensor3{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-	 ar & dim0 & dim1 & dim2 & _off & _size;
+	 ar & dim0 & dim1 & dim2 & _off;
       }
       int _addr(const int i0, const int i1, const int i2) const{ 
 	 return _off+i0+dim0*(i1+dim1*i2); 
       }
    public:
       // --- GENERAL FUNCTIONS ---
-      dtensor3(): dim0(0), dim1(0), dim2(0), _off(0), _size(0), _data(nullptr) {}
+      dtensor3(){}
       void setup_dims(const int _dim0, const int _dim1, const int _dim2, const size_t off){
 	 dim0 = _dim0;
 	 dim1 = _dim1;
 	 dim2 = _dim2;
 	 _off = off;
-	 _size = dim0*dim1*dim2;
       }
       void setup_data(Tm* data){ _data = data; }
       const Tm operator()(const int i0, const int i1, const int i2) const{
@@ -139,11 +121,12 @@ struct dtensor3{
 	 assert(i2>=0 && i2<dim2);
 	 return _data[_addr(i0,i1,i2)];
       }
-      size_t size() const{ return _size; };
+      size_t size() const{ return dim0*dim1*dim2; };
       const Tm* data() const{ return _data+_off; }
       Tm* data(){ return _data+_off; }
       // in-place operation
       void conjugate(){
+	 size_t _size = this->size();
          std::transform(_data+_off, _data+_off+_size, _data+_off,
 			[](const Tm& x){ return tools::conjugate(x); });
       }
@@ -170,10 +153,9 @@ struct dtensor3{
 	 } // i2
       }
    public:
-      int dim0, dim1, dim2;
-   private:
-      size_t _off, _size;
-      Tm* _data;
+      int dim0=0, dim1=0, dim2=0;
+      size_t _off=0;
+      Tm* _data=nullptr;
 };
 
 // O[l,r,c1,c2]
@@ -184,21 +166,20 @@ struct dtensor4{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-	 ar & dim0 & dim1 & dim2 & dim3 & _off & _size;
+	 ar & dim0 & dim1 & dim2 & dim3 & _off;
       }
       int _addr(const int i0, const int i1, const int i2, const int i3) const{ 
 	 return _off+i0+dim0*(i1+dim1*(i2+dim2*i3)); 
       }
    public:
       // --- GENERAL FUNCTIONS ---
-      dtensor4(): dim0(0), dim1(0), dim2(0), dim3(0), _off(0), _size(0), _data(nullptr) {}
+      dtensor4(){}
       void setup_dims(const int _dim0, const int _dim1, const int _dim2, const int _dim3, const size_t off){
 	 dim0 = _dim0;
 	 dim1 = _dim1;
 	 dim2 = _dim2;
 	 dim3 = _dim3;
 	 _off = off;
-	 _size = dim0*dim1*dim2*dim3;
       } 
       void setup_data(Tm* data){ _data = data; }
       const Tm operator()(const int i0, const int i1, const int i2, const int i3) const{
@@ -215,11 +196,12 @@ struct dtensor4{
 	 assert(i3>=0 && i3<dim3);
 	 return _data[_addr(i0,i1,i2,i3)];
       }
-      size_t size() const{ return _size; }
+      size_t size() const{ return dim0*dim1*dim2*dim3; }
       const Tm* data() const{ return _data+_off; }
       Tm* data(){ return _data+_off; }
       // in-place operation
       void conjugate(){
+         size_t _size = this->size();
          std::transform(_data+_off, _data+_off+_size, _data+_off,
 			[](const Tm& x){ return tools::conjugate(x); });
       }
@@ -260,10 +242,9 @@ struct dtensor4{
 	 } // i3
       }
    public:
-      int dim0, dim1, dim2, dim3;
-   private:
-      size_t _off, _size;
-      Tm* _data;
+      int dim0=0, dim1=0, dim2=0, dim3=0;
+      size_t _off=0;
+      Tm* _data=nullptr;
 };
 
 // 

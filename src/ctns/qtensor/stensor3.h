@@ -1,5 +1,5 @@
-#ifndef TENSOR_STENSOR3_H
-#define TENSOR_STENSOR3_H
+#ifndef STENSOR3_H
+#define STENSOR3_H
 
 #include "../../core/serialization.h"
 #include "../../core/matrix.h"

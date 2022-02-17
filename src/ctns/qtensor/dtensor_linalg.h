@@ -1,5 +1,5 @@
-#ifndef TENSOR_LINALG_H
-#define TENSOR_LINALG_H
+#ifndef DTENSOR_LINALG_H
+#define DTENSOR_LINALG_H
 
 #include "../../core/matrix.h"
 #include "../../core/linalg.h"

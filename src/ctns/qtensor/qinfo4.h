@@ -1,5 +1,5 @@
-#ifndef TENSOR_QINFO4_H
-#define TENSOR_QINFO4_H
+#ifndef QINFO4_H
+#define QINFO4_H
 
 #include "../../core/serialization.h"
 #include "../../core/tools.h"
@@ -48,7 +48,7 @@ struct qinfo4{
    public:
       qsym sym;
       qbond qrow, qcol, qmid, qver;
-   public:
+      // --- derived --- 
       int _rows, _cols, _mids, _vers;
       size_t _size = 0;
       std::vector<dtensor4<Tm>> _qblocks;
