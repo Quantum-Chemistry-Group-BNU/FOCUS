@@ -143,6 +143,11 @@ struct stensor2{
       bool dir_col() const{ return info.dir[1]; } 
       size_t size() const{ return info._size; }
       Tm* data() const{ return _data; }
+      // in-place operation
+      void conjugate(){
+         std::transform(_data, _data+info._size, _data,
+			[](const Tm& x){ return tools::conjugate(x); });
+      }
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }
       // access
@@ -326,19 +331,19 @@ template <typename Tm>
 stensor2<Tm> stensor2<Tm>::T() const{
    //std::cout << "stensor2: T()" << std::endl;
    stensor2<Tm> qt2(info.sym, info.qcol, info.qrow, {info.dir[1], info.dir[0]});
-   for(int br=0; br<qt2.rows(); br++){
-      for(int bc=0; bc<qt2.cols(); bc++){
-         auto& blk = qt2(br,bc);
-         if(blk.size() == 0) continue;
-	 const auto& blkt = (*this)(bc,br);
-	 // transpose
-	 for(int ic=0; ic<blk.dim1; ic++){
-	    for(int ir=0; ir<blk.dim0; ir++){
-	       blk(ir,ic) = blkt(ic,ir);
-	    } // ir
-	 } // ic
-      } // bc
-   } // br
+   int br, bc;
+   for(int i=0; i<qt2.info._nnzaddr.size(); i++){
+      int addr = qt2.info._nnzaddr[i];
+      qt2.info._addr_unpack(addr,br,bc);
+      auto& blk = qt2(br,bc);
+      // transpose
+      const auto& blkt = (*this)(bc,br);
+      for(int ic=0; ic<blk.dim1; ic++){
+         for(int ir=0; ir<blk.dim0; ir++){
+            blk(ir,ic) = blkt(ic,ir);
+         } // ir
+      } // ic
+   } // i
    return qt2; 
 }
 
@@ -350,19 +355,19 @@ stensor2<Tm> stensor2<Tm>::H() const{
    //std::cout << "stensor2: H()" << std::endl;
    // symmetry of operator get changed in consistency with line changes
    stensor2<Tm> qt2(-info.sym, info.qcol, info.qrow, info.dir);
-   for(int br=0; br<qt2.rows(); br++){
-      for(int bc=0; bc<qt2.cols(); bc++){
-         auto& blk = qt2(br,bc);
-         if(blk.size() == 0) continue;
-	 const auto& blkh = (*this)(bc,br);
-	 // transpose
-	 for(int ic=0; ic<blk.dim1; ic++){
-	    for(int ir=0; ir<blk.dim0; ir++){
-	       blk(ir,ic) = tools::conjugate(blkh(ic,ir));
-	    } // ir
-	 } // ic
-      } // bc
-   } // br
+   int br, bc;
+   for(int i=0; i<qt2.info._nnzaddr.size(); i++){
+      int addr = qt2.info._nnzaddr[i];
+      qt2.info._addr_unpack(addr,br,bc);
+      auto& blk = qt2(br,bc);
+      // conjugate transpose
+      const auto& blkh = (*this)(bc,br);
+      for(int ic=0; ic<blk.dim1; ic++){
+         for(int ir=0; ir<blk.dim0; ir++){
+	    blk(ir,ic) = tools::conjugate(blkh(ic,ir));
+	 } // ir
+      } // ic
+   } // i
    return qt2; 
 }
 
@@ -375,18 +380,19 @@ template <typename Tm>
 stensor2<Tm> stensor2<Tm>::K(const int nbar) const{
    const double fpo = (nbar%2==0)? 1.0 : -1.0;
    // the symmetry is flipped
-   stensor2<Tm> qt2(info.sym.flip(), info.qrow, info.qcol, info.dir); 
-   for(int br=0; br<qt2.rows(); br++){
-      for(int bc=0; bc<qt2.cols(); bc++){
-         auto& blk = qt2(br,bc);
-         if(blk.size() == 0) continue;
-	 const auto& blkk = (*this)(br,bc);
-	 int pr = info.qrow.get_parity(br);
-	 int pc = info.qcol.get_parity(bc);
-	 auto mat = blkk.time_reversal(pr, pc);
-	 linalg::xaxpy(blk.size(), fpo, mat.data(), blk.data());
-      } // bc
-   } // br
+   stensor2<Tm> qt2(info.sym.flip(), info.qrow, info.qcol, info.dir);
+   int br, bc;
+   for(int i=0; i<qt2.info._nnzaddr.size(); i++){
+      int addr = qt2.info._nnzaddr[i];
+      qt2.info._addr_unpack(addr,br,bc);
+      auto& blk = qt2(br,bc);
+      // kramers 
+      const auto& blkk = (*this)(br,bc);
+      int pr = info.qrow.get_parity(br);
+      int pc = info.qcol.get_parity(bc);
+      auto mat = blkk.time_reversal(pr, pc);
+      linalg::xaxpy(blk.size(), fpo, mat.data(), blk.data());
+   } // i
    return qt2; 
 }
 

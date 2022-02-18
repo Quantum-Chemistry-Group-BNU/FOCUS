@@ -140,6 +140,11 @@ struct stensor3{
       bool dir_mid() const{ return info.dir[2]; } 
       size_t size() const{ return info._size; }
       Tm* data() const{ return _data; }
+      // in-place operation
+      void conjugate(){
+         std::transform(_data, _data+info._size, _data,
+			[](const Tm& x){ return tools::conjugate(x); });
+      }
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }
       // access
@@ -270,10 +275,10 @@ stensor2<Tm> stensor3<Tm>::fix_mid(const std::pair<int,int> mdx) const{
 // wf[lcr](-1)^{p(c)}
 template <typename Tm>
 void stensor3<Tm>::mid_signed(const double fac){
-   int br,bc,bm;
-   for(int idx=0; idx<info._qblocks.size(); idx++){
+   int br, bc, bm;
+   for(int i=0; i<info._nnzaddr.size(); i++){
+      int idx = info._nnzaddr[i];
       auto& blk3 = info._qblocks[idx];
-      if(blk3.size() == 0) continue;
       info._addr_unpack(idx,br,bc,bm);
       double fac2 = (info.qmid.get_parity(bm)==0)? fac : -fac;
       linalg::xscal(blk3.size(), fac2, blk3.data());  
@@ -283,10 +288,10 @@ void stensor3<Tm>::mid_signed(const double fac){
 // wf[lcr](-1)^{p(l)}
 template <typename Tm>
 void stensor3<Tm>::row_signed(const double fac){
-   int br,bc,bm;
-   for(int idx=0; idx<info._qblocks.size(); idx++){
+   int br, bc, bm;
+   for(int i=0; i<info._nnzaddr.size(); i++){
+      int idx = info._nnzaddr[i];
       auto& blk3 = info._qblocks[idx];
-      if(blk3.size() == 0) continue;
       info._addr_unpack(idx,br,bc,bm);
       double fac2 = (info.qrow.get_parity(br)==0)? fac : -fac;
       linalg::xscal(blk3.size(), fac2, blk3.data());  
@@ -295,29 +300,25 @@ void stensor3<Tm>::row_signed(const double fac){
 
 template <typename Tm>
 void stensor3<Tm>::cntr_signed(const std::string block){
-   int br,bc,bm;
+   int br, bc, bm;
    if(block == "r"){
-      for(int idx=0; idx<info._qblocks.size(); idx++){
+      for(int i=0; i<info._nnzaddr.size(); i++){
+         int idx = info._nnzaddr[i];
          auto& blk3 = info._qblocks[idx];
-         if(blk3.size() == 0) continue;
          info._addr_unpack(idx,br,bc,bm);
 	 // (-1)^{p(l)+p(c)}wf[l,c,r]
 	 int pt = info.qrow.get_parity(br) 
 	        + info.qmid.get_parity(bm);
-	 if(pt%2 == 1){
-            linalg::xscal(blk3.size(), -1.0, blk3.data());
-	 } 
+	 if(pt%2 == 1) linalg::xscal(blk3.size(), -1.0, blk3.data());
       } // idx
    }else if(block == "c"){
-      for(int idx=0; idx<info._qblocks.size(); idx++){
+      for(int i=0; i<info._nnzaddr.size(); i++){
+         int idx = info._nnzaddr[i];
          auto& blk3 = info._qblocks[idx];
-         if(blk3.size() == 0) continue;
          info._addr_unpack(idx,br,bc,bm);
 	 // (-1)^{p(l)}wf[l,c,r]
 	 int pt = info.qrow.get_parity(br);
-         if(pt%2 == 1){
-	    linalg::xscal(blk3.size(), -1.0, blk3.data());
-	 }
+         if(pt%2 == 1) linalg::xscal(blk3.size(), -1.0, blk3.data());
       } // idx
    } // block
 }
@@ -327,10 +328,10 @@ void stensor3<Tm>::cntr_signed(const std::string block){
 // which is later used for wf3[l,c,r] <-> wf2[lr,c] (merge_lr)
 template <typename Tm>
 void stensor3<Tm>::permCR_signed(){
-   int br,bc,bm;
-   for(int idx=0; idx<info._qblocks.size(); idx++){
+   int br, bc, bm;
+   for(int i=0; i<info._nnzaddr.size(); i++){
+      int idx = info._nnzaddr[i];
       auto& blk3 = info._qblocks[idx];
-      if(blk3.size() == 0) continue;
       info._addr_unpack(idx,br,bc,bm);
       if(info.qmid.get_parity(bm)*info.qcol.get_parity(bc) == 1){
          linalg::xscal(blk3.size(), -1.0, blk3.data());
@@ -343,12 +344,13 @@ stensor3<Tm> stensor3<Tm>::K(const int nbar) const{
    const double fpo = (nbar%2==0)? 1.0 : -1.0;
    // the symmetry is flipped
    stensor3<Tm> qt3(info.sym.flip(), info.qrow, info.qcol, info.qmid, info.dir);
-   int br,bc,bm;
-   for(int idx=0; idx<info._qblocks.size(); idx++){
+   int br, bc, bm;
+   for(int i=0; i<info._nnzaddr.size(); i++){
+      int idx = info._nnzaddr[i];
       auto& blk = qt3.info._qblocks[idx];
-      if(blk.size() == 0) continue;
-      const auto& blkk = info._qblocks[idx];
       info._addr_unpack(idx,br,bc,bm);
+      // kramers
+      const auto& blkk = info._qblocks[idx];
       int pr = info.qrow.get_parity(br);
       int pc = info.qcol.get_parity(bc);
       int pm = info.qmid.get_parity(bm);

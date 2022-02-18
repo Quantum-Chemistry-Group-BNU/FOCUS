@@ -54,28 +54,26 @@ void onedot_Hdiag_local(const oper_dict<Tm>& lqops,
    const auto& Hr = rqops('H').at(0);
    const auto& Hc = cqops('H').at(0);
    // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-	 int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-	    int mdim = wf.info.qmid.get_dim(bm);
-            auto& blk = wf(br,bc,bm);
-	    if(blk.size() == 0) continue;
-	    // 1. local contributions: all four indices in c/l/r
-	    const auto& lblk = Hl(br,br); // left->row 
-	    const auto& rblk = Hr(bc,bc); // row->col
-	    const auto& cblk = Hc(bm,bm); // central->mid 
-            for(int im=0; im<mdim; im++){
-               for(int ic=0; ic<cdim; ic++){
-                  for(int ir=0; ir<rdim; ir++){
-                     blk(ir,ic,im) = ecore + lblk(ir,ir) + rblk(ic,ic) + cblk(im,im);
-                  } // ir
-               } // ic
-            } // im
-	 } // bc
-      } // br
-   } // bm
+   int br, bc, bm;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm);
+      auto& blk = wf(br,bc,bm);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      // 1. local contributions: all four indices in c/l/r
+      const auto& lblk = Hl(br,br); // left->row 
+      const auto& rblk = Hr(bc,bc); // row->col
+      const auto& cblk = Hc(bm,bm); // central->mid 
+      for(int im=0; im<mdim; im++){
+         for(int ic=0; ic<cdim; ic++){
+            for(int ir=0; ir<rdim; ir++){
+               blk(ir,ic,im) = ecore + lblk(ir,ir) + rblk(ic,ic) + cblk(im,im);
+            } // ir
+         } // ic
+      } // im
+   } // i
 }
 
 template <typename Tm>
@@ -127,26 +125,25 @@ void onedot_Hdiag_OlOc(const stensor2<Tm>& Ol,
 		       const stensor2<Tm>& Oc,
 		       stensor3<Tm>& wf,
 		       const Tm wt=1.0){
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-         int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-            int mdim = wf.info.qmid.get_dim(bm);
-            auto& blk = wf(br,bc,bm);
-            if(blk.size() == 0) continue;
-            const auto& lblk = Ol(br,br);
-            const auto& cblk = Oc(bm,bm);
-            for(int im=0; im<mdim; im++){
-               for(int ic=0; ic<cdim; ic++){
-                  for(int ir=0; ir<rdim; ir++){
-                     blk(ir,ic,im) += wt*lblk(ir,ir)*cblk(im,im);
-                  } // ir
-               } // ic
-            } // im
-         } // bm
-      } // bc
-   } // br
+   int br, bc, bm;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm);
+      auto& blk = wf(br,bc,bm);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      // Ol*Or 
+      const auto& lblk = Ol(br,br);
+      const auto& cblk = Oc(bm,bm);
+      for(int im=0; im<mdim; im++){
+         for(int ic=0; ic<cdim; ic++){
+            for(int ir=0; ir<rdim; ir++){
+               blk(ir,ic,im) += wt*lblk(ir,ir)*cblk(im,im);
+            } // ir
+         } // ic
+      } // im
+   } // i
 }
 
 // Ol*Ic*Or
@@ -155,26 +152,25 @@ void onedot_Hdiag_OlOr(const stensor2<Tm>& Ol,
 		       const stensor2<Tm>& Or,
 		       stensor3<Tm>& wf,
 		       const Tm wt=1.0){
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-         int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-            int mdim = wf.info.qmid.get_dim(bm);
-            auto& blk = wf(br,bc,bm);
-            if(blk.size() == 0) continue;
-            const auto& lblk = Ol(br,br);
-            const auto& rblk = Or(bc,bc);
-            for(int im=0; im<mdim; im++){
-               for(int ic=0; ic<cdim; ic++){
-                  for(int ir=0; ir<rdim; ir++){
-                     blk(ir,ic,im) += wt*lblk(ir,ir)*rblk(ic,ic);
-                  } // ir
-               } // ic
-            } // im
-         } // bm
-      } // bc
-   } // br
+   int br, bc, bm;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm);
+      auto& blk = wf(br,bc,bm);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      // Ol*Or
+      const auto& lblk = Ol(br,br);
+      const auto& rblk = Or(bc,bc);
+      for(int im=0; im<mdim; im++){
+         for(int ic=0; ic<cdim; ic++){
+            for(int ir=0; ir<rdim; ir++){
+               blk(ir,ic,im) += wt*lblk(ir,ir)*rblk(ic,ic);
+            } // ir
+         } // ic
+      } // im
+   } // i
 }
 
 // Il*Oc*Or
@@ -183,26 +179,25 @@ void onedot_Hdiag_OcOr(const stensor2<Tm>& Oc,
 		       const stensor2<Tm>& Or,
 		       stensor3<Tm>& wf,
 		       const Tm wt=1.0){
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-         int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-            auto& blk = wf(br,bc,bm);
-            if(blk.size() == 0) continue;
-            int mdim = wf.info.qmid.get_dim(bm);
-            const auto& cblk = Oc(bm,bm);
-            const auto& rblk = Or(bc,bc);
-            for(int im=0; im<mdim; im++){
-               for(int ic=0; ic<cdim; ic++){
-                  for(int ir=0; ir<rdim; ir++){
-                     blk(ir,ic,im) += wt*cblk(im,im)*rblk(ic,ic);
-                  } // r
-               } // c
-            } // m
-         } // bm
-      } // bc
-   } // br
+   int br, bc, bm;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm);
+      auto& blk = wf(br,bc,bm);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      // Oc*Or
+      const auto& cblk = Oc(bm,bm);
+      const auto& rblk = Or(bc,bc);
+      for(int im=0; im<mdim; im++){
+         for(int ic=0; ic<cdim; ic++){
+            for(int ir=0; ir<rdim; ir++){
+               blk(ir,ic,im) += wt*cblk(im,im)*rblk(ic,ic);
+            } // ir
+         } // ic
+      } // im
+   } // i
 }
 
 } // ctns

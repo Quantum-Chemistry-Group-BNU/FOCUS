@@ -146,6 +146,11 @@ struct stensor4{
       bool dir_ver() const{ return true; } 
       size_t size() const{ return info._size; }
       Tm* data() const{ return _data; }
+      // in-place operation
+      void conjugate(){
+         std::transform(_data, _data+info._size, _data,
+			[](const Tm& x){ return tools::conjugate(x); });
+      }
       // print
       void print(const std::string name, const int level=0) const{ info.print(name,level); }
       // access
@@ -244,42 +249,36 @@ struct stensor4{
 // wf[lc1c2r] = wf(row,col,mid,ver)
 template <typename Tm>
 void stensor4<Tm>::cntr_signed(const std::string block){
-   int br,bc,bm,bv;
+   int br, bc, bm, bv;
    if(block == "r"){
-      for(int idx=0; idx<info._qblocks.size(); idx++){
+      for(int i=0; i<info._nnzaddr.size(); i++){
+         int idx = info._nnzaddr[i];
          auto& blk4 = info._qblocks[idx];
-         if(blk4.size() == 0) continue;
          info._addr_unpack(idx,br,bc,bm,bv);
 	 // (-1)^{p(l)+p(c1)+p(c2)}wf[lc1c2r]
 	 int pt = info.qrow.get_parity(br)
 		+ info.qmid.get_parity(bm)
 		+ info.qver.get_parity(bv);
-         if(pt%2 == 1){
-            linalg::xscal(blk4.size(), -1.0, blk4.data());
-	 }
+         if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
       } // idx
    }else if(block == "c2"){
-      for(int idx=0; idx<info._qblocks.size(); idx++){
+      for(int i=0; i<info._nnzaddr.size(); i++){
+         int idx = info._nnzaddr[i];
          auto& blk4 = info._qblocks[idx];
-         if(blk4.size() == 0) continue;
          info._addr_unpack(idx,br,bc,bm,bv);
 	 // (-1)^{p(l)+p(c1)}wf[lc1c2r]
 	 int pt = info.qrow.get_parity(br)
 		+ info.qmid.get_parity(bm);
-         if(pt%2 == 1){
-            linalg::xscal(blk4.size(), -1.0, blk4.data());
-	 }
+         if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
       } // idx
    }else if(block == "c1"){
-      for(int idx=0; idx<info._qblocks.size(); idx++){
+      for(int i=0; i<info._nnzaddr.size(); i++){
+         int idx = info._nnzaddr[i];
          auto& blk4 = info._qblocks[idx];
-         if(blk4.size() == 0) continue;
          info._addr_unpack(idx,br,bc,bm,bv);
 	 // (-1)^{p(l)}wf[lc1c2r]
 	 int pt = info.qrow.get_parity(br);
-         if(pt%2 == 1){
-            linalg::xscal(blk4.size(), -1.0, blk4.data());
-	 }
+         if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
       } // idx
    } // block 
 }
@@ -287,10 +286,10 @@ void stensor4<Tm>::cntr_signed(const std::string block){
 // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}
 template <typename Tm>
 void stensor4<Tm>::permCR_signed(){
-   int br,bc,bm,bv;
-   for(int idx=0; idx<info._qblocks.size(); idx++){
+   int br, bc, bm, bv;
+   for(int i=0; i<info._nnzaddr.size(); i++){
+      int idx = info._nnzaddr[i];
       auto& blk4 = info._qblocks[idx];
-      if(blk4.size() == 0) continue;
       info._addr_unpack(idx,br,bc,bm,bv);
       if((info.qmid.get_parity(bm)+info.qver.get_parity(bv))*info.qcol.get_parity(bc) == 1){
          linalg::xscal(blk4.size(), -1.0, blk4.data());
@@ -303,12 +302,13 @@ template <typename Tm>
 stensor4<Tm> stensor4<Tm>::K(const int nbar) const{
    const double fpo = (nbar%2==0)? 1.0 : -1.0;
    stensor4<Tm> qt4(info.sym.flip(), info.qrow, info.qcol, info.qmid, info.qver);
-   int br,bc,bm,bv;
-   for(int idx=0; idx<info._qblocks.size(); idx++){
+   int br, bc, bm, bv;
+   for(int i=0; i<info._nnzaddr.size(); i++){
+      int idx = info._nnzaddr[i];
       auto& blk = qt4.info._qblocks[idx];
-      if(blk.size() == 0) continue;
-      const auto& blkk = info._qblocks[idx];
       info._addr_unpack(idx,br,bc,bm,bv);
+      // kramers 
+      const auto& blkk = info._qblocks[idx];
       int pr = info.qrow.get_parity(br);
       int pc = info.qcol.get_parity(bc);
       int pm = info.qmid.get_parity(bm);

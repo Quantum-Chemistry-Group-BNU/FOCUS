@@ -34,23 +34,21 @@ stensor2<Tm> contract_qt3_qt3_lc(const stensor3<Tm>& qt3a,
    assert(qt3a.info.qmid == qt3b.info.qmid);
    qsym sym = -qt3a.info.sym + qt3b.info.sym;
    stensor2<Tm> qt2(sym, qt3a.info.qcol, qt3b.info.qcol); 
-   // loop over external indices
-   for(int br=0; br<qt2.rows(); br++){
+   // loop over qt3a
+   int bx, br, bm;
+   for(int i=0; i<qt3a.info._nnzaddr.size(); i++){
+      int idx = qt3a.info._nnzaddr[i];
+      qt3a.info._addr_unpack(idx,bx,br,bm);
+      const auto& blk3a = qt3a(bx,br,bm);
+      // loop over bc
       for(int bc=0; bc<qt2.cols(); bc++){
-	 auto& blk2 = qt2(br,bc);
-	 if(blk2.size() == 0) continue;
-	 // loop over contracted indices
-	 for(int bx=0; bx<qt3a.rows(); bx++){
-            for(int bm=0; bm<qt3a.mids(); bm++){
-	       const auto& blk3a = qt3a(bx,br,bm);
-	       const auto& blk3b = qt3b(bx,bc,bm);
-	       if(blk3a.size() == 0 || blk3b.size() == 0) continue;
-	       int mdim = qt3a.info.qmid.get_dim(bm);
-               for(int im=0; im<mdim; im++){
-		  xgemm("C","N",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
-	       } // im
-	    } // bm
-	 } // bx
+         const auto& blk3b = qt3b(bx,bc,bm);
+         auto& blk2 = qt2(br,bc);
+         if(blk3b.size() == 0 || blk2.size() == 0) continue;
+         int mdim = blk3a.dim2;
+         for(int im=0; im<mdim; im++){
+            xgemm("C","N",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
+         } // im
       } // bc
    } // br
    return qt2;
@@ -67,26 +65,24 @@ stensor2<Tm> contract_qt3_qt3_cr(const stensor3<Tm>& qt3a,
    assert(qt3a.info.qcol == qt3b.info.qcol);
    qsym sym = -qt3a.info.sym + qt3b.info.sym;
    stensor2<Tm> qt2(sym, qt3a.info.qrow, qt3b.info.qrow);
-   // loop over external indices
-   for(int br=0; br<qt2.rows(); br++){
+   // loop over qt3a
+   int br, bx, bm;
+   for(int i=0; i<qt3a.info._nnzaddr.size(); i++){
+      int idx = qt3a.info._nnzaddr[i];
+      qt3a.info._addr_unpack(idx,br,bx,bm);
+      const auto& blk3a = qt3a(br,bx,bm);
+      // loop over bc
       for(int bc=0; bc<qt2.cols(); bc++){
+	 const auto& blk3b = qt3b(bc,bx,bm);
          auto& blk2 = qt2(br,bc);
-	 if(blk2.size() == 0) continue;
-	 // loop over contracted indices
-	 for(int bx=0; bx<qt3a.cols(); bx++){
-	    for(int bm=0; bm<qt3a.mids(); bm++){
-	       const auto& blk3a = qt3a(br,bx,bm);
-	       const auto& blk3b = qt3b(bc,bx,bm);
-	       if(blk3a.size() == 0 || blk3b.size() == 0) continue;
-	       int mdim = qt3a.info.qmid.get_dim(bm);
-	       for(int im=0; im<mdim; im++){
-		  xgemm("N","C",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
-	       } // im	       
-	    } // bm
-	 } // bx
-	 blk2.conjugate();
+	 if(blk3b.size() == 0 || blk2.size() == 0) continue;
+	 int mdim = blk3a.dim2;
+	 for(int im=0; im<mdim; im++){
+	    xgemm("N","C",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
+	 } // im	       
       } // bc
-   } // br
+   } // i
+   qt2.conjugate();
    return qt2;
 }
 
@@ -103,29 +99,27 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
    assert(qt3a.info.qcol == qt3b.info.qcol);
    qsym sym = -qt3a.info.sym + qt3b.info.sym;
    stensor2<Tm> qt2(sym, qt3a.info.qmid, qt3b.info.qmid);
-   // loop over contracted indices
-   for(int bx=0; bx<qt3a.rows(); bx++){
-      for(int by=0; by<qt3a.cols(); by++){
-         // loop over external indices
-         for(int br=0; br<qt2.rows(); br++){
-	    const auto& blk3a = qt3a(bx,by,br);
-	    if(blk3a.size() == 0) continue;
-            for(int bc=0; bc<qt2.cols(); bc++){
-               auto& blk2 = qt2(br,bc);
-	       const auto& blk3b = qt3b(bx,by,bc);
-	       if(blk2.size() == 0 || blk3b.size() == 0) continue;
-	       int cdim = qt2.info.qcol.get_dim(bc);
-	       int rdim = qt2.info.qrow.get_dim(br);
-	       for(int ic=0; ic<cdim; ic++){
-                  for(int ir=0; ir<rdim; ir++){
-		     auto tmp = xgemm("N","C",blk3a.get(ir),blk3b.get(ic));
-		     blk2(ir,ic) += tools::conjugate(tmp.trace());
-		  } // ir 
-	       } // ic
-            } // bc
-         } // br
-      } // by
-   } // bx
+   // loop over qt3a
+   int bx, by, br;
+   for(int i=0; i<qt3a.info._nnzaddr.size(); i++){
+      int idx = qt3a.info._nnzaddr[i];
+      qt3a.info._addr_unpack(idx,bx,by,br);
+      const auto& blk3a = qt3a(bx,by,br);
+      // loop over bc
+      for(int bc=0; bc<qt2.cols(); bc++){
+	 const auto& blk3b = qt3b(bx,by,bc);
+         auto& blk2 = qt2(br,bc);
+         if(blk3b.size() == 0 || blk2.size() == 0) continue;
+	 int rdim = blk2.dim0;
+	 int cdim = blk2.dim1;
+	 for(int ic=0; ic<cdim; ic++){
+            for(int ir=0; ir<rdim; ir++){
+	       auto tmp = xgemm("N","C",blk3a.get(ir),blk3b.get(ic));
+	       blk2(ir,ic) += tools::conjugate(tmp.trace());
+	    } // ir 
+	 } // ic
+      } // bc
+   } // i
    return qt2;
 }
 

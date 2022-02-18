@@ -198,7 +198,7 @@ struct dtensor4{
       }
       size_t size() const{ return dim0*dim1*dim2*dim3; }
       const Tm* data() const{ return _data+_off; }
-      Tm* data(){ return _data+_off; }
+      Tm* data() { return _data+_off; }
       // in-place operation
       void conjugate(){
          size_t _size = this->size();

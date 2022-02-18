@@ -37,24 +37,22 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
    std::vector<bool> dir = {qt2b.dir_row(), qt3a.dir_col(), qt3a.dir_mid()};
    stensor3<Tm> qt3(sym, qt2b.info.qrow, qt3a.info.qcol, qt3a.info.qmid, dir);
    // loop over external indices
-   for(int br=0; br<qt3.rows(); br++){
-      for(int bc=0; bc<qt3.cols(); bc++){
-         for(int bm=0; bm<qt3.mids(); bm++){
-	    auto& blk3 = qt3(br,bc,bm);
-	    if(blk3.size() == 0) continue;
-	    // loop over contracted indices
-	    for(int bx=0; bx<qt3a.rows(); bx++){
-	       const auto& blk3a = qt3a(bx,bc,bm);
-	       const auto& blk2b = qt2b(br,bx);
-	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
-	       int mdim = qt3.info.qmid.get_dim(bm);
-	       for(int im=0; im<mdim; im++){
-		  xgemm("N","N",1.0,blk2b,blk3a.get(im),1.0,blk3.get(im));
-	       } // im
-	    } // bx
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm;
+   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+      int idx = qt3.info._nnzaddr[i];
+      qt3.info._addr_unpack(idx,br,bc,bm);
+      auto& blk3 = qt3(br,bc,bm);
+      // loop over contracted indices
+      for(int bx=0; bx<qt3a.rows(); bx++){
+         const auto& blk3a = qt3a(bx,bc,bm);
+	 const auto& blk2b = qt2b(br,bx);
+	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+	 int mdim = qt3.info.qmid.get_dim(bm);
+	 for(int im=0; im<mdim; im++){
+            xgemm("N","N",1.0,blk2b,blk3a.get(im),1.0,blk3.get(im));
+	 } // im
+      } // bx
+   } // i
    return qt3;
 }
 
@@ -70,24 +68,22 @@ stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a,
    std::vector<bool> dir = {qt3a.dir_row(), qt2b.dir_row(), qt3a.dir_mid()};
    stensor3<Tm> qt3(sym, qt3a.info.qrow, qt2b.info.qrow, qt3a.info.qmid, dir);
    // loop over external indices
-   for(int br=0; br<qt3.rows(); br++){
-      for(int bc=0; bc<qt3.cols(); bc++){
-         for(int bm=0; bm<qt3.mids(); bm++){
-	    auto& blk3 = qt3(br,bc,bm);
-	    if(blk3.size() == 0) continue;
-	    // loop over contracted indices
-	    for(int bx=0; bx<qt3a.cols(); bx++){
-	       const auto& blk3a = qt3a(br,bx,bm);
-	       const auto& blk2b = qt2b(bc,bx);
-	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
-	       int mdim = qt3.info.qmid.get_dim(bm);
-	       for(int im=0; im<mdim; im++){
-		  xgemm("N","T",1.0,blk3a.get(im),blk2b,1.0,blk3.get(im));
-	       } // im
-	    } // bx
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm;
+   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+      int idx = qt3.info._nnzaddr[i];
+      qt3.info._addr_unpack(idx,br,bc,bm);
+      auto& blk3 = qt3(br,bc,bm);
+      // loop over contracted indices
+      for(int bx=0; bx<qt3a.cols(); bx++){
+	 const auto& blk3a = qt3a(br,bx,bm);
+	 const auto& blk2b = qt2b(bc,bx);
+	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+         int mdim = qt3.info.qmid.get_dim(bm);
+         for(int im=0; im<mdim; im++){
+            xgemm("N","T",1.0,blk3a.get(im),blk2b,1.0,blk3.get(im));
+         } // im
+      } // bx
+   } // i
    return qt3;
 }
 
@@ -104,28 +100,26 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
    std::vector<bool> dir = {qt3a.dir_row(), qt3a.dir_col(), qt2b.dir_row()};
    stensor3<Tm> qt3(sym, qt3a.info.qrow, qt3a.info.qcol, qt2b.info.qrow, dir);
    // loop over external indices
-   for(int br=0; br<qt3.rows(); br++){
-      for(int bc=0; bc<qt3.cols(); bc++){
-         for(int bm=0; bm<qt3.mids(); bm++){
-	    auto& blk3 = qt3(br,bc,bm);
-	    if(blk3.size() == 0) continue;
-	    // loop over contracted indices
-	    for(int bx=0; bx<qt3a.mids(); bx++){
-	       const auto& blk3a = qt3a(br,bc,bx);
-	       const auto& blk2b = qt2b(bm,bx);
-	       if(blk3a.size() == 0 || blk2b.size() == 0) continue;
-	       int N = blk3.dim0*blk3.dim1;
-	       int xdim = qt3a.info.qmid.get_dim(bx);
-	       int mdim = qt3.info.qmid.get_dim(bm);
-	       for(int ix=0; ix<xdim; ix++){
-	          for(int im=0; im<mdim; im++){
-		     linalg::xaxpy(N, blk2b(im,ix), blk3a.get(ix).data(), blk3.get(im).data());
-	          } // im
-	       } // ix 
-	    } // bx
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm;
+   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+      int idx = qt3.info._nnzaddr[i];
+      qt3.info._addr_unpack(idx,br,bc,bm);
+      auto& blk3 = qt3(br,bc,bm);
+      // loop over contracted indices
+      for(int bx=0; bx<qt3a.mids(); bx++){
+         const auto& blk3a = qt3a(br,bc,bx);
+	 const auto& blk2b = qt2b(bm,bx);
+	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+	 int N = blk3.dim0*blk3.dim1;
+	 int xdim = qt3a.info.qmid.get_dim(bx);
+	 int mdim = qt3.info.qmid.get_dim(bm);
+	 for(int ix=0; ix<xdim; ix++){
+	    for(int im=0; im<mdim; im++){
+	       linalg::xaxpy(N, blk2b(im,ix), blk3a.get(ix).data(), blk3.get(im).data());
+	    } // im
+	 } // ix 
+      } // bx
+   } // i
    return qt3;
 }
 

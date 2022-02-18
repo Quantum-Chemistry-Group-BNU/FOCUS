@@ -39,29 +39,25 @@ stensor4<Tm> contract_qt4_qt2_l(const stensor4<Tm>& qt4a,
    stensor4<Tm> qt4(sym, qt2b.info.qrow, qt4a.info.qcol, 
 		    qt4a.info.qmid, qt4a.info.qver);
    // loop over external indices
-   for(int br=0; br<qt4.rows(); br++){
-      for(int bc=0; bc<qt4.cols(); bc++){
-         for(int bm=0; bm<qt4.mids(); bm++){
- 	    for(int bv=0; bv<qt4.vers(); bv++){
-  	       auto& blk4 = qt4(br,bc,bm,bv);
-  	       if(blk4.size() == 0) continue;
-	       // loop over contracted indices
-  	       for(int bx=0; bx<qt4a.rows(); bx++){
-  	          const auto& blk4a = qt4a(bx,bc,bm,bv);
-  	          const auto& blk2b = qt2b(br,bx);
-  	          if(blk4a.size() == 0 || blk2b.size() == 0) continue;
-  	          int mdim = qt4.info.qmid.get_dim(bm);
-  	          int vdim = qt4.info.qver.get_dim(bv);
-  	          for(int iv=0; iv<vdim; iv++){
-  	             for(int im=0; im<mdim; im++){
-  	                xgemm("N","N",1.0,blk2b,blk4a.get(im,iv),1.0,blk4.get(im,iv));
-  	             } // im
-		  } // iv
-  	       } // bx
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<qt4.info._nnzaddr.size(); i++){
+      int idx = qt4.info._nnzaddr[i];
+      qt4.info._addr_unpack(idx,br,bc,bm,bv);
+      auto& blk4 = qt4(br,bc,bm,bv);
+      // loop over contracted indices
+      for(int bx=0; bx<qt4a.rows(); bx++){
+         const auto& blk4a = qt4a(bx,bc,bm,bv);
+         const auto& blk2b = qt2b(br,bx);
+         if(blk4a.size() == 0 || blk2b.size() == 0) continue;
+         int mdim = qt4.info.qmid.get_dim(bm);
+         int vdim = qt4.info.qver.get_dim(bv);
+         for(int iv=0; iv<vdim; iv++){
+            for(int im=0; im<mdim; im++){
+               xgemm("N","N",1.0,blk2b,blk4a.get(im,iv),1.0,blk4.get(im,iv));
+            } // im
+         } // iv
+      } // bx
+   } // i 
    return qt4;
 }
 
@@ -77,30 +73,26 @@ stensor4<Tm> contract_qt4_qt2_r(const stensor4<Tm>& qt4a,
    stensor4<Tm> qt4(sym, qt4a.info.qrow, qt2b.info.qrow, 
 		    qt4a.info.qmid, qt4a.info.qver);
    // loop over external indices
-   for(int br=0; br<qt4.rows(); br++){
-      for(int bc=0; bc<qt4.cols(); bc++){
-         for(int bm=0; bm<qt4.mids(); bm++){
- 	    for(int bv=0; bv<qt4.vers(); bv++){
-  	       auto& blk4 = qt4(br,bc,bm,bv);
-  	       if(blk4.size() == 0) continue;
-	       // loop over contracted indices
-	       for(int bx=0; bx<qt4a.cols(); bx++){
-	          const auto& blk4a = qt4a(br,bx,bm,bv);
-	          const auto& blk2b = qt2b(bc,bx);
-	          if(blk4a.size() == 0 || blk2b.size() == 0) continue;
-		  // sigma(r,c,m,v) = op(c,x)*wf(r,x,m,v)
-	          int mdim = qt4.info.qmid.get_dim(bm);
-  	          int vdim = qt4.info.qver.get_dim(bv);
-  	          for(int iv=0; iv<vdim; iv++){
-	             for(int im=0; im<mdim; im++){
-	                xgemm("N","T",1.0,blk4a.get(im,iv),blk2b,1.0,blk4.get(im,iv));
-	             } // im
-		  } // iv
-	       } // bx
-  	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<qt4.info._nnzaddr.size(); i++){
+      int idx = qt4.info._nnzaddr[i];
+      qt4.info._addr_unpack(idx,br,bc,bm,bv);
+      auto& blk4 = qt4(br,bc,bm,bv);
+      // loop over contracted indices
+      for(int bx=0; bx<qt4a.cols(); bx++){
+         const auto& blk4a = qt4a(br,bx,bm,bv);
+         const auto& blk2b = qt2b(bc,bx);
+         if(blk4a.size() == 0 || blk2b.size() == 0) continue;
+         // sigma(r,c,m,v) = op(c,x)*wf(r,x,m,v)
+         int mdim = qt4.info.qmid.get_dim(bm);
+         int vdim = qt4.info.qver.get_dim(bv);
+         for(int iv=0; iv<vdim; iv++){
+            for(int im=0; im<mdim; im++){
+               xgemm("N","T",1.0,blk4a.get(im,iv),blk2b,1.0,blk4.get(im,iv));
+            } // im
+         } // iv
+      } // bx
+   } // i
    return qt4;
 }
 
@@ -118,34 +110,31 @@ stensor4<Tm> contract_qt4_qt2_c1(const stensor4<Tm>& qt4a,
    stensor4<Tm> qt4(sym, qt4a.info.qrow, qt4a.info.qcol, 
 		    qt2b.info.qrow, qt4a.info.qver);
    // loop over external indices
-   for(int br=0; br<qt4.rows(); br++){
-      for(int bc=0; bc<qt4.cols(); bc++){
-         for(int bm=0; bm<qt4.mids(); bm++){
-	    for(int bv=0; bv<qt4.vers(); bv++){
-	       auto& blk4 = qt4(br,bc,bm,bv);
-	       if(blk4.size() == 0) continue;
-	       // loop over contracted indices
-	       for(int bx=0; bx<qt4a.mids(); bx++){
-	          const auto& blk4a = qt4a(br,bc,bx,bv);
-	          const auto& blk2b = qt2b(bm,bx);
-	          if(blk4a.size() == 0 || blk2b.size() == 0) continue;
-                  // sigma(rc,m,v) = op(m,x)*wf(rc,x,v)
-	          int N = blk4.dim0*blk4.dim1;
-	          int xdim = qt4a.info.qmid.get_dim(bx);
-	          int mdim = qt4.info.qmid.get_dim(bm);
-  	          int vdim = qt4.info.qver.get_dim(bv);
-  	          for(int iv=0; iv<vdim; iv++){
-	             for(int ix=0; ix<xdim; ix++){
-	                for(int im=0; im<mdim; im++){
-	                   linalg::xaxpy(N, blk2b(im,ix), blk4a.get(ix,iv).data(), blk4.get(im,iv).data());
-	                } // im
-		     } // ix
-	          } // iv
-	       } // bx
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<qt4.info._nnzaddr.size(); i++){
+      int idx = qt4.info._nnzaddr[i];
+      qt4.info._addr_unpack(idx,br,bc,bm,bv);
+      auto& blk4 = qt4(br,bc,bm,bv);
+      // loop over contracted indices
+      for(int bx=0; bx<qt4a.mids(); bx++){
+         const auto& blk4a = qt4a(br,bc,bx,bv);
+         const auto& blk2b = qt2b(bm,bx);
+         if(blk4a.size() == 0 || blk2b.size() == 0) continue;
+         // sigma(rc,m,v) = op(m,x)*wf(rc,x,v)
+         int N = blk4.dim0*blk4.dim1;
+         int xdim = qt4a.info.qmid.get_dim(bx);
+         int mdim = qt4.info.qmid.get_dim(bm);
+         int vdim = qt4.info.qver.get_dim(bv);
+         for(int iv=0; iv<vdim; iv++){
+            for(int ix=0; ix<xdim; ix++){
+               for(int im=0; im<mdim; im++){
+                  linalg::xaxpy(N, blk2b(im,ix), blk4a.get(ix,iv).data(), 
+			        blk4.get(im,iv).data());
+               } // im
+            } // ix
+         } // iv
+      } // bx
+   } // i
    return qt4;
 }
 
@@ -163,31 +152,28 @@ stensor4<Tm> contract_qt4_qt2_c2(const stensor4<Tm>& qt4a,
    stensor4<Tm> qt4(sym, qt4a.info.qrow, qt4a.info.qcol, 
 		    qt4a.info.qmid, qt2b.info.qrow);
    // loop over external indices
-   for(int br=0; br<qt4.rows(); br++){
-      for(int bc=0; bc<qt4.cols(); bc++){
-         for(int bm=0; bm<qt4.mids(); bm++){
-	    for(int bv=0; bv<qt4.vers(); bv++){
-	       auto& blk4 = qt4(br,bc,bm,bv);
-	       if(blk4.size() == 0) continue;
-	       // loop over contracted indices
-	       for(int bx=0; bx<qt4a.vers(); bx++){
-	          const auto& blk4a = qt4a(br,bc,bm,bx);
-	          const auto& blk2b = qt2b(bv,bx);
-	          if(blk4a.size() == 0 || blk2b.size() == 0) continue;
-		  // sigma(rcm,v) = op(v,x)*wf(rcm,x)
-	          int N = blk4.dim0*blk4.dim1*blk4.dim2;
-	          int xdim = qt4a.info.qver.get_dim(bx);
-  	          int vdim = qt4.info.qver.get_dim(bv);
-  	          for(int iv=0; iv<vdim; iv++){
-	             for(int ix=0; ix<xdim; ix++){
-	                linalg::xaxpy(N, blk2b(iv,ix), blk4a.get(ix).data(), blk4.get(iv).data());
-		     } // ix
-	          } // iv
-	       } // bx
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<qt4.info._nnzaddr.size(); i++){
+      int idx = qt4.info._nnzaddr[i];
+      qt4.info._addr_unpack(idx,br,bc,bm,bv);
+      auto& blk4 = qt4(br,bc,bm,bv);
+      // loop over contracted indices
+      for(int bx=0; bx<qt4a.vers(); bx++){
+         const auto& blk4a = qt4a(br,bc,bm,bx);
+         const auto& blk2b = qt2b(bv,bx);
+         if(blk4a.size() == 0 || blk2b.size() == 0) continue;
+         // sigma(rcm,v) = op(v,x)*wf(rcm,x)
+         int N = blk4.dim0*blk4.dim1*blk4.dim2;
+         int xdim = qt4a.info.qver.get_dim(bx);
+         int vdim = qt4.info.qver.get_dim(bv);
+         for(int iv=0; iv<vdim; iv++){
+            for(int ix=0; ix<xdim; ix++){
+               linalg::xaxpy(N, blk2b(iv,ix), blk4a.get(ix).data(), 
+			     blk4.get(iv).data());
+            } // ix
+         } // iv
+      } // bx
+   } // i
    return qt4;
 }
 

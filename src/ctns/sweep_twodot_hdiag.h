@@ -59,33 +59,30 @@ void twodot_Hdiag_local(const oper_dict<Tm>& lqops,
    const auto& Hr  = rqops('H').at(0);
    const auto& Hc1 = c1qops('H').at(0);
    const auto& Hc2 = c2qops('H').at(0);
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-	 int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-	    int mdim = wf.info.qmid.get_dim(bm);
-            for(int bv=0; bv<wf.vers(); bv++){
-	       int vdim = wf.info.qver.get_dim(bv);
-               auto& blk = wf(br,bc,bm,bv);
-	       if(blk.size() == 0) continue;
-	       const auto& lblk = Hl(br,br); // left->row 
-	       const auto& rblk = Hr(bc,bc); // row->col
-	       const auto& c1blk = Hc1(bm,bm); // central->mid 
-	       const auto& c2blk = Hc2(bv,bv); // 
-	       for(int iv=0; iv<vdim; iv++){
-                  for(int im=0; im<mdim; im++){
-                     for(int ic=0; ic<cdim; ic++){
-                        for(int ir=0; ir<rdim; ir++){
-                           blk(ir,ic,im,iv) = ecore + lblk(ir,ir) + rblk(ic,ic) + c1blk(im,im) + c2blk(iv,iv);
-                        } // ir
-                     } // ic
-                  } // im
-	       } // iv
-	    } // bc
-	 } // br
-      } // bv
-   } // bm
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm, bv);
+      auto& blk = wf(br,bc,bm,bv);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      int vdim = blk.dim3;
+      // Hlocal
+      const auto& lblk = Hl(br,br); // left->row 
+      const auto& rblk = Hr(bc,bc); // row->col
+      const auto& c1blk = Hc1(bm,bm); // central->mid 
+      const auto& c2blk = Hc2(bv,bv); // 
+      for(int iv=0; iv<vdim; iv++){
+         for(int im=0; im<mdim; im++){
+            for(int ic=0; ic<cdim; ic++){
+               for(int ir=0; ir<rdim; ir++){
+                  blk(ir,ic,im,iv) = ecore + lblk(ir,ir) + rblk(ic,ic) + c1blk(im,im) + c2blk(iv,iv);
+               } // ir
+            } // ic
+         } // im
+      } // iv
+   } // i
 }
 
 template <typename Tm>
@@ -146,31 +143,28 @@ void twodot_Hdiag_OlOc1(const stensor2<Tm>& Ol,
 		        const stensor2<Tm>& Oc1,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-         int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-            int mdim = wf.info.qmid.get_dim(bm);
-            for(int bv=0; bv<wf.vers(); bv++){
-	       int vdim = wf.info.qver.get_dim(bv);
-               auto& blk = wf(br,bc,bm,bv);
-	       if(blk.size() == 0) continue;
-	       const auto& lblk  = Ol(br,br); 
-	       const auto& c1blk = Oc1(bm,bm); 
-	       for(int iv=0; iv<vdim; iv++){
-                  for(int im=0; im<mdim; im++){
-                     for(int ic=0; ic<cdim; ic++){
-                        for(int ir=0; ir<rdim; ir++){
-                           blk(ir,ic,im,iv) += wt*lblk(ir,ir)*c1blk(im,im);
-                        } // ir
-                     } // ic
-                  } // im
-	       } // iv
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm, bv);
+      auto& blk = wf(br,bc,bm,bv);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      int vdim = blk.dim3;
+      // Ol*Oc1
+      const auto& lblk  = Ol(br,br); 
+      const auto& c1blk = Oc1(bm,bm); 
+      for(int iv=0; iv<vdim; iv++){
+         for(int im=0; im<mdim; im++){
+            for(int ic=0; ic<cdim; ic++){
+               for(int ir=0; ir<rdim; ir++){
+                  blk(ir,ic,im,iv) += wt*lblk(ir,ir)*c1blk(im,im);
+               } // ir
+            } // ic
+         } // im
+      } // iv
+   } // i
 }
 
 // Ol*Oc2
@@ -179,31 +173,28 @@ void twodot_Hdiag_OlOc2(const stensor2<Tm>& Ol,
 		        const stensor2<Tm>& Oc2,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-         int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-            int mdim = wf.info.qmid.get_dim(bm);
-            for(int bv=0; bv<wf.vers(); bv++){
-	       int vdim = wf.info.qver.get_dim(bv);
-               auto& blk = wf(br,bc,bm,bv);
-	       if(blk.size() == 0) continue;
-	       const auto& lblk  = Ol(br,br); 
-	       const auto& c2blk = Oc2(bv,bv); 
-	       for(int iv=0; iv<vdim; iv++){
-                  for(int im=0; im<mdim; im++){
-                     for(int ic=0; ic<cdim; ic++){
-                        for(int ir=0; ir<rdim; ir++){
-                           blk(ir,ic,im,iv) += wt*lblk(ir,ir)*c2blk(iv,iv);
-                        } // ir
-                     } // ic
-                  } // im
-	       } // iv
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm, bv);
+      auto& blk = wf(br,bc,bm,bv);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      int vdim = blk.dim3;
+      // Ol*Oc2
+      const auto& lblk  = Ol(br,br); 
+      const auto& c2blk = Oc2(bv,bv); 
+      for(int iv=0; iv<vdim; iv++){
+         for(int im=0; im<mdim; im++){
+            for(int ic=0; ic<cdim; ic++){
+               for(int ir=0; ir<rdim; ir++){
+                  blk(ir,ic,im,iv) += wt*lblk(ir,ir)*c2blk(iv,iv);
+               } // ir
+            } // ic
+         } // im
+      } // iv
+   } // i
 }
 
 // Ol*Or
@@ -212,31 +203,28 @@ void twodot_Hdiag_OlOr(const stensor2<Tm>& Ol,
 		       const stensor2<Tm>& Or,
 		       stensor4<Tm>& wf,
 		       const Tm wt=1.0){
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-         int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-            int mdim = wf.info.qmid.get_dim(bm);
-            for(int bv=0; bv<wf.vers(); bv++){
-	       int vdim = wf.info.qver.get_dim(bv);
-               auto& blk = wf(br,bc,bm,bv);
-	       if(blk.size() == 0) continue;
-	       const auto& lblk = Ol(br,br); 
-	       const auto& rblk = Or(bc,bc); 
-	       for(int iv=0; iv<vdim; iv++){
-                  for(int im=0; im<mdim; im++){
-                     for(int ic=0; ic<cdim; ic++){
-                        for(int ir=0; ir<rdim; ir++){
-                           blk(ir,ic,im,iv) += wt*lblk(ir,ir)*rblk(ic,ic);
-                        } // ir
-                     } // ic
-                  } // im
-	       } // iv
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm, bv);
+      auto& blk = wf(br,bc,bm,bv);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      int vdim = blk.dim3;
+      // Ol*Or
+      const auto& lblk = Ol(br,br); 
+      const auto& rblk = Or(bc,bc); 
+      for(int iv=0; iv<vdim; iv++){
+         for(int im=0; im<mdim; im++){
+            for(int ic=0; ic<cdim; ic++){
+               for(int ir=0; ir<rdim; ir++){
+                  blk(ir,ic,im,iv) += wt*lblk(ir,ir)*rblk(ic,ic);
+               } // ir
+            } // ic
+         } // im
+      } // iv
+   } // i
 }
 
 // Oc1*Oc2
@@ -245,31 +233,28 @@ void twodot_Hdiag_Oc1Oc2(const stensor2<Tm>& Oc1,
 		         const stensor2<Tm>& Oc2,
 		         stensor4<Tm>& wf,
 		         const Tm wt=1.0){
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-         int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-            int mdim = wf.info.qmid.get_dim(bm);
-            for(int bv=0; bv<wf.vers(); bv++){
-	       int vdim = wf.info.qver.get_dim(bv);
-               auto& blk = wf(br,bc,bm,bv);
-	       if(blk.size() == 0) continue;
-	       const auto& c1blk = Oc1(bm,bm); 
-	       const auto& c2blk = Oc2(bv,bv); 
-	       for(int iv=0; iv<vdim; iv++){
-                  for(int im=0; im<mdim; im++){
-                     for(int ic=0; ic<cdim; ic++){
-                        for(int ir=0; ir<rdim; ir++){
-                           blk(ir,ic,im,iv) += wt*c1blk(im,im)*c2blk(iv,iv);
-                        } // ir
-                     } // ic
-                  } // im
-	       } // iv
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm, bv);
+      auto& blk = wf(br,bc,bm,bv);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      int vdim = blk.dim3;
+      // Oc1*Oc2
+      const auto& c1blk = Oc1(bm,bm); 
+      const auto& c2blk = Oc2(bv,bv); 
+      for(int iv=0; iv<vdim; iv++){
+         for(int im=0; im<mdim; im++){
+            for(int ic=0; ic<cdim; ic++){
+               for(int ir=0; ir<rdim; ir++){
+                  blk(ir,ic,im,iv) += wt*c1blk(im,im)*c2blk(iv,iv);
+               } // ir
+            } // ic
+         } // im
+      } // iv
+   } // i
 }
 
 // Oc1*Or
@@ -278,31 +263,28 @@ void twodot_Hdiag_Oc1Or(const stensor2<Tm>& Oc1,
 		        const stensor2<Tm>& Or,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-         int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-            int mdim = wf.info.qmid.get_dim(bm);
-            for(int bv=0; bv<wf.vers(); bv++){
-	       int vdim = wf.info.qver.get_dim(bv);
-               auto& blk = wf(br,bc,bm,bv);
-	       if(blk.size() == 0) continue;
-	       const auto& c1blk = Oc1(bm,bm); 
-	       const auto& rblk  = Or(bc,bc); 
-	       for(int iv=0; iv<vdim; iv++){
-                  for(int im=0; im<mdim; im++){
-                     for(int ic=0; ic<cdim; ic++){
-                        for(int ir=0; ir<rdim; ir++){
-                           blk(ir,ic,im,iv) += wt*c1blk(im,im)*rblk(ic,ic);
-                        } // ir
-                     } // ic
-                  } // im
-	       } // iv
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm, bv);
+      auto& blk = wf(br,bc,bm,bv);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      int vdim = blk.dim3;
+      // Oc1*Or
+      const auto& c1blk = Oc1(bm,bm); 
+      const auto& rblk  = Or(bc,bc); 
+      for(int iv=0; iv<vdim; iv++){
+         for(int im=0; im<mdim; im++){
+            for(int ic=0; ic<cdim; ic++){
+               for(int ir=0; ir<rdim; ir++){
+                  blk(ir,ic,im,iv) += wt*c1blk(im,im)*rblk(ic,ic);
+               } // ir
+            } // ic
+         } // im
+      } // iv
+   } // i
 }
 
 // Oc2*Or
@@ -311,31 +293,28 @@ void twodot_Hdiag_Oc2Or(const stensor2<Tm>& Oc2,
 		        const stensor2<Tm>& Or,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);  
-      for(int bc=0; bc<wf.cols(); bc++){
-         int cdim = wf.info.qcol.get_dim(bc);
-         for(int bm=0; bm<wf.mids(); bm++){
-            int mdim = wf.info.qmid.get_dim(bm);
-            for(int bv=0; bv<wf.vers(); bv++){
-	       int vdim = wf.info.qver.get_dim(bv);
-               auto& blk = wf(br,bc,bm,bv);
-	       if(blk.size() == 0) continue;
-	       const auto& c2blk = Oc2(bv,bv); 
-	       const auto& rblk  = Or(bc,bc); 
-	       for(int iv=0; iv<vdim; iv++){
-                  for(int im=0; im<mdim; im++){
-                     for(int ic=0; ic<cdim; ic++){
-                        for(int ir=0; ir<rdim; ir++){
-                           blk(ir,ic,im,iv) += wt*c2blk(iv,iv)*rblk(ic,ic);
-                        } // ir
-                     } // ic
-                  } // im
-	       } // iv
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int addr = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(addr, br, bc, bm, bv);
+      auto& blk = wf(br,bc,bm,bv);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      int vdim = blk.dim3;
+      // Oc2*Or
+      const auto& c2blk = Oc2(bv,bv); 
+      const auto& rblk  = Or(bc,bc); 
+      for(int iv=0; iv<vdim; iv++){
+         for(int im=0; im<mdim; im++){
+            for(int ic=0; ic<cdim; ic++){
+               for(int ir=0; ir<rdim; ir++){
+                  blk(ir,ic,im,iv) += wt*c2blk(iv,iv)*rblk(ic,ic);
+               } // ir
+            } // ic
+         } // im
+      } // iv
+   } // i
 }
 
 } // ctns
