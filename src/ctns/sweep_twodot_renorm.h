@@ -93,7 +93,7 @@ void twodot_guess_psi(const std::string superblock,
 		      const linalg::matrix<typename Km::dtype>& vsol,
 		      stensor4<typename Km::dtype>& wf,
 		      const stensor2<typename Km::dtype>& rot){
-   const bool debug = false
+   const bool debug = false;
    if(debug) std::cout << "ctns::twodot_guess_psi superblock=" << superblock << std::endl;
    int nroots = vsol.cols();
    icomb.psi.clear();

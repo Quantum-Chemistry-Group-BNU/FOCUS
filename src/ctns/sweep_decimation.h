@@ -12,9 +12,6 @@ namespace ctns{
 const double thresh_sig2 = 1.e-14;
 extern const double thresh_sig2;
 
-const double thresh_sig2accum = -1.0;
-extern const double thresh_sig2accum;
-
 const bool debug_decimation = false;
 extern const bool debug_decimation;
 
@@ -31,12 +28,15 @@ inline void decimation_selection(const bool ifkr,
    			         std::vector<std::pair<qsym,int>>& dims,
 				 std::ofstream& fout){
    // sort all sigs
-   const int nqr = qrow.size();
    auto index = tools::sort_index(sig2all, 1);
-   deff = 0;
+   const int nqr = qrow.size();
    std::vector<int> kept_dim(nqr,0); // no. of states kept in each symmetry sector
    std::vector<double> kept_wts(nqr,0.0); // weights kept in each symmetry sector
+   deff = 0; // bond dimension kept (including additional for symmetry)
    double accum = 0.0, SvN = 0.0;
+   fout << "sorted renormalized states: total=" << sig2all.size()
+        << " dcut=" << dcut << " thresh_sig2=" << thresh_sig2 
+	<< std::endl;
    for(int i=0; i<sig2all.size(); i++){
       if(dcut > -1 && deff >= dcut) break; // discard rest
       int idx = index[i];
@@ -49,23 +49,19 @@ inline void decimation_selection(const bool ifkr,
       kept_wts[br] += nfac*sig2all[idx];
       accum += nfac*sig2all[idx];
       SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
-      if(accum <= thresh_sig2accum){
-	 if(i == 0) fout << "important sig2 with thresh_sig2accum = " 
-		         << thresh_sig2accum << std::endl;
-	 fout << " i=" << i << " br=" << br << " qr=" << qr 
-	      << " " << kept_dim[br]/nfac-1 << "-th"
-              << " sig2=" << sig2all[idx] 
-	      << " accum=" << accum << std::endl;
-      }
+      fout << " i=" << i << " qr=" << qr 
+	   << " " << kept_dim[br]/nfac-1 << "-th"
+           << " sig2=" << sig2all[idx] 
+	   << " accum=" << accum << std::endl;
    } // i
    dwt = 1.0-accum;
    // construct qbond & recompute deff including additional states 
    deff = 0;
    accum = 0.0;
    auto index2 = tools::sort_index(kept_wts, 1); // order symmetry sectors by kept weights
-   fout << "select renormalized states per symmetry sector:" << std::endl;
-   for(int i=0; i<nqr; i++){
-      int br = index2[i];
+   fout << "select renormalized states per symmetry sector: nqr=" << nqr << std::endl;
+   for(int iqr=0; iqr<nqr; iqr++){
+      int br = index2[iqr];
       const auto& qr = qrow.get_sym(br);
       const auto& dim0 = qrow.get_dim(br);
       const auto& dim = kept_dim[br];
@@ -76,28 +72,28 @@ inline void decimation_selection(const bool ifkr,
          accum += wts;    
          deff += dim;
          // save information
-         fout << " i=" << i << " br=" << br << " qr=" << qr
+         fout << " iqr=" << iqr << " qr=" << qr
   	      << " dim[full,kept]=" << dim0 << "," << dim 
               << " wts=" << wts << " accum=" << accum << " deff=" << deff 
   	      << std::endl;
       }else{
-	 // kept at least one state per sector
+	 // additional: kept at least one state per sector
 	 if(!ifmatched[br]) continue;
 	 br_kept.push_back(br);
 	 int dmin = (ifkr && qr.parity()==1)? 2 : 1;
          dims.emplace_back(qr,dmin);
          deff += dmin;
          // save information
-         fout << " i=" << i << " br=" << br << " qr=" << qr
+         fout << " iqr=" << iqr << " qr=" << qr
 	      << " dim[full,kept]=" << dim0 << "," << dmin 
               << " wts=" << wts << " accum=" << accum << " deff=" << deff
 	      << " (additional)" << std::endl;
-      } // kept_dim
-   } // i
-   std::cout << "decimation summary: "
-             << qrow.get_dimAll() << "->" << deff  
-	     << " dwt=" << dwt << " SvN=" << SvN 
-	     << std::endl;
+      }
+   } // iqr
+   fout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
+        << " dwt=" << dwt << " SvN=" << SvN << std::endl;
+   std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
+	     << " dwt=" << dwt << " SvN=" << SvN << std::endl;
 }
 
 // generate renormalized basis from wfs2[row,col] for row
