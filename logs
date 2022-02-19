@@ -38,7 +38,7 @@ LOGS
     - better data structure for qtensor & oper_dict [DONE2021/10/02]
         - problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
 
- * Optimized Hx algorithm [DONE2022/01/XX]
+ * Optimized algorithm: symbolic algorithm
     - onedot algorithm:
     	- generation of onedot_Hx formulae
     	- implemenation of onedot_Hx contraction [DONE2022/01/16]
@@ -49,18 +49,25 @@ LOGS
     	- generation of twodot_Hx formulae [DONE2022/01/18]
     	- optimized formation of sigma vector [DONE2022/01/22]
           - contract_qt4_qt2 (without intermediate/reshaping)
-    - renormalization algorithm
+    - renormalization algorithm:
 	 - generation of formulae 
          - optimized renormalization [DONE2022/02/17]
     - profiling:
 	- benchmark for small systems
 	- minimize memory allocation / intermediates?
 	- benchmark for [Fe4S4] systems
-    - optimization:
+    - generation of formula: 
+        - onedot/twodot-ibond
+        - renormalization
+    - optimization of onedot opt:
 	- avoid H() & K()
 	- int1e only appears in oper_dot.h
-        - onedot opt
-	- twodot opt 
+        - avoid daxpy?
+	- revise qt3_qt2 without explicit H()
+        - avoid repeated formation of intermediate?
+	- avoid memset?
+    - optimization of twodot opt:
+        - qt4_qt2? 
 
  * Large-scale parallelization: push to the limit!
     - GPU for contractions?
