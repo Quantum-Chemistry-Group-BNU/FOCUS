@@ -79,22 +79,22 @@ void sweep_twodot(const input::schedule& schd,
    using Tm = typename Km::dtype;
    oper_dict<Tm> lqops, rqops, c1qops, c2qops;
    if(!cturn){
-      oper_load_qops(icomb, p0, scratch, "l", lqops );
-      oper_load_qops(icomb, p1, scratch, "r", rqops );  
-      oper_load_qops(icomb, p0, scratch, "c", c1qops);
-      oper_load_qops(icomb, p1, scratch, "c", c2qops);
+      oper_load_qops(icomb, p0, scratch, "l", lqops , rank);
+      oper_load_qops(icomb, p1, scratch, "r", rqops , rank);  
+      oper_load_qops(icomb, p0, scratch, "c", c1qops, rank);
+      oper_load_qops(icomb, p1, scratch, "c", c2qops, rank);
    }else{
-      oper_load_qops(icomb, p0, scratch, "l", lqops );
-      oper_load_qops(icomb, p0, scratch, "r", rqops );  
-      oper_load_qops(icomb, p1, scratch, "c", c1qops);
-      oper_load_qops(icomb, p1, scratch, "r", c2qops);
+      oper_load_qops(icomb, p0, scratch, "l", lqops , rank);
+      oper_load_qops(icomb, p0, scratch, "r", rqops , rank);  
+      oper_load_qops(icomb, p1, scratch, "c", c1qops, rank);
+      oper_load_qops(icomb, p1, scratch, "r", c2qops, rank);
    }
    if(rank == 0){
       std::cout << "qops info: rank=" << rank << std::endl;
-      lqops.print("lqops", 2);
-      rqops.print("rqops", 2);
-      c1qops.print("c1qops", 2);
-      c2qops.print("c2qops", 2);
+      lqops.print("lqops");
+      rqops.print("rqops");
+      c1qops.print("c1qops");
+      c2qops.print("c2qops");
    }
    const oper_dictmap<Tm> qops_dict = {{"l",lqops},
 	   		 	       {"r",rqops},

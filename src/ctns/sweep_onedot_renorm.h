@@ -6,9 +6,6 @@
 
 namespace ctns{
 
-const bool debug_renorm = true;
-extern const bool debug_renorm;
-
 const double thresh_noise = 1.e-10;
 extern const double thresh_noise;
 
@@ -20,7 +17,8 @@ void onedot_decimation(sweep_data& sweeps,
 		       const std::string superblock,
 		       const linalg::matrix<Tm>& vsol,
 		       stensor3<Tm>& wf,
-		       stensor2<Tm>& rot){ 
+		       stensor2<Tm>& rot, 
+	               const std::string scratch){
    const auto& dbond = sweeps.seq[ibond];
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
@@ -32,6 +30,8 @@ void onedot_decimation(sweep_data& sweeps,
    auto& result = sweeps.opt_result[isweep][ibond];
    int nroots = vsol.cols();
    std::vector<stensor2<Tm>> wfs2(nroots);
+   std::string fname = scratch+"/decimation_"+std::to_string(isweep)
+	             + "_"+std::to_string(ibond)+".txt"; 
    if(superblock == "lc"){
 
       for(int i=0; i<nroots; i++){
@@ -43,7 +43,7 @@ void onedot_decimation(sweep_data& sweeps,
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qmid, 
 		     dcut, rdm_vs_svd, wfs2, 
-		     rot, result.dwt, result.deff);
+		     rot, result.dwt, result.deff, fname);
 
    }else if(superblock == "lr"){
 
@@ -58,7 +58,7 @@ void onedot_decimation(sweep_data& sweeps,
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qcol, 
       		     dcut, rdm_vs_svd, wfs2, 
-		     rot, result.dwt, result.deff);
+		     rot, result.dwt, result.deff, fname);
 
    }else if(superblock == "cr"){
 
@@ -71,7 +71,7 @@ void onedot_decimation(sweep_data& sweeps,
       }
       decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
       		     dcut, rdm_vs_svd, wfs2, 
-		     rot, result.dwt, result.deff);
+		     rot, result.dwt, result.deff, fname);
       rot = rot.T(); // rot[alpha,r] = (V^+)
 
    } // superblock
@@ -85,7 +85,8 @@ void onedot_guess_psi(const std::string superblock,
 		      const linalg::matrix<typename Km::dtype>& vsol,
 		      stensor3<typename Km::dtype>& wf,
 		      const stensor2<typename Km::dtype>& rot){
-   if(debug_renorm) std::cout << "ctns::onedot_guess_psi" << std::endl;
+   const bool debug = false;
+   if(debug) std::cout << "ctns::onedot_guess_psi superblock=" << superblock << std::endl;
    const auto& pdx0 = icomb.topo.rindex.at(dbond.p0);
    const auto& pdx1 = icomb.topo.rindex.at(dbond.p1);
    int nroots = vsol.cols();
@@ -164,7 +165,8 @@ void onedot_renorm(const input::schedule& schd,
    // build reduced density matrix & perform decimation
    stensor2<Tm> rot;
    if(rank == 0){
-      onedot_decimation(sweeps, isweep, ibond, ifkr, superblock, vsol, wf, rot);
+      onedot_decimation(sweeps, isweep, ibond, ifkr, 
+		        superblock, vsol, wf, rot, scratch);
    }
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
@@ -218,7 +220,7 @@ void onedot_renorm(const input::schedule& schd,
       fname = oper_fname(scratch, p, "r");
    }
    timing.tf = tools::get_time();
-   oper_save(fname, qops);
+   oper_save(fname, qops, rank);
 }
 
 } // ctns

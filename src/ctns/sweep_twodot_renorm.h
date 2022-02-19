@@ -15,7 +15,8 @@ void twodot_decimation(sweep_data& sweeps,
 		       const std::string superblock,
 		       const linalg::matrix<Tm>& vsol, 
 		       stensor4<Tm>& wf,
-	               stensor2<Tm>& rot){
+	               stensor2<Tm>& rot,
+	               const std::string scratch){
    const auto& dbond = sweeps.seq[ibond];
    const int& dbranch = sweeps.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
@@ -27,6 +28,8 @@ void twodot_decimation(sweep_data& sweeps,
    auto& result = sweeps.opt_result[isweep][ibond];
    int nroots = vsol.cols();
    std::vector<stensor2<Tm>> wfs2(nroots);
+   std::string fname = scratch+"/decimation_"+std::to_string(isweep)
+	             + "_"+std::to_string(ibond)+".txt"; 
    if(superblock == "lc1"){ 
 
       for(int i=0; i<nroots; i++){
@@ -37,7 +40,7 @@ void twodot_decimation(sweep_data& sweeps,
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qmid, 
 		     dcut, rdm_vs_svd, wfs2, 
-		     rot, result.dwt, result.deff);
+		     rot, result.dwt, result.deff, fname);
 
    }else if(superblock == "lr"){ 
 
@@ -50,7 +53,7 @@ void twodot_decimation(sweep_data& sweeps,
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qcol, 
 		     dcut, rdm_vs_svd, wfs2, 
-		     rot, result.dwt, result.deff);
+		     rot, result.dwt, result.deff, fname);
 
    }else if(superblock == "c2r"){ 
 
@@ -62,7 +65,7 @@ void twodot_decimation(sweep_data& sweeps,
       }
       decimation_row(ifkr, wf.info.qver, wf.info.qcol, 
 		     dcut, rdm_vs_svd, wfs2, 
-		     rot, result.dwt, result.deff);
+		     rot, result.dwt, result.deff, fname);
       rot = rot.T(); // rot[alpha,r] = (V^+)
 
    }else if(superblock == "c1c2"){
@@ -76,7 +79,7 @@ void twodot_decimation(sweep_data& sweeps,
       } // i
       decimation_row(ifkr, wf.info.qmid, wf.info.qver, 
 		     dcut, rdm_vs_svd, wfs2,
-		     rot, result.dwt, result.deff);
+		     rot, result.dwt, result.deff, fname);
       rot = rot.T(); // permute two lines for RCF
 
    } // superblock
@@ -90,7 +93,8 @@ void twodot_guess_psi(const std::string superblock,
 		      const linalg::matrix<typename Km::dtype>& vsol,
 		      stensor4<typename Km::dtype>& wf,
 		      const stensor2<typename Km::dtype>& rot){
-   if(debug_renorm) std::cout << "ctns::twodot_guess_psi" << std::endl;
+   const bool debug = false
+   if(debug) std::cout << "ctns::twodot_guess_psi superblock=" << superblock << std::endl;
    int nroots = vsol.cols();
    icomb.psi.clear();
    icomb.psi.resize(nroots);
@@ -204,7 +208,8 @@ void twodot_renorm(const input::schedule& schd,
    // build reduced density matrix & perform decimation
    stensor2<Tm> rot;
    if(rank == 0){
-      twodot_decimation(sweeps, isweep, ibond, ifkr, superblock, vsol, wf, rot);
+      twodot_decimation(sweeps, isweep, ibond, ifkr, 
+		        superblock, vsol, wf, rot, scratch);
    }
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
@@ -269,7 +274,7 @@ void twodot_renorm(const input::schedule& schd,
       fname = oper_fname(scratch, p, "r");
    }
    timing.tf = tools::get_time();
-   oper_save(fname, qops);
+   oper_save(fname, qops, rank);
 }
 
 } // ctns

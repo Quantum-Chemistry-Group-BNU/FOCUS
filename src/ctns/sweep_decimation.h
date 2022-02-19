@@ -12,14 +12,11 @@ namespace ctns{
 const double thresh_sig2 = 1.e-14;
 extern const double thresh_sig2;
 
-const double thresh_sig2accum = 0.99;
+const double thresh_sig2accum = -1.0;
 extern const double thresh_sig2accum;
 
 const bool debug_decimation = false;
 extern const bool debug_decimation;
-
-const bool debug_sig2 = true;
-extern const bool debug_sig2;
 
 // select important sigs
 inline void decimation_selection(const bool ifkr,
@@ -31,7 +28,8 @@ inline void decimation_selection(const bool ifkr,
 			         double& dwt,
 		                 int& deff,
    			         std::vector<int>& br_kept,
-   			         std::vector<std::pair<qsym,int>>& dims){
+   			         std::vector<std::pair<qsym,int>>& dims,
+				 std::ofstream& fout){
    // sort all sigs
    const int nqr = qrow.size();
    auto index = tools::sort_index(sig2all, 1);
@@ -51,13 +49,13 @@ inline void decimation_selection(const bool ifkr,
       kept_wts[br] += nfac*sig2all[idx];
       accum += nfac*sig2all[idx];
       SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
-      if(debug_sig2 && accum <= thresh_sig2accum){
-	 if(i == 0) std::cout << "important sig2 with thresh_sig2accum=" 
-		              << thresh_sig2accum << std::endl;
-	 std::cout << " i=" << i << " br=" << br << " qr=" << qr 
-		   << " " << kept_dim[br]/nfac-1 << "-th"
-                   << " sig2=" << sig2all[idx] 
-		   << " accum=" << accum << std::endl;
+      if(accum <= thresh_sig2accum){
+	 if(i == 0) fout << "important sig2 with thresh_sig2accum = " 
+		         << thresh_sig2accum << std::endl;
+	 fout << " i=" << i << " br=" << br << " qr=" << qr 
+	      << " " << kept_dim[br]/nfac-1 << "-th"
+              << " sig2=" << sig2all[idx] 
+	      << " accum=" << accum << std::endl;
       }
    } // i
    dwt = 1.0-accum;
@@ -65,7 +63,7 @@ inline void decimation_selection(const bool ifkr,
    deff = 0;
    accum = 0.0;
    auto index2 = tools::sort_index(kept_wts, 1); // order symmetry sectors by kept weights
-   std::cout << "select renormalized states per symmetry sector:" << std::endl;
+   fout << "select renormalized states per symmetry sector:" << std::endl;
    for(int i=0; i<nqr; i++){
       int br = index2[i];
       const auto& qr = qrow.get_sym(br);
@@ -77,12 +75,11 @@ inline void decimation_selection(const bool ifkr,
          dims.emplace_back(qr,dim);
          accum += wts;    
          deff += dim;
-         if(debug_sig2){ 
-            std::cout << " i=" << i << " br=" << br << " qr=" << qr
-		      << " dim[full,kept]=" << dim0 << "," << dim 
-                      << " wts=" << wts << " accum=" << accum << " deff=" << deff 
-		      << std::endl;
-         }
+         // save information
+         fout << " i=" << i << " br=" << br << " qr=" << qr
+  	      << " dim[full,kept]=" << dim0 << "," << dim 
+              << " wts=" << wts << " accum=" << accum << " deff=" << deff 
+  	      << std::endl;
       }else{
 	 // kept at least one state per sector
 	 if(!ifmatched[br]) continue;
@@ -90,12 +87,11 @@ inline void decimation_selection(const bool ifkr,
 	 int dmin = (ifkr && qr.parity()==1)? 2 : 1;
          dims.emplace_back(qr,dmin);
          deff += dmin;
-         if(debug_sig2){ 
-            std::cout << " i=" << i << " br=" << br << " qr=" << qr
-		      << " dim[full,kept]=" << dim0 << "," << dmin 
-                      << " wts=" << wts << " accum=" << accum << " deff=" << deff
-		      << " (additional)" << std::endl;
-	 }
+         // save information
+         fout << " i=" << i << " br=" << br << " qr=" << qr
+	      << " dim[full,kept]=" << dim0 << "," << dmin 
+              << " wts=" << wts << " accum=" << accum << " deff=" << deff
+	      << " (additional)" << std::endl;
       } // kept_dim
    } // i
    std::cout << "decimation summary: "
@@ -113,7 +109,8 @@ void decimation_row_nkr(const qbond& qs1,
 		        const std::vector<stensor2<Tm>>& wfs2,
 		        stensor2<Tm>& rot,
 		        double& dwt,
-		        int& deff){
+		        int& deff,
+			std::ofstream& fout){
    auto qprod = qmerge(qs1, qs2);
    auto qrow = qprod.first;
    auto dpt = qprod.second;
@@ -131,6 +128,7 @@ void decimation_row_nkr(const qbond& qs1,
 	        << " nqr=" << nqr << " maxthreads=" << maxthreads
 		<< std::endl;
    }
+
    // 1. compute reduced basis
    std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
 #ifdef _OPENMP
@@ -187,11 +185,12 @@ void decimation_row_nkr(const qbond& qs1,
 		  [sig2sum](const double& x){ return x*sig2sum; });
    sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
    assert(std::abs(sig2sum - 1.0) < 1.e-10);
+   
    // 2. select important sig2 & form rot
    std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
    decimation_selection(false, qrow, ifmatched, sig2all, idx2sector, dcut, 
-		        dwt, deff, br_kept, dims);
+		        dwt, deff, br_kept, dims, fout);
    qbond qkept(dims);
    auto isym = qkept.get_sym(0).isym();
    stensor2<Tm> qt2(qsym(isym), qrow, qkept);
@@ -221,7 +220,8 @@ void decimation_row_kr(const qbond& qs1,
 		       const std::vector<stensor2<Tm>>& wfs2,
 		       stensor2<Tm>& rot,
 		       double& dwt,
-		       int& deff){
+		       int& deff,
+		       std::ofstream& fout){
    tools::exit("error: decimation_row_kr only works for complex<double>!");
 }
 template <>
@@ -232,7 +232,8 @@ inline void decimation_row_kr(const qbond& qs1,
 		              const std::vector<stensor2<std::complex<double>>>& wfs2,
 		              stensor2<std::complex<double>>& rot,
 		              double& dwt,
-		              int& deff){
+		              int& deff,
+			      std::ofstream& fout){
    using Tm = std::complex<double>;
    auto qprod = qmerge(qs1, qs2);
    auto qrow = qprod.first;
@@ -251,6 +252,7 @@ inline void decimation_row_kr(const qbond& qs1,
                 << " nqr=" << nqr << " maxthreads=" << maxthreads
 		<< std::endl;
    }
+
    // 1. compute reduced basis
    std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
 #ifdef _OPENMP
@@ -330,11 +332,12 @@ inline void decimation_row_kr(const qbond& qs1,
    //NOTE: in kr case, sig2all only contain partial sigs2, thus no check is applied
    //sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
    //assert(std::abs(sig2sum - 1.0) < 1.e-10); 
+   
    // 2. select important sig2 & form rot
    std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
    decimation_selection(true, qrow, ifmatched, sig2all, idx2sector, dcut, 
-		        dwt, deff, br_kept, dims);
+		        dwt, deff, br_kept, dims, fout);
    qbond qkept(dims);
    auto isym = qkept.get_sym(0).isym();
    stensor2<Tm> qt2(qsym(isym), qrow, qkept);
@@ -379,12 +382,16 @@ void decimation_row(const bool ifkr,
 		    const std::vector<stensor2<Tm>>& wfs2,
 		    stensor2<Tm>& rot,
 		    double& dwt,
-		    int& deff){
+		    int& deff,
+		    const std::string fname){
+   std::cout << "decimation fname = " << fname << std::endl;
+   std::ofstream fout(fname);
    if(!ifkr){
-      decimation_row_nkr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff);
+      decimation_row_nkr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);
    }else{
-      decimation_row_kr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff);
+      decimation_row_kr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);
    }
+   fout.close();
 }
 
 } // ctns

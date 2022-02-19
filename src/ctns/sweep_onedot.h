@@ -56,9 +56,9 @@ void sweep_onedot(const input::schedule& schd,
    // 1. load operators 
    using Tm = typename Km::dtype;
    oper_dict<Tm> lqops, rqops, cqops;
-   oper_load_qops(icomb, p, scratch, "l", lqops);
-   oper_load_qops(icomb, p, scratch, "r", rqops);
-   oper_load_qops(icomb, p, scratch, "c", cqops);
+   oper_load_qops(icomb, p, scratch, "l", lqops, rank);
+   oper_load_qops(icomb, p, scratch, "r", rqops, rank);
+   oper_load_qops(icomb, p, scratch, "c", cqops, rank);
    if(rank == 0){
       std::cout << "qops info: rank=" << rank << std::endl;
       lqops.print("lqops");
@@ -192,9 +192,10 @@ void sweep_rwfuns(const input::schedule& schd,
       double dwt; 
       int deff;
       const bool ifkr = tools::is_complex<Km>();
+      std::string fname = scratch+"/decimation_site0.txt";
       decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
 		     dcut, schd.ctns.rdm_vs_svd, wfs2,
-		     rot, dwt, deff);
+		     rot, dwt, deff, fname);
       rot = rot.T(); 
       icomb.rsites[icomb.topo.rindex.at(p0)] = rot.split_cr(wf.info.qmid, wf.info.qcol);
       // form rwfuns(iroot,irbas)

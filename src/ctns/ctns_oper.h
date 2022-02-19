@@ -27,7 +27,7 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    oper_dict<Tm> qops;
    auto p = std::make_pair(0,0); 
    auto fname = oper_fname(scratch, p, "r");
-   oper_load(fname, qops);
+   oper_load(fname, qops, rank);
  
    //if(rank == 0) std::cout << "\nctns::get_Hmat" << std::endl;
    auto Hmat = qops('H')[0].to_matrix();

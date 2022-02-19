@@ -46,7 +46,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
          auto tb = tools::get_time();
 	 //---------------------------------------------
 	 std::string fname = oper_fname(scratch, p, "c");
-         oper_save(fname, qops);
+         oper_save(fname, qops, rank);
 	 //---------------------------------------------
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
@@ -64,7 +64,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
          auto tb = tools::get_time();
 	 //---------------------------------------------
 	 std::string fname = oper_fname(scratch, p, "r");
-         oper_save(fname, qops);
+         oper_save(fname, qops, rank);
 	 //---------------------------------------------
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
@@ -83,7 +83,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
    auto tb = tools::get_time();
    //---------------------------------------------
    std::string fname = oper_fname(scratch, p, "l");
-   oper_save(fname, qops);
+   oper_save(fname, qops, rank);
    //---------------------------------------------
    auto tc = tools::get_time();
    t_comp += tools::get_duration(tb-ta);
@@ -134,14 +134,8 @@ void oper_env_right(const comb<Km>& icomb,
          // load operators from disk    
          //---------------------------------------------
 	 oper_dict<typename Km::dtype> qops1, qops2, qops;
-	 //std::cout << "load1" << std::endl;
-         oper_load_qops(icomb, p, scratch, "c", qops1);
-	 //qops1.print("qops1");
-	 //std::cout << "data=" << qops1._data << std::endl; 
-	 //std::cout << "load2" << std::endl;
-         oper_load_qops(icomb, p, scratch, "r", qops2);
-	 //qops2.print("qops2");
-	 //std::cout << "data=" << qops2._data << std::endl; 
+         oper_load_qops(icomb, p, scratch, "c", qops1, rank);
+         oper_load_qops(icomb, p, scratch, "r", qops2, rank);
          //---------------------------------------------
          auto tc = tools::get_time();
          t_load += tools::get_duration(tc-tb); 
@@ -151,8 +145,6 @@ void oper_env_right(const comb<Km>& icomb,
 	 std::string superblock = "cr"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e,
 			   qops1, qops2, qops, alg_renorm);
-         //qops.print("qops");
-         //std::cout << "data=" << qops._data << std::endl; 
          //---------------------------------------------
          auto td = tools::get_time();
          t_comp += tools::get_duration(td-tc);
@@ -160,7 +152,7 @@ void oper_env_right(const comb<Km>& icomb,
 	 // save operators to disk
          //---------------------------------------------
 	 std::string fname = oper_fname(scratch, p, "r");
-         oper_save(fname, qops);
+         oper_save(fname, qops, rank);
          //---------------------------------------------
          auto te = tools::get_time();
 	 t_save += tools::get_duration(te-td);

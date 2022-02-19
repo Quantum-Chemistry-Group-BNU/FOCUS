@@ -111,11 +111,9 @@ void oper_dict<Tm>::print(const std::string name, const int level) const{
    }
    std::cout << s << std::endl;
    // memory information
-   std::cout << "        size = " << _size << "  "
-             << tools::sizeMB<Tm>(_size) << " MB" 
-	     << std::endl;
-   std::cout << "        opsize = " << _opsize << "  "
-             << tools::sizeMB<Tm>(_opsize) << " MB" 
+   std::cout << "        dim(bra,ket)=" << qbra.get_dimAll() << "," << qket.get_dimAll() 
+	     << " size(tot)=" << _size << ":" << tools::sizeMB<Tm>(_size) << "MB" 
+   	     << " size(op)=" << _opsize << ":" << tools::sizeMB<Tm>(_opsize) << "MB" 
              << std::endl;
    // print each operator
    if(level > 0){
