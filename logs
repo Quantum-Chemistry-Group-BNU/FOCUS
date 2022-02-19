@@ -89,12 +89,35 @@ KNOWN PROBLEMS
  2. to work with ctns, pRDM is removed which makes onedot opt prone to local minimum:
     implementing decimation for {|psi>, sum_k a_k|psi>, sum_l b_l|psi>} may help.
 
-       /home/lx/lzd/focus_repo/FOCUS/examples/3_h6+_kr
-       finput= results/rinput.dat
-       fname[ref]= results/rctns.out
-       nsweep= 2
-       fname[cal]= ./tmp/rctns.out
-       nsweep= 2
-       eref= [-2.89565156 -2.74390766]  ecal= [-2.89503561 -2.74089796]  ediff= 0.0030720814731275076
-       fail
+     /home/lx/lzd/focus_repo/FOCUS/examples/3_h6+_kr
+     finput= results/rinput.dat
+     fname[ref]= results/rctns.out
+     nsweep= 2
+     fname[cal]= ./tmp/rctns.out
+     nsweep= 2
+     eref= [-2.89565156 -2.74390766]  ecal= [-2.89503561 -2.74089796]  ediff= 0.0030720814731275076
+     fail
 
+ 3. SVD-based decimation: total=2, full=8
+   
+     decimation for each symmetry sector:
+     >br=0 qr=(4,0) rdim=2
+     >br=1 qr=(5,-1) rdim=4
+     >br=2 qr=(5,1) rdim=4
+     >br=3 qr=(6,-2) rdim=2
+     >br=4 qr=(6,0) rdim=8
+      find matched qc =(0,0)
+      SVD-based decimation: dim(l,r)=1,8
+      sigs2[final]: 0.5 0.5
+     >br=5 qr=(6,2) rdim=2
+     >br=6 qr=(7,-1) rdim=4
+     >br=7 qr=(7,1) rdim=4
+     >br=8 qr=(8,0) rdim=2
+     
+     sorted renormalized states: total=2 dcut=2 thresh_sig2=1e-14
+      i=0 qr=(6,0) 0-th sig2=0.5 accum=0.5
+      i=1 qr=(6,0) 1-th sig2=0.5 accum=1
+     select renormalized states per symmetry sector: nqr=9
+      iqr=0 qr=(6,0) dim[full,kept]=8,2 wts=1 accum=1 deff=2
+     decimation summary: 32->2 dwt=0 SvN=1
+     
