@@ -36,9 +36,10 @@ void oper_renorm_opAll(const std::string superblock,
    if(rank == 0){ 
       std::cout << "ctns::oper_renorm_opAll coord=" << p 
 	        << " superblock=" << superblock 
-	     	<< " isym=" << isym << " ifkr=" << ifkr
-		<< " mpisize=" << size
+	     	<< " isym=" << isym 
+		<< " ifkr=" << ifkr
 	        << " alg_renorm=" << alg_renorm	
+		<< " mpisize=" << size
 		<< std::endl;
    }
    auto t0 = tools::get_time();

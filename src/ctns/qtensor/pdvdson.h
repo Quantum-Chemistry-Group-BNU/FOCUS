@@ -198,7 +198,7 @@ struct pdvdsonSolver_nkr{
 	 if(rank == 0){
 	    std::cout << "ctns::pdvdsonSolver_nkr::solve_iter"
 	              << " is_complex=" << tools::is_complex<Tm>() 
-		      << " size=" << size
+		      << " mpisize=" << size
 		      << std::endl;
 	 }
          if(neig > ndim){

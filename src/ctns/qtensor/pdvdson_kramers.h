@@ -317,9 +317,10 @@ struct pdvdsonSolver_kr{
 #endif
 	 if(rank == 0){
 	    std::cout << "ctns::pdvdsonSolver_kr::solve_iter"
+	              << " parity=" << parity 
 	              << " is_complex=" << tools::is_complex<Tm>()
-		      << " size=" << size 
-	              << " parity=" << parity << std::endl;
+		      << " mpisize=" << size 
+		      << std::endl;
 	 }
          if(neig > ndim){
 	    std::string msg = "error: neig>ndim in pdvdson! neig/ndim=";
