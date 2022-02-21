@@ -25,12 +25,20 @@ void sweep_onedot(const input::schedule& schd,
                   const double ecore,
 		  const std::string scratch){
    const bool debug_sweep = (schd.ctns.verbose > 0);
-   int size = 1, rank = 0;
+   int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
-   size = icomb.world.size();
    rank = icomb.world.rank();
+   size = icomb.world.size();
 #endif   
-   if(rank == 0) std::cout << "ctns::sweep_onedot" << std::endl;
+#ifdef _OPENMP
+   maxthreads = omp_get_max_threads();
+#endif
+   if(rank == 0){
+      std::cout << "ctns::sweep_onedot"
+                << " mpisize=" << size
+	        << " maxthreads=" << maxthreads 
+	        << std::endl;
+   }
    const int isym = Km::isym;
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
