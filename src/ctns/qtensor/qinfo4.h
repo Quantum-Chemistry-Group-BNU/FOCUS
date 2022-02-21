@@ -93,8 +93,8 @@ void qinfo4<Tm>::setup_data(Tm* data){
    size_t off = 0;
    for(int i=0; i<_nnzaddr.size(); i++){
       int addr = _nnzaddr[i];
-      off += _qblocks[addr].size();
       _qblocks[addr].setup_data(data+off);
+      off += _qblocks[addr].size();
    }
 }
 
@@ -106,15 +106,19 @@ void qinfo4<Tm>::print(const std::string name, const int level) const{
    qmid.print("qmid");
    qver.print("qver");
    // qblocks
-   std::cout << "qblocks: nblocks=" << _qblocks.size() << std::endl;
+   std::cout << "total no. of nonzero blocks=" << _nnzaddr.size() 
+             << " nblocks=" << _qblocks.size() 
+             << " size=" << _size << ":" 
+             << tools::sizeMB<Tm>(_size) << "MB" 
+             << std::endl; 
    int br, bc, bm, bv;
    for(int i=0; i<_nnzaddr.size(); i++){
       int idx = _nnzaddr[i];
       _addr_unpack(idx,br,bc,bm,bv);	   
       const auto& blk = _qblocks[idx];
       if(level >= 1){
-         std::cout << "idx=" << idx 
-         	      << " block[" << qrow.get_sym(br) << "," << qcol.get_sym(bc) << ","
+         std::cout << " inz=" << i << " idx=" << idx 
+         	   << " block[" << qrow.get_sym(br) << "," << qcol.get_sym(bc) << ","
                    << qmid.get_sym(bm) << "," << qver.get_sym(bv) << "]" 
                    << " dim0,dim1,dim2,dim3=(" << blk.dim0 << "," << blk.dim1 << "," 
                    << blk.dim2 << "," << blk.dim3 << ")" 
@@ -122,8 +126,6 @@ void qinfo4<Tm>::print(const std::string name, const int level) const{
          if(level >= 2) blk.print("blk_"+std::to_string(idx));
       } // level>=1
    } // idx
-   std::cout << "total no. of nonzero blocks=" << _nnzaddr.size() << std::endl;
-   std::cout << "total size=" << _size << " sizeMB=" << tools::sizeMB<Tm>(_size) << std::endl; 
 }
 
 } // ctns

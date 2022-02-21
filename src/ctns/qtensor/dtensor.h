@@ -58,7 +58,8 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
       // print
       void print(std::string name="", const int prec=4) const{
          std::cout << " dtensor2: " << name 
-		   << " size=(" << dim0 << "," << dim1 << ")" 
+		   << " size=(" << dim0 << "," << dim1 << ")"
+                   << " _data=" << _data 
 		   << std::endl;
 	 std::cout << std::scientific << std::setprecision(prec); 
 	 for(int i0=0; i0<dim0; i0++){
@@ -144,6 +145,7 @@ struct dtensor3{
       void print(std::string name="", const int prec=4) const{
          std::cout << " dtensor3: " << name 
 		   << " size=(" << dim0 << "," << dim1 << "," << dim2 << ")" 
+                   << " _data=" << _data 
 		   << std::endl;
 	 for(int i2=0; i2<dim2; i2++){
 	    (*this).get(i2).print("i2="+std::to_string(i2),prec);
@@ -229,6 +231,7 @@ struct dtensor4{
       void print(std::string name="", const int prec=4) const{
          std::cout << " dtensor4: " << name 
 		   << " size=(" << dim0 << "," << dim1 << "," << dim2 << "," << dim3 << ")" 
+                   << " _data=" << _data 
 		   << std::endl;
 	 for(int i3=0; i3<dim3; i3++){
 	    for(int i2=0; i2<dim2; i2++){

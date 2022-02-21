@@ -445,7 +445,7 @@ struct pdvdsonSolver_kr{
             }
          } // iter
          if(rank == 0 && !ifconv){
-            std::cout << "convergence failure: out of maxcycle =" << maxcycle << std::endl;
+            std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
          }
       }
 
