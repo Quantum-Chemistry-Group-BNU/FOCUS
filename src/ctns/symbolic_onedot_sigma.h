@@ -86,7 +86,7 @@ void symbolic_onedot_Hx(Tm* y,
 	                stensor3<Tm>& wf,
 	                const int size,
 	                const int rank){
-   const bool debug = true;
+   const bool debug = false;
    auto t0 = tools::get_time();
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
@@ -94,7 +94,8 @@ void symbolic_onedot_Hx(Tm* y,
    int maxthreads = 1;
 #endif
    if(rank == 0 && debug){ 
-      std::cout << "ctns::symbolic_onedot_Hx size=" << size 
+      std::cout << "ctns::symbolic_onedot_Hx"
+	        << " mpisize=" << size 
                 << " maxthreads=" << maxthreads
                 << std::endl;
    }

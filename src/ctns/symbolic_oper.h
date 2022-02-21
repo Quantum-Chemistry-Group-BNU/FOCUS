@@ -262,7 +262,7 @@ struct symbolic_task{
 	 return st_new;
       }
       // display
-      void display(const std::string& name, const int level=0) const{
+      void display(const std::string& name, const int level=1) const{
          std::cout << " formulae " << name << " : size=" << tasks.size() << std::endl;
 	 if(level > 0){
             for(int i=0; i<tasks.size(); i++){

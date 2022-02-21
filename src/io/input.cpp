@@ -115,7 +115,7 @@ void params_sci::read(ifstream& istrm){
 }
 
 void params_sci::print() const{
-   cout << "===== params_sci::print =====" << endl;
+   cout << "\n===== params_sci::print =====" << endl;
    cout << "nroots = " << nroots << endl;
    cout << "no. of unique seeds = " << nseeds << endl;
    // print det_seeds = {|det>}
@@ -263,7 +263,7 @@ void params_ctns::read(ifstream& istrm){
 }
 
 void params_ctns::print() const{
-   cout << "===== params_ctns::print =====" << endl;
+   cout << "\n===== params_ctns::print =====" << endl;
    cout << "qkind = " << qkind << endl;
    cout << "topology_file = " << topology_file << endl;
    cout << "nroots = " << nroots << endl;
@@ -306,7 +306,7 @@ void params_ctns::print() const{
 // schedule
 //
 void schedule::print() const{
-   cout << "===== schedule::print =====" << endl;
+   cout << "\n===== schedule::print =====" << endl;
    cout << "scratch = " << scratch << endl;
    cout << "dtype = " << dtype << endl;
    cout << "nelec = " << nelec << endl;
@@ -323,6 +323,7 @@ void schedule::read(string fname){
       cout << "failed to open " << fname << '\n';
       exit(1);
    }
+   std::cout << tools::line_separator << std::endl;
    string line;
    while(!istrm.eof()){
       line.clear();	   
@@ -350,6 +351,7 @@ void schedule::read(string fname){
 	 tools::exit("error: no matching key! line = "+line);
       }
    }
+   std::cout << tools::line_separator << std::endl;
    istrm.close();
    // consistency check
    if(scratch == ".") tools::exit("error: scratch directory must be defined!");

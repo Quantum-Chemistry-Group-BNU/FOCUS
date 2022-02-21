@@ -18,10 +18,19 @@ namespace tools{
 
 inline void license(){
    std::cout << std::endl;	
-   std::cout << "===============================================================" << std::endl;
-   std::cout << " FOCUS: a platform for exploring FermiOniC qUantum Simulations " << std::endl;
-   std::cout << " Author: Zhendong Li <zhendongli2008@gmail.com> @ BNU2019      " << std::endl;
-   std::cout << "===============================================================" << std::endl;
+   std::cout << "======================================================================" << std::endl;
+   std::cout << "     FOCUS: a platform for exploring FermiOniC qUantum Simulation     " << std::endl;
+   std::cout << "   							               " << std::endl;
+   std::cout << "       :!!!!!!!!!    ^!!!7!:      :!7!!~~!:!!!!!:  ~!!!. :!!!!7:      " << std::endl;  
+   std::cout << "       .^G@P^^~?BJ ~GG!::~Y#P^  ^P#?^:^7G@^:5&#~.  ^J#! 7P:.:?&5      " << std::endl;
+   std::cout << "         5@Y  !J :~&@^     ?&@^^B@?     .?. ?&B     :P  5&J7~^~~      " << std::endl;
+   std::cout << "         5@G!?BB  ?&&:     :B@??&@^         ?&B     :P  .?5GB##P^     " << std::endl;
+   std::cout << "         5@Y  :!  ^B@J     !@#:^B@Y      ^: ?&#     ~P  JJ   .~@5     " << std::endl;
+   std::cout << "       .~G@P^:     ^5#5~^^7GY:  ^5&P7~~!?J: :5&5!~~!Y^  Y&5!^^7G^     " << std::endl;
+   std::cout << "       :~~~~~:       .~!!~^.      .~77!~.     :!7!~^    :::~!!^       " << std::endl;
+   std::cout << "   							               " << std::endl;
+   std::cout << "                    Authors: Zhendong Li @ BNU2019   		       " << std::endl;
+   std::cout << "======================================================================" << std::endl;
 }
 
 inline void exit(const std::string msg){

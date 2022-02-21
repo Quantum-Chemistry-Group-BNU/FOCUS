@@ -99,7 +99,7 @@ int CTNS(const input::schedule& schd){
 }
 
 int main(int argc, char *argv[]){
-   int rank = 0, size = 1;
+   int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
    // setup MPI environment 
    boost::mpi::environment env{argc, argv};
@@ -107,7 +107,15 @@ int main(int argc, char *argv[]){
    rank = world.rank();
    size = world.size();
 #endif
-   if(rank == 0) tools::license();
+#ifdef _OPENMP
+   maxthreads = omp_get_max_threads();
+#endif
+   if(rank == 0){
+      tools::license();
+      std::cout << "\nmpisize = " << size
+	        << " maxthreads = " << maxthreads
+		<< std::endl;
+   }
 
    // read input
    string fname;

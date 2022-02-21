@@ -22,7 +22,7 @@ template <typename Tm>
 void oper_save(const std::string fname, 
 	       const oper_dict<Tm>& qops,
 	       const int rank){
-   if(debug_oper_io and rank == 0) std::cout << "ctns::oper_save fname = " << fname << std::endl;
+   if(debug_oper_io and rank == 0) std::cout << "ctns::oper_save fname=" << fname << std::endl;
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << qops;
@@ -32,7 +32,7 @@ template <typename Tm>
 void oper_load(const std::string fname, 
 	       oper_dict<Tm>& qops,
 	       const int rank){
-   if(debug_oper_io and rank == 0) std::cout << "ctns::oper_load fname = " << fname << std::endl;
+   if(debug_oper_io and rank == 0) std::cout << "ctns::oper_load fname=" << fname << std::endl;
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> qops;

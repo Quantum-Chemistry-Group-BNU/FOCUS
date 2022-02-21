@@ -19,7 +19,6 @@ void symbolic_twodot_HxTerm(const oper_dictmap<Tm>& qops_dict,
 			    const symbolic_term<Tm>& HTerm,
 			    const stensor4<Tm>& wf,
 			    stensor4<Tm>& Hwf){
-   auto t0 = tools::get_time();
    const bool debug = false;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    // compute (HTerm+HTerm.H)*|wf>
@@ -78,11 +77,6 @@ void symbolic_twodot_HxTerm(const oper_dictmap<Tm>& qops_dict,
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
    linalg::xaxpy(N, 1.0, opNxwf.data(), Hwf.data()); 
    linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data());
-
-   // debug 
-   //std::cout << "iterm=" << it << " HTerm=" << HTerm << std::endl;
-   auto t1 = tools::get_time();
-   //tools::timing("iterm="+std::to_string(it), t0, t1);
 }
 
 template <typename Tm> 
@@ -94,7 +88,7 @@ void symbolic_twodot_Hx(Tm* y,
 	                stensor4<Tm>& wf,
 	                const int size,
 	                const int rank){
-   const bool debug = true;
+   const bool debug = false;
    auto t0 = tools::get_time();
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
@@ -102,7 +96,8 @@ void symbolic_twodot_Hx(Tm* y,
    int maxthreads = 1;
 #endif
    if(rank == 0 && debug){ 
-      std::cout << "ctns::symbolic_twodot_Hx size=" << size 
+      std::cout << "ctns::symbolic_twodot_Hx"
+	        << " mpisize=" << size 
                 << " maxthreads=" << maxthreads
                 << std::endl;
    }

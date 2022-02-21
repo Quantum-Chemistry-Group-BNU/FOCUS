@@ -121,8 +121,10 @@ void sweep_onedot(const input::schedule& schd,
       HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
            	  std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 1){
+      std::string fname = scratch+"/hformulae_"+std::to_string(isweep)
+	                + "_"+std::to_string(ibond)+".txt"; 
       H_formulae = symbolic_onedot_formulae(lqops, rqops, cqops, 
-		                            int2e, size, rank);
+		                            int2e, size, rank, fname);
       HVec = bind(&ctns::symbolic_onedot_Hx<Tm>, _1, _2, std::cref(H_formulae),
 		  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
@@ -134,7 +136,7 @@ void sweep_onedot(const input::schedule& schd,
    timing.tc = tools::get_time();
    if(rank == 0){ 
       sweeps.print_eopt(isweep, ibond);
-      oper_timer.analysis();
+      if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
    }
 
    // 4. decimation & renormalize operators

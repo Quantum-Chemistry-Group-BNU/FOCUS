@@ -52,13 +52,13 @@ LOGS
     - renormalization algorithm:
 	 - generation of formulae 
          - optimized renormalization [DONE2022/02/17]
+    - generation of formula: 
+        - onedot/twodot-ibond
+        - renormalization [DONE2022/02/21]
     - profiling:
 	- benchmark for small systems
 	- minimize memory allocation / intermediates?
 	- benchmark for [Fe4S4] systems
-    - generation of formula: 
-        - onedot/twodot-ibond
-        - renormalization
     - optimization of onedot opt:
 	- avoid H() & K()
 	- int1e only appears in oper_dot.h

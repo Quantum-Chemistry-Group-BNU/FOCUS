@@ -13,22 +13,37 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
 	     		                  const integral::two_body<Tm>& int2e,
 			                  const oper_dict<Tm>& qops1,
 			                  const oper_dict<Tm>& qops2,
-			                  const oper_dict<Tm>& qops){
+			                  const oper_dict<Tm>& qops,
+					  const std::string fname){
    auto t0 = tools::get_time();
-   const bool debug = true;
    const int print_level = 1;
    const int isym = qops.isym;
    const bool ifkr = qops.ifkr;
    const std::string block1 = superblock.substr(0,1);
    const std::string block2 = superblock.substr(1,2);
-   if(debug) std::cout << "symbolic_renorm_formulae"
-	               << " isym=" << isym
-		       << " ifkr=" << ifkr
-		       << " block1=" << block1
-		       << " block2=" << block2
-		       << std::endl;
+   std::streambuf *psbuf, *backup;
+   std::ofstream file;
+   if(qops.mpirank == 0){
+      std::cout << "ctns::symbolic_renorm_formulae"
+	        << " fname=" << fname
+		<< std::endl;
+      // http://www.cplusplus.com/reference/ios/ios/rdbuf/
+      file.open(fname);
+      backup = std::cout.rdbuf(); // back up cout's streambuf
+      psbuf = file.rdbuf(); // get file's streambuf
+      std::cout.rdbuf(psbuf); // assign streambuf to cout
+      std::cout << "ctns::symbolic_renorm_formulae"
+	        << " isym=" << isym
+		<< " ifkr=" << ifkr
+		<< " block1=" << block1
+		<< " block2=" << block2
+		<< " mpisize=" << qops.mpisize
+		<< std::endl;
+   }
 
    renorm_tasks<Tm> formulae;
+
+   int idx = 0;
    // opC
    if(qops.oplist.find('C') != std::string::npos){
       auto info = oper_combine_opC(qops1.cindex, qops2.cindex);
@@ -37,6 +52,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
 	 auto opC = symbolic_normxwf_opC<Tm>(block1, block2, index, iformula);
 	 formulae.push_back(std::make_tuple('C', index, opC));
          if(qops.mpirank == 0){
+	    std::cout << " idx=" << idx++;
 	    opC.display("opC["+std::to_string(index)+"]", print_level);
 	 }
       }
@@ -51,6 +67,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
 	    auto opA = symbolic_normxwf_opA<Tm>(block1, block2, index, iformula, ifkr);
 	    formulae.push_back(std::make_tuple('A', index, opA));
             if(qops.mpirank == 0){
+	       std::cout << " idx=" << idx++;
 	       opA.display("opA["+std::to_string(index)+"]", print_level);
 	    }
          }
@@ -66,6 +83,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
 	    auto opB = symbolic_normxwf_opB<Tm>(block1, block2, index, iformula, ifkr);
 	    formulae.push_back(std::make_tuple('B', index, opB));
             if(qops.mpirank == 0){
+	       std::cout << " idx=" << idx++;
 	       opB.display("opB["+std::to_string(index)+"]", print_level);
 	    }
          }
@@ -79,6 +97,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
 			 	             int2e, index, isym, ifkr);
 	 formulae.push_back(std::make_tuple('P', index, opP));
 	 if(qops.mpirank == 0){
+	    std::cout << " idx=" << idx++;
             opP.display("opP["+std::to_string(index)+"]", print_level);
 	 }
       }
@@ -91,6 +110,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
 			 	             int2e, index, isym, ifkr);
 	 formulae.push_back(std::make_tuple('Q', index, opQ));
 	 if(qops.mpirank == 0){
+	    std::cout << " idx=" << idx++;
             opQ.display("opQ["+std::to_string(index)+"]", print_level);
 	 }
       }
@@ -103,6 +123,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
 			 	             index, ifkr, qops.mpisize, qops.mpirank);
 	 formulae.push_back(std::make_tuple('S', index, opS));
 	 if(qops.mpirank == 0){
+	    std::cout << " idx=" << idx++;
 	    opS.display("opS["+std::to_string(index)+"]", print_level);
 	 }
       }
@@ -113,13 +134,19 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
 	 	      		          ifkr, qops.mpisize, qops.mpirank);
       formulae.push_back(std::make_tuple('H', 0, opH));
       if(qops.mpirank == 0){
+	 std::cout << " idx=" << idx++;
          opH.display("opH", print_level);
       }
    }
 
    auto t1 = tools::get_time();
    if(qops.mpirank == 0){
-      tools::timing("symbolic_renorm_formulae", t0, t1);
+      std::cout << "renormalization summary:" << std::endl;
+      qops.print("qops",2);
+      std::cout.rdbuf(backup); // restore cout's original streambuf
+      file.close();
+      int size = formulae.size();
+      tools::timing("symbolic_renorm_formulae with size="+std::to_string(size), t0, t1);
    }
    return formulae;
 }

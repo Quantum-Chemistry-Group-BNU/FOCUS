@@ -17,31 +17,49 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
 	                                   const oper_dict<Tm>& c2qops,
 	                                   const integral::two_body<Tm>& int2e,
 	                                   const int& size,
-	                                   const int& rank){
+	                                   const int& rank,
+					   const std::string fname){
+   const int print_level = 0;
    auto t0 = tools::get_time();
-   const bool debug = true;
-   const int print_level = 1;
    const int isym = lqops.isym;
    const bool ifkr = lqops.ifkr;
    int slc1 = lqops.cindex.size() + c1qops.cindex.size();
    int sc2r = c2qops.cindex.size() + rqops.cindex.size();
    const bool ifNC = (slc1 <= sc2r);
-   if(debug) std::cout << "symbolic_twodot_formulae"
-	               << " isym=" << isym
-		       << " ifkr=" << ifkr
-		       << " ifNC=" << ifNC
-	               << std::endl;
+   std::map<std::string,int> counter;
+   std::streambuf *psbuf, *backup;
+   std::ofstream file;
+   if(rank == 0){
+      std::cout << "ctns::symbolic_twodot_formulae"
+	        << " mpisize=" << size
+	        << " fname=" << fname 
+		<< std::endl;
+      // http://www.cplusplus.com/reference/ios/ios/rdbuf/
+      file.open(fname);
+      backup = std::cout.rdbuf(); // back up cout's streambuf
+      psbuf = file.rdbuf(); // get file's streambuf
+      std::cout.rdbuf(psbuf); // assign streambuf to cout
+      std::cout << "cnts::symbolic_twodot_formulae"
+	        << " isym=" << isym
+		<< " ifkr=" << ifkr
+		<< " ifNC=" << ifNC
+		<< " mpisize=" << size
+	        << std::endl;
+   }
 
    symbolic_task<Tm> formulae;
+   
    int idx = 0;
-
+   counter["CS"] = 0;
+   counter["SC"] = 0;
+   
    // Local terms:
    // H[lc1]
    auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
 		                        ifkr, size, rank);
    formulae.join(Hlc1);
    if(rank == 0){ 
-      std::cout << " idx=" << idx++ << " "; 
+      std::cout << " idx=" << idx++; 
       Hlc1.display("Hlc1", print_level);
    }
    // H[c2r]
@@ -49,7 +67,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
 		                        ifkr, size, rank);
    formulae.join(Hc2r);
    if(rank == 0){ 
-      std::cout << " idx=" << idx++ << " ";
+      std::cout << " idx=" << idx++;
       Hc2r.display("Hc2r", print_level);
    }
 
@@ -66,8 +84,9 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       auto Clc1_Sc2r = Clc1.outer_product(Sc2r);
       formulae.join(Clc1_Sc2r);
       if(rank == 0){ 
-	 std::cout << " idx=" << idx++ << " ";
+	 std::cout << " idx=" << idx++;
 	 Clc1_Sc2r.display("Clc1_Sc2r["+std::to_string(index)+"]", print_level);
+	 counter["CS"] += 1;
       }
    }
    // 4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
@@ -83,8 +102,9 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       auto Slc1_Cc2r = Slc1.outer_product(Cc2r);
       formulae.join(Slc1_Cc2r);
       if(rank == 0){ 
-	 std::cout << " idx=" << idx++ << " ";
+	 std::cout << " idx=" << idx++;
 	 Slc1_Cc2r.display("Slc1_Cc2r["+std::to_string(index)+"]", print_level);
+	 counter["SC"] += 1;
       }
    }
 
@@ -92,6 +112,8 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
    if(ifNC){
       auto ainfo = oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr);
       auto binfo = oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr);
+      counter["AP"] = 0;
+      counter["BQ"] = 0;
       // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
       for(const auto pr : ainfo){
          int index = pr.first;
@@ -107,8 +129,9 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
             auto Alc1_Pc2r = Alc1.outer_product(Pc2r);
             formulae.join(Alc1_Pc2r);
             if(rank == 0){ 
-               std::cout << " idx=" << idx++ << " ";
+               std::cout << " idx=" << idx++;
                Alc1_Pc2r.display("Alc1_Pc2r["+std::to_string(index)+"]", print_level);
+	       counter["AP"] += 1;
             }
          } // iproc
       }
@@ -125,16 +148,19 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
             const double wt = ifkr? wfacBQ(index) : wfac(index);
             Qc2r.scale(wt);
             auto Blc1_Qc2r = Blc1.outer_product(Qc2r);
-            if(rank == 0){ 
-               std::cout << " idx=" << idx++ << " ";
-               Blc1_Qc2r.display("Blc1_Qc2r["+std::to_string(index)+"]", print_level);
-            }
             formulae.join(Blc1_Qc2r);
+            if(rank == 0){ 
+               std::cout << " idx=" << idx++;
+               Blc1_Qc2r.display("Blc1_Qc2r["+std::to_string(index)+"]", print_level);
+	       counter["BQ"] += 1;
+            }
          } // iproc
       }
    }else{
       auto ainfo = oper_combine_opA(c2qops.cindex, rqops.cindex, ifkr);
       auto binfo = oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr);
+      counter["PA"] = 0;
+      counter["QB"] = 0;
       // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
       for(const auto pr : ainfo){
          int index = pr.first;
@@ -150,8 +176,9 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
             auto Plc1_Ac2r = Plc1.outer_product(Ac2r);
             formulae.join(Plc1_Ac2r);
             if(rank == 0){ 
-               std::cout << " idx=" << idx++ << " ";
+               std::cout << " idx=" << idx++;
                Plc1_Ac2r.display("Plc1_Ac2r["+std::to_string(index)+"]", print_level);
+	       counter["PA"] += 1;
             }
          } // iproc
       }
@@ -168,19 +195,34 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
             const double wt = ifkr? wfacBQ(index) : wfac(index);
             Qlc1.scale(wt);
             auto Qlc1_Bc2r = Qlc1.outer_product(Bc2r);
-            if(rank == 0){ 
-               std::cout << " idx=" << idx++ << " ";
-               Qlc1_Bc2r.display("Qlc1_Bc2r["+std::to_string(index)+"]", print_level);
-            }
             formulae.join(Qlc1_Bc2r);
+            if(rank == 0){ 
+               std::cout << " idx=" << idx++;
+               Qlc1_Bc2r.display("Qlc1_Bc2r["+std::to_string(index)+"]", print_level);
+	       counter["QB"] += 1;
+            }
          } // iproc
       }
    } // ifNC
 
    auto t1 = tools::get_time();
    if(rank == 0){
-      formulae.display("total", debug);
-      tools::timing("symbolic_twodot_formulae", t0, t1);
+      if(ifNC){
+         std::cout << "size=" << idx
+                   << " CS:" << counter["CS"] << " SC:" << counter["SC"]
+             	   << " AP:" << counter["AP"] << " BQ:" << counter["BQ"]
+           	   << std::endl;
+      }else{
+         std::cout << "size=" << idx
+                   << " SC:" << counter["SC"] << " CS:" << counter["CS"]
+           	   << " PA:" << counter["PA"] << " QB:" << counter["QB"]
+           	   << std::endl;
+      }
+      formulae.display("total");
+      std::cout.rdbuf(backup); // restore cout's original streambuf
+      file.close();
+      int size = formulae.size();
+      tools::timing("symbolic_twodot_formulae with size="+std::to_string(size), t0, t1);
    }
    return formulae;
 }

@@ -380,7 +380,7 @@ void decimation_row(const bool ifkr,
 		    double& dwt,
 		    int& deff,
 		    const std::string fname){
-   std::cout << "decimation fname = " << fname << std::endl;
+   std::cout << "ctns::decimation_row fname=" << fname << std::endl;
    std::ofstream fout(fname);
    if(!ifkr){
       decimation_row_nkr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);

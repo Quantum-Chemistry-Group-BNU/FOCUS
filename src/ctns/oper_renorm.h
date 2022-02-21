@@ -24,7 +24,8 @@ void oper_renorm_opAll(const std::string superblock,
 		       const oper_dict<Tm>& qops1,
 		       const oper_dict<Tm>& qops2,
 		       oper_dict<Tm>& qops,
-		       const int alg_renorm){
+		       const int alg_renorm,
+		       const std::string fname){
    const bool debug = false;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -78,9 +79,9 @@ void oper_renorm_opAll(const std::string superblock,
    // 1. start renormalization
    oper_timer.clear();
    if(alg_renorm == 0){
-      oper_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, rank, debug);
+      oper_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, debug);
    }else if(alg_renorm == 1){
-      symbolic_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, rank, debug);
+      symbolic_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, fname, debug);
    }
    
    // 2. check operators against explicit construction
@@ -107,7 +108,7 @@ void oper_renorm_opAll(const std::string superblock,
    auto t1 = tools::get_time();
    if(rank == 0){ 
       qops.print("qops");
-      oper_timer.analysis();
+      if(alg_renorm == 0) oper_timer.analysis();
       tools::timing("ctns::oper_renorm_opAll", t0, t1);
    }
 }
@@ -119,10 +120,11 @@ void oper_renorm_kernel(const std::string superblock,
 		        const oper_dict<Tm>& qops1,
 		        const oper_dict<Tm>& qops2,
 		        oper_dict<Tm>& qops,
-			const int rank,
 			const bool debug){
    auto Hx_funs = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops);
-   if(debug) std::cout << "rank=" << rank << " size[Hx_funs]=" << Hx_funs.size() << std::endl;
+   if(debug) std::cout << "rank=" << qops.mpirank 
+	               << " size[Hx_funs]=" << Hx_funs.size() 
+		       << std::endl;
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
@@ -130,7 +132,7 @@ void oper_renorm_kernel(const std::string superblock,
       char key = Hx_funs[i].label[0];
       int index = Hx_funs[i].index; 
       if(debug){
-         std::cout << "cal: rank=" << rank 
+         std::cout << "cal: rank=" << qops.mpirank 
                    << " i=" << i 
                    << " key=" << key 
 		   << " index=" << index 

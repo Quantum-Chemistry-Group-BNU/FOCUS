@@ -142,9 +142,10 @@ void oper_env_right(const comb<Km>& icomb,
          //---------------------------------------------
          // perform renormalization for superblock {|cr>}
          //---------------------------------------------
-	 std::string superblock = "cr"; 
+	 std::string superblock = "cr";
+	 std::string frenorm = scratch+"/rformulae_"+std::to_string(idx)+".txt"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e,
-			   qops1, qops2, qops, alg_renorm);
+			   qops1, qops2, qops, alg_renorm, frenorm);
          //---------------------------------------------
          auto td = tools::get_time();
          t_comp += tools::get_duration(td-tc);
