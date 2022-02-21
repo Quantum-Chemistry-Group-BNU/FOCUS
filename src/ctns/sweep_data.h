@@ -194,9 +194,11 @@ inline void sweep_data::summary(const int isweep){
       auto& ctrl = ctrls[jsweep];
       taccum += t_total[jsweep];
       nmvp = min_result[jsweep].nmvp;
-      std::cout << std::setw(10) << jsweep << " "
-           	<< ctrl.dots << " " << ctrl.dcut << " "
-           	<< ctrl.eps  << " " << ctrl.noise << " | " 
+      std::cout << std::setw(10) << jsweep 
+                << "  " << ctrl.dots 
+                << "  " << ctrl.dcut 
+                << "  " << ctrl.eps 
+ 		<< "  " << ctrl.noise << " | " 
 		<< nmvp << " | " 
            	<< t_total[jsweep] << " | " 
 		<< (t_total[jsweep]/nmvp) << " | " 

@@ -64,7 +64,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 icomb.world.barrier();
 #endif
 	 if(rank == 0){
-	    std::cout << "\nisweep=" << isweep << " ibond=" << ibond << " bond=" << p0 << "-" << p1 
+	    std::cout << "\nisweep=" << isweep 
+                      << " ibond=" << ibond << "/seqsize=" << sweeps.seqsize 
+                      << " bond=" << p0 << "-" << p1 
 	              << " (dots,forward,cturn)=(" << dots << "," << forward << "," << cturn << ")" 
 	              << std::endl;
             std::cout << tools::line_separator << std::endl;
