@@ -9,14 +9,13 @@ stensor3<Tm> contract_qt3_qt2(const std::string cpos,
 		 	      const stensor3<Tm>& qt3a, 
 			      const stensor2<Tm>& qt2b,
 			      const bool ifdagger=false){
-   const auto& qt2 = ifdagger? qt2b.H() : qt2b;
    stensor3<Tm> qt3;
    if(cpos == "l"){
-      qt3 = contract_qt3_qt2_l(qt3a, qt2);
+      qt3 = contract_qt3_qt2_l(qt3a, qt2b, ifdagger);
    }else if(cpos == "r"){
-      qt3 = contract_qt3_qt2_r(qt3a, qt2);
+      qt3 = contract_qt3_qt2_r(qt3a, qt2b, ifdagger);
    }else if(cpos == "c"){
-      qt3 = contract_qt3_qt2_c(qt3a, qt2);
+      qt3 = contract_qt3_qt2_c(qt3a, qt2b, ifdagger);
    }else{
       std::cout << "error: no such case in contract_qt3_qt2! cpos=" 
 	        << cpos << std::endl;
@@ -30,7 +29,9 @@ stensor3<Tm> contract_qt3_qt2(const std::string cpos,
 //  x\--*--c
 template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a, 
-				const stensor2<Tm>& qt2b){
+				const stensor2<Tm>& qt2,
+			        const bool ifdagger=false){
+   const auto& qt2b = ifdagger? qt2.H() : qt2;
    assert(qt3a.dir_row() == !qt2b.dir_col());
    assert(qt3a.info.qrow == qt2b.info.qcol);
    qsym sym = qt3a.info.sym + qt2b.info.sym;
@@ -61,7 +62,9 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
 //  r--*--/ x/c
 template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a, 
-				const stensor2<Tm>& qt2b){
+				const stensor2<Tm>& qt2,
+			        const bool ifdagger=false){
+   const auto& qt2b = ifdagger? qt2.H() : qt2;
    assert(qt3a.dir_col() == !qt2b.dir_col()); // each line is associated with one dir
    assert(qt3a.info.qcol == qt2b.info.qcol);
    qsym sym = qt3a.info.sym + qt2b.info.sym;
@@ -93,7 +96,9 @@ stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a,
 //  r--*--c
 template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a, 
-			 	const stensor2<Tm>& qt2b){
+			 	const stensor2<Tm>& qt2,
+			        const bool ifdagger=false){
+   const auto& qt2b = ifdagger? qt2.H() : qt2;
    assert(qt3a.dir_mid() == !qt2b.dir_col());
    assert(qt3a.info.qmid == qt2b.info.qcol);
    qsym sym = qt3a.info.sym + qt2b.info.sym;

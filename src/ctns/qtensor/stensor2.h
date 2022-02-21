@@ -203,6 +203,9 @@ struct stensor2{
       double normF() const{ return linalg::xnrm2(info._size, _data); }
       void clear(){ memset(_data, 0, info._size*sizeof(Tm)); }
       // --- SPECIFIC FUNCTIONS ---
+      
+      //stensor2<Tm> view(const bool ifdagger=false) const;
+
       // from/to dense matrix: assign block to proper place
       void from_matrix(const linalg::matrix<Tm>& mat); 
       linalg::matrix<Tm> to_matrix() const;
@@ -251,6 +254,21 @@ struct stensor2{
    private:
       Tm* _data = nullptr;
 };
+
+/*
+template <typename Tm>
+stensor2<Tm> stensor2<Tm>::view(const bool ifdagger) const{
+   stensor2<Tm> st2;
+   if(!ifdagger){
+      st2.init(_info, false);
+      st2.setup_data(_data);
+   }else{
+      stensor2<Tm> qt2(-info.sym, info.qcol, info.qrow, info.dir, false);
+       
+   }
+   return st2;
+}
+*/
 
 template <typename Tm>
 linalg::matrix<Tm> stensor2<Tm>::to_matrix() const{

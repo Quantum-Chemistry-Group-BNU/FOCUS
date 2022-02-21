@@ -74,7 +74,7 @@ void qinfo2<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
          int cdim = qcol.get_dim(bc);
          int addr = _addr(br,bc);
          _nnzaddr.push_back(addr);
-	 _qblocks[addr].setup_dims(rdim,cdim,_size);
+	 _qblocks[addr].setup_dims(rdim,cdim);
 	 _size += rdim*cdim;
       } // bc
    } // br
@@ -82,9 +82,11 @@ void qinfo2<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
 
 template <typename Tm>
 void qinfo2<Tm>::setup_data(Tm* data){
+   size_t off = 0;
    for(int i=0; i<_nnzaddr.size(); i++){
       int addr = _nnzaddr[i];
-      _qblocks[addr].setup_data(data);
+      off += _qblocks[addr].size();
+      _qblocks[addr].setup_data(data+off);
    }
 }
 
