@@ -31,16 +31,8 @@ template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a, 
 				const stensor2<Tm>& qt2,
 			        const bool ifdagger=false){
-   //const char* transa = ifdagger? "C" : "N";
-   //const auto qt2b = qt2.view(ifdagger);
-   const char* transa = "N";
-   stensor2<Tm> qt2b;
-   if(ifdagger){ 
-      qt2b = qt2.H();	   
-   }else{
-      qt2b = qt2.view();
-   }
-   qt2b.print("qt2b");
+
+   const auto& qt2b = ifdagger? qt2.H() : qt2;
    assert(qt3a.dir_row() == !qt2b.dir_col());
    assert(qt3a.info.qrow == qt2b.info.qcol);
    qsym sym = qt3a.info.sym + qt2b.info.sym;
@@ -59,10 +51,43 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
 	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
 	 int mdim = qt3.info.qmid.get_dim(bm);
 	 for(int im=0; im<mdim; im++){
+            xgemm("N","N",1.0,blk2b,blk3a.get(im),1.0,blk3.get(im));
+	 } // im
+      } // bx
+   } // i
+
+   // think more about the direction of qext & qint
+
+/*
+   const char* transa = ifdagger? "C" : "N";
+   auto sym2 = ifdagger? -qt2.info.sym : qt2.info.sym;
+   auto qext = ifdagger? qt2.info.qcol : qt2.info.qrow; 
+   auto qint = ifdagger? qt2.info.qrow : qt2.info.qcol;
+   auto dext = qt2.dir_row(); // see the comment in stensor2<Tm>::H()
+   auto dint = qt2.dir_col();
+   assert(qt3a.dir_row() == !dint);
+   assert(qt3a.info.qrow == qint);
+   qsym sym = qt3a.info.sym + sym2;
+   std::vector<bool> dir = {dext, qt3a.dir_col(), qt3a.dir_mid()};
+   stensor3<Tm> qt3(sym, qext, qt3a.info.qcol, qt3a.info.qmid, dir);
+   // loop over external indices
+   int br, bc, bm;
+   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+      int idx = qt3.info._nnzaddr[i];
+      qt3.info._addr_unpack(idx,br,bc,bm);
+      auto& blk3 = qt3(br,bc,bm);
+      // loop over contracted indices
+      for(int bx=0; bx<qt3a.rows(); bx++){
+         const auto& blk3a = qt3a(bx,bc,bm);
+         const auto& blk2b = ifdagger? qt2(bx,br) : qt2(br,bx);
+	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+	 int mdim = qt3.info.qmid.get_dim(bm);
+	 for(int im=0; im<mdim; im++){
             xgemm(transa,"N",1.0,blk2b,blk3a.get(im),1.0,blk3.get(im));
 	 } // im
       } // bx
    } // i
+*/
    return qt3;
 }
 

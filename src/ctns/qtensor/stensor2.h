@@ -150,7 +150,7 @@ struct stensor2{
       }
       // print
       void print(const std::string name, const int level=0) const{
-         std::cout << "stensor2: " << name << " own=" << own << " _data=" << _data << std::endl; 
+         std::cout << "\nstensor2: " << name << " own=" << own << " _data=" << _data << std::endl; 
 	 info.print(name,level); 
       }
       // access
@@ -206,7 +206,6 @@ struct stensor2{
       double normF() const{ return linalg::xnrm2(info._size, _data); }
       void clear(){ memset(_data, 0, info._size*sizeof(Tm)); }
       // --- SPECIFIC FUNCTIONS ---
-      stensor2<Tm> view(const bool ifdagger=false) const;
       // from/to dense matrix: assign block to proper place
       void from_matrix(const linalg::matrix<Tm>& mat); 
       linalg::matrix<Tm> to_matrix() const;
@@ -255,27 +254,6 @@ struct stensor2{
    private:
       Tm* _data = nullptr;
 };
-
-// ZL@20220221: just view instead of H()
-template <typename Tm>
-stensor2<Tm> stensor2<Tm>::view(const bool ifdagger) const{
-   stensor2<Tm> qt2;
-   if(!ifdagger){
-      qt2.init(info, false);
-      qt2.setup_data(_data);
-   }else{
-      qt2.init(-info.sym, info.qcol, info.qrow, info.dir, false);
-      int br, bc;
-      for(int i=0; i<qt2.info._nnzaddr.size(); i++){
-         int addr = qt2.info._nnzaddr[i];
-         qt2.info._addr_unpack(addr,br,bc);
-         // setup pointer for conjugate transpose
-         Tm* ptr = const_cast<Tm*>((*this)(bc,br).data());
-         qt2(br,bc).setup_data(ptr);
-      } // i
-   }
-   return qt2;
-}
 
 template <typename Tm>
 linalg::matrix<Tm> stensor2<Tm>::to_matrix() const{
