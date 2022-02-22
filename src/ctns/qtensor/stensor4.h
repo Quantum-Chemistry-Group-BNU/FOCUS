@@ -152,7 +152,10 @@ struct stensor4{
 			[](const Tm& x){ return tools::conjugate(x); });
       }
       // print
-      void print(const std::string name, const int level=0) const{ info.print(name,level); }
+      void print(const std::string name, const int level=0) const{ 
+         std::cout << "stensor4: " << name << " own=" << own << " _data=" << _data << std::endl; 
+	 info.print(name,level); 
+      }
       // access
       const dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv) const{ 
 	 return info._qblocks[info._addr(br,bc,bm,bv)]; 

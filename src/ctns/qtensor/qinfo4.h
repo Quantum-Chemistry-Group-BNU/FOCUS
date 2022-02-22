@@ -100,7 +100,7 @@ void qinfo4<Tm>::setup_data(Tm* data){
 
 template <typename Tm>
 void qinfo4<Tm>::print(const std::string name, const int level) const{
-   std::cout << "\nqinfo4: " << name << " sym=" << sym << std::endl;
+   std::cout << "qinfo4: " << name << " sym=" << sym << std::endl;
    qrow.print("qrow");
    qcol.print("qcol");
    qmid.print("qmid");

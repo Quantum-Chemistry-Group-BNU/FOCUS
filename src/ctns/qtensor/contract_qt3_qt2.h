@@ -31,8 +31,16 @@ template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a, 
 				const stensor2<Tm>& qt2,
 			        const bool ifdagger=false){
-   const char* transa = ifdagger? "C" : "N";
-   const auto qt2b = qt2.view(ifdagger);
+   //const char* transa = ifdagger? "C" : "N";
+   //const auto qt2b = qt2.view(ifdagger);
+   const char* transa = "N";
+   stensor2<Tm> qt2b;
+   if(ifdagger){ 
+      qt2b = qt2.H();	   
+   }else{
+      qt2b = qt2.view();
+   }
+   qt2b.print("qt2b");
    assert(qt3a.dir_row() == !qt2b.dir_col());
    assert(qt3a.info.qrow == qt2b.info.qcol);
    qsym sym = qt3a.info.sym + qt2b.info.sym;
@@ -47,7 +55,7 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
       // loop over contracted indices
       for(int bx=0; bx<qt3a.rows(); bx++){
          const auto& blk3a = qt3a(bx,bc,bm);
-	 const auto& blk2b = ifdagger? qt2b(bx,br) : qt2b(br,bx);
+         const auto& blk2b = qt2b(br,bx);
 	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
 	 int mdim = qt3.info.qmid.get_dim(bm);
 	 for(int im=0; im<mdim; im++){

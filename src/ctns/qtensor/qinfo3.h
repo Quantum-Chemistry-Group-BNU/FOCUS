@@ -108,7 +108,7 @@ void qinfo3<Tm>::setup_data(Tm* data){
 
 template <typename Tm>
 void qinfo3<Tm>::print(const std::string name, const int level) const{
-   std::cout << "\nqinfo3: " << name << " sym=" << sym;
+   std::cout << "qinfo3: " << name << " sym=" << sym;
    tools::print_vector(dir,"dir");
    qrow.print("qrow");
    qcol.print("qcol");
