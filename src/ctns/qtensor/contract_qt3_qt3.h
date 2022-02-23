@@ -114,7 +114,7 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
 	 int cdim = blk2.dim1;
 	 for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-	       auto tmp = xgemm("N","C",blk3a.get(ir),blk3b.get(ic));
+	       auto tmp = linalg::xgemm("N","C",blk3a.get(ir),blk3b.get(ic));
 	       blk2(ir,ic) += tools::conjugate(tmp.trace());
 	    } // ir 
 	 } // ic

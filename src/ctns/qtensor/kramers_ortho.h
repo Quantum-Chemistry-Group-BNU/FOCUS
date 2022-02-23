@@ -234,7 +234,7 @@ int get_ortho_basis_qt(const int ndim,
          linalg::matrix<Tm> V(ndim,neig+nindp);
 	 linalg::xcopy(ndim*neig, vbas.data(), V.col(0));
 	 linalg::xcopy(ndim*nindp, rbas_new.data(), V.col(neig));
-         auto ova = xgemm("C","N",V,V);
+         auto ova = linalg::xgemm("C","N",V,V);
          ova.print("ova");
 	 auto dev = ova - linalg::identity_matrix<Tm>(neig+nindp);
 	 double diff = normF(dev);
@@ -312,7 +312,7 @@ int get_ortho_basis_qt(const int ndim,
 	 if(diff > 1.e-10) tools::exit("error: in consistent psi and psi_bar!");
 	 // check overlap matrix for basis
          linalg::matrix<Tm> V(ndim,nindp,rbas_new.data());
-         auto ova = xgemm("C","N",V,V);
+         auto ova = linalg::xgemm("C","N",V,V);
          ova.print("ova");
       }
       //-------------------------------------------------------------

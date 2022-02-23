@@ -54,6 +54,7 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
          const auto& blk2b = ifdagger? qt2(bx,br) : qt2(br,bx);
 	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
 	 int mdim = qt3.info.qmid.get_dim(bm);
+	 std::cout << "dims=" << blk3a.dim0 << " " << blk3a.dim1 << " " << blk3a.dim2 << std::endl; 
 	 for(int im=0; im<mdim; im++){
             xgemm(transa,"N",1.0,blk2b,blk3a.get(im),1.0,blk3.get(im));
 	 } // im
