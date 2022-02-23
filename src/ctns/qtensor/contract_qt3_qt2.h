@@ -31,7 +31,6 @@ template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a, 
 				const stensor2<Tm>& qt2,
 			        const bool ifdagger=false){
-   const char* transa = ifdagger? "C" : "N";
    auto sym2 = ifdagger? -qt2.info.sym : qt2.info.sym;
    auto qext = ifdagger? qt2.info.qcol : qt2.info.qrow; 
    auto qint = ifdagger? qt2.info.qrow : qt2.info.qcol;
@@ -43,6 +42,8 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
    std::vector<bool> dir = {dext, qt3a.dir_col(), qt3a.dir_mid()};
    stensor3<Tm> qt3(sym, qext, qt3a.info.qcol, qt3a.info.qmid, dir);
    // loop over external indices
+   const char* transa = ifdagger? "C" : "N";
+   const Tm alpha = 1.0, beta = 1.0;
    int br, bc, bm;
    for(int i=0; i<qt3.info._nnzaddr.size(); i++){
       int idx = qt3.info._nnzaddr[i];
@@ -55,7 +56,7 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
 	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
 	 int mdim = blk3.dim2;
 	 for(int im=0; im<mdim; im++){
-            xgemm(transa,"N",1.0,blk2b,blk3a.get(im),1.0,blk3.get(im));
+            xgemm(transa,"N",alpha,blk2b,blk3a.get(im),beta,blk3.get(im));
 	 } // im
       } // bx
    } // i
@@ -69,6 +70,7 @@ template <typename Tm>
 stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a, 
 				const stensor2<Tm>& qt2,
 			        const bool ifdagger=false){
+/*
    const auto& qt2b = ifdagger? qt2.H() : qt2;
    assert(qt3a.dir_col() == !qt2b.dir_col()); // each line is associated with one dir
    assert(qt3a.info.qcol == qt2b.info.qcol);
@@ -90,6 +92,38 @@ stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a,
          for(int im=0; im<mdim; im++){
             xgemm("N","T",1.0,blk3a.get(im),blk2b,1.0,blk3.get(im));
          } // im
+      } // bx
+   } // i
+*/
+   auto sym2 = ifdagger? -qt2.info.sym : qt2.info.sym;
+   auto qext = ifdagger? qt2.info.qcol : qt2.info.qrow; 
+   auto qint = ifdagger? qt2.info.qrow : qt2.info.qcol;
+   auto dext = qt2.dir_row(); // see the comment in stensor2<Tm>::H()
+   auto dint = qt2.dir_col();
+   assert(qt3a.dir_col() == !dint);
+   assert(qt3a.info.qcol == qint);
+   qsym sym = qt3a.info.sym + sym2;
+   std::vector<bool> dir = {qt3a.dir_row(), dext, qt3a.dir_mid()};
+   stensor3<Tm> qt3(sym, qt3a.info.qrow, qext, qt3a.info.qmid, dir);
+   // loop over external indices
+   const char* transb = ifdagger? "N" : "T";
+   const Tm alpha = 1.0, beta = 1.0;
+   int br, bc, bm;
+   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+      int idx = qt3.info._nnzaddr[i];
+      qt3.info._addr_unpack(idx,br,bc,bm);
+      auto& blk3 = qt3(br,bc,bm);
+      // loop over contracted indices
+      for(int bx=0; bx<qt3a.cols(); bx++){
+	 const auto& blk3a = qt3a(br,bx,bm);
+	 auto blk2b = ifdagger? qt2(bx,bc) : qt2(bc,bx);
+	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+         int mdim = blk3.dim2;
+         if(ifdagger) blk2b.conjugate();
+	 for(int im=0; im<mdim; im++){
+            xgemm("N",transb,alpha,blk3a.get(im),blk2b,beta,blk3.get(im));
+         } // im
+         if(ifdagger) blk2b.conjugate();
       } // bx
    } // i
    return qt3;
@@ -132,7 +166,6 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
       } // bx
    } // i
 */
-
    auto sym2 = ifdagger? -qt2.info.sym : qt2.info.sym;
    auto qext = ifdagger? qt2.info.qcol : qt2.info.qrow; 
    auto qint = ifdagger? qt2.info.qrow : qt2.info.qcol;
@@ -144,6 +177,7 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
    std::vector<bool> dir = {qt3a.dir_row(), qt3a.dir_col(), dext};
    stensor3<Tm> qt3(sym, qt3a.info.qrow, qt3a.info.qcol, qext, dir);
    // loop over external indices
+   const char* transb = ifdagger? "N" : "T";
    const Tm alpha = 1.0, beta = 1.0;
    int br, bc, bm;
    for(int i=0; i<qt3.info._nnzaddr.size(); i++){
@@ -156,23 +190,14 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
 	 auto blk2b = ifdagger? qt2(bx,bm) : qt2(bm,bx);
 	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
 	 int rcdim = blk3.dim0*blk3.dim1;
-	 int xdim = blk3.dim2;
-	 int mdim = blk3a.dim2;
-         const char* transb = ifdagger? "N" : "T";
+	 int mdim = blk3.dim2;
+	 int xdim = blk3a.dim2;
+	 if(ifdagger) blk2b.conjugate();
          int LDB = ifdagger? xdim : mdim;
-         if(ifdagger) blk2b.conjugate();
          linalg::xgemm("N", transb, &rcdim, &mdim, &xdim, &alpha,
                        blk3a.data(), &rcdim, blk2b.data(), &LDB, &beta,
-	               blk3.data(), &rcdim); 
+	               blk3.data(), &rcdim);
          if(ifdagger) blk2b.conjugate();
-/*
-	 for(int ix=0; ix<xdim; ix++){
-	    for(int im=0; im<mdim; im++){
-	       Tm fac = ifdagger? tools::conjugate(blk2b(ix,im)) : blk2b(im,ix);
-	       linalg::xaxpy(N, fac, blk3a.get(ix).data(), blk3.get(im).data());
-	    } // im
-	 } // ix
-*/ 
       } // bx
    } // i
    return qt3;
