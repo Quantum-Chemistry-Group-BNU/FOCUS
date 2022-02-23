@@ -59,15 +59,15 @@ LOGS
 	- benchmark for small systems
 	- minimize memory allocation / intermediates?
 	- benchmark for [Fe4S4] systems
-    - optimization of onedot opt:
-	- avoid H() & K()
+    - optimization of onedot/twodot opt:
 	- int1e only appears in oper_dot.h
+	- revise qt3_qt2 without explicit H() [DONE2022/02/23]
+        - revise qt4_qt2? 
         - avoid daxpy?
-	- revise qt3_qt2 without explicit H()
         - avoid repeated formation of intermediate?
 	- avoid memset?
-    - optimization of twodot opt:
-        - qt4_qt2? 
+	- profile openmp version
+        - kramers version avoid K()
 
  * Large-scale parallelization: push to the limit!
     - GPU for contractions?

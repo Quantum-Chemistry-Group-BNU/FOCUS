@@ -9,16 +9,15 @@ stensor4<Tm> contract_qt4_qt2(const std::string cpos,
 		 	      const stensor4<Tm>& qt4a, 
 			      const stensor2<Tm>& qt2b,
 			      const bool ifdagger=false){
-   const auto& qt2 = ifdagger? qt2b.H() : qt2b;
    stensor4<Tm> qt4;
    if(cpos == "l"){
-      qt4 = contract_qt4_qt2_l(qt4a, qt2);
+      qt4 = contract_qt4_qt2_l(qt4a, qt2b, ifdagger);
    }else if(cpos == "r"){
-      qt4 = contract_qt4_qt2_r(qt4a, qt2);
+      qt4 = contract_qt4_qt2_r(qt4a, qt2b, ifdagger);
    }else if(cpos == "c1"){
-      qt4 = contract_qt4_qt2_c1(qt4a, qt2);
+      qt4 = contract_qt4_qt2_c1(qt4a, qt2b, ifdagger);
    }else if(cpos == "c2"){
-      qt4 = contract_qt4_qt2_c2(qt4a, qt2);
+      qt4 = contract_qt4_qt2_c2(qt4a, qt2b, ifdagger);
    }else{
       std::cout << "error: no such case in contract_qt4_qt2! cpos=" 
                 << cpos << std::endl;
@@ -32,7 +31,9 @@ stensor4<Tm> contract_qt4_qt2(const std::string cpos,
 //                                        x \--*--c
 template <typename Tm>
 stensor4<Tm> contract_qt4_qt2_l(const stensor4<Tm>& qt4a, 
-				const stensor2<Tm>& qt2b){
+				const stensor2<Tm>& qt2,
+				const bool ifdagger=false){
+   const auto& qt2b = ifdagger? qt2.H() : qt2;
    assert(qt4a.dir_row() == !qt2b.dir_col());
    assert(qt4a.info.qrow == qt2b.info.qcol);
    qsym sym = qt4a.info.sym + qt2b.info.sym;
@@ -66,7 +67,9 @@ stensor4<Tm> contract_qt4_qt2_l(const stensor4<Tm>& qt4a,
 //                                        r--*--/ x
 template <typename Tm>
 stensor4<Tm> contract_qt4_qt2_r(const stensor4<Tm>& qt4a, 
-				const stensor2<Tm>& qt2b){
+				const stensor2<Tm>& qt2,
+				const bool ifdagger=false){
+   const auto& qt2b = ifdagger? qt2.H() : qt2;
    assert(qt4a.dir_col() == !qt2b.dir_col()); // each line is associated with one dir
    assert(qt4a.info.qcol == qt2b.info.qcol);
    qsym sym = qt4a.info.sym + qt2b.info.sym;
@@ -103,7 +106,9 @@ stensor4<Tm> contract_qt4_qt2_r(const stensor4<Tm>& qt4a,
 //
 template <typename Tm>
 stensor4<Tm> contract_qt4_qt2_c1(const stensor4<Tm>& qt4a, 
-			 	 const stensor2<Tm>& qt2b){
+			 	 const stensor2<Tm>& qt2,
+				 const bool ifdagger=false){
+   const auto& qt2b = ifdagger? qt2.H() : qt2;
    assert(qt4a.dir_mid() == !qt2b.dir_col());
    assert(qt4a.info.qmid == qt2b.info.qcol);
    qsym sym = qt4a.info.sym + qt2b.info.sym;
@@ -145,7 +150,9 @@ stensor4<Tm> contract_qt4_qt2_c1(const stensor4<Tm>& qt4a,
 //  
 template <typename Tm>
 stensor4<Tm> contract_qt4_qt2_c2(const stensor4<Tm>& qt4a, 
-			 	 const stensor2<Tm>& qt2b){
+			 	 const stensor2<Tm>& qt2,
+				 const bool ifdagger=false){
+   const auto& qt2b = ifdagger? qt2.H() : qt2;
    assert(qt4a.dir_ver() == !qt2b.dir_col());
    assert(qt4a.info.qver == qt2b.info.qcol);
    qsym sym = qt4a.info.sym + qt2b.info.sym;
