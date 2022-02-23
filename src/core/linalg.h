@@ -57,11 +57,11 @@ double symmetric_diff(const matrix<Tm>& A){
    return normF(A-A.H());
 }
 
-// shorthand for A*B
+// C := alpha*op( A )*op( B )
 template <typename Tm>
 matrix<Tm> xgemm(const char* TRANSA, const char* TRANSB,
-	         const matrix<Tm>& A, const matrix<Tm>& B,
-	         const Tm alpha=1.0){
+	         const BaseMatrix<Tm>& A, const BaseMatrix<Tm>& B,
+		 const Tm alpha=1.0){
    int M, N, K;
    int LDA, LDB, LDC;
    // TRANS is c-type string (character array), input "N" not 'N' 
@@ -81,8 +81,9 @@ matrix<Tm> xgemm(const char* TRANSA, const char* TRANSB,
       assert(K == B.cols());
       N = B.rows(); LDB = N;
    }
+   // we assume the exact match of matrix size in our applications
    matrix<Tm> C(M,N);
-   LDC = M; // we assume the exact match of matrix size in our applications
+   LDC = M;
    const Tm beta = 0.0;
    xgemm(&trans_A, &trans_B, &M, &N, &K, &alpha, 
 	 A.data(), &LDA, B.data(), &LDB, &beta, 
