@@ -53,8 +53,7 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
          const auto& blk3a = qt3a(bx,bc,bm);
          const auto& blk2b = ifdagger? qt2(bx,br) : qt2(br,bx);
 	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
-	 int mdim = qt3.info.qmid.get_dim(bm);
-	 std::cout << "dims=" << blk3a.dim0 << " " << blk3a.dim1 << " " << blk3a.dim2 << std::endl; 
+	 int mdim = blk3.dim2;
 	 for(int im=0; im<mdim; im++){
             xgemm(transa,"N",1.0,blk2b,blk3a.get(im),1.0,blk3.get(im));
 	 } // im
@@ -87,7 +86,7 @@ stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a,
 	 const auto& blk3a = qt3a(br,bx,bm);
 	 const auto& blk2b = qt2b(bc,bx);
 	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
-         int mdim = qt3.info.qmid.get_dim(bm);
+         int mdim = blk3.dim2;
          for(int im=0; im<mdim; im++){
             xgemm("N","T",1.0,blk3a.get(im),blk2b,1.0,blk3.get(im));
          } // im
@@ -145,6 +144,7 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
    std::vector<bool> dir = {qt3a.dir_row(), qt3a.dir_col(), dext};
    stensor3<Tm> qt3(sym, qt3a.info.qrow, qt3a.info.qcol, qext, dir);
    // loop over external indices
+   const Tm alpha = 1.0, beta = 1.0;
    int br, bc, bm;
    for(int i=0; i<qt3.info._nnzaddr.size(); i++){
       int idx = qt3.info._nnzaddr[i];
@@ -153,17 +153,26 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
       // loop over contracted indices
       for(int bx=0; bx<qt3a.mids(); bx++){
          const auto& blk3a = qt3a(br,bc,bx);
-	 const auto& blk2b = ifdagger? qt2(bx,bm) : qt2(bm,bx);
+	 auto blk2b = ifdagger? qt2(bx,bm) : qt2(bm,bx);
 	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
-	 int N = blk3.dim0*blk3.dim1;
-	 int xdim = qt3a.info.qmid.get_dim(bx);
-	 int mdim = qt3.info.qmid.get_dim(bm);
+	 int rcdim = blk3.dim0*blk3.dim1;
+	 int xdim = blk3.dim2;
+	 int mdim = blk3a.dim2;
+         const char* transb = ifdagger? "N" : "T";
+         int LDB = ifdagger? xdim : mdim;
+         if(ifdagger) blk2b.conjugate();
+         linalg::xgemm("N", transb, &rcdim, &mdim, &xdim, &alpha,
+                       blk3a.data(), &rcdim, blk2b.data(), &LDB, &beta,
+	               blk3.data(), &rcdim); 
+         if(ifdagger) blk2b.conjugate();
+/*
 	 for(int ix=0; ix<xdim; ix++){
 	    for(int im=0; im<mdim; im++){
 	       Tm fac = ifdagger? tools::conjugate(blk2b(ix,im)) : blk2b(im,ix);
 	       linalg::xaxpy(N, fac, blk3a.get(ix).data(), blk3.get(im).data());
 	    } // im
-	 } // ix 
+	 } // ix
+*/ 
       } // bx
    } // i
    return qt3;
