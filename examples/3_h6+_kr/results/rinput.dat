@@ -31,5 +31,6 @@ schedule
 end
 maxsweep 2
 task_dmrg
+alg_dmrg 1
 $end
 
