@@ -26,7 +26,8 @@ class qsym{
    public:
       // constructors
       qsym(){}
-      qsym(const short isym): _isym(isym), _ne(0), _tm(0) {} 
+      qsym(const short isym): _isym(isym), _ne(0), _tm(0) {}
+      qsym(const short isym, const short ne): _isym(isym), _ne(ne), _tm(0) {} 
       qsym(const short isym, const short ne, const short tm):  _isym(isym), _ne(ne), _tm(tm) {}
       // assignement
       qsym& operator =(const qsym& sym){

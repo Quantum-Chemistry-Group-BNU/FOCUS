@@ -69,6 +69,8 @@ class oper_dict{
          return _opdict[key];      
       }
       // helpers
+      size_t size() const{ return _size; };
+      size_t opsize() const{ return _opsize; };
       void print(const std::string name, const int level=0) const;
       // precompute memory required
       std::vector<int> oper_index_op(const char key) const;
@@ -92,7 +94,7 @@ class oper_dict{
 template <typename Tm>
 using oper_dictmap = std::map<std::string,const oper_dict<Tm>&>; 
 
-
+// helpers
 template <typename Tm>
 void oper_dict<Tm>::print(const std::string name, const int level) const{
    std::cout << " " << name << ": oplist=" << oplist;

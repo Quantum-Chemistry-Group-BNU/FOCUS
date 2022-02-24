@@ -68,24 +68,20 @@ void qinfo4<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
    _cols = qcol.size();
    _mids = qmid.size();
    _vers = qver.size();
-   _qblocks.resize(_rows*_cols*_mids*_vers);
-   for(int br=0; br<qrow.size(); br++){
+   int nblks = _rows*_cols*_mids*_vers;
+   _qblocks.resize(nblks);
+   int br, bc, bm, bv;
+   for(int i=0; i<nblks; i++){
+      _addr_unpack(i,br,bc,bm,bv);
+      if(not _ifconserve(br,bc,bm,bv)) continue;
       int rdim = qrow.get_dim(br);
-      for(int bc=0; bc<qcol.size(); bc++){
-         int cdim = qcol.get_dim(bc);
-	 for(int bm=0; bm<qmid.size(); bm++){
-	    int mdim = qmid.get_dim(bm);
-	    for(int bv=0; bv<qver.size(); bv++){
-	       int vdim = qver.get_dim(bv);
-	       if(not _ifconserve(br,bc,bm,bv)) continue;
-	       int addr = _addr(br,bc,bm,bv);
-	       _nnzaddr.push_back(addr);
-	       _qblocks[addr].setup_dims(rdim,cdim,mdim,vdim);
-	       _size += rdim*cdim*mdim*vdim;
-	    } // bv
-	 } // bm
-      } // bc
-   } // br
+      int cdim = qcol.get_dim(bc);
+      int mdim = qmid.get_dim(bm);
+      int vdim = qver.get_dim(bv);
+      _nnzaddr.push_back(i);
+      _qblocks[i].setup_dims(rdim,cdim,mdim,vdim);
+      _size += rdim*cdim*mdim*vdim;
+   } // i
 }
 
 template <typename Tm>

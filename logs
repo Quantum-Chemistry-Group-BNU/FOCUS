@@ -61,9 +61,9 @@ LOGS
 	- benchmark for [Fe4S4] systems
     - optimization of onedot/twodot opt:
 	- int1e only appears in oper_dot.h
-	- revise qt3_qt2 without explicit H() [DONE2022/02/23]
-
-        - revise qt4_qt2? 
+	- revise qt3_qt2 without explicit H() 
+        - revise qt4_qt2 without explicit H() [DONE2022/02/23]
+ 
         - avoid daxpy?
         - avoid memory allocation: repeated formation of intermediate?
 	- avoid memset?

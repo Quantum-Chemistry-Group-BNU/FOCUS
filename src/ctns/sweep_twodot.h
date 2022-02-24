@@ -124,7 +124,9 @@ void sweep_twodot(const input::schedule& schd,
    auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
    stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
    if(rank == 0 && debug_sweep){ 
-      std::cout << "sym_state=" << sym_state << " dim(localCI)=" << wf.size() << std::endl;
+      std::cout << "sym_state=" << sym_state 
+	        << " dim(localCI)=" << wf.size() 
+		<< std::endl;
    }
  
    // 3. Davidson solver for wf
