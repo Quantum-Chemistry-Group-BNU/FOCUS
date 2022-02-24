@@ -63,9 +63,10 @@ LOGS
 	- int1e only appears in oper_dot.h
 	- revise qt3_qt2 without explicit H() 
         - revise qt4_qt2 without explicit H() [DONE2022/02/23]
- 
-        - avoid daxpy?
+
+        - preprocess: 
         - avoid memory allocation: repeated formation of intermediate?
+        - avoid daxpy?
 	- avoid memset?
 	- profile openmp version
         - kramers version avoid K()

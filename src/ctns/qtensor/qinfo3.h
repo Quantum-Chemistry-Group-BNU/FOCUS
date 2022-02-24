@@ -79,19 +79,21 @@ void qinfo3<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
    _rows = qrow.size();
    _cols = qcol.size();
    _mids = qmid.size();
-   int nblks = _rows*_cols*_mids;
-   _qblocks.resize(nblks);
-   int br, bc, bm;
-   for(int i=0; i<nblks; i++){
-      _addr_unpack(i,br,bc,bm);
-      if(not _ifconserve(br,bc,bm)) continue;
+   _qblocks.resize(_rows*_cols*_mids);
+   for(int br=0; br<qrow.size(); br++){
       int rdim = qrow.get_dim(br);
-      int cdim = qcol.get_dim(bc);
-      int mdim = qmid.get_dim(bm);
-      _nnzaddr.push_back(i);
-      _qblocks[i].setup_dims(rdim,cdim,mdim);
-      _size += rdim*cdim*mdim;
-   } // i
+      for(int bc=0; bc<qcol.size(); bc++){
+         int cdim = qcol.get_dim(bc);
+	 for(int bm=0; bm<qmid.size(); bm++){
+	    int mdim = qmid.get_dim(bm);
+	    if(not _ifconserve(br,bc,bm)) continue;
+            int addr = _addr(br,bc,bm);
+	    _nnzaddr.push_back(addr);
+	    _qblocks[addr].setup_dims(rdim,cdim,mdim);
+	    _size += rdim*cdim*mdim;
+	 } // bm 
+      } // bc
+   } // br
 }
 
 template <typename Tm>
