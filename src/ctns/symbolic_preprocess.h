@@ -36,76 +36,92 @@ inline std::set<qsym> get_qsym_allops(const int isym,
 }
 
 template <typename Tm>
-std::pair<size_t,size_t> symbolic_preprocess(const oper_dictmap<Tm>& qops_dict,
-				             const qsym& sym_state,
-			 	             const int nbody=2){
-   const bool debug = true;
-   int dims = qops_dict.size();
-   if(debug){
-      std::cout << "ctns::symbolic_preprocess"
-	        << " nbody=" << nbody
-		<< " dims=" << dims 
-		<< std::endl;
-   }
-   int isym = (qops_dict.begin()->second).isym;
-   // op2
+size_t preprocess_opsize(const oper_dictmap<Tm>& qops_dict){
    size_t opsize = 0;
    for(const auto& pr : qops_dict){
-      assert(isym == pr.second.isym);
       opsize = std::max(opsize, pr.second.opsize());
    }
-   // wf3 / wf4
-   auto sym_ops = get_qsym_allops(isym,nbody);
-   size_t wfsize = 0;
-   if(dims == 3){
-      auto qrow = qops_dict.at("l").qket;
-      auto qcol = qops_dict.at("r").qket;
-      auto qmid = qops_dict.at("c").qket;
-      int idx = 0;
-      for(const auto& sym_op : sym_ops){
-	 auto sym = sym_op+sym_state;
-         qinfo3<Tm> info3;
-	 info3.init(sym, qrow, qcol, qmid, {1,1,1});
-	 wfsize = std::max(wfsize, info3._size);
-	 if(debug){
-            std::cout << " idx=" << idx 
-	              << " sym_op=" << sym_op
-	              << " sym_state=" << sym_state
-	              << " sym=" << sym
-	              << " size=" << info3._size
-	              << std::endl;
-	 }
-	 idx++;
-      }
-   }else if(dims == 4){
-      auto qrow = qops_dict.at("l").qket;
-      auto qcol = qops_dict.at("r").qket;
-      auto qmid = qops_dict.at("c1").qket;
-      auto qver = qops_dict.at("c2").qket;
-      int idx = 0;
-      for(const auto& sym_op : sym_ops){
-	 auto sym = sym_op+sym_state;
-         qinfo4<Tm> info4;
-	 info4.init(sym, qrow, qcol, qmid, qver);
-	 wfsize = std::max(wfsize, info4._size);
-	 if(debug){
-            std::cout << " idx=" << idx 
-	              << " sym_op=" << sym_op
-	              << " sym_state=" << sym_state
-	              << " sym=" << sym
-	              << " size=" << info4._size
-	              << std::endl;
-	 }
-	 idx++;
-      }
-   }
+   return opsize;
+}
+
+template <typename Tm>
+size_t preprocess_wf3size(const qinfo3<Tm>& wf3info, 
+    	 	          std::map<qsym,qinfo3<Tm>>& info_dict,
+		          const int nbody=2){
+   const bool debug = true;
+   const auto& sym_state = wf3info.sym; 
+   const auto& qrow = wf3info.qrow;
+   const auto& qcol = wf3info.qcol;
+   const auto& qmid = wf3info.qmid;
+   const auto& dir = wf3info.dir;
+   int isym = sym_state.isym();
    if(debug){ 
-      std::cout << " summary: isym=" << isym 
-	        << " opsize=" << opsize 
-	        << " wfsize=" << wfsize 
+      std::cout << "ctns::preprocess_wf3size"
+	        << " isym=" << isym
+	        << " nbody=" << nbody 
 		<< std::endl;
    }
-   return std::make_pair(opsize,wfsize);
+   // generate all operators
+   auto sym_ops = get_qsym_allops(isym,nbody);
+   size_t wfsize = 0;
+   int idx = 0;
+   for(const auto& sym_op : sym_ops){
+      auto sym = sym_op+sym_state;
+      qinfo3<Tm> info;
+      info.init(sym, qrow, qcol, qmid, dir);
+      info_dict[sym] = info;
+      wfsize = std::max(wfsize, info._size);
+      if(debug){
+         std::cout << " idx=" << idx 
+                   << " sym_op=" << sym_op
+                   << " sym_state=" << sym_state
+                   << " sym=" << sym
+                   << " size=" << info._size
+                   << std::endl;
+      }
+      idx++;
+   }
+   return wfsize;
+}
+
+template <typename Tm>
+size_t preprocess_wf4size(const qinfo4<Tm>& wf4info, 
+    	 	          std::map<qsym,qinfo4<Tm>>& info_dict,
+		          const int nbody=2){
+   const bool debug = true;
+   const auto& sym_state = wf4info.sym; 
+   const auto& qrow = wf4info.qrow;
+   const auto& qcol = wf4info.qcol;
+   const auto& qmid = wf4info.qmid;
+   const auto& qver = wf4info.qver;
+   int isym = sym_state.isym();
+   if(debug){ 
+      std::cout << "ctns::preprocess_wf4size"
+	        << " isym=" << isym 
+		<< " nbody=" << nbody 
+		<< std::endl;
+   }
+   // generate all operators
+   auto sym_ops = get_qsym_allops(isym,nbody);
+   size_t wfsize = 0;
+   int idx = 0;
+   for(const auto& sym_op : sym_ops){
+      auto sym = sym_op+sym_state;
+      qinfo4<Tm> info;
+      info.init(sym, qrow, qcol, qmid, qver);
+      info_dict[sym] = info;
+      wfsize = std::max(wfsize, info._size);
+      if(debug){
+         std::cout << " idx=" << idx 
+                   << " sym_op=" << sym_op
+                   << " sym_state=" << sym_state
+                   << " sym=" << sym
+                   << " size=" << info._size
+                   << std::endl;
+      }
+      idx++;
+   }
+   return wfsize;
 }
 
 } // ctns

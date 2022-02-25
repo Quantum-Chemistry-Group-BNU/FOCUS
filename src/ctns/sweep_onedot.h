@@ -122,6 +122,7 @@ void sweep_onedot(const input::schedule& schd,
    const oper_dictmap<Tm> qops_dict = {{"l",lqops},
 	   		 	       {"r",rqops},
 	   			       {"c",cqops}};
+   std::map<qsym,qinfo3<Tm>> info_dict;
    symbolic_task<Tm> H_formulae;
    Hx_functors<Tm> Hx_funs;
    HVec_type<Tm> HVec;
@@ -143,9 +144,8 @@ void sweep_onedot(const input::schedule& schd,
            	     std::cref(qops_dict), std::cref(ecore),
                      std::ref(wf), std::cref(size), std::cref(rank));
       }else if(schd.ctns.alg_hvec == 2){
-         auto worksize = symbolic_preprocess(qops_dict, sym_state);
-	 size_t opsize = worksize.first;
-	 size_t wfsize = worksize.second;
+	 size_t opsize = preprocess_opsize(qops_dict);
+	 size_t wfsize = preprocess_wf3size(wf.info, info_dict);
 	 size_t tmpsize = opsize + 3*wfsize;
 	 size_t worktot = maxthreads*tmpsize;
 	 if(rank == 0){
@@ -162,7 +162,7 @@ void sweep_onedot(const input::schedule& schd,
            	     std::cref(qops_dict), std::cref(ecore), 
                      std::ref(wf), std::cref(size), std::cref(rank),
 		     std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
-		     std::ref(workspace));
+		     std::cref(info_dict), std::ref(workspace));
       }
    }
    oper_timer.clear();

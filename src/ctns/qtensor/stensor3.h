@@ -250,7 +250,6 @@ struct stensor3{
    public:
       bool own = true; // whether the object owns its data
       qinfo3<Tm> info;
-   private:   
       Tm* _data = nullptr;
 };
 

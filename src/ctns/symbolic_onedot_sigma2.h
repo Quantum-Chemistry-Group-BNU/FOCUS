@@ -61,38 +61,75 @@ void symbolic_onedot_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 		             stensor3<Tm>& Hwf,
 		             const size_t& opsize,
 			     const size_t& wfsize,
+			     const std::map<qsym,qinfo3<Tm>>& info_dict, 
 			     Tm* workspace){
    const bool debug = false;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    // compute (HTerm+HTerm.H)*|wf>
-   stensor3<Tm> opNxwf, opHxwf;
+   int isym = wf.info.sym.isym();
+   qsym sym;
+   stensor3<Tm> opxwf0, opxwf;
+   // 1. opN*|wf>
+   sym = wf.info.sym;
+   opxwf0.init(wf.info,false);
+   opxwf0.setup_data(wf.data());
    for(int idx=HTerm.size()-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];
       const auto& sop0 = sop.sums[0].second;
+      const auto& index0 = sop0.index;
       const auto& parity = sop0.parity;
       const auto& label  = sop0.label;
       const auto& dagger = sop0.dagger;
       const auto& block = sop0.block;
       const auto& qops = qops_dict.at(block);
       auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
-      // (opN+opH)*|wf>
-      if(idx == HTerm.size()-1){
-         opNxwf = contract_qt3_qt2(block,wf,optmp,dagger);
-         opHxwf = contract_qt3_qt2(block,wf,optmp,!dagger);
-      }else{
-         opNxwf = contract_qt3_qt2(block,opNxwf,optmp,dagger);
-         opHxwf = contract_qt3_qt2(block,opHxwf,optmp,!dagger);
-      }
-      // impose antisymmetry here
-      if(parity){ 
-         opNxwf.cntr_signed(block);
-         opHxwf.cntr_signed(block);
+      qsym sym_op = get_qsym_op(label, isym, index0); 
+      sym = dagger? sym-sym_op : sym+sym_op;
+      // opN*|wf>
+      const auto& info = info_dict.at(sym);
+      Tm* wptr = workspace+opsize+(idx%2)*wfsize;
+      opxwf.init(info,false);
+      opxwf.setup_data(wptr);
+      opxwf.clear();
+      contract_qt3_qt2_info(block,opxwf0,optmp,opxwf,dagger);
+      if(parity) opxwf.cntr_signed(block); // impose antisymmetry here
+      if(idx != 0){
+	 opxwf0.info = opxwf.info;
+         opxwf0.setup_data(wptr);	 
       }
    } // idx
-   int N = Hwf.size();
+   linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data()); 
+   // 2. opH*|wf> 
+   sym = wf.info.sym;
+   opxwf0.init(wf.info,false);
+   opxwf0.setup_data(wf.data());
+   for(int idx=HTerm.size()-1; idx>=0; idx--){
+      const auto& sop = HTerm.terms[idx];
+      const auto& sop0 = sop.sums[0].second;
+      const auto& index0 = sop0.index;
+      const auto& parity = sop0.parity;
+      const auto& label  = sop0.label;
+      const auto& dagger = sop0.dagger;
+      const auto& block = sop0.block;
+      const auto& qops = qops_dict.at(block);
+      auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
+      qsym sym_op = get_qsym_op(label, isym, index0); 
+      sym = !dagger? sym-sym_op : sym+sym_op;
+      // opH*|wf>
+      const auto& info = info_dict.at(sym);
+      Tm* wptr = workspace+opsize+(idx%2)*wfsize;
+      opxwf.init(info,false);
+      opxwf.setup_data(wptr);
+      opxwf.clear();
+      contract_qt3_qt2_info(block,opxwf0,optmp,opxwf,!dagger);
+      if(parity) opxwf.cntr_signed(block); // impose antisymmetry here
+      if(idx != 0){
+	 opxwf0.info = opxwf.info;
+         opxwf0.setup_data(wptr);	 
+      }
+   } // idx
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
-   linalg::xaxpy(N, 1.0, opNxwf.data(), Hwf.data()); 
-   linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data()); 
+   linalg::xaxpy(Hwf.size(), fac, opxwf.data(), Hwf.data()); 
 }
 
 template <typename Tm> 
@@ -107,6 +144,7 @@ void symbolic_onedot_Hx2(Tm* y,
 	                 const size_t& opsize,
 			 const size_t& wfsize,
 			 const size_t& tmpsize,
+			 const std::map<qsym,qinfo3<Tm>>& info_dict, 
 			 Tm* workspace){
    const bool debug = false;
    auto t0 = tools::get_time();
@@ -145,7 +183,7 @@ void symbolic_onedot_Hx2(Tm* y,
 #endif
       const auto& HTerm = H_formulae.tasks[it];
       symbolic_onedot_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[omprank],
-		              opsize,wfsize,
+		              opsize,wfsize,info_dict,
 			      &workspace[omprank*tmpsize+wfsize]);
    } // it
    auto t2 = tools::get_time();

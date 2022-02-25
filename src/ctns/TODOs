@@ -325,6 +325,9 @@ Twodot implementation: work with qt4_qt2 without reshaping
  qtensor/tensor_contract3.h
  qtensor/tensor_contract4.h
 
+Optimized version:
+ symbolic_preprocess.h
+ symbolic_onedot_sigma2.h
 
 #################################################################
 

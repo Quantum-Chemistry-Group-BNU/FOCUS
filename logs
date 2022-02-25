@@ -68,6 +68,7 @@ LOGS
         - avoid memory allocation: repeated formation of intermediate?
         - avoid daxpy?
 	- avoid memset?
+        - info only store offset? or maps - auto& blk3 = qt3(br,bc,bm) - avoid computation!
 	- profile openmp version
         - kramers version avoid K()
 
