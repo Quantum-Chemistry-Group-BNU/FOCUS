@@ -90,7 +90,6 @@ void symbolic_onedot_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
-      opxwf.clear();
       contract_qt3_qt2_info(block,opxwf0,optmp,opxwf,dagger);
       if(parity) opxwf.cntr_signed(block); // impose antisymmetry here
       if(idx != 0){
@@ -120,7 +119,6 @@ void symbolic_onedot_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
-      opxwf.clear();
       contract_qt3_qt2_info(block,opxwf0,optmp,opxwf,!dagger);
       if(parity) opxwf.cntr_signed(block); // impose antisymmetry here
       if(idx != 0){
