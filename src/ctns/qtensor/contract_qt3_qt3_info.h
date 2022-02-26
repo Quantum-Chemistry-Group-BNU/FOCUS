@@ -1,39 +1,36 @@
-#ifndef CONTRACT_QT3_QT3_H
-#define CONTRACT_QT3_QT3_H
+#ifndef CONTRACT_QT3_QT3_INFO_H
+#define CONTRACT_QT3_QT3_INFO_H
 
 namespace ctns{
 
 // --- contract_qt3_qt3 ---
 template <typename Tm>
-stensor2<Tm> contract_qt3_qt3(const std::string superblock,
-		 	      const stensor3<Tm>& qt3a, 
-			      const stensor3<Tm>& qt3b){
-   stensor2<Tm> qt2;
+void contract_qt3_qt3_info(const std::string superblock,
+		 	   const stensor3<Tm>& qt3a, 
+			   const stensor3<Tm>& qt3b,
+			   stensor2<Tm>& qt2){
    if(superblock == "lc"){
-      qt2 = contract_qt3_qt3_lc(qt3a, qt3b);
+      contract_qt3_qt3_info_lc(qt3a, qt3b, qt2);
    }else if(superblock == "cr"){
-      qt2 = contract_qt3_qt3_cr(qt3a, qt3b);
+      contract_qt3_qt3_info_cr(qt3a, qt3b, qt2);
    }else if(superblock == "lr"){
-      qt2 = contract_qt3_qt3_lr(qt3a, qt3b);
+      contract_qt3_qt3_info_lr(qt3a, qt3b, qt2);
    }else{
-      std::cout << "error: no such case in contract_qt3_qt3! superblock=" 
+      std::cout << "error: no such case in contract_qt3_qt3_info! superblock=" 
 	        << superblock << std::endl;
       exit(1);
    }
-   return qt2;
 }
 
 //          /--*--r qt3a
 // q(r,c) = |x |m  	  = <r|c> = \sum_n An^H*Bn
 //          \--*--c qt3b
 template <typename Tm>
-stensor2<Tm> contract_qt3_qt3_lc(const stensor3<Tm>& qt3a, 
-				 const stensor3<Tm>& qt3b){
-   assert(qt3a.info.dir == qt3b.info.dir); // bra dir fliped
-   assert(qt3a.info.qrow == qt3b.info.qrow);
-   assert(qt3a.info.qmid == qt3b.info.qmid);
-   qsym sym = -qt3a.info.sym + qt3b.info.sym;
-   stensor2<Tm> qt2(sym, qt3a.info.qcol, qt3b.info.qcol); 
+void contract_qt3_qt3_info_lc(const stensor3<Tm>& qt3a, 
+		              const stensor3<Tm>& qt3b,
+			      stensor2<Tm>& qt2){
+   assert(qt2.info.sym == -qt3a.info.sym + qt3b.info.sym);
+   qt2.clear();
    // loop over qt3a
    int bx, br, bm;
    for(int i=0; i<qt3a.info._nnzaddr.size(); i++){
@@ -51,20 +48,17 @@ stensor2<Tm> contract_qt3_qt3_lc(const stensor3<Tm>& qt3a,
          } // im
       } // bc
    } // br
-   return qt2;
 }
 
 //          r--*--\ qt3a
 // q(r,c) =    |m |x	  = <r|c> = \sum_n An^* Bn^T [conjugation is taken on qt3a!]
 //          c--*--/ qt3b
 template <typename Tm>
-stensor2<Tm> contract_qt3_qt3_cr(const stensor3<Tm>& qt3a, 
-				 const stensor3<Tm>& qt3b){
-   assert(qt3a.info.dir  == qt3b.info.dir); // bra dir fliped implicitly
-   assert(qt3a.info.qmid == qt3b.info.qmid);
-   assert(qt3a.info.qcol == qt3b.info.qcol);
-   qsym sym = -qt3a.info.sym + qt3b.info.sym;
-   stensor2<Tm> qt2(sym, qt3a.info.qrow, qt3b.info.qrow);
+void contract_qt3_qt3_info_cr(const stensor3<Tm>& qt3a, 
+			      const stensor3<Tm>& qt3b,
+			      stensor2<Tm>& qt2){
+   assert(qt2.info.sym == -qt3a.info.sym + qt3b.info.sym);
+   qt2.clear();
    // loop over qt3a
    int br, bx, bm;
    for(int i=0; i<qt3a.info._nnzaddr.size(); i++){
@@ -83,7 +77,6 @@ stensor2<Tm> contract_qt3_qt3_cr(const stensor3<Tm>& qt3a,
       } // bc
    } // i
    qt2.conjugate();
-   return qt2;
 }
 
 // 	      r|
@@ -92,13 +85,11 @@ stensor2<Tm> contract_qt3_qt3_cr(const stensor3<Tm>& qt3a,
 //          \--*--/ qt3b
 //            c|
 template <typename Tm>
-stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a, 
-				 const stensor3<Tm>& qt3b){
-   assert(qt3a.info.dir == qt3b.info.dir); // bra dir fliped
-   assert(qt3a.info.qrow == qt3b.info.qrow);
-   assert(qt3a.info.qcol == qt3b.info.qcol);
-   qsym sym = -qt3a.info.sym + qt3b.info.sym;
-   stensor2<Tm> qt2(sym, qt3a.info.qmid, qt3b.info.qmid);
+void contract_qt3_qt3_info_lr(const stensor3<Tm>& qt3a, 
+			      const stensor3<Tm>& qt3b,
+			      stensor2<Tm>& qt2){
+   assert(qt2.info.sym == -qt3a.info.sym + qt3b.info.sym);
+   qt2.clear();
    const Tm alpha = 1.0, beta = 1.0;
    // loop over qt3a
    int bx, by, br;
@@ -113,14 +104,6 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
          if(blk3b.size() == 0 || blk2.size() == 0) continue;
 	 int rdim = blk2.dim0;
 	 int cdim = blk2.dim1;
-/*
-	 for(int ic=0; ic<cdim; ic++){
-            for(int ir=0; ir<rdim; ir++){
-	       auto tmp = linalg::xgemm("N","C",blk3a.get(ir),blk3b.get(ic));
-	       blk2(ir,ic) += tools::conjugate(tmp.trace());
-	    } // ir 
-	 } // ic
-*/
 	 // qt2(r,c) = qt3a*(x,y,r) qt3b(x,y,c)
 	 int xydim = blk3a.dim0*blk3a.dim1;
          linalg::xgemm("N", "C", &rdim, &cdim, &xydim, &alpha,
@@ -129,7 +112,6 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
          blk2.conjugate();
       } // bc
    } // i
-   return qt2;
 }
 
 } // ctns

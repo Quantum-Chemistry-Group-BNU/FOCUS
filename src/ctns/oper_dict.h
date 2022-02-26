@@ -176,17 +176,6 @@ std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
 	 index = std::move(index2);
       }
    }
-/*
-   // ZL@20220210
-   // reorder index by symmetry
-   std::vector<int> index_new;
-   std::map<qsym,std::vector<int>> index_dic;
-   std::cout << "key=" << key << std::endl;
-   for(const auto& idx : index){
-      auto qs = this->get_qsym_op(key, idx);
-      std::cout << "qs=" << qs << " idx=" << idx << std::endl;
-   }
-*/
    return index;
 }
 
@@ -255,9 +244,10 @@ void oper_dict<Tm>::allocate_memory(const bool debug){
                 << " sizeMB=" << tools::sizeMB<Tm>(_size) 
                 << std::endl;
    }
-   // allocate & assign pointer
+   // allocate memory
    _data = new Tm[_size];
    memset(_data, 0, _size*sizeof(Tm));
+   // assign pointer for each operator
    this->setup_data(_data);
 }
 

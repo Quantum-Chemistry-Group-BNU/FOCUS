@@ -331,82 +331,12 @@ Optimized version:
 
 #################################################################
 
-优化方向: twodot算法
+优化方向: onedot/twodot算法
 
  0. intel VTune for Fe4S4 test -> cost of single Hx for D=1000
-
-    isweep=5 ibond=51 bond=(15,0)-(16,0) (dots,forward,cturn)=(2,0,0)
-    ----------------------------------------------------------------------
-    ctns::sweep_twodot
-    support info:
-     suppl= 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14
-     suppr= 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35
-     suppc1= 15
-     suppc2= 16
-    qops info: rank=0
-     lqops: oplist=CABPQSH nops=C:30 A:435 B:465 P:861 Q:903 S:42 H:1 
-     rqops: oplist=CABPQSH nops=C:38 A:703 B:741 P:561 Q:595 S:34 H:1 
-     c1qops: oplist=CABPQSH nops=C:2 A:1 B:3 P:2415 Q:2485 S:70 H:1 
-     c2qops: oplist=CABPQSH nops=C:2 A:1 B:3 P:2415 Q:2485 S:70 H:1 
-    qbond info:
-     qbond: ql nsym=14 dimAll=1000
-     qbond: qr nsym=17 dimAll=1000
-     qbond: qc1 nsym=4 dimAll=4
-     qbond: qc2 nsym=4 dimAll=4
-    sym_state=(54,0) dim(localCI)=1103160
-    twodot_Hx_functors: size=1097 CS:32 SC:40 AP:496 BQ:528
-    ctns::twodot_guess |c2r>
-    ctns::pdvdsonSolver_nkr::solve_iter is_complex=0 size=1
-    settings: ndim=1103160 neig=1 nbuff=4 maxcycle=6
-              damping=0.1 crit_v=1.00e-04 crit_e=1.00e-12 crit_indp=1.00e-12
-    iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-        1   0 -    -327.222794442929  -1.33e+03   7.31e-03    1     1   1.67e+01  1.67e+01
-        2   0 -    -327.222830750463  -3.63e-05   1.38e-03    2     2   3.34e+01  1.67e+01
-        3   0 -    -327.222832134107  -1.38e-06   4.88e-04    2     3   5.00e+01  1.67e+01
-        4   0 -    -327.222832322393  -1.88e-07   2.40e-04    2     4   6.67e+01  1.67e+01
-        5   0 -    -327.222832371250  -4.89e-08   1.42e-04    2     5   8.34e+01  1.67e+01
-        6   0 +    -327.222832389603  -1.84e-08   9.59e-05    2     6   1.00e+02  1.67e+01
-     optimized energies: isweep=5 dots=2 ibond=51 e[0]=-327.22283239
-    ----- oper_timing -----
-     user=3.53e+03 S system=4.07e+01 S wall=1.00e+02 S ratio=3.57e+01
-     opxwf=3.21e+03 S per=9.00e+01
-      opC: t=1.25e+01 S per=3.90e-01 n=864 tav=1.45e-02 S
-      opA: t=4.97e+01 S per=1.55e+00 n=5952 tav=8.36e-03 S
-      opB: t=7.13e+01 S per=2.22e+00 n=6336 tav=1.13e-02 S
-      opH: t=2.61e+01 S per=8.14e-01 n=12 tav=2.18e+00 S
-      opS: t=1.54e+03 S per=4.78e+01 n=864 tav=1.78e+00 S
-      opP: t=5.54e+02 S per=1.72e+01 n=5952 tav=9.31e-02 S
-      opQ: t=9.63e+02 S per=3.00e+01 n=6336 tav=1.52e-01 S
-     totHx=9.98e+01 S Init=6.06e-01 S Calc=9.91e+01 S Finl=7.00e-02 S
-
  1. 公式预先计算
-    -------------------------
-    TODOs: Tensor operations
-    -------------------------
-     a. allocate temporary work space!
-     b. in place operation:
-        opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1); 
-     sweep_twodot_ham.h:
-        // Apq*Ppq
-        qt3n = oper_compxwf_opP("cr",wf2,c2qops,rqops,isym,ifkr,int2e,int1e,index);
-        qt3n = qt3n.merge_cr().split_lc(wf.qrow,wf.qmid);
-        auto Hwf1 = wt*oper_normxwf_opA("lc",qt3n,lqops,c1qops,ifkr,iformula,index);
-     oper_normxwf.h:
-     oper_compxwf.h:
-        qtensor3<Tm> opwf(site.sym, site.qmid, site.qrow, site.qcol, site.dir); -> working space
-        opwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1); -> inplace
-        opwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
-     oper_kernel.h:
-        oper_kernel_OIwf
-        oper_kernel_IOwf
-        oper_kernel_OOwf
-     c. remove T() and H() in contract_qt_qt...
-
- 2. 提升并行效率
-
- 3. 异构计算 -> further accelerate contract_qt4_qt2?
-
-Comments:
- 1. direct operating wf4 in sweep_twodot_sigma.h without temporary stensor3
- 2. probably change to shared_ptr to share data instead of raw pointer & own?
+ 2. direct operating wf4 in sweep_twodot_sigma.h without temporary stensor3
+ 3. probably change to shared_ptr to share data instead of raw pointer & own?
+ 4. 提升并行效率
+ 5. 异构计算 -> further accelerate contract_qt4_qt2?
 

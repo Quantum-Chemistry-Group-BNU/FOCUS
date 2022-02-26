@@ -37,6 +37,8 @@ void sweep_onedot(const input::schedule& schd,
 #endif
    if(rank == 0){
       std::cout << "ctns::sweep_onedot"
+	        << " alg_hvec=" << schd.ctns.alg_hvec
+		<< " alg_renorm=" << schd.ctns.alg_renorm
                 << " mpisize=" << size
 	        << " maxthreads=" << maxthreads 
 	        << std::endl;
