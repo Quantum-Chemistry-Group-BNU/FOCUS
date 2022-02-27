@@ -48,7 +48,7 @@ template <typename Tm>
 size_t preprocess_wf3size(const qinfo3<Tm>& wf3info, 
     	 	          std::map<qsym,qinfo3<Tm>>& info_dict,
 		          const int nbody=2){
-   const bool debug = true;
+   const bool debug = false;
    const auto& sym_state = wf3info.sym; 
    const auto& qrow = wf3info.qrow;
    const auto& qcol = wf3info.qcol;
@@ -58,7 +58,8 @@ size_t preprocess_wf3size(const qinfo3<Tm>& wf3info,
    if(debug){ 
       std::cout << "ctns::preprocess_wf3size"
 	        << " isym=" << isym
-	        << " nbody=" << nbody 
+	        << " sym_state=" << sym_state	
+	        << " nbody=" << nbody
 		<< std::endl;
    }
    // generate all operators
@@ -88,7 +89,7 @@ template <typename Tm>
 size_t preprocess_wf4size(const qinfo4<Tm>& wf4info, 
     	 	          std::map<qsym,qinfo4<Tm>>& info_dict,
 		          const int nbody=2){
-   const bool debug = true;
+   const bool debug = false;
    const auto& sym_state = wf4info.sym; 
    const auto& qrow = wf4info.qrow;
    const auto& qcol = wf4info.qcol;
@@ -98,6 +99,7 @@ size_t preprocess_wf4size(const qinfo4<Tm>& wf4info,
    if(debug){ 
       std::cout << "ctns::preprocess_wf4size"
 	        << " isym=" << isym 
+	        << " sym_state=" << sym_state	
 		<< " nbody=" << nbody 
 		<< std::endl;
    }

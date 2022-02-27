@@ -59,24 +59,23 @@ LOGS
 	- benchmark for small systems
 	- minimize memory allocation / intermediates?
 	- benchmark for [Fe4S4] systems
-    - optimization of onedot/twodot opt:
+    - optimization of onedot:
 	- int1e only appears in oper_dot.h
-	- revise qt3_qt2 without explicit H() 
-        - revise qt4_qt2 without explicit H() [DONE2022/02/23]
-
-        - revise renormalization part
-
-	- make sure the code works for Fe4S4 & Fe8S7 with small D
-        
-        - info only store offset? or maps - auto& blk3 = qt3(br,bc,bm) - avoid computation!
-
+        - remove explicit H() in qt_qt:
+	  - revise qt3_qt2 without explicit H() 
+          - revise qt4_qt2 without explicit H() [DONE2022/02/23]
         - preprocess: 
-        - avoid memory allocation: repeated formation of intermediate?
+           - avoid memory allocation in sigma (onedot/twodot)
+	   - avoid memset?
+           - revise renormalization [DONE2022/02/27]
+	- make sure the code works for Fe4S4 & Fe8S7 with small D
+        - info only store offset? or maps:
+	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
-	- avoid memset?
 	
-        - profile openmp version
-        - kramers version avoid K()
+    - optimization of twodot:
+    - profile openmp version
+    - kramers version avoid K()
 
  * Large-scale parallelization: push to the limit!
     - GPU for contractions?

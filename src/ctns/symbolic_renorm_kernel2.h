@@ -22,8 +22,8 @@ void symbolic_renorm_single2(const std::string& block1,
 			     const size_t& wfsize,
 			     const std::map<qsym,qinfo3<Tm>>& info_dict,
 			     Tm* workspace){
-   const bool debug = true;
-   formulae.display("formulae");
+   const bool debug = false;
+   if(debug) formulae.display("formulae");
    // initialization 
    int isym = wf.info.sym.isym();
    qsym sym;
