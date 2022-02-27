@@ -72,7 +72,8 @@ LOGS
         - info only store offset? or maps:
 	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
-	
+    - use input for schd & fname to control whether write *.txt	
+	- bool ifwrite = (fname == ""); 
     - profile openmp version:
     - optimization of twodot:
     - kramers version:
