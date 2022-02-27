@@ -66,7 +66,11 @@ void symbolic_renorm_single2(const std::string& block1,
             opxwf0.setup_data(wptr);	 
          }
       } // idx
-      linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data()); 
+      if(it == 0){
+	 linalg::xcopy(Hwf.size(), opxwf.data(), Hwf.data());
+      }else{
+	 linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data());
+      }
    } // it
    // opH*|wf>
    if(key != 'H') return;
@@ -177,7 +181,6 @@ void symbolic_renorm_kernel2(const std::string superblock,
       auto sym = sym_op + site.info.sym;
       opxwf.init(info_dict.at(sym), false);
       opxwf.setup_data(&workspace[omprank*tmpsize]);
-      opxwf.clear();
       symbolic_renorm_single2(block1,block2,qops_dict,
 		              key,formula,site,opxwf,
 			      opsize,wfsize,info_dict,
@@ -186,7 +189,6 @@ void symbolic_renorm_kernel2(const std::string superblock,
       stensor2<Tm> op;
       op.init(qops(key)[index].info, false);
       op.setup_data(&workspace[omprank*tmpsize+wfsize]);
-      op.clear();
       contract_qt3_qt3_info(superblock, site, opxwf, op);
       if(key == 'H' && qops.ifkr) op += op.K();
       linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
