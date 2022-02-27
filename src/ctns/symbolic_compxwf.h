@@ -34,7 +34,7 @@ symbolic_task<Tm> symbolic_compxwf_opP(const std::string block1,
    auto P2pq = symbolic_term<Tm>(symbolic_oper(block2,'P',index,ifdagger));
    formulae.append(P2pq);
    // 3. sum_{s1} sum_{r2} -<pq||s1r2> as1*ar2
-   std::unordered_map<int,Tm> oij;
+   std::map<int,Tm> oij;
    if(!ifkr){
       for(const auto& s1 : cindex1){
          for(const auto& r2 : cindex2){
@@ -87,7 +87,7 @@ symbolic_task<Tm> symbolic_compxwf_opQ(const std::string block1,
    auto Q2ps = symbolic_term<Tm>(symbolic_oper(block2,'Q',index,ifdagger));
    formulae.append(Q2ps);
    // 3. <pq1||sr2> aq1^+*ar2 &  4. -<pr2||sq1> aq1*ar2^+
-   std::unordered_map<int,Tm> o1ij, o2ij;
+   std::map<int,Tm> o1ij, o2ij;
    if(!ifkr){
       for(const auto& q1 : cindex1){
          for(const auto& r2 : cindex2){

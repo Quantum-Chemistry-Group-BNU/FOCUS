@@ -48,7 +48,7 @@ void sweep_twodot(const input::schedule& schd,
    const auto& p1 = dbond.p1;
    const auto& p = dbond.p;
    const auto& cturn = dbond.cturn;
-   std::vector<int> suppc1, suppc2, suppl, suppr;
+   std::vector<int> suppl, suppr, suppc1, suppc2;
    if(!cturn){
       //
       //       |    |
@@ -69,17 +69,17 @@ void sweep_twodot(const input::schedule& schd,
       suppc1 = icomb.topo.get_suppc(p1);
       suppc2 = icomb.topo.get_suppr(p1);
    }
-   int sc1 = suppc1.size();
-   int sc2 = suppc2.size();
    int sl = suppl.size();
    int sr = suppr.size();
+   int sc1 = suppc1.size();
+   int sc2 = suppc2.size();
    assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
    if(rank == 0 && debug_sweep){
       std::cout << "support info:" << std::endl;
-      tools::print_vector(suppl, "suppl");
-      tools::print_vector(suppr, "suppr");
-      tools::print_vector(suppc1, "suppc1");
-      tools::print_vector(suppc2, "suppc2");
+      tools::print_vector(suppl , "sl="+std::to_string(sl)+" suppl");
+      tools::print_vector(suppr , "sr="+std::to_string(sr)+" suppr");
+      tools::print_vector(suppc1, "sc1="+std::to_string(sc1)+" suppc1");
+      tools::print_vector(suppc2, "sc2="+std::to_string(sc2)+" suppc2");
    }
 
    // 1. load operators 

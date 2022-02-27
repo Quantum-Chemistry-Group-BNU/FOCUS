@@ -73,9 +73,10 @@ LOGS
 	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
 	
+    - profile openmp version:
     - optimization of twodot:
-    - profile openmp version
-    - kramers version avoid K()
+    - kramers version:
+	- how to avoid repeated K()?
 
  * Large-scale parallelization: push to the limit!
     - GPU for contractions?
