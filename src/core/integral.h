@@ -30,6 +30,7 @@ struct one_body{
 	 assert(sorb > 0);
 	 data.resize(sorb*sorb);
       }
+      size_t size() const{ return data.size(); }
       Tm get(const size_t i, const size_t j) const{
          return data[j*sorb+i];
       }
@@ -41,7 +42,7 @@ struct one_body{
 	           [](const Tm& x){ return std::real(x); }); 
       }
       void set_zero(){
-	 fill_n(data.begin(), data.size(), 0.0);
+	 memset(data.data(), 0, data.size()*sizeof(Tm));
       }
       void print() const{
 	 std::cout << "integral::one_body sorb=" << sorb << std::endl;
@@ -76,6 +77,7 @@ struct two_body{
 	 data.resize(pair*(pair+1)/2,0.0);
 	 Q.resize(pair);
       }
+      size_t size() const{ return data.size()+Q.size(); }
       // return <ij||kl> from packed storage
       Tm get(const size_t i, const size_t j, 
 	     const size_t k, const size_t l) const{
@@ -120,8 +122,8 @@ struct two_body{
       }
       // set all integrals to zero
       void set_zero(){
-	 fill_n(data.begin(), data.size(), 0.0);
-	 fill_n(Q.begin(), Q.size(), 0.0);
+	 memset(data.data(), 0, data.size()*sizeof(Tm));
+	 memset(Q.data(), Q.size(), Q.size()*sizeof(Tm));
       }
       void print() const{
 	 std::cout << "integral::two_body sorb=" << sorb << std::endl;
@@ -179,12 +181,21 @@ void load(two_body<Tm>& int2e, one_body<Tm>& int1e, double& ecore, const std::st
    std::string line;
    std::getline(istrm,line);
    int sorb = std::stoi(line);
-   std::cout << "sorb = " << sorb << std::endl;
    // load integrals
    int1e.sorb = sorb;
    int1e.init_mem(); 
    int2e.sorb = sorb; 
    int2e.init_mem(); 
+   std::cout << "sorb = " << sorb << std::endl;
+   std::cout << "size(int1e) = " << int1e.size() << ":" 
+             << tools::sizeMB<Tm>(int1e.size()) << "MB:"
+             << tools::sizeGB<Tm>(int1e.size()) << "GB"
+             << std::endl;
+   std::cout << "size(int2e) = " << int2e.size() << ":" 
+             << tools::sizeMB<Tm>(int2e.size()) << "MB:"
+             << tools::sizeGB<Tm>(int2e.size()) << "GB"
+             << std::endl; 
+   // read
    int i,j,k,l;
    Tm eri;
    while(!istrm.eof()){
@@ -201,6 +212,7 @@ void load(two_body<Tm>& int2e, one_body<Tm>& int1e, double& ecore, const std::st
       }
    }
    istrm.close();
+   // compute Qij
    int2e.initQ();
    auto t1 = tools::get_time();
    tools::timing("integral::load_integral", t0, t1);

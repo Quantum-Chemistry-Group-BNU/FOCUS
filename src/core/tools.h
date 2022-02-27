@@ -57,9 +57,11 @@ inline bool is_complex(){ return false; }
 template <>
 inline bool is_complex<std::complex<double>>(){ return true; }
 
-// memory in MB
+// memory in MB/GB
 template <typename Tm>
 inline double sizeMB(size_t sz){ return sz*sizeof(Tm)/std::pow(1024.0,2); }
+template <typename Tm>
+inline double sizeGB(size_t sz){ return sz*sizeof(Tm)/std::pow(1024.0,3); }
 
 // conjugte
 inline double conjugate(const double x){ return x; }

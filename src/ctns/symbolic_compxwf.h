@@ -34,11 +34,11 @@ symbolic_task<Tm> symbolic_compxwf_opP(const std::string block1,
    auto P2pq = symbolic_term<Tm>(symbolic_oper(block2,'P',index,ifdagger));
    formulae.append(P2pq);
    // 3. sum_{s1} sum_{r2} -<pq||s1r2> as1*ar2
-   std::map<std::pair<int,int>,Tm> oij;
+   std::unordered_map<int,Tm> oij;
    if(!ifkr){
       for(const auto& s1 : cindex1){
          for(const auto& r2 : cindex2){
-	    oij[std::make_pair(s1,r2)] = -int2e.get(p,q,s1,r2);
+	    oij[oper_pack(s1,r2)] = -int2e.get(p,q,s1,r2);
 	 }
       }
    }else{
@@ -46,10 +46,10 @@ symbolic_task<Tm> symbolic_compxwf_opP(const std::string block1,
          int s1b = s1a+1;
          for(const auto& r2a : cindex2){
 	    int r2b = r2a+1;
-	    oij[std::make_pair(s1a,r2a)] = -int2e.get(p,q,s1a,r2a);
-	    oij[std::make_pair(s1a,r2b)] = -int2e.get(p,q,s1a,r2b);
-	    oij[std::make_pair(s1b,r2a)] = -int2e.get(p,q,s1b,r2a);
-	    oij[std::make_pair(s1b,r2b)] = -int2e.get(p,q,s1b,r2b);
+	    oij[oper_pack(s1a,r2a)] = -int2e.get(p,q,s1a,r2a);
+	    oij[oper_pack(s1a,r2b)] = -int2e.get(p,q,s1a,r2b);
+	    oij[oper_pack(s1b,r2a)] = -int2e.get(p,q,s1b,r2a);
+	    oij[oper_pack(s1b,r2b)] = -int2e.get(p,q,s1b,r2b);
 	 }
       }
    }
@@ -87,12 +87,12 @@ symbolic_task<Tm> symbolic_compxwf_opQ(const std::string block1,
    auto Q2ps = symbolic_term<Tm>(symbolic_oper(block2,'Q',index,ifdagger));
    formulae.append(Q2ps);
    // 3. <pq1||sr2> aq1^+*ar2 &  4. -<pr2||sq1> aq1*ar2^+
-   std::map<std::pair<int,int>,Tm> o1ij, o2ij;
+   std::unordered_map<int,Tm> o1ij, o2ij;
    if(!ifkr){
       for(const auto& q1 : cindex1){
          for(const auto& r2 : cindex2){
-            o1ij[std::make_pair(q1,r2)] =  int2e.get(p,q1,s,r2);
-	    o2ij[std::make_pair(q1,r2)] = -int2e.get(p,r2,s,q1);
+            o1ij[oper_pack(q1,r2)] =  int2e.get(p,q1,s,r2);
+	    o2ij[oper_pack(q1,r2)] = -int2e.get(p,r2,s,q1);
          }
       }
    }else{
@@ -100,14 +100,14 @@ symbolic_task<Tm> symbolic_compxwf_opQ(const std::string block1,
          int q1b = q1a+1;
          for(const auto& r2a : cindex2){
             int r2b = r2a+1;
-            o1ij[std::make_pair(q1a,r2a)] =  int2e.get(p,q1a,s,r2a);
-            o1ij[std::make_pair(q1a,r2b)] =  int2e.get(p,q1a,s,r2b);
-            o1ij[std::make_pair(q1b,r2a)] =  int2e.get(p,q1b,s,r2a);
-            o1ij[std::make_pair(q1b,r2b)] =  int2e.get(p,q1b,s,r2b);
-	    o2ij[std::make_pair(q1a,r2a)] = -int2e.get(p,r2a,s,q1a);
-	    o2ij[std::make_pair(q1a,r2b)] = -int2e.get(p,r2b,s,q1a);
-	    o2ij[std::make_pair(q1b,r2a)] = -int2e.get(p,r2a,s,q1b);
-	    o2ij[std::make_pair(q1b,r2b)] = -int2e.get(p,r2b,s,q1b);
+            o1ij[oper_pack(q1a,r2a)] =  int2e.get(p,q1a,s,r2a);
+            o1ij[oper_pack(q1a,r2b)] =  int2e.get(p,q1a,s,r2b);
+            o1ij[oper_pack(q1b,r2a)] =  int2e.get(p,q1b,s,r2a);
+            o1ij[oper_pack(q1b,r2b)] =  int2e.get(p,q1b,s,r2b);
+	    o2ij[oper_pack(q1a,r2a)] = -int2e.get(p,r2a,s,q1a);
+	    o2ij[oper_pack(q1a,r2b)] = -int2e.get(p,r2b,s,q1a);
+	    o2ij[oper_pack(q1b,r2a)] = -int2e.get(p,r2a,s,q1b);
+	    o2ij[oper_pack(q1b,r2b)] = -int2e.get(p,r2b,s,q1b);
          }
       }
    }

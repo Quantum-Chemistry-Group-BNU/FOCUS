@@ -17,7 +17,7 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 		            const std::vector<int>& cindex2,
 			    const int isym,
 			    const qsym& sym_op,
-		            const std::map<std::pair<int,int>,Tm>& oij,
+		            const std::unordered_map<int,Tm>& oij,
 		            const bool ifdagger1,
 		            const bool ifdagger2,
 		            const bool ifdagger){
@@ -35,7 +35,7 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 	    auto op2 = ifdagger2? op2C : op2C.H();
 	    auto sym_op2 = op2.get_qsym(isym);
 	    if(sym_op != sym_op1 + sym_op2) continue;
-	    top2.sum(oij.at(std::make_pair(i,j)),op2);
+	    top2.sum(oij.at(oper_pack(i,j)),op2);
 	 } // j
 	 // skip if its size is zero, which is possible for some i
          if(top2.size() > 0){
@@ -58,7 +58,7 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 	    auto op1 = ifdagger1? op1C : op1C.H();
 	    auto sym_op1 = op1.get_qsym(isym);
 	    if(sym_op != sym_op1 + sym_op2) continue;
-	    top1.sum(oij.at(std::make_pair(i,j)),op1);
+	    top1.sum(oij.at(oper_pack(i,j)),op1);
 	 } // i
          if(top1.size() > 0){
 	    term = symbolic_term<Tm>(top1,op2);
@@ -78,7 +78,7 @@ void symbolic_op1op2xwf_kr(symbolic_task<Tm>& formulae,
 			   const std::vector<int>& cindex2,
 			   const int isym,
 		           const qsym& sym_op,
-		           const std::map<std::pair<int,int>,Tm>& oij,
+		           const std::unordered_map<int,Tm>& oij,
 		           const bool ifdagger1,
 		           const bool ifdagger2,
 		           const bool ifdagger){
@@ -98,11 +98,11 @@ void symbolic_op1op2xwf_kr(symbolic_task<Tm>& formulae,
 	    auto op2a = ifdagger2? op2Ca : op2Ca.H();
 	    auto op2b = op2a.K(1);
 	    //top2a += oij[std::make_pair(ia,ja)]*op2a + oij[std::make_pair(ia,jb)]*op2b;
-	    top2a.sum(oij.at(std::make_pair(ia,ja)),op2a);
-	    top2a.sum(oij.at(std::make_pair(ia,jb)),op2b);
+	    top2a.sum(oij.at(oper_pack(ia,ja)),op2a);
+	    top2a.sum(oij.at(oper_pack(ia,jb)),op2b);
 	    //top2b += oij[std::make_pair(ib,ja)]*op2a + oij[std::make_pair(ib,jb)]*op2b;
-	    top2b.sum(oij.at(std::make_pair(ib,ja)),op2a);
-	    top2b.sum(oij.at(std::make_pair(ib,jb)),op2b);
+	    top2b.sum(oij.at(oper_pack(ib,ja)),op2a);
+	    top2b.sum(oij.at(oper_pack(ib,jb)),op2b);
 	 } // ja
 	 // skip if its size is zero, which is possible for some i
          if(top2a.size() > 0){
@@ -132,11 +132,11 @@ void symbolic_op1op2xwf_kr(symbolic_task<Tm>& formulae,
             auto op1a = ifdagger1? op1Ca : op1Ca.H();
 	    auto op1b = op1a.K(1);
 	    //top1a += oij[std::make_pair(ia,ja)]*op1a + oij[std::make_pair(ib,ja)]*op1b;
-	    top1a.sum(oij.at(std::make_pair(ia,ja)),op1a);
-	    top1a.sum(oij.at(std::make_pair(ib,ja)),op1b);
+	    top1a.sum(oij.at(oper_pack(ia,ja)),op1a);
+	    top1a.sum(oij.at(oper_pack(ib,ja)),op1b);
 	    //top1b += oij[std::make_pair(ia,jb)]*op1a + oij[std::make_pair(ib,jb)]*op1b;
-	    top1b.sum(oij.at(std::make_pair(ia,jb)),op1a);
-	    top1b.sum(oij.at(std::make_pair(ib,jb)),op1b);
+	    top1b.sum(oij.at(oper_pack(ia,jb)),op1a);
+	    top1b.sum(oij.at(oper_pack(ib,jb)),op1b);
 	 } // ia
 	 // skip if its size is zero, which is possible for some i
 	 if(top1a.size() > 0){
@@ -163,7 +163,7 @@ void symbolic_op1op2xwf(const bool ifkr,
 		        const std::vector<int>& cindex2,
 			const int isym,
 			const qsym& sym_op,
-			const std::map<std::pair<int,int>,Tm>& oij,
+			const std::unordered_map<int,Tm>& oij,
 		        const bool ifdagger1,
 		        const bool ifdagger2,
 		        const bool ifdagger){
