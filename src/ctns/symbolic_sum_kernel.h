@@ -4,7 +4,7 @@
 #include "oper_dict.h"
 #include "symbolic_oper.h"
 
-namespace cnts{
+namespace ctns{
 
 template <typename Tm>
 stensor2<Tm> symbolic_sum_oper(const oper_dict<Tm>& qops,

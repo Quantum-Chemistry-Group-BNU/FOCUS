@@ -104,12 +104,11 @@ void contract_qt3_qt3_info_lr(const stensor3<Tm>& qt3a,
          if(blk3b.size() == 0 || blk2.size() == 0) continue;
 	 int rdim = blk2.dim0;
 	 int cdim = blk2.dim1;
-	 // qt2(r,c) = qt3a*(x,y,r) qt3b(x,y,c)
+	 // qt2(r,c) = qt3a*(xy,r) qt3b(xy,c)
 	 int xydim = blk3a.dim0*blk3a.dim1;
-         linalg::xgemm("N", "C", &rdim, &cdim, &xydim, &alpha,
+         linalg::xgemm("C", "N", &rdim, &cdim, &xydim, &alpha,
                        blk3a.data(), &xydim, blk3b.data(), &xydim, &beta,
 	               blk2.data(), &rdim);
-         blk2.conjugate();
       } // bc
    } // i
 }

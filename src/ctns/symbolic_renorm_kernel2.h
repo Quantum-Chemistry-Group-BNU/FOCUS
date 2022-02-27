@@ -6,7 +6,7 @@
 #endif
 
 #include "symbolic_renorm_formulae.h"
-#include "symbolic_sum_oper.h"
+#include "symbolic_sum_kernel.h"
 
 namespace ctns{
 
@@ -177,6 +177,7 @@ void symbolic_renorm_kernel2(const std::string superblock,
       auto sym = sym_op + site.info.sym;
       opxwf.init(info_dict.at(sym), false);
       opxwf.setup_data(&workspace[omprank*tmpsize]);
+      opxwf.clear();
       symbolic_renorm_single2(block1,block2,qops_dict,
 		              key,formula,site,opxwf,
 			      opsize,wfsize,info_dict,
@@ -185,13 +186,12 @@ void symbolic_renorm_kernel2(const std::string superblock,
       stensor2<Tm> op;
       op.init(qops(key)[index].info, false);
       op.setup_data(&workspace[omprank*tmpsize+wfsize]);
+      op.clear();
       contract_qt3_qt3_info(superblock, site, opxwf, op);
       if(key == 'H' && qops.ifkr) op += op.K();
       linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
    } // i
    delete[] workspace;
-
-   exit(1);
 }
 
 } // ctns

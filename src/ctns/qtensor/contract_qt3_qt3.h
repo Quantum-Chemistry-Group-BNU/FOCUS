@@ -121,12 +121,11 @@ stensor2<Tm> contract_qt3_qt3_lr(const stensor3<Tm>& qt3a,
 	    } // ir 
 	 } // ic
 */
-	 // qt2(r,c) = qt3a*(x,y,r) qt3b(x,y,c)
+	 // qt2(r,c) = qt3a*(xy,r) qt3b(xy,c)
 	 int xydim = blk3a.dim0*blk3a.dim1;
-         linalg::xgemm("N", "C", &rdim, &cdim, &xydim, &alpha,
+         linalg::xgemm("C", "N", &rdim, &cdim, &xydim, &alpha,
                        blk3a.data(), &xydim, blk3b.data(), &xydim, &beta,
 	               blk2.data(), &rdim);
-         blk2.conjugate();
       } // bc
    } // i
    return qt2;
