@@ -6,6 +6,9 @@
 
 namespace ctns{
 
+const bool debug_preprocess = true;
+extern const bool debug_preprocess;
+
 inline std::set<qsym> get_qsym_allops(const int isym,
 				      const int nbody){
    std::set<qsym> sym_ops;
@@ -48,14 +51,13 @@ template <typename Tm>
 size_t preprocess_wf3size(const qinfo3<Tm>& wf3info, 
     	 	          std::map<qsym,qinfo3<Tm>>& info_dict,
 		          const int nbody=2){
-   const bool debug = false;
    const auto& sym_state = wf3info.sym; 
    const auto& qrow = wf3info.qrow;
    const auto& qcol = wf3info.qcol;
    const auto& qmid = wf3info.qmid;
    const auto& dir = wf3info.dir;
    int isym = sym_state.isym();
-   if(debug){ 
+   if(debug_preprocess){ 
       std::cout << "ctns::preprocess_wf3size"
 	        << " isym=" << isym
 	        << " sym_state=" << sym_state	
@@ -72,7 +74,7 @@ size_t preprocess_wf3size(const qinfo3<Tm>& wf3info,
       info.init(sym, qrow, qcol, qmid, dir);
       info_dict[sym] = info;
       wfsize = std::max(wfsize, info._size);
-      if(debug){
+      if(debug_preprocess){
          std::cout << " idx=" << idx 
                    << " sym_op=" << sym_op
                    << " sym_state=" << sym_state
@@ -89,14 +91,13 @@ template <typename Tm>
 size_t preprocess_wf4size(const qinfo4<Tm>& wf4info, 
     	 	          std::map<qsym,qinfo4<Tm>>& info_dict,
 		          const int nbody=2){
-   const bool debug = false;
    const auto& sym_state = wf4info.sym; 
    const auto& qrow = wf4info.qrow;
    const auto& qcol = wf4info.qcol;
    const auto& qmid = wf4info.qmid;
    const auto& qver = wf4info.qver;
    int isym = sym_state.isym();
-   if(debug){ 
+   if(debug_preprocess){ 
       std::cout << "ctns::preprocess_wf4size"
 	        << " isym=" << isym 
 	        << " sym_state=" << sym_state	
@@ -113,7 +114,7 @@ size_t preprocess_wf4size(const qinfo4<Tm>& wf4info,
       info.init(sym, qrow, qcol, qmid, qver);
       info_dict[sym] = info;
       wfsize = std::max(wfsize, info._size);
-      if(debug){
+      if(debug_preprocess){
          std::cout << " idx=" << idx 
                    << " sym_op=" << sym_op
                    << " sym_state=" << sym_state

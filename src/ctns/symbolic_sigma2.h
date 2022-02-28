@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_ONEDOT_SIGMA2_H
-#define SYMBOLIC_ONEDOT_SIGMA2_H
+#ifndef SYMBOLIC_SIGMA2_H
+#define SYMBOLIC_SIGMA2_H
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -9,22 +9,22 @@
 
 namespace ctns{
 
-template <typename Tm> 
-void symbolic_onedot_HxTerm2(const oper_dictmap<Tm>& qops_dict,
-			     const int it,
-		             const symbolic_term<Tm>& HTerm,
-			     const stensor3<Tm>& wf,
-		             stensor3<Tm>& Hwf,
-		             const size_t& opsize,
-			     const size_t& wfsize,
-			     const std::map<qsym,qinfo3<Tm>>& info_dict, 
-			     Tm* workspace){
-   const bool debug = false;
+template <typename Tm, typename QTm, typename QInfo> 
+void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
+		      const int it,
+		      const symbolic_term<Tm>& HTerm,
+		      const QTm& wf,
+		      QTm& Hwf,
+		      const std::map<qsym,QInfo>& info_dict, 
+		      const size_t& opsize,
+		      const size_t& wfsize,
+		      Tm* workspace){
+   const bool debug = true;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    // compute (HTerm+HTerm.H)*|wf>
    int isym = wf.info.sym.isym();
    qsym sym;
-   stensor3<Tm> opxwf0, opxwf;
+   QTm opxwf0, opxwf;
    // 1. opN*|wf>
    sym = wf.info.sym;
    opxwf0.init(wf.info,false);
@@ -46,7 +46,7 @@ void symbolic_onedot_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
-      contract_qt3_qt2_info(block,opxwf0,optmp,opxwf,dagger);
+      contract_opxwf_info(block,opxwf0,optmp,opxwf,dagger);
       // impose antisymmetry here
       if(parity) opxwf.cntr_signed(block); 
       if(idx != 0){
@@ -76,7 +76,7 @@ void symbolic_onedot_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
-      contract_qt3_qt2_info(block,opxwf0,optmp,opxwf,!dagger);
+      contract_opxwf_info(block,opxwf0,optmp,opxwf,!dagger);
       // impose antisymmetry here
       if(parity) opxwf.cntr_signed(block); 
       if(idx != 0){
@@ -88,21 +88,21 @@ void symbolic_onedot_HxTerm2(const oper_dictmap<Tm>& qops_dict,
    linalg::xaxpy(Hwf.size(), fac, opxwf.data(), Hwf.data()); 
 }
 
-template <typename Tm> 
-void symbolic_onedot_Hx2(Tm* y,
-	                 const Tm* x,
-	                 const symbolic_task<Tm>& H_formulae,
-	           	 const oper_dictmap<Tm>& qops_dict,
-			 const double& ecore,
-	                 stensor3<Tm>& wf,
-			 const int& size,
-	                 const int& rank,
-	                 const size_t& opsize,
-			 const size_t& wfsize,
-			 const size_t& tmpsize,
-			 const std::map<qsym,qinfo3<Tm>>& info_dict, 
-			 Tm* workspace){
-   const bool debug = false;
+template <typename Tm, typename QTm, typename QInfo> 
+void symbolic_Hx2(Tm* y,
+	          const Tm* x,
+	          const symbolic_task<Tm>& H_formulae,
+	   	  const oper_dictmap<Tm>& qops_dict,
+		  const double& ecore,
+	          QTm& wf,
+		  const int& size,
+	          const int& rank,
+		  const std::map<qsym,QInfo>& info_dict, 
+	          const size_t& opsize,
+		  const size_t& wfsize,
+		  const size_t& tmpsize,
+		  Tm* workspace){
+   const bool debug = true;
    auto t0 = tools::get_time();
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
@@ -110,7 +110,8 @@ void symbolic_onedot_Hx2(Tm* y,
    int maxthreads = 1;
 #endif
    if(rank == 0 && debug){
-      std::cout << "ctns::symbolic_onedot_Hx2"
+      std::cout << "ctns::symbolic_Hx2"
+	      	<< " QTm=" << get_name<QTm>() 
 	        << " mpisize=" << size 
                 << " maxthreads=" << maxthreads
                 << std::endl;
@@ -120,7 +121,7 @@ void symbolic_onedot_Hx2(Tm* y,
    //=======================
    wf.from_array(x);
    // initialization
-   std::vector<stensor3<Tm>> Hwfs(maxthreads);
+   std::vector<QTm> Hwfs(maxthreads);
    for(int i=0; i<maxthreads; i++){
       Hwfs[i].init(wf.info, false);
       Hwfs[i].setup_data(&workspace[i*tmpsize]);
@@ -128,6 +129,7 @@ void symbolic_onedot_Hx2(Tm* y,
    }
    auto t1 = tools::get_time();
    // compute
+   std::cout << "lzdA" << std::endl; 
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
@@ -138,21 +140,24 @@ void symbolic_onedot_Hx2(Tm* y,
       int omprank = 0;
 #endif
       const auto& HTerm = H_formulae.tasks[it];
-      symbolic_onedot_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[omprank],
-		              opsize,wfsize,info_dict,
-			      &workspace[omprank*tmpsize+wfsize]);
+      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[omprank],
+		       info_dict,opsize,wfsize,
+		       &workspace[omprank*tmpsize+wfsize]);
    } // it
    auto t2 = tools::get_time();
+   std::cout << "lzdB" << std::endl; 
    // reduction & save
    for(int i=1; i<maxthreads; i++){
       Hwfs[0] += Hwfs[i];
    }
    Hwfs[0].to_array(y);
+   std::cout << "lzdC" << std::endl; 
    // add const term
    if(rank == 0){
       const Tm scale = qops_dict.at("l").ifkr? 0.5 : 1.0;
       linalg::xaxpy(wf.size(), scale*ecore, x, y);
    }
+   std::cout << "lzdD" << std::endl; 
    auto t3 = tools::get_time();
    oper_timer.tHxInit += tools::get_duration(t1-t0);
    oper_timer.tHxCalc += tools::get_duration(t2-t1);

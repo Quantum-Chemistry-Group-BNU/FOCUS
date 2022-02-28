@@ -12,7 +12,6 @@ template <> inline std::string get_name<stensor2<std::complex<double>>>(){ retur
 template <> inline std::string get_name<stensor3<std::complex<double>>>(){ return "st3<cmplx>"; }
 template <> inline std::string get_name<stensor4<std::complex<double>>>(){ return "st4<cmplx>"; }
 
-// --- contract_qt3_qt2 ---
 template <typename Tm>
 stensor3<Tm> contract_opxwf(const std::string cpos,
 		 	    const stensor3<Tm>& qt3a, 
@@ -26,14 +25,12 @@ stensor3<Tm> contract_opxwf(const std::string cpos,
    }else if(cpos == "c"){
       qt3 = contract_qt3_qt2_c(qt3a, qt2b, ifdagger);
    }else{
-      std::cout << "error: no such case in contract_qt3_qt2! cpos=" 
+      std::cout << "error: no such case in contract_opxwf! cpos=" 
 	        << cpos << std::endl;
       exit(1);
    }
    return qt3;
 }
-
-// --- contract_qt4_qt2 ---
 template <typename Tm>
 stensor4<Tm> contract_opxwf(const std::string cpos,
 		 	    const stensor4<Tm>& qt4a, 
@@ -49,14 +46,13 @@ stensor4<Tm> contract_opxwf(const std::string cpos,
    }else if(cpos == "c2"){
       qt4 = contract_qt4_qt2_c2(qt4a, qt2b, ifdagger);
    }else{
-      std::cout << "error: no such case in contract_qt4_qt2! cpos=" 
+      std::cout << "error: no such case in contract_opxwf! cpos=" 
                 << cpos << std::endl;
       exit(1);
    }
    return qt4;
 }
 
-// --- contract_qt3_qt2_info ---
 template <typename Tm>
 void contract_opxwf_info(const std::string cpos,
 		         const stensor3<Tm>& qt3a, 
@@ -70,13 +66,11 @@ void contract_opxwf_info(const std::string cpos,
    }else if(cpos == "c"){
       contract_qt3_qt2_info_c(qt3a, qt2b, qt3, ifdagger);
    }else{
-      std::cout << "error: no such case in contract_qt3_qt2_info! cpos=" 
+      std::cout << "error: no such case in contract_opxwf_info! cpos=" 
 	        << cpos << std::endl;
       exit(1);
    }
 }
-
-// --- contract_qt4_qt2_info ---
 template <typename Tm>
 void contract_opxwf_info(const std::string cpos,
 		 	 const stensor4<Tm>& qt4a, 
@@ -84,15 +78,15 @@ void contract_opxwf_info(const std::string cpos,
 			 stensor4<Tm>& qt4,
 			 const bool ifdagger=false){
    if(cpos == "l"){
-      contract_qt4_qt2_l(qt4a, qt2b, qt4, ifdagger);
+      contract_qt4_qt2_info_l(qt4a, qt2b, qt4, ifdagger);
    }else if(cpos == "r"){
-      contract_qt4_qt2_r(qt4a, qt2b, qt4, ifdagger);
+      contract_qt4_qt2_info_r(qt4a, qt2b, qt4, ifdagger);
    }else if(cpos == "c1"){
-      contract_qt4_qt2_c1(qt4a, qt2b, qt4, ifdagger);
+      contract_qt4_qt2_info_c1(qt4a, qt2b, qt4, ifdagger);
    }else if(cpos == "c2"){
-      contract_qt4_qt2_c2(qt4a, qt2b, qt4, ifdagger);
+      contract_qt4_qt2_info_c2(qt4a, qt2b, qt4, ifdagger);
    }else{
-      std::cout << "error: no such case in contract_qt4_qt2_info! cpos=" 
+      std::cout << "error: no such case in contract_opxwf_info! cpos=" 
                 << cpos << std::endl;
       exit(1);
    }

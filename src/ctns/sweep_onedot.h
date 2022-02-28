@@ -9,10 +9,9 @@
 #include "sweep_onedot_local.h"
 #include "sweep_onedot_sigma.h"
 #include "symbolic_onedot_formulae.h"
-#include "symbolic_onedot_sigma.h"
-#include "symbolic_preprocess.h"
-#include "symbolic_onedot_sigma2.h"
 #include "symbolic_sigma.h"
+#include "symbolic_preprocess.h"
+#include "symbolic_sigma2.h"
 
 namespace ctns{
 
@@ -156,7 +155,7 @@ void sweep_onedot(const input::schedule& schd,
 	 size_t tmpsize = opsize + 3*wfsize;
 	 size_t worktot = maxthreads*tmpsize;
 	 if(rank == 0){
-	    std::cout << "maxthreads=" << maxthreads
+	    std::cout << "preprocess: maxthreads=" << maxthreads
 		      << " opsize=" << opsize
 		      << " wfsize=" << wfsize
 		      << " tmpsize=" << tmpsize
@@ -165,11 +164,11 @@ void sweep_onedot(const input::schedule& schd,
 		      << std::endl; 
 	 }
 	 workspace = new Tm[worktot];
-         HVec = bind(&ctns::symbolic_onedot_Hx2<Tm>, _1, _2, std::cref(H_formulae),
+         HVec = bind(&ctns::symbolic_Hx2<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, std::cref(H_formulae),
            	     std::cref(qops_dict), std::cref(ecore), 
-                     std::ref(wf), std::cref(size), std::cref(rank),
+                     std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
 		     std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
-		     std::cref(info_dict), std::ref(workspace));
+		     std::ref(workspace));
       }
    }
    oper_timer.clear();
