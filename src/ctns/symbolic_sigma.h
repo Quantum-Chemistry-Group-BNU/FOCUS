@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_TWODOT_SIGMA_H
-#define SYMBOLIC_TWODOT_SIGMA_H
+#ifndef SYMBOLIC_SIGMA_H
+#define SYMBOLIC_SIGMA_H
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -10,19 +10,17 @@
 #include "symbolic_oper.h"
 
 namespace ctns{
-
-// generate all formulea for constructing H*x as a list of terms
-// organizing principle: recursive partition
-template <typename Tm>
-void symbolic_twodot_HxTerm(const oper_dictmap<Tm>& qops_dict,
-	                    const int it,
-			    const symbolic_term<Tm>& HTerm,
-			    const stensor4<Tm>& wf,
-			    stensor4<Tm>& Hwf){
+      
+template <typename Tm, typename QTm> 
+void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
+		     const int it,
+		     const symbolic_term<Tm>& HTerm,
+		     const QTm& wf,
+		     QTm& Hwf){
    const bool debug = false;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    // compute (HTerm+HTerm.H)*|wf>
-   stensor4<Tm> opNxwf, opHxwf;
+   QTm opNxwf, opHxwf;
    for(int idx=HTerm.size()-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];
       int len = sop.size();
@@ -49,7 +47,7 @@ void symbolic_twodot_HxTerm(const oper_dictmap<Tm>& qops_dict,
       // form opsum = wt0*op0 + wt1*op1 + ...
       const auto& op0 = qops(label).at(index0);
       if(dagger) wt0 = tools::conjugate(wt0);
-      auto optmp = wt0*((nbar0==0)? op0 : op0.K(nbar0)); 
+      auto optmp = wt0*((nbar0==0)? op0 : op0.K(nbar0));      
       for(int k=1; k<len; k++){
          auto wtk = sop.sums[k].first;
 	 auto sopk = sop.sums[k].second;
@@ -61,11 +59,11 @@ void symbolic_twodot_HxTerm(const oper_dictmap<Tm>& qops_dict,
       } // k
       // (opN+opH)*|wf>
       if(idx == HTerm.size()-1){
-         opNxwf = contract_qt4_qt2(block,wf,optmp,dagger);
-         opHxwf = contract_qt4_qt2(block,wf,optmp,!dagger);
+         opNxwf = contract_opxwf(block,wf,optmp,dagger);
+         opHxwf = contract_opxwf(block,wf,optmp,!dagger);
       }else{
-         opNxwf = contract_qt4_qt2(block,opNxwf,optmp,dagger);
-         opHxwf = contract_qt4_qt2(block,opHxwf,optmp,!dagger);
+         opNxwf = contract_opxwf(block,opNxwf,optmp,dagger);
+         opHxwf = contract_opxwf(block,opHxwf,optmp,!dagger);
       }
       // impose antisymmetry here
       if(parity){ 
@@ -76,19 +74,19 @@ void symbolic_twodot_HxTerm(const oper_dictmap<Tm>& qops_dict,
    int N = Hwf.size();
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
    linalg::xaxpy(N, 1.0, opNxwf.data(), Hwf.data()); 
-   linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data());
+   linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data()); 
 }
 
-template <typename Tm> 
-void symbolic_twodot_Hx(Tm* y,
-	                const Tm* x,
-	                const symbolic_task<Tm>& H_formulae,
-	          	const oper_dictmap<Tm>& qops_dict,
-			const double& ecore,
-	                stensor4<Tm>& wf,
-	                const int size,
-	                const int rank){
-   const bool debug = false;
+template <typename Tm, typename QTm> 
+void symbolic_Hx(Tm* y,
+	         const Tm* x,
+	         const symbolic_task<Tm>& H_formulae,
+	         const oper_dictmap<Tm>& qops_dict,
+		 const double& ecore,
+	         QTm& wf,
+	         const int size,
+	         const int rank){
+   const bool debug = true;
    auto t0 = tools::get_time();
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
@@ -96,7 +94,8 @@ void symbolic_twodot_Hx(Tm* y,
    int maxthreads = 1;
 #endif
    if(rank == 0 && debug){ 
-      std::cout << "ctns::symbolic_twodot_Hx"
+      std::cout << "ctns::symbolic_Hx"
+	      	<< " QTm=" << get_name<QTm>() 
 	        << " mpisize=" << size 
                 << " maxthreads=" << maxthreads
                 << std::endl;
@@ -106,7 +105,7 @@ void symbolic_twodot_Hx(Tm* y,
    //=======================
    wf.from_array(x);
    // initialization
-   std::vector<stensor4<Tm>> Hwfs(maxthreads);
+   std::vector<QTm> Hwfs(maxthreads);
    for(int i=0; i<maxthreads; i++){
       Hwfs[i].init(wf.info);
    }
@@ -122,7 +121,7 @@ void symbolic_twodot_Hx(Tm* y,
       int omprank = 0;
 #endif
       const auto& HTerm = H_formulae.tasks[it];
-      symbolic_twodot_HxTerm(qops_dict,it,HTerm,wf,Hwfs[omprank]);
+      symbolic_HxTerm(qops_dict,it,HTerm,wf,Hwfs[omprank]);
    }
    auto t2 = tools::get_time();
    // reduction & save

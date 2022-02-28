@@ -10,6 +10,7 @@
 #include "sweep_twodot_sigma.h"
 #include "symbolic_twodot_formulae.h"
 #include "symbolic_twodot_sigma.h"
+#include "symbolic_sigma.h"
 
 namespace ctns{
 
@@ -175,7 +176,7 @@ void sweep_twodot(const input::schedule& schd,
       H_formulae = symbolic_twodot_formulae(lqops, rqops, c1qops, c2qops, 
 		                            int2e, size, rank, fname);
       if(schd.ctns.alg_hvec == 1){
-         HVec = bind(&ctns::symbolic_twodot_Hx<Tm>, _1, _2, std::cref(H_formulae),
+         HVec = bind(&ctns::symbolic_Hx<Tm,stensor4<Tm>>, _1, _2, std::cref(H_formulae),
            	     std::cref(qops_dict), std::cref(ecore),
                      std::ref(wf), std::cref(size), std::cref(rank));
       }else if(schd.ctns.alg_hvec == 2){
@@ -199,9 +200,7 @@ void sweep_twodot(const input::schedule& schd,
                      std::ref(wf), std::cref(size), std::cref(rank),
 		     std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
 		     std::cref(info_dict), std::ref(workspace));
-*/     
-	 std::cout << "Not implemented yet!" << std::endl;
-	 exit(1); 
+*/
       }
    }
    oper_timer.clear();

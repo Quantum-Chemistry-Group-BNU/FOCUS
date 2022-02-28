@@ -12,6 +12,7 @@
 #include "symbolic_onedot_sigma.h"
 #include "symbolic_preprocess.h"
 #include "symbolic_onedot_sigma2.h"
+#include "symbolic_sigma.h"
 
 namespace ctns{
 
@@ -146,7 +147,7 @@ void sweep_onedot(const input::schedule& schd,
       H_formulae = symbolic_onedot_formulae(lqops, rqops, cqops, 
 		                            int2e, size, rank, fname);
       if(schd.ctns.alg_hvec == 1){
-         HVec = bind(&ctns::symbolic_onedot_Hx<Tm>, _1, _2, std::cref(H_formulae),
+         HVec = bind(&ctns::symbolic_Hx<Tm,stensor3<Tm>>, _1, _2, std::cref(H_formulae),
            	     std::cref(qops_dict), std::cref(ecore),
                      std::ref(wf), std::cref(size), std::cref(rank));
       }else if(schd.ctns.alg_hvec == 2){
