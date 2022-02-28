@@ -45,8 +45,8 @@ void oper_init_dotAll(const comb<Km>& icomb,
 	 //---------------------------------------------
          auto tb = tools::get_time();
 	 //---------------------------------------------
-	 std::string fname = oper_fname(scratch, p, "c");
-         oper_save(fname, qops, rank);
+	 std::string fop = oper_fname(scratch, p, "c");
+         oper_save(fop, qops, rank);
 	 //---------------------------------------------
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
@@ -63,8 +63,8 @@ void oper_init_dotAll(const comb<Km>& icomb,
 	 //---------------------------------------------
          auto tb = tools::get_time();
 	 //---------------------------------------------
-	 std::string fname = oper_fname(scratch, p, "r");
-         oper_save(fname, qops, rank);
+	 std::string fop = oper_fname(scratch, p, "r");
+         oper_save(fop, qops, rank);
 	 //---------------------------------------------
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
@@ -82,8 +82,8 @@ void oper_init_dotAll(const comb<Km>& icomb,
    //---------------------------------------------
    auto tb = tools::get_time();
    //---------------------------------------------
-   std::string fname = oper_fname(scratch, p, "l");
-   oper_save(fname, qops, rank);
+   std::string fop = oper_fname(scratch, p, "l");
+   oper_save(fop, qops, rank);
    //---------------------------------------------
    auto tc = tools::get_time();
    t_comp += tools::get_duration(tb-ta);
@@ -105,7 +105,8 @@ void oper_env_right(const comb<Km>& icomb,
 		    const integral::two_body<typename Km::dtype>& int2e,
 		    const integral::one_body<typename Km::dtype>& int1e,
 		    const std::string scratch,
-		    const int alg_renorm){
+		    const int alg_renorm,
+		    const bool save_formulae){
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -143,17 +144,18 @@ void oper_env_right(const comb<Km>& icomb,
          // perform renormalization for superblock {|cr>}
          //---------------------------------------------
 	 std::string superblock = "cr";
-	 std::string frenorm = scratch+"/rformulae_"+std::to_string(idx)+".txt"; 
+         std::string fname;
+	 if(save_formulae) fname = scratch+"/rformulae_env_"+std::to_string(idx)+".txt"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e,
-			   qops1, qops2, qops, alg_renorm, frenorm);
+			   qops1, qops2, qops, alg_renorm, fname);
          //---------------------------------------------
          auto td = tools::get_time();
          t_comp += tools::get_duration(td-tc);
          //---------------------------------------------
 	 // save operators to disk
          //---------------------------------------------
-	 std::string fname = oper_fname(scratch, p, "r");
-         oper_save(fname, qops, rank);
+	 std::string fop = oper_fname(scratch, p, "r");
+         oper_save(fop, qops, rank);
          //---------------------------------------------
          auto te = tools::get_time();
 	 t_save += tools::get_duration(te-td);

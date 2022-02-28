@@ -124,10 +124,10 @@ void sweep_onedot(const input::schedule& schd,
    const oper_dictmap<Tm> qops_dict = {{"l",lqops},
 	   		 	       {"r",rqops},
 	   			       {"c",cqops}};
-   std::map<qsym,qinfo3<Tm>> info_dict;
-   symbolic_task<Tm> H_formulae;
-   Hx_functors<Tm> Hx_funs;
    HVec_type<Tm> HVec;
+   Hx_functors<Tm> Hx_funs;
+   symbolic_task<Tm> H_formulae;
+   std::map<qsym,qinfo3<Tm>> info_dict;
    Tm* workspace;
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -137,8 +137,10 @@ void sweep_onedot(const input::schedule& schd,
       HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
            	  std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec > 0){
-      std::string fname = scratch+"/hformulae_"+std::to_string(isweep)
-	                + "_"+std::to_string(ibond)+".txt"; 
+      std::string fname;
+      if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
+	                                + "_"+std::to_string(isweep)
+	                		+ "_"+std::to_string(ibond)+".txt"; 
       H_formulae = symbolic_onedot_formulae(lqops, rqops, cqops, 
 		                            int2e, size, rank, fname);
       if(schd.ctns.alg_hvec == 1){
@@ -171,9 +173,7 @@ void sweep_onedot(const input::schedule& schd,
    onedot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
-   if(schd.ctns.alg_hvec == 2){
-      delete[] workspace; 
-   }
+   if(schd.ctns.alg_hvec == 2) delete[] workspace; 
    timing.tc = tools::get_time();
    if(rank == 0){ 
       sweeps.print_eopt(isweep, ibond);

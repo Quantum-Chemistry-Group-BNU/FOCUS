@@ -75,7 +75,8 @@ int CTNS(const input::schedule& schd){
       if(schd.ctns.task_ham){
 	 auto scratch = schd.scratch+"/ham";
          schd.create_scratch(scratch, (rank == 0));
-         auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, scratch, schd.ctns.alg_renorm);
+         auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, scratch, 
+			 	   schd.ctns.alg_renorm, schd.ctns.save_formulae);
          if(rank == 0){
             Hij.print("Hij",8);
             auto Sij = ctns::get_Smat(icomb);

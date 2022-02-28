@@ -163,7 +163,8 @@ void onedot_renorm(const input::schedule& schd,
    // build reduced density matrix & perform decimation
    stensor2<Tm> rot;
    if(rank == 0){
-      std::string fname = scratch+"/decimation_"+std::to_string(isweep)
+      std::string fname = scratch+"/decimation"
+	       	        + "_"+std::to_string(isweep)
 	                + "_"+std::to_string(ibond)+".txt"; 
       onedot_decimation(sweeps, isweep, ibond, ifkr, 
 		        superblock, vsol, wf, rot, fname);
@@ -184,9 +185,10 @@ void onedot_renorm(const input::schedule& schd,
    const auto& p = dbond.p;
    const auto& pdx = icomb.topo.rindex.at(p); 
    oper_dict<Tm> qops;
-   std::string frenorm = scratch+"/rformulae_"+std::to_string(isweep)
-	               + "_"+std::to_string(ibond)+".txt";
-   std::string fname;
+   std::string fname, fop;
+   if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
+	                             + "_"+std::to_string(isweep)
+	               		     + "_"+std::to_string(ibond)+".txt";
    if(superblock == "lc"){
       icomb.lsites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
       //-------------------------------------------------------------------
@@ -196,8 +198,8 @@ void onedot_renorm(const input::schedule& schd,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, cqops, qops, 
-			schd.ctns.alg_renorm, frenorm);
-      fname = oper_fname(scratch, p, "l");
+			schd.ctns.alg_renorm, fname);
+      fop = oper_fname(scratch, p, "l");
    }else if(superblock == "lr"){
       icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
       //-------------------------------------------------------------------
@@ -207,8 +209,8 @@ void onedot_renorm(const input::schedule& schd,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops, 
-			schd.ctns.alg_renorm, frenorm);
-      fname = oper_fname(scratch, p, "l");
+			schd.ctns.alg_renorm, fname);
+      fop = oper_fname(scratch, p, "l");
    }else if(superblock == "cr"){
       icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
       //-------------------------------------------------------------------
@@ -218,11 +220,11 @@ void onedot_renorm(const input::schedule& schd,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("cr", icomb, p, int2e, int1e, cqops, rqops, qops, 
-			schd.ctns.alg_renorm, frenorm);
-      fname = oper_fname(scratch, p, "r");
+			schd.ctns.alg_renorm, fname);
+      fop = oper_fname(scratch, p, "r");
    }
    timing.tf = tools::get_time();
-   oper_save(fname, qops, rank);
+   oper_save(fop, qops, rank);
 }
 
 } // ctns

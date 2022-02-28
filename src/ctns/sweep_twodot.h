@@ -103,10 +103,6 @@ void sweep_twodot(const input::schedule& schd,
       c1qops.print("c1qops");
       c2qops.print("c2qops");
    }
-   const oper_dictmap<Tm> qops_dict = {{"l",lqops},
-	   		 	       {"r",rqops},
-	   			       {"c1",c1qops},
-				       {"c2",c2qops}};
    timing.ta = tools::get_time();
 
    // 2. twodot wavefunction
@@ -153,29 +149,64 @@ void sweep_twodot(const input::schedule& schd,
    timing.tb = tools::get_time();
 
    // 3.2 Solve local problem: Hc=cE
+   const oper_dictmap<Tm> qops_dict = {{"l",lqops},
+	   		 	       {"r",rqops},
+	   			       {"c1",c1qops},
+				       {"c2",c2qops}};
+   HVec_type<Tm> HVec;
+   Hx_functors<Tm> Hx_funs;
+   symbolic_task<Tm> H_formulae;
+   std::map<qsym,qinfo4<Tm>> info_dict;
+   Tm* workspace;
    using std::placeholders::_1;
    using std::placeholders::_2;
-   symbolic_task<Tm> H_formulae;
-   Hx_functors<Tm> Hx_funs;
-   HVec_type<Tm> HVec;
    if(schd.ctns.alg_hvec == 0){
       Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
                                    int2e, ecore, wf, size, rank);
       HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
-   }else if(schd.ctns.alg_hvec == 1){
-      std::string fname = scratch+"/hformulae_"+std::to_string(isweep)
-	                + "_"+std::to_string(ibond)+".txt"; 
+   }else if(schd.ctns.alg_hvec > 0){
+      std::string fname;
+      if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
+	      			        + "_"+std::to_string(isweep)
+	                		+ "_"+std::to_string(ibond)+".txt"; 
       H_formulae = symbolic_twodot_formulae(lqops, rqops, c1qops, c2qops, 
 		                            int2e, size, rank, fname);
-      HVec = bind(&ctns::symbolic_twodot_Hx<Tm>, _1, _2, std::cref(H_formulae),
-		  std::cref(qops_dict), std::cref(ecore),
-                  std::ref(wf), std::cref(size), std::cref(rank));
+      if(schd.ctns.alg_hvec == 1){
+         HVec = bind(&ctns::symbolic_twodot_Hx<Tm>, _1, _2, std::cref(H_formulae),
+           	     std::cref(qops_dict), std::cref(ecore),
+                     std::ref(wf), std::cref(size), std::cref(rank));
+      }else if(schd.ctns.alg_hvec == 2){
+	 size_t opsize = preprocess_opsize(qops_dict);
+	 size_t wfsize = preprocess_wf4size(wf.info, info_dict);
+	 size_t tmpsize = opsize + 3*wfsize;
+	 size_t worktot = maxthreads*tmpsize;
+	 if(rank == 0){
+	    std::cout << "maxthreads=" << maxthreads
+		      << " opsize=" << opsize
+		      << " wfsize=" << wfsize
+		      << " tmpsize=" << tmpsize
+		      << " worktot=" << worktot
+		      << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+		      << std::endl; 
+	 }
+	 workspace = new Tm[worktot];
+/*
+         HVec = bind(&ctns::symbolic_onedot_Hx2<Tm>, _1, _2, std::cref(H_formulae),
+           	     std::cref(qops_dict), std::cref(ecore), 
+                     std::ref(wf), std::cref(size), std::cref(rank),
+		     std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
+		     std::cref(info_dict), std::ref(workspace));
+*/     
+	 std::cout << "Not implemented yet!" << std::endl;
+	 exit(1); 
+      }
    }
    oper_timer.clear();
    twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, dbond, wf);
+   if(schd.ctns.alg_hvec == 2) delete[] workspace; 
    timing.tc = tools::get_time();
    if(rank == 0){ 
       sweeps.print_eopt(isweep, ibond);
