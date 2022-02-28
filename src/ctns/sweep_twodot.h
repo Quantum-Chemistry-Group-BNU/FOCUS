@@ -75,11 +75,13 @@ void sweep_twodot(const input::schedule& schd,
    int sc2 = suppc2.size();
    assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
    if(rank == 0 && debug_sweep){
-      std::cout << "support info:" << std::endl;
-      tools::print_vector(suppl , "sl="+std::to_string(sl)+" suppl");
-      tools::print_vector(suppr , "sr="+std::to_string(sr)+" suppr");
-      tools::print_vector(suppc1, "sc1="+std::to_string(sc1)+" suppc1");
-      tools::print_vector(suppc2, "sc2="+std::to_string(sc2)+" suppc2");
+      std::cout << "support info: (sl,sr,sc1,sc2)=" 
+		<< sl << "," << sr << "," << sc1 << "," << sc2
+		<< std::endl;
+      tools::print_vector(suppl , "suppl");
+      tools::print_vector(suppr , "suppr");
+      tools::print_vector(suppc1, "suppc1");
+      tools::print_vector(suppc2, "suppc2");
    }
 
    // 1. load operators 
