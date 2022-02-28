@@ -70,6 +70,8 @@ LOGS
            - avoid memory allocation in sigma (onedot/twodot)
 	   - avoid memset?
            - revise renormalization [DONE2022/02/27]
+
+        ### TODO: profile ###
 	- preprocess twodot:
 	   - preallocation of workspace
 	   - contract_qt4_qt2_info
