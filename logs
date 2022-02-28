@@ -58,7 +58,13 @@ LOGS
     - profiling:
 	- benchmark for small systems
 	- minimize memory allocation / intermediates?
-	- benchmark for [Fe4S4] systems
+	- make sure the code works for Fe4S4 & Fe8S7 with small D 
+	   - formulae correctly generated [DONE2022/02/27]
+
+        ### TODOs ###
+           - use input for schd & fname to control whether write *.txt	
+	   - bool ifwrite = (fname == ""); 
+
     - optimization of onedot:
 	- int1e only appears in oper_dot.h
         - remove explicit H() in qt_qt:
@@ -68,19 +74,22 @@ LOGS
            - avoid memory allocation in sigma (onedot/twodot)
 	   - avoid memset?
            - revise renormalization [DONE2022/02/27]
-	- make sure the code works for Fe4S4 & Fe8S7 with small D
-        - info only store offset? or maps:
+
+        ### TODOs ###
+        - info only store offset or maps: [CRUCIAL PART!!!]
 	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
-    - use input for schd & fname to control whether write *.txt	
-	- bool ifwrite = (fname == ""); 
+
     - profile openmp version:
-    - optimization of twodot:
+    - optimization of twodot: 
+	- preallocation of workspace
+	- contract_qt4_qt2_info 
     - kramers version:
 	- how to avoid repeated K()?
 
  * Large-scale parallelization: push to the limit!
     - GPU for contractions?
+    - memory bound for Hx & renorm
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]

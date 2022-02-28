@@ -95,7 +95,7 @@ private:
          & task_sdiag & task_ham & task_opt 
 	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
 	 & nroots & guess & maxsweep & ctrls 
-	 & alg_hvec & alg_renorm
+	 & alg_hvec & alg_renorm & save_formulae
 	 & cisolver & maxcycle
          & load & rcanon_file & iroot & nsample & ndetprt 
 	 & verbose;  
@@ -125,6 +125,7 @@ public:
    // algorithm
    int alg_hvec = 0;
    int alg_renorm = 0;
+   bool save_formulae = false;
    // dvdson
    int cisolver = 1;
    int maxcycle = 100;

@@ -188,6 +188,8 @@ void params_ctns::read(ifstream& istrm){
          int algorithm = stoi(line.substr(8));
 	 alg_hvec = algorithm;
 	 alg_renorm = algorithm;
+      }else if(line.substr(0,13)=="save_formulae"){
+         save_formulae = true;
       }else if(line.substr(0,4)=="load"){
          load = true;
       }else if(line.substr(0,13)=="topology_file"){
@@ -273,6 +275,7 @@ void params_ctns::print() const{
    cout << "rdm_vs_svd = " << scientific << rdm_vs_svd << endl;
    cout << "alg_hvec = " << alg_hvec << endl;
    cout << "alg_renorm = " << alg_renorm << endl;
+   cout << "save_formulae = " << save_formulae << endl;
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
    cout << "guess    = " << guess << endl;
