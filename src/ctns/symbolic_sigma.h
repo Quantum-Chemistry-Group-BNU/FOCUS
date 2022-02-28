@@ -86,7 +86,7 @@ void symbolic_Hx(Tm* y,
 	         QTm& wf,
 	         const int size,
 	         const int rank){
-   const bool debug = true;
+   const bool debug = false;
    auto t0 = tools::get_time();
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();

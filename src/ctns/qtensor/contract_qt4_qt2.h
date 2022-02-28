@@ -73,7 +73,7 @@ void contract_qt4_qt2_info_l(const stensor4<Tm>& qt4a,
          int vdim = blk4.dim3;
          for(int iv=0; iv<vdim; iv++){
             for(int im=0; im<mdim; im++){
-               xgemm(transa,"N",1.0,blk2b,blk4a.get(im,iv),1.0,blk4.get(im,iv));
+               xgemm(transa,"N",alpha,blk2b,blk4a.get(im,iv),beta,blk4.get(im,iv));
             } // im
          } // iv
       } // bx

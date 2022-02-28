@@ -19,7 +19,7 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 		      const size_t& opsize,
 		      const size_t& wfsize,
 		      Tm* workspace){
-   const bool debug = true;
+   const bool debug = false;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    // compute (HTerm+HTerm.H)*|wf>
    int isym = wf.info.sym.isym();
@@ -102,7 +102,7 @@ void symbolic_Hx2(Tm* y,
 		  const size_t& wfsize,
 		  const size_t& tmpsize,
 		  Tm* workspace){
-   const bool debug = true;
+   const bool debug = false;
    auto t0 = tools::get_time();
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
@@ -129,7 +129,6 @@ void symbolic_Hx2(Tm* y,
    }
    auto t1 = tools::get_time();
    // compute
-   std::cout << "lzdA" << std::endl; 
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
@@ -145,19 +144,16 @@ void symbolic_Hx2(Tm* y,
 		       &workspace[omprank*tmpsize+wfsize]);
    } // it
    auto t2 = tools::get_time();
-   std::cout << "lzdB" << std::endl; 
    // reduction & save
    for(int i=1; i<maxthreads; i++){
       Hwfs[0] += Hwfs[i];
    }
    Hwfs[0].to_array(y);
-   std::cout << "lzdC" << std::endl; 
    // add const term
    if(rank == 0){
       const Tm scale = qops_dict.at("l").ifkr? 0.5 : 1.0;
       linalg::xaxpy(wf.size(), scale*ecore, x, y);
    }
-   std::cout << "lzdD" << std::endl; 
    auto t3 = tools::get_time();
    oper_timer.tHxInit += tools::get_duration(t1-t0);
    oper_timer.tHxCalc += tools::get_duration(t2-t1);
