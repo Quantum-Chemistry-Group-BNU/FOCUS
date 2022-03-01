@@ -32,6 +32,9 @@ void sweep_twodot(const input::schedule& schd,
    rank = icomb.world.rank();
    size = icomb.world.size();
 #endif   
+#ifdef _OPENMP
+   maxthreads = omp_get_max_threads();
+#endif
    if(rank == 0){
       std::cout << "ctns::sweep_twodot"
 	        << " alg_hvec=" << schd.ctns.alg_hvec
