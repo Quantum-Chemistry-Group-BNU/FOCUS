@@ -75,8 +75,8 @@ LOGS
 	   - contract_qt4_qt2_info [DONE2022/03/01]
 
     ### TODOs ###
-
-    - profile openmp version:
+    
+    - profile openmp onedot/twodot version with large D
 
     - better data structure? pointer? 
         - info only store offset or maps: [CRUCIAL PART!!!]

@@ -155,12 +155,10 @@ void sweep_onedot(const input::schedule& schd,
 	 size_t tmpsize = opsize + 3*wfsize;
 	 size_t worktot = maxthreads*tmpsize;
 	 if(rank == 0){
-	    std::cout << "preprocess: maxthreads=" << maxthreads
-		      << " opsize=" << opsize
-		      << " wfsize=" << wfsize
-		      << " tmpsize=" << tmpsize
-		      << " worktot=" << worktot
-		      << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+	    std::cout << "preprocess:" 
+		      << " opsize=" << opsize << ":" << tools::sizeMB<Tm>(opsize) << "MB"
+		      << " wfsize=" << wfsize << ":" << tools::sizeMB<Tm>(wfsize) << "MB"
+		      << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
 		      << std::endl; 
 	 }
 	 workspace = new Tm[worktot];
@@ -190,6 +188,7 @@ void sweep_onedot(const input::schedule& schd,
    if(rank == 0){
       tools::timing("ctns::sweep_onedot", timing.t0, timing.t1);
       timing.analysis();
+      sweeps.timing_global.accumulate(timing);
    }
 }
 
