@@ -87,19 +87,9 @@ void sweep_onedot(const input::schedule& schd,
    const auto& ql = lqops.qbra;
    const auto& qr = rqops.qbra;
    const auto& qc = cqops.qbra;
-   if(rank == 0){
-      if(debug_sweep) std::cout << "qbond info:" << std::endl;
-      ql.print("ql", debug_sweep);
-      qr.print("qr", debug_sweep);
-      qc.print("qc", debug_sweep);
-   }
    auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
    stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
-   if(rank == 0 && debug_sweep){ 
-      std::cout << "sym_state=" << sym_state 
-	        << " dim(localCI)=" << wf.size() 
-		<< std::endl;
-   }
+   if(rank == 0 && debug_sweep) wf.print("wf"); 
 
    // 3. Davidson solver for wf
    int nsub = wf.size();
