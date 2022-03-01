@@ -76,12 +76,12 @@ LOGS
 
     ### TODOs ###
     
-    - profile openmp onedot/twodot version with large D
-
     - better data structure? pointer? 
         - info only store offset or maps: [CRUCIAL PART!!!]
 	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
+
+    - profile openmp/mpi onedot/twodot version with large D
 
     - kramers version:
 	- how to avoid repeated K()?
