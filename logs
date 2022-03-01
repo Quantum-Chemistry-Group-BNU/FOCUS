@@ -70,17 +70,19 @@ LOGS
            - avoid memory allocation in sigma (onedot/twodot)
 	   - avoid memset?
            - revise renormalization [DONE2022/02/27]
-
-        ### TODO: profile ###
 	- preprocess twodot:
 	   - preallocation of workspace
-	   - contract_qt4_qt2_info
+	   - contract_qt4_qt2_info [DONE2022/03/01]
 
-    - better data structure? 
+    ### TODOs ###
+
+    - profile openmp version:
+
+    - better data structure? pointer? 
         - info only store offset or maps: [CRUCIAL PART!!!]
 	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
-    - profile openmp version:
+
     - kramers version:
 	- how to avoid repeated K()?
 
