@@ -19,8 +19,11 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 		      const size_t& opsize,
 		      const size_t& wfsize,
 		      Tm* workspace){
-   const bool debug = false;
+/*
+   const bool debug = true;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
+   auto t0 = tools::get_time();
+*/
    // compute (HTerm+HTerm.H)*|wf>
    int isym = wf.info.sym.isym();
    qsym sym;
@@ -86,6 +89,11 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
    } // idx
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
    linalg::xaxpy(Hwf.size(), fac, opxwf.data(), Hwf.data()); 
+/*   
+   auto t1 = tools::get_time();
+   std::cout << "dt=" << std::scientific << std::setprecision(4)
+	     << tools::get_duration(t1-t0) << std::endl;
+*/
 }
 
 template <typename Tm, typename QTm, typename QInfo> 
@@ -142,6 +150,12 @@ void symbolic_Hx2(Tm* y,
       symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[omprank],
 		       info_dict,opsize,wfsize,
 		       &workspace[omprank*tmpsize+wfsize]);
+/*
+      const auto& HTerm = H_formulae.tasks[it];
+      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[it%maxthreads],
+		       info_dict,opsize,wfsize,
+		       &workspace[(it%maxthreads)*tmpsize+wfsize]);
+*/
    } // it
    auto t2 = tools::get_time();
    // reduction & save

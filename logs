@@ -76,12 +76,17 @@ LOGS
 
     ### TODOs ###
     
+    - profile openmp/mpi onedot/twodot version with large D
+	- why the parallel efficiency is low?
+	- 1. sort formulae by types Label/Block/Len? + static/dynamic/guided,chunksize
+	- 2. private workspace?
+	- note: when noise is added, the results can be different 
+
     - better data structure? pointer? 
+	- vtune profile stackblock for comparison [!!!] 
         - info only store offset or maps: [CRUCIAL PART!!!]
 	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
-
-    - profile openmp/mpi onedot/twodot version with large D
 
     - kramers version:
 	- how to avoid repeated K()?

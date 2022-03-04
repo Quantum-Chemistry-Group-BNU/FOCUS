@@ -147,7 +147,7 @@ struct stensor3{
       }
       // print
       void print(const std::string name, const int level=0) const{ 
-         std::cout << "\nstensor3: " << name << " own=" << own << " _data=" << _data << std::endl; 
+         std::cout << "stensor3: " << name << " own=" << own << " _data=" << _data << std::endl; 
 	 info.print(name,level); 
       }
       // access
