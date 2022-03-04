@@ -57,7 +57,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       counter = {{"CS",0},{"SC",0},{"AP",0},{"BQ",0}};
       // 1. H^l 
       const double scale = ifkr? 0.25 : 0.5;
-      auto Hl = symbolic_term<Tm>(symbolic_oper("l",'H',0), scale);
+      auto Hl = symbolic_prod<Tm>(symbolic_oper("l",'H',0), scale);
       formulae.append(Hl);
       // 2. H^cr
       auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cqops.cindex, rqops.cindex, 
@@ -70,7 +70,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       // One-index terms:
       // 3. p1^l+*Sp1^cr + h.c.
       for(const auto& index : lqops.cindex){
-         auto Cl = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("l",'C',index)));
+         auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
          auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cqops.cindex, rqops.cindex,
            	                             index, ifkr, size, rank);
          auto Cl_Scr = Cl.outer_product(Scr);
@@ -86,7 +86,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       for(const auto& pr : infoC){
          int index = pr.first;
          int iformula = pr.second;
-         auto Sl = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("l",'S',index)));
+         auto Sl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'S',index)));
          auto Ccr = symbolic_normxwf_opC<Tm>("c", "r", index, iformula);
 	 Ccr.scale(-1.0);
          auto Sl_Ccr = Sl.outer_product(Ccr);
@@ -101,7 +101,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       for(const auto& index : aindex){
          int iproc = distribute2(index,size);
          if(iproc == rank){
-            auto Al = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("l",'A',index)));
+            auto Al = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'A',index)));
             auto Pcr = symbolic_compxwf_opP<Tm>("c", "r", cqops.cindex, rqops.cindex,
 	 				        int2e, index, isym, ifkr);
 	    const double wt = ifkr? wfacAP(index) : 1.0;
@@ -119,7 +119,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       for(const auto& index : bindex){
          int iproc = distribute2(index,size);
          if(iproc == rank){
-            auto Bl = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("l",'B',index)));
+            auto Bl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'B',index)));
 	    auto Qcr = symbolic_compxwf_opQ<Tm>("c", "r", cqops.cindex, rqops.cindex,
 	           	                        int2e, index, isym, ifkr);
             const double wt = ifkr? wfacBQ(index) : wfac(index);
@@ -142,7 +142,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       formulae.join(Hlc);
       // 2. H^r
       const double scale = ifkr? 0.25 : 0.5;
-      auto Hr = symbolic_term<Tm>(symbolic_oper("r",'H',0), scale);
+      auto Hr = symbolic_prod<Tm>(symbolic_oper("r",'H',0), scale);
       formulae.append(Hr);
       if(ifsave){ 
 	 std::cout << " idx=" << idx++;
@@ -154,7 +154,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
          auto Slc = symbolic_compxwf_opS<Tm>("l", "c", lqops.cindex, cqops.cindex,
 			 		     index, ifkr, size, rank);
 	 Slc.scale(-1.0);
-	 auto Cr = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("r",'C',index)));
+	 auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
 	 auto Slc_Cr = Slc.outer_product(Cr);
 	 formulae.join(Slc_Cr);
 	 if(ifsave){ 
@@ -169,7 +169,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
          int index = pr.first;
          int iformula = pr.second;
          auto Clc = symbolic_normxwf_opC<Tm>("l", "c", index, iformula);
-         auto Sr = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("r",'S',index)));
+         auto Sr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'S',index)));
          auto Clc_Sr = Clc.outer_product(Sr);
          formulae.join(Clc_Sr);
          if(ifsave){ 
@@ -184,7 +184,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
          if(iproc == rank){
             auto Plc = symbolic_compxwf_opP<Tm>("l", "c", lqops.cindex, cqops.cindex,
 	 				        int2e, index, isym, ifkr);
-            auto Ar = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("r",'A',index)));
+            auto Ar = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'A',index)));
 	    const double wt = ifkr? wfacAP(index) : 1.0;
 	    Plc.scale(wt);
             auto Plc_Ar = Plc.outer_product(Ar);
@@ -202,7 +202,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
          if(iproc == rank){
 	    auto Qlc = symbolic_compxwf_opQ<Tm>("l", "c", lqops.cindex, cqops.cindex,
 	           	                        int2e, index, isym, ifkr);
-            auto Br = symbolic_task<Tm>(symbolic_term<Tm>(symbolic_oper("r",'B',index)));
+            auto Br = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'B',index)));
             const double wt = ifkr? wfacBQ(index) : wfac(index);
 	    Qlc.scale(wt);
 	    auto Qlc_Br = Qlc.outer_product(Br);
@@ -216,6 +216,10 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       }
    } // ifNC
 
+   std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
+	                             {"r",rqops.qket.get_dimAll()},
+	                             {"c",cqops.qket.get_dimAll()}};
+   formulae.sort(dims);
    if(ifsave){
       if(ifNC){
          std::cout << "size=" << idx
@@ -232,10 +236,6 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       std::cout.rdbuf(backup); // restore cout's original streambuf
       file.close();
    }
-   
-   formulae.display("total");
-   exit(1);
-
    if(rank == 0){
       auto t1 = tools::get_time();
       int size = formulae.size();

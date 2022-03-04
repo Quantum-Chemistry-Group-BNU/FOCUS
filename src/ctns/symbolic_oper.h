@@ -2,6 +2,8 @@
 #define SYMBOLIC_OPER_H
 
 #include "oper_dict.h"
+#include <numeric>      // std::iota
+#include <algorithm>    // std::stable_sort
 
 namespace ctns{
 
@@ -43,9 +45,7 @@ struct symbolic_oper{
       }
       // print
       friend std::ostream& operator <<(std::ostream& os, const symbolic_oper& op){
-         os << op.label;
-	 if(op.dagger) os << "dag";
-	 os << "[" << op.block << "]";
+         os << op.symbol();
 	 if(op.label == 'H' || op.label == 'C' || op.label == 'S'){
             os << "(" << op.index << ")";
 	 }else{
@@ -68,6 +68,12 @@ struct symbolic_oper{
       qsym get_qsym(const short isym) const{
          auto sym = get_qsym_op(label, isym, index);
 	 return (dagger? -sym : sym);
+      }
+      // symbol
+      std::string symbol() const{
+         std::string lb(1,label);
+         lb = dagger? lb+"d" : lb;
+	 return  lb+"["+block+"]";
       }
    public:
       std::string block;
@@ -126,26 +132,37 @@ struct symbolic_sum{
       }
       // helper
       int size() const{ return sums.size(); } 
+      // cost
+      size_t cost(std::map<std::string,int>& dims) const{
+	 size_t t = 1; 
+         for(const auto& pr : dims){
+	    t *= pr.second;
+	 }
+	 std::string block = sums[0].second.block;
+	 int d = dims.at(block);
+	 int len = this->size();
+	 return d*t + len*d*d;
+      }
    public:
       std::vector<std::pair<Tm,symbolic_oper>> sums;
 };
 
 // product of operators: o[l]*o[c1], o[l]*o[c1]*o[r]
 template <typename Tm>
-struct symbolic_term{
+struct symbolic_prod{
    public:
       // constructor
-      symbolic_term(){}
-      symbolic_term(const symbolic_oper& op1, const double _wt=1.0){
+      symbolic_prod(){}
+      symbolic_prod(const symbolic_oper& op1, const double _wt=1.0){
          terms.push_back(symbolic_sum<Tm>(op1,_wt));
       }
-      symbolic_term(const symbolic_oper& op1, 
+      symbolic_prod(const symbolic_oper& op1, 
 		    const symbolic_oper& op2,
 		    const double _wt=1.0){
          terms.push_back(symbolic_sum<Tm>(op1,_wt));
          terms.push_back(symbolic_sum<Tm>(op2));
       }
-      symbolic_term(const symbolic_oper& op1, 
+      symbolic_prod(const symbolic_oper& op1, 
 		    const symbolic_oper& op2,
 		    const symbolic_oper& op3,
 		    const double _wt=1.0){
@@ -154,7 +171,7 @@ struct symbolic_term{
          terms.push_back(symbolic_sum<Tm>(op3));
       }
       // o[l]o[c1]o[c2]o[r]
-      symbolic_term(const symbolic_oper& op1, 
+      symbolic_prod(const symbolic_oper& op1, 
 		    const symbolic_oper& op2,
 		    const symbolic_oper& op3,
 		    const symbolic_oper& op4,
@@ -165,18 +182,18 @@ struct symbolic_term{
          terms.push_back(symbolic_sum<Tm>(op4));
       }
       // oper & sum
-      symbolic_term(const symbolic_oper& op1,
+      symbolic_prod(const symbolic_oper& op1,
 		    const symbolic_sum<Tm>& ops2){
          terms.push_back(symbolic_sum<Tm>(op1));
 	 terms.push_back(ops2);
       }
-      symbolic_term(const symbolic_sum<Tm>& ops1,
+      symbolic_prod(const symbolic_sum<Tm>& ops1,
 		    const symbolic_oper& op2){
          terms.push_back(ops1);
 	 terms.push_back(symbolic_sum<Tm>(op2));
       }
       // print
-      friend std::ostream& operator <<(std::ostream& os, const symbolic_term& ops){
+      friend std::ostream& operator <<(std::ostream& os, const symbolic_prod& ops){
          int n = ops.terms.size();
 	 if(n > 0){
 	    os << ops.terms[0];
@@ -205,8 +222,8 @@ struct symbolic_term{
 	 return sgn;
       }
       // operations
-      symbolic_term H() const{
-	 symbolic_term<Tm> tH;
+      symbolic_prod H() const{
+	 symbolic_prod<Tm> tH;
          int n = terms.size();
 	 tH.terms.resize(n);
 	 for(int i=0; i<n; i++){
@@ -216,14 +233,30 @@ struct symbolic_term{
 	 return tH;
       }
       // t1*t2 
-      symbolic_term product(const symbolic_term& t) const{
-         symbolic_term t12;
+      symbolic_prod product(const symbolic_prod& t) const{
+         symbolic_prod t12;
 	 t12.terms = terms;
          std::copy(t.terms.begin(), t.terms.end(), std::back_inserter(t12.terms));
 	 return t12;
       }
       // helper
-      int size() const{ return terms.size(); } 
+      int size() const{ return terms.size(); }
+      // cost
+      size_t cost(std::map<std::string,int>& dims) const{
+         size_t t = 0;
+	 for(int i=0; i<terms.size(); i++){
+	    t += terms[i].cost(dims);
+	 }
+ 	 return t;
+      }
+      // symbol
+      std::string symbol() const{
+	 std::string lbl;
+	 for(int i=0; i<terms.size(); i++){
+	    lbl += terms[i].sums[0].second.symbol();
+	 }
+	 return lbl;
+      }
    public:
       std::vector<symbolic_sum<Tm>> terms;
 };
@@ -234,11 +267,11 @@ struct symbolic_task{
    public:
       // constructor
       symbolic_task(){}
-      symbolic_task(const symbolic_term<Tm>& t){
+      symbolic_task(const symbolic_prod<Tm>& t){
          tasks.push_back(t);
       }
       // append a term
-      void append(const symbolic_term<Tm>& t){
+      void append(const symbolic_prod<Tm>& t){
          tasks.push_back(t);
       }
       // join a task	   
@@ -271,9 +304,29 @@ struct symbolic_task{
 	 }
       }
       // helper
-      int size() const{ return tasks.size(); } 
+      int size() const{ return tasks.size(); }
+      // reorder
+      void sort(std::map<std::string,int>& dims){
+	 size_t size = tasks.size();
+         std::vector<int> idx(size);
+         std::iota(idx.begin(), idx.end(), 0);
+         std::stable_sort(tasks.begin(), tasks.end(),
+        	          [&dims](const symbolic_prod<Tm>& t1,
+			     	  const symbolic_prod<Tm>& t2){
+			  	  size_t c1 = t1.cost(dims);
+				  size_t c2 = t2.cost(dims);
+			     	  return (c1>c2) || (c1==c2 && t1.symbol()>t2.symbol()); 
+				  }
+			 );
+	 // debug
+         for(int i=0; i<tasks.size(); i++){
+	    std::cout << "i=" << i << " cost=" << tasks[i].cost(dims) 
+		      << " symbol=" << tasks[i].symbol()
+		      << " " << tasks[i] << std::endl;
+	 }
+      }
    public:
-      std::vector<symbolic_term<Tm>> tasks;
+      std::vector<symbolic_prod<Tm>> tasks;
 }; 
 
 template <typename Tm>

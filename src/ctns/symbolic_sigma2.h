@@ -12,7 +12,7 @@ namespace ctns{
 template <typename Tm, typename QTm, typename QInfo> 
 void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 		      const int it,
-		      const symbolic_term<Tm>& HTerm,
+		      const symbolic_prod<Tm>& HTerm,
 		      const QTm& wf,
 		      QTm& Hwf,
 		      const std::map<qsym,QInfo>& info_dict, 

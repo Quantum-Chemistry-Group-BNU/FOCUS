@@ -28,10 +28,10 @@ symbolic_task<Tm> symbolic_compxwf_opP(const std::string block1,
    //     + <pq||s1r2> ar2*as1	   => -<pq||s1r2> as1*ar2
    //
    // 1. P1*I2
-   auto P1pq = symbolic_term<Tm>(symbolic_oper(block1,'P',index,ifdagger));
+   auto P1pq = symbolic_prod<Tm>(symbolic_oper(block1,'P',index,ifdagger));
    formulae.append(P1pq);
    // 2. I1*P2
-   auto P2pq = symbolic_term<Tm>(symbolic_oper(block2,'P',index,ifdagger));
+   auto P2pq = symbolic_prod<Tm>(symbolic_oper(block2,'P',index,ifdagger));
    formulae.append(P2pq);
    // 3. sum_{s1} sum_{r2} -<pq||s1r2> as1*ar2
    std::map<int,Tm> oij;
@@ -81,10 +81,10 @@ symbolic_task<Tm> symbolic_compxwf_opQ(const std::string block1,
    //     + <pq2||sr1> aq2^+ar1 => -<pq2||sr1> ar1*aq2^+
    //
    // 1. Q1*I2
-   auto Q1ps = symbolic_term<Tm>(symbolic_oper(block1,'Q',index,ifdagger));
+   auto Q1ps = symbolic_prod<Tm>(symbolic_oper(block1,'Q',index,ifdagger));
    formulae.append(Q1ps);
    // 2. I1*Q2
-   auto Q2ps = symbolic_term<Tm>(symbolic_oper(block2,'Q',index,ifdagger));
+   auto Q2ps = symbolic_prod<Tm>(symbolic_oper(block2,'Q',index,ifdagger));
    formulae.append(Q2ps);
    // 3. <pq1||sr2> aq1^+*ar2 &  4. -<pr2||sq1> aq1*ar2^+
    std::map<int,Tm> o1ij, o2ij;
@@ -140,10 +140,10 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    //    + <pq1||s1r2> aq[1]^+ar[2]as[1] => Qpr2[1]*ar[2]    = sum_q Qpq[1]*aq[2]
    //
    // 1. S1*I2
-   auto S1p = symbolic_term<Tm>(symbolic_oper(block1,'S',index,ifdagger));
+   auto S1p = symbolic_prod<Tm>(symbolic_oper(block1,'S',index,ifdagger));
    formulae.append(S1p);
    // 2. I1*S2
-   auto S2p = symbolic_term<Tm>(symbolic_oper(block2,'S',index,ifdagger));
+   auto S2p = symbolic_prod<Tm>(symbolic_oper(block2,'S',index,ifdagger));
    formulae.append(S2p);
    // cross terms
    if(!ifkr){
@@ -154,13 +154,13 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	 if(iproc == rank){
 	    auto op1c = symbolic_oper(block1,'C',q);
 	    auto op2P = symbolic_oper(block2,'P',ipq);
-	    auto c1P2 = (p<q)? symbolic_term<Tm>(op1c,op2P) : 
-		     	       symbolic_term<Tm>(op1c,op2P,-1.0);
+	    auto c1P2 = (p<q)? symbolic_prod<Tm>(op1c,op2P) : 
+		     	       symbolic_prod<Tm>(op1c,op2P,-1.0);
             formulae.append(c1P2);
 	    auto op1a = op1c.H();
 	    auto op2Q = symbolic_oper(block2,'Q',ipq);
-	    auto a1Q2 = (p<q)? symbolic_term<Tm>(op1a,op2Q) : 
-		    	       symbolic_term<Tm>(op1a,op2Q.H());
+	    auto a1Q2 = (p<q)? symbolic_prod<Tm>(op1a,op2Q) : 
+		    	       symbolic_prod<Tm>(op1a,op2Q.H());
 	    formulae.append(a1Q2);
 	 }
       } // q
@@ -171,13 +171,13 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	 if(iproc == rank){
 	    auto op2c = symbolic_oper(block2,'C',q);
 	    auto op1P = symbolic_oper(block1,'P',ipq);
-	    auto P1c2 = (p<q)? symbolic_term<Tm>(op1P,op2c) : 
-		    	       symbolic_term<Tm>(op1P,op2c,-1.0);
+	    auto P1c2 = (p<q)? symbolic_prod<Tm>(op1P,op2c) : 
+		    	       symbolic_prod<Tm>(op1P,op2c,-1.0);
 	    formulae.append(P1c2);
             auto op2a = op2c.H();
 	    auto op1Q = symbolic_oper(block1,'Q',ipq);
-	    auto Q1a2 = (p<q)? symbolic_term<Tm>(op1Q,op2a) : 
-		    	       symbolic_term<Tm>(op1Q.H(),op2a);
+	    auto Q1a2 = (p<q)? symbolic_prod<Tm>(op1Q,op2a) : 
+		    	       symbolic_prod<Tm>(op1Q.H(),op2a);
             formulae.append(Q1a2);
 	 }
       } // q
@@ -194,24 +194,24 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	 int iproc_aa = distribute2(ipq_aa,size);
 	 if(iproc_aa == rank){
 	    auto op2P_AA = symbolic_oper(block2,'P',ipq_aa);
-	    auto c1P2_AA = (kp<kq)? symbolic_term<Tm>(op1c_A,op2P_AA) : 
-		   		    symbolic_term<Tm>(op1c_A,op2P_AA,-1.0); 
+	    auto c1P2_AA = (kp<kq)? symbolic_prod<Tm>(op1c_A,op2P_AA) : 
+		   		    symbolic_prod<Tm>(op1c_A,op2P_AA,-1.0); 
 	    formulae.append(c1P2_AA);
 	    auto op2Q_AA = symbolic_oper(block2,'Q',ipq_aa);
-	    auto a1Q2_AA = (kp<kq)? symbolic_term<Tm>(op1a_A,op2Q_AA) : 
-		    		    symbolic_term<Tm>(op1a_A,op2Q_AA.H());
+	    auto a1Q2_AA = (kp<kq)? symbolic_prod<Tm>(op1a_A,op2Q_AA) : 
+		    		    symbolic_prod<Tm>(op1a_A,op2Q_AA.H());
 	    formulae.append(a1Q2_AA);
 	 }
 	 int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
 	 int iproc_ab = distribute2(ipq_ab,size);
 	 if(iproc_ab == rank){
 	    auto op2P_AB = symbolic_oper(block2,'P',ipq_ab);
-	    auto c1P2_AB = (kp<kq)? symbolic_term<Tm>(op1c_B,op2P_AB) :
-		    		    symbolic_term<Tm>(op1c_B,op2P_AB.K(1),-1.0);
+	    auto c1P2_AB = (kp<kq)? symbolic_prod<Tm>(op1c_B,op2P_AB) :
+		    		    symbolic_prod<Tm>(op1c_B,op2P_AB.K(1),-1.0);
             formulae.append(c1P2_AB);
 	    auto op2Q_AB = symbolic_oper(block2,'Q',ipq_ab);
-	    auto a1Q2_AB = (kp<kq)? symbolic_term<Tm>(op1a_B,op2Q_AB) :
-		    		    symbolic_term<Tm>(op1a_B,op2Q_AB.K(1).H());
+	    auto a1Q2_AB = (kp<kq)? symbolic_prod<Tm>(op1a_B,op2Q_AB) :
+		    		    symbolic_prod<Tm>(op1a_B,op2Q_AB.K(1).H());
             formulae.append(a1Q2_AB);
 	 }
       } // qa
@@ -226,24 +226,24 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	 int iproc_aa = distribute2(ipq_aa,size);
 	 if(iproc_aa == rank){
 	    auto op1P_AA = symbolic_oper(block1,'P',ipq_aa);
-	    auto P1c2_AA = (kp<kq)? symbolic_term<Tm>(op1P_AA,op2c_A) : 
-		   		    symbolic_term<Tm>(op1P_AA,op2c_A,-1.0); 
+	    auto P1c2_AA = (kp<kq)? symbolic_prod<Tm>(op1P_AA,op2c_A) : 
+		   		    symbolic_prod<Tm>(op1P_AA,op2c_A,-1.0); 
 	    formulae.append(P1c2_AA);
 	    auto op1Q_AA = symbolic_oper(block1,'Q',ipq_aa);
-	    auto Q1a2_AA = (kp<kq)? symbolic_term<Tm>(op1Q_AA,op2a_A) : 
-		    		    symbolic_term<Tm>(op1Q_AA.H(),op2a_A);
+	    auto Q1a2_AA = (kp<kq)? symbolic_prod<Tm>(op1Q_AA,op2a_A) : 
+		    		    symbolic_prod<Tm>(op1Q_AA.H(),op2a_A);
 	    formulae.append(Q1a2_AA);
          } 
 	 int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
 	 int iproc_ab = distribute2(ipq_ab,size);
 	 if(iproc_ab == rank){
 	    auto op1P_AB = symbolic_oper(block1,'P',ipq_ab);
-	    auto P1c2_AB = (kp<kq)? symbolic_term<Tm>(op1P_AB,op2c_B) :
-		    		    symbolic_term<Tm>(op1P_AB.K(1),op2c_B,-1.0);
+	    auto P1c2_AB = (kp<kq)? symbolic_prod<Tm>(op1P_AB,op2c_B) :
+		    		    symbolic_prod<Tm>(op1P_AB.K(1),op2c_B,-1.0);
             formulae.append(P1c2_AB);
 	    auto op1Q_AB = symbolic_oper(block1,'Q',ipq_ab);
-	    auto Q1a2_AB = (kp<kq)? symbolic_term<Tm>(op1Q_AB,op2a_B) :
-		    		    symbolic_term<Tm>(op1Q_AB.K(1).H(),op2a_B);
+	    auto Q1a2_AB = (kp<kq)? symbolic_prod<Tm>(op1Q_AB,op2a_B) :
+		    		    symbolic_prod<Tm>(op1Q_AB.K(1).H(),op2a_B);
             formulae.append(Q1a2_AB);
 	 }
       } // qa
@@ -280,24 +280,24 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    //
    const double scale = ifkr? 0.25 : 0.5; 
    // 1. H1*I2
-   auto H1 = symbolic_term<Tm>(symbolic_oper(block1,'H',0), scale);
+   auto H1 = symbolic_prod<Tm>(symbolic_oper(block1,'H',0), scale);
    formulae.append(H1);
    // 2. I1*H2
-   auto H2 = symbolic_term<Tm>(symbolic_oper(block2,'H',0), scale);
+   auto H2 = symbolic_prod<Tm>(symbolic_oper(block2,'H',0), scale);
    formulae.append(H2);
    // One-index operators
    // 3. sum_p1 p1^+ Sp1^2 + h.c. 
    for(const auto& p1 : cindex1){
       auto op1C = symbolic_oper(block1,'C',p1);
       auto op2S = symbolic_oper(block2,'S',p1);
-      auto C1S2 = symbolic_term<Tm>(op1C, op2S);
+      auto C1S2 = symbolic_prod<Tm>(op1C, op2S);
       formulae.append(C1S2);
    }
    // 4. sum_q2 q2^+ Sq2^1 + h.c. = -Sq2^1 q2^+ + h.c. 
    for(const auto& q2 : cindex2){
       auto op1S = symbolic_oper(block1,'S',q2);
       auto op2C = symbolic_oper(block2,'C',q2);
-      auto S1C2 = symbolic_term<Tm>(op1S, op2C, -1.0);
+      auto S1C2 = symbolic_prod<Tm>(op1S, op2C, -1.0);
       formulae.append(S1C2);
    }
    // Two-index operators
@@ -308,7 +308,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
          const double wt = ifkr? wfacAP(index) : 1.0;
          auto op1 = symbolic_oper(block1,AP1,index);
          auto op2 = symbolic_oper(block2,AP2,index);
-         auto AP = symbolic_term<Tm>(op1, op2, wt);
+         auto AP = symbolic_prod<Tm>(op1, op2, wt);
          formulae.append(AP);
       } // iproc
    }
@@ -319,7 +319,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
          const double wt = ifkr? wfacBQ(index) : wfac(index);
          auto op1 = symbolic_oper(block1,BQ1,index);
          auto op2 = symbolic_oper(block2,BQ2,index);
-         auto BQ = symbolic_term<Tm>(op1, op2, wt);
+         auto BQ = symbolic_prod<Tm>(op1, op2, wt);
          formulae.append(BQ);
       } // iproc
    }

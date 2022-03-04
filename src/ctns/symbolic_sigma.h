@@ -14,7 +14,7 @@ namespace ctns{
 template <typename Tm, typename QTm> 
 void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
 		     const int it,
-		     const symbolic_term<Tm>& HTerm,
+		     const symbolic_prod<Tm>& HTerm,
 		     const QTm& wf,
 		     QTm& Hwf){
    const bool debug = false;

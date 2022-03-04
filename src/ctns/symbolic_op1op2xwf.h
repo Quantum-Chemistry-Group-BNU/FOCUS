@@ -21,7 +21,7 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 		            const bool ifdagger1,
 		            const bool ifdagger2,
 		            const bool ifdagger){
-   symbolic_term<Tm> term;
+   symbolic_prod<Tm> term;
    if(cindex1.size() <= cindex2.size()){
       // sum_i a1[i] * (sum_j oij a2[j])
       for(const auto& i : cindex1){
@@ -39,7 +39,7 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 	 } // j
 	 // skip if its size is zero, which is possible for some i
          if(top2.size() > 0){
-	    term = symbolic_term<Tm>(op1,top2);
+	    term = symbolic_prod<Tm>(op1,top2);
 	    if(ifdagger) term = term.H();
 	    formulae.append(term);
 	 }
@@ -61,7 +61,7 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 	    top1.sum(oij.at(oper_pack(i,j)),op1);
 	 } // i
          if(top1.size() > 0){
-	    term = symbolic_term<Tm>(top1,op2);
+	    term = symbolic_prod<Tm>(top1,op2);
 	    if(ifdagger) term = term.H();
 	    formulae.append(term);
 	 }
@@ -82,7 +82,7 @@ void symbolic_op1op2xwf_kr(symbolic_task<Tm>& formulae,
 		           const bool ifdagger1,
 		           const bool ifdagger2,
 		           const bool ifdagger){
-   symbolic_term<Tm> term;
+   symbolic_prod<Tm> term;
    if(cindex1.size() <= cindex2.size()){
       // sum_i a1[i] * (sum_j oij a2[j])
       for(const auto& ia : cindex1){
@@ -106,12 +106,12 @@ void symbolic_op1op2xwf_kr(symbolic_task<Tm>& formulae,
 	 } // ja
 	 // skip if its size is zero, which is possible for some i
          if(top2a.size() > 0){
-	    term = symbolic_term<Tm>(op1a,top2a);
+	    term = symbolic_prod<Tm>(op1a,top2a);
 	    if(ifdagger) term = term.H();
 	    formulae.append(term);
 	 }
 	 if(top2b.size() > 0){
-	    term = symbolic_term<Tm>(op1b,top2b);
+	    term = symbolic_prod<Tm>(op1b,top2b);
 	    if(ifdagger) term = term.H();
 	    formulae.append(term);
 	 }
@@ -140,12 +140,12 @@ void symbolic_op1op2xwf_kr(symbolic_task<Tm>& formulae,
 	 } // ia
 	 // skip if its size is zero, which is possible for some i
 	 if(top1a.size() > 0){
-	    term = symbolic_term<Tm>(top1a,op2a);
+	    term = symbolic_prod<Tm>(top1a,op2a);
 	    if(ifdagger) term = term.H();
 	    formulae.append(term);
 	 }
          if(top1b.size() > 0){
-	    term = symbolic_term<Tm>(top1b,op2b);
+	    term = symbolic_prod<Tm>(top1b,op2b);
 	    if(ifdagger) term = term.H();
 	    formulae.append(term);
 	 }
