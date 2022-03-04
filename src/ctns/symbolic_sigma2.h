@@ -57,7 +57,9 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
          opxwf0.setup_data(wptr);	 
       }
    } // idx
-   linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data()); 
+
+//   linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data()); 
+
    // 2. opH*|wf> 
    sym = wf.info.sym;
    opxwf0.init(wf.info,false);
@@ -88,7 +90,9 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       }
    } // idx
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
-   linalg::xaxpy(Hwf.size(), fac, opxwf.data(), Hwf.data()); 
+
+//   linalg::xaxpy(Hwf.size(), fac, opxwf.data(), Hwf.data());
+ 
 /*   
    auto t1 = tools::get_time();
    std::cout << "dt=" << std::scientific << std::setprecision(4)
@@ -128,7 +132,7 @@ void symbolic_Hx2(Tm* y,
    // Parallel evaluation
    //=======================
    wf.from_array(x);
-/*
+
    // initialization
    std::vector<QTm> Hwfs(maxthreads);
    for(int i=0; i<maxthreads; i++){
@@ -139,7 +143,7 @@ void symbolic_Hx2(Tm* y,
    auto t1 = tools::get_time();
    // compute
 #ifdef _OPENMP
-   #pragma omp parallel for schedule(dynamic)
+   #pragma omp parallel for schedule(dynamic,1)
 #endif
    for(int it=0; it<H_formulae.size(); it++){
 #ifdef _OPENMP
@@ -153,6 +157,7 @@ void symbolic_Hx2(Tm* y,
 		       &workspace[omprank*tmpsize+wfsize]);
    } // it
    auto t2 = tools::get_time();
+/*
    // reduction & save
    for(int i=1; i<maxthreads; i++){
       Hwfs[0] += Hwfs[i];
@@ -160,45 +165,32 @@ void symbolic_Hx2(Tm* y,
    Hwfs[0].to_array(y);
 */
 
+/*
    memset(y, 0, wf.size()*sizeof(Tm));
    auto t1 = tools::get_time();
-#ifdef _OPENMP
    #pragma omp parallel
    {
       int omprank = omp_get_thread_num();
-#else
-   int omprank = 0;
-#endif
    // initialization
    QTm Hwfs(wf.info,  false);
    Hwfs.setup_data(&workspace[omprank*tmpsize]);
    Hwfs.clear();
-   // compute
-#ifdef _OPENMP
-   #pragma omp parallel for schedule(dynamic)
-#endif
+   #pragma omp for schedule(dynamic,1)
    for(int it=0; it<H_formulae.size(); it++){
-#ifdef _OPENMP
-      int omprank = omp_get_thread_num();
-#else
-      int omprank = 0;
-#endif
+      int rk = omprank;
+      //std::cout << "it=" << it << " rk=" << rk << std::endl;
       const auto& HTerm = H_formulae.tasks[it];
       symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
 		       info_dict,opsize,wfsize,
-		       &workspace[omprank*tmpsize+wfsize]);
+		       &workspace[rk*tmpsize+wfsize]);
    } // it
-   // reduction & save
-#ifdef _OPENMP
    #pragma omp critical
    {
-#endif
    linalg::xaxpy(Hwfs.size(), 1.0, Hwfs.data(), y);
-#ifdef _OPENMP
    }
    }
-#endif  
    auto t2 = tools::get_time();
+*/
 
    // add const term
    if(rank == 0){

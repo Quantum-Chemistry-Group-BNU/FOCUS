@@ -202,6 +202,8 @@ void sweep_twodot(const input::schedule& schd,
       sweeps.print_eopt(isweep, ibond);
       if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
    }
+   
+   if(ibond == 49) exit(1);
 
    // 3. decimation & renormalize operators
    twodot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, 
