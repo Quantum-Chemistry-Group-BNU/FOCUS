@@ -232,6 +232,10 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       std::cout.rdbuf(backup); // restore cout's original streambuf
       file.close();
    }
+   
+   formulae.display("total");
+   exit(1);
+
    if(rank == 0){
       auto t1 = tools::get_time();
       int size = formulae.size();
