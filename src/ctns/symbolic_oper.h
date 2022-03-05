@@ -132,9 +132,9 @@ struct symbolic_sum{
       }
       // helper
       int size() const{ return sums.size(); } 
-      // cost
-      size_t cost(std::map<std::string,int>& dims) const{
-	 size_t t = 1; 
+      // cost for op*|wf>
+      double cost(std::map<std::string,int>& dims) const{
+	 double t = 1.e0; 
          for(const auto& pr : dims){
 	    t *= pr.second;
 	 }
@@ -241,14 +241,6 @@ struct symbolic_prod{
       }
       // helper
       int size() const{ return terms.size(); }
-      // cost
-      size_t cost(std::map<std::string,int>& dims) const{
-         size_t t = 0;
-	 for(int i=0; i<terms.size(); i++){
-	    t += terms[i].cost(dims);
-	 }
- 	 return t;
-      }
       // symbol
       std::string symbol() const{
 	 std::string lbl;
@@ -256,6 +248,14 @@ struct symbolic_prod{
 	    lbl += terms[i].sums[0].second.symbol();
 	 }
 	 return lbl;
+      }
+      // cost for op1*op2*...*|wf>
+      double cost(std::map<std::string,int>& dims) const{
+         double t = 0.e0;
+	 for(int i=0; i<terms.size(); i++){
+	    t += terms[i].cost(dims);
+	 }
+ 	 return t;
       }
    public:
       std::vector<symbolic_sum<Tm>> terms;
@@ -306,24 +306,30 @@ struct symbolic_task{
       // helper
       int size() const{ return tasks.size(); }
       // reorder
-      void sort(std::map<std::string,int>& dims){
-	 size_t size = tasks.size();
-         std::vector<int> idx(size);
-         std::iota(idx.begin(), idx.end(), 0);
+      void sort(std::map<std::string,int>& dims, const bool debug=false){
          std::stable_sort(tasks.begin(), tasks.end(),
         	          [&dims](const symbolic_prod<Tm>& t1,
 			     	  const symbolic_prod<Tm>& t2){
-			  	  size_t c1 = t1.cost(dims);
-				  size_t c2 = t2.cost(dims);
+			  	  double c1 = t1.cost(dims);
+				  double c2 = t2.cost(dims);
 			     	  return (c1>c2) || (c1==c2 && t1.symbol()>t2.symbol()); 
 				  }
 			 );
-	 // debug
-         for(int i=0; i<tasks.size(); i++){
-	    std::cout << "i=" << i << " cost=" << tasks[i].cost(dims) 
-		      << " symbol=" << tasks[i].symbol()
-		      << " " << tasks[i] << std::endl;
+	 if(debug){
+            for(int i=0; i<tasks.size(); i++){
+	       std::cout << "i=" << i << " cost=" << tasks[i].cost(dims) 
+	                 << " symbol=" << tasks[i].symbol()
+	                 << " " << tasks[i] << std::endl;
+	    }
 	 }
+      }
+      // cost for (op1+op2+...+)|wf>
+      double cost(std::map<std::string,int>& dims) const{
+         double t = 0.e0;
+	 for(int i=0; i<tasks.size(); i++){
+	    t += tasks[i].cost(dims);
+	 }
+ 	 return t;
       }
    public:
       std::vector<symbolic_prod<Tm>> tasks;

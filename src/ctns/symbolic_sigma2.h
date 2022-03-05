@@ -157,6 +157,16 @@ void symbolic_Hx2(Tm* y,
 		       &workspace[omprank*tmpsize+wfsize]);
    } // it
    auto t2 = tools::get_time();
+
+
+   std::map<std::string,int> dims;
+   for(const auto& pr : qops_dict){
+      dims[pr.first] = pr.second.qket.get_dimAll(); 
+   }
+   auto cost = H_formulae.cost(dims);
+   auto flops = cost/tools::get_duration(t2-t1);
+   std::cout << "cost,flops=" << cost << "," << flops << std::endl;
+
 /*
    // reduction & save
    for(int i=1; i<maxthreads; i++){
