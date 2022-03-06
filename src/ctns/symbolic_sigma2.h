@@ -134,6 +134,11 @@ void symbolic_Hx2(Tm* y,
 		       &workspace[omprank*tmpsize+wfsize]);
    } // it
    auto t2 = tools::get_time();
+   // reduction & save
+   for(int i=1; i<maxthreads; i++){
+      Hwfs[0] += Hwfs[i];
+   }
+   Hwfs[0].to_array(y);
 
 /*
    std::map<std::string,int> dims;
@@ -143,14 +148,6 @@ void symbolic_Hx2(Tm* y,
    auto cost = H_formulae.cost(dims);
    auto flops = cost/tools::get_duration(t2-t1)/maxthreads;
    std::cout << "cost,flops=" << cost << "," << flops << std::endl;
-*/
-
-/*
-   // reduction & save
-   for(int i=1; i<maxthreads; i++){
-      Hwfs[0] += Hwfs[i];
-   }
-   Hwfs[0].to_array(y);
 */
 
 /*
@@ -179,6 +176,7 @@ void symbolic_Hx2(Tm* y,
    }
    auto t2 = tools::get_time();
 */
+
 /*
    memset(y, 0, wf.size()*sizeof(Tm));
    auto t1 = tools::get_time();
@@ -204,6 +202,7 @@ void symbolic_Hx2(Tm* y,
    }
    auto t2 = tools::get_time();
 */
+
    // add const term
    if(rank == 0){
       const Tm scale = qops_dict.at("l").ifkr? 0.5 : 1.0;
