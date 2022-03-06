@@ -77,10 +77,11 @@ LOGS
     ### TODOs ###
     
     - profile openmp/mpi onedot/twodot version with large D
-	- why the parallel efficiency is low?
-	- 1. sort formulae by types Label/Block/Len? + static/dynamic/guided,chunksize
-	- 2. private workspace?
 	- note: when noise is added, the results can be different 
+	- analyze why the parallel efficiency is low?
+	- 1. sort formulae + static/dynamic/guided,chunksize [DONE2022/03/05]
+	- 2. private workspace?
+	- 3. reduction
 
     - better data structure? pointer? 
 	- vtune profile stackblock for comparison [!!!] 

@@ -26,12 +26,14 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 */
    // compute (HTerm+HTerm.H)*|wf>
    int isym = wf.info.sym.isym();
-   qsym sym;
-   QTm opxwf0, opxwf;
+   QTm opxwf0N, opxwfN, opxwf0H, opxwfH;
    // 1. opN*|wf>
-   sym = wf.info.sym;
-   opxwf0.init(wf.info,false);
-   opxwf0.setup_data(wf.data());
+   auto symN = wf.info.sym;
+   opxwf0N.init(wf.info,false);
+   opxwf0N.setup_data(wf.data());
+   auto symH = wf.info.sym;
+   opxwf0H.init(wf.info,false);
+   opxwf0H.setup_data(wf.data());
    for(int idx=HTerm.size()-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];
       const auto& sop0 = sop.sums[0].second;
@@ -43,56 +45,31 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       const auto& qops = qops_dict.at(block);
       auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
       qsym sym_op = get_qsym_op(label, isym, index0); 
-      sym = dagger? sym-sym_op : sym+sym_op;
+      symN = dagger? symN-sym_op : symN+sym_op;
+      symH = !dagger? symH-sym_op : symH+sym_op;
       // opN*|wf>
-      const auto& info = info_dict.at(sym);
-      Tm* wptr = workspace+opsize+(idx%2)*wfsize;
-      opxwf.init(info,false);
-      opxwf.setup_data(wptr);
-      contract_opxwf_info(block,opxwf0,optmp,opxwf,dagger);
-      // impose antisymmetry here
-      if(parity) opxwf.cntr_signed(block); 
-      if(idx != 0){
-	 opxwf0.info = opxwf.info;
-         opxwf0.setup_data(wptr);	 
-      }
-   } // idx
-
-//   linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data()); 
-
-   // 2. opH*|wf> 
-   sym = wf.info.sym;
-   opxwf0.init(wf.info,false);
-   opxwf0.setup_data(wf.data());
-   for(int idx=HTerm.size()-1; idx>=0; idx--){
-      const auto& sop = HTerm.terms[idx];
-      const auto& sop0 = sop.sums[0].second;
-      const auto& index0 = sop0.index;
-      const auto& parity = sop0.parity;
-      const auto& label  = sop0.label;
-      const auto& dagger = sop0.dagger;
-      const auto& block = sop0.block;
-      const auto& qops = qops_dict.at(block);
-      auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
-      qsym sym_op = get_qsym_op(label, isym, index0); 
-      sym = !dagger? sym-sym_op : sym+sym_op;
+      Tm* wptrN = workspace+opsize+(idx%2)*wfsize;
+      opxwfN.init(info_dict.at(symN),false);
+      opxwfN.setup_data(wptrN);
+      contract_opxwf_info(block,opxwf0N,optmp,opxwfN,dagger);
       // opH*|wf>
-      const auto& info = info_dict.at(sym);
-      Tm* wptr = workspace+opsize+(idx%2)*wfsize;
-      opxwf.init(info,false);
-      opxwf.setup_data(wptr);
-      contract_opxwf_info(block,opxwf0,optmp,opxwf,!dagger);
+      Tm* wptrH = workspace+opsize+(idx%2)*wfsize+2*wfsize;
+      opxwfH.init(info_dict.at(symH),false);
+      opxwfH.setup_data(wptrH);
+      contract_opxwf_info(block,opxwf0H,optmp,opxwfH,!dagger);
       // impose antisymmetry here
-      if(parity) opxwf.cntr_signed(block); 
-      if(idx != 0){
-	 opxwf0.info = opxwf.info;
-         opxwf0.setup_data(wptr);	 
+      if(parity){ 
+         opxwfN.cntr_signed(block);
+         opxwfH.cntr_signed(block);
       }
+      opxwf0N.info = opxwfN.info;
+      opxwf0N.setup_data(opxwfN.data());
+      opxwf0H.info = opxwfH.info;
+      opxwf0H.setup_data(opxwfH.data());
    } // idx
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
-
-//   linalg::xaxpy(Hwf.size(), fac, opxwf.data(), Hwf.data());
- 
+   linalg::xaxpy(Hwf.size(), 1.0, opxwfN.data(), Hwf.data()); 
+   linalg::xaxpy(Hwf.size(), fac, opxwfH.data(), Hwf.data());
 /*   
    auto t1 = tools::get_time();
    std::cout << "dt=" << std::scientific << std::setprecision(4)
@@ -158,14 +135,15 @@ void symbolic_Hx2(Tm* y,
    } // it
    auto t2 = tools::get_time();
 
-
+/*
    std::map<std::string,int> dims;
    for(const auto& pr : qops_dict){
       dims[pr.first] = pr.second.qket.get_dimAll(); 
    }
    auto cost = H_formulae.cost(dims);
-   auto flops = cost/tools::get_duration(t2-t1);
+   auto flops = cost/tools::get_duration(t2-t1)/maxthreads;
    std::cout << "cost,flops=" << cost << "," << flops << std::endl;
+*/
 
 /*
    // reduction & save
@@ -201,7 +179,31 @@ void symbolic_Hx2(Tm* y,
    }
    auto t2 = tools::get_time();
 */
-
+/*
+   memset(y, 0, wf.size()*sizeof(Tm));
+   auto t1 = tools::get_time();
+   #pragma omp parallel
+   {
+      int omprank = omp_get_thread_num();
+    //  Tm* worklocal = new Tm[tmpsize];
+   Tm* worklocal = workspace+omprank*tmpsize;
+   // initialization
+   QTm Hwfs(wf.info,  false);
+   Hwfs.setup_data(worklocal);
+   Hwfs.clear();
+   #pragma omp for schedule(dynamic,1) reduction(+:y)
+   for(int it=0; it<H_formulae.size(); it++){
+      int rk = omprank;
+      //std::cout << "it=" << it << " rk=" << rk << std::endl;
+      const auto& HTerm = H_formulae.tasks[it];
+      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
+		       info_dict,opsize,wfsize,
+		       &worklocal[wfsize]);
+      linalg::xaxpy(Hwfs.size(), 1.0, Hwfs.data(), y);
+   }
+   }
+   auto t2 = tools::get_time();
+*/
    // add const term
    if(rank == 0){
       const Tm scale = qops_dict.at("l").ifkr? 0.5 : 1.0;
