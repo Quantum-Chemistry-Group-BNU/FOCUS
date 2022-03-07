@@ -52,17 +52,19 @@ void contract_qt3_qt2_info_l(const stensor3<Tm>& qt3a,
 			     const bool ifdagger=false){
    const char* transa = ifdagger? "C" : "N";
    const Tm alpha = 1.0;
-   int br, bc, bm;
-   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
-      int idx = qt3.info._nnzaddr[i];
-      qt3.info._addr_unpack(idx,br,bc,bm);
-      auto& blk3 = qt3(br,bc,bm);
+   for(const auto& pr : qt3.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      auto blk3 = qt3(br,bc,bm);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt3a.rows(); bx++){
-         const auto& blk3a = qt3a(bx,bc,bm);
-         const auto& blk2b = ifdagger? qt2(bx,br) : qt2(br,bx);
-	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
+	 if(qt3a.ifNotExist(bx,bc,bm) || (ifdagger? qt2.ifNotExist(bx,br) : 
+				 		    qt2.ifNotExist(br,bx))) continue;
+         const auto blk3a = qt3a(bx,bc,bm);
+         const auto blk2b = ifdagger? qt2(bx,br) : qt2(br,bx);
          const Tm beta = ifzero? 0.0 : 1.0;
 	 ifzero = false;
 	 int mdim = blk3.dim2;
@@ -85,7 +87,7 @@ stensor3<Tm> contract_qt3_qt2_l(const stensor3<Tm>& qt3a,
    assert(qt3a.dir_row() == !dint);
    assert(qt3a.info.qrow == qint);
    qsym sym = qt3a.info.sym + sym2;
-   std::vector<bool> dir = {dext, qt3a.dir_col(), qt3a.dir_mid()};
+   direction3 dir = {dext, qt3a.dir_col(), qt3a.dir_mid()};
    stensor3<Tm> qt3(sym, qext, qt3a.info.qcol, qt3a.info.qmid, dir);
    contract_qt3_qt2_info_l(qt3a, qt2, qt3, ifdagger); 
    return qt3;
@@ -101,17 +103,19 @@ void contract_qt3_qt2_info_r(const stensor3<Tm>& qt3a,
 			     const bool ifdagger=false){
    const char* transb = ifdagger? "N" : "T";
    const Tm alpha = 1.0;
-   int br, bc, bm;
-   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
-      int idx = qt3.info._nnzaddr[i];
-      qt3.info._addr_unpack(idx,br,bc,bm);
-      auto& blk3 = qt3(br,bc,bm);
+   for(const auto& pr : qt3.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      auto blk3 = qt3(br,bc,bm);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt3a.cols(); bx++){
-	 const auto& blk3a = qt3a(br,bx,bm);
+	 if(qt3a.ifNotExist(br,bx,bm) || (ifdagger? qt2.ifNotExist(bx,bc) :
+				 		    qt2.ifNotExist(bc,bx))) continue;
+	 const auto blk3a = qt3a(br,bx,bm);
 	 auto blk2b = ifdagger? qt2(bx,bc) : qt2(bc,bx);
-	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
          const Tm beta = ifzero? 0.0 : 1.0;
          ifzero = false;
 	 int mdim = blk3.dim2;
@@ -136,7 +140,7 @@ stensor3<Tm> contract_qt3_qt2_r(const stensor3<Tm>& qt3a,
    assert(qt3a.dir_col() == !dint);
    assert(qt3a.info.qcol == qint);
    qsym sym = qt3a.info.sym + sym2;
-   std::vector<bool> dir = {qt3a.dir_row(), dext, qt3a.dir_mid()};
+   direction3 dir = {qt3a.dir_row(), dext, qt3a.dir_mid()};
    stensor3<Tm> qt3(sym, qt3a.info.qrow, qext, qt3a.info.qmid, dir);
    contract_qt3_qt2_info_r(qt3a, qt2, qt3, ifdagger);
    return qt3;
@@ -153,17 +157,19 @@ void contract_qt3_qt2_info_c(const stensor3<Tm>& qt3a,
 			     const bool ifdagger=false){
    const char* transb = ifdagger? "N" : "T";
    const Tm alpha = 1.0;
-   int br, bc, bm;
-   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
-      int idx = qt3.info._nnzaddr[i];
-      qt3.info._addr_unpack(idx,br,bc,bm);
-      auto& blk3 = qt3(br,bc,bm);
+   for(const auto& pr : qt3.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      auto blk3 = qt3(br,bc,bm);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt3a.mids(); bx++){
-         const auto& blk3a = qt3a(br,bc,bx);
+         if(qt3a.ifNotExist(br,bc,bx) || (ifdagger? qt2.ifNotExist(bx,bm) :
+				 		    qt2.ifNotExist(bm,bx))) continue;
+	 const auto blk3a = qt3a(br,bc,bx);
 	 auto blk2b = ifdagger? qt2(bx,bm) : qt2(bm,bx);
-	 if(blk3a.size() == 0 || blk2b.size() == 0) continue;
          const Tm beta = ifzero? 0.0 : 1.0;
 	 ifzero = false;
 	 int rcdim = blk3.dim0*blk3.dim1;
@@ -191,7 +197,7 @@ stensor3<Tm> contract_qt3_qt2_c(const stensor3<Tm>& qt3a,
    assert(qt3a.dir_mid() == !dint);
    assert(qt3a.info.qmid == qint);
    qsym sym = qt3a.info.sym + sym2;
-   std::vector<bool> dir = {qt3a.dir_row(), qt3a.dir_col(), dext};
+   direction3 dir = {qt3a.dir_row(), qt3a.dir_col(), dext};
    stensor3<Tm> qt3(sym, qt3a.info.qrow, qt3a.info.qcol, qext, dir);
    contract_qt3_qt2_info_c(qt3a, qt2, qt3, ifdagger); 
    return qt3;

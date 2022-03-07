@@ -59,20 +59,22 @@ void twodot_Hdiag_local(const oper_dict<Tm>& lqops,
    const auto& Hr  = rqops('H').at(0);
    const auto& Hc1 = c1qops('H').at(0);
    const auto& Hc2 = c2qops('H').at(0);
-   int br, bc, bm, bv;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm, bv);
-      auto& blk = wf(br,bc,bm,bv);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      int bv = std::get<3>(key);
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Hlocal
-      const auto& lblk = Hl(br,br); // left->row 
-      const auto& rblk = Hr(bc,bc); // row->col
-      const auto& c1blk = Hc1(bm,bm); // central->mid 
-      const auto& c2blk = Hc2(bv,bv); // 
+      const auto lblk = Hl(br,br); // left->row 
+      const auto rblk = Hr(bc,bc); // row->col
+      const auto c1blk = Hc1(bm,bm); // central->mid 
+      const auto c2blk = Hc2(bv,bv); // 
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
@@ -143,18 +145,20 @@ void twodot_Hdiag_OlOc1(const stensor2<Tm>& Ol,
 		        const stensor2<Tm>& Oc1,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   int br, bc, bm, bv;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm, bv);
-      auto& blk = wf(br,bc,bm,bv);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      int bv = std::get<3>(key);
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Ol*Oc1
-      const auto& lblk  = Ol(br,br); 
-      const auto& c1blk = Oc1(bm,bm); 
+      const auto lblk  = Ol(br,br); 
+      const auto c1blk = Oc1(bm,bm); 
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
@@ -173,18 +177,20 @@ void twodot_Hdiag_OlOc2(const stensor2<Tm>& Ol,
 		        const stensor2<Tm>& Oc2,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   int br, bc, bm, bv;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm, bv);
-      auto& blk = wf(br,bc,bm,bv);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      int bv = std::get<3>(key);
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Ol*Oc2
-      const auto& lblk  = Ol(br,br); 
-      const auto& c2blk = Oc2(bv,bv); 
+      const auto lblk  = Ol(br,br); 
+      const auto c2blk = Oc2(bv,bv); 
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
@@ -203,18 +209,20 @@ void twodot_Hdiag_OlOr(const stensor2<Tm>& Ol,
 		       const stensor2<Tm>& Or,
 		       stensor4<Tm>& wf,
 		       const Tm wt=1.0){
-   int br, bc, bm, bv;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm, bv);
-      auto& blk = wf(br,bc,bm,bv);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      int bv = std::get<3>(key);
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Ol*Or
-      const auto& lblk = Ol(br,br); 
-      const auto& rblk = Or(bc,bc); 
+      const auto lblk = Ol(br,br); 
+      const auto rblk = Or(bc,bc); 
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
@@ -233,18 +241,20 @@ void twodot_Hdiag_Oc1Oc2(const stensor2<Tm>& Oc1,
 		         const stensor2<Tm>& Oc2,
 		         stensor4<Tm>& wf,
 		         const Tm wt=1.0){
-   int br, bc, bm, bv;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm, bv);
-      auto& blk = wf(br,bc,bm,bv);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      int bv = std::get<3>(key);
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Oc1*Oc2
-      const auto& c1blk = Oc1(bm,bm); 
-      const auto& c2blk = Oc2(bv,bv); 
+      const auto c1blk = Oc1(bm,bm); 
+      const auto c2blk = Oc2(bv,bv); 
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
@@ -263,18 +273,20 @@ void twodot_Hdiag_Oc1Or(const stensor2<Tm>& Oc1,
 		        const stensor2<Tm>& Or,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   int br, bc, bm, bv;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm, bv);
-      auto& blk = wf(br,bc,bm,bv);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      int bv = std::get<3>(key);
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Oc1*Or
-      const auto& c1blk = Oc1(bm,bm); 
-      const auto& rblk  = Or(bc,bc); 
+      const auto c1blk = Oc1(bm,bm); 
+      const auto rblk  = Or(bc,bc); 
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
@@ -293,18 +305,20 @@ void twodot_Hdiag_Oc2Or(const stensor2<Tm>& Oc2,
 		        const stensor2<Tm>& Or,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   int br, bc, bm, bv;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm, bv);
-      auto& blk = wf(br,bc,bm,bv);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      int bv = std::get<3>(key);
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Oc2*Or
-      const auto& c2blk = Oc2(bv,bv); 
-      const auto& rblk  = Or(bc,bc); 
+      const auto c2blk = Oc2(bv,bv); 
+      const auto rblk  = Or(bc,bc); 
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){

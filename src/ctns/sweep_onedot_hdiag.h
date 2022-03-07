@@ -54,18 +54,19 @@ void onedot_Hdiag_local(const oper_dict<Tm>& lqops,
    const auto& Hr = rqops('H').at(0);
    const auto& Hc = cqops('H').at(0);
    // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
-   int br, bc, bm;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm);
-      auto& blk = wf(br,bc,bm);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      auto blk = wf(br,bc,bm);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       // 1. local contributions: all four indices in c/l/r
-      const auto& lblk = Hl(br,br); // left->row 
-      const auto& rblk = Hr(bc,bc); // row->col
-      const auto& cblk = Hc(bm,bm); // central->mid 
+      const auto lblk = Hl(br,br); // left->row 
+      const auto rblk = Hr(bc,bc); // row->col
+      const auto cblk = Hc(bm,bm); // central->mid 
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
@@ -125,17 +126,18 @@ void onedot_Hdiag_OlOc(const stensor2<Tm>& Ol,
 		       const stensor2<Tm>& Oc,
 		       stensor3<Tm>& wf,
 		       const Tm wt=1.0){
-   int br, bc, bm;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm);
-      auto& blk = wf(br,bc,bm);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      auto blk = wf(br,bc,bm);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       // Ol*Or 
-      const auto& lblk = Ol(br,br);
-      const auto& cblk = Oc(bm,bm);
+      const auto lblk = Ol(br,br);
+      const auto cblk = Oc(bm,bm);
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
@@ -152,17 +154,18 @@ void onedot_Hdiag_OlOr(const stensor2<Tm>& Ol,
 		       const stensor2<Tm>& Or,
 		       stensor3<Tm>& wf,
 		       const Tm wt=1.0){
-   int br, bc, bm;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm);
-      auto& blk = wf(br,bc,bm);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      auto blk = wf(br,bc,bm);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       // Ol*Or
-      const auto& lblk = Ol(br,br);
-      const auto& rblk = Or(bc,bc);
+      const auto lblk = Ol(br,br);
+      const auto rblk = Or(bc,bc);
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
@@ -179,17 +182,18 @@ void onedot_Hdiag_OcOr(const stensor2<Tm>& Oc,
 		       const stensor2<Tm>& Or,
 		       stensor3<Tm>& wf,
 		       const Tm wt=1.0){
-   int br, bc, bm;
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int addr = wf.info._nnzaddr[i];
-      wf.info._addr_unpack(addr, br, bc, bm);
-      auto& blk = wf(br,bc,bm);
+   for(const auto& pr : wf.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      auto blk = wf(br,bc,bm);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       // Oc*Or
-      const auto& cblk = Oc(bm,bm);
-      const auto& rblk = Or(bc,bc);
+      const auto cblk = Oc(bm,bm);
+      const auto rblk = Or(bc,bc);
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){

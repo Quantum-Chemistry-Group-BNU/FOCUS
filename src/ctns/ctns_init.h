@@ -174,8 +174,8 @@ void init_rsites(comb<Km>& icomb){
 	 for(int kl=0; kl<rbasis_l.size(); kl++){ // left
             for(int kr=0; kr<rbasis_r.size(); kr++){ // right 
 	       for(int kc=0; kc<rbasis_c.size(); kc++){ // upper 
-		  auto& blk = qt3(kl,kr,kc);
-	          if(blk.size() == 0) continue;
+	          if(qt3.ifNotExist(kl,kr,kc)) continue;
+		  auto blk = qt3(kl,kr,kc);
 		  //
 		  // construct site R[c][lr] = <qc,qr|ql> 
 		  // 			     = W*[c'c] W*[r'r] <D[c'],D[r']|D[l']> W[l',l]

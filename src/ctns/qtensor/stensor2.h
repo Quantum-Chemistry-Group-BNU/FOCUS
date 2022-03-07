@@ -36,14 +36,12 @@ struct stensor2{
             for(int i=0; i<info._size; i++){
 	       ar & _data[i];
 	    }
-	    info.setup_data(_data);
 	 }
       }
       BOOST_SERIALIZATION_SPLIT_MEMBER()
       // memory allocation
       void allocate(){
          _data = new Tm[info._size];
-	 info.setup_data(_data);
 	 memset(_data, 0, info._size*sizeof(Tm));
       }
    public:
@@ -51,13 +49,13 @@ struct stensor2{
       // constructors
       stensor2(){};
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-	        const std::vector<bool> _dir={1,0}, const bool _own=true){
+	        const direction2 _dir={1,0}, const bool _own=true){
          info.init(_sym, _qrow, _qcol, _dir);
          own = _own;
          if(own) this->allocate();
       }
       stensor2(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-	       const std::vector<bool> _dir={1,0}, const bool _own=true){
+	       const direction2 _dir={1,0}, const bool _own=true){
 	 this->init(_sym, _qrow, _qcol, _dir, _own);
       }
       // simple constructor from qinfo
@@ -73,7 +71,6 @@ struct stensor2{
       void setup_data(Tm* data){
          assert(own == false);
 	 _data = data;
-	 info.setup_data(_data);
       }
       // desctructors
       ~stensor2(){ 
@@ -87,7 +84,6 @@ struct stensor2{
 	 info = st.info;
 	 if(st.own){
 	    _data = new Tm[info._size];
-	    info.setup_data(_data);
 	    linalg::xcopy(info._size, st._data, _data);
 	 }else{
 	    // shalow copy of the wrapper in case st.own = false;
@@ -137,10 +133,10 @@ struct stensor2{
 	 return *this;
       }
       // helpers
-      int rows() const{ return info._rows; }
-      int cols() const{ return info._cols; }
-      bool dir_row() const{ return info.dir[0]; } 
-      bool dir_col() const{ return info.dir[1]; } 
+      int rows() const{ return info.qrow.size(); }
+      int cols() const{ return info.qcol.size(); }
+      bool dir_row() const{ return std::get<0>(info.dir); } 
+      bool dir_col() const{ return std::get<1>(info.dir); } 
       size_t size() const{ return info._size; }
       Tm* data() const{ return _data; }
       // in-place operation
@@ -149,16 +145,29 @@ struct stensor2{
 			[](const Tm& x){ return tools::conjugate(x); });
       }
       // print
-      void print(const std::string name, const int level=0) const{
-         std::cout << "stensor2: " << name << " own=" << own << " _data=" << _data << std::endl; 
-	 info.print(name,level); 
-      }
+      void print(const std::string name, const int level=0) const;
       // access
-      const dtensor2<Tm> operator()(const int br, const int bc) const{ 
-	 return info._qblocks[info._addr(br,bc)]; 
+      bool ifExist(const int br, const int bc) const{
+         return info._exist.at(std::make_tuple(br,bc));
       }
-      dtensor2<Tm>& operator()(const int br, const int bc){ 
-	 return info._qblocks[info._addr(br,bc)]; 
+      bool ifNotExist(const int br, const int bc) const{
+         return !info._exist.at(std::make_tuple(br,bc));
+      }
+      const dtensor2<Tm> operator()(const int br, const int bc) const{
+         assert(info.ifExist(br,bc));
+	 const auto& qblk = info._qblocks.at(std::make_tuple(br,bc));
+	 return dtensor2<Tm>(std::get<0>(qblk)+_data,
+			     std::get<1>(qblk),
+			     std::get<2>(qblk),
+			     std::get<3>(qblk));
+      }
+      dtensor2<Tm> operator()(const int br, const int bc){ 
+         assert(info.ifExist(br,bc));
+	 const auto& qblk = info._qblocks.at(std::make_tuple(br,bc));
+	 return dtensor2<Tm>(std::get<0>(qblk)+_data,
+			     std::get<1>(qblk),
+			     std::get<2>(qblk),
+			     std::get<3>(qblk));
       }
       // simple arithmetic operations
       stensor2<Tm>& operator *=(const Tm fac){
@@ -250,9 +259,33 @@ struct stensor2{
       }
    public:
       bool own = true; // whether the object owns its data
-      qinfo2<Tm> info;
       Tm* _data = nullptr;
+      qinfo2<Tm> info;
 };
+
+template <typename Tm>
+void stensor2<Tm>::print(const std::string name, const int level) const{
+   std::cout << "stensor2: " << name << " own=" << own << " _data=" << _data << std::endl; 
+   info.print(name);
+   int innz = 0;
+   for(const auto& pr : info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      const auto blk = (*this)(br,bc);
+      if(level >= 1){
+         std::cout << " innz=" << innz << " block["  
+		   << info.qrow.get_sym(br) << "," 
+		   << info.qcol.get_sym(bc) << "]" 
+                   << " dim0,dim1=(" 
+		   << blk.dim0 << "," 
+		   << blk.dim1 << ")" 
+                   << std::endl; 
+         if(level >= 2) blk.print("blk_"+std::to_string(innz));
+      } // level>=1
+      innz += 1;
+   } // idx
+}
 
 template <typename Tm>
 linalg::matrix<Tm> stensor2<Tm>::to_matrix() const{
@@ -262,12 +295,12 @@ linalg::matrix<Tm> stensor2<Tm>::to_matrix() const{
    // assign block to proper place
    auto roff = info.qrow.get_offset();
    auto coff = info.qcol.get_offset();
-   for(int br=0; br<info._rows; br++){
+   for(int br=0; br<this->rows(); br++){
       int offr = roff[br];		 
-      for(int bc=0; bc<info._cols; bc++){
+      for(int bc=0; bc<this->cols(); bc++){
          int offc = coff[bc];
-	 const auto& blk = (*this)(br,bc);
-         if(blk.size() == 0) continue;
+         if(this->ifNotExist(br,bc)) continue;
+	 const auto blk = (*this)(br,bc);
          for(int ic=0; ic<blk.dim1; ic++){
      	    for(int ir=0; ir<blk.dim0; ir++){
                mat(offr+ir,offc+ic) = blk(ir,ic);
@@ -283,12 +316,12 @@ template <typename Tm>
 void stensor2<Tm>::from_matrix(const linalg::matrix<Tm>& mat){
    auto roff = info.qrow.get_offset();
    auto coff = info.qcol.get_offset();
-   for(int br=0; br<info._rows; br++){
+   for(int br=0; br<this->rows(); br++){
       int offr = roff[br];		 
-      for(int bc=0; bc<info._cols; bc++){
+      for(int bc=0; bc<this->cols(); bc++){
          int offc = coff[bc];
-         auto& blk = (*this)(br,bc);
-         if(blk.size() == 0) continue;
+         if(this->ifNotExist(br,bc)) continue;
+         auto blk = (*this)(br,bc);
          for(int ic=0; ic<blk.dim1; ic++){
    	    for(int ir=0; ir<blk.dim0; ir++){
                blk(ir,ic) = mat(offr+ir,offc+ic);
@@ -302,10 +335,10 @@ template <typename Tm>
 double stensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool debug) const{
    if(debug) std::cout << "stensor2::check_identityMatrix thresh_ortho=" << thresh_ortho << std::endl;
    double maxdiff = -1.0;
-   for(int br=0; br<info._rows; br++){
-      for(int bc=0; bc<info._cols; bc++){
-         const auto& blk = (*this)(br,bc);
-         if(blk.size() == 0) continue;
+   for(int br=0; br<this->rows(); br++){
+      for(int bc=0; bc<this->cols(); bc++){
+         if(this->ifNotExist(br,bc)) continue;
+         const auto blk = (*this)(br,bc);
 	 if(br != bc){
 	    std::string msg = "error: not a block-diagonal matrix! br,bc=";
 	    tools::exit(msg+std::to_string(br)+","+std::to_string(bc));
@@ -331,15 +364,14 @@ double stensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool 
 // 	       This does not change the tensor, but just permute order of index
 template <typename Tm>
 stensor2<Tm> stensor2<Tm>::T() const{
-   //std::cout << "stensor2: T()" << std::endl;
-   stensor2<Tm> qt2(info.sym, info.qcol, info.qrow, {info.dir[1], info.dir[0]});
-   int br, bc;
-   for(int i=0; i<qt2.info._nnzaddr.size(); i++){
-      int addr = qt2.info._nnzaddr[i];
-      qt2.info._addr_unpack(addr,br,bc);
-      auto& blk = qt2(br,bc);
+   stensor2<Tm> qt2(info.sym, info.qcol, info.qrow, {std::get<1>(info.dir), std::get<0>(info.dir)});
+   for(const auto& pr : qt2.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      auto blk = qt2(br,bc);
       // transpose
-      const auto& blkt = (*this)(bc,br);
+      const auto blkt = (*this)(bc,br);
       for(int ic=0; ic<blk.dim1; ic++){
          for(int ir=0; ir<blk.dim0; ir++){
             blk(ir,ic) = blkt(ic,ir);
@@ -354,16 +386,15 @@ stensor2<Tm> stensor2<Tm>::T() const{
 // 	       the direction of lines in diagrams
 template <typename Tm>
 stensor2<Tm> stensor2<Tm>::H() const{
-   //std::cout << "stensor2: H()" << std::endl;
    // symmetry of operator get changed in consistency with line changes
    stensor2<Tm> qt2(-info.sym, info.qcol, info.qrow, info.dir);
-   int br, bc;
-   for(int i=0; i<qt2.info._nnzaddr.size(); i++){
-      int addr = qt2.info._nnzaddr[i];
-      qt2.info._addr_unpack(addr,br,bc);
-      auto& blk = qt2(br,bc);
+   for(const auto& pr : qt2.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      auto blk = qt2(br,bc);
       // conjugate transpose
-      const auto& blkh = (*this)(bc,br);
+      const auto blkh = (*this)(bc,br);
       for(int ic=0; ic<blk.dim1; ic++){
          for(int ir=0; ir<blk.dim0; ir++){
 	    blk(ir,ic) = tools::conjugate(blkh(ic,ir));
@@ -383,16 +414,16 @@ stensor2<Tm> stensor2<Tm>::K(const int nbar) const{
    const double fpo = (nbar%2==0)? 1.0 : -1.0;
    // the symmetry is flipped
    stensor2<Tm> qt2(info.sym.flip(), info.qrow, info.qcol, info.dir);
-   int br, bc;
-   for(int i=0; i<qt2.info._nnzaddr.size(); i++){
-      int addr = qt2.info._nnzaddr[i];
-      qt2.info._addr_unpack(addr,br,bc);
-      auto& blk = qt2(br,bc);
+   for(const auto& pr : qt2.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      auto blk = qt2(br,bc);
       // kramers 
-      const auto& blkk = (*this)(br,bc);
-      int pr = info.qrow.get_parity(br);
-      int pc = info.qcol.get_parity(bc);
-      auto mat = blkk.time_reversal(pr, pc);
+      const auto blkk = (*this)(br,bc);
+      int pt_r = info.qrow.get_parity(br);
+      int pt_c = info.qcol.get_parity(bc);
+      auto mat = blkk.time_reversal(pt_r, pt_c);
       linalg::xaxpy(blk.size(), fpo, mat.data(), blk.data());
    } // i
    return qt2; 

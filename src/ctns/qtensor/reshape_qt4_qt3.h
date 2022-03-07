@@ -16,22 +16,23 @@ stensor3<Tm> merge_qt4_qt3_lc1(const stensor4<Tm>& qt4,
    const auto& sym = qt4.info.sym;
    const auto& qver = qt4.info.qver;
    const auto& qcol = qt4.info.qcol;
-   std::vector<bool> dir = {1,1,1};
+   direction3 dir = {1,1,1};
    stensor3<Tm> qt3(sym, qlc1, qcol, qver, dir);
    // loop over qt3
-   int blc1, bc, bv;
-   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
-      int idx = qt3.info._nnzaddr[i];
-      qt3.info._addr_unpack(idx,blc1,bc,bv);
-      auto& blk3 = qt3(blc1,bc,bv);
+   for(const auto& pr : qt3.info._qblocks){
+      const auto& key = pr.first;
+      int blc1 = std::get<0>(key);
+      int bc   = std::get<1>(key);
+      int bv   = std::get<2>(key); 
+      auto blk3 = qt3(blc1,bc,bv);
       // loop over compatible l*c1 = lc1
       auto qsym_lc1 = qlc1.get_sym(blc1);
       for(const auto& p12 : dpt.at(qsym_lc1)){
          int br = std::get<0>(p12);
          int bm = std::get<1>(p12);
          int ioff = std::get<2>(p12);
-         const auto& blk4 = qt4(br,bc,bm,bv);
-         if(blk4.size() == 0) continue; 
+         if(qt4.ifNotExist(br,bc,bm,bv)) continue;
+         const auto blk4 = qt4(br,bc,bm,bv);
          int rdim = blk4.dim0;
          int cdim = blk4.dim1;
          int mdim = blk4.dim2; 
@@ -63,19 +64,20 @@ stensor4<Tm> split_qt4_qt3_lc1(const stensor3<Tm>& qt3,
    const auto& qcol = qt3.info.qcol;
    stensor4<Tm> qt4(sym, qlx, qcol, qc1, qver);
    // loop over qt3
-   int blc1, bc, bv;
-   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
-      int idx = qt3.info._nnzaddr[i];
-      qt3.info._addr_unpack(idx,blc1,bc,bv);
-      const auto& blk3 = qt3(blc1,bc,bv);
+   for(const auto& pr : qt3.info._qblocks){
+      const auto& key = pr.first;
+      int blc1 = std::get<0>(key);
+      int bc   = std::get<1>(key);
+      int bv   = std::get<2>(key); 
+      const auto blk3 = qt3(blc1,bc,bv);
       // loop over compatible l*c = lc
       auto qsym_lc1 = qlc1.get_sym(blc1);
       for(const auto& p12 : dpt.at(qsym_lc1)){
          int br = std::get<0>(p12);
          int bm = std::get<1>(p12);
          int ioff = std::get<2>(p12);
-         auto& blk4 = qt4(br,bc,bm,bv);
-         if(blk4.size() == 0) continue; 
+         if(qt4.ifNotExist(br,bc,bm,bv)) continue;
+         auto blk4 = qt4(br,bc,bm,bv);
          int rdim = blk4.dim0;
          int cdim = blk4.dim1;
          int mdim = blk4.dim2; 
@@ -104,22 +106,23 @@ stensor3<Tm> merge_qt4_qt3_c2r(const stensor4<Tm>& qt4,
    const auto& sym = qt4.info.sym;
    const auto& qrow = qt4.info.qrow; 
    const auto& qmid = qt4.info.qmid;
-   std::vector<bool> dir = {1,1,1};
+   direction3 dir = {1,1,1};
    stensor3<Tm> qt3(sym, qrow, qc2r, qmid, dir);
    // loop over qt3
-   int br, bc2r, bm;
-   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
-      int idx = qt3.info._nnzaddr[i];
-      qt3.info._addr_unpack(idx,br,bc2r,bm);
-      auto& blk3 = qt3(br,bc2r,bm);
+   for(const auto& pr : qt3.info._qblocks){
+      const auto& key = pr.first;
+      int br   = std::get<0>(key);
+      int bc2r = std::get<1>(key);
+      int bm   = std::get<2>(key); 
+      auto blk3 = qt3(br,bc2r,bm);
       // loop over compatible c2*r = c2r
       auto qsym_c2r = qc2r.get_sym(bc2r);
       for(const auto& p12 : dpt.at(qsym_c2r)){
          int bv = std::get<0>(p12);
          int bc = std::get<1>(p12);
          int ioff = std::get<2>(p12);
-         const auto& blk4 = qt4(br,bc,bm,bv);
-         if(blk4.size() == 0) continue;
+         if(qt4.ifNotExist(br,bc,bm,bv)) continue;
+         const auto blk4 = qt4(br,bc,bm,bv);
          int rdim = blk4.dim0;
          int cdim = blk4.dim1;
          int mdim = blk4.dim2; 
@@ -151,19 +154,20 @@ stensor4<Tm> split_qt4_qt3_c2r(const stensor3<Tm>& qt3,
    const auto& qc2r = qt3.info.qcol;
    stensor4<Tm> qt4(sym, qrow, qrx, qmid, qc2);
    // loop over qt3
-   int br, bc2r, bm;
-   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
-      int idx = qt3.info._nnzaddr[i];
-      qt3.info._addr_unpack(idx,br,bc2r,bm);
-      const auto& blk3 = qt3(br,bc2r,bm);
+   for(const auto& pr : qt3.info._qblocks){
+      const auto& key = pr.first;
+      int br   = std::get<0>(key);
+      int bc2r = std::get<1>(key);
+      int bm   = std::get<2>(key); 
+      const auto blk3 = qt3(br,bc2r,bm);
       // loop over compatible c2*r = c2r
       auto qsym_c2r = qc2r.get_sym(bc2r);
       for(const auto& p12 : dpt.at(qsym_c2r)){
          int bv = std::get<0>(p12);
          int bc = std::get<1>(p12);
          int ioff = std::get<2>(p12);
-         auto& blk4 = qt4(br,bc,bm,bv);
-         if(blk4.size() == 0) continue;
+         if(qt4.ifNotExist(br,bc,bm,bv)) continue;
+         auto blk4 = qt4(br,bc,bm,bv);
          int rdim = blk4.dim0;
          int cdim = blk4.dim1;
          int mdim = blk4.dim2; 
@@ -192,22 +196,23 @@ stensor3<Tm> merge_qt4_qt3_c1c2(const stensor4<Tm>& qt4,
    const auto& sym = qt4.info.sym;
    const auto& qrow = qt4.info.qrow;
    const auto& qcol = qt4.info.qcol;
-   std::vector<bool> dir = {1,1,1};
+   direction3 dir = {1,1,1};
    stensor3<Tm> qt3(sym, qrow, qcol, qc1c2, dir);
    // loop over qt3
-   int br, bc, bc1c2;
-   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
-      int idx = qt3.info._nnzaddr[i];
-      qt3.info._addr_unpack(idx,br,bc,bc1c2);
-      auto& blk3 = qt3(br,bc,bc1c2);
+   for(const auto& pr : qt3.info._qblocks){
+      const auto& key = pr.first;
+      int br    = std::get<0>(key);
+      int bc    = std::get<1>(key);
+      int bc1c2 = std::get<2>(key); 
+      auto blk3 = qt3(br,bc,bc1c2);
       // lover over compatible c1*c2 = c1c2
       auto qsym_c1c2 = qc1c2.get_sym(bc1c2);
       for(const auto& p12 : dpt.at(qsym_c1c2)){
          int bm = std::get<0>(p12);
          int bv = std::get<1>(p12);
          int ioff = std::get<2>(p12);
-         const auto& blk4 = qt4(br,bc,bm,bv);
-         if(blk4.size() == 0) continue;
+         if(qt4.ifNotExist(br,bc,bm,bv)) continue;
+         const auto blk4 = qt4(br,bc,bm,bv);
          int rdim = blk4.dim0;
          int cdim = blk4.dim1;
          int mdim = blk4.dim2; 
@@ -239,19 +244,20 @@ stensor4<Tm> split_qt4_qt3_c1c2(const stensor3<Tm>& qt3,
    const auto& qcol = qt3.info.qcol;
    stensor4<Tm> qt4(sym, qrow, qcol, qc1, qc2);
    // loop over qt3
-   int br, bc, bc1c2;
-   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
-      int idx = qt3.info._nnzaddr[i];
-      qt3.info._addr_unpack(idx,br,bc,bc1c2);
-      const auto& blk3 = qt3(br,bc,bc1c2);
+   for(const auto& pr : qt3.info._qblocks){
+      const auto& key = pr.first;
+      int br    = std::get<0>(key);
+      int bc    = std::get<1>(key);
+      int bc1c2 = std::get<2>(key); 
+      const auto blk3 = qt3(br,bc,bc1c2);
       // lover over compatible c1*c2 = c1c2
       auto qsym_c1c2 = qc1c2.get_sym(bc1c2);
       for(const auto& p12 : dpt.at(qsym_c1c2)){
          int bm = std::get<0>(p12);
          int bv = std::get<1>(p12);
          int ioff = std::get<2>(p12);
-         auto& blk4 = qt4(br,bc,bm,bv);
-         if(blk4.size() == 0) continue;
+         if(qt4.ifNotExist(br,bc,bm,bv)) continue;
+         auto blk4 = qt4(br,bc,bm,bv);
          int rdim = blk4.dim0;
          int cdim = blk4.dim1;
          int mdim = blk4.dim2; 

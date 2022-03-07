@@ -142,9 +142,8 @@ void decimation_row_nkr(const qbond& qs1,
       linalg::matrix<Tm> U;
       int matched = 0;
       for(int bc=0; bc<qcol.size(); bc++){
+	 if(wfs2[0].ifNotExist(br,bc)) continue;
 	 const auto& qc = qcol.get_sym(bc);     
-	 const auto& blk = wfs2[0](br,bc);
-	 if(blk.size() == 0) continue;
 	 if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
 	 matched += 1;
 	 if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
@@ -194,7 +193,7 @@ void decimation_row_nkr(const qbond& qs1,
       int br = br_kept[bc];
       // copy the kept portion of rbas into blk
       const auto& rbas = results[br].second;
-      auto& blk = qt2(br,bc); 
+      auto blk = qt2(br,bc); 
       linalg::xcopy(blk.size(), rbas.data(), blk.data());
       if(debug_decimation){
          assert(qrow.get_sym(br) == qt2.info.qcol.get_sym(bc));
@@ -266,9 +265,8 @@ inline void decimation_row_kr(const qbond& qs1,
       linalg::matrix<Tm> U;
       int matched = 0;
       for(int bc=0; bc<qcol.size(); bc++){
+	 if(wfs2[0].ifNotExist(br,bc)) continue;
 	 const auto& qc = qcol.get_sym(bc);     
-	 const auto& blk = wfs2[0](br,bc);
-	 if(blk.size() == 0) continue;
 	 if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
 	 matched += 1;
 	 if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
@@ -341,7 +339,7 @@ inline void decimation_row_kr(const qbond& qs1,
       int br = br_kept[bc];
       // copy rbas into blk
       const auto& rbas = results[br].second;
-      auto& blk = qt2(br,bc); 
+      auto blk = qt2(br,bc); 
       int rdim = blk.rows();
       int cdim = blk.cols();
       const auto& qr = qkept.get_sym(bc);

@@ -35,14 +35,12 @@ struct stensor4{
             for(int i=0; i<info._size; i++){
 	       ar & _data[i];
 	    }
-	    info.setup_data(_data);
 	 }
       }
       BOOST_SERIALIZATION_SPLIT_MEMBER()
       // memory allocation
       void allocate(){
          _data = new Tm[info._size];
-	 info.setup_data(_data);
 	 memset(_data, 0, info._size*sizeof(Tm));
       }
    public:
@@ -76,7 +74,6 @@ struct stensor4{
       void setup_data(Tm* data){
          assert(own == false);
 	 _data = data;
-	 info.setup_data(_data);
       }
       // desctructors
       ~stensor4(){ 
@@ -89,7 +86,6 @@ struct stensor4{
 	 info = st.info;
 	 if(st.own){
 	    _data = new Tm[info._size];
-	    info.setup_data(_data);
 	    linalg::xcopy(info._size, st._data, _data);
 	 }else{
 	    // shalow copy of the wrapper in case st.own = false;
@@ -136,10 +132,10 @@ struct stensor4{
 	 return *this;
       }
       // helpers
-      int rows() const{ return info._rows; }
-      int cols() const{ return info._cols; }
-      int mids() const{ return info._mids; }
-      int vers() const{ return info._vers; }
+      int rows() const{ return info.qrow.size(); }
+      int cols() const{ return info.qcol.size(); }
+      int mids() const{ return info.qmid.size(); }
+      int vers() const{ return info.qver.size(); }
       bool dir_row() const{ return true; } 
       bool dir_col() const{ return true; }
       bool dir_mid() const{ return true; } 
@@ -152,16 +148,33 @@ struct stensor4{
 			[](const Tm& x){ return tools::conjugate(x); });
       }
       // print
-      void print(const std::string name, const int level=0) const{ 
-         std::cout << "stensor4: " << name << " own=" << own << " _data=" << _data << std::endl; 
-	 info.print(name,level); 
-      }
+      void print(const std::string name, const int level=0) const;
       // access
-      const dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv) const{ 
-	 return info._qblocks[info._addr(br,bc,bm,bv)]; 
+      bool ifExist(const int br, const int bc, const int bm, const int bv) const{
+         return info._exist.at(std::make_tuple(br,bc,bm,bv));
       }
-      dtensor4<Tm>& operator()(const int br, const int bc, const int bm, const int bv){ 
-	 return info._qblocks[info._addr(br,bc,bm,bv)]; 
+      bool ifNotExist(const int br, const int bc, const int bm, const int bv) const{
+         return !info._exist.at(std::make_tuple(br,bc,bm,bv));
+      }
+      const dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv) const{ 
+         assert(info.ifExist(br,bc,bm,bv));
+	 const auto& qblk = info._qblocks.at(std::make_tuple(br,bc,bm,bv));
+	 return dtensor4<Tm>(std::get<0>(qblk)+_data,
+			     std::get<1>(qblk),
+			     std::get<2>(qblk),
+			     std::get<3>(qblk),
+			     std::get<4>(qblk),
+			     std::get<5>(qblk));
+      }
+      dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv){ 
+         assert(info.ifExist(br,bc,bm,bv));
+	 const auto& qblk = info._qblocks.at(std::make_tuple(br,bc,bm,bv));
+	 return dtensor4<Tm>(std::get<0>(qblk)+_data,
+			     std::get<1>(qblk),
+			     std::get<2>(qblk),
+			     std::get<3>(qblk),
+			     std::get<4>(qblk),
+			     std::get<5>(qblk));
       }
       // simple arithmetic operations
       stensor4<Tm>& operator *=(const Tm fac){
@@ -244,19 +257,52 @@ struct stensor4{
       }
    public:
       bool own = true; // whether the object owns its data
-      qinfo4<Tm> info;
       Tm* _data = nullptr;
+      qinfo4<Tm> info;
 };
+      
+template <typename Tm>
+void stensor4<Tm>::print(const std::string name, const int level) const{
+   std::cout << "stensor4: " << name << " own=" << own << " _data=" << _data << std::endl; 
+   info.print(name);
+   int innz = 0;
+   for(const auto& pr : info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key); 
+      int bv = std::get<3>(key); 
+      const auto blk = (*this)(br,bc,bm,bv);
+      if(level >= 1){
+         std::cout << " innz=" << innz << " block[" 
+		   << info.qrow.get_sym(br) << "," 
+		   << info.qcol.get_sym(bc) << ","
+                   << info.qmid.get_sym(bm) << "," 
+		   << info.qver.get_sym(bv) << "]" 
+                   << " dim0,dim1,dim2,dim3=(" 
+		   << blk.dim0 << "," 
+		   << blk.dim1 << "," 
+                   << blk.dim2 << "," 
+		   << blk.dim3 << ")" 
+                   << std::endl; 
+         if(level >= 2) blk.print("blk_"+std::to_string(innz));
+      } // level>=1
+      innz += 1;
+   } // idx
+}
 
 // wf[lc1c2r] = wf(row,col,mid,ver)
 template <typename Tm>
 void stensor4<Tm>::cntr_signed(const std::string block){
    int br, bc, bm, bv;
    if(block == "r"){
-      for(int i=0; i<info._nnzaddr.size(); i++){
-         int idx = info._nnzaddr[i];
-         auto& blk4 = info._qblocks[idx];
-         info._addr_unpack(idx,br,bc,bm,bv);
+      for(const auto& pr : info._qblocks){
+         const auto& key = pr.first;
+         int br = std::get<0>(key);
+         int bc = std::get<1>(key);
+         int bm = std::get<2>(key);
+	 int bv = std::get<3>(key);
+	 auto blk4 = (*this)(br,bc,bm,bv);
 	 // (-1)^{p(l)+p(c1)+p(c2)}wf[lc1c2r]
 	 int pt = info.qrow.get_parity(br)
 		+ info.qmid.get_parity(bm)
@@ -264,20 +310,26 @@ void stensor4<Tm>::cntr_signed(const std::string block){
          if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
       } // idx
    }else if(block == "c2"){
-      for(int i=0; i<info._nnzaddr.size(); i++){
-         int idx = info._nnzaddr[i];
-         auto& blk4 = info._qblocks[idx];
-         info._addr_unpack(idx,br,bc,bm,bv);
+      for(const auto& pr : info._qblocks){
+         const auto& key = pr.first;
+         int br = std::get<0>(key);
+         int bc = std::get<1>(key);
+         int bm = std::get<2>(key);
+	 int bv = std::get<3>(key);
+	 auto blk4 = (*this)(br,bc,bm,bv);
 	 // (-1)^{p(l)+p(c1)}wf[lc1c2r]
 	 int pt = info.qrow.get_parity(br)
 		+ info.qmid.get_parity(bm);
          if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
       } // idx
    }else if(block == "c1"){
-      for(int i=0; i<info._nnzaddr.size(); i++){
-         int idx = info._nnzaddr[i];
-         auto& blk4 = info._qblocks[idx];
-         info._addr_unpack(idx,br,bc,bm,bv);
+      for(const auto& pr : info._qblocks){
+         const auto& key = pr.first;
+         int br = std::get<0>(key);
+         int bc = std::get<1>(key);
+         int bm = std::get<2>(key);
+	 int bv = std::get<3>(key);
+	 auto blk4 = (*this)(br,bc,bm,bv);
 	 // (-1)^{p(l)}wf[lc1c2r]
 	 int pt = info.qrow.get_parity(br);
          if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
@@ -288,11 +340,13 @@ void stensor4<Tm>::cntr_signed(const std::string block){
 // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}
 template <typename Tm>
 void stensor4<Tm>::permCR_signed(){
-   int br, bc, bm, bv;
-   for(int i=0; i<info._nnzaddr.size(); i++){
-      int idx = info._nnzaddr[i];
-      auto& blk4 = info._qblocks[idx];
-      info._addr_unpack(idx,br,bc,bm,bv);
+   for(const auto& pr : info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      int bv = std::get<3>(key);
+      auto blk4 = (*this)(br,bc,bm,bv);
       if((info.qmid.get_parity(bm)+info.qver.get_parity(bv))*info.qcol.get_parity(bc) == 1){
          linalg::xscal(blk4.size(), -1.0, blk4.data());
       }
@@ -304,76 +358,78 @@ template <typename Tm>
 stensor4<Tm> stensor4<Tm>::K(const int nbar) const{
    const double fpo = (nbar%2==0)? 1.0 : -1.0;
    stensor4<Tm> qt4(info.sym.flip(), info.qrow, info.qcol, info.qmid, info.qver);
-   int br, bc, bm, bv;
-   for(int i=0; i<info._nnzaddr.size(); i++){
-      int idx = info._nnzaddr[i];
-      auto& blk = qt4.info._qblocks[idx];
-      info._addr_unpack(idx,br,bc,bm,bv);
+   for(const auto& pr : info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      int bm = std::get<2>(key);
+      int bv = std::get<3>(key);
+      auto blk = qt4(br,bc,bm,bv); 
       // kramers 
-      const auto& blkk = info._qblocks[idx];
-      int pr = info.qrow.get_parity(br);
-      int pc = info.qcol.get_parity(bc);
-      int pm = info.qmid.get_parity(bm);
-      int pv = info.qver.get_parity(bv);
+      const auto blkk = (*this)(br,bc,bm,bv);
+      int pt_r = info.qrow.get_parity(br);
+      int pt_c = info.qcol.get_parity(bc);
+      int pt_m = info.qmid.get_parity(bm);
+      int pt_v = info.qver.get_parity(bv);
       int mdim = info.qmid.get_dim(bm);
       int vdim = info.qver.get_dim(bv);
       // qt4_new(c1c2)[l,r] = qt4(c1c2_bar)[l_bar,r_bar]^*
-      if(pm == 0 && pv == 0){
+      if(pt_m == 0 && pt_v == 0){
 	 for(int iv=0; iv<vdim; iv++){
 	    for(int im=0; im<mdim; im++){
-	       auto mat = blkk.get(im,iv).time_reversal(pr, pc);
+	       auto mat = blkk.get(im,iv).time_reversal(pt_r, pt_c);
 	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im,iv).data());
             }
 	 }
-      }else if(pm == 0 && pv == 1){
+      }else if(pt_m == 0 && pt_v == 1){
 	 assert(vdim%2 == 0);
 	 int vdim2 = vdim/2;
 	 for(int iv=0; iv<vdim2; iv++){
 	    for(int im=0; im<mdim; im++){
-	       auto mat = blkk.get(im,iv+vdim2).time_reversal(pr, pc);
+	       auto mat = blkk.get(im,iv+vdim2).time_reversal(pt_r, pt_c);
 	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im,iv).data());
 	    }
 	 }
 	 for(int iv=0; iv<vdim2; iv++){
 	    for(int im=0; im<mdim; im++){
-	       auto mat = blkk.get(im,iv).time_reversal(pr, pc);
+	       auto mat = blkk.get(im,iv).time_reversal(pt_r, pt_c);
 	       linalg::xaxpy(mat.size(), -fpo, mat.data(), blk.get(im,iv+vdim2).data());
 	    }
 	 }
-      }else if(pm == 1 && pv == 0){
+      }else if(pt_m == 1 && pt_v == 0){
 	 assert(mdim%2 == 0);
 	 int mdim2 = mdim/2;
 	 for(int iv=0; iv<vdim; iv++){
 	    for(int im=0; im<mdim2; im++){
-	       auto mat = blkk.get(im+mdim2,iv).time_reversal(pr, pc);
+	       auto mat = blkk.get(im+mdim2,iv).time_reversal(pt_r, pt_c);
 	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im,iv).data());
 	    }
 	    for(int im=0; im<mdim2; im++){
-	       auto mat = blkk.get(im,iv).time_reversal(pr, pc);
+	       auto mat = blkk.get(im,iv).time_reversal(pt_r, pt_c);
 	       linalg::xaxpy(mat.size(), -fpo, mat.data(), blk.get(im+mdim2,iv).data());
 	    }
 	 }
-      }else if(pm == 1 && pv == 1){
+      }else if(pt_m == 1 && pt_v == 1){
 	 assert(mdim%2 == 0 && vdim%2 == 0);
 	 int mdim2 = mdim/2;
 	 int vdim2 = vdim/2;
 	 for(int iv=0; iv<vdim2; iv++){
 	    for(int im=0; im<mdim2; im++){
-	       auto mat = blkk.get(im+mdim2,iv+vdim2).time_reversal(pr, pc);
+	       auto mat = blkk.get(im+mdim2,iv+vdim2).time_reversal(pt_r, pt_c);
 	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im,iv).data());
 	    }
 	    for(int im=0; im<mdim2; im++){
-	       auto mat = blkk.get(im,iv+vdim2).time_reversal(pr, pc);
+	       auto mat = blkk.get(im,iv+vdim2).time_reversal(pt_r, pt_c);
 	       linalg::xaxpy(mat.size(), -fpo, mat.data(), blk.get(im+mdim2,iv).data());
 	    }
 	 }
 	 for(int iv=0; iv<vdim2; iv++){
 	    for(int im=0; im<mdim2; im++){
-	       auto mat = blkk.get(im+mdim2,iv).time_reversal(pr, pc);
+	       auto mat = blkk.get(im+mdim2,iv).time_reversal(pt_r, pt_c);
 	       linalg::xaxpy(mat.size(), -fpo, mat.data(), blk.get(im,iv+vdim2).data());
 	    }
 	    for(int im=0; im<mdim2; im++){
-	       auto mat = blkk.get(im,iv).time_reversal(pr, pc);
+	       auto mat = blkk.get(im,iv).time_reversal(pt_r, pt_c);
 	       linalg::xaxpy(mat.size(), fpo, mat.data(), blk.get(im+mdim2,iv+vdim2).data());
 	    }
 	 }

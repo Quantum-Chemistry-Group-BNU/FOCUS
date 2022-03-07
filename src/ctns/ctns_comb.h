@@ -56,8 +56,8 @@ class comb{
          qbond qrow({{rwfuns.info.qrow.get_sym(0),1}});
          stensor2<typename Km::dtype> rwfun(rwfuns.info.sym, qrow, rwfuns.info.qcol, rwfuns.info.dir);
 	 // copy data from blk0 to blk
-         const auto& blk0 = rwfuns(0,0);
-         auto& blk = rwfun(0,0);
+         const auto blk0 = rwfuns(0,0);
+         auto blk = rwfun(0,0);
          for(int ic=0; ic<rwfuns.info.qcol.get_dim(0); ic++){
             blk(0,ic) = blk0(iroot,ic);
          }

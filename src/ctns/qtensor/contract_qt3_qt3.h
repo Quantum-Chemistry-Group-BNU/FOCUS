@@ -50,16 +50,17 @@ void contract_qt3_qt3_info_lc(const stensor3<Tm>& qt3a,
    assert(qt2.info.sym == -qt3a.info.sym + qt3b.info.sym);
    qt2.clear();
    // loop over qt3a
-   int bx, br, bm;
-   for(int i=0; i<qt3a.info._nnzaddr.size(); i++){
-      int idx = qt3a.info._nnzaddr[i];
-      qt3a.info._addr_unpack(idx,bx,br,bm);
-      const auto& blk3a = qt3a(bx,br,bm);
+   for(const auto& pr : qt3a.info._qblocks){
+      const auto& key = pr.first;
+      int bx = std::get<0>(key);
+      int br = std::get<1>(key);
+      int bm = std::get<2>(key);
+      const auto blk3a = qt3a(bx,br,bm);
       // loop over bc
       for(int bc=0; bc<qt2.cols(); bc++){
-         const auto& blk3b = qt3b(bx,bc,bm);
-         auto& blk2 = qt2(br,bc);
-         if(blk3b.size() == 0 || blk2.size() == 0) continue;
+         if(qt3b.ifNotExist(bx,bc,bm) || qt2.ifNotExist(br,bc)) continue;
+         const auto blk3b = qt3b(bx,bc,bm);
+         auto blk2 = qt2(br,bc);
          int mdim = blk3a.dim2;
          for(int im=0; im<mdim; im++){
             xgemm("C","N",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
@@ -89,16 +90,17 @@ void contract_qt3_qt3_info_cr(const stensor3<Tm>& qt3a,
    assert(qt2.info.sym == -qt3a.info.sym + qt3b.info.sym);
    qt2.clear();
    // loop over qt3a
-   int br, bx, bm;
-   for(int i=0; i<qt3a.info._nnzaddr.size(); i++){
-      int idx = qt3a.info._nnzaddr[i];
-      qt3a.info._addr_unpack(idx,br,bx,bm);
-      const auto& blk3a = qt3a(br,bx,bm);
+   for(const auto& pr : qt3a.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bx = std::get<1>(key);
+      int bm = std::get<2>(key);
+      const auto blk3a = qt3a(br,bx,bm);
       // loop over bc
       for(int bc=0; bc<qt2.cols(); bc++){
-	 const auto& blk3b = qt3b(bc,bx,bm);
-         auto& blk2 = qt2(br,bc);
-	 if(blk3b.size() == 0 || blk2.size() == 0) continue;
+	 if(qt3b.ifNotExist(bc,bx,bm) || qt2.ifNotExist(br,bc)) continue;
+	 const auto blk3b = qt3b(bc,bx,bm);
+         auto blk2 = qt2(br,bc);
 	 int mdim = blk3a.dim2;
 	 for(int im=0; im<mdim; im++){
 	    xgemm("N","C",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
@@ -132,16 +134,17 @@ void contract_qt3_qt3_info_lr(const stensor3<Tm>& qt3a,
    qt2.clear();
    const Tm alpha = 1.0, beta = 1.0;
    // loop over qt3a
-   int bx, by, br;
-   for(int i=0; i<qt3a.info._nnzaddr.size(); i++){
-      int idx = qt3a.info._nnzaddr[i];
-      qt3a.info._addr_unpack(idx,bx,by,br);
-      const auto& blk3a = qt3a(bx,by,br);
+   for(const auto& pr : qt3a.info._qblocks){
+      const auto& key = pr.first;
+      int bx = std::get<0>(key);
+      int by = std::get<1>(key);
+      int br = std::get<2>(key);
+      const auto blk3a = qt3a(bx,by,br);
       // loop over bc
       for(int bc=0; bc<qt2.cols(); bc++){
-	 const auto& blk3b = qt3b(bx,by,bc);
-         auto& blk2 = qt2(br,bc);
-         if(blk3b.size() == 0 || blk2.size() == 0) continue;
+         if(qt3b.ifNotExist(bx,by,bc) || qt2.ifNotExist(br,bc)) continue;
+	 const auto blk3b = qt3b(bx,by,bc);
+         auto blk2 = qt2(br,bc);
 	 int rdim = blk2.dim0;
 	 int cdim = blk2.dim1;
 	 // qt2(r,c) = qt3a*(xy,r) qt3b(xy,c)

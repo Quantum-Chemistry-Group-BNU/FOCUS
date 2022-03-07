@@ -14,46 +14,39 @@ struct qinfo4{
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
 	 ar & sym & qrow & qcol & qmid & qver 
-	    & _rows & _cols & _mids & _vers & _size 
-	    & _nnzaddr & _qblocks;
+	    & _size & _exist & _qblocks; 
       }
-   public:
-      // --- GENERAL FUNCTIONS ---
       // conservation: dir={1,1,1,1} 
       bool _ifconserve(const int br, const int bc, const int bm, const int bv) const{
-	 return sym == qrow.get_sym(br) + qcol.get_sym(bc) + qmid.get_sym(bm) + qver.get_sym(bv);
+	 return sym == qrow.get_sym(br) + qcol.get_sym(bc) 
+		     + qmid.get_sym(bm) + qver.get_sym(bv);
       }
-      // address for storaging block data
-      int _addr(const int br, const int bc, const int bm, const int bv) const{
-	 return ((br*_cols + bc)*_mids + bm)*_vers + bv;
-      }
-      void _addr_unpack(const int idx4, int& br, int& bc, int& bm, int& bv) const{
-         bv = idx4%_vers;
-         int idx3 = idx4/_vers;
-	 bm = idx3%_mids;
-	 int idx2 = idx3/_mids;
-	 bc = idx2%_cols;
-	 br = idx2/_cols; 
-      }
+   public:
       // initialization
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
 	        const qbond& _qmid, const qbond& _qver);
-      void setup_data(Tm* data);
       // print
-      void print(const std::string name, const int level=0) const;
-      // --- SPECIFIC FUNCTIONS ---
+      void print(const std::string name) const;
+      // check
       bool operator ==(const qinfo4& info) const{
          return sym==info.sym && qrow==info.qrow && qcol==info.qcol 
 		 && qmid==info.qmid && qver==info.qver;
+      }
+      // helpers
+      bool ifExist(const int br, const int bc, const int bm, const int bv) const{ 
+         return _exist.at(std::make_tuple(br,bc,bm,bv));
+      }
+      bool ifNotExist(const int br, const int bc, const int bm, const int bv) const{ 
+         return !_exist.at(std::make_tuple(br,bc,bm,bv));
       }
    public:
       qsym sym;
       qbond qrow, qcol, qmid, qver;
       // --- derived --- 
-      int _rows, _cols, _mids, _vers;
-      size_t _size = 0;
-      std::vector<int> _nnzaddr;
-      std::vector<dtensor4<Tm>> _qblocks;
+      using index4 = std::tuple<int,int,int,int>; 
+      std::map<index4,bool> _exist; 
+      std::map<index4,std::tuple<size_t,int,int,int,int,int>> _qblocks;
+      size_t _size;
 };
 
 template <typename Tm>
@@ -64,11 +57,7 @@ void qinfo4<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
    qcol = _qcol;
    qmid = _qmid;
    qver = _qver;
-   _rows = qrow.size();
-   _cols = qcol.size();
-   _mids = qmid.size();
-   _vers = qver.size();
-   _qblocks.resize(_rows*_cols*_mids*_vers);
+   _size = 0;
    for(int br=0; br<qrow.size(); br++){
       int rdim = qrow.get_dim(br);
       for(int bc=0; bc<qcol.size(); bc++){
@@ -77,11 +66,13 @@ void qinfo4<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
 	    int mdim = qmid.get_dim(bm);
 	    for(int bv=0; bv<qver.size(); bv++){
 	       int vdim = qver.get_dim(bv);
-	       if(not _ifconserve(br,bc,bm,bv)) continue;
-	       int addr = _addr(br,bc,bm,bv);
-	       _nnzaddr.push_back(addr);
-	       _qblocks[addr].setup_dims(rdim,cdim,mdim,vdim);
-	       _size += rdim*cdim*mdim*vdim;
+	       bool ifexist = _ifconserve(br,bc,bm,bv);
+	       auto key = std::make_tuple(br,bc,bm,bv);
+	       _exist[key] = ifexist;
+	       if(not ifexist) continue;
+	       int size = rdim*cdim*mdim*vdim;
+	       _qblocks[key] = std::make_tuple(_size,size,rdim,cdim,mdim,vdim);
+	       _size += size;
 	    } // bv
 	 } // bm
       } // bc
@@ -89,43 +80,16 @@ void qinfo4<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
 }
 
 template <typename Tm>
-void qinfo4<Tm>::setup_data(Tm* data){
-   size_t off = 0;
-   for(int i=0; i<_nnzaddr.size(); i++){
-      int addr = _nnzaddr[i];
-      _qblocks[addr].setup_data(data+off);
-      off += _qblocks[addr].size();
-   }
-}
-
-template <typename Tm>
-void qinfo4<Tm>::print(const std::string name, const int level) const{
+void qinfo4<Tm>::print(const std::string name) const{
    std::cout << "qinfo4: " << name << " sym=" << sym << std::endl;
    qrow.print("qrow");
    qcol.print("qcol");
    qmid.print("qmid");
    qver.print("qver");
-   // qblocks
-   std::cout << "total no. of nonzero blocks=" << _nnzaddr.size() 
-             << " nblocks=" << _qblocks.size() 
-             << " size=" << _size << ":" 
-             << tools::sizeMB<Tm>(_size) << "MB" 
+   std::cout << "total no. of nonzero blocks=" << _qblocks.size() 
+             << " nblocks=" << _exist.size() 
+             << " size=" << _size << ":" << tools::sizeMB<Tm>(_size) << "MB" 
              << std::endl; 
-   int br, bc, bm, bv;
-   for(int i=0; i<_nnzaddr.size(); i++){
-      int idx = _nnzaddr[i];
-      _addr_unpack(idx,br,bc,bm,bv);	   
-      const auto& blk = _qblocks[idx];
-      if(level >= 1){
-         std::cout << " inz=" << i << " idx=" << idx 
-         	   << " block[" << qrow.get_sym(br) << "," << qcol.get_sym(bc) << ","
-                   << qmid.get_sym(bm) << "," << qver.get_sym(bv) << "]" 
-                   << " dim0,dim1,dim2,dim3=(" << blk.dim0 << "," << blk.dim1 << "," 
-                   << blk.dim2 << "," << blk.dim3 << ")" 
-                   << std::endl; 
-         if(level >= 2) blk.print("blk_"+std::to_string(idx));
-      } // level>=1
-   } // idx
 }
 
 } // ctns

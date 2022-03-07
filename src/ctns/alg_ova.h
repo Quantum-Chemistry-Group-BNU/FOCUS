@@ -97,12 +97,12 @@ std::vector<typename Km::dtype> rcanon_CIcoeff(const comb<Km>& icomb,
    } // i
    auto wfcoeff = icomb.rwfuns.dot(qt2_r);
    assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
-   const auto& blk2 = wfcoeff(0,0);
    // finally return coeff = <n|CTNS> 
    int n = icomb.get_nroots(); 
    std::vector<Tm> coeff(n,0.0);
    // in case this CTNS does not encode this det, no such block 
-   if(blk2.size() == 0) return coeff; 
+   if(wfcoeff.ifNotExist(0,0)) return coeff; 
+   const auto blk2 = wfcoeff(0,0);
    assert(blk2.size() == n);
    // compute fermionic sign changes to match ordering of orbitals
    double sgn = state.permute_sgn(icomb.topo.image2);

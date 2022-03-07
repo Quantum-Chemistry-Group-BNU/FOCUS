@@ -102,7 +102,7 @@ stensor3<Tm> get_right_bsite(const int isym){
    auto qphys = get_qbond_phys(isym);
    stensor3<Tm> qt3(qsym(isym), qphys, qvac, qphys); // lrc
    for(int bk=0; bk<qphys.size(); bk++){
-      auto& blk = qt3(bk,0,bk);
+      auto blk = qt3(bk,0,bk);
       for(int im=0; im<qphys.get_dim(bk); im++){
 	 blk(im,0,im) = 1.0;
       }
@@ -121,7 +121,7 @@ stensor3<Tm> get_left_bsite(const int isym){
    auto qphys = get_qbond_phys(isym);
    stensor3<Tm> qt3(qsym(isym), qvac, qphys, qphys, dir_LCF);
    for(int bk=0; bk<qphys.size(); bk++){
-      auto& blk = qt3(0,bk,bk);
+      auto blk = qt3(0,bk,bk);
       for(int im=0; im<qphys.get_dim(bk); im++){
 	 blk(0,im,im) = 1.0;
       }

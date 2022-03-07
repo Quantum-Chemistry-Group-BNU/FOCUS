@@ -18,23 +18,19 @@ namespace ctns{
 template <typename Tm>   
 struct dtensor2 : public linalg::BaseMatrix<Tm> {
    private:
-      // serialize
-      friend class boost::serialization::access;
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version){
-	 ar & dim0 & dim1;
-      }
       int _addr(const int i0, const int i1) const{ 
 	 return i0+dim0*i1; 
       }
    public:
       // --- GENERAL FUNCTIONS ---
-      dtensor2(){}
-      void setup_dims(const int _dim0, const int _dim1){
+      dtensor2(Tm* data, const int size, 
+	       const int _dim0, 
+	       const int _dim1){
+	 _data = data;
+	 _size = size;
 	 dim0 = _dim0;
 	 dim1 = _dim1; 
       }
-      void setup_data(Tm* data){ _data = data; }
       const Tm operator()(const int i0, const int i1) const{
          assert(i0>=0 && i0<dim0);
 	 assert(i1>=0 && i1<dim1);
@@ -45,19 +41,15 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
 	 assert(i1>=0 && i1<dim1);
 	 return _data[_addr(i0,i1)];
       } 
-      size_t size() const{ return dim0*dim1; };
+      size_t size() const{ return _size; };
       const Tm* data() const{ return _data; }
       Tm* data(){ return _data; }
       // in-place operation
       void conjugate(){
-	 size_t _size = this->size();
          std::transform(_data, _data+_size, _data,
 			[](const Tm& x){ return tools::conjugate(x); });
       }
-      void clear(){ 
-	 size_t _size = this->size();
-	 memset(_data, 0, _size*sizeof(Tm)); 
-      }
+      void clear(){ memset(_data, 0, _size*sizeof(Tm)); }
       // --- SPECIFIC FUNCTIONS ---
       // print
       void print(std::string name="", const int prec=4) const{
@@ -85,32 +77,29 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
       const Tm* col(const int j) const{ return &_data[_addr(0,j)]; }; 
       Tm* col(const int j){ return &_data[_addr(0,j)]; }; 
    public:
-      int dim0=0, dim1=0;
-      Tm* _data=nullptr;
+      Tm* _data;
+      int _size, dim0, dim1;
 };
 
 // O[l,r,c]
 template <typename Tm>   
 struct dtensor3{
    private:
-      // serialize
-      friend class boost::serialization::access;
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version){
-	 ar & dim0 & dim1 & dim2;
-      }
       int _addr(const int i0, const int i1, const int i2) const{ 
 	 return i0+dim0*(i1+dim1*i2); 
       }
    public:
       // --- GENERAL FUNCTIONS ---
-      dtensor3(){}
-      void setup_dims(const int _dim0, const int _dim1, const int _dim2){
+      dtensor3(Tm* data, const int size, 
+	       const int _dim0, 
+	       const int _dim1, 
+	       const int _dim2){
+	 _data = data;
+	 _size = size;
 	 dim0 = _dim0;
 	 dim1 = _dim1;
 	 dim2 = _dim2;
       }
-      void setup_data(Tm* data){ _data = data; }
       const Tm operator()(const int i0, const int i1, const int i2) const{
          assert(i0>=0 && i0<dim0);
 	 assert(i1>=0 && i1<dim1);
@@ -123,31 +112,21 @@ struct dtensor3{
 	 assert(i2>=0 && i2<dim2);
 	 return _data[_addr(i0,i1,i2)];
       }
-      size_t size() const{ return dim0*dim1*dim2; };
+      size_t size() const{ return _size; };
       const Tm* data() const{ return _data; }
       Tm* data(){ return _data; }
       // in-place operation
       void conjugate(){
-	 size_t _size = this->size();
          std::transform(_data, _data+_size, _data,
 			[](const Tm& x){ return tools::conjugate(x); });
       }
-      void clear(){ 
-	 size_t _size = this->size();
-	 memset(_data, 0, _size*sizeof(Tm));
-      } 
+      void clear(){ memset(_data, 0, _size*sizeof(Tm)); } 
       // --- SPECIFIC FUNCTIONS ---
       const dtensor2<Tm> get(const int i2) const{
-         dtensor2<Tm> dt2;
-	 dt2.setup_dims(dim0,dim1);
-	 dt2.setup_data(_data+_addr(0,0,i2));
-         return dt2;
+         return dtensor2<Tm>(_data+_addr(0,0,i2),dim0*dim1,dim0,dim1);
       }
       dtensor2<Tm> get(const int i2){
-         dtensor2<Tm> dt2;
-	 dt2.setup_dims(dim0,dim1);
-	 dt2.setup_data(_data+_addr(0,0,i2));
-         return dt2;
+         return dtensor2<Tm>(_data+_addr(0,0,i2),dim0*dim1,dim0,dim1);
       }
       // print
       void print(std::string name="", const int prec=4) const{
@@ -156,37 +135,36 @@ struct dtensor3{
                    << " _data=" << _data 
 		   << std::endl;
 	 for(int i2=0; i2<dim2; i2++){
-	    (*this).get(i2).print("i2="+std::to_string(i2),prec);
+	    const auto dt2 = this->get(i2);
+	    dt2.print("i2="+std::to_string(i2),prec);
 	 } // i2
       }
    public:
-      int dim0=0, dim1=0, dim2=0;
-      Tm* _data=nullptr;
+      Tm* _data;
+      int _size, dim0, dim1, dim2;
 };
 
 // O[l,r,c1,c2]
 template <typename Tm>   
 struct dtensor4{
    private:
-      // serialize
-      friend class boost::serialization::access;
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version){
-	 ar & dim0 & dim1 & dim2 & dim3;
-      }
       int _addr(const int i0, const int i1, const int i2, const int i3) const{ 
 	 return i0+dim0*(i1+dim1*(i2+dim2*i3)); 
       }
    public:
       // --- GENERAL FUNCTIONS ---
-      dtensor4(){}
-      void setup_dims(const int _dim0, const int _dim1, const int _dim2, const int _dim3){
+      dtensor4(Tm* data, const int size,
+	       const int _dim0, 
+	       const int _dim1, 
+	       const int _dim2, 
+	       const int _dim3){
+	 _data = data;
+	 _size = size;
 	 dim0 = _dim0;
 	 dim1 = _dim1;
 	 dim2 = _dim2;
 	 dim3 = _dim3;
       } 
-      void setup_data(Tm* data){ _data = data; }
       const Tm operator()(const int i0, const int i1, const int i2, const int i3) const{
          assert(i0>=0 && i0<dim0);
 	 assert(i1>=0 && i1<dim1);
@@ -201,43 +179,27 @@ struct dtensor4{
 	 assert(i3>=0 && i3<dim3);
 	 return _data[_addr(i0,i1,i2,i3)];
       }
-      size_t size() const{ return dim0*dim1*dim2*dim3; }
+      size_t size() const{ return _size; }
       const Tm* data() const{ return _data; }
       Tm* data() { return _data; }
       // in-place operation
       void conjugate(){
-         size_t _size = this->size();
          std::transform(_data, _data+_size, _data,
 			[](const Tm& x){ return tools::conjugate(x); });
       }
-      void clear(){ 
-	 size_t _size = this->size();
-	 memset(_data, 0, _size*sizeof(Tm)); 
-      }
+      void clear(){ memset(_data, 0, _size*sizeof(Tm)); }
       // --- SPECIFIC FUNCTIONS ---
       const dtensor2<Tm> get(const int i2, const int i3) const{
-         dtensor2<Tm> dt2;
-	 dt2.setup_dims(dim0,dim1);
-	 dt2.setup_data(_data+_addr(0,0,i2,i3));
-         return dt2;
+	 return dtensor2<Tm>(_data+_addr(0,0,i2,i3),dim0*dim1,dim0,dim1);
       }
       dtensor2<Tm> get(const int i2, const int i3){
-         dtensor2<Tm> dt2;
-	 dt2.setup_dims(dim0,dim1);
-	 dt2.setup_data(_data+_addr(0,0,i2,i3));
-         return dt2;
+	 return dtensor2<Tm>(_data+_addr(0,0,i2,i3),dim0*dim1,dim0,dim1);
       }
       const dtensor3<Tm> get(const int i3) const{
-         dtensor3<Tm> dt3;
-	 dt3.setup_dims(dim0,dim1,dim2);
-	 dt3.setup_data(_data+_addr(0,0,0,i3));
-         return dt3;
+         return dtensor3<Tm>(_data+_addr(0,0,0,i3),dim0*dim1*dim2,dim0,dim1,dim2);
       }
       dtensor3<Tm> get(const int i3){
-         dtensor3<Tm> dt3;
-	 dt3.setup_dims(dim0,dim1,dim2);
-	 dt3.setup_data(_data+_addr(0,0,0,i3));
-         return dt3;
+         return dtensor3<Tm>(_data+_addr(0,0,0,i3),dim0*dim1*dim2,dim0,dim1,dim2);
       }
       // print
       void print(std::string name="", const int prec=4) const{
@@ -247,13 +209,14 @@ struct dtensor4{
 		   << std::endl;
 	 for(int i3=0; i3<dim3; i3++){
 	    for(int i2=0; i2<dim2; i2++){
-	       (*this).get(i2,i3).print("i2,i3="+std::to_string(i2)+","+std::to_string(i3),prec);
+	       const auto dt2 = this->get(i2,i3);
+	       dt2.print("i2,i3="+std::to_string(i2)+","+std::to_string(i3),prec);
 	    } // i2
 	 } // i3
       }
    public:
-      int dim0=0, dim1=0, dim2=0, dim3=0;
-      Tm* _data=nullptr;
+      Tm* _data;
+      int _size, dim0, dim1, dim2, dim3;
 };
 
 // 

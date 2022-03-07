@@ -11,19 +11,19 @@ stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a,
    assert(qt2a.dir_col() == !qt2b.dir_row());
    assert(qt2a.info.qcol == qt2b.info.qrow);
    qsym sym = qt2a.info.sym + qt2b.info.sym;
-   std::vector<bool> dir = {qt2a.dir_row(), qt2b.dir_col()};
+   direction2 dir = {qt2a.dir_row(), qt2b.dir_col()};
    stensor2<Tm> qt2(sym, qt2a.info.qrow, qt2b.info.qcol, dir); 
    // loop over external indices
-   int br, bc;
-   for(int i=0; i<qt2.info._nnzaddr.size(); i++){
-      int idx = qt2.info._nnzaddr[i];
-      qt2.info._addr_unpack(idx,br,bc);
-      auto& blk2 = qt2(br,bc);
+   for(const auto& pr : qt2.info._qblocks){
+      const auto& key = pr.first;
+      int br = std::get<0>(key);
+      int bc = std::get<1>(key);
+      auto blk2 = qt2(br,bc);
       // loop over contracted indices
       for(int bx=0; bx<qt2a.cols(); bx++){
-	 const auto& blk2a = qt2a(br,bx);
-	 const auto& blk2b = qt2b(bx,bc);
-	 if(blk2a.size() == 0 || blk2b.size() == 0) continue;
+	 if(qt2a.ifNotExist(br,bx) || qt2b.ifNotExist(bx,bc)) continue;
+	 const auto blk2a = qt2a(br,bx);
+	 const auto blk2b = qt2b(bx,bc);
 	 xgemm("N","N",1.0,blk2a,blk2b,1.0,blk2);
       } // bx
    } // i
