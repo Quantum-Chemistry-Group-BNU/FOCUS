@@ -23,13 +23,14 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
       }
    public:
       // --- GENERAL FUNCTIONS ---
-      dtensor2(Tm* data, const int size, 
-	       const int _dim0, 
-	       const int _dim1){
-	 _data = data;
-	 _size = size;
+      dtensor2(){}
+      dtensor2(const int _dim0, 
+	       const int _dim1,
+	       Tm* data){
 	 dim0 = _dim0;
 	 dim1 = _dim1; 
+	 _data = data;
+	 _size = dim0*dim1;
       }
       const Tm operator()(const int i0, const int i1) const{
          assert(i0>=0 && i0<dim0);
@@ -41,9 +42,10 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
 	 assert(i1>=0 && i1<dim1);
 	 return _data[_addr(i0,i1)];
       } 
-      size_t size() const{ return _size; };
+      size_t size() const{ return _size; }
       const Tm* data() const{ return _data; }
       Tm* data(){ return _data; }
+      bool empty() const{ return _data==nullptr; }
       // in-place operation
       void conjugate(){
          std::transform(_data, _data+_size, _data,
@@ -77,8 +79,9 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
       const Tm* col(const int j) const{ return &_data[_addr(0,j)]; }; 
       Tm* col(const int j){ return &_data[_addr(0,j)]; }; 
    public:
-      Tm* _data;
-      int _size, dim0, dim1;
+      Tm* _data = nullptr;
+      int dim0 = 0, dim1 = 0; 
+      int _size = 0;
 };
 
 // O[l,r,c]
@@ -90,15 +93,16 @@ struct dtensor3{
       }
    public:
       // --- GENERAL FUNCTIONS ---
-      dtensor3(Tm* data, const int size, 
-	       const int _dim0, 
+      dtensor3(){}
+      dtensor3(const int _dim0, 
 	       const int _dim1, 
-	       const int _dim2){
-	 _data = data;
-	 _size = size;
+	       const int _dim2,
+	       Tm* data){
 	 dim0 = _dim0;
 	 dim1 = _dim1;
 	 dim2 = _dim2;
+	 _data = data;
+	 _size = dim0*dim1*dim2;
       }
       const Tm operator()(const int i0, const int i1, const int i2) const{
          assert(i0>=0 && i0<dim0);
@@ -112,9 +116,10 @@ struct dtensor3{
 	 assert(i2>=0 && i2<dim2);
 	 return _data[_addr(i0,i1,i2)];
       }
-      size_t size() const{ return _size; };
+      size_t size() const{ return _size; }
       const Tm* data() const{ return _data; }
       Tm* data(){ return _data; }
+      bool empty() const{ return _data==nullptr; }
       // in-place operation
       void conjugate(){
          std::transform(_data, _data+_size, _data,
@@ -123,10 +128,10 @@ struct dtensor3{
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); } 
       // --- SPECIFIC FUNCTIONS ---
       const dtensor2<Tm> get(const int i2) const{
-         return dtensor2<Tm>(_data+_addr(0,0,i2),dim0*dim1,dim0,dim1);
+         return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2));
       }
       dtensor2<Tm> get(const int i2){
-         return dtensor2<Tm>(_data+_addr(0,0,i2),dim0*dim1,dim0,dim1);
+         return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2));
       }
       // print
       void print(std::string name="", const int prec=4) const{
@@ -140,8 +145,9 @@ struct dtensor3{
 	 } // i2
       }
    public:
-      Tm* _data;
-      int _size, dim0, dim1, dim2;
+      Tm* _data = nullptr;
+      int dim0 = 0, dim1 = 0, dim2 = 0;
+      int _size = 0;
 };
 
 // O[l,r,c1,c2]
@@ -153,17 +159,18 @@ struct dtensor4{
       }
    public:
       // --- GENERAL FUNCTIONS ---
-      dtensor4(Tm* data, const int size,
-	       const int _dim0, 
+      dtensor4(){}
+      dtensor4(const int _dim0, 
 	       const int _dim1, 
 	       const int _dim2, 
-	       const int _dim3){
-	 _data = data;
-	 _size = size;
+	       const int _dim3,
+	       Tm* data){
 	 dim0 = _dim0;
 	 dim1 = _dim1;
 	 dim2 = _dim2;
 	 dim3 = _dim3;
+	 _data = data;
+	 _size = dim0*dim1*dim2*dim3;
       } 
       const Tm operator()(const int i0, const int i1, const int i2, const int i3) const{
          assert(i0>=0 && i0<dim0);
@@ -181,7 +188,8 @@ struct dtensor4{
       }
       size_t size() const{ return _size; }
       const Tm* data() const{ return _data; }
-      Tm* data() { return _data; }
+      Tm* data(){ return _data; }
+      bool empty() const{ return _data==nullptr; }
       // in-place operation
       void conjugate(){
          std::transform(_data, _data+_size, _data,
@@ -190,16 +198,16 @@ struct dtensor4{
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); }
       // --- SPECIFIC FUNCTIONS ---
       const dtensor2<Tm> get(const int i2, const int i3) const{
-	 return dtensor2<Tm>(_data+_addr(0,0,i2,i3),dim0*dim1,dim0,dim1);
+	 return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2,i3));
       }
       dtensor2<Tm> get(const int i2, const int i3){
-	 return dtensor2<Tm>(_data+_addr(0,0,i2,i3),dim0*dim1,dim0,dim1);
+	 return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2,i3));
       }
       const dtensor3<Tm> get(const int i3) const{
-         return dtensor3<Tm>(_data+_addr(0,0,0,i3),dim0*dim1*dim2,dim0,dim1,dim2);
+         return dtensor3<Tm>(dim0,dim1,dim2,_data+_addr(0,0,0,i3));
       }
       dtensor3<Tm> get(const int i3){
-         return dtensor3<Tm>(_data+_addr(0,0,0,i3),dim0*dim1*dim2,dim0,dim1,dim2);
+         return dtensor3<Tm>(dim0,dim1,dim2,_data+_addr(0,0,0,i3));
       }
       // print
       void print(std::string name="", const int prec=4) const{
@@ -215,8 +223,9 @@ struct dtensor4{
 	 } // i3
       }
    public:
-      Tm* _data;
-      int _size, dim0, dim1, dim2, dim3;
+      Tm* _data = nullptr;
+      int dim0 = 0, dim1 = 0, dim2 = 0, dim3 = 0;
+      int _size = 0;
 };
 
 // 

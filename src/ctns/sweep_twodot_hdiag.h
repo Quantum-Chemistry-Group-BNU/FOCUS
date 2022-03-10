@@ -59,12 +59,10 @@ void twodot_Hdiag_local(const oper_dict<Tm>& lqops,
    const auto& Hr  = rqops('H').at(0);
    const auto& Hc1 = c1qops('H').at(0);
    const auto& Hc2 = c2qops('H').at(0);
-   for(const auto& pr : wf.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int idx = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(idx, br, bc, bm, bv);
       auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
@@ -145,12 +143,10 @@ void twodot_Hdiag_OlOc1(const stensor2<Tm>& Ol,
 		        const stensor2<Tm>& Oc1,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   for(const auto& pr : wf.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int idx = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(idx, br, bc, bm, bv);
       auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
@@ -177,12 +173,10 @@ void twodot_Hdiag_OlOc2(const stensor2<Tm>& Ol,
 		        const stensor2<Tm>& Oc2,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   for(const auto& pr : wf.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int idx = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(idx, br, bc, bm, bv);
       auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
@@ -209,12 +203,10 @@ void twodot_Hdiag_OlOr(const stensor2<Tm>& Ol,
 		       const stensor2<Tm>& Or,
 		       stensor4<Tm>& wf,
 		       const Tm wt=1.0){
-   for(const auto& pr : wf.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int idx = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(idx, br, bc, bm, bv);
       auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
@@ -241,12 +233,10 @@ void twodot_Hdiag_Oc1Oc2(const stensor2<Tm>& Oc1,
 		         const stensor2<Tm>& Oc2,
 		         stensor4<Tm>& wf,
 		         const Tm wt=1.0){
-   for(const auto& pr : wf.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int idx = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(idx, br, bc, bm, bv);
       auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
@@ -273,12 +263,10 @@ void twodot_Hdiag_Oc1Or(const stensor2<Tm>& Oc1,
 		        const stensor2<Tm>& Or,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   for(const auto& pr : wf.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int idx = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(idx, br, bc, bm, bv);
       auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
@@ -305,12 +293,10 @@ void twodot_Hdiag_Oc2Or(const stensor2<Tm>& Oc2,
 		        const stensor2<Tm>& Or,
 		        stensor4<Tm>& wf,
 		        const Tm wt=1.0){
-   for(const auto& pr : wf.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int idx = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(idx, br, bc, bm, bv);
       auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;

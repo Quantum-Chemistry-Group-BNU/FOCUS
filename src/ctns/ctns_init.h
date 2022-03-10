@@ -174,8 +174,8 @@ void init_rsites(comb<Km>& icomb){
 	 for(int kl=0; kl<rbasis_l.size(); kl++){ // left
             for(int kr=0; kr<rbasis_r.size(); kr++){ // right 
 	       for(int kc=0; kc<rbasis_c.size(); kc++){ // upper 
-	          if(qt3.ifNotExist(kl,kr,kc)) continue;
 		  auto blk = qt3(kl,kr,kc);
+	          if(blk.empty()) continue;
 		  //
 		  // construct site R[c][lr] = <qc,qr|ql> 
 		  // 			     = W*[c'c] W*[r'r] <D[c'],D[r']|D[l']> W[l',l]
@@ -231,6 +231,7 @@ void init_rsites(comb<Km>& icomb){
          icomb.rsites[idx] = std::move(qt3);
 
       } // if
+      
       auto tf = tools::get_time(); 
       if(debug_init){ 
          auto dt = tools::get_duration(tf-ti);
@@ -246,6 +247,7 @@ void init_rsites(comb<Km>& icomb){
 		   << std::endl;
          if(maxdiff>thresh_ortho) tools::exit("error: deviate from identity matrix!");
       }
+
    } // idx
 
    auto t1 = tools::get_time();

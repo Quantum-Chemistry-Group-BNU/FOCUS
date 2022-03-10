@@ -24,17 +24,26 @@ struct qinfo3{
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
 	 ar & sym & qrow & qcol & qmid & dir
-	    & _size & _exist & _qblocks;
+	    & _size & _rows & _cols & _mids
+	    & _nnzaddr & _offset;
       }
       // conservation pattern determined by dir
       bool _ifconserve(const int br, const int bc, const int bm) const{
-	 auto qsum = -sym; // default in
-	 qsum += std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br);
-	 qsum += std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc);
-	 qsum += std::get<2>(dir) ? qmid.get_sym(bm) : -qmid.get_sym(bm);
-	 return qsum.is_zero();
+	 return sym == (std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br))
+	 	     + (std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc))
+	 	     + (std::get<2>(dir) ? qmid.get_sym(bm) : -qmid.get_sym(bm));
       }
    public:
+      // address for storaging block data
+      int _addr(const int br, const int bc, const int bm) const{
+         return (br*_cols + bc)*_mids + bm;
+      }
+      void _addr_unpack(const int idx3, int& br, int& bc, int& bm) const{
+         bm = idx3%_mids;
+         int idx2 = idx3/_mids;
+         bc = idx2%_cols;
+         br = idx2/_cols;
+      }
       // initialization
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
 		const qbond& _qmid, const direction3 _dir=dir_RCF);
@@ -46,21 +55,26 @@ struct qinfo3{
 		 && qmid==info.qmid && dir==info.dir;
       }
       // helpers
-      bool ifExist(const int br, const int bc, const int bm) const{ 
-         return _exist.at(std::make_tuple(br,bc,bm));
+      bool empty(const int br, const int bc, const int bm) const{
+	 return _offset[_addr(br,bc,bm)] == 0;
       }
-      bool ifNotExist(const int br, const int bc, const int bm) const{ 
-         return !_exist.at(std::make_tuple(br,bc,bm));
+      dtensor3<Tm> get_dtensor(const int br, const int bc, const int bm, 
+		      	       Tm* data) const{
+         size_t off = _offset[_addr(br,bc,bm)];
+	 return (off == 0)? dtensor3<Tm>() : dtensor3<Tm>(qrow.get_dim(br),
+		  	        			  qcol.get_dim(bc),
+		  	        			  qmid.get_dim(bm),
+				  		          data+off-1);
       }
    public:
       qsym sym;
       qbond qrow, qcol, qmid;
       direction3 dir;
       // --- derived --- 
-      using index3 = std::tuple<int,int,int>; 
-      std::map<index3,bool> _exist; 
-      std::map<index3,std::tuple<size_t,int,int,int,int>> _qblocks;
       size_t _size;
+      int _rows, _cols, _mids;
+      std::vector<int> _nnzaddr;
+      std::vector<size_t> _offset;
 };
 
 template <typename Tm>
@@ -71,23 +85,32 @@ void qinfo3<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
    qcol = _qcol;
    qmid = _qmid;
    dir = _dir;
-   _size = 0;
-   for(int br=0; br<qrow.size(); br++){
+   _rows = qrow.size();
+   _cols = qcol.size();
+   _mids = qmid.size();
+   int nblks = _rows*_cols*_mids;
+   _nnzaddr.resize(nblks);
+   _offset.resize(nblks, 0);
+   _size = 1;
+   int idx = 0, ndx = 0;
+   for(int br=0; br<_rows; br++){
       int rdim = qrow.get_dim(br);
-      for(int bc=0; bc<qcol.size(); bc++){
+      for(int bc=0; bc<_cols; bc++){
          int cdim = qcol.get_dim(bc);
-	 for(int bm=0; bm<qmid.size(); bm++){
-	    int mdim = qmid.get_dim(bm);
-	    bool ifexist = _ifconserve(br,bc,bm);
-	    auto key = std::make_tuple(br,bc,bm);
-	    _exist[key] = ifexist;
-	    if(not ifexist) continue;
-	    int size = rdim*cdim*mdim;
-	    _qblocks[key] = std::make_tuple(_size,size,rdim,cdim,mdim);
-	    _size += size;
+	 int rcdim = rdim*cdim;
+	 for(int bm=0; bm<_mids; bm++){
+	    if(_ifconserve(br,bc,bm)){
+	       _nnzaddr[ndx] = idx;
+	       _offset[idx] = _size;
+	       int mdim = qmid.get_dim(bm);
+	       _size += rcdim*mdim;
+	       ndx += 1;
+	    }
+	    idx += 1;
 	 } // bm 
       } // bc
    } // br
+   _nnzaddr.resize(ndx);
 }
 
 template <typename Tm>
@@ -99,8 +122,8 @@ void qinfo3<Tm>::print(const std::string name) const{
    qrow.print("qrow");
    qcol.print("qcol");
    qmid.print("qmid");
-   std::cout << "total no. of nonzero blocks=" << _qblocks.size() 
-             << " nblocks=" << _exist.size() 
+   std::cout << "total no. of nonzero blocks=" << _nnzaddr.size()
+             << " nblocks=" << _offset.size()
              << " size=" << _size << ":" << tools::sizeMB<Tm>(_size) << "MB" 
              << std::endl; 
 }

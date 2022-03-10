@@ -15,17 +15,24 @@ struct qinfo2{
       friend class boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-	 ar & sym & qrow & qcol & dir 
-	    & _size & _exist & _qblocks;
+	 ar & sym & qrow & qcol & dir
+	    & _size & _rows & _cols 
+	    & _nnzaddr & _offset;
       }
       // conservation pattern determined by dir
       bool _ifconserve(const int br, const int bc) const{
-	 auto qsum = -sym; // default in
-	 qsum += std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br);
-	 qsum += std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc);
-	 return qsum.is_zero();
+	 return sym == (std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br))
+		     + (std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc));
       }
    public:
+      // address for storaging block data  - FORTRAN ORDER
+      int _addr(const int br, const int bc) const{
+         return br*_cols + bc;
+      }
+      void _addr_unpack(const int idx2, int& br, int& bc) const{
+         bc = idx2%_cols;
+         br = idx2/_cols;
+      }
       // initialization
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
 		const direction2 _dir={1,0});
@@ -36,21 +43,25 @@ struct qinfo2{
          return sym==info.sym && qrow==info.qrow && qcol==info.qcol && dir==info.dir;
       }
       // helpers
-      bool ifExist(const int br, const int bc) const{ 
-         return _exist.at(std::make_tuple(br,bc));
+      bool empty(const int br, const int bc) const{
+	 return _offset[_addr(br,bc)] == 0;
       }
-      bool ifNotExist(const int br, const int bc) const{ 
-         return !_exist.at(std::make_tuple(br,bc));
+      dtensor2<Tm> get_dtensor(const int br, const int bc, 
+		      	       Tm* data) const{
+         size_t off = _offset[_addr(br,bc)];
+	 return (off == 0)? dtensor2<Tm>() : dtensor2<Tm>(qrow.get_dim(br),
+		  	        			  qcol.get_dim(bc),
+				  		          data+off-1);
       }
    public:
       qsym sym; // <row|op[in]|col>
       qbond qrow, qcol;
       direction2 dir={1,0}; // {out,int} by usual convention for operators in diagrams 
       // --- derived --- 
-      using index2 = std::tuple<int,int>;
-      std::map<index2,bool> _exist; 
-      std::map<index2,std::tuple<size_t,int,int,int>> _qblocks;
       size_t _size;
+      int _rows, _cols;
+      std::vector<int> _nnzaddr;
+      std::vector<size_t> _offset;
 };
 
 template <typename Tm>
@@ -60,20 +71,27 @@ void qinfo2<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
    qrow = _qrow;
    qcol = _qcol;
    dir = _dir;
-   _size = 0;
-   for(int br=0; br<qrow.size(); br++){
+   _rows = qrow.size();
+   _cols = qcol.size();
+   int nblks = _rows*_cols;
+   _nnzaddr.resize(nblks);
+   _offset.resize(nblks, 0);
+   _size = 1;
+   int idx = 0, ndx = 0;
+   for(int br=0; br<_rows; br++){
       int rdim = qrow.get_dim(br);
-      for(int bc=0; bc<qcol.size(); bc++){
-         int cdim = qcol.get_dim(bc);
-         bool ifexist = _ifconserve(br,bc);
-	 auto key = std::make_tuple(br,bc);
-	 _exist[key] = ifexist;
-	 if(not ifexist) continue;
-	 int size = rdim*cdim;
-	 _qblocks[key] = std::make_tuple(_size,size,rdim,cdim);
-	 _size += size;
+      for(int bc=0; bc<_cols; bc++){
+         if(_ifconserve(br,bc)){
+	    _nnzaddr[ndx] = idx;
+	    _offset[idx] = _size;
+	    int cdim = qcol.get_dim(bc);
+	    _size += rdim*cdim;
+	    ndx += 1;
+	 }
+	 idx += 1;
       } // bc
    } // br
+   _nnzaddr.resize(ndx);
 }
 
 template <typename Tm>
@@ -83,8 +101,8 @@ void qinfo2<Tm>::print(const std::string name) const{
 	     << std::get<1>(dir) << std::endl; 
    qrow.print("qrow");
    qcol.print("qcol");
-   std::cout << "total no. of nonzero blocks=" << _qblocks.size() 
-             << " nblocks=" << _exist.size() 
+   std::cout << "total no. of nonzero blocks=" << _nnzaddr.size()
+             << " nblocks=" << _offset.size()
              << " size=" << _size << ":" << tools::sizeMB<Tm>(_size) << "MB" 
              << std::endl;
 }

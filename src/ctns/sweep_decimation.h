@@ -142,7 +142,7 @@ void decimation_row_nkr(const qbond& qs1,
       linalg::matrix<Tm> U;
       int matched = 0;
       for(int bc=0; bc<qcol.size(); bc++){
-	 if(wfs2[0].ifNotExist(br,bc)) continue;
+	 if(wfs2[0](br,bc).empty()) continue;
 	 const auto& qc = qcol.get_sym(bc);     
 	 if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
 	 matched += 1;
@@ -265,7 +265,7 @@ inline void decimation_row_kr(const qbond& qs1,
       linalg::matrix<Tm> U;
       int matched = 0;
       for(int bc=0; bc<qcol.size(); bc++){
-	 if(wfs2[0].ifNotExist(br,bc)) continue;
+	 if(wfs2[0](br,bc).empty()) continue;
 	 const auto& qc = qcol.get_sym(bc);     
 	 if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
 	 matched += 1;

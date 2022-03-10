@@ -28,8 +28,8 @@ void onedot_guess_psi0(comb<Km>& icomb, const int nroots){
       stensor2<typename Km::dtype> cwf(state_sym, rsite0.info.qmid, rsite0.info.qcol, {1,1});
       for(int br=0; br<cwf.rows(); br++){
 	 for(int bc=0; bc<cwf.cols(); bc++){
-	    if(cwf.ifNotExist(br,bc)) continue;
 	    auto blk = cwf(br,bc);
+	    if(blk.empty()) continue;
 	    const auto blk0 = qt3(0,bc,br);
 	    int rdim = cwf.info.qrow.get_dim(br); 
 	    int cdim = cwf.info.qcol.get_dim(bc);

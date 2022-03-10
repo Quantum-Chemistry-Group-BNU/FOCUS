@@ -56,20 +56,17 @@ void contract_qt4_qt2_info_l(const stensor4<Tm>& qt4a,
 			     const bool ifdagger=false){
    const char* transa = ifdagger? "C" : "N";
    const Tm alpha = 1.0;
-   for(const auto& pr : qt4.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<qt4.info._nnzaddr.size(); i++){
+      int idx = qt4.info._nnzaddr[i];
+      qt4.info._addr_unpack(idx,br,bc,bm,bv);
       auto blk4 = qt4(br,bc,bm,bv);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt4a.rows(); bx++){
-         if(qt4a.ifNotExist(bx,bc,bm,bv) || (ifdagger? qt2.ifNotExist(bx,br) :
-				 		       qt2.ifNotExist(br,bx))) continue;
          const auto blk4a = qt4a(bx,bc,bm,bv);
          const auto blk2b = ifdagger? qt2(bx,br) : qt2(br,bx);
+         if(blk4a.empty() || blk2b.empty()) continue;
 	 const Tm beta = ifzero? 0.0 : 1.0;
 	 ifzero = false;
          int mdim = blk4.dim2;
@@ -110,20 +107,17 @@ void contract_qt4_qt2_info_r(const stensor4<Tm>& qt4a,
 			     const bool ifdagger=false){
    const char* transb = ifdagger? "N" : "T";
    const Tm alpha = 1.0;
-   for(const auto& pr : qt4.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<qt4.info._nnzaddr.size(); i++){
+      int idx = qt4.info._nnzaddr[i];
+      qt4.info._addr_unpack(idx,br,bc,bm,bv);
       auto blk4 = qt4(br,bc,bm,bv);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt4a.cols(); bx++){
-         if(qt4a.ifNotExist(br,bx,bm,bv) || (ifdagger? qt2.ifNotExist(bx,bc) :
-				 		       qt2.ifNotExist(bc,bx))) continue;
          const auto blk4a = qt4a(br,bx,bm,bv);
          auto blk2b = ifdagger? qt2(bx,bc) : qt2(bc,bx);
+         if(blk4a.empty() || blk2b.empty()) continue;
          const Tm beta = ifzero? 0.0 : 1.0;
          ifzero = false;
          // sigma(r,c,m,v) = op(c,x)*wf(r,x,m,v)
@@ -168,20 +162,17 @@ void contract_qt4_qt2_info_c1(const stensor4<Tm>& qt4a,
 			      const bool ifdagger=false){
    const char* transb = ifdagger? "N" : "T";
    const Tm alpha = 1.0;
-   for(const auto& pr : qt4.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<qt4.info._nnzaddr.size(); i++){
+      int idx = qt4.info._nnzaddr[i];
+      qt4.info._addr_unpack(idx,br,bc,bm,bv);
       auto blk4 = qt4(br,bc,bm,bv);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt4a.mids(); bx++){
-         if(qt4a.ifNotExist(br,bc,bx,bv) || (ifdagger? qt2.ifNotExist(bx,bm) :
-				 		       qt2.ifNotExist(bm,bx))) continue;
          const auto blk4a = qt4a(br,bc,bx,bv);
          auto blk2b = ifdagger? qt2(bx,bm) : qt2(bm,bx);
+         if(blk4a.empty() || blk2b.empty()) continue;
          const Tm beta = ifzero? 0.0 : 1.0;
          ifzero = false;
          // sigma(rc,m,v) = op(m,x)*wf(rc,x,v)
@@ -229,20 +220,17 @@ void contract_qt4_qt2_info_c2(const stensor4<Tm>& qt4a,
 			      const bool ifdagger=false){
    const char* transb = ifdagger? "N" : "T";
    const Tm alpha = 1.0;
-   for(const auto& pr : qt4.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
-      int bv = std::get<3>(key);
+   int br, bc, bm, bv;
+   for(int i=0; i<qt4.info._nnzaddr.size(); i++){
+      int idx = qt4.info._nnzaddr[i];
+      qt4.info._addr_unpack(idx,br,bc,bm,bv);
       auto blk4 = qt4(br,bc,bm,bv);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt4a.vers(); bx++){
-         if(qt4a.ifNotExist(br,bc,bm,bx) || (ifdagger? qt2.ifNotExist(bx,bv) :
-				 		       qt2.ifNotExist(bv,bx))) continue;
          const auto blk4a = qt4a(br,bc,bm,bx);
          auto blk2b = ifdagger? qt2(bx,bv) : qt2(bv,bx);
+         if(blk4a.empty() || blk2b.empty()) continue;
          const Tm beta = ifzero? 0.0 : 1.0;
          ifzero = false;
          // sigma(rcm,v) = op(v,x)*wf(rcm,x)

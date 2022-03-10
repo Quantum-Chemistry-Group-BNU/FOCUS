@@ -52,19 +52,17 @@ void contract_qt3_qt2_info_l(const stensor3<Tm>& qt3a,
 			     const bool ifdagger=false){
    const char* transa = ifdagger? "C" : "N";
    const Tm alpha = 1.0;
-   for(const auto& pr : qt3.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
+   int br, bc, bm;
+   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+      int idx = qt3.info._nnzaddr[i];
+      qt3.info._addr_unpack(idx,br,bc,bm);
       auto blk3 = qt3(br,bc,bm);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt3a.rows(); bx++){
-	 if(qt3a.ifNotExist(bx,bc,bm) || (ifdagger? qt2.ifNotExist(bx,br) : 
-				 		    qt2.ifNotExist(br,bx))) continue;
          const auto blk3a = qt3a(bx,bc,bm);
          const auto blk2b = ifdagger? qt2(bx,br) : qt2(br,bx);
+	 if(blk3a.empty() || blk2b.empty()) continue;
          const Tm beta = ifzero? 0.0 : 1.0;
 	 ifzero = false;
 	 int mdim = blk3.dim2;
@@ -103,19 +101,17 @@ void contract_qt3_qt2_info_r(const stensor3<Tm>& qt3a,
 			     const bool ifdagger=false){
    const char* transb = ifdagger? "N" : "T";
    const Tm alpha = 1.0;
-   for(const auto& pr : qt3.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
+   int br, bc, bm;
+   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+      int idx = qt3.info._nnzaddr[i];
+      qt3.info._addr_unpack(idx,br,bc,bm);
       auto blk3 = qt3(br,bc,bm);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt3a.cols(); bx++){
-	 if(qt3a.ifNotExist(br,bx,bm) || (ifdagger? qt2.ifNotExist(bx,bc) :
-				 		    qt2.ifNotExist(bc,bx))) continue;
 	 const auto blk3a = qt3a(br,bx,bm);
 	 auto blk2b = ifdagger? qt2(bx,bc) : qt2(bc,bx);
+	 if(blk3a.empty() || blk2b.empty()) continue;
          const Tm beta = ifzero? 0.0 : 1.0;
          ifzero = false;
 	 int mdim = blk3.dim2;
@@ -157,19 +153,17 @@ void contract_qt3_qt2_info_c(const stensor3<Tm>& qt3a,
 			     const bool ifdagger=false){
    const char* transb = ifdagger? "N" : "T";
    const Tm alpha = 1.0;
-   for(const auto& pr : qt3.info._qblocks){
-      const auto& key = pr.first;
-      int br = std::get<0>(key);
-      int bc = std::get<1>(key);
-      int bm = std::get<2>(key);
+   int br, bc, bm;
+   for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+      int idx = qt3.info._nnzaddr[i];
+      qt3.info._addr_unpack(idx,br,bc,bm);
       auto blk3 = qt3(br,bc,bm);
       bool ifzero = true;
       // loop over contracted indices
       for(int bx=0; bx<qt3a.mids(); bx++){
-         if(qt3a.ifNotExist(br,bc,bx) || (ifdagger? qt2.ifNotExist(bx,bm) :
-				 		    qt2.ifNotExist(bm,bx))) continue;
 	 const auto blk3a = qt3a(br,bc,bx);
 	 auto blk2b = ifdagger? qt2(bx,bm) : qt2(bm,bx);
+         if(blk3a.empty() || blk2b.empty()) continue;
          const Tm beta = ifzero? 0.0 : 1.0;
 	 ifzero = false;
 	 int rcdim = blk3.dim0*blk3.dim1;
