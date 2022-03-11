@@ -190,11 +190,11 @@ void params_ctns::read(ifstream& istrm){
 	 alg_renorm = algorithm;
       }else if(line.substr(0,13)=="save_formulae"){
          save_formulae = true;
-      }else if(line.substr(0,4)=="load"){
-         load = true;
       }else if(line.substr(0,13)=="topology_file"){
          istringstream is(line.substr(13));
 	 is >> topology_file;
+      }else if(line.substr(0,11)=="rcanon_load"){
+         rcanon_load = true;
       }else if(line.substr(0,11)=="rcanon_file"){
          istringstream is(line.substr(11));
 	 is >> rcanon_file;
@@ -294,7 +294,7 @@ void params_ctns::print() const{
       } // i
    }
    // io
-   cout << "load = " << load << endl; 
+   cout << "rcanon_load = " << rcanon_load << endl; 
    cout << "rcanon_file = " << rcanon_file << endl;
    // sampling
    cout << "iroot = " << iroot << endl;

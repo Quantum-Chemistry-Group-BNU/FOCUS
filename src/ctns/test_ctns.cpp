@@ -82,7 +82,7 @@ int tests::test_ctns(){
    // 2. initialize right canonical form from SCI wavefunction
    fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
 
-   if(!schd.ctns.load){
+   if(!schd.ctns.rcanon_load){
       ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
       ctns::rcanon_save(icomb);
    }else{

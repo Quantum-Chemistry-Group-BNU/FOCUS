@@ -207,9 +207,9 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
    } // ifNC
 
    std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
-	                             {"r",rqops.qket.get_dimAll()},
-	                             {"c1",c1qops.qket.get_dimAll()},
-	                             {"c2",c2qops.qket.get_dimAll()}};
+                                     {"r",rqops.qket.get_dimAll()},
+                                     {"c1",c1qops.qket.get_dimAll()},
+                                     {"c2",c2qops.qket.get_dimAll()}};
    formulae.sort(dims);
    if(ifsave){
       if(ifNC){

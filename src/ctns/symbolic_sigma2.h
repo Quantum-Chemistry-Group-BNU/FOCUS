@@ -99,6 +99,8 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
+      //opxwf.clear();
+
       contract_opxwf_info(block,opxwf0,optmp,opxwf,dagger);
       // impose antisymmetry here
       if(parity) opxwf.cntr_signed(block);
@@ -108,6 +110,7 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       }
    } // idx
    linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data());
+/*
    // 2. opH*|wf>
    sym = wf.info.sym;
    opxwf0.init(wf.info,false);
@@ -129,6 +132,8 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
+      opxwf.clear();
+      
       contract_opxwf_info(block,opxwf0,optmp,opxwf,!dagger);
       // impose antisymmetry here
       if(parity) opxwf.cntr_signed(block);
@@ -192,7 +197,8 @@ void symbolic_Hx2(Tm* y,
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
-   for(int it=0; it<H_formulae.size(); it++){
+   //for(int it=0; it<H_formulae.size(); it++){
+   for(int it=0; it<1; it++){
 #ifdef _OPENMP
       int omprank = omp_get_thread_num();
 #else

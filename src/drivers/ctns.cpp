@@ -29,7 +29,7 @@ int CTNS(const input::schedule& schd){
       icomb.topo.print();
       // initialize RCF 
       auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-      if(!schd.ctns.load){
+      if(!schd.ctns.rcanon_load){
          // from SCI wavefunction
          onspace sci_space;
          vector<double> es;

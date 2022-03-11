@@ -59,6 +59,7 @@ void contract_opxwf_info(const std::string cpos,
 		         const stensor2<Tm>& qt2b,
 		         stensor3<Tm>& qt3,
 		         const bool ifdagger=false){
+   std::cout << "cpos=" << cpos << std::endl;
    if(cpos == "l"){
       contract_qt3_qt2_info_l(qt3a, qt2b, qt3, ifdagger);
    }else if(cpos == "r"){

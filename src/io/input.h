@@ -97,7 +97,7 @@ private:
 	 & nroots & guess & maxsweep & maxbond & ctrls 
 	 & alg_hvec & alg_renorm & save_formulae
 	 & cisolver & maxcycle
-         & load & rcanon_file & iroot & nsample & ndetprt 
+         & rcanon_load & rcanon_file & iroot & nsample & ndetprt 
 	 & verbose;  
    }
 public:
@@ -131,7 +131,7 @@ public:
    int cisolver = 1;
    int maxcycle = 100;
    // io
-   bool load = false;
+   bool rcanon_load = false;
    std::string rcanon_file = "rcanon.info";
    // sampling
    int iroot = 0;
