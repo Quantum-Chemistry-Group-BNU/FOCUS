@@ -219,7 +219,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
    std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
                                      {"r",rqops.qket.get_dimAll()},
                                      {"c",cqops.qket.get_dimAll()}};
-   //formulae.sort(dims);
+   formulae.sort(dims);
    if(ifsave){
       if(ifNC){
          std::cout << "size=" << idx

@@ -92,6 +92,7 @@ void qinfo2<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
       } // bc
    } // br
    _nnzaddr.resize(ndx);
+   _size -= 1; // tricky part
 }
 
 template <typename Tm>
