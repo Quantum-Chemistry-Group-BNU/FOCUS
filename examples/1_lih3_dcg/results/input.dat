@@ -38,6 +38,4 @@ schedule
 end
 maxsweep 3
 task_dmrg
-alg_dmrg 1
-#rcanon_file rcanon_new.info
 $end

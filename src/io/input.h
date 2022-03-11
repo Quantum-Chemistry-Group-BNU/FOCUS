@@ -123,8 +123,8 @@ public:
    int maxsweep = 0;
    std::vector<params_sweep> ctrls;
    // algorithm
-   int alg_hvec = 0;
-   int alg_renorm = 0;
+   int alg_hvec = 2;
+   int alg_renorm = 2;
    bool save_formulae = false;
    // dvdson
    int cisolver = 1;
