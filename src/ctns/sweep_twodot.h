@@ -175,7 +175,7 @@ void sweep_twodot(const input::schedule& schd,
       }else if(schd.ctns.alg_hvec == 2){
 	 size_t opsize = preprocess_opsize(qops_dict);
 	 size_t wfsize = preprocess_wf4size(wf.info, info_dict);
-	 size_t tmpsize = opsize + 5*wfsize;
+	 size_t tmpsize = opsize + 3*wfsize;
 	 size_t worktot = maxthreads*tmpsize;
 	 if(rank == 0){
 	    std::cout << "preprocess:"
@@ -202,8 +202,6 @@ void sweep_twodot(const input::schedule& schd,
       sweeps.print_eopt(isweep, ibond);
       if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
    }
-   
-   if(ibond == 49) exit(1);
 
    // 3. decimation & renormalize operators
    twodot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, 

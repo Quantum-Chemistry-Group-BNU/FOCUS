@@ -226,6 +226,8 @@ void params_ctns::read(ifstream& istrm){
 	 dbranch = stoi(line.substr(7));
       }else if(line.substr(0,8)=="maxsweep"){
 	 maxsweep = stoi(line.substr(8));
+      }else if(line.substr(0,7)=="maxbond"){
+	 maxbond = stoi(line.substr(7));
       }else if(line.substr(0,8)=="schedule"){
 	 while(true){
 	    line.clear();
@@ -281,6 +283,7 @@ void params_ctns::print() const{
    cout << "guess    = " << guess << endl;
    cout << "dbranch  = " << dbranch << endl;
    cout << "maxsweep = " << maxsweep << endl;
+   cout << "maxbond = " << maxbond << endl;
    if(maxsweep > 0){
       cout << "schedule: isweep, dots, dcut, eps, noise" << endl;
       for(int i=0; i<maxsweep; i++){

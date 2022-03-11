@@ -94,7 +94,7 @@ private:
       ar & run & qkind & topology_file
          & task_sdiag & task_ham & task_opt 
 	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
-	 & nroots & guess & maxsweep & ctrls 
+	 & nroots & guess & maxsweep & maxbond & ctrls 
 	 & alg_hvec & alg_renorm & save_formulae
 	 & cisolver & maxcycle
          & load & rcanon_file & iroot & nsample & ndetprt 
@@ -121,6 +121,7 @@ public:
    bool guess = true;
    int dbranch = 0;
    int maxsweep = 0;
+   int maxbond = -1;
    std::vector<params_sweep> ctrls;
    // algorithm
    int alg_hvec = 2;

@@ -78,6 +78,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 }else{
 	    sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore, scratch);
 	 }
+	 if(ibond == schd.ctns.maxbond) exit(1); // just for debug
       } // ibond
       auto tf = tools::get_time();
       sweeps.t_total[isweep] = tools::get_duration(tf-ti);

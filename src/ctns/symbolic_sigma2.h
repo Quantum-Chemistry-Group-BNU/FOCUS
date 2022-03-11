@@ -24,6 +24,8 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    auto t0 = tools::get_time();
 */
+
+/*
    // compute (HTerm+HTerm.H)*|wf>
    int isym = wf.info.sym.isym();
    QTm opxwf0N, opxwfN, opxwf0H, opxwfH;
@@ -70,6 +72,74 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
    double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
    linalg::xaxpy(Hwf.size(), 1.0, opxwfN.data(), Hwf.data()); 
    linalg::xaxpy(Hwf.size(), fac, opxwfH.data(), Hwf.data());
+*/
+
+   // compute (HTerm+HTerm.H)*|wf>
+   int isym = wf.info.sym.isym();
+   qsym sym;
+   QTm opxwf0, opxwf;
+   // 1. opN*|wf>
+   sym = wf.info.sym;
+   opxwf0.init(wf.info,false);
+   opxwf0.setup_data(wf.data());
+   for(int idx=HTerm.size()-1; idx>=0; idx--){
+      const auto& sop = HTerm.terms[idx];
+      const auto& sop0 = sop.sums[0].second;
+      const auto& index0 = sop0.index;
+      const auto& parity = sop0.parity;
+      const auto& label  = sop0.label;
+      const auto& dagger = sop0.dagger;
+      const auto& block = sop0.block;
+      const auto& qops = qops_dict.at(block);
+      auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
+      qsym sym_op = get_qsym_op(label, isym, index0);
+      sym = dagger? sym-sym_op : sym+sym_op;
+      // opN*|wf>
+      const auto& info = info_dict.at(sym);
+      Tm* wptr = workspace+opsize+(idx%2)*wfsize;
+      opxwf.init(info,false);
+      opxwf.setup_data(wptr);
+      contract_opxwf_info(block,opxwf0,optmp,opxwf,dagger);
+      // impose antisymmetry here
+      if(parity) opxwf.cntr_signed(block);
+      if(idx != 0){
+         opxwf0.info = opxwf.info;
+         opxwf0.setup_data(wptr);
+      }
+   } // idx
+   linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data());
+   // 2. opH*|wf>
+   sym = wf.info.sym;
+   opxwf0.init(wf.info,false);
+   opxwf0.setup_data(wf.data());
+   for(int idx=HTerm.size()-1; idx>=0; idx--){
+      const auto& sop = HTerm.terms[idx];
+      const auto& sop0 = sop.sums[0].second;
+      const auto& index0 = sop0.index;
+      const auto& parity = sop0.parity;
+      const auto& label  = sop0.label;
+      const auto& dagger = sop0.dagger;
+      const auto& block = sop0.block;
+      const auto& qops = qops_dict.at(block);
+      auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
+      qsym sym_op = get_qsym_op(label, isym, index0);
+      sym = !dagger? sym-sym_op : sym+sym_op;
+      // opH*|wf>
+      const auto& info = info_dict.at(sym);
+      Tm* wptr = workspace+opsize+(idx%2)*wfsize;
+      opxwf.init(info,false);
+      opxwf.setup_data(wptr);
+      contract_opxwf_info(block,opxwf0,optmp,opxwf,!dagger);
+      // impose antisymmetry here
+      if(parity) opxwf.cntr_signed(block);
+      if(idx != 0){
+         opxwf0.info = opxwf.info;
+         opxwf0.setup_data(wptr);
+      }
+   } // idx
+   double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
+   linalg::xaxpy(Hwf.size(), fac, opxwf.data(), Hwf.data());
+
 /*   
    auto t1 = tools::get_time();
    std::cout << "dt=" << std::scientific << std::setprecision(4)
@@ -120,7 +190,7 @@ void symbolic_Hx2(Tm* y,
    auto t1 = tools::get_time();
    // compute
 #ifdef _OPENMP
-   #pragma omp parallel for schedule(dynamic,1)
+   #pragma omp parallel for schedule(dynamic)
 #endif
    for(int it=0; it<H_formulae.size(); it++){
 #ifdef _OPENMP
