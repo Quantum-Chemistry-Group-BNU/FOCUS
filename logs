@@ -76,18 +76,18 @@ LOGS
 
     ### TODOs ###
     
+    - better data structure? pointer? [DONE2022/03/XX] 
+	- vtune profile stackblock for comparison [!!!] 
+        - info only store offset or maps: [CRUCIAL PART!!!]
+	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
+        - avoid daxpy?
+
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 
 	- analyze why the parallel efficiency is low?
 	- 1. sort formulae + static/dynamic/guided,chunksize [DONE2022/03/05]
 	- 2. private workspace?
 	- 3. reduction
-
-    - better data structure? pointer? 
-	- vtune profile stackblock for comparison [!!!] 
-        - info only store offset or maps: [CRUCIAL PART!!!]
-	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
-        - avoid daxpy?
 
     - kramers version:
 	- how to avoid repeated K()?
