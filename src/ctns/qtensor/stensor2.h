@@ -141,10 +141,10 @@ struct stensor2{
       Tm* data() const{ return _data; }
       // access
       const dtensor2<Tm> operator()(const int br, const int bc) const{
-         return info.get_dtensor(br,bc,_data);
+         return info(br,bc,_data);
       }
       dtensor2<Tm> operator()(const int br, const int bc){
-         return info.get_dtensor(br,bc,_data);
+         return info(br,bc,_data);
       }
       // in-place operation
       void conjugate(){

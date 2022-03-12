@@ -9,6 +9,74 @@
 
 namespace ctns{
 
+//   template <typename Tm, typename QTm, typename QInfo> 
+//   void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
+//   		      const int it,
+//   		      const symbolic_prod<Tm>& HTerm,
+//   		      const QTm& wf,
+//   		      QTm& Hwf,
+//   		      const std::map<qsym,QInfo>& info_dict, 
+//   		      const size_t& opsize,
+//   		      const size_t& wfsize,
+//   		      Tm* workspace,
+//   		      const bool ifdagger=false){
+//   /*
+//      const bool debug = true;
+//      if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
+//      auto t0 = tools::get_time();
+//   */
+//   
+//      // compute (HTerm+HTerm.H)*|wf>
+//      int isym = wf.info.sym.isym();
+//      qsym sym;
+//      QInfo *opxwf0_info, *opxwf_info;
+//      Tm *opxwf0_data, *opxwf_data;
+//      // op(dagger)*|wf>
+//      sym = wf.info.sym;
+//      opxwf0_info = const_cast<QInfo*>(&wf.info);
+//      opxwf0_data = workspace+opsize;
+//      linalg::xcopy(wf.size(), wf.data(), opxwf0_data);
+//      int ic = 1;
+//      for(int idx=HTerm.size()-1; idx>=0; idx--){
+//         const auto& sop = HTerm.terms[idx];
+//         const auto& sop0 = sop.sums[0].second;
+//         const auto& index0 = sop0.index;
+//         const auto& parity = sop0.parity;
+//         const auto& label  = sop0.label;
+//         const auto& dagger = sop0.dagger;
+//         const auto& block = sop0.block;
+//         const auto& qops = qops_dict.at(block);
+//         // form operator
+//         auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
+//         // impose antisymmetry here
+//         if(parity) cntr_signed(block, *opxwf0_info, opxwf0_data);
+//         // op(dagger)*|wf>
+//         if(idx != 0){
+//            qsym sym_op = get_qsym_op(label, isym, index0);
+//            sym = (ifdagger^dagger)? sym-sym_op : sym+sym_op;
+//            opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
+//            opxwf_data = workspace+opsize+(ic%2)*wfsize;
+//            ic += 1;
+//   	 contract_opxwf_info(block,optmp,*opxwf0_info,opxwf_data,
+//   			     *opxwf_info,opxwf_data,
+//   			     1.0, false, (ifdagger^dagger));
+//            opxwf0_info = opxwf_info;
+//            opxwf0_data = opxwf_data;
+//         }else{
+//            double fac = ifdagger? HTerm.Hsign() : 1.0;
+//            contract_opxwf_info(block,optmp,*opxwf0_info,opxwf_data,
+//   			     Hwf.info,Hwf.data(),
+//   			     fac, true, (ifdagger^dagger));
+//         }
+//      } // idx
+//   
+//   /*   
+//      auto t1 = tools::get_time();
+//      std::cout << "dt=" << std::scientific << std::setprecision(4)
+//   	     << tools::get_duration(t1-t0) << std::endl;
+//   */
+//   }
+
 template <typename Tm, typename QTm, typename QInfo> 
 void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 		      const int it,
@@ -23,55 +91,6 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
    const bool debug = true;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    auto t0 = tools::get_time();
-*/
-
-/*
-   // compute (HTerm+HTerm.H)*|wf>
-   int isym = wf.info.sym.isym();
-   QTm opxwf0N, opxwfN, opxwf0H, opxwfH;
-   // 1. opN*|wf>
-   auto symN = wf.info.sym;
-   opxwf0N.init(wf.info,false);
-   opxwf0N.setup_data(wf.data());
-   auto symH = wf.info.sym;
-   opxwf0H.init(wf.info,false);
-   opxwf0H.setup_data(wf.data());
-   for(int idx=HTerm.size()-1; idx>=0; idx--){
-      const auto& sop = HTerm.terms[idx];
-      const auto& sop0 = sop.sums[0].second;
-      const auto& index0 = sop0.index;
-      const auto& parity = sop0.parity;
-      const auto& label  = sop0.label;
-      const auto& dagger = sop0.dagger;
-      const auto& block = sop0.block;
-      const auto& qops = qops_dict.at(block);
-      auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
-      qsym sym_op = get_qsym_op(label, isym, index0); 
-      symN = dagger? symN-sym_op : symN+sym_op;
-      symH = !dagger? symH-sym_op : symH+sym_op;
-      // opN*|wf>
-      Tm* wptrN = workspace+opsize+(idx%2)*wfsize;
-      opxwfN.init(info_dict.at(symN),false);
-      opxwfN.setup_data(wptrN);
-      contract_opxwf_info(block,opxwf0N,optmp,opxwfN,dagger);
-      // opH*|wf>
-      Tm* wptrH = workspace+opsize+(idx%2)*wfsize+2*wfsize;
-      opxwfH.init(info_dict.at(symH),false);
-      opxwfH.setup_data(wptrH);
-      contract_opxwf_info(block,opxwf0H,optmp,opxwfH,!dagger);
-      // impose antisymmetry here
-      if(parity){ 
-         opxwfN.cntr_signed(block);
-         opxwfH.cntr_signed(block);
-      }
-      opxwf0N.info = opxwfN.info;
-      opxwf0N.setup_data(opxwfN.data());
-      opxwf0H.info = opxwfH.info;
-      opxwf0H.setup_data(opxwfH.data());
-   } // idx
-   double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
-   linalg::xaxpy(Hwf.size(), 1.0, opxwfN.data(), Hwf.data()); 
-   linalg::xaxpy(Hwf.size(), fac, opxwfH.data(), Hwf.data());
 */
 
    // compute (HTerm+HTerm.H)*|wf>
@@ -99,7 +118,9 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
-      contract_opxwf_info(block,opxwf0,optmp,opxwf,dagger);
+      contract_opxwf_info(block,optmp,opxwf0.info,opxwf0.data(),
+		          opxwf.info,opxwf.data(),
+			  1.0, false, dagger);
       // impose antisymmetry here
       if(parity) opxwf.cntr_signed(block);
       if(idx != 0){
@@ -130,7 +151,9 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
-      contract_opxwf_info(block,opxwf0,optmp,opxwf,!dagger);
+      contract_opxwf_info(block,optmp,opxwf0.info,opxwf0.data(),
+		          opxwf.info,opxwf.data(),
+			  1.0, false, !dagger);
       // impose antisymmetry here
       if(parity) opxwf.cntr_signed(block);
       if(idx != 0){
@@ -203,6 +226,16 @@ void symbolic_Hx2(Tm* y,
       symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[omprank],
 		       info_dict,opsize,wfsize,
 		       &workspace[omprank*tmpsize+wfsize]);
+/*
+      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[omprank],
+		       info_dict,opsize,wfsize,
+		       &workspace[omprank*tmpsize+wfsize],
+		       false);
+      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[omprank],
+		       info_dict,opsize,wfsize,
+		       &workspace[omprank*tmpsize+wfsize],
+		       true);
+*/
    } // it
    auto t2 = tools::get_time();
    // reduction & save

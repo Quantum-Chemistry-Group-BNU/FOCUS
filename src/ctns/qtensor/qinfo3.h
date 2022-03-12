@@ -58,8 +58,16 @@ struct qinfo3{
       bool empty(const int br, const int bc, const int bm) const{
 	 return _offset[_addr(br,bc,bm)] == 0;
       }
-      dtensor3<Tm> get_dtensor(const int br, const int bc, const int bm, 
-		      	       Tm* data) const{
+      dtensor3<Tm> operator()(const int br, const int bc, const int bm, 
+		      	      Tm* data) const{
+         size_t off = _offset[_addr(br,bc,bm)];
+	 return (off == 0)? dtensor3<Tm>() : dtensor3<Tm>(qrow.get_dim(br),
+		  	        			  qcol.get_dim(bc),
+		  	        			  qmid.get_dim(bm),
+				  		          data+off-1);
+      }
+      const dtensor3<Tm> operator()(const int br, const int bc, const int bm, 
+		      	            const Tm* data) const{
          size_t off = _offset[_addr(br,bc,bm)];
 	 return (off == 0)? dtensor3<Tm>() : dtensor3<Tm>(qrow.get_dim(br),
 		  	        			  qcol.get_dim(bc),

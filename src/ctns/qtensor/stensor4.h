@@ -144,10 +144,10 @@ struct stensor4{
       Tm* data() const{ return _data; }
       // access
       const dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv) const{
-	 return info.get_dtensor(br,bc,bm,bv,_data);
+	 return info(br,bc,bm,bv,_data);
       }
       dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv){ 
-	 return info.get_dtensor(br,bc,bm,bv,_data);
+	 return info(br,bc,bm,bv,_data);
       }
       // in-place operation
       void conjugate(){
@@ -269,47 +269,45 @@ void stensor4<Tm>::print(const std::string name, const int level) const{
 
 // wf[lc1c2r] = wf(row,col,mid,ver)
 template <typename Tm>
-void stensor4<Tm>::cntr_signed(const std::string block){
+void cntr_signed(const std::string block, qinfo4<Tm>& info, Tm* data){
    if(block == "r"){
-
       int br, bc, bm, bv;
       for(int i=0; i<info._nnzaddr.size(); i++){
          int idx = info._nnzaddr[i];
          info._addr_unpack(idx,br,bc,bm,bv);
-	 auto blk4 = (*this)(br,bc,bm,bv);
+	 auto blk4 = info(br,bc,bm,bv,data);
 	 // (-1)^{p(l)+p(c1)+p(c2)}wf[lc1c2r]
 	 int pt = info.qrow.get_parity(br)
 		+ info.qmid.get_parity(bm)
 		+ info.qver.get_parity(bv);
          if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
       } // i
-
    }else if(block == "c2"){
-
       int br, bc, bm, bv;
       for(int i=0; i<info._nnzaddr.size(); i++){
          int idx = info._nnzaddr[i];
          info._addr_unpack(idx,br,bc,bm,bv);
-	 auto blk4 = (*this)(br,bc,bm,bv);
+	 auto blk4 = info(br,bc,bm,bv,data);
 	 // (-1)^{p(l)+p(c1)}wf[lc1c2r]
 	 int pt = info.qrow.get_parity(br)
 		+ info.qmid.get_parity(bm);
          if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
       } // i
-
    }else if(block == "c1"){
-
       int br, bc, bm, bv;
       for(int i=0; i<info._nnzaddr.size(); i++){
          int idx = info._nnzaddr[i];
          info._addr_unpack(idx,br,bc,bm,bv);
-	 auto blk4 = (*this)(br,bc,bm,bv);
+	 auto blk4 = info(br,bc,bm,bv,data);
 	 // (-1)^{p(l)}wf[lc1c2r]
 	 int pt = info.qrow.get_parity(br);
          if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
       } // i
-
    } // block 
+}
+template <typename Tm>
+void stensor4<Tm>::cntr_signed(const std::string block){
+   ctns::cntr_signed(block, info, _data);
 }
 
 // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]}

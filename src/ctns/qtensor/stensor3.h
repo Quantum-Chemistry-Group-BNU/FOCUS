@@ -138,10 +138,10 @@ struct stensor3{
       Tm* data() const{ return _data; }
       // access
       const dtensor3<Tm> operator()(const int br, const int bc, const int bm) const{
-	 return info.get_dtensor(br,bc,bm,_data);
+	 return info(br,bc,bm,_data);
       }
       dtensor3<Tm> operator()(const int br, const int bc, const int bm){ 
-	 return info.get_dtensor(br,bc,bm,_data);
+	 return info(br,bc,bm,_data);
       }
       // in-place operation
       void conjugate(){
@@ -318,33 +318,33 @@ void stensor3<Tm>::row_signed(const double fac){
 }
 
 template <typename Tm>
-void stensor3<Tm>::cntr_signed(const std::string block){
+void cntr_signed(const std::string block, qinfo3<Tm>& info, Tm* data){
    if(block == "r"){
-
       int br, bc, bm;
       for(int i=0; i<info._nnzaddr.size(); i++){
          int idx = info._nnzaddr[i];
          info._addr_unpack(idx,br,bc,bm);
-         auto blk3 = (*this)(br,bc,bm); 
+         auto blk3 = info(br,bc,bm,data); 
 	 // (-1)^{p(l)+p(c)}wf[l,c,r]
 	 int pt = info.qrow.get_parity(br) 
 	        + info.qmid.get_parity(bm);
 	 if(pt%2 == 1) linalg::xscal(blk3.size(), -1.0, blk3.data());
       } // i
-
    }else if(block == "c"){
-
       int br, bc, bm;
       for(int i=0; i<info._nnzaddr.size(); i++){
          int idx = info._nnzaddr[i];
          info._addr_unpack(idx,br,bc,bm);
-         auto blk3 = (*this)(br,bc,bm); 
+         auto blk3 = info(br,bc,bm,data); 
 	 // (-1)^{p(l)}wf[l,c,r]
 	 int pt = info.qrow.get_parity(br);
          if(pt%2 == 1) linalg::xscal(blk3.size(), -1.0, blk3.data());
       } // i
-
    } // block
+}
+template <typename Tm>
+void stensor3<Tm>::cntr_signed(const std::string block){
+   ctns::cntr_signed(block, info, _data);
 }
 
 // Generate the sign for wf[lcr]|lcr> = wf3[lcr]|lrc> 

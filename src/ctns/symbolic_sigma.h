@@ -59,11 +59,11 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
       } // k
       // (opN+opH)*|wf>
       if(idx == HTerm.size()-1){
-         opNxwf = contract_opxwf(block,wf,optmp,dagger);
-         opHxwf = contract_opxwf(block,wf,optmp,!dagger);
+         opNxwf = contract_opxwf(block,optmp,wf,dagger);
+         opHxwf = contract_opxwf(block,optmp,wf,!dagger);
       }else{
-         opNxwf = contract_opxwf(block,opNxwf,optmp,dagger);
-         opHxwf = contract_opxwf(block,opHxwf,optmp,!dagger);
+         opNxwf = contract_opxwf(block,optmp,opNxwf,dagger);
+         opHxwf = contract_opxwf(block,optmp,opHxwf,!dagger);
       }
       // impose antisymmetry here
       if(parity){ 
