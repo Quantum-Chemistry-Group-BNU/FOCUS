@@ -66,6 +66,7 @@ struct qinfo3{
 		  	        			  qmid.get_dim(bm),
 				  		          data+off-1);
       }
+/*
       const dtensor3<Tm> operator()(const int br, const int bc, const int bm, 
 		      	            const Tm* data) const{
          size_t off = _offset[_addr(br,bc,bm)];
@@ -74,6 +75,7 @@ struct qinfo3{
 		  	        			  qmid.get_dim(bm),
 				  		          data+off-1);
       }
+*/
    public:
       qsym sym;
       qbond qrow, qcol, qmid;

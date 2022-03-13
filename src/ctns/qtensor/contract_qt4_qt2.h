@@ -57,7 +57,7 @@ stensor4<Tm> contract_qt4_qt2_r(const stensor4<Tm>& qt4a,
    assert(qt4a.info.qcol == qint);
    qsym sym = qt4a.info.sym + sym2;
    stensor4<Tm> qt4(sym, qt4a.info.qrow, qext, qt4a.info.qmid, qt4a.info.qver);
-   contract_qt4_qt2_info_l(qt4a.info, qt4a.data(), qt2.info, qt2.data(), 
+   contract_qt4_qt2_info_r(qt4a.info, qt4a.data(), qt2.info, qt2.data(), 
 		           qt4.info, qt4.data(), 1.0, false, ifdagger);
    return qt4;
 }
