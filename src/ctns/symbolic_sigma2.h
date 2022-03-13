@@ -9,75 +9,67 @@
 
 namespace ctns{
 
-//   template <typename Tm, typename QTm, typename QInfo> 
-//   void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
-//   		      const int it,
-//   		      const symbolic_prod<Tm>& HTerm,
-//   		      const QTm& wf,
-//   		      QTm& Hwf,
-//   		      const std::map<qsym,QInfo>& info_dict, 
-//   		      const size_t& opsize,
-//   		      const size_t& wfsize,
-//   		      Tm* workspace,
-//   		      const bool ifdagger=false){
-//   /*
-//      const bool debug = true;
-//      if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
-//      auto t0 = tools::get_time();
-//   */
-//   
-//      // compute (HTerm+HTerm.H)*|wf>
-//      int isym = wf.info.sym.isym();
-//      qsym sym;
-//      QInfo *opxwf0_info, *opxwf_info;
-//      Tm *opxwf0_data, *opxwf_data;
-//      // op(dagger)*|wf>
-//      sym = wf.info.sym;
-//      opxwf0_info = const_cast<QInfo*>(&wf.info);
-//      opxwf0_data = workspace+opsize;
-//      linalg::xcopy(wf.size(), wf.data(), opxwf0_data);
-//      int ic = 1;
-//      for(int idx=HTerm.size()-1; idx>=0; idx--){
-//         const auto& sop = HTerm.terms[idx];
-//         const auto& sop0 = sop.sums[0].second;
-//         const auto& index0 = sop0.index;
-//         const auto& parity = sop0.parity;
-//         const auto& label  = sop0.label;
-//         const auto& dagger = sop0.dagger;
-//         const auto& block = sop0.block;
-//         const auto& qops = qops_dict.at(block);
-//         // form operator
-//         auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
-//         // impose antisymmetry here
-//         if(parity) cntr_signed(block, *opxwf0_info, opxwf0_data);
-//         // op(dagger)*|wf>
-//         if(idx != 0){
-//            qsym sym_op = get_qsym_op(label, isym, index0);
-//            sym = (ifdagger^dagger)? sym-sym_op : sym+sym_op;
-//            opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
-//            opxwf_data = workspace+opsize+(ic%2)*wfsize;
-//            ic += 1;
-//   	 contract_opxwf_info(block,optmp.info,optmp.data(),
-//   	 		     *opxwf0_info,opxwf_data,
-//   			     *opxwf_info,opxwf_data,
-//   			     1.0, false, (ifdagger^dagger));
-//            opxwf0_info = opxwf_info;
-//            opxwf0_data = opxwf_data;
-//         }else{
-//            double fac = ifdagger? HTerm.Hsign() : 1.0;
-//            contract_opxwf_info(block,optmp.info,optmp.data(),
-//            		     *opxwf0_info,opxwf_data,
-//   			     Hwf.info,Hwf.data(),
-//   			     fac, true, (ifdagger^dagger));
-//         }
-//      } // idx
-//   
-//   /*   
-//      auto t1 = tools::get_time();
-//      std::cout << "dt=" << std::scientific << std::setprecision(4)
-//   	     << tools::get_duration(t1-t0) << std::endl;
-//   */
-//   }
+template <typename Tm, typename QTm, typename QInfo> 
+void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
+		      const int it,
+		      const symbolic_prod<Tm>& HTerm,
+		      const QTm& wf,
+		      QTm& Hwf,
+		      const std::map<qsym,QInfo>& info_dict, 
+		      const size_t& opsize,
+		      const size_t& wfsize,
+		      Tm* workspace,
+		      const bool ifdagger){
+//   const bool debug = true;
+//   if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
+//   auto t0 = tools::get_time();
+   // compute (HTerm+HTerm.H)*|wf>
+   int isym = wf.info.sym.isym();
+   qsym sym;
+   QInfo *opxwf0_info, *opxwf_info;
+   Tm *opxwf0_data, *opxwf_data;
+   // op(dagger)*|wf>
+   sym = wf.info.sym;
+   opxwf0_info = const_cast<QInfo*>(&wf.info);
+   opxwf0_data = workspace+opsize+(HTerm.size()%2)*wfsize;
+   linalg::xcopy(wf.size(), wf.data(), opxwf0_data);
+   for(int idx=HTerm.size()-1; idx>=0; idx--){
+      const auto& sop = HTerm.terms[idx];
+      const auto& sop0 = sop.sums[0].second;
+      const auto& index0 = sop0.index;
+      const auto& parity = sop0.parity;
+      const auto& label  = sop0.label;
+      const auto& dagger = sop0.dagger;
+      const auto& block = sop0.block;
+      const auto& qops = qops_dict.at(block);
+      // form operator
+      auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
+      // impose antisymmetry here
+      if(parity) cntr_signed(block, *opxwf0_info, opxwf0_data);
+      // op(dagger)*|wf>
+      if(idx != 0){
+         qsym sym_op = get_qsym_op(label, isym, index0);
+         sym = (ifdagger^dagger)? sym-sym_op : sym+sym_op;
+         opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
+         opxwf_data = workspace+opsize+(idx%2)*wfsize;
+	 contract_opxwf_info(block, optmp.info, optmp.data(),
+	 		     *opxwf0_info, opxwf0_data,
+			     *opxwf_info, opxwf_data,
+			     1.0, false, (ifdagger^dagger));
+         opxwf0_info = opxwf_info;
+         opxwf0_data = opxwf_data;
+      }else{
+         double fac = ifdagger? HTerm.Hsign() : 1.0;
+         contract_opxwf_info(block, optmp.info, optmp.data(),
+         		     *opxwf0_info, opxwf_data,
+			     Hwf.info, Hwf.data(),
+			     fac, true, (ifdagger^dagger));
+      }
+   } // idx
+//   auto t1 = tools::get_time();
+//   std::cout << "dt=" << std::scientific << std::setprecision(4)
+//	     << tools::get_duration(t1-t0) << std::endl;
+}
 
 template <typename Tm, typename QTm, typename QInfo> 
 void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,

@@ -143,10 +143,7 @@ struct stensor4{
       size_t size() const{ return info._size; }
       Tm* data() const{ return _data; }
       // access
-      const dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv) const{
-	 return info(br,bc,bm,bv,_data);
-      }
-      dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv){ 
+      dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv) const{ 
 	 return info(br,bc,bm,bv,_data);
       }
       // in-place operation

@@ -60,17 +60,6 @@ struct qinfo4{
 		  	        			  qver.get_dim(bv),
 				  		          data+off-1);
       }
-/*
-      const dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv,
-		      	            const Tm* data) const{
-         size_t off = _offset[_addr(br,bc,bm,bv)];
-	 return (off == 0)? dtensor4<Tm>() : dtensor4<Tm>(qrow.get_dim(br),
-		  	        			  qcol.get_dim(bc),
-		  	        			  qmid.get_dim(bm),
-		  	        			  qver.get_dim(bv),
-				  		          data+off-1);
-      }
-*/
    public:
       qsym sym;
       qbond qrow, qcol, qmid, qver;

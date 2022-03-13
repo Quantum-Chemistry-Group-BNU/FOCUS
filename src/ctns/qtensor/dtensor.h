@@ -48,7 +48,6 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
       bool empty() const{ return _data==nullptr; }
       // in-place operation
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); }
-      void scale(const Tm fac){ linalg::xscal(_size, fac, _data); }
       void conjugate(){
          std::transform(_data, _data+_size, _data,
 			[](const Tm& x){ return tools::conjugate(x); });
@@ -123,7 +122,6 @@ struct dtensor3{
       bool empty() const{ return _data==nullptr; }
       // in-place operation
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); } 
-      void scale(const Tm fac){ linalg::xscal(_size, fac, _data); }
       void conjugate(){
          std::transform(_data, _data+_size, _data,
 			[](const Tm& x){ return tools::conjugate(x); });
@@ -194,7 +192,6 @@ struct dtensor4{
       bool empty() const{ return _data==nullptr; }
       // in-place operation
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); }
-      void scale(const Tm fac){ linalg::xscal(_size, fac, _data); }
       void conjugate(){
          std::transform(_data, _data+_size, _data,
 			[](const Tm& x){ return tools::conjugate(x); });
