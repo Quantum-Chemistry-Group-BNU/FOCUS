@@ -61,7 +61,7 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       }else{
          double fac = ifdagger? HTerm.Hsign() : 1.0;
          contract_opxwf_info(block, optmp.info, optmp.data(),
-         		     *opxwf0_info, opxwf_data,
+         		     *opxwf0_info, opxwf0_data,
 			     Hwf.info, Hwf.data(),
 			     fac, true, (ifdagger^dagger));
       }
