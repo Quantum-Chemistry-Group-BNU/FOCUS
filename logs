@@ -81,6 +81,7 @@ LOGS
         - info only store offset or maps: [CRUCIAL PART!!!]
 	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
+        - low-level implementation of contract!!!
 
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 
