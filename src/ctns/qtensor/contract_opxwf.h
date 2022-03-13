@@ -55,7 +55,8 @@ stensor4<Tm> contract_opxwf(const std::string cpos,
 
 template <typename Tm>
 void contract_opxwf_info(const std::string cpos,
-			 const stensor2<Tm>& qt2b,
+			 const qinfo2<Tm>& qt2b_info,
+			 Tm* qt2b_data,
 			 const qinfo3<Tm>& qt3a_info,
 			 Tm* qt3a_data,
 			 qinfo3<Tm>& qt3_info,
@@ -64,13 +65,13 @@ void contract_opxwf_info(const std::string cpos,
 			 const bool accum,
 		         const bool ifdagger=false){
    if(cpos == "l"){
-      contract_qt3_qt2_info_l(qt3a_info, qt3a_data, qt2b.info, qt2b.data(),
+      contract_qt3_qt2_info_l(qt3a_info, qt3a_data, qt2b_info, qt2b_data,
 		      	      qt3_info, qt3_data, alpha, accum, ifdagger);
    }else if(cpos == "r"){
-      contract_qt3_qt2_info_r(qt3a_info, qt3a_data, qt2b.info, qt2b.data(),
+      contract_qt3_qt2_info_r(qt3a_info, qt3a_data, qt2b_info, qt2b_data,
 		      	      qt3_info, qt3_data, alpha, accum, ifdagger);
    }else if(cpos == "c"){
-      contract_qt3_qt2_info_c(qt3a_info, qt3a_data, qt2b.info, qt2b.data(),
+      contract_qt3_qt2_info_c(qt3a_info, qt3a_data, qt2b_info, qt2b_data,
 		      	      qt3_info, qt3_data, alpha, accum, ifdagger);
    }else{
       std::cout << "error: no such case in contract_opxwf_info! cpos=" 
@@ -80,7 +81,8 @@ void contract_opxwf_info(const std::string cpos,
 }
 template <typename Tm>
 void contract_opxwf_info(const std::string cpos,
-			 const stensor2<Tm>& qt2b,
+			 const qinfo2<Tm>& qt2b_info,
+			 Tm* qt2b_data,
 			 const qinfo4<Tm>& qt4a_info,
 			 Tm* qt4a_data,
 			 qinfo4<Tm>& qt4_info,
@@ -89,16 +91,16 @@ void contract_opxwf_info(const std::string cpos,
 			 const bool accum,
 			 const bool ifdagger=false){
    if(cpos == "l"){
-      contract_qt4_qt2_info_l(qt4a_info, qt4a_data, qt2b.info, qt2b.data(),
+      contract_qt4_qt2_info_l(qt4a_info, qt4a_data, qt2b_info, qt2b_data,
 		      	      qt4_info, qt4_data, alpha, accum, ifdagger);
    }else if(cpos == "r"){
-      contract_qt4_qt2_info_r(qt4a_info, qt4a_data, qt2b.info, qt2b.data(),
+      contract_qt4_qt2_info_r(qt4a_info, qt4a_data, qt2b_info, qt2b_data,
 		      	      qt4_info, qt4_data, alpha, accum, ifdagger);
    }else if(cpos == "c1"){
-      contract_qt4_qt2_info_c1(qt4a_info, qt4a_data, qt2b.info, qt2b.data(),
+      contract_qt4_qt2_info_c1(qt4a_info, qt4a_data, qt2b_info, qt2b_data,
 		      	       qt4_info, qt4_data, alpha, accum, ifdagger);
    }else if(cpos == "c2"){
-      contract_qt4_qt2_info_c2(qt4a_info, qt4a_data, qt2b.info, qt2b.data(),
+      contract_qt4_qt2_info_c2(qt4a_info, qt4a_data, qt2b_info, qt2b_data,
 		      	       qt4_info, qt4_data, alpha, accum, ifdagger);
    }else{
       std::cout << "error: no such case in contract_opxwf_info! cpos=" 

@@ -57,14 +57,16 @@ namespace ctns{
 //            opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
 //            opxwf_data = workspace+opsize+(ic%2)*wfsize;
 //            ic += 1;
-//   	 contract_opxwf_info(block,optmp,*opxwf0_info,opxwf_data,
+//   	 contract_opxwf_info(block,optmp.info,optmp.data(),
+//   	 		     *opxwf0_info,opxwf_data,
 //   			     *opxwf_info,opxwf_data,
 //   			     1.0, false, (ifdagger^dagger));
 //            opxwf0_info = opxwf_info;
 //            opxwf0_data = opxwf_data;
 //         }else{
 //            double fac = ifdagger? HTerm.Hsign() : 1.0;
-//            contract_opxwf_info(block,optmp,*opxwf0_info,opxwf_data,
+//            contract_opxwf_info(block,optmp.info,optmp.data(),
+//            		     *opxwf0_info,opxwf_data,
 //   			     Hwf.info,Hwf.data(),
 //   			     fac, true, (ifdagger^dagger));
 //         }
@@ -118,7 +120,8 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
-      contract_opxwf_info(block,optmp,opxwf0.info,opxwf0.data(),
+      contract_opxwf_info(block,optmp.info,optmp.data(),
+			  opxwf0.info,opxwf0.data(),
 		          opxwf.info,opxwf.data(),
 			  1.0, false, dagger);
       // impose antisymmetry here
@@ -151,7 +154,8 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       Tm* wptr = workspace+opsize+(idx%2)*wfsize;
       opxwf.init(info,false);
       opxwf.setup_data(wptr);
-      contract_opxwf_info(block,optmp,opxwf0.info,opxwf0.data(),
+      contract_opxwf_info(block,optmp.info,optmp.data(),
+			  opxwf0.info,opxwf0.data(),
 		          opxwf.info,opxwf.data(),
 			  1.0, false, !dagger);
       // impose antisymmetry here
