@@ -31,8 +31,7 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
    // op(dagger)*|wf>
    sym = wf.info.sym;
    opxwf0_info = const_cast<QInfo*>(&wf.info);
-   opxwf0_data = workspace+opsize+(HTerm.size()%2)*wfsize;
-   linalg::xcopy(wf.size(), wf.data(), opxwf0_data);
+   opxwf0_data = wf.data();
    for(int idx=HTerm.size()-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];
       const auto& sop0 = sop.sums[0].second;
@@ -44,28 +43,22 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       const auto& qops = qops_dict.at(block);
       // form operator
       auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
-      // impose antisymmetry here
-      if(parity) cntr_signed(block, *opxwf0_info, opxwf0_data);
       // op(dagger)*|wf>
-      if(idx != 0){
-         qsym sym_op = get_qsym_op(label, isym, index0);
-         sym = (ifdagger^dagger)? sym-sym_op : sym+sym_op;
-         opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
-         opxwf_data = workspace+opsize+(idx%2)*wfsize;
-	 contract_opxwf_info(block, optmp.info, optmp.data(),
-	 		     *opxwf0_info, opxwf0_data,
-			     *opxwf_info, opxwf_data,
-			     1.0, false, (ifdagger^dagger));
-         opxwf0_info = opxwf_info;
-         opxwf0_data = opxwf_data;
-      }else{
-         double fac = ifdagger? HTerm.Hsign() : 1.0;
-         contract_opxwf_info(block, optmp.info, optmp.data(),
-         		     *opxwf0_info, opxwf0_data,
-			     Hwf.info, Hwf.data(),
-			     fac, true, (ifdagger^dagger));
-      }
-   } // idx
+      qsym sym_op = get_qsym_op(label, isym, index0);
+      sym = (ifdagger^dagger)? sym-sym_op : sym+sym_op;
+      opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
+      opxwf_data = workspace+opsize+(idx%2)*wfsize;
+      contract_opxwf_info(block, optmp.info, optmp.data(),
+      		          *opxwf0_info, opxwf0_data,
+             	          *opxwf_info, opxwf_data,
+             	          1.0, false, (ifdagger^dagger));
+      // impose antisymmetry here
+      if(parity) cntr_signed(block, *opxwf_info, opxwf_data);
+      opxwf0_info = opxwf_info;
+      opxwf0_data = opxwf_data;
+   }
+   double fac = ifdagger? HTerm.Hsign() : 1.0;
+   linalg::xaxpy(Hwf.size(), fac, opxwf_data, Hwf.data());
 //   auto t1 = tools::get_time();
 //   std::cout << "dt=" << std::scientific << std::setprecision(4)
 //	     << tools::get_duration(t1-t0) << std::endl;
