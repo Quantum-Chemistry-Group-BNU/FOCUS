@@ -219,10 +219,11 @@ void symbolic_Hx2(Tm* y,
       int omprank = 0;
 #endif
       const auto& HTerm = H_formulae.tasks[it];
+/*
       symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[omprank],
 		       info_dict,opsize,wfsize,
 		       &workspace[omprank*tmpsize+wfsize]);
-/*
+*/
       symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs[omprank],
 		       info_dict,opsize,wfsize,
 		       &workspace[omprank*tmpsize+wfsize],
@@ -231,7 +232,6 @@ void symbolic_Hx2(Tm* y,
 		       info_dict,opsize,wfsize,
 		       &workspace[omprank*tmpsize+wfsize],
 		       true);
-*/
    } // it
    auto t2 = tools::get_time();
    // reduction & save
