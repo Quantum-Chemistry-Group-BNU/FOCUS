@@ -86,7 +86,6 @@ void contract_qt4_qt2_info_r(const qinfo4<Tm>& qt4a_info,
       if(ifzero && !accum) blk4.clear();
    } // i
 */
-
    const char* transb = ifdagger? "N" : "T";
    const Tm alpha = static_cast<Tm>(talpha);
    const Tm beta = accum? 1.0 : 0.0;
@@ -130,7 +129,6 @@ void contract_qt4_qt2_info_r(const qinfo4<Tm>& qt4a_info,
       } // bx
       if(ifzero && !accum) memset(qt4_data+off4-1, 0, size*sizeof(Tm));
    } // i
-
 }
 
 //					  m /
