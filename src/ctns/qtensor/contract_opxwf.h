@@ -17,40 +17,14 @@ stensor3<Tm> contract_opxwf(const std::string cpos,
 			    const stensor2<Tm>& qt2b,
 		 	    const stensor3<Tm>& qt3a, 
 			    const bool ifdagger=false){
-   stensor3<Tm> qt3;
-   if(cpos == "l"){
-      qt3 = contract_qt3_qt2_l(qt3a, qt2b, ifdagger);
-   }else if(cpos == "r"){
-      qt3 = contract_qt3_qt2_r(qt3a, qt2b, ifdagger);
-   }else if(cpos == "c"){
-      qt3 = contract_qt3_qt2_c(qt3a, qt2b, ifdagger);
-   }else{
-      std::cout << "error: no such case in contract_opxwf! cpos=" 
-	        << cpos << std::endl;
-      exit(1);
-   }
-   return qt3;
+   return contract_qt3_qt2(cpos, qt3a, qt2b, ifdagger);
 }
 template <typename Tm>
 stensor4<Tm> contract_opxwf(const std::string cpos,
 			    const stensor2<Tm>& qt2b,
 		 	    const stensor4<Tm>& qt4a, 
 			    const bool ifdagger=false){
-   stensor4<Tm> qt4;
-   if(cpos == "l"){
-      qt4 = contract_qt4_qt2_l(qt4a, qt2b, ifdagger);
-   }else if(cpos == "r"){
-      qt4 = contract_qt4_qt2_r(qt4a, qt2b, ifdagger);
-   }else if(cpos == "c1"){
-      qt4 = contract_qt4_qt2_c1(qt4a, qt2b, ifdagger);
-   }else if(cpos == "c2"){
-      qt4 = contract_qt4_qt2_c2(qt4a, qt2b, ifdagger);
-   }else{
-      std::cout << "error: no such case in contract_opxwf! cpos=" 
-                << cpos << std::endl;
-      exit(1);
-   }
-   return qt4;
+   return contract_qt4_qt2(cpos, qt4a, qt2b, ifdagger);
 }
 
 template <typename Tm>

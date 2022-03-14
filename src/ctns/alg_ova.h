@@ -20,35 +20,35 @@ linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){
       if(tp == 0 || tp == 1){
 	 const auto& site = icomb.rsites[rindex.at(std::make_pair(i,0))];
 	 if(i == icomb.topo.nbackbone-1){
-	    qt2_r = contract_qt3_qt3_cr(site,site);
+	    qt2_r = contract_qt3_qt3("cr",site,site);
 	 }else{
-	    auto qtmp = contract_qt3_qt2_r(site,qt2_r);
-	    qt2_r = contract_qt3_qt3_cr(site,qtmp);
+	    auto qtmp = contract_qt3_qt2("r",site,qt2_r);
+	    qt2_r = contract_qt3_qt3("cr",site,qtmp);
 	 }
       }else if(tp == 3){
          for(int j=nodes[i].size()-1; j>=1; j--){
 	    const auto& site = icomb.rsites[rindex.at(std::make_pair(i,j))];
             if(j == nodes[i].size()-1){
-	       qt2_u = contract_qt3_qt3_cr(site,site);
+	       qt2_u = contract_qt3_qt3("cr",site,site);
 	    }else{
-	       auto qtmp = contract_qt3_qt2_r(site,qt2_u);
-	       qt2_u = contract_qt3_qt3_cr(site,qtmp);
+	       auto qtmp = contract_qt3_qt2("r",site,qt2_u);
+	       qt2_u = contract_qt3_qt3("cr",site,qtmp);
 	    }
 	 } // j
 	 // internal site without physical index
 	 const auto& site = icomb.rsites[rindex.at(std::make_pair(i,0))];
-	 auto qtmp = contract_qt3_qt2_r(site,qt2_r); // ket
-	 qtmp = contract_qt3_qt2_c(qtmp,qt2_u); // upper branch
-	 qt2_r = contract_qt3_qt3_cr(site,qtmp); // bra
+	 auto qtmp = contract_qt3_qt2("r",site,qt2_r); // ket
+	 qtmp = contract_qt3_qt2("c",qtmp,qt2_u); // upper branch
+	 qt2_r = contract_qt3_qt3("cr",site,qtmp); // bra
       }
    } // i
    // first merge: sum_l rwfuns[j,l]*site0[l,r,n] => site[j,r,n]
    const auto& site0 = icomb.rsites[rindex.at(std::make_pair(0,0))];
    site0.print("site0");
    icomb.rwfuns.print("rwfuns");
-   auto site = contract_qt3_qt2_l(site0,icomb.rwfuns); 
-   auto qtmp = contract_qt3_qt2_r(site,qt2_r);
-   qt2_r = contract_qt3_qt3_cr(site,qtmp);
+   auto site = contract_qt3_qt2("l",site0,icomb.rwfuns); 
+   auto qtmp = contract_qt3_qt2("r",site,qt2_r);
+   qt2_r = contract_qt3_qt3("cr",site,qtmp);
    auto Smat = qt2_r.to_matrix();
    return Smat;
 }
@@ -90,7 +90,7 @@ std::vector<typename Km::dtype> rcanon_CIcoeff(const comb<Km>& icomb,
 	 // internal site without physical index
 	 const auto& site = icomb.rsites[rindex.at(std::make_pair(i,0))];
 	 // contract upper matrix: permute row and col for contract_qt3_qt2_c
-	 auto qt3 = contract_qt3_qt2_c(site,qt2_u.T());
+	 auto qt3 = contract_qt3_qt2("c",site,qt2_u.T());
 	 auto qt2 = qt3.fix_mid( std::make_pair(0,0) );
 	 qt2_r = qt2.dot(qt2_r); // contract right matrix
       } // tp
@@ -126,7 +126,7 @@ std::pair<fock::onstate,double> rcanon_random(const comb<Km>& icomb,
       int tp = nodes[i][0].type;
       if(tp == 0 || tp == 1){
 	 const auto& site = icomb.rsites[rindex.at(std::make_pair(i,0))];
-	 auto qt3 = contract_qt3_qt2_l(site,wf);
+	 auto qt3 = contract_qt3_qt2("l",site,wf);
 	 // compute probability for physical index
          std::vector<stensor2<Tm>> qt2n(4);
 	 std::vector<double> weights(4);

@@ -19,14 +19,13 @@
 #include "stensor2.h"
 #include "stensor3.h"
 #include "stensor4.h"
+
 #include "contract_qt2_qt2.h"
-#include "contract_qt3_qt2_info.h"
-#include "contract_qt3_qt2.h"
-#include "contract_qt4_qt2_info.h"
-#include "contract_qt4_qt2.h"
-#include "contract_qt3_qt3_info.h"
 #include "contract_qt3_qt3.h"
+#include "contract_qt3_qt2.h"
+#include "contract_qt4_qt2.h"
 #include "contract_opxwf.h"
+
 #include "reshape_qt3_qt2.h"
 #include "reshape_qt4_qt3.h"
 

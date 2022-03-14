@@ -29,12 +29,12 @@ stensor3<Tm> onedot_Hx_local(const oper_dict<Tm>& lqops,
    stensor3<Tm> Hwf;
    if(ifNC){
       // 1. H^l + 2. H^cr
-      Hwf = contract_qt3_qt2_l(wf,lqops('H').at(0));
+      Hwf = contract_qt3_qt2("l",wf,lqops('H').at(0));
       Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,size,rank);
    }else{
       // 1. H^lc + 2. H^r
       Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,size,rank);
-      Hwf += contract_qt3_qt2_r(wf,rqops('H').at(0));
+      Hwf += contract_qt3_qt2("r",wf,rqops('H').at(0));
    }
    Hwf *= scale;
    // add const term

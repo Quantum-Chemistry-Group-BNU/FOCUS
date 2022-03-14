@@ -95,7 +95,7 @@ void onedot_guess_psi(const std::string superblock,
       for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
          auto cwf = rot.H().dot(wf.merge_lc()); // <-W[alpha,r]->
-         auto psi = contract_qt3_qt2_l(icomb.rsites[pdx1],cwf);
+         auto psi = contract_qt3_qt2("l",icomb.rsites[pdx1],cwf);
          icomb.psi[i] = std::move(psi);
       }
 
@@ -105,7 +105,7 @@ void onedot_guess_psi(const std::string superblock,
          wf.from_array(vsol.col(i));
 	 wf.permCR_signed();
          auto cwf = rot.H().dot(wf.merge_lr()); // <-W[alpha,r]->
-         auto psi = contract_qt3_qt2_l(icomb.rsites[pdx1],cwf);
+         auto psi = contract_qt3_qt2("l",icomb.rsites[pdx1],cwf);
          icomb.psi[i] = std::move(psi);
       }
       
@@ -116,11 +116,11 @@ void onedot_guess_psi(const std::string superblock,
          wf.from_array(vsol.col(i));
          auto cwf = wf.merge_cr().dot(rot.H()); // <-W[l,alpha]->
          if(!cturn){
-            auto psi = contract_qt3_qt2_r(icomb.lsites[pdx0],cwf.T());
+            auto psi = contract_qt3_qt2("r",icomb.lsites[pdx0],cwf.T());
 	    icomb.psi[i] = std::move(psi);
          }else{
             // special treatment of the propagation downside to backbone
-            auto psi = contract_qt3_qt2_c(icomb.lsites[pdx0],cwf.T());
+            auto psi = contract_qt3_qt2("c",icomb.lsites[pdx0],cwf.T());
             psi.permCR_signed(); // |(lr)c> back to |lcr> order on backbone
             icomb.psi[i] = std::move(psi);
          }

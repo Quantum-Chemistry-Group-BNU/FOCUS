@@ -33,7 +33,7 @@ void rcanon_check(const comb<Km>& icomb,
    for(int idx=0; idx<icomb.topo.ntotal; idx++){
       auto p = icomb.topo.rcoord[idx];
       // check right canonical form -> A*[l'cr]A[lcr] = w[l'l] = Id
-      auto qt2 = contract_qt3_qt3_cr(icomb.rsites[idx],icomb.rsites[idx]);
+      auto qt2 = contract_qt3_qt3("cr",icomb.rsites[idx],icomb.rsites[idx]);
       double maxdiff = qt2.check_identityMatrix(thresh_ortho, false);
       int Dtot = qt2.info.qrow.get_dimAll();
       std::cout << " idx=" << idx << " node=" << p << " Dtot=" << Dtot 

@@ -26,7 +26,7 @@ void twodot_guess(comb<Km>& icomb,
 	    // psi[l,a,c1] => cwf[lc1,a]
 	    auto cwf = icomb.psi[i].merge_lc(); 
 	    // cwf[lc1,a]*r[a,r,c2] => wf3[lc1,r,c2]
-            auto wf3 = contract_qt3_qt2_l(icomb.rsites[pdx1],cwf); 
+            auto wf3 = contract_qt3_qt2("l",icomb.rsites[pdx1],cwf); 
 	    // wf3[lc1,r,c2] => wf4[l,r,c1,c2]
 	    auto wf4 = wf3.split_lc1(wf.info.qrow, wf.info.qmid);
 	    assert(wf4.size() == nsub);
@@ -64,7 +64,7 @@ void twodot_guess(comb<Km>& icomb,
             // psi[a,r,c2] => cwf[a,c2r]
 	    auto cwf = icomb.psi[i].merge_cr();
 	    // l[l,a,c1]*cwf[a,c2r] => wf3[l,c2r,c1]
-	    auto wf3 = contract_qt3_qt2_r(icomb.lsites[pdx0],cwf.T());
+	    auto wf3 = contract_qt3_qt2("r",icomb.lsites[pdx0],cwf.T());
 	    // wf3[l,c2r,c1] => wf4[l,r,c1,c2] 
 	    auto wf4 = wf3.split_c2r(wf.info.qver, wf.info.qcol);
 	    assert(wf4.size() == nsub);

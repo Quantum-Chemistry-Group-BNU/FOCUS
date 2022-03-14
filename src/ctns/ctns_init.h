@@ -235,7 +235,7 @@ void init_rsites(comb<Km>& icomb){
       auto tf = tools::get_time(); 
       if(debug_init){ 
          auto dt = tools::get_duration(tf-ti);
-         auto ova = contract_qt3_qt3_cr(icomb.rsites[idx],icomb.rsites[idx]);
+         auto ova = contract_qt3_qt3("cr",icomb.rsites[idx],icomb.rsites[idx]);
          const double thresh_ortho = 1.e-10;
          double maxdiff = ova.check_identityMatrix(thresh_ortho, false);
          std::cout << " shape(l,r,c)=("

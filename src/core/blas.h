@@ -5,6 +5,8 @@
 #include <complex>
 
 extern "C" {
+// conj:
+void zlacgv_(const int* N, const std::complex<double>* X, const int* INCX);
 // scal: x = a*x
 void dscal_(const int* N, const double* alpha, double* X, const int* INCX);
 void zscal_(const int* N, const std::complex<double>* alpha, std::complex<double>* X, const int* INCX);
@@ -46,6 +48,12 @@ void zgemm_(const char* TRANSA, const char* TRANSB,
 
 // wrapper for BLAS
 namespace linalg{
+
+// conj
+inline void xconj(const int N, const double* X){
+   int INCX = 1;
+   ::zlacgv_(&N, X, &INCX);
+}
 
 // scal
 inline void xscal(const int N, const double alpha, double* X){
