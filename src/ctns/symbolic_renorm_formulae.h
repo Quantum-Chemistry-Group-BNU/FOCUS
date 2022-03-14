@@ -52,7 +52,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
       for(const auto& pr : info){
          int index = pr.first, iformula = pr.second;
 	 auto opC = symbolic_normxwf_opC<Tm>(block1, block2, index, iformula);
-	 formulae.push_back(std::make_tuple('C', index, opC));
+	 formulae.append(std::make_tuple('C', index, opC));
          if(ifsave){
 	    std::cout << " idx=" << idx++;
 	    opC.display("opC["+std::to_string(index)+"]", print_level);
@@ -67,7 +67,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
          int iproc = distribute2(index, qops.mpisize);
          if(iproc == qops.mpirank){
 	    auto opA = symbolic_normxwf_opA<Tm>(block1, block2, index, iformula, ifkr);
-	    formulae.push_back(std::make_tuple('A', index, opA));
+	    formulae.append(std::make_tuple('A', index, opA));
             if(ifsave){
 	       std::cout << " idx=" << idx++;
 	       opA.display("opA["+std::to_string(index)+"]", print_level);
@@ -83,7 +83,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
          int iproc = distribute2(index, qops.mpisize);
          if(iproc == qops.mpirank){
 	    auto opB = symbolic_normxwf_opB<Tm>(block1, block2, index, iformula, ifkr);
-	    formulae.push_back(std::make_tuple('B', index, opB));
+	    formulae.append(std::make_tuple('B', index, opB));
             if(ifsave){
 	       std::cout << " idx=" << idx++;
 	       opB.display("opB["+std::to_string(index)+"]", print_level);
@@ -97,7 +97,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
          int index = pr.first;
 	 auto opP = symbolic_compxwf_opP<Tm>(block1, block2, qops1.cindex, qops2.cindex,
 			 	             int2e, index, isym, ifkr);
-	 formulae.push_back(std::make_tuple('P', index, opP));
+	 formulae.append(std::make_tuple('P', index, opP));
 	 if(ifsave){
 	    std::cout << " idx=" << idx++;
             opP.display("opP["+std::to_string(index)+"]", print_level);
@@ -110,7 +110,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
          int index = pr.first;
 	 auto opQ = symbolic_compxwf_opQ<Tm>(block1, block2, qops1.cindex, qops2.cindex,
 			 	             int2e, index, isym, ifkr);
-	 formulae.push_back(std::make_tuple('Q', index, opQ));
+	 formulae.append(std::make_tuple('Q', index, opQ));
 	 if(ifsave){
 	    std::cout << " idx=" << idx++;
             opQ.display("opQ["+std::to_string(index)+"]", print_level);
@@ -123,7 +123,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
          int index = pr.first;
 	 auto opS = symbolic_compxwf_opS<Tm>(block1, block2, qops1.cindex, qops2.cindex,
 			 	             index, ifkr, qops.mpisize, qops.mpirank);
-	 formulae.push_back(std::make_tuple('S', index, opS));
+	 formulae.append(std::make_tuple('S', index, opS));
 	 if(ifsave){
 	    std::cout << " idx=" << idx++;
 	    opS.display("opS["+std::to_string(index)+"]", print_level);
@@ -134,13 +134,16 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
    if(qops.oplist.find('H') != std::string::npos){
       auto opH = symbolic_compxwf_opH<Tm>(block1, block2, qops1.cindex, qops2.cindex,
 	 	      		          ifkr, qops.mpisize, qops.mpirank);
-      formulae.push_back(std::make_tuple('H', 0, opH));
+      formulae.append(std::make_tuple('H', 0, opH));
       if(ifsave){
 	 std::cout << " idx=" << idx++;
          opH.display("opH", print_level);
       }
    }
 
+   std::map<std::string,int> dims = {{block1,qops1.qket.get_dimAll()},
+	   			     {block2,qops2.qket.get_dimAll()}};
+   formulae.sort(dims);
    if(ifsave){
       std::cout << "renormalization summary:" << std::endl;
       qops.print("qops",2);

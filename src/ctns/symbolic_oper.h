@@ -336,7 +336,29 @@ struct symbolic_task{
 }; 
 
 template <typename Tm>
-using renorm_tasks = std::vector<std::tuple<char,int,symbolic_task<Tm>>>;
+using op_task = std::tuple<char,int,symbolic_task<Tm>>;
+
+template <typename Tm>
+struct renorm_tasks{
+   public:
+      // constructor	   
+      renorm_tasks(){}
+      // add a renorm operator
+      void append(const op_task<Tm>& op){
+         op_tasks.push_back(op);	      
+      }
+      // helper
+      int size() const{ return op_tasks.size(); }
+      // reorder
+      void sort(std::map<std::string,int>& dims){
+         for(auto& op : op_tasks){
+	    auto& formulae = std::get<2>(op);
+	    formulae.sort(dims);
+	 }
+      }
+   public:
+      std::vector<op_task<Tm>> op_tasks;
+};
 
 } // ctns
 

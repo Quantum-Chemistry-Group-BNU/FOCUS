@@ -3,29 +3,6 @@
 
 namespace ctns{
 
-// --- contract_qt3_qt2 ---
-template <typename Tm>
-void contract_qt3_qt2_info(const std::string cpos,
-		           const stensor3<Tm>& qt3a, 
-		           const stensor2<Tm>& qt2,
-		           stensor3<Tm>& qt3,
-		           const bool ifdagger=false){
-   if(cpos == "l"){
-      contract_qt3_qt2_info_l(qt3a.info, qt3a.data(), qt2.info, qt2.data(), 
-		              qt3.info, qt3.data(), 1.0, false, ifdagger);
-   }else if(cpos == "r"){
-      contract_qt3_qt2_info_r(qt3a.info, qt3a.data(), qt2.info, qt2.data(), 
-		              qt3.info, qt3.data(), 1.0, false, ifdagger);
-   }else if(cpos == "c"){
-      contract_qt3_qt2_info_c(qt3a.info, qt3a.data(), qt2.info, qt2.data(), 
-		              qt3.info, qt3.data(), 1.0, false, ifdagger);
-   }else{
-      std::cout << "error: no such case in contract_qt3_qt2_info! cpos=" 
-	        << cpos << std::endl;
-      exit(1);
-   }
-}
-
 //  r/	m 
 //   *  |     = [m](r,c) = op(r,x) A[m](x,c) = <mr|o|c>
 //  x\--*--c

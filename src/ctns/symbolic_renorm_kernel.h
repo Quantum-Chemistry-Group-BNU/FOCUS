@@ -108,7 +108,7 @@ void symbolic_renorm_kernel(const std::string superblock,
    #pragma omp parallel for schedule(dynamic)
 #endif
    for(int i=0; i<tasks.size(); i++){
-      const auto& task = tasks[i];
+      const auto& task = tasks.op_tasks[i];
       auto key = std::get<0>(task);
       auto index = std::get<1>(task);
       auto formula = std::get<2>(task);

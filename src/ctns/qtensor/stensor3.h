@@ -290,28 +290,36 @@ stensor2<Tm> stensor3<Tm>::fix_mid(const std::pair<int,int> mdx) const{
 // deal with fermionic sign in fermionic direct product
 // wf[lcr](-1)^{p(c)}
 template <typename Tm>
-void stensor3<Tm>::mid_signed(const double fac){
+void mid_signed(qinfo3<Tm>& info, Tm* data, const double fac=1.0){
    int br, bc, bm;
    for(int i=0; i<info._nnzaddr.size(); i++){
       int idx = info._nnzaddr[i];
       info._addr_unpack(idx,br,bc,bm);
-      auto blk3 = (*this)(br,bc,bm);
+      auto blk3 = info(br,bc,bm,data);
       double fac2 = (info.qmid.get_parity(bm)==0)? fac : -fac;
       linalg::xscal(blk3.size(), fac2, blk3.data());  
    }
 }
+template <typename Tm>
+void stensor3<Tm>::mid_signed(const double fac){
+   ctns::mid_signed(info, _data, fac);
+}
 
 // wf[lcr](-1)^{p(l)}
 template <typename Tm>
-void stensor3<Tm>::row_signed(const double fac){
+void row_signed(qinfo3<Tm>& info, Tm* data, const double fac=1.0){
    int br, bc, bm;
    for(int i=0; i<info._nnzaddr.size(); i++){
       int idx = info._nnzaddr[i];
       info._addr_unpack(idx,br,bc,bm);
-      auto blk3 = (*this)(br,bc,bm); 
+      auto blk3 = info(br,bc,bm,data); 
       double fac2 = (info.qrow.get_parity(br)==0)? fac : -fac;
       linalg::xscal(blk3.size(), fac2, blk3.data());  
    }
+}
+template <typename Tm>
+void stensor3<Tm>::row_signed(const double fac){
+   ctns::row_signed(info, _data, fac);
 }
 
 template <typename Tm>

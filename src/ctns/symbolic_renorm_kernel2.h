@@ -17,7 +17,8 @@ void symbolic_renorm_single2(const std::string& block1,
 			     const char key,
 	  	             const symbolic_task<Tm>& formulae,
 			     const stensor3<Tm>& wf,
-		             stensor3<Tm>& Hwf,
+		             qinfo3<Tm>& Hwf_info,
+			     Tm* Hwf_data,
 			     const size_t& opsize,
 			     const size_t& wfsize,
 			     const std::map<qsym,qinfo3<Tm>>& info_dict,
@@ -27,14 +28,15 @@ void symbolic_renorm_single2(const std::string& block1,
    // initialization 
    int isym = wf.info.sym.isym();
    qsym sym;
-   stensor3<Tm> opxwf0, opxwf;
+   qinfo3<Tm> *opxwf0_info, *opxwf_info;
+   Tm *opxwf0_data, *opxwf_data;
    // opN*|wf>
    for(int it=0; it<formulae.size(); it++){
       const auto& HTerm = formulae.tasks[it];
       // term[it]*wf
       sym = wf.info.sym;
-      opxwf0.init(wf.info,false);
-      opxwf0.setup_data(wf.data());
+      opxwf0_info = const_cast<qinfo3<Tm>*>(&wf.info);
+      opxwf0_data = wf.data();
       for(int idx=HTerm.size()-1; idx>=0; idx--){
          const auto& sop = HTerm.terms[idx];
          const auto& sop0 = sop.sums[0].second;
@@ -44,75 +46,33 @@ void symbolic_renorm_single2(const std::string& block1,
          const auto& dagger = sop0.dagger;
          const auto& block = sop0.block;
          const auto& qops = qops_dict.at(block);
+         // form operator
          auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
+	 // opN*|wf> 
          qsym sym_op = get_qsym_op(label, isym, index0);
          sym = dagger? sym-sym_op : sym+sym_op;
-	 // opN*|wf> 
-         const auto& info = info_dict.at(sym);
-	 Tm* wptr = workspace+opsize+(idx%2)*wfsize; 
-	 opxwf.init(info,false);
-	 opxwf.setup_data(wptr);
-	 contract_qt3_qt2_info(block,opxwf0,optmp,opxwf,dagger);
-         // impose antisymmetry here
+         opxwf_info = const_cast<qinfo3<Tm>*>(&info_dict.at(sym));
+	 opxwf_data = workspace+opsize+(idx%2)*wfsize; 
+	 contract_opxwf_info(block, optmp.info, optmp.data(),
+			     *opxwf0_info, opxwf0_data,
+			     *opxwf_info, opxwf_data,
+			     1.0, false, dagger);
+	 // impose antisymmetry here
          if(block == block2 and parity){ 
             if(block1 == "l"){ // lc or lr
-	       opxwf.row_signed();
+	       row_signed(*opxwf_info, opxwf_data);
 	    }else if(block1 == "c"){
-	       opxwf.mid_signed();
+	       mid_signed(*opxwf_info, opxwf_data);
 	    }
 	 }
-         if(idx != 0){
-            opxwf0.info = opxwf.info;
-            opxwf0.setup_data(wptr);	 
-         }
+         opxwf0_info = opxwf_info;
+         opxwf0_data = opxwf_data;
       } // idx
       if(it == 0){
-	 linalg::xcopy(Hwf.size(), opxwf.data(), Hwf.data());
+	 linalg::xcopy(Hwf_info._size, opxwf_data, Hwf_data);
       }else{
-	 linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data());
+	 linalg::xaxpy(Hwf_info._size, 1.0, opxwf_data, Hwf_data);
       }
-   } // it
-   // opH*|wf>
-   if(key != 'H') return;
-   for(int it=0; it<formulae.size(); it++){
-      const auto& HTerm = formulae.tasks[it];
-      // term[it]*wf
-      sym = wf.info.sym;
-      opxwf0.init(wf.info,false);
-      opxwf0.setup_data(wf.data());
-      for(int idx=HTerm.size()-1; idx>=0; idx--){
-         const auto& sop = HTerm.terms[idx];
-         const auto& sop0 = sop.sums[0].second;
-         const auto& index0 = sop0.index;
-         const auto& parity = sop0.parity;
-         const auto& label  = sop0.label;
-         const auto& dagger = sop0.dagger;
-         const auto& block = sop0.block;
-         const auto& qops = qops_dict.at(block);
-         auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
-         qsym sym_op = get_qsym_op(label, isym, index0);
-         sym = !dagger? sym-sym_op : sym+sym_op;
-	 // opN*|wf> 
-         const auto& info = info_dict.at(sym);
-	 Tm* wptr = workspace+opsize+(idx%2)*wfsize; 
-	 opxwf.init(info,false);
-	 opxwf.setup_data(wptr);
-	 contract_qt3_qt2_info(block,opxwf0,optmp,opxwf,!dagger);
-       	 // impose antisymmetry here
-         if(block == block2 and parity){ 
-            if(block1 == "l"){ // lc or lr
-	       opxwf.row_signed();
-	    }else if(block1 == "c"){
-	       opxwf.mid_signed();
-	    }
-	 }
-         if(idx != 0){
-            opxwf0.info = opxwf.info;
-            opxwf0.setup_data(wptr);	 
-         }
-      } // idx
-      double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
-      linalg::xaxpy(Hwf.size(), fac, opxwf.data(), Hwf.data()); 
    } // it
 }
 
@@ -163,7 +123,7 @@ void symbolic_renorm_kernel2(const std::string superblock,
 #else
       int omprank = 0;
 #endif
-      const auto& task = tasks[i];
+      const auto& task = tasks.op_tasks[i];
       auto key = std::get<0>(task);
       auto index = std::get<1>(task);
       auto formula = std::get<2>(task);
@@ -176,22 +136,21 @@ void symbolic_renorm_kernel2(const std::string superblock,
 	 formula.display("formula", 1);
       }
       // op|ket>
-      stensor3<Tm> opxwf; 
       auto sym_op = qops.get_qsym_op(key, index);
       auto sym = sym_op + site.info.sym;
-      opxwf.init(info_dict.at(sym), false);
-      opxwf.setup_data(&workspace[omprank*tmpsize]);
+      qinfo3<Tm> *opxwf_info = const_cast<qinfo3<Tm>*>(&info_dict.at(sym));
+      Tm* opxwf_data = workspace + omprank*tmpsize;
       symbolic_renorm_single2(block1,block2,qops_dict,
-		              key,formula,site,opxwf,
+		              key,formula,site,*opxwf_info,opxwf_data,
 			      opsize,wfsize,info_dict,
 			      &workspace[omprank*tmpsize+wfsize]);
       // <bra|op|ket>
-      stensor2<Tm> op;
-      op.init(qops(key)[index].info, false);
-      op.setup_data(&workspace[omprank*tmpsize+wfsize]);
-      contract_qt3_qt3_info(superblock, site, opxwf, op);
+      auto& op = qops(key)[index];
+      contract_qt3_qt3_info(superblock, site.info, site.data(),
+		            *opxwf_info, opxwf_data,
+			    op.info, op.data());
+      if(key == 'H') op += op.H();
       if(key == 'H' && qops.ifkr) op += op.K();
-      linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
    } // i
    delete[] workspace;
 }
