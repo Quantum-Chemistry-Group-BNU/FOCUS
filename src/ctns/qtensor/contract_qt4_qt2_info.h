@@ -56,6 +56,7 @@ void contract_qt4_qt2_info_r(const qinfo4<Tm>& qt4a_info,
 			     const double talpha,
 			     const bool accum,
 			     const bool ifdagger=false){
+/*
    const char* transb = ifdagger? "N" : "T";
    const Tm alpha = static_cast<Tm>(talpha);
    int br, bc, bm, bv;
@@ -84,6 +85,52 @@ void contract_qt4_qt2_info_r(const qinfo4<Tm>& qt4a_info,
       } // bx
       if(ifzero && !accum) blk4.clear();
    } // i
+*/
+
+   const char* transb = ifdagger? "N" : "T";
+   const Tm alpha = static_cast<Tm>(talpha);
+   const Tm beta = accum? 1.0 : 0.0;
+   int br, bc, bm, bv;
+   for(int i=0; i<qt4_info._nnzaddr.size(); i++){
+      int idx = qt4_info._nnzaddr[i];
+      qt4_info._addr_unpack(idx,br,bc,bm,bv);
+      size_t off4 = qt4_info._offset[idx];
+      int rdim = qt4_info.qrow.get_dim(br); 
+      int cdim = qt4_info.qcol.get_dim(bc); 
+      int mdim = qt4_info.qmid.get_dim(bm);
+      int vdim = qt4_info.qver.get_dim(bv);
+      int size = rdim*cdim*mdim*vdim;
+      bool ifzero = true;
+      // loop over contracted indices
+      for(int bx=0; bx<qt4a_info._cols; bx++){
+	 size_t off4a = qt4a_info._offset[qt4a_info._addr(br,bx,bm,bv)];
+         if(off4a == 0) continue;
+	 int jdx = ifdagger? qt2_info._addr(bx,bc) : qt2_info._addr(bc,bx);
+         size_t off2b = qt2_info._offset[jdx];
+	 if(off2b == 0) continue;
+         ifzero = false;
+         // sigma(r,c,m,v) = op(c,x)*wf(r,x,m,v)
+	 int xdim = qt4a_info.qcol.get_dim(bx);
+         int LDB = ifdagger? xdim : cdim;
+	 int rxdim = rdim*xdim;
+	 int rcdim = rdim*cdim; 
+         //if(ifdagger) blk2b.conjugate();
+	 for(int iv=0; iv<vdim; iv++){
+            for(int im=0; im<mdim; im++){
+	       Tm* blk4a = qt4a_data + off4a-1 + (iv*mdim+im)*rxdim;
+	       Tm* blk2b = qt2_data + off2b-1;
+	       Tm* blk4 = qt4_data + off4-1 + (iv*mdim+im)*rcdim;
+               //xgemm("N",transb,alpha,blk4a.get(im,iv),blk2b,beta,blk4.get(im,iv));
+	       linalg::xgemm("N", transb, &rdim, &cdim, &xdim, &alpha,
+			     blk4a, &rdim, blk2b, &LDB, &beta,
+			     blk4, &rdim);  
+            } // im
+         } // iv
+	 //if(ifdagger) blk2b.conjugate();
+      } // bx
+      if(ifzero && !accum) memset(qt4_data+off4-1, 0, size*sizeof(Tm));
+   } // i
+
 }
 
 //					  m /
