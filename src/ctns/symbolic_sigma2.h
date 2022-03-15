@@ -24,7 +24,6 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 //   if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
 //   auto t0 = tools::get_time();
    // compute (HTerm+HTerm.H)*|wf>
-   int isym = wf.info.sym.isym();
    qsym sym;
    QInfo *opxwf0_info, *opxwf_info;
    Tm *opxwf0_data, *opxwf_data;
@@ -44,12 +43,11 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       // form operator
       auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
       // op(dagger)*|wf>
-      qsym sym_op = get_qsym_op(label, isym, index0);
-      sym = (ifdagger^dagger)? sym-sym_op : sym+sym_op;
+      sym += (ifdagger^dagger)? -optmp.sym : optmp.sym;
       opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
       opxwf_data = workspace+opsize+(idx%2)*wfsize;
-      contract_opxwf_info(block, optmp.info, optmp.data(),
-      		          *opxwf0_info, opxwf0_data,
+      contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
+			  optmp.info, optmp.data(),
              	          *opxwf_info, opxwf_data,
              	          1.0, false, (ifdagger^dagger));
       // impose antisymmetry here
@@ -87,7 +85,6 @@ void symbolic_Hx2(Tm* y,
 #endif
    if(rank == 0 && debug){
       std::cout << "ctns::symbolic_Hx2"
-	      	<< " QTm=" << get_name<QTm>() 
 	        << " mpisize=" << size 
                 << " maxthreads=" << maxthreads
                 << std::endl;

@@ -16,11 +16,12 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
 		     const int it,
 		     const symbolic_prod<Tm>& HTerm,
 		     const QTm& wf,
-		     QTm& Hwf){
+		     QTm& Hwf,
+		     const bool ifdagger){
    const bool debug = false;
    if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
    // compute (HTerm+HTerm.H)*|wf>
-   QTm opNxwf, opHxwf;
+   QTm opxwf;
    for(int idx=HTerm.size()-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];
       int len = sop.size();
@@ -59,22 +60,15 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
       } // k
       // (opN+opH)*|wf>
       if(idx == HTerm.size()-1){
-         opNxwf = contract_opxwf(block,optmp,wf,dagger);
-         opHxwf = contract_opxwf(block,optmp,wf,!dagger);
+         opxwf = contract_opxwf(block,wf,optmp,(ifdagger^dagger));
       }else{
-         opNxwf = contract_opxwf(block,optmp,opNxwf,dagger);
-         opHxwf = contract_opxwf(block,optmp,opHxwf,!dagger);
+         opxwf = contract_opxwf(block,opxwf,optmp,(ifdagger^dagger));
       }
       // impose antisymmetry here
-      if(parity){ 
-         opNxwf.cntr_signed(block);
-         opHxwf.cntr_signed(block);
-      }
+      if(parity) opxwf.cntr_signed(block);
    } // idx
-   int N = Hwf.size();
-   double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
-   linalg::xaxpy(N, 1.0, opNxwf.data(), Hwf.data()); 
-   linalg::xaxpy(N, fac, opHxwf.data(), Hwf.data()); 
+   double fac = ifdagger? HTerm.Hsign() : 1.0; // (opN)^H = sgn*opH
+   linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data()); 
 }
 
 template <typename Tm, typename QTm> 
@@ -95,7 +89,6 @@ void symbolic_Hx(Tm* y,
 #endif
    if(rank == 0 && debug){ 
       std::cout << "ctns::symbolic_Hx"
-	      	<< " QTm=" << get_name<QTm>() 
 	        << " mpisize=" << size 
                 << " maxthreads=" << maxthreads
                 << std::endl;
@@ -121,7 +114,8 @@ void symbolic_Hx(Tm* y,
       int omprank = 0;
 #endif
       const auto& HTerm = H_formulae.tasks[it];
-      symbolic_HxTerm(qops_dict,it,HTerm,wf,Hwfs[omprank]);
+      symbolic_HxTerm(qops_dict,it,HTerm,wf,Hwfs[omprank],false);
+      symbolic_HxTerm(qops_dict,it,HTerm,wf,Hwfs[omprank],true);
    }
    auto t2 = tools::get_time();
    // reduction & save

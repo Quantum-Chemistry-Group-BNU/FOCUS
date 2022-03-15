@@ -48,10 +48,6 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
       bool empty() const{ return _data==nullptr; }
       // in-place operation
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); }
-      void conjugate(){
-         std::transform(_data, _data+_size, _data,
-			[](const Tm& x){ return tools::conjugate(x); });
-      }
       // --- SPECIFIC FUNCTIONS ---
       // print
       void print(std::string name="", const int prec=4) const{
@@ -122,10 +118,6 @@ struct dtensor3{
       bool empty() const{ return _data==nullptr; }
       // in-place operation
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); } 
-      void conjugate(){
-         std::transform(_data, _data+_size, _data,
-			[](const Tm& x){ return tools::conjugate(x); });
-      }
       // --- SPECIFIC FUNCTIONS ---
       const dtensor2<Tm> get(const int i2) const{
          return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2));
@@ -192,10 +184,6 @@ struct dtensor4{
       bool empty() const{ return _data==nullptr; }
       // in-place operation
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); }
-      void conjugate(){
-         std::transform(_data, _data+_size, _data,
-			[](const Tm& x){ return tools::conjugate(x); });
-      }
       // --- SPECIFIC FUNCTIONS ---
       const dtensor2<Tm> get(const int i2, const int i3) const{
 	 return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2,i3));

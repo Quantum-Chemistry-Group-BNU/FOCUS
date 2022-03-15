@@ -11,7 +11,13 @@ stensor3<Tm> oper_kernel_OIwf(const std::string superblock,
 			      const stensor3<Tm>& ksite,
  			      const stensor2<Tm>& o1,
 			      const bool ifdagger=false){
-   return contract_qt3_qt2(superblock.substr(0,1), ksite, o1, ifdagger);
+   stensor3<Tm> qt3;
+   if(!ifdagger){
+      qt3 = contract_qt3_qt2(superblock.substr(0,1), ksite, o1);
+   }else{
+      qt3 = contract_qt3_qt2(superblock.substr(0,1), ksite, o1.H());
+   }
+   return qt3;
 }
 
 // I1*O2|psi> 
@@ -21,7 +27,12 @@ stensor3<Tm> oper_kernel_IOwf(const std::string superblock,
  			      const stensor2<Tm>& o2,
 			      const bool po2, // parity of O2
 			      const bool ifdagger=false){
-   auto qt3 = contract_qt3_qt2(superblock.substr(1,2), ksite, o2, ifdagger);
+   stensor3<Tm> qt3;
+   if(!ifdagger){
+      qt3 = contract_qt3_qt2(superblock.substr(1,2), ksite, o2);
+   }else{
+      qt3 = contract_qt3_qt2(superblock.substr(1,2), ksite, o2.H());
+   }
    // Il*Oc|psi> => (-1)^{p(l)}Oc[c',c]psi[l,c,r]
    if(po2 && superblock == "lc") qt3.row_signed();
    if(po2 && superblock == "lr") qt3.row_signed();

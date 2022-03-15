@@ -87,6 +87,7 @@ LOGS
 	- contract_qt4_qt2_info
 	- contract_qt3_qt3_info
 	- openmp error due to qt2.conjugate() for complex case [1_lih3_dcg]
+	- conjugate is treated outside contract_opxwf!
 
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 

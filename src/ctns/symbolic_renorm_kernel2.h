@@ -26,7 +26,6 @@ void symbolic_renorm_single2(const std::string& block1,
    const bool debug = false;
    if(debug) formulae.display("formulae");
    // initialization 
-   int isym = wf.info.sym.isym();
    qsym sym;
    qinfo3<Tm> *opxwf0_info, *opxwf_info;
    Tm *opxwf0_data, *opxwf_data;
@@ -49,12 +48,11 @@ void symbolic_renorm_single2(const std::string& block1,
          // form operator
          auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
 	 // opN*|wf> 
-         qsym sym_op = get_qsym_op(label, isym, index0);
-         sym = dagger? sym-sym_op : sym+sym_op;
+         sym += dagger? -optmp.sym : optmp.sym;
          opxwf_info = const_cast<qinfo3<Tm>*>(&info_dict.at(sym));
 	 opxwf_data = workspace+opsize+(idx%2)*wfsize; 
-	 contract_opxwf_info(block, optmp.info, optmp.data(),
-			     *opxwf0_info, opxwf0_data,
+	 contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
+			     optmp.info, optmp.data(),
 			     *opxwf_info, opxwf_data,
 			     1.0, false, dagger);
 	 // impose antisymmetry here

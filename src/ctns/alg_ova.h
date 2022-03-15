@@ -142,7 +142,7 @@ std::pair<fock::onstate,double> rcanon_random(const comb<Km>& icomb,
 	 wf = std::move(qt2n[idx]);
       }else if(tp == 3){
 	 const auto& site = icomb.rsites[rindex.at(std::make_pair(i,0))];
-	 auto qt3 = contract_qt3_qt2_l(site,wf);
+	 auto qt3 = contract_qt3_qt2("l",site,wf);
 	 // propogate upwards
 	 for(int j=1; j<nodes[i].size(); j++){
 	    const auto& sitej = icomb.rsites[rindex.at(std::make_pair(i,j))];
@@ -152,9 +152,9 @@ std::pair<fock::onstate,double> rcanon_random(const comb<Km>& icomb,
 	    for(int idx=0; idx<4; idx++){
 	       auto qt2 = sitej.fix_mid( idx2mdx(Km::isym, idx) );
 	       // purely change direction
-	       qt3n[idx] = contract_qt3_qt2_c(qt3,qt2.T()); 
+	       qt3n[idx] = contract_qt3_qt2("c",qt3,qt2.T()); 
 	       // \sum_ab |psi[n,a,b]|^2
-               auto psi2 = contract_qt3_qt3_cr(qt3n[idx],qt3n[idx]); 
+               auto psi2 = contract_qt3_qt3("cr",qt3n[idx],qt3n[idx]); 
 	       weights[idx] = std::real(psi2(0,0)(0,0));
 	    }
 	    std::discrete_distribution<> dist(weights.begin(),weights.end());

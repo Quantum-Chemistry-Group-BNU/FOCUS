@@ -17,10 +17,10 @@ stensor3<Tm> symbolic_renorm_single(const std::string& block1,
 	  	                    const symbolic_task<Tm>& formulae,
 			            const stensor3<Tm>& wf){
    const bool debug = false;
-   stensor3<Tm> opxwf;
+   stensor3<Tm> Hwf;
    for(int it=0; it<formulae.size(); it++){
       const auto& HTerm = formulae.tasks[it];
-      stensor3<Tm> opNxwf, opHxwf;
+      stensor3<Tm> opxwf;
       for(int idx=HTerm.size()-1; idx>=0; idx--){
          const auto& sop = HTerm.terms[idx];
          int len = sop.size();
@@ -35,13 +35,13 @@ stensor3<Tm> symbolic_renorm_single(const std::string& block1,
          int  nbar0  = sop0.nbar;
          if(debug){
             std::cout << " idx=" << idx
-           	   << " len=" << len
-           	   << " block=" << block
-           	   << " label=" << label
-           	   << " dagger=" << dagger
-           	   << " parity=" << parity
-           	   << " index0=" << index0 
-           	   << std::endl;
+           	      << " len=" << len
+           	      << " block=" << block
+           	      << " label=" << label
+           	      << " dagger=" << dagger
+           	      << " parity=" << parity
+           	      << " index0=" << index0 
+           	      << std::endl;
          }
          const auto& qops = qops_dict.at(block);
          // form opsum = wt0*op0 + wt1*op1 + ...
@@ -57,33 +57,26 @@ stensor3<Tm> symbolic_renorm_single(const std::string& block1,
             if(dagger) wtk = tools::conjugate(wtk);
             optmp += wtk*((nbark==0)? opk : opk.K(nbark));
          } // k
-         // (opN+opH)*|wf>
+	 if(dagger) linalg::xconj(optmp.size(), optmp.data());
+         // opN*|wf>
          if(idx == HTerm.size()-1){
-            opNxwf = contract_qt3_qt2(block,wf,optmp,dagger);
-	    if(key == 'H') opHxwf = contract_qt3_qt2(block,wf,optmp,!dagger);
+            opxwf = contract_opxwf(block,wf,optmp,dagger);
          }else{
-            opNxwf = contract_qt3_qt2(block,opNxwf,optmp,dagger);
-	    if(key == 'H') opHxwf = contract_qt3_qt2(block,opHxwf,optmp,!dagger);
+            opxwf = contract_opxwf(block,opxwf,optmp,dagger);
          }
          // impose antisymmetry here
          if(block == block2 and parity){ 
             if(block1 == "l"){ // lc or lr
-	       opNxwf.row_signed();
-	       if(key == 'H') opHxwf.row_signed();
+	       opxwf.row_signed();
 	    }else if(block1 == "c"){
-	       opNxwf.mid_signed();
-	       if(key == 'H') opHxwf.mid_signed();
+	       opxwf.mid_signed();
 	    }
          }
       } // idx
-      if(it == 0) opxwf.init(opNxwf.info);
-      linalg::xaxpy(opxwf.size(), 1.0, opNxwf.data(), opxwf.data());
-      if(key == 'H'){
-         double fac = HTerm.Hsign(); // (opN)^H = sgn*opH
-         linalg::xaxpy(opxwf.size(), fac, opHxwf.data(), opxwf.data());
-      }
+      if(it == 0) Hwf.init(opxwf.info);
+      linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data());
    } // it
-   return opxwf;
+   return Hwf;
 }
 
 template <typename Tm>
@@ -122,6 +115,7 @@ void symbolic_renorm_kernel(const std::string superblock,
       }
       auto opxwf = symbolic_renorm_single(block1,block2,qops_dict,key,formula,site);
       auto op = contract_qt3_qt3(superblock, site, opxwf);
+      if(key == 'H') op += op.H();
       if(key == 'H' && qops.ifkr) op += op.K();
       linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
    } // i

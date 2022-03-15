@@ -143,11 +143,6 @@ struct stensor2{
       dtensor2<Tm> operator()(const int br, const int bc) const{
          return info(br,bc,_data);
       }
-      // in-place operation
-      void conjugate(){
-         std::transform(_data, _data+info._size, _data,
-			[](const Tm& x){ return tools::conjugate(x); });
-      }
       // print
       void print(const std::string name, const int level=0) const;
       // simple arithmetic operations
