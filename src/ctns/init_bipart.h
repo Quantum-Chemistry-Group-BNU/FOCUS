@@ -271,7 +271,7 @@ void update_rbasis(renorm_basis<Tm>& rbasis,
       // check orthogonality
       if(debug_basis){
          auto ova = linalg::xgemm("N","N",rsec.coeff.H(),rsec.coeff);
-         double diff = linalg::normF(ova - linalg::identity_matrix<Tm>(dimBi));
+         double diff = (ova - linalg::identity_matrix<Tm>(dimBi)).normF();
          std::cout << " orthonormality=" << diff << std::endl;
          if(diff > 1.e-10) tools::exit("error: basis is not orthonormal!");
       }

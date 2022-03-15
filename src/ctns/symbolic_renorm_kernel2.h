@@ -48,7 +48,7 @@ void symbolic_renorm_single2(const std::string& block1,
          // form operator
          auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
 	 // opN*|wf> 
-         sym += dagger? -optmp.sym : optmp.sym;
+         sym += dagger? -optmp.info.sym : optmp.info.sym;
          opxwf_info = const_cast<qinfo3<Tm>*>(&info_dict.at(sym));
 	 opxwf_data = workspace+opsize+(idx%2)*wfsize; 
 	 contract_opxwf_info(block, *opxwf0_info, opxwf0_data,

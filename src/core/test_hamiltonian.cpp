@@ -66,8 +66,8 @@ int tests::test_hamiltonian(){
    vector<double> e(H.rows());
    auto v(H);
    eig_solver(H, e, v); // Hc=ce
-   cout << "H: symmetric_diff=" << setprecision(12) 
-        << symmetric_diff(H) << endl;  
+   cout << "H: diff_hermitian=" << setprecision(12) 
+        << H.diff_hermitian() << endl;  
    cout << "eigenvalues:\n" 
 	<< e[0] << "\n" << e[1] << "\n" << e[2] << "\n"
 	<< e[3] << "\n" << e[4] << "\n" << e[5] << endl;
@@ -81,7 +81,7 @@ int tests::test_hamiltonian(){
    assert(std::abs(e[3]+7.70051892907) < thresh);
    assert(std::abs(e[4]+7.70051892907) < thresh);
    assert(std::abs(e[5]+7.67557444095) < thresh);
-   assert(symmetric_diff(H) < thresh);
+   assert(H.diff_hermitian() < thresh);
 
    return 0;
 }

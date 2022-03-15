@@ -20,8 +20,8 @@ stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a,
       qt2.info._addr_unpack(idx,br,bc);
       size_t off2 = qt2.info._offset[idx];
       Tm* blk2 = qt2.data() + off2-1;
-      int rdim = qt2.info.get_dim(br);
-      int cdim = qt2.info.get_dim(bc);
+      int rdim = qt2.info.qrow.get_dim(br);
+      int cdim = qt2.info.qcol.get_dim(bc);
       // loop over contracted indices
       for(int bx=0; bx<qt2a.cols(); bx++){
 	 size_t off2a = qt2a.info._offset[qt2a.info._addr(br,bx)];

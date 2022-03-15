@@ -35,7 +35,7 @@ int tests::test_simpleci(){
    auto eHF = get_Hii(space2[0], int2e, int1e) + ecore;
    cout << "ref=" << space2[0] << " eHF=" << setprecision(12) << eHF << endl;
    auto H = get_Hmat(space2,int2e,int1e,ecore);
-   cout << H.rows() << " diff=" << symmetric_diff(H) << endl;
+   cout << H.rows() << " diff=" << H.diff_hermitian() << endl;
    vector<double> e(H.rows());
    auto v(H);
    eig_solver(H, e, v); // Hc=ce
@@ -78,7 +78,7 @@ int tests::test_simpleci(){
    for(int i=0; i<diag.size(); i++){
       cout << "i=" << i << " ni=" << diag[i] << endl;
    }
-   cout << "diff=" << symmetric_diff(rdm1) << endl;
+   cout << "diff=" << rdm1.diff_hermitian() << endl;
    
    // compute rdm2
    int k2 = k*(k-1)/2;
@@ -111,10 +111,10 @@ int tests::test_simpleci(){
 	 }
       }
    }
-   cout << "diff=" << symmetric_diff(rdm2) << endl;
+   cout << "diff=" << rdm2.diff_hermitian() << endl;
 
    auto rdm1b = get_rdm1_from_rdm2(rdm2);
-   auto diff1 = normF(rdm1b-rdm1);
+   auto diff1 = (rdm1b-rdm1).normF();
    cout << "diffRDM1=" << diff1 << endl;
    assert(diff1 < thresh);
 

@@ -36,7 +36,7 @@ int tests::test_fci(){
 
    // full diag
    auto H = get_Hmat(space2,int2e,int1e,ecore);
-   cout << "diff(H-H.h)=" << symmetric_diff(H) << endl;
+   cout << "diff(H-H.h)=" << H.diff_hermitian() << endl;
    vector<double> e(H.rows());
    auto v(H);
    eig_solver(H, e, v); // Hc=ce
@@ -80,7 +80,7 @@ int tests::test_fci(){
    auto rdm1 = fock::get_rdm1_from_rdm2(rdm2);
    linalg::matrix<DTYPE> rdm1b(k,k);
    fci::get_rdm1(space2,v0,v0,rdm1b);
-   auto diff = normF(rdm1b-rdm1);
+   auto diff = (rdm1b-rdm1).normF();
    cout << "|rdm1b-rdm1|=" << diff << endl;
    assert(diff < 1.e-6);
 

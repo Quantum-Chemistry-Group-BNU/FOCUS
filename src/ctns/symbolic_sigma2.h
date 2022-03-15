@@ -43,7 +43,7 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       // form operator
       auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
       // op(dagger)*|wf>
-      sym += (ifdagger^dagger)? -optmp.sym : optmp.sym;
+      sym += (ifdagger^dagger)? -optmp.info.sym : optmp.info.sym;
       opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
       opxwf_data = workspace+opsize+(idx%2)*wfsize;
       contract_opxwf_info(block, *opxwf0_info, opxwf0_data,

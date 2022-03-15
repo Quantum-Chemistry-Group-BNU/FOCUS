@@ -58,6 +58,7 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
          if(dagger) wtk = tools::conjugate(wtk);
 	 optmp += wtk*((nbark==0)? opk : opk.K(nbark));
       } // k
+      if(dagger) linalg::xconj(optmp.size(), optmp.data());
       // (opN+opH)*|wf>
       if(idx == HTerm.size()-1){
          opxwf = contract_opxwf(block,wf,optmp,(ifdagger^dagger));
@@ -68,7 +69,7 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
       if(parity) opxwf.cntr_signed(block);
    } // idx
    double fac = ifdagger? HTerm.Hsign() : 1.0; // (opN)^H = sgn*opH
-   linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data()); 
+   linalg::xaxpy(Hwf.size(), fac, opxwf.data(), Hwf.data()); 
 }
 
 template <typename Tm, typename QTm> 

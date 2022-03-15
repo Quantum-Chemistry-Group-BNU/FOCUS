@@ -2,6 +2,7 @@
 #define LINALG_H
 
 #include "blas.h"
+#include "matrix.h"
 
 extern "C" {
 // eig

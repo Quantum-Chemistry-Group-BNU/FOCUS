@@ -318,7 +318,7 @@ void init_rwfuns(comb<Km>& icomb,
       icomb.rwfuns.print("rwfuns",2);
       std::cout << "\ncheck state overlaps ..." << std::endl;
       // ova = <CTNS[i]|CTNS[j]>
-      auto ova = xgemm("N","C",icomb.rwfuns(0,0),icomb.rwfuns(0,0)).conj();
+      auto ova = linalg::xgemm("N","C",icomb.rwfuns(0,0),icomb.rwfuns(0,0)).conj();
       ova.print("ova_rwfuns");
       // ova0 = <CI[i]|CI[j]>
       linalg::matrix<Tm> ova0(nroots,nroots);
@@ -328,7 +328,7 @@ void init_rwfuns(comb<Km>& icomb,
 	 }
       }
       ova0.print("ova0_vs");
-      auto diff = linalg::normF(ova-ova0);
+      auto diff = (ova-ova0).normF();
       std::cout << "diff of ova matrices = " << diff << std::endl;
       const double thresh = 1.e-8;
       if(diff > thresh){ 

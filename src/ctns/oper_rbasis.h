@@ -116,14 +116,14 @@ void oper_check_rbasis(const comb<Km>& bra,
 	 ioff0 += n0;
       }
       auto opmat = op.to_matrix();
-      double diff = linalg::normF(opmat-tmat);
+      double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
       if(diff > thresh) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " C: p=" << orb_p 
-                   << " |opmat|=" << linalg::normF(opmat)
-                   << " |tmat|=" << linalg::normF(tmat)
+                   << " |opmat|=" << opmat.normF()
+                   << " |tmat|=" << tmat.normF()
                    << " diff=" << diff
                    << " fail=" << (diff > thresh)	
                    << std::endl;
@@ -187,14 +187,14 @@ void oper_check_rbasis(const comb<Km>& bra,
 	 ioff0 += n0;
       }
       auto opmat = op.to_matrix();
-      double diff = linalg::normF(opmat-tmat);
+      double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
       if(diff > thresh) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " A: p,q=" << orb_p << "," << orb_q
-                   << " |opmat|=" << linalg::normF(opmat)
-                   << " |tmat|=" << linalg::normF(tmat)
+                   << " |opmat|=" << opmat.normF()
+                   << " |tmat|=" << tmat.normF()
                    << " diff=" << diff
                    << " fail=" << (diff > thresh)
            	   << std::endl;
@@ -258,14 +258,14 @@ void oper_check_rbasis(const comb<Km>& bra,
 	 ioff0 += n0;
       }
       auto opmat = op.to_matrix();
-      double diff = linalg::normF(opmat-tmat);
+      double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
       if(diff > thresh) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " B: p,q=" << orb_p << "," << orb_q
-                   << " |opmat|=" << linalg::normF(opmat)
-                   << " |tmat|=" << linalg::normF(tmat)
+                   << " |opmat|=" << opmat.normF()
+                   << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
                    << " fail=" << (diff > thresh)	
            	   << std::endl;
@@ -367,14 +367,14 @@ void oper_check_rbasis(const comb<Km>& bra,
          ioff0 += n0;
       }
       auto opmat = op.to_matrix();
-      double diff = linalg::normF(opmat-tmat);
+      double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
       if(diff > thresh) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " P: p,q=" << orb_p << "," << orb_q
-                   << " |opmat|=" << linalg::normF(opmat)
-                   << " |tmat|=" << linalg::normF(tmat)
+                   << " |opmat|=" << opmat.normF()
+                   << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
                    << " fail=" << (diff > thresh)	
            	   << std::endl;
@@ -441,14 +441,14 @@ void oper_check_rbasis(const comb<Km>& bra,
          ioff0 += n0;
       }
       auto opmat = op.to_matrix();
-      double diff = linalg::normF(opmat-tmat);
+      double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
-      //if(diff > thresh) nfail++;
+      if(diff > thresh) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " Q: p,s=" << orb_p << "," << orb_s
-                   << " |opmat|=" << linalg::normF(opmat)
-                   << " |tmat|=" << linalg::normF(tmat)
+                   << " |opmat|=" << opmat.normF()
+                   << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
                    << " fail=" << (diff > thresh)	
            	   << std::endl;
@@ -531,14 +531,14 @@ void oper_check_rbasis(const comb<Km>& bra,
          ioff0 += n0;
       }
       auto opmat = op.to_matrix();
-      double diff = linalg::normF(opmat-tmat);
+      double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
       if(diff > thresh) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " S: p=" << orb_p
-                   << " |opmat|=" << linalg::normF(opmat)
-                   << " |tmat|=" << linalg::normF(tmat)
+                   << " |opmat|=" << opmat.normF()
+                   << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
                    << " fail=" << (diff > thresh)	
            	   << std::endl;
@@ -626,14 +626,14 @@ void oper_check_rbasis(const comb<Km>& bra,
          ioff0 += n0;
       }
       auto opmat = op.to_matrix();
-      double diff = linalg::normF(opmat-tmat);
+      double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
       if(diff > thresh) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " H:"
-                   << " |opmat|=" << linalg::normF(opmat)
-                   << " |tmat|=" << linalg::normF(tmat)
+                   << " |opmat|=" << opmat.normF()
+                   << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
                    << " fail=" << (diff > thresh)	
            	   << std::endl;

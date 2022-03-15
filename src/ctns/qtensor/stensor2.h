@@ -319,7 +319,7 @@ double stensor2<Tm>::check_identityMatrix(const double thresh_ortho, const bool 
 	 }
          auto qr = info.qrow.get_sym(br);
          int ndim = info.qrow.get_dim(br);
-         double diff = linalg::normF(blk.to_matrix() - linalg::identity_matrix<Tm>(ndim));
+         double diff = (blk.to_matrix() - linalg::identity_matrix<Tm>(ndim)).normF();
 	 maxdiff = std::max(diff,maxdiff);
 	 if(debug || (!debug && diff > thresh_ortho)){ 
 	    std::cout << " br=" << br << " qr=" << qr << " ndim=" << ndim 

@@ -205,6 +205,17 @@ struct matrix : public BaseMatrix<Tm> {
 	 }
 	 return tr;
       }
+      // normF = ||A||_F = sqrt(\sum_{ij}|aij|^2)
+      double normF() const{
+	 return xnrm2(_size, _data);
+      }
+      // ||A - Ah||_F
+      double diff_hermitian() const{
+         assert(_rows == _cols);
+	 matrix<Tm> diff(*this);
+	 diff -= this->H();
+	 return diff.normF();
+      }
       // transpose
       matrix T() const{
          matrix<Tm> At(_cols,_rows);
@@ -215,13 +226,7 @@ struct matrix : public BaseMatrix<Tm> {
          }
          return At;
       }
-      // complex case: conjugate & Hermitian conjugate
-      matrix conj() const{
-	 matrix<Tm> Ac(_rows,_cols);
-         std::transform(_data, _data+_size, Ac._data,
-			[](const Tm& x){ return tools::conjugate(x); });
-	 return Ac;
-      }
+      // complex case: Hermitian conjugate & conjugate
       matrix H() const{
          matrix<Tm> Ah(_cols,_rows);
          for(int j=0; j<_rows; j++){
@@ -230,6 +235,12 @@ struct matrix : public BaseMatrix<Tm> {
             }
          }
          return Ah;
+      }
+      matrix conj() const{
+	 matrix<Tm> Ac(_rows,_cols);
+         std::transform(_data, _data+_size, Ac._data,
+			[](const Tm& x){ return tools::conjugate(x); });
+	 return Ac;
       }
       // extract real & imag parts
       matrix<double> real() const{
@@ -339,31 +350,26 @@ struct matrix : public BaseMatrix<Tm> {
 	 return *this;
       }
       matrix& operator *=(const Tm fac){
-         std::transform(_data, _data+_size, _data,
-			[fac](const Tm& x){ return fac*x; });
+	 xscal(_size, fac, _data);
 	 return *this;
       }
       matrix& operator +=(const matrix<Tm>& mat){
-         std::transform(_data, _data+_size, mat._data, _data,
-			[](const Tm& x, const Tm& y){ return x+y; });
+	 xaxpy(_size, 1.0,  mat._data, _data);
 	 return *this;
       }
       matrix& operator -=(const matrix<Tm>& mat){
-         std::transform(_data, _data+_size, mat._data, _data,
-			[](const Tm& x, const Tm& y){ return x-y; });
+	 xaxpy(_size, -1.0,  mat._data, _data);
 	 return *this;
       }
       matrix operator -() const{
 	 matrix<Tm> mat(_rows,_cols);
-         std::transform(_data, _data+_size, mat._data,
-			[](const Tm& x){ return -x; });
+	 xaxpy(_size, -1.0, _data, mat._data);
 	 return mat;
       }
       // simple */+/-
       friend matrix operator *(const Tm fac, const matrix<Tm>& mat1){
-         matrix<Tm> mat(mat1.rows(),mat1.cols());
-	 std::transform(mat1._data, mat1._data+mat._size, mat._data,
-      	                [fac](const Tm& x){ return fac*x; });
+         matrix<Tm> mat(mat1);
+	 mat *= fac;
          return mat;
       }
       friend matrix operator *(const matrix<Tm>& mat1, const Tm fac){
@@ -371,16 +377,14 @@ struct matrix : public BaseMatrix<Tm> {
       }
       friend matrix operator +(const matrix<Tm>& mat1, const matrix<Tm>& mat2){
          assert(mat1._size == mat2._size);
-         matrix<Tm> mat(mat1.rows(),mat1.cols());
-         std::transform(mat1._data, mat1._data+mat1._size, mat2._data, mat._data,
-      		        [](const Tm& x, const Tm& y){ return x+y; });
+         matrix<Tm> mat(mat1);
+         mat += mat2; 
          return mat;
       }
       friend matrix operator -(const matrix<Tm>& mat1, const matrix<Tm>& mat2){
          assert(mat1._size == mat2._size);
-         matrix<Tm> mat(mat1.rows(),mat1.cols());
-         std::transform(mat1._data, mat1._data+mat1._size, mat2._data, mat._data,
-              	        [](const Tm& x, const Tm& y){ return x-y; });
+         matrix<Tm> mat(mat1);
+         mat -= mat2;
          return mat;
       }
       // M(l,r) = M1(bar{l},bar{r})^* given parity of qr and qc
@@ -485,7 +489,6 @@ matrix<Tm> identity_matrix(const int n){
 // random matrix
 template <typename Tm>
 matrix<Tm> random_matrix(const int m, const int n){};
-
 template <>
 inline matrix<double> random_matrix(const int m, const int n){
    std::uniform_real_distribution<double> dist(-1,1);
@@ -498,13 +501,46 @@ inline matrix<double> random_matrix(const int m, const int n){
    }
    return rand;
 }
-
 template <>
 inline matrix<std::complex<double>> random_matrix(const int m, const int n){
    const std::complex<double> i(0.0,1.0);
    matrix<std::complex<double>> rand(m,n);
    rand = random_matrix<double>(m,n) + i*random_matrix<double>(m,n);
    return rand;
+}
+
+// C := alpha*op( A )*op( B )
+template <typename Tm>
+matrix<Tm> xgemm(const char* TRANSA, const char* TRANSB,
+	         const BaseMatrix<Tm>& A, const BaseMatrix<Tm>& B,
+		 const Tm alpha=1.0){
+   int M, N, K;
+   int LDA, LDB, LDC;
+   // TRANS is c-type string (character array), input "N" not 'N' 
+   char trans_A = toupper(TRANSA[0]); 
+   char trans_B = toupper(TRANSB[0]);
+   assert(trans_A == 'N' || trans_A == 'T' || trans_A == 'C');
+   assert(trans_B == 'N' || trans_B == 'T' || trans_B == 'C');
+   if(trans_A == 'N'){
+      M = A.rows(); K = A.cols(); LDA = M; 
+   }else{
+      M = A.cols(); K = A.rows(); LDA = K; 
+   }
+   if(trans_B == 'N'){
+      assert(K == B.rows());
+      N = B.cols(); LDB = K;
+   }else{
+      assert(K == B.cols());
+      N = B.rows(); LDB = N;
+   }
+   // we assume the exact match of matrix size in our applications
+   matrix<Tm> C(M,N);
+   LDC = M;
+   const Tm beta = 0.0;
+   xgemm(&trans_A, &trans_B, &M, &N, &K, &alpha, 
+	 A.data(), &LDA, B.data(), &LDB, &beta, 
+	 C.data(), &LDC);
+   return C;
 }
 
 } // linalg

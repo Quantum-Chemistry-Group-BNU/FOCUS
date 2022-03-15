@@ -122,7 +122,7 @@ struct pdvdsonSolver_nkr{
 	       std::cout << "CheckDiag passed successfully!" << std::endl;
             }
             // check symmetry
-            auto sdiff = linalg::symmetric_diff(H);
+            auto sdiff = H.diff_hermitian();
 	    std::cout << "|H-H.h|=" << sdiff << std::endl;
             if(sdiff > 1.e-5){
                (H-H.H()).print("H-H.h");
@@ -160,7 +160,7 @@ struct pdvdsonSolver_nkr{
                        &alpha,vbas.data(),&ndim,wbas.data(),&ndim,
                        &beta,tmpH.data(),&nsub);
          // 2. check symmetry property
-         double diff = linalg::symmetric_diff(tmpH);
+         double diff = tmpH.diff_hermitian();
          if(diff > crit_skewH){
             tmpH.print("tmpH");
             std::string msg = "error: ctns::pdvdsonSolver_nkr::subspace_solver: diff_skewH=";

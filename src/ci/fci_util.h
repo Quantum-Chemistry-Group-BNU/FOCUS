@@ -454,7 +454,7 @@ struct sparse_hamiltonian{
                     << std::endl;
             }
          } 
-	 double diff = normF(H1-H0);
+	 double diff = (H1-H0).normF();
          std::cout << "|H1-H0|=" << diff << std::endl;
 	 if(diff > thresh){
             std::string msg = "error: difference is greater than thresh=";

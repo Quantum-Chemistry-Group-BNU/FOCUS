@@ -97,7 +97,7 @@ int tests::test_ctns(){
    Sij_ci.print("Sij_ci");
    auto Sij_ctns = ctns::get_Smat(icomb);
    Sij_ctns.print("Sij");
-   double diff_ctns = normF(Sij_ctns - Sij_ci);
+   double diff_ctns = (Sij_ctns - Sij_ci).normF();
    cout << "\ncheck diff_Sij[ctns] = " << diff_ctns << endl;
    if(diff_ctns > thresh) tools::exit(string("error: diff_Sij[ctns] > thresh=")+to_string(thresh));
    // 3.2 <CI|CTNS>
@@ -105,7 +105,7 @@ int tests::test_ctns(){
    auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
    Sij_mix.print("Sij_mix");
    // check
-   double diff_mix = normF(Sij_mix - Sij_ci);
+   double diff_mix = (Sij_mix - Sij_ci).normF();
    cout << "\ncheck diff_Sij[mix] = " << diff_mix << endl;
    if(diff_mix > thresh) tools::exit(string("error: diff_Sij[mix] > thresh=")+to_string(thresh));
 
@@ -132,7 +132,7 @@ int tests::test_ctns(){
    Hij_ci.print("Hij_ci",8);
    auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd.scratch, alg_renorm);
    Hij_ctns.print("Hij_ctns",8);
-   double diffH = normF(Hij_ctns - Hij_ci);
+   double diffH = (Hij_ctns - Hij_ci).normF();
    cout << "\ncheck diffH=" << diffH << endl;
    if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
 

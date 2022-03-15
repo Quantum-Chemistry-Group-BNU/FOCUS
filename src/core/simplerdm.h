@@ -117,7 +117,7 @@ linalg::matrix<Tm> get_rdm1_from_rdm2(const linalg::matrix<Tm>& rdm2){
 	 }
       }
    }
-   double diff = symmetric_diff(rdm1);
+   double diff = rdm1.diff_hermitian();
    assert(diff < 1.e-8);
    // normalization
    double dn2 = std::real(rdm1.trace()); // tr(rdm2) is normalized to n(n-1)

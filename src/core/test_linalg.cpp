@@ -21,8 +21,8 @@ int tests::test_linalg(){
    mat(1,2) = 1.0;
    mat(2,0) = 3.0;
    mat.print("mat");
-   cout << normF(mat) << endl;
-   cout << symmetric_diff(mat) << endl;
+   cout << mat.normF() << endl;
+   cout << mat.diff_hermitian() << endl;
 
    auto mat2 = xgemm("N","N",mat,mat);
    mat2.print("mat2");
@@ -38,8 +38,8 @@ int tests::test_linalg(){
    cmat(2,0) = 3.0;
    cmat(2,1) = 1.0+1.0*i;
    cmat.print("cmat");
-   cout << normF(cmat) << endl;
-   cout << symmetric_diff(cmat) << endl;
+   cout << cmat.normF() << endl;
+   cout << cmat.diff_hermitian() << endl;
 
    const complex<double> ctmp={1.0,0.0};
    cmat += ctmp*random_matrix<complex<double>>(n,n);
@@ -59,7 +59,7 @@ int tests::test_linalg(){
    cout << "s0=" << s[0] << endl;
    auto tmp1 = xgemm("N","N",U,diagonal_matrix(s));
    auto tmp2 = xgemm("N","N",tmp1,Vt);
-   auto diff_svd = normF(mat-tmp2);
+   auto diff_svd = (mat-tmp2).normF();
    cout << "diff_svd=" << diff_svd << endl;
    assert(diff_svd < thresh);
   
@@ -70,7 +70,7 @@ int tests::test_linalg(){
    cout << "s0=" << sc[0] << endl;
    auto tmp1c = xgemm("N","N",Uc,diagonal_cmatrix(sc));
    auto tmp2c = xgemm("N","N",tmp1c,Vtc);
-   auto diff_svdc = normF(cmat-tmp2c);
+   auto diff_svdc = (cmat-tmp2c).normF();
    cmat.print("cmat");
    tmp2c.print("cmat_svd");
    cout << "diff_svdc=" << diff_svdc << endl;
@@ -88,13 +88,13 @@ int tests::test_linalg(){
    auto diff = xgemm("T","N",vt,v) - identity_matrix<double>(n);
    v.print("V");
    diff.print("VtV-idn");
-   cout << "normF=" << normF(diff) << endl;
+   cout << "normF=" << diff.normF() << endl;
    // Av-ve
    auto Av = xgemm("N","N",mat,v);
    auto ve = xgemm("N","N",v,diagonal_matrix(e));
    auto diff1 = Av - ve;
    diff1.print("Av-ve");
-   double diff_eig = normF(diff1);
+   double diff_eig = diff1.normF();
    cout << "normF=" << diff_eig << endl;
    assert(diff_eig < thresh);
 
@@ -107,13 +107,13 @@ int tests::test_linalg(){
    auto diffc = xgemm("C","N",vtc,vc) - identity_matrix<complex<double>>(n);
    vc.print("Vc");
    diffc.print("VtV-idn");
-   cout << "normF=" << normF(diffc) << endl;
+   cout << "normF=" << diffc.normF() << endl;
    // Av-ve
    auto Avc = xgemm("N","N",cmat,vc);
    auto vce = xgemm("N","N",vc,diagonal_cmatrix(e));
    auto diff1c = Avc - vce;
    diff1c.print("Av-ve");
-   double diff_eigc = normF(diff1c); 
+   double diff_eigc = diff1c.normF();
    cout << "normF=" << diff_eigc << endl;
    assert(diff_eigc < thresh);
 

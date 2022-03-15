@@ -236,8 +236,7 @@ int get_ortho_basis_qt(const int ndim,
 	 linalg::xcopy(ndim*nindp, rbas_new.data(), V.col(neig));
          auto ova = linalg::xgemm("C","N",V,V);
          ova.print("ova");
-	 auto dev = ova - linalg::identity_matrix<Tm>(neig+nindp);
-	 double diff = normF(dev);
+	 double diff = (ova - linalg::identity_matrix<Tm>(neig+nindp)).normF();
 	 std::cout << "diff=" << diff << std::endl;
       }
       //-------------------------------------------------------------

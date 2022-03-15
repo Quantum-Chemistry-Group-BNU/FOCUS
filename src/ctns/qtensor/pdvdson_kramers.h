@@ -179,7 +179,7 @@ struct pdvdsonSolver_kr{
                        &alpha,vbas.data(),&ndim,wbas.data(),&ndim,
                        &beta,tmpH.data(),&nsub);
        	 // 2. check symmetry property
-         double diff = linalg::symmetric_diff(tmpH);
+         double diff = tmpH.diff_hermitian();
          if(diff > crit_skewH){
             tmpH.print("tmpH");
 	    std::string msg = "error in ctns::pdvdsonSolver_kr::subspace_solver_even!";
@@ -252,7 +252,7 @@ struct pdvdsonSolver_kr{
 	    pos_new[i+nsub2] = 2*i+1;
 	 }
        	 // check symmetry property
-         double diff = linalg::symmetric_diff(tmpH);
+         double diff = tmpH.diff_hermitian();
          if(diff > crit_skewH){
             tmpH.print("tmpH");
 	    std::string msg = "error in ctns::pdvdsonSolver_kr::subspace_solver_odd!";
