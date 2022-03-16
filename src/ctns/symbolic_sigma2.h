@@ -20,9 +20,14 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 		      const size_t& wfsize,
 		      Tm* workspace,
 		      const bool ifdagger){
-//   const bool debug = true;
-//   if(debug) std::cout << "\niterm=" << it << " HTerm=" << HTerm << std::endl;
 //   auto t0 = tools::get_time();
+   const bool debug = false;
+   if(debug){ 
+      std::cout << "iterm=" << it 
+		<< " ifdagger=" << ifdagger
+	        << " HTerm=" << HTerm 
+		<< std::endl;
+   }
    // compute (HTerm+HTerm.H)*|wf>
    qsym sym;
    QInfo *opxwf0_info, *opxwf_info;
@@ -37,19 +42,19 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       const auto& index0 = sop0.index;
       const auto& parity = sop0.parity;
       const auto& label  = sop0.label;
-      const auto& dagger = sop0.dagger;
+      const auto& dagger = ifdagger^sop0.dagger;
       const auto& block = sop0.block;
       const auto& qops = qops_dict.at(block);
       // form operator
       auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
       // op(dagger)*|wf>
-      sym += (ifdagger^dagger)? -optmp.info.sym : optmp.info.sym;
+      sym += dagger? -optmp.info.sym : optmp.info.sym;
       opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
       opxwf_data = workspace+opsize+(idx%2)*wfsize;
       contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
 			  optmp.info, optmp.data(),
              	          *opxwf_info, opxwf_data,
-             	          1.0, false, (ifdagger^dagger));
+             	          1.0, false, dagger);
       // impose antisymmetry here
       if(parity) cntr_signed(block, *opxwf_info, opxwf_data);
       opxwf0_info = opxwf_info;
