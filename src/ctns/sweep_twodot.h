@@ -26,7 +26,6 @@ void sweep_twodot(const input::schedule& schd,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore,
 		  const std::string scratch){
-   const bool debug_sweep = (schd.ctns.verbose > 0);
    int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
    rank = icomb.world.rank();
@@ -79,7 +78,7 @@ void sweep_twodot(const input::schedule& schd,
    int sc1 = suppc1.size();
    int sc2 = suppc2.size();
    assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
-   if(rank == 0 && debug_sweep){
+   if(rank == 0){
       std::cout << "support info: (sl,sr,sc1,sc2)=" 
 		<< sl << "," << sr << "," << sc1 << "," << sc2
 		<< std::endl;
@@ -121,7 +120,7 @@ void sweep_twodot(const input::schedule& schd,
    const auto& qc2 = c2qops.qbra;
    auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
    stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
-   if(rank == 0 && debug_sweep) wf.print("wf"); 
+   if(rank == 0) wf.print("wf"); 
  
    // 3. Davidson solver for wf
    int nsub = wf.size();

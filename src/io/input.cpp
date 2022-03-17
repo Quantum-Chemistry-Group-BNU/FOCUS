@@ -216,8 +216,6 @@ void params_ctns::read(ifstream& istrm){
          nsample = stoi(line.substr(7));
       }else if(line.substr(0,7)=="ndetprt"){
          ndetprt = stoi(line.substr(7));
-      }else if(line.substr(0,7)=="verbose"){
-         verbose = stoi(line.substr(7));
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
@@ -300,8 +298,6 @@ void params_ctns::print() const{
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;
    cout << "ndetprt = " << ndetprt << endl;
-   // debug level
-   cout << "verbose = " << verbose << endl;
    // ZL@20220210 new task structure
    cout << "task_sdiag = " << task_sdiag << endl;
    cout << "task_ham = " << task_ham << endl;

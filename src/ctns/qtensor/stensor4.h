@@ -261,7 +261,7 @@ void stensor4<Tm>::print(const std::string name, const int level) const{
 
 // wf[lc1c2r] = wf(row,col,mid,ver)
 template <typename Tm>
-void cntr_signed(const std::string block, qinfo4<Tm>& info, Tm* data){
+void cntr_signed(const std::string block, const qinfo4<Tm>& info, Tm* data){
    if(block == "r"){
       int br, bc, bm, bv;
       for(int i=0; i<info._nnzaddr.size(); i++){

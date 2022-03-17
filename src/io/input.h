@@ -97,8 +97,7 @@ private:
 	 & nroots & guess & maxsweep & maxbond & ctrls 
 	 & alg_hvec & alg_renorm & save_formulae
 	 & cisolver & maxcycle
-         & rcanon_load & rcanon_file & iroot & nsample & ndetprt 
-	 & verbose;  
+         & rcanon_load & rcanon_file & iroot & nsample & ndetprt; 
    }
 public:
    void read(std::ifstream& istrm);
@@ -137,8 +136,6 @@ public:
    int iroot = 0;
    int nsample = 1.e5;
    int ndetprt = 10;
-   // debug level
-   int verbose = 0; 
 };
 
 //

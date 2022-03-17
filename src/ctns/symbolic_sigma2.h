@@ -54,8 +54,7 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
       opxwf_data = workspace+opsize+(idx%2)*wfsize;
       contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
 			  optmp.info, optmp.data(),
-             	          *opxwf_info, opxwf_data,
-             	          1.0, false, op_dagger);
+             	          *opxwf_info, opxwf_data, op_dagger);
       // impose antisymmetry here
       if(parity) cntr_signed(block, *opxwf_info, opxwf_data);
       opxwf0_info = opxwf_info;

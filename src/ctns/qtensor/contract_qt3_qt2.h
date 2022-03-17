@@ -22,21 +22,21 @@ stensor3<Tm> contract_qt3_qt2(const std::string cpos,
       direction3 dir = {dext, qt3a.dir_col(), qt3a.dir_mid()};
       qt3.init(sym, qext, qt3a.info.qcol, qt3a.info.qmid, dir);
       contract_qt3_qt2_info_l(qt3a.info, qt3a.data(), qt2.info, qt2.data(),
-           	              qt3.info, qt3.data(), 1.0, false, iftrans);
+           	              qt3.info, qt3.data(), iftrans);
    }else if(cpos == "r"){
       assert(qt3a.dir_col() == !dint);
       assert(qt3a.info.qcol == qint);
       direction3 dir = {qt3a.dir_row(), dext, qt3a.dir_mid()};
       qt3.init(sym, qt3a.info.qrow, qext, qt3a.info.qmid, dir);
       contract_qt3_qt2_info_r(qt3a.info, qt3a.data(), qt2.info, qt2.data(), 
-           	              qt3.info, qt3.data(), 1.0, false, iftrans); 
+           	              qt3.info, qt3.data(), iftrans); 
    }else if(cpos == "c"){
       assert(qt3a.dir_mid() == !dint);
       assert(qt3a.info.qmid == qint);
       direction3 dir = {qt3a.dir_row(), qt3a.dir_col(), dext};
       qt3.init(sym, qt3a.info.qrow, qt3a.info.qcol, qext, dir);
       contract_qt3_qt2_info_c(qt3a.info, qt3a.data(), qt2.info, qt2.data(), 
-   		              qt3.info, qt3.data(), 1.0, false, iftrans); 
+   		              qt3.info, qt3.data(), iftrans); 
    }else{
       std::cout << "error: no such case in contract_qt3_qt2! cpos=" 
 	        << cpos << std::endl;
@@ -53,17 +53,14 @@ stensor3<Tm> contract_qt3_qt2(const std::string cpos,
 //  x\--*--c
 template <typename Tm>
 void contract_qt3_qt2_info_l(const qinfo3<Tm>& qt3a_info,
-	       		     Tm* qt3a_data,	
+	       		     const Tm* qt3a_data,	
 		 	     const qinfo2<Tm>& qt2_info,
-			     Tm* qt2_data,
-			     qinfo3<Tm>& qt3_info,
+			     const Tm* qt2_data,
+			     const qinfo3<Tm>& qt3_info,
 			     Tm* qt3_data,
-			     const double talpha,
-			     const bool accum,
 			     const bool iftrans=false){
+   const Tm alpha = 1.0, beta = 0.0;
    const char* transa = iftrans? "T" : "N";
-   const Tm alpha = static_cast<Tm>(talpha);
-   const Tm beta = accum? 1.0 : 0.0; 
    int br, bc, bm;
    for(int i=0; i<qt3_info._nnzaddr.size(); i++){
       int idx = qt3_info._nnzaddr[i];
@@ -85,17 +82,16 @@ void contract_qt3_qt2_info_l(const qinfo3<Tm>& qt3a_info,
 	 ifzero = false; 
          // qt3(r,c,m) = \sum_x qt2(r,x)*qt3a(x,c,m) ; iftrans=false 
          // 	       = \sum_x qt2(x,r)*qt3a(x,c,m) ; iftrans=true
-	 Tm* blk3a = qt3a_data + off3a-1;
-	 Tm* blk2 = qt2_data + off2-1;
+	 const Tm* blk3a = qt3a_data + off3a-1;
+	 const Tm* blk2 = qt2_data + off2-1;
 	 int xdim = qt3a_info.qrow.get_dim(bx);
 	 int LDA = iftrans? xdim : rdim;
 	 int cmdim = cdim*mdim;
-         // xgemm(transa,"N",alpha,blk2b,blk3a.get(im),beta,blk3.get(im));
 	 linalg::xgemm(transa, "N", &rdim, &cmdim, &xdim, &alpha,
 		       blk2, &LDA, blk3a, &xdim, &beta,
 		       blk3, &rdim); 
       } // bx
-      if(ifzero && !accum) memset(blk3, 0, size*sizeof(Tm));
+      if(ifzero) memset(blk3, 0, size*sizeof(Tm));
    } // i
 }
 
@@ -107,17 +103,14 @@ void contract_qt3_qt2_info_l(const qinfo3<Tm>& qt3a_info,
 //  r--*--/ x/c
 template <typename Tm>
 void contract_qt3_qt2_info_r(const qinfo3<Tm>& qt3a_info,
-	       		     Tm* qt3a_data,	
+	       		     const Tm* qt3a_data,	
 		 	     const qinfo2<Tm>& qt2_info,
-			     Tm* qt2_data,
-			     qinfo3<Tm>& qt3_info,
+			     const Tm* qt2_data,
+			     const qinfo3<Tm>& qt3_info,
 			     Tm* qt3_data,
-			     const double talpha,
-			     const bool accum,
 			     const bool iftrans=false){
+   const Tm alpha = 1.0, beta = 0.0;
    const char* transb = iftrans? "N" : "T";
-   const Tm alpha = static_cast<Tm>(talpha);
-   const Tm beta = accum? 1.0 : 0.0;
    int br, bc, bm;
    for(int i=0; i<qt3_info._nnzaddr.size(); i++){
       int idx = qt3_info._nnzaddr[i];
@@ -139,22 +132,21 @@ void contract_qt3_qt2_info_r(const qinfo3<Tm>& qt3a_info,
 	 ifzero = false;
 	 // qt3(r,c,m) = \sum_x qt2(c,x)*qt3a(r,x,m) ; iftrans=false 
 	 // 	       = \sum_x qt2(x,c)*qt3a(r,x,m) ; iftrans=true
-	 Tm* blk3a = qt3a_data + off3a-1;
-	 Tm* blk2 = qt2_data + off2-1;
+	 const Tm* blk3a = qt3a_data + off3a-1;
+	 const Tm* blk2 = qt2_data + off2-1;
 	 int xdim = qt3a_info.qcol.get_dim(bx);
 	 int LDB = iftrans? xdim : cdim;
 	 int rcdim = rdim*cdim;
 	 int rxdim = rdim*xdim;
 	 for(int im=0; im<mdim; im++){
-            //xgemm("N",transb,alpha,blk3a.get(im),blk2b,beta,blk3.get(im));
-	    Tm* blk3a_im = blk3a + im*rxdim;
+	    const Tm* blk3a_im = blk3a + im*rxdim;
 	    Tm* blk3_im = blk3 + im*rcdim;
 	    linalg::xgemm("N", transb, &rdim, &cdim, &xdim, &alpha,
 			  blk3a_im, &rdim, blk2, &LDB, &beta,
 			  blk3_im, &rdim);
          } // im
       } // bx
-      if(ifzero && !accum) memset(blk3, 0, size*sizeof(Tm));
+      if(ifzero) memset(blk3, 0, size*sizeof(Tm));
    } // i
 }
 
@@ -167,17 +159,14 @@ void contract_qt3_qt2_info_r(const qinfo3<Tm>& qt3a_info,
 //  r--*--c
 template <typename Tm>
 void contract_qt3_qt2_info_c(const qinfo3<Tm>& qt3a_info,
-	       		     Tm* qt3a_data,	
+	       		     const Tm* qt3a_data,	
 		 	     const qinfo2<Tm>& qt2_info,
-			     Tm* qt2_data,
-			     qinfo3<Tm>& qt3_info,
+			     const Tm* qt2_data,
+			     const qinfo3<Tm>& qt3_info,
 			     Tm* qt3_data,
-			     const double talpha,
-			     const bool accum,
 			     const bool iftrans=false){
+   const Tm alpha = 1.0, beta = 0.0;
    const char* transb = iftrans? "N" : "T";
-   const Tm alpha = static_cast<Tm>(talpha);
-   const Tm beta = accum? 1.0 : 0.0;
    int br, bc, bm;
    for(int i=0; i<qt3_info._nnzaddr.size(); i++){
       int idx = qt3_info._nnzaddr[i];
@@ -199,8 +188,8 @@ void contract_qt3_qt2_info_c(const qinfo3<Tm>& qt3a_info,
 	 ifzero = false;
          // qt3(r,c,m) = \sum_x qt2(m,x)*qt3a(r,c,x) ; iftrans=false 
          // 	       = \sum_x qt2(x,m)*qt3a(r,c,x) ; iftrans=true
-	 Tm* blk3a = qt3a_data + off3a-1;
-	 Tm* blk2 = qt2_data + off2-1;
+	 const Tm* blk3a = qt3a_data + off3a-1;
+	 const Tm* blk2 = qt2_data + off2-1;
 	 int xdim = qt3a_info.qmid.get_dim(bx);
          int LDB = iftrans? xdim : mdim;
 	 int rcdim = rdim*cdim;
@@ -208,7 +197,7 @@ void contract_qt3_qt2_info_c(const qinfo3<Tm>& qt3a_info,
                        blk3a, &rcdim, blk2, &LDB, &beta,
 	               blk3, &rcdim);
       } // bx
-      if(ifzero && !accum) memset(blk3, 0, size*sizeof(Tm));
+      if(ifzero) memset(blk3, 0, size*sizeof(Tm));
    } // i
 }
 

@@ -58,10 +58,10 @@ void contract_qt3_qt3_info(const std::string superblock,
 //          \--*--c qt3b
 template <typename Tm>
 void contract_qt3_qt3_info_lc(const qinfo3<Tm>& qt3a_info,
-	       		      Tm* qt3a_data,	
+	       		      const Tm* qt3a_data,	
 			      const qinfo3<Tm>& qt3b_info,
-			      Tm* qt3b_data,
-			      qinfo2<Tm>& qt2_info,
+			      const Tm* qt3b_data,
+			      const qinfo2<Tm>& qt2_info,
 			      Tm* qt2_data){
    const Tm alpha = 1.0, beta = 1.0;
    // loop over qt3a
@@ -70,7 +70,7 @@ void contract_qt3_qt3_info_lc(const qinfo3<Tm>& qt3a_info,
       int idx = qt3a_info._nnzaddr[i];
       qt3a_info._addr_unpack(idx,bx,br,bm);
       size_t off3a = qt3a_info._offset[idx];
-      Tm* blk3a = qt3a_data + off3a-1;
+      const Tm* blk3a = qt3a_data + off3a-1;
       int xdim = qt3a_info.qrow.get_dim(bx);
       int rdim = qt3a_info.qcol.get_dim(br);
       int mdim = qt3a_info.qmid.get_dim(bm);
@@ -81,15 +81,14 @@ void contract_qt3_qt3_info_lc(const qinfo3<Tm>& qt3a_info,
          size_t off2 = qt2_info._offset[qt2_info._addr(br,bc)];
          if(off2 == 0) continue;
          // qt2(r,c) = Conj[qt3a](x,r,m)*qt3b(x,c,m)
-         Tm* blk3b = qt3b_data + off3b-1;
+         const Tm* blk3b = qt3b_data + off3b-1;
 	 Tm* blk2 = qt2_data + off2-1;
 	 int cdim = qt2_info.qcol.get_dim(bc);
 	 int xrdim = xdim*rdim;
 	 int xcdim = xdim*cdim;
          for(int im=0; im<mdim; im++){
-	    Tm* blk3a_im = blk3a + im*xrdim;
-	    Tm* blk3b_im = blk3b + im*xcdim;
-            // xgemm("C","N",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
+	    const Tm* blk3a_im = blk3a + im*xrdim;
+	    const Tm* blk3b_im = blk3b + im*xcdim;
 	    linalg::xgemm("C", "N", &rdim, &cdim, &xdim, &alpha,
 			  blk3a_im, &xdim, blk3b_im, &xdim, &beta,
 			  blk2, &rdim);
@@ -117,7 +116,7 @@ void contract_qt3_qt3_info_cr(const qinfo3<Tm>& qt3a_info,
       int idx = qt3a_info._nnzaddr[i];
       qt3a_info._addr_unpack(idx,br,bx,bm);
       size_t off3a = qt3a_info._offset[idx];
-      Tm* blk3a = qt3a_data + off3a-1;
+      const Tm* blk3a = qt3a_data + off3a-1;
       int rdim = qt3a_info.qrow.get_dim(br);
       int xdim = qt3a_info.qcol.get_dim(bx);
       int mdim = qt3a_info.qmid.get_dim(bm);
@@ -128,11 +127,10 @@ void contract_qt3_qt3_info_cr(const qinfo3<Tm>& qt3a_info,
 	 size_t off2 = qt2_info._offset[qt2_info._addr(br,bc)];
 	 if(off2 == 0) continue;
 	 // qt2(r,c) = Conj[qt3a](r,x,m)*qt3b(c,x,m)
-	 Tm* blk3b = qt3b_data + off3b-1;
+	 const Tm* blk3b = qt3b_data + off3b-1;
 	 Tm* blk2 = qt2_data + off2-1;
 	 int cdim = qt2_info.qcol.get_dim(bc);
          int xmdim = xdim*mdim;
-	 // xgemm("N","C",1.0,blk3a.get(im),blk3b.get(im),1.0,blk2);
 	 linalg::xgemm("N", "C", &rdim, &cdim, &xmdim, &alpha,
 		       blk3a, &rdim, blk3b, &cdim, &beta,
 		       blk2, &rdim);
@@ -162,7 +160,7 @@ void contract_qt3_qt3_info_lr(const qinfo3<Tm>& qt3a_info,
       int idx = qt3a_info._nnzaddr[i];
       qt3a_info._addr_unpack(idx,bx,by,br);
       size_t off3a = qt3a_info._offset[idx];
-      Tm* blk3a = qt3a_data + off3a-1;
+      const Tm* blk3a = qt3a_data + off3a-1;
       int xdim = qt3a_info.qrow.get_dim(bx);
       int ydim = qt3a_info.qcol.get_dim(by);
       int rdim = qt3a_info.qmid.get_dim(br);
@@ -173,7 +171,7 @@ void contract_qt3_qt3_info_lr(const qinfo3<Tm>& qt3a_info,
 	 size_t off2 = qt2_info._offset[qt2_info._addr(br,bc)];
 	 if(off2 == 0) continue;
 	 // qt2(r,c) = Conj[qt3a](x,y,r)*qt3b(x,y,c)
-	 Tm* blk3b = qt3b_data + off3b-1;
+	 const Tm* blk3b = qt3b_data + off3b-1;
 	 Tm* blk2 = qt2_data + off2-1;
          int cdim = qt2_info.qcol.get_dim(bc);
 	 int xydim = xdim*ydim;

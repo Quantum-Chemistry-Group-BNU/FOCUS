@@ -286,7 +286,7 @@ stensor2<Tm> stensor3<Tm>::fix_mid(const std::pair<int,int> mdx) const{
 // deal with fermionic sign in fermionic direct product
 // wf[lcr](-1)^{p(c)}
 template <typename Tm>
-void mid_signed(qinfo3<Tm>& info, Tm* data, const double fac=1.0){
+void mid_signed(const qinfo3<Tm>& info, Tm* data, const double fac=1.0){
    int br, bc, bm;
    for(int i=0; i<info._nnzaddr.size(); i++){
       int idx = info._nnzaddr[i];
@@ -303,7 +303,7 @@ void stensor3<Tm>::mid_signed(const double fac){
 
 // wf[lcr](-1)^{p(l)}
 template <typename Tm>
-void row_signed(qinfo3<Tm>& info, Tm* data, const double fac=1.0){
+void row_signed(const qinfo3<Tm>& info, Tm* data, const double fac=1.0){
    int br, bc, bm;
    for(int i=0; i<info._nnzaddr.size(); i++){
       int idx = info._nnzaddr[i];
@@ -319,7 +319,7 @@ void stensor3<Tm>::row_signed(const double fac){
 }
 
 template <typename Tm>
-void cntr_signed(const std::string block, qinfo3<Tm>& info, Tm* data){
+void cntr_signed(const std::string block, const qinfo3<Tm>& info, Tm* data){
    if(block == "r"){
       int br, bc, bm;
       for(int i=0; i<info._nnzaddr.size(); i++){

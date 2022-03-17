@@ -54,8 +54,7 @@ void symbolic_renorm_single2(const std::string& block1,
 	 opxwf_data = workspace+opsize+(idx%2)*wfsize; 
 	 contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
 			     optmp.info, optmp.data(),
-			     *opxwf_info, opxwf_data,
-			     1.0, false, dagger);
+			     *opxwf_info, opxwf_data, dagger);
 	 // impose antisymmetry here
          if(block == block2 and parity){ 
             if(block1 == "l"){ // lc or lr

@@ -21,25 +21,25 @@ stensor4<Tm> contract_qt4_qt2(const std::string cpos,
       assert(qt4a.info.qrow == qint);
       qt4.init(sym, qext, qt4a.info.qcol, qt4a.info.qmid, qt4a.info.qver);
       contract_qt4_qt2_info_l(qt4a.info, qt4a.data(), qt2.info, qt2.data(), 
-		              qt4.info, qt4.data(), 1.0, false, iftrans);
+		              qt4.info, qt4.data(), iftrans);
    }else if(cpos == "r"){
       assert(qt4a.dir_col() == !dint);
       assert(qt4a.info.qcol == qint);
       qt4.init(sym, qt4a.info.qrow, qext, qt4a.info.qmid, qt4a.info.qver);
       contract_qt4_qt2_info_r(qt4a.info, qt4a.data(), qt2.info, qt2.data(), 
-		              qt4.info, qt4.data(), 1.0, false, iftrans);
+		              qt4.info, qt4.data(), iftrans);
    }else if(cpos == "c1"){
       assert(qt4a.dir_mid() == !dint);
       assert(qt4a.info.qmid == qint);
       qt4.init(sym, qt4a.info.qrow, qt4a.info.qcol, qext, qt4a.info.qver);
       contract_qt4_qt2_info_c1(qt4a.info, qt4a.data(), qt2.info, qt2.data(), 
-		               qt4.info, qt4.data(), 1.0, false, iftrans);
+		               qt4.info, qt4.data(), iftrans);
    }else if(cpos == "c2"){
       assert(qt4a.dir_ver() == !dint);
       assert(qt4a.info.qver == qint);
       qt4.init(sym, qt4a.info.qrow, qt4a.info.qcol, qt4a.info.qmid, qext);
       contract_qt4_qt2_info_c2(qt4a.info, qt4a.data(), qt2.info, qt2.data(), 
-		               qt4.info, qt4.data(), 1.0, false, iftrans);
+		               qt4.info, qt4.data(), iftrans);
    }else{
       std::cout << "error: no such case in contract_qt4_qt2! cpos=" 
                 << cpos << std::endl;
@@ -56,17 +56,14 @@ stensor4<Tm> contract_qt4_qt2(const std::string cpos,
 //                                        x \--*--c
 template <typename Tm>
 void contract_qt4_qt2_info_l(const qinfo4<Tm>& qt4a_info,
-	       		     Tm* qt4a_data,	
+	       		     const Tm* qt4a_data,	
 			     const qinfo2<Tm>& qt2_info,
-			     Tm* qt2_data,
-			     qinfo4<Tm>& qt4_info,
+			     const Tm* qt2_data,
+			     const qinfo4<Tm>& qt4_info,
 			     Tm* qt4_data,
-			     const double talpha,
-			     const bool accum,
 			     const bool iftrans=false){
+   const Tm alpha = 1.0, beta = 0.0;
    const char* transa = iftrans? "T" : "N";
-   const Tm alpha = static_cast<Tm>(talpha);
-   const Tm beta = accum? 1.0 : 0.0;
    int br, bc, bm, bv;
    for(int i=0; i<qt4_info._nnzaddr.size(); i++){
       int idx = qt4_info._nnzaddr[i];
@@ -89,17 +86,16 @@ void contract_qt4_qt2_info_l(const qinfo4<Tm>& qt4a_info,
 	 ifzero = false; 
          // qt4(r,c,m,v) = \sum_x qt2(r,x)*qt4a(x,c,m,v) ; iftrans=false 
          // 		 = \sum_x qt2(x,r)*qt4a(x,c,m,v) ; iftrans=true
-         Tm* blk4a = qt4a_data + off4a-1;
-         Tm* blk2 = qt2_data + off2-1;
+         const Tm* blk4a = qt4a_data + off4a-1;
+         const Tm* blk2 = qt2_data + off2-1;
          int xdim = qt4a_info.qrow.get_dim(bx);
          int LDA = iftrans? xdim : rdim;
          int cmvdim = cdim*mdim*vdim;
-         // xgemm(transa,"N",alpha,blk2b,blk4a.get(im,iv),beta,blk4.get(im,iv));
 	 linalg::xgemm(transa, "N", &rdim, &cmvdim, &xdim, &alpha,
 		       blk2, &LDA, blk4a, &xdim, &beta,
 		       blk4, &rdim);
       } // bx
-      if(ifzero && !accum) memset(blk4, 0, size*sizeof(Tm));
+      if(ifzero) memset(blk4, 0, size*sizeof(Tm));
    } // i 
 }
 
@@ -111,17 +107,14 @@ void contract_qt4_qt2_info_l(const qinfo4<Tm>& qt4a_info,
 //                                        r--*--/ x
 template <typename Tm>
 void contract_qt4_qt2_info_r(const qinfo4<Tm>& qt4a_info,
-	       		     Tm* qt4a_data,	
+	       		     const Tm* qt4a_data,	
 			     const qinfo2<Tm>& qt2_info,
-			     Tm* qt2_data,
-			     qinfo4<Tm>& qt4_info,
+			     const Tm* qt2_data,
+			     const qinfo4<Tm>& qt4_info,
 			     Tm* qt4_data,
-			     const double talpha,
-			     const bool accum,
 			     const bool iftrans=false){
+   const Tm alpha = 1.0, beta = 0.0;
    const char* transb = iftrans? "N" : "T";
-   const Tm alpha = static_cast<Tm>(talpha);
-   const Tm beta = accum? 1.0 : 0.0;
    int br, bc, bm, bv;
    for(int i=0; i<qt4_info._nnzaddr.size(); i++){
       int idx = qt4_info._nnzaddr[i];
@@ -144,16 +137,15 @@ void contract_qt4_qt2_info_r(const qinfo4<Tm>& qt4a_info,
          ifzero = false;
          // qt4(r,c,m,v) = \sum_x qt2(c,x)*qt4a(r,x,m,v) ; iftrans=false 
          // 		 = \sum_x qt2(x,c)*qt4a(r,x,m,v) ; iftrans=true
-	 Tm* blk4a = qt4a_data + off4a-1;
-	 Tm* blk2 = qt2_data + off2-1;
+	 const Tm* blk4a = qt4a_data + off4a-1;
+	 const Tm* blk2 = qt2_data + off2-1;
 	 int xdim = qt4a_info.qcol.get_dim(bx);
          int LDB = iftrans? xdim : cdim;
 	 int rxdim = rdim*xdim;
 	 int rcdim = rdim*cdim;
 	 for(int iv=0; iv<vdim; iv++){
             for(int im=0; im<mdim; im++){
-               //xgemm("N",transb,alpha,blk4a.get(im,iv),blk2b,beta,blk4.get(im,iv));
-	       Tm* blk4a_imv = blk4a + (iv*mdim+im)*rxdim;
+	       const Tm* blk4a_imv = blk4a + (iv*mdim+im)*rxdim;
 	       Tm* blk4_imv = blk4 + (iv*mdim+im)*rcdim;
 	       linalg::xgemm("N", transb, &rdim, &cdim, &xdim, &alpha,
 			     blk4a_imv, &rdim, blk2, &LDB, &beta,
@@ -161,7 +153,7 @@ void contract_qt4_qt2_info_r(const qinfo4<Tm>& qt4a_info,
             } // im
          } // iv
       } // bx
-      if(ifzero && !accum) memset(blk4, 0, size*sizeof(Tm));
+      if(ifzero) memset(blk4, 0, size*sizeof(Tm));
    } // i
 }
 
@@ -174,17 +166,14 @@ void contract_qt4_qt2_info_r(const qinfo4<Tm>& qt4a_info,
 //                                        r--*--c
 template <typename Tm>
 void contract_qt4_qt2_info_c1(const qinfo4<Tm>& qt4a_info,
-	       		      Tm* qt4a_data,	
+	       		      const Tm* qt4a_data,	
 			      const qinfo2<Tm>& qt2_info,
-			      Tm* qt2_data,
-			      qinfo4<Tm>& qt4_info,
+			      const Tm* qt2_data,
+			      const qinfo4<Tm>& qt4_info,
 			      Tm* qt4_data,
-			      const double talpha,
-			      const bool accum,
 			      const bool iftrans=false){
+   const Tm alpha = 1.0, beta = 0.0;
    const char* transb = iftrans? "N" : "T";
-   const Tm alpha = static_cast<Tm>(talpha);
-   const Tm beta = accum? 1.0 : 0.0;
    int br, bc, bm, bv;
    for(int i=0; i<qt4_info._nnzaddr.size(); i++){
       int idx = qt4_info._nnzaddr[i];
@@ -207,22 +196,22 @@ void contract_qt4_qt2_info_c1(const qinfo4<Tm>& qt4a_info,
          ifzero = false;
          // qt4(r,c,m,v) = \sum_x qt2(m,x)*qt4a(r,c,x,v) ; iftrans=false 
          // 		 = \sum_x qt2(x,m)*qt4a(r,c,x,v) ; iftrans=true
-         Tm* blk4a = qt4a_data + off4a-1;
-         Tm* blk2 = qt2_data + off2-1;
+         const Tm* blk4a = qt4a_data + off4a-1;
+         const Tm* blk2 = qt2_data + off2-1;
          int xdim = qt4a_info.qmid.get_dim(bx);
 	 int LDB = iftrans? xdim : mdim;
 	 int rcdim = rdim*cdim;
 	 int rcmdim = rcdim*mdim;
 	 int rcxdim = rcdim*xdim;
          for(int iv=0; iv<vdim; iv++){
-	    Tm* blk4a_iv = blk4a + iv*rcxdim;
+	    const Tm* blk4a_iv = blk4a + iv*rcxdim;
 	    Tm* blk4_iv =  blk4 + iv*rcmdim;
             linalg::xgemm("N", transb, &rcdim, &mdim, &xdim, &alpha,
                           blk4a_iv, &rcdim, blk2, &LDB, &beta,
  	                  blk4_iv, &rcdim);
          } // iv
       } // bx
-      if(ifzero && !accum) memset(blk4, 0, size*sizeof(Tm));
+      if(ifzero) memset(blk4, 0, size*sizeof(Tm));
    } // i
 }
 
@@ -235,17 +224,14 @@ void contract_qt4_qt2_info_c1(const qinfo4<Tm>& qt4a_info,
 //                                        r--*--c
 template <typename Tm>
 void contract_qt4_qt2_info_c2(const qinfo4<Tm>& qt4a_info,
-	       		      Tm* qt4a_data,	
+	       		      const Tm* qt4a_data,	
 			      const qinfo2<Tm>& qt2_info,
-			      Tm* qt2_data,
-			      qinfo4<Tm>& qt4_info,
+			      const Tm* qt2_data,
+			      const qinfo4<Tm>& qt4_info,
 			      Tm* qt4_data,
-			      const double talpha,
-			      const bool accum,
 			      const bool iftrans=false){
+   const Tm alpha = 1.0, beta = 0.0;
    const char* transb = iftrans? "N" : "T";
-   const Tm alpha = static_cast<Tm>(talpha);
-   const Tm beta = accum? 1.0 : 0.0;
    int br, bc, bm, bv;
    for(int i=0; i<qt4_info._nnzaddr.size(); i++){
       int idx = qt4_info._nnzaddr[i];
@@ -268,8 +254,8 @@ void contract_qt4_qt2_info_c2(const qinfo4<Tm>& qt4a_info,
          ifzero = false;
 	 // qt4(r,c,m,v) = \sum_x qt2(v,x)*qt4a(r,c,m,x) ; iftrans=false 
 	 // 		 = \sum_x qt2(x,v)*qt4a(r,c,m,x) ; iftrans=true
-         Tm* blk4a = qt4a_data + off4a-1;
-         Tm* blk2 = qt2_data + off2-1;
+         const Tm* blk4a = qt4a_data + off4a-1;
+         const Tm* blk2 = qt2_data + off2-1;
          int xdim = qt4a_info.qver.get_dim(bx);
 	 int LDB = iftrans? xdim : vdim;
 	 int rcmdim = rdim*cdim*mdim;
@@ -277,7 +263,7 @@ void contract_qt4_qt2_info_c2(const qinfo4<Tm>& qt4a_info,
 		       blk4a, &rcmdim, blk2, &LDB, &beta,
 		       blk4, &rcmdim);
       } // bx
-      if(ifzero && !accum) memset(blk4, 0, size*sizeof(Tm));
+      if(ifzero) memset(blk4, 0, size*sizeof(Tm));
    } // i
 }
 
