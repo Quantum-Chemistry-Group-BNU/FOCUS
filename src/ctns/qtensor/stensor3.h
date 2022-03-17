@@ -268,15 +268,16 @@ template <typename Tm>
 stensor2<Tm> stensor3<Tm>::fix_mid(const std::pair<int,int> mdx) const{
    int bm = mdx.first, im = mdx.second;   
    assert(im < info.qmid.get_dim(bm));
-   auto symIn = std::get<2>(info.dir) ? info.sym-info.qmid.get_sym(bm) : info.sym+info.qmid.get_sym(bm);
-   stensor2<Tm> qt2(symIn, info.qrow, info.qcol, {std::get<0>(info.dir), std::get<1>(info.dir)});
+   auto symIn = std::get<2>(info.dir) ? info.sym-info.qmid.get_sym(bm) : 
+	   				info.sym+info.qmid.get_sym(bm);
+   stensor2<Tm> qt2(symIn, info.qrow, info.qcol, 
+		   {std::get<0>(info.dir), std::get<1>(info.dir)});
    for(int br=0; br<info._rows; br++){
       for(int bc=0; bc<info._cols; bc++){
 	 const auto blk3 = (*this)(br,bc,bm);
          if(blk3.empty()) continue;
          auto blk2 = qt2(br,bc);
-	 int N = blk2.size();
-	 linalg::xcopy(N, blk3.get(im).data(), blk2.data()); 
+	 linalg::xcopy(blk2.size(), blk3.get(im).data(), blk2.data()); 
       } // bc
    } // br
    return qt2;

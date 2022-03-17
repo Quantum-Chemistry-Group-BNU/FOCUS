@@ -47,6 +47,7 @@ void symbolic_renorm_single2(const std::string& block1,
          const auto& qops = qops_dict.at(block);
          // form operator
          auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
+         if(dagger) linalg::xconj(optmp.size(), optmp.data());
 	 // opN*|wf> 
          sym += dagger? -optmp.info.sym : optmp.info.sym;
          opxwf_info = const_cast<qinfo3<Tm>*>(&info_dict.at(sym));

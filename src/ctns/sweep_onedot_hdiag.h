@@ -63,13 +63,13 @@ void onedot_Hdiag_local(const oper_dict<Tm>& lqops,
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       // 1. local contributions: all four indices in c/l/r
-      const auto lblk = Hl(br,br); // left->row 
-      const auto rblk = Hr(bc,bc); // row->col
-      const auto cblk = Hc(bm,bm); // central->mid 
+      const auto blkl = Hl(br,br); // left->row 
+      const auto blkr = Hr(bc,bc); // row->col
+      const auto blkc = Hc(bm,bm); // central->mid 
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-               blk(ir,ic,im) = ecore + lblk(ir,ir) + rblk(ic,ic) + cblk(im,im);
+               blk(ir,ic,im) = ecore + blkl(ir,ir) + blkr(ic,ic) + blkc(im,im);
             } // ir
          } // ic
       } // im
@@ -134,12 +134,12 @@ void onedot_Hdiag_OlOc(const stensor2<Tm>& Ol,
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       // Ol*Or 
-      const auto lblk = Ol(br,br);
-      const auto cblk = Oc(bm,bm);
+      const auto blkl = Ol(br,br);
+      const auto blkc = Oc(bm,bm);
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-               blk(ir,ic,im) += wt*lblk(ir,ir)*cblk(im,im);
+               blk(ir,ic,im) += wt*blkl(ir,ir)*blkc(im,im);
             } // ir
          } // ic
       } // im
@@ -161,12 +161,12 @@ void onedot_Hdiag_OlOr(const stensor2<Tm>& Ol,
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       // Ol*Or
-      const auto lblk = Ol(br,br);
-      const auto rblk = Or(bc,bc);
+      const auto blkl = Ol(br,br);
+      const auto blkr = Or(bc,bc);
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-               blk(ir,ic,im) += wt*lblk(ir,ir)*rblk(ic,ic);
+               blk(ir,ic,im) += wt*blkl(ir,ir)*blkr(ic,ic);
             } // ir
          } // ic
       } // im
@@ -188,12 +188,12 @@ void onedot_Hdiag_OcOr(const stensor2<Tm>& Oc,
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       // Oc*Or
-      const auto cblk = Oc(bm,bm);
-      const auto rblk = Or(bc,bc);
+      const auto blkc = Oc(bm,bm);
+      const auto blkr = Or(bc,bc);
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-               blk(ir,ic,im) += wt*cblk(im,im)*rblk(ic,ic);
+               blk(ir,ic,im) += wt*blkc(im,im)*blkr(ic,ic);
             } // ir
          } // ic
       } // im

@@ -10,13 +10,17 @@ template <typename Tm>
 struct qinfo4{
    private:
       // serialize
-      friend class boost::serialization::access;
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version){
-	 ar & sym & qrow & qcol & qmid & qver 
-	    & _size & _rows & _cols & _mids & _vers
-	    & _nnzaddr & _offset;
+      friend class boost::serialization::access;	   
+      template <class Archive>
+      void save(Archive & ar, const unsigned int version) const{
+	 ar & sym & qrow & qcol & qmid & qver;
       }
+      template <class Archive>
+      void load(Archive & ar, const unsigned int version){
+	 ar & sym & qrow & qcol & qmid & qver;
+	 this->setup_qblocks();
+      }
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
       // conservation: dir={1,1,1,1} 
       bool _ifconserve(const int br, const int bc, const int bm, const int bv) const{
 	 return sym == qrow.get_sym(br) 
@@ -24,6 +28,8 @@ struct qinfo4{
 		     + qmid.get_sym(bm) 
 		     + qver.get_sym(bv);
       }
+      // setup derived variables
+      void setup();
    public:
       // address for storaging block data
       int _addr(const int br, const int bc, const int bm, const int bv) const{
@@ -39,7 +45,14 @@ struct qinfo4{
       }
       // initialization
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
-	        const qbond& _qmid, const qbond& _qver);
+	        const qbond& _qmid, const qbond& _qver){
+         sym = _sym;
+         qrow = _qrow;
+         qcol = _qcol;
+	 qmid = _qmid;
+         qver = _qver;
+	 this->setup(); 
+      }
       // print
       void print(const std::string name) const;
       // check
@@ -63,7 +76,7 @@ struct qinfo4{
    public:
       qsym sym;
       qbond qrow, qcol, qmid, qver;
-      // --- derived --- 
+   public: // derived
       size_t _size;
       int _rows, _cols, _mids, _vers;
       std::vector<int> _nnzaddr;
@@ -71,13 +84,7 @@ struct qinfo4{
 };
 
 template <typename Tm>
-void qinfo4<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
-		      const qbond& _qmid, const qbond& _qver){
-   sym = _sym;
-   qrow = _qrow;
-   qcol = _qcol;
-   qmid = _qmid;
-   qver = _qver;
+void qinfo4<Tm>::setup(){
    _rows = qrow.size();
    _cols = qcol.size();
    _mids = qmid.size();

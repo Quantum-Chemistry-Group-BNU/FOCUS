@@ -12,18 +12,24 @@ template <typename Tm>
 struct qinfo2{
    private:
       // serialize
-      friend class boost::serialization::access;
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version){
-	 ar & sym & qrow & qcol & dir
-	    & _size & _rows & _cols 
-	    & _nnzaddr & _offset;
+      friend class boost::serialization::access;	   
+      template <class Archive>
+      void save(Archive & ar, const unsigned int version) const{
+	 ar & sym & qrow & qcol & dir;
       }
+      template <class Archive>
+      void load(Archive & ar, const unsigned int version){
+	 ar & sym & qrow & qcol & dir;
+	 this->setup();
+      }
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
       // conservation pattern determined by dir
       bool _ifconserve(const int br, const int bc) const{
 	 return sym == (std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br))
 		     + (std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc));
       }
+      // setup derived variables
+      void setup();
    public:
       // address for storaging block data  - FORTRAN ORDER
       int _addr(const int br, const int bc) const{
@@ -35,7 +41,13 @@ struct qinfo2{
       }
       // initialization
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-		const direction2 _dir={1,0});
+		const direction2 _dir={1,0}){
+         sym = _sym;
+         qrow = _qrow;
+         qcol = _qcol;
+         dir = _dir;
+         this->setup();
+      }
       // print
       void print(const std::string name) const;
       // check
@@ -57,7 +69,7 @@ struct qinfo2{
       qsym sym; // <row|op[in]|col>
       qbond qrow, qcol;
       direction2 dir={1,0}; // {out,int} by usual convention for operators in diagrams 
-      // --- derived --- 
+   public: // derived
       size_t _size;
       int _rows, _cols;
       std::vector<int> _nnzaddr;
@@ -65,12 +77,7 @@ struct qinfo2{
 };
 
 template <typename Tm>
-void qinfo2<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol,
-	 	      const direction2 _dir){
-   sym = _sym;
-   qrow = _qrow;
-   qcol = _qcol;
-   dir = _dir;
+void qinfo2<Tm>::setup(){
    _rows = qrow.size();
    _cols = qcol.size();
    int nblks = _rows*_cols;

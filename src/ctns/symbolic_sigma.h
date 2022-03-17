@@ -18,7 +18,7 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
 		     const QTm& wf,
 		     QTm& Hwf,
 		     const bool ifdagger){
-   const bool debug = false;
+   const bool debug = true;
    if(debug){ 
       std::cout << "iterm=" << it 
 		<< " ifdagger=" << ifdagger
@@ -35,7 +35,7 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
       // we assume the rest of terms have the same label/dagger/parity
       auto block  = sop0.block;
       char label  = sop0.label;
-      bool dagger = ifdagger^sop0.dagger;
+      bool dagger = sop0.dagger;
       bool parity = sop0.parity;
       int  index0 = sop0.index;
       int  nbar0  = sop0.nbar;
@@ -63,12 +63,13 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
          if(dagger) wtk = tools::conjugate(wtk);
 	 optmp += wtk*((nbark==0)? opk : opk.K(nbark));
       } // k
-      if(dagger) linalg::xconj(optmp.size(), optmp.data());
+      const bool op_dagger = ifdagger^dagger; 
+      if(op_dagger) linalg::xconj(optmp.size(), optmp.data());
       // (opN+opH)*|wf>
       if(idx == HTerm.size()-1){
-         opxwf = contract_opxwf(block,wf,optmp,dagger);
+         opxwf = contract_opxwf(block,wf,optmp,op_dagger);
       }else{
-         opxwf = contract_opxwf(block,opxwf,optmp,dagger);
+         opxwf = contract_opxwf(block,opxwf,optmp,op_dagger);
       }
       // impose antisymmetry here
       if(parity) opxwf.cntr_signed(block);

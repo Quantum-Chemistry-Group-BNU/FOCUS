@@ -89,6 +89,10 @@ LOGS
 	- openmp error due to qt2.conjugate() for complex case [1_lih3_dcg]
 	- conjugate is treated outside contract_opxwf!
 
+    ### TODOs ###
+	- unpack versus direct loops?
+	- qbond - separate arrays?
+
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 
 	- analyze why the parallel efficiency is low?

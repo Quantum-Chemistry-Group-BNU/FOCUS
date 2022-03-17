@@ -20,19 +20,25 @@ template <typename Tm>
 struct qinfo3{
    private:
       // serialize
-      friend class boost::serialization::access;
-      template<class Archive>
-      void serialize(Archive & ar, const unsigned int version){
-	 ar & sym & qrow & qcol & qmid & dir
-	    & _size & _rows & _cols & _mids
-	    & _nnzaddr & _offset;
+      friend class boost::serialization::access;	   
+      template <class Archive>
+      void save(Archive & ar, const unsigned int version) const{
+	 ar & sym & qrow & qcol & qmid & dir;
       }
+      template <class Archive>
+      void load(Archive & ar, const unsigned int version){
+	 ar & sym & qrow & qcol & qmid & dir;
+	 this->setup();
+      }
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
       // conservation pattern determined by dir
       bool _ifconserve(const int br, const int bc, const int bm) const{
 	 return sym == (std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br))
 	 	     + (std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc))
 	 	     + (std::get<2>(dir) ? qmid.get_sym(bm) : -qmid.get_sym(bm));
       }
+      // setup derived variables
+      void setup();
    public:
       // address for storaging block data
       int _addr(const int br, const int bc, const int bm) const{
@@ -46,7 +52,14 @@ struct qinfo3{
       }
       // initialization
       void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-		const qbond& _qmid, const direction3 _dir=dir_RCF);
+		const qbond& _qmid, const direction3 _dir=dir_RCF){
+         sym = _sym;
+         qrow = _qrow;
+         qcol = _qcol;
+	 qmid = _qmid;
+         dir = _dir;
+         this->setup();
+      }
       // print
       void print(const std::string name) const;
       // check
@@ -70,7 +83,7 @@ struct qinfo3{
       qsym sym;
       qbond qrow, qcol, qmid;
       direction3 dir;
-      // --- derived --- 
+   public: // derived
       size_t _size;
       int _rows, _cols, _mids;
       std::vector<int> _nnzaddr;
@@ -78,13 +91,7 @@ struct qinfo3{
 };
 
 template <typename Tm>
-void qinfo3<Tm>::init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-		      const qbond& _qmid, const direction3 _dir){
-   sym = _sym;
-   qrow = _qrow;
-   qcol = _qcol;
-   qmid = _qmid;
-   dir = _dir;
+void qinfo3<Tm>::setup(){
    _rows = qrow.size();
    _cols = qcol.size();
    _mids = qmid.size();

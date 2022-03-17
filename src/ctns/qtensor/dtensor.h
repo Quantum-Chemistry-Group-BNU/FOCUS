@@ -42,10 +42,10 @@ struct dtensor2 : public linalg::BaseMatrix<Tm> {
 	 assert(i1>=0 && i1<dim1);
 	 return _data[_addr(i0,i1)];
       } 
+      bool empty() const{ return _size==0; }
       size_t size() const{ return _size; }
       const Tm* data() const{ return _data; }
       Tm* data(){ return _data; }
-      bool empty() const{ return _data==nullptr; }
       // in-place operation
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); }
       // --- SPECIFIC FUNCTIONS ---
@@ -112,10 +112,10 @@ struct dtensor3{
 	 assert(i2>=0 && i2<dim2);
 	 return _data[_addr(i0,i1,i2)];
       }
+      bool empty() const{ return _size==0; }
       size_t size() const{ return _size; }
       const Tm* data() const{ return _data; }
       Tm* data(){ return _data; }
-      bool empty() const{ return _data==nullptr; }
       // in-place operation
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); } 
       // --- SPECIFIC FUNCTIONS ---
@@ -178,10 +178,10 @@ struct dtensor4{
 	 assert(i3>=0 && i3<dim3);
 	 return _data[_addr(i0,i1,i2,i3)];
       }
+      bool empty() const{ return _size==0; }
       size_t size() const{ return _size; }
       const Tm* data() const{ return _data; }
       Tm* data(){ return _data; }
-      bool empty() const{ return _data==nullptr; }
       // in-place operation
       void clear(){ memset(_data, 0, _size*sizeof(Tm)); }
       // --- SPECIFIC FUNCTIONS ---

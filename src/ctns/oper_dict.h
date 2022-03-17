@@ -33,7 +33,7 @@ class oper_dict{
 	 ar & isym & ifkr & qbra & qket 
             & cindex & krest & oplist
 	    & mpisize & mpirank & ifdist2; 
-	 this->_init();
+	 this->_setup_opdict();
 	 _data = new Tm[_size];
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
@@ -41,6 +41,8 @@ class oper_dict{
 	 this->_setup_data(_data);
       }
       BOOST_SERIALIZATION_SPLIT_MEMBER()
+      // initialize _opdict, _size, _opsize
+      void _setup_opdict(const bool debug=false);
       // setup the mapping to physical address
       void _setup_data(Tm* data){
          size_t off = 0;
@@ -54,8 +56,6 @@ class oper_dict{
          }
 	 assert(off == _size);
       }
-      // initialize _opdict, _size, _opsize
-      void _init(const bool debug=false);
    public:
       // constructor
       oper_dict(){}
@@ -66,7 +66,7 @@ class oper_dict{
       qsym get_qsym_op(const char key, const int idx) const;
       // allocate memory
       void allocate_memory(const bool debug=false){
-	this->_init(debug);
+	this->_setup_opdict(debug);
         _data = new Tm[_size];
         memset(_data, 0, _size*sizeof(Tm));
         this->_setup_data(_data); // assign pointer for each operator
@@ -216,9 +216,9 @@ qsym oper_dict<Tm>::get_qsym_op(const char key, const int idx) const{
 
 // initialize _opdict, _size, _opsize
 template <typename Tm>
-void oper_dict<Tm>::_init(const bool debug){
+void oper_dict<Tm>::_setup_opdict(const bool debug){
    if(debug){
-      std::cout << "ctns::oper_dict<Tm>:_init oplist=" 
+      std::cout << "ctns::oper_dict<Tm>:_setup_opdict oplist=" 
 	        << oplist << std::endl;
    }
    // count the size

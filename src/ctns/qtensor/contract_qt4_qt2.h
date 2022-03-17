@@ -48,8 +48,8 @@ stensor4<Tm> contract_qt4_qt2(const std::string cpos,
    return qt4;
 }
 
-// formula: qt4(r,c,m,v) = \sum_x qt2(r,x)*qt4b(x,c,m,v) ; iftrans=false 
-// 		         = \sum_x qt2(x,r)*qt4b(x,c,m,v) ; iftrans=true
+// formula: qt4(r,c,m,v) = \sum_x qt2(r,x)*qt4a(x,c,m,v) ; iftrans=false 
+// 		         = \sum_x qt2(x,r)*qt4a(x,c,m,v) ; iftrans=true
 //
 //					  r / m v
 // sigma(r,c,m,v) = op(r,x)*wf(x,c,m,v) =  *  \ /    
@@ -87,8 +87,8 @@ void contract_qt4_qt2_info_l(const qinfo4<Tm>& qt4a_info,
 	 size_t off2 = qt2_info._offset[jdx];
          if(off2 == 0) continue;
 	 ifzero = false; 
-         // qt4(r,c,m,v) = \sum_x qt2(r,x)*qt4b(x,c,m,v) ; iftrans=false 
-         // 		 = \sum_x qt2(x,r)*qt4b(x,c,m,v) ; iftrans=true
+         // qt4(r,c,m,v) = \sum_x qt2(r,x)*qt4a(x,c,m,v) ; iftrans=false 
+         // 		 = \sum_x qt2(x,r)*qt4a(x,c,m,v) ; iftrans=true
          Tm* blk4a = qt4a_data + off4a-1;
          Tm* blk2 = qt2_data + off2-1;
          int xdim = qt4a_info.qrow.get_dim(bx);

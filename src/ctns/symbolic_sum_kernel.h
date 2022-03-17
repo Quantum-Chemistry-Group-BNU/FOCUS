@@ -6,6 +6,7 @@
 
 namespace ctns{
 
+// formulae = (w a^d) => (w^d a)^d, return w^d a 
 template <typename Tm>
 stensor2<Tm> symbolic_sum_oper(const oper_dict<Tm>& qops,
 			       const symbolic_sum<Tm>& sop,
@@ -45,7 +46,6 @@ stensor2<Tm> symbolic_sum_oper(const oper_dict<Tm>& qops,
          linalg::xaxpy(opk.size(), wtk, opkk.data(), optmp.data());
       }
    } // k
-   if(dagger) linalg::xconj(optmp.size(), optmp.data());
    return optmp;
 }
 
