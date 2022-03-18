@@ -42,7 +42,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    // generate sweep sequence
    sweep_data sweeps(icomb.topo.get_sweeps(rank==0), 
 		     schd.ctns.nroots, schd.ctns.guess, schd.ctns.maxsweep, 
-		     schd.ctns.ctrls, schd.ctns.dbranch, schd.ctns.rdm_vs_svd); 
+		     schd.ctns.ctrls, schd.ctns.dbranch, schd.ctns.rdm_vs_svd);
+ 
    for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
       if(rank == 0){
@@ -73,12 +74,14 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 }
 	 auto tp0 = icomb.topo.get_type(p0);
 	 auto tp1 = icomb.topo.get_type(p1);
+	 // optimization
 	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
 	    sweep_onedot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore, scratch);
 	 }else{
 	    sweep_twodot(schd, sweeps, isweep, ibond, icomb, int2e, int1e, ecore, scratch);
-	 }
-	 if(ibond == schd.ctns.maxbond) exit(1); // just for debug
+	 } 
+         // just for debug
+	 if(isweep == schd.ctns.maxsweep-1 && ibond == schd.ctns.maxbond) exit(1);
       } // ibond
       auto tf = tools::get_time();
       sweeps.t_total[isweep] = tools::get_duration(tf-ti);

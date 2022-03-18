@@ -134,64 +134,74 @@ void symbolic_Hx2(Tm* y,
    Hwfs[0].to_array(y);
 
 /*
-   std::map<std::string,int> dims;
-   for(const auto& pr : qops_dict){
-      dims[pr.first] = pr.second.qket.get_dimAll(); 
-   }
-   auto cost = H_formulae.cost(dims);
-   auto flops = cost/tools::get_duration(t2-t1)/maxthreads;
-   std::cout << "cost,flops=" << cost << "," << flops << std::endl;
-*/
-
-/*
    memset(y, 0, wf.size()*sizeof(Tm));
    auto t1 = tools::get_time();
    #pragma omp parallel
    {
       int omprank = omp_get_thread_num();
+
    // initialization
    QTm Hwfs(wf.info,  false);
    Hwfs.setup_data(&workspace[omprank*tmpsize]);
    Hwfs.clear();
+
    #pragma omp for schedule(dynamic,1)
    for(int it=0; it<H_formulae.size(); it++){
       int rk = omprank;
-      //std::cout << "it=" << it << " rk=" << rk << std::endl;
       const auto& HTerm = H_formulae.tasks[it];
       symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
 		       info_dict,opsize,wfsize,
-		       &workspace[rk*tmpsize+wfsize]);
+		       &workspace[rk*tmpsize+wfsize],
+		       false);
+      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
+		       info_dict,opsize,wfsize,
+		       &workspace[rk*tmpsize+wfsize],
+		       true);
    } // it
+
    #pragma omp critical
    {
-   linalg::xaxpy(Hwfs.size(), 1.0, Hwfs.data(), y);
+      linalg::xaxpy(Hwfs.size(), 1.0, Hwfs.data(), y);
    }
+
    }
    auto t2 = tools::get_time();
 */
-
 /*
    memset(y, 0, wf.size()*sizeof(Tm));
    auto t1 = tools::get_time();
    #pragma omp parallel
    {
       int omprank = omp_get_thread_num();
-    //  Tm* worklocal = new Tm[tmpsize];
-   Tm* worklocal = workspace+omprank*tmpsize;
+   
+   Tm* worklocal = new Tm[tmpsize];
+   //Tm* worklocal = workspace+omprank*tmpsize;
    // initialization
    QTm Hwfs(wf.info,  false);
    Hwfs.setup_data(worklocal);
    Hwfs.clear();
-   #pragma omp for schedule(dynamic,1) reduction(+:y)
+   //#pragma omp for schedule(static,1) nowait
+   #pragma omp for schedule(dynamic,100)
    for(int it=0; it<H_formulae.size(); it++){
       int rk = omprank;
-      //std::cout << "it=" << it << " rk=" << rk << std::endl;
       const auto& HTerm = H_formulae.tasks[it];
       symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
 		       info_dict,opsize,wfsize,
-		       &worklocal[wfsize]);
+		       &worklocal[wfsize],
+		       false);
+      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
+		       info_dict,opsize,wfsize,
+		       &worklocal[wfsize],
+		       true);
+   }
+
+   #pragma omp critical
+   {
       linalg::xaxpy(Hwfs.size(), 1.0, Hwfs.data(), y);
    }
+
+   delete[] worklocal;
+
    }
    auto t2 = tools::get_time();
 */

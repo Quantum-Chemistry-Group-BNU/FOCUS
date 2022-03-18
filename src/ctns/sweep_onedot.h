@@ -77,6 +77,11 @@ void sweep_onedot(const input::schedule& schd,
       lqops.print("lqops");
       rqops.print("rqops");
       cqops.print("cqops");
+      size_t tsize = lqops.size()+rqops.size()+cqops.size();
+      std::cout << " optot=" << tsize 
+                << ":" << tools::sizeMB<Tm>(tsize) << "MB"
+                << ":" << tools::sizeGB<Tm>(tsize) << "GB"
+		<< std::endl;
    }
    timing.ta = tools::get_time();
 

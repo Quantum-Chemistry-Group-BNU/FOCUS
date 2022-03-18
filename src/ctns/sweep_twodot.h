@@ -108,6 +108,11 @@ void sweep_twodot(const input::schedule& schd,
       rqops.print("rqops");
       c1qops.print("c1qops");
       c2qops.print("c2qops");
+      size_t tsize = lqops.size()+rqops.size()+c1qops.size()+c2qops.size();
+      std::cout << " optot=" << tsize 
+                << ":" << tools::sizeMB<Tm>(tsize) << "MB"
+                << ":" << tools::sizeGB<Tm>(tsize) << "GB"
+		<< std::endl;
    }
    timing.ta = tools::get_time();
 
