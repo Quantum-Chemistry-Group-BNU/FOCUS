@@ -18,7 +18,7 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
 		     const QTm& wf,
 		     QTm& Hwf,
 		     const bool ifdagger){
-   const bool debug = true;
+   const bool debug = false;
    if(debug){ 
       std::cout << "iterm=" << it 
 		<< " ifdagger=" << ifdagger
