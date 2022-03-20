@@ -5,7 +5,7 @@
 #include <omp.h>
 #endif
 
-#include "symbolic_sum_kernel.h"
+#include "symbolic_kernel_sum.h"
 
 namespace ctns{
 

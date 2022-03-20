@@ -310,9 +310,9 @@ Symbolic derivations: expansion of formulae:
  symbolic_normxwf.h
  symbolic_compxwf.h
  symbolic_op1op2xwf.h
- symbolic_onedot_formulae.h
+ symbolic_formulae_onedot.h
  symbolic_onedot_sigma.h
- symbolic_twodot_formulae.h
+ symbolic_formulae_twodot.h
  symbolic_twodot_sigma.h
 
 Kramers symmetry-adapted version:

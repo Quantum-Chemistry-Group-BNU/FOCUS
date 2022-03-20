@@ -1,7 +1,7 @@
 #ifndef SYMBOLIC_OP1OP2XWF_H
 #define SYMBOLIC_OP1OP2XWF_H
 
-#include "symbolic_oper.h"
+#include "symbolic_task.h"
 
 namespace ctns{
 

@@ -1,7 +1,7 @@
 #ifndef SYMBOLIC_ONEDOT_FORMULAE_H
 #define SYMBOLIC_ONEDOT_FORMULAE_H
 
-#include "symbolic_oper.h"
+#include "symbolic_task.h"
 #include "symbolic_normxwf.h"
 #include "symbolic_compxwf.h"
 #include "../core/tools.h"
@@ -11,7 +11,7 @@ namespace ctns{
 // generate all formulea for constructing H*x as a list of terms
 // organizing principle: recursive partition
 template <typename Tm>
-symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
+symbolic_task<Tm> symbolic_formulae_onedot(const oper_dict<Tm>& lqops,
 	                                   const oper_dict<Tm>& rqops,
 	                                   const oper_dict<Tm>& cqops,
 	                                   const integral::two_body<Tm>& int2e,
@@ -30,7 +30,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
    std::ofstream file;
    bool ifsave = !fname.empty() and rank == 0;
    if(ifsave){
-      std::cout << "ctns::symbolic_onedot_formulae"
+      std::cout << "ctns::symbolic_formulae_onedot"
 	        << " mpisize=" << size
 	        << " fname=" << fname 
 		<< std::endl;
@@ -39,7 +39,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
       backup = std::cout.rdbuf(); // back up cout's streambuf
       psbuf = file.rdbuf(); // get file's streambuf
       std::cout.rdbuf(psbuf); // assign streambuf to cout
-      std::cout << "ctns::symbolic_onedot_formulae"
+      std::cout << "ctns::symbolic_formulae_onedot"
 	        << " isym=" << isym
 	  	<< " ifkr=" << ifkr
 		<< " ifNC=" << ifNC
@@ -239,7 +239,7 @@ symbolic_task<Tm> symbolic_onedot_formulae(const oper_dict<Tm>& lqops,
    if(rank == 0){
       auto t1 = tools::get_time();
       int size = formulae.size();
-      tools::timing("symbolic_onedot_formulae with size="+std::to_string(size), t0, t1);
+      tools::timing("symbolic_formulae_onedot with size="+std::to_string(size), t0, t1);
    }
    return formulae;
 }

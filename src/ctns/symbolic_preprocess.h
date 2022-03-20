@@ -2,7 +2,6 @@
 #define SYMBOLIC_PREPROCESS_H
 
 #include "oper_dict.h"
-#include "symbolic_oper.h"
 
 namespace ctns{
 

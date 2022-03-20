@@ -8,10 +8,10 @@
 #include "sweep_twodot_hdiag.h"
 #include "sweep_twodot_local.h"
 #include "sweep_twodot_sigma.h"
-#include "symbolic_twodot_formulae.h"
-#include "symbolic_sigma.h"
+#include "symbolic_formulae_twodot.h"
 #include "symbolic_preprocess.h"
-#include "symbolic_sigma2.h"
+#include "symbolic_kernel_sigma.h"
+#include "symbolic_kernel_sigma2.h"
 
 namespace ctns{
 
@@ -170,7 +170,7 @@ void sweep_twodot(const input::schedule& schd,
       if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
 	      			        + "_"+std::to_string(isweep)
 	                		+ "_"+std::to_string(ibond)+".txt"; 
-      H_formulae = symbolic_twodot_formulae(lqops, rqops, c1qops, c2qops, 
+      H_formulae = symbolic_formulae_twodot(lqops, rqops, c1qops, c2qops, 
 		                            int2e, size, rank, fname);
       if(schd.ctns.alg_hvec == 1){
          HVec = bind(&ctns::symbolic_Hx<Tm,stensor4<Tm>>, _1, _2, std::cref(H_formulae),

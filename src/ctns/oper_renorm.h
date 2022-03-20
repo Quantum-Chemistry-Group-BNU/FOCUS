@@ -10,8 +10,8 @@
 #include "oper_normxwf.h"
 #include "oper_compxwf.h"
 #include "oper_rbasis.h"
-#include "symbolic_renorm_kernel.h"
-#include "symbolic_renorm_kernel2.h"
+#include "symbolic_kernel_renorm.h"
+#include "symbolic_kernel_renorm2.h"
 
 namespace ctns{
 
@@ -82,9 +82,9 @@ void oper_renorm_opAll(const std::string superblock,
    if(alg_renorm == 0){
       oper_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, debug);
    }else if(alg_renorm == 1){
-      symbolic_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, fname, debug);
+      symbolic_kernel_renorm(superblock, site, int2e, qops1, qops2, qops, fname, debug);
    }else if(alg_renorm == 2){
-      symbolic_renorm_kernel2(superblock, site, int2e, qops1, qops2, qops, fname, debug);
+      symbolic_kernel_renorm2(superblock, site, int2e, qops1, qops2, qops, fname, debug);
    }
    
    // 2. check operators against explicit construction

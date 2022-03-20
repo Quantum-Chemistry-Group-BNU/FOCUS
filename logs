@@ -3,6 +3,8 @@
 LOGS
 ----
 
+=== 2021 ===
+
  * Setup tests for NR & R integrals [DONE2021/03/24]
  
  * Redesign and decouple codes [DONE2021/04/08]
@@ -37,6 +39,8 @@ LOGS
         - Checked by diagonalizing fock::Hmat
     - better data structure for qtensor & oper_dict [DONE2021/10/02]
         - problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
+
+=== 2022 ===
 
  * Optimized algorithm: symbolic algorithm
     - onedot algorithm:
@@ -76,7 +80,7 @@ LOGS
 
     ### TODOs ###
     
-    - better data structure? pointer? [DONE2022/03/XX] 
+    - better data structure? pointer? [DONE2022/03/18] 
 	- vtune profile stackblock for comparison [!!!] 
         - info only store offset or maps: [CRUCIAL PART!!!]
 	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
@@ -92,6 +96,8 @@ LOGS
     ### TODOs ###
 	- unpack versus direct loops?
 	- qbond - separate arrays?
+        - 测openmp 注释contract 更好reduction
+	- 重新考虑一下alg (minimal operation count), 结合symbolic, 预先计算
 
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 

@@ -5,8 +5,8 @@
 #include <omp.h>
 #endif
 
-#include "symbolic_renorm_formulae.h"
-#include "symbolic_sum_kernel.h"
+#include "symbolic_formulae_renorm.h"
+#include "symbolic_kernel_sum.h"
 
 namespace ctns{
 
@@ -75,7 +75,7 @@ void symbolic_renorm_single2(const std::string& block1,
 }
 
 template <typename Tm>
-void symbolic_renorm_kernel2(const std::string superblock,
+void symbolic_kernel_renorm2(const std::string superblock,
 		             const stensor3<Tm>& site,
 		             const integral::two_body<Tm>& int2e,
 		             const oper_dict<Tm>& qops1,
@@ -84,7 +84,7 @@ void symbolic_renorm_kernel2(const std::string superblock,
 			     const std::string fname, 
 			     const bool debug){
    // generate formulae for renormalization first
-   auto tasks = symbolic_renorm_formulae(superblock, int2e, qops1, qops2, qops, fname);
+   auto tasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, fname);
    if(debug) std::cout << "rank=" << qops.mpirank 
 	               << " size[tasks]=" << tasks.size() 
 		       << std::endl;

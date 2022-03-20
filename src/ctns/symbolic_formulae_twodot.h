@@ -11,7 +11,7 @@ namespace ctns{
 // generate all formulea for constructing H*x as a list of terms
 // organizing principle: recursive partition
 template <typename Tm>
-symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
+symbolic_task<Tm> symbolic_formulae_twodot(const oper_dict<Tm>& lqops,
 	                                   const oper_dict<Tm>& rqops,
 			                   const oper_dict<Tm>& c1qops,
 	                                   const oper_dict<Tm>& c2qops,
@@ -30,7 +30,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
    std::ofstream file;
    bool ifsave = !fname.empty() and rank == 0;
    if(ifsave){
-      std::cout << "ctns::symbolic_twodot_formulae"
+      std::cout << "ctns::symbolic_formulae_twodot"
 	        << " mpisize=" << size
 	        << " fname=" << fname 
 		<< std::endl;
@@ -39,7 +39,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
       backup = std::cout.rdbuf(); // back up cout's streambuf
       psbuf = file.rdbuf(); // get file's streambuf
       std::cout.rdbuf(psbuf); // assign streambuf to cout
-      std::cout << "cnts::symbolic_twodot_formulae"
+      std::cout << "cnts::symbolic_formulae_twodot"
 	        << " isym=" << isym
 		<< " ifkr=" << ifkr
 		<< " ifNC=" << ifNC
@@ -230,7 +230,7 @@ symbolic_task<Tm> symbolic_twodot_formulae(const oper_dict<Tm>& lqops,
    if(rank == 0){
       auto t1 = tools::get_time();
       int size = formulae.size();
-      tools::timing("symbolic_twodot_formulae with size="+std::to_string(size), t0, t1);
+      tools::timing("symbolic_formulae_twodot with size="+std::to_string(size), t0, t1);
    }
    return formulae;
 }

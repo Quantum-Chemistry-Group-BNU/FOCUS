@@ -1,7 +1,7 @@
 #ifndef SYMBOLIC_RENORM_FORMULAE_H
 #define SYMBOLIC_RENORM_FORMULAE_H
 
-#include "symbolic_oper.h"
+#include "symbolic_task.h"
 #include "symbolic_normxwf.h"
 #include "symbolic_compxwf.h"
 #include "../core/tools.h"
@@ -9,7 +9,7 @@
 namespace ctns{
 
 template <typename Tm>
-renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
+renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
 	     		                  const integral::two_body<Tm>& int2e,
 			                  const oper_dict<Tm>& qops1,
 			                  const oper_dict<Tm>& qops2,
@@ -25,7 +25,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
    std::ofstream file;
    bool ifsave = !fname.empty() and qops.mpirank == 0;
    if(ifsave){
-      std::cout << "ctns::symbolic_renorm_formulae"
+      std::cout << "ctns::symbolic_formulae_renorm"
 	        << " mpisize=" << qops.mpisize
 		<< " fname=" << fname
 		<< std::endl;
@@ -34,7 +34,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
       backup = std::cout.rdbuf(); // back up cout's streambuf
       psbuf = file.rdbuf(); // get file's streambuf
       std::cout.rdbuf(psbuf); // assign streambuf to cout
-      std::cout << "ctns::symbolic_renorm_formulae"
+      std::cout << "ctns::symbolic_formulae_renorm"
 	        << " isym=" << isym
 		<< " ifkr=" << ifkr
 		<< " block1=" << block1
@@ -153,7 +153,7 @@ renorm_tasks<Tm> symbolic_renorm_formulae(const std::string superblock,
    if(qops.mpirank == 0){
       auto t1 = tools::get_time();
       int size = formulae.size();
-      tools::timing("symbolic_renorm_formulae with size="+std::to_string(size), t0, t1);
+      tools::timing("symbolic_formulae_renorm with size="+std::to_string(size), t0, t1);
    }
    return formulae;
 }
