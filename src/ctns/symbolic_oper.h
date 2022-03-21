@@ -80,11 +80,12 @@ struct symbolic_oper{
       char label;
       int index;
       bool dagger = false;
-      bool parity = false;
       int nbar = 0; // for kramers operations
+      bool parity = false;
 };
 
 // sum of weighted symbolic operators: wa*opa + wb*opb + ...
+// where we assume that all ops have the same parity !!!
 template <typename Tm>
 struct symbolic_sum{
    public:
@@ -92,12 +93,15 @@ struct symbolic_sum{
       symbolic_sum(){}
       symbolic_sum(const symbolic_oper& sop){
          sums.push_back(std::make_pair(1.0,sop));
+	 parity = sop.parity;
       }
       symbolic_sum(const symbolic_oper& sop, const Tm& wt){
          sums.push_back(std::make_pair(wt,sop));
+	 parity = sop.parity;
       }
       // sum a term
       void sum(const Tm& wt, const symbolic_oper& sop){
+         if(sums.size() == 0) parity = sop.parity;
          sums.push_back(std::make_pair(wt,sop));
       }
       // print
@@ -128,6 +132,7 @@ struct symbolic_sum{
 	    auto op = sums[i].second.H();
             sH.sums[i] = std::make_pair(wt,op);
 	 }
+	 sH.parity = parity;
 	 return sH;
       }
       // helper
@@ -144,6 +149,7 @@ struct symbolic_sum{
 	 return d*t + len*d*d;
       }
    public:
+      bool parity;
       std::vector<std::pair<Tm,symbolic_oper>> sums;
 };
 
@@ -155,12 +161,14 @@ struct symbolic_prod{
       symbolic_prod(){}
       symbolic_prod(const symbolic_oper& op1, const double _wt=1.0){
          terms.push_back(symbolic_sum<Tm>(op1,_wt));
+	 parity = op1.parity;
       }
       symbolic_prod(const symbolic_oper& op1, 
 		    const symbolic_oper& op2,
 		    const double _wt=1.0){
          terms.push_back(symbolic_sum<Tm>(op1,_wt));
          terms.push_back(symbolic_sum<Tm>(op2));
+	 parity = op1.parity^op2.parity;
       }
       symbolic_prod(const symbolic_oper& op1, 
 		    const symbolic_oper& op2,
@@ -169,6 +177,7 @@ struct symbolic_prod{
          terms.push_back(symbolic_sum<Tm>(op1,_wt));
          terms.push_back(symbolic_sum<Tm>(op2));
          terms.push_back(symbolic_sum<Tm>(op3));
+	 parity = op1.parity^op2.parity^op3.parity;
       }
       // o[l]o[c1]o[c2]o[r]
       symbolic_prod(const symbolic_oper& op1, 
@@ -180,17 +189,20 @@ struct symbolic_prod{
          terms.push_back(symbolic_sum<Tm>(op2));
          terms.push_back(symbolic_sum<Tm>(op3));
          terms.push_back(symbolic_sum<Tm>(op4));
+	 parity = op1.parity^op2.parity^op3.parity^op4.parity;
       }
       // oper & sum
       symbolic_prod(const symbolic_oper& op1,
 		    const symbolic_sum<Tm>& ops2){
          terms.push_back(symbolic_sum<Tm>(op1));
 	 terms.push_back(ops2);
+	 parity = op1.parity^ops2.parity;
       }
       symbolic_prod(const symbolic_sum<Tm>& ops1,
 		    const symbolic_oper& op2){
          terms.push_back(ops1);
 	 terms.push_back(symbolic_sum<Tm>(op2));
+	 parity = ops1.parity^op2.parity;
       }
       // print
       friend std::ostream& operator <<(std::ostream& os, const symbolic_prod& ops){
@@ -230,6 +242,7 @@ struct symbolic_prod{
 	    tH.terms[i] = terms[i].H();
 	 }
 	 tH.scale(tH.Hsign());
+	 tH.parity = parity;
 	 return tH;
       }
       // t1*t2 
@@ -237,6 +250,7 @@ struct symbolic_prod{
          symbolic_prod t12;
 	 t12.terms = terms;
          std::copy(t.terms.begin(), t.terms.end(), std::back_inserter(t12.terms));
+	 t12.parity = parity^t.parity;
 	 return t12;
       }
       // helper
@@ -258,6 +272,7 @@ struct symbolic_prod{
  	 return t;
       }
    public:
+      bool parity = false;
       std::vector<symbolic_sum<Tm>> terms;
 };
 

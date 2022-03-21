@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_RENORM_KERNEL_H
-#define SYMBOLIC_RENORM_KERNEL_H
+#ifndef SYMBOLIC_KERNEL_RENORM_H
+#define SYMBOLIC_KERNEL_RENORM_H
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -81,17 +81,15 @@ stensor3<Tm> symbolic_renorm_single(const std::string& block1,
 
 template <typename Tm>
 void symbolic_kernel_renorm(const std::string superblock,
+			    const renorm_tasks<Tm>& rtasks,
 		            const stensor3<Tm>& site,
-		            const integral::two_body<Tm>& int2e,
 		            const oper_dict<Tm>& qops1,
 		            const oper_dict<Tm>& qops2,
 		            oper_dict<Tm>& qops,
-			    const std::string fname, 
 			    const bool debug){
    // generate formulae for renormalization first
-   auto tasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, fname);
    if(debug) std::cout << "rank=" << qops.mpirank 
-	               << " size[tasks]=" << tasks.size() 
+	               << " size[rtasks]=" << rtasks.size() 
 		       << std::endl;
    const std::string block1 = superblock.substr(0,1);
    const std::string block2 = superblock.substr(1,2);
@@ -100,8 +98,8 @@ void symbolic_kernel_renorm(const std::string superblock,
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
-   for(int i=0; i<tasks.size(); i++){
-      const auto& task = tasks.op_tasks[i];
+   for(int i=0; i<rtasks.size(); i++){
+      const auto& task = rtasks.op_tasks[i];
       auto key = std::get<0>(task);
       auto index = std::get<1>(task);
       auto formula = std::get<2>(task);

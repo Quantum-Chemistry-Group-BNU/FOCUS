@@ -47,9 +47,9 @@ size_t preprocess_opsize(const oper_dictmap<Tm>& qops_dict){
 }
 
 template <typename Tm>
-size_t preprocess_wf3size(const qinfo3<Tm>& wf3info, 
-    	 	          std::map<qsym,qinfo3<Tm>>& info_dict,
-		          const int nbody=2){
+size_t preprocess_wfsize(const qinfo3<Tm>& wf3info, 
+    	 	         std::map<qsym,qinfo3<Tm>>& info_dict,
+		         const int nbody=2){
    const auto& sym_state = wf3info.sym; 
    const auto& qrow = wf3info.qrow;
    const auto& qcol = wf3info.qcol;
@@ -57,7 +57,7 @@ size_t preprocess_wf3size(const qinfo3<Tm>& wf3info,
    const auto& dir = wf3info.dir;
    int isym = sym_state.isym();
    if(debug_preprocess){ 
-      std::cout << "ctns::preprocess_wf3size"
+      std::cout << "ctns::preprocess_wfsize"
 	        << " isym=" << isym
 	        << " sym_state=" << sym_state	
 	        << " nbody=" << nbody
@@ -87,9 +87,9 @@ size_t preprocess_wf3size(const qinfo3<Tm>& wf3info,
 }
 
 template <typename Tm>
-size_t preprocess_wf4size(const qinfo4<Tm>& wf4info, 
-    	 	          std::map<qsym,qinfo4<Tm>>& info_dict,
-		          const int nbody=2){
+size_t preprocess_wfsize(const qinfo4<Tm>& wf4info, 
+    	 	         std::map<qsym,qinfo4<Tm>>& info_dict,
+		         const int nbody=2){
    const auto& sym_state = wf4info.sym; 
    const auto& qrow = wf4info.qrow;
    const auto& qcol = wf4info.qcol;
@@ -97,7 +97,7 @@ size_t preprocess_wf4size(const qinfo4<Tm>& wf4info,
    const auto& qver = wf4info.qver;
    int isym = sym_state.isym();
    if(debug_preprocess){ 
-      std::cout << "ctns::preprocess_wf4size"
+      std::cout << "ctns::preprocess_wfsize"
 	        << " isym=" << isym 
 	        << " sym_state=" << sym_state	
 		<< " nbody=" << nbody 

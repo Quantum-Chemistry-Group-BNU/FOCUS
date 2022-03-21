@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_SUM_KERNEL_H
-#define SYMBOLIC_SUM_KERNEL_H
+#ifndef SYMBOLIC_KERNEL_SUM_H
+#define SYMBOLIC_KERNEL_SUM_H
 
 #include "oper_dict.h"
 #include "symbolic_oper.h"

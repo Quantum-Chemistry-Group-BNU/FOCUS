@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_RENORM_KERNEL2_H
-#define SYMBOLIC_RENORM_KERNEL2_H
+#ifndef SYMBOLIC_KERNEL_RENORM2_H
+#define SYMBOLIC_KERNEL_RENORM2_H
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -25,7 +25,6 @@ void symbolic_renorm_single2(const std::string& block1,
 			     Tm* workspace){
    const bool debug = false;
    if(debug) formulae.display("formulae");
-   // initialization 
    qsym sym;
    qinfo3<Tm> *opxwf0_info, *opxwf_info;
    Tm *opxwf0_data, *opxwf_data;
@@ -76,17 +75,14 @@ void symbolic_renorm_single2(const std::string& block1,
 
 template <typename Tm>
 void symbolic_kernel_renorm2(const std::string superblock,
+			     const renorm_tasks<Tm>& rtasks,
 		             const stensor3<Tm>& site,
-		             const integral::two_body<Tm>& int2e,
 		             const oper_dict<Tm>& qops1,
 		             const oper_dict<Tm>& qops2,
 		             oper_dict<Tm>& qops,
-			     const std::string fname, 
 			     const bool debug){
-   // generate formulae for renormalization first
-   auto tasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, fname);
    if(debug) std::cout << "rank=" << qops.mpirank 
-	               << " size[tasks]=" << tasks.size() 
+	               << " size[rtasks]=" << rtasks.size() 
 		       << std::endl;
    const std::string block1 = superblock.substr(0,1);
    const std::string block2 = superblock.substr(1,2);
@@ -99,7 +95,7 @@ void symbolic_kernel_renorm2(const std::string superblock,
 #endif
    std::map<qsym,qinfo3<Tm>> info_dict;
    size_t opsize = preprocess_opsize(qops_dict);
-   size_t wfsize = preprocess_wf3size(site.info, info_dict);
+   size_t wfsize = preprocess_wfsize(site.info, info_dict);
    size_t tmpsize = opsize + 3*wfsize;
    size_t worktot = maxthreads*tmpsize;
    if(qops.mpirank == 0){
@@ -115,13 +111,13 @@ void symbolic_kernel_renorm2(const std::string superblock,
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
-   for(int i=0; i<tasks.size(); i++){
+   for(int i=0; i<rtasks.size(); i++){
 #ifdef _OPENMP
       int omprank = omp_get_thread_num();
 #else
       int omprank = 0;
 #endif
-      const auto& task = tasks.op_tasks[i];
+      const auto& task = rtasks.op_tasks[i];
       auto key = std::get<0>(task);
       auto index = std::get<1>(task);
       auto formula = std::get<2>(task);

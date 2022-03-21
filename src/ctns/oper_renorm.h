@@ -25,8 +25,9 @@ void oper_renorm_opAll(const std::string superblock,
 		       const oper_dict<Tm>& qops1,
 		       const oper_dict<Tm>& qops2,
 		       oper_dict<Tm>& qops,
+		       const std::string fname,
 		       const int alg_renorm,
-		       const std::string fname){
+		       const bool sort_formulae){
    const bool debug = false;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -80,11 +81,16 @@ void oper_renorm_opAll(const std::string superblock,
    // 1. start renormalization
    oper_timer.clear();
    if(alg_renorm == 0){
-      oper_renorm_kernel(superblock, site, int2e, qops1, qops2, qops, debug);
+      auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops);
+      oper_renorm_kernel(superblock, rfuns, site, qops, debug);
    }else if(alg_renorm == 1){
-      symbolic_kernel_renorm(superblock, site, int2e, qops1, qops2, qops, fname, debug);
+      auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+		                             fname, sort_formulae);
+      symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, debug);
    }else if(alg_renorm == 2){
-      symbolic_kernel_renorm2(superblock, site, int2e, qops1, qops2, qops, fname, debug);
+      auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+		                             fname, sort_formulae);
+      symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, debug);
    }
    
    // 2. check operators against explicit construction
@@ -118,22 +124,19 @@ void oper_renorm_opAll(const std::string superblock,
 
 template <typename Tm>
 void oper_renorm_kernel(const std::string superblock,
+		        const Hx_functors<Tm>& rfuns,
 		        const stensor3<Tm>& site,
-		        const integral::two_body<Tm>& int2e,
-		        const oper_dict<Tm>& qops1,
-		        const oper_dict<Tm>& qops2,
 		        oper_dict<Tm>& qops,
 			const bool debug){
-   auto Hx_funs = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops);
    if(debug) std::cout << "rank=" << qops.mpirank 
-	               << " size[Hx_funs]=" << Hx_funs.size() 
+	               << " size[rfuns]=" << rfuns.size() 
 		       << std::endl;
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
-   for(int i=0; i<Hx_funs.size(); i++){
-      char key = Hx_funs[i].label[0];
-      int index = Hx_funs[i].index; 
+   for(int i=0; i<rfuns.size(); i++){
+      char key = rfuns[i].label[0];
+      int index = rfuns[i].index; 
       if(debug){
          std::cout << "cal: rank=" << qops.mpirank 
                    << " i=" << i 
@@ -141,7 +144,7 @@ void oper_renorm_kernel(const std::string superblock,
 		   << " index=" << index 
 		   << std::endl;
       }
-      auto opxwf = Hx_funs[i]();
+      auto opxwf = rfuns[i]();
       auto op = contract_qt3_qt3(superblock, site, opxwf);
       linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
    } // i
@@ -154,7 +157,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
 				     const oper_dict<Tm>& qops1,
 				     const oper_dict<Tm>& qops2,
 				     const oper_dict<Tm>& qops){
-   Hx_functors<Tm> Hx_funs;
+   Hx_functors<Tm> rfuns;
    // opC
    if(qops.oplist.find('C') != std::string::npos){
       auto info = oper_combine_opC(qops1.cindex, qops2.cindex);
@@ -165,7 +168,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
            	         std::cref(superblock), std::cref(site), 
            	         std::cref(qops1), std::cref(qops2),
            	         index, iformula, false);
-         Hx_funs.push_back(Hx);
+         rfuns.push_back(Hx);
       }
    }
    // opA
@@ -180,7 +183,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
            	            std::cref(superblock), std::cref(site), 
            	            std::cref(qops1), std::cref(qops2),
            		    index, iformula, false);
-            Hx_funs.push_back(Hx);
+            rfuns.push_back(Hx);
          }
       }
    }
@@ -196,7 +199,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
            	            std::cref(superblock), std::cref(site), 
            	            std::cref(qops1), std::cref(qops2),
            		    index, iformula, false);
-            Hx_funs.push_back(Hx);
+            rfuns.push_back(Hx);
          }
       }
    }
@@ -209,7 +212,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
            	         std::cref(superblock), std::cref(site),
            	         std::cref(qops1), std::cref(qops2), std::cref(int2e), 
 			 index, false);
-         Hx_funs.push_back(Hx);
+         rfuns.push_back(Hx);
       }
    }
    // opQ
@@ -221,7 +224,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
            	         std::cref(superblock), std::cref(site),
            	         std::cref(qops1), std::cref(qops2), std::cref(int2e), 
 			 index, false);
-         Hx_funs.push_back(Hx);
+         rfuns.push_back(Hx);
       }
    }
    // opS
@@ -233,7 +236,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
            	         std::cref(superblock), std::cref(site),
            	         std::cref(qops1), std::cref(qops2),
 			 index, qops.mpisize, qops.mpirank, false);
-         Hx_funs.push_back(Hx);
+         rfuns.push_back(Hx);
       }
    }
    // opH
@@ -243,9 +246,9 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
            	      std::cref(superblock), std::cref(site),
            	      std::cref(qops1), std::cref(qops2),
            	      qops.mpisize, qops.mpirank);
-      Hx_funs.push_back(Hx);
+      rfuns.push_back(Hx);
    }
-   return Hx_funs;
+   return rfuns;
 }
 
 } // ctns

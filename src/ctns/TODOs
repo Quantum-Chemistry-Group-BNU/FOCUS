@@ -329,6 +329,23 @@ Optimized version:
  symbolic_preprocess.h
  symbolic_onedot_sigma2.h
 
+NEW STRUCTURE:
+ symbolic_oper.h
+ symbolic_task.h
+ symbolic_normxwf.h
+ symbolic_compxwf.h
+ symbolic_op1op2xwf.h
+ symbolic_formulae_onedot.h
+ symbolic_formulae_twodot.h
+ symbolic_formulae_renorm.h
+ symbolic_kernel_sigma.h
+ symbolic_kernel_sigma2.h
+ symbolic_kernel_sigma3.h
+ symbolic_kernel_renorm.h
+ symbolic_kernel_renorm2.h
+ symbolic_kernel_sum.h
+ symbolic_preprocess.h
+
 #################################################################
 
 优化方向: onedot/twodot算法

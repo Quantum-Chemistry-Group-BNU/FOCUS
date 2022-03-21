@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_SIGMA_H
-#define SYMBOLIC_SIGMA_H
+#ifndef SYMBOLIC_KERNEL_SIGMA_H
+#define SYMBOLIC_KERNEL_SIGMA_H
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -25,7 +25,7 @@ void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,
 	        << " HTerm=" << HTerm 
 		<< std::endl;
    }
-   // compute (HTerm+HTerm.H)*|wf>
+   // compute HTerm*|wf>
    QTm opxwf;
    for(int idx=HTerm.size()-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];

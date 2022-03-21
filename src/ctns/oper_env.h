@@ -106,7 +106,8 @@ void oper_env_right(const comb<Km>& icomb,
 		    const integral::one_body<typename Km::dtype>& int1e,
 		    const std::string scratch,
 		    const int alg_renorm,
-		    const bool save_formulae){
+		    const bool save_formulae,
+		    const bool sort_formulae){
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -147,7 +148,8 @@ void oper_env_right(const comb<Km>& icomb,
          std::string fname;
 	 if(save_formulae) fname = scratch+"/rformulae_env_"+std::to_string(idx)+".txt"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e,
-			   qops1, qops2, qops, alg_renorm, fname);
+			   qops1, qops2, qops, 
+			   fname, alg_renorm, sort_formulae);
          //---------------------------------------------
          auto td = tools::get_time();
          t_comp += tools::get_duration(td-tc);

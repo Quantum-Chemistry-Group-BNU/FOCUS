@@ -13,7 +13,8 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
 		            		    const double ecore,
 		            		    const std::string scratch,
 					    const int alg_renorm,
-					    const bool save_formulae=false){
+					    const bool save_formulae,
+					    const bool sort_formulae){
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -21,7 +22,8 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
 #endif   
    
    // build operators for environement
-   oper_env_right(icomb, int2e, int1e, scratch, alg_renorm, save_formulae);
+   oper_env_right(icomb, int2e, int1e, scratch, 
+		  alg_renorm, save_formulae, sort_formulae);
 
    // load operators from file
    using Tm = typename Km::dtype;

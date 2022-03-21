@@ -13,6 +13,7 @@ struct symbolic_task{
       symbolic_task(){}
       symbolic_task(const symbolic_prod<Tm>& t){
          tasks.push_back(t);
+	 parity = t.parity;
       }
       // append a term
       void append(const symbolic_prod<Tm>& t){
@@ -36,6 +37,7 @@ struct symbolic_task{
   	       st_new.tasks.push_back( tasks[i].product(st.tasks[j]) );
 	    }
 	 }
+	 st_new.parity = parity^st.parity;
 	 return st_new;
       }
       // display
@@ -76,6 +78,7 @@ struct symbolic_task{
  	 return t;
       }
    public:
+      bool parity;
       std::vector<symbolic_prod<Tm>> tasks;
 }; 
 
@@ -141,6 +144,10 @@ struct bipart_oper{
       // cost
       double cost(const std::map<std::string,int>& dims) const{
          return lop.cost(dims) + rop.cost(dims);
+      }
+      // (lop*rop)^H 
+      double Hsign() const{
+	 return ((lop.parity & rop.parity)? -1.0 : 1.0);
       }
    public:
       std::string name;

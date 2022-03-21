@@ -190,6 +190,8 @@ void params_ctns::read(ifstream& istrm){
 	 alg_renorm = algorithm;
       }else if(line.substr(0,13)=="save_formulae"){
          save_formulae = true;
+      }else if(line.substr(0,6)=="nosort"){
+         sort_formulae = false;
       }else if(line.substr(0,13)=="topology_file"){
          istringstream is(line.substr(13));
 	 is >> topology_file;
@@ -276,6 +278,7 @@ void params_ctns::print() const{
    cout << "alg_hvec = " << alg_hvec << endl;
    cout << "alg_renorm = " << alg_renorm << endl;
    cout << "save_formulae = " << save_formulae << endl;
+   cout << "sort_formulae = " << sort_formulae << endl;
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
    cout << "guess    = " << guess << endl;

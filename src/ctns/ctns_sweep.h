@@ -28,12 +28,6 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 
    if(schd.ctns.maxsweep == 0) return;
 
-   // ZL@20220210: this should be done by calling task=ham
-   // prepare environmental operators 
-   // //oper_env_right(icomb, int2e, int1e, scratch);
-   // auto Hmat = get_Hmat(icomb, int2e, int1e, ecore, scratch);
-   // if(rank == 0) Hmat.print("Hmat",8);
-
    // init left boundary site
    auto& ntotal = icomb.topo.ntotal;
    icomb.lsites.resize(ntotal);

@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_RENORM_FORMULAE_H
-#define SYMBOLIC_RENORM_FORMULAE_H
+#ifndef SYMBOLIC_FORMULAE_RENORM_H
+#define SYMBOLIC_FORMULAE_RENORM_H
 
 #include "symbolic_task.h"
 #include "symbolic_normxwf.h"
@@ -14,7 +14,8 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
 			                  const oper_dict<Tm>& qops1,
 			                  const oper_dict<Tm>& qops2,
 			                  const oper_dict<Tm>& qops,
-					  const std::string fname){
+					  const std::string fname,
+					  const bool sort_formulae){
    auto t0 = tools::get_time();
    const int print_level = 1;
    const int isym = qops.isym;
@@ -141,9 +142,11 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
       }
    }
 
-   std::map<std::string,int> dims = {{block1,qops1.qket.get_dimAll()},
-	   			     {block2,qops2.qket.get_dimAll()}};
-   formulae.sort(dims);
+   if(sort_formulae){
+      std::map<std::string,int> dims = {{block1,qops1.qket.get_dimAll()},
+              			        {block2,qops2.qket.get_dimAll()}};
+      formulae.sort(dims);
+   }
    if(ifsave){
       std::cout << "renormalization summary:" << std::endl;
       qops.print("qops",2);

@@ -12,6 +12,7 @@
 #include "symbolic_preprocess.h"
 #include "symbolic_kernel_sigma.h"
 #include "symbolic_kernel_sigma2.h"
+#include "symbolic_kernel_sigma3.h"
 
 namespace ctns{
 
@@ -120,6 +121,24 @@ void sweep_onedot(const input::schedule& schd,
    const oper_dictmap<Tm> qops_dict = {{"l",lqops},
 	   		 	       {"r",rqops},
 	   			       {"c",cqops}};
+   std::map<qsym,qinfo3<Tm>> info_dict;
+   const bool preprocess = schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3;
+   size_t opsize, wfsize, tmpsize, worktot;
+   opsize = preprocess_opsize(qops_dict);
+   wfsize = preprocess_wfsize(wf.info, info_dict);
+   if(schd.ctns.alg_hvec == 2){
+      tmpsize = opsize + 3*wfsize;
+   }else if(schd.ctns.alg_hvec == 3){
+      tmpsize = opsize + 4*wfsize;
+   }
+   worktot = maxthreads*tmpsize;
+   if(preprocess && rank == 0){
+      std::cout << "preprocess:" 
+                << " opsize=" << opsize << ":" << tools::sizeMB<Tm>(opsize) << "MB"
+                << " wfsize=" << wfsize << ":" << tools::sizeMB<Tm>(wfsize) << "MB"
+                << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                << std::endl; 
+   }
    std::string fname;
    if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
 	                             + "_"+std::to_string(isweep)
@@ -128,7 +147,6 @@ void sweep_onedot(const input::schedule& schd,
    Hx_functors<Tm> Hx_funs;
    symbolic_task<Tm> H_formulae;
    bipart_task<Tm> H_formulae2;
-   std::map<qsym,qinfo3<Tm>> info_dict;
    Tm* workspace;
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -139,24 +157,15 @@ void sweep_onedot(const input::schedule& schd,
            	  std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 1){
       H_formulae = symbolic_formulae_onedot(lqops, rqops, cqops, 
-		                            int2e, size, rank, fname);
+		                            int2e, size, rank, fname,
+					    schd.ctns.sort_formulae);
       HVec = bind(&ctns::symbolic_Hx<Tm,stensor3<Tm>>, _1, _2, std::cref(H_formulae),
         	  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 2){
       H_formulae = symbolic_formulae_onedot(lqops, rqops, cqops, 
-		                            int2e, size, rank, fname);
-      size_t opsize = preprocess_opsize(qops_dict);
-      size_t wfsize = preprocess_wf3size(wf.info, info_dict);
-      size_t tmpsize = opsize + 3*wfsize;
-      size_t worktot = maxthreads*tmpsize;
-      if(rank == 0){
-         std::cout << "preprocess:" 
-     	           << " opsize=" << opsize << ":" << tools::sizeMB<Tm>(opsize) << "MB"
-     	           << " wfsize=" << wfsize << ":" << tools::sizeMB<Tm>(wfsize) << "MB"
-     	           << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
-     	           << std::endl; 
-      }
+		                            int2e, size, rank, fname,
+					    schd.ctns.sort_formulae);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx2<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
 		  std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
@@ -165,35 +174,20 @@ void sweep_onedot(const input::schedule& schd,
      	          std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 3){
       H_formulae2 = symbolic_formulae_onedot2(lqops, rqops, cqops, 
-		                              int2e, size, rank, fname);
-/*
-      size_t opsize = preprocess_opsize(qops_dict);
-      size_t wfsize = preprocess_wf3size(wf.info, info_dict);
-      size_t tmpsize = opsize + 3*wfsize;
-      size_t worktot = maxthreads*tmpsize;
-      if(rank == 0){
-         std::cout << "preprocess:" 
-     	           << " opsize=" << opsize << ":" << tools::sizeMB<Tm>(opsize) << "MB"
-     	           << " wfsize=" << wfsize << ":" << tools::sizeMB<Tm>(wfsize) << "MB"
-     	           << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
-     	           << std::endl; 
-      }
+		                              int2e, size, rank, fname,
+					      schd.ctns.sort_formulae);
       workspace = new Tm[worktot];
-      HVec = bind(&ctns::symbolic_Hx2<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
-		  std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
+      HVec = bind(&ctns::symbolic_Hx3<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
+		  std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
      	          std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
      	          std::ref(workspace));
-*/
-      exit(1);
-   }
+   } // alg_hvec
    oper_timer.clear();
    onedot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
-   if(schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3){
-      delete[] workspace;
-   } 
+   if(preprocess) delete[] workspace;
    timing.tc = tools::get_time();
    if(rank == 0){ 
       sweeps.print_eopt(isweep, ibond);

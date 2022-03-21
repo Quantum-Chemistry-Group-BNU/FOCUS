@@ -17,7 +17,7 @@ struct Hx_functor{
          iformula = _iformula;
       }
       // compute
-      stensor3<Tm> operator ()(){ return opxwf(); }
+      stensor3<Tm> operator ()() const{ return opxwf(); }
       // print
       friend std::ostream& operator <<(std::ostream& os, const Hx_functor& Hx){
          os << " Hx_functor: label=" << Hx.label 

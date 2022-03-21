@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_TWODOT_FORMULAE_H
-#define SYMBOLIC_TWODOT_FORMULAE_H
+#ifndef SYMBOLIC_FORMULAE_TWODOT_H
+#define SYMBOLIC_FORMULAE_TWODOT_H
 
 #include "symbolic_oper.h"
 #include "symbolic_normxwf.h"
@@ -18,7 +18,8 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dict<Tm>& lqops,
 	                                   const integral::two_body<Tm>& int2e,
 	                                   const int& size,
 	                                   const int& rank,
-					   const std::string fname){
+					   const std::string fname,
+					   const bool sort_formulae){
    auto t0 = tools::get_time();
    const int print_level = 0;
    const int isym = lqops.isym;
@@ -206,11 +207,13 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dict<Tm>& lqops,
       }
    } // ifNC
 
-   std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
-                                     {"r",rqops.qket.get_dimAll()},
-                                     {"c1",c1qops.qket.get_dimAll()},
-                                     {"c2",c2qops.qket.get_dimAll()}};
-   formulae.sort(dims);
+   if(sort_formulae){
+      std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
+                                        {"r",rqops.qket.get_dimAll()},
+                                        {"c1",c1qops.qket.get_dimAll()},
+                                        {"c2",c2qops.qket.get_dimAll()}};
+      formulae.sort(dims);
+   }
    if(ifsave){
       std::cout << "\nSUMMARY size=" << idx;
       if(ifNC){
@@ -244,7 +247,8 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dict<Tm>& lqops,
 	                                  const integral::two_body<Tm>& int2e,
 	                                  const int& size,
 	                                  const int& rank,
-					  const std::string fname){
+					  const std::string fname,
+					  const bool sort_formulae){
    auto t0 = tools::get_time();
    const int print_level = 1;
    const int isym = lqops.isym;
@@ -434,11 +438,13 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dict<Tm>& lqops,
       }
    } // ifNC
 
-   std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
-                                     {"r",rqops.qket.get_dimAll()},
-                                     {"c1",c1qops.qket.get_dimAll()},
-                                     {"c2",c2qops.qket.get_dimAll()}};
-   sort(formulae, dims);
+   if(sort_formulae){
+      std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
+                                        {"r",rqops.qket.get_dimAll()},
+                                        {"c1",c1qops.qket.get_dimAll()},
+                                        {"c2",c2qops.qket.get_dimAll()}};
+      sort(formulae, dims);
+   }
    if(ifsave){
       std::cout << "\nSUMMARY size=" << idx;
       if(ifNC){
@@ -459,7 +465,6 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dict<Tm>& lqops,
       int size = formulae.size();
       tools::timing("symbolic_formulae_twodot2 with size="+std::to_string(size), t0, t1);
    }
-   exit(1);
    return formulae;
 }
 
