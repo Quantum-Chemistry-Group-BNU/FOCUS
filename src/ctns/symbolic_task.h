@@ -40,7 +40,7 @@ struct symbolic_task{
       }
       // display
       void display(const std::string& name, const int level=1) const{
-         std::cout << " formulae " << name << " : size=" << tasks.size() << std::endl;
+         std::cout << " symbolic_task=" << name << " : size=" << tasks.size() << std::endl;
 	 if(level > 0){
             for(int i=0; i<tasks.size(); i++){
 	       std::cout << "  i=" << i << " " << tasks[i] << std::endl; 
@@ -50,7 +50,7 @@ struct symbolic_task{
       // helper
       int size() const{ return tasks.size(); }
       // reorder
-      void sort(std::map<std::string,int>& dims, const bool debug=false){
+      void sort(const std::map<std::string,int>& dims, const bool debug=false){
          std::stable_sort(tasks.begin(), tasks.end(),
         	          [&dims](const symbolic_prod<Tm>& t1,
 			     	  const symbolic_prod<Tm>& t2){
@@ -68,7 +68,7 @@ struct symbolic_task{
 	 }
       }
       // cost for (op1+op2+...+)|wf>
-      double cost(std::map<std::string,int>& dims) const{
+      double cost(const std::map<std::string,int>& dims) const{
          double t = 0.e0;
 	 for(int i=0; i<tasks.size(); i++){
 	    t += tasks[i].cost(dims);
@@ -95,7 +95,7 @@ struct renorm_tasks{
       // helper
       int size() const{ return op_tasks.size(); }
       // reorder
-      void sort(std::map<std::string,int>& dims){
+      void sort(const std::map<std::string,int>& dims){
          for(auto& op : op_tasks){
 	    auto& formulae = std::get<2>(op);
 	    formulae.sort(dims);
@@ -106,14 +106,75 @@ struct renorm_tasks{
 };
 
 template <typename Tm>
-struct bipart_task{
+struct bipart_oper{
    public:
-     // contructor
-      bipart_task(){}
+      // contructor
+      bipart_oper(const symbolic_task<Tm>& _lop,
+		  const symbolic_task<Tm>& _rop,
+		  const std::string _name=""){
+         lop = _lop;
+	 rop = _rop; 
+	 if(_name != "") name = _name;
+      }
+      bipart_oper(const char space, 
+		  const symbolic_task<Tm>& _op,
+		  const std::string _name=""){
+         if(space == 'l') lop = _op;
+	 if(space == 'r') rop = _op;
+	 if(_name != "") name = _name;
+      }
+      // display
+      void display(const int level=1) const{
+         std::cout << " bipart_oper=" << name << " size(lop,rop)=" 
+		   << lop.size() << "," << rop.size()
+		   << std::endl;
+	 if(level > 0){
+	    lop.display("lop", level);
+	    rop.display("rop", level);
+	 }
+      }
+      // sort lop & rop
+      void sort(const std::map<std::string,int>& dims){
+         lop.sort(dims);
+	 rop.sort(dims);
+      }
+      // cost
+      double cost(const std::map<std::string,int>& dims) const{
+         return lop.cost(dims) + rop.cost(dims);
+      }
    public:
+      std::string name;
       symbolic_task<Tm> lop;
       symbolic_task<Tm> rop;
 };
+template <typename Tm>
+using bipart_task = std::vector<bipart_oper<Tm>>;
+
+template <typename Tm>
+void sort(bipart_task<Tm>& formulae, const std::map<std::string,int>& dims){
+   // sort each operator
+   for(auto& oper : formulae){
+      oper.sort(dims);
+   }
+   // sort all operator
+   std::stable_sort(formulae.begin(), formulae.end(),
+		    [&dims](const bipart_oper<Tm>& t1,
+		       	    const bipart_oper<Tm>& t2){
+		       	    return t1.cost(dims)>t2.cost(dims);
+			    }
+		   );
+}
+
+template <typename Tm>
+void display(const bipart_task<Tm>& formulae, 
+ 	     const std::string& name,
+	     const int level=0){
+   std::cout << " bipart_task=" << name << " : size=" << formulae.size() << std::endl;
+   for(int i=0; i<formulae.size(); i++){
+      std::cout << " idx=" << i;
+      formulae[i].display(level);
+   }
+}
 
 } // ctns
 

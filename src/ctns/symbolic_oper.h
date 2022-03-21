@@ -133,7 +133,7 @@ struct symbolic_sum{
       // helper
       int size() const{ return sums.size(); } 
       // cost for op*|wf>
-      double cost(std::map<std::string,int>& dims) const{
+      double cost(const std::map<std::string,int>& dims) const{
 	 double t = 1.e0; 
          for(const auto& pr : dims){
 	    t *= pr.second;
@@ -250,7 +250,7 @@ struct symbolic_prod{
 	 return lbl;
       }
       // cost for op1*op2*...*|wf>
-      double cost(std::map<std::string,int>& dims) const{
+      double cost(const std::map<std::string,int>& dims) const{
          double t = 0.e0;
 	 for(int i=0; i<terms.size(); i++){
 	    t += terms[i].cost(dims);
