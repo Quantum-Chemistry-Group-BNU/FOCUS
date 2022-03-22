@@ -20,7 +20,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dict<Tm>& lqops,
 					   const std::string fname,
 					   const bool sort_formulae){
    auto t0 = tools::get_time();
-   const int print_level = 0;
+   const int print_level = 1;
    const int isym = lqops.isym;
    const bool ifkr = lqops.ifkr;
    const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();

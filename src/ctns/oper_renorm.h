@@ -234,7 +234,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
          Hx_functor<Tm> Hx("S", index);
          Hx.opxwf = bind(&oper_compxwf_opS<Tm>,
            	         std::cref(superblock), std::cref(site),
-           	         std::cref(qops1), std::cref(qops2),
+           	         std::cref(qops1), std::cref(qops2), std::cref(int2e),
 			 index, qops.mpisize, qops.mpirank, false);
          rfuns.push_back(Hx);
       }

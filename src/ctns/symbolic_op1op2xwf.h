@@ -6,7 +6,7 @@
 namespace ctns{
 
 //
-// opwf = (sum_{ij} oij*a1^(d1)[i]*a2^(d2)[i])^d * wf
+// opxwf = (sum_{ij} oij*a1^(d1)[i]*a2^(d2)[i])^d * wf
 //
 
 template <typename Tm>
@@ -153,7 +153,7 @@ void symbolic_op1op2xwf_kr(symbolic_task<Tm>& formulae,
    }  // cindex1.size() <= cindex2.size()
 }
 
-// opwf = (sum_{ij}oij*a1^(d)[i]*a2^(d)[i])*wf
+// opxwf = (sum_{ij}oij*a1^(d)[i]*a2^(d)[i])*wf
 template <typename Tm>
 void symbolic_op1op2xwf(const bool ifkr,
 			symbolic_task<Tm>& formulae,

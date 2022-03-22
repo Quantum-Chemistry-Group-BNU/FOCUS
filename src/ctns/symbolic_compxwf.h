@@ -261,7 +261,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
 			               const int size,
 			               const int rank){
    symbolic_task<Tm> formulae;
-   // for AP,BQ terms
+   // for AP,BQ terms: to ensure the optimal scaling!
    const bool ifNC = cindex1.size() <= cindex2.size(); 
    auto AP1 = ifNC? 'A' : 'P';
    auto AP2 = ifNC? 'P' : 'A';

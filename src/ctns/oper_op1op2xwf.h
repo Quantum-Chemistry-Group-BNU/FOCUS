@@ -6,11 +6,11 @@
 namespace ctns{
 
 //
-// opwf = (sum_{ij} oij*a1^(d1)[i]*a2^(d2)[i])^d*wf
+// opxwf = (sum_{ij} oij*a1^(d1)[i]*a2^(d2)[i])^d*wf
 //
 
 template <typename Tm>
-void oper_op1op2xwf_nkr(stensor3<Tm>& opwf,
+void oper_op1op2xwf_nkr(stensor3<Tm>& opxwf,
 		        const std::string superblock,
 		        const stensor3<Tm>& site,
 		        const oper_map<Tm>& qops1C,
@@ -42,9 +42,9 @@ void oper_op1op2xwf_nkr(stensor3<Tm>& opwf,
 	    //tmp_op2 += oij[std::make_pair(i,j)]*op2;
 	    linalg::xaxpy(N, oij.at(std::make_pair(i,j)), op2.data(), tmp_op2.data());
 	 }
-	 //opwf += sgn*oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
+	 //opxwf += sgn*oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
 	 auto tmp = oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger); 
-	 linalg::xaxpy(opwf.size(), sgn, tmp.data(), opwf.data());
+	 linalg::xaxpy(opxwf.size(), sgn, tmp.data(), opxwf.data());
       }
    }else{
       // this part appears when the branch is larger 
@@ -64,16 +64,16 @@ void oper_op1op2xwf_nkr(stensor3<Tm>& opwf,
 	    //tmp_op1 += oij[std::make_pair(i,j)]*op1;
 	    linalg::xaxpy(N, oij.at(std::make_pair(i,j)), op1.data(), tmp_op1.data());
 	 }
-	 //opwf += sgn*oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
+	 //opxwf += sgn*oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
 	 auto tmp = oper_kernel_OOwf(superblock,site,tmp_op1,op2,1,ifdagger);
-	 linalg::xaxpy(opwf.size(), sgn, tmp.data(), opwf.data());
+	 linalg::xaxpy(opxwf.size(), sgn, tmp.data(), opxwf.data());
       }
    }
 }
 
 // TRS version: only unbar part of creation ops is stored
 template <typename Tm>
-void oper_op1op2xwf_kr(stensor3<Tm>& opwf,
+void oper_op1op2xwf_kr(stensor3<Tm>& opxwf,
 		       const std::string superblock,
 		       const stensor3<Tm>& site,
 		       const oper_map<Tm>& qops1C,
@@ -109,12 +109,12 @@ void oper_op1op2xwf_kr(stensor3<Tm>& opwf,
 	    linalg::xaxpy(Nb, oij.at(std::make_pair(ib,ja)), op2a.data(), top2b.data());
 	    linalg::xaxpy(Nb, oij.at(std::make_pair(ib,jb)), op2b.data(), top2b.data());
 	 }
-	 //opwf += sgn*(oper_kernel_OOwf(superblock,site,op1a,top2a,1,ifdagger)
+	 //opxwf += sgn*(oper_kernel_OOwf(superblock,site,op1a,top2a,1,ifdagger)
 	 //            +oper_kernel_OOwf(superblock,site,op1b,top2b,1,ifdagger));
 	 auto tmpa = oper_kernel_OOwf(superblock,site,op1a,top2a,1,ifdagger);
 	 auto tmpb = oper_kernel_OOwf(superblock,site,op1b,top2b,1,ifdagger);
-	 linalg::xaxpy(opwf.size(), sgn, tmpa.data(), opwf.data());
-	 linalg::xaxpy(opwf.size(), sgn, tmpb.data(), opwf.data());
+	 linalg::xaxpy(opxwf.size(), sgn, tmpa.data(), opxwf.data());
+	 linalg::xaxpy(opxwf.size(), sgn, tmpb.data(), opxwf.data());
       }
    // sum_j (sum_i oij a1[i]) * a2[j]
    }else{
@@ -138,20 +138,20 @@ void oper_op1op2xwf_kr(stensor3<Tm>& opwf,
 	    linalg::xaxpy(Nb, oij.at(std::make_pair(ia,jb)), op1a.data(), top1b.data());
 	    linalg::xaxpy(Nb, oij.at(std::make_pair(ib,jb)), op1b.data(), top1b.data());
 	 }
-	 //opwf += sgn*(oper_kernel_OOwf(superblock,site,top1a,op2a,1,ifdagger)
+	 //opxwf += sgn*(oper_kernel_OOwf(superblock,site,top1a,op2a,1,ifdagger)
 	 //            +oper_kernel_OOwf(superblock,site,top1b,op2b,1,ifdagger));
 	 auto tmpa = oper_kernel_OOwf(superblock,site,top1a,op2a,1,ifdagger);
 	 auto tmpb = oper_kernel_OOwf(superblock,site,top1b,op2b,1,ifdagger);
-	 linalg::xaxpy(opwf.size(), sgn, tmpa.data(), opwf.data());
-	 linalg::xaxpy(opwf.size(), sgn, tmpb.data(), opwf.data());
+	 linalg::xaxpy(opxwf.size(), sgn, tmpa.data(), opxwf.data());
+	 linalg::xaxpy(opxwf.size(), sgn, tmpb.data(), opxwf.data());
       }
    }
 }
 
-// opwf = (sum_{ij}oij*a1^(d)[i]*a2^(d)[i])*wf
+// opxwf = (sum_{ij}oij*a1^(d)[i]*a2^(d)[i])*wf
 template <typename Tm>
 void oper_op1op2xwf(const bool& ifkr,
-		    stensor3<Tm>& opwf,
+		    stensor3<Tm>& opxwf,
 		    const std::string superblock,
 		    const stensor3<Tm>& site,
 		    const oper_map<Tm>& qops1C,
@@ -162,10 +162,10 @@ void oper_op1op2xwf(const bool& ifkr,
 		    const bool ifdagger2,
 		    const bool ifdagger){
    if(!ifkr){
-      oper_op1op2xwf_nkr(opwf, superblock, site, qops1C, qops2C, 
+      oper_op1op2xwf_nkr(opxwf, superblock, site, qops1C, qops2C, 
 		         sym_op, oij, ifdagger1, ifdagger2, ifdagger);
    }else{
-      oper_op1op2xwf_kr(opwf, superblock, site, qops1C, qops2C, 
+      oper_op1op2xwf_kr(opxwf, superblock, site, qops1C, qops2C, 
 		        sym_op, oij, ifdagger1, ifdagger2, ifdagger);
    }
 }

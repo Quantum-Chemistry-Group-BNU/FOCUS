@@ -28,13 +28,13 @@ stensor3<Tm> oper_normxwf_opC(const std::string superblock,
 	        << " iformula=" << iformula << std::endl;
    }
  
-   stensor3<Tm> opwf;
+   stensor3<Tm> opxwf;
    if(iformula == 1){
       const auto& op1 = qops1('C').at(index);
-      opwf = oper_kernel_OIwf(superblock, site, op1, ifdagger);
+      opxwf = oper_kernel_OIwf(superblock, site, op1, ifdagger);
    }else if(iformula == 2){
       const auto& op2 = qops2('C').at(index);
-      opwf = oper_kernel_IOwf(superblock, site, op2, 1, ifdagger);
+      opxwf = oper_kernel_IOwf(superblock, site, op2, 1, ifdagger);
    } // iformula
 
    auto t1 = tools::get_time();
@@ -45,7 +45,7 @@ stensor3<Tm> oper_normxwf_opC(const std::string superblock,
       oper_timer.nC += 1;
       oper_timer.tC += tools::get_duration(t1-t0);
    }
-   return opwf; 
+   return opxwf; 
 }
 
 // kernel for computing Apq|ket> 
@@ -64,13 +64,13 @@ stensor3<Tm> oper_normxwf_opA(const std::string superblock,
    }
 
    const bool ifkr = qops1.ifkr;
-   stensor3<Tm> opwf;
+   stensor3<Tm> opxwf;
    if(iformula == 1){
       const auto& op1 = qops1('A').at(index);
-      opwf = oper_kernel_OIwf(superblock, site, op1, ifdagger);
+      opxwf = oper_kernel_OIwf(superblock, site, op1, ifdagger);
    }else if(iformula == 2){
       const auto& op2 = qops2('A').at(index);
-      opwf = oper_kernel_IOwf(superblock, site, op2, 0, ifdagger);
+      opxwf = oper_kernel_IOwf(superblock, site, op2, 0, ifdagger);
    }else if(iformula == 3){
       auto pq = oper_unpack(index);	
       int p = pq.first, sp = p%2;
@@ -79,8 +79,8 @@ stensor3<Tm> oper_normxwf_opA(const std::string superblock,
       const bool ifnot_kros = !(ifkr && sp != sq);
       const auto& op1 = qops1('C').at(p);
       const auto& op2 = ifnot_kros? qops2('C').at(q) : qops2('C').at(q-1).K(1);
-      opwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
-      if(ifdagger) opwf *= -1.0; // (c1*c2)^d = c2d*c1d = -c1d*c2d
+      opxwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
+      if(ifdagger) opxwf *= -1.0; // (c1*c2)^d = c2d*c1d = -c1d*c2d
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
@@ -89,8 +89,8 @@ stensor3<Tm> oper_normxwf_opA(const std::string superblock,
       const bool ifnot_kros = !(ifkr && sp != sq);
       const auto& op1 = ifnot_kros? -qops1('C').at(p) : -qops1('C').at(p-1).K(1);
       const auto& op2 = qops2('C').at(q);
-      opwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
-      if(ifdagger) opwf *= -1.0;
+      opxwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
+      if(ifdagger) opxwf *= -1.0;
    } // iformula
 
    auto t1 = tools::get_time();
@@ -101,7 +101,7 @@ stensor3<Tm> oper_normxwf_opA(const std::string superblock,
       oper_timer.nA += 1;
       oper_timer.tA += tools::get_duration(t1-t0);
    }
-   return opwf;
+   return opxwf;
 }
 
 // kernel for computing Bps|ket> 
@@ -120,13 +120,13 @@ stensor3<Tm> oper_normxwf_opB(const std::string superblock,
    }
 
    const bool ifkr = qops1.ifkr;
-   stensor3<Tm> opwf;
+   stensor3<Tm> opxwf;
    if(iformula == 1){
       const auto& op1 = qops1('B').at(index);
-      opwf = oper_kernel_OIwf(superblock, site, op1, ifdagger);
+      opxwf = oper_kernel_OIwf(superblock, site, op1, ifdagger);
    }else if(iformula == 2){
       const auto& op2 = qops2('B').at(index);
-      opwf = oper_kernel_IOwf(superblock, site, op2, 0, ifdagger);
+      opxwf = oper_kernel_IOwf(superblock, site, op2, 0, ifdagger);
    }else if(iformula == 3){
       auto pq = oper_unpack(index);	
       int p = pq.first, sp = p%2;
@@ -136,8 +136,8 @@ stensor3<Tm> oper_normxwf_opB(const std::string superblock,
       const auto& op1 = qops1('C').at(p);
       const auto& op2 = ifnot_kros? qops2('C').at(q).H() : 
 	                            qops2('C').at(q-1).H().K(1);
-      opwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
-      if(ifdagger) opwf *= -1.0;
+      opxwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
+      if(ifdagger) opxwf *= -1.0;
    }else if(iformula == 4){
       auto qp = oper_unpack(index);	
       int p = qp.second, sp = p%2;
@@ -147,8 +147,8 @@ stensor3<Tm> oper_normxwf_opB(const std::string superblock,
       const auto& op1 = ifnot_kros? -qops1('C').at(p).H() : 
 	                            -qops1('C').at(p-1).H().K(1);
       const auto& op2 = qops2('C').at(q);
-      opwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
-      if(ifdagger) opwf *= -1.0;
+      opxwf = oper_kernel_OOwf(superblock, site, op1, op2, 1, ifdagger);
+      if(ifdagger) opxwf *= -1.0;
    } // iformula
 
    auto t1 = tools::get_time();
@@ -159,7 +159,7 @@ stensor3<Tm> oper_normxwf_opB(const std::string superblock,
       oper_timer.nB += 1;
       oper_timer.tB += tools::get_duration(t1-t0);
    }
-   return opwf;
+   return opxwf;
 }
 
 } // ctns
