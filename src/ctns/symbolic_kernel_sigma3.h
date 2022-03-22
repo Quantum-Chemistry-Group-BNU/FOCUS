@@ -26,8 +26,11 @@ void symbolic_HxTerm3(const oper_dictmap<Tm>& qops_dict,
 		      const size_t& wfsize,
 		      Tm* workspace,
 		      const bool ifdagger){
-   const bool debug = true;
-   if(debug) bipart_op.display();
+   const bool debug = false;
+   if(debug){
+      std::cout << "it=" << it;
+      bipart_op.display();
+   }
    const auto& lformulae = bipart_op.lop;
    const auto& rformulae = bipart_op.rop;
    // temporary
@@ -167,8 +170,7 @@ void symbolic_Hx3(Tm* y,
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
-   //for(int it=0; it<H_formulae.size(); it++){
-   for(int it=0; it<2; it++){
+   for(int it=0; it<H_formulae.size(); it++){
 #ifdef _OPENMP
       int omprank = omp_get_thread_num();
 #else
@@ -227,6 +229,7 @@ void symbolic_Hx3(Tm* y,
    }
    auto t2 = tools::get_time();
 */
+
 /*
    memset(y, 0, wf.size()*sizeof(Tm));
    auto t1 = tools::get_time();

@@ -17,10 +17,12 @@ struct symbolic_task{
       }
       // append a term
       void append(const symbolic_prod<Tm>& t){
+	 if(tasks.size() == 0) parity = t.parity;
          tasks.push_back(t);
       }
       // join a task	   
       void join(const symbolic_task& st){
+	 if(tasks.size() == 0) parity = st.parity;
          std::copy(st.tasks.begin(), st.tasks.end(), std::back_inserter(tasks));
       }
       // scale by a factor
@@ -78,7 +80,7 @@ struct symbolic_task{
  	 return t;
       }
    public:
-      bool parity;
+      bool parity = false;
       std::vector<symbolic_prod<Tm>> tasks;
 }; 
 
@@ -116,8 +118,9 @@ struct bipart_oper{
 		  const symbolic_task<Tm>& _rop,
 		  const std::string _name=""){
          lop = _lop;
-	 rop = _rop; 
+	 rop = _rop;
 	 if(_name != "") name = _name;
+	 parity = lop.parity^rop.parity; 
       }
       bipart_oper(const char space, 
 		  const symbolic_task<Tm>& _op,
@@ -125,6 +128,7 @@ struct bipart_oper{
          if(space == 'l') lop = _op;
 	 if(space == 'r') rop = _op;
 	 if(_name != "") name = _name;
+	 parity = lop.parity^rop.parity; 
       }
       // display
       void display(const int level=1) const{
@@ -150,6 +154,7 @@ struct bipart_oper{
 	 return ((lop.parity & rop.parity)? -1.0 : 1.0);
       }
    public:
+      bool parity;
       std::string name;
       symbolic_task<Tm> lop;
       symbolic_task<Tm> rop;
