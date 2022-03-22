@@ -321,9 +321,6 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dict<Tm>& lqops,
          auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cqops.cindex, rqops.cindex,
            	                             index, ifkr, size, rank);
          auto Cl_Scr = bipart_oper(Cl,Scr,"Cl_Scr["+std::to_string(index)+"]");
-         
-	 std::cout << "Cl=" << Cl.parity << std::endl;
-	 std::cout << "Scr=" << Scr.parity << std::endl;
 	 assert(Cl_Scr.parity == 0);
 	 formulae.push_back(Cl_Scr);
          if(ifsave){ 
