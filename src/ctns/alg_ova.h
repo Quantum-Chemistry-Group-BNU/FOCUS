@@ -44,8 +44,6 @@ linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){
    } // i
    // first merge: sum_l rwfuns[j,l]*site0[l,r,n] => site[j,r,n]
    const auto& site0 = icomb.rsites[rindex.at(std::make_pair(0,0))];
-   site0.print("site0");
-   icomb.rwfuns.print("rwfuns");
    auto site = contract_qt3_qt2("l",site0,icomb.rwfuns); 
    auto qtmp = contract_qt3_qt2("r",site,qt2_r);
    qt2_r = contract_qt3_qt3("cr",site,qtmp);

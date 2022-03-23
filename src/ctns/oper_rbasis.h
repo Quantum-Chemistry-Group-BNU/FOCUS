@@ -12,6 +12,9 @@ namespace ctns{
 
 const bool debug_rops = true;
 extern const bool debug_rops;
+   
+const double thresh_rops = 1.e-5;
+extern const double thresh_rops;
 
 inline void setup_orb2pos_map(const std::vector<int>& lsupp,
 		              const std::vector<int>& rsupp,
@@ -47,7 +50,6 @@ void oper_check_rbasis(const comb<Km>& bra,
 		       oper_dict<typename Km::dtype>& qops,
 		       const char opname){
    using Tm = typename Km::dtype;
-   const double thresh = 1.e-6;
    if(p == std::make_pair(0,0)) return; // no rbases at the start 
    std::cout << "ctns::oper_check_rbasis coord=" << p 
 	     << " opname=" << opname << std::endl; 
@@ -118,14 +120,14 @@ void oper_check_rbasis(const comb<Km>& bra,
       auto opmat = op.to_matrix();
       double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
-      if(diff > thresh) nfail++;
+      if(diff > thresh_rops) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " C: p=" << orb_p 
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff
-                   << " fail=" << (diff > thresh)	
+                   << " fail=" << (diff > thresh_rops)	
                    << std::endl;
       }
       nop++;
@@ -189,14 +191,14 @@ void oper_check_rbasis(const comb<Km>& bra,
       auto opmat = op.to_matrix();
       double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
-      if(diff > thresh) nfail++;
+      if(diff > thresh_rops) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " A: p,q=" << orb_p << "," << orb_q
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff
-                   << " fail=" << (diff > thresh)
+                   << " fail=" << (diff > thresh_rops)
            	   << std::endl;
       }
       nop++;
@@ -260,14 +262,14 @@ void oper_check_rbasis(const comb<Km>& bra,
       auto opmat = op.to_matrix();
       double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
-      if(diff > thresh) nfail++;
+      if(diff > thresh_rops) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " B: p,q=" << orb_p << "," << orb_q
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
-                   << " fail=" << (diff > thresh)	
+                   << " fail=" << (diff > thresh_rops)	
            	   << std::endl;
       }
       nop++;
@@ -276,7 +278,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    std::cout << "no. of ops = " << nop 
 	     << " failed = " << nfail 
 	     << " maxdiff = " << maxdiff << std::endl;
-   if(nfail>0 || std::abs(maxdiff)>thresh) exit(1);
+   if(nfail>0 || std::abs(maxdiff)>thresh_rops) exit(1);
 }
 
 // check complementary operators: P, Q, S, H
@@ -289,7 +291,6 @@ void oper_check_rbasis(const comb<Km>& bra,
 	               const integral::two_body<typename Km::dtype>& int2e,
 	               const integral::one_body<typename Km::dtype>& int1e){
    using Tm = typename Km::dtype;
-   const double thresh = 1.e-5;
    if(p == std::make_pair(0,0)) return; // no rbases at the start 
    std::cout << "ctns::oper_check_rbasis coord=" << p 
 	     << " opname=" << opname << std::endl; 
@@ -369,14 +370,14 @@ void oper_check_rbasis(const comb<Km>& bra,
       auto opmat = op.to_matrix();
       double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
-      if(diff > thresh) nfail++;
+      if(diff > thresh_rops) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " P: p,q=" << orb_p << "," << orb_q
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
-                   << " fail=" << (diff > thresh)	
+                   << " fail=" << (diff > thresh_rops)	
            	   << std::endl;
       }
       nop++;
@@ -443,16 +444,16 @@ void oper_check_rbasis(const comb<Km>& bra,
       auto opmat = op.to_matrix();
       double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
-      if(diff > thresh) nfail++;
+      if(diff > thresh_rops) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " Q: p,s=" << orb_p << "," << orb_s
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
-                   << " fail=" << (diff > thresh)	
+                   << " fail=" << (diff > thresh_rops)	
            	   << std::endl;
-	 if(diff > thresh){
+	 if(diff > thresh_rops){
 	    opmat.print("opmat");
 	    tmat.print("tmat");
 	    exit(1);
@@ -533,14 +534,14 @@ void oper_check_rbasis(const comb<Km>& bra,
       auto opmat = op.to_matrix();
       double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
-      if(diff > thresh) nfail++;
+      if(diff > thresh_rops) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " S: p=" << orb_p
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
-                   << " fail=" << (diff > thresh)	
+                   << " fail=" << (diff > thresh_rops)	
            	   << std::endl;
       }
       nop++;
@@ -628,14 +629,14 @@ void oper_check_rbasis(const comb<Km>& bra,
       auto opmat = op.to_matrix();
       double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
-      if(diff > thresh) nfail++;
+      if(diff > thresh_rops) nfail++;
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " H:"
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
-                   << " fail=" << (diff > thresh)	
+                   << " fail=" << (diff > thresh_rops)	
            	   << std::endl;
       }
       nop++;
@@ -644,7 +645,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    std::cout << "no. of ops = " << nop
 	     << " failed = " << nfail 
 	     << " maxdiff = " << maxdiff << std::endl;
-   if(nfail>0 || std::abs(maxdiff)>thresh) exit(1);
+   if(nfail>0 || std::abs(maxdiff)>thresh_rops) exit(1);
 }
 
 } // ctns
