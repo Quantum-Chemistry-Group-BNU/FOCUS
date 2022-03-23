@@ -333,7 +333,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
 	       tmp_op2 -= int2e.get(p,q1,s1,r2)*op2;
 	    }
 	    opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
-	    // Hermitian part: q1<->r1
+	    // Hermitian part: q1<->s1
 	    if(q1 == s1) continue;
 	    stensor2<Tm> tmp_op2H(sym_op+op1.info.sym, qrow2, qcol2);
 	    for(const auto& op2C : qops2('C')){
@@ -534,6 +534,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
             }
             opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
             opxwf += oper_kernel_OOwf(superblock,site,op1K,tmp_op2K,1,ifdagger);
+	    // Hermitian part: q1<->s1
             if(kq1 == ks1) continue;
             stensor2<Tm> tmp_op2H(sym_op+op1.info.sym, qrow2, qcol2);
             stensor2<Tm> tmp_op2KH(sym_op+op1K.info.sym, qrow2, qcol2);

@@ -157,8 +157,8 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    int kB2 = kc2*kc2;
    bool combine_two_index3 = 0; //(kc1 <= kA2);
    bool combine_two_index4 = 0; //(kc1 <= kB2);
-   bool combine_two_index5 = 1; //(kc2 <= kA1);
-   bool combine_two_index6 = 1; //(kc2 <= kB1);
+   bool combine_two_index5 = 0; //(kc2 <= kA1);
+   bool combine_two_index6 = 0; //(kc2 <= kB1);
    auto aindex1 = oper_index_opA(cindex1, ifkr);
    auto bindex1 = oper_index_opB(cindex1, ifkr);
    auto aindex2 = oper_index_opA(cindex2, ifkr);
@@ -279,25 +279,30 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
             }
          } // q
       }else{
-/*
 	 // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
-	 for(const auto& op1A : qops1('A')){
-	    auto sr = oper_unpack(op1A.first);
-	    int s1 = sr.first;
-	    int r1 = sr.second;
-	    const auto& op1 = op1A.second.H();
-	    // sum_q <pq2||s1r1> aq[2]^+
-	    stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
-	    for(const auto& op2C : qops2('C')){
-	       if(op2C.second.info.sym != tmp_op2.info.sym) continue;
-	       int q2 = op2C.first;
-	       const auto& op2 = op2C.second;
-	       tmp_op2 += int2e.get(p,q2,s1,r1)*op2;
+	 for(const auto& isr : aindex1){
+	    int iproc = distribute2(isr,size);
+	    if(iproc == rank){
+	       auto sr = oper_unpack(isr);
+	       int s1 = sr.first;
+	       int r1 = sr.second;
+	       auto op1 = symbolic_oper(block1,'A',isr).H();
+	       auto sym_op1 = op1.get_qsym(isym);
+	       // sum_q <pq2||s1r1> aq[2]^+
+	       symbolic_sum<Tm> top2;
+	       for(const auto& q2 : cindex2){
+	          auto op2 = symbolic_oper(block2,'C',q2);
+		  auto sym_op2 = op2.get_qsym(isym);
+		  if(sym_op != sym_op1 + sym_op2) continue;
+		  top2.sum(int2e.get(p,q2,s1,r1),op2);
+	       }
+	       if(top2.size() > 0){
+		  auto term = symbolic_prod<Tm>(op1,top2);
+		  if(ifdagger) term = term.H();
+		  formulae.append(term);
+	       }
 	    } 
-	    opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
 	 }
-      }
-*/
       }
 
       // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]   
@@ -316,6 +321,46 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
             }
          } // q
       }else{
+         // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
+	 for(const auto& iqs : bindex1){
+	    int iproc = distribute2(iqs,size);
+   	    if(iproc == rank){
+	       auto qs = oper_unpack(iqs);
+	       int q1 = qs.first;
+	       int s1 = qs.second;
+	       auto op1 = symbolic_oper(block1,'B',iqs);
+	       auto sym_op1 = op1.get_qsym(isym);
+	       // sum_r -<pq1||s1r2> ar[2]
+	       symbolic_sum<Tm> top2;
+	       for(const auto& r2 : cindex2){
+	          auto op2 = symbolic_oper(block2,'C',r2).H();
+		  auto sym_op2 = op2.get_qsym(isym);
+		  if(sym_op != sym_op1 + sym_op2) continue;
+		  top2.sum(-int2e.get(p,q1,s1,r2),op2);
+	       }
+	       if(top2.size() > 0){
+		  auto term = symbolic_prod<Tm>(op1,top2);
+		  if(ifdagger) term = term.H();
+		  formulae.append(term);
+	       }
+	       // Hermitian part: q1<->r1
+	       if(q1 == s1) continue;
+	       auto op1H = op1.H();
+	       auto sym_op1H = op1H.get_qsym(isym);
+	       symbolic_sum<Tm> top2H;
+	       for(const auto& r2 : cindex2){
+	          auto op2 = symbolic_oper(block2,'C',r2).H();
+		  auto sym_op2 = op2.get_qsym(isym);
+		  if(sym_op != sym_op1H + sym_op2) continue;
+		  top2H.sum(-int2e.get(p,s1,q1,r2),op2);
+	       }
+	       if(top2H.size() > 0){
+		  auto term = symbolic_prod<Tm>(op1H,top2H);
+		  if(ifdagger) term = term.H();
+		  formulae.append(term);
+	       }
+	    }
+	 }
       }
 
    }else{
@@ -537,6 +582,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
             }
             opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
             opxwf += oper_kernel_OOwf(superblock,site,op1K,tmp_op2K,1,ifdagger);
+	    // Hermitian part: q1<->s1
             if(kq1 == ks1) continue;
             stensor2<Tm> tmp_op2H(sym_op+op1.info.sym, qrow2, qcol2);
             stensor2<Tm> tmp_op2KH(sym_op+op1K.info.sym, qrow2, qcol2);
