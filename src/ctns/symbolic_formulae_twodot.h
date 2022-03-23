@@ -82,7 +82,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dict<Tm>& lqops,
       // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
       auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
       auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
-		                           index, ifkr, size, rank);
+		                           int2e, index, isym, ifkr, size, rank);
       auto Clc1_Sc2r = Clc1.outer_product(Sc2r);
       formulae.join(Clc1_Sc2r);
       if(ifsave){ 
@@ -98,7 +98,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dict<Tm>& lqops,
       int iformula = pr.second;
       // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
       auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
-		                           index, ifkr, size, rank);
+		                           int2e, index, isym, ifkr, size, rank);
       auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
       Cc2r.scale(-1.0);
       auto Slc1_Cc2r = Slc1.outer_product(Cc2r);
@@ -315,7 +315,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dict<Tm>& lqops,
       // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
       auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
       auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
-		                           index, ifkr, size, rank);
+		                           int2e, index, isym, ifkr, size, rank);
       auto Clc1_Sc2r = bipart_oper(Clc1,Sc2r,"Clc1_Sc2r["+std::to_string(index)+"]");
       assert(Clc1_Sc2r.parity == 0);
       formulae.push_back(Clc1_Sc2r);
@@ -332,7 +332,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dict<Tm>& lqops,
       int iformula = pr.second;
       // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
       auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
-		                           index, ifkr, size, rank);
+		                           int2e, index, isym, ifkr, size, rank);
       auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
       Cc2r.scale(-1.0);
       auto Slc1_Cc2r = bipart_oper(Slc1,Cc2r,"Slc1_Cc2r["+std::to_string(index)+"]");

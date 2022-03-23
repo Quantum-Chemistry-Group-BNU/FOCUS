@@ -188,10 +188,10 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
    int kc2 = ifkr? 2*qops2.cindex.size() : qops2.cindex.size();
    int kA2 = kc2*(kc2-1)/2;
    int kB2 = kc2*kc2;
-   bool combine_two_index3 = 0; //(kc1 >= kA2);
-   bool combine_two_index4 = 0; //(kc1 >= kB2);
-   bool combine_two_index5 = 0; //(kc2 >= kA1);
-   bool combine_two_index6 = 0; //(kc2 >= kB1);
+   bool combine_two_index3 = (kc1 <= kA2);
+   bool combine_two_index4 = (kc1 <= kB2);
+   bool combine_two_index5 = (kc2 <= kA1);
+   bool combine_two_index6 = (kc2 <= kB1);
    const auto& qrow1 = qops1.qbra;
    const auto& qcol1 = qops1.qket;
    const auto& qrow2 = qops2.qbra;

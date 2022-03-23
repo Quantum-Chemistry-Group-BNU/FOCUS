@@ -123,7 +123,7 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
       for(const auto& pr : qops('S')){
          int index = pr.first;
 	 auto opS = symbolic_compxwf_opS<Tm>(block1, block2, qops1.cindex, qops2.cindex,
-			 	             index, ifkr, qops.mpisize, qops.mpirank);
+			 	             int2e, index, isym, ifkr, qops.mpisize, qops.mpirank);
 	 formulae.append(std::make_tuple('S', index, opS));
 	 if(ifsave){
 	    std::cout << "idx=" << idx++;

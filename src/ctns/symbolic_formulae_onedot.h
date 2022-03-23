@@ -73,7 +73,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dict<Tm>& lqops,
       for(const auto& index : lqops.cindex){
          auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
          auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cqops.cindex, rqops.cindex,
-           	                             index, ifkr, size, rank);
+           	                             int2e, index, isym, ifkr, size, rank);
          auto Cl_Scr = Cl.outer_product(Scr);
          formulae.join(Cl_Scr);
          if(ifsave){ 
@@ -153,7 +153,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dict<Tm>& lqops,
       // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
       for(const auto& index : rqops.cindex){
          auto Slc = symbolic_compxwf_opS<Tm>("l", "c", lqops.cindex, cqops.cindex,
-			 		     index, ifkr, size, rank);
+			 		     int2e, index, isym, ifkr, size, rank);
 	 Slc.scale(-1.0);
 	 auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
 	 auto Slc_Cr = Slc.outer_product(Cr);
@@ -319,7 +319,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dict<Tm>& lqops,
       for(const auto& index : lqops.cindex){
          auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
          auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cqops.cindex, rqops.cindex,
-           	                             index, ifkr, size, rank);
+           	                             int2e, index, isym, ifkr, size, rank);
          auto Cl_Scr = bipart_oper(Cl,Scr,"Cl_Scr["+std::to_string(index)+"]");
 	 assert(Cl_Scr.parity == 0);
 	 formulae.push_back(Cl_Scr);
@@ -411,7 +411,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dict<Tm>& lqops,
       // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
       for(const auto& index : rqops.cindex){
          auto Slc = symbolic_compxwf_opS<Tm>("l", "c", lqops.cindex, cqops.cindex,
-			 		     index, ifkr, size, rank);
+			 		     int2e, index, isym, ifkr, size, rank);
 	 Slc.scale(-1.0);
 	 auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
 	 auto Slc_Cr = bipart_oper(Slc,Cr,"Slc_Cr["+std::to_string(index)+"]");
