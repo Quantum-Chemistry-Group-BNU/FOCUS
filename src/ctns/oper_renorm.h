@@ -93,8 +93,8 @@ void oper_renorm_opAll(const std::string superblock,
       symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, debug);
    }
    
-   // 2. check operators against explicit construction
-   const bool ifcheck_rbasis = false;
+   // 2. check against explicit construction
+   const bool ifcheck_rbasis = true;
    if(ifcheck_rbasis){
       for(const auto& key : qops.oplist){
 	 if(key == 'C' || key == 'A' || key == 'B'){

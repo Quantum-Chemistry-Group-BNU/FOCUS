@@ -172,28 +172,26 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
    //
    // Sp = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
    //    = Sp^1 + Sp^2 (S exists in both blocks)
-   //    + <pq1||s2r2> aq[1]^+ar[2]as[2] => aq^+[1]*Ppq1[2]  = sum_q aq^+[1]*Ppq[2]
-   //    + <pq2||s1r2> aq[2]^+ar[2]as[1] => Qps1[2]*as[1]    = sum_q aq[1]*Qpq[2]
-   //    + <pq2||s1r1> aq[2]^+ar[1]as[1] => aq2^+[2]*Ppq2[1] = sum_q Ppq[1]*aq^+[2]
-   //    + <pq1||s1r2> aq[1]^+ar[2]as[1] => Qpr2[1]*ar[2]    = sum_q Qpq[1]*aq[2]
+   //    + <pq1||s2r2> aq[1]^+ar[2]as[2] 
+   //    + <pq2||s1r2> aq[2]^+ar[2]as[1] 
+   //    + <pq2||s1r1> aq[2]^+ar[1]as[1] 
+   //    + <pq1||s1r2> aq[1]^+ar[2]as[1] 
    //
    // 1. S1*I2
    opxwf += oper_kernel_OIwf(superblock,site,qops1('S').at(index),ifdagger);
    // 2. I1*S2
    opxwf += oper_kernel_IOwf(superblock,site,qops2('S').at(index),1,ifdagger);
    // cross terms
-   int c1 = qops1.cindex.size();
-   int kc1 = ifkr? 2*c1 : c1;
-   int kA1 = oper_num_opA(c1, ifkr);
-   int kB1 = oper_num_opB(c1, ifkr);
-   int c2 = qops2.cindex.size();
-   int kc2 = ifkr? 2*c2 : c2;
-   int kA2 = oper_num_opA(c2, ifkr);
-   int kB2 = oper_num_opB(c2, ifkr);
-   bool combine_two_index3 = (kc1 >= kA2);
-   bool combine_two_index4 = (kc1 >= kB2);
-   bool combine_two_index5 = (kc2 >= kA1);
-   bool combine_two_index6 = (kc2 >= kB1);
+   int kc1 = ifkr? 2*qops1.cindex.size() : qops1.cindex.size();
+   int kA1 = kc1*(kc1-1)/2;
+   int kB1 = kc1*kc1;
+   int kc2 = ifkr? 2*qops2.cindex.size() : qops2.cindex.size();
+   int kA2 = kc2*(kc2-1)/2;
+   int kB2 = kc2*kc2;
+   bool combine_two_index3 = 1; //(kc1 >= kA2);
+   bool combine_two_index4 = 1; //(kc1 >= kB2);
+   bool combine_two_index5 = 1; //(kc2 >= kA1);
+   bool combine_two_index6 = 1; //(kc2 >= kB1);
    const auto& qrow1 = qops1.qbra;
    const auto& qcol1 = qops1.qket;
    const auto& qrow2 = qops2.qbra;
@@ -240,15 +238,37 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
             int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
             int iproc = distribute2(ipq,size);
             if(iproc == rank){
-               const auto& op1c = op1C.second;
-               const auto& op2P = (p<q)? qops2('P').at(ipq) : -qops2('P').at(ipq);
-               opxwf += oper_kernel_OOwf(superblock,site,op1c,op2P,0,ifdagger);
                const auto& op1a = op1C.second.H();
                const auto& op2Q = (p<q)? qops2('Q').at(ipq) : qops2('Q').at(ipq).H();
                opxwf += oper_kernel_OOwf(superblock,site,op1a,op2Q,0,ifdagger);
             }
          }
       }else{
+         // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
+	 for(const auto& op2B : qops2('B')){
+            auto qr = oper_unpack(op2B.first);
+	    int q2 = qr.first;
+	    int r2 = qr.second;
+	    const auto& op2 = op2B.second;
+	    // sum_s <pq2||s1r2> as[1]
+	    stensor2<Tm> tmp_op1n(sym_op-op2.info.sym, qrow1, qcol1);
+	    for(const auto& op1C : qops1('C')){
+               if(-op1C.second.info.sym != tmp_op1n.info.sym) continue;
+	       int s1 = op1C.first;
+	       const auto& op1 = op1C.second.H();
+	       tmp_op1n += int2e.get(p,q2,s1,r2)*op1;
+	    }
+	    opxwf += oper_kernel_OOwf(superblock,site,tmp_op1n,op2,0,ifdagger);
+	    if(q2 == r2) continue;	    
+	    stensor2<Tm> tmp_op1h(sym_op+op2.info.sym, qrow1, qcol1);
+	    for(const auto& op1C : qops1('C')){
+               if(-op1C.second.info.sym != tmp_op1h.info.sym) continue;
+	       int s1 = op1C.first;
+	       const auto& op1 = op1C.second.H();
+	       tmp_op1h += int2e.get(p,r2,s1,q2)*op1;
+	    }
+	    opxwf += oper_kernel_OOwf(superblock,site,tmp_op1h,op2.H(),0,ifdagger);	    	    
+         }
       }
      
       // 5. <pq2||s1r1> aq[2]^+ar[1]as[1]
@@ -265,6 +285,22 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
             }
          }
       }else{
+	 // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
+	 for(const auto& op1A : qops1('A')){
+	    auto sr = oper_unpack(op1A.first);
+	    int s1 = sr.first;
+	    int r1 = sr.second;
+	    const auto& op1 = op1A.second.H();
+	    // sum_q <pq2||s1r1> aq[2]^+
+	    stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
+	    for(const auto& op2C : qops2('C')){
+	       if(op2C.second.info.sym != tmp_op2.info.sym) continue;
+	       int q2 = op2C.first;
+	       const auto& op2 = op2C.second;
+	       tmp_op2 += int2e.get(p,q2,s1,r1)*op2;
+	    } 
+	    opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
+	 }
       }
 
       // 6. <pq1||s1r2> aq[1]^+ar[2]as[1] 
@@ -281,6 +317,31 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
             }
          }
       }else{
+         // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
+	 for(const auto& op1B : qops1('B')){
+	    auto qs = oper_unpack(op1B.first);
+	    int q1 = qs.first;
+	    int s1 = qs.second;
+	    const auto& op1 = op1B.second;
+	    // sum_r -<pq1||s1r2> ar[2]
+	    stensor2<Tm> tmp_op2n(sym_op-op1.info.sym, qrow2, qcol2);
+	    for(const auto& op2C : qops2('C')){
+               if(-op2C.second.info.sym != tmp_op2n.info.sym) continue;
+	       int r2 = op2C.first;
+	       const auto& op2 = op2C.second.H();
+	       tmp_op2n -= int2e.get(p,q1,s1,r2)*op2;
+	    }
+	    opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2n,1,ifdagger);
+	    if(q1 == s1) continue;
+	    stensor2<Tm> tmp_op2h(sym_op+op1.info.sym, qrow2, qcol2);
+	    for(const auto& op2C : qops2('C')){
+               if(-op2C.second.info.sym != tmp_op2h.info.sym) continue;		   
+	       int r2 = op2C.first; 
+	       const auto& op2 = op2C.second.H();
+	       tmp_op2h -= int2e.get(p,s1,q1,r2)*op2;
+            }
+	    opxwf += oper_kernel_OOwf(superblock,site,op1.H(),tmp_op2h,1,ifdagger);
+	 }
       }
 
    }else{
