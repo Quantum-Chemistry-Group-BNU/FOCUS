@@ -124,7 +124,7 @@ public:
    bool lastdot = false;
    std::vector<params_sweep> ctrls;
    // algorithm
-   int alg_hvec = 2;
+   int alg_hvec = 3;
    int alg_renorm = 2;
    bool save_formulae = false;
    bool sort_formulae = true;
