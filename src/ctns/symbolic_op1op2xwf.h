@@ -35,14 +35,9 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 	    auto op2 = ifdagger2? op2C : op2C.H();
 	    auto sym_op2 = op2.get_qsym(isym);
 	    if(sym_op != sym_op1 + sym_op2) continue;
-	    top2.sum(oij.at(oper_pack(i,j)),op2);
+	    top2.sum(oij.at(oper_pack(i,j)), op2);
 	 } // j
-	 // skip if its size is zero, which is possible for some i
-         if(top2.size() > 0){
-	    term = symbolic_prod<Tm>(op1,top2);
-	    if(ifdagger) term = term.H();
-	    formulae.append(term);
-	 }
+	 formulae.append(op1,top2,ifdagger);
       } // i
    }else{
       // this part appears when the branch is larger 
@@ -58,13 +53,9 @@ void symbolic_op1op2xwf_nkr(symbolic_task<Tm>& formulae,
 	    auto op1 = ifdagger1? op1C : op1C.H();
 	    auto sym_op1 = op1.get_qsym(isym);
 	    if(sym_op != sym_op1 + sym_op2) continue;
-	    top1.sum(oij.at(oper_pack(i,j)),op1);
+	    top1.sum(oij.at(oper_pack(i,j)), op1);
 	 } // i
-         if(top1.size() > 0){
-	    term = symbolic_prod<Tm>(top1,op2);
-	    if(ifdagger) term = term.H();
-	    formulae.append(term);
-	 }
+	 formulae.append(top1,op2,ifdagger);
       } // j
    } // cindex1.size() <= cindex2.size() 
 }
@@ -97,24 +88,13 @@ void symbolic_op1op2xwf_kr(symbolic_task<Tm>& formulae,
             auto op2Ca = symbolic_oper(block2,'C',ja);
 	    auto op2a = ifdagger2? op2Ca : op2Ca.H();
 	    auto op2b = op2a.K(1);
-	    //top2a += oij[std::make_pair(ia,ja)]*op2a + oij[std::make_pair(ia,jb)]*op2b;
-	    top2a.sum(oij.at(oper_pack(ia,ja)),op2a);
-	    top2a.sum(oij.at(oper_pack(ia,jb)),op2b);
-	    //top2b += oij[std::make_pair(ib,ja)]*op2a + oij[std::make_pair(ib,jb)]*op2b;
-	    top2b.sum(oij.at(oper_pack(ib,ja)),op2a);
-	    top2b.sum(oij.at(oper_pack(ib,jb)),op2b);
+	    top2a.sum(oij.at(oper_pack(ia,ja)), op2a);
+	    top2a.sum(oij.at(oper_pack(ia,jb)), op2b);
+	    top2b.sum(oij.at(oper_pack(ib,ja)), op2a);
+	    top2b.sum(oij.at(oper_pack(ib,jb)), op2b);
 	 } // ja
-	 // skip if its size is zero, which is possible for some i
-         if(top2a.size() > 0){
-	    term = symbolic_prod<Tm>(op1a,top2a);
-	    if(ifdagger) term = term.H();
-	    formulae.append(term);
-	 }
-	 if(top2b.size() > 0){
-	    term = symbolic_prod<Tm>(op1b,top2b);
-	    if(ifdagger) term = term.H();
-	    formulae.append(term);
-	 }
+         formulae.append(op1a,top2a,ifdagger);
+	 formulae.append(op1b,top2b,ifdagger);
       } // ia
    }else{
       // this part appears when the branch is larger 
@@ -131,24 +111,13 @@ void symbolic_op1op2xwf_kr(symbolic_task<Tm>& formulae,
             auto op1Ca = symbolic_oper(block1,'C',ia);
             auto op1a = ifdagger1? op1Ca : op1Ca.H();
 	    auto op1b = op1a.K(1);
-	    //top1a += oij[std::make_pair(ia,ja)]*op1a + oij[std::make_pair(ib,ja)]*op1b;
-	    top1a.sum(oij.at(oper_pack(ia,ja)),op1a);
-	    top1a.sum(oij.at(oper_pack(ib,ja)),op1b);
-	    //top1b += oij[std::make_pair(ia,jb)]*op1a + oij[std::make_pair(ib,jb)]*op1b;
-	    top1b.sum(oij.at(oper_pack(ia,jb)),op1a);
-	    top1b.sum(oij.at(oper_pack(ib,jb)),op1b);
+	    top1a.sum(oij.at(oper_pack(ia,ja)), op1a);
+	    top1a.sum(oij.at(oper_pack(ib,ja)), op1b);
+	    top1b.sum(oij.at(oper_pack(ia,jb)), op1a);
+	    top1b.sum(oij.at(oper_pack(ib,jb)), op1b);
 	 } // ia
-	 // skip if its size is zero, which is possible for some i
-	 if(top1a.size() > 0){
-	    term = symbolic_prod<Tm>(top1a,op2a);
-	    if(ifdagger) term = term.H();
-	    formulae.append(term);
-	 }
-         if(top1b.size() > 0){
-	    term = symbolic_prod<Tm>(top1b,op2b);
-	    if(ifdagger) term = term.H();
-	    formulae.append(term);
-	 }
+	 formulae.append(top1a,op2a,ifdagger);
+	 formulae.append(top1b,op2b,ifdagger);	 
       } // ja 
    }  // cindex1.size() <= cindex2.size()
 }

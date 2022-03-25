@@ -155,10 +155,10 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    int kc2 = ifkr? 2*cindex2.size() : cindex2.size();
    int kA2 = kc2*(kc2-1)/2;
    int kB2 = kc2*kc2;
-   bool combine_two_index3 = 0; //(kc1 <= kA2);
-   bool combine_two_index4 = 0; //(kc1 <= kB2);
-   bool combine_two_index5 = 0; //(kc2 <= kA1);
-   bool combine_two_index6 = 0; //(kc2 <= kB1);
+   bool combine_two_index3 = (kc1 <= kA2);
+   bool combine_two_index4 = (kc1 <= kB2);
+   bool combine_two_index5 = (kc2 <= kA1);
+   bool combine_two_index6 = (kc2 <= kB1);
    auto aindex1 = oper_index_opA(cindex1, ifkr);
    auto bindex1 = oper_index_opB(cindex1, ifkr);
    auto aindex2 = oper_index_opA(cindex2, ifkr);
@@ -195,13 +195,9 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	          auto op1 = symbolic_oper(block1,'C',q1);
 		  auto sym_op1 = op1.get_qsym(isym);
 		  if(sym_op != sym_op1 + sym_op2) continue;
-		  top1.sum(int2e.get(p,q1,s2,r2),op1);
+		  top1.sum(int2e.get(p,q1,s2,r2), op1);
 	       }
-	       if(top1.size() > 0){
-	          auto term = symbolic_prod<Tm>(top1,op2);
-		  if(ifdagger) term = term.H();
-		  formulae.append(term);
-	       }
+	       formulae.append(top1,op2,ifdagger);
 	    }
 	 }
       }
@@ -237,13 +233,9 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 		  auto op1 = symbolic_oper(block1,'C',s1).H();
 		  auto sym_op1 = op1.get_qsym(isym);
 		  if(sym_op != sym_op1 + sym_op2) continue;
-		  top1.sum(int2e.get(p,q2,s1,r2),op1);
+		  top1.sum(int2e.get(p,q2,s1,r2), op1);
 	       }
-	       if(top1.size() > 0){
-		  auto term = symbolic_prod<Tm>(top1,op2);
-		  if(ifdagger) term = term.H();
-		  formulae.append(term);
-	       }
+	       formulae.append(top1,op2,ifdagger);
 	       // Hermitian part: q2<->r2
 	       if(q2 == r2) continue;	    
 	       auto op2H = op2.H();
@@ -253,13 +245,9 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 		  auto op1 = symbolic_oper(block1,'C',s1).H();
 		  auto sym_op1 = op1.get_qsym(isym);
 		  if(sym_op != sym_op1 + sym_op2H) continue;
-		  top1H.sum(int2e.get(p,r2,s1,q2),op1);
+		  top1H.sum(int2e.get(p,r2,s1,q2), op1);
 	       }
-	       if(top1H.size() > 0){
-		  auto term = symbolic_prod<Tm>(top1H,op2H);
-		  if(ifdagger) term = term.H();
-		  formulae.append(term);
-	       }
+	       formulae.append(top1H,op2H,ifdagger);
 	    }
          }
       }
@@ -294,13 +282,9 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	          auto op2 = symbolic_oper(block2,'C',q2);
 		  auto sym_op2 = op2.get_qsym(isym);
 		  if(sym_op != sym_op1 + sym_op2) continue;
-		  top2.sum(int2e.get(p,q2,s1,r1),op2);
+		  top2.sum(int2e.get(p,q2,s1,r1), op2);
 	       }
-	       if(top2.size() > 0){
-		  auto term = symbolic_prod<Tm>(op1,top2);
-		  if(ifdagger) term = term.H();
-		  formulae.append(term);
-	       }
+	       formulae.append(op1,top2,ifdagger);
 	    } 
 	 }
       }
@@ -336,13 +320,9 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	          auto op2 = symbolic_oper(block2,'C',r2).H();
 		  auto sym_op2 = op2.get_qsym(isym);
 		  if(sym_op != sym_op1 + sym_op2) continue;
-		  top2.sum(-int2e.get(p,q1,s1,r2),op2);
+		  top2.sum(-int2e.get(p,q1,s1,r2), op2);
 	       }
-	       if(top2.size() > 0){
-		  auto term = symbolic_prod<Tm>(op1,top2);
-		  if(ifdagger) term = term.H();
-		  formulae.append(term);
-	       }
+	       formulae.append(op1,top2,ifdagger);
 	       // Hermitian part: q1<->r1
 	       if(q1 == s1) continue;
 	       auto op1H = op1.H();
@@ -352,13 +332,9 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	          auto op2 = symbolic_oper(block2,'C',r2).H();
 		  auto sym_op2 = op2.get_qsym(isym);
 		  if(sym_op != sym_op1H + sym_op2) continue;
-		  top2H.sum(-int2e.get(p,s1,q1,r2),op2);
+		  top2H.sum(-int2e.get(p,s1,q1,r2), op2);
 	       }
-	       if(top2H.size() > 0){
-		  auto term = symbolic_prod<Tm>(op1H,top2H);
-		  if(ifdagger) term = term.H();
-		  formulae.append(term);
-	       }
+	       formulae.append(op1H,top2H,ifdagger);
 	    }
 	 }
       }
@@ -394,29 +370,33 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    	    }
          } // qa
       }else{
-/*
          // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
-         for(const auto& op2A : qops2('A')){
-	    double wt =  wfacAP(op2A.first);
-            auto sr = oper_unpack(op2A.first);
-            int s2 = sr.first , ks2 = s2/2, spin_s2 = s2%2, s2K = s2+1-2*spin_s2;
-            int r2 = sr.second, kr2 = r2/2, spin_r2 = r2%2, r2K = r2+1-2*spin_r2;
-            const auto& op2 = op2A.second.H();
-            const auto& op2K = op2.K(2-spin_s2-spin_r2);
-	    // sum_q <pq1||s2r2> aq[1]^+
-            stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
-            stensor2<Tm> tmp_op1K(sym_op-op2K.info.sym, qrow1, qcol1);
-            for(const auto& op1C : qops1('C')){
-               int q1a = op1C.first, q1b = q1a+1;
-               const auto& op1c_A = op1C.second;
-	       const auto& op1c_B = op1c_A.K(1);
-               tmp_op1 += int2e.get(p,q1a,s2,r2)*op1c_A + int2e.get(p,q1b,s2,r2)*op1c_B;
-	       tmp_op1K += int2e.get(p,q1a,s2K,r2K)*op1c_A + int2e.get(p,q1b,s2K,r2K)*op1c_B;
-            }
-            opxwf += wt*oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
-            opxwf += wt*oper_kernel_OOwf(superblock,site,tmp_op1K,op2K,0,ifdagger);
-         }
-*/
+	 for(const auto& isr : aindex2){
+	    int iproc = distribute2(isr,size);
+	    if(iproc == rank){
+	       double wt = wfacAP(isr);
+	       auto sr = oper_unpack(isr);
+	       int s2 = sr.first , ks2 = s2/2, spin_s2 = s2%2, s2K = s2+1-2*spin_s2;
+	       int r2 = sr.second, kr2 = r2/2, spin_r2 = r2%2, r2K = r2+1-2*spin_r2;
+	       auto op2 = symbolic_oper(block2,'A',isr).H();
+	       auto op2K = op2.K(2-spin_s2-spin_r2);
+	       // sum_q <pq1||s2r2> aq[1]^+
+	       symbolic_sum<Tm> top1, top1K;
+	       for(const auto& q1a : cindex1){
+	          int q1b = q1a+1;
+		  auto op1c_A = symbolic_oper(block1,'C',q1a);
+		  auto op1c_B = op1c_A.K(1);
+		  top1.sum(int2e.get(p,q1a,s2,r2), op1c_A);
+		  top1.sum(int2e.get(p,q1b,s2,r2), op1c_B);
+		  top1K.sum(int2e.get(p,q1a,s2K,r2K), op1c_A);
+		  top1K.sum(int2e.get(p,q1b,s2K,r2K), op1c_B);
+	       }
+	       top1.scale(wt);
+	       top1K.scale(wt);
+	       formulae.append(top1,op2,ifdagger);
+	       formulae.append(top1K,op2K,ifdagger);
+	    }
+	 }
       }
 
       // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]      
@@ -446,41 +426,44 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    	    }
          } // qa
       }else{
-/*
          // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
-         for(const auto& op2B : qops2('B')){
-            auto qr = oper_unpack(op2B.first);
-            int q2 = qr.first , kq2 = q2/2, spin_q2 = q2%2, q2K = q2+1-2*spin_q2;
-            int r2 = qr.second, kr2 = r2/2, spin_r2 = r2%2, r2K = r2+1-2*spin_r2;;
-            const auto& op2 = op2B.second;
-	    const auto& op2K =  op2.K(2-spin_q2-spin_r2);
-            // sum_s <pq2||s1r2> as[1]
-            stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
-            stensor2<Tm> tmp_op1K(sym_op-op2K.info.sym, qrow1, qcol1);
-            for(const auto& op1C : qops1('C')){
-               int s1a = op1C.first, s1b = s1a+1;
-               const auto& op1a_A = op1C.second.H();
-	       const auto& op1a_B = op1a_A.K(1);
-               tmp_op1 += int2e.get(p,q2,s1a,r2)*op1a_A + int2e.get(p,q2,s1b,r2)*op1a_B;
-	       tmp_op1K += int2e.get(p,q2K,s1a,r2K)*op1a_A + int2e.get(p,q2K,s1b,r2K)*op1a_B;
-            }
-            opxwf += oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
-            opxwf += oper_kernel_OOwf(superblock,site,tmp_op1K,op2K,0,ifdagger);
-	    // Hermitian part: q2<->r2
-            if(kq2 == kr2) continue;
-            stensor2<Tm> tmp_op1H(sym_op+op2.info.sym, qrow1, qcol1);
-            stensor2<Tm> tmp_op1KH(sym_op+op2K.info.sym, qrow1, qcol1);
-            for(const auto& op1C : qops1('C')){
-               int s1a = op1C.first, s1b = s1a+1;
-               const auto& op1a_A = op1C.second.H();
-	       const auto& op1a_B = op1a_A.K(1);
-               tmp_op1H += int2e.get(p,r2,s1a,q2)*op1a_A + int2e.get(p,r2,s1b,q2)*op1a_B;
-	       tmp_op1KH += int2e.get(p,r2K,s1a,q2K)*op1a_A + int2e.get(p,r2K,s1b,q2K)*op1a_B;
-            }
-            opxwf += oper_kernel_OOwf(superblock,site,tmp_op1H,op2.H(),0,ifdagger);
-            opxwf += oper_kernel_OOwf(superblock,site,tmp_op1KH,op2K.H(),0,ifdagger);
+         for(const auto& iqr : bindex2){
+            int iproc = distribute2(iqr,size);
+	    if(iproc == rank){
+	       auto qr = oper_unpack(iqr);
+               int q2 = qr.first , kq2 = q2/2, spin_q2 = q2%2, q2K = q2+1-2*spin_q2;
+               int r2 = qr.second, kr2 = r2/2, spin_r2 = r2%2, r2K = r2+1-2*spin_r2;;
+               auto op2 = symbolic_oper(block2,'B',iqr);
+	       auto op2K =  op2.K(2-spin_q2-spin_r2);
+               // sum_s <pq2||s1r2> as[1]
+               symbolic_sum<Tm> top1, top1K;
+               for(const auto& s1a : cindex1){
+                  int s1b = s1a+1;
+                  auto op1a_A = symbolic_oper(block1,'C',s1a).H();
+		  auto op1a_B = op1a_A.K(1);
+                  top1.sum(int2e.get(p,q2,s1a,r2), op1a_A);
+		  top1.sum(int2e.get(p,q2,s1b,r2), op1a_B);
+	          top1K.sum(int2e.get(p,q2K,s1a,r2K), op1a_A);
+		  top1K.sum(int2e.get(p,q2K,s1b,r2K), op1a_B);
+               }
+	       formulae.append(top1,op2,ifdagger);
+	       formulae.append(top1K,op2K,ifdagger);
+	       // Hermitian part: q2<->r2
+               if(kq2 == kr2) continue;
+	       symbolic_sum<Tm> top1H, top1KH;
+	       for(const auto& s1a : cindex1){
+                  int s1b = s1a+1;
+                  auto op1a_A = symbolic_oper(block1,'C',s1a).H();
+		  auto op1a_B = op1a_A.K(1);
+                  top1H.sum(int2e.get(p,r2,s1a,q2), op1a_A);
+		  top1H.sum(int2e.get(p,r2,s1b,q2), op1a_B);
+	          top1KH.sum(int2e.get(p,r2K,s1a,q2K), op1a_A);
+		  top1KH.sum(int2e.get(p,r2K,s1b,q2K), op1a_B);
+               }
+               formulae.append(top1H,op2.H(),ifdagger);
+	       formulae.append(top1KH,op2K.H(),ifdagger);
+	    }
          }
-*/
       }
 
       // 5. <pq2||s1r1> aq[2]^+ar[1]as[1]      
@@ -511,28 +494,32 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
          } // qa
       }else{
          // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
-/*
-         for(const auto& op1A : qops1('A')){
-            double wt =  wfacAP(op1A.first);
-	    auto sr = oper_unpack(op1A.first);
-            int s1 = sr.first , ks1 = s1/2, spin_s1 = s1%2, s1K = s1+1-2*spin_s1;
-            int r1 = sr.second, kr1 = r1/2, spin_r1 = r1%2, r1K = r1+1-2*spin_r1;
-            const auto& op1 = op1A.second.H();
-	    const auto& op1K = op1.K(2-spin_s1-spin_r1);
-            // sum_q <pq2||s1r1> aq[2]^+
-            stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
-            stensor2<Tm> tmp_op2K(sym_op-op1K.info.sym, qrow2, qcol2);
-            for(const auto& op2C : qops2('C')){
-               int q2a = op2C.first, q2b = q2a+1;
-               const auto& op2c_A = op2C.second;
-               const auto& op2c_B = op2c_A.K(1);
-               tmp_op2 += int2e.get(p,q2a,s1,r1)*op2c_A + int2e.get(p,q2b,s1,r1)*op2c_B;
-               tmp_op2K += int2e.get(p,q2a,s1K,r1K)*op2c_A + int2e.get(p,q2b,s1K,r1K)*op2c_B;
+         for(const auto& isr : aindex1){
+	    int iproc = distribute2(isr,size);
+            if(iproc == rank){	    
+               double wt =  wfacAP(isr);
+	       auto sr = oper_unpack(isr);
+               int s1 = sr.first , ks1 = s1/2, spin_s1 = s1%2, s1K = s1+1-2*spin_s1;
+               int r1 = sr.second, kr1 = r1/2, spin_r1 = r1%2, r1K = r1+1-2*spin_r1;
+               auto op1 = symbolic_oper(block1,'A',isr).H();
+	       auto op1K = op1.K(2-spin_s1-spin_r1);
+               // sum_q <pq2||s1r1> aq[2]^+
+	       symbolic_sum<Tm> top2, top2K;
+	       for(const auto& q2a : cindex2){
+                  int q2b = q2a+1;
+                  auto op2c_A = symbolic_oper(block2,'C',q2a);
+                  auto op2c_B = op2c_A.K(1);
+                  top2.sum(int2e.get(p,q2a,s1,r1), op2c_A);
+		  top2.sum(int2e.get(p,q2b,s1,r1), op2c_B);
+                  top2K.sum(int2e.get(p,q2a,s1K,r1K), op2c_A);
+	          top2K.sum(int2e.get(p,q2b,s1K,r1K), op2c_B);
+	       }
+	       top2.scale(wt);
+	       top2K.scale(wt);
+               formulae.append(op1,top2,ifdagger);
+               formulae.append(op1K,top2K,ifdagger);
             }
-            opxwf += wt*oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
-            opxwf += wt*oper_kernel_OOwf(superblock,site,op1K,tmp_op2K,1,ifdagger);
          }
-*/
       }
 
       // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]      
@@ -563,40 +550,43 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
          } // qa
       }else{
          // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
-/*
-         for(const auto& op1B : qops1('B')){
-	    auto qs = oper_unpack(op1B.first);
-            int q1 = qs.first , kq1 = q1/2, spin_q1 = q1%2, q1K = q1+1-2*spin_q1;
-            int s1 = qs.second, ks1 = s1/2, spin_s1 = s1%2, s1K = s1+1-2*spin_s1;
-            const auto& op1 = op1B.second;
-	    const auto& op1K = op1.K(2-spin_q1-spin_s1);
-            // sum_r -<pq1||s1r2> ar[2]
-            stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
-            stensor2<Tm> tmp_op2K(sym_op-op1K.info.sym, qrow2, qcol2);
-            for(const auto& op2C : qops2('C')){
-               int r2a = op2C.first, r2b = r2a+1;
-               const auto& op2a_A = op2C.second.H();
-	       const auto& op2a_B = op2a_A.K(1);
-               tmp_op2 -= int2e.get(p,q1,s1,r2a)*op2a_A + int2e.get(p,q1,s1,r2b)*op2a_B;
-	       tmp_op2K -= int2e.get(p,q1K,s1K,r2a)*op2a_A + int2e.get(p,q1K,s1K,r2b)*op2a_B;
-            }
-            opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
-            opxwf += oper_kernel_OOwf(superblock,site,op1K,tmp_op2K,1,ifdagger);
-	    // Hermitian part: q1<->s1
-            if(kq1 == ks1) continue;
-            stensor2<Tm> tmp_op2H(sym_op+op1.info.sym, qrow2, qcol2);
-            stensor2<Tm> tmp_op2KH(sym_op+op1K.info.sym, qrow2, qcol2);
-            for(const auto& op2C : qops2('C')){
-               int r2a = op2C.first, r2b = r2a+1;
-               const auto& op2a_A = op2C.second.H();
-               const auto& op2a_B = op2a_A.K(1);
-               tmp_op2H -= int2e.get(p,s1,q1,r2a)*op2a_A + int2e.get(p,s1,q1,r2b)*op2a_B;
-               tmp_op2KH -= int2e.get(p,s1K,q1K,r2a)*op2a_A + int2e.get(p,s1K,q1K,r2b)*op2a_B;
-            }
-            opxwf += oper_kernel_OOwf(superblock,site,op1.H(),tmp_op2H,1,ifdagger);
-            opxwf += oper_kernel_OOwf(superblock,site,op1K.H(),tmp_op2KH,1,ifdagger);
+         for(const auto& iqs : bindex1){
+	    int iproc = distribute2(iqs,size);
+	    if(iproc == rank){
+	       auto qs = oper_unpack(iqs);
+               int q1 = qs.first , kq1 = q1/2, spin_q1 = q1%2, q1K = q1+1-2*spin_q1;
+               int s1 = qs.second, ks1 = s1/2, spin_s1 = s1%2, s1K = s1+1-2*spin_s1;
+               auto op1 = symbolic_oper(block1,'B',iqs);
+	       auto op1K = op1.K(2-spin_q1-spin_s1);
+               // sum_r -<pq1||s1r2> ar[2]
+               symbolic_sum<Tm> top2, top2K;
+               for(const auto& r2a : cindex2){
+                  int r2b = r2a+1;
+                  auto op2a_A = symbolic_oper(block2,'C',r2a).H();
+	          auto op2a_B = op2a_A.K(1);
+                  top2.sum(-int2e.get(p,q1,s1,r2a), op2a_A);
+		  top2.sum(-int2e.get(p,q1,s1,r2b), op2a_B);
+	          top2K.sum(-int2e.get(p,q1K,s1K,r2a), op2a_A);
+		  top2K.sum(-int2e.get(p,q1K,s1K,r2b), op2a_B);
+	       }
+	       formulae.append(op1,top2,ifdagger);
+	       formulae.append(op1K,top2K,ifdagger);
+	       // Hermitian part: q1<->s1
+               if(kq1 == ks1) continue;
+	       symbolic_sum<Tm> top2H, top2KH;
+               for(const auto& r2a : cindex2){
+                  int r2b = r2a+1;
+                  auto op2a_A = symbolic_oper(block2,'C',r2a).H();
+                  auto op2a_B = op2a_A.K(1);
+		  top2H.sum(-int2e.get(p,s1,q1,r2a), op2a_A);
+		  top2H.sum(-int2e.get(p,s1,q1,r2b), op2a_B);
+                  top2KH.sum(-int2e.get(p,s1K,q1K,r2a), op2a_A);
+		  top2KH.sum(-int2e.get(p,s1K,q1K,r2b), op2a_B);
+               }
+	       formulae.append(op1.H(),top2H,ifdagger);
+	       formulae.append(op1K.H(),top2KH,ifdagger);
+	    }
          }
-*/
       }
     
    } // ifkr

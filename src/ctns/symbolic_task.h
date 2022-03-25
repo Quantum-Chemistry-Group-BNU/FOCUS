@@ -20,6 +20,23 @@ struct symbolic_task{
 	 if(tasks.size() == 0) parity = t.parity;
          tasks.push_back(t);
       }
+      // append a term
+      void append(const symbolic_sum<Tm>& top1, 
+		  const symbolic_oper& op2,
+		  const bool ifdagger){
+         if(top1.size() == 0) return;
+         auto term = symbolic_prod<Tm>(top1,op2);
+	 if(ifdagger) term = term.H();
+	 this->append(term);
+      }
+      void append(const symbolic_oper& op1,
+		  const symbolic_sum<Tm>& top2, 
+		  const bool ifdagger){
+         if(top2.size() == 0) return;
+         auto term = symbolic_prod<Tm>(op1,top2);
+	 if(ifdagger) term = term.H();
+	 this->append(term);
+      }
       // join a task	   
       void join(const symbolic_task& st){
 	 if(tasks.size() == 0) parity = st.parity;
