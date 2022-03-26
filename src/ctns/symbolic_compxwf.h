@@ -149,7 +149,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    auto S2p = symbolic_prod<Tm>(symbolic_oper(block2,'S',index,ifdagger));
    formulae.append(S2p);
    // cross terms
-   int kc1 = ifkr? 2*cindex1.size() : cindex2.size();
+   int kc1 = ifkr? 2*cindex1.size() : cindex1.size();
    int kA1 = kc1*(kc1-1)/2;
    int kB1 = kc1*kc1;
    int kc2 = ifkr? 2*cindex2.size() : cindex2.size();

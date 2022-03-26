@@ -8,8 +8,7 @@
 
 namespace ctns{
 
-// generate all formulea for constructing H*x as a list of terms
-// organizing principle: recursive partition
+// primitive form (without factorization)
 template <typename Tm>
 symbolic_task<Tm> symbolic_formulae_twodot(const oper_dict<Tm>& lqops,
 	                                   const oper_dict<Tm>& rqops,
@@ -237,8 +236,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dict<Tm>& lqops,
    return formulae;
 }
 
-// generate all formulea for constructing H*x as a list of terms
-// organizing principle: recursive partition
+// bipartite form (with factorization)
 template <typename Tm>
 bipart_task<Tm> symbolic_formulae_twodot2(const oper_dict<Tm>& lqops,
 	                                  const oper_dict<Tm>& rqops,
