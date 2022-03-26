@@ -10,6 +10,10 @@
 #include "symbolic_oper.h"
 
 namespace ctns{
+
+//
+// raw version: symbolic formulae + dynamic allocation of memory 
+//
       
 template <typename Tm, typename QTm> 
 void symbolic_HxTerm(const oper_dictmap<Tm>& qops_dict,

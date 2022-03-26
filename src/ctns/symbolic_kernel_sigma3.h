@@ -15,6 +15,10 @@ inline bool is_qtensor4(){ return false; }
 template <> inline bool is_qtensor4<stensor4<double>>(){ return true; }
 template <> inline bool is_qtensor4<stensor4<std::complex<double>>>(){ return true; }
 
+//
+// symbolic formulae (factorized) + preallocation of workspace 
+//
+
 template <typename Tm, typename QTm, typename QInfo> 
 void symbolic_HxTerm3(const oper_dictmap<Tm>& qops_dict,
 		      const int it,

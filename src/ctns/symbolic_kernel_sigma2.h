@@ -9,6 +9,10 @@
 
 namespace ctns{
 
+//
+// symbolic formulae + preallocation of workspace 
+//
+
 template <typename Tm, typename QTm, typename QInfo> 
 void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 		      const int it,
