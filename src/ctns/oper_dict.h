@@ -24,23 +24,28 @@ class oper_dict{
 	 ar & isym & ifkr & qbra & qket 
 	    & cindex & krest & oplist 
 	    & mpisize & mpirank & ifdist2;
+	 /*
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
 	 }
+	 */
       }
       template <class Archive>
       void load(Archive & ar, const unsigned int version){
 	 ar & isym & ifkr & qbra & qket 
             & cindex & krest & oplist
 	    & mpisize & mpirank & ifdist2; 
+	 /*
 	 this->_setup_opdict();
 	 _data = new Tm[_size];
          for(int i=0; i<_size; i++){
 	    ar & _data[i];
 	 }
 	 this->_setup_data(_data);
+	 */
       }
       BOOST_SERIALIZATION_SPLIT_MEMBER()
+   public:
       // initialize _opdict, _size, _opsize
       void _setup_opdict(const bool debug=false);
       // setup the mapping to physical address
@@ -56,7 +61,6 @@ class oper_dict{
          }
 	 assert(off == _size);
       }
-   public:
       // constructor
       oper_dict(){}
       ~oper_dict(){ delete[] _data; }
@@ -92,7 +96,7 @@ class oper_dict{
       int mpisize = 1;
       int mpirank = 0;
       bool ifdist2 = false; // whether distribute two-index object
-   private:
+   //private:
       std::map<char,oper_map<Tm>> _opdict;
       size_t _size = 0, _opsize = 0;
       Tm* _data = nullptr;

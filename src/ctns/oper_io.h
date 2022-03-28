@@ -26,6 +26,7 @@ void oper_save(const std::string fname,
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << qops;
+   ofs.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
 }
 
 template <typename Tm>
@@ -36,6 +37,10 @@ void oper_load(const std::string fname,
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> qops;
+   qops._setup_opdict();
+   qops._data = new Tm[qops._size];
+   ifs.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
+   qops._setup_data(qops._data);
 }
 
 //
