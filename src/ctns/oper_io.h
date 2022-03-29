@@ -25,7 +25,6 @@ void oper_save(const std::string fname,
 	       const oper_dict<Tm>& qops,
 	       const int rank){
    if(debug_oper_io and rank == 0) std::cout << "ctns::oper_save fname=" << fname << std::endl;
-/*
    auto t0 = tools::get_time();
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
@@ -34,31 +33,13 @@ void oper_save(const std::string fname,
    ofs.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
    ofs.close();
    auto t2 = tools::get_time();
-   std::cout << "timing for save:" 
-	     << tools::get_duration(t1-t0) << " " 
-	     << tools::get_duration(t2-t1) << " "
-	     << tools::get_duration(t2-t0) 
-	     << std::endl;
-*/
-
-   auto t0 = tools::get_time();
-   std::ofstream ofs(fname, std::ios::binary);
-   boost::archive::binary_oarchive save(ofs);
-   save << qops;
-   ofs.close();
-   auto t1 = tools::get_time();
-
-   FILE* fp = std::fopen((fname+"data").c_str(),  "wb");
-   std::fwrite(&qops._data[0], sizeof(Tm), qops._size, fp);
-   std::fclose(fp);
-
-   auto t2 = tools::get_time();
-   std::cout << "timing for save:" 
-	     << tools::get_duration(t1-t0) << " " 
-	     << tools::get_duration(t2-t1) << " "
-	     << tools::get_duration(t2-t0) 
-	     << std::endl;
-
+   if(debug_oper_io and rank == 0){
+      std::cout << "timing for save:" 
+                << " info:" << tools::get_duration(t1-t0) << " " 
+                << " data:" << tools::get_duration(t2-t1) << " "
+                << " tot:" << tools::get_duration(t2-t0) 
+                << std::endl;
+   }
 }
 
 template <typename Tm>
@@ -66,58 +47,26 @@ void oper_load(const std::string fname,
 	       oper_dict<Tm>& qops,
 	       const int rank){
    if(debug_oper_io and rank == 0) std::cout << "ctns::oper_load fname=" << fname << std::endl;
-
-   auto t0 = tools::get_time();
-   std::ifstream ifs(fname, std::ios::binary);
-   boost::archive::binary_iarchive load(ifs);
-   load >> qops;
-   ifs.close();
-   auto t1 = tools::get_time();
-
-   qops._setup_opdict();
-   auto t2 = tools::get_time();
-   qops._data = new Tm[qops._size];
-   //ifs.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
-   //ifs.close();
-   
-   auto t3 = tools::get_time();
-
-   FILE* fp = std::fopen((fname+"data").c_str(),  "rb");
-   std::fread(&qops._data[0], sizeof(Tm), qops._size, fp);
-   std::fclose(fp);
-
-   qops._setup_data(qops._data);
-   auto t4 = tools::get_time();
-   std::cout << "TIMING for load:" 
-	     << tools::get_duration(t1-t0) << " " 
-	     << tools::get_duration(t2-t1) << " "
-	     << tools::get_duration(t3-t2) << " "
-	     << tools::get_duration(t4-t3) << " "
-	     << tools::get_duration(t4-t0) 
-	     << std::endl;
-
-/*
    auto t0 = tools::get_time();
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> qops;
    auto t1 = tools::get_time();
    qops._setup_opdict();
-   auto t2 = tools::get_time();
    qops._data = new Tm[qops._size];
+   auto t2 = tools::get_time();
    ifs.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
    ifs.close();
-   auto t3 = tools::get_time();
    qops._setup_data(qops._data);
-   auto t4 = tools::get_time();
-   std::cout << "TIMING for load:" 
-	     << tools::get_duration(t1-t0) << " " 
-	     << tools::get_duration(t2-t1) << " "
-	     << tools::get_duration(t3-t2) << " "
-	     << tools::get_duration(t4-t3) << " "
-	     << tools::get_duration(t4-t0) 
-	     << std::endl;
-*/
+   auto t3 = tools::get_time();
+   if(debug_oper_io and rank == 0){
+      std::cout << "TIMING for load:" 
+                << " info:" << tools::get_duration(t1-t0) << " " 
+                << " setup:" << tools::get_duration(t2-t1) << " "
+                << " data:" << tools::get_duration(t3-t2) << " "
+                << " tot:" << tools::get_duration(t3-t0) 
+                << std::endl;
+   }
 }
 
 //
