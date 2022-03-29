@@ -5,8 +5,6 @@
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
-#include <cstdio>
-
 namespace ctns{ 
 
 const bool debug_oper_io = false;
