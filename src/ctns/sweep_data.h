@@ -47,7 +47,7 @@ struct dot_timing{
       dt4 = tools::get_duration(te-td); // t(guess)
       dt5 = tools::get_duration(tf-te); // t(renrm)
       dt6 = tools::get_duration(t1-tf); // t(save)
-      std::cout << "##### timing: " << std::scientific << std::setprecision(2)
+      std::cout << "##### timing_local: " << std::scientific << std::setprecision(2)
                 << dt << " S #####" << std::endl;
       this->print();
    }

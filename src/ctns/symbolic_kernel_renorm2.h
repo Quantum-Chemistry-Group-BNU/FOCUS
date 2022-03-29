@@ -99,12 +99,13 @@ void symbolic_kernel_renorm2(const std::string superblock,
    size_t tmpsize = opsize + 3*wfsize;
    size_t worktot = maxthreads*tmpsize;
    if(qops.mpirank == 0){
-      std::cout << "maxthreads=" << maxthreads
+      std::cout << "preprocess for renorm:"
                 << " opsize=" << opsize
                 << " wfsize=" << wfsize
                 << " tmpsize=" << tmpsize
                 << " worktot=" << worktot
                 << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                << ":" << tools::sizeGB<Tm>(worktot) << "GB"
                 << std::endl; 
    }
    Tm* workspace = new Tm[worktot];

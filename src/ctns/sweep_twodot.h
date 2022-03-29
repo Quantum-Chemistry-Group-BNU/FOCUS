@@ -110,7 +110,7 @@ void sweep_twodot(const input::schedule& schd,
       c1qops.print("c1qops");
       c2qops.print("c2qops");
       size_t tsize = lqops.size()+rqops.size()+c1qops.size()+c2qops.size();
-      std::cout << " optot=" << tsize 
+      std::cout << " qops(tot)=" << tsize 
                 << ":" << tools::sizeMB<Tm>(tsize) << "MB"
                 << ":" << tools::sizeGB<Tm>(tsize) << "GB"
 		<< std::endl;
@@ -166,10 +166,13 @@ void sweep_twodot(const input::schedule& schd,
    }
    worktot = maxthreads*tmpsize;
    if(rank == 0){
-      std::cout << "preprocess:"
-                << " opsize=" << opsize << ":" << tools::sizeMB<Tm>(opsize) << "MB"
-                << " wfsize=" << wfsize << ":" << tools::sizeMB<Tm>(wfsize) << "MB"
-                << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+      std::cout << "preprocess for Hx:"
+                << " opsize=" << opsize 
+                << " wfsize=" << wfsize 
+		<< " tmpsize=" << tmpsize
+                << " worktot=" << worktot 
+                << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                << ":" << tools::sizeGB<Tm>(worktot) << "GB"
                 << std::endl; 
    }
    std::string fname;
