@@ -118,9 +118,33 @@ struct renorm_tasks{
       int size() const{ return op_tasks.size(); }
       // reorder
       void sort(const std::map<std::string,int>& dims){
+         // sort each operator
          for(auto& op : op_tasks){
 	    auto& formulae = std::get<2>(op);
 	    formulae.sort(dims);
+	 }
+         // sort all operator
+         std::stable_sort(op_tasks.begin(), op_tasks.end(),
+		          [&dims](const op_task<Tm>& t1,
+		       	          const op_task<Tm>& t2){
+		       	          return std::get<2>(t1).cost(dims)>std::get<2>(t2).cost(dims);
+			          }
+		         );
+      }
+      // display
+      void display(const std::string& name, const int level=1) const{
+         std::cout << " renorm_task=" << name << " : size=" << op_tasks.size() << std::endl;
+	 if(level > 0){
+            for(int idx=0; idx<op_tasks.size(); idx++){
+	       const auto& task = op_tasks[idx];
+	       const auto& label = std::get<0>(task);
+	       const auto& index = std::get<1>(task);
+	       const auto& stask = std::get<2>(task);
+	       std::string opname(1,label);
+	       opname += "[" + std::to_string(index) + "]";
+	       std::cout << "idx=" << idx;
+	       stask.display(opname, level);
+	    }
 	 }
       }
    public:

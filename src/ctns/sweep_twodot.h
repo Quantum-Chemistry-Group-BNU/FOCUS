@@ -165,7 +165,7 @@ void sweep_twodot(const input::schedule& schd,
       tmpsize = opsize + 4*wfsize;
    }
    worktot = maxthreads*tmpsize;
-   if(rank == 0){
+   if(preprocess && rank == 0){
       std::cout << "preprocess for Hx:"
                 << " opsize=" << opsize 
                 << " wfsize=" << wfsize 

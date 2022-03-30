@@ -148,7 +148,8 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
       formulae.sort(dims);
    }
    if(ifsave){
-      std::cout << "renormalization summary:" << std::endl;
+      std::cout << "\nSUMMARY:" << std::endl;
+      formulae.display("total");
       qops.print("qops",2);
       std::cout.rdbuf(backup); // restore cout's original streambuf
       file.close();
