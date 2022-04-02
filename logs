@@ -42,7 +42,7 @@ LOGS
 
 === 2022 ===
 
- * Optimized algorithm: symbolic algorithm
+ * Optimized algorithm: symbolic algorithm [DONE@20220402]
     - onedot algorithm:
     	- generation of onedot_Hx formulae
     	- implemenation of onedot_Hx contraction [DONE2022/01/16]
@@ -77,27 +77,33 @@ LOGS
 	- preprocess twodot:
 	   - preallocation of workspace
 	   - contract_qt4_qt2_info [DONE2022/03/01]
-
-    ### TODOs ###
-    
     - better data structure? pointer? [DONE2022/03/18] 
 	- vtune profile stackblock for comparison [!!!] 
         - info only store offset or maps: [CRUCIAL PART!!!]
 	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
-
     - low-level implementation of contract without dtensor!
 	- contract_qt3_qt2_info
 	- contract_qt4_qt2_info
 	- contract_qt3_qt3_info
 	- openmp error due to qt2.conjugate() for complex case [1_lih3_dcg]
 	- conjugate is treated outside contract_opxwf!
+    - minimal operation count: bipart_oper with factorization
 
-    ### TODOs ###
-	- unpack versus direct loops?
+ ### TODOs ###
+ 
+ * Toward large-scale applications:
+
+    - concurrency: separate computation & save
+
+    - merged implementation?
+
+    - memory bound for Hx & renorm
+	- unpack versus direct loops for qt4?
 	- qbond - separate arrays?
         - 测openmp 注释contract 更好reduction
-	- 重新考虑一下alg (minimal operation count), 结合symbolic, 预先计算
+
+    - GPU for contractions?
 
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 
@@ -105,13 +111,9 @@ LOGS
 	- 1. sort formulae + static/dynamic/guided,chunksize [DONE2022/03/05]
 	- 2. private workspace?
 	- 3. reduction
-
     - kramers version:
 	- how to avoid repeated K()?
 
- * Large-scale parallelization: push to the limit!
-    - GPU for contractions?
-    - memory bound for Hx & renorm
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]
@@ -126,6 +128,7 @@ KNOWN PROBLEMS
 --------------
 
  1. thresh_proj & thresh_ortho sensitivity in SCI projection [theoretical/numerical problem?]
+    => implement canonicalization with help!
 
  2. to work with ctns, pRDM is removed which makes onedot opt prone to local minimum:
     implementing decimation for {|psi>, sum_k a_k|psi>, sum_l b_l|psi>} may help.

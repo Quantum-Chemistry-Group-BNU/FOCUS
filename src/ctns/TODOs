@@ -351,9 +351,8 @@ NEW STRUCTURE:
 优化方向: onedot/twodot算法
 
  0. intel VTune for Fe4S4 test -> cost of single Hx for D=1000
- 1. 公式预先计算
- 2. direct operating wf4 in sweep_twodot_sigma.h without temporary stensor3
- 3. probably change to shared_ptr to share data instead of raw pointer & own?
- 4. 提升并行效率
- 5. 异构计算 -> further accelerate contract_qt4_qt2?
+ 1. probably change to shared_ptr to share data instead of raw pointer & own?
+ 2. 异构计算 -> further accelerate contract_qt4_qt2?
+ 3. direct operating wf4 in sweep_twodot_sigma.h without temporary stensor3
+    versus reshape wf4->wf3?
 

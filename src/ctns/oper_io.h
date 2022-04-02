@@ -5,9 +5,6 @@
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
-#include <sys/mman.h>
-#include <fcntl.h>
-
 namespace ctns{ 
 
 const bool debug_oper_io = true;
@@ -30,22 +27,9 @@ void oper_save(const std::string fname,
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << qops;
-   ofs.close();
    auto t1 = tools::get_time();
-
-   //ofs.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
-   int fp = open((fname+"data").c_str(),  O_WRONLY);
-   char* mmapped_data = (char*)mmap(NULL, qops._size*sizeof(Tm), PROT_WRITE, MAP_PRIVATE, fp, 0);
-   if(mmapped_data == MAP_FAILED){
-      close(fp);
-      std::cout << "ERROR in save!" << std::endl;
-      exit(1);
-   }
-   std::memcpy(mmapped_data, reinterpret_cast<void*>(qops._data), qops._size*sizeof(Tm)); 
-
-   int rc = munmap(mmapped_data, qops._size*sizeof(Tm));
-
-   //ofs.close();
+   ofs.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
+   ofs.close();
    auto t2 = tools::get_time();
    if(debug_oper_io and rank == 0){
       std::cout << "timing for save:" 
@@ -65,27 +49,12 @@ void oper_load(const std::string fname,
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> qops;
-   ifs.close();
    auto t1 = tools::get_time();
-
    qops._setup_opdict();
    qops._data = new Tm[qops._size];
    auto t2 = tools::get_time();
-
-   int fp = open((fname+"data").c_str(),  O_RDONLY);
-   char* mmapped_data = (char*)mmap(NULL, qops._size*sizeof(Tm), PROT_READ, MAP_PRIVATE, fp, 0);
-   if(mmapped_data == MAP_FAILED){
-      close(fp);
-      std::cout << "ERROR in load!" << std::endl;
-      exit(1);
-   }
-   std::memcpy(reinterpret_cast<void*>(qops._data), mmapped_data, qops._size*sizeof(Tm)); 
-   int rc = munmap(mmapped_data, qops._size*sizeof(Tm));
-   //std::fread(&qops._data[0], sizeof(Tm), qops._size, fp);
-   //std::fclose(fp);
- 
-  //ifs.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
-   //ifs.close();
+   ifs.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
+   ifs.close();
    qops._setup_data(qops._data);
    auto t3 = tools::get_time();
    if(debug_oper_io and rank == 0){
