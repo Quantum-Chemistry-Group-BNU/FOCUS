@@ -120,10 +120,10 @@ void sweep_twodot(const input::schedule& schd,
    // 2. twodot wavefunction
    //	 \ /
    //   --*--
-   const auto& ql = lqops.qbra;
-   const auto& qr = rqops.qbra;
-   const auto& qc1 = c1qops.qbra;
-   const auto& qc2 = c2qops.qbra;
+   const auto& ql = lqops.qket;
+   const auto& qr = rqops.qket;
+   const auto& qc1 = c1qops.qket;
+   const auto& qc2 = c2qops.qket;
    auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
    stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
    if(rank == 0) wf.print("wf"); 
@@ -169,7 +169,6 @@ void sweep_twodot(const input::schedule& schd,
       std::cout << "preprocess for Hx:"
                 << " opsize=" << opsize 
                 << " wfsize=" << wfsize 
-		<< " tmpsize=" << tmpsize
                 << " worktot=" << worktot 
                 << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                 << ":" << tools::sizeGB<Tm>(worktot) << "GB"

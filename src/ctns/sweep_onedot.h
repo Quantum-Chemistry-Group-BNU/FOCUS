@@ -51,6 +51,8 @@ void sweep_onedot(const input::schedule& schd,
    const auto& dbond = sweeps.seq[ibond];
    const auto& p = dbond.p;
    std::vector<int> suppl, suppr, suppc;
+   icomb.topo.get_support_onedot(dbond, suppl, suppr, suppc);
+
    suppl = icomb.topo.get_suppl(p);
    suppr = icomb.topo.get_suppr(p);
    suppc = icomb.topo.get_suppc(p); 
@@ -136,7 +138,6 @@ void sweep_onedot(const input::schedule& schd,
       std::cout << "preprocess for Hx:" 
                 << " opsize=" << opsize 
                 << " wfsize=" << wfsize
-		<< " tmpsize=" << tmpsize
                 << " worktot=" << worktot 
                 << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                 << ":" << tools::sizeGB<Tm>(worktot) << "GB"

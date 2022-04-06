@@ -251,6 +251,12 @@ void params_ctns::read(ifstream& istrm){
    if(size == 0){
       if(task_opt) tools::exit("error: schedule is not specified!");
    }else{
+      // consistency check
+      for(int i=0; i<size-1; i++){
+	 if(tmp_ctrls[i+1].isweep <= tmp_ctrls[i].isweep){
+	    tools::exit("error: exist invalid isweep in schedule!"); 
+	 }
+      }
       // put control parameters into ctrls
       ctrls.resize(maxsweep);
       for(int i=1; i<size; i++){

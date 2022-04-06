@@ -13,16 +13,16 @@ extern const bool debug_oper_io;
 inline std::string oper_fname(const std::string scratch, 
   	  	       	      const comb_coord& p,
 		       	      const std::string kind){
-   return scratch + "/" + kind + "_"
-        + std::to_string(p.first) + "_"
-        + std::to_string(p.second) + ".op";
+   return scratch + "/" + kind + "("
+        + std::to_string(p.first) + ","
+        + std::to_string(p.second) + ").op";
 }
 
 template <typename Tm>
 void oper_save(const std::string fname, 
 	       const oper_dict<Tm>& qops,
 	       const int rank){
-   if(debug_oper_io and rank == 0) std::cout << "ctns::oper_save fname=" << fname << std::endl;
+   if(debug_oper_io and rank == 0) std::cout << "ctns::oper_save fname=" << fname;
    auto t0 = tools::get_time();
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
@@ -32,10 +32,10 @@ void oper_save(const std::string fname,
    ofs.close();
    auto t2 = tools::get_time();
    if(debug_oper_io and rank == 0){
-      std::cout << "timing for save:" 
-                << " info:" << tools::get_duration(t1-t0) << " " 
-                << " data:" << tools::get_duration(t2-t1) << " "
-                << " tot:" << tools::get_duration(t2-t0) 
+      std::cout << " T(info/data/tot)=" 
+                << tools::get_duration(t1-t0) << "," 
+                << tools::get_duration(t2-t1) << ","
+                << tools::get_duration(t2-t0) 
                 << std::endl;
    }
 }
@@ -44,7 +44,7 @@ template <typename Tm>
 void oper_load(const std::string fname, 
 	       oper_dict<Tm>& qops,
 	       const int rank){
-   if(debug_oper_io and rank == 0) std::cout << "ctns::oper_load fname=" << fname << std::endl;
+   if(debug_oper_io and rank == 0) std::cout << "ctns::oper_load fname=" << fname;
    auto t0 = tools::get_time();
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
@@ -58,11 +58,11 @@ void oper_load(const std::string fname,
    qops._setup_data(qops._data);
    auto t3 = tools::get_time();
    if(debug_oper_io and rank == 0){
-      std::cout << "TIMING for load:" 
-                << " info:" << tools::get_duration(t1-t0) << " " 
-                << " setup:" << tools::get_duration(t2-t1) << " "
-                << " data:" << tools::get_duration(t3-t2) << " "
-                << " tot:" << tools::get_duration(t3-t0) 
+      std::cout << " T(info/setup/data/tot)=" 
+                << tools::get_duration(t1-t0) << "," 
+                << tools::get_duration(t2-t1) << ","
+                << tools::get_duration(t3-t2) << "," 
+                << tools::get_duration(t3-t0) 
                 << std::endl;
    }
 }

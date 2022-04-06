@@ -94,7 +94,7 @@ LOGS
  
  * Toward large-scale applications:
 
-    - concurrency: separate computation & save
+    - concurrency: separate computation & save 
 
     - merged implementation?
 
