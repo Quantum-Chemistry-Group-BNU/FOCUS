@@ -116,7 +116,7 @@ struct sweep_data{
       t_total.resize(maxsweep);
    }
    // print control parameters
-   void print_ctrls(const int isweep) const{
+   void print_ctrls(const int isweep) const{ 
       const auto& ctrl = ctrls[isweep];
       ctrl.print();
    }
@@ -161,12 +161,12 @@ inline void sweep_data::summary(const int isweep){
    std::vector<double> emean(seqsize,0.0);
    int nmvp = 0;
    for(int ibond=0; ibond<seqsize; ibond++){
-      auto dbond = seq[ibond];
-      auto p0 = dbond.p0;
-      auto p1 = dbond.p1;
-      auto forward = dbond.forward;
-      auto p = dbond.p;
-      std::cout << " ibond=" << ibond << " bond=" << p0 << "-" << p1 
+      const auto& dbond = seq[ibond];
+      const auto& p0 = dbond.p0;
+      const auto& p1 = dbond.p1;
+      const auto& forward = dbond.forward;
+      std::cout << " ibond=" << ibond 
+		<< " bond=" << p0 << "-" << p1 
                 << " forward=" << forward
                 << " deff=" << opt_result[isweep][ibond].deff
                 << " dwt=" << std::showpos << std::scientific << std::setprecision(3)

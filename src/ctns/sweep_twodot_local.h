@@ -19,7 +19,7 @@ void twodot_guess(comb<Km>& icomb,
    assert(icomb.psi.size() == neig);
    v0.resize(nsub*neig);
    if(dbond.forward){
-      if(!dbond.cturn){
+      if(!dbond.is_cturn()){
 
          if(debug_twodot_guess) std::cout << "|lc1>" << std::endl;
 	 for(int i=0; i<neig; i++){
@@ -57,7 +57,7 @@ void twodot_guess(comb<Km>& icomb,
 
       } // cturn
    }else{
-      if(!dbond.cturn){
+      if(!dbond.is_cturn()){
 
 	 if(debug_twodot_guess) std::cout << "|c2r>" << std::endl;
 	 for(int i=0; i<neig; i++){

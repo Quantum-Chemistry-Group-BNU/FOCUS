@@ -3,8 +3,9 @@
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
 #include <numeric> // iota
-#include "ctns_topo.h"
 #include "../core/tools.h"
+#include "ctns_topo.h"
+#include "oper_io.h"
 
 using namespace std;
 using namespace ctns;
@@ -27,7 +28,7 @@ ostream& ctns::operator <<(ostream& os, const node& nd){
 
 // topology
 void topology::read(const string& fname){
-   cout << "\ntopology::read fname=" << fname << endl;
+   cout << "\nctns::topology::read fname=" << fname << endl;
    
    ifstream istrm(fname);
    if(!istrm){
@@ -167,7 +168,7 @@ void topology::read(const string& fname){
    for(int idx=0; idx<ntotal; idx++){
       auto p = rcoord[idx];
       int i = p.first, j = p.second;
-      nodes[i][j].lsupport = support_rest(nodes[i][j].rsupport);
+      nodes[i][j].lsupport = get_supp_rest(nodes[i][j].rsupport);
    }
    // image2 simply from rsupport[0,0] (1D order)
    auto order = nodes[0][0].rsupport; 
@@ -179,7 +180,7 @@ void topology::read(const string& fname){
 }
 
 void topology::print() const{
-   cout << "\ntopology::print"
+   cout << "\nctns::topology::print"
 	<< " ntotal=" << ntotal
 	<< " nphysical=" << nphysical 
         << " nbackbone=" << nbackbone
@@ -217,20 +218,8 @@ void topology::print() const{
    get_sweeps();
 }
 
-vector<int> topology::support_rest(const vector<int>& rsupp) const{
-   vector<int> bas(nphysical);
-   iota(bas.begin(), bas.end(), 0);
-   auto supp = rsupp;
-   // order required in set_difference
-   stable_sort(supp.begin(), supp.end()); 
-   vector<int> rest;
-   set_difference(bas.begin(), bas.end(), supp.begin(), supp.end(),
-                  back_inserter(rest));
-   return rest;
-}
-
 vector<directed_bond> topology::get_sweeps(const bool debug) const{
-   if(debug) cout << "\ntopology::get_sweeps" << endl;
+   if(debug) cout << "\nctns::topology::get_sweeps" << endl;
    vector<directed_bond> sweeps;
    // sweep sequence: 
    for(int i=1; i<nbackbone-1; i++){
@@ -238,30 +227,26 @@ vector<directed_bond> topology::get_sweeps(const bool debug) const{
       for(int j=1; j<nodes[i].size()-1; j++){
          auto p0 = make_pair(i,j-1);
          auto p1 = make_pair(i,j);
-	 auto cturn = is_cturn(p0,p1);
-         sweeps.push_back( directed_bond(p0,p1,1,p0,cturn) );
+         sweeps.push_back( directed_bond(p0,p1,1) );
       }
       // branch backward
       for(int j=nodes[i].size()-2; j>0; j--){
          auto p0 = make_pair(i,j-1);
          auto p1 = make_pair(i,j);
-	 auto cturn = is_cturn(p0,p1);
-         sweeps.push_back( directed_bond(p0,p1,0,p1,cturn) );
+         sweeps.push_back( directed_bond(p0,p1,0) );
       }
       // backbone forward
       if(i != nbackbone-2){
          auto p0 = make_pair(i,0);
          auto p1 = make_pair(i+1,0);      
-	 auto cturn = is_cturn(p0,p1);
-         sweeps.push_back( directed_bond(p0,p1,1,p0,cturn) );
+         sweeps.push_back( directed_bond(p0,p1,1) );
       }
    }
    // backward on backbone
    for(int i=nbackbone-2; i>=2; i--){
       auto p0 = make_pair(i-1,0);      
       auto p1 = make_pair(i,0); 
-      auto cturn = is_cturn(p0,p1);
-      sweeps.push_back( directed_bond(p0,p1,0,p1,cturn) );
+      sweeps.push_back( directed_bond(p0,p1,0) );
    }
    // check
    if(debug){
@@ -273,14 +258,218 @@ vector<directed_bond> topology::get_sweeps(const bool debug) const{
       }
       assert(sweeps.size() == 2*(ninternal-1));
       for(int idx=0; idx<sweeps.size(); idx++){
-         auto p0 = sweeps[idx].p0;
-         auto p1 = sweeps[idx].p1;
-         auto forward = sweeps[idx].forward;
-	 auto cturn = sweeps[idx].cturn; 
-	 cout << " ibond=" << idx << " bond=" << p0 << "-" << p1 
-	      << " (forward,cturn)=(" << forward << "," << cturn << ")" 
+         const auto& p0 = sweeps[idx].p0;
+         const auto& p1 = sweeps[idx].p1;
+         const auto& forward = sweeps[idx].forward;
+	 cout << " ibond=" << idx 
+	      << " bond=" << p0 << "-" << p1 
+	      << " forward=" << forward
+	      << " cturn=" << sweeps[idx].is_cturn()
 	      << endl;
       }
    }
    return sweeps;
+}
+
+vector<int> topology::get_supp_rest(const vector<int>& rsupp) const{
+   vector<int> bas(nphysical);
+   iota(bas.begin(), bas.end(), 0);
+   auto supp = rsupp;
+   // order required in set_difference
+   stable_sort(supp.begin(), supp.end()); 
+   vector<int> rest;
+   set_difference(bas.begin(), bas.end(), supp.begin(), supp.end(),
+                  back_inserter(rest));
+   return rest;
+}
+
+//				  |
+//    MPS-like:	    Additional: --pc
+//     \|/			 \|/
+//    --p--			--p--
+//
+vector<int> topology::get_suppc(const comb_coord& p) const{
+   auto pc = get_node(p).center;
+   bool physical = (pc == coord_phys);
+   auto suppc = physical? vector<int>({get_node(p).pindex}) : get_node(pc).rsupport;
+   return suppc;
+}
+
+// 			          |
+//    MPS-like:     Additional: --p 
+//      |      |                 /|\
+//    --pl-->--p--     	        --pl--
+//
+vector<int> topology::get_suppl(const comb_coord& p) const{
+   auto suppl = get_node(p).lsupport;
+   return suppl;
+}
+
+//
+// MPS-like:
+//    |     |
+//  --p--<--pr-- : qrow of rsites[pr]
+//
+vector<int> topology::get_suppr(const comb_coord& p) const{
+   auto pr = get_node(p).right;
+   auto suppr = get_node(pr).rsupport;
+   return suppr;
+}
+
+// sweep related
+bool topology::check_partition(const int dots,
+			       const directed_bond& dbond,
+                               const bool debug) const{
+   if(debug) cout << "ctns::topology::check_partition: ";
+   bool ifNC;
+   auto p = dbond.current();
+   if(dots == 1){
+      // onedot
+      auto suppl = get_suppl(p);
+      auto suppr = get_suppr(p);
+      auto suppc = get_suppc(p);
+      int sl = suppl.size();
+      int sr = suppr.size();
+      int sc = suppc.size();
+      assert(sc+sl+sr == nphysical);
+      ifNC = (sl <= sr);
+      if(debug){
+         cout << "(sl,sr,sc)="
+              << sl << "," << sr << "," << sc
+	      << " ifNC=" << ifNC
+              << endl;
+         tools::print_vector(suppl, "suppl");
+         tools::print_vector(suppr, "suppr");
+         tools::print_vector(suppc, "suppc");
+      }
+   }else if(dots == 2){
+      // twodot
+      const auto& p0 = dbond.p0;
+      const auto& p1 = dbond.p1;
+      vector<int> suppl, suppr, suppc1, suppc2;
+      if(!dbond.is_cturn()){
+         //        c1   c2
+         //        |    |
+         //    l---p0---p1---r
+         //
+         suppl  = get_suppl(p0);
+         suppr  = get_suppr(p1);
+         suppc1 = get_suppc(p0);
+         suppc2 = get_suppc(p1);
+      }else{
+         //       c2
+         //       |
+         //  c1---p1
+         //       |
+         //   l---p0---r
+         //
+         suppl  = get_suppl(p0);
+         suppr  = get_suppr(p0);
+         suppc1 = get_suppc(p1);
+         suppc2 = get_suppr(p1);
+      }
+      int sl = suppl.size();
+      int sr = suppr.size();
+      int sc1 = suppc1.size();
+      int sc2 = suppc2.size();
+      assert(sc1+sc2+sl+sr == nphysical);
+      ifNC = (sl+sc1 <= sc2+sr);
+      if(debug){
+         cout << "(sl,sr,sc1,sc2)=" 
+              << sl << "," << sr << "," << sc1 << "," << sc2
+	      << " ifNC=" << ifNC
+              << endl;
+         tools::print_vector(suppl , "suppl");
+         tools::print_vector(suppr , "suppr");
+         tools::print_vector(suppc1, "suppc1");
+         tools::print_vector(suppc2, "suppc2");
+      }
+   }
+   return ifNC;
+}
+
+// get fqop around node p for kind = {"l","c","r"}
+string topology::get_fqop(const comb_coord& p,
+		          const string kind,
+		          const string scratch) const{
+   string fqop;
+   const auto& node = get_node(p);
+   if(kind == "c"){
+      if(node.type != 3){
+         fqop = oper_fname(scratch, p, "c"); // physical dofs
+      }else{
+         auto pc = node.center;
+         fqop = oper_fname(scratch, pc, "r"); // branching site
+      }
+   }else if(kind == "r"){
+      auto pr = node.right;
+      fqop = oper_fname(scratch, pr, "r");
+   }else if(kind == "l"){
+      auto pl = node.left;
+      fqop = oper_fname(scratch, pl, "l");
+   }
+   return fqop;
+}
+
+// fqops for sweep optimization
+vector<string> topology::get_fqops(const int dots,
+		                   const directed_bond& dbond,
+			           const string scratch,
+			           const bool debug) const{
+   vector<string> fqops;
+   if(dots == 1){
+      auto p = dbond.current();
+      fqops.resize(3); // l,r,c
+      fqops[0] = get_fqop(p, "l", scratch);
+      fqops[1] = get_fqop(p, "r", scratch);
+      fqops[2] = get_fqop(p, "c", scratch);
+   }else if(dots == 2){
+      const auto& p0 = dbond.p0;
+      const auto& p1 = dbond.p1;
+      fqops.resize(4); // l,r,c1,c2
+      if(!dbond.is_cturn()){
+         //        c1   c2
+         //        |    |
+         //    l---p0---p1---r
+         //
+	 fqops[0] = get_fqop(p0, "l", scratch);
+	 fqops[1] = get_fqop(p1, "r", scratch);
+	 fqops[2] = get_fqop(p0, "c", scratch);
+	 fqops[3] = get_fqop(p1, "c", scratch);
+      }else{
+         //       c2
+         //       |
+         //  c1---p1
+         //       |
+         //   l---p0---r
+         //
+         fqops[0] = get_fqop(p0, "l", scratch);
+         fqops[1] = get_fqop(p0, "r", scratch);
+         fqops[2] = get_fqop(p1, "c", scratch);
+         fqops[3] = get_fqop(p1, "r", scratch);
+      }
+   } 
+   if(debug){
+      cout << "ctns::topology::get_fqops dots=" << dots << endl;
+      for(int i=0; i<fqops.size(); i++){
+         cout << " fqop[" << i << "]=" << fqops[i] << endl;
+      }
+   }
+   return fqops;
+}
+
+string topology::get_frop(const directed_bond& dbond,
+			  const string scratch,
+			  const bool debug) const{
+   string frop;
+   auto p = dbond.current();
+   if(dbond.forward){
+      frop = oper_fname(scratch, p, "l");
+   }else{
+      frop = oper_fname(scratch, p, "r");
+   }
+   if(debug){
+      cout << "ctns::topology::get_frop frop=" << frop << endl;
+   }
+   return frop;
 }

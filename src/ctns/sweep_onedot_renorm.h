@@ -111,7 +111,7 @@ void onedot_guess_psi(const std::string superblock,
       
    }else if(superblock == "cr"){
 
-      const auto& cturn = dbond.cturn; 
+      auto cturn = dbond.is_cturn(); 
       for(int i=0; i<nroots; i++){
          wf.from_array(vsol.col(i));
          auto cwf = wf.merge_cr().dot(rot.H()); // <-W[l,alpha]->
@@ -153,7 +153,7 @@ void onedot_renorm(const input::schedule& schd,
    const auto& dbond = sweeps.seq[ibond];
    std::string superblock;
    if(dbond.forward){
-      superblock = dbond.cturn? "lr" : "lc";
+      superblock = dbond.is_cturn()? "lr" : "lc";
    }else{
       superblock = "cr";
    }
@@ -182,7 +182,7 @@ void onedot_renorm(const input::schedule& schd,
 
    // renorm operators	 
    const bool thresh = 1.e-10;
-   const auto& p = dbond.p;
+   const auto p = dbond.current();
    const auto& pdx = icomb.topo.rindex.at(p); 
    oper_dict<Tm> qops;
    std::string fname, fop;
@@ -224,7 +224,7 @@ void onedot_renorm(const input::schedule& schd,
       fop = oper_fname(scratch, p, "r");
    }
    timing.tf = tools::get_time();
-   oper_save(fop, qops, rank);
+   oper_save(fop, qops, (rank==0));
 }
 
 } // ctns

@@ -64,6 +64,12 @@ class oper_dict{
       // constructor
       oper_dict(){}
       ~oper_dict(){ delete[] _data; }
+      // copy
+      oper_dict(const oper_dict& op_dict) = delete;
+      oper_dict& operator =(const oper_dict& op_dict) = delete;
+      // move
+      oper_dict(oper_dict&& op_dict) = delete;
+      oper_dict& operator =(oper_dict&& op_dict) = delete;
       // stored operators
       std::vector<int> oper_index_op(const char key) const;
       // symmetry of op

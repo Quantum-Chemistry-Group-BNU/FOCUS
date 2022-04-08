@@ -27,6 +27,7 @@ void sweep_twodot(const input::schedule& schd,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore,
 		  const std::string scratch){
+   using Tm = typename Km::dtype;
    int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
    rank = icomb.world.rank();
@@ -35,7 +36,8 @@ void sweep_twodot(const input::schedule& schd,
 #ifdef _OPENMP
    maxthreads = omp_get_max_threads();
 #endif
-   if(rank == 0){
+   const bool debug = (rank==0);
+   if(debug){
       std::cout << "ctns::sweep_twodot"
 	        << " alg_hvec=" << schd.ctns.alg_hvec
 		<< " alg_renorm=" << schd.ctns.alg_renorm
@@ -43,67 +45,23 @@ void sweep_twodot(const input::schedule& schd,
 	        << " maxthreads=" << maxthreads 
 	        << std::endl;
    }
-   const int isym = Km::isym;
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
 
    // 0. check partition
    const auto& dbond = sweeps.seq[ibond];
-   const auto& p0 = dbond.p0;
-   const auto& p1 = dbond.p1;
-   const auto& p = dbond.p;
-   const auto& cturn = dbond.cturn;
-   std::vector<int> suppl, suppr, suppc1, suppc2;
-   if(!cturn){
-      //
-      //       |    |
-      //    ---p0---p1---
-      //
-      suppl  = icomb.topo.get_suppl(p0);
-      suppr  = icomb.topo.get_suppr(p1);
-      suppc1 = icomb.topo.get_suppc(p0);
-      suppc2 = icomb.topo.get_suppc(p1);
-   }else{
-      //       |
-      //    ---p1
-      //       |
-      //    ---p0---
-      //
-      suppl  = icomb.topo.get_suppl(p0);
-      suppr  = icomb.topo.get_suppr(p0);
-      suppc1 = icomb.topo.get_suppc(p1);
-      suppc2 = icomb.topo.get_suppr(p1);
-   }
-   int sl = suppl.size();
-   int sr = suppr.size();
-   int sc1 = suppc1.size();
-   int sc2 = suppc2.size();
-   assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
-   if(rank == 0){
-      std::cout << "support info: (sl,sr,sc1,sc2)=" 
-		<< sl << "," << sr << "," << sc1 << "," << sc2
-		<< std::endl;
-      tools::print_vector(suppl , "suppl");
-      tools::print_vector(suppr , "suppr");
-      tools::print_vector(suppc1, "suppc1");
-      tools::print_vector(suppc2, "suppc2");
-   }
+   const bool ifNC = icomb.topo.check_partition(2, dbond, debug);
 
    // 1. load operators 
-   using Tm = typename Km::dtype;
+   auto fqops = icomb.topo.get_fqops(2, dbond, scratch, debug);
+   auto frop = icomb.topo.get_frop(dbond, scratch, debug);
+
    oper_dict<Tm> lqops, rqops, c1qops, c2qops;
-   if(!cturn){
-      oper_load_qops(icomb, p0, scratch, "l", lqops , rank);
-      oper_load_qops(icomb, p1, scratch, "r", rqops , rank);  
-      oper_load_qops(icomb, p0, scratch, "c", c1qops, rank);
-      oper_load_qops(icomb, p1, scratch, "c", c2qops, rank);
-   }else{
-      oper_load_qops(icomb, p0, scratch, "l", lqops , rank);
-      oper_load_qops(icomb, p0, scratch, "r", rqops , rank);  
-      oper_load_qops(icomb, p1, scratch, "c", c1qops, rank);
-      oper_load_qops(icomb, p1, scratch, "r", c2qops, rank);
-   }
-   if(rank == 0){
+   oper_load(fqops[0], lqops, debug);
+   oper_load(fqops[1], rqops, debug);
+   oper_load(fqops[2], c1qops, debug);
+   oper_load(fqops[3], c2qops, debug);
+   if(debug){
       std::cout << "qops info: rank=" << rank << std::endl;
       lqops.print("lqops");
       rqops.print("rqops");
@@ -124,9 +82,9 @@ void sweep_twodot(const input::schedule& schd,
    const auto& qr = rqops.qket;
    const auto& qc1 = c1qops.qket;
    const auto& qc2 = c2qops.qket;
-   auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
+   auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
    stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
-   if(rank == 0) wf.print("wf"); 
+   if(debug) wf.print("wf"); 
  
    // 3. Davidson solver for wf
    int nsub = wf.size();
@@ -165,7 +123,7 @@ void sweep_twodot(const input::schedule& schd,
       tmpsize = opsize + 4*wfsize;
    }
    worktot = maxthreads*tmpsize;
-   if(preprocess && rank == 0){
+   if(preprocess && debug){
       std::cout << "preprocess for Hx:"
                 << " opsize=" << opsize 
                 << " wfsize=" << wfsize 
@@ -224,7 +182,7 @@ void sweep_twodot(const input::schedule& schd,
 		  schd.ctns.maxcycle, (schd.nelec)%2, dbond, wf);
    if(preprocess) delete[] workspace;
    timing.tc = tools::get_time();
-   if(rank == 0){ 
+   if(debug){
       sweeps.print_eopt(isweep, ibond);
       if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
    }
@@ -234,7 +192,7 @@ void sweep_twodot(const input::schedule& schd,
 		 lqops, rqops, c1qops, c2qops, int2e, int1e, scratch);
 
    timing.t1 = tools::get_time();
-   if(rank == 0){
+   if(debug){
       tools::timing("ctns::sweep_twodot", timing.t0, timing.t1);
       timing.analysis();
       sweeps.timing_global.accumulate(timing);

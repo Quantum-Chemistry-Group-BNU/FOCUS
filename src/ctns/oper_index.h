@@ -1,5 +1,5 @@
-#ifndef OPER_SETTINGS_H
-#define OPER_SETTINGS_H
+#ifndef OPER_INDEX_H
+#define OPER_INDEX_H
 
 namespace ctns{
 

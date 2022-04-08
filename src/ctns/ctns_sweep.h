@@ -40,29 +40,27 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 
    for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
-      if(rank == 0){
-         std::cout << tools::line_separator2 << std::endl;
-         sweeps.print_ctrls(isweep);
-         std::cout << tools::line_separator2 << std::endl;
-      }
+      std::cout << tools::line_separator2 << std::endl;
+      sweeps.print_ctrls(isweep);
+      std::cout << tools::line_separator2 << std::endl;
       // loop over sites
       auto ti = tools::get_time();
       for(int ibond=0; ibond<sweeps.seqsize; ibond++){
-	 auto dbond = sweeps.seq[ibond];
-         auto p0 = dbond.p0;
-	 auto p1 = dbond.p1;
-         auto forward = dbond.forward;
-         auto p = dbond.p;
-         bool cturn = dbond.cturn;
+	 const auto& dbond = sweeps.seq[ibond];
+         const auto& p0 = dbond.p0;
+	 const auto& p1 = dbond.p1;
+         const auto& forward = dbond.forward;
 	 auto dots = sweeps.ctrls[isweep].dots;
 #ifndef SERIAL
 	 icomb.world.barrier();
 #endif
 	 if(rank == 0){
 	    std::cout << "\nisweep=" << isweep 
-                      << " ibond=" << ibond << "/seqsize=" << sweeps.seqsize 
-                      << " bond=" << p0 << "-" << p1 
-	              << " (dots,forward,cturn)=(" << dots << "," << forward << "," << cturn << ")" 
+                      << " ibond=" << ibond << "/seqsize=" << sweeps.seqsize
+		      << " dots=" << dots 
+                      << " bond=" << p0 << "-" << p1
+		      << " forward=" << forward
+		      << " cturn=" << dbond.is_cturn()
 	              << std::endl;
             std::cout << tools::line_separator << std::endl;
 	 }

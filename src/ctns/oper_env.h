@@ -28,6 +28,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif  
+   const bool debug = (rank==0);
    double t_comp = 0.0, t_save = 0.0;
 
    auto t0 = tools::get_time();
@@ -46,7 +47,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
          auto tb = tools::get_time();
 	 //---------------------------------------------
 	 std::string fop = oper_fname(scratch, p, "c");
-         oper_save(fop, qops, rank);
+         oper_save(fop, qops, debug);
 	 //---------------------------------------------
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
@@ -64,7 +65,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
          auto tb = tools::get_time();
 	 //---------------------------------------------
 	 std::string fop = oper_fname(scratch, p, "r");
-         oper_save(fop, qops, rank);
+         oper_save(fop, qops, debug);
 	 //---------------------------------------------
          auto tc = tools::get_time();
          t_comp += tools::get_duration(tb-ta);
@@ -83,18 +84,19 @@ void oper_init_dotAll(const comb<Km>& icomb,
    auto tb = tools::get_time();
    //---------------------------------------------
    std::string fop = oper_fname(scratch, p, "l");
-   oper_save(fop, qops, rank);
+   oper_save(fop, qops, debug);
    //---------------------------------------------
    auto tc = tools::get_time();
    t_comp += tools::get_duration(tb-ta);
    t_save += tools::get_duration(tc-tb);
 
    auto t1 = tools::get_time();
-   if(rank == 0){
+   if(debug){
       tools::timing("ctns::oper_init", t0, t1);
-      std::cout << "detailed T(comp/save)= "
-	        << t_comp << ", " << t_save
-                << " T(total)=" << (t_comp + t_save) << " S"
+      std::cout << "Detailed T(comp/save/tot)="
+	        << t_comp << "," 
+		<< t_save << ","
+                << (t_comp + t_save)
                 << std::endl;
    }
 }
@@ -108,68 +110,70 @@ void oper_env_right(const comb<Km>& icomb,
 		    const int alg_renorm,
 		    const bool save_formulae,
 		    const bool sort_formulae){
+   using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
-   if(rank == 0){ 
+   const bool debug = (rank==0);
+   if(debug){ 
       std::cout << "\nctns::oper_env_right Km=" << qkind::get_name<Km>() << std::endl;
    }
    double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
    
+   // 1. construct for dot [cop] & boundary operators [lop/rop]
    auto t0 = tools::get_time();
-   //---------------------------------------------
-   // construct for dot operators [cop] & boundary operators [lop/rop]
    oper_init_dotAll(icomb, int2e, int1e, scratch);
-   //---------------------------------------------
    auto ta = tools::get_time();
    t_init = tools::get_duration(ta-t0);
 
-   // successive renormalization process
+   // 2. successive renormalization process
+   std::map<std::string,oper_dict<Tm>> fqops_dict;
    for(int idx=0; idx<icomb.topo.ntotal; idx++){
       auto p = icomb.topo.rcoord[idx];
       const auto& node = icomb.topo.get_node(p);
       if(node.type != 0 || p.first == 0){
          auto tb = tools::get_time();
-         //---------------------------------------------
-         // load operators from disk    
-         //---------------------------------------------
-	 oper_dict<typename Km::dtype> qops1, qops2, qops;
-         oper_load_qops(icomb, p, scratch, "c", qops1, rank);
-         oper_load_qops(icomb, p, scratch, "r", qops2, rank);
-         //---------------------------------------------
+         if(debug){ 
+	    std::cout << "\nidx=" << idx 
+		      << " coord=" << p 
+		      << std::endl;
+         }
+         // a. get operators from memory / disk    
+         std::vector<std::string> fneed(2);
+	 fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
+	 fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
+         oper_fetch(fqops_dict, fneed, debug);
          auto tc = tools::get_time();
          t_load += tools::get_duration(tc-tb); 
-         //---------------------------------------------
-         // perform renormalization for superblock {|cr>}
-         //---------------------------------------------
+         // b. perform renormalization for superblock {|cr>}
+	 std::string frop = oper_fname(scratch, p, "r");
 	 std::string superblock = "cr";
          std::string fname;
 	 if(save_formulae) fname = scratch+"/rformulae_env_"+std::to_string(idx)+".txt"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e,
-			   qops1, qops2, qops, 
-			   fname, alg_renorm, sort_formulae);
-         //---------------------------------------------
+			   fqops_dict.at(fneed[0]), fqops_dict.at(fneed[1]), 
+			   fqops_dict[frop], fname, alg_renorm, sort_formulae);
          auto td = tools::get_time();
          t_comp += tools::get_duration(td-tc);
-         //---------------------------------------------
-	 // save operators to disk
-         //---------------------------------------------
-	 std::string fop = oper_fname(scratch, p, "r");
-         oper_save(fop, qops, rank);
-         //---------------------------------------------
+         // c. save operators to disk
+	 oper_save(frop, fqops_dict.at(frop), debug);
          auto te = tools::get_time();
 	 t_save += tools::get_duration(te-td);
       }
    } // idx
+   fqops_dict.clear();
 
    auto t1 = tools::get_time();
-   if(rank == 0){
+   if(debug){
       tools::timing("ctns::oper_env_right", t0, t1);
-      std::cout << "detailed T(init/load/comp/save)= "
-                << t_init << ", " << t_load << ", " << t_comp << ", " << t_save
-                << " T(total)=" << (t_init + t_load + t_comp + t_save) << " S"
+      std::cout << "Detailed T(init/load/comp/save/tot)="
+                << t_init << "," 
+		<< t_load << "," 
+		<< t_comp << "," 
+		<< t_save << ","
+                << (t_init + t_load + t_comp + t_save)
                 << std::endl;
    }
 }

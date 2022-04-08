@@ -196,9 +196,9 @@ void twodot_renorm(const input::schedule& schd,
    const auto& dbond = sweeps.seq[ibond];
    std::string superblock;
    if(dbond.forward){
-      superblock = dbond.cturn? "lr" : "lc1";
+      superblock = dbond.is_cturn()? "lr" : "lc1";
    }else{
-      superblock = dbond.cturn? "c1c2" : "c2r";
+      superblock = dbond.is_cturn()? "c1c2" : "c2r";
    }
    if(rank == 0) std::cout << "ctns::twodot_renorm superblock=" << superblock;
    auto& timing = sweeps.opt_timing[isweep][ibond];
@@ -225,7 +225,7 @@ void twodot_renorm(const input::schedule& schd,
 
    // renorm operators	 
    const bool thresh = 1.e-10;
-   const auto& p = dbond.p;
+   const auto p = dbond.current();
    const auto& pdx = icomb.topo.rindex.at(p); 
    oper_dict<Tm> qops;
    std::string fname, fop;
@@ -278,7 +278,7 @@ void twodot_renorm(const input::schedule& schd,
       fop = oper_fname(scratch, p, "r");
    }
    timing.tf = tools::get_time();
-   oper_save(fop, qops, rank);
+   oper_save(fop, qops, (rank==0));
 }
 
 } // ctns

@@ -27,6 +27,7 @@ void sweep_onedot(const input::schedule& schd,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore,
 		  const std::string scratch){
+   using Tm = typename Km::dtype;
    int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
    rank = icomb.world.rank();
@@ -35,7 +36,8 @@ void sweep_onedot(const input::schedule& schd,
 #ifdef _OPENMP
    maxthreads = omp_get_max_threads();
 #endif
-   if(rank == 0){
+   const bool debug = (rank==0);
+   if(debug){
       std::cout << "ctns::sweep_onedot"
 	        << " alg_hvec=" << schd.ctns.alg_hvec
 		<< " alg_renorm=" << schd.ctns.alg_renorm
@@ -43,39 +45,22 @@ void sweep_onedot(const input::schedule& schd,
 	        << " maxthreads=" << maxthreads 
 	        << std::endl;
    }
-   const int isym = Km::isym;
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
 
    // check partition 
    const auto& dbond = sweeps.seq[ibond];
-   const auto& p = dbond.p;
-   std::vector<int> suppl, suppr, suppc;
-   icomb.topo.get_support_onedot(dbond, suppl, suppr, suppc);
-
-   suppl = icomb.topo.get_suppl(p);
-   suppr = icomb.topo.get_suppr(p);
-   suppc = icomb.topo.get_suppc(p); 
-   int sl = suppl.size();
-   int sr = suppr.size();
-   int sc = suppc.size();
-   assert(sc+sl+sr == icomb.topo.nphysical);
-   if(rank == 0){ 
-      std::cout << "support info: (sl,sr,sc)=" 
-                << sl << "," << sr << "," << sc 
-                << std::endl;
-      tools::print_vector(suppl, "suppl");
-      tools::print_vector(suppr, "suppr");
-      tools::print_vector(suppc, "suppc");
-   }
+   const bool ifNC = icomb.topo.check_partition(1, dbond, debug);
 
    // 1. load operators 
-   using Tm = typename Km::dtype;
+   auto fqops = icomb.topo.get_fqops(1, dbond, scratch, debug);
+   auto frop = icomb.topo.get_frop(dbond, scratch, debug);
+
    oper_dict<Tm> lqops, rqops, cqops;
-   oper_load_qops(icomb, p, scratch, "l", lqops, rank);
-   oper_load_qops(icomb, p, scratch, "r", rqops, rank);
-   oper_load_qops(icomb, p, scratch, "c", cqops, rank);
-   if(rank == 0){
+   oper_load(fqops[0], lqops, debug);
+   oper_load(fqops[1], rqops, debug);
+   oper_load(fqops[2], cqops, debug);
+   if(debug){
       std::cout << "qops info: rank=" << rank << std::endl;
       lqops.print("lqops");
       rqops.print("rqops");
@@ -91,12 +76,12 @@ void sweep_onedot(const input::schedule& schd,
    // 2. onedot wavefunction
    //	  |
    //   --*--
-   const auto& ql = lqops.qbra;
-   const auto& qr = rqops.qbra;
-   const auto& qc = cqops.qbra;
-   auto sym_state = get_qsym_state(isym, schd.nelec, schd.twoms);
+   const auto& ql = lqops.qket;
+   const auto& qr = rqops.qket;
+   const auto& qc = cqops.qket;
+   auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
    stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
-   if(rank == 0) wf.print("wf"); 
+   if(debug) wf.print("wf"); 
 
    // 3. Davidson solver for wf
    int nsub = wf.size();
@@ -134,7 +119,7 @@ void sweep_onedot(const input::schedule& schd,
       tmpsize = opsize + 4*wfsize;
    }
    worktot = maxthreads*tmpsize;
-   if(preprocess && rank == 0){
+   if(preprocess && debug){
       std::cout << "preprocess for Hx:" 
                 << " opsize=" << opsize 
                 << " wfsize=" << wfsize
@@ -193,7 +178,7 @@ void sweep_onedot(const input::schedule& schd,
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
    if(preprocess) delete[] workspace;
    timing.tc = tools::get_time();
-   if(rank == 0){ 
+   if(debug){
       sweeps.print_eopt(isweep, ibond);
       if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
    }
@@ -203,7 +188,7 @@ void sweep_onedot(const input::schedule& schd,
 		 lqops, rqops, cqops, int2e, int1e, scratch);
 
    timing.t1 = tools::get_time();
-   if(rank == 0){
+   if(debug){
       tools::timing("ctns::sweep_onedot", timing.t0, timing.t1);
       timing.analysis();
       sweeps.timing_global.accumulate(timing);
@@ -230,8 +215,7 @@ void sweep_rwfuns(const input::schedule& schd,
    // perform an additional onedot opt  
    auto p0 = std::make_pair(0,0);
    auto p1 = std::make_pair(1,0);
-   auto cturn = icomb.topo.is_cturn(p0,p1);
-   auto dbond = directed_bond(p0,p1,0,p1,cturn); // fake dbond
+   auto dbond = directed_bond(p0,p1,0); // fake dbond
    const int dcut1 = -1;
    const double eps = schd.ctns.ctrls[schd.ctns.maxsweep-1].eps; // take the last eps 
    input::params_sweep ctrl = {0, 1, dcut1, eps, 0.0};

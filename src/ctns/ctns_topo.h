@@ -47,15 +47,28 @@ struct node{
       std::vector<int> lsupport;  // orbitals in the left part
 };
 
-// directed_bond used in sweep sequence for optimization of ctns: (p0,p1,forward,p,cturn)
+// directed_bond used in sweep sequence for optimization of ctns: (p0,p1,forward)
 struct directed_bond{
    public:
-      directed_bond(const comb_coord _p0, const comb_coord _p1, const bool _forward, 
-		    const comb_coord _p, const bool _cturn):
-	p0(_p0), p1(_p1), forward(_forward), p(_p), cturn(_cturn) {}
+      // constructor
+      directed_bond(const comb_coord _p0, 
+		    const comb_coord _p1, 
+		    const bool _forward): 
+	p0(_p0), p1(_p1), forward(_forward) {}
+      // node to be updated
+      comb_coord current() const{ return forward? p0 : p1; }
+      //
+      // cturn: a bond that at the turning points to branches
+      //              |
+      //           ---*(i,1)
+      //       |      I      |
+      //    ---*------*------*---
+      //               (i,0)
+      //
+      bool is_cturn() const{ return p0.second == 0 && p1.second == 1; }
    public:
-      comb_coord p0, p1, p;
-      bool forward, cturn;
+      comb_coord p0, p1;
+      bool forward;
 };
 
 // topology information of ctns
@@ -75,51 +88,27 @@ struct topology{
       // helpers
       const node& get_node(const comb_coord& p) const{ return nodes[p.first][p.second]; }
       int get_type(const comb_coord& p) const{ return nodes[p.first][p.second].type; }
-      //				  |
-      //    MPS-like:	    Additional: --pc
-      //     \|/			 \|/
-      //    --p--			--p--
-      //
-      std::vector<int> get_suppc(const comb_coord& p) const{
-         auto pc = get_node(p).center;
-         bool physical = (pc == coord_phys);
-         auto suppc = physical? std::vector<int>({get_node(p).pindex}) : get_node(pc).rsupport;
-         return suppc;
-      }
-      // 			        |
-      //    MPS-like:     Additional: --p 
-      //      |      |                 /|\
-      //    --pl-->--p--     	      --pl--
-      //
-      std::vector<int> get_suppl(const comb_coord& p) const{
-         auto suppl = get_node(p).lsupport;
-         return suppl;
-      }
-      //
-      // MPS-like:
-      //    |     |
-      //  --p--<--pr-- : qrow of rsites[pr]
-      //
-      std::vector<int> get_suppr(const comb_coord& p) const{
-         auto pr = get_node(p).right;
-         auto suppr = get_node(pr).rsupport;
-         return suppr;
-      }
-      //
-      // cturn: bond that at the turning points to branches
-      //              |
-      //           ---*(i,1)
-      //       |      I      |
-      //    ---*------*------*---
-      //               (i,0)
-      //
-      bool is_cturn(const comb_coord& p0, const comb_coord& p1) const{
-	 return p0.second == 0 && p1.second == 1;
-      }
-      // helper for support 
-      std::vector<int> support_rest(const std::vector<int>& rsupp) const;
-      // sweep sequence 
+      // supports 
+      std::vector<int> get_supp_rest(const std::vector<int>& rsupp) const;
+      std::vector<int> get_suppc(const comb_coord& p) const;
+      std::vector<int> get_suppl(const comb_coord& p) const;
+      std::vector<int> get_suppr(const comb_coord& p) const;
+      // sweep related 
       std::vector<directed_bond> get_sweeps(const bool debug=true) const;
+      bool check_partition(const int dots,
+			   const directed_bond& dbond, 
+			   const bool debug=false) const;
+      // fqops
+      std::string get_fqop(const comb_coord& p,
+			   const std::string kind,
+			   const std::string scratch) const;
+      std::vector<std::string> get_fqops(const int dots,
+			                 const directed_bond& dbond,
+					 const std::string scratch,
+					 const bool debug=false) const;
+      std::string get_frop(const directed_bond& dbond,
+			   const std::string scratch,
+			   const bool debug=false) const;
    public:
       int ntotal, nbackbone, nphysical;
       // nodes on comb
