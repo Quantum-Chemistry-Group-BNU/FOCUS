@@ -91,10 +91,12 @@ LOGS
     - minimal operation count: bipart_oper with factorization
 
  ### TODOs ###
- 
- * Toward large-scale applications:
 
+ * Better IO strategy: 
+    - oper_stack: global memory for saving oper_load [DONE2022/04/08]
     - concurrency: separate computation & save 
+
+ * Toward large-scale applications:
 
     - merged implementation?
 
