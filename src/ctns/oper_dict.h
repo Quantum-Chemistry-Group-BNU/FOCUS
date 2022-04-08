@@ -108,6 +108,8 @@ class oper_dict{
       Tm* _data = nullptr;
 };
 template <typename Tm>
+using oper_stack = std::map<std::string,oper_dict<Tm>>; // for global storage
+template <typename Tm>
 using oper_dictmap = std::map<std::string,const oper_dict<Tm>&>; // for sigma2
 
 // helpers

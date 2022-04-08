@@ -129,7 +129,7 @@ void oper_env_right(const comb<Km>& icomb,
    t_init = tools::get_duration(ta-t0);
 
    // 2. successive renormalization process
-   std::map<std::string,oper_dict<Tm>> fqops_dict;
+   oper_stack<Tm> fqops_stack;
    for(int idx=0; idx<icomb.topo.ntotal; idx++){
       auto p = icomb.topo.rcoord[idx];
       const auto& node = icomb.topo.get_node(p);
@@ -144,7 +144,7 @@ void oper_env_right(const comb<Km>& icomb,
          std::vector<std::string> fneed(2);
 	 fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
 	 fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
-         oper_fetch(fqops_dict, fneed, debug);
+         oper_fetch(fqops_stack, fneed, debug);
          auto tc = tools::get_time();
          t_load += tools::get_duration(tc-tb); 
          // b. perform renormalization for superblock {|cr>}
@@ -153,17 +153,17 @@ void oper_env_right(const comb<Km>& icomb,
          std::string fname;
 	 if(save_formulae) fname = scratch+"/rformulae_env_"+std::to_string(idx)+".txt"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e,
-			   fqops_dict.at(fneed[0]), fqops_dict.at(fneed[1]), 
-			   fqops_dict[frop], fname, alg_renorm, sort_formulae);
+			   fqops_stack.at(fneed[0]), fqops_stack.at(fneed[1]), 
+			   fqops_stack[frop], fname, alg_renorm, sort_formulae);
          auto td = tools::get_time();
          t_comp += tools::get_duration(td-tc);
          // c. save operators to disk
-	 oper_save(frop, fqops_dict.at(frop), debug);
+	 oper_save(frop, fqops_stack.at(frop), debug);
          auto te = tools::get_time();
 	 t_save += tools::get_duration(te-td);
       }
    } // idx
-   fqops_dict.clear();
+   fqops_stack.clear();
 
    auto t1 = tools::get_time();
    if(debug){

@@ -179,6 +179,7 @@ void twodot_renorm(const input::schedule& schd,
 		   comb<Km>& icomb,
 		   const linalg::matrix<typename Km::dtype>& vsol,
 		   stensor4<typename Km::dtype>& wf,
+		   oper_dict<typename Km::dtype>& qops,
 	           const oper_dict<typename Km::dtype>& lqops,
 	           const oper_dict<typename Km::dtype>& rqops,	
 	           const oper_dict<typename Km::dtype>& c1qops,
@@ -227,8 +228,7 @@ void twodot_renorm(const input::schedule& schd,
    const bool thresh = 1.e-10;
    const auto p = dbond.current();
    const auto& pdx = icomb.topo.rindex.at(p); 
-   oper_dict<Tm> qops;
-   std::string fname, fop;
+   std::string fname;
    if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
 	    			     + "_"+std::to_string(isweep)
 	               		     + "_"+std::to_string(ibond)+".txt";
@@ -242,7 +242,6 @@ void twodot_renorm(const input::schedule& schd,
       //-------------------------------------------------------------------
       oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, c1qops, qops, 
 			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae);
-      fop = oper_fname(scratch, p, "l");
    }else if(superblock == "lr"){
       icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
       //-------------------------------------------------------------------
@@ -253,7 +252,6 @@ void twodot_renorm(const input::schedule& schd,
       //-------------------------------------------------------------------
       oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops, 
 			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae);
-      fop = oper_fname(scratch, p, "l");
    }else if(superblock == "c2r"){
       icomb.rsites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
       //-------------------------------------------------------------------
@@ -264,7 +262,6 @@ void twodot_renorm(const input::schedule& schd,
       //-------------------------------------------------------------------
       oper_renorm_opAll("cr", icomb, p, int2e, int1e, c2qops, rqops, qops, 
 			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae);
-      fop = oper_fname(scratch, p, "r");
    }else if(superblock == "c1c2"){
       icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
       //-------------------------------------------------------------------
@@ -275,10 +272,7 @@ void twodot_renorm(const input::schedule& schd,
       //-------------------------------------------------------------------
       oper_renorm_opAll("cr", icomb, p, int2e, int1e, c1qops, c2qops, qops, 
 			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae);
-      fop = oper_fname(scratch, p, "r");
    }
-   timing.tf = tools::get_time();
-   oper_save(fop, qops, (rank==0));
 }
 
 } // ctns
