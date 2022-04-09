@@ -67,52 +67,6 @@ void oper_load(const std::string fname,
    }
 }
 
-template <typename Tm>
-void oper_fetch(std::map<std::string,oper_dict<Tm>>& fqops_dict,
-		std::vector<std::string>& fneed,
-		const bool debug){
-   if(debug_oper_io && debug){
-      std::cout << "ctns::oper_fetch" << std::endl;
-      std::cout << "fqops_dict[in]: size=" << fqops_dict.size() << std::endl; 
-      for(const auto& pr : fqops_dict){
-         std::cout << " fqop=" << pr.first << std::endl;
-      }
-      std::cout << "fneed: size=" << fneed.size() << std::endl;
-      for(const auto& fqop : fneed){
-	 std::cout << " fqop=" << fqop << std::endl;
-      }
-   }
-   // first release uncessary qops
-   std::vector<std::string> frelease;
-   for(auto& pr : fqops_dict){
-      auto& fqop = pr.first;
-      auto result = std::find(fneed.begin(), fneed.end(), fqop);
-      if(result == fneed.end()){
-         frelease.push_back(fqop);
-      }
-   }
-   for(const auto& fqop : frelease){
-      fqops_dict.erase(fqop);
-   }
-   if(debug_oper_io && debug){
-      std::cout << "frelease: size=" << frelease.size() << std::endl; 
-      for(const auto& fqop : frelease){
-         std::cout << " fqop=" << fqop << std::endl;
-      }
-   }
-   // then load new data is in memory
-   for(const auto& fqop : fneed){
-      if(fqops_dict.find(fqop) != fqops_dict.end()) continue;
-      oper_load(fqop, fqops_dict[fqop], debug);
-   }
-   if(debug_oper_io && debug){
-      std::cout << "fqops_dict[out]: size=" << fqops_dict.size() << std::endl; 
-      for(const auto& pr : fqops_dict){
-         std::cout << " fqop=" << pr.first << std::endl;
-      }
-   }
-}
-
 } // ctns
 
 #endif

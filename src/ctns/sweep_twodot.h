@@ -22,7 +22,7 @@ void sweep_twodot(const input::schedule& schd,
 		  sweep_data& sweeps,
 		  const int isweep,
 		  const int ibond,
-	          oper_stack<typename Km::dtype>& fqops_stack,
+	          oper_stack<typename Km::dtype>& qops_stack,
                   comb<Km>& icomb,
                   const integral::two_body<typename Km::dtype>& int2e,
                   const integral::one_body<typename Km::dtype>& int1e,
@@ -55,11 +55,11 @@ void sweep_twodot(const input::schedule& schd,
 
    // 1. load operators 
    auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug);
-   oper_fetch(fqops_stack, fneed, debug);
-   const auto& lqops = fqops_stack.at(fneed[0]);
-   const auto& rqops = fqops_stack.at(fneed[1]);
-   const auto& c1qops = fqops_stack.at(fneed[2]);
-   const auto& c2qops = fqops_stack.at(fneed[3]);
+   qops_stack.fetch(fneed, debug);
+   const auto& lqops  = qops_stack(fneed[0]);
+   const auto& rqops  = qops_stack(fneed[1]);
+   const auto& c1qops = qops_stack(fneed[2]);
+   const auto& c2qops = qops_stack(fneed[3]);
    if(debug){
       std::cout << "qops info: rank=" << rank << std::endl;
       lqops.print("lqops");
@@ -188,10 +188,10 @@ void sweep_twodot(const input::schedule& schd,
 
    // 3. decimation & renormalize operators
    auto frop = icomb.topo.get_frop(dbond, scratch, debug);
-   twodot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, fqops_stack[frop], 
+   twodot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, qops_stack(frop), 
 		 lqops, rqops, c1qops, c2qops, int2e, int1e, scratch);
    timing.tf = tools::get_time();
-   oper_save(frop, fqops_stack.at(frop), debug);
+   qops_stack.save(frop, debug);
 
    timing.t1 = tools::get_time();
    if(debug){

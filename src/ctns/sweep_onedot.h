@@ -22,7 +22,7 @@ void sweep_onedot(const input::schedule& schd,
 		  sweep_data& sweeps,
 		  const int isweep,
 		  const int ibond,
-	          oper_stack<typename Km::dtype>& fqops_stack,
+	          oper_stack<typename Km::dtype>& qops_stack,
                   comb<Km>& icomb,
                   const integral::two_body<typename Km::dtype>& int2e,
                   const integral::one_body<typename Km::dtype>& int1e,
@@ -55,10 +55,10 @@ void sweep_onedot(const input::schedule& schd,
 
    // 1. load operators 
    auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug);
-   oper_fetch(fqops_stack, fneed, debug);
-   const auto& lqops = fqops_stack.at(fneed[0]);
-   const auto& rqops = fqops_stack.at(fneed[1]);
-   const auto& cqops = fqops_stack.at(fneed[2]);
+   qops_stack.fetch(fneed, debug);
+   const auto& lqops = qops_stack(fneed[0]);
+   const auto& rqops = qops_stack(fneed[1]);
+   const auto& cqops = qops_stack(fneed[2]);
    if(debug){
       std::cout << "qops info: rank=" << rank << std::endl;
       lqops.print("lqops");
@@ -184,10 +184,10 @@ void sweep_onedot(const input::schedule& schd,
 
    // 4. decimation & renormalize operators
    auto frop = icomb.topo.get_frop(dbond, scratch, debug);
-   onedot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, fqops_stack[frop], 
+   onedot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, qops_stack(frop), 
 		 lqops, rqops, cqops, int2e, int1e, scratch);
    timing.tf = tools::get_time();
-   oper_save(frop, fqops_stack.at(frop), debug);
+   qops_stack.save(frop, debug);
 
    timing.t1 = tools::get_time();
    if(debug){
@@ -201,7 +201,7 @@ void sweep_onedot(const input::schedule& schd,
 // in right canonical form (RCF) for later usage
 template <typename Km>
 void sweep_rwfuns(const input::schedule& schd,
-	          oper_stack<typename Km::dtype>& fqops_stack,
+	          oper_stack<typename Km::dtype>& qops_stack,
 		  comb<Km>& icomb,
 		  const integral::two_body<typename Km::dtype>& int2e,
 	          const integral::one_body<typename Km::dtype>& int1e,
@@ -224,7 +224,7 @@ void sweep_rwfuns(const input::schedule& schd,
    input::params_sweep ctrl = {0, 1, dcut1, eps, 0.0};
    sweep_data sweeps({dbond}, schd.ctns.nroots, schd.ctns.guess, 
 		      1, {ctrl}, 0, schd.ctns.rdm_vs_svd);
-   sweep_onedot(schd, sweeps, 0, 0, fqops_stack, icomb, 
+   sweep_onedot(schd, sweeps, 0, 0, qops_stack, icomb, 
 	        int2e, int1e, ecore, scratch);
 
    if(rank == 0){

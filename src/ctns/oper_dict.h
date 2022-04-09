@@ -15,7 +15,7 @@ template <typename Tm>
 using oper_map = std::map<int,stensor2<Tm>>;
 
 template <typename Tm>
-class oper_dict{
+struct oper_dict{
    private:
       // serialize
       friend class boost::serialization::access;	   
@@ -107,8 +107,6 @@ class oper_dict{
       size_t _size = 0, _opsize = 0;
       Tm* _data = nullptr;
 };
-template <typename Tm>
-using oper_stack = std::map<std::string,oper_dict<Tm>>; // for global storage
 template <typename Tm>
 using oper_dictmap = std::map<std::string,const oper_dict<Tm>&>; // for sigma2
 
