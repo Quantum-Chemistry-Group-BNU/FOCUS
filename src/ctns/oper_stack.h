@@ -31,12 +31,19 @@ struct oper_stack{
 		const bool debug){
          if(thrd.joinable()) thrd.join();
 	 fkept = frop;
+
 	 thrd = std::thread(&ctns::oper_save<Tm>, frop,
 			    std::cref(qstore.at(frop)), debug);
+/*
+	 ctns::oper_save<Tm>(frop, qstore.at(frop), debug);
+*/
+	 // we can also add HDF5 support here
+
       }
       void clean_up(){
+	 // must be first join then clear, otherwise IO is not finished!
+	 if(thrd.joinable()) thrd.join();
 	 qstore.clear();
-	 thrd.join();
       }
    public:
       std::map<std::string,oper_dict<Tm>> qstore; // for global storage

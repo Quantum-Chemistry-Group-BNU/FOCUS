@@ -5,6 +5,8 @@
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
+//#include "../../extlibs/h5pp/h5pp.h"
+
 namespace ctns{ 
 
 const bool debug_oper_io = true;
@@ -13,9 +15,9 @@ extern const bool debug_oper_io;
 inline std::string oper_fname(const std::string scratch, 
   	  	       	      const comb_coord& p,
 		       	      const std::string kind){
-   return scratch + "/" + kind + "("
+   return scratch + "/" + kind + "op("
         + std::to_string(p.first) + ","
-        + std::to_string(p.second) + ").op";
+        + std::to_string(p.second) + ")";
 }
 
 template <typename Tm>
@@ -24,12 +26,23 @@ void oper_save(const std::string fname,
 	       const bool debug){
    if(debug_oper_io and debug) std::cout << "ctns::oper_save fname=" << fname;
    auto t0 = tools::get_time();
+
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << qops;
+//   ofs.close();
    auto t1 = tools::get_time();
+
    ofs.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
    ofs.close();
+
+/*
+   std::cout << h5pp::hdf5::isCompressionAvaliable() << std::endl;
+
+   h5pp::File file(fname+".h5", h5pp::FileAccess::REPLACE); // Initialize a file
+   file.writeDataset(qops._data, "data", qops._size);
+*/
+
    auto t2 = tools::get_time();
    if(debug_oper_io and debug){
       std::cout << " T(info/data/tot)=" 
@@ -46,16 +59,25 @@ void oper_load(const std::string fname,
 	       const bool debug){
    if(debug_oper_io and debug) std::cout << "ctns::oper_load fname=" << fname;
    auto t0 = tools::get_time();
+
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> qops;
+//   ifs.close();
    auto t1 = tools::get_time();
+
    qops._setup_opdict();
    qops._data = new Tm[qops._size];
    auto t2 = tools::get_time();
+
    ifs.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
    ifs.close();
+/*
+   h5pp::File file(fname+".h5", h5pp::FileAccess::READONLY); 
+   file.readDataset(qops._data, "data", qops._size);
+*/
    qops._setup_data(qops._data);
+
    auto t3 = tools::get_time();
    if(debug_oper_io and debug){
       std::cout << " T(info/setup/data/tot)=" 

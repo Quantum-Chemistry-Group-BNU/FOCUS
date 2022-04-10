@@ -8,7 +8,11 @@ namespace ctns{
 
 // timing
 struct dot_timing{
-   void print(){
+   void print(const std::string msg){
+      std::cout << "##### " << msg << ": " 
+		<< std::scientific << std::setprecision(2) << dt
+                << " S #####" 
+		<< std::endl;
       std::cout << " T(load)  = " << std::scientific << std::setprecision(2) << dt0 << " S"
    	        << "  per = " << std::defaultfloat << dt0/dt*100 
 		<< "  per(accum) = " << dt0/dt*100 
@@ -38,7 +42,8 @@ struct dot_timing{
 		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4+dt5+dt6)/dt*100 
 		<< std::endl;
    }
-   void analysis(){
+   void analysis(const std::string msg,
+		 const bool debug=true){
       dt  = tools::get_duration(t1-t0); // total
       dt0 = tools::get_duration(ta-t0); // t(procs)
       dt1 = tools::get_duration(tb-ta); // t(hdiag)
@@ -47,11 +52,11 @@ struct dot_timing{
       dt4 = tools::get_duration(te-td); // t(guess)
       dt5 = tools::get_duration(tf-te); // t(renrm)
       dt6 = tools::get_duration(t1-tf); // t(save)
-      std::cout << "##### timing_local: " << std::scientific << std::setprecision(2)
-                << dt << " S #####" << std::endl;
-      this->print();
+      if(debug) this->print(msg);
    }
-   void accumulate(const dot_timing& timer){
+   void accumulate(const dot_timing& timer,
+		   const std::string msg,
+		   const bool debug=true){
       dt  += timer.dt;
       dt0 += timer.dt0;
       dt1 += timer.dt1;
@@ -60,9 +65,7 @@ struct dot_timing{
       dt4 += timer.dt4;
       dt5 += timer.dt5;
       dt6 += timer.dt6;
-      std::cout << "##### timing_global: " << std::scientific << std::setprecision(2) 
-                << dt << " S #####" << std::endl;
-      this->print();
+      if(debug) this->print(msg);
    }
 public:
    using Tm = std::chrono::high_resolution_clock::time_point;
@@ -103,6 +106,7 @@ struct sweep_data{
       dbranch = _dbranch;
       rdm_vs_svd = _rdm_vs_svd;
       // sweep results
+      timing_sweep.resize(maxsweep);
       opt_result.resize(maxsweep);
       opt_timing.resize(maxsweep);
       for(int i=0; i<maxsweep; i++){
@@ -146,6 +150,7 @@ public:
    std::vector<dot_result> min_result;
    // timing
    std::vector<std::vector<dot_timing>> opt_timing;
+   std::vector<dot_timing> timing_sweep;
    dot_timing timing_global;
    std::vector<double> t_total; 
 };

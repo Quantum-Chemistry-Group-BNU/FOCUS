@@ -166,7 +166,7 @@ void oper_env_right(const comb<Km>& icomb,
       }
    } // idx
    qops_stack.clean_up();
-
+ 
    auto t1 = tools::get_time();
    if(debug){
       tools::timing("ctns::oper_env_right", t0, t1);

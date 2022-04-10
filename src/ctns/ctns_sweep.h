@@ -20,8 +20,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
-#endif   
-   if(rank == 0){ 
+#endif  
+   const bool debug = (rank==0); 
+   if(debug){ 
       std::cout << "\nctns::sweep_opt maxsweep=" << schd.ctns.maxsweep << std::endl;
    }
    auto t0 = tools::get_time();
@@ -29,7 +30,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    if(schd.ctns.maxsweep == 0) return;
 
    // init left boundary site
-   auto& ntotal = icomb.topo.ntotal;
+   const auto& ntotal = icomb.topo.ntotal;
    icomb.lsites.resize(ntotal);
    icomb.lsites[ntotal-1] = get_left_bsite<Tm>(Km::isym);
 
@@ -50,7 +51,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
          const auto& p0 = dbond.p0;
 	 const auto& p1 = dbond.p1;
          const auto& forward = dbond.forward;
-	 auto dots = sweeps.ctrls[isweep].dots;
+	 const auto& dots = sweeps.ctrls[isweep].dots;
+	 auto tp0 = icomb.topo.get_type(p0);
+	 auto tp1 = icomb.topo.get_type(p1);
 #ifndef SERIAL
 	 icomb.world.barrier();
 #endif
@@ -64,8 +67,6 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	              << std::endl;
             std::cout << tools::line_separator << std::endl;
 	 }
-	 auto tp0 = icomb.topo.get_type(p0);
-	 auto tp1 = icomb.topo.get_type(p1);
 	 // optimization
 	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
 	    sweep_onedot(schd, sweeps, isweep, ibond, qops_stack, icomb,
@@ -73,13 +74,19 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 }else{
 	    sweep_twodot(schd, sweeps, isweep, ibond, qops_stack, icomb, 
 			 int2e, int1e, ecore, scratch);
-	 } 
+	 }
+	 // timing 
+         if(debug){
+            const auto& timing = sweeps.opt_timing[isweep][ibond];
+	    sweeps.timing_sweep[isweep].accumulate(timing,"time_sweep");
+            sweeps.timing_global.accumulate(timing,"time_global");
+         }
          // just for debug
 	 if(isweep == schd.ctns.maxsweep-1 && ibond == schd.ctns.maxbond) exit(1);
       } // ibond
       auto tf = tools::get_time();
       sweeps.t_total[isweep] = tools::get_duration(tf-ti);
-      if(rank == 0) sweeps.summary(isweep);
+      if(debug) sweeps.summary(isweep);
    } // isweep
 
    // for later computing properties
@@ -88,7 +95,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    qops_stack.clean_up();
 
    auto t1 = tools::get_time();
-   if(rank == 0) tools::timing("ctns::opt_sweep", t0, t1);
+   if(debug) tools::timing("ctns::opt_sweep", t0, t1);
 }
 
 } // ctns

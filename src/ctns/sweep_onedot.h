@@ -176,24 +176,25 @@ void sweep_onedot(const input::schedule& schd,
 		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
 		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
    if(preprocess) delete[] workspace;
-   timing.tc = tools::get_time();
    if(debug){
       sweeps.print_eopt(isweep, ibond);
       if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
    }
+   timing.tc = tools::get_time();
 
    // 4. decimation & renormalize operators
    auto frop = icomb.topo.get_frop(dbond, scratch, debug);
    onedot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, qops_stack(frop), 
 		 lqops, rqops, cqops, int2e, int1e, scratch);
    timing.tf = tools::get_time();
+   
+   // 4. save on disk 
    qops_stack.save(frop, debug);
 
    timing.t1 = tools::get_time();
    if(debug){
       tools::timing("ctns::sweep_onedot", timing.t0, timing.t1);
-      timing.analysis();
-      sweeps.timing_global.accumulate(timing);
+      timing.analysis("time_local");
    }
 }
 

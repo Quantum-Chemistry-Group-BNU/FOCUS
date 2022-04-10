@@ -13,7 +13,8 @@
 #include <random>
 #include <chrono>
 #include <complex>
-
+#include <time.h>
+ 
 namespace tools{
 
 inline void license(){
@@ -31,6 +32,12 @@ inline void license(){
    std::cout << "   							               " << std::endl;
    std::cout << "                    Authors: Zhendong Li @ BNU2019   		       " << std::endl;
    std::cout << "======================================================================" << std::endl;
+   std::cout << std::endl;
+   // https://en.cppreference.com/w/c/chrono/time
+   time_t now = time(NULL);
+   std::cout << "TIME = " << ctime(&now) << std::endl; 
+   // https://stackoverflow.com/questions/44038428/include-git-commit-hash-and-or-branch-name-in-c-c-source
+   std::cout << "GIT_HASH = " << GIT_HASH << std::endl;
 }
 
 inline void exit(const std::string msg){
