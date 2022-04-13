@@ -93,7 +93,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
    auto t1 = tools::get_time();
    if(debug){
       tools::timing("ctns::oper_init", t0, t1);
-      std::cout << "Detailed T(comp/save/tot)="
+      std::cout << "T[ctns::oper_init](comp/save/tot)="
 	        << t_comp << "," 
 		<< t_save << ","
                 << (t_comp + t_save)
@@ -129,7 +129,7 @@ void oper_env_right(const comb<Km>& icomb,
    t_init = tools::get_duration(ta-t0);
 
    // 2. successive renormalization process
-   oper_stack<Tm> qops_stack;
+   oper_stack<Tm> qops_stack(debug);
    for(int idx=0; idx<icomb.topo.ntotal; idx++){
       auto p = icomb.topo.rcoord[idx];
       const auto& node = icomb.topo.get_node(p);
@@ -144,7 +144,7 @@ void oper_env_right(const comb<Km>& icomb,
          std::vector<std::string> fneed(2);
 	 fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
 	 fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
-         qops_stack.fetch(fneed, debug);
+         qops_stack.fetch(fneed);
 	 const auto& cqops = qops_stack(fneed[0]);
 	 const auto& rqops = qops_stack(fneed[1]);
          auto tc = tools::get_time();
@@ -160,7 +160,7 @@ void oper_env_right(const comb<Km>& icomb,
          auto td = tools::get_time();
          t_comp += tools::get_duration(td-tc);
          // c. save operators to disk
-         qops_stack.save(frop, debug);
+         qops_stack.save(frop);
          auto te = tools::get_time();
 	 t_save += tools::get_duration(te-td);
       }
@@ -170,7 +170,7 @@ void oper_env_right(const comb<Km>& icomb,
    auto t1 = tools::get_time();
    if(debug){
       tools::timing("ctns::oper_env_right", t0, t1);
-      std::cout << "Detailed T(init/load/comp/save/tot)="
+      std::cout << "T[ctns::oper_env_right](init/load/comp/save/tot)="
                 << t_init << "," 
 		<< t_load << "," 
 		<< t_comp << "," 

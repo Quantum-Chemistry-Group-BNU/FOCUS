@@ -55,7 +55,7 @@ void sweep_onedot(const input::schedule& schd,
 
    // 1. load operators 
    auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug);
-   qops_stack.fetch(fneed, debug);
+   qops_stack.fetch(fneed);
    const auto& lqops = qops_stack(fneed[0]);
    const auto& rqops = qops_stack(fneed[1]);
    const auto& cqops = qops_stack(fneed[2]);
@@ -189,7 +189,7 @@ void sweep_onedot(const input::schedule& schd,
    timing.tf = tools::get_time();
    
    // 4. save on disk 
-   qops_stack.save(frop, debug);
+   qops_stack.save(frop);
 
    timing.t1 = tools::get_time();
    if(debug){

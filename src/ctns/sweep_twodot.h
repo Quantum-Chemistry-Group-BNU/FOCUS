@@ -55,7 +55,7 @@ void sweep_twodot(const input::schedule& schd,
 
    // 1. load operators 
    auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug);
-   qops_stack.fetch(fneed, debug);
+   qops_stack.fetch(fneed);
    const auto& lqops  = qops_stack(fneed[0]);
    const auto& rqops  = qops_stack(fneed[1]);
    const auto& c1qops = qops_stack(fneed[2]);
@@ -73,6 +73,11 @@ void sweep_twodot(const input::schedule& schd,
 		<< std::endl;
    }
    timing.ta = tools::get_time();
+   if(debug){
+      std::cout << "TIMING for fetch = "
+		<< tools::get_duration(timing.ta-timing.t0)
+	        << std::endl;
+   }
 
    // 2. twodot wavefunction
    //	 \ /
@@ -105,6 +110,11 @@ void sweep_twodot(const input::schedule& schd,
    }
 #endif 
    timing.tb = tools::get_time();
+   if(debug){
+      std::cout << "TIMING for Hdiag = "
+		<< tools::get_duration(timing.tb-timing.ta)
+	        << std::endl;
+   }
 
    // 3.2 Solve local problem: Hc=cE
    const oper_dictmap<Tm> qops_dict = {{"l",lqops},
@@ -185,6 +195,11 @@ void sweep_twodot(const input::schedule& schd,
       if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
    }
    timing.tc = tools::get_time();
+   if(debug){
+      std::cout << "TIMING for localCI = "
+		<< tools::get_duration(timing.tc-timing.tb)
+	        << std::endl;
+   }
 
    // 3. decimation & renormalize operators
    auto frop = icomb.topo.get_frop(dbond, scratch, debug);
@@ -193,7 +208,7 @@ void sweep_twodot(const input::schedule& schd,
    timing.tf = tools::get_time();
   
    // 4. save on disk 
-   qops_stack.save(frop, debug);
+   qops_stack.save(frop);
 
    timing.t1 = tools::get_time();
    if(debug){

@@ -38,7 +38,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    sweep_data sweeps(icomb.topo.get_sweeps(rank==0), 
 		     schd.ctns.nroots, schd.ctns.guess, schd.ctns.maxsweep, 
 		     schd.ctns.ctrls, schd.ctns.dbranch, schd.ctns.rdm_vs_svd);
-   oper_stack<Tm> qops_stack;
+   oper_stack<Tm> qops_stack(debug);
    for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
       std::cout << tools::line_separator2 << std::endl;

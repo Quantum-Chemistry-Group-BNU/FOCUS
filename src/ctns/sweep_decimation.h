@@ -77,7 +77,7 @@ inline void decimation_selection(const bool ifkr,
               << " wts=" << wts << " accum=" << accum << " deff=" << deff 
   	      << std::endl;
       }else{
-/*
+
 	 // additional: kept at least one state per sector
 	 if(!ifmatched[br]) continue;
 	 br_kept.push_back(br);
@@ -89,7 +89,7 @@ inline void decimation_selection(const bool ifkr,
 	      << " dim[full,kept]=" << dim0 << "," << dmin 
               << " wts=" << wts << " accum=" << accum << " deff=" << deff
 	      << " (additional)" << std::endl;
-*/
+
       }
    } // iqr
    fout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  

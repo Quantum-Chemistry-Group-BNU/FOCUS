@@ -10,6 +10,8 @@ namespace ctns{
 template <typename Tm>
 struct oper_stack{
    public:
+      // constuctor
+      oper_stack(const bool _debug): debug(_debug) {}
       const oper_dict<Tm>& operator()(const std::string fqop) const{
          return qstore.at(fqop);
       } 
@@ -25,35 +27,29 @@ struct oper_stack{
          }
       }
       // fetch qops from memory / disk
-      void fetch(const std::vector<std::string>& fneed,
-		 const bool debug);
-      void save(const std::string frop,
-		const bool debug){
-         if(thrd.joinable()) thrd.join();
+      void fetch(const std::vector<std::string>& fneed);
+      void save(const std::string frop){
 	 fkept = frop;
-
-	 thrd = std::thread(&ctns::oper_save<Tm>, frop,
-			    std::cref(qstore.at(frop)), debug);
-/*
-	 ctns::oper_save<Tm>(frop, qstore.at(frop), debug);
-*/
-	 // we can also add HDF5 support here
-
       }
       void clean_up(){
-	 // must be first join then clear, otherwise IO is not finished!
+         // just add if to be compatible with serial version
 	 if(thrd.joinable()) thrd.join();
+	 // dump the last file
+	 ctns::oper_save<Tm>(fkept, qstore.at(fkept), debug);
+	 fkept.clear();
+	 // must be first join then clear, otherwise IO is not finished!
 	 qstore.clear();
       }
    public:
       std::map<std::string,oper_dict<Tm>> qstore; // for global storage
       std::string fkept;
       std::thread thrd;
+      bool debug = false;
 };
 
 template <typename Tm>
-void oper_stack<Tm>::fetch(const std::vector<std::string>& fneed,
-		 	   const bool debug){
+void oper_stack<Tm>::fetch(const std::vector<std::string>& fneed){
+   auto t0 = tools::get_time();
    if(debug_oper_io && debug){
       std::cout << "ctns::oper_stack<Tm>::fetch" << std::endl;
       std::cout << "fneed: size=" << fneed.size() << std::endl;
@@ -72,6 +68,10 @@ void oper_stack<Tm>::fetch(const std::vector<std::string>& fneed,
          frelease.push_back(fqop);
       }
    }
+   // just join before release   
+   auto ta = tools::get_time();
+   if(thrd.joinable()) thrd.join();
+   auto tb = tools::get_time();
    for(const auto& fqop : frelease){
       qstore.erase(fqop);
    }
@@ -82,13 +82,25 @@ void oper_stack<Tm>::fetch(const std::vector<std::string>& fneed,
       }
    }
    // then load new data is in memory
+   auto tc = tools::get_time();
    for(const auto& fqop : fneed){
       if(qstore.find(fqop) != qstore.end()) continue;
       oper_load(fqop, qstore[fqop], debug);
    }
-   if(debug_oper_io && debug){
-      this->display("out");
+   auto td = tools::get_time();
+   if(debug_oper_io && debug) this->display("out");
+   // save the previous renormalized operators
+   if(fkept.size() > 0){
+      thrd = std::thread(&ctns::oper_save<Tm>, fkept, 
+			 std::cref(qstore.at(fkept)), debug);
    }
+   auto t1 = tools::get_time();
+   std::cout << "T(sync/load/tot)="
+	     << tools::get_duration(tb-ta) << ","
+	     << tools::get_duration(td-tc) << ","
+	     << tools::get_duration(t1-t0) 
+	     << std::endl;
+   if(debug) tools::timing("ctns::oper_stack<Tm>::fetch", t0, t1);
 }
 
 } // ctns

@@ -5,7 +5,11 @@
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
-//#include "../../extlibs/h5pp/h5pp.h"
+//#include "h5pp/h5pp.h"
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5DataSpace.hpp>
+#include <highfive/H5File.hpp>
+using namespace HighFive;
 
 namespace ctns{ 
 
@@ -30,22 +34,25 @@ void oper_save(const std::string fname,
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << qops;
-//   ofs.close();
+   ofs.close();
    auto t1 = tools::get_time();
 
-   ofs.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
-   ofs.close();
+//   ofs.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
+//   ofs.close();
+
+   File file(fname+".h5", File::ReadWrite | File::Create | File::Truncate); //File::Overwrite);
+   std::vector<size_t> dims{qops._size};
+   DataSet dataset = file.createDataSet<Tm>("data", DataSpace(dims));
+   dataset.write_raw(qops._data);
 
 /*
-   std::cout << h5pp::hdf5::isCompressionAvaliable() << std::endl;
-
-   h5pp::File file(fname+".h5", h5pp::FileAccess::REPLACE); // Initialize a file
+   h5pp::File file(fname+".h5", h5pp::FileAccess::REPLACE);
    file.writeDataset(qops._data, "data", qops._size);
 */
 
    auto t2 = tools::get_time();
    if(debug_oper_io and debug){
-      std::cout << " T(info/data/tot)=" 
+      std::cout << "T[ctns::oper_save](info/data/tot)=" 
                 << tools::get_duration(t1-t0) << "," 
                 << tools::get_duration(t2-t1) << ","
                 << tools::get_duration(t2-t0) 
@@ -63,24 +70,29 @@ void oper_load(const std::string fname,
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> qops;
-//   ifs.close();
+   ifs.close();
    auto t1 = tools::get_time();
 
    qops._setup_opdict();
    qops._data = new Tm[qops._size];
    auto t2 = tools::get_time();
 
-   ifs.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
-   ifs.close();
+//   ifs.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
+//   ifs.close();
+
+   File file(fname+".h5", File::ReadOnly);
+   DataSet dataset = file.getDataSet("data");
+   dataset.read<Tm>(qops._data);
 /*
-   h5pp::File file(fname+".h5", h5pp::FileAccess::READONLY); 
+   h5pp::File file(fname+".h5", h5pp::FileAccess::READWRITE);
    file.readDataset(qops._data, "data", qops._size);
 */
+ 
    qops._setup_data(qops._data);
 
    auto t3 = tools::get_time();
    if(debug_oper_io and debug){
-      std::cout << " T(info/setup/data/tot)=" 
+      std::cout << "T[ctns::oper_load](info/setup/data/tot)=" 
                 << tools::get_duration(t1-t0) << "," 
                 << tools::get_duration(t2-t1) << ","
                 << tools::get_duration(t3-t2) << "," 

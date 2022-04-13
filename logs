@@ -90,32 +90,41 @@ LOGS
 	- conjugate is treated outside contract_opxwf!
     - minimal operation count: bipart_oper with factorization
 
- ### TODOs ###
-
  * Better IO strategy: 
     - oper_stack: global memory for saving oper_load [DONE2022/04/08]
-    - concurrency: separate computation & save 
+    - concurrency: separate computation & save for saving oper_save [DONE2022/04/09]
+    - new computational model:
+	1. fetch qops from memory / disk
+	2. compute [Hx/renorm] + save previous qops [threaded]
+	3. fkept is updated, the old qops will be released
+ 
+ ### TODOs ###
+
+    - hdf5 support: compare against iostream (timing)	
+    - data compression? [DONE2022/04/XX] 
+         
+    - options:
+	 - serial/threaded
+	 - raw/hdf5/hdf5compressed
+
+    - reduce half AB/PQ operators?
 
  * Toward large-scale applications:
-
-    - merged implementation?
-
-    - memory bound for Hx & renorm
-	- unpack versus direct loops for qt4?
-	- qbond - separate arrays?
-        - 测openmp 注释contract 更好reduction
-
+    - merged wf4[lc1,c2r] implementation?
     - GPU for contractions?
-
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 
 	- analyze why the parallel efficiency is low?
 	- 1. sort formulae + static/dynamic/guided,chunksize [DONE2022/03/05]
 	- 2. private workspace?
 	- 3. reduction
+    - memory bound for Hx & renorm
+	- unpack versus direct loops for qt4?
+	- qbond - separate arrays?
+        - 测openmp 注释contract 更好reduction
     - kramers version:
+	- complex alrithemic
 	- how to avoid repeated K()?
-
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]
