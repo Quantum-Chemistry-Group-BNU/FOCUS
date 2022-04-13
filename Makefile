@@ -1,8 +1,8 @@
 
-machine = lenovo
+machine = mac #lenovo
 
-DEBUG = no #yes
-USE_GCC = no #yes
+DEBUG = yes
+USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 
@@ -18,7 +18,7 @@ ifeq ($(strip $(machine)), lenovo)
    endif
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
-   HDF5 = /usr/local
+   HDF5 = ./extlibs/CMake-hdf5-1.12.1/HDF_Group/HDF5/1.12.1
    BOOST = /usr/local
    LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system 
    ifeq ($(strip $(USE_MPI)), yes)   

@@ -20,7 +20,6 @@ maxiter 3
 $end
 
 $ctns
-verbose 1
 qkind rNSz
 maxdets 1000 # keep dets as much as possible
 topology_file topology/topo0
@@ -48,7 +47,9 @@ schedule
 36 2 9000 1.e-4 0.e0 
 38 2 9000 1.e-4 0.e0 
 end
-maxsweep 40
+maxsweep 1
 maxcycle 6
-task opt
+maxbond 0
+task_dmrg
+alg_dmrg 2
 $end
