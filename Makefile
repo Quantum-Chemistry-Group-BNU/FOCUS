@@ -1,14 +1,16 @@
 
 machine = lenovo
 
-DEBUG = no
-USE_GCC = no
-USE_MPI = no #yes
-USE_OPENMP = no #yes
+DEBUG = no #yes
+USE_GCC = no #yes
+USE_MPI = yes
+USE_OPENMP = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
+   #HDF5 = /home/lx/lzd/hdf5/CMake-hdf5-1.12.1/HDF_Group/HDF5/1.12.1
+   HDF5 = /home/lx/lzd/hdf5/hdf5-1.12.1/hdf5
    BOOST = /home/lx/software/boost/install_1_75_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
@@ -16,19 +18,25 @@ ifeq ($(strip $(machine)), lenovo)
    endif
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
+   HDF5 = /usr/local
    BOOST = /usr/local
-   LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system
+   LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system 
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi
    endif
 endif
+LFLAGS += -L${HDF5}/lib -lhdf5
+FLAGS = -I${BOOST}/include -I${HDF5}/include -I./extlibs/HighFive-master/include \
+	${INCLUDE_DIR} -std=c++17
+#FLAGS = -I${BOOST}/include -I${HDF5}/include -I./extlibs \
+	${INCLUDE_DIR} -std=c++17
 
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
-      FLAGS = -DDEBUG -std=c++17 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -DDEBUG -g -O0 -Wall 
    else
-      FLAGS = -DNDEBUG -std=c++17 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -DNDEBUG -g -O2 -Wall 
    endif
    ifeq ($(strip $(USE_MPI)),no)
       CXX = g++
@@ -41,9 +49,9 @@ ifeq ($(strip $(USE_GCC)),yes)
 else
    # Intel compiler
    ifeq ($(strip $(DEBUG)), yes)
-      FLAGS = -DDEBUG -std=c++17 -g -O0 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -DDEBUG -g -O0 -Wall 
    else 
-      FLAGS = -DNDEBUG -std=c++17 -g -O2 -Wall -I${BOOST}/include ${INCLUDE_DIR}
+      FLAGS += -DNDEBUG -g -O2 -Wall 
    endif 
    ifeq ($(strip $(USE_MPI)),no)
       CXX = icpc
@@ -113,6 +121,10 @@ all: depend \
      $(BIN_DIR)/sci.x \
      $(BIN_DIR)/ctns.x 
 
+# version
+GIT_HASH=`git rev-parse HEAD`
+FLAGS += -DGIT_HASH="\"$(GIT_HASH)\"" 
+
 depend:
 	echo "Check compilation options:"; \
 	echo " machine = " $(machine); \
@@ -147,6 +159,7 @@ $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(OBJ_DEP)
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
 
+# Main: sci & ctns
 $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(OBJ_DEP)
 	@echo "=== LINK $@"
 	@echo $(OBJ_DEP)
@@ -155,7 +168,7 @@ $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(OBJ_DEP)
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(OBJ_DEP)
 	@echo "=== LINK $@"
 	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
+	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
 # Needs to be here! 
 $(OBJ_ALL):
