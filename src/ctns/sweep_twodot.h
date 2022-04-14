@@ -18,16 +18,16 @@ namespace ctns{
 
 // twodot optimization algorithm
 template <typename Km>
-void sweep_twodot(const input::schedule& schd,
-		  sweep_data& sweeps,
-		  const int isweep,
-		  const int ibond,
-	          oper_stack<typename Km::dtype>& qops_stack,
-                  comb<Km>& icomb,
+void sweep_twodot(comb<Km>& icomb,
                   const integral::two_body<typename Km::dtype>& int2e,
                   const integral::one_body<typename Km::dtype>& int1e,
                   const double ecore,
-		  const std::string scratch){
+		  const input::schedule& schd,
+		  const std::string scratch,
+	          oper_stack<typename Km::dtype>& qops_stack,
+		  sweep_data& sweeps,
+		  const int isweep,
+		  const int ibond){
    using Tm = typename Km::dtype;
    int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
@@ -56,17 +56,20 @@ void sweep_twodot(const input::schedule& schd,
    // 1. load operators 
    auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug);
    qops_stack.fetch(fneed);
-   const auto& lqops  = qops_stack(fneed[0]);
-   const auto& rqops  = qops_stack(fneed[1]);
-   const auto& c1qops = qops_stack(fneed[2]);
-   const auto& c2qops = qops_stack(fneed[3]);
+   const oper_dictmap<Tm> qops_dict = {{"l" ,qops_stack(fneed[0])},
+	   		 	       {"r" ,qops_stack(fneed[1])},
+	   			       {"c1",qops_stack(fneed[2])},
+				       {"c2",qops_stack(fneed[3])}};
    if(debug){
       std::cout << "qops info: rank=" << rank << std::endl;
-      lqops.print("lqops");
-      rqops.print("rqops");
-      c1qops.print("c1qops");
-      c2qops.print("c2qops");
-      size_t tsize = lqops.size()+rqops.size()+c1qops.size()+c2qops.size();
+      qops_dict.at("l").print("lqops");
+      qops_dict.at("r").print("rqops");
+      qops_dict.at("c1").print("c1qops");
+      qops_dict.at("c2").print("c2qops");
+      size_t tsize = qops_dict.at("l").size()
+	           + qops_dict.at("r").size()
+		   + qops_dict.at("c1").size()
+		   + qops_dict.at("c2").size();
       std::cout << " qops(tot)=" << tsize 
                 << ":" << tools::sizeMB<Tm>(tsize) << "MB"
                 << ":" << tools::sizeGB<Tm>(tsize) << "GB"
@@ -82,10 +85,10 @@ void sweep_twodot(const input::schedule& schd,
    // 2. twodot wavefunction
    //	 \ /
    //   --*--
-   const auto& ql = lqops.qket;
-   const auto& qr = rqops.qket;
-   const auto& qc1 = c1qops.qket;
-   const auto& qc2 = c2qops.qket;
+   const auto& ql  = qops_dict.at("l").qket;
+   const auto& qr  = qops_dict.at("r").qket;
+   const auto& qc1 = qops_dict.at("c1").qket;
+   const auto& qc2 = qops_dict.at("c2").qket;
    auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
    stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
    if(debug) wf.print("wf"); 
@@ -99,7 +102,7 @@ void sweep_twodot(const input::schedule& schd,
    
    // 3.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
-   twodot_Hdiag(lqops, rqops, c1qops, c2qops, ecore, wf, diag, size, rank);
+   twodot_Hdiag(qops_dict, ecore, wf, diag, size, rank);
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
@@ -117,10 +120,6 @@ void sweep_twodot(const input::schedule& schd,
    }
 
    // 3.2 Solve local problem: Hc=cE
-   const oper_dictmap<Tm> qops_dict = {{"l",lqops},
-	   		 	       {"r",rqops},
-	   			       {"c1",c1qops},
-				       {"c2",c2qops}};
    std::map<qsym,qinfo4<Tm>> info_dict;
    const bool preprocess = schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3;
    size_t opsize, wfsize, tmpsize, worktot;
@@ -153,20 +152,17 @@ void sweep_twodot(const input::schedule& schd,
    using std::placeholders::_1;
    using std::placeholders::_2;
    if(schd.ctns.alg_hvec == 0){
-      Hx_funs = twodot_Hx_functors(lqops, rqops, c1qops, c2qops, 
-                                   int2e, ecore, wf, size, rank);
+      Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank);
       HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 1){
-      H_formulae = symbolic_formulae_twodot(lqops, rqops, c1qops, c2qops, 
-		                            int2e, size, rank, fname,
+      H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae);
       HVec = bind(&ctns::symbolic_Hx<Tm,stensor4<Tm>>, _1, _2, std::cref(H_formulae),
         	  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 2){ 
-      H_formulae = symbolic_formulae_twodot(lqops, rqops, c1qops, c2qops, 
-		                            int2e, size, rank, fname,
+      H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
@@ -175,8 +171,7 @@ void sweep_twodot(const input::schedule& schd,
 		  std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
 		  std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 3){
-      H_formulae2 = symbolic_formulae_twodot2(lqops, rqops, c1qops, c2qops, 
-		                              int2e, size, rank, fname,
+      H_formulae2 = symbolic_formulae_twodot2(qops_dict, int2e, size, rank, fname,
 			                      schd.ctns.sort_formulae);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx3<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
@@ -203,8 +198,9 @@ void sweep_twodot(const input::schedule& schd,
 
    // 3. decimation & renormalize operators
    auto frop = icomb.topo.get_frop(dbond, scratch, debug);
-   twodot_renorm(schd, sweeps, isweep, ibond, icomb, vsol, wf, qops_stack(frop), 
-		 lqops, rqops, c1qops, c2qops, int2e, int1e, scratch);
+   twodot_renorm(icomb, int2e, int1e, schd, scratch, 
+		 vsol, wf, qops_dict, qops_stack(frop), 
+		 sweeps, isweep, ibond);
    timing.tf = tools::get_time();
   
    // 4. save on disk 

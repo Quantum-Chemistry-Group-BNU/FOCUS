@@ -219,15 +219,16 @@ stensor3<Tm> twodot_Hx_local(const oper_dict<Tm>& lqops,
 
 // Collect all Hx_funs 
 template <typename Tm>
-Hx_functors<Tm> twodot_Hx_functors(const oper_dict<Tm>& lqops,
-	                           const oper_dict<Tm>& rqops,
-				   const oper_dict<Tm>& c1qops,
-	                           const oper_dict<Tm>& c2qops,
+Hx_functors<Tm> twodot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
 	                           const integral::two_body<Tm>& int2e,
 				   const double& ecore,
 	                           const stensor4<Tm>& wf,
 	                           const int& size,
 	                           const int& rank){
+   const auto& lqops = qops_dict.at("l");
+   const auto& rqops = qops_dict.at("r");
+   const auto& c1qops = qops_dict.at("c1");
+   const auto& c2qops = qops_dict.at("c2");
    Hx_functors<Tm> Hx_funs;
    // Local terms:
    Hx_functor<Tm> Hx("Hloc", 0, 0);

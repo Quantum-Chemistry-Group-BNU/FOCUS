@@ -1,23 +1,25 @@
 #ifndef SYMBOLIC_FORMULAE_ONEDOT_H
 #define SYMBOLIC_FORMULAE_ONEDOT_H
 
+#include "../core/tools.h"
+#include "oper_dict.h"
 #include "symbolic_task.h"
 #include "symbolic_normxwf.h"
 #include "symbolic_compxwf.h"
-#include "../core/tools.h"
 
 namespace ctns{
 
 // primitive form (without factorization)
 template <typename Tm>
-symbolic_task<Tm> symbolic_formulae_onedot(const oper_dict<Tm>& lqops,
-	                                   const oper_dict<Tm>& rqops,
-	                                   const oper_dict<Tm>& cqops,
+symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
 	                                   const integral::two_body<Tm>& int2e,
 	                                   const int& size,
 	                                   const int& rank,
 					   const std::string fname,
 					   const bool sort_formulae){
+   const auto& lqops = qops_dict.at("l");
+   const auto& rqops = qops_dict.at("r");
+   const auto& cqops = qops_dict.at("c");
    auto t0 = tools::get_time();
    const int print_level = 1;
    const int isym = lqops.isym;
@@ -247,14 +249,15 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dict<Tm>& lqops,
 
 // bipartite form (with factorization)
 template <typename Tm>
-bipart_task<Tm> symbolic_formulae_onedot2(const oper_dict<Tm>& lqops,
-	                                  const oper_dict<Tm>& rqops,
-	                                  const oper_dict<Tm>& cqops,
+bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
 	                                  const integral::two_body<Tm>& int2e,
 	                                  const int& size,
 	                                  const int& rank,
 					  const std::string fname,
 					  const bool sort_formulae){
+   const auto& lqops = qops_dict.at("l");
+   const auto& rqops = qops_dict.at("r");
+   const auto& cqops = qops_dict.at("c");
    auto t0 = tools::get_time();
    const int print_level = 1;
    const int isym = lqops.isym;

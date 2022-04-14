@@ -1,24 +1,26 @@
 #ifndef SYMBOLIC_FORMULAE_TWODOT_H
 #define SYMBOLIC_FORMULAE_TWODOT_H
 
+#include "../core/tools.h"
+#include "oper_dict.h"
 #include "symbolic_oper.h"
 #include "symbolic_normxwf.h"
 #include "symbolic_compxwf.h"
-#include "../core/tools.h"
 
 namespace ctns{
 
 // primitive form (without factorization)
 template <typename Tm>
-symbolic_task<Tm> symbolic_formulae_twodot(const oper_dict<Tm>& lqops,
-	                                   const oper_dict<Tm>& rqops,
-			                   const oper_dict<Tm>& c1qops,
-	                                   const oper_dict<Tm>& c2qops,
+symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
 	                                   const integral::two_body<Tm>& int2e,
 	                                   const int& size,
 	                                   const int& rank,
 					   const std::string fname,
 					   const bool sort_formulae){
+   const auto& lqops = qops_dict.at("l");
+   const auto& rqops = qops_dict.at("r");
+   const auto& c1qops = qops_dict.at("c1");
+   const auto& c2qops = qops_dict.at("c2");
    auto t0 = tools::get_time();
    const int print_level = 1;
    const int isym = lqops.isym;
@@ -238,15 +240,16 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dict<Tm>& lqops,
 
 // bipartite form (with factorization)
 template <typename Tm>
-bipart_task<Tm> symbolic_formulae_twodot2(const oper_dict<Tm>& lqops,
-	                                  const oper_dict<Tm>& rqops,
-			                  const oper_dict<Tm>& c1qops,
-	                                  const oper_dict<Tm>& c2qops,
+bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
 	                                  const integral::two_body<Tm>& int2e,
 	                                  const int& size,
 	                                  const int& rank,
 					  const std::string fname,
 					  const bool sort_formulae){
+   const auto& lqops = qops_dict.at("l");
+   const auto& rqops = qops_dict.at("r");
+   const auto& c1qops = qops_dict.at("c1");
+   const auto& c2qops = qops_dict.at("c2");
    auto t0 = tools::get_time();
    const int print_level = 1;
    const int isym = lqops.isym;

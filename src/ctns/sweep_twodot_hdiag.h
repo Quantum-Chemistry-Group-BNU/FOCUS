@@ -9,15 +9,16 @@ const bool debug_twodot_hdiag = false;
 extern const bool debug_twodot_hdiag;
 
 template <typename Tm>
-void twodot_Hdiag(const oper_dict<Tm>& lqops,
-		  const oper_dict<Tm>& rqops,
-		  const oper_dict<Tm>& c1qops,
-		  const oper_dict<Tm>& c2qops,
+void twodot_Hdiag(const oper_dictmap<Tm>& qops_dict,
 		  const double ecore,
 		  stensor4<Tm>& wf,
 		  std::vector<double>& diag,
 	       	  const int size,
 	       	  const int rank){
+   const auto& lqops  = qops_dict.at("l");
+   const auto& rqops  = qops_dict.at("r");
+   const auto& c1qops = qops_dict.at("c1");
+   const auto& c2qops = qops_dict.at("c2");
    if(rank == 0 && debug_twodot_hdiag){
       std::cout << "ctns::twodot_Hdiag ifkr=" << lqops.ifkr 
 	        << " size=" << size << std::endl;

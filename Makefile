@@ -26,9 +26,10 @@ else
    endif
 endif
 LFLAGS += -L${HDF5}/lib -lhdf5
-FLAGS = -I${BOOST}/include -I${HDF5}/include -I./extlibs/HighFive-master/include \
-	${INCLUDE_DIR} -std=c++17
-#FLAGS = -I${BOOST}/include -I${HDF5}/include -I./extlibs \
+FLAGS = -I${BOOST}/include \
+	-I${HDF5}/include \
+	-I./extlibs/HighFive-master/include \
+	-I./extlibs/h5pp-master/include \
 	${INCLUDE_DIR} -std=c++17
 
 ifeq ($(strip $(USE_GCC)),yes)

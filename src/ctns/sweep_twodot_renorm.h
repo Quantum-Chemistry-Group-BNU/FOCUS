@@ -172,21 +172,22 @@ void twodot_guess_psi(const std::string superblock,
 }
 
 template <typename Km>
-void twodot_renorm(const input::schedule& schd,
-		   sweep_data& sweeps,
-		   const int isweep,
-		   const int ibond, 
-		   comb<Km>& icomb,
-		   const linalg::matrix<typename Km::dtype>& vsol,
-		   stensor4<typename Km::dtype>& wf,
-		   oper_dict<typename Km::dtype>& qops,
-	           const oper_dict<typename Km::dtype>& lqops,
-	           const oper_dict<typename Km::dtype>& rqops,	
-	           const oper_dict<typename Km::dtype>& c1qops,
-	           const oper_dict<typename Km::dtype>& c2qops,
+void twodot_renorm(comb<Km>& icomb,
 	           const integral::two_body<typename Km::dtype>& int2e, 
 	           const integral::one_body<typename Km::dtype>& int1e,
-	           const std::string scratch){
+		   const input::schedule& schd,
+	           const std::string scratch,
+		   const linalg::matrix<typename Km::dtype>& vsol,
+		   stensor4<typename Km::dtype>& wf,
+		   const oper_dictmap<typename Km::dtype>& qops_dict,
+		   oper_dict<typename Km::dtype>& qops,
+		   sweep_data& sweeps,
+		   const int isweep,
+		   const int ibond){
+   const auto& lqops = qops_dict.at("l");
+   const auto& rqops = qops_dict.at("r");
+   const auto& c1qops = qops_dict.at("c1");
+   const auto& c2qops = qops_dict.at("c2");
    using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL

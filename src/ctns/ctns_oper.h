@@ -11,10 +11,8 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
 		            		    const integral::two_body<typename Km::dtype>& int2e,
 		            		    const integral::one_body<typename Km::dtype>& int1e,
 		            		    const double ecore,
-		            		    const std::string scratch,
-					    const int alg_renorm,
-					    const bool save_formulae,
-					    const bool sort_formulae){
+					    const input::schedule& schd,
+					    const std::string scratch){
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -22,15 +20,14 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
 #endif   
    
    // build operators for environement
-   oper_env_right(icomb, int2e, int1e, scratch, 
-		  alg_renorm, save_formulae, sort_formulae);
+   oper_env_right(icomb, int2e, int1e, schd, scratch);
 
    // load operators from file
    using Tm = typename Km::dtype;
    oper_dict<Tm> qops;
    auto p = std::make_pair(0,0); 
    auto fname = oper_fname(scratch, p, "r");
-   oper_load(fname, qops, (rank==0));
+   oper_load(schd.ctns.iomode, fname, qops, (rank==0));
  
    //if(rank == 0) std::cout << "\nctns::get_Hmat" << std::endl;
    auto Hmat = qops('H')[0].to_matrix();

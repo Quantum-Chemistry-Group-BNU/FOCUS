@@ -228,14 +228,15 @@ stensor3<Tm> onedot_Hx_QBcn(const int index,
 
 // Collect all Hx_funs 
 template <typename Tm>
-Hx_functors<Tm> onedot_Hx_functors(const oper_dict<Tm>& lqops,
-	                           const oper_dict<Tm>& rqops,
-	                           const oper_dict<Tm>& cqops,
+Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
 	                           const integral::two_body<Tm>& int2e,
 				   const double& ecore,
 	                           const stensor3<Tm>& wf,
 	                           const int& size,
 	                           const int& rank){
+   const auto& lqops = qops_dict.at("l");
+   const auto& rqops = qops_dict.at("r");
+   const auto& cqops = qops_dict.at("c");
    const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
    Hx_functors<Tm> Hx_funs;
    // Local terms:

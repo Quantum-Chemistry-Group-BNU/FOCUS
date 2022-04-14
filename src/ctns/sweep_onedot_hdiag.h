@@ -9,19 +9,20 @@ const bool debug_onedot_hdiag = false;
 extern const bool debug_onedot_hdiag;
 
 template <typename Tm>
-void onedot_Hdiag(const oper_dict<Tm>& lqops,
-		  const oper_dict<Tm>& rqops,
-		  const oper_dict<Tm>& cqops,
+void onedot_Hdiag(const oper_dictmap<Tm>& qops_dict,
 		  const double ecore,
 		  stensor3<Tm>& wf,
 		  std::vector<double>& diag,
 	       	  const int size,
 	       	  const int rank){
+   const auto& lqops = qops_dict.at("l"); 
+   const auto& rqops = qops_dict.at("r"); 
+   const auto& cqops = qops_dict.at("c"); 
    if(rank == 0 && debug_onedot_hdiag){
       std::cout << "ctns::onedot_Hdiag ifkr=" << lqops.ifkr 
 	        << " size=" << size << std::endl;
    }
-   
+
    // 1. local terms: <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
    onedot_Hdiag_local(lqops, rqops, cqops, ecore/size, wf, size, rank);
 

@@ -212,6 +212,8 @@ void params_ctns::read(ifstream& istrm){
 	 nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){
          guess = stoi(line.substr(5));
+      }else if(line.substr(0,6)=="iomode"){
+	 iomode = stoi(line.substr(6));     
       }else if(line.substr(0,5)=="iroot"){
          iroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
@@ -306,6 +308,7 @@ void params_ctns::print() const{
    // io
    cout << "rcanon_load = " << rcanon_load << endl; 
    cout << "rcanon_file = " << rcanon_file << endl;
+   cout << "iomode = " << iomode << endl;
    // sampling
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;

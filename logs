@@ -103,9 +103,9 @@ LOGS
     - hdf5 support: compare against iostream (timing)	
     - data compression? [DONE2022/04/XX] 
          
-    - options:
-	 - serial/threaded
+    - add options for:
 	 - raw/hdf5/hdf5compressed
+	 - serial/threaded
 
     - reduce half AB/PQ operators?
 
@@ -131,8 +131,11 @@ LOGS
     - Fe2S2 [CAS(30e,20o)] - parallelized
     - SOC within this active space
     - G-tensor/GIAO for Ferric-Ferrous dimer [THIS WOULD BE GREAT!]
+    - entropy as a complexity measure?
  
  * Twordms: enable Rel-CASSCF with interface to other codes 
+
+ * VMPS+GPU? (simply dense matrix multiplication?)
 
 --------------
 KNOWN PROBLEMS

@@ -134,6 +134,7 @@ public:
    // io
    bool rcanon_load = false;
    std::string rcanon_file = "rcanon.info";
+   int iomode = 0;
    // sampling
    int iroot = 0;
    int nsample = 1.e5;

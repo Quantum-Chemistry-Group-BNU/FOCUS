@@ -130,20 +130,21 @@ void onedot_guess_psi(const std::string superblock,
 }
 
 template <typename Km>
-void onedot_renorm(const input::schedule& schd,
-		   sweep_data& sweeps,
-		   const int isweep,
-		   const int ibond, 
-		   comb<Km>& icomb,
-		   const linalg::matrix<typename Km::dtype>& vsol,
-		   stensor3<typename Km::dtype>& wf,
-		   oper_dict<typename Km::dtype>& qops,
-		   const oper_dict<typename Km::dtype>& lqops,
-		   const oper_dict<typename Km::dtype>& rqops,
-		   const oper_dict<typename Km::dtype>& cqops,
+void onedot_renorm(comb<Km>& icomb,
 	           const integral::two_body<typename Km::dtype>& int2e, 
 	           const integral::one_body<typename Km::dtype>& int1e,
-	           const std::string scratch){
+		   const input::schedule& schd,
+	           const std::string scratch,
+		   const linalg::matrix<typename Km::dtype>& vsol,
+		   stensor3<typename Km::dtype>& wf,
+		   const oper_dictmap<typename Km::dtype>& qops_dict,
+		   oper_dict<typename Km::dtype>& qops,
+		   sweep_data& sweeps,
+		   const int isweep,
+		   const int ibond){
+   const auto& lqops = qops_dict.at("l");
+   const auto& rqops = qops_dict.at("r");
+   const auto& cqops = qops_dict.at("c");
    using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL

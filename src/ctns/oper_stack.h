@@ -11,7 +11,7 @@ template <typename Tm>
 struct oper_stack{
    public:
       // constuctor
-      oper_stack(const bool _debug): debug(_debug) {}
+      oper_stack(const int _iomode, const bool _debug): iomode(_iomode), debug(_debug) {}
       const oper_dict<Tm>& operator()(const std::string fqop) const{
          return qstore.at(fqop);
       } 
@@ -47,17 +47,18 @@ struct oper_stack{
 	 if(thrd.joinable()) thrd.join();
 
 	 // dump the last file
-	 ctns::oper_save<Tm>(fkept, qstore.at(fkept), debug);
+	 ctns::oper_save<Tm>(iomode, fkept, qstore.at(fkept), debug);
 
 	 fkept.clear();
 	 // must be first join then clear, otherwise IO is not finished!
 	 qstore.clear();
       }
    public:
+      int iomode;
+      bool debug = false;
       std::map<std::string,oper_dict<Tm>> qstore; // for global storage
       std::string fkept;
       std::thread thrd;
-      bool debug = false;
 };
 
 template <typename Tm>
@@ -100,14 +101,14 @@ void oper_stack<Tm>::fetch(const std::vector<std::string>& fneed){
    auto tc = tools::get_time();
    for(const auto& fqop : fneed){
       if(qstore.find(fqop) != qstore.end()) continue;
-      oper_load(fqop, qstore[fqop], debug);
+      oper_load(iomode, fqop, qstore[fqop], debug);
    }
    auto td = tools::get_time();
    if(debug_oper_io && debug) this->display("out");
 
    // save the previous renormalized operators
    if(fkept.size() > 0){
-      thrd = std::thread(&ctns::oper_save<Tm>, fkept, 
+      thrd = std::thread(&ctns::oper_save<Tm>, iomode, fkept, 
 			 std::cref(qstore.at(fkept)), debug);
    }
 
