@@ -9,8 +9,6 @@ USE_OPENMP = yes
 # set library
 ifeq ($(strip $(machine)), lenovo)
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
-   #HDF5 = /home/lx/lzd/hdf5/CMake-hdf5-1.12.1/HDF_Group/HDF5/1.12.1
-   HDF5 = /home/lx/lzd/hdf5/hdf5-1.12.1/hdf5
    BOOST = /home/lx/software/boost/install_1_75_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
@@ -18,13 +16,13 @@ ifeq ($(strip $(machine)), lenovo)
    endif
 else
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
-   HDF5 = ./extlibs/CMake-hdf5-1.12.1/HDF_Group/HDF5/1.12.1
    BOOST = /usr/local
    LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system 
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi
    endif
 endif
+HDF5 = ./extlibs/CMake-hdf5-1.12.1/HDF_Group/HDF5/1.12.1
 LFLAGS += -L${HDF5}/lib -lhdf5
 FLAGS = -I${BOOST}/include \
 	-I${HDF5}/include \
