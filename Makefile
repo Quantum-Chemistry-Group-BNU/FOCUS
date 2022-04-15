@@ -1,5 +1,5 @@
 
-machine = mac #lenovo
+machine = lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -8,6 +8,7 @@ USE_OPENMP = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
+   HDF5 = /home/lx/lzd/hdf5/hdf5-1.12.1/hdf5
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
    BOOST = /home/lx/software/boost/install_1_75_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64
@@ -15,6 +16,7 @@ ifeq ($(strip $(machine)), lenovo)
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else
+   HDF5 =
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    BOOST = /usr/local
    LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system 
@@ -22,13 +24,12 @@ else
       LFLAGS += -lboost_mpi
    endif
 endif
-HDF5 = ./extlibs/CMake-hdf5-1.12.1/HDF_Group/HDF5/1.12.1
-LFLAGS += -L${HDF5}/lib -lhdf5
+LFLAGS += -L${HDF5}/lib -lhdf5 -lhdf5_cpp
 FLAGS = -I${BOOST}/include \
 	-I${HDF5}/include \
-	-I./extlibs/HighFive-master/include \
-	-I./extlibs/h5pp-master/include \
 	${INCLUDE_DIR} -std=c++17
+#	-I./extlibs/h5pp-master/include \
+#	-I./extlibs/HighFive-master/include \
 
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
