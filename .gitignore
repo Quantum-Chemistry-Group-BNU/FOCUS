@@ -14,7 +14,6 @@ obj/*.o
 *.out
 *.a
 scratch
+extlibs/hdf5-1.12.0
 extlibs/h5pp-master/
-extlibs/CMake-hdf5-1.12.1/
 extlibs/HighFive-master/
-

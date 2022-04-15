@@ -1,5 +1,5 @@
 
-machine = lenovo
+machine = mac #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -16,7 +16,7 @@ ifeq ($(strip $(machine)), lenovo)
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else
-   HDF5 =
+   HDF5 = ./extlibs/hdf5-1.12.0/hdf5
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    BOOST = /usr/local
    LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system 
