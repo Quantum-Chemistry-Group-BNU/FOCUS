@@ -5,9 +5,9 @@
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
-/*
 #include "h5pp/h5pp.h"
 
+/*
 #include <highfive/H5DataSet.hpp>
 #include <highfive/H5DataSpace.hpp>
 #include <highfive/H5File.hpp>
@@ -67,8 +67,7 @@ void oper_save(const int iomode,
       dataset.write_raw(qops._data);
 */ 
    }else if(iomode == 2 || iomode == 12){
-      exit(1);
-/*
+
       std::cout << "X0" << std::endl;
       h5pp::File file(fname+".h5", h5pp::FileAccess::REPLACE);
       std::cout << "X1" << std::endl;
@@ -77,14 +76,11 @@ void oper_save(const int iomode,
 	 assert(h5pp::hdf5::isCompressionAvaliable());
 	 file.setCompressionLevel(3);
       }
-      double* dat = new double[10];
-      file.writeDataset(dat, "dset", 10);
       std::cout << "X2a" << std::endl;
       file.writeDataset(qops._data, "data", qops._size);
       //file.writeDataset(qops._data, "data", qops._size, H5D_CHUNKED);
-      //file.writeDataset(dat, "dset", H5D_CHUNKED);
       std::cout << "X2" << std::endl;
-*/
+
    }else{
       const H5std_string FILE_NAME(fname+".h5");
       const H5std_string DATASET_NAME("data");
@@ -148,11 +144,10 @@ void oper_load(const int iomode,
       dataset.read<Tm>(qops._data);
 */
    }else if(iomode == 2){
-      exit(1);
-/*
+
       h5pp::File file(fname+".h5", h5pp::FileAccess::READWRITE);
       file.readDataset(qops._data, "data", qops._size);
-*/
+
    }else{
       const H5std_string FILE_NAME(fname+".h5");
       const H5std_string DATASET_NAME("data");

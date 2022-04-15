@@ -27,8 +27,8 @@ endif
 LFLAGS += -L${HDF5}/lib -lhdf5 -lhdf5_cpp
 FLAGS = -I${BOOST}/include \
 	-I${HDF5}/include \
+	-I./extlibs/h5pp-master/include \
 	${INCLUDE_DIR} -std=c++17
-#	-I./extlibs/h5pp-master/include \
 #	-I./extlibs/HighFive-master/include \
 
 ifeq ($(strip $(USE_GCC)),yes)
