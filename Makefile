@@ -1,5 +1,5 @@
 
-machine = mac #lenovo
+machine = lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -8,28 +8,25 @@ USE_OPENMP = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
-   HDF5 = /home/lx/lzd/hdf5/hdf5-1.12.1/hdf5
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
-   BOOST = /home/lx/software/boost/install_1_75_0
-   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64
+   BOOST = /home/lx/software/boost/install_1_79_0
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else
-   HDF5 = ./extlibs/hdf5-1.12.0/hdf5
    MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    BOOST = /usr/local
-   LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system 
+   LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system -lboost_iostreams 
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi
    endif
 endif
-LFLAGS += -L${HDF5}/lib -lhdf5 -lhdf5_cpp
-FLAGS = -I${BOOST}/include \
-	-I${HDF5}/include \
-	-I./extlibs/h5pp-master/include \
-	${INCLUDE_DIR} -std=c++17
-#	-I./extlibs/HighFive-master/include \
+FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include 
+
+# IO
+FLAGS += -I./extlibs/lz4-dev/lib -I./extlibs/zstd-dev/lib
+LFLAGS += -L./extlibs/lz4-dev/lib -llz4 -L./extlibs/zstd-dev/lib -lzstd
 
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler

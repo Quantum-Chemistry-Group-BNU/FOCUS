@@ -5,17 +5,10 @@
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
-#include "h5pp/h5pp.h"
-
-/*
-#include <highfive/H5DataSet.hpp>
-#include <highfive/H5DataSpace.hpp>
-#include <highfive/H5File.hpp>
-using namespace HighFive;
-*/
-
-#include "H5Cpp.h"
-using namespace H5;
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/zstd.hpp>
+#include "../io/lz4_filter.h"
+namespace ext { namespace bio = ext::boost::iostreams; }
 
 namespace ctns{ 
 
@@ -56,41 +49,26 @@ void oper_save(const int iomode,
       std::ofstream ofs2(fname+".op", std::ios::binary);
       ofs2.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
       ofs2.close();
-   }else if(iomode == 1 || iomode == 11){
-      exit(1);
-/*
-      File file(fname+".h5", File::Overwrite);
-      std::vector<size_t> dims{qops._size};
-
-      DataSet dataset = file.createDataSet<Tm>("data", DataSpace(dims));
-
-      dataset.write_raw(qops._data);
-*/ 
-   }else if(iomode == 2 || iomode == 12){
-
-      std::cout << "X0" << std::endl;
-      h5pp::File file(fname+".h5", h5pp::FileAccess::REPLACE);
-      std::cout << "X1" << std::endl;
-      // True if your installation of HDF5 has zlib support  
-      if(iomode == 12){
-	 assert(h5pp::hdf5::isCompressionAvaliable());
-	 file.setCompressionLevel(3);
-      }
-      std::cout << "X2a" << std::endl;
-      file.writeDataset(qops._data, "data", qops._size);
-      //file.writeDataset(qops._data, "data", qops._size, H5D_CHUNKED);
-      std::cout << "X2" << std::endl;
-
+   }else if(iomode == 1){
+      std::ofstream ofs2(fname+".op", std::ios::binary);
+      boost::iostreams::filtering_ostream out;
+      out.push( ext::bio::lz4_compressor() );
+      out.push(ofs2);
+      out.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
+      out.reset();
+      ofs2.close();
+   }else if(iomode == 2){
+      std::ofstream ofs2(fname+".op", std::ios::binary);
+      boost::iostreams::filtering_ostream out;
+      boost::iostreams::zstd_params params(boost::iostreams::zstd::best_speed);
+      out.push( boost::iostreams::zstd_compressor(params) );
+      out.push(ofs2);
+      out.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
+      out.reset();
+      ofs2.close();
    }else{
-      const H5std_string FILE_NAME(fname+".h5");
-      const H5std_string DATASET_NAME("data");
-      H5File file(FILE_NAME, H5F_ACC_TRUNC);
-      hsize_t dimsf[1] = {qops._size};
-      DataSpace dataspace(1, dimsf);
-      DataSet dataset = file.createDataSet(DATASET_NAME, 
-					   PredType::NATIVE_DOUBLE,
-                                           dataspace);
-      dataset.write(qops._data, PredType::NATIVE_DOUBLE);
+      std::cout << "error: no such option in oper_save! iomode=" << iomode << std::endl;
+      exit(1); 
    }
 
    auto t2 = tools::get_time();
@@ -132,29 +110,33 @@ void oper_load(const int iomode,
    qops._data = new Tm[qops._size];
    auto t2 = tools::get_time();
 
+   // read data
    if(iomode == 0){
       std::ifstream ifs2(fname+".op", std::ios::binary);
       ifs2.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
       ifs2.close();
    }else if(iomode == 1){
-      exit(1);
-/*
-      File file(fname+".h5", File::ReadOnly);
-      DataSet dataset = file.getDataSet("data");
-      dataset.read<Tm>(qops._data);
-*/
+      std::ifstream ifs2(fname+".op", std::ios::binary);
+      boost::iostreams::filtering_istream in;
+      in.push( ext::bio::lz4_decompressor() );
+      in.push(ifs2);
+      in.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
+      in.reset();
+      ifs2.close();
    }else if(iomode == 2){
-
-      h5pp::File file(fname+".h5", h5pp::FileAccess::READWRITE);
-      file.readDataset(qops._data, "data", qops._size);
-
+      std::ifstream ifs2(fname+".op", std::ios::binary);
+      boost::iostreams::filtering_istream in;
+      boost::iostreams::zstd_params params(boost::iostreams::zstd::best_speed);
+      in.push( boost::iostreams::zstd_decompressor(params) );
+      in.push(ifs2);
+      in.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
+      in.reset();
+      ifs2.close();
    }else{
-      const H5std_string FILE_NAME(fname+".h5");
-      const H5std_string DATASET_NAME("data");
-      H5File file(FILE_NAME, H5F_ACC_RDONLY);
-      DataSet dataset = file.openDataSet(DATASET_NAME);
-      dataset.read(qops._data, PredType::NATIVE_DOUBLE);
+      std::cout << "error: no such option in oper_load! iomode=" << iomode << std::endl;
+      exit(1); 
    }
+
    qops._setup_data(qops._data);
 
    auto t3 = tools::get_time();
