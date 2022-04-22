@@ -38,7 +38,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    sweep_data sweeps(icomb.topo.get_sweeps(rank==0), 
 		     schd.ctns.nroots, schd.ctns.guess, schd.ctns.maxsweep, 
 		     schd.ctns.ctrls, schd.ctns.dbranch, schd.ctns.rdm_vs_svd);
-   oper_stack<Tm> qops_stack(schd.ctns.iomode, debug);
+   oper_pool<Tm> qops_pool(schd.ctns.iomode, schd.ctns.ioasync, debug);
    for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
       std::cout << tools::line_separator2 << std::endl;
@@ -70,10 +70,10 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 // optimization
 	 if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
 	    sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
-			 qops_stack, sweeps, isweep, ibond); 
+			 qops_pool, sweeps, isweep, ibond); 
 	 }else{
 	    sweep_twodot(icomb, int2e, int1e, ecore, schd, scratch,
-			 qops_stack, sweeps, isweep, ibond); 
+			 qops_pool, sweeps, isweep, ibond); 
 	 }
 	 // timing 
          if(debug){
@@ -91,8 +91,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 
    // for later computing properties
    if(schd.ctns.lastdot) sweep_rwfuns(icomb, int2e, int1e, ecore, 
-		   		      schd, scratch, qops_stack);
-   qops_stack.clean_up();
+		   		      schd, scratch, qops_pool);
+   qops_pool.clean_up();
 
    auto t1 = tools::get_time();
    if(debug) tools::timing("ctns::opt_sweep", t0, t1);

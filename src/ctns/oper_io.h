@@ -2,6 +2,7 @@
 #define OPER_IO_H
 
 #include "../core/serialization.h"
+#include "../io/io.h"
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
@@ -9,6 +10,9 @@
 #include <boost/iostreams/filter/zstd.hpp>
 #include "../io/lz4_filter.h"
 namespace ext { namespace bio = ext::boost::iostreams; }
+
+#include "fp_codec.h"
+
 
 namespace ctns{ 
 
@@ -66,6 +70,11 @@ void oper_save(const int iomode,
       out.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
       out.reset();
       ofs2.close();
+   }else if(iomode == 3){
+      std::ofstream ofs2(fname+".op", std::ios::binary);
+      FPCodec<double> fp;
+      fp.write_array(ofs2, (double*)qops._data, qops._size);
+      ofs2.close(); 
    }else{
       std::cout << "error: no such option in oper_save! iomode=" << iomode << std::endl;
       exit(1); 
@@ -82,6 +91,15 @@ void oper_save(const int iomode,
 		<< "size=" << tools::sizeMB<Tm>(qops._size) << "MB " 
 		<< "speed=" << tools::sizeMB<Tm>(qops._size)/tot << "MB/s" 
                 << std::endl;
+      std::filesystem::path path{fname};
+      double usage = io::directory_size(path.parent_path())/std::pow(1024,3);
+      double available = io::available_disk()/std::pow(1024,3);
+      double fsize = std::filesystem::file_size(fname+".op");
+      std::cout << "fsize=" << fsize/std::pow(1024.0,2) << "MB " 
+		<< "ratio=" << qops._size*sizeof(Tm)/fsize << " "
+ 	        << "usage=" << usage << "GB "
+                << "available=" << available << "GB" 
+		<< std::endl;
    }
 }
 
@@ -93,9 +111,7 @@ void oper_load(const int iomode,
    if(debug_oper_io and debug){
       std::cout << "ctns::oper_load"
 	        << " iomode=" << iomode
-	     	<< " fname=" << fname << " size="
-		<< tools::sizeMB<Tm>(qops._size) << "MB:" 
-		<< tools::sizeGB<Tm>(qops._size) << "GB"
+	     	<< " fname=" << fname
 		<< std::endl;
    }
    auto t0 = tools::get_time();
@@ -131,6 +147,11 @@ void oper_load(const int iomode,
       in.push(ifs2);
       in.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
       in.reset();
+      ifs2.close();
+   }else if(iomode == 3){
+      std::ifstream ifs2(fname+".op", std::ios::binary);
+      FPCodec<double> fp; 
+      fp.read_array(ifs2, (double*)qops._data, qops._size);
       ifs2.close();
    }else{
       std::cout << "error: no such option in oper_load! iomode=" << iomode << std::endl;

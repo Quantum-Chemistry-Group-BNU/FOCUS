@@ -6,6 +6,7 @@
 #include <string>
 #include <set> 
 #include <sstream> // istringstream
+
 #include "../core/serialization.h"
 
 #ifndef SERIAL
@@ -14,9 +15,7 @@
 
 namespace input{
 
-//
 // SCI
-//
 struct params_sci{
 private:
    // serialize
@@ -59,9 +58,7 @@ public:
    std::string ci_file = "ci.info"; 
 };
 
-//
 // CTNS
-//
 struct params_sweep{
 private:
    // serialize
@@ -107,6 +104,7 @@ public:
    std::string qkind;
    std::string topology_file = "TOPOLOGY";
    // task
+   bool task_init = false;
    bool task_sdiag = false;
    bool task_ham = false;
    bool task_opt = false;
@@ -134,16 +132,16 @@ public:
    // io
    bool rcanon_load = false;
    std::string rcanon_file = "rcanon.info";
+   // oper_pool
    int iomode = 0;
+   int ioasync = 1;
    // sampling
    int iroot = 0;
    int nsample = 1.e5;
    int ndetprt = 10;
 };
 
-//
 // General
-//
 struct schedule{
 private:
    // serialize
@@ -156,9 +154,6 @@ private:
 public:
    void read(std::string fname="input.dat");
    void print() const;
-   void create_scratch(const std::string sdir, const bool debug=true) const;
-   void remove_scratch(const std::string sdir, const bool debug=true) const;
-   void copy_scratch(const std::string sfrom, const std::string to, const bool debug=true) const;
 public:
    // --- Generic ---
    std::string scratch = ".";

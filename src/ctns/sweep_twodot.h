@@ -24,7 +24,7 @@ void sweep_twodot(comb<Km>& icomb,
                   const double ecore,
 		  const input::schedule& schd,
 		  const std::string scratch,
-	          oper_stack<typename Km::dtype>& qops_stack,
+	          oper_pool<typename Km::dtype>& qops_pool,
 		  sweep_data& sweeps,
 		  const int isweep,
 		  const int ibond){
@@ -55,11 +55,11 @@ void sweep_twodot(comb<Km>& icomb,
 
    // 1. load operators 
    auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug);
-   qops_stack.fetch(fneed);
-   const oper_dictmap<Tm> qops_dict = {{"l" ,qops_stack(fneed[0])},
-	   		 	       {"r" ,qops_stack(fneed[1])},
-	   			       {"c1",qops_stack(fneed[2])},
-				       {"c2",qops_stack(fneed[3])}};
+   qops_pool.fetch(fneed);
+   const oper_dictmap<Tm> qops_dict = {{"l" ,qops_pool(fneed[0])},
+	   		 	       {"r" ,qops_pool(fneed[1])},
+	   			       {"c1",qops_pool(fneed[2])},
+				       {"c2",qops_pool(fneed[3])}};
    if(debug){
       std::cout << "qops info: rank=" << rank << std::endl;
       qops_dict.at("l").print("lqops");
@@ -199,12 +199,12 @@ void sweep_twodot(comb<Km>& icomb,
    // 3. decimation & renormalize operators
    auto frop = icomb.topo.get_frop(dbond, scratch, debug);
    twodot_renorm(icomb, int2e, int1e, schd, scratch, 
-		 vsol, wf, qops_dict, qops_stack(frop), 
+		 vsol, wf, qops_dict, qops_pool(frop), 
 		 sweeps, isweep, ibond);
    timing.tf = tools::get_time();
   
    // 4. save on disk 
-   qops_stack.save(frop);
+   qops_pool.save(frop);
 
    timing.t1 = tools::get_time();
    if(debug){

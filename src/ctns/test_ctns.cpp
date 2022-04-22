@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include "../io/io.h"
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "ctns_header.h"
@@ -124,7 +125,7 @@ int tests::test_ctns(){
            << endl;
    }
 
-   schd.create_scratch(schd.scratch);
+   io::create_scratch(schd.scratch);
 
    // 5. Hij: construct renormalized operators
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
@@ -146,7 +147,7 @@ int tests::test_ctns(){
    auto ovlp = rcanon_CIovlp(icomb, sci_space, vs);
    ovlp.print("ovlp");
 
-   schd.remove_scratch(schd.scratch);
+   io::remove_scratch(schd.scratch);
 
    return 0;
 }

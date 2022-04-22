@@ -1,6 +1,4 @@
-#include <iostream>
-#include "input.h"
-#include <filesystem> // c++17
+#include "io.h"
 namespace fs = std::filesystem;
 
 // boost fs::copy does not work properly on mac
@@ -9,11 +7,10 @@ namespace fs = std::filesystem;
 // namespace fs = boost::filesystem;
 
 using namespace std;
-using namespace input;
 
-void schedule::create_scratch(const std::string sdir,
-			      const bool debug) const{
-   if(debug) cout << "\nschedule::create_scratch scratch=" << sdir << endl;
+void io::create_scratch(const std::string sdir,
+			const bool debug){
+   if(debug) cout << "\nio::create_scratch scratch=" << sdir << endl;
    fs::path dir(sdir);
    if(!fs::exists(dir)){ // check whether the directory exist first
       if(fs::create_directory(dir)){
@@ -25,9 +22,9 @@ void schedule::create_scratch(const std::string sdir,
    }
 }
 
-void schedule::remove_scratch(const std::string sdir,
-			      const bool debug) const{
-   if(debug) cout << "\nschedule::remove_scratch scratch=" << sdir << endl;
+void io::remove_scratch(const std::string sdir,
+			const bool debug){
+   if(debug) cout << "\nio::remove_scratch scratch=" << sdir << endl;
    fs::path dir(sdir);
    if(fs::exists(dir)){ // check whether the directory exist first
       if(fs::remove_all(dir)){
@@ -39,12 +36,29 @@ void schedule::remove_scratch(const std::string sdir,
    }
 }
 
-void schedule::copy_scratch(const std::string sfrom,
-	 	            const std::string sto,
-		            const bool debug) const{
-   if(debug) cout << "\nschedule::copy from " << sfrom
-                  << " to " << sto << endl;
+void io::copy_scratch(const std::string sfrom,
+	 	      const std::string sto,
+		      const bool debug){
+   if(debug) cout << "\nio::copy from " << sfrom << " to " << sto << endl;
    fs::path pfrom(sfrom);
    fs::path pto(sto);
    fs::copy(pfrom, pto);
+}
+
+double io::directory_size(const fs::path& directory){
+   double size = 0.0;
+/*
+   for(const auto& entry : fs::recursive_directory_iterator(directory)){
+       if(entry.is_regular_file() && !entry.is_symlink()){
+           size += entry.file_size();
+       }
+   }
+*/
+   return size;
+}
+
+double io::available_disk(){
+   std::error_code ec;
+   const fs::space_info si = fs::space(".", ec);
+   return si.available;
 }

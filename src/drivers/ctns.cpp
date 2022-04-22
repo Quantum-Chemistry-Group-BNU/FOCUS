@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include "../io/io.h"
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
@@ -9,7 +10,7 @@ using namespace std;
 using namespace fock;
 
 template <typename Km>  
-int CTNS(const input::schedule& schd){
+void CTNS(const input::schedule& schd){
    int rank = 0; 
 #ifndef SERIAL
    rank = schd.world.rank();
@@ -45,6 +46,8 @@ int CTNS(const input::schedule& schd){
       }
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
    }
+   // only perform initialization
+   if(schd.ctns.task_init) return;
 #ifndef SERIAL
    boost::mpi::broadcast(schd.world, icomb, 0);
    icomb.world = schd.world;
@@ -74,7 +77,7 @@ int CTNS(const input::schedule& schd){
       // compute hamiltonian 
       if(schd.ctns.task_ham){
 	 auto scratch = schd.scratch+"/ham";
-         schd.create_scratch(scratch, (rank == 0));
+         io::create_scratch(scratch, (rank == 0));
          auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
          if(rank == 0){
             Hij.print("Hij",8);
@@ -85,8 +88,8 @@ int CTNS(const input::schedule& schd){
       // optimization from current RCF
       if(schd.ctns.task_opt){
          auto scratch = schd.scratch+"/opt";
-         schd.remove_scratch(scratch, (rank == 0));
-         schd.copy_scratch(schd.scratch+"/ham", scratch);
+         io::remove_scratch(scratch, (rank == 0));
+         io::copy_scratch(schd.scratch+"/ham", scratch);
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
          if(rank == 0){
             auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
@@ -95,7 +98,6 @@ int CTNS(const input::schedule& schd){
       }
    } // ham || opt
 
-   return 0;	
 }
 
 int main(int argc, char *argv[]){
@@ -133,23 +135,22 @@ int main(int argc, char *argv[]){
 #endif
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);
-   schd.create_scratch(schd.scratch, (rank == 0));
+   io::create_scratch(schd.scratch, (rank == 0));
 
-   int info = 0;
    if(schd.ctns.qkind == "rZ2"){
-      info = CTNS<ctns::qkind::rZ2>(schd);
+      CTNS<ctns::qkind::rZ2>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
-      info = CTNS<ctns::qkind::cZ2>(schd);
+      CTNS<ctns::qkind::cZ2>(schd);
    }else if(schd.ctns.qkind == "rN"){
-      info = CTNS<ctns::qkind::rN>(schd);
+      CTNS<ctns::qkind::rN>(schd);
    }else if(schd.ctns.qkind == "cN"){
-      info = CTNS<ctns::qkind::cN>(schd);
+      CTNS<ctns::qkind::cN>(schd);
    }else if(schd.ctns.qkind == "rNSz"){
-      info = CTNS<ctns::qkind::rNSz>(schd);
+      CTNS<ctns::qkind::rNSz>(schd);
    }else if(schd.ctns.qkind == "cNSz"){
-      info = CTNS<ctns::qkind::cNSz>(schd);
+      CTNS<ctns::qkind::cNSz>(schd);
    }else if(schd.ctns.qkind == "cNK"){
-      info = CTNS<ctns::qkind::cNK>(schd);
+      CTNS<ctns::qkind::cNK>(schd);
    }else{
       tools::exit("error: no such qkind for ctns!");
    } // qkind
@@ -157,6 +158,6 @@ int main(int argc, char *argv[]){
 #ifndef SERIAL
    world.barrier();
 #endif
-   if(rank > 0) schd.remove_scratch(schd.scratch, (rank == 0));
-   return info;
+   if(rank > 0) io::remove_scratch(schd.scratch, (rank == 0));
+   return 0;
 }

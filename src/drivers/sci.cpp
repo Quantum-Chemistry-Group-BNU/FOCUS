@@ -1,4 +1,5 @@
 #include <iostream>
+#include "../io/io.h"
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 
@@ -6,7 +7,7 @@ using namespace std;
 using namespace fock;
 
 template <typename Tm>  
-int SCI(const input::schedule& schd){
+void SCI(const input::schedule& schd){
    // read integral
    integral::two_body<Tm> int2e;
    integral::one_body<Tm> int1e;
@@ -35,7 +36,6 @@ int SCI(const input::schedule& schd){
       assert(iroot < nroots);
       sci::pt2_solver(schd, es[iroot], vs[iroot], sci_space, int2e, int1e, ecore);
    }
-   return 0;
 }
 
 int main(int argc, char *argv[]){
@@ -50,13 +50,12 @@ int main(int argc, char *argv[]){
    }
    input::schedule schd;
    schd.read(fname);
-   schd.create_scratch(schd.scratch);
+   io::create_scratch(schd.scratch);
    // we will use Tm to control Hnr/Hrel 
-   int info = 0;
    if(schd.dtype == 0){
-      info = SCI<double>(schd);
+      SCI<double>(schd);
    }else if(schd.dtype == 1){
-      info = SCI<complex<double>>(schd);
+      SCI<complex<double>>(schd);
    }
-   return info;
+   return 0;
 }

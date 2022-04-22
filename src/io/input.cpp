@@ -171,6 +171,8 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,5)=="qkind"){
          istringstream is(line.substr(5));
 	 is >> qkind;
+      }else if(line.substr(0,9)=="task_init"){
+         task_init = true;
       }else if(line.substr(0,10)=="task_sdiag"){
          task_sdiag = true;
       }else if(line.substr(0,8)=="task_ham"){
@@ -213,7 +215,9 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,5)=="guess"){
          guess = stoi(line.substr(5));
       }else if(line.substr(0,6)=="iomode"){
-	 iomode = stoi(line.substr(6));     
+	 iomode = stoi(line.substr(6));    
+      }else if(line.substr(0,7)=="ioasync"){
+         ioasync = stoi(line.substr(7));
       }else if(line.substr(0,5)=="iroot"){
          iroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
@@ -308,7 +312,9 @@ void params_ctns::print() const{
    // io
    cout << "rcanon_load = " << rcanon_load << endl; 
    cout << "rcanon_file = " << rcanon_file << endl;
+   // oper_poll
    cout << "iomode = " << iomode << endl;
+   cout << "ioasync = " << ioasync << endl;
    // sampling
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;

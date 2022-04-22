@@ -24,7 +24,7 @@ void sweep_onedot(comb<Km>& icomb,
                   const double ecore,
 		  const input::schedule& schd,
 		  const std::string scratch,
-	          oper_stack<typename Km::dtype>& qops_stack,
+	          oper_pool<typename Km::dtype>& qops_pool,
 		  sweep_data& sweeps,
 		  const int isweep,
 		  const int ibond){
@@ -55,10 +55,10 @@ void sweep_onedot(comb<Km>& icomb,
 
    // 1. load operators 
    auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug);
-   qops_stack.fetch(fneed);
-   const oper_dictmap<Tm> qops_dict = {{"l",qops_stack(fneed[0])},
-	   		 	       {"r",qops_stack(fneed[1])},
-	   			       {"c",qops_stack(fneed[2])}};
+   qops_pool.fetch(fneed);
+   const oper_dictmap<Tm> qops_dict = {{"l",qops_pool(fneed[0])},
+	   		 	       {"r",qops_pool(fneed[1])},
+	   			       {"c",qops_pool(fneed[2])}};
    if(debug){
       std::cout << "qops info: rank=" << rank << std::endl;
       qops_dict.at("l").print("lqops");
@@ -180,12 +180,12 @@ void sweep_onedot(comb<Km>& icomb,
    // 3. decimation & renormalize operators
    auto frop = icomb.topo.get_frop(dbond, scratch, debug);
    onedot_renorm(icomb, int2e, int1e, schd, scratch, 
-		 vsol, wf, qops_dict, qops_stack(frop), 
+		 vsol, wf, qops_dict, qops_pool(frop), 
 		 sweeps, isweep, ibond);
    timing.tf = tools::get_time();
    
    // 4. save on disk 
-   qops_stack.save(frop);
+   qops_pool.save(frop);
 
    timing.t1 = tools::get_time();
    if(debug){
@@ -203,7 +203,7 @@ void sweep_rwfuns(comb<Km>& icomb,
 		  const double ecore,
 		  const input::schedule& schd,
 		  const std::string scratch,
-	          oper_stack<typename Km::dtype>& qops_stack){
+	          oper_pool<typename Km::dtype>& qops_pool){
    using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -222,7 +222,7 @@ void sweep_rwfuns(comb<Km>& icomb,
    sweep_data sweeps({dbond}, schd.ctns.nroots, schd.ctns.guess, 
 		      1, {ctrl}, 0, schd.ctns.rdm_vs_svd);
    sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
-		qops_stack, sweeps, 0, 0);
+		qops_pool, sweeps, 0, 0);
 
    if(rank == 0){
       std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;

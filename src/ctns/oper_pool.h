@@ -8,10 +8,16 @@
 namespace ctns{
 
 template <typename Tm>
-struct oper_stack{
+struct oper_pool{
    public:
       // constuctor
-      oper_stack(const int _iomode, const bool _debug): iomode(_iomode), debug(_debug) {}
+      oper_pool(const int _iomode,
+                const int _ioasync,
+                 const bool _debug){
+         iomode = _iomode;
+         ioasync = _ioasync;
+         debug = _debug;
+      }
       const oper_dict<Tm>& operator()(const std::string fqop) const{
          return qstore.at(fqop);
       } 
@@ -29,29 +35,24 @@ struct oper_stack{
       // fetch qops from memory / disk
       void fetch(const std::vector<std::string>& fneed);
       void save(const std::string frop){
-	 fkept = frop;
-         // just add if to be compatible with serial version
 	 if(thrd.joinable()) thrd.join();
- 	 ctns::oper_save<Tm>(iomode, fkept, qstore.at(fkept), debug);
-/*
-         thrd = std::thread(&ctns::oper_save<Tm>, iomode, fkept, 
-			 std::cref(qstore.at(fkept)), debug);
-*/
-
+         if(ioasync == 0){
+ 	    ctns::oper_save<Tm>(iomode, frop, qstore.at(frop), debug);
+         }else if(ioasync == 1){
+            thrd = std::thread(&ctns::oper_save<Tm>, iomode, frop,
+			       std::cref(qstore.at(frop)), debug);
+         }
+	 fkept = frop;
       }
       void clean_up(){
          // just add if to be compatible with serial version
 	 if(thrd.joinable()) thrd.join();
-/*
-	 // dump the last file
-	 ctns::oper_save<Tm>(iomode, fkept, qstore.at(fkept), debug);
-*/
 	 fkept.clear();
 	 // must be first join then clear, otherwise IO is not finished!
 	 qstore.clear();
       }
    public:
-      int iomode;
+      int iomode, ioasync;
       bool debug = false;
       std::map<std::string,oper_dict<Tm>> qstore; // for global storage
       std::string fkept;
@@ -59,10 +60,10 @@ struct oper_stack{
 };
 
 template <typename Tm>
-void oper_stack<Tm>::fetch(const std::vector<std::string>& fneed){
+void oper_pool<Tm>::fetch(const std::vector<std::string>& fneed){
    auto t0 = tools::get_time();
    if(debug_oper_io && debug){
-      std::cout << "ctns::oper_stack<Tm>::fetch" << std::endl;
+      std::cout << "ctns::oper_pool<Tm>::fetch" << std::endl;
       std::cout << "fneed: size=" << fneed.size() << std::endl;
       for(const auto& fqop : fneed){
 	 std::cout << " fqop=" << fqop << std::endl;
@@ -79,12 +80,6 @@ void oper_stack<Tm>::fetch(const std::vector<std::string>& fneed){
          frelease.push_back(fqop);
       }
    }
-   // just join before release   
-   auto ta = tools::get_time();
-
-//   if(thrd.joinable()) thrd.join();
-
-   auto tb = tools::get_time();
    for(const auto& fqop : frelease){
       qstore.erase(fqop);
    }
@@ -95,27 +90,13 @@ void oper_stack<Tm>::fetch(const std::vector<std::string>& fneed){
       }
    }
    // then load new data is in memory
-   auto tc = tools::get_time();
    for(const auto& fqop : fneed){
       if(qstore.find(fqop) != qstore.end()) continue;
       oper_load(iomode, fqop, qstore[fqop], debug);
    }
-   auto td = tools::get_time();
    if(debug_oper_io && debug) this->display("out");
-/*
-   // save the previous renormalized operators
-   if(fkept.size() > 0){
-      thrd = std::thread(&ctns::oper_save<Tm>, iomode, fkept, 
-			 std::cref(qstore.at(fkept)), debug);
-   }
-*/
    auto t1 = tools::get_time();
-   std::cout << "T(sync/load/tot)="
-	     << tools::get_duration(tb-ta) << ","
-	     << tools::get_duration(td-tc) << ","
-	     << tools::get_duration(t1-t0) 
-	     << std::endl;
-   if(debug) tools::timing("ctns::oper_stack<Tm>::fetch", t0, t1);
+   if(debug) tools::timing("ctns::oper_pool<Tm>::fetch", t0, t1);
 }
 
 } // ctns
