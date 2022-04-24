@@ -102,7 +102,6 @@ LOGS
 
     - hdf5 support: compare against iostream (timing)	
     - data compression? [DONE2022/04/XX] 
-         
     - add options for:
 	 - raw/hdf5/hdf5compressed
 	 - serial/threaded
@@ -132,6 +131,7 @@ LOGS
     - SOC within this active space
     - G-tensor/GIAO for Ferric-Ferrous dimer [THIS WOULD BE GREAT!]
     - entropy as a complexity measure?
+    - classical help for quantum computing? better biased measurement?
  
  * Twordms: enable Rel-CASSCF with interface to other codes 
 
