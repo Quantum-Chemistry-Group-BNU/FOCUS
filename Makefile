@@ -23,7 +23,7 @@ else
    endif
 endif
 FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include 
-
+ 
 # IO
 FLAGS += -I./extlibs/lz4-dev/lib -I./extlibs/zstd-dev/lib
 LFLAGS += -L./extlibs/lz4-dev/lib -llz4 -L./extlibs/zstd-dev/lib -lzstd
@@ -94,16 +94,19 @@ SRC_DIR_IO   = ./$(SRC)/io
 SRC_DIR_CI   = ./$(SRC)/ci
 SRC_DIR_QT   = ./$(SRC)/ctns/qtensor
 SRC_DIR_CTNS = ./$(SRC)/ctns
+SRC_DIR_EXPT = ./$(SRC)/experiment
 INCLUDE_DIR = -I$(SRC_DIR_CORE) \
 	      -I$(SRC_DIR_IO) \
 	      -I$(SRC_DIR_CI) \
 	      -I$(SRC_DIR_QT) \
-	      -I$(SRC_DIR_CTNS)
+	      -I$(SRC_DIR_CTNS) \
+	      -I$(SRC_DIR_EXPT) 
 SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 	  	     $(SRC_DIR_IO)/*.cpp  \
 	  	     $(SRC_DIR_CI)/*.cpp \
 	  	     $(SRC_DIR_QT)/*.cpp \
-	  	     $(SRC_DIR_CTNS)/*.cpp)
+	  	     $(SRC_DIR_CTNS)/*.cpp \
+	  	     $(SRC_DIR_EXPT)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
 # all the files with main functions

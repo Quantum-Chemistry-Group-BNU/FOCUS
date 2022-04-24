@@ -17,3 +17,5 @@ scratch
 extlibs/hdf5-1.12.0
 extlibs/h5pp-master/
 extlibs/HighFive-master/
+extlibs/lz4-dev/
+extlibs/zstd-dev/

@@ -8,11 +8,9 @@
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/zstd.hpp>
-#include "../io/lz4_filter.h"
+#include "../experiment/lz4_filter.h"
+#include "../experiment/fp_codec.h"
 namespace ext { namespace bio = ext::boost::iostreams; }
-
-#include "fp_codec.h"
-
 
 namespace ctns{ 
 

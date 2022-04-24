@@ -47,13 +47,11 @@ void io::copy_scratch(const std::string sfrom,
 
 double io::directory_size(const fs::path& directory){
    double size = 0.0;
-/*
    for(const auto& entry : fs::recursive_directory_iterator(directory)){
        if(entry.is_regular_file() && !entry.is_symlink()){
            size += entry.file_size();
        }
    }
-*/
    return size;
 }
 
