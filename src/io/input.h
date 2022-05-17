@@ -134,7 +134,7 @@ public:
    std::string rcanon_file = "rcanon.info";
    // oper_pool
    int iomode = 0;
-   int ioasync = 1;
+   int ioasync = 0;
    // sampling
    int iroot = 0;
    int nsample = 1.e5;
