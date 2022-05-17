@@ -57,6 +57,7 @@ struct directed_bond{
 	p0(_p0), p1(_p1), forward(_forward) {}
       // node to be updated
       comb_coord current() const{ return forward? p0 : p1; }
+      comb_coord next() const{ return forward? p1 : p0; }
       //
       // cturn: a bond that at the turning points to branches
       //              |
@@ -106,9 +107,9 @@ struct topology{
 			                 const directed_bond& dbond,
 					 const std::string scratch,
 					 const bool debug=false) const;
-      std::string get_frop(const directed_bond& dbond,
-			   const std::string scratch,
-			   const bool debug=false) const;
+      std::pair<std::string,std::string> get_fbond(const directed_bond& dbond,
+			    			   const std::string scratch,
+			    			   const bool debug=false) const;
    public:
       int ntotal, nbackbone, nphysical;
       // nodes on comb

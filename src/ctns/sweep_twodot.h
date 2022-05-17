@@ -197,13 +197,16 @@ void sweep_twodot(comb<Km>& icomb,
    }
 
    // 3. decimation & renormalize operators
-   auto frop = icomb.topo.get_frop(dbond, scratch, debug);
+   auto fbond = icomb.topo.get_fbond(dbond, scratch, debug);
+   auto frop = fbond.first;
+   auto fdel = fbond.second;
    twodot_renorm(icomb, int2e, int1e, schd, scratch, 
 		 vsol, wf, qops_dict, qops_pool(frop), 
 		 sweeps, isweep, ibond);
    timing.tf = tools::get_time();
   
    // 4. save on disk 
+   oper_remove(fdel, debug);
    qops_pool.save(frop);
 
    timing.t1 = tools::get_time();

@@ -458,18 +458,24 @@ vector<string> topology::get_fqops(const int dots,
    return fqops;
 }
 
-string topology::get_frop(const directed_bond& dbond,
-			  const string scratch,
-			  const bool debug) const{
-   string frop;
-   auto p = dbond.current();
+pair<string,string> topology::get_fbond(const directed_bond& dbond,
+			       	        const string scratch,
+			  		const bool debug) const{
+   const auto& p0 = dbond.p0;
+   const auto& p1 = dbond.p1;
+   string frop, fdel;
    if(dbond.forward){
-      frop = oper_fname(scratch, p, "l");
+      frop = oper_fname(scratch, p0, "l");
+      fdel = oper_fname(scratch, p1, "r");
    }else{
-      frop = oper_fname(scratch, p, "r");
+      frop = oper_fname(scratch, p1, "r");
+      fdel = oper_fname(scratch, p0, "l");
    }
    if(debug){
-      cout << "ctns::topology::get_frop frop=" << frop << endl;
+      cout << "ctns::topology::get_fbond"
+	   << " frop=" << frop
+	   << " fdel=" << fdel
+	   << endl; 
    }
-   return frop;
+   return std::make_pair(frop,fdel);
 }

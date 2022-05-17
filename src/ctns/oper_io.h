@@ -30,6 +30,15 @@ inline std::string oper_fname(const std::string scratch,
         + std::to_string(p.second) + ")";
 }
 
+inline void oper_remove(const std::string fname,
+			const bool debug){
+   if(debug_oper_io and debug){
+      std::cout << "ctns::oper_remove fname=" << fname << std::endl;
+   }
+   io::remove_file(fname+".info", debug);
+   io::remove_file(fname+".op", debug);
+}
+
 template <typename Tm>
 void oper_save(const int iomode,
 	       const std::string fname, 

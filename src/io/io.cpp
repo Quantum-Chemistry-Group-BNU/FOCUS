@@ -22,6 +22,15 @@ void io::create_scratch(const std::string sdir,
    }
 }
 
+void io::copy_scratch(const std::string sfrom,
+	 	      const std::string sto,
+		      const bool debug){
+   if(debug) cout << "\nio::copy from " << sfrom << " to " << sto << endl;
+   fs::path pfrom(sfrom);
+   fs::path pto(sto);
+   fs::copy(pfrom, pto);
+}
+
 void io::remove_scratch(const std::string sdir,
 			const bool debug){
    if(debug) cout << "\nio::remove_scratch scratch=" << sdir << endl;
@@ -36,13 +45,10 @@ void io::remove_scratch(const std::string sdir,
    }
 }
 
-void io::copy_scratch(const std::string sfrom,
-	 	      const std::string sto,
-		      const bool debug){
-   if(debug) cout << "\nio::copy from " << sfrom << " to " << sto << endl;
-   fs::path pfrom(sfrom);
-   fs::path pto(sto);
-   fs::copy(pfrom, pto);
+void io::remove_file(const std::string fname,
+		     const bool debug){
+   if(debug) cout << "io::remove_file fname=" << fname << endl;
+   fs::remove(fname);
 }
 
 double io::directory_size(const fs::path& directory){

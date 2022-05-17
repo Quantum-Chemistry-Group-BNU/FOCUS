@@ -74,10 +74,11 @@ void CTNS(const input::schedule& schd){
       boost::mpi::broadcast(schd.world, int2e, 0);
       boost::mpi::broadcast(schd.world, ecore, 0);
 #endif
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0)); // cleanup
+      io::create_scratch(scratch, (rank == 0));
       // compute hamiltonian 
       if(schd.ctns.task_ham){
-	 auto scratch = schd.scratch+"/ham";
-         io::create_scratch(scratch, (rank == 0));
          auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
          if(rank == 0){
             Hij.print("Hij",8);
@@ -87,9 +88,6 @@ void CTNS(const input::schedule& schd){
       }
       // optimization from current RCF
       if(schd.ctns.task_opt){
-         auto scratch = schd.scratch+"/opt";
-         io::remove_scratch(scratch, (rank == 0));
-         io::copy_scratch(schd.scratch+"/ham", scratch);
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
          if(rank == 0){
             auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
