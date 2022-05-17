@@ -6,11 +6,16 @@
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
+// compression
 #include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/zstd.hpp>
+#ifdef LZ4
 #include "../experiment/lz4_filter.h"
-#include "../experiment/fp_codec.h"
 namespace ext { namespace bio = ext::boost::iostreams; }
+#endif
+#ifdef ZSTD
+#include <boost/iostreams/filter/zstd.hpp>
+#endif
+#include "../experiment/fp_codec.h"
 
 namespace ctns{ 
 
@@ -51,6 +56,7 @@ void oper_save(const int iomode,
       std::ofstream ofs2(fname+".op", std::ios::binary);
       ofs2.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
       ofs2.close();
+#ifdef LZ4 
    }else if(iomode == 1){
       std::ofstream ofs2(fname+".op", std::ios::binary);
       boost::iostreams::filtering_ostream out;
@@ -59,6 +65,8 @@ void oper_save(const int iomode,
       out.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
       out.reset();
       ofs2.close();
+#endif
+#ifdef ZSTD
    }else if(iomode == 2){
       std::ofstream ofs2(fname+".op", std::ios::binary);
       boost::iostreams::filtering_ostream out;
@@ -68,9 +76,11 @@ void oper_save(const int iomode,
       out.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
       out.reset();
       ofs2.close();
+#endif
    }else if(iomode == 3){
       std::ofstream ofs2(fname+".op", std::ios::binary);
-      FPCodec<double> fp;
+      const double prec = 1.e-14;
+      FPCodec<double> fp(prec);
       fp.write_array(ofs2, (double*)qops._data, qops._size);
       ofs2.close(); 
    }else{
@@ -129,6 +139,7 @@ void oper_load(const int iomode,
       std::ifstream ifs2(fname+".op", std::ios::binary);
       ifs2.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
       ifs2.close();
+#ifdef LZ4 
    }else if(iomode == 1){
       std::ifstream ifs2(fname+".op", std::ios::binary);
       boost::iostreams::filtering_istream in;
@@ -137,6 +148,8 @@ void oper_load(const int iomode,
       in.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
       in.reset();
       ifs2.close();
+#endif
+#ifdef ZSTD
    }else if(iomode == 2){
       std::ifstream ifs2(fname+".op", std::ios::binary);
       boost::iostreams::filtering_istream in;
@@ -146,6 +159,7 @@ void oper_load(const int iomode,
       in.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
       in.reset();
       ifs2.close();
+#endif
    }else if(iomode == 3){
       std::ifstream ifs2(fname+".op", std::ios::binary);
       FPCodec<double> fp; 

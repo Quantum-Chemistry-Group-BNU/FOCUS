@@ -1,10 +1,13 @@
 
-machine = lenovo
+machine = mac #lenovo
 
 DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
+# compression
+USE_LZ4 = no
+USE_ZSTD = no
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
@@ -24,10 +27,6 @@ else
 endif
 FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include 
  
-# IO
-FLAGS += -I./extlibs/lz4-dev/lib -I./extlibs/zstd-dev/lib
-LFLAGS += -L./extlibs/lz4-dev/lib -llz4 -L./extlibs/zstd-dev/lib -lzstd
-
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
@@ -81,8 +80,17 @@ else
 endif
 # quaternion matrix diagonalization
 MATH += -L./extlibs/zquatev -lzquatev
-
 LFLAGS += ${MATH}
+
+# IO
+ifeq ($(strip $(USE_LZ4)), yes)
+   FLAGS += -DLZ4 -I./extlibs/lz4-dev/lib
+   LFLAGS += -L./extlibs/lz4-dev/lib -llz4
+endif
+ifeq ($(strip $(USE_ZSTD)), yes)
+   FLAGS += -DZSTD -I./extlibs/zstd-dev/lib
+   LFLAGS += -L./extlibs/zstd-dev/lib -lzstd
+endif
 
 SRC = src
 BIN_DIR = ./bin

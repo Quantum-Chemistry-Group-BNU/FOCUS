@@ -1,3 +1,5 @@
+#ifdef LZ4
+
 #ifndef LZ4_FILTER_HPP_INCLUDED
 #define LZ4_FILTER_HPP_INCLUDED
 
@@ -260,3 +262,5 @@ basic_lz4_decompressor<Alloc>::basic_lz4_decompressor() :
 //#include <boost/config/abi_suffix.hpp> // Pops abi_suffix.hpp pragmas.
 
 #endif // #ifndef LZ4_FILTER_HPP_INCLUDED
+
+#endif

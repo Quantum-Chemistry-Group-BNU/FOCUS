@@ -1,3 +1,5 @@
+#ifdef LZ4
+
 // Define BOOST_IOSTREAMS_SOURCE so that <boost/iostreams/detail/config.hpp>
 // knows that we are building the library (possibly exporting code), rather
 // than using it (possibly importing code).
@@ -294,3 +296,5 @@ int lz4_base::lz4_decompress(const char* src_begin, char* dst_begin, int comp_ch
 } // namespace iostreams
 } // namespace boost
 } // namespace ext
+
+#endif
