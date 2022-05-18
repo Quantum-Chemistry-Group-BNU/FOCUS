@@ -84,7 +84,8 @@ int tests::test_ctns(){
    fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
 
    if(!schd.ctns.rcanon_load){
-      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
+      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_vs_svd,
+		        schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
       ctns::rcanon_save(icomb);
    }else{
       ctns::rcanon_load(icomb);

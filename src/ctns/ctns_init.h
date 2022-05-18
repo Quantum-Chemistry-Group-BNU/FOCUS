@@ -16,40 +16,45 @@ extern const bool debug_init;
 
 namespace ctns{
 
+//
 // initialize RCF from SCI wavefunctions
+//
 template <typename Km>
 void rcanon_init(comb<Km>& icomb,
 		 const fock::onspace& space,
 		 const std::vector<std::vector<typename Km::dtype>>& vs,
+		 const double rdm_vs_svd,
 		 const double thresh_proj,
-		 const double rdm_vs_svd){
+		 const double thresh_ortho){
    std::cout << "\nctns::rcanon_init Km=" << qkind::get_name<Km>() << std::endl;
    auto t0 = tools::get_time();
 
    // 1. compute renormalized bases {|r>} from SCI wavefunctions
-   init_rbases(icomb, space, vs, thresh_proj, rdm_vs_svd);
+   init_rbases(icomb, space, vs, rdm_vs_svd, thresh_proj);
 
    // 2. build sites from rbases
-   init_rsites(icomb); 
+   init_rsites(icomb, thresh_ortho);
 
    // 3. compute wave functions at the start for right canonical form 
-   init_rwfuns(icomb, space, vs);  
+   init_rwfuns(icomb, space, vs, thresh_ortho);
 
    auto t1 = tools::get_time();
    tools::timing("ctns::rcanon_init", t0, t1);
 }
 
-
+//
 // compute renormalized bases {|r>} from SCI wavefunctions 
+//
 template <typename Km>
 void init_rbases(comb<Km>& icomb,
 		const fock::onspace& space,
 		const std::vector<std::vector<typename Km::dtype>>& vs,
-		const double thresh_proj,
-		const double rdm_vs_svd){
+		const double rdm_vs_svd,
+		const double thresh_proj){
    using Tm = typename Km::dtype;
    std::cout << "\nctns::init_rbases" << std::scientific << std::setprecision(2) 
-	     << " thresh_proj=" << thresh_proj << " rdm_vs_svd=" << rdm_vs_svd
+	     << " rdm_vs_svd=" << rdm_vs_svd
+	     << " thresh_proj=" << thresh_proj 
 	     << std::endl;
    auto t0 = tools::get_time();
   
@@ -123,11 +128,16 @@ void init_rbases(comb<Km>& icomb,
    tools::timing("ctns::init_rbases", t0, t1);
 }
 
+//
 // build site tensor from {|r>} bases
+//
 template <typename Km>
-void init_rsites(comb<Km>& icomb){
+void init_rsites(comb<Km>& icomb,
+		 const double thresh_ortho){
    using Tm = typename Km::dtype;
-   std::cout << "\nctns::init_rsites Km=" << qkind::get_name<Km>() << std::endl;
+   std::cout << "\nctns::init_rsites Km=" << qkind::get_name<Km>() 
+	     << " thresh_ortho=" << thresh_ortho
+	     << std::endl;
    auto t0 = tools::get_time();
    
    // loop over sites - parallelizable
@@ -236,7 +246,6 @@ void init_rsites(comb<Km>& icomb){
       if(debug_init){ 
          auto dt = tools::get_duration(tf-ti);
          auto ova = contract_qt3_qt3("cr",icomb.rsites[idx],icomb.rsites[idx]);
-         const double thresh_ortho = 1.e-10;
          double maxdiff = ova.check_identityMatrix(thresh_ortho, false);
          std::cout << " shape(l,r,c)=("
                    << icomb.rsites[idx].info.qrow.get_dimAll() << ","
@@ -254,13 +263,18 @@ void init_rsites(comb<Km>& icomb){
    tools::timing("ctns::init_rsites", t0, t1);
 }
 
+//
 // compute wave function at the start for right canonical form
+//
 template <typename Km>
 void init_rwfuns(comb<Km>& icomb,
 		 const fock::onspace& space,
-		 const std::vector<std::vector<typename Km::dtype>>& vs){
+		 const std::vector<std::vector<typename Km::dtype>>& vs,
+		 const double thresh_ortho){
    using Tm = typename Km::dtype;
-   std::cout << "\nctns::init_rwfuns Km=" << qkind::get_name<Km>() << std::endl;
+   std::cout << "\nctns::init_rwfuns Km=" << qkind::get_name<Km>() 
+	     << " thresh_ortho=" << thresh_ortho 
+	     << std::endl;
    auto t0 = tools::get_time();
    
    // determine symmetry of rwfuns
@@ -330,10 +344,11 @@ void init_rwfuns(comb<Km>& icomb,
       ova0.print("ova0_vs");
       auto diff = (ova-ova0).normF();
       std::cout << "diff of ova matrices = " << diff << std::endl;
-      const double thresh = 1.e-8;
-      if(diff > thresh){ 
+      if(diff > thresh_ortho){ 
 	 std::string msg = "error: too large diff=";
-	 tools::exit(msg+std::to_string(diff)+" with thresh="+std::to_string(thresh));
+	 tools::exit(msg+std::to_string(diff)
+		     +" with thresh_ortho="
+		     +std::to_string(thresh_ortho));
       }
    } // debug_init
 

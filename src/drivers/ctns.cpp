@@ -39,7 +39,8 @@ void CTNS(const input::schedule& schd){
          fci::ci_load(sci_space, es, vs, ci_file);
          // truncate CI coefficients
          fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-         ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.thresh_proj, schd.ctns.rdm_vs_svd);
+         ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_vs_svd,
+			   schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
          ctns::rcanon_save(icomb, rcanon_file);
       }else{
          ctns::rcanon_load(icomb, rcanon_file);
