@@ -65,6 +65,10 @@ void CTNS(const input::schedule& schd){
    }
    
    if(schd.ctns.task_ham or schd.ctns.task_opt){
+      
+      // preprocess
+      //ctns::preprocess_oper(icomb);
+      
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -75,6 +79,7 @@ void CTNS(const input::schedule& schd){
       boost::mpi::broadcast(schd.world, int2e, 0);
       boost::mpi::broadcast(schd.world, ecore, 0);
 #endif
+      // create scratch
       auto scratch = schd.scratch+"/sweep";
       io::remove_scratch(scratch, (rank == 0)); // cleanup
       io::create_scratch(scratch, (rank == 0));

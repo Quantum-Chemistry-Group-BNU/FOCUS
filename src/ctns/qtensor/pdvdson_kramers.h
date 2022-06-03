@@ -74,15 +74,21 @@ struct pdvdsonSolver_kr{
 	 rank = world.rank();
 	 world.barrier();
 #endif
-         auto t0 = tools::get_time();
+	 double tcal = 0.0, tcomm = 0.0;
+         auto ti = tools::get_time();
          for(int istate=0; istate<nstate; istate++){
+	    auto t0 = tools::get_time();
             HVec(y+istate*ndim, x+istate*ndim); // y = tilde{H}*x
+	    auto t1 = tools::get_time();
+	    tcal += tools::get_duration(t1-t0);
 #ifndef SERIAL
 	    if(size > 1){
 	       std::vector<Tm> y_sum(ndim);
 	       boost::mpi::reduce(world, y+istate*ndim, ndim, y_sum.data(), std::plus<Tm>(), 0);
 	       linalg::xcopy(ndim, y_sum.data(), y+istate*ndim);
 	    }
+	    auto t2 = tools::get_time();
+	    tcomm += tools::get_duration(t2-t1); 
 #endif
             //-------------------------------------------------------------
             // Even-electron case: get full sigma vector from skeleton one
@@ -95,17 +101,19 @@ struct pdvdsonSolver_kr{
             //-------------------------------------------------------------
          } // istate
          nmvp += nstate;
-         auto t1 = tools::get_time();
-	 /*
+         auto tf = tools::get_time();
          if(rank == 0){
-            auto dt = tools::get_duration(t1-t0);
+            auto dt = tools::get_duration(tf-ti);
 	    std::cout << "timing for HVecs : " << std::setprecision(2)  
-                      << dt << " s" 
-                      << " for nstate = " << nstate
+                      << dt << " s"
+		      << " tcal=" << tcal
+		      << " tcomm=" << tcomm 
+                      << " for nstate = " << nstate 
 		      << " tav = " << dt/nstate << " s" 
 		      << " size = " << size << std::endl;
+	    t_cal += tcal;
+	    t_comm += tcomm;
          }
-	 */
       }
 
       // initialization
@@ -310,6 +318,7 @@ struct pdvdsonSolver_kr{
 
       // Davidson iterative algorithm for Hv=ve
       void solve_iter(double* es, Tm* vs, Tm* vguess){
+         auto ti = tools::get_time();
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = world.size();
@@ -328,7 +337,6 @@ struct pdvdsonSolver_kr{
 	 }
          // clear counter
          nmvp = 0;
-         auto t0 = tools::get_time();
          
 	 // 1. generate initial subspace - vbas 
          int nl = std::min(ndim,neig+nbuff); // maximal subspace size
@@ -371,7 +379,7 @@ struct pdvdsonSolver_kr{
                   rconv[i] = (norm < crit_v)? true : false;
                }
                auto t1 = tools::get_time();
-               if(iprt > 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-t0));
+               if(iprt > 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
                // check convergence and return (e,v) if applied 
                ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
 	    }
@@ -447,8 +455,16 @@ struct pdvdsonSolver_kr{
          if(rank == 0 && !ifconv){
             std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
          }
+	 auto tf = tools::get_time();    
+	 if(rank == 0){
+	    t_tot = tools::get_duration(tf-ti);
+	    t_rest = t_tot - t_cal - t_comm;
+            std::cout << "TIMING for Davdison : " << t_tot
+		      << " T(cal/comm/rest)=" << t_cal << ","
+		      << t_comm << "," << t_rest
+		      << std::endl;
+	 }
       }
-
    public:
       // basics
       int ndim = 0;
@@ -474,6 +490,10 @@ struct pdvdsonSolver_kr{
 #ifndef SERIAL
       boost::mpi::communicator world;
 #endif
+      double t_tot = 0.0;
+      double t_cal = 0.0; // Hx
+      double t_comm = 0.0; // reduce
+      double t_rest = 0.0; // solver
 };
 
 } // ctns

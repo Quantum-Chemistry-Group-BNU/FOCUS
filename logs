@@ -93,19 +93,16 @@ LOGS
  * Better IO strategy: 
     - oper_stack: global memory for saving oper_load [DONE2022/04/08]
     - concurrency: separate computation & save for saving oper_save [DONE2022/04/09]
+    - remove hdf5 support: compare against iostream (timing)	
     - new computational model:
 	1. fetch qops from memory / disk
 	2. compute [Hx/renorm] + save previous qops [threaded]
 	3. fkept is updated, the old qops will be released
- 
+        4. delete unused file at a given bond
+
  ### TODOs ###
 
-    - hdf5 support: compare against iostream (timing)	
-    - data compression? [DONE2022/04/XX] 
-    - add options for:
-	 - raw/hdf5/hdf5compressed
-	 - serial/threaded
-
+    - data compression? 
     - reduce half AB/PQ operators?
 
  * Toward large-scale applications:

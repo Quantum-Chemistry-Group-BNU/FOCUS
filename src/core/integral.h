@@ -162,7 +162,7 @@ struct two_body{
       }
    public:
       int sorb = 0; // no. of spin orbitals
-   private:   
+   public:
       std::vector<Tm> data; // <ij||kl>
       std::vector<double> Q;  // Qij=<ij||ij> 
 };

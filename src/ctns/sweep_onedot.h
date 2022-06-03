@@ -187,8 +187,15 @@ void sweep_onedot(comb<Km>& icomb,
    timing.tf = tools::get_time();
    
    // 4. save on disk 
-   oper_remove(fdel, debug);
    qops_pool.save(frop);
+   /*
+      NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ],
+      removing in the later configuration must wait until 
+      the file from the former configuration has been saved!
+      Therefore, oper_remove must come later than save,
+      which contains the synchronization!
+   */
+   oper_remove(fdel, debug);
 
    timing.t1 = tools::get_time();
    if(debug){

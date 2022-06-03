@@ -57,17 +57,15 @@ void oper_renorm_opAll(const std::string superblock,
    const auto& site = (superblock=="cr")? icomb.rsites[rindex.at(p)] : 
 	   				  icomb.lsites[rindex.at(p)];
    if(superblock == "cr"){
-      qops.krest = node.lsupport;
+      qops.krest = node.lorbs;
       qops.qbra = site.info.qrow;
       qops.qket = site.info.qrow; 
    }else if(superblock == "lc"){
-      auto pr = node.right;
-      qops.krest = icomb.topo.get_node(pr).rsupport;
+      qops.krest = node.rorbs;
       qops.qbra = site.info.qcol;
       qops.qket = site.info.qcol;
    }else if(superblock == "lr"){
-      auto pc = node.center;
-      qops.krest = icomb.topo.get_node(pc).rsupport;
+      qops.krest = node.corbs;
       qops.qbra = site.info.qmid;
       qops.qket = site.info.qmid;
    }
@@ -113,6 +111,20 @@ void oper_renorm_opAll(const std::string superblock,
       std::string msg = "error: H-H.H() is too large! diffH=";
       tools::exit(msg+std::to_string(diffH));
    }
+
+/*
+   // 4. reduce S += S[iproc]
+   std::vector<Tm> topS(qops._opsize);
+   for(auto& pr : qops('S')){
+      auto& index = pr.first;
+      auto& opS = pr.second;
+      int opsize = opS.size(); 
+      memset(topS.data(), 0, opsize*sizeof(Tm));
+      boost::mpi::reduce(icomb.world, opS.data(), opsize, 
+		         topS.data(), std::plus<Tm>(), 0);
+      linalg::xcopy(opsize, topS.data(), opS.data());
+   }
+*/
 
    auto t1 = tools::get_time();
    if(rank == 0){ 

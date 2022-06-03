@@ -58,6 +58,14 @@ void print_vector(const std::vector<Tm>& vec, const std::string name){
    std::cout << std::endl;
 }	
 
+template <typename Tm>
+std::vector<Tm> combine_vector(const std::vector<Tm>& v1, 
+		    	       const std::vector<Tm>& v2){
+   std::vector<Tm> v12 = v1;
+   v12.insert(v12.end(), v2.begin(), v2.end());
+   return v12;
+}
+
 // type information
 template <typename Tm>
 inline bool is_complex(){ return false; }

@@ -184,7 +184,7 @@ void onedot_renorm(comb<Km>& icomb,
 
    // renorm operators	 
    const bool thresh = 1.e-10;
-   const auto p = dbond.current();
+   const auto p = dbond.get_current();
    const auto& pdx = icomb.topo.rindex.at(p); 
    std::string fname;
    if(schd.ctns.save_formulae) fname = scratch+"/rformulae"

@@ -16,8 +16,7 @@ extern const bool debug_rops;
 const double thresh_rops = 1.e-5;
 extern const double thresh_rops;
 
-inline void setup_orb2pos_map(const std::vector<int>& lsupp,
-		              const std::vector<int>& rsupp,
+inline void setup_orb2pos_map(const std::vector<int>& rsupp,
 		              std::vector<int>& rspinorbs,
 		              std::map<int,int>& orb2pos){
    int idx = 0;
@@ -30,15 +29,8 @@ inline void setup_orb2pos_map(const std::vector<int>& lsupp,
       rspinorbs.push_back(2*ks+1);
    }
    if(debug_rops){
-      std::cout << "lsupport=";
-      for(int i : lsupp) std::cout << i << " ";
-      std::cout << std::endl;
-      std::cout << "rsupport=";
-      for(int i : rsupp) std::cout << i << " ";
-      std::cout << std::endl;
-      std::cout << "rspinorbs=";
-      for(int i : rspinorbs) std::cout << i << " ";
-      std::cout << std::endl;
+      tools::print_vector(rsupp,"rsupport");
+      tools::print_vector(rspinorbs,"rspinorbs");
    }
 }
 
@@ -62,11 +54,10 @@ void oper_check_rbasis(const comb<Km>& bra,
    const auto& rbasis0 = bra.rbases[rindex.at(p)];
    const auto& rbasis1 = ket.rbases[rindex.at(p)];
    // setup mapping for orbitals to local support
-   const auto& lsupp = node.lsupport;
    const auto& rsupp = node.rsupport;
    std::vector<int> rspinorbs;
    std::map<int,int> orb2pos;
-   setup_orb2pos_map(lsupp, rsupp, rspinorbs, orb2pos);
+   setup_orb2pos_map(rsupp, rspinorbs, orb2pos);
    //----------------
    // check for ap^+
    //----------------
@@ -303,11 +294,10 @@ void oper_check_rbasis(const comb<Km>& bra,
    const auto& rbasis0 = bra.rbases[rindex.at(p)];
    const auto& rbasis1 = ket.rbases[rindex.at(p)];
    // setup mapping for orbitals to local support
-   const auto& lsupp = node.lsupport;
    const auto& rsupp = node.rsupport;
    std::vector<int> rspinorbs;
    std::map<int,int> orb2pos;
-   setup_orb2pos_map(lsupp, rsupp, rspinorbs, orb2pos);
+   setup_orb2pos_map(rsupp, rspinorbs, orb2pos);
    //-------------------------------------
    // check for Ppq = <pq||sr> aras [r>s]
    //-------------------------------------

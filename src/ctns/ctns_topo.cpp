@@ -26,6 +26,14 @@ ostream& ctns::operator <<(ostream& os, const node& nd){
    return os;   
 }
 
+// directed_bond
+ostream& ctns::operator <<(ostream& os, const directed_bond& dbond){
+   os << dbond.p0 << "-" << dbond.p1
+      << " forward=" << dbond.forward
+      << " cturn=" << dbond.is_cturn();
+   return os;   
+}
+
 // topology
 void topology::read(const string& fname){
    cout << "\nctns::topology::read fname=" << fname << endl;
@@ -36,7 +44,7 @@ void topology::read(const string& fname){
       exit(1);
    }
    // load topo from file
-   vector<vector<int>> tmp;
+   vector<vector<int>> orbsgrid;
    vector<string> v;
    string line;
    while(!istrm.eof()){
@@ -50,26 +58,26 @@ void topology::read(const string& fname){
       for(auto s : v){
 	 branch.push_back(stoi(s));
       }
-      tmp.push_back(branch);
+      orbsgrid.push_back(branch);
    }
    istrm.close();
    // consistency check
-   if(tmp[0].size() != 1 || tmp[tmp.size()-1].size() != 1){
+   if(orbsgrid[0].size() != 1 || orbsgrid[orbsgrid.size()-1].size() != 1){
       tools::exit("error: we assume the start and end nodes are leaves!");
    }
 
    // initialize topo structure: type & neighbor of each site
-   nbackbone = tmp.size();
+   nbackbone = orbsgrid.size();
    nphysical = 0;
    nodes.resize(nbackbone);
    for(int i=nbackbone-1; i>=0; i--){
-      int size = tmp[i].size();
+      int size = orbsgrid[i].size();
       nphysical += size;
       if(i==nbackbone-1){
 	 nodes[i].resize(1);
 	 // type 0: end
 	 auto& node = nodes[i][0];
-	 node.pindex = tmp[i][0]; 
+	 node.pindex = orbsgrid[i][0]; 
 	 node.type   = 0;
 	 node.center = coord_phys;
 	 node.left   = make_pair(i-1,0);
@@ -78,7 +86,7 @@ void topology::read(const string& fname){
 	 nodes[i].resize(1);
 	 // type 0: start
 	 auto& node = nodes[i][0];
-	 node.pindex = tmp[i][0]; 
+	 node.pindex = orbsgrid[i][0]; 
 	 node.type   = 0;
 	 node.center = coord_phys;
 	 node.left   = coord_vac;
@@ -88,7 +96,7 @@ void topology::read(const string& fname){
 	    nodes[i].resize(1);
 	    // type 1: physical site on backbone
 	    auto& node = nodes[i][0];
-	    node.pindex = tmp[i][0];
+	    node.pindex = orbsgrid[i][0];
 	    node.type   = 1;
 	    node.center = coord_phys;
 	    node.left   = make_pair(i-1,0);
@@ -97,7 +105,7 @@ void topology::read(const string& fname){
 	    nodes[i].resize(size+1);
 	    // type 0: leaves on branch
             auto& node = nodes[i][size];
-	    node.pindex = tmp[i][size-1];
+	    node.pindex = orbsgrid[i][size-1];
 	    node.type   = 0;
 	    node.center = coord_phys;
 	    node.left   = make_pair(i,size-1);
@@ -105,7 +113,7 @@ void topology::read(const string& fname){
 	    // type 2: physical site on branch
 	    for(int j=size-1; j>=1; j--){
 	       auto& nodej = nodes[i][j];
-	       nodej.pindex = tmp[i][j-1];
+	       nodej.pindex = orbsgrid[i][j-1];
 	       nodej.type   = 2;
 	       nodej.center = coord_phys;
 	       nodej.left   = make_pair(i,j-1);
@@ -134,34 +142,40 @@ void topology::read(const string& fname){
 
    // compute support of each node in right canonical form
    for(int i=nbackbone-1; i>=0; i--){
-      int size = tmp[i].size(); // same as input topo
+      int size = orbsgrid[i].size(); // same as input topo
       if(size == 1){
 	 // upper branch is just physical indices     
-	 nodes[i][0].rsupport.push_back(tmp[i][0]);
+	 nodes[i][0].rsupport.push_back(orbsgrid[i][0]);
+	 nodes[i][0].corbs.push_back(orbsgrid[i][0]);
          if(i != nbackbone-1){ 
 	    // build recursively by copying right branch
 	    copy(nodes[i+1][0].rsupport.begin(),
 	         nodes[i+1][0].rsupport.end(),
 		 back_inserter(nodes[i][0].rsupport));
+	    nodes[i][0].rorbs = nodes[i+1][0].rsupport;
 	 }
       }else{
 	 // visit upper branch from the leaf
          for(int j=size; j>0; j--){
-	    nodes[i][j].rsupport.push_back(tmp[i][j-1]);
+	    nodes[i][j].rsupport.push_back(orbsgrid[i][j-1]);
+	    nodes[i][j].corbs.push_back(orbsgrid[i][j-1]);
 	    if(j != size){
   	       copy(nodes[i][j+1].rsupport.begin(),
 	            nodes[i][j+1].rsupport.end(),
 		    back_inserter(nodes[i][j].rsupport));
+	       nodes[i][j].rorbs = nodes[i][j+1].rsupport;
 	    }
 	 }
 	 // branching node: upper
 	 copy(nodes[i][1].rsupport.begin(),
 	      nodes[i][1].rsupport.end(),
 	      back_inserter(nodes[i][0].rsupport));
+	 nodes[i][0].corbs = nodes[i][1].rsupport;
 	 // right - assuming the end node is leaf (which is true)
 	 copy(nodes[i+1][0].rsupport.begin(),
 	      nodes[i+1][0].rsupport.end(),
 	      back_inserter(nodes[i][0].rsupport));
+	 nodes[i][0].rorbs = nodes[i+1][0].rsupport;
       }
    }
    // lsupport
@@ -169,6 +183,7 @@ void topology::read(const string& fname){
       auto p = rcoord[idx];
       int i = p.first, j = p.second;
       nodes[i][j].lsupport = get_supp_rest(nodes[i][j].rsupport);
+      nodes[i][j].lorbs = nodes[i][j].lsupport;
    }
    // image2 simply from rsupport[0,0] (1D order)
    auto order = nodes[0][0].rsupport; 
@@ -209,6 +224,19 @@ void topology::print() const{
       for(int k : nodes[i][j].rsupport) cout << k << " ";
       cout << "; lsupport: ";
       for(int k : nodes[i][j].lsupport) cout << k << " ";
+      cout << endl;
+   }
+   cout << "corbs/rorbs/lorbs:" << endl;
+   for(int idx=0; idx<ntotal; idx++){
+      auto p = rcoord[idx];
+      int i = p.first, j = p.second;
+      cout << " idx=" << idx << " coord=" << p;
+      cout << " corbs: ";
+      for(int k : nodes[i][j].corbs) cout << k << " ";
+      cout << "; rorbs: ";
+      for(int k : nodes[i][j].rorbs) cout << k << " ";
+      cout << "; lorbs: ";
+      for(int k : nodes[i][j].lorbs) cout << k << " ";
       cout << endl;
    }
    cout << "image2:" << endl;
@@ -283,46 +311,13 @@ vector<int> topology::get_supp_rest(const vector<int>& rsupp) const{
    return rest;
 }
 
-//				  |
-//    MPS-like:	    Additional: --pc
-//     \|/			 \|/
-//    --p--			--p--
-//
-vector<int> topology::get_suppc(const comb_coord& p) const{
-   auto pc = get_node(p).center;
-   bool physical = (pc == coord_phys);
-   auto suppc = physical? vector<int>({get_node(p).pindex}) : get_node(pc).rsupport;
-   return suppc;
-}
-
-// 			          |
-//    MPS-like:     Additional: --p 
-//      |      |                 /|\
-//    --pl-->--p--     	        --pl--
-//
-vector<int> topology::get_suppl(const comb_coord& p) const{
-   auto suppl = get_node(p).lsupport;
-   return suppl;
-}
-
-//
-// MPS-like:
-//    |     |
-//  --p--<--pr-- : qrow of rsites[pr]
-//
-vector<int> topology::get_suppr(const comb_coord& p) const{
-   auto pr = get_node(p).right;
-   auto suppr = get_node(pr).rsupport;
-   return suppr;
-}
-
 // sweep related
 bool topology::check_partition(const int dots,
 			       const directed_bond& dbond,
                                const bool debug) const{
    if(debug) cout << "ctns::topology::check_partition: ";
    bool ifNC;
-   auto p = dbond.current();
+   auto p = dbond.get_current();
    if(dots == 1){
       // onedot
       auto suppl = get_suppl(p);
@@ -418,7 +413,7 @@ vector<string> topology::get_fqops(const int dots,
 			           const bool debug) const{
    vector<string> fqops;
    if(dots == 1){
-      auto p = dbond.current();
+      auto p = dbond.get_current();
       fqops.resize(3); // l,r,c
       fqops[0] = get_fqop(p, "l", scratch);
       fqops[1] = get_fqop(p, "r", scratch);

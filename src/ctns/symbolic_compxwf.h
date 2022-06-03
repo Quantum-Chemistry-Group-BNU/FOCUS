@@ -630,17 +630,23 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    // One-index operators
    // 3. sum_p1 p1^+ Sp1^2 + h.c. 
    for(const auto& p1 : cindex1){
-      auto op1C = symbolic_oper(block1,'C',p1);
-      auto op2S = symbolic_oper(block2,'S',p1);
-      auto C1S2 = symbolic_prod<Tm>(op1C, op2S);
-      formulae.append(C1S2);
+      int iproc = distribute1(p1,size);
+      if(iproc == rank){
+         auto op1C = symbolic_oper(block1,'C',p1);
+         auto op2S = symbolic_oper(block2,'S',p1);
+         auto C1S2 = symbolic_prod<Tm>(op1C, op2S);
+         formulae.append(C1S2);
+      }
    }
    // 4. sum_q2 q2^+ Sq2^1 + h.c. = -Sq2^1 q2^+ + h.c. 
    for(const auto& q2 : cindex2){
-      auto op1S = symbolic_oper(block1,'S',q2);
-      auto op2C = symbolic_oper(block2,'C',q2);
-      auto S1C2 = symbolic_prod<Tm>(op1S, op2C, -1.0);
-      formulae.append(S1C2);
+      int iproc = distribute1(q2,size);
+      if(iproc == rank){
+         auto op1S = symbolic_oper(block1,'S',q2);
+         auto op2C = symbolic_oper(block2,'C',q2);
+         auto S1C2 = symbolic_prod<Tm>(op1S, op2C, -1.0);
+         formulae.append(S1C2);
+      }
    }
    // Two-index operators
    // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.

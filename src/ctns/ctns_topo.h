@@ -32,7 +32,8 @@ struct node{
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
 	 ar & pindex & type & center & left & right
-	    & rsupport & lsupport;
+	    & rsupport & lsupport
+	    & corbs & lorbs & rorbs;
       }
    public:
       friend std::ostream& operator <<(std::ostream& os, const node& nd);
@@ -42,9 +43,18 @@ struct node{
       comb_coord center; // c-neighbor
       comb_coord left;   // l-neighbor
       comb_coord right;  // r-neighbor
-      // the bipartite bond is chosen as l-*
-      std::vector<int> rsupport;  // orbitals in the right part 
+      //				    |
+      // the bipartite bond is chosen as -|-*-- [remove the bond leads to two parts]
+      //
       std::vector<int> lsupport;  // orbitals in the left part
+      std::vector<int> rsupport;  // orbitals in the right part
+      //              c
+      //  	      |	
+      // orbitals: l--*--r [remove the dot leads to three parts] (lorbs=lsupport)
+      //
+      std::vector<int> corbs;
+      std::vector<int> lorbs;
+      std::vector<int> rorbs;
 };
 
 // directed_bond used in sweep sequence for optimization of ctns: (p0,p1,forward)
@@ -56,8 +66,8 @@ struct directed_bond{
 		    const bool _forward): 
 	p0(_p0), p1(_p1), forward(_forward) {}
       // node to be updated
-      comb_coord current() const{ return forward? p0 : p1; }
-      comb_coord next() const{ return forward? p1 : p0; }
+      comb_coord get_current() const{ return forward? p0 : p1; }
+      comb_coord get_next() const{ return forward? p1 : p0; }
       //
       // cturn: a bond that at the turning points to branches
       //              |
@@ -67,6 +77,8 @@ struct directed_bond{
       //               (i,0)
       //
       bool is_cturn() const{ return p0.second == 0 && p1.second == 1; }
+   public:
+      friend std::ostream& operator <<(std::ostream& os, const directed_bond& dbond);
    public:
       comb_coord p0, p1;
       bool forward;
@@ -91,11 +103,11 @@ struct topology{
       int get_type(const comb_coord& p) const{ return nodes[p.first][p.second].type; }
       // supports 
       std::vector<int> get_supp_rest(const std::vector<int>& rsupp) const;
-      std::vector<int> get_suppc(const comb_coord& p) const;
-      std::vector<int> get_suppl(const comb_coord& p) const;
-      std::vector<int> get_suppr(const comb_coord& p) const;
+      std::vector<int> get_suppc(const comb_coord& p) const{ return get_node(p).corbs; }
+      std::vector<int> get_suppl(const comb_coord& p) const{ return get_node(p).lorbs; }
+      std::vector<int> get_suppr(const comb_coord& p) const{ return get_node(p).rorbs; }
       // sweep related 
-      std::vector<directed_bond> get_sweeps(const bool debug=true) const;
+      std::vector<directed_bond> get_sweeps(const bool debug=false) const;
       bool check_partition(const int dots,
 			   const directed_bond& dbond, 
 			   const bool debug=false) const;

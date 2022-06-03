@@ -206,8 +206,8 @@ void sweep_twodot(comb<Km>& icomb,
    timing.tf = tools::get_time();
   
    // 4. save on disk 
-   oper_remove(fdel, debug);
    qops_pool.save(frop);
+   oper_remove(fdel, debug);
 
    timing.t1 = tools::get_time();
    if(debug){

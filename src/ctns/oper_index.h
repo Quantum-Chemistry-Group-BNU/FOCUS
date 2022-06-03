@@ -3,6 +3,11 @@
 
 namespace ctns{
 
+// --- distribution of p for MPI ---
+inline int distribute1(const int index, const int size){
+   return index%size;
+}
+
 // --- packing (i,j) into ij ---
 const int kpack = 1000;
 extern const int kpack;
@@ -153,6 +158,9 @@ inline std::vector<int> oper_index_opS(const std::vector<int>& krest, const bool
       if(!ifkr) index.push_back(pb);
    }
    return index;
+}
+inline std::vector<int> oper_index_opC(const std::vector<int>& ksupp, const bool& ifkr){
+   return oper_index_opS(ksupp, ifkr);
 }
 
 // --- combination of two sets of indices ---

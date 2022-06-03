@@ -23,7 +23,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 #endif  
    const bool debug = (rank==0); 
    if(debug){ 
-      std::cout << "\nctns::sweep_opt maxsweep=" << schd.ctns.maxsweep << std::endl;
+      std::cout << "\nctns::sweep_opt maxsweep=" 
+	        << schd.ctns.maxsweep 
+		<< std::endl;
    }
    auto t0 = tools::get_time();
 
@@ -41,29 +43,25 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    oper_pool<Tm> qops_pool(schd.ctns.iomode, schd.ctns.ioasync, debug);
    for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
-      std::cout << tools::line_separator2 << std::endl;
-      sweeps.print_ctrls(isweep);
-      std::cout << tools::line_separator2 << std::endl;
+      if(debug){
+         std::cout << tools::line_separator2 << std::endl;
+         sweeps.print_ctrls(isweep);
+         std::cout << tools::line_separator2 << std::endl;
+      }
       // loop over sites
       auto ti = tools::get_time();
       for(int ibond=0; ibond<sweeps.seqsize; ibond++){
 	 const auto& dbond = sweeps.seq[ibond];
-         const auto& p0 = dbond.p0;
-	 const auto& p1 = dbond.p1;
-         const auto& forward = dbond.forward;
 	 const auto& dots = sweeps.ctrls[isweep].dots;
-	 auto tp0 = icomb.topo.get_type(p0);
-	 auto tp1 = icomb.topo.get_type(p1);
+	 auto tp0 = icomb.topo.get_type(dbond.p0);
+	 auto tp1 = icomb.topo.get_type(dbond.p1);
 #ifndef SERIAL
 	 icomb.world.barrier();
 #endif
-	 if(rank == 0){
+	 if(debug){
 	    std::cout << "\nisweep=" << isweep 
                       << " ibond=" << ibond << "/seqsize=" << sweeps.seqsize
-		      << " dots=" << dots 
-                      << " bond=" << p0 << "-" << p1
-		      << " forward=" << forward
-		      << " cturn=" << dbond.is_cturn()
+		      << " dots=" << dots << " dbond=" << dbond
 	              << std::endl;
             std::cout << tools::line_separator << std::endl;
 	 }
