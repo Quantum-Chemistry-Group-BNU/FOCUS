@@ -29,7 +29,8 @@ void oper_init_dot(oper_dict<Tm>& qops,
 		   const int kp,
                    const integral::two_body<Tm>& int2e,
                    const integral::one_body<Tm>& int1e,
-		   const int size){
+		   const int size,
+		   const int rank){
    // setup basic information
    qops.isym = isym;
    qops.ifkr = ifkr;
@@ -57,10 +58,17 @@ void oper_init_dot(oper_dict<Tm>& qops,
    // scale full {Sp,H} on dot to avoid repetition in parallelization
 #ifndef SERIAL
    if(size > 1){
+/*
       const Tm scale = 1.0/size;
       qops('H')[0] *= scale;
       for(auto& p : qops('S')){
          p.second *= scale;
+      }
+*/
+      if(rank != 0) qops('H')[0].clear();
+      for(auto& pr : qops('S')){
+         int iproc = distribute1(pr.first,size);
+	 if(iproc != rank) pr.second.clear();
       }
    }
 #endif

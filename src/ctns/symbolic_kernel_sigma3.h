@@ -9,12 +9,6 @@
 
 namespace ctns{
 
-// type information
-template <typename QTm>
-inline bool is_qtensor4(){ return false; }
-template <> inline bool is_qtensor4<stensor4<double>>(){ return true; }
-template <> inline bool is_qtensor4<stensor4<std::complex<double>>>(){ return true; }
-
 //
 // symbolic formulae (factorized) + preallocation of workspace 
 //

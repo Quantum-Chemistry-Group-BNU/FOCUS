@@ -43,7 +43,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
 	 //---------------------------------------------
          int kp = node.pindex;
          oper_dict<Tm> qops;
-	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size);
+	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
 	 //---------------------------------------------
          auto tb = tools::get_time();
 	 //---------------------------------------------
@@ -61,7 +61,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
 	 //---------------------------------------------
 	 int kp = node.pindex;
          oper_dict<Tm> qops;
-	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size);
+	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
 	 //---------------------------------------------
          auto tb = tools::get_time();
 	 //---------------------------------------------
@@ -80,7 +80,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
    //---------------------------------------------
    int kp = icomb.topo.get_node(p).pindex;
    oper_dict<Tm> qops;
-   oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size);
+   oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
    //---------------------------------------------
    auto tb = tools::get_time();
    //---------------------------------------------

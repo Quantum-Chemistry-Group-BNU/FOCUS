@@ -45,7 +45,7 @@ void oper_renorm_opAll(const std::string superblock,
 		<< " mpisize=" << size
 		<< std::endl;
    }
-   auto t0 = tools::get_time();
+   auto ti = tools::get_time();
    
    // 0. setup basic information for qops
    qops.isym = isym;
@@ -112,25 +112,33 @@ void oper_renorm_opAll(const std::string superblock,
       tools::exit(msg+std::to_string(diffH));
    }
 
-/*
-   // 4. reduce S += S[iproc]
-   std::vector<Tm> topS(qops._opsize);
-   for(auto& pr : qops('S')){
-      auto& index = pr.first;
-      auto& opS = pr.second;
-      int opsize = opS.size(); 
-      memset(topS.data(), 0, opsize*sizeof(Tm));
-      boost::mpi::reduce(icomb.world, opS.data(), opsize, 
-		         topS.data(), std::plus<Tm>(), 0);
-      linalg::xcopy(opsize, topS.data(), opS.data());
+   // 4. reduce Sp[iproc] += \sum_i Sp[i]
+   auto ta = tools::get_time();
+   if(ifdistribute1){
+      std::vector<Tm> topS(qops._opsize);
+      auto opS_index = qops.oper_index_op('S');
+      for(auto& p : opS_index){
+         int iproc = distribute1(p,size);
+         auto& opS = qops('S').at(p);
+         int opsize = opS.size();
+         memset(topS.data(), 0, opsize*sizeof(Tm));
+         boost::mpi::reduce(icomb.world, opS.data(), opsize, 
+           	            topS.data(), std::plus<Tm>(), iproc);
+         if(iproc == rank) linalg::xcopy(opsize, topS.data(), opS.data());
+      }
    }
-*/
 
-   auto t1 = tools::get_time();
+   auto tf = tools::get_time();
    if(rank == 0){ 
       qops.print("qops");
       if(alg_renorm == 0) oper_timer.analysis();
-      tools::timing("ctns::oper_renorm_opAll", t0, t1);
+      double t_tot = tools::get_duration(tf-ti); 
+      double t_cal = tools::get_duration(ta-ti);
+      double t_comm = tools::get_duration(tf-ta);
+      std::cout << "T(tot/cal/comm)=" 
+	        << t_tot << "," << t_cal << "," << t_comm
+	        << std::endl;	
+      tools::timing("ctns::oper_renorm_opAll", ti, tf);
    }
 }
 

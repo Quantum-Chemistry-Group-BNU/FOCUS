@@ -329,7 +329,7 @@ Optimized version:
  symbolic_preprocess.h
  symbolic_onedot_sigma2.h
 
-NEW STRUCTURE:
+NEW STRUCTURE of symbolic codes:
  symbolic_oper.h
  symbolic_task.h
  symbolic_normxwf.h
@@ -338,13 +338,20 @@ NEW STRUCTURE:
  symbolic_formulae_onedot.h
  symbolic_formulae_twodot.h
  symbolic_formulae_renorm.h
- symbolic_kernel_sigma.h
- symbolic_kernel_sigma2.h
- symbolic_kernel_sigma3.h
+ symbolic_kernel_sigma.h // raw version: symbolic formulae + dynamic allocation of memory
+ symbolic_kernel_sigma2.h // symbolic formulae + preallocation of workspace 
+ symbolic_kernel_sigma3.h // symbolic formulae (factorized) + preallocation of workspace
  symbolic_kernel_renorm.h
  symbolic_kernel_renorm2.h
  symbolic_kernel_sum.h
  symbolic_preprocess.h
+
+Distributed:
+ oper_dot.h
+ oper_index.h
+ oper_renorm.h
+ symbolic_compxwf.h
+ oper_rbasis.h // MPI version
 
 #################################################################
 
