@@ -338,7 +338,7 @@ NEW STRUCTURE of symbolic codes:
  symbolic_formulae_onedot.h
  symbolic_formulae_twodot.h
  symbolic_formulae_renorm.h
- symbolic_kernel_sigma.h // raw version: symbolic formulae + dynamic allocation of memory
+ symbolic_kernel_sigma.h  // raw version: symbolic formulae + dynamic allocation of memory
  symbolic_kernel_sigma2.h // symbolic formulae + preallocation of workspace 
  symbolic_kernel_sigma3.h // symbolic formulae (factorized) + preallocation of workspace
  symbolic_kernel_renorm.h
@@ -349,9 +349,12 @@ NEW STRUCTURE of symbolic codes:
 Distributed:
  oper_dot.h
  oper_index.h
- oper_renorm.h
- symbolic_compxwf.h
- oper_rbasis.h // MPI version
+ symbolic_compxwf.h // opS and opH
+ oper_renorm.h // Ham works
+
+ symbolic_formulae_twodot.h
+ symbolic_formulae_onedot.h
+ symbolic_formulae_renorm.h
 
 #################################################################
 

@@ -13,6 +13,13 @@ namespace ctns{
 // renorm_sector: renormalized states from determinants
 template <typename Tm>
 struct renorm_sector{
+   private:
+      // serialize [for MPI] 
+      friend class boost::serialization::access;
+      template <class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+         ar & sym & space & coeff;
+      }
    public:
       void print(const std::string name, const int level=0) const{
          std::cout << "renorm_sector: " << name << " qsym=" << sym 

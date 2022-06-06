@@ -15,6 +15,9 @@
 
 namespace ctns{
 
+const bool debug_oper_renorm = true;
+extern const bool debug_oper_renorm;
+
 // renormalize operators
 template <typename Km, typename Tm>
 void oper_renorm_opAll(const std::string superblock,
@@ -75,7 +78,7 @@ void oper_renorm_opAll(const std::string superblock,
    qops.ifdist2 = true;
    // initialize memory 
    qops.allocate_memory();
-
+      
    // 1. start renormalization
    oper_timer.clear();
    if(alg_renorm == 0){
@@ -83,50 +86,63 @@ void oper_renorm_opAll(const std::string superblock,
       oper_renorm_kernel(superblock, rfuns, site, qops, debug);
    }else if(alg_renorm == 1){
       auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             fname, sort_formulae);
+		                             size, rank, fname, sort_formulae);
       symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, debug);
    }else if(alg_renorm == 2){
       auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             fname, sort_formulae);
+		                             size, rank, fname, sort_formulae);
       symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, debug);
    }
-   
-   // 2. check against explicit construction
-   const bool ifcheck_rbasis = false;
-   if(ifcheck_rbasis){
-      for(const auto& key : qops.oplist){
-	 if(key == 'C' || key == 'A' || key == 'B'){
-	    oper_check_rbasis(icomb, icomb, p, qops, key);
-         }else{
-	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e);
-	 }
+
+   // 2. reduce 
+   auto ta = tools::get_time();
+   if(ifdistribute1 and size > 1){
+      std::vector<Tm> top(qops._opsize);
+      // Sp[iproc] += \sum_i Sp[i]
+      auto opS_index = qops.oper_index_op('S');
+      for(auto& p : opS_index){
+         int iproc = distribute1(p,size);
+         auto& opS = qops('S')[p];
+         int opsize = opS.size();
+         memset(top.data(), 0, opsize*sizeof(Tm));
+         boost::mpi::reduce(icomb.world, opS.data(), opsize, 
+           	            top.data(), std::plus<Tm>(), iproc);
+         if(iproc == rank) linalg::xcopy(opsize, top.data(), opS.data());
       }
+      // H[0] += \sum_i H[i]
+      auto& opH = qops('H')[0];
+      int opsize = opH.size();
+      memset(top.data(), 0, opsize*sizeof(Tm));
+      boost::mpi::reduce(icomb.world, opH.data(), opsize,
+		         top.data(), std::plus<Tm>(), 0);
+      if(rank == 0) linalg::xcopy(opsize, top.data(), opH.data());
    }
 
    // 3. consistency check for Hamiltonian
-   const auto& H = qops('H').at(0);
-   auto diffH = (H-H.H()).normF();
+   const auto& opH = qops('H').at(0);
+   auto diffH = (opH-opH.H()).normF();
    if(diffH > 1.e-10){
-      H.print("H",2);
+      opH.print("H",2);
       std::string msg = "error: H-H.H() is too large! diffH=";
       tools::exit(msg+std::to_string(diffH));
    }
 
-   // 4. reduce Sp[iproc] += \sum_i Sp[i]
-   auto ta = tools::get_time();
-   if(ifdistribute1){
-      std::vector<Tm> topS(qops._opsize);
-      auto opS_index = qops.oper_index_op('S');
-      for(auto& p : opS_index){
-         int iproc = distribute1(p,size);
-         auto& opS = qops('S').at(p);
-         int opsize = opS.size();
-         memset(topS.data(), 0, opsize*sizeof(Tm));
-         boost::mpi::reduce(icomb.world, opS.data(), opsize, 
-           	            topS.data(), std::plus<Tm>(), iproc);
-         if(iproc == rank) linalg::xcopy(opsize, topS.data(), opS.data());
+   // check against explicit construction
+   if(debug_oper_renorm){
+      for(const auto& key : qops.oplist){
+	 if(key == 'C' || key == 'A' || key == 'B'){
+	    //oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
+         }else{
+	    if(key == 'S'){
+	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
+	    }
+	 }
       }
    }
+
+   icomb.world.barrier();
+   std::cout << "####### rank=" << rank << " #########" << std::endl;
+   icomb.world.barrier();
 
    auto tf = tools::get_time();
    if(rank == 0){ 

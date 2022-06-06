@@ -166,8 +166,8 @@ void onedot_renorm(comb<Km>& icomb,
    stensor2<Tm> rot;
    if(rank == 0){
       std::string fname = scratch+"/decimation"
-	       	        + "_"+std::to_string(isweep)
-	                + "_"+std::to_string(ibond)+".txt"; 
+	       	        + "_isweep"+std::to_string(isweep)
+	                + "_ibond"+std::to_string(ibond)+".txt"; 
       onedot_decimation(sweeps, isweep, ibond, ifkr, 
 		        superblock, vsol, wf, rot, fname);
    }
@@ -188,8 +188,8 @@ void onedot_renorm(comb<Km>& icomb,
    const auto& pdx = icomb.topo.rindex.at(p); 
    std::string fname;
    if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
-	                             + "_"+std::to_string(isweep)
-	               		     + "_"+std::to_string(ibond)+".txt";
+	                             + "_isweep"+std::to_string(isweep)
+	               		     + "_ibond"+std::to_string(ibond) + ".txt";
    if(superblock == "lc"){
       icomb.lsites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
       //-------------------------------------------------------------------

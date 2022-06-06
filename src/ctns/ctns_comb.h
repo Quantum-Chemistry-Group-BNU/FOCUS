@@ -20,18 +20,28 @@ class comb{
       friend class boost::serialization::access;	   
       template <class Archive>
       void save(Archive & ar, const unsigned int version) const{
-	 ar & topo & rwfuns;
+	 ar & topo
+	    & rbases // ZL@20220606: for usage in debug oper_rbasis
+	    & rwfuns 
+	    & rsites;
+	 /*
 	 for(int idx=0; idx<topo.ntotal; idx++){
 	    ar & rsites[idx];
 	 }
+	 */
       }
       template <class Archive>
       void load(Archive & ar, const unsigned int version){
-	 ar & topo & rwfuns;
+	 ar & topo 
+	    & rbases
+	    & rwfuns 
+	    & rsites;
+	 /*
 	 rsites.resize(topo.ntotal);
 	 for(int idx=0; idx<topo.ntotal; idx++){
 	    ar & rsites[idx];
 	 }
+	 */
       }
       BOOST_SERIALIZATION_SPLIT_MEMBER()
    public:

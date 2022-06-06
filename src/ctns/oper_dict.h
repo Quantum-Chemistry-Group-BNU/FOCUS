@@ -34,7 +34,10 @@ struct oper_dict{
       void load(Archive & ar, const unsigned int version){
 	 ar & isym & ifkr & qbra & qket 
             & cindex & krest & oplist
-	    & mpisize & mpirank & ifdist2; 
+	    & mpisize & mpirank & ifdist2;
+	 //
+	 // IO of data will be handled in oper_io.h
+	 //
 	 /*
 	 this->_setup_opdict();
 	 _data = new Tm[_size];
@@ -76,10 +79,10 @@ struct oper_dict{
       qsym get_qsym_op(const char key, const int idx) const;
       // allocate memory
       void allocate_memory(const bool debug=false){
-	this->_setup_opdict(debug);
-        _data = new Tm[_size];
-        memset(_data, 0, _size*sizeof(Tm));
-        this->_setup_data(_data); // assign pointer for each operator
+	 this->_setup_opdict(debug);
+         _data = new Tm[_size];
+         memset(_data, 0, _size*sizeof(Tm));
+         this->_setup_data(_data); // assign pointer for each operator
       }
       // access
       const oper_map<Tm>& operator()(const char key) const{

@@ -40,13 +40,18 @@ void oper_check_rbasis(const comb<Km>& bra,
 		       const comb<Km>& ket, 
 		       const comb_coord& p,
 		       oper_dict<typename Km::dtype>& qops,
-		       const char opname){
+		       const char opname,
+		       const int size,
+		       const int rank){
    using Tm = typename Km::dtype;
    if(p == std::make_pair(0,0)) return; // no rbases at the start 
    std::cout << "ctns::oper_check_rbasis coord=" << p 
-	     << " opname=" << opname << std::endl; 
+	     << " opname=" << opname 
+	     << " size=" << size
+	     << " rank=" << rank
+	     << std::endl; 
    int nop = 0, nfail = 0; 
-   double maxdiff = -1.0;
+   double maxdiff = 0.0;
    const auto& node = bra.topo.get_node(p);
    const auto& rindex = bra.topo.rindex;
    const auto& bsite = bra.rsites[rindex.at(p)];
@@ -105,9 +110,9 @@ void oper_check_rbasis(const comb<Km>& bra,
 	       }
 	    }
 	    ioff1 += n1;
-	 }
+	 } // rec1
 	 ioff0 += n0;
-      }
+      } // rec0
       auto opmat = op.to_matrix();
       double diff = (opmat-tmat).normF();
       maxdiff = std::max(diff,maxdiff);
@@ -115,6 +120,7 @@ void oper_check_rbasis(const comb<Km>& bra,
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " C: p=" << orb_p 
+		   << " rank=" << rank
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff
@@ -186,6 +192,7 @@ void oper_check_rbasis(const comb<Km>& bra,
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " A: p,q=" << orb_p << "," << orb_q
+		   << " rank=" << rank
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff
@@ -257,6 +264,7 @@ void oper_check_rbasis(const comb<Km>& bra,
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " B: p,q=" << orb_p << "," << orb_q
+		   << " rank=" << rank
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
@@ -280,13 +288,18 @@ void oper_check_rbasis(const comb<Km>& bra,
 		       oper_dict<typename Km::dtype>& qops,
 		       const char opname,
 	               const integral::two_body<typename Km::dtype>& int2e,
-	               const integral::one_body<typename Km::dtype>& int1e){
+	               const integral::one_body<typename Km::dtype>& int1e,
+		       const int size,
+		       const int rank){
    using Tm = typename Km::dtype;
    if(p == std::make_pair(0,0)) return; // no rbases at the start 
    std::cout << "ctns::oper_check_rbasis coord=" << p 
-	     << " opname=" << opname << std::endl; 
+	     << " opname=" << opname
+	     << " size=" << size
+	     << " rank=" << rank
+	     << std::endl; 
    int nop = 0, nfail = 0;
-   double maxdiff = -1.0;
+   double maxdiff = 0.0;
    const auto& node = bra.topo.get_node(p);
    const auto& rindex = bra.topo.rindex;
    const auto& bsite = bra.rsites[rindex.at(p)];
@@ -364,11 +377,17 @@ void oper_check_rbasis(const comb<Km>& bra,
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " P: p,q=" << orb_p << "," << orb_q
+		   << " rank=" << rank
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
                    << " fail=" << (diff > thresh_rops)	
            	   << std::endl;
+	 if(diff > thresh_rops){
+	    opmat.print("opmat");
+	    tmat.print("tmat");
+	    exit(1);
+	 }
       }
       nop++;
    } // op
@@ -438,6 +457,7 @@ void oper_check_rbasis(const comb<Km>& bra,
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " Q: p,s=" << orb_p << "," << orb_s
+		   << " rank=" << rank
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
@@ -459,6 +479,8 @@ void oper_check_rbasis(const comb<Km>& bra,
    for(const auto& opS : qops('S')){
       const auto& op = opS.second;
       int orb_p = opS.first;
+      int iproc = distribute1(orb_p,size);
+      if(ifdistribute1 and iproc!=rank) continue;
       // build
       int dim0 = bsite.info.qrow.get_dimAll();
       int dim1 = ksite.info.qrow.get_dimAll();
@@ -528,11 +550,17 @@ void oper_check_rbasis(const comb<Km>& bra,
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " S: p=" << orb_p
+		   << " rank=" << rank
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
                    << " fail=" << (diff > thresh_rops)	
            	   << std::endl;
+	 if(diff > thresh_rops){
+	    opmat.print("opmat");
+	    tmat.print("tmat");
+	    exit(1);
+	 }
       }
       nop++;
    } // op
@@ -543,6 +571,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    if(opname == 'H'){
    for(const auto& opH : qops('H')){
       const auto& op = opH.second;
+      if(ifdistribute1 and rank != 0) continue;
       // build
       int dim0 = bsite.info.qrow.get_dimAll();
       int dim1 = ksite.info.qrow.get_dimAll();
@@ -623,11 +652,17 @@ void oper_check_rbasis(const comb<Km>& bra,
       if(debug_rops){
          std::cout << std::scientific << std::setprecision(8);
          std::cout << " H:"
+		   << " rank=" << rank
                    << " |opmat|=" << opmat.normF()
                    << " |tmat|=" << tmat.normF()
                    << " diff=" << diff 
                    << " fail=" << (diff > thresh_rops)	
            	   << std::endl;
+	 if(diff > thresh_rops){
+	    opmat.print("opmat");
+	    tmat.print("tmat");
+	    exit(1);
+	 }
       }
       nop++;
    } // op

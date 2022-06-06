@@ -30,12 +30,14 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
    auto bindex = oper_index_opB(cindex, ifkr);
    std::streambuf *psbuf, *backup;
    std::ofstream file;
-   bool ifsave = !fname.empty() and rank == 0;
+   bool ifsave = !fname.empty();
    if(ifsave){
-      std::cout << "ctns::symbolic_formulae_onedot"
-	        << " mpisize=" << size
-	        << " fname=" << fname 
-		<< std::endl;
+      if(rank == 0){
+         std::cout << "ctns::symbolic_formulae_onedot"
+                   << " mpisize=" << size
+                   << " fname=" << fname 
+           	   << std::endl;
+      }
       // http://www.cplusplus.com/reference/ios/ios/rdbuf/
       file.open(fname);
       backup = std::cout.rdbuf(); // back up cout's streambuf
@@ -46,6 +48,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
 	  	<< " ifkr=" << ifkr
 		<< " ifNC=" << ifNC
 		<< " mpisize=" << size
+		<< " mpirank=" << rank 
 	        << std::endl;
    }
    
@@ -268,12 +271,14 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
    auto bindex = oper_index_opB(cindex, ifkr);
    std::streambuf *psbuf, *backup;
    std::ofstream file;
-   bool ifsave = !fname.empty() and rank == 0;
+   bool ifsave = !fname.empty();
    if(ifsave){
-      std::cout << "ctns::symbolic_formulae_onedot2"
-	        << " mpisize=" << size
-	        << " fname=" << fname 
-		<< std::endl;
+      if(rank == 0){
+         std::cout << "ctns::symbolic_formulae_onedot2"
+                   << " mpisize=" << size
+                   << " fname=" << fname 
+           	   << std::endl;
+      }
       // http://www.cplusplus.com/reference/ios/ios/rdbuf/
       file.open(fname);
       backup = std::cout.rdbuf(); // back up cout's streambuf
@@ -284,6 +289,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
 	  	<< " ifkr=" << ifkr
 		<< " ifNC=" << ifNC
 		<< " mpisize=" << size
+		<< " mpirank=" << rank 
 	        << std::endl;
    }
    

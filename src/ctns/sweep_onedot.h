@@ -128,8 +128,8 @@ void sweep_onedot(comb<Km>& icomb,
    }
    std::string fname;
    if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
-	                             + "_"+std::to_string(isweep)
-	                	     + "_"+std::to_string(ibond)+".txt"; 
+	                             + "_isweep"+std::to_string(isweep)
+	                	     + "_ibond"+std::to_string(ibond) + ".txt";
    HVec_type<Tm> HVec;
    Hx_functors<Tm> Hx_funs;
    symbolic_task<Tm> H_formulae;
