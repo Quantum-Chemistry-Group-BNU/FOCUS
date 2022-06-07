@@ -16,7 +16,8 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
 	                                   const int& size,
 	                                   const int& rank,
 					   const std::string fname,
-					   const bool sort_formulae){
+					   const bool sort_formulae,
+					   const bool ifdist1){
    const auto& lqops = qops_dict.at("l");
    const auto& rqops = qops_dict.at("r");
    const auto& cqops = qops_dict.at("c");
@@ -66,7 +67,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
       formulae.append(Hl);
       // 2. H^cr
       auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cqops.cindex, rqops.cindex, 
-		                          ifkr, size, rank);
+		                          ifkr, size, rank, ifdist1);
       formulae.join(Hcr);
       if(ifsave){
 	 std::cout << "idx=" << idx++;
@@ -77,7 +78,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
       for(const auto& index : lqops.cindex){
          auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
          auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cqops.cindex, rqops.cindex,
-           	                             int2e, index, isym, ifkr, size, rank);
+           	                             int2e, index, isym, ifkr, size, rank, ifdist1);
          auto Cl_Scr = Cl.outer_product(Scr);
          formulae.join(Cl_Scr);
          if(ifsave){ 
@@ -143,7 +144,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
       counter = {{"CS",0},{"SC",0},{"PA",0},{"QB",0}};
       // 1. H^lc 
       auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", lqops.cindex, cqops.cindex, 
-           	                          ifkr, size, rank);
+           	                          ifkr, size, rank, ifdist1);
       formulae.join(Hlc);
       // 2. H^r
       const double scale = ifkr? 0.25 : 0.5;
@@ -157,7 +158,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
       // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
       for(const auto& index : rqops.cindex){
          auto Slc = symbolic_compxwf_opS<Tm>("l", "c", lqops.cindex, cqops.cindex,
-			 		     int2e, index, isym, ifkr, size, rank);
+			 		     int2e, index, isym, ifkr, size, rank, ifdist1);
 	 Slc.scale(-1.0);
 	 auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
 	 auto Slc_Cr = Slc.outer_product(Cr);
@@ -257,7 +258,8 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
 	                                  const int& size,
 	                                  const int& rank,
 					  const std::string fname,
-					  const bool sort_formulae){
+					  const bool sort_formulae,
+					  const bool ifdist1){
    const auto& lqops = qops_dict.at("l");
    const auto& rqops = qops_dict.at("r");
    const auto& cqops = qops_dict.at("c");
@@ -313,7 +315,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       }
       // 2. H^cr
       auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cqops.cindex, rqops.cindex, 
-		                          ifkr, size, rank);
+		                          ifkr, size, rank, ifdist1);
       auto Il_Hcr = bipart_oper('r',Hcr,"Il_Hcr");
       assert(Il_Hcr.parity == 0);
       formulae.push_back(Il_Hcr);
@@ -326,7 +328,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       for(const auto& index : lqops.cindex){
          auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
          auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cqops.cindex, rqops.cindex,
-           	                             int2e, index, isym, ifkr, size, rank);
+           	                             int2e, index, isym, ifkr, size, rank, ifdist1);
          auto Cl_Scr = bipart_oper(Cl,Scr,"Cl_Scr["+std::to_string(index)+"]");
 	 assert(Cl_Scr.parity == 0);
 	 formulae.push_back(Cl_Scr);
@@ -396,7 +398,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       counter = {{"CS",0},{"SC",0},{"PA",0},{"QB",0}};
       // 1. H^lc 
       auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", lqops.cindex, cqops.cindex, 
-           	                          ifkr, size, rank);
+           	                          ifkr, size, rank, ifdist1);
       auto Hlc_Ir = bipart_oper('l',Hlc,"Hlc_Ir");
       assert(Hlc_Ir.parity == 0);
       formulae.push_back(Hlc_Ir);
@@ -418,7 +420,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
       for(const auto& index : rqops.cindex){
          auto Slc = symbolic_compxwf_opS<Tm>("l", "c", lqops.cindex, cqops.cindex,
-			 		     int2e, index, isym, ifkr, size, rank);
+			 		     int2e, index, isym, ifkr, size, rank, ifdist1);
 	 Slc.scale(-1.0);
 	 auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
 	 auto Slc_Cr = bipart_oper(Slc,Cr,"Slc_Cr["+std::to_string(index)+"]");

@@ -17,7 +17,8 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
 	                                  const int& size,
 	                                  const int& rank,
 					  const std::string fname,
-					  const bool sort_formulae){
+					  const bool sort_formulae,
+					  const bool ifdist1){
    auto t0 = tools::get_time();
    const int print_level = 1;
    const int isym = qops.isym;
@@ -71,7 +72,7 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
       for(const auto& pr : ainfo){
          int index = pr.first, iformula = pr.second;
          int iproc = distribute2(index, size);
-         if(iproc == qops.mpirank){
+         if(iproc == rank){
 	    auto opA = symbolic_normxwf_opA<Tm>(block1, block2, index, iformula, ifkr);
 	    formulae.append(std::make_tuple('A', index, opA));
             if(ifsave){
@@ -87,7 +88,7 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
       for(const auto& pr : binfo){
          int index = pr.first, iformula = pr.second;
          int iproc = distribute2(index, size);
-         if(iproc == qops.mpirank){
+         if(iproc == rank){
 	    auto opB = symbolic_normxwf_opB<Tm>(block1, block2, index, iformula, ifkr);
 	    formulae.append(std::make_tuple('B', index, opB));
             if(ifsave){
@@ -128,7 +129,7 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
       for(const auto& pr : qops('S')){
          int index = pr.first;
 	 auto opS = symbolic_compxwf_opS<Tm>(block1, block2, qops1.cindex, qops2.cindex,
-			 	             int2e, index, isym, ifkr, size, qops.mpirank);
+			 	             int2e, index, isym, ifkr, size, rank, ifdist1);
 	 // opS can be empty for ifdistribute1=true
 	 if(opS.size() > 0){
   	    formulae.append(std::make_tuple('S', index, opS));
@@ -142,7 +143,7 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
    // opH
    if(qops.oplist.find('H') != std::string::npos){
       auto opH = symbolic_compxwf_opH<Tm>(block1, block2, qops1.cindex, qops2.cindex,
-	 	      		          ifkr, size, qops.mpirank);
+	 	      		          ifkr, size, rank, ifdist1);
       // opH can be empty for ifdistribute1=true
       if(opH.size() > 0){
          formulae.append(std::make_tuple('H', 0, opH));
@@ -165,7 +166,7 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
       std::cout.rdbuf(backup); // restore cout's original streambuf
       file.close();
    }
-   if(qops.mpirank == 0){
+   if(rank == 0){
       auto t1 = tools::get_time();
       int size = formulae.size();
       tools::timing("symbolic_formulae_renorm with size="+std::to_string(size), t0, t1);

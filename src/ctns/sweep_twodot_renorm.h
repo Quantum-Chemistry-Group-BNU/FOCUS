@@ -242,7 +242,8 @@ void twodot_renorm(comb<Km>& icomb,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, c1qops, qops, 
-			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae);
+			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae,
+			schd.ctns.ifdist1);
    }else if(superblock == "lr"){
       icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
       //-------------------------------------------------------------------
@@ -252,7 +253,8 @@ void twodot_renorm(comb<Km>& icomb,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops, 
-			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae);
+			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae,
+			schd.ctns.ifdist1);
    }else if(superblock == "c2r"){
       icomb.rsites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
       //-------------------------------------------------------------------
@@ -262,7 +264,8 @@ void twodot_renorm(comb<Km>& icomb,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("cr", icomb, p, int2e, int1e, c2qops, rqops, qops, 
-			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae);
+			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae,
+			schd.ctns.ifdist1);
    }else if(superblock == "c1c2"){
       icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
       //-------------------------------------------------------------------
@@ -272,7 +275,8 @@ void twodot_renorm(comb<Km>& icomb,
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
       oper_renorm_opAll("cr", icomb, p, int2e, int1e, c1qops, c2qops, qops, 
-			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae);
+			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae,
+			schd.ctns.ifdist1);
    }
 }
 

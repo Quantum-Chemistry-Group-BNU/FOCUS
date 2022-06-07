@@ -16,7 +16,8 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
 	                                   const int& size,
 	                                   const int& rank,
 					   const std::string fname,
-					   const bool sort_formulae){
+					   const bool sort_formulae,
+					   const bool ifdist1){
    const auto& lqops = qops_dict.at("l");
    const auto& rqops = qops_dict.at("r");
    const auto& c1qops = qops_dict.at("c1");
@@ -62,7 +63,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
    // Local terms:
    // H[lc1]
    auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
-		                        ifkr, size, rank);
+		                        ifkr, size, rank, ifdist1);
    formulae.join(Hlc1);
    if(ifsave){ 
       std::cout << "idx=" << idx++; 
@@ -70,7 +71,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
    }
    // H[c2r]
    auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", c2qops.cindex, rqops.cindex, 
-		                        ifkr, size, rank);
+		                        ifkr, size, rank, ifdist1);
    formulae.join(Hc2r);
    if(ifsave){ 
       std::cout << "idx=" << idx++;
@@ -86,7 +87,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
       // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
       auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
       auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
-		                           int2e, index, isym, ifkr, size, rank);
+		                           int2e, index, isym, ifkr, size, rank, ifdist1);
       auto Clc1_Sc2r = Clc1.outer_product(Sc2r);
       formulae.join(Clc1_Sc2r);
       if(ifsave){ 
@@ -102,7 +103,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
       int iformula = pr.second;
       // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
       auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
-		                           int2e, index, isym, ifkr, size, rank);
+		                           int2e, index, isym, ifkr, size, rank, ifdist1);
       auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
       Cc2r.scale(-1.0);
       auto Slc1_Cc2r = Slc1.outer_product(Cc2r);
@@ -248,7 +249,8 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
 	                                  const int& size,
 	                                  const int& rank,
 					  const std::string fname,
-					  const bool sort_formulae){
+					  const bool sort_formulae,
+					  const bool ifdist1){
    const auto& lqops = qops_dict.at("l");
    const auto& rqops = qops_dict.at("r");
    const auto& c1qops = qops_dict.at("c1");
@@ -294,7 +296,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
    // Local terms:
    // H[lc1]
    auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
-		                        ifkr, size, rank);
+		                        ifkr, size, rank, ifdist1);
    auto Hlc1_Ic2r = bipart_oper('l',Hlc1,"Hlc1_Ic2r");
    assert(Hlc1_Ic2r.parity == 0);
    formulae.push_back(Hlc1_Ic2r);
@@ -304,7 +306,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
    }
    // H[c2r]
    auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", c2qops.cindex, rqops.cindex, 
-		                        ifkr, size, rank);
+		                        ifkr, size, rank, ifdist1);
    auto Ilc1_Hc2r = bipart_oper('r',Hc2r,"Ilc1_Hc2r");
    assert(Ilc1_Hc2r.parity == 0);
    formulae.push_back(Ilc1_Hc2r);
@@ -322,7 +324,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
       // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
       auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
       auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
-		                           int2e, index, isym, ifkr, size, rank);
+		                           int2e, index, isym, ifkr, size, rank, ifdist1);
       auto Clc1_Sc2r = bipart_oper(Clc1,Sc2r,"Clc1_Sc2r["+std::to_string(index)+"]");
       assert(Clc1_Sc2r.parity == 0);
       formulae.push_back(Clc1_Sc2r);
@@ -339,7 +341,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
       int iformula = pr.second;
       // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
       auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
-		                           int2e, index, isym, ifkr, size, rank);
+		                           int2e, index, isym, ifkr, size, rank, ifdist1);
       auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
       Cc2r.scale(-1.0);
       auto Slc1_Cc2r = bipart_oper(Slc1,Cc2r,"Slc1_Cc2r["+std::to_string(index)+"]");

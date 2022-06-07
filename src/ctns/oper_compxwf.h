@@ -160,10 +160,11 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
 		              const int index,
 			      const int size,
 			      const int rank,
+			      const bool ifdist1,
 			      const bool ifdagger=false){
    auto t0 = tools::get_time();
 
-   const int  isym = qops1.isym;
+   const int isym = qops1.isym;
    const bool ifkr = qops1.ifkr;
    int p = index, kp = p/2;
    auto sym_op = get_qsym_opS(isym, index);
@@ -177,10 +178,13 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
    //    + <pq2||s1r1> aq[2]^+ar[1]as[1] 
    //    + <pq1||s1r2> aq[1]^+ar[2]as[1] 
    //
-   // 1. S1*I2
-   opxwf += oper_kernel_OIwf(superblock,site,qops1('S').at(index),ifdagger);
-   // 2. I1*S2
-   opxwf += oper_kernel_IOwf(superblock,site,qops2('S').at(index),1,ifdagger);
+   int iproc = distribute1(p,size);
+   if(!ifdist1 or iproc==rank){
+      // 1. S1*I2
+      opxwf += oper_kernel_OIwf(superblock,site,qops1('S').at(index),ifdagger);
+      // 2. I1*S2
+      opxwf += oper_kernel_IOwf(superblock,site,qops2('S').at(index),1,ifdagger);
+   }
    // cross terms
    int kc1 = ifkr? 2*qops1.cindex.size() : qops1.cindex.size();
    int kA1 = kc1*(kc1-1)/2;
@@ -570,7 +574,8 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
 		              const oper_dict<Tm>& qops1,
 		              const oper_dict<Tm>& qops2,
 			      const int size,
-			      const int rank){
+			      const int rank,
+			      const bool ifdist1){
    auto t0 = tools::get_time();
 
    const int  isym = qops1.isym;
@@ -596,10 +601,12 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
    //   + <p1q2||s1r2> p1^+q2^+r2s1 
    //
    stensor3<Tm> opxwf(site.info.sym, site.info.qrow, site.info.qcol, site.info.qmid, site.info.dir);
-   // 1. H1*I2
-   opxwf += oper_kernel_OIwf(superblock,site,qops1('H').at(0));
-   // 2. I1*H2
-   opxwf += oper_kernel_IOwf(superblock,site,qops2('H').at(0),0);
+   if(!ifdist1 or rank==0){
+      // 1. H1*I2
+      opxwf += oper_kernel_OIwf(superblock,site,qops1('H').at(0));
+      // 2. I1*H2
+      opxwf += oper_kernel_IOwf(superblock,site,qops2('H').at(0),0);
+   }
    if(!ifkr){
       // One-index operators
       // 3. sum_p1 p1^+ Sp1^2 + h.c. 

@@ -290,7 +290,8 @@ void oper_check_rbasis(const comb<Km>& bra,
 	               const integral::two_body<typename Km::dtype>& int2e,
 	               const integral::one_body<typename Km::dtype>& int1e,
 		       const int size,
-		       const int rank){
+		       const int rank,
+		       const bool ifdist1=false){
    using Tm = typename Km::dtype;
    if(p == std::make_pair(0,0)) return; // no rbases at the start 
    std::cout << "ctns::oper_check_rbasis coord=" << p 
@@ -480,7 +481,7 @@ void oper_check_rbasis(const comb<Km>& bra,
       const auto& op = opS.second;
       int orb_p = opS.first;
       int iproc = distribute1(orb_p,size);
-      if(ifdistribute1 and iproc!=rank) continue;
+      if(ifdist1 and iproc!=rank) continue;
       // build
       int dim0 = bsite.info.qrow.get_dimAll();
       int dim1 = ksite.info.qrow.get_dimAll();
@@ -571,7 +572,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    if(opname == 'H'){
    for(const auto& opH : qops('H')){
       const auto& op = opH.second;
-      if(ifdistribute1 and rank!=0) continue;
+      if(ifdist1 and rank!=0) continue;
       // build
       int dim0 = bsite.info.qrow.get_dimAll();
       int dim1 = ksite.info.qrow.get_dimAll();

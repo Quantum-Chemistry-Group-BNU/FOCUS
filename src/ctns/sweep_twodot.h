@@ -152,18 +152,20 @@ void sweep_twodot(comb<Km>& icomb,
    using std::placeholders::_1;
    using std::placeholders::_2;
    if(schd.ctns.alg_hvec == 0){
-      Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank);
+      Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, schd.ctns.ifdist1);
       HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 1){
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-			                    schd.ctns.sort_formulae);
+			                    schd.ctns.sort_formulae,
+					    schd.ctns.ifdist1);
       HVec = bind(&ctns::symbolic_Hx<Tm,stensor4<Tm>>, _1, _2, std::cref(H_formulae),
         	  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 2){ 
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-			                    schd.ctns.sort_formulae);
+			                    schd.ctns.sort_formulae,
+					    schd.ctns.ifdist1);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
 		  std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
@@ -172,7 +174,8 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 3){
       H_formulae2 = symbolic_formulae_twodot2(qops_dict, int2e, size, rank, fname,
-			                      schd.ctns.sort_formulae);
+			                      schd.ctns.sort_formulae,
+					      schd.ctns.ifdist1);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx3<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
 		  std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 

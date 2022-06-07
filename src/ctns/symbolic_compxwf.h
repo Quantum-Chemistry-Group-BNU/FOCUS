@@ -130,6 +130,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 				       const bool ifkr,
 			               const int size,
 			               const int rank,
+				       const bool ifdist1,
 			               const bool ifdagger=false){
    symbolic_task<Tm> formulae;
    int p = index, kp = p/2;
@@ -143,7 +144,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    //    + <pq1||s1r2> aq[1]^+ar[2]as[1] 
    //
    int iproc = distribute1(p,size);
-   if(!ifdistribute1 or iproc==rank){
+   if(!ifdist1 or iproc==rank){
       // 1. S1*I2
       auto S1p = symbolic_prod<Tm>(symbolic_oper(block1,'S',index,ifdagger));
       formulae.append(S1p);
@@ -604,7 +605,8 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
 			               const std::vector<int>& cindex2,
 			               const bool ifkr,
 			               const int size,
-			               const int rank){
+			               const int rank,
+				       const bool ifdist1){
    symbolic_task<Tm> formulae;
    // for AP,BQ terms: to ensure the optimal scaling!
    const bool ifNC = cindex1.size() <= cindex2.size(); 
@@ -624,7 +626,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    //   + <p1q2||s1r2> p1^+q2^+r2s1 
    //
    const double scale = ifkr? 0.25 : 0.5;
-   if(!ifdistribute1 or rank==0){ 
+   if(!ifdist1 or rank==0){ 
       // 1. H1*I2
       auto H1 = symbolic_prod<Tm>(symbolic_oper(block1,'H',0), scale);
       formulae.append(H1);
@@ -636,7 +638,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    // 3. sum_p1 p1^+ Sp1^2 + h.c. 
    for(const auto& p1 : cindex1){
       int iproc = distribute1(p1,size);
-      if(!ifdistribute1 or iproc==rank){
+      if(!ifdist1 or iproc==rank){
          auto op1C = symbolic_oper(block1,'C',p1);
          auto op2S = symbolic_oper(block2,'S',p1);
          auto C1S2 = symbolic_prod<Tm>(op1C, op2S);
@@ -646,7 +648,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    // 4. sum_q2 q2^+ Sq2^1 + h.c. = -Sq2^1 q2^+ + h.c. 
    for(const auto& q2 : cindex2){
       int iproc = distribute1(q2,size);
-      if(!ifdistribute1 or iproc==rank){
+      if(!ifdist1 or iproc==rank){
          auto op1S = symbolic_oper(block1,'S',q2);
          auto op2C = symbolic_oper(block2,'C',q2);
          auto S1C2 = symbolic_prod<Tm>(op1S, op2C, -1.0);

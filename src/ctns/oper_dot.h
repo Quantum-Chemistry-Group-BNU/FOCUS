@@ -30,7 +30,8 @@ void oper_init_dot(oper_dict<Tm>& qops,
                    const integral::two_body<Tm>& int2e,
                    const integral::one_body<Tm>& int1e,
 		   const int size,
-		   const int rank){
+		   const int rank,
+		   const bool ifdist1){
    // setup basic information
    qops.isym = isym;
    qops.ifkr = ifkr;
@@ -59,16 +60,24 @@ void oper_init_dot(oper_dict<Tm>& qops,
 #ifndef SERIAL
    if(size > 1){
 /*
-      const Tm scale = 1.0/size;
-      qops('H')[0] *= scale;
-      for(auto& p : qops('S')){
-         p.second *= scale;
+      if(!ifdist1){ // to ensure the code work for alg_hvec/renorm=0
+         const Tm scale = 1.0/size;
+         qops('H')[0] *= scale;
+         for(auto& p : qops('S')){
+            p.second *= scale;
+         }
+      }else{
+         if(rank != 0) qops('H')[0].clear();
+         for(auto& pr : qops('S')){
+            int iproc = distribute1(pr.first,size);
+            if(iproc != rank) pr.second.clear();
+         }
       }
 */
       if(rank != 0) qops('H')[0].clear();
       for(auto& pr : qops('S')){
          int iproc = distribute1(pr.first,size);
-	 if(iproc != rank) pr.second.clear();
+         if(iproc != rank) pr.second.clear();
       }
    }
 #endif

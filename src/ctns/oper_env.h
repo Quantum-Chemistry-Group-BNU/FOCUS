@@ -20,7 +20,8 @@ void oper_init_dotAll(const comb<Km>& icomb,
          	      const integral::two_body<typename Km::dtype>& int2e,
          	      const integral::one_body<typename Km::dtype>& int1e,
          	      const std::string scratch,
-		      const int iomode){
+		      const int iomode,
+		      const bool ifdist1){
    using Tm = typename Km::dtype;
    const int isym = Km::isym;
    const bool ifkr = qkind::is_kramers<Km>();
@@ -43,7 +44,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
 	 //---------------------------------------------
          int kp = node.pindex;
          oper_dict<Tm> qops;
-	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
+	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
 	 //---------------------------------------------
          auto tb = tools::get_time();
 	 //---------------------------------------------
@@ -61,7 +62,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
 	 //---------------------------------------------
 	 int kp = node.pindex;
          oper_dict<Tm> qops;
-	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
+	 oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
 	 //---------------------------------------------
          auto tb = tools::get_time();
 	 //---------------------------------------------
@@ -80,7 +81,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
    //---------------------------------------------
    int kp = icomb.topo.get_node(p).pindex;
    oper_dict<Tm> qops;
-   oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
+   oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
    //---------------------------------------------
    auto tb = tools::get_time();
    //---------------------------------------------
@@ -119,6 +120,7 @@ void oper_env_right(const comb<Km>& icomb,
    const auto& alg_renorm = schd.ctns.alg_renorm;
    const auto& save_formulae = schd.ctns.save_formulae;
    const auto& sort_formulae = schd.ctns.sort_formulae;
+   const auto& ifdist1 = schd.ctns.ifdist1;
    const bool debug = (rank==0);
    if(debug){ 
       std::cout << "\nctns::oper_env_right Km=" << qkind::get_name<Km>() << std::endl;
@@ -127,7 +129,7 @@ void oper_env_right(const comb<Km>& icomb,
 
    // 1. construct for dot [cop] & boundary operators [lop/rop]
    auto t0 = tools::get_time();
-   oper_init_dotAll(icomb, int2e, int1e, scratch, iomode);
+   oper_init_dotAll(icomb, int2e, int1e, scratch, iomode, ifdist1);
    auto ta = tools::get_time();
    t_init = tools::get_duration(ta-t0);
 
@@ -160,7 +162,7 @@ void oper_env_right(const comb<Km>& icomb,
 		   		 + std::to_string(idx) + ".txt"; 
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e,
 			   cqops, rqops, qops_pool(frop), 
-			   fname, alg_renorm, sort_formulae);
+			   fname, alg_renorm, sort_formulae, ifdist1);
          auto td = tools::get_time();
          t_comp += tools::get_duration(td-tc);
          // c. save operators to disk

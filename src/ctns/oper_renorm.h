@@ -15,7 +15,7 @@
 
 namespace ctns{
 
-const bool debug_oper_renorm = false;
+const bool debug_oper_renorm = true;
 extern const bool debug_oper_renorm;
 
 // renormalize operators
@@ -30,7 +30,8 @@ void oper_renorm_opAll(const std::string superblock,
 		       oper_dict<Tm>& qops,
 		       const std::string fname,
 		       const int alg_renorm,
-		       const bool sort_formulae){
+		       const bool sort_formulae,
+		       const bool ifdist1){
    const bool debug = false;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -82,21 +83,21 @@ void oper_renorm_opAll(const std::string superblock,
    // 1. start renormalization
    oper_timer.clear();
    if(alg_renorm == 0){
-      auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops);
+      auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
       oper_renorm_kernel(superblock, rfuns, site, qops, debug);
    }else if(alg_renorm == 1){
       auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             size, rank, fname, sort_formulae);
+		                             size, rank, fname, sort_formulae, ifdist1);
       symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, debug);
    }else if(alg_renorm == 2){
       auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             size, rank, fname, sort_formulae);
+		                             size, rank, fname, sort_formulae, ifdist1);
       symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, debug);
    }
 
    // 2. reduce 
    auto ta = tools::get_time();
-   if(ifdistribute1 and size > 1){
+   if(ifdist1 and size > 1){
       std::vector<Tm> top(qops._opsize);
       // Sp[iproc] += \sum_i Sp[i]
       auto opS_index = qops.oper_index_op('S');
@@ -132,8 +133,10 @@ void oper_renorm_opAll(const std::string superblock,
       for(const auto& key : qops.oplist){
 	 if(key == 'C' || key == 'A' || key == 'B'){
 	    oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
-         }else{
+         }else if(key == 'P' || key == 'Q'){
 	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
+         }else if(key == 'S' || key == 'H'){
+	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
 	 }
       }
    }
@@ -186,7 +189,8 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
 	             		     const integral::two_body<Tm>& int2e,
 				     const oper_dict<Tm>& qops1,
 				     const oper_dict<Tm>& qops2,
-				     const oper_dict<Tm>& qops){
+				     const oper_dict<Tm>& qops,
+				     const bool ifdist1){
    Hx_functors<Tm> rfuns;
    // opC
    if(qops.oplist.find('C') != std::string::npos){
@@ -265,7 +269,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
          Hx.opxwf = bind(&oper_compxwf_opS<Tm>,
            	         std::cref(superblock), std::cref(site),
            	         std::cref(qops1), std::cref(qops2), std::cref(int2e),
-			 index, qops.mpisize, qops.mpirank, false);
+			 index, qops.mpisize, qops.mpirank, ifdist1, false);
          rfuns.push_back(Hx);
       }
    }
@@ -275,7 +279,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
       Hx.opxwf = bind(&oper_compxwf_opH<Tm>, 
            	      std::cref(superblock), std::cref(site),
            	      std::cref(qops1), std::cref(qops2),
-           	      qops.mpisize, qops.mpirank);
+           	      qops.mpisize, qops.mpirank, ifdist1);
       rfuns.push_back(Hx);
    }
    return rfuns;

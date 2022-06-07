@@ -4,9 +4,6 @@
 namespace ctns{
 
 // --- distribution of p for MPI ---
-const bool ifdistribute1 = true;
-extern const bool ifdistribute1;
-
 inline int distribute1(const int index, const int size){
    return index%size;
 }

@@ -5,6 +5,7 @@
 
 namespace ctns{
 
+/*
 // primitive form (without factorization)
 template <typename Tm>
 symbolic_task<Tm> preprocess_formulae_twodot(const std::vector<int>& cindex_l,
@@ -200,7 +201,9 @@ symbolic_task<Tm> preprocess_formulae_twodot(const std::vector<int>& cindex_l,
    }
    return formulae;
 }
+*/
 
+/*
 // bipartite form (with factorization)
 template <typename Tm>
 bipart_task<Tm> preprocess_formulae_twodot2(const std::vector<int>& cindex_l,
@@ -406,6 +409,7 @@ bipart_task<Tm> preprocess_formulae_twodot2(const std::vector<int>& cindex_l,
    }
    return formulae;
 }
+*/
 
 // analyze the distribution of operators along a sweep
 template <typename Km>
@@ -543,16 +547,16 @@ void preprocess_oper(const comb<Km>& icomb){
 
 	 std::vector<double> fsizes(mpisize,0.0);
 	 for(int rank=0; rank<mpisize; rank++){
-            bool debug = mpisize==1 && rank==0;		 
+            bool debug = mpisize==1 && rank==0;		
+/*
             auto formulae = preprocess_formulae_twodot2(cindex_l, cindex_r, cindex_c1, cindex_c2,
 		      	  	 		       int2e, isym, ifkr, mpisize, rank,
 						       debug);
-/*
-	    std::cout << "rank=" << rank
-		      << " size(formulae)=" << formulae.size()
-		      << std::endl;
-*/
+	    //std::cout << "rank=" << rank
+	    //          << " size(formulae)=" << formulae.size()
+	    //          << std::endl;
 	    fsizes[rank] = formulae.size();
+*/
 	 } // rank
 	 double max = *std::max_element(fsizes.begin(), fsizes.end());
 	 double min = *std::min_element(fsizes.begin(), fsizes.end());

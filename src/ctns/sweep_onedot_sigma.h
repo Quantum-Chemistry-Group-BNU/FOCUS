@@ -22,7 +22,8 @@ stensor3<Tm> onedot_Hx_local(const oper_dict<Tm>& lqops,
 			     const double& ecore,
 			     const stensor3<Tm>& wf,
 	          	     const int& size,
-	          	     const int& rank){
+	          	     const int& rank,
+			     const bool& ifdist1){
    if(debug_onedot_sigma) std::cout << "onedot_Hx_local" << std::endl;
    const Tm scale = lqops.ifkr? 0.5 : 1.0;
    const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
@@ -30,10 +31,10 @@ stensor3<Tm> onedot_Hx_local(const oper_dict<Tm>& lqops,
    if(ifNC){
       // 1. H^l + 2. H^cr
       Hwf = contract_qt3_qt2("l",wf,lqops('H').at(0));
-      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,size,rank);
+      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,size,rank,ifdist1);
    }else{
       // 1. H^lc + 2. H^r
-      Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,size,rank);
+      Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,size,rank,ifdist1);
       Hwf += contract_qt3_qt2("r",wf,rqops('H').at(0));
    }
    Hwf *= scale;
@@ -55,16 +56,17 @@ stensor3<Tm> onedot_Hx_CSnc(const int index,
 	          	    const integral::two_body<Tm>& int2e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
-	          	    const int& rank){
+	          	    const int& rank,
+			    const bool& ifdist1){
    if(debug_onedot_sigma) std::cout << "onedot_Hx_CSnc index=" << index << std::endl;
    const bool dagger = true;
    const auto& op1 = lqops('C').at(index);
    // p^L+*S^CR
-   auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,index,size,rank);
+   auto qt3n = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,index,size,rank,ifdist1);
    qt3n.row_signed();
    auto Hwf = oper_kernel_OIwf("lc",qt3n,op1); // both lc/lr can work 
    // h.c.
-   auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,index,size,rank,dagger);
+   auto qt3h = oper_compxwf_opS("cr",wf,cqops,rqops,int2e,index,size,rank,ifdist1,dagger);
    qt3h.row_signed();
    Hwf -= oper_kernel_OIwf("lc",qt3h,op1,dagger);
    return Hwf;
@@ -168,7 +170,8 @@ stensor3<Tm> onedot_Hx_SCcn(const int index,
 	          	    const integral::two_body<Tm>& int2e,
 	          	    const stensor3<Tm>& wf,
 	          	    const int& size,
-	          	    const int& rank){
+	          	    const int& rank,
+			    const bool& ifdist1){
    if(debug_onedot_sigma) std::cout << "onedot_Hx_SCcn index=" << index << std::endl;
    const bool dagger = true;
    const int& q2 = index;
@@ -177,8 +180,8 @@ stensor3<Tm> onedot_Hx_SCcn(const int index,
    qt3n.row_signed(); 
    auto qt3h = oper_kernel_IOwf("cr",wf,op2,1,dagger);
    qt3h.row_signed();
-   auto Hwf = oper_compxwf_opS("lc",qt3h,lqops,cqops,int2e,q2,size,rank,dagger);
-   Hwf -= oper_compxwf_opS("lc",qt3n,lqops,cqops,int2e,q2,size,rank);
+   auto Hwf = oper_compxwf_opS("lc",qt3h,lqops,cqops,int2e,q2,size,rank,ifdist1,dagger);
+   Hwf -= oper_compxwf_opS("lc",qt3n,lqops,cqops,int2e,q2,size,rank,ifdist1);
    return Hwf;
 }
 
@@ -233,7 +236,8 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
 				   const double& ecore,
 	                           const stensor3<Tm>& wf,
 	                           const int& size,
-	                           const int& rank){
+	                           const int& rank,
+				   const bool& ifdist1){
    const auto& lqops = qops_dict.at("l");
    const auto& rqops = qops_dict.at("r");
    const auto& cqops = qops_dict.at("c");
@@ -243,7 +247,8 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
    Hx_functor<Tm> Hx("Hloc", 0, 0);
    Hx.opxwf = bind(&onedot_Hx_local<Tm>,
 		   std::cref(lqops), std::cref(rqops), std::cref(cqops),
-		   std::cref(ecore), std::cref(wf), std::cref(size), std::cref(rank));
+		   std::cref(ecore), std::cref(wf), std::cref(size), std::cref(rank),
+		   std::cref(ifdist1));
    Hx_funs.push_back(Hx);
    // One-index terms:
    // 3. p1^l+*Sp1^cr + h.c. or 4. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
@@ -254,7 +259,8 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
       Hx_functor<Tm> Hx(cnlabel, index, 0);
       Hx.opxwf = bind(cnfun, index,
         	      std::cref(lqops), std::cref(rqops), std::cref(cqops), 
-        	      std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
+        	      std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank),
+		      std::cref(ifdist1));
       Hx_funs.push_back(Hx); 
    }
    // 4. q2^cr+*Sq2^l + h.c. or 3. p1^lc+*Sp1^r + h.c.
