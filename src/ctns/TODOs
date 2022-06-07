@@ -351,10 +351,9 @@ Distributed:
  oper_index.h
  symbolic_compxwf.h // opS and opH
  oper_renorm.h // Ham works
-
+ symbolic_formulae_renorm.h // remove term with size = 0!
  symbolic_formulae_twodot.h
  symbolic_formulae_onedot.h
- symbolic_formulae_renorm.h
 
 #################################################################
 

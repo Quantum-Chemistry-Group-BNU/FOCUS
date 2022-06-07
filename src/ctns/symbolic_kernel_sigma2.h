@@ -31,6 +31,7 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
 	        << " HTerm=" << HTerm 
 		<< std::endl;
    }
+   if(HTerm.size()==0) return;
    qsym sym;
    QInfo *opxwf0_info, *opxwf_info;
    Tm *opxwf0_data, *opxwf_data;

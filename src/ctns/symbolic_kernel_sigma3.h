@@ -31,15 +31,13 @@ void symbolic_HxTerm3(const oper_dictmap<Tm>& qops_dict,
    }
    const auto& lformulae = bipart_op.lop;
    const auto& rformulae = bipart_op.rop;
+   if(lformulae.size() == 0 and rformulae.size() == 0) return;
    // temporary
    QInfo *opxwf0_info, *opxwf_info;
    Tm *opxwf0_data, *opxwf_data;
    // rop*|wf>
    QInfo *wf0_info = const_cast<QInfo*>(&wf.info);
    Tm *wf0_data = wf.data();
-   
-   // examine length of rformulae.size()?
-   
    for(int it=0; it<rformulae.size(); it++){
       const auto& HTerm = rformulae.tasks[it];
       // term[it]*wf

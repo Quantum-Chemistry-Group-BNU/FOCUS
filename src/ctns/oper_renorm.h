@@ -120,6 +120,7 @@ void oper_renorm_opAll(const std::string superblock,
 
    // 3. consistency check for Hamiltonian
    const auto& opH = qops('H').at(0);
+   if(rank == 0) opH.to_matrix().print("opH");
    auto diffH = (opH-opH.H()).normF();
    if(diffH > 1.e-10){
       opH.print("H",2);
@@ -131,18 +132,12 @@ void oper_renorm_opAll(const std::string superblock,
    if(debug_oper_renorm){
       for(const auto& key : qops.oplist){
 	 if(key == 'C' || key == 'A' || key == 'B'){
-	    //oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
+	    oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
          }else{
-	    if(key == 'S'){
 	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
-	    }
 	 }
       }
    }
-
-   icomb.world.barrier();
-   std::cout << "####### rank=" << rank << " #########" << std::endl;
-   icomb.world.barrier();
 
    auto tf = tools::get_time();
    if(rank == 0){ 

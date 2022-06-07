@@ -129,10 +129,13 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
          int index = pr.first;
 	 auto opS = symbolic_compxwf_opS<Tm>(block1, block2, qops1.cindex, qops2.cindex,
 			 	             int2e, index, isym, ifkr, size, qops.mpirank);
-	 formulae.append(std::make_tuple('S', index, opS));
-	 if(ifsave){
-	    std::cout << "idx=" << idx++;
-	    opS.display("opS["+std::to_string(index)+"]", print_level);
+	 // opS can be empty for ifdistribute1=true
+	 if(opS.size() > 0){
+  	    formulae.append(std::make_tuple('S', index, opS));
+	    if(ifsave){
+	       std::cout << "idx=" << idx++;
+	       opS.display("opS["+std::to_string(index)+"]", print_level);
+	    }
 	 }
       }
    }
@@ -140,10 +143,13 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
    if(qops.oplist.find('H') != std::string::npos){
       auto opH = symbolic_compxwf_opH<Tm>(block1, block2, qops1.cindex, qops2.cindex,
 	 	      		          ifkr, size, qops.mpirank);
-      formulae.append(std::make_tuple('H', 0, opH));
-      if(ifsave){
-	 std::cout << "idx=" << idx++;
-         opH.display("opH", print_level);
+      // opH can be empty for ifdistribute1=true
+      if(opH.size() > 0){
+         formulae.append(std::make_tuple('H', 0, opH));
+         if(ifsave){
+            std::cout << "idx=" << idx++;
+            opH.display("opH", print_level);
+         }
       }
    }
 

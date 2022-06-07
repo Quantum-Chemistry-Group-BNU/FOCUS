@@ -87,10 +87,12 @@ void symbolic_kernel_renorm(const std::string superblock,
 		            const oper_dict<Tm>& qops2,
 		            oper_dict<Tm>& qops,
 			    const bool debug){
-   // generate formulae for renormalization first
-   if(debug) std::cout << "rank=" << qops.mpirank 
-	               << " size[rtasks]=" << rtasks.size() 
-		       << std::endl;
+   if(debug){
+      std::cout << "symbolic_kernel_renorm"
+	        << " rank=" << qops.mpirank 
+	        << " size(formulae)=" << rtasks.size() 
+		<< std::endl;
+   }
    const std::string block1 = superblock.substr(0,1);
    const std::string block2 = superblock.substr(1,2);
    const oper_dictmap<Tm> qops_dict = {{block1,qops1},
@@ -105,8 +107,8 @@ void symbolic_kernel_renorm(const std::string superblock,
       auto formula = std::get<2>(task);
       if(debug){
          std::cout << "rank=" << qops.mpirank 
-		   << " i=" << i 
-		   << " key=" << key
+		   << " idx=" << i 
+		   << " op=" << key
 		   << " index=" << index
 		   << std::endl;
 	 formula.display("formula", 1);
