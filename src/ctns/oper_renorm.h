@@ -15,7 +15,7 @@
 
 namespace ctns{
 
-const bool debug_oper_renorm = true;
+const bool debug_oper_renorm = false;
 extern const bool debug_oper_renorm;
 
 // renormalize operators
@@ -120,7 +120,6 @@ void oper_renorm_opAll(const std::string superblock,
 
    // 3. consistency check for Hamiltonian
    const auto& opH = qops('H').at(0);
-   if(rank == 0) opH.to_matrix().print("opH");
    auto diffH = (opH-opH.H()).normF();
    if(diffH > 1.e-10){
       opH.print("H",2);
