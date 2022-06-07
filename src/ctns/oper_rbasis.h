@@ -571,7 +571,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    if(opname == 'H'){
    for(const auto& opH : qops('H')){
       const auto& op = opH.second;
-      if(ifdistribute1 and rank != 0) continue;
+      if(ifdistribute1 and rank!=0) continue;
       // build
       int dim0 = bsite.info.qrow.get_dimAll();
       int dim1 = ksite.info.qrow.get_dimAll();
