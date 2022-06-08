@@ -73,7 +73,7 @@ void oper_renorm_opAll(const std::string superblock,
       qops.qbra = site.info.qmid;
       qops.qket = site.info.qmid;
    }
-   qops.oplist = "CABPQSH";
+   qops.oplist = "SH"; //CABPQSH";
    qops.mpisize = size;
    qops.mpirank = rank;
    qops.ifdist2 = true;
@@ -93,6 +93,9 @@ void oper_renorm_opAll(const std::string superblock,
       auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
 		                             size, rank, fname, sort_formulae, ifdist1);
       symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, debug);
+   }else{
+      std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
+      exit(1);
    }
 
    // 2. reduce 
@@ -105,6 +108,14 @@ void oper_renorm_opAll(const std::string superblock,
          int iproc = distribute1(p,size);
          auto& opS = qops('S')[p];
          int opsize = opS.size();
+
+	 if(p==0){
+	 std::cout << "p=" << p << " rank=" << rank 
+		   << std::setprecision(10)
+		   << " |opS|=" << opS.normF()
+		   << std::endl;
+	 }
+
          memset(top.data(), 0, opsize*sizeof(Tm));
          boost::mpi::reduce(icomb.world, opS.data(), opsize, 
            	            top.data(), std::plus<Tm>(), iproc);
@@ -132,14 +143,22 @@ void oper_renorm_opAll(const std::string superblock,
    if(debug_oper_renorm){
       for(const auto& key : qops.oplist){
 	 if(key == 'C' || key == 'A' || key == 'B'){
+/*
 	    oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
          }else if(key == 'P' || key == 'Q'){
 	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
-         }else if(key == 'S' || key == 'H'){
+*/
+	 // check opS and opH only if ifdist1=true   
+         }else if((key == 'S' || key == 'H') and ifdist1){
 	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
 	 }
       }
    }
+
+   icomb.world.barrier();
+   std::cout << "### RANK=" << rank << std::endl;
+   icomb.world.barrier();
+   exit(1);
 
    auto tf = tools::get_time();
    if(rank == 0){ 

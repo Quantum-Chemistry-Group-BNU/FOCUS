@@ -62,10 +62,10 @@ void oper_init_dot(oper_dict<Tm>& qops,
 /*
       if(!ifdist1){ // to ensure the code work for alg_hvec/renorm=0
          const Tm scale = 1.0/size;
-         qops('H')[0] *= scale;
          for(auto& p : qops('S')){
             p.second *= scale;
          }
+         qops('H')[0] *= scale;
       }else{
          if(rank != 0) qops('H')[0].clear();
          for(auto& pr : qops('S')){
@@ -74,11 +74,13 @@ void oper_init_dot(oper_dict<Tm>& qops,
          }
       }
 */
-      if(rank != 0) qops('H')[0].clear();
+	   
       for(auto& pr : qops('S')){
          int iproc = distribute1(pr.first,size);
          if(iproc != rank) pr.second.clear();
       }
+      if(rank != 0) qops('H')[0].clear();
+
    }
 #endif
 }

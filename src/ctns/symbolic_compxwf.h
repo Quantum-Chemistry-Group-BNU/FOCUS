@@ -345,6 +345,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 
    }else{
       
+      // Kramers symmetry-adapted version 
       int pa = p, pb = pa+1;
 
       // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]

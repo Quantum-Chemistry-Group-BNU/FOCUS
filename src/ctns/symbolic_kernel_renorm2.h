@@ -128,7 +128,7 @@ void symbolic_kernel_renorm2(const std::string superblock,
       auto key = std::get<0>(task);
       auto index = std::get<1>(task);
       auto formula = std::get<2>(task);
-      if(debug){
+      if(debug || i==0){
          std::cout << "rank=" << qops.mpirank 
 		   << " idx=" << i 
 		   << " op=" << key
