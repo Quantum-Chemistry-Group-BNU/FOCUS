@@ -99,11 +99,13 @@ LOGS
 	2. compute [Hx/renorm] + save previous qops [threaded]
 	3. fkept is updated, the old qops will be released
         4. delete unused file at a given bond
+    NOT DONE YET:
+    - data compression? 
+    - reduce half AB/PQ operators?
 
  ### TODOs ###
 
-    - data compression? 
-    - reduce half AB/PQ operators?
+ * Distributed H[CS] term [DONE2022/06/XX]
 
  * Toward large-scale applications:
     - merged wf4[lc1,c2r] implementation?
