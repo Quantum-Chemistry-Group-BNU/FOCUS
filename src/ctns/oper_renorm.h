@@ -73,7 +73,7 @@ void oper_renorm_opAll(const std::string superblock,
       qops.qbra = site.info.qmid;
       qops.qket = site.info.qmid;
    }
-   qops.oplist = "SH"; //CABPQSH";
+   qops.oplist = "CABPQSH";
    qops.mpisize = size;
    qops.mpirank = rank;
    qops.ifdist2 = true;
@@ -108,14 +108,14 @@ void oper_renorm_opAll(const std::string superblock,
          int iproc = distribute1(p,size);
          auto& opS = qops('S')[p];
          int opsize = opS.size();
-
+/*
 	 if(p==0){
 	 std::cout << "p=" << p << " rank=" << rank 
 		   << std::setprecision(10)
 		   << " |opS|=" << opS.normF()
 		   << std::endl;
 	 }
-
+*/
          memset(top.data(), 0, opsize*sizeof(Tm));
          boost::mpi::reduce(icomb.world, opS.data(), opsize, 
            	            top.data(), std::plus<Tm>(), iproc);
@@ -158,7 +158,6 @@ void oper_renorm_opAll(const std::string superblock,
    icomb.world.barrier();
    std::cout << "### RANK=" << rank << std::endl;
    icomb.world.barrier();
-   exit(1);
 
    auto tf = tools::get_time();
    if(rank == 0){ 

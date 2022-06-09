@@ -635,20 +635,24 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
    if(!ifkr){
       // One-index operators
       // 3. sum_p1 p1^+ Sp1^2 + h.c. 
-      for(const auto& op1C : qops1('C')){
-         int p1 = op1C.first;
-         const auto& op1c = op1C.second;
-         const auto& op2S = qops2('S').at(p1);
-         opxwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1);
-         opxwf -= oper_kernel_OOwf(superblock,site,op1c,op2S,1,dagger);
+      for(const auto& p1 : cindex1){
+	 int iproc = distribute1(p1,size);
+	 if(!ifdist1 or iproc==rank){
+	    const auto& op1c = qops1('C').at(p1);
+            const auto& op2S = qops2('S').at(p1);
+            opxwf += oper_kernel_OOwf(superblock,site,op1c,op2S,1);
+            opxwf -= oper_kernel_OOwf(superblock,site,op1c,op2S,1,dagger);
+	 }
       }
       // 4. sum_q2 q2^+ Sq2^1 + h.c. = -Sq2^1 q2^+ + h.c. 
-      for(const auto& op2C : qops2('C')){
-         int q2 = op2C.first;
-         const auto& op2c = op2C.second;
-         const auto& op1S = qops1('S').at(q2);
-         opxwf -= oper_kernel_OOwf(superblock,site,op1S,op2c,1);
-         opxwf += oper_kernel_OOwf(superblock,site,op1S,op2c,1,dagger);
+      for(const auto& q2 : cindex2){
+	 int iproc = distribute1(q2,size);
+	 if(!ifdist1 or iproc==rank){
+            const auto& op2c = qops2('C').at(q2);
+            const auto& op1S = qops1('S').at(q2);
+            opxwf -= oper_kernel_OOwf(superblock,site,op1S,op2c,1);
+            opxwf += oper_kernel_OOwf(superblock,site,op1S,op2c,1,dagger);
+	 }
       }
       // Two-index operators
       // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
@@ -678,31 +682,35 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       }
    }else{
       // One-index operators
-      // 3. sum_p1 p1^+ Sp1^2 + h.c. 
-      for(const auto& op1C : qops1('C')){
-         int p1 = op1C.first;
-         const auto& op1c_A = op1C.second;
-         const auto& op2S_A = qops2('S').at(p1);
-         opxwf += oper_kernel_OOwf(superblock,site,op1c_A,op2S_A,1);
-         opxwf -= oper_kernel_OOwf(superblock,site,op1c_A,op2S_A,1,dagger);
-         // KR part
-	 const auto& op1c_B = op1c_A.K(1);
-	 const auto& op2S_B = op2S_A.K(1);
-         opxwf += oper_kernel_OOwf(superblock,site,op1c_B,op2S_B,1);
-         opxwf -= oper_kernel_OOwf(superblock,site,op1c_B,op2S_B,1,dagger);
+      // 3. sum_p1 p1^+ Sp1^2 + h.c.
+      for(const auto& p1 : cindex1){
+	 int iproc = distribute1(p1,size);
+	 if(!ifdist1 or iproc==rank){
+            const auto& op1c_A = qops1('C').at(p1);
+            const auto& op2S_A = qops2('S').at(p1);
+            opxwf += oper_kernel_OOwf(superblock,site,op1c_A,op2S_A,1);
+            opxwf -= oper_kernel_OOwf(superblock,site,op1c_A,op2S_A,1,dagger);
+            // KR part
+	    const auto& op1c_B = op1c_A.K(1);
+	    const auto& op2S_B = op2S_A.K(1);
+            opxwf += oper_kernel_OOwf(superblock,site,op1c_B,op2S_B,1);
+            opxwf -= oper_kernel_OOwf(superblock,site,op1c_B,op2S_B,1,dagger);
+	 }
       }
       // 4. sum_q2 q2^+ Sq2^1 + h.c. = -Sq2^1 q2^+ + h.c. 
-      for(const auto& op2C : qops2('C')){
-         int q2 = op2C.first;
-         const auto& op2c_A = op2C.second;
-         const auto& op1S_A = qops1('S').at(q2);
-         opxwf -= oper_kernel_OOwf(superblock,site,op1S_A,op2c_A,1);
-         opxwf += oper_kernel_OOwf(superblock,site,op1S_A,op2c_A,1,dagger);
-         // KR part
-         const auto& op2c_B = op2c_A.K(1);
-         const auto& op1S_B = op1S_A.K(1);
-         opxwf -= oper_kernel_OOwf(superblock,site,op1S_B,op2c_B,1);
-         opxwf += oper_kernel_OOwf(superblock,site,op1S_B,op2c_B,1,dagger);
+      for(const auto& q2 : cindex2){
+	 int iproc = distribute1(q2,size);
+	 if(!ifdist1 or iproc==rank){ 
+            const auto& op2c_A = qops2('C').at(q2);
+            const auto& op1S_A = qops1('S').at(q2);
+            opxwf -= oper_kernel_OOwf(superblock,site,op1S_A,op2c_A,1);
+            opxwf += oper_kernel_OOwf(superblock,site,op1S_A,op2c_A,1,dagger);
+            // KR part
+            const auto& op2c_B = op2c_A.K(1);
+            const auto& op1S_B = op1S_A.K(1);
+            opxwf -= oper_kernel_OOwf(superblock,site,op1S_B,op2c_B,1);
+            opxwf += oper_kernel_OOwf(superblock,site,op1S_B,op2c_B,1,dagger);
+	 }
       }
       // Two-index operators
       // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
