@@ -15,7 +15,7 @@
 
 namespace ctns{
 
-const bool debug_oper_renorm = true;
+const bool debug_oper_renorm = false;
 extern const bool debug_oper_renorm;
 
 // renormalize operators
@@ -108,14 +108,6 @@ void oper_renorm_opAll(const std::string superblock,
          int iproc = distribute1(p,size);
          auto& opS = qops('S')[p];
          int opsize = opS.size();
-/*
-	 if(p==0){
-	 std::cout << "p=" << p << " rank=" << rank 
-		   << std::setprecision(10)
-		   << " |opS|=" << opS.normF()
-		   << std::endl;
-	 }
-*/
          memset(top.data(), 0, opsize*sizeof(Tm));
          boost::mpi::reduce(icomb.world, opS.data(), opsize, 
            	            top.data(), std::plus<Tm>(), iproc);
@@ -143,21 +135,15 @@ void oper_renorm_opAll(const std::string superblock,
    if(debug_oper_renorm){
       for(const auto& key : qops.oplist){
 	 if(key == 'C' || key == 'A' || key == 'B'){
-/*
 	    oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
          }else if(key == 'P' || key == 'Q'){
 	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
-*/
 	 // check opS and opH only if ifdist1=true   
          }else if((key == 'S' || key == 'H') and ifdist1){
 	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
 	 }
       }
    }
-
-   icomb.world.barrier();
-   std::cout << "### RANK=" << rank << std::endl;
-   icomb.world.barrier();
 
    auto tf = tools::get_time();
    if(rank == 0){ 

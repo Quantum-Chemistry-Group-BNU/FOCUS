@@ -9,60 +9,32 @@
 
 namespace ctns{
 
-// primitive form (without factorization)
 template <typename Tm>
-symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
-	                                   const integral::two_body<Tm>& int2e,
-	                                   const int& size,
-	                                   const int& rank,
-					   const std::string fname,
-					   const bool sort_formulae,
-					   const bool ifdist1){
-   const auto& lqops = qops_dict.at("l");
-   const auto& rqops = qops_dict.at("r");
-   const auto& c1qops = qops_dict.at("c1");
-   const auto& c2qops = qops_dict.at("c2");
-   auto t0 = tools::get_time();
+symbolic_task<Tm> preprocess_formulae_twodot(const std::vector<int>& cindex_l,
+					     const std::vector<int>& cindex_r,
+					     const std::vector<int>& cindex_c1,
+					     const std::vector<int>& cindex_c2,
+					     const int isym,
+					     const bool ifkr,
+	                                     const integral::two_body<Tm>& int2e,
+	                                     const int& size,
+	                                     const int& rank,
+					     const bool ifdist1,
+					     const bool ifsave,
+   				             std::map<std::string,int>& counter){
    const int print_level = 1;
-   const int isym = lqops.isym;
-   const bool ifkr = lqops.ifkr;
-   int slc1 = lqops.cindex.size() + c1qops.cindex.size();
-   int sc2r = c2qops.cindex.size() + rqops.cindex.size();
+   int slc1 = cindex_l.size() + cindex_c1.size();
+   int sc2r = cindex_c2.size() + cindex_r.size();
    const bool ifNC = (slc1 <= sc2r);
-   std::streambuf *psbuf, *backup;
-   std::ofstream file;
-   bool ifsave = !fname.empty();
-   if(ifsave){
-      if(rank == 0){
-         std::cout << "ctns::symbolic_formulae_twodot"
-                   << " mpisize=" << size
-                   << " fname=" << fname 
-           	   << std::endl;
-      }
-      // http://www.cplusplus.com/reference/ios/ios/rdbuf/
-      file.open(fname);
-      backup = std::cout.rdbuf(); // back up cout's streambuf
-      psbuf = file.rdbuf(); // get file's streambuf
-      std::cout.rdbuf(psbuf); // assign streambuf to cout
-      std::cout << "cnts::symbolic_formulae_twodot"
-	        << " isym=" << isym
-		<< " ifkr=" << ifkr
-		<< " ifNC=" << ifNC
-		<< " mpisize=" << size
-		<< " mpirank=" << rank 
-	        << std::endl;
-   }
 
    symbolic_task<Tm> formulae;
-   
    int idx = 0;
-   std::map<std::string,int> counter;
    counter["CS"] = 0;
    counter["SC"] = 0;
    
    // Local terms:
    // H[lc1]
-   auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
+   auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", cindex_l, cindex_c1, 
 		                        ifkr, size, rank, ifdist1);
    formulae.join(Hlc1);
    if(ifsave){ 
@@ -70,23 +42,22 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
       Hlc1.display("Hlc1", print_level);
    }
    // H[c2r]
-   auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", c2qops.cindex, rqops.cindex, 
+   auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", cindex_c2, cindex_r, 
 		                        ifkr, size, rank, ifdist1);
    formulae.join(Hc2r);
    if(ifsave){ 
       std::cout << "idx=" << idx++;
       Hc2r.display("Hc2r", print_level);
    }
-
    // One-index terms:
    // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
-   auto infoC1 = oper_combine_opC(lqops.cindex, c1qops.cindex);
+   auto infoC1 = oper_combine_opC(cindex_l, cindex_c1);
    for(const auto& pr : infoC1){
       int index = pr.first;
       int iformula = pr.second;
       // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
       auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
-      auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+      auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", cindex_c2, cindex_r,
 		                           int2e, index, isym, ifkr, size, rank, ifdist1);
       auto Clc1_Sc2r = Clc1.outer_product(Sc2r);
       formulae.join(Clc1_Sc2r);
@@ -97,12 +68,12 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
       }
    }
    // 4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
-   auto infoC2 = oper_combine_opC(c2qops.cindex, rqops.cindex);
+   auto infoC2 = oper_combine_opC(cindex_c2, cindex_r);
    for(const auto& pr : infoC2){
       int index = pr.first;
       int iformula = pr.second;
       // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
-      auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
+      auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", cindex_l, cindex_c1,
 		                           int2e, index, isym, ifkr, size, rank, ifdist1);
       auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
       Cc2r.scale(-1.0);
@@ -114,11 +85,10 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
 	 counter["SC"] += 1;
       }
    }
-
    // Two-index terms:
    if(ifNC){
-      auto ainfo = oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr);
-      auto binfo = oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr);
+      auto ainfo = oper_combine_opA(cindex_l, cindex_c1, ifkr);
+      auto binfo = oper_combine_opB(cindex_l, cindex_c1, ifkr);
       counter["AP"] = 0;
       counter["BQ"] = 0;
       // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
@@ -129,7 +99,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
          if(iproc == rank){
             // Apq*Ppq + Apq^+*Ppq^+
             auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula, ifkr);
-            auto Pc2r = symbolic_compxwf_opP<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+            auto Pc2r = symbolic_compxwf_opP<Tm>("c2", "r", cindex_c2, cindex_r,
             				         int2e, index, isym, ifkr);
             const double wt = ifkr? wfacAP(index) : 1.0;
             Pc2r.scale(wt);
@@ -149,7 +119,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
          int iproc = distribute2(index,size);
          if(iproc == rank){
             auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula, ifkr);
-            auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+            auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", cindex_c2, cindex_r,
            		                         int2e, index, isym, ifkr);
             // Bpq*Qpq + Bpq^+*Qpq^+
             const double wt = ifkr? wfacBQ(index) : wfac(index);
@@ -164,8 +134,8 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
          } // iproc
       }
    }else{
-      auto ainfo = oper_combine_opA(c2qops.cindex, rqops.cindex, ifkr);
-      auto binfo = oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr);
+      auto ainfo = oper_combine_opA(cindex_c2, cindex_r, ifkr);
+      auto binfo = oper_combine_opB(cindex_c2, cindex_r, ifkr);
       counter["PA"] = 0;
       counter["QB"] = 0;
       // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
@@ -175,7 +145,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
          int iproc = distribute2(index,size);
          if(iproc == rank){
             // Apq*Ppq + Apq^+*Ppq^+
-            auto Plc1 = symbolic_compxwf_opP<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
+            auto Plc1 = symbolic_compxwf_opP<Tm>("l", "c1", cindex_l, cindex_c1,
             				         int2e, index, isym, ifkr);
             auto Ac2r = symbolic_normxwf_opA<Tm>("c2", "r", index, iformula, ifkr);
             const double wt = ifkr? wfacAP(index) : 1.0;
@@ -195,7 +165,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
          int iformula = pr.second;
          int iproc = distribute2(index,size);
          if(iproc == rank){
-            auto Qlc1 = symbolic_compxwf_opQ<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
+            auto Qlc1 = symbolic_compxwf_opQ<Tm>("l", "c1", cindex_l, cindex_c1,
            		                         int2e, index, isym, ifkr);
             auto Bc2r = symbolic_normxwf_opB<Tm>("c2", "r", index, iformula, ifkr);
             // Bpq*Qpq + Bpq^+*Qpq^+
@@ -211,7 +181,59 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
          } // iproc
       }
    } // ifNC
+   return formulae;
+}
 
+// primitive form (without factorization)
+template <typename Tm>
+symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
+	                                   const integral::two_body<Tm>& int2e,
+	                                   const int& size,
+	                                   const int& rank,
+					   const std::string fname,
+					   const bool sort_formulae,
+					   const bool ifdist1){
+   auto t0 = tools::get_time();
+   const auto& lqops = qops_dict.at("l");
+   const auto& rqops = qops_dict.at("r");
+   const auto& c1qops = qops_dict.at("c1");
+   const auto& c2qops = qops_dict.at("c2");
+   const auto& cindex_l = lqops.cindex;
+   const auto& cindex_r = rqops.cindex;
+   const auto& cindex_c1 = c1qops.cindex;
+   const auto& cindex_c2 = c2qops.cindex;
+   int slc1 = cindex_l.size() + cindex_c1.size();
+   int sc2r = cindex_c2.size() + cindex_r.size();
+   const bool ifNC = (slc1 <= sc2r);
+   const int isym = lqops.isym;
+   const bool ifkr = lqops.ifkr; 
+   std::streambuf *psbuf, *backup;
+   std::ofstream file;
+   bool ifsave = !fname.empty();
+   if(ifsave){
+      if(rank == 0){
+         std::cout << "ctns::symbolic_formulae_twodot"
+                   << " mpisize=" << size
+                   << " fname=" << fname 
+           	   << std::endl;
+      }
+      // http://www.cplusplus.com/reference/ios/ios/rdbuf/
+      file.open(fname);
+      backup = std::cout.rdbuf(); // back up cout's streambuf
+      psbuf = file.rdbuf(); // get file's streambuf
+      std::cout.rdbuf(psbuf); // assign streambuf to cout
+      std::cout << "cnts::symbolic_formulae_twodot"
+	        << " isym=" << isym
+		<< " ifkr=" << ifkr
+		<< " mpisize=" << size
+		<< " mpirank=" << rank 
+	        << std::endl;
+   }
+   // generation of Hx
+   std::map<std::string,int> counter;
+   auto formulae = preprocess_formulae_twodot(cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
+					      int2e,size,rank,ifdist1,ifsave,counter);
+   // reorder if necessary
    if(sort_formulae){
       std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
                                         {"r",rqops.qket.get_dimAll()},
@@ -220,7 +242,7 @@ symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
       formulae.sort(dims);
    }
    if(ifsave){
-      std::cout << "\nSUMMARY size=" << idx;
+      std::cout << "\nSUMMARY size=" << formulae.size();
       if(ifNC){
 	 std::cout << " CS:" << counter["CS"] << " SC:" << counter["SC"]
              	   << " AP:" << counter["AP"] << " BQ:" << counter["BQ"]
@@ -251,16 +273,20 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
 					  const std::string fname,
 					  const bool sort_formulae,
 					  const bool ifdist1){
+   auto t0 = tools::get_time();
+   const int print_level = 1;
    const auto& lqops = qops_dict.at("l");
    const auto& rqops = qops_dict.at("r");
    const auto& c1qops = qops_dict.at("c1");
    const auto& c2qops = qops_dict.at("c2");
-   auto t0 = tools::get_time();
-   const int print_level = 1;
+   const auto& cindex_l = lqops.cindex;
+   const auto& cindex_r = rqops.cindex;
+   const auto& cindex_c1 = c1qops.cindex;
+   const auto& cindex_c2 = c2qops.cindex;
    const int isym = lqops.isym;
    const bool ifkr = lqops.ifkr;
-   int slc1 = lqops.cindex.size() + c1qops.cindex.size();
-   int sc2r = c2qops.cindex.size() + rqops.cindex.size();
+   int slc1 = cindex_l.size() + cindex_c1.size();
+   int sc2r = cindex_c2.size() + cindex_r.size();
    const bool ifNC = (slc1 <= sc2r);
    std::streambuf *psbuf, *backup;
    std::ofstream file;
@@ -287,7 +313,6 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
    }
 
    bipart_task<Tm> formulae;
-   
    int idx = 0;
    std::map<std::string,int> counter;
    counter["CS"] = 0;
@@ -295,36 +320,41 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
    
    // Local terms:
    // H[lc1]
-   auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", lqops.cindex, c1qops.cindex, 
+   auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", cindex_l, cindex_c1, 
 		                        ifkr, size, rank, ifdist1);
-   auto Hlc1_Ic2r = bipart_oper('l',Hlc1,"Hlc1_Ic2r");
-   assert(Hlc1_Ic2r.parity == 0);
-   formulae.push_back(Hlc1_Ic2r);
-   if(ifsave){ 
-      std::cout << "idx=" << idx++; 
-      Hlc1_Ic2r.display(print_level);
+   if(Hlc1.size() > 0){
+      auto Hlc1_Ic2r = bipart_oper('l',Hlc1,"Hlc1_Ic2r");
+      assert(Hlc1_Ic2r.parity == 0);
+      formulae.push_back(Hlc1_Ic2r);
+      if(ifsave){ 
+         std::cout << "idx=" << idx++; 
+         Hlc1_Ic2r.display(print_level);
+      }
    }
    // H[c2r]
-   auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", c2qops.cindex, rqops.cindex, 
+   auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", cindex_c2, cindex_r, 
 		                        ifkr, size, rank, ifdist1);
-   auto Ilc1_Hc2r = bipart_oper('r',Hc2r,"Ilc1_Hc2r");
-   assert(Ilc1_Hc2r.parity == 0);
-   formulae.push_back(Ilc1_Hc2r);
-   if(ifsave){ 
-      std::cout << "idx=" << idx++;
-      Ilc1_Hc2r.display(print_level);
+   if(Hc2r.size() > 0){
+      auto Ilc1_Hc2r = bipart_oper('r',Hc2r,"Ilc1_Hc2r");
+      assert(Ilc1_Hc2r.parity == 0);
+      formulae.push_back(Ilc1_Hc2r);
+      if(ifsave){ 
+         std::cout << "idx=" << idx++;
+         Ilc1_Hc2r.display(print_level);
+      }
    }
 
    // One-index terms:
    // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
-   auto infoC1 = oper_combine_opC(lqops.cindex, c1qops.cindex);
+   auto infoC1 = oper_combine_opC(cindex_l, cindex_c1);
    for(const auto& pr : infoC1){
       int index = pr.first;
       int iformula = pr.second;
       // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
       auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
-      auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+      auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", cindex_c2, cindex_r,
 		                           int2e, index, isym, ifkr, size, rank, ifdist1);
+      if(Sc2r.size() == 0) continue;
       auto Clc1_Sc2r = bipart_oper(Clc1,Sc2r,"Clc1_Sc2r["+std::to_string(index)+"]");
       assert(Clc1_Sc2r.parity == 0);
       formulae.push_back(Clc1_Sc2r);
@@ -335,13 +365,14 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
       }
    }
    // 4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
-   auto infoC2 = oper_combine_opC(c2qops.cindex, rqops.cindex);
+   auto infoC2 = oper_combine_opC(cindex_c2, cindex_r);
    for(const auto& pr : infoC2){
       int index = pr.first;
       int iformula = pr.second;
       // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
-      auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
+      auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", cindex_l, cindex_c1,
 		                           int2e, index, isym, ifkr, size, rank, ifdist1);
+      if(Slc1.size() == 0) continue;
       auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
       Cc2r.scale(-1.0);
       auto Slc1_Cc2r = bipart_oper(Slc1,Cc2r,"Slc1_Cc2r["+std::to_string(index)+"]");
@@ -356,8 +387,8 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
 
    // Two-index terms:
    if(ifNC){
-      auto ainfo = oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr);
-      auto binfo = oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr);
+      auto ainfo = oper_combine_opA(cindex_l, cindex_c1, ifkr);
+      auto binfo = oper_combine_opB(cindex_l, cindex_c1, ifkr);
       counter["AP"] = 0;
       counter["BQ"] = 0;
       // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
@@ -368,7 +399,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
          if(iproc == rank){
             // Apq*Ppq + Apq^+*Ppq^+
             auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula, ifkr);
-            auto Pc2r = symbolic_compxwf_opP<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+            auto Pc2r = symbolic_compxwf_opP<Tm>("c2", "r", cindex_c2, cindex_r,
             				         int2e, index, isym, ifkr);
             const double wt = ifkr? wfacAP(index) : 1.0;
             Pc2r.scale(wt);
@@ -389,7 +420,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
          int iproc = distribute2(index,size);
          if(iproc == rank){
             auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula, ifkr);
-            auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", c2qops.cindex, rqops.cindex,
+            auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", cindex_c2, cindex_r,
            		                         int2e, index, isym, ifkr);
             // Bpq*Qpq + Bpq^+*Qpq^+
             const double wt = ifkr? wfacBQ(index) : wfac(index);
@@ -405,8 +436,8 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
          } // iproc
       }
    }else{
-      auto ainfo = oper_combine_opA(c2qops.cindex, rqops.cindex, ifkr);
-      auto binfo = oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr);
+      auto ainfo = oper_combine_opA(cindex_c2, cindex_r, ifkr);
+      auto binfo = oper_combine_opB(cindex_c2, cindex_r, ifkr);
       counter["PA"] = 0;
       counter["QB"] = 0;
       // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
@@ -416,7 +447,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
          int iproc = distribute2(index,size);
          if(iproc == rank){
             // Apq*Ppq + Apq^+*Ppq^+
-            auto Plc1 = symbolic_compxwf_opP<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
+            auto Plc1 = symbolic_compxwf_opP<Tm>("l", "c1", cindex_l, cindex_c1,
             				         int2e, index, isym, ifkr);
             auto Ac2r = symbolic_normxwf_opA<Tm>("c2", "r", index, iformula, ifkr);
             const double wt = ifkr? wfacAP(index) : 1.0;
@@ -437,7 +468,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
          int iformula = pr.second;
          int iproc = distribute2(index,size);
          if(iproc == rank){
-            auto Qlc1 = symbolic_compxwf_opQ<Tm>("l", "c1", lqops.cindex, c1qops.cindex,
+            auto Qlc1 = symbolic_compxwf_opQ<Tm>("l", "c1", cindex_l, cindex_c1,
            		                         int2e, index, isym, ifkr);
             auto Bc2r = symbolic_normxwf_opB<Tm>("c2", "r", index, iformula, ifkr);
             // Bpq*Qpq + Bpq^+*Qpq^+

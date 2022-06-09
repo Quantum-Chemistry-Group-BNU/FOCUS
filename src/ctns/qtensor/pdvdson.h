@@ -88,13 +88,13 @@ struct pdvdsonSolver_nkr{
          auto tf = tools::get_time();
          if(rank == 0){
             auto dt = tools::get_duration(tf-ti);
-	    std::cout << "timing for HVecs : " << std::setprecision(2)  
-                      << dt << " s"
-		      << " tcal=" << tcal
-		      << " tcomm=" << tcomm 
-                      << " for nstate = " << nstate 
-		      << " tav = " << dt/nstate << " s" 
-		      << " size = " << size << std::endl;
+/*
+	    std::cout << "T(tot/cal/comm)=" << dt << "," 
+		      << tcal << "," << tcomm
+                      << " for nstate=" << nstate 
+		      << " tav=" << dt/nstate 
+		      << std::endl;
+*/
 	    t_cal += tcal;
 	    t_comm += tcomm;
          }

@@ -352,10 +352,13 @@ Distributed CS:
  symbolic_compxwf.h // opS and opH
  oper_renorm.h // Ham works
  symbolic_formulae_renorm.h // remove term with size = 0!
- symbolic_formulae_twodot.h
- symbolic_formulae_onedot.h
  oper_compxwf.h // revise opS and opH to support ifdist1 
+ symbolic_formulae_twodot.h  
+ sweep_twodot_sigma.h // add ifdist1
 
+TODOs:
+ symbolic_formulae_onedot.h
+ 
 #################################################################
 
 优化方向: onedot/twodot算法
