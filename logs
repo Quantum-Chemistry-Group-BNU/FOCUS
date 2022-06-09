@@ -106,6 +106,9 @@ LOGS
  ### TODOs ###
 
  * Distributed H[CS] term [DONE2022/06/XX]
+    - renorm opS and opH
+    - twodot partition
+    - onedot partition
 
  * Toward large-scale applications:
     - merged wf4[lc1,c2r] implementation?
