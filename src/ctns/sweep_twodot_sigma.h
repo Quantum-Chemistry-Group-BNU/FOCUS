@@ -215,8 +215,10 @@ stensor3<Tm> twodot_Hx_local(const oper_dict<Tm>& lqops,
    // scale for kr case
    Hwf1 *= scale; 
    // 3. add const term
-   const Tm fac = scale*(ecore/size);
-   linalg::xaxpy(wf1.size(), fac, wf1.data(), Hwf1.data());
+   if(rank == 0){
+      const Tm fac = scale*ecore;
+      linalg::xaxpy(wf1.size(), fac, wf1.data(), Hwf1.data());
+   }
    return Hwf1; 
 }
 

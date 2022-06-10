@@ -346,7 +346,7 @@ NEW STRUCTURE of symbolic codes:
  symbolic_kernel_sum.h
  symbolic_preprocess.h
 
-Distributed CS:
+Distributed CS: opS & opH
  oper_dot.h
  oper_index.h
  symbolic_compxwf.h // opS and opH
@@ -355,9 +355,8 @@ Distributed CS:
  oper_compxwf.h // revise opS and opH to support ifdist1 
  symbolic_formulae_twodot.h  
  sweep_twodot_sigma.h // add ifdist1
-
-TODOs:
  symbolic_formulae_onedot.h
+ sweep_onedot_sigma.h // add ifdist1
  
 #################################################################
 

@@ -30,17 +30,23 @@ stensor3<Tm> onedot_Hx_local(const oper_dict<Tm>& lqops,
    stensor3<Tm> Hwf;
    if(ifNC){
       // 1. H^l + 2. H^cr
-      Hwf = contract_qt3_qt2("l",wf,lqops('H').at(0));
-      Hwf += oper_compxwf_opH("cr",wf,cqops,rqops,size,rank,ifdist1);
+      Hwf = oper_compxwf_opH("cr",wf,cqops,rqops,size,rank,ifdist1);
+      if(!ifdist1 or rank==0){
+         Hwf += contract_qt3_qt2("l",wf,lqops('H').at(0));
+      }
    }else{
       // 1. H^lc + 2. H^r
       Hwf = oper_compxwf_opH("lc",wf,lqops,cqops,size,rank,ifdist1);
-      Hwf += contract_qt3_qt2("r",wf,rqops('H').at(0));
+      if(!ifdist1 or rank==0){
+         Hwf += contract_qt3_qt2("r",wf,rqops('H').at(0));
+      }
    }
    Hwf *= scale;
    // add const term
-   const Tm fac = scale*(ecore/size);
-   linalg::xaxpy(wf.size(), fac, wf.data(), Hwf.data());
+   if(rank == 0){
+      const Tm fac = scale*ecore;
+      linalg::xaxpy(wf.size(), fac, wf.data(), Hwf.data());
+   }
    return Hwf;
 }
 
@@ -270,12 +276,15 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
    auto ccfun = ifNC? &onedot_Hx_SCnc<Tm> : &onedot_Hx_CScn<Tm>;
    for(const auto& pr : ccinfo){
       int index = pr.first;
-      int iformula = pr.second;
-      Hx_functor<Tm> Hx(cclabel, index, iformula);
-      Hx.opxwf = bind(ccfun, index, iformula, 
-        	      std::cref(lqops), std::cref(rqops), std::cref(cqops), 
-        	      std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
-      Hx_funs.push_back(Hx); 
+      int iproc = distribute1(index,size);
+      if(!ifdist1 or iproc==rank){ 
+         int iformula = pr.second;
+         Hx_functor<Tm> Hx(cclabel, index, iformula);
+         Hx.opxwf = bind(ccfun, index, iformula, 
+           	         std::cref(lqops), std::cref(rqops), std::cref(cqops), 
+           	         std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
+         Hx_funs.push_back(Hx);
+      }
    }
    // Two-index terms:
    const bool ifkr = lqops.ifkr;

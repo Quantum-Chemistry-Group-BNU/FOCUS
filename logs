@@ -103,12 +103,12 @@ LOGS
     - data compression? 
     - reduce half AB/PQ operators?
 
- ### TODOs ###
-
- * Distributed H[CS] term [DONE2022/06/XX]
+ * Distributed H[CS] term [DONE2022/06/10]
     - renorm opS and opH
     - twodot partition
     - onedot partition
+
+ ### TODOs ###
 
  * Toward large-scale applications:
     - merged wf4[lc1,c2r] implementation?

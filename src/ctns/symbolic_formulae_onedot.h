@@ -37,16 +37,22 @@ symbolic_task<Tm> preprocess_formulae_onedot(const std::vector<int>& cindex_l,
       counter["AP"] = 0;
       counter["BQ"] = 0;
       // 1. H^l 
-      const double scale = ifkr? 0.25 : 0.5;
-      auto Hl = symbolic_prod<Tm>(symbolic_oper("l",'H',0), scale);
-      formulae.append(Hl);
+      if(!ifdist1 or rank==0){ 
+         const double scale = ifkr? 0.25 : 0.5;
+         auto Hl = symbolic_prod<Tm>(symbolic_oper("l",'H',0), scale);
+         formulae.append(Hl);
+         if(ifsave){
+            std::cout << "idx=" << idx++;
+            formulae.display("Hl", print_level);
+	 }
+      }
       // 2. H^cr
       auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cindex_c, cindex_r, 
 		                          ifkr, size, rank, ifdist1);
       formulae.join(Hcr);
       if(ifsave){
 	 std::cout << "idx=" << idx++;
-	 formulae.display("Hl+Hcr", print_level);
+	 formulae.display("Hcr", print_level);
       }
       // One-index terms:
       // 3. p1^l+*Sp1^cr + h.c.
@@ -125,13 +131,19 @@ symbolic_task<Tm> preprocess_formulae_onedot(const std::vector<int>& cindex_l,
       auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", cindex_l, cindex_c, 
            	                          ifkr, size, rank, ifdist1);
       formulae.join(Hlc);
-      // 2. H^r
-      const double scale = ifkr? 0.25 : 0.5;
-      auto Hr = symbolic_prod<Tm>(symbolic_oper("r",'H',0), scale);
-      formulae.append(Hr);
       if(ifsave){ 
-	 std::cout << "idx=" << idx++;
-	 formulae.display("Hlc+Hr", print_level);
+         std::cout << "idx=" << idx++;
+         formulae.display("Hlc", print_level);
+      }
+      // 2. H^r
+      if(!ifdist1 or rank==0){ 
+         const double scale = ifkr? 0.25 : 0.5;
+         auto Hr = symbolic_prod<Tm>(symbolic_oper("r",'H',0), scale);
+         formulae.append(Hr);
+         if(ifsave){
+            std::cout << "idx=" << idx++;
+            formulae.display("Hr", print_level);
+         }
       }
       // One-index terms:
       // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
@@ -340,24 +352,28 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       counter["AP"] = 0;
       counter["BQ"] = 0;
       // 1. H^l 
-      const double scale = ifkr? 0.25 : 0.5;
-      auto Hl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'H',0), scale));
-      auto Hl_Ir = bipart_oper('l',Hl,"Hl_Ir");
-      assert(Hl_Ir.parity == 0);
-      formulae.push_back(Hl_Ir);
-      if(ifsave){
-         std::cout << "idx=" << idx++;
-	 Hl_Ir.display(print_level);
+      if(!ifdist1 or rank==0){ 
+         const double scale = ifkr? 0.25 : 0.5;
+         auto Hl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'H',0), scale));
+         auto Hl_Ir = bipart_oper('l',Hl,"Hl_Ir");
+         assert(Hl_Ir.parity == 0);
+         formulae.push_back(Hl_Ir);
+         if(ifsave){
+            std::cout << "idx=" << idx++;
+            Hl_Ir.display(print_level);
+         }
       }
       // 2. H^cr
       auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cindex_c, cindex_r, 
 		                          ifkr, size, rank, ifdist1);
-      auto Il_Hcr = bipart_oper('r',Hcr,"Il_Hcr");
-      assert(Il_Hcr.parity == 0);
-      formulae.push_back(Il_Hcr);
-      if(ifsave){
-	 std::cout << "idx=" << idx++;
-	 Il_Hcr.display(print_level);
+      if(Hcr.size() > 0){
+         auto Il_Hcr = bipart_oper('r',Hcr,"Il_Hcr");
+         assert(Il_Hcr.parity == 0);
+         formulae.push_back(Il_Hcr);
+         if(ifsave){
+            std::cout << "idx=" << idx++;
+            Il_Hcr.display(print_level);
+         }
       }
       // One-index terms:
       // 3. p1^l+*Sp1^cr + h.c.
@@ -365,6 +381,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
          auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
          auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cindex_c, cindex_r,
            	                             int2e, index, isym, ifkr, size, rank, ifdist1);
+	 if(Scr.size() == 0) continue;
          auto Cl_Scr = bipart_oper(Cl,Scr,"Cl_Scr["+std::to_string(index)+"]");
 	 assert(Cl_Scr.parity == 0);
 	 formulae.push_back(Cl_Scr);
@@ -378,17 +395,20 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       auto infoC = oper_combine_opC(cindex_c, cindex_r);
       for(const auto& pr : infoC){
          int index = pr.first;
-         int iformula = pr.second;
-         auto Sl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'S',index)));
-         auto Ccr = symbolic_normxwf_opC<Tm>("c", "r", index, iformula);
-	 Ccr.scale(-1.0);
-	 auto Sl_Ccr = bipart_oper(Sl,Ccr,"Sl_Ccr["+std::to_string(index)+"]");
-         assert(Sl_Ccr.parity == 0);
-         formulae.push_back(Sl_Ccr);
-         if(ifsave){ 
-	    std::cout << "idx=" << idx++;
-            Sl_Ccr.display(print_level);
-	    counter["SC"] += 1;
+	 int iproc = distribute1(index,size);
+	 if(!ifdist1 or iproc==rank){ 
+            int iformula = pr.second;
+            auto Sl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'S',index)));
+            auto Ccr = symbolic_normxwf_opC<Tm>("c", "r", index, iformula);
+	    Ccr.scale(-1.0);
+	    auto Sl_Ccr = bipart_oper(Sl,Ccr,"Sl_Ccr["+std::to_string(index)+"]");
+            assert(Sl_Ccr.parity == 0);
+            formulae.push_back(Sl_Ccr);
+            if(ifsave){ 
+	       std::cout << "idx=" << idx++;
+               Sl_Ccr.display(print_level);
+	       counter["SC"] += 1;
+	    }
 	 }
       }
       // 5. Apq^l*Ppq^cr + h.c.
@@ -436,28 +456,33 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       // 1. H^lc 
       auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", cindex_l, cindex_c, 
            	                          ifkr, size, rank, ifdist1);
-      auto Hlc_Ir = bipart_oper('l',Hlc,"Hlc_Ir");
-      assert(Hlc_Ir.parity == 0);
-      formulae.push_back(Hlc_Ir);
-      if(ifsave){
-         std::cout << "idx=" << idx++;
-	 Hlc_Ir.display(print_level);
+      if(Hlc.size() > 0){
+         auto Hlc_Ir = bipart_oper('l',Hlc,"Hlc_Ir");
+         assert(Hlc_Ir.parity == 0);
+         formulae.push_back(Hlc_Ir);
+         if(ifsave){
+            std::cout << "idx=" << idx++;
+            Hlc_Ir.display(print_level);
+         }
       }
       // 2. H^r
-      const double scale = ifkr? 0.25 : 0.5;
-      auto Hr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'H',0), scale));
-      auto Ilc_Hr = bipart_oper('r',Hr,"Ilc_Hr");
-      assert(Ilc_Hr.parity == 0);
-      formulae.push_back(Ilc_Hr);
-      if(ifsave){
-	 std::cout << "idx=" << idx++;
-	 Ilc_Hr.display(print_level);
+      if(!ifdist1 or rank==0){ 
+         const double scale = ifkr? 0.25 : 0.5;
+         auto Hr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'H',0), scale));
+         auto Ilc_Hr = bipart_oper('r',Hr,"Ilc_Hr");
+         assert(Ilc_Hr.parity == 0);
+         formulae.push_back(Ilc_Hr);
+         if(ifsave){
+            std::cout << "idx=" << idx++;
+            Ilc_Hr.display(print_level);
+         }
       }
       // One-index terms:
       // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
       for(const auto& index : cindex_r){
          auto Slc = symbolic_compxwf_opS<Tm>("l", "c", cindex_l, cindex_c,
 			 		     int2e, index, isym, ifkr, size, rank, ifdist1);
+	 if(Slc.size() == 0) continue;
 	 Slc.scale(-1.0);
 	 auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
 	 auto Slc_Cr = bipart_oper(Slc,Cr,"Slc_Cr["+std::to_string(index)+"]");
@@ -473,16 +498,19 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       auto infoC = oper_combine_opC(cindex_l, cindex_c);
       for(const auto& pr : infoC){
          int index = pr.first;
-         int iformula = pr.second;
-         auto Clc = symbolic_normxwf_opC<Tm>("l", "c", index, iformula);
-         auto Sr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'S',index)));
-         auto Clc_Sr = bipart_oper(Clc,Sr,"Clc_Sr["+std::to_string(index)+"]");
-         assert(Clc_Sr.parity == 0);
-         formulae.push_back(Clc_Sr);
-         if(ifsave){ 
-	    std::cout << "idx=" << idx++;
-	    Clc_Sr.display(print_level);
-	    counter["CS"] += 1;
+	 int iproc = distribute1(index,size);
+	 if(!ifdist1 or iproc==rank){ 
+            int iformula = pr.second;
+            auto Clc = symbolic_normxwf_opC<Tm>("l", "c", index, iformula);
+            auto Sr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'S',index)));
+            auto Clc_Sr = bipart_oper(Clc,Sr,"Clc_Sr["+std::to_string(index)+"]");
+            assert(Clc_Sr.parity == 0);
+            formulae.push_back(Clc_Sr);
+            if(ifsave){ 
+	       std::cout << "idx=" << idx++;
+	       Clc_Sr.display(print_level);
+	       counter["CS"] += 1;
+	    }
 	 }
       }
       // 5. Ars^r*Prs^lc + h.c.
