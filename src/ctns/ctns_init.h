@@ -278,30 +278,18 @@ void init_rwfuns(comb<Km>& icomb,
    auto t0 = tools::get_time();
    
    // determine symmetry of rwfuns
-   auto sym_states = get_qsym_onstate(Km::isym, space[0]);
+   auto sym_state = get_qsym_onstate(Km::isym, space[0]);
    // check symmetry: we assume all the dets are of the same symmetry!
    for(int i=0; i<space.size(); i++){
       auto sym = get_qsym_onstate(Km::isym, space[i]);
-      if(sym != sym_states){
-	 std::cout << "sym_states=" << sym_states 
+      if(sym != sym_state){
+	 std::cout << "sym_state=" << sym_state 
 		   << " det=" << space[i] << " sym=" << sym
 		   << std::endl;
 	 tools::exit("error: symmetry is different in space!");
       }
    }
-   int nroots = vs.size();
-   qbond qrow({{sym_states, nroots}});
-   const auto& rbasis = icomb.rbases[icomb.topo.ntotal-1];
-   auto qcol = get_qbond(rbasis);
-   if(qcol.size() != 1) tools::exit("error: multiple symmetries in qcol!"); 
-   //
-   // construct the boundary matrix: |psi[i]> = \sum_a |rbas[a]>(<rbas[a]|psi[i]>)
-   // In RCF the site is defined as 
-   //    W[i,a] =  <rbas[a]|psi[i]> = (rbas^+*wfs)^T = wfs^T*rbas.conj()
-   // such that W*[i,a]W[j,a] = delta[i,j]
-   //
-   stensor2<Tm> rwfuns(qsym(Km::isym), qrow, qcol, {0,1}); // rwfuns[l,r] for RCF
-   // setup wavefunction: map vs2 to correct position
+   // setup wavefunction: map vs2 to the correct position
    fock::onspace space2;
    std::vector<std::vector<Tm>> vs2;
    const auto& order = icomb.topo.nodes[0][0].rsupport;
@@ -311,28 +299,42 @@ void init_rwfuns(comb<Km>& icomb,
    // NOTE: for isym=1, ndet can be larger than space.size()
    //       due to the possible reorder of basis in init_bipart.h
    //
-   std::map<fock::onstate,int> index; // index of a state
+   const auto& rbasis = icomb.rbases[icomb.topo.ntotal-1];
+   int nroots = vs.size();
    int ndet = rbasis[0].space.size();
+   std::map<fock::onstate,int> index; // index of a state
    for(int i=0; i<ndet; i++){
       const auto& state = rbasis[0].space[i];
       index[state] = i;
    }
-   linalg::matrix<Tm> wfs(ndet, nroots);
-   for(int i=0; i<space2.size(); i++){
-      int ir = index.at(space2[i]);
-      for(int iroot=0; iroot<nroots; iroot++){
-         wfs(ir,iroot) = vs2[iroot][i];
-      } // iroot
-   } // i
-   xgemm("T","N",1.0,wfs,rbasis[0].coeff.conj(),0.0,rwfuns(0,0));
-   icomb.rwfuns = std::move(rwfuns);
+   //
+   // construct the boundary matrix: |psi[i]> = \sum_a |rbas[a]>(<rbas[a]|psi[i]>)
+   // In RCF the site is defined as 
+   //    W[i,a] =  <rbas[a]|psi[i]> = (rbas^+*wfs)^T = wfs^T*rbas.conj()
+   // such that W*[i,a]W[j,a] = delta[i,j]
+   //
+   qbond qrow({{sym_state, 1}});
+   auto qcol = get_qbond(rbasis);
+   if(qcol.size() != 1) tools::exit("error: multiple symmetries in qcol!"); 
+   icomb.rwfuns.resize(nroots);
+   for(int iroot=0; iroot<nroots; iroot++){
+      linalg::matrix<Tm> wf(ndet,1);
+      for(int i=0; i<space2.size(); i++){
+         int ir = index.at(space2[i]);
+         wf(ir,0) = vs2[iroot][i];
+      } // i
+      stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, {0,1}); // rwfuns[l,r] for RCF
+      xgemm("T","N",1.0,wf,rbasis[0].coeff.conj(),0.0,rwfun(0,0));
+      icomb.rwfuns[iroot] = std::move(rwfun);
+   } // iroot
 
    // check overlaps
    if(debug_init){
-      icomb.rwfuns.print("rwfuns",2);
+      auto wfmat = icomb.get_wf2().to_matrix();
+      wfmat.print("rwfuns",2);
       std::cout << "\ncheck state overlaps ..." << std::endl;
       // ova = <CTNS[i]|CTNS[j]>
-      auto ova = linalg::xgemm("N","C",icomb.rwfuns(0,0),icomb.rwfuns(0,0)).conj();
+      auto ova = linalg::xgemm("N","C",wfmat,wfmat).conj();
       ova.print("ova_rwfuns");
       // ova0 = <CI[i]|CI[j]>
       linalg::matrix<Tm> ova0(nroots,nroots);

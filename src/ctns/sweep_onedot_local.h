@@ -11,21 +11,21 @@ void onedot_guess_psi0(comb<Km>& icomb, const int nroots){
    const auto& rindex = icomb.topo.rindex;
    const auto& rsite0 = icomb.rsites[rindex.at(std::make_pair(0,0))];
    const auto& rsite1 = icomb.rsites[rindex.at(std::make_pair(1,0))];
-   const auto& qrow = icomb.rwfuns.info.qrow;
+   const auto& qrow = icomb.rwfuns[0].info.qrow;
    assert(qrow.size() == 1); // only same symmetry of wfs
-   if(qrow.get_dim(0) < nroots){
-      std::cout << "dim(psi0)=" << qrow.get_dim(0) << " nroots=" << nroots << std::endl;
-      tools::exit("error in onedot_guess_psi0: nroots exceed!");
+   if(icomb.get_nroots() < nroots){
+      std::cout << "dim(psi0)=" << icomb.get_nroots() << " nroots=" << nroots << std::endl;
+      tools::exit("error in onedot_guess_psi0: requested nroots exceed!");
    }
-   auto state_sym = qrow.get_sym(0);
+   auto sym_state = qrow.get_sym(0);
    icomb.psi.resize(nroots);
    for(int iroot=0; iroot<nroots; iroot++){
       // qt2(1,r)
-      auto qt2 = icomb.get_iroot(iroot); 
+      auto qt2 = icomb.rwfuns[iroot];
       // qt2(1,r)*rsite0(r,r0,n0) = qt3(1,r0,n0)
       auto qt3 = contract_qt3_qt2("l",rsite0,qt2); 
       // qt3(1,r0,n0) -> cwf(n0,r0)
-      stensor2<typename Km::dtype> cwf(state_sym, rsite0.info.qmid, rsite0.info.qcol, {1,1});
+      stensor2<typename Km::dtype> cwf(sym_state, rsite0.info.qmid, rsite0.info.qcol, {1,1});
       for(int br=0; br<cwf.rows(); br++){
 	 for(int bc=0; bc<cwf.cols(); bc++){
 	    auto blk = cwf(br,bc);

@@ -259,20 +259,11 @@ void sweep_rwfuns(comb<Km>& icomb,
       rot = rot.T(); 
       icomb.rsites[icomb.topo.rindex.at(p0)] = rot.split_cr(wf.info.qmid, wf.info.qcol);
       // form rwfuns(iroot,irbas)
-      auto& sym_state = icomb.psi[0].info.sym;
-      qbond qrow({{sym_state, nroots}});
-      auto& qcol = rot.info.qrow; 
-      stensor2<typename Km::dtype> rwfuns(qsym(Km::isym), qrow, qcol, {0,1});
-      assert(qcol.size() == 1);
-      int rdim = qrow.get_dim(0);
-      int cdim = qcol.get_dim(0);
-      for(int i=0; i<nroots; i++){
-         auto cwf = icomb.psi[i].merge_cr().dot(rot.H()); // <-W[1,alpha]->
-         for(int ic=0; ic<cdim; ic++){
-            rwfuns(0,0)(i,ic) = cwf(0,0)(0,ic);
-         }
+      icomb.rwfuns.resize(nroots);
+      for(int iroot=0; iroot<nroots; iroot++){
+         auto cwf = icomb.psi[iroot].merge_cr().dot(rot.H()); // <-W[1,alpha]->
+         icomb.rwfuns[iroot] = std::move(cwf);
       } // iroot
-      icomb.rwfuns = std::move(rwfuns);
    } // rank0
 }
    

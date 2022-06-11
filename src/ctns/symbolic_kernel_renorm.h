@@ -105,14 +105,17 @@ void symbolic_kernel_renorm(const std::string superblock,
       auto key = std::get<0>(task);
       auto index = std::get<1>(task);
       auto formula = std::get<2>(task);
+      auto size = formula.size();
       if(debug){
          std::cout << "rank=" << qops.mpirank 
 		   << " idx=" << i 
 		   << " op=" << key
 		   << " index=" << index
+		   << " size=" << size
 		   << std::endl;
 	 formula.display("formula", 1);
       }
+      if(size == 0) continue;
       auto opxwf = symbolic_renorm_single(block1,block2,qops_dict,key,formula,site);
       auto op = contract_qt3_qt3(superblock, site, opxwf);
       if(key == 'H') op += op.H();

@@ -22,8 +22,8 @@ class comb{
       void save(Archive & ar, const unsigned int version) const{
 	 ar & topo
 	    & rbases // ZL@20220606: for usage in debug oper_rbasis
-	    & rwfuns 
-	    & rsites;
+	    & rsites
+	    & rwfuns;
 	 /*
 	 for(int idx=0; idx<topo.ntotal; idx++){
 	    ar & rsites[idx];
@@ -34,8 +34,8 @@ class comb{
       void load(Archive & ar, const unsigned int version){
 	 ar & topo 
 	    & rbases
-	    & rwfuns 
-	    & rsites;
+	    & rsites
+	    & rwfuns;
 	 /*
 	 rsites.resize(topo.ntotal);
 	 for(int idx=0; idx<topo.ntotal; idx++){
@@ -52,26 +52,24 @@ class comb{
       }
       // helpers
       int get_nphysical() const{ return topo.nphysical; }
-      int get_nroots() const{
-	 assert(rwfuns.rows() == 1); // currently, only allow one symmetry sector
-	 return rwfuns.info.qrow.get_dim(0);
-      }
       qsym get_sym_state() const{
-	 assert(rwfuns.rows() == 1); // only one symmetry sector
-         return rwfuns.info.qrow.get_sym(0);
+	 assert(rwfuns[0].rows() == 1); // only one symmetry sector
+         return rwfuns[0].info.qrow.get_sym(0);
       }
-      // return rwfun for iroot, extracted from rwfuns
-      stensor2<typename Km::dtype> get_iroot(const int iroot) const{
-         assert(rwfuns.rows() == 1);
-         qbond qrow({{rwfuns.info.qrow.get_sym(0),1}});
-         stensor2<typename Km::dtype> rwfun(rwfuns.info.sym, qrow, rwfuns.info.qcol, rwfuns.info.dir);
-	 // copy data from blk0 to blk
-         const auto blk0 = rwfuns(0,0);
-         auto blk = rwfun(0,0);
-         for(int ic=0; ic<rwfuns.info.qcol.get_dim(0); ic++){
-            blk(0,ic) = blk0(iroot,ic);
-         }
-         return rwfun;
+      int get_nroots() const{ return rwfuns.size(); }
+      // wf2(iroot,icol)
+      stensor2<typename Km::dtype> get_wf2() const{
+	 int nroots = rwfuns.size();
+         qbond qrow({{this->get_sym_state(),nroots}});
+	 const auto& qcol = rwfuns[0].info.qcol;
+	 const auto& dir = rwfuns[0].info.dir;
+         stensor2<typename Km::dtype> wf2(rwfuns[0].info.sym, qrow, qcol, dir);
+	 for(int iroot=0; iroot<nroots; iroot++){
+            for(int ic=0; ic<rwfuns[0].info.qcol.get_dim(0); ic++){
+               wf2(0,0)(iroot,ic) = rwfuns[iroot](0,0)(0,ic);
+            }
+	 }
+         return wf2;
       }
    public:
       using Tm = typename Km::dtype;
@@ -82,7 +80,7 @@ class comb{
       // right canonical form 
       std::vector<stensor3<Tm>> rsites;
       // wavefunction at the left boundary -*-
-      stensor2<Tm> rwfuns; 
+      std::vector<stensor2<Tm>> rwfuns; 
       // left canonical form 
       std::vector<stensor3<Tm>> lsites;
       // propagation of initial guess 

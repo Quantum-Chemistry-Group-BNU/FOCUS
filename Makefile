@@ -127,6 +127,7 @@ all: depend \
      $(BIN_DIR)/tests_ci.x \
      $(BIN_DIR)/tests_ctns.x \
      $(BIN_DIR)/sci.x \
+     $(BIN_DIR)/prectns.x \
      $(BIN_DIR)/ctns.x 
 
 # version
@@ -172,6 +173,11 @@ $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(OBJ_DEP)
 	@echo "=== LINK $@"
 	@echo $(OBJ_DEP)
 	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
+
+$(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(OBJ_DEP)
+	@echo "=== LINK $@"
+	@echo $(OBJ_DEP)
+	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
 
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(OBJ_DEP)
 	@echo "=== LINK $@"

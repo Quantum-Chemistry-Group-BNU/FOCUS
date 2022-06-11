@@ -44,7 +44,7 @@ linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){
    } // i
    // first merge: sum_l rwfuns[j,l]*site0[l,r,n] => site[j,r,n]
    const auto& site0 = icomb.rsites[rindex.at(std::make_pair(0,0))];
-   auto site = contract_qt3_qt2("l",site0,icomb.rwfuns); 
+   auto site = contract_qt3_qt2("l",site0,icomb.get_wf2()); 
    auto qtmp = contract_qt3_qt2("r",site,qt2_r);
    qt2_r = contract_qt3_qt3("cr",site,qtmp);
    auto Smat = qt2_r.to_matrix();
@@ -93,7 +93,7 @@ std::vector<typename Km::dtype> rcanon_CIcoeff(const comb<Km>& icomb,
 	 qt2_r = qt2.dot(qt2_r); // contract right matrix
       } // tp
    } // i
-   auto wfcoeff = icomb.rwfuns.dot(qt2_r);
+   auto wfcoeff = icomb.get_wf2().dot(qt2_r);
    assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
    // finally return coeff = <n|CTNS> 
    int n = icomb.get_nroots(); 
@@ -117,7 +117,7 @@ std::pair<fock::onstate,double> rcanon_random(const comb<Km>& icomb,
    if(debug) std::cout << "\nctns::rcanon_random iroot=" << iroot << std::endl; 
    using Tm = typename Km::dtype; 
    fock::onstate state(2*icomb.get_nphysical());
-   auto wf = icomb.get_iroot(iroot); // initialize wf
+   auto wf = icomb.rwfuns[iroot]; // initialize wf
    const auto& nodes = icomb.topo.nodes; 
    const auto& rindex = icomb.topo.rindex;
    for(int i=0; i<icomb.topo.nbackbone; i++){

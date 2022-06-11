@@ -74,10 +74,6 @@ void CTNS(const input::schedule& schd){
    }
    
    if(schd.ctns.task_ham or schd.ctns.task_opt){
-      
-      // preprocess
-      //ctns::preprocess_oper(icomb);
-      
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
