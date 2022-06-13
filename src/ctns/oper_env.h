@@ -24,7 +24,7 @@ void oper_init_dotAll(const comb<Km>& icomb,
 		      const bool ifdist1){
    using Tm = typename Km::dtype;
    const int isym = Km::isym;
-   const bool ifkr = qkind::is_kramers<Km>();
+   const bool ifkr = Km::ifkr;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();

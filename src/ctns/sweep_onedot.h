@@ -251,7 +251,7 @@ void sweep_rwfuns(comb<Km>& icomb,
       const int dcut = nroots;
       double dwt; 
       int deff;
-      const bool ifkr = tools::is_complex<Km>();
+      const bool ifkr = Km::ifkr;
       std::string fname = scratch+"/decimation_site0.txt";
       decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
 		     dcut, schd.ctns.rdm_vs_svd, wfs2,

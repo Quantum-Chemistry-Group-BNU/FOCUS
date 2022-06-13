@@ -15,10 +15,19 @@ void preprocess_oper(const comb<Km>& icomb,
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif  
+   // settings 
+   using DTYPE = typename Km::dtype;
+   const int isym = Km::isym;
+   const bool ifkr = Km::ifkr;
    if(rank == 0){
-      std::cout << "\nctns::preprocess_oper" << std::endl;
+      std::cout << "\nctns::preprocess_oper" 
+		<< " qkind=" << qkind::get_name<Km>()
+		<< " isym=" << isym
+		<< " ifkr=" << ifkr
+		<< std::endl;
    }
    if(rank != 0) return;
+
    auto sweeps = icomb.topo.get_sweeps(true);
    int mid0 = icomb.topo.nphysical/2-2;
    int mid1 = mid0 + icomb.topo.nphysical-2;
@@ -53,7 +62,6 @@ void preprocess_oper(const comb<Km>& icomb,
          ksupp = rsupp;
          krest = lsupp;
       }
-      bool ifkr = false;
       auto cindex = oper_index_opC(ksupp, ifkr);
       auto sindex = oper_index_opS(krest, ifkr);
       auto aindex = oper_index_opA(cindex, ifkr);
@@ -69,7 +77,6 @@ void preprocess_oper(const comb<Km>& icomb,
 		<< std::endl;
 
       // twodot Hx
-      const int isym = 2;
       std::vector<int> suppl, suppr, suppc1, suppc2;
       auto node0 = icomb.topo.get_node(p0);
       auto node1 = icomb.topo.get_node(p1);
@@ -99,7 +106,6 @@ void preprocess_oper(const comb<Km>& icomb,
       auto cindex_c1 = oper_index_opC(suppc1, ifkr);
       auto cindex_c2 = oper_index_opC(suppc2, ifkr);
 
-      using DTYPE = double;
       integral::two_body<DTYPE> int2e;
       int2e.sorb = 2*icomb.topo.nphysical;
       int2e.init_mem();
@@ -156,6 +162,7 @@ void preprocess_oper(const comb<Km>& icomb,
 	    psbuf = file.rdbuf();
 	    std::cout.rdbuf(psbuf);
 	    std::cout << "preprocess_formulae_twodot" 
+		      << " qkind=" << qkind::get_name<Km>()
 		      << " isym=" << isym
 		      << " ifkr=" << ifkr
 		      << " mpisize=" << mpisize

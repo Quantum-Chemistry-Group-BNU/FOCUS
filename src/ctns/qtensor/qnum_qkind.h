@@ -11,35 +11,42 @@ namespace qkind{
 
 // isym = 0:
 struct rZ2{
-   static const int isym = 0;
    using dtype = double;
+   static const int isym = 0;
+   static const bool ifkr = false;
 };
 struct cZ2{
-   static const int isym = 0;
    using dtype = std::complex<double>;
+   static const int isym = 0;
+   static const bool ifkr = false;
 };
 // isym = 1:
 struct rN{
-   static const int isym = 1;
    using dtype = double;
+   static const int isym = 1;
+   static const bool ifkr = false;
 };
 struct cN{
-   static const int isym = 1;
    using dtype = std::complex<double>;
+   static const int isym = 1;
+   static const bool ifkr = false;
 };
 // isym = 2:
 struct rNSz{
-   static const int isym = 2;
    using dtype = double;
+   static const int isym = 2;
+   static const bool ifkr = false;
 };
 struct cNSz{
-   static const int isym = 2;
    using dtype = std::complex<double>;
+   static const int isym = 2;
+   static const bool ifkr = false;
 };
 // Kramers symmetry: relativistic H with SOC
 struct cNK{
-   static const int isym = 1;
    using dtype = std::complex<double>;
+   static const int isym = 1;
+   static const bool ifkr = true;
 };
 
 // is_available
@@ -53,10 +60,7 @@ template <> inline bool is_available<rNSz>(){ return true; }
 template <> inline bool is_available<cNSz>(){ return true; }
 template <> inline bool is_available<cNK>(){ return true; }
 
-template <typename>
-inline bool is_kramers(){ return false; }
-template <> inline bool is_kramers<cNK>(){ return true; }
-
+// get_name
 template <typename Tm>
 inline std::string get_name(){ return ""; }
 template <> inline std::string get_name<rZ2>(){ return "rZ2"; } 

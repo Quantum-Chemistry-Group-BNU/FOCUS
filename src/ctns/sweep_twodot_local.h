@@ -122,7 +122,7 @@ void twodot_localCI(comb<Km>& icomb,
 #endif
 
    // without kramers restriction
-   assert(!qkind::is_kramers<Km>());
+   assert(Km::ifkr == false);
    pdvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
    solver.Diag = diag.data();
    solver.HVec = HVec;

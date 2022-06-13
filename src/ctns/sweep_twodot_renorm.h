@@ -189,12 +189,12 @@ void twodot_renorm(comb<Km>& icomb,
    const auto& c1qops = qops_dict.at("c1");
    const auto& c2qops = qops_dict.at("c2");
    using Tm = typename Km::dtype;
+   const bool ifkr = Km::ifkr;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif
-   const bool ifkr = qkind::is_kramers<Km>();
    const auto& dbond = sweeps.seq[ibond];
    std::string superblock;
    if(dbond.forward){

@@ -39,7 +39,7 @@ void oper_renorm_opAll(const std::string superblock,
    rank = icomb.world.rank();
 #endif   
    const int isym = Km::isym;
-   const bool ifkr = qkind::is_kramers<Km>();
+   const bool ifkr = Km::ifkr;
    if(rank == 0){ 
       std::cout << "ctns::oper_renorm_opAll coord=" << p 
 	        << " superblock=" << superblock 
