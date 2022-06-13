@@ -26,7 +26,7 @@ void rcanon_init(comb<Km>& icomb,
 		 const double rdm_vs_svd,
 		 const double thresh_proj,
 		 const double thresh_ortho){
-   std::cout << "\nctns::rcanon_init Km=" << qkind::get_name<Km>() << std::endl;
+   std::cout << "\nctns::rcanon_init qkind=" << qkind::get_name<Km>() << std::endl;
    auto t0 = tools::get_time();
 
    // 1. compute renormalized bases {|r>} from SCI wavefunctions
@@ -135,7 +135,7 @@ template <typename Km>
 void init_rsites(comb<Km>& icomb,
 		 const double thresh_ortho){
    using Tm = typename Km::dtype;
-   std::cout << "\nctns::init_rsites Km=" << qkind::get_name<Km>() 
+   std::cout << "\nctns::init_rsites qkind=" << qkind::get_name<Km>() 
 	     << " thresh_ortho=" << thresh_ortho
 	     << std::endl;
    auto t0 = tools::get_time();
@@ -272,7 +272,7 @@ void init_rwfuns(comb<Km>& icomb,
 		 const std::vector<std::vector<typename Km::dtype>>& vs,
 		 const double thresh_ortho){
    using Tm = typename Km::dtype;
-   std::cout << "\nctns::init_rwfuns Km=" << qkind::get_name<Km>() 
+   std::cout << "\nctns::init_rwfuns qkind=" << qkind::get_name<Km>() 
 	     << " thresh_ortho=" << thresh_ortho 
 	     << std::endl;
    auto t0 = tools::get_time();

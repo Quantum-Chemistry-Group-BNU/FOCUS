@@ -108,11 +108,16 @@ LOGS
     - twodot partition
     - onedot partition
 
+ * Toward large-scale applications [DONE2022/06/XX]
+    - better distribution of operators & contraction pairs in Hx?
+	typical: cN [isym=1, ifkr=False]
+		 cNSz [isym=2, ifkr=False]
+		 cNK [isym=1, ifkr=True]
+
  ### TODOs ###
 
- * Toward large-scale applications:
-    - merged wf4[lc1,c2r] implementation?
     - GPU for contractions?
+    - merged wf4[lc1,c2r] implementation?
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 
 	- analyze why the parallel efficiency is low?
@@ -124,7 +129,7 @@ LOGS
 	- qbond - separate arrays?
         - 测openmp 注释contract 更好reduction
     - kramers version:
-	- complex alrithemic
+	- complex arithmetic
 	- how to avoid repeated K()?
 
  * Applications:

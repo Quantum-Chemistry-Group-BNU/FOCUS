@@ -64,7 +64,10 @@ struct symbolic_task{
          std::cout << " symbolic_task=" << name << " : size=" << tasks.size() << std::endl;
 	 if(level > 0){
             for(int i=0; i<tasks.size(); i++){
-	       std::cout << "  i=" << i << " " << tasks[i] << std::endl; 
+	       std::cout << "  i=" << i
+		         << " symbol=" << tasks[i].symbol() 
+		         << " " << tasks[i] 
+			 << std::endl; 
 	    }
 	 }
       }
@@ -84,7 +87,8 @@ struct symbolic_task{
             for(int i=0; i<tasks.size(); i++){
 	       std::cout << "i=" << i << " cost=" << tasks[i].cost(dims) 
 	                 << " symbol=" << tasks[i].symbol()
-	                 << " " << tasks[i] << std::endl;
+	                 << " " << tasks[i] 
+			 << std::endl;
 	    }
 	 }
       }
@@ -116,6 +120,14 @@ struct renorm_tasks{
       }
       // helper
       int size() const{ return op_tasks.size(); }
+      int sizetot() const{
+	 int sz = 0;
+         for(int idx=0; idx<op_tasks.size(); idx++){
+	    const auto& task = op_tasks[idx];
+	    sz += std::get<2>(task).size();
+	 }
+	 return sz;
+      }
       // reorder
       void sort(const std::map<std::string,int>& dims){
          // sort each operator

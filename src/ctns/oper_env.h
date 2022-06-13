@@ -123,7 +123,7 @@ void oper_env_right(const comb<Km>& icomb,
    const auto& ifdist1 = schd.ctns.ifdist1;
    const bool debug = (rank==0);
    if(debug){ 
-      std::cout << "\nctns::oper_env_right Km=" << qkind::get_name<Km>() << std::endl;
+      std::cout << "\nctns::oper_env_right qkind=" << qkind::get_name<Km>() << std::endl;
    }
    double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
 

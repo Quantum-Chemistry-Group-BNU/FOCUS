@@ -6,6 +6,27 @@
 
 namespace ctns{
 
+inline void analyze_distribution(const std::vector<int>& sizes){
+   int mpisize = sizes.size();
+   std::vector<double> fsizes(mpisize);
+   std::transform(sizes.cbegin(), sizes.cend(), fsizes.begin(),
+		  [](const int& x){ return double(x); }); 
+   int max = *std::max_element(fsizes.begin(), fsizes.end());
+   int min = *std::min_element(fsizes.begin(), fsizes.end());
+   int sum = std::accumulate(fsizes.begin(), fsizes.end(), 0.0);
+   int mean = double(sum)/mpisize;
+   double sum_sq = std::inner_product(fsizes.begin(), fsizes.end(), fsizes.begin(), 0.0);
+   int stdev = std::sqrt(sum_sq/mpisize - 1.0*mean*mean);
+   std::cout << "mpisize=" << mpisize
+  	     << " sum=" << sum
+  	     << " mean=" << mean 
+  	     << " max=" << max 
+  	     << " min=" << min
+  	     << " diff=" << (max-min)
+  	     << " stdev=" << stdev
+  	     << std::endl;
+}
+
 // analyze the distribution of operators along a sweep
 template <typename Km>
 void preprocess_oper(const comb<Km>& icomb,
@@ -30,10 +51,7 @@ void preprocess_oper(const comb<Km>& icomb,
 
    auto sweeps = icomb.topo.get_sweeps(true);
    int mid0 = icomb.topo.nphysical/2-2;
-   int mid1 = mid0 + icomb.topo.nphysical-2;
-   std::cout << "mid0,mid1=" << mid0 << "," << mid1 << std::endl; 
    for(int ibond=0; ibond<sweeps.size(); ibond++){
-      //if(ibond != mid0 && ibond != mid1) continue;
       if(ibond != mid0) continue;
       const auto& dbond = sweeps[ibond];
       const auto& p0 = dbond.p0;
@@ -113,12 +131,14 @@ void preprocess_oper(const comb<Km>& icomb,
       
       const bool& ifdist1 = schd.ctns.ifdist1;
       std::vector<int> sizes({1,2,4,8,32,128,1024});
-      for(int i=0; i<sizes.size(); i++){
-	 int mpisize = sizes[i];
+      for(int idx=0; idx<sizes.size(); idx++){
+	 int mpisize = sizes[idx];
 	 std::cout << "\nmpisize=" << mpisize 
 		   << " ifdist1=" << ifdist1
 		   << " ifkr=" << ifkr 
 		   << std::endl;
+
+	 // 1. distribution of two-indexed operators 
 	 // a
 	 std::vector<int> astat(mpisize,0);  
          for(int idx : aindex){
@@ -148,13 +168,73 @@ void preprocess_oper(const comb<Km>& icomb,
 	 }
          tools::print_vector(qstat,"qstat");
 
-	 // Hx formulae
-         std::string scratch = "scratch_formulae_"+std::to_string(mpisize);
+	 // 2. distribution of renormalized operators
+	 std::string scratch = "analysis_"+Km::name;
+	 io::remove_scratch(scratch);
 	 io::create_scratch(scratch); 
+
+	 std::string rscratch = scratch+"/rformulae_"+std::to_string(mpisize);
+	 io::create_scratch(rscratch); 
+	 std::vector<int> rsizes(mpisize,0.0);
+	 for(int rank=0; rank<mpisize; rank++){
+            std::string fname = rscratch+"/renorm"+std::to_string(rank)+".txt";
+            std::streambuf *psbuf, *backup;
+   	    std::ofstream file;
+            file.open(fname);
+	    backup = std::cout.rdbuf();
+	    psbuf = file.rdbuf();
+	    std::cout.rdbuf(psbuf);
+	    std::cout << "preprocess_formulae_renorm" 
+		      << " qkind=" << Km::name
+		      << " isym=" << isym
+		      << " ifkr=" << ifkr
+		      << " mpisize=" << mpisize
+		      << " mpirank=" << rank
+		      << std::endl;
+
+   	    std::string oplist = "CABPQSH";
+	    std::string block1, block2;
+	    std::vector<int> cindex1, cindex2;
+	    if(forward){
+	       block1 = "l"; cindex1 = cindex_l;
+	       block2 = "c"; cindex2 = cindex_c1;
+	    }else{
+	       block1 = "c"; cindex1 = cindex_c2;
+	       block2 = "r"; cindex2 = cindex_r;
+	    }
+	    const bool ifsave = true;
+            std::map<std::string,int> counter;
+            auto formulae = preprocess_formulae_renorm(oplist, block1, block2, 
+			    			       cindex1, cindex2, krest,
+		      	  	 		       isym, ifkr, int2e, mpisize, rank, ifdist1, 
+						       ifsave, counter);
+
+            formulae.display("total");
+	    std::cout.rdbuf(backup);
+	    file.close();
+
+	    // statistics
+	    std::cout << " rank=" << rank
+	              << " size=" << formulae.size()
+	              << " sizetot=" << formulae.sizetot()
+		      << " C:" << counter["C"]
+		      << " A:" << counter["A"]
+		      << " B:" << counter["B"]
+		      << " P:" << counter["P"]
+		      << " Q:" << counter["Q"]
+		      << " S:" << counter["S"]
+		      << " H:" << counter["H"]
+	              << std::endl;
+	    rsizes[rank] = formulae.sizetot();
+	 } // rank
+	 analyze_distribution(rsizes);
+
+	 // 3. Hx formulae
+         std::string hscratch = scratch+"/hformulae_"+std::to_string(mpisize);
+	 io::create_scratch(hscratch); 
 	 std::vector<int> fsizes(mpisize,0.0);
 	 for(int rank=0; rank<mpisize; rank++){
-
-            std::string fname = scratch+"/Hx"+std::to_string(rank)+".txt";
+            std::string fname = hscratch+"/Hx"+std::to_string(rank)+".txt";
             std::streambuf *psbuf, *backup;
    	    std::ofstream file;
             file.open(fname);
@@ -162,7 +242,7 @@ void preprocess_oper(const comb<Km>& icomb,
 	    psbuf = file.rdbuf();
 	    std::cout.rdbuf(psbuf);
 	    std::cout << "preprocess_formulae_twodot" 
-		      << " qkind=" << qkind::get_name<Km>()
+		      << " qkind=" << Km::name
 		      << " isym=" << isym
 		      << " ifkr=" << ifkr
 		      << " mpisize=" << mpisize
@@ -182,7 +262,7 @@ void preprocess_oper(const comb<Km>& icomb,
 	    // statistics
 	    auto key1 = ifNC? "AP" : "PA";
 	    auto key2 = ifNC? "BQ" : "QB";
-	    std::cout << "rank=" << rank
+	    std::cout << " rank=" << rank
 	              << " size(formulae)=" << formulae.size()
 		      << " H1:" << counter["H1"]
 		      << " H2:" << counter["H2"]
@@ -193,22 +273,9 @@ void preprocess_oper(const comb<Km>& icomb,
 	              << std::endl;
 	    fsizes[rank] = formulae.size();
 	 } // rank
-	 int max = *std::max_element(fsizes.begin(), fsizes.end());
-	 int min = *std::min_element(fsizes.begin(), fsizes.end());
-	 int sum = std::accumulate(fsizes.begin(), fsizes.end(), 0.0);
-	 int mean = double(sum)/mpisize;
-	 int sum_sq = std::inner_product(fsizes.begin(), fsizes.end(), fsizes.begin(), 0.0);
-         int stdev = std::sqrt(sum_sq/mpisize - mean*mean);
-	 std::cout << "mpisize=" << mpisize
-		   << " sum=" << sum
-		   << " mean=" << mean 
-		   << " max=" << max 
-		   << " min=" << min
-		   << " diff=" << (max-min)
-		   << " stdev=" << stdev
-		   << std::endl;
+	 analyze_distribution(fsizes);
 
-      } // i 
+      } // idx
 
    } // ibond
    exit(1);
