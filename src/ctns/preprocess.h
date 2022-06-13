@@ -40,9 +40,10 @@ void preprocess_oper(const comb<Km>& icomb,
    using DTYPE = typename Km::dtype;
    const int isym = Km::isym;
    const bool ifkr = Km::ifkr;
+   const std::string qname = qkind::get_name<Km>();
    if(rank == 0){
       std::cout << "\nctns::preprocess_oper" 
-		<< " qkind=" << qkind::get_name<Km>()
+		<< " qkind=" << qname
 		<< " isym=" << isym
 		<< " ifkr=" << ifkr
 		<< std::endl;
@@ -123,13 +124,18 @@ void preprocess_oper(const comb<Km>& icomb,
       auto cindex_r = oper_index_opC(suppr, ifkr);
       auto cindex_c1 = oper_index_opC(suppc1, ifkr);
       auto cindex_c2 = oper_index_opC(suppc2, ifkr);
+      const bool& ifdist1 = schd.ctns.ifdist1;
 
       integral::two_body<DTYPE> int2e;
       int2e.sorb = 2*icomb.topo.nphysical;
       int2e.init_mem();
       std::fill_n(int2e.data.begin(), int2e.data.size(), 1.0); 
-      
-      const bool& ifdist1 = schd.ctns.ifdist1;
+     
+      std::string scratch = "analysis_"+qname;
+      io::remove_scratch(scratch);
+      io::create_scratch(scratch); 
+      bool ifsave = true;
+
       std::vector<int> sizes({1,2,4,8,32,128,1024});
       for(int idx=0; idx<sizes.size(); idx++){
 	 int mpisize = sizes[idx];
@@ -169,10 +175,6 @@ void preprocess_oper(const comb<Km>& icomb,
          tools::print_vector(qstat,"qstat");
 
 	 // 2. distribution of renormalized operators
-	 std::string scratch = "analysis_"+Km::name;
-	 io::remove_scratch(scratch);
-	 io::create_scratch(scratch); 
-
 	 std::string rscratch = scratch+"/rformulae_"+std::to_string(mpisize);
 	 io::create_scratch(rscratch); 
 	 std::vector<int> rsizes(mpisize,0.0);
@@ -185,7 +187,7 @@ void preprocess_oper(const comb<Km>& icomb,
 	    psbuf = file.rdbuf();
 	    std::cout.rdbuf(psbuf);
 	    std::cout << "preprocess_formulae_renorm" 
-		      << " qkind=" << Km::name
+		      << " qkind=" << qname
 		      << " isym=" << isym
 		      << " ifkr=" << ifkr
 		      << " mpisize=" << mpisize
@@ -202,7 +204,6 @@ void preprocess_oper(const comb<Km>& icomb,
 	       block1 = "c"; cindex1 = cindex_c2;
 	       block2 = "r"; cindex2 = cindex_r;
 	    }
-	    const bool ifsave = true;
             std::map<std::string,int> counter;
             auto formulae = preprocess_formulae_renorm(oplist, block1, block2, 
 			    			       cindex1, cindex2, krest,
@@ -242,14 +243,13 @@ void preprocess_oper(const comb<Km>& icomb,
 	    psbuf = file.rdbuf();
 	    std::cout.rdbuf(psbuf);
 	    std::cout << "preprocess_formulae_twodot" 
-		      << " qkind=" << Km::name
+		      << " qkind=" << qname
 		      << " isym=" << isym
 		      << " ifkr=" << ifkr
 		      << " mpisize=" << mpisize
 		      << " mpirank=" << rank
 		      << std::endl;
 
-	    const bool ifsave = true;
             std::map<std::string,int> counter;
             auto formulae = preprocess_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
 		      	  	 		       isym, ifkr, int2e, mpisize, rank, ifdist1, 
@@ -274,9 +274,34 @@ void preprocess_oper(const comb<Km>& icomb,
 	    fsizes[rank] = formulae.size();
 	 } // rank
 	 analyze_distribution(fsizes);
-
       } // idx
 
+      // classification of Hx
+      ifsave = false;
+      std::map<std::string,int> counter;
+      auto formulae = preprocess_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+		      	  	 		 isym, ifkr, int2e, 1, 0, ifdist1, 
+						 ifsave, counter);
+      std::map<std::string,std::vector<int>> maps;
+      for(int i=0; i<formulae.size(); i++){
+         auto symbol = formulae.tasks[i].symbol();
+	 maps[symbol].push_back(i);
+      }	     
+      std::cout << "Hx_twodot: " << std::endl;
+      int nterm = 0;
+      int htype = 0;
+      for(const auto& pr : maps){
+	 std::cout << "idx=" << htype 
+		   << " htype=" << pr.first
+		   << " size=" << pr.second.size()
+		   << std::endl;
+	 nterm += pr.second.size(); 
+	 htype++;
+      } 
+      std::cout << "Total types=" << htype
+	        << " nterm=" << nterm
+		<< std::endl;
+      assert(formulae.size() == nterm);
    } // ibond
    exit(1);
 }
