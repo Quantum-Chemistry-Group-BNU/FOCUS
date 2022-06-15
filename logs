@@ -103,20 +103,25 @@ LOGS
     - data compression? 
     - reduce half AB/PQ operators?
 
- * Distributed H[CS] term [DONE2022/06/10]
+ * Distributed H[CS] term - Chan's algorithm [DONE2022/06/10]
     - renorm opS and opH
     - twodot partition
     - onedot partition
 
- * Toward large-scale applications [DONE2022/06/XX]
+ * Load balance
+    - better distribution of operators [DONE2022/06/15]
+    - opS?
+    - Hx?
+   
+ ### TODOs ###
+
     - better distribution of operators & contraction pairs in Hx?
 	typical: cN [isym=1, ifkr=False]
 		 cNSz [isym=2, ifkr=False]
 		 cNK [isym=1, ifkr=True]
-
- ### TODOs ###
-
-    - GPU for contractions?
+ 
+ * Toward large-scale applications [DONE2022/06/XX]
+    - GPU for contractions? BatchedGEMM
     - merged wf4[lc1,c2r] implementation?
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 
