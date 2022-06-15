@@ -480,7 +480,7 @@ void oper_check_rbasis(const comb<Km>& bra,
    for(const auto& opS : qops('S')){
       const auto& op = opS.second;
       int orb_p = opS.first;
-      int iproc = distribute1(orb_p,size);
+      int iproc = distribute1(qops.ifkr,size,orb_p);
       if(ifdist1 and iproc!=rank) continue;
       // build
       int dim0 = bsite.info.qrow.get_dimAll();

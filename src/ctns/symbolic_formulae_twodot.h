@@ -101,7 +101,7 @@ symbolic_task<Tm> preprocess_formulae_twodot(const std::vector<int>& cindex_l,
       for(const auto pr : ainfo){
          int index = pr.first;
          int iformula = pr.second;
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             // Apq*Ppq + Apq^+*Ppq^+
             auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula, ifkr);
@@ -124,7 +124,7 @@ symbolic_task<Tm> preprocess_formulae_twodot(const std::vector<int>& cindex_l,
       for(const auto pr : binfo){
          int index = pr.first;
          int iformula = pr.second;
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula, ifkr);
             auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", cindex_c2, cindex_r,
@@ -148,7 +148,7 @@ symbolic_task<Tm> preprocess_formulae_twodot(const std::vector<int>& cindex_l,
       for(const auto pr : ainfo){
          int index = pr.first;
          int iformula = pr.second;
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             // Apq*Ppq + Apq^+*Ppq^+
             auto Plc1 = symbolic_compxwf_opP<Tm>("l", "c1", cindex_l, cindex_c1,
@@ -171,7 +171,7 @@ symbolic_task<Tm> preprocess_formulae_twodot(const std::vector<int>& cindex_l,
       for(const auto pr : binfo){
          int index = pr.first;
          int iformula = pr.second;
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Qlc1 = symbolic_compxwf_opQ<Tm>("l", "c1", cindex_l, cindex_c1,
            		                         int2e, index, isym, ifkr);
@@ -403,7 +403,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
       for(const auto pr : ainfo){
          int index = pr.first;
          int iformula = pr.second;
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             // Apq*Ppq + Apq^+*Ppq^+
             auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula, ifkr);
@@ -427,7 +427,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
       for(const auto pr : binfo){
          int index = pr.first;
          int iformula = pr.second;
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula, ifkr);
             auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", cindex_c2, cindex_r,
@@ -452,7 +452,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
       for(const auto pr : ainfo){
          int index = pr.first;
          int iformula = pr.second;
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             // Apq*Ppq + Apq^+*Ppq^+
             auto Plc1 = symbolic_compxwf_opP<Tm>("l", "c1", cindex_l, cindex_c1,
@@ -476,7 +476,7 @@ bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
       for(const auto pr : binfo){
          int index = pr.first;
          int iformula = pr.second;
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Qlc1 = symbolic_compxwf_opQ<Tm>("l", "c1", cindex_l, cindex_c1,
            		                         int2e, index, isym, ifkr);

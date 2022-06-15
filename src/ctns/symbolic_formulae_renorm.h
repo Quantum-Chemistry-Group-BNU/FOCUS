@@ -49,7 +49,7 @@ renorm_tasks<Tm> preprocess_formulae_renorm(const std::string& oplist,
       auto ainfo = oper_combine_opA(cindex1, cindex2, ifkr);
       for(const auto& pr : ainfo){
          int index = pr.first, iformula = pr.second;
-         int iproc = distribute2(index, size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
 	    auto opA = symbolic_normxwf_opA<Tm>(block1, block2, index, iformula, ifkr);
 	    formulae.append(std::make_tuple('A', index, opA));
@@ -67,7 +67,7 @@ renorm_tasks<Tm> preprocess_formulae_renorm(const std::string& oplist,
       auto binfo = oper_combine_opB(cindex1, cindex2, ifkr);
       for(const auto& pr : binfo){
          int index = pr.first, iformula = pr.second;
-         int iproc = distribute2(index, size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
 	    auto opB = symbolic_normxwf_opB<Tm>(block1, block2, index, iformula, ifkr);
 	    formulae.append(std::make_tuple('B', index, opB));
@@ -84,13 +84,16 @@ renorm_tasks<Tm> preprocess_formulae_renorm(const std::string& oplist,
       counter["P"] = 0;	
       auto pindex = oper_index_opP(krest, ifkr);    
       for(const auto& index : pindex){
-	 auto opP = symbolic_compxwf_opP<Tm>(block1, block2, cindex1, cindex2,
-			 	             int2e, index, isym, ifkr);
-	 formulae.append(std::make_tuple('P', index, opP));
-         counter["P"] += opP.size();	   
-	 if(ifsave){
-	    std::cout << "idx=" << idx++;
-            opP.display("opP["+std::to_string(index)+"]", print_level);
+         int iproc = distribute2(ifkr,size,index);
+	 if(iproc == rank){
+	    auto opP = symbolic_compxwf_opP<Tm>(block1, block2, cindex1, cindex2,
+	           	 	                int2e, index, isym, ifkr);
+	    formulae.append(std::make_tuple('P', index, opP));
+            counter["P"] += opP.size();	   
+	    if(ifsave){
+	       std::cout << "idx=" << idx++;
+               opP.display("opP["+std::to_string(index)+"]", print_level);
+	    }
 	 }
       }
    }
@@ -99,13 +102,16 @@ renorm_tasks<Tm> preprocess_formulae_renorm(const std::string& oplist,
       counter["Q"] = 0;
       auto qindex = oper_index_opQ(krest, ifkr); 
       for(const auto& index : qindex){
-	 auto opQ = symbolic_compxwf_opQ<Tm>(block1, block2, cindex1, cindex2,
-			 	             int2e, index, isym, ifkr);
-	 formulae.append(std::make_tuple('Q', index, opQ));
-      	 counter["Q"] += opQ.size();	   
-	 if(ifsave){
-	    std::cout << "idx=" << idx++;
-            opQ.display("opQ["+std::to_string(index)+"]", print_level);
+	 int iproc = distribute2(ifkr,size,index);
+	 if(iproc == rank){
+	    auto opQ = symbolic_compxwf_opQ<Tm>(block1, block2, cindex1, cindex2,
+	           	 	                int2e, index, isym, ifkr);
+	    formulae.append(std::make_tuple('Q', index, opQ));
+      	    counter["Q"] += opQ.size();	   
+	    if(ifsave){
+	       std::cout << "idx=" << idx++;
+               opQ.display("opQ["+std::to_string(index)+"]", print_level);
+	    }
 	 }
       }
    }
@@ -116,7 +122,7 @@ renorm_tasks<Tm> preprocess_formulae_renorm(const std::string& oplist,
       for(const auto& index : sindex){
 	 auto opS = symbolic_compxwf_opS<Tm>(block1, block2, cindex1, cindex2,
 			 	             int2e, index, isym, ifkr, size, rank, ifdist1);
-	 // opS can be empty for ifdistribute1=true
+	 // opS can be empty for ifdist1=true
 	 if(opS.size() == 0) continue;
   	 formulae.append(std::make_tuple('S', index, opS));
          counter["S"] += opS.size();	   
@@ -131,7 +137,7 @@ renorm_tasks<Tm> preprocess_formulae_renorm(const std::string& oplist,
       counter["H"] = 0;	   
       auto opH = symbolic_compxwf_opH<Tm>(block1, block2, cindex1, cindex2,
 	 	      		          ifkr, size, rank, ifdist1);
-      // opH can be empty for ifdistribute1=true
+      // opH can be empty for ifdist1=true
       if(opH.size() > 0){
          formulae.append(std::make_tuple('H', 0, opH));
          counter["H"] += opH.size();	   

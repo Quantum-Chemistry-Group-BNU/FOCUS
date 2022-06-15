@@ -100,7 +100,7 @@ void onedot_Hdiag_BQ(const std::string superblock,
    }
    // B^L*Q^R or Q^L*B^R 
    for(const auto& index : bindex){
-      int iproc = distribute2(index,size);
+      int iproc = distribute2(ifkr,size,index);
       if(iproc == rank){
          const Tm wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
          const auto& O1 = qops1(BQ1).at(index);

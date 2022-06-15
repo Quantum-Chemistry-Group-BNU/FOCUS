@@ -190,7 +190,7 @@ std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
       }
       if(ifdist2 && mpisize > 1){ 
          for(int idx : index2){
-            int iproc = distribute2(idx, mpisize);
+            int iproc = distribute2(ifkr, mpisize, idx);
             if(iproc == mpirank) index.push_back(idx);
          }
       }else{

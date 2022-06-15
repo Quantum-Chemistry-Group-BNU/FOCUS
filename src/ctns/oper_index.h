@@ -3,11 +3,6 @@
 
 namespace ctns{
 
-// --- distribution of p for MPI ---
-inline int distribute1(const int index, const int size){
-   return index%size;
-}
-
 // --- packing (i,j) into ij ---
 const int kpack = 1000;
 extern const int kpack;
@@ -17,14 +12,6 @@ inline int oper_pack(const int i, const int j){
 }
 inline std::pair<int,int> oper_unpack(const int ij){
    return std::make_pair(ij%kpack,ij/kpack);
-}
-
-// --- distribution of (p,q) for MPI ---
-inline int distribute2(const int index, const int size){
-   auto pq = oper_unpack(index);
-   int p = pq.first, q = pq.second;
-   assert(p <= q);
-   return (p == q)? p%size : (q*(q-1)/2+p)%size;
 }
 
 // --- weight factor in H ---
@@ -48,6 +35,20 @@ inline double wfacBQ(const int ij){
    int i = ij%kpack, ki = i/2, spin_i = i%2;
    int j = ij/kpack, kj = j/2, spin_j = j%2;
    return (ki==kj)? 0.5 : 1.0;
+}
+
+// --- distribution of p or (p,q) for MPI ---
+inline int distribute1(const bool ifkr, const int size, const int index){
+   // only SpA is kept for ifkr=true
+   return ifkr? (index/2)%size : index%size; 
+}
+
+inline int distribute2(const bool ifkr, const int size, const int index){
+   auto pq = oper_unpack(index);
+   int p = pq.first;
+   int q = pq.second;
+   assert(p <= q);
+   return (q*(q+1)/2+p)%size;
 }
 
 // --- no. of A/B/P/Q operators ---

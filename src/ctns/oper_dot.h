@@ -59,24 +59,8 @@ void oper_init_dot(oper_dict<Tm>& qops,
    // scale full {Sp,H} on dot to avoid repetition in parallelization
 #ifndef SERIAL
    if(size > 1){
-/*
-      if(!ifdist1){ // to ensure the code work for alg_hvec/renorm=0
-         const Tm scale = 1.0/size;
-         for(auto& p : qops('S')){
-            p.second *= scale;
-         }
-         qops('H')[0] *= scale;
-      }else{
-         if(rank != 0) qops('H')[0].clear();
-         for(auto& pr : qops('S')){
-            int iproc = distribute1(pr.first,size);
-            if(iproc != rank) pr.second.clear();
-         }
-      }
-*/
-	   
       for(auto& pr : qops('S')){
-         int iproc = distribute1(pr.first,size);
+         int iproc = distribute1(ifkr,size,pr.first);
          if(iproc != rank) pr.second.clear();
       }
       if(rank != 0) qops('H')[0].clear();

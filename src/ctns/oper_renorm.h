@@ -105,7 +105,7 @@ void oper_renorm_opAll(const std::string superblock,
       // Sp[iproc] += \sum_i Sp[i]
       auto opS_index = qops.oper_index_op('S');
       for(auto& p : opS_index){
-         int iproc = distribute1(p,size);
+         int iproc = distribute1(ifkr,size,p);
          auto& opS = qops('S')[p];
          int opsize = opS.size();
          memset(top.data(), 0, opsize*sizeof(Tm));
@@ -214,7 +214,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
       auto ainfo = oper_combine_opA(qops1.cindex, qops2.cindex, qops.ifkr);
       for(const auto& pr : ainfo){
          int index = pr.first, iformula = pr.second;
-         int iproc = distribute2(index, qops.mpisize);
+         int iproc = distribute2(qops.ifkr, qops.mpisize, index);
          if(iproc == qops.mpirank){
             Hx_functor<Tm> Hx("A", index, iformula);
             Hx.opxwf = bind(&oper_normxwf_opA<Tm>, 
@@ -230,7 +230,7 @@ Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
       auto binfo = oper_combine_opB(qops1.cindex, qops2.cindex, qops.ifkr);
       for(const auto& pr : binfo){
          int index = pr.first, iformula = pr.second;
-         int iproc = distribute2(index, qops.mpisize);
+         int iproc = distribute2(qops.ifkr, qops.mpisize, index);
          if(iproc == qops.mpirank){
             Hx_functor<Tm> Hx("B", index, iformula);
             Hx.opxwf = bind(&oper_normxwf_opB<Tm>, 

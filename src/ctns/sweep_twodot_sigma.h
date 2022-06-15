@@ -285,7 +285,7 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
    for(const auto pr : ainfo){
       int index = pr.first;
       int iformula = pr.second;
-      int iproc = distribute2(index,size);
+      int iproc = distribute2(ifkr,size,index);
       if(iproc == rank){
          Hx_functor<Tm> Hx(alabel, index, iformula);
          Hx.opxwf = bind(afun, index, iformula,
@@ -298,7 +298,7 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
    for(const auto pr : binfo){
       int index = pr.first;
       int iformula = pr.second;
-      int iproc = distribute2(index,size);
+      int iproc = distribute2(ifkr,size,index);
       if(iproc == rank){
          Hx_functor<Tm> Hx(blabel, index, iformula);
          Hx.opxwf = bind(bfun, index, iformula, 

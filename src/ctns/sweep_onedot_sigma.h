@@ -247,6 +247,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
    const auto& lqops = qops_dict.at("l");
    const auto& rqops = qops_dict.at("r");
    const auto& cqops = qops_dict.at("c");
+   const bool ifkr = lqops.ifkr;
    const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
    Hx_functors<Tm> Hx_funs;
    // Local terms:
@@ -276,7 +277,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
    auto ccfun = ifNC? &onedot_Hx_SCnc<Tm> : &onedot_Hx_CScn<Tm>;
    for(const auto& pr : ccinfo){
       int index = pr.first;
-      int iproc = distribute1(index,size);
+      int iproc = distribute1(ifkr,size,index);
       if(!ifdist1 or iproc==rank){ 
          int iformula = pr.second;
          Hx_functor<Tm> Hx(cclabel, index, iformula);
@@ -287,7 +288,6 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
       }
    }
    // Two-index terms:
-   const bool ifkr = lqops.ifkr;
    auto aindex = ifNC? oper_index_opA(lqops.cindex, ifkr) : oper_index_opA(rqops.cindex, ifkr);
    auto bindex = ifNC? oper_index_opB(lqops.cindex, ifkr) : oper_index_opB(rqops.cindex, ifkr);
    auto afun = ifNC? &onedot_Hx_APnc<Tm> : &onedot_Hx_PAcn<Tm>;
@@ -296,7 +296,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
    auto blabel = ifNC? "BQnc" : "QBcn";
    // 5. Apq^l*Ppq^cr + h.c. or Ars^r*Prs^lc + h.c.
    for(const auto& index : aindex){
-      int iproc = distribute2(index,size);
+      int iproc = distribute2(ifkr,size,index);
       if(iproc == rank){
          Hx_functor<Tm> Hx(alabel, index, 0);
          Hx.opxwf = bind(afun, index, 
@@ -307,7 +307,7 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
    }
    // 6. Bps^l*Qps^cr (using Hermicity) or Qqr^lc*Bqr^r (using Hermicity)
    for(const auto& index : bindex){
-      int iproc = distribute2(index,size);
+      int iproc = distribute2(ifkr,size,index);
       if(iproc == rank){
          Hx_functor<Tm> Hx(blabel, index, 0);
          Hx.opxwf = bind(bfun, index, 

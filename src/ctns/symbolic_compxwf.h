@@ -143,7 +143,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    //    + <pq2||s1r1> aq[2]^+ar[1]as[1] 
    //    + <pq1||s1r2> aq[1]^+ar[2]as[1] 
    //
-   int iproc = distribute1(p,size);
+   int iproc = distribute1(ifkr,size,p);
    if(!ifdist1 or iproc==rank){
       // 1. S1*I2
       auto S1p = symbolic_prod<Tm>(symbolic_oper(block1,'S',index,ifdagger));
@@ -168,13 +168,13 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    auto aindex2 = oper_index_opA(cindex2, ifkr);
    auto bindex2 = oper_index_opB(cindex2, ifkr); 
    if(!ifkr){
-      
+/*      
       // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	   
       if(combine_two_index3){
          // sum_q aq^+[1]*Ppq[2]
          for(const auto& q : cindex1){
             int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-            int iproc = distribute2(ipq,size);
+            int iproc = distribute2(ifkr,size,ipq);
             if(iproc == rank){
                auto op1c = symbolic_oper(block1,'C',q);
                auto op2P = symbolic_oper(block2,'P',ipq);
@@ -186,7 +186,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
       }else{
          // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
          for(const auto& isr : aindex2){
-	    int iproc = distribute2(isr,size);
+	    int iproc = distribute2(ifkr,size,isr);
 	    if(iproc == rank){
                auto sr = oper_unpack(isr);
 	       int s2 = sr.first;
@@ -211,7 +211,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	 // sum_q aq[1]*Qpq[2]
          for(const auto& q : cindex1){
             int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-            int iproc = distribute2(ipq,size);
+            int iproc = distribute2(ifkr,size,ipq);
             if(iproc == rank){
                auto op1c = symbolic_oper(block1,'C',q);
                auto op1a = op1c.H();
@@ -224,7 +224,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
       }else{
          // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
 	 for(const auto& iqr : bindex2){
-	    int iproc = distribute2(iqr,size);
+	    int iproc = distribute2(ifkr,size,iqr);
 	    if(iproc == rank){
                auto qr = oper_unpack(iqr);
 	       int q2 = qr.first;
@@ -261,7 +261,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
          // sum_q Ppq[1]*aq^+[2]
          for(const auto& q : cindex2){
             int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-            int iproc = distribute2(ipq,size);
+            int iproc = distribute2(ifkr,size,ipq);
             if(iproc == rank){
                auto op2c = symbolic_oper(block2,'C',q);
                auto op1P = symbolic_oper(block1,'P',ipq);
@@ -273,7 +273,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
       }else{
 	 // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
 	 for(const auto& isr : aindex1){
-	    int iproc = distribute2(isr,size);
+	    int iproc = distribute2(ifkr,size,isr);
 	    if(iproc == rank){
 	       auto sr = oper_unpack(isr);
 	       int s1 = sr.first;
@@ -298,7 +298,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	 // sum_q Qpq^[1]*aq[2]
          for(const auto& q : cindex2){
             int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-            int iproc = distribute2(ipq,size);
+            int iproc = distribute2(ifkr,size,ipq);
             if(iproc == rank){
                auto op2c = symbolic_oper(block2,'C',q);
                auto op2a = op2c.H();
@@ -311,7 +311,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
       }else{
          // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
 	 for(const auto& iqs : bindex1){
-	    int iproc = distribute2(iqs,size);
+	    int iproc = distribute2(ifkr,size,iqs);
    	    if(iproc == rank){
 	       auto qs = oper_unpack(iqs);
 	       int q1 = qs.first;
@@ -342,9 +342,9 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	    }
 	 }
       }
-
+*/
    }else{
-      
+/*      
       // Kramers symmetry-adapted version 
       int pa = p, pb = pa+1;
 
@@ -358,7 +358,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
             auto op1c_B = op1c_A.K(1);
    	    auto op1a_B = op1a_A.K(1);
    	    int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-   	    int iproc_aa = distribute2(ipq_aa,size);
+   	    int iproc_aa = distribute2(ifkr,size,ipq_aa);
    	    if(iproc_aa == rank){
    	       auto op2P_AA = symbolic_oper(block2,'P',ipq_aa);
    	       auto c1P2_AA = (kp<kq)? symbolic_prod<Tm>(op1c_A,op2P_AA) : 
@@ -366,7 +366,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    	       formulae.append(c1P2_AA);
    	    }
    	    int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-   	    int iproc_ab = distribute2(ipq_ab,size);
+   	    int iproc_ab = distribute2(ifkr,size,ipq_ab);
    	    if(iproc_ab == rank){
    	       auto op2P_AB = symbolic_oper(block2,'P',ipq_ab);
    	       auto c1P2_AB = (kp<kq)? symbolic_prod<Tm>(op1c_B,op2P_AB) :
@@ -377,7 +377,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
       }else{
          // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
 	 for(const auto& isr : aindex2){
-	    int iproc = distribute2(isr,size);
+	    int iproc = distribute2(ifkr,size,isr);
 	    if(iproc == rank){
 	       double wt = wfacAP(isr);
 	       auto sr = oper_unpack(isr);
@@ -414,7 +414,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
             auto op1c_B = op1c_A.K(1);
    	    auto op1a_B = op1a_A.K(1);
    	    int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-   	    int iproc_aa = distribute2(ipq_aa,size);
+   	    int iproc_aa = distribute2(ifkr,size,ipq_aa);
    	    if(iproc_aa == rank){
    	       auto op2Q_AA = symbolic_oper(block2,'Q',ipq_aa);
    	       auto a1Q2_AA = (kp<kq)? symbolic_prod<Tm>(op1a_A,op2Q_AA) : 
@@ -422,7 +422,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    	       formulae.append(a1Q2_AA);
    	    }
    	    int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-   	    int iproc_ab = distribute2(ipq_ab,size);
+   	    int iproc_ab = distribute2(ifkr,size,ipq_ab);
    	    if(iproc_ab == rank){
    	       auto op2Q_AB = symbolic_oper(block2,'Q',ipq_ab);
    	       auto a1Q2_AB = (kp<kq)? symbolic_prod<Tm>(op1a_B,op2Q_AB) :
@@ -433,7 +433,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
       }else{
          // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
          for(const auto& iqr : bindex2){
-            int iproc = distribute2(iqr,size);
+            int iproc = distribute2(ifkr,size,iqr);
 	    if(iproc == rank){
 	       auto qr = oper_unpack(iqr);
                int q2 = qr.first , kq2 = q2/2, spin_q2 = q2%2, q2K = q2+1-2*spin_q2;
@@ -481,7 +481,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
             auto op2c_B = op2c_A.K(1);
    	    auto op2a_B = op2a_A.K(1);
             int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-   	    int iproc_aa = distribute2(ipq_aa,size);
+   	    int iproc_aa = distribute2(ifkr,size,ipq_aa);
    	    if(iproc_aa == rank){
    	       auto op1P_AA = symbolic_oper(block1,'P',ipq_aa);
    	       auto P1c2_AA = (kp<kq)? symbolic_prod<Tm>(op1P_AA,op2c_A) : 
@@ -489,7 +489,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    	       formulae.append(P1c2_AA);
             } 
    	    int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-   	    int iproc_ab = distribute2(ipq_ab,size);
+   	    int iproc_ab = distribute2(ifkr,size,ipq_ab);
    	    if(iproc_ab == rank){
    	       auto op1P_AB = symbolic_oper(block1,'P',ipq_ab);
    	       auto P1c2_AB = (kp<kq)? symbolic_prod<Tm>(op1P_AB,op2c_B) :
@@ -500,7 +500,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
       }else{
          // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
          for(const auto& isr : aindex1){
-	    int iproc = distribute2(isr,size);
+	    int iproc = distribute2(ifkr,size,isr);
             if(iproc == rank){	    
                double wt =  wfacAP(isr);
 	       auto sr = oper_unpack(isr);
@@ -537,7 +537,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
             auto op2c_B = op2c_A.K(1);
    	    auto op2a_B = op2a_A.K(1);
             int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-   	    int iproc_aa = distribute2(ipq_aa,size);
+   	    int iproc_aa = distribute2(ifkr,size,ipq_aa);
    	    if(iproc_aa == rank){
    	       auto op1Q_AA = symbolic_oper(block1,'Q',ipq_aa);
    	       auto Q1a2_AA = (kp<kq)? symbolic_prod<Tm>(op1Q_AA,op2a_A) : 
@@ -545,7 +545,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    	       formulae.append(Q1a2_AA);
             }
    	    int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-   	    int iproc_ab = distribute2(ipq_ab,size);
+   	    int iproc_ab = distribute2(ifkr,size,ipq_ab);
    	    if(iproc_ab == rank){
    	       auto op1Q_AB = symbolic_oper(block1,'Q',ipq_ab);
    	       auto Q1a2_AB = (kp<kq)? symbolic_prod<Tm>(op1Q_AB,op2a_B) :
@@ -556,7 +556,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
       }else{
          // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
          for(const auto& iqs : bindex1){
-	    int iproc = distribute2(iqs,size);
+	    int iproc = distribute2(ifkr,size,iqs);
 	    if(iproc == rank){
 	       auto qs = oper_unpack(iqs);
                int q1 = qs.first , kq1 = q1/2, spin_q1 = q1%2, q1K = q1+1-2*spin_q1;
@@ -593,7 +593,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	    }
          }
       }
-    
+*/
    } // ifkr
    return formulae;
 }
@@ -638,7 +638,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    // One-index operators
    // 3. sum_p1 p1^+ Sp1^2 + h.c. 
    for(const auto& p1 : cindex1){
-      int iproc = distribute1(p1,size);
+      int iproc = distribute1(ifkr,size,p1);
       if(!ifdist1 or iproc==rank){
          auto op1C = symbolic_oper(block1,'C',p1);
          auto op2S = symbolic_oper(block2,'S',p1);
@@ -648,7 +648,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    }
    // 4. sum_q2 q2^+ Sq2^1 + h.c. = -Sq2^1 q2^+ + h.c. 
    for(const auto& q2 : cindex2){
-      int iproc = distribute1(q2,size);
+      int iproc = distribute1(ifkr,size,q2);
       if(!ifdist1 or iproc==rank){
          auto op1S = symbolic_oper(block1,'S',q2);
          auto op2C = symbolic_oper(block2,'C',q2);
@@ -659,7 +659,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    // Two-index operators
    // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
    for(const auto& index : aindex){
-      int iproc = distribute2(index,size);
+      int iproc = distribute2(ifkr,size,index);
       if(iproc == rank){
          const double wt = ifkr? wfacAP(index) : 1.0;
          auto op1 = symbolic_oper(block1,AP1,index);
@@ -670,7 +670,7 @@ symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
    }
    // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
    for(const auto& index : bindex){
-      int iproc = distribute2(index,size);
+      int iproc = distribute2(ifkr,size,index);
       if(iproc == rank){
          const double wt = ifkr? wfacBQ(index) : wfac(index);
          auto op1 = symbolic_oper(block1,BQ1,index);

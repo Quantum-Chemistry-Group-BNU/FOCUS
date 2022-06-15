@@ -178,7 +178,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
    //    + <pq2||s1r1> aq[2]^+ar[1]as[1] 
    //    + <pq1||s1r2> aq[1]^+ar[2]as[1] 
    //
-   int iproc = distribute1(p,size);
+   int iproc = distribute1(ifkr,size,p);
    if(!ifdist1 or iproc==rank){
       // 1. S1*I2
       opxwf += oper_kernel_OIwf(superblock,site,qops1('S').at(index),ifdagger);
@@ -213,7 +213,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          // sum_q aq^+[1]*Ppq[2]
 	 for(const auto& q : cindex1){
             int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-            int iproc = distribute2(ipq,size);
+            int iproc = distribute2(ifkr,size,ipq);
             if(iproc == rank){
 	       const auto& op1c = qops1('C').at(q);
                const auto& op2P = (p<q)? qops2('P').at(ipq) : -qops2('P').at(ipq);
@@ -223,7 +223,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
       }else{
          // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
 	 for(const auto& isr : aindex2){
-	    int iproc = distribute2(isr,size);
+	    int iproc = distribute2(ifkr,size,isr);
 	    if(iproc == rank){
 	       auto sr = oper_unpack(isr);
 	       int s2 = sr.first;
@@ -246,7 +246,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          // sum_q aq[1]*Qpq[2]
 	 for(const auto& q : cindex1){
             int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-            int iproc = distribute2(ipq,size);
+            int iproc = distribute2(ifkr,size,ipq);
             if(iproc == rank){
                const auto& op1a = qops1('C').at(q).H();
                const auto& op2Q = (p<q)? qops2('Q').at(ipq) : qops2('Q').at(ipq).H();
@@ -256,7 +256,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
       }else{
          // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
 	 for(const auto& iqr : bindex2){
-	    int iproc = distribute2(iqr,size);
+	    int iproc = distribute2(ifkr,size,iqr);
 	    if(iproc == rank){
                auto qr = oper_unpack(iqr);
 	       int q2 = qr.first;
@@ -290,7 +290,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          // sum_q Ppq[1]*aq^+[2]
 	 for(const auto& q : cindex2){
             int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-            int iproc = distribute2(ipq,size);
+            int iproc = distribute2(ifkr,size,ipq);
             if(iproc == rank){
                const auto& op2c = qops2('C').at(q);
                const auto& op1P = (p<q)? qops1('P').at(ipq) : -qops1('P').at(ipq);
@@ -300,7 +300,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
       }else{
 	 // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
 	 for(const auto& isr : aindex1){ 
-	    int iproc = distribute2(isr,size);
+	    int iproc = distribute2(ifkr,size,isr);
 	    if(iproc == rank){
 	       auto sr = oper_unpack(isr);
 	       int s1 = sr.first;
@@ -323,7 +323,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          // sum_q Qpq^[1]*aq[2]
 	 for(const auto& q : cindex2){
             int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-            int iproc = distribute2(ipq,size);
+            int iproc = distribute2(ifkr,size,ipq);
             if(iproc == rank){
                const auto& op2a = qops2('C').at(q).H();
                const auto& op1Q = (p<q)? qops1('Q').at(ipq) : qops1('Q').at(ipq).H();
@@ -333,7 +333,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
       }else{
          // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
 	 for(const auto& iqs : bindex1){
-            int iproc = distribute2(iqs,size);
+            int iproc = distribute2(ifkr,size,iqs);
 	    if(iproc == rank){
 	       auto qs = oper_unpack(iqs);
 	       int q1 = qs.first;
@@ -374,14 +374,14 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
             int qb = qa+1, kq = qa/2;
    	    const auto& op1c_A = qops1('C').at(qa);
    	    int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-   	    int iproc_aa = distribute2(ipq_aa,size);
+   	    int iproc_aa = distribute2(ifkr,size,ipq_aa);
    	    if(iproc_aa == rank){
    	       const auto& op2P_AA = (kp<kq)? qops2('P').at(ipq_aa) : -qops2('P').at(ipq_aa);
                opxwf += oper_kernel_OOwf(superblock,site,op1c_A,op2P_AA,0,ifdagger);
    	    } 
             const auto& op1c_B = op1c_A.K(1);
    	    int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-   	    int iproc_ab = distribute2(ipq_ab,size);
+   	    int iproc_ab = distribute2(ifkr,size,ipq_ab);
    	    if(iproc_ab == rank){
    	       const auto& op2P_AB = (kp<kq)? qops2('P').at(ipq_ab) : -qops2('P').at(ipq_ab).K(1);
                opxwf += oper_kernel_OOwf(superblock,site,op1c_B,op2P_AB,0,ifdagger);
@@ -390,7 +390,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
       }else{
          // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
 	 for(const auto& isr : aindex2){
-	    int iproc = distribute2(isr,size);
+	    int iproc = distribute2(ifkr,size,isr);
 	    if(iproc == rank){
 	       double wt =  wfacAP(isr);
                auto sr = oper_unpack(isr);
@@ -421,14 +421,14 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
             int qb = qa+1, kq = qa/2;
             const auto& op1a_A = qops1('C').at(qa).H();
    	    int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-   	    int iproc_aa = distribute2(ipq_aa,size);
+   	    int iproc_aa = distribute2(ifkr,size,ipq_aa);
    	    if(iproc_aa == rank){
                const auto& op2Q_AA = (kp<kq)? qops2('Q').at(ipq_aa) :  qops2('Q').at(ipq_aa).H();
                opxwf += oper_kernel_OOwf(superblock,site,op1a_A,op2Q_AA,0,ifdagger);
    	    } 
    	    const auto& op1a_B = op1a_A.K(1);
    	    int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-   	    int iproc_ab = distribute2(ipq_ab,size);
+   	    int iproc_ab = distribute2(ifkr,size,ipq_ab);
    	    if(iproc_ab == rank){
                const auto& op2Q_AB = (kp<kq)? qops2('Q').at(ipq_ab) :  qops2('Q').at(ipq_ab).K(1).H();
                opxwf += oper_kernel_OOwf(superblock,site,op1a_B,op2Q_AB,0,ifdagger);
@@ -437,7 +437,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
       }else{
          // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
 	 for(const auto& iqr : bindex2){
-            int iproc = distribute2(iqr,size);
+            int iproc = distribute2(ifkr,size,iqr);
 	    if(iproc == rank){
 	       auto qr = oper_unpack(iqr);
                int q2 = qr.first , kq2 = q2/2, spin_q2 = q2%2, q2K = q2+1-2*spin_q2;
@@ -480,14 +480,14 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
             int qb = qa+1, kq = qa/2;
             const auto& op2c_A = qops2('C').at(qa);
             int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-            int iproc_aa = distribute2(ipq_aa,size);
+            int iproc_aa = distribute2(ifkr,size,ipq_aa);
             if(iproc_aa == rank){
                const auto& op1P_AA = (kp<kq)? qops1('P').at(ipq_aa) : -qops1('P').at(ipq_aa);
                opxwf += oper_kernel_OOwf(superblock,site,op1P_AA,op2c_A,1,ifdagger);
             } 
             const auto& op2c_B = op2c_A.K(1);
             int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-            int iproc_ab = distribute2(ipq_ab,size);
+            int iproc_ab = distribute2(ifkr,size,ipq_ab);
             if(iproc_ab == rank){
                const auto& op1P_AB = (kp<kq)? qops1('P').at(ipq_ab) : -qops1('P').at(ipq_ab).K(1);
                opxwf += oper_kernel_OOwf(superblock,site,op1P_AB,op2c_B,1,ifdagger);
@@ -496,7 +496,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
       }else{
          // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
 	 for(const auto& isr : aindex1){
- 	    int iproc = distribute2(isr,size);
+ 	    int iproc = distribute2(ifkr,size,isr);
 	    if(iproc == rank){
                double wt =  wfacAP(isr);
 	       auto sr = oper_unpack(isr);
@@ -527,14 +527,14 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
             int qb = qa+1, kq = qa/2;
             const auto& op2a_A = qops2('C').at(qa).H();
             int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-            int iproc_aa = distribute2(ipq_aa,size);
+            int iproc_aa = distribute2(ifkr,size,ipq_aa);
             if(iproc_aa == rank){
                const auto& op1Q_AA = (kp<kq)? qops1('Q').at(ipq_aa) :  qops1('Q').at(ipq_aa).H();
                opxwf += oper_kernel_OOwf(superblock,site,op1Q_AA,op2a_A,1,ifdagger);
             } 
             const auto& op2a_B = op2a_A.K(1);
             int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-            int iproc_ab = distribute2(ipq_ab,size);
+            int iproc_ab = distribute2(ifkr,size,ipq_ab);
             if(iproc_ab == rank){
                const auto& op1Q_AB = (kp<kq)? qops1('Q').at(ipq_ab) :  qops1('Q').at(ipq_ab).K(1).H();
                opxwf += oper_kernel_OOwf(superblock,site,op1Q_AB,op2a_B,1,ifdagger);
@@ -543,7 +543,7 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
       }else{
          // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
 	 for(const auto& iqs : bindex1){
-	    int iproc = distribute2(iqs,size);
+	    int iproc = distribute2(ifkr,size,iqs);
 	    if(iproc == rank){
 	       auto qs = oper_unpack(iqs);
                int q1 = qs.first , kq1 = q1/2, spin_q1 = q1%2, q1K = q1+1-2*spin_q1;
@@ -636,7 +636,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       // One-index operators
       // 3. sum_p1 p1^+ Sp1^2 + h.c. 
       for(const auto& p1 : cindex1){
-	 int iproc = distribute1(p1,size);
+	 int iproc = distribute1(ifkr,size,p1);
 	 if(!ifdist1 or iproc==rank){
 	    const auto& op1c = qops1('C').at(p1);
             const auto& op2S = qops2('S').at(p1);
@@ -646,7 +646,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       }
       // 4. sum_q2 q2^+ Sq2^1 + h.c. = -Sq2^1 q2^+ + h.c. 
       for(const auto& q2 : cindex2){
-	 int iproc = distribute1(q2,size);
+	 int iproc = distribute1(ifkr,size,q2);
 	 if(!ifdist1 or iproc==rank){
             const auto& op2c = qops2('C').at(q2);
             const auto& op1S = qops1('S').at(q2);
@@ -657,7 +657,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       // Two-index operators
       // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
       for(const auto& index : aindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             const auto& op1 = qops1(AP1).at(index);
             const auto& op2 = qops2(AP2).at(index);
@@ -667,7 +667,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       }
       // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
       for(const auto& index : bindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             const auto& op1 = qops1(BQ1).at(index);
             const auto& op2 = qops2(BQ2).at(index);
@@ -684,7 +684,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       // One-index operators
       // 3. sum_p1 p1^+ Sp1^2 + h.c.
       for(const auto& p1 : cindex1){
-	 int iproc = distribute1(p1,size);
+	 int iproc = distribute1(ifkr,size,p1);
 	 if(!ifdist1 or iproc==rank){
             const auto& op1c_A = qops1('C').at(p1);
             const auto& op2S_A = qops2('S').at(p1);
@@ -699,7 +699,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       }
       // 4. sum_q2 q2^+ Sq2^1 + h.c. = -Sq2^1 q2^+ + h.c. 
       for(const auto& q2 : cindex2){
-	 int iproc = distribute1(q2,size);
+	 int iproc = distribute1(ifkr,size,q2);
 	 if(!ifdist1 or iproc==rank){ 
             const auto& op2c_A = qops2('C').at(q2);
             const auto& op1S_A = qops1('S').at(q2);
@@ -715,7 +715,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       // Two-index operators
       // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
       for(const auto& index : aindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             const Tm wt = wfacAP(index);
             const auto& op1_A = qops1(AP1).at(index);
@@ -742,7 +742,7 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       }
       // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
       for(const auto& index : bindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             const Tm wt = wfacBQ(index);
             const auto& op1_A = qops1(BQ1).at(index);

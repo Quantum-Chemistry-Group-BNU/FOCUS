@@ -6,20 +6,24 @@
 
 namespace ctns{
 
-inline void analyze_distribution(const std::vector<int>& sizes){
+inline void analyze_distribution(const std::vector<int>& sizes,
+				 const std::string name=""){
+   //tools::print_vector(sizes,name);
    int mpisize = sizes.size();
    std::vector<double> fsizes(mpisize);
    std::transform(sizes.cbegin(), sizes.cend(), fsizes.begin(),
 		  [](const int& x){ return double(x); }); 
    int max = *std::max_element(fsizes.begin(), fsizes.end());
    int min = *std::min_element(fsizes.begin(), fsizes.end());
-   int sum = std::accumulate(fsizes.begin(), fsizes.end(), 0.0);
-   int mean = double(sum)/mpisize;
-   double sum_sq = std::inner_product(fsizes.begin(), fsizes.end(), fsizes.begin(), 0.0);
-   int stdev = std::sqrt(sum_sq/mpisize - 1.0*mean*mean);
-   std::cout << "mpisize=" << mpisize
-  	     << " sum=" << sum
-  	     << " mean=" << mean 
+   double sum = std::accumulate(fsizes.begin(), fsizes.end(), 0.0);
+   double mean = sum/mpisize;
+   std::transform(fsizes.begin(), fsizes.end(), fsizes.begin(),
+		  [mean](const double& x){ return (x-mean)*(x-mean); });
+   double stdev = std::sqrt(std::accumulate(fsizes.begin(), fsizes.end(), 0.0)/mpisize);
+   std::cout << name << std::setprecision(1)
+	     << " mpisize=" << mpisize
+  	     << " sum=" << int(sum)
+  	     << " mean=" << int(mean) 
   	     << " max=" << max 
   	     << " min=" << min
   	     << " diff=" << (max-min)
@@ -52,8 +56,9 @@ void preprocess_oper(const comb<Km>& icomb,
 
    auto sweeps = icomb.topo.get_sweeps(true);
    int mid0 = icomb.topo.nphysical/2-2;
+   int mid1 = sweeps.size()-1-mid0;
    for(int ibond=0; ibond<sweeps.size(); ibond++){
-      if(ibond != mid0) continue;
+      if(ibond != mid0 and ibond != mid1) continue;
       const auto& dbond = sweeps[ibond];
       const auto& p0 = dbond.p0;
       const auto& p1 = dbond.p1;
@@ -136,7 +141,56 @@ void preprocess_oper(const comb<Km>& icomb,
       io::create_scratch(scratch); 
       bool ifsave = true;
 
-      std::vector<int> sizes({1,2,4,8,32,128,1024});
+      std::vector<int> sizes({1,2,4,8,32,64,128});
+  
+      // 1. distribution of two-indexed operators 
+      for(int idx=0; idx<sizes.size(); idx++){
+	 int mpisize = sizes[idx];
+	 std::cout << "\nmpisize=" << mpisize 
+		   << " ifdist1=" << ifdist1
+		   << " ifkr=" << ifkr 
+		   << std::endl;
+	 // s
+	 std::vector<int> sstat(mpisize,0);  
+         for(int idx : sindex){
+            int iproc = distribute1(ifkr,mpisize,idx);
+            sstat[iproc] += 1;
+	 }
+         analyze_distribution(sstat,"sstat ");
+	 // a
+	 std::vector<int> astat(mpisize,0);  
+         for(int idx : aindex){
+            int iproc = distribute2(ifkr,mpisize,idx);
+            astat[iproc] += 1;
+	 }
+         analyze_distribution(astat,"astat ");
+	 // b
+	 std::vector<int> bstat(mpisize,0);  
+         for(int idx : bindex){
+            int iproc = distribute2(ifkr,mpisize,idx);
+            bstat[iproc] += 1;
+	 }
+         analyze_distribution(bstat,"bstat ");
+	 // p
+	 std::vector<int> pstat(mpisize,0);  
+         for(int idx : pindex){
+            int iproc = distribute2(ifkr,mpisize,idx);
+            pstat[iproc] += 1;
+	 }
+         analyze_distribution(pstat,"pstat ");
+	 // q
+	 std::vector<int> qstat(mpisize,0);  
+         for(int idx : qindex){
+            int iproc = distribute2(ifkr,mpisize,idx);
+            qstat[iproc] += 1;
+	 }
+         analyze_distribution(qstat,"qstat ");
+      } // idx
+   }
+   exit(1);
+
+/*
+      // 2. distribution of renormalized operators
       for(int idx=0; idx<sizes.size(); idx++){
 	 int mpisize = sizes[idx];
 	 std::cout << "\nmpisize=" << mpisize 
@@ -144,37 +198,6 @@ void preprocess_oper(const comb<Km>& icomb,
 		   << " ifkr=" << ifkr 
 		   << std::endl;
 
-	 // 1. distribution of two-indexed operators 
-	 // a
-	 std::vector<int> astat(mpisize,0);  
-         for(int idx : aindex){
-            int iproc = distribute2(idx,mpisize);
-            astat[iproc] += 1;
-	 }
-         tools::print_vector(astat,"astat");
-	 // b
-	 std::vector<int> bstat(mpisize,0);  
-         for(int idx : bindex){
-            int iproc = distribute2(idx,mpisize);
-            bstat[iproc] += 1;
-	 }
-         tools::print_vector(bstat,"bstat");
-	 // p
-	 std::vector<int> pstat(mpisize,0);  
-         for(int idx : pindex){
-            int iproc = distribute2(idx,mpisize);
-            pstat[iproc] += 1;
-	 }
-         tools::print_vector(pstat,"pstat");
-	 // q
-	 std::vector<int> qstat(mpisize,0);  
-         for(int idx : qindex){
-            int iproc = distribute2(idx,mpisize);
-            qstat[iproc] += 1;
-	 }
-         tools::print_vector(qstat,"qstat");
-
-	 // 2. distribution of renormalized operators
 	 std::string rscratch = scratch+"/rformulae_"+std::to_string(mpisize);
 	 io::create_scratch(rscratch); 
 	 std::vector<int> rsizes(mpisize,0.0);
@@ -229,8 +252,16 @@ void preprocess_oper(const comb<Km>& icomb,
 	    rsizes[rank] = formulae.sizetot();
 	 } // rank
 	 analyze_distribution(rsizes);
+      } // idx
 
-	 // 3. Hx formulae
+      // 3. Hx formulae
+      for(int idx=0; idx<sizes.size(); idx++){
+	 int mpisize = sizes[idx];
+	 std::cout << "\nmpisize=" << mpisize 
+		   << " ifdist1=" << ifdist1
+		   << " ifkr=" << ifkr 
+		   << std::endl;
+
          std::string hscratch = scratch+"/hformulae_"+std::to_string(mpisize);
 	 io::create_scratch(hscratch); 
 	 std::vector<int> fsizes(mpisize,0.0);
@@ -276,7 +307,7 @@ void preprocess_oper(const comb<Km>& icomb,
 	 analyze_distribution(fsizes);
       } // idx
 
-      // classification of Hx
+      // 4. classification of Hx
       ifsave = false;
       std::map<std::string,int> counter;
       auto formulae = preprocess_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
@@ -304,6 +335,8 @@ void preprocess_oper(const comb<Km>& icomb,
       assert(formulae.size() == nterm);
    } // ibond
    exit(1);
+*/
+
 }
 
 } // ctns

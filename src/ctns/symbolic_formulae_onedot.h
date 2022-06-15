@@ -76,7 +76,7 @@ symbolic_task<Tm> preprocess_formulae_onedot(const std::vector<int>& cindex_l,
       auto infoC = oper_combine_opC(cindex_c, cindex_r);
       for(const auto& pr : infoC){
          int index = pr.first;
-	 int iproc = distribute1(index,size);
+	 int iproc = distribute1(ifkr,size,index);
 	 if(!ifdist1 or iproc==rank){ 
             int iformula = pr.second;
             auto Sl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'S',index)));
@@ -94,7 +94,7 @@ symbolic_task<Tm> preprocess_formulae_onedot(const std::vector<int>& cindex_l,
       // 5. Apq^l*Ppq^cr + h.c.
       counter["AP"] = 0;
       for(const auto& index : aindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Al = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'A',index)));
             auto Pcr = symbolic_compxwf_opP<Tm>("c", "r", cindex_c, cindex_r,
@@ -113,7 +113,7 @@ symbolic_task<Tm> preprocess_formulae_onedot(const std::vector<int>& cindex_l,
       // 6. Bps^l*Qps^cr (using Hermicity)
       counter["BQ"] = 0;
       for(const auto& index : bindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Bl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'B',index)));
 	    auto Qcr = symbolic_compxwf_opQ<Tm>("c", "r", cindex_c, cindex_r,
@@ -176,7 +176,7 @@ symbolic_task<Tm> preprocess_formulae_onedot(const std::vector<int>& cindex_l,
       auto infoC = oper_combine_opC(cindex_l, cindex_c);
       for(const auto& pr : infoC){
          int index = pr.first;
-	 int iproc = distribute1(index,size);
+	 int iproc = distribute1(ifkr,size,index);
 	 if(!ifdist1 or iproc==rank){ 
             int iformula = pr.second;
             auto Clc = symbolic_normxwf_opC<Tm>("l", "c", index, iformula);
@@ -193,7 +193,7 @@ symbolic_task<Tm> preprocess_formulae_onedot(const std::vector<int>& cindex_l,
       // 5. Ars^r*Prs^lc + h.c.
       counter["PA"] = 0;
       for(const auto& index : aindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Plc = symbolic_compxwf_opP<Tm>("l", "c", cindex_l, cindex_c,
 	 				        int2e, index, isym, ifkr);
@@ -212,7 +212,7 @@ symbolic_task<Tm> preprocess_formulae_onedot(const std::vector<int>& cindex_l,
       // 6. Qqr^lc*Bqr^r (using Hermicity)
       counter["QB"] = 0;
       for(const auto& index : bindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
 	    auto Qlc = symbolic_compxwf_opQ<Tm>("l", "c", cindex_l, cindex_c,
 	           	                        int2e, index, isym, ifkr);
@@ -410,7 +410,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       auto infoC = oper_combine_opC(cindex_c, cindex_r);
       for(const auto& pr : infoC){
          int index = pr.first;
-	 int iproc = distribute1(index,size);
+	 int iproc = distribute1(ifkr,size,index);
 	 if(!ifdist1 or iproc==rank){ 
             int iformula = pr.second;
             auto Sl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'S',index)));
@@ -429,7 +429,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       // 5. Apq^l*Ppq^cr + h.c.
       counter["AP"] = 0;
       for(const auto& index : aindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Al = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'A',index)));
             auto Pcr = symbolic_compxwf_opP<Tm>("c", "r", cindex_c, cindex_r,
@@ -449,7 +449,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       // 6. Bps^l*Qps^cr (using Hermicity)
       counter["BQ"] = 0;
       for(const auto& index : bindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Bl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'B',index)));
 	    auto Qcr = symbolic_compxwf_opQ<Tm>("c", "r", cindex_c, cindex_r,
@@ -518,7 +518,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       auto infoC = oper_combine_opC(cindex_l, cindex_c);
       for(const auto& pr : infoC){
          int index = pr.first;
-	 int iproc = distribute1(index,size);
+	 int iproc = distribute1(ifkr,size,index);
 	 if(!ifdist1 or iproc==rank){ 
             int iformula = pr.second;
             auto Clc = symbolic_normxwf_opC<Tm>("l", "c", index, iformula);
@@ -536,7 +536,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       // 5. Ars^r*Prs^lc + h.c.
       counter["PA"] = 0;
       for(const auto& index : aindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
             auto Plc = symbolic_compxwf_opP<Tm>("l", "c", cindex_l, cindex_c,
 	 				        int2e, index, isym, ifkr);
@@ -556,7 +556,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       // 6. Qqr^lc*Bqr^r (using Hermicity)
       counter["QB"] = 0;
       for(const auto& index : bindex){
-         int iproc = distribute2(index,size);
+         int iproc = distribute2(ifkr,size,index);
          if(iproc == rank){
 	    auto Qlc = symbolic_compxwf_opQ<Tm>("l", "c", cindex_l, cindex_c,
 	           	                        int2e, index, isym, ifkr);
