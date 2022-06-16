@@ -166,9 +166,15 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
    auto aindex1 = oper_index_opA(cindex1, ifkr);
    auto bindex1 = oper_index_opB(cindex1, ifkr);
    auto aindex2 = oper_index_opA(cindex2, ifkr);
-   auto bindex2 = oper_index_opB(cindex2, ifkr); 
+   auto bindex2 = oper_index_opB(cindex2, ifkr);
+/*   
+   combine_two_index3 = true;
+   combine_two_index4 = true;
+   combine_two_index5 = true;
+   combine_two_index6 = true;
+*/
    if(!ifkr){
-/*      
+
       // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	   
       if(combine_two_index3){
          // sum_q aq^+[1]*Ppq[2]
@@ -205,7 +211,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	    }
 	 }
       }
- 
+
       // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]     
       if(combine_two_index4){
 	 // sum_q aq[1]*Qpq[2]
@@ -342,9 +348,9 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	    }
 	 }
       }
-*/
+
    }else{
-/*      
+
       // Kramers symmetry-adapted version 
       int pa = p, pb = pa+1;
 
@@ -593,7 +599,7 @@ symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
 	    }
          }
       }
-*/
+
    } // ifkr
    return formulae;
 }

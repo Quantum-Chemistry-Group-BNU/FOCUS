@@ -58,7 +58,10 @@ void preprocess_oper(const comb<Km>& icomb,
    int mid0 = icomb.topo.nphysical/2-2;
    int mid1 = sweeps.size()-1-mid0;
    for(int ibond=0; ibond<sweeps.size(); ibond++){
-      if(ibond != mid0 and ibond != mid1) continue;
+
+      //if(ibond != mid0 and ibond != mid1) continue;
+      if(ibond != mid0) continue;
+
       const auto& dbond = sweeps[ibond];
       const auto& p0 = dbond.p0;
       const auto& p1 = dbond.p1;
@@ -139,9 +142,8 @@ void preprocess_oper(const comb<Km>& icomb,
       std::string scratch = "analysis_"+qname;
       io::remove_scratch(scratch);
       io::create_scratch(scratch); 
-      bool ifsave = true;
 
-      std::vector<int> sizes({1,2,4,8,32,64,128});
+      std::vector<int> sizes({1,2,4,8,32,128,1024});
   
       for(int idx=0; idx<sizes.size(); idx++){
 	 int mpisize = sizes[idx];
@@ -216,6 +218,7 @@ void preprocess_oper(const comb<Km>& icomb,
 	       block1 = "c"; cindex1 = cindex_c2;
 	       block2 = "r"; cindex2 = cindex_r;
 	    }
+            bool ifsave = true;
             std::map<std::string,int> counter;
             auto formulae = preprocess_formulae_renorm(oplist, block1, block2, 
 			    			       cindex1, cindex2, krest,
@@ -241,18 +244,8 @@ void preprocess_oper(const comb<Km>& icomb,
 	    rsizes[rank] = formulae.sizetot();
 	 } // rank
 	 analyze_distribution(rsizes,"renorm");
-      } // idx
-   } // ibond
 
-/*
-      // 3. Hx formulae
-      for(int idx=0; idx<sizes.size(); idx++){
-	 int mpisize = sizes[idx];
-	 std::cout << "\nmpisize=" << mpisize 
-		   << " ifdist1=" << ifdist1
-		   << " ifkr=" << ifkr 
-		   << std::endl;
-
+         // 3. Hx formulae
          std::string hscratch = scratch+"/hformulae_"+std::to_string(mpisize);
 	 io::create_scratch(hscratch); 
 	 std::vector<int> fsizes(mpisize,0.0);
@@ -272,6 +265,7 @@ void preprocess_oper(const comb<Km>& icomb,
 		      << " mpirank=" << rank
 		      << std::endl;
 
+            bool ifsave = true;
             std::map<std::string,int> counter;
             auto formulae = preprocess_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
 		      	  	 		       isym, ifkr, int2e, mpisize, rank, ifdist1, 
@@ -299,7 +293,7 @@ void preprocess_oper(const comb<Km>& icomb,
       } // idx
 
       // 4. classification of Hx
-      ifsave = false;
+      bool ifsave = false;
       std::map<std::string,int> counter;
       auto formulae = preprocess_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
 		      	  	 		 isym, ifkr, int2e, 1, 0, ifdist1, 
@@ -324,9 +318,49 @@ void preprocess_oper(const comb<Km>& icomb,
 	        << " nterm=" << nterm
 		<< std::endl;
       assert(formulae.size() == nterm);
+
+      // classification based on types
+      for(int idx=0; idx<sizes.size(); idx++){
+	 int mpisize = sizes[idx];
+	 std::cout << "\nmpisize=" << mpisize 
+		   << " ifdist1=" << ifdist1
+		   << " ifkr=" << ifkr 
+		   << std::endl;
+         std::vector<std::map<std::string,int>> imaps(mpisize);
+	 for(int i=0; i<mpisize; i++){
+            for(const auto& pr : maps){
+	       const auto& key = pr.first;
+               imaps[i][key] = 0;
+	    }
+	 }
+	 for(int rank=0; rank<mpisize; rank++){
+            bool ifsave = false;
+            std::map<std::string,int> counter;
+            auto formulae = preprocess_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+		      	  	 		       isym, ifkr, int2e, mpisize, rank, ifdist1, 
+						       ifsave, counter);
+            for(int i=0; i<formulae.size(); i++){
+               auto symbol = formulae.tasks[i].symbol();
+	       imaps[rank][symbol] += 1;
+	    }
+	 } // rank
+         std::cout << "Hx_twodot: " << std::endl;
+	 int i = 0;
+         for(const auto& pr : maps){
+            std::cout << "idx=" << i 
+           	      << " htype=" << pr.first
+           	      << " total=" << pr.second.size() 
+		      << " : ";
+            for(int rank=0; rank<mpisize; rank++){
+	       std::cout << imaps[rank][pr.first] << " ";
+	    }
+	    std::cout << std::endl;
+            i++;
+         }
+      } // idx
+
    } // ibond
    exit(1);
-*/
 
 }
 
