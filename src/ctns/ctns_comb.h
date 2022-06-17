@@ -47,7 +47,7 @@ class comb{
    public:
       // constructors
       comb(){
-	 std::cout << "\ncomb: qkind=" << qkind::get_name<Km>() << std::endl;
+	 //std::cout << "\ncomb: qkind=" << qkind::get_name<Km>() << std::endl;
          if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
       }
       // helpers

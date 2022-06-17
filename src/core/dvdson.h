@@ -247,7 +247,7 @@ struct dvdsonSolver{
       double* Diag;
       std::function<void(Tm*, const Tm*)> HVec;
       double crit_v = 1.e-5;  // used control parameter
-      int maxcycle = 1000;
+      int maxcycle = 200;
       // settings
       int iprt = 1;
       double crit_e = 1.e-12; // not used actually

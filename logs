@@ -107,13 +107,14 @@ LOGS
     - renorm opS and opH
     - twodot partition
     - onedot partition
+    - hdiag for ifdist1
+   
+ ### TODOs ###
 
  * Load balance
     - better distribution of operators [DONE2022/06/15]
     - opS?
     - Hx?
-   
- ### TODOs ###
 
     - better distribution of operators & contraction pairs in Hx?
 	typical: cN [isym=1, ifkr=False]

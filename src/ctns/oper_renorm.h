@@ -104,22 +104,28 @@ void oper_renorm_opAll(const std::string superblock,
       std::vector<Tm> top(qops._opsize);
       // Sp[iproc] += \sum_i Sp[i]
       auto opS_index = qops.oper_index_op('S');
-      for(auto& p : opS_index){
+      for(int p : opS_index){
          int iproc = distribute1(ifkr,size,p);
          auto& opS = qops('S')[p];
          int opsize = opS.size();
-         memset(top.data(), 0, opsize*sizeof(Tm));
          boost::mpi::reduce(icomb.world, opS.data(), opsize, 
            	            top.data(), std::plus<Tm>(), iproc);
-         if(iproc == rank) linalg::xcopy(opsize, top.data(), opS.data());
+         if(iproc == rank){ 
+            linalg::xcopy(opsize, top.data(), opS.data());
+	 }else{
+	    opS.clear();
+	 }
       }
       // H[0] += \sum_i H[i]
       auto& opH = qops('H')[0];
       int opsize = opH.size();
-      memset(top.data(), 0, opsize*sizeof(Tm));
       boost::mpi::reduce(icomb.world, opH.data(), opsize,
 		         top.data(), std::plus<Tm>(), 0);
-      if(rank == 0) linalg::xcopy(opsize, top.data(), opH.data());
+      if(rank == 0){ 
+	 linalg::xcopy(opsize, top.data(), opH.data());
+      }else{
+	 opH.clear();
+      }
    }
 
    // 3. consistency check for Hamiltonian

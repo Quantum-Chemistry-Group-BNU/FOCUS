@@ -14,7 +14,8 @@ void twodot_Hdiag(const oper_dictmap<Tm>& qops_dict,
 		  stensor4<Tm>& wf,
 		  std::vector<double>& diag,
 	       	  const int size,
-	       	  const int rank){
+	       	  const int rank,
+		  const bool ifdist1){
    const auto& lqops  = qops_dict.at("l");
    const auto& rqops  = qops_dict.at("r");
    const auto& c1qops = qops_dict.at("c1");
@@ -25,7 +26,11 @@ void twodot_Hdiag(const oper_dictmap<Tm>& qops_dict,
    }
    
    // 1. local terms: <lc1c2r|H|lc1c2r> = Hll + Hc1c1 + Hc2c2 + Hrr
-   twodot_Hdiag_local(lqops, rqops, c1qops, c2qops, ecore/size, wf, size, rank);
+   if(!ifdist1 or rank == 0){
+      twodot_Hdiag_local(lqops, rqops, c1qops, c2qops, ecore, wf, size, rank);
+   }else{
+      wf.clear();
+   }
 
    // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
    //        B/Q^C1 B/Q^C2

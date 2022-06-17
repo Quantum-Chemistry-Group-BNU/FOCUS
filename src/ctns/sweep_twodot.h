@@ -102,7 +102,7 @@ void sweep_twodot(comb<Km>& icomb,
    
    // 3.1 Hdiag 
    std::vector<double> diag(nsub,1.0);
-   twodot_Hdiag(qops_dict, ecore, wf, diag, size, rank);
+   twodot_Hdiag(qops_dict, ecore, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm

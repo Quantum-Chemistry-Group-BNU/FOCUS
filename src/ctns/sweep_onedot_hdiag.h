@@ -14,7 +14,8 @@ void onedot_Hdiag(const oper_dictmap<Tm>& qops_dict,
 		  stensor3<Tm>& wf,
 		  std::vector<double>& diag,
 	       	  const int size,
-	       	  const int rank){
+	       	  const int rank,
+		  const bool ifdist1){
    const auto& lqops = qops_dict.at("l"); 
    const auto& rqops = qops_dict.at("r"); 
    const auto& cqops = qops_dict.at("c"); 
@@ -24,7 +25,11 @@ void onedot_Hdiag(const oper_dictmap<Tm>& qops_dict,
    }
 
    // 1. local terms: <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
-   onedot_Hdiag_local(lqops, rqops, cqops, ecore/size, wf, size, rank);
+   if(!ifdist1 or rank == 0){
+      onedot_Hdiag_local(lqops, rqops, cqops, ecore, wf, size, rank);
+   }else{
+      wf.clear();
+   }
 
    // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
    //         B/Q^C
