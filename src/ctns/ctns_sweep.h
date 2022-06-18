@@ -96,7 +96,7 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    if(debug){
       auto t1 = tools::get_time();
       tools::timing("ctns::opt_sweep", t0, t1);
-      timing_global.print("time_global");
+      if(schd.ctns.verbose>0) timing_global.print("time_global");
    }
 }
 

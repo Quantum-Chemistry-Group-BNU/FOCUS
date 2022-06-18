@@ -3,15 +3,14 @@ import time
 import numpy
 
 def parse_ctns(fname="ctns.out"):
-   debug = True #False
+   debug = False
    f = open(fname,"r")
    lines = f.readlines()
    # get nsweep
-   pattern0 = "results: iter, dwt, energies (delta_e)"
-   pattern1 = "results: isweep, dwt, energies (delta_e)"
+   pattern = "results:"
    nsweep = 0
    for line in lines:
-      if pattern0 in line or pattern1 in line:
+      if pattern in line:
          nsweep += 1
    if(debug): print("nsweep=",nsweep)
    # process
@@ -19,7 +18,7 @@ def parse_ctns(fname="ctns.out"):
    iread = 0
    ene = []
    for line in lines:
-      if pattern0 in line or pattern1 in line:
+      if pattern in line:
          isweep += 1
          if isweep == nsweep:
             iread = 1
@@ -32,11 +31,12 @@ def parse_ctns(fname="ctns.out"):
    nstate = 0 
    for line in ene:
       dat = line.split()
-      nstate = (len(dat)-2)//2
+      nstate = (len(dat)-3)//2
       es = []
       for istate in range(nstate):
-         ei = float(dat[2+2*istate].split('=')[-1])
+         ei = float(dat[3+2*istate].split('=')[-1])
          es.append(ei)
+      if(debug): print('es=',es)
       elst.append(es)
    elst = numpy.array(elst)
    return elst
