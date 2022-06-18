@@ -87,7 +87,6 @@ void sweep_twodot(comb<Km>& icomb,
    auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
    stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
    if(debug){
-      if(schd.ctns.verbose>0) wf.print("wf");
       std::cout << "wf4(diml,dimr,dimc1,dimc2)=(" 
 	        << ql.get_dimAll() << ","
 		<< qr.get_dimAll() << ","
@@ -96,6 +95,7 @@ void sweep_twodot(comb<Km>& icomb,
 		<< " nnz=" << wf.size() << ":"
 		<< tools::sizeMB<Tm>(wf.size()) << "MB"
 	        << std::endl;
+      if(schd.ctns.verbose>0) wf.print("wf");
    }
  
    // 3. Davidson solver for wf

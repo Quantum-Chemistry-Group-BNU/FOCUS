@@ -83,7 +83,6 @@ void sweep_onedot(comb<Km>& icomb,
    auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
    stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
    if(debug){
-      if(schd.ctns.verbose>0) wf.print("wf");
       std::cout << "wf3(diml,dimr,dimc)=(" 
 	        << ql.get_dimAll() << ","
 		<< qr.get_dimAll() << ","
@@ -91,6 +90,7 @@ void sweep_onedot(comb<Km>& icomb,
 		<< " nnz=" << wf.size() << ":"
 		<< tools::sizeMB<Tm>(wf.size()) << "MB"
 	        << std::endl;
+      if(schd.ctns.verbose>0) wf.print("wf3");
    }
 
    // 3. Davidson solver for wf
