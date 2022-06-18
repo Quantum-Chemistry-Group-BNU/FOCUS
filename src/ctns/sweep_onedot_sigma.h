@@ -243,7 +243,8 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
 	                           const stensor3<Tm>& wf,
 	                           const int& size,
 	                           const int& rank,
-				   const bool& ifdist1){
+				   const bool& ifdist1,
+				   const bool debug=false){
    const auto& lqops = qops_dict.at("l");
    const auto& rqops = qops_dict.at("r");
    const auto& cqops = qops_dict.at("c");
@@ -317,19 +318,13 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
       }
    }
    // debug
-   if(rank == 0){
+   if(rank == 0 and debug){
       std::cout << "onedot_Hx_functors: size=" << Hx_funs.size() 
                 << " " << cnlabel << ":" << cnindex.size()
                 << " " << cclabel << ":" << ccinfo.size()
                 << " " << alabel << ":" << aindex.size()
                 << " " << blabel << ":" << bindex.size()
                 << std::endl; 
-      const bool debug = false;
-      if(debug){
-         for(int i=0; i<Hx_funs.size(); i++){
-            std::cout << "i=" << i << Hx_funs[i] << std::endl;
-         } // i
-      }
    }
    return Hx_funs;
 }

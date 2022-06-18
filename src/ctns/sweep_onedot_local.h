@@ -48,6 +48,9 @@ void onedot_guess_psi0(comb<Km>& icomb, const int nroots){
 // local CI solver	
 template <typename Km>
 void onedot_localCI(comb<Km>& icomb,
+		    const input::schedule& schd,
+		    const double eps,
+		    const int parity,
 		    const int nsub,
 		    const int neig,
    		    std::vector<double>& diag,
@@ -55,11 +58,6 @@ void onedot_localCI(comb<Km>& icomb,
    		    std::vector<double>& eopt,
    		    linalg::matrix<typename Km::dtype>& vsol,
 		    int& nmvp,
-		    const int cisolver,
-		    const bool guess,
-		    const double eps,
-		    const int maxcycle,
-		    const int parity,
 		    stensor3<typename Km::dtype>& wf){
    using Tm = typename Km::dtype;
    int size = 1, rank = 0;
@@ -70,21 +68,22 @@ void onedot_localCI(comb<Km>& icomb,
 
    // without kramers restriction
    assert(Km::ifkr == false);
-   pdvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
+   pdvdsonSolver_nkr<Tm> solver(nsub, neig, eps, schd.ctns.maxcycle);
+   solver.iprt = schd.ctns.verbose;
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL
    solver.world = icomb.world;
 #endif
-   if(cisolver == 0){
+   if(schd.ctns.cisolver == 0){
 
       // full diagonalization for debug
       solver.solve_diag(eopt.data(), vsol.data(), true);
 
-   }else if(cisolver == 1){ 
+   }else if(schd.ctns.cisolver == 1){ 
       
       // davidson
-      if(!guess){
+      if(!schd.ctns.guess){
 	 // davidson without initial guess
          solver.solve_iter(eopt.data(), vsol.data()); 
       }else{    
@@ -115,19 +114,17 @@ void onedot_localCI(comb<Km>& icomb,
 
 template <>
 inline void onedot_localCI(comb<qkind::cNK>& icomb,
-		    const int nsub,
-		    const int neig,
-   		    std::vector<double>& diag,
-		    HVec_type<std::complex<double>> HVec,
-   		    std::vector<double>& eopt,
-   		    linalg::matrix<std::complex<double>>& vsol,
-		    int& nmvp,
-		    const int cisolver,
-		    const bool guess,
-		    const double eps,
-		    const int maxcycle,
-		    const int parity,
-		    stensor3<std::complex<double>>& wf){
+			   const input::schedule& schd,
+		           const double eps,
+		           const int parity,
+		           const int nsub,
+		           const int neig,
+   		           std::vector<double>& diag,
+		           HVec_type<std::complex<double>> HVec,
+   		           std::vector<double>& eopt,
+   		           linalg::matrix<std::complex<double>>& vsol,
+		           int& nmvp,
+		           stensor3<std::complex<double>>& wf){
    using Tm = std::complex<double>;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -136,8 +133,9 @@ inline void onedot_localCI(comb<qkind::cNK>& icomb,
 #endif
 
    // kramers restricted (currently works only for iterative with guess!)
-   assert(cisolver == 1 && guess);
-   pdvdsonSolver_kr<Tm,stensor3<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
+   assert(schd.ctns.cisolver == 1 && schd.ctns.guess);
+   pdvdsonSolver_kr<Tm,stensor3<Tm>> solver(nsub, neig, eps, schd.ctns.maxcycle, parity, wf); 
+   solver.iprt = schd.ctns.verbose;
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL

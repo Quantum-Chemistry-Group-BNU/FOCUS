@@ -84,10 +84,9 @@ void symbolic_kernel_renorm2(const std::string superblock,
 		             const oper_dict<Tm>& qops1,
 		             const oper_dict<Tm>& qops2,
 		             oper_dict<Tm>& qops,
-			     const bool debug){
-   if(debug){
-      std::cout << "symbolic_kernel_renorm2"
-	        << " rank=" << qops.mpirank 
+			     const int verbose){
+   if(qops.mpirank==0 and verbose>1){
+      std::cout << "ctns::symbolic_kernel_renorm2"
 	        << " size(formulae)=" << rtasks.size() 
 		<< std::endl;
    }
@@ -105,7 +104,7 @@ void symbolic_kernel_renorm2(const std::string superblock,
    size_t wfsize = preprocess_wfsize(site.info, info_dict);
    size_t tmpsize = opsize + 3*wfsize;
    size_t worktot = maxthreads*tmpsize;
-   if(qops.mpirank == 0){
+   if(qops.mpirank == 0 and verbose>0){
       std::cout << "preprocess for renorm:"
                 << " opsize=" << opsize
                 << " wfsize=" << wfsize
@@ -129,7 +128,7 @@ void symbolic_kernel_renorm2(const std::string superblock,
       auto index = std::get<1>(task);
       auto formula = std::get<2>(task);
       auto size = formula.size();
-      if(debug){
+      if(verbose>2){
          std::cout << "rank=" << qops.mpirank 
 		   << " idx=" << i 
 		   << " op=" << key

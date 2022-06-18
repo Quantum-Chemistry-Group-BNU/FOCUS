@@ -106,7 +106,6 @@ void CTNS(const input::schedule& schd){
          }
       }
    } // ham || opt
-
 }
 
 int main(int argc, char *argv[]){
@@ -164,9 +163,11 @@ int main(int argc, char *argv[]){
       tools::exit("error: no such qkind for ctns!");
    } // qkind
 
-#ifndef SERIAL
-   world.barrier();
-#endif
-   if(rank > 0) io::remove_scratch(schd.scratch, (rank == 0));
+   // cleanup 
+   if(rank == 0){
+      tools::finish("CTNS");	   
+   }else{
+      io::remove_scratch(schd.scratch, (rank == 0));
+   }
    return 0;
 }

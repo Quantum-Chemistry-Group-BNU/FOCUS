@@ -5,6 +5,9 @@
 
 namespace ctns{
 
+const bool debug_twodot_guess = false;
+extern const bool debug_twodot_guess;
+
 template <typename Km>
 void twodot_guess(comb<Km>& icomb, 
 	          const directed_bond& dbond,
@@ -12,7 +15,6 @@ void twodot_guess(comb<Km>& icomb,
 	          const int neig,
 	          stensor4<typename Km::dtype>& wf,
 	          std::vector<typename Km::dtype>& v0){
-   const bool debug_twodot_guess = true;
    if(debug_twodot_guess) std::cout << "ctns::twodot_guess ";
    auto pdx0 = icomb.topo.rindex.at(dbond.p0);
    auto pdx1 = icomb.topo.rindex.at(dbond.p1);
@@ -100,6 +102,9 @@ void twodot_guess(comb<Km>& icomb,
 // local CI solver	
 template <typename Km>
 void twodot_localCI(comb<Km>& icomb,
+		    const input::schedule& schd,
+		    const double eps,
+		    const int parity,
 		    const int nsub,
 		    const int neig,
    		    std::vector<double>& diag,
@@ -107,13 +112,8 @@ void twodot_localCI(comb<Km>& icomb,
    		    std::vector<double>& eopt,
    		    linalg::matrix<typename Km::dtype>& vsol,
 		    int& nmvp,
-		    const int cisolver,
-		    const bool guess,
-		    const double eps,
-		    const int maxcycle,
-		    const int parity,
-		    const directed_bond& dbond,
-		    stensor4<typename Km::dtype>& wf){
+		    stensor4<typename Km::dtype>& wf,
+		    const directed_bond& dbond){
    using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -123,21 +123,22 @@ void twodot_localCI(comb<Km>& icomb,
 
    // without kramers restriction
    assert(Km::ifkr == false);
-   pdvdsonSolver_nkr<Tm> solver(nsub, neig, eps, maxcycle);
+   pdvdsonSolver_nkr<Tm> solver(nsub, neig, eps, schd.ctns.maxcycle);
+   solver.iprt = schd.ctns.verbose;
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL
    solver.world = icomb.world;
 #endif
-   if(cisolver == 0){
+   if(schd.ctns.cisolver == 0){
 
       // full diagonalization for debug
       solver.solve_diag(eopt.data(), vsol.data(), true);
 
-   }else if(cisolver == 1){ 
+   }else if(schd.ctns.cisolver == 1){ 
 	   
       // davidson
-      if(!guess){
+      if(!schd.ctns.guess){
 	 // davidson without initial guess
          solver.solve_iter(eopt.data(), vsol.data()); 
       }else{     
@@ -164,20 +165,18 @@ void twodot_localCI(comb<Km>& icomb,
 
 template <>
 inline void twodot_localCI(comb<qkind::cNK>& icomb,
-		    const int nsub,
-		    const int neig,
-   		    std::vector<double>& diag,
-		    HVec_type<std::complex<double>> HVec,
-   		    std::vector<double>& eopt,
-   		    linalg::matrix<std::complex<double>>& vsol,
-		    int& nmvp,
-		    const int cisolver,
-		    const bool guess,
-		    const double eps,
-		    const int maxcycle,
-		    const int parity,
-		    const directed_bond& dbond,
-		    stensor4<std::complex<double>>& wf){
+		    	   const input::schedule& schd,
+		    	   const double eps,
+		           const int parity,
+			   const int nsub,
+		    	   const int neig,
+   		    	   std::vector<double>& diag,
+		    	   HVec_type<std::complex<double>> HVec,
+   		    	   std::vector<double>& eopt,
+   		    	   linalg::matrix<std::complex<double>>& vsol,
+		    	   int& nmvp,
+		    	   stensor4<std::complex<double>>& wf,
+		    	   const directed_bond& dbond){
    using Tm = std::complex<double>;
    int size = 1, rank = 0;
 #ifndef SERIAL
@@ -186,8 +185,9 @@ inline void twodot_localCI(comb<qkind::cNK>& icomb,
 #endif
 
    // kramers restricted (currently works only for iterative with guess!) 
-   assert(cisolver == 1 && guess);
-   pdvdsonSolver_kr<Tm,stensor4<Tm>> solver(nsub, neig, eps, maxcycle, parity, wf); 
+   assert(schd.ctns.cisolver == 1 && schd.ctns.guess);
+   pdvdsonSolver_kr<Tm,stensor4<Tm>> solver(nsub, neig, eps, schd.ctns.maxcycle, parity, wf); 
+   solver.iprt = schd.ctns.verbose;
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL

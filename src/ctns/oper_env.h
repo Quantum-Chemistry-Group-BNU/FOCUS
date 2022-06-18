@@ -117,9 +117,6 @@ void oper_env_right(const comb<Km>& icomb,
    rank = icomb.world.rank();
 #endif   
    const auto& iomode = schd.ctns.iomode;
-   const auto& alg_renorm = schd.ctns.alg_renorm;
-   const auto& save_formulae = schd.ctns.save_formulae;
-   const auto& sort_formulae = schd.ctns.sort_formulae;
    const auto& ifdist1 = schd.ctns.ifdist1;
    const bool debug = (rank==0);
    if(debug){ 
@@ -158,11 +155,10 @@ void oper_env_right(const comb<Km>& icomb,
 	 std::string frop = oper_fname(scratch, p, "r");
 	 std::string superblock = "cr";
          std::string fname;
-	 if(save_formulae) fname = scratch+"/rformulae_env_idx"
-		   		 + std::to_string(idx) + ".txt"; 
-         oper_renorm_opAll(superblock, icomb, p, int2e, int1e,
-			   cqops, rqops, qops_pool(frop), 
-			   fname, alg_renorm, sort_formulae, ifdist1);
+	 if(schd.ctns.save_formulae) fname = scratch+"/rformulae_env_idx"
+		   		  	   + std::to_string(idx) + ".txt"; 
+         oper_renorm_opAll(superblock, icomb, p, int2e, int1e, schd,
+			   cqops, rqops, qops_pool(frop), fname); 
          auto td = tools::get_time();
          t_comp += tools::get_duration(td-tc);
          // c. save operators to disk

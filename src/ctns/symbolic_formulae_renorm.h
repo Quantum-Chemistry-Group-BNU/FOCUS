@@ -160,7 +160,8 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
 	                                  const int& rank,
 					  const std::string fname,
 					  const bool sort_formulae,
-					  const bool ifdist1){
+					  const bool ifdist1,
+					  const bool debug=false){
    auto t0 = tools::get_time();
    const std::string block1 = superblock.substr(0,1);
    const std::string block2 = superblock.substr(1,2);
@@ -172,7 +173,7 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
    std::ofstream file;
    bool ifsave = !fname.empty();
    if(ifsave){
-      if(rank == 0){
+      if(rank == 0 and debug){
          std::cout << "ctns::symbolic_formulae_renorm"
                    << " mpisize=" << size
            	   << " fname=" << fname
@@ -210,7 +211,7 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
       std::cout.rdbuf(backup); // restore cout's original streambuf
       file.close();
    }
-   if(rank == 0){
+   if(rank == 0 and debug){
       auto t1 = tools::get_time();
       int size = rformulae.size();
       tools::timing("symbolic_formulae_renorm with size="+std::to_string(size), t0, t1);

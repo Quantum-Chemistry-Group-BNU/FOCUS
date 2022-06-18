@@ -8,44 +8,33 @@ namespace ctns{
 
 // timing
 struct dot_timing{
-   void print(const std::string msg){
+   void print_part(const std::string key,
+		   const double dtkey,
+		   const double dtacc) const{
+      std::cout << " T(" << std::setw(5) << key << ") = " 
+	        << std::scientific << std::setprecision(2) << dtkey << " S"
+   	        << "  per = " << std::setw(4) << std::defaultfloat << dtkey/dt*100 
+		<< "  per(accum) = " << dtacc/dt*100 
+		<< std::endl;
+   }
+   void print(const std::string msg) const{
       std::cout << "##### " << msg << ": " 
 		<< std::scientific << std::setprecision(2) << dt
                 << " S #####" 
 		<< std::endl;
-      std::cout << " T(load)  = " << std::scientific << std::setprecision(2) << dt0 << " S"
-   	        << "  per = " << std::defaultfloat << dt0/dt*100 
-		<< "  per(accum) = " << dt0/dt*100 
-		<< std::endl;
-      std::cout << " T(hdiag) = " << std::scientific << std::setprecision(2) << dt1 << " S"
-   	        << "  per = " << std::defaultfloat << dt1/dt*100 
-		<< "  per(accum) = " << (dt0+dt1)/dt*100 
-		<< std::endl;
-      std::cout << " T(dvdsn) = " << std::scientific << std::setprecision(2) << dt2 << " S"
-   	        << "  per = " << std::defaultfloat << dt2/dt*100 
-		<< "  per(accum) = " << (dt0+dt1+dt2)/dt*100 
-		<< std::endl;
-      std::cout << " T(decim) = " << std::scientific << std::setprecision(2) << dt3 << " S"
-   	        << "  per = " << std::defaultfloat << dt3/dt*100 
-		<< "  per(accum) = " << (dt0+dt1+dt2+dt3)/dt*100 
-		<< std::endl;
-      std::cout << " T(guess) = " << std::scientific << std::setprecision(2) << dt4 << " S"
-   	        << "  per = " << std::defaultfloat << dt4/dt*100 
-		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4)/dt*100 
-		<< std::endl;
-      std::cout << " T(renrm) = " << std::scientific << std::setprecision(2) << dt5 << " S"
-   	        << "  per = " << std::defaultfloat << dt5/dt*100 
-		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4+dt5)/dt*100 
-		<< std::endl;
-      std::cout << " T(save)  = " << std::scientific << std::setprecision(2) << dt6 << " S"
-   	        << "  per = " << std::defaultfloat << dt6/dt*100 
-		<< "  per(accum) = " << (dt0+dt1+dt2+dt3+dt4+dt5+dt6)/dt*100 
-		<< std::endl;
+      double dtacc = dt0;
+      this->print_part("fetch", dt0, dtacc); dtacc += dt1; 
+      this->print_part("hdiag", dt1, dtacc); dtacc += dt2;
+      this->print_part("dvdsn", dt2, dtacc); dtacc += dt3;
+      this->print_part("decim", dt3, dtacc); dtacc += dt4;
+      this->print_part("guess", dt4, dtacc); dtacc += dt5;
+      this->print_part("renrm", dt5, dtacc); dtacc += dt6;
+      this->print_part("save" , dt6, dtacc);
    }
    void analysis(const std::string msg,
 		 const bool debug=true){
       dt  = tools::get_duration(t1-t0); // total
-      dt0 = tools::get_duration(ta-t0); // t(procs)
+      dt0 = tools::get_duration(ta-t0); // t(fetch)
       dt1 = tools::get_duration(tb-ta); // t(hdiag)
       dt2 = tools::get_duration(tc-tb); // t(dvdsn)
       dt3 = tools::get_duration(td-tc); // t(decim)
@@ -70,7 +59,7 @@ struct dot_timing{
 public:
    using Tm = std::chrono::high_resolution_clock::time_point;
    Tm t0;
-   Tm ta; // ta-t0: t(load) 
+   Tm ta; // ta-t0: t(fetch) 
    Tm tb; // tb-ta: t(hdiag)
    Tm tc; // tc-ta: t(dvdson)
    Tm td; // td-tc: t(decim)
@@ -92,19 +81,13 @@ struct sweep_data{
    // constructor
    sweep_data(const std::vector<directed_bond>& sweep_seq,
               const int _nroots,
-              const bool _guess,
               const int _maxsweep,
-              const std::vector<input::params_sweep>& _ctrls,
-              const int _dbranch,
-	      const double _rdm_vs_svd){
+              const std::vector<input::params_sweep>& _ctrls){
       seq = sweep_seq;
       seqsize = sweep_seq.size();
-      guess = _guess;
       nroots = _nroots;
       maxsweep = _maxsweep;
       ctrls = _ctrls;
-      dbranch = _dbranch;
-      rdm_vs_svd = _rdm_vs_svd;
       // sweep results
       timing_sweep.resize(maxsweep);
       opt_result.resize(maxsweep);
@@ -140,9 +123,7 @@ struct sweep_data{
    // summary for a single sweep
    void summary(const int isweep);
 public:
-   bool guess;
-   int seqsize, nroots, maxsweep, dbranch;
-   double rdm_vs_svd;
+   int seqsize, nroots, maxsweep;
    std::vector<directed_bond> seq; // sweep bond sequence 
    std::vector<input::params_sweep> ctrls; // control parameters
    // energies
@@ -151,15 +132,13 @@ public:
    // timing
    std::vector<std::vector<dot_timing>> opt_timing;
    std::vector<dot_timing> timing_sweep;
-   dot_timing timing_global;
    std::vector<double> t_total; 
 };
 
 // analysis of the current sweep (eopt,dwt,deff) and timing
 inline void sweep_data::summary(const int isweep){
    std::cout << "\n" << tools::line_separator2 << std::endl;
-   std::cout << "sweep_data::summary isweep=" << isweep 
-             << " dbranch=" << dbranch << std::endl;
+   std::cout << "sweep_data::summary isweep=" << isweep << std::endl; 
    std::cout << tools::line_separator << std::endl;
    print_ctrls(isweep);
    // print results for each dot in a single sweep
@@ -209,14 +188,13 @@ inline void sweep_data::summary(const int isweep){
    
    // print all previous optimized results - sweep_data
    std::cout << tools::line_separator << std::endl;
-   std::cout << "summary of sweep optimization up to isweep=" << isweep
-             << " dbranch=" << dbranch << std::endl;
-   std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | TIMING/S | Tav/S | Taccum/S" << std::endl;
+   std::cout << "summary of sweep optimization up to isweep=" << isweep << std::endl;
+   std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Tav/S | Taccum/S" << std::endl;
    std::cout << std::scientific << std::setprecision(2);
    // print previous ctrl parameters
    double taccum = 0.0;
    for(int jsweep=0; jsweep<=isweep; jsweep++){
-      auto& ctrl = ctrls[jsweep];
+      const auto& ctrl = ctrls[jsweep];
       taccum += t_total[jsweep];
       nmvp = min_result[jsweep].nmvp;
       std::cout << std::setw(10) << jsweep 
@@ -229,12 +207,14 @@ inline void sweep_data::summary(const int isweep){
 		<< (t_total[jsweep]/nmvp) << " | " 
 	        << taccum << std::endl;
    } // jsweep
-   std::cout << "results: isweep, dwt, energies (delta_e)" << std::endl;
+   std::cout << "results: isweep, dcut, dwt, energies (delta_e)" << std::endl;
    const auto& eopt_isweep = min_result[isweep].eopt;
    for(int jsweep=0; jsweep<=isweep; jsweep++){
+      const auto& ctrl = ctrls[jsweep];
       const auto& dwt = min_result[jsweep].dwt;
       const auto& eopt_jsweep = min_result[jsweep].eopt;
-      std::cout << std::setw(10) << jsweep << " "
+      std::cout << std::setw(10) << jsweep
+	        << std::setw(8) << ctrl.dcut << " "
       	        << std::showpos << std::scientific << std::setprecision(2) << dwt
                 << std::noshowpos << std::defaultfloat << std::setprecision(12);
       for(int j=0; j<nroots; j++){ 

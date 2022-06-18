@@ -25,14 +25,11 @@ void oper_renorm_opAll(const std::string superblock,
 		       const comb_coord& p,
 		       const integral::two_body<Tm>& int2e,
 		       const integral::one_body<Tm>& int1e,
+		       const input::schedule& schd,
 		       const oper_dict<Tm>& qops1,
 		       const oper_dict<Tm>& qops2,
 		       oper_dict<Tm>& qops,
-		       const std::string fname,
-		       const int alg_renorm,
-		       const bool sort_formulae,
-		       const bool ifdist1){
-   const bool debug = false;
+		       const std::string fname){
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -40,7 +37,10 @@ void oper_renorm_opAll(const std::string superblock,
 #endif   
    const int isym = Km::isym;
    const bool ifkr = Km::ifkr;
-   if(rank == 0){ 
+   const int& alg_renorm = schd.ctns.alg_renorm;
+   const bool& sort_formulae = schd.ctns.sort_formulae;
+   const bool& ifdist1 = schd.ctns.ifdist1;
+   if(rank == 0 and schd.ctns.verbose>0){ 
       std::cout << "ctns::oper_renorm_opAll coord=" << p 
 	        << " superblock=" << superblock 
 	     	<< " isym=" << isym 
@@ -84,15 +84,17 @@ void oper_renorm_opAll(const std::string superblock,
    oper_timer.clear();
    if(alg_renorm == 0){
       auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
-      oper_renorm_kernel(superblock, rfuns, site, qops, debug);
+      oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
    }else if(alg_renorm == 1){
       auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             size, rank, fname, sort_formulae, ifdist1);
-      symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, debug);
+		                             size, rank, fname, sort_formulae, 
+					     ifdist1, schd.ctns.verbose>1);
+      symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
    }else if(alg_renorm == 2){
       auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             size, rank, fname, sort_formulae, ifdist1);
-      symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, debug);
+		                             size, rank, fname, sort_formulae, 
+					     ifdist1, schd.ctns.verbose>1);
+      symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
    }else{
       std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
       exit(1);
@@ -153,15 +155,14 @@ void oper_renorm_opAll(const std::string superblock,
 
    auto tf = tools::get_time();
    if(rank == 0){ 
-      qops.print("qops");
-      if(alg_renorm == 0) oper_timer.analysis();
+      if(schd.ctns.verbose>0) qops.print("qops");
+      if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
       double t_tot = tools::get_duration(tf-ti); 
       double t_cal = tools::get_duration(ta-ti);
       double t_comm = tools::get_duration(tf-ta);
-      std::cout << "T(tot/cal/comm)=" 
-	        << t_tot << "," << t_cal << "," << t_comm
-	        << std::endl;	
-      tools::timing("ctns::oper_renorm_opAll", ti, tf);
+      std::cout << "TIMING for Renormalization : " << t_tot 
+		<< "  T(cal/comm)=" << t_cal << "," << t_comm
+	        << std::endl;
    }
 }
 
@@ -170,19 +171,21 @@ void oper_renorm_kernel(const std::string superblock,
 		        const Hx_functors<Tm>& rfuns,
 		        const stensor3<Tm>& site,
 		        oper_dict<Tm>& qops,
-			const bool debug){
-   if(debug) std::cout << "rank=" << qops.mpirank 
-	               << " size[rfuns]=" << rfuns.size() 
-		       << std::endl;
+			const int verbose){
+   if(qops.mpirank==0 and verbose>1){
+      std::cout << "ctns::oper_renorm_kernel"
+	        << " size[rfuns]=" << rfuns.size() 
+		<< std::endl;
+   }
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
    for(int i=0; i<rfuns.size(); i++){
       char key = rfuns[i].label[0];
       int index = rfuns[i].index; 
-      if(debug){
-         std::cout << "cal: rank=" << qops.mpirank 
-                   << " i=" << i 
+      if(verbose>2){
+         std::cout << "rank=" << qops.mpirank 
+                   << " idx=" << i 
                    << " key=" << key 
 		   << " index=" << index 
 		   << std::endl;

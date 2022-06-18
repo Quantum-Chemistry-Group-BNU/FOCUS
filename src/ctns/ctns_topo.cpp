@@ -314,7 +314,8 @@ vector<int> topology::get_supp_rest(const vector<int>& rsupp) const{
 // sweep related
 bool topology::check_partition(const int dots,
 			       const directed_bond& dbond,
-                               const bool debug) const{
+                               const bool debug,
+			       const int verbose) const{
    if(debug) cout << "ctns::topology::check_partition: ";
    bool ifNC;
    auto p = dbond.get_current();
@@ -333,9 +334,11 @@ bool topology::check_partition(const int dots,
               << sl << "," << sr << "," << sc
 	      << " ifNC=" << ifNC
               << endl;
-         tools::print_vector(suppl, "suppl");
-         tools::print_vector(suppr, "suppr");
-         tools::print_vector(suppc, "suppc");
+	 if(verbose > 0){
+            tools::print_vector(suppl, "suppl");
+            tools::print_vector(suppr, "suppr");
+            tools::print_vector(suppc, "suppc");
+	 }
       }
    }else if(dots == 2){
       // twodot
@@ -374,10 +377,12 @@ bool topology::check_partition(const int dots,
               << sl << "," << sr << "," << sc1 << "," << sc2
 	      << " ifNC=" << ifNC
               << endl;
-         tools::print_vector(suppl , "suppl");
-         tools::print_vector(suppr , "suppr");
-         tools::print_vector(suppc1, "suppc1");
-         tools::print_vector(suppc2, "suppc2");
+	 if(verbose > 0){
+            tools::print_vector(suppl , "suppl");
+            tools::print_vector(suppr , "suppr");
+            tools::print_vector(suppc1, "suppc1");
+            tools::print_vector(suppc2, "suppc2");
+	 }
       }
    }
    return ifNC;

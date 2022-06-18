@@ -86,10 +86,9 @@ void symbolic_kernel_renorm(const std::string superblock,
 		            const oper_dict<Tm>& qops1,
 		            const oper_dict<Tm>& qops2,
 		            oper_dict<Tm>& qops,
-			    const bool debug){
-   if(debug){
-      std::cout << "symbolic_kernel_renorm"
-	        << " rank=" << qops.mpirank 
+			    const int verbose){
+   if(qops.mpirank==0 and verbose>1){
+      std::cout << "ctns::symbolic_kernel_renorm"
 	        << " size(formulae)=" << rtasks.size() 
 		<< std::endl;
    }
@@ -106,7 +105,7 @@ void symbolic_kernel_renorm(const std::string superblock,
       auto index = std::get<1>(task);
       auto formula = std::get<2>(task);
       auto size = formula.size();
-      if(debug){
+      if(verbose>2){
          std::cout << "rank=" << qops.mpirank 
 		   << " idx=" << i 
 		   << " op=" << key

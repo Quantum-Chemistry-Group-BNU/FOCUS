@@ -40,6 +40,14 @@ inline void license(){
    std::cout << "GIT_HASH = " << GIT_HASH << std::endl;
 }
 
+inline void finish(const std::string msg){
+   time_t now = time(NULL);
+   std::cout << "\nCongrats! " << msg 
+	     << " calculation finishes successfully. "
+	     << ctime(&now) 
+	     << std::endl; 
+}
+
 inline void exit(const std::string msg){
    std::cout << "\n" << msg << std::endl;
    std::exit(1);

@@ -57,5 +57,6 @@ int main(int argc, char *argv[]){
    }else if(schd.dtype == 1){
       SCI<complex<double>>(schd);
    }
+   tools::finish("SCI");
    return 0;
 }

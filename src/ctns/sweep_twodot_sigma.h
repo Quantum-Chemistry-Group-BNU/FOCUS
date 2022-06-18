@@ -230,7 +230,8 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
 	                           const stensor4<Tm>& wf,
 	                           const int& size,
 	                           const int& rank,
-				   const bool& ifdist1){
+				   const bool& ifdist1,
+				   const bool debug=false){
    const auto& lqops = qops_dict.at("l");
    const auto& rqops = qops_dict.at("r");
    const auto& c1qops = qops_dict.at("c1");
@@ -308,19 +309,13 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
       } // iproc
    }
    // debug
-   if(rank == 0){
+   if(rank == 0 and debug){
       std::cout << "twodot_Hx_functors: size=" << Hx_funs.size() 
                 << " CS:" << infoC1.size()
                 << " SC:" << infoC2.size()
                 << " " << alabel << ":" << ainfo.size()
                 << " " << blabel << ":" << binfo.size()
                 << std::endl; 
-      const bool debug = false;
-      if(debug){
-         for(int i=0; i<Hx_funs.size(); i++){
-            std::cout << "i=" << i << Hx_funs[i] << std::endl;
-         } // i
-      }
    }
    return Hx_funs;
 }

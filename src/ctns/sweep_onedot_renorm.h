@@ -10,7 +10,8 @@ const double thresh_noise = 1.e-10;
 extern const double thresh_noise;
 
 template <typename Tm>
-void onedot_decimation(sweep_data& sweeps,
+void onedot_decimation(const input::schedule& schd,
+		       sweep_data& sweeps,
 		       const int isweep,
 		       const int ibond, 
 		       const bool ifkr,
@@ -19,14 +20,18 @@ void onedot_decimation(sweep_data& sweeps,
 		       stensor3<Tm>& wf,
 		       stensor2<Tm>& rot, 
 	               const std::string fname){
+   const bool debug = schd.ctns.verbose>0;
+   const auto& rdm_vs_svd = schd.ctns.rdm_vs_svd;
    const auto& dbond = sweeps.seq[ibond];
-   const int& dbranch = sweeps.dbranch;
+   const int& dbranch = schd.ctns.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const auto& noise = sweeps.ctrls[isweep].noise;
-   const auto& rdm_vs_svd = sweeps.rdm_vs_svd;
-   std::cout <<" (dbranch,dcut,noise,rdm_vs_svd)=" << dbranch << "," << dcut << ","
-             << std::scientific << std::setprecision(1) << noise << "," << rdm_vs_svd
-	     << std::endl;
+   if(debug){
+      std::cout <<" (rdm_vs_svd,dbranch,dcut,noise)=" 
+                << std::scientific << std::setprecision(1) << rdm_vs_svd << ","
+                << dbranch << "," << dcut << ","
+                << noise << std::endl;
+   }
    auto& result = sweeps.opt_result[isweep][ibond];
    int nroots = vsol.cols();
    std::vector<stensor2<Tm>> wfs2(nroots);
@@ -41,7 +46,8 @@ void onedot_decimation(sweep_data& sweeps,
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qmid, 
 		     dcut, rdm_vs_svd, wfs2, 
-		     rot, result.dwt, result.deff, fname);
+		     rot, result.dwt, result.deff, fname,
+		     debug);
 
    }else if(superblock == "lr"){
 
@@ -56,7 +62,8 @@ void onedot_decimation(sweep_data& sweeps,
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qcol, 
       		     dcut, rdm_vs_svd, wfs2, 
-		     rot, result.dwt, result.deff, fname);
+		     rot, result.dwt, result.deff, fname,
+		     debug);
 
    }else if(superblock == "cr"){
 
@@ -69,7 +76,8 @@ void onedot_decimation(sweep_data& sweeps,
       }
       decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
       		     dcut, rdm_vs_svd, wfs2, 
-		     rot, result.dwt, result.deff, fname);
+		     rot, result.dwt, result.deff, fname,
+		     debug);
       rot = rot.T(); // rot[alpha,r] = (V^+)
 
    } // superblock
@@ -152,6 +160,7 @@ void onedot_renorm(comb<Km>& icomb,
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif
+   const bool debug = (rank == 0);
    const auto& dbond = sweeps.seq[ibond];
    std::string superblock;
    if(dbond.forward){
@@ -159,7 +168,9 @@ void onedot_renorm(comb<Km>& icomb,
    }else{
       superblock = "cr";
    }
-   if(rank == 0) std::cout << "ctns::onedot_renorm superblock=" << superblock;
+   if(debug && schd.ctns.verbose>0){ 
+      std::cout << "ctns::onedot_renorm superblock=" << superblock;
+   }
    auto& timing = sweeps.opt_timing[isweep][ibond];
 
    // build reduced density matrix & perform decimation
@@ -168,7 +179,7 @@ void onedot_renorm(comb<Km>& icomb,
       std::string fname = scratch+"/decimation"
 	       	        + "_isweep"+std::to_string(isweep)
 	                + "_ibond"+std::to_string(ibond)+".txt"; 
-      onedot_decimation(sweeps, isweep, ibond, ifkr, 
+      onedot_decimation(schd, sweeps, isweep, ibond, ifkr, 
 		        superblock, vsol, wf, rot, fname);
    }
 #ifndef SERIAL
@@ -177,7 +188,7 @@ void onedot_renorm(comb<Km>& icomb,
    timing.td = tools::get_time();
 
    // prepare guess for the next site
-   if(rank == 0 && sweeps.guess){
+   if(rank == 0 && schd.ctns.guess){
       onedot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
    }
    timing.te = tools::get_time();
@@ -198,9 +209,8 @@ void onedot_renorm(comb<Km>& icomb,
       auto ovlp = contract_qt3_qt3("lc", icomb.lsites[pdx], icomb.lsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
-      oper_renorm_opAll("lc", icomb, p, int2e, int1e, lqops, cqops, qops, 
-			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae, 
-			schd.ctns.ifdist1);
+      oper_renorm_opAll("lc", icomb, p, int2e, int1e, schd,
+		        lqops, cqops, qops, fname); 
    }else if(superblock == "lr"){
       icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
       //-------------------------------------------------------------------
@@ -209,9 +219,8 @@ void onedot_renorm(comb<Km>& icomb,
       auto ovlp = contract_qt3_qt3("lr", icomb.lsites[pdx],icomb.lsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
-      oper_renorm_opAll("lr", icomb, p, int2e, int1e, lqops, rqops, qops, 
-			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae,
-			schd.ctns.ifdist1);
+      oper_renorm_opAll("lr", icomb, p, int2e, int1e, schd,
+		        lqops, rqops, qops, fname); 
    }else if(superblock == "cr"){
       icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
       //-------------------------------------------------------------------
@@ -220,9 +229,8 @@ void onedot_renorm(comb<Km>& icomb,
       auto ovlp = contract_qt3_qt3("cr", icomb.rsites[pdx],icomb.rsites[pdx]);
       assert(ovlp.check_identityMatrix(thresh) < thresh);
       //-------------------------------------------------------------------
-      oper_renorm_opAll("cr", icomb, p, int2e, int1e, cqops, rqops, qops, 
-			fname, schd.ctns.alg_renorm, schd.ctns.sort_formulae,
-			schd.ctns.ifdist1);
+      oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,
+		        cqops, rqops, qops, fname); 
    }
 }
 

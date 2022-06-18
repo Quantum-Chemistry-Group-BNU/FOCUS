@@ -27,9 +27,8 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	        << schd.ctns.maxsweep 
 		<< std::endl;
    }
-   auto t0 = tools::get_time();
-
    if(schd.ctns.maxsweep == 0) return;
+   auto t0 = tools::get_time();
 
    // init left boundary site
    const auto& ntotal = icomb.topo.ntotal;
@@ -37,9 +36,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    icomb.lsites[ntotal-1] = get_left_bsite<Tm>(Km::isym);
 
    // generate sweep sequence
-   sweep_data sweeps(icomb.topo.get_sweeps(rank==0), 
-		     schd.ctns.nroots, schd.ctns.guess, schd.ctns.maxsweep, 
-		     schd.ctns.ctrls, schd.ctns.dbranch, schd.ctns.rdm_vs_svd);
+   dot_timing timing_global;
+   sweep_data sweeps(icomb.topo.get_sweeps(rank==0), schd.ctns.nroots, 
+		     schd.ctns.maxsweep, schd.ctns.ctrls);
    oper_pool<Tm> qops_pool(schd.ctns.iomode, schd.ctns.ioasync, debug);
    for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
       // print sweep control
@@ -76,11 +75,11 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
 	 // timing 
          if(debug){
             const auto& timing = sweeps.opt_timing[isweep][ibond];
-	    sweeps.timing_sweep[isweep].accumulate(timing,"time_sweep");
-            sweeps.timing_global.accumulate(timing,"time_global");
+	    sweeps.timing_sweep[isweep].accumulate(timing,"time_sweep",schd.ctns.verbose>0);
+            timing_global.accumulate(timing,"time_global",schd.ctns.verbose>0);
          }
          // just for debug
-	 if(isweep == schd.ctns.maxsweep-1 && ibond == schd.ctns.maxbond) exit(1);
+	 if(isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
       } // ibond
       auto tf = tools::get_time();
       sweeps.t_total[isweep] = tools::get_duration(tf-ti);
@@ -88,12 +87,17 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
    } // isweep
 
    // for later computing properties
-   if(schd.ctns.lastdot) sweep_rwfuns(icomb, int2e, int1e, ecore, 
-		   		      schd, scratch, qops_pool);
+   if(schd.ctns.lastdot){
+      sweep_rwfuns(icomb, int2e, int1e, ecore, schd, 
+		   scratch, qops_pool, timing_global);
+   }
    qops_pool.clean_up();
 
-   auto t1 = tools::get_time();
-   if(debug) tools::timing("ctns::opt_sweep", t0, t1);
+   if(debug){
+      auto t1 = tools::get_time();
+      tools::timing("ctns::opt_sweep", t0, t1);
+      timing_global.print("time_global");
+   }
 }
 
 } // ctns

@@ -380,8 +380,9 @@ void decimation_row(const bool ifkr,
 		    stensor2<Tm>& rot,
 		    double& dwt,
 		    int& deff,
-		    const std::string fname){
-   std::cout << "ctns::decimation_row fname=" << fname << std::endl;
+		    const std::string fname,
+		    const bool debug){
+   if(debug) std::cout << "ctns::decimation_row fname=" << fname << std::endl;
    std::ofstream fout(fname);
    if(!ifkr){
       decimation_row_nkr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);

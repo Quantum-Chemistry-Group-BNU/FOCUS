@@ -171,6 +171,11 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,5)=="qkind"){
          istringstream is(line.substr(5));
 	 is >> qkind;
+      }else if(line.substr(0,13)=="topology_file"){
+         istringstream is(line.substr(13));
+	 is >> topology_file;
+      }else if(line.substr(0,7)=="verbose"){
+         verbose = stoi(line.substr(7));
       }else if(line.substr(0,9)=="task_init"){
          task_init = true;
       }else if(line.substr(0,10)=="task_sdiag"){
@@ -196,9 +201,6 @@ void params_ctns::read(ifstream& istrm){
          sort_formulae = false;
       }else if(line.substr(0,7)=="ifdist1"){
          ifdist1 = true;	      
-      }else if(line.substr(0,13)=="topology_file"){
-         istringstream is(line.substr(13));
-	 is >> topology_file;
       }else if(line.substr(0,11)=="rcanon_load"){
          rcanon_load = true;
       }else if(line.substr(0,11)=="rcanon_file"){
@@ -286,18 +288,20 @@ void params_ctns::print() const{
    cout << "\n===== params_ctns::print =====" << endl;
    cout << "qkind = " << qkind << endl;
    cout << "topology_file = " << topology_file << endl;
-   cout << "nroots = " << nroots << endl;
+   // debug level
+   cout << "verbose = " << verbose << endl;
+   // ZL@20220210 new task structure
+   cout << "task_init = " << task_init << endl;
+   cout << "task_sdiag = " << task_sdiag << endl;
+   cout << "task_ham = " << task_ham << endl;
+   cout << "task_opt = " << task_opt << endl;
+   // conversion of sci
    cout << "maxdets = " << maxdets << endl;
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;
    cout << "rdm_vs_svd = " << scientific << rdm_vs_svd << endl;
-   cout << "alg_hvec = " << alg_hvec << endl;
-   cout << "alg_renorm = " << alg_renorm << endl;
-   cout << "save_formulae = " << save_formulae << endl;
-   cout << "sort_formulae = " << sort_formulae << endl;
-   cout << "ifdist1 = " << ifdist1 << endl;
-   cout << "cisolver = " << cisolver << endl;
-   cout << "maxcycle = " << maxcycle << endl;
+   // sweep
+   cout << "nroots = " << nroots << endl;
    cout << "guess    = " << guess << endl;
    cout << "dbranch  = " << dbranch << endl;
    cout << "maxsweep = " << maxsweep << endl;
@@ -312,6 +316,15 @@ void params_ctns::print() const{
 	      << tmp.noise << endl;
       } // i
    }
+   // algorithm
+   cout << "alg_hvec = " << alg_hvec << endl;
+   cout << "alg_renorm = " << alg_renorm << endl;
+   cout << "save_formulae = " << save_formulae << endl;
+   cout << "sort_formulae = " << sort_formulae << endl;
+   cout << "ifdist1 = " << ifdist1 << endl;
+   // dvdson
+   cout << "cisolver = " << cisolver << endl;
+   cout << "maxcycle = " << maxcycle << endl;
    // io
    cout << "rcanon_load = " << rcanon_load << endl; 
    cout << "rcanon_file = " << rcanon_file << endl;
@@ -322,10 +335,6 @@ void params_ctns::print() const{
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;
    cout << "ndetprt = " << ndetprt << endl;
-   // ZL@20220210 new task structure
-   cout << "task_sdiag = " << task_sdiag << endl;
-   cout << "task_ham = " << task_ham << endl;
-   cout << "task_opt = " << task_opt << endl;
 }
 
 //

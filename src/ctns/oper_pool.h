@@ -62,7 +62,7 @@ struct oper_pool{
 template <typename Tm>
 void oper_pool<Tm>::fetch(const std::vector<std::string>& fneed){
    auto t0 = tools::get_time();
-   if(debug_oper_io && debug){
+   if(debug_oper_io and debug){
       std::cout << "ctns::oper_pool<Tm>::fetch" << std::endl;
       std::cout << "fneed: size=" << fneed.size() << std::endl;
       for(const auto& fqop : fneed){
@@ -83,7 +83,7 @@ void oper_pool<Tm>::fetch(const std::vector<std::string>& fneed){
    for(const auto& fqop : frelease){
       qstore.erase(fqop);
    }
-   if(debug_oper_io && debug){
+   if(debug_oper_io and debug){
       std::cout << "frelease: size=" << frelease.size() << std::endl; 
       for(const auto& fqop : frelease){
          std::cout << " fqop=" << fqop << std::endl;
@@ -94,9 +94,11 @@ void oper_pool<Tm>::fetch(const std::vector<std::string>& fneed){
       if(qstore.find(fqop) != qstore.end()) continue;
       oper_load(iomode, fqop, qstore[fqop], debug);
    }
-   if(debug_oper_io && debug) this->display("out");
-   auto t1 = tools::get_time();
-   if(debug) tools::timing("ctns::oper_pool<Tm>::fetch", t0, t1);
+   if(debug_oper_io and debug){
+      this->display("out");
+      auto t1 = tools::get_time();
+      tools::timing("ctns::oper_pool<Tm>::fetch", t0, t1);
+   }
 }
 
 } // ctns

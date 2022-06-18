@@ -51,16 +51,16 @@ void sweep_twodot(comb<Km>& icomb,
 
    // 0. check partition
    const auto& dbond = sweeps.seq[ibond];
-   const bool ifNC = icomb.topo.check_partition(2, dbond, debug);
+   const bool ifNC = icomb.topo.check_partition(2, dbond, debug, schd.ctns.verbose);
 
    // 1. load operators 
-   auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug);
+   auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug && schd.ctns.verbose>0);
    qops_pool.fetch(fneed);
    const oper_dictmap<Tm> qops_dict = {{"l" ,qops_pool(fneed[0])},
 	   		 	       {"r" ,qops_pool(fneed[1])},
 	   			       {"c1",qops_pool(fneed[2])},
 				       {"c2",qops_pool(fneed[3])}};
-   if(debug){
+   if(debug && schd.ctns.verbose>0){
       std::cout << "qops info: rank=" << rank << std::endl;
       qops_dict.at("l").print("lqops");
       qops_dict.at("r").print("rqops");
@@ -76,11 +76,6 @@ void sweep_twodot(comb<Km>& icomb,
 		<< std::endl;
    }
    timing.ta = tools::get_time();
-   if(debug){
-      std::cout << "TIMING for fetch = "
-		<< tools::get_duration(timing.ta-timing.t0)
-	        << std::endl;
-   }
 
    // 2. twodot wavefunction
    //	 \ /
@@ -91,7 +86,17 @@ void sweep_twodot(comb<Km>& icomb,
    const auto& qc2 = qops_dict.at("c2").qket;
    auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
    stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
-   if(debug) wf.print("wf"); 
+   if(debug){
+      if(schd.ctns.verbose>0) wf.print("wf");
+      std::cout << "wf4(diml,dimr,dimc1,dimc2)=(" 
+	        << ql.get_dimAll() << ","
+		<< qr.get_dimAll() << ","
+		<< qc1.get_dimAll() << ","
+		<< qc2.get_dimAll() << ")"
+		<< " nnz=" << wf.size() << ":"
+		<< tools::sizeMB<Tm>(wf.size()) << "MB"
+	        << std::endl;
+   }
  
    // 3. Davidson solver for wf
    int nsub = wf.size();
@@ -113,11 +118,6 @@ void sweep_twodot(comb<Km>& icomb,
    }
 #endif 
    timing.tb = tools::get_time();
-   if(debug){
-      std::cout << "TIMING for Hdiag = "
-		<< tools::get_duration(timing.tb-timing.ta)
-	        << std::endl;
-   }
 
    // 3.2 Solve local problem: Hc=cE
    std::map<qsym,qinfo4<Tm>> info_dict;
@@ -131,7 +131,7 @@ void sweep_twodot(comb<Km>& icomb,
       tmpsize = opsize + 4*wfsize;
    }
    worktot = maxthreads*tmpsize;
-   if(preprocess && debug){
+   if(preprocess && debug && schd.ctns.verbose>0){
       std::cout << "preprocess for Hx:"
                 << " opsize=" << opsize 
                 << " wfsize=" << wfsize 
@@ -152,20 +152,21 @@ void sweep_twodot(comb<Km>& icomb,
    using std::placeholders::_1;
    using std::placeholders::_2;
    if(schd.ctns.alg_hvec == 0){
-      Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, schd.ctns.ifdist1);
+      Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
+		                   schd.ctns.ifdist1, schd.ctns.verbose>1);
       HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 1){
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae,
-					    schd.ctns.ifdist1);
+					    schd.ctns.ifdist1, schd.ctns.verbose>1);
       HVec = bind(&ctns::symbolic_Hx<Tm,stensor4<Tm>>, _1, _2, std::cref(H_formulae),
         	  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 2){ 
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae,
-					    schd.ctns.ifdist1);
+					    schd.ctns.ifdist1, schd.ctns.verbose>1);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
 		  std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
@@ -175,7 +176,7 @@ void sweep_twodot(comb<Km>& icomb,
    }else if(schd.ctns.alg_hvec == 3){
       H_formulae2 = symbolic_formulae_twodot2(qops_dict, int2e, size, rank, fname,
 			                      schd.ctns.sort_formulae,
-					      schd.ctns.ifdist1);
+					      schd.ctns.ifdist1, schd.ctns.verbose>1);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx3<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
 		  std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
@@ -184,23 +185,17 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::ref(workspace));
    } // alg_hvec
    oper_timer.clear();
-   twodot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
-		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
-		  schd.ctns.maxcycle, (schd.nelec)%2, dbond, wf);
+   twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
+		  nsub, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond);
    if(preprocess) delete[] workspace;
-   if(debug){
+   if(debug && schd.ctns.verbose>1){
       sweeps.print_eopt(isweep, ibond);
       if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
    }
    timing.tc = tools::get_time();
-   if(debug){
-      std::cout << "TIMING for localCI = "
-		<< tools::get_duration(timing.tc-timing.tb)
-	        << std::endl;
-   }
 
    // 3. decimation & renormalize operators
-   auto fbond = icomb.topo.get_fbond(dbond, scratch, debug);
+   auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>1);
    auto frop = fbond.first;
    auto fdel = fbond.second;
    twodot_renorm(icomb, int2e, int1e, schd, scratch, 
@@ -213,10 +208,7 @@ void sweep_twodot(comb<Km>& icomb,
    oper_remove(fdel, debug);
 
    timing.t1 = tools::get_time();
-   if(debug){
-      tools::timing("ctns::sweep_twodot", timing.t0, timing.t1);
-      timing.analysis("time_local");
-   }
+   if(debug) timing.analysis("time_local", schd.ctns.verbose>0);
 }
 
 } // ctns

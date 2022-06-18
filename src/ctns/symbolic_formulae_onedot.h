@@ -240,7 +240,8 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
 	                                   const int& rank,
 					   const std::string fname,
 					   const bool sort_formulae,
-					   const bool ifdist1){
+					   const bool ifdist1,
+					   const bool debug=false){
    auto t0 = tools::get_time();
    const int print_level = 1;
    const auto& lqops = qops_dict.at("l");
@@ -256,7 +257,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
    std::ofstream file;
    bool ifsave = !fname.empty();
    if(ifsave){
-      if(rank == 0){
+      if(rank == 0 and debug){
          std::cout << "ctns::symbolic_formulae_onedot"
                    << " mpisize=" << size
                    << " fname=" << fname 
@@ -300,7 +301,7 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
       std::cout.rdbuf(backup); // restore cout's original streambuf
       file.close();
    }
-   if(rank == 0){
+   if(rank == 0 and debug){
       auto t1 = tools::get_time();
       int size = formulae.size();
       tools::timing("symbolic_formulae_onedot with size="+std::to_string(size), t0, t1);
@@ -316,7 +317,8 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
 	                                  const int& rank,
 					  const std::string fname,
 					  const bool sort_formulae,
-					  const bool ifdist1){
+					  const bool ifdist1,
+					  const bool debug=false){
    auto t0 = tools::get_time();
    const int print_level = 1;
    const auto& lqops = qops_dict.at("l");
@@ -332,7 +334,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
    std::ofstream file;
    bool ifsave = !fname.empty();
    if(ifsave){
-      if(rank == 0){
+      if(rank == 0 and debug){
          std::cout << "ctns::symbolic_formulae_onedot2"
                    << " mpisize=" << size
                    << " fname=" << fname 
@@ -596,7 +598,7 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       std::cout.rdbuf(backup); // restore cout's original streambuf
       file.close();
    }
-   if(rank == 0){
+   if(rank == 0 and debug){
       auto t1 = tools::get_time();
       int size = formulae.size();
       tools::timing("symbolic_formulae_onedot2 with size="+std::to_string(size), t0, t1);

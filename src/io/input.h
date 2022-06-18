@@ -88,7 +88,7 @@ private:
    friend class boost::serialization::access;
    template<class Archive>
    void serialize(Archive & ar, const unsigned int version){
-      ar & run & qkind & topology_file
+      ar & run & qkind & topology_file & verbose
          & task_sdiag & task_ham & task_opt 
 	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
 	 & nroots & guess & maxsweep & maxbond & lastdot & ctrls
@@ -103,6 +103,8 @@ public:
    bool run = false;
    std::string qkind;
    std::string topology_file = "TOPOLOGY";
+   // debug level
+   int verbose = 0;
    // task
    bool task_init = false;
    bool task_sdiag = false;

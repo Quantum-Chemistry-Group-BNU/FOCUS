@@ -35,20 +35,20 @@ struct pdvdsonSolver_kr{
 		      const linalg::matrix<double>& eigs,
 		      const linalg::matrix<double>& rnorm,
 		      const double t){
-	 //const std::string line(87,'-');
 	 const std::string ifconverge = "-+";
          if(iter == 1){
-            std::cout << std::defaultfloat; 
-            std::cout << "settings: ndim=" << ndim 
-                      << " neig=" << neig
-                      << " nbuff=" << nbuff  
-                      << " maxcycle=" << maxcycle << std::endl; 
-	    std::cout << "          damping=" << damping << std::scientific 
-                      << " crit_v=" << crit_v 
-                      << " crit_e=" << crit_e 
-                      << " crit_indp=" << crit_indp << std::endl;
+            if(iprt > 0){
+               std::cout << std::defaultfloat; 
+               std::cout << "settings: ndim=" << ndim 
+                         << " neig=" << neig
+                         << " nbuff=" << nbuff  
+                         << " maxcycle=" << maxcycle << std::endl; 
+	       std::cout << "          damping=" << damping << std::scientific 
+                         << " crit_v=" << crit_v 
+                         << " crit_e=" << crit_e 
+                         << " crit_indp=" << crit_indp << std::endl;
+	    }
 	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s" << std::endl;
-            //std::cout << line << std::endl;
          }
          for(int i=0; i<neig; i++){
             std::cout << std::setw(5) << iter << " " 
@@ -63,7 +63,6 @@ struct pdvdsonSolver_kr{
                  << std::setw(10) << std::setprecision(2) << std::scientific << t/nmvp 
 		 << std::endl;
          } // i
-	 //std::cout << line << std::endl;
       }
 
       // perform H*x for a set of input vectors: x(nstate,ndim)
@@ -103,8 +102,8 @@ struct pdvdsonSolver_kr{
          nmvp += nstate;
          auto tf = tools::get_time();
          if(rank == 0){
-            auto dt = tools::get_duration(tf-ti);
 /*
+            auto dt = tools::get_duration(tf-ti);
 	    std::cout << "T(tot/cal/comm)=" << dt << "," 
 		      << tcal << "," << tcomm
                       << " for nstate=" << nstate 
@@ -119,38 +118,27 @@ struct pdvdsonSolver_kr{
       // initialization
       void init_guess(const std::vector<QTm>& psi, 
 		      std::vector<Tm>& v0){
-	 std::cout << "ctns::pdvdsonSolver_kr::init_guess parity=" << parity << std::endl;
+	 if(iprt > 0) std::cout << "ctns::pdvdsonSolver_kr::init_guess parity=" << parity << std::endl;
 	 assert(psi.size() == neig && psi[0].size() == ndim);
          v0.resize(ndim*neig*2);
 	 int nindp = 0;
          if(parity == 0){
             // even-electron case
             const std::complex<double> iunit(0.0,1.0);
-/*
             for(int i=0; i<neig; i++){
-	       std::cout << "I=" << i << " - " << psi[i].normF() << std::endl;
 	       auto psiK = psi[i].K();
-	       std::cout << "I=" << i << " - " << psi[i].normF() << " - " << psiK.normF() << std::endl;
-	       exit(1);
-	    }
-    	    exit(1);	   
-*/ 
-            for(int i=0; i<neig; i++){
-/*
-     		    std::cout << "I=" << i << " - " << psi[i].normF() << std::endl;
-*/
-	       auto psiK = psi[i].K();
-
                auto tmp1 = (psi[i] + psiK);
                auto tmp2 = (psi[i] - psiK)*iunit; 
                tmp1.to_array(&v0[ndim*(i)]); // put all plus combination before
                tmp2.to_array(&v0[ndim*(i+neig)]);
-               std::cout << " iguess=" << i 
-		         << " |psi|=" << psi[i].normF()
-		         << " |psiK|=" << psiK.normF()
-           	         << " |psi+psiK|=" << tmp1.normF() 
-           	         << " |i(psi-psiK)|=" << tmp2.normF() 
-           	         << std::endl;
+	       if(iprt > 0){
+                  std::cout << " iguess=" << i 
+	                    << " |psi|=" << psi[i].normF()
+	                    << " |psiK|=" << psiK.normF()
+                            << " |psi+psiK|=" << tmp1.normF() 
+                            << " |i(psi-psiK)|=" << tmp2.normF() 
+                            << std::endl;
+	       }
             } // i
             nindp = linalg::get_ortho_basis(ndim, neig*2, v0); // reorthogonalization
          }else{
@@ -158,13 +146,15 @@ struct pdvdsonSolver_kr{
             for(int i=0; i<neig; i++){
                psi[i].to_array(&v0[ndim*(2*i)]);
                psi[i].K().to_array(&v0[ndim*(2*i+1)]);
-	       std::cout << " iguess=" << i 
-		         << " |psi(K)|=" << psi[i].normF()
-			 << std::endl;
+	       if(iprt > 0){
+	          std::cout << " iguess=" << i 
+	                    << " |psi(K)|=" << psi[i].normF()
+	           	    << std::endl;
+	       }
             } // i
             nindp = kramers::get_ortho_basis_qt(ndim, neig*2, v0, *pwf); // reorthogonalization
          }
-         std::cout << " neig,nindp=" << neig << "," << nindp << std::endl;
+         if(iprt > 0) std::cout << " neig,nindp=" << neig << "," << nindp << std::endl;
          assert(nindp >= neig);
 	 v0.resize(ndim*nindp);
       }
@@ -324,7 +314,7 @@ struct pdvdsonSolver_kr{
          size = world.size();
 	 rank = world.rank();
 #endif
-	 if(rank == 0){
+	 if(rank == 0 && iprt > 0){
 	    std::cout << "ctns::pdvdsonSolver_kr::solve_iter"
 	              << " parity=" << parity 
 	              << " is_complex=" << tools::is_complex<Tm>()
@@ -379,7 +369,7 @@ struct pdvdsonSolver_kr{
                   rconv[i] = (norm < crit_v)? true : false;
                }
                auto t1 = tools::get_time();
-               if(iprt > 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
+               if(iprt >= 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
                // check convergence and return (e,v) if applied 
                ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
 	    }
@@ -459,8 +449,8 @@ struct pdvdsonSolver_kr{
 	 if(rank == 0){
 	    t_tot = tools::get_duration(tf-ti);
 	    t_rest = t_tot - t_cal - t_comm;
-            std::cout << "TIMING for Davdison : " << t_tot
-		      << " T(cal/comm/rest)=" << t_cal << ","
+            std::cout << "TIMING for Davidson : " << t_tot
+		      << "  T(cal/comm/rest)=" << t_cal << ","
 		      << t_comm << "," << t_rest
 		      << std::endl;
 	 }
@@ -480,7 +470,7 @@ struct pdvdsonSolver_kr{
       QTm* pwf; 
       //--------------------
       // settings
-      int iprt = 1;
+      int iprt = 0;
       double crit_e = 1.e-12; // not used actually
       double crit_indp = 1.e-12;
       double crit_skewH = 1.e-8;

@@ -51,15 +51,15 @@ void sweep_onedot(comb<Km>& icomb,
 
    // check partition 
    const auto& dbond = sweeps.seq[ibond];
-   const bool ifNC = icomb.topo.check_partition(1, dbond, debug);
+   const bool ifNC = icomb.topo.check_partition(1, dbond, debug, schd.ctns.verbose);
 
    // 1. load operators 
-   auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug);
+   auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
    qops_pool.fetch(fneed);
    const oper_dictmap<Tm> qops_dict = {{"l",qops_pool(fneed[0])},
 	   		 	       {"r",qops_pool(fneed[1])},
 	   			       {"c",qops_pool(fneed[2])}};
-   if(debug){
+   if(debug && schd.ctns.verbose>0){
       std::cout << "qops info: rank=" << rank << std::endl;
       qops_dict.at("l").print("lqops");
       qops_dict.at("r").print("rqops");
@@ -82,7 +82,16 @@ void sweep_onedot(comb<Km>& icomb,
    const auto& qc = qops_dict.at("c").qket;
    auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
    stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
-   if(debug) wf.print("wf"); 
+   if(debug){
+      if(schd.ctns.verbose>0) wf.print("wf");
+      std::cout << "wf3(diml,dimr,dimc)=(" 
+	        << ql.get_dimAll() << ","
+		<< qr.get_dimAll() << ","
+		<< qc.get_dimAll() << ")"
+		<< " nnz=" << wf.size() << ":"
+		<< tools::sizeMB<Tm>(wf.size()) << "MB"
+	        << std::endl;
+   }
 
    // 3. Davidson solver for wf
    int nsub = wf.size();
@@ -117,7 +126,7 @@ void sweep_onedot(comb<Km>& icomb,
       tmpsize = opsize + 4*wfsize;
    }
    worktot = maxthreads*tmpsize;
-   if(preprocess && debug){
+   if(preprocess && debug && schd.ctns.verbose>0){
       std::cout << "preprocess for Hx:" 
                 << " opsize=" << opsize 
                 << " wfsize=" << wfsize
@@ -138,20 +147,21 @@ void sweep_onedot(comb<Km>& icomb,
    using std::placeholders::_1;
    using std::placeholders::_2;
    if(schd.ctns.alg_hvec == 0){
-      Hx_funs = onedot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, schd.ctns.ifdist1);
+      Hx_funs = onedot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
+		      		   schd.ctns.ifdist1, schd.ctns.verbose>1);
       HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
            	  std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 1){
       H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
 					    schd.ctns.sort_formulae,
-					    schd.ctns.ifdist1);
+					    schd.ctns.ifdist1, schd.ctns.verbose>1);
       HVec = bind(&ctns::symbolic_Hx<Tm,stensor3<Tm>>, _1, _2, std::cref(H_formulae),
         	  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 2){
       H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
 					    schd.ctns.sort_formulae,
-					    schd.ctns.ifdist1);
+					    schd.ctns.ifdist1, schd.ctns.verbose>1);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx2<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
 		  std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
@@ -161,7 +171,7 @@ void sweep_onedot(comb<Km>& icomb,
    }else if(schd.ctns.alg_hvec == 3){
       H_formulae2 = symbolic_formulae_onedot2(qops_dict, int2e, size, rank, fname,
 					      schd.ctns.sort_formulae,
-					      schd.ctns.ifdist1);
+					      schd.ctns.ifdist1, schd.ctns.verbose>1);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx3<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
 		  std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
@@ -170,18 +180,17 @@ void sweep_onedot(comb<Km>& icomb,
      	          std::ref(workspace));
    } // alg_hvec
    oper_timer.clear();
-   onedot_localCI(icomb, nsub, neig, diag, HVec, eopt, vsol, nmvp,
-		  schd.ctns.cisolver, sweeps.guess, sweeps.ctrls[isweep].eps, 
-		  schd.ctns.maxcycle, (schd.nelec)%2, wf);
+   onedot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2, 
+		  nsub, neig, diag, HVec, eopt, vsol, nmvp, wf);
    if(preprocess) delete[] workspace;
-   if(debug){
+   if(debug && schd.ctns.verbose>1){
       sweeps.print_eopt(isweep, ibond);
       if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
    }
    timing.tc = tools::get_time();
 
    // 3. decimation & renormalize operators
-   auto fbond = icomb.topo.get_fbond(dbond, scratch, debug);
+   auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>1);
    auto frop = fbond.first;
    auto fdel = fbond.second;
    onedot_renorm(icomb, int2e, int1e, schd, scratch, 
@@ -201,10 +210,7 @@ void sweep_onedot(comb<Km>& icomb,
    oper_remove(fdel, debug);
 
    timing.t1 = tools::get_time();
-   if(debug){
-      tools::timing("ctns::sweep_onedot", timing.t0, timing.t1);
-      timing.analysis("time_local");
-   }
+   if(debug) timing.analysis("time_local", schd.ctns.verbose>0);
 }
 
 // use one dot algorithm to produce a final wavefunction
@@ -216,14 +222,18 @@ void sweep_rwfuns(comb<Km>& icomb,
 		  const double ecore,
 		  const input::schedule& schd,
 		  const std::string scratch,
-	          oper_pool<typename Km::dtype>& qops_pool){
+	          oper_pool<typename Km::dtype>& qops_pool,
+		  dot_timing& timing_global){
    using Tm = typename Km::dtype;
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
    rank = icomb.world.rank();
 #endif   
-   if(rank == 0) std::cout << "ctns::sweep_rwfuns" << std::endl;
+   if(rank == 0){ 
+      std::cout << "ctns::sweep_rwfuns: obtain rsite0 & rwfuns" << std::endl;
+      std::cout << tools::line_separator << std::endl;
+   }
 
    // perform an additional onedot opt  
    auto p0 = std::make_pair(0,0);
@@ -231,15 +241,16 @@ void sweep_rwfuns(comb<Km>& icomb,
    auto dbond = directed_bond(p0,p1,0); // fake dbond
    const int dcut1 = -1;
    const double eps = schd.ctns.ctrls[schd.ctns.maxsweep-1].eps; // take the last eps 
+   const int maxsweep = 1; 
    input::params_sweep ctrl = {0, 1, dcut1, eps, 0.0};
-   sweep_data sweeps({dbond}, schd.ctns.nroots, schd.ctns.guess, 
-		      1, {ctrl}, 0, schd.ctns.rdm_vs_svd);
+   sweep_data sweeps({dbond}, schd.ctns.nroots, maxsweep, {ctrl});
    sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
 		qops_pool, sweeps, 0, 0);
-
+   const auto& timing = sweeps.opt_timing[0][0];
+   timing_global.accumulate(timing,"time_global",false);
+ 
+   // decimation to get site0
    if(rank == 0){
-      std::cout << "deal with site0 by decimation for rsite0 & rwfuns" << std::endl;
-      // decimation to get site0
       const auto& wf = icomb.psi[0]; // only rank-0 has psi from renorm
       stensor2<Tm> rot;
       int nroots = schd.ctns.nroots;
@@ -255,7 +266,8 @@ void sweep_rwfuns(comb<Km>& icomb,
       std::string fname = scratch+"/decimation_site0.txt";
       decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
 		     dcut, schd.ctns.rdm_vs_svd, wfs2,
-		     rot, dwt, deff, fname);
+		     rot, dwt, deff, fname, 
+		     schd.ctns.verbose>0);
       rot = rot.T(); 
       icomb.rsites[icomb.topo.rindex.at(p0)] = rot.split_cr(wf.info.qmid, wf.info.qcol);
       // form rwfuns(iroot,irbas)
@@ -264,6 +276,7 @@ void sweep_rwfuns(comb<Km>& icomb,
          auto cwf = icomb.psi[iroot].merge_cr().dot(rot.H()); // <-W[1,alpha]->
          icomb.rwfuns[iroot] = std::move(cwf);
       } // iroot
+      std::cout << std::endl;
    } // rank0
 }
    

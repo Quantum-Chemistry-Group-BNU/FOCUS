@@ -19,7 +19,7 @@ namespace ext { namespace bio = ext::boost::iostreams; }
 
 namespace ctns{ 
 
-const bool debug_oper_io = true;
+const bool debug_oper_io = false;
 extern const bool debug_oper_io;
 
 inline std::string oper_fname(const std::string scratch, 
@@ -35,8 +35,8 @@ inline void oper_remove(const std::string fname,
    if(debug_oper_io and debug){
       std::cout << "ctns::oper_remove fname=" << fname << std::endl;
    }
-   io::remove_file(fname+".info", debug);
-   io::remove_file(fname+".op", debug);
+   io::remove_file(fname+".info", debug_oper_io && debug);
+   io::remove_file(fname+".op", debug_oper_io && debug);
 }
 
 template <typename Tm>
