@@ -109,17 +109,27 @@ LOGS
     - onedot partition
     - hdiag for ifdist1
    
- ### TODOs ###
-
  * Load balance
     - better distribution of operators [DONE2022/06/15]
-    - opS?
+    - opS? currently this is not good because a*Ac type operators 
     - Hx?
-
-    - better distribution of operators & contraction pairs in Hx?
 	typical: cN [isym=1, ifkr=False]
 		 cNSz [isym=2, ifkr=False]
 		 cNK [isym=1, ifkr=True]
+
+ * Restart from optimized states:
+      1. task_dmrg & lastdot
+      2. change the name of the file rcanon_new.info to avoid overwrite later
+      3. if the operator files are not deleted:
+	    task_opt & rcanon_load & rcanon_file newname.info
+	 else rebuild the operators
+	    task_dmrg & rcanon_load & rcanon_file newname.info
+
+ ### TODOs ###
+
+ * More abstract implementation:
+    1. AXPY: form summed operators
+    2. GEMM: contract and accumulate
  
  * Toward large-scale applications [DONE2022/06/XX]
     - GPU for contractions? BatchedGEMM
@@ -134,9 +144,13 @@ LOGS
 	- unpack versus direct loops for qt4?
 	- qbond - separate arrays?
         - 测openmp 注释contract 更好reduction
-    - kramers version:
+
+ * Other improvements for special usages:
+    - different symmetry, in particular, kramers version:
 	- complex arithmetic
 	- how to avoid repeated K()?
+    - other topologies:
+	- comb
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]

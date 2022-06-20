@@ -23,7 +23,7 @@ void onedot_guess_psi0(comb<Km>& icomb, const int nroots){
       // qt2(1,r)
       auto qt2 = icomb.rwfuns[iroot];
       // qt2(1,r)*rsite0(r,r0,n0) = qt3(1,r0,n0)
-      auto qt3 = contract_qt3_qt2("l",rsite0,qt2); 
+      auto qt3 = contract_qt3_qt2("l",rsite0,qt2);
       // qt3(1,r0,n0) -> cwf(n0,r0)
       stensor2<typename Km::dtype> cwf(sym_state, rsite0.info.qmid, rsite0.info.qcol, {1,1});
       for(int br=0; br<cwf.rows(); br++){

@@ -9,20 +9,20 @@
 namespace ctns{
 
 template <typename Tm>
-renorm_tasks<Tm> preprocess_formulae_renorm(const std::string& oplist,
-					    const std::string& block1,
-					    const std::string& block2,
-					    const std::vector<int>& cindex1,
-					    const std::vector<int>& cindex2,
-					    const std::vector<int>& krest,
-	     		                    const int isym,
-					    const bool ifkr,
-					    const integral::two_body<Tm>& int2e,
-	                                    const int& size,
-	                                    const int& rank,
-					    const bool ifdist1,
-					    const bool ifsave,
-					    std::map<std::string,int>& counter){
+renorm_tasks<Tm> gen_formulae_renorm(const std::string& oplist,
+				     const std::string& block1,
+				     const std::string& block2,
+				     const std::vector<int>& cindex1,
+				     const std::vector<int>& cindex2,
+				     const std::vector<int>& krest,
+	     		             const int isym,
+				     const bool ifkr,
+				     const integral::two_body<Tm>& int2e,
+	                             const int& size,
+	                             const int& rank,
+				     const bool ifdist1,
+				     const bool ifsave,
+				     std::map<std::string,int>& counter){
    const int print_level = 1;
 
    renorm_tasks<Tm> formulae;
@@ -195,9 +195,9 @@ renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
    }
    // generation of renorm
    std::map<std::string,int> counter;
-   auto rformulae = preprocess_formulae_renorm(qops.oplist,block1,block2,
-		   			       cindex1,cindex2,qops.krest,isym,ifkr,
-		   			       int2e,size,rank,ifdist1,ifsave,counter);
+   auto rformulae = gen_formulae_renorm(qops.oplist,block1,block2,
+		   			cindex1,cindex2,qops.krest,isym,ifkr,
+		   			int2e,size,rank,ifdist1,ifsave,counter);
    // reorder if necessary
    if(sort_formulae){
       std::map<std::string,int> dims = {{block1,qops1.qket.get_dimAll()},

@@ -471,6 +471,8 @@ pair<string,string> topology::get_fbond(const directed_bond& dbond,
       frop = oper_fname(scratch, p1, "r");
       fdel = oper_fname(scratch, p0, "l");
    }
+   // do not remove l(0,0), which is needed for restart!
+   if(p0 == std::make_pair(0,0)) fdel.clear();
    if(debug){
       cout << "ctns::topology::get_fbond"
 	   << " frop=" << frop

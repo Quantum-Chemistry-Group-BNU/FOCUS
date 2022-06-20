@@ -10,17 +10,17 @@
 namespace ctns{
 
 template <typename Tm>
-symbolic_task<Tm> preprocess_formulae_onedot(const std::vector<int>& cindex_l,
-					     const std::vector<int>& cindex_r,
-					     const std::vector<int>& cindex_c,
-					     const int isym,
-					     const bool ifkr,
-	                                     const integral::two_body<Tm>& int2e,
-	                                     const int& size,
-	                                     const int& rank,
-					     const bool ifdist1,
-					     const bool ifsave,
-   				             std::map<std::string,int>& counter){
+symbolic_task<Tm> gen_formulae_onedot(const std::vector<int>& cindex_l,
+				      const std::vector<int>& cindex_r,
+				      const std::vector<int>& cindex_c,
+				      const int isym,
+				      const bool ifkr,
+	                              const integral::two_body<Tm>& int2e,
+	                              const int& size,
+	                              const int& rank,
+				      const bool ifdist1,
+				      const bool ifsave,
+   			              std::map<std::string,int>& counter){
    const int print_level = 1;
    const bool ifNC = cindex_l.size() <= cindex_r.size();
    const auto& cindex = ifNC? cindex_l : cindex_r;
@@ -277,8 +277,8 @@ symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
    }
    // generation of Hx
    std::map<std::string,int> counter;
-   auto formulae = preprocess_formulae_onedot(cindex_l,cindex_r,cindex_c,isym,ifkr,
-		   		   	      int2e,size,rank,ifdist1,ifsave,counter);
+   auto formulae = gen_formulae_onedot(cindex_l,cindex_r,cindex_c,isym,ifkr,
+		   		       int2e,size,rank,ifdist1,ifsave,counter);
    // reorder if necessary
    if(sort_formulae){
       std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},

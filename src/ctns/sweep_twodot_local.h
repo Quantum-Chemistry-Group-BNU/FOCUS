@@ -31,6 +31,12 @@ void twodot_guess(comb<Km>& icomb,
             auto wf3 = contract_qt3_qt2("l",icomb.rsites[pdx1],cwf); 
 	    // wf3[lc1,r,c2] => wf4[l,r,c1,c2]
 	    auto wf4 = wf3.split_lc1(wf.info.qrow, wf.info.qmid);
+
+	    cwf.print("cwf");
+	    wf3.print("wf3");
+	    wf4.print("wf4");
+	    std::cout << "nsub=" << nsub << std::endl;
+
 	    assert(wf4.size() == nsub);
             wf4.to_array(&v0[nsub*i]);
          }
@@ -148,6 +154,9 @@ void twodot_localCI(comb<Km>& icomb,
          std::vector<Tm> v0;
 	 if(rank == 0){
 	    // starting guess 
+
+	    std::cout << "lzd PSI=" << icomb.psi.size() << std::endl;
+
             if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig);
 	    // specific to twodot 
             twodot_guess(icomb, dbond, nsub, neig, wf, v0);

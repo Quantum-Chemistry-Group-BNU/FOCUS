@@ -86,7 +86,9 @@ void CTNS(const input::schedule& schd){
 #endif
       // create scratch
       auto scratch = schd.scratch+"/sweep";
-      io::remove_scratch(scratch, (rank == 0)); // cleanup
+      if(schd.ctns.task_ham){
+         io::remove_scratch(scratch, (rank == 0)); // task_opt will not recreate 
+      }
       io::create_scratch(scratch, (rank == 0));
       // compute hamiltonian 
       if(schd.ctns.task_ham){

@@ -200,7 +200,7 @@ void preprocess_oper(const comb<Km>& icomb,
 	    backup = std::cout.rdbuf();
 	    psbuf = file.rdbuf();
 	    std::cout.rdbuf(psbuf);
-	    std::cout << "preprocess_formulae_renorm" 
+	    std::cout << "gen_formulae_renorm" 
 		      << " qkind=" << qname
 		      << " isym=" << isym
 		      << " ifkr=" << ifkr
@@ -220,10 +220,10 @@ void preprocess_oper(const comb<Km>& icomb,
 	    }
             bool ifsave = true;
             std::map<std::string,int> counter;
-            auto formulae = preprocess_formulae_renorm(oplist, block1, block2, 
-			    			       cindex1, cindex2, krest,
-		      	  	 		       isym, ifkr, int2e, mpisize, rank, ifdist1, 
-						       ifsave, counter);
+            auto formulae = gen_formulae_renorm(oplist, block1, block2, 
+			    			cindex1, cindex2, krest,
+		      	  	 		isym, ifkr, int2e, mpisize, rank, ifdist1, 
+						ifsave, counter);
 
             formulae.display("total");
 	    std::cout.rdbuf(backup);
@@ -257,7 +257,7 @@ void preprocess_oper(const comb<Km>& icomb,
 	    backup = std::cout.rdbuf();
 	    psbuf = file.rdbuf();
 	    std::cout.rdbuf(psbuf);
-	    std::cout << "preprocess_formulae_twodot" 
+	    std::cout << "gen_formulae_twodot" 
 		      << " qkind=" << qname
 		      << " isym=" << isym
 		      << " ifkr=" << ifkr
@@ -267,9 +267,9 @@ void preprocess_oper(const comb<Km>& icomb,
 
             bool ifsave = true;
             std::map<std::string,int> counter;
-            auto formulae = preprocess_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
-		      	  	 		       isym, ifkr, int2e, mpisize, rank, ifdist1, 
-						       ifsave, counter);
+            auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+		      	  	 		isym, ifkr, int2e, mpisize, rank, ifdist1, 
+						ifsave, counter);
 
             formulae.display("total");
 	    std::cout.rdbuf(backup);
@@ -295,9 +295,9 @@ void preprocess_oper(const comb<Km>& icomb,
       // 4. classification of Hx
       bool ifsave = false;
       std::map<std::string,int> counter;
-      auto formulae = preprocess_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
-		      	  	 		 isym, ifkr, int2e, 1, 0, ifdist1, 
-						 ifsave, counter);
+      auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+		      	  		  isym, ifkr, int2e, 1, 0, ifdist1, 
+					  ifsave, counter);
       std::map<std::string,std::vector<int>> maps;
       for(int i=0; i<formulae.size(); i++){
          auto symbol = formulae.tasks[i].symbol();
@@ -336,9 +336,9 @@ void preprocess_oper(const comb<Km>& icomb,
 	 for(int rank=0; rank<mpisize; rank++){
             bool ifsave = false;
             std::map<std::string,int> counter;
-            auto formulae = preprocess_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
-		      	  	 		       isym, ifkr, int2e, mpisize, rank, ifdist1, 
-						       ifsave, counter);
+            auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+		      	  	 		isym, ifkr, int2e, mpisize, rank, ifdist1, 
+						ifsave, counter);
             for(int i=0; i<formulae.size(); i++){
                auto symbol = formulae.tasks[i].symbol();
 	       imaps[rank][symbol] += 1;

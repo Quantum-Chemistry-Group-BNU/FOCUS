@@ -60,13 +60,13 @@ struct symbolic_task{
 	 return st_new;
       }
       // display
-      void display(const std::string& name, const int level=1) const{
+      void display(const std::string name, const int level=1) const{
          std::cout << " symbolic_task=" << name << " : size=" << tasks.size() << std::endl;
 	 if(level > 0){
             for(int i=0; i<tasks.size(); i++){
 	       std::cout << "  i=" << i
-		         << " symbol=" << tasks[i].symbol() 
-		         << " " << tasks[i] 
+		         << "  symbol=" << tasks[i].symbol() 
+		         << "  formula=" << tasks[i] 
 			 << std::endl; 
 	    }
 	 }
@@ -83,14 +83,7 @@ struct symbolic_task{
 			     	  return (c1>c2) || (c1==c2 && t1.symbol()>t2.symbol()); 
 				  }
 			 );
-	 if(debug){
-            for(int i=0; i<tasks.size(); i++){
-	       std::cout << "i=" << i << " cost=" << tasks[i].cost(dims) 
-	                 << " symbol=" << tasks[i].symbol()
-	                 << " " << tasks[i] 
-			 << std::endl;
-	    }
-	 }
+	 if(debug) this->display("reordered");
       }
       // cost for (op1+op2+...+)|wf>
       double cost(const std::map<std::string,int>& dims) const{
@@ -144,7 +137,7 @@ struct renorm_tasks{
 		         );
       }
       // display
-      void display(const std::string& name, const int level=1) const{
+      void display(const std::string name, const int level=1) const{
          std::cout << " renorm_task=" << name << " : size=" << op_tasks.size() << std::endl;
 	 if(level > 0){
             for(int idx=0; idx<op_tasks.size(); idx++){
@@ -232,7 +225,7 @@ void sort(bipart_task<Tm>& formulae, const std::map<std::string,int>& dims){
 
 template <typename Tm>
 void display(const bipart_task<Tm>& formulae, 
- 	     const std::string& name,
+ 	     const std::string name,
 	     const int level=0){
    std::cout << " bipart_task=" << name << " : size=" << formulae.size() << std::endl;
    for(int i=0; i<formulae.size(); i++){

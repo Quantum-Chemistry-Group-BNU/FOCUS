@@ -330,6 +330,7 @@ void init_rwfuns(comb<Km>& icomb,
 
    // check overlaps
    if(debug_init){
+      icomb.rwfuns[0].info.print("rwfun0.qinfo");
       auto wfmat = icomb.get_wf2().to_matrix();
       wfmat.print("rwfuns",2);
       std::cout << "\ncheck state overlaps ..." << std::endl;

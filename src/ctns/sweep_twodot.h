@@ -9,10 +9,11 @@
 #include "sweep_twodot_local.h"
 #include "sweep_twodot_sigma.h"
 #include "symbolic_formulae_twodot.h"
-#include "symbolic_preprocess.h"
 #include "symbolic_kernel_sigma.h"
 #include "symbolic_kernel_sigma2.h"
 #include "symbolic_kernel_sigma3.h"
+#include "preprocess_size.h"
+#include "preprocess_formulae_twodot.h"
 
 namespace ctns{
 
@@ -151,22 +152,25 @@ void sweep_twodot(comb<Km>& icomb,
    Tm* workspace;
    using std::placeholders::_1;
    using std::placeholders::_2;
+   const bool debug_formulae = schd.ctns.verbose>0;
    if(schd.ctns.alg_hvec == 0){
       Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
-		                   schd.ctns.ifdist1, schd.ctns.verbose>1);
+		                   schd.ctns.ifdist1, debug_formulae);
       HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 1){
+      // raw version: symbolic formulae + dynamic allocation of memory 
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-			                    schd.ctns.sort_formulae,
-					    schd.ctns.ifdist1, schd.ctns.verbose>1);
+			                    schd.ctns.sort_formulae, schd.ctns.ifdist1,
+					    debug_formulae); 
       HVec = bind(&ctns::symbolic_Hx<Tm,stensor4<Tm>>, _1, _2, std::cref(H_formulae),
         	  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 2){ 
+      // symbolic formulae + preallocation of workspace 
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-			                    schd.ctns.sort_formulae,
-					    schd.ctns.ifdist1, schd.ctns.verbose>1);
+			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+					    debug_formulae); 
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
 		  std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
@@ -174,15 +178,34 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
 		  std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 3){
+      // symbolic formulae (factorized) + preallocation of workspace 
       H_formulae2 = symbolic_formulae_twodot2(qops_dict, int2e, size, rank, fname,
-			                      schd.ctns.sort_formulae,
-					      schd.ctns.ifdist1, schd.ctns.verbose>1);
+			                      schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+					      debug_formulae); 
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx3<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
 		  std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
 		  std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
 		  std::ref(workspace));
+   }else if(schd.ctns.alg_hvec == 4){
+      H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
+			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+					    debug_formulae); 
+      preprocess_formulae_twodot(qops_dict, H_formulae, rank==0 && schd.ctns.verbose>0);
+/*
+      workspace = new Tm[worktot];
+      HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
+		  std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
+                  std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
+		  std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
+		  std::ref(workspace));
+*/ 
+      std::cout << "NOT FINISH YET!" << std::endl;
+      exit(1);	   
+   }else{
+      std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
+      exit(1);
    } // alg_hvec
    oper_timer.clear();
    twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
@@ -195,7 +218,7 @@ void sweep_twodot(comb<Km>& icomb,
    timing.tc = tools::get_time();
 
    // 3. decimation & renormalize operators
-   auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>1);
+   auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
    auto frop = fbond.first;
    auto fdel = fbond.second;
    twodot_renorm(icomb, int2e, int1e, schd, scratch, 

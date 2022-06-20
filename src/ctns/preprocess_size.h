@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_PREPROCESS_H
-#define SYMBOLIC_PREPROCESS_H
+#ifndef PREPROCESS_SIZE_H
+#define PREPROCESS_SIZE_H
 
 #include "oper_dict.h"
 

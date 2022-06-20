@@ -82,18 +82,19 @@ void oper_renorm_opAll(const std::string superblock,
       
    // 1. start renormalization
    oper_timer.clear();
+   const bool debug_formulae = schd.ctns.verbose>0;
    if(alg_renorm == 0){
       auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
       oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
    }else if(alg_renorm == 1){
       auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             size, rank, fname, sort_formulae, 
-					     ifdist1, schd.ctns.verbose>1);
+		                             size, rank, fname, sort_formulae, ifdist1, 
+					     debug_formulae);
       symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
    }else if(alg_renorm == 2){
       auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             size, rank, fname, sort_formulae, 
-					     ifdist1, schd.ctns.verbose>1);
+		                             size, rank, fname, sort_formulae, ifdist1,
+					     debug_formulae);
       symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
    }else{
       std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;

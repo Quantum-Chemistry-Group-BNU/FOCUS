@@ -9,10 +9,10 @@
 #include "sweep_onedot_local.h"
 #include "sweep_onedot_sigma.h"
 #include "symbolic_formulae_onedot.h"
-#include "symbolic_preprocess.h"
 #include "symbolic_kernel_sigma.h"
 #include "symbolic_kernel_sigma2.h"
 #include "symbolic_kernel_sigma3.h"
+#include "preprocess_size.h"
 
 namespace ctns{
 
@@ -146,22 +146,25 @@ void sweep_onedot(comb<Km>& icomb,
    Tm* workspace;
    using std::placeholders::_1;
    using std::placeholders::_2;
+   const bool debug_formulae = schd.ctns.verbose>0;
    if(schd.ctns.alg_hvec == 0){
       Hx_funs = onedot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
-		      		   schd.ctns.ifdist1, schd.ctns.verbose>1);
+		      		   schd.ctns.ifdist1, debug_formulae);
       HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
            	  std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 1){
+      // raw version: symbolic formulae + dynamic allocation of memory 
       H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
-					    schd.ctns.sort_formulae,
-					    schd.ctns.ifdist1, schd.ctns.verbose>1);
+					    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+					    debug_formulae); 
       HVec = bind(&ctns::symbolic_Hx<Tm,stensor3<Tm>>, _1, _2, std::cref(H_formulae),
         	  std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
    }else if(schd.ctns.alg_hvec == 2){
+      // symbolic formulae + preallocation of workspace 
       H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
-					    schd.ctns.sort_formulae,
-					    schd.ctns.ifdist1, schd.ctns.verbose>1);
+					    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+					    debug_formulae); 
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx2<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
 		  std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
@@ -169,15 +172,19 @@ void sweep_onedot(comb<Km>& icomb,
      	          std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
      	          std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 3){
+      // symbolic formulae (factorized) + preallocation of workspace 
       H_formulae2 = symbolic_formulae_onedot2(qops_dict, int2e, size, rank, fname,
-					      schd.ctns.sort_formulae,
-					      schd.ctns.ifdist1, schd.ctns.verbose>1);
+					      schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+					      debug_formulae); 
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx3<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
 		  std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
      	          std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
      	          std::ref(workspace));
+   }else{
+      std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
+      exit(1);
    } // alg_hvec
    oper_timer.clear();
    onedot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2, 
@@ -190,7 +197,7 @@ void sweep_onedot(comb<Km>& icomb,
    timing.tc = tools::get_time();
 
    // 3. decimation & renormalize operators
-   auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>1);
+   auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
    auto frop = fbond.first;
    auto fdel = fbond.second;
    onedot_renorm(icomb, int2e, int1e, schd, scratch, 
@@ -271,11 +278,20 @@ void sweep_rwfuns(comb<Km>& icomb,
       rot = rot.T(); 
       icomb.rsites[icomb.topo.rindex.at(p0)] = rot.split_cr(wf.info.qmid, wf.info.qcol);
       // form rwfuns(iroot,irbas)
+      const auto& sym_state = icomb.psi[0].info.sym;
+      qbond qrow({{sym_state, 1}});
+      const auto& qcol = rot.info.qrow;
       icomb.rwfuns.resize(nroots);
       for(int iroot=0; iroot<nroots; iroot++){
          auto cwf = icomb.psi[iroot].merge_cr().dot(rot.H()); // <-W[1,alpha]->
-         icomb.rwfuns[iroot] = std::move(cwf);
+         // change the carrier of sym_state from left to center qsym
+	 stensor2<typename Km::dtype> rwfun(qsym(Km::isym), qrow, qcol, {0,1});	
+	 for(int ic=0; ic<qcol.get_dim(0); ic++){
+	    rwfun(0,0)(0,ic) = cwf(0,0)(0,ic);
+	 }
+         icomb.rwfuns[iroot] = std::move(rwfun);
       } // iroot
+      if(schd.ctns.verbose>0) icomb.rwfuns[0].info.print("rwfuns0.info");
       std::cout << std::endl;
    } // rank0
 }
