@@ -42,14 +42,11 @@ void symbolic_HxTerm2(const oper_dictmap<Tm>& qops_dict,
    for(int idx=HTerm.size()-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];
       const auto& sop0 = sop.sums[0].second;
-      const auto& index0 = sop0.index;
       const auto& parity = sop0.parity;
-      const auto& label  = sop0.label;
       const auto& dagger = sop0.dagger;
       const auto& block = sop0.block;
-      const auto& qops = qops_dict.at(block);
       // form operator
-      auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
+      auto optmp = symbolic_sum_oper(qops_dict, sop, workspace);
       const bool op_dagger = ifdagger^dagger; // (w op^d1)^d2 = (w^d1 op)^d1d2 
       if(op_dagger) linalg::xconj(optmp.size(), optmp.data());
       // op(dagger)*|wf>

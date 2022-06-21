@@ -42,14 +42,11 @@ void symbolic_renorm_single2(const std::string& block1,
       for(int idx=HTerm.size()-1; idx>=0; idx--){
          const auto& sop = HTerm.terms[idx];
          const auto& sop0 = sop.sums[0].second;
-         const auto& index0 = sop0.index;
          const auto& parity = sop0.parity;
-         const auto& label  = sop0.label;
          const auto& dagger = sop0.dagger;
          const auto& block = sop0.block;
-         const auto& qops = qops_dict.at(block);
          // form operator
-         auto optmp = symbolic_sum_oper(qops, sop, label, dagger, workspace);
+         auto optmp = symbolic_sum_oper(qops_dict, sop, workspace);
          if(dagger) linalg::xconj(optmp.size(), optmp.data());
 	 // opN*|wf> 
          sym += dagger? -optmp.info.sym : optmp.info.sym;

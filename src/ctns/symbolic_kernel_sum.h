@@ -8,18 +8,20 @@ namespace ctns{
 
 // formulae = (w a^d) => (w^d a)^d, return w^d a 
 template <typename Tm>
-stensor2<Tm> symbolic_sum_oper(const oper_dict<Tm>& qops,
+stensor2<Tm> symbolic_sum_oper(const oper_dictmap<Tm>& qops_dict,
 			       const symbolic_sum<Tm>& sop,
-	          	       const char& label,
-			       const bool& dagger,
 			       Tm* workspace){
    int len = sop.size();
    // we assume the rest of terms have the same label/dagger
    auto wt0 = sop.sums[0].first;
    const auto& sop0 = sop.sums[0].second;
+   const auto& block = sop0.block;
+   const auto& label = sop0.label;
+   const auto& dagger= sop0.dagger;
    int index0 = sop0.index;
    int nbar0  = sop0.nbar;
    // form opsum = wt0*op0 + wt1*op1 + ...
+   const auto& qops = qops_dict.at(block);
    const auto& op0 = qops(label).at(index0);
    if(dagger) wt0 = tools::conjugate(wt0);
    stensor2<Tm> optmp;
