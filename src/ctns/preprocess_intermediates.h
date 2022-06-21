@@ -17,6 +17,8 @@ public:
 	     const symbolic_task<Tm>& H_formulae,
 	     const bool debug=false);
    // helpers
+   const Tm* operator()(const int i, const int j) const{ return _data+_imap.at(std::make_pair(i,j)); }
+   Tm* operator()(const int i, const int j){ return _data+_imap.at(std::make_pair(i,j)); }
    int count() const{ return _count; };
    int size() const{ return _size; };
 public:
@@ -30,24 +32,22 @@ void intermediates<Tm>::init(const oper_dictmap<Tm>& qops_dict,
 	     		     const symbolic_task<Tm>& H_formulae,
 	     		     const bool debug){
    auto t0 = tools::get_time();
+#ifdef _OPENMP
+   int maxthreads = omp_get_max_threads();
+#else
+   int maxthreads = 1;
+#endif
    if(debug){
-      std::cout << "intermediates<Tm>::init"
-	        << " size(formulae)=" << H_formulae.size()
-	        << std::endl;
+      std::cout << "intermediates<Tm>::init maxthreads=" << maxthreads << std::endl;
+      std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
    }
    // count the size of intermediates
-   int hsize = H_formulae.size();
-   std::vector<Tm> coeffs(hsize,1.0);
-   for(int it=0; it<hsize; it++){
+   for(int it=0; it<H_formulae.size(); it++){
       const auto& HTerm = H_formulae.tasks[it];
-      if(debug) std::cout << "it=" << it << " formulae=" << HTerm << std::endl;
       for(int idx=HTerm.size()-1; idx>=0; idx--){
          const auto& sop = HTerm.terms[idx];
-         int len = sop.size();
-         if(len == 1){
-            coeffs[it] *= sop.sums[0].first; 
-         }else{
-            // define intermediate operators
+         // define intermediate operators
+         if(sop.size() > 1){
 	    _count += 1;
             _imap[std::make_pair(it,idx)] = _size;
             const auto& sop0 = sop.sums[0].second;
@@ -59,8 +59,11 @@ void intermediates<Tm>::init(const oper_dictmap<Tm>& qops_dict,
       }
    } // it
    if(debug){
-      std::cout << "no. of intermediate operators = " << _count << std::endl;
-      std::cout << "size of intermediate operators = " << _size << std::endl;
+      std::cout << " no. of intermediate operators=" << _count << std::endl;
+      std::cout << " size of intermediate operators=" << _size 
+                << ":" << tools::sizeMB<Tm>(_size) << "MB"
+                << ":" << tools::sizeGB<Tm>(_size) << "GB"
+		<< std::endl;
    }
    // allocate memory
    _data = new Tm[_size];

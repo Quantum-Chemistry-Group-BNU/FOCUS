@@ -172,7 +172,8 @@ void sweep_twodot(comb<Km>& icomb,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
       
-      preprocess_formulae_twodot(qops_dict, H_formulae, rank==0 && schd.ctns.verbose>0);
+      preprocess_formulae_twodot(qops_dict, H_formulae, wf, 
+		      		 rank==0 && schd.ctns.verbose>0);
 
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
@@ -195,8 +196,8 @@ void sweep_twodot(comb<Km>& icomb,
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
-      preprocess_formulae_twodot(qops_dict, H_formulae, rank==0 && schd.ctns.verbose>0);
 /*
+      preprocess_formulae_twodot(qops_dict, H_formulae, rank==0 && schd.ctns.verbose>0);
       workspace = new Tm[worktot];
       HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
 		  std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 

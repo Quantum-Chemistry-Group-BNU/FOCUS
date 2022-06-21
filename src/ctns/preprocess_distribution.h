@@ -1,5 +1,5 @@
-#ifndef PREPROCESS_H
-#define PREPROCESS_H
+#ifndef PREPROCESS_DISTRIBUTION_H
+#define PREPROCESS_DISTRIBUTION_H
 
 #include <numeric>
 #include "../core/tools.h"
@@ -33,8 +33,8 @@ inline void analyze_distribution(const std::vector<int>& sizes,
 
 // analyze the distribution of operators along a sweep
 template <typename Km>
-void preprocess_oper(const comb<Km>& icomb,
-		     const input::schedule& schd){	
+void preprocess_distribution(const comb<Km>& icomb,
+		             const input::schedule& schd){	
    int size = 1, rank = 0;
 #ifndef SERIAL
    size = icomb.world.size();
@@ -46,7 +46,7 @@ void preprocess_oper(const comb<Km>& icomb,
    const bool ifkr = Km::ifkr;
    const std::string qname = qkind::get_name<Km>();
    if(rank == 0){
-      std::cout << "\nctns::preprocess_oper" 
+      std::cout << "\nctns::preprocess_distribution" 
 		<< " qkind=" << qname
 		<< " isym=" << isym
 		<< " ifkr=" << ifkr
@@ -360,8 +360,6 @@ void preprocess_oper(const comb<Km>& icomb,
       } // idx
 
    } // ibond
-   exit(1);
-
 }
 
 } // ctns

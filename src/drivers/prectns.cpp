@@ -33,8 +33,8 @@ void preCTNS(const input::schedule& schd){
    icomb.world = schd.world;
 #endif
 
-   // preprocess
-   ctns::preprocess_oper(icomb, schd);
+   // analyze
+   ctns::preprocess_distribution(icomb, schd);
 }
 
 int main(int argc, char *argv[]){
