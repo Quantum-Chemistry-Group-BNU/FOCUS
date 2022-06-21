@@ -76,25 +76,26 @@ void contract_qt4_qt2_info_l(const qinfo4<Tm>& qt4a_info,
       int vdim = qt4_info.qver.get_dim(bv);
       int size = rdim*cdim*mdim*vdim;
       bool ifzero = true;
-      // loop over contracted indices
-      for(int bx=0; bx<qt4a_info._rows; bx++){
+      // find contracted index for
+      // qt4(r,c,m,v) = \sum_x qt2(r,x)*qt4a(x,c,m,v) ; iftrans=false 
+      // 	      = \sum_x qt2(x,r)*qt4a(x,c,m,v) ; iftrans=true
+      int bx = iftrans? qt2_info._bc2br[br] : qt2_info._br2bc[br];
+      if(bx != -1){
 	 size_t off4a = qt4a_info._offset[qt4a_info._addr(bx,bc,bm,bv)];
-	 if(off4a == 0) continue;
-	 int jdx = iftrans? qt2_info._addr(bx,br) : qt2_info._addr(br,bx);
-	 size_t off2 = qt2_info._offset[jdx];
-         if(off2 == 0) continue;
-	 ifzero = false; 
-         // qt4(r,c,m,v) = \sum_x qt2(r,x)*qt4a(x,c,m,v) ; iftrans=false 
-         // 		 = \sum_x qt2(x,r)*qt4a(x,c,m,v) ; iftrans=true
-         const Tm* blk4a = qt4a_data + off4a-1;
-         const Tm* blk2 = qt2_data + off2-1;
-         int xdim = qt4a_info.qrow.get_dim(bx);
-         int LDA = iftrans? xdim : rdim;
-         int cmvdim = cdim*mdim*vdim;
-	 linalg::xgemm(transa, "N", &rdim, &cmvdim, &xdim, &alpha,
-		       blk2, &LDA, blk4a, &xdim, &beta,
-		       blk4, &rdim);
-      } // bx
+	 if(off4a != 0){
+	    ifzero = false; 
+	    int jdx = iftrans? qt2_info._addr(bx,br) : qt2_info._addr(br,bx);
+	    size_t off2 = qt2_info._offset[jdx];
+            const Tm* blk4a = qt4a_data + off4a-1;
+            const Tm* blk2 = qt2_data + off2-1;
+            int xdim = qt4a_info.qrow.get_dim(bx);
+            int LDA = iftrans? xdim : rdim;
+            int cmvdim = cdim*mdim*vdim;
+	    linalg::xgemm(transa, "N", &rdim, &cmvdim, &xdim, &alpha,
+	   	          blk2, &LDA, blk4a, &xdim, &beta,
+	   	          blk4, &rdim);
+	 }
+      }
       if(ifzero) memset(blk4, 0, size*sizeof(Tm));
    } // i 
 }
@@ -127,32 +128,33 @@ void contract_qt4_qt2_info_r(const qinfo4<Tm>& qt4a_info,
       int vdim = qt4_info.qver.get_dim(bv);
       int size = rdim*cdim*mdim*vdim;
       bool ifzero = true;
-      // loop over contracted indices
-      for(int bx=0; bx<qt4a_info._cols; bx++){
+      // find contracted index for
+      // qt4(r,c,m,v) = \sum_x qt2(c,x)*qt4a(r,x,m,v) ; iftrans=false 
+      // 	      = \sum_x qt2(x,c)*qt4a(r,x,m,v) ; iftrans=true
+      int bx = iftrans? qt2_info._bc2br[bc] : qt2_info._br2bc[bc];
+      if(bx != -1){
 	 size_t off4a = qt4a_info._offset[qt4a_info._addr(br,bx,bm,bv)];
-         if(off4a == 0) continue;
-	 int jdx = iftrans? qt2_info._addr(bx,bc) : qt2_info._addr(bc,bx);
-         size_t off2 = qt2_info._offset[jdx];
-	 if(off2 == 0) continue;
-         ifzero = false;
-         // qt4(r,c,m,v) = \sum_x qt2(c,x)*qt4a(r,x,m,v) ; iftrans=false 
-         // 		 = \sum_x qt2(x,c)*qt4a(r,x,m,v) ; iftrans=true
-	 const Tm* blk4a = qt4a_data + off4a-1;
-	 const Tm* blk2 = qt2_data + off2-1;
-	 int xdim = qt4a_info.qcol.get_dim(bx);
-         int LDB = iftrans? xdim : cdim;
-	 int rxdim = rdim*xdim;
-	 int rcdim = rdim*cdim;
-	 for(int iv=0; iv<vdim; iv++){
-            for(int im=0; im<mdim; im++){
-	       const Tm* blk4a_imv = blk4a + (iv*mdim+im)*rxdim;
-	       Tm* blk4_imv = blk4 + (iv*mdim+im)*rcdim;
-	       linalg::xgemm("N", transb, &rdim, &cdim, &xdim, &alpha,
-			     blk4a_imv, &rdim, blk2, &LDB, &beta,
-			     blk4_imv, &rdim);  
-            } // im
-         } // iv
-      } // bx
+         if(off4a != 0){
+            ifzero = false;
+	    int jdx = iftrans? qt2_info._addr(bx,bc) : qt2_info._addr(bc,bx);
+            size_t off2 = qt2_info._offset[jdx];
+	    const Tm* blk4a = qt4a_data + off4a-1;
+	    const Tm* blk2 = qt2_data + off2-1;
+	    int xdim = qt4a_info.qcol.get_dim(bx);
+            int LDB = iftrans? xdim : cdim;
+	    int rxdim = rdim*xdim;
+	    int rcdim = rdim*cdim;
+	    for(int iv=0; iv<vdim; iv++){
+               for(int im=0; im<mdim; im++){
+	          const Tm* blk4a_imv = blk4a + (iv*mdim+im)*rxdim;
+	          Tm* blk4_imv = blk4 + (iv*mdim+im)*rcdim;
+	          linalg::xgemm("N", transb, &rdim, &cdim, &xdim, &alpha,
+	           	        blk4a_imv, &rdim, blk2, &LDB, &beta,
+	           	        blk4_imv, &rdim);  
+               } // im
+            } // iv
+	 }
+      }
       if(ifzero) memset(blk4, 0, size*sizeof(Tm));
    } // i
 }
@@ -186,31 +188,32 @@ void contract_qt4_qt2_info_c1(const qinfo4<Tm>& qt4a_info,
       int vdim = qt4_info.qver.get_dim(bv);
       int size = rdim*cdim*mdim*vdim;
       bool ifzero = true;
-      // loop over contracted indices
-      for(int bx=0; bx<qt4a_info._mids; bx++){
+      // find contracted index for
+      // qt4(r,c,m,v) = \sum_x qt2(m,x)*qt4a(r,c,x,v) ; iftrans=false 
+      // 	      = \sum_x qt2(x,m)*qt4a(r,c,x,v) ; iftrans=true
+      int bx = iftrans? qt2_info._bc2br[bm] : qt2_info._br2bc[bm];
+      if(bx != -1){
 	 size_t off4a = qt4a_info._offset[qt4a_info._addr(br,bc,bx,bv)];
-	 if(off4a == 0) continue;
-	 int jdx = iftrans? qt2_info._addr(bx,bm) : qt2_info._addr(bm,bx);
-	 size_t off2 = qt2_info._offset[jdx];
-         if(off2 == 0) continue;
-         ifzero = false;
-         // qt4(r,c,m,v) = \sum_x qt2(m,x)*qt4a(r,c,x,v) ; iftrans=false 
-         // 		 = \sum_x qt2(x,m)*qt4a(r,c,x,v) ; iftrans=true
-         const Tm* blk4a = qt4a_data + off4a-1;
-         const Tm* blk2 = qt2_data + off2-1;
-         int xdim = qt4a_info.qmid.get_dim(bx);
-	 int LDB = iftrans? xdim : mdim;
-	 int rcdim = rdim*cdim;
-	 int rcmdim = rcdim*mdim;
-	 int rcxdim = rcdim*xdim;
-         for(int iv=0; iv<vdim; iv++){
-	    const Tm* blk4a_iv = blk4a + iv*rcxdim;
-	    Tm* blk4_iv =  blk4 + iv*rcmdim;
-            linalg::xgemm("N", transb, &rcdim, &mdim, &xdim, &alpha,
-                          blk4a_iv, &rcdim, blk2, &LDB, &beta,
- 	                  blk4_iv, &rcdim);
-         } // iv
-      } // bx
+	 if(off4a != 0){
+            ifzero = false;
+	    int jdx = iftrans? qt2_info._addr(bx,bm) : qt2_info._addr(bm,bx);
+	    size_t off2 = qt2_info._offset[jdx];
+            const Tm* blk4a = qt4a_data + off4a-1;
+            const Tm* blk2 = qt2_data + off2-1;
+            int xdim = qt4a_info.qmid.get_dim(bx);
+	    int LDB = iftrans? xdim : mdim;
+	    int rcdim = rdim*cdim;
+	    int rcmdim = rcdim*mdim;
+	    int rcxdim = rcdim*xdim;
+            for(int iv=0; iv<vdim; iv++){
+	       const Tm* blk4a_iv = blk4a + iv*rcxdim;
+	       Tm* blk4_iv =  blk4 + iv*rcmdim;
+               linalg::xgemm("N", transb, &rcdim, &mdim, &xdim, &alpha,
+                             blk4a_iv, &rcdim, blk2, &LDB, &beta,
+ 	                     blk4_iv, &rcdim);
+            } // iv
+	 }
+      }
       if(ifzero) memset(blk4, 0, size*sizeof(Tm));
    } // i
 }
@@ -244,25 +247,26 @@ void contract_qt4_qt2_info_c2(const qinfo4<Tm>& qt4a_info,
       int vdim = qt4_info.qver.get_dim(bv);
       int size = rdim*cdim*mdim*vdim;
       bool ifzero = true;
-      // loop over contracted indices
-      for(int bx=0; bx<qt4a_info._vers; bx++){
+      // find contracted index for
+      // qt4(r,c,m,v) = \sum_x qt2(v,x)*qt4a(r,c,m,x) ; iftrans=false 
+      // 	      = \sum_x qt2(x,v)*qt4a(r,c,m,x) ; iftrans=true
+      int bx = iftrans? qt2_info._bc2br[bv] : qt2_info._br2bc[bv];
+      if(bx != -1){
 	 size_t off4a = qt4a_info._offset[qt4a_info._addr(br,bc,bm,bx)];
-	 if(off4a == 0) continue;
-	 int jdx = iftrans? qt2_info._addr(bx,bv) : qt2_info._addr(bv,bx);
-	 size_t off2 = qt2_info._offset[jdx];
-         if(off2 == 0) continue;
-         ifzero = false;
-	 // qt4(r,c,m,v) = \sum_x qt2(v,x)*qt4a(r,c,m,x) ; iftrans=false 
-	 // 		 = \sum_x qt2(x,v)*qt4a(r,c,m,x) ; iftrans=true
-         const Tm* blk4a = qt4a_data + off4a-1;
-         const Tm* blk2 = qt2_data + off2-1;
-         int xdim = qt4a_info.qver.get_dim(bx);
-	 int LDB = iftrans? xdim : vdim;
-	 int rcmdim = rdim*cdim*mdim;
-	 linalg::xgemm("N", transb, &rcmdim, &vdim, &xdim, &alpha,
-		       blk4a, &rcmdim, blk2, &LDB, &beta,
-		       blk4, &rcmdim);
-      } // bx
+	 if(off4a != 0){
+            ifzero = false;
+	    int jdx = iftrans? qt2_info._addr(bx,bv) : qt2_info._addr(bv,bx);
+	    size_t off2 = qt2_info._offset[jdx];
+            const Tm* blk4a = qt4a_data + off4a-1;
+            const Tm* blk2 = qt2_data + off2-1;
+            int xdim = qt4a_info.qver.get_dim(bx);
+	    int LDB = iftrans? xdim : vdim;
+	    int rcmdim = rdim*cdim*mdim;
+	    linalg::xgemm("N", transb, &rcmdim, &vdim, &xdim, &alpha,
+	                  blk4a, &rcmdim, blk2, &LDB, &beta,
+	                  blk4, &rcmdim);
+	 }
+      }
       if(ifzero) memset(blk4, 0, size*sizeof(Tm));
    } // i
 }
