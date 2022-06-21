@@ -74,6 +74,8 @@ struct qinfo2{
       int _rows, _cols;
       std::vector<int> _nnzaddr;
       std::vector<size_t> _offset;
+      // ZL@20220621 fast access of nonzero blocks 
+      std::vector<int> _br2bc, _bc2br;
 };
 
 template <typename Tm>
@@ -100,6 +102,18 @@ void qinfo2<Tm>::setup(){
    } // br
    _nnzaddr.resize(ndx);
    _size -= 1; // tricky part
+   // ZL@20220621 fast access of nonzero blocks
+   _br2bc.resize(_rows,-1);
+   _bc2br.resize(_cols,-1);
+   int br, bc;
+   for(int i=0; i<ndx; i++){
+      int idx = _nnzaddr[i];
+      _addr_unpack(idx, br, bc);
+      // We use the fact that each br/bc only appear once for Abelian symmetry!
+      assert(_br2bc[br] == -1 && _bc2br[bc] == -1);
+      _br2bc[br] = bc;
+      _bc2br[bc] = br;
+   }
 }
 
 template <typename Tm>

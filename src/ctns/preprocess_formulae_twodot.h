@@ -49,7 +49,7 @@ void preprocess_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
          }
       }
    } // it
-  
+
    // 3. from Hmu to expanded block forms 
    std::cout << "hsize=" << hsize << std::endl;
    for(int it=0; it<hsize; it++){
@@ -60,8 +60,9 @@ void preprocess_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
 		<< " c1op=" << Hmu[it].info[2]
 		<< " c2op=" << Hmu[it].info[3]
 		<< std::endl;
-      Hmu[it].gen_Hxblocks(wf);
+      auto Hxblks = Hmu[it].gen_Hxblocks(wf.info);
    }
+
    std::cout << "hsize=" << hsize << std::endl;
    exit(1);
 

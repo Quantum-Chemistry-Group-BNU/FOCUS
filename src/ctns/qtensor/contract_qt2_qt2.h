@@ -22,20 +22,18 @@ stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a,
       Tm* blk2 = qt2.data() + off2-1;
       int rdim = qt2.info.qrow.get_dim(br);
       int cdim = qt2.info.qcol.get_dim(bc);
-      // loop over contracted indices
-      for(int bx=0; bx<qt2a.cols(); bx++){
-	 size_t off2a = qt2a.info._offset[qt2a.info._addr(br,bx)];
-	 if(off2a == 0) continue;
-	 size_t off2b = qt2b.info._offset[qt2b.info._addr(bx,bc)];
-	 if(off2b == 0) continue;
-	 // qt2(r,c) = qt2a(r,x)*qt2b(x,c)
-	 Tm* blk2a = qt2a.data() + off2a-1;
-	 Tm* blk2b = qt2b.data() + off2b-1;
-	 int xdim = qt2a.info.qcol.get_dim(bx);
-	 linalg::xgemm("N", "N", &rdim, &cdim, &xdim, &alpha,
-		       blk2a, &rdim, blk2b, &xdim, &beta,
-		       blk2, &rdim);
-      } // bx
+      // qt2(r,c) = qt2a(r,x)*qt2b(x,c)
+      int bx = qt2a.info._br2bc[br];
+      if(bx == -1) continue;
+      if(bx != qt2b.info._bc2br[bc]) continue;
+      size_t off2a = qt2a.info._offset[qt2a.info._addr(br,bx)];
+      Tm* blk2a = qt2a.data() + off2a-1;
+      size_t off2b = qt2b.info._offset[qt2b.info._addr(bx,bc)];
+      Tm* blk2b = qt2b.data() + off2b-1;
+      int xdim = qt2a.info.qcol.get_dim(bx);
+      linalg::xgemm("N", "N", &rdim, &cdim, &xdim, &alpha,
+		    blk2a, &rdim, blk2b, &xdim, &beta,
+		    blk2, &rdim);
    } // i
    return qt2;
 }
