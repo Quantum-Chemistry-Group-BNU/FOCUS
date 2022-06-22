@@ -94,20 +94,20 @@ void sweep_onedot(comb<Km>& icomb,
    }
 
    // 3. Davidson solver for wf
-   int nsub = wf.size();
+   size_t ndim = wf.size();
    int neig = sweeps.nroots;
    auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
-   linalg::matrix<Tm> vsol(nsub,neig);
+   linalg::matrix<Tm> vsol(ndim,neig);
 
    // 3.1 Hdiag 
-   std::vector<double> diag(nsub,1.0);
+   std::vector<double> diag(ndim,1.0);
    onedot_Hdiag(qops_dict, ecore, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifndef SERIAL
    // reduction of partial Hdiag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
    if(size > 1){
-      std::vector<double> diag2(nsub);
+      std::vector<double> diag2(ndim);
       boost::mpi::reduce(icomb.world, diag, diag2, std::plus<double>(), 0);
       diag = std::move(diag2);
    }
@@ -188,7 +188,7 @@ void sweep_onedot(comb<Km>& icomb,
    } // alg_hvec
    oper_timer.clear();
    onedot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2, 
-		  nsub, neig, diag, HVec, eopt, vsol, nmvp, wf);
+		  ndim, neig, diag, HVec, eopt, vsol, nmvp, wf);
    if(preprocess) delete[] workspace;
    if(debug && schd.ctns.verbose>1){
       sweeps.print_eopt(isweep, ibond);

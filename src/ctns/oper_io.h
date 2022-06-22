@@ -141,6 +141,7 @@ void oper_load(const int iomode,
 
    qops._setup_opdict();
    qops._data = new Tm[qops._size];
+   qops._setup_data();
    auto t2 = tools::get_time();
 
    // read data
@@ -178,8 +179,6 @@ void oper_load(const int iomode,
       std::cout << "error: no such option in oper_load! iomode=" << iomode << std::endl;
       exit(1); 
    }
-
-   qops._setup_data(qops._data);
 
    auto t3 = tools::get_time();
    if(debug_oper_io and debug){

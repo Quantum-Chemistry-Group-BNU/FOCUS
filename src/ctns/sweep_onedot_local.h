@@ -51,7 +51,7 @@ void onedot_localCI(comb<Km>& icomb,
 		    const input::schedule& schd,
 		    const double eps,
 		    const int parity,
-		    const int nsub,
+		    const int ndim,
 		    const int neig,
    		    std::vector<double>& diag,
 		    HVec_type<typename Km:: dtype> HVec,
@@ -68,7 +68,7 @@ void onedot_localCI(comb<Km>& icomb,
 
    // without kramers restriction
    assert(Km::ifkr == false);
-   pdvdsonSolver_nkr<Tm> solver(nsub, neig, eps, schd.ctns.maxcycle);
+   pdvdsonSolver_nkr<Tm> solver(ndim, neig, eps, schd.ctns.maxcycle);
    solver.iprt = schd.ctns.verbose;
    solver.Diag = diag.data();
    solver.HVec = HVec;
@@ -94,14 +94,14 @@ void onedot_localCI(comb<Km>& icomb,
 	 if(rank == 0){ 
 	    // starting guess 
             if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); 
-            assert(icomb.psi.size() == neig && icomb.psi[0].size() == nsub);
+            assert(icomb.psi.size() == neig && icomb.psi[0].size() == ndim);
             // load initial guess from previous opt
-	    v0.resize(nsub*neig);
+	    v0.resize(ndim*neig);
             for(int i=0; i<neig; i++){
-               icomb.psi[i].to_array(&v0[nsub*i]);
+               icomb.psi[i].to_array(&v0[ndim*i]);
             }
 	    // reorthogonalization
-            int nindp = linalg::get_ortho_basis(nsub, neig, v0); 
+            int nindp = linalg::get_ortho_basis(ndim, neig, v0); 
             assert(nindp == neig);
 	 }
 	 //------------------------------------
@@ -117,7 +117,7 @@ inline void onedot_localCI(comb<qkind::cNK>& icomb,
 			   const input::schedule& schd,
 		           const double eps,
 		           const int parity,
-		           const int nsub,
+		           const int ndim,
 		           const int neig,
    		           std::vector<double>& diag,
 		           HVec_type<std::complex<double>> HVec,
@@ -134,7 +134,7 @@ inline void onedot_localCI(comb<qkind::cNK>& icomb,
 
    // kramers restricted (currently works only for iterative with guess!)
    assert(schd.ctns.cisolver == 1 && schd.ctns.guess);
-   pdvdsonSolver_kr<Tm,stensor3<Tm>> solver(nsub, neig, eps, schd.ctns.maxcycle, parity, wf); 
+   pdvdsonSolver_kr<Tm,stensor3<Tm>> solver(ndim, neig, eps, schd.ctns.maxcycle, parity, wf); 
    solver.iprt = schd.ctns.verbose;
    solver.Diag = diag.data();
    solver.HVec = HVec;

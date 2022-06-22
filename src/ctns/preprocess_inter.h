@@ -1,5 +1,5 @@
-#ifndef PREPROCESS_INTERMEDIATES_H
-#define PREPROCESS_INTERMEDIATES_H
+#ifndef PREPROCESS_INTER_H
+#define PREPROCESS_INTER_H
 
 namespace ctns{
 
@@ -9,7 +9,7 @@ public:
    // constructors
    intermediates(){}
    ~intermediates(){ 
-      _imap.clear();
+      _offset.clear();
       delete[] _data; 
    }
    // form intermediates
@@ -17,12 +17,10 @@ public:
 	     const symbolic_task<Tm>& H_formulae,
 	     const bool debug=false);
    // helpers
-   const Tm* operator()(const int i, const int j) const{ return _data+_imap.at(std::make_pair(i,j)); }
-   Tm* operator()(const int i, const int j){ return _data+_imap.at(std::make_pair(i,j)); }
    int count() const{ return _count; };
    int size() const{ return _size; };
 public:
-   std::map<std::pair<int,int>,int> _imap;
+   std::map<std::pair<int,int>,size_t> _offset;
    size_t _count = 0, _size = 0;
    Tm* _data = nullptr;
 };
@@ -49,7 +47,7 @@ void intermediates<Tm>::init(const oper_dictmap<Tm>& qops_dict,
          // define intermediate operators
          if(sop.size() > 1){
 	    _count += 1;
-            _imap[std::make_pair(it,idx)] = _size;
+            _offset[std::make_pair(it,idx)] = _size;
             const auto& sop0 = sop.sums[0].second;
             const auto& block = sop0.block;
             const auto& label  = sop0.label;
@@ -71,7 +69,7 @@ void intermediates<Tm>::init(const oper_dictmap<Tm>& qops_dict,
    // form intermediates via AXPY
    std::vector<std::pair<int,int>> _index(_count);
    int idx = 0;
-   for(const auto& pr : _imap){
+   for(const auto& pr : _offset){
       _index[idx] = pr.first;
       idx++;
    }
@@ -84,7 +82,7 @@ void intermediates<Tm>::init(const oper_dictmap<Tm>& qops_dict,
       int i = item.first;
       int j = item.second;
       const auto& sop = H_formulae.tasks[i].terms[j];
-      Tm* workspace = _data+_imap.at(item);
+      Tm* workspace = _data+_offset.at(item);
       symbolic_sum_oper(qops_dict, sop, workspace);
    } // idx 
 
@@ -93,7 +91,6 @@ void intermediates<Tm>::init(const oper_dictmap<Tm>& qops_dict,
       tools::timing("intermediates<Tm>::init", t0, t1);
    }
 }
-
 
 } // ctns
 

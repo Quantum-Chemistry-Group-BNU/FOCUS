@@ -17,53 +17,15 @@ using oper_map = std::map<int,stensor2<Tm>>;
 template <typename Tm>
 struct oper_dict{
    private:
-      // serialize
+      // IO of data will be handled in oper_io.h
       friend class boost::serialization::access;	   
       template <class Archive>
-      void save(Archive & ar, const unsigned int version) const{
+      void serialize(Archive & ar, const unsigned int version){
 	 ar & isym & ifkr & qbra & qket 
 	    & cindex & krest & oplist 
 	    & mpisize & mpirank & ifdist2;
-	 /*
-         for(int i=0; i<_size; i++){
-	    ar & _data[i];
-	 }
-	 */
       }
-      template <class Archive>
-      void load(Archive & ar, const unsigned int version){
-	 ar & isym & ifkr & qbra & qket 
-            & cindex & krest & oplist
-	    & mpisize & mpirank & ifdist2;
-	 //
-	 // IO of data will be handled in oper_io.h
-	 //
-	 /*
-	 this->_setup_opdict();
-	 _data = new Tm[_size];
-         for(int i=0; i<_size; i++){
-	    ar & _data[i];
-	 }
-	 this->_setup_data(_data);
-	 */
-      }
-      BOOST_SERIALIZATION_SPLIT_MEMBER()
    public:
-      // initialize _opdict, _size, _opsize
-      void _setup_opdict(const bool debug=false);
-      // setup the mapping to physical address
-      void _setup_data(Tm* data){
-         size_t off = 0;
-         for(const auto& key : oplist){
-            for(auto& pr : _opdict[key]){
-	       auto& op = pr.second;
-	       assert(op.own == false);
-	       op.setup_data(_data+off);
-	       off += op.size();
-            }
-         }
-	 assert(off == _size);
-      }
       // constructor
       oper_dict(){}
       ~oper_dict(){ delete[] _data; }
@@ -73,17 +35,21 @@ struct oper_dict{
       // move
       oper_dict(oper_dict&& op_dict) = delete;
       oper_dict& operator =(oper_dict&& op_dict) = delete;
-      // stored operators
-      std::vector<int> oper_index_op(const char key) const;
-      // symmetry of op
-      qsym get_qsym_op(const char key, const int idx) const;
+      // initialize _opdict, _size, _opsize
+      void _setup_opdict(const bool debug=false);
+      // setup the mapping to physical address
+      void _setup_data();
       // allocate memory
       void allocate_memory(const bool debug=false){
 	 this->_setup_opdict(debug);
          _data = new Tm[_size];
+         this->_setup_data(); // assign pointer for each operator
          memset(_data, 0, _size*sizeof(Tm));
-         this->_setup_data(_data); // assign pointer for each operator
       }
+      // stored operators
+      std::vector<int> oper_index_op(const char key) const;
+      // symmetry of op
+      qsym get_qsym_op(const char key, const int idx) const;
       // access
       const oper_map<Tm>& operator()(const char key) const{
          return _opdict.at(key);
@@ -106,6 +72,7 @@ struct oper_dict{
       int mpirank = 0;
       bool ifdist2 = false; // whether distribute two-index object
    //private:
+      std::map<std::pair<char,int>,size_t> _offset;
       std::map<char,oper_map<Tm>> _opdict;
       size_t _size = 0, _opsize = 0;
       Tm* _data = nullptr;
@@ -266,6 +233,23 @@ void oper_dict<Tm>::_setup_opdict(const bool debug){
                 << " sizeMB=" << tools::sizeMB<Tm>(_size) 
                 << std::endl;
    }
+}
+
+// setup the mapping to physical address
+template <typename Tm>
+void oper_dict<Tm>::_setup_data(){
+   size_t off = 0;
+   for(const auto& key : oplist){
+      for(auto& pr : _opdict[key]){
+         auto& idx = pr.first;
+         auto& op = pr.second;
+         assert(op.own == false);
+         op.setup_data( _data+off );
+	 _offset[std::make_pair(key,idx)] = off;
+         off += op.size();
+      }
+   }
+   assert(off == _size);
 }
 
 } // ctns
