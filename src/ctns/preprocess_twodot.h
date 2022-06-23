@@ -41,7 +41,6 @@ size_t preprocess_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
 	 const auto& qops = qops_dict.at(block); 
 	 const auto& op0 = qops(label).at(index0);
 	 int pos = posmap.at(block); 
-	 Hmu.identity[pos] = false;
 	 Hmu.parity[pos] = parity;
 	 Hmu.dagger[pos] = dagger;
 	 Hmu.info[pos] = const_cast<qinfo2<Tm>*>(&op0.info);
@@ -88,12 +87,12 @@ template <typename Tm>
 void preprocess_twodot_Hx(Tm* y,
 	                  const Tm* x,
 	                  const Hxlist<Tm>& Hxlst,
-	   	          const std::vector<Tm*>& locations,
 		          const Tm& scale,
 		          const int& size,
 	                  const int& rank,
 			  const size_t& ndim,
 	                  const size_t& blksize,
+	   	          Tm** locations,
 		          Tm* workspace){
    const bool debug = false;
 #ifdef _OPENMP
@@ -119,7 +118,7 @@ void preprocess_twodot_Hx(Tm* y,
 #endif
       const auto& Hxblk = Hxlst[i];
       Tm* wptr = &workspace[omprank*blksize*2];
-      Hxblk.kernel(x, locations, wptr, blksize);
+      Hxblk.kernel(x, blksize, locations, wptr);
 #ifdef _OPENMP
       #pragma omp critical
 #endif

@@ -357,6 +357,14 @@ Distributed CS: opS & opH
  sweep_twodot_sigma.h // add ifdist1
  symbolic_formulae_onedot.h
  sweep_onedot_sigma.h // add ifdist1
+
+PREPROCESS:
+ preprocess_distribution.h  
+ preprocess_size.h  
+ preprocess_inter.h  
+ preprocess_twodot.h
+ preprocess_hmu.h  
+ preprocess_hxlist.h  
  
 #################################################################
 

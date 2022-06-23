@@ -213,17 +213,17 @@ void sweep_twodot(comb<Km>& icomb,
                    << ":" << tools::sizeGB<Tm>(worktot) << "GB"
                    << std::endl; 
       }
-      std::vector<Tm*> locations = {qops_dict.at("l")._data,
-	      	                    qops_dict.at("r")._data,
-	      	                    qops_dict.at("c1")._data,
-	      	                    qops_dict.at("c2")._data,
-	      	                    inter._data};
       Tm scale = qops_dict.at("l").ifkr? 0.5*ecore : 1.0*ecore;
+      Tm* locations[5] = {qops_dict.at("l")._data,
+	      	          qops_dict.at("r")._data,
+	      	          qops_dict.at("c1")._data,
+	      	          qops_dict.at("c2")._data,
+	      	          inter._data};
       workspace = new Tm[worktot];
-      HVec = bind(&ctns::preprocess_twodot_Hx<Tm>, _1, _2, 
-		  std::cref(Hxlst), std::cref(locations), 
-		  std::cref(scale), std::cref(size), std::cref(rank), 
-		  std::cref(ndim), std::cref(blksize), std::ref(workspace));
+      HVec = bind(&ctns::preprocess_twodot_Hx<Tm>, _1, _2,
+		  std::cref(Hxlst), std::cref(scale), std::cref(size), std::cref(rank),
+		  std::cref(ndim), std::cref(blksize),
+		  std::ref(locations), std::ref(workspace));
    }else{
       std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
       exit(1);

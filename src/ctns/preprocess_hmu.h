@@ -13,12 +13,11 @@ public:
 		     Hxlist<Tm>& Hxblks,
 		     const bool ifdagger) const;
 public:
-   bool identity[4] = {true,true,true,true}; 
    bool parity[4] = {false,false,false,false};
    bool dagger[4] = {false,false,false,false};
    int location[4] = {-1,-1,-1,-1}; 
-   qinfo2<Tm>* info[4] = {nullptr,nullptr,nullptr,nullptr};
    size_t offop[4] = {0,0,0,0};
+   qinfo2<Tm>* info[4] = {nullptr,nullptr,nullptr,nullptr};
    Tm coeff = 1.0, coeffH = 1.0; 
 };
 
@@ -45,7 +44,7 @@ size_t Hmu_ptr<Tm>::gen_Hxlist(const qinfo4<Tm>& wf_info,
       bool symAllowed = true;
       for(int k=0; k<4; k++){
 	 Hxblk.dagger[k] = dagger[k]^ifdagger;
-         if(identity[k]){
+         if(location[k] == -1){ // identity operator
             bi[k] = bo[k];
          }else{
 	    const bool& iftrans = dagger[k]^ifdagger;
