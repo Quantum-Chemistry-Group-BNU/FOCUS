@@ -52,7 +52,7 @@ size_t preprocess_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
 	    Hmu.location[pos] = 4; // {l,r,c1,c2,i} 
             Hmu.offop[pos] = inter._offset.at(std::make_pair(it,idx));
          }
-      }
+      } // idx
       Hmu.coeffH = Hmu.coeff*HTerm.Hsign(); 
    } // it
    auto tb = tools::get_time();
@@ -92,7 +92,7 @@ void preprocess_twodot_Hx(Tm* y,
 	                  const int& rank,
 			  const size_t& ndim,
 	                  const size_t& blksize,
-	   	          Tm** locations,
+	   	          Tm** qops_addr,
 		          Tm* workspace){
    const bool debug = false;
 #ifdef _OPENMP
@@ -107,6 +107,10 @@ void preprocess_twodot_Hx(Tm* y,
                 << std::endl;
    }
 
+   // initialization
+   memset(y, 0, ndim*sizeof(Tm));
+
+   // compute
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
 #endif
@@ -118,12 +122,12 @@ void preprocess_twodot_Hx(Tm* y,
 #endif
       const auto& Hxblk = Hxlst[i];
       Tm* wptr = &workspace[omprank*blksize*2];
-      Hxblk.kernel(x, blksize, locations, wptr);
+      Tm* rptr = Hxblk.kernel(x, blksize, qops_addr, wptr);
 #ifdef _OPENMP
       #pragma omp critical
 #endif
       {
-         linalg::xaxpy(Hxblk.size, Hxblk.coeff, wptr, y+Hxblk.offout);
+         linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, y+Hxblk.offout);
       }
    } // i
 

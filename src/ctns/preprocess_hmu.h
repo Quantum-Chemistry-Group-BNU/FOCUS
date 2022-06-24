@@ -40,14 +40,14 @@ size_t Hmu_ptr<Tm>::gen_Hxlist(const qinfo4<Tm>& wf_info,
       Hxblk.dimout[2] = wf_info.qmid.get_dim(bo[2]);
       Hxblk.dimout[3] = wf_info.qver.get_dim(bo[3]);
       Hxblk.size = Hxblk.dimout[0]*Hxblk.dimout[1]*Hxblk.dimout[2]*Hxblk.dimout[3];
-      // finding the operator blocks
+      // finding the corresponding operator blocks given {bo[0],bo[1],bo[2],bo[3]}
       bool symAllowed = true;
       for(int k=0; k<4; k++){
 	 Hxblk.dagger[k] = dagger[k]^ifdagger;
          if(location[k] == -1){ // identity operator
             bi[k] = bo[k];
          }else{
-	    const bool& iftrans = dagger[k]^ifdagger;
+	    bool iftrans = dagger[k]^ifdagger;
 	    bi[k] = iftrans? info[k]->_bc2br[bo[k]] : info[k]->_br2bc[bo[k]];
 	    if(bi[k] == -1){
 	       symAllowed = false;
@@ -55,7 +55,8 @@ size_t Hmu_ptr<Tm>::gen_Hxlist(const qinfo4<Tm>& wf_info,
 	    }else{
 	       Hxblk.location[k] = location[k];
 	       int jdx = iftrans? info[k]->_addr(bi[k],bo[k]) : info[k]->_addr(bo[k],bi[k]);
-	       Hxblk.offop[k] = offop[k]+info[k]->_offset[jdx]-1;
+	       assert(info[k]->_offset[jdx] != 0);
+	       Hxblk.offop[k] = offop[k]+(info[k]->_offset[jdx]-1);
 	    }
          }
       }
@@ -69,7 +70,7 @@ size_t Hmu_ptr<Tm>::gen_Hxlist(const qinfo4<Tm>& wf_info,
       Hxblk.dimin[3] = wf_info.qver.get_dim(bi[3]);
       // compute sign due to parity
       Hxblk.coeff = ifdagger? coeffH : coeff;
-      int pl = wf_info.qrow.get_parity(bi[0]);
+      int pl  = wf_info.qrow.get_parity(bi[0]);
       int pc1 = wf_info.qmid.get_parity(bi[2]);
       int pc2 = wf_info.qver.get_parity(bi[3]);
       if(parity[1] && (pl+pc1+pc2)%2==1) Hxblk.coeff *= -1.0; // Or

@@ -159,6 +159,7 @@ void symbolic_Hx3(Tm* y,
       Hwfs[i].clear();
    }
    auto t1 = tools::get_time();
+
    // compute
 #ifdef _OPENMP
    #pragma omp parallel for schedule(dynamic)
@@ -181,93 +182,18 @@ void symbolic_Hx3(Tm* y,
 		       &workspace[omprank*tmpsize+wfsize],
 		       true);
    } // it
-   auto t2 = tools::get_time();
    // reduction & save
    for(int i=1; i<maxthreads; i++){
       Hwfs[0] += Hwfs[i];
    }
    Hwfs[0].to_array(y);
-
-/*
-   memset(y, 0, wf.size()*sizeof(Tm));
-   auto t1 = tools::get_time();
-   #pragma omp parallel
-   {
-      int omprank = omp_get_thread_num();
-
-   // initialization
-   QTm Hwfs(wf.info,  false);
-   Hwfs.setup_data(&workspace[omprank*tmpsize]);
-   Hwfs.clear();
-
-   #pragma omp for schedule(dynamic,1)
-   for(int it=0; it<H_formulae.size(); it++){
-      int rk = omprank;
-      const auto& HTerm = H_formulae.tasks[it];
-      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
-		       info_dict,opsize,wfsize,
-		       &workspace[rk*tmpsize+wfsize],
-		       false);
-      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
-		       info_dict,opsize,wfsize,
-		       &workspace[rk*tmpsize+wfsize],
-		       true);
-   } // it
-
-   #pragma omp critical
-   {
-      linalg::xaxpy(Hwfs.size(), 1.0, Hwfs.data(), y);
-   }
-
-   }
    auto t2 = tools::get_time();
-*/
-
-/*
-   memset(y, 0, wf.size()*sizeof(Tm));
-   auto t1 = tools::get_time();
-   #pragma omp parallel
-   {
-      int omprank = omp_get_thread_num();
-   
-   Tm* worklocal = new Tm[tmpsize];
-   //Tm* worklocal = workspace+omprank*tmpsize;
-   // initialization
-   QTm Hwfs(wf.info,  false);
-   Hwfs.setup_data(worklocal);
-   Hwfs.clear();
-   //#pragma omp for schedule(static,1) nowait
-   #pragma omp for schedule(dynamic,100)
-   for(int it=0; it<H_formulae.size(); it++){
-      int rk = omprank;
-      const auto& HTerm = H_formulae.tasks[it];
-      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
-		       info_dict,opsize,wfsize,
-		       &worklocal[wfsize],
-		       false);
-      symbolic_HxTerm2(qops_dict,it,HTerm,wf,Hwfs,
-		       info_dict,opsize,wfsize,
-		       &worklocal[wfsize],
-		       true);
-   }
-
-   #pragma omp critical
-   {
-      linalg::xaxpy(Hwfs.size(), 1.0, Hwfs.data(), y);
-   }
-
-   delete[] worklocal;
-
-   }
-   auto t2 = tools::get_time();
-*/
 
    // add const term
    if(rank == 0){
       const Tm scale = qops_dict.at("l").ifkr? 0.5 : 1.0;
       linalg::xaxpy(wf.size(), scale*ecore, x, y);
    }
-
    auto t3 = tools::get_time();
    oper_timer.tHxInit += tools::get_duration(t1-t0);
    oper_timer.tHxCalc += tools::get_duration(t2-t1);
