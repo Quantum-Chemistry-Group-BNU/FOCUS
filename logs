@@ -118,18 +118,24 @@ LOGS
 		 cNK [isym=1, ifkr=True]
 
  * Restart from optimized states:
-      1. task_dmrg & lastdot
-      2. change the name of the file rcanon_new.info to avoid overwrite later
-      3. if the operator files are not deleted:
-	    task_opt & rcanon_load & rcanon_file newname.info
-	 else rebuild the operators
-	    task_dmrg & rcanon_load & rcanon_file newname.info
+    - task_dmrg & lastdot
+    - change the name of the file rcanon_new.info to avoid overwrite later
+    - if the operator files are not deleted:
+	 task_opt & rcanon_load & rcanon_file newname.info
+      else rebuild the operators
+	 task_dmrg & rcanon_load & rcanon_file newname.info
+
+ * More abstract implementation: preparation for GPU
+    - Basics [DONE2022/xx/xx]
+       1. AXPY: form summed operators (form intermediates)
+       2. GEMM: contract and accumulate
+       3. MMlist & cost analysis
+    - Twodot Hx [DONE2022/06/27]
+    - Onedot Hx
+    - Renorm 
+    - Complex version
 
  ### TODOs ###
-
- * More abstract implementation:
-    1. AXPY: form summed operators
-    2. GEMM: contract and accumulate
  
  * Toward large-scale applications [DONE2022/06/XX]
     - GPU for contractions? BatchedGEMM
@@ -150,7 +156,7 @@ LOGS
 	- complex arithmetic
 	- how to avoid repeated K()?
     - other topologies:
-	- comb
+	- comb tns
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]

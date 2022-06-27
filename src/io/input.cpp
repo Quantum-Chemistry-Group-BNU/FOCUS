@@ -195,12 +195,14 @@ void params_ctns::read(ifstream& istrm){
          int algorithm = stoi(line.substr(8));
 	 alg_hvec = algorithm;
 	 alg_renorm = algorithm;
+      }else if(line.substr(0,7)=="ifdist1"){
+         ifdist1 = true;	      
       }else if(line.substr(0,13)=="save_formulae"){
          save_formulae = true;
       }else if(line.substr(0,6)=="nosort"){
          sort_formulae = false;
-      }else if(line.substr(0,7)=="ifdist1"){
-         ifdist1 = true;	      
+      }else if(line.substr(0,7)=="hxorder"){
+         hxorder = stoi(line.substr(7));
       }else if(line.substr(0,11)=="rcanon_load"){
          rcanon_load = true;
       }else if(line.substr(0,11)=="rcanon_file"){
@@ -319,9 +321,10 @@ void params_ctns::print() const{
    // algorithm
    cout << "alg_hvec = " << alg_hvec << endl;
    cout << "alg_renorm = " << alg_renorm << endl;
+   cout << "ifdist1 = " << ifdist1 << endl;
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;
-   cout << "ifdist1 = " << ifdist1 << endl;
+   cout << "hxorder = " << hxorder << endl;
    // dvdson
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
