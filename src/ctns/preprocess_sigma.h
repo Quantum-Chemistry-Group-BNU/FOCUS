@@ -225,7 +225,15 @@ size_t preprocess_formulae_sigma2(const oper_dictmap<Tm>& qops_dict,
          std::stable_sort(Hxlst.begin(), Hxlst.end(),
            	          [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ return t1.cost < t2.cost; });
       }
+   }else if(hxorder == 4){
+      // sort by offin
+      for(int i=0; i<nnzblk; i++){
+	 auto& Hxlst = Hxlst2[i];     
+         std::stable_sort(Hxlst.begin(), Hxlst.end(),
+           	          [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ return t1.offin < t2.offin; });
+      }
    }
+ 
    auto td = tools::get_time();
 
    if(debug){
@@ -300,7 +308,7 @@ void preprocess_Hx2(Tm* y,
       } // j
       // reduction
       const auto& Hxblk = Hxlst2[i][0];
-      for(int k=1; k<maxthreads; k++){
+      for(int k=0; k<maxthreads; k++){
          linalg::xaxpy(Hxblk.size, 1.0, &workspace[k*blksize], y+Hxblk.offout);
       } // k
    } // i
