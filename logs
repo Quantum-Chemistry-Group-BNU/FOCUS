@@ -126,14 +126,14 @@ LOGS
 	 task_dmrg & rcanon_load & rcanon_file newname.info
 
  * More abstract implementation: preparation for GPU
-    - Basics [DONE2022/xx/xx]
+    - Basics [DONE2022/06/25]
        1. AXPY: form summed operators (form intermediates)
        2. GEMM: contract and accumulate
        3. MMlist & cost analysis
     - Twodot Hx [DONE2022/06/27]
-    - Onedot Hx
+    - Onedot Hx [DONE2022/06/27]
     - Renorm 
-    - Complex version
+    - Complex version: 'R'
 
  ### TODOs ###
  

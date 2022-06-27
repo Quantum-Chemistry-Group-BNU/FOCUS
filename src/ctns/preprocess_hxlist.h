@@ -84,62 +84,65 @@ void Hxblock<Tm>::gen_MMlist_twodot(){
    int nt = 0;
    // Oc2^dagger3[bv,bv']: out(r,c,m,v) = o[d](v,x) in(r,c,m,x) 
    if(!this->identity(3)){
+      int p = 3;
       MMinfo<Tm> mm;
       mm.M = din[0]*din[1]*din[2];
-      mm.N = dimout[3];
-      mm.K = din[3];
+      mm.N = dimout[p];
+      mm.K = din[p];
       mm.LDA = mm.M;
       mm.transA = 'N';
-      mm.LDB = dagger[3]? mm.K : mm.N; // o(x,v) or o(v,x)
-      mm.transB = dagger[3]? 'N' : 'T';
+      mm.LDB = dagger[p]? mm.K : mm.N; // o(x,v) or o(v,x)
+      mm.transB = dagger[p]? 'N' : 'T';
       mm.locA = xloc; mm.offA = xoff;
-      mm.locB = 3;    mm.offB = 0;
+      mm.locB = p;    mm.offB = 0;
       mm.locC = yloc; mm.offC = yoff; 
       MMlst.push_back(mm); 
       // update x & y  
       xloc = 5; xoff = (nt%2)*blksize; 
       yloc = 5; yoff = (1-nt%2)*blksize;
-      cost += double(din[0])*din[1]*din[2]*din[3]*dimout[3];
-      din[3] = dimout[3];
+      cost += double(din[0])*din[1]*din[2]*din[3]*dimout[p];
+      din[p] = dimout[p];
       nt += 1;
    }
    // Oc1^dagger2[bm,bm']: out(r,c,m,v) = o[d](m,x) in(r,c,x,v)
    if(!this->identity(2)){
+      int p = 2;
       for(int iv=0; iv<din[3]; iv++){
 	 MMinfo<Tm> mm;
 	 mm.M = din[0]*din[1];
-	 mm.N = dimout[2];
-	 mm.K = din[2];
+	 mm.N = dimout[p];
+	 mm.K = din[p];
 	 mm.LDA = mm.M;
 	 mm.transA = 'N';
-	 mm.LDB = dagger[2]? mm.K : mm.N;
-	 mm.transB = dagger[2]? 'N' : 'T';
+	 mm.LDB = dagger[p]? mm.K : mm.N;
+	 mm.transB = dagger[p]? 'N' : 'T';
 	 mm.locA = xloc; mm.offA = xoff+iv*mm.M*mm.K;
-	 mm.locB = 2;    mm.offB = 0;
+	 mm.locB = p;    mm.offB = 0;
 	 mm.locC = yloc; mm.offC = yoff+iv*mm.M*mm.N;
 	 MMlst.push_back(mm);
       }
       // update x & y
       xloc = 5; xoff = (nt%2)*blksize;
       yloc = 5; yoff = (1-nt%2)*blksize;
-      cost += double(din[0])*din[1]*din[2]*din[3]*dimout[2];
-      din[2] = dimout[2];
+      cost += double(din[0])*din[1]*din[2]*din[3]*dimout[p];
+      din[p] = dimout[p];
       nt += 1;
    }
    // Or^dagger1[bc,bc']: out(r,c,m,v) = o[d](c,x) in(r,x,m,v) 
    if(!this->identity(1)){
+      int p = 1;
       for(int iv=0; iv<din[3]; iv++){
          for(int im=0; im<din[2]; im++){
 	    MMinfo<Tm> mm;
 	    mm.M = din[0];
-	    mm.N = dimout[1];
-	    mm.K = din[1];
+	    mm.N = dimout[p];
+	    mm.K = din[p];
 	    mm.LDA = mm.M;
 	    mm.transA = 'N';
-	    mm.LDB = dagger[1]? mm.K : mm.N;
-	    mm.transB = dagger[1]? 'N' : 'T';
+	    mm.LDB = dagger[p]? mm.K : mm.N;
+	    mm.transB = dagger[p]? 'N' : 'T';
 	    mm.locA = xloc; mm.offA = xoff+(iv*din[2]+im)*mm.M*mm.K;
-	    mm.locB = 1;    mm.offB = 0;
+	    mm.locB = p;    mm.offB = 0;
 	    mm.locC = yloc; mm.offC = yoff+(iv*din[2]+im)*mm.M*mm.N;
 	    MMlst.push_back(mm);
 	 }
@@ -147,34 +150,38 @@ void Hxblock<Tm>::gen_MMlist_twodot(){
       // update x & y
       xloc = 5; xoff = (nt%2)*blksize;
       yloc = 5; yoff = (1-nt%2)*blksize;
-      cost += double(din[0])*din[1]*din[2]*din[3]*dimout[1];
-      din[1] = dimout[1];
+      cost += double(din[0])*din[1]*din[2]*din[3]*dimout[p];
+      din[p] = dimout[p];
       nt += 1;	  
    }
    // Ol^dagger0[br,br']: out(r,c,m,v) = o[d](r,x) in(x,c,m,v)
    if(!this->identity(0)){
+      int p = 0;	   
       MMinfo<Tm> mm;
-      mm.M = dimout[0];
+      mm.M = dimout[p];
       mm.N = din[1]*din[2]*din[3];
-      mm.K = din[0];
-      mm.LDA = dagger[0]? mm.K : mm.M;
-      mm.transA = dagger[0]? 'T' : 'N';
+      mm.K = din[p];
+      mm.LDA = dagger[p]? mm.K : mm.M;
+      mm.transA = dagger[p]? 'T' : 'N';
       mm.LDB = mm.K;
       mm.transB = 'N';
-      mm.locA = 0;    mm.offA = 0;
+      mm.locA = p;    mm.offA = 0;
       mm.locB = xloc; mm.offB = xoff;
       mm.locC = yloc; mm.offC = yoff;
       MMlst.push_back(mm);
       xoff = (nt%2)*blksize;
       assert(xoff == yoff);
-      cost += double(din[0])*din[1]*din[2]*din[3]*dimout[0];
-      din[0] = dimout[0];
+      cost += double(din[0])*din[1]*din[2]*din[3]*dimout[p];
+      din[p] = dimout[p];
    }
    assert(din[0]==dimout[0] && din[1]==dimout[1] &&
           din[2]==dimout[2] && din[3]==dimout[3]);		  
    offres = xoff;
 }
 
+// compute sigma[br,bc,bm] = coeff Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
+// 			     Oc1^dagger2[bm,bm'] 
+// 			     wf[br',bc',bm']
 template <typename Tm>
 void Hxblock<Tm>::gen_MMlist_onedot(){
    std::vector<size_t> dims = {dimin[0] *dimin[1] *dimout[2],
@@ -182,7 +189,80 @@ void Hxblock<Tm>::gen_MMlist_onedot(){
 		      	       dimout[0]*dimout[1]*dimout[2]};
    size_t blksize = *std::max_element(dims.begin(), dims.end());
    tmpsize = 2*blksize;
-   exit(1);
+   // wf[br',bc',bm']
+   int xloc = 4, yloc = 5;
+   size_t xoff = offin, yoff = 0;
+   int din[3] = {dimin[0],dimin[1],dimin[2]};
+   int nt = 0;
+   // Oc1^dagger2[bm,bm']: out(r,c,m) = o[d](m,x) in(r,c,x)
+   if(!this->identity(2)){
+      int p = 2;
+      MMinfo<Tm> mm;
+      mm.M = din[0]*din[1];
+      mm.N = dimout[p];
+      mm.K = din[p];
+      mm.LDA = mm.M;
+      mm.transA = 'N';
+      mm.LDB = dagger[p]? mm.K : mm.N; // o(x,v) or o(v,x)
+      mm.transB = dagger[p]? 'N' : 'T';
+      mm.locA = xloc; mm.offA = xoff;
+      mm.locB = p;    mm.offB = 0;
+      mm.locC = yloc; mm.offC = yoff; 
+      MMlst.push_back(mm); 
+      // update x & y  
+      xloc = 5; xoff = (nt%2)*blksize; 
+      yloc = 5; yoff = (1-nt%2)*blksize;
+      cost += double(din[0])*din[1]*din[2]*dimout[p];
+      din[p] = dimout[p];
+      nt += 1;
+   }
+   // Or^dagger1[bc,bc']: out(r,c,m) = o[d](c,x) in(r,x,m) 
+   if(!this->identity(1)){
+      int p = 1;
+      for(int im=0; im<din[2]; im++){
+	 MMinfo<Tm> mm;
+	 mm.M = din[0];
+	 mm.N = dimout[p];
+	 mm.K = din[p];
+	 mm.LDA = mm.M;
+	 mm.transA = 'N';
+	 mm.LDB = dagger[p]? mm.K : mm.N;
+	 mm.transB = dagger[p]? 'N' : 'T';
+	 mm.locA = xloc; mm.offA = xoff+im*mm.M*mm.K;
+	 mm.locB = p;    mm.offB = 0;
+	 mm.locC = yloc; mm.offC = yoff+im*mm.M*mm.N;
+	 MMlst.push_back(mm);
+      }
+      // update x & y
+      xloc = 5; xoff = (nt%2)*blksize;
+      yloc = 5; yoff = (1-nt%2)*blksize;
+      cost += double(din[0])*din[1]*din[2]*dimout[p];
+      din[p] = dimout[p];
+      nt += 1;
+   }
+   // Ol^dagger0[br,br']: out(r,c,m) = o[d](r,x) in(x,c,m)
+   if(!this->identity(0)){
+      int p = 0;
+      MMinfo<Tm> mm;
+      mm.M = dimout[p];
+      mm.N = din[1]*din[2];
+      mm.K = din[p];
+      mm.LDA = dagger[p]? mm.K : mm.M;
+      mm.transA = dagger[p]? 'T' : 'N';
+      mm.LDB = mm.K;
+      mm.transB = 'N';
+      mm.locA = p;    mm.offA = 0;
+      mm.locB = xloc; mm.offB = xoff;
+      mm.locC = yloc; mm.offC = yoff;
+      MMlst.push_back(mm);
+      xoff = (nt%2)*blksize;
+      assert(xoff == yoff);
+      cost += double(din[0])*din[1]*din[2]*dimout[p];
+      din[p] = dimout[p];
+   }
+   assert(din[0]==dimout[0] && din[1]==dimout[1] &&
+          din[2]==dimout[2]);
+   offres = xoff;
 }
 
 // perform the actual matrix-matrix multiplication
