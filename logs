@@ -132,12 +132,11 @@ LOGS
        3. MMlist & cost analysis
     - Twodot Hx [DONE2022/06/27]
     - Onedot Hx [DONE2022/06/27]
-    - Renorm 
-    - Complex version: 'R'
+    - Complex version: 'R'?
 
  ### TODOs ###
  
- * Toward large-scale applications [DONE2022/06/XX]
+ * Towards large-scale parallelization [DONE2022/XX/XX]
     - GPU for contractions? BatchedGEMM
     - merged wf4[lc1,c2r] implementation?
     - profile openmp/mpi onedot/twodot version with large D
