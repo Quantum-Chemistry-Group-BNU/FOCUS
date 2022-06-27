@@ -15,7 +15,7 @@ public:
 template <typename Tm>
 using MMlist = std::vector<MMinfo<Tm>>;  
 
-// information for sigma[br,bc,bm,bv] 
+// information for sigma = H*x with given symmetry blocks
 template <typename Tm>
 struct Hxblock{
 public:
@@ -66,9 +66,10 @@ void Hxblock<Tm>::gen_MMlist(const int cases){
    }
 }
 
-// compute sigma[br,bc,bm,bv] = coeff Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
-// 			        Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv']
-// 			        wf[br',bc',bm',bv']
+// Generation of MMlst following qtensor/contract_qt4_qt2.h
+// sigma[br,bc,bm,bv] = coeff Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
+// 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv']
+// 			wf[br',bc',bm',bv']
 template <typename Tm>
 void Hxblock<Tm>::gen_MMlist_twodot(){
    std::vector<size_t> dims = {dimin[0] *dimin[1] *dimin[2] *dimout[3],
@@ -179,9 +180,10 @@ void Hxblock<Tm>::gen_MMlist_twodot(){
    offres = xoff;
 }
 
-// compute sigma[br,bc,bm] = coeff Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
-// 			     Oc1^dagger2[bm,bm'] 
-// 			     wf[br',bc',bm']
+// Generation of MMlst following qtensor/contract_qt3_qt2.h
+// sigma[br,bc,bm] = coeff Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
+// 	             Oc1^dagger2[bm,bm'] 
+// 		     wf[br',bc',bm']
 template <typename Tm>
 void Hxblock<Tm>::gen_MMlist_onedot(){
    std::vector<size_t> dims = {dimin[0] *dimin[1] *dimout[2],
@@ -265,7 +267,7 @@ void Hxblock<Tm>::gen_MMlist_onedot(){
    offres = xoff;
 }
 
-// perform the actual matrix-matrix multiplication
+// Perform the actual matrix-matrix multiplication
 template <typename Tm>
 void Hxblock<Tm>::kernel(const Tm* x,
 	       		 Tm* workspace){
