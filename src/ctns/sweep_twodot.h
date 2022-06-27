@@ -135,6 +135,7 @@ void sweep_twodot(comb<Km>& icomb,
    bipart_task<Tm> H_formulae2;
    intermediates<Tm> inter;
    Hxlist<Tm> Hxlst;
+   Hxlist2<Tm> Hxlst2;
    Tm* workspace;
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -193,12 +194,12 @@ void sweep_twodot(comb<Km>& icomb,
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
-      size_t tmpsize = preprocess_formulae_sigma(qops_dict, H_formulae, wf, inter, 
+      size_t blksize = preprocess_formulae_sigma(qops_dict, H_formulae, wf, inter, 
 		       			         Hxlst, schd.ctns.hxorder, 
 		      		                 rank==0 && schd.ctns.verbose>0);
-      worktot = maxthreads*tmpsize;
+      worktot = maxthreads*blksize*2;
       if(debug && schd.ctns.verbose>0){
-         std::cout << "preprocess for Hx: ndim=" << ndim << " tmpsize=" << tmpsize 
+         std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
                    << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                    << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
       }
@@ -206,8 +207,28 @@ void sweep_twodot(comb<Km>& icomb,
       workspace = new Tm[worktot];
       HVec = bind(&ctns::preprocess_Hx<Tm>, _1, _2,
 		  std::cref(scale), std::cref(size), std::cref(rank),
-		  std::cref(ndim), std::cref(tmpsize), 
+		  std::cref(ndim), std::cref(blksize), 
 		  std::ref(Hxlst), std::ref(workspace));
+   }else if(schd.ctns.alg_hvec == 5){
+      // symbolic formulae + intermediates + preallocation of workspace
+      H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
+			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+					    debug_formulae); 
+      size_t blksize = preprocess_formulae_sigma2(qops_dict, H_formulae, wf, inter, 
+		       			         Hxlst2, schd.ctns.hxorder, 
+		      		                 rank==0 && schd.ctns.verbose>0);
+      worktot = maxthreads*blksize*3;
+      if(debug && schd.ctns.verbose>0){
+         std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
+                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+      }
+      Tm scale = qops_dict.at("l").ifkr? 0.5*ecore : 1.0*ecore;
+      workspace = new Tm[worktot];
+      HVec = bind(&ctns::preprocess_Hx2<Tm>, _1, _2,
+		  std::cref(scale), std::cref(size), std::cref(rank),
+		  std::cref(ndim), std::cref(blksize), 
+		  std::ref(Hxlst2), std::ref(workspace));
    }else{
       std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
       exit(1);

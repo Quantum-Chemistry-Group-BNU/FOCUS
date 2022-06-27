@@ -34,12 +34,14 @@ public:
    size_t size = 0; // dimout[0]*dimout[1]*dimout[2]*dimout[3]
    Tm coeff = 1.0;
    // for Matrix-Matrix multiplications
-   size_t tmpsize = 0, offres = 0;
+   size_t blksize = 0, offres = 0;
    double cost = 0.0;
    MMlist<Tm> MMlst;
 };
 template <typename Tm>
-using Hxlist = std::vector<Hxblock<Tm>>;  
+using Hxlist = std::vector<Hxblock<Tm>>;
+template <typename Tm>
+using Hxlist2 = std::vector<std::vector<Hxblock<Tm>>>; 
 
 template <typename Tm>
 void Hxblock<Tm>::display() const{
@@ -76,8 +78,7 @@ void Hxblock<Tm>::gen_MMlist_twodot(){
 		               dimin[0] *dimin[1] *dimout[2]*dimout[3],
 		      	       dimin[0] *dimout[1]*dimout[2]*dimout[3],
 		      	       dimout[0]*dimout[1]*dimout[2]*dimout[3]};
-   size_t blksize = *std::max_element(dims.begin(), dims.end());
-   tmpsize = 2*blksize;
+   blksize = *std::max_element(dims.begin(), dims.end());
    // wf[br',bc',bm',bv']
    int xloc = 4, yloc = 5; 
    size_t xoff = offin, yoff = 0;
@@ -189,8 +190,7 @@ void Hxblock<Tm>::gen_MMlist_onedot(){
    std::vector<size_t> dims = {dimin[0] *dimin[1] *dimout[2],
 		               dimin[0] *dimout[1]*dimout[2],
 		      	       dimout[0]*dimout[1]*dimout[2]};
-   size_t blksize = *std::max_element(dims.begin(), dims.end());
-   tmpsize = 2*blksize;
+   blksize = *std::max_element(dims.begin(), dims.end());
    // wf[br',bc',bm']
    int xloc = 4, yloc = 5;
    size_t xoff = offin, yoff = 0;
