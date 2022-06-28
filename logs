@@ -132,9 +132,12 @@ LOGS
        3. MMlist & cost analysis
     - Twodot Hx [DONE2022/06/27]
     - Onedot Hx [DONE2022/06/27]
-    - Complex version: 'R'?
 
  ### TODOs ###
+
+    - Renormalization? [smaller temporary memory]
+    - Complex version: 'R'?
+    - Kramers version?
  
  * Towards large-scale parallelization [DONE2022/XX/XX]
     - GPU for contractions? BatchedGEMM
