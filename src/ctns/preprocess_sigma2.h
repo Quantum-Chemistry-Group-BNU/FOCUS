@@ -56,8 +56,7 @@ size_t preprocess_formulae_sigma2(const oper_dictmap<Tm>& qops_dict,
    Hxlst2.resize(nnzblk);
    size_t blksize = 0;
    double cost = 0.0;
-   //for(int it=0; it<hsize; it++){
-   for(int it=0; it<2; it++){
+   for(int it=0; it<hsize; it++){
       Hmu_vec[it].gen_Hxlist2(wf.info, Hxlst2, blksize, cost, false);
       Hmu_vec[it].gen_Hxlist2(wf.info, Hxlst2, blksize, cost, true);
    }

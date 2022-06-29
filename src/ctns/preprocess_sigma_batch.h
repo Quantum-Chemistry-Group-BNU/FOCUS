@@ -73,7 +73,6 @@ void batchGEMM(const std::vector<char>& transA,
 	       std::vector<const Tm*>& Aptr,
 	       std::vector<const Tm*>& Bptr,
 	       std::vector<Tm*>& Cptr){
-/*
    int group_count = transA.size();
    const std::vector<Tm> alpha_vector(group_count,1.0);
    const std::vector<Tm> beta_vector(group_count,0.0);
@@ -84,13 +83,14 @@ void batchGEMM(const std::vector<char>& transA,
 	       Bptr.data(), LDBlst.data(), beta_vector.data(),
 	       Cptr.data(), Mlst.data(), 
 	       &group_count, size_per_group_vector.data());
-*/
+/*
    const Tm alpha = 1.0, beta = 0.0;
    for(int i=0; i<transA.size(); i++){
       linalg::xgemm(&transA[i], &transB[i], &Mlst[i], &Nlst[i], &Klst[i], &alpha,
 		    Aptr[i], &LDAlst[i], Bptr[i], &LDBlst[i], &beta,
 		    Cptr[i], &Mlst[i]);
    }
+*/
 }
 
 // for Davidson diagonalization
@@ -127,18 +127,11 @@ void preprocess_Hx_batch(Tm* y,
    std::vector<int> nt(batchsize); 
 
    // loop over nonzero blocks
-   //for(int i=0; i<Hxlst2.size(); i++){
-   for(int i=0; i<1; i++){
+   for(int i=0; i<Hxlst2.size(); i++){
  
       int fsize = Hxlst2[i].size();
       int nbatch = fsize/batchsize;
       if(fsize%batchsize != 0) nbatch += 1;
-     
-      std::cout << "iblk=" << i 
-	        << " fsize=" << fsize
-		<< " batchsize=" << batchsize
-		<< " nbatch=" << nbatch
-		<< std::endl;
 
       // partition formulae into batches
       for(int k=0; k<nbatch; k++){
@@ -167,7 +160,6 @@ void preprocess_Hx_batch(Tm* y,
 	    int jdx = k*batchsize+j;
             auto& Hxblk = Hxlst2[i][jdx];
 	    if(Hxblk.identity(3)) continue;
-	    std::cout << " Oc2: j=" << j << std::endl;
 	    int M = din[j][0]*din[j][1]*din[j][2];
 	    int N = Hxblk.dimout[3];
 	    int K = din[j][3];
@@ -186,20 +178,18 @@ void preprocess_Hx_batch(Tm* y,
 	    din[j][3] = Hxblk.dimout[3];
 	    nt[j] += 1;
 	 }
-	 std::cout << "Oc2: " << transA.size() << std::endl;
 	 batchGEMM(transA, transB, Mlst, Nlst, Klst, 
 		   LDAlst, LDBlst, Aptr, Bptr, Cptr);
 	 
 	 // 2. Oc1
 	 transA.clear(); transB.clear();
-         Mlst.clear(); Mlst.clear(); Klst.clear(); LDAlst.clear(); LDBlst.clear();
+         Mlst.clear(); Nlst.clear(); Klst.clear(); LDAlst.clear(); LDBlst.clear();
 	 Aptr.clear(); Bptr.clear(); Cptr.clear();
 	 // form batched GEMM
          for(int j=0; j<jlen; j++){
 	    int jdx = k*batchsize+j;
             auto& Hxblk = Hxlst2[i][jdx];
 	    if(Hxblk.identity(2)) continue;
-	    std::cout << " Oc1: j=" << j << std::endl;
 	    for(int iv=0; iv<din[j][3]; iv++){
 	       int M = din[j][0]*din[j][1];
 	       int N = Hxblk.dimout[2];
@@ -220,20 +210,18 @@ void preprocess_Hx_batch(Tm* y,
 	    din[j][2] = Hxblk.dimout[2];
 	    nt[j] += 1;
 	 }
-	 std::cout << "Oc1: " << transA.size() << std::endl;
 	 batchGEMM(transA, transB, Mlst, Nlst, Klst, 
 		   LDAlst, LDBlst, Aptr, Bptr, Cptr);
 	 
 	 // 3. Or
 	 transA.clear(); transB.clear();
-         Mlst.clear(); Mlst.clear(); Klst.clear(); LDAlst.clear(); LDBlst.clear();
+         Mlst.clear(); Nlst.clear(); Klst.clear(); LDAlst.clear(); LDBlst.clear();
 	 Aptr.clear(); Bptr.clear(); Cptr.clear();
 	 // form batched GEMM
          for(int j=0; j<jlen; j++){
 	    int jdx = k*batchsize+j;
             auto& Hxblk = Hxlst2[i][jdx];
 	    if(Hxblk.identity(1)) continue;
-	    std::cout << " Or: j=" << j << std::endl;
 	    for(int iv=0; iv<din[j][3]; iv++){
 	       for(int im=0; im<din[j][2]; im++){
 	          int M = din[j][0];
@@ -256,20 +244,18 @@ void preprocess_Hx_batch(Tm* y,
 	    din[j][1] = Hxblk.dimout[1];
 	    nt[j] += 1;
 	 }
-	 std::cout << "Or: " << transA.size() << std::endl;
 	 batchGEMM(transA, transB, Mlst, Nlst, Klst, 
 		   LDAlst, LDBlst, Aptr, Bptr, Cptr);
 	 
 	 // 4. Ol
 	 transA.clear(); transB.clear();
-         Mlst.clear(); Mlst.clear(); Klst.clear(); LDAlst.clear(); LDBlst.clear();
+         Mlst.clear(); Nlst.clear(); Klst.clear(); LDAlst.clear(); LDBlst.clear();
 	 Aptr.clear(); Bptr.clear(); Cptr.clear();
 	 // form batched GEMM
          for(int j=0; j<jlen; j++){
 	    int jdx = k*batchsize+j;
             auto& Hxblk = Hxlst2[i][jdx];
 	    if(Hxblk.identity(0)) continue;
-	    std::cout << " Ol: j=" << j << std::endl;
 	    int M = Hxblk.dimout[0];
 	    int N = din[j][1]*din[j][2]*din[j][3];
 	    int K = din[j][0];
@@ -288,7 +274,6 @@ void preprocess_Hx_batch(Tm* y,
 	    din[j][0] = Hxblk.dimout[0];
 	    nt[j] += 1;
 	 }
-	 std::cout << "Ol: " << transA.size() << std::endl;
 	 batchGEMM(transA, transB, Mlst, Nlst, Klst, 
 		   LDAlst, LDBlst, Aptr, Bptr, Cptr);
 

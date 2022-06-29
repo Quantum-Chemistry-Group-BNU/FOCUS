@@ -239,7 +239,7 @@ void sweep_twodot(comb<Km>& icomb,
       size_t blksize = preprocess_formulae_sigma2(qops_dict, H_formulae, wf, inter, 
 		       			         Hxlst2, schd.ctns.hxorder, 
 		      		                 rank==0 && schd.ctns.verbose>0);
-      size_t batchsize = 64;
+      size_t batchsize = 1000;
       worktot = batchsize*blksize*2;
       if(debug && schd.ctns.verbose>0){
          std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
