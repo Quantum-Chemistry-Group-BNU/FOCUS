@@ -14,6 +14,8 @@
 #include "symbolic_kernel_sigma3.h"
 #include "preprocess_size.h"
 #include "preprocess_sigma.h"
+#include "preprocess_sigma2.h"
+#include "preprocess_sigma_batch.h"
 
 namespace ctns{
 
@@ -228,6 +230,27 @@ void sweep_twodot(comb<Km>& icomb,
       HVec = bind(&ctns::preprocess_Hx2<Tm>, _1, _2,
 		  std::cref(scale), std::cref(size), std::cref(rank),
 		  std::cref(ndim), std::cref(blksize), 
+		  std::ref(Hxlst2), std::ref(workspace));
+   }else if(schd.ctns.alg_hvec == 6){
+      // symbolic formulae + intermediates + preallocation of workspace
+      H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
+			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+					    debug_formulae); 
+      size_t blksize = preprocess_formulae_sigma2(qops_dict, H_formulae, wf, inter, 
+		       			         Hxlst2, schd.ctns.hxorder, 
+		      		                 rank==0 && schd.ctns.verbose>0);
+      size_t batchsize = 64;
+      worktot = batchsize*blksize*2;
+      if(debug && schd.ctns.verbose>0){
+         std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
+                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+      }
+      Tm scale = qops_dict.at("l").ifkr? 0.5*ecore : 1.0*ecore;
+      workspace = new Tm[worktot];
+      HVec = bind(&ctns::preprocess_Hx_batch<Tm>, _1, _2,
+		  std::cref(scale), std::cref(size), std::cref(rank),
+		  std::cref(ndim), std::cref(blksize), std::cref(batchsize), 
 		  std::ref(Hxlst2), std::ref(workspace));
    }else{
       std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;

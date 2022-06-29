@@ -5,7 +5,8 @@
 
 namespace ctns{
 
-// H[mu] = Ol*Or*Oc or Ol*Or*Oc1*Oc2 
+// H[mu] = coeff*Ol*Or*Oc (ondot)
+//       = coeff*Ol*Or*Oc1*Oc2 (twodot) 
 template <typename Tm>
 struct Hmu_ptr{
 public:
@@ -66,9 +67,9 @@ void Hmu_ptr<Tm>::init(const int it,
       info[pos] = const_cast<qinfo2<Tm>*>(&op0.info);
       if(sop.size() == 1){
          coeff *= sop.sums[0].first;
-         addr[pos] = opaddr[pos]+qops._offset.at(std::make_pair(label,index0)); // qops
+         addr[pos] = opaddr[pos] + qops._offset.at(std::make_pair(label,index0)); // qops
       }else{
-         addr[pos] = opaddr[posmap.size()]+inter._offset.at(std::make_pair(it,idx)); // intermediates
+         addr[pos] = opaddr[posmap.size()] + inter._offset.at(std::make_pair(it,idx)); // intermediates
       }
    } // idx
    coeffH = coeff*HTerm.Hsign(); 
