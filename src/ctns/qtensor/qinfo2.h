@@ -66,6 +66,7 @@ struct qinfo2{
 				  		          data+off-1);
       }
    public:
+      static const int dims = 2; 
       qsym sym; // <row|op[in]|col>
       qbond qrow, qcol;
       direction2 dir={1,0}; // {out,int} by usual convention for operators in diagrams 

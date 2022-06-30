@@ -132,6 +132,10 @@ void sweep_onedot(comb<Km>& icomb,
    bipart_task<Tm> H_formulae2;
    intermediates<Tm> inter;
    Hxlist<Tm> Hxlst;
+   Hxlist2<Tm> Hxlst2;
+   std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c",2}};
+   Tm* ptrs[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data, qops_dict.at("c")._data, 
+	 	  nullptr, nullptr};
    Tm* workspace;
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -185,26 +189,6 @@ void sweep_onedot(comb<Km>& icomb,
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
      	          std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
      	          std::ref(workspace));
-   }else if(schd.ctns.alg_hvec == 4){
-      // symbolic formulae + intermediates + preallocation of workspace
-      H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
-			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-					    debug_formulae); 
-      size_t tmpsize = preprocess_formulae_sigma(qops_dict, H_formulae, wf, inter, 
-		      				 Hxlst, schd.ctns.sort_formulae, 
-		      		                 rank==0 && schd.ctns.verbose>0);
-      worktot = maxthreads*tmpsize;
-      if(debug && schd.ctns.verbose>0){
-         std::cout << "preprocess for Hx: ndim=" << ndim << " tmpsize=" << tmpsize 
-                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
-                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
-      }
-      Tm scale = qops_dict.at("l").ifkr? 0.5*ecore : 1.0*ecore;
-      workspace = new Tm[worktot];
-      HVec = bind(&ctns::preprocess_Hx<Tm>, _1, _2,
-		  std::cref(scale), std::cref(size), std::cref(rank),
-		  std::cref(ndim), std::cref(tmpsize), 
-		  std::ref(Hxlst), std::ref(workspace));
    }else{
       std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
       exit(1);
@@ -213,7 +197,7 @@ void sweep_onedot(comb<Km>& icomb,
    onedot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2, 
 		  ndim, neig, diag, HVec, eopt, vsol, nmvp, wf);
    // free temporary space
-   if(schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3 || schd.ctns.alg_hvec==4){ 
+   if(schd.ctns.alg_hvec >=2){
       delete[] workspace;
    }
    if(debug && schd.ctns.verbose>1){

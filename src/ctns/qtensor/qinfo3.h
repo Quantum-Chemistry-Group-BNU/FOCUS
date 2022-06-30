@@ -80,6 +80,7 @@ struct qinfo3{
 				  		          data+off-1);
       }
    public:
+      static const int dims = 3;
       qsym sym;
       qbond qrow, qcol, qmid;
       direction3 dir;

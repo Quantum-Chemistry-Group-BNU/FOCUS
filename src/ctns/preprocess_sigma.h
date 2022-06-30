@@ -8,6 +8,7 @@ namespace ctns{
 
 template <typename Tm, typename QTm>
 size_t preprocess_formulae_sigma(const oper_dictmap<Tm>& qops_dict,
+				 const std::map<std::string,int>& oploc,
 		 	         const symbolic_task<Tm>& H_formulae,
 			         const QTm& wf,
 				 intermediates<Tm>& inter,
@@ -17,41 +18,18 @@ size_t preprocess_formulae_sigma(const oper_dictmap<Tm>& qops_dict,
    auto t0 = tools::get_time();
 
    // 1. form intermediate operators 
-   inter.init(qops_dict,H_formulae,debug);
+   inter.init(qops_dict, H_formulae, debug);
    auto ta = tools::get_time();
 
    // 2. preprocess formulae to Hmu
-   std::map<std::string,int> posmap; 
-   Tm* opaddr[5]; // this can be different from qops_dict/inter 
-   		  // in case of GPU implementation in future
-   if(qops_dict.size() == 4){
-      posmap["l"] = 0;
-      posmap["r"] = 1;
-      posmap["c1"] = 2;
-      posmap["c2"] = 3;
-      opaddr[0] = qops_dict.at("l")._data;
-      opaddr[1] = qops_dict.at("r")._data;
-      opaddr[2] = qops_dict.at("c1")._data;
-      opaddr[3] = qops_dict.at("c2")._data;
-      opaddr[4] = inter._data;
-   }else if(qops_dict.size() == 3){
-      posmap["l"] = 0;
-      posmap["r"] = 1;
-      posmap["c"] = 2;
-      opaddr[0] = qops_dict.at("l")._data;
-      opaddr[1] = qops_dict.at("r")._data;
-      opaddr[2] = qops_dict.at("c")._data;
-      opaddr[3] = inter._data;
-   }
    int hsize = H_formulae.size();
    std::vector<Hmu_ptr<Tm>> Hmu_vec(hsize);
    for(int it=0; it<hsize; it++){
-      Hmu_vec[it].init(it, H_formulae, qops_dict, inter, 
-		       posmap, opaddr);
+      Hmu_vec[it].init(it, H_formulae, qops_dict, inter, oploc);
    } // it
    auto tb = tools::get_time();
 
-   // 3. from Hmu to Hx in expanded block forms
+   // 3. from Hmu to Hxlst in expanded block forms
    size_t blksize = 0;
    double cost = 0.0;
    for(int it=0; it<hsize; it++){
@@ -60,23 +38,26 @@ size_t preprocess_formulae_sigma(const oper_dictmap<Tm>& qops_dict,
    }
    auto tc = tools::get_time();
 
-   // 4. reorder hxlist
-   if(hxorder == 1){
-      // sort by cost
+   // 4. reorder & gen MMlst
+   if(hxorder == 1){ // sort by cost
       std::stable_sort(Hxlst.begin(), Hxlst.end(),
-           	       [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ return t1.cost > t2.cost; });
-   }else if(hxorder == 2){
-      // sort by cost
+           	       [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ 
+		       	  return t1.cost > t2.cost; });
+   }else if(hxorder == 2){ // sort by cost
       std::stable_sort(Hxlst.begin(), Hxlst.end(),
-           	       [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ return t1.cost < t2.cost; });
-   }else if(hxorder == 3){
-      // sort by offout
+           	       [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ 
+		       	  return t1.cost < t2.cost; });
+   }else if(hxorder == 3){ // sort by offout
       std::stable_sort(Hxlst.begin(), Hxlst.end(),
-           	       [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ return t1.offout < t2.offout; });
-   }else if(hxorder == 4){
-      // sort by offin
+           	       [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ 
+		          return t1.offout < t2.offout; });
+   }else if(hxorder == 4){ // sort by offin
       std::stable_sort(Hxlst.begin(), Hxlst.end(),
-           	       [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ return t1.offin < t2.offin; });
+           	       [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ 
+		          return t1.offin < t2.offin; });
+   } // hxorder
+   for(int i=0; i<Hxlst.size(); i++){
+      Hxlst[i].get_MMlist();
    }
    auto td = tools::get_time();
 
@@ -85,8 +66,8 @@ size_t preprocess_formulae_sigma(const oper_dictmap<Tm>& qops_dict,
       size_t hxsize = Hxlst.size(); 
       std::cout << "size(Hxlst)=" << hxsize
                 << " size(formulae)=" << hsize
-	        << " average=" << hxsize/double(hsize)
-		<< " nnzblks=" << wf.info._nnzaddr.size()
+	        << " hxsize/hsize=" << hxsize/double(hsize)
+		<< " nnzblk=" << wf.info._nnzaddr.size()
 		<< " cost=" << cost 
 	        << std::endl;
       std::cout << "T(inter/Hmu/Hxlist/sort/tot)="
@@ -111,6 +92,7 @@ void preprocess_Hx(Tm* y,
 		   const size_t& ndim,
 	           const size_t& blksize,
 	           Hxlist<Tm>& Hxlst,
+		   Tm** opaddr,
 		   Tm* workspace){
    const bool debug = false;
 #ifdef _OPENMP
@@ -140,19 +122,18 @@ void preprocess_Hx(Tm* y,
 #endif
       auto& Hxblk = Hxlst[i];
       Tm* wptr = &workspace[omprank*blksize*2];
-      Hxblk.kernel(x, wptr);
+      Hxblk.kernel(x, opaddr, wptr);
+      Tm* rptr = &workspace[omprank*blksize*2+Hxblk.offres];
 #ifdef _OPENMP
       #pragma omp critical
 #endif
       {
-         linalg::xaxpy(Hxblk.size, Hxblk.coeff, wptr+Hxblk.offres, y+Hxblk.offout);
+         linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, y+Hxblk.offout);
       }
    } // i
 
    // add const term
-   if(rank == 0){
-      linalg::xaxpy(ndim, scale, x, y);
-   }
+   if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
 }
 
 } // ctns

@@ -138,6 +138,11 @@ void sweep_twodot(comb<Km>& icomb,
    intermediates<Tm> inter;
    Hxlist<Tm> Hxlst;
    Hxlist2<Tm> Hxlst2;
+   MMtasks<Tm> mmtasks;
+   std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c1",2},{"c2",3}};
+   Tm* opaddr[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data,
+	            qops_dict.at("c1")._data, qops_dict.at("c2")._data,
+	 	    nullptr};
    Tm* workspace;
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -196,9 +201,10 @@ void sweep_twodot(comb<Km>& icomb,
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
-      size_t blksize = preprocess_formulae_sigma(qops_dict, H_formulae, wf, inter, 
+      size_t blksize = preprocess_formulae_sigma(qops_dict, oploc, H_formulae, wf, inter, 
 		       			         Hxlst, schd.ctns.hxorder, 
-		      		                 rank==0 && schd.ctns.verbose>0);
+						 rank==0 && schd.ctns.verbose>0);
+      opaddr[4] = inter._data;
       worktot = maxthreads*blksize*2;
       if(debug && schd.ctns.verbose>0){
          std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
@@ -210,15 +216,16 @@ void sweep_twodot(comb<Km>& icomb,
       HVec = bind(&ctns::preprocess_Hx<Tm>, _1, _2,
 		  std::cref(scale), std::cref(size), std::cref(rank),
 		  std::cref(ndim), std::cref(blksize), 
-		  std::ref(Hxlst), std::ref(workspace));
+		  std::ref(Hxlst), std::ref(opaddr), std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 5){
       // symbolic formulae + intermediates + preallocation of workspace
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
-      size_t blksize = preprocess_formulae_sigma2(qops_dict, H_formulae, wf, inter, 
+      size_t blksize = preprocess_formulae_sigma2(qops_dict, oploc, H_formulae, wf, inter, 
 		       			         Hxlst2, schd.ctns.hxorder, 
 		      		                 rank==0 && schd.ctns.verbose>0);
+      opaddr[4] = inter._data;
       worktot = maxthreads*blksize*3;
       if(debug && schd.ctns.verbose>0){
          std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
@@ -230,17 +237,17 @@ void sweep_twodot(comb<Km>& icomb,
       HVec = bind(&ctns::preprocess_Hx2<Tm>, _1, _2,
 		  std::cref(scale), std::cref(size), std::cref(rank),
 		  std::cref(ndim), std::cref(blksize), 
-		  std::ref(Hxlst2), std::ref(workspace));
+		  std::ref(Hxlst2), std::ref(opaddr), std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 6){
       // symbolic formulae + intermediates + preallocation of workspace
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
-      size_t blksize = preprocess_formulae_sigma2(qops_dict, H_formulae, wf, inter, 
-		       			         Hxlst2, schd.ctns.hxorder, 
+      size_t blksize = preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
+		       			         Hxlst2, mmtasks, schd.ctns.hxorder, 
 		      		                 rank==0 && schd.ctns.verbose>0);
-      size_t batchsize = 1000;
-      worktot = batchsize*blksize*2;
+      opaddr[4] = inter._data;
+      worktot = mmtasks[0].batchsize*blksize*2;
       if(debug && schd.ctns.verbose>0){
          std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
                    << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
@@ -250,8 +257,8 @@ void sweep_twodot(comb<Km>& icomb,
       workspace = new Tm[worktot];
       HVec = bind(&ctns::preprocess_Hx_batch<Tm>, _1, _2,
 		  std::cref(scale), std::cref(size), std::cref(rank),
-		  std::cref(ndim), std::cref(blksize), std::cref(batchsize), 
-		  std::ref(Hxlst2), std::ref(workspace));
+		  std::cref(ndim), std::cref(blksize), 
+		  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace));
    }else{
       std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
       exit(1);
@@ -260,7 +267,7 @@ void sweep_twodot(comb<Km>& icomb,
    twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
 		  ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond);
    // free temporary space
-   if(schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3 || schd.ctns.alg_hvec==4){ 
+   if(schd.ctns.alg_hvec >=2){
       delete[] workspace;
    }
    if(debug && schd.ctns.verbose>1){

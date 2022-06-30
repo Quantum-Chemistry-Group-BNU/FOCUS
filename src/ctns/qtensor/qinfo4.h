@@ -74,6 +74,7 @@ struct qinfo4{
 				  		          data+off-1);
       }
    public:
+      static const int dims = 4; 
       qsym sym;
       qbond qrow, qcol, qmid, qver;
    public: // derived

@@ -14,32 +14,33 @@ public:
 	     const symbolic_task<Tm>& H_formulae,
 	     const oper_dictmap<Tm>& qops_dict,
 	     const intermediates<Tm>& inter,
-	     const std::map<std::string,int>& posmap,
-	     Tm** qops_addr);
-   bool identity(const int i) const{ return addr[i]==nullptr; }
+	     const std::map<std::string,int>& oploc);
+   bool identity(const int i) const{ return loc[i]==-1; }
    // onedot
    void gen_Hxlist(const qinfo3<Tm>& wf, 
 		   Hxlist<Tm>& Hxblks,
 		   size_t& blksize,
-	           double& cost,
+		   double& cost,
 		   const bool ifdagger) const;
    // twodot
    void gen_Hxlist(const qinfo4<Tm>& wf, 
 		   Hxlist<Tm>& Hxblks,
 		   size_t& blksize,
-	           double& cost,
+		   double& cost,
 		   const bool ifdagger) const;
    // twodot
    void gen_Hxlist2(const qinfo4<Tm>& wf, 
 		   Hxlist2<Tm>& Hxblks,
 		   size_t& blksize,
-	           double& cost,
+		   double& cost,
 		   const bool ifdagger) const;
 public:
    bool parity[4] = {false,false,false,false};
    bool dagger[4] = {false,false,false,false};
    qinfo2<Tm>* info[4] = {nullptr,nullptr,nullptr,nullptr};
-   Tm* addr[4] = {nullptr,nullptr,nullptr,nullptr};
+   int loc[4] = {-1,-1,-1,-1};
+   size_t off[4] = {0,0,0,0};
+   int terms = 0;
    Tm coeff = 1.0, coeffH = 1.0; 
 };
 
@@ -48,10 +49,10 @@ void Hmu_ptr<Tm>::init(const int it,
 		       const symbolic_task<Tm>& H_formulae,
 	     	       const oper_dictmap<Tm>& qops_dict,
 	     	       const intermediates<Tm>& inter,
-		       const std::map<std::string,int>& posmap,
-		       Tm** opaddr){
+		       const std::map<std::string,int>& oploc){
    const auto& HTerm = H_formulae.tasks[it];
-   for(int idx=HTerm.size()-1; idx>=0; idx--){
+   terms = HTerm.size();
+   for(int idx=terms-1; idx>=0; idx--){
       const auto& sop = HTerm.terms[idx];
       const auto& sop0 = sop.sums[0].second;
       const auto& par = sop0.parity;
@@ -61,15 +62,17 @@ void Hmu_ptr<Tm>::init(const int it,
       const auto& index0 = sop0.index;
       const auto& qops = qops_dict.at(block); 
       const auto& op0 = qops(label).at(index0);
-      int pos = posmap.at(block); 
+      int pos = oploc.at(block); 
       parity[pos] = par;
       dagger[pos] = dag;
       info[pos] = const_cast<qinfo2<Tm>*>(&op0.info);
       if(sop.size() == 1){
          coeff *= sop.sums[0].first;
-         addr[pos] = opaddr[pos] + qops._offset.at(std::make_pair(label,index0)); // qops
+	 loc[pos] = pos;
+         off[pos] = qops._offset.at(std::make_pair(label,index0)); // qops
       }else{
-         addr[pos] = opaddr[posmap.size()] + inter._offset.at(std::make_pair(it,idx)); // intermediates
+	 loc[pos] = locinter;
+         off[pos] = inter._offset.at(std::make_pair(it,idx)); // intermediates
       }
    } // idx
    coeffH = coeff*HTerm.Hsign(); 
@@ -80,14 +83,14 @@ void Hmu_ptr<Tm>::init(const int it,
 template <typename Tm>
 void Hmu_ptr<Tm>::gen_Hxlist(const qinfo3<Tm>& wf_info,
 		   	     Hxlist<Tm>& Hxlst,
-			     size_t& blksize,
-			     double& cost,
+		   	     size_t& blksize,
+		   	     double& cost,
 			     const bool ifdagger) const{
    int bo[3], bi[3];
    for(int i=0; i<wf_info._nnzaddr.size(); i++){
       int idx = wf_info._nnzaddr[i];
       wf_info._addr_unpack(idx,bo[0],bo[1],bo[2]);
-      Hxblock<Tm> Hxblk;
+      Hxblock<Tm> Hxblk(3,terms);
       Hxblk.offout = wf_info._offset[idx]-1;
       Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
       Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
@@ -108,7 +111,8 @@ void Hmu_ptr<Tm>::gen_Hxlist(const qinfo3<Tm>& wf_info,
 	    }else{
 	       int jdx = iftrans? info[k]->_addr(bi[k],bo[k]) : info[k]->_addr(bo[k],bi[k]);
 	       assert(info[k]->_offset[jdx] != 0);
-	       Hxblk.addr[k] = addr[k]+(info[k]->_offset[jdx]-1);
+	       Hxblk.loc[k] = loc[k];
+	       Hxblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
 	    }
          }
       }
@@ -125,7 +129,7 @@ void Hmu_ptr<Tm>::gen_Hxlist(const qinfo3<Tm>& wf_info,
       int pc = wf_info.qmid.get_parity(bi[2]);
       if(parity[1] && (pl+pc)%2==1) Hxblk.coeff *= -1.0; // Or
       if(parity[2] && pl%2==1) Hxblk.coeff *= -1.0; // Oc
-      Hxblk.gen_MMlist(3);
+      Hxblk.setup();
       blksize = std::max(blksize, Hxblk.blksize);
       cost += Hxblk.cost;
       Hxlst.push_back(Hxblk);
@@ -138,14 +142,14 @@ void Hmu_ptr<Tm>::gen_Hxlist(const qinfo3<Tm>& wf_info,
 template <typename Tm>
 void Hmu_ptr<Tm>::gen_Hxlist(const qinfo4<Tm>& wf_info,
 		 	     Hxlist<Tm>& Hxlst,
-			     size_t& blksize,
-			     double& cost,
+		   	     size_t& blksize,
+		   	     double& cost,
 			     const bool ifdagger) const{
    int bo[4], bi[4];
    for(int i=0; i<wf_info._nnzaddr.size(); i++){
       int idx = wf_info._nnzaddr[i];
       wf_info._addr_unpack(idx,bo[0],bo[1],bo[2],bo[3]);
-      Hxblock<Tm> Hxblk;
+      Hxblock<Tm> Hxblk(4,terms);
       Hxblk.offout = wf_info._offset[idx]-1;
       Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
       Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
@@ -167,7 +171,8 @@ void Hmu_ptr<Tm>::gen_Hxlist(const qinfo4<Tm>& wf_info,
 	    }else{
 	       int jdx = iftrans? info[k]->_addr(bi[k],bo[k]) : info[k]->_addr(bo[k],bi[k]);
 	       assert(info[k]->_offset[jdx] != 0);
-	       Hxblk.addr[k] = addr[k]+(info[k]->_offset[jdx]-1);
+	       Hxblk.loc[k] = loc[k];
+	       Hxblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
 	    }
          }
       }
@@ -187,7 +192,7 @@ void Hmu_ptr<Tm>::gen_Hxlist(const qinfo4<Tm>& wf_info,
       if(parity[1] && (pl+pc1+pc2)%2==1) Hxblk.coeff *= -1.0; // Or
       if(parity[3] && (pl+pc1)%2==1) Hxblk.coeff *= -1.0;  // Oc2
       if(parity[2] && pl%2==1) Hxblk.coeff *= -1.0; // Oc1
-      Hxblk.gen_MMlist(4);
+      Hxblk.setup();
       blksize = std::max(blksize, Hxblk.blksize);
       cost += Hxblk.cost;
       Hxlst.push_back(Hxblk);
@@ -200,14 +205,14 @@ void Hmu_ptr<Tm>::gen_Hxlist(const qinfo4<Tm>& wf_info,
 template <typename Tm>
 void Hmu_ptr<Tm>::gen_Hxlist2(const qinfo4<Tm>& wf_info,
 		 	     Hxlist2<Tm>& Hxlst2,
-			     size_t& blksize,
-			     double& cost,
+		   	     size_t& blksize,
+		   	     double& cost,
 			     const bool ifdagger) const{
    int bo[4], bi[4];
    for(int i=0; i<wf_info._nnzaddr.size(); i++){
       int idx = wf_info._nnzaddr[i];
       wf_info._addr_unpack(idx,bo[0],bo[1],bo[2],bo[3]);
-      Hxblock<Tm> Hxblk;
+      Hxblock<Tm> Hxblk(4,terms);
       Hxblk.offout = wf_info._offset[idx]-1;
       Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
       Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
@@ -229,7 +234,8 @@ void Hmu_ptr<Tm>::gen_Hxlist2(const qinfo4<Tm>& wf_info,
 	    }else{
 	       int jdx = iftrans? info[k]->_addr(bi[k],bo[k]) : info[k]->_addr(bo[k],bi[k]);
 	       assert(info[k]->_offset[jdx] != 0);
-	       Hxblk.addr[k] = addr[k]+(info[k]->_offset[jdx]-1);
+	       Hxblk.loc[k] = loc[k];
+	       Hxblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
 	    }
          }
       }
@@ -249,7 +255,7 @@ void Hmu_ptr<Tm>::gen_Hxlist2(const qinfo4<Tm>& wf_info,
       if(parity[1] && (pl+pc1+pc2)%2==1) Hxblk.coeff *= -1.0; // Or
       if(parity[3] && (pl+pc1)%2==1) Hxblk.coeff *= -1.0;  // Oc2
       if(parity[2] && pl%2==1) Hxblk.coeff *= -1.0; // Oc1
-      Hxblk.gen_MMlist(4);
+      Hxblk.setup();
       blksize = std::max(blksize, Hxblk.blksize);
       cost += Hxblk.cost;
       Hxlst2[i].push_back(Hxblk);
