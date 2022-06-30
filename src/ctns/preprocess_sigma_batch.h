@@ -46,7 +46,7 @@ size_t preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
    const size_t batchsize = 1000;
    mmtasks.resize(nnzblk);
    for(int i=0; i<nnzblk; i++){
-      mmtasks[i].init(Hxlst2[i], batchsize, hxorder);
+      mmtasks[i].init(Hxlst2[i], batchsize, blksize*2, hxorder);
    } // i
    auto td = tools::get_time();
 
@@ -112,17 +112,17 @@ void preprocess_Hx_batch(Tm* y,
    ptrs[5] = const_cast<Tm*>(x);
    ptrs[6] = workspace;
 
+   const bool ifbatch = true;
+
    // loop over nonzero blocks
    for(int i=0; i<mmtasks.size(); i++){
       auto& mmtask = mmtasks[i];
       for(int k=0; k<mmtask.nbatch; k++){
-/*
          // gemm
-         mmtask.mmbatch2[k][0].kernel(ptrs); // c2 
-         mmtask.mmbatch2[k][1].kernel(ptrs); // c1
-         mmtask.mmbatch2[k][2].kernel(ptrs); // r
-         mmtask.mmbatch2[k][3].kernel(ptrs); // l
-*/
+         mmtask.mmbatch2[k][0].kernel(ptrs, ifbatch); // c2 
+         mmtask.mmbatch2[k][1].kernel(ptrs, ifbatch); // c1
+         mmtask.mmbatch2[k][2].kernel(ptrs, ifbatch); // r
+         mmtask.mmbatch2[k][3].kernel(ptrs, ifbatch); // l
          // reduction
 	 size_t off = k*mmtask.batchsize;
 	 size_t jlen = std::min(mmtask.totsize-off,mmtask.batchsize);

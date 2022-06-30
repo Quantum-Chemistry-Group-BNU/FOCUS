@@ -11,6 +11,13 @@ template <typename Tm>
 struct MMbatch{
 public:
    void init(const MMlist<Tm>& MMlst);
+   void kernel(Tm** ptrs, const bool ifbatch=false){
+      if(ifbatch){
+	 this->xgemm_batch(ptrs);    
+      }else{
+	 this->xgemm(ptrs);    
+      }
+   }
    void xgemm(Tm** ptrs);
    void xgemm_batch(Tm** ptrs);
 public:
@@ -72,9 +79,9 @@ void MMbatch<Tm>::xgemm_batch(Tm** ptrs){
       Cptr[i] = ptrs[locC[i]] + offC[i];
    }
    int group_count = size; 
-   xgemm_batch(transA.data(), transB.data(), M.data(), N.data(), K.data(), alpha_vec.data(), 
-               Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
-               Cptr.data(), M.data(), &group_count, size_per_group_vec.data());
+   linalg::xgemm_batch(transA.data(), transB.data(), M.data(), N.data(), K.data(), alpha_vec.data(), 
+               	       Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
+               	       Cptr.data(), M.data(), &group_count, size_per_group_vec.data());
 }
 
 // Interface to Hxlist
@@ -83,6 +90,7 @@ struct MMtask{
 public:
    void init(const Hxlist<Tm>& Hxlst, 
 	     const size_t _batchsize,
+	     const size_t offset,
 	     const int hdxorder);
 public:
    size_t totsize, batchsize, nbatch;
@@ -94,6 +102,7 @@ using MMtasks = std::vector<MMtask<Tm>>;
 template <typename Tm>
 void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
 		      const size_t _batchsize,
+		      const size_t offset,
 	 	      const int hxorder){
    totsize = Hxlst.size();
    batchsize = _batchsize;
@@ -124,7 +133,7 @@ void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
       for(int j=0; j<jlen; j++){
 	 int jdx = off+j;
          MMlist2<Tm> mmtmp2(4);
-         Hxlst[jdx].get_MMlist_twodot(mmtmp2);
+         Hxlst[jdx].get_MMlist_twodot(mmtmp2, j*offset);
          for(int i=0; i<4; i++){
             for(int k=0; k<mmtmp2[i].size(); k++){
                mmlst2[i][idx[i]] = mmtmp2[i][k];

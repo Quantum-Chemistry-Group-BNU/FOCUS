@@ -35,8 +35,8 @@ public:
    void display() const;
    void setup();
    void get_MMlist();   
-   void get_MMlist_twodot(MMlist2<Tm>& MMlst2) const;
-   void get_MMlist_onedot(MMlist2<Tm>& MMlst2) const;
+   void get_MMlist_twodot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
+   void get_MMlist_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
    void kernel(const Tm* x,
 	       Tm** opaddr, 
 	       Tm* workspace) const;
@@ -132,10 +132,11 @@ void Hxblock<Tm>::get_MMlist(){
 // 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv']
 // 			wf[br',bc',bm',bv']
 template <typename Tm>
-void Hxblock<Tm>::get_MMlist_twodot(MMlist2<Tm>& MMlst2) const{
+void Hxblock<Tm>::get_MMlist_twodot(MMlist2<Tm>& MMlst2,
+		                    const size_t offset) const{
    // wf[br',bc',bm',bv']
    int xloc = locin, yloc = locout;
-   size_t xoff = offin, yoff = 0;
+   size_t xoff = offin, yoff = offset;
    int nt = 0;
    // Oc2^dagger3[bv,bv']: out(r,c,m,v) = o[d](v,x) in(r,c,m,x) 
    if(!this->identity(3)){
@@ -153,8 +154,8 @@ void Hxblock<Tm>::get_MMlist_twodot(MMlist2<Tm>& MMlst2) const{
       mm.locC = yloc;   mm.offC = yoff; 
       MMlst2[0].push_back(mm); 
       // update x & y  
-      xloc = locout; xoff = (nt%2)*blksize; 
-      yloc = locout; yoff = (1-nt%2)*blksize;
+      xloc = locout; xoff = offset+(nt%2)*blksize; 
+      yloc = locout; yoff = offset+(1-nt%2)*blksize;
       nt += 1;
    }
    // Oc1^dagger2[bm,bm']: out(r,c,m,v) = o[d](m,x) in(r,c,x,v)
@@ -175,8 +176,8 @@ void Hxblock<Tm>::get_MMlist_twodot(MMlist2<Tm>& MMlst2) const{
 	 MMlst2[1].push_back(mm);
       }
       // update x & y
-      xloc = locout; xoff = (nt%2)*blksize;
-      yloc = locout; yoff = (1-nt%2)*blksize;
+      xloc = locout; xoff = offset+(nt%2)*blksize;
+      yloc = locout; yoff = offset+(1-nt%2)*blksize;
       nt += 1;
    }
    // Or^dagger1[bc,bc']: out(r,c,m,v) = o[d](c,x) in(r,x,m,v) 
@@ -199,8 +200,8 @@ void Hxblock<Tm>::get_MMlist_twodot(MMlist2<Tm>& MMlst2) const{
 	 }
       }
       // update x & y
-      xloc = locout; xoff = (nt%2)*blksize;
-      yloc = locout; yoff = (1-nt%2)*blksize;
+      xloc = locout; xoff = offset+(nt%2)*blksize;
+      yloc = locout; yoff = offset+(1-nt%2)*blksize;
       nt += 1;	  
    }
    // Ol^dagger0[br,br']: out(r,c,m,v) = o[d](r,x) in(x,c,m,v)
@@ -228,10 +229,11 @@ void Hxblock<Tm>::get_MMlist_twodot(MMlist2<Tm>& MMlst2) const{
 // 	             Oc1^dagger2[bm,bm'] 
 // 		     wf[br',bc',bm']
 template <typename Tm>
-void Hxblock<Tm>::get_MMlist_onedot(MMlist2<Tm>& MMlst2) const{
+void Hxblock<Tm>::get_MMlist_onedot(MMlist2<Tm>& MMlst2,
+		                    const size_t offset) const{
    // wf[br',bc',bm']
    int xloc = locin, yloc = locout;
-   size_t xoff = offin, yoff = 0;
+   size_t xoff = offin, yoff = offset;
    int nt = 0;
    // Oc1^dagger2[bm,bm']: out(r,c,m) = o[d](m,x) in(r,c,x)
    if(!this->identity(2)){
@@ -249,8 +251,8 @@ void Hxblock<Tm>::get_MMlist_onedot(MMlist2<Tm>& MMlst2) const{
       mm.locC = yloc;   mm.offC = yoff; 
       MMlst2[0].push_back(mm); 
       // update x & y  
-      xloc = locout; xoff = (nt%2)*blksize; 
-      yloc = locout; yoff = (1-nt%2)*blksize;
+      xloc = locout; xoff = offset+(nt%2)*blksize; 
+      yloc = locout; yoff = offset+(1-nt%2)*blksize;
       nt += 1;
    }
    // Or^dagger1[bc,bc']: out(r,c,m) = o[d](c,x) in(r,x,m) 
@@ -271,8 +273,8 @@ void Hxblock<Tm>::get_MMlist_onedot(MMlist2<Tm>& MMlst2) const{
 	 MMlst2[1].push_back(mm);
       }
       // update x & y
-      xloc = locout; xoff = (nt%2)*blksize;
-      yloc = locout; yoff = (1-nt%2)*blksize;
+      xloc = locout; xoff = offset+(nt%2)*blksize;
+      yloc = locout; yoff = offset+(1-nt%2)*blksize;
       nt += 1;
    }
    // Ol^dagger0[br,br']: out(r,c,m) = o[d](r,x) in(x,c,m)
@@ -299,7 +301,7 @@ void Hxblock<Tm>::get_MMlist_onedot(MMlist2<Tm>& MMlst2) const{
 template <typename Tm>
 void Hxblock<Tm>::kernel(const Tm* x,
 			 Tm** opaddr,
-			 Tm* workspace) const{
+			 Tm* workspace) const{ 
    const Tm alpha = 1.0, beta = 0.0;
    Tm* ptrs[7];
    ptrs[0] = opaddr[0];
