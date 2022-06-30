@@ -14,8 +14,10 @@ size_t preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
 			               const QTm& wf,
 				       intermediates<Tm>& inter,
    			               Hxlist2<Tm>& Hxlst2,
-				       MMtasks<Tm>& mmtasks,
 				       const int hxorder,
+				       MMtasks<Tm>& mmtasks,
+				       const bool batchgemm,
+				       const size_t batchsize,
 				       const bool debug){
    auto t0 = tools::get_time();
 
@@ -43,10 +45,10 @@ size_t preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
    auto tc = tools::get_time();
 
    // 4. gen MMlst & reorder
-   const size_t batchsize = 1000;
    mmtasks.resize(nnzblk);
    for(int i=0; i<nnzblk; i++){
-      mmtasks[i].init(Hxlst2[i], batchsize, blksize*2, hxorder);
+      mmtasks[i].init(Hxlst2[i], batchgemm, batchsize,
+		      blksize*2, hxorder);
    } // i
    auto td = tools::get_time();
 
@@ -112,17 +114,12 @@ void preprocess_Hx_batch(Tm* y,
    ptrs[5] = const_cast<Tm*>(x);
    ptrs[6] = workspace;
 
-   const bool ifbatch = true;
-
    // loop over nonzero blocks
    for(int i=0; i<mmtasks.size(); i++){
       auto& mmtask = mmtasks[i];
       for(int k=0; k<mmtask.nbatch; k++){
          // gemm
-         mmtask.mmbatch2[k][0].kernel(ptrs, ifbatch); // c2 
-         mmtask.mmbatch2[k][1].kernel(ptrs, ifbatch); // c1
-         mmtask.mmbatch2[k][2].kernel(ptrs, ifbatch); // r
-         mmtask.mmbatch2[k][3].kernel(ptrs, ifbatch); // l
+	 mmtask.kernel(k, ptrs);
          // reduction
 	 size_t off = k*mmtask.batchsize;
 	 size_t jlen = std::min(mmtask.totsize-off,mmtask.batchsize);

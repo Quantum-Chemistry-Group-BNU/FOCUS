@@ -130,6 +130,8 @@ public:
    bool save_formulae = false;
    bool sort_formulae = true;
    int hxorder = 0;
+   bool batchgemm = false;
+   int batchsize = 1000;
    // dvdson
    int cisolver = 1;
    int maxcycle = 100;

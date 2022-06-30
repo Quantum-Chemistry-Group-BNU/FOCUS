@@ -203,6 +203,10 @@ void params_ctns::read(ifstream& istrm){
          sort_formulae = false;
       }else if(line.substr(0,7)=="hxorder"){
          hxorder = stoi(line.substr(7));
+      }else if(line.substr(0,9)=="batchgemm"){
+         batchgemm = true;
+      }else if(line.substr(0,9)=="batchsize"){
+         batchsize = stoi(line.substr(9));
       }else if(line.substr(0,11)=="rcanon_load"){
          rcanon_load = true;
       }else if(line.substr(0,11)=="rcanon_file"){
@@ -325,6 +329,8 @@ void params_ctns::print() const{
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;
    cout << "hxorder = " << hxorder << endl;
+   cout << "batchgemm = " << batchgemm << endl;
+   cout << "batchsize = " << batchsize << endl;
    // dvdson
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;

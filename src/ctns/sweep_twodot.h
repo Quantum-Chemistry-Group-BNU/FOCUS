@@ -244,7 +244,8 @@ void sweep_twodot(comb<Km>& icomb,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
       size_t blksize = preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
-		       			         Hxlst2, mmtasks, schd.ctns.hxorder, 
+		       			         Hxlst2, schd.ctns.hxorder,
+						 mmtasks, schd.ctns.batchgemm, schd.ctns.batchsize,
 		      		                 rank==0 && schd.ctns.verbose>0);
       opaddr[4] = inter._data;
       worktot = mmtasks[0].batchsize*blksize*2;

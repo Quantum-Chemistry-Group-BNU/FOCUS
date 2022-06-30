@@ -11,8 +11,8 @@ template <typename Tm>
 struct MMbatch{
 public:
    void init(const MMlist<Tm>& MMlst);
-   void kernel(Tm** ptrs, const bool ifbatch=false){
-      if(ifbatch){
+   void kernel(const bool batchgemm, Tm** ptrs){
+      if(batchgemm){
 	 this->xgemm_batch(ptrs);    
       }else{
 	 this->xgemm(ptrs);    
@@ -89,10 +89,14 @@ template <typename Tm>
 struct MMtask{
 public:
    void init(const Hxlist<Tm>& Hxlst, 
+	     const bool _batchgemm,
 	     const size_t _batchsize,
 	     const size_t offset,
 	     const int hdxorder);
+   void kernel(const int k, 
+	       Tm** ptrs);
 public:
+   bool batchgemm;
    size_t totsize, batchsize, nbatch;
    std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][iop]
 };
@@ -101,11 +105,13 @@ using MMtasks = std::vector<MMtask<Tm>>;
 
 template <typename Tm>
 void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
+		      const bool _batchgemm,
 		      const size_t _batchsize,
 		      const size_t offset,
 	 	      const int hxorder){
-   totsize = Hxlst.size();
+   batchgemm = _batchgemm;
    batchsize = _batchsize;
+   totsize = Hxlst.size();
    nbatch = totsize/batchsize;
    if(totsize%batchsize != 0) nbatch += 1;
    mmbatch2.resize(nbatch);
@@ -153,6 +159,15 @@ void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
          mmbatch2[k][i].init(mmlst2[i]);
      } // i
    } // k
+}
+
+template <typename Tm>
+void MMtask<Tm>::kernel(const int k, 
+	                Tm** ptrs){
+   mmbatch2[k][0].kernel(batchgemm, ptrs); // c2
+   mmbatch2[k][1].kernel(batchgemm, ptrs); // c1
+   mmbatch2[k][2].kernel(batchgemm, ptrs); // r
+   mmbatch2[k][3].kernel(batchgemm, ptrs); // l
 }
 
 } // ctns
