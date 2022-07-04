@@ -158,9 +158,9 @@ void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
 	    pos[2] = Hxblk.dagger[2]? 4 : 5;
 	    pos[3] = Hxblk.dagger[3]? 6 : 7;
 	 }
-         MMlist2<Tm> mmtmp2(nd);
+         MMlist2<Tm> mmtmp2(4);
          Hxblk.get_MMlist_twodot(mmtmp2, j*offset);
-         for(int i=0; i<nd; i++){
+         for(int i=0; i<mmtmp2.size(); i++){
             for(int k=0; k<mmtmp2[i].size(); k++){
                mmlst2[pos[i]][idx[i]] = mmtmp2[i][k];
                idx[pos[i]]++;
