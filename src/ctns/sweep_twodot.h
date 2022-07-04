@@ -197,6 +197,7 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
 		  std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 4){
+      // Single Hxlst	   
       // symbolic formulae + intermediates + preallocation of workspace
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
@@ -218,6 +219,7 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::cref(ndim), std::cref(blksize), 
 		  std::ref(Hxlst), std::ref(opaddr), std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 5){
+      // Hxlist2 
       // symbolic formulae + intermediates + preallocation of workspace
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
@@ -239,6 +241,7 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::cref(ndim), std::cref(blksize), 
 		  std::ref(Hxlst2), std::ref(opaddr), std::ref(workspace));
    }else if(schd.ctns.alg_hvec == 6){
+      // BatchGEMM
       // symbolic formulae + intermediates + preallocation of workspace
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
