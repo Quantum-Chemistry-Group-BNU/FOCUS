@@ -161,9 +161,11 @@ void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
          MMlist2<Tm> mmtmp2(4);
          Hxblk.get_MMlist_twodot(mmtmp2, j*offset);
          for(int i=0; i<mmtmp2.size(); i++){
+            int ipos = pos[i];
+	    // copy the mmlst to the correct place
             for(int k=0; k<mmtmp2[i].size(); k++){
-               mmlst2[pos[i]][idx[i]] = mmtmp2[i][k];
-               idx[pos[i]]++;
+               mmlst2[ipos][idx[ipos]] = mmtmp2[i][k];
+               idx[ipos]++;
             } //k
          } // i
       } // j
