@@ -92,9 +92,14 @@ public:
 	     const bool _batchgemm,
 	     const size_t _batchsize,
 	     const size_t offset,
-	     const int hdxorder);
-   void kernel(const int k, 
-	       Tm** ptrs);
+	     const int hdxorder,
+	     const int iop=0);
+   void kernel(const int k, Tm** ptrs){
+      // perform GEMMs [c2,c1,r,l]
+      for(int i=0; i<mmbatch2[k].size(); i++){
+         mmbatch2[k][i].kernel(batchgemm, ptrs);
+      }
+   }
 public:
    bool batchgemm;
    size_t totsize, batchsize, nbatch;
@@ -108,7 +113,8 @@ void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
 		      const bool _batchgemm,
 		      const size_t _batchsize,
 		      const size_t offset,
-	 	      const int hxorder){
+	 	      const int hxorder,
+		      const int iop){
    batchgemm = _batchgemm;
    batchsize = _batchsize;
    totsize = Hxlst.size();
@@ -120,36 +126,50 @@ void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
       size_t off = k*batchsize;
       int jlen = std::min(totsize-off, batchsize);
       // initialization
-      size_t dims[4] = {0,0,0,0};
+      int nd = (iop==0)? 4 : 8;
+      int pos[4] = {0,1,2,3};
+      std::vector<size_t> dims(nd,0);
       for(int j=0; j<jlen; j++){
 	 int jdx = off+j;
          auto& Hxblk = Hxlst[jdx];
-         dims[0] += Hxblk.identity(3)? 0 : 1; // c2
-         dims[1] += Hxblk.identity(2)? 0 : Hxblk.dimout[3]; // c1
-         dims[2] += Hxblk.identity(1)? 0 : Hxblk.dimout[3]*Hxblk.dimout[2]; // r
-         dims[3] += Hxblk.identity(0)? 0 : 1; // l
+	 if(iop == 1){
+	    pos[0] = Hxblk.dagger[0]? 0 : 1;
+	    pos[1] = Hxblk.dagger[1]? 2 : 3;
+	    pos[2] = Hxblk.dagger[2]? 4 : 5;
+	    pos[3] = Hxblk.dagger[3]? 6 : 7;
+	 }
+         dims[pos[0]] += Hxblk.identity(3)? 0 : 1; 
+         dims[pos[1]] += Hxblk.identity(2)? 0 : Hxblk.dimout[3]; // c1
+         dims[pos[2]] += Hxblk.identity(1)? 0 : Hxblk.dimout[3]*Hxblk.dimout[2]; // r
+         dims[pos[3]] += Hxblk.identity(0)? 0 : 1; // l
       }
-      // collect MMinform
-      MMlist2<Tm> mmlst2(4);
-      mmlst2[0].resize(dims[0]); // c2
-      mmlst2[1].resize(dims[1]); // c1
-      mmlst2[2].resize(dims[2]); // r
-      mmlst2[3].resize(dims[3]); // l
-      size_t idx[4] = {0,0,0,0};
+      // generation of mmlst2
+      MMlist2<Tm> mmlst2(nd);
+      for(int i=0; i<nd; i++){
+         mmlst2[i].resize(dims[i]); // c2,c1,r,l
+      }
+      std::vector<size_t> idx(nd,0);
       for(int j=0; j<jlen; j++){
 	 int jdx = off+j;
-         MMlist2<Tm> mmtmp2(4);
-         Hxlst[jdx].get_MMlist_twodot(mmtmp2, j*offset);
-         for(int i=0; i<4; i++){
+	 auto& Hxblk = Hxlst[jdx];
+	 if(iop == 1){
+	    pos[0] = Hxblk.dagger[0]? 0 : 1;
+	    pos[1] = Hxblk.dagger[1]? 2 : 3;
+	    pos[2] = Hxblk.dagger[2]? 4 : 5;
+	    pos[3] = Hxblk.dagger[3]? 6 : 7;
+	 }
+         MMlist2<Tm> mmtmp2(nd);
+         Hxblk.get_MMlist_twodot(mmtmp2, j*offset);
+         for(int i=0; i<nd; i++){
             for(int k=0; k<mmtmp2[i].size(); k++){
-               mmlst2[i][idx[i]] = mmtmp2[i][k];
-               idx[i]++;
+               mmlst2[pos[i]][idx[i]] = mmtmp2[i][k];
+               idx[pos[i]]++;
             } //k
          } // i
       } // j
       // convert to batch list
-      mmbatch2[k].resize(4);
-      for(int i=0; i<4; i++){
+      mmbatch2[k].resize(nd);
+      for(int i=0; i<nd; i++){
          if(hxorder == 1){ // sort by cost
             std::stable_sort(mmlst2[i].begin(), mmlst2[i].end(),
            		     [](const MMinfo<Tm>& mm1, const MMinfo<Tm>& mm2){
@@ -159,15 +179,6 @@ void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
          mmbatch2[k][i].init(mmlst2[i]);
      } // i
    } // k
-}
-
-template <typename Tm>
-void MMtask<Tm>::kernel(const int k, 
-	                Tm** ptrs){
-   mmbatch2[k][0].kernel(batchgemm, ptrs); // c2
-   mmbatch2[k][1].kernel(batchgemm, ptrs); // c1
-   mmbatch2[k][2].kernel(batchgemm, ptrs); // r
-   mmbatch2[k][3].kernel(batchgemm, ptrs); // l
 }
 
 } // ctns
