@@ -204,7 +204,7 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,7)=="hxorder"){
          hxorder = stoi(line.substr(7));
       }else if(line.substr(0,9)=="batchgemm"){
-         batchgemm = true;
+         batchgemm = stoi(line.substr(9));
       }else if(line.substr(0,9)=="batchsize"){
          batchsize = stoi(line.substr(9));
       }else if(line.substr(0,11)=="rcanon_load"){

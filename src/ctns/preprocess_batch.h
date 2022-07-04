@@ -11,11 +11,11 @@ template <typename Tm>
 struct MMbatch{
 public:
    void init(const MMlist<Tm>& MMlst);
-   void kernel(const bool batchgemm, Tm** ptrs){
-      if(batchgemm){
+   void kernel(const int batchgemm, Tm** ptrs){
+      if(batchgemm == 0){
+	 this->xgemm(ptrs);   
+      }else if(batchgemm == 1){
 	 this->xgemm_batch(ptrs);    
-      }else{
-	 this->xgemm(ptrs);    
       }
    }
    void xgemm(Tm** ptrs);
@@ -89,7 +89,7 @@ template <typename Tm>
 struct MMtask{
 public:
    void init(const Hxlist<Tm>& Hxlst, 
-	     const bool _batchgemm,
+	     const int _batchgemm,
 	     const size_t _batchsize,
 	     const size_t offset,
 	     const int hdxorder,
@@ -101,7 +101,7 @@ public:
       }
    }
 public:
-   bool batchgemm;
+   int batchgemm;
    size_t totsize, batchsize, nbatch;
    std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][iop]
 };
@@ -110,7 +110,7 @@ using MMtasks = std::vector<MMtask<Tm>>;
 
 template <typename Tm>
 void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
-		      const bool _batchgemm,
+		      const int _batchgemm,
 		      const size_t _batchsize,
 		      const size_t offset,
 	 	      const int hxorder,
