@@ -263,6 +263,56 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::cref(scale), std::cref(size), std::cref(rank),
 		  std::cref(ndim), std::cref(blksize), 
 		  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace));
+   }else if(schd.ctns.alg_hvec == 7){
+      // BatchGEMM on GPU
+      // symbolic formulae + intermediates + preallocation of workspace
+      H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
+			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+					    debug_formulae); 
+      size_t blksize = preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
+		       			         Hxlst2, schd.ctns.hxorder,
+						 mmtasks, schd.ctns.batchgemm, schd.ctns.batchsize,
+		      		                 rank==0 && schd.ctns.verbose>0);
+      opaddr[4] = inter._data;
+
+      /* 
+      // GPU: copy operators (qops_dict & inter)
+      // 1. allocate memery on GPU
+      size_t tsize = qops_dict.at("l").size()
+	           + qops_dict.at("r").size()
+		   + qops_dict.at("c1").size()
+		   + qops_dict.at("c2").size()
+		   + inter.size();
+      // 2. copy
+      // qops_dict.at("l")._data;
+      // inter._data
+      // 3. save pointers to opaddr
+      // opaddr[0] =  
+      // opaddr[1] = 
+      // opaddr[2] = 
+      // opaddr[3] = 
+      // opaddr[4] = 
+      std::cout << " qops(tot)=" << tsize 
+                << ":" << tools::sizeMB<Tm>(tsize) << "MB"
+                << ":" << tools::sizeGB<Tm>(tsize) << "GB"
+		<< std::endl;
+      // 4. allocate memory for Davidson: x,y(=Hx),worktot
+      worktot = mmtasks[0].batchsize*blksize*2;
+      workspace = new Tm[2*ndim+worktot];
+      */
+
+      if(debug && schd.ctns.verbose>0){
+         std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
+                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+      }
+      Tm scale = qops_dict.at("l").ifkr? 0.5*ecore : 1.0*ecore;
+      workspace = new Tm[worktot];
+      HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
+		  std::cref(scale), std::cref(size), std::cref(rank),
+		  std::cref(ndim), std::cref(blksize), 
+		  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace));
+
    }else{
       std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
       exit(1);
@@ -273,6 +323,12 @@ void sweep_twodot(comb<Km>& icomb,
    // free temporary space
    if(schd.ctns.alg_hvec >=2){
       delete[] workspace;
+      
+      // free memory space on GPU
+      if(schd.ctns.alg_hvec == 7){
+
+      }
+
    }
    if(debug && schd.ctns.verbose>1){
       sweeps.print_eopt(isweep, ibond);

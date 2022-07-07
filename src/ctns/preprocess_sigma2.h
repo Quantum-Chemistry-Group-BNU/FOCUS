@@ -114,7 +114,7 @@ void preprocess_Hx2(Tm* y,
    // initialization
    memset(y, 0, ndim*sizeof(Tm));
 
-   // compute
+   // compute Y[I] = \sum_J H[I,J] X[J]
    size_t off = maxthreads*blksize;
    for(int i=0; i<Hxlst2.size(); i++){
       memset(workspace, 0, off*sizeof(Tm));
