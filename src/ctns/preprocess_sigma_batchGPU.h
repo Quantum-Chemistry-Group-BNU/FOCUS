@@ -1,6 +1,7 @@
 #ifndef PREPROCESS_SIGMA_BATCHGPU_H
 #define PREPROCESS_SIGMA_BATCHGPU_H
 
+/*
 #include "preprocess_inter.h"
 #include "preprocess_hmu.h"
 #include "preprocess_batch.h"
@@ -77,5 +78,6 @@ void preprocess_Hx_batch_GPU(Tm* yCPU,
 
 
 } // ctns
+*/
 
 #endif

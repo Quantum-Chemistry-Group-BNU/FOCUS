@@ -154,11 +154,10 @@ struct pdvdsonSolver_nkr{
       // subspace problem
       void subspace_solver(const int ndim, 
 		      	   const int nsub,
-		      	   const int nt,
+		      	   const int neig,
       	       		   std::vector<Tm>& vbas,
       	       		   std::vector<Tm>& wbas,
       	       		   std::vector<double>& tmpE,
-      	       		   std::vector<Tm>& tmpV,
 			   std::vector<Tm>& rbas){
          // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
          const Tm alpha = 1.0, beta=0.0;
@@ -176,23 +175,31 @@ struct pdvdsonSolver_nkr{
          // 3. solve eigenvalue problem
 	 linalg::matrix<Tm> tmpU;
 	 linalg::eig_solver(tmpH, tmpE, tmpU);
-	 linalg::xcopy(nsub*nt, tmpU.data(), tmpV.data());
          // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
-         // vbas = X[i]
+         // vbas = {X[i]}
 	 linalg::xcopy(ndim*nsub, vbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                       &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+                       &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,vbas.data(),&ndim);
-         // wbas = HX[i]
+         // wbas = {HX[i]}
 	 linalg::xcopy(ndim*nsub, wbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                       &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+                       &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,wbas.data(),&ndim);
          // rbas = HX[i]-e[i]*X[i]
-         for(int i=0; i<nt; i++){
-            std::transform(&wbas[i*ndim],&wbas[i*ndim]+ndim,&vbas[i*ndim],&rbas[i*ndim],
-                           [i,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i]; }); 
+	 linalg::xcopy(ndim*neig, wbas.data(), rbas.data()); 
+	 for(int i=0; i<neig; i++){
+	    linalg::xaxpy(ndim, -tmpE[i], &vbas[i*ndim], &rbas[i*ndim]); 
          }
+      }
+
+      // Precondition of a residual 
+      void precondition(const Tm* rvec, Tm* tvec, const double& ei){
+         const double damp = damping;
+	 std::transform(rvec, rvec+ndim, Diag, tvec,
+                        [&ei,&damp](const Tm& rk, const double& dk){
+			   return rk/(std::abs(dk-ei)+damp); 
+			});
       }
 
       // Davidson iterative algorithm for Hv=ve 
@@ -213,12 +220,17 @@ struct pdvdsonSolver_nkr{
 	    std::string msg = "error: neig>ndim in pdvdson! neig/ndim=";	
 	    tools::exit(msg+std::to_string(neig)+","+std::to_string(ndim));
 	 }
-         // clear counter
+
+	 // 0. initialization
+         int nmax = std::min(ndim,neig+nbuff); // maximal subspace size
+	 std::vector<Tm> vbas(ndim*nmax), wbas(ndim*nmax);
+	 std::vector<Tm> rbas(ndim*nmax), tbas(ndim*neig);
+	 std::vector<double> tmpE(nmax), tnorm(neig);
+         std::vector<bool> rconv(neig);
+	 linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); // history
          nmvp = 0;
 
          // 1. generate initial subspace - vbas
-         int nl = std::min(ndim,neig+nbuff); // maximal subspace size
-	 std::vector<Tm> vbas(ndim*nl), wbas(ndim*nl);
 	 if(rank == 0){
             if(vguess != nullptr){
 	       linalg::xcopy(ndim*neig, vguess, vbas.data());
@@ -236,37 +248,33 @@ struct pdvdsonSolver_nkr{
          HVecs(neig, wbas.data(), vbas.data());
 
          // 2. begin to solve
-	 std::vector<Tm> rbas(ndim*nl), tbas(ndim*nl), tmpV(nl*nl);
-	 std::vector<double> tmpE(nl), tnorm(neig);
-         std::vector<bool> rconv(neig);
-	 // record history
-	 linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); 
-         double damp = damping;
          bool ifconv = false;
          int nsub = neig;
          for(int iter=1; iter<maxcycle+1; iter++){
-	    // ONLY rank-0 solve the subspace problem
+
+	    // rank-0: solve the subspace problem
 	    if(rank == 0){
 	       //------------------------------------------------------------------------
                // solve subspace problem and form full residuals: Res[i]=HX[i]-w[i]*X[i]
 	       //------------------------------------------------------------------------
-               subspace_solver(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
+               subspace_solver(ndim,nsub,neig,vbas,wbas,tmpE,rbas);
 	       //------------------------------------------------------------------------
 	       // compute norm of residual
                for(int i=0; i<neig; i++){
-                  auto norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
+                  double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
                   eigs(i,iter) = tmpE[i];
                   rnorm(i,iter) = norm;
                   rconv[i] = (norm < crit_v)? true : false;
                }
                auto t1 = tools::get_time();
                if(iprt >= 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
-               // check convergence and return (e,v) if applied 
                ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
-	    }
+	    } // rank-0
+
 #ifndef SERIAL
             if(size > 1) boost::mpi::broadcast(world, ifconv, 0);
-#endif	  
+#endif
+	    // if converged, return (es,vs) 
             if(ifconv || iter == maxcycle){
 #ifndef SERIAL
 	       if(size > 1){
@@ -279,15 +287,15 @@ struct pdvdsonSolver_nkr{
                linalg::xcopy(ndim*neig, vbas.data(), vs);
                break;
             }
-            // if not converged, improve the subspace by ri/(abs(D-ei)+damp) 
+
+            // if not converged, improve the subspace by adding new vectors
 	    int nindp = 0;
 	    if(rank == 0){
-               int nres = 0;
+               int nres = 0; // no. of residuals to be added
                for(int i=0; i<neig; i++){
                   if(rconv[i]) continue;
-	          std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, Diag, &tbas[nres*ndim],
-                                 [i,&tmpE,&damp](const Tm& r, const double& d){ return r/(std::abs(d-tmpE[i])+damp); });
-                  tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
+                  precondition(&rbas[i*ndim],&tbas[nres*ndim],tmpE[i]);
+		  tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
                   nres += 1;		
                }
                // *** this part is critical for better performance ***
@@ -297,31 +305,35 @@ struct pdvdsonSolver_nkr{
 	          linalg::xcopy(ndim, &tbas[index[i]*ndim], &rbas[i*ndim]); 
                }
                // re-orthogonalization and get nindp
-               nindp = linalg::get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
-	    }
+               nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas,rbas,crit_indp);
+	    } // rank-0
+
 #ifndef SERIAL
             if(size > 1) boost::mpi::broadcast(world, nindp, 0);	    
 #endif
-            if(nindp == 0){
+	    if(nindp == 0){
 	       std::cout << "Convergence failure: unable to generate new direction: nindp=0!" << std::endl;
                exit(1);
             }else{
-               // expand V and W
-               nindp = std::min(nindp,nbuff);
+	       // restart the subspace 
+	       if(nsub == nmax) nsub = neig; 
+	       // expand V and W
+	       nindp = std::min(nindp,nmax-nsub);
 #ifndef SERIAL
 	       if(size > 1) boost::mpi::broadcast(world, &rbas[0], ndim*nindp, 0);
 #endif	       
-	       linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*neig]);
-	       HVecs(nindp, &wbas[ndim*neig], &vbas[ndim*neig]);
-               nsub = neig+nindp;
+	       linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
+	       HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
+	       nsub += nindp; // update the subspace 
 	       if(rank == 0) linalg::check_orthogonality(ndim,nsub,vbas);
             }
+
          } // iter
-         if(rank == 0 && !ifconv){
-            std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
-         }
-	 auto tf = tools::get_time();    
 	 if(rank == 0){
+	    if(!ifconv){
+               std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
+            }
+	    auto tf = tools::get_time();    
 	    t_tot = tools::get_duration(tf-ti);
 	    t_rest = t_tot - t_cal - t_comm;
             std::cout << "TIMING for Davidson : " << t_tot

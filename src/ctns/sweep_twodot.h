@@ -263,6 +263,7 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::cref(scale), std::cref(size), std::cref(rank),
 		  std::cref(ndim), std::cref(blksize), 
 		  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace));
+/*
    }else if(schd.ctns.alg_hvec == 7){
       // BatchGEMM on GPU
       // symbolic formulae + intermediates + preallocation of workspace
@@ -275,7 +276,6 @@ void sweep_twodot(comb<Km>& icomb,
 		      		                 rank==0 && schd.ctns.verbose>0);
       opaddr[4] = inter._data;
 
-      /* 
       // GPU: copy operators (qops_dict & inter)
       // 1. allocate memery on GPU
       size_t tsize = qops_dict.at("l").size()
@@ -299,7 +299,6 @@ void sweep_twodot(comb<Km>& icomb,
       // 4. allocate memory for Davidson: x,y(=Hx),worktot
       worktot = mmtasks[0].batchsize*blksize*2;
       workspace = new Tm[2*ndim+worktot];
-      */
 
       if(debug && schd.ctns.verbose>0){
          std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
@@ -312,7 +311,7 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::cref(scale), std::cref(size), std::cref(rank),
 		  std::cref(ndim), std::cref(blksize), 
 		  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace));
-
+*/
    }else{
       std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
       exit(1);
