@@ -38,7 +38,6 @@ struct pdvdsonSolver_nkr{
                          << " maxcycle=" << maxcycle << std::endl; 
 	       std::cout << "          damping=" << damping << std::scientific 
                          << " crit_v=" << crit_v 
-                         << " crit_e=" << crit_e 
                          << " crit_indp=" << crit_indp << std::endl;
 	    }
 	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s" << std::endl;
@@ -193,12 +192,14 @@ struct pdvdsonSolver_nkr{
          }
       }
 
-      // Precondition of a residual 
+      // Precondition of a residual
       void precondition(const Tm* rvec, Tm* tvec, const double& ei){
          const double damp = damping;
+	 const double denorm = crit_denorm;
 	 std::transform(rvec, rvec+ndim, Diag, tvec,
-                        [&ei,&damp](const Tm& rk, const double& dk){
-			   return rk/(std::abs(dk-ei)+damp); 
+                        [&ei,&damp,&denorm](const Tm& rk, const double& dk){
+			   //return rk/(std::abs(dk-ei)+damp); 
+			   return std::abs(dk-ei)<denorm? rk/denorm : rk/(dk-ei);
 			});
       }
 
@@ -294,7 +295,17 @@ struct pdvdsonSolver_nkr{
                int nres = 0; // no. of residuals to be added
                for(int i=0; i<neig; i++){
                   if(rconv[i]) continue;
-                  precondition(&rbas[i*ndim],&tbas[nres*ndim],tmpE[i]);
+                  
+		  /*
+		  precondition(&vbas[i*ndim],&tbas[nres*ndim],tmpE[i]);
+		  auto tr = linalg::xdot(ndim,&tbas[nres*ndim],&rbas[i*ndim]);
+		  auto tv = linalg::xdot(ndim,&tbas[nres*ndim],&vbas[i*ndim]);  
+	          auto fac = -tr/tv;
+		  linalg::xaxpy(ndim, fac, &vbas[i*ndim], &rbas[i*ndim]);
+		  */  
+		  precondition(&rbas[i*ndim],&tbas[nres*ndim],tmpE[i]);
+		  
+
 		  tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
                   nres += 1;		
                }
@@ -352,9 +363,9 @@ struct pdvdsonSolver_nkr{
       int maxcycle = 200;
       // settings
       int iprt = 0;
-      double crit_e = 1.e-12; // not used actually
       double crit_indp = 1.e-12;
       double crit_skewH = 1.e-8;
+      double crit_denorm = 1.e-12;
       double damping = 1.e-1;
       int nbuff = 4; // maximal additional vectors
       int nmvp = 0;
