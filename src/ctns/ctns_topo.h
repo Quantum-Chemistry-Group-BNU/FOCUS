@@ -109,7 +109,7 @@ struct topology{
       // sweep related 
       std::vector<directed_bond> get_sweeps(const bool debug=false) const;
       std::vector<int> check_partition(const int dots, const directed_bond& dbond, 
-			               const bool debug, const int verbose) const;
+			               const bool debug, const int verbose=0) const;
       // get qops around a dot p 
       std::string get_fqop(const comb_coord& p,
 			   const std::string kind,

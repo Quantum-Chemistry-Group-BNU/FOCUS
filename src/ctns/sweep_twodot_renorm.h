@@ -24,7 +24,7 @@ void twodot_decimation(const input::schedule& schd,
    const auto& dbond = sweeps.seq[ibond];
    const int& dbranch = schd.ctns.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
-   const bool iftrunc = (ksupp > std::log(dcut)); 
+   const bool iftrunc = 2*ksupp >= (int)std::log2(dcut); 
    const auto& noise = sweeps.ctrls[isweep].noise;
    if(debug){
       std::cout <<" (rdm_vs_svd,dbranch,dcut,iftrunc,noise)=" 
@@ -222,7 +222,7 @@ void twodot_renorm(comb<Km>& icomb,
    // 1. build reduced density matrix & perform decimation
    stensor2<Tm> rot;
    if(rank == 0){
-      auto dims = icomb.topo.check_partition(2, dbond, debug, schd.ctns.verbose);
+      auto dims = icomb.topo.check_partition(2, dbond, false);
       int ksupp;
       if(superblock == "lc1"){
          ksupp = dims[0] + dims[2];
