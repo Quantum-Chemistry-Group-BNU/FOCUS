@@ -77,7 +77,7 @@ inline void decimation_selection(const bool ifkr,
               << " wts=" << wts << " accum=" << accum << " deff=" << deff 
   	      << std::endl;
       }else{
-// ZL@20220517 disable such choice 
+// ZL@20220517 disable such choice, since it will create many sector with dim=1 
 /*
 	 // additional: kept at least one state per sector
 	 if(!ifmatched[br]) continue;
@@ -105,6 +105,7 @@ inline void decimation_selection(const bool ifkr,
 template <typename Tm>
 void decimation_row_nkr(const qbond& qs1,
 		        const qbond& qs2,
+			const bool iftrunc,
 		        const int dcut,
 			const double rdm_vs_svd,
 		        const std::vector<stensor2<Tm>>& wfs2,
@@ -131,8 +132,7 @@ void decimation_row_nkr(const qbond& qs1,
    }
    
    // 0. untruncated case
-   int dim12 = qrow.get_dimAll();
-   if(dim12 <= dcut){
+   if(!iftrunc){
       auto isym = qrow.get_sym(0).isym();
       stensor2<Tm> qt2(qsym(isym), qrow, qrow); // identity matrix
       for(int br=0; br<nqr; br++){
@@ -145,7 +145,7 @@ void decimation_row_nkr(const qbond& qs1,
       }
       rot = std::move(qt2);
       dwt = 0.0;
-      deff = dim12;
+      deff = qt2.rows();
       return;
    }
 
@@ -234,6 +234,7 @@ void decimation_row_nkr(const qbond& qs1,
 template <typename Tm>
 void decimation_row_kr(const qbond& qs1,
 		       const qbond& qs2,
+		       const bool iftrunc,
 		       const int dcut,
 		       const double rdm_vs_svd,
 		       const std::vector<stensor2<Tm>>& wfs2,
@@ -246,6 +247,7 @@ void decimation_row_kr(const qbond& qs1,
 template <>
 inline void decimation_row_kr(const qbond& qs1,
 		              const qbond& qs2,
+			      const bool iftrunc,
 		              const int dcut,
 		              const double rdm_vs_svd,
 		              const std::vector<stensor2<std::complex<double>>>& wfs2,
@@ -396,6 +398,7 @@ template <typename Tm>
 void decimation_row(const bool ifkr,
                     const qbond& qs1,
 		    const qbond& qs2,
+		    const bool iftrunc,
 		    const int dcut,
 		    const double rdm_vs_svd,
 		    const std::vector<stensor2<Tm>>& wfs2,
@@ -407,9 +410,9 @@ void decimation_row(const bool ifkr,
    if(debug) std::cout << "ctns::decimation_row fname=" << fname << std::endl;
    std::ofstream fout(fname);
    if(!ifkr){
-      decimation_row_nkr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);
+      decimation_row_nkr(qs1, qs2, iftrunc, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);
    }else{
-      decimation_row_kr(qs1, qs2, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);
+      decimation_row_kr(qs1, qs2, iftrunc, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);
    }
    fout.close();
 }

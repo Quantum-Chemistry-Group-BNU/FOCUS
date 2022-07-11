@@ -8,6 +8,9 @@ namespace ctns{
 
 const double thresh_noise = 1.e-10;
 extern const double thresh_noise;
+   
+const double thresh_canon = 1.e-10;
+extern const double thresh_canon;
 
 template <typename Tm>
 void onedot_decimation(const input::schedule& schd,
@@ -16,6 +19,7 @@ void onedot_decimation(const input::schedule& schd,
 		       const int ibond, 
 		       const bool ifkr,
 		       const std::string superblock,
+		       const int ksupp,
 		       const linalg::matrix<Tm>& vsol,
 		       stensor3<Tm>& wf,
 		       stensor2<Tm>& rot, 
@@ -25,11 +29,12 @@ void onedot_decimation(const input::schedule& schd,
    const auto& dbond = sweeps.seq[ibond];
    const int& dbranch = schd.ctns.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
+   const bool iftrunc = (ksupp > std::log(dcut)); 
    const auto& noise = sweeps.ctrls[isweep].noise;
    if(debug){
-      std::cout <<" (rdm_vs_svd,dbranch,dcut,noise)=" 
+      std::cout <<" (rdm_vs_svd,dbranch,dcut,iftrunc,noise)=" 
                 << std::scientific << std::setprecision(1) << rdm_vs_svd << ","
-                << dbranch << "," << dcut << ","
+                << dbranch << "," << dcut << "," << iftrunc << ","
                 << noise << std::endl;
    }
    auto& result = sweeps.opt_result[isweep][ibond];
@@ -45,7 +50,7 @@ void onedot_decimation(const input::schedule& schd,
 	 wfs2[i] = std::move(wf2);
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qmid, 
-		     dcut, rdm_vs_svd, wfs2, 
+		     iftrunc, dcut, rdm_vs_svd, wfs2, 
 		     rot, result.dwt, result.deff, fname,
 		     debug);
 
@@ -61,7 +66,7 @@ void onedot_decimation(const input::schedule& schd,
 	 wfs2[i] = std::move(wf2);
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qcol, 
-      		     dcut, rdm_vs_svd, wfs2, 
+      		     iftrunc, dcut, rdm_vs_svd, wfs2, 
 		     rot, result.dwt, result.deff, fname,
 		     debug);
 
@@ -75,7 +80,7 @@ void onedot_decimation(const input::schedule& schd,
 	 wfs2[i] = std::move(wf2);
       }
       decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
-      		     dcut, rdm_vs_svd, wfs2, 
+      		     iftrunc, dcut, rdm_vs_svd, wfs2, 
 		     rot, result.dwt, result.deff, fname,
 		     debug);
       rot = rot.T(); // rot[alpha,r] = (V^+)
@@ -173,28 +178,36 @@ void onedot_renorm(comb<Km>& icomb,
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
 
-   // build reduced density matrix & perform decimation
+   // 1. build reduced density matrix & perform decimation
    stensor2<Tm> rot;
    if(rank == 0){
+      auto dims = icomb.topo.check_partition(1, dbond, debug, schd.ctns.verbose);
+      int ksupp;
+      if(superblock == "lc"){
+         ksupp = dims[0] + dims[2];
+      }else if(superblock == "lr"){
+         ksupp = dims[0] + dims[1];
+      }else if(superblock == "cr"){
+         ksupp = dims[1] + dims[2];
+      }
       std::string fname = scratch+"/decimation"
 	       	        + "_isweep"+std::to_string(isweep)
-	                + "_ibond"+std::to_string(ibond)+".txt"; 
+	                + "_ibond"+std::to_string(ibond)+".txt";
       onedot_decimation(schd, sweeps, isweep, ibond, ifkr, 
-		        superblock, vsol, wf, rot, fname);
+		        superblock, ksupp, vsol, wf, rot, fname);
    }
 #ifndef SERIAL
    if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
 #endif
    timing.td = tools::get_time();
 
-   // prepare guess for the next site
+   // 2. prepare guess for the next site
    if(rank == 0 && schd.ctns.guess){
       onedot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
    }
    timing.te = tools::get_time();
 
-   // renorm operators	 
-   const bool thresh = 1.e-10;
+   // 3. renorm operators	 
    const auto p = dbond.get_current();
    const auto& pdx = icomb.topo.rindex.at(p); 
    std::string fname;
@@ -205,9 +218,9 @@ void onedot_renorm(comb<Km>& icomb,
       icomb.lsites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
       //-------------------------------------------------------------------
       rot -= icomb.lsites[pdx].merge_lc();
-      assert(rot.normF() < thresh);
+      assert(rot.normF() < thresh_canon);
       auto ovlp = contract_qt3_qt3("lc", icomb.lsites[pdx], icomb.lsites[pdx]);
-      assert(ovlp.check_identityMatrix(thresh) < thresh);
+      assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
       //-------------------------------------------------------------------
       oper_renorm_opAll("lc", icomb, p, int2e, int1e, schd,
 		        lqops, cqops, qops, fname); 
@@ -215,9 +228,9 @@ void onedot_renorm(comb<Km>& icomb,
       icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
       //-------------------------------------------------------------------
       rot -= icomb.lsites[pdx].merge_lr();
-      assert(rot.normF() < thresh);
+      assert(rot.normF() < thresh_canon);
       auto ovlp = contract_qt3_qt3("lr", icomb.lsites[pdx],icomb.lsites[pdx]);
-      assert(ovlp.check_identityMatrix(thresh) < thresh);
+      assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
       //-------------------------------------------------------------------
       oper_renorm_opAll("lr", icomb, p, int2e, int1e, schd,
 		        lqops, rqops, qops, fname); 
@@ -225,9 +238,9 @@ void onedot_renorm(comb<Km>& icomb,
       icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
       //-------------------------------------------------------------------
       rot -= icomb.rsites[pdx].merge_cr();
-      assert(rot.normF() < thresh);
+      assert(rot.normF() < thresh_canon);
       auto ovlp = contract_qt3_qt3("cr", icomb.rsites[pdx],icomb.rsites[pdx]);
-      assert(ovlp.check_identityMatrix(thresh) < thresh);
+      assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
       //-------------------------------------------------------------------
       oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,
 		        cqops, rqops, qops, fname); 

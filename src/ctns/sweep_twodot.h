@@ -54,7 +54,7 @@ void sweep_twodot(comb<Km>& icomb,
 
    // 0. check partition
    const auto& dbond = sweeps.seq[ibond];
-   const bool ifNC = icomb.topo.check_partition(2, dbond, debug, schd.ctns.verbose);
+   icomb.topo.check_partition(2, dbond, debug, schd.ctns.verbose);
 
    // 1. load operators 
    auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug && schd.ctns.verbose>0);

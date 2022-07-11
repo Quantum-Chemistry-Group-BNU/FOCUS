@@ -54,7 +54,7 @@ void sweep_onedot(comb<Km>& icomb,
 
    // check partition 
    const auto& dbond = sweeps.seq[ibond];
-   const bool ifNC = icomb.topo.check_partition(1, dbond, debug, schd.ctns.verbose);
+   icomb.topo.check_partition(1, dbond, debug, schd.ctns.verbose);
 
    // 1. load operators 
    auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
@@ -282,7 +282,7 @@ void sweep_rwfuns(comb<Km>& icomb,
       const bool ifkr = Km::ifkr;
       std::string fname = scratch+"/decimation_site0.txt";
       decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
-		     dcut, schd.ctns.rdm_vs_svd, wfs2,
+		     true, dcut, schd.ctns.rdm_vs_svd, wfs2,
 		     rot, dwt, deff, fname, 
 		     schd.ctns.verbose>0);
       rot = rot.T(); 

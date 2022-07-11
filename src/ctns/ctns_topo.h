@@ -108,8 +108,8 @@ struct topology{
       std::vector<int> get_suppr(const comb_coord& p) const{ return get_node(p).rorbs; }
       // sweep related 
       std::vector<directed_bond> get_sweeps(const bool debug=false) const;
-      bool check_partition(const int dots, const directed_bond& dbond, 
-			   const bool debug, const int verbose) const;
+      std::vector<int> check_partition(const int dots, const directed_bond& dbond, 
+			               const bool debug, const int verbose) const;
       // get qops around a dot p 
       std::string get_fqop(const comb_coord& p,
 			   const std::string kind,

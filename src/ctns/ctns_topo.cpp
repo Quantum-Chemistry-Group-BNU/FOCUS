@@ -312,11 +312,12 @@ vector<int> topology::get_supp_rest(const vector<int>& rsupp) const{
 }
 
 // sweep related
-bool topology::check_partition(const int dots,
-			       const directed_bond& dbond,
-                               const bool debug,
-			       const int verbose) const{
+std::vector<int> topology::check_partition(const int dots,
+			                   const directed_bond& dbond,
+                                           const bool debug,
+			                   const int verbose) const{
    if(debug) cout << "ctns::topology::check_partition: ";
+   std::vector<int> dims;
    bool ifNC;
    auto p = dbond.get_current();
    if(dots == 1){
@@ -327,13 +328,15 @@ bool topology::check_partition(const int dots,
       int sl = suppl.size();
       int sr = suppr.size();
       int sc = suppc.size();
+      dims.resize(3);
+      dims[0] = sl;
+      dims[1] = sr;
+      dims[2] = sc;
       assert(sc+sl+sr == nphysical);
       ifNC = (sl <= sr);
       if(debug){
-         cout << "(sl,sr,sc)="
-              << sl << "," << sr << "," << sc
-	      << " ifNC=" << ifNC
-              << endl;
+         cout << "(sl,sr,sc)=" << sl << "," << sr << "," << sc
+	      << " ifNC=" << ifNC << endl;
 	 if(verbose > 0){
             tools::print_vector(suppl, "suppl");
             tools::print_vector(suppr, "suppr");
@@ -370,6 +373,11 @@ bool topology::check_partition(const int dots,
       int sr = suppr.size();
       int sc1 = suppc1.size();
       int sc2 = suppc2.size();
+      dims.resize(4);
+      dims[0] = sl;
+      dims[1] = sr;
+      dims[2] = sc1;
+      dims[3] = sc2;
       assert(sc1+sc2+sl+sr == nphysical);
       ifNC = (sl+sc1 <= sc2+sr);
       if(debug){
@@ -384,8 +392,8 @@ bool topology::check_partition(const int dots,
             tools::print_vector(suppc2, "suppc2");
 	 }
       }
-   }
-   return ifNC;
+   } // dots
+   return dims;
 }
 
 // get fqop around node p for kind = {"l","c","r"}
