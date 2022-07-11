@@ -139,12 +139,12 @@ LOGS
     - Complex version: 'R'?
     - Kramers version?
 
- * Davidson solver:
-    - tuning size of subspace & preconditioning
-
- * Sweep decimation:
-    - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are almost exact,
-      unless some quantum numbers are missing from the start.
+ * Better sweeps:
+    - Reducing the number of Hx in Davidson solver:
+    	- tuning size of subspace & preconditioning
+    - Sweep decimation:
+        - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are 
+          almost exact, unless some quantum numbers are missing from the start.
  
  * Towards large-scale parallelization [DONE2022/XX/XX]
     - GPU for contractions? BatchedGEMM
