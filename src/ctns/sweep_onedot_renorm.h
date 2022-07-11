@@ -12,7 +12,8 @@ extern const double thresh_noise;
 const double thresh_canon = 1.e-10;
 extern const double thresh_canon;
 
-inline bool start_truncation(ksupp, dcut){
+inline bool start_truncation(const int ksupp, 
+		             const int dcut){
    return (ksupp > 3) || (2*ksupp >= (int)(std::ceil(std::log2(dcut))));
 }
 
