@@ -24,7 +24,7 @@ void twodot_decimation(const input::schedule& schd,
    const auto& dbond = sweeps.seq[ibond];
    const int& dbranch = schd.ctns.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
-   const bool iftrunc = 2*ksupp >= (int)(std::ceil(std::log2(dcut)));
+   const bool iftrunc = start_truncation(ksupp, dcut);
    const auto& noise = sweeps.ctrls[isweep].noise;
    if(debug){
       std::cout <<" (rdm_vs_svd,dbranch,dcut,iftrunc,noise)=" 

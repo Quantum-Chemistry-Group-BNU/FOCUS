@@ -29,7 +29,7 @@ struct dot_timing{
       this->print_part("decim", dt3, dtacc); dtacc += dt4;
       this->print_part("guess", dt4, dtacc); dtacc += dt5;
       this->print_part("renrm", dt5, dtacc); dtacc += dt6;
-      this->print_part("save" , dt6, dtacc);
+      this->print_part("save ", dt6, dtacc);
    }
    void analysis(const std::string msg,
 		 const bool debug=true){
