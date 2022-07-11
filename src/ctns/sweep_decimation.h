@@ -138,7 +138,10 @@ void decimation_row_nkr(const qbond& qs1,
       for(int br=0; br<nqr; br++){
          const auto& qr = qrow.get_sym(br);
          const int rdim = qrow.get_dim(br);
-	 qt2(br,br) = identity_matrix<Tm>(rdim);
+	 auto blk = qt2(br,br);
+	 for(int r=0; r<rdim; r++){
+            blk(r,r) = 1.0;
+	 } // r
       }
       rot = std::move(qt2);
       dwt = 0.0;
