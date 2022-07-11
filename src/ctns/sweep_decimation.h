@@ -94,9 +94,11 @@ inline void decimation_selection(const bool ifkr,
       }
    } // iqr
    fout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
-        << " dwt=" << dwt << " SvN=" << SvN << std::endl;
+        << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt 
+	<< " SvN=" << std::noshowpos << SvN << std::endl;
    std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
-	     << " dwt=" << dwt << " SvN=" << SvN << std::endl;
+	     << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt 
+             << " SvN=" << std::noshowpos << SvN << std::endl;
 }
 
 // generate renormalized basis from wfs2[row,col] for row
@@ -110,13 +112,13 @@ void decimation_row_nkr(const qbond& qs1,
 		        double& dwt,
 		        int& deff,
 			std::ofstream& fout){
-   auto qprod = qmerge(qs1, qs2);
-   auto qrow = qprod.first;
-   auto dpt = qprod.second;
+   const auto qprod = qmerge(qs1, qs2);
+   const auto& qrow = qprod.first;
+   const auto& dpt = qprod.second;
    assert(qrow == wfs2[0].info.qrow);
-   auto qcol = wfs2[0].info.qcol;
+   const auto& qcol = wfs2[0].info.qcol;
    int nroots = wfs2.size();
-   const int nqr = qrow.size();
+   int nqr = qrow.size();
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
 #else
@@ -126,6 +128,22 @@ void decimation_row_nkr(const qbond& qs1,
       std::cout << "ctns::decimation_row_nkr dcut=" << dcut 
 	        << " nqr=" << nqr << " maxthreads=" << maxthreads
 		<< std::endl;
+   }
+   
+   // 0. untruncated case
+   int dim12 = qrow.get_dimAll();
+   if(dim12 <= dcut){
+      auto isym = qrow.get_sym(0).isym();
+      stensor2<Tm> qt2(qsym(isym), qrow, qrow); // identity matrix
+      for(int br=0; br<nqr; br++){
+         const auto& qr = qrow.get_sym(br);
+         const int rdim = qrow.get_dim(br);
+	 qt2(br,br) = identity_matrix<Tm>(rdim);
+      }
+      rot = std::move(qt2);
+      dwt = 0.0;
+      deff = dim12;
+      return;
    }
 
    // 1. compute reduced basis
@@ -233,13 +251,14 @@ inline void decimation_row_kr(const qbond& qs1,
 		              int& deff,
 			      std::ofstream& fout){
    using Tm = std::complex<double>;
-   auto qprod = qmerge(qs1, qs2);
-   auto qrow = qprod.first;
-   auto dpt = qprod.second;
+   const auto qprod = qmerge(qs1, qs2);
+   const auto& qrow = qprod.first;
+   const auto& dpt = qprod.second;
    assert(qrow == wfs2[0].info.qrow);
-   auto qcol = wfs2[0].info.qcol;
+   const auto& qcol = wfs2[0].info.qcol;
    int nroots = wfs2.size();
-   const int nqr = qrow.size();
+   int nqr = qrow.size();
+   int dim12 = qrow.get_dimAll(); 
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
 #else

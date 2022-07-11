@@ -215,7 +215,7 @@ inline void sweep_data::summary(const int isweep){
       const auto& eopt_jsweep = min_result[jsweep].eopt;
       std::cout << std::setw(10) << jsweep
 	        << std::setw(8) << ctrl.dcut << " "
-      	        << std::showpos << std::scientific << std::setprecision(2) << dwt
+      	        << std::showpos << std::scientific << std::setprecision(3) << dwt
                 << std::noshowpos << std::defaultfloat << std::setprecision(12);
       for(int j=0; j<nroots; j++){ 
          std::cout << " e[" << j << "]=" 

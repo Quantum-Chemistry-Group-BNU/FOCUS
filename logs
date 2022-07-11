@@ -138,6 +138,9 @@ LOGS
     - Renormalization? [smaller temporary memory]
     - Complex version: 'R'?
     - Kramers version?
+
+ * Davidson solver:
+    - tuning size of subspace & preconditioning
  
  * Towards large-scale parallelization [DONE2022/XX/XX]
     - GPU for contractions? BatchedGEMM
