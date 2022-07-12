@@ -14,7 +14,8 @@ extern const double thresh_canon;
 
 inline bool start_truncation(const int ksupp, 
 		             const int dcut){
-   return (ksupp > 3) || (2*ksupp >= (int)(std::ceil(std::log2(dcut))));
+   int knotrunc = std::min(4,(int)(0.5*std::log2(dcut)));
+   return ksupp > knotrunc;
 }
 
 template <typename Tm>

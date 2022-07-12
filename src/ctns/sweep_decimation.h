@@ -146,7 +146,7 @@ void decimation_row_nkr(const qbond& qs1,
       rot = std::move(qt2);
       dwt = 0.0;
       deff = qrow.get_dimAll();
-      std::cout << "decimation summary: all " << deff << " states are kept" << std::endl;
+      std::cout << "decimation summary: keep all " << deff << " states" << std::endl;
       return;
    }
 
