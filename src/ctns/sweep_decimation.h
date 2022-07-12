@@ -26,9 +26,9 @@ inline void decimation_selection(const bool ifkr,
 		                 int& deff,
    			         std::vector<int>& br_kept,
    			         std::vector<std::pair<qsym,int>>& dims,
-				 std::ofstream& fout){
-   // sort all sigs
-   auto index = tools::sort_index(sig2all, 1);
+		    		 const std::string fname){
+   std::ofstream fout(fname);
+   auto index = tools::sort_index(sig2all, 1); // sort all sigs
    const int nqr = qrow.size();
    std::vector<int> kept_dim(nqr,0); // no. of states kept in each symmetry sector
    std::vector<double> kept_wts(nqr,0.0); // weights kept in each symmetry sector
@@ -96,6 +96,7 @@ inline void decimation_selection(const bool ifkr,
    fout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
         << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt 
 	<< " SvN=" << std::noshowpos << SvN << std::endl;
+   fout.close();
    std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
 	     << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt 
              << " SvN=" << std::noshowpos << SvN << std::endl;
@@ -112,7 +113,7 @@ void decimation_row_nkr(const qbond& qs1,
 		        stensor2<Tm>& rot,
 		        double& dwt,
 		        int& deff,
-			std::ofstream& fout){
+		        const std::string fname){
    const auto qprod = qmerge(qs1, qs2);
    const auto& qrow = qprod.first;
    const auto& dpt = qprod.second;
@@ -146,7 +147,7 @@ void decimation_row_nkr(const qbond& qs1,
       rot = std::move(qt2);
       dwt = 0.0;
       deff = qrow.get_dimAll();
-      std::cout << "decimation summary: keep all " << deff << " states" << std::endl;
+      std::cout << "keep all " << deff << " states" << std::endl;
       return;
    }
 
@@ -210,7 +211,7 @@ void decimation_row_nkr(const qbond& qs1,
    std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
    decimation_selection(false, qrow, ifmatched, sig2all, idx2sector, dcut, 
-		        dwt, deff, br_kept, dims, fout);
+		        dwt, deff, br_kept, dims, fname);
    qbond qkept(dims);
    auto isym = qkept.get_sym(0).isym();
    stensor2<Tm> qt2(qsym(isym), qrow, qkept);
@@ -242,7 +243,7 @@ void decimation_row_kr(const qbond& qs1,
 		       stensor2<Tm>& rot,
 		       double& dwt,
 		       int& deff,
-		       std::ofstream& fout){
+		       const std::string fname){
    tools::exit("error: decimation_row_kr only works for complex<double>!");
 }
 template <>
@@ -255,7 +256,7 @@ inline void decimation_row_kr(const qbond& qs1,
 		              stensor2<std::complex<double>>& rot,
 		              double& dwt,
 		              int& deff,
-			      std::ofstream& fout){
+		              const std::string fname){
    using Tm = std::complex<double>;
    const auto qprod = qmerge(qs1, qs2);
    const auto& qrow = qprod.first;
@@ -359,7 +360,7 @@ inline void decimation_row_kr(const qbond& qs1,
    std::vector<int> br_kept;
    std::vector<std::pair<qsym,int>> dims;
    decimation_selection(true, qrow, ifmatched, sig2all, idx2sector, dcut, 
-		        dwt, deff, br_kept, dims, fout);
+		        dwt, deff, br_kept, dims, fname);
    qbond qkept(dims);
    auto isym = qkept.get_sym(0).isym();
    stensor2<Tm> qt2(qsym(isym), qrow, qkept);
@@ -408,14 +409,15 @@ void decimation_row(const bool ifkr,
 		    int& deff,
 		    const std::string fname,
 		    const bool debug){
-   if(debug) std::cout << "ctns::decimation_row fname=" << fname << std::endl;
-   std::ofstream fout(fname);
+   if(debug) std::cout << "ctns::decimation_row: ";
+   if(iftrunc) std::cout << "fname=" << fname << std::endl;
    if(!ifkr){
-      decimation_row_nkr(qs1, qs2, iftrunc, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);
+      decimation_row_nkr(qs1, qs2, iftrunc, dcut, rdm_vs_svd, 
+		         wfs2, rot, dwt, deff, fname);
    }else{
-      decimation_row_kr(qs1, qs2, iftrunc, dcut, rdm_vs_svd, wfs2, rot, dwt, deff, fout);
+      decimation_row_kr(qs1, qs2, iftrunc, dcut, rdm_vs_svd, 
+		        wfs2, rot, dwt, deff, fname);
    }
-   fout.close();
 }
 
 } // ctns
