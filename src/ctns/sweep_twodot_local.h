@@ -125,6 +125,7 @@ void twodot_localCI(comb<Km>& icomb,
    assert(Km::ifkr == false);
    pdvdsonSolver_nkr<Tm> solver(ndim, neig, eps, schd.ctns.maxcycle);
    solver.iprt = schd.ctns.verbose;
+   solver.nbuff = schd.ctns.nbuff;
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL
@@ -188,6 +189,7 @@ inline void twodot_localCI(comb<qkind::cNK>& icomb,
    assert(schd.ctns.cisolver == 1 && schd.ctns.guess);
    pdvdsonSolver_kr<Tm,stensor4<Tm>> solver(ndim, neig, eps, schd.ctns.maxcycle, parity, wf); 
    solver.iprt = schd.ctns.verbose;
+   solver.nbuff = schd.ctns.nbuff;
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL

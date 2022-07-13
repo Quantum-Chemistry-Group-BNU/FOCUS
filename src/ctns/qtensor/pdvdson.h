@@ -66,7 +66,6 @@ struct pdvdsonSolver_nkr{
 	 world.barrier();
 #endif
 	 double tcal = 0.0, tcomm = 0.0;
-         auto ti = tools::get_time();
          for(int istate=0; istate<nstate; istate++){
 	    auto t0 = tools::get_time();
             HVec(y+istate*ndim, x+istate*ndim); // y=H*x
@@ -83,16 +82,7 @@ struct pdvdsonSolver_nkr{
 #endif
          }
          nmvp += nstate;
-         auto tf = tools::get_time();
          if(rank == 0){
-/*
-            auto dt = tools::get_duration(tf-ti);
-	    std::cout << "T(tot/cal/comm)=" << dt << "," 
-		      << tcal << "," << tcomm
-                      << " for nstate=" << nstate 
-		      << " tav=" << dt/nstate 
-		      << std::endl;
-*/
 	    t_cal += tcal;
 	    t_comm += tcomm;
          }
@@ -198,8 +188,7 @@ struct pdvdsonSolver_nkr{
 	 const double denorm = crit_denorm;
 	 std::transform(rvec, rvec+ndim, Diag, tvec,
                         [&ei,&damp,&denorm](const Tm& rk, const double& dk){
-			   //return rk/(std::abs(dk-ei)+damp); 
-			   return std::abs(dk-ei)<denorm? rk/denorm : rk/(dk-ei);
+			   return rk/(std::abs(dk-ei)+damp); 
 			});
       }
 
@@ -295,17 +284,7 @@ struct pdvdsonSolver_nkr{
                int nres = 0; // no. of residuals to be added
                for(int i=0; i<neig; i++){
                   if(rconv[i]) continue;
-                  
-		  /*
-		  precondition(&vbas[i*ndim],&tbas[nres*ndim],tmpE[i]);
-		  auto tr = linalg::xdot(ndim,&tbas[nres*ndim],&rbas[i*ndim]);
-		  auto tv = linalg::xdot(ndim,&tbas[nres*ndim],&vbas[i*ndim]);  
-	          auto fac = -tr/tv;
-		  linalg::xaxpy(ndim, fac, &vbas[i*ndim], &rbas[i*ndim]);
-		  */  
 		  precondition(&rbas[i*ndim],&tbas[nres*ndim],tmpE[i]);
-		  
-
 		  tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
                   nres += 1;		
                }
@@ -360,18 +339,19 @@ struct pdvdsonSolver_nkr{
       double* Diag;
       std::function<void(Tm*, const Tm*)> HVec;
       double crit_v = 1.e-5;  // used control parameter
-      int maxcycle = 200;
+      int maxcycle = 30;
+      int nbuff = 6; // maximal additional vectors
       // settings
       int iprt = 0;
       double crit_indp = 1.e-12;
       double crit_skewH = 1.e-8;
       double crit_denorm = 1.e-12;
-      double damping = 1.e-1;
-      int nbuff = 4; // maximal additional vectors
-      int nmvp = 0;
+      double damping = 1.e-12;
 #ifndef SERIAL
       boost::mpi::communicator world;
 #endif
+      // statistics
+      int nmvp = 0;
       double t_tot = 0.0;
       double t_cal = 0.0; // Hx
       double t_comm = 0.0; // reduce

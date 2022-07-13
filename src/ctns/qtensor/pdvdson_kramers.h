@@ -74,7 +74,6 @@ struct pdvdsonSolver_kr{
 	 world.barrier();
 #endif
 	 double tcal = 0.0, tcomm = 0.0;
-         auto ti = tools::get_time();
          for(int istate=0; istate<nstate; istate++){
 	    auto t0 = tools::get_time();
             HVec(y+istate*ndim, x+istate*ndim); // y = tilde{H}*x
@@ -100,16 +99,7 @@ struct pdvdsonSolver_kr{
             //-------------------------------------------------------------
          } // istate
          nmvp += nstate;
-         auto tf = tools::get_time();
          if(rank == 0){
-/*
-            auto dt = tools::get_duration(tf-ti);
-	    std::cout << "T(tot/cal/comm)=" << dt << "," 
-		      << tcal << "," << tcomm
-                      << " for nstate=" << nstate 
-		      << " tav=" << dt/nstate << " s" 
-		      << std::endl;
-*/
 	    t_cal += tcal;
 	    t_comm += tcomm;
          }

@@ -238,6 +238,8 @@ void params_ctns::read(ifstream& istrm){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
          maxcycle = stoi(line.substr(8));
+      }else if(line.substr(0,5)=="nbuff"){
+         nbuff = stoi(line.substr(5));
       }else if(line.substr(0,7)=="dbranch"){
 	 dbranch = stoi(line.substr(7));
       }else if(line.substr(0,8)=="maxsweep"){
@@ -334,6 +336,7 @@ void params_ctns::print() const{
    // dvdson
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
+   cout << "nbuff = " << nbuff << endl;
    // io
    cout << "rcanon_load = " << rcanon_load << endl; 
    cout << "rcanon_file = " << rcanon_file << endl;
