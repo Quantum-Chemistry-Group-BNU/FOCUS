@@ -93,7 +93,7 @@ private:
 	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
 	 & nroots & guess & maxsweep & maxbond & lastdot & ctrls
 	 & alg_hvec & alg_renorm & ifdist1 & save_formulae & sort_formulae & hxorder
-	 & cisolver & maxcycle & nbuff
+	 & cisolver & maxcycle & nbuff & damping
          & rcanon_load & rcanon_file & iroot & nsample & ndetprt; 
    }
 public:
@@ -136,6 +136,7 @@ public:
    int cisolver = 1;
    int maxcycle = 100;
    int nbuff = 10;
+   double damping = 0.1;
    // io
    bool rcanon_load = false;
    std::string rcanon_file = "rcanon.info";

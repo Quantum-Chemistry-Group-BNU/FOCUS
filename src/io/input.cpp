@@ -240,6 +240,8 @@ void params_ctns::read(ifstream& istrm){
          maxcycle = stoi(line.substr(8));
       }else if(line.substr(0,5)=="nbuff"){
          nbuff = stoi(line.substr(5));
+      }else if(line.substr(0,7)=="damping"){
+         damping = stod(line.substr(7));
       }else if(line.substr(0,7)=="dbranch"){
 	 dbranch = stoi(line.substr(7));
       }else if(line.substr(0,8)=="maxsweep"){
@@ -337,6 +339,7 @@ void params_ctns::print() const{
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
    cout << "nbuff = " << nbuff << endl;
+   cout << "damping = " << damping << endl;
    // io
    cout << "rcanon_load = " << rcanon_load << endl; 
    cout << "rcanon_file = " << rcanon_file << endl;

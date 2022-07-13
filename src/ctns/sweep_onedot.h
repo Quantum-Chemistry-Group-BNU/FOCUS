@@ -127,12 +127,14 @@ void sweep_onedot(comb<Km>& icomb,
 	                             + "_isweep"+std::to_string(isweep)
 	                	     + "_ibond"+std::to_string(ibond) + ".txt";
    HVec_type<Tm> HVec;
-   Hx_functors<Tm> Hx_funs;
-   symbolic_task<Tm> H_formulae;
-   bipart_task<Tm> H_formulae2;
-   intermediates<Tm> inter;
-   Hxlist<Tm> Hxlst;
-   Hxlist2<Tm> Hxlst2;
+   Hx_functors<Tm> Hx_funs; // hvec0
+   symbolic_task<Tm> H_formulae; // hvec1,2
+   bipart_task<Tm> H_formulae2; // hvec3
+   intermediates<Tm> inter; // hvec4,5,6
+   Hxlist<Tm> Hxlst; // hvec4
+   Hxlist2<Tm> Hxlst2; // hvec5
+   MMtasks<Tm> mmtasks; // hvec6
+   Tm scale = Km::ifkr? 0.5*ecore : 1.0*ecore;
    std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c",2}};
    Tm* ptrs[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data, qops_dict.at("c")._data, 
 	 	  nullptr, nullptr};
@@ -140,6 +142,10 @@ void sweep_onedot(comb<Km>& icomb,
    using std::placeholders::_1;
    using std::placeholders::_2;
    const bool debug_formulae = schd.ctns.verbose>0;
+   if(schd.ctns.alg_hvec >=4){
+      std::cout << "inter does not support onedot yet!" << std::endl;
+      exit(1); 
+   }
    if(schd.ctns.alg_hvec == 0){
       Hx_funs = onedot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
 		      		   schd.ctns.ifdist1, debug_formulae);

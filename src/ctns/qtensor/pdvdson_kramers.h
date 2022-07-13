@@ -38,14 +38,16 @@ struct pdvdsonSolver_kr{
 	 const std::string ifconverge = "-+";
          if(iter == 1){
             if(iprt > 0){
+               int nmax = std::min(ndim,neig+nbuff); // maximal subspace size
                std::cout << std::defaultfloat; 
                std::cout << "settings: ndim=" << ndim 
                          << " neig=" << neig
+                         << " maxcycle=" << maxcycle 
                          << " nbuff=" << nbuff  
-                         << " maxcycle=" << maxcycle << std::endl; 
+			 << " memory=" << tools::sizeGB<Tm>(ndim*(3*nmax+neig)) << "GB"
+			 << std::endl; 
 	       std::cout << "          damping=" << damping << std::scientific 
                          << " crit_v=" << crit_v 
-                         << " crit_e=" << crit_e 
                          << " crit_indp=" << crit_indp << std::endl;
 	    }
 	    std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s" << std::endl;
@@ -154,11 +156,10 @@ struct pdvdsonSolver_kr{
       //-------------------------------------
       void subspace_solver_even(const int ndim, 
 		      	        const int nsub,
-		      	        const int nt,
+		      	        const int neig,
       	       		        std::vector<Tm>& vbas,
       	       		        std::vector<Tm>& wbas,
       	       		        std::vector<double>& tmpE,
-      	       		        std::vector<Tm>& tmpV,
 			        std::vector<Tm>& rbas){
          // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
          const Tm alpha = 1.0, beta=0.0;
@@ -179,23 +180,22 @@ struct pdvdsonSolver_kr{
 	 linalg::matrix<double> tmpX;
          linalg::eig_solver(tmpH.real(), tmpE, tmpX);
 	 auto tmpU = tmpX.as_complex();
-	 linalg::xcopy(nsub*nt, tmpU.data(), tmpV.data());
 	 //-------------------------------------------------------- 
          // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
          // vbas = X[i]
 	 linalg::xcopy(ndim*nsub, vbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                       &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+                       &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,vbas.data(),&ndim);
          // wbas = HX[i]
 	 linalg::xcopy(ndim*nsub, wbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                       &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+                       &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,wbas.data(),&ndim);
          // rbas = HX[i]-e[i]*X[i]
-         for(int i=0; i<nt; i++){
-            std::transform(&wbas[i*ndim],&wbas[i*ndim]+ndim,&vbas[i*ndim],&rbas[i*ndim],
-                           [i,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i]; }); 
+ 	 linalg::xcopy(ndim*neig, wbas.data(), rbas.data()); 
+         for(int i=0; i<neig; i++){
+            linalg::xaxpy(ndim, -tmpE[i], &vbas[i*ndim], &rbas[i*ndim]); 
          }
       }
 
@@ -204,11 +204,10 @@ struct pdvdsonSolver_kr{
       //-------------------------------------
       void subspace_solver_odd(const int ndim, 
 		      	       const int nsub,
-		      	       const int nt,
+		      	       const int neig,
       	       		       std::vector<Tm>& vbas,
       	       		       std::vector<Tm>& wbas,
       	       		       std::vector<double>& tmpE,
-      	       		       std::vector<Tm>& tmpV,
 			       std::vector<Tm>& rbas){
          // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
          const Tm alpha = 1.0, beta=0.0;
@@ -250,50 +249,53 @@ struct pdvdsonSolver_kr{
          // 3. solve eigenvalue problem  
 	 //-----------------------------------------------------------
          // TRS-preserving diagonalization (only half eigs are output) 
-	 std::vector<double> tmpE2(nsub);
+	 std::vector<double> tmpe(nsub);
 	 linalg::matrix<Tm> tmpU;
-	 kramers::zquatev(tmpH, tmpE, tmpU);
+	 kramers::zquatev(tmpH, tmpe, tmpU);
 	 for(int i=0; i<nsub2; i++){
-	    tmpE2[2*i] = tmpE[i];
-	    tmpE2[2*i+1] = tmpE[i];
+	    tmpE[2*i] = tmpe[i];
+	    tmpE[2*i+1] = tmpe[i];
 	 }
-	 tmpE = tmpE2;
 	 tmpU = tmpU.reorder_rowcol(pos_new, pos_new, 1);
-	 linalg::xcopy(nsub*nt, tmpU.data(), tmpV.data());
 	 //-----------------------------------------------------------
          // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
          // vbas = X[i]
 	 linalg::xcopy(ndim*nsub, vbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                       &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+                       &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,vbas.data(),&ndim);
          // wbas = HX[i]
 	 linalg::xcopy(ndim*nsub, wbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                       &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+                       &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,wbas.data(),&ndim);
 	 // rbas = HX[i]-e[i]*X[i]
-	 std::vector<Tm> krvec(ndim);
-         for(int i=0; i<nt/2; i++){
+	 linalg::xcopy(ndim*neig, wbas.data(), rbas.data());
+         for(int i=0; i<neig/2; i++){
 	    int i0 = 2*i;
 	    int i1 = 2*i+1;
             //-------------------------------------------------------------------------
             // We need to first contruct full sigma vector from skeleton one using TRS
             //-------------------------------------------------------------------------
-	    // sigma[o]
-	    kramers::get_krvec_qt(&wbas[i1*ndim], krvec.data(), *pwf, 0);
-            std::transform(&wbas[i0*ndim], &wbas[i0*ndim]+ndim, krvec.begin(), &rbas[i0*ndim],
-			   [](const Tm& x, const Tm& y){ return x + y; });
-            std::transform(&rbas[i0*ndim], &rbas[i0*ndim]+ndim, &vbas[i0*ndim], &rbas[i0*ndim],
-                           [i0,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i0]; }); 
-	    // sigma[o_bar] 
-	    kramers::get_krvec_qt(&wbas[i0*ndim], krvec.data(), *pwf);
-            std::transform(&wbas[i1*ndim], &wbas[i1*ndim]+ndim, krvec.begin(), &rbas[i1*ndim], 
-			   [](const Tm& x, const Tm& y){ return x + y; });
-            std::transform(&rbas[i1*ndim], &rbas[i1*ndim]+ndim, &vbas[i1*ndim], &rbas[i1*ndim],
-                           [i1,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i1]; }); 
+	    // sigma[o] = (H+KHKi)xo - e*xo = Hxo + K(Hxob)Ki - e*xo
+ 	    kramers::get_krvec_qt(&wbas[i1*ndim], &rbas[i0*ndim], *pwf, 0); // K(Hxob)Ki
+            linalg::xaxpy(ndim, 1.0, &wbas[i0*ndim], &rbas[i0*ndim]); // +Hxo 
+ 	    linalg::xaxpy(ndim, -tmpE[i0], &vbas[i0*ndim], &rbas[i0*ndim]); // -e*xo 
+ 	    // sigma[o_bar] = (H+KHKi)xob - e*xob = Hxob + K(-Hxo)Ki - e*xob
+ 	    kramers::get_krvec_qt(&wbas[i0*ndim], &rbas[i1*ndim], *pwf); // K(-Hxo)Ki
+            linalg::xaxpy(ndim, 1.0, &wbas[i1*ndim], &rbas[i1*ndim]); // +Hxob
+            linalg::xaxpy(ndim, -tmpE[i1], &vbas[i1*ndim], &rbas[i1*ndim]); // -e*xob
             //-------------------------------------------------------------------------
          } // i
+      }
+
+      // Precondition of a residual
+      void precondition(const Tm* rvec, Tm* tvec, const double& ei){
+         const double damp = damping;
+	 std::transform(rvec, rvec+ndim, Diag, tvec,
+                        [&ei,&damp](const Tm& rk, const double& dk){
+			   return rk/(std::abs(dk-ei)+damp); 
+			});
       }
 
       // Davidson iterative algorithm for Hv=ve
@@ -315,12 +317,17 @@ struct pdvdsonSolver_kr{
 	    std::string msg = "error: neig>ndim in pdvdson! neig/ndim=";
             tools::exit(msg+std::to_string(neig)+","+std::to_string(ndim));
 	 }
-         // clear counter
+
+ 	 // 0. initialization
+         int nmax = std::min(ndim,neig+nbuff); // maximal subspace size
+ 	 std::vector<Tm> vbas(ndim*nmax), wbas(ndim*nmax);
+ 	 std::vector<Tm> rbas(ndim*nmax), tbas(ndim*neig);
+ 	 std::vector<double> tmpE(nmax), tnorm(neig);
+         std::vector<bool> rconv(neig);
+ 	 linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); // history
          nmvp = 0;
          
 	 // 1. generate initial subspace - vbas 
-         int nl = std::min(ndim,neig+nbuff); // maximal subspace size
-	 std::vector<Tm> vbas(ndim*nl), wbas(ndim*nl);
 	 if(rank == 0){
 	    linalg::xcopy(ndim*neig, vguess, vbas.data()); // copying neig states from vguess
 	    linalg::check_orthogonality(ndim, neig, vbas);
@@ -331,41 +338,36 @@ struct pdvdsonSolver_kr{
          HVecs(neig, wbas.data(), vbas.data());
          
 	 // 2. begin to solve
-	 std::vector<Tm> rbas(ndim*nl), tbas(ndim*nl), tmpV(nl*nl);
-	 std::vector<double> tmpE(nl), tnorm(neig);
-         std::vector<bool> rconv(neig);
-	 // record history
-	 linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); 
-         double damp = damping;
          bool ifconv = false;
          int nsub = neig;
          for(int iter=1; iter<maxcycle+1; iter++){
-	    // ONLY rank-0 solve the subspace problem
+
+            // rank-0: solve the subspace problem
 	    if(rank == 0){
 	       //------------------------------------------------------------------------
                // solve subspace problem and form full residuals: Res[i]=HX[i]-w[i]*X[i]
 	       //------------------------------------------------------------------------
 	       if(parity == 0){
-                  subspace_solver_even(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
+                  subspace_solver_even(ndim,nsub,neig,vbas,wbas,tmpE,rbas);
 	       }else{
-                  subspace_solver_odd(ndim,nsub,neig,vbas,wbas,tmpE,tmpV,rbas);
+                  subspace_solver_odd(ndim,nsub,neig,vbas,wbas,tmpE,rbas);
 	       }
 	       //------------------------------------------------------------------------
                // compute norm of residual
                for(int i=0; i<neig; i++){
-                  auto norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
+                  double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
                   eigs(i,iter) = tmpE[i];
                   rnorm(i,iter) = norm;
                   rconv[i] = (norm < crit_v)? true : false;
                }
                auto t1 = tools::get_time();
                if(iprt >= 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
-               // check convergence and return (e,v) if applied 
                ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
 	    }
 #ifndef SERIAL
             if(size > 1) boost::mpi::broadcast(world, ifconv, 0);
 #endif	  
+	    // if converged, return (es,vs) 
             if(ifconv || iter == maxcycle){
 #ifndef SERIAL
 	       if(size > 1){
@@ -378,14 +380,15 @@ struct pdvdsonSolver_kr{
                linalg::xcopy(ndim*neig, vbas.data(), vs);
                break;
             }
-            // if not converged, improve the subspace by ri/(abs(D-ei)+damp) 
+            
+            // if not converged, improve the subspace by adding preconditioned residues
+	    if(nsub == nmax) nsub = neig; // restart the subspace
 	    int nindp = 0;
 	    if(rank == 0){
                int nres = 0;
                for(int i=0; i<neig; i++){
                   if(rconv[i]) continue;
-	          std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, Diag, &tbas[nres*ndim],
-                                 [i,&tmpE,&damp](const Tm& r, const double& d){ return r/(std::abs(d-tmpE[i])+damp); });
+		  precondition(&rbas[i*ndim],&tbas[nres*ndim],tmpE[i]);
 	          //-------------------------------------------
 	          // Kramers projection to ensure K|psi>=|psi>
 	          //-------------------------------------------
@@ -408,12 +411,14 @@ struct pdvdsonSolver_kr{
                // re-orthogonalization and get nindp for different cases of parity
 	       //------------------------------------------------------------------
 	       if(parity == 0){
-	          nindp = linalg::get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
+	          nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas,rbas,crit_indp);
 	       }else{
-                  nindp = kramers::get_ortho_basis_qt(ndim,neig,nres,vbas,rbas,*pwf,crit_indp);
+                  nindp = kramers::get_ortho_basis_qt(ndim,nsub,nres,vbas,rbas,*pwf,crit_indp);
 	       }
 	       //------------------------------------------------------------------
+	       nindp = std::min(nindp,nmax-nsub);
 	    }
+
 #ifndef SERIAL
             if(size > 1) boost::mpi::broadcast(world, nindp, 0);	    
 #endif
@@ -421,22 +426,19 @@ struct pdvdsonSolver_kr{
 	       std::cout << "Convergence failure: unable to generate new direction: nindp=0!" << std::endl;
                exit(1);
             }else{
-               // expand V and W
-               nindp = std::min(nindp,nbuff);
 #ifndef SERIAL
 	       if(size > 1) boost::mpi::broadcast(world, &rbas[0], ndim*nindp, 0);
-#endif	       
-	       linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*neig]);
-               HVecs(nindp, &wbas[ndim*neig], &vbas[ndim*neig]);
-               nsub = neig+nindp;
+#endif	      
+ 	       linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
+               HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
+               nsub += nindp; // expand the subspace
                if(rank == 0) linalg::check_orthogonality(ndim,nsub,vbas);
             }
+
          } // iter
-         if(rank == 0 && !ifconv){
-            std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
-         }
-	 auto tf = tools::get_time();    
 	 if(rank == 0){
+            if(!ifconv) std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
+	    auto tf = tools::get_time();    
 	    t_tot = tools::get_duration(tf-ti);
 	    t_rest = t_tot - t_cal - t_comm;
             std::cout << "TIMING for Davidson : " << t_tot
@@ -452,7 +454,8 @@ struct pdvdsonSolver_kr{
       double* Diag;
       std::function<void(Tm*, const Tm*)> HVec;
       double crit_v = 1.e-5;  // used control parameter
-      int maxcycle = 200;
+      int maxcycle = 30;
+      int nbuff = 6; // maximal additional vectors
       //--------------------
       // Kramers projection
       //--------------------
@@ -461,15 +464,13 @@ struct pdvdsonSolver_kr{
       //--------------------
       // settings
       int iprt = 0;
-      double crit_e = 1.e-12; // not used actually
       double crit_indp = 1.e-12;
       double crit_skewH = 1.e-8;
-      double damping = 1.e-1;
-      int nbuff = 4; // maximal additional vectors
-      int nmvp = 0;
+      double damping = 1.e-12;
 #ifndef SERIAL
       boost::mpi::communicator world;
 #endif
+      int nmvp = 0;
       double t_tot = 0.0;
       double t_cal = 0.0; // Hx
       double t_comm = 0.0; // reduce

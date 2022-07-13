@@ -126,6 +126,7 @@ void twodot_localCI(comb<Km>& icomb,
    pdvdsonSolver_nkr<Tm> solver(ndim, neig, eps, schd.ctns.maxcycle);
    solver.iprt = schd.ctns.verbose;
    solver.nbuff = schd.ctns.nbuff;
+   solver.damping = schd.ctns.damping;
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL
@@ -190,6 +191,7 @@ inline void twodot_localCI(comb<qkind::cNK>& icomb,
    pdvdsonSolver_kr<Tm,stensor4<Tm>> solver(ndim, neig, eps, schd.ctns.maxcycle, parity, wf); 
    solver.iprt = schd.ctns.verbose;
    solver.nbuff = schd.ctns.nbuff;
+   solver.damping = schd.ctns.damping;
    solver.Diag = diag.data();
    solver.HVec = HVec;
 #ifndef SERIAL

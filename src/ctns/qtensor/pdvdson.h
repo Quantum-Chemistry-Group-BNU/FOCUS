@@ -31,11 +31,14 @@ struct pdvdsonSolver_nkr{
 	 const std::string ifconverge = "-+";
          if(iter == 1){
             if(iprt > 0){		 
+               int nmax = std::min(ndim,neig+nbuff); // maximal subspace size
                std::cout << std::defaultfloat; 
                std::cout << "settings: ndim=" << ndim 
                          << " neig=" << neig
-                         << " nbuff=" << nbuff  
-                         << " maxcycle=" << maxcycle << std::endl; 
+                         << " maxcycle=" << maxcycle 
+                         << " nbuff=" << nbuff 
+			 << " memory=" << tools::sizeGB<Tm>(ndim*(3*nmax+neig)) << "GB"
+			 << std::endl; 
 	       std::cout << "          damping=" << damping << std::scientific 
                          << " crit_v=" << crit_v 
                          << " crit_indp=" << crit_indp << std::endl;
@@ -185,9 +188,8 @@ struct pdvdsonSolver_nkr{
       // Precondition of a residual
       void precondition(const Tm* rvec, Tm* tvec, const double& ei){
          const double damp = damping;
-	 const double denorm = crit_denorm;
 	 std::transform(rvec, rvec+ndim, Diag, tvec,
-                        [&ei,&damp,&denorm](const Tm& rk, const double& dk){
+                        [&ei,&damp](const Tm& rk, const double& dk){
 			   return rk/(std::abs(dk-ei)+damp); 
 			});
       }
@@ -278,7 +280,8 @@ struct pdvdsonSolver_nkr{
                break;
             }
 
-            // if not converged, improve the subspace by adding new vectors
+            // if not converged, improve the subspace by adding preconditioned residues
+	    if(nsub == nmax) nsub = neig; // restart the subspace 
 	    int nindp = 0;
 	    if(rank == 0){
                int nres = 0; // no. of residuals to be added
@@ -294,8 +297,8 @@ struct pdvdsonSolver_nkr{
                for(int i=0; i<nres; i++){
 	          linalg::xcopy(ndim, &tbas[index[i]*ndim], &rbas[i*ndim]); 
                }
-               // re-orthogonalization and get nindp
                nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas,rbas,crit_indp);
+	       nindp = std::min(nindp,nmax-nsub);
 	    } // rank-0
 
 #ifndef SERIAL
@@ -305,24 +308,18 @@ struct pdvdsonSolver_nkr{
 	       std::cout << "Convergence failure: unable to generate new direction: nindp=0!" << std::endl;
                exit(1);
             }else{
-	       // restart the subspace 
-	       if(nsub == nmax) nsub = neig; 
-	       // expand V and W
-	       nindp = std::min(nindp,nmax-nsub);
 #ifndef SERIAL
 	       if(size > 1) boost::mpi::broadcast(world, &rbas[0], ndim*nindp, 0);
 #endif	       
-	       linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
+	       linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]); 
 	       HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
-	       nsub += nindp; // update the subspace 
+	       nsub += nindp; // expand the subspace 
 	       if(rank == 0) linalg::check_orthogonality(ndim,nsub,vbas);
             }
 
          } // iter
 	 if(rank == 0){
-	    if(!ifconv){
-               std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
-            }
+	    if(!ifconv) std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
 	    auto tf = tools::get_time();    
 	    t_tot = tools::get_duration(tf-ti);
 	    t_rest = t_tot - t_cal - t_comm;
@@ -345,7 +342,6 @@ struct pdvdsonSolver_nkr{
       int iprt = 0;
       double crit_indp = 1.e-12;
       double crit_skewH = 1.e-8;
-      double crit_denorm = 1.e-12;
       double damping = 1.e-12;
 #ifndef SERIAL
       boost::mpi::communicator world;

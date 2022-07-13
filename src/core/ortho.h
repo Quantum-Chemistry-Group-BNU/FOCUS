@@ -18,11 +18,11 @@ double check_orthogonality(const linalg::matrix<Tm>& V,
    linalg::matrix<Tm> dev = xgemm("C","N",V,V) - identity_matrix<Tm>(n);
    double diff = dev.normF()/static_cast<double>(n);
    if(diff > thresh){
-      //dev.print("dev");
       std::cout << "error in check_orthogonality: dim=" << n 
 	        << " diff=" << std::scientific << diff 
 		<< " thresh=" << thresh
 	        << std::endl;
+      dev.print("dev");
       std::exit(1);
    }
    return diff;
