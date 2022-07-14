@@ -1,0 +1,31 @@
+nelec 6
+twoms 0
+integral_file moleinfo/fmole.info
+scratch ./scratch
+
+$sci
+dets 
+#0 1 2 3 4 5 
+0 2 4 7 9 11
+end
+nroots 2
+schedule
+0 1.e-5
+end
+maxiter 3
+$end
+
+$ctns
+qkind rNSz
+nroots 2
+maxdets 10000
+thresh_proj 1.e-15
+thresh_ortho 1.e-8 
+topology_file topology/topo1
+schedule
+0 1 60 1.e-5 0.0
+end
+maxsweep 2
+task_dmrg
+cisolver 0
+$end

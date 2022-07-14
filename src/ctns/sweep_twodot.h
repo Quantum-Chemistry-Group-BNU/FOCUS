@@ -5,7 +5,7 @@
 #include "../core/linalg.h"
 #include "qtensor/qtensor.h"
 #include "sweep_twodot_renorm.h"
-#include "sweep_twodot_hdiag.h"
+#include "sweep_twodot_diag.h"
 #include "sweep_twodot_local.h"
 #include "sweep_twodot_sigma.h"
 #include "symbolic_formulae_twodot.h"
@@ -108,11 +108,11 @@ void sweep_twodot(comb<Km>& icomb,
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(ndim,neig);
    
-   // 3.1 Hdiag 
-   std::vector<double> diag(ndim,1.0);
-   twodot_Hdiag(qops_dict, ecore, wf, diag, size, rank, schd.ctns.ifdist1);
+   // 3.1 diag 
+   std::vector<double> diag(ndim);
+   twodot_diag(qops_dict, ecore, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifndef SERIAL
-   // reduction of partial Hdiag: no need to broadcast, if only rank=0 
+   // reduction of partial diag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
    if(size > 1){
       std::vector<double> diag2(ndim);

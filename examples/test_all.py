@@ -66,7 +66,7 @@ def testAll(dirs):
          t1 = time.time()
          print('timing =',t1-t0)
 	 # CTNS
-         cmd = CTNS+" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"ctns.out"
+         cmd = mpiprefix+CTNS+" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"ctns.out"
          print(cmd)
          t0 = time.time()
          os.system(cmd)
@@ -113,6 +113,7 @@ def compareAll(dirs,thresh=1.e-8):
 
 if __name__ == '__main__':
 
+   mpiprefix = "mpirun -np 2 "
    os.environ['OMP_NUM_THREADS'] = "4"
    print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
 
@@ -124,7 +125,13 @@ if __name__ == '__main__':
    #cdir = os.getcwd()
    #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
    nfail = 0
-   dirs = ['0_h6_tns', '1_lih3_dcg', '2_lih3+_dcg', '3_h6+_kr', '4_h5_twodot']
+   dirs = ['0_h6_tns',
+           '1_lih3_dcg', 
+           '2_lih3+_dcg', 
+           '3_h6+_kr', 
+           '4_h5_twodot',
+           '5_h6_cisolver',
+           ]
    #dirs = ['3_h6+_kr']
    t0 = time.time()
    for fname in dirs:
@@ -132,4 +139,4 @@ if __name__ == '__main__':
       testAll(fdir)
       compareAll(fdir)
    t1 = time.time()
-   print('totol time =',t1-t0)
+   print('\ntotol time =',t1-t0)

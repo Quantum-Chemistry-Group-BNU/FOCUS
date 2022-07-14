@@ -64,7 +64,6 @@ void oper_init_dot(oper_dict<Tm>& qops,
          if(iproc != rank) pr.second.clear();
       }
       if(rank != 0) qops('H')[0].clear();
-
    }
 #endif
 }

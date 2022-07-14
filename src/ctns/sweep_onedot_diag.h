@@ -5,11 +5,11 @@
 
 namespace ctns{
 
-const bool debug_onedot_hdiag = false;
-extern const bool debug_onedot_hdiag;
+const bool debug_onedot_diag = false;
+extern const bool debug_onedot_diag;
 
 template <typename Tm>
-void onedot_Hdiag(const oper_dictmap<Tm>& qops_dict,
+void onedot_diag(const oper_dictmap<Tm>& qops_dict,
 		  const double ecore,
 		  stensor3<Tm>& wf,
 		  std::vector<double>& diag,
@@ -19,14 +19,16 @@ void onedot_Hdiag(const oper_dictmap<Tm>& qops_dict,
    const auto& lqops = qops_dict.at("l"); 
    const auto& rqops = qops_dict.at("r"); 
    const auto& cqops = qops_dict.at("c"); 
-   if(rank == 0 && debug_onedot_hdiag){
-      std::cout << "ctns::onedot_Hdiag ifkr=" << lqops.ifkr 
+   if(rank == 0 && debug_onedot_diag){
+      std::cout << "ctns::onedot_diag ifkr=" << lqops.ifkr 
 	        << " size=" << size << std::endl;
    }
 
-   // 1. local terms: <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
-   if(!ifdist1 or rank == 0){
-      onedot_Hdiag_local(lqops, rqops, cqops, ecore, wf, size, rank);
+   // 1. local terms: <lcr|H|lcr> = Hll + Hcc + Hrr
+   // NOTE: ifdist1=false, each node has nonzero H[l] and H[r],
+   // whose contributions to Diag need to be taken into aacount.
+   if(!ifdist1 || rank == 0){
+      onedot_diag_local(lqops, rqops, cqops, wf, size, rank);
    }else{
       wf.clear();
    }
@@ -35,31 +37,30 @@ void onedot_Hdiag(const oper_dictmap<Tm>& qops_dict,
    //         B/Q^C
    //         |
    // B/Q^L---*---B/Q^R
-   onedot_Hdiag_BQ("lc", lqops, cqops, wf, size, rank);
-   onedot_Hdiag_BQ("lr", lqops, rqops, wf, size, rank);
-   onedot_Hdiag_BQ("cr", cqops, rqops, wf, size, rank);
+   onedot_diag_BQ("lc", lqops, cqops, wf, size, rank);
+   onedot_diag_BQ("lr", lqops, rqops, wf, size, rank);
+   onedot_diag_BQ("cr", cqops, rqops, wf, size, rank);
 
    // save to real vector
+   double efac = ecore/size;
    std::transform(wf.data(), wf.data()+wf.size(), diag.begin(),
-                  [](const Tm& x){ return std::real(x); });
+                  [&efac](const Tm& x){ return std::real(x)+efac; });
 }
 
-// H[loc] = H[l]I[c]I[r] + I[l]H[c]I[r] + I[l]I[c]H[r]
+// H[loc] 
 template <typename Tm>
-void onedot_Hdiag_local(const oper_dict<Tm>& lqops,
+void onedot_diag_local(const oper_dict<Tm>& lqops,
 		        const oper_dict<Tm>& rqops,
 		        const oper_dict<Tm>& cqops,
-			const double ecore,
 		        stensor3<Tm>& wf,
 			const int size,
 			const int rank){
-   if(rank == 0 && debug_onedot_hdiag){ 
-      std::cout << "onedot_Hdiag_local" << std::endl;
+   if(rank == 0 && debug_onedot_diag){ 
+      std::cout << "onedot_diag_local" << std::endl;
    }
    const auto& Hl = lqops('H').at(0);
    const auto& Hr = rqops('H').at(0);
    const auto& Hc = cqops('H').at(0);
-   // <lcr|H|lcr> = <lcr|Hl*Ic*Ir+...|lcr> = Hll + Hcc + Hrr
    int br, bc, bm;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -68,14 +69,13 @@ void onedot_Hdiag_local(const oper_dict<Tm>& lqops,
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
-      // 1. local contributions: all four indices in c/l/r
-      const auto blkl = Hl(br,br); // left->row 
-      const auto blkr = Hr(bc,bc); // row->col
-      const auto blkc = Hc(bm,bm); // central->mid 
+      const auto blkl = Hl(br,br);
+      const auto blkr = Hr(bc,bc);
+      const auto blkc = Hc(bm,bm);
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-               blk(ir,ic,im) = ecore + blkl(ir,ir) + blkr(ic,ic) + blkc(im,im);
+               blk(ir,ic,im) = blkl(ir,ir) + blkr(ic,ic) + blkc(im,im);
             } // ir
          } // ic
       } // im
@@ -83,14 +83,14 @@ void onedot_Hdiag_local(const oper_dict<Tm>& lqops,
 }
 
 template <typename Tm>
-void onedot_Hdiag_BQ(const std::string superblock,
+void onedot_diag_BQ(const std::string superblock,
 		     const oper_dict<Tm>& qops1,
 		     const oper_dict<Tm>& qops2,
 		     stensor3<Tm>& wf,
        	             const int size,
        	             const int rank){
-   if(rank == 0 && debug_onedot_hdiag){
-      std::cout << "onedot_Hdiag_BQ superblock=" << superblock << std::endl;
+   if(rank == 0 && debug_onedot_diag){
+      std::cout << "onedot_diag_BQ superblock=" << superblock << std::endl;
    }
    const bool ifkr = qops1.ifkr;
    const bool ifNC = qops1.cindex.size() <= qops2.cindex.size();
@@ -98,7 +98,7 @@ void onedot_Hdiag_BQ(const std::string superblock,
    char BQ2 = ifNC? 'Q' : 'B';
    const auto& cindex = ifNC? qops1.cindex : qops2.cindex;
    auto bindex = oper_index_opB(cindex, ifkr);
-   if(rank == 0 && debug_onedot_hdiag){ 
+   if(rank == 0 && debug_onedot_diag){ 
       std::cout << " superblock=" << superblock << " ifNC=" << ifNC 
 	        << " " << BQ1 << BQ2 << " size=" << bindex.size() 
 		<< std::endl;
@@ -112,14 +112,14 @@ void onedot_Hdiag_BQ(const std::string superblock,
          const auto& O2 = qops2(BQ2).at(index);
          if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
 	 if(superblock == "lc"){ 
-            onedot_Hdiag_OlOc(O1,O2,wf,wt);
-	    if(ifkr) onedot_Hdiag_OlOc(O1.K(0),O2.K(0),wf,wt);
+            onedot_diag_OlOc(O1,O2,wf,wt);
+	    if(ifkr) onedot_diag_OlOc(O1.K(0),O2.K(0),wf,wt);
 	 }else if(superblock == "cr"){
-            onedot_Hdiag_OcOr(O1,O2,wf,wt);
-	    if(ifkr) onedot_Hdiag_OcOr(O1.K(0),O2.K(0),wf,wt);
+            onedot_diag_OcOr(O1,O2,wf,wt);
+	    if(ifkr) onedot_diag_OcOr(O1.K(0),O2.K(0),wf,wt);
 	 }else if(superblock == "lr"){
-            onedot_Hdiag_OlOr(O1,O2,wf,wt);
-	    if(ifkr) onedot_Hdiag_OlOr(O1.K(0),O2.K(0),wf,wt);
+            onedot_diag_OlOr(O1,O2,wf,wt);
+	    if(ifkr) onedot_diag_OlOr(O1.K(0),O2.K(0),wf,wt);
 	 }
       } // iproc
    } // index
@@ -127,7 +127,7 @@ void onedot_Hdiag_BQ(const std::string superblock,
 
 // Ol*Oc*Ir
 template <typename Tm>
-void onedot_Hdiag_OlOc(const stensor2<Tm>& Ol,
+void onedot_diag_OlOc(const stensor2<Tm>& Ol,
 		       const stensor2<Tm>& Oc,
 		       stensor3<Tm>& wf,
 		       const Tm wt=1.0){
@@ -154,7 +154,7 @@ void onedot_Hdiag_OlOc(const stensor2<Tm>& Ol,
 
 // Ol*Ic*Or
 template <typename Tm>
-void onedot_Hdiag_OlOr(const stensor2<Tm>& Ol,
+void onedot_diag_OlOr(const stensor2<Tm>& Ol,
 		       const stensor2<Tm>& Or,
 		       stensor3<Tm>& wf,
 		       const Tm wt=1.0){
@@ -181,7 +181,7 @@ void onedot_Hdiag_OlOr(const stensor2<Tm>& Ol,
 
 // Il*Oc*Or
 template <typename Tm>
-void onedot_Hdiag_OcOr(const stensor2<Tm>& Oc,
+void onedot_diag_OcOr(const stensor2<Tm>& Oc,
 		       const stensor2<Tm>& Or,
 		       stensor3<Tm>& wf,
 		       const Tm wt=1.0){

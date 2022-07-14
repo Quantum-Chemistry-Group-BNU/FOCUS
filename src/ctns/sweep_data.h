@@ -24,7 +24,7 @@ struct dot_timing{
 		<< std::endl;
       double dtacc = dt0;
       this->print_part("fetch", dt0, dtacc); dtacc += dt1; 
-      this->print_part("hdiag", dt1, dtacc); dtacc += dt2;
+      this->print_part("diag ", dt1, dtacc); dtacc += dt2;
       this->print_part("dvdsn", dt2, dtacc); dtacc += dt3;
       this->print_part("decim", dt3, dtacc); dtacc += dt4;
       this->print_part("guess", dt4, dtacc); dtacc += dt5;
@@ -35,7 +35,7 @@ struct dot_timing{
 		 const bool debug=true){
       dt  = tools::get_duration(t1-t0); // total
       dt0 = tools::get_duration(ta-t0); // t(fetch)
-      dt1 = tools::get_duration(tb-ta); // t(hdiag)
+      dt1 = tools::get_duration(tb-ta); // t(diag)
       dt2 = tools::get_duration(tc-tb); // t(dvdsn)
       dt3 = tools::get_duration(td-tc); // t(decim)
       dt4 = tools::get_duration(te-td); // t(guess)
@@ -60,7 +60,7 @@ public:
    using Tm = std::chrono::high_resolution_clock::time_point;
    Tm t0;
    Tm ta; // ta-t0: t(fetch) 
-   Tm tb; // tb-ta: t(hdiag)
+   Tm tb; // tb-ta: t(diag)
    Tm tc; // tc-ta: t(dvdson)
    Tm td; // td-tc: t(decim)
    Tm te; // te-td: t(guess)

@@ -99,7 +99,7 @@ LOGS
 	2. compute [Hx/renorm] + save previous qops [threaded]
 	3. fkept is updated, the old qops will be released
         4. delete unused file at a given bond
-    NOT DONE YET:
+ ### NOT DONE YET ###
     - data compression? 
     - reduce half AB/PQ operators?
 
@@ -109,13 +109,12 @@ LOGS
     - onedot partition
     - hdiag for ifdist1
    
- * Load balance
+ * Load balance:
     - better distribution of operators [DONE2022/06/15]
     - opS? currently this is not good because a*Ac type operators 
-    - Hx?
-	typical: cN [isym=1, ifkr=False]
-		 cNSz [isym=2, ifkr=False]
-		 cNK [isym=1, ifkr=True]
+    - Hx? typical: cN [isym=1, ifkr=False]
+		   cNSz [isym=2, ifkr=False]
+		   cNK [isym=1, ifkr=True]
 
  * Restart from optimized states:
     - task_dmrg & lastdot
@@ -125,6 +124,14 @@ LOGS
       else rebuild the operators
 	 task_dmrg & rcanon_load & rcanon_file newname.info
 
+ * Better sweep performances [DONE@20220714]
+    - Reducing the number of Hx in Davidson solver:
+    	- tuning size of subspace & preconditioning
+    - Sweep decimation:
+        - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are 
+          almost exact, unless some quantum numbers are missing from the start.
+        - exact sites for cNK also work!
+ 
  * More abstract implementation: preparation for GPU
     - Basics [DONE2022/06/25]
        1. AXPY: form summed operators (form intermediates)
@@ -134,21 +141,11 @@ LOGS
     - Onedot Hx [DONE2022/06/27]
 
  ### TODOs ###
-
     - Renormalization? [smaller temporary memory]
     - Complex version: 'R'?
     - Kramers version?
 
- * Better sweeps [DONE@20220714]
-    - Reducing the number of Hx in Davidson solver:
-    	- tuning size of subspace & preconditioning
-    - Sweep decimation:
-        - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are 
-          almost exact, unless some quantum numbers are missing from the start.
-        - exact sites for cNK also work!
- 
  * Towards large-scale parallelization [DONE2022/XX/XX]
-    - GPU for contractions? BatchedGEMM
     - merged wf4[lc1,c2r] implementation?
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 
