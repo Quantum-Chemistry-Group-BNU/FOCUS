@@ -46,7 +46,10 @@ def testAll(dirs):
    #print("dirs=",dirs)
    tmpdir = "./tmp"
    for fdir in dirs:
-      print('\n### run:',fdir,'###')
+      print("")
+      print('-'*60) 
+      print("### run:",fdir,"###")
+      print('-'*60)
       os.chdir(fdir)
       os.system("pwd")
       if(not os.path.exists(tmpdir)): os.mkdir(tmpdir)
@@ -79,7 +82,7 @@ def compareAll(dirs,thresh=1.e-8):
    tmpdir = "./tmp"
    global nfail
    for fdir in dirs:
-      print('\n### check:',fdir,'###')
+      print("\n### check:",fdir,"###")
       os.chdir(fdir)
       os.system("pwd")
       for prefix in ['','r','c']:
