@@ -277,6 +277,38 @@ inline void decimation_row_kr(const qbond& qs1,
 		<< std::endl;
    }
 
+   // 0. untruncated case
+   if(!iftrunc){
+      auto isym = qrow.get_sym(0).isym();
+      stensor2<Tm> qt2(qsym(isym), qrow, qrow); // identity matrix
+      for(int br=0; br<nqr; br++){
+         const auto& qr = qrow.get_sym(br);
+         const int rdim = qrow.get_dim(br);
+	 auto blk = qt2(br,br);
+         std::vector<double> sigs2(rdim);
+         linalg::matrix<Tm> U;
+	 // mapping product basis to kramers paired basis
+         std::vector<int> pos_new;
+         std::vector<double> phases;
+         mapping2krbasis(qr, qs1, qs2, dpt, pos_new, phases);
+	 // compute KRS-adapted renormalized basis
+         auto rhor = linalg::identity_matrix<Tm>(rdim);
+	 kramers::eig_solver_kr<std::complex<double>>(qr, phases, rhor, sigs2, U);
+	 // convert back to the original product basis
+         U = U.reorder_row(pos_new,1);
+	 linalg::xcopy(rdim*rdim,U.data(),blk.data()); 
+	 /*
+	 std::cout << "br=" << br << " qr=" << qr << std::endl;
+	 U.print("U");
+	 */
+      }
+      rot = std::move(qt2);
+      dwt = 0.0;
+      deff = qrow.get_dimAll();
+      std::cout << "keep all " << deff << " states" << std::endl;
+      return;
+   }
+
    // 1. compute reduced basis
    std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
 #ifdef _OPENMP
