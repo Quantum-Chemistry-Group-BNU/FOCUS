@@ -134,9 +134,9 @@ public:
    int batchsize = 1000;
    // dvdson
    int cisolver = 1;
-   int maxcycle = 100;
+   int maxcycle = 30;
    int nbuff = 10;
-   double damping = 0.1;
+   double damping = 1.e-10;
    // io
    bool rcanon_load = false;
    std::string rcanon_file = "rcanon.info";
