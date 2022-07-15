@@ -127,6 +127,10 @@ LOGS
  * Better sweep performances [DONE@20220714]
     - Reducing the number of Hx in Davidson solver:
     	- tuning size of subspace & preconditioning
+
+	=> nbuff 
+	=> damping
+
     - Sweep decimation:
         - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are 
           almost exact, unless some quantum numbers are missing from the start.
