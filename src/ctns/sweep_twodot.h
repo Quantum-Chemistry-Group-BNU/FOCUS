@@ -231,6 +231,9 @@ void sweep_twodot(comb<Km>& icomb,
       size_t blksize = preprocess_formulae_sigma2(qops_dict, oploc, H_formulae, wf, inter, 
 		       			         Hxlst2, schd.ctns.hxorder, 
 		      		                 rank==0 && schd.ctns.verbose>0);
+      
+      blksize = (int(blksize/64)+1)*64;
+      
       opaddr[4] = inter._data;
       worktot = maxthreads*blksize*3;
       if(debug && schd.ctns.verbose>0){
