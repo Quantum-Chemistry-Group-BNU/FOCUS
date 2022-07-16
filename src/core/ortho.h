@@ -10,7 +10,7 @@
 
 namespace linalg{
 
-// orthogonality of vbas(ndim,mstate) as in Fortran
+// orthogonality of vbas(ndim,mstate) as in Fortran: ||V^+V-I||_F < thresh
 template <typename Tm>
 double check_orthogonality(const linalg::matrix<Tm>& V,
   		           const double thresh=1.e-10){

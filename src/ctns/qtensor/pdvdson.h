@@ -167,6 +167,20 @@ struct pdvdsonSolver_nkr{
          // 3. solve eigenvalue problem
 	 linalg::matrix<Tm> tmpU;
 	 linalg::eig_solver(tmpH, tmpE, tmpU);
+/*
+         // 4. Rotated basis to minimal subspace that
+  	 //    can give the exact [neig] eigenvalues
+	 //    Also, the difference vector = xold - xnew as correction 
+	 auto iden = linalg::identity_matrix<Tm>(nsub) - tmpU;
+         nindp = linalg::get_ortho_basis(nsub,neig,neig,tmpU,rbas,crit_indp);
+	       nindp = std::min(nindp,nmax-nsub);
+	    }
+	         pr = numpy.identity(ndim,dtype=self.dtype)[:neig,:] - vr
+	         nindp,vr2 = dvdson_ortho(vr,pr[rindx,:],self.crit_indp)
+	         if nindp !=0: vr = numpy.vstack((vr,vr2))
+	         vbas = numpy.dot(vr,vbas)
+	         wbas = numpy.dot(vr,wbas)
+*/
          // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
          // vbas = {X[i]}
 	 linalg::xcopy(ndim*nsub, vbas.data(), rbas.data()); 
@@ -281,7 +295,10 @@ struct pdvdsonSolver_nkr{
             }
 
             // if not converged, improve the subspace by adding preconditioned residues
-	    if(nsub == nmax) nsub = neig; // restart the subspace 
+	    if(nsub == nmax){ 
+               nsub = neig; // restart the subspace 
+               //nsub = min(neig+2,nmax);
+	    }
 	    int nindp = 0;
 	    if(rank == 0){
                int nres = 0; // no. of residuals to be added
