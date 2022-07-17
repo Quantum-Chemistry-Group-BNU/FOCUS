@@ -131,6 +131,16 @@ LOGS
 	=> nbuff 
 	=> damping
 
+
+
+ ### TODOs ###
+
+    1. iteration number
+
+    2. openmp parallel
+
+
+
     - Sweep decimation:
         - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are 
           almost exact, unless some quantum numbers are missing from the start.

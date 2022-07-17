@@ -154,7 +154,7 @@ void twodot_localCI(comb<Km>& icomb,
 	    // specific to twodot 
             twodot_guess(icomb, dbond, ndim, neig, wf, v0);
 	    // reorthogonalization
-            int nindp = linalg::get_ortho_basis(ndim, neig, v0); 
+            int nindp = linalg::get_ortho_basis(ndim, neig, v0.data()); 
             assert(nindp == neig);
 	 }
 	 //------------------------------------

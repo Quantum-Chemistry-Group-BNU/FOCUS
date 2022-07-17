@@ -103,7 +103,7 @@ void onedot_localCI(comb<Km>& icomb,
                icomb.psi[i].to_array(&v0[ndim*i]);
             }
 	    // reorthogonalization
-            int nindp = linalg::get_ortho_basis(ndim, neig, v0); 
+            int nindp = linalg::get_ortho_basis(ndim, neig, v0.data()); 
             assert(nindp == neig);
 	 }
 	 //------------------------------------

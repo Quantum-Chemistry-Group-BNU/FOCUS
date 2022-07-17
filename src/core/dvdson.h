@@ -223,7 +223,7 @@ struct dvdsonSolver{
 	       linalg::xcopy(ndim, &tbas[index[i]*ndim], &rbas[i*ndim]); 
             }
             // re-orthogonalization and get nindp
-            int nindp = get_ortho_basis(ndim,neig,nres,vbas,rbas,crit_indp);
+            int nindp = get_ortho_basis(ndim,neig,nres,vbas.data(),rbas.data(),crit_indp);
             if(nindp == 0){
 	       std::cout << "Convergence failure: unable to generate new direction: nindp=0!" << std::endl;
                exit(1);

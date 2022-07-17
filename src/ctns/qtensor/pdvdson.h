@@ -314,7 +314,7 @@ struct pdvdsonSolver_nkr{
                for(int i=0; i<nres; i++){
 	          linalg::xcopy(ndim, &tbas[index[i]*ndim], &rbas[i*ndim]); 
                }
-               nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas,rbas,crit_indp);
+               nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas.data(),rbas.data(),crit_indp);
 	       nindp = std::min(nindp,nmax-nsub);
 	    } // rank-0
 

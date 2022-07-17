@@ -601,7 +601,7 @@ void ci_truncate(fock::onspace& space,
       }
    }
    if(ifortho){
-      int nindp = linalg::get_ortho_basis(vtmp,neig);
+      int nindp = linalg::get_ortho_basis(nred,neig,vtmp.data());
       if(nindp != neig){
          std::string msg = "error: thresh is too large for ci_truncate! nindp,neig=";
 	 tools::exit(msg+std::to_string(nindp)+","+std::to_string(neig));

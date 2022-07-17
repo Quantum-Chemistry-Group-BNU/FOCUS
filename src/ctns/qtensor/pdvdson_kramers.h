@@ -132,7 +132,7 @@ struct pdvdsonSolver_kr{
                             << std::endl;
 	       }
             } // i
-            nindp = linalg::get_ortho_basis(ndim, neig*2, v0); // reorthogonalization
+            nindp = linalg::get_ortho_basis(ndim, neig*2, v0.data()); 
          }else{
             // odd-electron case: needs to first generate Kramers paired basis
             for(int i=0; i<neig; i++){
@@ -144,7 +144,7 @@ struct pdvdsonSolver_kr{
 	           	    << std::endl;
 	       }
             } // i
-            nindp = kramers::get_ortho_basis_qt(ndim, neig*2, v0, *pwf); // reorthogonalization
+            nindp = kramers::get_ortho_basis_qt(ndim, neig*2, v0, *pwf);
          }
          if(iprt > 0) std::cout << " neig,nindp=" << neig << "," << nindp << std::endl;
          assert(nindp >= neig);
@@ -411,7 +411,7 @@ struct pdvdsonSolver_kr{
                // re-orthogonalization and get nindp for different cases of parity
 	       //------------------------------------------------------------------
 	       if(parity == 0){
-	          nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas,rbas,crit_indp);
+	          nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas.data(),rbas.data(),crit_indp);
 	       }else{
                   nindp = kramers::get_ortho_basis_qt(ndim,nsub,nres,vbas,rbas,*pwf,crit_indp);
 	       }

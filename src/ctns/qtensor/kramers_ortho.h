@@ -19,12 +19,18 @@ extern const bool debug_ortho;
 const double crit_indp_kr = 1.e-6;
 extern const double crit_indp_kr;
 
-//
+//================================
+// Functions for kramers_linalg.h 
+//================================
+
+//----------------------------------------------------------
+// 1. Generate |ykr> = K|y> for |y> expanded in KSA basis
+//----------------------------------------------------------
+
 // Even-electron case: suppose |v> = |D>A + |Df>B + |D0>C
 // then K|v> = |Df>sA* + |D>sB* + |D0>C* 
 //           = |D>sB* + |Df>sA* + |D0>C*
 // using K|D>=|Df>s and K|Df>=|D>s
-//
 template <typename Tm> 
 void get_krvec_even(Tm* y, Tm* ykr, const std::vector<double>& phases, const int ndim0){
    int ndim1 = phases.size();
@@ -39,12 +45,10 @@ void get_krvec_even(Tm* y, Tm* ykr, const std::vector<double>& phases, const int
    }
 }
 
-//
 // Odd-electron case: suppose |v> = |D>A + |Df>B 
 // then K|v> = |Df>sA* + |D>(-sB*)
 //           = |D>(-sB*) + |Df>sA*
 // using K|D>=|Df>s and K|Df>=|D>(-s)
-//
 template <typename Tm> 
 void get_krvec_odd(Tm* y, Tm* ykr, const std::vector<double>& phases){
    int ndim2 = phases.size();
@@ -56,23 +60,29 @@ void get_krvec_odd(Tm* y, Tm* ykr, const std::vector<double>& phases){
    }
 }
 
+//----------------------------------------------------------
+// 2. Generate KSA basis from a given set of vectors
+//----------------------------------------------------------
+
 // Even-electron case: MGS for rbas of size rbas(ndim,nres)
 template <typename Tm>
 int get_ortho_basis_even(linalg::matrix<Tm>& rbas, 
 		         const int nres,
 		         const std::vector<double>& phases,
 		         const double crit_indp=crit_indp_kr){
-   const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const double isqrt2 = 1.0/std::sqrt(2.0);
    const std::complex<double> iunit(0.0,1.0);
    const int maxtimes = 2;
    if(debug_ortho) std::cout << "kramers::get_ortho_basis_even crit_indp=" << crit_indp << std::endl;
    // form new basis from rbas by modified Gram-Schmidt procedure
-   int ndim = rbas.rows(), ndim1 = phases.size(), ndim0 = ndim-ndim1*2;
+   int ndim = rbas.rows();
+   int ndim1 = phases.size();
+   int ndim0 = ndim-ndim1*2;
    // Form {1/sqrt2(|b>+K|b>), i/sqrt2(|b>-K|b>)} from {|b>}
    linalg::matrix<Tm> rbas_new(ndim,2*nres);
    std::vector<Tm> vec(ndim), krvec(ndim);
    for(int i=0; i<nres; i++){
+      // |v> = |r[i]>/sqrt2
       std::transform(rbas.col(i), rbas.col(i)+ndim, vec.begin(),
 		     [isqrt2](const Tm& x){ return x*isqrt2; });
       get_krvec_even(vec.data(), krvec.data(), phases, ndim0);
@@ -84,7 +94,7 @@ int get_ortho_basis_even(linalg::matrix<Tm>& rbas,
 		     [iunit](const Tm& x, const Tm& y){ return (x-y)*iunit; }); 
    }
    // Orthonormalization
-   int nindp = get_ortho_basis(rbas_new, 2*nres, crit_indp);
+   int nindp = linalg::get_ortho_basis(ndim, 2*nres, rbas_new.data(), crit_indp);
    if(debug_ortho) std::cout << "final nindp=" << nindp << std::endl;
    assert(nindp > 0);
    rbas.resize(ndim, nindp);
@@ -100,7 +110,6 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
 		        const int nres,
 		        const std::vector<double>& phases,
 		        const double crit_indp=crit_indp_kr){
-   const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
    if(debug_ortho) std::cout << "kramers::get_ortho_basis_odd crit_indp=" << crit_indp << std::endl;
    // form new basis from rbas by modified Gram-Schmidt procedure
@@ -114,13 +123,11 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
       if(rii < crit_indp) continue;
       // normalized |r[i]> 
       for(int repeat=0; repeat<maxtimes; repeat++){
-	 std::transform(rbas.col(i), rbas.col(i)+ndim, rbas.col(i),
-		        [rii](const Tm& x){ return x/rii; });
+         linalg::xscal(ndim, 1.0/rii, rbas.col(i));
          rii = linalg::xnrm2(ndim, rbas.col(i));
       }
       //-------------------------------------------------------------
       rbas_new.resize(ndim*(nindp+2));
-      // copy
       linalg::xcopy(ndim, rbas.col(i), &rbas_new[nindp*ndim]);
       nindp += 1;
       // add its time-reversal partner
@@ -129,19 +136,11 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
       nindp += 1;
       //-------------------------------------------------------------
       // project out |r[i]>-component from other basis
-      int N = nres-1-i;
-      if(N == 0) break;
-      std::vector<Tm> rtr(nindp*N);
-      // R_rest = (1-Rnew*Rnew^+)*R_rest
+      int nleft = nres-1-i;
+      if(nleft == 0) break;
       for(int repeat=0; repeat<maxtimes; repeat++){
-	 // rtr = Rnew^+*R_rest
-	 linalg::xgemm("C","N",&nindp,&N,&ndim,
-               	       &one,&rbas_new[0],&ndim,rbas.col(i+1),&ndim,
-               	       &zero,rtr.data(),&nindp);
-	 // R_rest -= Rnew*rtr
-	 linalg::xgemm("N","N",&ndim,&N,&nindp,
-                       &mone,&rbas_new[0],&ndim,rtr.data(),&nindp,
-                       &one,rbas.col(i+1),&ndim);
+         // R_rest = (1-Rnew*Rnew^+)*R_rest
+	 linalg::ortho_projection(ndim,nindp,nleft,&rbas_new[0],rbas.col(i+1));
       } // repeat
    } // i
    if(debug_ortho) std::cout << "final nindp=" << nindp << std::endl;
@@ -176,16 +175,21 @@ int get_ortho_basis_kr(const ctns::qsym& qr,
    return nindp;
 }
 
-//
-// QTensor-related, used in pdvdson_kramers.h
-//
+//===================================================
+// Functions for pdvdson_kramers.h (QTensor-related) 
+//===================================================
+
 template <typename Tm, typename QTm> 
 void get_krvec_qt(Tm* y, Tm* ykr, QTm& wf, const int parity=1){
    wf.from_array(y);
    wf.K(parity).to_array(ykr);
 }
 
-// Odd case: 
+//-------------------------------------------------
+// Generate KSA basis for Odd electron case, while
+// Even electron case is treated as usual.
+//-------------------------------------------------
+
 template <typename Tm, typename QTm>
 int get_ortho_basis_qt(const int ndim,
   	      	       const int neig,
@@ -194,17 +198,10 @@ int get_ortho_basis_qt(const int ndim,
   		       std::vector<Tm>& rbas,
 		       QTm& wf,
   		       const double crit_indp=1.e-12){
-   const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
    // projection (1-V*V^+)*R = R-V*(V^+R)
-   std::vector<Tm> vtr(neig*nres);
    for(int repeat=0; repeat<maxtimes; repeat++){
-      linalg::xgemm("C","N",&neig,&nres,&ndim,
-	            &one,vbas.data(),&ndim,rbas.data(),&ndim,
-	            &zero,vtr.data(),&neig);
-      linalg::xgemm("N","N",&ndim,&nres,&neig,
-	            &mone,vbas.data(),&ndim,vtr.data(),&neig,
-	            &one,rbas.data(),&ndim);
+      linalg::ortho_projection(ndim,neig,nres,vbas.data(),rbas.data());
    }
    // form new basis from rbas by modified Gram-Schmidt procedure
    std::vector<Tm> krvec(ndim);
@@ -216,13 +213,11 @@ int get_ortho_basis_qt(const int ndim,
       if(rii < crit_indp) continue;
       // normalized |r[i]> 
       for(int repeat=0; repeat<maxtimes; repeat++){
-	 std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[i*ndim],
-		        [rii](const Tm& x){ return x/rii; });
+	 linalg::xscal(ndim, 1.0/rii, &rbas[i*ndim]);
          rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
       }
       //-------------------------------------------------------------
       rbas_new.resize(ndim*(nindp+2));
-      // copy
       linalg::xcopy(ndim, &rbas[i*ndim], &rbas_new[nindp*ndim]);
       nindp += 1;
       // add its time-reversal partner
@@ -241,40 +236,30 @@ int get_ortho_basis_qt(const int ndim,
       }
       //-------------------------------------------------------------
       // project out |r[i]>-component from other basis
-      int N = nres-1-i;
-      if(N == 0) continue;
-      std::vector<Tm> vtr(neig*N), rtr(nindp*N);
+      int nleft = nres-1-i;
+      if(nleft == 0) continue;
       for(int repeat=0; repeat<maxtimes; repeat++){
          // R_rest = (1-V*V^+)*R_rest
-	 linalg::xgemm("C","N",&neig,&N,&ndim,
-                       &one,vbas.data(),&ndim,&rbas[(i+1)*ndim],&ndim,
-                       &zero,vtr.data(),&neig);
-         linalg::xgemm("N","N",&ndim,&N,&neig,
-                       &mone,vbas.data(),&ndim,vtr.data(),&neig,
-                       &one,&rbas[(i+1)*ndim],&ndim);
+	 linalg::ortho_projection(ndim,neig,nleft,vbas.data(),&rbas[(i+1)*ndim]);
          // R_rest = (1-Rnew*Rnew^+)*R_rest
-         linalg::xgemm("C","N",&nindp,&N,&ndim,
-                       &one,&rbas_new[0],&ndim,&rbas[(i+1)*ndim],&ndim,
-                       &zero,rtr.data(),&nindp);
-         linalg::xgemm("N","N",&ndim,&N,&nindp,
-                       &mone,&rbas_new[0],&ndim,rtr.data(),&nindp,
-                       &one,&rbas[(i+1)*ndim],&ndim);
+         linalg::ortho_projection(ndim,nindp,nleft,&rbas_new[0],&rbas[(i+1)*ndim]);
       } // repeat
    } // i
+   
+   //rbas = std::move(rbas_new);
    rbas = rbas_new;
+   
    // Orthonormality is essential
    linalg::check_orthogonality(ndim, nindp, rbas);
    return nindp;
 }
 
-// MGS for rbas of size rbas(ndim,nres)
 template <typename Tm, typename QTm>
 int get_ortho_basis_qt(const int ndim,
 		       const int nres,
 		       std::vector<Tm>& rbas,
 		       QTm& wf,
 		       const double crit_indp=1.e-12){
-   const Tm one = 1.0, mone = -1.0, zero = 0.0;
    const int maxtimes = 2;
    // form new basis from rbas by modified Gram-Schmidt procedure
    std::vector<Tm> krvec(ndim);
@@ -286,13 +271,11 @@ int get_ortho_basis_qt(const int ndim,
       if(rii < crit_indp) continue;
       // normalized |r[i]> 
       for(int repeat=0; repeat<maxtimes; repeat++){
-	 std::transform(&rbas[i*ndim], &rbas[i*ndim]+ndim, &rbas[i*ndim],
-		        [rii](const Tm& x){ return x/rii; });
+         linalg::xscal(ndim, 1.0/rii, &rbas[i*ndim]);
          rii = linalg::xnrm2(ndim, &rbas[i*ndim]);
       }
       //-------------------------------------------------------------
       rbas_new.resize(ndim*(nindp+2));
-      // copy
       linalg::xcopy(ndim, &rbas[i*ndim], &rbas_new[nindp*ndim]);
       nindp += 1;
       // add its time-reversal partner
@@ -316,22 +299,16 @@ int get_ortho_basis_qt(const int ndim,
       }
       //-------------------------------------------------------------
       // project out |r[i]>-component from other basis
-      int N = nres-1-i;
-      if(N == 0) break;
-      std::vector<Tm> rtr(nindp*N);
-      // R_rest = (1-Rnew*Rnew^+)*R_rest
+      int nleft = nres-1-i;
+      if(nleft == 0) break;
       for(int repeat=0; repeat<maxtimes; repeat++){
-	 // rtr = Rnew^+*R_rest
-	 linalg::xgemm("C","N",&nindp,&N,&ndim,
-               	       &one,&rbas_new[0],&ndim,&rbas[(i+1)*ndim],&ndim,
-               	       &zero,rtr.data(),&nindp);
-	 // R_rest -= Rnew*rtr
-	 linalg::xgemm("N","N",&ndim,&N,&nindp,
-                       &mone,&rbas_new[0],&ndim,rtr.data(),&nindp,
-                       &one,&rbas[(i+1)*ndim],&ndim);
+         // R_rest = (1-Rnew*Rnew^+)*R_rest
+	 linalg::ortho_projection(ndim,nindp,nleft,&rbas_new[0],&rbas[(i+1)*ndim]);
       } // repeat
    } // i
+   
    rbas = rbas_new;
+   
    // Orthonormality is essential
    linalg::check_orthogonality(ndim, nindp, rbas);
    return nindp;

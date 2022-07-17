@@ -187,6 +187,7 @@ void eig_solver_even(const linalg::matrix<Tm>& rhor,
    //  [   (a-b)r   (a+b)i   sqrt2*ci ]
    //  [  -(a-b)i   (a+b)r   sqrt2*cr ] 
    //  [ sqrt2*ciT sqrt2*crT     e    ]
+   //
    auto ApB = A+B;
    auto AmB = A-B;
    const double sqrt2 = std::sqrt(2.0), isqrt2 = 1.0/sqrt2;

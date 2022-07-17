@@ -10,7 +10,6 @@
 #include "../core/integral.h"
 #include "../core/onspace.h"
 #include "../core/matrix.h"
-#include "../core/dvdson.h"  // get_ortho_basis
 #include "../io/input.h" // schedule
 #include "fci_util.h"
 
