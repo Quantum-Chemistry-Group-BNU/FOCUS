@@ -44,7 +44,7 @@ struct pdvdsonSolver_kr{
                          << " neig=" << neig
                          << " maxcycle=" << maxcycle 
                          << " nbuff=" << nbuff  
-			 << " memory=" << tools::sizeGB<Tm>(ndim*(3*nmax+neig)) << "GB"
+			 << " memory=" << tools::sizeGB<Tm>(ndim*(3*nmax)) << "GB"
 			 << std::endl; 
 	       std::cout << "          damping=" << damping << std::scientific 
                          << " crit_v=" << crit_v 
@@ -154,13 +154,15 @@ struct pdvdsonSolver_kr{
       //-------------------------------------
       // Case 0: even-electron Hilbert space 
       //-------------------------------------
-      void subspace_solver_even(const int ndim, 
-		      	        const int nsub,
-		      	        const int neig,
-      	       		        std::vector<Tm>& vbas,
-      	       		        std::vector<Tm>& wbas,
-      	       		        std::vector<double>& tmpE,
-			        std::vector<Tm>& rbas){
+      int subspace_solver_even(const int ndim, 
+		      	       const int nsub,
+		      	       const int neig,
+			       const int naux,
+			       const std::vector<bool>& rconv,
+      	       		       std::vector<Tm>& vbas,
+      	       		       std::vector<Tm>& wbas,
+      	       		       std::vector<double>& tmpE,
+			       std::vector<Tm>& rbas){
          // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
          const Tm alpha = 1.0, beta=0.0;
 	 linalg::matrix<Tm> tmpH(nsub,nsub);
@@ -180,16 +182,31 @@ struct pdvdsonSolver_kr{
 	 linalg::matrix<double> tmpX;
          linalg::eig_solver(tmpH.real(), tmpE, tmpX);
 	 auto tmpU = tmpX.as_complex();
-	 //-------------------------------------------------------- 
+	 //---------------------------------------------------------------------------------
+         // 4. Rotated basis to minimal subspace that can give the exact [neig] eigenvalues
+	 //    Also, the difference vector = xold - xnew as corrections 
+         //---------------------------------------------------------------------------------
+	 auto delU = linalg::identity_matrix<Tm>(nsub) - tmpU;
+	 int nres = 0;
+	 for(int i=0; i<neig; i++){
+	    if(rconv[i]) continue;
+	    linalg::xcopy(nsub,delU.col(i),delU.col(nres));
+	    nres++;
+	 }
+	 int nindp = linalg::get_ortho_basis(nsub,neig,nres,tmpU.data(),delU.data(),crit_indp);
+	 if(nindp >= naux) nindp = 2;
+	 if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
+	 int nsub1 = neig + nindp;
+         //---------------------------------------------------------------------------------
          // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
          // vbas = X[i]
 	 linalg::xcopy(ndim*nsub, vbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub1,&nsub,
                        &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,vbas.data(),&ndim);
          // wbas = HX[i]
 	 linalg::xcopy(ndim*nsub, wbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub1,&nsub,
                        &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,wbas.data(),&ndim);
          // rbas = HX[i]-e[i]*X[i]
@@ -197,18 +214,21 @@ struct pdvdsonSolver_kr{
          for(int i=0; i<neig; i++){
             linalg::xaxpy(ndim, -tmpE[i], &vbas[i*ndim], &rbas[i*ndim]); 
          }
+	 return nindp;
       }
 
       //-------------------------------------
       // Case 1: odd-electron Hilbert space 
       //-------------------------------------
-      void subspace_solver_odd(const int ndim, 
-		      	       const int nsub,
-		      	       const int neig,
-      	       		       std::vector<Tm>& vbas,
-      	       		       std::vector<Tm>& wbas,
-      	       		       std::vector<double>& tmpE,
-			       std::vector<Tm>& rbas){
+      int subspace_solver_odd(const int ndim, 
+		      	      const int nsub,
+		      	      const int neig,
+			      const int naux,
+			      const std::vector<bool>& rconv,
+      	       		      std::vector<Tm>& vbas,
+      	       		      std::vector<Tm>& wbas,
+      	       		      std::vector<double>& tmpE,
+			      std::vector<Tm>& rbas){
          // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
          const Tm alpha = 1.0, beta=0.0;
 	 linalg::matrix<Tm> tmpH2(nsub,nsub);
@@ -287,6 +307,7 @@ struct pdvdsonSolver_kr{
             linalg::xaxpy(ndim, -tmpE[i1], &vbas[i1*ndim], &rbas[i1*ndim]); // -e*xob
             //-------------------------------------------------------------------------
          } // i
+	 return 0;
       }
 
       // Precondition of a residual
@@ -320,9 +341,9 @@ struct pdvdsonSolver_kr{
 
  	 // 0. initialization
          int nmax = std::min(ndim,neig+nbuff); // maximal subspace size
- 	 std::vector<Tm> vbas(ndim*nmax), wbas(ndim*nmax);
- 	 std::vector<Tm> rbas(ndim*nmax), tbas(ndim*neig);
- 	 std::vector<double> tmpE(nmax), tnorm(neig);
+	 int naux = nmax-neig;
+ 	 std::vector<Tm> vbas(ndim*nmax), wbas(ndim*nmax), rbas(ndim*nmax);
+ 	 std::vector<double> tmpE(nmax);
          std::vector<bool> rconv(neig);
  	 linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); // history
          nmvp = 0;
@@ -339,7 +360,8 @@ struct pdvdsonSolver_kr{
          
 	 // 2. begin to solve
          bool ifconv = false;
-         int nsub = neig;
+         int nsub = (rank==0)? neig : 0;
+	 int nindp = 0;
          for(int iter=1; iter<maxcycle+1; iter++){
 
             // rank-0: solve the subspace problem
@@ -348,9 +370,9 @@ struct pdvdsonSolver_kr{
                // solve subspace problem and form full residuals: Res[i]=HX[i]-w[i]*X[i]
 	       //------------------------------------------------------------------------
 	       if(parity == 0){
-                  subspace_solver_even(ndim,nsub,neig,vbas,wbas,tmpE,rbas);
+                  nindp = subspace_solver_even(ndim,nsub,neig,naux,rconv,vbas,wbas,tmpE,rbas);
 	       }else{
-                  subspace_solver_odd(ndim,nsub,neig,vbas,wbas,tmpE,rbas);
+                  nindp = subspace_solver_odd(ndim,nsub,neig,naux,rconv,vbas,wbas,tmpE,rbas);
 	       }
 	       //------------------------------------------------------------------------
                // compute norm of residual
@@ -362,8 +384,10 @@ struct pdvdsonSolver_kr{
                }
                auto t1 = tools::get_time();
                if(iprt >= 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
+	       nsub = neig+nindp;
                ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
 	    }
+
 #ifndef SERIAL
             if(size > 1) boost::mpi::broadcast(world, ifconv, 0);
 #endif	  
@@ -382,30 +406,21 @@ struct pdvdsonSolver_kr{
             }
             
             // if not converged, improve the subspace by adding preconditioned residues
-	    if(nsub == nmax) nsub = neig; // restart the subspace
-	    int nindp = 0;
 	    if(rank == 0){
                int nres = 0;
                for(int i=0; i<neig; i++){
                   if(rconv[i]) continue;
-		  precondition(&rbas[i*ndim],&tbas[nres*ndim],tmpE[i]);
-	          //-------------------------------------------
-	          // Kramers projection to ensure K|psi>=|psi>
-	          //-------------------------------------------
+		  precondition(&rbas[i*ndim],&rbas[nres*ndim],tmpE[i]);
+	          //------------------------------------------------------------------
+	          // Kramers projection to ensure K|psi>=|psi> for even electron case
+	          //------------------------------------------------------------------
 	          if(parity == 0){
-   	             pwf->from_array( &tbas[nres*ndim] );
+   	             pwf->from_array( &rbas[nres*ndim] );
    	             *pwf += pwf->K();
-   	             pwf->to_array( &tbas[nres*ndim] );
+   	             pwf->to_array( &rbas[nres*ndim] );
 	          }
-	          //-------------------------------------------
-                  tnorm[nres] = linalg::xnrm2(ndim,&tbas[nres*ndim]);
+	          //------------------------------------------------------------------
                   nres += 1;
-               }
-               // *** this part is critical for better performance ***
-               // ordering the residual to be added from large to small
-               auto index = tools::sort_index(nres, tnorm.data(), 1);
-               for(int i=0; i<nres; i++){
-	          linalg::xcopy(ndim, &tbas[index[i]*ndim], &rbas[i*ndim]); 
                }
 	       //------------------------------------------------------------------
                // re-orthogonalization and get nindp for different cases of parity
@@ -416,7 +431,7 @@ struct pdvdsonSolver_kr{
                   nindp = kramers::get_ortho_basis_qt(ndim,nsub,nres,vbas,rbas,*pwf,crit_indp);
 	       }
 	       //------------------------------------------------------------------
-	       nindp = std::min(nindp,nmax-nsub);
+	       nindp = std::min(nindp, nmax-nsub);
 	    }
 
 #ifndef SERIAL
@@ -431,8 +446,10 @@ struct pdvdsonSolver_kr{
 #endif	      
  	       linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
                HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
-               nsub += nindp; // expand the subspace
-               if(rank == 0) linalg::check_orthogonality(ndim,nsub,vbas);
+               if(rank == 0){
+		  nsub += nindp; // expand the subspace
+                  linalg::check_orthogonality(ndim,nsub,vbas);
+	       }
             }
 
          } // iter
@@ -455,7 +472,7 @@ struct pdvdsonSolver_kr{
       std::function<void(Tm*, const Tm*)> HVec;
       double crit_v = 1.e-5;  // used control parameter
       int maxcycle = 30;
-      int nbuff = 6; // maximal additional vectors
+      int nbuff = 4; // maximal additional vectors
       //--------------------
       // Kramers projection
       //--------------------
