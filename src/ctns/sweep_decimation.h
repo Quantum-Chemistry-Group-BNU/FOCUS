@@ -131,6 +131,7 @@ void decimation_row_nkr(const qbond& qs1,
 	        << " nqr=" << nqr << " maxthreads=" << maxthreads
 		<< std::endl;
    }
+   qrow.print("qsuper");
    
    // 0. untruncated case
    if(!iftrunc){
@@ -147,7 +148,8 @@ void decimation_row_nkr(const qbond& qs1,
       rot = std::move(qt2);
       dwt = 0.0;
       deff = qrow.get_dimAll();
-      std::cout << "keep all " << deff << " states" << std::endl;
+      std::cout << "decimation summary: keep all " 
+	        << deff << " states" << std::endl;
       return;
    }
 
@@ -305,7 +307,8 @@ inline void decimation_row_kr(const qbond& qs1,
       rot = std::move(qt2);
       dwt = 0.0;
       deff = qrow.get_dimAll();
-      std::cout << "keep all " << deff << " states" << std::endl;
+      std::cout << "decimation summary: keep all " 
+	        << deff << " states" << std::endl;
       return;
    }
 
@@ -441,8 +444,11 @@ void decimation_row(const bool ifkr,
 		    int& deff,
 		    const std::string fname,
 		    const bool debug){
-   if(debug) std::cout << "ctns::decimation_row: ";
-   if(iftrunc) std::cout << "fname=" << fname << std::endl;
+   if(debug){
+      std::cout << "ctns::decimation_row: ";
+      if(iftrunc) std::cout << "fname=" << fname;
+      std::cout << std::endl;
+   }
    if(!ifkr){
       decimation_row_nkr(qs1, qs2, iftrunc, dcut, rdm_vs_svd, 
 		         wfs2, rot, dwt, deff, fname);
