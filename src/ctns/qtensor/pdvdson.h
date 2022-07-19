@@ -171,9 +171,9 @@ struct pdvdsonSolver_nkr{
 	 linalg::eig_solver(tmpH, tmpE, tmpU);
          //---------------------------------------------------------------------------------
          // 4. Rotated basis to minimal subspace that can give the exact [neig] eigenvalues
-	 //    Also, the difference vector = xold - xnew as corrections 
+	 //    Also, the difference vector = xold - xnew as corrections (or simply xold)
          //---------------------------------------------------------------------------------
-	 auto delU = linalg::identity_matrix<Tm>(nsub) - tmpU;
+         auto delU = linalg::identity_matrix<Tm>(nsub);
 	 int nres = 0;
 	 for(int i=0; i<neig; i++){
 	    if(rconv[i]) continue;
@@ -184,6 +184,7 @@ struct pdvdsonSolver_nkr{
 	 if(nindp >= naux) nindp = 2;
 	 if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
 	 int nsub1 = neig + nindp;
+	 assert(nsub1 <= nsub);
          //---------------------------------------------------------------------------------
 	 // 5. form full residuals: Res[i]=HX[i]-e[i]*X[i]
          // vbas = {X[i]}

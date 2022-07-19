@@ -184,9 +184,9 @@ struct pdvdsonSolver_kr{
 	 auto tmpU = tmpX.as_complex();
 	 //---------------------------------------------------------------------------------
          // 4. Rotated basis to minimal subspace that can give the exact [neig] eigenvalues
-	 //    Also, the difference vector = xold - xnew as corrections 
+	 //    Also, the difference vector = xold - xnew as corrections (or simply xold) 
          //---------------------------------------------------------------------------------
-	 auto delU = linalg::identity_matrix<Tm>(nsub) - tmpU;
+	 auto delU = linalg::identity_matrix<Tm>(nsub);
 	 int nres = 0;
 	 for(int i=0; i<neig; i++){
 	    if(rconv[i]) continue;
@@ -197,6 +197,7 @@ struct pdvdsonSolver_kr{
 	 if(nindp >= naux) nindp = 2;
 	 if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
 	 int nsub1 = neig + nindp;
+	 assert(nsub1 <= nsub);
          //---------------------------------------------------------------------------------
          // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
          // vbas = X[i]
@@ -237,6 +238,7 @@ struct pdvdsonSolver_kr{
                        &beta,tmpH2.data(),&nsub);
 	 //-----------------------------------------------------------
 	 // 2. construct full Hamiltonian from skeleton sigma vector
+	 //    convert ordering of basis from abab to aabb (pow_new).
 	 //-----------------------------------------------------------
 	 assert(nsub%2 == 0);
 	 int nsub2 = nsub/2;
@@ -270,23 +272,44 @@ struct pdvdsonSolver_kr{
 	 //-----------------------------------------------------------
          // TRS-preserving diagonalization (only half eigs are output) 
 	 std::vector<double> tmpe(nsub);
-	 linalg::matrix<Tm> tmpU;
+	 linalg::matrix<Tm> tmpU; // U(aabb,aabb) for zquatev
 	 kramers::zquatev(tmpH, tmpe, tmpU);
 	 for(int i=0; i<nsub2; i++){
 	    tmpE[2*i] = tmpe[i];
 	    tmpE[2*i+1] = tmpe[i];
 	 }
-	 tmpU = tmpU.reorder_rowcol(pos_new, pos_new, 1);
-	 //-----------------------------------------------------------
+	 // convert ordering of basis from aabb back to abab 
+	 tmpU = tmpU.reorder_rowcol(pos_new, pos_new, 1); // U(abab,abab)
+	 //---------------------------------------------------------------------------------
+	 // 4. Rotated basis to minimal subspace that can give the exact [neig] eigenvalues
+	 //    Also, the difference vector = xold - xnew as corrections (or simply xold) 
+         //---------------------------------------------------------------------------------
+	 auto delU = linalg::identity_matrix<Tm>(nsub);
+	 int nres = 0;
+	 for(int i=0; i<neig; i++){
+	    if(rconv[i]) continue;
+	    linalg::xcopy(nsub,delU.col(i),delU.col(nres));
+	    nres++;
+	 }
+	 tmpU = tmpU.reorder_row(pos_new, 0); // U(aabb,abab)
+	 delU = delU.reorder_row(pos_new, 0);
+	 std::vector<double> phases(nsub2,1.0);
+         int nindp = kramers::get_ortho_basis_odd(nsub,neig,nres,tmpU,delU,phases,crit_indp);
+	 tmpU = tmpU.reorder_row(pos_new, 1); // U(abab,abab)
+	 delU = delU.reorder_row(pos_new, 1);
+	 if(nindp >= naux) nindp = 2;
+	 if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
+	 int nsub1 = neig + nindp;
+	 assert(nsub1 <= nsub);
          // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
          // vbas = X[i]
 	 linalg::xcopy(ndim*nsub, vbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub1,&nsub,
                        &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,vbas.data(),&ndim);
          // wbas = HX[i]
 	 linalg::xcopy(ndim*nsub, wbas.data(), rbas.data()); 
-	 linalg::xgemm("N","N",&ndim,&nsub,&nsub,
+	 linalg::xgemm("N","N",&ndim,&nsub1,&nsub,
                        &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
                        &beta,wbas.data(),&ndim);
 	 // rbas = HX[i]-e[i]*X[i]
@@ -307,7 +330,7 @@ struct pdvdsonSolver_kr{
             linalg::xaxpy(ndim, -tmpE[i1], &vbas[i1*ndim], &rbas[i1*ndim]); // -e*xob
             //-------------------------------------------------------------------------
          } // i
-	 return 0;
+	 return nindp;
       }
 
       // Precondition of a residual

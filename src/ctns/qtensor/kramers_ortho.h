@@ -2,11 +2,9 @@
 #define KRAMERS_ORTHO_H
 
 /*
-
  Generation of Kramers-Symmetry-Adapted basis:
   0. even-electron subspace: {|b>} with K|b>=|b>
   1. odd-electron subspace: {|b>,K|b>}
-
 */
 
 #include "../../core/ortho.h"
@@ -72,7 +70,6 @@ int get_ortho_basis_even(linalg::matrix<Tm>& rbas,
 		         const double crit_indp=crit_indp_kr){
    const double isqrt2 = 1.0/std::sqrt(2.0);
    const std::complex<double> iunit(0.0,1.0);
-   const int maxtimes = 2;
    if(debug_ortho) std::cout << "kramers::get_ortho_basis_even crit_indp=" << crit_indp << std::endl;
    // form new basis from rbas by modified Gram-Schmidt procedure
    int ndim = rbas.rows();
@@ -144,7 +141,7 @@ int get_ortho_basis_odd(linalg::matrix<Tm>& rbas,
       } // repeat
    } // i
    if(debug_ortho) std::cout << "final nindp=" << nindp << std::endl;
-   assert(nindp%2 == 0);
+   assert(nindp > 0 && nindp%2 == 0);
    rbas.resize(ndim, nindp);
    linalg::xcopy(ndim*nindp, rbas_new.data(), rbas.data());
    // reorder into {|b>,K|b>} structure
@@ -171,13 +168,78 @@ int get_ortho_basis_kr(const ctns::qsym& qr,
    }else{
       nindp = get_ortho_basis_odd(rbas, nres, phases, crit_indp);
    }
-   assert(nindp > 0);
    return nindp;
 }
 
 //===================================================
 // Functions for pdvdson_kramers.h (QTensor-related) 
 //===================================================
+
+// Odd-electron case: MGS for rbas of size rbas(ndim,nres)
+template <typename Tm>
+int get_ortho_basis_odd(const int ndim,
+			const int neig,
+			const int nres,
+			const linalg::matrix<Tm>& vbas,
+		        linalg::matrix<Tm>& rbas, 
+		        const std::vector<double>& phases,
+		        const double crit_indp=1.e-12){
+   const int maxtimes = 2;
+   // 1. projection (1-V*V^+)*R = R-V*(V^+R)
+   for(int repeat=0; repeat<maxtimes; repeat++){
+      linalg::ortho_projection(ndim,neig,nres,vbas.data(),rbas.data());
+   }
+   // 2. form new basis from rbas by modified Gram-Schmidt procedure
+   std::vector<Tm> krvec(ndim);
+   std::vector<Tm> rbas_new;
+   int nindp = 0;
+   for(int i=0; i<nres; i++){
+      double rii = linalg::xnrm2(ndim, rbas.col(i)); // normalization constant
+      if(rii < crit_indp) continue;
+      // normalized |r[i]> 
+      for(int repeat=0; repeat<maxtimes; repeat++){
+         linalg::xscal(ndim, 1.0/rii, rbas.col(i));
+         rii = linalg::xnrm2(ndim, rbas.col(i));
+      }
+      //-------------------------------------------------------------
+      rbas_new.resize(ndim*(nindp+2));
+      linalg::xcopy(ndim, rbas.col(i), &rbas_new[nindp*ndim]);
+      nindp += 1;
+      // add its time-reversal partner
+      get_krvec_odd(rbas.col(i), krvec.data(), phases);
+      linalg::xcopy(ndim, krvec.data(), &rbas_new[nindp*ndim]);
+      nindp += 1;
+      //-------------------------------------------------------------
+      // project out |r[i]>-component from other basis
+      int nleft = nres-1-i;
+      if(nleft == 0) break;
+      for(int repeat=0; repeat<maxtimes; repeat++){
+         // R_rest = (1-V*V^+)*R_rest
+	 //linalg::ortho_projection(ndim,neig,nleft,vbas.data(),rbas.col(i+1));
+	 linalg::ortho_projection(ndim,neig,nleft,vbas.data(),&rbas._data[(i+1)*ndim]);
+	 // R_rest = (1-Rnew*Rnew^+)*R_rest
+	 //linalg::ortho_projection(ndim,nindp,nleft,&rbas_new[0],rbas.col(i+1));
+	 linalg::ortho_projection(ndim,nindp,nleft,&rbas_new[0],&rbas._data[(i+1)*ndim]);
+      } // repeat
+   } // i
+   assert(nindp%2 == 0);
+   if(nindp > 0){
+      rbas.resize(ndim, nindp);
+      linalg::xcopy(ndim*nindp, rbas_new.data(), rbas.data());
+      // this part is not needed in subspace_solver_odd (pdvdson_kramers.h)
+      /*
+      // reorder into {|b>,K|b>} structure
+      std::vector<int> pos_new(nindp);
+      for(int i=0; i<nindp; i++){
+         pos_new[i] = i%2==0? i/2 : i/2+nindp/2;
+      }
+      rbas = rbas.reorder_col(pos_new, 1);
+      */
+      // Orthonormality is essential
+      linalg::check_orthogonality(rbas);
+   }
+   return nindp;
+}
 
 template <typename Tm, typename QTm> 
 void get_krvec_qt(Tm* y, Tm* ykr, QTm& wf, const int parity=1){
@@ -245,10 +307,8 @@ int get_ortho_basis_qt(const int ndim,
          linalg::ortho_projection(ndim,nindp,nleft,&rbas_new[0],&rbas[(i+1)*ndim]);
       } // repeat
    } // i
-   
-   //rbas = std::move(rbas_new);
+   assert(nindp > 0);
    rbas = rbas_new;
-   
    // Orthonormality is essential
    linalg::check_orthogonality(ndim, nindp, rbas);
    return nindp;
@@ -306,9 +366,8 @@ int get_ortho_basis_qt(const int ndim,
 	 linalg::ortho_projection(ndim,nindp,nleft,&rbas_new[0],&rbas[(i+1)*ndim]);
       } // repeat
    } // i
-   
+   assert(nindp > 0);
    rbas = rbas_new;
-   
    // Orthonormality is essential
    linalg::check_orthogonality(ndim, nindp, rbas);
    return nindp;

@@ -44,12 +44,14 @@ void ortho_projection(const int ndim,
   		      Tm* rbas){
    const Tm one = 1.0, mone = -1.0, zero = 0.0;
    std::vector<Tm> vdr(neig*nres);
+   // V^+r
    linalg::xgemm("C","N",&neig,&nres,&ndim,
 	         &one,vbas,&ndim,rbas,&ndim,
-	         &zero,vdr.data(),&neig); // V^+r
+	         &zero,vdr.data(),&neig); 
+   // R = R-V*(V^+r)
    linalg::xgemm("N","N",&ndim,&nres,&neig,
 	         &mone,vbas,&ndim,vdr.data(),&neig,
-	         &one,rbas,&ndim); // R = R-V*(V^+r)
+	         &one,rbas,&ndim); 
 }
 
 // modified Gram-Schmidt orthogonalization of 

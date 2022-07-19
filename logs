@@ -127,20 +127,8 @@ LOGS
  * Better sweep performances [DONE@20220714]
     - Reducing the number of Hx in Davidson solver:
     	- tuning size of subspace & preconditioning
-
-	=> nbuff 
-	=> damping
-
-
-
- ### TODOs ###
-
-    1. iteration number
-
-    2. openmp parallel
-
-
-
+        - nbuff>=4 (larger value does not matter too much)
+	- LOBPCG like improvement 
     - Sweep decimation:
         - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are 
           almost exact, unless some quantum numbers are missing from the start.
@@ -155,11 +143,13 @@ LOGS
     - Onedot Hx [DONE2022/06/27]
 
  ### TODOs ###
-    - Renormalization? [allows smaller temporary memory usuage]
+    - Renormalization? [allows smaller temporary memory usuage!!!]
     - Complex version: 'R'?
     - Kramers version?
 
  * Towards large-scale parallelization [DONE2022/XX/XX]
+
+    - openmp version
 
     - profile openmp/mpi onedot/twodot version with large D
 	- note: when noise is added, the results can be different 

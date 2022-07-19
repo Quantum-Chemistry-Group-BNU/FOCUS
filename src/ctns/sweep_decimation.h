@@ -291,7 +291,7 @@ inline void decimation_row_kr(const qbond& qs1,
          std::vector<int> pos_new;
          std::vector<double> phases;
          mapping2krbasis(qr, qs1, qs2, dpt, pos_new, phases);
-	 // compute KRS-adapted renormalized basis
+	 // compute KRS-adapted renormalized basis (from a fake rho = Iden)
          auto rhor = linalg::identity_matrix<Tm>(rdim);
 	 kramers::eig_solver_kr<std::complex<double>>(qr, phases, rhor, sigs2, U);
 	 // convert back to the original product basis
