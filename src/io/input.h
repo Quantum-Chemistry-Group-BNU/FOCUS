@@ -134,8 +134,8 @@ public:
    int batchsize = 1000;
    // dvdson
    int cisolver = 1;
-   int maxcycle = 100;
-   int nbuff = 4;
+   int maxcycle = 30;
+   int nbuff = 4; // should be greater than 2
    double damping = 1.e-10;
    // io
    bool rcanon_load = false;

@@ -127,7 +127,7 @@ LOGS
  * Better sweep performances [DONE@20220714]
     - Reducing the number of Hx in Davidson solver:
     	- tuning size of subspace & preconditioning
-        - nbuff>=4 (larger value does not matter too much)
+        - nbuff>=4 (larger value does not matter too much); keep 2 delU for restart!
 	- LOBPCG like improvement 
     - Sweep decimation:
         - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are 
