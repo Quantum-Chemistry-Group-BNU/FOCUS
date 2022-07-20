@@ -114,7 +114,8 @@ void preprocess_Hx2(Tm* y,
    // initialization
    memset(y, 0, ndim*sizeof(Tm));
 
-/*
+/*   
+   // version-0
    // compute Y[I] = \sum_J H[I,J] X[J]
    size_t off = maxthreads*blksize;
    for(int i=0; i<Hxlst2.size(); i++){
@@ -143,66 +144,50 @@ void preprocess_Hx2(Tm* y,
    } // i
 */
 
-/*
+   // version-1
    // compute Y[I] = \sum_J H[I,J] X[J]
    #pragma omp parallel
    {
 
       Tm* work = new Tm[blksize*3];
-
+/*
+      int omprank = omp_get_thread_num();
+      std::cout << "rk=" << omprank
+	        << " ptr=" << work
+	        << std::endl;	
+*/
+   #pragma omp for schedule(dynamic) nowait
+   //#pragma omp for schedule(dynamic)
    for(int i=0; i<Hxlst2.size(); i++){
-      memset(work, 0, blksize*3*sizeof(Tm));
-      #pragma omp parallel for schedule(dynamic)
+      
+      memset(work, 0, blksize*sizeof(Tm));
+
       for(int j=0; j<Hxlst2[i].size(); j++){
          auto& Hxblk = Hxlst2[i][j];
-         Tm* wptr = work;
+         Tm* wptr = &work[blksize];
          Hxblk.kernel(x, opaddr, wptr);
-	 Tm* rptr = work+Hxblk.offres;
+	 Tm* rptr = &work[blksize+Hxblk.offres];
 	 // save to local memory
-         linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, work+blksize*2);
+         linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, work);
+/*   
+	 int omprank = omp_get_thread_num();
+	 std::cout << "omprank=" << omprank
+		   << " i,j=" << i << "," << j 
+		   << std::endl;
+*/		   
       } // j
-      // reduction
+
       const auto& Hxblk = Hxlst2[i][0];
       #pragma omp critical
-      {
-         linalg::xaxpy(Hxblk.size, 1.0, work+blksize*2, y+Hxblk.offout);
-      }
-   } // i
+      linalg::xaxpy(Hxblk.size, 1.0, work, y+Hxblk.offout);
 
+   } // i
+      
    delete[] work;
    }
-*/
 
 /*
-   // compute Y[I] = \sum_J H[I,J] X[J]
-   #pragma omp parallel
-   {
-
-      Tm* work = new Tm[blksize*3];
-
-   #pragma omp parallel for schedule(dynamic)
-   for(int i=0; i<Hxlst2.size(); i++){
-      memset(work, 0, blksize*3*sizeof(Tm));
-      for(int j=0; j<Hxlst2[i].size(); j++){
-         auto& Hxblk = Hxlst2[i][j];
-         Tm* wptr = work;
-         Hxblk.kernel(x, opaddr, wptr);
-	 Tm* rptr = work+Hxblk.offres;
-	 // save to local memory
-         linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, work+blksize*2);
-      } // j
-      // reduction
-      const auto& Hxblk = Hxlst2[i][0];
-      #pragma omp critical
-      {
-         linalg::xaxpy(Hxblk.size, 1.0, work+blksize*2, y+Hxblk.offout);
-      }
-   } // i
-
-   delete[] work;
-   }
-*/
-
+   // version-2
    // compute Y[I] = \sum_J H[I,J] X[J]
    #pragma omp parallel for schedule(dynamic)
    for(int i=0; i<Hxlst2.size(); i++){
@@ -223,6 +208,7 @@ void preprocess_Hx2(Tm* y,
          linalg::xaxpy(Hxblk.size, 1.0, work+blksize*2, y+Hxblk.offout);
       }
    } // i
+*/
 
    // add const term
    if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
