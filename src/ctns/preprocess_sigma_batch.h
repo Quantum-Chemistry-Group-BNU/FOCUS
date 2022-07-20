@@ -16,7 +16,7 @@ size_t preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
    			               Hxlist2<Tm>& Hxlst2,
 				       const int hxorder,
 				       MMtasks<Tm>& mmtasks,
-				       const bool batchgemm,
+				       const int batchgemm,
 				       const size_t batchsize,
 				       const bool debug){
    auto t0 = tools::get_time();
