@@ -150,31 +150,20 @@ void preprocess_Hx2(Tm* y,
    {
 
       Tm* work = new Tm[blksize*3];
-/*
-      int omprank = omp_get_thread_num();
-      std::cout << "rk=" << omprank
-	        << " ptr=" << work
-	        << std::endl;	
-*/
-   #pragma omp for schedule(dynamic) nowait
-   //#pragma omp for schedule(dynamic)
+
    for(int i=0; i<Hxlst2.size(); i++){
       
       memset(work, 0, blksize*sizeof(Tm));
 
+      #pragma omp for schedule(dynamic) nowait
       for(int j=0; j<Hxlst2[i].size(); j++){
+         int omprank = omp_get_thread_num();
          auto& Hxblk = Hxlst2[i][j];
          Tm* wptr = &work[blksize];
          Hxblk.kernel(x, opaddr, wptr);
 	 Tm* rptr = &work[blksize+Hxblk.offres];
 	 // save to local memory
          linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, work);
-/*   
-	 int omprank = omp_get_thread_num();
-	 std::cout << "omprank=" << omprank
-		   << " i,j=" << i << "," << j 
-		   << std::endl;
-*/		   
       } // j
 
       const auto& Hxblk = Hxlst2[i][0];
