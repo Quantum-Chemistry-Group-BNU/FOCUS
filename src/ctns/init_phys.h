@@ -97,7 +97,6 @@ inline qbond get_qbond_phys(const int isym){
 //  |out> 	          |
 template <typename Tm>
 stensor3<Tm> get_right_bsite(const int isym){
-   std::cout << "ctns::get_right_bsite isym=" << isym << std::endl;
    auto qvac = get_qbond_vac(isym);
    auto qphys = get_qbond_phys(isym);
    stensor3<Tm> qt3(qsym(isym), qphys, qvac, qphys); // lrc
@@ -116,7 +115,6 @@ stensor3<Tm> get_right_bsite(const int isym){
 //  <vac| 	       
 template <typename Tm>
 stensor3<Tm> get_left_bsite(const int isym){
-   std::cout << "ctns::get_left_bsite isym=" << isym << std::endl;
    auto qvac = get_qbond_vac(isym);
    auto qphys = get_qbond_phys(isym);
    stensor3<Tm> qt3(qsym(isym), qvac, qphys, qphys, dir_LCF);
