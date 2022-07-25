@@ -266,11 +266,15 @@ struct FPCodec {
         T *pdata = new T[(chunk_size + 1) * min(nchunk, n_parallel_chunks)];
         vector<size_t> cplens(n_parallel_chunks);
         //std::cout << "nchunk=" << nchunk << " nbatch=" << nbatch << std::endl;
+#ifdef _OPENMP
 #pragma omp parallel
+#endif
         for (size_t ib = 0; ib < nbatch; ib++) {
             size_t n_this_chunk =
                 min(nchunk - ib * n_parallel_chunks, n_parallel_chunks);
+#ifdef _OPENMP
 #pragma omp for schedule(static)
+#endif
             for (size_t ic = 0; ic < n_this_chunk; ic++) {
                 size_t offset = ic * chunk_size;
                 size_t batch_offset =
@@ -279,7 +283,9 @@ struct FPCodec {
                 cplens[ic] =
                     encode(data + batch_offset, cklen, pdata + offset + ic);
             }
+#ifdef _OPENMP
 #pragma omp single
+#endif
             for (size_t ic = 0; ic < n_this_chunk; ic++) {
                 size_t offset = ic * chunk_size;
                 size_t cplen = cplens[ic];
@@ -307,11 +313,15 @@ struct FPCodec {
                                  !!(nchunk % n_parallel_chunks));
         T *pdata = new T[(chunk_size + 1) * min(nchunk, n_parallel_chunks)];
         vector<size_t> cplens(n_parallel_chunks);
+#ifdef _OPENMP
 #pragma omp parallel
+#endif
         for (size_t ib = 0; ib < nbatch; ib++) {
             size_t n_this_chunk =
                 min(nchunk - ib * n_parallel_chunks, n_parallel_chunks);
+#ifdef _OPENMP
 #pragma omp single
+#endif
             for (size_t ic = 0; ic < n_this_chunk; ic++) {
                 size_t &cplen = cplens[ic];
                 size_t offset = ic * chunk_size;
@@ -319,7 +329,9 @@ struct FPCodec {
                 assert(cplen <= chunk_size + 1);
                 ifs.read((char *)(pdata + offset + ic), sizeof(T) * cplen);
             }
+#ifdef _OPENMP
 #pragma omp for schedule(static)
+#endif
             for (size_t ic = 0; ic < n_this_chunk; ic++) {
                 size_t offset = ic * chunk_size;
                 size_t batch_offset =

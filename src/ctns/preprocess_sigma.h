@@ -7,14 +7,16 @@
 namespace ctns{
 
 template <typename Tm, typename QTm>
-size_t preprocess_formulae_sigma(const oper_dictmap<Tm>& qops_dict,
-				 const std::map<std::string,int>& oploc,
-		 	         const symbolic_task<Tm>& H_formulae,
-			         const QTm& wf,
-				 intermediates<Tm>& inter,
-   			         Hxlist<Tm>& Hxlst,
-				 const int hxorder,
-				 const bool debug){
+void preprocess_formulae_sigma(const oper_dictmap<Tm>& qops_dict,
+			       const std::map<std::string,int>& oploc,
+		 	       const symbolic_task<Tm>& H_formulae,
+			       const QTm& wf,
+			       intermediates<Tm>& inter,
+   			       Hxlist<Tm>& Hxlst,
+			       size_t& blksize,
+			       double& cost,
+			       const int hxorder,
+			       const bool debug){
    auto t0 = tools::get_time();
 
    // 1. form intermediate operators 
@@ -30,8 +32,8 @@ size_t preprocess_formulae_sigma(const oper_dictmap<Tm>& qops_dict,
    auto tb = tools::get_time();
 
    // 3. from Hmu to Hxlst in expanded block forms
-   size_t blksize = 0;
-   double cost = 0.0;
+   blksize = 0;
+   cost = 0.0;
    for(int it=0; it<hsize; it++){
       Hmu_vec[it].gen_Hxlist(wf.info, Hxlst, blksize, cost, false);
       Hmu_vec[it].gen_Hxlist(wf.info, Hxlst, blksize, cost, true);
@@ -63,13 +65,6 @@ size_t preprocess_formulae_sigma(const oper_dictmap<Tm>& qops_dict,
 
    if(debug){
       auto t1 = tools::get_time();
-      size_t hxsize = Hxlst.size(); 
-      std::cout << "size(Hxlst)=" << hxsize
-                << " size(formulae)=" << hsize
-	        << " hxsize/hsize=" << hxsize/double(hsize)
-		<< " nnzblk=" << wf.info._nnzaddr.size()
-		<< " cost=" << cost 
-	        << std::endl;
       std::cout << "T(inter/Hmu/Hxlist/sort/tot)="
 	        << tools::get_duration(ta-t0) << ","
 	        << tools::get_duration(tb-ta) << ","
@@ -79,7 +74,6 @@ size_t preprocess_formulae_sigma(const oper_dictmap<Tm>& qops_dict,
 		<< std::endl;
       tools::timing("preprocess_formulae_sigma", t0, t1);
    }
-   return blksize;
 }
 
 // for Davidson diagonalization
@@ -92,8 +86,7 @@ void preprocess_Hx(Tm* y,
 		   const size_t& ndim,
 	           const size_t& blksize,
 	           Hxlist<Tm>& Hxlst,
-		   Tm** opaddr,
-		   Tm* workspace){
+		   Tm** opaddr){
    const bool debug = false;
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
@@ -110,27 +103,44 @@ void preprocess_Hx(Tm* y,
    // initialization
    memset(y, 0, ndim*sizeof(Tm));
 
-   // compute
+   // compute Y[I] = \sum_J H[I,J] X[J]
 #ifdef _OPENMP
-   #pragma omp parallel for schedule(dynamic)
-#endif
+
+   #pragma omp parallel
+   {
+   Tm* yi = new Tm[ndim];
+   memset(yi, 0, ndim*sizeof(ndim));
+
+   Tm* work = new Tm[blksize*2];
+   #pragma omp for schedule(dynamic) nowait
    for(int i=0; i<Hxlst.size(); i++){
-#ifdef _OPENMP
-      int omprank = omp_get_thread_num();
-#else
-      int omprank = 0;
-#endif
       auto& Hxblk = Hxlst[i];
-      Tm* wptr = &workspace[omprank*blksize*2];
+      Tm* wptr = work;
       Hxblk.kernel(x, opaddr, wptr);
-      Tm* rptr = &workspace[omprank*blksize*2+Hxblk.offres];
-#ifdef _OPENMP
-      #pragma omp critical
-#endif
-      {
-         linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, y+Hxblk.offout);
-      }
+      Tm* rptr = &work[Hxblk.offres];
+      linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, yi+Hxblk.offout);
    } // i
+   delete[] work;
+
+   #pragma omp critical
+   linalg::xaxpy(ndim, 1.0, yi, y);
+
+   delete[] yi;
+   }
+
+#else
+
+   Tm* work = new Tm[blksize*2];
+   for(int i=0; i<Hxlst.size(); i++){
+      auto& Hxblk = Hxlst[i];
+      Tm* wptr = work;
+      Hxblk.kernel(x, opaddr, wptr);
+      Tm* rptr = &work[Hxblk.offres];
+      linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, y+Hxblk.offout);
+   } // i
+   delete[] work;
+
+#endif
 
    // add const term
    if(rank == 0) linalg::xaxpy(ndim, scale, x, y);

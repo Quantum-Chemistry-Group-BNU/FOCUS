@@ -8,12 +8,14 @@
 namespace ctns{
 
 template <typename Tm, typename QTm>
-size_t preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
+void preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
 				       const std::map<std::string,int>& oploc,
 		 	               const symbolic_task<Tm>& H_formulae,
 			               const QTm& wf,
 				       intermediates<Tm>& inter,
    			               Hxlist2<Tm>& Hxlst2,
+				       size_t& blksize,
+				       double& cost,
 				       const int hxorder,
 				       MMtasks<Tm>& mmtasks,
 				       const int batchgemm,
@@ -34,8 +36,8 @@ size_t preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
    auto tb = tools::get_time();
 
    // 3. from Hmu to expanded block forms
-   size_t blksize = 0;
-   double cost = 0.0;
+   blksize = 0;
+   cost = 0.0;
    int nnzblk = wf.info._nnzaddr.size();
    Hxlst2.resize(nnzblk);
    for(int it=0; it<hsize; it++){
@@ -54,16 +56,6 @@ size_t preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
 
    if(debug){
       auto t1 = tools::get_time();
-      size_t hxsize = 0;
-      for(int i=0; i<nnzblk; i++){
-	 hxsize += Hxlst2[i].size();
-      }
-      std::cout << "size(Hxlst2)=" << nnzblk
-	        << " size(Hxlst)=" << hxsize
-                << " size(formulae)=" << hsize
-	        << " hxsize/nnzblk=" << hxsize/double(nnzblk)
-		<< " cost=" << cost 
-	        << std::endl;
       std::cout << "T(inter/Hmu/Hxlist/sort/tot)="
 	        << tools::get_duration(ta-t0) << ","
 	        << tools::get_duration(tb-ta) << ","
@@ -73,7 +65,6 @@ size_t preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
 		<< std::endl;
       tools::timing("preprocess_formulae_sigma_batch", t0, t1);
    }
-   return blksize;
 }
 
 // for Davidson diagonalization

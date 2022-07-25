@@ -144,6 +144,8 @@ void sweep_twodot(comb<Km>& icomb,
    Tm* opaddr[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data,
 	            qops_dict.at("c1")._data, qops_dict.at("c2")._data,
 	 	    nullptr};
+   size_t blksize;
+   double cost;
    Tm* workspace;
    using std::placeholders::_1;
    using std::placeholders::_2;
@@ -207,33 +209,59 @@ void sweep_twodot(comb<Km>& icomb,
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
-      size_t blksize = preprocess_formulae_sigma(qops_dict, oploc, H_formulae, wf, inter, 
-		       			         Hxlst, schd.ctns.hxorder, 
-						 rank==0 && schd.ctns.verbose>0);
+      preprocess_formulae_sigma(qops_dict, oploc, H_formulae, wf, inter, 
+		       		Hxlst, blksize, cost, schd.ctns.hxorder, 
+				rank==0 && schd.ctns.verbose>0);
+      if(schd.ctns.verbose>0){
+         for(int k=0; k<size; k++){
+            if(rank == k){
+               if(rank == 0) std::cout << "partition of Hxlst:" << std::endl;
+               std::cout << " * rank=" << k 
+			 << " size(Hxlst)=" << Hxlst.size()
+			 << " blksize=" << blksize
+			 << " cost=" << cost 
+			 << std::endl;
+            }
+            icomb.world.barrier();
+         }
+      }
       opaddr[4] = inter._data;
-      worktot = maxthreads*blksize*2;
+      worktot = maxthreads*(blksize*2+ndim);
       if(debug && schd.ctns.verbose>0){
          std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
                    << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                    << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
       }
-      workspace = new Tm[worktot];
       HVec = bind(&ctns::preprocess_Hx<Tm>, _1, _2,
 		  std::cref(scale), std::cref(size), std::cref(rank),
 		  std::cref(ndim), std::cref(blksize), 
-		  std::ref(Hxlst), std::ref(opaddr), std::ref(workspace));
+		  std::ref(Hxlst), std::ref(opaddr));
    }else if(schd.ctns.alg_hvec == 5){
       // Hxlist2 
       // symbolic formulae + intermediates + preallocation of workspace
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
-      size_t blksize = preprocess_formulae_sigma2(qops_dict, oploc, H_formulae, wf, inter, 
-		       			         Hxlst2, schd.ctns.hxorder, 
-		      		                 rank==0 && schd.ctns.verbose>0);
-      
-      blksize = (int(blksize/64)+1)*64;
-      
+      preprocess_formulae_sigma2(qops_dict, oploc, H_formulae, wf, inter, 
+		       		 Hxlst2, blksize, cost, schd.ctns.hxorder, 
+		      		 rank==0 && schd.ctns.verbose>0);
+      if(schd.ctns.verbose>0){
+         for(int k=0; k<size; k++){
+            if(rank == k){
+               if(rank == 0) std::cout << "partition of Hxlst:" << std::endl;
+	       size_t hxsize = 0;
+      	       for(int i=0; i<Hxlst2.size(); i++){
+      	          hxsize += Hxlst2[i].size();
+      	       }
+               std::cout << " * rank=" << k 
+			 << " size(Hxlst)=" << hxsize 
+			 << " blksize=" << blksize
+			 << " cost=" << cost
+			 << std::endl;
+            }
+            icomb.world.barrier();
+         }
+      }
       opaddr[4] = inter._data;
       worktot = maxthreads*blksize*3;
       if(debug && schd.ctns.verbose>0){
@@ -241,21 +269,20 @@ void sweep_twodot(comb<Km>& icomb,
                    << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                    << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
       }
-      workspace = new Tm[worktot];
       HVec = bind(&ctns::preprocess_Hx2<Tm>, _1, _2,
 		  std::cref(scale), std::cref(size), std::cref(rank),
 		  std::cref(ndim), std::cref(blksize), 
-		  std::ref(Hxlst2), std::ref(opaddr), std::ref(workspace));
+		  std::ref(Hxlst2), std::ref(opaddr));
    }else if(schd.ctns.alg_hvec == 6){
       // BatchGEMM
       // symbolic formulae + intermediates + preallocation of workspace
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
 			                    schd.ctns.sort_formulae, schd.ctns.ifdist1, 
 					    debug_formulae); 
-      size_t blksize = preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
-		       			         Hxlst2, schd.ctns.hxorder,
-						 mmtasks, schd.ctns.batchgemm, schd.ctns.batchsize,
-		      		                 rank==0 && schd.ctns.verbose>0);
+      preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
+		       		      Hxlst2, blksize, cost, schd.ctns.hxorder,
+				      mmtasks, schd.ctns.batchgemm, schd.ctns.batchsize,
+		      		      rank==0 && schd.ctns.verbose>0);
       opaddr[4] = inter._data;
       worktot = mmtasks[0].batchsize*blksize*2;
       if(debug && schd.ctns.verbose>0){
@@ -268,8 +295,8 @@ void sweep_twodot(comb<Km>& icomb,
 		  std::cref(scale), std::cref(size), std::cref(rank),
 		  std::cref(ndim), std::cref(blksize), 
 		  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace));
-/*
    }else if(schd.ctns.alg_hvec == 7){
+/*
       // BatchGEMM on GPU
       // symbolic formulae + intermediates + preallocation of workspace
       H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
@@ -324,14 +351,11 @@ void sweep_twodot(comb<Km>& icomb,
    twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
 		  ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond);
    // free temporary space
-   if(schd.ctns.alg_hvec >=2){
+   if(schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3 ||
+      schd.ctns.alg_hvec==6 || schd.ctns.alg_hvec==7){
       delete[] workspace;
-      
       // free memory space on GPU
-      if(schd.ctns.alg_hvec == 7){
-
-      }
-
+      if(schd.ctns.alg_hvec == 7){}
    }
    if(debug && schd.ctns.verbose>1){
       sweeps.print_eopt(isweep, ibond);
