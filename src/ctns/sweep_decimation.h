@@ -121,14 +121,9 @@ void decimation_row_nkr(const qbond& qs1,
    const auto& qcol = wfs2[0].info.qcol;
    int nroots = wfs2.size();
    int nqr = qrow.size();
-#ifdef _OPENMP
-   int maxthreads = omp_get_max_threads();
-#else
-   int maxthreads = 1;
-#endif
    if(debug_decimation){
-      std::cout << "ctns::decimation_row_nkr dcut=" << dcut 
-	        << " nqr=" << nqr << " maxthreads=" << maxthreads
+      std::cout << "ctns::decimation_row_nkr"
+	        << " dcut=" << dcut << " nqr=" << nqr
 		<< std::endl;
    }
    qrow.print("qsuper");
@@ -155,9 +150,9 @@ void decimation_row_nkr(const qbond& qs1,
 
    // 1. compute reduced basis
    std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-#ifdef _OPENMP
-   #pragma omp parallel for schedule(dynamic)
-#endif
+//#ifdef _OPENMP
+//   #pragma omp parallel for schedule(dynamic)
+//#endif
    for(int br=0; br<nqr; br++){
       const auto& qr = qrow.get_sym(br);
       const int rdim = qrow.get_dim(br);
@@ -182,9 +177,9 @@ void decimation_row_nkr(const qbond& qs1,
 	 }
 	 kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_vs_svd, debug_decimation);
       } // qc
-#ifdef _OPENMP
-      #pragma omp critical
-#endif
+//#ifdef _OPENMP
+//      #pragma omp critical
+//#endif
       results[br] = std::make_pair(sigs2, U);
    } // br
    int idx = 0;
@@ -268,16 +263,12 @@ inline void decimation_row_kr(const qbond& qs1,
    int nroots = wfs2.size();
    int nqr = qrow.size();
    int dim12 = qrow.get_dimAll(); 
-#ifdef _OPENMP
-   int maxthreads = omp_get_max_threads();
-#else
-   int maxthreads = 1;
-#endif
    if(debug_decimation){ 
-      std::cout << "ctns::decimation_row_kr dcut=" << dcut 
-                << " nqr=" << nqr << " maxthreads=" << maxthreads
+      std::cout << "ctns::decimation_row_kr"
+	        << " dcut=" << dcut << " nqr=" << nqr 
 		<< std::endl;
    }
+   qrow.print("qsuper");
 
    // 0. untruncated case
    if(!iftrunc){
@@ -314,9 +305,9 @@ inline void decimation_row_kr(const qbond& qs1,
 
    // 1. compute reduced basis
    std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-#ifdef _OPENMP
-   #pragma omp parallel for schedule(dynamic)
-#endif
+//#ifdef _OPENMP
+//   #pragma omp parallel for schedule(dynamic)
+//#endif
    for(int br=0; br<nqr; br++){
       const auto& qr = qrow.get_sym(br);
       const int rdim = qrow.get_dim(br);
@@ -348,9 +339,9 @@ inline void decimation_row_kr(const qbond& qs1,
 	 // convert back to the original product basis
          U = U.reorder_row(pos_new,1);
       } // qc
-#ifdef _OPENMP
-      #pragma omp critical
-#endif
+//#ifdef _OPENMP
+//      #pragma omp critical
+//#endif
       results[br] = std::make_pair(sigs2, U);
    } // br
    int idx = 0;
