@@ -198,10 +198,10 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
    bool combine_two_index4 = (kc1 <= kB2);
    bool combine_two_index5 = (kc2 <= kA1);
    bool combine_two_index6 = (kc2 <= kB1);
-   auto aindex1 = oper_index_opA(cindex1, ifkr);
-   auto bindex1 = oper_index_opB(cindex1, ifkr);
-   auto aindex2 = oper_index_opA(cindex2, ifkr);
-   auto bindex2 = oper_index_opB(cindex2, ifkr); 
+   auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank);
+   auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank);
+   auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank);
+   auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank); 
    const auto& qrow1 = qops1.qbra;
    const auto& qcol1 = qops1.qket;
    const auto& qrow2 = qops2.qbra;
@@ -222,22 +222,19 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          }
       }else{
          // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
-	 for(const auto& isr : aindex2){
-	    int iproc = distribute2(ifkr,size,isr);
-	    if(iproc == rank){
-	       auto sr = oper_unpack(isr);
-	       int s2 = sr.first;
-	       int r2 = sr.second;
-	       const auto& op2 = qops2('A').at(isr).H();
-	       // sum_q <pq1||s2r2> aq[1]^+
-	       stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
-	       for(const auto& q1 : cindex1){
-		  const auto& op1 = qops1('C').at(q1);     
-	          if(op1.info.sym != tmp_op1.info.sym) continue;
-	          tmp_op1 += int2e.get(p,q1,s2,r2)*op1;
-	       }
-	       opxwf += oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
+	 for(const auto& isr : aindex2_dist){
+	    auto sr = oper_unpack(isr);
+	    int s2 = sr.first;
+	    int r2 = sr.second;
+	    const auto& op2 = qops2('A').at(isr).H();
+	    // sum_q <pq1||s2r2> aq[1]^+
+	    stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
+	    for(const auto& q1 : cindex1){
+	       const auto& op1 = qops1('C').at(q1);     
+	       if(op1.info.sym != tmp_op1.info.sym) continue;
+	       tmp_op1 += int2e.get(p,q1,s2,r2)*op1;
 	    }
+	    opxwf += oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
 	 }
       }
 
@@ -255,33 +252,30 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          }
       }else{
          // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
-	 for(const auto& iqr : bindex2){
-	    int iproc = distribute2(ifkr,size,iqr);
-	    if(iproc == rank){
-               auto qr = oper_unpack(iqr);
-	       int q2 = qr.first;
-	       int r2 = qr.second;
-	       const auto& op2 = qops2('B').at(iqr);
-	       // sum_s <pq2||s1r2> as[1]
-	       stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
-	       for(const auto& s1 : cindex1){
-		  const auto& op1c = qops1('C').at(s1); 
-                  if(-op1c.info.sym != tmp_op1.info.sym) continue;
-	          const auto& op1 = op1c.H();
-	          tmp_op1 += int2e.get(p,q2,s1,r2)*op1;
-	       }
-	       opxwf += oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
-	       // Hermitian part: q2<->r2
-	       if(q2 == r2) continue;	    
-	       stensor2<Tm> tmp_op1H(sym_op+op2.info.sym, qrow1, qcol1);
-	       for(const auto& s1 : cindex1){
-		  const auto& op1c = qops1('C').at(s1);
-                  if(-op1c.info.sym != tmp_op1H.info.sym) continue;
-	          const auto& op1 = op1c.H();
-	          tmp_op1H += int2e.get(p,r2,s1,q2)*op1;
-	       }
-	       opxwf += oper_kernel_OOwf(superblock,site,tmp_op1H,op2.H(),0,ifdagger);
+	 for(const auto& iqr : bindex2_dist){
+            auto qr = oper_unpack(iqr);
+	    int q2 = qr.first;
+	    int r2 = qr.second;
+	    const auto& op2 = qops2('B').at(iqr);
+	    // sum_s <pq2||s1r2> as[1]
+	    stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
+	    for(const auto& s1 : cindex1){
+	       const auto& op1c = qops1('C').at(s1); 
+               if(-op1c.info.sym != tmp_op1.info.sym) continue;
+	       const auto& op1 = op1c.H();
+	       tmp_op1 += int2e.get(p,q2,s1,r2)*op1;
 	    }
+	    opxwf += oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
+	    // Hermitian part: q2<->r2
+	    if(q2 == r2) continue;	    
+	    stensor2<Tm> tmp_op1H(sym_op+op2.info.sym, qrow1, qcol1);
+	    for(const auto& s1 : cindex1){
+	       const auto& op1c = qops1('C').at(s1);
+               if(-op1c.info.sym != tmp_op1H.info.sym) continue;
+	       const auto& op1 = op1c.H();
+	       tmp_op1H += int2e.get(p,r2,s1,q2)*op1;
+	    }
+	    opxwf += oper_kernel_OOwf(superblock,site,tmp_op1H,op2.H(),0,ifdagger);
          }
       }
      
@@ -299,22 +293,19 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          }
       }else{
 	 // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
-	 for(const auto& isr : aindex1){ 
-	    int iproc = distribute2(ifkr,size,isr);
-	    if(iproc == rank){
-	       auto sr = oper_unpack(isr);
-	       int s1 = sr.first;
-	       int r1 = sr.second;
-	       const auto& op1 = qops1('A').at(isr).H();
-	       // sum_q <pq2||s1r1> aq[2]^+
-	       stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
-	       for(const auto& q2 : cindex2){
-		  const auto& op2 = qops2('C').at(q2);
-	          if(op2.info.sym != tmp_op2.info.sym) continue;
-	          tmp_op2 += int2e.get(p,q2,s1,r1)*op2;
-	       }
-	       opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
+	 for(const auto& isr : aindex1_dist){ 
+	    auto sr = oper_unpack(isr);
+	    int s1 = sr.first;
+	    int r1 = sr.second;
+	    const auto& op1 = qops1('A').at(isr).H();
+	    // sum_q <pq2||s1r1> aq[2]^+
+	    stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
+	    for(const auto& q2 : cindex2){
+	       const auto& op2 = qops2('C').at(q2);
+	       if(op2.info.sym != tmp_op2.info.sym) continue;
+	       tmp_op2 += int2e.get(p,q2,s1,r1)*op2;
 	    }
+	    opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
 	 }
       }
 
@@ -332,33 +323,30 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          }
       }else{
          // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
-	 for(const auto& iqs : bindex1){
-            int iproc = distribute2(ifkr,size,iqs);
-	    if(iproc == rank){
-	       auto qs = oper_unpack(iqs);
-	       int q1 = qs.first;
-	       int s1 = qs.second;
-	       const auto& op1 = qops1('B').at(iqs);
-	       // sum_r -<pq1||s1r2> ar[2]
-	       stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
-	       for(const auto& r2 : cindex2){
-		  const auto& op2c = qops2('C').at(r2);
-                  if(-op2c.info.sym != tmp_op2.info.sym) continue;
-	          const auto& op2 = op2c.H();
-	          tmp_op2 -= int2e.get(p,q1,s1,r2)*op2;
-	       }
-	       opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
-	       // Hermitian part: q1<->s1
-	       if(q1 == s1) continue;
-	       stensor2<Tm> tmp_op2H(sym_op+op1.info.sym, qrow2, qcol2);
-	       for(const auto& r2 : cindex2){
-		  const auto& op2c = qops2('C').at(r2);
-                  if(-op2c.info.sym != tmp_op2H.info.sym) continue;		   
-	          const auto& op2 = op2c.H();
-	          tmp_op2H -= int2e.get(p,s1,q1,r2)*op2;
-               }
-	       opxwf += oper_kernel_OOwf(superblock,site,op1.H(),tmp_op2H,1,ifdagger);
+	 for(const auto& iqs : bindex1_dist){
+	    auto qs = oper_unpack(iqs);
+	    int q1 = qs.first;
+	    int s1 = qs.second;
+	    const auto& op1 = qops1('B').at(iqs);
+	    // sum_r -<pq1||s1r2> ar[2]
+	    stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
+	    for(const auto& r2 : cindex2){
+	       const auto& op2c = qops2('C').at(r2);
+               if(-op2c.info.sym != tmp_op2.info.sym) continue;
+	       const auto& op2 = op2c.H();
+	       tmp_op2 -= int2e.get(p,q1,s1,r2)*op2;
 	    }
+	    opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
+	    // Hermitian part: q1<->s1
+	    if(q1 == s1) continue;
+	    stensor2<Tm> tmp_op2H(sym_op+op1.info.sym, qrow2, qcol2);
+	    for(const auto& r2 : cindex2){
+	       const auto& op2c = qops2('C').at(r2);
+               if(-op2c.info.sym != tmp_op2H.info.sym) continue;		   
+	       const auto& op2 = op2c.H();
+	       tmp_op2H -= int2e.get(p,s1,q1,r2)*op2;
+            }
+	    opxwf += oper_kernel_OOwf(superblock,site,op1.H(),tmp_op2H,1,ifdagger);
 	 }
       }
 
@@ -389,28 +377,25 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          }
       }else{
          // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
-	 for(const auto& isr : aindex2){
-	    int iproc = distribute2(ifkr,size,isr);
-	    if(iproc == rank){
-	       double wt =  wfacAP(isr);
-               auto sr = oper_unpack(isr);
-               int s2 = sr.first , ks2 = s2/2, spin_s2 = s2%2, s2K = s2+1-2*spin_s2;
-               int r2 = sr.second, kr2 = r2/2, spin_r2 = r2%2, r2K = r2+1-2*spin_r2;
-               const auto& op2 = qops2('A').at(isr).H();
-               const auto& op2K = op2.K(2-spin_s2-spin_r2);
-	       // sum_q <pq1||s2r2> aq[1]^+
-               stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
-               stensor2<Tm> tmp_op1K(sym_op-op2K.info.sym, qrow1, qcol1);
-               for(const auto& q1a : cindex1){
-                  int q1b = q1a+1;
-                  const auto& op1c_A = qops1('C').at(q1a);
-	          const auto& op1c_B = op1c_A.K(1);
-                  tmp_op1 += int2e.get(p,q1a,s2,r2)*op1c_A + int2e.get(p,q1b,s2,r2)*op1c_B;
-	          tmp_op1K += int2e.get(p,q1a,s2K,r2K)*op1c_A + int2e.get(p,q1b,s2K,r2K)*op1c_B;
-               }
-               opxwf += wt*oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
-               opxwf += wt*oper_kernel_OOwf(superblock,site,tmp_op1K,op2K,0,ifdagger);
-	    }
+	 for(const auto& isr : aindex2_dist){
+	    double wt =  wfacAP(isr);
+            auto sr = oper_unpack(isr);
+            int s2 = sr.first , ks2 = s2/2, spin_s2 = s2%2, s2K = s2+1-2*spin_s2;
+            int r2 = sr.second, kr2 = r2/2, spin_r2 = r2%2, r2K = r2+1-2*spin_r2;
+            const auto& op2 = qops2('A').at(isr).H();
+            const auto& op2K = op2.K(2-spin_s2-spin_r2);
+	    // sum_q <pq1||s2r2> aq[1]^+
+            stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
+            stensor2<Tm> tmp_op1K(sym_op-op2K.info.sym, qrow1, qcol1);
+            for(const auto& q1a : cindex1){
+               int q1b = q1a+1;
+               const auto& op1c_A = qops1('C').at(q1a);
+	       const auto& op1c_B = op1c_A.K(1);
+               tmp_op1 += int2e.get(p,q1a,s2,r2)*op1c_A + int2e.get(p,q1b,s2,r2)*op1c_B;
+	       tmp_op1K += int2e.get(p,q1a,s2K,r2K)*op1c_A + int2e.get(p,q1b,s2K,r2K)*op1c_B;
+            }
+            opxwf += wt*oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
+            opxwf += wt*oper_kernel_OOwf(superblock,site,tmp_op1K,op2K,0,ifdagger);
          }
       }
 
@@ -436,40 +421,37 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          } 
       }else{
          // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
-	 for(const auto& iqr : bindex2){
-            int iproc = distribute2(ifkr,size,iqr);
-	    if(iproc == rank){
-	       auto qr = oper_unpack(iqr);
-               int q2 = qr.first , kq2 = q2/2, spin_q2 = q2%2, q2K = q2+1-2*spin_q2;
-               int r2 = qr.second, kr2 = r2/2, spin_r2 = r2%2, r2K = r2+1-2*spin_r2;;
-               const auto& op2 = qops2('B').at(iqr);
-	       const auto& op2K =  op2.K(2-spin_q2-spin_r2);
-               // sum_s <pq2||s1r2> as[1]
-               stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
-               stensor2<Tm> tmp_op1K(sym_op-op2K.info.sym, qrow1, qcol1);
-	       for(const auto& s1a : cindex1){
-                  int s1b = s1a+1;
-                  const auto& op1a_A = qops1('C').at(s1a).H();
-	          const auto& op1a_B = op1a_A.K(1);
-                  tmp_op1 += int2e.get(p,q2,s1a,r2)*op1a_A + int2e.get(p,q2,s1b,r2)*op1a_B;
-	          tmp_op1K += int2e.get(p,q2K,s1a,r2K)*op1a_A + int2e.get(p,q2K,s1b,r2K)*op1a_B;
-               }
-               opxwf += oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
-               opxwf += oper_kernel_OOwf(superblock,site,tmp_op1K,op2K,0,ifdagger);
-	       // Hermitian part: q2<->r2
-               if(kq2 == kr2) continue;
-               stensor2<Tm> tmp_op1H(sym_op+op2.info.sym, qrow1, qcol1);
-               stensor2<Tm> tmp_op1KH(sym_op+op2K.info.sym, qrow1, qcol1);
-	       for(const auto& s1a : cindex1){
-                  int s1b = s1a+1;
-                  const auto& op1a_A = qops1('C').at(s1a).H();
-	          const auto& op1a_B = op1a_A.K(1);
-                  tmp_op1H += int2e.get(p,r2,s1a,q2)*op1a_A + int2e.get(p,r2,s1b,q2)*op1a_B;
-	          tmp_op1KH += int2e.get(p,r2K,s1a,q2K)*op1a_A + int2e.get(p,r2K,s1b,q2K)*op1a_B;
-               }
-               opxwf += oper_kernel_OOwf(superblock,site,tmp_op1H,op2.H(),0,ifdagger);
-               opxwf += oper_kernel_OOwf(superblock,site,tmp_op1KH,op2K.H(),0,ifdagger);
-	    }
+	 for(const auto& iqr : bindex2_dist){
+	    auto qr = oper_unpack(iqr);
+            int q2 = qr.first , kq2 = q2/2, spin_q2 = q2%2, q2K = q2+1-2*spin_q2;
+            int r2 = qr.second, kr2 = r2/2, spin_r2 = r2%2, r2K = r2+1-2*spin_r2;;
+            const auto& op2 = qops2('B').at(iqr);
+	    const auto& op2K =  op2.K(2-spin_q2-spin_r2);
+            // sum_s <pq2||s1r2> as[1]
+            stensor2<Tm> tmp_op1(sym_op-op2.info.sym, qrow1, qcol1);
+            stensor2<Tm> tmp_op1K(sym_op-op2K.info.sym, qrow1, qcol1);
+	    for(const auto& s1a : cindex1){
+               int s1b = s1a+1;
+               const auto& op1a_A = qops1('C').at(s1a).H();
+	       const auto& op1a_B = op1a_A.K(1);
+               tmp_op1 += int2e.get(p,q2,s1a,r2)*op1a_A + int2e.get(p,q2,s1b,r2)*op1a_B;
+	       tmp_op1K += int2e.get(p,q2K,s1a,r2K)*op1a_A + int2e.get(p,q2K,s1b,r2K)*op1a_B;
+            }
+            opxwf += oper_kernel_OOwf(superblock,site,tmp_op1,op2,0,ifdagger);
+            opxwf += oper_kernel_OOwf(superblock,site,tmp_op1K,op2K,0,ifdagger);
+	    // Hermitian part: q2<->r2
+            if(kq2 == kr2) continue;
+            stensor2<Tm> tmp_op1H(sym_op+op2.info.sym, qrow1, qcol1);
+            stensor2<Tm> tmp_op1KH(sym_op+op2K.info.sym, qrow1, qcol1);
+	    for(const auto& s1a : cindex1){
+               int s1b = s1a+1;
+               const auto& op1a_A = qops1('C').at(s1a).H();
+	       const auto& op1a_B = op1a_A.K(1);
+               tmp_op1H += int2e.get(p,r2,s1a,q2)*op1a_A + int2e.get(p,r2,s1b,q2)*op1a_B;
+	       tmp_op1KH += int2e.get(p,r2K,s1a,q2K)*op1a_A + int2e.get(p,r2K,s1b,q2K)*op1a_B;
+            }
+            opxwf += oper_kernel_OOwf(superblock,site,tmp_op1H,op2.H(),0,ifdagger);
+            opxwf += oper_kernel_OOwf(superblock,site,tmp_op1KH,op2K.H(),0,ifdagger);
          }
       }
 
@@ -495,28 +477,25 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          }
       }else{
          // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
-	 for(const auto& isr : aindex1){
- 	    int iproc = distribute2(ifkr,size,isr);
-	    if(iproc == rank){
-               double wt =  wfacAP(isr);
-	       auto sr = oper_unpack(isr);
-               int s1 = sr.first , ks1 = s1/2, spin_s1 = s1%2, s1K = s1+1-2*spin_s1;
-               int r1 = sr.second, kr1 = r1/2, spin_r1 = r1%2, r1K = r1+1-2*spin_r1;
-               const auto& op1 = qops1('A').at(isr).H();
-	       const auto& op1K = op1.K(2-spin_s1-spin_r1);
-               // sum_q <pq2||s1r1> aq[2]^+
-               stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
-               stensor2<Tm> tmp_op2K(sym_op-op1K.info.sym, qrow2, qcol2);
-	       for(const auto& q2a : cindex2){
-                  int q2b = q2a+1;
-                  const auto& op2c_A = qops2('C').at(q2a);
-                  const auto& op2c_B = op2c_A.K(1);
-                  tmp_op2 += int2e.get(p,q2a,s1,r1)*op2c_A + int2e.get(p,q2b,s1,r1)*op2c_B;
-                  tmp_op2K += int2e.get(p,q2a,s1K,r1K)*op2c_A + int2e.get(p,q2b,s1K,r1K)*op2c_B;
-               }
-               opxwf += wt*oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
-               opxwf += wt*oper_kernel_OOwf(superblock,site,op1K,tmp_op2K,1,ifdagger);
-	    }
+	 for(const auto& isr : aindex1_dist){
+            double wt =  wfacAP(isr);
+	    auto sr = oper_unpack(isr);
+            int s1 = sr.first , ks1 = s1/2, spin_s1 = s1%2, s1K = s1+1-2*spin_s1;
+            int r1 = sr.second, kr1 = r1/2, spin_r1 = r1%2, r1K = r1+1-2*spin_r1;
+            const auto& op1 = qops1('A').at(isr).H();
+	    const auto& op1K = op1.K(2-spin_s1-spin_r1);
+            // sum_q <pq2||s1r1> aq[2]^+
+            stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
+            stensor2<Tm> tmp_op2K(sym_op-op1K.info.sym, qrow2, qcol2);
+	    for(const auto& q2a : cindex2){
+               int q2b = q2a+1;
+               const auto& op2c_A = qops2('C').at(q2a);
+               const auto& op2c_B = op2c_A.K(1);
+               tmp_op2 += int2e.get(p,q2a,s1,r1)*op2c_A + int2e.get(p,q2b,s1,r1)*op2c_B;
+               tmp_op2K += int2e.get(p,q2a,s1K,r1K)*op2c_A + int2e.get(p,q2b,s1K,r1K)*op2c_B;
+            }
+            opxwf += wt*oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
+            opxwf += wt*oper_kernel_OOwf(superblock,site,op1K,tmp_op2K,1,ifdagger);
          }
       }
 
@@ -542,40 +521,37 @@ stensor3<Tm> oper_compxwf_opS(const std::string superblock,
          }
       }else{
          // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
-	 for(const auto& iqs : bindex1){
-	    int iproc = distribute2(ifkr,size,iqs);
-	    if(iproc == rank){
-	       auto qs = oper_unpack(iqs);
-               int q1 = qs.first , kq1 = q1/2, spin_q1 = q1%2, q1K = q1+1-2*spin_q1;
-               int s1 = qs.second, ks1 = s1/2, spin_s1 = s1%2, s1K = s1+1-2*spin_s1;
-               const auto& op1 = qops1('B').at(iqs);
-	       const auto& op1K = op1.K(2-spin_q1-spin_s1);
-               // sum_r -<pq1||s1r2> ar[2]
-               stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
-               stensor2<Tm> tmp_op2K(sym_op-op1K.info.sym, qrow2, qcol2);
-	       for(const auto& r2a : cindex2){
-                  int r2b = r2a+1;
-                  const auto& op2a_A = qops2('C').at(r2a).H();
-	          const auto& op2a_B = op2a_A.K(1);
-                  tmp_op2 -= int2e.get(p,q1,s1,r2a)*op2a_A + int2e.get(p,q1,s1,r2b)*op2a_B;
-	          tmp_op2K -= int2e.get(p,q1K,s1K,r2a)*op2a_A + int2e.get(p,q1K,s1K,r2b)*op2a_B;
-               }
-               opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
-               opxwf += oper_kernel_OOwf(superblock,site,op1K,tmp_op2K,1,ifdagger);
-	       // Hermitian part: q1<->s1
-               if(kq1 == ks1) continue;
-               stensor2<Tm> tmp_op2H(sym_op+op1.info.sym, qrow2, qcol2);
-               stensor2<Tm> tmp_op2KH(sym_op+op1K.info.sym, qrow2, qcol2);
-	       for(const auto& r2a : cindex2){
-                  int r2b = r2a+1;
-                  const auto& op2a_A = qops2('C').at(r2a).H();
-                  const auto& op2a_B = op2a_A.K(1);
-                  tmp_op2H -= int2e.get(p,s1,q1,r2a)*op2a_A + int2e.get(p,s1,q1,r2b)*op2a_B;
-                  tmp_op2KH -= int2e.get(p,s1K,q1K,r2a)*op2a_A + int2e.get(p,s1K,q1K,r2b)*op2a_B;
-               }
-               opxwf += oper_kernel_OOwf(superblock,site,op1.H(),tmp_op2H,1,ifdagger);
-               opxwf += oper_kernel_OOwf(superblock,site,op1K.H(),tmp_op2KH,1,ifdagger);
-	    }
+	 for(const auto& iqs : bindex1_dist){
+	    auto qs = oper_unpack(iqs);
+            int q1 = qs.first , kq1 = q1/2, spin_q1 = q1%2, q1K = q1+1-2*spin_q1;
+            int s1 = qs.second, ks1 = s1/2, spin_s1 = s1%2, s1K = s1+1-2*spin_s1;
+            const auto& op1 = qops1('B').at(iqs);
+	    const auto& op1K = op1.K(2-spin_q1-spin_s1);
+            // sum_r -<pq1||s1r2> ar[2]
+            stensor2<Tm> tmp_op2(sym_op-op1.info.sym, qrow2, qcol2);
+            stensor2<Tm> tmp_op2K(sym_op-op1K.info.sym, qrow2, qcol2);
+	    for(const auto& r2a : cindex2){
+               int r2b = r2a+1;
+               const auto& op2a_A = qops2('C').at(r2a).H();
+	       const auto& op2a_B = op2a_A.K(1);
+               tmp_op2 -= int2e.get(p,q1,s1,r2a)*op2a_A + int2e.get(p,q1,s1,r2b)*op2a_B;
+	       tmp_op2K -= int2e.get(p,q1K,s1K,r2a)*op2a_A + int2e.get(p,q1K,s1K,r2b)*op2a_B;
+            }
+            opxwf += oper_kernel_OOwf(superblock,site,op1,tmp_op2,1,ifdagger);
+            opxwf += oper_kernel_OOwf(superblock,site,op1K,tmp_op2K,1,ifdagger);
+	    // Hermitian part: q1<->s1
+            if(kq1 == ks1) continue;
+            stensor2<Tm> tmp_op2H(sym_op+op1.info.sym, qrow2, qcol2);
+            stensor2<Tm> tmp_op2KH(sym_op+op1K.info.sym, qrow2, qcol2);
+	    for(const auto& r2a : cindex2){
+               int r2b = r2a+1;
+               const auto& op2a_A = qops2('C').at(r2a).H();
+               const auto& op2a_B = op2a_A.K(1);
+               tmp_op2H -= int2e.get(p,s1,q1,r2a)*op2a_A + int2e.get(p,s1,q1,r2b)*op2a_B;
+               tmp_op2KH -= int2e.get(p,s1K,q1K,r2a)*op2a_A + int2e.get(p,s1K,q1K,r2b)*op2a_B;
+            }
+            opxwf += oper_kernel_OOwf(superblock,site,op1.H(),tmp_op2H,1,ifdagger);
+            opxwf += oper_kernel_OOwf(superblock,site,op1K.H(),tmp_op2KH,1,ifdagger);
          }
       }
        
@@ -615,8 +591,8 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
    char BQ1 = ifNC? 'B' : 'Q';
    char BQ2 = ifNC? 'Q' : 'B';
    const auto& cindex = ifNC? cindex1 : cindex2;
-   auto aindex = oper_index_opA(cindex, ifkr);
-   auto bindex = oper_index_opB(cindex, ifkr);
+   auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank);
+   auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
    //
    // H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
    //   = H1 + H2
@@ -656,29 +632,23 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       }
       // Two-index operators
       // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
-      for(const auto& index : aindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            const auto& op1 = qops1(AP1).at(index);
-            const auto& op2 = qops2(AP2).at(index);
-            opxwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
-            opxwf += oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
-         } // iproc
+      for(const auto& index : aindex_dist){
+         const auto& op1 = qops1(AP1).at(index);
+         const auto& op2 = qops2(AP2).at(index);
+         opxwf += oper_kernel_OOwf(superblock,site,op1,op2,0);
+         opxwf += oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
       }
       // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
-      for(const auto& index : bindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            const auto& op1 = qops1(BQ1).at(index);
-            const auto& op2 = qops2(BQ2).at(index);
-            const Tm wt = wfac(index);
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
-	    auto tmp1 = oper_kernel_OOwf(superblock,site,op1,op2,0);
-            auto tmp2 = oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
-	    linalg::xaxpy(opxwf.size(), wt, tmp1.data(), opxwf.data());
-	    linalg::xaxpy(opxwf.size(), wt, tmp2.data(), opxwf.data());
-         } // iproc
+      for(const auto& index : bindex_dist){
+         const auto& op1 = qops1(BQ1).at(index);
+         const auto& op2 = qops2(BQ2).at(index);
+         const Tm wt = wfac(index);
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0);
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
+	 auto tmp1 = oper_kernel_OOwf(superblock,site,op1,op2,0);
+         auto tmp2 = oper_kernel_OOwf(superblock,site,op1,op2,0,dagger);
+	 linalg::xaxpy(opxwf.size(), wt, tmp1.data(), opxwf.data());
+	 linalg::xaxpy(opxwf.size(), wt, tmp2.data(), opxwf.data());
       }
    }else{
       // One-index operators
@@ -714,55 +684,49 @@ stensor3<Tm> oper_compxwf_opH(const std::string superblock,
       }
       // Two-index operators
       // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
-      for(const auto& index : aindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            const Tm wt = wfacAP(index);
-            const auto& op1_A = qops1(AP1).at(index);
-            const auto& op2_A = qops2(AP2).at(index);
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
-            auto tmp1a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
-            auto tmp2a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
-	    linalg::xaxpy(opxwf.size(), wt, tmp1a.data(), opxwf.data());
-	    linalg::xaxpy(opxwf.size(), wt, tmp2a.data(), opxwf.data());
-	    // NOTE: the following lines work for A_{pq} & A_{p\bqr{q}}, 
-	    // because the global sign in K() does not matter as the pair AP 
-	    // has even no. of barred indices! That is, the phases will get 
-	    // cancelled in op1 and op2 after the time-reversal operation!
-	    const auto& op1_B = op1_A.K(0);  
-	    const auto& op2_B = op2_A.K(0); 
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
-            auto tmp1b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
-            auto tmp2b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
-	    linalg::xaxpy(opxwf.size(), wt, tmp1b.data(), opxwf.data());
-	    linalg::xaxpy(opxwf.size(), wt, tmp2b.data(), opxwf.data());
-         } // iproc
+      for(const auto& index : aindex_dist){
+         const Tm wt = wfacAP(index);
+         const auto& op1_A = qops1(AP1).at(index);
+         const auto& op2_A = qops2(AP2).at(index);
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+         auto tmp1a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
+         auto tmp2a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+	 linalg::xaxpy(opxwf.size(), wt, tmp1a.data(), opxwf.data());
+	 linalg::xaxpy(opxwf.size(), wt, tmp2a.data(), opxwf.data());
+	 // NOTE: the following lines work for A_{pq} & A_{p\bqr{q}}, 
+	 // because the global sign in K() does not matter as the pair AP 
+	 // has even no. of barred indices! That is, the phases will get 
+	 // cancelled in op1 and op2 after the time-reversal operation!
+	 const auto& op1_B = op1_A.K(0);  
+	 const auto& op2_B = op2_A.K(0); 
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+         auto tmp1b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
+         auto tmp2b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+	 linalg::xaxpy(opxwf.size(), wt, tmp1b.data(), opxwf.data());
+	 linalg::xaxpy(opxwf.size(), wt, tmp2b.data(), opxwf.data());
       }
       // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
-      for(const auto& index : bindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            const Tm wt = wfacBQ(index);
-            const auto& op1_A = qops1(BQ1).at(index);
-            const auto& op2_A = qops2(BQ2).at(index);
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
-            auto tmp1a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
-            auto tmp2a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
-	    linalg::xaxpy(opxwf.size(), wt, tmp1a.data(), opxwf.data());
-	    linalg::xaxpy(opxwf.size(), wt, tmp2a.data(), opxwf.data());
-            // KR part
-            const auto& op1_B = op1_A.K(0);
-            const auto& op2_B = op2_A.K(0);
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
-            //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
-            auto tmp1b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
-            auto tmp2b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
-	    linalg::xaxpy(opxwf.size(), wt, tmp1b.data(), opxwf.data());
-	    linalg::xaxpy(opxwf.size(), wt, tmp2b.data(), opxwf.data());
-         } // iproc
+      for(const auto& index : bindex_dist){
+         const Tm wt = wfacBQ(index);
+         const auto& op1_A = qops1(BQ1).at(index);
+         const auto& op2_A = qops2(BQ2).at(index);
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+         auto tmp1a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0);
+         auto tmp2a = oper_kernel_OOwf(superblock,site,op1_A,op2_A,0,dagger);
+	 linalg::xaxpy(opxwf.size(), wt, tmp1a.data(), opxwf.data());
+	 linalg::xaxpy(opxwf.size(), wt, tmp2a.data(), opxwf.data());
+         // KR part
+         const auto& op1_B = op1_A.K(0);
+         const auto& op2_B = op2_A.K(0);
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
+         //opxwf += wt*oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+         auto tmp1b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0);
+         auto tmp2b = oper_kernel_OOwf(superblock,site,op1_B,op2_B,0,dagger);
+	 linalg::xaxpy(opxwf.size(), wt, tmp1b.data(), opxwf.data());
+	 linalg::xaxpy(opxwf.size(), wt, tmp2b.data(), opxwf.data());
       }
    } // ifkr
 

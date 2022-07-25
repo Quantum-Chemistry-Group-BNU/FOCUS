@@ -217,6 +217,7 @@ void sweep_twodot(comb<Km>& icomb,
             if(rank == k){
                if(rank == 0) std::cout << "partition of Hxlst:" << std::endl;
                std::cout << " * rank=" << k 
+			 << " size(H_formulae)=" << H_formulae.size() 
 			 << " size(Hxlst)=" << Hxlst.size()
 			 << " blksize=" << blksize
 			 << " cost=" << cost 
@@ -224,6 +225,12 @@ void sweep_twodot(comb<Km>& icomb,
             }
             icomb.world.barrier();
          }
+         double cost_tot = cost;
+#ifndef SERIAL
+	 if(size > 1) boost::mpi::reduce(icomb.world, cost, cost_tot, std::plus<double>(), 0);
+#endif 
+         icomb.world.barrier();
+         if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
       }
       opaddr[4] = inter._data;
       worktot = maxthreads*(blksize*2+ndim);
@@ -253,7 +260,8 @@ void sweep_twodot(comb<Km>& icomb,
       	       for(int i=0; i<Hxlst2.size(); i++){
       	          hxsize += Hxlst2[i].size();
       	       }
-               std::cout << " * rank=" << k 
+               std::cout << " * rank=" << k
+			 << " size(H_formulae)=" << H_formulae.size() 
 			 << " size(Hxlst)=" << hxsize 
 			 << " blksize=" << blksize
 			 << " cost=" << cost
@@ -261,6 +269,12 @@ void sweep_twodot(comb<Km>& icomb,
             }
             icomb.world.barrier();
          }
+         double cost_tot = cost;
+#ifndef SERIAL
+	 if(size > 1) boost::mpi::reduce(icomb.world, cost, cost_tot, std::plus<double>(), 0);
+#endif 
+         icomb.world.barrier();
+         if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
       }
       opaddr[4] = inter._data;
       worktot = maxthreads*blksize*3;

@@ -289,41 +289,35 @@ Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
       }
    }
    // Two-index terms:
-   auto aindex = ifNC? oper_index_opA(lqops.cindex, ifkr) : oper_index_opA(rqops.cindex, ifkr);
-   auto bindex = ifNC? oper_index_opB(lqops.cindex, ifkr) : oper_index_opB(rqops.cindex, ifkr);
+   auto aindex_dist = ifNC? oper_index_opA_dist(lqops.cindex, ifkr, size, rank) : 
+			    oper_index_opA_dist(rqops.cindex, ifkr, size, rank);
+   auto bindex_dist = ifNC? oper_index_opB_dist(lqops.cindex, ifkr, size, rank) : 
+			    oper_index_opB_dist(rqops.cindex, ifkr, size, rank);
    auto afun = ifNC? &onedot_Hx_APnc<Tm> : &onedot_Hx_PAcn<Tm>;
    auto bfun = ifNC? &onedot_Hx_BQnc<Tm> : &onedot_Hx_QBcn<Tm>;
    auto alabel = ifNC? "APnc" : "PAcn";
    auto blabel = ifNC? "BQnc" : "QBcn";
    // 5. Apq^l*Ppq^cr + h.c. or Ars^r*Prs^lc + h.c.
-   for(const auto& index : aindex){
-      int iproc = distribute2(ifkr,size,index);
-      if(iproc == rank){
-         Hx_functor<Tm> Hx(alabel, index, 0);
-         Hx.opxwf = bind(afun, index, 
-           	         std::cref(lqops), std::cref(rqops), std::cref(cqops), 
-           	         std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
-         Hx_funs.push_back(Hx);
-      }
+   for(const auto& index : aindex_dist){
+      Hx_functor<Tm> Hx(alabel, index, 0);
+      Hx.opxwf = bind(afun, index, std::cref(lqops), std::cref(rqops), std::cref(cqops), 
+        	      std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
+      Hx_funs.push_back(Hx);
    }
    // 6. Bps^l*Qps^cr (using Hermicity) or Qqr^lc*Bqr^r (using Hermicity)
-   for(const auto& index : bindex){
-      int iproc = distribute2(ifkr,size,index);
-      if(iproc == rank){
-         Hx_functor<Tm> Hx(blabel, index, 0);
-         Hx.opxwf = bind(bfun, index, 
-           	         std::cref(lqops), std::cref(rqops), std::cref(cqops), 
-           	         std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
-         Hx_funs.push_back(Hx);
-      }
+   for(const auto& index : bindex_dist){
+      Hx_functor<Tm> Hx(blabel, index, 0);
+      Hx.opxwf = bind(bfun, index, std::cref(lqops), std::cref(rqops), std::cref(cqops), 
+        	      std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
+      Hx_funs.push_back(Hx);
    }
    // debug
    if(rank == 0 and debug){
       std::cout << "onedot_Hx_functors: size=" << Hx_funs.size() 
                 << " " << cnlabel << ":" << cnindex.size()
                 << " " << cclabel << ":" << ccinfo.size()
-                << " " << alabel << ":" << aindex.size()
-                << " " << blabel << ":" << bindex.size()
+                << " " << alabel << ":" << aindex_dist.size()
+                << " " << blabel << ":" << bindex_dist.size()
                 << std::endl; 
    }
    return Hx_funs;

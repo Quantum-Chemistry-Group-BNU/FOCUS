@@ -24,8 +24,8 @@ symbolic_task<Tm> gen_formulae_onedot(const std::vector<int>& cindex_l,
    const int print_level = 1;
    const bool ifNC = cindex_l.size() <= cindex_r.size();
    const auto& cindex = ifNC? cindex_l : cindex_r;
-   auto aindex = oper_index_opA(cindex, ifkr);
-   auto bindex = oper_index_opB(cindex, ifkr);
+   auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank);
+   auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
    
    symbolic_task<Tm> formulae;
    int idx = 0;
@@ -93,41 +93,35 @@ symbolic_task<Tm> gen_formulae_onedot(const std::vector<int>& cindex_l,
       }
       // 5. Apq^l*Ppq^cr + h.c.
       counter["AP"] = 0;
-      for(const auto& index : aindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            auto Al = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'A',index)));
-            auto Pcr = symbolic_compxwf_opP<Tm>("c", "r", cindex_c, cindex_r,
-	 				        int2e, index, isym, ifkr);
-	    const double wt = ifkr? wfacAP(index) : 1.0;
-	    Pcr.scale(wt);
-            auto Al_Pcr = Al.outer_product(Pcr);
-            formulae.join(Al_Pcr);
-	    counter["AP"] += Al_Pcr.size();
-            if(ifsave){ 
-	       std::cout << "idx=" << idx++;
-	       Al_Pcr.display("Al_Pcr["+std::to_string(index)+"]", print_level);
-	    }
-         } // iproc
+      for(const auto& index : aindex_dist){
+         auto Al = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'A',index)));
+         auto Pcr = symbolic_compxwf_opP<Tm>("c", "r", cindex_c, cindex_r,
+	     			        int2e, index, isym, ifkr);
+	 const double wt = ifkr? wfacAP(index) : 1.0;
+	 Pcr.scale(wt);
+         auto Al_Pcr = Al.outer_product(Pcr);
+         formulae.join(Al_Pcr);
+	 counter["AP"] += Al_Pcr.size();
+         if(ifsave){ 
+	    std::cout << "idx=" << idx++;
+	    Al_Pcr.display("Al_Pcr["+std::to_string(index)+"]", print_level);
+	 }
       }
       // 6. Bps^l*Qps^cr (using Hermicity)
       counter["BQ"] = 0;
-      for(const auto& index : bindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            auto Bl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'B',index)));
-	    auto Qcr = symbolic_compxwf_opQ<Tm>("c", "r", cindex_c, cindex_r,
-	           	                        int2e, index, isym, ifkr);
-            const double wt = ifkr? wfacBQ(index) : wfac(index);
-	    Qcr.scale(wt);
-	    auto Bl_Qcr = Bl.outer_product(Qcr);
-	    formulae.join(Bl_Qcr);
-	    counter["BQ"] += Bl_Qcr.size();
-	    if(ifsave){ 
-	       std::cout << "idx=" << idx++;
-	       Bl_Qcr.display("Bl_Qcr["+std::to_string(index)+"]", print_level);
-	    }
-	 } // iproc
+      for(const auto& index : bindex_dist){
+         auto Bl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'B',index)));
+	 auto Qcr = symbolic_compxwf_opQ<Tm>("c", "r", cindex_c, cindex_r,
+	        	                        int2e, index, isym, ifkr);
+         const double wt = ifkr? wfacBQ(index) : wfac(index);
+	 Qcr.scale(wt);
+	 auto Bl_Qcr = Bl.outer_product(Qcr);
+	 formulae.join(Bl_Qcr);
+	 counter["BQ"] += Bl_Qcr.size();
+	 if(ifsave){ 
+	    std::cout << "idx=" << idx++;
+	    Bl_Qcr.display("Bl_Qcr["+std::to_string(index)+"]", print_level);
+	 }
       }
    }else{
       // partition = lc|r
@@ -192,41 +186,35 @@ symbolic_task<Tm> gen_formulae_onedot(const std::vector<int>& cindex_l,
       }
       // 5. Ars^r*Prs^lc + h.c.
       counter["PA"] = 0;
-      for(const auto& index : aindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            auto Plc = symbolic_compxwf_opP<Tm>("l", "c", cindex_l, cindex_c,
-	 				        int2e, index, isym, ifkr);
-            auto Ar = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'A',index)));
-	    const double wt = ifkr? wfacAP(index) : 1.0;
-	    Plc.scale(wt);
-            auto Plc_Ar = Plc.outer_product(Ar);
-            formulae.join(Plc_Ar);
-	    counter["PA"] += Plc_Ar.size();
-            if(ifsave){ 
-	       std::cout << "idx=" << idx++;
-	       Plc_Ar.display("Plc_Ar["+std::to_string(index)+"]", print_level);
-	    }
-         } // iproc
+      for(const auto& index : aindex_dist){
+         auto Plc = symbolic_compxwf_opP<Tm>("l", "c", cindex_l, cindex_c,
+	     			        int2e, index, isym, ifkr);
+         auto Ar = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'A',index)));
+	 const double wt = ifkr? wfacAP(index) : 1.0;
+	 Plc.scale(wt);
+         auto Plc_Ar = Plc.outer_product(Ar);
+         formulae.join(Plc_Ar);
+	 counter["PA"] += Plc_Ar.size();
+         if(ifsave){ 
+	    std::cout << "idx=" << idx++;
+	    Plc_Ar.display("Plc_Ar["+std::to_string(index)+"]", print_level);
+	 }
       }
       // 6. Qqr^lc*Bqr^r (using Hermicity)
       counter["QB"] = 0;
-      for(const auto& index : bindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-	    auto Qlc = symbolic_compxwf_opQ<Tm>("l", "c", cindex_l, cindex_c,
-	           	                        int2e, index, isym, ifkr);
-            auto Br = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'B',index)));
-            const double wt = ifkr? wfacBQ(index) : wfac(index);
-	    Qlc.scale(wt);
-	    auto Qlc_Br = Qlc.outer_product(Br);
-	    formulae.join(Qlc_Br);
-	    counter["QB"] += Qlc_Br.size();
-	    if(ifsave){ 
-	       std::cout << "idx=" << idx++;
-	       Qlc_Br.display("Qlc_Br["+std::to_string(index)+"]", print_level);
-	    }
-	 } // iproc
+      for(const auto& index : bindex_dist){
+	 auto Qlc = symbolic_compxwf_opQ<Tm>("l", "c", cindex_l, cindex_c,
+	        	                        int2e, index, isym, ifkr);
+         auto Br = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'B',index)));
+         const double wt = ifkr? wfacBQ(index) : wfac(index);
+	 Qlc.scale(wt);
+	 auto Qlc_Br = Qlc.outer_product(Br);
+	 formulae.join(Qlc_Br);
+	 counter["QB"] += Qlc_Br.size();
+	 if(ifsave){ 
+	    std::cout << "idx=" << idx++;
+	    Qlc_Br.display("Qlc_Br["+std::to_string(index)+"]", print_level);
+	 }
       }
    } // ifNC
    return formulae;
@@ -354,8 +342,8 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
 	        << std::endl;
    }
    const auto& cindex = ifNC? cindex_l : cindex_r;
-   auto aindex = oper_index_opA(cindex, ifkr);
-   auto bindex = oper_index_opB(cindex, ifkr);
+   auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank);
+   auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
    
    bipart_task<Tm> formulae;
    int idx = 0;
@@ -430,43 +418,37 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       }
       // 5. Apq^l*Ppq^cr + h.c.
       counter["AP"] = 0;
-      for(const auto& index : aindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            auto Al = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'A',index)));
-            auto Pcr = symbolic_compxwf_opP<Tm>("c", "r", cindex_c, cindex_r,
-	 				        int2e, index, isym, ifkr);
-	    const double wt = ifkr? wfacAP(index) : 1.0;
-	    Pcr.scale(wt);
-            auto Al_Pcr = bipart_oper(Al,Pcr,"Al_Pcr["+std::to_string(index)+"]");
-            assert(Al_Pcr.parity == 0);
-            formulae.push_back(Al_Pcr);
-	    counter["AP"] += 1;
-            if(ifsave){ 
-	       std::cout << "idx=" << idx++;
-	       Al_Pcr.display(print_level);
-	    }
-         } // iproc
+      for(const auto& index : aindex_dist){
+         auto Al = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'A',index)));
+         auto Pcr = symbolic_compxwf_opP<Tm>("c", "r", cindex_c, cindex_r,
+	     			        int2e, index, isym, ifkr);
+	 const double wt = ifkr? wfacAP(index) : 1.0;
+	 Pcr.scale(wt);
+         auto Al_Pcr = bipart_oper(Al,Pcr,"Al_Pcr["+std::to_string(index)+"]");
+         assert(Al_Pcr.parity == 0);
+         formulae.push_back(Al_Pcr);
+	 counter["AP"] += 1;
+         if(ifsave){ 
+	    std::cout << "idx=" << idx++;
+	    Al_Pcr.display(print_level);
+	 }
       }
       // 6. Bps^l*Qps^cr (using Hermicity)
       counter["BQ"] = 0;
-      for(const auto& index : bindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            auto Bl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'B',index)));
-	    auto Qcr = symbolic_compxwf_opQ<Tm>("c", "r", cindex_c, cindex_r,
-	           	                        int2e, index, isym, ifkr);
-            const double wt = ifkr? wfacBQ(index) : wfac(index);
-	    Qcr.scale(wt);
-	    auto Bl_Qcr = bipart_oper(Bl,Qcr,"Bl_Qcr["+std::to_string(index)+"]");
-            assert(Bl_Qcr.parity == 0);
-	    formulae.push_back(Bl_Qcr);
-	    counter["BQ"] += 1;
-	    if(ifsave){ 
-	       std::cout << "idx=" << idx++;
-	       Bl_Qcr.display(print_level);
-	    }
-	 } // iproc
+      for(const auto& index : bindex_dist){
+         auto Bl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'B',index)));
+	 auto Qcr = symbolic_compxwf_opQ<Tm>("c", "r", cindex_c, cindex_r,
+	        	                        int2e, index, isym, ifkr);
+         const double wt = ifkr? wfacBQ(index) : wfac(index);
+	 Qcr.scale(wt);
+	 auto Bl_Qcr = bipart_oper(Bl,Qcr,"Bl_Qcr["+std::to_string(index)+"]");
+         assert(Bl_Qcr.parity == 0);
+	 formulae.push_back(Bl_Qcr);
+	 counter["BQ"] += 1;
+	 if(ifsave){ 
+	    std::cout << "idx=" << idx++;
+	    Bl_Qcr.display(print_level);
+	 }
       }
    }else{
       // partition = lc|r
@@ -537,43 +519,37 @@ bipart_task<Tm> symbolic_formulae_onedot2(const oper_dictmap<Tm>& qops_dict,
       }
       // 5. Ars^r*Prs^lc + h.c.
       counter["PA"] = 0;
-      for(const auto& index : aindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-            auto Plc = symbolic_compxwf_opP<Tm>("l", "c", cindex_l, cindex_c,
-	 				        int2e, index, isym, ifkr);
-            auto Ar = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'A',index)));
-	    const double wt = ifkr? wfacAP(index) : 1.0;
-	    Plc.scale(wt);
-            auto Plc_Ar = bipart_oper(Plc,Ar,"Plc_Ar["+std::to_string(index)+"]");
-            assert(Plc_Ar.parity == 0);
-            formulae.push_back(Plc_Ar);
-	    counter["PA"] += 1;
-            if(ifsave){ 
-	       std::cout << "idx=" << idx++;
-	       Plc_Ar.display(print_level);
-	    }
-         } // iproc
+      for(const auto& index : aindex_dist){
+         auto Plc = symbolic_compxwf_opP<Tm>("l", "c", cindex_l, cindex_c,
+	     			        int2e, index, isym, ifkr);
+         auto Ar = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'A',index)));
+	 const double wt = ifkr? wfacAP(index) : 1.0;
+	 Plc.scale(wt);
+         auto Plc_Ar = bipart_oper(Plc,Ar,"Plc_Ar["+std::to_string(index)+"]");
+         assert(Plc_Ar.parity == 0);
+         formulae.push_back(Plc_Ar);
+	 counter["PA"] += 1;
+         if(ifsave){ 
+	    std::cout << "idx=" << idx++;
+	    Plc_Ar.display(print_level);
+	 }
       }
       // 6. Qqr^lc*Bqr^r (using Hermicity)
       counter["QB"] = 0;
-      for(const auto& index : bindex){
-         int iproc = distribute2(ifkr,size,index);
-         if(iproc == rank){
-	    auto Qlc = symbolic_compxwf_opQ<Tm>("l", "c", cindex_l, cindex_c,
-	           	                        int2e, index, isym, ifkr);
-            auto Br = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'B',index)));
-            const double wt = ifkr? wfacBQ(index) : wfac(index);
-	    Qlc.scale(wt);
-	    auto Qlc_Br = bipart_oper(Qlc,Br,"Qlc_Br["+std::to_string(index)+"]");
-            assert(Qlc_Br.parity == 0);
-	    formulae.push_back(Qlc_Br);
-	    counter["QB"] += 1;
-	    if(ifsave){ 
-	       std::cout << "idx=" << idx++;
-	       Qlc_Br.display(print_level);
-	    }
-	 } // iproc
+      for(const auto& index : bindex_dist){
+	 auto Qlc = symbolic_compxwf_opQ<Tm>("l", "c", cindex_l, cindex_c,
+	        	                        int2e, index, isym, ifkr);
+         auto Br = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'B',index)));
+         const double wt = ifkr? wfacBQ(index) : wfac(index);
+	 Qlc.scale(wt);
+	 auto Qlc_Br = bipart_oper(Qlc,Br,"Qlc_Br["+std::to_string(index)+"]");
+         assert(Qlc_Br.parity == 0);
+	 formulae.push_back(Qlc_Br);
+	 counter["QB"] += 1;
+	 if(ifsave){ 
+	    std::cout << "idx=" << idx++;
+	    Qlc_Br.display(print_level);
+	 }
       }
    } // ifNC
 

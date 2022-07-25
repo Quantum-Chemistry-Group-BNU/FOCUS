@@ -107,40 +107,37 @@ void twodot_diag_BQ(const std::string superblock,
    char BQ1 = ifNC? 'B' : 'Q';
    char BQ2 = ifNC? 'Q' : 'B';
    const auto& cindex = ifNC? qops1.cindex : qops2.cindex;
-   auto bindex = oper_index_opB(cindex, ifkr);
+   auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
    if(rank == 0 && debug_twodot_diag){ 
       std::cout << " superblock=" << superblock << " ifNC=" << ifNC 
 	        << " " << BQ1 << BQ2 << " size=" << bindex.size() 
 		<< std::endl;
    }
    // B^L*Q^R or Q^L*B^R 
-   for(const auto& index : bindex){
-      int iproc = distribute2(ifkr,size,index);
-      if(iproc == rank){
-         const Tm wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
-         const auto& O1 = qops1(BQ1).at(index);
-         const auto& O2 = qops2(BQ2).at(index);
-         if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
-	 if(superblock == "lc1"){ 
-            twodot_diag_OlOc1(O1,O2,wf,wt);
-	    if(ifkr) twodot_diag_OlOc1(O1.K(0),O2.K(0),wf,wt);
-	 }else if(superblock == "lc2"){ 
-            twodot_diag_OlOc2(O1,O2,wf,wt);
-	    if(ifkr) twodot_diag_OlOc2(O1.K(0),O2.K(0),wf,wt);
-	 }else if(superblock == "lr"){
-            twodot_diag_OlOr(O1,O2,wf,wt);
-	    if(ifkr) twodot_diag_OlOr(O1.K(0),O2.K(0),wf,wt);
-	 }else if(superblock == "c1c2"){
-            twodot_diag_Oc1Oc2(O1,O2,wf,wt);
-	    if(ifkr) twodot_diag_Oc1Oc2(O1.K(0),O2.K(0),wf,wt);
-	 }else if(superblock == "c1r"){
-            twodot_diag_Oc1Or(O1,O2,wf,wt);
-	    if(ifkr) twodot_diag_Oc1Or(O1.K(0),O2.K(0),wf,wt);
-	 }else if(superblock == "c2r"){
-            twodot_diag_Oc2Or(O1,O2,wf,wt);
-	    if(ifkr) twodot_diag_Oc2Or(O1.K(0),O2.K(0),wf,wt);
-	 }
-      } // iproc
+   for(const auto& index : bindex_dist){
+      const Tm wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
+      const auto& O1 = qops1(BQ1).at(index);
+      const auto& O2 = qops2(BQ2).at(index);
+      if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
+      if(superblock == "lc1"){ 
+         twodot_diag_OlOc1(O1,O2,wf,wt);
+         if(ifkr) twodot_diag_OlOc1(O1.K(0),O2.K(0),wf,wt);
+      }else if(superblock == "lc2"){ 
+         twodot_diag_OlOc2(O1,O2,wf,wt);
+         if(ifkr) twodot_diag_OlOc2(O1.K(0),O2.K(0),wf,wt);
+      }else if(superblock == "lr"){
+         twodot_diag_OlOr(O1,O2,wf,wt);
+         if(ifkr) twodot_diag_OlOr(O1.K(0),O2.K(0),wf,wt);
+      }else if(superblock == "c1c2"){
+         twodot_diag_Oc1Oc2(O1,O2,wf,wt);
+         if(ifkr) twodot_diag_Oc1Oc2(O1.K(0),O2.K(0),wf,wt);
+      }else if(superblock == "c1r"){
+         twodot_diag_Oc1Or(O1,O2,wf,wt);
+         if(ifkr) twodot_diag_Oc1Or(O1.K(0),O2.K(0),wf,wt);
+      }else if(superblock == "c2r"){
+         twodot_diag_Oc2Or(O1,O2,wf,wt);
+         if(ifkr) twodot_diag_Oc2Or(O1.K(0),O2.K(0),wf,wt);
+      }
    } // index
 }
 

@@ -155,11 +155,9 @@ std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
       }else if(key == 'Q'){
          index2 = oper_index_opQ(krest, ifkr);
       }
-      if(ifdist2 && mpisize > 1){ 
-         for(int idx : index2){
-            int iproc = distribute2(ifkr, mpisize, idx);
-            if(iproc == mpirank) index.push_back(idx);
-         }
+      // distribute two index operators
+      if(ifdist2 && mpisize > 1){
+         index = distribute2(ifkr, mpisize, index2, mpirank); 
       }else{
 	 index = std::move(index2);
       }

@@ -51,6 +51,17 @@ inline int distribute2(const bool ifkr, const int size, const int index){
    return (q*(q+1)/2+p)%size;
 }
 
+inline std::vector<int> distribute2(const bool ifkr, const int size, 
+			            const std::vector<int>& index_full,
+				    const int rank){
+   std::vector<int> index_dist;
+   for(int idx : index_full){
+      int iproc = distribute2(ifkr, size, idx);
+      if(iproc == rank) index_dist.push_back(idx);
+   }
+   return index_dist;
+}
+
 // --- no. of A/B/P/Q operators ---
 inline int oper_num_opA(const int cindex1_size, const bool& ifkr){
    int k = ifkr? cindex1_size : cindex1_size/2;
@@ -89,6 +100,11 @@ inline std::vector<int> oper_index_opA(const std::vector<int>& cindex1, const bo
    assert(aindex.size() == oper_num_opA(cindex1.size(),ifkr));
    return aindex;
 }
+inline std::vector<int> oper_index_opA_dist(const std::vector<int>& cindex1, const bool& ifkr,
+					    const int size, const int rank){
+   std::vector<int> aindex = oper_index_opA(cindex1, ifkr);
+   return distribute2(ifkr, size, aindex, rank);
+}
 
 inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bool& ifkr){
    std::vector<int> bindex;
@@ -102,6 +118,11 @@ inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bo
    }
    assert(bindex.size() == oper_num_opB(cindex1.size(),ifkr));
    return bindex;
+}
+inline std::vector<int> oper_index_opB_dist(const std::vector<int>& cindex1, const bool& ifkr,
+					    const int size, const int rank){
+   std::vector<int> bindex = oper_index_opB(cindex1, ifkr);
+   return distribute2(ifkr, size, bindex, rank);
 }
 
 // --- generate index for complementary operators: P,Q,S ---
@@ -128,6 +149,11 @@ inline std::vector<int> oper_index_opP(const std::vector<int>& krest, const bool
    assert(index.size() == oper_num_opP(krest.size(),ifkr)); 
    return index;
 }
+inline std::vector<int> oper_index_opP_dist(const std::vector<int>& krest, const bool& ifkr,
+					    const int size, const int rank){
+   std::vector<int> pindex = oper_index_opP(cindex1, ifkr);
+   return distribute2(ifkr, size, pindex, rank);
+}
 
 inline std::vector<int> oper_index_opQ(const std::vector<int>& krest, const bool& ifkr){
    std::vector<int> index;
@@ -149,6 +175,11 @@ inline std::vector<int> oper_index_opQ(const std::vector<int>& krest, const bool
    } // kp
    assert(index.size() == oper_num_opQ(krest.size(),ifkr));
    return index;
+}
+inline std::vector<int> oper_index_opQ_dist(const std::vector<int>& krest, const bool& ifkr,
+					    const int size, const int rank){
+   std::vector<int> qindex = oper_index_opQ(cindex1, ifkr);
+   return distribute2(ifkr, size, qindex, rank);
 }
 
 inline std::vector<int> oper_index_opS(const std::vector<int>& krest, const bool& ifkr){
