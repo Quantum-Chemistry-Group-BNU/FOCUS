@@ -110,7 +110,7 @@ void twodot_diag_BQ(const std::string superblock,
    auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
    if(rank == 0 && debug_twodot_diag){ 
       std::cout << " superblock=" << superblock << " ifNC=" << ifNC 
-	        << " " << BQ1 << BQ2 << " size=" << bindex.size() 
+	        << " " << BQ1 << BQ2 << " size=" << bindex_dist.size() 
 		<< std::endl;
    }
    // B^L*Q^R or Q^L*B^R 

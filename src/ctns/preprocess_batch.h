@@ -128,17 +128,17 @@ void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
       // initialization
       int nd = (iop==0)? 4 : 8;
       int pos[4] = {0,1,2,3};
-      std::vector<size_t> dims(nd,0);
+      std::vector<size_t> dims(nd,0); // c2,c1,r,l
       for(int j=0; j<jlen; j++){
 	 int jdx = off+j;
          auto& Hxblk = Hxlst[jdx];
 	 if(iop == 1){
-	    pos[0] = Hxblk.dagger[0]? 0 : 1;
-	    pos[1] = Hxblk.dagger[1]? 2 : 3;
-	    pos[2] = Hxblk.dagger[2]? 4 : 5;
-	    pos[3] = Hxblk.dagger[3]? 6 : 7;
+	    pos[0] = Hxblk.dagger[3]? 0 : 1;
+	    pos[1] = Hxblk.dagger[2]? 2 : 3;
+	    pos[2] = Hxblk.dagger[1]? 4 : 5;
+	    pos[3] = Hxblk.dagger[0]? 6 : 7;
 	 }
-         dims[pos[0]] += Hxblk.identity(3)? 0 : 1; 
+         dims[pos[0]] += Hxblk.identity(3)? 0 : 1; // c2 
          dims[pos[1]] += Hxblk.identity(2)? 0 : Hxblk.dimout[3]; // c1
          dims[pos[2]] += Hxblk.identity(1)? 0 : Hxblk.dimout[3]*Hxblk.dimout[2]; // r
          dims[pos[3]] += Hxblk.identity(0)? 0 : 1; // l
@@ -153,10 +153,10 @@ void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
 	 int jdx = off+j;
 	 auto& Hxblk = Hxlst[jdx];
 	 if(iop == 1){
-	    pos[0] = Hxblk.dagger[0]? 0 : 1;
-	    pos[1] = Hxblk.dagger[1]? 2 : 3;
-	    pos[2] = Hxblk.dagger[2]? 4 : 5;
-	    pos[3] = Hxblk.dagger[3]? 6 : 7;
+	    pos[0] = Hxblk.dagger[3]? 0 : 1;
+	    pos[1] = Hxblk.dagger[2]? 2 : 3;
+	    pos[2] = Hxblk.dagger[1]? 4 : 5;
+	    pos[3] = Hxblk.dagger[0]? 6 : 7;
 	 }
          MMlist2<Tm> mmtmp2(4);
          Hxblk.get_MMlist_twodot(mmtmp2, j*offset);

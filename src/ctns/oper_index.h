@@ -151,7 +151,7 @@ inline std::vector<int> oper_index_opP(const std::vector<int>& krest, const bool
 }
 inline std::vector<int> oper_index_opP_dist(const std::vector<int>& krest, const bool& ifkr,
 					    const int size, const int rank){
-   std::vector<int> pindex = oper_index_opP(cindex1, ifkr);
+   std::vector<int> pindex = oper_index_opP(krest, ifkr);
    return distribute2(ifkr, size, pindex, rank);
 }
 
@@ -178,7 +178,7 @@ inline std::vector<int> oper_index_opQ(const std::vector<int>& krest, const bool
 }
 inline std::vector<int> oper_index_opQ_dist(const std::vector<int>& krest, const bool& ifkr,
 					    const int size, const int rank){
-   std::vector<int> qindex = oper_index_opQ(cindex1, ifkr);
+   std::vector<int> qindex = oper_index_opQ(krest, ifkr);
    return distribute2(ifkr, size, qindex, rank);
 }
 
