@@ -8,13 +8,16 @@
 
 // compression
 #include <boost/iostreams/filtering_stream.hpp>
+
 #ifdef LZ4
 #include "../experiment/lz4_filter.h"
 namespace ext { namespace bio = ext::boost::iostreams; }
 #endif
+
 #ifdef ZSTD
 #include <boost/iostreams/filter/zstd.hpp>
 #endif
+
 #include "../experiment/fp_codec.h"
 
 namespace ctns{ 

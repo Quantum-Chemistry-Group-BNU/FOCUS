@@ -118,7 +118,7 @@ void twodot_diag_BQ(const std::string superblock,
    {
    double* di = new double[ndim];
    memset(di, 0, ndim*sizeof(double));
-   #pragma omp for schedule(dynamic)
+   #pragma omp for schedule(dynamic) nowait
    for(const auto& index : bindex_dist){
       const auto& O1 = qops1(BQ1).at(index);
       const auto& O2 = qops2(BQ2).at(index);
