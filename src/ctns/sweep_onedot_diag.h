@@ -10,12 +10,11 @@ extern const bool debug_onedot_diag;
 
 template <typename Tm>
 void onedot_diag(const oper_dictmap<Tm>& qops_dict,
-		  const double ecore,
-		  stensor3<Tm>& wf,
-		  std::vector<double>& diag,
-	       	  const int size,
-	       	  const int rank,
-		  const bool ifdist1){
+		 const stensor3<Tm>& wf,
+		 double* diag,
+	       	 const int size,
+	       	 const int rank,
+		 const bool ifdist1){
    const auto& lqops = qops_dict.at("l"); 
    const auto& rqops = qops_dict.at("r"); 
    const auto& cqops = qops_dict.at("c"); 
@@ -28,33 +27,27 @@ void onedot_diag(const oper_dictmap<Tm>& qops_dict,
    // NOTE: ifdist1=false, each node has nonzero H[l] and H[r],
    // whose contributions to Diag need to be taken into aacount.
    if(!ifdist1 || rank == 0){
-      onedot_diag_local(lqops, rqops, cqops, wf, size, rank);
-   }else{
-      wf.clear();
+      onedot_diag_local(lqops, rqops, cqops, wf, diag, size, rank);
    }
 
    // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
    //         B/Q^C
    //         |
    // B/Q^L---*---B/Q^R
-   onedot_diag_BQ("lc", lqops, cqops, wf, size, rank);
-   onedot_diag_BQ("lr", lqops, rqops, wf, size, rank);
-   onedot_diag_BQ("cr", cqops, rqops, wf, size, rank);
-
-   // save to real vector
-   double efac = ecore/size;
-   std::transform(wf.data(), wf.data()+wf.size(), diag.begin(),
-                  [&efac](const Tm& x){ return std::real(x)+efac; });
+   onedot_diag_BQ("lc", lqops, cqops, wf, diag, size, rank);
+   onedot_diag_BQ("lr", lqops, rqops, wf, diag, size, rank);
+   onedot_diag_BQ("cr", cqops, rqops, wf, diag, size, rank);
 }
 
 // H[loc] 
 template <typename Tm>
 void onedot_diag_local(const oper_dict<Tm>& lqops,
-		        const oper_dict<Tm>& rqops,
-		        const oper_dict<Tm>& cqops,
-		        stensor3<Tm>& wf,
-			const int size,
-			const int rank){
+		       const oper_dict<Tm>& rqops,
+		       const oper_dict<Tm>& cqops,
+		       const stensor3<Tm>& wf,
+		       double* diag,
+		       const int size,
+		       const int rank){
    if(rank == 0 && debug_onedot_diag){ 
       std::cout << "onedot_diag_local" << std::endl;
    }
@@ -72,10 +65,14 @@ void onedot_diag_local(const oper_dict<Tm>& lqops,
       const auto blkl = Hl(br,br);
       const auto blkr = Hr(bc,bc);
       const auto blkc = Hc(bm,bm);
+      size_t ircm = wf.info._offset[idx]-1;
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-               blk(ir,ic,im) = blkl(ir,ir) + blkr(ic,ic) + blkc(im,im);
+               diag[ircm] += std::real(blkl(ir,ir)) 
+		       	   + std::real(blkr(ic,ic))
+			   + std::real(blkc(im,im));
+	       ircm++;
             } // ir
          } // ic
       } // im
@@ -84,50 +81,83 @@ void onedot_diag_local(const oper_dict<Tm>& lqops,
 
 template <typename Tm>
 void onedot_diag_BQ(const std::string superblock,
-		     const oper_dict<Tm>& qops1,
-		     const oper_dict<Tm>& qops2,
-		     stensor3<Tm>& wf,
-       	             const int size,
-       	             const int rank){
-   if(rank == 0 && debug_onedot_diag){
-      std::cout << "onedot_diag_BQ superblock=" << superblock << std::endl;
-   }
+		    const oper_dict<Tm>& qops1,
+		    const oper_dict<Tm>& qops2,
+		    const stensor3<Tm>& wf,
+		    double* diag,
+       	            const int size,
+       	            const int rank){
    const bool ifkr = qops1.ifkr;
    const bool ifNC = qops1.cindex.size() <= qops2.cindex.size();
    char BQ1 = ifNC? 'B' : 'Q';
    char BQ2 = ifNC? 'Q' : 'B';
    const auto& cindex = ifNC? qops1.cindex : qops2.cindex;
    auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
-   if(rank == 0 && debug_onedot_diag){ 
-      std::cout << " superblock=" << superblock << " ifNC=" << ifNC 
-	        << " " << BQ1 << BQ2 << " size=" << bindex_dist.size() 
+   if(rank == 0 && debug_onedot_diag){
+      std::cout << "onedot_diag_BQ superblock=" << superblock 
+	        << " ifNC=" << ifNC << " " << BQ1 << BQ2 
+		<< " size=" << bindex_dist.size() 
 		<< std::endl;
    }
    // B^L*Q^R or Q^L*B^R 
+#ifdef _OPENMP
+
+   size_t ndim = wf.size();
+   #pragma omp parallel
+   {
+   double* di = new double[ndim];
+   memset(di, 0, ndim*sizeof(double));
+   #pragma omp for schedule(dynamic) nowait
    for(const auto& index : bindex_dist){
-      const Tm wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
       const auto& O1 = qops1(BQ1).at(index);
       const auto& O2 = qops2(BQ2).at(index);
       if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
+      const double wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
       if(superblock == "lc"){ 
-         onedot_diag_OlOc(O1,O2,wf,wt);
-         if(ifkr) onedot_diag_OlOc(O1.K(0),O2.K(0),wf,wt);
+         onedot_diag_OlOc(wt, O1, O2, wf, di);
+         if(ifkr) onedot_diag_OlOc(wt, O1.K(0), O2.K(0), wf, di);
       }else if(superblock == "cr"){
-         onedot_diag_OcOr(O1,O2,wf,wt);
-         if(ifkr) onedot_diag_OcOr(O1.K(0),O2.K(0),wf,wt);
+         onedot_diag_OcOr(wt, O1, O2, wf, di);
+         if(ifkr) onedot_diag_OcOr(wt, O1.K(0), O2.K(0), wf, di);
       }else if(superblock == "lr"){
-         onedot_diag_OlOr(O1,O2,wf,wt);
-         if(ifkr) onedot_diag_OlOr(O1.K(0),O2.K(0),wf,wt);
+         onedot_diag_OlOr(wt, O1, O2, wf, di);
+         if(ifkr) onedot_diag_OlOr(wt, O1.K(0), O2.K(0), wf, di);
       }
    } // index
+   #pragma omp critical
+   linalg::xaxpy(ndim, 1.0, di, diag);
+   delete[] di;
+   }
+
+#else
+
+   for(const auto& index : bindex_dist){
+      const auto& O1 = qops1(BQ1).at(index);
+      const auto& O2 = qops2(BQ2).at(index);
+      if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
+      const double wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
+      if(superblock == "lc"){ 
+         onedot_diag_OlOc(wt, O1, O2, wf, diag);
+         if(ifkr) onedot_diag_OlOc(wt, O1.K(0), O2.K(0), wf, diag);
+      }else if(superblock == "cr"){
+         onedot_diag_OcOr(wt, O1, O2, wf, diag);
+         if(ifkr) onedot_diag_OcOr(wt, O1.K(0), O2.K(0), wf, diag);
+      }else if(superblock == "lr"){
+         onedot_diag_OlOr(wt, O1, O2, wf, diag);
+         if(ifkr) onedot_diag_OlOr(wt, O1.K(0), O2.K(0), wf, diag);
+      }
+   } // index
+
+#endif
 }
 
 // Ol*Oc*Ir
 template <typename Tm>
-void onedot_diag_OlOc(const stensor2<Tm>& Ol,
-		       const stensor2<Tm>& Oc,
-		       stensor3<Tm>& wf,
-		       const Tm wt=1.0){
+void onedot_diag_OlOc(const double wt,
+		      const stensor2<Tm>& Ol,
+		      const stensor2<Tm>& Oc,
+		      const stensor3<Tm>& wf,
+		      double* diag){
    int br, bc, bm;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -139,10 +169,12 @@ void onedot_diag_OlOc(const stensor2<Tm>& Ol,
       // Ol*Or 
       const auto blkl = Ol(br,br);
       const auto blkc = Oc(bm,bm);
+      size_t ircm = wf.info._offset[idx]-1;
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-               blk(ir,ic,im) += wt*blkl(ir,ir)*blkc(im,im);
+               diag[ircm] += wt*std::real(blkl(ir,ir)*blkc(im,im));
+	       ircm++;
             } // ir
          } // ic
       } // im
@@ -151,10 +183,11 @@ void onedot_diag_OlOc(const stensor2<Tm>& Ol,
 
 // Ol*Ic*Or
 template <typename Tm>
-void onedot_diag_OlOr(const stensor2<Tm>& Ol,
-		       const stensor2<Tm>& Or,
-		       stensor3<Tm>& wf,
-		       const Tm wt=1.0){
+void onedot_diag_OlOr(const double wt,
+		      const stensor2<Tm>& Ol,
+		      const stensor2<Tm>& Or,
+		      const stensor3<Tm>& wf,
+		      double* diag){
    int br, bc, bm;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -166,10 +199,12 @@ void onedot_diag_OlOr(const stensor2<Tm>& Ol,
       // Ol*Or
       const auto blkl = Ol(br,br);
       const auto blkr = Or(bc,bc);
+      size_t ircm = wf.info._offset[idx]-1;
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-               blk(ir,ic,im) += wt*blkl(ir,ir)*blkr(ic,ic);
+               diag[ircm] += wt*std::real(blkl(ir,ir)*blkr(ic,ic));
+	       ircm++;
             } // ir
          } // ic
       } // im
@@ -178,10 +213,11 @@ void onedot_diag_OlOr(const stensor2<Tm>& Ol,
 
 // Il*Oc*Or
 template <typename Tm>
-void onedot_diag_OcOr(const stensor2<Tm>& Oc,
-		       const stensor2<Tm>& Or,
-		       stensor3<Tm>& wf,
-		       const Tm wt=1.0){
+void onedot_diag_OcOr(const double wt,
+		      const stensor2<Tm>& Oc,
+		      const stensor2<Tm>& Or,
+		      const stensor3<Tm>& wf,
+		      double* diag){
    int br, bc, bm;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -193,10 +229,12 @@ void onedot_diag_OcOr(const stensor2<Tm>& Oc,
       // Oc*Or
       const auto blkc = Oc(bm,bm);
       const auto blkr = Or(bc,bc);
+      size_t ircm = wf.info._offset[idx]-1;
       for(int im=0; im<mdim; im++){
          for(int ic=0; ic<cdim; ic++){
             for(int ir=0; ir<rdim; ir++){
-               blk(ir,ic,im) += wt*blkc(im,im)*blkr(ic,ic);
+               diag[ircm] += wt*std::real(blkc(im,im)*blkr(ic,ic));
+	       ircm++;
             } // ir
          } // ic
       } // im

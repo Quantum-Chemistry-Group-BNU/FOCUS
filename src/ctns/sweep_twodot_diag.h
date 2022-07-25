@@ -10,12 +10,11 @@ extern const bool debug_twodot_diag;
 
 template <typename Tm>
 void twodot_diag(const oper_dictmap<Tm>& qops_dict,
-		  const double ecore,
-		  stensor4<Tm>& wf,
-		  std::vector<double>& diag,
-	       	  const int size,
-	       	  const int rank,
-		  const bool ifdist1){
+		 const stensor4<Tm>& wf,
+		 double* diag,
+	       	 const int size,
+	       	 const int rank,
+		 const bool ifdist1){
    const auto& lqops  = qops_dict.at("l");
    const auto& rqops  = qops_dict.at("r");
    const auto& c1qops = qops_dict.at("c1");
@@ -29,37 +28,31 @@ void twodot_diag(const oper_dictmap<Tm>& qops_dict,
    // NOTE: ifdist1=false, each node has nonzero H[l] and H[r],
    // whose contributions to Diag need to be taken into aacount.
    if(!ifdist1 || rank == 0){
-      twodot_diag_local(lqops, rqops, c1qops, c2qops, wf, size, rank);
-   }else{
-      wf.clear();
+      twodot_diag_local(lqops, rqops, c1qops, c2qops, wf, diag, size, rank);
    }
 
    // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
    //        B/Q^C1 B/Q^C2
    //         |      |
    // B/Q^L---*------*---B/Q^R
-   twodot_diag_BQ("lc1" ,  lqops, c1qops, wf, size, rank);
-   twodot_diag_BQ("lc2" ,  lqops, c2qops, wf, size, rank);
-   twodot_diag_BQ("lr"  ,  lqops,  rqops, wf, size, rank);
-   twodot_diag_BQ("c1c2", c1qops, c2qops, wf, size, rank);
-   twodot_diag_BQ("c1r" , c1qops,  rqops, wf, size, rank);
-   twodot_diag_BQ("c2r" , c2qops,  rqops, wf, size, rank);
-
-   // save to real vector
-   double efac = ecore/size;
-   std::transform(wf.data(), wf.data()+wf.size(), diag.begin(),
-                  [&efac](const Tm& x){ return std::real(x)+efac; });
+   twodot_diag_BQ("lc1" ,  lqops, c1qops, wf, diag, size, rank);
+   twodot_diag_BQ("lc2" ,  lqops, c2qops, wf, diag, size, rank);
+   twodot_diag_BQ("lr"  ,  lqops,  rqops, wf, diag, size, rank);
+   twodot_diag_BQ("c1c2", c1qops, c2qops, wf, diag, size, rank);
+   twodot_diag_BQ("c1r" , c1qops,  rqops, wf, diag, size, rank);
+   twodot_diag_BQ("c2r" , c2qops,  rqops, wf, diag, size, rank);
 }
 
 // H[loc] 
 template <typename Tm>
 void twodot_diag_local(const oper_dict<Tm>& lqops,
-		        const oper_dict<Tm>& rqops,
-		        const oper_dict<Tm>& c1qops,
-		        const oper_dict<Tm>& c2qops,
-		        stensor4<Tm>& wf,
-			const int size,
-			const int rank){
+		       const oper_dict<Tm>& rqops,
+		       const oper_dict<Tm>& c1qops,
+		       const oper_dict<Tm>& c2qops,
+		       const stensor4<Tm>& wf,
+		       double* diag,
+		       const int size,
+		       const int rank){
    if(rank == 0 && debug_twodot_diag){ 
       std::cout << "twodot_diag_local" << std::endl;
    }
@@ -80,11 +73,16 @@ void twodot_diag_local(const oper_dict<Tm>& lqops,
       const auto blkr = Hr(bc,bc);
       const auto blkc1 = Hc1(bm,bm);
       const auto blkc2 = Hc2(bv,bv);
+      size_t ircmv = wf.info._offset[idx]-1;
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-                  blk(ir,ic,im,iv) = blkl(ir,ir) + blkr(ic,ic) + blkc1(im,im) + blkc2(iv,iv);
+                  diag[ircmv] += std::real(blkl(ir,ir))
+			       + std::real(blkr(ic,ic))
+			       + std::real(blkc1(im,im))
+			       + std::real(blkc2(iv,iv));
+		  ircmv++;
                } // ir
             } // ic
          } // im
@@ -94,14 +92,12 @@ void twodot_diag_local(const oper_dict<Tm>& lqops,
 
 template <typename Tm>
 void twodot_diag_BQ(const std::string superblock,
-		     const oper_dict<Tm>& qops1,
-		     const oper_dict<Tm>& qops2,
-		     stensor4<Tm>& wf,
-       	             const int size,
-       	             const int rank){
-   if(rank == 0 && debug_twodot_diag){
-      std::cout << "twodot_diag_BQ superblock=" << superblock << std::endl;
-   }
+		    const oper_dict<Tm>& qops1,
+		    const oper_dict<Tm>& qops2,
+		    const stensor4<Tm>& wf,
+		    double* diag,
+       	            const int size,
+       	            const int rank){
    const bool ifkr = qops1.ifkr;
    const bool ifNC = qops1.cindex.size() <= qops2.cindex.size();
    char BQ1 = ifNC? 'B' : 'Q';
@@ -109,44 +105,88 @@ void twodot_diag_BQ(const std::string superblock,
    const auto& cindex = ifNC? qops1.cindex : qops2.cindex;
    auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
    if(rank == 0 && debug_twodot_diag){ 
-      std::cout << " superblock=" << superblock << " ifNC=" << ifNC 
-	        << " " << BQ1 << BQ2 << " size=" << bindex_dist.size() 
+      std::cout << "twodot_diag_BQ superblock=" << superblock
+      	        << " ifNC=" << ifNC << " " << BQ1 << BQ2 
+		<< " size=" << bindex_dist.size() 
 		<< std::endl;
    }
    // B^L*Q^R or Q^L*B^R 
+#ifdef _OPENMP
+
+   size_t ndim = wf.size();
+   #pragma omp parallel
+   {
+   double* di = new double[ndim];
+   memset(di, 0, ndim*sizeof(double));
+   #pragma omp for schedule(dynamic)
    for(const auto& index : bindex_dist){
-      const Tm wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
       const auto& O1 = qops1(BQ1).at(index);
       const auto& O2 = qops2(BQ2).at(index);
       if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
+      const double wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
       if(superblock == "lc1"){ 
-         twodot_diag_OlOc1(O1,O2,wf,wt);
-         if(ifkr) twodot_diag_OlOc1(O1.K(0),O2.K(0),wf,wt);
+         twodot_diag_OlOc1(wt, O1, O2, wf, di);
+         if(ifkr) twodot_diag_OlOc1(wt, O1.K(0), O2.K(0), wf, di);
       }else if(superblock == "lc2"){ 
-         twodot_diag_OlOc2(O1,O2,wf,wt);
-         if(ifkr) twodot_diag_OlOc2(O1.K(0),O2.K(0),wf,wt);
+         twodot_diag_OlOc2(wt, O1, O2, wf, di);
+         if(ifkr) twodot_diag_OlOc2(wt, O1.K(0), O2.K(0), wf, di);
       }else if(superblock == "lr"){
-         twodot_diag_OlOr(O1,O2,wf,wt);
-         if(ifkr) twodot_diag_OlOr(O1.K(0),O2.K(0),wf,wt);
+         twodot_diag_OlOr(wt, O1, O2, wf, di);
+         if(ifkr) twodot_diag_OlOr(wt, O1.K(0), O2.K(0), wf, di);
       }else if(superblock == "c1c2"){
-         twodot_diag_Oc1Oc2(O1,O2,wf,wt);
-         if(ifkr) twodot_diag_Oc1Oc2(O1.K(0),O2.K(0),wf,wt);
+         twodot_diag_Oc1Oc2(wt, O1, O2, wf, di);
+         if(ifkr) twodot_diag_Oc1Oc2(wt, O1.K(0), O2.K(0), wf, di);
       }else if(superblock == "c1r"){
-         twodot_diag_Oc1Or(O1,O2,wf,wt);
-         if(ifkr) twodot_diag_Oc1Or(O1.K(0),O2.K(0),wf,wt);
+         twodot_diag_Oc1Or(wt, O1, O2, wf, di);
+         if(ifkr) twodot_diag_Oc1Or(wt, O1.K(0), O2.K(0), wf, di);
       }else if(superblock == "c2r"){
-         twodot_diag_Oc2Or(O1,O2,wf,wt);
-         if(ifkr) twodot_diag_Oc2Or(O1.K(0),O2.K(0),wf,wt);
+         twodot_diag_Oc2Or(wt, O1, O2, wf, di);
+         if(ifkr) twodot_diag_Oc2Or(wt, O1.K(0), O2.K(0), wf, di);
       }
    } // index
+   #pragma omp critical
+   linalg::xaxpy(ndim, 1.0, di, diag);
+   delete[] di;
+   }
+
+#else
+
+   for(const auto& index : bindex_dist){
+      const auto& O1 = qops1(BQ1).at(index);
+      const auto& O2 = qops2(BQ2).at(index);
+      if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
+      const double wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
+      if(superblock == "lc1"){ 
+         twodot_diag_OlOc1(wt, O1, O2, wf, diag);
+         if(ifkr) twodot_diag_OlOc1(wt, O1.K(0), O2.K(0), wf, diag);
+      }else if(superblock == "lc2"){ 
+         twodot_diag_OlOc2(wt, O1, O2, wf, diag);
+         if(ifkr) twodot_diag_OlOc2(wt, O1.K(0), O2.K(0), wf, diag);
+      }else if(superblock == "lr"){
+         twodot_diag_OlOr(wt, O1, O2, wf, diag);
+         if(ifkr) twodot_diag_OlOr(wt, O1.K(0), O2.K(0), wf, diag);
+      }else if(superblock == "c1c2"){
+         twodot_diag_Oc1Oc2(wt, O1, O2, wf, diag);
+         if(ifkr) twodot_diag_Oc1Oc2(wt, O1.K(0), O2.K(0), wf, diag);
+      }else if(superblock == "c1r"){
+         twodot_diag_Oc1Or(wt, O1, O2, wf, diag);
+         if(ifkr) twodot_diag_Oc1Or(wt, O1.K(0), O2.K(0), wf, diag);
+      }else if(superblock == "c2r"){
+         twodot_diag_Oc2Or(wt, O1, O2, wf, diag);
+         if(ifkr) twodot_diag_Oc2Or(wt, O1.K(0), O2.K(0), wf, diag);
+      }
+   } // index
+
+#endif
 }
 
 // Ol*Oc1
 template <typename Tm>
-void twodot_diag_OlOc1(const stensor2<Tm>& Ol,
-		        const stensor2<Tm>& Oc1,
-		        stensor4<Tm>& wf,
-		        const Tm wt=1.0){
+void twodot_diag_OlOc1(const double wt,
+		       const stensor2<Tm>& Ol,
+		       const stensor2<Tm>& Oc1,
+		       const stensor4<Tm>& wf,
+		       double* diag){
    int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -158,12 +198,14 @@ void twodot_diag_OlOc1(const stensor2<Tm>& Ol,
       int vdim = blk.dim3;
       // Ol*Oc1
       const auto blkl  = Ol(br,br); 
-      const auto blkc1 = Oc1(bm,bm); 
+      const auto blkc1 = Oc1(bm,bm);
+      size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-                  blk(ir,ic,im,iv) += wt*blkl(ir,ir)*blkc1(im,im);
+                  diag[ircmv] += wt*std::real(blkl(ir,ir)*blkc1(im,im));
+		  ircmv++;
                } // ir
             } // ic
          } // im
@@ -173,10 +215,11 @@ void twodot_diag_OlOc1(const stensor2<Tm>& Ol,
 
 // Ol*Oc2
 template <typename Tm>
-void twodot_diag_OlOc2(const stensor2<Tm>& Ol,
-		        const stensor2<Tm>& Oc2,
-		        stensor4<Tm>& wf,
-		        const Tm wt=1.0){
+void twodot_diag_OlOc2(const double wt,
+		       const stensor2<Tm>& Ol,
+		       const stensor2<Tm>& Oc2,
+		       const stensor4<Tm>& wf,
+		       double* diag){
    int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -189,11 +232,13 @@ void twodot_diag_OlOc2(const stensor2<Tm>& Ol,
       // Ol*Oc2
       const auto blkl  = Ol(br,br); 
       const auto blkc2 = Oc2(bv,bv); 
+      size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-                  blk(ir,ic,im,iv) += wt*blkl(ir,ir)*blkc2(iv,iv);
+                  diag[ircmv] += wt*std::real(blkl(ir,ir)*blkc2(iv,iv));
+		  ircmv++;
                } // ir
             } // ic
          } // im
@@ -203,10 +248,11 @@ void twodot_diag_OlOc2(const stensor2<Tm>& Ol,
 
 // Ol*Or
 template <typename Tm>
-void twodot_diag_OlOr(const stensor2<Tm>& Ol,
-		       const stensor2<Tm>& Or,
-		       stensor4<Tm>& wf,
-		       const Tm wt=1.0){
+void twodot_diag_OlOr(const double wt,
+		      const stensor2<Tm>& Ol,
+		      const stensor2<Tm>& Or,
+		      const stensor4<Tm>& wf,
+		      double* diag){
    int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -219,11 +265,13 @@ void twodot_diag_OlOr(const stensor2<Tm>& Ol,
       // Ol*Or
       const auto blkl = Ol(br,br); 
       const auto blkr = Or(bc,bc); 
+      size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-                  blk(ir,ic,im,iv) += wt*blkl(ir,ir)*blkr(ic,ic);
+                  diag[ircmv] += wt*std::real(blkl(ir,ir)*blkr(ic,ic));
+		  ircmv++;
                } // ir
             } // ic
          } // im
@@ -233,10 +281,11 @@ void twodot_diag_OlOr(const stensor2<Tm>& Ol,
 
 // Oc1*Oc2
 template <typename Tm>
-void twodot_diag_Oc1Oc2(const stensor2<Tm>& Oc1,
-		         const stensor2<Tm>& Oc2,
-		         stensor4<Tm>& wf,
-		         const Tm wt=1.0){
+void twodot_diag_Oc1Oc2(const double wt,
+			const stensor2<Tm>& Oc1,
+		        const stensor2<Tm>& Oc2,
+		        const stensor4<Tm>& wf,
+		        double* diag){
    int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -249,11 +298,13 @@ void twodot_diag_Oc1Oc2(const stensor2<Tm>& Oc1,
       // Oc1*Oc2
       const auto blkc1 = Oc1(bm,bm); 
       const auto blkc2 = Oc2(bv,bv); 
+      size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-                  blk(ir,ic,im,iv) += wt*blkc1(im,im)*blkc2(iv,iv);
+                  diag[ircmv] += wt*std::real(blkc1(im,im)*blkc2(iv,iv));
+		  ircmv++;
                } // ir
             } // ic
          } // im
@@ -263,10 +314,11 @@ void twodot_diag_Oc1Oc2(const stensor2<Tm>& Oc1,
 
 // Oc1*Or
 template <typename Tm>
-void twodot_diag_Oc1Or(const stensor2<Tm>& Oc1,
-		        const stensor2<Tm>& Or,
-		        stensor4<Tm>& wf,
-		        const Tm wt=1.0){
+void twodot_diag_Oc1Or(const double wt,
+		       const stensor2<Tm>& Oc1,
+		       const stensor2<Tm>& Or,
+		       const stensor4<Tm>& wf,
+		       double* diag){
    int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -279,11 +331,13 @@ void twodot_diag_Oc1Or(const stensor2<Tm>& Oc1,
       // Oc1*Or
       const auto blkc1 = Oc1(bm,bm); 
       const auto blkr  = Or(bc,bc); 
+      size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-                  blk(ir,ic,im,iv) += wt*blkc1(im,im)*blkr(ic,ic);
+                  diag[ircmv] += wt*std::real(blkc1(im,im)*blkr(ic,ic));
+	          ircmv++;
                } // ir
             } // ic
          } // im
@@ -293,10 +347,11 @@ void twodot_diag_Oc1Or(const stensor2<Tm>& Oc1,
 
 // Oc2*Or
 template <typename Tm>
-void twodot_diag_Oc2Or(const stensor2<Tm>& Oc2,
-		        const stensor2<Tm>& Or,
-		        stensor4<Tm>& wf,
-		        const Tm wt=1.0){
+void twodot_diag_Oc2Or(const double wt,
+		       const stensor2<Tm>& Oc2,
+		       const stensor2<Tm>& Or,
+		       const stensor4<Tm>& wf,
+		       double* diag){
    int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
@@ -309,11 +364,13 @@ void twodot_diag_Oc2Or(const stensor2<Tm>& Oc2,
       // Oc2*Or
       const auto blkc2 = Oc2(bv,bv); 
       const auto blkr  = Or(bc,bc); 
+      size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-                  blk(ir,ic,im,iv) += wt*blkc2(iv,iv)*blkr(ic,ic);
+                  diag[ircmv] += wt*std::real(blkc2(iv,iv)*blkr(ic,ic));
+	          ircmv++;
                } // ir
             } // ic
          } // im

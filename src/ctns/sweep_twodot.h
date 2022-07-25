@@ -109,8 +109,8 @@ void sweep_twodot(comb<Km>& icomb,
    linalg::matrix<Tm> vsol(ndim,neig);
    
    // 3.1 diag 
-   std::vector<double> diag(ndim);
-   twodot_diag(qops_dict, ecore, wf, diag, size, rank, schd.ctns.ifdist1);
+   std::vector<double> diag(ndim, ecore/size); // constant term
+   twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
 #ifndef SERIAL
    // reduction of partial diag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
