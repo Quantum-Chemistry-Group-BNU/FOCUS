@@ -145,9 +145,9 @@ struct dvdsonSolver{
                        &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
                        &beta,wbas.data(),&ndim);
          // rbas = HX[i]-e[i]*X[i]
+	 linalg::xcopy(ndim*neig, wbas.data(), rbas.data()); 
          for(int i=0; i<nt; i++){
-            std::transform(&wbas[i*ndim],&wbas[i*ndim]+ndim,&vbas[i*ndim],&rbas[i*ndim],
-                           [i,&tmpE](const Tm& w, const Tm& x){ return w-x*tmpE[i]; }); 
+	    linalg::xaxpy(ndim, -tmpE[i], &vbas[i*ndim], &rbas[i*ndim]); 
          }
       }
       // Davidson iterative algorithm for Hv=ve 

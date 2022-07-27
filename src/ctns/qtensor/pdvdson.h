@@ -207,11 +207,9 @@ struct pdvdsonSolver_nkr{
 
       // Precondition of a residual
       void precondition(const Tm* rvec, Tm* tvec, const double& ei){
-         const double damp = damping;
-	 std::transform(rvec, rvec+ndim, Diag, tvec,
-                        [&ei,&damp](const Tm& rk, const double& dk){
-			   return rk/(std::abs(dk-ei)+damp); 
-			});
+         for(int j=0; j<ndim; j++){
+            tvec[j] = rvec[j]/(std::abs(Diag[j]-ei)+damping);
+         }
       }
 
       // Davidson iterative algorithm for Hv=ve 

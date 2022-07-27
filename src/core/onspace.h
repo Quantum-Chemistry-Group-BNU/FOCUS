@@ -49,8 +49,9 @@ void transform_coeff(const onspace& space,
    vs2.resize(nroots);
    for(int i=0; i<nroots; i++){
       vs2[i].resize(dim);
-      std::transform(vs[i].begin(),vs[i].end(),sgns.begin(),vs2[i].begin(),
-	             [](const Tm& x, const double& y){ return x*y; });
+      for(int j=0; j<dim; j++){
+ 	 vs2[i][j] = vs[i][j]*sgns[j];
+      }
    }
 }
 

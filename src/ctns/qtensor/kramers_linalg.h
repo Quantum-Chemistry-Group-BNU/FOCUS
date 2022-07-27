@@ -122,7 +122,9 @@ inline void zquatev(const linalg::matrix<std::complex<double>>& A,
    int n2 = A.rows(); 
    int nld2 = n2;
    int info = ts::zquatev(n2, U.data(), nld2, e.data());
-   if(order == 1){ std::transform(e.begin(),e.end(),e.begin(),[](const double& x){ return -x; }); }
+   if(order == 1){ 
+      linalg::xscal(e.size(), -1.0, e.data()); 
+   }
    if(info) tools::exit("error: zquatev failed!");
 }
 
