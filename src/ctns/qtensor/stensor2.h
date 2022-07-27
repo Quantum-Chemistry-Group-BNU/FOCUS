@@ -143,6 +143,10 @@ struct stensor2{
       dtensor2<Tm> operator()(const int br, const int bc) const{
          return info(br,bc,_data);
       }
+      Tm* start_ptr(const int br, const int bc) const{
+         size_t off = info._offset[info._addr(br,bc)];
+         return (off==0)? nullptr : _data+off-1;
+      }
       // print
       void print(const std::string name, const int level=0) const;
       // simple arithmetic operations

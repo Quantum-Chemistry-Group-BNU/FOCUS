@@ -3,6 +3,9 @@
 
 namespace ctns{
 
+const int maxdim_per_sym = 65536; // 2**16
+extern const int maxdim_per_sym;
+
 // qbond: std::vector<std::pair<qsym,int>> dims;
 class qbond{
    private:

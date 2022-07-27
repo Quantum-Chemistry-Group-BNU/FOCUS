@@ -146,6 +146,10 @@ struct stensor4{
       dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv) const{ 
 	 return info(br,bc,bm,bv,_data);
       }
+      Tm* start_ptr(const int br, const int bc, const int bm, const int bv) const{
+         size_t off = info._offset[info._addr(br,bc,bm,bv)];
+         return (off==0)? nullptr : _data+off-1;
+      }
       // print
       void print(const std::string name, const int level=0) const;
       // simple arithmetic operations

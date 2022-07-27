@@ -125,6 +125,20 @@ inline std::vector<int> oper_index_opB_dist(const std::vector<int>& cindex1, con
    return distribute2(ifkr, size, bindex, rank);
 }
 
+inline std::vector<int> oper_index_opBdiag(const std::vector<int>& cindex1, const bool& ifkr){
+   std::vector<int> bindex;
+   for(int p1 : cindex1){
+      bindex.push_back( oper_pack(p1,p1) );
+   }
+   assert(bindex.size() == cindex1.size());
+   return bindex;
+}
+inline std::vector<int> oper_index_opBdiag_dist(const std::vector<int>& cindex1, const bool& ifkr,
+					    const int size, const int rank){
+   std::vector<int> bindex = oper_index_opBdiag(cindex1, ifkr);
+   return distribute2(ifkr, size, bindex, rank);
+}
+
 // --- generate index for complementary operators: P,Q,S ---
 // tricky part: determine the storage pattern for Ppq for p,q in krest
 inline std::vector<int> oper_index_opP(const std::vector<int>& krest, const bool& ifkr){

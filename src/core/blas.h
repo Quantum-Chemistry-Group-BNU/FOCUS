@@ -78,6 +78,15 @@ inline void xcopy(const int N, const std::complex<double>* X, std::complex<doubl
    ::zcopy_(&N, X, &INCX, Y, &INCY);
 }
 
+inline void xcopy(const int N, const double* X, const int INCX, 
+		  double* Y, const int INCY){
+   ::dcopy_(&N, X, &INCX, Y, &INCY);
+}
+inline void xcopy(const int N, const std::complex<double>* X, const int INCX, 
+		  std::complex<double>* Y, const int INCY){
+   ::zcopy_(&N, X, &INCX, Y, &INCY);
+}
+
 // xaxpy
 inline void xaxpy(const int N, const double alpha, 
 		  const double* X, double* Y){
