@@ -43,6 +43,53 @@ void twodot_diag(const oper_dictmap<Tm>& qops_dict,
    twodot_diag_BQ("c2r" , c2qops,  rqops, wf, diag, size, rank);
 }
 
+// H[loc] 
+template <typename Tm>
+void twodot_diag_local(const oper_dict<Tm>& lqops,
+		       const oper_dict<Tm>& rqops,
+		       const oper_dict<Tm>& c1qops,
+		       const oper_dict<Tm>& c2qops,
+		       const stensor4<Tm>& wf,
+		       double* diag,
+		       const int size,
+		       const int rank){
+   if(rank == 0 && debug_twodot_diag){ 
+      std::cout << "twodot_diag_local" << std::endl;
+   }
+   const auto& Hl  = lqops('H').at(0);
+   const auto& Hr  = rqops('H').at(0);
+   const auto& Hc1 = c1qops('H').at(0);
+   const auto& Hc2 = c2qops('H').at(0);
+   int br, bc, bm, bv;
+   for(int i=0; i<wf.info._nnzaddr.size(); i++){
+      int idx = wf.info._nnzaddr[i];
+      wf.info._addr_unpack(idx, br, bc, bm, bv);
+      auto blk = wf(br,bc,bm,bv);
+      int rdim = blk.dim0;
+      int cdim = blk.dim1;
+      int mdim = blk.dim2;
+      int vdim = blk.dim3;
+      const auto blkl = Hl(br,br);
+      const auto blkr = Hr(bc,bc);
+      const auto blkc1 = Hc1(bm,bm);
+      const auto blkc2 = Hc2(bv,bv);
+      size_t ircmv = wf.info._offset[idx]-1;
+      for(int iv=0; iv<vdim; iv++){
+         for(int im=0; im<mdim; im++){
+            for(int ic=0; ic<cdim; ic++){
+               for(int ir=0; ir<rdim; ir++){
+                  diag[ircmv] += std::real(blkl(ir,ir))
+			       + std::real(blkr(ic,ic))
+			       + std::real(blkc1(im,im))
+			       + std::real(blkc2(iv,iv));
+		  ircmv++;
+               } // ir
+            } // ic
+         } // im
+      } // iv
+   } // i
+}
+
 template <typename Tm>
 void twodot_diag_BQ(const std::string superblock,
 		    const oper_dict<Tm>& qops1,
@@ -73,7 +120,7 @@ void twodot_diag_BQ(const std::string superblock,
    {
    double* di = new double[ndim];
    memset(di, 0, ndim*sizeof(double));
-   #pragma omp for schedule(dynamic) nowait
+   #pragma omp for schedule(dynamic)
    for(const auto& index : bindex_dist){
       const auto& O1 = qops1(BQ1).at(index);
       const auto& O2 = qops2(BQ2).at(index);
@@ -132,97 +179,8 @@ void twodot_diag_BQ(const std::string superblock,
          if(ifkr) twodot_diag_Oc2Or(wt, O1.K(0), O2.K(0), wf, diag);
       }
    } // index
-
-//#endif
-}
-
-// H[loc] 
-template <typename Tm>
-void twodot_diag_local(const oper_dict<Tm>& lqops,
-		       const oper_dict<Tm>& rqops,
-		       const oper_dict<Tm>& c1qops,
-		       const oper_dict<Tm>& c2qops,
-		       const stensor4<Tm>& wf,
-		       double* diag,
-		       const int size,
-		       const int rank){
-   if(rank == 0 && debug_twodot_diag){ 
-      std::cout << "twodot_diag_local" << std::endl;
-   }
-   const auto& Hl  = lqops('H').at(0);
-   const auto& Hr  = rqops('H').at(0);
-   const auto& Hc1 = c1qops('H').at(0);
-   const auto& Hc2 = c2qops('H').at(0);
-   Tm Odiagl[maxdim_per_sym];
-   Tm Odiagr[maxdim_per_sym];
-   Tm Odiagc1[maxdim_per_sym];
-   Tm Odiagc2[maxdim_per_sym];
-
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);
-      linalg::xcopy(rdim, Hl.start_ptr(br,br), rdim+1, Odiagl, 1);
-   for(int bc=0; bc<wf.cols(); bc++){
-      int cdim = wf.info.qcol.get_dim(bc);
-      linalg::xcopy(cdim, Hr.start_ptr(bc,bc), cdim+1, Odiagr, 1);
-   for(int bm=0; bm<wf.mids(); bm++){
-      int mdim = wf.info.qmid.get_dim(bm);
-      linalg::xcopy(mdim, Hc1.start_ptr(bm,bm), mdim+1, Odiagc1, 1);
-   for(int bv=0; bv<wf.vers(); bv++){
-      int vdim = wf.info.qver.get_dim(bv);
-      linalg::xcopy(vdim, Hc2.start_ptr(bv,bv), vdim+1, Odiagc2, 1);
-
-      size_t off = wf.info._offset[wf.info._addr(br,bc,bm,bv)];
-      if(off == 0) continue; 
-      size_t ircmv = off-1;
-      for(int iv=0; iv<vdim; iv++){
-         double dc2 = std::real(Odiagc2[iv]);
-         for(int im=0; im<mdim; im++){
-	    double dc2c1 = dc2 + std::real(Odiagc1[im]);
-            for(int ic=0; ic<cdim; ic++){
-	       double dc2c1r = dc2c1 + std::real(Odiagr[ic]);
-               for(int ir=0; ir<rdim; ir++){
-                  diag[ircmv] += dc2c1r + std::real(Odiagl[ir]);
-		  ircmv++;
-               } // ir
-            } // ic
-         } // im
-      } // iv
-
-   } // bv
-   } // bm
-   } // bc
-   } // br
-
-
 /*
-   for(int i=0; i<wf.info._nnzaddr.size(); i++){
-      int idx = wf.info._nnzaddr[i];
-      int br, bc, bm, bv;
-      wf.info._addr_unpack(idx, br, bc, bm, bv);
-      const auto blk = wf(br, bc, bm, bv); 
-      int rdim = blk.dim0;
-      int cdim = blk.dim1;
-      int mdim = blk.dim2;
-      int vdim = blk.dim3;
-      linalg::xcopy(rdim, Hl.start_ptr(br,br), rdim+1, Odiagl, 1);
-      linalg::xcopy(cdim, Hr.start_ptr(bc,bc), cdim+1, Odiagr, 1);
-      linalg::xcopy(mdim, Hc1.start_ptr(bm,bm), mdim+1, Odiagc1, 1);
-      linalg::xcopy(vdim, Hc2.start_ptr(bv,bv), vdim+1, Odiagc2, 1);
-      size_t ircmv = wf.info._offset[idx]-1;
-      for(int iv=0; iv<vdim; iv++){
-         double dc2 = std::real(Odiagc2[iv]);
-         for(int im=0; im<mdim; im++){
-	    double dc2c1 = dc2 + std::real(Odiagc1[im]);
-            for(int ic=0; ic<cdim; ic++){
-	       double dc2c1r = dc2c1 + std::real(Odiagr[ic]);
-               for(int ir=0; ir<rdim; ir++){
-                  diag[ircmv] += dc2c1r + std::real(Odiagl[ir]);
-		  ircmv++;
-               } // ir
-            } // ic
-         } // im
-      } // iv
-   } // i
+#endif
 */
 }
 
@@ -233,28 +191,24 @@ void twodot_diag_OlOc1(const double wt,
 		       const stensor2<Tm>& Oc1,
 		       const stensor4<Tm>& wf,
 		       double* diag){
-   Tm Odiagl[maxdim_per_sym];
-   Tm Odiagc1[maxdim_per_sym];
+   int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
-      int br, bc, bm, bv;
       wf.info._addr_unpack(idx, br, bc, bm, bv);
-      const auto blk = wf(br, bc, bm, bv); 
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Ol*Oc1
-      linalg::xcopy(rdim, Ol.start_ptr(br,br), rdim+1, Odiagl, 1);
-      linalg::xcopy(mdim, Oc1.start_ptr(bm,bm), mdim+1, Odiagc1, 1);
+      const auto blkl  = Ol(br,br); 
+      const auto blkc1 = Oc1(bm,bm);
       size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
-	    Tm dc1 = Odiagc1[im];
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-		  Tm dl = Odiagl[ir];
-                  diag[ircmv] += wt*std::real(dl*dc1);
+                  diag[ircmv] += wt*std::real(blkl(ir,ir)*blkc1(im,im));
 		  ircmv++;
                } // ir
             } // ic
@@ -270,28 +224,24 @@ void twodot_diag_OlOc2(const double wt,
 		       const stensor2<Tm>& Oc2,
 		       const stensor4<Tm>& wf,
 		       double* diag){
-   Tm Odiagl[maxdim_per_sym];
-   Tm Odiagc2[maxdim_per_sym];
+   int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
-      int br, bc, bm, bv;
       wf.info._addr_unpack(idx, br, bc, bm, bv);
-      const auto blk = wf(br, bc, bm, bv); 
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Ol*Oc2
-      linalg::xcopy(rdim, Ol.start_ptr(br,br), rdim+1, Odiagl, 1);
-      linalg::xcopy(vdim, Oc2.start_ptr(bv,bv), vdim+1, Odiagc2, 1);
+      const auto blkl  = Ol(br,br); 
+      const auto blkc2 = Oc2(bv,bv); 
       size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
-	 Tm dc2 = Odiagc2[iv];
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-		  Tm dl = Odiagl[ir];
-                  diag[ircmv] += wt*std::real(dl*dc2);
+                  diag[ircmv] += wt*std::real(blkl(ir,ir)*blkc2(iv,iv));
 		  ircmv++;
                } // ir
             } // ic
@@ -307,71 +257,30 @@ void twodot_diag_OlOr(const double wt,
 		      const stensor2<Tm>& Or,
 		      const stensor4<Tm>& wf,
 		      double* diag){
-   Tm Odiagl[maxdim_per_sym];
-   Tm Odiagr[maxdim_per_sym];
-
-   for(int br=0; br<wf.rows(); br++){
-      int rdim = wf.info.qrow.get_dim(br);
-      linalg::xcopy(rdim, Ol.start_ptr(br,br), rdim+1, Odiagl, 1);
-   for(int bc=0; bc<wf.cols(); bc++){
-      int cdim = wf.info.qcol.get_dim(bc);
-      linalg::xcopy(cdim, Or.start_ptr(bc,bc), cdim+1, Odiagr, 1);
-   for(int bm=0; bm<wf.mids(); bm++){
-      int mdim = wf.info.qmid.get_dim(bm);
-   for(int bv=0; bv<wf.vers(); bv++){
-      int vdim = wf.info.qver.get_dim(bv);
-
-      size_t off = wf.info._offset[wf.info._addr(br,bc,bm,bv)];
-      if(off == 0) continue; 
-      size_t ircmv = off-1;
-      // Ol*Or
-      for(int iv=0; iv<vdim; iv++){
-         for(int im=0; im<mdim; im++){
-            for(int ic=0; ic<cdim; ic++){
-	       Tm dr = Odiagr[ic];
-               for(int ir=0; ir<rdim; ir++){
-		  Tm dl = Odiagl[ir];
-                  diag[ircmv] += wt*std::real(dl*dr);
-		  ircmv++;
-               } // ir
-            } // ic
-         } // im
-      } // iv
- 
-   } // bv
-   } // bm
-   } // bc
-   } // br
-
-/*
+   int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
-      int br, bc, bm, bv;
       wf.info._addr_unpack(idx, br, bc, bm, bv);
-      const auto blk = wf(br, bc, bm, bv); 
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Ol*Or
-      linalg::xcopy(rdim, Ol.start_ptr(br,br), rdim+1, Odiagl, 1);
-      linalg::xcopy(cdim, Or.start_ptr(bc,bc), cdim+1, Odiagr, 1);
+      const auto blkl = Ol(br,br); 
+      const auto blkr = Or(bc,bc); 
       size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
-	       Tm dr = Odiagr[ic];
                for(int ir=0; ir<rdim; ir++){
-		  Tm dl = Odiagl[ir];
-                  diag[ircmv] += wt*std::real(dl*dr);
+                  diag[ircmv] += wt*std::real(blkl(ir,ir)*blkr(ic,ic));
 		  ircmv++;
                } // ir
             } // ic
          } // im
       } // iv
    } // i
-*/
-
 }
 
 // Oc1*Oc2
@@ -381,28 +290,24 @@ void twodot_diag_Oc1Oc2(const double wt,
 		        const stensor2<Tm>& Oc2,
 		        const stensor4<Tm>& wf,
 		        double* diag){
-   Tm Odiagc1[maxdim_per_sym];
-   Tm Odiagc2[maxdim_per_sym];
+   int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
-      int br, bc, bm, bv;
       wf.info._addr_unpack(idx, br, bc, bm, bv);
-      const auto blk = wf(br, bc, bm, bv); 
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Oc1*Oc2
-      linalg::xcopy(mdim, Oc1.start_ptr(bm,bm), mdim+1, Odiagc1, 1);
-      linalg::xcopy(vdim, Oc2.start_ptr(bv,bv), vdim+1, Odiagc2, 1);
+      const auto blkc1 = Oc1(bm,bm); 
+      const auto blkc2 = Oc2(bv,bv); 
       size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
-	 Tm dc2 = Odiagc2[iv];
          for(int im=0; im<mdim; im++){
-	    Tm dc1 = Odiagc1[im];
             for(int ic=0; ic<cdim; ic++){
                for(int ir=0; ir<rdim; ir++){
-                  diag[ircmv] += wt*std::real(dc1*dc2);
+                  diag[ircmv] += wt*std::real(blkc1(im,im)*blkc2(iv,iv));
 		  ircmv++;
                } // ir
             } // ic
@@ -418,28 +323,24 @@ void twodot_diag_Oc1Or(const double wt,
 		       const stensor2<Tm>& Or,
 		       const stensor4<Tm>& wf,
 		       double* diag){
-   Tm Odiagr[maxdim_per_sym];
-   Tm Odiagc1[maxdim_per_sym];
+   int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
-      int br, bc, bm, bv;
       wf.info._addr_unpack(idx, br, bc, bm, bv);
-      const auto blk = wf(br, bc, bm, bv); 
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Oc1*Or
-      linalg::xcopy(cdim, Or.start_ptr(bc,bc), cdim+1, Odiagr, 1);
-      linalg::xcopy(mdim, Oc1.start_ptr(bm,bm), mdim+1, Odiagc1, 1);
+      const auto blkc1 = Oc1(bm,bm); 
+      const auto blkr  = Or(bc,bc); 
       size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
          for(int im=0; im<mdim; im++){
-	    Tm dc1 = Odiagc1[im];
             for(int ic=0; ic<cdim; ic++){
-	       Tm dr = Odiagr[ic];
                for(int ir=0; ir<rdim; ir++){
-                  diag[ircmv] += wt*std::real(dc1*dr);
+                  diag[ircmv] += wt*std::real(blkc1(im,im)*blkr(ic,ic));
 	          ircmv++;
                } // ir
             } // ic
@@ -455,28 +356,24 @@ void twodot_diag_Oc2Or(const double wt,
 		       const stensor2<Tm>& Or,
 		       const stensor4<Tm>& wf,
 		       double* diag){
-   Tm Odiagr[maxdim_per_sym];
-   Tm Odiagc2[maxdim_per_sym];
+   int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
-      int br, bc, bm, bv;
       wf.info._addr_unpack(idx, br, bc, bm, bv);
-      const auto blk = wf(br, bc, bm, bv); 
+      auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;
       int cdim = blk.dim1;
       int mdim = blk.dim2;
       int vdim = blk.dim3;
       // Oc2*Or
-      linalg::xcopy(cdim, Or.start_ptr(bc,bc), cdim+1, Odiagr, 1);
-      linalg::xcopy(vdim, Oc2.start_ptr(bv,bv), vdim+1, Odiagc2, 1);
+      const auto blkc2 = Oc2(bv,bv); 
+      const auto blkr  = Or(bc,bc); 
       size_t ircmv = wf.info._offset[idx]-1;  
       for(int iv=0; iv<vdim; iv++){
-	 Tm dc2 = Odiagc2[iv];
          for(int im=0; im<mdim; im++){
             for(int ic=0; ic<cdim; ic++){
-	       Tm dr = Odiagr[ic];
                for(int ir=0; ir<rdim; ir++){
-                  diag[ircmv] += wt*std::real(dc2*dr);
+                  diag[ircmv] += wt*std::real(blkc2(iv,iv)*blkr(ic,ic));
 	          ircmv++;
                } // ir
             } // ic

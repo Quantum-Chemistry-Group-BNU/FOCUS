@@ -145,7 +145,7 @@ LOGS
  ### TODOs ###
 
  * Openmp version: different parallelization strategies:
-    - hvec5/hvec6
+    - hvec4/hvec5/hvec6
     - Renormalization? [allows smaller temporary memory usuage!!!]
     - Kramers version?
     - Complex version: 'R'?

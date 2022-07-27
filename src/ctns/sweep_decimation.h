@@ -198,9 +198,7 @@ void decimation_row_nkr(const qbond& qs1,
          idx++;
       }
    } // br
-   sig2sum = 1.0/sig2sum;
-   std::transform(sig2all.begin(), sig2all.end(), sig2all.begin(),
-		  [sig2sum](const double& x){ return x*sig2sum; });
+   linalg::xscal(sig2all.size(), 1.0/sig2sum, sig2all.data());
    sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
    assert(std::abs(sig2sum - 1.0) < 1.e-10);
    
@@ -375,9 +373,7 @@ inline void decimation_row_kr(const qbond& qs1,
          }
       } // parity
    } // br
-   sig2sum = 1.0/sig2sum;
-   std::transform(sig2all.begin(), sig2all.end(), sig2all.begin(),
-		  [sig2sum](const double& x){ return x*sig2sum; });
+   linalg::xscal(sig2all.size(), 1.0/sig2sum, sig2all.data());
    //NOTE: in kr case, sig2all only contain partial sigs2, thus no check is applied
    //sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
    //assert(std::abs(sig2sum - 1.0) < 1.e-10); 

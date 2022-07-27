@@ -81,14 +81,14 @@ int get_ortho_basis_even(linalg::matrix<Tm>& rbas,
    for(int i=0; i<nres; i++){
       // |v> = |r[i]>/sqrt2
       std::transform(rbas.col(i), rbas.col(i)+ndim, vec.begin(),
-		     [isqrt2](const Tm& x){ return x*isqrt2; });
+		     [&isqrt2](const Tm& x){ return x*isqrt2; });
       get_krvec_even(vec.data(), krvec.data(), phases, ndim0);
       // |+> = (|v>+K|v>)
       std::transform(vec.begin(), vec.begin()+ndim, krvec.begin(), rbas_new.col(2*i),
 		     [](const Tm& x, const Tm& y){ return x+y; }); 
       // |-> = i(|v>-K|v>)
       std::transform(vec.begin(), vec.begin()+ndim, krvec.begin(), rbas_new.col(2*i+1),
-		     [iunit](const Tm& x, const Tm& y){ return (x-y)*iunit; }); 
+		     [&iunit](const Tm& x, const Tm& y){ return (x-y)*iunit; }); 
    }
    // Orthonormalization
    int nindp = linalg::get_ortho_basis(ndim, 2*nres, rbas_new.data(), crit_indp);

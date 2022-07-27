@@ -127,7 +127,7 @@ void ci_solver(const input::schedule& schd,
          }
       }
       std::transform(cmax.begin(), cmax.end(), cmax.begin(),
-		     [neig](const double& x){ return std::pow(x,0.5); });
+		     [](const double& x){ return std::pow(x,0.5); });
       // expand 
       expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.sci.flip);
       int nsub0 = nsub;

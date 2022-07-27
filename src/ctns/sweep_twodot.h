@@ -6,6 +6,7 @@
 #include "qtensor/qtensor.h"
 #include "sweep_twodot_renorm.h"
 #include "sweep_twodot_diag.h"
+#include "sweep_twodot_diag1.h"
 #include "sweep_twodot_local.h"
 #include "sweep_twodot_sigma.h"
 #include "symbolic_formulae_twodot.h"
@@ -111,6 +112,14 @@ void sweep_twodot(comb<Km>& icomb,
    // 3.1 diag 
    std::vector<double> diag(ndim, ecore/size); // constant term
    twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
+   
+   std::vector<double> diag1(ndim, ecore/size); // constant term
+   twodot_diag1(qops_dict, wf, diag1.data(), size, rank, schd.ctns.ifdist1);
+   linalg::xaxpy(ndim, -1.0, diag.data(), diag1.data());
+   std::cout << "-----------lzd-----------" << std::endl;
+   std::cout << "diff of diag=" << linalg::xnrm2(ndim, diag1.data()) << std::endl;
+   std::cout << "-----------lzd-----------" << std::endl;
+
 #ifndef SERIAL
    // reduction of partial diag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm

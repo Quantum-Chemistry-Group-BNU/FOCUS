@@ -286,7 +286,7 @@ struct matrix : public BaseMatrix<Tm> {
          for(int ic=0; ic<_cols; ic++){
 	    double phase = phases[ic];
 	    std::transform(this->col(ic), this->col(ic)+_rows, this->col(ic),
-			   [phase](const Tm& x){ return x*phase; });
+			   [&phase](const Tm& x){ return x*phase; });
 	 }
       }
       // ZL@20210421: reorder row/col/rowcol 

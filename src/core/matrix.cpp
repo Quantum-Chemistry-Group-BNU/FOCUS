@@ -9,7 +9,7 @@ matrix<complex<double>> linalg::operator *(const complex<double> fac,
 				           const matrix<double>& mat1){
    matrix<complex<double>> mat(mat1.rows(),mat1.cols());
    transform(mat1._data, mat1._data+mat._size, mat._data,
-     	     [fac](const double& x){return fac*x;});
+     	     [&fac](const double& x){return fac*x;});
    return mat;
 }
 matrix<complex<double>> linalg::operator *(const matrix<double>& mat1,

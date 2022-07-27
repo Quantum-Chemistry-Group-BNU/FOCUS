@@ -18,7 +18,7 @@ inline void analyze_distribution(const std::vector<int>& sizes,
    double sum = std::accumulate(fsizes.begin(), fsizes.end(), 0.0);
    double mean = sum/mpisize;
    std::transform(fsizes.begin(), fsizes.end(), fsizes.begin(),
-		  [mean](const double& x){ return (x-mean)*(x-mean); });
+		  [&mean](const double& x){ return (x-mean)*(x-mean); });
    double stdev = std::sqrt(std::accumulate(fsizes.begin(), fsizes.end(), 0.0)/mpisize);
    std::cout << " " << name
 	     << " mpisize=" << mpisize
