@@ -7,6 +7,7 @@
 #include "sweep_twodot_renorm.h"
 #include "sweep_twodot_diag.h"
 #include "sweep_twodot_diag1.h"
+#include "sweep_twodot_diag2.h"
 #include "sweep_twodot_local.h"
 #include "sweep_twodot_sigma.h"
 #include "symbolic_formulae_twodot.h"
@@ -110,15 +111,36 @@ void sweep_twodot(comb<Km>& icomb,
    linalg::matrix<Tm> vsol(ndim,neig);
    
    // 3.1 diag 
+   auto time0 = tools::get_time();
    std::vector<double> diag(ndim, ecore/size); // constant term
    twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
+   auto time1 = tools::get_time();
    
    std::vector<double> diag1(ndim, ecore/size); // constant term
    twodot_diag1(qops_dict, wf, diag1.data(), size, rank, schd.ctns.ifdist1);
+   auto time2 = tools::get_time();
+
+   std::vector<double> diag2(ndim, ecore/size); // constant term
+   twodot_diag2(qops_dict, wf, diag2.data(), size, rank, schd.ctns.ifdist1);
+   auto time3 = tools::get_time();
+
+
    linalg::xaxpy(ndim, -1.0, diag.data(), diag1.data());
+   linalg::xaxpy(ndim, -1.0, diag.data(), diag2.data());
    std::cout << "-----------lzd-----------" << std::endl;
-   std::cout << "diff of diag=" << linalg::xnrm2(ndim, diag1.data()) << std::endl;
+   std::cout << "t0,t1,t2=" 
+             << tools::get_duration(time1-time0) << "," 
+	     << tools::get_duration(time2-time1) << "," 
+	     << tools::get_duration(time3-time2) << "," 
+             << std::endl;
+   double diff1 = linalg::xnrm2(ndim, diag1.data());
+   double diff2 = linalg::xnrm2(ndim, diag1.data());
+   std::cout << "diff of diag1,diag2=" << diff1 << "," << diff2 << std::endl;
    std::cout << "-----------lzd-----------" << std::endl;
+   if(diff1 > 1.e-8 || diff2 > 1.e-8){ 
+      std::cout << "diff is too large!" << std::endl;
+      exit(1);
+   }
 
 #ifndef SERIAL
    // reduction of partial diag: no need to broadcast, if only rank=0 
