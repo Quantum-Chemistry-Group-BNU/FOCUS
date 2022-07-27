@@ -33,6 +33,9 @@ void sweep_twodot(comb<Km>& icomb,
 		  sweep_data& sweeps,
 		  const int isweep,
 		  const int ibond){
+
+   std::cout << "start sweep_twodot" << std::endl;
+
    using Tm = typename Km::dtype;
    int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
@@ -53,6 +56,8 @@ void sweep_twodot(comb<Km>& icomb,
    }
    auto& timing = sweeps.opt_timing[isweep][ibond];
    timing.t0 = tools::get_time();
+
+   std::cout << "start rank=" << rank << " sweep_twodot" << std::endl;
 
    // 0. check partition
    const auto& dbond = sweeps.seq[ibond];
@@ -109,13 +114,16 @@ void sweep_twodot(comb<Km>& icomb,
    auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
    auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
    linalg::matrix<Tm> vsol(ndim,neig);
-   
+
    // 3.1 diag 
+   std::cout << "rank,diag0=" << rank << std::endl;
    auto time0 = tools::get_time();
    std::vector<double> diag(ndim, ecore/size); // constant term
-   twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
+   twodot_diag1(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
    auto time1 = tools::get_time();
-   
+   std::cout << "rank,diag1=" << rank << std::endl;
+
+ /*     
    std::vector<double> diag1(ndim, ecore/size); // constant term
    twodot_diag1(qops_dict, wf, diag1.data(), size, rank, schd.ctns.ifdist1);
    auto time2 = tools::get_time();
@@ -123,7 +131,6 @@ void sweep_twodot(comb<Km>& icomb,
    std::vector<double> diag2(ndim, ecore/size); // constant term
    twodot_diag2(qops_dict, wf, diag2.data(), size, rank, schd.ctns.ifdist1);
    auto time3 = tools::get_time();
-
 
    linalg::xaxpy(ndim, -1.0, diag.data(), diag1.data());
    linalg::xaxpy(ndim, -1.0, diag.data(), diag2.data());
@@ -141,7 +148,7 @@ void sweep_twodot(comb<Km>& icomb,
       std::cout << "diff is too large!" << std::endl;
       exit(1);
    }
-
+*/
 #ifndef SERIAL
    // reduction of partial diag: no need to broadcast, if only rank=0 
    // executes the preconditioning in Davidson's algorithm
@@ -152,6 +159,7 @@ void sweep_twodot(comb<Km>& icomb,
    }
 #endif 
    timing.tb = tools::get_time();
+   std::cout << "rank,diag2=" << rank << std::endl;
 
    // 3.2 Solve local problem: Hc=cE
    std::map<qsym,qinfo4<Tm>> info_dict;
@@ -423,6 +431,7 @@ void sweep_twodot(comb<Km>& icomb,
 
    timing.t1 = tools::get_time();
    if(debug) timing.analysis("time_local", schd.ctns.verbose>0);
+   std::cout << "end rank=" << rank << " sweep_twodot" << std::endl;
 }
 
 } // ctns

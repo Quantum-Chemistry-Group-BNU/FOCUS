@@ -114,7 +114,7 @@ int main(int argc, char *argv[]){
    int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
    // setup MPI environment 
-   boost::mpi::environment env{argc, argv};
+   boost::mpi::environment env{argc, argv, boost::mpi::threading::serialized};
    boost::mpi::communicator world;
    rank = world.rank();
    size = world.size();

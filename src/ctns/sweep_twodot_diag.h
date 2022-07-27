@@ -257,9 +257,9 @@ void twodot_diag_OlOr(const double wt,
 		      const stensor2<Tm>& Or,
 		      const stensor4<Tm>& wf,
 		      double* diag){
-   int br, bc, bm, bv;
    for(int i=0; i<wf.info._nnzaddr.size(); i++){
       int idx = wf.info._nnzaddr[i];
+      int br, bc, bm, bv;
       wf.info._addr_unpack(idx, br, bc, bm, bv);
       auto blk = wf(br,bc,bm,bv);
       int rdim = blk.dim0;

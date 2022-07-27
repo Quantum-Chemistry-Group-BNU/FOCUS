@@ -6,6 +6,8 @@
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
+#include <stdlib.h>     //for using the function sleep
+
 // compression
 #include <boost/iostreams/filtering_stream.hpp>
 
@@ -22,7 +24,7 @@ namespace ext { namespace bio = ext::boost::iostreams; }
 
 namespace ctns{ 
 
-const bool debug_oper_io = false;
+const bool debug_oper_io = true;
 extern const bool debug_oper_io;
 
 inline std::string oper_fname(const std::string scratch, 
@@ -100,8 +102,11 @@ void oper_save(const int iomode,
       exit(1); 
    }
 
+   std::cout << "saving operators fname=" << fname << std::endl; 
+   if(qops._size > 1.e6) sleep(5); // make the programme waiting for 10 seconds
+
    auto t2 = tools::get_time();
-   if(debug_oper_io and debug){
+   //if(debug_oper_io and debug){
       double tot = tools::get_duration(t2-t0);
       std::cout << "T[save](info/data/tot)=" 
                 << tools::get_duration(t1-t0) << "," 
@@ -120,7 +125,7 @@ void oper_save(const int iomode,
  	        << "usage=" << usage << "GB "
                 << "available=" << available << "GB" 
 		<< std::endl;
-   }
+   //}
 }
 
 template <typename Tm>

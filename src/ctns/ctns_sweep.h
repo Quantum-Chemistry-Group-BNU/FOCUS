@@ -50,13 +50,12 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
       // loop over sites
       auto ti = tools::get_time();
       for(int ibond=0; ibond<sweeps.seqsize; ibond++){
+   
+         std::cout << "\n=== start rank=" << rank << " ibond=" << ibond << std::endl;
 	 const auto& dbond = sweeps.seq[ibond];
 	 const auto& dots = sweeps.ctrls[isweep].dots;
 	 auto tp0 = icomb.topo.get_type(dbond.p0);
 	 auto tp1 = icomb.topo.get_type(dbond.p1);
-#ifndef SERIAL
-	 icomb.world.barrier();
-#endif
 	 if(debug){
 	    std::cout << "\nisweep=" << isweep 
                       << " ibond=" << ibond << "/seqsize=" << sweeps.seqsize
@@ -80,6 +79,9 @@ void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
          }
          // just for debug
 	 if(isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
+      
+         std::cout << "\n=== end rank=" << rank << " ibond=" << ibond << std::endl;
+
       } // ibond
       auto tf = tools::get_time();
       sweeps.t_total[isweep] = tools::get_duration(tf-ti);
