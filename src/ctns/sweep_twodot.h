@@ -426,8 +426,11 @@ void sweep_twodot(comb<Km>& icomb,
    timing.tf = tools::get_time();
   
    // 4. save on disk 
+   std::cout << "### lzd ###" << rank << std::endl;
    qops_pool.save(frop);
+   std::cout << "=== lzd ===" << rank << std::endl;
    oper_remove(fdel, debug);
+   std::cout << "--- lzd ---" << rank << std::endl;
 
    timing.t1 = tools::get_time();
    if(debug) timing.analysis("time_local", schd.ctns.verbose>0);

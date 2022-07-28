@@ -89,12 +89,15 @@ private:
    template<class Archive>
    void serialize(Archive & ar, const unsigned int version){
       ar & run & qkind & topology_file & verbose
-         & task_sdiag & task_ham & task_opt 
+         & task_init & task_sdiag & task_ham & task_opt 
 	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
-	 & nroots & guess & maxsweep & maxbond & lastdot & ctrls
-	 & alg_hvec & alg_renorm & ifdist1 & save_formulae & sort_formulae & hxorder
+	 & nroots & guess & dbranch & maxsweep & maxbond & lastdot & ctrls
+	 & alg_hvec & alg_renorm & ifdist1 & save_formulae & sort_formulae 
+	 & hxorder & batchgemm & batchsize 
 	 & cisolver & maxcycle & nbuff & damping
-         & rcanon_load & rcanon_file & iroot & nsample & ndetprt; 
+         & rcanon_load & rcanon_file 
+	 & iomode & ioasync
+	 & iroot & nsample & ndetprt; 
    }
 public:
    void read(std::ifstream& istrm);

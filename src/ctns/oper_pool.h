@@ -35,14 +35,18 @@ struct oper_pool{
       // fetch qops from memory / disk
       void fetch(const std::vector<std::string>& fneed);
       void save(const std::string frop){
+	 std::cout << "~~lzdX0~~ ioasync=" << ioasync << std::endl;
 	 if(thrd.joinable()) thrd.join();
+	 std::cout << "~~lzdX1~~" << std::endl;
          if(ioasync == 0){
  	    ctns::oper_save<Tm>(iomode, frop, qstore.at(frop), debug);
          }else if(ioasync == 1){
             thrd = std::thread(&ctns::oper_save<Tm>, iomode, frop,
 			       std::cref(qstore.at(frop)), debug);
          }
+	 std::cout << "~~lzdX2~~" << std::endl;
 	 fkept = frop;
+	 std::cout << "~~lzdX3~~" << std::endl;
       }
       void clean_up(){
          // just add if to be compatible with serial version

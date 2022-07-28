@@ -114,7 +114,8 @@ int main(int argc, char *argv[]){
    int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
    // setup MPI environment 
-   boost::mpi::environment env{argc, argv, boost::mpi::threading::serialized};
+   //boost::mpi::environment env{argc, argv, boost::mpi::threading::serialized};
+   boost::mpi::environment env{argc, argv};
    boost::mpi::communicator world;
    rank = world.rank();
    size = world.size();
@@ -143,10 +144,12 @@ int main(int argc, char *argv[]){
    boost::mpi::broadcast(world, schd, 0);
    schd.world = world;
 #endif
+
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    io::create_scratch(schd.scratch, (rank == 0));
 
+   // perform CTNS calculations
    if(schd.ctns.qkind == "rZ2"){
       CTNS<ctns::qkind::rZ2>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
