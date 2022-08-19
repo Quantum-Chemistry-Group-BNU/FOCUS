@@ -190,6 +190,12 @@ namespace ctns{
          size_t blksize;
          double cost;
          Tm* workspace;
+#ifdef GPU
+         Tm* dev_opaddr;
+	 Tm * dev_workspace;
+	 double t_kernel_ibond=0.0;
+	 double t_reduction_ibond=0.0;
+#endif
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
@@ -295,6 +301,8 @@ namespace ctns{
             preprocess_formulae_sigma2(qops_dict, oploc, H_formulae, wf, inter, 
                   Hxlst2, blksize, cost, schd.ctns.hxorder, 
                   rank==0 && schd.ctns.verbose>0);
+
+	    // debug hxlst
             if(schd.ctns.verbose>0){
                for(int k=0; k<size; k++){
                   if(rank == k){
@@ -319,6 +327,7 @@ namespace ctns{
                icomb.world.barrier();
                if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
             }
+
             opaddr[4] = inter._data;
             worktot = maxthreads*blksize*3;
             if(debug && schd.ctns.verbose>0){
@@ -337,7 +346,7 @@ namespace ctns{
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, 
                   debug_formulae); 
             preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
-                  Hxlst2, blksize, cost, schd.ctns.hxorder,
+                  Hxlst2, blksize, cost, 0, schd.ctns.hxorder,
                   mmtasks, schd.ctns.batchgemm, schd.ctns.batchsize,
                   rank==0 && schd.ctns.verbose>0);
             opaddr[4] = inter._data;
@@ -351,7 +360,8 @@ namespace ctns{
             HVec = bind(&ctns::preprocess_Hx_batch<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
-                  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace));
+                  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace),
+		  std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
 #ifdef GPU
          }else if(schd.ctns.alg_hvec == 7){
             // BatchGEMM on GPU
@@ -359,11 +369,36 @@ namespace ctns{
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, 
                   debug_formulae); 
-            size_t blksize = preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
-                  Hxlst2, schd.ctns.hxorder,
+            preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
+                  Hxlst2, blksize, cost, 1, schd.ctns.hxorder,
                   mmtasks, schd.ctns.batchgemm, schd.ctns.batchsize,
                   rank==0 && schd.ctns.verbose>0);
-            // opaddr[4] = inter._data;
+
+	    // debug hxlst
+            if(schd.ctns.verbose>0){
+               for(int k=0; k<size; k++){
+                  if(rank == k){
+                     if(rank == 0) std::cout << "partition of Hxlst:" << std::endl;
+                     size_t hxsize = 0;
+                     for(int i=0; i<Hxlst2.size(); i++){
+                        hxsize += Hxlst2[i].size();
+                     }
+                     std::cout << " * rank=" << k
+                        << " size(H_formulae)=" << H_formulae.size() 
+                        << " size(Hxlst)=" << hxsize 
+                        << " blksize=" << blksize
+                        << " cost=" << cost
+                        << std::endl;
+                  }
+                  icomb.world.barrier();
+               }
+               double cost_tot = cost;
+#ifndef SERIAL
+               if(size > 1) boost::mpi::reduce(icomb.world, cost, cost_tot, std::plus<double>(), 0);
+#endif 
+               icomb.world.barrier();
+               if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
+            }
 
             // GPU: copy operators (qops_dict & inter)
             // 1. allocate memery on GPU
@@ -427,13 +462,14 @@ namespace ctns{
             }
             Tm scale = qops_dict.at("l").ifkr? 0.5*ecore : 1.0*ecore;
 
-
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
-                  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(dev_workspace), std::cref(worktot), std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
+                  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(dev_workspace), std::cref(worktot), 
+		  std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
 
 #endif
+
          }else{
             std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
             exit(1);
