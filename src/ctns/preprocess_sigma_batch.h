@@ -3,7 +3,7 @@
 
 #include "preprocess_inter.h"
 #include "preprocess_hmu.h"
-#include "preprocess_batch.h"
+#include "preprocess_mmtask.h"
 
 #include "time.h"
 #include "sys/time.h"
@@ -123,22 +123,20 @@ void preprocess_Hx_batch(Tm* y,
          // gemm
          gettimeofday(&t0_time_gemm_kernel, NULL);
 	 mmtask.kernel(k, ptrs);
-                    gettimeofday(&t1_time_gemm_kernel, NULL);
+         gettimeofday(&t1_time_gemm_kernel, NULL);
          // reduction
-                    gettimeofday(&t0_time_gemm_reduction, NULL);
-                    mmtask.reduction(k, ptrs[6], y, 0);
-                    gettimeofday(&t1_time_gemm_reduction, NULL);
-                    time_cost_gemm_kernel += ((double)(t1_time_gemm_kernel.tv_sec - t0_time_gemm_kernel.tv_sec) + (double)(t1_time_gemm_kernel.tv_usec - t0_time_gemm_kernel.tv_usec)/1000000.0);
-                    time_cost_gemm_reduction += ((double)(t1_time_gemm_reduction.tv_sec - t0_time_gemm_reduction.tv_sec) + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
-         }
+         gettimeofday(&t0_time_gemm_reduction, NULL);
+         mmtask.reduction(k, ptrs[6], y, 0);
+         gettimeofday(&t1_time_gemm_reduction, NULL);
+         time_cost_gemm_kernel += ((double)(t1_time_gemm_kernel.tv_sec - t0_time_gemm_kernel.tv_sec) + (double)(t1_time_gemm_kernel.tv_usec - t0_time_gemm_kernel.tv_usec)/1000000.0);
+         time_cost_gemm_reduction += ((double)(t1_time_gemm_reduction.tv_sec - t0_time_gemm_reduction.tv_sec) + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
       } // k
    } // i
-            std::cout<<"time_cost_gemm_kernel="<<time_cost_gemm_kernel<<std::endl;
-            std::cout<<"time_cost_gemm_reduction="<<time_cost_gemm_reduction<<std::endl;
-            std::cout<<"time_sum above="<<time_cost_gemm_kernel+time_cost_gemm_reduction<<std::endl;
-            t_kernel_ibond = time_cost_gemm_kernel;
-            t_reduction_ibond = time_cost_gemm_reduction;
-
+   std::cout<<"time_cost_gemm_kernel="<<time_cost_gemm_kernel<<std::endl;
+   std::cout<<"time_cost_gemm_reduction="<<time_cost_gemm_reduction<<std::endl;
+   std::cout<<"time_sum above="<<time_cost_gemm_kernel+time_cost_gemm_reduction<<std::endl;
+   t_kernel_ibond = time_cost_gemm_kernel;
+   t_reduction_ibond = time_cost_gemm_reduction;
 
    // add const term
    if(rank == 0) linalg::xaxpy(ndim, scale, x, y);

@@ -1,6 +1,10 @@
 #ifndef PREPROCESS_MMREDUCE_H
 #define PREPROCESS_MMREDUCE_H
 
+#ifdef GPU
+#include "../gpu/gpu_blas.h"
+#endif
+
 namespace ctns{
 
     template <typename Tm>

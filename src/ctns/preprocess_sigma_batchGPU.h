@@ -6,7 +6,7 @@
 #include "preprocess_inter.h"
 #include "preprocess_hmu.h"
 #include "preprocess_mmtask.h"
-#include "../gpu_env.h"
+#include "../gpu/gpu_env.h"
 
 #include "time.h"
 #include "sys/time.h"

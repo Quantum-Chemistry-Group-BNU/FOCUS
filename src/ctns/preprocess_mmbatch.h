@@ -27,7 +27,7 @@ namespace ctns{
                         this->xgemm_batch_gpu_precopy(ptrs);   
 #endif 
 		    }else{
-			std::cout << "error: no such option in MMbatch::kernel iop=" << iop << std::endl;
+			std::cout << "error: no such option in MMbatch::kernel batchgemm=" << batchgemm << std::endl;
 			exit(1);
                     }
                 }
