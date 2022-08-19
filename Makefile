@@ -1,19 +1,27 @@
 
-machine = mac #lenovo
+machine = dell #lenovo
 
-DEBUG = yes
-USE_GCC = yes
+DEBUG = no #yes
+USE_GCC = no
 USE_MPI = yes
 USE_OPENMP = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
+USE_GPU = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
    BOOST = /home/lx/software/boost/install_1_79_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi-mt-x64
+   endif
+else ifeq ($(strip $(machine)), dell)
+   MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
+   BOOST = /home/dell/lzd/boost/install
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
@@ -90,6 +98,14 @@ endif
 ifeq ($(strip $(USE_ZSTD)), yes)
    FLAGS += -DZSTD -I./extlibs/zstd-dev/lib
    LFLAGS += -L./extlibs/zstd-dev/lib -lzstd
+endif
+
+# GPU
+ifeq ($(strip $(USE_GPU)), yes)
+   CUDA_DIR= /usr/local/cuda
+   MAGMA_DIR = ./extlibs/magma-2.6.1/install
+   FLAGS += -DGPU -I${MAGMA_DIR}/include
+   LFLAGS += ${MAGMA_DIR}/lib -lmagma -lmagma_sparse ${CUDA_DIR}/lib64 -lcudart_static
 endif
 
 SRC = src

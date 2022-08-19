@@ -1,11 +1,15 @@
 
-machine = lenovo
+machine = dell #lenovo
 
 INCLUDE = -I.
-ifeq ($(machine), lenovo)
+ifeq ($(strip $(machine)), lenovo)
    CXX = icpc
    CXXFLAGS = -O2 -DNDEBUG -std=c++11 $(INCLUDE)
-   MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64 
+   MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
+else ifeq ($(strip $(machine)), dell)
+   CXX = icpc
+   CXXFLAGS = -O2 -DNDEBUG -std=c++11 $(INCLUDE)
+   MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
 else
    CXX = g++
    CXXFLAGS = -O2 -DNDEBUG -std=c++11 $(INCLUDE)

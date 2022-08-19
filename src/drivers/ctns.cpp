@@ -5,6 +5,9 @@
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
+#ifdef GPU
+#include "../gpu/gpu_env.h"
+#endif
 
 using namespace std;
 using namespace fock;
@@ -112,14 +115,35 @@ void CTNS(const input::schedule& schd){
 
 int main(int argc, char *argv[]){
    int rank = 0, size = 1, maxthreads = 1;
+
 #ifndef SERIAL
    // setup MPI environment 
-   //boost::mpi::environment env{argc, argv, boost::mpi::threading::serialized};
    boost::mpi::environment env{argc, argv};
    boost::mpi::communicator world;
    rank = world.rank();
    size = world.size();
 #endif
+
+#ifdef GPU
+   magma_queue = 0;
+   int num_gpus = -1;
+   int device = -1;
+
+   magma_init();
+   num_gpus=magma_getdevice_multiprocessor_count();
+   magma_setdevice(rank % num_gpus);
+   magma_getdevice(&device);
+
+   magma_queue_create(device, &magma_queue);
+   std::cout<<"rank: "<< rank <<"; device: "<< device <<"; magma_queue="<<magma_queue << std::endl;
+
+   magma_queue_t magma_queue_array[nqueue];
+   for(int i=0;i<nqueue;i++)
+   {
+       magma_queue_create(device, &magma_queue_array[i]);
+   }
+#endif
+
 #ifdef _OPENMP
    maxthreads = omp_get_max_threads();
 #endif
@@ -144,12 +168,10 @@ int main(int argc, char *argv[]){
    boost::mpi::broadcast(world, schd, 0);
    schd.world = world;
 #endif
-
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    io::create_scratch(schd.scratch, (rank == 0));
 
-   // perform CTNS calculations
    if(schd.ctns.qkind == "rZ2"){
       CTNS<ctns::qkind::rZ2>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
@@ -167,6 +189,15 @@ int main(int argc, char *argv[]){
    }else{
       tools::exit("error: no such qkind for ctns!");
    } // qkind
+
+#ifdef GPU
+   magma_queue_destroy(magma_queue);
+   for(int i=0;i<nqueue;i++)
+   {
+       magma_queue_destroy(magma_queue_array[i]);
+   }
+   magma_finalize();
+#endif
 
    // cleanup 
    if(rank == 0){

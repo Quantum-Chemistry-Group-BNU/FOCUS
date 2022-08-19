@@ -19,6 +19,11 @@ How to install:
       1. zquatev (https://github.com/qsimulate-open/zquatev) for 
 	 diagonalization of quaternion matrix (relativistic case)
       2. compression libraries: lz4 & zstd
+      3. gpu: magma
+         $ cp make.inc-examples/make.inc.mkl-icc make.inc
+         $ 修改make.inc的22行 GPU架构为GPU_TARGET ?= Volta或者Ampere （NVIDIA GeForce RTX 3090）
+         $ make
+         $ make install prefix= INSTALL_PATH
  - Install:
       1. Edit makefile in extlibs/zquatev/ & make 
       2. Edit makefile & make
