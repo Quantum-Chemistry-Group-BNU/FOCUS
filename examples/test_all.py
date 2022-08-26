@@ -128,8 +128,8 @@ if __name__ == '__main__':
    dirs = ['0_h6_tns',
            '1_lih3_dcg', 
            '2_lih3+_dcg', 
-           '3_h6+_kr', 
-           '4_h5_twodot',
+           '3_h6+_kr', # nr integral
+           '4_h5_twodot', # nr integral
            '5_h6_cisolver',
            ]
    #dirs = ['3_h6+_kr']
