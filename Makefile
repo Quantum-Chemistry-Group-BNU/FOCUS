@@ -1,5 +1,5 @@
 
-machine = mac #lenovo
+machine = dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -8,12 +8,20 @@ USE_OPENMP = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
+USE_GPU = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
    BOOST = /home/lx/software/boost/install_1_79_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi-mt-x64
+   endif
+else ifeq ($(strip $(machine)), dell)
+   MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
+   BOOST = /home/dell/lzd/boost/install
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
@@ -92,6 +100,14 @@ ifeq ($(strip $(USE_ZSTD)), yes)
    LFLAGS += -L./extlibs/zstd-dev/lib -lzstd
 endif
 
+# GPU
+ifeq ($(strip $(USE_GPU)), yes)
+   CUDA_DIR= /usr/local/cuda
+   MAGMA_DIR = ../magma/install
+   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -lmagma_sparse -L${CUDA_DIR}/lib64 -lcudart_static
+endif
+
 SRC = src
 BIN_DIR = ./bin
 OBJ_DIR = ./obj
@@ -103,18 +119,23 @@ SRC_DIR_CI   = ./$(SRC)/ci
 SRC_DIR_QT   = ./$(SRC)/ctns/qtensor
 SRC_DIR_CTNS = ./$(SRC)/ctns
 SRC_DIR_EXPT = ./$(SRC)/experiment
+ifeq ($(strip $(USE_GPU)), yes)
+   SRC_DIR_GPU = ./$(SRC)/gpu
+endif 
 INCLUDE_DIR = -I$(SRC_DIR_CORE) \
 	      -I$(SRC_DIR_IO) \
 	      -I$(SRC_DIR_CI) \
 	      -I$(SRC_DIR_QT) \
 	      -I$(SRC_DIR_CTNS) \
-	      -I$(SRC_DIR_EXPT) 
+	      -I$(SRC_DIR_EXPT) \
+ 	      -I$(SRC_DIR_GPU) 
 SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 	  	     $(SRC_DIR_IO)/*.cpp  \
 	  	     $(SRC_DIR_CI)/*.cpp \
 	  	     $(SRC_DIR_QT)/*.cpp \
 	  	     $(SRC_DIR_CTNS)/*.cpp \
-	  	     $(SRC_DIR_EXPT)/*.cpp)
+	  	     $(SRC_DIR_EXPT)/*.cpp \
+	  	     $(SRC_DIR_GPU)/*.cpp)
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
 # all the files with main functions

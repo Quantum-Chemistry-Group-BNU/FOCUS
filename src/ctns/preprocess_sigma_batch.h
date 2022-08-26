@@ -3,7 +3,10 @@
 
 #include "preprocess_inter.h"
 #include "preprocess_hmu.h"
-#include "preprocess_batch.h"
+#include "preprocess_mmtask.h"
+
+#include "time.h"
+#include "sys/time.h"
 
 namespace ctns{
 
@@ -16,6 +19,7 @@ void preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
    			               Hxlist2<Tm>& Hxlst2,
 				       size_t& blksize,
 				       double& cost,
+				       const int icase,
 				       const int hxorder,
 				       MMtasks<Tm>& mmtasks,
 				       const int batchgemm,
@@ -50,7 +54,7 @@ void preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
    mmtasks.resize(nnzblk);
    for(int i=0; i<nnzblk; i++){
       mmtasks[i].init(Hxlst2[i], batchgemm, batchsize,
-		      blksize*2, hxorder);
+		      blksize*2, hxorder, icase);
    } // i
    auto td = tools::get_time();
 
@@ -79,7 +83,9 @@ void preprocess_Hx_batch(Tm* y,
 			 Hxlist2<Tm>& Hxlst2,
 			 MMtasks<Tm>& mmtasks,
 		         Tm** opaddr,
-		         Tm* workspace){
+		         Tm* workspace,
+                	 double& t_kernel_ibond,
+                	 double& t_reduction_ibond){
    const bool debug = false;
 #ifdef _OPENMP
    int maxthreads = omp_get_max_threads();
@@ -105,23 +111,32 @@ void preprocess_Hx_batch(Tm* y,
    ptrs[5] = const_cast<Tm*>(x);
    ptrs[6] = workspace;
 
+   double time_cost_gemm_kernel=0.0;
+   double time_cost_gemm_reduction=0.0;
+   struct timeval t0_time_gemm_kernel, t1_time_gemm_kernel;
+   struct timeval t0_time_gemm_reduction, t1_time_gemm_reduction;
+
    // loop over nonzero blocks
    for(int i=0; i<mmtasks.size(); i++){
       auto& mmtask = mmtasks[i];
       for(int k=0; k<mmtask.nbatch; k++){
          // gemm
+         gettimeofday(&t0_time_gemm_kernel, NULL);
 	 mmtask.kernel(k, ptrs);
+         gettimeofday(&t1_time_gemm_kernel, NULL);
          // reduction
-	 size_t off = k*mmtask.batchsize;
-	 size_t jlen = std::min(mmtask.totsize-off,mmtask.batchsize);
-         for(int j=0; j<jlen; j++){
-            int jdx = k*mmtask.batchsize+j;
-            auto& Hxblk = Hxlst2[i][jdx];
-	    Tm* rptr = &workspace[j*blksize*2+Hxblk.offres];
-            linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, y+Hxblk.offout);
-         }
+         gettimeofday(&t0_time_gemm_reduction, NULL);
+         mmtask.reduction(k, ptrs[6], y, 0);
+         gettimeofday(&t1_time_gemm_reduction, NULL);
+         time_cost_gemm_kernel += ((double)(t1_time_gemm_kernel.tv_sec - t0_time_gemm_kernel.tv_sec) + (double)(t1_time_gemm_kernel.tv_usec - t0_time_gemm_kernel.tv_usec)/1000000.0);
+         time_cost_gemm_reduction += ((double)(t1_time_gemm_reduction.tv_sec - t0_time_gemm_reduction.tv_sec) + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
       } // k
    } // i
+   std::cout<<"time_cost_gemm_kernel="<<time_cost_gemm_kernel<<std::endl;
+   std::cout<<"time_cost_gemm_reduction="<<time_cost_gemm_reduction<<std::endl;
+   std::cout<<"time_sum above="<<time_cost_gemm_kernel+time_cost_gemm_reduction<<std::endl;
+   t_kernel_ibond = time_cost_gemm_kernel;
+   t_reduction_ibond = time_cost_gemm_reduction;
 
    // add const term
    if(rank == 0) linalg::xaxpy(ndim, scale, x, y);

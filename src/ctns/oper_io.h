@@ -102,8 +102,10 @@ void oper_save(const int iomode,
       exit(1); 
    }
 
+/*
    std::cout << "saving operators fname=" << fname << std::endl; 
    if(qops._size > 1.e6) sleep(5); // make the programme waiting for 10 seconds
+*/
 
    auto t2 = tools::get_time();
    //if(debug_oper_io and debug){
