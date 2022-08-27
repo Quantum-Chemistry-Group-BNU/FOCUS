@@ -192,10 +192,9 @@ namespace ctns{
          Tm* workspace;
 #ifdef GPU
          Tm* dev_opaddr;
-	 Tm * dev_workspace;
-	 double t_kernel_ibond=0.0;
-	 double t_reduction_ibond=0.0;
+         Tm * dev_workspace;
 #endif
+         double t_kernel_ibond=0.0, t_reduction_ibond=0.0; // debug
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
@@ -302,7 +301,7 @@ namespace ctns{
                   Hxlst2, blksize, cost, schd.ctns.hxorder, 
                   rank==0 && schd.ctns.verbose>0);
 
-	    // debug hxlst
+            // debug hxlst
             if(schd.ctns.verbose>0){
                for(int k=0; k<size; k++){
                   if(rank == k){
@@ -361,7 +360,7 @@ namespace ctns{
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
                   std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace),
-		  std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
+                  std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
 #ifdef GPU
          }else if(schd.ctns.alg_hvec == 7){
             // BatchGEMM on GPU
@@ -374,7 +373,7 @@ namespace ctns{
                   mmtasks, schd.ctns.batchgemm, schd.ctns.batchsize,
                   rank==0 && schd.ctns.verbose>0);
 
-	    // debug hxlst
+            // debug hxlst
             if(schd.ctns.verbose>0){
                for(int k=0; k<size; k++){
                   if(rank == k){
@@ -466,7 +465,7 @@ namespace ctns{
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
                   std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(dev_workspace), std::cref(worktot), 
-		  std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
+                  std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
 
 #endif
 
