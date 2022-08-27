@@ -27,11 +27,11 @@ void params_sci::read(ifstream& istrm){
       getline(istrm,line);
       std::cout << line << std::endl;
       if(line.empty() || line[0]=='#'){
-	 continue; // skip empty and comments    
+         continue; // skip empty and comments    
       }else if(line.substr(0,4)=="$end"){
-	 break;
+         break;
       }else if(line.substr(0,6)=="nroots"){
-	 nroots = stoi(line.substr(6));
+         nroots = stoi(line.substr(6));
       }else if(line.substr(0,4)=="flip"){
          flip = true;
       }else if(line.substr(0,4)=="eps0"){
@@ -49,25 +49,25 @@ void params_sci::read(ifstream& istrm){
       }else if(line.substr(0,4)=="load"){
          load = true;
       }else if(line.substr(0,4)=="dets"){
-	 int ndet = 0;
-	 while(true){
+         int ndet = 0;
+         while(true){
             line.clear();	   
             getline(istrm,line);
             std::cout << line << std::endl;
-	    if(line.empty() || line[0]=='#') continue;
-	    if(line.substr(0,3)=="end") break;
-	    ndet += 1;
-	    // read occ from string 
-	    istringstream is(line);
-	    string s;
-	    set<int> det;
-	    while(is>>s){
-	       det.insert( stoi(s) );	    
-	    }
-	    det_seeds.insert(det);
-	    if(ndet != det_seeds.size()) tools::exit("error: det is redundant!");
-	 }
-	 nseeds = det_seeds.size();
+            if(line.empty() || line[0]=='#') continue;
+            if(line.substr(0,3)=="end") break;
+            ndet += 1;
+            // read occ from string 
+            istringstream is(line);
+            string s;
+            set<int> det;
+            while(is>>s){
+               det.insert( stoi(s) );	    
+            }
+            det_seeds.insert(det);
+            if(ndet != det_seeds.size()) tools::exit("error: det is redundant!");
+         }
+         nseeds = det_seeds.size();
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
@@ -75,23 +75,23 @@ void params_sci::read(ifstream& istrm){
       }else if(line.substr(0,6)=="crit_v"){
          crit_v = stod(line.substr(6));
       }else if(line.substr(0,8)=="schedule"){
-	 while(true){
-	    line.clear();
-	    getline(istrm,line);
+         while(true){
+            line.clear();
+            getline(istrm,line);
             std::cout << line << std::endl;
-	    if(line.empty() || line[0]=='#') continue;
-	    if(line.substr(0,3)=="end") break;
-	    istringstream is(line);
-	    string iter, eps;
-	    is >> iter >> eps;
-	    sweep_iter.push_back( stoi(iter) );
-	    sweep_eps.push_back( stod(eps) );
-	 }
+            if(line.empty() || line[0]=='#') continue;
+            if(line.substr(0,3)=="end") break;
+            istringstream is(line);
+            string iter, eps;
+            is >> iter >> eps;
+            sweep_iter.push_back( stoi(iter) );
+            sweep_eps.push_back( stod(eps) );
+         }
       }else if(line.substr(0,7)=="ci_file"){
          istringstream is(line.substr(7));
-	 is >> ci_file;
+         is >> ci_file;
       }else{
-	 tools::exit("error: no matching key! line = "+line);
+         tools::exit("error: no matching key! line = "+line);
       }
    }
    // set miniter & maxiter
@@ -103,7 +103,7 @@ void params_sci::read(ifstream& istrm){
       eps1.resize(maxiter);
       for(int i=1; i<size; i++){     
          for(int j=sweep_iter[i-1]; j<sweep_iter[i]; j++){
-	    if(j < maxiter) eps1[j] = sweep_eps[i-1];
+            if(j < maxiter) eps1[j] = sweep_eps[i-1];
          }
          if(sweep_iter[i-1] < maxiter) miniter = sweep_iter[i-1];
       }
@@ -165,15 +165,15 @@ void params_ctns::read(ifstream& istrm){
       getline(istrm,line);
       std::cout << line << std::endl;
       if(line.empty() || line[0]=='#'){
-	 continue; // skip empty and comments    
+         continue; // skip empty and comments    
       }else if(line.substr(0,4)=="$end"){ 
-	 break;
+         break;
       }else if(line.substr(0,5)=="qkind"){
          istringstream is(line.substr(5));
-	 is >> qkind;
+         is >> qkind;
       }else if(line.substr(0,13)=="topology_file"){
          istringstream is(line.substr(13));
-	 is >> topology_file;
+         is >> topology_file;
       }else if(line.substr(0,7)=="verbose"){
          verbose = stoi(line.substr(7));
       }else if(line.substr(0,9)=="task_init"){
@@ -193,8 +193,8 @@ void params_ctns::read(ifstream& istrm){
          alg_renorm = stoi(line.substr(10));
       }else if(line.substr(0,8)=="alg_dmrg"){
          int algorithm = stoi(line.substr(8));
-	 alg_hvec = algorithm;
-	 alg_renorm = algorithm;
+         alg_hvec = algorithm;
+         alg_renorm = algorithm;
       }else if(line.substr(0,7)=="ifdist1"){
          ifdist1 = true;	      
       }else if(line.substr(0,13)=="save_formulae"){
@@ -211,7 +211,7 @@ void params_ctns::read(ifstream& istrm){
          rcanon_load = true;
       }else if(line.substr(0,11)=="rcanon_file"){
          istringstream is(line.substr(11));
-	 is >> rcanon_file;
+         is >> rcanon_file;
       }else if(line.substr(0,7)=="maxdets"){
          maxdets = stoi(line.substr(7)); 
       }else if(line.substr(0,11)=="thresh_proj"){
@@ -221,11 +221,11 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,10)=="rdm_vs_svd"){
          rdm_vs_svd = stod(line.substr(10));
       }else if(line.substr(0,6)=="nroots"){
-	 nroots = stoi(line.substr(6));
+         nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){
          guess = stoi(line.substr(5));
       }else if(line.substr(0,6)=="iomode"){
-	 iomode = stoi(line.substr(6));    
+         iomode = stoi(line.substr(6));    
       }else if(line.substr(0,7)=="ioasync"){
          ioasync = stoi(line.substr(7));
       }else if(line.substr(0,5)=="iroot"){
@@ -243,27 +243,27 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,7)=="damping"){
          damping = stod(line.substr(7));
       }else if(line.substr(0,7)=="dbranch"){
-	 dbranch = stoi(line.substr(7));
+         dbranch = stoi(line.substr(7));
       }else if(line.substr(0,8)=="maxsweep"){
-	 maxsweep = stoi(line.substr(8));
+         maxsweep = stoi(line.substr(8));
       }else if(line.substr(0,7)=="maxbond"){
-	 maxbond = stoi(line.substr(7));
+         maxbond = stoi(line.substr(7));
       }else if(line.substr(0,7)=="lastdot"){
-	 lastdot = true;
+         lastdot = true;
       }else if(line.substr(0,8)=="schedule"){
-	 while(true){
-	    line.clear();
-	    getline(istrm,line);
+         while(true){
+            line.clear();
+            getline(istrm,line);
             std::cout << line << std::endl;
-	    if(line.empty() || line[0]=='#') continue;
-	    if(line.substr(0,3)=="end") break;
-	    istringstream is(line);
-	    string isweep, dots, dcut, eps, noise;
-	    is >> isweep >> dots >> dcut >> eps >> noise;
-	    tmp_ctrls.push_back({stoi(isweep),stoi(dots),stoi(dcut),stod(eps),stod(noise)});
-	 }
+            if(line.empty() || line[0]=='#') continue;
+            if(line.substr(0,3)=="end") break;
+            istringstream is(line);
+            string isweep, dots, dcut, eps, noise;
+            is >> isweep >> dots >> dcut >> eps >> noise;
+            tmp_ctrls.push_back({stoi(isweep),stoi(dots),stoi(dcut),stod(eps),stod(noise)});
+         }
       }else{
-	 tools::exit("error: no matching key! line = "+line);
+         tools::exit("error: no matching key! line = "+line);
       }
    }
    // setup ctrls
@@ -272,10 +272,13 @@ void params_ctns::read(ifstream& istrm){
       if(task_opt) tools::exit("error: schedule is not specified!");
    }else{
       // consistency check
-      for(int i=0; i<size-1; i++){
-	 if(tmp_ctrls[i+1].isweep <= tmp_ctrls[i].isweep){
-	    tools::exit("error: exist invalid isweep in schedule!"); 
-	 }
+      if(tmp_ctrls[0].isweep != 0){
+         tools::exit("error: schedule must start with isweep=0");
+      }
+      for(int i=1; i<size; i++){
+         if(tmp_ctrls[i].isweep <= tmp_ctrls[i-1].isweep){
+            tools::exit("error: schedule is invalid for i="+std::to_string(i)); 
+         }
       }
       // put control parameters into ctrls
       ctrls.resize(maxsweep);
@@ -284,7 +287,7 @@ void params_ctns::read(ifstream& istrm){
             if(j < maxsweep){
                ctrls[j] = tmp_ctrls[i-1];
                ctrls[j].isweep = j;
-	    }
+            }
          }
       }
       for(int j=tmp_ctrls[size-1].isweep; j<maxsweep; j++){
@@ -312,8 +315,8 @@ void params_ctns::print() const{
    cout << "rdm_vs_svd = " << scientific << rdm_vs_svd << endl;
    // sweep
    cout << "nroots = " << nroots << endl;
-   cout << "guess    = " << guess << endl;
-   cout << "dbranch  = " << dbranch << endl;
+   cout << "guess = " << guess << endl;
+   cout << "dbranch = " << dbranch << endl;
    cout << "maxsweep = " << maxsweep << endl;
    cout << "maxbond = " << maxbond << endl;
    cout << "lastdot = " << lastdot << endl;
@@ -322,8 +325,8 @@ void params_ctns::print() const{
       for(int i=0; i<maxsweep; i++){
          auto& tmp = ctrls[i];
          cout << tmp.isweep << " " << tmp.dots << " " 
-              << tmp.dcut << " " << tmp.eps << " " 
-	      << tmp.noise << endl;
+            << tmp.dcut << " " << tmp.eps << " " 
+            << tmp.noise << endl;
       } // i
    }
    // algorithm
@@ -380,25 +383,25 @@ void schedule::read(string fname){
       getline(istrm,line);
       std::cout << line << std::endl;
       if(line.empty() || line[0]=='#'){
-	 continue; // skip empty and comments    
+         continue; // skip empty and comments    
       }else if(line.substr(0,7)=="scratch"){
          istringstream is(line.substr(7));
-	 is >> scratch;
+         is >> scratch;
       }else if(line.substr(0,5)=="dtype"){
-	 dtype = stoi(line.substr(5));
+         dtype = stoi(line.substr(5));
       }else if(line.substr(0,5)=="nelec"){
-	 nelec = stoi(line.substr(5)); // [5,end)
+         nelec = stoi(line.substr(5)); // [5,end)
       }else if(line.substr(0,5)=="twoms"){
-	 twoms = stoi(line.substr(5)); // [5,end)
+         twoms = stoi(line.substr(5)); // [5,end)
       }else if(line.substr(0,13)=="integral_file"){
          istringstream is(line.substr(13));
-	 is >> integral_file;
+         is >> integral_file;
       }else if(line.substr(0,4)=="$sci"){
-	 sci.read(istrm);
+         sci.read(istrm);
       }else if(line.substr(0,5)=="$ctns"){
-	 ctns.read(istrm);
+         ctns.read(istrm);
       }else{
-	 tools::exit("error: no matching key! line = "+line);
+         tools::exit("error: no matching key! line = "+line);
       }
    }
    std::cout << tools::line_separator << std::endl;
