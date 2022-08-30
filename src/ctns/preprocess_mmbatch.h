@@ -13,7 +13,8 @@ namespace ctns{
         struct MMbatch{
             public:
                 void init(const MMlist<Tm>& MMlst);
-                void kernel(const int batchgemm, Tm** ptrs){
+                void kernel(const int batchgemm, Tm** ptrs, double& flops_t){
+                    double flops_tt=0.0;
                     if(batchgemm == 0){
                         this->xgemm_omp(ptrs);   
                     }else if(batchgemm == 1){
@@ -24,18 +25,20 @@ namespace ctns{
                         this->xgemm_batch_gpu(ptrs);    
                         //std::cout<<"xgemm_batch_gpu 1"<<std::endl;
                     }else if(batchgemm == 3){
-                        this->xgemm_batch_gpu_precopy(ptrs);   
+                        this->xgemm_batch_gpu_precopy(ptrs, flops_tt);   
 #endif 
-		    }else{
-			std::cout << "error: no such option in MMbatch::kernel batchgemm=" << batchgemm << std::endl;
-			exit(1);
+                    }else{
+                        std::cout << "error: no such option in MMbatch::kernel batchgemm=" << batchgemm << std::endl;
+                        exit(1);
                     }
+
+                    flops_t = flops_tt;
                 }
                 void xgemm_omp(Tm** ptrs);
                 void xgemm_batch_cpu(Tm** ptrs);
 #ifdef GPU
                 void xgemm_batch_gpu(Tm** ptrs);
-                void xgemm_batch_gpu_precopy(Tm** ptrs);
+                void xgemm_batch_gpu_precopy(Tm** ptrs, double& flops_t);
 #endif
             public:
                 size_t size;
@@ -112,41 +115,41 @@ namespace ctns{
 
             time_cost = ((double)(t1_time.tv_sec - t0_time.tv_sec) + (double)(t1_time.tv_usec - t0_time.tv_usec)/1000000.0);
             /*
-            if(size==0)
-            {
-                std::cout<<"Bflops= size is zero; Bflops/time_cost is illegal"<<std::endl;
-            }else
-            {
+               if(size==0)
+               {
+               std::cout<<"Bflops= size is zero; Bflops/time_cost is illegal"<<std::endl;
+               }else
+               {
 
-                std::cout << " Bflops=" << Bflops 
-                    << "; size=" << size << ""
-                    << "; time_cost=" << time_cost << "S"
-                    << ":" << Bflops/1.e9 << "GB"
-                    << ":" << Bflops/1.e9/ time_cost << "Gflops"
-                    << std::endl;
-            }
-            **/
+               std::cout << " Bflops=" << Bflops 
+               << "; size=" << size << ""
+               << "; time_cost=" << time_cost << "S"
+               << ":" << Bflops/1.e9 << "GB"
+               << ":" << Bflops/1.e9/ time_cost << "Gflops"
+               << std::endl;
+               }
+             **/
 
 
-          //  std::cout<<"transa="<<transA[0]<<"; transb="<<transB[0]<<"LDA="<<LDA[0]<<";LDB="<<LDB[0]<<";alpha="<<alpha_vec[0]<<";beta="<<beta_vec[0]<<std::endl;
-          //  std::cout<<"AAA: M="<<M[0]<<"; K="<<K[0]<<std::endl;
-          //  for(int i=0;i<M[0]*K[0];i++)
-          //      std::cout<<Aptr[0][i]<<std::endl;
+            //  std::cout<<"transa="<<transA[0]<<"; transb="<<transB[0]<<"LDA="<<LDA[0]<<";LDB="<<LDB[0]<<";alpha="<<alpha_vec[0]<<";beta="<<beta_vec[0]<<std::endl;
+            //  std::cout<<"AAA: M="<<M[0]<<"; K="<<K[0]<<std::endl;
+            //  for(int i=0;i<M[0]*K[0];i++)
+            //      std::cout<<Aptr[0][i]<<std::endl;
 
-          //  std::cout<<"BBB: K="<<K[0]<<"; N="<<N[0]<<std::endl;
-          //  for(int i=0;i<K[0]*N[0];i++)
-          //      std::cout<<Bptr[0][i]<<std::endl;
+            //  std::cout<<"BBB: K="<<K[0]<<"; N="<<N[0]<<std::endl;
+            //  for(int i=0;i<K[0]*N[0];i++)
+            //      std::cout<<Bptr[0][i]<<std::endl;
 
-          //  std::cout<<"CCC: M="<<M[0]<<"; N="<<N[0]<<std::endl;
-          //  for(int i=0;i<M[0]*N[0];i++)
-          //      std::cout<<Cptr[0][i]<<std::endl;
+            //  std::cout<<"CCC: M="<<M[0]<<"; N="<<N[0]<<std::endl;
+            //  for(int i=0;i<M[0]*N[0];i++)
+            //      std::cout<<Cptr[0][i]<<std::endl;
 
         }
 
 #ifdef GPU
     template <typename Tm>
         void MMbatch<Tm>::xgemm_batch_gpu(Tm** ptrs){
-         //   std::cout<<"xgemm_batch_gpu"<<std::endl;
+            //   std::cout<<"xgemm_batch_gpu"<<std::endl;
             int a_total=0;
             int b_total=0;
             int c_total=0;
@@ -167,23 +170,23 @@ namespace ctns{
                         Cptr.data(), M.data(), size, a_total, b_total, c_total);
             }
 
-          //  std::cout<<"transa="<<transA[0]<<"; transb="<<transB[0]<<";LDA="<<LDA[0]<<";LDB="<<LDB[0]<<";alpha="<<alpha_vec[0]<<";beta="<<beta_vec[0]<<";a_total"<<a_total<<";b_total"<<b_total<<";c_total="<<c_total<<std::endl;
-          //  std::cout<<"AAA: M="<<M[0]<<"; K="<<K[0]<<std::endl;
-          //  for(int i=0;i<M[0]*K[0];i++)
-          //      std::cout<<Aptr[0][i]<<std::endl;
+            //  std::cout<<"transa="<<transA[0]<<"; transb="<<transB[0]<<";LDA="<<LDA[0]<<";LDB="<<LDB[0]<<";alpha="<<alpha_vec[0]<<";beta="<<beta_vec[0]<<";a_total"<<a_total<<";b_total"<<b_total<<";c_total="<<c_total<<std::endl;
+            //  std::cout<<"AAA: M="<<M[0]<<"; K="<<K[0]<<std::endl;
+            //  for(int i=0;i<M[0]*K[0];i++)
+            //      std::cout<<Aptr[0][i]<<std::endl;
 
-          //  std::cout<<"BBB: K="<<K[0]<<"; N="<<N[0]<<std::endl;
-          //  for(int i=0;i<K[0]*N[0];i++)
-          //      std::cout<<Bptr[0][i]<<std::endl;
+            //  std::cout<<"BBB: K="<<K[0]<<"; N="<<N[0]<<std::endl;
+            //  for(int i=0;i<K[0]*N[0];i++)
+            //      std::cout<<Bptr[0][i]<<std::endl;
 
-          //  std::cout<<"CCC: M="<<M[0]<<"; N="<<N[0]<<std::endl;
-          //  for(int i=0;i<M[0]*N[0];i++)
-          //      std::cout<<Cptr[0][i]<<std::endl;
+            //  std::cout<<"CCC: M="<<M[0]<<"; N="<<N[0]<<std::endl;
+            //  for(int i=0;i<M[0]*N[0];i++)
+            //      std::cout<<Cptr[0][i]<<std::endl;
 
         }
 
     template <typename Tm>
-        void MMbatch<Tm>::xgemm_batch_gpu_precopy(Tm** ptrs){
+        void MMbatch<Tm>::xgemm_batch_gpu_precopy(Tm** ptrs, double& flops_t){
             int a_total=0;
             int b_total=0;
             int c_total=0;
@@ -200,36 +203,37 @@ namespace ctns{
                 b_total +=K[i]*N[i];
                 c_total +=M[i]*N[i];
 
-                Bflops += M[i]*N[i]*K[i] ;
+                Bflops += 2* M[i]*N[i]*K[i] ;
             }
+            flops_t = Bflops/1.0e9;
 
-            struct timeval t0_time, t1_time;
-            gettimeofday(&t0_time, NULL);
+         //   struct timeval t0_time, t1_time;
+         //   gettimeofday(&t0_time, NULL);
 
             if(size > 0)
             {
-            linalg::xgemm_batch_gpu_precopy(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
-                    Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
-                    Cptr.data(), M.data(), size, a_total, b_total, c_total);
+                linalg::xgemm_batch_gpu_precopy(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
+                        Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
+                        Cptr.data(), M.data(), size, a_total, b_total, c_total);
             }
-            gettimeofday(&t1_time, NULL);
+         //   gettimeofday(&t1_time, NULL);
 
-            time_cost = ((double)(t1_time.tv_sec - t0_time.tv_sec) + (double)(t1_time.tv_usec - t0_time.tv_usec)/1000000.0);
+         //   time_cost = ((double)(t1_time.tv_sec - t0_time.tv_sec) + (double)(t1_time.tv_usec - t0_time.tv_usec)/1000000.0);
             /**
-            if(size==0)
-            {
-                std::cout<<"Bflops= size is zero; Bflops/time_cost is illegal"<<std::endl;
-            }else
-            {
+              if(size==0)
+              {
+              std::cout<<"Bflops= size is zero; Bflops/time_cost is illegal"<<std::endl;
+              }else
+              {
 
-                std::cout << " Bflops=" << Bflops 
-                    << "; size=" << size << ""
-                    << "; time_cost=" << time_cost << "S"
-                    << ":" << Bflops/1.e9 << "GB"
-                    << ":" << Bflops/1.e9/ time_cost << "Gflops"
-                    << std::endl;
-            }
-            */
+              std::cout << " Bflops=" << Bflops 
+              << "; size=" << size << ""
+              << "; time_cost=" << time_cost << "S"
+              << ":" << Bflops/1.e9 << "GB"
+              << ":" << Bflops/1.e9/ time_cost << "Gflops"
+              << std::endl;
+              }
+              */
         }
 #endif
 

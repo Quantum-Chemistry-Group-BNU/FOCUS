@@ -1,8 +1,8 @@
 
 machine = dell #lenovo
 
-DEBUG = yes
-USE_GCC = yes
+DEBUG = no 
+USE_GCC = no
 USE_MPI = yes
 USE_OPENMP = yes
 # compression
@@ -12,28 +12,28 @@ USE_GPU = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
-   MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
-   BOOST = /home/lx/software/boost/install_1_79_0
+   MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
+   BOOST =/data/home/scv7260/run/xiangchunyang/boost_1_80_0_install
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else ifeq ($(strip $(machine)), dell)
-   MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
-   BOOST = /home/dell/lzd/boost/install
-   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
+   BOOST =/data/home/scv7260/run/xiangchunyang/boost_1_80_0_install
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else
-   MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
-   BOOST = /usr/local
-   LFLAGS = -L${BOOST}/lib -lboost_timer -lboost_serialization -lboost_system -lboost_iostreams 
+   MATHLIB =/data/apps/intel/2019/mkl/lib/intel64
+   BOOST =/data/home/scv7260/run/xiangchunyang/boost_1_80_0_install
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi
    endif
 endif
-FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include 
+FLAGS = -std=c++17  ${INCLUDE_DIR} -I${BOOST}/include 
  
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
@@ -102,8 +102,8 @@ endif
 
 # GPU
 ifeq ($(strip $(USE_GPU)), yes)
-   CUDA_DIR= /usr/local/cuda
-   MAGMA_DIR = ../magma/install
+   CUDA_DIR=/data/apps/cuda/11.4
+   MAGMA_DIR=/data/home/scv7260/run/xiangchunyang/magma_2_6_1_install
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -lmagma_sparse -L${CUDA_DIR}/lib64 -lcudart_static
 endif

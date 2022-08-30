@@ -20,3 +20,5 @@ extlibs/HighFive-master/
 extlibs/lz4-dev/
 extlibs/zstd-dev/
 src.tar
+.*.swo
+.*.swp
