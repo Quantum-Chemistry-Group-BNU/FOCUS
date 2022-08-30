@@ -21,7 +21,7 @@ $end
 
 $ctns
 qkind rNSz
-maxdets 1000 # keep dets as much as possible
+maxdets 10000 # keep dets as much as possible
 topology_file topology/topo0
 thresh_proj 1.e-14
 thresh_ortho 1.e-10 
@@ -47,9 +47,14 @@ schedule
 36 2 9000 1.e-4 0.e0 
 38 2 9000 1.e-4 0.e0 
 end
-maxsweep 1
-maxcycle 6
-maxbond 0
+maxsweep 39
+maxcycle 2
 task_dmrg
-alg_dmrg 2
+alg_hvec 7
+batchgemm 3
+batchsize 1000
+alg_renorm 2
+iomode 0
+ioasync 0
+lastdot
 $end
