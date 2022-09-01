@@ -343,11 +343,16 @@ namespace ctns{
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-                  debug_formulae); 
+                  debug_formulae);
+            // gen MMlst & reorder
             preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
-                  Hxlst2, blksize, cost, 0, schd.ctns.hxorder,
-                  mmtasks, schd.ctns.batchgemm, schd.ctns.batchsize,
-                  rank==0 && schd.ctns.verbose>0);
+                  Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
+            size_t nnzblk = wf.info._nnzaddr.size();
+            mmtasks.resize(nnzblk);
+            for(int i=0; i<nnzblk; i++){
+               mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
+         		       blksize*2, schd.ctns.hxorder, 0);
+            } // i
             opaddr[4] = inter._data;
             worktot = mmtasks[0].batchsize*blksize*2;
             if(debug && schd.ctns.verbose>0){
@@ -367,12 +372,10 @@ namespace ctns{
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-                  debug_formulae); 
+                  debug_formulae);
+            // gen MMlst & reorder
             preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
-                  Hxlst2, blksize, cost, 1, schd.ctns.hxorder,
-                  mmtasks, schd.ctns.batchgemm, schd.ctns.batchsize,
-                  rank==0 && schd.ctns.verbose>0);
-
+                  Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
             // debug hxlst
             if(schd.ctns.verbose>0){
                for(int k=0; k<size; k++){
@@ -398,7 +401,7 @@ namespace ctns{
                icomb.world.barrier();
                if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
             }
-
+       
             // GPU: copy operators (qops_dict & inter)
             // 1. allocate memery on GPU
             size_t tsize = qops_dict.at("l").size()
@@ -440,18 +443,36 @@ namespace ctns{
             opaddr[3]=dev_c2_opaddr;
             opaddr[4]=dev_inter_opaddr;
 
-            std::cout << " qops(tot)=" << tsize 
+            std::cout << "rank=" << rank << " qops(tot)=" << tsize 
                << ":" << tools::sizeMB<Tm>(tsize) << "MB"
                << ":" << tools::sizeGB<Tm>(tsize) << "GB"
                << std::endl;
+	
+	    // determine the size of batch
+	    size_t batchsize = 0;
+	    if(schd.ctns.batchsize > 0){
+	       batchsize = schd.ctns.batchsize;
+	    }else{
+	       batchsize = std::ceil((schd.ctns.batchmem - tools::sizeGB<Tm>(tsize+2*ndim))*std::pow(1024,3)/(blksize*2*sizeof(Tm)));
+	    }
+	    if(batchsize <= 0){
+	       std::cout << "error: in sufficient memory!" << std::endl;
+	       exit(1);
+	    }
+	    // generate mmtasks
+	    size_t nnzblk = wf.info._nnzaddr.size();
+            mmtasks.resize(nnzblk);
+            for(int i=0; i<nnzblk; i++){
+               mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
+         		       blksize*2, schd.ctns.hxorder, 0);
+            } // i
+
             // 4. allocate memory for Davidson: x,worktot
-            worktot = mmtasks[0].batchsize*blksize*2;
-            // ndim for x, worktot for temp
-            std::cout<<"ndim="<<ndim<<"; worktot="<<worktot<<std::endl;
+            worktot = 2*ndim + batchsize*blksize*2;
 #if defined(USE_CUDA_OPERATION)
-            CUDA_CHECK(cudaMalloc((void**)&dev_workspace, (2*ndim+worktot)*sizeof(Tm)));
+            CUDA_CHECK(cudaMalloc((void**)&dev_workspace, worktot*sizeof(Tm)));
 #else
-            MAGMA_CHECK(magma_dmalloc((double**)(&dev_workspace), 2*ndim+worktot));
+            MAGMA_CHECK(magma_dmalloc((double**)(&dev_workspace), worktot));
 #endif
 
             if(debug && schd.ctns.verbose>0){
@@ -464,9 +485,8 @@ namespace ctns{
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
-                  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(dev_workspace), std::cref(worktot), 
+                  std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(dev_workspace),
                   std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
-
 #endif
 
          }else{

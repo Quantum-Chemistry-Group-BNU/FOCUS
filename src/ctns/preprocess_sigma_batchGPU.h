@@ -26,7 +26,6 @@ namespace ctns{
                 MMtasks<Tm>& mmtasks,
                 Tm** opaddr,
                 Tm* dev_workspace,
-                const int& worktotal,
                 double& t_kernel_ibond,
                 double& t_reduction_ibond
                 ){
@@ -93,15 +92,6 @@ namespace ctns{
                     gettimeofday(&t0_time_gemm_kernel, NULL);
                     mmtask.kernel(k, ptrs);
                     gettimeofday(&t1_time_gemm_kernel, NULL);
-
-                    // GPU: copy y vector back to yCPU
-/*
-#if defined(USE_CUDA_OPERATION)
-                    CUDA_CHECK(cudaMemcpy(workspace,ptrs[6], worktotal*sizeof(Tm), cudaMemcpyDeviceToHost));
-#else
-                    magma_dgetvector(worktotal, (double*)ptrs[6], 1, (double*)workspace,  1,  magma_queue);
-#endif
-*/
 
                     // reduction
                     gettimeofday(&t0_time_gemm_reduction, NULL);

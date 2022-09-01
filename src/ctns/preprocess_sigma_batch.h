@@ -19,11 +19,6 @@ void preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
    			               Hxlist2<Tm>& Hxlst2,
 				       size_t& blksize,
 				       double& cost,
-				       const int icase,
-				       const int hxorder,
-				       MMtasks<Tm>& mmtasks,
-				       const int batchgemm,
-				       const size_t batchsize,
 				       const bool debug){
    auto t0 = tools::get_time();
 
@@ -50,21 +45,12 @@ void preprocess_formulae_sigma_batch(const oper_dictmap<Tm>& qops_dict,
    }
    auto tc = tools::get_time();
 
-   // 4. gen MMlst & reorder
-   mmtasks.resize(nnzblk);
-   for(int i=0; i<nnzblk; i++){
-      mmtasks[i].init(Hxlst2[i], batchgemm, batchsize,
-		      blksize*2, hxorder, icase);
-   } // i
-   auto td = tools::get_time();
-
    if(debug){
       auto t1 = tools::get_time();
-      std::cout << "T(inter/Hmu/Hxlist/sort/tot)="
+      std::cout << "T(inter/Hmu/Hxlist/tot)="
 	        << tools::get_duration(ta-t0) << ","
 	        << tools::get_duration(tb-ta) << ","
 	        << tools::get_duration(tc-tb) << ","
-	        << tools::get_duration(td-tc) << ","
 		<< tools::get_duration(t1-t0) 
 		<< std::endl;
       tools::timing("preprocess_formulae_sigma_batch", t0, t1);
