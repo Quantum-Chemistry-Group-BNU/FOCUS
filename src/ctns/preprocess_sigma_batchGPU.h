@@ -82,16 +82,21 @@ namespace ctns{
             ptrs[5] = x;
             ptrs[6] = &dev_workspace[offset];
 
+            double flops_G=0.0;
+
             gettimeofday(&t0_time_gemm, NULL);
             // loop over nonzero blocks
             for(int i=0; i<mmtasks.size(); i++){
                 auto& mmtask = mmtasks[i];
                 for(int k=0; k<mmtask.nbatch; k++){
                     
+                    
+                    double flops_tt=0.0;
                     // gemm on GPU
                     gettimeofday(&t0_time_gemm_kernel, NULL);
-                    mmtask.kernel(k, ptrs);
+                    mmtask.kernel(k, ptrs, flops_tt);
                     gettimeofday(&t1_time_gemm_kernel, NULL);
+                    flops_G += flops_tt;
 
                     // reduction
                     gettimeofday(&t0_time_gemm_reduction, NULL);
@@ -107,10 +112,11 @@ namespace ctns{
             gettimeofday(&t1_time_gemm, NULL);
             time_cost_gemm = ((double)(t1_time_gemm.tv_sec - t0_time_gemm.tv_sec) + (double)(t1_time_gemm.tv_usec - t0_time_gemm.tv_usec)/1000000.0);
 
-            std::cout<<"time_cost_copy xcpu hosttodevice size ndim ="<<time_cost_copy<<"; time_cost_gemm  kernel+reduction total="<<time_cost_gemm<<std::endl;
+            //std::cout<<"time_cost_copy xcpu hosttodevice size ndim ="<<time_cost_copy<<"; time_cost_gemm  kernel+reduction total="<<time_cost_gemm<<std::endl;
             std::cout<<"time_cost_gemm_kernel="<<time_cost_gemm_kernel<<std::endl;
             std::cout<<"time_cost_gemm_reduction="<<time_cost_gemm_reduction<<std::endl;
-            std::cout<<"time_sum kernel+reduction="<<time_cost_gemm_kernel+time_cost_gemm_copy+time_cost_gemm_reduction<<std::endl;
+            //std::cout<<"time_sum kernel+reduction="<<time_cost_gemm_kernel+time_cost_gemm_copy+time_cost_gemm_reduction<<std::endl;
+            std::cout<<"gflops=2*m*n*k/time = kernel/time="<<flops_G/time_cost_gemm_kernel<<" flops_G:"<<flops_G<<std::endl;
 
             t_kernel_ibond = time_cost_gemm_kernel;
             t_reduction_ibond = time_cost_gemm_reduction;
@@ -124,7 +130,7 @@ namespace ctns{
 #endif
             gettimeofday(&t1_time_gemm_copy, NULL);
             time_cost_gemm_copy += ((double)(t1_time_gemm_copy.tv_sec - t0_time_gemm_copy.tv_sec) + (double)(t1_time_gemm_copy.tv_usec - t0_time_gemm_copy.tv_usec)/1000000.0);
-            std::cout<<"time_cost_gemm_copy yGPU devicetohost size ndim ="<<time_cost_gemm_copy<<std::endl;
+            //std::cout<<"time_cost_gemm_copy yGPU devicetohost size ndim ="<<time_cost_gemm_copy<<std::endl;
 
             // add const term
             if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);

@@ -21,3 +21,5 @@ extlibs/lz4-dev/
 extlibs/zstd-dev/
 extlibs/magma-2.6.1/
 src.tar
+.*.swo
+.*.swp

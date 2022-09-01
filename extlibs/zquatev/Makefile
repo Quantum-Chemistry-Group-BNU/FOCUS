@@ -4,17 +4,16 @@ machine = dell #lenovo
 INCLUDE = -I.
 ifeq ($(strip $(machine)), lenovo)
    CXX = icpc
-   CXXFLAGS = -O2 -DNDEBUG -std=c++11 $(INCLUDE)
-   MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
+   CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
 else ifeq ($(strip $(machine)), dell)
-   CXX = icpc
-   CXXFLAGS = -O2 -DNDEBUG -std=c++11 $(INCLUDE)
-   MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
+   CXX = icpc 
+   CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
 else
    CXX = g++
-   CXXFLAGS = -O2 -DNDEBUG -std=c++11 $(INCLUDE)
-   MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib  
-   #MATHLIB = /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64 
+   CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
 endif
 
 LIBS = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl 

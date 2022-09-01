@@ -12,6 +12,10 @@
 #include "oper_rbasis.h"
 #include "symbolic_kernel_renorm.h"
 #include "symbolic_kernel_renorm2.h"
+#ifndef SERIAL
+#include <boost/mpi.hpp>
+#endif
+
 
 namespace ctns{
 
