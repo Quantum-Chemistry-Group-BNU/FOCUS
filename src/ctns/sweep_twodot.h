@@ -80,13 +80,13 @@ namespace ctns{
             qops_dict.at("r").print("rqops");
             qops_dict.at("c1").print("c1qops");
             qops_dict.at("c2").print("c2qops");
-            size_t tsize = qops_dict.at("l").size()
+            size_t opertot = qops_dict.at("l").size()
                + qops_dict.at("r").size()
                + qops_dict.at("c1").size()
                + qops_dict.at("c2").size();
-            std::cout << " qops(tot)=" << tsize 
-               << ":" << tools::sizeMB<Tm>(tsize) << "MB"
-               << ":" << tools::sizeGB<Tm>(tsize) << "GB"
+            std::cout << " qops(tot)=" << opertot 
+               << ":" << tools::sizeMB<Tm>(opertot) << "MB"
+               << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
          }
          timing.ta = tools::get_time();
@@ -355,11 +355,13 @@ namespace ctns{
                std::cout << "error: batchsize should be set!" << std::endl;
                exit(1);
             }
+            // generate mmtasks
+	    int icase = 0;
             size_t nnzblk = wf.info._nnzaddr.size();
             mmtasks.resize(nnzblk);
             for(int i=0; i<nnzblk; i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
-                     blksize*2, schd.ctns.hxorder, 0);
+                     blksize*2, schd.ctns.hxorder, icase);
             } // i
             opaddr[4] = inter._data;
             worktot = mmtasks[0].batchsize*blksize*2;
@@ -416,15 +418,15 @@ namespace ctns{
 
             // GPU: copy operators (qops_dict & inter)
             // 1. allocate memery on GPU
-            size_t tsize = qops_dict.at("l").size()
+            size_t opertot = qops_dict.at("l").size()
                + qops_dict.at("r").size()
                + qops_dict.at("c1").size()
                + qops_dict.at("c2").size()
                + inter.size();
 #if defined(USE_CUDA_OPERATION)
-            CUDA_CHECK(cudaMalloc((void**)&dev_opaddr, tsize*sizeof(Tm)));
+            CUDA_CHECK(cudaMalloc((void**)&dev_opaddr, opertot*sizeof(Tm)));
 #else
-            MAGMA_CHECK(magma_dmalloc((double**)(&dev_opaddr), tsize));
+            MAGMA_CHECK(magma_dmalloc((double**)(&dev_opaddr), opertot));
 #endif
 
             Tm* dev_l_opaddr = dev_opaddr;
@@ -455,9 +457,9 @@ namespace ctns{
             opaddr[3]=dev_c2_opaddr;
             opaddr[4]=dev_inter_opaddr;
 
-            std::cout << "rank=" << rank << " qops(tot)=" << tsize 
-               << ":" << tools::sizeMB<Tm>(tsize) << "MB"
-               << ":" << tools::sizeGB<Tm>(tsize) << "GB"
+            std::cout << "rank=" << rank << " qops(tot)=" << opertot 
+               << ":" << tools::sizeMB<Tm>(opertot) << "MB"
+               << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
 
             // determine the size of batch
@@ -465,18 +467,27 @@ namespace ctns{
             if(schd.ctns.batchsize > 0){
                batchsize = schd.ctns.batchsize;
             }else{
-               batchsize = std::ceil((schd.ctns.batchmem - tools::sizeGB<Tm>(tsize+2*ndim))*std::pow(1024,3)/(blksize*2*sizeof(Tm)));
+               batchsize = std::ceil((schd.ctns.batchmem - tools::sizeGB<Tm>(opertot+2*ndim))*std::pow(1024,3)/(blksize*2*sizeof(Tm)));
             }
             if(batchsize <= 0){
                std::cout << "error: in sufficient memory!" << std::endl;
                exit(1);
             }
             // generate mmtasks
+	    int icase = 1;
             size_t nnzblk = wf.info._nnzaddr.size();
             mmtasks.resize(nnzblk);
             for(int i=0; i<nnzblk; i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
-                     blksize*2, schd.ctns.hxorder, 0);
+                     blksize*2, schd.ctns.hxorder, 1);
+	       if(rank==0){
+	          std::cout << "rank=" << rank << " iblk=" << i 
+	           	 << " mmtasks.totsize=" << mmtasks[i].totsize
+	           	 << " batchsize=" << mmtasks[i].batchsize 
+ 	           	 << " nbatch=" << mmtasks[i].nbatch 
+	           	 << std::endl;
+	       }
+	       batchsize = (i==0)? mmtasks[i].batchsize : std::max(batchsize,mmtasks[i].batchsize);
             } // i
 
             // 4. allocate memory for Davidson: x,worktot
@@ -484,8 +495,9 @@ namespace ctns{
             std::cout << "rank=" << rank
                       << " blksize=" << blksize
                       << " batchsize=" << batchsize
+		      << " opertot(GB)=" << tools::sizeGB<Tm>(opertot)
                       << " worktot(GB)=" << tools::sizeGB<Tm>(worktot)
-                      << " all(GB)=" << tools::sizeGB<Tm>(tsize+worktot)
+                      << " gpu(GB)=" << tools::sizeGB<Tm>(opertot+worktot)
                       << std::endl;
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMalloc((void**)&dev_workspace, worktot*sizeof(Tm)));
