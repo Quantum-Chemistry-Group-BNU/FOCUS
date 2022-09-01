@@ -645,6 +645,108 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
 
 }
 
+inline void xgemm_batch_gpu_precopy_stream(const char transa, const char transb, 
+        const int *m_array, const int *n_array, const int *k_array,
+        const double *alpha, const double **a_array, const int *lda_array, 
+        const double **b_array, const int *ldb_array,
+        const double *beta, double **c_array, const int *ldc_array, 
+        const int batch_count, const int a_total_count, const int b_total_count, const int c_total_count)
+{
+    magma_ptr dev_total;
+
+    int  *dev_m;
+    int  *dev_n;
+    int  *dev_k;
+
+    int  *dev_lda;
+    int  *dev_ldb;
+    int  *dev_ldc;
+
+    double ** dev_a_array_ptr;
+    double ** dev_b_array_ptr;
+    double ** dev_c_array_ptr;
+
+
+    int total_size =0 ;
+    //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
+    total_size += 6*(batch_count+1)*sizeof(int);
+    //dev_array_ptr
+    total_size +=3*batch_count*sizeof(double*);
+
+    //CUDA_CHECK(cudaMalloc((void**)&dev_total, total_size));
+    MAGMA_CHECK(magma_malloc(&dev_total, total_size));
+
+    dev_m = (int*)((void*)dev_total);
+    dev_n = dev_m + (batch_count+1);
+    dev_k = dev_n + (batch_count+1);
+
+    dev_lda = dev_k + (batch_count+1);
+    dev_ldb = dev_lda + (batch_count+1);
+    dev_ldc = dev_ldb + (batch_count+1);
+
+    dev_a_array_ptr= (double**)((void*)dev_ldc +(batch_count+1)*sizeof(int)) ;
+    dev_b_array_ptr = dev_a_array_ptr + batch_count;
+    dev_c_array_ptr = dev_b_array_ptr + batch_count;
+
+
+    magma_isetvector(batch_count, m_array, 1, dev_m, 1, magma_queue);
+    magma_isetvector(batch_count, n_array, 1, dev_n, 1, magma_queue);
+    magma_isetvector(batch_count, k_array, 1, dev_k, 1, magma_queue);
+
+    magma_isetvector(batch_count, lda_array, 1, dev_lda, 1, magma_queue);
+    magma_isetvector(batch_count, ldb_array, 1, dev_ldb, 1, magma_queue);
+    magma_isetvector(batch_count, ldc_array, 1, dev_ldc, 1, magma_queue);
+
+
+    magma_setvector(batch_count, sizeof(double*),  a_array, 1, dev_a_array_ptr, 1, magma_queue);
+    magma_setvector(batch_count, sizeof(double*),  b_array, 1, dev_b_array_ptr, 1, magma_queue);
+    magma_setvector(batch_count, sizeof(double*),  c_array, 1, dev_c_array_ptr, 1, magma_queue);
+
+    //magma_init();
+    //magma_queue_t queue=0;
+    //magma_setdevice(0);
+    //magma_queue_create(0,&queue);
+
+    magma_trans_t transA =  MagmaNoTrans ;
+    magma_trans_t transB =  MagmaNoTrans ;
+
+
+    if(transa=='T')
+    {
+        transA = MagmaTrans;
+    }else if (transa == 'C'){
+        transA = MagmaConjTrans;
+    }
+
+    if(transb=='T')
+    {
+        transB = MagmaTrans;
+    }else if(transb == 'C'){
+        transB = MagmaConjTrans;
+    }
+
+
+    magmablas_dgemm_vbatched(
+            transA,
+            transB,
+            dev_m,
+            dev_n,
+            dev_k,
+            alpha[0],
+            dev_a_array_ptr,
+            dev_lda,
+            dev_b_array_ptr,
+            dev_ldb,
+            beta[0],
+            dev_c_array_ptr,
+            dev_ldc,
+            batch_count,
+            magma_queue
+            );
+
+    MAGMA_CHECK(magma_free(dev_total));
+}
+
 inline void xgemm_batch_gpu_precopy_new(const char transa, const char transb, 
         const int *m_array, const int *n_array, const int *k_array,
         const double *alpha, const double **a_array, const int *lda_array, 
