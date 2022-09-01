@@ -235,56 +235,56 @@ namespace ctns{
               }
               */
         }
-    template <typename Tm>
-        void MMbatch<Tm>::xgemm_batch_gpu_precopy_stream(Tm** ptrs, double& flops_t){
-            int a_total=0;
-            int b_total=0;
-            int c_total=0;
+    //template <typename Tm>
+    //    void MMbatch<Tm>::xgemm_batch_gpu_precopy_stream(Tm** ptrs, double& flops_t){
+    //        int a_total=0;
+    //        int b_total=0;
+    //        int c_total=0;
 
-            double Bflops=0;
-            double time_cost=0.0;
-            // initialization 
-            for(int i=0; i<size; i++){
-                Aptr[i] = ptrs[locA[i]] + offA[i];
-                Bptr[i] = ptrs[locB[i]] + offB[i];
-                Cptr[i] = ptrs[locC[i]] + offC[i];
+    //        double Bflops=0;
+    //        double time_cost=0.0;
+    //        // initialization 
+    //        for(int i=0; i<size; i++){
+    //            Aptr[i] = ptrs[locA[i]] + offA[i];
+    //            Bptr[i] = ptrs[locB[i]] + offB[i];
+    //            Cptr[i] = ptrs[locC[i]] + offC[i];
 
-                a_total +=M[i]*K[i];
-                b_total +=K[i]*N[i];
-                c_total +=M[i]*N[i];
+    //            a_total +=M[i]*K[i];
+    //            b_total +=K[i]*N[i];
+    //            c_total +=M[i]*N[i];
 
-                Bflops += 2* M[i]*N[i]*K[i] ;
-            }
-            flops_t = Bflops/1.0e9;
+    //            Bflops += 2* M[i]*N[i]*K[i] ;
+    //        }
+    //        flops_t = Bflops/1.0e9;
 
-         //   struct timeval t0_time, t1_time;
-         //   gettimeofday(&t0_time, NULL);
+    //     //   struct timeval t0_time, t1_time;
+    //     //   gettimeofday(&t0_time, NULL);
 
-            if(size > 0)
-            {
-                linalg::xgemm_batch_gpu_precopy_stream(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
-                        Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
-                        Cptr.data(), M.data(), size, a_total, b_total, c_total);
-            }
-         //   gettimeofday(&t1_time, NULL);
+    //        if(size > 0)
+    //        {
+    //            linalg::xgemm_batch_gpu_precopy_stream(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
+    //                    Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
+    //                    Cptr.data(), M.data(), size, a_total, b_total, c_total);
+    //        }
+    //     //   gettimeofday(&t1_time, NULL);
 
-         //   time_cost = ((double)(t1_time.tv_sec - t0_time.tv_sec) + (double)(t1_time.tv_usec - t0_time.tv_usec)/1000000.0);
-            /**
-              if(size==0)
-              {
-              std::cout<<"Bflops= size is zero; Bflops/time_cost is illegal"<<std::endl;
-              }else
-              {
+    //     //   time_cost = ((double)(t1_time.tv_sec - t0_time.tv_sec) + (double)(t1_time.tv_usec - t0_time.tv_usec)/1000000.0);
+    //        /**
+    //          if(size==0)
+    //          {
+    //          std::cout<<"Bflops= size is zero; Bflops/time_cost is illegal"<<std::endl;
+    //          }else
+    //          {
 
-              std::cout << " Bflops=" << Bflops 
-              << "; size=" << size << ""
-              << "; time_cost=" << time_cost << "S"
-              << ":" << Bflops/1.e9 << "GB"
-              << ":" << Bflops/1.e9/ time_cost << "Gflops"
-              << std::endl;
-              }
-              */
-        }
+    //          std::cout << " Bflops=" << Bflops 
+    //          << "; size=" << size << ""
+    //          << "; time_cost=" << time_cost << "S"
+    //          << ":" << Bflops/1.e9 << "GB"
+    //          << ":" << Bflops/1.e9/ time_cost << "Gflops"
+    //          << std::endl;
+    //          }
+    //          */
+    //    }
 #endif
 
 } // ctns
