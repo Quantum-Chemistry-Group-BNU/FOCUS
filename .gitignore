@@ -23,3 +23,4 @@ extlibs/magma-2.6.1/
 src.tar
 .*.swo
 .*.swp
+*.sh

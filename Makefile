@@ -1,8 +1,8 @@
 
 machine = mac #dell #lenovo
 
-DEBUG = no 
-USE_GCC = no
+DEBUG = yes
+USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 # compression
