@@ -3,8 +3,10 @@
 #SBATCH -t 300:00:00 
 #SBATCH --tasks-per-node=8
 #SBATCH --cpus-per-task=10
-#SBATCH -n 8
-#SBATCH -N 1
+#SBATCH --gres=gpu:24
+#SBATCH --qos=gpugpu
+#SBATCH -n 24
+#SBATCH -N 3
 
 # -J task_name
 # -t runting time
@@ -25,5 +27,5 @@ export OMP_NUM_THREADS=10
 #export MKL_NUM_THREADS=1
 #export MKL_DYNAMIC=FALSE
 
-srun -n 8 -c 10  ../../bin/ctns.x input.dat
+srun -n 24 -c 10 ../../bin/ctns.x input.dat
 
