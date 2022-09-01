@@ -58,16 +58,18 @@ def testAll(dirs):
          exist = os.path.exists(finput)
          if(not exist): continue
          print('finput=',finput)
-	 # SCI
+	     # SCI
+         print('=== SCI ===')
          cmd = SCI +" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"sci.out"
-         print(cmd)
+         print('cmd = ', cmd)
          t0 = time.time()
          os.system(cmd)
          t1 = time.time()
          print('timing =',t1-t0)
-	 # CTNS
+	     # CTNS
+         print('=== CTNS ===')
          cmd = mpiprefix+CTNS+" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"ctns.out"
-         print(cmd)
+         print('cmd = ', cmd)
          t0 = time.time()
          os.system(cmd)
          t1 = time.time()
@@ -90,7 +92,7 @@ def compareAll(dirs,thresh=1.e-8):
          exist = os.path.exists(finput)
          if(not exist): continue
          print('finput=',finput)
-	 # COMPARISON
+	     # COMPARISON
          fname = "results/"+prefix+"ctns.out"
          print('fname[ref]=',fname)
          elst0 = parse_ctns(fname)[-1]
@@ -128,8 +130,8 @@ if __name__ == '__main__':
    dirs = ['0_h6_tns',
            '1_lih3_dcg', 
            '2_lih3+_dcg', 
-           '3_h6+_kr', 
-           '4_h5_twodot',
+           '3_h6+_kr', # nr integral
+           '4_h5_twodot', # nr integral
            '5_h6_cisolver',
            ]
    #dirs = ['3_h6+_kr']

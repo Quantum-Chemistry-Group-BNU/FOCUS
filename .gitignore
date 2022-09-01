@@ -19,6 +19,7 @@ extlibs/h5pp-master/
 extlibs/HighFive-master/
 extlibs/lz4-dev/
 extlibs/zstd-dev/
+extlibs/magma-2.6.1/
 src.tar
 .*.swo
 .*.swp
