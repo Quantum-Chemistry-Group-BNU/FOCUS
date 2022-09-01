@@ -207,6 +207,8 @@ void params_ctns::read(ifstream& istrm){
          batchgemm = stoi(line.substr(9));
       }else if(line.substr(0,9)=="batchsize"){
          batchsize = stoi(line.substr(9));
+      }else if(line.substr(0,8)=="batchmem"){
+         batchmem = stod(line.substr(8));
       }else if(line.substr(0,11)=="rcanon_load"){
          rcanon_load = true;
       }else if(line.substr(0,11)=="rcanon_file"){
@@ -338,6 +340,7 @@ void params_ctns::print() const{
    cout << "hxorder = " << hxorder << endl;
    cout << "batchgemm = " << batchgemm << endl;
    cout << "batchsize = " << batchsize << endl;
+   cout << "batchmem = " << batchmem << endl;
    // dvdson
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
