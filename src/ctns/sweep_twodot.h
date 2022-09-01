@@ -340,6 +340,10 @@ namespace ctns{
                   std::ref(Hxlst2), std::ref(opaddr));
          }else if(schd.ctns.alg_hvec == 6){
             // BatchGEMM
+            if(schd.ctns.batchsize == 0){
+               std::cout << "error: batchsize should be set!" << std::endl;
+               exit(1);
+            }
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, 
@@ -347,11 +351,15 @@ namespace ctns{
             // gen MMlst & reorder
             preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
                   Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
+            if(schd.ctns.batchsize == 0){
+               std::cout << "error: batchsize should be set!" << std::endl;
+               exit(1);
+            }
             size_t nnzblk = wf.info._nnzaddr.size();
             mmtasks.resize(nnzblk);
             for(int i=0; i<nnzblk; i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
-         		       blksize*2, schd.ctns.hxorder, 0);
+                     blksize*2, schd.ctns.hxorder, 0);
             } // i
             opaddr[4] = inter._data;
             worktot = mmtasks[0].batchsize*blksize*2;
@@ -369,6 +377,10 @@ namespace ctns{
 #ifdef GPU
          }else if(schd.ctns.alg_hvec == 7){
             // BatchGEMM on GPU
+            if(schd.ctns.batchsize == 0 && std::abs(schd.ctns.batchmem) < 1.e-10){
+               std::cout << "error: batchsize/batchmem should be set!" << std::endl;
+               exit(1);
+            }
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, 
@@ -401,7 +413,7 @@ namespace ctns{
                icomb.world.barrier();
                if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
             }
-       
+
             // GPU: copy operators (qops_dict & inter)
             // 1. allocate memery on GPU
             size_t tsize = qops_dict.at("l").size()
@@ -447,34 +459,39 @@ namespace ctns{
                << ":" << tools::sizeMB<Tm>(tsize) << "MB"
                << ":" << tools::sizeGB<Tm>(tsize) << "GB"
                << std::endl;
-	
-	    // determine the size of batch
-	    size_t batchsize = 0;
-	    if(schd.ctns.batchsize > 0){
-	       batchsize = schd.ctns.batchsize;
-	    }else{
-	       batchsize = std::ceil((schd.ctns.batchmem - tools::sizeGB<Tm>(tsize+2*ndim))*std::pow(1024,3)/(blksize*2*sizeof(Tm)));
-	    }
-	    if(batchsize <= 0){
-	       std::cout << "error: in sufficient memory!" << std::endl;
-	       exit(1);
-	    }
-	    // generate mmtasks
-	    size_t nnzblk = wf.info._nnzaddr.size();
+
+            // determine the size of batch
+            size_t batchsize = 0;
+            if(schd.ctns.batchsize > 0){
+               batchsize = schd.ctns.batchsize;
+            }else{
+               batchsize = std::ceil((schd.ctns.batchmem - tools::sizeGB<Tm>(tsize+2*ndim))*std::pow(1024,3)/(blksize*2*sizeof(Tm)));
+            }
+            if(batchsize <= 0){
+               std::cout << "error: in sufficient memory!" << std::endl;
+               exit(1);
+            }
+            // generate mmtasks
+            size_t nnzblk = wf.info._nnzaddr.size();
             mmtasks.resize(nnzblk);
             for(int i=0; i<nnzblk; i++){
-               mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
-         		       blksize*2, schd.ctns.hxorder, 0);
+               mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
+                     blksize*2, schd.ctns.hxorder, 0);
             } // i
 
             // 4. allocate memory for Davidson: x,worktot
             worktot = 2*ndim + batchsize*blksize*2;
+            std::cout << "rank=" << rank
+                      << " blksize=" << blksize
+                      << " batchsize=" << batchsize
+                      << " worktot(GB)=" << tools::sizeGB<Tm>(worktot)
+                      << " all(GB)=" << tools::sizeGB<Tm>(tsize+worktot)
+                      << std::endl;
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMalloc((void**)&dev_workspace, worktot*sizeof(Tm)));
 #else
             MAGMA_CHECK(magma_dmalloc((double**)(&dev_workspace), worktot));
 #endif
-
             if(debug && schd.ctns.verbose>0){
                std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"

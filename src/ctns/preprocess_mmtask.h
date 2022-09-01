@@ -49,9 +49,9 @@ namespace ctns{
                 const size_t offset,
                 const int hxorder,
                 const int icase){
-            batchgemm = _batchgemm;
-            batchsize = _batchsize;
             totsize = Hxlst.size();
+            batchgemm = _batchgemm;
+            batchsize = std::min(totsize,_batchsize);
             nbatch = totsize/batchsize;
             if(totsize%batchsize != 0) nbatch += 1;
             mmbatch2.resize(nbatch);
