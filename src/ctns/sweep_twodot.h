@@ -509,6 +509,7 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
+
             Tm scale = qops_dict.at("l").ifkr? 0.5*ecore : 1.0*ecore;
 
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
