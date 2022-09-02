@@ -15,11 +15,12 @@
 #include "symbolic_kernel_sigma2.h"
 #include "symbolic_kernel_sigma3.h"
 #include "preprocess_size.h"
+#include "preprocess_hxlist.h"
+#include "preprocess_formulae.h"
 #include "preprocess_sigma.h"
 #include "preprocess_sigma2.h"
 #include "preprocess_sigma_batch.h"
 #ifdef GPU
-#include "../gpu/gpu_env.h"
 #include "preprocess_sigma_batchGPU.h"
 #endif
 
@@ -203,23 +204,26 @@ namespace ctns{
             exit(1); 
          }
          if(schd.ctns.alg_hvec == 0){
+
             Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
                   schd.ctns.ifdist1, debug_formulae);
             HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
+
          }else if(schd.ctns.alg_hvec == 1){
+
             // raw version: symbolic formulae + dynamic allocation of memory 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1,
-                  debug_formulae); 
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
             HVec = bind(&ctns::symbolic_Hx<Tm,stensor4<Tm>>, _1, _2, std::cref(H_formulae),
                   std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
+
          }else if(schd.ctns.alg_hvec == 2){ 
+
             // symbolic formulae + preallocation of workspace 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-                  debug_formulae);
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
             tmpsize = opsize + 3*wfsize;
             worktot = maxthreads*tmpsize;
             if(debug && schd.ctns.verbose>0){
@@ -233,11 +237,12 @@ namespace ctns{
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
                   std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
                   std::ref(workspace));
+
          }else if(schd.ctns.alg_hvec == 3){
+
             // symbolic formulae (factorized) + preallocation of workspace 
             H_formulae2 = symbolic_formulae_twodot2(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-                  debug_formulae); 
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
             tmpsize = opsize + 4*wfsize;
             worktot = maxthreads*tmpsize;
             if(debug && schd.ctns.verbose>0){
@@ -251,15 +256,17 @@ namespace ctns{
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
                   std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
                   std::ref(workspace));
+
          }else if(schd.ctns.alg_hvec == 4){
+
             // Single Hxlst	   
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-                  debug_formulae); 
-            preprocess_formulae_sigma(qops_dict, oploc, H_formulae, wf, inter, 
-                  Hxlst, blksize, cost, schd.ctns.hxorder, 
-                  rank==0 && schd.ctns.verbose>0);
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
+            preprocess_formulae_Hxlist(qops_dict, oploc, H_formulae, wf, inter, 
+                  Hxlst, blksize, cost, rank==0 && schd.ctns.verbose>0);
+            get_MMlist(Hxlst, schd.ctns.hxorder);
+            // debug hxlst
             if(schd.ctns.verbose>0){
                for(int k=0; k<size; k++){
                   if(rank == k){
@@ -291,16 +298,16 @@ namespace ctns{
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
                   std::ref(Hxlst), std::ref(opaddr));
+
          }else if(schd.ctns.alg_hvec == 5){
+
             // Hxlist2 
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-                  debug_formulae); 
-            preprocess_formulae_sigma2(qops_dict, oploc, H_formulae, wf, inter, 
-                  Hxlst2, blksize, cost, schd.ctns.hxorder, 
-                  rank==0 && schd.ctns.verbose>0);
-
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
+            preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, inter, 
+                  Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
+            get_MMlist(Hxlst2, schd.ctns.hxorder);
             // debug hxlst
             if(schd.ctns.verbose>0){
                for(int k=0; k<size; k++){
@@ -338,7 +345,9 @@ namespace ctns{
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
                   std::ref(Hxlst2), std::ref(opaddr));
+
          }else if(schd.ctns.alg_hvec == 6){
+
             // BatchGEMM
             if(schd.ctns.batchsize == 0){
                std::cout << "error: batchsize should be set!" << std::endl;
@@ -346,20 +355,14 @@ namespace ctns{
             }
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-                  debug_formulae);
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
             // gen MMlst & reorder
-            preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
+            preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, inter, 
                   Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
-            if(schd.ctns.batchsize == 0){
-               std::cout << "error: batchsize should be set!" << std::endl;
-               exit(1);
-            }
             // generate mmtasks
-	    int icase = 0;
-            size_t nnzblk = wf.info._nnzaddr.size();
-            mmtasks.resize(nnzblk);
-            for(int i=0; i<nnzblk; i++){
+            int icase = 0;
+            mmtasks.resize(Hxlst2.size());
+            for(int i=0; i<Hxlst2.size(); i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
                      blksize*2, schd.ctns.hxorder, icase);
             } // i
@@ -376,8 +379,10 @@ namespace ctns{
                   std::cref(ndim), std::cref(blksize), 
                   std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace),
                   std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
+
 #ifdef GPU
          }else if(schd.ctns.alg_hvec == 7){
+
             // BatchGEMM on GPU
             if(schd.ctns.batchsize == 0 && std::abs(schd.ctns.batchmem) < 1.e-10){
                std::cout << "error: batchsize/batchmem should be set!" << std::endl;
@@ -385,10 +390,9 @@ namespace ctns{
             }
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-                  debug_formulae);
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
             // gen MMlst & reorder
-            preprocess_formulae_sigma_batch(qops_dict, oploc, H_formulae, wf, inter, 
+            preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, inter, 
                   Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
             // debug hxlst
             if(schd.ctns.verbose>0){
@@ -474,42 +478,36 @@ namespace ctns{
                exit(1);
             }
             // generate mmtasks
-	    int icase = 1;
-            size_t nnzblk = wf.info._nnzaddr.size();
-            mmtasks.resize(nnzblk);
-            for(int i=0; i<nnzblk; i++){
+            int icase = 1;
+            mmtasks.resize(Hxlst2.size());
+            for(int i=0; i<Hxlst2.size(); i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
                      blksize*2, schd.ctns.hxorder, 1);
-	       if(rank==0){
-	          std::cout << "rank=" << rank << " iblk=" << i 
-	           	 << " mmtasks.totsize=" << mmtasks[i].totsize
-	           	 << " batchsize=" << mmtasks[i].batchsize 
- 	           	 << " nbatch=" << mmtasks[i].nbatch 
-	           	 << std::endl;
-	       }
-	       batchsize = (i==0)? mmtasks[i].batchsize : std::max(batchsize,mmtasks[i].batchsize);
+               if(rank==0){
+                  std::cout << "rank=" << rank << " iblk=" << i 
+                     << " mmtasks.totsize=" << mmtasks[i].totsize
+                     << " batchsize=" << mmtasks[i].batchsize 
+                     << " nbatch=" << mmtasks[i].nbatch 
+                     << std::endl;
+               }
             } // i
 
             // 4. allocate memory for Davidson: x,worktot
             worktot = 2*ndim + batchsize*blksize*2;
-            std::cout << "rank=" << rank
-                      << " blksize=" << blksize
-                      << " batchsize=" << batchsize
-		      << " opertot(GB)=" << tools::sizeGB<Tm>(opertot)
-                      << " worktot(GB)=" << tools::sizeGB<Tm>(worktot)
-                      << " gpu(GB)=" << tools::sizeGB<Tm>(opertot+worktot)
-                      << std::endl;
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " blksize=" << blksize
+                  << " batchsize=" << batchsize
+                  << " opertot(GB)=" << tools::sizeGB<Tm>(opertot)
+                  << " worktot(GB)=" << tools::sizeGB<Tm>(worktot)
+                  << " gpu(GB)=" << tools::sizeGB<Tm>(opertot+worktot)
+                  << std::endl;
+            }
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMalloc((void**)&dev_workspace, worktot*sizeof(Tm)));
 #else
             MAGMA_CHECK(magma_dmalloc((double**)(&dev_workspace), worktot));
 #endif
-            if(debug && schd.ctns.verbose>0){
-               std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
-                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
-                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
-            }
-            Tm scale = qops_dict.at("l").ifkr? 0.5*ecore : 1.0*ecore;
 
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
