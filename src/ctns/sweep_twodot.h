@@ -487,7 +487,7 @@ namespace ctns{
  	           	 << " nbatch=" << mmtasks[i].nbatch 
 	           	 << std::endl;
 	       }
-	       batchsize = (i==0)? mmtasks[i].batchsize : std::max(batchsize,mmtasks[i].batchsize);
+	       //batchsize = (i==0)? mmtasks[i].batchsize : std::max(batchsize,mmtasks[i].batchsize);
             } // i
 
             // 4. allocate memory for Davidson: x,worktot
