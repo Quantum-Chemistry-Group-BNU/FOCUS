@@ -7,7 +7,7 @@ namespace ctns{
    template <typename Tm>
       struct MMinfo{
          public:
-            double cost() const{ return double(M)*N*K; }
+            double cost() const{ return 2*double(M)*N*K; }
          public:
             char transA, transB;
             int M, N, K, LDA, LDB;
@@ -123,18 +123,18 @@ namespace ctns{
                dimin[0] *dimout[1]*dimout[2]*dimout[3],
                dimout[0]*dimout[1]*dimout[2]*dimout[3]};
             blksize = *std::max_element(dims.begin(), dims.end());
-            if(!this->identity(3)) cost += double(dimin[0])*dimin[1]*dimin[2]*dimin[3]*dimout[3]; // Oc2
-            if(!this->identity(2)) cost += double(dimin[0])*dimin[1]*dimin[2]*dimout[3]*dimout[2]; // Oc1
-            if(!this->identity(1)) cost += double(dimin[0])*dimin[1]*dimout[2]*dimout[3]*dimout[1]; // Or
-            if(!this->identity(0)) cost += double(dimin[0])*dimout[1]*dimout[2]*dimout[3]*dimout[0]; // Ol
+            if(!this->identity(3)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimin[3]*dimout[3]; // Oc2
+            if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[3]*dimout[2]; // Oc1
+            if(!this->identity(1)) cost += 2*double(dimin[0])*dimin[1]*dimout[2]*dimout[3]*dimout[1]; // Or
+            if(!this->identity(0)) cost += 2*double(dimin[0])*dimout[1]*dimout[2]*dimout[3]*dimout[0]; // Ol
          }else if(dims == 3){
             std::vector<size_t> dims = {dimin[0] *dimin[1] *dimout[2],
                dimin[0] *dimout[1]*dimout[2],
                dimout[0]*dimout[1]*dimout[2]};
             blksize = *std::max_element(dims.begin(), dims.end());
-            if(!this->identity(2)) cost += double(dimin[0])*dimin[1]*dimin[2]*dimout[2];
-            if(!this->identity(1)) cost += double(dimin[0])*dimin[1]*dimout[2]*dimout[1];
-            if(!this->identity(0)) cost += double(dimin[0])*dimout[1]*dimout[2]*dimout[0];
+            if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[2];
+            if(!this->identity(1)) cost += 2*double(dimin[0])*dimin[1]*dimout[2]*dimout[1];
+            if(!this->identity(0)) cost += 2*double(dimin[0])*dimout[1]*dimout[2]*dimout[0];
          }else{
             std::cout << "error: no such option for dims=" << dims << std::endl;
             exit(1);

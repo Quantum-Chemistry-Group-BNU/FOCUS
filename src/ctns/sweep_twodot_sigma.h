@@ -283,7 +283,7 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
    auto alabel = ifNC? "AP" : "PA";
    auto blabel = ifNC? "BQ" : "QB"; 
    // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
-   for(const auto pr : ainfo){
+   for(const auto& pr : ainfo){
       int index = pr.first;
       int iformula = pr.second;
       int iproc = distribute2(ifkr,size,index);
@@ -296,7 +296,7 @@ Hx_functors<Tm> twodot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
       } // iproc
    }
    // 6. Bps^LC1*Qps^C2R + h.c. or Qqr^LC1*Bqr^C2R
-   for(const auto pr : binfo){
+   for(const auto& pr : binfo){
       int index = pr.first;
       int iformula = pr.second;
       int iproc = distribute2(ifkr,size,index);

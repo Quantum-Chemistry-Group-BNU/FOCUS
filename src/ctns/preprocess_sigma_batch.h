@@ -55,37 +55,38 @@ namespace ctns{
          struct timeval t0_time_gemm_kernel, t1_time_gemm_kernel;
          struct timeval t0_time_gemm_reduction, t1_time_gemm_reduction;
 
-         double flops_G=0.0;
-
          // loop over nonzero blocks
+         double cost = 0.0;
          for(int i=0; i<mmtasks.size(); i++){
             auto& mmtask = mmtasks[i];
+            cost += mmtask.cost;
             for(int k=0; k<mmtask.nbatch; k++){
-               double flops_tt=0.0;
                // gemm
                gettimeofday(&t0_time_gemm_kernel, NULL);
-               mmtask.kernel(k, ptrs, flops_tt);
+               mmtask.kernel(k, ptrs);
                gettimeofday(&t1_time_gemm_kernel, NULL);
-               flops_G += flops_tt;
                // reduction
                gettimeofday(&t0_time_gemm_reduction, NULL);
                mmtask.reduction(k, ptrs[6], y, 0);
                gettimeofday(&t1_time_gemm_reduction, NULL);
-               time_cost_gemm_kernel += ((double)(t1_time_gemm_kernel.tv_sec - t0_time_gemm_kernel.tv_sec) + (double)(t1_time_gemm_kernel.tv_usec - t0_time_gemm_kernel.tv_usec)/1000000.0);
-               time_cost_gemm_reduction += ((double)(t1_time_gemm_reduction.tv_sec - t0_time_gemm_reduction.tv_sec) + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
+               // timing
+               time_cost_gemm_kernel += ((double)(t1_time_gemm_kernel.tv_sec - t0_time_gemm_kernel.tv_sec) 
+                                       + (double)(t1_time_gemm_kernel.tv_usec - t0_time_gemm_kernel.tv_usec)/1000000.0);
+               time_cost_gemm_reduction += ((double)(t1_time_gemm_reduction.tv_sec - t0_time_gemm_reduction.tv_sec) 
+                                          + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
             } // k
          } // i
-         std::cout<<"time_cost_gemm_kernel="<<time_cost_gemm_kernel<<std::endl;
-         std::cout<<"time_cost_gemm_reduction="<<time_cost_gemm_reduction<<std::endl;
-         //std::cout<<"time_sum above="<<time_cost_gemm_kernel+time_cost_gemm_reduction<<std::endl;
-         std::cout<<"gflops=2*m*n*k/time = kernel/time="<<flops_G/time_cost_gemm_kernel<<" flops_G:"<<flops_G<<std::endl;
+         std::cout << "--- time_cost_gemm_kernel=" << time_cost_gemm_kernel << std::endl;
+         std::cout << "--- time_cost_gemm_reduction=" << time_cost_gemm_reduction << std::endl;
+         std::cout << "--- cost_gemm_kernel=" << cost 
+                   << " gflops=kernel/time=" << cost/time_cost_gemm_kernel
+                   << std::endl;
          t_kernel_ibond = time_cost_gemm_kernel;
          t_reduction_ibond = time_cost_gemm_reduction;
 
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
       }
-
 
 } // ctns
 
