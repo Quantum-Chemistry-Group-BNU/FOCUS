@@ -294,6 +294,7 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
+            // private workspace for each thread
             HVec = bind(&ctns::preprocess_Hx<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
@@ -341,6 +342,7 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
+            // private workspace for each thread
             HVec = bind(&ctns::preprocess_Hx2<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
