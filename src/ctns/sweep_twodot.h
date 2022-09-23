@@ -463,11 +463,6 @@ namespace ctns{
             opaddr[3]=dev_c2_opaddr;
             opaddr[4]=dev_inter_opaddr;
 
-            std::cout << "rank=" << rank << " qops(tot)=" << opertot 
-               << ":" << tools::sizeMB<Tm>(opertot) << "MB"
-               << ":" << tools::sizeGB<Tm>(opertot) << "GB"
-               << std::endl;
-
             // determine the size of batch
             size_t batchsize = 0;
             if(schd.ctns.batchsize > 0){
@@ -485,7 +480,7 @@ namespace ctns{
             for(int i=0; i<Hxlst2.size(); i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
                      blksize*2, schd.ctns.hxorder, 1);
-               if(rank==0){
+               if(debug && schd.ctns.verbose>1){
                   std::cout << "rank=" << rank << " iblk=" << i 
                      << " mmtasks.totsize=" << mmtasks[i].totsize
                      << " batchsize=" << mmtasks[i].batchsize 

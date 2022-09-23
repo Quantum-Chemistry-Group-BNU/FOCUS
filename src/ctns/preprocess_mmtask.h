@@ -46,7 +46,6 @@ namespace ctns{
             const int icase){
          totsize = Hxlst.size();
          batchgemm = _batchgemm;
-         //batchsize = std::min(totsize,_batchsize);
          batchsize = _batchsize;
          nbatch = totsize/batchsize;
          if(totsize%batchsize != 0) nbatch += 1;
@@ -119,7 +118,7 @@ namespace ctns{
             } // i
 
             // setup mmreduce[k]
-            mmreduce[k].size = jlen;
+	    mmreduce[k].size = jlen;
             mmreduce[k].ndim = Hxlst[off].size;
             mmreduce[k].offout = Hxlst[off].offout;
             mmreduce[k].alpha.resize(jlen);
