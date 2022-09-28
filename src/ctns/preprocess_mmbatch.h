@@ -37,7 +37,7 @@ namespace ctns{
 #endif
             void save(const std::string fname){
                std::ofstream fout(fname);
-               fout << size << std::endl;
+               fout << size << " " << transA[0] << " " << transB[0] << " " << std::endl;
                for(int i=0; i<size; i++){
                   fout << M[i] << " " 
                        << N[i] << " "
