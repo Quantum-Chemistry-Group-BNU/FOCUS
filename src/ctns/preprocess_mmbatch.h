@@ -35,6 +35,17 @@ namespace ctns{
             void xgemm_batch_gpu(Tm** ptrs);
             void xgemm_batch_gpu_precopy(Tm** ptrs);
 #endif
+            void save(const std::string fname){
+               std::ofstream fout(fname);
+               fout << size << std::endl;
+               for(int i=0; i<size; i++){
+                  fout << M[i] << " " 
+                       << N[i] << " "
+                       << K[i] 
+                       << std::endl;
+               }
+               fout.close();
+            }
          public:
             size_t size;
             double cost = 0.0;

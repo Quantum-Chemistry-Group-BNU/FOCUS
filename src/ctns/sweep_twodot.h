@@ -196,6 +196,9 @@ namespace ctns{
          Tm * dev_workspace;
 #endif
          double t_kernel_ibond=0.0, t_reduction_ibond=0.0; // debug
+         std::string fgemm = "mmtasks";
+         fgemm += "_isweep"+std::to_string(isweep)
+                + "_ibond"+std::to_string(ibond);
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
@@ -368,6 +371,13 @@ namespace ctns{
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
                      blksize*2, schd.ctns.hxorder, icase);
             } // i
+            if(isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+               for(int i=0; i<Hxlst2.size(); i++){
+                  std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
+                  mmtasks[i].save(fgemmi);
+               }
+            }
+
             opaddr[4] = inter._data;
             worktot = mmtasks[0].batchsize*blksize*2;
             if(debug && schd.ctns.verbose>0){
@@ -488,6 +498,12 @@ namespace ctns{
                      << std::endl;
                }
             } // i
+            if(isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+               for(int i=0; i<Hxlst2.size(); i++){
+                  std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
+                  mmtasks[i].save(fgemmi);
+               }
+            }
 
             // 4. allocate memory for Davidson: x,worktot
             worktot = 2*ndim + batchsize*blksize*2;

@@ -17,6 +17,16 @@ namespace ctns{
                   const size_t offset,
                   const int hdxorder,
                   const int icase=0);
+            // save
+            void save(const std::string fgemm){
+               for(int k=0; k<mmbatch2.size(); k++){
+                  for(int i=0; i<mmbatch2[k].size(); i++){
+                     std::string fgemmki = fgemm+"_"+std::to_string(k)+"."
+                                          +std::to_string(i)+".txt";
+                     mmbatch2[k][i].save(fgemmki);
+                  }
+               }
+            }
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
                for(int i=0; i<mmbatch2[k].size(); i++){
