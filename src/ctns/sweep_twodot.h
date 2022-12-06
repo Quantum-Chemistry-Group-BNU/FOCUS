@@ -281,13 +281,15 @@ namespace ctns{
                         << " cost=" << cost 
                         << std::endl;
                   }
+#ifndef SERIAL
                   icomb.world.barrier();
+#endif
                }
                double cost_tot = cost;
 #ifndef SERIAL
                if(size > 1) boost::mpi::reduce(icomb.world, cost, cost_tot, std::plus<double>(), 0);
-#endif 
                icomb.world.barrier();
+#endif 
                if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
             }
             opaddr[4] = inter._data;
@@ -328,13 +330,15 @@ namespace ctns{
                         << " cost=" << cost
                         << std::endl;
                   }
+#ifndef SERIAL
                   icomb.world.barrier();
+#endif
                }
                double cost_tot = cost;
 #ifndef SERIAL
                if(size > 1) boost::mpi::reduce(icomb.world, cost, cost_tot, std::plus<double>(), 0);
-#endif 
                icomb.world.barrier();
+#endif 
                if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
             }
 

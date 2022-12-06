@@ -1,19 +1,19 @@
 
-machine = dell #lenovo
+machine = mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
-USE_MPI = yes
-USE_OPENMP = yes
+USE_MPI = no #yes
+USE_OPENMP = no #yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
-USE_GPU = yes
+USE_GPU = no #yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
-   BOOST = /home/lx/software/boost/install_1_79_0
+   BOOST = /home/lx.aftware/boost/install_1_79_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
@@ -26,8 +26,10 @@ else ifeq ($(strip $(machine)), dell)
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else
-   MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
-   BOOST = /Users/zhendongli/Desktop/FOCUS_program/boost/install
+   #MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
+   #BOOST = /Users/zhendongli/Desktop/FOCUS_program/boost/install
+   MATHLIB = /opt/anaconda3/envs/work/lib
+   BOOST = /Users/zhendongli/Desktop/documents_ZL/Codes/boost/install
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
@@ -79,7 +81,7 @@ else
    else
       FLAGS += -qopenmp	
    endif
-   # https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html	
+   # https:/.aftware.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-adv.ar.html	
    # parallel version of MKL
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
           -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
@@ -111,12 +113,13 @@ endif
 SRC = src
 BIN_DIR = ./bin
 OBJ_DIR = ./obj
+LIB_DIR = ./lib
 
 # all dependence
 SRC_DIR_CORE = ./$(SRC)/core
 SRC_DIR_IO   = ./$(SRC)/io
 SRC_DIR_CI   = ./$(SRC)/ci
-SRC_DIR_QT   = ./$(SRC)/ctns/qtensor
+SRC_DIR_QT   = ./$(SRC)/ctns/qte.ar
 SRC_DIR_CTNS = ./$(SRC)/ctns
 SRC_DIR_EXPT = ./$(SRC)/experiment
 
@@ -142,12 +145,29 @@ SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
+# separate libraries
+SRC_CORE = $(wildcard $(SRC_DIR_CORE)/*.cpp)
+OBJ_CORE = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CORE}))
+SRC_IO = $(wildcard $(SRC_DIR_IO)/*.cpp) 
+OBJ_IO = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_IO}))
+SRC_CI = $(wildcard $(SRC_DIR_CI)/*.cpp)
+OBJ_CI = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CI}))
+SRC_CTNS = $(wildcard $(SRC_DIR_QT)/*.cpp \
+		      $(SRC_DIR_CTNS)/*.cpp \
+		      $(SRC_DIR_EXPT)/*.cpp \
+		      $(SRC_DIR_GPU)/*.cpp)
+OBJ_CTNS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CTNS}))
+
 # all the files with main functions
 SRC_ALL = $(SRC_DEP) 
 SRC_ALL += $(wildcard ./$(SRC)/drivers/*.cpp)
 OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend \
+     $(LIB_DIR)/libcore.a \
+     $(LIB_DIR)/libio.a \
+     $(LIB_DIR)/libci.a \
+     $(LIB_DIR)/libctns.a \
      $(BIN_DIR)/tests_core.x \
      $(BIN_DIR)/tests_ci.x \
      $(BIN_DIR)/tests_ctns.x \
@@ -177,37 +197,48 @@ depend:
 	rm -f $$$$.depend # $$$$ id number 
 -include .depend
 
+# LIBARARIES
+$(LIB_DIR)/libcore.a: $(OBJ_CORE)
+	@echo "=== COMPLIE $@"
+	ar crv $@ $^
+
+$(LIB_DIR)/libio.a: $(OBJ_IO)
+	@echo "=== COMPLIE $@"
+	ar crv $@ $^
+
+$(LIB_DIR)/libci.a: $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
+	@echo "=== COMPLIE $@"
+	ar crv $@ $^
+
+$(LIB_DIR)/libctns.a: $(OBJ_CTNS) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
+	@echo "=== COMPLIE $@"
+	ar crv $@ $^
+
 # Executables
-$(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(OBJ_DEP)
+$(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_core.o $(LFLAGS) -L$(LIB_DIR) -lcore
 
-$(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(OBJ_DEP)
+$(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"
-	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ci.o $(LFLAGS) -L$(LIB_DIR) -lci
 
-$(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(OBJ_DEP)
+$(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ctns.o $(LFLAGS) -L$(LIB_DIR) -lctns
 
 # Main: sci & ctns
-$(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(OBJ_DEP)
+$(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"
-	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS) 
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/sci.o $(LFLAGS) -L$(LIB_DIR) -lci
 
-$(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(OBJ_DEP)
+$(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/prectns.o $(LFLAGS) -L$(LIB_DIR) -lctns
 
-$(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(OBJ_DEP)
+$(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	@echo $(OBJ_DEP)
-	$(CXX) $(FLAGS) -o $@ $^ $(LFLAGS)
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/ctns.o $(LFLAGS) -L$(LIB_DIR) -lctns
 
 # Needs to be here! 
 $(OBJ_ALL):
@@ -217,4 +248,5 @@ $(OBJ_ALL):
 clean:
 	rm -f obj/*.o
 	rm -f bin/*.x
+	rm -f lib/*.a
 	rm -f *.depend

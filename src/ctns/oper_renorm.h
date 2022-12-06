@@ -107,6 +107,7 @@ void oper_renorm_opAll(const std::string superblock,
 
    // 2. reduce 
    auto ta = tools::get_time();
+#ifndef SERIAL
    if(ifdist1 and size > 1){
       std::vector<Tm> top(qops._opsize);
       // Sp[iproc] += \sum_i Sp[i]
@@ -134,6 +135,7 @@ void oper_renorm_opAll(const std::string superblock,
 	 opH.clear();
       }
    }
+#endif
 
    // 3. consistency check for Hamiltonian
    const auto& opH = qops('H').at(0);

@@ -115,7 +115,7 @@ def compareAll(dirs,thresh=1.e-8):
 
 if __name__ == '__main__':
 
-   mpiprefix = "mpirun -np 2 "
+   mpiprefix = "" #mpirun -np 2 "
    os.environ['OMP_NUM_THREADS'] = "4"
    print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
 
@@ -123,6 +123,9 @@ if __name__ == '__main__':
    print('HOME=',HOME)
    SCI  = HOME+"/bin/sci.x"
    CTNS = HOME+"/bin/ctns.x"
+
+   #import os
+   #print(os.environ['DYLD_LIBRARY_PATH'])
 
    #cdir = os.getcwd()
    #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
