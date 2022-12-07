@@ -508,6 +508,7 @@ namespace ctns{
 #ifndef SERIAL
             boost::mpi::communicator world;
 #endif
+            // statistics
             int nmvp = 0;
             double t_tot = 0.0;
             double t_cal = 0.0; // Hx

@@ -35,6 +35,7 @@ template <typename Tm>
 int iter_solver(const matrix<Tm>& mat, vector<double>& es, matrix<Tm>& vs){	
    // Davidson solver 
    dvdsonSolver<Tm> solver;
+   solver.maxcycle = 500;
    solver.ndim = mat.rows();
    solver.neig = es.size();
    // diag
@@ -68,7 +69,7 @@ int tests::test_dvdson(){
    cout << "\nreal version" << endl; 
    matrix<double> rd1 = random_matrix<double>(n,n);
    matrix<double> rd2 = random_matrix<double>(n,n);
-   rd1 = 0.5*(rd1 + rd1.H()) + identity_matrix<double>(n);
+   rd1 = 0.1*(rd1 + rd1.H()) + identity_matrix<double>(n);
    //rd1.print("rd1");
 
    // 2. exact solver
@@ -96,7 +97,7 @@ int tests::test_dvdson(){
    cout << "\ncomplex version" << endl; 
    const complex<double> i0(1.0,0.0), i1(0.0,1.0);
    matrix<complex<double>> cmat = i0*rd1 + i1*rd2;
-   cmat = cmat + cmat.H();
+   cmat = 0.1*(cmat + cmat.H()) + identity_matrix<complex<double>>(n);
    //cmat.print("cmat");
 
    // 2. exact solver

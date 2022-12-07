@@ -33,7 +33,6 @@ namespace linalg{
                             << " maxcycle= " << maxcycle << std::endl; 
                         std::cout << "          damping=" << damping 
                             << " crit_v=" << crit_v 
-                            << " crit_e=" << crit_e 
                             << " crit_indp=" << crit_indp << std::endl;
                         std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp  time/s" << std::endl;
                     }
@@ -248,13 +247,12 @@ namespace linalg{
                 std::function<void(Tm*, const Tm*)> HVec;
                 double crit_v = 1.e-5;  // used control parameter
                 int maxcycle = 200;
+                int nbuff = 4; // maximal additional vectors
                 // settings
                 int iprt = 1;
-                double crit_e = 1.e-12; // not used actually
                 double crit_indp = 1.e-12;
                 double crit_skewH = 1.e-8;
-                double damping = 1.e-1;
-                int nbuff = 4; // maximal additional vectors
+                double damping = 1.e-12;
                 int nmvp = 0;
         };
 
