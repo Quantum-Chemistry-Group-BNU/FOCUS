@@ -8,6 +8,34 @@
 namespace fock{
 
 using onspace = std::vector<onstate>;
+
+struct onspace_compact{
+   public:
+      onspace_compact(const onspace& space){
+         dim = space.size();
+	 if(dim > 0){
+	    size = space[0]._size;
+	    len = space[0]._len;
+	    reprs.resize(dim*len);
+            for(size_t i=0; i<dim; i++){
+               std::copy_n(space[i]._repr, len, &reprs[i*len]);
+	    }
+	 }
+      }
+      // save
+      void save(std::ofstream& ofs) const{
+	 ofs.write((char*)(&dim), sizeof(dim));
+	 ofs.write((char*)(&size), sizeof(size));
+         ofs.write((char*)(&len), sizeof(len));
+         ofs.write(reinterpret_cast<const char*>(reprs.data()),
+	           sizeof(reprs[0])*dim*len); 
+      }
+   public:
+      size_t dim = 0;
+      int size = 0;
+      int len = 0;
+      std::vector<unsigned long> reprs;
+};
       
 // print
 void check_space(onspace& space);

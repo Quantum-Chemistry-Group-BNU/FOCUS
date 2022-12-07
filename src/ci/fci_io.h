@@ -15,6 +15,18 @@ void ci_save(const fock::onspace& space,
    std::ofstream ofs(fname, std::ios::binary);
    boost::archive::binary_oarchive save(ofs);
    save << space << es << vs;
+   ofs.close();
+   // ZL@20221207 binary format for easier loading in python 
+   std::ofstream ofs2(fname+".bin", std::ios::binary);
+   fock::onspace_compact space_compact(space);
+   space_compact.save(ofs2);
+   int nroot = es.size();
+   ofs2.write((char*)(&nroot), sizeof(nroot));
+   ofs2.write((char*)(es.data()), sizeof(double)*nroot);
+   for(int i=0; i<nroot; i++){
+      ofs2.write((char*)(vs[i].data()), sizeof(Tm)*vs[i].size());
+   }
+   ofs2.close();
 }
 
 template <typename Tm>
@@ -26,6 +38,7 @@ void ci_load(fock::onspace& space,
    std::ifstream ifs(fname, std::ios::binary);
    boost::archive::binary_iarchive load(ifs);
    load >> space >> es >> vs;
+   ifs.close();
 }
 
 } // fci

@@ -176,11 +176,13 @@ struct matrix : public BaseMatrix<Tm> {
 	 std::ofstream ofs(fname, std::ios::binary);
          boost::archive::binary_oarchive saver(ofs);
          saver << *this;
+	 ofs.close();
       } 
       void load(const std::string& fname){
 	 std::ifstream ifs(fname, std::ios::binary);
          boost::archive::binary_iarchive loader(ifs);
          loader >> *this;
+	 ifs.close();
       }
       // helpers
       int rows() const{ return _rows; }

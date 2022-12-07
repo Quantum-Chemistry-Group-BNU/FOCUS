@@ -462,6 +462,9 @@ namespace fock{
             return -2*(num%2)+1;
          }
 
+         // onspace_compact
+         friend class onspace_compact;
+
       private:
          int _size;
          int _len;
