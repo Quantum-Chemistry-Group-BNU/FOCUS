@@ -25,19 +25,19 @@ int tests::test_onstate(){
    for(int i=0; i<state1.size(); i++){
       cout << "i=" << i << " occ=" << state1[i] << endl;
    };
-   cout << "state1=" << state1 << endl;
+   cout << "state1=" << state1.to_string() << endl;
    cout << "state1=" << state1.to_string2() << endl; 
 
    // test constructor from string
    fock::onstate state2("00000101");
-   cout << "state2=" << state2 << endl;
+   cout << "state2=" << state2.to_string() << endl;
    cout << "state2=" << state2.to_string2() << endl; 
 
    // test assignment
    fock::onstate state3(state1.size());
    state3 = state1;
    state3[1] = 1;
-   cout << "state3=" << state3 << endl; 
+   cout << "state3=" << state3.to_string() << endl; 
    cout << "state3=" << state3.to_string2() << endl; 
 
    // test count

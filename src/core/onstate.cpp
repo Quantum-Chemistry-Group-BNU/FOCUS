@@ -5,7 +5,7 @@
 using namespace std;
 using namespace fock;
 
-// constructor from "010011" strings (from right to left)
+// constructor from "010011" strings (read from right to left)
 onstate::onstate(const string& s){
    _size = s.size();
    _len = (_size-1)/64+1;
@@ -80,9 +80,9 @@ ostream& fock::operator <<(ostream& os, const onstate& state){
    return os;
 }
 
-// print 01 string
+// print 01 string: "010011" (read from right to left)
 string onstate::to_string() const{
-   string s; // string counts from left to right
+   string s; // loop from left to right for +=
    for(int i = _size-1; i >= 0; i--){
       s += (*this)[i] ? '1' : '0'; 
    }
