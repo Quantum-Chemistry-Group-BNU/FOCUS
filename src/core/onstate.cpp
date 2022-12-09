@@ -98,13 +98,13 @@ string onstate::to_string2() const{
       nodd  = (*this)[2*i+1];
       neven = (*this)[2*i];
       if(nodd == 1 && neven == 1)
-	 s += '2';
+         s += '2';
       else if(nodd == 0 && neven == 1)
-	 s += 'a';
+         s += 'a';
       else if(nodd == 1 && neven == 0)
-	 s += 'b';
+         s += 'b';
       else if(nodd == 0 && neven == 0)
-	 s += '0';
+         s += '0';
    }
    return s;
 }
@@ -121,8 +121,8 @@ string onstate::to_string2() const{
 //      <bra|p1^+...pm^+*qn*...*q1|ket>*sgn(bra)*sgn(ket) = 1
 // which leads to the above result.
 void onstate::diff_orb(const onstate& ket,
-	  	       vector<int>& cre, 
-		       vector<int>& ann) const{
+      vector<int>& cre, 
+      vector<int>& ann) const{
    unsigned long idiff,icre,iann;
    // from higher position
    for(int i=_len-1; i>=0; i--){
@@ -132,13 +132,13 @@ void onstate::diff_orb(const onstate& ket,
 #ifdef DEBUG
       for(int j=63; j>=0; j--){
          if(icre & 1ULL<<j){
-	    cre.push_back(i*64+j);
-	 }
+            cre.push_back(i*64+j);
+         }
       }
       for(int j=63; j>=0; j--){
-	 if(iann & 1ULL<<j){
-	    ann.push_back(i*64+j);
-	 }
+         if(iann & 1ULL<<j){
+            ann.push_back(i*64+j);
+         }
       }
 #else
       while(icre != 0){
@@ -147,16 +147,16 @@ void onstate::diff_orb(const onstate& ket,
          icre &= ~(1ULL<<j);
       }
       while(iann != 0){
-	 int j = 63-__builtin_clzl(iann);
-	 ann.push_back(i*64+j);
-	 iann &= ~(1ULL<<j);
+         int j = 63-__builtin_clzl(iann);
+         ann.push_back(i*64+j);
+         iann &= ~(1ULL<<j);
       }
 #endif
    } // i
 }
 
 void onstate::diff_orb(const onstate& ket,
-	  	       int* cre, int* ann) const{
+      int* cre, int* ann) const{
    unsigned long idiff,icre,iann;
    int ic=0, ia=0;
    // from higher position
@@ -167,28 +167,28 @@ void onstate::diff_orb(const onstate& ket,
 #ifdef DEBUG
       for(int j=63; j>=0; j--){
          if(icre & 1ULL<<j){
-	    cre[ic] = i*64+j;
-	    ic++;
-	 }
+            cre[ic] = i*64+j;
+            ic++;
+         }
       }
       for(int j=63; j>=0; j--){
-	 if(iann & 1ULL<<j){
-	    ann[ia] = i*64+j;
-	    ia++;
-	 }
+         if(iann & 1ULL<<j){
+            ann[ia] = i*64+j;
+            ia++;
+         }
       }
 #else
       while(icre != 0){
          int j = 63-__builtin_clzl(icre);
-	 cre[ic] = i*64+j;
-	 ic++;
+         cre[ic] = i*64+j;
+         ic++;
          icre &= ~(1ULL<<j);
       }
       while(iann != 0){
-	 int j = 63-__builtin_clzl(iann);
-	 ann[ia] = i*64+j;
-	 ia++;
-	 iann &= ~(1ULL<<j);
+         int j = 63-__builtin_clzl(iann);
+         ann[ia] = i*64+j;
+         ia++;
+         iann &= ~(1ULL<<j);
       }
 #endif
    } // i
@@ -221,7 +221,7 @@ void onstate::get_olst(int* olst) const{
    for(int i=0; i<_size; i++){
       if((*this)[i]){
          olst[ic] = i;
-	 ic++;
+         ic++;
       }
    }
 #else
@@ -231,7 +231,7 @@ void onstate::get_olst(int* olst) const{
       while(tmp != 0){
          int j = __builtin_ctzl(tmp);
          olst[ic] = i*64+j;
-	 ic++;
+         ic++;
          tmp &= ~(1ULL<<j);
       }
    }
@@ -266,7 +266,7 @@ void onstate::get_vlst(int* vlst) const{
    for(int i=0; i<_size; i++){
       if(!(*this)[i]){
          vlst[ic] = i;
-	 ic++;
+         ic++;
       }
    }
 #else
@@ -277,7 +277,7 @@ void onstate::get_vlst(int* vlst) const{
       while(tmp != 0){
          int j = __builtin_ctzl(tmp);
          vlst[ic] = i*64+j;
-	 ic++;
+         ic++;
          tmp &= ~(1ULL<<j);
       }
    }

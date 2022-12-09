@@ -23,7 +23,7 @@ void CTNS(const input::schedule& schd){
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
       tools::exit("error: inconsistent dtype in CTNS!");
    }
-   
+
    // CTNS 
    ctns::comb<Km> icomb;
    // convert from SCI or load from files
@@ -41,18 +41,18 @@ void CTNS(const input::schedule& schd){
          auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
          fci::ci_load(sci_space, es, vs, ci_file);
          // truncate CI coefficients
-      	 fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-/*
+         fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
+         /*
          // debug         
-	 integral::two_body<Tm> int2e;
+         integral::two_body<Tm> int2e;
          integral::one_body<Tm> int1e;
          double ecore;
          integral::load(int2e, int1e, ecore, schd.integral_file);
          auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-	 Hij_ci.print("Hij_ci",8);
-*/ 
+         Hij_ci.print("Hij_ci",8);
+         */ 
          ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_vs_svd,
-			   schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
+               schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
          ctns::rcanon_save(icomb, rcanon_file);
       }else{
          ctns::rcanon_load(icomb, rcanon_file);
@@ -75,7 +75,7 @@ void CTNS(const input::schedule& schd){
          double Sd = rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
       }
    }
-   
+
    if(schd.ctns.task_ham or schd.ctns.task_opt){
       // read integral
       integral::two_body<Tm> int2e;
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]){
    magma_queue_t magma_queue_array[nqueue];
    for(int i=0;i<nqueue;i++)
    {
-       magma_queue_create(device, &magma_queue_array[i]);
+      magma_queue_create(device, &magma_queue_array[i]);
    }
 #endif
 
@@ -150,8 +150,8 @@ int main(int argc, char *argv[]){
    if(rank == 0){
       tools::license();
       std::cout << "\nmpisize = " << size
-	        << " maxthreads = " << maxthreads
-		<< std::endl;
+         << " maxthreads = " << maxthreads
+         << std::endl;
    }
 
    // read input
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]){
    magma_queue_destroy(magma_queue);
    for(int i=0;i<nqueue;i++)
    {
-       magma_queue_destroy(magma_queue_array[i]);
+      magma_queue_destroy(magma_queue_array[i]);
    }
    magma_finalize();
 #endif

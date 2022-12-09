@@ -196,22 +196,6 @@ namespace fock{
          }
 
          // creation/annihilation operators related subroutines
-         //
-         // phase to convert |ON>=f[odd,even]|odd>|even>
-         // f[odd,even] = sum_{i=0}^{n-1} f[2i+1] (sum_{j=0}^{i} f[2j])
-         // n=3: f1*f0
-         //      f3*(f2+f0)
-         //      f5*(f4+f2+f0) 
-         int parity_odd_even() const{
-            int ff = 0;
-            for(int i=0; i<_size/2; i++){
-               if(!(*this)[2*i+1]) continue;
-               for(int j=0; j<=i; j++){
-                  if((*this)[2*j]) ff += 1;
-               }
-            }
-            return -2*(ff%2)+1;
-         }
          // parity: = (-1)^sum_k fk for k in [0,n) 
          int parity(const int& n) const{
             assert(n>=0 && n<_size);    

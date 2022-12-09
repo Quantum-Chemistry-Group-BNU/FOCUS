@@ -19,7 +19,7 @@ void ci_save(const fock::onspace& space,
    // ZL@20221207 binary format for easier loading in python 
    std::ofstream ofs2(fname+".bin", std::ios::binary);
    fock::onspace_compact space_compact(space);
-   space_compact.save(ofs2);
+   space_compact.dump(ofs2);
    int nroot = es.size();
    ofs2.write((char*)(&nroot), sizeof(nroot));
    ofs2.write((char*)(es.data()), sizeof(double)*nroot);

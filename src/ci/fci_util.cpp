@@ -9,7 +9,7 @@ using namespace fci;
 
 // constructor
 void product_space::get_pspace(const onspace& space,
-		 	       const int istart){
+      const int istart){
    dimA0 = spaceA.size();
    dimB0 = spaceB.size();
    int udxA = dimA0, udxB = dimB0;
@@ -20,21 +20,21 @@ void product_space::get_pspace(const onspace& space,
       onstate strA = space[i].get_even();
       auto itA = umapA.find(strA);
       if(itA == umapA.end()){
-	 spaceA.push_back(strA);
+         spaceA.push_back(strA);
          auto pr = umapA.insert({strA,udxA});
-	 itA = pr.first;
-	 udxA += 1;
-	 rowA.resize(udxA); // reserve additional space for the new row
+         itA = pr.first;
+         udxA += 1;
+         rowA.resize(udxA); // reserve additional space for the new row
       };
       // odd bits
       onstate strB = space[i].get_odd();
       auto itB = umapB.find(strB);
       if(itB == umapB.end()){
-	 spaceB.push_back(strB);
+         spaceB.push_back(strB);
          auto pr = umapB.insert({strB,udxB});
-	 itB = pr.first;
-	 udxB += 1;
-	 colB.resize(udxB);
+         itB = pr.first;
+         udxB += 1;
+         colB.resize(udxB);
       }
       rowA[itA->second].emplace_back(itB->second,i);
       colB[itB->second].emplace_back(itA->second,i);
@@ -47,9 +47,9 @@ void product_space::get_pspace(const onspace& space,
 
 // update Cmn 
 void coupling_table::update_Cmn(const onspace& space,
-			        const int istart,
-			        const pair<int,int>& key,
-			        vector<set<int>>& Cmn){
+      const int istart,
+      const pair<int,int>& key,
+      vector<set<int>>& Cmn){
    int dim = space.size(); 
    Cmn.resize(dim);
    for(int i=0; i<dim; i++){
@@ -66,11 +66,11 @@ void coupling_table::update_Cmn(const onspace& space,
       }
    }
 }
-			     
+
 // coupling_table
 void coupling_table::get_Cmn(const onspace& space,
-			     const bool Htype,
-			     const int istart){
+      const bool Htype,
+      const int istart){
    auto t0 = tools::get_time();
    // C11
    auto key11 = make_pair(1,1); 
@@ -89,5 +89,5 @@ void coupling_table::get_Cmn(const onspace& space,
    } // Htype
    auto t1 = tools::get_time();
    cout << "coupling_table::get_Cmn : dim=" << space.size()
-	<< " timing : " << tools::get_duration(t1-t0) << " s" << endl; 
+      << " timing : " << tools::get_duration(t1-t0) << " s" << endl; 
 }

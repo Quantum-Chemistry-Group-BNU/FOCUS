@@ -17,3 +17,10 @@ SCI+PT2
  ci/sci.h
  ci/sci_pt2.h
  tests/test_sci.cpp
+
+
+Note:
+
+ 1. FCI/SCI is carried out with basis {|onv>} (using get_Hij),
+    while {|Ia>} and {|Ib>} are just used for testing connectivity.
+ 

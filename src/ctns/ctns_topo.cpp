@@ -37,7 +37,7 @@ ostream& ctns::operator <<(ostream& os, const directed_bond& dbond){
 // topology
 void topology::read(const string& fname){
    cout << "\nctns::topology::read fname=" << fname << endl;
-   
+
    ifstream istrm(fname);
    if(!istrm){
       cout << "failed to open " << fname << '\n';
@@ -56,7 +56,7 @@ void topology::read(const string& fname){
       boost::split(v,line,boost::is_any_of(","),boost::token_compress_on);
       vector<int> branch;
       for(auto s : v){
-	 branch.push_back(stoi(s));
+         branch.push_back(stoi(s));
       }
       orbsgrid.push_back(branch);
    }
@@ -74,59 +74,59 @@ void topology::read(const string& fname){
       int size = orbsgrid[i].size();
       nphysical += size;
       if(i==nbackbone-1){
-	 nodes[i].resize(1);
-	 // type 0: end
-	 auto& node = nodes[i][0];
-	 node.pindex = orbsgrid[i][0]; 
-	 node.type   = 0;
-	 node.center = coord_phys;
-	 node.left   = make_pair(i-1,0);
-	 node.right  = coord_vac;
+         nodes[i].resize(1);
+         // type 0: end
+         auto& node = nodes[i][0];
+         node.pindex = orbsgrid[i][0]; 
+         node.type   = 0;
+         node.center = coord_phys;
+         node.left   = make_pair(i-1,0);
+         node.right  = coord_vac;
       }else if(i==0){
-	 nodes[i].resize(1);
-	 // type 0: start
-	 auto& node = nodes[i][0];
-	 node.pindex = orbsgrid[i][0]; 
-	 node.type   = 0;
-	 node.center = coord_phys;
-	 node.left   = coord_vac;
-	 node.right  = make_pair(i+1,0);
+         nodes[i].resize(1);
+         // type 0: start
+         auto& node = nodes[i][0];
+         node.pindex = orbsgrid[i][0]; 
+         node.type   = 0;
+         node.center = coord_phys;
+         node.left   = coord_vac;
+         node.right  = make_pair(i+1,0);
       }else{
-	 if(size == 1){
-	    nodes[i].resize(1);
-	    // type 1: physical site on backbone
-	    auto& node = nodes[i][0];
-	    node.pindex = orbsgrid[i][0];
-	    node.type   = 1;
-	    node.center = coord_phys;
-	    node.left   = make_pair(i-1,0);
-	    node.right  = make_pair(i+1,0);
-	 }else if(size > 1){
-	    nodes[i].resize(size+1);
-	    // type 0: leaves on branch
+         if(size == 1){
+            nodes[i].resize(1);
+            // type 1: physical site on backbone
+            auto& node = nodes[i][0];
+            node.pindex = orbsgrid[i][0];
+            node.type   = 1;
+            node.center = coord_phys;
+            node.left   = make_pair(i-1,0);
+            node.right  = make_pair(i+1,0);
+         }else if(size > 1){
+            nodes[i].resize(size+1);
+            // type 0: leaves on branch
             auto& node = nodes[i][size];
-	    node.pindex = orbsgrid[i][size-1];
-	    node.type   = 0;
-	    node.center = coord_phys;
-	    node.left   = make_pair(i,size-1);
-	    node.right  = coord_vac;
-	    // type 2: physical site on branch
-	    for(int j=size-1; j>=1; j--){
-	       auto& nodej = nodes[i][j];
-	       nodej.pindex = orbsgrid[i][j-1];
-	       nodej.type   = 2;
-	       nodej.center = coord_phys;
-	       nodej.left   = make_pair(i,j-1);
-	       nodej.right  = make_pair(i,j+1);
-	    } // j
-	    // type 3: internal site on backbone
+            node.pindex = orbsgrid[i][size-1];
+            node.type   = 0;
+            node.center = coord_phys;
+            node.left   = make_pair(i,size-1);
+            node.right  = coord_vac;
+            // type 2: physical site on branch
+            for(int j=size-1; j>=1; j--){
+               auto& nodej = nodes[i][j];
+               nodej.pindex = orbsgrid[i][j-1];
+               nodej.type   = 2;
+               nodej.center = coord_phys;
+               nodej.left   = make_pair(i,j-1);
+               nodej.right  = make_pair(i,j+1);
+            } // j
+              // type 3: internal site on backbone
             auto& nodei = nodes[i][0];
-	    nodei.pindex = -1; // no physical index
-	    nodei.type   = 3;
-	    nodei.center = make_pair(i,1);
-	    nodei.left   = make_pair(i-1,0);
-	    nodei.right  = make_pair(i+1,0);
-	 }
+            nodei.pindex = -1; // no physical index
+            nodei.type   = 3;
+            nodei.center = make_pair(i,1);
+            nodei.left   = make_pair(i-1,0);
+            nodei.right  = make_pair(i+1,0);
+         }
       }
    }
 
@@ -135,8 +135,8 @@ void topology::read(const string& fname){
    for(int i=nbackbone-1; i>=0; i--){
       for(int j=nodes[i].size()-1; j>=0; j--){
          rcoord.push_back(make_pair(i,j));
-	 rindex[make_pair(i,j)] = ntotal;
-	 ntotal++;
+         rindex[make_pair(i,j)] = ntotal;
+         ntotal++;
       }
    }
 
@@ -144,38 +144,38 @@ void topology::read(const string& fname){
    for(int i=nbackbone-1; i>=0; i--){
       int size = orbsgrid[i].size(); // same as input topo
       if(size == 1){
-	 // upper branch is just physical indices     
-	 nodes[i][0].rsupport.push_back(orbsgrid[i][0]);
-	 nodes[i][0].corbs.push_back(orbsgrid[i][0]);
+         // upper branch is just physical indices     
+         nodes[i][0].rsupport.push_back(orbsgrid[i][0]);
+         nodes[i][0].corbs.push_back(orbsgrid[i][0]);
          if(i != nbackbone-1){ 
-	    // build recursively by copying right branch
-	    copy(nodes[i+1][0].rsupport.begin(),
-	         nodes[i+1][0].rsupport.end(),
-		 back_inserter(nodes[i][0].rsupport));
-	    nodes[i][0].rorbs = nodes[i+1][0].rsupport;
-	 }
+            // build recursively by copying right branch
+            copy(nodes[i+1][0].rsupport.begin(),
+                  nodes[i+1][0].rsupport.end(),
+                  back_inserter(nodes[i][0].rsupport));
+            nodes[i][0].rorbs = nodes[i+1][0].rsupport;
+         }
       }else{
-	 // visit upper branch from the leaf
+         // visit upper branch from the leaf
          for(int j=size; j>0; j--){
-	    nodes[i][j].rsupport.push_back(orbsgrid[i][j-1]);
-	    nodes[i][j].corbs.push_back(orbsgrid[i][j-1]);
-	    if(j != size){
-  	       copy(nodes[i][j+1].rsupport.begin(),
-	            nodes[i][j+1].rsupport.end(),
-		    back_inserter(nodes[i][j].rsupport));
-	       nodes[i][j].rorbs = nodes[i][j+1].rsupport;
-	    }
-	 }
-	 // branching node: upper
-	 copy(nodes[i][1].rsupport.begin(),
-	      nodes[i][1].rsupport.end(),
-	      back_inserter(nodes[i][0].rsupport));
-	 nodes[i][0].corbs = nodes[i][1].rsupport;
-	 // right - assuming the end node is leaf (which is true)
-	 copy(nodes[i+1][0].rsupport.begin(),
-	      nodes[i+1][0].rsupport.end(),
-	      back_inserter(nodes[i][0].rsupport));
-	 nodes[i][0].rorbs = nodes[i+1][0].rsupport;
+            nodes[i][j].rsupport.push_back(orbsgrid[i][j-1]);
+            nodes[i][j].corbs.push_back(orbsgrid[i][j-1]);
+            if(j != size){
+               copy(nodes[i][j+1].rsupport.begin(),
+                     nodes[i][j+1].rsupport.end(),
+                     back_inserter(nodes[i][j].rsupport));
+               nodes[i][j].rorbs = nodes[i][j+1].rsupport;
+            }
+         }
+         // branching node: upper
+         copy(nodes[i][1].rsupport.begin(),
+               nodes[i][1].rsupport.end(),
+               back_inserter(nodes[i][0].rsupport));
+         nodes[i][0].corbs = nodes[i][1].rsupport;
+         // right - assuming the end node is leaf (which is true)
+         copy(nodes[i+1][0].rsupport.begin(),
+               nodes[i+1][0].rsupport.end(),
+               back_inserter(nodes[i][0].rsupport));
+         nodes[i][0].rorbs = nodes[i+1][0].rsupport;
       }
    }
    // lsupport
@@ -196,15 +196,15 @@ void topology::read(const string& fname){
 
 void topology::print() const{
    cout << "\nctns::topology::print"
-	<< " ntotal=" << ntotal
-	<< " nphysical=" << nphysical 
-        << " nbackbone=" << nbackbone
-	<< endl;
+      << " ntotal=" << ntotal
+      << " nphysical=" << nphysical 
+      << " nbackbone=" << nbackbone
+      << endl;
    cout << "topo:" << endl;
    for(int i=0; i<nbackbone; i++){
       cout << " i=" << i << " : ";
       for(int j=0; j<nodes[i].size(); j++){
-	 cout << nodes[i][j].pindex << " ";
+         cout << nodes[i][j].pindex << " ";
       }
       cout << endl; 
    } 
@@ -281,19 +281,19 @@ vector<directed_bond> topology::get_sweeps(const bool debug) const{
       // in this scheme, each internal bond is visited twice
       int ninternal = 0;
       for(const auto& p : rcoord){
-	 auto& node = nodes[p.first][p.second];
-	 if(node.type != 0) ninternal += 1; 
+         auto& node = nodes[p.first][p.second];
+         if(node.type != 0) ninternal += 1; 
       }
       assert(sweeps.size() == 2*(ninternal-1));
       for(int idx=0; idx<sweeps.size(); idx++){
          const auto& p0 = sweeps[idx].p0;
          const auto& p1 = sweeps[idx].p1;
          const auto& forward = sweeps[idx].forward;
-	 cout << " ibond=" << idx 
-	      << " bond=" << p0 << "-" << p1 
-	      << " forward=" << forward
-	      << " cturn=" << sweeps[idx].is_cturn()
-	      << endl;
+         cout << " ibond=" << idx 
+            << " bond=" << p0 << "-" << p1 
+            << " forward=" << forward
+            << " cturn=" << sweeps[idx].is_cturn()
+            << endl;
       }
    }
    return sweeps;
@@ -307,15 +307,15 @@ vector<int> topology::get_supp_rest(const vector<int>& rsupp) const{
    stable_sort(supp.begin(), supp.end()); 
    vector<int> rest;
    set_difference(bas.begin(), bas.end(), supp.begin(), supp.end(),
-                  back_inserter(rest));
+         back_inserter(rest));
    return rest;
 }
 
 // sweep related
 std::vector<int> topology::check_partition(const int dots,
-			                   const directed_bond& dbond,
-                                           const bool debug,
-			                   const int verbose) const{
+      const directed_bond& dbond,
+      const bool debug,
+      const int verbose) const{
    if(debug) cout << "ctns::topology::check_partition: ";
    std::vector<int> dims;
    bool ifNC;
@@ -336,12 +336,12 @@ std::vector<int> topology::check_partition(const int dots,
       ifNC = (sl <= sr);
       if(debug){
          cout << "(sl,sr,sc)=" << sl << "," << sr << "," << sc
-	      << " ifNC=" << ifNC << endl;
-	 if(verbose > 0){
+            << " ifNC=" << ifNC << endl;
+         if(verbose > 0){
             tools::print_vector(suppl, "suppl");
             tools::print_vector(suppr, "suppr");
             tools::print_vector(suppc, "suppc");
-	 }
+         }
       }
    }else if(dots == 2){
       // twodot
@@ -382,15 +382,15 @@ std::vector<int> topology::check_partition(const int dots,
       ifNC = (sl+sc1 <= sc2+sr);
       if(debug){
          cout << "(sl,sr,sc1,sc2)=" 
-              << sl << "," << sr << "," << sc1 << "," << sc2
-	      << " ifNC=" << ifNC
-              << endl;
-	 if(verbose > 0){
+            << sl << "," << sr << "," << sc1 << "," << sc2
+            << " ifNC=" << ifNC
+            << endl;
+         if(verbose > 0){
             tools::print_vector(suppl , "suppl");
             tools::print_vector(suppr , "suppr");
             tools::print_vector(suppc1, "suppc1");
             tools::print_vector(suppc2, "suppc2");
-	 }
+         }
       }
    } // dots
    return dims;
@@ -398,8 +398,8 @@ std::vector<int> topology::check_partition(const int dots,
 
 // get fqop around node p for kind = {"l","c","r"}
 string topology::get_fqop(const comb_coord& p,
-		          const string kind,
-		          const string scratch) const{
+      const string kind,
+      const string scratch) const{
    string fqop;
    const auto& node = get_node(p);
    if(kind == "c"){
@@ -421,9 +421,9 @@ string topology::get_fqop(const comb_coord& p,
 
 // fqops for sweep optimization
 vector<string> topology::get_fqops(const int dots,
-		                   const directed_bond& dbond,
-			           const string scratch,
-			           const bool debug) const{
+      const directed_bond& dbond,
+      const string scratch,
+      const bool debug) const{
    vector<string> fqops;
    if(dots == 1){
       auto p = dbond.get_current();
@@ -440,10 +440,10 @@ vector<string> topology::get_fqops(const int dots,
          //        |    |
          //    l---p0---p1---r
          //
-	 fqops[0] = get_fqop(p0, "l", scratch);
-	 fqops[1] = get_fqop(p1, "r", scratch);
-	 fqops[2] = get_fqop(p0, "c", scratch);
-	 fqops[3] = get_fqop(p1, "c", scratch);
+         fqops[0] = get_fqop(p0, "l", scratch);
+         fqops[1] = get_fqop(p1, "r", scratch);
+         fqops[2] = get_fqop(p0, "c", scratch);
+         fqops[3] = get_fqop(p1, "c", scratch);
       }else{
          //       c2
          //       |
@@ -467,8 +467,8 @@ vector<string> topology::get_fqops(const int dots,
 }
 
 pair<string,string> topology::get_fbond(const directed_bond& dbond,
-			       	        const string scratch,
-			  		const bool debug) const{
+      const string scratch,
+      const bool debug) const{
    const auto& p0 = dbond.p0;
    const auto& p1 = dbond.p1;
    string frop, fdel;
@@ -483,9 +483,9 @@ pair<string,string> topology::get_fbond(const directed_bond& dbond,
    if(p0 == std::make_pair(0,0)) fdel.clear();
    if(debug){
       cout << "ctns::topology::get_fbond"
-	   << " frop=" << frop
-	   << " fdel=" << fdel
-	   << endl; 
+         << " frop=" << frop
+         << " fdel=" << fdel
+         << endl; 
    }
    return std::make_pair(frop,fdel);
 }
