@@ -194,7 +194,7 @@ namespace ctns{
                   nres++;
                }
                int nindp = linalg::get_ortho_basis(nsub,neig,nres,tmpU.data(),delU.data(),crit_indp);
-               if(nindp >= naux) nindp = 2;
+               if(nindp >= naux) nindp = std::min(2,naux);
                if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
                int nsub1 = neig + nindp;
                assert(nsub1 <= nsub);
@@ -297,7 +297,7 @@ namespace ctns{
                int nindp = kramers::get_ortho_basis_odd(nsub,neig,nres,tmpU,delU,phases,crit_indp);
                tmpU = tmpU.reorder_row(pos_new, 1); // U(abab,abab)
                delU = delU.reorder_row(pos_new, 1);
-               if(nindp >= naux) nindp = 2;
+               if(nindp >= naux) nindp = std::min(2,naux);
                if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
                int nsub1 = neig + nindp;
                assert(nsub1 <= nsub);

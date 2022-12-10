@@ -153,6 +153,7 @@ namespace ctns{
                   std::vector<Tm>& wbas,
                   std::vector<double>& tmpE,
                   std::vector<Tm>& rbas){
+               std::cout << "lzdA" << std::endl;
                // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
                const Tm alpha = 1.0, beta=0.0;
                linalg::matrix<Tm> tmpH(nsub,nsub);
@@ -169,6 +170,7 @@ namespace ctns{
                // 3. solve eigenvalue problem
                linalg::matrix<Tm> tmpU;
                linalg::eig_solver(tmpH, tmpE, tmpU);
+               std::cout << "lzdA" << std::endl;
                //---------------------------------------------------------------------------------
                // 4. Rotated basis to minimal subspace that can give the exact [neig] eigenvalues
                //    Also, the difference vector = xold - xnew as corrections (or simply xold)
@@ -180,11 +182,20 @@ namespace ctns{
                   linalg::xcopy(nsub,delU.col(i),delU.col(nres));
                   nres++;
                }
+               std::cout << "lzdB" << std::endl;
                int nindp = linalg::get_ortho_basis(nsub,neig,nres,tmpU.data(),delU.data(),crit_indp);
-               if(nindp >= naux) nindp = 2;
+               std::cout << "lzdC ndim,nindp=" 
+                         << ndim << " " << nindp 
+                         << " " << nsub << std::endl;
+               std::cout << "lzdX" << std::endl;
+               if(nindp >= naux) nindp = std::min(2,naux); // ZL@20221210 for naux=0
+               std::cout << "lzdX" << std::endl;
                if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
+               std::cout << "lzdX" << std::endl;
                int nsub1 = neig + nindp;
+               std::cout << "lzdX" << std::endl;
                assert(nsub1 <= nsub);
+               std::cout << "lzdD" << std::endl;
                //---------------------------------------------------------------------------------
                // 5. form full residuals: Res[i]=HX[i]-e[i]*X[i]
                // vbas = {X[i]}
@@ -233,7 +244,7 @@ namespace ctns{
 
                // 0. initialization
                int nmax = std::min(ndim,neig+nbuff); // maximal subspace size
-               int naux = nmax-neig;
+               int naux = nmax-neig; // additional dimension for subspace
                std::vector<Tm> vbas(ndim*nmax), wbas(ndim*nmax), rbas(ndim*nmax);
                std::vector<double> tmpE(nmax);
                std::vector<bool> rconv(neig);
