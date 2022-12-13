@@ -40,8 +40,8 @@ namespace fci{
          std::cout << std::setprecision(12);
          for(int i=0; i<neig; i++){
             std::cout << "i=" << i 
-               << " d=" << Diag[index[i]] 
-               << " e=" << e[i]+ecore << std::endl;
+               << " diag=" << Diag[index[i]] 
+               << " energy=" << e[i]+ecore << std::endl;
          }
       }
 
@@ -54,6 +54,9 @@ namespace fci{
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore){
+         if(!(es.size()>0 && vs.rows()>0 && vs.cols()>0)){
+            tools::exit("error: dims of es and vs must be set!");
+         }
          const bool debug = true;
          const bool Htype = tools::is_complex<Tm>();
          auto t0 = tools::get_time();
@@ -74,7 +77,7 @@ namespace fci{
          solver.Diag = sparseH.diag.data();
          using std::placeholders::_1;
          using std::placeholders::_2;
-         solver.HVec = std::bind(&fci::get_Hx<Tm>, _1, _2, cref(sparseH));
+         solver.HVec = std::bind(&fci::get_Hx<Tm>, _1, _2, std::cref(sparseH));
          // get initial guess
          linalg::matrix<Tm> v0(solver.ndim, solver.neig);
          get_initial(space, int2e, int1e, ecore, sparseH.diag, v0);

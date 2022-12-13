@@ -54,7 +54,7 @@ namespace ctns{
    template <typename Km>
       int rcanon_CIcoeff_check(const comb<Km>& icomb,
             const fock::onspace& space,
-            const std::vector<std::vector<typename Km::dtype>>& vs,
+            const linalg::matrix<typename Km::dtype>& vs,
             const double thresh=1.e-8){
          std::cout << "\nctns::rcanon_CIcoeff_check" << std::endl;
          int n = icomb.get_nroots(); 
@@ -65,9 +65,9 @@ namespace ctns{
             auto coeff = rcanon_CIcoeff(icomb, space[i]);
             std::cout << " i=" << i << " state=" << space[i] << std::endl;
             for(int j=0; j<n; j++){
-               auto diff = std::abs(coeff[j] - vs[j][i]);
+               auto diff = std::abs(coeff[j] - vs(i,j));
                std::cout << "   j=" << j << " <n|CTNS[j]>=" << coeff[j] 
-                  << " <n|CI[j]>=" << vs[j][i] 
+                  << " <n|CI[j]>=" << vs(i,j)
                   << " diff=" << diff << std::endl;
                maxdiff = std::max(maxdiff, diff);
             }
@@ -81,7 +81,7 @@ namespace ctns{
    template <typename Km>
       linalg::matrix<typename Km::dtype> rcanon_CIovlp(const comb<Km>& icomb,
             const fock::onspace& space,
-            const std::vector<std::vector<typename Km::dtype>>& vs){
+            const linalg::matrix<typename Km::dtype>& vs){
          using Tm = typename Km::dtype;
          std::cout << "\nctns::rcanon_CIovlp" << std::endl;
          int n = icomb.get_nroots(); 
@@ -93,8 +93,7 @@ namespace ctns{
             linalg::xcopy(n, coeff.data(), cmat.col(i));
          }
          // ovlp[i,n] = vs*[k,i] cmat[n,k]
-         linalg::matrix<Tm> vmat(vs);
-         auto ovlp = linalg::xgemm("C","T",vmat,cmat);
+         auto ovlp = linalg::xgemm("C","T",vs,cmat);
          return ovlp;
       }
 

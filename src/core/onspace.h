@@ -51,10 +51,10 @@ namespace fock{
    // transform space and coefficient upon permutation
    template <typename Tm>
       void transform_coeff(const onspace& space,
-            const std::vector<std::vector<Tm>>& vs,
+            const linalg::matrix<Tm>& vs,
             const std::vector<int>& order,
             onspace& space2,
-            std::vector<std::vector<Tm>>& vs2){
+            linalg::matrix<Tm>& vs2){
          // image2
          int k = order.size();
          std::vector<int> image2(2*k);
@@ -72,12 +72,11 @@ namespace fock{
             sgns.push_back(static_cast<double>(sgn));
          }
          int dim = space.size();
-         int nroots = vs.size();
-         vs2.resize(nroots);
+         int nroots = vs.cols();
+         vs2.resize(dim, nroots);
          for(int i=0; i<nroots; i++){
-            vs2[i].resize(dim);
             for(int j=0; j<dim; j++){
-               vs2[i][j] = vs[i][j]*sgns[j];
+               vs2(j,i) = vs(j,i)*sgns[j];
             }
          }
       }

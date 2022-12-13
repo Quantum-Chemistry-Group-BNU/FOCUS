@@ -171,6 +171,7 @@ all: depend \
      $(BIN_DIR)/tests_core.x \
      $(BIN_DIR)/tests_ci.x \
      $(BIN_DIR)/tests_ctns.x \
+     $(BIN_DIR)/fci.x \
      $(BIN_DIR)/sci.x \
      $(BIN_DIR)/prectns.x \
      $(BIN_DIR)/ctns.x 
@@ -228,6 +229,10 @@ $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(LIB_DIR)/libctns.a
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ctns.o $(LFLAGS) -L$(LIB_DIR) -lctns
 
 # Main: sci & ctns
+$(BIN_DIR)/fci.x: $(OBJ_DIR)/fci.o $(LIB_DIR)/libci.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/fci.o $(LFLAGS) -L$(LIB_DIR) -lci
+
 $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/sci.o $(LFLAGS) -L$(LIB_DIR) -lci

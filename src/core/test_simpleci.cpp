@@ -17,7 +17,7 @@ int tests::test_simpleci(){
    cout << tools::line_separator << endl;	
    cout << "tests::test_simpleci" << endl;
    cout << tools::line_separator << endl;	
-   
+
    const double thresh = 1.e-6;
    using DTYPE = complex<double>;
 
@@ -79,7 +79,7 @@ int tests::test_simpleci(){
       cout << "i=" << i << " ni=" << diag[i] << endl;
    }
    cout << "diff=" << rdm1.diff_hermitian() << endl;
-   
+
    // compute rdm2
    int k2 = k*(k-1)/2;
    matrix<DTYPE> rdm2(k2,k2);
@@ -93,22 +93,22 @@ int tests::test_simpleci(){
       for(int p1=0; p1<p0; p1++){
          for(int q0=0; q0<k; q0++){
             for(int q1=0; q1<q0; q1++){
-	       auto p01 = tools::canonical_pair0(p0,p1);
-	       auto q01 = tools::canonical_pair0(q0,q1);
-	       // AAAA-block
-	       if(p0%2 == 0 && p1%2 == 0 && 
-		  q0%2 == 0 && q1%2 == 0 &&
-		  std::abs(rdm2(p01,q01))>1.e-5){
-		  cout << "(p0,p1,q1,q0)=" 
-		       << defaultfloat << setprecision(8)
-		       << p0/2 << " "
-		       << p1/2 << " "
-		       << q1/2 << " "
-		       << q0/2 << " "
-		       << rdm2(p01,q01) << endl; 
-	       }
-	    }
-	 }
+               auto p01 = tools::canonical_pair0(p0,p1);
+               auto q01 = tools::canonical_pair0(q0,q1);
+               // AAAA-block
+               if(p0%2 == 0 && p1%2 == 0 && 
+                     q0%2 == 0 && q1%2 == 0 &&
+                     std::abs(rdm2(p01,q01))>1.e-5){
+                  cout << "(p0,p1,q1,q0)=" 
+                     << defaultfloat << setprecision(8)
+                     << p0/2 << " "
+                     << p1/2 << " "
+                     << q1/2 << " "
+                     << q0/2 << " "
+                     << rdm2(p01,q01) << endl; 
+               }
+            }
+         }
       }
    }
    cout << "diff=" << rdm2.diff_hermitian() << endl;

@@ -74,12 +74,8 @@ namespace sci{
          int neig = schd.sci.nroots;
          es.resize(neig);
          vs.resize(nsub, neig);
-         for(int j=0; j<neig; j++){
-            for(int i=0; i<nsub; i++){
-               vs(i,j) = vsol(i,j);
-            }
-            es[j] = esol[j];
-         }
+         linalg::xcopy(neig, esol.data(), es.data());
+         linalg::xcopy(nsub*neig, vsol.data(), vs.data());
          // print
          std::cout << std::setprecision(12);
          for(int i=0; i<neig; i++){
@@ -92,25 +88,29 @@ namespace sci{
       void ci_solver(const input::schedule& schd,
             fci::sparse_hamiltonian<Tm>& sparseH,
             std::vector<double>& es,
-            std::vector<std::vector<Tm>>& vs,
+            linalg::matrix<Tm>& vs,
             fock::onspace& space,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore){
          const bool Htype = tools::is_complex<Tm>();
          auto t0 = tools::get_time();
-         std::cout << "\nsci::ci_solver Htype=" << Htype << std::endl; 
+         std::cout << "\nsci::ci_solver Htype=" << Htype << std::endl;
+
          // set up head-bath table
          heatbath_table<Tm> hbtab(int2e, int1e);
+        
          // set up intial configurations
          std::vector<double> esol;
          linalg::matrix<Tm> vsol;
          std::unordered_set<fock::onstate> varSpace;
          get_initial(esol, vsol, space, varSpace, 
                hbtab, schd, int2e, int1e, ecore);
+        
          // set up auxilliary data structure   
          sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype);
-         // start increment
+        
+         // start increment selected CI subspace
          bool ifconv = false;
          int nsub = space.size(); 
          int neig = schd.sci.nroots;
@@ -131,7 +131,7 @@ namespace sci{
             // expand 
             expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.sci.flip);
             int nsub0 = nsub;
-            nsub = space.size();
+            nsub = space.size(); // nsub >= nsub0
             // update auxilliary data structure 
             sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype, nsub0);
             // set up Davidson solver 
@@ -143,9 +143,7 @@ namespace sci{
             // copy previous initial guess
             linalg::matrix<Tm> v0(nsub, neig);
             for(int j=0; j<neig; j++){
-               for(int i=0; i<nsub0; i++){
-                  v0(i,j) = vsol(i,j);
-               }
+               linalg::xcopy(nsub0, vsol.col(j), v0.col(j));
             }
             // solve
             std::cout << std::endl;
@@ -183,11 +181,10 @@ namespace sci{
             std::cout << "\nsci convergence failure: out of maxiter=" << schd.sci.maxiter << std::endl;
          }
          // finally save results
-         copy_n(esol.begin(), neig, es.begin());
-         for(int i=0; i<neig; i++){
-            vs[i].resize(nsub);
-            copy_n(vsol.col(i), nsub, vs[i].begin());
-         }
+         es.resize(neig);
+         vs.resize(nsub,neig);
+         linalg::xcopy(neig, esol.data(), es.data());
+         linalg::xcopy(nsub*neig, vsol.data(), vs.data());
          auto t1 = tools::get_time();
          tools::timing("sci::ci_solver", t0, t1);
       }

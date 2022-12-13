@@ -34,23 +34,25 @@ int tests::test_ctns(){
   
    // --- SCI ---
    int nroots = schd.sci.nroots;
-   vector<double> es(nroots,0.0);
+   vector<double> es;
+   matrix<Tm> vs;
    onspace sci_space;
-   vector<vector<Tm>> vs(nroots);
    
    if(!schd.sci.load){
       fci::sparse_hamiltonian<Tm> sparseH;
       sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
       // pt2 for single root
       if(schd.sci.ifpt2){
-         sci::pt2_solver(schd, es[0], vs[0], sci_space, int2e, int1e, ecore);
+         vector<Tm> v0(vs.col(0), vs.col(0)+sci_space.size());
+         sci::pt2_solver(schd, es[0], v0, sci_space, int2e, int1e, ecore);
       }
       fci::ci_save(sci_space, es, vs);
    }else{
       fci::ci_load(sci_space, es, vs);
    }
    for(int i=0; i<nroots; i++){
-      coeff_population(sci_space, vs[i]);
+      vector<Tm> vi(vs.col(i), vs.col(i)+sci_space.size());
+      coeff_population(sci_space, vi);
    }
 
    // --- Diagonalization in Fock space ---
@@ -84,7 +86,7 @@ int tests::test_ctns(){
    fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
 
    if(!schd.ctns.rcanon_load){
-      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_vs_svd,
+      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
 		        schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
       ctns::rcanon_save(icomb);
    }else{
@@ -113,7 +115,8 @@ int tests::test_ctns(){
 
    // 4. compute Sd by sampling 
    int iroot = 0;
-   double Sdiag0 = fock::coeff_entropy(vs[iroot]);
+   vector<Tm> vi(vs.col(iroot), vs.col(iroot)+sci_space.size());
+   double Sdiag0 = fock::coeff_entropy(vi);
    double Sdiag1 = rcanon_Sdiag_exact(icomb,iroot);
    bool ifsample = false;
    if(ifsample){

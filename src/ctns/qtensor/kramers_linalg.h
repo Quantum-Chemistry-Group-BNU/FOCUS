@@ -310,12 +310,12 @@ namespace kramers{
       void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
             std::vector<double>& sigs2,
             linalg::matrix<Tm>& U,
-            const double rdm_vs_svd,
+            const double rdm_svd,
             const bool debug_basis=false){
          int nroots = clr.size();
          int diml = clr[0].rows();
          int dimr = clr[0].cols();
-         if(dimr <= static_cast<int>(rdm_vs_svd*diml)){ 
+         if(dimr <= static_cast<int>(rdm_svd*diml)){ 
 
             if(debug_basis){ 
                std::cout << " RDM-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
@@ -360,14 +360,14 @@ namespace kramers{
             const std::vector<linalg::matrix<Tm>>& clr,
             std::vector<double>& sigs2,
             linalg::matrix<Tm>& U,
-            const double rdm_vs_svd,
+            const double rdm_svd,
             const bool debug_basis=false){
          const double thresh_kept = 1.e-16;
          assert(tools::is_complex<Tm>());
          int nroots = clr.size();
          int diml = clr[0].rows();
          int dimr = clr[0].cols();
-         if(dimr <= static_cast<int>(rdm_vs_svd*diml)){ 
+         if(dimr <= static_cast<int>(rdm_svd*diml)){ 
 
             if(debug_basis){ 
                std::cout << " RDM-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;

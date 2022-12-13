@@ -288,7 +288,7 @@ which contains the synchronization!
                 const bool ifkr = Km::ifkr;
                 std::string fname = scratch+"/decimation_site0.txt";
                 decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
-                        true, dcut, schd.ctns.rdm_vs_svd, wfs2,
+                        true, dcut, schd.ctns.rdm_svd, wfs2,
                         rot, dwt, deff, fname, 
                         schd.ctns.verbose>0);
                 rot = rot.T(); 

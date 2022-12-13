@@ -37,7 +37,7 @@ void CTNS(const input::schedule& schd){
          // from SCI wavefunction
          onspace sci_space;
          vector<double> es;
-         vector<vector<Tm>> vs;
+         linalg::matrix<Tm> vs;
          auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
          fci::ci_load(sci_space, es, vs, ci_file);
          // truncate CI coefficients
@@ -51,7 +51,7 @@ void CTNS(const input::schedule& schd){
          auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
          Hij_ci.print("Hij_ci",8);
          */ 
-         ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_vs_svd,
+         ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
                schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
          ctns::rcanon_save(icomb, rcanon_file);
       }else{

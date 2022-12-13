@@ -7,39 +7,36 @@ using namespace std;
 using namespace fock;
 
 template <typename Tm>  
-void SCI(const input::schedule& schd){
+void FCI(const input::schedule& schd){
    // read integral
    integral::two_body<Tm> int2e;
    integral::one_body<Tm> int1e;
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
-   // SCI
-   int nroots = schd.sci.nroots;
-   onspace sci_space;
-   vector<double> es;
-   linalg::matrix<Tm> vs;
-   auto ci_file = schd.scratch+"/"+schd.sci.ci_file;
-   if(!schd.sci.load){
-      fci::sparse_hamiltonian<Tm> sparseH;
-      sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
-      fci::ci_save(sci_space, es, vs, ci_file);
+   // FCI 
+   onspace ci_space;
+   if(tools::is_complex<Tm>()){
+      ci_space = get_fci_space(int1e.sorb, schd.nelec);
    }else{
-      fci::ci_load(sci_space, es, vs, ci_file);
+      int na = (schd.nelec + schd.twoms)/2;
+      int nb = (schd.nelec - schd.twoms)/2;
+      ci_space = get_fci_space(int1e.sorb/2, na, nb);
    }
-   int dim = sci_space.size(); 
+   int nroots = schd.sci.nroots;
+   int dim = ci_space.size();
+   vector<double> es(nroots);
+   linalg::matrix<Tm> vs(dim, nroots);
+   auto ci_file = schd.scratch+"/"+schd.sci.ci_file;
+   fci::sparse_hamiltonian<Tm> sparseH;
+   fci::ci_solver(sparseH, es, vs, ci_space, int2e, int1e, ecore);
+   fci::ci_save(ci_space, es, vs, ci_file);
+   sparseH.dump(schd.scratch+"/sparseH.bin");
    for(int i=0; i<nroots; i++){
       std::cout << "\nstate " << i << " energy = "  
                 << std::setprecision(12) << es[i] 
                 << std::endl;
       std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
-      coeff_population(sci_space, vi);
-   }
-   // pt2 for single root
-   if(schd.sci.ifpt2){
-      int iroot = schd.sci.iroot;
-      assert(iroot < nroots);
-      std::vector<Tm> vi(vs.col(iroot), vs.col(iroot)+dim);
-      sci::pt2_solver(schd, es[iroot], vi, sci_space, int2e, int1e, ecore);
+      coeff_population(ci_space, vi);
    }
 }
 
@@ -58,10 +55,10 @@ int main(int argc, char *argv[]){
    io::create_scratch(schd.scratch);
    // we will use Tm to control Hnr/Hrel 
    if(schd.dtype == 0){
-      SCI<double>(schd);
+      FCI<double>(schd);
    }else if(schd.dtype == 1){
-      SCI<complex<double>>(schd);
+      FCI<complex<double>>(schd);
    }
-   tools::finish("SCI");
+   tools::finish("FCI");
    return 0;
 }

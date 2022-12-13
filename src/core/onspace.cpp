@@ -13,7 +13,7 @@ using namespace linalg;
 void fock::check_space(onspace& space){
    cout << "\nfock::check_space dim=" << space.size() << endl; 
    for(size_t i=0; i<space.size(); i++){
-       cout << "i=" << i << " : " << space[i] << endl;
+      cout << "i=" << i << " : " << space[i] << endl;
    }
 }
 
@@ -36,7 +36,7 @@ onspace fock::get_fci_space(const int k, const int n){
    onspace space;
    string s = string(k-n,'0')+string(n,'1');
    do{
-       space.push_back(onstate(s));
+      space.push_back(onstate(s));
    }while(next_permutation(s.begin(), s.end()));
    return space;
 }
@@ -48,7 +48,7 @@ onspace fock::get_fci_space(const int ks, const int na, const int nb){
    onspace space;
    for(size_t ia=0; ia<space_a.size(); ia++){
       for(size_t ib=0; ib<space_b.size(); ib++){
-	 space.push_back( move(onstate(space_a[ia],space_b[ib])) );
+         space.push_back( move(onstate(space_a[ia],space_b[ib])) );
       }
    }
    return space;

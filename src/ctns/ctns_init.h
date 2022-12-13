@@ -22,15 +22,15 @@ namespace ctns{
    template <typename Km>
       void rcanon_init(comb<Km>& icomb,
             const fock::onspace& space,
-            const std::vector<std::vector<typename Km::dtype>>& vs,
-            const double rdm_vs_svd,
+            const linalg::matrix<typename Km::dtype>& vs,
+            const double rdm_svd,
             const double thresh_proj,
             const double thresh_ortho){
          std::cout << "\nctns::rcanon_init qkind=" << qkind::get_name<Km>() << std::endl;
          auto t0 = tools::get_time();
 
          // 1. compute renormalized bases {|r>} from SCI wavefunctions
-         init_rbases(icomb, space, vs, rdm_vs_svd, thresh_proj);
+         init_rbases(icomb, space, vs, rdm_svd, thresh_proj);
 
          // 2. build sites from rbases
          init_rsites(icomb, thresh_ortho);
@@ -48,12 +48,12 @@ namespace ctns{
    template <typename Km>
       void init_rbases(comb<Km>& icomb,
             const fock::onspace& space,
-            const std::vector<std::vector<typename Km::dtype>>& vs,
-            const double rdm_vs_svd,
+            const linalg::matrix<typename Km::dtype>& vs,
+            const double rdm_svd,
             const double thresh_proj){
          using Tm = typename Km::dtype;
          std::cout << "\nctns::init_rbases" << std::scientific << std::setprecision(2) 
-            << " rdm_vs_svd=" << rdm_vs_svd
+            << " rdm_svd=" << rdm_svd
             << " thresh_proj=" << thresh_proj 
             << std::endl;
          auto t0 = tools::get_time();
@@ -91,12 +91,12 @@ namespace ctns{
 
                // 2. transform SCI coefficient to this ordering
                fock::onspace space2;
-               std::vector<std::vector<Tm>> vs2;
+               linalg::matrix<Tm> vs2;
                fock::transform_coeff(space, vs, order, space2, vs2); 
 
                // 3. bipartition of space and compute renormalized states [time-consuming part!]
                right_projection<Km>(rbasis, 2*bpos, space2, vs2, 
-                     thresh_proj, rdm_vs_svd, debug_init);
+                     thresh_proj, rdm_svd, debug_init);
 
             } // node type
 #ifdef _OPENMP
@@ -269,7 +269,7 @@ namespace ctns{
    template <typename Km>
       void init_rwfuns(comb<Km>& icomb,
             const fock::onspace& space,
-            const std::vector<std::vector<typename Km::dtype>>& vs,
+            const linalg::matrix<typename Km::dtype>& vs,
             const double thresh_ortho){
          using Tm = typename Km::dtype;
          std::cout << "\nctns::init_rwfuns qkind=" << qkind::get_name<Km>() 
@@ -291,7 +291,7 @@ namespace ctns{
          }
          // setup wavefunction: map vs2 to the correct position
          fock::onspace space2;
-         std::vector<std::vector<Tm>> vs2;
+         linalg::matrix<Tm> vs2;
          const auto& order = icomb.topo.nodes[0][0].rsupport;
          fock::transform_coeff(space, vs, order, space2, vs2);
          //
@@ -300,7 +300,7 @@ namespace ctns{
          //       due to the possible reorder of basis in init_bipart.h
          //
          const auto& rbasis = icomb.rbases[icomb.topo.ntotal-1];
-         int nroots = vs.size();
+         int nroots = vs.cols();
          int ndet = rbasis[0].space.size();
          std::map<fock::onstate,int> index; // index of a state
          for(int i=0; i<ndet; i++){
@@ -321,7 +321,7 @@ namespace ctns{
             linalg::matrix<Tm> wf(ndet,1);
             for(int i=0; i<space2.size(); i++){
                int ir = index.at(space2[i]);
-               wf(ir,0) = vs2[iroot][i];
+               wf(ir,0) = vs2(i,iroot);
             } // i
             stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, {0,1}); // rwfuns[l,r] for RCF
             xgemm("T","N",1.0,wf,rbasis[0].coeff.conj(),0.0,rwfun(0,0));
@@ -341,7 +341,7 @@ namespace ctns{
             linalg::matrix<Tm> ova0(nroots,nroots);
             for(int i=0; i<nroots; i++){
                for(int j=0; j<nroots; j++){
-                  ova0(i,j) = linalg::xdot(vs[i].size(),vs[i].data(),vs[j].data());
+                  ova0(i,j) = linalg::xdot(vs.rows(),vs.col(i),vs.col(j));
                }
             }
             ova0.print("ova0_vs");

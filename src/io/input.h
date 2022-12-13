@@ -90,7 +90,7 @@ private:
    void serialize(Archive & ar, const unsigned int version){
       ar & run & qkind & topology_file & verbose
          & task_init & task_sdiag & task_ham & task_opt 
-	 & maxdets & thresh_proj & thresh_ortho & rdm_vs_svd
+	 & maxdets & thresh_proj & thresh_ortho & rdm_svd
 	 & nroots & guess & dbranch & maxsweep & maxbond & lastdot & ctrls
 	 & alg_hvec & alg_renorm & ifdist1 & save_formulae & sort_formulae 
 	 & hxorder & batchgemm & batchsize & batchmem 
@@ -117,7 +117,7 @@ public:
    int maxdets = 10000;
    double thresh_proj = 1.e-16;
    double thresh_ortho = 1.e-8;
-   double rdm_vs_svd = 1.5;
+   double rdm_svd = 1.5;
    // sweep
    int nroots = 1; // this can be smaller than nroots in CI 
    bool guess = true;

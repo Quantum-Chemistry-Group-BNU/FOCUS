@@ -20,15 +20,15 @@ void twodot_decimation(const input::schedule& schd,
 	               stensor2<Tm>& rot,
 	               const std::string fname){
    const bool debug = schd.ctns.verbose>0;
-   const auto& rdm_vs_svd = schd.ctns.rdm_vs_svd;
+   const auto& rdm_svd = schd.ctns.rdm_svd;
    const auto& dbond = sweeps.seq[ibond];
    const int& dbranch = schd.ctns.dbranch;
    const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
    const bool iftrunc = start_truncation(ksupp, dcut);
    const auto& noise = sweeps.ctrls[isweep].noise;
    if(debug){
-      std::cout <<" (rdm_vs_svd,dbranch,dcut,iftrunc,noise)=" 
-                << std::scientific << std::setprecision(1) << rdm_vs_svd << ","
+      std::cout <<" (rdm_svd,dbranch,dcut,iftrunc,noise)=" 
+                << std::scientific << std::setprecision(1) << rdm_svd << ","
                 << dbranch << "," << dcut << "," << iftrunc << ","
                 << noise << std::endl;
    }
@@ -44,7 +44,7 @@ void twodot_decimation(const input::schedule& schd,
 	 wfs2[i] = std::move(wf2);
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qmid, 
-		     iftrunc, dcut, rdm_vs_svd, wfs2, 
+		     iftrunc, dcut, rdm_svd, wfs2, 
 		     rot, result.dwt, result.deff, fname,
 		     debug);
 
@@ -58,7 +58,7 @@ void twodot_decimation(const input::schedule& schd,
 	 wfs2[i] = std::move(wf2);
       }
       decimation_row(ifkr, wf.info.qrow, wf.info.qcol, 
-		     iftrunc, dcut, rdm_vs_svd, wfs2, 
+		     iftrunc, dcut, rdm_svd, wfs2, 
 		     rot, result.dwt, result.deff, fname,
 		     debug);
 
@@ -71,7 +71,7 @@ void twodot_decimation(const input::schedule& schd,
 	 wfs2[i] = std::move(wf2);
       }
       decimation_row(ifkr, wf.info.qver, wf.info.qcol, 
-		     iftrunc, dcut, rdm_vs_svd, wfs2, 
+		     iftrunc, dcut, rdm_svd, wfs2, 
 		     rot, result.dwt, result.deff, fname,
 		     debug);
       rot = rot.T(); // rot[alpha,r] = (V^+)
@@ -86,7 +86,7 @@ void twodot_decimation(const input::schedule& schd,
 	 wfs2[i] = std::move(wf2);
       } // i
       decimation_row(ifkr, wf.info.qmid, wf.info.qver, 
-		     iftrunc, dcut, rdm_vs_svd, wfs2,
+		     iftrunc, dcut, rdm_svd, wfs2,
 		     rot, result.dwt, result.deff, fname,
 		     debug);
       rot = rot.T(); // permute two lines for RCF

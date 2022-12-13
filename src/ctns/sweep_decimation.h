@@ -114,7 +114,7 @@ namespace ctns{
             const qbond& qs2,
             const bool iftrunc,
             const int dcut,
-            const double rdm_vs_svd,
+            const double rdm_svd,
             const std::vector<stensor2<Tm>>& wfs2,
             stensor2<Tm>& rot,
             double& dwt,
@@ -181,7 +181,7 @@ namespace ctns{
                for(int iroot=0; iroot<nroots; iroot++){
                   blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
                }
-               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_vs_svd, debug_decimation);
+               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
             } // qc
               //#ifdef _OPENMP
               //      #pragma omp critical
@@ -239,7 +239,7 @@ namespace ctns{
             const qbond& qs2,
             const bool iftrunc,
             const int dcut,
-            const double rdm_vs_svd,
+            const double rdm_svd,
             const std::vector<stensor2<Tm>>& wfs2,
             stensor2<Tm>& rot,
             double& dwt,
@@ -252,7 +252,7 @@ namespace ctns{
             const qbond& qs2,
             const bool iftrunc,
             const int dcut,
-            const double rdm_vs_svd,
+            const double rdm_svd,
             const std::vector<stensor2<std::complex<double>>>& wfs2,
             stensor2<std::complex<double>>& rot,
             double& dwt,
@@ -339,7 +339,7 @@ namespace ctns{
                for(int iroot=0; iroot<nroots; iroot++){
                   blks[iroot] = wfs2[iroot](br,bc).to_matrix().reorder_row(pos_new).T();
                }
-               kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_vs_svd, debug_decimation);
+               kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_svd, debug_decimation);
                // convert back to the original product basis
                U = U.reorder_row(pos_new,1);
             } // qc
@@ -430,7 +430,7 @@ namespace ctns{
             const qbond& qs2,
             const bool iftrunc,
             const int dcut,
-            const double rdm_vs_svd,
+            const double rdm_svd,
             const std::vector<stensor2<Tm>>& wfs2,
             stensor2<Tm>& rot,
             double& dwt,
@@ -443,10 +443,10 @@ namespace ctns{
             std::cout << std::endl;
          }
          if(!ifkr){
-            decimation_row_nkr(qs1, qs2, iftrunc, dcut, rdm_vs_svd, 
+            decimation_row_nkr(qs1, qs2, iftrunc, dcut, rdm_svd, 
                   wfs2, rot, dwt, deff, fname);
          }else{
-            decimation_row_kr(qs1, qs2, iftrunc, dcut, rdm_vs_svd, 
+            decimation_row_kr(qs1, qs2, iftrunc, dcut, rdm_svd, 
                   wfs2, rot, dwt, deff, fname);
          }
       }

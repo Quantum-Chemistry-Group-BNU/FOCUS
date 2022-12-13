@@ -28,17 +28,17 @@ int tests::test_sci(){
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
   
-   int nroots = schd.sci.nroots;
-   vector<double> es(nroots,0.0);
-
    // selected CI
+   int nroots = schd.sci.nroots;
+   vector<double> es;
+   matrix<DTYPE> vs;
    onspace sci_space;
-   vector<vector<DTYPE>> vs(nroots);
    fci::sparse_hamiltonian<DTYPE> sparseH;
    sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
 
    // pt2 for single root
-   sci::pt2_solver(schd, es[0], vs[0], sci_space, int2e, int1e, ecore);
+   vector<DTYPE> v0(vs.col(0), vs.col(0)+sci_space.size());
+   sci::pt2_solver(schd, es[0], v0, sci_space, int2e, int1e, ecore);
 
    return 0;
 }

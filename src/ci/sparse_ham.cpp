@@ -1,6 +1,6 @@
 #include "../core/tools.h"
 #include "../core/hamiltonian.h"
-#include "fci_util.h"
+#include "sparse_ham.h"
 
 using namespace std;
 using namespace fock;
