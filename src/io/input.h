@@ -159,7 +159,8 @@ private:
    friend class boost::serialization::access;
    template<class Archive>
    void serialize(Archive & ar, const unsigned int version){
-      ar & run & ansatz & nhiden & nsample & optimizer;
+      ar & run & ansatz & nhiden & nsample 
+         & optimizer & maxiter;
    }
 public:
    void read(std::ifstream& istrm);
@@ -170,6 +171,7 @@ public:
    int nhiden = 0;
    int nsample = 1000;
    std::string optimizer = "kfac";
+   int maxiter = 1000; 
 };
 
 // General

@@ -4,6 +4,7 @@
 #include "../io/io.h"
 #include "../io/input.h"
 #include "../ci/ci_header.h"
+#include "../vmc/vmc_header.h"
 
 using namespace std;
 using namespace fock;
@@ -15,90 +16,31 @@ void VMC(const input::schedule& schd){
    rank = schd.world.rank();
 #endif
   
-/*
-   // CTNS 
-   ctns::comb<Km> icomb;
-   // convert from SCI or load from files
-   if(rank == 0){
-      // dealing with topology 
-      icomb.topo.read(schd.ctns.topology_file);
-      icomb.topo.print();
-      // initialize RCF 
-      auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-      if(!schd.ctns.rcanon_load){
-         // from SCI wavefunction
-         onspace sci_space;
-         vector<double> es;
-         linalg::matrix<Tm> vs;
-         auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
-         fci::ci_load(sci_space, es, vs, ci_file);
-         // truncate CI coefficients
-         fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-         //// debug         
-         //integral::two_body<Tm> int2e;
-         //integral::one_body<Tm> int1e;
-         //double ecore;
-         //integral::load(int2e, int1e, ecore, schd.integral_file);
-         //auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-         //Hij_ci.print("Hij_ci",8);
-         ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
-               schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
-         ctns::rcanon_save(icomb, rcanon_file);
-      }else{
-         ctns::rcanon_load(icomb, rcanon_file);
-      }
-      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
-   }
-   // only perform initialization
-   if(schd.ctns.task_init) return;
-#ifndef SERIAL
-   boost::mpi::broadcast(schd.world, icomb, 0);
-   icomb.world = schd.world;
-#endif
-*/
+   // CTNS
+   
+   // from SCI wavefunction
+   onspace sci_space;
+   vector<double> es;
+   linalg::matrix<Tm> vs;
+   auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
+   fci::ci_load(sci_space, es, vs, ci_file);
 
-/*
-   if(schd.ctns.task_opt){
-*/
-      // read integral
-      integral::two_body<Tm> int2e;
-      integral::one_body<Tm> int1e;
-      double ecore;
-      if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
+   // read integral
+   integral::two_body<Tm> int2e;
+   integral::one_body<Tm> int1e;
+   double ecore;
+   if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
 #ifndef SERIAL
-      boost::mpi::broadcast(schd.world, int1e, 0);
-      boost::mpi::broadcast(schd.world, int2e, 0);
-      boost::mpi::broadcast(schd.world, ecore, 0);
+   boost::mpi::broadcast(schd.world, int1e, 0);
+   boost::mpi::broadcast(schd.world, int2e, 0);
+   boost::mpi::broadcast(schd.world, ecore, 0);
 #endif
+     
+   auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
+   Hij_ci.print("Hij");
 
-      //ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
- 
-/*
-      // create scratch
-      auto scratch = schd.scratch+"/vmc";
-      if(schd.ctns.task_ham){
-         io::remove_scratch(scratch, (rank == 0)); // task_opt will not recreate 
-      }
-      io::create_scratch(scratch, (rank == 0));
-      // compute hamiltonian 
-      if(schd.ctns.task_ham){
-         auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
-         if(rank == 0){
-            Hij.print("Hij",8);
-            auto Sij = ctns::get_Smat(icomb);
-            Sij.print("Sij");
-         }
-      }
-      // optimization from current RCF
-      if(schd.ctns.task_opt){
-         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
-         if(rank == 0){
-            auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
-            ctns::rcanon_save(icomb, rcanon_file);
-         }
-      }
-   } // ham || opt
-*/
+   vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden);
+   vmc::opt(wavefun, int2e, int1e, ecore, schd, sci_space);
 }
 
 int main(int argc, char *argv[]){

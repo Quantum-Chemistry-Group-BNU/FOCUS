@@ -446,7 +446,16 @@ namespace fock{
             return -2*(num%2)+1;
          }
 
-         // onspace_compact
+         // zvec for rbm
+         std::vector<double> get_zvec() const{
+            std::vector<double> zvec(_size);
+            for(int i=0; i<_size; i++){
+               zvec[i] = (*this)[i]? 1.0 : -1.0;
+            }
+            return zvec;
+         }
+
+         // onspace_compact in onspace.h for dump
          friend class onspace_compact;
 
       private:

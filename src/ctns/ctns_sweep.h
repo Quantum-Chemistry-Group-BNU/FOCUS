@@ -101,7 +101,7 @@ namespace ctns{
 
                 if(debug){
                     auto t1 = tools::get_time();
-                    tools::timing("ctns::opt_sweep", t0, t1);
+                    tools::timing("ctns::sweep_opt", t0, t1);
                     if(schd.ctns.verbose>0) timing_global.print("time_global");
                 }
             }
