@@ -121,6 +121,7 @@ SRC_DIR_IO   = ./$(SRC)/io
 SRC_DIR_CI   = ./$(SRC)/ci
 SRC_DIR_QT   = ./$(SRC)/ctns/qte.ar
 SRC_DIR_CTNS = ./$(SRC)/ctns
+SRC_DIR_VMC  = ./$(SRC)/vmc
 SRC_DIR_EXPT = ./$(SRC)/experiment
 
 INCLUDE_DIR = -I$(SRC_DIR_CORE) \
@@ -128,6 +129,7 @@ INCLUDE_DIR = -I$(SRC_DIR_CORE) \
      	        -I$(SRC_DIR_CI) \
      	        -I$(SRC_DIR_QT) \
      	        -I$(SRC_DIR_CTNS) \
+     	        -I$(SRC_DIR_VMC) \
      	        -I$(SRC_DIR_EXPT) 
 
 ifeq ($(strip $(USE_GPU)), yes)
@@ -140,6 +142,7 @@ SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 	  	     $(SRC_DIR_CI)/*.cpp \
 	  	     $(SRC_DIR_QT)/*.cpp \
 	  	     $(SRC_DIR_CTNS)/*.cpp \
+	  	     $(SRC_DIR_VMC)/*.cpp \
 	  	     $(SRC_DIR_EXPT)/*.cpp \
 	  	     $(SRC_DIR_GPU)/*.cpp)
 
@@ -148,15 +151,21 @@ OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 # separate libraries
 SRC_CORE = $(wildcard $(SRC_DIR_CORE)/*.cpp)
 OBJ_CORE = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CORE}))
+
 SRC_IO = $(wildcard $(SRC_DIR_IO)/*.cpp) 
 OBJ_IO = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_IO}))
+
 SRC_CI = $(wildcard $(SRC_DIR_CI)/*.cpp)
 OBJ_CI = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CI}))
+
 SRC_CTNS = $(wildcard $(SRC_DIR_QT)/*.cpp \
 		      $(SRC_DIR_CTNS)/*.cpp \
 		      $(SRC_DIR_EXPT)/*.cpp \
 		      $(SRC_DIR_GPU)/*.cpp)
 OBJ_CTNS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CTNS}))
+
+SRC_VMC = $(wildcard $(SRC_DIR_VMC)/*.cpp)
+OBJ_VMC = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_VMC}))
 
 # all the files with main functions
 SRC_ALL = $(SRC_DEP) 
@@ -168,13 +177,15 @@ all: depend \
      $(LIB_DIR)/libio.a \
      $(LIB_DIR)/libci.a \
      $(LIB_DIR)/libctns.a \
+     $(LIB_DIR)/libvmc.a \
      $(BIN_DIR)/tests_core.x \
      $(BIN_DIR)/tests_ci.x \
      $(BIN_DIR)/tests_ctns.x \
      $(BIN_DIR)/fci.x \
      $(BIN_DIR)/sci.x \
      $(BIN_DIR)/prectns.x \
-     $(BIN_DIR)/ctns.x 
+     $(BIN_DIR)/ctns.x \
+     $(BIN_DIR)/vmc.x \
 
 # version
 GIT_HASH=`git rev-parse HEAD`
@@ -215,6 +226,10 @@ $(LIB_DIR)/libctns.a: $(OBJ_CTNS) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
 	@echo "=== COMPLIE $@"
 	ar crv $@ $^
 
+$(LIB_DIR)/libvmc.a: $(OBJ_VMC) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
+	@echo "=== COMPLIE $@"
+	ar crv $@ $^
+
 # Executables
 $(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
@@ -244,6 +259,10 @@ $(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(LIB_DIR)/libctns.a
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/ctns.o $(LFLAGS) -L$(LIB_DIR) -lctns
+
+$(BIN_DIR)/vmc.x: $(OBJ_DIR)/vmc.o $(LIB_DIR)/libvmc.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/vmc.o $(LFLAGS) -L$(LIB_DIR) -lci
 
 # Needs to be here! 
 $(OBJ_ALL):

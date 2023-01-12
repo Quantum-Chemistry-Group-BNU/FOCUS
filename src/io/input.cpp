@@ -359,6 +359,46 @@ void params_ctns::print() const{
 }
 
 //
+// VMC
+//
+void params_vmc::read(ifstream& istrm){
+   if(debug_input) cout << "params_vmc::read" << endl; 
+   run = true;
+   // read 
+   string line;
+   while(true){
+      line.clear();	   
+      getline(istrm,line);
+      std::cout << line << std::endl;
+      if(line.empty() || line[0]=='#'){
+         continue; // skip empty and comments    
+      }else if(line.substr(0,4)=="$end"){ 
+         break;
+      }else if(line.substr(0,6)=="ansatz"){
+         istringstream is(line.substr(6));
+         is >> ansatz;
+      }else if(line.substr(0,6)=="nhiden"){
+         nhiden = stoi(line.substr(6));
+      }else if(line.substr(0,7)=="nsample"){
+         nsample = stoi(line.substr(7));
+      }else if(line.substr(0,9)=="optimizer"){
+         istringstream is(line.substr(9));
+         is >> optimizer;
+      }else{
+         tools::exit("error: no matching key! line = "+line);
+      }
+   }
+}
+
+void params_vmc::print() const{
+   cout << "\n===== params_vmc::print =====" << endl;
+   cout << "ansatz = " << ansatz << endl;
+   cout << "nhiden = " << nhiden << endl;
+   cout << "nsample = " << nsample << endl;
+   cout << "optimizer = " << optimizer << endl;
+}
+
+//
 // schedule
 //
 void schedule::print() const{
@@ -370,6 +410,7 @@ void schedule::print() const{
    cout << "integral_file = " << integral_file << endl;
    if(sci.run) sci.print();
    if(ctns.run) ctns.print();
+   if(vmc.run) vmc.print();
 }
 
 void schedule::read(string fname){
@@ -403,6 +444,8 @@ void schedule::read(string fname){
          sci.read(istrm);
       }else if(line.substr(0,5)=="$ctns"){
          ctns.read(istrm);
+      }else if(line.substr(0,4)=="$vmc"){
+         vmc.read(istrm);
       }else{
          tools::exit("error: no matching key! line = "+line);
       }

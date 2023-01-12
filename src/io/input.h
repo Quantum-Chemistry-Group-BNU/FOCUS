@@ -153,6 +153,25 @@ public:
    int ndetprt = 10;
 };
 
+struct params_vmc{
+private:
+   // serialize
+   friend class boost::serialization::access;
+   template<class Archive>
+   void serialize(Archive & ar, const unsigned int version){
+      ar & run & ansatz & nhiden & nsample & optimizer;
+   }
+public:
+   void read(std::ifstream& istrm);
+   void print() const;
+public:
+   bool run = false;
+   std::string ansatz = "irbm";
+   int nhiden = 0;
+   int nsample = 1000;
+   std::string optimizer = "kfac";
+};
+
 // General
 struct schedule{
 private:
@@ -161,7 +180,7 @@ private:
    template<class Archive>
    void serialize(Archive & ar, const unsigned int version){
       ar & scratch & dtype & nelec & twoms & integral_file
-         & sci & ctns;
+         & sci & ctns & vmc;
    }
 public:
    void read(std::string fname="input.dat");
@@ -176,6 +195,7 @@ public:
    // --- Methods --- 
    params_sci sci;
    params_ctns ctns;
+   params_vmc vmc;
    // --- MPI ---
 #ifndef SERIAL
    boost::mpi::communicator world;
