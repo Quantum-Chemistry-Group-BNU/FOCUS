@@ -1,12 +1,12 @@
 #ifndef VMC_ELOC_H
 #define VMC_ELOC_H
 
-#include "ansatz_rbm.h"
+#include "ansatz.h"
 
 namespace vmc{
 
    template<typename Tm>
-      std::vector<std::complex<double>> get_eloc(irbm& wavefun,
+      std::vector<std::complex<double>> get_eloc(BaseAnsatz& wavefun,
             const fock::onspace& space,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
@@ -14,6 +14,15 @@ namespace vmc{
             const sci::heatbath_table<Tm>& hbtab,
             const double eps2){
          std::cout << "\nvmc::get_eloc" << std::endl; 
+
+         /*
+         fock::onspace space2 = fock::get_fci_space(6,3,3);
+         auto H = fock::get_Hmat(space2,int2e,int1e,ecore);
+         for(int i=0; i<400; i++){
+            std::cout << "i=" << i << " H0i=" << H(20,i) << std::endl;
+         }
+         */
+
          // assuming particle number conserving space
          fock::onstate state = space[0];
          int no = state.nelec(), k = state.size(), nv = k - no;
@@ -29,10 +38,11 @@ namespace vmc{
             auto lnpsi_i = wavefun.lnpsi(state);
             double v0i = std::exp(lnpsi_i.real());
             eloc[idx] = ecore + fock::get_Hii(state,int2e,int1e);
-            std::cout << "eloc=" << eloc[idx] << std::endl;
-            std::cout << state.to_string() << std::endl;
-            std::cout << ecore << std::endl;
-            std::cout << fock::get_Hii(state,int2e,int1e) << std::endl;
+            /*
+            std::cout << "\nidx=" << idx << " state=" << state.to_string() << std::endl;
+            std::cout << "ecore=" << ecore << " lnpsi_i=" << lnpsi_i << std::endl;
+            std::cout << "Hii=" << fock::get_Hii(state,int2e,int1e) << std::endl;
+            */
             // singles
             for(int ia=0; ia<nsingles; ia++){
                int ix = ia%no, ax = ia/no;
@@ -42,6 +52,11 @@ namespace vmc{
                state1[a] = 1;
                auto pr = fock::get_HijS(state,state1,int2e,int1e);
                eloc[idx] += pr.first * std::exp(wavefun.lnpsi(state1) - lnpsi_i);
+               /*
+               std::cout << "ia=" << i << "," << a 
+                         << " state1=" << state1.to_string()
+                         << " HijS=" << pr.first << std::endl; 
+               */
             } // ia 
             // doubles
             for(int ijdx=0; ijdx<no*(no-1)/2; ijdx++){
@@ -60,13 +75,20 @@ namespace vmc{
                      state2[b] = 1;
                      auto pr = fock::get_HijD(state,state2,int2e,int1e);
                      eloc[idx] += pr.first * std::exp(wavefun.lnpsi(state2) - lnpsi_i);
+                     /*
+                     std::cout << "iiab=" << i << "," << j << "," << a << "," << b 
+                               << " state2=" << state2.to_string()
+                               << " HijD=" << pr.first << std::endl;
+                     */
                   }
                } // ab
             } // ij
+            /*
             std::cout << "idx=" << idx
                       << " state=" << state
                       << " eloc=" << eloc[idx] 
                       << std::endl;
+            */
          } // idx
          return eloc;
       }

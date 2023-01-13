@@ -14,29 +14,29 @@ void FCI(const input::schedule& schd){
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
    // FCI 
-   onspace ci_space;
+   onspace fci_space;
    if(tools::is_complex<Tm>()){
-      ci_space = get_fci_space(int1e.sorb, schd.nelec);
+      fci_space = get_fci_space(int1e.sorb, schd.nelec);
    }else{
       int na = (schd.nelec + schd.twoms)/2;
       int nb = (schd.nelec - schd.twoms)/2;
-      ci_space = get_fci_space(int1e.sorb/2, na, nb);
+      fci_space = get_fci_space(int1e.sorb/2, na, nb);
    }
    int nroots = schd.sci.nroots;
-   int dim = ci_space.size();
+   int dim = fci_space.size();
    vector<double> es(nroots);
    linalg::matrix<Tm> vs(dim, nroots);
    auto ci_file = schd.scratch+"/"+schd.sci.ci_file;
    fci::sparse_hamiltonian<Tm> sparseH;
-   fci::ci_solver(sparseH, es, vs, ci_space, int2e, int1e, ecore);
-   fci::ci_save(ci_space, es, vs, ci_file);
+   fci::ci_solver(sparseH, es, vs, fci_space, int2e, int1e, ecore);
+   fci::ci_save(fci_space, es, vs, ci_file);
    sparseH.dump(schd.scratch+"/sparseH.bin");
    for(int i=0; i<nroots; i++){
       std::cout << "\nstate " << i << " energy = "  
                 << std::setprecision(12) << es[i] 
                 << std::endl;
       std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
-      coeff_population(ci_space, vi);
+      coeff_population(fci_space, vi);
    }
 }
 

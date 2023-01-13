@@ -16,14 +16,14 @@ int tests::test_hamiltonian(){
    cout << tools::line_separator << endl;	
    cout << "tests::test_hamiltonian" << endl;
    cout << tools::line_separator << endl;	
-   
+
    double thresh = 1.e-8;
 
    // read integral
    integral::two_body<complex<double>> int2e;
    integral::one_body<complex<double>> int1e;
    double ecore;
-   
+
    // just for LiH
    integral::load(int2e, int1e, ecore, "./fmole.info");
    onspace space2 = get_fci_space(6,2,2);
@@ -50,13 +50,13 @@ int tests::test_hamiltonian(){
    for(int j=0; j<H.cols(); j++){
       for(int i=0; i<H.rows(); i++){
          if(std::abs(H(i,j))<thresh) continue; // skip small terms
-	 if(std::abs(H(i,j)-H(j,i))<thresh) continue;
-	 ndiff += 1; 
+         if(std::abs(H(i,j)-H(j,i))<thresh) continue;
+         ndiff += 1; 
          cout << space2[i].diff_num(space2[j]) 
-	      << " (" << i << "," << j << ")=" 
-	      << H(i,j) << " " << H(j,i)
-              << " diff=" << std::abs(H(i,j)-H(j,i))	   
-              << endl;
+            << " (" << i << "," << j << ")=" 
+            << H(i,j) << " " << H(j,i)
+            << " diff=" << std::abs(H(i,j)-H(j,i))	   
+            << endl;
       }
    }
    cout << "ndiff=" << ndiff << endl;
@@ -67,13 +67,13 @@ int tests::test_hamiltonian(){
    auto v(H);
    eig_solver(H, e, v); // Hc=ce
    cout << "H: diff_hermitian=" << setprecision(12) 
-        << H.diff_hermitian() << endl;  
+      << H.diff_hermitian() << endl;  
    cout << "eigenvalues:\n" 
-	<< e[0] << "\n" << e[1] << "\n" << e[2] << "\n"
-	<< e[3] << "\n" << e[4] << "\n" << e[5] << endl;
+      << e[0] << "\n" << e[1] << "\n" << e[2] << "\n"
+      << e[3] << "\n" << e[4] << "\n" << e[5] << endl;
    auto t1 = tools::get_time();
    cout << "timing : " << setw(10) << fixed << setprecision(2) 
-	<< tools::get_duration(t1-t0) << " s" << endl;
+      << tools::get_duration(t1-t0) << " s" << endl;
    // compared with FCI value
    assert(std::abs(e[0]+7.87388139034) < thresh); 
    assert(std::abs(e[1]+7.74509251524) < thresh);

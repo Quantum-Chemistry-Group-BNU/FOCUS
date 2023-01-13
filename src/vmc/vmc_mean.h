@@ -3,6 +3,7 @@
 
 namespace vmc{
 
+   // <X>
    template <typename Tm>
    Tm get_mean(const int nsample,
                const Tm* x){
@@ -14,6 +15,7 @@ namespace vmc{
       return mean;
    }
 
+   // <XY>
    template <typename Tm>
    Tm get_mean(const int nsample,
                const Tm* x,

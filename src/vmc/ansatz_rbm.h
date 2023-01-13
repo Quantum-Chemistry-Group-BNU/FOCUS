@@ -1,17 +1,11 @@
 #ifndef ANSATZ_RBM_H
 #define ANSATZ_RBM_H
 
-#ifndef SERIAL
-#include <boost/mpi.hpp>
-#endif
-
-#include <cmath>
-#include "../core/serialization.h"
-#include "../core/matrix.h"
+#include "ansatz.h"
 
 namespace vmc{
 
-   class irbm{
+   class irbm : public BaseAnsatz {
       private:
          // serialize [for MPI] in src/drivers/ctns.cpp
          friend class boost::serialization::access;	   
@@ -19,18 +13,18 @@ namespace vmc{
             void save(Archive & ar, const unsigned int version) const{
                ar & nqubits
                   & nhiden
-                  & size 
-                  & data;
+                  & nparam 
+                  & params;
             }
       public:
          irbm(){}
          irbm(const int _nqubits, const int _nhiden, const double scale=1.e-3){
             nqubits = _nqubits;
             nhiden = _nhiden;
-            size = nqubits + nhiden + nhiden*nqubits;
-            auto tmp = linalg::random_matrix<double>(size,1)*scale;
-            data.resize(size);
-            linalg::xcopy(size, tmp.data(), data.data());
+            nparam = nqubits + nhiden + nhiden*nqubits;
+            auto tmp = linalg::random_matrix<double>(nparam,1)*scale;
+            params.resize(nparam);
+            linalg::xcopy(nparam, tmp.data(), params.data());
          }
          // value
          std::complex<double> lnpsi(const fock::onstate& state) const;
@@ -39,8 +33,8 @@ namespace vmc{
       public:
          int nqubits;
          int nhiden;
-         int size;
-         std::vector<double> data;
+         int nparam;
+         std::vector<double> params;
    }; // irbm
 
    // psi = sum_{ha} exp(1j * (ai*zi + ba*ha + ha*Wai*zi))  
@@ -57,11 +51,11 @@ namespace vmc{
       tools::print_vector(zvec,"z");
 */
       // lnpsiI
-      lnpsiI = linalg::xdot(nqubits,&data[0],zvec.data());
+      lnpsiI = linalg::xdot(nqubits,&params[0],zvec.data());
       // Wai*zvec
       std::vector<double> Wz(nhiden);
-      linalg::xcopy(nhiden, &data[nqubits], Wz.data());
-      linalg::xgemv("N",&nhiden,&nqubits,&alpha,&data[nqubits+nhiden],&nhiden,
+      linalg::xcopy(nhiden, &params[nqubits], Wz.data());
+      linalg::xgemv("N",&nhiden,&nqubits,&alpha,&params[nqubits+nhiden],&nhiden,
             zvec.data(),&INCX,&beta,Wz.data(),&INCY);
 /*      
       tools::print_vector(Wz,"lzdWz");
@@ -76,17 +70,17 @@ namespace vmc{
    // d ln psi_theta*(x) / d theta_i
    std::vector<std::complex<double>> irbm::dlnpsiC(const fock::onstate& state) const{
       const double alpha = 1.0, beta = 1.0;
-      const int INCX = 1, INCY = 1; 
+      const int INCX = 1, INCY = 1;
+      std::vector<std::complex<double>> dlnpsiC(nparam,0.0);
       // get zvec from onstate
-      auto zvec = state.get_zvec(); 
+      auto zvec = state.get_zvec();
       // Wai*zvec
-      std::vector<double> Wz(nhiden,0.0);
-      linalg::xcopy(nhiden, &data[nqubits], Wz.data());
-      linalg::xgemv("N",&nhiden,&nqubits,&alpha,&data[nqubits+nhiden],&nhiden,
+      std::vector<double> Wz(nhiden);
+      linalg::xcopy(nhiden, &params[nqubits], Wz.data());
+      linalg::xgemv("N",&nhiden,&nqubits,&alpha,&params[nqubits+nhiden],&nhiden,
             zvec.data(),&INCX,&beta,Wz.data(),&INCY);
       // assemble gradient
       std::complex<double> iunit(0.0,1.0);
-      std::vector<std::complex<double>> dlnpsiC(size);
       // ai
       std::transform(zvec.begin(), zvec.end(), dlnpsiC.begin(),
                      [&iunit](const auto& z){ return -iunit*z; });
@@ -95,11 +89,23 @@ namespace vmc{
                      [](const auto& u){ return -std::tan(u); });
       // Wai
       for(int i=0; i<nqubits; i++){
-         double zi = zvec[i];
-         std::transform(&dlnpsiC[nqubits], &dlnpsiC[nqubits+nhiden],
-                        &dlnpsiC[nqubits+nhiden+i*nqubits],
-                        [&zi](const auto& x){ return x*zi; });
+         linalg::xaxpy(nhiden, zvec[i], &dlnpsiC[nqubits], &dlnpsiC[nqubits+nhiden+i*nhiden]);
       }
+      /*
+      // debug
+      for(int k=0; k<nparam; k++){
+         double eps = 1.e-4;
+         params[k] += eps;
+         auto valp = this->lnpsi(state);
+         params[k] -= 2*eps;
+         auto valm = this->lnpsi(state);
+         auto diff = tools::conjugate((valp - valm)/(2.0*eps));
+         std::cout << "k=" << k << " d=" << dlnpsiC[k] 
+                   << " fd=" << diff << " error=" 
+                   << dlnpsiC[k]-diff << std::endl;
+         params[k] += eps;
+      }
+      */
       return dlnpsiC;
    }
 

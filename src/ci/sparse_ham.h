@@ -135,6 +135,10 @@ namespace fci{
             void analysis(const double thresh=1.e-8);
             // dump
             void dump(const std::string fname="sparseH.bin") const;
+            //void dump(const std::string fname="sparseH.bin",
+            //      const integral::two_body<Tm>& int2e,
+            //      const integral::one_body<Tm>& int1e,
+            //      const double ecore) const;
          private:
             product_space _pspace;
             coupling_table _ctabA, _ctabB;
@@ -609,6 +613,10 @@ namespace fci{
 
    template <typename Tm>
       void sparse_hamiltonian<Tm>::dump(const std::string fname) const{
+      //void sparse_hamiltonian<Tm>::dump(const std::string fname,
+      //            const integral::two_body<Tm>& int2e,
+      //            const integral::one_body<Tm>& int1e,
+      //            const double ecore) const{
          std::cout << "\nsparse_hamiltonian::dump fname=" << fname << std::endl;
          // CSR format
          std::vector<int> indptr(dim+1);
@@ -619,6 +627,10 @@ namespace fci{
          int nnz = indptr[dim];
          std::vector<int> indices(nnz);
          std::vector<Tm> data(nnz);
+         /*
+         fock::onspace space2 = fock::get_fci_space(6,3,3);
+         auto H = fock::get_Hmat(space2,int2e,int1e,ecore);
+         */
          // fill
          for(int i=0; i<dim; i++){
             int innz = connect[i].size();
@@ -628,7 +640,17 @@ namespace fci{
             indices[end] = i;
             linalg::xcopy(innz, value[i].data(), &data[sta]);
             data[end] = 0.5*diag[i]; // such that H[full]=H+H^conj
-            std::cout << "i=" << i << " di=" << diag[i] << std::endl;
+            /*
+            //std::cout << "i=" << i << " di=" << diag[i] << std::endl;
+            std::cout << std::setprecision(20);
+            for(int j=0; j<connect[i].size(); j++){
+               int m = connect[i][j];
+               std::cout << "i,m=" << i << "," << m 
+                         << " H[i,m]=" << value[i][j] 
+                         << " H(i,m)=" << H(i,m)
+                         << std::endl;
+            }
+            */
          }
          // save
          std::ofstream ofs(fname, std::ios::binary);

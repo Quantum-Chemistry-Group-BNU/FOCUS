@@ -1,11 +1,11 @@
 #ifndef VMC_SAMPLE_H
 #define VMC_SAMPLE_H
 
-#include "ansatz_rbm.h"
+#include "ansatz.h"
 
 namespace vmc{
 
-   fock::onspace get_sample(irbm& wavefun,
+   fock::onspace get_sample(BaseAnsatz& wavefun,
          const int nsample, 
          const fock::onstate& seed){
       std::cout << "\nvmc::get_sample" << std::endl; 
@@ -21,7 +21,7 @@ namespace vmc{
       std::uniform_real_distribution<double> udist(0,1);
       // start Markov-Chain Monte-Carlo
       // https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm
-      int noff = 0; //10000;
+      int noff = 1000;
       int maxcycle = nsample + noff;
       int naccept = 0;
       for(int k=0; k<maxcycle; k++){
@@ -38,33 +38,27 @@ namespace vmc{
          double prob_ratio = std::exp(2.0*(lnpsi1R - lnpsiR));
          double paccept = std::min(1.0,prob_ratio);
          double u = udist(tools::generator);
+         /*
          std::cout << std::setprecision(10);
          std::cout << "state=" << state << " lnpsiR=" << lnpsiR << std::endl;
          std::cout << "state1=" << state1 << " lnpsi1R=" << lnpsi1R << std::endl; 
          std::cout << "prob_ratio=" << prob_ratio << std::endl;
-         /*
+         */
          if(u <= paccept){
             state = state1;
             lnpsiR = lnpsi1R;
             if(k >= noff) naccept += 1;
          }
-         */
          if(k >= noff){
             space[k-noff] = state;
+            /*
             std::cout << "i=" << k-noff 
                       << " " << prob_ratio 
                       << " " << u 
                       << " " << state 
                       << std::endl;
+            */
          }
-         
-         // debug
-         if(u <= paccept){
-            state = state1;
-            lnpsiR = lnpsi1R;
-            if(k >= noff) naccept += 1;
-         }
-
       }
       std::cout << " acceptance ratio =" << naccept/double(nsample) << std::endl; 
       return space;

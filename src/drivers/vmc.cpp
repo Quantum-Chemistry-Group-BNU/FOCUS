@@ -15,8 +15,6 @@ void VMC(const input::schedule& schd){
 #ifndef SERIAL
    rank = schd.world.rank();
 #endif
-  
-   // CTNS
    
    // from SCI wavefunction
    onspace sci_space;
@@ -40,7 +38,8 @@ void VMC(const input::schedule& schd){
    Hij_ci.print("Hij");
 
    vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.scale);
-   vmc::opt(wavefun, int2e, int1e, ecore, schd, sci_space);
+   //vmc::opt_sample(wavefun, int2e, int1e, ecore, schd, sci_space);
+   vmc::opt_exact(wavefun, int2e, int1e, ecore, schd);
 }
 
 int main(int argc, char *argv[]){
