@@ -179,13 +179,6 @@ LOGS
 
  * VMPS+GPU? (simply dense matrix multiplication?)
 
-=== 2023 ===
-
- * VMC + iRBM:
-   - opt_exact [DONE@20230113]
-   - stochastic reconfiguration (SR)
-   - opt_sample
-
 --------------
 KNOWN PROBLEMS
 --------------
@@ -230,4 +223,15 @@ KNOWN PROBLEMS
     
  4. The truncation thresh_sig2=1.e-14 may lead some differences on the number of renormalized states,
     such that the optimized energies can be slightly different with maxcycle truncated.
+
+=== 2023 ===
+
+ * VMC + iRBM:
+   - opt_exact [DONE@20230113]
+   - stochastic reconfiguration (SR)
+   - opt_sample: MCMC
+   - schedule for nhiden?
+   - pretraining by SCI
+   - optimizer: BFGS [KEY for accuracy]
+   - GPU?
 
