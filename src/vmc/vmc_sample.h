@@ -11,7 +11,7 @@ namespace vmc{
       std::cout << "\nvmc::get_sample" << std::endl; 
       fock::onspace space(nsample);
       fock::onstate state(seed);
-      double lnpsiR = wavefun.lnpsi(state).real();
+      double prob = std::pow(std::abs(wavefun.psi(state)),2);
       int no = state.nelec(), k = state.size(), nv = k - no;
       std::vector<int> olst(no), vlst(nv);
       // random singles
@@ -34,30 +34,16 @@ namespace vmc{
          fock::onstate state1(state);
          state1[i] = 0;
          state1[a] = 1;
-         double lnpsi1R = wavefun.lnpsi(state1).real();
-         double prob_ratio = std::exp(2.0*(lnpsi1R - lnpsiR));
-         double paccept = std::min(1.0,prob_ratio);
+         double prob1 = std::pow(std::abs(wavefun.psi(state1)),2);
+         double paccept = std::min(1.0,prob1/prob);
          double u = udist(tools::generator);
-         /*
-         std::cout << std::setprecision(10);
-         std::cout << "state=" << state << " lnpsiR=" << lnpsiR << std::endl;
-         std::cout << "state1=" << state1 << " lnpsi1R=" << lnpsi1R << std::endl; 
-         std::cout << "prob_ratio=" << prob_ratio << std::endl;
-         */
          if(u <= paccept){
             state = state1;
-            lnpsiR = lnpsi1R;
+            prob = prob1;
             if(k >= noff) naccept += 1;
          }
          if(k >= noff){
             space[k-noff] = state;
-            /*
-            std::cout << "i=" << k-noff 
-                      << " " << prob_ratio 
-                      << " " << u 
-                      << " " << state 
-                      << std::endl;
-            */
          }
       }
       std::cout << " acceptance ratio =" << naccept/double(nsample) << std::endl; 

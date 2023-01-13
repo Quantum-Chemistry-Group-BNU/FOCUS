@@ -27,6 +27,17 @@ namespace vmc{
       }
       return mean;
    }
+   // <XY>
+   inline std::complex<double> get_mean(const int nsample,
+               const double* x,
+               const std::complex<double>* y){
+      double fac = 1.0/nsample;
+      std::complex<double> mean = 0.0;
+      for(int i=0; i<nsample; i++){
+         mean += x[i]*y[i]*fac;
+      }
+      return mean;
+   }
 
 } // vmc
 

@@ -27,44 +27,31 @@ namespace vmc{
             linalg::xcopy(nparam, tmp.data(), params.data());
          }
          // value
-         std::complex<double> lnpsi(const fock::onstate& state) const;
+         std::complex<double> psi(const fock::onstate& state) const;
          // grad
          std::vector<std::complex<double>> dlnpsiC(const fock::onstate& state) const;
-      public:
-         int nqubits;
-         int nhiden;
-         int nparam;
-         std::vector<double> params;
    }; // irbm
 
    // psi = sum_{ha} exp(1j * (ai*zi + ba*ha + ha*Wai*zi))  
    //     = exp(1j * (ai*zi)) * prod_a 2 cos(ba+Wai*zi)
-   // lnpsi = 1j*(ai*zi) + sum_a ln[2*cos(ba+Wai*zi)
-   std::complex<double> irbm::lnpsi(const fock::onstate& state) const{
+   std::complex<double> irbm::psi(const fock::onstate& state) const{
       const double alpha = 1.0, beta = 1.0;
       const int INCX = 1, INCY = 1; 
-      double lnpsiR = 0.0, lnpsiI = 0.0;
       // get zvec from onstate
       auto zvec = state.get_zvec();
-/*
-      std::cout << "state=" << state << std::endl;
-      tools::print_vector(zvec,"z");
-*/
-      // lnpsiI
-      lnpsiI = linalg::xdot(nqubits,&params[0],zvec.data());
+      // phase = ai*zi 
+      double phase = linalg::xdot(nqubits,&params[0],zvec.data());
       // Wai*zvec
       std::vector<double> Wz(nhiden);
       linalg::xcopy(nhiden, &params[nqubits], Wz.data());
       linalg::xgemv("N",&nhiden,&nqubits,&alpha,&params[nqubits+nhiden],&nhiden,
             zvec.data(),&INCX,&beta,Wz.data(),&INCY);
-/*      
-      tools::print_vector(Wz,"lzdWz");
-*/
-      // lnpsiR
+      // amp
+      double amp = 1.0;
       for(int a=0; a<nhiden; a++){
-         lnpsiR += std::log(std::cos(Wz[a]));
+         amp *= 2.0*std::cos(Wz[a]);
       }
-      return std::complex(lnpsiR,lnpsiI);
+      return std::complex(amp*std::cos(phase),amp*std::sin(phase));
    }
 
    // d ln psi_theta*(x) / d theta_i
@@ -93,15 +80,16 @@ namespace vmc{
       }
       /*
       // debug
+      double eps = 1.e-4;
       for(int k=0; k<nparam; k++){
-         double eps = 1.e-4;
+         auto val = this->psi(state);
          params[k] += eps;
-         auto valp = this->lnpsi(state);
+         auto valp = this->psi(state);
          params[k] -= 2*eps;
-         auto valm = this->lnpsi(state);
-         auto diff = tools::conjugate((valp - valm)/(2.0*eps));
-         std::cout << "k=" << k << " d=" << dlnpsiC[k] 
-                   << " fd=" << diff << " error=" 
+         auto valm = this->psi(state);
+         auto diff = tools::conjugate((valp - valm)/(2.0*eps*val));
+         std::cout << "CHECK dlnpsiC: k=" << k << " d=" << dlnpsiC[k]
+                   << " fd=" << diff << " error="
                    << dlnpsiC[k]-diff << std::endl;
          params[k] += eps;
       }

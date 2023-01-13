@@ -14,10 +14,12 @@ namespace vmc{
    struct BaseAnsatz{
       public:
          // value
-         virtual std::complex<double> lnpsi(const fock::onstate& state) const = 0;
+         virtual std::complex<double> psi(const fock::onstate& state) const = 0;
          // grad with respect to parameters
          virtual std::vector<std::complex<double>> dlnpsiC(const fock::onstate& state) const = 0;
       public:
+         int nqubits;
+         int nhiden; // rbm
          int nparam;
          std::vector<double> params;
    };

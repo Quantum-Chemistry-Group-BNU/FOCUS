@@ -35,14 +35,9 @@ namespace vmc{
             state = space[idx];
             state.get_olst(olst.data());
             state.get_vlst(vlst.data());
-            auto lnpsi_i = wavefun.lnpsi(state);
-            double v0i = std::exp(lnpsi_i.real());
+            auto psi_i = wavefun.psi(state);
+            double v0i = std::abs(psi_i);
             eloc[idx] = ecore + fock::get_Hii(state,int2e,int1e);
-            /*
-            std::cout << "\nidx=" << idx << " state=" << state.to_string() << std::endl;
-            std::cout << "ecore=" << ecore << " lnpsi_i=" << lnpsi_i << std::endl;
-            std::cout << "Hii=" << fock::get_Hii(state,int2e,int1e) << std::endl;
-            */
             // singles
             for(int ia=0; ia<nsingles; ia++){
                int ix = ia%no, ax = ia/no;
@@ -51,7 +46,7 @@ namespace vmc{
                state1[i] = 0;
                state1[a] = 1;
                auto pr = fock::get_HijS(state,state1,int2e,int1e);
-               eloc[idx] += pr.first * std::exp(wavefun.lnpsi(state1) - lnpsi_i);
+               eloc[idx] += pr.first * wavefun.psi(state1)/psi_i;
                /*
                std::cout << "ia=" << i << "," << a 
                          << " state1=" << state1.to_string()
@@ -74,7 +69,7 @@ namespace vmc{
                      state2[a] = 1;
                      state2[b] = 1;
                      auto pr = fock::get_HijD(state,state2,int2e,int1e);
-                     eloc[idx] += pr.first * std::exp(wavefun.lnpsi(state2) - lnpsi_i);
+                     eloc[idx] += pr.first * wavefun.psi(state2)/psi_i;
                      /*
                      std::cout << "iiab=" << i << "," << j << "," << a << "," << b 
                                << " state2=" << state2.to_string()

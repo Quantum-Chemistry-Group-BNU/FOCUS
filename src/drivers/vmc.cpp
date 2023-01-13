@@ -37,9 +37,21 @@ void VMC(const input::schedule& schd){
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hij_ci.print("Hij");
 
-   vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.scale);
-   //vmc::opt_sample(wavefun, int2e, int1e, ecore, schd, sci_space);
-   vmc::opt_exact(wavefun, int2e, int1e, ecore, schd);
+   vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.iscale);
+   if(schd.vmc.wf_load){ 
+      auto wf_file = schd.scratch+"/"+schd.vmc_file; 
+      vmc::wf_load(wavefun, wf_file);
+   }
+
+   // optimization
+   if(schd.vmc.exactopt){
+      vmc::opt_exact(wavefun, int2e, int1e, ecore, schd);
+   }else{
+      vmc::opt_sample(wavefun, int2e, int1e, ecore, schd, sci_space);
+   }
+
+   auto wf_file = schd.scratch+"/vmc_new.info";
+   vmc::wf_save(wavefun, wf_file);
 }
 
 int main(int argc, char *argv[]){
