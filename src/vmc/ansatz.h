@@ -17,6 +17,10 @@ namespace vmc{
          virtual std::complex<double> psi(const fock::onstate& state) const = 0;
          // grad with respect to parameters
          virtual std::vector<std::complex<double>> dlnpsiC(const fock::onstate& state) const = 0;
+         // save
+         virtual void save(const std::string fname) const = 0;
+         // load
+         virtual void load(const std::string fname) = 0;
       public:
          int nqubits;
          int nhiden; // rbm

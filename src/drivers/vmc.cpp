@@ -39,8 +39,8 @@ void VMC(const input::schedule& schd){
 
    vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.iscale);
    if(schd.vmc.wf_load){ 
-      auto wf_file = schd.scratch+"/"+schd.vmc_file; 
-      vmc::wf_load(wavefun, wf_file);
+      auto wf_file = schd.scratch+"/"+schd.vmc.wf_file; 
+      wavefun.load(wf_file);
    }
 
    // optimization
@@ -51,7 +51,7 @@ void VMC(const input::schedule& schd){
    }
 
    auto wf_file = schd.scratch+"/vmc_new.info";
-   vmc::wf_save(wavefun, wf_file);
+   wavefun.save(wf_file);
 }
 
 int main(int argc, char *argv[]){

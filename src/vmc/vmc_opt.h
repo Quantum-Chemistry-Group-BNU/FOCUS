@@ -131,7 +131,7 @@ namespace vmc{
             ehis[iter] = emean;
             std::cout << "iter=" << iter << " emean=" << emean << std::endl;
          }
-         opt_dump(schd.vmc.log, ehis);
+         opt_dump(schd.vmc.history, ehis);
          if(debug){
             auto t1 = tools::get_time();
             tools::timing("vmc::opt_sample", t0, t1);

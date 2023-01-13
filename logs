@@ -179,6 +179,13 @@ LOGS
 
  * VMPS+GPU? (simply dense matrix multiplication?)
 
+=== 2023 ===
+
+ * VMC + iRBM:
+   - opt_exact [DONE@20230113]
+   - stochastic reconfiguration (SR)
+   - opt_sample
+
 --------------
 KNOWN PROBLEMS
 --------------

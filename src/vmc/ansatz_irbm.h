@@ -7,10 +7,9 @@ namespace vmc{
 
    class irbm : public BaseAnsatz {
       private:
-         // serialize [for MPI] in src/drivers/ctns.cpp
          friend class boost::serialization::access;	   
          template <class Archive>
-            void save(Archive & ar, const unsigned int version) const{
+            void serialize(Archive & ar, const unsigned int version){
                ar & nqubits
                   & nhiden
                   & nparam 
@@ -30,6 +29,22 @@ namespace vmc{
          std::complex<double> psi(const fock::onstate& state) const;
          // grad
          std::vector<std::complex<double>> dlnpsiC(const fock::onstate& state) const;
+         // save
+         void save(const std::string fname) const{
+            std::cout << "\nvmc::irbm::save fname=" << fname << std::endl;
+            std::ofstream ofs(fname, std::ios::binary);
+            boost::archive::binary_oarchive save(ofs);
+            save << (*this);
+            ofs.close();
+         }
+         // load
+         void load(const std::string fname){
+            std::cout << "\nvmc::irbm::load fname=" << fname << std::endl;
+            std::ifstream ifs(fname, std::ios::binary);
+            boost::archive::binary_iarchive load(ifs);
+            load >> (*this);
+            ifs.close();
+         }
    }; // irbm
 
    // psi = sum_{ha} exp(1j * (ai*zi + ba*ha + ha*Wai*zi))  
