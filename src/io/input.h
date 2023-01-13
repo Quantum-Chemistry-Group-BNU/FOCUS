@@ -171,7 +171,8 @@ public:
    int nhiden = 0;
    int nsample = 1000;
    std::string optimizer = "kfac";
-   int maxiter = 1000; 
+   int maxiter = 1000;
+   double scale = 1.e-3; 
 };
 
 // General

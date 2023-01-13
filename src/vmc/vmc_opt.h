@@ -41,7 +41,7 @@ namespace vmc{
             auto samples = get_sample(wavefun, nsample, sci_space[0]);
             
             // compute local energy
-            auto eloc = get_eloc(wavefun, samples, int2e, int1e, hbtab, eps2);
+            auto eloc = get_eloc(wavefun, samples, int2e, int1e, ecore, hbtab, eps2);
             // emean
             auto emean = get_mean(nsample, eloc.data()); 
             std::cout << "iter=" << iter << " emean=" << emean << std::endl;

@@ -10,6 +10,7 @@ namespace vmc{
             const fock::onspace& space,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
+            const double& ecore,
             const sci::heatbath_table<Tm>& hbtab,
             const double eps2){
          std::cout << "\nvmc::get_eloc" << std::endl; 
@@ -27,7 +28,11 @@ namespace vmc{
             state.get_vlst(vlst.data());
             auto lnpsi_i = wavefun.lnpsi(state);
             double v0i = std::exp(lnpsi_i.real());
-            eloc[idx] = fock::get_Hii(state,int2e,int1e);
+            eloc[idx] = ecore + fock::get_Hii(state,int2e,int1e);
+            std::cout << "eloc=" << eloc[idx] << std::endl;
+            std::cout << state.to_string() << std::endl;
+            std::cout << ecore << std::endl;
+            std::cout << fock::get_Hii(state,int2e,int1e) << std::endl;
             // singles
             for(int ia=0; ia<nsingles; ia++){
                int ix = ia%no, ax = ia/no;

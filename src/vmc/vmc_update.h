@@ -42,7 +42,8 @@ namespace vmc{
             double sj = oii[j] - std::pow(std::abs(oi[j]),2); // variance
             double gj = eoi[j] - emean*oi[j].real();
             gnorm += std::pow(gj,2);
-            wavefun.data[j] -= lr*gj/(sj + eps);
+            //wavefun.data[j] -= lr*gj/(sj + eps);
+            wavefun.data[j] -= lr*gj;
          }
          gnorm = std::sqrt(gnorm);
          std::cout << "||g||=" << gnorm << std::endl;

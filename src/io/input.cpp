@@ -386,6 +386,8 @@ void params_vmc::read(ifstream& istrm){
          is >> optimizer;
       }else if(line.substr(0,7)=="maxiter"){
          maxiter = stoi(line.substr(7));
+      }else if(line.substr(0,5)=="scale"){
+         scale = stod(line.substr(5));
       }else{
          tools::exit("error: no matching key! line = "+line);
       }
@@ -399,6 +401,7 @@ void params_vmc::print() const{
    cout << "nsample = " << nsample << endl;
    cout << "optimizer = " << optimizer << endl;
    cout << "maxiter = " << maxiter << endl;
+   cout << "scale = " << scale << endl;
 }
 
 //

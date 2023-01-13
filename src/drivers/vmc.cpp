@@ -39,7 +39,7 @@ void VMC(const input::schedule& schd){
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hij_ci.print("Hij");
 
-   vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden);
+   vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.scale);
    vmc::opt(wavefun, int2e, int1e, ecore, schd, sci_space);
 }
 
