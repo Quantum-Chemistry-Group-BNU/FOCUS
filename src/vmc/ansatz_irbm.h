@@ -1,5 +1,5 @@
-#ifndef ANSATZ_RBM_H
-#define ANSATZ_RBM_H
+#ifndef ANSATZ_IRBM_H
+#define ANSATZ_IRBM_H
 
 #include "ansatz.h"
 
