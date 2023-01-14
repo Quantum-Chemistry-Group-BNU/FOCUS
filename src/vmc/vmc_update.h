@@ -65,8 +65,8 @@ namespace vmc{
             */
          }
          gnorm = std::sqrt(gnorm);
-         std::cout << "iter=" << iter << std::setprecision(12)
-                   << " emean=" << emean << "||g||=" << gnorm 
+         std::cout << "iter = " << iter << std::setprecision(12)
+                   << " emean = " << emean << " ||g|| = " << gnorm 
                    << std::endl;
          return emean;
       }
@@ -110,8 +110,8 @@ namespace vmc{
             }
          }
          gnorm = std::sqrt(gnorm);
-         std::cout << "iter=" << iter << std::setprecision(12)
-                   << " emean=" << emean << "||g||=" << gnorm 
+         std::cout << "iter = " << iter << std::setprecision(12)
+                   << " emean = " << emean << " ||g|| = " << gnorm 
                    << std::endl;
          return emean;
       }

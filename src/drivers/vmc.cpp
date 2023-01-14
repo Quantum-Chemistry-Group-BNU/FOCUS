@@ -10,7 +10,8 @@ using namespace std;
 using namespace fock;
 
 template <typename Tm>  
-void VMC(const input::schedule& schd){
+void VMC(const input::schedule& schd,
+         vmc::BaseAnsatz& wavefun){
    int rank = 0; 
 #ifndef SERIAL
    rank = schd.world.rank();
@@ -37,29 +38,24 @@ void VMC(const input::schedule& schd){
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hij_ci.print("Hij");
 
-   // define wavefunction
-   vmc::BaseAnsatz* pwavefun;
-   if(schd.vmc.ansatz == "irbm"){
-      vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.iscale);
-      pwavefun = &wavefun;
-   }else if(schd.vmc.ansatz == "tanhfcn"){
-      vmc::tanhfcn wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.iscale);
-      pwavefun = &wavefun;
-   }
    // load
    if(schd.vmc.wf_load){ 
       auto wf_file = schd.scratch+"/"+schd.vmc.wf_file; 
-      pwavefun->load(wf_file);
+      wavefun.load(wf_file);
+   }else{
+      wavefun.init(int1e.sorb, schd.vmc.nhiden, schd.vmc.iscale);
    }
+   
    // optimization
    if(schd.vmc.exactopt){
-      vmc::opt_exact(*pwavefun, int2e, int1e, ecore, schd);
+      vmc::opt_exact(wavefun, int2e, int1e, ecore, schd);
    }else{
-      vmc::opt_sample(*pwavefun, int2e, int1e, ecore, schd, sci_space);
+      vmc::opt_sample(wavefun, int2e, int1e, ecore, schd, sci_space);
    }
+   
    // save
    auto wf_file = schd.scratch+"/vmc_new.info";
-   pwavefun->save(wf_file);
+   wavefun.save(wf_file);
 }
 
 int main(int argc, char *argv[]){
@@ -100,11 +96,41 @@ int main(int argc, char *argv[]){
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    io::create_scratch(schd.scratch, (rank == 0));
-   if(schd.dtype == 0){
-      VMC<double>(schd);
-   }else if(schd.dtype == 1){
-      VMC<complex<double>>(schd);
+
+   // define wavefunction
+   if(schd.vmc.ansatz == "irbm"){
+      vmc::irbm wavefun;
+      if(schd.dtype == 0){
+         VMC<double>(schd, wavefun);
+      }else if(schd.dtype == 1){
+         VMC<complex<double>>(schd, wavefun);
+      }
+   }else if(schd.vmc.ansatz == "trbm"){
+      vmc::trbm wavefun;
+      if(schd.dtype == 0){
+         VMC<double>(schd, wavefun);
+      }else if(schd.dtype == 1){
+         VMC<complex<double>>(schd, wavefun);
+      }
+   }else if(schd.vmc.ansatz == "rrbm"){
+      vmc::rrbm wavefun;
+      if(schd.dtype == 0){
+         VMC<double>(schd, wavefun);
+      }else if(schd.dtype == 1){
+         VMC<complex<double>>(schd, wavefun);
+      }
+   }else if(schd.vmc.ansatz == "irbmcos"){
+      vmc::irbmcos wavefun;
+      if(schd.dtype == 0){
+         VMC<double>(schd, wavefun);
+      }else if(schd.dtype == 1){
+         VMC<complex<double>>(schd, wavefun);
+      }
+   }else{
+      std::cout << "error: no such ansatz=" << schd.vmc.ansatz << std::endl;
+      exit(1);
    }
+
    // cleanup 
    if(rank == 0){
       tools::finish("VMC");

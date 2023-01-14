@@ -13,10 +13,12 @@ namespace vmc{
 
    struct BaseAnsatz{
       public:
+         // initialization
+         virtual void init(const int _nqubits, const int _nhiden, const double scale) = 0;
          // value
          virtual std::complex<double> psi(const fock::onstate& state) const = 0;
          // grad with respect to parameters
-         virtual std::vector<std::complex<double>> dlnpsiC(const fock::onstate& state) const = 0;
+         virtual std::vector<std::complex<double>> dlnpsiC(const fock::onstate& state) = 0;
          // save
          virtual void save(const std::string fname) const = 0;
          // load

@@ -1,11 +1,11 @@
-#ifndef ANSATZ_TANHFCN_H
-#define ANSATZ_TANHFCN_H
+#ifndef ANSATZ_IRBMCOS_H
+#define ANSATZ_IRBMCOS_H
 
 #include "ansatz.h"
 
 namespace vmc{
 
-   class tanhfcn : public BaseAnsatz {
+   class irbmcos : public BaseAnsatz {
       private:
          friend class boost::serialization::access;	   
          template <class Archive>
@@ -16,8 +16,8 @@ namespace vmc{
                   & params;
             }
       public:
-         tanhfcn(){}
-         tanhfcn(const int _nqubits, const int _nhiden, const double scale=1.e-3){
+         irbmcos(){}
+         void init(const int _nqubits, const int _nhiden, const double scale=1.e-3){
             nqubits = _nqubits;
             nhiden = _nhiden;
             nparam = nqubits + nhiden + nhiden*nqubits;
@@ -31,7 +31,7 @@ namespace vmc{
          std::vector<std::complex<double>> dlnpsiC(const fock::onstate& state);
          // save
          void save(const std::string fname) const{
-            std::cout << "\nvmc::tanhfcn::save fname=" << fname << std::endl;
+            std::cout << "\nvmc::irbmcos::save fname=" << fname << std::endl;
             std::ofstream ofs(fname, std::ios::binary);
             boost::archive::binary_oarchive save(ofs);
             save << (*this);
@@ -39,22 +39,21 @@ namespace vmc{
          }
          // load
          void load(const std::string fname){
-            std::cout << "\nvmc::tanhfcn::load fname=" << fname << std::endl;
+            std::cout << "\nvmc::irbmcos::load fname=" << fname << std::endl;
             std::ifstream ifs(fname, std::ios::binary);
             boost::archive::binary_iarchive load(ifs);
             load >> (*this);
             ifs.close();
          }
-   }; // tanhfcn
+   }; // irbmcos
 
-   // psi = tanh(ai*zi) * sum_{ha} exp(ba*ha + ha*Wai*zi) 
-   std::complex<double> tanhfcn::psi(const fock::onstate& state) const{
+   // psi = sum_{ha} exp(1j * (ba*ha + ha*Wai*zi))  
+   //     = prod_a 2 cos(ba+Wai*zi)
+   std::complex<double> irbmcos::psi(const fock::onstate& state) const{
       const double alpha = 1.0, beta = 1.0;
       const int INCX = 1, INCY = 1; 
       // get zvec from onstate
       auto zvec = state.get_zvec();
-      // phase = ai*zi 
-      double phase = std::tanh(linalg::xdot(nqubits,&params[0],zvec.data()));
       // Wai*zvec
       std::vector<double> Wz(nhiden);
       linalg::xcopy(nhiden, &params[nqubits], Wz.data());
@@ -63,37 +62,34 @@ namespace vmc{
       // amp
       double amp = 1.0;
       for(int a=0; a<nhiden; a++){
-         amp *= 2.0*std::cosh(Wz[a]);
+         amp *= 2.0*std::cos(Wz[a]);
       }
-      return std::complex(amp*phase,0.0);
+      return std::complex(amp,0.0);
    }
 
    // d ln psi_theta*(x) / d theta_i
-   std::vector<std::complex<double>> tanhfcn::dlnpsiC(const fock::onstate& state){
+   std::vector<std::complex<double>> irbmcos::dlnpsiC(const fock::onstate& state){
       const double alpha = 1.0, beta = 1.0;
       const int INCX = 1, INCY = 1;
       std::vector<std::complex<double>> dlnpsiC(nparam,0.0);
       // get zvec from onstate
       auto zvec = state.get_zvec();
-      // aizi part
-      double fac = 2.0/std::sinh(2.0*linalg::xdot(nqubits,&params[0],zvec.data()));
       // Wai*zvec
       std::vector<double> Wz(nhiden);
       linalg::xcopy(nhiden, &params[nqubits], Wz.data());
       linalg::xgemv("N",&nhiden,&nqubits,&alpha,&params[nqubits+nhiden],&nhiden,
             zvec.data(),&INCX,&beta,Wz.data(),&INCY);
       // assemble gradient
-      // ai
-      std::transform(zvec.begin(), zvec.end(), dlnpsiC.begin(),
-                     [&fac](const auto& z){ return fac*z; });
       // ba
       std::transform(Wz.begin(), Wz.end(), &dlnpsiC[nqubits],
-                     [](const auto& u){ return std::tanh(u); });
+                     [](const auto& u){ return -std::tan(u); });
       // Wai
       for(int i=0; i<nqubits; i++){
          linalg::xaxpy(nhiden, zvec[i], &dlnpsiC[nqubits], &dlnpsiC[nqubits+nhiden+i*nhiden]);
       }
+      /*
       // debug [const needs to be removed]
+      std::cout << std::setprecision(10);
       double eps = 1.e-4;
       for(int k=0; k<nparam; k++){
          auto val = this->psi(state);
@@ -108,6 +104,7 @@ namespace vmc{
          params[k] += eps;
       }
       exit(1);
+      */
       return dlnpsiC;
    }
 

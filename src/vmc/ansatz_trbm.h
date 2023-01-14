@@ -1,11 +1,11 @@
-#ifndef ANSATZ_IRBM_H
-#define ANSATZ_IRBM_H
+#ifndef ANSATZ_TRBM_H
+#define ANSATZ_TRBM_H
 
 #include "ansatz.h"
 
 namespace vmc{
 
-   class irbm : public BaseAnsatz {
+   class trbm : public BaseAnsatz {
       private:
          friend class boost::serialization::access;	   
          template <class Archive>
@@ -16,7 +16,7 @@ namespace vmc{
                   & params;
             }
       public:
-         irbm(){}
+         trbm(){}
          void init(const int _nqubits, const int _nhiden, const double scale=1.e-3){
             nqubits = _nqubits;
             nhiden = _nhiden;
@@ -31,7 +31,7 @@ namespace vmc{
          std::vector<std::complex<double>> dlnpsiC(const fock::onstate& state);
          // save
          void save(const std::string fname) const{
-            std::cout << "\nvmc::irbm::save fname=" << fname << std::endl;
+            std::cout << "\nvmc::trbm::save fname=" << fname << std::endl;
             std::ofstream ofs(fname, std::ios::binary);
             boost::archive::binary_oarchive save(ofs);
             save << (*this);
@@ -39,24 +39,23 @@ namespace vmc{
          }
          // load
          void load(const std::string fname){
-            std::cout << "\nvmc::irbm::load fname=" << fname << std::endl;
+            std::cout << "\nvmc::trbm::load fname=" << fname << std::endl;
             std::ifstream ifs(fname, std::ios::binary);
             boost::archive::binary_iarchive load(ifs);
             load >> (*this);
             ifs.close();
          }
-   }; // irbm
+   }; // trbm
 
-   // psi = sum_{ha} exp(1j * (ai*zi + ba*ha + ha*Wai*zi))  
-   //     = exp(1j * (ai*zi)) * prod_a 2 cos(ba+Wai*zi)
-   std::complex<double> irbm::psi(const fock::onstate& state) const{
+   // psi = tanh(ai*zi) * sum_{ha} exp(ba*ha + ha*Wai*zi) 
+   std::complex<double> trbm::psi(const fock::onstate& state) const{
       const double alpha = 1.0, beta = 1.0;
       const int INCX = 1, INCY = 1; 
       // get zvec from onstate
       auto zvec = state.get_zvec();
       //--------------
       // phase = ai*zi 
-      double phase = linalg::xdot(nqubits,&params[0],zvec.data());
+      double phase = std::tanh(linalg::xdot(nqubits,&params[0],zvec.data()));
       //--------------
       // Wai*zvec
       std::vector<double> Wz(nhiden);
@@ -66,13 +65,13 @@ namespace vmc{
       // amp
       double amp = 1.0;
       for(int a=0; a<nhiden; a++){
-         amp *= 2.0*std::cos(Wz[a]);
+         amp *= 2.0*std::cosh(Wz[a]);
       }
-      return std::complex(amp*std::cos(phase),amp*std::sin(phase));
+      return std::complex(amp*phase,0.0);
    }
 
    // d ln psi_theta*(x) / d theta_i
-   std::vector<std::complex<double>> irbm::dlnpsiC(const fock::onstate& state){
+   std::vector<std::complex<double>> trbm::dlnpsiC(const fock::onstate& state){
       const double alpha = 1.0, beta = 1.0;
       const int INCX = 1, INCY = 1;
       std::vector<std::complex<double>> dlnpsiC(nparam,0.0);
@@ -85,12 +84,12 @@ namespace vmc{
             zvec.data(),&INCX,&beta,Wz.data(),&INCY);
       // assemble gradient
       // ai
-      std::complex<double> fac(0.0,-1.0);
+      double fac = 2.0/std::sinh(2.0*linalg::xdot(nqubits,&params[0],zvec.data()));
       std::transform(zvec.begin(), zvec.end(), dlnpsiC.begin(),
                      [&fac](const auto& z){ return fac*z; });
       // ba
       std::transform(Wz.begin(), Wz.end(), &dlnpsiC[nqubits],
-                     [](const auto& u){ return -std::tan(u); });
+                     [](const auto& u){ return std::tanh(u); });
       // Wai
       for(int i=0; i<nqubits; i++){
          linalg::xaxpy(nhiden, zvec[i], &dlnpsiC[nqubits], &dlnpsiC[nqubits+nhiden+i*nhiden]);
