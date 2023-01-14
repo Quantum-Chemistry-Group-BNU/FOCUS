@@ -37,21 +37,29 @@ void VMC(const input::schedule& schd){
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
    Hij_ci.print("Hij");
 
-   vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.iscale);
+   // define wavefunction
+   vmc::BaseAnsatz* pwavefun;
+   if(schd.vmc.ansatz == "irbm"){
+      vmc::irbm wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.iscale);
+      pwavefun = &wavefun;
+   }else if(schd.vmc.ansatz == "tanhfcn"){
+      vmc::tanhfcn wavefun(int1e.sorb, schd.vmc.nhiden, schd.vmc.iscale);
+      pwavefun = &wavefun;
+   }
+   // load
    if(schd.vmc.wf_load){ 
       auto wf_file = schd.scratch+"/"+schd.vmc.wf_file; 
-      wavefun.load(wf_file);
+      pwavefun->load(wf_file);
    }
-
    // optimization
    if(schd.vmc.exactopt){
-      vmc::opt_exact(wavefun, int2e, int1e, ecore, schd);
+      vmc::opt_exact(*pwavefun, int2e, int1e, ecore, schd);
    }else{
-      vmc::opt_sample(wavefun, int2e, int1e, ecore, schd, sci_space);
+      vmc::opt_sample(*pwavefun, int2e, int1e, ecore, schd, sci_space);
    }
-
+   // save
    auto wf_file = schd.scratch+"/vmc_new.info";
-   wavefun.save(wf_file);
+   pwavefun->save(wf_file);
 }
 
 int main(int argc, char *argv[]){

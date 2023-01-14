@@ -3,6 +3,7 @@
 
 #include "ansatz.h"
 #include "ansatz_irbm.h"
+#include "ansatz_tanhfcn.h"
 #include "vmc_opt.h"
 
 #endif

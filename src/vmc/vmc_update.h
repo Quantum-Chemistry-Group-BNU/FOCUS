@@ -4,14 +4,18 @@
 namespace vmc{
 
    template <typename Tm>
-      double update_exact(BaseAnsatz& wavefun, 
+      double update_exact(const int iter,
+            BaseAnsatz& wavefun, 
             const fock::onspace& space, 
             //const std::vector<Tm>& eloc){ 
             const std::vector<Tm>& eloc,
-            const double lr,
+            const std::string& optimizer,
+            const double& lr,
             const std::vector<double>& grad){ 
-         std::cout << "\nvmc::update_exact" << std::endl;
-         const double eps = 1.e-2;
+         if(iter == 0){
+            std::cout << "\nvmc::update_exact" << std::endl;
+         }
+         const double eps = 1.e-3;
          int nsample = space.size();
          // probablity
          std::vector<double> prob(nsample);
@@ -42,8 +46,11 @@ namespace vmc{
             double sj = oii[j] - std::pow(std::abs(oi[j]),2); // variance
             double gj = 2.0*(eoi[j] - emean*oi[j].real());
             gnorm += std::pow(gj,2);
-            //wavefun.params[j] -= lr*gj/(sj + eps);
-            wavefun.params[j] -= lr*gj;
+            if(optimizer == "gd"){
+               wavefun.params[j] -= lr*gj;
+            }else if(optimizer == "kfac"){
+               wavefun.params[j] -= lr*gj/(sj + eps);
+            }
             /*
             std::cout << std::setprecision(10);
             std::cout << "j=" << j 
@@ -58,18 +65,23 @@ namespace vmc{
             */
          }
          gnorm = std::sqrt(gnorm);
-         std::cout << std::setprecision(12);
-         std::cout << "||g||=" << gnorm << " emean=" << emean << std::endl;
+         std::cout << "iter=" << iter << std::setprecision(12)
+                   << " emean=" << emean << "||g||=" << gnorm 
+                   << std::endl;
          return emean;
       }
 
    template <typename Tm>
-      double update_sample(BaseAnsatz& wavefun, 
+      double update_sample(const int iter,
+            BaseAnsatz& wavefun, 
             const fock::onspace& space,
             const std::vector<Tm>& eloc,
-            const double lr){
-         std::cout << "\nvmc::update_sample" << std::endl;
-         const double eps = 1.e-2;
+            const std::string& optimizer,
+            const double& lr){
+         if(iter == 0){
+            std::cout << "\nvmc::update_sample" << std::endl;
+         }
+         const double eps = 1.e-3;
          int nparam = wavefun.nparam;
          std::vector<std::complex<double>> oi(nparam,0.0);
          std::vector<double> oii(nparam,0.0);
@@ -91,11 +103,16 @@ namespace vmc{
             double sj = oii[j] - std::pow(std::abs(oi[j]),2); // variance
             double gj = 2.0*(eoi[j] - emean*oi[j].real());
             gnorm += std::pow(gj,2);
-            //wavefun.params[j] -= lr*gj/(sj + eps);
-            wavefun.params[j] -= lr*gj;
+            if(optimizer == "gd"){
+               wavefun.params[j] -= lr*gj;
+            }else if(optimizer == "kfac"){
+               wavefun.params[j] -= lr*gj/(sj + eps);
+            }
          }
          gnorm = std::sqrt(gnorm);
-         std::cout << "||g||=" << gnorm << " emean=" << emean << std::endl;
+         std::cout << "iter=" << iter << std::setprecision(12)
+                   << " emean=" << emean << "||g||=" << gnorm 
+                   << std::endl;
          return emean;
       }
 

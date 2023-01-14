@@ -10,6 +10,7 @@
 === Features ===
  - FCI and SCI for benchmarking & preparing initial guesses for TNS
  - DMRG and CTNS (NR and R with time-reversal symmetry adaptation)
+ - VMC with NN (exploring new ansatze)
 
 === How to install ===
  - Requirements:
@@ -46,4 +47,3 @@
     https://github.com/boostorg/mpi/issues/124
     edit BOOST_MPI_USE_IMPROBE in boost/mpi/config.hpp
  - std::filesystem may cause problems for old compilers
-

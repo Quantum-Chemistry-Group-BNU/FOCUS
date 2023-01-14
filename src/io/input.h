@@ -175,7 +175,7 @@ namespace input{
          int nsample = 10000;
          int maxiter = 1000;
          std::string optimizer = "kfac";
-         double lr = 1.e-1;
+         double lr = 1.e-2;
          std::string history  = "vmc_his.bin";
          bool wf_load = false;
          std::string wf_file = "vmc.info";

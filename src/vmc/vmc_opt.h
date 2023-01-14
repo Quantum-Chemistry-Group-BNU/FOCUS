@@ -87,10 +87,8 @@ namespace vmc{
                */
 
             // update parameters
-            double emean = update_exact(wavefun, fci_space, eloc, schd.vmc.lr, grad);
+            double emean = update_exact(iter, wavefun, fci_space, eloc, schd.vmc.optimizer, schd.vmc.lr, grad);
             ehis[iter] = emean;
-
-            std::cout << "iter=" << iter << " emean=" << emean << std::endl;
          } // iter
          opt_dump(schd.scratch+"/"+schd.vmc.history, ehis);
          if(debug){
@@ -127,9 +125,8 @@ namespace vmc{
             // compute local energy
             auto eloc = get_eloc(wavefun, samples, int2e, int1e, ecore, hbtab, eps2);
             // update parameters
-            double emean = update_sample(wavefun, samples, eloc, schd.vmc.lr);
+            double emean = update_sample(iter, wavefun, samples, eloc, schd.vmc.optimizer, schd.vmc.lr);
             ehis[iter] = emean;
-            std::cout << "iter=" << iter << " emean=" << emean << std::endl;
          }
          opt_dump(schd.scratch+"/"+schd.vmc.history, ehis);
          if(debug){

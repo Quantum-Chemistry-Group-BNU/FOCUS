@@ -13,7 +13,7 @@ namespace vmc{
             const double& ecore,
             const sci::heatbath_table<Tm>& hbtab,
             const double eps2){
-         std::cout << "\nvmc::get_eloc" << std::endl; 
+         //std::cout << "\nvmc::get_eloc" << std::endl; 
 
          /*
          fock::onspace space2 = fock::get_fci_space(6,3,3);
