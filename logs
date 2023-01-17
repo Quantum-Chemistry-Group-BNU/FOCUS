@@ -226,6 +226,8 @@ KNOWN PROBLEMS
 
 === 2023 ===
 
+ * Exact diagonalization by construct full Hamtiltonian [DONE@20230117]
+
  * VMC + iRBM:
    - opt_exact [DONE@20230113]
    - various RBM ansatz [DONE@20230114]
