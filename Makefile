@@ -181,6 +181,7 @@ all: depend \
      $(BIN_DIR)/tests_core.x \
      $(BIN_DIR)/tests_ci.x \
      $(BIN_DIR)/tests_ctns.x \
+     $(BIN_DIR)/exactdiag.x \
      $(BIN_DIR)/fci.x \
      $(BIN_DIR)/sci.x \
      $(BIN_DIR)/prectns.x \
@@ -243,7 +244,11 @@ $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ctns.o $(LFLAGS) -L$(LIB_DIR) -lctns
 
-# Main: sci & ctns
+# Main:
+$(BIN_DIR)/exactdiag.x: $(OBJ_DIR)/exactdiag.o $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/exactdiag.o $(LFLAGS) -L$(LIB_DIR) -lcore -lio
+
 $(BIN_DIR)/fci.x: $(OBJ_DIR)/fci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/fci.o $(LFLAGS) -L$(LIB_DIR) -lci

@@ -36,7 +36,7 @@ void FCI(const input::schedule& schd){
                 << std::setprecision(12) << es[i] 
                 << std::endl;
       std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
-      coeff_population(fci_space, vi);
+      coeff_population(fci_space, vi, schd.sci.cthrd);
    }
 }
 

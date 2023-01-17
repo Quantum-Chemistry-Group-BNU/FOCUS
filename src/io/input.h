@@ -25,7 +25,7 @@ namespace input{
                ar & run & nroots & det_seeds & nseeds & flip
                   & eps0 & eps1 & miniter & maxiter & deltaE
                   & cisolver & maxcycle & crit_v & ifpt2 & eps2 & iroot
-                  & load & ci_file;
+                  & load & ci_file & cthrd;
             }
       public:
          void read(std::ifstream& istrm);
@@ -56,6 +56,8 @@ namespace input{
          // io
          bool load = false;
          std::string ci_file = "ci.info"; 
+         // print
+         double cthrd = 1.e-2;
    };
 
    // CTNS

@@ -178,9 +178,18 @@ namespace integral{
             exit(1);
          }
          // parse MOLEINFO file
+         int sorb;
          std::string line;
-         std::getline(istrm,line);
-         int sorb = std::stoi(line);
+         while(!istrm.eof()){
+            line.clear();	    
+            std::getline(istrm,line);
+            if(line.empty() || line[0]=='#'){
+               continue; // skip empty and comments
+            }else{
+               sorb = std::stoi(line);
+               break;
+            }
+         }
          // load integrals
          int1e.sorb = sorb;
          int1e.init_mem(); 
@@ -201,14 +210,18 @@ namespace integral{
          while(!istrm.eof()){
             line.clear();	    
             std::getline(istrm,line);
-            std::istringstream is(line);
-            is >> i >> j >> k >> l >> eri;
-            if(i*j == 0 && k*l == 0){
-               ecore = std::real(eri);
-            }else if(i*j != 0 && k*l == 0){
-               int1e.set(i-1, j-1, eri);
-            }else if(i*j != 0 && k*l != 0){
-               int2e.set(i-1, j-1, k-1, l-1, eri);
+            if(line.empty() || line[0]=='#'){
+               continue; // skip empty and comments
+            }else{
+               std::istringstream is(line);
+               is >> i >> j >> k >> l >> eri; // read quadruple and integral
+               if(i*j == 0 && k*l == 0){
+                  ecore = std::real(eri);
+               }else if(i*j != 0 && k*l == 0){
+                  int1e.set(i-1, j-1, eri);
+               }else if(i*j != 0 && k*l != 0){
+                  int2e.set(i-1, j-1, k-1, l-1, eri);
+               }
             }
          }
          istrm.close();

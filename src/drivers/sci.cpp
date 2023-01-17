@@ -32,7 +32,7 @@ void SCI(const input::schedule& schd){
                 << std::setprecision(12) << es[i] 
                 << std::endl;
       std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
-      coeff_population(sci_space, vi);
+      coeff_population(sci_space, vi, schd.sci.cthrd);
    }
    // pt2 for single root
    if(schd.sci.ifpt2){

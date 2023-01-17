@@ -229,10 +229,19 @@ KNOWN PROBLEMS
  * VMC + iRBM:
    - opt_exact [DONE@20230113]
    - various RBM ansatz [DONE@20230114]
-   - stochastic reconfiguration (SR)
+
+   - LBFGS/Adam with opt_exact for reference 
+
+   - stochastic reconfiguration (SR): SVD-based?
+ 
+   - optimizer: BFGS [KEY for accuracy]
+
    - opt_sample: MCMC
+
    - schedule for nhiden?
    - pretraining by SCI
-   - optimizer: BFGS [KEY for accuracy]
+
    - scale up: parallelization by GPU?
+   - iron-sulfur clusters: frustrated spin systems
+
 

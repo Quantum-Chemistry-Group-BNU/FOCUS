@@ -45,7 +45,7 @@ int tests::test_simpleci(){
 
    // analysis 
    vector<DTYPE> v0x(v.col(0),v.col(0)+dim);
-   coeff_population(space2, v0x, 1.e-3);
+   coeff_population(space2, v0x);
    auto SvNx = coeff_entropy(v0x);
    cout << "SvN=" << setprecision(12) << SvNx << endl;
    assert(std::abs(SvNx-0.176260153867) < thresh);
@@ -62,7 +62,7 @@ int tests::test_simpleci(){
 
    // analysis 
    vector<DTYPE> v0(vs.col(0),vs.col(0)+dim);
-   coeff_population(space2, v0, 1.e-3);
+   coeff_population(space2, v0);
    auto SvN = coeff_entropy(v0);
    cout << "SvN=" << setprecision(12) << SvN  << endl;
    assert(std::abs(SvN-0.176260153867) < thresh);
