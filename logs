@@ -33,8 +33,8 @@ LOGS
 
  * Optimized parallel version [DONE2021/10/02]
     - OpenMP support [DONE2021/09/03]
-	- Hx & decimation
-	- Initialization of CTNS
+ 	 - Hx & decimation
+	 - Initialization of CTNS
     - Z2 symmetry: {rZ2,cZ2}
         - Checked by diagonalizing fock::Hmat
     - better data structure for qtensor & oper_dict [DONE2021/10/02]
@@ -46,13 +46,13 @@ LOGS
     - onedot algorithm:
     	- generation of onedot_Hx formulae
     	- implemenation of onedot_Hx contraction [DONE2022/01/16]
-	  - adjoint of Hterm is treated in symbolic_onedot_Hx
-	- implementation of Kramers version of Hx [DONE2022/01/18]
-	  - different treatment of Hl,Hcr,{CS/SC,AP,BQ}
+	   - adjoint of Hterm is treated in symbolic_onedot_Hx
+	   - implementation of Kramers version of Hx [DONE2022/01/18]
+	   - different treatment of Hl,Hcr,{CS/SC,AP,BQ}
     - twodot algorithm:
     	- generation of twodot_Hx formulae [DONE2022/01/18]
     	- optimized formation of sigma vector [DONE2022/01/22]
-          - contract_qt4_qt2 (without intermediate/reshaping)
+      - contract_qt4_qt2 (without intermediate/reshaping)
     - renormalization algorithm:
 	 - generation of formulae 
          - optimized renormalization [DONE2022/02/17]
@@ -60,34 +60,34 @@ LOGS
         - onedot/twodot-ibond
         - renormalization [DONE2022/02/21]
     - profiling:
-	- benchmark for small systems
-	- minimize memory allocation / intermediates?
-	- make sure the code works for Fe4S4 & Fe8S7 with small D [DONE2022/02/28]
-	   - formulae correctly generated 
-           - use input for schd & fname to control whether write *.txt 
+	     - benchmark for small systems
+        - minimize memory allocation / intermediates?
+	     - make sure the code works for Fe4S4 & Fe8S7 with small D [DONE2022/02/28]
+	     - formulae correctly generated 
+        - use input for schd & fname to control whether write *.txt 
     - optimization of onedot & twodot algorithm:
-	- int1e only appears in oper_dot.h
+	     - int1e only appears in oper_dot.h
         - remove explicit H() in qt_qt:
-	  - revise qt3_qt2 without explicit H() 
-          - revise qt4_qt2 without explicit H() [DONE2022/02/23]
+	 - revise qt3_qt2 without explicit H() 
+        - revise qt4_qt2 without explicit H() [DONE2022/02/23]
         - preprocess onedot: 
-           - avoid memory allocation in sigma (onedot/twodot)
-	   - avoid memset?
-           - revise renormalization [DONE2022/02/27]
-	- preprocess twodot:
-	   - preallocation of workspace
-	   - contract_qt4_qt2_info [DONE2022/03/01]
+        - avoid memory allocation in sigma (onedot/twodot)
+	     - avoid memset?
+        - revise renormalization [DONE2022/02/27]
+        - preprocess twodot:
+	       - preallocation of workspace
+	       - contract_qt4_qt2_info [DONE2022/03/01]
     - better data structure? pointer? [DONE2022/03/18] 
-	- vtune profile stackblock for comparison [!!!] 
+	 - vtune profile stackblock for comparison [!!!] 
         - info only store offset or maps: [CRUCIAL PART!!!]
-	   - auto& blk3 = qt3(br,bc,bm) - avoid computation!
+	     - auto& blk3 = qt3(br,bc,bm) - avoid computation!
         - avoid daxpy?
     - low-level implementation of contract without dtensor!
-	- contract_qt3_qt2_info
-	- contract_qt4_qt2_info
-	- contract_qt3_qt3_info
-	- openmp error due to qt2.conjugate() for complex case [1_lih3_dcg]
-	- conjugate is treated outside contract_opxwf!
+	     - contract_qt3_qt2_info
+	     - contract_qt4_qt2_info
+	     - contract_qt3_qt3_info
+  	 - openmp error due to qt2.conjugate() for complex case [1_lih3_dcg]
+	 - conjugate is treated outside contract_opxwf!
     - minimal operation count: bipart_oper with factorization
 
  * Better IO strategy: 
@@ -95,11 +95,11 @@ LOGS
     - concurrency: separate computation & save for saving oper_save [DONE2022/04/09]
     - remove hdf5 support: compare against iostream (timing)	
     - new computational model:
-	1. fetch qops from memory / disk
-	2. compute [Hx/renorm] + save previous qops [threaded]
-	3. fkept is updated, the old qops will be released
-        4. delete unused file at a given bond
- ### NOT DONE YET ###
+	   1. fetch qops from memory / disk
+	   2. compute [Hx/renorm] + save previous qops [threaded]
+	   3. fkept is updated, the old qops will be released
+      4. delete unused file at a given bond
+    ### NOT DONE YET ###
     - data compression? 
     - reduce half AB/PQ operators?
 
@@ -120,15 +120,15 @@ LOGS
     - task_dmrg & lastdot
     - change the name of the file rcanon_new.info to avoid overwrite later
     - if the operator files are not deleted:
-	 task_opt & rcanon_load & rcanon_file newname.info
+	      task_opt & rcanon_load & rcanon_file newname.info
       else rebuild the operators
-	 task_dmrg & rcanon_load & rcanon_file newname.info
+	      task_dmrg & rcanon_load & rcanon_file newname.info
 
  * Better sweep performances [DONE@20220714]
     - Reducing the number of Hx in Davidson solver:
-    	- tuning size of subspace & preconditioning
-        - nbuff>=4 (larger value does not matter too much); keep 2 delU for restart!
-	- LOBPCG like improvement 
+    - tuning size of subspace & preconditioning
+    - nbuff>=4 (larger value does not matter too much); keep 2 delU for restart!
+	 - LOBPCG like improvement 
     - Sweep decimation:
         - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are 
           almost exact, unless some quantum numbers are missing from the start.
@@ -152,20 +152,20 @@ LOGS
 
  * Towards large-scale parallelization [DONE2022/XX/XX]
     - profile openmp/mpi onedot/twodot version with large D
-	- note: when noise is added, the results can be different 
-	- analyze why the parallel efficiency is low?
-	- 1. sort formulae + static/dynamic/guided,chunksize [DONE2022/03/05]
-	- 2. private workspace?
-	- 3. reduction
+	 - note: when noise is added, the results can be different 
+	 - analyze why the parallel efficiency is low?
+	 - 1. sort formulae + static/dynamic/guided,chunksize [DONE2022/03/05]
+	 - 2. private workspace?
+	 - 3. reduction
     - GPU implementation 
     - merged wf4[lc1,c2r] implementation?
 
  * Other improvements for special usages:
     - different symmetry, in particular, kramers version:
-	- complex arithmetic
-	- how to avoid repeated K()?
+	 - complex arithmetic
+	 - how to avoid repeated K()?
     - other topologies:
-	- comb tns
+	 - comb tns
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]
@@ -224,26 +224,27 @@ KNOWN PROBLEMS
  4. The truncation thresh_sig2=1.e-14 may lead some differences on the number of renormalized states,
     such that the optimized energies can be slightly different with maxcycle truncated.
 
-=== 2023 ===
+=== 2023 VMC ===
 
  * Exact diagonalization by construct full Hamtiltonian [DONE@20230117]
 
  * VMC + iRBM:
    - opt_exact [DONE@20230113]
    - various RBM ansatz [DONE@20230114]
-
-   - LBFGS/Adam with opt_exact for reference 
-
    - stochastic reconfiguration (SR): SVD-based?
- 
-   - optimizer: BFGS [KEY for accuracy]
-
    - opt_sample: MCMC
-
    - schedule for nhiden?
    - pretraining by SCI
-
-   - scale up: parallelization by GPU?
    - iron-sulfur clusters: frustrated spin systems
 
+=== 2023 DMRG ===
+
+ * Setup Fe2S2 test [dell?] for hvec=6/7?
+ * Current best estimate for Fe4S4 and Fe8S7?
+ * Clean up Hx with Chunyang
+ * Bugs:
+   - Fix bug in parallel IO
+   - Fix bug in GPU implementation - wrong results sometimes?
+ * Support Renorm with GPU
+ * Support Kramers version
 
