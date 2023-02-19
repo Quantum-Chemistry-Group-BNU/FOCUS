@@ -1,5 +1,5 @@
 
-machine = dell #lenovo
+machine = mac #lenovo
 
 INCLUDE = -I.
 ifeq ($(strip $(machine)), lenovo)
@@ -13,10 +13,10 @@ else ifeq ($(strip $(machine)), dell)
 else
    CXX = g++
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
-   MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
+   MATHLIB = /opt/anaconda3/envs/work/lib
 endif
 
-LIBS = -L$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl 
+LIBS = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl 
 LD       = $(CXX)
 LDFLAGS  = $(CXXFLAGS) $(LIBS)
 #LFLAGS = -shared -fPIC

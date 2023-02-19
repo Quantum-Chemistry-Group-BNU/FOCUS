@@ -35,6 +35,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <iomanip>
+#include <array>
 #include "zquatev.h"
 #include "f77.h"
 
