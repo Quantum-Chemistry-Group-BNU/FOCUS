@@ -42,7 +42,7 @@ else
       LFLAGS += -lboost_mpi-mt-x64
    endif
 endif
-FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include #-gdwarf-4 -gstrict-dwarf
+FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -gdwarf-4 -gstrict-dwarf # dwarf error in ld
  
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
