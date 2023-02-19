@@ -1,5 +1,5 @@
 
-machine = mac #dell #lenovo
+machine = dell2 #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -25,6 +25,13 @@ else ifeq ($(strip $(machine)), dell)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
+else ifeq ($(strip $(machine)), dell2)
+   MATHLIB = /home/dell/intel/oneapi/mkl/2022.0.2
+   BOOST = /home/dell/users/lzd/boost/install
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi-mt-x64
+   endif
 else
    #MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    #BOOST = /Users/zhendongli/Desktop/FOCUS_program/boost/install
@@ -35,14 +42,14 @@ else
       LFLAGS += -lboost_mpi-mt-x64
    endif
 endif
-FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include 
+FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -gdwarf-4 -gstrict-dwarf
  
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
       FLAGS += -DDEBUG -g -O0 -Wall 
    else
-      FLAGS += -DNDEBUG -g -O2 -Wall 
+      FLAGS += -DNDEBUG -O2 -Wall 
    endif
    ifeq ($(strip $(USE_MPI)),no)
       CXX = g++
@@ -57,7 +64,7 @@ else
    ifeq ($(strip $(DEBUG)), yes)
       FLAGS += -DDEBUG -g -O0 -Wall 
    else 
-      FLAGS += -DNDEBUG -g -O2 -Wall 
+      FLAGS += -DNDEBUG -O2 -Wall 
    endif 
    ifeq ($(strip $(USE_MPI)),no)
       CXX = icpc
@@ -202,7 +209,7 @@ depend:
 	echo " CXX = " $(CXX); \
 	echo " CC = " $(CC); \
 	set -e; \
-	mkdir -p $(BIN_DIR) $(OBJ_DIR); \
+	mkdir -p $(BIN_DIR) $(OBJ_DIR) $(LIB_DIR); \
 	echo $(SRC_ALL); \
 	$(CXX) $(FLAGS) -I${BOOST}/include -MM $(SRC_ALL) > $$$$.depend; \
 	sed 's,\([^.]*\.o\),$(OBJ_DIR)/\1,' < $$$$.depend > .depend; \
