@@ -249,7 +249,7 @@ $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
 
 $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ctns.o $(LFLAGS) -L$(LIB_DIR) -lctns
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ctns.o -L$(LIB_DIR) -lctns $(LFLAGS) 
 
 # Main:
 $(BIN_DIR)/exactdiag.x: $(OBJ_DIR)/exactdiag.o $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a
@@ -266,11 +266,11 @@ $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(LIB_DIR)/libci.a
 
 $(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/prectns.o $(LFLAGS) -L$(LIB_DIR) -lctns
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/prectns.o -L$(LIB_DIR) -lctns $(LFLAGS)
 
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/ctns.o $(LFLAGS) -L$(LIB_DIR) -lctns
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/ctns.o -L$(LIB_DIR) -lctns $(LFLAGS)
 
 $(BIN_DIR)/vmc.x: $(OBJ_DIR)/vmc.o $(LIB_DIR)/libvmc.a
 	@echo "=== LINK $@"
