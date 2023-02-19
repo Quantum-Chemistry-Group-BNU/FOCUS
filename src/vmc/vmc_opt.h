@@ -26,10 +26,10 @@ namespace vmc{
             const double ecore,
             const input::schedule& schd){
          int size = 1, rank = 0;
-#ifndef SERIAL
-         size = icomb.world.size();
-         rank = icomb.world.rank();
-#endif  
+//#ifndef SERIAL
+//         size = icomb.world.size();
+//         rank = icomb.world.rank();
+//#endif  
          const bool debug = (rank==0); 
          if(debug) std::cout << "\nvmc::opt_exact" << std::endl;
          auto t0 = tools::get_time();
@@ -105,10 +105,10 @@ namespace vmc{
             const input::schedule& schd,
             const fock::onspace& sci_space){
          int size = 1, rank = 0;
-#ifndef SERIAL
-         size = icomb.world.size();
-         rank = icomb.world.rank();
-#endif  
+//#ifndef SERIAL
+//         size = icomb.world.size();
+//         rank = icomb.world.rank();
+//#endif  
          const bool debug = (rank==0); 
          if(debug) std::cout << "\nvmc::opt_sample" << std::endl;
          auto t0 = tools::get_time();
