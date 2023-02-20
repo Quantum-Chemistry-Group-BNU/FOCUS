@@ -1,10 +1,10 @@
 
-machine = dell2 #dell #lenovo
+machine = mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
-USE_MPI = no #yes
-USE_OPENMP = no #yes
+USE_MPI = yes
+USE_OPENMP = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -32,7 +32,7 @@ else ifeq ($(strip $(machine)), dell2)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
-else
+else ifeq ($(strip $(machine)), mac)
    #MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
    #BOOST = /Users/zhendongli/Desktop/FOCUS_program/boost/install
    MATHLIB = /opt/anaconda3/envs/work/lib
@@ -42,7 +42,7 @@ else
       LFLAGS += -lboost_mpi-mt-x64
    endif
 endif
-FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -gdwarf-4 -gstrict-dwarf # dwarf error in ld
+FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include #-gdwarf-4 -gstrict-dwarf # dwarf error in ld
  
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
