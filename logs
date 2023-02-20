@@ -243,8 +243,29 @@ KNOWN PROBLEMS
  * Current best estimate for Fe4S4 and Fe8S7?
  * Clean up Hx with Chunyang
  * Bugs:
-   - Fix bug in parallel IO
+   - Fix bug in parallel IO [mpi problem]
    - Fix bug in GPU implementation - wrong results sometimes?
+   - Fix bug in memory issues
  * Support Renorm with GPU
  * Support Kramers version
 
+=== Supported options ===
+ - alg_hvec:
+    =0: oldest version
+    =1: symbolic formulae + dynamic allocation of memory
+    =2: symbolic formulae + preallocation of workspace
+    =3: symbolic formulae (factorized) + preallocation of workspace
+    =4: symbolic formulae + intermediates + preallocation of workspace [Hxlst]
+    =5: symbolic formulae + intermediates + preallocation of workspace [Hxlst2]
+    =6: symbolic formulae + intermediates + preallocation of workspace [BatchGEMM]
+    =7: symbolic formulae + intermediates + preallocation of workspace [GPU]
+ - batchgemm:
+    =0: xgemm_omp
+    =1: xgemm_batch_cpu
+    =2: xgemm_batch_gpu
+    =3: xgemm_batch_gpu_precopy
+ - alg_renorm:
+    =0: oldest version
+    =1: symbolic formulae + dynamic allocation of memory
+    =2: symbolic formulae + preallocation of workspace
+ 
