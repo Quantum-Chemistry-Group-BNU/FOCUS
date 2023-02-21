@@ -137,7 +137,7 @@ namespace input{
          int hxorder = 0;
          int batchgemm = 0;
          int batchsize = 0;
-         double batchmem = 0.0; // in GB
+         int batchmem = -1; // in GB
          // dvdson
          int cisolver = 1;
          int maxcycle = 30;

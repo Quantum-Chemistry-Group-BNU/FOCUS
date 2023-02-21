@@ -243,9 +243,9 @@ KNOWN PROBLEMS
  * Current best estimate for Fe4S4 and Fe8S7?
  * Clean up Hx with Chunyang
  * Bugs:
+   - Fix bug in memory issues: statistics 
    - Fix bug in parallel IO [mpi problem]
    - Fix bug in GPU implementation - wrong results sometimes?
-   - Fix bug in memory issues
  * Support Renorm with GPU
  * Support Kramers version
 

@@ -114,7 +114,7 @@ endif
 ifeq ($(strip $(USE_GPU)), yes)
    CUDA_DIR= /home/dell/anaconda3/envs/pytorch
    MAGMA_DIR = ../magma/magma-2.6.1
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
+   FLAGS += -DGPU -DUSE_CUDA_OPERATION -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static
 endif
 

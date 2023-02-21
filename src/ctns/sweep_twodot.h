@@ -400,10 +400,6 @@ namespace ctns{
          }else if(schd.ctns.alg_hvec == 7){
 
             // BatchGEMM on GPU
-            if(std::abs(schd.ctns.batchmem) < 1.e-10){
-               std::cout << "error: batchmem should be set!" << std::endl;
-               exit(1);
-            }
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
@@ -437,7 +433,22 @@ namespace ctns{
             }
 
             // GPU: copy operators (qops_dict & inter)
-            size_t gpumem_tot = std::ceil(schd.ctns.batchmem*std::pow(1024,3));
+            size_t free, total, gpumem_tot;
+            CUDA_CHECK(cudaMemGetInfo( &free, &total ));
+            if(schd.ctns.batchmem == -1){
+               gpumem_tot = std::ceil(0.95*free);
+            }else if(schd.ctns.batchmem > 0){
+               gpumem_tot = schd.ctns.batchmem*std::pow(1024,3);
+               if(gpumem_tot >= free){
+                  std::cout << "error: batchmem exceed free GPU memory!" << std::endl;
+                  std::cout << "free=" << free << " batchmem=" << gpumem_tot << std::endl;
+                  exit(1);
+               }
+            }else{
+               std::cout << "error: batchmem should be set correctly!" 
+                         << schd.ctns.batchmem<< std::endl;
+               exit(1);
+            }
             // 1. allocate memery on GPU
             size_t opertot = qops_dict.at("l").size()
                + qops_dict.at("r").size()
@@ -527,7 +538,7 @@ namespace ctns{
                std::cout << "error: in sufficient GPU memory!" << std::endl; // for case schd.ctns.batchsize is set
                exit(1);
             }
- 
+
             // generate mmtasks
             int icase = 1; // seperate (NN,NT,TN) for MAGMA
             mmtasks.resize(Hxlst2.size());
