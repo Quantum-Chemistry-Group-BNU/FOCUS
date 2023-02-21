@@ -400,8 +400,8 @@ namespace ctns{
          }else if(schd.ctns.alg_hvec == 7){
 
             // BatchGEMM on GPU
-            if(schd.ctns.batchsize == 0 && std::abs(schd.ctns.batchmem) < 1.e-10){
-               std::cout << "error: batchsize/batchmem should be set!" << std::endl;
+            if(std::abs(schd.ctns.batchmem) < 1.e-10){
+               std::cout << "error: batchmem should be set!" << std::endl;
                exit(1);
             }
             // symbolic formulae + intermediates + preallocation of workspace
@@ -437,12 +437,29 @@ namespace ctns{
             }
 
             // GPU: copy operators (qops_dict & inter)
+            size_t gpumem_tot = std::ceil(schd.ctns.batchmem*std::pow(1024,3));
             // 1. allocate memery on GPU
             size_t opertot = qops_dict.at("l").size()
                + qops_dict.at("r").size()
                + qops_dict.at("c1").size()
                + qops_dict.at("c2").size()
                + inter.size();
+            size_t gpumem_oper = sizeof(Tm)*opertot;
+            size_t gpumem_dvdson = sizeof(Tm)*2*ndim;
+            size_t gpumem_use = gpumem_oper + gpumem_dvdson;
+            if(schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                         << " gpumem_tot(GB)=" << gpumem_tot/std::pow(1024.0,3)
+                         << " gpumem_use(GB)=" << gpumem_use/std::pow(1024.0,3)
+                         << " (oper,dvdson)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
+                         << "," << gpumem_dvdson/std::pow(1024.0,3)
+                         << std::endl;
+            }
+            if(gpumem_use > gpumem_tot){
+               std::cout << "error: insufficient GPU memory for storing!" << std::endl;
+               exit(1); 
+            }
+
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMalloc((void**)&dev_opaddr, opertot*sizeof(Tm)));
 #else
@@ -478,22 +495,45 @@ namespace ctns{
             opaddr[4]=dev_inter_opaddr;
 
             // determine the size of batch
+            size_t maxbatch = 0;
+            for(int i=0; i<Hxlst2.size(); i++){
+               maxbatch = std::max(maxbatch, Hxlst2[i].size());
+            } // i
+
             size_t batchsize = 0;
             if(schd.ctns.batchsize > 0){
-               batchsize = schd.ctns.batchsize;
+               batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             }else{
-               batchsize = std::ceil((schd.ctns.batchmem - tools::sizeGB<Tm>(opertot+2*ndim))*std::pow(1024,3)/(blksize*2*sizeof(Tm)));
+               assert(gpumem_tot > gpumem_use);
+               batchsize = std::floor(double(gpumem_tot - gpumem_use)/(sizeof(Tm)*blksize*2));
+               batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
+               if(batchsize == 0){
+                  std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
+               }
             }
-            if(batchsize <= 0){
-               std::cout << "error: in sufficient memory!" << std::endl;
+            size_t gpumem_tmp = batchsize*blksize*2*sizeof(Tm);
+            gpumem_use += gpumem_tmp;
+            if(schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                         << " gpumem_tot(GB)=" << gpumem_tot/std::pow(1024.0,3)
+                         << " gpumem_use(GB)=" << gpumem_use/std::pow(1024.0,3)
+                         << " (oper,dvdson,tmp)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
+                         << "," << gpumem_dvdson/std::pow(1024.0,3)
+                         << "," << gpumem_tmp/std::pow(1024.0,3)
+                         << " batchsize=" << batchsize
+                         << std::endl;
+            }
+            if(gpumem_use > gpumem_tot){
+               std::cout << "error: in sufficient GPU memory!" << std::endl; // for case schd.ctns.batchsize is set
                exit(1);
             }
+ 
             // generate mmtasks
-            int icase = 1;
+            int icase = 1; // seperate (NN,NT,TN) for MAGMA
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<Hxlst2.size(); i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
-                     blksize*2, schd.ctns.hxorder, 1);
+                     blksize*2, schd.ctns.hxorder, icase);
                if(debug && schd.ctns.verbose>1){
                   std::cout << "rank=" << rank << " iblk=" << i 
                      << " mmtasks.totsize=" << mmtasks[i].totsize
@@ -502,6 +542,7 @@ namespace ctns{
                      << std::endl;
                }
             } // i
+            // save for analysis of BatchGEMM
             if(isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
                for(int i=0; i<Hxlst2.size(); i++){
                   std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
@@ -509,23 +550,15 @@ namespace ctns{
                }
             }
 
-            // 4. allocate memory for Davidson: x,worktot
+            // 4. allocate memory for Davidson: x,y,tmp
             worktot = 2*ndim + batchsize*blksize*2;
-            if(debug && schd.ctns.verbose>0){
-               std::cout << "rank=" << rank
-                  << " blksize=" << blksize
-                  << " batchsize=" << batchsize
-                  << " opertot(GB)=" << tools::sizeGB<Tm>(opertot)
-                  << " worktot(GB)=" << tools::sizeGB<Tm>(worktot)
-                  << " gpu(GB)=" << tools::sizeGB<Tm>(opertot+worktot)
-                  << std::endl;
-            }
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMalloc((void**)&dev_workspace, worktot*sizeof(Tm)));
 #else
             MAGMA_CHECK(magma_dmalloc((double**)(&dev_workspace), worktot));
 #endif
 
+            // GPU version of Hx
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 

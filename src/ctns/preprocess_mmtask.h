@@ -58,7 +58,7 @@ namespace ctns{
          batchgemm = _batchgemm;
          batchsize = _batchsize;
          nbatch = totsize/batchsize;
-         if(totsize%batchsize != 0) nbatch += 1;
+         if(totsize%batchsize != 0) nbatch += 1; // thus, this works even for totsize < batchsize
          mmbatch2.resize(nbatch);
          mmreduce.resize(nbatch);
          // process Hxlst

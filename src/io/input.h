@@ -138,7 +138,7 @@ namespace input{
          int batchgemm = 0;
          int batchsize = 0;
          double batchmem = 0.0; // in GB
-                                // dvdson
+         // dvdson
          int cisolver = 1;
          int maxcycle = 30;
          int nbuff = 4; // should be greater than 2
