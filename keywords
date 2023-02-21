@@ -1,0 +1,106 @@
+
+=== A typical input file ===
+
+dtype 0
+nelec 30
+twoms 0 
+integral_file moleinfo/fmole.info
+scratch ./scratch
+
+$sci
+dets
+0 2 4 6 8 10 12 14 16 18 20 22 24 36 38   1 3 15 17 19 21 23 25 27 29 31 33 35 37 39
+end
+flip
+nroots 2 
+schedule
+0 1.e-3
+#3 5.e-4
+#6 1.e-4
+#9 5.e-5
+end
+maxiter 3
+$end
+
+$ctns
+verbose 1
+qkind rNSz
+maxdets 1000 # keep dets as much as possible
+topology_file topology/topo0
+thresh_proj 1.e-14
+thresh_ortho 1.e-10 
+schedule
+0 2 1000 1.e-4 0.e0 
+2 2 2000 1.e-4 0.e0
+4 2 3000 1.e-4 0.e0
+6 2 4000 1.e-4 0.e0
+8 2 5000 1.e-4 0.e0
+10 2 6000 1.e-4 0.e0
+12 2 7000 1.e-4 0.e0
+14 2 8000 1.e-4 0.e0
+16 2 9000 1.e-4 0.e0
+18 2 10000 1.e-4 0.e0
+end
+maxsweep 20
+maxcycle 2
+task_dmrg
+alg_hvec 7
+batchgemm 3
+batchmem 5
+alg_renorm 2
+$end
+
+=== Common settings ===
+
+ - dtype: data type used in calculations =0 double, =1 complex
+ - nelec: Nalpha+Nbeta - no. of electrons
+ - twoms: 2*(Nalpha-Nbeta)
+ - integral_file: directory of the integral file
+ - scratch: scratch directory
+
+=== SCI: selected configuration interaction ===
+
+ - dets ... end: occupied orbitals (abab ordering) in the starting determinant 
+                 multiple determinants are allowed by separate lines
+ - flip: useful for twoms=0, which will add flip determinant
+ - nroots: no. of states to be computed
+ - schedule: iteration & tolerance for selecting determinants |Hai*ci|>eps1
+ - maxiter: max no of SCI iterations
+
+=== CTNS: comb tensor network or density matrix renormalization group ===
+
+ - verbose: 0,1,2 - print level for debugging
+ - qkind: rNSz - symmetry of the calculation: rNSz - real, N, Sz
+ - topology_file: topology file for CTNS
+ - maxdets: max no. of det used in initialization
+ - thresh_proj: threshold for projection in initialization
+ - thresh_ortho: threshold for checking right canonical form in initialization
+ - schedule: sweep schdule
+   0 2 1000 1.e-4 0.e0: iter, dots, dcut, tol (in Davidson), noise
+ - maxsweep: max no. of sweeps
+ - maxcycle: max no. of iteration in Davidson iteration
+ - task_dmrg: perform dmrg optimization
+ - alg_hvec:
+    =0: oldest version
+    =1: symbolic formulae + dynamic allocation of memory
+    =2: symbolic formulae + preallocation of workspace
+    =3: symbolic formulae (factorized) + preallocation of workspace
+    =4: symbolic formulae + intermediates + preallocation of workspace [Hxlst]
+    =5: symbolic formulae + intermediates + preallocation of workspace [Hxlst2]
+    =6: symbolic formulae + intermediates + preallocation of workspace [BatchGEMM]
+    =7: symbolic formulae + intermediates + preallocation of workspace [GPU]
+ - batchgemm: relevant only for alg_hvec = 6 and 7
+    =0: xgemm_omp
+    =1: xgemm_batch_cpu
+    =2: xgemm_batch_gpu
+    =3: xgemm_batch_gpu_precopy
+ - batchmem: GPU memory to be used in GB
+ - alg_renorm:
+    =0: oldest version
+    =1: symbolic formulae + dynamic allocation of memory
+    =2: symbolic formulae + preallocation of workspace
+ - iomode: =0 (default: no compression)
+ - ioasync: =0 (default: sequential)
+ - lastdot: compute wavefunction for the last dot, which is necessary for restart
+            and property calculations later on.
+
