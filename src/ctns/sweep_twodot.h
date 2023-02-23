@@ -433,22 +433,6 @@ namespace ctns{
             }
 
             // GPU: copy operators (qops_dict & inter)
-            size_t free, total, gpumem_tot;
-            CUDA_CHECK(cudaMemGetInfo( &free, &total ));
-            if(schd.ctns.batchmem == -1){
-               gpumem_tot = std::ceil(0.95*free);
-            }else if(schd.ctns.batchmem > 0){
-               gpumem_tot = schd.ctns.batchmem*std::pow(1024,3);
-               if(gpumem_tot >= free){
-                  std::cout << "error: batchmem exceed free GPU memory!" << std::endl;
-                  std::cout << "free=" << free << " batchmem=" << gpumem_tot << std::endl;
-                  exit(1);
-               }
-            }else{
-               std::cout << "error: batchmem should be set correctly!" 
-                         << schd.ctns.batchmem<< std::endl;
-               exit(1);
-            }
             // 1. allocate memery on GPU
             size_t opertot = qops_dict.at("l").size()
                + qops_dict.at("r").size()

@@ -24,3 +24,4 @@ src.tar
 .*.swo
 .*.swp
 *.sh
+examples/fe2s2/input.dat

@@ -50,26 +50,31 @@ namespace ctns{
             // GPU: copy x vector (dimension=ndim)
             double time_cost_copy=0.0;
             double time_cost_gemm_kernel=0.0;
-            double time_cost_gemm_copy=0.0;
+            double time_cost_ycopy=0.0;
             double time_cost_gemm_reduction=0.0;
             struct timeval t0_time_copy, t1_time_copy;
             struct timeval t0_time_gemm_kernel, t1_time_gemm_kernel;
-            struct timeval t0_time_gemm_copy, t1_time_gemm_copy;
+            struct timeval t0_time_ycopy, t1_time_ycopy;
             struct timeval t0_time_gemm_reduction, t1_time_gemm_reduction;
 
             // from xCPU to x
             gettimeofday(&t0_time_copy, NULL);
+#ifdef USE_HIP
+            HIP_CHECK(hipMemcpy(x, xCPU,ndim*sizeof(Tm), hipMemcpyHostToDevice));
+            // TODOs: memset yGPU
+            HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
+#else
+            CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
 #else
-                magma_dsetvector(ndim, (double*)xCPU, 1, (double*)x,  1,  magma_queue);
+				MAGMA_CHECK(magma_dsetvector(ndim, (double*)xCPU, 1, (double*)x,  1,  magma_queue));
 #endif
+#endif //USE_HIP
             gettimeofday(&t1_time_copy, NULL);
             
             time_cost_copy = ((double)(t1_time_copy.tv_sec - t0_time_copy.tv_sec) + (double)(t1_time_copy.tv_usec - t0_time_copy.tv_usec)/1000000.0);
 
-            // TODOs: memset yGPU
-            cudaMemset(y, 0, ndim*sizeof(Tm));
 
             Tm* ptrs[7];
             ptrs[0] = opaddr[0];
@@ -82,13 +87,14 @@ namespace ctns{
 
             // loop over nonzero blocks
             double cost = 0.0;
+            double flops_G=0.0;
             for(int i=0; i<mmtasks.size(); i++){
                 auto& mmtask = mmtasks[i];
                 cost += mmtask.cost;
                 for(int k=0; k<mmtask.nbatch; k++){
                     // gemm on GPU
                     gettimeofday(&t0_time_gemm_kernel, NULL);
-                    mmtask.kernel(k, ptrs);
+                    flops_G += mmtask.kernel(k, ptrs);
                     gettimeofday(&t1_time_gemm_kernel, NULL);
                     // reduction
                     gettimeofday(&t0_time_gemm_reduction, NULL);
@@ -102,27 +108,38 @@ namespace ctns{
 
                 } // k
             } // i
-            std::cout << "--- time_cost_gemm_kernel=" << time_cost_gemm_kernel << std::endl;
-            std::cout << "--- time_cost_gemm_reduction=" << time_cost_gemm_reduction << std::endl;
-            std::cout << "--- cost_gemm_kernel=" << cost 
-                      << " gflops=kernel/time=" << cost/time_cost_gemm_kernel
-                      << std::endl;
-            t_kernel_ibond = time_cost_gemm_kernel;
-            t_reduction_ibond = time_cost_gemm_reduction;
+
+            if(rank==0)
+            {
+                std::cout<<"rank="<<rank<<"; X time_copy="<<time_cost_copy<<" Second"<<std::endl;
+                std::cout<<"rank="<<rank<<"; time_gemm_kernel="<<time_cost_gemm_kernel<<" Second"<<std::endl;
+                std::cout<<"rank="<<rank<<"; time_gemm_reduction="<<time_cost_gemm_reduction<<" Second"<<std::endl;
+                std::cout<<"rank="<<rank<<"; gflops=2*m*n*k/time = "<<flops_G/1.0e9/time_cost_gemm_kernel<<" gflops;  flops_G:"<<flops_G/1.0e9<<" Glops"<<std::endl;
+            }
+            t_kernel_ibond += time_cost_gemm_kernel;
+            t_reduction_ibond += time_cost_gemm_reduction;
 
             // TODOs: copy yGPU to yCPU
-            gettimeofday(&t0_time_gemm_copy, NULL);
+            gettimeofday(&t0_time_ycopy, NULL);
+#ifdef USE_HIP
+            HIP_CHECK(hipMemcpy(yCPU,y, ndim*sizeof(Tm), hipMemcpyDeviceToHost));
+#else
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMemcpy(yCPU,y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
 #else
             magma_dgetvector(ndim, (double*)y, 1, (double*)yCPU,  1,  magma_queue);
 #endif
-            gettimeofday(&t1_time_gemm_copy, NULL);
-            time_cost_gemm_copy += ((double)(t1_time_gemm_copy.tv_sec - t0_time_gemm_copy.tv_sec) 
-                                  + (double)(t1_time_gemm_copy.tv_usec - t0_time_gemm_copy.tv_usec)/1000000.0);
-
+#endif
             // add const term
             if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);
+
+            gettimeofday(&t1_time_ycopy, NULL);
+            time_cost_ycopy += ((double)(t1_time_ycopy.tv_sec - t0_time_ycopy.tv_sec) 
+                                  + (double)(t1_time_ycopy.tv_usec - t0_time_ycopy.tv_usec)/1000000.0);
+            if(rank==0)
+            {
+                std::cout<<"rank="<<rank<<"; Y time_cost_copy + xaxpy_CPU="<<time_cost_ycopy<<" Second"<<std::endl;
+            }
         }
 
 } // ctns
