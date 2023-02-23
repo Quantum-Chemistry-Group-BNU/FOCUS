@@ -11,14 +11,14 @@ namespace ctns{
         void display(){
             const double toGB = 1.0/std::pow(1024.0,3);
             tot = comb + oper + dvdson + hvec + renorm;
-            std::cout << "+++++ CPUmem(GB): tot=" << tot*toGB
+            std::cout << "===== CPUmem(GB): tot=" << tot*toGB
                       << " (comb,oper,dvdson,hvec,renorm)=" 
                       << comb*toGB << ","
                       << oper*toGB << ","
                       << dvdson*toGB << ","
                       << hvec*toGB << ","
 		      << renorm*toGB
-                      << " +++++" << std::endl;
+                      << " =====" << std::endl;
         }
         public:
             size_t comb = 0;
