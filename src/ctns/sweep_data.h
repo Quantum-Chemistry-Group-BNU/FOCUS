@@ -139,7 +139,7 @@ namespace ctns{
             const auto& eopt = opt_result[isweep][ibond].eopt;
             int dots = ctrls[isweep].dots;
             for(int i=0; i<nroots; i++){
-                std::cout << " optimized energies:"
+                std::cout << "optimized energies:"
                     << " isweep=" << isweep 
                     << " dots=" << dots
                     << " ibond=" << ibond 

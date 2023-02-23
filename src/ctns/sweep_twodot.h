@@ -600,7 +600,7 @@ namespace ctns{
          oper_timer.start();
          twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond);
-         if(debug && schd.ctns.verbose>1){
+         if(debug && schd.ctns.verbose>0){
             sweeps.print_eopt(isweep, ibond);
             if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
          }
