@@ -13,6 +13,7 @@ namespace ctns{
       struct MMbatch{
          public:
             void init(const MMlist<Tm>& MMlst);
+#if 0
             void kernel(const int batchgemm, Tm** ptrs){
                if(batchgemm == 0){
                   this->xgemm_omp(ptrs);   
@@ -29,11 +30,36 @@ namespace ctns{
                   exit(1);
                }
             }
+#else
+
+            double kernel(const int batchgemm, Tm** ptrs){
+                double flops = 0;
+               if(batchgemm == 0){
+                  this->xgemm_omp(ptrs);   
+               }else if(batchgemm == 1){
+                  this->xgemm_batch_cpu(ptrs);   
+#ifdef GPU 
+               }else if(batchgemm == 2){
+                  this->xgemm_batch_gpu(ptrs);    
+               }else if(batchgemm == 3){
+                  flops += this->xgemm_batch_gpu_precopy(ptrs);
+#endif 
+               }else{
+                  std::cout << "error: no such option in MMbatch::kernel batchgemm=" << batchgemm << std::endl;
+                  exit(1);
+               }
+               return flops;
+            }
+#endif
             void xgemm_omp(Tm** ptrs);
             void xgemm_batch_cpu(Tm** ptrs);
 #ifdef GPU
             void xgemm_batch_gpu(Tm** ptrs);
+#if 0
             void xgemm_batch_gpu_precopy(Tm** ptrs);
+#else
+            double xgemm_batch_gpu_precopy(Tm** ptrs);
+#endif
 #endif
             void save(const std::string fname){
                std::ofstream fout(fname);
@@ -136,6 +162,7 @@ namespace ctns{
          }
       }
 
+#if 0
    template <typename Tm>
       void MMbatch<Tm>::xgemm_batch_gpu_precopy(Tm** ptrs){
          int a_total=0;
@@ -156,6 +183,33 @@ namespace ctns{
                   Cptr.data(), M.data(), size, a_total, b_total, c_total);
          }
       }
+#else
+   template <typename Tm>
+      double MMbatch<Tm>::xgemm_batch_gpu_precopy(Tm** ptrs){
+         int a_total=0;
+         int b_total=0;
+         int c_total=0;
+
+         double flops=0;
+         // initialization 
+         for(int i=0; i<size; i++){
+            Aptr[i] = ptrs[locA[i]] + offA[i];
+            Bptr[i] = ptrs[locB[i]] + offB[i];
+            Cptr[i] = ptrs[locC[i]] + offC[i];
+            a_total +=M[i]*K[i];
+            b_total +=K[i]*N[i];
+            c_total +=M[i]*N[i];
+
+            flops += 2*M[i]*N[i]*K[i];
+         }
+         if(size > 0){
+            linalg::xgemm_batch_gpu_precopy(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
+                  Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
+                  Cptr.data(), M.data(), size, a_total, b_total, c_total);
+         }
+         return flops;
+      }
+#endif
 #endif
 
 } // ctns

@@ -7,7 +7,7 @@ extern magma_queue_t magma_queue =0;
 extern void* dev_addr = nullptr;
 extern size_t gpumem_tot = 0;
 
-void gpu_init()
+void gpu_init(int rank)
 {
    magma_queue = 0;
    int device_id = -1;
@@ -41,7 +41,7 @@ void gpu_init()
    }
    gpumem_tot = free - MAX_GPU_PAGE;
    std::cout << "allocated gpumem_tot (GB) = " 
-             << tools::sizeGB<byte>(gpumem_tot)
+             << tools::sizeGB<std::byte>(gpumem_tot)
              << std::endl;
 
 #ifdef USE_HIP

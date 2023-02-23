@@ -157,7 +157,7 @@ int main(int argc, char *argv[]){
    io::create_scratch(schd.scratch, (rank == 0));
 
 #ifdef GPU
-   gpu_init();
+   gpu_init(rank);
 #endif
 
    if(schd.ctns.qkind == "rZ2"){

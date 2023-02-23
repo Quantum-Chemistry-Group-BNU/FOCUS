@@ -61,6 +61,9 @@ extern const size_t MAX_GPU_PAGE;
     } while( 0 )
 
 #endif //USE_HIP
+
+void gpu_init(int rank);
+void gpu_clean();
 #endif //GPU_ENV_H
 #endif //GPU
 

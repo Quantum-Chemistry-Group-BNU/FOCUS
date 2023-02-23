@@ -27,12 +27,22 @@ namespace ctns{
                   }
                }
             }
+#if 0
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
                for(int i=0; i<mmbatch2[k].size(); i++){
                   mmbatch2[k][i].kernel(batchgemm, ptrs);
                }
             }
+#else
+            double kernel(const int k, Tm** ptrs){
+                double flops=0;
+               for(int i=0; i<mmbatch2[k].size(); i++){
+                  flops += mmbatch2[k][i].kernel(batchgemm, ptrs);
+               }
+               return flops;
+            }
+#endif
             // reduction of y[:] = \sum_i ai*yi[:]
             void reduction(const int k, Tm* workspace, Tm* y, const int icase){
                mmreduce[k].reduction(workspace, y, icase);

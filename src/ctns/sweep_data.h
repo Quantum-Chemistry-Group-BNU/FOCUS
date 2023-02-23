@@ -6,27 +6,6 @@
 
 namespace ctns{
 
-    // memory
-    struct dot_memory{
-        void display(){
-            const double toGB = 1.0/std::pow(1024.0,3);
-            tot += comb + oper + dvdson + work;
-            std::cout << "+++++ CPUmem(GB): tot=" << tot*toGB
-                      << " (comb,oper,dvdson,work)=" 
-                      << comb*toGB << ","
-                      << oper*toGB << ","
-                      << dvdson*toGB << ","
-                      << work*toGB
-                      << " +++++" << std::endl;
-        }
-        public:
-            size_t comb = 0;
-            size_t oper = 0;
-            size_t dvdson = 0;
-            size_t work = 0;
-            size_t tot = 0;
-    };
-
     // timing
     struct dot_timing{
         void print_part(const std::string key,
@@ -36,6 +15,14 @@ namespace ctns{
                 << std::scientific << std::setprecision(2) << dtkey << " S"
                 << "  per = " << std::setw(4) << std::defaultfloat << dtkey/dt*100 
                 << "  per(accum) = " << dtacc/dt*100 
+                << std::endl;
+        }
+        void print_part_dmrg(const std::string key,
+                const double dtkey
+                ) const{
+            std::cout << " T(" << std::setw(5) << key << ") = " 
+                << std::scientific << std::setprecision(2) << dtkey << " S"
+                << "  per = " << std::setw(4) << std::defaultfloat << dtkey/dt2*100 
                 << std::endl;
         }
         void print(const std::string msg) const{
@@ -51,6 +38,17 @@ namespace ctns{
             this->print_part("guess", dt4, dtacc); dtacc += dt5;
             this->print_part("renrm", dt5, dtacc); dtacc += dt6;
             this->print_part("save" , dt6, dtacc);
+
+            this->print_part_dmrg("preprocess_op_wf           ",dtb1 );  
+            this->print_part_dmrg("symbolic_formulae_twodot   ",dtb2 ); 
+            this->print_part_dmrg("preprocess_formulae_Hxlist2",dtb3 ); 
+            this->print_part_dmrg("verbose1_debug_Hxlst2      ",dtb4 ); 
+            this->print_part_dmrg("op_lrc1c2_memory_host2GPU  ",dtb5 ); 
+            this->print_part_dmrg("inter_memory_host2GPU      ",dtb6 ); 
+            this->print_part_dmrg("batchsize_compute          ",dtb7 );
+            this->print_part_dmrg("generate_mmtasks           ",dtb8 ); 
+            this->print_part_dmrg("save_mmtasks               ",dtb9 ); 
+            this->print_part_dmrg("preprocess_Hx_batchGPU     ",dtb10);
         }
         void analysis(const std::string msg,
                 const bool debug=true){
@@ -62,6 +60,17 @@ namespace ctns{
             dt4 = tools::get_duration(te-td); // t(guess)
             dt5 = tools::get_duration(tf-te); // t(renrm)
             dt6 = tools::get_duration(t1-tf); // t(save)
+
+            dtb1 = tools::get_duration(tb1-tb); // tb1-tb : t(preprocess_op_wf           )
+            dtb2 = tools::get_duration(tb2-tb1);// tb2-tb1: t(symbolic_formulae_twodot   ) 
+            dtb3 = tools::get_duration(tb3-tb2);// tb3-tb2: t(preprocess_formulae_Hxlist2)
+            dtb4 = tools::get_duration(tb4-tb3);// tb4-tb3: t(verbose1_debug_Hxlst2      )
+            dtb5 = tools::get_duration(tb5-tb4);// tb5-tb4: t(op_lrc1c2_memory_host2GPU  )
+            dtb6 = tools::get_duration(tb6-tb5);// tb6-tb5: t(inter_memory_host2GPU      )
+            dtb7 = tools::get_duration(tb7-tb6);// tb7-tb6: t(batchsize_compute          )
+            dtb8 = tools::get_duration(tb8-tb7);// tb8-tb7: t(generate_mmtasks           )
+            dtb9 = tools::get_duration(tb9-tb8);// tb9-tb8: t(save_mmtasks               )
+            dtb10 =tools::get_duration(tb10-tb9);//tb10-tb9:t(preprocess_Hx_batchGPU     ) 
             if(debug) this->print(msg);
         }
         void accumulate(const dot_timing& timer,
@@ -75,6 +84,17 @@ namespace ctns{
             dt4 += timer.dt4;
             dt5 += timer.dt5;
             dt6 += timer.dt6;
+
+            dtb1  += timer.dtb1; 
+            dtb2  += timer.dtb2; 
+            dtb3  += timer.dtb3; 
+            dtb4  += timer.dtb4; 
+            dtb5  += timer.dtb5; 
+            dtb6  += timer.dtb6; 
+            dtb7  += timer.dtb7; 
+            dtb8  += timer.dtb8; 
+            dtb9  += timer.dtb9; 
+            dtb10 += timer.dtb10;
             if(debug) this->print(msg);
         }
         public:
@@ -88,6 +108,19 @@ namespace ctns{
         Tm tf; // tf-te: t(renrm)
         Tm t1; // t1-tf: t(save)
         double dt=0, dt0=0, dt1=0, dt2=0, dt3=0, dt4=0, dt5=0, dt6=0;
+
+
+        Tm tb1; // tb1-tb :t(preprocess_op_wf)
+        Tm tb2; // tb2-tb1: t(prepare_GPU) 
+        Tm tb3; // tb3-tb2: t(symbolic_formulae)
+        Tm tb4; // tb4-tb3: t(preprocess_formulae)
+        Tm tb5; // tb5-tb4: t(debug_Hxlst2)
+        Tm tb6; // tb6-tb5: t(GPU_malloc_opertot)
+        Tm tb7; // tb7-tb6: t(memory_copy)
+        Tm tb8; // tb8-tb7: t(task_init)
+        Tm tb9; // tb9-tb8: t(GPU_malloc_dev_workspace)
+        Tm tb10;// tb10-tb9: t(preprocess_Hx_batchGPU)
+        double dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0, dtb10=0;
     };
 
     // computed results at a given dot	
@@ -112,11 +145,9 @@ namespace ctns{
             // sweep results
             timing_sweep.resize(maxsweep);
             opt_result.resize(maxsweep);
-            opt_memory.resize(maxsweep);
             opt_timing.resize(maxsweep);
             for(int i=0; i<maxsweep; i++){
                 opt_result[i].resize(seqsize);
-                opt_memory[i].resize(seqsize);
                 opt_timing[i].resize(seqsize);
                 for(int j=0; j<seqsize; j++){
                     opt_result[i][j].eopt.resize(nroots);
@@ -154,8 +185,6 @@ namespace ctns{
         // energies
         std::vector<std::vector<dot_result>> opt_result; // (maxsweep,seqsize) 
         std::vector<dot_result> min_result;
-        // memory
-        std::vector<std::vector<dot_memory>> opt_memory;
         // timing
         std::vector<std::vector<dot_timing>> opt_timing;
         std::vector<dot_timing> timing_sweep;

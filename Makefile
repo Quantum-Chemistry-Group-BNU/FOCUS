@@ -1,19 +1,19 @@
 
-machine = lenovo
+machine = scy0799 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
-USE_GCC = yes
+DEBUG = no
+USE_GCC = no
 USE_MPI = yes
 USE_OPENMP = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
-USE_GPU = no #yes
+USE_GPU = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
-   BOOST = /home/lx/software/boost/install_1_79_0
+	 BOOST = /home/lx/software/boost/install_1_79_0
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
@@ -32,9 +32,22 @@ else ifeq ($(strip $(machine)), dell2)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
-else
-   #MATHLIB = /Users/zhendongli/anaconda2/envs/py38/lib
-   #BOOST = /Users/zhendongli/Desktop/FOCUS_program/boost/install
+else ifeq ($(strip $(machine)), scy0799)
+   MATHLIB =/data/apps/OneApi/2022.1/oneapi/mkl/latest/lib/intel64/
+   BOOST =/data01/home/scy0799/run/xiangchunyang/project/boost_1_80_0_install
+   LFLAGS = -L${BOOST}/lib -lboost_chrono-mt-x64 -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi-mt-x64
+   endif
+else ifeq ($(strip $(machine)), DCU_419)
+   MATHLIB = /public/software/compiler/intel/oneapi/mkl/latest/lib/intel64
+   BOOST = /public/home/ictapp_j/xiangchunyang/boost-1.80.0-install
+   FLAGS += -D__HIP_PLATFORM_HCC__ -DHAVE_HIP -w
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi-mt-x64
+   endif
+else ifeq ($(strip $(machine)), mac)
    MATHLIB = /opt/anaconda3/envs/work/lib
    BOOST = /Users/zhendongli/Desktop/documents_ZL/Codes/boost/install
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
@@ -42,7 +55,7 @@ else
       LFLAGS += -lboost_mpi-mt-x64
    endif
 endif
-FLAGS = -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include 
+FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include 
  
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
@@ -112,10 +125,22 @@ endif
 
 # GPU
 ifeq ($(strip $(USE_GPU)), yes)
-   CUDA_DIR= /home/dell/anaconda3/envs/pytorch
-   MAGMA_DIR = ../magma/magma-2.6.1
-   FLAGS += -DGPU -DUSE_CUDA_OPERATION -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
+ifeq ($(strip $(machine)), DCU_419)
+   HIP_DIR=/public/software/compiler/rocm/rocm-3.3.0/hip
+   MAGMA_DIR=/public/software/mathlib/magma/magma-rocm_3.3_develop
+   FLAGS += -DGPU -DUSE_HIP -I${MAGMA_DIR}/include -I${HIP_DIR}/include 
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma  -L${HIP_DIR}/lib -lhip_hcc -lhiprtc
+else ifeq ($(strip $(machine)), scy0799)
+   CUDA_DIR=/data/apps/cuda/11.2
+   MAGMA_DIR=/data01/home/scy0799/run/xiangchunyang/project/magma-2.6.1-install/
+   FLAGS += -DGPU -DUSE_CUDA_OPERATION -I${MAGMA_DIR}/include -I${CUDA_DIR}/include 
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -lmagma_sparse -L${CUDA_DIR}/lib64 -lcudart_static
+else
+   CUDA_DIR= /usr/local/cuda
+   MAGMA_DIR = ../magma/install
+   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static
+endif
 endif
 
 SRC = src
@@ -280,7 +305,7 @@ $(BIN_DIR)/vmc.x: $(OBJ_DIR)/vmc.o $(LIB_DIR)/libvmc.a
 # Needs to be here! 
 $(OBJ_ALL):
 	@echo "=== COMPILE $@ FROM $<" # just from *.cpp is sufficient	
-	$(CXX) $(FLAGS) -o $@ -c $< 
+	$(CXX) $(FLAGS) -o $@ -c $< $(LFLAGS)
 
 clean:
 	rm -f obj/*.o
