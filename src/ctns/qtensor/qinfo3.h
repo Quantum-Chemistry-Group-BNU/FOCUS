@@ -87,8 +87,8 @@ namespace ctns{
             qbond qrow, qcol, qmid;
             direction3 dir;
          public: // derived
-            size_t _size;
-            int _rows, _cols, _mids;
+            size_t _size = 0;
+            int _rows = 0, _cols = 0, _mids = 0;
             std::vector<int> _nnzaddr;
             std::vector<size_t> _offset;
       };

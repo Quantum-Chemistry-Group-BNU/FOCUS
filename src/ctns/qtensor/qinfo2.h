@@ -71,8 +71,8 @@ struct qinfo2{
       qbond qrow, qcol;
       direction2 dir={1,0}; // {out,int} by usual convention for operators in diagrams 
    public: // derived
-      size_t _size;
-      int _rows, _cols;
+      size_t _size = 0;
+      int _rows = 0, _cols = 0;
       std::vector<int> _nnzaddr;
       std::vector<size_t> _offset;
       // ZL@20220621 fast access of nonzero blocks 

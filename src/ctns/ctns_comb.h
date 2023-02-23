@@ -15,12 +15,15 @@ namespace ctns{
 
    template <typename Tm, typename Qm>
       size_t display_vec_size(const Qm& vec, std::string name){
-         std::cout << " " << name << ": len=" << vec.size() << " mem(GB)=";
+         std::cout << " " << name << ": len=" << vec.size() << " mem=";
          size_t sz = 0;
-         for(const auto& item : vec){
-            sz += item.size();
+         for(int i=0; i<vec.size(); i++){
+            sz += vec[i].size();
          }
-         std::cout << tools::sizeGB<Tm>(sz) << std::endl;
+         std::cout << sz << ":" 
+		   << tools::sizeMB<Tm>(sz) << "MB:"
+		   << tools::sizeGB<Tm>(sz) << "GB"
+		   << std::endl;
          return sz;
       }
 
@@ -92,7 +95,10 @@ namespace ctns{
                   sz += display_vec_size<Tm>(rwfuns, "rwfuns");
                   sz += display_vec_size<Tm>(lsites, "lsites");
                   sz += display_vec_size<Tm>(psi, "psi");
-                  std::cout << "tot size of comb (GB)=" << tools::sizeGB<Tm>(sz) << std::endl;
+                  std::cout << "total mem of comb=" << sz << ":" 
+			    << tools::sizeMB<Tm>(sz) << ":MB"
+			    << tools::sizeGB<Tm>(sz) << "GB"
+			    << std::endl;
                   return sz;
                }
          public:

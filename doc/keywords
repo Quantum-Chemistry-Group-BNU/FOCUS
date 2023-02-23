@@ -111,4 +111,6 @@ $end
 
  Some keyworks useful for debugging:
  - maxbond: stop the sweep after this bond and maxsweep
+ - batchcase: =0 no separation for different GEMM [NN,NT,TN]
+	      =1 seperate into different cases [for MAGMA]
 

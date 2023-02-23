@@ -92,7 +92,7 @@ namespace ctns{
                << std::endl;
          }
          if(debug){
-            icomb.display_size(); 
+	    memory.comb = sizeof(Tm)*icomb.display_size(); 
             memory.oper = sizeof(Tm)*qops_pool.size(); 
             memory.display();
          }
@@ -375,11 +375,10 @@ namespace ctns{
             preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, inter, 
                   Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
             // generate mmtasks
-            int icase = 0;
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<Hxlst2.size(); i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
-                     blksize*2, schd.ctns.hxorder, icase);
+                     blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
             } // i
             if(isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
                for(int i=0; i<Hxlst2.size(); i++){
@@ -547,11 +546,10 @@ namespace ctns{
             }
 
             // generate mmtasks
-            int icase = 1; // seperate (NN,NT,TN) for MAGMA
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<Hxlst2.size(); i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
-                     blksize*2, schd.ctns.hxorder, icase);
+                     blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
                if(debug && schd.ctns.verbose>1){
                   std::cout << "rank=" << rank << " iblk=" << i 
                      << " mmtasks.totsize=" << mmtasks[i].totsize
@@ -633,8 +631,8 @@ namespace ctns{
                vsol, wf, qops_dict, qops_pool(frop), 
                sweeps, isweep, ibond);
          if(debug){
+	    memory.comb = sizeof(Tm)*icomb.display_size();
             memory.oper = sizeof(Tm)*qops_pool.size();
-            memory.dvdson = 0;
             memory.display();
          }
          timing.tf = tools::get_time();

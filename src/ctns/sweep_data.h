@@ -10,15 +10,17 @@ namespace ctns{
     struct dot_memory{
         void display(){
             const double toGB = 1.0/std::pow(1024.0,3);
-            tot += oper + dvdson + work;
+            tot += comb + oper + dvdson + work;
             std::cout << "+++++ CPUmem(GB): tot=" << tot*toGB
-                      << " (oper,dvdson,work)=" 
+                      << " (comb,oper,dvdson,work)=" 
+                      << comb*toGB << ","
                       << oper*toGB << ","
                       << dvdson*toGB << ","
                       << work*toGB
                       << " +++++" << std::endl;
         }
         public:
+            size_t comb = 0;
             size_t oper = 0;
             size_t dvdson = 0;
             size_t work = 0;
