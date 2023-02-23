@@ -106,8 +106,8 @@ namespace ctns{
                 if(qstore.find(fqop) != qstore.end()) continue;
                 oper_load(iomode, fqop, qstore[fqop], debug);
             }
-            if(debug_oper_io and debug){
-                this->display("out");
+            if(debug){
+                if(debug_oper_io) this->display("out");
                 auto t1 = tools::get_time();
                 tools::timing("ctns::oper_pool<Tm>::fetch", t0, t1);
             }

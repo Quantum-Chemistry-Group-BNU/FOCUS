@@ -49,6 +49,7 @@ namespace ctns{
                     << " maxthreads=" << maxthreads 
                     << std::endl;
             }
+            auto& memory = sweeps.opt_memory[isweep][ibond];
             auto& timing = sweeps.opt_timing[isweep][ibond];
             timing.t0 = tools::get_time();
 
@@ -75,6 +76,11 @@ namespace ctns{
                     << ":" << tools::sizeGB<Tm>(tsize) << "GB"
                     << std::endl;
             }
+            if(debug){
+   	    memory.comb = sizeof(Tm)*icomb.display_size(); 
+               memory.oper = sizeof(Tm)*qops_pool.size(); 
+               memory.display();
+            }
             timing.ta = tools::get_time();
 
             // 2. onedot wavefunction
@@ -85,24 +91,19 @@ namespace ctns{
             const auto& qc = qops_dict.at("c").qket;
             auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
             stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
+            size_t ndim = wf.size();
             if(debug){
                 std::cout << "wf3(diml,dimr,dimc)=(" 
                     << ql.get_dimAll() << ","
                     << qr.get_dimAll() << ","
                     << qc.get_dimAll() << ")"
-                    << " nnz=" << wf.size() << ":"
-                    << tools::sizeMB<Tm>(wf.size()) << "MB"
+                    << " nnz=" << ndim  << ":"
+                    << tools::sizeMB<Tm>(ndim) << "MB"
                     << std::endl;
                 if(schd.ctns.verbose>0) wf.print("wf3");
             }
 
             // 3. Davidson solver for wf
-            size_t ndim = wf.size();
-            int neig = sweeps.nroots;
-            auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
-            auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
-            linalg::matrix<Tm> vsol(ndim,neig);
-
             // 3.1 diag 
             std::vector<double> diag(ndim, ecore/size); // constant term
             onedot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
@@ -199,7 +200,14 @@ namespace ctns{
                 std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
                 exit(1);
             } // alg_hvec
-            oper_timer.clear();
+           
+             int neig = sweeps.nroots;
+            auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
+            auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
+            linalg::matrix<Tm> vsol(ndim,neig);
+
+
+	   oper_timer.clear();
             onedot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2, 
                     ndim, neig, diag, HVec, eopt, vsol, nmvp, wf);
             // free temporary space
