@@ -17,7 +17,7 @@ namespace ctns{
                       << oper*toGB << ","
                       << dvdson*toGB << ","
                       << hvec*toGB << ","
-		      << renorm*toGB
+                      << renorm*toGB
                       << " =====" << std::endl;
         }
         public:
@@ -211,6 +211,8 @@ namespace ctns{
         // timing
         std::vector<std::vector<dot_timing>> opt_timing;
         std::vector<dot_timing> timing_sweep;
+        //memory 
+        std::vector<std::vector<dot_memory>> opt_memory;
         std::vector<double> t_total; 
         std::vector<double> t_kernel_total; 
         std::vector<double> t_reduction_total; 
