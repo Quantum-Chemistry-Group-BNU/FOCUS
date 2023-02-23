@@ -92,6 +92,7 @@ namespace linalg{
             */
             // desctructors
             ~matrix(){ delete[] _data; }
+            void clear(){ delete[] _data; _data = nullptr; } // to avoid delete again
             // copy constructor
             matrix(const matrix& mat){
                _rows = mat._rows;

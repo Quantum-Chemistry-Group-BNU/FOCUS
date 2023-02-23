@@ -75,7 +75,7 @@ void symbolic_renorm_single2(const std::string& block1,
 }
 
 template <typename Tm>
-void symbolic_kernel_renorm2(const std::string superblock,
+size_t symbolic_kernel_renorm2(const std::string superblock,
 			     const renorm_tasks<Tm>& rtasks,
 		             const stensor3<Tm>& site,
 		             const oper_dict<Tm>& qops1,
@@ -153,6 +153,7 @@ void symbolic_kernel_renorm2(const std::string superblock,
       if(key == 'H' && qops.ifkr) op += op.K();
    } // i
    delete[] workspace;
+   return worktot;
 }
 
 } // ctns

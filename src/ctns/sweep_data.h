@@ -6,6 +6,29 @@
 
 namespace ctns{
 
+    // memory
+    struct dot_memory{
+        void display(){
+            const double toGB = 1.0/std::pow(1024.0,3);
+            tot = comb + oper + dvdson + hvec + renorm;
+            std::cout << "+++++ CPUmem(GB): tot=" << tot*toGB
+                      << " (comb,oper,dvdson,hvec,renorm)=" 
+                      << comb*toGB << ","
+                      << oper*toGB << ","
+                      << dvdson*toGB << ","
+                      << hvec*toGB << ","
+		      << renorm*toGB
+                      << " +++++" << std::endl;
+        }
+        public:
+            size_t comb = 0;
+            size_t oper = 0;
+            size_t dvdson = 0;
+            size_t hvec = 0;
+	    size_t renorm = 0;
+            size_t tot = 0;
+    };
+
     // timing
     struct dot_timing{
         void print_part(const std::string key,
@@ -168,7 +191,7 @@ namespace ctns{
             const auto& eopt = opt_result[isweep][ibond].eopt;
             int dots = ctrls[isweep].dots;
             for(int i=0; i<nroots; i++){
-                std::cout << " optimized energies:"
+                std::cout << "optimized energies:"
                     << " isweep=" << isweep 
                     << " dots=" << dots
                     << " ibond=" << ibond 
@@ -199,8 +222,10 @@ namespace ctns{
         std::cout << "sweep_data::summary isweep=" << isweep << std::endl; 
         std::cout << tools::line_separator << std::endl;
         print_ctrls(isweep);
+
         // print results for each dot in a single sweep
-        std::vector<double> emean(seqsize,0.0);
+        std::vector<double> eav(seqsize,0.0);
+        std::vector<double> dwt(seqsize,0.0);
         int nmvp = 0;
         for(int ibond=0; ibond<seqsize; ibond++){
             const auto& dbond = seq[ibond];
@@ -220,26 +245,42 @@ namespace ctns{
             const auto& eopt = opt_result[isweep][ibond].eopt;
             for(int j=0; j<nroots; j++){ 
                 std::cout << " e[" << j << "]=" << eopt[j];
-                emean[ibond] += eopt[j]; 
+                eav[ibond] += eopt[j]; 
             } // jstate
-            emean[ibond] /= nroots;
+            eav[ibond] /= nroots;
+            dwt[ibond] = opt_result[isweep][ibond].dwt;
             std::cout << std::endl;
         }
-        // find the minimal energy
-        auto pos = std::min_element(emean.begin(), emean.end());
-        int mbond = std::distance(emean.begin(), pos);
-        min_result[isweep] = opt_result[isweep][mbond];
+        // find the min,max energy and discard weights
+        auto eav_ptr = std::minmax_element(eav.begin(), eav.end());
+        int pos_eav_min = std::distance(eav.begin(),eav_ptr.first);
+        int pos_eav_max = std::distance(eav.begin(),eav_ptr.second);
+        auto dwt_ptr = std::minmax_element(dwt.begin(), dwt.end());
+        int pos_dwt_min = std::distance(dwt.begin(),dwt_ptr.first);
+        int pos_dwt_max = std::distance(dwt.begin(),dwt_ptr.second);
+        std::cout << " eav_max=" << *eav_ptr.second
+                  << " [ibond=" << pos_eav_max << "] "
+                  << " dwt_min=" << *dwt_ptr.first 
+                  << " [ibond=" << pos_dwt_min << "]"
+                  << std::endl;
+        std::cout << " eav_min=" << *eav_ptr.first 
+                  << " [ibond=" << pos_eav_min << "] "
+                  << " dwt_max=" << *dwt_ptr.second
+                  << " [ibond=" << pos_dwt_max << "]"
+                  << std::endl;
+        std::cout << " eav_diff=" << *eav_ptr.second - *eav_ptr.first << std::endl;
+        // minimal energy   
+        min_result[isweep] = opt_result[isweep][pos_eav_min];
         min_result[isweep].nmvp = nmvp;
-        std::cout << "minimal energies at ibond=" << mbond << std::endl;
         const auto& eopt = min_result[isweep].eopt; 
         for(int i=0; i<nroots; i++){
             std::cout << " sweep energies:"
                 << " isweep=" << isweep 
                 << " dots=" << ctrls[isweep].dots
                 << " dcut=" << ctrls[isweep].dcut
-                << " deff=" << opt_result[isweep][mbond].deff
+                << " deff=" << opt_result[isweep][pos_eav_min].deff
                 << " dwt=" << std::showpos << std::scientific << std::setprecision(3)
-                << opt_result[isweep][mbond].dwt << std::noshowpos
+                << opt_result[isweep][pos_eav_min].dwt << std::noshowpos
                 << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
                 << std::endl;
         } // i
