@@ -546,6 +546,7 @@ namespace ctns{
             }
 
             // generate mmtasks
+            assert(schd.ctns.batchcase == 1);
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<Hxlst2.size(); i++){
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
