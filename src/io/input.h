@@ -95,7 +95,7 @@ namespace input{
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd
                   & nroots & guess & dbranch & maxsweep & maxbond & lastdot & ctrls
                   & alg_hvec & alg_renorm & ifdist1 & save_formulae & sort_formulae 
-                  & hxorder & batchgemm & batchsize & batchmem 
+                  & hxorder & batchgemm & batchsize & batchmem & batchcase 
                   & cisolver & maxcycle & nbuff & damping
                   & rcanon_load & rcanon_file 
                   & iomode & ioasync
@@ -138,6 +138,7 @@ namespace input{
          int batchgemm = 0;
          int batchsize = 0;
          int batchmem = -1; // in GB
+         int batchcase = 1;
          // dvdson
          int cisolver = 1;
          int maxcycle = 30;
