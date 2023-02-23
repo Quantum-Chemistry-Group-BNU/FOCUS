@@ -6,6 +6,25 @@
 
 namespace ctns{
 
+    // memory
+    struct dot_memory{
+        void display(){
+            const double toGB = 1.0/std::pow(1024.0,3);
+            tot += oper + dvdson + work;
+            std::cout << "+++++ CPUmem(GB): tot=" << tot*toGB
+                      << " (oper,dvdson,work)=" 
+                      << oper*toGB << ","
+                      << dvdson*toGB << ","
+                      << work*toGB
+                      << " +++++" << std::endl;
+        }
+        public:
+            size_t oper = 0;
+            size_t dvdson = 0;
+            size_t work = 0;
+            size_t tot = 0;
+    };
+
     // timing
     struct dot_timing{
         void print_part(const std::string key,
@@ -91,9 +110,11 @@ namespace ctns{
             // sweep results
             timing_sweep.resize(maxsweep);
             opt_result.resize(maxsweep);
+            opt_memory.resize(maxsweep);
             opt_timing.resize(maxsweep);
             for(int i=0; i<maxsweep; i++){
                 opt_result[i].resize(seqsize);
+                opt_memory[i].resize(seqsize);
                 opt_timing[i].resize(seqsize);
                 for(int j=0; j<seqsize; j++){
                     opt_result[i][j].eopt.resize(nroots);
@@ -131,6 +152,8 @@ namespace ctns{
         // energies
         std::vector<std::vector<dot_result>> opt_result; // (maxsweep,seqsize) 
         std::vector<dot_result> min_result;
+        // memory
+        std::vector<std::vector<dot_memory>> opt_memory;
         // timing
         std::vector<std::vector<dot_timing>> opt_timing;
         std::vector<dot_timing> timing_sweep;

@@ -59,6 +59,7 @@ namespace ctns{
                << " maxthreads=" << maxthreads 
                << std::endl;
          }
+         auto& memory = sweeps.opt_memory[isweep][ibond];
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
 
@@ -68,7 +69,7 @@ namespace ctns{
          const auto& dbond = sweeps.seq[ibond];
          icomb.topo.check_partition(2, dbond, debug, schd.ctns.verbose);
 
-         // 1. load operators 
+         // 1. load operators
          auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug && schd.ctns.verbose>0);
          qops_pool.fetch(fneed);
          const oper_dictmap<Tm> qops_dict = {{"l" ,qops_pool(fneed[0])},
@@ -90,6 +91,8 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
          }
+         memory.oper = sizeof(Tm)*qops_pool.size(); 
+         memory.display();
          timing.ta = tools::get_time();
 
          // 2. twodot wavefunction
@@ -101,25 +104,20 @@ namespace ctns{
          const auto& qc2 = qops_dict.at("c2").qket;
          auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
          stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
+         size_t ndim = wf.size();
          if(debug){
             std::cout << "wf4(diml,dimr,dimc1,dimc2)=(" 
                << ql.get_dimAll() << ","
                << qr.get_dimAll() << ","
                << qc1.get_dimAll() << ","
                << qc2.get_dimAll() << ")"
-               << " nnz=" << wf.size() << ":"
-               << tools::sizeMB<Tm>(wf.size()) << "MB"
+               << " nnz=" << ndim << ":"
+               << tools::sizeMB<Tm>(ndim) << "MB"
                << std::endl;
             if(schd.ctns.verbose>0) wf.print("wf");
          }
 
          // 3. Davidson solver for wf
-         size_t ndim = wf.size();
-         int neig = sweeps.nroots;
-         auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
-         auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
-         linalg::matrix<Tm> vsol(ndim,neig);
-
          // 3.1 diag 
          std::cout << "rank,diag0=" << rank << std::endl;
          auto time0 = tools::get_time();
@@ -167,6 +165,7 @@ namespace ctns{
          std::cout << "rank,diag2=" << rank << std::endl;
 
          // 3.2 Solve local problem: Hc=cE
+         // prepare HVec
          std::map<qsym,qinfo4<Tm>> info_dict;
          size_t opsize, wfsize, tmpsize, worktot;
          opsize = preprocess_opsize(qops_dict);
@@ -197,8 +196,7 @@ namespace ctns{
 #endif
          double t_kernel_ibond=0.0, t_reduction_ibond=0.0; // debug
          std::string fgemm = "mmtasks";
-         fgemm += "_isweep"+std::to_string(isweep)
-                + "_ibond"+std::to_string(ibond);
+         fgemm += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
@@ -208,6 +206,7 @@ namespace ctns{
          }
          if(schd.ctns.alg_hvec == 0){
 
+            // oldest version
             Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
                   schd.ctns.ifdist1, debug_formulae);
             HVec = bind(&ctns::twodot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
@@ -235,6 +234,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
+            memory.work = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
                   std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -254,6 +254,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
+            memory.work = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx3<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -299,7 +300,8 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
-            // private workspace for each thread
+            // private workspace for each thread allocated inside preprocess_Hx
+            memory.work = sizeof(Tm)*worktot;
             HVec = bind(&ctns::preprocess_Hx<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
@@ -350,6 +352,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             // private workspace for each thread
+            memory.work = sizeof(Tm)*worktot;
             HVec = bind(&ctns::preprocess_Hx2<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
@@ -390,6 +393,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
+            memory.work = sizeof(Tm)*worktot;
             HVec = bind(&ctns::preprocess_Hx_batch<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
@@ -581,30 +585,39 @@ namespace ctns{
             std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
             exit(1);
          } // alg_hvec
+
+         // solve HC=CE         
+         int neig = sweeps.nroots;
+         linalg::matrix<Tm> vsol(ndim,neig);
+         memory.dvdson += sizeof(Tm)*ndim*(neig + std::min(ndim,neig+schd.ctns.nbuff)*3); 
+         memory.display();
+         auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
+         auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
          oper_timer.clear();
          twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond);
-         // free temporary space
-         if(schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3 ||
-               schd.ctns.alg_hvec==6 || schd.ctns.alg_hvec==7){
-            if(schd.ctns.alg_hvec != 7) delete[] workspace;
-#ifdef GPU
-            // free memory space on GPU
-            if(schd.ctns.alg_hvec == 7){
-#if defined(USE_CUDA_OPERATION)
-               CUDA_CHECK(cudaFree(dev_opaddr));
-               CUDA_CHECK(cudaFree(dev_workspace));
-#else
-               MAGMA_CHECK(magma_free(dev_opaddr));
-               MAGMA_CHECK(magma_free(dev_workspace));
-#endif
-            }
-#endif
-         }
          if(debug && schd.ctns.verbose>1){
             sweeps.print_eopt(isweep, ibond);
             if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
          }
+
+         // free tmp space on CPU
+         if(schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3 || schd.ctns.alg_hvec==6){
+            delete[] workspace;
+            memory.work = 0;
+         }
+#ifdef GPU
+         // free memory space on GPU
+         if(schd.ctns.alg_hvec == 7){
+#if defined(USE_CUDA_OPERATION)
+            CUDA_CHECK(cudaFree(dev_opaddr));
+            CUDA_CHECK(cudaFree(dev_workspace));
+#else
+            MAGMA_CHECK(magma_free(dev_opaddr));
+            MAGMA_CHECK(magma_free(dev_workspace));
+#endif
+         }
+#endif
          timing.tc = tools::get_time();
 
          // 3. decimation & renormalize operators
@@ -614,6 +627,7 @@ namespace ctns{
          twodot_renorm(icomb, int2e, int1e, schd, scratch, 
                vsol, wf, qops_dict, qops_pool(frop), 
                sweeps, isweep, ibond);
+         memory.dvdson = 0
          timing.tf = tools::get_time();
 
          // 4. save on disk 
