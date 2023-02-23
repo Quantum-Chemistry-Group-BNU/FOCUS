@@ -306,7 +306,7 @@ namespace ctns{
                   c1qops, c2qops, qops, fname); 
          }
          if(debug){
-            memory.renorm = 0;
+            memory.renorm = worktot;
             memory.display();
          }
       }

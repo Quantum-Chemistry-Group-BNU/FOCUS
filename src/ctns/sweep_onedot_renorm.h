@@ -259,7 +259,7 @@ namespace ctns{
                   cqops, rqops, qops, fname); 
          }
          if(debug){
-            memory.renorm = 0;
+            memory.renorm = worktot;
             memory.display();
          }
       }
