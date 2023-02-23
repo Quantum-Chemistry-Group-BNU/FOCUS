@@ -138,7 +138,7 @@ namespace input{
          int batchgemm = 0;
          int batchsize = 0;
          int batchmem = -1; // in GB
-         int batchcase = 1;
+         int batchcase = 1; // seperate GEMM
          // dvdson
          int cisolver = 1;
          int maxcycle = 30;
