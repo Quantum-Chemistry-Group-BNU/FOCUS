@@ -34,6 +34,7 @@ namespace ctns{
             const auto& ntotal = icomb.topo.ntotal;
             icomb.lsites.resize(ntotal);
             icomb.lsites[ntotal-1] = get_left_bsite<Tm>(Km::isym);
+	    icomb.display_size();
 
             // generate sweep sequence
             dot_timing timing_global;

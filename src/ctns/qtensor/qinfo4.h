@@ -78,8 +78,8 @@ struct qinfo4{
       qsym sym;
       qbond qrow, qcol, qmid, qver;
    public: // derived
-      size_t _size;
-      int _rows, _cols, _mids, _vers;
+      size_t _size = 0;
+      int _rows = 0, _cols = 0, _mids = 0, _vers = 0;
       std::vector<int> _nnzaddr;
       std::vector<size_t> _offset;
 };

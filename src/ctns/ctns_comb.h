@@ -13,6 +13,20 @@
 
 namespace ctns{
 
+   template <typename Tm, typename Qm>
+      size_t display_vec_size(const Qm& vec, std::string name){
+         std::cout << " " << name << ": len=" << vec.size() << " mem=";
+         size_t sz = 0;
+         for(int i=0; i<vec.size(); i++){
+            sz += vec[i].size();
+         }
+         std::cout << sz << ":" 
+		   << tools::sizeMB<Tm>(sz) << "MB:"
+		   << tools::sizeGB<Tm>(sz) << "GB"
+		   << std::endl;
+         return sz;
+      }
+
    template <typename Km>
       class comb{
          private:
@@ -70,6 +84,22 @@ namespace ctns{
                      }
                   }
                   return wf2;
+               }
+               // print size 
+               size_t display_size() const{
+                  std::cout << "comb::display_size" << std::endl;
+                  size_t sz = 0;
+                  using Tm = typename Km::dtype;
+                  sz += display_vec_size<Tm>(rbases, "rbases");
+                  sz += display_vec_size<Tm>(rsites, "rsites");
+                  sz += display_vec_size<Tm>(rwfuns, "rwfuns");
+                  sz += display_vec_size<Tm>(lsites, "lsites");
+                  sz += display_vec_size<Tm>(psi, "psi");
+                  std::cout << "total mem of comb=" << sz << ":" 
+			    << tools::sizeMB<Tm>(sz) << ":MB"
+			    << tools::sizeGB<Tm>(sz) << "GB"
+			    << std::endl;
+                  return sz;
                }
          public:
                using Tm = typename Km::dtype;

@@ -84,11 +84,16 @@ $end
     =0: oldest version
     =1: symbolic formulae + dynamic allocation of memory
     =2: symbolic formulae + preallocation of workspace
+            worktot = maxthreads*(opsize + 3*wfsize) 
     =3: symbolic formulae (factorized) + preallocation of workspace
-    =4: symbolic formulae + intermediates + preallocation of workspace [Hxlst]
-    =5: symbolic formulae + intermediates + preallocation of workspace [Hxlst2]
-    =6: symbolic formulae + intermediates + preallocation of workspace [BatchGEMM]
-    =7: symbolic formulae + intermediates + preallocation of workspace [GPU]
+            worktot = maxthreads*(opsize + 4*wfsize)
+    =4: symbolic formulae + preallocation of workspace + intermediates [Hxlst]
+            worktot = maxthreads*(blksize*2 + ndim) [local]
+    =5: symbolic formulae + preallocation of workspace + intermediates [Hxlst2]
+            worktot = maxthreads*(blksize*3) [local]
+    =6: symbolic formulae + preallocation of workspace + intermediates [BatchGEMM]
+            worktot = batchsize*(blksize*2)
+    =7: symbolic formulae + preallocation of workspace + intermediates [GPU]
  - batchgemm: relevant only for alg_hvec = 6 and 7
     =0: xgemm_omp
     =1: xgemm_batch_cpu
@@ -103,4 +108,9 @@ $end
  - ioasync: =0 (default: sequential)
  - lastdot: compute wavefunction for the last dot, which is necessary for restart
             and property calculations later on.
+
+ Some keyworks useful for debugging:
+ - maxbond: stop the sweep after this bond and maxsweep
+ - batchcase: =0 no separation for different GEMM [NN,NT,TN]
+	      =1 seperate into different cases [for MAGMA]
 

@@ -7,6 +7,7 @@
 
 namespace ctns{
 
+    // pool for mananging operators
     template <typename Tm>
         struct oper_pool{
             public:
@@ -54,6 +55,13 @@ namespace ctns{
                     fkept.clear();
                     // must be first join then clear, otherwise IO is not finished!
                     qstore.clear();
+                }
+                size_t size() const{
+                    size_t sz = 0;
+                    for(const auto& pr : qstore){
+                        sz += pr.second.size();
+                    }
+                    return sz;
                 }
             public:
                 int iomode, ioasync;
