@@ -38,6 +38,9 @@ namespace ctns{
          // 3. compute wave functions at the start for right canonical form 
          init_rwfuns(icomb, space, vs, thresh_ortho);
 
+         // check
+         icomb.display_size();
+
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_init", t0, t1);
       }

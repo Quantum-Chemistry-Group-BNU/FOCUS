@@ -91,8 +91,11 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
          }
-         memory.oper = sizeof(Tm)*qops_pool.size(); 
-         memory.display();
+         if(debug){
+            icomb.display_size(); 
+            memory.oper = sizeof(Tm)*qops_pool.size(); 
+            memory.display();
+         }
          timing.ta = tools::get_time();
 
          // 2. twodot wavefunction
@@ -589,8 +592,10 @@ namespace ctns{
          // solve HC=CE         
          int neig = sweeps.nroots;
          linalg::matrix<Tm> vsol(ndim,neig);
-         memory.dvdson += sizeof(Tm)*ndim*(neig + std::min(ndim,neig+schd.ctns.nbuff)*3); 
-         memory.display();
+         if(debug){
+            memory.dvdson += sizeof(Tm)*ndim*(neig + std::min(ndim,size_t(neig+schd.ctns.nbuff))*3); 
+            memory.display();
+         }
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
          oper_timer.clear();
@@ -627,7 +632,11 @@ namespace ctns{
          twodot_renorm(icomb, int2e, int1e, schd, scratch, 
                vsol, wf, qops_dict, qops_pool(frop), 
                sweeps, isweep, ibond);
-         memory.dvdson = 0
+         if(debug){
+            memory.oper = sizeof(Tm)*qops_pool.size();
+            memory.dvdson = 0;
+            memory.display();
+         }
          timing.tf = tools::get_time();
 
          // 4. save on disk 
