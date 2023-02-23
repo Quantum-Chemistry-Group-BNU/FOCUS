@@ -185,69 +185,69 @@ namespace ctns{
                return fac*qt;
             }
             double normF() const{ return linalg::xnrm2(info._size, _data); }
-            void clear(){ memset(_data, 0, info._size*sizeof(Tm)); }
+            void set_zero(){ memset(_data, 0, info._size*sizeof(Tm)); }
             // --- SPECIFIC FUNCTIONS ---
             // fix middle index (bm,im) - bm-th block, im-idx - composite index!
             stensor2<Tm> fix_mid(const std::pair<int,int> mdx) const;
             // deal with fermionic sign in fermionic direct product
             void mid_signed(const double fac=1.0); // wf[lcr](-1)^{p(c)}
-            void row_signed(const double fac=1.0); // wf[lcr](-1)^{p(l)}
-            void cntr_signed(const std::string block);
-            void permCR_signed(); // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
-                                  // ZL20210413: application of time-reversal operation
-            stensor3<Tm> K(const int nbar=0) const;
-            // for sweep algorithm
-            void from_array(const Tm* array){
-               linalg::xcopy(info._size, array, _data);
-            }
-            void to_array(Tm* array) const{
-               linalg::xcopy(info._size, _data, array);
-            }
-            // for decimation
-            qproduct dpt_lc() const{ return qmerge(info.qrow, info.qmid); }
-            qproduct dpt_cr() const{ return qmerge(info.qmid, info.qcol); }
-            qproduct dpt_lr() const{ return qmerge(info.qrow, info.qcol); }
-            // reshape: merge wf3[l,r,c]
-            stensor2<Tm> merge_lc() const{ // wf2[lc,r] 
-               auto qprod = dpt_lc();
-               return merge_qt3_qt2_lc(*this, qprod.first, qprod.second);
-            }
-            stensor2<Tm> merge_cr() const{ // wf2[l,cr]
-               auto qprod = dpt_cr(); 
-               return merge_qt3_qt2_cr(*this, qprod.first, qprod.second);
-            }
-            stensor2<Tm> merge_lr() const{ // wf2[lr,c]
-               auto qprod = dpt_lr();  
-               return merge_qt3_qt2_lr(*this, qprod.first, qprod.second);
-            }
-            // reshape: split
-            // wf3[lc1,r,c2] -> wf4[l,r,c1,c2]
-            stensor4<Tm> split_lc1(const qbond& qlx, const qbond& qc1) const{
-               auto dpt = qmerge(qlx, qc1).second;
-               return split_qt4_qt3_lc1(*this, qlx, qc1, dpt);
-            }
-            // wf3[l,c2r,c1] -> wf4[l,r,c1,c2]
-            stensor4<Tm> split_c2r(const qbond& qc2, const qbond& qrx) const{
-               auto dpt = qmerge(qc2, qrx).second;
-               return split_qt4_qt3_c2r(*this, qc2, qrx, dpt); 
-            }
-            // wf3[l,r,c1c2] -> wf4[l,r,c1,c2]
-            stensor4<Tm> split_c1c2(const qbond& qc1, const qbond& qc2) const{
-               auto dpt = qmerge(qc1, qc2).second;     
-               return split_qt4_qt3_c1c2(*this, qc1, qc2, dpt);
-            }
-            // ZL@20221207 dump
-            void dump(std::ofstream& ofs) const;
+      void row_signed(const double fac=1.0); // wf[lcr](-1)^{p(l)}
+      void cntr_signed(const std::string block);
+      void permCR_signed(); // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
+                            // ZL20210413: application of time-reversal operation
+      stensor3<Tm> K(const int nbar=0) const;
+      // for sweep algorithm
+      void from_array(const Tm* array){
+         linalg::xcopy(info._size, array, _data);
+      }
+      void to_array(Tm* array) const{
+         linalg::xcopy(info._size, _data, array);
+      }
+      // for decimation
+      qproduct dpt_lc() const{ return qmerge(info.qrow, info.qmid); }
+      qproduct dpt_cr() const{ return qmerge(info.qmid, info.qcol); }
+      qproduct dpt_lr() const{ return qmerge(info.qrow, info.qcol); }
+      // reshape: merge wf3[l,r,c]
+      stensor2<Tm> merge_lc() const{ // wf2[lc,r] 
+         auto qprod = dpt_lc();
+         return merge_qt3_qt2_lc(*this, qprod.first, qprod.second);
+      }
+      stensor2<Tm> merge_cr() const{ // wf2[l,cr]
+         auto qprod = dpt_cr(); 
+         return merge_qt3_qt2_cr(*this, qprod.first, qprod.second);
+      }
+      stensor2<Tm> merge_lr() const{ // wf2[lr,c]
+         auto qprod = dpt_lr();  
+         return merge_qt3_qt2_lr(*this, qprod.first, qprod.second);
+      }
+      // reshape: split
+      // wf3[lc1,r,c2] -> wf4[l,r,c1,c2]
+      stensor4<Tm> split_lc1(const qbond& qlx, const qbond& qc1) const{
+         auto dpt = qmerge(qlx, qc1).second;
+         return split_qt4_qt3_lc1(*this, qlx, qc1, dpt);
+      }
+      // wf3[l,c2r,c1] -> wf4[l,r,c1,c2]
+      stensor4<Tm> split_c2r(const qbond& qc2, const qbond& qrx) const{
+         auto dpt = qmerge(qc2, qrx).second;
+         return split_qt4_qt3_c2r(*this, qc2, qrx, dpt); 
+      }
+      // wf3[l,r,c1c2] -> wf4[l,r,c1,c2]
+      stensor4<Tm> split_c1c2(const qbond& qc1, const qbond& qc2) const{
+         auto dpt = qmerge(qc1, qc2).second;     
+         return split_qt4_qt3_c1c2(*this, qc1, qc2, dpt);
+      }
+      // ZL@20221207 dump
+      void dump(std::ofstream& ofs) const;
          public:
-            bool own = true; // whether the object owns its data
-            Tm* _data = nullptr;
-            qinfo3<Tm> info;
+      bool own = true; // whether the object owns its data
+      Tm* _data = nullptr;
+      qinfo3<Tm> info;
       };
-            
+
    template <typename Tm>
       void stensor3<Tm>::dump(std::ofstream& ofs) const{
-          info.dump(ofs);
-          ofs.write((char*)(_data), sizeof(Tm)*info._size);
+         info.dump(ofs);
+         ofs.write((char*)(_data), sizeof(Tm)*info._size);
       }
 
    template <typename Tm>

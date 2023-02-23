@@ -19,296 +19,296 @@
 
 namespace ctns{
 
-const bool debug_oper_renorm = false;
-extern const bool debug_oper_renorm;
+   const bool debug_oper_renorm = false;
+   extern const bool debug_oper_renorm;
 
-// renormalize operators
-template <typename Km, typename Tm>
-size_t oper_renorm_opAll(const std::string superblock,
-		       const comb<Km>& icomb,
-		       const comb_coord& p,
-		       const integral::two_body<Tm>& int2e,
-		       const integral::one_body<Tm>& int1e,
-		       const input::schedule& schd,
-		       const oper_dict<Tm>& qops1,
-		       const oper_dict<Tm>& qops2,
-		       oper_dict<Tm>& qops,
-		       const std::string fname){
-   int size = 1, rank = 0;
+   // renormalize operators
+   template <typename Km, typename Tm>
+      size_t oper_renorm_opAll(const std::string superblock,
+            const comb<Km>& icomb,
+            const comb_coord& p,
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const input::schedule& schd,
+            const oper_dict<Tm>& qops1,
+            const oper_dict<Tm>& qops2,
+            oper_dict<Tm>& qops,
+            const std::string fname){
+         int size = 1, rank = 0;
 #ifndef SERIAL
-   size = icomb.world.size();
-   rank = icomb.world.rank();
+         size = icomb.world.size();
+         rank = icomb.world.rank();
 #endif   
-   const int isym = Km::isym;
-   const bool ifkr = Km::ifkr;
-   const int& alg_renorm = schd.ctns.alg_renorm;
-   const bool& sort_formulae = schd.ctns.sort_formulae;
-   const bool& ifdist1 = schd.ctns.ifdist1;
-   if(rank == 0 and schd.ctns.verbose>0){ 
-      std::cout << "ctns::oper_renorm_opAll coord=" << p 
-	        << " superblock=" << superblock 
-	     	<< " isym=" << isym 
-		<< " ifkr=" << ifkr
-	        << " alg_renorm=" << alg_renorm	
-		<< " mpisize=" << size
-		<< std::endl;
-   }
-   auto ti = tools::get_time();
-   
-   // 0. setup basic information for qops
-   qops.isym = isym;
-   qops.ifkr = ifkr;
-   qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
-   // rest of spatial orbital indices
-   const auto& node = icomb.topo.get_node(p);
-   const auto& rindex = icomb.topo.rindex;
-   const auto& site = (superblock=="cr")? icomb.rsites[rindex.at(p)] : 
-	   				  icomb.lsites[rindex.at(p)];
-   if(superblock == "cr"){
-      qops.krest = node.lorbs;
-      qops.qbra = site.info.qrow;
-      qops.qket = site.info.qrow; 
-   }else if(superblock == "lc"){
-      qops.krest = node.rorbs;
-      qops.qbra = site.info.qcol;
-      qops.qket = site.info.qcol;
-   }else if(superblock == "lr"){
-      qops.krest = node.corbs;
-      qops.qbra = site.info.qmid;
-      qops.qket = site.info.qmid;
-   }
-   qops.oplist = "CABPQSH";
-   qops.mpisize = size;
-   qops.mpirank = rank;
-   qops.ifdist2 = true;
-   // initialize memory 
-   qops.allocate_memory();
-      
-   // 1. start renormalization
-   oper_timer.clear();
-   const bool debug_formulae = schd.ctns.verbose>0;
-   size_t worktot = 0;
-   if(alg_renorm == 0){
-      // oldest version
-      auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
-      oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
-   }else if(alg_renorm == 1){
-      // symbolic formulae + dynamic allocation of memory
-      auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             size, rank, fname, sort_formulae, ifdist1, 
-					     debug_formulae);
-      symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
-   }else if(alg_renorm == 2){
-      // symbolic formulae + preallocation of workspace
-      auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-		                             size, rank, fname, sort_formulae, ifdist1,
-					     debug_formulae);
-      worktot = symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
-   }else{
-      std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
-      exit(1);
-   }
+         const int isym = Km::isym;
+         const bool ifkr = Km::ifkr;
+         const int& alg_renorm = schd.ctns.alg_renorm;
+         const bool& sort_formulae = schd.ctns.sort_formulae;
+         const bool& ifdist1 = schd.ctns.ifdist1;
+         if(rank == 0 and schd.ctns.verbose>0){ 
+            std::cout << "ctns::oper_renorm_opAll coord=" << p 
+               << " superblock=" << superblock 
+               << " isym=" << isym 
+               << " ifkr=" << ifkr
+               << " alg_renorm=" << alg_renorm	
+               << " mpisize=" << size
+               << std::endl;
+         }
+         auto ti = tools::get_time();
 
-   // 2. reduce 
-   auto ta = tools::get_time();
+         // 0. setup basic information for qops
+         qops.isym = isym;
+         qops.ifkr = ifkr;
+         qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
+         // rest of spatial orbital indices
+         const auto& node = icomb.topo.get_node(p);
+         const auto& rindex = icomb.topo.rindex;
+         const auto& site = (superblock=="cr")? icomb.rsites[rindex.at(p)] : 
+            icomb.lsites[rindex.at(p)];
+         if(superblock == "cr"){
+            qops.krest = node.lorbs;
+            qops.qbra = site.info.qrow;
+            qops.qket = site.info.qrow; 
+         }else if(superblock == "lc"){
+            qops.krest = node.rorbs;
+            qops.qbra = site.info.qcol;
+            qops.qket = site.info.qcol;
+         }else if(superblock == "lr"){
+            qops.krest = node.corbs;
+            qops.qbra = site.info.qmid;
+            qops.qket = site.info.qmid;
+         }
+         qops.oplist = "CABPQSH";
+         qops.mpisize = size;
+         qops.mpirank = rank;
+         qops.ifdist2 = true;
+         // initialize memory 
+         qops.allocate_memory();
+
+         // 1. start renormalization
+         oper_timer.start();
+         const bool debug_formulae = schd.ctns.verbose>0;
+         size_t worktot = 0;
+         if(alg_renorm == 0){
+            // oldest version
+            auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
+            oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
+         }else if(alg_renorm == 1){
+            // symbolic formulae + dynamic allocation of memory
+            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+                  size, rank, fname, sort_formulae, ifdist1, 
+                  debug_formulae);
+            symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
+         }else if(alg_renorm == 2){
+            // symbolic formulae + preallocation of workspace
+            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+                  size, rank, fname, sort_formulae, ifdist1,
+                  debug_formulae);
+            worktot = symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
+         }else{
+            std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
+            exit(1);
+         }
+
+         // 2. reduce 
+         auto ta = tools::get_time();
 #ifndef SERIAL
-   if(ifdist1 and size > 1){
-      std::vector<Tm> top(qops._opsize);
-      // Sp[iproc] += \sum_i Sp[i]
-      auto opS_index = qops.oper_index_op('S');
-      for(int p : opS_index){
-         int iproc = distribute1(ifkr,size,p);
-         auto& opS = qops('S')[p];
-         int opsize = opS.size();
-         boost::mpi::reduce(icomb.world, opS.data(), opsize, 
-           	            top.data(), std::plus<Tm>(), iproc);
-         if(iproc == rank){ 
-            linalg::xcopy(opsize, top.data(), opS.data());
-	 }else{
-	    opS.clear();
-	 }
-      }
-      // H[0] += \sum_i H[i]
-      auto& opH = qops('H')[0];
-      int opsize = opH.size();
-      boost::mpi::reduce(icomb.world, opH.data(), opsize,
-		         top.data(), std::plus<Tm>(), 0);
-      if(rank == 0){ 
-	 linalg::xcopy(opsize, top.data(), opH.data());
-      }else{
-	 opH.clear();
-      }
-   }
+         if(ifdist1 and size > 1){
+            std::vector<Tm> top(qops._opsize);
+            // Sp[iproc] += \sum_i Sp[i]
+            auto opS_index = qops.oper_index_op('S');
+            for(int p : opS_index){
+               int iproc = distribute1(ifkr,size,p);
+               auto& opS = qops('S')[p];
+               int opsize = opS.size();
+               boost::mpi::reduce(icomb.world, opS.data(), opsize, 
+                     top.data(), std::plus<Tm>(), iproc);
+               if(iproc == rank){ 
+                  linalg::xcopy(opsize, top.data(), opS.data());
+               }else{
+                  opS.set_zero();
+               }
+            }
+            // H[0] += \sum_i H[i]
+            auto& opH = qops('H')[0];
+            int opsize = opH.size();
+            boost::mpi::reduce(icomb.world, opH.data(), opsize,
+                  top.data(), std::plus<Tm>(), 0);
+            if(rank == 0){ 
+               linalg::xcopy(opsize, top.data(), opH.data());
+            }else{
+               opH.set_zero();
+            }
+         }
 #endif
 
-   // 3. consistency check for Hamiltonian
-   const auto& opH = qops('H').at(0);
-   auto diffH = (opH-opH.H()).normF();
-   if(diffH > 1.e-10){
-      opH.print("H",2);
-      std::string msg = "error: H-H.H() is too large! diffH=";
-      tools::exit(msg+std::to_string(diffH));
-   }
+         // 3. consistency check for Hamiltonian
+         const auto& opH = qops('H').at(0);
+         auto diffH = (opH-opH.H()).normF();
+         if(diffH > 1.e-10){
+            opH.print("H",2);
+            std::string msg = "error: H-H.H() is too large! diffH=";
+            tools::exit(msg+std::to_string(diffH));
+         }
 
-   // check against explicit construction
-   if(debug_oper_renorm){
-      for(const auto& key : qops.oplist){
-	 if(key == 'C' || key == 'A' || key == 'B'){
-	    oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
-         }else if(key == 'P' || key == 'Q'){
-	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
-	 // check opS and opH only if ifdist1=true   
-         }else if((key == 'S' || key == 'H') and ifdist1){
-	    oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
-	 }
+         // check against explicit construction
+         if(debug_oper_renorm){
+            for(const auto& key : qops.oplist){
+               if(key == 'C' || key == 'A' || key == 'B'){
+                  oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
+               }else if(key == 'P' || key == 'Q'){
+                  oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
+                  // check opS and opH only if ifdist1=true   
+               }else if((key == 'S' || key == 'H') and ifdist1){
+                  oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
+               }
+            }
+         }
+
+         auto tf = tools::get_time();
+         if(rank == 0){ 
+            if(schd.ctns.verbose>0) qops.print("qops");
+            if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
+            double t_tot = tools::get_duration(tf-ti); 
+            double t_cal = tools::get_duration(ta-ti);
+            double t_comm = tools::get_duration(tf-ta);
+            std::cout << "TIMING for Renormalization : " << t_tot 
+               << "  T(cal/comm)=" << t_cal << "," << t_comm
+               << std::endl;
+         }
+         return worktot;
       }
-   }
 
-   auto tf = tools::get_time();
-   if(rank == 0){ 
-      if(schd.ctns.verbose>0) qops.print("qops");
-      if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
-      double t_tot = tools::get_duration(tf-ti); 
-      double t_cal = tools::get_duration(ta-ti);
-      double t_comm = tools::get_duration(tf-ta);
-      std::cout << "TIMING for Renormalization : " << t_tot 
-		<< "  T(cal/comm)=" << t_cal << "," << t_comm
-	        << std::endl;
-   }
-   return worktot;
-}
-
-template <typename Tm>
-void oper_renorm_kernel(const std::string superblock,
-		        const Hx_functors<Tm>& rfuns,
-		        const stensor3<Tm>& site,
-		        oper_dict<Tm>& qops,
-			const int verbose){
-   if(qops.mpirank==0 and verbose>1){
-      std::cout << "ctns::oper_renorm_kernel"
-	        << " size[rfuns]=" << rfuns.size() 
-		<< std::endl;
-   }
+   template <typename Tm>
+      void oper_renorm_kernel(const std::string superblock,
+            const Hx_functors<Tm>& rfuns,
+            const stensor3<Tm>& site,
+            oper_dict<Tm>& qops,
+            const int verbose){
+         if(qops.mpirank==0 and verbose>1){
+            std::cout << "ctns::oper_renorm_kernel"
+               << " size[rfuns]=" << rfuns.size() 
+               << std::endl;
+         }
 #ifdef _OPENMP
-   #pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic)
 #endif
-   for(int i=0; i<rfuns.size(); i++){
-      char key = rfuns[i].label[0];
-      int index = rfuns[i].index; 
-      if(verbose>2){
-         std::cout << "rank=" << qops.mpirank 
-                   << " idx=" << i 
-                   << " key=" << key 
-		   << " index=" << index 
-		   << std::endl;
+         for(int i=0; i<rfuns.size(); i++){
+            char key = rfuns[i].label[0];
+            int index = rfuns[i].index; 
+            if(verbose>2){
+               std::cout << "rank=" << qops.mpirank 
+                  << " idx=" << i 
+                  << " key=" << key 
+                  << " index=" << index 
+                  << std::endl;
+            }
+            auto opxwf = rfuns[i]();
+            auto op = contract_qt3_qt3(superblock, site, opxwf);
+            linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
+         } // i
       }
-      auto opxwf = rfuns[i]();
-      auto op = contract_qt3_qt3(superblock, site, opxwf);
-      linalg::xcopy(op.size(), op.data(), qops(key)[index].data());
-   } // i
-}
 
-template <typename Tm>
-Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
-				     const stensor3<Tm>& site,
-	             		     const integral::two_body<Tm>& int2e,
-				     const oper_dict<Tm>& qops1,
-				     const oper_dict<Tm>& qops2,
-				     const oper_dict<Tm>& qops,
-				     const bool ifdist1){
-   Hx_functors<Tm> rfuns;
-   // opC
-   if(qops.oplist.find('C') != std::string::npos){
-      auto info = oper_combine_opC(qops1.cindex, qops2.cindex);
-      for(const auto& pr : info){
-         int index = pr.first, iformula = pr.second;
-         Hx_functor<Tm> Hx("C", index, iformula);
-         Hx.opxwf = bind(&oper_normxwf_opC<Tm>, 
-           	         std::cref(superblock), std::cref(site), 
-           	         std::cref(qops1), std::cref(qops2),
-           	         index, iformula, false);
-         rfuns.push_back(Hx);
-      }
-   }
-   // opA
-   if(qops.oplist.find('A') != std::string::npos){
-      auto ainfo = oper_combine_opA(qops1.cindex, qops2.cindex, qops.ifkr);
-      for(const auto& pr : ainfo){
-         int index = pr.first, iformula = pr.second;
-         int iproc = distribute2(qops.ifkr, qops.mpisize, index);
-         if(iproc == qops.mpirank){
-            Hx_functor<Tm> Hx("A", index, iformula);
-            Hx.opxwf = bind(&oper_normxwf_opA<Tm>, 
-           	            std::cref(superblock), std::cref(site), 
-           	            std::cref(qops1), std::cref(qops2),
-           		    index, iformula, false);
+   template <typename Tm>
+      Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
+            const stensor3<Tm>& site,
+            const integral::two_body<Tm>& int2e,
+            const oper_dict<Tm>& qops1,
+            const oper_dict<Tm>& qops2,
+            const oper_dict<Tm>& qops,
+            const bool ifdist1){
+         Hx_functors<Tm> rfuns;
+         // opC
+         if(qops.oplist.find('C') != std::string::npos){
+            auto info = oper_combine_opC(qops1.cindex, qops2.cindex);
+            for(const auto& pr : info){
+               int index = pr.first, iformula = pr.second;
+               Hx_functor<Tm> Hx("C", index, iformula);
+               Hx.opxwf = bind(&oper_normxwf_opC<Tm>, 
+                     std::cref(superblock), std::cref(site), 
+                     std::cref(qops1), std::cref(qops2),
+                     index, iformula, false);
+               rfuns.push_back(Hx);
+            }
+         }
+         // opA
+         if(qops.oplist.find('A') != std::string::npos){
+            auto ainfo = oper_combine_opA(qops1.cindex, qops2.cindex, qops.ifkr);
+            for(const auto& pr : ainfo){
+               int index = pr.first, iformula = pr.second;
+               int iproc = distribute2(qops.ifkr, qops.mpisize, index);
+               if(iproc == qops.mpirank){
+                  Hx_functor<Tm> Hx("A", index, iformula);
+                  Hx.opxwf = bind(&oper_normxwf_opA<Tm>, 
+                        std::cref(superblock), std::cref(site), 
+                        std::cref(qops1), std::cref(qops2),
+                        index, iformula, false);
+                  rfuns.push_back(Hx);
+               }
+            }
+         }
+         // opB
+         if(qops.oplist.find('B') != std::string::npos){
+            auto binfo = oper_combine_opB(qops1.cindex, qops2.cindex, qops.ifkr);
+            for(const auto& pr : binfo){
+               int index = pr.first, iformula = pr.second;
+               int iproc = distribute2(qops.ifkr, qops.mpisize, index);
+               if(iproc == qops.mpirank){
+                  Hx_functor<Tm> Hx("B", index, iformula);
+                  Hx.opxwf = bind(&oper_normxwf_opB<Tm>, 
+                        std::cref(superblock), std::cref(site), 
+                        std::cref(qops1), std::cref(qops2),
+                        index, iformula, false);
+                  rfuns.push_back(Hx);
+               }
+            }
+         }
+         // opP
+         if(qops.oplist.find('P') != std::string::npos){
+            for(const auto& pr : qops('P')){
+               int index = pr.first;
+               Hx_functor<Tm> Hx("P", index);
+               Hx.opxwf = bind(&oper_compxwf_opP<Tm>,
+                     std::cref(superblock), std::cref(site),
+                     std::cref(qops1), std::cref(qops2), std::cref(int2e), 
+                     index, false);
+               rfuns.push_back(Hx);
+            }
+         }
+         // opQ
+         if(qops.oplist.find('Q') != std::string::npos){
+            for(const auto& pr : qops('Q')){
+               int index = pr.first;
+               Hx_functor<Tm> Hx("Q", index);
+               Hx.opxwf = bind(&oper_compxwf_opQ<Tm>,
+                     std::cref(superblock), std::cref(site),
+                     std::cref(qops1), std::cref(qops2), std::cref(int2e), 
+                     index, false);
+               rfuns.push_back(Hx);
+            }
+         }
+         // opS
+         if(qops.oplist.find('S') != std::string::npos){
+            for(const auto& pr : qops('S')){
+               int index = pr.first;
+               Hx_functor<Tm> Hx("S", index);
+               Hx.opxwf = bind(&oper_compxwf_opS<Tm>,
+                     std::cref(superblock), std::cref(site),
+                     std::cref(qops1), std::cref(qops2), std::cref(int2e),
+                     index, qops.mpisize, qops.mpirank, ifdist1, false);
+               rfuns.push_back(Hx);
+            }
+         }
+         // opH
+         if(qops.oplist.find('H') != std::string::npos){
+            Hx_functor<Tm> Hx("H");
+            Hx.opxwf = bind(&oper_compxwf_opH<Tm>, 
+                  std::cref(superblock), std::cref(site),
+                  std::cref(qops1), std::cref(qops2),
+                  qops.mpisize, qops.mpirank, ifdist1);
             rfuns.push_back(Hx);
          }
+         return rfuns;
       }
-   }
-   // opB
-   if(qops.oplist.find('B') != std::string::npos){
-      auto binfo = oper_combine_opB(qops1.cindex, qops2.cindex, qops.ifkr);
-      for(const auto& pr : binfo){
-         int index = pr.first, iformula = pr.second;
-         int iproc = distribute2(qops.ifkr, qops.mpisize, index);
-         if(iproc == qops.mpirank){
-            Hx_functor<Tm> Hx("B", index, iformula);
-            Hx.opxwf = bind(&oper_normxwf_opB<Tm>, 
-           	            std::cref(superblock), std::cref(site), 
-           	            std::cref(qops1), std::cref(qops2),
-           		    index, iformula, false);
-            rfuns.push_back(Hx);
-         }
-      }
-   }
-   // opP
-   if(qops.oplist.find('P') != std::string::npos){
-      for(const auto& pr : qops('P')){
-         int index = pr.first;
-         Hx_functor<Tm> Hx("P", index);
-         Hx.opxwf = bind(&oper_compxwf_opP<Tm>,
-           	         std::cref(superblock), std::cref(site),
-           	         std::cref(qops1), std::cref(qops2), std::cref(int2e), 
-			 index, false);
-         rfuns.push_back(Hx);
-      }
-   }
-   // opQ
-   if(qops.oplist.find('Q') != std::string::npos){
-      for(const auto& pr : qops('Q')){
-         int index = pr.first;
-         Hx_functor<Tm> Hx("Q", index);
-         Hx.opxwf = bind(&oper_compxwf_opQ<Tm>,
-           	         std::cref(superblock), std::cref(site),
-           	         std::cref(qops1), std::cref(qops2), std::cref(int2e), 
-			 index, false);
-         rfuns.push_back(Hx);
-      }
-   }
-   // opS
-   if(qops.oplist.find('S') != std::string::npos){
-      for(const auto& pr : qops('S')){
-         int index = pr.first;
-         Hx_functor<Tm> Hx("S", index);
-         Hx.opxwf = bind(&oper_compxwf_opS<Tm>,
-           	         std::cref(superblock), std::cref(site),
-           	         std::cref(qops1), std::cref(qops2), std::cref(int2e),
-			 index, qops.mpisize, qops.mpirank, ifdist1, false);
-         rfuns.push_back(Hx);
-      }
-   }
-   // opH
-   if(qops.oplist.find('H') != std::string::npos){
-      Hx_functor<Tm> Hx("H");
-      Hx.opxwf = bind(&oper_compxwf_opH<Tm>, 
-           	      std::cref(superblock), std::cref(site),
-           	      std::cref(qops1), std::cref(qops2),
-           	      qops.mpisize, qops.mpirank, ifdist1);
-      rfuns.push_back(Hx);
-   }
-   return rfuns;
-}
 
 } // ctns
 

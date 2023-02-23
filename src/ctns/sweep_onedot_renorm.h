@@ -26,7 +26,7 @@ namespace ctns{
             const bool ifkr,
             const std::string superblock,
             const int ksupp,
-            linalg::matrix<Tm>& vsol,
+            const linalg::matrix<Tm>& vsol,
             stensor3<Tm>& wf,
             stensor2<Tm>& rot, 
             const std::string fname){
@@ -154,7 +154,7 @@ namespace ctns{
             const integral::one_body<typename Km::dtype>& int1e,
             const input::schedule& schd,
             const std::string scratch,
-            const linalg::matrix<typename Km::dtype>& vsol,
+            linalg::matrix<typename Km::dtype>& vsol,
             stensor3<typename Km::dtype>& wf,
             const oper_dictmap<typename Km::dtype>& qops_dict,
             oper_dict<typename Km::dtype>& qops,
@@ -183,7 +183,7 @@ namespace ctns{
             std::cout << "ctns::onedot_renorm superblock=" << superblock;
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
-	 auto& memory = sweeps.opt_memory[isweep][ibond];
+         auto& memory = sweeps.opt_memory[isweep][ibond];
 
          // 1. build reduced density matrix & perform decimation
          stensor2<Tm> rot;
@@ -212,11 +212,11 @@ namespace ctns{
          if(rank == 0 && schd.ctns.guess){
             onedot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
          }
-	 vsol.clear();
-	 if(debug){
-	    memory.dvdson = 0;
-	    memory.display();
-	 }
+         vsol.clear();
+         if(debug){
+            memory.dvdson = 0;
+            memory.display();
+         }
          timing.te = tools::get_time();
 
          // 3. renorm operators	 
@@ -224,9 +224,9 @@ namespace ctns{
          const auto& pdx = icomb.topo.rindex.at(p); 
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
-               + "_isweep"+std::to_string(isweep)
+            + "_isweep"+std::to_string(isweep)
                + "_ibond"+std::to_string(ibond) + ".txt";
-	 size_t worktot = 0;
+         size_t worktot = 0;
          if(superblock == "lc"){
             icomb.lsites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
             //-------------------------------------------------------------------
@@ -258,10 +258,10 @@ namespace ctns{
             worktot = oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,
                   cqops, rqops, qops, fname); 
          }
-	 if(debug){
-	    memory.renorm = 0;
-	    memory.display();
-	 }
+         if(debug){
+            memory.renorm = 0;
+            memory.display();
+         }
       }
 
 } // ctns

@@ -102,7 +102,7 @@ void symbolic_Hx2(Tm* y,
    for(int i=0; i<maxthreads; i++){
       Hwfs[i].init(wf.info, false);
       Hwfs[i].setup_data(&workspace[i*tmpsize]);
-      Hwfs[i].clear();
+      Hwfs[i].set_zero();
    }
    auto t1 = tools::get_time();
 

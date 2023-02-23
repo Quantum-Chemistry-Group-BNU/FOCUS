@@ -61,9 +61,9 @@ void oper_init_dot(oper_dict<Tm>& qops,
    if(size > 1){
       for(auto& pr : qops('S')){
          int iproc = distribute1(ifkr,size,pr.first);
-         if(iproc != rank) pr.second.clear();
+         if(iproc != rank) pr.second.set_zero();
       }
-      if(rank != 0) qops('H')[0].clear();
+      if(rank != 0) qops('H')[0].set_zero();
    }
 #endif
 }

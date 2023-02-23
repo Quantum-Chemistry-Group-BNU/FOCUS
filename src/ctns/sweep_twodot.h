@@ -92,7 +92,7 @@ namespace ctns{
                << std::endl;
          }
          if(debug){
-	    memory.comb = sizeof(Tm)*icomb.display_size(); 
+            memory.comb = sizeof(Tm)*icomb.display_size(); 
             memory.oper = sizeof(Tm)*qops_pool.size(); 
             memory.display();
          }
@@ -175,7 +175,7 @@ namespace ctns{
          wfsize = preprocess_wfsize(wf.info, info_dict);
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
-            + "_isweep"+std::to_string(isweep)
+               + "_isweep"+std::to_string(isweep)
                + "_ibond"+std::to_string(ibond) + ".txt";
          HVec_type<Tm> HVec; 
          Hx_functors<Tm> Hx_funs; // hvec0
@@ -237,7 +237,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            memory.work = sizeof(Tm)*worktot;
+            memory.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
                   std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -257,7 +257,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            memory.work = sizeof(Tm)*worktot;
+            memory.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx3<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -304,7 +304,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             // private workspace for each thread allocated inside preprocess_Hx
-            memory.work = sizeof(Tm)*worktot;
+            memory.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::preprocess_Hx<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
@@ -355,7 +355,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             // private workspace for each thread
-            memory.work = sizeof(Tm)*worktot;
+            memory.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::preprocess_Hx2<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
@@ -395,7 +395,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            memory.work = sizeof(Tm)*worktot;
+            memory.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::preprocess_Hx_batch<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
                   std::cref(ndim), std::cref(blksize), 
@@ -452,7 +452,7 @@ namespace ctns{
                }
             }else{
                std::cout << "error: batchmem should be set correctly!" 
-                         << schd.ctns.batchmem<< std::endl;
+                  << schd.ctns.batchmem<< std::endl;
                exit(1);
             }
             // 1. allocate memery on GPU
@@ -466,11 +466,11 @@ namespace ctns{
             size_t gpumem_use = gpumem_oper + gpumem_dvdson;
             if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
-                         << " gpumem_tot(GB)=" << gpumem_tot/std::pow(1024.0,3)
-                         << " gpumem_use(GB)=" << gpumem_use/std::pow(1024.0,3)
-                         << " (oper,dvdson)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
-                         << "," << gpumem_dvdson/std::pow(1024.0,3)
-                         << std::endl;
+                  << " gpumem_tot(GB)=" << gpumem_tot/std::pow(1024.0,3)
+                  << " gpumem_use(GB)=" << gpumem_use/std::pow(1024.0,3)
+                  << " (oper,dvdson)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
+                  << "," << gpumem_dvdson/std::pow(1024.0,3)
+                  << std::endl;
             }
             if(gpumem_use > gpumem_tot){
                std::cout << "error: insufficient GPU memory for storing!" << std::endl;
@@ -532,13 +532,13 @@ namespace ctns{
             gpumem_use += gpumem_tmp;
             if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
-                         << " gpumem_tot(GB)=" << gpumem_tot/std::pow(1024.0,3)
-                         << " gpumem_use(GB)=" << gpumem_use/std::pow(1024.0,3)
-                         << " (oper,dvdson,tmp)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
-                         << "," << gpumem_dvdson/std::pow(1024.0,3)
-                         << "," << gpumem_tmp/std::pow(1024.0,3)
-                         << " batchsize=" << batchsize
-                         << std::endl;
+                  << " gpumem_tot(GB)=" << gpumem_tot/std::pow(1024.0,3)
+                  << " gpumem_use(GB)=" << gpumem_use/std::pow(1024.0,3)
+                  << " (oper,dvdson,tmp)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
+                  << "," << gpumem_dvdson/std::pow(1024.0,3)
+                  << "," << gpumem_tmp/std::pow(1024.0,3)
+                  << " batchsize=" << batchsize
+                  << std::endl;
             }
             if(gpumem_use > gpumem_tot){
                std::cout << "error: in sufficient GPU memory!" << std::endl; // for case schd.ctns.batchsize is set
@@ -559,7 +559,7 @@ namespace ctns{
                      << std::endl;
                }
             } // i
-            // save for analysis of BatchGEMM
+              // save for analysis of BatchGEMM
             if(isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
                for(int i=0; i<Hxlst2.size(); i++){
                   std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
@@ -597,18 +597,19 @@ namespace ctns{
          }
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
-         oper_timer.clear();
+         oper_timer.start();
          twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond);
          if(debug && schd.ctns.verbose>1){
             sweeps.print_eopt(isweep, ibond);
             if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
          }
+         timing.tc = tools::get_time();
 
          // free tmp space on CPU
          if(schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3 || schd.ctns.alg_hvec==6){
             delete[] workspace;
-            memory.work = 0;
+            memory.hvec = 0;
          }
 #ifdef GPU
          // free memory space on GPU
@@ -622,7 +623,6 @@ namespace ctns{
 #endif
          }
 #endif
-         timing.tc = tools::get_time();
 
          // 3. decimation & renormalize operators
          auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
@@ -632,7 +632,7 @@ namespace ctns{
                vsol, wf, qops_dict, qops_pool(frop), 
                sweeps, isweep, ibond);
          if(debug){
-	    memory.comb = sizeof(Tm)*icomb.display_size();
+            memory.comb = sizeof(Tm)*icomb.display_size();
             memory.oper = sizeof(Tm)*qops_pool.size();
             memory.display();
          }

@@ -27,7 +27,7 @@ stensor2<Tm> symbolic_sum_oper(const oper_dictmap<Tm>& qops_dict,
    stensor2<Tm> optmp;
    optmp.init(op0.info,false);
    optmp.setup_data(workspace);
-   optmp.clear();
+   optmp.set_zero();
    if(nbar0 == 0){
       linalg::xaxpy(op0.size(), wt0, op0.data(), optmp.data());
    }else{
