@@ -96,7 +96,7 @@ namespace ctns{
                   sz += display_vec_size<Tm>(lsites, "lsites");
                   sz += display_vec_size<Tm>(psi, "psi");
                   std::cout << "total mem of comb=" << sz << ":" 
-			    << tools::sizeMB<Tm>(sz) << ":MB"
+			    << tools::sizeMB<Tm>(sz) << "MB:"
 			    << tools::sizeGB<Tm>(sz) << "GB"
 			    << std::endl;
                   return sz;
