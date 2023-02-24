@@ -1,5 +1,5 @@
 
-machine = scy0799 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no
 USE_GCC = no
@@ -39,6 +39,13 @@ else ifeq ($(strip $(machine)), scy0799)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
+else ifeq ($(strip $(machine)), scv7260)
+   MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
+   BOOST =/data/home/scv7260/run/xiangchunyang/boost_1_80_0_install
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi-mt-x64
+   endif
 else ifeq ($(strip $(machine)), DCU_419)
    MATHLIB = /public/software/compiler/intel/oneapi/mkl/latest/lib/intel64
    BOOST = /public/home/ictapp_j/xiangchunyang/boost-1.80.0-install
@@ -60,9 +67,9 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
-      FLAGS += -DDEBUG -g -O0 -Wall 
+      FLAGS += -DDEBUG -g -O0 -Wall -lm
    else
-      FLAGS += -DNDEBUG -O2 -Wall 
+      FLAGS += -DNDEBUG -O2 -Wall -lm
    endif
    FLAGS += -gdwarf-4 -gstrict-dwarf # dwarf error in ld
    ifeq ($(strip $(USE_MPI)),no)
@@ -93,7 +100,7 @@ endif
 ifeq ($(strip $(USE_OPENMP)),no)
    # serial version of MKL
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
+          -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -ldl
    # mac framework Accelerate
    #MATH = -llapack -lblas 
 else
@@ -105,7 +112,7 @@ else
    # https:/.aftware.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-adv.ar.html	
    # parallel version of MKL
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -ldl \
+          -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -ldl \
    	  -liomp5
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
 endif
@@ -134,6 +141,12 @@ else ifeq ($(strip $(machine)), scy0799)
    CUDA_DIR=/data/apps/cuda/11.2
    MAGMA_DIR=/data01/home/scy0799/run/xiangchunyang/project/magma-2.6.1-install/
    FLAGS += -DGPU -DUSE_CUDA_OPERATION -I${MAGMA_DIR}/include -I${CUDA_DIR}/include 
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -lmagma_sparse -L${CUDA_DIR}/lib64 -lcudart_static
+
+else ifeq ($(strip $(machine)), scv7260)
+   CUDA_DIR=/data/apps/cuda/11.4
+   MAGMA_DIR=/data/home/scv7260/run/xiangchunyang/magma_2_6_1_install
+   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -lmagma_sparse -L${CUDA_DIR}/lib64 -lcudart_static
 else
    CUDA_DIR= /usr/local/cuda

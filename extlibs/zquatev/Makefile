@@ -1,5 +1,5 @@
 
-machine = scy0799 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 INCLUDE = -I.
 

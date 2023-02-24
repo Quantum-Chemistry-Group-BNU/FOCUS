@@ -68,7 +68,7 @@ namespace ctns{
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
 #else
-				MAGMA_CHECK(magma_dsetvector(ndim, (double*)xCPU, 1, (double*)x,  1,  magma_queue));
+				    magma_dsetvector(ndim, (double*)xCPU, 1, (double*)x,  1,  magma_queue);
 #endif
 #endif //USE_HIP
             gettimeofday(&t1_time_copy, NULL);
