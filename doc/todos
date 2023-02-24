@@ -249,6 +249,9 @@ KNOWN PROBLEMS
  * Check fetch time for Fe8S7
 
  * Support Intermediate with GPU
+
  * Support Renorm with GPU
+
  * Support Mixed CPU-GPU implementation
+
  * Support Kramers version
