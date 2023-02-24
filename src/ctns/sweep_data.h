@@ -168,9 +168,11 @@ namespace ctns{
             // sweep results
             timing_sweep.resize(maxsweep);
             opt_result.resize(maxsweep);
+            opt_memory.resize(maxsweep);
             opt_timing.resize(maxsweep);
             for(int i=0; i<maxsweep; i++){
                 opt_result[i].resize(seqsize);
+                opt_memory[i].resize(seqsize);
                 opt_timing[i].resize(seqsize);
                 for(int j=0; j<seqsize; j++){
                     opt_result[i][j].eopt.resize(nroots);

@@ -146,7 +146,7 @@ else ifeq ($(strip $(machine)), scy0799)
 else ifeq ($(strip $(machine)), scv7260)
    CUDA_DIR=/data/apps/cuda/11.4
    MAGMA_DIR=/data/home/scv7260/run/xiangchunyang/magma_2_6_1_install
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
+   FLAGS += -DGPU -DUSE_CUDA_OPERATION -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -lmagma_sparse -L${CUDA_DIR}/lib64 -lcudart_static
 else
    CUDA_DIR= /usr/local/cuda
