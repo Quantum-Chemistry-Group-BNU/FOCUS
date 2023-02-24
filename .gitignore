@@ -23,5 +23,4 @@ extlibs/magma-2.6.1/
 src.tar
 .*.swo
 .*.swp
-*.sh
 examples/fe2s2/input.dat
