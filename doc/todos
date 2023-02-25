@@ -239,21 +239,20 @@ KNOWN PROBLEMS
 
 === 2023 DMRG ===
 
- * Setup Fe2S2 test [dell?] for hvec=6/7?
- * Current best estimate for Fe4S4 and Fe8S7?
- * Clean up Hx with Chunyang
  * Bugs:
-   - Fix bug in memory issues: statistics [check icase=1 with CPU] 
-   - Fix bug in parallel IO [mpi problem]
    - Fix bug in GPU implementation - wrong results sometimes?
- * Check fetch time for Fe8S7
+   - Fix bug in parallel IO [mpi problem]
+ * Profiling: Check fetch time for Fe8S7
 
- * === Support Restart isweep ibond ===
+ * Support Restart isweep ibond
 
  * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
 
  * Support Intermediate with GPU
 
+ * Support Mixed CPU-GPU implementation
+
  * Support Renorm with GPU
 
  * Support Kramers version
+
