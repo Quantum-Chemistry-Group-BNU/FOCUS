@@ -91,7 +91,8 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
-                  & task_init & task_sdiag & task_ham & task_opt 
+                  & task_init & task_sdiag & task_ham & task_opt
+                  & task_restart & rsweep & rbond 
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd
                   & nroots & guess & dbranch & maxsweep & maxbond & lastdot & ctrls
                   & alg_hvec & alg_renorm & ifdist1 & save_formulae & sort_formulae 
@@ -115,6 +116,10 @@ namespace input{
          bool task_sdiag = false;
          bool task_ham = false;
          bool task_opt = false;
+         // restart
+         bool task_restart = false;
+         int rsweep = -1;
+         int rbond = -1;
          // conversion of sci 
          int maxdets = 10000;
          double thresh_proj = 1.e-16;
