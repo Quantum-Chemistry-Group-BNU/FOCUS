@@ -53,28 +53,36 @@ namespace ctns{
             const size_t _batchsize,
             const size_t offset,
             const int hxorder,
-            const int icase){
-         totsize = Hxlst.size();
+            const int _batchcase){
+         // init
          batchgemm = _batchgemm;
+         totsize = Hxlst.size();
          batchsize = _batchsize;
+         if(batchsize == 0 && totsize !=0){
+            std::cout << "error: inconsistent batchsize & totsize!" << std::endl;
+            std::cout << "batchsize=" << batchsize << " totsize=" << totsize << std::endl;
+            exit(1);
+         }
+         if(batchsize == 0) return;
          nbatch = totsize/batchsize;
          if(totsize%batchsize != 0) nbatch += 1; // thus, this works even for totsize < batchsize
+         
+         // start process Hxlst
          mmbatch2.resize(nbatch);
          mmreduce.resize(nbatch);
-         // process Hxlst
          for(int k=0; k<nbatch; k++){
             size_t off = k*batchsize;
-            int jlen = std::min(totsize-off, batchsize);
+            size_t jlen = std::min(totsize-off, batchsize);
 
             // initialization
-            int nd = (icase==0)? 4 : 8;
+            int nd = (_batchcase==0)? 4 : 8;
             int pos[4] = {0,1,2,3};
             std::vector<size_t> dims(nd,0);
             // count how many gemms in each case 
             for(int j=0; j<jlen; j++){
-               int jdx = off+j;
-               auto& Hxblk = Hxlst[jdx];
-               if(icase == 1){
+               size_t jdx = off+j;
+               const auto& Hxblk = Hxlst[jdx];
+               if(_batchcase == 1){
                   pos[0] = Hxblk.dagger[3]? 0 : 1;
                   pos[1] = Hxblk.dagger[2]? 2 : 3;
                   pos[2] = Hxblk.dagger[1]? 4 : 5;
@@ -94,9 +102,9 @@ namespace ctns{
             }
             std::vector<size_t> idx(nd,0);
             for(int j=0; j<jlen; j++){
-               int jdx = off+j;
-               auto& Hxblk = Hxlst[jdx];
-               if(icase == 1){
+               size_t jdx = off+j;
+               const auto& Hxblk = Hxlst[jdx];
+               if(_batchcase == 1){
                   pos[0] = Hxblk.dagger[3]? 0 : 1;
                   pos[1] = Hxblk.dagger[2]? 2 : 3;
                   pos[2] = Hxblk.dagger[1]? 4 : 5;
@@ -128,14 +136,14 @@ namespace ctns{
             } // i
 
             // setup mmreduce[k]
-	    mmreduce[k].size = jlen;
+	        mmreduce[k].size = jlen;
             mmreduce[k].ndim = Hxlst[off].size;
             mmreduce[k].offout = Hxlst[off].offout;
             mmreduce[k].alpha.resize(jlen);
             mmreduce[k].yoff.resize(jlen);
             for(int j=0; j<jlen; j++){
-               int jdx = off+j;
-               auto& Hxblk = Hxlst[jdx];
+               size_t jdx = off+j;
+               const auto& Hxblk = Hxlst[jdx];
                mmreduce[k].alpha[j] = Hxblk.coeff;
                mmreduce[k].yoff[j] = j*offset+Hxblk.offres;
             }

@@ -248,10 +248,12 @@ KNOWN PROBLEMS
    - Fix bug in GPU implementation - wrong results sometimes?
  * Check fetch time for Fe8S7
 
+ * === Support Restart isweep ibond ===
+
+ * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
+
  * Support Intermediate with GPU
 
  * Support Renorm with GPU
-
- * Support Mixed CPU-GPU implementation
 
  * Support Kramers version

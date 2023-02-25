@@ -38,7 +38,7 @@ inline void xgemm_batch_gpu(const char transa, const char transb,
     double ** dev_c_array_ptr;
 
 
-    int total_size = (a_total_count + b_total_count + c_total_count)*sizeof(double);
+    size_t total_size = (a_total_count + b_total_count + c_total_count)*sizeof(double);
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
     //dev_array_ptr
@@ -324,7 +324,7 @@ inline void xgemm_batch_gpu(const char transa, const char transb,
     magmaDoubleComplex ** dev_c_array_ptr;
 
 
-    int total_size = (a_total_count + b_total_count + c_total_count)*sizeof(magmaDoubleComplex);
+    size_t total_size = (a_total_count + b_total_count + c_total_count)*sizeof(magmaDoubleComplex);
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
     //dev_array_ptr
@@ -469,7 +469,7 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     double ** dev_c_array_ptr;
 
 
-    int total_size =0 ;
+    size_t total_size =0 ;
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
     //dev_array_ptr
@@ -562,14 +562,18 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     double ** dev_c_array_ptr;
 
 
-    int total_size =0 ;
+    size_t total_size =0 ;
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
     //dev_array_ptr
-    total_size +=3*batch_count*sizeof(double*);
+    total_size += 3*batch_count*sizeof(double*);
+    std::cout << "lzd batchcount: " << batch_count << std::endl;
 
     //CUDA_CHECK(cudaMalloc((void**)&dev_total, total_size));
     MAGMA_CHECK(magma_malloc(&dev_total, total_size));
+
+    // lzd debug
+    cudaMemset((void**)&dev_total, 0, total_size);
 
     dev_m = (int*)((void*)dev_total);
     dev_n = dev_m + (batch_count+1);
@@ -667,7 +671,7 @@ inline void xgemm_batch_gpu_precopy_stream(const char transa, const char transb,
     double ** dev_c_array_ptr;
 
 
-    int total_size =0 ;
+    size_t total_size =0 ;
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
     //dev_array_ptr
@@ -769,7 +773,7 @@ inline void xgemm_batch_gpu_precopy_new(const char transa, const char transb,
     double ** dev_c_array_ptr;
 
 
-    int total_size =0 ;
+    size_t total_size =0 ;
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
     //dev_array_ptr
@@ -875,7 +879,7 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     magmaDoubleComplex ** dev_c_array_ptr;
 
 
-    int total_size =0 ;
+    size_t total_size =0 ;
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
     //dev_array_ptr
