@@ -1,6 +1,6 @@
 #!/bin/bash
 
-platform="scv720" # scy0799  #scv720  #DCU_419 #DCU_zhengzhou
+platform="scy0799" # scy0799  #scv720  #DCU_419 #DCU_zhengzhou
 
 if [ $platform == "scy0799" ]; then
 module purge 

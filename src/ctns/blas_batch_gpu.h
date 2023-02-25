@@ -603,7 +603,8 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
         return ;
     }
 #ifdef USE_HIP
-    double* dev_total;
+    int* dev_total;
+    double** dev_total_addr;
 
     int  *dev_m;
     int  *dev_n;
@@ -618,15 +619,24 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     double ** dev_c_array_ptr;
 
 
-    int total_size =0 ;
+    size_t total_size =0 ;
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
+
+
+    size_t total_size_addr =0 ;
     //dev_array_ptr
-    total_size +=3*batch_count*sizeof(double*);
+    total_size_addr +=3*batch_count*sizeof(double*);
 
-    HIP_CHECK(hipMalloc((void**)&dev_total, total_size));
 
-    dev_m = (int*)((void*)dev_total);
+	 HIP_CHECK(hipMalloc((void**)&dev_total, total_size));
+	 HIP_CHECK(hipMemset((void*)dev_total, 0, total_size));
+
+	 HIP_CHECK(hipMalloc((void**)&dev_total_addr, total_size_addr));
+	 HIP_CHECK(hipMemset((void*)dev_total_addr, 0, total_size_addr));
+
+
+    dev_m = (int*)dev_total;
     dev_n = dev_m + (batch_count+1);
     dev_k = dev_n + (batch_count+1);
 
@@ -634,7 +644,7 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     dev_ldb = dev_lda + (batch_count+1);
     dev_ldc = dev_ldb + (batch_count+1);
 
-    dev_a_array_ptr= (double**)((void*)dev_ldc +(batch_count+1)*sizeof(int)) ;
+    dev_a_array_ptr= (double**)dev_total_addr ;
     dev_b_array_ptr = dev_a_array_ptr + batch_count;
     dev_c_array_ptr = dev_b_array_ptr + batch_count;
 
@@ -695,10 +705,11 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
             );
 
     HIP_CHECK(hipFree(dev_total));     
+    HIP_CHECK(hipFree(dev_total_addr));     
 #else
 #if defined(USE_CUDA_OPERATION)
-
-    double* dev_total;
+    int* dev_total;
+    double** dev_total_addr;
 
     int  *dev_m;
     int  *dev_n;
@@ -713,15 +724,24 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     double ** dev_c_array_ptr;
 
 
-    int total_size =0 ;
+    size_t total_size =0 ;
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
+
+
+    size_t total_size_addr =0 ;
     //dev_array_ptr
-    total_size +=3*batch_count*sizeof(double*);
+    total_size_addr +=3*batch_count*sizeof(double*);
 
-    CUDA_CHECK(cudaMalloc((void**)&dev_total, total_size));
 
-    dev_m = (int*)((void*)dev_total);
+	 CUDA_CHECK(cudaMalloc((void**)&dev_total, total_size));
+	 CUDA_CHECK(cudaMemset((void*)dev_total, 0, total_size));
+
+	 CUDA_CHECK(cudaMalloc((void**)&dev_total_addr, total_size_addr));
+	 CUDA_CHECK(cudaMemset((void*)dev_total_addr, 0, total_size_addr));
+
+
+    dev_m = (int*)dev_total;
     dev_n = dev_m + (batch_count+1);
     dev_k = dev_n + (batch_count+1);
 
@@ -729,7 +749,7 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     dev_ldb = dev_lda + (batch_count+1);
     dev_ldc = dev_ldb + (batch_count+1);
 
-    dev_a_array_ptr= (double**)((void*)dev_ldc +(batch_count+1)*sizeof(int)) ;
+    dev_a_array_ptr= (double**)dev_total_addr ;
     dev_b_array_ptr = dev_a_array_ptr + batch_count;
     dev_c_array_ptr = dev_b_array_ptr + batch_count;
 
@@ -790,6 +810,8 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
             );
 
     CUDA_CHECK(cudaFree(dev_total));     
+    CUDA_CHECK(cudaFree(dev_total_addr));     
+
 #else
     magma_ptr dev_total;
 
