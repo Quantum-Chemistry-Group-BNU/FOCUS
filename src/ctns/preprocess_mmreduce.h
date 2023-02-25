@@ -12,7 +12,7 @@ namespace ctns{
             public:
                 void reduction(Tm* workspace, Tm* y, const int iop);
             public:
-                size_t size, ndim, offout;
+                size_t size = 0, ndim = 0, offout = 0;
                 std::vector<Tm> alpha;
                 std::vector<size_t> yoff;
         };

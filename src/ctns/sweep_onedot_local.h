@@ -85,10 +85,10 @@ namespace ctns{
          }else if(schd.ctns.cisolver == 1){ 
 
             // davidson
-            if(!schd.ctns.guess){
+            if(schd.ctns.guess == 0){
                // davidson without initial guess
                solver.solve_iter(eopt.data(), vsol.data()); 
-            }else{    
+            }else if(schd.ctns.guess == 1){    
                //------------------------------------
                // prepare initial guess     
                //------------------------------------
@@ -108,6 +108,9 @@ namespace ctns{
                }
                //------------------------------------
                solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+            }else{
+               std::cout << "error: no such option for guess=" << schd.ctns.guess << std::endl;
+               exit(1);
             }
 
          }
@@ -135,7 +138,7 @@ namespace ctns{
 #endif
 
          // kramers restricted (currently works only for iterative with guess!)
-         assert(schd.ctns.cisolver == 1 && schd.ctns.guess);
+         assert(schd.ctns.cisolver == 1 && schd.ctns.guess == 1);
          pdvdsonSolver_kr<Tm,stensor3<Tm>> solver(ndim, neig, eps, schd.ctns.maxcycle, parity, wf); 
          solver.iprt = schd.ctns.verbose;
          solver.nbuff = schd.ctns.nbuff;

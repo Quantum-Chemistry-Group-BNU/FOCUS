@@ -38,6 +38,11 @@ namespace ctns{
                << std::endl;
          }
 
+        std::cout << std::setprecision(10); 
+	    std::cout << "||xCPU||=" << linalg::xnrm2(ndim, x) 
+                  << " xCPU[0]=" << x[0] << "," << x[ndim-1] 
+                  << std::endl;
+
          // initialization
          memset(y, 0, ndim*sizeof(Tm));
 
@@ -75,6 +80,13 @@ namespace ctns{
                time_cost_gemm_reduction += ((double)(t1_time_gemm_reduction.tv_sec - t0_time_gemm_reduction.tv_sec) 
                                           + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
             } // k
+
+        // lzd
+		std::cout << "i=" << i << " xty=" << linalg::xdot(ndim, x, y)
+                  << " yty=" << linalg::xdot(ndim, y, y) 
+                  << " yCPU=" << y[0] << "," << y[ndim-1]
+                  << std::endl;
+
          } // i
          std::cout << "--- time_cost_gemm_kernel=" << time_cost_gemm_kernel << std::endl;
          std::cout << "--- time_cost_gemm_reduction=" << time_cost_gemm_reduction << std::endl;

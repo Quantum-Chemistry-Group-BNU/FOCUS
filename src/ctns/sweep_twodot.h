@@ -524,7 +524,7 @@ namespace ctns{
                assert(gpumem_tot > gpumem_use);
                batchsize = std::floor(double(gpumem_tot - gpumem_use)/(sizeof(Tm)*blksize*2));
                batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
-               if(batchsize == 0){
+               if(batchsize == 0 && maxbatch != 0){
                   std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
                }
             }
@@ -544,13 +544,16 @@ namespace ctns{
                std::cout << "error: in sufficient GPU memory!" << std::endl; // for case schd.ctns.batchsize is set
                exit(1);
             }
+            std::cout << "lzdA0" << std::endl;
 
             // generate mmtasks
             assert(schd.ctns.batchcase == 1);
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<Hxlst2.size(); i++){
+               std::cout << "i0=" << i << std::endl;
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
                      blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
+               std::cout << "i1=" << i << std::endl;
                if(debug && schd.ctns.verbose>1){
                   std::cout << "rank=" << rank << " iblk=" << i 
                      << " mmtasks.totsize=" << mmtasks[i].totsize
@@ -559,13 +562,15 @@ namespace ctns{
                      << std::endl;
                }
             } // i
-              // save for analysis of BatchGEMM
+            std::cout << "lzdA1" << std::endl;
+            // save for analysis of BatchGEMM
             if(isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
                for(int i=0; i<Hxlst2.size(); i++){
                   std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
                   mmtasks[i].save(fgemmi);
                }
             }
+            std::cout << "lzdA2" << std::endl;
 
             // 4. allocate memory for Davidson: x,y,tmp
             worktot = 2*ndim + batchsize*blksize*2;
@@ -574,6 +579,11 @@ namespace ctns{
 #else
             MAGMA_CHECK(magma_dmalloc((double**)(&dev_workspace), worktot));
 #endif
+            std::cout << "lzdA3" << std::endl;
+
+            // lzd
+            cudaMemset(dev_workspace, 2329, worktot*sizeof(Tm)); 
+            std::cout << "lzdA4" << std::endl;
 
             // GPU version of Hx
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
@@ -598,8 +608,11 @@ namespace ctns{
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
          oper_timer.start();
+
+         std::cout << "lzdB" << std::endl;
          twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond);
+         std::cout << "lzdC" << std::endl;
          if(debug && schd.ctns.verbose>0){
             sweeps.print_eopt(isweep, ibond);
             if(schd.ctns.alg_hvec == 0) oper_timer.analysis();

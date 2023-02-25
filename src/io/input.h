@@ -127,7 +127,7 @@ namespace input{
          double rdm_svd = 1.5;
          // sweep
          int nroots = 1; // this can be smaller than nroots in CI 
-         bool guess = true;
+         int guess = 1;
          int dbranch = 0;
          int maxsweep = 0;
          int maxbond = -1;

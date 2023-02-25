@@ -47,7 +47,7 @@ namespace ctns{
                fout.close();
             }
          public:
-            size_t size;
+            size_t size = 0;
             double cost = 0.0;
             std::vector<char> transA, transB;
             std::vector<int> M, N, K, LDA, LDB;
@@ -107,10 +107,13 @@ namespace ctns{
             Bptr[i] = ptrs[locB[i]] + offB[i];
             Cptr[i] = ptrs[locC[i]] + offC[i];
          }
-         int group_count = size; 
-         linalg::xgemm_batch(transA.data(), transB.data(), M.data(), N.data(), K.data(), alpha_vec.data(), 
-               Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
-               Cptr.data(), M.data(), &group_count, size_per_group_vec.data());
+         int group_count = size;
+         std::cout << "lzd group_count = " << group_count << std::endl;
+         if(size > 0){ 
+            linalg::xgemm_batch(transA.data(), transB.data(), M.data(), N.data(), K.data(), alpha_vec.data(), 
+                  Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
+                  Cptr.data(), M.data(), &group_count, size_per_group_vec.data());
+         }
       }
 
 #ifdef GPU

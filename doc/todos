@@ -242,8 +242,11 @@ KNOWN PROBLEMS
  * Bugs:
    - Fix bug in GPU implementation - wrong results sometimes?
    - Fix bug in parallel IO [mpi problem]
-
  * Profiling: Check fetch time for Fe8S7
+
+ * Support Restart isweep ibond
+
+ * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
 
  * Support Intermediate with GPU
 

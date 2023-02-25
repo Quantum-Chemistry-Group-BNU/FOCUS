@@ -41,6 +41,11 @@ namespace ctns{
                     << " maxthreads=" << maxthreads
                     << std::endl;
             }
+	   
+        std::cout << std::setprecision(10); 
+	    std::cout << "||xCPU||=" << linalg::xnrm2(ndim, xCPU) 
+                  << "xCPU[0]=" << xCPU[0] << "," << xCPU[ndim-1] 
+                  << std::endl;
 
             // initialization
             Tm* x = &dev_workspace[0];
@@ -80,6 +85,8 @@ namespace ctns{
             ptrs[5] = x;
             ptrs[6] = &dev_workspace[offset];
 
+            std::cout << "lzd::mmtasks.size=" << mmtasks.size() << std::endl;
+
             // loop over nonzero blocks
             double cost = 0.0;
             for(int i=0; i<mmtasks.size(); i++){
@@ -101,6 +108,18 @@ namespace ctns{
                                                + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
 
                 } // k
+
+	    // lzd - debug
+#if defined(USE_CUDA_OPERATION)
+            CUDA_CHECK(cudaMemcpy(yCPU,y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
+#else
+            magma_dgetvector(ndim, (double*)y, 1, (double*)yCPU,  1,  magma_queue);
+#endif
+		std::cout << "i=" << i << " xty=" << linalg::xdot(ndim, xCPU, yCPU) 
+                  << " yty=" << linalg::xdot(ndim, yCPU, yCPU) 
+                  << " yCPU=" << yCPU[0] << "," << yCPU[ndim-1]
+                  << std::endl;
+
             } // i
             std::cout << "--- time_cost_gemm_kernel=" << time_cost_gemm_kernel << std::endl;
             std::cout << "--- time_cost_gemm_reduction=" << time_cost_gemm_reduction << std::endl;
@@ -121,8 +140,10 @@ namespace ctns{
             time_cost_gemm_copy += ((double)(t1_time_gemm_copy.tv_sec - t0_time_gemm_copy.tv_sec) 
                                   + (double)(t1_time_gemm_copy.tv_usec - t0_time_gemm_copy.tv_usec)/1000000.0);
 
+	    std::cout << "||yCPU||=" << linalg::xnrm2(ndim, yCPU) << std::endl;
             // add const term
             if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);
+	    std::cout << "||yCPU||=" << linalg::xnrm2(ndim, yCPU) << std::endl;
         }
 
 } // ctns
