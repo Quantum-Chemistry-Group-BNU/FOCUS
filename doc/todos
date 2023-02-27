@@ -240,8 +240,9 @@ KNOWN PROBLEMS
 === 2023 DMRG ===
 
  * Bugs:
-   - Fix bug in GPU implementation - wrong results sometimes?
+   - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magma size is int]
    - Fix bug in parallel IO [mpi problem]
+
  * Profiling: Check fetch time for Fe8S7
 
  * Support Restart isweep ibond
@@ -250,13 +251,9 @@ KNOWN PROBLEMS
 
  * Support Intermediate with GPU
 
- * Support Mixed CPU-GPU implementation
-
  * Support Renorm with GPU
 
  * Support Kramers version
 
  * Problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
-
-
 
