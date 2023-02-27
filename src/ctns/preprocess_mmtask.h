@@ -22,7 +22,7 @@ namespace ctns{
                for(int k=0; k<mmbatch2.size(); k++){
                   for(int i=0; i<mmbatch2[k].size(); i++){
                      std::string fgemmki = fgemm+"_"+std::to_string(k)+"."
-                                          +std::to_string(i)+".txt";
+                        +std::to_string(i)+".txt";
                      mmbatch2[k][i].save(fgemmki);
                   }
                }
@@ -66,7 +66,7 @@ namespace ctns{
          if(batchsize == 0) return;
          nbatch = totsize/batchsize;
          if(totsize%batchsize != 0) nbatch += 1; // thus, this works even for totsize < batchsize
-         
+
          // start process Hxlst
          mmbatch2.resize(nbatch);
          mmreduce.resize(nbatch);
@@ -121,7 +121,7 @@ namespace ctns{
                   } //k
                } // i
             } // j
-            
+
             // convert to batch list
             mmbatch2[k].resize(nd);
             for(int i=0; i<nd; i++){
@@ -136,7 +136,7 @@ namespace ctns{
             } // i
 
             // setup mmreduce[k]
-	        mmreduce[k].size = jlen;
+            mmreduce[k].size = jlen;
             mmreduce[k].ndim = Hxlst[off].size;
             mmreduce[k].offout = Hxlst[off].offout;
             mmreduce[k].alpha.resize(jlen);

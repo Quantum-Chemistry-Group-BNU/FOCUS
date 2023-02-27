@@ -3,8 +3,10 @@
 
 #include <time.h>
 #include <sys/time.h>
-#include "blas_batch.h"
-#include "blas_batch_gpu.h"
+#include "../core/blas_batch.h"
+#ifdef GPU
+#include "../gpu/gpu_blas_batch.h"
+#endif
 
 namespace ctns{
 
@@ -20,9 +22,7 @@ namespace ctns{
                   this->xgemm_batch_cpu(ptrs);   
 #ifdef GPU 
                }else if(batchgemm == 2){
-                  this->xgemm_batch_gpu(ptrs);    
-               }else if(batchgemm == 3){
-                  this->xgemm_batch_gpu_precopy(ptrs);
+                  this->xgemm_batch_gpu(ptrs);
 #endif 
                }else{
                   std::cout << "error: no such option in MMbatch::kernel batchgemm=" << batchgemm << std::endl;
@@ -33,16 +33,15 @@ namespace ctns{
             void xgemm_batch_cpu(Tm** ptrs);
 #ifdef GPU
             void xgemm_batch_gpu(Tm** ptrs);
-            void xgemm_batch_gpu_precopy(Tm** ptrs);
 #endif
             void save(const std::string fname){
                std::ofstream fout(fname);
                fout << size << " " << transA[0] << " " << transB[0] << " " << std::endl;
                for(int i=0; i<size; i++){
                   fout << M[i] << " " 
-                       << N[i] << " "
-                       << K[i] 
-                       << std::endl;
+                     << N[i] << " "
+                     << K[i] 
+                     << std::endl;
                }
                fout.close();
             }
@@ -107,9 +106,8 @@ namespace ctns{
             Bptr[i] = ptrs[locB[i]] + offB[i];
             Cptr[i] = ptrs[locC[i]] + offC[i];
          }
-         int group_count = size;
-         std::cout << "lzd group_count = " << group_count << std::endl;
          if(size > 0){ 
+            int group_count = size;
             linalg::xgemm_batch(transA.data(), transB.data(), M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
                   Cptr.data(), M.data(), &group_count, size_per_group_vec.data());
@@ -119,28 +117,6 @@ namespace ctns{
 #ifdef GPU
    template <typename Tm>
       void MMbatch<Tm>::xgemm_batch_gpu(Tm** ptrs){
-         //   std::cout<<"xgemm_batch_gpu"<<std::endl;
-         int a_total=0;
-         int b_total=0;
-         int c_total=0;
-         // initialization 
-         for(int i=0; i<size; i++){
-            Aptr[i] = ptrs[locA[i]] + offA[i];
-            Bptr[i] = ptrs[locB[i]] + offB[i];
-            Cptr[i] = ptrs[locC[i]] + offC[i];
-            a_total +=M[i]*K[i];
-            b_total +=K[i]*N[i];
-            c_total +=M[i]*N[i];
-         }
-         if(size >0){
-            linalg::xgemm_batch_gpu(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
-                  Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
-                  Cptr.data(), M.data(), size, a_total, b_total, c_total);
-         }
-      }
-
-   template <typename Tm>
-      void MMbatch<Tm>::xgemm_batch_gpu_precopy(Tm** ptrs){
          int a_total=0;
          int b_total=0;
          int c_total=0;
@@ -154,7 +130,7 @@ namespace ctns{
             c_total +=M[i]*N[i];
          }
          if(size > 0){
-            linalg::xgemm_batch_gpu_precopy(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
+            linalg::xgemm_batch_gpu(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
                   Cptr.data(), M.data(), size, a_total, b_total, c_total);
          }
