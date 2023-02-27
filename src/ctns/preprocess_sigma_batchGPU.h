@@ -57,20 +57,15 @@ namespace ctns{
          struct timeval t0_time_ycopy, t1_time_ycopy;
          struct timeval t0_time_gemm_reduction, t1_time_gemm_reduction;
 
-         // from xCPU to x
          gettimeofday(&t0_time_copy, NULL);
 #ifdef USE_HIP
+         // from xCPU to x
          HIP_CHECK(hipMemcpy(x, xCPU,ndim*sizeof(Tm), hipMemcpyHostToDevice));
          // TODOs: memset yGPU
          HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
 #else
          CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
-#if defined(USE_CUDA_OPERATION)
          CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
-#else
-         CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
-         //magma_dsetvector(ndim, (double*)xCPU, 1, (double*)x,  1,  magma_queue);
-#endif
 #endif //USE_HIP
          gettimeofday(&t1_time_copy, NULL);
 
@@ -125,12 +120,7 @@ namespace ctns{
 #ifdef USE_HIP
          HIP_CHECK(hipMemcpy(yCPU,y, ndim*sizeof(Tm), hipMemcpyDeviceToHost));
 #else
-#if defined(USE_CUDA_OPERATION)
          CUDA_CHECK(cudaMemcpy(yCPU,y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
-#else
-         CUDA_CHECK(cudaMemcpy(yCPU,y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
-         //magma_dgetvector(ndim, (double*)y, 1, (double*)yCPU,  1,  magma_queue);
-#endif
 #endif
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);

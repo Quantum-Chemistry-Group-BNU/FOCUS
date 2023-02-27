@@ -21,7 +21,7 @@ namespace ctns{
                }else if(batchgemm == 1){
                   this->xgemm_batch_cpu(ptrs);   
 #ifdef GPU 
-               }else if(batchgemm == 3){
+               }else if(batchgemm == 2){
                   this->xgemm_batch_gpu(ptrs);
 #endif 
                }else{

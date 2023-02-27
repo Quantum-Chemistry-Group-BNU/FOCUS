@@ -21,6 +21,7 @@
 #include "preprocess_sigma2.h"
 #include "preprocess_sigma_batch.h"
 #ifdef GPU
+#include "gpu_env.h"
 #include "preprocess_sigma_batchGPU.h"
 #endif
 
@@ -194,8 +195,9 @@ namespace ctns{
          double cost;
          Tm* workspace;
 #ifdef GPU
-         Tm* dev_opaddr = nullptr;
+         Tm* dev_oper = nullptr;
          Tm* dev_workspace = nullptr;
+         size_t gpumem_use = 0;
 #endif
          double t_kernel_ibond=0.0, t_reduction_ibond=0.0; // debug
          std::string fgemm = "mmtasks";
@@ -451,28 +453,20 @@ timing.tb4 = tools::get_time();
                + qops_dict.at("c2").size()
                + inter.size();
             size_t gpumem_oper = sizeof(Tm)*opertot;
-            size_t gpumem_dvdson = sizeof(Tm)*2*ndim;
-            size_t gpumem_use = gpumem_oper + gpumem_dvdson;
-            if(schd.ctns.verbose>0){
-               std::cout << "rank=" << rank
-                  << " gpumem_tot(GB)=" << gpumem_tot/std::pow(1024.0,3)
-                  << " gpumem_use(GB)=" << gpumem_use/std::pow(1024.0,3)
-                  << " (oper,dvdson)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
-                  << "," << gpumem_dvdson/std::pow(1024.0,3)
-                  << std::endl;
-            }
-            if(gpumem_use > gpumem_tot){
-               std::cout << "error: insufficient GPU memory for storing!" << std::endl;
-               exit(1); 
-            }
-
-            // 2. copy
-            dev_opaddr = (Tm*)dev_addr;
-            Tm* dev_l_opaddr = dev_opaddr;
+            dev_oper = (Tm*)gpumem.allocate(gpumem_oper);
+            Tm* dev_l_opaddr = dev_oper;
             Tm* dev_r_opaddr = dev_l_opaddr + qops_dict.at("l").size();
             Tm* dev_c1_opaddr = dev_r_opaddr + qops_dict.at("r").size();
             Tm* dev_c2_opaddr = dev_c1_opaddr + qops_dict.at("c1").size();
             Tm* dev_inter_opaddr = dev_c2_opaddr + qops_dict.at("c2").size();
+            // save pointers to opaddr
+            opaddr[0] = dev_l_opaddr;
+            opaddr[1] = dev_r_opaddr;
+            opaddr[2] = dev_c1_opaddr;
+            opaddr[3] = dev_c2_opaddr;
+            opaddr[4] = dev_inter_opaddr;
+
+            // 2. copy
             // copy qops
 #ifdef USE_HIP
             HIP_CHECK(hipMemcpy(dev_l_opaddr,qops_dict.at("l")._data,qops_dict.at("l").size()*sizeof(Tm), hipMemcpyHostToDevice));
@@ -480,88 +474,56 @@ timing.tb4 = tools::get_time();
             HIP_CHECK(hipMemcpy(dev_c1_opaddr,qops_dict.at("c1")._data,qops_dict.at("c1").size()*sizeof(Tm), hipMemcpyHostToDevice));
             HIP_CHECK(hipMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), hipMemcpyHostToDevice));
 #else
-#if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMemcpy(dev_l_opaddr,qops_dict.at("l")._data,qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_r_opaddr,qops_dict.at("r")._data,qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_c1_opaddr,qops_dict.at("c1")._data,qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-#else
-            // lzd
-            CUDA_CHECK(cudaMemcpy(dev_l_opaddr,qops_dict.at("l")._data,qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(dev_r_opaddr,qops_dict.at("r")._data,qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(dev_c1_opaddr,qops_dict.at("c1")._data,qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
-          
-            //error: 
-            //std::cout << "lzd cvt:" << qops_dict.at("l").size()  << " : " << int(qops_dict.at("l").size()) << std::endl;
-            //std::cout << "lzd cvt:" << qops_dict.at("r").size()  << " : " << int(qops_dict.at("r").size()) << std::endl;
-            //std::cout << "lzd cvt:" << qops_dict.at("c1").size() << " : " << int(qops_dict.at("c1").size()) << std::endl;
-            //std::cout << "lzd cvt:" << qops_dict.at("c2").size() << " : " << int(qops_dict.at("c2").size()) << std::endl;
-            //magma_dsetvector(qops_dict.at("l").size(),  (double*)qops_dict.at("l")._data, 1,  (double*)dev_l_opaddr,  1,  magma_queue);
-            //magma_dsetvector(qops_dict.at("r").size(),  (double*)qops_dict.at("r")._data, 1,  (double*)dev_r_opaddr,  1,  magma_queue);
-            //magma_dsetvector(qops_dict.at("c1").size(), (double*)qops_dict.at("c1")._data, 1, (double*)dev_c1_opaddr, 1,  magma_queue);
-            //magma_dsetvector(qops_dict.at("c2").size(), (double*)qops_dict.at("c2")._data, 1, (double*)dev_c2_opaddr, 1,  magma_queue);
-#endif
 #endif //USE_HIP
-            
 timing.tb5 = tools::get_time();
             // copy inter 
 #ifdef USE_HIP
             HIP_CHECK(hipMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), hipMemcpyHostToDevice));
 #else
-#if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
-#else
-            magma_dsetvector(inter.size(), (double*)inter._data, 1, (double*)dev_inter_opaddr,  1,  magma_queue);
-#endif //USE_CUDA_OPERATION
 #endif// USE_HIP
 timing.tb6 = tools::get_time();
 
-            // save pointers to opaddr
-            opaddr[0]=dev_l_opaddr;
-            opaddr[1]=dev_r_opaddr;
-            opaddr[2]=dev_c1_opaddr;
-            opaddr[3]=dev_c2_opaddr;
-            opaddr[4]=dev_inter_opaddr;
-
-            // 3. batchsize
+            // 3. compute batchsize & allocate workspace
             size_t maxbatch = 0;
             for(int i=0; i<Hxlst2.size(); i++){
                maxbatch = std::max(maxbatch, Hxlst2[i].size());
             } // i
-
             size_t batchsize = 0;
+            size_t gpumem_dvdson = sizeof(Tm)*2*ndim;
+            size_t gpumem_occupied = gpumem_oper + gpumem_dvdson + 48;
             if(schd.ctns.batchsize > 0){
                batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             }else{
-               assert(gpumem_tot > gpumem_use);
-               batchsize = std::floor(double(gpumem_tot - gpumem_use)/(sizeof(Tm)*blksize*2));
+               // oper + dvdson + N*blksize*2 + 6*(N+1)*sizeof(int) + 3*N*sizeof(double*)
+               // 6*(N+1)*sizeof(int) + 3*N*sizeof(double*) estimated by 6*8*(N+1) + 3*N*16 = 96*N+48
+               batchsize = std::floor(double(gpumem.size() - gpumem_occupied)/(sizeof(Tm)*blksize*2 + 96));
                batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
                if(batchsize == 0 && maxbatch != 0){
                   std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
                }
             }
-            size_t gpumem_tmp = batchsize*blksize*2*sizeof(Tm);
-            gpumem_use += gpumem_tmp;
+            worktot = 2*ndim + batchsize*blksize*2;
+            size_t gpumem_batch = sizeof(Tm)*batchsize*blksize*2;
+            dev_workspace = (Tm*)gpumem.allocate(gpumem_dvdson+gpumem_batch);
+            gpumem_use = gpumem.used();
             if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
-                  << " gpumem_tot(GB)=" << gpumem_tot/std::pow(1024.0,3)
-                  << " gpumem_use(GB)=" << gpumem_use/std::pow(1024.0,3)
-                  << " (oper,dvdson,tmp)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
+                  << " gpumem.size(GB)=" << gpumem.size()/std::pow(1024.0,3)
+                  << " gpumem.used(GB)=" << gpumem.used()/std::pow(1024.0,3)
+                  << " (oper,dvdson,batch)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_dvdson/std::pow(1024.0,3)
-                  << "," << gpumem_tmp/std::pow(1024.0,3)
+                  << "," << gpumem_batch/std::pow(1024.0,3)
                   << " batchsize=" << batchsize
                   << std::endl;
             }
-            if(gpumem_use > gpumem_tot){
-               std::cout << "error: in sufficient GPU memory!" << std::endl; // for case schd.ctns.batchsize is set
-               exit(1);
-            }
-
 timing.tb7 = tools::get_time();
 
-            // generate mmtasks
+            // 4. generate mmtasks
             assert(schd.ctns.batchcase == 1);
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<Hxlst2.size(); i++){
@@ -583,21 +545,6 @@ timing.tb7 = tools::get_time();
                }
             }
 timing.tb8 = tools::get_time();
-
-            // 4. allocate memory for Davidson: x,y,tmp
-            worktot = 2*ndim + batchsize*blksize*2;
-            dev_workspace = (Tm*)dev_opaddr + opertot;
-/*
-#ifdef USE_HIP
-            HIP_CHECK(hipMemset(dev_workspace,0,worktot*sizeof(Tm)));
-#else
-#if defined(USE_CUDA_OPERATION)
-            CUDA_CHECK(cudaMemset(dev_workspace,0,worktot*sizeof(Tm)));
-#else
-            CUDA_CHECK(cudaMemset(dev_workspace,0,worktot*sizeof(Tm)));
-#endif
-#endif//USE_HIP
-*/
 timing.tb9 = tools::get_time();
 
             // GPU version of Hx
@@ -606,7 +553,7 @@ timing.tb9 = tools::get_time();
                   std::cref(ndim), std::cref(blksize), 
                   std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(dev_workspace),
                   std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
-#endif
+#endif // GPU
 
          }else{
             std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
@@ -638,6 +585,11 @@ timing.tb10 = tools::get_time();
             delete[] workspace;
             memory.hvec = 0;
          }
+#ifdef GPU
+         if(schd.ctns.alg_hvec==7){
+            gpumem.deallocate(dev_oper, gpumem_use);
+         }
+#endif
          timing.tc = tools::get_time();
 
          // 3. decimation & renormalize operators
