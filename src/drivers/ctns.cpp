@@ -166,7 +166,9 @@ int main(int argc, char *argv[]){
    io::create_scratch(schd.scratch, (rank == 0));
 
 #ifdef GPU
-   gpu_init(rank);
+   if(schd.ctns.alg_hvec == 7){
+      gpu_init(rank);
+   }
 #endif
 
    if(schd.ctns.qkind == "rZ2"){
@@ -188,7 +190,9 @@ int main(int argc, char *argv[]){
    } // qkind
 
 #ifdef GPU
-   gpu_clean();
+   if(schd.ctns.alg_hvec == 7){
+      gpu_clean();
+   }
 #endif
 
    // cleanup 
