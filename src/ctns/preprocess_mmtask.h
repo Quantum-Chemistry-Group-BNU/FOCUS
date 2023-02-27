@@ -22,27 +22,17 @@ namespace ctns{
                for(int k=0; k<mmbatch2.size(); k++){
                   for(int i=0; i<mmbatch2[k].size(); i++){
                      std::string fgemmki = fgemm+"_"+std::to_string(k)+"."
-                                          +std::to_string(i)+".txt";
+                        +std::to_string(i)+".txt";
                      mmbatch2[k][i].save(fgemmki);
                   }
                }
             }
-#if 0
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
                for(int i=0; i<mmbatch2[k].size(); i++){
                   mmbatch2[k][i].kernel(batchgemm, ptrs);
                }
             }
-#else
-            double kernel(const int k, Tm** ptrs){
-                double flops=0;
-               for(int i=0; i<mmbatch2[k].size(); i++){
-                  flops += mmbatch2[k][i].kernel(batchgemm, ptrs);
-               }
-               return flops;
-            }
-#endif
             // reduction of y[:] = \sum_i ai*yi[:]
             void reduction(const int k, Tm* workspace, Tm* y, const int icase){
                mmreduce[k].reduction(workspace, y, icase);
@@ -76,7 +66,7 @@ namespace ctns{
          if(batchsize == 0) return;
          nbatch = totsize/batchsize;
          if(totsize%batchsize != 0) nbatch += 1; // thus, this works even for totsize < batchsize
-         
+
          // start process Hxlst
          mmbatch2.resize(nbatch);
          mmreduce.resize(nbatch);
@@ -131,7 +121,7 @@ namespace ctns{
                   } //k
                } // i
             } // j
-            
+
             // convert to batch list
             mmbatch2[k].resize(nd);
             for(int i=0; i<nd; i++){
@@ -146,7 +136,7 @@ namespace ctns{
             } // i
 
             // setup mmreduce[k]
-	        mmreduce[k].size = jlen;
+            mmreduce[k].size = jlen;
             mmreduce[k].ndim = Hxlst[off].size;
             mmreduce[k].offout = Hxlst[off].offout;
             mmreduce[k].alpha.resize(jlen);

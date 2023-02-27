@@ -1,4 +1,5 @@
 #ifdef GPU
+
 #ifndef GPU_ENV_H
 #define GPU_ENV_H
 
@@ -64,6 +65,7 @@ extern const size_t MAX_GPU_PAGE;
 
 void gpu_init(int rank);
 void gpu_clean();
-#endif //GPU_ENV_H
-#endif //GPU
 
+#endif //GPU_ENV_H
+
+#endif //GPU

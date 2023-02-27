@@ -487,21 +487,21 @@ timing.tb4 = tools::get_time();
             CUDA_CHECK(cudaMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #else
             // lzd
-            //CUDA_CHECK(cudaMemcpy(dev_l_opaddr,qops_dict.at("l")._data,qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            //CUDA_CHECK(cudaMemcpy(dev_r_opaddr,qops_dict.at("r")._data,qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            //CUDA_CHECK(cudaMemcpy(dev_c1_opaddr,qops_dict.at("c1")._data,qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            //CUDA_CHECK(cudaMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            //CUDA_CHECK(cudaMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
-           
-            std::cout << "lzd cvt:" << qops_dict.at("l").size()  << " : " << int(qops_dict.at("l").size()) << std::endl;
-            std::cout << "lzd cvt:" << qops_dict.at("r").size()  << " : " << int(qops_dict.at("r").size()) << std::endl;
-            std::cout << "lzd cvt:" << qops_dict.at("c1").size() << " : " << int(qops_dict.at("c1").size()) << std::endl;
-            std::cout << "lzd cvt:" << qops_dict.at("c2").size() << " : " << int(qops_dict.at("c2").size()) << std::endl;
- 
-            magma_dsetvector(qops_dict.at("l").size(),  (double*)qops_dict.at("l")._data, 1,  (double*)dev_l_opaddr,  1,  magma_queue);
-            magma_dsetvector(qops_dict.at("r").size(),  (double*)qops_dict.at("r")._data, 1,  (double*)dev_r_opaddr,  1,  magma_queue);
-            magma_dsetvector(qops_dict.at("c1").size(), (double*)qops_dict.at("c1")._data, 1, (double*)dev_c1_opaddr, 1,  magma_queue);
-            magma_dsetvector(qops_dict.at("c2").size(), (double*)qops_dict.at("c2")._data, 1, (double*)dev_c2_opaddr, 1,  magma_queue);
+            CUDA_CHECK(cudaMemcpy(dev_l_opaddr,qops_dict.at("l")._data,qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_r_opaddr,qops_dict.at("r")._data,qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_c1_opaddr,qops_dict.at("c1")._data,qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
+          
+            //error: 
+            //std::cout << "lzd cvt:" << qops_dict.at("l").size()  << " : " << int(qops_dict.at("l").size()) << std::endl;
+            //std::cout << "lzd cvt:" << qops_dict.at("r").size()  << " : " << int(qops_dict.at("r").size()) << std::endl;
+            //std::cout << "lzd cvt:" << qops_dict.at("c1").size() << " : " << int(qops_dict.at("c1").size()) << std::endl;
+            //std::cout << "lzd cvt:" << qops_dict.at("c2").size() << " : " << int(qops_dict.at("c2").size()) << std::endl;
+            //magma_dsetvector(qops_dict.at("l").size(),  (double*)qops_dict.at("l")._data, 1,  (double*)dev_l_opaddr,  1,  magma_queue);
+            //magma_dsetvector(qops_dict.at("r").size(),  (double*)qops_dict.at("r")._data, 1,  (double*)dev_r_opaddr,  1,  magma_queue);
+            //magma_dsetvector(qops_dict.at("c1").size(), (double*)qops_dict.at("c1")._data, 1, (double*)dev_c1_opaddr, 1,  magma_queue);
+            //magma_dsetvector(qops_dict.at("c2").size(), (double*)qops_dict.at("c2")._data, 1, (double*)dev_c2_opaddr, 1,  magma_queue);
 #endif
 #endif //USE_HIP
             
@@ -565,10 +565,8 @@ timing.tb7 = tools::get_time();
             assert(schd.ctns.batchcase == 1);
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<Hxlst2.size(); i++){
-               std::cout << "i0=" << i << std::endl;
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
                      blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
-               std::cout << "i1=" << i << std::endl;
                if(debug && schd.ctns.verbose>1){
                   std::cout << "rank=" << rank << " iblk=" << i 
                      << " mmtasks.totsize=" << mmtasks[i].totsize

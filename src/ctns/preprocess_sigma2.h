@@ -60,11 +60,6 @@ namespace ctns{
 #endif
                   linalg::xaxpy(Hxblk.size, 1.0, work, y+Hxblk.offout);
                }
-
-               std::cout << "i=" << i 
-                         << " xty=" << linalg::xdot(ndim, x, y)
-                         << std::endl;
-            
             } // i
             delete[] work;
 
