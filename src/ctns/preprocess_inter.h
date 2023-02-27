@@ -39,7 +39,8 @@ namespace ctns{
                 std::cout << "intermediates<Tm>::init maxthreads=" << maxthreads << std::endl;
                 std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
             }
-            // count the size of intermediates
+
+            // 1. count the size of intermediates
             for(int it=0; it<H_formulae.size(); it++){
                 const auto& HTerm = H_formulae.tasks[it];
                 for(int idx=HTerm.size()-1; idx>=0; idx--){
@@ -63,10 +64,12 @@ namespace ctns{
                     << ":" << tools::sizeGB<Tm>(_size) << "GB"
                     << std::endl;
             }
-            // allocate memory
+
+            // 2. allocate memory
             _data = new Tm[_size];
             memset(_data, 0, _size*sizeof(Tm));
-            // form intermediates via AXPY
+
+            // 3. form intermediates via AXPY
             std::vector<std::pair<int,int>> _index(_count);
             int idx = 0;
             for(const auto& pr : _offset){

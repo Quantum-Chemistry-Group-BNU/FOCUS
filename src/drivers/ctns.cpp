@@ -104,6 +104,7 @@ void CTNS(const input::schedule& schd){
          io::remove_scratch(scratch, (rank == 0)); // task_opt will not recreate 
       }
       io::create_scratch(scratch, (rank == 0));
+
       // compute hamiltonian 
       if(schd.ctns.task_ham){
          auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
