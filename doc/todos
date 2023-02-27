@@ -243,17 +243,19 @@ KNOWN PROBLEMS
    - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magma size is int]
    - Fix bug in parallel IO [mpi problem]
 
- * Profiling: Check fetch time for Fe8S7
+ * Profiling: Check fetch time & CPU memory for Fe8S7
 
+ >>> Support Intermediate with GPU
+ 
+ >>> Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
+
+ >>> Support Renorm with GPU
+ 
  * Support Restart isweep ibond
 
- * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
+=== Future ===
 
- * Support Intermediate with GPU
-
- * Support Renorm with GPU
-
- * Support Kramers version
+ * Support complex & Kramers version
 
  * Problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
 
