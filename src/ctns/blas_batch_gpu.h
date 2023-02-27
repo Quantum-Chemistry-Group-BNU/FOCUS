@@ -1,3 +1,4 @@
+
 #ifdef GPU
 
 #ifndef BLAS_BATCH_GPU_H
@@ -16,7 +17,150 @@ inline void xgemm_batch_gpu(const char transa, const char transb,
         const int batch_count, const int a_total_count, const int b_total_count, const int c_total_count)
 {
     if(batch_count <= 0)
+    {
+        std::cout<<"batch_count shoule > 0 in function xgemm_batch_gpu_precopy"<<std::endl;
         return ;
+    }
+#ifdef USE_HIP
+    double* dev_total;
+
+    double* dev_a;
+    double* dev_b;
+    double* dev_c;
+
+    int  *dev_m;
+    int  *dev_n;
+    int  *dev_k;
+
+    int  *dev_lda;
+    int  *dev_ldb;
+    int  *dev_ldc;
+
+    double ** dev_a_array_ptr;
+    double ** dev_b_array_ptr;
+    double ** dev_c_array_ptr;
+
+
+    int total_size = (a_total_count + b_total_count + c_total_count)*sizeof(double);
+    //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
+    total_size += 6*(batch_count+1)*sizeof(int);
+    //dev_array_ptr
+    total_size +=3*batch_count*sizeof(double*);
+
+    HIP_CHECK(hipMalloc((void**)&dev_total, total_size));
+
+    dev_a = dev_total + 0;
+    dev_b = dev_a + a_total_count;
+    dev_c = dev_b + b_total_count;
+
+    dev_m = (int*)((void*)dev_c + c_total_count*sizeof(double));
+    dev_n = dev_m + (batch_count+1);
+    dev_k = dev_n + (batch_count+1);
+
+    dev_lda = dev_k + (batch_count+1);
+    dev_ldb = dev_lda + (batch_count+1);
+    dev_ldc = dev_ldb + (batch_count+1);
+
+    dev_a_array_ptr= (double**)((void*)dev_ldc +(batch_count+1)*sizeof(int)) ;
+    dev_b_array_ptr = dev_a_array_ptr + batch_count;
+    dev_c_array_ptr = dev_b_array_ptr + batch_count;
+
+
+    for(int i=0;i<batch_count;i++)
+    {
+        HIP_CHECK(hipMemcpy(dev_a, a_array[i], m_array[i]*k_array[i]*sizeof(double), hipMemcpyHostToDevice));
+        HIP_CHECK(hipMemcpy(dev_b, b_array[i], k_array[i]*n_array[i]*sizeof(double), hipMemcpyHostToDevice));
+        HIP_CHECK(hipMemcpy(dev_c, c_array[i], m_array[i]*n_array[i]*sizeof(double), hipMemcpyHostToDevice));
+
+        dev_a +=m_array[i]*k_array[i];
+        dev_b +=k_array[i]*n_array[i];
+        dev_c +=m_array[i]*n_array[i];
+    }
+
+    HIP_CHECK(hipMemcpy(dev_m, m_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_n, n_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_k, k_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+
+    HIP_CHECK(hipMemcpy(dev_lda, lda_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_ldb, ldb_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_ldc, ldc_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+
+    double ** a_array_ptr = (double**)malloc(3*batch_count*sizeof(double*));
+    double ** b_array_ptr = a_array_ptr + batch_count;
+    double ** c_array_ptr = b_array_ptr + batch_count;
+
+    a_array_ptr[0] = (double*)dev_total + 0;
+    b_array_ptr[0] = (double*)dev_total + a_total_count; 
+    c_array_ptr[0] = (double*)dev_total + a_total_count + b_total_count; 
+
+    for(int i=1;i<batch_count;i++)
+    {
+        a_array_ptr[i] = a_array_ptr[i-1] + m_array[i-1]*k_array[i-1];
+        b_array_ptr[i] = b_array_ptr[i-1] + k_array[i-1]*n_array[i-1];
+        c_array_ptr[i] = c_array_ptr[i-1] + m_array[i-1]*n_array[i-1];
+    }
+
+    HIP_CHECK(hipMemcpy(dev_a_array_ptr, a_array_ptr, 3*batch_count*sizeof(double*), hipMemcpyHostToDevice));
+
+    magma_queue_t queue=::magma_queue;
+    /**
+    int device=0;
+    magma_queue_t queue=0;
+    magma_init();
+    magma_getdevice(&device);
+    magma_queue_create(device,&queue);
+    **/
+
+    
+
+    magma_trans_t transA =  MagmaNoTrans ;
+    magma_trans_t transB =  MagmaNoTrans ;
+
+
+    if(transa=='T')
+    {
+        transA = MagmaTrans;
+    }else if (transa == 'C'){
+        transA = MagmaConjTrans;
+    }
+
+    if(transb=='T')
+    {
+        transB = MagmaTrans;
+    }else if(transb == 'C'){
+        transB = MagmaConjTrans;
+    }
+
+    magmablas_dgemm_vbatched(
+            transA,
+            transB,
+            dev_m,
+            dev_n,
+            dev_k,
+            alpha[0],
+            dev_a_array_ptr,
+            dev_lda,
+            dev_b_array_ptr,
+            dev_ldb,
+            beta[0],
+            dev_c_array_ptr,
+            dev_ldc,
+            batch_count,
+            queue
+            );
+
+    dev_c = dev_total + a_total_count + b_total_count;
+    for(int i=0;i<batch_count;i++)
+    {
+        HIP_CHECK(hipMemcpy(c_array[i], dev_c, m_array[i]*n_array[i]*sizeof(double), hipMemcpyDeviceToHost));
+        dev_c +=m_array[i]*n_array[i];
+    }
+
+    if(a_array_ptr)
+        free(a_array_ptr);
+    HIP_CHECK(hipFree(dev_total));     
+
+#else
 #if defined(USE_CUDA_OPERATION)
 
     double* dev_total;
@@ -291,6 +435,7 @@ inline void xgemm_batch_gpu(const char transa, const char transb,
     MAGMA_CHECK(magma_free(dev_total));
 
 #endif
+#endif //USE_HIP
 }
 
 // complex
@@ -452,9 +597,14 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
         const double *beta, double **c_array, const int *ldc_array, 
         const int batch_count, const int a_total_count, const int b_total_count, const int c_total_count)
 {
-#if defined(USE_CUDA_OPERATION)
-
-    double* dev_total;
+    if(batch_count <= 0)
+    {
+        std::cout<<"batch_count shoule > 0 in function xgemm_batch_gpu_precopy"<<std::endl;
+        return ;
+    }
+#ifdef USE_HIP
+    int* dev_total;
+    double** dev_total_addr;
 
     int  *dev_m;
     int  *dev_n;
@@ -472,12 +622,21 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     size_t total_size =0 ;
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     total_size += 6*(batch_count+1)*sizeof(int);
+
+
+    size_t total_size_addr =0 ;
     //dev_array_ptr
-    total_size +=3*batch_count*sizeof(double*);
+    total_size_addr +=3*batch_count*sizeof(double*);
 
-    CUDA_CHECK(cudaMalloc((void**)&dev_total, total_size));
 
-    dev_m = (int*)((void*)dev_total);
+	 HIP_CHECK(hipMalloc((void**)&dev_total, total_size));
+	 HIP_CHECK(hipMemset((void*)dev_total, 0, total_size));
+
+	 HIP_CHECK(hipMalloc((void**)&dev_total_addr, total_size_addr));
+	 HIP_CHECK(hipMemset((void*)dev_total_addr, 0, total_size_addr));
+
+
+    dev_m = (int*)dev_total;
     dev_n = dev_m + (batch_count+1);
     dev_k = dev_n + (batch_count+1);
 
@@ -485,7 +644,112 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     dev_ldb = dev_lda + (batch_count+1);
     dev_ldc = dev_ldb + (batch_count+1);
 
-    dev_a_array_ptr= (double**)((void*)dev_ldc +(batch_count+1)*sizeof(int)) ;
+    dev_a_array_ptr= (double**)dev_total_addr ;
+    dev_b_array_ptr = dev_a_array_ptr + batch_count;
+    dev_c_array_ptr = dev_b_array_ptr + batch_count;
+
+
+    HIP_CHECK(hipMemcpy(dev_m, m_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_n, n_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_k, k_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+
+    HIP_CHECK(hipMemcpy(dev_lda, lda_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_ldb, ldb_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_ldc, ldc_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
+
+
+    HIP_CHECK(hipMemcpy(dev_a_array_ptr, a_array, batch_count*sizeof(double*), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_b_array_ptr, b_array, batch_count*sizeof(double*), hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(dev_c_array_ptr, c_array, batch_count*sizeof(double*), hipMemcpyHostToDevice));
+
+    //magma_init();
+    //magma_queue_t queue=0;
+    //magma_setdevice(0);
+    //magma_queue_create(0,&queue);
+
+    magma_trans_t transA =  MagmaNoTrans ;
+    magma_trans_t transB =  MagmaNoTrans ;
+
+
+    if(transa=='T')
+    {
+        transA = MagmaTrans;
+    }else if (transa == 'C'){
+        transA = MagmaConjTrans;
+    }
+
+    if(transb=='T')
+    {
+        transB = MagmaTrans;
+    }else if(transb == 'C'){
+        transB = MagmaConjTrans;
+    }
+
+
+    magmablas_dgemm_vbatched(
+            transA,
+            transB,
+            dev_m,
+            dev_n,
+            dev_k,
+            alpha[0],
+            dev_a_array_ptr,
+            dev_lda,
+            dev_b_array_ptr,
+            dev_ldb,
+            beta[0],
+            dev_c_array_ptr,
+            dev_ldc,
+            batch_count,
+            magma_queue
+            );
+
+    HIP_CHECK(hipFree(dev_total));     
+    HIP_CHECK(hipFree(dev_total_addr));     
+#else
+#if defined(USE_CUDA_OPERATION)
+    int* dev_total;
+    double** dev_total_addr;
+
+    int  *dev_m;
+    int  *dev_n;
+    int  *dev_k;
+
+    int  *dev_lda;
+    int  *dev_ldb;
+    int  *dev_ldc;
+
+    double ** dev_a_array_ptr;
+    double ** dev_b_array_ptr;
+    double ** dev_c_array_ptr;
+
+
+    size_t total_size =0 ;
+    //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
+    total_size += 6*(batch_count+1)*sizeof(int);
+
+
+    size_t total_size_addr =0 ;
+    //dev_array_ptr
+    total_size_addr +=3*batch_count*sizeof(double*);
+
+
+	 CUDA_CHECK(cudaMalloc((void**)&dev_total, total_size));
+	 CUDA_CHECK(cudaMemset((void*)dev_total, 0, total_size));
+
+	 CUDA_CHECK(cudaMalloc((void**)&dev_total_addr, total_size_addr));
+	 CUDA_CHECK(cudaMemset((void*)dev_total_addr, 0, total_size_addr));
+
+
+    dev_m = (int*)dev_total;
+    dev_n = dev_m + (batch_count+1);
+    dev_k = dev_n + (batch_count+1);
+
+    dev_lda = dev_k + (batch_count+1);
+    dev_ldb = dev_lda + (batch_count+1);
+    dev_ldc = dev_ldb + (batch_count+1);
+
+    dev_a_array_ptr= (double**)dev_total_addr ;
     dev_b_array_ptr = dev_a_array_ptr + batch_count;
     dev_c_array_ptr = dev_b_array_ptr + batch_count;
 
@@ -545,8 +809,9 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
             magma_queue
             );
 
-    CUDA_CHECK(cudaFree(dev_total));    
- 
+    CUDA_CHECK(cudaFree(dev_total));     
+    CUDA_CHECK(cudaFree(dev_total_addr));     
+
 #else
 
 /*
@@ -770,6 +1035,7 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
     MAGMA_CHECK(magma_free(dev_a_array_ptr));
 */
 #endif
+#endif//USE_HIP
 
 }
 
@@ -987,6 +1253,11 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
         const int *ldc_array, 
         const int batch_count, const int a_total_count, const int b_total_count, const int c_total_count)
 {
+    if(batch_count <= 0)
+    {
+        std::cout<<"batch_count shoule > 0 in function xgemm_batch_gpu_precopy"<<std::endl;
+        return ;
+    }
 #if 0
     magmaDoubleComplex* dev_total;
 
@@ -1091,4 +1362,4 @@ inline void xgemm_batch_gpu_precopy(const char transa, const char transb,
 
 #endif
 
-#endif
+#endif//GPU

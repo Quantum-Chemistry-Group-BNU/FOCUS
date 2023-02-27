@@ -136,25 +136,6 @@ int main(int argc, char *argv[]){
    size = world.size();
 #endif
 
-#ifdef GPU
-   magma_queue = 0;
-   int num_gpus = -1;
-   int device = -1;
-
-   magma_init();
-   num_gpus=magma_getdevice_multiprocessor_count();
-   magma_setdevice(rank % num_gpus);
-   magma_getdevice(&device);
-
-   magma_queue_create(device, &magma_queue);
-   std::cout<<"rank: "<< rank <<"; device: "<< device <<"; magma_queue="<<magma_queue << std::endl;
-
-   magma_queue_t magma_queue_array[nqueue];
-   for(int i=0;i<nqueue;i++)
-   {
-      magma_queue_create(device, &magma_queue_array[i]);
-   }
-#endif
 
 #ifdef _OPENMP
    maxthreads = omp_get_max_threads();
@@ -184,6 +165,10 @@ int main(int argc, char *argv[]){
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    io::create_scratch(schd.scratch, (rank == 0));
 
+#ifdef GPU
+   gpu_init(rank);
+#endif
+
    if(schd.ctns.qkind == "rZ2"){
       CTNS<ctns::qkind::rZ2>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
@@ -203,12 +188,7 @@ int main(int argc, char *argv[]){
    } // qkind
 
 #ifdef GPU
-   magma_queue_destroy(magma_queue);
-   for(int i=0;i<nqueue;i++)
-   {
-      magma_queue_destroy(magma_queue_array[i]);
-   }
-   magma_finalize();
+   gpu_clean();
 #endif
 
    // cleanup 

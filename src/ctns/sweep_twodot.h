@@ -194,8 +194,8 @@ namespace ctns{
          double cost;
          Tm* workspace;
 #ifdef GPU
-         Tm* dev_opaddr;
-         Tm* dev_workspace;
+         Tm* dev_opaddr = nullptr;
+         Tm* dev_workspace = nullptr;
 #endif
          double t_kernel_ibond=0.0, t_reduction_ibond=0.0; // debug
          std::string fgemm = "mmtasks";
@@ -406,12 +406,16 @@ namespace ctns{
          }else if(schd.ctns.alg_hvec == 7){
 
             // BatchGEMM on GPU
+timing.tb1 = tools::get_time();
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
+
+timing.tb2 = tools::get_time();
             // gen MMlst & reorder
             preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, inter, 
                   Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
+timing.tb3 = tools::get_time();
             // debug hxlst
             if(schd.ctns.verbose>0){
                for(int k=0; k<size; k++){
@@ -437,24 +441,9 @@ namespace ctns{
                icomb.world.barrier();
                if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
             }
+timing.tb4 = tools::get_time();
 
             // GPU: copy operators (qops_dict & inter)
-            size_t free, total, gpumem_tot;
-            CUDA_CHECK(cudaMemGetInfo( &free, &total ));
-            if(schd.ctns.batchmem == -1){
-               gpumem_tot = std::ceil(0.95*free);
-            }else if(schd.ctns.batchmem > 0){
-               gpumem_tot = schd.ctns.batchmem*std::pow(1024,3);
-               if(gpumem_tot >= free){
-                  std::cout << "error: batchmem exceed free GPU memory!" << std::endl;
-                  std::cout << "free=" << free << " batchmem=" << gpumem_tot << std::endl;
-                  exit(1);
-               }
-            }else{
-               std::cout << "error: batchmem should be set correctly!" 
-                  << schd.ctns.batchmem<< std::endl;
-               exit(1);
-            }
             // 1. allocate memery on GPU
             size_t opertot = qops_dict.at("l").size()
                + qops_dict.at("r").size()
@@ -477,28 +466,26 @@ namespace ctns{
                exit(1); 
             }
 
-#if defined(USE_CUDA_OPERATION)
-            CUDA_CHECK(cudaMalloc((void**)&dev_opaddr, opertot*sizeof(Tm)));
-#else
-            CUDA_CHECK(cudaMalloc((void**)&dev_opaddr, opertot*sizeof(Tm)));
-            //MAGMA_CHECK(magma_dmalloc((double**)(&dev_opaddr), opertot));
-#endif
-
+            // 2. copy
+            dev_opaddr = (Tm*)dev_addr;
             Tm* dev_l_opaddr = dev_opaddr;
             Tm* dev_r_opaddr = dev_l_opaddr + qops_dict.at("l").size();
             Tm* dev_c1_opaddr = dev_r_opaddr + qops_dict.at("r").size();
             Tm* dev_c2_opaddr = dev_c1_opaddr + qops_dict.at("c1").size();
             Tm* dev_inter_opaddr = dev_c2_opaddr + qops_dict.at("c2").size();
-
-            // 2. copy
+            // copy qops
+#ifdef USE_HIP
+            HIP_CHECK(hipMemcpy(dev_l_opaddr,qops_dict.at("l")._data,qops_dict.at("l").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_r_opaddr,qops_dict.at("r")._data,qops_dict.at("r").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_c1_opaddr,qops_dict.at("c1")._data,qops_dict.at("c1").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), hipMemcpyHostToDevice));
+#else
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMemcpy(dev_l_opaddr,qops_dict.at("l")._data,qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_r_opaddr,qops_dict.at("r")._data,qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_c1_opaddr,qops_dict.at("c1")._data,qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #else
-        
             // lzd
             //CUDA_CHECK(cudaMemcpy(dev_l_opaddr,qops_dict.at("l")._data,qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             //CUDA_CHECK(cudaMemcpy(dev_r_opaddr,qops_dict.at("r")._data,qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
@@ -510,24 +497,35 @@ namespace ctns{
             std::cout << "lzd cvt:" << qops_dict.at("r").size()  << " : " << int(qops_dict.at("r").size()) << std::endl;
             std::cout << "lzd cvt:" << qops_dict.at("c1").size() << " : " << int(qops_dict.at("c1").size()) << std::endl;
             std::cout << "lzd cvt:" << qops_dict.at("c2").size() << " : " << int(qops_dict.at("c2").size()) << std::endl;
-            std::cout << "lzd cvt:" << inter.size() << " : " << int(inter.size()) << std::endl;
  
             magma_dsetvector(qops_dict.at("l").size(),  (double*)qops_dict.at("l")._data, 1,  (double*)dev_l_opaddr,  1,  magma_queue);
             magma_dsetvector(qops_dict.at("r").size(),  (double*)qops_dict.at("r")._data, 1,  (double*)dev_r_opaddr,  1,  magma_queue);
             magma_dsetvector(qops_dict.at("c1").size(), (double*)qops_dict.at("c1")._data, 1, (double*)dev_c1_opaddr, 1,  magma_queue);
             magma_dsetvector(qops_dict.at("c2").size(), (double*)qops_dict.at("c2")._data, 1, (double*)dev_c2_opaddr, 1,  magma_queue);
-            magma_dsetvector(inter.size(), (double*)inter._data, 1, (double*)dev_inter_opaddr,  1,  magma_queue);
-
 #endif
+#endif //USE_HIP
+            
+timing.tb5 = tools::get_time();
+            // copy inter 
+#ifdef USE_HIP
+            HIP_CHECK(hipMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), hipMemcpyHostToDevice));
+#else
+#if defined(USE_CUDA_OPERATION)
+            CUDA_CHECK(cudaMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
+#else
+            magma_dsetvector(inter.size(), (double*)inter._data, 1, (double*)dev_inter_opaddr,  1,  magma_queue);
+#endif //USE_CUDA_OPERATION
+#endif// USE_HIP
+timing.tb6 = tools::get_time();
 
-            // 3. save pointers to opaddr
+            // save pointers to opaddr
             opaddr[0]=dev_l_opaddr;
             opaddr[1]=dev_r_opaddr;
             opaddr[2]=dev_c1_opaddr;
             opaddr[3]=dev_c2_opaddr;
             opaddr[4]=dev_inter_opaddr;
 
-            // determine the size of batch
+            // 3. batchsize
             size_t maxbatch = 0;
             for(int i=0; i<Hxlst2.size(); i++){
                maxbatch = std::max(maxbatch, Hxlst2[i].size());
@@ -560,7 +558,8 @@ namespace ctns{
                std::cout << "error: in sufficient GPU memory!" << std::endl; // for case schd.ctns.batchsize is set
                exit(1);
             }
-            std::cout << "lzdA0" << std::endl;
+
+timing.tb7 = tools::get_time();
 
             // generate mmtasks
             assert(schd.ctns.batchcase == 1);
@@ -578,7 +577,6 @@ namespace ctns{
                      << std::endl;
                }
             } // i
-            std::cout << "lzdA1" << std::endl;
             // save for analysis of BatchGEMM
             if(isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
                for(int i=0; i<Hxlst2.size(); i++){
@@ -586,21 +584,23 @@ namespace ctns{
                   mmtasks[i].save(fgemmi);
                }
             }
-            std::cout << "lzdA2" << std::endl;
+timing.tb8 = tools::get_time();
 
             // 4. allocate memory for Davidson: x,y,tmp
             worktot = 2*ndim + batchsize*blksize*2;
-#if defined(USE_CUDA_OPERATION)
-            CUDA_CHECK(cudaMalloc((void**)&dev_workspace, worktot*sizeof(Tm)));
+            dev_workspace = (Tm*)dev_opaddr + opertot;
+/*
+#ifdef USE_HIP
+            HIP_CHECK(hipMemset(dev_workspace,0,worktot*sizeof(Tm)));
 #else
-            CUDA_CHECK(cudaMalloc((void**)&dev_workspace, worktot*sizeof(Tm)));
-            //MAGMA_CHECK(magma_dmalloc((double**)(&dev_workspace), worktot));
+#if defined(USE_CUDA_OPERATION)
+            CUDA_CHECK(cudaMemset(dev_workspace,0,worktot*sizeof(Tm)));
+#else
+            CUDA_CHECK(cudaMemset(dev_workspace,0,worktot*sizeof(Tm)));
 #endif
-            std::cout << "lzdA3" << std::endl;
-
-            // lzd
-            cudaMemset(dev_workspace, 2329, worktot*sizeof(Tm)); 
-            std::cout << "lzdA4" << std::endl;
+#endif//USE_HIP
+*/
+timing.tb9 = tools::get_time();
 
             // GPU version of Hx
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
@@ -625,36 +625,22 @@ namespace ctns{
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
          oper_timer.start();
-
-         std::cout << "lzdB" << std::endl;
          twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond);
-         std::cout << "lzdC" << std::endl;
          if(debug && schd.ctns.verbose>0){
             sweeps.print_eopt(isweep, ibond);
             if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
          }
-         timing.tc = tools::get_time();
+timing.tb10 = tools::get_time();
+         sweeps.t_kernel_total[isweep] += t_kernel_ibond;
+         sweeps.t_reduction_total[isweep] += t_reduction_ibond;
 
          // free tmp space on CPU
          if(schd.ctns.alg_hvec==2 || schd.ctns.alg_hvec==3 || schd.ctns.alg_hvec==6){
             delete[] workspace;
             memory.hvec = 0;
          }
-#ifdef GPU
-         // free memory space on GPU
-         if(schd.ctns.alg_hvec == 7){
-#if defined(USE_CUDA_OPERATION)
-            CUDA_CHECK(cudaFree(dev_opaddr));
-            CUDA_CHECK(cudaFree(dev_workspace));
-#else
-            CUDA_CHECK(cudaFree(dev_opaddr));
-            CUDA_CHECK(cudaFree(dev_workspace));
-            //MAGMA_CHECK(magma_free(dev_opaddr));
-            //MAGMA_CHECK(magma_free(dev_workspace));
-#endif
-         }
-#endif
+         timing.tc = tools::get_time();
 
          // 3. decimation & renormalize operators
          auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
