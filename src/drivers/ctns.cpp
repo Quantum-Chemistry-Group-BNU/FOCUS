@@ -34,41 +34,48 @@ void CTNS(const input::schedule& schd){
       // dealing with topology 
       icomb.topo.read(schd.ctns.topology_file);
       icomb.topo.print();
-      // initialize RCF 
-      auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-      if(!schd.ctns.rcanon_load){
-         // from SCI wavefunction
-         onspace sci_space;
-         vector<double> es;
-         linalg::matrix<Tm> vs;
-         auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
-         fci::ci_load(sci_space, es, vs, ci_file);
-         // truncate CI coefficients
-         fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-         /*
-         // debug         
-         integral::two_body<Tm> int2e;
-         integral::one_body<Tm> int1e;
-         double ecore;
-         integral::load(int2e, int1e, ecore, schd.integral_file);
-         auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-         Hij_ci.print("Hij_ci",8);
-         */ 
-         ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
-               schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
-         ctns::rcanon_save(icomb, rcanon_file);
+      if(!schd.ctns.task_restart){
+         // initialize RCF 
+         auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
+         if(!schd.ctns.rcanon_load){
+            // from SCI wavefunction
+            onspace sci_space;
+            vector<double> es;
+            linalg::matrix<Tm> vs;
+            auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
+            fci::ci_load(sci_space, es, vs, ci_file);
+            // truncate CI coefficients
+            fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
+            /*
+            // debug         
+            integral::two_body<Tm> int2e;
+            integral::one_body<Tm> int1e;
+            double ecore;
+            integral::load(int2e, int1e, ecore, schd.integral_file);
+            auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
+            Hij_ci.print("Hij_ci",8);
+            */ 
+            ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
+                  schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
+            ctns::rcanon_save(icomb, rcanon_file);
+         }else{
+            ctns::rcanon_load(icomb, rcanon_file);
+         } // rcanon_load
+         ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
       }else{
-         ctns::rcanon_load(icomb, rcanon_file);
-      }
-      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
-   }
-   // only perform initialization
-   if(schd.ctns.task_init) return;
+         // restart from disk
+         std::cout << "ERROR: NOT IMPLEMENTED YET!" << std::endl;
+      } // task_restart
+   } // rank 0
+   
+   if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
+
 #ifndef SERIAL
    boost::mpi::broadcast(schd.world, icomb, 0);
    icomb.world = schd.world;
 #endif
 
+   // compute sdiag
    if(schd.ctns.task_sdiag){
       // parallel sampling can be implemented in future (very simple)!
       if(rank == 0){
@@ -79,7 +86,8 @@ void CTNS(const input::schedule& schd){
       }
    }
 
-   if(schd.ctns.task_ham or schd.ctns.task_opt){
+   // compute hamiltonian or optimize ctns by dmrg algorithm
+   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_restart){
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -106,7 +114,7 @@ void CTNS(const input::schedule& schd){
          }
       }
       // optimization from current RCF
-      if(schd.ctns.task_opt){
+      if(schd.ctns.task_opt || schd.ctns.task_restart){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
          if(rank == 0){
             auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
@@ -114,6 +122,7 @@ void CTNS(const input::schedule& schd){
          }
       }
    } // ham || opt
+    
 }
 
 int main(int argc, char *argv[]){
