@@ -67,7 +67,8 @@ namespace ctns{
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
 #else
-                magma_dsetvector(ndim, (double*)xCPU, 1, (double*)x,  1,  magma_queue);
+            CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
+            //magma_dsetvector(ndim, (double*)xCPU, 1, (double*)x,  1,  magma_queue);
 #endif
             gettimeofday(&t1_time_copy, NULL);
             
@@ -113,7 +114,8 @@ namespace ctns{
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMemcpy(yCPU,y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
 #else
-            magma_dgetvector(ndim, (double*)y, 1, (double*)yCPU,  1,  magma_queue);
+            CUDA_CHECK(cudaMemcpy(yCPU,y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
+            //magma_dgetvector(ndim, (double*)y, 1, (double*)yCPU,  1,  magma_queue);
 #endif
 		std::cout << "i=" << i << " xty=" << linalg::xdot(ndim, xCPU, yCPU) 
                   << " yty=" << linalg::xdot(ndim, yCPU, yCPU) 
@@ -134,7 +136,8 @@ namespace ctns{
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMemcpy(yCPU,y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
 #else
-            magma_dgetvector(ndim, (double*)y, 1, (double*)yCPU,  1,  magma_queue);
+            CUDA_CHECK(cudaMemcpy(yCPU,y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
+            //magma_dgetvector(ndim, (double*)y, 1, (double*)yCPU,  1,  magma_queue);
 #endif
             gettimeofday(&t1_time_gemm_copy, NULL);
             time_cost_gemm_copy += ((double)(t1_time_gemm_copy.tv_sec - t0_time_gemm_copy.tv_sec) 

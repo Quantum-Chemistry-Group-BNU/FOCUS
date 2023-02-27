@@ -195,7 +195,7 @@ namespace ctns{
          Tm* workspace;
 #ifdef GPU
          Tm* dev_opaddr;
-         Tm * dev_workspace;
+         Tm* dev_workspace;
 #endif
          double t_kernel_ibond=0.0, t_reduction_ibond=0.0; // debug
          std::string fgemm = "mmtasks";
@@ -480,7 +480,8 @@ namespace ctns{
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMalloc((void**)&dev_opaddr, opertot*sizeof(Tm)));
 #else
-            MAGMA_CHECK(magma_dmalloc((double**)(&dev_opaddr), opertot));
+            CUDA_CHECK(cudaMalloc((void**)&dev_opaddr, opertot*sizeof(Tm)));
+            //MAGMA_CHECK(magma_dmalloc((double**)(&dev_opaddr), opertot));
 #endif
 
             Tm* dev_l_opaddr = dev_opaddr;
@@ -497,11 +498,26 @@ namespace ctns{
             CUDA_CHECK(cudaMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #else
-            magma_dsetvector(qops_dict.at("l").size(),  (double*)qops_dict.at("l")._data, 1,  (double*)dev_l_opaddr,    1,  magma_queue);
-            magma_dsetvector(qops_dict.at("r").size(),  (double*)qops_dict.at("r")._data, 1,  (double*)dev_r_opaddr,    1,  magma_queue);
+        
+            // lzd
+            //CUDA_CHECK(cudaMemcpy(dev_l_opaddr,qops_dict.at("l")._data,qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            //CUDA_CHECK(cudaMemcpy(dev_r_opaddr,qops_dict.at("r")._data,qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            //CUDA_CHECK(cudaMemcpy(dev_c1_opaddr,qops_dict.at("c1")._data,qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            //CUDA_CHECK(cudaMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            //CUDA_CHECK(cudaMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
+           
+            std::cout << "lzd cvt:" << qops_dict.at("l").size()  << " : " << int(qops_dict.at("l").size()) << std::endl;
+            std::cout << "lzd cvt:" << qops_dict.at("r").size()  << " : " << int(qops_dict.at("r").size()) << std::endl;
+            std::cout << "lzd cvt:" << qops_dict.at("c1").size() << " : " << int(qops_dict.at("c1").size()) << std::endl;
+            std::cout << "lzd cvt:" << qops_dict.at("c2").size() << " : " << int(qops_dict.at("c2").size()) << std::endl;
+            std::cout << "lzd cvt:" << inter.size() << " : " << int(inter.size()) << std::endl;
+ 
+            magma_dsetvector(qops_dict.at("l").size(),  (double*)qops_dict.at("l")._data, 1,  (double*)dev_l_opaddr,  1,  magma_queue);
+            magma_dsetvector(qops_dict.at("r").size(),  (double*)qops_dict.at("r")._data, 1,  (double*)dev_r_opaddr,  1,  magma_queue);
             magma_dsetvector(qops_dict.at("c1").size(), (double*)qops_dict.at("c1")._data, 1, (double*)dev_c1_opaddr, 1,  magma_queue);
             magma_dsetvector(qops_dict.at("c2").size(), (double*)qops_dict.at("c2")._data, 1, (double*)dev_c2_opaddr, 1,  magma_queue);
             magma_dsetvector(inter.size(), (double*)inter._data, 1, (double*)dev_inter_opaddr,  1,  magma_queue);
+
 #endif
 
             // 3. save pointers to opaddr
@@ -577,7 +593,8 @@ namespace ctns{
 #if defined(USE_CUDA_OPERATION)
             CUDA_CHECK(cudaMalloc((void**)&dev_workspace, worktot*sizeof(Tm)));
 #else
-            MAGMA_CHECK(magma_dmalloc((double**)(&dev_workspace), worktot));
+            CUDA_CHECK(cudaMalloc((void**)&dev_workspace, worktot*sizeof(Tm)));
+            //MAGMA_CHECK(magma_dmalloc((double**)(&dev_workspace), worktot));
 #endif
             std::cout << "lzdA3" << std::endl;
 
@@ -631,8 +648,10 @@ namespace ctns{
             CUDA_CHECK(cudaFree(dev_opaddr));
             CUDA_CHECK(cudaFree(dev_workspace));
 #else
-            MAGMA_CHECK(magma_free(dev_opaddr));
-            MAGMA_CHECK(magma_free(dev_workspace));
+            CUDA_CHECK(cudaFree(dev_opaddr));
+            CUDA_CHECK(cudaFree(dev_workspace));
+            //MAGMA_CHECK(magma_free(dev_opaddr));
+            //MAGMA_CHECK(magma_free(dev_workspace));
 #endif
          }
 #endif

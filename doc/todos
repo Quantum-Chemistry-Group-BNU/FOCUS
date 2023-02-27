@@ -256,3 +256,7 @@ KNOWN PROBLEMS
 
  * Support Kramers version
 
+ * Problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
+
+
+
