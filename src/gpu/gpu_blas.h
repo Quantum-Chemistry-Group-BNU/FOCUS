@@ -30,8 +30,7 @@ namespace linalg{
          const double* X, const int* INCX,
          const double* beta, double* Y, const int* INCY ){
       magma_trans_t transA =  MagmaNoTrans ;
-      if(*TRANSA=='T')
-      {
+      if(*TRANSA=='T'){
          transA = MagmaTrans;
       }else if (*TRANSA == 'C'){
          transA = MagmaConjTrans;
@@ -44,8 +43,7 @@ namespace linalg{
          const std::complex<double>* X, const int* INCX,
          const std::complex<double>* beta, std::complex<double>* Y, const int* INCY){
       magma_trans_t transA =  MagmaNoTrans ;
-      if(*TRANSA=='T')
-      {
+      if(*TRANSA == 'T'){
          transA = MagmaTrans;
       }else if (*TRANSA == 'C'){
          transA = MagmaConjTrans;

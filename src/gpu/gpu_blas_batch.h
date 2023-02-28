@@ -37,8 +37,6 @@ inline void xgemm_batch_gpu(const char transa, const char transb,
     double** dev_b_array_ptr = dev_a_array_ptr + batch_count;
     double** dev_c_array_ptr = dev_b_array_ptr + batch_count;
 
-    std::cout << "lzd batch_count =" << batch_count << std::endl; 
-    std::cout << "lzd m =" << m_array[0] << std::endl; 
 #ifdef USE_HIP
     HIP_CHECK(hipMemcpy(dev_m, m_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
     HIP_CHECK(hipMemcpy(dev_n, n_array, batch_count*sizeof(int), hipMemcpyHostToDevice));
