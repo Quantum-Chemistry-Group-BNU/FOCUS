@@ -522,7 +522,7 @@ timing.tb7 = tools::get_time();
                      blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
                if(debug && schd.ctns.verbose>1){
                   std::cout << "rank=" << rank << " iblk=" << i 
-                     << " blksize=" << Hxlst2[i][0].blksize 
+                     << " size=" << Hxlst2[i][0].size 
                      << " mmtasks.totsize=" << mmtasks[i].totsize
                      << " batchsize=" << mmtasks[i].batchsize 
                      << " nbatch=" << mmtasks[i].nbatch 
@@ -537,9 +537,9 @@ timing.tb7 = tools::get_time();
                   std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
                   mmtasks[i].save(fgemmi);
                }
-               std::string fred = "mmtasks_red";
-               fred += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
-               std::ofstream fout(fred);
+               std::string freduction = "mmtasks_reduction";
+               freduction += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond)+".txt";
+               std::ofstream fout(freduction);
                for(int i=0; i<Hxlst2.size(); i++){
                   for(int j=0; j<mmtasks[i].mmreduce.size(); j++){
                      const auto& red = mmtasks[i].mmreduce[j];
