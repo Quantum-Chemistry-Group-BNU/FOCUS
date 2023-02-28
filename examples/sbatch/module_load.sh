@@ -1,6 +1,6 @@
 #!/bin/bash
 
-platform="scy0799" # scy0799  #scv720  #DCU_419 #DCU_zhengzhou
+platform="scv7260" # scy0799  #scv7260  #DCU_419 #DCU_zhengzhou
 
 if [ $platform == "scy0799" ]; then
 module purge 
@@ -27,7 +27,7 @@ export UCX_NET_DEVICES=mlx5_1:1
 # export NCCL_IB_GID_INDEX=3
 ########################################
 
-elif [ $platform == "scv720" ]; then
+elif [ $platform == "scv7260" ]; then
 module purge
 export PATH=/data/home/scv7260/run/xiangchunyang/ctags-install/bin:$PATH
 export PATH=/data/home/scv7260/run/xiangchunyang/valgrind-install/bin:$PATH
