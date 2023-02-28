@@ -29,12 +29,12 @@ namespace ctns{
             double& t_kernel_ibond,
             double& t_reduction_ibond
             ){
-         const bool debug = false;
 #ifdef _OPENMP
          int maxthreads = omp_get_max_threads();
 #else
          int maxthreads = 1;
 #endif
+         const bool debug = false;
          if(rank == 0 && debug){
             std::cout << "ctns::preprocess_Hx_batchGPU"
                << " mpisize=" << size 
@@ -50,26 +50,24 @@ namespace ctns{
          // GPU: copy x vector (dimension=ndim)
          double time_cost_copy=0.0;
          double time_cost_gemm_kernel=0.0;
-         double time_cost_ycopy=0.0;
          double time_cost_gemm_reduction=0.0;
          struct timeval t0_time_copy, t1_time_copy;
          struct timeval t0_time_gemm_kernel, t1_time_gemm_kernel;
-         struct timeval t0_time_ycopy, t1_time_ycopy;
          struct timeval t0_time_gemm_reduction, t1_time_gemm_reduction;
 
          gettimeofday(&t0_time_copy, NULL);
 #ifdef USE_HIP
          // from xCPU to x
          HIP_CHECK(hipMemcpy(x, xCPU,ndim*sizeof(Tm), hipMemcpyHostToDevice));
-         // TODOs: memset yGPU
+         // memset yGPU
          HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
 #else
-         CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
          CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
+         CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
 #endif //USE_HIP
          gettimeofday(&t1_time_copy, NULL);
-
-         time_cost_copy = ((double)(t1_time_copy.tv_sec - t0_time_copy.tv_sec) + (double)(t1_time_copy.tv_usec - t0_time_copy.tv_usec)/1000000.0);
+         time_cost_copy = ((double)(t1_time_copy.tv_sec - t0_time_copy.tv_sec) 
+               + (double)(t1_time_copy.tv_usec - t0_time_copy.tv_usec)/1000000.0);
 
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
@@ -103,6 +101,21 @@ namespace ctns{
             } // k
          } // i
 
+         // copy yGPU to yCPU
+         gettimeofday(&t0_time_copy, NULL);
+#ifdef USE_HIP
+         HIP_CHECK(hipMemcpy(yCPU, y, ndim*sizeof(Tm), hipMemcpyDeviceToHost));
+#else
+         CUDA_CHECK(cudaMemcpy(yCPU, y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
+#endif
+         gettimeofday(&t1_time_copy, NULL);
+         time_cost_copy += ((double)(t1_time_copy.tv_sec - t0_time_copy.tv_sec) 
+               + (double)(t1_time_copy.tv_usec - t0_time_copy.tv_usec)/1000000.0);
+
+         // add const term
+         if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);
+
+         // timing
          if(rank==0){
             std::cout << "--- preprocess_Hx_batchGPU ---" << std::endl;
             std::cout << "--- time_copy=" << time_cost_copy << std::endl;
@@ -114,23 +127,6 @@ namespace ctns{
          }
          t_kernel_ibond += time_cost_gemm_kernel;
          t_reduction_ibond += time_cost_gemm_reduction;
-
-         // TODOs: copy yGPU to yCPU
-         gettimeofday(&t0_time_ycopy, NULL);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(yCPU,y, ndim*sizeof(Tm), hipMemcpyDeviceToHost));
-#else
-         CUDA_CHECK(cudaMemcpy(yCPU,y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
-#endif
-         // add const term
-         if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);
-
-         gettimeofday(&t1_time_ycopy, NULL);
-         time_cost_ycopy += ((double)(t1_time_ycopy.tv_sec - t0_time_ycopy.tv_sec) 
-               + (double)(t1_time_ycopy.tv_usec - t0_time_ycopy.tv_usec)/1000000.0);
-         if(rank==0){
-            std::cout<<"rank="<<rank<<"; Y time_cost_copy + xaxpy_CPU="<<time_cost_ycopy<<" Second"<<std::endl;
-         }
       }
 
 } // ctns

@@ -118,7 +118,7 @@ namespace ctns{
                << " nnz=" << ndim << ":"
                << tools::sizeMB<Tm>(ndim) << "MB"
                << std::endl;
-            if(schd.ctns.verbose>0) wf.print("wf");
+            wf.print("wf",schd.ctns.verbose-1);
          }
 
          // 3. Davidson solver for wf
@@ -200,13 +200,11 @@ namespace ctns{
          size_t gpumem_use = 0;
 #endif
          double t_kernel_ibond=0.0, t_reduction_ibond=0.0; // debug
-         std::string fgemm = "mmtasks";
-         fgemm += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
-         if(tools::is_complex<Tm>() && schd.ctns.alg_hvec >=4){
-            std::cout << "inter does not support cNK yet!" << std::endl;
+         if(Km::ifkr && schd.ctns.alg_hvec >=4){
+            std::cout << "error: alg_hvec >= 4 does not support cNK yet!" << std::endl;
             exit(1); 
          }
          if(schd.ctns.alg_hvec == 0){
@@ -382,13 +380,6 @@ namespace ctns{
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
                      blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
             } // i
-            if(isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
-               for(int i=0; i<Hxlst2.size(); i++){
-                  std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
-                  mmtasks[i].save(fgemmi);
-               }
-            }
-
             opaddr[4] = inter._data;
             worktot = mmtasks[0].batchsize*blksize*2;
             if(debug && schd.ctns.verbose>0){
@@ -531,6 +522,7 @@ timing.tb7 = tools::get_time();
                      blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
                if(debug && schd.ctns.verbose>1){
                   std::cout << "rank=" << rank << " iblk=" << i 
+                     << " blksize=" << Hxlst2[i][0].blksize 
                      << " mmtasks.totsize=" << mmtasks[i].totsize
                      << " batchsize=" << mmtasks[i].batchsize 
                      << " nbatch=" << mmtasks[i].nbatch 
@@ -538,11 +530,25 @@ timing.tb7 = tools::get_time();
                }
             } // i
             // save for analysis of BatchGEMM
-            if(isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+            if(rank == 0 && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+               std::string fgemm = "mmtasks_gemm";
+               fgemm += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
                for(int i=0; i<Hxlst2.size(); i++){
                   std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
                   mmtasks[i].save(fgemmi);
                }
+               std::string fred = "mmtasks_red";
+               fred += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
+               std::ofstream fout(fred);
+               for(int i=0; i<Hxlst2.size(); i++){
+                  for(int j=0; j<mmtasks[i].mmreduce.size(); j++){
+                     const auto& red = mmtasks[i].mmreduce[j];
+                     fout << "iblk=" << i << " ibatch=" << j 
+                          << " size=" << red.size << " ndim=" << red.ndim
+                          << std::endl;      
+                  }
+               }
+               fout.close();
             }
 timing.tb8 = tools::get_time();
 timing.tb9 = tools::get_time();

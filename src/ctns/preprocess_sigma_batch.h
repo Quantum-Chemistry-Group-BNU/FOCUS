@@ -25,12 +25,12 @@ namespace ctns{
             Tm* workspace,
             double& t_kernel_ibond,
             double& t_reduction_ibond){
-         const bool debug = false;
 #ifdef _OPENMP
          int maxthreads = omp_get_max_threads();
 #else
          int maxthreads = 1;
 #endif
+         const bool debug = false;
          if(rank == 0 && debug){
             std::cout << "ctns::preprocess_Hx_batch"
                << " mpisize=" << size 
@@ -76,7 +76,10 @@ namespace ctns{
                      + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
             } // k
          } // i
+         // add const term
+         if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
 
+         // timing
          if(rank == 0){
             std::cout << "--- preprocess_Hx_batch ---" << std::endl;
             std::cout << "--- time_cost_gemm_kernel=" << time_cost_gemm_kernel << std::endl;
@@ -87,9 +90,6 @@ namespace ctns{
          }
          t_kernel_ibond = time_cost_gemm_kernel;
          t_reduction_ibond = time_cost_gemm_reduction;
-
-         // add const term
-         if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
       }
 
 } // ctns
