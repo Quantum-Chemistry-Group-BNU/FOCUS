@@ -41,16 +41,17 @@ namespace ctns{
                   Tm** opaddr, 
                   Tm* workspace) const;
          public:
+            int dims  = 0; // 3/4 for onedot/twodot
+            int terms = 0; // no. of terms in Hmu 
             size_t dimout[4] = {0,0,0,0};
             size_t dimin[4] = {0,0,0,0};
             bool dagger[4] = {false,false,false,false};
             int loc[4] = {-1,-1,-1,-1};
             size_t off[4] = {0,0,0,0};
             size_t offout = 0, offin = 0, size = 0; // size of output block 
-            int dims = 0, terms = 0;
             Tm coeff = 1.0;
             // for Matrix-Matrix multiplications
-            size_t blksize = 0, offres = 0; // blksize of GEMM (can be different from size)
+            size_t blksize = 0; // blksize of GEMM (can be different from size)
             double cost = 0.0;
             MMlist<Tm> MMlst;
       };
@@ -93,11 +94,13 @@ namespace ctns{
          } // i
       }
 
+   /*
    // partition the tasks into Large & Small for GPU & CPU
    template <typename Tm>
       void partition(Hxlist2<Tm>& Hxlst2, const size_t thresh){
 
       }
+   */
 
    template <typename Tm>
       void Hxblock<Tm>::display() const{
@@ -139,7 +142,6 @@ namespace ctns{
             std::cout << "error: no such option for dims=" << dims << std::endl;
             exit(1);
          }
-         offres = ((terms-1)%2)*blksize;
       }
 
    template <typename Tm>
@@ -177,7 +179,7 @@ namespace ctns{
          // wf[br',bc',bm',bv']
          int xloc = locin, yloc = locout;
          size_t xoff = offin, yoff = offset;
-         int nt = 0;
+         int nt = terms+1; // ZL@20230228: ensure the output is always at the first part of 2*blksize
          // Oc2^dagger3[bv,bv']: out(r,c,m,v) = o[d](v,x) in(r,c,m,x) 
          if(!this->identity(3)){
             int p = 3;
@@ -196,7 +198,7 @@ namespace ctns{
             // update x & y  
             xloc = locout; xoff = offset+(nt%2)*blksize; 
             yloc = locout; yoff = offset+(1-nt%2)*blksize;
-            nt += 1;
+            nt -= 1;
          }
          // Oc1^dagger2[bm,bm']: out(r,c,m,v) = o[d](m,x) in(r,c,x,v)
          if(!this->identity(2)){
@@ -218,7 +220,7 @@ namespace ctns{
             // update x & y
             xloc = locout; xoff = offset+(nt%2)*blksize;
             yloc = locout; yoff = offset+(1-nt%2)*blksize;
-            nt += 1;
+            nt -= 1;
          }
          // Or^dagger1[bc,bc']: out(r,c,m,v) = o[d](c,x) in(r,x,m,v) 
          if(!this->identity(1)){
@@ -242,7 +244,7 @@ namespace ctns{
             // update x & y
             xloc = locout; xoff = offset+(nt%2)*blksize;
             yloc = locout; yoff = offset+(1-nt%2)*blksize;
-            nt += 1;	  
+            nt -= 1;	  
          }
          // Ol^dagger0[br,br']: out(r,c,m,v) = o[d](r,x) in(x,c,m,v)
          if(!this->identity(0)){
@@ -259,9 +261,9 @@ namespace ctns{
             mm.locB = xloc;   mm.offB = xoff;
             mm.locC = yloc;   mm.offC = yoff;
             MMlst2[3].push_back(mm);
-            nt += 1;
+            nt -= 1;
          }
-         assert(nt == terms);
+         assert(nt == 1);
       }
 
    // Generation of MMlst following qtensor/contract_qt3_qt2.h
@@ -274,7 +276,7 @@ namespace ctns{
          // wf[br',bc',bm']
          int xloc = locin, yloc = locout;
          size_t xoff = offin, yoff = offset;
-         int nt = 0;
+         int nt = terms+1; // ZL@20230228: ensure the output is always at the first part of 2*blksize
          // Oc1^dagger2[bm,bm']: out(r,c,m) = o[d](m,x) in(r,c,x)
          if(!this->identity(2)){
             int p = 2;
@@ -293,7 +295,7 @@ namespace ctns{
             // update x & y  
             xloc = locout; xoff = offset+(nt%2)*blksize; 
             yloc = locout; yoff = offset+(1-nt%2)*blksize;
-            nt += 1;
+            nt -= 1;
          }
          // Or^dagger1[bc,bc']: out(r,c,m) = o[d](c,x) in(r,x,m) 
          if(!this->identity(1)){
@@ -315,7 +317,7 @@ namespace ctns{
             // update x & y
             xloc = locout; xoff = offset+(nt%2)*blksize;
             yloc = locout; yoff = offset+(1-nt%2)*blksize;
-            nt += 1;
+            nt -= 1;
          }
          // Ol^dagger0[br,br']: out(r,c,m) = o[d](r,x) in(x,c,m)
          if(!this->identity(0)){
@@ -332,9 +334,9 @@ namespace ctns{
             mm.locB = xloc;   mm.offB = xoff;
             mm.locC = yloc;   mm.offC = yoff;
             MMlst2[2].push_back(mm);
-            nt += 1;
+            nt -= 1;
          }
-         assert(nt == terms);
+         assert(nt == 1);
       }
 
    // Perform the actual matrix-matrix multiplication

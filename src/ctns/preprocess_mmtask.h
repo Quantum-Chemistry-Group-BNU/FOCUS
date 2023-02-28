@@ -138,14 +138,13 @@ namespace ctns{
             // setup mmreduce[k]
             mmreduce[k].size = jlen;
             mmreduce[k].ndim = Hxlst[off].size;
+            mmreduce[k].offset = offset;
             mmreduce[k].offout = Hxlst[off].offout;
-            mmreduce[k].alpha.resize(jlen);
-            mmreduce[k].yoff.resize(jlen);
+            mmreduce[k].coeff.resize(jlen);
             for(int j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Hxblk = Hxlst[jdx];
-               mmreduce[k].alpha[j] = Hxblk.coeff;
-               mmreduce[k].yoff[j] = j*offset+Hxblk.offres;
+               mmreduce[k].coeff[j] = Hxblk.coeff;
             }
 
          } // k
