@@ -140,7 +140,7 @@ namespace input{
          bool save_formulae = false;
          bool sort_formulae = true;
          int hxorder = 0;
-         int batchgemm = 0;
+         int batchgemm = 1;
          int batchsize = 0;
          int batchcase = 1; // seperate GEMM
          // dvdson

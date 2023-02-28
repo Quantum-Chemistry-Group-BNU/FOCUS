@@ -310,8 +310,8 @@ void params_ctns::read(ifstream& istrm){
    } // size
    // consistency check for batchgemm
    if(alg_hvec == 6){
-      if(batchgemm != 0 || batchgemm !=1){
-         std::cout << "error: alg_hvec=6 does not support batchgemm != 0/1:" 
+      if(batchgemm != 0 && batchgemm !=1){
+         std::cout << "error: alg_hvec=6 does not support batchgemm != 0/1: " 
                    << batchgemm << std::endl;
          exit(1);
       }
