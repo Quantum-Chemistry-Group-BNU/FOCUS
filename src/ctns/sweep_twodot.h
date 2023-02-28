@@ -205,10 +205,10 @@ namespace ctns{
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
-         if(tools::is_complex<Tm>() && schd.ctns.alg_hvec >=4){
-            std::cout << "inter does not support cNK yet!" << std::endl;
-            exit(1); 
-         }
+       //  if(tools::is_complex<Tm>() && schd.ctns.alg_hvec >=4){
+       //     std::cout << "inter does not support cNK yet!" << std::endl;
+       //     exit(1); 
+       //  }
          if(schd.ctns.alg_hvec == 0){
 
             // oldest version

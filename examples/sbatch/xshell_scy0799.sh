@@ -7,6 +7,8 @@
 #SBATCH --qos=gpugpu
 #SBATCH -n 16
 #SBATCH -N 2
+#SBATCH -o DCU16_Node2.o
+#SBATCH -e DCU16_Node2.e
 ####SBATCH --exclude=g[0006-0011,0013-0014]
 
 export LD_LIBRARY_PATH=/data01/home/scy0799/run/xiangchunyang/project/magma-2.6.1-install:$LD_LIBRARY_PATH
