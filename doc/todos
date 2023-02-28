@@ -239,23 +239,20 @@ KNOWN PROBLEMS
 
 === 2023 DMRG ===
 
- * Bugs:
-   - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magma size is int]
-   - Fix bug in parallel IO [mpi problem]
+ * Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magma size is int]
+ * Support complex version [DONE@20230228]
 
+ * Support restart isweep ibond
+ * Fix bug in parallel IO [mpi problem]
  * Profiling: Check fetch time & CPU memory for Fe8S7
-
- >>> Support Intermediate with GPU
- 
+ >>> Better reduction
+ >>> Support Intermediate with GPU?
  >>> Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
-
  >>> Support Renorm with GPU
- 
- * Support Restart isweep ibond
+ * OpenMP parallelization in decimation
 
 === Future ===
 
- * Support complex & Kramers version
-
+ * Support Kramers version
  * Problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
 

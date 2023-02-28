@@ -118,7 +118,7 @@ namespace ctns{
                << " nnz=" << ndim << ":"
                << tools::sizeMB<Tm>(ndim) << "MB"
                << std::endl;
-            wf.print("wf",schd.ctns.verbose-1);
+            wf.print("wf",schd.ctns.verbose-2);
          }
 
          // 3. Davidson solver for wf
