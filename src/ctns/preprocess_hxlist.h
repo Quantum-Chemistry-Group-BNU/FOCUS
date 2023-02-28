@@ -178,8 +178,8 @@ namespace ctns{
             const size_t offset) const{
          // wf[br',bc',bm',bv']
          int xloc = locin, yloc = locout;
-         size_t xoff = offin, yoff = offset;
          int nt = terms+1; // ZL@20230228: ensure the output is always at the first part of 2*blksize
+         size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc2^dagger3[bv,bv']: out(r,c,m,v) = o[d](v,x) in(r,c,m,x) 
          if(!this->identity(3)){
             int p = 3;
@@ -275,8 +275,8 @@ namespace ctns{
             const size_t offset) const{
          // wf[br',bc',bm']
          int xloc = locin, yloc = locout;
-         size_t xoff = offin, yoff = offset;
          int nt = terms+1; // ZL@20230228: ensure the output is always at the first part of 2*blksize
+         size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc1^dagger2[bm,bm']: out(r,c,m) = o[d](m,x) in(r,c,x)
          if(!this->identity(2)){
             int p = 2;

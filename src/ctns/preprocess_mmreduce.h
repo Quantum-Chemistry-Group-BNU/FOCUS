@@ -21,21 +21,28 @@ namespace ctns{
    // y[ndim] += \sum_i a_i*y_i[ndim]
    template <typename Tm>
       void MMreduce<Tm>::reduction(Tm* workspace, Tm* y, const int iop){
-         const Tm alpha = 1.0, beta = 0.0;
+         const Tm alpha = 1.0, beta = 1.0; // accumulate
          const int  INCX = 1, INCY = 1;
-         Tm* yptr = y + offout;
+         Tm* yout = y + offout;
          if(iop == 0){
+            /*
+            for(int i=0; i<size; i++){
+               Tm* yptr = workspace + i*offset;
+               linalg::xaxpy(ndim, coeff[i], yptr, yout);
+            }
+            */
             linalg::xgemv("N", &ndim, &size, &alpha, workspace, &offset, 
-                  coeff.data(), &INCX, &beta, yptr, &INCY);
+                  coeff.data(), &INCX, &beta, yout, &INCY);
 #ifdef GPU
          }else if(iop == 1){
-            /*
+            for(int i=0; i<size; i++){
+               Tm* yptr = workspace + i*offset;
+               linalg::xaxpy_magma(ndim, coeff[i], yptr, yout); 
+            }
+/*
             linalg::xgemv_magma("N", &ndim, &size, &alpha, workspace, &offset, 
-                  coeff.data(), &INCX, &beta, yptr, &INCY);
-               for(int i=0; i<size; i++){
-               linalg::xaxpy_magma(ndim, alpha[i], yptr[i], y+offout); 
-               }
-            */
+                  coeff.data(), &INCX, &beta, yout, &INCY);
+*/
 #endif
          }else{
             std::cout << "error: no such option in MMreduce<Tm>::reduction iop=" << iop << std::endl;
