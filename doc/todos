@@ -241,6 +241,7 @@ KNOWN PROBLEMS
 
  * Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magma size is int]
  * Support complex version [DONE@20230228]
+ * Add more tests
 
  * Support restart isweep ibond
  * Fix bug in parallel IO [mpi problem]

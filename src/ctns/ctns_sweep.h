@@ -50,14 +50,15 @@ namespace ctns{
                sweeps.print_ctrls(isweep);
                std::cout << tools::line_separator2 << std::endl;
             }
-            if(schd.ctns.task_restart && isweep != schd.ctns.rsweep) continue;
+            if(schd.ctns.task_restart && isweep < schd.ctns.rsweep) continue;
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
                if(debug){
                   std::cout << "\n=== start rank=" << rank << " ibond=" << ibond << std::endl;
                }
-               if(schd.ctns.task_restart && ibond != schd.ctns.rbond) continue;
+               if(schd.ctns.task_restart && ibond < schd.ctns.rbond) continue;
+               std::cout << "ISWEEP,IBOND=" << isweep << "," << ibond << std::endl;
                const auto& dbond = sweeps.seq[ibond];
                const auto& dots = sweeps.ctrls[isweep].dots;
                auto tp0 = icomb.topo.get_type(dbond.p0);
