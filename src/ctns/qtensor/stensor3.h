@@ -268,6 +268,7 @@ namespace ctns{
                   << blk.dim0 << "," 
                   << blk.dim1 << ","
                   << blk.dim2 << ")" 
+                  << " size=" << blk._size 
                   << std::endl; 
                if(level >= 2) blk.print("blk_"+std::to_string(idx));
             } // level>=1

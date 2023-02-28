@@ -17,7 +17,7 @@ namespace ctns{
                   const size_t offset,
                   const int hdxorder,
                   const int icase=0);
-            // save
+            // save dimensions for optimization
             void save(const std::string fgemm){
                for(int k=0; k<mmbatch2.size(); k++){
                   for(int i=0; i<mmbatch2[k].size(); i++){

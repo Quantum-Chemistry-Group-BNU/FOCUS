@@ -34,14 +34,12 @@ namespace ctns{
 #ifdef GPU
             void xgemm_batch_gpu(Tm** ptrs);
 #endif
+            // save dimension for optimization
             void save(const std::string fname){
                std::ofstream fout(fname);
                fout << size << " " << transA[0] << " " << transB[0] << " " << std::endl;
                for(int i=0; i<size; i++){
-                  fout << M[i] << " " 
-                     << N[i] << " "
-                     << K[i] 
-                     << std::endl;
+                  fout << M[i] << " " << N[i] << " " << K[i] << std::endl;
                }
                fout.close();
             }

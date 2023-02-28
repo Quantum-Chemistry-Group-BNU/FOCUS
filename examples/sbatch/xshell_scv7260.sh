@@ -7,6 +7,8 @@
 #SBATCH --qos=gpugpu
 #SBATCH -n 16
 #SBATCH -N 2
+#SBATCH -o DCU16_Node2.o
+#SBATCH -e DCU16_Node2.e
 
 export PATH=/data/home/scv7260/run/xiangchunyang/ctags-install/bin:$PATH
 export PATH=/data/home/scv7260/run/xiangchunyang/valgrind-install/bin:$PATH

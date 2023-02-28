@@ -46,11 +46,11 @@ namespace ctns{
             bool dagger[4] = {false,false,false,false};
             int loc[4] = {-1,-1,-1,-1};
             size_t off[4] = {0,0,0,0};
-            size_t offout = 0, offin = 0, size = 0; 
+            size_t offout = 0, offin = 0, size = 0; // size of output block 
             int dims = 0, terms = 0;
             Tm coeff = 1.0;
             // for Matrix-Matrix multiplications
-            size_t blksize = 0, offres = 0;
+            size_t blksize = 0, offres = 0; // blksize of GEMM (can be different from size)
             double cost = 0.0;
             MMlist<Tm> MMlst;
       };
