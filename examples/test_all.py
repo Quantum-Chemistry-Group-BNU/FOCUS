@@ -115,7 +115,7 @@ def compareAll(dirs,thresh=1.e-8):
 
 if __name__ == '__main__':
 
-   mpiprefix = "" #mpirun -np 2 "
+   mpiprefix = "mpirun -np 2 "
    os.environ['OMP_NUM_THREADS'] = "4"
    print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
 
@@ -133,9 +133,13 @@ if __name__ == '__main__':
    dirs = ['0_h6_tns',
            '1_lih3_dcg', 
            '2_lih3+_dcg', 
-           '3_h6+_kr', # nr integral
-           '4_h5_twodot', # nr integral
-           '5_h6_cisolver',
+           '3_h6+_kr',
+           '4_h5_cNK',
+           '5_h5_rNSz_hvec4',
+           '5_h5_rNSz_hvec5',
+           '5_h5_rNSz_hvec6',
+           '5_h5_rNSz_renorm2',
+           '7_h6_cisolver',
            ]
    #dirs = ['3_h6+_kr']
    t0 = time.time()

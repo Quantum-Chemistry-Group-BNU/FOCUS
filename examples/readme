@@ -1,0 +1,22 @@
+
+ Description:
+
+ 0_h6_tns: rNSz/cNSz + real integrals
+ 1_lih3_dcg: cNK + complex integrals from DCG Hamiltonian (pyscf)
+ 2_lih3+_dcg: same as 1_lih3_dcg, but for odd no. of electrons
+ 3_h6+_kr: rNSz,cNK + real integrals
+ 4_h5_cNK: cNK + real integrals
+ 5_h5_rNSz_hvec4: rNSz + alg_hvec=4
+ 5_h5_rNSz_hvec5: rNSz + alg_hvec=5
+ 5_h5_rNSz_hvec6: rNSz + alg_hvec=6
+ 5_h5_rNSz_renorm2: rNSz + alg_hvec=4 + alg_renorm=2
+ 6_h6_cisolver: cisolver 0
+
+ 6_h5_cNSz: rNSz + alg_hvec4
+ test_all.py
+
+ analyzer
+ largemol:
+   - fe2s2
+   - hn_series
+ slurm_scripts
