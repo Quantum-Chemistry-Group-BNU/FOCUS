@@ -124,31 +124,3 @@ def test_run(dirs):
    print('\ntotol time =',t1-t0)
    return nfail
 
-if __name__ == '__main__':
-
-   mpiprefix = "mpirun -np 2 "
-   os.environ['OMP_NUM_THREADS'] = "4"
-   print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
-
-   HOME = os.path.dirname(os.getcwd())
-   print('HOME=',HOME)
-   SCI  = HOME+"/bin/sci.x"
-   CTNS = mpiprefix + HOME+"/bin/ctns.x"
-
-   #import os
-   #print(os.environ['DYLD_LIBRARY_PATH'])
-
-   #cdir = os.getcwd()
-   #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
-   dirs = ['0_h6_tns',
-           '1_lih3_dcg', 
-           '2_lih3+_dcg', 
-           '3_h6+_kr',
-           '4_h5_cNK',
-           '5_h5_rNSz_hvec4',
-           '5_h5_rNSz_hvec5',
-           '5_h5_rNSz_hvec6',
-           '5_h5_rNSz_renorm2',
-           '7_h6_cisolver',
-           ]
-   test_run(dirs)
