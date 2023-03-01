@@ -42,8 +42,7 @@ def parse_ctns(fname="ctns.out"):
    return elst
 
 def testAll(dirs):
-   #print("\ntestAll")
-   #print("dirs=",dirs)
+   parrent = os.getcwd()
    tmpdir = "./tmp"
    for fdir in dirs:
       print("")
@@ -76,16 +75,16 @@ def testAll(dirs):
          os.system(cmd)
          t1 = time.time()
          print('timing =',t1-t0)
-      os.chdir("..")
+      os.chdir(parrent)
    print("\nRun successfully!")
    return 0
 
 def compareAll(dirs,nfail,thresh=1.e-8): 
-   #print("\ncompareAll with thresh=",thresh)
-   #print("dirs=",dirs)
+   parrent = os.getcwd()
    tmpdir = "./tmp"
    for fdir in dirs:
       print("\n### check:",fdir,"###")
+      os.system("pwd")
       os.chdir(fdir)
       os.system("pwd")
       for prefix in ['','r','c']:
@@ -109,7 +108,7 @@ def compareAll(dirs,nfail,thresh=1.e-8):
          else:
             print("fail")
             nfail += 1
-      os.chdir("..")
+      os.chdir(parrent)
    print("\nSummary: nfail =",nfail) 
    return nfail
 
