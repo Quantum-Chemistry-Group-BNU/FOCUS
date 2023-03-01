@@ -1,0 +1,13 @@
+dtype 0
+nelec -1 
+twoms -1
+integral_file moleinfo/fmole.info
+scratch ./scratch
+
+$sci
+nroots 3
+schedule # fake
+0 1.e-5
+end
+cthrd 1.e-1
+$end
