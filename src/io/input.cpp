@@ -231,8 +231,8 @@ void params_ctns::read(ifstream& istrm){
          thresh_proj = stod(line.substr(11)); 
       }else if(line.substr(0,12)=="thresh_ortho"){
          thresh_ortho = stod(line.substr(12));
-      }else if(line.substr(0,10)=="rdm_svd"){
-         rdm_svd = stod(line.substr(10));
+      }else if(line.substr(0,7)=="rdm_svd"){
+         rdm_svd = stod(line.substr(7));
       }else if(line.substr(0,6)=="nroots"){
          nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){

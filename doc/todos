@@ -254,8 +254,8 @@ KNOWN PROBLEMS
 === Future ===
 
  * Support complex version [DONE@20230228]
-   - hvec4 error for CNSz in H5?
-   - what about R operation in contract?
+   - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, otherwise renormalized state become complex, and the construction of H requires 'Conj' operation in GEMM!] 
+   - what about R operation in contract? [general complex]
  
  * Support Kramers version
 

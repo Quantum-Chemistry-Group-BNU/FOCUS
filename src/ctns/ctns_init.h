@@ -258,6 +258,8 @@ namespace ctns{
                   << " TIMING=" << dt << " S"
                   << std::endl;
                if(maxdiff>thresh_ortho) tools::exit("error: deviate from identity matrix!");
+               //debug
+               //icomb.rsites[idx].print("rsite"+std::to_string(idx),2);
             }
 
          } // idx

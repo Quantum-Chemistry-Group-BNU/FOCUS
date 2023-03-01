@@ -26,6 +26,7 @@ dirs = ['tests_cpu/0_h6_tns',
         'tests_cpu/5_h5_rNSz_hvec5',
         'tests_cpu/5_h5_rNSz_hvec6',
         'tests_cpu/5_h5_rNSz_renorm2',
+        'tests_cpu/5_h5_cNSz_hvec5',
         'tests_cpu/7_h6_cisolver',
         ]
 test_utils.test_run(dirs)
