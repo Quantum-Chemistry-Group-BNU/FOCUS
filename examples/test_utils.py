@@ -58,17 +58,19 @@ def testAll(dirs):
          exist = os.path.exists(finput)
          if(not exist): continue
          print('finput=',finput)
-	     # SCI
+	      # SCI
          print('=== SCI ===')
+         SCI = os.environ['SCI']
          cmd = SCI +" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"sci.out"
          print('cmd = ', cmd)
          t0 = time.time()
          os.system(cmd)
          t1 = time.time()
          print('timing =',t1-t0)
-	     # CTNS
+	      # CTNS
          print('=== CTNS ===')
-         cmd = mpiprefix+CTNS+" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"ctns.out"
+         CTNS = os.environ['CTNS']
+         cmd = CTNS+" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"ctns.out"
          print('cmd = ', cmd)
          t0 = time.time()
          os.system(cmd)
@@ -78,11 +80,10 @@ def testAll(dirs):
    print("\nRun successfully!")
    return 0
 
-def compareAll(dirs,thresh=1.e-8): 
+def compareAll(dirs,nfail,thresh=1.e-8): 
    #print("\ncompareAll with thresh=",thresh)
    #print("dirs=",dirs)
    tmpdir = "./tmp"
-   global nfail
    for fdir in dirs:
       print("\n### check:",fdir,"###")
       os.chdir(fdir)
@@ -110,8 +111,18 @@ def compareAll(dirs,thresh=1.e-8):
             nfail += 1
       os.chdir("..")
    print("\nSummary: nfail =",nfail) 
-   return 0
+   return nfail
 
+def test_run(dirs):
+   nfail = 0
+   t0 = time.time()
+   for fname in dirs:
+      fdir = [fname]
+      testAll(fdir)
+      nfail += compareAll(fdir,nfail)
+   t1 = time.time()
+   print('\ntotol time =',t1-t0)
+   return nfail
 
 if __name__ == '__main__':
 
@@ -122,14 +133,13 @@ if __name__ == '__main__':
    HOME = os.path.dirname(os.getcwd())
    print('HOME=',HOME)
    SCI  = HOME+"/bin/sci.x"
-   CTNS = HOME+"/bin/ctns.x"
+   CTNS = mpiprefix + HOME+"/bin/ctns.x"
 
    #import os
    #print(os.environ['DYLD_LIBRARY_PATH'])
 
    #cdir = os.getcwd()
    #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
-   nfail = 0
    dirs = ['0_h6_tns',
            '1_lih3_dcg', 
            '2_lih3+_dcg', 
@@ -141,11 +151,4 @@ if __name__ == '__main__':
            '5_h5_rNSz_renorm2',
            '7_h6_cisolver',
            ]
-   #dirs = ['3_h6+_kr']
-   t0 = time.time()
-   for fname in dirs:
-      fdir = [fname]
-      testAll(fdir)
-      compareAll(fdir)
-   t1 = time.time()
-   print('\ntotol time =',t1-t0)
+   test_run(dirs)

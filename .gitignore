@@ -13,7 +13,7 @@ obj/*.o
 *.x
 *.out
 *.a
-scratch
+scratch*
 extlibs/hdf5-1.12.0
 extlibs/h5pp-master/
 extlibs/HighFive-master/
