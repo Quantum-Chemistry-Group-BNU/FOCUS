@@ -1,5 +1,5 @@
 
-machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = scv7260 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no
 USE_GCC = no
