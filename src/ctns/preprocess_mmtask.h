@@ -18,7 +18,7 @@ namespace ctns{
                   const int hdxorder,
                   const int icase=0);
             // save dimensions for optimization
-            void save(const std::string fgemm){
+            void save(const std::string fgemm) const{
                for(int k=0; k<mmbatch2.size(); k++){
                   for(int i=0; i<mmbatch2[k].size(); i++){
                      std::string fgemmki = fgemm+"_"+std::to_string(k)+"."
@@ -34,8 +34,8 @@ namespace ctns{
                }
             }
             // reduction of y[:] = \sum_i ai*yi[:]
-            void reduction(const int k, Tm* workspace, Tm* y, const int icase){
-               mmreduce[k].reduction(workspace, y, icase);
+            void reduction(const int k, Tm* workspace, Tm* y, const int iop) const{
+               mmreduce[k].reduction(workspace, y, iop);
             }
          public:
             int batchgemm;
@@ -138,14 +138,13 @@ namespace ctns{
             // setup mmreduce[k]
             mmreduce[k].size = jlen;
             mmreduce[k].ndim = Hxlst[off].size;
+            mmreduce[k].offset = offset;
             mmreduce[k].offout = Hxlst[off].offout;
-            mmreduce[k].alpha.resize(jlen);
-            mmreduce[k].yoff.resize(jlen);
+            mmreduce[k].coeff.resize(jlen);
             for(int j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Hxblk = Hxlst[jdx];
-               mmreduce[k].alpha[j] = Hxblk.coeff;
-               mmreduce[k].yoff[j] = j*offset+Hxblk.offres;
+               mmreduce[k].coeff[j] = Hxblk.coeff;
             }
 
          } // k

@@ -240,13 +240,12 @@ KNOWN PROBLEMS
 === 2023 DMRG ===
 
  * Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magma size is int]
- * Support complex version [DONE@20230228]
+ * Better reduction algorithm using GEMV
  * Add more tests
 
  * Support restart isweep ibond
  * Fix bug in parallel IO [mpi problem]
  * Profiling: Check fetch time & CPU memory for Fe8S7
- >>> Better reduction
  >>> Support Intermediate with GPU?
  >>> Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
  >>> Support Renorm with GPU
@@ -254,6 +253,8 @@ KNOWN PROBLEMS
 
 === Future ===
 
+ * Support complex version [DONE@20230228]
+   - what about R operation in contract? 
  * Support Kramers version
  * Problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
 

@@ -138,14 +138,14 @@ namespace linalg{
          const double* alpha, const double* A, const int* LDA, 
          const double* B, const int* LDB,
          const double* beta, double* C, const int* LDC){
-      return ::dgemm_(TRANSA, TRANSB, M, N, K, alpha, A, LDA, B, LDB, beta, C, LDC);
+      ::dgemm_(TRANSA, TRANSB, M, N, K, alpha, A, LDA, B, LDB, beta, C, LDC);
    }
    inline void xgemm(const char* TRANSA, const char* TRANSB, 
          const int* M, const int* N, const int* K,
          const std::complex<double>* alpha, const std::complex<double>* A, const int* LDA, 
          const std::complex<double>* B, const int* LDB,
          const std::complex<double>* beta, std::complex<double>* C, const int* LDC){
-      return ::zgemm_(TRANSA, TRANSB, M, N, K, alpha, A, LDA, B, LDB, beta, C, LDC);
+      ::zgemm_(TRANSA, TRANSB, M, N, K, alpha, A, LDA, B, LDB, beta, C, LDC);
    }
 
    // y = alpha*A*x + beta*y
@@ -153,14 +153,14 @@ namespace linalg{
          const double* alpha, const double* A, const int* LDA,
          const double* X, const int* INCX,
          const double* beta, double* Y, const int* INCY){
-      return ::dgemv_(TRANSA, M, N, alpha, A, LDA, X, INCX, beta, Y, INCY);
+      ::dgemv_(TRANSA, M, N, alpha, A, LDA, X, INCX, beta, Y, INCY);
    }
    // zgemv
    inline void xgemv(const char* TRANSA, const int* M, const int* N, 
          const std::complex<double>* alpha, const std::complex<double>* A, const int* LDA,
          const std::complex<double>* X, const int* INCX,
          const std::complex<double>* beta, std::complex<double>* Y, const int* INCY){
-      return ::zgemv_(TRANSA, M, N, alpha, A, LDA, X, INCX, beta, Y, INCY);
+      ::zgemv_(TRANSA, M, N, alpha, A, LDA, X, INCX, beta, Y, INCY);
    }
 
 } // linalg

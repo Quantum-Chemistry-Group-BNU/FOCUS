@@ -49,9 +49,8 @@ namespace ctns{
                   auto& Hxblk = Hxlst2[i][j];
                   Tm* wptr = &work[blksize];
                   Hxblk.kernel(x, opaddr, wptr);
-                  Tm* rptr = &work[blksize+Hxblk.offres];
                   // save to local memory
-                  linalg::xaxpy(Hxblk.size, Hxblk.coeff, rptr, work);
+                  linalg::xaxpy(Hxblk.size, Hxblk.coeff, wptr, work);
                } // j
                if(Hxlst2[i].size()>0){
                   const auto& Hxblk = Hxlst2[i][0];
