@@ -160,7 +160,7 @@ namespace ctns{
 
                icomb.rsites[idx] = get_right_bsite<Tm>(Km::isym);
 
-               // physical/internal on backbone/branch
+            // physical/internal on backbone/branch
             }else{
 
                //  node.type == 3: internal site on backbone
@@ -230,7 +230,7 @@ namespace ctns{
                                  } // k
                               } // j
                            } // i
-                             // tmp3[c'](l,r)= Wr*[r'r]tmp2[c'][r'l] = tmp2^T*Wr.conj() 
+                           // tmp3[c'](l,r)= Wr*[r'r]tmp2[c'][r'l] = tmp2^T*Wr.conj() 
                            auto tmp3 = linalg::xgemm("T","N",tmp12,Wr);
                            int N = tmp3.size();
                            // R[c][lr] = sum_c' Wc*[c'c]tmp3[c'][lr]
@@ -333,9 +333,9 @@ namespace ctns{
 
          // check overlaps
          if(debug_init){
-            icomb.rwfuns[0].info.print("rwfun0.qinfo");
-            auto wfmat = icomb.get_wf2().to_matrix();
-            wfmat.print("rwfuns",2);
+            auto wf2 = icomb.get_wf2();
+            wf2.print("wf2");
+            auto wfmat = wf2.to_matrix();
             std::cout << "\ncheck state overlaps ..." << std::endl;
             // ova = <CTNS[i]|CTNS[j]>
             auto ova = linalg::xgemm("N","C",wfmat,wfmat).conj();

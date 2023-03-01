@@ -28,7 +28,14 @@ namespace ctns{
          qsym(){}
          qsym(const short isym): _isym(isym), _ne(0), _tm(0) {}
          qsym(const short isym, const short ne): _isym(isym), _ne(ne), _tm(0) {} 
-         qsym(const short isym, const short ne, const short tm):  _isym(isym), _ne(ne), _tm(tm) {}
+         qsym(const short isym, const short ne, const short tm): _isym(isym), _ne(ne), _tm(tm) {
+            // ne,tm can be negative due to the negative function 
+            if(isym == 2 && (std::abs(ne)%2 != std::abs(tm)%2)){ 
+               std::cout << "error: inconsistent (ne,tm) for isym=2!" << std::endl;
+               std::cout << "ne = " << ne << " tm=" << tm << std::endl;
+               exit(1); 
+            }
+         }
          // assignement
          qsym& operator =(const qsym& sym){
             _isym = sym._isym; // allow _isym to be changed here

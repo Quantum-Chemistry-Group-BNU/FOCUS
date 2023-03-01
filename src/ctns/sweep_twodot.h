@@ -120,6 +120,10 @@ namespace ctns{
                << std::endl;
             wf.print("wf",schd.ctns.verbose-2);
          }
+         if(ndim == 0){
+            std::cout << "error: symmetry is inconsistent as ndim=0" << std::endl;
+            exit(1);
+         }
 
          // 3. Davidson solver for wf
          // 3.1 diag 
