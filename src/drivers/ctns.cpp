@@ -5,6 +5,9 @@
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
+#ifndef SERIAL
+#include <boost/mpi.hpp>
+#endif
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -136,7 +139,6 @@ int main(int argc, char *argv[]){
    rank = world.rank();
    size = world.size();
 #endif
-
 
 #ifdef _OPENMP
    maxthreads = omp_get_max_threads();

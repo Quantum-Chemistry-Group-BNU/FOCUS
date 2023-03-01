@@ -5,6 +5,9 @@
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../vmc/vmc_header.h"
+#ifndef SERIAL
+#include <boost/mpi.hpp>
+#endif
 #ifdef _OPENMP
 #include <omp.h>
 #endif
