@@ -1,8 +1,8 @@
 
 machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no
-USE_GCC = no
+DEBUG = yes
+USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 # compression
@@ -67,7 +67,7 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
-      FLAGS += -DDEBUG -g -O0 -Wall -lm
+      FLAGS += -DDEBUG -O0 -Wall -lm
    else
       FLAGS += -DNDEBUG -O2 -Wall -lm
    endif
@@ -83,7 +83,7 @@ ifeq ($(strip $(USE_GCC)),yes)
 else
    # Intel compiler
    ifeq ($(strip $(DEBUG)), yes)
-      FLAGS += -DDEBUG -g -O0 -Wall 
+      FLAGS += -DDEBUG -O0 -Wall 
    else 
       FLAGS += -DNDEBUG -O2 -Wall 
    endif 
@@ -151,8 +151,8 @@ else ifeq ($(strip $(machine)), dell2)
    CUDA_DIR= /home/dell/anaconda3/envs/pytorch
    MAGMA_DIR = ../magma/magma-2.6.1
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static
-else
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static -lrt
+else ifeq ($(strip $(machine)), dell)
    CUDA_DIR= /usr/local/cuda
    MAGMA_DIR = ../magma/install
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include

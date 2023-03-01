@@ -5,6 +5,9 @@
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
+#ifndef SERIAL
+#include <boost/mpi.hpp>
+#endif
 
 using namespace std;
 using namespace fock;

@@ -1,7 +1,7 @@
 import os
 import test_utils
 
-mpiprefix = "mpirun -np 2 "
+mpiprefix = "" #mpirun -np 2 "
 os.environ['OMP_NUM_THREADS'] = "4"
 print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
 
@@ -17,7 +17,6 @@ os.environ['CTNS'] = CTNS
 
 #cdir = os.getcwd()
 #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
-dirs = ['gpu_tests/5_h5_rNSz_hvec7',
-        'gpu_tests/5_h5_rNSz_renorm2',
+dirs = ['tests_gpu/5_h5_rNSz_hvec7',
         ]
 test_utils.test_run(dirs)
