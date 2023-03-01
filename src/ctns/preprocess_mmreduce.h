@@ -26,28 +26,23 @@ namespace ctns{
          Tm* yout = y + offout;
          if(iop == 0){
             /*
-            for(int i=0; i<size; i++){
+               for(int i=0; i<size; i++){
                Tm* yptr = workspace + i*offset;
                linalg::xaxpy(ndim, coeff[i], yptr, yout);
-            }
-            */
+               }
+               */
             linalg::xgemv("N", &ndim, &size, &alpha, workspace, &offset, 
                   coeff.data(), &INCX, &beta, yout, &INCY);
 #ifdef GPU
          }else if(iop == 1){
-           
-             /*
-            for(int i=0; i<size; i++){
+            /*
+               for(int i=0; i<size; i++){
                Tm* yptr = workspace + i*offset;
                linalg::xaxpy_magma(ndim, coeff[i], yptr, yout); 
-            }
-            */
-            
-             //std::cout<<"reduction 1:ndim="<<ndim<<"; size="<<size<<"; offset="<<offset<<std::endl;
+               }
+               */
             linalg::xgemv_magma("N", &ndim, &size, &alpha, workspace, &offset, 
                   coeff.data(), &INCX, &beta, yout, &INCY);
-             //std::cout<<"reduction 2"<<std::endl;
-             
 #endif
          }else{
             std::cout << "error: no such option in MMreduce<Tm>::reduction iop=" << iop << std::endl;

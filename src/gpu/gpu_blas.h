@@ -35,17 +35,16 @@ namespace linalg{
       }else if (TRANSA[0] == 'C'){
          transA = MagmaConjTrans;
       }
-      double* dev_X = nullptr;
-      dev_X = (double*)gpumem.allocate((*N)*sizeof(double));
+      size_t size = (*N)*sizeof(double);
+      double* dev_X = (double*)gpumem.allocate(size);
 #ifdef USE_HIP
-            HIP_CHECK(hipMemcpy(dev_X, X, (*N)*sizeof(double), hipMemcpyHostToDevice));
+      HIP_CHECK(hipMemcpy(dev_X, X, size, hipMemcpyHostToDevice));
 #else
-            CUDA_CHECK(cudaMemcpy(dev_X, X, (*N)*sizeof(double), cudaMemcpyHostToDevice));
+      CUDA_CHECK(cudaMemcpy(dev_X, X, size, cudaMemcpyHostToDevice));
 #endif// USE_HIP
       magma_dgemv(transA, *M, *N, *alpha, A, *LDA,
             dev_X, *INCX, *beta, Y, *INCY, magma_queue);
-
-      gpumem.deallocate(dev_X, (*N)*sizeof(double));
+      gpumem.deallocate(dev_X, size);
    }
    inline void xgemv_magma(const char* TRANSA, const int* M, const int* N,
          const std::complex<double>* alpha, const std::complex<double>* A, const int* LDA,
@@ -57,18 +56,18 @@ namespace linalg{
       }else if (TRANSA[0] == 'C'){
          transA = MagmaConjTrans;
       }
-      magmaDoubleComplex* dev_X = nullptr;
-      dev_X = (magmaDoubleComplex*)gpumem.allocate((*N)*sizeof(magmaDoubleComplex));
+      size_t size = (*N)*sizeof(magmaDoubleComplex);
+      magmaDoubleComplex* dev_X = (magmaDoubleComplex*)gpumem.allocate(size);
 #ifdef USE_HIP
-            HIP_CHECK(hipMemcpy(dev_X, X, (*N)*sizeof(magmaDoubleComplex), hipMemcpyHostToDevice));
+      HIP_CHECK(hipMemcpy(dev_X, X, size, hipMemcpyHostToDevice));
 #else
-            CUDA_CHECK(cudaMemcpy(dev_X, X, (*N)*sizeof(magmaDoubleComplex), cudaMemcpyHostToDevice));
+      CUDA_CHECK(cudaMemcpy(dev_X, X, size, cudaMemcpyHostToDevice));
 #endif// USE_HIP
       magmaDoubleComplex alpha1{alpha->real(),alpha->imag()};
       magmaDoubleComplex beta1{beta->real(),beta->imag()};
       magma_zgemv(transA, *M, *N, alpha1, (magmaDoubleComplex *)A, *LDA,
             (magmaDoubleComplex *)dev_X, *INCX, beta1, (magmaDoubleComplex *)Y, *INCY, magma_queue);
-            gpumem.deallocate(dev_X, (*N)*sizeof(magmaDoubleComplex));
+      gpumem.deallocate(dev_X, size);
    }
 } // linalg
 

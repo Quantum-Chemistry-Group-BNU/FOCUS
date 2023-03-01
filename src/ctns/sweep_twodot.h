@@ -494,9 +494,13 @@ timing.tb6 = tools::get_time();
             if(schd.ctns.batchsize > 0){
                batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             }else{
-               // oper + dvdson + N*blksize*2 + 6*(N+1)*sizeof(int) + 3*N*sizeof(double*)
-               // 6*(N+1)*sizeof(int) + 3*N*sizeof(double*) estimated by 6*8*(N+1) + 3*N*16 = 96*N+48
-               batchsize = std::floor(double(gpumem.size() - gpumem_occupied)/(sizeof(Tm)*blksize*2 + 96));
+               // oper + dvdson + N*blksize*2 
+               // + [6*(N+1)*sizeof(int) + 3*N*sizeof(double/complex*)] (inside BatchGEMM)
+               // + N*sizeof(double/complex*) [inside GEMV]
+               //
+               // 6*(N+1)*sizeof(int) + 3*N*sizeof(double/complex*) estimated by 6*8*(N+1) + 3*N*16 = 96*N+48
+               // N*sizeof(double/complex*) estimated by N*16 = 16*N
+               batchsize = std::floor(double(gpumem.size() - gpumem_occupied)/(sizeof(Tm)*blksize*2 + 112));
                batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
                if(batchsize == 0 && maxbatch != 0){
                   std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
