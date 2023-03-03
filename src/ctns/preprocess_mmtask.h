@@ -7,6 +7,7 @@
 
 #include "time.h"
 #include "sys/time.h"
+#include "oper_timer.h"
 
 namespace ctns{
 
@@ -37,7 +38,7 @@ namespace ctns{
                   gettimeofday(&t0, NULL);
                   mmbatch2[k][i].kernel(batchgemm, ptrs);
                   gettimeofday(&t1, NULL);
-                  oper_timer.tHxkernel[i] += ((double)(t1.tv_sec - t0.tv_sec) 
+                  oper_timer.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
                         + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
                }
             }
@@ -47,7 +48,7 @@ namespace ctns{
                gettimeofday(&t0, NULL);
                mmreduce[k].reduction(workspace, y, iop);
                gettimeofday(&t1, NULL);
-               oper_timer.tHxkernel[8] += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:

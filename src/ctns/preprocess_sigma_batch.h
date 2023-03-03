@@ -7,6 +7,7 @@
 
 #include "time.h"
 #include "sys/time.h"
+#include "oper_timer.h"
 
 namespace ctns{
 
@@ -55,6 +56,7 @@ namespace ctns{
          struct timeval t0_time_gemm_kernel, t1_time_gemm_kernel;
          struct timeval t0_time_gemm_reduction, t1_time_gemm_reduction;
 
+         oper_timer.start_Hx();
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<mmtasks.size(); i++){
@@ -87,6 +89,7 @@ namespace ctns{
             std::cout << "--- cost_gemm_kernel=" << cost 
                << " flops=kernel/time=" << cost/time_cost_gemm_kernel
                << std::endl;
+            oper_timer.analysis_Hx();
          }
          t_kernel_ibond = time_cost_gemm_kernel;
          t_reduction_ibond = time_cost_gemm_reduction;

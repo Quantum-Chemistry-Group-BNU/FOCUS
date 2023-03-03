@@ -60,23 +60,37 @@ namespace ctns{
          // tR=0.0;
       }
       // GPU_kernel
-      void start_Hxkernel(){
-         tHxkernel.resize(9,0);
-         if(counter == 0){
-            tHxkernel_tot.resize(9,0);
+      void start_Hx(){
+         tHx.resize(nd);
+         memset(tHx.data(), 0, nd*sizeof(double));
+         if(Hx_counter == 0){
+            tHx_tot.resize(nd);
+            memset(tHx_tot.data(), 0, nd*sizeof(double));
          }
-         counter += 1;
+         Hx_counter += 1;
       }
-      void analysis_Hxkernel(){
-         std::cout << "Timing for Hxkernel:" << std::endl;
-         for(int i=0; i<tHxkernel.size(); i++){
-            std::cout << "counter=" << counter << " i=" << i << " t=" << tHxkernel[i] << std::endl;
-            tHxkernel_tot[i] += tHxkernel[i];
+      void print_Hx(std::string name, const std::vector<double>& data){
+         double tgemm = 0.0;
+         for(int i=0; i<nd-1; i++){
+            tgemm += data[i]; 
          }
-         std::cout << "Timing for Hxkernel_tot:" << std::endl;
-         for(int i=0; i<tHxkernel.size(); i++){
-            std::cout << "counter=" << counter << " i=" << i << " t=" << tHxkernel_tot[i] << std::endl;
+         double tot = tgemm + data[nd-1];
+         std::cout << "Timing for " << name << ": tot=" << tot 
+                   << " tgemm=" << tgemm 
+                   << " treduction=" << data[nd-1]
+                   << std::endl;
+         for(int i=0; i<nd-1; i++){
+            std::cout << " Hx_counter=" << Hx_counter << " i=" << i << " t=" << data[i] 
+                      << " per=" << data[i]/tgemm << std::endl;
          }
+      }
+      void analysis_Hx(){
+         // accumulate
+         for(int i=0; i<nd; i++){
+            tHx_tot[i] += tHx[i];
+         }
+         this->print_Hx("Hx", tHx);
+         this->print_Hx("Hx_tot", tHx_tot);
       }
       public:
       boost::timer::cpu_timer timer;
@@ -86,9 +100,10 @@ namespace ctns{
       // Hx
       double tHxInit=0.0, tHxCalc=0.0, tHxFinl=0.0;
       // GPU_kernel 
-      int counter = 0;
-      std::vector<double> tHxkernel;
-      std::vector<double> tHxkernel_tot;
+      int Hx_counter = 0;
+      const int nd = 9;
+      std::vector<double> tHx;
+      std::vector<double> tHx_tot;
       // // renorm
       // int nR=0;
       // double tR=0.0; 

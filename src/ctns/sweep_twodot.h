@@ -599,7 +599,6 @@ namespace ctns{
          if(debug && schd.ctns.verbose>0){
             sweeps.print_eopt(isweep, ibond);
             if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
-            oper_timer.analysis_Hxkernel();
          }
          timing.tb10 = tools::get_time();
          sweeps.t_kernel_total[isweep] += t_kernel_ibond;
