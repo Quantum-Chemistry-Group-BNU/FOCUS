@@ -180,7 +180,7 @@ namespace ctns{
          wfsize = preprocess_wfsize(wf.info, info_dict);
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
-               + "_isweep"+std::to_string(isweep)
+            + "_isweep"+std::to_string(isweep)
                + "_ibond"+std::to_string(ibond) + ".txt";
          HVec_type<Tm> HVec; 
          Hx_functors<Tm> Hx_funs; // hvec0
@@ -403,16 +403,16 @@ namespace ctns{
          }else if(schd.ctns.alg_hvec == 7){
 
             // BatchGEMM on GPU
-timing.tb1 = tools::get_time();
+            timing.tb1 = tools::get_time();
             // symbolic formulae + intermediates + preallocation of workspace
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
-timing.tb2 = tools::get_time();
+            timing.tb2 = tools::get_time();
             // gen MMlst & reorder
             preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, inter, 
                   Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
-timing.tb3 = tools::get_time();
+            timing.tb3 = tools::get_time();
             // debug hxlst
             if(schd.ctns.verbose>0){
                for(int k=0; k<size; k++){
@@ -438,7 +438,7 @@ timing.tb3 = tools::get_time();
                icomb.world.barrier();
                if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
             }
-timing.tb4 = tools::get_time();
+            timing.tb4 = tools::get_time();
 
             // GPU: copy operators (qops_dict & inter)
             // 1. allocate memery on GPU
@@ -475,14 +475,14 @@ timing.tb4 = tools::get_time();
             CUDA_CHECK(cudaMemcpy(dev_c1_opaddr,qops_dict.at("c1")._data,qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_c2_opaddr,qops_dict.at("c2")._data,qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #endif //USE_HIP
-timing.tb5 = tools::get_time();
+            timing.tb5 = tools::get_time();
             // copy inter 
 #ifdef USE_HIP
             HIP_CHECK(hipMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), hipMemcpyHostToDevice));
 #else
             CUDA_CHECK(cudaMemcpy(dev_inter_opaddr,inter._data,inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #endif// USE_HIP
-timing.tb6 = tools::get_time();
+            timing.tb6 = tools::get_time();
 
             // 3. compute batchsize & allocate workspace
             size_t maxbatch = 0;
@@ -491,9 +491,7 @@ timing.tb6 = tools::get_time();
             } // i
             size_t batchsize = 0;
             size_t gpumem_dvdson = sizeof(Tm)*2*ndim;
-            size_t gpumem_occupied = gpumem_oper + gpumem_dvdson + 48;
-std::cout << "rk=" << rank << " gpumem_occupied=" << gpumem_occupied << std::endl;
-
+            size_t gpumem_rest = gpumem_oper + gpumem_dvdson + 48;
             if(schd.ctns.batchsize > 0){
                batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             }else{
@@ -503,21 +501,24 @@ std::cout << "rk=" << rank << " gpumem_occupied=" << gpumem_occupied << std::end
                //
                // 6*(N+1)*sizeof(int) + 3*N*sizeof(double/complex*) estimated by 6*8*(N+1) + 3*N*16 = 96*N+48
                // N*sizeof(double/complex*) estimated by N*16 = 16*N
-               batchsize = std::floor(double(gpumem.size() - gpumem_occupied)/(sizeof(Tm)*blksize*2 + 112));
-               batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
-               if(batchsize == 0 && maxbatch != 0){
-                  std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
+               if(gpumem.size() > gpumem_rest){
+                  batchsize = std::floor(double(gpumem.size() - gpumem_rest)/(sizeof(Tm)*blksize*2 + 112));
+                  batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
+                  if(batchsize == 0 && maxbatch != 0){
+                     std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
+                     exit(1);
+                  }
+               }else{
+                  std::cout << "error: in sufficient GPU memory for batchGEMM!" << std::endl;
+                  std::cout << "gpumem.size()=" << gpumem.size()
+                            << " gpumem_rest=" << gpumem_rest
+                            << std::endl;
+                  exit(1);
                }
             }
             worktot = 2*ndim + batchsize*blksize*2;
             size_t gpumem_batch = sizeof(Tm)*batchsize*blksize*2;
-
-std::cout << "rk=" << rank << " batch=" << gpumem_batch << std::endl;  
-
             dev_workspace = (Tm*)gpumem.allocate(gpumem_dvdson+gpumem_batch);
-
-std::cout << "rk=" << rank << " used=" << gpumem.used() << std::endl; 
- 
             gpumem_use = gpumem.used();
             if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
@@ -529,7 +530,7 @@ std::cout << "rk=" << rank << " used=" << gpumem.used() << std::endl;
                   << " batchsize=" << batchsize
                   << std::endl;
             }
-timing.tb7 = tools::get_time();
+            timing.tb7 = tools::get_time();
 
             // 4. generate mmtasks
             assert(schd.ctns.batchcase == 1);
@@ -561,14 +562,14 @@ timing.tb7 = tools::get_time();
                   for(int j=0; j<mmtasks[i].mmreduce.size(); j++){
                      const auto& red = mmtasks[i].mmreduce[j];
                      fout << "iblk=" << i << " ibatch=" << j 
-                          << " size=" << red.size << " ndim=" << red.ndim
-                          << std::endl;      
+                        << " size=" << red.size << " ndim=" << red.ndim
+                        << std::endl;      
                   }
                }
                fout.close();
             }
-timing.tb8 = tools::get_time();
-timing.tb9 = tools::get_time();
+            timing.tb8 = tools::get_time();
+            timing.tb9 = tools::get_time();
 
             // GPU version of Hx
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
@@ -598,8 +599,9 @@ timing.tb9 = tools::get_time();
          if(debug && schd.ctns.verbose>0){
             sweeps.print_eopt(isweep, ibond);
             if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
+            oper_timer.analysis_Hxkernel();
          }
-timing.tb10 = tools::get_time();
+         timing.tb10 = tools::get_time();
          sweeps.t_kernel_total[isweep] += t_kernel_ibond;
          sweeps.t_reduction_total[isweep] += t_reduction_ibond;
 

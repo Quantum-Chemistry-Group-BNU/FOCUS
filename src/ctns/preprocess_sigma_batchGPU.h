@@ -78,6 +78,8 @@ namespace ctns{
          ptrs[5] = x;
          ptrs[6] = &dev_workspace[offset];
 
+         oper_timer.start_Hxkernel();
+
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<mmtasks.size(); i++){
@@ -124,6 +126,7 @@ namespace ctns{
             std::cout << "--- cost_gemm_kernel=" << cost
                << " flops=kernel/time=" << cost/time_cost_gemm_kernel
                << std::endl;
+            oper_timer.analysis_Hxkernel();
          }
          t_kernel_ibond += time_cost_gemm_kernel;
          t_reduction_ibond += time_cost_gemm_reduction;

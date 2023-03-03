@@ -59,6 +59,25 @@ namespace ctns{
          // nR=0;
          // tR=0.0;
       }
+      // GPU_kernel
+      void start_Hxkernel(){
+         tHxkernel.resize(9,0);
+         if(counter == 0){
+            tHxkernel_tot.resize(9,0);
+         }
+         counter += 1;
+      }
+      void analysis_Hxkernel(){
+         std::cout << "Timing for Hxkernel:" << std::endl;
+         for(int i=0; i<tHxkernel.size(); i++){
+            std::cout << "counter=" << counter << " i=" << i << " t=" << tHxkernel[i] << std::endl;
+            tHxkernel_tot[i] += tHxkernel[i];
+         }
+         std::cout << "Timing for Hxkernel_tot:" << std::endl;
+         for(int i=0; i<tHxkernel.size(); i++){
+            std::cout << "counter=" << counter << " i=" << i << " t=" << tHxkernel_tot[i] << std::endl;
+         }
+      }
       public:
       boost::timer::cpu_timer timer;
       // opxwf
@@ -66,6 +85,10 @@ namespace ctns{
       double tC=0.0, tA=0.0, tB=0.0, tH=0.0, tS=0.0, tP=0.0, tQ=0.0;
       // Hx
       double tHxInit=0.0, tHxCalc=0.0, tHxFinl=0.0;
+      // GPU_kernel 
+      int counter = 0;
+      std::vector<double> tHxkernel;
+      std::vector<double> tHxkernel_tot;
       // // renorm
       // int nR=0;
       // double tR=0.0; 

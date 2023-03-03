@@ -5,6 +5,9 @@
 #include "preprocess_mmbatch.h"
 #include "preprocess_mmreduce.h"
 
+#include "time.h"
+#include "sys/time.h"
+
 namespace ctns{
 
    // Interface to Hxlist
@@ -29,13 +32,23 @@ namespace ctns{
             }
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
+               struct timeval t0, t1;
                for(int i=0; i<mmbatch2[k].size(); i++){
+                  gettimeofday(&t0, NULL);
                   mmbatch2[k][i].kernel(batchgemm, ptrs);
+                  gettimeofday(&t1, NULL);
+                  oper_timer.tHxkernel[i] += ((double)(t1.tv_sec - t0.tv_sec) 
+                        + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
                }
             }
             // reduction of y[:] = \sum_i ai*yi[:]
             void reduction(const int k, Tm* workspace, Tm* y, const int iop) const{
+               struct timeval t0, t1;
+               gettimeofday(&t0, NULL);
                mmreduce[k].reduction(workspace, y, iop);
+               gettimeofday(&t1, NULL);
+               oper_timer.tHxkernel[8] += ((double)(t1.tv_sec - t0.tv_sec) 
+                     + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
             int batchgemm;
