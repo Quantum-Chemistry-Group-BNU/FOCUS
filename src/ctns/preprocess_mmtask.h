@@ -40,6 +40,7 @@ namespace ctns{
                   gettimeofday(&t1, NULL);
                   oper_timer.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
                         + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+                  oper_timer.cHx[i] += mmbatch2[k][i].cost; 
                }
             }
             // reduction of y[:] = \sum_i ai*yi[:]

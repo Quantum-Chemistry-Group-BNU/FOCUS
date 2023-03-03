@@ -243,12 +243,16 @@ KNOWN PROBLEMS
  * Better reduction algorithm using GEMV [DONE@20230301]
  * Add more tests [DONE@20230301]
 
- * Profiling: Check fetch time & CPU memory for Fe8S7
+ * Profiling: Check fetch time & CPU memory for Fe8S7 !!!
+
+ * Support restart isweep ibond !!!
+
  * Fix bug in parallel IO [mpi problem]
- * Support restart isweep ibond
+
  >>> Support Intermediate with GPU?
  >>> Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
  >>> Support Renorm with GPU
+
  * OpenMP parallelization in decimation
 
 === Future ===

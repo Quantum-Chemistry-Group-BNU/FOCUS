@@ -63,34 +63,46 @@ namespace ctns{
       void start_Hx(){
          tHx.resize(nd);
          memset(tHx.data(), 0, nd*sizeof(double));
+         cHx.resize(nd);
+         memset(cHx.data(), 0, nd*sizeof(double));
          if(Hx_counter == 0){
             tHx_tot.resize(nd);
             memset(tHx_tot.data(), 0, nd*sizeof(double));
+            cHx_tot.resize(nd);
+            memset(cHx_tot.data(), 0, nd*sizeof(double));
          }
          Hx_counter += 1;
       }
-      void print_Hx(std::string name, const std::vector<double>& data){
+      void print_Hx(std::string name, const std::vector<double>& tdata, const std::vector<double>& cost){
          double tgemm = 0.0;
          for(int i=0; i<nd-1; i++){
-            tgemm += data[i]; 
+            tgemm += tdata[i]; 
          }
-         double tot = tgemm + data[nd-1];
-         std::cout << "Timing for " << name << ": tot=" << tot 
+         double tot = tgemm + tdata[nd-1];
+         std::cout << "--- Timing for " << name << " :" 
                    << " tgemm=" << tgemm 
-                   << " treduction=" << data[nd-1]
+                   << " treduction=" << tdata[nd-1]
+                   << " tot=" << tot << " ---" 
                    << std::endl;
+         double cgemm = 0.0;
          for(int i=0; i<nd-1; i++){
-            std::cout << " Hx_counter=" << Hx_counter << " i=" << i << " t=" << data[i] 
-                      << " per=" << data[i]/tgemm << std::endl;
+            std::cout << " Hx_counter=" << Hx_counter << " i=" << i << " t=" << tdata[i] 
+                      << " per=" << tdata[i]/tgemm*100 
+                      << " cost=" << cost[i]
+                      << " flops=" << cost[i]/tdata[i]
+                      << std::endl;
+            cgemm += cost[i];
          }
+         std::cout << " total GEMM cost=" << cgemm << " flops=" << cgemm/tgemm << std::endl;
       }
       void analysis_Hx(){
          // accumulate
          for(int i=0; i<nd; i++){
             tHx_tot[i] += tHx[i];
+            cHx_tot[i] += cHx[i];
          }
-         this->print_Hx("Hx", tHx);
-         this->print_Hx("Hx_tot", tHx_tot);
+         this->print_Hx("Hx", tHx, cHx);
+         this->print_Hx("Hx_tot", tHx_tot, cHx_tot);
       }
       public:
       boost::timer::cpu_timer timer;
@@ -100,10 +112,12 @@ namespace ctns{
       // Hx
       double tHxInit=0.0, tHxCalc=0.0, tHxFinl=0.0;
       // GPU_kernel 
-      int Hx_counter = 0;
       const int nd = 9;
+      int Hx_counter = 0;
       std::vector<double> tHx;
       std::vector<double> tHx_tot;
+      std::vector<double> cHx;
+      std::vector<double> cHx_tot;
       // // renorm
       // int nR=0;
       // double tR=0.0; 
