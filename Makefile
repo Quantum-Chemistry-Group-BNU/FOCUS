@@ -1,7 +1,7 @@
 
-machine = scv7260 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
+DEBUG = no #yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
@@ -28,6 +28,13 @@ else ifeq ($(strip $(machine)), dell)
 else ifeq ($(strip $(machine)), dell2)
    MATHLIB = /home/dell/intel/oneapi/mkl/2022.0.2
    BOOST = /home/dell/users/lzd/boost/install
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi-mt-x64
+   endif
+else ifeq ($(strip $(machine)), jiageng)
+   MATHLIB = /public/software/intel/oneapi2021/mkl/latest
+   BOOST = /public/home/bnulizdtest/boost/install-gcc
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
@@ -67,11 +74,11 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
-      FLAGS += -DDEBUG -O0 -Wall -lm
+      FLAGS += -DDEBUG -O0 -Wall
    else
-      FLAGS += -DNDEBUG -O2 -Wall -lm
+      FLAGS += -DNDEBUG -O2 -Wall
    endif
-   FLAGS += -gdwarf-4 -gstrict-dwarf # dwarf error in ld
+   #FLAGS += -gdwarf-4 -gstrict-dwarf # dwarf error in ld
    ifeq ($(strip $(USE_MPI)),no)
       CXX = g++
       CC = gcc
@@ -157,6 +164,11 @@ else ifeq ($(strip $(machine)), dell)
    MAGMA_DIR = ../magma/install
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static
+else ifeq ($(strip $(machine)), jiageng)
+   CUDA_DIR= ${CUDADIR}
+   MAGMA_DIR = ../magma-2.6.1
+   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static -lrt
 endif
 endif
 

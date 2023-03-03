@@ -17,8 +17,8 @@ namespace ctns{
                         const symbolic_task<Tm>& H_formulae,
                         const bool debug=false);
                 // helpers
-                int count() const{ return _count; };
-                int size() const{ return _size; };
+                size_t count() const{ return _count; };
+                size_t size() const{ return _size; };
             public:
                 std::map<std::pair<int,int>,size_t> _offset;
                 size_t _count = 0, _size = 0;

@@ -1,5 +1,5 @@
 
-machine = scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = jiageng #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 INCLUDE = -I.
 
@@ -24,6 +24,10 @@ else ifeq ($(strip $(machine)), scy0799)
    CXX = icpc 
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
    MATHLIB =/data/apps/OneApi/2022.1/oneapi/mkl/latest/lib/intel64/
+else ifeq ($(strip $(machine)), jiageng)
+   CXX = g++ #icpc 
+   CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB = ${MKLROOT}
 else
    CXX = g++
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)

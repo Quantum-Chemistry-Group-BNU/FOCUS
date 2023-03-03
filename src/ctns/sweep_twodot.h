@@ -448,6 +448,7 @@ timing.tb4 = tools::get_time();
                + qops_dict.at("c2").size()
                + inter.size();
             size_t gpumem_oper = sizeof(Tm)*opertot;
+
             dev_oper = (Tm*)gpumem.allocate(gpumem_oper);
             Tm* dev_l_opaddr = dev_oper;
             Tm* dev_r_opaddr = dev_l_opaddr + qops_dict.at("l").size();
@@ -491,6 +492,8 @@ timing.tb6 = tools::get_time();
             size_t batchsize = 0;
             size_t gpumem_dvdson = sizeof(Tm)*2*ndim;
             size_t gpumem_occupied = gpumem_oper + gpumem_dvdson + 48;
+std::cout << "rk=" << rank << " gpumem_occupied=" << gpumem_occupied << std::endl;
+
             if(schd.ctns.batchsize > 0){
                batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             }else{
@@ -508,7 +511,13 @@ timing.tb6 = tools::get_time();
             }
             worktot = 2*ndim + batchsize*blksize*2;
             size_t gpumem_batch = sizeof(Tm)*batchsize*blksize*2;
+
+std::cout << "rk=" << rank << " batch=" << gpumem_batch << std::endl;  
+
             dev_workspace = (Tm*)gpumem.allocate(gpumem_dvdson+gpumem_batch);
+
+std::cout << "rk=" << rank << " used=" << gpumem.used() << std::endl; 
+ 
             gpumem_use = gpumem.used();
             if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
