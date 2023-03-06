@@ -37,7 +37,9 @@ namespace ctns{
                for(int i=0; i<mmbatch2[k].size(); i++){
                   gettimeofday(&t0, NULL);
                   mmbatch2[k][i].kernel(batchgemm, ptrs);
+#ifdef GPU
                   cudaDeviceSynchronize();
+#endif
                   gettimeofday(&t1, NULL);
                   oper_timer.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
                         + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
@@ -49,7 +51,9 @@ namespace ctns{
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
                mmreduce[k].reduction(workspace, y, iop);
+#ifdef GPU
                cudaDeviceSynchronize();
+#endif
                gettimeofday(&t1, NULL);
                oper_timer.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
@@ -153,7 +157,7 @@ namespace ctns{
             } // i
 
             // setup mmreduce[k]
-            mmreduce[k].size = jlen;
+            mmreduce[k].batchsize = jlen;
             mmreduce[k].ndim = Hxlst[off].size;
             mmreduce[k].offset = offset;
             mmreduce[k].offout = Hxlst[off].offout;

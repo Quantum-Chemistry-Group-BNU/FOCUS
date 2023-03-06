@@ -62,8 +62,7 @@ namespace ctns{
          // rest of spatial orbital indices
          const auto& node = icomb.topo.get_node(p);
          const auto& rindex = icomb.topo.rindex;
-         const auto& site = (superblock=="cr")? icomb.rsites[rindex.at(p)] : 
-            icomb.lsites[rindex.at(p)];
+         const auto& site = icomb.sites[rindex.at(p)];
          if(superblock == "cr"){
             qops.krest = node.lorbs;
             qops.qbra = site.info.qrow;
@@ -84,30 +83,39 @@ namespace ctns{
          // initialize memory 
          qops.allocate_memory();
 
-         // 1. start renormalization
+         //-------------------------------
+         // 1. kernel for renormalization
+         //-------------------------------
          oper_timer.start();
          const bool debug_formulae = schd.ctns.verbose>0;
          size_t worktot = 0;
          if(alg_renorm == 0){
+
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
+
          }else if(alg_renorm == 1){
+
             // symbolic formulae + dynamic allocation of memory
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, 
                   debug_formulae);
             symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
+
          }else if(alg_renorm == 2){
+
             // symbolic formulae + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1,
                   debug_formulae);
             worktot = symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
+
          }else{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
             exit(1);
          }
+         //-------------------------------
 
          // 2. reduce 
          auto ta = tools::get_time();

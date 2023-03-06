@@ -18,31 +18,35 @@ namespace ctns{
    inline qproduct qmerge(const qbond& qs1, const qbond& qs2){
       // init dpt
       qdpt dpt;
+      std::vector<qsym> syms12; // natural ordering qs1,qs2 based on the double loop
       for(int i1=0; i1<qs1.size(); i1++){
          auto q1 = qs1.get_sym(i1);
          for(int i2=0; i2<qs2.size(); i2++){
             auto q2 = qs2.get_sym(i2);
-            dpt[q1+q2].push_back(std::make_tuple(i1,i2,0));
+            auto q12 = q1+q2;
+            if(dpt.find(q12) == dpt.end()) syms12.push_back(q12);
+            dpt[q12].push_back(std::make_tuple(i1,i2,-1));
          }
       }
       // form qs12 & compute offset
       qbond qs12;
-      for(auto& p : dpt){
-         const auto& q12 = p.first;
-         auto& p12 = p.second;
-         int ioff = 0;
+      for(int i=0; i<syms12.size(); i++){
+         const auto& q12 = syms12[i];
+         auto& p12 = dpt[q12];
+         // count offset for dpt[q12]
+         int dim = 0;
          for(int i12=0; i12<p12.size(); i12++){
             int i1 = std::get<0>(p12[i12]);
             int i2 = std::get<1>(p12[i12]);
             int d1 = qs1.get_dim(i1);
             int d2 = qs2.get_dim(i2);
-            p12[i12] = std::make_tuple(i1,i2,ioff);
-            ioff += d1*d2; 
+            p12[i12] = std::make_tuple(i1,i2,dim);
+            dim += d1*d2; 
          }
-         qs12.dims.push_back(std::make_pair(q12,ioff));
+         // setup dims for qs12
+         qs12.dims.push_back(std::make_pair(q12,dim));
       }
-      // reoder qs12
-      if(sort_by_dim) qs12.sort_by_dim();
+      if(sort_by_dim) qs12.sort_by_dim(); // reoder qs12 if necessary
       return std::make_pair(qs12,dpt);
    }
 

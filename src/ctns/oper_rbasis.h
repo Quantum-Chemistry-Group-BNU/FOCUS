@@ -54,8 +54,8 @@ void oper_check_rbasis(const comb<Km>& bra,
    double maxdiff = 0.0;
    const auto& node = bra.topo.get_node(p);
    const auto& rindex = bra.topo.rindex;
-   const auto& bsite = bra.rsites[rindex.at(p)];
-   const auto& ksite = ket.rsites[rindex.at(p)];
+   const auto& bsite = bra.sites[rindex.at(p)];
+   const auto& ksite = ket.sites[rindex.at(p)];
    const auto& rbasis0 = bra.rbases[rindex.at(p)];
    const auto& rbasis1 = ket.rbases[rindex.at(p)];
    // setup mapping for orbitals to local support
@@ -303,8 +303,8 @@ void oper_check_rbasis(const comb<Km>& bra,
    double maxdiff = 0.0;
    const auto& node = bra.topo.get_node(p);
    const auto& rindex = bra.topo.rindex;
-   const auto& bsite = bra.rsites[rindex.at(p)];
-   const auto& ksite = ket.rsites[rindex.at(p)];
+   const auto& bsite = bra.sites[rindex.at(p)];
+   const auto& ksite = ket.sites[rindex.at(p)];
    const auto& rbasis0 = bra.rbases[rindex.at(p)];
    const auto& rbasis1 = ket.rbases[rindex.at(p)];
    // setup mapping for orbitals to local support

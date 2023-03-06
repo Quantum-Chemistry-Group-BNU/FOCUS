@@ -5,53 +5,13 @@
 
 namespace ctns{
 
-   // generate initial guess for initial sweep optimization at p=(1,0)
-   template <typename Km>
-      void onedot_guess_psi0(comb<Km>& icomb, const int nroots){
-         const auto& rindex = icomb.topo.rindex;
-         const auto& rsite0 = icomb.rsites[rindex.at(std::make_pair(0,0))];
-         const auto& rsite1 = icomb.rsites[rindex.at(std::make_pair(1,0))];
-         const auto& qrow = icomb.rwfuns[0].info.qrow;
-         assert(qrow.size() == 1); // only same symmetry of wfs
-         if(icomb.get_nroots() < nroots){
-            std::cout << "dim(psi0)=" << icomb.get_nroots() << " nroots=" << nroots << std::endl;
-            tools::exit("error in onedot_guess_psi0: requested nroots exceed!");
-         }
-         auto sym_state = qrow.get_sym(0);
-         icomb.psi.resize(nroots);
-         for(int iroot=0; iroot<nroots; iroot++){
-            // qt2(1,r)
-            auto qt2 = icomb.rwfuns[iroot];
-            // qt2(1,r)*rsite0(r,r0,n0) = qt3(1,r0,n0)
-            auto qt3 = contract_qt3_qt2("l",rsite0,qt2);
-            // qt3(1,r0,n0) -> cwf(n0,r0)
-            stensor2<typename Km::dtype> cwf(sym_state, rsite0.info.qmid, rsite0.info.qcol, {1,1});
-            for(int br=0; br<cwf.rows(); br++){
-               for(int bc=0; bc<cwf.cols(); bc++){
-                  auto blk = cwf(br,bc);
-                  if(blk.empty()) continue;
-                  const auto blk0 = qt3(0,bc,br);
-                  int rdim = cwf.info.qrow.get_dim(br); 
-                  int cdim = cwf.info.qcol.get_dim(bc);
-                  for(int ir=0; ir<rdim; ir++){
-                     for(int ic=0; ic<cdim; ic++){
-                        blk(ir,ic) = blk0(0,ic,ir); 
-                     } // ic
-                  } // ir
-               } // bc
-            } // br
-            // cwf(n0,r0)*rsite1(r0,r1,n1) = psi(n0,r1,n1)
-            icomb.psi[iroot] = contract_qt3_qt2("l",rsite1,cwf);
-         } // iroot
-      }
-
    // local CI solver	
    template <typename Km>
       void onedot_localCI(comb<Km>& icomb,
             const input::schedule& schd,
             const double eps,
             const int parity,
-            const int ndim,
+            const size_t ndim,
             const int neig,
             std::vector<double>& diag,
             HVec_type<typename Km:: dtype> HVec,
@@ -94,13 +54,11 @@ namespace ctns{
                //------------------------------------
                std::vector<Tm> v0;
                if(rank == 0){ 
-                  // starting guess 
-                  if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); 
-                  assert(icomb.psi.size() == neig && icomb.psi[0].size() == ndim);
+                  assert(icomb.cpsi.size() == neig && icomb.cpsi[0].size() == ndim);
                   // load initial guess from previous opt
                   v0.resize(ndim*neig);
                   for(int i=0; i<neig; i++){
-                     icomb.psi[i].to_array(&v0[ndim*i]);
+                     icomb.cpsi[i].to_array(&v0[ndim*i]);
                   }
                   // reorthogonalization
                   int nindp = linalg::get_ortho_basis(ndim, neig, v0.data()); 
@@ -122,7 +80,7 @@ namespace ctns{
             const input::schedule& schd,
             const double eps,
             const int parity,
-            const int ndim,
+            const size_t ndim,
             const int neig,
             std::vector<double>& diag,
             HVec_type<std::complex<double>> HVec,
@@ -153,9 +111,9 @@ namespace ctns{
          //------------------------------------
          std::vector<Tm> v0;
          if(rank == 0){
-            if(icomb.psi.size() == 0) onedot_guess_psi0(icomb, neig); // starting guess 
+            assert(icomb.cpsi.size() == neig && icomb.cpsi[0].size() == ndim);
             // load initial guess from previous opt
-            solver.init_guess(icomb.psi, v0);
+            solver.init_guess(icomb.cpsi, v0);
          }
          //------------------------------------
          solver.solve_iter(eopt.data(), vsol.data(), v0.data());

@@ -107,15 +107,15 @@ namespace ctns{
          const auto& pdx0 = icomb.topo.rindex.at(dbond.p0);
          const auto& pdx1 = icomb.topo.rindex.at(dbond.p1);
          int nroots = vsol.cols();
-         icomb.psi.clear();
-         icomb.psi.resize(nroots);
+         icomb.cpsi.clear();
+         icomb.cpsi.resize(nroots);
          if(superblock == "lc"){
 
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
                auto cwf = rot.H().dot(wf.merge_lc()); // <-W[alpha,r]->
-               auto psi = contract_qt3_qt2("l",icomb.rsites[pdx1],cwf);
-               icomb.psi[i] = std::move(psi);
+               auto psi = contract_qt3_qt2("l",icomb.sites[pdx1],cwf);
+               icomb.cpsi[i] = std::move(psi);
             }
 
          }else if(superblock == "lr"){
@@ -124,8 +124,8 @@ namespace ctns{
                wf.from_array(vsol.col(i));
                wf.permCR_signed();
                auto cwf = rot.H().dot(wf.merge_lr()); // <-W[alpha,r]->
-               auto psi = contract_qt3_qt2("l",icomb.rsites[pdx1],cwf);
-               icomb.psi[i] = std::move(psi);
+               auto psi = contract_qt3_qt2("l",icomb.sites[pdx1],cwf);
+               icomb.cpsi[i] = std::move(psi);
             }
 
          }else if(superblock == "cr"){
@@ -135,13 +135,13 @@ namespace ctns{
                wf.from_array(vsol.col(i));
                auto cwf = wf.merge_cr().dot(rot.H()); // <-W[l,alpha]->
                if(!cturn){
-                  auto psi = contract_qt3_qt2("r",icomb.lsites[pdx0],cwf.T());
-                  icomb.psi[i] = std::move(psi);
+                  auto psi = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.T());
+                  icomb.cpsi[i] = std::move(psi);
                }else{
                   // special treatment of the propagation downside to backbone
-                  auto psi = contract_qt3_qt2("c",icomb.lsites[pdx0],cwf.T());
+                  auto psi = contract_qt3_qt2("c",icomb.sites[pdx0],cwf.T());
                   psi.permCR_signed(); // |(lr)c> back to |lcr> order on backbone
-                  icomb.psi[i] = std::move(psi);
+                  icomb.cpsi[i] = std::move(psi);
                }
             }
 
@@ -228,31 +228,31 @@ namespace ctns{
                + "_ibond"+std::to_string(ibond) + ".txt";
          size_t worktot = 0;
          if(superblock == "lc"){
-            icomb.lsites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
+            icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
             //-------------------------------------------------------------------
-            rot -= icomb.lsites[pdx].merge_lc();
+            rot -= icomb.sites[pdx].merge_lc();
             assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("lc", icomb.lsites[pdx], icomb.lsites[pdx]);
+            auto ovlp = contract_qt3_qt3("lc", icomb.sites[pdx], icomb.sites[pdx]);
             assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("lc", icomb, p, int2e, int1e, schd,
                   lqops, cqops, qops, fname); 
          }else if(superblock == "lr"){
-            icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
+            icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
             //-------------------------------------------------------------------
-            rot -= icomb.lsites[pdx].merge_lr();
+            rot -= icomb.sites[pdx].merge_lr();
             assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("lr", icomb.lsites[pdx],icomb.lsites[pdx]);
+            auto ovlp = contract_qt3_qt3("lr", icomb.sites[pdx],icomb.sites[pdx]);
             assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("lr", icomb, p, int2e, int1e, schd,
                   lqops, rqops, qops, fname); 
          }else if(superblock == "cr"){
-            icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
+            icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
             //-------------------------------------------------------------------
-            rot -= icomb.rsites[pdx].merge_cr();
+            rot -= icomb.sites[pdx].merge_cr();
             assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("cr", icomb.rsites[pdx],icomb.rsites[pdx]);
+            auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
             assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,

@@ -291,6 +291,10 @@ namespace ctns{
             std::cout << tools::line_separator << std::endl;
          }
 
+         std::cout << "NOT IMPLEMENTED YET!" << std::endl;
+         exit(1);
+
+         /*
          // perform an additional onedot opt  
          auto p0 = std::make_pair(0,0);
          auto p1 = std::make_pair(1,0);
@@ -307,12 +311,13 @@ namespace ctns{
 
          // decimation to get site0
          if(rank == 0){
-            const auto& wf = icomb.psi[0]; // only rank-0 has psi from renorm
+            const auto& wf = icomb.cpsi[0]; // only rank-0 has psi from renorm
+
             stensor2<Tm> rot;
             int nroots = schd.ctns.nroots;
             std::vector<stensor2<Tm>> wfs2(nroots);
             for(int i=0; i<nroots; i++){
-               auto wf2 = icomb.psi[i].merge_cr().T();
+               auto wf2 = icomb.cpsi[i].merge_cr().T();
                wfs2[i] = std::move(wf2);
             }
             const int dcut = nroots;
@@ -325,14 +330,14 @@ namespace ctns{
                   rot, dwt, deff, fname, 
                   schd.ctns.verbose>0);
             rot = rot.T(); 
-            icomb.rsites[icomb.topo.rindex.at(p0)] = rot.split_cr(wf.info.qmid, wf.info.qcol);
+            icomb.sites[icomb.topo.rindex.at(p0)] = rot.split_cr(wf.info.qmid, wf.info.qcol);
             // form rwfuns(iroot,irbas)
-            const auto& sym_state = icomb.psi[0].info.sym;
+            const auto& sym_state = icomb.cpsi[0].info.sym;
             qbond qrow({{sym_state, 1}});
             const auto& qcol = rot.info.qrow;
             icomb.rwfuns.resize(nroots);
             for(int iroot=0; iroot<nroots; iroot++){
-               auto cwf = icomb.psi[iroot].merge_cr().dot(rot.H()); // <-W[1,alpha]->
+               auto cwf = icomb.cpsi[iroot].merge_cr().dot(rot.H()); // <-W[1,alpha]->
                                                                     // change the carrier of sym_state from left to center qsym
                stensor2<typename Km::dtype> rwfun(qsym(Km::isym), qrow, qcol, {0,1});	
                for(int ic=0; ic<qcol.get_dim(0); ic++){
@@ -343,6 +348,7 @@ namespace ctns{
             if(schd.ctns.verbose>0) icomb.rwfuns[0].info.print("rwfuns0.info");
             std::cout << std::endl;
          } // rank0
+         */
       }
 
 } // ctns

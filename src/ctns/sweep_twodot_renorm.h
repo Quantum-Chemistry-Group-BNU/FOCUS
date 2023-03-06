@@ -105,8 +105,8 @@ namespace ctns{
          const bool debug = false;
          if(debug) std::cout << "ctns::twodot_guess_psi superblock=" << superblock << std::endl;
          int nroots = vsol.cols();
-         icomb.psi.clear();
-         icomb.psi.resize(nroots);
+         icomb.cpsi.clear();
+         icomb.cpsi.resize(nroots);
          if(superblock == "lc1"){
 
             for(int i=0; i<nroots; i++){
@@ -121,7 +121,7 @@ namespace ctns{
                // cwf[alpha,c2r] => psi[alpha,r,c2]
                auto psi = cwf.split_cr(wf.info.qver, wf.info.qcol);
                //------------------------------------------
-               icomb.psi[i] = std::move(psi);
+               icomb.cpsi[i] = std::move(psi);
             }
 
          }else if(superblock == "lr"){
@@ -139,7 +139,7 @@ namespace ctns{
                // cwf[alpha,c1c2] => cwf[alpha,c2,c1] 
                auto psi = cwf.split_cr(wf.info.qmid, wf.info.qver);
                //-------------------------------------------
-               icomb.psi[i] = std::move(psi);
+               icomb.cpsi[i] = std::move(psi);
             }
 
          }else if(superblock == "c2r"){
@@ -156,7 +156,7 @@ namespace ctns{
                // cwf[lc1,alpha] => cwf[l,alpha,c1]
                auto psi = cwf.split_lc(wf.info.qrow, wf.info.qmid);
                //------------------------------------------
-               icomb.psi[i] = std::move(psi);
+               icomb.cpsi[i] = std::move(psi);
             }
 
          }else if(superblock == "c1c2"){
@@ -176,7 +176,7 @@ namespace ctns{
                // revert ordering of the underlying basis
                psi.permCR_signed(); 
                //----------------------------------------------
-               icomb.psi[i] = std::move(psi); // psi on backbone
+               icomb.cpsi[i] = std::move(psi); // psi on backbone
             }
 
          } // superblock
@@ -265,41 +265,41 @@ namespace ctns{
                + "_ibond"+std::to_string(ibond) + ".txt";
          size_t worktot = 0;
          if(superblock == "lc1"){
-            icomb.lsites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
+            icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
             //-------------------------------------------------------------------
-            rot -= icomb.lsites[pdx].merge_lc();
+            rot -= icomb.sites[pdx].merge_lc();
             assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("lc", icomb.lsites[pdx], icomb.lsites[pdx]);
+            auto ovlp = contract_qt3_qt3("lc", icomb.sites[pdx], icomb.sites[pdx]);
             assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("lc", icomb, p, int2e, int1e, schd,
                   lqops, c1qops, qops, fname); 
          }else if(superblock == "lr"){
-            icomb.lsites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
+            icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
             //-------------------------------------------------------------------
-            rot -= icomb.lsites[pdx].merge_lr();
+            rot -= icomb.sites[pdx].merge_lr();
             assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("lr", icomb.lsites[pdx],icomb.lsites[pdx]);
+            auto ovlp = contract_qt3_qt3("lr", icomb.sites[pdx],icomb.sites[pdx]);
             assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("lr", icomb, p, int2e, int1e, schd,
                   lqops, rqops, qops, fname); 
          }else if(superblock == "c2r"){
-            icomb.rsites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
+            icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
             //-------------------------------------------------------------------
-            rot -= icomb.rsites[pdx].merge_cr();
+            rot -= icomb.sites[pdx].merge_cr();
             assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("cr", icomb.rsites[pdx],icomb.rsites[pdx]);
+            auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
             assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,
                   c2qops, rqops, qops, fname);
          }else if(superblock == "c1c2"){
-            icomb.rsites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
+            icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
             //-------------------------------------------------------------------
-            rot -= icomb.rsites[pdx].merge_cr();
+            rot -= icomb.sites[pdx].merge_cr();
             assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("cr", icomb.rsites[pdx],icomb.rsites[pdx]);
+            auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
             assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,

@@ -350,6 +350,7 @@ namespace ctns{
 #endif
                if(rank == 0 && iprt > 0){
                   std::cout << "ctns::pdvdsonSolver_kr::solve_iter"
+                     << " ndim=" << ndim 
                      << " parity=" << parity 
                      << " is_complex=" << tools::is_complex<Tm>()
                      << " mpisize=" << size 

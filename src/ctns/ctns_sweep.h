@@ -33,8 +33,8 @@ namespace ctns{
          // init left boundary site
          const auto& ntotal = icomb.topo.ntotal;
          if(!schd.ctns.task_restart){
-            icomb.lsites.resize(ntotal);
-            icomb.lsites[ntotal-1] = get_left_bsite<Tm>(Km::isym);
+            icomb.initiate_psi0(schd.ctns.nroots);
+            icomb.sites[ntotal-1] = get_left_bsite<Tm>(Km::isym);
             icomb.display_size();
          }
 
@@ -42,23 +42,31 @@ namespace ctns{
          dot_timing timing_global;
          sweep_data sweeps(icomb.topo.get_sweeps(rank==0), schd.ctns.nroots, 
                schd.ctns.maxsweep, schd.ctns.ctrls);
+
          oper_pool<Tm> qops_pool(schd.ctns.iomode, schd.ctns.ioasync, debug);
          for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
+
             // print sweep control
             if(debug){
                std::cout << tools::line_separator2 << std::endl;
                sweeps.print_ctrls(isweep);
                std::cout << tools::line_separator2 << std::endl;
             }
+
+            // restart case
             if(schd.ctns.task_restart && isweep < schd.ctns.rsweep) continue;
+
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
+
                if(debug){
                   std::cout << "\n=== start rank=" << rank << " ibond=" << ibond << std::endl;
                }
+
                if(schd.ctns.task_restart && ibond < schd.ctns.rbond) continue;
                std::cout << "ISWEEP,IBOND=" << isweep << "," << ibond << std::endl;
+
                const auto& dbond = sweeps.seq[ibond];
                const auto& dots = sweeps.ctrls[isweep].dots;
                auto tp0 = icomb.topo.get_type(dbond.p0);
@@ -70,6 +78,7 @@ namespace ctns{
                      << std::endl;
                   std::cout << tools::line_separator << std::endl;
                }
+
                // optimization
                if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
                   sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
@@ -78,13 +87,14 @@ namespace ctns{
                   sweep_twodot(icomb, int2e, int1e, ecore, schd, scratch,
                         qops_pool, sweeps, isweep, ibond); 
                }
+
                // timing 
                if(debug){
                   const auto& timing = sweeps.opt_timing[isweep][ibond];
                   sweeps.timing_sweep[isweep].accumulate(timing,"time_sweep",schd.ctns.verbose>0);
                   timing_global.accumulate(timing,"time_global",schd.ctns.verbose>0);
                }
-               // just for debug
+               // stop just for debug
                if(isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
 
                if(debug){
@@ -99,8 +109,8 @@ namespace ctns{
 
             // for later computing properties
             if(schd.ctns.lastdot){
-               sweep_rwfuns(icomb, int2e, int1e, ecore, schd, 
-                     scratch, qops_pool, timing_global);
+               sweep_rwfuns(icomb, int2e, int1e, ecore, schd, scratch, 
+                     qops_pool, timing_global);
             }
             qops_pool.clean_up();
 

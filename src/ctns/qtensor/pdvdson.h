@@ -222,6 +222,7 @@ namespace ctns{
 #endif
                if(rank == 0 && iprt > 0){
                   std::cout << "ctns::pdvdsonSolver_nkr::solve_iter"
+                     << " ndim=" << ndim 
                      << " is_complex=" << tools::is_complex<Tm>() 
                      << " mpisize=" << size
                      << std::endl;

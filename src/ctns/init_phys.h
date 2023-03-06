@@ -94,7 +94,7 @@ namespace ctns{
    //        n             |vac>
    //        |               |
    //     ---*---|vac>   n---*
-   //  |out> 	          |
+   //  |out> 	              |
    template <typename Tm>
       stensor3<Tm> get_right_bsite(const int isym){
          auto qvac = get_qbond_vac(isym);

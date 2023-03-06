@@ -2,10 +2,9 @@
 #define CTNS_ALG_H
 
 /*
-
    Algorithms for CTNS:
 
-   0. rcanon_check: check rsites in right canonical form (RCF)
+   0. rcanon_check: check sites in right canonical form (RCF)
    1. get_Smat: <CTNS[i]|CTNS[j]> 
    2. rcanon_CIcoeff: <n|CTNS>
       rcanon_CIovlp: <CI|CTNS>
@@ -13,10 +12,11 @@
    3. rcanon_Sdiag_exact:
       rcanon_random: random sampling from distribution p(n)=|<n|CTNS>|^2
       rcanon_Sdiag_sample: compute Sdiag via sampling
-
 */
 
-#include "alg_ova.h"
+#include "../core/onspace.h"
+#include "../core/analysis.h"
+#include "ctns_comb.h"
 
 namespace ctns{
 
@@ -33,7 +33,7 @@ namespace ctns{
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             auto p = icomb.topo.rcoord[idx];
             // check right canonical form -> A*[l'cr]A[lcr] = w[l'l] = Id
-            auto qt2 = contract_qt3_qt3("cr",icomb.rsites[idx],icomb.rsites[idx]);
+            auto qt2 = contract_qt3_qt3("cr", icomb.sites[idx], icomb.sites[idx]);
             double maxdiff = qt2.check_identityMatrix(thresh_ortho, false);
             int Dtot = qt2.info.qrow.get_dimAll();
             std::cout << " idx=" << idx << " node=" << p << " Dtot=" << Dtot 
@@ -46,9 +46,101 @@ namespace ctns{
 
    // Algorithm 1:
    // <CTNS[i]|CTNS[j]>: compute by a typical loop for right canonical form 
+   template <typename Km>
+      linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){ 
+         // loop over sites on backbone
+         const auto& nodes = icomb.topo.nodes;
+         const auto& rindex = icomb.topo.rindex;
+         stensor2<typename Km::dtype> qt2_r, qt2_u;
+         for(int i=icomb.topo.nbackbone-1; i>=0; i--){
+            const auto& node = nodes[i][0];
+            int tp = node.type;
+            if(tp == 0 || tp == 1){
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               if(i == icomb.topo.nbackbone-1){
+                  qt2_r = contract_qt3_qt3("cr",site,site);
+               }else{
+                  auto qtmp = contract_qt3_qt2("r",site,qt2_r);
+                  qt2_r = contract_qt3_qt3("cr",site,qtmp);
+               }
+            }else if(tp == 3){
+               for(int j=nodes[i].size()-1; j>=1; j--){
+                  const auto& site = icomb.sites[rindex.at(std::make_pair(i,j))];
+                  if(j == nodes[i].size()-1){
+                     qt2_u = contract_qt3_qt3("cr",site,site);
+                  }else{
+                     auto qtmp = contract_qt3_qt2("r",site,qt2_u);
+                     qt2_u = contract_qt3_qt3("cr",site,qtmp);
+                  }
+               } // j
+               // internal site without physical index
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               auto qtmp = contract_qt3_qt2("r",site,qt2_r); // ket
+               qtmp = contract_qt3_qt2("c",qtmp,qt2_u); // upper branch
+               qt2_r = contract_qt3_qt3("cr",site,qtmp); // bra
+            }
+         } // i
+         auto Smat = qt2_r.to_matrix();
+         return qt2_r.to_matrix();
+      }
 
    // Algorithm 2:
    // <n|CTNS[i]> by contracting the CTNS
+   template <typename Km>
+      std::vector<typename Km::dtype> rcanon_CIcoeff(const comb<Km>& icomb,
+            const fock::onstate& state){
+         using Tm = typename Km::dtype;
+         // compute <n|CTNS> by contracting all sites
+         const auto& nodes = icomb.topo.nodes;
+         const auto& rindex = icomb.topo.rindex;
+         stensor2<Tm> qt2_r, qt2_u;
+         for(int i=icomb.topo.nbackbone-1; i>=0; i--){
+            const auto& node = nodes[i][0];
+            int tp = node.type;
+            if(tp == 0 || tp == 1){
+               // site on backbone with physical index
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               // given occ pattern, extract the corresponding qblock
+               auto qt2 = site.fix_mid( occ2mdx(Km::isym, state, node.pindex) ); 
+               if(i == icomb.topo.nbackbone-1){
+                  qt2_r = std::move(qt2);
+               }else{
+                  qt2_r = qt2.dot(qt2_r); // (out,x)*(x,in)->(out,in)
+               }
+            }else if(tp == 3){
+               // propogate symmetry from leaves down to backbone
+               for(int j=nodes[i].size()-1; j>=1; j--){
+                  const auto& site = icomb.sites[rindex.at(std::make_pair(i,j))];
+                  const auto& nodej = nodes[i][j];
+                  auto qt2 = site.fix_mid( occ2mdx(Km::isym, state, nodej.pindex) );
+                  if(j == nodes[i].size()-1){
+                     qt2_u = std::move(qt2);
+                  }else{
+                     qt2_u = qt2.dot(qt2_u);
+                  }
+               } // j
+               // internal site without physical index
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               // contract upper matrix: permute row and col for contract_qt3_qt2_c
+               auto qt3 = contract_qt3_qt2("c",site,qt2_u.T());
+               auto qt2 = qt3.fix_mid( std::make_pair(0,0) );
+               qt2_r = qt2.dot(qt2_r); // contract right matrix
+            } // tp
+         } // i
+         const auto& wfcoeff = qt2_r; 
+         assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
+         // finally return coeff = <n|CTNS[i]> as a vector 
+         int n = icomb.get_nroots(); 
+         std::vector<Tm> coeff(n,0.0);
+         // in case this CTNS does not encode this det, no such block 
+         const auto blk2 = wfcoeff(0,0);
+         if(blk2.empty()) return coeff; 
+         assert(blk2.size() == n);
+         // compute fermionic sign changes to match ordering of orbitals
+         double sgn = state.permute_sgn(icomb.topo.image2);
+         linalg::xaxpy(n, sgn, blk2.data(), coeff.data());
+         return coeff;
+      }
 
    // check rcanon_CIcoeff
    template <typename Km>
@@ -159,6 +251,78 @@ namespace ctns{
             }
          }
          return Sdiag;
+      }
+
+   // Sampling CTNS to get {|det>,p(det)=|<det|Psi[i]>|^2} 
+   // In case that CTNS is unnormalized, p(det) is also unnormalized. 
+   template <typename Km>
+      std::pair<fock::onstate,double> rcanon_random(const comb<Km>& icomb, 
+            const int iroot,
+            const bool debug=false){
+         if(debug) std::cout << "\nctns::rcanon_random iroot=" << iroot << std::endl; 
+         using Tm = typename Km::dtype; 
+         fock::onstate state(2*icomb.get_nphysical());
+         // initialize boundary wf for i-th state
+         auto wf = icomb.get_rwfun(iroot); 
+         const auto& nodes = icomb.topo.nodes; 
+         const auto& rindex = icomb.topo.rindex;
+         // loop from left to right
+         for(int i=0; i<icomb.topo.nbackbone; i++){
+            int tp = nodes[i][0].type;
+            if(tp == 0 || tp == 1){
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               auto qt3 = contract_qt3_qt2("l",site,wf);
+               // compute probability for physical index
+               std::vector<stensor2<Tm>> qt2n(4);
+               std::vector<double> weights(4);
+               for(int idx=0; idx<4; idx++){
+                  qt2n[idx] = qt3.fix_mid( idx2mdx(Km::isym, idx) );
+                  // \sum_a |psi[n,a]|^2
+                  auto psi2 = qt2n[idx].dot(qt2n[idx].H()); 
+                  weights[idx] = std::real(psi2(0,0)(0,0));
+               }
+               std::discrete_distribution<> dist(weights.begin(),weights.end());
+               int idx = dist(tools::generator);
+               idx2occ(state, nodes[i][0].pindex, idx);
+               wf = std::move(qt2n[idx]);
+            }else if(tp == 3){
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               auto qt3 = contract_qt3_qt2("l",site,wf);
+               // propogate upwards
+               for(int j=1; j<nodes[i].size(); j++){
+                  const auto& sitej = icomb.sites[rindex.at(std::make_pair(i,j))];
+                  // compute probability for physical index
+                  std::vector<stensor3<Tm>> qt3n(4);
+                  std::vector<double> weights(4);
+                  for(int idx=0; idx<4; idx++){
+                     auto qt2 = sitej.fix_mid( idx2mdx(Km::isym, idx) );
+                     // purely change direction
+                     qt3n[idx] = contract_qt3_qt2("c",qt3,qt2.T()); 
+                     // \sum_ab |psi[n,a,b]|^2
+                     auto psi2 = contract_qt3_qt3("cr",qt3n[idx],qt3n[idx]); 
+                     weights[idx] = std::real(psi2(0,0)(0,0));
+                  }
+                  std::discrete_distribution<> dist(weights.begin(),weights.end());
+                  int idx = dist(tools::generator);
+                  idx2occ(state, nodes[i][j].pindex, idx);
+                  qt3 = std::move(qt3n[idx]);
+               } // j
+               wf = qt3.fix_mid(std::make_pair(0,0));
+            }
+         }
+         // finally wf should be the corresponding CI coefficients: coeff0*sgn = coeff1
+         auto coeff0 = wf(0,0)(0,0);
+         if(debug){
+            double sgn = state.permute_sgn(icomb.topo.image2); // from orbital ordering
+            auto coeff1 = rcanon_CIcoeff(icomb, state)[iroot];
+            std::cout << " state=" << state 
+               << " coeff0,sgn=" << coeff0 << "," << sgn
+               << " coeff1=" << coeff1 
+               << " diff=" << coeff0*sgn-coeff1 << std::endl;
+            assert(std::abs(coeff0*sgn-coeff1)<1.e-10);
+         }
+         double prob = std::norm(coeff0);
+         return std::make_pair(state,prob);
       }
 
    // compute diagonal entropy via sampling:

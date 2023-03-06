@@ -16,9 +16,7 @@ extern const bool debug_init;
 
 namespace ctns{
 
-   //
    // initialize RCF from SCI wavefunctions
-   //
    template <typename Km>
       void rcanon_init(comb<Km>& icomb,
             const fock::onspace& space,
@@ -36,7 +34,7 @@ namespace ctns{
          init_rsites(icomb, thresh_ortho);
 
          // 3. compute wave functions at the start for right canonical form 
-         init_rwfuns(icomb, space, vs, thresh_ortho);
+         init_cpsi(icomb, space, vs, thresh_ortho);
 
          // check
          icomb.display_size();
@@ -45,9 +43,7 @@ namespace ctns{
          tools::timing("ctns::rcanon_init", t0, t1);
       }
 
-   //
    // compute renormalized bases {|r>} from SCI wavefunctions 
-   //
    template <typename Km>
       void init_rbases(comb<Km>& icomb,
             const fock::onspace& space,
@@ -131,9 +127,7 @@ namespace ctns{
          tools::timing("ctns::init_rbases", t0, t1);
       }
 
-   //
    // build site tensor from {|r>} bases
-   //
    template <typename Km>
       void init_rsites(comb<Km>& icomb,
             const double thresh_ortho){
@@ -145,7 +139,7 @@ namespace ctns{
 
          // loop over sites - parallelizable
          const auto& topo = icomb.topo;
-         icomb.rsites.resize(topo.ntotal);
+         icomb.sites.resize(topo.ntotal);
          for(int idx=0; idx<topo.ntotal; idx++){
             auto p = topo.rcoord[idx];
             int i = p.first, j = p.second;
@@ -158,7 +152,7 @@ namespace ctns{
             // type=0: end or leaves
             if(node.type == 0 && p != std::make_pair(0,0)){
 
-               icomb.rsites[idx] = get_right_bsite<Tm>(Km::isym);
+               icomb.sites[idx] = get_right_bsite<Tm>(Km::isym);
 
             // physical/internal on backbone/branch
             }else{
@@ -241,25 +235,22 @@ namespace ctns{
                      } // kc
                   } // kr
                } // kl
-               icomb.rsites[idx] = std::move(qt3);
-
+               icomb.sites[idx] = std::move(qt3); // save
             } // if
 
             auto tf = tools::get_time(); 
             if(debug_init){ 
                auto dt = tools::get_duration(tf-ti);
-               auto ova = contract_qt3_qt3("cr",icomb.rsites[idx],icomb.rsites[idx]);
+               auto ova = contract_qt3_qt3("cr", icomb.sites[idx], icomb.sites[idx]);
                double maxdiff = ova.check_identityMatrix(thresh_ortho, false);
                std::cout << " shape(l,r,c)=("
-                  << icomb.rsites[idx].info.qrow.get_dimAll() << ","
-                  << icomb.rsites[idx].info.qcol.get_dimAll() << ","
-                  << icomb.rsites[idx].info.qmid.get_dimAll() << ")"
+                  << icomb.sites[idx].info.qrow.get_dimAll() << ","
+                  << icomb.sites[idx].info.qcol.get_dimAll() << ","
+                  << icomb.sites[idx].info.qmid.get_dimAll() << ")"
                   << " maxdiff=" << std::scientific << maxdiff 
                   << " TIMING=" << dt << " S"
                   << std::endl;
                if(maxdiff>thresh_ortho) tools::exit("error: deviate from identity matrix!");
-               //debug
-               //icomb.rsites[idx].print("rsite"+std::to_string(idx),2);
             }
 
          } // idx
@@ -268,16 +259,14 @@ namespace ctns{
          tools::timing("ctns::init_rsites", t0, t1);
       }
 
-   //
    // compute wave function at the start for right canonical form
-   //
    template <typename Km>
-      void init_rwfuns(comb<Km>& icomb,
+      void init_cpsi(comb<Km>& icomb,
             const fock::onspace& space,
             const linalg::matrix<typename Km::dtype>& vs,
             const double thresh_ortho){
          using Tm = typename Km::dtype;
-         std::cout << "\nctns::init_rwfuns qkind=" << qkind::get_name<Km>() 
+         std::cout << "\nctns::init_cpsi qkind=" << qkind::get_name<Km>() 
             << " thresh_ortho=" << thresh_ortho 
             << std::endl;
          auto t0 = tools::get_time();
@@ -321,7 +310,7 @@ namespace ctns{
          qbond qrow({{sym_state, 1}});
          auto qcol = get_qbond(rbasis);
          if(qcol.size() != 1) tools::exit("error: multiple symmetries in qcol!"); 
-         icomb.rwfuns.resize(nroots);
+         icomb.cpsi.resize(nroots);
          for(int iroot=0; iroot<nroots; iroot++){
             linalg::matrix<Tm> wf(ndet,1);
             for(int i=0; i<space2.size(); i++){
@@ -330,18 +319,33 @@ namespace ctns{
             } // i
             stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, {0,1}); // rwfuns[l,r] for RCF
             xgemm("T","N",1.0,wf,rbasis[0].coeff.conj(),0.0,rwfun(0,0));
-            icomb.rwfuns[iroot] = std::move(rwfun);
+            //
+            // construct psi from tmp: as the symmetry is one-to-ono, just copy works
+            //          |                    |
+            // state <--|-->   from   vac <--|-->
+            //          vac                  state
+            auto tmp = contract_qt3_qt2("l", icomb.sites[icomb.topo.ntotal-1], rwfun); 
+            stensor3<Tm> cpsi(sym_state, get_qbond_vac(Km::isym), tmp.info.qcol, tmp.info.qmid, dir_WF3);
+            linalg::xcopy(cpsi.info._size, tmp.data(), cpsi.data());
+            icomb.cpsi[iroot] = std::move(cpsi);
+            // 
          } // iroot
+         
+         // for later convenience of computing properties with right canonical form, 
+         // we always replace icomb.sites[icomb.topo.ntotal-1] by a stack of cpsi 
+         icomb.stack_cpsi();
 
          // check overlaps
          if(debug_init){
-            auto wf2 = icomb.get_wf2();
-            wf2.print("wf2");
-            auto wfmat = wf2.to_matrix();
             std::cout << "\ncheck state overlaps ..." << std::endl;
             // ova = <CTNS[i]|CTNS[j]>
-            auto ova = linalg::xgemm("N","C",wfmat,wfmat).conj();
-            ova.print("ova_rwfuns");
+            linalg::matrix<Tm> ova1(nroots,nroots);
+            for(int i=0; i<nroots; i++){
+               for(int j=0; j<nroots; j++){
+                  ova1(i,j) = contract_qt3_qt3_scalar(icomb.cpsi[i], icomb.cpsi[j]);
+               }
+            }
+            ova1.print("ova1_cpsi");
             // ova0 = <CI[i]|CI[j]>
             linalg::matrix<Tm> ova0(nroots,nroots);
             for(int i=0; i<nroots; i++){
@@ -350,7 +354,7 @@ namespace ctns{
                }
             }
             ova0.print("ova0_vs");
-            auto diff = (ova-ova0).normF();
+            auto diff = (ova1-ova0).normF();
             std::cout << "diff of ova matrices = " << diff << std::endl;
             if(diff > thresh_ortho){ 
                std::string msg = "error: too large diff=";
@@ -361,7 +365,7 @@ namespace ctns{
          } // debug_init
 
          auto t1 = tools::get_time();
-         tools::timing("ctns::init_rwfuns", t0, t1);
+         tools::timing("ctns::init_cpsi", t0, t1);
       }
 
 } // ctns

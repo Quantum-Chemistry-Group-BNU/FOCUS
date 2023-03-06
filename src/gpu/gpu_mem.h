@@ -19,12 +19,13 @@
 const size_t MAX_GPU_PAGE= 128*1024*1024;
 extern const size_t MAX_GPU_PAGE;
 
+// class for controlling the usage of GPU memory
 class gpu_mem{
    public:
       gpu_mem(): _size(0), _used(0), _addr(nullptr) {}
 
+      // allocate GPU memory
       void init(){
-         // allocate GPU memory
          size_t avail, total;
 #ifdef USE_HIP
          HIP_CHECK(hipMemGetInfo(&avail, &total));
@@ -39,13 +40,11 @@ class gpu_mem{
          std::cout << "allocated gpu mem size (GB) = "
             << tools::sizeGB<std::byte>(_size)
             << std::endl;
-
 #ifdef USE_HIP
          HIP_CHECK(hipMalloc((void**)&_addr, _size));
 #else
          CUDA_CHECK(cudaMalloc((void**)&_addr, _size));
 #endif //USE_HIP
-
       }
 
       void free(){
@@ -61,7 +60,8 @@ class gpu_mem{
 
       void* allocate(size_t n){
          if(_used + n >= _size){
-            std::cout << "error: exceeding allowed GPU memory" << std::endl;
+            std::cout << "error: exceeding allowed GPU memory!" << std::endl;
+            std::cout << "total size=" << _size << " used=" << _used << " required=" << n << std::endl; 
             exit(1);
          }else{
             _used = _used + n;

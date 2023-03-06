@@ -7,7 +7,7 @@
 namespace ctns{
 
    using direction3 = std::tuple<bool,bool,bool>;
-   const direction3 dir_RCF = {0,1,1}; // RCF (default)
+   const direction3 dir_RCF = {0,1,1}; // RCF (default: in,out,out)
    const direction3 dir_LCF = {1,0,1}; // LCF
    const direction3 dir_CCF = {1,1,0}; // CCF (for internal upward node)
    const direction3 dir_WF3 = {1,1,1}; // WF

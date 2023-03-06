@@ -21,9 +21,9 @@ namespace ctns{
             sz += vec[i].size();
          }
          std::cout << sz << ":" 
-		   << tools::sizeMB<Tm>(sz) << "MB:"
-		   << tools::sizeGB<Tm>(sz) << "GB"
-		   << std::endl;
+            << tools::sizeMB<Tm>(sz) << "MB:"
+            << tools::sizeGB<Tm>(sz) << "GB"
+            << std::endl;
          return sz;
       }
 
@@ -33,91 +33,99 @@ namespace ctns{
             // serialize [for MPI] in src/drivers/ctns.cpp
             friend class boost::serialization::access;	   
             template <class Archive>
-               void save(Archive & ar, const unsigned int version) const{
+               void serialize(Archive & ar, const unsigned int version){
                   ar & topo
                      & rbases // ZL@20220606: for usage in debug oper_rbasis
-                     & rsites
-                     & rwfuns;
-                  /*
-                     for(int idx=0; idx<topo.ntotal; idx++){
-                     ar & rsites[idx];
-                     }
-                     */
-               }
-            template <class Archive>
-               void load(Archive & ar, const unsigned int version){
-                  ar & topo 
-                     & rbases
-                     & rsites
-                     & rwfuns;
-                  /*
-                     rsites.resize(topo.ntotal);
-                     for(int idx=0; idx<topo.ntotal; idx++){
-                     ar & rsites[idx];
-                     }
-                     */
-               }
-            BOOST_SERIALIZATION_SPLIT_MEMBER()
-         public:
-               // constructors
-               comb(){
-                  //std::cout << "\ncomb: qkind=" << qkind::get_name<Km>() << std::endl;
-                  if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
-               }
-               // helpers
-               int get_nphysical() const{ return topo.nphysical; }
-               qsym get_sym_state() const{
-                  assert(rwfuns[0].rows() == 1); // only one symmetry sector
-                  return rwfuns[0].info.qrow.get_sym(0);
-               }
-               int get_nroots() const{ return rwfuns.size(); }
-               // wf2(iroot,icol)
-               stensor2<typename Km::dtype> get_wf2() const{
-                  int nroots = rwfuns.size();
-                  qbond qrow({{this->get_sym_state(),nroots}});
-                  const auto& qcol = rwfuns[0].info.qcol;
-                  const auto& dir = rwfuns[0].info.dir;
-                  stensor2<typename Km::dtype> wf2(rwfuns[0].info.sym, qrow, qcol, dir);
-                  for(int iroot=0; iroot<nroots; iroot++){
-                     for(int ic=0; ic<rwfuns[0].info.qcol.get_dim(0); ic++){
-                        wf2(0,0)(iroot,ic) = rwfuns[iroot](0,0)(0,ic);
-                     }
-                  }
-                  return wf2;
-               }
-               // print size 
-               size_t display_size() const{
-                  std::cout << "comb::display_size" << std::endl;
-                  size_t sz = 0;
-                  using Tm = typename Km::dtype;
-                  sz += display_vec_size<Tm>(rbases, "rbases");
-                  sz += display_vec_size<Tm>(rsites, "rsites");
-                  sz += display_vec_size<Tm>(rwfuns, "rwfuns");
-                  sz += display_vec_size<Tm>(lsites, "lsites");
-                  sz += display_vec_size<Tm>(psi, "psi");
-                  std::cout << "total mem of comb=" << sz << ":" 
-			    << tools::sizeMB<Tm>(sz) << "MB:"
-			    << tools::sizeGB<Tm>(sz) << "GB"
-			    << std::endl;
-                  return sz;
+                     & sites
+                     & cpsi;
                }
          public:
+            // constructors
+            comb(){
+               if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
+            }
+            // helpers
+            int get_nphysical() const{ return topo.nphysical; }
+            qsym get_sym_state() const{ return cpsi[0].info.sym; }
+            int get_nroots() const{ return cpsi.size(); }
+            // print size 
+            size_t display_size() const{
+               std::cout << "comb::display_size" << std::endl;
+               size_t sz = 0;
                using Tm = typename Km::dtype;
-               // -- CTNS ---
-               topology topo;
-               // used in initialization & debug operators 
-               std::vector<renorm_basis<Tm>> rbases;
-               // right canonical form 
-               std::vector<stensor3<Tm>> rsites;
-               // wavefunction at the left boundary -*-
-               std::vector<stensor2<Tm>> rwfuns; 
-               // left canonical form 
-               std::vector<stensor3<Tm>> lsites;
-               // propagation of initial guess 
-               std::vector<stensor3<Tm>> psi; 
-               // --- MPI ---
+               sz += display_vec_size<Tm>(rbases, "rbases");
+               sz += display_vec_size<Tm>(sites, "sites");
+               sz += display_vec_size<Tm>(cpsi, "cpsi");
+               std::cout << "total mem of comb=" << sz << ":" 
+                  << tools::sizeMB<Tm>(sz) << "MB:"
+                  << tools::sizeGB<Tm>(sz) << "GB"
+                  << std::endl;
+               return sz;
+            }
+            // stack_cpsi at the first site in right canonical form
+            void stack_cpsi(){
+               int nroots = this->get_nroots();
+               qsym sym_state = this->get_sym_state();
+               qbond qrow({{sym_state, nroots}});
+               qbond qcol = cpsi[0].info.qcol;
+               qbond qmid = cpsi[0].info.qmid;
+               stensor3<Tm> site0(qsym(Km::isym), qrow, qcol, qmid);
+               for(int bc=0; bc<qcol.size(); bc++){
+                  for(int bm=0; bm<qmid.size(); bm++){
+                     auto blk = site0(0,bc,bm);
+                     if(blk.empty()) continue;
+                     int cdim = qcol.get_dim(bc);
+                     int mdim = qmid.get_dim(bm);
+                     for(int im=0; im<mdim; im++){
+                        for(int ic=0; ic<cdim; ic++){
+                           for(int iroot=0; iroot<nroots; iroot++){
+                              const auto blk0 = cpsi[iroot](0,bc,bm);
+                              blk(iroot,ic,im) = blk0(0,ic,im); 
+                           }  // iroot
+                        } // ic
+                     } // im
+                  } // bm
+               } // bc
+               sites[topo.ntotal-1] = std::move(site0);
+            }
+            // rank-2 wavefunction at the first site
+            stensor2<typename Km::dtype> get_rwfun(const int iroot) const{
+               int nroots = this->get_nroots();
+               qsym sym_state = this->get_sym_state();
+               qbond qrow({{sym_state, 1}});
+               qbond qcol({{sym_state, nroots}});
+               stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, dir_RWFUN);
+               rwfun(0,0)(0,iroot) = 1.0; 
+               return rwfun;
+            }
+            // initiate sweep: generate initial guess for 
+            // the initial sweep optimization at p=(1,0)
+            void initiate_psi0(const int nroots){
+               const auto& rindex = topo.rindex;
+               const auto& rsite1 = sites[rindex.at(std::make_pair(1,0))];
+               if(cpsi.size() < nroots){
+                  std::cout << "dim(psi0)=" << cpsi.size() << " nroots=" << nroots << std::endl;
+                  tools::exit("error in initiate_psi0: requested nroots exceed!");
+               }
+               std::vector<stensor3<Tm>> psi0(nroots);
+               for(int iroot=0; iroot<nroots; iroot++){
+                  auto wf2 = cpsi[iroot].merge_lc(); // (1,n,r)->(n,r)
+                  psi0[iroot] = contract_qt3_qt2("l", rsite1, wf2);
+               }
+               cpsi = std::move(psi0);
+            }
+         public:
+            using Tm = typename Km::dtype;
+            // -- CTNS ---
+            topology topo;
+            // used in initialization & debug operators 
+            std::vector<renorm_basis<Tm>> rbases;
+            // mixed canonical form
+            std::vector<stensor3<Tm>> sites;
+            // central wavefunction
+            std::vector<stensor3<Tm>> cpsi;
 #ifndef SERIAL
-               boost::mpi::communicator world;
+            boost::mpi::communicator world; // for MPI
 #endif
       };
 

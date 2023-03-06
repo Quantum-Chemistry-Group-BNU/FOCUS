@@ -49,18 +49,28 @@ void CTNS(const input::schedule& schd){
             fci::ci_load(sci_space, es, vs, ci_file);
             // truncate CI coefficients
             fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-            /*
-            // debug         
-            integral::two_body<Tm> int2e;
-            integral::one_body<Tm> int1e;
-            double ecore;
-            integral::load(int2e, int1e, ecore, schd.integral_file);
-            auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-            Hij_ci.print("Hij_ci",8);
-            */ 
             ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
                   schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
             ctns::rcanon_save(icomb, rcanon_file);
+            // debug        
+            const bool debug = false;
+            if(debug){ 
+               integral::two_body<Tm> int2e;
+               integral::one_body<Tm> int1e;
+               double ecore;
+               integral::load(int2e, int1e, ecore, schd.integral_file);
+               io::create_scratch(schd.scratch);
+               auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
+               Hij_ci.print("Hij_ci",8);
+               auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
+               Hij_ctns.print("Hij_ctns",8);
+               double diffH = (Hij_ctns - Hij_ci).normF();
+               cout << "\ncheck diffH=" << diffH << endl;
+               const double thresh = 1.e-8;
+               if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
+               io::remove_scratch(schd.scratch);
+               exit(1);
+            }
          }else{
             ctns::rcanon_load(icomb, rcanon_file);
          } // rcanon_load
@@ -70,7 +80,7 @@ void CTNS(const input::schedule& schd){
          std::cout << "ERROR: NOT IMPLEMENTED YET!" << std::endl;
       } // task_restart
    } // rank 0
-   
+
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
 
 #ifndef SERIAL
@@ -126,7 +136,7 @@ void CTNS(const input::schedule& schd){
          }
       }
    } // ham || opt
-    
+
 }
 
 int main(int argc, char *argv[]){
