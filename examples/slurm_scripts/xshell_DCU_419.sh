@@ -8,6 +8,7 @@
 #SBATCH --gres=dcu:4
 #SBATCH -o DCU8_Node2.o
 #SBATCH -e DCU8_Node2.e
+#SBATCH --exclude=h06r2n[06-10],h04r1n17,h05r1n05
 
 
 module purge
