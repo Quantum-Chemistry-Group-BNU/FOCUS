@@ -31,8 +31,8 @@ namespace ctns{
                linalg::xaxpy(ndim, coeff[i], yptr, yout);
                }
                */
-            linalg::xgemv("N", &ndim, &batchsize, &alpha, workspace, &offset, 
-                  coeff.data(), &INCX, &beta, yout, &INCY);
+            linalg::xgemv("N", ndim, batchsize, alpha, workspace, offset, 
+                  coeff.data(), INCX, beta, yout, INCY);
 #ifdef GPU
          }else if(iop == 1){
             /*
@@ -41,8 +41,8 @@ namespace ctns{
                linalg::xaxpy_magma(ndim, coeff[i], yptr, yout); 
                }
                */
-            linalg::xgemv_magma("N", &ndim, &batchsize, &alpha, workspace, &offset, 
-                  coeff.data(), &INCX, &beta, yout, &INCY);
+            linalg::xgemv_magma("N", ndim, batchsize, alpha, workspace, offset, 
+                  coeff.data(), INCX, beta, yout, INCY);
 #endif
          }else{
             std::cout << "error: no such option in MMreduce<Tm>::reduction iop=" << iop << std::endl;

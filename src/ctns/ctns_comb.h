@@ -36,7 +36,7 @@ namespace ctns{
                void serialize(Archive & ar, const unsigned int version){
                   ar & topo
                      & rbases // ZL@20220606: for usage in debug oper_rbasis
-                     & sites
+                     & sites;
                      & cpsi;
                }
          public:
@@ -63,13 +63,17 @@ namespace ctns{
                return sz;
             }
             // stack_cpsi at the first site in right canonical form
+            //          |                      |       
+            // state ->-|->- [RCF]  <=  vac -<-|->- [cpsi] 
+            //         /|\                    /|\
+            //          vac                  state  
             void stack_cpsi(){
                int nroots = this->get_nroots();
                qsym sym_state = this->get_sym_state();
                qbond qrow({{sym_state, nroots}});
                qbond qcol = cpsi[0].info.qcol;
                qbond qmid = cpsi[0].info.qmid;
-               stensor3<Tm> site0(qsym(Km::isym), qrow, qcol, qmid);
+               stensor3<Tm> site0(qsym(Km::isym), qrow, qcol, qmid); // dir_RCF 
                for(int bc=0; bc<qcol.size(); bc++){
                   for(int bm=0; bm<qmid.size(); bm++){
                      auto blk = site0(0,bc,bm);
@@ -86,9 +90,25 @@ namespace ctns{
                      } // im
                   } // bm
                } // bc
-               sites[topo.ntotal-1] = std::move(site0);
+               sites[topo.rindex.at(std::make_pair(0,0))] = std::move(site0);
             }
-            // rank-2 wavefunction at the first site
+            // initiate sweep: generate initial guess for 
+            // the initial sweep optimization at p=(1,0): CRRR => LCRR (L=Id)
+            void initiate_psi0(const int nroots){
+               if(cpsi.size() < nroots){
+                  std::cout << "dim(psi0)=" << cpsi.size() << " nroots=" << nroots << std::endl;
+                  tools::exit("error in initiate_psi0: requested nroots exceed!");
+               }
+               const auto& site1 = sites[topo.rindex.at(std::make_pair(1,0))];
+               std::vector<stensor3<Tm>> psi0(nroots);
+               for(int iroot=0; iroot<nroots; iroot++){
+                  auto wf2 = cpsi[iroot].merge_lc(); // (1,n,r)->(n,r)
+                  psi0[iroot] = contract_qt3_qt2("l", site1, wf2);
+               }
+               cpsi = std::move(psi0);
+               sites[topo.rindex.at(std::make_pair(0,0))] = get_left_bsite<Tm>(Km::isym);
+            }
+            // rank-2 wavefunction at the first site: ->-*->- in ctns_alg.h
             stensor2<typename Km::dtype> get_rwfun(const int iroot) const{
                int nroots = this->get_nroots();
                qsym sym_state = this->get_sym_state();
@@ -97,22 +117,6 @@ namespace ctns{
                stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, dir_RWFUN);
                rwfun(0,0)(0,iroot) = 1.0; 
                return rwfun;
-            }
-            // initiate sweep: generate initial guess for 
-            // the initial sweep optimization at p=(1,0)
-            void initiate_psi0(const int nroots){
-               const auto& rindex = topo.rindex;
-               const auto& rsite1 = sites[rindex.at(std::make_pair(1,0))];
-               if(cpsi.size() < nroots){
-                  std::cout << "dim(psi0)=" << cpsi.size() << " nroots=" << nroots << std::endl;
-                  tools::exit("error in initiate_psi0: requested nroots exceed!");
-               }
-               std::vector<stensor3<Tm>> psi0(nroots);
-               for(int iroot=0; iroot<nroots; iroot++){
-                  auto wf2 = cpsi[iroot].merge_lc(); // (1,n,r)->(n,r)
-                  psi0[iroot] = contract_qt3_qt2("l", rsite1, wf2);
-               }
-               cpsi = std::move(psi0);
             }
          public:
             using Tm = typename Km::dtype;

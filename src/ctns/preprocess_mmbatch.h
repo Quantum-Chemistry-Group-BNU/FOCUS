@@ -47,13 +47,13 @@ namespace ctns{
             size_t size = 0;
             double cost = 0.0;
             std::vector<char> transA, transB;
-            std::vector<int> M, N, K, LDA, LDB;
-            std::vector<int> locA, locB, locC;
+            std::vector<MKL_INT> M, N, K, LDA, LDB;
+            std::vector<MKL_INT> locA, locB, locC;
             std::vector<size_t> offA, offB, offC;
             std::vector<const Tm*> Aptr, Bptr;
             std::vector<Tm*> Cptr;
             std::vector<Tm> alpha_vec, beta_vec;
-            std::vector<int> size_per_group_vec;
+            std::vector<MKL_INT> size_per_group_vec;
       };
 
    template <typename Tm>
@@ -90,9 +90,9 @@ namespace ctns{
             Tm* aptr = ptrs[locA[i]] + offA[i];
             Tm* bptr = ptrs[locB[i]] + offB[i];
             Tm* cptr = ptrs[locC[i]] + offC[i];
-            linalg::xgemm(&transA[i], &transB[i], &M[i], &N[i], &K[i], &alpha,
-                  aptr, &LDA[i], bptr, &LDB[i], &beta,
-                  cptr, &M[i]);
+            linalg::xgemm(&transA[i], &transB[i], M[i], N[i], K[i], alpha,
+                  aptr, LDA[i], bptr, LDB[i], beta,
+                  cptr, M[i]);
          } // i
       }
 
@@ -105,7 +105,7 @@ namespace ctns{
             Cptr[i] = ptrs[locC[i]] + offC[i];
          }
          if(size > 0){ 
-            int group_count = size;
+            MKL_INT group_count = size;
             linalg::xgemm_batch(transA.data(), transB.data(), M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
                   Cptr.data(), M.data(), &group_count, size_per_group_vec.data());

@@ -27,14 +27,25 @@ namespace ctns{
          std::vector<int>& br_kept,
          std::vector<std::pair<qsym,int>>& dims,
          const std::string fname){
-      std::ofstream fout(fname);
+
+      std::streambuf *psbuf, *backup;
+      std::ofstream file;
+      bool ifsave = !fname.empty();
+      if(ifsave){
+         // http://www.cplusplus.com/reference/ios/ios/rdbuf/
+         file.open(fname);
+         backup = std::cout.rdbuf(); // back up cout's streambuf
+         psbuf = file.rdbuf(); // get file's streambuf
+         std::cout.rdbuf(psbuf); // assign streambuf to cout
+      }
+
       auto index = tools::sort_index(sig2all, 1); // sort all sigs
       const int nqr = qrow.size();
       std::vector<int> kept_dim(nqr,0); // no. of states kept in each symmetry sector
       std::vector<double> kept_wts(nqr,0.0); // weights kept in each symmetry sector
       deff = 0; // bond dimension kept (including additional for symmetry)
       double accum = 0.0, SvN = 0.0;
-      fout << "sorted renormalized states: total=" << sig2all.size()
+      std::cout << "sorted renormalized states: total=" << sig2all.size()
          << " dcut=" << dcut << " thresh_sig2=" << thresh_sig2 
          << std::endl;
       for(int i=0; i<sig2all.size(); i++){
@@ -49,7 +60,7 @@ namespace ctns{
          kept_wts[br] += nfac*sig2all[idx];
          accum += nfac*sig2all[idx];
          SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
-         fout << " i=" << i << " qr=" << qr 
+         std::cout << " i=" << i << " qr=" << qr 
             << " " << kept_dim[br]/nfac-1 << "-th"
             << " sig2=" << sig2all[idx] 
             << " accum=" << accum << std::endl;
@@ -65,7 +76,7 @@ namespace ctns{
       }else{
          index2 = tools::sort_index(kept_wts, 1); 
       }
-      fout << "select renormalized states per symmetry sector: nqr=" << nqr << std::endl;
+      std::cout << "select renormalized states per symmetry sector: nqr=" << nqr << std::endl;
       for(int iqr=0; iqr<nqr; iqr++){
          int br = index2[iqr];
          const auto& qr = qrow.get_sym(br);
@@ -78,7 +89,7 @@ namespace ctns{
             accum += wts;    
             deff += dim;
             // save information
-            fout << " iqr=" << iqr << " qr=" << qr
+            std::cout << " iqr=" << iqr << " qr=" << qr
                << " dim[full,kept]=" << dim0 << "," << dim 
                << " wts=" << wts << " accum=" << accum << " deff=" << deff 
                << std::endl;
@@ -86,23 +97,27 @@ namespace ctns{
             // additional: kept at least one state per sector
             // ZL@20220517 disable such choice, since it will create many sector with dim=1 
             /*
-            if(!ifmatched[br]) continue;
-            br_kept.push_back(br);
-            int dmin = (ifkr && qr.parity()==1)? 2 : 1;
-            dims.emplace_back(qr,dmin);
-            deff += dmin;
+               if(!ifmatched[br]) continue;
+               br_kept.push_back(br);
+               int dmin = (ifkr && qr.parity()==1)? 2 : 1;
+               dims.emplace_back(qr,dmin);
+               deff += dmin;
             // save information
-            fout << " iqr=" << iqr << " qr=" << qr
+            std::cout << " iqr=" << iqr << " qr=" << qr
             << " dim[full,kept]=" << dim0 << "," << dmin 
             << " wts=" << wts << " accum=" << accum << " deff=" << deff
             << " (additional)" << std::endl;
             */
          }
       } // iqr
-      fout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
-         << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt 
-         << " SvN=" << std::noshowpos << SvN << std::endl;
-      fout.close();
+
+      if(ifsave){
+         std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
+            << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt 
+            << " SvN=" << std::noshowpos << SvN << std::endl;
+         std::cout.rdbuf(backup); // restore cout's original streambuf
+         file.close();
+      }
       std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
          << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt 
          << " SvN=" << std::noshowpos << SvN << std::endl;
@@ -439,7 +454,7 @@ namespace ctns{
             const bool debug){
          if(debug){
             std::cout << "ctns::decimation_row: ";
-            if(iftrunc) std::cout << "fname=" << fname;
+            if(iftrunc && !fname.empty()) std::cout << "fname=" << fname;
             std::cout << std::endl;
          }
          if(!ifkr){

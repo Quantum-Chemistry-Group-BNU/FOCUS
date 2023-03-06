@@ -15,7 +15,7 @@ namespace ctns{
          public:
 
             // simple constructor
-            pdvdsonSolver_nkr(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle){
+            pdvdsonSolver_nkr(const size_t _ndim, const int _neig, const double _crit_v, const int _maxcycle){
                ndim = _ndim;
                neig = _neig;
                crit_v = _crit_v;
@@ -31,7 +31,7 @@ namespace ctns{
                const std::string ifconverge = "-+";
                if(iter == 1){
                   if(iprt > 0){		 
-                     int nmax = std::min(ndim,neig+nbuff); // maximal subspace size
+                     size_t nmax = std::min(ndim,size_t(neig+nbuff)); // maximal subspace size
                      std::cout << std::defaultfloat; 
                      std::cout << "settings: ndim=" << ndim 
                         << " neig=" << neig
@@ -132,7 +132,7 @@ namespace ctns{
                   linalg::matrix<Tm> V;
                   linalg::eig_solver(H, e, V);
                   std::cout << "eigenvalues:\n" << std::setprecision(12);
-                  for(int i=0; i<ndim; i++){
+                  for(size_t i=0; i<ndim; i++){
                      std::cout << "i=" << i << " e=" << e[i] << std::endl;
                   }
                   // copy results
@@ -144,7 +144,7 @@ namespace ctns{
             }
 
             // subspace problem
-            int subspace_solver(const int ndim, 
+            int subspace_solver(const size_t ndim, 
                   const int nsub,
                   const int neig,
                   const int naux,
@@ -156,9 +156,9 @@ namespace ctns{
                // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
                const Tm alpha = 1.0, beta=0.0;
                linalg::matrix<Tm> tmpH(nsub,nsub);
-               linalg::xgemm("C","N",&nsub,&nsub,&ndim,
-                     &alpha,vbas.data(),&ndim,wbas.data(),&ndim,
-                     &beta,tmpH.data(),&nsub);
+               linalg::xgemm("C", "N", nsub, nsub, ndim,
+                     alpha, vbas.data(), ndim, wbas.data(), ndim,
+                     beta, tmpH.data(), nsub);
                // 2. check symmetry property
                double diff = tmpH.diff_hermitian();
                if(diff > crit_skewH){
@@ -189,14 +189,14 @@ namespace ctns{
                // 5. form full residuals: Res[i]=HX[i]-e[i]*X[i]
                // vbas = {X[i]}
                linalg::xcopy(ndim*nsub, vbas.data(), rbas.data()); 
-               linalg::xgemm("N","N",&ndim,&nsub1,&nsub,
-                     &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
-                     &beta,vbas.data(),&ndim);
+               linalg::xgemm("N", "N", ndim, nsub1, nsub,
+                     alpha, rbas.data(), ndim, tmpU.data(), nsub,
+                     beta, vbas.data(), ndim);
                // wbas = {HX[i]}
                linalg::xcopy(ndim*nsub, wbas.data(), rbas.data()); 
-               linalg::xgemm("N","N",&ndim,&nsub1,&nsub,
-                     &alpha,rbas.data(),&ndim,tmpU.data(),&nsub,
-                     &beta,wbas.data(),&ndim);
+               linalg::xgemm("N", "N", ndim, nsub1, nsub,
+                     alpha, rbas.data(), ndim, tmpU.data(), nsub,
+                     beta, wbas.data(), ndim);
                // rbas = HX[i]-e[i]*X[i]
                linalg::xcopy(ndim*neig, wbas.data(), rbas.data()); 
                for(int i=0; i<neig; i++){
@@ -207,7 +207,7 @@ namespace ctns{
 
             // Precondition of a residual
             void precondition(const Tm* rvec, Tm* tvec, const double& ei){
-               for(int j=0; j<ndim; j++){
+               for(size_t j=0; j<ndim; j++){
                   tvec[j] = rvec[j]/(std::abs(Diag[j]-ei)+damping);
                }
             }
@@ -233,7 +233,7 @@ namespace ctns{
                }
 
                // 0. initialization
-               int nmax = std::min(ndim,neig+nbuff); // maximal subspace size
+               size_t nmax = std::min(ndim,size_t(neig+nbuff)); // maximal subspace size
                int naux = nmax-neig; // additional dimension for subspace
                std::vector<Tm> vbas(ndim*nmax), wbas(ndim*nmax), rbas(ndim*nmax);
                std::vector<double> tmpE(nmax);
@@ -310,7 +310,7 @@ namespace ctns{
                         nres += 1;		
                      }
                      nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas.data(),rbas.data(),crit_indp);
-                     nindp = std::min(nindp, nmax-nsub);
+                     nindp = std::min(nindp, int(nmax-nsub));
                   }
 
 #ifndef SERIAL
@@ -345,7 +345,7 @@ namespace ctns{
             }
          public:
             // basics
-            int ndim = 0;
+            size_t ndim = 0;
             int neig = 0;
             double* Diag;
             std::function<void(Tm*, const Tm*)> HVec;

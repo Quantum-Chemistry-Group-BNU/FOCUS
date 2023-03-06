@@ -4,6 +4,7 @@
 #include "sweep_data.h"
 #include "sweep_onedot.h"
 #include "sweep_twodot.h"
+#include "sweep_rcanon.h"
 
 namespace ctns{
 
@@ -30,19 +31,14 @@ namespace ctns{
          if(schd.ctns.maxsweep == 0) return;
          auto t0 = tools::get_time();
 
-         // init left boundary site
+         // init
          const auto& ntotal = icomb.topo.ntotal;
-         if(!schd.ctns.task_restart){
-            icomb.initiate_psi0(schd.ctns.nroots);
-            icomb.sites[ntotal-1] = get_left_bsite<Tm>(Km::isym);
-            icomb.display_size();
-         }
-
-         // generate sweep sequence
+         // global timer
          dot_timing timing_global;
+         // generate sweep sequence
          sweep_data sweeps(icomb.topo.get_sweeps(rank==0), schd.ctns.nroots, 
                schd.ctns.maxsweep, schd.ctns.ctrls);
-
+         // pool for handling operators
          oper_pool<Tm> qops_pool(schd.ctns.iomode, schd.ctns.ioasync, debug);
          for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
 
@@ -52,6 +48,9 @@ namespace ctns{
                sweeps.print_ctrls(isweep);
                std::cout << tools::line_separator2 << std::endl;
             }
+
+            icomb.initiate_psi0(schd.ctns.nroots);
+            icomb.display_size();
 
             // restart case
             if(schd.ctns.task_restart && isweep < schd.ctns.rsweep) continue;
@@ -101,26 +100,24 @@ namespace ctns{
                   std::cout << "\n=== end rank=" << rank << " ibond=" << ibond << std::endl;
                }
 
-               } // ibond
-               auto tf = tools::get_time();
-               sweeps.t_total[isweep] = tools::get_duration(tf-ti);
-               if(debug) sweeps.summary(isweep);
-            } // isweep
+            } // ibond
+            auto tf = tools::get_time();
+            sweeps.t_total[isweep] = tools::get_duration(tf-ti);
+            if(debug) sweeps.summary(isweep);
 
-            // for later computing properties
-            if(schd.ctns.lastdot){
-               sweep_rwfuns(icomb, int2e, int1e, ecore, schd, scratch, 
-                     qops_pool, timing_global);
-            }
-            qops_pool.clean_up();
+            // generate right rcanonical form and save checkpoint file
+            sweep_rcanon(icomb, schd, scratch, isweep);
 
-            if(debug){
-               auto t1 = tools::get_time();
-               tools::timing("ctns::sweep_opt", t0, t1);
-               if(schd.ctns.verbose>0) timing_global.print("time_global");
-            }
+         } // isweep
+         qops_pool.clean_up();
+
+         if(debug){
+            auto t1 = tools::get_time();
+            tools::timing("ctns::sweep_opt", t0, t1);
+            if(schd.ctns.verbose>0) timing_global.print("time_global");
          }
+      }
 
-      } // ctns
+   } // ctns
 
 #endif

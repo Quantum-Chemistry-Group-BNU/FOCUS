@@ -34,7 +34,8 @@ namespace linalg{
             friend class boost::serialization::access;	   
             template <class Archive>
                void serialize(Archive & ar, const unsigned int version){
-                  int rows = _rows, cols = _cols, size = _size;
+                  int rows = _rows, cols = _cols;
+                  size_t  size = _size;
                   ar & rows;
                   ar & cols;
                   ar & size;
@@ -519,8 +520,8 @@ namespace linalg{
       matrix<Tm> xgemm(const char* TRANSA, const char* TRANSB,
             const BaseMatrix<Tm>& A, const BaseMatrix<Tm>& B,
             const Tm alpha=1.0){
-         int M, N, K;
-         int LDA, LDB, LDC;
+         MKL_INT M, N, K;
+         MKL_INT LDA, LDB, LDC;
          // TRANS is c-type string (character array), input "N" not 'N' 
          char trans_A = toupper(TRANSA[0]); 
          char trans_B = toupper(TRANSB[0]);
@@ -542,9 +543,9 @@ namespace linalg{
          matrix<Tm> C(M,N);
          LDC = M;
          const Tm beta = 0.0;
-         xgemm(&trans_A, &trans_B, &M, &N, &K, &alpha, 
-               A.data(), &LDA, B.data(), &LDB, &beta, 
-               C.data(), &LDC);
+         xgemm(&trans_A, &trans_B, M, N, K, alpha, 
+               A.data(), LDA, B.data(), LDB, beta, 
+               C.data(), LDC);
          return C;
       }
 

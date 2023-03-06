@@ -284,6 +284,40 @@ namespace ctns{
          return blk;
       }
 
+   // C := alpha*op( A )*op( B ) + beta*C
+   template <typename Tm, typename Km>
+      void xgemm(const char* TRANSA, const char* TRANSB,
+            const Km alpha, const linalg::BaseMatrix<Tm>& A, const linalg::BaseMatrix<Tm>& B,
+            const Km beta, dtensor2<Tm> C){
+         MKL_INT M, N, K;
+         MKL_INT LDA, LDB, LDC;
+         // TRANS is c-type string (character array), input "N" not 'N' 
+         char trans_A = toupper(TRANSA[0]); 
+         char trans_B = toupper(TRANSB[0]);
+         assert(trans_A == 'N' || trans_A == 'T' || trans_A == 'C');
+         assert(trans_B == 'N' || trans_B == 'T' || trans_B == 'C');
+         if(trans_A == 'N'){
+            M = A.rows(); K = A.cols(); LDA = M; 
+         }else{
+            M = A.cols(); K = A.rows(); LDA = K; 
+         }
+         if(trans_B == 'N'){
+            assert(K == B.rows());
+            N = B.cols(); LDB = K;
+         }else{
+            assert(K == B.cols());
+            N = B.rows(); LDB = N;
+         }
+         // we assume the exact match of matrix size in our applications
+         assert(C.rows() == M && C.cols() == N);
+         LDC = M;
+         Tm talpha = static_cast<Tm>(alpha);
+         Tm tbeta = static_cast<Tm>(beta);
+         linalg::xgemm(&trans_A, &trans_B, M, N, K, talpha, 
+               A.data(), LDA, B.data(), LDB, tbeta, 
+               C.data(), LDC);
+      }
+
 } // ctns
 
 #endif

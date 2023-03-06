@@ -11,18 +11,18 @@ using namespace linalg;
 
 // real symmetric A
 void linalg::eig_solver(const matrix<double>& A, vector<double>& e, 
-			matrix<double>& U, const int order){
+			matrix<double>& U, const MKL_INT order){
    assert(A.rows() == A.cols());  
    assert(A.rows() <= e.size()); // allow larger space used for e 
-   int n = A.rows(), lwork = -1, liwork=-1, iworkopt, info = 0;
+   MKL_INT n = A.rows(), lwork = -1, liwork=-1, iworkopt, info = 0;
    double workopt;
    U.resize(A.rows(), A.cols());
    U = (order == 0)? A : -A;
    dsyevd_("V","L",&n,U.data(),&n,e.data(),&workopt,&lwork,&iworkopt,&liwork,&info);
-   lwork = static_cast<int>(workopt);
-   liwork = static_cast<int>(iworkopt);
+   lwork = static_cast<MKL_INT>(workopt);
+   liwork = static_cast<MKL_INT>(iworkopt);
    unique_ptr<double[]> work(new double[lwork]);
-   unique_ptr<int[]> iwork(new int[liwork]);
+   unique_ptr<MKL_INT[]> iwork(new MKL_INT[liwork]);
    dsyevd_("V","L",&n,U.data(),&n,e.data(),work.get(),&lwork,iwork.get(),&liwork,&info);
    if(order == 1){ transform(e.begin(),e.end(),e.begin(),[](const double& x){ return -x; }); }
    if(info){
@@ -33,21 +33,21 @@ void linalg::eig_solver(const matrix<double>& A, vector<double>& e,
 
 // complex Hermitian A
 void linalg::eig_solver(const matrix<complex<double>>& A, vector<double>& e, 
-		        matrix<complex<double>>& U, const int order){
+		        matrix<complex<double>>& U, const MKL_INT order){
    assert(A.rows() == A.cols());  
    assert(A.rows() <= e.size()); // allow larger space used for e 
-   int n = A.rows(), lwork = -1, liwork=-1, lrwork = -1, iworkopt, info = 0;
+   MKL_INT n = A.rows(), lwork = -1, liwork=-1, lrwork = -1, iworkopt, info = 0;
    complex<double> workopt;
    double rworkopt;
    U.resize(A.rows(), A.cols());
    U = (order == 0)? A : -A;
    zheevd_("V","L",&n,U.data(),&n,e.data(),&workopt,&lwork,&rworkopt,&lrwork,&iworkopt,&liwork,&info);
-   lwork = static_cast<int>(workopt.real());
-   lrwork = static_cast<int>(rworkopt);
-   liwork = static_cast<int>(iworkopt);
+   lwork = static_cast<MKL_INT>(workopt.real());
+   lrwork = static_cast<MKL_INT>(rworkopt);
+   liwork = static_cast<MKL_INT>(iworkopt);
    unique_ptr<complex<double>[]> work(new complex<double>[lwork]);
    unique_ptr<double[]> rwork(new double[lrwork]);
-   unique_ptr<int[]> iwork(new int[liwork]);
+   unique_ptr<MKL_INT[]> iwork(new MKL_INT[liwork]);
    zheevd_("V","L",&n,U.data(),&n,e.data(),work.get(),&lwork,rwork.get(),&lrwork,iwork.get(),&liwork,&info);
    if(order == 1){ transform(e.begin(),e.end(),e.begin(),[](const double& x){ return -x; }); }
    if(info){
@@ -67,9 +67,9 @@ void linalg::eig_solver(const matrix<complex<double>>& A, vector<double>& e,
 // real A = U*s*Vt
 void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
 			matrix<double>& U, matrix<double>& Vt,
-			const int iop){
-   int m = A.rows(), n = A.cols(), r = min(m,n);
-   int lwork = -1, ldu = 1, ldvt = 1, info;
+			const MKL_INT iop){
+   MKL_INT m = A.rows(), n = A.cols(), r = min(m,n);
+   MKL_INT lwork = -1, ldu = 1, ldvt = 1, info;
    char JOBU, JOBVT, JOBZ;
    matrix<double> Atmp(A);
    s.resize(r);
@@ -90,7 +90,7 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
       double workopt;
       dgesvd_(&JOBU,&JOBVT,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,&workopt,&lwork,&info);
-      lwork = static_cast<int>(workopt);
+      lwork = static_cast<MKL_INT>(workopt);
       unique_ptr<double[]> work(new double[lwork]);
       dgesvd_(&JOBU,&JOBVT,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,work.get(),&lwork,&info);
@@ -103,11 +103,11 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
       }else if(iop == 13){
          JOBZ = 'S'; U.resize(m,r); ldu = m; Vt.resize(r,n); ldvt = r;
       }
-      unique_ptr<int[]> iwork(new int[8*r]);
+      unique_ptr<MKL_INT[]> iwork(new MKL_INT[8*r]);
       double workopt;
       dgesdd_(&JOBZ,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,&workopt,&lwork,iwork.get(),&info);
-      lwork = static_cast<int>(workopt);
+      lwork = static_cast<MKL_INT>(workopt);
       unique_ptr<double[]> work(new double[lwork]);
       dgesdd_(&JOBZ,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,work.get(),&lwork,iwork.get(),&info);
@@ -121,9 +121,9 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
 // complex A = U*s*Vh
 void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
 			matrix<complex<double>>& U, matrix<complex<double>>& Vt,
-			const int iop){
-   int m = A.rows(), n = A.cols(), r = min(m,n);
-   int lwork = -1, ldu = 1, ldvt = 1, info;
+			const MKL_INT iop){
+   MKL_INT m = A.rows(), n = A.cols(), r = min(m,n);
+   MKL_INT lwork = -1, ldu = 1, ldvt = 1, info;
    char JOBU, JOBVT, JOBZ;
    matrix<complex<double>> Atmp(A);
    s.resize(r);
@@ -145,7 +145,7 @@ void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
       unique_ptr<double[]> rwork(new double[5*r]);
       zgesvd_(&JOBU,&JOBVT,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,&workopt,&lwork,rwork.get(),&info);
-      lwork = static_cast<int>(workopt.real());
+      lwork = static_cast<MKL_INT>(workopt.real());
       unique_ptr<complex<double>[]> work(new complex<double>[lwork]);
       zgesvd_(&JOBU,&JOBVT,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,work.get(),&lwork,rwork.get(),&info);
@@ -157,13 +157,13 @@ void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
       }
       complex<double> workopt;
       // lrwork: https://www.hpc.nec/documents/sdk/SDK_NLC/UsersGuide/man/zgesdd.html
-      int mx = max(m,n), mn = min(m,n);
-      int lrwork = mn*max(5*mn + 7, 2*mx + 2*mn + 1); 
+      MKL_INT mx = max(m,n), mn = min(m,n);
+      MKL_INT lrwork = mn*max(5*mn + 7, 2*mx + 2*mn + 1); 
       unique_ptr<double[]> rwork(new double[lrwork]);
-      unique_ptr<int[]> iwork(new int[8*r]);
+      unique_ptr<MKL_INT[]> iwork(new MKL_INT[8*r]);
       zgesdd_(&JOBZ,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,&workopt,&lwork,rwork.get(),iwork.get(),&info);
-      lwork = static_cast<int>(workopt.real());
+      lwork = static_cast<MKL_INT>(workopt.real());
       unique_ptr<complex<double>[]> work(new complex<double>[lwork]);
       zgesdd_(&JOBZ,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,work.get(),&lwork,rwork.get(),iwork.get(),&info);

@@ -4,20 +4,20 @@
 extern "C" {
 
 void dgemm_batch_(const char *transa_array, const char *transb_array, 
-        const int *m_array, const int *n_array, const int *k_array,
-        const double *alpha_array, const double **a_array, const int *lda_array, 
-        const double **b_array, const int *ldb_array,
-        const double *beta_array, double **c_array, const int *ldc_array, 
-        const int *group_count, const int *group_size);
+        const MKL_INT *m_array, const MKL_INT *n_array, const MKL_INT *k_array,
+        const double *alpha_array, const double **a_array, const MKL_INT *lda_array, 
+        const double **b_array, const MKL_INT *ldb_array,
+        const double *beta_array, double **c_array, const MKL_INT *ldc_array, 
+        const MKL_INT *group_count, const MKL_INT *group_size);
 
 void zgemm_batch_(const char *transa_array, const char *transb_array, 
-        const int *m_array, const int *n_array, const int *k_array,
+        const MKL_INT *m_array, const MKL_INT *n_array, const MKL_INT *k_array,
         const std::complex<double> *alpha_array, const std::complex<double> **a_array, 
-        const int *lda_array,
-        const std::complex<double> **b_array, const int *ldb_array,
+        const MKL_INT *lda_array,
+        const std::complex<double> **b_array, const MKL_INT *ldb_array,
         const std::complex<double> *beta_array, std::complex<double> **c_array, 
-        const int *ldc_array, 
-        const int *group_count, const int *group_size);
+        const MKL_INT *ldc_array, 
+        const MKL_INT *group_count, const MKL_INT *group_size);
 
 }
 
@@ -25,11 +25,11 @@ void zgemm_batch_(const char *transa_array, const char *transb_array,
 namespace linalg{
 
 inline void xgemm_batch(const char *transa_array, const char *transb_array, 
-        const int *m_array, const int *n_array, const int *k_array,
-        const double *alpha_array, const double **a_array, const int *lda_array, 
-        const double **b_array, const int *ldb_array,
-        const double *beta_array, double **c_array, const int *ldc_array, 
-        const int *group_count, const int *group_size)
+        const MKL_INT *m_array, const MKL_INT *n_array, const MKL_INT *k_array,
+        const double *alpha_array, const double **a_array, const MKL_INT *lda_array, 
+        const double **b_array, const MKL_INT *ldb_array,
+        const double *beta_array, double **c_array, const MKL_INT *ldc_array, 
+        const MKL_INT *group_count, const MKL_INT *group_size)
 {
     return ::dgemm_batch_(
             transa_array, transb_array, 
@@ -42,13 +42,13 @@ inline void xgemm_batch(const char *transa_array, const char *transb_array,
 }
 
 inline void xgemm_batch(const char *transa_array, const char *transb_array, 
-        const int *m_array, const int *n_array, const int *k_array,
+        const MKL_INT *m_array, const MKL_INT *n_array, const MKL_INT *k_array,
         const std::complex<double> *alpha_array, 
-        const std::complex<double> **a_array, const int *lda_array,
-        const std::complex<double> **b_array, const int *ldb_array,
+        const std::complex<double> **a_array, const MKL_INT *lda_array,
+        const std::complex<double> **b_array, const MKL_INT *ldb_array,
         const std::complex<double> *beta_array, std::complex<double> **c_array, 
-        const int *ldc_array, 
-        const int *group_count, const int *group_size)
+        const MKL_INT *ldc_array, 
+        const MKL_INT *group_count, const MKL_INT *group_size)
 {
     return ::zgemm_batch_(
             transa_array, transb_array, 

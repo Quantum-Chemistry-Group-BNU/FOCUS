@@ -1,7 +1,7 @@
 import os
 import test_utils
 
-mpiprefix = "mpirun -np 2 "
+mpiprefix = "" #mpirun -np 2 "
 os.environ['OMP_NUM_THREADS'] = "4"
 print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
 

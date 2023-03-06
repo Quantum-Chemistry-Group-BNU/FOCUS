@@ -17,11 +17,10 @@ namespace ctns{
 
          std::ofstream ofs(fname, std::ios::binary);
          boost::archive::binary_oarchive save(ofs);
-         // save sites & cpsi
+         // save sites 
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             save << icomb.sites[idx];
          }
-         save << icomb.cpsi;
          ofs.close();
          
          // ZL@20221207 binary format for easier loading in python 
@@ -31,11 +30,6 @@ namespace ctns{
             // save all sites
             for(int idx=0; idx<icomb.topo.ntotal; idx++){
                icomb.sites[idx].dump(ofs2);
-            }
-            int nstate = icomb.cpsi.size();
-            ofs2.write((char*)(&nstate), sizeof(int));
-            for(int i=0; i<icomb.cpsi.size(); i++){
-               icomb.cpsi[i].dump(ofs2); 
             }
             ofs2.close();
          }
@@ -48,12 +42,11 @@ namespace ctns{
 
          std::ifstream ifs(fname, std::ios::binary);
          boost::archive::binary_iarchive load(ifs);
-         // load sites & cpsi
+         // load sites 
          icomb.sites.resize(icomb.topo.ntotal);
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             load >> icomb.sites[idx]; // this save calls to copy constructor for vector<st3>
          }
-         load >> icomb.cpsi;
          ifs.close();
       }
 

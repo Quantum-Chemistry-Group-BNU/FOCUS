@@ -130,10 +130,6 @@ void CTNS(const input::schedule& schd){
       // optimization from current RCF
       if(schd.ctns.task_opt || schd.ctns.task_restart){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
-         if(rank == 0){
-            auto rcanon_file = schd.scratch+"/rcanon_new.info"; 
-            ctns::rcanon_save(icomb, rcanon_file);
-         }
       }
    } // ham || opt
 

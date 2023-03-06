@@ -317,18 +317,19 @@ namespace ctns{
                int ir = index.at(space2[i]);
                wf(ir,0) = vs2(i,iroot);
             } // i
-            stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, {0,1}); // rwfuns[l,r] for RCF
+            // rwfuns[l,r] for RCF: ->-*->- 
+            stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, {0,1}); 
             xgemm("T","N",1.0,wf,rbasis[0].coeff.conj(),0.0,rwfun(0,0));
             //
             // construct psi from tmp: as the symmetry is one-to-ono, just copy works
-            //          |                    |
-            // state <--|-->   from   vac <--|-->
-            //          vac                  state
+            //        |                         |             
+            // vac -<-|->- [cpsi]  <=  state ->-|->- [RCF] 
+            //       /|\                       /|\
+            //        state                    vac           
             auto tmp = contract_qt3_qt2("l", icomb.sites[icomb.topo.ntotal-1], rwfun); 
             stensor3<Tm> cpsi(sym_state, get_qbond_vac(Km::isym), tmp.info.qcol, tmp.info.qmid, dir_WF3);
             linalg::xcopy(cpsi.info._size, tmp.data(), cpsi.data());
             icomb.cpsi[iroot] = std::move(cpsi);
-            // 
          } // iroot
          
          // for later convenience of computing properties with right canonical form, 

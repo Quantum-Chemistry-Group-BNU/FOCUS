@@ -245,15 +245,24 @@ KNOWN PROBLEMS
 
  * Profiling: Check fetch time & CPU memory for Fe8S7 !!!
 
- * Support restart isweep ibond !!!
+ * Support restart isweep & ibond !
+     0. restructure rsites/rwfuns/psi into cpsi/sites - more compact [DONE@20220305]
+     1. fix guess error [DONE@20220306]
+     2. fix last conversion into RCF [DONE@20220306]
+     3. add dump RCF at each step [DONE20220306]
+     4. support restart by loading RCF?
+     5. support restart at a particular ibond?
 
- * Fix bug in parallel IO [mpi problem]
-
- >>> Support Intermediate with GPU?
- >>> Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
+ * Problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
+   - Fix int32 & int64 problem? 2GB problem
+   - How stackblock & block2 deal with this problem? 
+ 
  >>> Support Renorm with GPU
+ >>> Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
+ >>> Support Intermediate with GPU?
 
  * OpenMP parallelization in decimation
+ * Fix bug in parallel IO [mpi problem]
 
 === Future ===
 
@@ -262,6 +271,4 @@ KNOWN PROBLEMS
    - what about R operation in contract? [general complex]
  
  * Support Kramers version
-
- * Problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
 

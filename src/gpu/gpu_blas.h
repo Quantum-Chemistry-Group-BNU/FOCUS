@@ -12,51 +12,51 @@
 namespace linalg{
 
    // axpy
-   inline void xaxpy_magma(const int N, const double alpha, 
+   inline void xaxpy_magma(const magma_int_t N, const double alpha, 
          const double* X, double* Y){
-      const int INCX = 1, INCY = 1;
+      const magma_int_t INCX = 1, INCY = 1;
       magma_daxpy(N, alpha, X, INCX, Y, INCY, magma_queue );
    }
-   inline void xaxpy_magma(const int N, const std::complex<double> alpha, 
+   inline void xaxpy_magma(const magma_int_t N, const std::complex<double> alpha, 
          const std::complex<double>* X, std::complex<double>* Y){
-      const int INCX = 1, INCY = 1;
+      const magma_int_t INCX = 1, INCY = 1;
       magmaDoubleComplex alpha1{alpha.real(),alpha.imag()};
       magma_zaxpy(N, alpha1, (magmaDoubleComplex *)X, INCX, (magmaDoubleComplex *)Y, INCY, magma_queue);
    }
 
    // y = alpha*A*x + beta*y
-   inline void xgemv_magma(const char* TRANSA, const int* M, const int* N,
-         const double* alpha, const double* A, const int* LDA,
-         const double* X, const int* INCX,
-         const double* beta, double* Y, const int* INCY ){
-      magma_trans_t transA =  MagmaNoTrans ;
+   inline void xgemv_magma(const char* TRANSA, const magma_int_t M, const magma_int_t N,
+         const double alpha, const double* A, const magma_int_t LDA,
+         const double* X, const magma_int_t INCX,
+         const double beta, double* Y, const magma_int_t INCY){
+      magma_trans_t transA =  MagmaNoTrans;
       if(TRANSA[0]=='T'){
          transA = MagmaTrans;
       }else if (TRANSA[0] == 'C'){
          transA = MagmaConjTrans;
       }
-      size_t size = (*N)*sizeof(double);
+      size_t size = N*sizeof(double);
       double* dev_X = (double*)gpumem.allocate(size);
 #ifdef USE_HIP
       HIP_CHECK(hipMemcpy(dev_X, X, size, hipMemcpyHostToDevice));
 #else
       CUDA_CHECK(cudaMemcpy(dev_X, X, size, cudaMemcpyHostToDevice));
 #endif// USE_HIP
-      magma_dgemv(transA, *M, *N, *alpha, A, *LDA,
-            dev_X, *INCX, *beta, Y, *INCY, magma_queue);
+      magma_dgemv(transA, M, N, alpha, A, LDA,
+            dev_X, INCX, beta, Y, INCY, magma_queue);
       gpumem.deallocate(dev_X, size);
    }
-   inline void xgemv_magma(const char* TRANSA, const int* M, const int* N,
-         const std::complex<double>* alpha, const std::complex<double>* A, const int* LDA,
-         const std::complex<double>* X, const int* INCX,
-         const std::complex<double>* beta, std::complex<double>* Y, const int* INCY){
-      magma_trans_t transA =  MagmaNoTrans ;
+   inline void xgemv_magma(const char* TRANSA, const magma_int_t M, const magma_int_t N,
+         const std::complex<double> alpha, const std::complex<double>* A, const magma_int_t LDA,
+         const std::complex<double>* X, const magma_int_t INCX,
+         const std::complex<double> beta, std::complex<double>* Y, const magma_int_t INCY){
+      magma_trans_t transA =  MagmaNoTrans;
       if(TRANSA[0] == 'T'){
          transA = MagmaTrans;
       }else if (TRANSA[0] == 'C'){
          transA = MagmaConjTrans;
       }
-      size_t size = (*N)*sizeof(magmaDoubleComplex);
+      size_t size = N*sizeof(magmaDoubleComplex);
       magmaDoubleComplex* dev_X = (magmaDoubleComplex*)gpumem.allocate(size);
 #ifdef USE_HIP
       HIP_CHECK(hipMemcpy(dev_X, X, size, hipMemcpyHostToDevice));
@@ -65,8 +65,8 @@ namespace linalg{
 #endif// USE_HIP
       magmaDoubleComplex alpha1{alpha->real(),alpha->imag()};
       magmaDoubleComplex beta1{beta->real(),beta->imag()};
-      magma_zgemv(transA, *M, *N, alpha1, (magmaDoubleComplex *)A, *LDA,
-            (magmaDoubleComplex *)dev_X, *INCX, beta1, (magmaDoubleComplex *)Y, *INCY, magma_queue);
+      magma_zgemv(transA, M, N, alpha1, (magmaDoubleComplex *)A, LDA,
+            (magmaDoubleComplex *)dev_X, INCX, beta1, (magmaDoubleComplex *)Y, INCY, magma_queue);
       gpumem.deallocate(dev_X, size);
    }
 } // linalg

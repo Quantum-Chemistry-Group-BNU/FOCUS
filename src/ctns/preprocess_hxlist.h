@@ -358,9 +358,9 @@ namespace ctns{
             Tm* Aptr = ptrs[mm.locA] + mm.offA;
             Tm* Bptr = ptrs[mm.locB] + mm.offB;
             Tm* Cptr = ptrs[mm.locC] + mm.offC;
-            linalg::xgemm(&mm.transA, &mm.transB, &mm.M, &mm.N, &mm.K, &alpha,
-                  Aptr, &mm.LDA, Bptr, &mm.LDB, &beta,
-                  Cptr, &mm.M);
+            linalg::xgemm(&mm.transA, &mm.transB, mm.M, mm.N, mm.K, alpha,
+                  Aptr, mm.LDA, Bptr, mm.LDB, beta,
+                  Cptr, mm.M);
          }
       }
 

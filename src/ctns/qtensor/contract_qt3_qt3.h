@@ -96,9 +96,9 @@ namespace ctns{
                for(int im=0; im<mdim; im++){
                   const Tm* blk3a_im = blk3a + im*xrdim;
                   const Tm* blk3b_im = blk3b + im*xcdim;
-                  linalg::xgemm("C", "N", &rdim, &cdim, &xdim, &alpha,
-                        blk3a_im, &xdim, blk3b_im, &xdim, &beta,
-                        blk2, &rdim);
+                  linalg::xgemm("C", "N", rdim, cdim, xdim, alpha,
+                        blk3a_im, xdim, blk3b_im, xdim, beta,
+                        blk2, rdim);
                } // im
             } // bc
          } // i
@@ -138,9 +138,9 @@ namespace ctns{
                Tm* blk2 = qt2_data + off2-1;
                int cdim = qt2_info.qcol.get_dim(bc);
                int xmdim = xdim*mdim;
-               linalg::xgemm("N", "C", &rdim, &cdim, &xmdim, &alpha,
-                     blk3a, &rdim, blk3b, &cdim, &beta,
-                     blk2, &rdim);
+               linalg::xgemm("N", "C", rdim, cdim, xmdim, alpha,
+                     blk3a, rdim, blk3b, cdim, beta,
+                     blk2, rdim);
             } // bc
          } // i
          linalg::xconj(qt2_info._size, qt2_data);
@@ -182,9 +182,9 @@ namespace ctns{
                Tm* blk2 = qt2_data + off2-1;
                int cdim = qt2_info.qcol.get_dim(bc);
                int xydim = xdim*ydim;
-               linalg::xgemm("C", "N", &rdim, &cdim, &xydim, &alpha,
-                     blk3a, &xydim, blk3b, &xydim, &beta,
-                     blk2, &rdim);
+               linalg::xgemm("C", "N", rdim, cdim, xydim, alpha,
+                     blk3a, xydim, blk3b, xydim, beta,
+                     blk2, rdim);
             } // bc
          } // i
       }

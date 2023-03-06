@@ -94,7 +94,7 @@ namespace input{
                   & task_init & task_sdiag & task_ham & task_opt
                   & task_restart & rsweep & rbond 
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd
-                  & nroots & guess & dbranch & maxsweep & maxbond & lastdot & ctrls
+                  & nroots & guess & dbranch & maxsweep & maxbond & ctrls
                   & alg_hvec & alg_renorm & ifdist1 & save_formulae & sort_formulae 
                   & hxorder & batchgemm & batchsize & batchcase 
                   & cisolver & maxcycle & nbuff & damping
@@ -131,7 +131,6 @@ namespace input{
          int dbranch = 0;
          int maxsweep = 0;
          int maxbond = -1;
-         bool lastdot = false;
          std::vector<params_sweep> ctrls;
          // algorithm
          int alg_hvec = 3;

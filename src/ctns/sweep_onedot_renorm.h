@@ -12,6 +12,7 @@ namespace ctns{
    const double thresh_canon = 1.e-10;
    extern const double thresh_canon;
 
+   // do not perform truncation at the boundary
    inline bool start_truncation(const int ksupp, 
          const int dcut){
       int knotrunc = std::min(4,(int)(0.5*std::log2(dcut)));

@@ -31,9 +31,9 @@ stensor2<Tm> contract_qt2_qt2(const stensor2<Tm>& qt2a,
       size_t off2b = qt2b.info._offset[qt2b.info._addr(bx,bc)];
       Tm* blk2b = qt2b.data() + off2b-1;
       int xdim = qt2a.info.qcol.get_dim(bx);
-      linalg::xgemm("N", "N", &rdim, &cdim, &xdim, &alpha,
-		    blk2a, &rdim, blk2b, &xdim, &beta,
-		    blk2, &rdim);
+      linalg::xgemm("N", "N", rdim, cdim, xdim, alpha,
+		    blk2a, rdim, blk2b, xdim, beta,
+		    blk2, rdim);
    } // i
    return qt2;
 }

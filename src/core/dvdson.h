@@ -12,7 +12,7 @@ namespace linalg{
             public:
                 // simple constructor
                 dvdsonSolver(){};
-                dvdsonSolver(const int _ndim, const int _neig, const double _crit_v, const int _maxcycle){
+                dvdsonSolver(const size_t _ndim, const int _neig, const double _crit_v, const int _maxcycle){
                     ndim = _ndim;
                     neig = _neig;
                     crit_v = _crit_v;
@@ -99,7 +99,7 @@ namespace linalg{
                     linalg::matrix<Tm> V;
                     linalg::eig_solver(H, e, V);
                     std::cout << "eigenvalues:\n" << std::setprecision(12);
-                    for(int i=0; i<ndim; i++){
+                    for(size_t i=0; i<ndim; i++){
                         std::cout << "i=" << i << " e=" << e[i] << std::endl;
                     }
                     // copy results
@@ -107,7 +107,7 @@ namespace linalg{
                     linalg::xcopy(ndim*neig, V.data(), vs);
                 }
                 // subspace problem
-                void subspace_solver(const int ndim, 
+                void subspace_solver(const size_t ndim, 
                         const int nsub,
                         const int nt,
                         std::vector<Tm>& vbas,
@@ -118,9 +118,9 @@ namespace linalg{
                     // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
                     const Tm alpha = 1.0, beta=0.0;
                     linalg::matrix<Tm> tmpH(nsub,nsub);
-                    linalg::xgemm("C","N",&nsub,&nsub,&ndim,
-                            &alpha,vbas.data(),&ndim,wbas.data(),&ndim,
-                            &beta,tmpH.data(),&nsub);
+                    linalg::xgemm("C", "N", nsub, nsub, ndim,
+                            alpha, vbas.data(), ndim, wbas.data(), ndim,
+                            beta, tmpH.data(), nsub);
                     // 2. check symmetry property
                     double diff = tmpH.diff_hermitian();
                     if(diff > crit_skewH){
@@ -135,14 +135,14 @@ namespace linalg{
                     // 4. form full residuals: Res[i]=HX[i]-e[i]*X[i]
                     // vbas = X[i]
                     linalg::xcopy(ndim*nsub, vbas.data(), rbas.data());
-                    linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                            &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
-                            &beta,vbas.data(),&ndim);
+                    linalg::xgemm("N", "N", ndim, nt, nsub,
+                            alpha, rbas.data(), ndim, tmpV.data(), nsub,
+                            beta, vbas.data(), ndim);
                     // wbas = HX[i]
                     linalg::xcopy(ndim*nsub, wbas.data(), rbas.data()); 
-                    linalg::xgemm("N","N",&ndim,&nt,&nsub,
-                            &alpha,rbas.data(),&ndim,tmpV.data(),&nsub,
-                            &beta,wbas.data(),&ndim);
+                    linalg::xgemm("N", "N", ndim, nt, nsub,
+                            alpha, rbas.data(), ndim, tmpV.data(), nsub,
+                            beta, wbas.data(), ndim);
                     // rbas = HX[i]-e[i]*X[i]
                     linalg::xcopy(ndim*neig, wbas.data(), rbas.data()); 
                     for(int i=0; i<nt; i++){
@@ -154,16 +154,16 @@ namespace linalg{
                     std::cout << "linalg::dvdsonSolver::solve_iter"
                         << " is_complex=" << tools::is_complex<Tm>() << std::endl;
                     if(neig > ndim){
-                        std::string msg = "error: neig>ndim in dvdson! neig/ndim=";	
-                        tools::exit(msg+std::to_string(neig)+","+std::to_string(ndim));
+                       std::string msg = "error: neig>ndim in dvdson! neig/ndim=";	
+                       tools::exit(msg+std::to_string(neig)+","+std::to_string(ndim));
                     }
                     // clear counter
                     nmvp = 0;
                     auto t0 = tools::get_time();
 
                     // generate initial subspace - vbas
-                    int nl = std::min(ndim,neig+nbuff); // maximal subspace size
-                    std::vector<Tm> vbas(ndim*nl), wbas(ndim*nl);
+                    size_t nmax = std::min(ndim,size_t(neig+nbuff)); // maximal subspace size
+                    std::vector<Tm> vbas(ndim*nmax), wbas(ndim*nmax);
                     if(vguess != nullptr){
                         linalg::xcopy(ndim*neig, vguess, vbas.data());
                     }else{
@@ -176,8 +176,8 @@ namespace linalg{
                     HVecs(neig, wbas.data(), vbas.data());
 
                     // Begin to solve
-                    std::vector<Tm> rbas(ndim*nl), tbas(ndim*nl), tmpV(nl*nl);
-                    std::vector<double> tmpE(nl), tnorm(neig);
+                    std::vector<Tm> rbas(ndim*nmax), tbas(ndim*nmax), tmpV(nmax*nmax);
+                    std::vector<double> tmpE(nmax), tnorm(neig);
                     std::vector<bool> rconv(neig);
                     // record history
                     linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); 
@@ -241,7 +241,7 @@ namespace linalg{
                 }
             public:
                 // basics
-                int ndim = 0;
+                size_t ndim = 0;
                 int neig = 0;
                 double* Diag;
                 std::function<void(Tm*, const Tm*)> HVec;

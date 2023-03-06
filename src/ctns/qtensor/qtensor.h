@@ -12,7 +12,6 @@
 #include "kramers_linalg.h"
 
 #include "dtensor.h"
-#include "dtensor_linalg.h"
 #include "qinfo2.h"
 #include "qinfo3.h"
 #include "qinfo4.h"

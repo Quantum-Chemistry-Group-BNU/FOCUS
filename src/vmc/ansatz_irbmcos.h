@@ -57,8 +57,8 @@ namespace vmc{
       // Wai*zvec
       std::vector<double> Wz(nhiden);
       linalg::xcopy(nhiden, &params[nqubits], Wz.data());
-      linalg::xgemv("N",&nhiden,&nqubits,&alpha,&params[nqubits+nhiden],&nhiden,
-            zvec.data(),&INCX,&beta,Wz.data(),&INCY);
+      linalg::xgemv("N", nhiden, nqubits, alpha, &params[nqubits+nhiden], nhiden,
+            zvec.data(), INCX, beta, Wz.data(), INCY);
       // amp
       double amp = 1.0;
       for(int a=0; a<nhiden; a++){
@@ -77,8 +77,8 @@ namespace vmc{
       // Wai*zvec
       std::vector<double> Wz(nhiden);
       linalg::xcopy(nhiden, &params[nqubits], Wz.data());
-      linalg::xgemv("N",&nhiden,&nqubits,&alpha,&params[nqubits+nhiden],&nhiden,
-            zvec.data(),&INCX,&beta,Wz.data(),&INCY);
+      linalg::xgemv("N", nhiden, nqubits, alpha, &params[nqubits+nhiden], nhiden,
+            zvec.data(), INCX, beta, Wz.data(), INCY);
       // assemble gradient
       // ba
       std::transform(Wz.begin(), Wz.end(), &dlnpsiC[nqubits],
