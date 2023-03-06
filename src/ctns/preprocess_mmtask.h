@@ -38,7 +38,11 @@ namespace ctns{
                   gettimeofday(&t0, NULL);
                   mmbatch2[k][i].kernel(batchgemm, ptrs);
 #ifdef GPU
+#ifdef USE_HIP
+                  hipDeviceSynchronize();
+#else
                   cudaDeviceSynchronize();
+#endif
 #endif
                   gettimeofday(&t1, NULL);
                   oper_timer.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
@@ -52,7 +56,11 @@ namespace ctns{
                gettimeofday(&t0, NULL);
                mmreduce[k].reduction(workspace, y, iop);
 #ifdef GPU
+#ifdef USE_HIP
+               hipDeviceSynchronize();
+#else
                cudaDeviceSynchronize();
+#endif
 #endif
                gettimeofday(&t1, NULL);
                oper_timer.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
