@@ -295,6 +295,7 @@ vector<directed_bond> topology::get_sweeps(const bool debug) const{
             << " cturn=" << sweeps[idx].is_cturn()
             << endl;
       }
+      std::cout << "..... end of get_sweeps .....\n" << std::endl; 
    }
    return sweeps;
 }

@@ -14,7 +14,7 @@ namespace linalg{
    template <typename Tm>
       double check_orthogonality(const linalg::matrix<Tm>& V,
             const double thresh=1.e-10){
-         int n = V.cols();
+         size_t n = V.cols();
          linalg::matrix<Tm> dev = xgemm("C","N",V,V) - identity_matrix<Tm>(n);
          double diff = dev.normF()/static_cast<double>(n);
          if(diff > thresh){
@@ -28,7 +28,7 @@ namespace linalg{
          return diff;
       }
    template <typename Tm>
-      double check_orthogonality(const int m, const int n,
+      double check_orthogonality(const size_t m, const size_t n,
             const std::vector<Tm>& vbas,
             const double thresh=1.e-10){
          linalg::matrix<Tm> V(m,n,vbas.data());
@@ -37,7 +37,7 @@ namespace linalg{
 
    // (1-V*V^+)*R = R-V*(V^+R)
    template <typename Tm>
-      void ortho_projection(const int ndim,
+      void ortho_projection(const size_t ndim,
             const int neig,
             const int nres,
             const Tm* vbas,
@@ -57,7 +57,7 @@ namespace linalg{
    // modified Gram-Schmidt orthogonalization of 
    // rbas(ndim,nres) against vbas(ndim,neig)
    template <typename Tm>
-      int get_ortho_basis(const int ndim,
+      int get_ortho_basis(const size_t ndim,
             const int neig,
             const int nres,
             const Tm* vbas,
@@ -97,7 +97,7 @@ namespace linalg{
 
    // MGS for rbas of size rbas(ndim,nres)
    template <typename Tm>
-      int get_ortho_basis(const int ndim,
+      int get_ortho_basis(const size_t ndim,
             const int nres,
             Tm* rbas,
             const double crit_indp=1.e-12){

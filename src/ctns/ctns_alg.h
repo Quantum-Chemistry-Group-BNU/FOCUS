@@ -26,6 +26,7 @@ namespace ctns{
       void rcanon_check(const comb<Km>& icomb,
             const double thresh_ortho,
             const bool ifortho=true){
+         auto t0 = tools::get_time();
          std::cout << "\nctns::rcanon_check thresh_ortho=" 
             << std::scientific << std::setprecision(2) << thresh_ortho 
             << std::endl;
@@ -42,6 +43,8 @@ namespace ctns{
                tools::exit("error: deviate from identity matrix!");
             }
          } // idx
+         auto t1 = tools::get_time();
+         tools::timing("ctns::rcanon_check", t0, t1);
       }
 
    // Algorithm 1:

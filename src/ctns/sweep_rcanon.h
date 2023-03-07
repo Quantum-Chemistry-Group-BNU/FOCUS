@@ -26,9 +26,23 @@ namespace ctns{
             std::cout << tools::line_separator << std::endl;
             // only rank-0 has psi from renorm
             const auto& wf = icomb.cpsi[0];
+            // reorthogonalize {cpsi} in case there is truncation in the last sweep
+            // such that they are not orthonormal any more, which can happens for
+            // small bond dimension. 
+            size_t ndim = wf.size();
+            int nroots = icomb.get_nroots();
+            std::vector<Tm> v0(ndim*nroots);
+            for(int i=0; i<nroots; i++){
+               icomb.cpsi[i].to_array(&v0[ndim*i]);
+            }
+            int nindp = linalg::get_ortho_basis(ndim, nroots, v0.data()); // reorthogonalization
+            assert(nindp == nroots);
+            for(int i=0; i<nroots; i++){
+               icomb.cpsi[i].from_array(&v0[ndim*i]);
+            }
+            v0.clear();
             // compute R1 from cpsi via decimation
             stensor2<Tm> rot;
-            int nroots = schd.ctns.nroots;
             std::vector<stensor2<Tm>> wfs2(nroots);
             for(int i=0; i<nroots; i++){
                auto wf2 = icomb.cpsi[i].merge_cr().T();
@@ -56,6 +70,8 @@ namespace ctns{
             }
             icomb.stack_cpsi();
             ctns::rcanon_save(icomb, rcanon_file);
+            ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+            std::cout << "..... end of isweep = " << isweep << " .....\n" << std::endl;
          } // rank0
       }
 

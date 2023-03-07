@@ -1,2 +1,0 @@
-ctns/qtensor/dtensor_linalg.h
-ctns/ctns_init.h:            xgemm("T","N",1.0,wf,rbasis[0].coeff.conj(),0.0,rwfun(0,0));
