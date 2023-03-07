@@ -1,5 +1,5 @@
-#ifndef CTNS_COMB_H
-#define CTNS_COMB_H
+#ifndef CTNS_COMB0_H
+#define CTNS_COMB0_H
 
 #ifndef SERIAL
 #include <boost/mpi.hpp>
@@ -9,28 +9,15 @@
 #include "ctns_topo.h"
 #include "init_rbasis.h"
 #include "init_phys.h" // get_qbond_vac
+#include "ctns_comb.h"
 
 namespace ctns{
 
-   template <typename Tm, typename Qm>
-      size_t display_vec_size(const Qm& vec, std::string name){
-         std::cout << " " << name << ": len=" << vec.size() << " mem=";
-         size_t sz = 0;
-         for(int i=0; i<vec.size(); i++){
-            sz += vec[i].size();
-         }
-         std::cout << sz << ":"
-            << tools::sizeMB<Tm>(sz) << "MB:"
-            << tools::sizeGB<Tm>(sz) << "GB"
-            << std::endl;
-         return sz;
-      }
-
    template <typename Km>
-      struct comb{
+      struct comb0{
          public:
             // constructors
-            comb(){
+            comb0(){
                if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
             }
             // print size 

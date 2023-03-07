@@ -8,6 +8,7 @@
 #include "../core/integral.h"
 #include "qtensor/qtensor.h"
 #include "ctns_comb.h"
+#include "ctns_comb0.h"
 
 namespace mpi_wrapper{
 
@@ -16,6 +17,7 @@ namespace mpi_wrapper{
          return tools::is_complex<Tm>()? (1ULL<<26) : (1ULL<<30); // based on some tests; int 2^31-1
       }
 
+   //--- broadcast ---
    // raw data
    template <typename Tm>
       void broadcast(const boost::mpi::communicator & comm, Tm* ptr, size_t size, int root){
@@ -53,7 +55,7 @@ namespace mpi_wrapper{
 
    // icomb: assuming the individual size of sites is small
    template <typename Tm>
-      void broadcast(const boost::mpi::communicator & comm, ctns::comb<Tm>& icomb, int root){
+      void broadcast(const boost::mpi::communicator & comm, ctns::comb0<Tm>& icomb, int root){
          /*
          boost::mpi::broadcast(comm, icomb.topo, root);
          boost::mpi::broadcast(comm, icomb.rbases, root);
@@ -65,6 +67,21 @@ namespace mpi_wrapper{
          */
       }
 
+   // icomb: assuming the individual size of sites is small
+   template <typename Tm>
+      void broadcast(const boost::mpi::communicator & comm, ctns::comb<Tm>& xxx, int root){
+         /*
+         boost::mpi::broadcast(comm, icomb.topo, root);
+         boost::mpi::broadcast(comm, icomb.rbases, root);
+         // sites could be packed in future: 
+         // https://gist.github.com/hsidky/2f0e075095026d2ebda1
+         for(int i=0; i<icomb.topo.ntotal; i++){
+            boost::mpi::broadcast(comm, icomb.sites[i], root);
+         }
+         */
+      }
+
+   //--- reduce ---
    // raw data
    template <typename Tm, typename Op>
       void reduce(const boost::mpi::communicator & comm, const Tm* ptr_in, size_t size, 
@@ -72,7 +89,7 @@ namespace mpi_wrapper{
          size_t chunksize = get_chunksize<Tm>();
          for(size_t offset=0; offset<size; offset+=chunksize){
             size_t len = std::min(chunksize, size-offset);
-            boost::mpi::reduce(comm, ptr_int+offset, len, ptr_out+offset, op, root); 
+            boost::mpi::reduce(comm, ptr_in+offset, len, ptr_out+offset, op, root); 
          }
       }
 
