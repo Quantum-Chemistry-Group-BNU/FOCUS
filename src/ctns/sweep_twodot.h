@@ -66,6 +66,7 @@ namespace ctns{
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
 
+         icomb.world.barrier();
          std::cout << "start rank=" << rank << " sweep_twodot" << std::endl;
 
          // 0. check partition
@@ -642,6 +643,7 @@ namespace ctns{
          timing.t1 = tools::get_time();
          if(debug) timing.analysis("time_local", schd.ctns.verbose>0);
          std::cout << "end rank=" << rank << " sweep_twodot" << std::endl;
+         icomb.world.barrier();
       }
 
 } // ctns

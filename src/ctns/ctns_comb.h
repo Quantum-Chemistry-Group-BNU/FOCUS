@@ -165,6 +165,8 @@ namespace mpi_wrapper{
       void broadcast(const boost::mpi::communicator & comm, ctns::comb<Tm>& icomb, int root){
          boost::mpi::broadcast(comm, icomb.topo, root);
          boost::mpi::broadcast(comm, icomb.rbases, root);
+         int rank = comm.rank();
+         if(rank != root) icomb.sites.resize(icomb.topo.ntotal); // reserve space
          // sites could be packed in future: 
          // https://gist.github.com/hsidky/2f0e075095026d2ebda1
          for(int i=0; i<icomb.topo.ntotal; i++){

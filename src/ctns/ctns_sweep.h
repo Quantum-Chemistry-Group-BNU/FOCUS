@@ -49,8 +49,10 @@ namespace ctns{
                std::cout << tools::line_separator2 << std::endl;
             }
 
-            icomb.site0_to_cpsi1(schd.ctns.nroots);
-            icomb.display_size();
+            if(rank == 0){
+               icomb.site0_to_cpsi1(schd.ctns.nroots);
+               icomb.display_size();
+            }
 
             // restart case
             if(schd.ctns.task_restart && isweep < schd.ctns.rsweep) continue;
@@ -100,24 +102,24 @@ namespace ctns{
                   std::cout << "\n=== end rank=" << rank << " ibond=" << ibond << std::endl;
                }
 
-            } // ibond
-            auto tf = tools::get_time();
-            sweeps.t_total[isweep] = tools::get_duration(tf-ti);
-            if(debug) sweeps.summary(isweep);
+               } // ibond
+               auto tf = tools::get_time();
+               sweeps.t_total[isweep] = tools::get_duration(tf-ti);
+               if(debug) sweeps.summary(isweep);
 
-            // generate right rcanonical form and save checkpoint file
-            sweep_rcanon(icomb, schd, scratch, isweep);
+               // generate right rcanonical form and save checkpoint file
+               sweep_rcanon(icomb, schd, scratch, isweep);
 
-         } // isweep
-         qops_pool.clean_up();
+            } // isweep
+            qops_pool.clean_up();
 
-         if(debug){
-            auto t1 = tools::get_time();
-            tools::timing("ctns::sweep_opt", t0, t1);
-            if(schd.ctns.verbose>0) timing_global.print("time_global");
+            if(debug){
+               auto t1 = tools::get_time();
+               tools::timing("ctns::sweep_opt", t0, t1);
+               if(schd.ctns.verbose>0) timing_global.print("time_global");
+            }
          }
-      }
 
-   } // ctns
+      } // ctns
 
 #endif

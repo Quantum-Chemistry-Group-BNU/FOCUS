@@ -93,32 +93,48 @@ def compareAll(dirs,nfail,thresh=1.e-8):
          if(not exist): continue
          print('finput=',finput)
 	     # COMPARISON
+         # reference
          fname = "results/"+prefix+"ctns.out"
          print('fname[ref]=',fname)
          elst0 = parse_ctns(fname)[-1]
+         # computed
          fname = tmpdir+"/"+prefix+"ctns.out"
          print('fname[cal]=',fname)
-         elst1 = parse_ctns(fname)[-1]
-         ediff = numpy.linalg.norm(elst0 - elst1)
-         print('eref=',elst0)
-         print('ecal=',elst1)
-         print('ediff=',ediff)
-         if ediff < thresh:
-            print("pass")
+         if(os.path.exists(fname)):
+             try:
+                elst1 = parse_ctns(fname)[-1]
+                ediff = numpy.linalg.norm(elst0 - elst1)
+                print('eref=',elst0)
+                print('ecal=',elst1)
+                print('ediff=',ediff)
+                if ediff < thresh:
+                   print("pass")
+                else:
+                   print("fail: different results")
+                   nfail += 1
+             except:
+                 print("fail: output is problematic")
+                 nfail += 1
+                 break
          else:
-            print("fail")
-            nfail += 1
+               print("fail: no output is found")
+               nfail += 1
       os.chdir(parrent)
-   print("\nSummary: nfail =",nfail) 
    return nfail
 
 def test_run(dirs):
    nfail = 0
+   failed = []
    t0 = time.time()
    for fname in dirs:
       fdir = [fname]
       testAll(fdir)
-      nfail += compareAll(fdir,nfail)
+      nfail_out = compareAll(fdir,nfail)
+      if nfail_out != nfail:
+          failed.append(fname)
+          nfail = nfail_out
+      print("\nSummary: nfail =",nfail) 
+      print('failed tests:',failed)
    t1 = time.time()
    print('\ntotol time =',t1-t0)
    return nfail

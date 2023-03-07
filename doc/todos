@@ -241,22 +241,21 @@ KNOWN PROBLEMS
 
  * Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magma size is int]
  * Better reduction algorithm using GEMV [DONE@20230301]
- * Add more tests [DONE@20230301]
-
- * Profiling: Check fetch time & CPU memory for Fe8S7 !!!
+ * Add more tests in examples [DONE@20230301]
+ * Problem for large arrays: [DONE@20230307] 
+   - bypass the 2GB limit in MPI_COUNT by partitioned broadcast & reduce
+   - Fix int32 & int64 problem in blas/lapack using MKL_INT [ndim is int]
 
  * Support restart isweep & ibond !
      0. restructure rsites/rwfuns/psi into cpsi/sites - more compact [DONE@20220305]
      1. fix guess error [DONE@20220306]
      2. fix last conversion into RCF [DONE@20220306]
-     3. add dump RCF at each step [DONE20220306]
-     4. support restart by loading RCF?
+     3. add dump RCF at each step [DONE@20220306]
+     4. support restart by loading RCF? [DONE@20220307]
      5. support restart at a particular ibond?
 
- * Problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
-   - Fix int32 & int64 problem? 2GB problem
-   - How stackblock & block2 deal with this problem? 
- 
+ * Profiling: Check fetch time & CPU memory for Fe8S7 !!!
+
  >>> Support Renorm with GPU
  >>> Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
  >>> Support Intermediate with GPU?
