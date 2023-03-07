@@ -21,10 +21,9 @@
 #include "preprocess_sigma2.h"
 #include "preprocess_sigma_batch.h"
 #ifndef SERIAL
-#include "mpi_wrapper.h"
+#include "../core/mpi_wrapper.h"
 #endif
 #ifdef GPU
-#include "gpu_env.h"
 #include "preprocess_sigma_batchGPU.h"
 #endif
 

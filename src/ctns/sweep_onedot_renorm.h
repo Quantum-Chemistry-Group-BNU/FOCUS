@@ -4,7 +4,7 @@
 #include "oper_io.h"
 #include "sweep_decimation.h"
 #ifndef SERIAL
-#include "mpi_wrapper.h"
+#include "../core/mpi_wrapper.h"
 #endif
 
 namespace ctns{

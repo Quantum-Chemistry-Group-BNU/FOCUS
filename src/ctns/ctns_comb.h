@@ -1,14 +1,14 @@
 #ifndef CTNS_COMB_H
 #define CTNS_COMB_H
 
-#ifndef SERIAL
-#include <boost/mpi.hpp>
-#endif
-
 #include "qtensor/qtensor.h"
 #include "ctns_topo.h"
 #include "init_rbasis.h"
 #include "init_phys.h" // get_qbond_vac
+
+#ifndef SERIAL
+#include "../core/mpi_wrapper.h"
+#endif
 
 namespace ctns{
 
@@ -155,5 +155,25 @@ namespace ctns{
       };
 
 } // ctns
+
+#ifndef SERIAL
+
+namespace mpi_wrapper{
+
+   // icomb: assuming the individual size of sites is small
+   template <typename Tm>
+      void broadcast(const boost::mpi::communicator & comm, ctns::comb<Tm>& icomb, int root){
+         boost::mpi::broadcast(comm, icomb.topo, root);
+         boost::mpi::broadcast(comm, icomb.rbases, root);
+         // sites could be packed in future: 
+         // https://gist.github.com/hsidky/2f0e075095026d2ebda1
+         for(int i=0; i<icomb.topo.ntotal; i++){
+            boost::mpi::broadcast(comm, icomb.sites[i], root);
+         }
+      }
+
+} // mpi_wrapper
+
+#endif
 
 #endif

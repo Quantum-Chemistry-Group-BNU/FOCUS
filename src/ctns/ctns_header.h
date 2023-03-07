@@ -8,8 +8,5 @@
 #include "ctns_oper.h" 
 #include "ctns_sweep.h"
 #include "preprocess_distribution.h"
-#ifndef SERIAL
-#include "mpi_wrapper.h"
-#endif
 
 #endif

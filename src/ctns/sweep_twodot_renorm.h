@@ -5,7 +5,7 @@
 #include "sweep_decimation.h"
 #include "sweep_onedot_renorm.h"
 #ifndef SERIAL
-#include "mpi_wrapper.h"
+#include "../core/mpi_wrapper.h"
 #endif
 
 namespace ctns{

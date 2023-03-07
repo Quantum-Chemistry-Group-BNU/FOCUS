@@ -1,14 +1,6 @@
 #ifndef OPER_RENORM_H
 #define OPER_RENORM_H
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
-#ifndef SERIAL
-#include "mpi_wrapper.h"
-#endif
-
 #include "oper_timer.h"
 #include "oper_functors.h"
 #include "oper_normxwf.h"
@@ -16,6 +8,14 @@
 #include "oper_rbasis.h"
 #include "symbolic_kernel_renorm.h"
 #include "symbolic_kernel_renorm2.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+#ifndef SERIAL
+#include "../core/mpi_wrapper.h"
+#endif
 
 namespace ctns{
 

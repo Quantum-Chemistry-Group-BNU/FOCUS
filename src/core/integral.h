@@ -13,6 +13,10 @@
 #include "tools.h"
 #include "serialization.h"
 
+#ifndef SERIAL
+#include "mpi_wrapper.h"
+#endif
+
 namespace integral{
 
    // one-electron integral h[i,j] [full in column-major storage]	
@@ -226,5 +230,23 @@ namespace integral{
       }
 
 } // integral
+
+#ifndef SERIAL
+
+namespace mpi_wrapper{
+
+   // int2e: assuming int2e.data is large
+   template <typename Tm>
+      void broadcast(const boost::mpi::communicator & comm, integral::two_body<Tm>& int2e, int root){
+         int rank = comm.rank();
+         boost::mpi::broadcast(comm, int2e.sorb, root);
+         if(rank != root) int2e.init_mem();
+         boost::mpi::broadcast(comm, int2e.Q, root);
+         broadcast(comm, int2e.data.data(), int2e.data.size(), root);
+      }
+
+} // mpi_wrapper
+
+#endif
 
 #endif

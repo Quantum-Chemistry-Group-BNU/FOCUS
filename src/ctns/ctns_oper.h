@@ -2,8 +2,9 @@
 #define CTNS_OPER_H
 
 #include "oper_env.h"
+
 #ifndef SERIAL
-#include "mpi_wrapper.h"
+#include "../core/mpi_wrapper.h"
 #endif
 
 namespace ctns{

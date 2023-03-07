@@ -1,11 +1,11 @@
 #ifndef PDVDSON_KRAMERS_H
 #define PDVDSON_KRAMERS_H
 
-#ifndef SERIAL
-#include "../mpi_wrapper.h"
-#endif
-
 #include "../../core/ortho.h"
+
+#ifndef SERIAL
+#include "../../core/mpi_wrapper.h"
+#endif
 
 namespace ctns{
 
