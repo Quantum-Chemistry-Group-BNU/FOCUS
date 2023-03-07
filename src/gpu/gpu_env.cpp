@@ -9,16 +9,16 @@ gpu_mem gpumem = {};
 void gpu_init(int rank)
 {
    magma_queue = 0;
-   int device_id = -1;
+   magma_device_t device_id = -1;
 
    magma_device_t devices[MAXGPUS];
-   magma_int_t num_gpus=0;
+   magma_int_t num_gpus = 0;
 
    magma_init();
    magma_getdevices(devices, MAXGPUS, &num_gpus);
    if(num_gpus == 0)
    {
-      std::cout<<"no GPU avail !"<<std::endl;
+      std::cout<<"error: no GPU available!"<<std::endl;
       exit(1);
    }
    magma_setdevice(rank % num_gpus);

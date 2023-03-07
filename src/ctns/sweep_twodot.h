@@ -565,7 +565,7 @@ namespace ctns{
                   for(int j=0; j<mmtasks[i].mmreduce.size(); j++){
                      const auto& red = mmtasks[i].mmreduce[j];
                      fout << "iblk=" << i << " ibatch=" << j 
-                        << " size=" << red.size << " ndim=" << red.ndim
+                        << " batchsize=" << red.batchsize << " ndim=" << red.ndim
                         << std::endl;      
                   }
                }

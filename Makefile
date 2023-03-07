@@ -1,5 +1,5 @@
 
-machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no #yes
 USE_GCC = yes
@@ -107,7 +107,7 @@ endif
 ifeq ($(strip $(USE_OPENMP)),no)
    # serial version of MKL
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -ldl
+          -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -ldl
    # mac framework Accelerate
    #MATH = -llapack -lblas 
 else
@@ -119,12 +119,12 @@ else
    # https:/.aftware.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-adv.ar.html	
    # parallel version of MKL
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -ldl \
+          -lmkl_intel_ilp64 -lmkl_core -lmkl_intel_thread -lpthread -ldl \
    	  -liomp5
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
 endif
 # quaternion matrix diagonalization
-MATH += -L./extlibs/zquatev -lzquatev
+MATH += -L./extlibs/zquatev -lzquatev -DMKL_ILP64
 LFLAGS += ${MATH}
 
 # IO

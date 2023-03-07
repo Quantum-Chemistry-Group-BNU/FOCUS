@@ -63,8 +63,8 @@ namespace linalg{
 #else
       CUDA_CHECK(cudaMemcpy(dev_X, X, size, cudaMemcpyHostToDevice));
 #endif// USE_HIP
-      magmaDoubleComplex alpha1{alpha->real(),alpha->imag()};
-      magmaDoubleComplex beta1{beta->real(),beta->imag()};
+      magmaDoubleComplex alpha1{alpha.real(),alpha.imag()};
+      magmaDoubleComplex beta1{beta.real(),beta.imag()};
       magma_zgemv(transA, M, N, alpha1, (magmaDoubleComplex *)A, LDA,
             (magmaDoubleComplex *)dev_X, INCX, beta1, (magmaDoubleComplex *)Y, INCY, magma_queue);
       gpumem.deallocate(dev_X, size);
