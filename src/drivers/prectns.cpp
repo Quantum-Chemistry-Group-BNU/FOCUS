@@ -5,9 +5,6 @@
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
-#ifndef SERIAL
-#include <boost/mpi.hpp>
-#endif
 
 using namespace std;
 using namespace fock;
@@ -32,7 +29,7 @@ void preCTNS(const input::schedule& schd){
    // only perform initialization
    if(schd.ctns.task_init) return;
 #ifndef SERIAL
-   boost::mpi::broadcast(schd.world, icomb, 0);
+   mpi_wrapper::broadcast(schd.world, icomb, 0);
    icomb.world = schd.world;
 #endif
 

@@ -5,9 +5,6 @@
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
-#ifndef SERIAL
-#include <boost/mpi.hpp>
-#endif
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -84,7 +81,7 @@ void CTNS(const input::schedule& schd){
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
 
 #ifndef SERIAL
-   boost::mpi::broadcast(schd.world, icomb, 0);
+   mpi_wrapper::broadcast(schd.world, icomb, 0);
    icomb.world = schd.world;
 #endif
 
@@ -107,9 +104,9 @@ void CTNS(const input::schedule& schd){
       double ecore;
       if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
 #ifndef SERIAL
-      boost::mpi::broadcast(schd.world, int1e, 0);
-      boost::mpi::broadcast(schd.world, int2e, 0);
       boost::mpi::broadcast(schd.world, ecore, 0);
+      boost::mpi::broadcast(schd.world, int1e, 0);
+      mpi_wrapper::broadcast(schd.world, int2e, 0);
 #endif
       // create scratch
       auto scratch = schd.scratch+"/sweep";

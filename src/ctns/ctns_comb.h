@@ -5,53 +5,41 @@
 #include <boost/mpi.hpp>
 #endif
 
-#include "../core/serialization.h"
 #include "qtensor/qtensor.h"
 #include "ctns_topo.h"
 #include "init_rbasis.h"
-#include "init_phys.h" // get_qbond_phys
+#include "init_phys.h" // get_qbond_vac
 
 namespace ctns{
 
-   template <typename Tm, typename Qm>
-      size_t display_vec_size(const Qm& vec, std::string name){
-         std::cout << " " << name << ": len=" << vec.size() << " mem=";
-         size_t sz = 0;
-         for(int i=0; i<vec.size(); i++){
-            sz += vec[i].size();
-         }
-         std::cout << sz << ":" 
-            << tools::sizeMB<Tm>(sz) << "MB:"
-            << tools::sizeGB<Tm>(sz) << "GB"
-            << std::endl;
-         return sz;
-      }
-
    template <typename Km>
-      class comb{
-         private:
-            // serialize [for MPI] in src/drivers/ctns.cpp
-            friend class boost::serialization::access;	   
-            template <class Archive>
-               void serialize(Archive & ar, const unsigned int version){
-                  ar & topo
-                     & rbases // ZL@20220606: for usage in debug oper_rbasis
-                     & sites;
-                  & cpsi;
-               }
+      struct comb{
          public:
             // constructors
             comb(){
                if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
             }
+            // print size of vectors
+            template <typename Qm>
+               size_t display_vec_size(const std::vector<Qm>& vec, std::string name) const{
+                  std::cout << " " << name << ": len=" << vec.size() << " mem=";
+                  size_t sz = 0;
+                  for(int i=0; i<vec.size(); i++){
+                     sz += vec[i].size();
+                  }
+                  std::cout << sz << ":" 
+                     << tools::sizeMB<typename Km::dtype>(sz) << "MB:"
+                     << tools::sizeGB<typename Km::dtype>(sz) << "GB"
+                     << std::endl;
+                  return sz;
+               }
             // print size 
             size_t display_size() const{
                std::cout << "comb::display_size" << std::endl;
                size_t sz = 0;
-               using Tm = typename Km::dtype;
-               sz += display_vec_size<Tm>(rbases, "rbases");
-               sz += display_vec_size<Tm>(sites, "sites");
-               sz += display_vec_size<Tm>(cpsi, "cpsi");
+               sz += this->display_vec_size<Km>(rbases, "rbases");
+               sz += this->display_vec_size<Km>(sites, "sites");
+               sz += this->display_vec_size<Km>(cpsi, "cpsi");
                std::cout << "total mem of comb=" << sz << ":" 
                   << tools::sizeMB<Tm>(sz) << "MB:"
                   << tools::sizeGB<Tm>(sz) << "GB"
@@ -105,8 +93,8 @@ namespace ctns{
             void site0_to_cpsi1(const int nroots){
                if(this->get_rcanon_nroots() < nroots){
                   std::cout << "dim(psi0)=" << this->get_rcanon_nroots() 
-                            << " nroots=" << nroots 
-                            << std::endl;
+                     << " nroots=" << nroots 
+                     << std::endl;
                   tools::exit("error in initiate_psi0: requested nroots exceed!");
                }
                // site0_to_cpsi0 & cpsi0_to_cpsi1
@@ -133,7 +121,7 @@ namespace ctns{
                         } // im
                      } // bm
                   } // bc
-                  // construct cpsi1
+                    // construct cpsi1
                   auto wf2 = cpsi0.merge_lc(); // (1,n,r)->(n,r)
                   cpsi[iroot] = contract_qt3_qt2("l", site1, wf2);
                }  // iroot

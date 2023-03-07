@@ -2,6 +2,9 @@
 #define CTNS_OPER_H
 
 #include "oper_env.h"
+#ifndef SERIAL
+#include "mpi_wrapper.h"
+#endif
 
 namespace ctns{
 
@@ -35,7 +38,7 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    if(!schd.ctns.ifdist1 and size > 1){
       // reduction of partial H formed on each processor if ifdist1 = false
       linalg::matrix<Tm> Hmat2(Hmat.rows(),Hmat.cols());
-      boost::mpi::reduce(icomb.world, Hmat, Hmat2, std::plus<linalg::matrix<Tm>>(), 0);
+      mpi_wrapper::reduce(icomb.world, Hmat.data(), Hmat.size(), Hmat2.data(), std::plus<linalg::matrix<Tm>>(), 0);
       Hmat = Hmat2;
    }
 #endif 

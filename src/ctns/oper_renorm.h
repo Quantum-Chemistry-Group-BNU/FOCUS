@@ -5,6 +5,10 @@
 #include <omp.h>
 #endif
 
+#ifndef SERIAL
+#include "mpi_wrapper.h"
+#endif
+
 #include "oper_timer.h"
 #include "oper_functors.h"
 #include "oper_normxwf.h"
@@ -12,10 +16,6 @@
 #include "oper_rbasis.h"
 #include "symbolic_kernel_renorm.h"
 #include "symbolic_kernel_renorm2.h"
-#ifndef SERIAL
-#include <boost/mpi.hpp>
-#endif
-
 
 namespace ctns{
 
@@ -128,8 +128,7 @@ namespace ctns{
                int iproc = distribute1(ifkr,size,p);
                auto& opS = qops('S')[p];
                int opsize = opS.size();
-               boost::mpi::reduce(icomb.world, opS.data(), opsize, 
-                     top.data(), std::plus<Tm>(), iproc);
+               mpi_wrapper::reduce(icomb.world, opS.data(), opsize, top.data(), std::plus<Tm>(), iproc);
                if(iproc == rank){ 
                   linalg::xcopy(opsize, top.data(), opS.data());
                }else{
@@ -139,8 +138,7 @@ namespace ctns{
             // H[0] += \sum_i H[i]
             auto& opH = qops('H')[0];
             int opsize = opH.size();
-            boost::mpi::reduce(icomb.world, opH.data(), opsize,
-                  top.data(), std::plus<Tm>(), 0);
+            mpi_wrapper::reduce(icomb.world, opH.data(), opsize, top.data(), std::plus<Tm>(), 0);
             if(rank == 0){ 
                linalg::xcopy(opsize, top.data(), opH.data());
             }else{

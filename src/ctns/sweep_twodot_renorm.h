@@ -4,6 +4,9 @@
 #include "oper_io.h"
 #include "sweep_decimation.h"
 #include "sweep_onedot_renorm.h"
+#ifndef SERIAL
+#include "mpi_wrapper.h"
+#endif
 
 namespace ctns{
 
@@ -241,7 +244,7 @@ namespace ctns{
                   superblock, ksupp, vsol, wf, rot, fname);
          }
 #ifndef SERIAL
-         if(size > 1) boost::mpi::broadcast(icomb.world, rot, 0); 
+         if(size > 1) mpi_wrapper::broadcast(icomb.world, rot, 0); 
 #endif
          timing.td = tools::get_time();
 

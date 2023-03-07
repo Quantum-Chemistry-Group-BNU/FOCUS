@@ -2,7 +2,7 @@
 #define PDVDSON_H
 
 #ifndef SERIAL
-#include <boost/mpi.hpp>
+#include "../mpi_wrapper.h"
 #endif
 
 #include "../../core/ortho.h"
@@ -77,7 +77,7 @@ namespace ctns{
 #ifndef SERIAL
                   if(size > 1){
                      std::vector<Tm> y_sum(ndim);
-                     boost::mpi::reduce(world, y+istate*ndim, ndim, y_sum.data(), std::plus<Tm>(), 0);
+                     mpi_wrapper::reduce(world, y+istate*ndim, ndim, y_sum.data(), std::plus<Tm>(), 0);
                      linalg::xcopy(ndim, y_sum.data(), y+istate*ndim);
                   }
                   auto t2 = tools::get_time();
@@ -254,7 +254,7 @@ namespace ctns{
                   linalg::check_orthogonality(ndim, neig, vbas);
                }
 #ifndef SERIAL
-               if(size > 1) boost::mpi::broadcast(world, vbas, 0);
+               if(size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
 #endif
                HVecs(neig, wbas.data(), vbas.data());
 
@@ -290,10 +290,10 @@ namespace ctns{
                   // if converged, return (es,vs) 
                   if(ifconv || iter == maxcycle){
 #ifndef SERIAL
+                     // broadcast converged results to all processors
                      if(size > 1){
-                        // broadcast results to all processors
                         boost::mpi::broadcast(world, tmpE.data(), neig, 0);
-                        boost::mpi::broadcast(world, vbas.data(), ndim*neig, 0);
+                        mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
                      }
 #endif
                      linalg::xcopy(neig, tmpE.data(), es);
@@ -321,7 +321,7 @@ namespace ctns{
                      exit(1);
                   }else{
 #ifndef SERIAL
-                     if(size > 1) boost::mpi::broadcast(world, &rbas[0], ndim*nindp, 0);
+                     if(size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0);
 #endif	       
                      linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]); 
                      HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);

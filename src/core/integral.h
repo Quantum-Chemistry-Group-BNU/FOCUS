@@ -63,13 +63,6 @@ namespace integral{
    // diagonal term Qij = <ij||ij> (i>j)
    template <typename Tm>
       struct two_body{
-         private:
-            // serialize
-            friend class boost::serialization::access;	   
-            template <class Archive>
-               void serialize(Archive & ar, const unsigned int version){
-                  ar & sorb & data & Q;
-               }
          public:
             void init_mem(){
                assert(sorb > 0);

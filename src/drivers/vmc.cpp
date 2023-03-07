@@ -36,9 +36,9 @@ void VMC(const input::schedule& schd,
    double ecore;
    if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
 #ifndef SERIAL
-   boost::mpi::broadcast(schd.world, int1e, 0);
-   boost::mpi::broadcast(schd.world, int2e, 0);
    boost::mpi::broadcast(schd.world, ecore, 0);
+   boost::mpi::broadcast(schd.world, int1e, 0);
+   mpi_wrapper::broadcast(schd.world, int2e, 0);
 #endif
      
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);

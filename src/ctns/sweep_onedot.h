@@ -16,6 +16,9 @@
 #include "preprocess_sigma.h"
 #include "preprocess_sigma2.h"
 #include "preprocess_sigma_batch.h"
+#ifndef SERIAL
+#include "mpi_wrapper.h"
+#endif
 
 namespace ctns{
 
@@ -116,7 +119,7 @@ namespace ctns{
          // executes the preconditioning in Davidson's algorithm
          if(size > 1){
             std::vector<double> diag2(ndim);
-            boost::mpi::reduce(icomb.world, diag, diag2, std::plus<double>(), 0);
+            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0);
             diag = std::move(diag2);
          }
 #endif 
