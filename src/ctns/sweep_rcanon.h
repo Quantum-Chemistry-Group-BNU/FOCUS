@@ -20,7 +20,7 @@ namespace ctns{
 #endif 
          // LCRRR -> CRRRR
          if(rank == 0){
-            auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(isweep)+".info";
+            auto rcanon_file = scratch+"/rcanon_isweep"+std::to_string(isweep)+".info";
             std::cout << "ctns::sweep_rcanon: convert into RCF & save into "
                << rcanon_file << std::endl;
             std::cout << tools::line_separator << std::endl;
@@ -30,7 +30,7 @@ namespace ctns{
             // such that they are not orthonormal any more, which can happens for
             // small bond dimension. 
             size_t ndim = wf.size();
-            int nroots = icomb.get_nroots();
+            int nroots = icomb.cpsi.size();
             std::vector<Tm> v0(ndim*nroots);
             for(int i=0; i<nroots; i++){
                icomb.cpsi[i].to_array(&v0[ndim*i]);
@@ -65,10 +65,10 @@ namespace ctns{
             // compute C0 
             for(int i=0; i<nroots; i++){
                auto cwf = icomb.cpsi[i].merge_cr().dot(rot.H()); // <-W[l,alpha]->
-               auto psi = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.T());
+               auto psi = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.T()); // A0(1,n,r)
                icomb.cpsi[i] = std::move(psi);
             }
-            icomb.stack_cpsi();
+            icomb.cpsi0_to_site0();
             ctns::rcanon_save(icomb, rcanon_file);
             ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
             std::cout << "..... end of isweep = " << isweep << " .....\n" << std::endl;

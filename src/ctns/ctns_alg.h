@@ -133,7 +133,7 @@ namespace ctns{
          const auto& wfcoeff = qt2_r; 
          assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
          // finally return coeff = <n|CTNS[i]> as a vector 
-         int n = icomb.get_nroots(); 
+         int n = icomb.get_rcanon_nroots(); 
          std::vector<Tm> coeff(n,0.0);
          // in case this CTNS does not encode this det, no such block 
          const auto blk2 = wfcoeff(0,0);
@@ -152,7 +152,7 @@ namespace ctns{
             const linalg::matrix<typename Km::dtype>& vs,
             const double thresh=1.e-8){
          std::cout << "\nctns::rcanon_CIcoeff_check" << std::endl;
-         int n = icomb.get_nroots(); 
+         int n = icomb.get_rcanon_nroots(); 
          int dim = space.size();
          double maxdiff = -1.e10;
          // cmat[j,i] = <D[i]|CTNS[j]>
@@ -179,7 +179,7 @@ namespace ctns{
             const linalg::matrix<typename Km::dtype>& vs){
          using Tm = typename Km::dtype;
          std::cout << "\nctns::rcanon_CIovlp" << std::endl;
-         int n = icomb.get_nroots(); 
+         int n = icomb.get_rcanon_nroots(); 
          int dim = space.size();
          // cmat[n,i] = <D[i]|CTNS[n]>
          linalg::matrix<Tm> cmat(n,dim);
@@ -202,7 +202,7 @@ namespace ctns{
          std::cout << "\nctns::rcanon_Sdiag_exact iroot=" << iroot
             << " thresh_print=" << thresh_print << std::endl;
          // setup FCI space
-         qsym sym_state = icomb.get_sym_state();
+         qsym sym_state = icomb.get_rcanon_sym();
          int ne = sym_state.ne(); 
          int ks = icomb.get_nphysical();
          fock::onspace fci_space;

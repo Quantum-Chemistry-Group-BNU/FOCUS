@@ -49,7 +49,7 @@ namespace ctns{
                std::cout << tools::line_separator2 << std::endl;
             }
 
-            icomb.initiate_psi0(schd.ctns.nroots);
+            icomb.site0_to_cpsi1(schd.ctns.nroots);
             icomb.display_size();
 
             // restart case

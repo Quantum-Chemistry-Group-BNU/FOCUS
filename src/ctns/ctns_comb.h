@@ -37,17 +37,13 @@ namespace ctns{
                   ar & topo
                      & rbases // ZL@20220606: for usage in debug oper_rbasis
                      & sites;
-                     & cpsi;
+                  & cpsi;
                }
          public:
             // constructors
             comb(){
                if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
             }
-            // helpers
-            int get_nphysical() const{ return topo.nphysical; }
-            qsym get_sym_state() const{ return cpsi[0].info.sym; }
-            int get_nroots() const{ return cpsi.size(); }
             // print size 
             size_t display_size() const{
                std::cout << "comb::display_size" << std::endl;
@@ -62,14 +58,26 @@ namespace ctns{
                   << std::endl;
                return sz;
             }
+            // helpers
+            int get_nphysical() const{ return topo.nphysical; }
+            qsym get_rcanon_sym() const{
+               const auto& site0 = sites[topo.rindex.at(std::make_pair(0,0))];
+               assert(site0.rows() == 1);
+               return site0.info.qrow.get_sym(0);
+            }
+            int get_rcanon_nroots() const{
+               const auto& site0 = sites[topo.rindex.at(std::make_pair(0,0))];
+               assert(site0.rows() == 1);
+               return site0.info.qrow.get_dim(0);
+            }
             // stack_cpsi at the first site in right canonical form
             //          |                      |       
             // state ->-|->- [RCF]  <=  vac -<-|->- [cpsi] 
             //         /|\                    /|\
             //          vac                  state  
-            void stack_cpsi(){
-               int nroots = this->get_nroots();
-               qsym sym_state = this->get_sym_state();
+            void cpsi0_to_site0(){
+               int nroots = cpsi.size();
+               qsym sym_state = cpsi[0].info.sym;
                qbond qrow({{sym_state, nroots}});
                qbond qcol = cpsi[0].info.qcol;
                qbond qmid = cpsi[0].info.qmid;
@@ -92,26 +100,49 @@ namespace ctns{
                } // bc
                sites[topo.rindex.at(std::make_pair(0,0))] = std::move(site0);
             }
-            // initiate sweep: generate initial guess for 
+            // used in initialization:  generate initial guess for 
             // the initial sweep optimization at p=(1,0): CRRR => LCRR (L=Id)
-            void initiate_psi0(const int nroots){
-               if(cpsi.size() < nroots){
-                  std::cout << "dim(psi0)=" << cpsi.size() << " nroots=" << nroots << std::endl;
+            void site0_to_cpsi1(const int nroots){
+               if(this->get_rcanon_nroots() < nroots){
+                  std::cout << "dim(psi0)=" << this->get_rcanon_nroots() 
+                            << " nroots=" << nroots 
+                            << std::endl;
                   tools::exit("error in initiate_psi0: requested nroots exceed!");
                }
+               // site0_to_cpsi0 & cpsi0_to_cpsi1
+               auto& site0 = sites[topo.rindex.at(std::make_pair(0,0))];
                const auto& site1 = sites[topo.rindex.at(std::make_pair(1,0))];
-               std::vector<stensor3<Tm>> psi0(nroots);
+               qsym sym_state = this->get_rcanon_sym();
+               qbond qcol = site0.info.qcol;
+               qbond qmid = site0.info.qmid;
+               cpsi.resize(nroots);
                for(int iroot=0; iroot<nroots; iroot++){
-                  auto wf2 = cpsi[iroot].merge_lc(); // (1,n,r)->(n,r)
-                  psi0[iroot] = contract_qt3_qt2("l", site1, wf2);
-               }
-               cpsi = std::move(psi0);
-               sites[topo.rindex.at(std::make_pair(0,0))] = get_left_bsite<Tm>(Km::isym);
+                  // construct cpsi0
+                  stensor3<Tm> cpsi0(sym_state, get_qbond_vac(Km::isym), site0.info.qcol, site0.info.qmid, dir_WF3);
+                  for(int bc=0; bc<qcol.size(); bc++){
+                     for(int bm=0; bm<qmid.size(); bm++){                        
+                        auto blk = cpsi0(0,bc,bm);
+                        if(blk.empty()) continue;
+                        int cdim = qcol.get_dim(bc);
+                        int mdim = qmid.get_dim(bm);
+                        for(int im=0; im<mdim; im++){
+                           for(int ic=0; ic<cdim; ic++){
+                              const auto blk0 = site0(0,bc,bm);
+                              blk(0,ic,im) = blk0(iroot,ic,im); 
+                           } // ic
+                        } // im
+                     } // bm
+                  } // bc
+                  // construct cpsi1
+                  auto wf2 = cpsi0.merge_lc(); // (1,n,r)->(n,r)
+                  cpsi[iroot] = contract_qt3_qt2("l", site1, wf2);
+               }  // iroot
+               site0 = get_left_bsite<Tm>(Km::isym); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
             }
             // rank-2 wavefunction at the first site: ->-*->- in ctns_alg.h
             stensor2<typename Km::dtype> get_rwfun(const int iroot) const{
-               int nroots = this->get_nroots();
-               qsym sym_state = this->get_sym_state();
+               int nroots = this->get_rcanon_nroots();
+               qsym sym_state = this->get_rcanon_sym();
                qbond qrow({{sym_state, 1}});
                qbond qcol({{sym_state, nroots}});
                stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, dir_RWFUN);

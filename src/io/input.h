@@ -149,7 +149,7 @@ namespace input{
          double damping = 1.e-10;
          // io
          bool rcanon_load = false;
-         std::string rcanon_file = "rcanon.info";
+         std::string rcanon_file = "rcanon_ci.info";
          // oper_pool
          int iomode = 0;
          int ioasync = 0;

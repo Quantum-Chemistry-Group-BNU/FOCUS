@@ -334,7 +334,7 @@ namespace ctns{
          
          // for later convenience of computing properties with right canonical form, 
          // we always replace icomb.sites[icomb.topo.ntotal-1] by a stack of cpsi 
-         icomb.stack_cpsi();
+         icomb.cpsi0_to_site0();
 
          // check overlaps
          if(debug_init){
