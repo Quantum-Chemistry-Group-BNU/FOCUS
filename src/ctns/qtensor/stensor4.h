@@ -22,7 +22,7 @@ namespace ctns{
                void save(Archive & ar, const unsigned int version) const{
                   ar & own & info;
                   if(own){
-                     for(int i=0; i<info._size; i++){
+                     for(size_t i=0; i<info._size; i++){
                         ar & _data[i];
                      }
                   }
@@ -32,7 +32,7 @@ namespace ctns{
                   ar & own & info;
                   if(own){
                      _data = new Tm[info._size];
-                     for(int i=0; i<info._size; i++){
+                     for(size_t i=0; i<info._size; i++){
                         ar & _data[i];
                      }
                   }

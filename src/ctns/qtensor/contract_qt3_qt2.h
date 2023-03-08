@@ -70,7 +70,7 @@ namespace ctns{
             int rdim = qt3_info.qrow.get_dim(br);
             int cdim = qt3_info.qcol.get_dim(bc);
             int mdim = qt3_info.qmid.get_dim(bm);
-            int size = rdim*cdim*mdim;
+            size_t size = rdim*cdim*mdim;
             bool ifzero = true;
             // find contracted index for
             // qt3(r,c,m) = \sum_x qt2(r,x)*qt3a(x,c,m) ; iftrans=false 
@@ -121,7 +121,7 @@ namespace ctns{
             int rdim = qt3_info.qrow.get_dim(br);
             int cdim = qt3_info.qcol.get_dim(bc);
             int mdim = qt3_info.qmid.get_dim(bm);
-            int size = rdim*cdim*mdim;
+            size_t size = rdim*cdim*mdim;
             bool ifzero = true;
             // find contracted index for
             // qt3(r,c,m) = \sum_x qt2(c,x)*qt3a(r,x,m) ; iftrans=false 
@@ -178,7 +178,7 @@ namespace ctns{
             int rdim = qt3_info.qrow.get_dim(br);
             int cdim = qt3_info.qcol.get_dim(bc);
             int mdim = qt3_info.qmid.get_dim(bm);
-            int size = rdim*cdim*mdim;
+            size_t size = rdim*cdim*mdim;
             bool ifzero = true;
             // find contracted index for
             // qt3(r,c,m) = \sum_x qt2(m,x)*qt3a(r,c,x) ; iftrans=false 

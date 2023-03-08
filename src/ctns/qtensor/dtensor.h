@@ -77,7 +77,7 @@ namespace ctns{
          public:
             Tm* _data = nullptr;
             int dim0 = 0, dim1 = 0; 
-            int _size = 0;
+            size_t _size = 0;
       };
 
    // O[l,r,c]
@@ -139,7 +139,7 @@ namespace ctns{
          public:
             Tm* _data = nullptr;
             int dim0 = 0, dim1 = 0, dim2 = 0;
-            int _size = 0;
+            size_t _size = 0;
       };
 
    // O[l,r,c1,c2]
@@ -213,7 +213,7 @@ namespace ctns{
          public:
             Tm* _data = nullptr;
             int dim0 = 0, dim1 = 0, dim2 = 0, dim3 = 0;
-            int _size = 0;
+            size_t _size = 0;
       };
 
    // 

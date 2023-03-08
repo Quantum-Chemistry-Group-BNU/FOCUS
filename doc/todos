@@ -253,6 +253,7 @@ KNOWN PROBLEMS
      3. add dump RCF at each step [DONE@20220306]
      4. support restart by loading RCF? [DONE@20220307]
      5. support restart at a particular ibond?
+     6. resolve cNK bugs? zquatev - MKL_INT?
 
  * Profiling: Check fetch time & CPU memory for Fe8S7 !!!
 

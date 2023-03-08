@@ -74,7 +74,7 @@ namespace ctns{
             int cdim = qt4_info.qcol.get_dim(bc);
             int mdim = qt4_info.qmid.get_dim(bm);
             int vdim = qt4_info.qver.get_dim(bv);
-            int size = rdim*cdim*mdim*vdim;
+            size_t size = rdim*cdim*mdim*vdim;
             bool ifzero = true;
             // find contracted index for
             // qt4(r,c,m,v) = \sum_x qt2(r,x)*qt4a(x,c,m,v) ; iftrans=false 
@@ -126,7 +126,7 @@ namespace ctns{
             int cdim = qt4_info.qcol.get_dim(bc); 
             int mdim = qt4_info.qmid.get_dim(bm);
             int vdim = qt4_info.qver.get_dim(bv);
-            int size = rdim*cdim*mdim*vdim;
+            size_t size = rdim*cdim*mdim*vdim;
             bool ifzero = true;
             // find contracted index for
             // qt4(r,c,m,v) = \sum_x qt2(c,x)*qt4a(r,x,m,v) ; iftrans=false 
@@ -186,7 +186,7 @@ namespace ctns{
             int cdim = qt4_info.qcol.get_dim(bc);
             int mdim = qt4_info.qmid.get_dim(bm);
             int vdim = qt4_info.qver.get_dim(bv);
-            int size = rdim*cdim*mdim*vdim;
+            size_t size = rdim*cdim*mdim*vdim;
             bool ifzero = true;
             // find contracted index for
             // qt4(r,c,m,v) = \sum_x qt2(m,x)*qt4a(r,c,x,v) ; iftrans=false 
@@ -245,7 +245,7 @@ namespace ctns{
             int cdim = qt4_info.qcol.get_dim(bc);
             int mdim = qt4_info.qmid.get_dim(bm);
             int vdim = qt4_info.qver.get_dim(bv);
-            int size = rdim*cdim*mdim*vdim;
+            size_t size = rdim*cdim*mdim*vdim;
             bool ifzero = true;
             // find contracted index for
             // qt4(r,c,m,v) = \sum_x qt2(v,x)*qt4a(r,c,m,x) ; iftrans=false 
