@@ -34,7 +34,7 @@ void CTNS(const input::schedule& schd){
       // dealing with topology 
       icomb.topo.read(schd.ctns.topology_file);
       icomb.topo.print();
-      if(!schd.ctns.task_restart){
+      if(schd.ctns.restart_sweep == 0){
          // initialize RCF 
          auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
          if(!schd.ctns.rcanon_load){
@@ -69,13 +69,21 @@ void CTNS(const input::schedule& schd){
                exit(1);
             }
          }else{
-            ctns::rcanon_load(icomb, rcanon_file);
+            ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
          } // rcanon_load
-         ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
       }else{
-         // restart from disk
-         std::cout << "ERROR: NOT IMPLEMENTED YET!" << std::endl;
-      } // task_restart
+         // restart a broken calculation from disk
+         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1)+".info";
+         if(schd.ctns.restart_sweep > schd.ctns.maxsweep){
+            std::cout << "error: restart_sweep exceed maxsweep!" << std::endl;
+            std::cout << "restart_sweep=" << schd.ctns.restart_sweep
+                      << "maxsweep=" << schd.ctns.maxsweep
+                      << std::endl;
+            exit(1);
+         }
+         ctns::rcanon_load(icomb, rcanon_file);
+      }
+      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
    } // rank 0
 
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
@@ -97,7 +105,7 @@ void CTNS(const input::schedule& schd){
    }
 
    // compute hamiltonian or optimize ctns by dmrg algorithm
-   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_restart){
+   if(schd.ctns.task_ham || schd.ctns.task_opt){
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -111,7 +119,7 @@ void CTNS(const input::schedule& schd){
       // create scratch
       auto scratch = schd.scratch+"/sweep";
       if(schd.ctns.task_ham){
-         io::remove_scratch(scratch, (rank == 0)); // task_opt will not recreate 
+         io::remove_scratch(scratch, (rank == 0)); // start a new scratch
       }
       io::create_scratch(scratch, (rank == 0));
 
@@ -125,7 +133,7 @@ void CTNS(const input::schedule& schd){
          }
       }
       // optimization from current RCF
-      if(schd.ctns.task_opt || schd.ctns.task_restart){
+      if(schd.ctns.task_opt){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
    } // ham || opt

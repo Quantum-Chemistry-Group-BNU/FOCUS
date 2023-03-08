@@ -37,25 +37,22 @@ namespace ctns{
          dot_timing timing_global;
          // generate sweep sequence
          auto sweep_seq = icomb.topo.get_sweeps(debug);
-         sweep_data sweeps(sweep_seq, schd.ctns.nroots, schd.ctns.maxsweep, schd.ctns.ctrls);
+         sweep_data sweeps(sweep_seq, schd.ctns.nroots, schd.ctns.maxsweep, 
+               schd.ctns.restart_sweep, schd.ctns.ctrls);
          // pool for handling operators
          oper_pool<Tm> qops_pool(schd.ctns.iomode, schd.ctns.ioasync, debug);
          for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
-
-            // print sweep control
+            if(isweep < schd.ctns.restart_sweep) continue; // restart case
             if(debug){
                std::cout << tools::line_separator2 << std::endl;
-               sweeps.print_ctrls(isweep);
+               sweeps.print_ctrls(isweep); // print sweep control
                std::cout << tools::line_separator2 << std::endl;
             }
-
+            // initialize
             if(rank == 0){
                icomb.site0_to_cpsi1(schd.ctns.nroots);
                icomb.display_size();
             }
-
-            // restart case
-            if(schd.ctns.task_restart && isweep < schd.ctns.rsweep) continue;
 
             // loop over sites
             auto ti = tools::get_time();
@@ -64,9 +61,6 @@ namespace ctns{
                if(debug){
                   std::cout << "\n=== start rank=" << rank << " ibond=" << ibond << std::endl;
                }
-
-               if(schd.ctns.task_restart && ibond < schd.ctns.rbond) continue;
-               std::cout << "ISWEEP,IBOND=" << isweep << "," << ibond << std::endl;
 
                const auto& dbond = sweeps.seq[ibond];
                const auto& dots = sweeps.ctrls[isweep].dots;
@@ -102,24 +96,24 @@ namespace ctns{
                   std::cout << "\n=== end rank=" << rank << " ibond=" << ibond << std::endl;
                }
 
-               } // ibond
-               auto tf = tools::get_time();
-               sweeps.t_total[isweep] = tools::get_duration(tf-ti);
-               if(debug) sweeps.summary(isweep);
+            } // ibond
+            auto tf = tools::get_time();
+            sweeps.t_total[isweep] = tools::get_duration(tf-ti);
+            if(debug) sweeps.summary(isweep);
 
-               // generate right rcanonical form and save checkpoint file
-               sweep_rcanon(icomb, schd, scratch, isweep);
+            // generate right rcanonical form and save checkpoint file
+            sweep_rcanon(icomb, schd, isweep);
 
-            } // isweep
-            qops_pool.clean_up();
+         } // isweep
+         qops_pool.clean_up();
 
-            if(debug){
-               auto t1 = tools::get_time();
-               tools::timing("ctns::sweep_opt", t0, t1);
-               if(schd.ctns.verbose>0) timing_global.print("time_global");
-            }
+         if(debug){
+            auto t1 = tools::get_time();
+            tools::timing("ctns::sweep_opt", t0, t1);
+            if(schd.ctns.verbose>0) timing_global.print("time_global");
          }
+      }
 
-      } // ctns
+   } // ctns
 
 #endif

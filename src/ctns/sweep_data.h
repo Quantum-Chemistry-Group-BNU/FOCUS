@@ -36,8 +36,8 @@ namespace ctns{
             const double dtacc) const{
          std::cout << " T(" << std::setw(5) << key << ") = " 
             << std::scientific << std::setprecision(2) << dtkey << " S"
-            << "  per = " << std::setw(4) << std::defaultfloat << dtkey/dt*100 
-            << "  per(accum) = " << dtacc/dt*100 
+            << "  per = " << std::setw(4) << std::defaultfloat << dtkey/(dt+eps)*100 
+            << "  per(accum) = " << dtacc/(dt+eps)*100 
             << std::endl;
       }
       void print_part_dmrg(const std::string key,
@@ -45,7 +45,7 @@ namespace ctns{
             ) const{
          std::cout << " T(" << std::setw(5) << key << ") = " 
             << std::scientific << std::setprecision(2) << dtkey << " S"
-            << "  per = " << std::setw(4) << std::defaultfloat << dtkey/dt2*100 
+            << "  per = " << std::setw(4) << std::defaultfloat << dtkey/(dt2+eps)*100 
             << std::endl;
       }
       void print(const std::string msg) const{
@@ -83,7 +83,7 @@ namespace ctns{
          dt4 = tools::get_duration(te-td); // t(guess)
          dt5 = tools::get_duration(tf-te); // t(renrm)
          dt6 = tools::get_duration(t1-tf); // t(save)
-
+         // decomposition of dt2 into different parts
          dtb1 = tools::get_duration(tb1-tb); // tb1-tb : t(preprocess_op_wf           )
          dtb2 = tools::get_duration(tb2-tb1);// tb2-tb1: t(symbolic_formulae_twodot   ) 
          dtb3 = tools::get_duration(tb3-tb2);// tb3-tb2: t(preprocess_formulae_Hxlist2)
@@ -122,6 +122,7 @@ namespace ctns{
       }
       public:
       using Tm = std::chrono::high_resolution_clock::time_point;
+      const double eps = 1.e-20;
       Tm t0;
       Tm ta; // ta-t0: t(fetch) 
       Tm tb; // tb-ta: t(hdiag)
@@ -158,11 +159,13 @@ namespace ctns{
       sweep_data(const std::vector<directed_bond>& sweep_seq,
             const int _nroots,
             const int _maxsweep,
+            const int _restart_sweep,
             const std::vector<input::params_sweep>& _ctrls){
          seq = sweep_seq;
          seqsize = sweep_seq.size();
          nroots = _nroots;
          maxsweep = _maxsweep;
+         restart_sweep = _restart_sweep;
          ctrls = _ctrls;
          // sweep results
          timing_sweep.resize(maxsweep);
@@ -174,7 +177,7 @@ namespace ctns{
             opt_CPUmem[i].resize(seqsize);
             opt_timing[i].resize(seqsize);
             for(int j=0; j<seqsize; j++){
-               opt_result[i][j].eopt.resize(nroots);
+               opt_result[i][j].eopt.resize(nroots, 0.0);
             }
          }
          min_result.resize(maxsweep);
@@ -203,7 +206,7 @@ namespace ctns{
       // summary for a single sweep
       void summary(const int isweep);
       public:
-      int seqsize, nroots, maxsweep;
+      int seqsize, nroots, maxsweep, restart_sweep;
       std::vector<directed_bond> seq; // sweep bond sequence 
       std::vector<input::params_sweep> ctrls; // control parameters
       // energies
@@ -296,14 +299,15 @@ namespace ctns{
       // print previous ctrl parameters
       double taccum = 0.0;
       for(int jsweep=0; jsweep<=isweep; jsweep++){
+         if(jsweep < restart_sweep) continue;
          const auto& ctrl = ctrls[jsweep];
          taccum += t_total[jsweep];
          nmvp = min_result[jsweep].nmvp;
-         std::cout << std::setw(10) << jsweep 
-            << "  " << ctrl.dots 
-            << "  " << ctrl.dcut 
-            << "  " << ctrl.eps 
-            << "  " << ctrl.noise << " | " 
+         std::cout << std::setw(13) << jsweep 
+            << std::setw(5) << ctrl.dots 
+            << std::setw(5) << ctrl.dcut 
+            << std::setw(5) << ctrl.eps 
+            << std::setw(5) << ctrl.noise << " | " 
             << nmvp << " | " 
             << t_total[jsweep] << " | " 
             << (t_total[jsweep]/nmvp) << " | " 
@@ -315,10 +319,11 @@ namespace ctns{
       std::cout << "results: isweep, dcut, dwt, energies (delta_e)" << std::endl;
       const auto& eopt_isweep = min_result[isweep].eopt;
       for(int jsweep=0; jsweep<=isweep; jsweep++){
+         if(jsweep < restart_sweep) continue;
          const auto& ctrl = ctrls[jsweep];
          const auto& dwt = min_result[jsweep].dwt;
          const auto& eopt_jsweep = min_result[jsweep].eopt;
-         std::cout << std::setw(10) << jsweep
+         std::cout << std::setw(13) << jsweep
             << std::setw(8) << ctrl.dcut << " "
             << std::showpos << std::scientific << std::setprecision(2) << dwt
             << std::noshowpos << std::defaultfloat << std::setprecision(12);

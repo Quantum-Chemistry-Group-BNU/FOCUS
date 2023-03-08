@@ -10,7 +10,6 @@ namespace ctns{
    template <typename Km>
       void sweep_rcanon(comb<Km>& icomb,
             const input::schedule& schd,
-            const std::string scratch,
             const int isweep){
          using Tm = typename Km::dtype;
          int size = 1, rank = 0;
@@ -20,7 +19,7 @@ namespace ctns{
 #endif 
          // LCRRR -> CRRRR
          if(rank == 0){
-            auto rcanon_file = scratch+"/rcanon_isweep"+std::to_string(isweep)+".info";
+            auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(isweep)+".info";
             std::cout << "ctns::sweep_rcanon: convert into RCF & save into "
                << rcanon_file << std::endl;
             std::cout << tools::line_separator << std::endl;
