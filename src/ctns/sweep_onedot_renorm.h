@@ -187,7 +187,7 @@ namespace ctns{
             std::cout << "ctns::onedot_renorm superblock=" << superblock;
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
-         auto& memory = sweeps.opt_memory[isweep][ibond];
+         auto& CPUmem = sweeps.opt_CPUmem[isweep][ibond];
 
          // 1. build reduced density matrix & perform decimation
          stensor2<Tm> rot;
@@ -218,8 +218,8 @@ namespace ctns{
          }
          vsol.clear();
          if(debug){
-            memory.dvdson = 0;
-            memory.display();
+            CPUmem.dvdson = 0;
+            CPUmem.display();
          }
          timing.te = tools::get_time();
 
@@ -263,8 +263,8 @@ namespace ctns{
                   cqops, rqops, qops, fname); 
          }
          if(debug){
-            memory.renorm = worktot;
-            memory.display();
+            CPUmem.renorm = worktot;
+            CPUmem.display();
          }
       }
 

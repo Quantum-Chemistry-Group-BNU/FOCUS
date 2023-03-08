@@ -4,7 +4,7 @@
 #include "../core/tools.h"
 
 magma_queue_t magma_queue = 0;
-gpu_mem gpumem = {};
+gpu_mem GPUmem = {};
 
 void gpu_init(int rank)
 {
@@ -29,12 +29,12 @@ void gpu_init(int rank)
              << " device_id=" << device_id << " magma_queue=" <<magma_queue 
              << std::endl;
 
-   gpumem.init();
+   GPUmem.init();
 }
 
 void gpu_clean()
 {
-   gpumem.free();
+   GPUmem.free();
    magma_queue_destroy(magma_queue);
    magma_finalize();
 }

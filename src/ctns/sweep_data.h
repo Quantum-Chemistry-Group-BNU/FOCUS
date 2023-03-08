@@ -6,8 +6,8 @@
 
 namespace ctns{
 
-   // memory
-   struct dot_memory{
+   // memory monitor
+   struct dot_CPUmem{
       void display(){
          const double toGB = 1.0/std::pow(1024.0,3);
          tot = comb + oper + dvdson + hvec + renorm;
@@ -66,8 +66,8 @@ namespace ctns{
          this->print_part_dmrg("symbolic_formulae_twodot   ",dtb2 ); 
          this->print_part_dmrg("preprocess_formulae_Hxlist2",dtb3 ); 
          this->print_part_dmrg("verbose1_debug_Hxlst2      ",dtb4 ); 
-         this->print_part_dmrg("op_lrc1c2_memory_host2GPU  ",dtb5 ); 
-         this->print_part_dmrg("inter_memory_host2GPU      ",dtb6 ); 
+         this->print_part_dmrg("op_lrc1c2_cpumem_host2GPU  ",dtb5 ); 
+         this->print_part_dmrg("inter_cpumem_host2GPU      ",dtb6 ); 
          this->print_part_dmrg("batchsize_compute          ",dtb7 );
          this->print_part_dmrg("generate_mmtasks           ",dtb8 ); 
          this->print_part_dmrg("save_mmtasks               ",dtb9 ); 
@@ -88,8 +88,8 @@ namespace ctns{
          dtb2 = tools::get_duration(tb2-tb1);// tb2-tb1: t(symbolic_formulae_twodot   ) 
          dtb3 = tools::get_duration(tb3-tb2);// tb3-tb2: t(preprocess_formulae_Hxlist2)
          dtb4 = tools::get_duration(tb4-tb3);// tb4-tb3: t(verbose1_debug_Hxlst2      )
-         dtb5 = tools::get_duration(tb5-tb4);// tb5-tb4: t(op_lrc1c2_memory_host2GPU  )
-         dtb6 = tools::get_duration(tb6-tb5);// tb6-tb5: t(inter_memory_host2GPU      )
+         dtb5 = tools::get_duration(tb5-tb4);// tb5-tb4: t(op_lrc1c2_cpumem_host2GPU  )
+         dtb6 = tools::get_duration(tb6-tb5);// tb6-tb5: t(inter_cpumem_host2GPU      )
          dtb7 = tools::get_duration(tb7-tb6);// tb7-tb6: t(batchsize_compute          )
          dtb8 = tools::get_duration(tb8-tb7);// tb8-tb7: t(generate_mmtasks           )
          dtb9 = tools::get_duration(tb9-tb8);// tb9-tb8: t(save_mmtasks               )
@@ -138,7 +138,7 @@ namespace ctns{
       Tm tb4; // tb4-tb3: t(preprocess_formulae)
       Tm tb5; // tb5-tb4: t(debug_Hxlst2)
       Tm tb6; // tb6-tb5: t(GPU_malloc_opertot)
-      Tm tb7; // tb7-tb6: t(memory_copy)
+      Tm tb7; // tb7-tb6: t(cpumem_copy)
       Tm tb8; // tb8-tb7: t(task_init)
       Tm tb9; // tb9-tb8: t(GPU_malloc_dev_workspace)
       Tm tb10;// tb10-tb9: t(preprocess_Hx_batchGPU)
@@ -167,11 +167,11 @@ namespace ctns{
          // sweep results
          timing_sweep.resize(maxsweep);
          opt_result.resize(maxsweep);
-         opt_memory.resize(maxsweep);
+         opt_CPUmem.resize(maxsweep);
          opt_timing.resize(maxsweep);
          for(int i=0; i<maxsweep; i++){
             opt_result[i].resize(seqsize);
-            opt_memory[i].resize(seqsize);
+            opt_CPUmem[i].resize(seqsize);
             opt_timing[i].resize(seqsize);
             for(int j=0; j<seqsize; j++){
                opt_result[i][j].eopt.resize(nroots);
@@ -212,11 +212,11 @@ namespace ctns{
       // timing
       std::vector<std::vector<dot_timing>> opt_timing;
       std::vector<dot_timing> timing_sweep;
-      //memory 
-      std::vector<std::vector<dot_memory>> opt_memory;
       std::vector<double> t_total; 
       std::vector<double> t_kernel_total; 
       std::vector<double> t_reduction_total; 
+      // memory
+      std::vector<std::vector<dot_CPUmem>> opt_CPUmem;
    };
 
    // analysis of the current sweep (eopt,dwt,deff) and timing

@@ -52,7 +52,7 @@ namespace ctns{
                << " maxthreads=" << maxthreads 
                << std::endl;
          }
-         auto& memory = sweeps.opt_memory[isweep][ibond];
+         auto& CPUmem = sweeps.opt_CPUmem[isweep][ibond];
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
 
@@ -80,9 +80,9 @@ namespace ctns{
                << std::endl;
          }
          if(debug){
-            memory.comb = sizeof(Tm)*icomb.display_size(); 
-            memory.oper = sizeof(Tm)*qops_pool.size(); 
-            memory.display();
+            CPUmem.comb = sizeof(Tm)*icomb.display_size(); 
+            CPUmem.oper = sizeof(Tm)*qops_pool.size(); 
+            CPUmem.display();
          }
          timing.ta = tools::get_time();
 
@@ -187,7 +187,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            memory.hvec = sizeof(Tm)*worktot;
+            CPUmem.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx2<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
                   std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -208,7 +208,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            memory.hvec = sizeof(Tm)*worktot;
+            CPUmem.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx3<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -224,8 +224,8 @@ namespace ctns{
          int neig = sweeps.nroots;
          linalg::matrix<Tm> vsol(ndim,neig);
          if(debug){
-            memory.dvdson += sizeof(Tm)*ndim*(neig + std::min(ndim,size_t(neig+schd.ctns.nbuff))*3);
-            memory.display();
+            CPUmem.dvdson += sizeof(Tm)*ndim*(neig + std::min(ndim,size_t(neig+schd.ctns.nbuff))*3);
+            CPUmem.display();
          }
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
@@ -241,7 +241,7 @@ namespace ctns{
          // free temporary space
          if(schd.ctns.alg_hvec >=2){
             delete[] workspace;
-            memory.hvec = 0; 
+            CPUmem.hvec = 0; 
          }
 
          // 3. decimation & renormalize operators
@@ -252,9 +252,9 @@ namespace ctns{
                vsol, wf, qops_dict, qops_pool(frop), 
                sweeps, isweep, ibond);
          if(debug){
-            memory.comb = sizeof(Tm)*icomb.display_size();
-            memory.oper = sizeof(Tm)*qops_pool.size();
-            memory.display();
+            CPUmem.comb = sizeof(Tm)*icomb.display_size();
+            CPUmem.oper = sizeof(Tm)*qops_pool.size();
+            CPUmem.display();
          }
          timing.tf = tools::get_time();
 

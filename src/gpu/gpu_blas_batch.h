@@ -25,8 +25,8 @@ inline void xgemm_batch_gpu(const char transa, const char transb,
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     size_t total_isize = 6*(batch_count+1)*sizeof(magma_int_t);
     size_t total_dsize = 3*batch_count*sizeof(double*);
-    void* dev_itotal = gpumem.allocate(total_isize);
-    void* dev_dtotal = gpumem.allocate(total_dsize);
+    void* dev_itotal = GPUmem.allocate(total_isize);
+    void* dev_dtotal = GPUmem.allocate(total_dsize);
     magma_int_t* dev_m = (magma_int_t*)dev_itotal;
     magma_int_t* dev_n = dev_m + (batch_count+1);
     magma_int_t* dev_k = dev_n + (batch_count+1);
@@ -92,8 +92,8 @@ inline void xgemm_batch_gpu(const char transa, const char transb,
             magma_queue
             );
 
-    gpumem.deallocate(dev_dtotal, total_dsize);
-    gpumem.deallocate(dev_itotal, total_isize);
+    GPUmem.deallocate(dev_dtotal, total_dsize);
+    GPUmem.deallocate(dev_itotal, total_isize);
 }
 
 // complex
@@ -114,8 +114,8 @@ inline void xgemm_batch_gpu(const char transa, const char transb,
     //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
     size_t total_isize = 6*(batch_count+1)*sizeof(magma_int_t);
     size_t total_dsize = 3*batch_count*sizeof(magmaDoubleComplex*);
-    void* dev_itotal = gpumem.allocate(total_isize);
-    void* dev_dtotal = gpumem.allocate(total_dsize);
+    void* dev_itotal = GPUmem.allocate(total_isize);
+    void* dev_dtotal = GPUmem.allocate(total_dsize);
     magma_int_t* dev_m = (magma_int_t*)dev_itotal;
     magma_int_t* dev_n = dev_m + (batch_count+1);
     magma_int_t* dev_k = dev_n + (batch_count+1);
@@ -183,8 +183,8 @@ inline void xgemm_batch_gpu(const char transa, const char transb,
             magma_queue
             );
 
-    gpumem.deallocate(dev_dtotal, total_dsize);
-    gpumem.deallocate(dev_itotal, total_isize);
+    GPUmem.deallocate(dev_dtotal, total_dsize);
+    GPUmem.deallocate(dev_itotal, total_isize);
 }
 
 } // linalg

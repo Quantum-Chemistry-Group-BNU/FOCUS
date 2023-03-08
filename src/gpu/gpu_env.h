@@ -6,7 +6,7 @@
 #include "gpu_mem.h"
 
 extern magma_queue_t magma_queue;
-extern gpu_mem gpumem; 
+extern gpu_mem GPUmem; 
 
 const int MAXGPUS = 16;
 extern const int MAXGPUS;
