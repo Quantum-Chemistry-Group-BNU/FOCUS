@@ -36,6 +36,8 @@
 
 #ifdef MKL_ILP64
    #define MKL_INT long long int
+#else
+   #define MKL_INT int
 #endif
 
 // blas

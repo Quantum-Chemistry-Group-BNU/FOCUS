@@ -53,6 +53,10 @@ void CTNS(const input::schedule& schd){
             // debug        
             const bool debug = false;
             if(debug){ 
+               // <CI|CTNS>
+               auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
+               Sij_mix.print("Sij_mix");
+               // HIJ
                integral::two_body<Tm> int2e;
                integral::one_body<Tm> int1e;
                double ecore;

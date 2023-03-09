@@ -1,5 +1,6 @@
 
-machine = lenovo #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = mac #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+USE_ILP64 = no
 
 INCLUDE = -I.
 
@@ -34,9 +35,14 @@ else ifeq ($(strip $(machine)), mac)
    MATHLIB = /opt/anaconda3/envs/work/lib
    LIBS += -lm
 endif
-CXXFLAGS += -DMKL_ILP64
 
-LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread  -ldl 
+ifeq ($(strip $(USE_ILP64)), no)
+   LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread  -ldl 
+else
+   CXXFLAGS += -DMKL_ILP64
+   LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread  -ldl 
+endif
+
 LD       = $(CXX)
 LDFLAGS  = $(CXXFLAGS) $(LIBS)
 #LFLAGS = -shared -fPIC

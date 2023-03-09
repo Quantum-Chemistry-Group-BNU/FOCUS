@@ -1,14 +1,15 @@
 
-machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no #yes
+DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
+USE_ILP64 = no #yes
+USE_GPU = no #yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
-USE_GPU = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
@@ -104,38 +105,35 @@ else
    endif
 endif
 
+# OpenMP & MKL
 ifeq ($(strip $(USE_OPENMP)),no)
-   # serial version of MKL
-   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -ldl
-   # mac framework Accelerate
-   #MATH = -llapack -lblas 
+   ifeq ($(strip $(USE_ILP64)), no)
+      # serial version of MKL
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -ldl
+   else
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -ldl -DMKL_ILP64 
+   endif
 else
+   # parallel version of MKL
+   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
+   ifeq ($(strip $(USE_ILP64)), no)
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -ldl -liomp5
+   else
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lmkl_intel_ilp64 -lmkl_core -lmkl_intel_thread -lpthread -ldl -liomp5 -DMKL_ILP64
+   endif
    ifeq ($(strip $(USE_GCC)),yes)
       FLAGS += -fopenmp
    else
-      FLAGS += -qopenmp	
+      FLAGS += -qopenmp 
    endif
-   # https:/.aftware.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-adv.ar.html	
-   # parallel version of MKL
-   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lmkl_intel_ilp64 -lmkl_core -lmkl_intel_thread -lpthread -ldl \
-   	  -liomp5
-   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
 endif
 # quaternion matrix diagonalization
-MATH += -L./extlibs/zquatev -lzquatev -DMKL_ILP64
+MATH += -L./extlibs/zquatev -lzquatev 
 LFLAGS += ${MATH}
-
-# IO
-ifeq ($(strip $(USE_LZ4)), yes)
-   FLAGS += -DLZ4 -I./extlibs/lz4-dev/lib
-   LFLAGS += -L./extlibs/lz4-dev/lib -llz4
-endif
-ifeq ($(strip $(USE_ZSTD)), yes)
-   FLAGS += -DZSTD -I./extlibs/zstd-dev/lib
-   LFLAGS += -L./extlibs/zstd-dev/lib -lzstd
-endif
 
 # GPU
 ifeq ($(strip $(USE_GPU)), yes)
@@ -170,6 +168,16 @@ else ifeq ($(strip $(machine)), jiageng)
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static -lrt
 endif
+endif
+
+# IO
+ifeq ($(strip $(USE_LZ4)), yes)
+   FLAGS += -DLZ4 -I./extlibs/lz4-dev/lib
+   LFLAGS += -L./extlibs/lz4-dev/lib -llz4
+endif
+ifeq ($(strip $(USE_ZSTD)), yes)
+   FLAGS += -DZSTD -I./extlibs/zstd-dev/lib
+   LFLAGS += -L./extlibs/zstd-dev/lib -lzstd
 endif
 
 SRC = src
