@@ -427,7 +427,7 @@ namespace ctns{
 
 namespace mpi_wrapper{
 
-   // stensor2
+   // stensor3
    template <typename Tm>
       void broadcast(const boost::mpi::communicator & comm, ctns::stensor3<Tm>& qt3, int root){
          boost::mpi::broadcast(comm, qt3.own, root);

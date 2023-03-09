@@ -1,5 +1,5 @@
 
-machine = jiageng #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = mac #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 INCLUDE = -I.
 
@@ -28,14 +28,15 @@ else ifeq ($(strip $(machine)), jiageng)
    CXX = g++ #icpc 
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
    MATHLIB = ${MKLROOT}
-else
+else ifeq ($(strip $(machine)), mac)
    CXX = g++
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
    MATHLIB = /opt/anaconda3/envs/work/lib
    LIBS += -lm
 endif
+CXXFLAGS += -DMKL_ILP64
 
-LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread  -ldl 
+LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread  -ldl 
 LD       = $(CXX)
 LDFLAGS  = $(CXXFLAGS) $(LIBS)
 #LFLAGS = -shared -fPIC
@@ -55,4 +56,4 @@ test.x: test.o
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o *.a test.x 
+	rm -f *.o *.a test.x *.out 
