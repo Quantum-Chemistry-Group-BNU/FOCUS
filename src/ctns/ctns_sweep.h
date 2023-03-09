@@ -2,10 +2,10 @@
 #define CTNS_SWEEP_H
 
 #include "sweep_data.h"
+#include "sweep_rcanon.h"
 #include "sweep_restart.h"
 #include "sweep_onedot.h"
 #include "sweep_twodot.h"
-#include "sweep_rcanon.h"
 
 namespace ctns{
 
@@ -49,18 +49,13 @@ namespace ctns{
                sweeps.print_ctrls(isweep); // print sweep control
                std::cout << tools::line_separator2 << std::endl;
             }
+            
             // initialize
-            if(rank == 0){
-               icomb.site0_to_cpsi1(schd.ctns.nroots);
-               icomb.display_size();
-            }
-
+            if(rank == 0) sweep_init(icomb, schd.ctns.nroots);
+            
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
-               if(debug){
-                  std::cout << "\n=== start rank=" << rank << " ibond=" << ibond << std::endl;
-               }
                const auto& dbond = sweeps.seq[ibond];
                const auto& dots = sweeps.ctrls[isweep].dots;
                auto tp0 = icomb.topo.get_type(dbond.p0);
@@ -72,7 +67,6 @@ namespace ctns{
                      << std::endl;
                   std::cout << tools::line_separator << std::endl;
                }
-
                if(ibond < schd.ctns.restart_bond){
                   sweep_restart(icomb, int2e, int1e, ecore, schd, scratch,
                         qops_pool, sweeps, isweep, ibond);
@@ -94,16 +88,13 @@ namespace ctns{
                }
                // stop just for debug
                if(isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
-               if(debug){
-                  std::cout << "\n=== end rank=" << rank << " ibond=" << ibond << std::endl;
-               }
             } // ibond
             auto tf = tools::get_time();
             sweeps.t_total[isweep] = tools::get_duration(tf-ti);
             if(debug) sweeps.summary(isweep);
 
             // generate right rcanonical form and save checkpoint file
-            sweep_rcanon(icomb, schd, isweep);
+            if(rank == 0) sweep_final(icomb, schd, scratch, isweep);
 
          } // isweep
          qops_pool.clean_up();

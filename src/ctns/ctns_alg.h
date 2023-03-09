@@ -37,12 +37,23 @@ namespace ctns{
             auto qt2 = contract_qt3_qt3("cr", icomb.sites[idx], icomb.sites[idx]);
             double maxdiff = qt2.check_identityMatrix(thresh_ortho, false);
             int Dtot = qt2.info.qrow.get_dimAll();
-            std::cout << " idx=" << idx << " node=" << p << " Dtot=" << Dtot 
+            std::cout << " idx=" << idx << " node=" << p << " Drow=" << Dtot 
                << " maxdiff=" << std::scientific << maxdiff << std::endl;
-            if((ifortho || (!ifortho && idx != icomb.topo.ntotal-1)) && (maxdiff>thresh_ortho)){
+            if(ifortho && (maxdiff>thresh_ortho)){
                tools::exit("error: deviate from identity matrix!");
             }
          } // idx
+         // rwfuns
+         auto wf2 = icomb.get_wf2();
+         wf2.print("wf2",2);
+         auto qt2 = contract_qt2_qt2(wf2, wf2.H());
+         double maxdiff = qt2.check_identityMatrix(thresh_ortho, false);
+         int Dtot = qt2.info.qrow.get_dimAll();
+         std::cout << " rwfuns: nroots=" << Dtot 
+            << " maxdiff=" << std::scientific << maxdiff << std::endl;
+         if(ifortho && (maxdiff>thresh_ortho)){
+            tools::exit("error: deviate from identity matrix!");
+         }
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_check", t0, t1);
       }
@@ -55,7 +66,7 @@ namespace ctns{
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
          stensor2<typename Km::dtype> qt2_r, qt2_u;
-         for(int i=icomb.topo.nbackbone-1; i>=0; i--){
+         for(int i=icomb.topo.nbackbone-1; i>0; i--){
             const auto& node = nodes[i][0];
             int tp = node.type;
             if(tp == 0 || tp == 1){
@@ -83,6 +94,11 @@ namespace ctns{
                qt2_r = contract_qt3_qt3("cr",site,qtmp); // bra
             }
          } // i
+         // first merge: sum_l rwfuns[j,l]*site0[l,r,n] => site[j,r,n]
+         const auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))];
+         auto site = contract_qt3_qt2("l",site0,icomb.get_wf2());
+         auto qtmp = contract_qt3_qt2("r",site,qt2_r);
+         qt2_r = contract_qt3_qt3("cr",site,qtmp);
          auto Smat = qt2_r.to_matrix();
          return qt2_r.to_matrix();
       }
@@ -130,10 +146,10 @@ namespace ctns{
                qt2_r = qt2.dot(qt2_r); // contract right matrix
             } // tp
          } // i
-         const auto& wfcoeff = qt2_r; 
+         const auto& wfcoeff = icomb.get_wf2().dot(qt2_r);
          assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
          // finally return coeff = <n|CTNS[i]> as a vector 
-         int n = icomb.get_rcanon_nroots(); 
+         int n = icomb.get_nroots(); 
          std::vector<Tm> coeff(n,0.0);
          // in case this CTNS does not encode this det, no such block 
          const auto blk2 = wfcoeff(0,0);
@@ -152,7 +168,7 @@ namespace ctns{
             const linalg::matrix<typename Km::dtype>& vs,
             const double thresh=1.e-8){
          std::cout << "\nctns::rcanon_CIcoeff_check" << std::endl;
-         int n = icomb.get_rcanon_nroots(); 
+         int n = icomb.get_nroots(); 
          int dim = space.size();
          double maxdiff = -1.e10;
          // cmat[j,i] = <D[i]|CTNS[j]>
@@ -179,7 +195,7 @@ namespace ctns{
             const linalg::matrix<typename Km::dtype>& vs){
          using Tm = typename Km::dtype;
          std::cout << "\nctns::rcanon_CIovlp" << std::endl;
-         int n = icomb.get_rcanon_nroots(); 
+         int n = icomb.get_nroots(); 
          int dim = space.size();
          // cmat[n,i] = <D[i]|CTNS[n]>
          linalg::matrix<Tm> cmat(n,dim);
@@ -202,7 +218,7 @@ namespace ctns{
          std::cout << "\nctns::rcanon_Sdiag_exact iroot=" << iroot
             << " thresh_print=" << thresh_print << std::endl;
          // setup FCI space
-         qsym sym_state = icomb.get_rcanon_sym();
+         qsym sym_state = icomb.get_sym_state();
          int ne = sym_state.ne(); 
          int ks = icomb.get_nphysical();
          fock::onspace fci_space;
@@ -266,7 +282,7 @@ namespace ctns{
          using Tm = typename Km::dtype; 
          fock::onstate state(2*icomb.get_nphysical());
          // initialize boundary wf for i-th state
-         auto wf = icomb.get_rwfun(iroot); 
+         auto wf = icomb.rwfuns[iroot];
          const auto& nodes = icomb.topo.nodes; 
          const auto& rindex = icomb.topo.rindex;
          // loop from left to right

@@ -34,7 +34,7 @@ namespace ctns{
          init_rsites(icomb, thresh_ortho);
 
          // 3. compute wave functions at the start for right canonical form 
-         init_cpsi(icomb, space, vs, thresh_ortho);
+         init_rwfuns(icomb, space, vs, thresh_ortho);
 
          // check
          icomb.display_size();
@@ -261,12 +261,12 @@ namespace ctns{
 
    // compute wave function at the start for right canonical form
    template <typename Km>
-      void init_cpsi(comb<Km>& icomb,
+      void init_rwfuns(comb<Km>& icomb,
             const fock::onspace& space,
             const linalg::matrix<typename Km::dtype>& vs,
             const double thresh_ortho){
          using Tm = typename Km::dtype;
-         std::cout << "\nctns::init_cpsi qkind=" << qkind::get_name<Km>() 
+         std::cout << "\nctns::init_rwfuns qkind=" << qkind::get_name<Km>() 
             << " thresh_ortho=" << thresh_ortho 
             << std::endl;
          auto t0 = tools::get_time();
@@ -310,7 +310,7 @@ namespace ctns{
          qbond qrow({{sym_state, 1}});
          auto qcol = get_qbond(rbasis);
          if(qcol.size() != 1) tools::exit("error: multiple symmetries in qcol!"); 
-         icomb.cpsi.resize(nroots);
+         icomb.rwfuns.resize(nroots);
          for(int iroot=0; iroot<nroots; iroot++){
             linalg::matrix<Tm> wf(ndet,1);
             for(int i=0; i<space2.size(); i++){
@@ -320,33 +320,18 @@ namespace ctns{
             // rwfuns[l,r] for RCF: ->-*->- 
             stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, {0,1}); 
             xgemm("T","N",1.0,wf,rbasis[0].coeff.conj(),0.0,rwfun(0,0));
-            //
-            // construct psi from tmp: as the symmetry is one-to-ono, just copy works
-            //        |                         |             
-            // vac -<-|->- [cpsi]  <=  state ->-|->- [RCF] 
-            //       /|\                       /|\
-            //        state                    vac           
-            auto tmp = contract_qt3_qt2("l", icomb.sites[icomb.topo.ntotal-1], rwfun); 
-            stensor3<Tm> cpsi(sym_state, get_qbond_vac(Km::isym), tmp.info.qcol, tmp.info.qmid, dir_WF3);
-            linalg::xcopy(cpsi.info._size, tmp.data(), cpsi.data());
-            icomb.cpsi[iroot] = std::move(cpsi);
+            icomb.rwfuns[iroot] = std::move(rwfun);
          } // iroot
          
-         // for later convenience of computing properties with right canonical form, 
-         // we always replace icomb.sites[icomb.topo.ntotal-1] by a stack of cpsi 
-         icomb.cpsi0_to_site0();
-
          // check overlaps
          if(debug_init){
+            auto wf2 = icomb.get_wf2();
+            wf2.print("wf2");
+            auto wfmat = wf2.to_matrix();
             std::cout << "\ncheck state overlaps ..." << std::endl;
             // ova = <CTNS[i]|CTNS[j]>
-            linalg::matrix<Tm> ova1(nroots,nroots);
-            for(int i=0; i<nroots; i++){
-               for(int j=0; j<nroots; j++){
-                  ova1(i,j) = contract_qt3_qt3_scalar(icomb.cpsi[i], icomb.cpsi[j]);
-               }
-            }
-            ova1.print("ova1_cpsi");
+            auto ova = linalg::xgemm("N","C",wfmat,wfmat).conj();
+            ova.print("ova_rwfuns");
             // ova0 = <CI[i]|CI[j]>
             linalg::matrix<Tm> ova0(nroots,nroots);
             for(int i=0; i<nroots; i++){
@@ -355,18 +340,16 @@ namespace ctns{
                }
             }
             ova0.print("ova0_vs");
-            auto diff = (ova1-ova0).normF();
+            auto diff = (ova-ova0).normF();
             std::cout << "diff of ova matrices = " << diff << std::endl;
             if(diff > thresh_ortho){ 
                std::string msg = "error: too large diff=";
-               tools::exit(msg+std::to_string(diff)
-                     +" with thresh_ortho="
-                     +std::to_string(thresh_ortho));
+               tools::exit(msg+std::to_string(diff)+" with thresh_ortho="+std::to_string(thresh_ortho));
             }
          } // debug_init
 
          auto t1 = tools::get_time();
-         tools::timing("ctns::init_cpsi", t0, t1);
+         tools::timing("ctns::init_rwfuns", t0, t1);
       }
 
 } // ctns

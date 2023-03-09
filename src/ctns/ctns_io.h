@@ -21,6 +21,7 @@ namespace ctns{
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             save << icomb.sites[idx];
          }
+         save << icomb.rwfuns;
          ofs.close();
          
          // ZL@20221207 binary format for easier loading in python 
@@ -28,9 +29,14 @@ namespace ctns{
             std::ofstream ofs2(fname+".bin", std::ios::binary);
             ofs2.write((char*)(&icomb.topo.ntotal), sizeof(int));
             // save all sites
-            for(int idx=0; idx<icomb.topo.ntotal; idx++){
+            for(int idx=0; idx<icomb.topo.ntotal-1; idx++){
                icomb.sites[idx].dump(ofs2);
             }
+            // merge rwfun & site0
+            const auto& rindex = icomb.topo.rindex;
+            const auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))];
+            auto site = contract_qt3_qt2("l",site0,icomb.get_wf2());
+            site.dump(ofs2);
             ofs2.close();
          }
       }
@@ -47,6 +53,7 @@ namespace ctns{
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             load >> icomb.sites[idx]; // this save calls to copy constructor for vector<st3>
          }
+         load >> icomb.rwfuns;
          ifs.close();
       }
 

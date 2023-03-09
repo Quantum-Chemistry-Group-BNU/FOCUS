@@ -245,6 +245,7 @@ KNOWN PROBLEMS
    - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magmamemcpy size is int]
    - MPI: bypass the 2GB limit in MPI_COUNT by partitioned broadcast & reduce
    - MATH: Fix int32 & int64 problem in blas/lapack using MKL_INT [ndim is int]
+   - zquatev: resolve cNK bugs? use MKL_INT
  * Support restart isweep & ibond: [DONE@20220309]
      0. restructure rsites/rwfuns/psi into cpsi/sites - more compact [DONE@20220305]
      1. fix guess error [DONE@20220306]
@@ -252,8 +253,6 @@ KNOWN PROBLEMS
      3. add dump RCF at each step [DONE@20220306]
      4. support restart by loading RCF? [DONE@20220308]
      5. support restart at a particular ibond? [DONE@20220309]
-
- ??? resolve cNK bugs? zquatev - MKL_INT?
 
  * Profiling: Check fetch time & CPU memory for Fe8S7 !!!
 

@@ -56,7 +56,6 @@ def testAll(dirs):
          finput = "results/"+prefix+"input.dat"
          exist = os.path.exists(finput)
          if(not exist): continue
-         print('finput=',finput)
 	      # SCI
          print('=== SCI ===')
          SCI = os.environ['SCI']
@@ -84,9 +83,7 @@ def compareAll(dirs,nfail,thresh=1.e-8):
    tmpdir = "./tmp"
    for fdir in dirs:
       print("\n### check:",fdir,"###")
-      os.system("pwd")
       os.chdir(fdir)
-      os.system("pwd")
       for prefix in ['','r','c']:
          finput = "results/"+prefix+"input.dat"
          exist = os.path.exists(finput)

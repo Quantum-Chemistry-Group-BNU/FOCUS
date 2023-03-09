@@ -356,7 +356,7 @@ namespace ctns{
          } // jstate
          std::cout << std::endl;
       } // jsweep
-      std::cout << tools::line_separator2 << "\n" << std::endl;
+      std::cout << tools::line_separator2 << std::endl;
    }
 
 } // ctns

@@ -4,13 +4,6 @@
 namespace ctns{
 
    template <typename Tm>
-      Tm contract_qt3_qt3_scalar(const stensor3<Tm>& qt3a,
-                                 const stensor3<Tm>& qt3b){
-          assert(qt3a.info == qt3b.info);
-          return linalg::xdot(qt3a.info._size, qt3a.data(), qt3b.data());
-      }
-
-   template <typename Tm>
       stensor2<Tm> contract_qt3_qt3(const std::string superblock,
             const stensor3<Tm>& qt3a, 
             const stensor3<Tm>& qt3b){

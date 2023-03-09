@@ -5,7 +5,7 @@ DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
-USE_ILP64 = no #yes
+USE_ILP64 = yes
 USE_GPU = no #yes
 # compression
 USE_LZ4 = no
