@@ -65,7 +65,7 @@ namespace ctns{
          locA.resize(size); locB.resize(size); locC.resize(size);
          offA.resize(size); offB.resize(size); offC.resize(size);
          cost = 0.0;
-         for(int i=0; i<size; i++){
+         for(size_t i=0; i<size; i++){
             const auto& mm = MMlst[i];
             cost += mm.cost();
             transA[i] = mm.transA; transB[i] = mm.transB;
@@ -86,7 +86,7 @@ namespace ctns{
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-         for(int i=0; i<size; i++){
+         for(size_t i=0; i<size; i++){
             Tm* aptr = ptrs[locA[i]] + offA[i];
             Tm* bptr = ptrs[locB[i]] + offB[i];
             Tm* cptr = ptrs[locC[i]] + offC[i];
@@ -99,7 +99,7 @@ namespace ctns{
    template <typename Tm>
       void MMbatch<Tm>::xgemm_batch_cpu(Tm** ptrs){
          // initialization 
-         for(int i=0; i<size; i++){
+         for(size_t i=0; i<size; i++){
             Aptr[i] = ptrs[locA[i]] + offA[i];
             Bptr[i] = ptrs[locB[i]] + offB[i];
             Cptr[i] = ptrs[locC[i]] + offC[i];
@@ -119,7 +119,7 @@ namespace ctns{
          int b_total=0;
          int c_total=0;
          // initialization 
-         for(int i=0; i<size; i++){
+         for(size_t i=0; i<size; i++){
             Aptr[i] = ptrs[locA[i]] + offA[i];
             Bptr[i] = ptrs[locB[i]] + offB[i];
             Cptr[i] = ptrs[locC[i]] + offC[i];

@@ -2,6 +2,7 @@
 #define CTNS_SWEEP_H
 
 #include "sweep_data.h"
+#include "sweep_restart.h"
 #include "sweep_onedot.h"
 #include "sweep_twodot.h"
 #include "sweep_rcanon.h"
@@ -57,11 +58,9 @@ namespace ctns{
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
-
                if(debug){
                   std::cout << "\n=== start rank=" << rank << " ibond=" << ibond << std::endl;
                }
-
                const auto& dbond = sweeps.seq[ibond];
                const auto& dots = sweeps.ctrls[isweep].dots;
                auto tp0 = icomb.topo.get_type(dbond.p0);
@@ -74,28 +73,30 @@ namespace ctns{
                   std::cout << tools::line_separator << std::endl;
                }
 
-               // optimization
-               if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
-                  sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
-                        qops_pool, sweeps, isweep, ibond); 
+               if(ibond < schd.ctns.restart_bond){
+                  sweep_restart(icomb, int2e, int1e, ecore, schd, scratch,
+                        qops_pool, sweeps, isweep, ibond);
                }else{
-                  sweep_twodot(icomb, int2e, int1e, ecore, schd, scratch,
-                        qops_pool, sweeps, isweep, ibond); 
-               }
-
-               // timing 
-               if(debug){
-                  const auto& timing = sweeps.opt_timing[isweep][ibond];
-                  sweeps.timing_sweep[isweep].accumulate(timing,"time_sweep",schd.ctns.verbose>0);
-                  timing_global.accumulate(timing,"time_global",schd.ctns.verbose>0);
+                  // optimization
+                  if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
+                     sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
+                           qops_pool, sweeps, isweep, ibond); 
+                  }else{
+                     sweep_twodot(icomb, int2e, int1e, ecore, schd, scratch,
+                           qops_pool, sweeps, isweep, ibond); 
+                  }
+                  // timing 
+                  if(debug){
+                     const auto& timing = sweeps.opt_timing[isweep][ibond];
+                     sweeps.timing_sweep[isweep].accumulate(timing,"time_sweep",schd.ctns.verbose>0);
+                     timing_global.accumulate(timing,"time_global",schd.ctns.verbose>0);
+                  }
                }
                // stop just for debug
                if(isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
-
                if(debug){
                   std::cout << "\n=== end rank=" << rank << " ibond=" << ibond << std::endl;
                }
-
             } // ibond
             auto tf = tools::get_time();
             sweeps.t_total[isweep] = tools::get_duration(tf-ti);

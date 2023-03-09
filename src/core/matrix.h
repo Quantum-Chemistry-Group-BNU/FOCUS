@@ -46,7 +46,7 @@ namespace linalg{
                      delete[] _data;
                      _data = new Tm[_size];
                   }
-                  for(int i=0; i<_size; i++){
+                  for(size_t i=0; i<_size; i++){
                      ar & _data[i];
                   }
                }

@@ -11,9 +11,10 @@ using namespace fock;
 
 template <typename Km>  
 void preCTNS(const input::schedule& schd){
-   int rank = 0; 
+   int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
+   size = schd.world.size();
 #endif
    // consistency check for dtype
    using Tm = typename Km::dtype;
@@ -29,8 +30,10 @@ void preCTNS(const input::schedule& schd){
    // only perform initialization
    if(schd.ctns.task_init) return;
 #ifndef SERIAL
-   mpi_wrapper::broadcast(schd.world, icomb, 0);
-   icomb.world = schd.world;
+   if(size > 1){
+      mpi_wrapper::broadcast(schd.world, icomb, 0);
+      icomb.world = schd.world;
+   }
 #endif
 
    // analyze
@@ -67,8 +70,10 @@ int main(int argc, char *argv[]){
    input::schedule schd;
    if(rank == 0) schd.read(fname);
 #ifndef SERIAL
-   boost::mpi::broadcast(world, schd, 0);
-   schd.world = world;
+   if(size > 1){
+      boost::mpi::broadcast(world, schd, 0);
+      schd.world = world;
+   }
 #endif
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);

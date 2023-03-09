@@ -36,7 +36,7 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    auto Hmat = qops('H')[0].to_matrix();
    if(rank == 0) Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows()); // avoid repetition
 #ifndef SERIAL
-   if(!schd.ctns.ifdist1 and size > 1){
+   if(size > 1 and !schd.ctns.ifdist1){
       // reduction of partial H formed on each processor if ifdist1 = false
       linalg::matrix<Tm> Hmat2(Hmat.rows(),Hmat.cols());
       mpi_wrapper::reduce(icomb.world, Hmat.data(), Hmat.size(), Hmat2.data(), std::plus<Tm>(), 0);

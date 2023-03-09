@@ -193,6 +193,8 @@ void params_ctns::read(ifstream& istrm){
          task_opt = true;
       }else if(line.substr(0,13)=="restart_sweep"){
          restart_sweep = stoi(line.substr(13));
+      }else if(line.substr(0,12)=="restart_bond"){
+         restart_bond = stoi(line.substr(12));
       }else if(line.substr(0,8)=="alg_hvec"){
          alg_hvec = stoi(line.substr(8));
       }else if(line.substr(0,10)=="alg_renorm"){
@@ -327,6 +329,7 @@ void params_ctns::print() const{
    cout << "task_ham = " << task_ham << endl;
    cout << "task_opt = " << task_opt << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
+   cout << "restart_bond = " << restart_bond << endl;
    // conversion of sci
    cout << "maxdets = " << maxdets << endl;
    cout << "thresh_proj = " << scientific << thresh_proj << endl;

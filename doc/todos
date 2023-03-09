@@ -239,21 +239,23 @@ KNOWN PROBLEMS
 
 === 2023 DMRG ===
 
- * Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magma size is int]
  * Better reduction algorithm using GEMV [DONE@20230301]
  * Add more tests in examples [DONE@20230301]
- * Problem for large arrays: [DONE@20230307] 
-   - bypass the 2GB limit in MPI_COUNT by partitioned broadcast & reduce
-   - Fix int32 & int64 problem in blas/lapack using MKL_INT [ndim is int]
 
- * Support restart isweep & ibond !
+ * Problems for large arrays: [DONE@20230307] 
+   - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magmamemcpy size is int]
+   - MPI: bypass the 2GB limit in MPI_COUNT by partitioned broadcast & reduce
+   - MATH: Fix int32 & int64 problem in blas/lapack using MKL_INT [ndim is int]
+
+ ??? resolve cNK bugs? zquatev - MKL_INT?
+
+ * Support restart isweep & ibond:
      0. restructure rsites/rwfuns/psi into cpsi/sites - more compact [DONE@20220305]
      1. fix guess error [DONE@20220306]
      2. fix last conversion into RCF [DONE@20220306]
      3. add dump RCF at each step [DONE@20220306]
-     4. support restart by loading RCF? [DONE@20220307]
-     5. support restart at a particular ibond?
-     6. resolve cNK bugs? zquatev - MKL_INT?
+     4. support restart by loading RCF? [DONE@20220308]
+     5. support restart at a particular ibond? [DONE@20220309]
 
  * Profiling: Check fetch time & CPU memory for Fe8S7 !!!
 
@@ -266,14 +268,16 @@ KNOWN PROBLEMS
 
 === Future ===
 
- * Support partition operators:
+ * Support further partition of operators: reduce GPU memory requirement
    - GPU only compute large blocks y[l,r,c1,c2] if d[l] & d[r] > dthresh,
      and hence we only need to send rows of o[l,:] and o[r,:] as well as
      the full vector x & y to GPU, which minimize the memory usage of GPU.
    - Can renorm be performed in a similar way?
  
  * Support complex version [DONE@20230228]
-   - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, otherwise renormalized state become complex, and the construction of H requires 'Conj' operation in GEMM!] 
+   - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
+      otherwise renormalized state become complex, and the construction of H 
+      requires 'Conj' operation in GEMM!] 
    - what about R operation in contract? [general complex]
  
  * Support Kramers version

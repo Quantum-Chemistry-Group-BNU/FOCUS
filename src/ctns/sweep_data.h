@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "../io/input.h"
+#include "../core/serialization.h"
 
 namespace ctns{
 
@@ -83,7 +84,7 @@ namespace ctns{
          dt4 = tools::get_duration(te-td); // t(guess)
          dt5 = tools::get_duration(tf-te); // t(renrm)
          dt6 = tools::get_duration(t1-tf); // t(save)
-         // decomposition of dt2 into different parts
+                                           // decomposition of dt2 into different parts
          dtb1 = tools::get_duration(tb1-tb); // tb1-tb : t(preprocess_op_wf           )
          dtb2 = tools::get_duration(tb2-tb1);// tb2-tb1: t(symbolic_formulae_twodot   ) 
          dtb3 = tools::get_duration(tb3-tb2);// tb3-tb2: t(preprocess_formulae_Hxlist2)
@@ -148,10 +149,31 @@ namespace ctns{
 
    // computed results at a given dot	
    struct dot_result{
-      std::vector<double> eopt; // eopt[nroots]
-      double dwt;
-      int deff;
-      int nmvp;
+      private:
+         // serialize
+         friend class boost::serialization::access;
+         template<class Archive>
+            void serialize(Archive & ar, const unsigned int version){
+               ar & eopt & dwt & deff & nmvp;
+            }
+      public:
+         void print() const{
+            int nroots = eopt.size();
+            for(int i=0; i<nroots; i++){
+               std::cout << "optimized energies:"
+                  << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
+                  << std::endl;
+            } // i
+            std::cout << " deff=" << deff
+                      << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt
+                      << std::noshowpos << " nmvp=" << nmvp
+                      << std::endl;
+         }    
+      public:
+         std::vector<double> eopt; // eopt[nroots]
+         double dwt;
+         int deff;
+         int nmvp;
    };
 
    struct sweep_data{
@@ -209,7 +231,7 @@ namespace ctns{
       int seqsize, nroots, maxsweep, restart_sweep;
       std::vector<directed_bond> seq; // sweep bond sequence 
       std::vector<input::params_sweep> ctrls; // control parameters
-      // energies
+                                              // energies
       std::vector<std::vector<dot_result>> opt_result; // (maxsweep,seqsize) 
       std::vector<dot_result> min_result;
       // timing
@@ -259,11 +281,11 @@ namespace ctns{
       }
       // find the min,max energy and discard weights
       auto eav_ptr = std::minmax_element(eav.begin(), eav.end());
-      int pos_eav_min = std::distance(eav.begin(),eav_ptr.first);
-      int pos_eav_max = std::distance(eav.begin(),eav_ptr.second);
+      int pos_eav_min = std::distance(eav.begin(), eav_ptr.first);
+      int pos_eav_max = std::distance(eav.begin(), eav_ptr.second);
       auto dwt_ptr = std::minmax_element(dwt.begin(), dwt.end());
-      int pos_dwt_min = std::distance(dwt.begin(),dwt_ptr.first);
-      int pos_dwt_max = std::distance(dwt.begin(),dwt_ptr.second);
+      int pos_dwt_min = std::distance(dwt.begin(), dwt_ptr.first);
+      int pos_dwt_max = std::distance(dwt.begin(), dwt_ptr.second);
       std::cout << " eav_max=" << *eav_ptr.second
          << " [ibond=" << pos_eav_max << "] "
          << " dwt_min=" << *dwt_ptr.first 
@@ -304,10 +326,10 @@ namespace ctns{
          taccum += t_total[jsweep];
          nmvp = min_result[jsweep].nmvp;
          std::cout << std::setw(13) << jsweep 
-            << std::setw(5) << ctrl.dots 
-            << std::setw(5) << ctrl.dcut 
-            << std::setw(5) << ctrl.eps 
-            << std::setw(5) << ctrl.noise << " | " 
+            << std::setw(3) << ctrl.dots 
+            << std::setw(8) << ctrl.dcut 
+            << " " << ctrl.eps 
+            << " " << ctrl.noise << " | " 
             << nmvp << " | " 
             << t_total[jsweep] << " | " 
             << (t_total[jsweep]/nmvp) << " | " 

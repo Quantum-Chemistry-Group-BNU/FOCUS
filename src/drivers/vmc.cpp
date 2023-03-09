@@ -18,9 +18,10 @@ using namespace fock;
 template <typename Tm>  
 void VMC(const input::schedule& schd,
          vmc::BaseAnsatz& wavefun){
-   int rank = 0; 
+   int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
+   size = schd.world.size();
 #endif
    
    // from SCI wavefunction
@@ -36,9 +37,11 @@ void VMC(const input::schedule& schd,
    double ecore;
    if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
 #ifndef SERIAL
-   boost::mpi::broadcast(schd.world, ecore, 0);
-   boost::mpi::broadcast(schd.world, int1e, 0);
-   mpi_wrapper::broadcast(schd.world, int2e, 0);
+   if(size > 1){
+      boost::mpi::broadcast(schd.world, ecore, 0);
+      boost::mpi::broadcast(schd.world, int1e, 0);
+      mpi_wrapper::broadcast(schd.world, int2e, 0);
+   }
 #endif
      
    auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
@@ -66,7 +69,6 @@ void VMC(const input::schedule& schd,
 
 int main(int argc, char *argv[]){
    int rank = 0, size = 1, maxthreads = 1;
-
 #ifndef SERIAL
    // setup MPI environment 
    boost::mpi::environment env{argc, argv};
@@ -74,7 +76,6 @@ int main(int argc, char *argv[]){
    rank = world.rank();
    size = world.size();
 #endif
-
 #ifdef _OPENMP
    maxthreads = omp_get_max_threads();
 #endif
@@ -96,8 +97,10 @@ int main(int argc, char *argv[]){
    input::schedule schd;
    if(rank == 0) schd.read(fname);
 #ifndef SERIAL
-   boost::mpi::broadcast(world, schd, 0);
-   schd.world = world;
+   if(size > 1){
+      boost::mpi::broadcast(world, schd, 0);
+      schd.world = world;
+   }
 #endif
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);

@@ -656,11 +656,30 @@ namespace ctns{
          timing.tf = tools::get_time();
 
          // 4. save on disk 
-         std::cout << "### lzd ###" << rank << std::endl;
          qops_pool.save(frop);
-         std::cout << "=== lzd ===" << rank << std::endl;
+         /* NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ],
+                  removing in the later configuration must wait until 
+                  the file from the former configuration has been saved!
+                  Therefore, oper_remove must come later than save,
+                  which contains the synchronization!
+         */
          oper_remove(fdel, debug);
-         std::cout << "--- lzd ---" << rank << std::endl;
+         // save for restart
+         if(rank == 0){
+            // local result
+            std::string fresult = scratch+"/result_ibond"+std::to_string(ibond)+".info";
+            rcanon_save(sweeps.opt_result[isweep][ibond], fresult);
+            // updated site
+            std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";
+            const auto p = dbond.get_current();
+            const auto& pdx = icomb.topo.rindex.at(p); 
+            rcanon_save(icomb.sites[pdx], fsite);
+            // generated cpsi
+            if(schd.ctns.guess){ 
+               std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond)+".info";
+               rcanon_save(icomb.cpsi, fcpsi);
+            }
+         } // only rank-0 save and load, later broadcast
 
          timing.t1 = tools::get_time();
          if(debug) timing.analysis("time_local", schd.ctns.verbose>0);

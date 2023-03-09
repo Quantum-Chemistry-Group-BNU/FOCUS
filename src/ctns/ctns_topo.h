@@ -22,8 +22,8 @@ namespace ctns{
    // node information for sites of ctns in right 
    //		            r
    //      c		    |
-   //      |               c---*
-   //  l---*---r               |
+   //      |      c---*
+   //  l---*---r      |
    //		            l
    struct node{
       private:

@@ -312,6 +312,15 @@ namespace ctns{
             CPUmem.renorm = worktot;
             CPUmem.display();
          }
+         // save for restart
+         if(rank == 0){
+            std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";
+            rcanon_save(icomb.sites[pdx], fsite);
+            if(schd.ctns.guess){ 
+               std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond)+".info";
+               rcanon_save(icomb.cpsi, fcpsi);
+            }
+         } // only rank-0 save and load, later broadcast
       }
 
 } // ctns

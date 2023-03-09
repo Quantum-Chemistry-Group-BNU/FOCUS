@@ -120,7 +120,7 @@ namespace ctns{
          // 2. reduce 
          auto ta = tools::get_time();
 #ifndef SERIAL
-         if(ifdist1 and size > 1){
+         if(size > 1 and ifdist1){
             std::vector<Tm> top(qops._opsize);
             // Sp[iproc] += \sum_i Sp[i]
             auto opS_index = qops.oper_index_op('S');

@@ -4,6 +4,10 @@
 #include "../../core/serialization.h"
 #include "../../core/matrix.h"
 
+#ifndef SERIAL
+#include "../../core/mpi_wrapper.h"
+#endif
+
 namespace ctns{
 
    template <typename Tm>
@@ -418,5 +422,28 @@ namespace ctns{
       }
 
 } // ctns
+
+#ifndef SERIAL
+
+namespace mpi_wrapper{
+
+   // stensor2
+   template <typename Tm>
+      void broadcast(const boost::mpi::communicator & comm, ctns::stensor3<Tm>& qt3, int root){
+         boost::mpi::broadcast(comm, qt3.own, root);
+         boost::mpi::broadcast(comm, qt3.info, root);
+         int rank = comm.rank();
+         if(rank != root && qt3.own) qt3._data = new Tm[qt3.info._size];
+         size_t chunksize = get_chunksize<Tm>();
+         size_t size = qt3.info._size; 
+         for(size_t offset=0; offset<size; offset+=chunksize){
+            size_t len = std::min(chunksize, size-offset);
+            boost::mpi::broadcast(comm, qt3._data+offset, len, root); 
+         }
+      }
+
+} // mpi_wrapper
+
+#endif
 
 #endif

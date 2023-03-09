@@ -17,9 +17,10 @@ using namespace fock;
 
 template <typename Km>  
 void CTNS(const input::schedule& schd){
-   int rank = 0; 
+   int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
+   size = schd.world.size();
 #endif
    // consistency check for dtype
    using Tm = typename Km::dtype;
@@ -89,13 +90,15 @@ void CTNS(const input::schedule& schd){
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
 
 #ifndef SERIAL
-   mpi_wrapper::broadcast(schd.world, icomb, 0);
-   icomb.world = schd.world;
+   if(size > 1){
+      mpi_wrapper::broadcast(schd.world, icomb, 0);
+      icomb.world = schd.world;
+   }
 #endif
 
    // compute sdiag
    if(schd.ctns.task_sdiag){
-      // parallel sampling can be implemented in future (very simple)!
+      // parallel sampling can be implemented in future (should be very simple)!
       if(rank == 0){
          int iroot  = schd.ctns.iroot;
          int nsample = schd.ctns.nsample;
@@ -112,13 +115,15 @@ void CTNS(const input::schedule& schd){
       double ecore;
       if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
 #ifndef SERIAL
-      boost::mpi::broadcast(schd.world, ecore, 0);
-      boost::mpi::broadcast(schd.world, int1e, 0);
-      mpi_wrapper::broadcast(schd.world, int2e, 0);
+      if(size > 1){
+         boost::mpi::broadcast(schd.world, ecore, 0);
+         boost::mpi::broadcast(schd.world, int1e, 0);
+         mpi_wrapper::broadcast(schd.world, int2e, 0);
+      }
 #endif
       // create scratch
       auto scratch = schd.scratch+"/sweep";
-      if(schd.ctns.task_ham){
+      if(schd.ctns.task_ham && schd.ctns.restart_bond == 0){ // restart_bond require site_ibondN.info in existing scratch 
          io::remove_scratch(scratch, (rank == 0)); // start a new scratch
       }
       io::create_scratch(scratch, (rank == 0));
@@ -142,7 +147,6 @@ void CTNS(const input::schedule& schd){
 
 int main(int argc, char *argv[]){
    int rank = 0, size = 1, maxthreads = 1;
-
 #ifndef SERIAL
    // setup MPI environment 
    boost::mpi::environment env{argc, argv};
@@ -150,7 +154,6 @@ int main(int argc, char *argv[]){
    rank = world.rank();
    size = world.size();
 #endif
-
 #ifdef _OPENMP
    maxthreads = omp_get_max_threads();
 #endif
@@ -172,17 +175,17 @@ int main(int argc, char *argv[]){
    input::schedule schd;
    if(rank == 0) schd.read(fname);
 #ifndef SERIAL
-   boost::mpi::broadcast(world, schd, 0);
-   schd.world = world;
+   if(size > 1){
+      boost::mpi::broadcast(world, schd, 0);
+      schd.world = world;
+   }
 #endif
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    io::create_scratch(schd.scratch, (rank == 0));
 
 #ifdef GPU
-   if(schd.ctns.alg_hvec == 7){
-      gpu_init(rank);
-   }
+   if(schd.ctns.alg_hvec == 7) gpu_init(rank);
 #endif
 
    if(schd.ctns.qkind == "rZ2"){
@@ -204,9 +207,7 @@ int main(int argc, char *argv[]){
    } // qkind
 
 #ifdef GPU
-   if(schd.ctns.alg_hvec == 7){
-      gpu_clean();
-   }
+   if(schd.ctns.alg_hvec == 7) gpu_clean();
 #endif
 
    // cleanup 

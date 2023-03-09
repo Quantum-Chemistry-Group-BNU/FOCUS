@@ -92,7 +92,7 @@ namespace input{
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
                   & task_init & task_sdiag & task_ham & task_opt
-                  & restart_sweep 
+                  & restart_sweep & restart_bond 
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
                   & alg_hvec & alg_renorm & ifdist1 & save_formulae & sort_formulae 
@@ -118,6 +118,7 @@ namespace input{
          bool task_opt = false;
          // restart
          int restart_sweep = 0;
+         int restart_bond = 0;
          // conversion of sci 
          int maxdets = 10000;
          double thresh_proj = 1.e-16;
