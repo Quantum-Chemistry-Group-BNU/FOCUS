@@ -43,9 +43,9 @@ using namespace std;
 
 int main(int argc, char * argv[]) {
 
-  const int n = (argc>1) ? atoi(argv[1]) : 1000;
-  const int n2 = n*2;
-  const int nld = n*2;
+  const MKL_INT n = (argc>1) ? atoi(argv[1]) : 1000;
+  const MKL_INT n2 = n*2;
+  const MKL_INT nld = n*2;
   cout << "n=" << n << endl;
 
   unique_ptr<complex<double>[]> A(new complex<double>[n*n]);
@@ -85,10 +85,10 @@ int main(int argc, char * argv[]) {
   cout << " **** using zheev **** " << endl;
   auto time0 = chrono::high_resolution_clock::now();
   {
-    int lwork = -1;
+    MKL_INT lwork = -1;
     unique_ptr<double[]> rwork(new double[6*n-2]);
     complex<double> lworkopt;
-    int info;
+    MKL_INT info;
     zheev_("V", "U", &n2, C.get(), &nld, eig.get(), &lworkopt, &lwork, rwork.get(), &info);
     lwork = static_cast<int>(lworkopt.real());
     unique_ptr<complex<double>[]> work(new complex<double>[lwork]);

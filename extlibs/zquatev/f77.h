@@ -25,7 +25,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // The views and conclusions contained in the software and documentation are those
-// of the authors and should not be interpreted as representing official policies,
+// of the authors and should not be MKL_INTerpreted as representing official policies,
 // either expressed or implied, of the FreeBSD Project.
 //
 
@@ -34,82 +34,86 @@
 
 #include <complex>
 
+#ifdef MKL_ILP64
+   #define MKL_INT long long int
+#endif
+
 // blas
 extern "C" {
 
- void zscal_(const int*, const std::complex<double>*, std::complex<double>*, const int*);
+ void zscal_(const MKL_INT*, const std::complex<double>*, std::complex<double>*, const MKL_INT*);
 #ifndef ZDOT_RETURN
- void zdotc_(std::complex<double>*, const int*, const std::complex<double>*, const int*, const std::complex<double>*, const int*);
+ void zdotc_(std::complex<double>*, const MKL_INT*, const std::complex<double>*, const MKL_INT*, const std::complex<double>*, const MKL_INT*);
 #else
- std::complex<double> zdotc_(const int*, const std::complex<double>*, const int*, const std::complex<double>*, const int*);
+ std::complex<double> zdotc_(const MKL_INT*, const std::complex<double>*, const MKL_INT*, const std::complex<double>*, const MKL_INT*);
 #endif
- void zaxpy_(const int*, const std::complex<double>*, const std::complex<double>*, const int*, std::complex<double>*, const int*);
- void zgemv_(const char*, const int*, const int*, const std::complex<double>*, const std::complex<double>*, const int*, const std::complex<double>*, const int*,
-             const std::complex<double>*, std::complex<double>*, const int*);
- void ztrmv_(const char*, const char*, const char*, const int*, const std::complex<double>*, const int*, std::complex<double>*, const int*);
+ void zaxpy_(const MKL_INT*, const std::complex<double>*, const std::complex<double>*, const MKL_INT*, std::complex<double>*, const MKL_INT*);
+ void zgemv_(const char*, const MKL_INT*, const MKL_INT*, const std::complex<double>*, const std::complex<double>*, const MKL_INT*, const std::complex<double>*, const MKL_INT*,
+             const std::complex<double>*, std::complex<double>*, const MKL_INT*);
+ void ztrmv_(const char*, const char*, const char*, const MKL_INT*, const std::complex<double>*, const MKL_INT*, std::complex<double>*, const MKL_INT*);
 #ifdef HAVE_ZGEMM3M
- void zgemm3m_(const char* transa, const char* transb, const int* m, const int* n, const int* k,
-               const std::complex<double>* alpha, const std::complex<double>* a, const int* lda, const std::complex<double>* b, const int* ldb,
-               const std::complex<double>* beta, std::complex<double>* c, const int* ldc);
+ void zgemm3m_(const char* transa, const char* transb, const MKL_INT* m, const MKL_INT* n, const MKL_INT* k,
+               const std::complex<double>* alpha, const std::complex<double>* a, const MKL_INT* lda, const std::complex<double>* b, const MKL_INT* ldb,
+               const std::complex<double>* beta, std::complex<double>* c, const MKL_INT* ldc);
 #else
- void zgemm_(const char* transa, const char* transb, const int* m, const int* n, const int* k,
-             const std::complex<double>* alpha, const std::complex<double>* a, const int* lda, const std::complex<double>* b, const int* ldb,
-             const std::complex<double>* beta, std::complex<double>* c, const int* ldc);
+ void zgemm_(const char* transa, const char* transb, const MKL_INT* m, const MKL_INT* n, const MKL_INT* k,
+             const std::complex<double>* alpha, const std::complex<double>* a, const MKL_INT* lda, const std::complex<double>* b, const MKL_INT* ldb,
+             const std::complex<double>* beta, std::complex<double>* c, const MKL_INT* ldc);
 #endif
- void zrot_(const int*, std::complex<double>*, const int*, std::complex<double>*, const int*, const double*, const std::complex<double>*);
- void zgerc_(const int*, const int*, const std::complex<double>*, const std::complex<double>*, const int*, const std::complex<double>*, const int*,
-             std::complex<double>*, const int*);
- void zgeru_(const int*, const int*, const std::complex<double>*, const std::complex<double>*, const int*, const std::complex<double>*, const int*,
-             std::complex<double>*, const int*);
+ void zrot_(const MKL_INT*, std::complex<double>*, const MKL_INT*, std::complex<double>*, const MKL_INT*, const double*, const std::complex<double>*);
+ void zgerc_(const MKL_INT*, const MKL_INT*, const std::complex<double>*, const std::complex<double>*, const MKL_INT*, const std::complex<double>*, const MKL_INT*,
+             std::complex<double>*, const MKL_INT*);
+ void zgeru_(const MKL_INT*, const MKL_INT*, const std::complex<double>*, const std::complex<double>*, const MKL_INT*, const std::complex<double>*, const MKL_INT*,
+             std::complex<double>*, const MKL_INT*);
 
  // lapack
- void zheev_(const char*, const char*, const int*, std::complex<double>*, const int*, double*, std::complex<double>*, const int*, double*, int*);
- void zhbev_(const char*, const char*, const int*, const int*, std::complex<double>*, const int*, double*, std::complex<double>*, const int*,
-             std::complex<double>*, double*, int*);
+ void zheev_(const char*, const char*, const MKL_INT*, std::complex<double>*, const MKL_INT*, double*, std::complex<double>*, const MKL_INT*, double*, MKL_INT*);
+ void zhbev_(const char*, const char*, const MKL_INT*, const MKL_INT*, std::complex<double>*, const MKL_INT*, double*, std::complex<double>*, const MKL_INT*,
+             std::complex<double>*, double*, MKL_INT*);
  void zlartg_(const std::complex<double>*, const std::complex<double>*, double*, std::complex<double>*, std::complex<double>*);
- void zlarfg_(const int*, const std::complex<double>*, std::complex<double>*, const int*, std::complex<double>*);
+ void zlarfg_(const MKL_INT*, const std::complex<double>*, std::complex<double>*, const MKL_INT*, std::complex<double>*);
 }
 
 
 namespace {
 
- void zgemv_(const char* a, const int b, const int c, const std::complex<double> d, const std::complex<double>* e, const int f, const std::complex<double>* g, const int h,
-             const std::complex<double> i, std::complex<double>* j, const int k) { ::zgemv_(a,&b,&c,&d,e,&f,g,&h,&i,j,&k); }
- void ztrmv_(const char* a, const char* b, const char* c, const int d, const std::complex<double>* e, const int f, std::complex<double>* g, const int h)
+ void zgemv_(const char* a, const MKL_INT b, const MKL_INT c, const std::complex<double> d, const std::complex<double>* e, const MKL_INT f, const std::complex<double>* g, const MKL_INT h,
+             const std::complex<double> i, std::complex<double>* j, const MKL_INT k) { ::zgemv_(a,&b,&c,&d,e,&f,g,&h,&i,j,&k); }
+ void ztrmv_(const char* a, const char* b, const char* c, const MKL_INT d, const std::complex<double>* e, const MKL_INT f, std::complex<double>* g, const MKL_INT h)
             { ::ztrmv_(a,b,c,&d,e,&f,g,&h); }
 #ifdef HAVE_ZGEMM3M
- void zgemm3m_(const char* transa, const char* transb, const int m, const int n, const int k,
-               const std::complex<double> alpha, const std::complex<double>* a, const int lda, const std::complex<double>* b, const int ldb,
-               const std::complex<double> beta, std::complex<double>* c, const int ldc) { ::zgemm3m_(transa,transb,&m,&n,&k,&alpha,a,&lda,b,&ldb,&beta,c,&ldc); }
+ void zgemm3m_(const char* transa, const char* transb, const MKL_INT m, const MKL_INT n, const MKL_INT k,
+               const std::complex<double> alpha, const std::complex<double>* a, const MKL_INT lda, const std::complex<double>* b, const MKL_INT ldb,
+               const std::complex<double> beta, std::complex<double>* c, const MKL_INT ldc) { ::zgemm3m_(transa,transb,&m,&n,&k,&alpha,a,&lda,b,&ldb,&beta,c,&ldc); }
 #else
- void zgemm3m_(const char* transa, const char* transb, const int m, const int n, const int k,
-             const std::complex<double> alpha, const std::complex<double>* a, const int lda, const std::complex<double>* b, const int ldb,
-             const std::complex<double> beta, std::complex<double>* c, const int ldc) { ::zgemm_(transa,transb,&m,&n,&k,&alpha,a,&lda,b,&ldb,&beta,c,&ldc); }
+ void zgemm3m_(const char* transa, const char* transb, const MKL_INT m, const MKL_INT n, const MKL_INT k,
+             const std::complex<double> alpha, const std::complex<double>* a, const MKL_INT lda, const std::complex<double>* b, const MKL_INT ldb,
+             const std::complex<double> beta, std::complex<double>* c, const MKL_INT ldc) { ::zgemm_(transa,transb,&m,&n,&k,&alpha,a,&lda,b,&ldb,&beta,c,&ldc); }
 #endif
 
- void zaxpy_(const int a, const std::complex<double> b, const std::complex<double>* c, const int d, std::complex<double>* e, const int f) { ::zaxpy_(&a,&b,c,&d,e,&f); }
- void zscal_(const int a, const std::complex<double> b, std::complex<double>* c, const int d) { ::zscal_(&a, &b, c, &d); }
+ void zaxpy_(const MKL_INT a, const std::complex<double> b, const std::complex<double>* c, const MKL_INT d, std::complex<double>* e, const MKL_INT f) { ::zaxpy_(&a,&b,c,&d,e,&f); }
+ void zscal_(const MKL_INT a, const std::complex<double> b, std::complex<double>* c, const MKL_INT d) { ::zscal_(&a, &b, c, &d); }
 #ifndef ZDOT_RETURN
- std::complex<double> zdotc_(const int b, const std::complex<double>* c, const int d, const std::complex<double>* e, const int f) {
+ std::complex<double> zdotc_(const MKL_INT b, const std::complex<double>* c, const MKL_INT d, const std::complex<double>* e, const MKL_INT f) {
    std::complex<double> a;
    ::zdotc_(&a,&b,c,&d,e,&f);
    return a;
  }
 #else
- std::complex<double> zdotc_(const int a, const std::complex<double>* b, const int c, const std::complex<double>* d, const int e) { return ::zdotc_(&a,b,&c,d,&e); }
+ std::complex<double> zdotc_(const MKL_INT a, const std::complex<double>* b, const MKL_INT c, const std::complex<double>* d, const MKL_INT e) { return ::zdotc_(&a,b,&c,d,&e); }
 #endif
- void zheev_(const char* a, const char* b, const int c, std::complex<double>* d, const int e, double* f, std::complex<double>* g, const int h, double* i, int& j)
+ void zheev_(const char* a, const char* b, const MKL_INT c, std::complex<double>* d, const MKL_INT e, double* f, std::complex<double>* g, const MKL_INT h, double* i, MKL_INT& j)
              { ::zheev_(a,b,&c,d,&e,f,g,&h,i,&j); }
- void zhbev_(const char* a, const char* b, const int c, const int d, std::complex<double>* e, const int f, double* g, std::complex<double>* h, const int i,
-             std::complex<double>* j, double* k, int& l) { ::zhbev_(a, b, &c, &d, e, &f, g, h, &i, j, k, &l); }
- void zrot_(const int a, std::complex<double>* b, const int c, std::complex<double>* d, const int e, const double f, const std::complex<double> g) {
+ void zhbev_(const char* a, const char* b, const MKL_INT c, const MKL_INT d, std::complex<double>* e, const MKL_INT f, double* g, std::complex<double>* h, const MKL_INT i,
+             std::complex<double>* j, double* k, MKL_INT& l) { ::zhbev_(a, b, &c, &d, e, &f, g, h, &i, j, k, &l); }
+ void zrot_(const MKL_INT a, std::complex<double>* b, const MKL_INT c, std::complex<double>* d, const MKL_INT e, const double f, const std::complex<double> g) {
             ::zrot_(&a, b, &c, d, &e, &f, &g); }
- void zgerc_(const int a, const int b, const std::complex<double> c, const std::complex<double>* d, const int e, const std::complex<double>* f, const int g,
-             std::complex<double>* h, const int i) { ::zgerc_(&a, &b, &c, d, &e, f, &g, h, &i); }
- void zgeru_(const int a, const int b, const std::complex<double> c, const std::complex<double>* d, const int e, const std::complex<double>* f, const int g,
-             std::complex<double>* h, const int i) { ::zgeru_(&a, &b, &c, d, &e, f, &g, h, &i); }
+ void zgerc_(const MKL_INT a, const MKL_INT b, const std::complex<double> c, const std::complex<double>* d, const MKL_INT e, const std::complex<double>* f, const MKL_INT g,
+             std::complex<double>* h, const MKL_INT i) { ::zgerc_(&a, &b, &c, d, &e, f, &g, h, &i); }
+ void zgeru_(const MKL_INT a, const MKL_INT b, const std::complex<double> c, const std::complex<double>* d, const MKL_INT e, const std::complex<double>* f, const MKL_INT g,
+             std::complex<double>* h, const MKL_INT i) { ::zgeru_(&a, &b, &c, d, &e, f, &g, h, &i); }
  void zlartg_(const std::complex<double> a, const std::complex<double> b, double& c, std::complex<double>& d, std::complex<double>& e) { ::zlartg_(&a, &b, &c, &d, &e); }
- void zlarfg_(const int a, std::complex<double>& b, std::complex<double>* c, const int d, std::complex<double>& e) { ::zlarfg_(&a, &b, c, &d, &e); }
+ void zlarfg_(const MKL_INT a, std::complex<double>& b, std::complex<double>* c, const MKL_INT d, std::complex<double>& e) { ::zlarfg_(&a, &b, c, &d, &e); }
 
 }
 

@@ -80,7 +80,7 @@ int zquatev(const int n2, complex<double>* const D, const int ld2, double* const
     work3[2*i] = D0[i+i*ld];
     work3[2*i+1] = D0[i+i*ld+1];
   }
-  int info;
+  MKL_INT info;
   zhbev_("V", "L", n, 1, work3, 2, eig, D0+ld, ld2, work1, reinterpret_cast<double*>(work2), info);
 
   // form the coefficient matrix in D
