@@ -34,19 +34,13 @@ namespace ctns{
    struct dot_timing{
       void print_part(const std::string key,
             const double dtkey,
-            const double dtacc) const{
+            const double dttot,
+            double& dtacc) const{
+         dtacc += dtkey;
          std::cout << " T(" << std::setw(5) << key << ") = " 
             << std::scientific << std::setprecision(2) << dtkey << " S"
-            << "  per = " << std::setw(4) << std::defaultfloat << dtkey/(dt+eps)*100 
-            << "  per(accum) = " << dtacc/(dt+eps)*100 
-            << std::endl;
-      }
-      void print_part_dmrg(const std::string key,
-            const double dtkey
-            ) const{
-         std::cout << " T(" << std::setw(5) << key << ") = " 
-            << std::scientific << std::setprecision(2) << dtkey << " S"
-            << "  per = " << std::setw(4) << std::defaultfloat << dtkey/(dt2+eps)*100 
+            << "  per = " << std::setw(4) << std::defaultfloat << dtkey/(dttot+eps)*100 
+            << "  per(accum) = " << dtacc/(dttot+eps)*100 
             << std::endl;
       }
       void print(const std::string msg) const{
@@ -54,22 +48,23 @@ namespace ctns{
             << std::scientific << std::setprecision(2) << dt
             << " S #####" 
             << std::endl;
-         double dtacc = dt0;
-         this->print_part("fetch", dt0, dtacc); dtacc += dt1; 
-         this->print_part("hdiag", dt1, dtacc); dtacc += dt2;
-         this->print_part("dvdsn", dt2, dtacc); dtacc += dt3;
-         this->print_part("decim", dt3, dtacc); dtacc += dt4;
-         this->print_part("guess", dt4, dtacc); dtacc += dt5;
-         this->print_part("renrm", dt5, dtacc); dtacc += dt6;
-         this->print_part("save" , dt6, dtacc);
-
-         this->print_part_dmrg("symbolic_formulae_twodot   ", dtb1);  
-         this->print_part_dmrg("op_lrc1c2_cpumem_host2GPU  ", dtb2); 
-         this->print_part_dmrg("inter_compute              ", dtb3); 
-         this->print_part_dmrg("inter_cpumem_host2GPU      ", dtb4); 
-         this->print_part_dmrg("preprocess_formulae_Hxlist2", dtb5); 
-         this->print_part_dmrg("generate_mmtasks           ", dtb6); 
-         this->print_part_dmrg("preprocess_Hx_batchGPU     ", dtb7);
+         double dtacc = 0.0;
+         this->print_part("fetch", dt0, dt, dtacc); 
+         this->print_part("hdiag", dt1, dt, dtacc);
+         this->print_part("dvdsn", dt2, dt, dtacc);
+         this->print_part("decim", dt3, dt, dtacc);
+         this->print_part("guess", dt4, dt, dtacc);
+         this->print_part("renrm", dt5, dt, dtacc);
+         this->print_part("save" , dt6, dt, dtacc);
+         std::cout << "Detailed decomposition of T(dvdson):" << std::endl;
+         dtacc = 0.0;
+         this->print_part("symbolic_formulae_twodot   ", dtb1, dt2, dtacc);
+         this->print_part("op_lrc1c2_cpumem_host2GPU  ", dtb2, dt2, dtacc);
+         this->print_part("inter_compute              ", dtb3, dt2, dtacc);
+         this->print_part("inter_cpumem_host2GPU      ", dtb4, dt2, dtacc);
+         this->print_part("preprocess_formulae_Hxlist2", dtb5, dt2, dtacc);
+         this->print_part("generate_mmtasks           ", dtb6, dt2, dtacc);
+         this->print_part("preprocess_Hx_batchGPU     ", dtb7, dt2, dtacc);
       }
       void analysis(const std::string msg,
             const bool debug=true){

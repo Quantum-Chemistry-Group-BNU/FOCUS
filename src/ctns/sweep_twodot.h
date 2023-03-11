@@ -537,22 +537,19 @@ namespace ctns{
             //
             size_t batchsize = 0;
             size_t GPUmem_dvdson = sizeof(Tm)*2*ndim;
-            size_t GPUmem_rest = GPUmem_oper + GPUmem_inter + GPUmem_dvdson + 48;
-            if(GPUmem.size() > GPUmem_rest){
-               batchsize = std::floor(double(GPUmem.size() - GPUmem_rest)/(sizeof(Tm)*blksize*2 + 112));
+            size_t GPUmem_reserved = GPUmem_oper + GPUmem_inter + GPUmem_dvdson + 48;
+            if(GPUmem.size() > GPUmem_reserved){
+               batchsize = std::floor(double(GPUmem.size() - GPUmem_reserved)/(sizeof(Tm)*blksize*2 + 112));
                batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
                if(batchsize == 0 && maxbatch != 0){
                   std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
                   exit(1);
                }
             }else{
-               std::cout << "error: in sufficient GPU memory for batchGEMM!" << std::endl;
-               std::cout << "GPUmem.size=" << GPUmem.size()
-                         << " GPUmem.used=" << GPUmem.used()
-                         << " GPUmem_rest=" << GPUmem_rest
-                         << " (oper,inter,dvdson)=" << GPUmem_oper
-                         << "," << GPUmem_inter
-                         << "," << GPUmem_dvdson 
+               std::cout << "error: in sufficient GPU memory for batchGEMM! already reserved:" << std::endl;
+               std::cout << "GPUmem.size=" << GPUmem.size() << " GPUmem.used=" << GPUmem.used()
+                         << " GPUmem_reserved=" << GPUmem_reserved << " (oper,inter,dvdson)=" 
+                         << GPUmem_oper << "," << GPUmem_inter << "," << GPUmem_dvdson 
                          << std::endl;
                exit(1);
             }
@@ -588,7 +585,7 @@ namespace ctns{
                }
             } // i
             // save for analysis of BatchGEMM
-            if(rank == 0 && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+            if(debug && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
                save_mmtasks(mmtasks, isweep, ibond);
             }
             timing.tb7 = tools::get_time();
