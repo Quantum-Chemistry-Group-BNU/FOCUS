@@ -3,25 +3,9 @@
 
 namespace ctns{
 
-   // Matrix-matrix operations: interface to XGEMM
-   template <typename Tm>
-      struct MMinfo{
-         public:
-            double cost() const{ return 2*double(M)*N*K; }
-         public:
-            char transA, transB;
-            int M, N, K, LDA, LDB;
-            int locA, locB, locC;
-            size_t offA, offB, offC;
-      };
-   template <typename Tm>
-      using MMlist = std::vector<MMinfo<Tm>>;  
-   template <typename Tm>
-      using MMlist2 = std::vector<std::vector<MMinfo<Tm>>>;
-
    const int locinter = 4;
-   const int locin = 5;
-   const int locout = 6;
+   const int locin = 5; // x
+   const int locout = 6; // y
    extern const int locinter;
    extern const int locin;
    extern const int locout;
