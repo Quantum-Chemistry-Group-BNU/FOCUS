@@ -73,8 +73,6 @@ namespace ctns{
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
             std::vector<MMreduce<Tm>> mmreduce; // mmreduce[ibatch]
       };
-   template <typename Tm>
-      using MMtasks = std::vector<MMtask<Tm>>;
 
    template <typename Tm>
       void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
@@ -177,6 +175,31 @@ namespace ctns{
             }
 
          } // k
+      }
+
+   template <typename Tm>
+      using MMtasks = std::vector<MMtask<Tm>>;
+
+   template <typename Tm>
+      void save_mmtasks(const MMtasks<Tm>& mmtasks, const int isweep, const int ibond){
+         std::string fgemm = "mmtasks_gemm";
+         fgemm += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
+         for(int i=0; i<mmtasks.size(); i++){
+            std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
+            mmtasks[i].save(fgemmi);
+         }
+         std::string freduction = "mmtasks_reduction";
+         freduction += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond)+".txt";
+         std::ofstream fout(freduction);
+         for(int i=0; i<mmtasks.size(); i++){
+            for(int j=0; j<mmtasks[i].mmreduce.size(); j++){
+               const auto& red = mmtasks[i].mmreduce[j];
+               fout << "iblk=" << i << " ibatch=" << j 
+                  << " batchsize=" << red.batchsize << " ndim=" << red.ndim
+                  << std::endl;      
+            }
+         }
+         fout.close();
       }
 
 } // ctns

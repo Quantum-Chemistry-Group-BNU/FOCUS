@@ -6,361 +6,364 @@
 
 namespace ctns{
 
-inline void analyze_distribution(const std::vector<int>& sizes,
-				 const std::string name){
-   //tools::print_vector(sizes,name);
-   int mpisize = sizes.size();
-   std::vector<double> fsizes(mpisize);
-   std::transform(sizes.cbegin(), sizes.cend(), fsizes.begin(),
-		  [](const int& x){ return double(x); }); 
-   int max = *std::max_element(fsizes.begin(), fsizes.end());
-   int min = *std::min_element(fsizes.begin(), fsizes.end());
-   double sum = std::accumulate(fsizes.begin(), fsizes.end(), 0.0);
-   double mean = sum/mpisize;
-   std::transform(fsizes.begin(), fsizes.end(), fsizes.begin(),
-		  [&mean](const double& x){ return (x-mean)*(x-mean); });
-   double stdev = std::sqrt(std::accumulate(fsizes.begin(), fsizes.end(), 0.0)/mpisize);
-   std::cout << " " << name
-	     << " mpisize=" << mpisize
-  	     << " sum=" << int(sum)
-  	     << " mean=" << int(mean) 
-  	     << " max=" << max 
-  	     << " min=" << min
-  	     << " diff=" << (max-min)
-  	     << " stdev=" << std::setprecision(1) << stdev
-  	     << std::endl;
-}
-
-// analyze the distribution of operators along a sweep
-template <typename Km>
-void preprocess_distribution(const comb<Km>& icomb,
-		             const input::schedule& schd){	
-   int size = 1, rank = 0;
-#ifndef SERIAL
-   size = icomb.world.size();
-   rank = icomb.world.rank();
-#endif  
-   // settings 
-   using DTYPE = typename Km::dtype;
-   const int isym = Km::isym;
-   const bool ifkr = Km::ifkr;
-   const std::string qname = qkind::get_name<Km>();
-   if(rank == 0){
-      std::cout << "\nctns::preprocess_distribution" 
-		<< " qkind=" << qname
-		<< " isym=" << isym
-		<< " ifkr=" << ifkr
-		<< std::endl;
+   inline void analyze_distribution(const std::vector<int>& sizes,
+         const std::string name){
+      //tools::print_vector(sizes,name);
+      int mpisize = sizes.size();
+      std::vector<double> fsizes(mpisize);
+      std::transform(sizes.cbegin(), sizes.cend(), fsizes.begin(),
+            [](const int& x){ return double(x); }); 
+      int max = *std::max_element(fsizes.begin(), fsizes.end());
+      int min = *std::min_element(fsizes.begin(), fsizes.end());
+      double sum = std::accumulate(fsizes.begin(), fsizes.end(), 0.0);
+      double mean = sum/mpisize;
+      std::transform(fsizes.begin(), fsizes.end(), fsizes.begin(),
+            [&mean](const double& x){ return (x-mean)*(x-mean); });
+      double stdev = std::sqrt(std::accumulate(fsizes.begin(), fsizes.end(), 0.0)/mpisize);
+      std::cout << " " << name
+         << " mpisize=" << mpisize
+         << " sum=" << int(sum)
+         << " mean=" << int(mean) 
+         << " max=" << max 
+         << " min=" << min
+         << " diff=" << (max-min)
+         << " stdev=" << std::setprecision(1) << stdev
+         << std::endl;
    }
-   if(rank != 0) return;
 
-   auto sweeps = icomb.topo.get_sweeps(true);
-   int mid0 = icomb.topo.nphysical/2-2;
-   int mid1 = sweeps.size()-1-mid0;
-   for(int ibond=0; ibond<sweeps.size(); ibond++){
+   // analyze the distribution of operators along a sweep
+   template <typename Km>
+      void preprocess_distribution(const comb<Km>& icomb,
+            const input::schedule& schd){	
+         int size = 1, rank = 0;
+#ifndef SERIAL
+         size = icomb.world.size();
+         rank = icomb.world.rank();
+#endif  
+         // settings 
+         using Tm = typename Km::dtype;
+         const int isym = Km::isym;
+         const bool ifkr = Km::ifkr;
+         const std::string qname = qkind::get_name<Km>();
+         if(rank == 0){
+            std::cout << "\nctns::preprocess_distribution" 
+               << " qkind=" << qname
+               << " isym=" << isym
+               << " ifkr=" << ifkr
+               << std::endl;
+         }
+         if(rank != 0) return;
 
-      //if(ibond != mid0 and ibond != mid1) continue;
-      if(ibond != mid0) continue;
+         integral::two_body<Tm> int2e;
+         int2e.sorb = 2*icomb.topo.nphysical;
+         int2e.init_mem();
+         std::fill_n(int2e.data.begin(), int2e.data.size(), 1.0); 
 
-      const auto& dbond = sweeps[ibond];
-      const auto& p0 = dbond.p0;
-      const auto& p1 = dbond.p1;
-      const auto& forward = dbond.forward;
-      std::cout << "\nibond=" << ibond 
-	        << " dbond=" << dbond
-		<< std::endl;
-      auto fbond = icomb.topo.get_fbond(dbond,".");
-      auto frop = fbond.first;
-      auto fdel = fbond.second;
-      std::cout << " frop=" << frop 
-	        << " fdel=" << fdel
-		<< std::endl;
-      auto node = icomb.topo.get_node(dbond.p1);
-      auto lsupp = node.lsupport;
-      auto rsupp = node.rsupport;
-      tools::print_vector(lsupp,"lsupp");
-      tools::print_vector(rsupp,"rsupp");
+         auto sweeps = icomb.topo.get_sweeps(true);
+         int mid0 = icomb.topo.nphysical/2-2;
+         int mid1 = sweeps.size()-1-mid0;
+         for(int ibond=0; ibond<sweeps.size(); ibond++){
 
-      std::vector<int> ksupp, krest;
-      if(forward){
-         ksupp = lsupp;
-         krest = rsupp;
-      }else{
-         ksupp = rsupp;
-         krest = lsupp;
-      }
-      auto cindex = oper_index_opC(ksupp, ifkr);
-      auto sindex = oper_index_opS(krest, ifkr);
-      auto aindex = oper_index_opA(cindex, ifkr);
-      auto bindex = oper_index_opB(cindex, ifkr);
-      auto pindex = oper_index_opP(krest, ifkr); 
-      auto qindex = oper_index_opQ(krest, ifkr);
-      std::cout << " C:" << cindex.size() 
-                << " S:" << sindex.size()
-                << " A:" << aindex.size()
-                << " B:" << bindex.size()
-                << " P:" << pindex.size()
-                << " Q:" << qindex.size()
-		<< std::endl;
+            //if(ibond != mid0 and ibond != mid1) continue;
+            if(ibond != mid0) continue;
 
-      // twodot Hx
-      std::vector<int> suppl, suppr, suppc1, suppc2;
-      auto node0 = icomb.topo.get_node(p0);
-      auto node1 = icomb.topo.get_node(p1);
-      if(!dbond.is_cturn()){
-	 suppl = node0.lorbs;
-	 suppr = node1.rorbs;
-	 suppc1 = node0.corbs;
-	 suppc2 = node1.corbs;
-      }else{
-	 suppl = node0.lorbs;
-	 suppr = node0.rorbs;
-	 suppc1 = node1.corbs;
-	 suppc2 = node1.rorbs;
-      }
-      int sl = suppl.size();
-      int sr = suppr.size();
-      int sc1 = suppc1.size();
-      int sc2 = suppc2.size();
-      assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
-      bool ifNC = (sl+sc1 <= sc2+sr);
-      std::cout << "(sl,sr,sc1,sc2)="
-	        << sl << "," << sr << "," << sc1 << "," << sc2
-		<< " ifNC=" << ifNC
-		<< endl;
-      auto cindex_l = oper_index_opC(suppl, ifkr);
-      auto cindex_r = oper_index_opC(suppr, ifkr);
-      auto cindex_c1 = oper_index_opC(suppc1, ifkr);
-      auto cindex_c2 = oper_index_opC(suppc2, ifkr);
-      const bool& ifdist1 = schd.ctns.ifdist1;
+            const auto& dbond = sweeps[ibond];
+            const auto& p0 = dbond.p0;
+            const auto& p1 = dbond.p1;
+            const auto& forward = dbond.forward;
+            std::cout << tools::line_separator2 << std::endl;
+            std::cout << "ibond=" << ibond << " dbond=" << dbond << std::endl;
+            std::cout << tools::line_separator2 << std::endl;
 
-      integral::two_body<DTYPE> int2e;
-      int2e.sorb = 2*icomb.topo.nphysical;
-      int2e.init_mem();
-      std::fill_n(int2e.data.begin(), int2e.data.size(), 1.0); 
-     
-      std::string scratch = "analysis_"+qname;
-      io::remove_scratch(scratch);
-      io::create_scratch(scratch); 
+            // twodot Hx
+            std::vector<int> suppl, suppr, suppc1, suppc2;
+            auto node0 = icomb.topo.get_node(p0);
+            auto node1 = icomb.topo.get_node(p1);
+            if(!dbond.is_cturn()){
+               suppl = node0.lorbs;
+               suppr = node1.rorbs;
+               suppc1 = node0.corbs;
+               suppc2 = node1.corbs;
+            }else{
+               suppl = node0.lorbs;
+               suppr = node0.rorbs;
+               suppc1 = node1.corbs;
+               suppc2 = node1.rorbs;
+            }
+            int sl = suppl.size();
+            int sr = suppr.size();
+            int sc1 = suppc1.size();
+            int sc2 = suppc2.size();
+            assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
+            bool ifNC = (sl+sc1 <= sc2+sr);
+            std::cout << " (sl,sr,sc1,sc2)="
+               << sl << "," << sr << "," << sc1 << "," << sc2
+               << " ifNC=" << ifNC
+               << endl;
+            auto cindex_l = oper_index_opC(suppl, ifkr);
+            auto cindex_r = oper_index_opC(suppr, ifkr);
+            auto cindex_c1 = oper_index_opC(suppc1, ifkr);
+            auto cindex_c2 = oper_index_opC(suppc2, ifkr);
+            const bool& ifdist1 = schd.ctns.ifdist1;
+            
+            // renormalization
+            auto fbond = icomb.topo.get_fbond(dbond,".");
+            auto frop = fbond.first;
+            auto fdel = fbond.second;
+            std::cout << " renormalization: frop=" << frop << " fdel=" << fdel << std::endl;
+            auto node = icomb.topo.get_node(dbond.p1);
+            auto lsupp = node.lsupport;
+            auto rsupp = node.rsupport;
+            tools::print_vector(lsupp,"lsupp");
+            tools::print_vector(rsupp,"rsupp");
+            std::vector<int> ksupp, krest;
+            if(forward){
+               ksupp = lsupp;
+               krest = rsupp;
+            }else{
+               ksupp = rsupp;
+               krest = lsupp;
+            }
+            auto cindex = oper_index_opC(ksupp, ifkr);
+            auto sindex = oper_index_opS(krest, ifkr);
+            auto aindex = oper_index_opA(cindex, ifkr);
+            auto bindex = oper_index_opB(cindex, ifkr);
+            auto pindex = oper_index_opP(krest, ifkr); 
+            auto qindex = oper_index_opQ(krest, ifkr);
+            std::cout << " renormalized operators: C:" << cindex.size() 
+               << " S:" << sindex.size()
+               << " A:" << aindex.size()
+               << " B:" << bindex.size()
+               << " P:" << pindex.size()
+               << " Q:" << qindex.size()
+               << std::endl;
 
-      std::vector<int> sizes({1,2,4,8,32,128,1024});
-  
-      for(int idx=0; idx<sizes.size(); idx++){
-	 int mpisize = sizes[idx];
-	 std::cout << "\nmpisize=" << mpisize 
-		   << " ifdist1=" << ifdist1
-		   << " ifkr=" << ifkr 
-		   << std::endl;
-         // 1. distribution of two-indexed operators 
-	 // s
-	 std::vector<int> sstat(mpisize,0);  
-         for(int idx : sindex){
-            int iproc = distribute1(ifkr,mpisize,idx);
-            sstat[iproc] += 1;
-	 }
-         analyze_distribution(sstat,"sstat");
-	 // a
-	 std::vector<int> astat(mpisize,0);  
-         for(int idx : aindex){
-            int iproc = distribute2(ifkr,mpisize,idx);
-            astat[iproc] += 1;
-	 }
-         analyze_distribution(astat,"astat");
-	 // b
-	 std::vector<int> bstat(mpisize,0);  
-         for(int idx : bindex){
-            int iproc = distribute2(ifkr,mpisize,idx);
-            bstat[iproc] += 1;
-	 }
-         analyze_distribution(bstat,"bstat");
-	 // p
-	 std::vector<int> pstat(mpisize,0);  
-         for(int idx : pindex){
-            int iproc = distribute2(ifkr,mpisize,idx);
-            pstat[iproc] += 1;
-	 }
-         analyze_distribution(pstat,"pstat");
-	 // q
-	 std::vector<int> qstat(mpisize,0);  
-         for(int idx : qindex){
-            int iproc = distribute2(ifkr,mpisize,idx);
-            qstat[iproc] += 1;
-	 }
-         analyze_distribution(qstat,"qstat");
+            std::string scratch = "analysis_"+qname;
+            io::remove_scratch(scratch);
+            io::create_scratch(scratch); 
 
-         // 2. distribution of renormalized operators
-	 std::string rscratch = scratch+"/rformulae_"+std::to_string(mpisize);
-	 io::create_scratch(rscratch); 
-	 std::vector<int> rsizes(mpisize,0.0);
-	 for(int rank=0; rank<mpisize; rank++){
-            std::string fname = rscratch+"/renorm"+std::to_string(rank)+".txt";
-            std::streambuf *psbuf, *backup;
-   	    std::ofstream file;
-            file.open(fname);
-	    backup = std::cout.rdbuf();
-	    psbuf = file.rdbuf();
-	    std::cout.rdbuf(psbuf);
-	    std::cout << "gen_formulae_renorm" 
-		      << " qkind=" << qname
-		      << " isym=" << isym
-		      << " ifkr=" << ifkr
-		      << " mpisize=" << mpisize
-		      << " mpirank=" << rank
-		      << std::endl;
+            std::vector<int> mpisizes({1,2,4,8,64});
+            for(int idx=0; idx<mpisizes.size(); idx++){
+               int mpisize = mpisizes[idx];
+               std::cout << '\n' << tools::line_separator << std::endl;
+               std::cout << "mpisize=" << mpisize 
+                  << " ifdist1=" << ifdist1
+                  << " ifkr=" << ifkr 
+                  << std::endl;
+               std::cout << tools::line_separator << std::endl;
 
-   	    std::string oplist = "CABPQSH";
-	    std::string block1, block2;
-	    std::vector<int> cindex1, cindex2;
-	    if(forward){
-	       block1 = "l"; cindex1 = cindex_l;
-	       block2 = "c"; cindex2 = cindex_c1;
-	    }else{
-	       block1 = "c"; cindex1 = cindex_c2;
-	       block2 = "r"; cindex2 = cindex_r;
-	    }
-            bool ifsave = true;
-            std::map<std::string,int> counter;
-            auto formulae = gen_formulae_renorm(oplist, block1, block2, 
-			    			cindex1, cindex2, krest,
-		      	  	 		isym, ifkr, int2e, mpisize, rank, ifdist1, 
-						ifsave, counter);
+               std::cout << "\n1. analyze the distribution of renormalized operators:" << std::endl;
+               // s
+               std::vector<int> sstat(mpisize,0);  
+               for(int idx : sindex){
+                  int iproc = distribute1(ifkr,mpisize,idx);
+                  sstat[iproc] += 1;
+               }
+               analyze_distribution(sstat,"opS stat");
+               // a
+               std::vector<int> astat(mpisize,0);  
+               for(int idx : aindex){
+                  int iproc = distribute2(ifkr,mpisize,idx);
+                  astat[iproc] += 1;
+               }
+               analyze_distribution(astat,"opA stat");
+               // b
+               std::vector<int> bstat(mpisize,0);  
+               for(int idx : bindex){
+                  int iproc = distribute2(ifkr,mpisize,idx);
+                  bstat[iproc] += 1;
+               }
+               analyze_distribution(bstat,"opB stat");
+               // p
+               std::vector<int> pstat(mpisize,0);  
+               for(int idx : pindex){
+                  int iproc = distribute2(ifkr,mpisize,idx);
+                  pstat[iproc] += 1;
+               }
+               analyze_distribution(pstat,"opP stat");
+               // q
+               std::vector<int> qstat(mpisize,0);  
+               for(int idx : qindex){
+                  int iproc = distribute2(ifkr,mpisize,idx);
+                  qstat[iproc] += 1;
+               }
+               analyze_distribution(qstat,"opQ stat");
 
-            formulae.display("total");
-	    std::cout.rdbuf(backup);
-	    file.close();
+               std::cout << "\n2. sizes of renorm formulae" << std::endl;
+               std::string rscratch = scratch+"/rformulae_mpisize"+std::to_string(mpisize);
+               io::create_scratch(rscratch); 
+               std::vector<int> rsizes(mpisize,0.0);
+               for(int rank=0; rank<mpisize; rank++){
+                  std::string fname = rscratch+"/rformulae_rank"+std::to_string(rank)+".txt";
+                  std::streambuf *psbuf, *backup;
+                  std::ofstream file;
+                  file.open(fname);
+                  backup = std::cout.rdbuf();
+                  psbuf = file.rdbuf();
+                  std::cout.rdbuf(psbuf);
+                  std::cout << "gen_formulae_renorm" 
+                     << " qkind=" << qname
+                     << " isym=" << isym
+                     << " ifkr=" << ifkr
+                     << " mpisize=" << mpisize
+                     << " mpirank=" << rank
+                     << std::endl;
 
-	    // statistics
-	    std::cout << " rank=" << rank
-	              << " size=" << formulae.size()
-	              << " sizetot=" << formulae.sizetot()
-		      << " C:" << counter["C"]
-		      << " A:" << counter["A"]
-		      << " B:" << counter["B"]
-		      << " P:" << counter["P"]
-		      << " Q:" << counter["Q"]
-		      << " S:" << counter["S"]
-		      << " H:" << counter["H"]
-	              << std::endl;
-	    rsizes[rank] = formulae.sizetot();
-	 } // rank
-	 analyze_distribution(rsizes,"renorm");
+                  std::string oplist = "CABPQSH";
+                  std::string block1, block2;
+                  std::vector<int> cindex1, cindex2;
+                  if(forward){
+                     block1 = "l"; cindex1 = cindex_l;
+                     block2 = "c"; cindex2 = cindex_c1;
+                  }else{
+                     block1 = "c"; cindex1 = cindex_c2;
+                     block2 = "r"; cindex2 = cindex_r;
+                  }
+                  bool ifsave = true;
+                  std::map<std::string,int> counter;
+                  auto formulae = gen_formulae_renorm(oplist, block1, block2, 
+                        cindex1, cindex2, krest,
+                        isym, ifkr, int2e, mpisize, rank, ifdist1, 
+                        ifsave, counter);
 
-         // 3. Hx formulae
-         std::string hscratch = scratch+"/hformulae_"+std::to_string(mpisize);
-	 io::create_scratch(hscratch); 
-	 std::vector<int> fsizes(mpisize,0.0);
-	 for(int rank=0; rank<mpisize; rank++){
-            std::string fname = hscratch+"/Hx"+std::to_string(rank)+".txt";
-            std::streambuf *psbuf, *backup;
-   	    std::ofstream file;
-            file.open(fname);
-	    backup = std::cout.rdbuf();
-	    psbuf = file.rdbuf();
-	    std::cout.rdbuf(psbuf);
-	    std::cout << "gen_formulae_twodot" 
-		      << " qkind=" << qname
-		      << " isym=" << isym
-		      << " ifkr=" << ifkr
-		      << " mpisize=" << mpisize
-		      << " mpirank=" << rank
-		      << std::endl;
+                  formulae.display("total");
+                  std::cout.rdbuf(backup);
+                  file.close();
 
-            bool ifsave = true;
-            std::map<std::string,int> counter;
-            auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
-		      	  	 		isym, ifkr, int2e, mpisize, rank, ifdist1, 
-						ifsave, counter);
+                  // statistics
+                  std::cout << " rank=" << rank
+                     << " size=" << formulae.size()
+                     << " sizetot=" << formulae.sizetot()
+                     << " C:" << counter["C"]
+                     << " A:" << counter["A"]
+                     << " B:" << counter["B"]
+                     << " P:" << counter["P"]
+                     << " Q:" << counter["Q"]
+                     << " S:" << counter["S"]
+                     << " H:" << counter["H"]
+                     << std::endl;
+                  rsizes[rank] = formulae.sizetot();
+               } // rank
+               analyze_distribution(rsizes,"renorm");
 
-            formulae.display("total");
-	    std::cout.rdbuf(backup);
-	    file.close();
+               std::cout << "\n3. sizes of Hx formulae" << std::endl;
+               std::string hscratch = scratch+"/hformulae_mpisize"+std::to_string(mpisize);
+               io::create_scratch(hscratch); 
+               std::vector<int> fsizes(mpisize,0.0);
+               for(int rank=0; rank<mpisize; rank++){
+                  std::string fname = hscratch+"/hformulae_rank"+std::to_string(rank)+".txt";
+                  std::streambuf *psbuf, *backup;
+                  std::ofstream file;
+                  file.open(fname);
+                  backup = std::cout.rdbuf();
+                  psbuf = file.rdbuf();
+                  std::cout.rdbuf(psbuf);
+                  std::cout << "gen_formulae_twodot" 
+                     << " qkind=" << qname
+                     << " isym=" << isym
+                     << " ifkr=" << ifkr
+                     << " mpisize=" << mpisize
+                     << " mpirank=" << rank
+                     << std::endl;
 
-	    // statistics
-	    auto key1 = ifNC? "AP" : "PA";
-	    auto key2 = ifNC? "BQ" : "QB";
-	    std::cout << " rank=" << rank
-	              << " size(formulae)=" << formulae.size()
-		      << " H1:" << counter["H1"]
-		      << " H2:" << counter["H2"]
-		      << " CS:" << counter["CS"]
-		      << " SC:" << counter["SC"]
-		      << " " << key1 << ":" << counter[key1]
-		      << " " << key2 << ":" << counter[key2]
-	              << std::endl;
-	    fsizes[rank] = formulae.size();
-	 } // rank
-	 analyze_distribution(fsizes,"Htwodot");
-      } // idx
+                  bool ifsave = true;
+                  std::map<std::string,int> counter;
+                  auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+                        isym, ifkr, int2e, mpisize, rank, ifdist1, 
+                        ifsave, counter);
 
-      // 4. classification of Hx
-      bool ifsave = false;
-      std::map<std::string,int> counter;
-      auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
-		      	  		  isym, ifkr, int2e, 1, 0, ifdist1, 
-					  ifsave, counter);
-      std::map<std::string,std::vector<int>> maps;
-      for(int i=0; i<formulae.size(); i++){
-         auto symbol = formulae.tasks[i].symbol();
-	 maps[symbol].push_back(i);
-      }	     
-      std::cout << "Hx_twodot: " << std::endl;
-      int nterm = 0;
-      int htype = 0;
-      for(const auto& pr : maps){
-	 std::cout << "idx=" << htype 
-		   << " htype=" << pr.first
-		   << " size=" << pr.second.size()
-		   << std::endl;
-	 nterm += pr.second.size(); 
-	 htype++;
-      } 
-      std::cout << "Total types=" << htype
-	        << " nterm=" << nterm
-		<< std::endl;
-      assert(formulae.size() == nterm);
+                  formulae.display("total");
+                  std::cout.rdbuf(backup);
+                  file.close();
 
-      // classification based on types
-      for(int idx=0; idx<sizes.size(); idx++){
-	 int mpisize = sizes[idx];
-	 std::cout << "\nmpisize=" << mpisize 
-		   << " ifdist1=" << ifdist1
-		   << " ifkr=" << ifkr 
-		   << std::endl;
-         std::vector<std::map<std::string,int>> imaps(mpisize);
-	 for(int i=0; i<mpisize; i++){
-            for(const auto& pr : maps){
-	       const auto& key = pr.first;
-               imaps[i][key] = 0;
-	    }
-	 }
-	 for(int rank=0; rank<mpisize; rank++){
+                  // statistics
+                  auto key1 = ifNC? "AP" : "PA";
+                  auto key2 = ifNC? "BQ" : "QB";
+                  std::cout << " rank=" << rank
+                     << " size(formulae)=" << formulae.size()
+                     << " H1:" << counter["H1"]
+                     << " H2:" << counter["H2"]
+                     << " CS:" << counter["CS"]
+                     << " SC:" << counter["SC"]
+                     << " " << key1 << ":" << counter[key1]
+                     << " " << key2 << ":" << counter[key2]
+                     << std::endl;
+                  fsizes[rank] = formulae.size();
+               } // rank
+               analyze_distribution(fsizes,"Htwodot");
+            } // idx
+
+/*
+            // Classification of Hx
             bool ifsave = false;
             std::map<std::string,int> counter;
             auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
-		      	  	 		isym, ifkr, int2e, mpisize, rank, ifdist1, 
-						ifsave, counter);
+                  isym, ifkr, int2e, 1, 0, ifdist1, 
+                  ifsave, counter);
+            std::map<std::string,std::vector<int>> maps;
             for(int i=0; i<formulae.size(); i++){
                auto symbol = formulae.tasks[i].symbol();
-	       imaps[rank][symbol] += 1;
-	    }
-	 } // rank
-         std::cout << "Hx_twodot: " << std::endl;
-	 int i = 0;
-         for(const auto& pr : maps){
-            std::cout << "idx=" << i 
-           	      << " htype=" << pr.first
-           	      << " total=" << pr.second.size() 
-		      << " : ";
-            for(int rank=0; rank<mpisize; rank++){
-	       std::cout << imaps[rank][pr.first] << " ";
-	    }
-	    std::cout << std::endl;
-            i++;
-         }
-      } // idx
+               maps[symbol].push_back(i);
+            }	     
+            std::cout << "Hx_twodot: " << std::endl;
+            int nterm = 0;
+            int htype = 0;
+            for(const auto& pr : maps){
+               std::cout << "idx=" << htype 
+                  << " htype=" << pr.first
+                  << " size=" << pr.second.size()
+                  << std::endl;
+               nterm += pr.second.size(); 
+               htype++;
+            } 
+            std::cout << "Total types=" << htype
+               << " nterm=" << nterm
+               << std::endl;
+            assert(formulae.size() == nterm);
 
-   } // ibond
-}
+            // classification based on types
+            for(int idx=0; idx<sizes.size(); idx++){
+               int mpisize = sizes[idx];
+               std::cout << "\nmpisize=" << mpisize 
+                  << " ifdist1=" << ifdist1
+                  << " ifkr=" << ifkr 
+                  << std::endl;
+               std::vector<std::map<std::string,int>> imaps(mpisize);
+               for(int i=0; i<mpisize; i++){
+                  for(const auto& pr : maps){
+                     const auto& key = pr.first;
+                     imaps[i][key] = 0;
+                  }
+               }
+               for(int rank=0; rank<mpisize; rank++){
+                  bool ifsave = false;
+                  std::map<std::string,int> counter;
+                  auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+                        isym, ifkr, int2e, mpisize, rank, ifdist1, 
+                        ifsave, counter);
+                  for(int i=0; i<formulae.size(); i++){
+                     auto symbol = formulae.tasks[i].symbol();
+                     imaps[rank][symbol] += 1;
+                  }
+               } // rank
+               std::cout << "Hx_twodot: " << std::endl;
+               int i = 0;
+               for(const auto& pr : maps){
+                  std::cout << "idx=" << i 
+                     << " htype=" << pr.first
+                     << " total=" << pr.second.size() 
+                     << " : ";
+                  for(int rank=0; rank<mpisize; rank++){
+                     std::cout << imaps[rank][pr.first] << " ";
+                  }
+                  std::cout << std::endl;
+                  i++;
+               }
+            } // idx
+*/
+
+         } // ibond
+      }
 
 } // ctns
 

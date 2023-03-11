@@ -63,16 +63,13 @@ namespace ctns{
          this->print_part("renrm", dt5, dtacc); dtacc += dt6;
          this->print_part("save" , dt6, dtacc);
 
-         this->print_part_dmrg("preprocess_op_wf           ",dtb1 );  
-         this->print_part_dmrg("symbolic_formulae_twodot   ",dtb2 ); 
-         this->print_part_dmrg("preprocess_formulae_Hxlist2",dtb3 ); 
-         this->print_part_dmrg("verbose1_debug_Hxlst2      ",dtb4 ); 
-         this->print_part_dmrg("op_lrc1c2_cpumem_host2GPU  ",dtb5 ); 
-         this->print_part_dmrg("inter_cpumem_host2GPU      ",dtb6 ); 
-         this->print_part_dmrg("batchsize_compute          ",dtb7 );
-         this->print_part_dmrg("generate_mmtasks           ",dtb8 ); 
-         this->print_part_dmrg("save_mmtasks               ",dtb9 ); 
-         this->print_part_dmrg("preprocess_Hx_batchGPU     ",dtb10);
+         this->print_part_dmrg("symbolic_formulae_twodot   ", dtb1);  
+         this->print_part_dmrg("op_lrc1c2_cpumem_host2GPU  ", dtb2); 
+         this->print_part_dmrg("inter_compute              ", dtb3); 
+         this->print_part_dmrg("inter_cpumem_host2GPU      ", dtb4); 
+         this->print_part_dmrg("preprocess_formulae_Hxlist2", dtb5); 
+         this->print_part_dmrg("generate_mmtasks           ", dtb6); 
+         this->print_part_dmrg("preprocess_Hx_batchGPU     ", dtb7);
       }
       void analysis(const std::string msg,
             const bool debug=true){
@@ -84,17 +81,15 @@ namespace ctns{
          dt4 = tools::get_duration(te-td); // t(guess)
          dt5 = tools::get_duration(tf-te); // t(renrm)
          dt6 = tools::get_duration(t1-tf); // t(save)
-                                           // decomposition of dt2 into different parts
-         dtb1 = tools::get_duration(tb1-tb); // tb1-tb : t(preprocess_op_wf           )
-         dtb2 = tools::get_duration(tb2-tb1);// tb2-tb1: t(symbolic_formulae_twodot   ) 
-         dtb3 = tools::get_duration(tb3-tb2);// tb3-tb2: t(preprocess_formulae_Hxlist2)
-         dtb4 = tools::get_duration(tb4-tb3);// tb4-tb3: t(verbose1_debug_Hxlst2      )
-         dtb5 = tools::get_duration(tb5-tb4);// tb5-tb4: t(op_lrc1c2_cpumem_host2GPU  )
-         dtb6 = tools::get_duration(tb6-tb5);// tb6-tb5: t(inter_cpumem_host2GPU      )
-         dtb7 = tools::get_duration(tb7-tb6);// tb7-tb6: t(batchsize_compute          )
-         dtb8 = tools::get_duration(tb8-tb7);// tb8-tb7: t(generate_mmtasks           )
-         dtb9 = tools::get_duration(tb9-tb8);// tb9-tb8: t(save_mmtasks               )
-         dtb10 =tools::get_duration(tb10-tb9);//tb10-tb9:t(preprocess_Hx_batchGPU     ) 
+         
+         // decomposition of dt2 into different parts
+         dtb1 = tools::get_duration(tb2-tb1); // t(symbolic_formulae_twodot   ) 
+         dtb2 = tools::get_duration(tb3-tb2); // t(op_lrc1c2_cpumem_host2GPU  )
+         dtb3 = tools::get_duration(tb4-tb3); // t(inter_compute              )
+         dtb4 = tools::get_duration(tb5-tb4); // t(inter_cpumem_host2GPU      )
+         dtb5 = tools::get_duration(tb6-tb5); // t(preprocess_formulae_Hxlist2)
+         dtb6 = tools::get_duration(tb7-tb6); // t(generate_mmtasks           )
+         dtb7 = tools::get_duration(tb8-tb7); // t(preprocess_Hx_batchGPU     ) 
          if(debug) this->print(msg);
       }
       void accumulate(const dot_timing& timer,
@@ -116,35 +111,30 @@ namespace ctns{
          dtb5  += timer.dtb5; 
          dtb6  += timer.dtb6; 
          dtb7  += timer.dtb7; 
-         dtb8  += timer.dtb8; 
-         dtb9  += timer.dtb9; 
-         dtb10 += timer.dtb10;
          if(debug) this->print(msg);
       }
       public:
       using Tm = std::chrono::high_resolution_clock::time_point;
       const double eps = 1.e-20;
       Tm t0;
-      Tm ta; // ta-t0: t(fetch) 
-      Tm tb; // tb-ta: t(hdiag)
-      Tm tc; // tc-ta: t(dvdson)
-      Tm td; // td-tc: t(decim)
-      Tm te; // te-td: t(guess)
-      Tm tf; // tf-te: t(renrm)
-      Tm t1; // t1-tf: t(save)
+      Tm ta; // t(fetch) 
+      Tm tb; // t(hdiag)
+      Tm tc; // t(dvdson)
+      Tm td; // t(decim)
+      Tm te; // t(guess)
+      Tm tf; // t(renrm)
+      Tm t1; // t(save)
       double dt=0, dt0=0, dt1=0, dt2=0, dt3=0, dt4=0, dt5=0, dt6=0;
 
-      Tm tb1; // tb1-tb : t(preprocess_op_wf)
-      Tm tb2; // tb2-tb1: t(prepare_GPU) 
-      Tm tb3; // tb3-tb2: t(symbolic_formulae)
-      Tm tb4; // tb4-tb3: t(preprocess_formulae)
-      Tm tb5; // tb5-tb4: t(debug_Hxlst2)
-      Tm tb6; // tb6-tb5: t(GPU_malloc_opertot)
-      Tm tb7; // tb7-tb6: t(cpumem_copy)
-      Tm tb8; // tb8-tb7: t(task_init)
-      Tm tb9; // tb9-tb8: t(GPU_malloc_dev_workspace)
-      Tm tb10;// tb10-tb9: t(preprocess_Hx_batchGPU)
-      double dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0, dtb10=0;
+      Tm tb1; // t(symbolic_formulae_twodot   ) 
+      Tm tb2; // t(op_lrc1c2_cpumem_host2GPU  )
+      Tm tb3; // t(inter_compute              )
+      Tm tb4; // t(inter_cpumem_host2GPU      )
+      Tm tb5; // t(preprocess_formulae_Hxlist2)
+      Tm tb6; // t(generate_mmtasks           )
+      Tm tb7; // t(preprocess_Hx_batchGPU     )
+      Tm tb8; 
+      double dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0;
    };
 
    // computed results at a given dot	
