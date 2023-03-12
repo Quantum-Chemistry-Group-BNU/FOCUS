@@ -257,11 +257,17 @@ KNOWN PROBLEMS
 
  * Profiling: Check fetch time & CPU memory for Fe8S7 !!!
 
- * Support Intermediate with GPU?
+ !!! Support Intermediate with GPU? [working!!!]
  
- * Support Renorm with GPU
+ !!! Support Renorm with GPU [???]
 
- * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma]
+=== TODOs ===
+
+ * Revise Hx -> a single big batch?
+
+ * Muilt-GPU support on jiageng? => reinstall OpenMPI
+
+ * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma?]
 
  * OpenMP parallelization in decimation
 

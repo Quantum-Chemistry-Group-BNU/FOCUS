@@ -1,8 +1,6 @@
 #ifndef PREPROCESS_MVBATCH_H
 #define PREPROCESS_MVBATCH_H
 
-#include <time.h>
-#include <sys/time.h>
 #include "../core/blas_batch.h"
 #ifdef GPU
 #include "../gpu/gpu_blas_batch.h"
@@ -24,11 +22,11 @@ namespace ctns{
    template <typename Tm>
       using MVlist = std::vector<MVinfo<Tm>>;  
 
-   // Matrix-matrix operations: interface to XGEMM_BATCH
+   // Matrix-vector operations: interface to XGEMV_BATCH
    template <typename Tm>
       struct MVbatch{
          public:
-            void init(const MMlist<Tm>& MMlst);
+            void init(const MVlist<Tm>& MVlst);
             void kernel(const int batchgemv, Tm** ptrs){
                if(batchgemv == 0){
                   this->xgemv_omp(ptrs);   
@@ -83,7 +81,7 @@ namespace ctns{
             const auto& mv = MVlst[i];
             cost += mv.cost();
             transA[i] = mv.transA; 
-            M[i] = mv.M; N[i] = mm.N;
+            M[i] = mv.M; N[i] = mv.N;
             LDA[i] = mv.LDA;
             locA[i] = mv.locA; locx[i] = mv.locx; locy[i] = mv.locy;
             offA[i] = mv.offA; offx[i] = mv.offx; offy[i] = mv.offy;
@@ -105,7 +103,7 @@ namespace ctns{
             Tm* xptr = ptrs[locx[i]] + offx[i];
             Tm* yptr = ptrs[locy[i]] + offy[i];
             linalg::xgemv(&transA[i], M[i], N[i], alpha,
-                  aptr, LDA[i], x, INCX[i], beta,
+                  aptr, LDA[i], xptr, INCX[i], beta,
                   yptr, INCY[i]);
          } // i
       }

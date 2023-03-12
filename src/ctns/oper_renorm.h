@@ -8,6 +8,7 @@
 #include "oper_rbasis.h"
 #include "symbolic_kernel_renorm.h"
 #include "symbolic_kernel_renorm2.h"
+#include "preprocess_rinter.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -38,13 +39,14 @@ namespace ctns{
 #ifndef SERIAL
          size = icomb.world.size();
          rank = icomb.world.rank();
-#endif   
+#endif  
          const int isym = Km::isym;
          const bool ifkr = Km::ifkr;
          const int& alg_renorm = schd.ctns.alg_renorm;
          const bool& sort_formulae = schd.ctns.sort_formulae;
          const bool& ifdist1 = schd.ctns.ifdist1;
-         if(rank == 0 and schd.ctns.verbose>0){ 
+         const bool debug = (rank == 0); 
+         if(debug and schd.ctns.verbose>0){ 
             std::cout << "ctns::oper_renorm_opAll coord=" << p 
                << " superblock=" << superblock 
                << " isym=" << isym 
@@ -89,6 +91,13 @@ namespace ctns{
          oper_timer.start();
          const bool debug_formulae = schd.ctns.verbose>0;
          size_t worktot = 0;
+         // intermediates      
+         rintermediates<Tm> rinter;
+         const std::string block1 = superblock.substr(0,1);
+         const std::string block2 = superblock.substr(1,2);
+         const oper_dictmap<Tm> qops_dict = {{block1,qops1}, {block2,qops2}};
+         Tm* opaddr[3] = {qops_dict.at(block1)._data, qops_dict.at(block2)._data, nullptr};
+         std::map<std::string,int> oploc = {{block1,0},{block2,1}};
          if(alg_renorm == 0){
 
             // oldest version
@@ -110,6 +119,29 @@ namespace ctns{
                   size, rank, fname, sort_formulae, ifdist1,
                   debug_formulae);
             worktot = symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
+
+         }else if(alg_renorm == 3){
+
+            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
+            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+                  size, rank, fname, sort_formulae, ifdist1,
+                  debug_formulae);
+            
+            // generation of renormalization block [lc/lr/cr]
+            rinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, rtasks, debug);
+
+            // GEMM list and GEMV list
+
+            // kernel
+
+            exit(1);
+            worktot = symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
+
+         }else if(alg_renorm == 4){
+
+            // BatchGPU: symbolic formulae + rintermediates + preallocation of workspace
+            std::cout << "Not implemented yet!" << std::endl;
+            exit(1);
 
          }else{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
@@ -171,7 +203,7 @@ namespace ctns{
          }
 
          auto tf = tools::get_time();
-         if(rank == 0){ 
+         if(debug){ 
             if(schd.ctns.verbose>0) qops.print("qops");
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
             double t_tot = tools::get_duration(tf-ti); 

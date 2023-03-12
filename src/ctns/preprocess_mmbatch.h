@@ -1,8 +1,6 @@
 #ifndef PREPROCESS_MMBATCH_H
 #define PREPROCESS_MMBATCH_H
 
-#include <time.h>
-#include <sys/time.h>
 #include "../core/blas_batch.h"
 #ifdef GPU
 #include "../gpu/gpu_blas_batch.h"
@@ -131,22 +129,16 @@ namespace ctns{
 #ifdef GPU
    template <typename Tm>
       void MMbatch<Tm>::xgemm_batch_gpu(Tm** ptrs){
-         int a_total=0;
-         int b_total=0;
-         int c_total=0;
          // initialization 
          for(size_t i=0; i<size; i++){
             Aptr[i] = ptrs[locA[i]] + offA[i];
             Bptr[i] = ptrs[locB[i]] + offB[i];
             Cptr[i] = ptrs[locC[i]] + offC[i];
-            a_total +=M[i]*K[i];
-            b_total +=K[i]*N[i];
-            c_total +=M[i]*N[i];
          }
          if(size > 0){
             linalg::xgemm_batch_gpu(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
-                  Cptr.data(), M.data(), size, a_total, b_total, c_total);
+                  Cptr.data(), M.data(), size);
          }
       }
 #endif

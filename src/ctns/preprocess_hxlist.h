@@ -1,6 +1,8 @@
 #ifndef PREPROCESS_HXLIST_H
 #define PREPROCESS_HXLIST_H
 
+#include "preprocess_mmbatch.h"
+
 namespace ctns{
 
    const int locinter = 4;

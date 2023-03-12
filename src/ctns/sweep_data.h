@@ -99,13 +99,13 @@ namespace ctns{
          dt5 += timer.dt5;
          dt6 += timer.dt6;
 
-         dtb1  += timer.dtb1; 
-         dtb2  += timer.dtb2; 
-         dtb3  += timer.dtb3; 
-         dtb4  += timer.dtb4; 
-         dtb5  += timer.dtb5; 
-         dtb6  += timer.dtb6; 
-         dtb7  += timer.dtb7; 
+         dtb1 += timer.dtb1; 
+         dtb2 += timer.dtb2; 
+         dtb3 += timer.dtb3; 
+         dtb4 += timer.dtb4; 
+         dtb5 += timer.dtb5; 
+         dtb6 += timer.dtb6; 
+         dtb7 += timer.dtb7; 
          if(debug) this->print(msg);
       }
       public:

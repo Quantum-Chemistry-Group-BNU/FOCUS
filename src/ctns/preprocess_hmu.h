@@ -13,7 +13,7 @@ namespace ctns{
             void init(const int it,
                   const symbolic_task<Tm>& H_formulae,
                   const oper_dictmap<Tm>& qops_dict,
-                  const intermediates<Tm>& inter,
+                  const hintermediates<Tm>& hinter,
                   const std::map<std::string,int>& oploc);
             bool identity(const int i) const{ return loc[i]==-1; }
             // onedot
@@ -48,7 +48,7 @@ namespace ctns{
       void Hmu_ptr<Tm>::init(const int it,
             const symbolic_task<Tm>& H_formulae,
             const oper_dictmap<Tm>& qops_dict,
-            const intermediates<Tm>& inter,
+            const hintermediates<Tm>& hinter,
             const std::map<std::string,int>& oploc){
          const auto& HTerm = H_formulae.tasks[it];
          terms = HTerm.size();
@@ -72,7 +72,7 @@ namespace ctns{
                off[pos] = qops._offset.at(std::make_pair(label,index0)); // qops
             }else{
                loc[pos] = locinter;
-               off[pos] = inter._offset.at(std::make_pair(it,idx)); // intermediates
+               off[pos] = hinter._offset.at(std::make_pair(it,idx)); // intermediates
             }
          } // idx
          coeffH = coeff*HTerm.Hsign(); 

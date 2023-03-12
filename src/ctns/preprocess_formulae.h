@@ -1,7 +1,7 @@
 #ifndef PREPROCESS_FORMULAE_H
 #define PREPROCESS_FORMULAE_H
 
-#include "preprocess_inter.h"
+#include "preprocess_hinter.h"
 #include "preprocess_hmu.h"
 
 namespace ctns{
@@ -11,7 +11,7 @@ namespace ctns{
             const std::map<std::string,int>& oploc,
             const symbolic_task<Tm>& H_formulae,
             const QTm& wf,
-            const intermediates<Tm>& inter,
+            const hintermediates<Tm>& hinter,
             Hxlist<Tm>& Hxlst,
             size_t& blksize,
             double& cost,
@@ -22,7 +22,7 @@ namespace ctns{
          int hsize = H_formulae.size();
          std::vector<Hmu_ptr<Tm>> Hmu_vec(hsize);
          for(int it=0; it<hsize; it++){
-            Hmu_vec[it].init(it, H_formulae, qops_dict, inter, oploc);
+            Hmu_vec[it].init(it, H_formulae, qops_dict, hinter, oploc);
          } // it
          auto ta = tools::get_time();
 
@@ -51,7 +51,7 @@ namespace ctns{
             const std::map<std::string,int>& oploc,
             const symbolic_task<Tm>& H_formulae,
             const QTm& wf,
-            const intermediates<Tm>& inter,
+            const hintermediates<Tm>& hinter,
             Hxlist2<Tm>& Hxlst2,
             size_t& blksize,
             double& cost,
@@ -62,7 +62,7 @@ namespace ctns{
          int hsize = H_formulae.size();
          std::vector<Hmu_ptr<Tm>> Hmu_vec(hsize);
          for(int it=0; it<hsize; it++){
-            Hmu_vec[it].init(it, H_formulae, qops_dict, inter, oploc); 
+            Hmu_vec[it].init(it, H_formulae, qops_dict, hinter, oploc); 
          } // it
          auto ta = tools::get_time();
 

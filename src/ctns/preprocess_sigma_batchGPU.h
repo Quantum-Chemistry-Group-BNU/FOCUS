@@ -3,7 +3,7 @@
 #ifndef PREPROCESS_SIGMA_BATCHGPU_H
 #define PREPROCESS_SIGMA_BATCHGPU_H
 
-#include "preprocess_inter.h"
+#include "preprocess_hinter.h"
 #include "preprocess_hmu.h"
 #include "preprocess_mmtask.h"
 #include "../gpu/gpu_env.h"

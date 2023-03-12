@@ -139,7 +139,7 @@ namespace ctns{
          Hx_functors<Tm> Hx_funs; // hvec0
          symbolic_task<Tm> H_formulae; // hvec1,2
          bipart_task<Tm> H_formulae2; // hvec3
-         intermediates<Tm> inter; // hvec4,5,6
+         hintermediates<Tm> hinter; // hvec4,5,6
          Hxlist<Tm> Hxlst; // hvec4
          Hxlist2<Tm> Hxlst2; // hvec5
          MMtasks<Tm> mmtasks; // hvec6
@@ -152,7 +152,7 @@ namespace ctns{
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
          if(schd.ctns.alg_hvec >=4){
-            std::cout << "inter does not support onedot yet!" << std::endl;
+            std::cout << "hinter does not support onedot yet!" << std::endl;
             exit(1); 
          }
          if(schd.ctns.alg_hvec == 0){

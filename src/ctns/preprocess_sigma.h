@@ -1,7 +1,7 @@
 #ifndef PREPROCESS_SIGMA_H
 #define PREPROCESS_SIGMA_H
 
-#include "preprocess_inter.h"
+#include "preprocess_hinter.h"
 #include "preprocess_hmu.h"
 
 namespace ctns{

@@ -179,7 +179,7 @@ namespace ctns{
          Hx_functors<Tm> Hx_funs; // hvec0
          symbolic_task<Tm> H_formulae; // hvec1,2
          bipart_task<Tm> H_formulae2; // hvec3
-         intermediates<Tm> inter; // hvec4,5,6
+         hintermediates<Tm> hinter; // hvec4,5,6
          Hxlist<Tm> Hxlst; // hvec4
          Hxlist2<Tm> Hxlst2; // hvec5
          MMtasks<Tm> mmtasks; // hvec6
@@ -263,15 +263,14 @@ namespace ctns{
 
          }else if(schd.ctns.alg_hvec == 4){
 
-            // Single Hxlst: symbolic formulae + intermediates + preallocation of workspace
+            // Single Hxlst: symbolic formulae + hintermediates + preallocation of workspace
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
-            inter.kernel_cpu(schd.ctns.alg_inter, qops_dict, H_formulae, debug);
-            opaddr[4] = inter._data;
+            hinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, H_formulae, debug);
 
-            preprocess_formulae_Hxlist(qops_dict, oploc, H_formulae, wf, inter, 
+            preprocess_formulae_Hxlist(qops_dict, oploc, H_formulae, wf, hinter, 
                   Hxlst, blksize, cost, rank==0 && schd.ctns.verbose>0);
 
             get_MMlist(Hxlst, schd.ctns.hxorder);
@@ -315,15 +314,14 @@ namespace ctns{
 
          }else if(schd.ctns.alg_hvec == 5){
 
-            // Hxlist2: symbolic formulae + intermediates + preallocation of workspace
+            // Hxlist2: symbolic formulae + hintermediates + preallocation of workspace
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
 
-            inter.kernel_cpu(schd.ctns.alg_inter, qops_dict, H_formulae, debug);
-            opaddr[4] = inter._data;
+            hinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, H_formulae, debug);
 
-            preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, inter, 
+            preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, hinter, 
                   Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
 
             get_MMlist(Hxlst2, schd.ctns.hxorder);
@@ -376,15 +374,14 @@ namespace ctns{
                exit(1);
             }
 
-            // BatchGEMM: symbolic formulae + intermediates + preallocation of workspace
+            // BatchGEMM: symbolic formulae + hintermediates + preallocation of workspace
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
-            inter.init(schd.ctns.alg_inter, qops_dict, H_formulae, debug);
-            opaddr[4] = inter._data;
+            hinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, H_formulae, debug);
 
-            preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, inter, 
+            preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, hinter, 
                   Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
 
             // generate mmtasks
@@ -428,7 +425,7 @@ namespace ctns{
                exit(1);
             }
 
-            // BatchGEMM on GPU: symbolic formulae + intermediates + preallocation of workspace
+            // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
             timing.tb1 = tools::get_time();
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
@@ -468,34 +465,33 @@ namespace ctns{
 
             timing.tb3 = tools::get_time();
 
-            // compute intermediates
-            inter.init(qops_dict, H_formulae, debug);
-            size_t GPUmem_inter = sizeof(Tm)*inter.size();
-            opaddr[4] = (Tm*)GPUmem.allocate(GPUmem_inter);
+            // compute hintermediates
+            hinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, H_formulae, debug);
+            
+            timing.tb4 = tools::get_time();
+
+            // copy 
+            size_t GPUmem_hinter = sizeof(Tm)*hinter.size();
+            if(schd.ctns.alg_inter != 2){
+               opaddr[4] = (Tm*)GPUmem.allocate(GPUmem_hinter);
+#ifdef USE_HIP
+               HIP_CHECK(hipMemcpy(opaddr[4], hinter._data, hinter.size()*sizeof(Tm), hipMemcpyHostToDevice));
+#else
+               CUDA_CHECK(cudaMemcpy(opaddr[4], hinter._data, hinter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
+#endif// USE_HIP
+            }
             if(rank == 0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper,inter)(GB)=" << GPUmem_oper/std::pow(1024.0,3)
-                  << "," << GPUmem_inter/std::pow(1024.0,3) 
+                  << " (oper,hinter)(GB)=" << GPUmem_oper/std::pow(1024.0,3)
+                  << "," << GPUmem_hinter/std::pow(1024.0,3) 
                   << std::endl;
-            }
-            if(schd.ctns.alg_inter != 2){
-               inter.kernel_cpu(schd.ctns.alg_inter, qops_dict, H_formulae, debug);
-               timing.tb4 = tools::get_time();
-#ifdef USE_HIP
-               HIP_CHECK(hipMemcpy(opaddr[4], inter._data, inter.size()*sizeof(Tm), hipMemcpyHostToDevice));
-#else
-               CUDA_CHECK(cudaMemcpy(opaddr[4], inter._data, inter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
-#endif// USE_HIP
-            }else{
-               inter.kernel_gpu(opaddr, qops_dict, H_formulae, debug);
-               timing.tb4 = tools::get_time();
             }
             timing.tb5 = tools::get_time();
 
             // gen MMlst & reorder
-            preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, inter, 
+            preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, hinter, 
                   Hxlst2, blksize, cost, debug && schd.ctns.verbose>0);
             if(schd.ctns.verbose>0){
                // debug hxlst
@@ -540,7 +536,7 @@ namespace ctns{
             //
             size_t batchsize = 0;
             size_t GPUmem_dvdson = sizeof(Tm)*2*ndim;
-            size_t GPUmem_reserved = GPUmem_oper + GPUmem_inter + GPUmem_dvdson + 48;
+            size_t GPUmem_reserved = GPUmem_oper + GPUmem_hinter + GPUmem_dvdson + 48;
             if(GPUmem.size() > GPUmem_reserved){
                batchsize = std::floor(double(GPUmem.size() - GPUmem_reserved)/(sizeof(Tm)*blksize*2 + 112));
                batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
@@ -551,8 +547,8 @@ namespace ctns{
             }else{
                std::cout << "error: in sufficient GPU memory for batchGEMM! already reserved:" << std::endl;
                std::cout << "GPUmem.size=" << GPUmem.size() << " GPUmem.used=" << GPUmem.used()
-                  << " GPUmem_reserved=" << GPUmem_reserved << " (oper,inter,dvdson)=" 
-                  << GPUmem_oper << "," << GPUmem_inter << "," << GPUmem_dvdson 
+                  << " GPUmem_reserved=" << GPUmem_reserved << " (oper,hinter,dvdson)=" 
+                  << GPUmem_oper << "," << GPUmem_hinter << "," << GPUmem_dvdson 
                   << std::endl;
                exit(1);
             }
@@ -565,8 +561,8 @@ namespace ctns{
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper,inter,dvdson,batch)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
-                  << "," << GPUmem_inter/std::pow(1024.0,3)
+                  << " (oper,hinter,dvdson,batch)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
+                  << "," << GPUmem_hinter/std::pow(1024.0,3)
                   << "," << GPUmem_dvdson/std::pow(1024.0,3)
                   << "," << GPUmem_batch/std::pow(1024.0,3)
                   << " batchsize=" << batchsize
