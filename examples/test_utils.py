@@ -1,6 +1,14 @@
 import os
 import time
-import numpy
+
+def check_difference(elst0,elst1):
+   len1 = len(elst0)
+   len2 = len(elst1)
+   assert(len1 == len2)
+   diff = 0
+   for i in range(len1):
+      diff + abs(elst0[i]-elst1[i])
+   return diff
 
 def parse_ctns(fname="ctns.out"):
    debug = False
@@ -38,7 +46,6 @@ def parse_ctns(fname="ctns.out"):
          es.append(ei)
       if(debug): print('es=',es)
       elst.append(es)
-   elst = numpy.array(elst)
    return elst
 
 def testAll(dirs):
@@ -100,7 +107,7 @@ def compareAll(dirs,nfail,thresh=1.e-8):
          if(os.path.exists(fname)):
              try:
                 elst1 = parse_ctns(fname)[-1]
-                ediff = numpy.linalg.norm(elst0 - elst1)
+                ediff = check_difference(elst0,elst1)
                 print('eref=',elst0)
                 print('ecal=',elst1)
                 print('ediff=',ediff)
