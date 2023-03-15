@@ -197,12 +197,10 @@ void params_ctns::read(ifstream& istrm){
          restart_bond = stoi(line.substr(12));
       }else if(line.substr(0,8)=="alg_hvec"){
          alg_hvec = stoi(line.substr(8));
+      }else if(line.substr(0,9)=="alg_inter"){
+         alg_inter = stoi(line.substr(9));
       }else if(line.substr(0,10)=="alg_renorm"){
          alg_renorm = stoi(line.substr(10));
-      }else if(line.substr(0,8)=="alg_dmrg"){
-         int algorithm = stoi(line.substr(8));
-         alg_hvec = algorithm;
-         alg_renorm = algorithm;
       }else if(line.substr(0,7)=="ifdist1"){
          ifdist1 = true;	      
       }else if(line.substr(0,13)=="save_formulae"){
@@ -352,6 +350,7 @@ void params_ctns::print() const{
    }
    // algorithm
    cout << "alg_hvec = " << alg_hvec << endl;
+   cout << "alg_inter = " << alg_inter << endl;
    cout << "alg_renorm = " << alg_renorm << endl;
    cout << "ifdist1 = " << ifdist1 << endl;
    cout << "save_formulae = " << save_formulae << endl;
