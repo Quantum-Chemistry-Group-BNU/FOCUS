@@ -1,5 +1,5 @@
 
-machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no #yes
 USE_GCC = yes
@@ -118,7 +118,6 @@ ifeq ($(strip $(USE_OPENMP)),no)
    endif
 else
    # parallel version of MKL
-   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
    ifeq ($(strip $(USE_ILP64)), no)
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl 
@@ -127,11 +126,18 @@ else
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64
    endif
-   ifeq ($(strip $(USE_GCC)),yes)
-      FLAGS += -fopenmp -lmkl_gnu_thread -lgomp
-   else
-      FLAGS += -qopenmp -lmkl_intel_thread -liomp 
-   endif
+  
+   # Choose OpenMP library properly, otherwise there will be lapack error [info != 0] 
+	# GNU: -lmkl_gnu_thread -lgomp 
+	# Intel: -lmkl_intel_thread -liomp5
+   
+	#ifeq ($(strip $(USE_GCC)),yes)
+   #   FLAGS += -fopenmp -lmkl_gnu_thread -lgomp
+   #else
+   #   FLAGS += -qopenmp -lmkl_intel_thread -liomp5 
+   #endif
+   FLAGS += -fopenmp -lmkl_intel_thread -liomp5
+
 endif
 # quaternion matrix diagonalization
 MATH += -L./extlibs/zquatev -lzquatev 
