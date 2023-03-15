@@ -124,10 +124,12 @@ namespace ctns{
          }
       }
 
-/*
 #ifdef GPU
    template <typename Tm>
-      void MMbatch<Tm>::xgemm_batch_gpu(Tm** ptrs){
+      void MVbatch<Tm>::xgemv_batch_gpu(Tm** ptrs){
+         std::cout << "xgemv_batch_gpu is NOT IMPLEMENTED YET!" << std::endl;
+         exit(1);
+/*
          int a_total=0;
          int b_total=0;
          int c_total=0;
@@ -145,9 +147,9 @@ namespace ctns{
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
                   Cptr.data(), M.data(), size, a_total, b_total, c_total);
          }
+*/
       }
 #endif
-*/
 
 } // ctns
 

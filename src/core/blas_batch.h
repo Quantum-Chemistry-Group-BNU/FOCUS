@@ -55,7 +55,7 @@ namespace linalg{
             );
    }
 
-   void xgemv_batch(const char *transa_array, 
+   inline void xgemv_batch(const char *transa_array, 
          const MKL_INT *m_array, const MKL_INT *n_array,
          const std::complex<double> *alpha_array, const std::complex<double> **a_array, const MKL_INT *lda_array, 
          const std::complex<double> **x_array, const MKL_INT *incx_array,

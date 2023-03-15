@@ -29,7 +29,7 @@ namespace ctns{
                   this->init_batch_cpu(qops_dict, oploc, opaddr, H_formulae, debug);
 #ifdef GPU
                }else if(alg_inter == 2){
-                  this->kernel_batch_gpu(qops_dic, oploc, opaddr, H_formulae, debug);
+                  this->init_batch_gpu(qops_dict, oploc, opaddr, H_formulae, debug);
 #endif
                }else{
                   std::cout << "error: no such option in Intermediates::init alg_inter=" 
