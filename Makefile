@@ -1,5 +1,5 @@
 
-machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no #yes
 USE_GCC = yes
@@ -34,12 +34,13 @@ else ifeq ($(strip $(machine)), dell2)
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else ifeq ($(strip $(machine)), jiageng)
-   MATHLIB = /public/software/intel/oneapi2021/mkl/latest
-   BOOST = /public/home/bnulizdtest/boost/install-gcc
+   MATHLIB = ${MKLROOT}
+   BOOST = /public/home/bnulizdtest/boost/install
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
+   #FLAGS += -no-multibyte-chars
 else ifeq ($(strip $(machine)), scy0799)
    MATHLIB =/data/apps/OneApi/2022.1/oneapi/mkl/latest/lib/intel64/
    BOOST =/data01/home/scy0799/run/xiangchunyang/project/boost_1_80_0_install
@@ -75,7 +76,7 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
-      FLAGS += -DDEBUG -O0 -Wall
+      FLAGS += -DDEBUG -O0 -w #-Wall
    else
       FLAGS += -DNDEBUG -O2 -Wall
    endif
@@ -110,25 +111,26 @@ ifeq ($(strip $(USE_OPENMP)),no)
    ifeq ($(strip $(USE_ILP64)), no)
       # serial version of MKL
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -ldl
+             -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
    else
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -ldl -DMKL_ILP64 
+             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -DMKL_ILP64 -m64
    endif
 else
    # parallel version of MKL
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
    ifeq ($(strip $(USE_ILP64)), no)
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -ldl -liomp5
+             -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl 
    else
+	   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lmkl_intel_thread -lpthread -ldl -liomp5 -DMKL_ILP64
+             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64
    endif
    ifeq ($(strip $(USE_GCC)),yes)
-      FLAGS += -fopenmp
+      FLAGS += -fopenmp -lmkl_gnu_thread -lgomp
    else
-      FLAGS += -qopenmp 
+      FLAGS += -qopenmp -lmkl_intel_thread -liomp 
    endif
 endif
 # quaternion matrix diagonalization
@@ -267,8 +269,10 @@ depend:
 	echo " machine = " $(machine); \
 	echo " DEBUG = " $(DEBUG); \
 	echo " USE_GCC = " $(USE_GCC); \
-	echo " USE_OPENMP = " $(USE_OPENMP); \
 	echo " USE_MPI = " $(USE_MPI); \
+	echo " USE_OPENMP = " $(USE_OPENMP); \
+	echo " USE_ILP64 = " $(USE_ILP64); \
+	echo " USE_GPU = " $(USE_GPU); \
 	echo " CXX = " $(CXX); \
 	echo " CC = " $(CC); \
 	set -e; \
