@@ -129,6 +129,7 @@ namespace ctns{
             
             // generation of renormalization block [lc/lr/cr]
             rinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, rtasks, debug);
+            exit(1);
 
             // GEMM list and GEMV list
 

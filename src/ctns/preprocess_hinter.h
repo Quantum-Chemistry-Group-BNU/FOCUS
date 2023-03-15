@@ -97,8 +97,8 @@ namespace ctns{
             }
          } // it
          if(debug){
-            std::cout << " no. of intermediate operators=" << _count << std::endl;
-            std::cout << " size of intermediate operators=" << _size 
+            std::cout << " no. of hintermediate operators=" << _count << std::endl;
+            std::cout << " size of hintermediate operators=" << _size 
                << ":" << tools::sizeMB<Tm>(_size) << "MB"
                << ":" << tools::sizeGB<Tm>(_size) << "GB"
                << std::endl;
@@ -173,9 +173,9 @@ namespace ctns{
             }
          } // it
          if(debug){
-            std::cout << " no. of intermediate operators=" << _count << std::endl;
+            std::cout << " no. of hintermediate operators=" << _count << std::endl;
             std::cout << " no. of coefficients=" << alpha_size << std::endl;
-            std::cout << " size of intermediate operators=" << _size 
+            std::cout << " size of hintermediate operators=" << _size 
                << ":" << tools::sizeMB<Tm>(_size) << "MB"
                << ":" << tools::sizeGB<Tm>(_size) << "GB"
                << std::endl;
@@ -267,10 +267,8 @@ namespace ctns{
          for(size_t i=0; i<_size; i++){
             diff += std::abs(_data[i]-_data2[i]);
          }
-         std::cout << "difference=" << diff << std::endl;
-         delete[] _data;
+         std::cout << "difference hinter=" << diff << std::endl;
          delete[] _data2;
-         exit(1);
 
          if(debug){
             auto t1 = tools::get_time();
@@ -319,9 +317,9 @@ namespace ctns{
             }
          } // it
          if(debug){
-            std::cout << " no. of intermediate operators=" << _count << std::endl;
+            std::cout << " no. of hintermediate operators=" << _count << std::endl;
             std::cout << " no. of coefficients=" << alpha_size << std::endl;
-            std::cout << " size of intermediate operators=" << _size 
+            std::cout << " size of hintermediate operators=" << _size 
                << ":" << tools::sizeMB<Tm>(_size) << "MB"
                << ":" << tools::sizeGB<Tm>(_size) << "GB"
                << std::endl;
