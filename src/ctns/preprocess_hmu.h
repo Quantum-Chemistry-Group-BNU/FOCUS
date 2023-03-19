@@ -1,11 +1,12 @@
 #ifndef PREPROCESS_HMU_H
 #define PREPROCESS_HMU_H
 
+#include "preprocess_header.h"
 #include "preprocess_hxlist.h"
 
 namespace ctns{
 
-   // H[mu] = coeff*Ol*Or*Oc (ondot)
+   // H[mu] = coeff*Ol*Or*Oc (onedot)
    //       = coeff*Ol*Or*Oc1*Oc2 (twodot) 
    template <typename Tm>
       struct Hmu_ptr{
@@ -17,19 +18,19 @@ namespace ctns{
                   const std::map<std::string,int>& oploc);
             bool identity(const int i) const{ return loc[i]==-1; }
             // onedot
-            void gen_Hxlist(const qinfo3<Tm>& wf, 
+            void gen_Hxlist(const qinfo3<Tm>& wf_info, 
                   Hxlist<Tm>& Hxblks,
                   size_t& blksize,
                   double& cost,
                   const bool ifdagger) const;
             // twodot
-            void gen_Hxlist(const qinfo4<Tm>& wf, 
+            void gen_Hxlist(const qinfo4<Tm>& wf_info, 
                   Hxlist<Tm>& Hxblks,
                   size_t& blksize,
                   double& cost,
                   const bool ifdagger) const;
             // twodot
-            void gen_Hxlist2(const qinfo4<Tm>& wf, 
+            void gen_Hxlist2(const qinfo4<Tm>& wf_info, 
                   Hxlist2<Tm>& Hxblks,
                   size_t& blksize,
                   double& cost,
@@ -71,7 +72,7 @@ namespace ctns{
                loc[pos] = pos;
                off[pos] = qops._offset.at(std::make_pair(label,index0)); // qops
             }else{
-               loc[pos] = locinter;
+               loc[pos] = locInter;
                off[pos] = hinter._offset.at(std::make_pair(it,idx)); // intermediates
             }
          } // idx
@@ -127,7 +128,7 @@ namespace ctns{
             Hxblk.coeff = ifdagger? coeffH : coeff;
             int pl = wf_info.qrow.get_parity(bi[0]);
             int pc = wf_info.qmid.get_parity(bi[2]);
-            if(parity[1] && (pl+pc)%2==1) Hxblk.coeff *= -1.0; // Or
+            if(parity[1] && (pl+pc)%2==1) Hxblk.coeff *= -1.0; // Or: Or|lcr> = (-1)^{pl+pc}|lc>*Or|r>
             if(parity[2] && pl%2==1) Hxblk.coeff *= -1.0; // Oc
             Hxblk.setup();
             blksize = std::max(blksize, Hxblk.blksize);

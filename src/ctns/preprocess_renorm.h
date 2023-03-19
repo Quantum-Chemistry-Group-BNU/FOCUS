@@ -1,21 +1,20 @@
-#ifndef PREPROCESS_SIGMA_H
-#define PREPROCESS_SIGMA_H
+#ifndef PREPROCESS_RENORM_H
+#define PREPROCESS_RENORM_H
 
-#include "preprocess_hinter.h"
-#include "preprocess_hmu.h"
+#include "preprocess_rinter.h"
+#include "preprocess_rmu.h"
 
 namespace ctns{
 
    // for Davidson diagonalization
    template <typename Tm> 
-      void preprocess_Hx(Tm* y,
+      void preprocess_renorm(Tm* y,
             const Tm* x,
-            const Tm& scale,
             const int& size,
             const int& rank,
             const size_t& ndim,
             const size_t& blksize,
-            Hxlist<Tm>& Hxlst,
+            Rlist<Tm>& Rlst,
             Tm** opaddr){
          const bool debug = false;
 #ifdef _OPENMP
@@ -24,23 +23,19 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(rank == 0 && debug){
-            std::cout << "ctns::preprocess_Hx"
+            std::cout << "ctns::preprocess_renorm"
                << " mpisize=" << size 
                << " maxthreads=" << maxthreads
                << std::endl;
          }
 
-         // initialization
-         memset(y, 0, ndim*sizeof(Tm));
-
-         // compute Y[I] = \sum_J H[I,J] X[J]
 #ifndef _OPENMP
 
          Tm* work = new Tm[blksize*2];
-         for(int i=0; i<Hxlst.size(); i++){
-            auto& Hxblk = Hxlst[i];
-            Hxblk.kernel(x, opaddr, work);
-            linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, y+Hxblk.offout);
+         for(int i=0; i<Rlst.size(); i++){
+            auto& Rblk = Rlst[i];
+            Rblk.kernel(x, opaddr, work);
+            linalg::xaxpy(Rblk.size, Rblk.coeff, work, y+Rblk.offrop);
          } // i
          delete[] work;
 
@@ -53,10 +48,10 @@ namespace ctns{
 
             Tm* work = new Tm[blksize*2];
             #pragma omp for schedule(dynamic) nowait
-            for(int i=0; i<Hxlst.size(); i++){
-               auto& Hxblk = Hxlst[i];
-               Hxblk.kernel(x, opaddr, work);
-               linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, yi+Hxblk.offout);
+            for(int i=0; i<Rlst.size(); i++){
+               auto& Rblk = Rlst[i];
+               Rblk.kernel(x, opaddr, work);
+               linalg::xaxpy(Rblk.size, Rblk.coeff, work, yi+Rblk.offrop);
             } // i
             delete[] work;
 
@@ -67,9 +62,6 @@ namespace ctns{
          }
 
 #endif
-
-         // add const term
-         if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
       }
 
 } // ctns

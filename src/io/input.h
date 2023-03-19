@@ -137,7 +137,7 @@ namespace input{
          int alg_renorm = 2;
          bool ifdist1 = false;
          bool save_formulae = false;
-         bool sort_formulae = true;
+         bool sort_formulae = false;
          int hxorder = 0;
          int batchgemm = 1;
          int batchsize = 10000;

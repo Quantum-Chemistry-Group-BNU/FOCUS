@@ -240,32 +240,43 @@ KNOWN PROBLEMS
 === 2023 DMRG ===
 
  * Better reduction algorithm using GEMV [DONE@20230301]
- * Add more tests in examples [DONE@20230301]
+
+ * Test platform on jiageng:
+   - Add more tests in examples [DONE@20230301]
+   - Muilt-GPU support on jiageng? => reinstall OpenMPI
+   - Profiling: Check fetch time & CPU memory for Fe8S7 !!!
+
  * Problems for large arrays: [DONE@20230307] 
    - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magmamemcpy size is int]
    - MPI: bypass the 2GB limit in MPI_COUNT by partitioned broadcast & reduce
    - MATH: Fix int32 & int64 problem in blas/lapack using MKL_INT [ndim is int]
    - zquatev: resolve cNK bugs? use MKL_INT
+
  * Support restart isweep & ibond: [DONE@20220309]
-     0. restructure rsites/lsites/rwfuns/psi into sites/rwfuns/psi - more compact [DONE@20220305]
+      0. restructure rsites/lsites/rwfuns/psi into sites/rwfuns/psi - more compact [DONE@20220305]
          - rwfuns must be used, otherwise get_Hmat will not work in CNK in the last site !!!
-     1. fix guess error [DONE@20220306]
-     2. fix last conversion into RCF [DONE@20220306]
-     3. add dump RCF at each step [DONE@20220306]
-     4. support restart by loading RCF? [DONE@20220308]
-     5. support restart at a particular ibond? [DONE@20220309]
+      1. fix guess error [DONE@20220306]
+      2. fix last conversion into RCF [DONE@20220306]
+      3. add dump RCF at each step [DONE@20220306]
+      4. support restart by loading RCF? [DONE@20220308]
+      5. support restart at a particular ibond? [DONE@20230309]
 
- * Profiling: Check fetch time & CPU memory for Fe8S7 !!!
+ * Support Renorm with GPU [???]
+      0. basic subroutines: alg_renorm=4 [DONE@20230319]
+         - preprocess_renorm.h
+         - preprocess_rformulae.h
+         - preprocess_rinter.h
+         - preprocess_rlist.h
+         - preprocess_rmu.h
+      1. alg_renorm=5: partitioned
+      2. alg_renorm=6: Batch
+      3. GPU support
 
- !!! Support Intermediate with GPU? [working!!!]
- 
- !!! Support Renorm with GPU [???]
+ * Support Intermediate with GPU? [working!!!]
 
 === TODOs ===
 
  * Revise Hx -> a single big batch?
-
- * Muilt-GPU support on jiageng? => reinstall OpenMPI
 
  * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma?]
 

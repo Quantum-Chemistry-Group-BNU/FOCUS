@@ -1,5 +1,5 @@
-#ifndef PREPROCESS_FORMULAE_H
-#define PREPROCESS_FORMULAE_H
+#ifndef PREPROCESS_HFORMULAE_H
+#define PREPROCESS_HFORMULAE_H
 
 #include "preprocess_hinter.h"
 #include "preprocess_hmu.h"
@@ -58,7 +58,7 @@ namespace ctns{
             const bool debug){
          auto t0 = tools::get_time();
 
-         // 2. preprocess formulae to Hmu
+         // 1. preprocess formulae to Hmu
          int hsize = H_formulae.size();
          std::vector<Hmu_ptr<Tm>> Hmu_vec(hsize);
          for(int it=0; it<hsize; it++){
@@ -66,7 +66,7 @@ namespace ctns{
          } // it
          auto ta = tools::get_time();
 
-         // 3. from Hmu to expanded block forms
+         // 2. from Hmu to expanded block forms
          blksize = 0;
          cost = 0.0;
          int nnzblk = wf.info._nnzaddr.size();

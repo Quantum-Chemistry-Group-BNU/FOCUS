@@ -16,7 +16,7 @@
 #include "symbolic_kernel_sigma3.h"
 #include "preprocess_size.h"
 #include "preprocess_hxlist.h"
-#include "preprocess_formulae.h"
+#include "preprocess_hformulae.h"
 #include "preprocess_sigma.h"
 #include "preprocess_sigma2.h"
 #include "preprocess_sigma_batch.h"

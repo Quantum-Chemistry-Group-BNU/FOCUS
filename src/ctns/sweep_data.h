@@ -58,13 +58,13 @@ namespace ctns{
          this->print_part("save" , dt6, dt, dtacc);
          std::cout << "Detailed decomposition of T(dvdson):" << std::endl;
          dtacc = 0.0;
-         this->print_part("symbolic_formulae_twodot   ", dtb1, dt2, dtacc);
-         this->print_part("op_lrc1c2_cpumem_host2GPU  ", dtb2, dt2, dtacc);
-         this->print_part("inter_compute              ", dtb3, dt2, dtacc);
-         this->print_part("inter_cpumem_host2GPU      ", dtb4, dt2, dtacc);
-         this->print_part("preprocess_formulae_Hxlist2", dtb5, dt2, dtacc);
-         this->print_part("generate_mmtasks           ", dtb6, dt2, dtacc);
-         this->print_part("preprocess_Hx_batchGPU     ", dtb7, dt2, dtacc);
+         this->print_part("symbolic_formulae_twodot    ", dtb1, dt2, dtacc);
+         this->print_part("op_lrc1c2_cpumem_host2GPU   ", dtb2, dt2, dtacc);
+         this->print_part("inter_compute               ", dtb3, dt2, dtacc);
+         this->print_part("inter_cpumem_host2GPU       ", dtb4, dt2, dtacc);
+         this->print_part("preprocess_hformulae_Hxlist2", dtb5, dt2, dtacc);
+         this->print_part("generate_mmtasks            ", dtb6, dt2, dtacc);
+         this->print_part("preprocess_Hx_batchGPU      ", dtb7, dt2, dtacc);
       }
       void analysis(const std::string msg,
             const bool debug=true){
@@ -78,13 +78,13 @@ namespace ctns{
          dt6 = tools::get_duration(t1-tf); // t(save)
          
          // decomposition of dt2 into different parts
-         dtb1 = tools::get_duration(tb2-tb1); // t(symbolic_formulae_twodot   ) 
-         dtb2 = tools::get_duration(tb3-tb2); // t(op_lrc1c2_cpumem_host2GPU  )
-         dtb3 = tools::get_duration(tb4-tb3); // t(inter_compute              )
-         dtb4 = tools::get_duration(tb5-tb4); // t(inter_cpumem_host2GPU      )
-         dtb5 = tools::get_duration(tb6-tb5); // t(preprocess_formulae_Hxlist2)
-         dtb6 = tools::get_duration(tb7-tb6); // t(generate_mmtasks           )
-         dtb7 = tools::get_duration(tb8-tb7); // t(preprocess_Hx_batchGPU     ) 
+         dtb1 = tools::get_duration(tb2-tb1); // t(symbolic_formulae_twodot    ) 
+         dtb2 = tools::get_duration(tb3-tb2); // t(op_lrc1c2_cpumem_host2GPU   )
+         dtb3 = tools::get_duration(tb4-tb3); // t(inter_compute               )
+         dtb4 = tools::get_duration(tb5-tb4); // t(inter_cpumem_host2GPU       )
+         dtb5 = tools::get_duration(tb6-tb5); // t(preprocess_hformulae_Hxlist2)
+         dtb6 = tools::get_duration(tb7-tb6); // t(generate_mmtasks            )
+         dtb7 = tools::get_duration(tb8-tb7); // t(preprocess_Hx_batchGPU      ) 
          if(debug) this->print(msg);
       }
       void accumulate(const dot_timing& timer,
@@ -121,13 +121,13 @@ namespace ctns{
       Tm t1; // t(save)
       double dt=0, dt0=0, dt1=0, dt2=0, dt3=0, dt4=0, dt5=0, dt6=0;
 
-      Tm tb1; // t(symbolic_formulae_twodot   ) 
-      Tm tb2; // t(op_lrc1c2_cpumem_host2GPU  )
-      Tm tb3; // t(inter_compute              )
-      Tm tb4; // t(inter_cpumem_host2GPU      )
-      Tm tb5; // t(preprocess_formulae_Hxlist2)
-      Tm tb6; // t(generate_mmtasks           )
-      Tm tb7; // t(preprocess_Hx_batchGPU     )
+      Tm tb1; // t(symbolic_formulae_twodot    ) 
+      Tm tb2; // t(op_lrc1c2_cpumem_host2GPU   )
+      Tm tb3; // t(inter_compute               )
+      Tm tb4; // t(inter_cpumem_host2GPU       )
+      Tm tb5; // t(preprocess_hformulae_Hxlist2)
+      Tm tb6; // t(generate_mmtasks            )
+      Tm tb7; // t(preprocess_Hx_batchGPU      )
       Tm tb8; 
       double dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0;
    };

@@ -3,6 +3,7 @@
 
 #include "time.h"
 #include "sys/time.h"
+#include "preprocess_header.h"
 #include "preprocess_mvbatch.h"
 
 namespace ctns{
@@ -36,7 +37,7 @@ namespace ctns{
                      << alg_inter << std::endl;
                   exit(1);
                }
-               opaddr[4] = _data;
+               opaddr[locInter] = _data;
             }
             // form hintermediates
             void init_omp(const oper_dictmap<Tm>& qops_dict,
@@ -103,6 +104,7 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(_size) << "GB"
                << std::endl;
          }
+         if(_size == 0) return;
 
          // 2. allocate memory on CPU
          _data = new Tm[_size];
@@ -160,7 +162,7 @@ namespace ctns{
                const auto& sop = HTerm.terms[idx];
                int len = sop.size();
                // define intermediate operators
-               if(sop.size() > 1){
+               if(len > 1){
                   _count += 1;
                   _offset[std::make_pair(it,idx)] = _size; 
                   const auto& sop0 = sop.sums[0].second;
@@ -180,20 +182,14 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(_size) << "GB"
                << std::endl;
          }
+         if(_size == 0) return;
 
          // allocate memory on CPU
          _data = new Tm[_size];
          std::vector<Tm> alpha_vec(alpha_size);
 
+         Tm* _data1 = new Tm[_size];
          Tm* _data2 = new Tm[_size];
-
-         const auto& qops = qops_dict.at("r");
-         for(const auto& qop : qops('C')){
-            const auto& idx = qop.first;
-            const auto& op = qop.second;
-            std::cout << "idx=" << idx << std::endl;
-            op.print("op");
-         }
 
          // setup GEMV_BATCH
          MVlist<Tm> mvlst(_count);
@@ -233,11 +229,28 @@ namespace ctns{
                auto wtk = sop.sums[k].first;
                alpha_vec[adx+k] = dagger? tools::conjugate(wtk) : wtk; 
             } 
+           
+            std::cout << "idx=" << idx << " sop=" << sop << std::endl; 
+            std::cout << "lzdA" << std::endl;
+            Tm* workspace = _data1+_offset.at(item);
+            symbolic_sum_oper(qops_dict, sop, workspace);
+
+            std::cout << "lzdB" << std::endl;
+            const Tm alpha = 1.0, beta = 0.0;
+            const int INCX = 1, INCY = 1;
+            Tm* Aptr = opaddr[mv.locA] + mv.offA;
+            Tm* Xptr = &alpha_vec[adx];
+            Tm* Yptr = _data2 + mv.offy;
+            linalg::xgemv(&mv.transA, mv.M, mv.N, alpha, Aptr, mv.LDA,
+                  Xptr, INCX, beta, Yptr, INCY);
+
+            std::cout << "lzdC" << std::endl;
+            linalg::xaxpy(mv.M, -1.0, workspace, Yptr);
+            auto diff = linalg::xnrm2(mv.M, Yptr);
+            std::cout << "idx=" << idx << " diff=" << diff << std::endl;
+
             adx += len;
             idx += 1;
-
-            Tm* workspace = _data2+_offset.at(item);
-            symbolic_sum_oper(qops_dict, sop, workspace);
          }
          assert(idx == _count && adx == alpha_size);
 
@@ -252,7 +265,7 @@ namespace ctns{
          ptrs[4] = alpha_vec.data(); 
          ptrs[5] = _data;
          struct timeval t0gemv, t1gemv;
-         int batchgemv = 1;
+         int batchgemv = 0;
          gettimeofday(&t0gemv, NULL);
          mvbatch.kernel(batchgemv, ptrs);
          gettimeofday(&t1gemv, NULL);
@@ -263,12 +276,30 @@ namespace ctns{
             << " flops=" << mvbatch.cost/dt
             << std::endl;
 
-         double diff = 0.0;
-         for(size_t i=0; i<_size; i++){
-            diff += std::abs(_data[i]-_data2[i]);
+         Tm* _data0 = new Tm[_size];
+         memset(_data0, 0, _size*sizeof(Tm));
+         std::vector<std::pair<int,int>> _index(_count);
+         size_t idx2 = 0;
+         for(const auto& pr : _offset){
+            _index[idx2] = pr.first;
+            idx2++;
          }
-         std::cout << "difference hinter=" << diff << std::endl;
+         for(size_t idx=0; idx<_count; idx++){
+            const auto& item = _index[idx];
+            int i = item.first;
+            int j = item.second;
+            const auto& sop = H_formulae.tasks[i].terms[j];
+            Tm* workspace = _data0+_offset.at(item);
+            symbolic_sum_oper(qops_dict, sop, workspace);
+
+         } // idx 
+         linalg::xaxpy(_size, -1.0, _data, _data0);
+         auto diff = linalg::xnrm2(_size, _data0);
+         std::cout << "diff=" << diff << std::endl;
+         delete[] _data0;
+         delete[] _data1;
          delete[] _data2;
+         if(diff > 1.e-10) exit(1);
 
          if(debug){
             auto t1 = tools::get_time();
@@ -324,6 +355,7 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(_size) << "GB"
                << std::endl;
          }
+         if(_size == 0) return;
 
          // allocate memory on CPU
          _data = new Tm[_size];

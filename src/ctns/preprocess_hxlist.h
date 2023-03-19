@@ -1,16 +1,10 @@
 #ifndef PREPROCESS_HXLIST_H
 #define PREPROCESS_HXLIST_H
 
+#include "preprocess_header.h"
 #include "preprocess_mmbatch.h"
 
 namespace ctns{
-
-   const int locinter = 4;
-   const int locin = 5; // x
-   const int locout = 6; // y
-   extern const int locinter;
-   extern const int locin;
-   extern const int locout;
 
    // information for sigma = H*x with given symmetry blocks
    template <typename Tm>
@@ -18,14 +12,69 @@ namespace ctns{
          public:
             Hxblock(const int _dims, const int _terms): dims(_dims), terms(_terms) {};
             bool identity(const int i) const{ return loc[i]==-1; }    
-            void display() const;
-            void setup();
-            void get_MMlist();   
+            void display() const{
+               std::cout << "offout=" << offout << " offin=" << offin 
+                  << " dimout=" << dimout[0] << "," << dimout[1] << "," << dimout[2] << "," << dimout[3]
+                  << " dimin=" << dimin[0] << "," << dimin[1] << "," << dimin[2] << "," << dimin[3]
+                  << " identity=" << this->identity(0) << "," << this->identity(1) << "," 
+                  << this->identity(2) << "," << this->identity(3) 
+                  << " dagger=" << dagger[0] << "," << dagger[1] << "," << dagger[2] << "," << dagger[3]
+                  << " loc=" << loc[0] << "," << loc[1] << "," << loc[2] << "," << loc[3]
+                  << " off=" << off[0] << "," << off[1] << "," << off[2] << "," << off[3]
+                  << " coeff=" << coeff
+                  << " cost=" << cost
+                  << std::endl;  
+            }
+            // cost for contractions
+            void setup(){         
+               if(dims == 4){
+                  std::vector<size_t> dimsInter = {dimin[0] *dimin[1] *dimin[2] *dimout[3],
+                     dimin[0] *dimin[1] *dimout[2]*dimout[3],
+                     dimin[0] *dimout[1]*dimout[2]*dimout[3],
+                     dimout[0]*dimout[1]*dimout[2]*dimout[3]};
+                  blksize = *std::max_element(dimsInter.begin(), dimsInter.end());
+                  if(!this->identity(3)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimin[3]*dimout[3]; // Oc2
+                  if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[3]*dimout[2]; // Oc1
+                  if(!this->identity(1)) cost += 2*double(dimin[0])*dimin[1]*dimout[2]*dimout[3]*dimout[1]; // Or
+                  if(!this->identity(0)) cost += 2*double(dimin[0])*dimout[1]*dimout[2]*dimout[3]*dimout[0]; // Ol
+               }else if(dims == 3){
+                  std::vector<size_t> dimsInter = {dimin[0] *dimin[1] *dimout[2],
+                     dimin[0] *dimout[1]*dimout[2],
+                     dimout[0]*dimout[1]*dimout[2]};
+                  blksize = *std::max_element(dimsInter.begin(), dimsInter.end());
+                  if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[2];
+                  if(!this->identity(1)) cost += 2*double(dimin[0])*dimin[1]*dimout[2]*dimout[1];
+                  if(!this->identity(0)) cost += 2*double(dimin[0])*dimout[1]*dimout[2]*dimout[0];
+               }else{
+                  std::cout << "error: no such option for dims=" << dims << std::endl;
+                  exit(1);
+               }
+            }
+            void get_MMlist(){
+               MMlist2<Tm> MMlst2(4);
+               if(dims == 4){
+                  get_MMlist_twodot(MMlst2);
+               }else if(dims == 3){
+                  get_MMlist_onedot(MMlst2);
+               }else{
+                  std::cout << "error: no such option for dims=" << dims << std::endl;
+                  exit(1);
+               }
+               // flatten MMlst2 to MMlst
+               size_t size = MMlst2[0].size() + MMlst2[1].size() + MMlst2[2].size() + MMlst2[3].size();
+               assert(size > 0);
+               MMlst.resize(size);
+               int idx = 0;
+               for(int i=0; i<dims; i++){
+                  for(int j=0; j<MMlst2[i].size(); j++){
+                     MMlst[idx] = MMlst2[i][j];
+                     idx++;
+                  } // j
+               } // i
+            }
             void get_MMlist_twodot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
             void get_MMlist_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
-            void kernel(const Tm* x,
-                  Tm** opaddr, 
-                  Tm* workspace) const;
+            void kernel(const Tm* x, Tm** opaddr, Tm* workspace) const;
          public:
             int dims  = 0; // 3/4 for onedot/twodot
             int terms = 0; // no. of terms in Hmu 
@@ -66,7 +115,7 @@ namespace ctns{
                   [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ 
                   return t1.offin < t2.offin; });
          } // hxorder
-         // generate MMlist 
+           // generate MMlist 
          for(int i=0; i<Hxlst.size(); i++){
             Hxlst[i].get_MMlist();
          }
@@ -80,81 +129,6 @@ namespace ctns{
          } // i
       }
 
-   /*
-   // partition the tasks into Large & Small for GPU & CPU
-   template <typename Tm>
-      void partition(Hxlist2<Tm>& Hxlst2, const size_t thresh){
-
-      }
-   */
-
-   template <typename Tm>
-      void Hxblock<Tm>::display() const{
-         std::cout << "offout=" << offout << " offin=" << offin 
-            << " dimout=" << dimout[0] << "," << dimout[1] << "," << dimout[2] << "," << dimout[3]
-            << " dimin=" << dimin[0] << "," << dimin[1] << "," << dimin[2] << "," << dimin[3]
-            << " identity=" << this->identity(0) << "," << this->identity(1) << "," 
-            << this->identity(2) << "," << this->identity(3) 
-            << " dagger=" << dagger[0] << "," << dagger[1] << "," << dagger[2] << "," << dagger[3]
-            << " loc=" << loc[0] << "," << loc[1] << "," << loc[2] << "," << loc[3]
-            << " off=" << off[0] << "," << off[1] << "," << off[2] << "," << off[3]
-            << " coeff=" << coeff
-            << " cost=" << cost
-            << std::endl;  
-      }
-
-   // cost for contractions
-   template <typename Tm>
-      void Hxblock<Tm>::setup(){
-         if(dims == 4){
-            std::vector<size_t> dims = {dimin[0] *dimin[1] *dimin[2] *dimout[3],
-               dimin[0] *dimin[1] *dimout[2]*dimout[3],
-               dimin[0] *dimout[1]*dimout[2]*dimout[3],
-               dimout[0]*dimout[1]*dimout[2]*dimout[3]};
-            blksize = *std::max_element(dims.begin(), dims.end());
-            if(!this->identity(3)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimin[3]*dimout[3]; // Oc2
-            if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[3]*dimout[2]; // Oc1
-            if(!this->identity(1)) cost += 2*double(dimin[0])*dimin[1]*dimout[2]*dimout[3]*dimout[1]; // Or
-            if(!this->identity(0)) cost += 2*double(dimin[0])*dimout[1]*dimout[2]*dimout[3]*dimout[0]; // Ol
-         }else if(dims == 3){
-            std::vector<size_t> dims = {dimin[0] *dimin[1] *dimout[2],
-               dimin[0] *dimout[1]*dimout[2],
-               dimout[0]*dimout[1]*dimout[2]};
-            blksize = *std::max_element(dims.begin(), dims.end());
-            if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[2];
-            if(!this->identity(1)) cost += 2*double(dimin[0])*dimin[1]*dimout[2]*dimout[1];
-            if(!this->identity(0)) cost += 2*double(dimin[0])*dimout[1]*dimout[2]*dimout[0];
-         }else{
-            std::cout << "error: no such option for dims=" << dims << std::endl;
-            exit(1);
-         }
-      }
-
-   template <typename Tm>
-      void Hxblock<Tm>::get_MMlist(){
-         MMlist2<Tm> MMlst2(4);
-         if(dims == 4){
-            get_MMlist_twodot(MMlst2);
-         }else if(dims == 3){
-            get_MMlist_onedot(MMlst2);
-         }else{
-            std::cout << "error: no such option for dims=" << dims << std::endl;
-            exit(1);
-         }
-         // flatten MMlst2 to MMlst
-         size_t size = MMlst2[0].size() + MMlst2[1].size() 
-            + MMlst2[2].size() + MMlst2[3].size();
-         assert(size > 0);
-         MMlst.resize(size);
-         int idx = 0;
-         for(int i=0; i<dims; i++){
-            for(int j=0; j<MMlst2[i].size(); j++){
-               MMlst[idx] = MMlst2[i][j];
-               idx++;
-            } // j
-         } // i
-      }
-
    // Generation of MMlst following qtensor/contract_qt4_qt2.h
    // sigma[br,bc,bm,bv] = coeff Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
    // 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv']
@@ -163,7 +137,7 @@ namespace ctns{
       void Hxblock<Tm>::get_MMlist_twodot(MMlist2<Tm>& MMlst2,
             const size_t offset) const{
          // wf[br',bc',bm',bv']
-         int xloc = locin, yloc = locout;
+         int xloc = locIn, yloc = locOut;
          int nt = terms+1; // ZL@20230228: ensure the output is always at the first part of 2*blksize
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc2^dagger3[bv,bv']: out(r,c,m,v) = o[d](v,x) in(r,c,m,x) 
@@ -182,8 +156,8 @@ namespace ctns{
             mm.locC = yloc;   mm.offC = yoff; 
             MMlst2[0].push_back(mm); 
             // update x & y  
-            xloc = locout; xoff = offset+(nt%2)*blksize; 
-            yloc = locout; yoff = offset+(1-nt%2)*blksize;
+            xloc = locOut; xoff = offset+(nt%2)*blksize; 
+            yloc = locOut; yoff = offset+(1-nt%2)*blksize;
             nt -= 1;
          }
          // Oc1^dagger2[bm,bm']: out(r,c,m,v) = o[d](m,x) in(r,c,x,v)
@@ -204,8 +178,8 @@ namespace ctns{
                MMlst2[1].push_back(mm);
             }
             // update x & y
-            xloc = locout; xoff = offset+(nt%2)*blksize;
-            yloc = locout; yoff = offset+(1-nt%2)*blksize;
+            xloc = locOut; xoff = offset+(nt%2)*blksize;
+            yloc = locOut; yoff = offset+(1-nt%2)*blksize;
             nt -= 1;
          }
          // Or^dagger1[bc,bc']: out(r,c,m,v) = o[d](c,x) in(r,x,m,v) 
@@ -228,8 +202,8 @@ namespace ctns{
                }
             }
             // update x & y
-            xloc = locout; xoff = offset+(nt%2)*blksize;
-            yloc = locout; yoff = offset+(1-nt%2)*blksize;
+            xloc = locOut; xoff = offset+(nt%2)*blksize;
+            yloc = locOut; yoff = offset+(1-nt%2)*blksize;
             nt -= 1;	  
          }
          // Ol^dagger0[br,br']: out(r,c,m,v) = o[d](r,x) in(x,c,m,v)
@@ -260,7 +234,7 @@ namespace ctns{
       void Hxblock<Tm>::get_MMlist_onedot(MMlist2<Tm>& MMlst2,
             const size_t offset) const{
          // wf[br',bc',bm']
-         int xloc = locin, yloc = locout;
+         int xloc = locIn, yloc = locOut;
          int nt = terms+1; // ZL@20230228: ensure the output is always at the first part of 2*blksize
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc1^dagger2[bm,bm']: out(r,c,m) = o[d](m,x) in(r,c,x)
@@ -279,8 +253,8 @@ namespace ctns{
             mm.locC = yloc;   mm.offC = yoff; 
             MMlst2[0].push_back(mm); 
             // update x & y  
-            xloc = locout; xoff = offset+(nt%2)*blksize; 
-            yloc = locout; yoff = offset+(1-nt%2)*blksize;
+            xloc = locOut; xoff = offset+(nt%2)*blksize; 
+            yloc = locOut; yoff = offset+(1-nt%2)*blksize;
             nt -= 1;
          }
          // Or^dagger1[bc,bc']: out(r,c,m) = o[d](c,x) in(r,x,m) 
@@ -301,8 +275,8 @@ namespace ctns{
                MMlst2[1].push_back(mm);
             }
             // update x & y
-            xloc = locout; xoff = offset+(nt%2)*blksize;
-            yloc = locout; yoff = offset+(1-nt%2)*blksize;
+            xloc = locOut; xoff = offset+(nt%2)*blksize;
+            yloc = locOut; yoff = offset+(1-nt%2)*blksize;
             nt -= 1;
          }
          // Ol^dagger0[br,br']: out(r,c,m) = o[d](r,x) in(x,c,m)
@@ -327,9 +301,7 @@ namespace ctns{
 
    // Perform the actual matrix-matrix multiplication
    template <typename Tm>
-      void Hxblock<Tm>::kernel(const Tm* x,
-            Tm** opaddr,
-            Tm* workspace) const{ 
+      void Hxblock<Tm>::kernel(const Tm* x, Tm** opaddr, Tm* workspace) const{ 
          const Tm alpha = 1.0, beta = 0.0;
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
