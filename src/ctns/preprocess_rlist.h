@@ -33,10 +33,11 @@ namespace ctns{
             }
             // cost for contractions
             void setup(){
+               int dfac = (icase == 1)? dimin2[2] : 1; // for batchGEMM
                std::vector<size_t> dimsInter = {dimin[0] *dimin[1] *dimout[2],
                   dimin[0] *dimout[1]*dimout[2],
                   dimout[0]*dimout[1]*dimout[2],
-                  dimin2[icase]*dimout[icase] // renormalized operators
+                  dimin2[icase]*dimout[icase]*dfac // renormalized operators
                };
                blksize = *std::max_element(dimsInter.begin(), dimsInter.end());
                if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[2];
@@ -45,7 +46,8 @@ namespace ctns{
                // Additional information for psi*[br,bc,bm]
                cost += 2*double(dimin2[0])*dimin2[1]*dimin2[2]*dimout[icase];
             }
-            void get_MMlist_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
+            void get_MMlist_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0,
+                  const bool ifbatch=false) const;
             void get_MMlist(){
                MMlst2.resize(4);
                get_MMlist_onedot(MMlst2);
@@ -118,7 +120,8 @@ namespace ctns{
    // lr: O[bm,bm'] = psi*[br,bc,bm] sigma[br,bc,bm']
    template <typename Tm>
       void Rblock<Tm>::get_MMlist_onedot(MMlist2<Tm>& MMlst2,
-            const size_t offset) const{
+            const size_t offset,
+            const bool ifbatch) const{
          // wf[br',bc',bm']
          int xloc = locIn, yloc = locOut;
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
@@ -219,6 +222,7 @@ namespace ctns{
                mm.locA = locIn; mm.offA = offin2+im*mm.M*mm.K;
                mm.locB = xloc;  mm.offB = xoff+im*mm.N*mm.K;
                mm.locC = yloc;  mm.offC = yoff;
+               if(ifbatch) mm.offC += im*mm.M*mm.N;
                MMlst2[3].push_back(mm);
             }
          }else if(icase == 2){

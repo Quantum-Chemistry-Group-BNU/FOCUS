@@ -11,7 +11,7 @@
 #include "symbolic_kernel_renorm2.h"
 #include "preprocess_rformulae.h"
 #include "preprocess_renorm.h"
-#include "preprocess_renorm2.h"
+#include "preprocess_renorm_batch.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -66,12 +66,6 @@ namespace ctns{
          qops.isym = isym;
          qops.ifkr = ifkr;
          qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
-
-
-         tools::print_vector(qops1.cindex,"CINDEX1");
-         tools::print_vector(qops2.cindex,"CINDEX2");
-         tools::print_vector(qops.cindex,"CINDEX");
-
          // rest of spatial orbital indices
          const auto& node = icomb.topo.get_node(p);
          const auto& rindex = icomb.topo.rindex;
@@ -112,6 +106,7 @@ namespace ctns{
          rintermediates<Tm> rinter;
          Rlist<Tm> Rlst;
          Rlist2<Tm> Rlst2;
+         RMMtasks<Tm> Rmmtasks;
          std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c",2}};
          Tm* opaddr[5] = {nullptr, nullptr, nullptr, nullptr, nullptr}; // {l,r,c1,c2,i}
          const std::string block1 = superblock.substr(0,1);
@@ -235,9 +230,14 @@ namespace ctns{
             if(diff > 1.e-10) exit(1);
             linalg::xcopy(qops._size, data1, qops._data);
 
-         }else if(alg_renorm == 5){
- 
-            // CPU: symbolic formulae + rintermediates + preallocation of workspace
+         }else if(alg_renorm == 6){
+
+            if(schd.ctns.batchsize == 0){
+               std::cout << "error: batchsize should be set!" << std::endl;
+               exit(1);
+            }
+
+            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1,
                   debug_formulae);
@@ -249,14 +249,22 @@ namespace ctns{
             preprocess_formulae_Rlist2(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
                   Rlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
 
-            get_MMlist(Rlst2, schd.ctns.hxorder);
+            // generate Rmmtasks
+            Rmmtasks.resize(qops.qbra.size());
+            for(int i=0; i<Rmmtasks.size(); i++){
+               Rmmtasks[i].init(Rlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
+                     blksize*2, schd.ctns.hxorder);
+            }
 
-            worktot = maxthreads*blksize*3;
+            worktot = Rmmtasks[0].batchsize*blksize*2;
             if(debug && schd.ctns.verbose>0){
                std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
+            workspace = new Tm[worktot];
+            std::cout << "batchsize=" << schd.ctns.batchsize << std::endl;
+            exit(1);
 
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
@@ -278,8 +286,10 @@ namespace ctns{
             }
             
             memset(qops._data, 0, qops._size*sizeof(Tm));
-            
-            preprocess_renorm2(qops._data, site._data, size, rank, qops._size, blksize, Rlst2, opaddr);
+           
+            preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size, blksize, Rlst2, 
+                                    Rmmtasks, opaddr, workspace);
+            delete[] workspace;
             linalg::xcopy(qops._size, qops._data, data1);
           
             std::cout << "\nlzd:qops: new" << std::endl;
@@ -313,13 +323,6 @@ namespace ctns{
             std::cout << "total diff=" << diff << std::endl;
             if(diff > 1.e-10) exit(1);
             linalg::xcopy(qops._size, data1, qops._data);
-
-         }else if(alg_renorm == 6){
-
-            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
-            std::cout << "Not implemented yet!" << std::endl;
-            exit(1);
-
 
          }else if(alg_renorm == 7){
 

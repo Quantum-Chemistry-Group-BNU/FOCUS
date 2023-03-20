@@ -45,9 +45,9 @@ namespace ctns{
 #endif
 #endif
                   gettimeofday(&t1, NULL);
-                  oper_timer.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
+                  oper_timer.local.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
                         + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
-                  oper_timer.cHx[i] += mmbatch2[k][i].cost; 
+                  oper_timer.local.cHx[i] += mmbatch2[k][i].cost; 
                }
             }
             // reduction of y[:] = \sum_i ai*yi[:]
@@ -63,7 +63,7 @@ namespace ctns{
 #endif
 #endif
                gettimeofday(&t1, NULL);
-               oper_timer.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.local.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
@@ -106,7 +106,7 @@ namespace ctns{
             int pos[4] = {0,1,2,3};
             std::vector<size_t> dims(nd,0);
             // count how many gemms in each case 
-            for(int j=0; j<jlen; j++){
+            for(size_t j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Hxblk = Hxlst[jdx];
                if(_batchcase == 1){
@@ -128,7 +128,7 @@ namespace ctns{
                mmlst2[i].resize(dims[i]); // c2,c1,r,l
             }
             std::vector<size_t> idx(nd,0);
-            for(int j=0; j<jlen; j++){
+            for(size_t j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Hxblk = Hxlst[jdx];
                if(_batchcase == 1){
@@ -168,7 +168,7 @@ namespace ctns{
             mmreduce[k].offset = offset;
             mmreduce[k].offout = Hxlst[off].offout;
             mmreduce[k].coeff.resize(jlen);
-            for(int j=0; j<jlen; j++){
+            for(size_t j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Hxblk = Hxlst[jdx];
                mmreduce[k].coeff[j] = Hxblk.coeff;

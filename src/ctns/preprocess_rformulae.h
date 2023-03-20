@@ -139,12 +139,19 @@ namespace ctns{
             const auto& key = std::get<0>(task);
             const auto& index = std::get<1>(task);
             const auto& formula = std::get<2>(task);
+
+            if(key != 'C') continue;
+
             for(int it=0; it<formula.size(); it++){
+
+               std::cout << "it=" << it << std::endl;
+
                Rmu[k][it].gen_Rlist2(superblock, site.info, Rlst2, blksize, cost, false);
                if(key == 'H'){
                   Rmu[k][it].gen_Rlist2(superblock, site.info, Rlst2, blksize, cost, true);
                }
             }
+
          }
          auto tb = tools::get_time();
 

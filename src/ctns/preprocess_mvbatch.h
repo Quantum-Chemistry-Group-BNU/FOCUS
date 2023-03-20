@@ -26,7 +26,7 @@ namespace ctns{
    template <typename Tm>
       struct MVbatch{
          public:
-            void init(const MVlist<Tm>& MVlst);
+            void init(const MVlist<Tm>& MVlst, const Tm beta=0.0);
             void kernel(const int batchgemv, Tm** ptrs){
                if(batchgemv == 0){
                   this->xgemv_omp(ptrs);   
@@ -69,7 +69,7 @@ namespace ctns{
       };
 
    template <typename Tm>
-      void MVbatch<Tm>::init(const MVlist<Tm>& MVlst){
+      void MVbatch<Tm>::init(const MVlist<Tm>& MVlst, const Tm beta){
          size = MVlst.size();
          transA.resize(size);
          M.resize(size); N.resize(size);
@@ -88,7 +88,7 @@ namespace ctns{
          }
          Aptr.resize(size); xptr.resize(size); yptr.resize(size);
          alpha_vec.resize(size,1.0);
-         beta_vec.resize(size,0.0);
+         beta_vec.resize(size,beta); // beta is allowed
          size_per_group_vec.resize(size,1);
       }
 

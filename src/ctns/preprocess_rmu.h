@@ -258,6 +258,8 @@ namespace ctns{
             cost += Rblk.cost;
             Rlst2[bi2[icase]].push_back(Rblk);
             // debug 
+            //std::cout << "i=" << i << " icase=" << icase << std::endl;
+            //std::cout << "offrop=" << Rblk.offrop << " size=" << Rblk.size << std::endl; 
             //std::cout << "bi=" << bi[0] << "," << bi[1] << "," << bi[2] << std::endl;
             //std::cout << "bo=" << bo[0] << "," << bo[1] << "," << bo[2] << std::endl;
             //std::cout << "bi2=" << bi2[0] << "," << bi2[1] << "," << bi2[2] << std::endl;

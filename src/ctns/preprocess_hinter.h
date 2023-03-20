@@ -231,7 +231,6 @@ namespace ctns{
             } 
          
             // debug  
-            std::cout << "idx=" << idx << " sop=" << sop << std::endl; 
             std::cout << "lzdA" << std::endl;
             Tm* workspace = _data1+_offset.at(item);
             symbolic_sum_oper(qops_dict, sop, workspace);

@@ -1,9 +1,9 @@
-#ifndef PREPROCESS_SIGMA_BATCH_H
-#define PREPROCESS_SIGMA_BATCH_H
+#ifndef PREPROCESS_RENORM_BATCH_H
+#define PREPROCESS_RENORM_BATCH_H
 
-#include "preprocess_hinter.h"
-#include "preprocess_hmu.h"
-#include "preprocess_mmtask.h"
+#include "preprocess_rinter.h"
+#include "preprocess_rmu.h"
+#include "preprocess_rmmtask.h"
 
 #include "time.h"
 #include "sys/time.h"
@@ -11,21 +11,17 @@
 
 namespace ctns{
 
-   // for Davidson diagonalization
    template <typename Tm> 
-      void preprocess_Hx_batch(Tm* y,
+      void preprocess_renorm_batch(Tm* y,
             const Tm* x,
-            const Tm& scale,
             const int& size,
             const int& rank,
             const size_t& ndim,
             const size_t& blksize,
-            Hxlist2<Tm>& Hxlst2,
-            MMtasks<Tm>& mmtasks,
+            Rlist2<Tm>& Rlst2,
+            RMMtasks<Tm>& Rmmtasks,
             Tm** opaddr,
-            Tm* workspace,
-            double& t_kernel_ibond,
-            double& t_reduction_ibond){
+            Tm* workspace){
 #ifdef _OPENMP
          int maxthreads = omp_get_max_threads();
 #else
@@ -33,7 +29,7 @@ namespace ctns{
 #endif
          const bool debug = false;
          if(rank == 0 && debug){
-            std::cout << "ctns::preprocess_Hx_batch"
+            std::cout << "ctns::preprocess_renorm_batch"
                << " mpisize=" << size 
                << " maxthreads=" << maxthreads
                << std::endl;
@@ -56,43 +52,41 @@ namespace ctns{
          struct timeval t0_time_gemm_kernel, t1_time_gemm_kernel;
          struct timeval t0_time_gemm_reduction, t1_time_gemm_reduction;
 
-         oper_timer.local.start();
+         oper_timer.renorm.start();
          // loop over nonzero blocks
          double cost = 0.0;
-         for(int i=0; i<mmtasks.size(); i++){
-            auto& mmtask = mmtasks[i];
-            cost += mmtask.cost;
-            for(int k=0; k<mmtask.nbatch; k++){
+         for(int i=0; i<Rmmtasks.size(); i++){
+            auto& Rmmtask = Rmmtasks[i];
+            cost += Rmmtask.cost;
+            for(int k=0; k<Rmmtask.nbatch; k++){
+               /*
                // gemm
                gettimeofday(&t0_time_gemm_kernel, NULL);
-               mmtask.kernel(k, ptrs);
+               Rmmtask.kernel(k, ptrs);
                gettimeofday(&t1_time_gemm_kernel, NULL);
                // reduction
                gettimeofday(&t0_time_gemm_reduction, NULL);
-               mmtask.reduction(k, ptrs[6], y, 0);
+               Rmmtask.reduction(k, ptrs[6], y, 0);
                gettimeofday(&t1_time_gemm_reduction, NULL);
                // timing
                time_cost_gemm_kernel += ((double)(t1_time_gemm_kernel.tv_sec - t0_time_gemm_kernel.tv_sec) 
                      + (double)(t1_time_gemm_kernel.tv_usec - t0_time_gemm_kernel.tv_usec)/1000000.0);
                time_cost_gemm_reduction += ((double)(t1_time_gemm_reduction.tv_sec - t0_time_gemm_reduction.tv_sec) 
                      + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
+               */
             } // k
          } // i
-         // add const term
-         if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
 
          // timing
          if(rank == 0){
-            std::cout << "--- preprocess_Hx_batch ---" << std::endl;
+            std::cout << "--- preprocess_renorm_batch ---" << std::endl;
             std::cout << "--- time_cost_gemm_kernel=" << time_cost_gemm_kernel << std::endl;
             std::cout << "--- time_cost_gemm_reduction=" << time_cost_gemm_reduction << std::endl;
             std::cout << "--- cost_gemm_kernel=" << cost 
                << " flops=kernel/time=" << cost/time_cost_gemm_kernel
                << std::endl;
-            oper_timer.local.analysis();
+            oper_timer.renorm.analysis();
          }
-         t_kernel_ibond = time_cost_gemm_kernel;
-         t_reduction_ibond = time_cost_gemm_reduction;
       }
 
 } // ctns
