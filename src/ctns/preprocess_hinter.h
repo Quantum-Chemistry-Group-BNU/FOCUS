@@ -229,7 +229,8 @@ namespace ctns{
                auto wtk = sop.sums[k].first;
                alpha_vec[adx+k] = dagger? tools::conjugate(wtk) : wtk; 
             } 
-           
+         
+            // debug  
             std::cout << "idx=" << idx << " sop=" << sop << std::endl; 
             std::cout << "lzdA" << std::endl;
             Tm* workspace = _data1+_offset.at(item);
@@ -276,6 +277,7 @@ namespace ctns{
             << " flops=" << mvbatch.cost/dt
             << std::endl;
 
+         // debug
          Tm* _data0 = new Tm[_size];
          memset(_data0, 0, _size*sizeof(Tm));
          std::vector<std::pair<int,int>> _index(_count);

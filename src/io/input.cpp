@@ -205,8 +205,8 @@ void params_ctns::read(ifstream& istrm){
          ifdist1 = true;	      
       }else if(line.substr(0,13)=="save_formulae"){
          save_formulae = true;
-      }else if(line.substr(0,6)=="nosort"){
-         sort_formulae = false;
+      }else if(line.substr(0,13)=="sort_formulae"){
+         sort_formulae = true;
       }else if(line.substr(0,7)=="hxorder"){
          hxorder = stoi(line.substr(7));
       }else if(line.substr(0,9)=="batchgemm"){

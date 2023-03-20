@@ -261,6 +261,11 @@ KNOWN PROBLEMS
       4. support restart by loading RCF? [DONE@20220308]
       5. support restart at a particular ibond? [DONE@20230309]
 
+ * Support Intermediate with GPU? [working!!!]
+      0. fix storage order in oper_dict to make opC contigous
+      1. consistent ordering for dgemv? [DONE@20230320]
+      2. GPU support
+
  * Support Renorm with GPU [???]
       0. basic subroutines: alg_renorm=4 [DONE@20230319]
          - preprocess_renorm.h
@@ -271,8 +276,6 @@ KNOWN PROBLEMS
       1. alg_renorm=5: partitioned
       2. alg_renorm=6: Batch
       3. GPU support
-
- * Support Intermediate with GPU? [working!!!]
 
 === TODOs ===
 

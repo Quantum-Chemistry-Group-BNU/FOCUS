@@ -12,7 +12,7 @@ namespace ctns{
    // --- oper_dict: container for operators --- 
 
    template <typename Tm>
-      using oper_map = std::map<int,stensor2<Tm>>;
+      using oper_map = std::map<int,stensor2<Tm>>; // index to operator
 
    template <typename Tm>
       struct oper_dict{
@@ -118,13 +118,12 @@ namespace ctns{
                for(const auto& key : opseq){
                   if(exist[key] == 0) continue;
                   std::cout << " " << key << ": ";
-                  if(key == 'H' || key == 'C' || key == 'S'){
-                     for(const auto& op : _opdict.at(key)){
-                        std::cout << "(" << op.first << ") ";
-                     }
-                  }else{
-                     for(const auto& op : _opdict.at(key)){
-                        auto pq = oper_unpack(op.first);
+                  auto op_index = this->oper_index_op(key);
+                  for(int idx : op_index){
+                     if(key == 'H' || key == 'C' || key == 'S'){
+                        std::cout << "(" << idx << ") ";
+                     }else{
+                        auto pq = oper_unpack(idx);
                         std::cout << "(" << pq.first << "," << pq.second << ") ";
                      }
                   }
@@ -206,7 +205,8 @@ namespace ctns{
          std::map<char,size_t> sizes;
          // loop over different types of operators
          for(const auto& key : oplist){
-            sizes[key] = 0; 
+            sizes[key] = 0;
+            _opdict[key] = oper_map<Tm>(); // initialize an empty dictionary
             if(debug) std::cout << " allocate_memory for op" << key << ":";
             // loop over indices
             auto op_index = this->oper_index_op(key);
@@ -238,12 +238,13 @@ namespace ctns{
       void oper_dict<Tm>::_setup_data(){
          size_t off = 0;
          for(const auto& key : oplist){
-            for(auto& pr : _opdict[key]){
-               auto& idx = pr.first;
-               auto& op = pr.second;
+            // use the same order in setup_opdict for storage 
+            auto op_index = this->oper_index_op(key); 
+            for(int idx : op_index){
+               auto& op = _opdict[key][idx];
                assert(op.own == false);
                op.setup_data( _data+off );
-               _offset[std::make_pair(key,idx)] = off;
+               _offset[std::make_pair(key,idx)] = off; 
                off += op.size();
             }
          }

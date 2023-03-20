@@ -19,19 +19,19 @@ namespace ctns{
             bool identity(const int i) const{ return loc[i]==-1; }
             // onedot
             void gen_Hxlist(const qinfo3<Tm>& wf_info, 
-                  Hxlist<Tm>& Hxblks,
+                  Hxlist<Tm>& Hxlst,
                   size_t& blksize,
                   double& cost,
                   const bool ifdagger) const;
             // twodot
             void gen_Hxlist(const qinfo4<Tm>& wf_info, 
-                  Hxlist<Tm>& Hxblks,
+                  Hxlist<Tm>& Hxlst,
                   size_t& blksize,
                   double& cost,
                   const bool ifdagger) const;
             // twodot
             void gen_Hxlist2(const qinfo4<Tm>& wf_info, 
-                  Hxlist2<Tm>& Hxblks,
+                  Hxlist2<Tm>& Hxlst2,
                   size_t& blksize,
                   double& cost,
                   const bool ifdagger) const;

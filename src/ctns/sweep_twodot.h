@@ -96,6 +96,8 @@ namespace ctns{
          }
          timing.ta = tools::get_time();
 
+         qops_dict.at("l").print("lqops",2);
+
          // 2. twodot wavefunction
          //	 \ /
          //   --*--

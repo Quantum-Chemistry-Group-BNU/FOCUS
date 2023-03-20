@@ -11,6 +11,7 @@
 #include "symbolic_kernel_renorm2.h"
 #include "preprocess_rformulae.h"
 #include "preprocess_renorm.h"
+#include "preprocess_renorm2.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -65,6 +66,12 @@ namespace ctns{
          qops.isym = isym;
          qops.ifkr = ifkr;
          qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);
+
+
+         tools::print_vector(qops1.cindex,"CINDEX1");
+         tools::print_vector(qops2.cindex,"CINDEX2");
+         tools::print_vector(qops.cindex,"CINDEX");
+
          // rest of spatial orbital indices
          const auto& node = icomb.topo.get_node(p);
          const auto& rindex = icomb.topo.rindex;
@@ -88,6 +95,7 @@ namespace ctns{
          qops.ifdist2 = true;
          // initialize memory 
          qops.allocate_memory();
+         qops.print("qops",2);
 
          Tm* data0 = new Tm[qops._size];
          memset(data0, 0, qops._size*sizeof(Tm));
@@ -146,7 +154,7 @@ namespace ctns{
          
          }else if(alg_renorm == 4){
 
-            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
+            // CPU: symbolic formulae + rintermediates + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1,
                   debug_formulae);
@@ -230,10 +238,82 @@ namespace ctns{
          }else if(alg_renorm == 5){
  
             // CPU: symbolic formulae + rintermediates + preallocation of workspace
-            std::cout << "Not implemented yet!" << std::endl;
-            exit(1);
+            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+                  size, rank, fname, sort_formulae, ifdist1,
+                  debug_formulae);
+            
+            // generation of renormalization block [lc/lr/cr]
+            rinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, rtasks, debug);
 
-        
+            // GEMM list and GEMV list
+            preprocess_formulae_Rlist2(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+                  Rlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
+
+            get_MMlist(Rlst2, schd.ctns.hxorder);
+
+            worktot = maxthreads*blksize*3;
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
+                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+            }
+
+            // oldest version
+            auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
+            oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
+            linalg::xcopy(qops._size, qops._data, data0);
+
+            std::cout << "\nlzd:qops: old" << std::endl;
+            for(auto& key : qops.oplist){
+               auto& opdict = qops(key);
+               //if(key != 'C') continue;
+               for(auto& pr : opdict){
+                  std::cout << "key=" << key
+                     << " pr.first=" << pr.first
+                     << " pr.second=" << pr.second.normF()
+                     << std::endl;
+                  if(key == 'C' and pr.first == 8) pr.second.print("C0old",2);
+                  //if(pr.first == 9) pr.second.print("C8old",2);
+               }
+            }
+            
+            memset(qops._data, 0, qops._size*sizeof(Tm));
+            
+            preprocess_renorm2(qops._data, site._data, size, rank, qops._size, blksize, Rlst2, opaddr);
+            linalg::xcopy(qops._size, qops._data, data1);
+          
+            std::cout << "\nlzd:qops: new" << std::endl;
+            for(auto& key : qops.oplist){
+               auto& opdict = qops(key);
+               //if(key != 'C') continue;
+               for(auto& pr : opdict){
+                  std::cout << "key=" << key
+                     << " pr.first=" << pr.first
+                     << " pr.second=" << pr.second.normF()
+                     << std::endl;
+                  if(key == 'C' and pr.first == 8) pr.second.print("C0new",2);
+               }
+            }
+            linalg::xaxpy(qops._size, -1.0, data0, qops._data);
+            auto diff = linalg::xnrm2(qops._size, qops._data);
+
+            std::cout << "\nlzd:qops-diff" << std::endl;
+            for(auto& key : qops.oplist){
+               auto& opdict = qops(key);
+               //if(key != 'C') continue;
+               for(auto& pr : opdict){
+                  if(pr.second.normF() < 1.e-10) continue;
+                  std::cout << "key=" << key
+                     << " pr.first=" << pr.first
+                     << " pr.second=" << pr.second.normF()
+                     << std::endl;
+                  if(key == 'C' and pr.first == 8) pr.second.print("C0diff",2);
+               }
+            }
+            std::cout << "total diff=" << diff << std::endl;
+            if(diff > 1.e-10) exit(1);
+            linalg::xcopy(qops._size, data1, qops._data);
+
          }else if(alg_renorm == 6){
 
             // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace

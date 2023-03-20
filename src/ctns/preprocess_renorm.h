@@ -6,7 +6,6 @@
 
 namespace ctns{
 
-   // for Davidson diagonalization
    template <typename Tm> 
       void preprocess_renorm(Tm* y,
             const Tm* x,
