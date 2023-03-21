@@ -29,17 +29,17 @@ namespace ctns{
       struct MMbatch{
          public:
             void init(const MMlist<Tm>& MMlst);
-            void kernel(const int batchgemm, Tm** ptrs){
-               if(batchgemm == 0){
+            void kernel(const int batchblas, Tm** ptrs){
+               if(batchblas == 0){
                   this->xgemm_omp(ptrs);   
-               }else if(batchgemm == 1){
+               }else if(batchblas == 1){
                   this->xgemm_batch_cpu(ptrs);   
 #ifdef GPU 
-               }else if(batchgemm == 2){
+               }else if(batchblas == 2){
                   this->xgemm_batch_gpu(ptrs);
 #endif 
                }else{
-                  std::cout << "error: no such option in MMbatch::kernel batchgemm=" << batchgemm << std::endl;
+                  std::cout << "error: no such option in MMbatch::kernel batchblas=" << batchblas << std::endl;
                   exit(1);
                }
             }

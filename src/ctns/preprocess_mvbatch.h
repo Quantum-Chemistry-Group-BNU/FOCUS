@@ -27,17 +27,17 @@ namespace ctns{
       struct MVbatch{
          public:
             void init(const MVlist<Tm>& MVlst, const Tm beta=0.0);
-            void kernel(const int batchgemv, Tm** ptrs){
-               if(batchgemv == 0){
+            void kernel(const int batchblas, Tm** ptrs){
+               if(batchblas == 0){
                   this->xgemv_omp(ptrs);   
-               }else if(batchgemv == 1){
+               }else if(batchblas == 1){
                   this->xgemv_batch_cpu(ptrs);   
 #ifdef GPU 
-               }else if(batchgemv == 2){
+               }else if(batchblas == 2){
                   this->xgemv_batch_gpu(ptrs);
 #endif 
                }else{
-                  std::cout << "error: no such option in MVbatch::kernel batchgemv=" << batchgemv << std::endl;
+                  std::cout << "error: no such option in MVbatch::kernel batchblas=" << batchblas << std::endl;
                   exit(1);
                }
             }

@@ -209,8 +209,8 @@ void params_ctns::read(ifstream& istrm){
          sort_formulae = true;
       }else if(line.substr(0,7)=="hxorder"){
          hxorder = stoi(line.substr(7));
-      }else if(line.substr(0,9)=="batchgemm"){
-         batchgemm = stoi(line.substr(9));
+      }else if(line.substr(0,9)=="batchblas"){
+         batchblas = stoi(line.substr(9));
       }else if(line.substr(0,9)=="batchsize"){
          batchsize = stoi(line.substr(9));
       }else if(line.substr(0,9)=="batchcase"){
@@ -301,17 +301,17 @@ void params_ctns::read(ifstream& istrm){
          ctrls[j].isweep = j;
       }
    } // size
-   // consistency check for batchgemm
+   // consistency check for batchblas
    if(alg_hvec == 6){
-      if(batchgemm != 0 and batchgemm !=1){
-         std::cout << "error: alg_hvec=6 does not support batchgemm != 0/1: "
-                   << batchgemm << std::endl;
+      if(!(batchblas == 0 or batchblas ==1)){
+         std::cout << "error: alg_hvec=6 does not support batchblas other than 0 and 1: "
+                   << batchblas << std::endl;
          exit(1);
       }
    }
    if(alg_hvec == 7){
-      std::cout << "notice: automatically set batchgemm=2 for alg_hvec=7" << std::endl;
-      batchgemm = 2;
+      std::cout << "notice: automatically set batchblas=2 for alg_hvec=7" << std::endl;
+      batchblas = 2;
    }
 }
 
@@ -356,7 +356,7 @@ void params_ctns::print() const{
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;
    cout << "hxorder = " << hxorder << endl;
-   cout << "batchgemm = " << batchgemm << endl;
+   cout << "batchblas = " << batchblas << endl;
    cout << "batchsize = " << batchsize << endl;
    cout << "batchcase = " << batchcase << endl;
    // dvdson

@@ -265,9 +265,9 @@ namespace ctns{
          ptrs[4] = alpha_vec.data(); 
          ptrs[5] = _data;
          struct timeval t0gemv, t1gemv;
-         int batchgemv = 0;
          gettimeofday(&t0gemv, NULL);
-         mvbatch.kernel(batchgemv, ptrs);
+         int batchblas = 1;
+         mvbatch.kernel(batchblas, ptrs);
          gettimeofday(&t1gemv, NULL);
          double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
                + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);
@@ -429,9 +429,9 @@ namespace ctns{
          ptrs[4] = alpha_vec.data(); 
          ptrs[5] = _data;
          struct timeval t0gemv, t1gemv;
-         int batchgemv = 2;
          gettimeofday(&t0gemv, NULL);
-         mvbatch.kernel(batchgemv, ptrs);
+         int batchblas = 2;
+         mvbatch.kernel(batchblas, ptrs);
          gettimeofday(&t1gemv, NULL);
          double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
                + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);

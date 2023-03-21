@@ -394,7 +394,7 @@ namespace ctns{
             // generate mmtasks
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<mmtasks.size(); i++){
-               mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
+               mmtasks[i].init(Hxlst2[i], schd.ctns.batchblas, batchsize,
                      blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank << " iblk=" << i 
@@ -589,7 +589,7 @@ namespace ctns{
             // generate mmtasks given batchsize
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<mmtasks.size(); i++){
-               mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
+               mmtasks[i].init(Hxlst2[i], schd.ctns.batchblas, batchsize,
                      blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank << " iblk=" << i 

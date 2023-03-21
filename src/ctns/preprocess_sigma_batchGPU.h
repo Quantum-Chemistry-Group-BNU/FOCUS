@@ -92,7 +92,7 @@ namespace ctns{
                gettimeofday(&t1_time_gemm_kernel, NULL);
                // reduction
                gettimeofday(&t0_time_gemm_reduction, NULL);
-               mmtask.reduction(k, ptrs[6], y, 1);
+               mmtask.reduction(k, ptrs[6], y);
                gettimeofday(&t1_time_gemm_reduction, NULL);
                // timing
                time_cost_gemm_kernel += ((double)(t1_time_gemm_kernel.tv_sec - t0_time_gemm_kernel.tv_sec) 

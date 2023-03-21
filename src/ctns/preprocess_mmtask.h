@@ -16,7 +16,7 @@ namespace ctns{
       struct MMtask{
          public:
             void init(const Hxlist<Tm>& Hxlst, 
-                  const int _batchgemm,
+                  const int _batchblas,
                   const size_t _batchsize,
                   const size_t offset,
                   const int hdxorder,
@@ -36,7 +36,7 @@ namespace ctns{
                struct timeval t0, t1;
                for(int i=0; i<mmbatch2[k].size(); i++){
                   gettimeofday(&t0, NULL);
-                  mmbatch2[k][i].kernel(batchgemm, ptrs);
+                  mmbatch2[k][i].kernel(batchblas, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                   hipDeviceSynchronize();
@@ -51,10 +51,10 @@ namespace ctns{
                }
             }
             // reduction of y[:] = \sum_i ai*yi[:]
-            void reduction(const int k, Tm* workspace, Tm* y, const int iop) const{
+            void reduction(const int k, Tm* workspace, Tm* y) const{
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
-               mmreduce[k].reduction(workspace, y, iop);
+               mmreduce[k].reduction(batchblas, workspace, y);
 #ifdef GPU
 #ifdef USE_HIP
                hipDeviceSynchronize();
@@ -67,7 +67,7 @@ namespace ctns{
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
-            int batchgemm;
+            int batchblas;
             size_t totsize, batchsize, nbatch;
             double cost = 0.0;
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
@@ -76,13 +76,13 @@ namespace ctns{
 
    template <typename Tm>
       void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
-            const int _batchgemm,
+            const int _batchblas,
             const size_t _batchsize,
             const size_t offset,
             const int hxorder,
             const int _batchcase){
          // init
-         batchgemm = _batchgemm;
+         batchblas = _batchblas;
          totsize = Hxlst.size();
          batchsize = _batchsize;
          if(batchsize == 0 && totsize !=0){

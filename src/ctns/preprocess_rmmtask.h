@@ -16,7 +16,7 @@ namespace ctns{
       struct RMMtask{
          public:
             void init(const Rlist<Tm>& Rlst, 
-                  const int _batchgemm,
+                  const int _batchblas,
                   const size_t _batchsize,
                   const size_t offset,
                   const int hdxorder);
@@ -25,7 +25,7 @@ namespace ctns{
                struct timeval t0, t1;
                for(int i=0; i<mmbatch2[k].size(); i++){
                   gettimeofday(&t0, NULL);
-                  mmbatch2[k][i].kernel(batchgemm, ptrs);
+                  mmbatch2[k][i].kernel(batchblas, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                   hipDeviceSynchronize();
@@ -40,14 +40,14 @@ namespace ctns{
                } // i
             }
             // reduction
-            void reduction(const int k, Tm* workspace, Tm* y, const int iop){
+            void reduction(const int k, Tm* workspace, Tm* y){
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
 
-               // 1. collect O(r,r') += \sum_c O(r,r',c)
+               // 1. collect O(r,r') += \sum_c O(r,r',c) [axpy_batch]
                if(icase == 1){
                   const Tm alpha = 1.0;
-                  if(iop == 0){
+                  if(batchblas == 0 || batchblas == 1){
                      for(size_t j=0; j<collectc[k].size(); j++){
                         int dimc = collectc[k][j].first;
                         size_t size = collectc[k][j].second;
@@ -57,20 +57,19 @@ namespace ctns{
                         }
                      }
 #ifdef GPU
-                  }else if(iop == 1){
+                  }else if(batchblas == 2){
                      std::cout << "NOT IMPLEMENTED YET!" << std::endl;
                      exit(1);
 #endif
-                  } // iop
+                  } // batchblas
                } // icase
                
                // 2. reduction by GEMV
-               int batchgemv = iop+1;
                Tm* ptrs[3];
                ptrs[0] = workspace;
                ptrs[1] = const_cast<Tm*>(coefflst[k].data());
                ptrs[2] = y;
-               mvbatch[k].kernel(batchgemv, ptrs);
+               mvbatch[k].kernel(batchblas, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                hipDeviceSynchronize();
@@ -83,7 +82,7 @@ namespace ctns{
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
-            int icase, batchgemm;
+            int icase, batchblas;
             size_t totsize, batchsize, offset, nbatch;
             double cost = 0.0;
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
@@ -94,12 +93,12 @@ namespace ctns{
 
    template <typename Tm>
       void RMMtask<Tm>::init(const Rlist<Tm>& Rlst,
-            const int _batchgemm,
+            const int _batchblas,
             const size_t _batchsize,
             const size_t _offset,
             const int hxorder){
          // init
-         batchgemm = _batchgemm;
+         batchblas = _batchblas;
          totsize = Rlst.size();
          batchsize = _batchsize;
          offset = _offset;
