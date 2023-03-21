@@ -132,26 +132,23 @@ namespace ctns{
          // 2. from Hmu to expanded block forms
          blksize = 0;
          cost = 0.0;
-         int nnzblk = qops.qbra.size(); // partitioned according to rows 
+         int nnzblk = site.info._nnzaddr.size(); // partitioned according to rows 
+
+         nnzblk = qops.qbra.size();
          Rlst2.resize(nnzblk);
+
          for(int k=0; k<rsize; k++){
             const auto& task = rtasks.op_tasks[k];
             const auto& key = std::get<0>(task);
             const auto& index = std::get<1>(task);
             const auto& formula = std::get<2>(task);
-
-            if(key != 'C') continue;
-
+            //lzd std::cout << "\nk=" << k << " key,index=" << key << "," << index << std::endl;
             for(int it=0; it<formula.size(); it++){
-
-               std::cout << "it=" << it << std::endl;
-
                Rmu[k][it].gen_Rlist2(superblock, site.info, Rlst2, blksize, cost, false);
                if(key == 'H'){
                   Rmu[k][it].gen_Rlist2(superblock, site.info, Rlst2, blksize, cost, true);
                }
             }
-
          }
          auto tb = tools::get_time();
 

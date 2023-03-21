@@ -90,7 +90,7 @@ namespace ctns{
             std::cout << "batchsize=" << batchsize << " totsize=" << totsize << std::endl;
             exit(1);
          }
-         if(batchsize == 0) return;
+         if(batchsize == 0 || totsize == 0) return;
          nbatch = totsize/batchsize;
          if(totsize%batchsize != 0) nbatch += 1; // thus, this works even for totsize < batchsize
 

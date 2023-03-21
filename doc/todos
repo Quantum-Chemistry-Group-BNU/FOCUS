@@ -273,9 +273,11 @@ KNOWN PROBLEMS
          - preprocess_rinter.h
          - preprocess_rlist.h
          - preprocess_rmu.h
-      1. alg_renorm=5: partitioned
-      2. alg_renorm=6: Batch
-      3. GPU support
+      1. alg_renorm=6: CPU batch [DONE@20230321]
+         - preprocess_rmmtasks.h
+         - preprocess_rernorm_batch.h
+      2. alg_renorm=7: GPU batch
+         - preprocess_rernorm_batchGPU.h
 
 === TODOs ===
 

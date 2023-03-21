@@ -22,7 +22,6 @@ namespace ctns{
                   const int hdxorder);
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
-/*
                struct timeval t0, t1;
                for(int i=0; i<mmbatch2[k].size(); i++){
                   gettimeofday(&t0, NULL);
@@ -39,36 +38,37 @@ namespace ctns{
                         + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
                   oper_timer.renorm.cHx[i] += mmbatch2[k][i].cost; 
                } // i
-*/
             }
             // reduction
-            void reduction(const int k, Tm* workspace, Tm* y, const int iop) const{
-/*
+            void reduction(const int k, Tm* workspace, Tm* y, const int iop){
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
+
                // 1. collect O(r,r') += \sum_c O(r,r',c)
                if(icase == 1){
+                  const Tm alpha = 1.0;
                   if(iop == 0){
-                     for(size_t j=0; j<jlen; j++){
-                        int dimc = collect[k][j].first;
-                        size_t size = collect[k][j].second;
+                     for(size_t j=0; j<collectc[k].size(); j++){
+                        int dimc = collectc[k][j].first;
+                        size_t size = collectc[k][j].second;
                         Tm* ptr = workspace+j*offset; 
                         for(int i=1; i<dimc; i++){
-                           linalg::xaxpy(size, ptr+i*size, ptr);
+                           linalg::xaxpy(size, alpha, ptr+i*size, ptr);
                         }
                      }
 #ifdef GPU
                   }else if(iop == 1){
                      std::cout << "NOT IMPLEMENTED YET!" << std::endl;
                      exit(1);
-                  } // iop
 #endif
+                  } // iop
                } // icase
+               
                // 2. reduction by GEMV
                int batchgemv = iop+1;
                Tm* ptrs[3];
                ptrs[0] = workspace;
-               ptrs[1] = &coefflst[k];
+               ptrs[1] = const_cast<Tm*>(coefflst[k].data());
                ptrs[2] = y;
                mvbatch[k].kernel(batchgemv, ptrs);
 #ifdef GPU
@@ -81,7 +81,6 @@ namespace ctns{
                gettimeofday(&t1, NULL);
                oper_timer.renorm.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
-*/
             }
          public:
             int icase, batchgemm;
@@ -109,11 +108,10 @@ namespace ctns{
             std::cout << "batchsize=" << batchsize << " totsize=" << totsize << std::endl;
             exit(1);
          }
-         if(batchsize == 0) return;
+         if(batchsize == 0 || totsize == 0) return;
          nbatch = totsize/batchsize;
          if(totsize%batchsize != 0) nbatch += 1; // thus, this works even for totsize < batchsize
          icase = Rlst[0].icase; 
-
          // start process Rlst
          mmbatch2.resize(nbatch);
          collectc.resize(nbatch);
@@ -179,6 +177,19 @@ namespace ctns{
                cost += mmbatch2[k][i].cost; // accumulate MM cost
             } // i
 
+            /*
+            std::cout << "mmbatch:" << std::endl;
+            for(int i=0; i<nd; i++){
+               std::cout << "I=" << i << " size=" << mmbatch2[k][i].size << std::endl;
+               for(int j=0; j<mmbatch2[k][i].size; j++){
+                  std::cout << " j=" << j << " M,N,K="
+                     << mmbatch2[k][i].M[j] << ","
+                     << mmbatch2[k][i].N[j] << ","
+                     << mmbatch2[k][i].K[j] << std::endl;
+               }
+            }
+            */
+
             // information for collect O(r,r') += \sum_c O(r,r',c)
             if(icase == 1){
                collectc[k].resize(jlen);
@@ -189,6 +200,7 @@ namespace ctns{
                } // j
             }
 
+            coefflst[k].resize(jlen);
             MVlist<Tm> mvlst; 
             int nmu = 0;
             size_t offrop = Rlst[off].offrop;
@@ -196,13 +208,20 @@ namespace ctns{
                size_t jdx = off+j;
                const auto& Rblk = Rlst[jdx];
                coefflst[k][j] = Rblk.coeff;
-               if(Rblk.offrop == offrop){
-                  nmu += 1;
-               }else{
+               /*
+               std::cout << "j=" << j 
+                  << " Rblk.size=" << Rblk.size
+                  << " Rblk.offrop=" << Rblk.offrop 
+                  << " offset=" << offset
+                  << " nmu=" << nmu
+                  << " coeff=" << coefflst[k][j]
+                  << std::endl;
+               */ 
+               if(Rblk.offrop != offrop){
                   // append into mvbatch
                   MVinfo<Tm> mv;
                   mv.transA = 'N';
-                  mv.M = Rblk.size;
+                  mv.M = Rlst[jdx-1].size;
                   mv.N = nmu;
                   mv.LDA = offset;
                   mv.locA = 0;
@@ -210,18 +229,19 @@ namespace ctns{
                   mv.locx = 1;
                   mv.offx = (j-nmu);
                   mv.locy = 2;
-                  mv.offy = offrop;
+                  mv.offy = Rlst[jdx-1].offrop;
                   mvlst.push_back(mv);
                   // new 
-                  nmu = 0;
+                  nmu = 1;
                   offrop = Rblk.offrop;
+               }else{
+                  nmu += 1;
                }
             } // j
             // append into mvbatch
-            const auto& Rblk = Rlst[jlen-1];
             MVinfo<Tm> mv;
             mv.transA = 'N';
-            mv.M = Rblk.size;
+            mv.M = Rlst[off+jlen-1].size;
             mv.N = nmu;
             mv.LDA = offset;
             mv.locA = 0;
@@ -231,7 +251,21 @@ namespace ctns{
             mv.locy = 2;
             mv.offy = offrop;
             mvlst.push_back(mv);
-            mvbatch[k].init(mvlst);
+            const Tm beta = 1.0;
+            mvbatch[k].init(mvlst, beta);
+            /*
+            // debug:
+            std::cout << "mvbatch:" << mvbatch[k].size << std::endl;
+            for(int i=0; i<mvbatch[k].size; i++){
+               std::cout << "i=" << i << " M,N="
+                  << mvbatch[k].M[i] << ","
+                  << mvbatch[k].N[i] << " Aloc,off="
+                  << mvbatch[k].locA[i] << "," << mvbatch[k].offA[i] << " xloc,off="
+                  << mvbatch[k].locx[i] << "," << mvbatch[k].offx[i] << " yloc,off="
+                  << mvbatch[k].locy[i] << "," << mvbatch[k].offy[i] 
+                  << std::endl;
+            }
+            */
          } // k
       }
 

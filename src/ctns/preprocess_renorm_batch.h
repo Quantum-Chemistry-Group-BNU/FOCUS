@@ -59,7 +59,6 @@ namespace ctns{
             auto& Rmmtask = Rmmtasks[i];
             cost += Rmmtask.cost;
             for(int k=0; k<Rmmtask.nbatch; k++){
-               /*
                // gemm
                gettimeofday(&t0_time_gemm_kernel, NULL);
                Rmmtask.kernel(k, ptrs);
@@ -73,7 +72,6 @@ namespace ctns{
                      + (double)(t1_time_gemm_kernel.tv_usec - t0_time_gemm_kernel.tv_usec)/1000000.0);
                time_cost_gemm_reduction += ((double)(t1_time_gemm_reduction.tv_sec - t0_time_gemm_reduction.tv_sec) 
                      + (double)(t1_time_gemm_reduction.tv_usec - t0_time_gemm_reduction.tv_usec)/1000000.0);
-               */
             } // k
          } // i
 

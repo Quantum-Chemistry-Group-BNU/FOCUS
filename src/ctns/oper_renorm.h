@@ -250,7 +250,7 @@ namespace ctns{
                   Rlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
 
             // generate Rmmtasks
-            Rmmtasks.resize(qops.qbra.size());
+            Rmmtasks.resize(Rlst2.size());
             for(int i=0; i<Rmmtasks.size(); i++){
                Rmmtasks[i].init(Rlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
                      blksize*2, schd.ctns.hxorder);
@@ -263,27 +263,25 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            std::cout << "batchsize=" << schd.ctns.batchsize << std::endl;
-            exit(1);
 
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
             linalg::xcopy(qops._size, qops._data, data0);
 
+            /*
             std::cout << "\nlzd:qops: old" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
-               //if(key != 'C') continue;
                for(auto& pr : opdict){
                   std::cout << "key=" << key
                      << " pr.first=" << pr.first
+                     << " size=" << pr.second.size()
                      << " pr.second=" << pr.second.normF()
                      << std::endl;
-                  if(key == 'C' and pr.first == 8) pr.second.print("C0old",2);
-                  //if(pr.first == 9) pr.second.print("C8old",2);
                }
             }
+            */
             
             memset(qops._data, 0, qops._size*sizeof(Tm));
            
@@ -291,33 +289,33 @@ namespace ctns{
                                     Rmmtasks, opaddr, workspace);
             delete[] workspace;
             linalg::xcopy(qops._size, qops._data, data1);
-          
+
+            /*
             std::cout << "\nlzd:qops: new" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
-               //if(key != 'C') continue;
                for(auto& pr : opdict){
                   std::cout << "key=" << key
                      << " pr.first=" << pr.first
+                     << " size=" << pr.second.size()
                      << " pr.second=" << pr.second.normF()
                      << std::endl;
-                  if(key == 'C' and pr.first == 8) pr.second.print("C0new",2);
                }
             }
+            */
             linalg::xaxpy(qops._size, -1.0, data0, qops._data);
             auto diff = linalg::xnrm2(qops._size, qops._data);
 
             std::cout << "\nlzd:qops-diff" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
-               //if(key != 'C') continue;
                for(auto& pr : opdict){
                   if(pr.second.normF() < 1.e-10) continue;
-                  std::cout << "key=" << key
+                  std::cout << ">>> key=" << key
                      << " pr.first=" << pr.first
+                     << " size=" << pr.second.size()
                      << " pr.second=" << pr.second.normF()
                      << std::endl;
-                  if(key == 'C' and pr.first == 8) pr.second.print("C0diff",2);
                }
             }
             std::cout << "total diff=" << diff << std::endl;
