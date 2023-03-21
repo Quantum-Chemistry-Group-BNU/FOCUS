@@ -96,8 +96,6 @@ namespace ctns{
          }
          timing.ta = tools::get_time();
 
-         qops_dict.at("l").print("lqops",2);
-
          // 2. twodot wavefunction
          //	 \ /
          //   --*--
@@ -386,14 +384,29 @@ namespace ctns{
             preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, hinter, 
                   Hxlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
 
+            // compute batchsize & allocate workspace
+            size_t maxbatch = 0;
+            for(int i=0; i<Hxlst2.size(); i++){
+               maxbatch = std::max(maxbatch, Hxlst2[i].size());
+            } // i
+            size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
+             
             // generate mmtasks
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<mmtasks.size(); i++){
-               mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
+               mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
                      blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
+               if(debug && schd.ctns.verbose>1){
+                  std::cout << " rank=" << rank << " iblk=" << i 
+                     << " size=" << Hxlst2[i][0].size 
+                     << " mmtasks.totsize=" << mmtasks[i].totsize
+                     << " batchsize=" << mmtasks[i].batchsize 
+                     << " nbatch=" << mmtasks[i].nbatch 
+                     << std::endl;
+               }
             } // i
 
-            worktot = mmtasks[0].batchsize*blksize*2;
+            worktot = batchsize*blksize*2;
             if(debug && schd.ctns.verbose>0){
                std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
@@ -579,7 +592,7 @@ namespace ctns{
                mmtasks[i].init(Hxlst2[i], schd.ctns.batchgemm, batchsize,
                      blksize*2, schd.ctns.hxorder, schd.ctns.batchcase);
                if(debug && schd.ctns.verbose>1){
-                  std::cout << "rank=" << rank << " iblk=" << i 
+                  std::cout << " rank=" << rank << " iblk=" << i 
                      << " size=" << Hxlst2[i][0].size 
                      << " mmtasks.totsize=" << mmtasks[i].totsize
                      << " batchsize=" << mmtasks[i].batchsize 

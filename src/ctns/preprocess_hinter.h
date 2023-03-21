@@ -188,8 +188,8 @@ namespace ctns{
          _data = new Tm[_size];
          std::vector<Tm> alpha_vec(alpha_size);
 
-         Tm* _data1 = new Tm[_size];
-         Tm* _data2 = new Tm[_size];
+         //Tm* _data1 = new Tm[_size];
+         //Tm* _data2 = new Tm[_size];
 
          // setup GEMV_BATCH
          MVlist<Tm> mvlst(_count);
@@ -231,23 +231,23 @@ namespace ctns{
             } 
          
             // debug  
-            std::cout << "lzdA" << std::endl;
-            Tm* workspace = _data1+_offset.at(item);
-            symbolic_sum_oper(qops_dict, sop, workspace);
-
-            std::cout << "lzdB" << std::endl;
-            const Tm alpha = 1.0, beta = 0.0;
-            const int INCX = 1, INCY = 1;
-            Tm* Aptr = opaddr[mv.locA] + mv.offA;
-            Tm* Xptr = &alpha_vec[adx];
-            Tm* Yptr = _data2 + mv.offy;
-            linalg::xgemv(&mv.transA, mv.M, mv.N, alpha, Aptr, mv.LDA,
-                  Xptr, INCX, beta, Yptr, INCY);
-
-            std::cout << "lzdC" << std::endl;
-            linalg::xaxpy(mv.M, -1.0, workspace, Yptr);
-            auto diff = linalg::xnrm2(mv.M, Yptr);
-            std::cout << "idx=" << idx << " diff=" << diff << std::endl;
+            //std::cout << "lzdA" << std::endl;
+            //Tm* workspace = _data1+_offset.at(item);
+            //symbolic_sum_oper(qops_dict, sop, workspace);
+            //
+            //std::cout << "lzdB" << std::endl;
+            //const Tm alpha = 1.0, beta = 0.0;
+            //const int INCX = 1, INCY = 1;
+            //Tm* Aptr = opaddr[mv.locA] + mv.offA;
+            //Tm* Xptr = &alpha_vec[adx];
+            //Tm* Yptr = _data2 + mv.offy;
+            //linalg::xgemv(&mv.transA, mv.M, mv.N, alpha, Aptr, mv.LDA,
+            //      Xptr, INCX, beta, Yptr, INCY);
+            //
+            //std::cout << "lzdC" << std::endl;
+            //linalg::xaxpy(mv.M, -1.0, workspace, Yptr);
+            //auto diff = linalg::xnrm2(mv.M, Yptr);
+            //std::cout << "idx=" << idx << " diff=" << diff << std::endl;
 
             adx += len;
             idx += 1;
@@ -277,30 +277,30 @@ namespace ctns{
             << std::endl;
 
          // debug
-         Tm* _data0 = new Tm[_size];
-         memset(_data0, 0, _size*sizeof(Tm));
-         std::vector<std::pair<int,int>> _index(_count);
-         size_t idx2 = 0;
-         for(const auto& pr : _offset){
-            _index[idx2] = pr.first;
-            idx2++;
-         }
-         for(size_t idx=0; idx<_count; idx++){
-            const auto& item = _index[idx];
-            int i = item.first;
-            int j = item.second;
-            const auto& sop = H_formulae.tasks[i].terms[j];
-            Tm* workspace = _data0+_offset.at(item);
-            symbolic_sum_oper(qops_dict, sop, workspace);
+         //Tm* _data0 = new Tm[_size];
+         //memset(_data0, 0, _size*sizeof(Tm));
+         //std::vector<std::pair<int,int>> _index(_count);
+         //size_t idx2 = 0;
+         //for(const auto& pr : _offset){
+         //   _index[idx2] = pr.first;
+         //   idx2++;
+         //}
+         //for(size_t idx=0; idx<_count; idx++){
+         //   const auto& item = _index[idx];
+         //   int i = item.first;
+         //   int j = item.second;
+         //   const auto& sop = H_formulae.tasks[i].terms[j];
+         //   Tm* workspace = _data0+_offset.at(item);
+         //   symbolic_sum_oper(qops_dict, sop, workspace);
 
-         } // idx 
-         linalg::xaxpy(_size, -1.0, _data, _data0);
-         auto diff = linalg::xnrm2(_size, _data0);
-         std::cout << "diff=" << diff << std::endl;
-         delete[] _data0;
-         delete[] _data1;
-         delete[] _data2;
-         if(diff > 1.e-10) exit(1);
+         //} // idx 
+         //linalg::xaxpy(_size, -1.0, _data, _data0);
+         //auto diff = linalg::xnrm2(_size, _data0);
+         //std::cout << "diff=" << diff << std::endl;
+         //delete[] _data0;
+         //delete[] _data1;
+         //delete[] _data2;
+         //if(diff > 1.e-10) exit(1);
 
          if(debug){
             auto t1 = tools::get_time();

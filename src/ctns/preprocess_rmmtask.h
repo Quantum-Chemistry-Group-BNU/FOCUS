@@ -79,7 +79,7 @@ namespace ctns{
 #endif
 #endif
                gettimeofday(&t1, NULL);
-               oper_timer.renorm.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.renorm.tHx[7] += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:

@@ -45,9 +45,9 @@ namespace ctns{
 #endif
 #endif
                   gettimeofday(&t1, NULL);
-                  oper_timer.local.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
+                  oper_timer.sigma.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
                         + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
-                  oper_timer.local.cHx[i] += mmbatch2[k][i].cost; 
+                  oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost; 
                }
             }
             // reduction of y[:] = \sum_i ai*yi[:]
@@ -63,7 +63,7 @@ namespace ctns{
 #endif
 #endif
                gettimeofday(&t1, NULL);
-               oper_timer.local.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.sigma.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:

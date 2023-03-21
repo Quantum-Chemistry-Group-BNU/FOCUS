@@ -140,7 +140,7 @@ namespace input{
          bool sort_formulae = false;
          int hxorder = 0;
          int batchgemm = 1;
-         int batchsize = 10000;
+         int batchsize = 1000;
          int batchcase = 1; // seperate GEMM
          // dvdson
          int cisolver = 1;

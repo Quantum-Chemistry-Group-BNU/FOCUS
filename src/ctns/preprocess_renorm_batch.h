@@ -52,7 +52,7 @@ namespace ctns{
          struct timeval t0_time_gemm_kernel, t1_time_gemm_kernel;
          struct timeval t0_time_gemm_reduction, t1_time_gemm_reduction;
 
-         oper_timer.renorm.start();
+         oper_timer.renorm_start();
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<Rmmtasks.size(); i++){
@@ -77,13 +77,12 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "--- preprocess_renorm_batch ---" << std::endl;
-            std::cout << "--- time_cost_gemm_kernel=" << time_cost_gemm_kernel << std::endl;
-            std::cout << "--- time_cost_gemm_reduction=" << time_cost_gemm_reduction << std::endl;
-            std::cout << "--- cost_gemm_kernel=" << cost 
-               << " flops=kernel/time=" << cost/time_cost_gemm_kernel
-               << std::endl;
-            oper_timer.renorm.analysis();
+            std::cout << "preprocess_renorm_batch: t[gemm,reduction]="
+                      << time_cost_gemm_kernel << ","
+                      << time_cost_gemm_reduction << " cost="
+                      << cost << " flops[gemm]=" << cost/time_cost_gemm_kernel
+                      << std::endl;
+            oper_timer.renorm_analysis();
          }
       }
 

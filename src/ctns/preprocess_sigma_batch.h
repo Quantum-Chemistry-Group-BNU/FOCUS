@@ -56,7 +56,7 @@ namespace ctns{
          struct timeval t0_time_gemm_kernel, t1_time_gemm_kernel;
          struct timeval t0_time_gemm_reduction, t1_time_gemm_reduction;
 
-         oper_timer.local.start();
+         oper_timer.sigma_start();
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<mmtasks.size(); i++){
@@ -83,13 +83,12 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "--- preprocess_Hx_batch ---" << std::endl;
-            std::cout << "--- time_cost_gemm_kernel=" << time_cost_gemm_kernel << std::endl;
-            std::cout << "--- time_cost_gemm_reduction=" << time_cost_gemm_reduction << std::endl;
-            std::cout << "--- cost_gemm_kernel=" << cost 
-               << " flops=kernel/time=" << cost/time_cost_gemm_kernel
-               << std::endl;
-            oper_timer.local.analysis();
+            std::cout << "preprocess_Hx_batch: t[gemm,reduction]="
+                      << time_cost_gemm_kernel << ","
+                      << time_cost_gemm_reduction << " cost="
+                      << cost << " flops[gemm]=" << cost/time_cost_gemm_kernel
+                      << std::endl;
+            oper_timer.sigma_analysis();
          }
          t_kernel_ibond = time_cost_gemm_kernel;
          t_reduction_ibond = time_cost_gemm_reduction;

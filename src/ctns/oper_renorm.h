@@ -89,12 +89,13 @@ namespace ctns{
          qops.ifdist2 = true;
          // initialize memory 
          qops.allocate_memory();
-         qops.print("qops",2);
 
+         /*
          Tm* data0 = new Tm[qops._size];
          memset(data0, 0, qops._size*sizeof(Tm));
          Tm* data1 = new Tm[qops._size];
          memset(data1, 0, qops._size*sizeof(Tm));
+         */
 
          //-------------------------------
          // 1. kernel for renormalization
@@ -170,12 +171,12 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
 
+            /*
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
             linalg::xcopy(qops._size, qops._data, data0);
 
-            /*
             std::cout << "\nlzd:qops: old" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
@@ -189,13 +190,13 @@ namespace ctns{
                   //if(pr.first == 9) pr.second.print("C8old",2);
                }
             }
-            */
             memset(qops._data, 0, qops._size*sizeof(Tm));
+            */
             
             preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
+            /* 
             linalg::xcopy(qops._size, qops._data, data1);
           
-            /* 
             std::cout << "\nlzd:qops: new" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
@@ -208,7 +209,6 @@ namespace ctns{
                   if(key == 'C' and pr.first == 0) pr.second.print("C0new",2);
                }
             }
-            */
             linalg::xaxpy(qops._size, -1.0, data0, qops._data);
             auto diff = linalg::xnrm2(qops._size, qops._data);
 
@@ -229,6 +229,7 @@ namespace ctns{
             std::cout << "total diff=" << diff << std::endl;
             if(diff > 1.e-10) exit(1);
             linalg::xcopy(qops._size, data1, qops._data);
+            */
 
          }else if(alg_renorm == 6){
 
@@ -249,14 +250,28 @@ namespace ctns{
             preprocess_formulae_Rlist2(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
                   Rlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
 
+            // compute batchsize & allocate workspace
+            size_t maxbatch = 0;
+            for(int i=0; i<Rlst2.size(); i++){
+               maxbatch = std::max(maxbatch, Rlst2[i].size());
+            } // i
+            size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
+ 
             // generate Rmmtasks
             Rmmtasks.resize(Rlst2.size());
             for(int i=0; i<Rmmtasks.size(); i++){
-               Rmmtasks[i].init(Rlst2[i], schd.ctns.batchgemm, schd.ctns.batchsize,
+               Rmmtasks[i].init(Rlst2[i], schd.ctns.batchgemm, batchsize,
                      blksize*2, schd.ctns.hxorder);
+               if(debug && schd.ctns.verbose>1){
+                  std::cout << " rank=" << rank << " iblk=" << i
+                      << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
+                      << " batchsize=" << Rmmtasks[i].batchsize
+                      << " nbatch=" << Rmmtasks[i].nbatch
+                      << std::endl;
+               }
             }
 
-            worktot = Rmmtasks[0].batchsize*blksize*2;
+            worktot = batchsize*blksize*2;
             if(debug && schd.ctns.verbose>0){
                std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
@@ -264,12 +279,12 @@ namespace ctns{
             }
             workspace = new Tm[worktot];
 
+            /*
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
             linalg::xcopy(qops._size, qops._data, data0);
 
-            /*
             std::cout << "\nlzd:qops: old" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
@@ -281,16 +296,15 @@ namespace ctns{
                      << std::endl;
                }
             }
-            */
-            
             memset(qops._data, 0, qops._size*sizeof(Tm));
+            */
            
             preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size, blksize, Rlst2, 
                                     Rmmtasks, opaddr, workspace);
             delete[] workspace;
+            /*
             linalg::xcopy(qops._size, qops._data, data1);
 
-            /*
             std::cout << "\nlzd:qops: new" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
@@ -302,7 +316,6 @@ namespace ctns{
                      << std::endl;
                }
             }
-            */
             linalg::xaxpy(qops._size, -1.0, data0, qops._data);
             auto diff = linalg::xnrm2(qops._size, qops._data);
 
@@ -321,6 +334,7 @@ namespace ctns{
             std::cout << "total diff=" << diff << std::endl;
             if(diff > 1.e-10) exit(1);
             linalg::xcopy(qops._size, data1, qops._data);
+            */
 
          }else if(alg_renorm == 7){
 
