@@ -15,11 +15,36 @@ namespace ctns{
    template <typename Tm>
       struct RMMtask{
          public:
-            void init(const Rlist<Tm>& Rlst, 
+            void init(Rlist<Tm>& Rlst, 
                   const int hdxorder,
                   const int _batchblas,
                   const size_t _batchsize,
-                  const size_t offset);
+                  const size_t offset,
+                  const size_t offset0=0);
+            // form intermeidate operators
+            void inter(const int k, Tm** opaddr){
+               struct timeval t0, t1;
+               // perform GEMV_BATCH
+               Tm* ptrs[6];
+               ptrs[0] = opaddr[0];
+               ptrs[1] = opaddr[1];
+               ptrs[2] = opaddr[2];
+               ptrs[3] = opaddr[3];
+               ptrs[4] = opaddr[4];
+               ptrs[5] = alphavec[k].data(); 
+               gettimeofday(&t0, NULL);
+               imvbatch[k].kernel(batchblas, ptrs);
+#ifdef GPU
+#ifdef USE_HIP
+               hipDeviceSynchronize();
+#else
+               cudaDeviceSynchronize();
+#endif
+#endif
+               gettimeofday(&t1, NULL);
+               oper_timer.renorm.tInter += ((double)(t1.tv_sec - t0.tv_sec) 
+                     + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+            }
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
                struct timeval t0, t1;
@@ -82,25 +107,29 @@ namespace ctns{
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
-            int icase, batchblas;
-            size_t totsize, batchsize, offset, nbatch;
+            int icase = -1, batchblas = -1;
+            size_t totsize = 0, batchsize = 0, offset = 0, nbatch = 0;
             double cost = 0.0;
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
             std::vector<std::vector<std::pair<int,size_t>>> collectc; // icase=1 
             std::vector<std::vector<Tm>> coefflst;
             std::vector<MVbatch<Tm>> mvbatch;
+            // --- intermediates [Direct] --- 
+            std::vector<std::vector<Tm>> alphavec; 
+            std::vector<MVbatch<Tm>> imvbatch;
       };
 
    template <typename Tm>
-      void RMMtask<Tm>::init(const Rlist<Tm>& Rlst,
+      void RMMtask<Tm>::init(Rlist<Tm>& Rlst,
             const int hxorder,
             const int _batchblas,
             const size_t _batchsize,
-            const size_t _offset){
+            const size_t _offset,
+            const size_t offset0){
          // init
          batchblas = _batchblas;
-         totsize = Rlst.size();
          batchsize = _batchsize;
+         totsize = Rlst.size();
          offset = _offset;
          if(batchsize == 0 && totsize !=0){
             std::cout << "error: inconsistent batchsize & totsize!" << std::endl;
@@ -116,11 +145,58 @@ namespace ctns{
          collectc.resize(nbatch);
          coefflst.resize(nbatch);
          mvbatch.resize(nbatch);
+         alphavec.resize(nbatch);
+         imvbatch.resize(nbatch);
          for(int k=0; k<nbatch; k++){
             size_t off = k*batchsize;
             size_t jlen = std::min(totsize-off, batchsize);
 
-            // initialization
+            // 1. setup imvbatch for inter
+            if(offset0 != 0){
+               size_t nInter = 0;
+               size_t dalpha = 0;
+               for(size_t j=0; j<jlen; j++){
+                  size_t jdx = off+j;
+                  const auto& Rblk = Rlst[jdx];
+                  if(Rblk.posInter == -1) continue;
+                  nInter += 1;
+                  dalpha += Rblk.alpha_vec.size();
+               }
+               std::cout << "k=" << k << " nInter=" << nInter 
+                  << " dalpha=" << dalpha << std::endl;
+               if(nInter > 0){
+                  MVlist<Tm> mvlst(nInter); 
+                  alphavec[k].resize(dalpha);
+                  size_t idx = 0, adx = 0;
+                  for(size_t j=0; j<jlen; j++){
+                     size_t jdx = off+j;
+                     auto& Rblk = Rlst[jdx];
+                     if(Rblk.posInter == -1) continue;
+                     int ipos = Rblk.posInter;
+                     int len = Rblk.alpha_vec.size();
+                     linalg::xcopy(len, Rblk.alpha_vec.data(), &alphavec[k][adx]);
+                     size_t opsize = Rblk.dimout[ipos]*Rblk.dimin[ipos];
+                     MVinfo<Tm> mv;
+                     mv.transA = 'N';
+                     mv.M = opsize;
+                     mv.N = len;
+                     mv.LDA = Rblk.ldaInter; 
+                     mv.locA = ipos;
+                     mv.offA = Rblk.off[ipos];
+                     mv.locx = 5;
+                     mv.offx = adx;
+                     mv.locy = locInter;
+                     mv.offy = j*offset0;
+                     mvlst[idx] = mv; 
+                     adx += len;
+                     idx += 1;
+                     Rblk.off[ipos] = j*offset0; // overwrite old position
+                  } // j
+                  imvbatch[k].init(mvlst);
+               }
+            }
+
+            // 2. setup mmbatch2[k]
             int nd = 7;
             int pos[4] = {0,1,2};
             std::vector<size_t> dims(nd,0);
@@ -137,7 +213,6 @@ namespace ctns{
                dims[6] += (icase == 1)? Rblk.dimin2[2] : 1; 
             }
 
-            // setup mmbatch2[k]
             // generation of mmlst2
             MMlist2<Tm> mmlst2(nd);
             for(int i=0; i<nd; i++){
@@ -189,6 +264,7 @@ namespace ctns{
             }
             */
 
+            // 3. setup mvbatch[k]
             // information for collect O(r,r') += \sum_c O(r,r',c)
             if(icase == 1){
                collectc[k].resize(jlen);

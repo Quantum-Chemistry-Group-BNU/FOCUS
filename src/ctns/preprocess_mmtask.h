@@ -43,7 +43,7 @@ namespace ctns{
                ptrs[4] = opaddr[4];
                ptrs[5] = alphavec[k].data(); 
                gettimeofday(&t0, NULL);
-               mvbatch[k].kernel(batchblas, ptrs);
+               imvbatch[k].kernel(batchblas, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                hipDeviceSynchronize();
@@ -96,8 +96,9 @@ namespace ctns{
             double cost = 0.0;
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
             std::vector<MMreduce<Tm>> mmreduce; // mmreduce[ibatch]
-            std::vector<std::vector<Tm>> alphavec; // intermediates [Direct]
-            std::vector<MVbatch<Tm>> mvbatch; // intermediates [Direct]
+            // --- intermediates [Direct] ---
+            std::vector<std::vector<Tm>> alphavec;
+            std::vector<MVbatch<Tm>> imvbatch;
       };
 
    template <typename Tm>
@@ -124,12 +125,12 @@ namespace ctns{
          mmbatch2.resize(nbatch);
          mmreduce.resize(nbatch);
          alphavec.resize(nbatch);
-         mvbatch.resize(nbatch);
+         imvbatch.resize(nbatch);
          for(int k=0; k<nbatch; k++){
             size_t off = k*batchsize;
             size_t jlen = std::min(totsize-off, batchsize);
 
-            // 1. setup mvbatch for inter
+            // 1. setup imvbatch for inter
             if(offset0 != 0){
                size_t nInter = 0;
                size_t dalpha = 0;
@@ -170,7 +171,7 @@ namespace ctns{
                      idx += 1;
                      Hxblk.off[ipos] = j*offset0; // overwrite old position
                   } // j
-                  mvbatch[k].init(mvlst);
+                  imvbatch[k].init(mvlst);
                }
             }
 

@@ -1,5 +1,5 @@
-#ifndef PREPROCESS_RENORM_BATCH_H
-#define PREPROCESS_RENORM_BATCH_H
+#ifndef PREPROCESS_RENORM_BATCH2_H
+#define PREPROCESS_RENORM_BATCH2_H
 
 #include "preprocess_rinter.h"
 #include "preprocess_rmu.h"
@@ -12,7 +12,7 @@
 namespace ctns{
 
    template <typename Tm> 
-      void preprocess_renorm_batch(Tm* y,
+      void preprocess_renorm_batch2(Tm* y,
             const Tm* x,
             const int& size,
             const int& rank,
@@ -28,7 +28,7 @@ namespace ctns{
 #endif
          const bool debug = false;
          if(rank == 0 && debug){
-            std::cout << "ctns::preprocess_renorm_batch"
+            std::cout << "ctns::preprocess_renorm_batch2"
                << " mpisize=" << size 
                << " maxthreads=" << maxthreads
                << std::endl;
@@ -46,8 +46,10 @@ namespace ctns{
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
 
+         double time_axpy=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
+         struct timeval t0_axpy, t1_axpy;
          struct timeval t0_gemm, t1_gemm;
          struct timeval t0_reduction, t1_reduction;
 
@@ -58,6 +60,10 @@ namespace ctns{
             auto& Rmmtask = Rmmtasks[i];
             cost += Rmmtask.cost;
             for(int k=0; k<Rmmtask.nbatch; k++){
+               // axpy
+               gettimeofday(&t0_axpy, NULL);
+               Rmmtask.inter(k, opaddr);
+               gettimeofday(&t1_axpy, NULL);
                // gemm
                gettimeofday(&t0_gemm, NULL);
                Rmmtask.kernel(k, ptrs);
@@ -67,6 +73,8 @@ namespace ctns{
                Rmmtask.reduction(k, ptrs[6], y);
                gettimeofday(&t1_reduction, NULL);
                // timing
+               time_axpy += ((double)(t1_axpy.tv_sec - t0_axpy.tv_sec) 
+                     + (double)(t1_axpy.tv_usec - t0_axpy.tv_usec)/1000000.0);
                time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
                      + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
                time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
@@ -76,8 +84,8 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_renorm_batch: t[gemm,reduction]="
-                      << time_gemm << "," << time_reduction 
+            std::cout << "preprocess_renorm_batch: t[axpy,gemm,reduction]="
+                      << time_axpy << "," << time_gemm << "," << time_reduction 
                       << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
             oper_timer.renorm_analysis();

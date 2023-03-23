@@ -12,6 +12,7 @@
 #include "preprocess_rformulae.h"
 #include "preprocess_renorm.h"
 #include "preprocess_renorm_batch.h"
+#include "preprocess_renorm_batch2.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -90,19 +91,12 @@ namespace ctns{
          // initialize memory 
          qops.allocate_memory();
 
-         /*
-         Tm* data0 = new Tm[qops._size];
-         memset(data0, 0, qops._size*sizeof(Tm));
-         Tm* data1 = new Tm[qops._size];
-         memset(data1, 0, qops._size*sizeof(Tm));
-         */
-
          //-------------------------------
          // 1. kernel for renormalization
          //-------------------------------
          oper_timer.start();
          const bool debug_formulae = schd.ctns.verbose>0;
-         size_t worktot = 0;
+         size_t worktot=0;
          // intermediates      
          rintermediates<Tm> rinter;
          Rlist<Tm> Rlst;
@@ -123,8 +117,8 @@ namespace ctns{
             opaddr[0] = qops1._data;
             opaddr[1] = qops2._data;
          }
-         size_t blksize;
-         double cost;
+         size_t blksize=0, blksize0=0;
+         double cost=0.0;
          Tm* workspace;
          if(alg_renorm == 0){
 
@@ -262,7 +256,7 @@ namespace ctns{
             for(int i=0; i<Rmmtasks.size(); i++){
                Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, schd.ctns.batchblas, batchsize,
                      blksize*2);
-               if(debug && schd.ctns.verbose>1){
+               if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                   std::cout << " rank=" << rank << " iblk=" << i
                       << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
                       << " batchsize=" << Rmmtasks[i].batchsize
@@ -299,7 +293,7 @@ namespace ctns{
             memset(qops._data, 0, qops._size*sizeof(Tm));
             */
            
-            preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size, blksize, Rlst2, 
+            preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size, Rlst2, 
                                     Rmmtasks, opaddr, workspace);
             delete[] workspace;
             /*
@@ -336,11 +330,112 @@ namespace ctns{
             linalg::xcopy(qops._size, data1, qops._data);
             */
 
-         }else if(alg_renorm == 7){
+         }else if(alg_renorm == 8){
 
-            // BatchGPU: symbolic formulae + rintermediates + preallocation of workspace
-            std::cout << "Not implemented yet!" << std::endl;
-            exit(1);
+            if(schd.ctns.batchsize == 0){
+               std::cout << "error: batchsize should be set!" << std::endl;
+               exit(1);
+            }
+
+            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
+            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+                  size, rank, fname, sort_formulae, ifdist1,
+                  debug_formulae);
+            
+            // GEMM list and GEMV list
+            preprocess_formulae_Rlist2Direct(superblock, qops, qops_dict, oploc, rtasks, site,
+                  Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+
+            // compute batchsize & allocate workspace
+            size_t maxbatch = 0;
+            for(int i=0; i<Rlst2.size(); i++){
+               maxbatch = std::max(maxbatch, Rlst2[i].size());
+            } // i
+            size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
+ 
+            // generate Rmmtasks
+            Rmmtasks.resize(Rlst2.size());
+            for(int i=0; i<Rmmtasks.size(); i++){
+               Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, schd.ctns.batchblas, 
+                     batchsize, blksize*2, blksize0);
+               if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
+                  std::cout << " rank=" << rank << " iblk=" << i
+                      << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
+                      << " batchsize=" << Rmmtasks[i].batchsize
+                      << " nbatch=" << Rmmtasks[i].nbatch
+                      << std::endl;
+               }
+            }
+
+            worktot = batchsize*(blksize*2+blksize0);
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
+                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+            }
+            workspace = new Tm[worktot];
+         
+            Tm* data0 = new Tm[qops._size];
+            memset(data0, 0, qops._size*sizeof(Tm));
+            Tm* data1 = new Tm[qops._size];
+            memset(data1, 0, qops._size*sizeof(Tm));
+
+            // oldest version
+            auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
+            oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
+            linalg::xcopy(qops._size, qops._data, data0);
+
+            std::cout << "\nlzd:qops: old" << std::endl;
+            for(auto& key : qops.oplist){
+               auto& opdict = qops(key);
+               for(auto& pr : opdict){
+                  std::cout << "key=" << key
+                     << " pr.first=" << pr.first
+                     << " size=" << pr.second.size()
+                     << " pr.second=" << pr.second.normF()
+                     << std::endl;
+               }
+            }
+            memset(qops._data, 0, qops._size*sizeof(Tm));
+           
+            opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
+            preprocess_renorm_batch2(qops._data, site._data, size, rank, qops._size, Rlst2, 
+                                     Rmmtasks, opaddr, workspace);
+            delete[] workspace;
+            linalg::xcopy(qops._size, qops._data, data1);
+
+            std::cout << "\nlzd:qops: new" << std::endl;
+            for(auto& key : qops.oplist){
+               auto& opdict = qops(key);
+               for(auto& pr : opdict){
+                  std::cout << "key=" << key
+                     << " pr.first=" << pr.first
+                     << " size=" << pr.second.size()
+                     << " pr.second=" << pr.second.normF()
+                     << std::endl;
+               }
+            }
+            linalg::xaxpy(qops._size, -1.0, data0, qops._data);
+            auto diff = linalg::xnrm2(qops._size, qops._data);
+
+            std::cout << "\nlzd:qops-diff" << std::endl;
+            for(auto& key : qops.oplist){
+               auto& opdict = qops(key);
+               for(auto& pr : opdict){
+                  if(pr.second.normF() < 1.e-10) continue;
+                  std::cout << ">>> key=" << key
+                     << " pr.first=" << pr.first
+                     << " size=" << pr.second.size()
+                     << " pr.second=" << pr.second.normF()
+                     << std::endl;
+               }
+            }
+            std::cout << "total diff=" << diff << std::endl;
+            if(diff > 1.e-10) exit(1);
+            linalg::xcopy(qops._size, data1, qops._data);
+           
+            delete[] data0;
+            delete[] data1; 
 
          }else{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;

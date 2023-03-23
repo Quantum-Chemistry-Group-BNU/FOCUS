@@ -163,6 +163,73 @@ namespace ctns{
          }
       }
 
+   template <typename Tm, typename QTm>
+      void preprocess_formulae_Rlist2Direct(const std::string superblock,
+            const oper_dict<Tm>& qops,
+            const oper_dictmap<Tm>& qops_dict,
+            const std::map<std::string,int>& oploc,
+            const renorm_tasks<Tm>& rtasks,
+            const QTm& site,
+            Rlist2<Tm>& Rlst2,
+            size_t& blksize,
+            size_t& blksize0,
+            double& cost,
+            const bool debug){
+         auto t0 = tools::get_time();
+
+         // 1. preprocess formulae to Hmu
+         int rsize = rtasks.size();
+         std::vector<std::vector<Rmu_ptr<Tm>>> Rmu(rsize);
+         for(int k=0; k<rsize; k++){
+            const auto& task = rtasks.op_tasks[k];
+            const auto& key = std::get<0>(task);
+            const auto& index = std::get<1>(task);
+            const auto& formula = std::get<2>(task);
+            Rmu[k].resize(formula.size());
+            for(int it=0; it<formula.size(); it++){
+               Rmu[k][it].rinfo = const_cast<qinfo2<Tm>*>(&qops(key).at(index).info);
+               Rmu[k][it].offrop = qops._offset.at(std::make_pair(key,index));
+               Rmu[k][it].initDirect(k, it, formula, qops_dict, oploc);
+            }
+         } // it
+         auto ta = tools::get_time();
+
+         // 2. from Hmu to expanded block forms
+         blksize = 0;
+         blksize0 = 0;
+         cost = 0.0;
+         int nnzblk = site.info._nnzaddr.size(); // partitioned according to rows 
+
+         nnzblk = qops.qbra.size();
+         Rlst2.resize(nnzblk);
+
+         for(int k=0; k<rsize; k++){
+            const auto& task = rtasks.op_tasks[k];
+            const auto& key = std::get<0>(task);
+            const auto& index = std::get<1>(task);
+            const auto& formula = std::get<2>(task);
+            //lzd std::cout << "\nk=" << k << " key,index=" << key << "," << index << std::endl;
+            for(int it=0; it<formula.size(); it++){
+               Rmu[k][it].gen_Rlist2Direct(superblock, site.info, Rlst2, blksize, blksize0, cost, false);
+               if(key == 'H'){
+                  Rmu[k][it].gen_Rlist2Direct(superblock, site.info, Rlst2, blksize, blksize0, cost, true);
+               }
+            }
+         }
+         auto tb = tools::get_time();
+
+         if(debug){
+            auto t1 = tools::get_time();
+            std::cout << "T(Hmu/Hxlist/tot)="
+               << tools::get_duration(ta-t0) << ","
+               << tools::get_duration(tb-ta) << ","
+               << tools::get_duration(t1-t0) 
+               << std::endl;
+            tools::timing("preprocess_formulae_Rlist2Direct", t0, t1);
+         }
+      }
+
+
 } // ctns
 
 #endif
