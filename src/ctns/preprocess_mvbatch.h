@@ -105,6 +105,18 @@ namespace ctns{
             linalg::xgemv(&transA[i], M[i], N[i], alpha,
                   aptr, LDA[i], xptr, INCX[i], beta,
                   yptr, INCY[i]);
+            /*
+            // debug
+            std::cout << "M,N,LDA=" << M[i] << "," << N[i] << "," << LDA[i] << std::endl;
+            linalg::matrix<Tm> amat(M[i],N[i],aptr);
+            amat.print("amat");
+            for(int j=0; j<N[i]; j++){
+               std::cout << "lzd x: j=" << j << " x=" << xptr[j] << std::endl;
+            }
+            for(int j=0; j<M[i]; j++){
+               std::cout << "lzd y: j=" << j << " y=" << yptr[j] << std::endl;
+            }
+            */
          } // i
       }
 

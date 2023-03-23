@@ -260,8 +260,8 @@ namespace ctns{
             // generate Rmmtasks
             Rmmtasks.resize(Rlst2.size());
             for(int i=0; i<Rmmtasks.size(); i++){
-               Rmmtasks[i].init(Rlst2[i], schd.ctns.batchblas, batchsize,
-                     blksize*2, schd.ctns.hxorder);
+               Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, schd.ctns.batchblas, batchsize,
+                     blksize*2);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank << " iblk=" << i
                       << " Rmmtasks.totsize=" << Rmmtasks[i].totsize

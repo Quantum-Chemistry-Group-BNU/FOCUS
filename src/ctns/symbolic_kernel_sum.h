@@ -48,6 +48,10 @@ stensor2<Tm> symbolic_sum_oper(const oper_dictmap<Tm>& qops_dict,
          linalg::xaxpy(opk.size(), wtk, opkk.data(), optmp.data());
       }
    } // k
+   /*
+   std::cout << "sop=" << sop << std::endl; 
+   optmp.print("optmp",2);
+   */
    return optmp;
 }
 

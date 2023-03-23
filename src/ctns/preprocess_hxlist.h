@@ -89,6 +89,10 @@ namespace ctns{
             size_t blksize = 0; // blksize of GEMM (can be different from size)
             double cost = 0.0;
             MMlist<Tm> MMlst;
+            // intermediates [direct]
+            int posInter = -1;
+            size_t ldaInter = 0; 
+            std::vector<Tm> alpha_vec;
       };
    template <typename Tm>
       using Hxlist = std::vector<Hxblock<Tm>>;

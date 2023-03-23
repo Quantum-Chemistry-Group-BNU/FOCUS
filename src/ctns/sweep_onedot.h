@@ -187,7 +187,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            CPUmem.hvec = sizeof(Tm)*worktot;
+            if(debug) CPUmem.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx2<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
                   std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -208,7 +208,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            CPUmem.hvec = sizeof(Tm)*worktot;
+            if(debug) CPUmem.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx3<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -241,7 +241,7 @@ namespace ctns{
          // free temporary space
          if(schd.ctns.alg_hvec >=2){
             delete[] workspace;
-            CPUmem.hvec = 0; 
+            if(debug) CPUmem.hvec = 0; 
          }
 
          // 3. decimation & renormalize operators

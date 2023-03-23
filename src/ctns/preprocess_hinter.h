@@ -126,6 +126,7 @@ namespace ctns{
             int j = item.second;
             const auto& sop = H_formulae.tasks[i].terms[j];
             Tm* workspace = _data+_offset.at(item);
+            //std::cout << "\ninter: i,j=" << i << "," << j << std::endl;
             symbolic_sum_oper(qops_dict, sop, workspace);
          } // idx 
 

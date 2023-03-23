@@ -23,13 +23,17 @@ namespace ctns{
             }
             Hx_counter += 1;
          }
-         void print(std::string name, const std::vector<double>& tdata, const std::vector<double>& cost){
+         void print(std::string name, 
+               const std::vector<double>& tdata, 
+               const std::vector<double>& cost,
+               double tinter){
             double tgemm = 0.0;
             for(int i=0; i<nd-1; i++){
                tgemm += tdata[i]; 
             }
-            double tot = tgemm + tdata[nd-1];
-            std::cout << "--- TIMING for " << name << " :" 
+            double tot = tinter + tgemm + tdata[nd-1];
+            std::cout << "--- TIMING for " << name << " :"
+               << " tinter=" << tinter 
                << " tgemm=" << tgemm 
                << " treduction=" << tdata[nd-1]
                << " tot=" << tot << " ---" 
@@ -51,8 +55,9 @@ namespace ctns{
                tHx_tot[i] += tHx[i];
                cHx_tot[i] += cHx[i];
             }
-            this->print(name, tHx, cHx);
-            this->print(name+"_tot", tHx_tot, cHx_tot);
+            tInter_tot += tInter;
+            this->print(name, tHx, cHx, tInter);
+            this->print(name+"_tot", tHx_tot, cHx_tot, tInter_tot);
          }
       public:
          int nd = 0;
@@ -61,6 +66,8 @@ namespace ctns{
          std::vector<double> tHx_tot;
          std::vector<double> cHx;
          std::vector<double> cHx_tot;
+         double tInter = 0.0;
+         double tInter_tot = 0.0;
    };
 
    struct oper_timing{

@@ -16,10 +16,10 @@ namespace ctns{
       struct RMMtask{
          public:
             void init(const Rlist<Tm>& Rlst, 
+                  const int hdxorder,
                   const int _batchblas,
                   const size_t _batchsize,
-                  const size_t offset,
-                  const int hdxorder);
+                  const size_t offset);
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
                struct timeval t0, t1;
@@ -93,10 +93,10 @@ namespace ctns{
 
    template <typename Tm>
       void RMMtask<Tm>::init(const Rlist<Tm>& Rlst,
+            const int hxorder,
             const int _batchblas,
             const size_t _batchsize,
-            const size_t _offset,
-            const int hxorder){
+            const size_t _offset){
          // init
          batchblas = _batchblas;
          totsize = Rlst.size();

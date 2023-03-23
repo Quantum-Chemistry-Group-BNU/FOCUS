@@ -15,12 +15,12 @@ namespace ctns{
    template <typename Tm>
       struct MMtask{
          public:
-            void init(const Hxlist<Tm>& Hxlst, 
+            void init(Hxlist<Tm>& Hxlst, 
+                  const int hdxorder,
                   const int _batchblas,
                   const size_t _batchsize,
                   const size_t offset,
-                  const int hdxorder,
-                  const int icase=0);
+                  const size_t offset0=0);
             // save dimensions for optimization
             void save(const std::string fgemm) const{
                for(int k=0; k<mmbatch2.size(); k++){
@@ -30,6 +30,30 @@ namespace ctns{
                      mmbatch2[k][i].save(fgemmki);
                   }
                }
+            }
+            // form intermeidate operators
+            void inter(const int k, Tm** opaddr){
+               struct timeval t0, t1;
+               // perform GEMV_BATCH
+               Tm* ptrs[6];
+               ptrs[0] = opaddr[0];
+               ptrs[1] = opaddr[1];
+               ptrs[2] = opaddr[2];
+               ptrs[3] = opaddr[3];
+               ptrs[4] = opaddr[4];
+               ptrs[5] = alphavec[k].data(); 
+               gettimeofday(&t0, NULL);
+               mvbatch[k].kernel(batchblas, ptrs);
+#ifdef GPU
+#ifdef USE_HIP
+               hipDeviceSynchronize();
+#else
+               cudaDeviceSynchronize();
+#endif
+#endif
+               gettimeofday(&t1, NULL);
+               oper_timer.sigma.tInter += ((double)(t1.tv_sec - t0.tv_sec) 
+                     + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
@@ -67,24 +91,26 @@ namespace ctns{
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
-            int batchblas;
-            size_t totsize, batchsize, nbatch;
+            int batchblas = -1;
+            size_t totsize = 0, batchsize = 0, nbatch = 0;
             double cost = 0.0;
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
             std::vector<MMreduce<Tm>> mmreduce; // mmreduce[ibatch]
+            std::vector<std::vector<Tm>> alphavec; // intermediates [Direct]
+            std::vector<MVbatch<Tm>> mvbatch; // intermediates [Direct]
       };
 
    template <typename Tm>
-      void MMtask<Tm>::init(const Hxlist<Tm>& Hxlst,
+      void MMtask<Tm>::init(Hxlist<Tm>& Hxlst,
+            const int hxorder,
             const int _batchblas,
             const size_t _batchsize,
             const size_t offset,
-            const int hxorder,
-            const int _batchcase){
+            const size_t offset0){
          // init
          batchblas = _batchblas;
-         totsize = Hxlst.size();
          batchsize = _batchsize;
+         totsize = Hxlst.size();
          if(batchsize == 0 && totsize !=0){
             std::cout << "error: inconsistent batchsize & totsize!" << std::endl;
             std::cout << "batchsize=" << batchsize << " totsize=" << totsize << std::endl;
@@ -97,31 +123,75 @@ namespace ctns{
          // start process Hxlst
          mmbatch2.resize(nbatch);
          mmreduce.resize(nbatch);
+         alphavec.resize(nbatch);
+         mvbatch.resize(nbatch);
          for(int k=0; k<nbatch; k++){
             size_t off = k*batchsize;
             size_t jlen = std::min(totsize-off, batchsize);
 
-            // initialization
-            int nd = (_batchcase==0)? 4 : 8;
+            // 1. setup mvbatch for inter
+            if(offset0 != 0){
+               size_t nInter = 0;
+               size_t dalpha = 0;
+               for(size_t j=0; j<jlen; j++){
+                  size_t jdx = off+j;
+                  const auto& Hxblk = Hxlst[jdx];
+                  if(Hxblk.posInter == -1) continue;
+                  nInter += 1;
+                  dalpha += Hxblk.alpha_vec.size();
+               }
+               std::cout << "k=" << k << " nInter=" << nInter 
+                  << " dalpha=" << dalpha << std::endl;
+               if(nInter > 0){
+                  MVlist<Tm> mvlst(nInter); 
+                  alphavec[k].resize(dalpha);
+                  size_t idx = 0, adx = 0;
+                  for(size_t j=0; j<jlen; j++){
+                     size_t jdx = off+j;
+                     auto& Hxblk = Hxlst[jdx];
+                     if(Hxblk.posInter == -1) continue;
+                     int ipos = Hxblk.posInter;
+                     int len = Hxblk.alpha_vec.size();
+                     linalg::xcopy(len, Hxblk.alpha_vec.data(), &alphavec[k][adx]);
+                     size_t opsize = Hxblk.dimout[ipos]*Hxblk.dimin[ipos];
+                     MVinfo<Tm> mv;
+                     mv.transA = 'N';
+                     mv.M = opsize;
+                     mv.N = len;
+                     mv.LDA = Hxblk.ldaInter; 
+                     mv.locA = ipos;
+                     mv.offA = Hxblk.off[ipos];
+                     mv.locx = 5;
+                     mv.offx = adx;
+                     mv.locy = locInter;
+                     mv.offy = j*offset0;
+                     mvlst[idx] = mv; 
+                     adx += len;
+                     idx += 1;
+                     Hxblk.off[ipos] = j*offset0; // overwrite old position
+                  } // j
+                  mvbatch[k].init(mvlst);
+               }
+            }
+
+            // 2. setup mmbatch2[k]
+            int nd = 8;
             int pos[4] = {0,1,2,3};
             std::vector<size_t> dims(nd,0);
             // count how many gemms in each case 
             for(size_t j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Hxblk = Hxlst[jdx];
-               if(_batchcase == 1){
-                  pos[0] = Hxblk.dagger[3]? 0 : 1;
-                  pos[1] = Hxblk.dagger[2]? 2 : 3;
-                  pos[2] = Hxblk.dagger[1]? 4 : 5;
-                  pos[3] = Hxblk.dagger[0]? 6 : 7;
-               }
+               pos[0] = Hxblk.dagger[3]? 0 : 1;
+               pos[1] = Hxblk.dagger[2]? 2 : 3;
+               pos[2] = Hxblk.dagger[1]? 4 : 5;
+               pos[3] = Hxblk.dagger[0]? 6 : 7;
                dims[pos[0]] += Hxblk.identity(3)? 0 : 1; 
                dims[pos[1]] += Hxblk.identity(2)? 0 : Hxblk.dimout[3]; // c1
                dims[pos[2]] += Hxblk.identity(1)? 0 : Hxblk.dimout[3]*Hxblk.dimout[2]; // r
                dims[pos[3]] += Hxblk.identity(0)? 0 : 1; // l
             }
 
-            // setup mmbatch2[k]
             // generation of mmlst2
             MMlist2<Tm> mmlst2(nd);
             for(int i=0; i<nd; i++){
@@ -131,12 +201,10 @@ namespace ctns{
             for(size_t j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Hxblk = Hxlst[jdx];
-               if(_batchcase == 1){
-                  pos[0] = Hxblk.dagger[3]? 0 : 1;
-                  pos[1] = Hxblk.dagger[2]? 2 : 3;
-                  pos[2] = Hxblk.dagger[1]? 4 : 5;
-                  pos[3] = Hxblk.dagger[0]? 6 : 7;
-               }
+               pos[0] = Hxblk.dagger[3]? 0 : 1;
+               pos[1] = Hxblk.dagger[2]? 2 : 3;
+               pos[2] = Hxblk.dagger[1]? 4 : 5;
+               pos[3] = Hxblk.dagger[0]? 6 : 7;
                MMlist2<Tm> mmtmp2(4);
                Hxblk.get_MMlist_twodot(mmtmp2, j*offset);
                for(int i=0; i<mmtmp2.size(); i++){
@@ -162,7 +230,7 @@ namespace ctns{
                cost += mmbatch2[k][i].cost; // accumulate MM cost
             } // i
 
-            // setup mmreduce[k]
+            // 3. setup mmreduce[k]
             mmreduce[k].batchsize = jlen;
             mmreduce[k].ndim = Hxlst[off].size;
             mmreduce[k].offset = offset;
