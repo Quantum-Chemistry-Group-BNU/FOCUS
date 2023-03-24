@@ -70,21 +70,30 @@ namespace ctns{
 
    template <typename Tm>
       void MVbatch<Tm>::init(const MVlist<Tm>& MVlst, const Tm beta){
-         size = MVlst.size();
+         // remove zero dimensions
+         size = 0;
+         for(size_t i=0; i<MVlst.size(); i++){
+            const auto& mv = MVlst[i];
+            if(mv.M*mv.N == 0) continue;
+            size += 1;
+         }
          transA.resize(size);
          M.resize(size); N.resize(size);
          LDA.resize(size); INCX.resize(size,1), INCY.resize(size,1); // by default = 1
          locA.resize(size); locx.resize(size); locy.resize(size);
          offA.resize(size); offx.resize(size); offy.resize(size);
          cost = 0.0;
-         for(size_t i=0; i<size; i++){
-            const auto& mv = MVlst[i];
+         size_t i = 0;
+         for(size_t j=0; j<MVlst.size(); j++){
+            const auto& mv = MVlst[j];
+            if(mv.M*mv.N == 0) continue;
             cost += mv.cost();
             transA[i] = mv.transA; 
             M[i] = mv.M; N[i] = mv.N;
             LDA[i] = mv.LDA;
             locA[i] = mv.locA; locx[i] = mv.locx; locy[i] = mv.locy;
             offA[i] = mv.offA; offx[i] = mv.offx; offy[i] = mv.offy;
+            i += 1;
          }
          Aptr.resize(size); xptr.resize(size); yptr.resize(size);
          alpha_vec.resize(size,1.0);
@@ -94,7 +103,6 @@ namespace ctns{
 
    template <typename Tm>
       void MVbatch<Tm>::xgemv_omp(Tm** ptrs){
-         const Tm alpha = 1.0, beta = 0.0;
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -102,8 +110,8 @@ namespace ctns{
             Tm* aptr = ptrs[locA[i]] + offA[i];
             Tm* xptr = ptrs[locx[i]] + offx[i];
             Tm* yptr = ptrs[locy[i]] + offy[i];
-            linalg::xgemv(&transA[i], M[i], N[i], alpha,
-                  aptr, LDA[i], xptr, INCX[i], beta,
+            linalg::xgemv(&transA[i], M[i], N[i], alpha_vec[i],
+                  aptr, LDA[i], xptr, INCX[i], beta_vec[i],
                   yptr, INCY[i]);
             /*
             // debug
@@ -130,9 +138,14 @@ namespace ctns{
          }
          if(size > 0){ 
             MKL_INT group_count = size;
+
+            std::cout << "lzd SIZE=" << size << std::endl;
+            std::cout << "lzd =" << transA[0] << std::endl;
+            std::cout << "lzd =" << M[0] << std::endl;
             linalg::xgemv_batch(transA.data(), M.data(), N.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), xptr.data(), INCX.data(), beta_vec.data(),
                   yptr.data(), INCY.data(), &group_count, size_per_group_vec.data());
+            std::cout << "lzd end" << std::endl;
          }
       }
 

@@ -166,6 +166,12 @@ namespace ctns{
             }
 
             /*
+            // debug 
+            Tm* data0 = new Tm[qops._size];
+            memset(data0, 0, qops._size*sizeof(Tm));
+            Tm* data1 = new Tm[qops._size];
+            memset(data1, 0, qops._size*sizeof(Tm));
+
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
@@ -188,7 +194,7 @@ namespace ctns{
             */
             
             preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
-            /* 
+            /*
             linalg::xcopy(qops._size, qops._data, data1);
           
             std::cout << "\nlzd:qops: new" << std::endl;
@@ -223,6 +229,8 @@ namespace ctns{
             std::cout << "total diff=" << diff << std::endl;
             if(diff > 1.e-10) exit(1);
             linalg::xcopy(qops._size, data1, qops._data);
+            delete[] data0;
+            delete[] data1;
             */
 
          }else if(alg_renorm == 6){
@@ -274,6 +282,12 @@ namespace ctns{
             workspace = new Tm[worktot];
 
             /*
+            // debug 
+            Tm* data0 = new Tm[qops._size];
+            memset(data0, 0, qops._size*sizeof(Tm));
+            Tm* data1 = new Tm[qops._size];
+            memset(data1, 0, qops._size*sizeof(Tm));
+
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
@@ -292,7 +306,7 @@ namespace ctns{
             }
             memset(qops._data, 0, qops._size*sizeof(Tm));
             */
-           
+
             preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size, Rlst2, 
                                     Rmmtasks, opaddr, workspace);
             delete[] workspace;
@@ -328,6 +342,8 @@ namespace ctns{
             std::cout << "total diff=" << diff << std::endl;
             if(diff > 1.e-10) exit(1);
             linalg::xcopy(qops._size, data1, qops._data);
+            delete[] data0;
+            delete[] data1;
             */
 
          }else if(alg_renorm == 8){
@@ -352,7 +368,7 @@ namespace ctns{
                maxbatch = std::max(maxbatch, Rlst2[i].size());
             } // i
             size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
- 
+
             // generate Rmmtasks
             Rmmtasks.resize(Rlst2.size());
             for(int i=0; i<Rmmtasks.size(); i++){
@@ -369,12 +385,14 @@ namespace ctns{
 
             worktot = batchsize*(blksize*2+blksize0);
             if(debug && schd.ctns.verbose>0){
-               std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
+               std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize
+                  << " blksize0=" << blksize0 << " batchsize=" << batchsize
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-         
+        
+            /* 
             Tm* data0 = new Tm[qops._size];
             memset(data0, 0, qops._size*sizeof(Tm));
             Tm* data1 = new Tm[qops._size];
@@ -397,11 +415,13 @@ namespace ctns{
                }
             }
             memset(qops._data, 0, qops._size*sizeof(Tm));
-           
+            */
+
             opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
             preprocess_renorm_batch2(qops._data, site._data, size, rank, qops._size, Rlst2, 
                                      Rmmtasks, opaddr, workspace);
             delete[] workspace;
+            /*
             linalg::xcopy(qops._size, qops._data, data1);
 
             std::cout << "\nlzd:qops: new" << std::endl;
@@ -433,9 +453,9 @@ namespace ctns{
             std::cout << "total diff=" << diff << std::endl;
             if(diff > 1.e-10) exit(1);
             linalg::xcopy(qops._size, data1, qops._data);
-           
             delete[] data0;
             delete[] data1; 
+            */
 
          }else{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;

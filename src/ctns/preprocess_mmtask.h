@@ -141,8 +141,6 @@ namespace ctns{
                   nInter += 1;
                   dalpha += Hxblk.alpha_vec.size();
                }
-               std::cout << "k=" << k << " nInter=" << nInter 
-                  << " dalpha=" << dalpha << std::endl;
                if(nInter > 0){
                   MVlist<Tm> mvlst(nInter); 
                   alphavec[k].resize(dalpha);

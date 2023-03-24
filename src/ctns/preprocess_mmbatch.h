@@ -72,21 +72,30 @@ namespace ctns{
 
    template <typename Tm>
       void MMbatch<Tm>::init(const MMlist<Tm>& MMlst){
-         size = MMlst.size();
+         // remove zero dimensions
+         size = 0;
+         for(size_t i=0; i<MMlst.size(); i++){
+            const auto& mm = MMlst[i];
+            if(mm.M*mm.N*mm.K == 0) continue;
+            size += 1; 
+         } 
          transA.resize(size); transB.resize(size);
          M.resize(size); N.resize(size); K.resize(size);
          LDA.resize(size); LDB.resize(size);
          locA.resize(size); locB.resize(size); locC.resize(size);
          offA.resize(size); offB.resize(size); offC.resize(size);
          cost = 0.0;
-         for(size_t i=0; i<size; i++){
+         size_t i = 0;
+         for(size_t j=0; j<MMlst.size(); j++){
             const auto& mm = MMlst[i];
+            if(mm.M*mm.N*mm.K == 0) continue;
             cost += mm.cost();
             transA[i] = mm.transA; transB[i] = mm.transB;
             M[i] = mm.M; N[i] = mm.N; K[i] = mm.K;
             LDA[i] = mm.LDA; LDB[i] = mm.LDB;
             locA[i] = mm.locA; locB[i] = mm.locB; locC[i] = mm.locC;
-            offA[i] = mm.offA; offB[i] = mm.offB; offC[i] = mm.offC; 
+            offA[i] = mm.offA; offB[i] = mm.offB; offC[i] = mm.offC;
+            i += 1; 
          }
          Aptr.resize(size); Bptr.resize(size); Cptr.resize(size);
          alpha_vec.resize(size,1.0);
@@ -96,7 +105,6 @@ namespace ctns{
 
    template <typename Tm>
       void MMbatch<Tm>::xgemm_omp(Tm** ptrs){
-         const Tm alpha = 1.0, beta = 0.0;
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -104,8 +112,8 @@ namespace ctns{
             Tm* aptr = ptrs[locA[i]] + offA[i];
             Tm* bptr = ptrs[locB[i]] + offB[i];
             Tm* cptr = ptrs[locC[i]] + offC[i];
-            linalg::xgemm(&transA[i], &transB[i], M[i], N[i], K[i], alpha,
-                  aptr, LDA[i], bptr, LDB[i], beta,
+            linalg::xgemm(&transA[i], &transB[i], M[i], N[i], K[i], alpha_vec[i],
+                  aptr, LDA[i], bptr, LDB[i], beta_vec[i],
                   cptr, M[i]);
          } // i
       }

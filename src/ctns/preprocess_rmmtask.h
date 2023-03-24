@@ -162,8 +162,6 @@ namespace ctns{
                   nInter += 1;
                   dalpha += Rblk.alpha_vec.size();
                }
-               std::cout << "k=" << k << " nInter=" << nInter 
-                  << " dalpha=" << dalpha << std::endl;
                if(nInter > 0){
                   MVlist<Tm> mvlst(nInter); 
                   alphavec[k].resize(dalpha);
@@ -198,7 +196,7 @@ namespace ctns{
 
             // 2. setup mmbatch2[k]
             int nd = 7;
-            int pos[4] = {0,1,2};
+            int pos[3] = {0,1,2};
             std::vector<size_t> dims(nd,0);
             // count how many gemms in each case 
             for(size_t j=0; j<jlen; j++){
@@ -324,7 +322,7 @@ namespace ctns{
             mv.locx = 1;
             mv.offx = (jlen-nmu);
             mv.locy = 2;
-            mv.offy = offrop;
+            mv.offy = Rlst[off+jlen-1].offrop;
             mvlst.push_back(mv);
             const Tm beta = 1.0;
             mvbatch[k].init(mvlst, beta);

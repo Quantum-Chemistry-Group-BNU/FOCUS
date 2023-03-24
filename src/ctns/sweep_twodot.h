@@ -123,6 +123,13 @@ namespace ctns{
             exit(1);
          }
 
+         /*
+         for(const auto& pr : qops_dict.at("r")('C')){
+            std::cout << "pr=" << pr.first << " " 
+               << pr.second.size() << std::endl;
+         }
+         */
+
          // 3. Davidson solver for wf
          // 3.1 diag 
          auto time0 = tools::get_time();
