@@ -139,8 +139,9 @@ namespace ctns{
          if(batchsize == 0 || totsize == 0) return;
          nbatch = totsize/batchsize;
          if(totsize%batchsize != 0) nbatch += 1; // thus, this works even for totsize < batchsize
-         icase = Rlst[0].icase; 
+         
          // start process Rlst
+         icase = Rlst[0].icase; 
          mmbatch2.resize(nbatch);
          collectc.resize(nbatch);
          coefflst.resize(nbatch);
@@ -150,7 +151,7 @@ namespace ctns{
          for(int k=0; k<nbatch; k++){
             size_t off = k*batchsize;
             size_t jlen = std::min(totsize-off, batchsize);
-
+         
             // 1. setup imvbatch for inter
             if(offset0 != 0){
                size_t nInter = 0;
@@ -195,13 +196,13 @@ namespace ctns{
             }
 
             // 2. setup mmbatch2[k]
-            int nd = 7;
-            int pos[3] = {0,1,2};
+            const int nd = 7;
             std::vector<size_t> dims(nd,0);
             // count how many gemms in each case 
             for(size_t j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Rblk = Rlst[jdx];
+               int pos[3];
                pos[0] = Rblk.dagger[2]? 0 : 1;
                pos[1] = Rblk.dagger[1]? 2 : 3;
                pos[2] = Rblk.dagger[0]? 4 : 5;
@@ -220,6 +221,7 @@ namespace ctns{
             for(size_t j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Rblk = Rlst[jdx];
+               int pos[4];
                pos[0] = Rblk.dagger[2]? 0 : 1;
                pos[1] = Rblk.dagger[1]? 2 : 3;
                pos[2] = Rblk.dagger[0]? 4 : 5;

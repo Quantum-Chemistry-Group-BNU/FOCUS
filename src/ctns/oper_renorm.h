@@ -258,7 +258,7 @@ namespace ctns{
                maxbatch = std::max(maxbatch, Rlst2[i].size());
             } // i
             size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
- 
+
             // generate Rmmtasks
             Rmmtasks.resize(Rlst2.size());
             for(int i=0; i<Rmmtasks.size(); i++){

@@ -174,13 +174,13 @@ namespace ctns{
             }
 
             // 2. setup mmbatch2[k]
-            int nd = 8;
-            int pos[4] = {0,1,2,3};
+            const int nd = 8;
             std::vector<size_t> dims(nd,0);
             // count how many gemms in each case 
             for(size_t j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Hxblk = Hxlst[jdx];
+               int pos[4];
                pos[0] = Hxblk.dagger[3]? 0 : 1;
                pos[1] = Hxblk.dagger[2]? 2 : 3;
                pos[2] = Hxblk.dagger[1]? 4 : 5;
@@ -200,6 +200,7 @@ namespace ctns{
             for(size_t j=0; j<jlen; j++){
                size_t jdx = off+j;
                const auto& Hxblk = Hxlst[jdx];
+               int pos[4];
                pos[0] = Hxblk.dagger[3]? 0 : 1;
                pos[1] = Hxblk.dagger[2]? 2 : 3;
                pos[2] = Hxblk.dagger[1]? 4 : 5;
