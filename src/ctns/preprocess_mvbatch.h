@@ -138,41 +138,26 @@ namespace ctns{
          }
          if(size > 0){ 
             MKL_INT group_count = size;
-
-            std::cout << "lzd SIZE=" << size << std::endl;
-            std::cout << "lzd =" << transA[0] << std::endl;
-            std::cout << "lzd =" << M[0] << std::endl;
             linalg::xgemv_batch(transA.data(), M.data(), N.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), xptr.data(), INCX.data(), beta_vec.data(),
                   yptr.data(), INCY.data(), &group_count, size_per_group_vec.data());
-            std::cout << "lzd end" << std::endl;
          }
       }
 
 #ifdef GPU
    template <typename Tm>
       void MVbatch<Tm>::xgemv_batch_gpu(Tm** ptrs){
-         std::cout << "xgemv_batch_gpu is NOT IMPLEMENTED YET!" << std::endl;
-         exit(1);
-/*
-         int a_total=0;
-         int b_total=0;
-         int c_total=0;
          // initialization 
          for(size_t i=0; i<size; i++){
             Aptr[i] = ptrs[locA[i]] + offA[i];
-            Bptr[i] = ptrs[locB[i]] + offB[i];
-            Cptr[i] = ptrs[locC[i]] + offC[i];
-            a_total +=M[i]*K[i];
-            b_total +=K[i]*N[i];
-            c_total +=M[i]*N[i];
+            xptr[i] = ptrs[locx[i]] + offx[i];
+            yptr[i] = ptrs[locy[i]] + offy[i];
          }
          if(size > 0){
-            linalg::xgemm_batch_gpu(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
-                  Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
-                  Cptr.data(), M.data(), size, a_total, b_total, c_total);
+            linalg::xgemv_batch_gpu(transA[0], M.data(), N.data(), alpha_vec.data(), 
+                  Aptr.data(), LDA.data(), xptr.data(), INCX.data(), beta_vec.data(),
+                  yptr.data(), INCY.data(), size);
          }
-*/
       }
 #endif
 

@@ -94,6 +94,7 @@ $end
     =6: symbolic formulae + preallocation of workspace + intermediates [BatchGEMM]
             worktot = batchsize*(blksize*2)
     =7: symbolic formulae + preallocation of workspace + intermediates [GPU]
+    =8: symbolic formulae + preallocation of workspace + intermediates (direct)
  - batchgemm: relevant only for alg_hvec = 6 and 7
     =0: xgemm_omp
     =1: xgemm_batch_cpu
@@ -104,6 +105,9 @@ $end
     =0: oldest version
     =1: symbolic formulae + dynamic allocation of memory
     =2: symbolic formulae + preallocation of workspace
+    =4: symbolic formulae + preallocation of workspace + intermediates [Rlst]
+    =6: symbolic formulae + preallocation of workspace + intermediates [BatchGEMM]
+    =8: symbolic formulae + preallocation of workspace + intermediates (direct) 
  - iomode: =0 (default: no compression)
  - ioasync: =0 (default: sequential)
  - lastdot: compute wavefunction for the last dot, which is necessary for restart

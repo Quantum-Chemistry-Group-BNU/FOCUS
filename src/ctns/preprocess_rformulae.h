@@ -112,7 +112,7 @@ namespace ctns{
             const bool debug){
          auto t0 = tools::get_time();
 
-         // 1. preprocess formulae to Hmu
+         // 1. preprocess formulae to Rmu
          int rsize = rtasks.size();
          std::vector<std::vector<Rmu_ptr<Tm>>> Rmu(rsize);
          for(int k=0; k<rsize; k++){
@@ -129,7 +129,7 @@ namespace ctns{
          } // it
          auto ta = tools::get_time();
 
-         // 2. from Hmu to expanded block forms
+         // 2. from Rmu to expanded block forms
          blksize = 0;
          cost = 0.0;
          int nnzblk = site.info._nnzaddr.size(); // partitioned according to rows 
@@ -154,7 +154,7 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            std::cout << "T(Hmu/Hxlist/tot)="
+            std::cout << "T(Rmu/Rlist/tot)="
                << tools::get_duration(ta-t0) << ","
                << tools::get_duration(tb-ta) << ","
                << tools::get_duration(t1-t0) 
@@ -177,7 +177,7 @@ namespace ctns{
             const bool debug){
          auto t0 = tools::get_time();
 
-         // 1. preprocess formulae to Hmu
+         // 1. preprocess formulae to Rmu
          int rsize = rtasks.size();
          std::vector<std::vector<Rmu_ptr<Tm>>> Rmu(rsize);
          for(int k=0; k<rsize; k++){
@@ -194,7 +194,7 @@ namespace ctns{
          } // it
          auto ta = tools::get_time();
 
-         // 2. from Hmu to expanded block forms
+         // 2. from Rmu to expanded block forms
          blksize = 0;
          blksize0 = 0;
          cost = 0.0;
@@ -220,7 +220,7 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            std::cout << "T(Hmu/Hxlist/tot)="
+            std::cout << "T(Rmu/Rlist/tot)="
                << tools::get_duration(ta-t0) << ","
                << tools::get_duration(tb-ta) << ","
                << tools::get_duration(t1-t0) 

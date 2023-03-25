@@ -11,33 +11,27 @@ namespace ctns{
    template <typename Tm>
       struct hintermediates{
          public:
-            // constructors
-            hintermediates(){}
-            ~hintermediates(){ 
-               _offset.clear();
-               delete[] _data; 
-            }
             // initialization
-            void init(const int alg_inter,
+            void init(const int alg_hinter,
                   const oper_dictmap<Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const symbolic_task<Tm>& H_formulae,
                   const bool debug=false){
-               if(alg_inter == 0){
+               if(alg_hinter == 0){
                   this->init_omp(qops_dict, H_formulae, debug);
-               }else if(alg_inter == 1){
+               }else if(alg_hinter == 1){
                   this->init_batch_cpu(qops_dict, oploc, opaddr, H_formulae, debug);
 #ifdef GPU
-               }else if(alg_inter == 2){
+               }else if(alg_hinter == 2){
                   this->init_batch_gpu(qops_dict, oploc, opaddr, H_formulae, debug);
 #endif
                }else{
-                  std::cout << "error: no such option in Intermediates::init alg_inter=" 
-                     << alg_inter << std::endl;
+                  std::cout << "error: no such option in Intermediates::init alg_hinter=" 
+                     << alg_hinter << std::endl;
                   exit(1);
                }
-               opaddr[locInter] = _data;
+               opaddr[locInter] = _value.data();
             }
             // form hintermediates
             void init_omp(const oper_dictmap<Tm>& qops_dict,
@@ -61,7 +55,7 @@ namespace ctns{
          public:
             std::map<std::pair<int,int>,size_t> _offset; // map from (it,idx) in H_formulae to offset
             size_t _count = 0, _size = 0;
-            Tm* _data = nullptr;
+            std::vector<Tm> _value;
       };
 
    // openmp version with symbolic_sum_oper
@@ -108,7 +102,8 @@ namespace ctns{
          if(_size == 0) return;
 
          // 2. allocate memory on CPU
-         _data = new Tm[_size];
+         _value.resize(_size);
+         Tm* _data = _value.data();
          memset(_data, 0, _size*sizeof(Tm));
 
          // 3. form hintermediates via AXPY
@@ -126,7 +121,7 @@ namespace ctns{
             int i = item.first;
             int j = item.second;
             const auto& sop = H_formulae.tasks[i].terms[j];
-            Tm* workspace = _data+_offset.at(item);
+            Tm* workspace = _data + _offset.at(item);
             symbolic_sum_oper(qops_dict, sop, workspace);
          } // idx 
 
@@ -187,7 +182,8 @@ namespace ctns{
          if(_size == 0) return;
 
          // allocate memory on CPU
-         _data = new Tm[_size];
+         _value.resize(_size);
+         Tm* _data = _value.data();
          std::vector<Tm> alpha_vec(alpha_size);
 
          /*
@@ -289,9 +285,8 @@ namespace ctns{
          gettimeofday(&t1gemv, NULL);
          double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
                + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);
-         std::cout << "--- cost_inter=" << mvbatch.cost
-            << " time=" << dt
-            << " flops=" << mvbatch.cost/dt
+         std::cout << "cost_hinter=" << mvbatch.cost
+            << " time=" << dt << " flops=" << mvbatch.cost/dt
             << std::endl;
 
          /*
@@ -372,14 +367,15 @@ namespace ctns{
                const auto& sop = HTerm.terms[idx];
                int len = sop.size();
                // define intermediate operators
-               if(sop.size() > 1){
+               if(len > 1){
                   _count += 1;
                   _offset[std::make_pair(it,idx)] = _size; 
                   const auto& sop0 = sop.sums[0].second;
                   const auto& block = sop0.block;
                   const auto& label  = sop0.label;
                   const auto& qops = qops_dict.at(block);
-                  _size += qops(label).at(sop0.index).size();
+                  size_t opsize = qops(label).at(sop0.index).size();
+                  _size += opsize;
                   alpha_size += len; 
                }
             }
@@ -395,18 +391,9 @@ namespace ctns{
          if(_size == 0) return;
 
          // allocate memory on CPU
-         _data = new Tm[_size];
+         size_t GPUmem_inter = sizeof(Tm)*_size;
+         Tm* _data = (Tm*)GPUmem.allocate(GPUmem_inter);
          std::vector<Tm> alpha_vec(alpha_size);
-
-         Tm* _data2 = new Tm[_size];
-
-         const auto& qops = qops_dict.at("r");
-         for(const auto& qop : qops('C')){
-            const auto& idx = qop.first;
-            const auto& op = qop.second;
-            std::cout << "idx=" << idx << std::endl;
-            op.print("op");
-         }
 
          // setup GEMV_BATCH
          MVlist<Tm> mvlst(_count);
@@ -432,7 +419,7 @@ namespace ctns{
             const auto& op1 = qops(label).at(index1);
             MVinfo<Tm> mv;
             mv.transA = 'N';
-            mv.M = op0.size(); 
+            mv.M = ndim;
             mv.N = len;
             mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dimes for isym=2
             mv.locA = oploc.at(block); 
@@ -448,21 +435,26 @@ namespace ctns{
             } 
             adx += len;
             idx += 1;
-
-            Tm* workspace = _data2+_offset.at(item);
-            symbolic_sum_oper(qops_dict, sop, workspace);
          }
          assert(idx == _count && adx == alpha_size);
+
+         size_t GPUmem_alpha = sizeof(Tm)*alpha_size;
+         Tm* dev_alpha_vec = (Tm*)GPUmem.allocate(GPUmem_alpha);
+#ifdef USE_HIP
+         HIP_CHECK(hipMemcpy(dev_alpha_vec, alpha_vec.data(), GPUmem_alpha, hipMemcpyHostToDevice));
+#else
+         CUDA_CHECK(cudaMemcpy(dev_alpha_vec, alpha_vec.data(), GPUmem_alpha, cudaMemcpyHostToDevice));
+#endif// USE_HIP
 
          // perform GEMV_BATCH
          MVbatch<Tm> mvbatch;
          mvbatch.init(mvlst);
          Tm* ptrs[6];
-         ptrs[0] = opaddr[0];
-         ptrs[1] = opaddr[1];
-         ptrs[2] = opaddr[2];
-         ptrs[3] = opaddr[3];
-         ptrs[4] = alpha_vec.data(); 
+         ptrs[0] = opaddr[0]; // l
+         ptrs[1] = opaddr[1]; // r
+         ptrs[2] = opaddr[2]; // c1
+         ptrs[3] = opaddr[3]; // c2
+         ptrs[4] = dev_alpha_vec;
          ptrs[5] = _data;
          struct timeval t0gemv, t1gemv;
          gettimeofday(&t0gemv, NULL);
@@ -471,19 +463,11 @@ namespace ctns{
          gettimeofday(&t1gemv, NULL);
          double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
                + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);
-         std::cout << "--- cost_inter=" << mvbatch.cost
-            << " time=" << dt
-            << " flops=" << mvbatch.cost/dt
+         std::cout << "cost_hinter=" << mvbatch.cost
+            << " time=" << dt << " flops=" << mvbatch.cost/dt
             << std::endl;
 
-         double diff = 0.0;
-         for(size_t i=0; i<_size; i++){
-            diff += std::abs(_data[i]-_data2[i]);
-         }
-         std::cout << "difference=" << diff << std::endl;
-         delete[] _data;
-         delete[] _data2;
-         exit(1);
+         GPUmem.deallocate(dev_alpha_vec, GPUmem_alpha);
 
          if(debug){
             auto t1 = tools::get_time();

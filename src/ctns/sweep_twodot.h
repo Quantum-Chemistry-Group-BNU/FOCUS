@@ -276,7 +276,7 @@ namespace ctns{
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
-            hinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, H_formulae, debug);
+            hinter.init(schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
             if(debug) CPUmem.oper += sizeof(Tm)*hinter.size();
 
             preprocess_formulae_Hxlist(qops_dict, oploc, H_formulae, wf, hinter, 
@@ -328,7 +328,7 @@ namespace ctns{
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
 
-            hinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, H_formulae, debug);
+            hinter.init(schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
             if(debug) CPUmem.oper += sizeof(Tm)*hinter.size();
 
             preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, hinter, 
@@ -389,7 +389,7 @@ namespace ctns{
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
-            hinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, H_formulae, debug);
+            hinter.init(schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
             if(debug) CPUmem.oper += sizeof(Tm)*hinter.size();
 
             preprocess_formulae_Hxlist2(qops_dict, oploc, H_formulae, wf, hinter, 
@@ -487,19 +487,19 @@ namespace ctns{
             timing.tb3 = tools::get_time();
 
             // compute hintermediates
-            hinter.init(schd.ctns.alg_inter, qops_dict, oploc, opaddr, H_formulae, debug);
+            hinter.init(schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
             if(debug) CPUmem.oper += sizeof(Tm)*hinter.size();
             
             timing.tb4 = tools::get_time();
 
             // copy 
             size_t GPUmem_hinter = sizeof(Tm)*hinter.size();
-            if(schd.ctns.alg_inter != 2){
+            if(schd.ctns.alg_hinter != 2){
                opaddr[4] = (Tm*)GPUmem.allocate(GPUmem_hinter);
 #ifdef USE_HIP
-               HIP_CHECK(hipMemcpy(opaddr[4], hinter._data, hinter.size()*sizeof(Tm), hipMemcpyHostToDevice));
+               HIP_CHECK(hipMemcpy(opaddr[4], hinter._value.data(), hinter.size()*sizeof(Tm), hipMemcpyHostToDevice));
 #else
-               CUDA_CHECK(cudaMemcpy(opaddr[4], hinter._data, hinter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
+               CUDA_CHECK(cudaMemcpy(opaddr[4], hinter._value.data(), hinter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #endif// USE_HIP
             }
             if(rank == 0 && schd.ctns.verbose>0){
@@ -578,7 +578,6 @@ namespace ctns{
             }
             size_t GPUmem_batch = sizeof(Tm)*batchsize*blksize*2;
             worktot = 2*ndim + batchsize*blksize*2;
-            std::cout << "GPUmem_batch=" << GPUmem_batch << std::endl;
             dev_workspace = (Tm*)GPUmem.allocate(GPUmem_dvdson+GPUmem_batch);
             GPUmem_used = GPUmem.used(); // oper + dvdson + batch, later used in deallocate
             if(schd.ctns.verbose>0){

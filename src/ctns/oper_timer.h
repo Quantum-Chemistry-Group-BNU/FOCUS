@@ -11,11 +11,13 @@ namespace ctns{
          // GPU_kernel
          void start(const int _nd){
             nd = _nd;
+            tInter = 0.0;
             tHx.resize(nd);
             memset(tHx.data(), 0, nd*sizeof(double));
             cHx.resize(nd);
             memset(cHx.data(), 0, nd*sizeof(double));
             if(Hx_counter == 0){
+               tInter_tot = 0.0;
                tHx_tot.resize(nd);
                memset(tHx_tot.data(), 0, nd*sizeof(double));
                cHx_tot.resize(nd);
@@ -60,14 +62,14 @@ namespace ctns{
             this->print(name+"_tot", tHx_tot, cHx_tot, tInter_tot);
          }
       public:
+         double tInter;
+         double tInter_tot;
          int nd = 0;
          int Hx_counter = 0;
          std::vector<double> tHx;
          std::vector<double> tHx_tot;
          std::vector<double> cHx;
          std::vector<double> cHx_tot;
-         double tInter = 0.0;
-         double tInter_tot = 0.0;
    };
 
    struct oper_timing{

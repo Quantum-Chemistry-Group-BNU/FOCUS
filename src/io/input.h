@@ -95,7 +95,8 @@ namespace input{
                   & restart_sweep & restart_bond 
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
-                  & alg_hvec & alg_inter & alg_renorm & ifdist1 & save_formulae & sort_formulae 
+                  & alg_hvec & alg_hinter & alg_renorm & alg_rinter 
+                  & ifdist1 & save_formulae & sort_formulae 
                   & hxorder & batchblas & batchsize 
                   & cisolver & maxcycle & nbuff & damping
                   & rcanon_load & rcanon_file 
@@ -133,8 +134,9 @@ namespace input{
          std::vector<params_sweep> ctrls;
          // algorithm
          int alg_hvec = 3;
-         int alg_inter = 0;
+         int alg_hinter = 0;
          int alg_renorm = 2;
+         int alg_rinter = 0;
          bool ifdist1 = false;
          bool save_formulae = false;
          bool sort_formulae = false;
