@@ -19,6 +19,10 @@
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
+#ifdef GPU
+#include "preprocess_renorm_batchGPU.h"
+//#include "preprocess_renorm_batch2GPU.h"
+#endif
 
 namespace ctns{
 
@@ -121,6 +125,18 @@ namespace ctns{
          size_t blksize=0, blksize0=0;
          double cost=0.0;
          Tm* workspace;
+#ifdef GPU
+         Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
+         Tm* dev_oper = nullptr;
+         Tm* dev_workspace = nullptr;
+         Tm* dev_site = nullptr;
+         Tm* dev_qops = nullptr;
+         size_t GPUmem_used = 0;
+#endif
+         if(Km::ifkr && schd.ctns.alg_renorm >=4){
+            std::cout << "error: alg_renorm >= 4 does not support complex yet!" << std::endl;
+            exit(1); 
+         }
          auto tb = tools::get_time();
          if(alg_renorm == 0){
 
@@ -171,34 +187,6 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
-
-            /*
-            // debug 
-            Tm* data0 = new Tm[qops._size];
-            memset(data0, 0, qops._size*sizeof(Tm));
-            Tm* data1 = new Tm[qops._size];
-            memset(data1, 0, qops._size*sizeof(Tm));
-
-            // oldest version
-            auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
-            oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
-            linalg::xcopy(qops._size, qops._data, data0);
-
-            std::cout << "\nlzd:qops: old" << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               //if(key != 'C') continue;
-               for(auto& pr : opdict){
-                  std::cout << "key=" << key
-                     << " pr.first=" << pr.first
-                     << " pr.second=" << pr.second.normF()
-                     << std::endl;
-                  if(key == 'C' and pr.first == 0) pr.second.print("C0old",2);
-                  //if(pr.first == 9) pr.second.print("C8old",2);
-               }
-            }
-            memset(qops._data, 0, qops._size*sizeof(Tm));
-            */
             auto t5x = tools::get_time();
 
             preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
@@ -216,45 +204,6 @@ namespace ctns{
             std::cout << "t[get_MMlist]=" << t4y << std::endl;
             std::cout << "t[preprocess_renorm]=" << t5y << std::endl;
             std::cout << "t[tot]=" << t6y << std::endl;
-
-            /*
-            linalg::xcopy(qops._size, qops._data, data1);
-          
-            std::cout << "\nlzd:qops: new" << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               //if(key != 'C') continue;
-               for(auto& pr : opdict){
-                  std::cout << "key=" << key
-                     << " pr.first=" << pr.first
-                     << " pr.second=" << pr.second.normF()
-                     << std::endl;
-                  if(key == 'C' and pr.first == 0) pr.second.print("C0new",2);
-               }
-            }
-            linalg::xaxpy(qops._size, -1.0, data0, qops._data);
-            auto diff = linalg::xnrm2(qops._size, qops._data);
-
-            std::cout << "\nlzd:qops-diff" << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               //if(key != 'C') continue;
-               for(auto& pr : opdict){
-                  if(pr.second.normF() < 1.e-10) continue;
-                  std::cout << "key=" << key
-                     << " pr.first=" << pr.first
-                     << " pr.second=" << pr.second.normF()
-                     << std::endl;
-                  //if(pr.first == 9) pr.second.print("C8diff",2);
-                  if(key == 'C' and pr.first == 0) pr.second.print("C0diff",2);
-               }
-            }
-            std::cout << "total diff=" << diff << std::endl;
-            if(diff > 1.e-10) exit(1);
-            linalg::xcopy(qops._size, data1, qops._data);
-            delete[] data0;
-            delete[] data1;
-            */
 
          }else if(alg_renorm == 6){
 
@@ -304,71 +253,178 @@ namespace ctns{
             }
             workspace = new Tm[worktot];
 
-            /*
-            // debug 
-            Tm* data0 = new Tm[qops._size];
-            memset(data0, 0, qops._size*sizeof(Tm));
-            Tm* data1 = new Tm[qops._size];
-            memset(data1, 0, qops._size*sizeof(Tm));
-
-            // oldest version
-            auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
-            oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
-            linalg::xcopy(qops._size, qops._data, data0);
-
-            std::cout << "\nlzd:qops: old" << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               for(auto& pr : opdict){
-                  std::cout << "key=" << key
-                     << " pr.first=" << pr.first
-                     << " size=" << pr.second.size()
-                     << " pr.second=" << pr.second.normF()
-                     << std::endl;
-               }
-            }
-            memset(qops._data, 0, qops._size*sizeof(Tm));
-            */
-
             preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size,
                                     Rmmtasks, opaddr, workspace);
-            delete[] workspace;
-            /*
-            linalg::xcopy(qops._size, qops._data, data1);
 
-            std::cout << "\nlzd:qops: new" << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               for(auto& pr : opdict){
-                  std::cout << "key=" << key
-                     << " pr.first=" << pr.first
-                     << " size=" << pr.second.size()
-                     << " pr.second=" << pr.second.normF()
-                     << std::endl;
+         }else if(alg_renorm == 7){
+
+            if(rank == 0 && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
+                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
+                  << std::endl;
+            }
+            if(GPUmem.used() != 0){ 
+               std::cout << "error: there should not be any use of GPU memory at this point!" << std::endl;
+               std::cout << "GPUmem.used=" << GPUmem.used() << std::endl;
+               exit(1);
+            }
+
+            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
+            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+                  size, rank, fname, sort_formulae, ifdist1,
+                  debug_formulae);
+
+            // allocate memery on GPU & copy qops
+            size_t opertot = qops1.size() + qops2.size();
+            size_t GPUmem_oper = sizeof(Tm)*opertot;
+            dev_oper = (Tm*)GPUmem.allocate(GPUmem_oper);
+            if(rank == 0 && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
+                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
+                  << std::endl;
+            }
+            dev_opaddr[0] = dev_oper;
+            if(superblock == "lc"){
+               dev_opaddr[1] = dev_opaddr[0] + qops1.size();
+               dev_opaddr[2] = dev_opaddr[1];
+               dev_opaddr[3] = dev_opaddr[2] + qops2.size();
+            }else if(superblock == "cr"){
+               dev_opaddr[1] = dev_opaddr[0];
+               dev_opaddr[2] = dev_opaddr[1] + qops2.size();
+               dev_opaddr[3] = dev_opaddr[2] + qops1.size();
+            }else if(superblock == "lr"){
+               dev_opaddr[1] = dev_opaddr[0] + qops1.size();
+               dev_opaddr[2] = dev_opaddr[1] + qops2.size();
+               dev_opaddr[3] = dev_opaddr[2];
+            }
+#ifdef USE_HIP
+            HIP_CHECK(hipMemcpy(dev_opaddr[oploc[block1]], qops1._data, qops1.size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_opaddr[oploc[block2]], qops2._data, qops2.size()*sizeof(Tm), hipMemcpyHostToDevice));
+#else
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[oploc[block1]], qops1._data, qops1.size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[oploc[block2]], qops2._data, qops2.size()*sizeof(Tm), cudaMemcpyHostToDevice));
+#endif //USE_HIP
+
+            // generation of renormalization block [lc/lr/cr]
+            if(schd.ctns.alg_rinter != 2){
+               rinter.init(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
+            }else{
+               rinter.init(schd.ctns.alg_rinter, qops_dict, oploc, dev_opaddr, rtasks, debug);
+            }
+
+            size_t GPUmem_rinter = sizeof(Tm)*rinter.size();
+            // copy from CPU to GPU 
+            if(schd.ctns.alg_rinter != 2){
+               dev_opaddr[4] = (Tm*)GPUmem.allocate(GPUmem_rinter);
+#ifdef USE_HIP
+               HIP_CHECK(hipMemcpy(dev_opaddr[4], rinter._value.data(), GPUmem_rinter, hipMemcpyHostToDevice));
+#else
+               CUDA_CHECK(cudaMemcpy(dev_opaddr[4], rinter._value.data(), GPUmem_rinter, cudaMemcpyHostToDevice));
+#endif// USE_HIP
+            }
+            if(rank == 0 && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
+                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper,rinter)(GB)=" << GPUmem_oper/std::pow(1024.0,3)
+                  << "," << GPUmem_rinter/std::pow(1024.0,3) 
+                  << std::endl;
+            }
+
+            size_t GPUmem_qops = sizeof(Tm)*qops.size();
+            size_t GPUmem_site = sizeof(Tm)*site.size();
+            dev_qops = (Tm*)GPUmem.allocate(GPUmem_qops);
+            dev_site = (Tm*)GPUmem.allocate(GPUmem_site);
+            if(rank == 0 && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
+                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper,rinter,qops,site)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
+                  << "," << GPUmem_rinter/std::pow(1024.0,3) 
+                  << "," << GPUmem_qops/std::pow(1024.0,3) 
+                  << "," << GPUmem_site/std::pow(1024.0,3) 
+                  << std::endl;
+            }
+#ifdef USE_HIP
+            HIP_CHECK(hipMemcpy(dev_site, site._data, site.size()*sizeof(Tm), hipMemcpyHostToDevice));
+#else
+            CUDA_CHECK(cudaMemcpy(dev_site, site._data, site.size()*sizeof(Tm), cudaMemcpyHostToDevice));
+#endif //USE_HIP
+
+            // GEMM list and GEMV list
+            preprocess_formulae_Rlist2(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+                  Rlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
+
+            // compute batchsize & allocate workspace
+            size_t maxbatch = 0;
+            for(int i=0; i<Rlst2.size(); i++){
+               maxbatch = std::max(maxbatch, Rlst2[i].size());
+            } // i
+            
+            // Determine batchsize dynamically: following sweep_twodot.h [additional N for reduction]
+            size_t batchsize = 0;
+            size_t GPUmem_reserved = GPUmem_oper + GPUmem_rinter + GPUmem_qops + GPUmem_site + 48;
+            if(GPUmem.size() > GPUmem_reserved){
+               batchsize = std::floor(double(GPUmem.size() - GPUmem_reserved)/(sizeof(Tm)*blksize*2 + 113));
+               batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
+               if(batchsize == 0 && maxbatch != 0){
+                  std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
+                  exit(1);
+               }
+            }else{
+               std::cout << "error: in sufficient GPU memory for batchGEMM! already reserved:" << std::endl;
+               std::cout << "GPUmem.size=" << GPUmem.size() << " GPUmem.used=" << GPUmem.used()
+                  << " GPUmem_reserved=" << GPUmem_reserved << " (oper,rinter,qops,site)=" 
+                  << GPUmem_oper << "," << GPUmem_rinter << "," << GPUmem_qops << "," << GPUmem_site 
+                  << std::endl;
+               exit(1);
+            }
+            size_t GPUmem_batch = sizeof(Tm)*batchsize*(blksize*2+1);
+            dev_workspace = (Tm*)GPUmem.allocate(GPUmem_batch);
+            GPUmem_used = GPUmem.used(); // later used in deallocate
+            if(schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
+                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper,rinter,qops,site,batch)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
+                  << "," << GPUmem_rinter/std::pow(1024.0,3)
+                  << "," << GPUmem_qops/std::pow(1024.0,3)
+                  << "," << GPUmem_site/std::pow(1024.0,3)
+                  << "," << GPUmem_batch/std::pow(1024.0,3)
+                  << " batchsize=" << batchsize
+                  << std::endl;
+            }
+
+            // generate Rmmtasks
+            const int batchblas = 2;
+            Rmmtasks.resize(Rlst2.size());
+            for(int i=0; i<Rmmtasks.size(); i++){
+               Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, batchblas, 
+                     batchsize, blksize*2);
+               if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
+                  std::cout << " rank=" << rank << " iblk=" << i
+                      << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
+                      << " batchsize=" << Rmmtasks[i].batchsize
+                      << " nbatch=" << Rmmtasks[i].nbatch
+                      << std::endl;
                }
             }
-            linalg::xaxpy(qops._size, -1.0, data0, qops._data);
-            auto diff = linalg::xnrm2(qops._size, qops._data);
 
-            std::cout << "\nlzd:qops-diff" << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               for(auto& pr : opdict){
-                  if(pr.second.normF() < 1.e-10) continue;
-                  std::cout << ">>> key=" << key
-                     << " pr.first=" << pr.first
-                     << " size=" << pr.second.size()
-                     << " pr.second=" << pr.second.normF()
-                     << std::endl;
-               }
-            }
-            std::cout << "total diff=" << diff << std::endl;
-            if(diff > 1.e-10) exit(1);
-            linalg::xcopy(qops._size, data1, qops._data);
-            delete[] data0;
-            delete[] data1;
-            */
+            // kernel
+            Tm* dev_red = dev_workspace + batchsize*blksize*2;
+            preprocess_renorm_batchGPU(dev_qops, dev_site, size, rank, qops._size,
+                                    Rmmtasks, dev_opaddr, dev_workspace, dev_red);
 
+            // copy results back to CPU
+#ifdef USE_HIP
+            HIP_CHECK(hipMemcpy(qops._data, dev_qops, qops.size()*sizeof(Tm), hipMemcpyDeviceToHost));
+#else
+            CUDA_CHECK(cudaMemcpy(qops._data, dev_qops, qops.size()*sizeof(Tm), cudaMemcpyDeviceToHost));
+#endif
+            
          }else if(alg_renorm == 8){
 
             if(schd.ctns.batchsize == 0){
@@ -424,35 +480,9 @@ namespace ctns{
             workspace = new Tm[worktot];
             auto t5x = tools::get_time();
         
-            /* 
-            Tm* data0 = new Tm[qops._size];
-            memset(data0, 0, qops._size*sizeof(Tm));
-            Tm* data1 = new Tm[qops._size];
-            memset(data1, 0, qops._size*sizeof(Tm));
-
-            // oldest version
-            auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
-            oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
-            linalg::xcopy(qops._size, qops._data, data0);
-
-            std::cout << "\nlzd:qops: old" << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               for(auto& pr : opdict){
-                  std::cout << "key=" << key
-                     << " pr.first=" << pr.first
-                     << " size=" << pr.second.size()
-                     << " pr.second=" << pr.second.normF()
-                     << std::endl;
-               }
-            }
-            memset(qops._data, 0, qops._size*sizeof(Tm));
-            */
-
             opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
             preprocess_renorm_batch2(qops._data, site._data, size, rank, qops._size,
                                      Rmmtasks, opaddr, workspace, rinter._data);
-            delete[] workspace;
             auto t6x = tools::get_time();
 
             double t1y = tools::get_duration(t2x-t1x); 
@@ -468,48 +498,76 @@ namespace ctns{
             std::cout << "t[preprocess_renorm_batch2]=" << t5y << std::endl;
             std::cout << "t[tot]=" << t6y << std::endl;
 
-            /*
-            linalg::xcopy(qops._size, qops._data, data1);
+         }else{
+            std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
+            exit(1);
+         } // alg_renorm
+         auto tc = tools::get_time();
+         //-------------------------------
 
-            std::cout << "\nlzd:qops: new" << std::endl;
+         // debug 
+         const bool ifcheck = true;
+         if(ifcheck){
+            const int target = 8;
+            std::cout << "\nlzd:qops:" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
                for(auto& pr : opdict){
                   std::cout << "key=" << key
                      << " pr.first=" << pr.first
-                     << " size=" << pr.second.size()
                      << " pr.second=" << pr.second.normF()
                      << std::endl;
+                  if(key == 'C' and pr.first == target) pr.second.print("Cnew",2);
+               }
+            }
+            Tm* data0 = new Tm[qops._size];
+            memset(data0, 0, qops._size*sizeof(Tm));
+            linalg::xcopy(qops._size, qops._data, data0);
+            // oldest version
+            auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
+            oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
+            Tm* data1 = new Tm[qops._size];
+            linalg::xcopy(qops._size, qops._data, data1);
+            std::cout << "\nlzd:qops: ref" << std::endl;
+            for(auto& key : qops.oplist){
+               auto& opdict = qops(key);
+               for(auto& pr : opdict){
+                  std::cout << "key=" << key
+                     << " pr.first=" << pr.first
+                     << " pr.second[ref]=" << pr.second.normF()
+                     << std::endl;
+                  if(key == 'C' and pr.first == target) pr.second.print("Cref",2);
                }
             }
             linalg::xaxpy(qops._size, -1.0, data0, qops._data);
             auto diff = linalg::xnrm2(qops._size, qops._data);
-
             std::cout << "\nlzd:qops-diff" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
                for(auto& pr : opdict){
-                  if(pr.second.normF() < 1.e-10) continue;
-                  std::cout << ">>> key=" << key
+                  std::cout << "key=" << key
                      << " pr.first=" << pr.first
-                     << " size=" << pr.second.size()
-                     << " pr.second=" << pr.second.normF()
+                     << " pr.second[diff]=" << pr.second.normF()
                      << std::endl;
+                  if(key == 'C' and pr.first == target) pr.second.print("Cdiff",2);
                }
             }
             std::cout << "total diff=" << diff << std::endl;
-            if(diff > 1.e-10) exit(1);
             linalg::xcopy(qops._size, data1, qops._data);
             delete[] data0;
-            delete[] data1; 
-            */
-
-         }else{
-            std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
-            exit(1);
+            delete[] data1;
+            if(diff > 1.e-10) exit(1);
          }
-         auto tc = tools::get_time();
-         //-------------------------------
+
+         // free tmp space on CPU
+         if(schd.ctns.alg_renorm==6 || schd.ctns.alg_renorm==8){
+            delete[] workspace;
+         }
+#ifdef GPU
+         if(schd.ctns.alg_renorm==7 || schd.ctns.alg_renorm==9){
+            GPUmem.deallocate(dev_oper, GPUmem_used);
+         }
+#endif
 
          // 2. reduce 
 #ifndef SERIAL

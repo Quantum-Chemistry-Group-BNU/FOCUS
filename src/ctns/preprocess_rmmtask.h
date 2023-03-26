@@ -65,7 +65,7 @@ namespace ctns{
                } // i
             }
             // reduction
-            void reduction(const int k, Tm* workspace, Tm* y){
+            void reduction(const int k, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
 
@@ -83,16 +83,33 @@ namespace ctns{
                      }
 #ifdef GPU
                   }else if(batchblas == 2){
-                     std::cout << "NOT IMPLEMENTED YET!" << std::endl;
-                     exit(1);
+                     for(size_t j=0; j<collectc[k].size(); j++){
+                        int dimc = collectc[k][j].first;
+                        size_t size = collectc[k][j].second;
+                        Tm* ptr = workspace+j*offset; 
+                        for(int i=1; i<dimc; i++){
+                           linalg::xaxpy_magma(size, alpha, ptr+i*size, ptr);
+                        }
+                     }
 #endif
                   } // batchblas
                } // icase
-               
+              
                // 2. reduction by GEMV
+               Tm* pcoeff = const_cast<Tm*>(coefflst[k].data());  
+#ifdef GPU
+               if(dev_red != nullptr){
+#ifdef USE_HIP
+                  HIP_CHECK(hipMemcpy(dev_red, pcoeff, coefflst[k].size()*sizeof(Tm), hipMemcpyHostToDevice));
+#else
+                  CUDA_CHECK(cudaMemcpy(dev_red, pcoeff, coefflst[k].size()*sizeof(Tm), cudaMemcpyHostToDevice));
+#endif
+                  pcoeff = dev_red;
+               }
+#endif
                Tm* ptrs[3];
                ptrs[0] = workspace;
-               ptrs[1] = const_cast<Tm*>(coefflst[k].data());
+               ptrs[1] = pcoeff;
                ptrs[2] = y;
                mvbatch[k].kernel(batchblas, ptrs);
 #ifdef GPU

@@ -211,7 +211,7 @@ namespace ctns{
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
          if(Km::ifkr && schd.ctns.alg_hvec >=4){
-            std::cout << "error: alg_hvec >= 4 does not support cNK yet!" << std::endl;
+            std::cout << "error: alg_hvec >= 4 does not support complex yet!" << std::endl;
             exit(1); 
          }
          if(schd.ctns.alg_hvec == 0){
@@ -586,8 +586,7 @@ namespace ctns{
                exit(1);
             }
             size_t GPUmem_batch = sizeof(Tm)*batchsize*blksize*2;
-            worktot = 2*ndim + batchsize*blksize*2;
-            dev_workspace = (Tm*)GPUmem.allocate(GPUmem_dvdson+GPUmem_batch);
+            dev_workspace = (Tm*)GPUmem.allocate(GPUmem_dvdson + GPUmem_batch);
             GPUmem_used = GPUmem.used(); // oper + dvdson + batch, later used in deallocate
             if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
@@ -833,8 +832,7 @@ namespace ctns{
                exit(1);
             }
             size_t GPUmem_batch = sizeof(Tm)*batchsize*(blksize*2+blksize0);
-            worktot = 2*ndim + batchsize*(blksize*2+blksize0);
-            dev_workspace = (Tm*)GPUmem.allocate(GPUmem_dvdson+GPUmem_batch);
+            dev_workspace = (Tm*)GPUmem.allocate(GPUmem_dvdson + GPUmem_batch);
             GPUmem_used = GPUmem.used(); // oper + dvdson + batch, later used in deallocate
             if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
