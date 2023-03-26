@@ -19,7 +19,6 @@ namespace ctns{
             const int& size,
             const int& rank,
             const size_t& ndim,
-            Hxlist2<Tm>& Hxlst2,
             MMtasks<Tm>& mmtasks,
             Tm** opaddr,
             Tm* workspace,

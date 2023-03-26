@@ -17,10 +17,10 @@ namespace ctns{
             const int& size,
             const int& rank,
             const size_t& ndim,
-            Rlist2<Tm>& Rlst2,
             RMMtasks<Tm>& Rmmtasks,
             Tm** opaddr,
-            Tm* workspace){
+            Tm* workspace,
+            Tm* alphas){
 #ifdef _OPENMP
          int maxthreads = omp_get_max_threads();
 #else
@@ -62,7 +62,7 @@ namespace ctns{
             for(int k=0; k<Rmmtask.nbatch; k++){
                // axpy
                gettimeofday(&t0_axpy, NULL);
-               Rmmtask.inter(k, opaddr);
+               Rmmtask.inter(k, opaddr, alphas);
                gettimeofday(&t1_axpy, NULL);
                // gemm
                gettimeofday(&t0_gemm, NULL);

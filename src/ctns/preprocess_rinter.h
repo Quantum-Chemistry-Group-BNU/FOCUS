@@ -31,7 +31,7 @@ namespace ctns{
                      << alg_rinter << std::endl;
                   exit(1);
                }
-               opaddr[locInter] = _value.data();
+               opaddr[locInter] = _data;
             }
             // form rintermediates
             void init_omp(const oper_dictmap<Tm>& qops_dict,
@@ -49,6 +49,37 @@ namespace ctns{
                   const renorm_tasks<Tm>& rtasks,
                   const bool debug);
 #endif
+            // initialization [direct]
+            void initDirect(const int alg_rinter,
+                  const oper_dictmap<Tm>& qops_dict,
+                  const std::map<std::string,int>& oploc,
+                  Tm** opaddr,
+                  const renorm_tasks<Tm>& rtasks,
+                  const bool debug=false){
+               if(alg_rinter == 1){
+                  this->initDirect_batch_cpu(qops_dict, oploc, opaddr, rtasks, debug);
+#ifdef GPU
+               }else if(alg_rinter == 2){
+                  this->initDirect_batch_gpu(qops_dict, oploc, opaddr, rtasks, debug);
+#endif
+               }else{
+                  std::cout << "error: no such option in Intermediates::initDirect alg_rinter=" 
+                     << alg_rinter << std::endl;
+                  exit(1);
+               }
+            }
+            void initDirect_batch_cpu(const oper_dictmap<Tm>& qops_dict,
+                  const std::map<std::string,int>& oploc,
+                  Tm** opaddr,
+                  const renorm_tasks<Tm>& rtasks,
+                  const bool debug);
+#ifdef GPU
+            void initDirect_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+                  const std::map<std::string,int>& oploc,
+                  Tm** opaddr,
+                  const renorm_tasks<Tm>& rtasks,
+                  const bool debug);
+#endif
             // helpers
             size_t count() const{ return _count; };
             size_t size() const{ return _size; };
@@ -56,6 +87,7 @@ namespace ctns{
             std::map<std::tuple<int,int,int>,size_t> _offset; // map from (it,idx) in rtasks to offset
             size_t _count = 0, _size = 0;
             std::vector<Tm> _value;
+            Tm* _data;
       };
 
    // openmp version with symbolic_sum_oper
@@ -108,7 +140,7 @@ namespace ctns{
 
          // 2. allocate memory on CPU
          _value.resize(_size);
-         Tm* _data = _value.data();
+         _data = _value.data();
          memset(_data, 0, _size*sizeof(Tm));
 
          // 3. form rintermediates via AXPY
@@ -194,7 +226,7 @@ namespace ctns{
 
          // allocate memory on CPU
          _value.resize(_size);
-         Tm* _data = _value.data();
+         _data = _value.data();
          std::vector<Tm> alpha_vec(alpha_size);
 
          // setup GEMV_BATCH
@@ -326,7 +358,7 @@ namespace ctns{
 
          // allocate memory on CPU
          size_t GPUmem_inter = sizeof(Tm)*_size;
-         Tm* _data = (Tm*)GPUmem.allocate(GPUmem_inter);
+         _data = (Tm*)GPUmem.allocate(GPUmem_inter);
          std::vector<Tm> alpha_vec(alpha_size);
 
          // setup GEMV_BATCH
@@ -407,6 +439,165 @@ namespace ctns{
          if(debug){
             auto t1 = tools::get_time();
             tools::timing("rintermediates<Tm>::init_batch_gpu", t0, t1);
+         }
+      }
+#endif
+
+   // This subroutine does not work for cNK. Besides, we make the
+   // assumption that the C operators are stored contegously.
+   template <typename Tm>
+      void rintermediates<Tm>::initDirect_batch_cpu(const oper_dictmap<Tm>& qops_dict,
+            const std::map<std::string,int>& oploc,
+            Tm** opaddr,
+            const renorm_tasks<Tm>& rtasks,
+            const bool debug){
+         auto t0 = tools::get_time();
+#ifdef _OPENMP
+         int maxthreads = omp_get_max_threads();
+#else
+         int maxthreads = 1;
+#endif
+         if(debug){
+            std::cout << "rintermediates<Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
+            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+         }
+
+         // count the size of rintermediates
+         for(int k=0; k<rtasks.size(); k++){
+            const auto& task = rtasks.op_tasks[k];
+            const auto& key = std::get<0>(task);
+            const auto& index = std::get<1>(task);
+            const auto& formula = std::get<2>(task);
+            for(int it=0; it<formula.size(); it++){
+               const auto& Term = formula.tasks[it];
+               for(int idx=Term.size()-1; idx>=0; idx--){
+                  const auto& sop = Term.terms[idx];
+                  int len = sop.size();
+                  // define intermediate operators
+                  if(len > 1){
+                     _count += 1;
+                     _offset[std::make_tuple(k,it,idx)] = _size; 
+                     _size += len;
+                  }
+               } // idx
+            } // it
+         } // i
+         if(debug){
+            std::cout << " no. of rintermediate operators=" << _count << std::endl;
+            std::cout << " no. of coefficients=" << _size 
+               << ":" << tools::sizeMB<Tm>(_size) << "MB"
+               << ":" << tools::sizeGB<Tm>(_size) << "GB"
+               << std::endl;
+         }
+         if(_size == 0) return;
+
+         // allocate memory on CPU
+         _value.resize(_size);
+         _data = _value.data();
+         size_t adx = 0;
+         for(const auto& pr : _offset){
+            const auto& item = pr.first;
+            int k = std::get<0>(item);
+            int i = std::get<1>(item);
+            int j = std::get<2>(item);
+            const auto& sop = std::get<2>(rtasks.op_tasks[k]).tasks[i].terms[j];
+            const auto& sop0 = sop.sums[0].second;
+            const auto& dagger= sop0.dagger;
+            int len = sop.size();
+            for(int k=0; k<len; k++){
+               auto wtk = sop.sums[k].first;
+               _value[adx+k] = dagger? tools::conjugate(wtk) : wtk; 
+            } 
+            adx += len;
+         }
+         assert(adx == _size);
+
+         if(debug){
+            auto t1 = tools::get_time();
+            tools::timing("rintermediates<Tm>::initDirect_batch_cpu", t0, t1);
+         }
+      }
+
+#ifdef GPU
+   // This subroutine does not work for cNK. Besides, we make the
+   // assumption that the C operators are stored contegously.
+   template <typename Tm>
+      void rintermediates<Tm>::initDirect_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+            const std::map<std::string,int>& oploc,
+            Tm** opaddr,
+            const renorm_tasks<Tm>& rtasks,
+            const bool debug){
+         auto t0 = tools::get_time();
+#ifdef _OPENMP
+         int maxthreads = omp_get_max_threads();
+#else
+         int maxthreads = 1;
+#endif
+         if(debug){
+            std::cout << "rintermediates<Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
+            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+         }
+
+         // count the size of rintermediates
+         for(int k=0; k<rtasks.size(); k++){
+            const auto& task = rtasks.op_tasks[k];
+            const auto& key = std::get<0>(task);
+            const auto& index = std::get<1>(task);
+            const auto& formula = std::get<2>(task);
+            for(int it=0; it<formula.size(); it++){
+               const auto& Term = formula.tasks[it];
+               for(int idx=Term.size()-1; idx>=0; idx--){
+                  const auto& sop = Term.terms[idx];
+                  int len = sop.size();
+                  // define intermediate operators
+                  if(len > 1){
+                     _count += 1;
+                     _offset[std::make_tuple(k,it,idx)] = _size; 
+                     _size += len;
+                  }
+               } // idx
+            } // it
+         } // i
+         if(debug){
+            std::cout << " no. of rintermediate operators=" << _count << std::endl;
+            std::cout << " no. of coefficients=" << _size 
+               << ":" << tools::sizeMB<Tm>(_size) << "MB"
+               << ":" << tools::sizeGB<Tm>(_size) << "GB"
+               << std::endl;
+         }
+         if(_size == 0) return;
+
+         // allocate memory on CPU
+         std::vector<Tm> alpha_vec(_size);
+         size_t adx = 0;
+         for(const auto& pr : _offset){
+            const auto& item = pr.first;
+            int k = std::get<0>(item);
+            int i = std::get<1>(item);
+            int j = std::get<2>(item);
+            const auto& sop = std::get<2>(rtasks.op_tasks[k]).tasks[i].terms[j];
+            const auto& sop0 = sop.sums[0].second;
+            const auto& dagger= sop0.dagger;
+            int len = sop.size();
+            for(int k=0; k<len; k++){
+               auto wtk = sop.sums[k].first;
+               alpha_vec[adx+k] = dagger? tools::conjugate(wtk) : wtk; 
+            } 
+            adx += len;
+         }
+         assert(adx == _size);
+
+         size_t GPUmem_inter = sizeof(Tm)*_size;
+         _data = (Tm*)GPUmem.allocate(GPUmem_inter);
+#ifdef USE_HIP
+         HIP_CHECK(hipMemcpy(_data, alpha_vec.data(), GPUmem_inter, hipMemcpyHostToDevice));
+#else
+         CUDA_CHECK(cudaMemcpy(_data, alpha_vec.data(), GPUmem_inter, cudaMemcpyHostToDevice));
+#endif// USE_HIP
+
+         if(debug){
+            auto t1 = tools::get_time();
+            tools::timing("rintermediates<Tm>::initDirect_batch_gpu", t0, t1);
          }
       }
 #endif

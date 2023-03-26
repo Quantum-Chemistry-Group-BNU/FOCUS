@@ -39,6 +39,7 @@ namespace ctns{
             void initDirect(const int it,
                   const symbolic_task<Tm>& H_formulae,
                   const oper_dictmap<Tm>& qops_dict,
+                  const hintermediates<Tm>& hinter,
                   const std::map<std::string,int>& oploc);
             void gen_Hxlist2Direct(const qinfo4<Tm>& wf_info, 
                   Hxlist2<Tm>& Hxlst2,
@@ -55,9 +56,8 @@ namespace ctns{
             int terms = 0;
             Tm coeff = 1.0, coeffH = 1.0;
             // intermediates [direct] -> we assume each hmu contains only one intermediates
-            int posInter = -1;
-            size_t ldaInter = 0;
-            std::vector<Tm> alpha_vec;
+            int posInter = -1, lenInter = -1;
+            size_t offInter = 0, ldaInter = 0;
       };
 
    template <typename Tm>
@@ -283,6 +283,7 @@ namespace ctns{
       void Hmu_ptr<Tm>::initDirect(const int it,
             const symbolic_task<Tm>& H_formulae,
             const oper_dictmap<Tm>& qops_dict,
+            const hintermediates<Tm>& hinter,
             const std::map<std::string,int>& oploc){
          const auto& HTerm = H_formulae.tasks[it];
          terms = HTerm.size();
@@ -309,11 +310,8 @@ namespace ctns{
                loc[pos] = locInter;
                off[pos] = qops._offset.at(std::make_pair(label,index0)); // fake intermediates
                posInter = pos;
-               alpha_vec.resize(len);
-               for(int k=0; k<len; k++){
-                  auto wtk = sop.sums[k].first;
-                  alpha_vec[k] = dagger? tools::conjugate(wtk) : wtk;
-               }
+               lenInter = len; 
+               offInter = hinter._offset.at(std::make_pair(it,idx)); // alpha
                const auto& sop1 = sop.sums[1].second; // used for determine LDA
                const auto& index1 = sop1.index;
                const auto& op1 = qops(label).at(index1);
@@ -387,8 +385,9 @@ namespace ctns{
             // Intermediates
             if(posInter != -1){
                Hxblk.posInter = posInter;
-               Hxblk.ldaInter= ldaInter;
-               Hxblk.alpha_vec = alpha_vec;
+               Hxblk.lenInter = lenInter;
+               Hxblk.offInter = offInter;
+               Hxblk.ldaInter = ldaInter;
                blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
             }
             Hxlst2[i].push_back(Hxblk);

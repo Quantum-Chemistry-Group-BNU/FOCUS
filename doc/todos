@@ -283,11 +283,12 @@ KNOWN PROBLEMS
 
  * GPU support for Intermediate & Renorm:
    - Support Intermediate with GPU:
-         0. alg_inter=2: GPU batch [DONE@2023????]
+         0. alg_inter=2: GPU batch [DONE@20230325]
    - Support Renorm with GPU:
-         0. alg_hvec=8: GPU batch [DONE@2023????]
+         0. alg_hvec=7/9: GPU batch [DONE@20230326]
             - preprocess_rernorm_batchGPU.h
-         1. alg_renorm=8: GPU batch [DONE@2023????]
+
+         1. alg_renorm=7/9: GPU batch [DONE@2023????]
             - preprocess_rernorm_batchGPU.h
 
 === TODOs ===
@@ -297,6 +298,8 @@ KNOWN PROBLEMS
    - TensorCore!
 
  * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma?]
+
+ * OpenMP for symbolic & mmtasks
 
  * OpenMP parallelization in decimation
 

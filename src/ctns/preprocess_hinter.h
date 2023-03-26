@@ -31,7 +31,7 @@ namespace ctns{
                      << alg_hinter << std::endl;
                   exit(1);
                }
-               opaddr[locInter] = _value.data();
+               opaddr[locInter] = _data;
             }
             // form hintermediates
             void init_omp(const oper_dictmap<Tm>& qops_dict,
@@ -49,6 +49,37 @@ namespace ctns{
                   const symbolic_task<Tm>& H_formulae,
                   const bool debug);
 #endif
+            // initialization [direct]
+            void initDirect(const int alg_hinter,
+                  const oper_dictmap<Tm>& qops_dict,
+                  const std::map<std::string,int>& oploc,
+                  Tm** opaddr,
+                  const symbolic_task<Tm>& H_formulae,
+                  const bool debug=false){
+               if(alg_hinter == 1){
+                  this->initDirect_batch_cpu(qops_dict, oploc, opaddr, H_formulae, debug);
+#ifdef GPU
+               }else if(alg_hinter == 2){
+                  this->initDirect_batch_gpu(qops_dict, oploc, opaddr, H_formulae, debug);
+#endif
+               }else{
+                  std::cout << "error: no such option in Intermediates::initDirect alg_hinter=" 
+                     << alg_hinter << std::endl;
+                  exit(1);
+               }
+            }
+            void initDirect_batch_cpu(const oper_dictmap<Tm>& qops_dict,
+                  const std::map<std::string,int>& oploc,
+                  Tm** opaddr,
+                  const symbolic_task<Tm>& H_formulae,
+                  const bool debug);
+#ifdef GPU
+            void initDirect_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+                  const std::map<std::string,int>& oploc,
+                  Tm** opaddr,
+                  const symbolic_task<Tm>& H_formulae,
+                  const bool debug);
+#endif
             // helpers
             size_t count() const{ return _count; };
             size_t size() const{ return _size; };
@@ -56,6 +87,7 @@ namespace ctns{
             std::map<std::pair<int,int>,size_t> _offset; // map from (it,idx) in H_formulae to offset
             size_t _count = 0, _size = 0;
             std::vector<Tm> _value;
+            Tm* _data = nullptr;
       };
 
    // openmp version with symbolic_sum_oper
@@ -103,7 +135,7 @@ namespace ctns{
 
          // 2. allocate memory on CPU
          _value.resize(_size);
-         Tm* _data = _value.data();
+         _data = _value.data();
          memset(_data, 0, _size*sizeof(Tm));
 
          // 3. form hintermediates via AXPY
@@ -183,7 +215,7 @@ namespace ctns{
 
          // allocate memory on CPU
          _value.resize(_size);
-         Tm* _data = _value.data();
+         _data = _value.data();
          std::vector<Tm> alpha_vec(alpha_size);
 
          /*
@@ -392,7 +424,7 @@ namespace ctns{
 
          // allocate memory on CPU
          size_t GPUmem_inter = sizeof(Tm)*_size;
-         Tm* _data = (Tm*)GPUmem.allocate(GPUmem_inter);
+         _data = (Tm*)GPUmem.allocate(GPUmem_inter);
          std::vector<Tm> alpha_vec(alpha_size);
 
          // setup GEMV_BATCH
@@ -472,6 +504,151 @@ namespace ctns{
          if(debug){
             auto t1 = tools::get_time();
             tools::timing("hintermediates<Tm>::init_batch_gpu", t0, t1);
+         }
+      }
+#endif
+
+   // This subroutine does not work for cNK. Besides, we make the
+   // assumption that the C operators are stored contegously.
+   template <typename Tm>
+      void hintermediates<Tm>::initDirect_batch_cpu(const oper_dictmap<Tm>& qops_dict,
+            const std::map<std::string,int>& oploc,
+            Tm** opaddr,
+            const symbolic_task<Tm>& H_formulae,
+            const bool debug){
+         auto t0 = tools::get_time();
+#ifdef _OPENMP
+         int maxthreads = omp_get_max_threads();
+#else
+         int maxthreads = 1;
+#endif
+         if(debug){
+            std::cout << "hintermediates<Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
+            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+         }
+
+         // count the size of hintermediates
+         for(int it=0; it<H_formulae.size(); it++){
+            const auto& HTerm = H_formulae.tasks[it];
+            for(int idx=HTerm.size()-1; idx>=0; idx--){
+               const auto& sop = HTerm.terms[idx];
+               int len = sop.size();
+               // define intermediate operators
+               if(len > 1){
+                  _count += 1;
+                  _offset[std::make_pair(it,idx)] = _size; 
+                  _size += len; 
+               }
+            }
+         } // it
+         if(debug){
+            std::cout << " no. of hintermediate operators=" << _count << std::endl;
+            std::cout << " no. of coefficients=" << _size
+               << ":" << tools::sizeMB<Tm>(_size) << "MB"
+               << ":" << tools::sizeGB<Tm>(_size) << "GB"
+               << std::endl;
+         }
+         if(_size == 0) return;
+
+         // allocate memory on CPU
+         _value.resize(_size);
+         _data = _value.data();
+         size_t adx = 0;
+         for(const auto& pr : _offset){
+            const auto& item = pr.first;
+            int i = item.first;
+            int j = item.second;
+            const auto& sop = H_formulae.tasks[i].terms[j];
+            const auto& sop0 = sop.sums[0].second;
+            const auto& dagger= sop0.dagger;
+            int len = sop.size();
+            for(int k=0; k<len; k++){
+               auto wtk = sop.sums[k].first;
+               _value[adx+k] = dagger? tools::conjugate(wtk) : wtk; 
+            } 
+            adx += len;
+         }
+         assert(adx == _size);
+
+         if(debug){
+            auto t1 = tools::get_time();
+            tools::timing("hintermediates<Tm>::initDirect_batch_cpu", t0, t1);
+         }
+      }
+
+#ifdef GPU
+   // This subroutine does not work for cNK. Besides, we make the
+   // assumption that the C operators are stored contegously.
+   template <typename Tm>
+      void hintermediates<Tm>::initDirect_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+            const std::map<std::string,int>& oploc,
+            Tm** opaddr,
+            const symbolic_task<Tm>& H_formulae,
+            const bool debug){
+         auto t0 = tools::get_time();
+#ifdef _OPENMP
+         int maxthreads = omp_get_max_threads();
+#else
+         int maxthreads = 1;
+#endif
+         if(debug){
+            std::cout << "hintermediates<Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
+            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+         }
+
+         // count the size of hintermediates
+         for(int it=0; it<H_formulae.size(); it++){
+            const auto& HTerm = H_formulae.tasks[it];
+            for(int idx=HTerm.size()-1; idx>=0; idx--){
+               const auto& sop = HTerm.terms[idx];
+               int len = sop.size();
+               // define intermediate operators
+               if(len > 1){
+                  _count += 1;
+                  _offset[std::make_pair(it,idx)] = _size; 
+                  _size += len; 
+               }
+            }
+         } // it
+         if(debug){
+            std::cout << " no. of hintermediate operators=" << _count << std::endl;
+            std::cout << " no. of coefficients=" << _size 
+               << ":" << tools::sizeMB<Tm>(_size) << "MB"
+               << ":" << tools::sizeGB<Tm>(_size) << "GB"
+               << std::endl;
+         }
+         if(_size == 0) return;
+
+         // allocate memory on CPU
+         std::vector<Tm> alpha_vec(_size);
+         size_t adx = 0;
+         for(const auto& pr : _offset){
+            const auto& item = pr.first;
+            int i = item.first;
+            int j = item.second;
+            const auto& sop = H_formulae.tasks[i].terms[j];
+            const auto& sop0 = sop.sums[0].second;
+            const auto& dagger= sop0.dagger;
+            int len = sop.size();
+            for(int k=0; k<len; k++){
+               auto wtk = sop.sums[k].first;
+               alpha_vec[adx+k] = dagger? tools::conjugate(wtk) : wtk; 
+            } 
+            adx += len;
+         }
+         assert(adx == _size);
+
+         size_t GPUmem_inter = sizeof(Tm)*_size;
+         _data = (Tm*)GPUmem.allocate(GPUmem_inter);
+#ifdef USE_HIP
+         HIP_CHECK(hipMemcpy(_data, alpha_vec.data(), GPUmem_inter, hipMemcpyHostToDevice));
+#else
+         CUDA_CHECK(cudaMemcpy(_data, alpha_vec.data(), GPUmem_inter, cudaMemcpyHostToDevice));
+#endif// USE_HIP
+
+         if(debug){
+            auto t1 = tools::get_time();
+            tools::timing("hintermediates<Tm>::initDirect_batch_gpu", t0, t1);
          }
       }
 #endif

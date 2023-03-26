@@ -90,9 +90,8 @@ namespace ctns{
             double cost = 0.0;
             MMlist<Tm> MMlst;
             // intermediates [direct]
-            int posInter = -1;
-            size_t ldaInter = 0; 
-            std::vector<Tm> alpha_vec;
+            int posInter = -1, lenInter = -1;
+            size_t offInter = 0, ldaInter = 0; 
       };
    template <typename Tm>
       using Hxlist = std::vector<Hxblock<Tm>>;

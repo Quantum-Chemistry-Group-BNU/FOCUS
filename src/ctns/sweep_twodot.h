@@ -26,6 +26,7 @@
 #endif
 #ifdef GPU
 #include "preprocess_sigma_batchGPU.h"
+#include "preprocess_sigma_batch2GPU.h"
 #endif
 
 namespace ctns{
@@ -200,6 +201,7 @@ namespace ctns{
          double cost=0.0;
          Tm* workspace;
 #ifdef GPU
+         Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
          Tm* dev_oper = nullptr;
          Tm* dev_workspace = nullptr;
          size_t GPUmem_used = 0;
@@ -428,7 +430,7 @@ namespace ctns{
 
             HVec = bind(&ctns::preprocess_Hx_batch<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
-                  std::cref(ndim), std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace),
+                  std::cref(ndim), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace),
                   std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
 
 #ifdef GPU
@@ -468,38 +470,45 @@ namespace ctns{
                   << " (oper)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
                   << std::endl;
             }
-            opaddr[0] = dev_oper;
-            opaddr[1] = opaddr[0] + qops_dict.at("l").size();
-            opaddr[2] = opaddr[1] + qops_dict.at("r").size();
-            opaddr[3] = opaddr[2] + qops_dict.at("c1").size();
+            dev_opaddr[0] = dev_oper;
+            dev_opaddr[1] = dev_opaddr[0] + qops_dict.at("l").size();
+            dev_opaddr[2] = dev_opaddr[1] + qops_dict.at("r").size();
+            dev_opaddr[3] = dev_opaddr[2] + qops_dict.at("c1").size();
 #ifdef USE_HIP
-            HIP_CHECK(hipMemcpy(opaddr[0], qops_dict.at("l")._data, qops_dict.at("l").size()*sizeof(Tm), hipMemcpyHostToDevice));
-            HIP_CHECK(hipMemcpy(opaddr[1], qops_dict.at("r")._data, qops_dict.at("r").size()*sizeof(Tm), hipMemcpyHostToDevice));
-            HIP_CHECK(hipMemcpy(opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), hipMemcpyHostToDevice));
-            HIP_CHECK(hipMemcpy(opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_opaddr[0], qops_dict.at("l")._data, qops_dict.at("l").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_opaddr[1], qops_dict.at("r")._data, qops_dict.at("r").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), hipMemcpyHostToDevice));
 #else
-            CUDA_CHECK(cudaMemcpy(opaddr[0], qops_dict.at("l")._data, qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(opaddr[1], qops_dict.at("r")._data, qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[0], qops_dict.at("l")._data, qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[1], qops_dict.at("r")._data, qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #endif //USE_HIP
 
             timing.tb3 = tools::get_time();
 
-            // compute hintermediates
-            hinter.init(schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
-            if(debug) CPUmem.oper += sizeof(Tm)*hinter.size();
-            
-            timing.tb4 = tools::get_time();
-
-            // copy 
-            size_t GPUmem_hinter = sizeof(Tm)*hinter.size();
+            //------------------------------
+            // intermediates
+            //------------------------------
             if(schd.ctns.alg_hinter != 2){
-               opaddr[4] = (Tm*)GPUmem.allocate(GPUmem_hinter);
+               // compute hintermediates on CPU
+               hinter.init(schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
+            }else{
+               // compute hintermediates on GPU directly
+               hinter.init(schd.ctns.alg_hinter, qops_dict, oploc, dev_opaddr, H_formulae, debug);
+            }
+            timing.tb4 = tools::get_time();
+            
+            size_t GPUmem_hinter = sizeof(Tm)*hinter.size();
+            // copy from CPU to GPU 
+            if(schd.ctns.alg_hinter != 2){
+               if(debug) CPUmem.oper += GPUmem_hinter;
+               dev_opaddr[4] = (Tm*)GPUmem.allocate(GPUmem_hinter);
 #ifdef USE_HIP
-               HIP_CHECK(hipMemcpy(opaddr[4], hinter._value.data(), hinter.size()*sizeof(Tm), hipMemcpyHostToDevice));
+               HIP_CHECK(hipMemcpy(dev_opaddr[4], hinter._value.data(), GPUmem_hinter, hipMemcpyHostToDevice));
 #else
-               CUDA_CHECK(cudaMemcpy(opaddr[4], hinter._value.data(), hinter.size()*sizeof(Tm), cudaMemcpyHostToDevice));
+               CUDA_CHECK(cudaMemcpy(dev_opaddr[4], hinter._value.data(), GPUmem_hinter, cudaMemcpyHostToDevice));
 #endif// USE_HIP
             }
             if(rank == 0 && schd.ctns.verbose>0){
@@ -593,9 +602,10 @@ namespace ctns{
             }
 
             // generate mmtasks given batchsize
+            const int batchblas = 2;
             mmtasks.resize(Hxlst2.size());
             for(int i=0; i<mmtasks.size(); i++){
-               mmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, schd.ctns.batchblas, 
+               mmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
                      batchsize, blksize*2);
                if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                   std::cout << " rank=" << rank << " iblk=" << i 
@@ -615,12 +625,17 @@ namespace ctns{
             // GPU version of Hx
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
-                  std::cref(ndim), std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(dev_workspace),
+                  std::cref(ndim), std::ref(mmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
                   std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
 #endif // GPU
 
          }else if(schd.ctns.alg_hvec == 8){
 
+            if(schd.ctns.alg_hinter != 1){
+               std::cout << "error: alg_hvec=8 must be used with alg_hinter=1!" << std::endl;
+               exit(1);
+            }
+ 
             if(schd.ctns.batchsize == 0){
                std::cout << "error: batchsize should be set!" << std::endl;
                exit(1);
@@ -630,7 +645,10 @@ namespace ctns{
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
-            preprocess_formulae_Hxlist2Direct(qops_dict, oploc, H_formulae, wf, 
+            hinter.initDirect(schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
+            if(debug) CPUmem.oper += sizeof(Tm)*hinter.size();
+
+            preprocess_formulae_Hxlist2Direct(qops_dict, oploc, H_formulae, wf, hinter, 
                   Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
 
             // compute batchsize & allocate workspace
@@ -668,14 +686,206 @@ namespace ctns{
             opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
             HVec = bind(&ctns::preprocess_Hx_batch2<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
-                  std::cref(ndim), std::ref(Hxlst2), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace));
+                  std::cref(ndim), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace),
+                  std::ref(hinter._data));
+
+#ifdef GPU
+         }else if(schd.ctns.alg_hvec == 9){
+
+            if(schd.ctns.alg_hinter != 2){
+               std::cout << "error: alg_hvec=9 must be used with alg_hinter=2!" << std::endl;
+               exit(1);
+            }
+ 
+            if(rank == 0 && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
+                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
+                  << std::endl;
+            }
+            if(GPUmem.used() != 0){ 
+               std::cout << "error: there should not be any use of GPU memory at this point!" << std::endl;
+               std::cout << "GPUmem.used=" << GPUmem.used() << std::endl;
+               exit(1);
+            }
+
+            // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
+            timing.tb1 = tools::get_time();
+
+            H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
+
+            timing.tb2 = tools::get_time();
+
+            // allocate memery on GPU & copy qops
+            size_t opertot = qops_dict.at("l").size()
+               + qops_dict.at("r").size()
+               + qops_dict.at("c1").size()
+               + qops_dict.at("c2").size();
+            size_t GPUmem_oper = sizeof(Tm)*opertot;
+            dev_oper = (Tm*)GPUmem.allocate(GPUmem_oper);
+            if(rank == 0 && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
+                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
+                  << std::endl;
+            }
+            dev_opaddr[0] = dev_oper;
+            dev_opaddr[1] = dev_opaddr[0] + qops_dict.at("l").size();
+            dev_opaddr[2] = dev_opaddr[1] + qops_dict.at("r").size();
+            dev_opaddr[3] = dev_opaddr[2] + qops_dict.at("c1").size();
+#ifdef USE_HIP
+            HIP_CHECK(hipMemcpy(dev_opaddr[0], qops_dict.at("l")._data, qops_dict.at("l").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_opaddr[1], qops_dict.at("r")._data, qops_dict.at("r").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), hipMemcpyHostToDevice));
+            HIP_CHECK(hipMemcpy(dev_opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), hipMemcpyHostToDevice));
+#else
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[0], qops_dict.at("l")._data, qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[1], qops_dict.at("r")._data, qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(dev_opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
+#endif //USE_HIP
+
+            timing.tb3 = tools::get_time();
+            
+            hinter.initDirect(schd.ctns.alg_hinter, qops_dict, oploc, dev_opaddr, H_formulae, debug);
+
+            timing.tb4 = tools::get_time();
+
+            size_t GPUmem_hinter = sizeof(Tm)*hinter.size();
+            if(rank == 0 && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
+                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper,hinter)(GB)=" << GPUmem_oper/std::pow(1024.0,3)
+                  << "," << GPUmem_hinter/std::pow(1024.0,3) 
+                  << std::endl;
+            }
+ 
+            timing.tb5 = tools::get_time();
+
+            // gen MMlst & reorder
+            preprocess_formulae_Hxlist2Direct(qops_dict, oploc, H_formulae, wf, hinter, 
+                  Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+            if(schd.ctns.verbose>0){
+               // debug hxlst
+               for(int k=0; k<size; k++){
+                  if(rank == k){
+                     if(rank == 0) std::cout << "partition of Hxlst:" << std::endl;
+                     size_t hxsize = 0;
+                     for(int i=0; i<Hxlst2.size(); i++){
+                        hxsize += Hxlst2[i].size();
+                     }
+                     std::cout << " * rank=" << k
+                        << " size(H_formulae)=" << H_formulae.size() 
+                        << " size(Hxlst)=" << hxsize 
+                        << " blksize=" << blksize
+                        << " cost=" << cost
+                        << std::endl;
+                  }
+#ifndef SERIAL
+                  icomb.world.barrier();
+#endif
+               }
+               double cost_tot = cost;
+#ifndef SERIAL
+               if(size > 1) boost::mpi::reduce(icomb.world, cost, cost_tot, std::plus<double>(), 0);
+               icomb.world.barrier();
+#endif 
+               if(rank == 0) std::cout << "total cost for Hx=" << cost_tot << std::endl;
+            }
+            timing.tb6 = tools::get_time();
+
+            // compute batchsize & allocate workspace
+            size_t maxbatch = 0;
+            for(int i=0; i<Hxlst2.size(); i++){
+               maxbatch = std::max(maxbatch, Hxlst2[i].size());
+            } // i
+            
+            //
+            // Determine batchsize dynamically: total GPU memory required
+            //   oper + dvdson + N*blksize*2 
+            // + [6*(N+1)*sizeof(int) + 3*N*sizeof(double/complex*)] (inside BatchGEMM)
+            // + N*sizeof(double/complex*) [inside GEMV]
+            // + [5*(N+1)*sizeof(int) + 3*N*sizeof(double/complex*)] (inside BatchGEMV)
+            //
+            // 6*(N+1)*sizeof(int) + 3*N*sizeof(double/complex*) estimated by 6*8*(N+1) + 3*N*16 = 96*N+48
+            // N*sizeof(double/complex*) estimated by N*16 = 16*N
+            // 5*(N+1)*sizeof(int) + 3*N*sizeof(double/complex*) estimated by 5*8*(N+1) + 3*N*16 = 88*N+40
+            //
+            size_t batchsize = 0;
+            size_t GPUmem_dvdson = sizeof(Tm)*2*ndim;
+            size_t GPUmem_reserved = GPUmem_oper + GPUmem_hinter + GPUmem_dvdson + 88;
+            if(GPUmem.size() > GPUmem_reserved){
+               batchsize = std::floor(double(GPUmem.size() - GPUmem_reserved)/(sizeof(Tm)*blksize*2 + 200));
+               batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
+               if(batchsize == 0 && maxbatch != 0){
+                  std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
+                  exit(1);
+               }
+            }else{
+               std::cout << "error: in sufficient GPU memory for batchGEMM! already reserved:" << std::endl;
+               std::cout << "GPUmem.size=" << GPUmem.size() << " GPUmem.used=" << GPUmem.used()
+                  << " GPUmem_reserved=" << GPUmem_reserved << " (oper,hinter,dvdson)=" 
+                  << GPUmem_oper << "," << GPUmem_hinter << "," << GPUmem_dvdson 
+                  << std::endl;
+               exit(1);
+            }
+            size_t GPUmem_batch = sizeof(Tm)*batchsize*(blksize*2+blksize0);
+            worktot = 2*ndim + batchsize*(blksize*2+blksize0);
+            dev_workspace = (Tm*)GPUmem.allocate(GPUmem_dvdson+GPUmem_batch);
+            GPUmem_used = GPUmem.used(); // oper + dvdson + batch, later used in deallocate
+            if(schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
+                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper,hinter,dvdson,batch)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
+                  << "," << GPUmem_hinter/std::pow(1024.0,3)
+                  << "," << GPUmem_dvdson/std::pow(1024.0,3)
+                  << "," << GPUmem_batch/std::pow(1024.0,3)
+                  << " batchsize=" << batchsize
+                  << std::endl;
+            }
+
+            // generate mmtasks given batchsize
+            const int batchblas = 2;
+            mmtasks.resize(Hxlst2.size());
+            for(int i=0; i<mmtasks.size(); i++){
+               mmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
+                     batchsize, blksize*2, blksize0);
+               if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
+                  std::cout << " rank=" << rank << " iblk=" << i 
+                     << " size=" << Hxlst2[i][0].size 
+                     << " mmtasks.totsize=" << mmtasks[i].totsize
+                     << " batchsize=" << mmtasks[i].batchsize 
+                     << " nbatch=" << mmtasks[i].nbatch 
+                     << std::endl;
+               }
+            } // i
+            // save for analysis of BatchGEMM
+            if(debug && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+               save_mmtasks(mmtasks, isweep, ibond);
+            }
+            timing.tb7 = tools::get_time();
+
+            dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*(blksize*2); // memory layout [workspace|inter]
+            // GPU version of Hx
+            HVec = bind(&ctns::preprocess_Hx_batch2GPU<Tm>, _1, _2,
+                  std::cref(scale), std::cref(size), std::cref(rank),
+                  std::cref(ndim), std::ref(mmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
+                  std::ref(hinter._data),
+                  std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
+#endif // GPU
 
          }else{
             std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
             exit(1);
          } // alg_hvec
 
+         //-------------
          // solve HC=CE         
+         //-------------
          int neig = sweeps.nroots;
          linalg::matrix<Tm> vsol(ndim,neig);
          if(debug){
@@ -702,7 +912,7 @@ namespace ctns{
             if(debug) CPUmem.hvec = 0;
          }
 #ifdef GPU
-         if(schd.ctns.alg_hvec==7){
+         if(schd.ctns.alg_hvec==7 || schd.ctns.alg_hvec==9){
             GPUmem.deallocate(dev_oper, GPUmem_used);
          }
 #endif

@@ -309,10 +309,6 @@ void params_ctns::read(ifstream& istrm){
          exit(1);
       }
    }
-   if(alg_hvec == 7){
-      std::cout << "notice: automatically set batchblas=2 for alg_hvec=7" << std::endl;
-      batchblas = 2;
-   }
 }
 
 void params_ctns::print() const{

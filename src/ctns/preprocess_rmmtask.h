@@ -22,7 +22,7 @@ namespace ctns{
                   const size_t offset,
                   const size_t offset0=0);
             // form intermeidate operators
-            void inter(const int k, Tm** opaddr){
+            void inter(const int k, Tm** opaddr, const Tm* alphas){
                struct timeval t0, t1;
                // perform GEMV_BATCH
                Tm* ptrs[6];
@@ -31,7 +31,7 @@ namespace ctns{
                ptrs[2] = opaddr[2];
                ptrs[3] = opaddr[3];
                ptrs[4] = opaddr[4];
-               ptrs[5] = alphavec[k].data(); 
+               ptrs[5] = const_cast<Tm*>(alphas);
                gettimeofday(&t0, NULL);
                imvbatch[k].kernel(batchblas, ptrs);
 #ifdef GPU
@@ -115,7 +115,6 @@ namespace ctns{
             std::vector<std::vector<Tm>> coefflst;
             std::vector<MVbatch<Tm>> mvbatch;
             // --- intermediates [Direct] --- 
-            std::vector<std::vector<Tm>> alphavec; 
             std::vector<MVbatch<Tm>> imvbatch;
       };
 
@@ -146,7 +145,6 @@ namespace ctns{
          collectc.resize(nbatch);
          coefflst.resize(nbatch);
          mvbatch.resize(nbatch);
-         alphavec.resize(nbatch);
          imvbatch.resize(nbatch);
          for(int k=0; k<nbatch; k++){
             size_t off = k*batchsize;
@@ -155,39 +153,33 @@ namespace ctns{
             // 1. setup imvbatch for inter
             if(offset0 != 0){
                size_t nInter = 0;
-               size_t dalpha = 0;
                for(size_t j=0; j<jlen; j++){
                   size_t jdx = off+j;
                   const auto& Rblk = Rlst[jdx];
                   if(Rblk.posInter == -1) continue;
                   nInter += 1;
-                  dalpha += Rblk.alpha_vec.size();
                }
                if(nInter > 0){
                   MVlist<Tm> mvlst(nInter); 
-                  alphavec[k].resize(dalpha);
                   size_t idx = 0, adx = 0;
                   for(size_t j=0; j<jlen; j++){
                      size_t jdx = off+j;
                      auto& Rblk = Rlst[jdx];
                      if(Rblk.posInter == -1) continue;
                      int ipos = Rblk.posInter;
-                     int len = Rblk.alpha_vec.size();
-                     linalg::xcopy(len, Rblk.alpha_vec.data(), &alphavec[k][adx]);
                      size_t opsize = Rblk.dimout[ipos]*Rblk.dimin[ipos];
                      MVinfo<Tm> mv;
                      mv.transA = 'N';
                      mv.M = opsize;
-                     mv.N = len;
+                     mv.N = Rblk.lenInter;
                      mv.LDA = Rblk.ldaInter; 
                      mv.locA = ipos;
                      mv.offA = Rblk.off[ipos];
                      mv.locx = 5;
-                     mv.offx = adx;
+                     mv.offx = Rblk.offInter;
                      mv.locy = locInter;
                      mv.offy = j*offset0;
                      mvlst[idx] = mv; 
-                     adx += len;
                      idx += 1;
                      Rblk.off[ipos] = j*offset0; // overwrite old position
                   } // j

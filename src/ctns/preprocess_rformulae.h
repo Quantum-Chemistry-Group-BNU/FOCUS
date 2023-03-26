@@ -170,6 +170,7 @@ namespace ctns{
             const std::map<std::string,int>& oploc,
             const renorm_tasks<Tm>& rtasks,
             const QTm& site,
+            const rintermediates<Tm>& rinter,
             Rlist2<Tm>& Rlst2,
             size_t& blksize,
             size_t& blksize0,
@@ -189,7 +190,7 @@ namespace ctns{
             for(int it=0; it<formula.size(); it++){
                Rmu[k][it].rinfo = const_cast<qinfo2<Tm>*>(&qops(key).at(index).info);
                Rmu[k][it].offrop = qops._offset.at(std::make_pair(key,index));
-               Rmu[k][it].initDirect(k, it, formula, qops_dict, oploc);
+               Rmu[k][it].initDirect(k, it, formula, qops_dict, rinter, oploc);
             }
          } // it
          auto ta = tools::get_time();
@@ -208,7 +209,6 @@ namespace ctns{
             const auto& key = std::get<0>(task);
             const auto& index = std::get<1>(task);
             const auto& formula = std::get<2>(task);
-            //lzd std::cout << "\nk=" << k << " key,index=" << key << "," << index << std::endl;
             for(int it=0; it<formula.size(); it++){
                Rmu[k][it].gen_Rlist2Direct(superblock, site.info, Rlst2, blksize, blksize0, cost, false);
                if(key == 'H'){

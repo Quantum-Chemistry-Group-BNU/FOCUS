@@ -147,21 +147,22 @@ namespace ctns{
          }else if(alg_renorm == 4){
 
             auto t1x = tools::get_time();
+
             // CPU: symbolic formulae + rintermediates + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1,
                   debug_formulae);
-            
             auto t2x = tools::get_time();
+
             // generation of renormalization block [lc/lr/cr]
             rinter.init(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
-
             auto t3x = tools::get_time();
+
             // GEMM list and GEMV list
             preprocess_formulae_Rlist(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
                   Rlst, blksize, cost, rank==0 && schd.ctns.verbose>0);
-
             auto t4x = tools::get_time();
+
             get_MMlist(Rlst, schd.ctns.hxorder);
 
             worktot = maxthreads*(blksize*2+qops._size);
@@ -198,8 +199,8 @@ namespace ctns{
             }
             memset(qops._data, 0, qops._size*sizeof(Tm));
             */
-            
             auto t5x = tools::get_time();
+
             preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
             auto t6x = tools::get_time();
 
@@ -329,7 +330,7 @@ namespace ctns{
             memset(qops._data, 0, qops._size*sizeof(Tm));
             */
 
-            preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size, Rlst2, 
+            preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size,
                                     Rmmtasks, opaddr, workspace);
             delete[] workspace;
             /*
@@ -376,16 +377,21 @@ namespace ctns{
             }
 
             auto t1x = tools::get_time();
+            
             // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1,
                   debug_formulae);
             auto t2x = tools::get_time();
             
-            // GEMM list and GEMV list
-            preprocess_formulae_Rlist2Direct(superblock, qops, qops_dict, oploc, rtasks, site,
-                  Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+            // generation of renormalization block [lc/lr/cr]
+            rinter.initDirect(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
             auto t3x = tools::get_time();
+
+            // GEMM list and GEMV list
+            preprocess_formulae_Rlist2Direct(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+                  Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+            auto t4x = tools::get_time();
 
             // compute batchsize & allocate workspace
             size_t maxbatch = 0;
@@ -416,7 +422,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            auto t4x = tools::get_time();
+            auto t5x = tools::get_time();
         
             /* 
             Tm* data0 = new Tm[qops._size];
@@ -444,21 +450,23 @@ namespace ctns{
             */
 
             opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
-            preprocess_renorm_batch2(qops._data, site._data, size, rank, qops._size, Rlst2, 
-                                     Rmmtasks, opaddr, workspace);
+            preprocess_renorm_batch2(qops._data, site._data, size, rank, qops._size,
+                                     Rmmtasks, opaddr, workspace, rinter._data);
             delete[] workspace;
-            auto t5x = tools::get_time();
+            auto t6x = tools::get_time();
 
             double t1y = tools::get_duration(t2x-t1x); 
             double t2y = tools::get_duration(t3x-t2x); 
             double t3y = tools::get_duration(t4x-t3x); 
             double t4y = tools::get_duration(t5x-t4x); 
-            double t5y = tools::get_duration(t5x-t1x);
+            double t5y = tools::get_duration(t6x-t5x);
+            double t6y = tools::get_duration(t6x-t1x);
             std::cout << "t[symbolic_formulae_renorm]=" << t1y << std::endl;
-            std::cout << "t[preprocess_formulae_Rlist2Direct]=" << t2y << std::endl;
-            std::cout << "t[Rmmtasks[i].init]=" << t3y << std::endl;
-            std::cout << "t[preprocess_renorm_batch2]=" << t4y << std::endl;
-            std::cout << "t[tot]=" << t5y << std::endl;
+            std::cout << "t[rinter.init]=" << t2y << std::endl;
+            std::cout << "t[preprocess_formulae_Rlist2Direct]=" << t3y << std::endl;
+            std::cout << "t[Rmmtasks]=" << t4y << std::endl;
+            std::cout << "t[preprocess_renorm_batch2]=" << t5y << std::endl;
+            std::cout << "t[tot]=" << t6y << std::endl;
 
             /*
             linalg::xcopy(qops._size, qops._data, data1);
