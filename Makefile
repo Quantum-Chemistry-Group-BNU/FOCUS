@@ -63,6 +63,7 @@ else ifeq ($(strip $(machine)), cluster)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
+	 LFLAGS +=-L /share/app/oneapi2022/compiler/2022.0.2/linux/compiler/lib/intel64_lin -liomp5
 else ifeq ($(strip $(machine)), DCU_419)
    MATHLIB = /public/software/compiler/intel/oneapi/mkl/latest/lib/intel64
    BOOST = /public/home/ictapp_j/xiangchunyang/boost-1.80.0-install
@@ -122,7 +123,7 @@ ifeq ($(strip $(USE_OPENMP)),no)
              -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
    else
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -DMKL_ILP64 -m64 -D__LP64__
+             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -DMKL_ILP64 -m64 #-D__LP64__
    endif
 else
    # parallel version of MKL
@@ -132,7 +133,7 @@ else
    else
 	   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64 -D__LP64__
+             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64 #-D__LP64__
    endif
   
    # Choose OpenMP library properly, otherwise there will be lapack error [info != 0] 
