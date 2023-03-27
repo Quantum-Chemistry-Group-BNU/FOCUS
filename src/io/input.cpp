@@ -211,8 +211,6 @@ void params_ctns::read(ifstream& istrm){
          sort_formulae = true;
       }else if(line.substr(0,7)=="hxorder"){
          hxorder = stoi(line.substr(7));
-      }else if(line.substr(0,9)=="batchblas"){
-         batchblas = stoi(line.substr(9));
       }else if(line.substr(0,9)=="batchsize"){
          batchsize = stoi(line.substr(9));
       }else if(line.substr(0,11)=="rcanon_load"){
@@ -301,14 +299,6 @@ void params_ctns::read(ifstream& istrm){
          ctrls[j].isweep = j;
       }
    } // size
-   // consistency check for batchblas
-   if(alg_hvec == 6){
-      if(!(batchblas == 0 or batchblas ==1)){
-         std::cout << "error: alg_hvec=6 does not support batchblas other than 0 and 1: "
-                   << batchblas << std::endl;
-         exit(1);
-      }
-   }
 }
 
 void params_ctns::print() const{
@@ -353,7 +343,6 @@ void params_ctns::print() const{
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;
    cout << "hxorder = " << hxorder << endl;
-   cout << "batchblas = " << batchblas << endl;
    cout << "batchsize = " << batchsize << endl;
    // dvdson
    cout << "cisolver = " << cisolver << endl;

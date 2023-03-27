@@ -97,7 +97,7 @@ namespace input{
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
                   & alg_hvec & alg_hinter & alg_renorm & alg_rinter 
                   & ifdist1 & save_formulae & sort_formulae 
-                  & hxorder & batchblas & batchsize 
+                  & hxorder & batchsize 
                   & cisolver & maxcycle & nbuff & damping
                   & rcanon_load & rcanon_file 
                   & iomode & ioasync
@@ -141,7 +141,6 @@ namespace input{
          bool save_formulae = false;
          bool sort_formulae = false;
          int hxorder = 0;
-         int batchblas = 0;
          int batchsize = 1000;
          // dvdson
          int cisolver = 1;
