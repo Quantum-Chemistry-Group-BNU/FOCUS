@@ -142,7 +142,7 @@ namespace ctns{
          hintermediates<Tm> hinter; // hvec4,5,6
          Hxlist<Tm> Hxlst; // hvec4
          Hxlist2<Tm> Hxlst2; // hvec5
-         MMtasks<Tm> mmtasks; // hvec6
+         HMMtasks<Tm> Hmmtasks; // hvec6
          Tm scale = Km::ifkr? 0.5*ecore : 1.0*ecore;
          std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c",2}};
          Tm* ptrs[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data, qops_dict.at("c")._data, 
@@ -231,7 +231,7 @@ namespace ctns{
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
          oper_timer.start();
          onedot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2, 
-               ndim, neig, diag, HVec, eopt, vsol, nmvp, wf);
+               ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, timing);
          if(debug && schd.ctns.verbose>0){
             sweeps.print_eopt(isweep, ibond);
             if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
@@ -256,7 +256,6 @@ namespace ctns{
             CPUmem.oper = sizeof(Tm)*qops_pool.size();
             CPUmem.display();
          }
-         timing.tf = tools::get_time();
 
          // 4. save on disk 
          qops_pool.save(frop);

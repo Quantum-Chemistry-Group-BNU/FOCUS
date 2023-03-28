@@ -3,7 +3,7 @@
 
 #include "preprocess_hinter.h"
 #include "preprocess_hmu.h"
-#include "preprocess_mmtask.h"
+#include "preprocess_hmmtask.h"
 
 #include "time.h"
 #include "sys/time.h"
@@ -19,7 +19,7 @@ namespace ctns{
             const int& size,
             const int& rank,
             const size_t& ndim,
-            MMtasks<Tm>& mmtasks,
+            HMMtasks<Tm>& Hmmtasks,
             Tm** opaddr,
             Tm* workspace,
             Tm* alphas){
@@ -58,21 +58,21 @@ namespace ctns{
          oper_timer.sigma_start();
          // loop over nonzero blocks
          double cost = 0.0;
-         for(int i=0; i<mmtasks.size(); i++){
-            auto& mmtask = mmtasks[i];
-            cost += mmtask.cost;
-            for(int k=0; k<mmtask.nbatch; k++){
+         for(int i=0; i<Hmmtasks.size(); i++){
+            auto& Hmmtask = Hmmtasks[i];
+            cost += Hmmtask.cost;
+            for(int k=0; k<Hmmtask.nbatch; k++){
                // axpy
                gettimeofday(&t0_axpy, NULL);
-               mmtask.inter(k, opaddr, alphas);
+               Hmmtask.inter(k, opaddr, alphas);
                gettimeofday(&t1_axpy, NULL);
                // gemm
                gettimeofday(&t0_gemm, NULL);
-               mmtask.kernel(k, ptrs);
+               Hmmtask.kernel(k, ptrs);
                gettimeofday(&t1_gemm, NULL);
                // reduction
                gettimeofday(&t0_reduction, NULL);
-               mmtask.reduction(k, ptrs[6], y);
+               Hmmtask.reduction(k, ptrs[6], y);
                gettimeofday(&t1_reduction, NULL);
                // timing
                time_axpy += ((double)(t1_axpy.tv_sec - t0_axpy.tv_sec) 

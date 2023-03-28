@@ -5,7 +5,7 @@
 
 #include "preprocess_hinter.h"
 #include "preprocess_hmu.h"
-#include "preprocess_mmtask.h"
+#include "preprocess_hmmtask.h"
 #include "../gpu/gpu_env.h"
 
 #include "time.h"
@@ -22,7 +22,7 @@ namespace ctns{
             const int& size,
             const int& rank,
             const size_t& ndim,
-            MMtasks<Tm>& mmtasks,
+            HMMtasks<Tm>& Hmmtasks,
             Tm** opaddr,
             Tm* dev_workspace,
             double& t_kernel_ibond,
@@ -80,17 +80,17 @@ namespace ctns{
          oper_timer.sigma_start();
          // loop over nonzero blocks
          double cost = 0.0;
-         for(int i=0; i<mmtasks.size(); i++){
-            auto& mmtask = mmtasks[i];
-            cost += mmtask.cost;
-            for(int k=0; k<mmtask.nbatch; k++){
+         for(int i=0; i<Hmmtasks.size(); i++){
+            auto& Hmmtask = Hmmtasks[i];
+            cost += Hmmtask.cost;
+            for(int k=0; k<Hmmtask.nbatch; k++){
                // gemm on GPU
                gettimeofday(&t0_time_gemm_kernel, NULL);
-               mmtask.kernel(k, ptrs);
+               Hmmtask.kernel(k, ptrs);
                gettimeofday(&t1_time_gemm_kernel, NULL);
                // reduction
                gettimeofday(&t0_time_gemm_reduction, NULL);
-               mmtask.reduction(k, ptrs[6], y);
+               Hmmtask.reduction(k, ptrs[6], y);
                gettimeofday(&t1_time_gemm_reduction, NULL);
                // timing
                time_cost_gemm_kernel += ((double)(t1_time_gemm_kernel.tv_sec - t0_time_gemm_kernel.tv_sec) 

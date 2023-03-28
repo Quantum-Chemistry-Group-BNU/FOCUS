@@ -192,7 +192,7 @@ namespace ctns{
          hintermediates<Tm> hinter; // hvec4,5,6
          Hxlist<Tm> Hxlst; // hvec4
          Hxlist2<Tm> Hxlst2; // hvec5
-         MMtasks<Tm> mmtasks; // hvec6
+         HMMtasks<Tm> Hmmtasks; // hvec6
          Tm scale = Km::ifkr? 0.5*ecore : 1.0*ecore;
          std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c1",2},{"c2",3}};
          Tm* opaddr[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data,
@@ -408,18 +408,18 @@ namespace ctns{
             } // i
             size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             
-            // generate mmtasks
+            // generate Hmmtasks
             const int batchblas = 1;
-            mmtasks.resize(Hxlst2.size());
-            for(int i=0; i<mmtasks.size(); i++){
-               mmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
+            Hmmtasks.resize(Hxlst2.size());
+            for(int i=0; i<Hmmtasks.size(); i++){
+               Hmmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
                      batchsize, blksize*2);
                if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                   std::cout << " rank=" << rank << " iblk=" << i 
                      << " size=" << Hxlst2[i][0].size 
-                     << " mmtasks.totsize=" << mmtasks[i].totsize
-                     << " batchsize=" << mmtasks[i].batchsize 
-                     << " nbatch=" << mmtasks[i].nbatch 
+                     << " Hmmtasks.totsize=" << Hmmtasks[i].totsize
+                     << " batchsize=" << Hmmtasks[i].batchsize 
+                     << " nbatch=" << Hmmtasks[i].nbatch 
                      << std::endl;
                }
             } // i
@@ -435,7 +435,7 @@ namespace ctns{
 
             HVec = bind(&ctns::preprocess_Hx_batch<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
-                  std::cref(ndim), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace),
+                  std::cref(ndim), std::ref(Hmmtasks), std::ref(opaddr), std::ref(workspace),
                   std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
 
          }else if(alg_hvec == 7){
@@ -466,18 +466,18 @@ namespace ctns{
             } // i
             size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
  
-            // generate mmtasks
+            // generate Hmmtasks
             const int batchblas = 1;
-            mmtasks.resize(Hxlst2.size());
-            for(int i=0; i<mmtasks.size(); i++){
-               mmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
+            Hmmtasks.resize(Hxlst2.size());
+            for(int i=0; i<Hmmtasks.size(); i++){
+               Hmmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
                      batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                   std::cout << " rank=" << rank << " iblk=" << i 
                      << " size=" << Hxlst2[i][0].size 
-                     << " mmtasks.totsize=" << mmtasks[i].totsize
-                     << " batchsize=" << mmtasks[i].batchsize 
-                     << " nbatch=" << mmtasks[i].nbatch 
+                     << " Hmmtasks.totsize=" << Hmmtasks[i].totsize
+                     << " batchsize=" << Hmmtasks[i].batchsize 
+                     << " nbatch=" << Hmmtasks[i].nbatch 
                      << std::endl;
                }
             } // i
@@ -495,7 +495,7 @@ namespace ctns{
             opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
             HVec = bind(&ctns::preprocess_Hx_batch2<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
-                  std::cref(ndim), std::ref(mmtasks), std::ref(opaddr), std::ref(workspace),
+                  std::cref(ndim), std::ref(Hmmtasks), std::ref(opaddr), std::ref(workspace),
                   std::ref(hinter._data));
 
 #ifdef GPU
@@ -665,31 +665,31 @@ namespace ctns{
                   << std::endl;
             }
 
-            // generate mmtasks given batchsize
+            // generate Hmmtasks given batchsize
             const int batchblas = 2;
-            mmtasks.resize(Hxlst2.size());
-            for(int i=0; i<mmtasks.size(); i++){
-               mmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
+            Hmmtasks.resize(Hxlst2.size());
+            for(int i=0; i<Hmmtasks.size(); i++){
+               Hmmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
                      batchsize, blksize*2);
                if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                   std::cout << " rank=" << rank << " iblk=" << i 
                      << " size=" << Hxlst2[i][0].size 
-                     << " mmtasks.totsize=" << mmtasks[i].totsize
-                     << " batchsize=" << mmtasks[i].batchsize 
-                     << " nbatch=" << mmtasks[i].nbatch 
+                     << " Hmmtasks.totsize=" << Hmmtasks[i].totsize
+                     << " batchsize=" << Hmmtasks[i].batchsize 
+                     << " nbatch=" << Hmmtasks[i].nbatch 
                      << std::endl;
                }
             } // i
             // save for analysis of BatchGEMM
             if(debug && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
-               save_mmtasks(mmtasks, isweep, ibond);
+               save_hmmtasks(Hmmtasks, isweep, ibond);
             }
             timing.tb7 = tools::get_time();
 
             // GPU version of Hx
             HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
-                  std::cref(ndim), std::ref(mmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
+                  std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
                   std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
 
          }else if(alg_hvec == 17){
@@ -848,24 +848,24 @@ namespace ctns{
                   << std::endl;
             }
 
-            // generate mmtasks given batchsize
+            // generate Hmmtasks given batchsize
             const int batchblas = 2;
-            mmtasks.resize(Hxlst2.size());
-            for(int i=0; i<mmtasks.size(); i++){
-               mmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
+            Hmmtasks.resize(Hxlst2.size());
+            for(int i=0; i<Hmmtasks.size(); i++){
+               Hmmtasks[i].init(Hxlst2[i], schd.ctns.hxorder, batchblas, 
                      batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                   std::cout << " rank=" << rank << " iblk=" << i 
                      << " size=" << Hxlst2[i][0].size 
-                     << " mmtasks.totsize=" << mmtasks[i].totsize
-                     << " batchsize=" << mmtasks[i].batchsize 
-                     << " nbatch=" << mmtasks[i].nbatch 
+                     << " Hmmtasks.totsize=" << Hmmtasks[i].totsize
+                     << " batchsize=" << Hmmtasks[i].batchsize 
+                     << " nbatch=" << Hmmtasks[i].nbatch 
                      << std::endl;
                }
             } // i
             // save for analysis of BatchGEMM
             if(debug && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
-               save_mmtasks(mmtasks, isweep, ibond);
+               save_hmmtasks(Hmmtasks, isweep, ibond);
             }
             timing.tb7 = tools::get_time();
 
@@ -873,7 +873,7 @@ namespace ctns{
             // GPU version of Hx
             HVec = bind(&ctns::preprocess_Hx_batch2GPU<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
-                  std::cref(ndim), std::ref(mmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
+                  std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
                   std::ref(hinter._data),
                   std::ref(t_kernel_ibond), std::ref(t_reduction_ibond));
 #endif // GPU
@@ -896,14 +896,15 @@ namespace ctns{
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
          oper_timer.start();
          twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
-               ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond);
+               ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond, timing);
          if(debug && schd.ctns.verbose>0){
             sweeps.print_eopt(isweep, ibond);
             if(alg_hvec == 0) oper_timer.analysis();
          }
-         timing.tb8 = tools::get_time();
-         sweeps.t_kernel_total[isweep] += t_kernel_ibond;
-         sweeps.t_reduction_total[isweep] += t_reduction_ibond;
+         timing.tc = tools::get_time();
+         sweeps.t_axpy[isweep] += oper_timer.sigma.t_axpy;
+         sweeps.t_gemm[isweep] += oper_timer.sigma.t_gemm;
+         sweeps.t_gemv[isweep] += oper_timer.sigma.t_gemv;
 
          // free tmp space on CPU
          if(alg_hvec==2 || alg_hvec==3 || 
@@ -916,7 +917,6 @@ namespace ctns{
             GPUmem.deallocate(dev_oper, GPUmem_used);
          }
 #endif
-         timing.tc = tools::get_time();
 
          // 3. decimation & renormalize operators
          auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
@@ -930,7 +930,9 @@ namespace ctns{
             CPUmem.oper = sizeof(Tm)*qops_pool.size();
             CPUmem.display();
          }
-         timing.tf = tools::get_time();
+         sweeps.t_axpy[isweep] += oper_timer.renorm.t_axpy;
+         sweeps.t_gemm[isweep] += oper_timer.renorm.t_gemm;
+         sweeps.t_gemv[isweep] += oper_timer.renorm.t_gemv;
 
          // 4. save on disk 
          qops_pool.save(frop);

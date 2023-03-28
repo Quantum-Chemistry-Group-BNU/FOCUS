@@ -131,17 +131,16 @@ namespace ctns{
          t_init = tools::get_duration(ta-t0);
 
          // 2. successive renormalization process
+         dot_timing timing_sweep, timing;
          oper_pool<Tm> qops_pool(iomode, schd.ctns.ioasync, debug);
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             auto p = icomb.topo.rcoord[idx];
             const auto& node = icomb.topo.get_node(p);
             if(node.type != 0 || p.first == 0){
                auto tb = tools::get_time();
-               if(debug){ 
-                  std::cout << "\nidx=" << idx 
-                     << " coord=" << p 
-                     << std::endl;
-               }
+               timing.t0 = tools::get_time();
+               if(debug) std::cout << "\nidx=" << idx << " coord=" << p << std::endl;
+               
                // a. get operators from memory / disk    
                std::vector<std::string> fneed(2);
                fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
@@ -149,8 +148,18 @@ namespace ctns{
                qops_pool.fetch(fneed);
                const auto& cqops = qops_pool(fneed[0]);
                const auto& rqops = qops_pool(fneed[1]);
+               if(debug && schd.ctns.verbose>0){
+                  cqops.print("cqops");
+                  rqops.print("rqops");
+               }
                auto tc = tools::get_time();
-               t_load += tools::get_duration(tc-tb); 
+               t_load += tools::get_duration(tc-tb);
+               timing.ta = tools::get_time();
+               timing.tb = timing.ta;
+               timing.tc = timing.ta;
+               timing.td = timing.ta;
+               timing.te = timing.ta;
+
                // b. perform renormalization for superblock {|cr>}
                std::string frop = oper_fname(scratch, p, "r");
                std::string superblock = "cr";
@@ -158,13 +167,21 @@ namespace ctns{
                if(schd.ctns.save_formulae) fname = scratch+"/rformulae_env_idx"
                   + std::to_string(idx) + ".txt"; 
                oper_renorm_opAll(superblock, icomb, p, int2e, int1e, schd,
-                     cqops, rqops, qops_pool(frop), fname); 
+                     cqops, rqops, qops_pool(frop), fname, timing); 
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
+               timing.tf = tools::get_time();
+               
                // c. save operators to disk
                qops_pool.save(frop);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
+               timing.t1 = tools::get_time();
+
+               if(debug){ 
+                  timing.analysis("time_local", schd.ctns.verbose>0);
+                  timing_sweep.accumulate(timing, "time_sweep", schd.ctns.verbose>0);
+               }
             }
          } // idx
          qops_pool.clean_up();
@@ -173,10 +190,8 @@ namespace ctns{
          if(debug){
             tools::timing("ctns::oper_env_right", t0, t1);
             std::cout << "T[ctns::oper_env_right](init/load/comp/save/tot)="
-               << t_init << "," 
-               << t_load << "," 
-               << t_comp << "," 
-               << t_save << ","
+               << t_init << "," << t_load << "," 
+               << t_comp << "," << t_save << ","
                << (t_init + t_load + t_comp + t_save)
                << std::endl;
          }

@@ -80,8 +80,10 @@ namespace ctns{
          }
          fneed.resize(2);
          qops_pool.fetch(fneed);
+         dot_timing timing_local;
          oper_renorm_opAll(superblock, icomb, p, int2e, int1e, schd,
-               qops_pool(fneed[0]), qops_pool(fneed[1]), qops_pool(frop), fname); 
+               qops_pool(fneed[0]), qops_pool(fneed[1]), qops_pool(frop), 
+               fname, timing_local); 
          qops_pool.save(frop);
 
          auto t1 = tools::get_time();

@@ -11,13 +11,15 @@ namespace ctns{
          // GPU_kernel
          void start(const int _nd){
             nd = _nd;
-            tInter = 0.0;
+            t_axpy = 0.0;
+            t_gemv = 0.0;
             tHx.resize(nd);
             memset(tHx.data(), 0, nd*sizeof(double));
             cHx.resize(nd);
             memset(cHx.data(), 0, nd*sizeof(double));
             if(Hx_counter == 0){
-               tInter_tot = 0.0;
+               t_axpy_tot = 0.0;
+               t_gemv_tot = 0.0;
                tHx_tot.resize(nd);
                memset(tHx_tot.data(), 0, nd*sizeof(double));
                cHx_tot.resize(nd);
@@ -28,20 +30,18 @@ namespace ctns{
          void print(std::string name, 
                const std::vector<double>& tdata, 
                const std::vector<double>& cost,
-               double tinter){
-            double tgemm = 0.0;
-            for(int i=0; i<nd-1; i++){
-               tgemm += tdata[i]; 
-            }
-            double tot = tinter + tgemm + tdata[nd-1];
+               const double& taxpy,
+               const double& tgemm,
+               const double& tgemv){
+            double tot = taxpy + tgemm + tgemv;
             std::cout << "--- TIMING for " << name << " :"
-               << " tinter=" << tinter 
+               << " taxpy=" << taxpy 
                << " tgemm=" << tgemm 
-               << " treduction=" << tdata[nd-1]
+               << " tgemv=" << tgemv
                << " tot=" << tot << " ---" 
                << std::endl;
             double cgemm = 0.0;
-            for(int i=0; i<nd-1; i++){
+            for(int i=0; i<nd; i++){
                std::cout << " " << name << " counter=" << Hx_counter << " i=" << i << " t=" << tdata[i] 
                   << " per=" << tdata[i]/tgemm*100 
                   << " cost=" << cost[i]
@@ -52,18 +52,24 @@ namespace ctns{
             std::cout << " total GEMM cost=" << cgemm << " flops=" << cgemm/tgemm << std::endl;
          }
          void analysis(std::string name){
+            t_gemm = 0.0;
+            for(int i=0; i<nd; i++){
+               t_gemm += tHx[i]; 
+            }
             // accumulate
             for(int i=0; i<nd; i++){
                tHx_tot[i] += tHx[i];
                cHx_tot[i] += cHx[i];
             }
-            tInter_tot += tInter;
-            this->print(name, tHx, cHx, tInter);
-            this->print(name+"_tot", tHx_tot, cHx_tot, tInter_tot);
+            t_axpy_tot += t_axpy;
+            t_gemm_tot += t_gemm;
+            t_gemv_tot += t_gemv;
+            this->print(name, tHx, cHx, t_axpy, t_gemm, t_gemv);
+            this->print(name+"_tot", tHx_tot, cHx_tot, t_axpy_tot, t_gemm_tot, t_gemv_tot);
          }
       public:
-         double tInter;
-         double tInter_tot;
+         double t_axpy, t_gemm, t_gemv;
+         double t_axpy_tot, t_gemm_tot, t_gemv_tot;
          int nd = 0;
          int Hx_counter = 0;
          std::vector<double> tHx;
@@ -123,8 +129,8 @@ namespace ctns{
             tC=0.0; tA=0.0; tB=0.0; tH=0.0; tS=0.0; tP=0.0; tQ=0.0;
             tHxInit=0.0; tHxCalc=0.0; tHxFinl=0.0;
          }
-         void sigma_start(){ sigma.start(9); }
-         void renorm_start(){ renorm.start(8); }
+         void sigma_start(){ sigma.start(8); }
+         void renorm_start(){ renorm.start(7); }
       public:
          boost::timer::cpu_timer timer;
          // opxwf

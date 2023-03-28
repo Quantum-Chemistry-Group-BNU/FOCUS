@@ -55,36 +55,70 @@ namespace ctns{
          this->print_part("decim", dt3, dt, dtacc);
          this->print_part("guess", dt4, dt, dtacc);
          this->print_part("renrm", dt5, dt, dtacc);
-         this->print_part("save" , dt6, dt, dtacc);
-         std::cout << "Detailed decomposition of T(dvdson):" << std::endl;
+         this->print_part("save " , dt6, dt, dtacc);
+
+         double tdvdsn = dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9;
+         std::cout << "Detailed decomposition of T(dvdsn): " 
+            << std::scientific << std::setprecision(2) << tdvdsn << " S"
+            << std::endl;
          dtacc = 0.0;
-         this->print_part("symbolic_formulae_twodot    ", dtb1, dt2, dtacc);
-         this->print_part("op_lrc1c2_cpumem_host2GPU   ", dtb2, dt2, dtacc);
-         this->print_part("inter_compute               ", dtb3, dt2, dtacc);
-         this->print_part("inter_cpumem_host2GPU       ", dtb4, dt2, dtacc);
-         this->print_part("preprocess_hformulae_Hxlist2", dtb5, dt2, dtacc);
-         this->print_part("generate_mmtasks            ", dtb6, dt2, dtacc);
-         this->print_part("preprocess_Hx_batchGPU      ", dtb7, dt2, dtacc);
+         this->print_part("symbolic_formulae_twodot     ", dtb1, tdvdsn, dtacc);
+         this->print_part("qops_dict memcpy cpu2gpu     ", dtb2, tdvdsn, dtacc);
+         this->print_part("hintermediate init           ", dtb3, tdvdsn, dtacc);
+         this->print_part("hintermediates memcpy cpu2gpu", dtb4, tdvdsn, dtacc);
+         this->print_part("preprocess_hformulae_Hxlist2 ", dtb5, tdvdsn, dtacc);
+         this->print_part("hmmtasks init                ", dtb6, tdvdsn, dtacc);
+         this->print_part("dvdson solver [Hx_batchGPU]  ", dtb7, tdvdsn, dtacc);
+         this->print_part("dvdson solver [communication]", dtb8, tdvdsn, dtacc);
+         this->print_part("dvdson solver [rest part]    ", dtb9, tdvdsn, dtacc);
+        
+         double trenrm = dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9;
+         std::cout << "Detailed decomposition of T(renrm): " 
+            << std::scientific << std::setprecision(2) << trenrm << " S"
+            << std::endl;
+         dtacc = 0.0;
+         this->print_part("qops init                    ", dtf0, trenrm, dtacc);
+         this->print_part("symbolic_formulae_renorm     ", dtf1, trenrm, dtacc);
+         this->print_part("qops_dict memcpy cpu2gpu     ", dtf2, trenrm, dtacc);
+         this->print_part("rintermediate init           ", dtf3, trenrm, dtacc);
+         this->print_part("rintermediates memcpy cpu2gpu", dtf4, trenrm, dtacc);
+         this->print_part("preprocess_formulae_Rlist2   ", dtf5, trenrm, dtacc);
+         this->print_part("rmmtasks init                ", dtf6, trenrm, dtacc);
+         this->print_part("preprocess_renorm_batchGPU   ", dtf7, trenrm, dtacc);
+         this->print_part("qops memcpy gpu2cpu          ", dtf8, trenrm, dtacc);
+         this->print_part("communication of opS and opH ", dtf9, trenrm, dtacc);
       }
       void analysis(const std::string msg,
             const bool debug=true){
-         dt  = tools::get_duration(t1-t0); // total
-         dt0 = tools::get_duration(ta-t0); // t(fetch)
-         dt1 = tools::get_duration(tb-ta); // t(hdiag)
-         dt2 = tools::get_duration(tc-tb); // t(dvdsn)
-         dt3 = tools::get_duration(td-tc); // t(decim)
-         dt4 = tools::get_duration(te-td); // t(guess)
-         dt5 = tools::get_duration(tf-te); // t(renrm)
-         dt6 = tools::get_duration(t1-tf); // t(save)
+         dt  = tools::get_duration(t1-t0); 
+         dt0 = tools::get_duration(ta-t0); 
+         dt1 = tools::get_duration(tb-ta); 
+         dt2 = tools::get_duration(tc-tb); 
+         dt3 = tools::get_duration(td-tc); 
+         dt4 = tools::get_duration(te-td); 
+         dt5 = tools::get_duration(tf-te); 
+         dt6 = tools::get_duration(t1-tf); 
          
          // decomposition of dt2 into different parts
-         dtb1 = tools::get_duration(tb2-tb1); // t(symbolic_formulae_twodot    ) 
-         dtb2 = tools::get_duration(tb3-tb2); // t(op_lrc1c2_cpumem_host2GPU   )
-         dtb3 = tools::get_duration(tb4-tb3); // t(inter_compute               )
-         dtb4 = tools::get_duration(tb5-tb4); // t(inter_cpumem_host2GPU       )
-         dtb5 = tools::get_duration(tb6-tb5); // t(preprocess_hformulae_Hxlist2)
-         dtb6 = tools::get_duration(tb7-tb6); // t(generate_mmtasks            )
-         dtb7 = tools::get_duration(tb8-tb7); // t(preprocess_Hx_batchGPU      ) 
+         dtb1 = tools::get_duration(tb2-tb1); 
+         dtb2 = tools::get_duration(tb3-tb2); 
+         dtb3 = tools::get_duration(tb4-tb3); 
+         dtb4 = tools::get_duration(tb5-tb4); 
+         dtb5 = tools::get_duration(tb6-tb5); 
+         dtb6 = tools::get_duration(tb7-tb6); 
+ 
+         // decomposition of dt5 into different parts
+         dtf0 = tools::get_duration(tf1-tf0); 
+         dtf1 = tools::get_duration(tf2-tf1); 
+         dtf2 = tools::get_duration(tf3-tf2); 
+         dtf3 = tools::get_duration(tf4-tf3); 
+         dtf4 = tools::get_duration(tf5-tf4); 
+         dtf5 = tools::get_duration(tf6-tf5); 
+         dtf6 = tools::get_duration(tf7-tf6); 
+         dtf7 = tools::get_duration(tf8-tf7); 
+         dtf8 = tools::get_duration(tf9-tf8); 
+         dtf9 = tools::get_duration(tf10-tf9); 
+         
          if(debug) this->print(msg);
       }
       void accumulate(const dot_timing& timer,
@@ -98,7 +132,8 @@ namespace ctns{
          dt4 += timer.dt4;
          dt5 += timer.dt5;
          dt6 += timer.dt6;
-
+         
+         // decomposition of dt2 into different parts
          dtb1 += timer.dtb1; 
          dtb2 += timer.dtb2; 
          dtb3 += timer.dtb3; 
@@ -106,30 +141,56 @@ namespace ctns{
          dtb5 += timer.dtb5; 
          dtb6 += timer.dtb6; 
          dtb7 += timer.dtb7; 
+         dtb8 += timer.dtb8; 
+         dtb9 += timer.dtb9; 
+       
+         // decomposition of dt5 into different parts
+         dtf0 += timer.dtf0; 
+         dtf1 += timer.dtf1; 
+         dtf2 += timer.dtf2; 
+         dtf3 += timer.dtf3; 
+         dtf4 += timer.dtf4; 
+         dtf5 += timer.dtf5; 
+         dtf6 += timer.dtf6; 
+         dtf7 += timer.dtf7; 
+         dtf8 += timer.dtf8; 
+         dtf9 += timer.dtf9; 
+   
          if(debug) this->print(msg);
       }
       public:
       using Tm = std::chrono::high_resolution_clock::time_point;
       const double eps = 1.e-20;
       Tm t0;
-      Tm ta; // t(fetch) 
-      Tm tb; // t(hdiag)
-      Tm tc; // t(dvdson)
-      Tm td; // t(decim)
-      Tm te; // t(guess)
-      Tm tf; // t(renrm)
-      Tm t1; // t(save)
+      Tm ta; // fetch
+      Tm tb; // hdiag
+      Tm tc; // dvdsn
+      Tm td; // decim
+      Tm te; // guess
+      Tm tf; // renrm
+      Tm t1; // save
       double dt=0, dt0=0, dt1=0, dt2=0, dt3=0, dt4=0, dt5=0, dt6=0;
-
-      Tm tb1; // t(symbolic_formulae_twodot    ) 
-      Tm tb2; // t(op_lrc1c2_cpumem_host2GPU   )
-      Tm tb3; // t(inter_compute               )
-      Tm tb4; // t(inter_cpumem_host2GPU       )
-      Tm tb5; // t(preprocess_hformulae_Hxlist2)
-      Tm tb6; // t(generate_mmtasks            )
-      Tm tb7; // t(preprocess_Hx_batchGPU      )
-      Tm tb8; 
-      double dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0;
+      // decomposition of dt2 into different parts
+      Tm tb1; 
+      Tm tb2; // symbolic_formulae_twodot     
+      Tm tb3; // qops_dict memcpy cpu2gpu    
+      Tm tb4; // hintermediate init           
+      Tm tb5; // hintermediates memcpy cpu2gpu
+      Tm tb6; // preprocess_hformulae_Hxlist2
+      Tm tb7; // hmmtasks init                
+      double dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0;
+      Tm tf0;
+      Tm tf1; // qops init
+      Tm tf2; // symbolic_formulae_renorm      
+      Tm tf3; // qops_dict memcpy cpu2gpu     
+      Tm tf4; // rintermediate init           
+      Tm tf5; // rintermediates memcpy cpu2gpu
+      Tm tf6; // preprocess_formulae_Rlist2   
+      Tm tf7; // rmmtasks init                
+      Tm tf8; // preprocess_renorm_batchGPU   
+      Tm tf9; // qops memcpy gpu2cpu
+      Tm tf10; // communication 
+      double dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0;
    };
 
    // computed results at a given dot	
@@ -189,8 +250,9 @@ namespace ctns{
          }
          min_result.resize(maxsweep);
          t_total.resize(maxsweep);
-         t_kernel_total.resize(maxsweep);
-         t_reduction_total.resize(maxsweep);
+         t_axpy.resize(maxsweep);
+         t_gemm.resize(maxsweep);
+         t_gemv.resize(maxsweep);
       }
       // print control parameters
       void print_ctrls(const int isweep) const{ 
@@ -223,8 +285,9 @@ namespace ctns{
       std::vector<std::vector<dot_timing>> opt_timing;
       std::vector<dot_timing> timing_sweep;
       std::vector<double> t_total; 
-      std::vector<double> t_kernel_total; 
-      std::vector<double> t_reduction_total; 
+      std::vector<double> t_axpy; 
+      std::vector<double> t_gemm; 
+      std::vector<double> t_gemv;
       // memory
       std::vector<std::vector<dot_CPUmem>> opt_CPUmem;
    };
@@ -301,7 +364,7 @@ namespace ctns{
       // print all previous optimized results - sweep_data
       std::cout << tools::line_separator << std::endl;
       std::cout << "summary of sweep optimization up to isweep=" << isweep << std::endl;
-      std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Tav/S | Taccum/S| t_kernel/S | t_reduction/S " << std::endl;
+      std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Taccum/S | t_axpy/S t_gemm/S t_gemv/S t_blas/S   per" << std::endl;
       std::cout << std::scientific << std::setprecision(2);
       // print previous ctrl parameters
       double taccum = 0.0;
@@ -310,6 +373,7 @@ namespace ctns{
          const auto& ctrl = ctrls[jsweep];
          taccum += t_total[jsweep];
          nmvp = min_result[jsweep].nmvp;
+         double t_blas = t_axpy[jsweep]+t_gemm[jsweep]+t_gemv[jsweep];
          std::cout << std::setw(13) << jsweep 
             << std::setw(3) << ctrl.dots 
             << std::setw(8) << ctrl.dcut 
@@ -317,10 +381,12 @@ namespace ctns{
             << " " << ctrl.noise << " | " 
             << nmvp << " | " 
             << t_total[jsweep] << " | " 
-            << (t_total[jsweep]/nmvp) << " | " 
             << taccum << " | "
-            << t_kernel_total[jsweep] << " | " 
-            << t_reduction_total[jsweep] 
+            << t_axpy[jsweep] << " " 
+            << t_gemm[jsweep] << " " 
+            << t_gemv[jsweep] << " "
+            << t_blas << " "
+            << t_blas/taccum*100 
             << std::endl;
       } // jsweep
       std::cout << "results: isweep, dcut, dwt, energies (delta_e)" << std::endl;

@@ -1,5 +1,5 @@
-#ifndef PREPROCESS_MMTASK_H
-#define PREPROCESS_MMTASK_H
+#ifndef PREPROCESS_HMMTASK_H
+#define PREPROCESS_HMMTASK_H
 
 #include "preprocess_hxlist.h"
 #include "preprocess_mmbatch.h"
@@ -13,7 +13,7 @@ namespace ctns{
 
    // Interface to Hxlist
    template <typename Tm>
-      struct MMtask{
+      struct HMMtask{
          public:
             void init(Hxlist<Tm>& Hxlst, 
                   const int hdxorder,
@@ -52,7 +52,7 @@ namespace ctns{
 #endif
 #endif
                gettimeofday(&t1, NULL);
-               oper_timer.sigma.tInter += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.sigma.t_axpy += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
             // perform GEMMs [c2,c1,r,l]
@@ -87,7 +87,7 @@ namespace ctns{
 #endif
 #endif
                gettimeofday(&t1, NULL);
-               oper_timer.sigma.tHx[8] += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.sigma.t_gemv += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
@@ -101,7 +101,7 @@ namespace ctns{
       };
 
    template <typename Tm>
-      void MMtask<Tm>::init(Hxlist<Tm>& Hxlst,
+      void HMMtask<Tm>::init(Hxlist<Tm>& Hxlst,
             const int hxorder,
             const int _batchblas,
             const size_t _batchsize,
@@ -238,22 +238,22 @@ namespace ctns{
       }
 
    template <typename Tm>
-      using MMtasks = std::vector<MMtask<Tm>>;
+      using HMMtasks = std::vector<HMMtask<Tm>>;
 
    template <typename Tm>
-      void save_mmtasks(const MMtasks<Tm>& mmtasks, const int isweep, const int ibond){
-         std::string fgemm = "mmtasks_gemm";
+      void save_hmmtasks(const HMMtasks<Tm>& hmmtasks, const int isweep, const int ibond){
+         std::string fgemm = "hmmtasks_gemm";
          fgemm += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
-         for(int i=0; i<mmtasks.size(); i++){
+         for(int i=0; i<hmmtasks.size(); i++){
             std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
-            mmtasks[i].save(fgemmi);
+            hmmtasks[i].save(fgemmi);
          }
          std::string freduction = "mmtasks_reduction";
          freduction += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond)+".txt";
          std::ofstream fout(freduction);
-         for(int i=0; i<mmtasks.size(); i++){
-            for(int j=0; j<mmtasks[i].mmreduce.size(); j++){
-               const auto& red = mmtasks[i].mmreduce[j];
+         for(int i=0; i<hmmtasks.size(); i++){
+            for(int j=0; j<hmmtasks[i].mmreduce.size(); j++){
+               const auto& red = hmmtasks[i].mmreduce[j];
                fout << "iblk=" << i << " ibatch=" << j 
                   << " batchsize=" << red.batchsize << " ndim=" << red.ndim
                   << std::endl;      

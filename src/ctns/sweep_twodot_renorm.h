@@ -270,48 +270,58 @@ namespace ctns{
          if(superblock == "lc1"){
             icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
             //-------------------------------------------------------------------
-            rot -= icomb.sites[pdx].merge_lc();
-            assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("lc", icomb.sites[pdx], icomb.sites[pdx]);
-            assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            if(check_canon){
+               rot -= icomb.sites[pdx].merge_lc();
+               assert(rot.normF() < thresh_canon);
+               auto ovlp = contract_qt3_qt3("lc", icomb.sites[pdx], icomb.sites[pdx]);
+               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            }
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("lc", icomb, p, int2e, int1e, schd,
-                  lqops, c1qops, qops, fname); 
+                  lqops, c1qops, qops, fname, timing); 
          }else if(superblock == "lr"){
             icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
             //-------------------------------------------------------------------
-            rot -= icomb.sites[pdx].merge_lr();
-            assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("lr", icomb.sites[pdx],icomb.sites[pdx]);
-            assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            if(check_canon){
+               rot -= icomb.sites[pdx].merge_lr();
+               assert(rot.normF() < thresh_canon);
+               auto ovlp = contract_qt3_qt3("lr", icomb.sites[pdx],icomb.sites[pdx]);
+               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            }
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("lr", icomb, p, int2e, int1e, schd,
-                  lqops, rqops, qops, fname); 
+                  lqops, rqops, qops, fname, timing); 
          }else if(superblock == "c2r"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
             //-------------------------------------------------------------------
-            rot -= icomb.sites[pdx].merge_cr();
-            assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
-            assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            if(check_canon){
+               rot -= icomb.sites[pdx].merge_cr();
+               assert(rot.normF() < thresh_canon);
+               auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
+               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            }
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,
-                  c2qops, rqops, qops, fname);
+                  c2qops, rqops, qops, fname, timing);
          }else if(superblock == "c1c2"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
             //-------------------------------------------------------------------
-            rot -= icomb.sites[pdx].merge_cr();
-            assert(rot.normF() < thresh_canon);
-            auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
-            assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            if(check_canon){
+               rot -= icomb.sites[pdx].merge_cr();
+               assert(rot.normF() < thresh_canon);
+               auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
+               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            }
             //-------------------------------------------------------------------
             worktot = oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,
-                  c1qops, c2qops, qops, fname); 
+                  c1qops, c2qops, qops, fname, timing); 
          }
          if(debug){
             CPUmem.renorm = worktot;
             CPUmem.display();
          }
+         timing.tf = tools::get_time();
+
          // save for restart
          if(rank == 0){
             std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";

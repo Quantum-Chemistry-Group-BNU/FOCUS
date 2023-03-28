@@ -111,7 +111,8 @@ namespace ctns{
             linalg::matrix<typename Km::dtype>& vsol,
             int& nmvp,
             stensor4<typename Km::dtype>& wf,
-            const directed_bond& dbond){
+            const directed_bond& dbond,
+            dot_timing& timing){
          using Tm = typename Km::dtype;
          int size = 1, rank = 0;
 #ifndef SERIAL
@@ -163,6 +164,9 @@ namespace ctns{
 
          }
          nmvp = solver.nmvp;
+         timing.dtb7 = solver.t_cal; 
+         timing.dtb8 = solver.t_comm;
+         timing.dtb9 = solver.t_rest;
       }
 
    template <>
@@ -178,7 +182,8 @@ namespace ctns{
             linalg::matrix<std::complex<double>>& vsol,
             int& nmvp,
             stensor4<std::complex<double>>& wf,
-            const directed_bond& dbond){
+            const directed_bond& dbond,
+            dot_timing& timing){
          using Tm = std::complex<double>;
          int size = 1, rank = 0;
 #ifndef SERIAL
@@ -218,6 +223,9 @@ namespace ctns{
          //------------------------------------
          solver.solve_iter(eopt.data(), vsol.data(), v0.data());
          nmvp = solver.nmvp;
+         timing.dtb7 = solver.t_cal; 
+         timing.dtb8 = solver.t_comm;
+         timing.dtb9 = solver.t_rest;
       }
 
 } // ctns

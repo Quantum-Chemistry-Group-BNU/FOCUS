@@ -82,8 +82,8 @@ namespace ctns{
                   // timing 
                   if(debug){
                      const auto& timing = sweeps.opt_timing[isweep][ibond];
-                     sweeps.timing_sweep[isweep].accumulate(timing,"time_sweep",schd.ctns.verbose>0);
-                     timing_global.accumulate(timing,"time_global",schd.ctns.verbose>0);
+                     sweeps.timing_sweep[isweep].accumulate(timing, "time_sweep", schd.ctns.verbose>0);
+                     timing_global.accumulate(timing, "time_global", schd.ctns.verbose>0);
                   }
                }
                // stop just for debug
