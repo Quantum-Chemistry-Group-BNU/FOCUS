@@ -41,10 +41,20 @@ namespace ctns{
             void _setup_data();
             // allocate memory
             void allocate_memory(const bool debug=false){
+               auto t0 = tools::get_time();
                this->_setup_opdict(debug);
+               auto t1 = tools::get_time();
                _data = new Tm[_size];
                this->_setup_data(); // assign pointer for each operator
+               auto t2 = tools::get_time();
                memset(_data, 0, _size*sizeof(Tm));
+               auto t3 = tools::get_time();
+               std::cout << "T[allocate_memory](setup_opdict/setup_data/memset/tot)="
+                  << tools::get_duration(t1-t0) << ","
+                  << tools::get_duration(t2-t1) << ","
+                  << tools::get_duration(t3-t2) << ","
+                  << tools::get_duration(t3-t0) 
+                  << std::endl;
             }
             // stored operators
             std::vector<int> oper_index_op(const char key) const;

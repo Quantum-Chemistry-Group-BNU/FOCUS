@@ -192,12 +192,12 @@ namespace integral{
          int1e.init_mem(); 
          int2e.sorb = sorb; 
          int2e.init_mem(); 
-         std::cout << "sorb = " << sorb << std::endl;
-         std::cout << "size(int1e) = " << int1e.size() << ":" 
+         std::cout << " sorb = " << sorb << std::endl;
+         std::cout << " size(int1e) = " << int1e.size() << ":" 
             << tools::sizeMB<Tm>(int1e.size()) << "MB:"
             << tools::sizeGB<Tm>(int1e.size()) << "GB"
             << std::endl;
-         std::cout << "size(int2e) = " << int2e.size() << ":" 
+         std::cout << " size(int2e) = " << int2e.size() << ":" 
             << tools::sizeMB<Tm>(int2e.size()) << "MB:"
             << tools::sizeGB<Tm>(int2e.size()) << "GB"
             << std::endl; 

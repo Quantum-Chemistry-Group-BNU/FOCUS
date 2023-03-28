@@ -91,13 +91,13 @@ inline double conjugate(const double x){ return x; }
 inline std::complex<double> conjugate(const std::complex<double> x){ return std::conj(x); }
 
 // timing 
-std::chrono::high_resolution_clock::time_point get_time();
-
+inline std::chrono::system_clock::time_point get_time(){
+   return std::chrono::system_clock::now();
+}
 template<typename T>
 double get_duration(T t){
-   return std::chrono::duration_cast<std::chrono::milliseconds>(t).count()*0.001; 
+   return std::chrono::duration<double, std::nano>(t).count()*1.e-9; 
 }
-
 template<typename T>
 void timing(const std::string msg, const T& t0, const T& t1){
    std::cout << "----- TIMING FOR " << msg << " : " << std::scientific << std::setprecision(3) 

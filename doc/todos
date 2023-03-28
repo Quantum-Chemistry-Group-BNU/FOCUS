@@ -290,6 +290,12 @@ KNOWN PROBLEMS
          1. alg_renorm=7/9: GPU batch [DONE@20203273]
             - preprocess_rernorm_batchGPU.h
 
+ * profiling: better timing for alg_hvec & alg_renorm
+
+ * OpenMP for symbolic & mmtasks
+   - more tests
+   - compare mmtask & rmmtask
+
 === TODOs ===
 
  * Better organization of tasks: 
@@ -297,8 +303,6 @@ KNOWN PROBLEMS
    - Use of TensorCore!!!
 
  * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma?]
-
- * OpenMP for symbolic & mmtasks
 
  * OpenMP parallelization in decimation
 
