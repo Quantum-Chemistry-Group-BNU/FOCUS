@@ -1,5 +1,5 @@
 
-machine = dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 USE_ILP64 = yes
 
 INCLUDE = -I.
@@ -25,6 +25,10 @@ else ifeq ($(strip $(machine)), scv7260)
    CXX = icpc 
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
    MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
+else ifeq ($(strip $(machine)), cluster)
+   CXX = icpc 
+   CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB =/share/app/oneapi2022/mkl/2022.0.2/lib/intel64
 else ifeq ($(strip $(machine)), scy0799)
    CXX = icpc 
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)

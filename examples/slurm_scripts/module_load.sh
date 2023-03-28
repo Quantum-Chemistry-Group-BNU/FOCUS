@@ -1,6 +1,6 @@
 #!/bin/bash
 
-platform="scv7260" # scy0799  #scv7260  #DCU_419 #DCU_zhengzhou
+platform="cluster" #scy0799  #scv7260  #DCU_419 #DCU_zhengzhou #cluster
 
 if [ $platform == "scy0799" ]; then
 module purge 
@@ -38,6 +38,23 @@ module load oneAPI/2022.2-mpi
 module load oneAPI/2022.2
 module load gcc/9.3
 module load cuda/11.4
+#########################################
+#interactive job run
+# $ salloc -N 1 -n 1 --gres=gpu:1
+########################################
+elif [ $platform == "cluster" ]; then
+module purge
+export PATH=/data/home/scv7260/run/xiangchunyang/ctags-install/bin:$PATH
+export PATH=/data/home/scv7260/run/xiangchunyang/valgrind-install/bin:$PATH
+export LD_LIBRARY_PATH=/share/home/xiangchunyang/software/boost-1.80.0-install-64/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/share/home/xiangchunyang/software/magma-2.7.1-install-64/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/share/app/oneapi2022/compiler/2022.0.2/linux/compiler/lib/intel64_lin:$LD_LIBRARY_PATH
+export CUDADIR=/share/app/cuda/cuda-11.6
+module load icc/latest
+module load mkl/latest
+module load mpi/latest
+module load compiler-rt/latest
+module load cuda/11.6
 #########################################
 #interactive job run
 # $ salloc -N 1 -n 1 --gres=gpu:1
