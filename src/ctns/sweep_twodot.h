@@ -516,11 +516,6 @@ namespace ctns{
             // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
             timing.tb1 = tools::get_time();
 
-            H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
-
-            timing.tb2 = tools::get_time();
-
             // allocate memery on GPU & copy qops
             size_t opertot = qops_dict.at("l").size()
                + qops_dict.at("r").size()
@@ -550,6 +545,11 @@ namespace ctns{
             CUDA_CHECK(cudaMemcpy(dev_opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #endif //USE_HIP
+
+            timing.tb2 = tools::get_time();
+
+            H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
             timing.tb3 = tools::get_time();
 
@@ -713,11 +713,6 @@ namespace ctns{
             // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
             timing.tb1 = tools::get_time();
 
-            H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
-
-            timing.tb2 = tools::get_time();
-
             // allocate memery on GPU & copy qops
             size_t opertot = qops_dict.at("l").size()
                + qops_dict.at("r").size()
@@ -747,6 +742,11 @@ namespace ctns{
             CUDA_CHECK(cudaMemcpy(dev_opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
             CUDA_CHECK(cudaMemcpy(dev_opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #endif //USE_HIP
+
+            timing.tb2 = tools::get_time();
+
+            H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
             timing.tb3 = tools::get_time();
             

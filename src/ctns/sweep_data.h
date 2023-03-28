@@ -62,8 +62,8 @@ namespace ctns{
             << std::scientific << std::setprecision(2) << tdvdsn << " S"
             << std::endl;
          dtacc = 0.0;
-         this->print_part(msg+":symbolic_formulae_twodot     ", dtb1, tdvdsn, dtacc);
-         this->print_part(msg+":qops_dict memcpy cpu2gpu     ", dtb2, tdvdsn, dtacc);
+         this->print_part(msg+":qops_dict memcpy cpu2gpu     ", dtb1, tdvdsn, dtacc);
+         this->print_part(msg+":symbolic_formulae_twodot     ", dtb2, tdvdsn, dtacc);
          this->print_part(msg+":hintermediate init           ", dtb3, tdvdsn, dtacc);
          this->print_part(msg+":hintermediates memcpy cpu2gpu", dtb4, tdvdsn, dtacc);
          this->print_part(msg+":preprocess_hformulae_Hxlist2 ", dtb5, tdvdsn, dtacc);
@@ -78,8 +78,8 @@ namespace ctns{
             << std::endl;
          dtacc = 0.0;
          this->print_part(msg+":qops init                    ", dtf0, trenrm, dtacc);
-         this->print_part(msg+":symbolic_formulae_renorm     ", dtf1, trenrm, dtacc);
-         this->print_part(msg+":qops_dict memcpy cpu2gpu     ", dtf2, trenrm, dtacc);
+         this->print_part(msg+":qops_dict memcpy cpu2gpu     ", dtf1, trenrm, dtacc);
+         this->print_part(msg+":symbolic_formulae_renorm     ", dtf2, trenrm, dtacc);
          this->print_part(msg+":rintermediate init           ", dtf3, trenrm, dtacc);
          this->print_part(msg+":rintermediates memcpy cpu2gpu", dtf4, trenrm, dtacc);
          this->print_part(msg+":preprocess_formulae_Rlist2   ", dtf5, trenrm, dtacc);
@@ -172,8 +172,8 @@ namespace ctns{
       double dt=0, dt0=0, dt1=0, dt2=0, dt3=0, dt4=0, dt5=0, dt6=0;
       // decomposition of dt2 into different parts
       Tm tb1; 
-      Tm tb2; // symbolic_formulae_twodot     
-      Tm tb3; // qops_dict memcpy cpu2gpu    
+      Tm tb2; // qops_dict memcpy cpu2gpu    
+      Tm tb3; // symbolic_formulae_twodot     
       Tm tb4; // hintermediate init           
       Tm tb5; // hintermediates memcpy cpu2gpu
       Tm tb6; // preprocess_hformulae_Hxlist2
@@ -181,8 +181,8 @@ namespace ctns{
       double dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0;
       Tm tf0;
       Tm tf1; // qops init
-      Tm tf2; // symbolic_formulae_renorm      
-      Tm tf3; // qops_dict memcpy cpu2gpu     
+      Tm tf2; // qops_dict memcpy cpu2gpu   
+      Tm tf3; // symbolic_formulae_renorm        
       Tm tf4; // rintermediate init           
       Tm tf5; // rintermediates memcpy cpu2gpu
       Tm tf6; // preprocess_formulae_Rlist2   

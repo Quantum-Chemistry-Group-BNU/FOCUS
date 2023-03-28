@@ -166,22 +166,23 @@ namespace ctns{
          
          }else if(alg_renorm == 4){
 
-            auto tb1 = tools::get_time();
-
             // CPU: symbolic formulae + rintermediates + preallocation of workspace
+            timing.tf2 = tools::get_time();
+            
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1,
                   debug_formulae);
-            auto tb2 = tools::get_time();
-
+            timing.tf3 = tools::get_time();
+            
             // generation of renormalization block [lc/lr/cr]
             rinter.init(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
-            auto tb3 = tools::get_time();
+            timing.tf4 = tools::get_time();
+            timing.tf5 = tools::get_time();
 
             // GEMM list and GEMV list
             preprocess_formulae_Rlist(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
                   Rlst, blksize, cost, rank==0 && schd.ctns.verbose>0);
-            auto tb4 = tools::get_time();
+            timing.tf6 = tools::get_time();
 
             get_MMlist(Rlst, schd.ctns.hxorder);
 
@@ -191,26 +192,14 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
-            auto tb5 = tools::get_time();
+            timing.tf7 = tools::get_time();
 
             preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
-            auto tb6 = tools::get_time();
-
-            double dtb1 = tools::get_duration(tb2-tb1); 
-            double dtb2 = tools::get_duration(tb3-tb2); 
-            double dtb3 = tools::get_duration(tb4-tb3); 
-            double dtb4 = tools::get_duration(tb5-tb4); 
-            double dtb5 = tools::get_duration(tb6-tb5);
-            double dtb6 = tools::get_duration(tb6-tb1);
-            std::cout << "t[symbolic_formulae_renorm]=" << dtb1 << std::endl;
-            std::cout << "t[rinter.init]=" << dtb2 << std::endl;
-            std::cout << "t[preprocess_formulae_Rlist]=" << dtb3 << std::endl;
-            std::cout << "t[get_MMlist]=" << dtb4 << std::endl;
-            std::cout << "t[preprocess_renorm]=" << dtb5 << std::endl;
-            std::cout << "t[tot]=" << dtb6 << std::endl;
+            timing.tf8 = tools::get_time();
 
          }else if(alg_renorm == 6){
 
+            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
             if(schd.ctns.alg_rinter != 0 and schd.ctns.alg_rinter != 1){
                std::cout << "error: alg_renorm=6 should be used with alg_rinter=0 or 1!" << std::endl;
                exit(1);
@@ -219,18 +208,22 @@ namespace ctns{
                std::cout << "error: batchsize should be set!" << std::endl;
                exit(1);
             }
+            timing.tf2 = tools::get_time();
 
-            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1,
                   debug_formulae);
-            
+            timing.tf3 = tools::get_time();
+
             // generation of renormalization block [lc/lr/cr]
             rinter.init(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
+            timing.tf4 = tools::get_time();
+            timing.tf5 = tools::get_time();
 
             // GEMM list and GEMV list
             preprocess_formulae_Rlist2(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
                   Rlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
+            timing.tf6 = tools::get_time();
 
             // compute batchsize & allocate workspace
             size_t maxbatch = 0;
@@ -260,13 +253,16 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
+            timing.tf7 = tools::get_time();
+            
             workspace = new Tm[worktot];
-
             preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size,
                                     Rmmtasks, opaddr, workspace);
+            timing.tf8 = tools::get_time();
 
          }else if(alg_renorm == 7){
 
+            // BatchCPU: symbolic formulae + rintermediates [on the fly] + preallocation of workspace
             if(schd.ctns.alg_rinter != 1){
                std::cout << "error: alg_renorm=7 should be used with alg_rinter=1!" << std::endl;
                exit(1);
@@ -275,23 +271,22 @@ namespace ctns{
                std::cout << "error: batchsize should be set!" << std::endl;
                exit(1);
             }
-
-            auto tb1 = tools::get_time();
+            timing.tf2 = tools::get_time();
             
-            // BatchCPU: symbolic formulae + rintermediates [on the fly] + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1,
                   debug_formulae);
-            auto tb2 = tools::get_time();
+            timing.tf3 = tools::get_time();
             
             // generation of renormalization block [lc/lr/cr]
             rinter.initDirect(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
-            auto tb3 = tools::get_time();
+            timing.tf4 = tools::get_time();
+            timing.tf5 = tools::get_time();
 
             // GEMM list and GEMV list
             preprocess_formulae_Rlist2Direct(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
                   Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
-            auto tb4 = tools::get_time();
+            timing.tf6 = tools::get_time();
 
             // compute batchsize & allocate workspace
             size_t maxbatch = 0;
@@ -322,30 +317,18 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
+            timing.tf7 = tools::get_time();
+            
             workspace = new Tm[worktot];
-            auto tb5 = tools::get_time();
-        
             opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
             preprocess_renorm_batch2(qops._data, site._data, size, rank, qops._size,
                                      Rmmtasks, opaddr, workspace, rinter._data);
-            auto tb6 = tools::get_time();
-
-            double dtb1 = tools::get_duration(tb2-tb1); 
-            double dtb2 = tools::get_duration(tb3-tb2); 
-            double dtb3 = tools::get_duration(tb4-tb3); 
-            double dtb4 = tools::get_duration(tb5-tb4); 
-            double dtb5 = tools::get_duration(tb6-tb5);
-            double dtb6 = tools::get_duration(tb6-tb1);
-            std::cout << "t[symbolic_formulae_renorm]=" << dtb1 << std::endl;
-            std::cout << "t[rinter.init]=" << dtb2 << std::endl;
-            std::cout << "t[preprocess_formulae_Rlist2Direct]=" << dtb3 << std::endl;
-            std::cout << "t[Rmmtasks]=" << dtb4 << std::endl;
-            std::cout << "t[preprocess_renorm_batch2]=" << dtb5 << std::endl;
-            std::cout << "t[tot]=" << dtb6 << std::endl;
+            timing.tf8 = tools::get_time();
 
 #ifdef GPU
          }else if(alg_renorm == 16){
 
+            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
             if(rank == 0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
@@ -357,13 +340,6 @@ namespace ctns{
                std::cout << "GPUmem.used=" << GPUmem.used() << std::endl;
                exit(1);
             }
-
-            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
-            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1,
-                  debug_formulae);
-
-            timing.tf2 = tools::get_time();
 
             // allocate memery on GPU & copy qops
             size_t opertot = qops1.size() + qops2.size();
@@ -416,6 +392,12 @@ namespace ctns{
 #else
             CUDA_CHECK(cudaMemcpy(dev_site, site._data, site.size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #endif //USE_HIP
+
+            timing.tf2 = tools::get_time();
+
+            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+                  size, rank, fname, sort_formulae, ifdist1,
+                  debug_formulae);
 
             timing.tf3 = tools::get_time();
 
@@ -529,6 +511,7 @@ namespace ctns{
 
          }else if(alg_renorm == 17){
 
+            // BatchCPU: symbolic formulae + rintermediates [on the fly] + preallocation of workspace
             if(schd.ctns.alg_rinter != 2){
                std::cout << "error: alg_renorm=17 should be used with alg_rinter=2!" << std::endl;
                exit(1);
@@ -544,14 +527,7 @@ namespace ctns{
                std::cout << "GPUmem.used=" << GPUmem.used() << std::endl;
                exit(1);
             }
-            
-            // BatchCPU: symbolic formulae + rintermediates [on the fly] + preallocation of workspace
-            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1,
-                  debug_formulae);
-            
-            timing.tf2 = tools::get_time();
-           
+          
             // allocate memery on GPU & copy qops
             size_t opertot = qops1.size() + qops2.size();
             size_t GPUmem_oper = sizeof(Tm)*opertot;
@@ -604,6 +580,12 @@ namespace ctns{
             CUDA_CHECK(cudaMemcpy(dev_site, site._data, site.size()*sizeof(Tm), cudaMemcpyHostToDevice));
 #endif //USE_HIP
 
+            timing.tf2 = tools::get_time();
+            
+            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+                  size, rank, fname, sort_formulae, ifdist1,
+                  debug_formulae);
+ 
             timing.tf3 = tools::get_time();
 
             //------------------------------
@@ -717,7 +699,6 @@ namespace ctns{
             exit(1);
          } // alg_renorm
          timing.tf9 = tools::get_time();
-         //-------------------------------
 
          // debug 
          if(debug_oper_renorm){
