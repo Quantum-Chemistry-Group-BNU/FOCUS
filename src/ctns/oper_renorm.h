@@ -27,11 +27,14 @@
 
 namespace ctns{
 
-   const bool debug_oper_renorm = false;
+   const bool debug_oper_renorm = true;
    extern const bool debug_oper_renorm;
 
-   const bool debug_oper_rbasis = false;
+   const bool debug_oper_rbasis = true;
    extern const bool debug_oper_rbasis;
+
+   const double thresh_opdiff = 1.e-10;
+   extern const double thresh_opdiff;
 
    // renormalize operators
    template <typename Km, typename Tm>
@@ -702,7 +705,7 @@ namespace ctns{
 
          // debug 
          if(debug_oper_renorm){
-            const int target = 8;
+            const int target = -1;
             std::cout << "\nlzd:qops:" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
@@ -715,13 +718,14 @@ namespace ctns{
                }
             }
             Tm* data0 = new Tm[qops._size];
-            memset(data0, 0, qops._size*sizeof(Tm));
             linalg::xcopy(qops._size, qops._data, data0);
-            // oldest version
-            auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
-            oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
-            Tm* data1 = new Tm[qops._size];
-            linalg::xcopy(qops._size, qops._data, data1);
+            
+            // alg_renorm=2: symbolic formulae + preallocation of workspace
+            memset(qops._data, 0, qops._size*sizeof(Tm));
+            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+                  size, rank, fname, sort_formulae, ifdist1,
+                  debug_formulae);
+            worktot = symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
             std::cout << "\nlzd:qops: ref" << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
@@ -733,6 +737,9 @@ namespace ctns{
                   if(key == 'C' and pr.first == target) pr.second.print("Cref",2);
                }
             }
+            Tm* data1 = new Tm[qops._size];
+            linalg::xcopy(qops._size, qops._data, data1);
+
             linalg::xaxpy(qops._size, -1.0, data0, qops._data);
             auto diff = linalg::xnrm2(qops._size, qops._data);
             std::cout << "\nlzd:qops-diff" << std::endl;
@@ -750,7 +757,7 @@ namespace ctns{
             linalg::xcopy(qops._size, data1, qops._data);
             delete[] data0;
             delete[] data1;
-            if(diff > 1.e-10) exit(1);
+            if(diff > thresh_opdiff) exit(1);
          }
 
          // free tmp space on CPU
@@ -795,10 +802,11 @@ namespace ctns{
          // 3. consistency check for Hamiltonian
          const auto& opH = qops('H').at(0);
          auto diffH = (opH-opH.H()).normF();
-         if(diffH > 1.e-10){
-            opH.print("H",2);
-            std::string msg = "error: H-H.H() is too large! diffH=";
-            tools::exit(msg+std::to_string(diffH));
+         if(diffH > thresh_opdiff){
+            std::cout <<  "error in oper_renorm: norm of H-H.H() is " 
+               << std::scientific << std::setprecision(2) << diffH
+               << " > thresh_opdiff=" << thresh_opdiff << std::endl; 
+            exit(1);
          }
 
          // check against explicit construction
