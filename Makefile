@@ -1,5 +1,5 @@
 
-machine = cluster #mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no #yes
 USE_GCC = yes
@@ -34,8 +34,8 @@ else ifeq ($(strip $(machine)), dell2)
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else ifeq ($(strip $(machine)), jiageng)
-   MATHLIB = ${MKLROOT}
-   BOOST = /public/home/bnulizdtest/boost/install
+   MATHLIB = ./mkl2022 #/public/software/intel/oneapi2021/mkl/latest #/public/software/anaconda/anaconda3-2022.5/lib
+   BOOST = /public/home/bnulizdtest/boost/install-gcc
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
@@ -55,15 +55,6 @@ else ifeq ($(strip $(machine)), scv7260)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
-else ifeq ($(strip $(machine)), cluster)
-   FLAGS +=-DCOMPT_FILESYSTEM
-   MATHLIB =/share/app/oneapi2022/mkl/2022.0.2/lib/intel64
-   BOOST =/share/home/xiangchunyang/software/boost-1.80.0-install-64
-   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64 -lboost_chrono-mt-x64
-   ifeq ($(strip $(USE_MPI)), yes)   
-      LFLAGS += -lboost_mpi-mt-x64
-   endif
-	 LFLAGS +=-L /share/app/oneapi2022/compiler/2022.0.2/linux/compiler/lib/intel64_lin -liomp5
 else ifeq ($(strip $(machine)), DCU_419)
    MATHLIB = /public/software/compiler/intel/oneapi/mkl/latest/lib/intel64
    BOOST = /public/home/ictapp_j/xiangchunyang/boost-1.80.0-install
@@ -87,7 +78,7 @@ ifeq ($(strip $(USE_GCC)),yes)
    ifeq ($(strip $(DEBUG)),yes)
       FLAGS += -DDEBUG -O0 -w #-Wall
    else
-      FLAGS += -DNDEBUG -O2 -Wall
+      FLAGS += -DNDEBUG -O2 -w #-Wall
    endif
    #FLAGS += -gdwarf-4 -gstrict-dwarf # dwarf error in ld
    ifeq ($(strip $(USE_MPI)),no)
@@ -101,9 +92,9 @@ ifeq ($(strip $(USE_GCC)),yes)
 else
    # Intel compiler
    ifeq ($(strip $(DEBUG)), yes)
-      FLAGS += -DDEBUG -O0 -Wall 
+      FLAGS += -DDEBUG -O0 -w #-Wall 
    else 
-      FLAGS += -DNDEBUG -O2 -Wall 
+      FLAGS += -DNDEBUG -O2 -w #-Wall 
    endif 
    ifeq ($(strip $(USE_MPI)),no)
       CXX = icpc
@@ -123,30 +114,24 @@ ifeq ($(strip $(USE_OPENMP)),no)
              -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
    else
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -DMKL_ILP64 -m64 #-D__LP64__
+             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -DMKL_ILP64 -m64
    endif
 else
    # parallel version of MKL
+   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
    ifeq ($(strip $(USE_ILP64)), no)
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl 
    else
 	   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64 #-D__LP64__
+             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64
    endif
-  
-   # Choose OpenMP library properly, otherwise there will be lapack error [info != 0] 
-	# GNU: -lmkl_gnu_thread -lgomp 
-	# Intel: -lmkl_intel_thread -liomp5
-   
-	#ifeq ($(strip $(USE_GCC)),yes)
-   #   FLAGS += -fopenmp -lmkl_gnu_thread -lgomp
-   #else
-   #   FLAGS += -qopenmp -lmkl_intel_thread -liomp5 
-   #endif
-   FLAGS += -fopenmp -lmkl_intel_thread -liomp5
-
+   ifeq ($(strip $(USE_GCC)),yes)
+      FLAGS += -fopenmp -lmkl_gnu_thread -lgomp
+   else
+      FLAGS += -qopenmp -lmkl_intel_thread -liomp5 
+   endif
 endif
 # quaternion matrix diagonalization
 MATH += -L./extlibs/zquatev -lzquatev 
@@ -169,11 +154,6 @@ else ifeq ($(strip $(machine)), scv7260)
    MAGMA_DIR=/data/home/scv7260/run/xiangchunyang/magma_2_6_1_install
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
-else ifeq ($(strip $(machine)), cluster)
-   CUDA_DIR=/share/app/cuda/cuda-11.6
-   MAGMA_DIR=/share/home/xiangchunyang/software/magma-2.7.1-install-64
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma  -L${CUDA_DIR}/lib64 -lcudart_static
 else ifeq ($(strip $(machine)), dell2)
    CUDA_DIR= /home/dell/anaconda3/envs/pytorch
    MAGMA_DIR = ../magma/magma-2.6.1

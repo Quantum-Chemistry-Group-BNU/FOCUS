@@ -30,7 +30,7 @@ namespace ctns{
    const bool debug_oper_renorm = true;
    extern const bool debug_oper_renorm;
 
-   const bool debug_oper_rbasis = true;
+   const bool debug_oper_rbasis = false;
    extern const bool debug_oper_rbasis;
 
    const double thresh_opdiff = 1.e-10;
@@ -447,6 +447,7 @@ namespace ctns{
             for(int i=0; i<Rlst2.size(); i++){
                maxbatch = std::max(maxbatch, Rlst2[i].size());
             } // i
+            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             
             // Determine batchsize dynamically: following sweep_twodot.h [additional N for reduction]
             size_t batchsize = 0;
@@ -630,6 +631,7 @@ namespace ctns{
             for(int i=0; i<Rlst2.size(); i++){
                maxbatch = std::max(maxbatch, Rlst2[i].size());
             } // i
+            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
 
             // Determine batchsize dynamically: following sweep_twodot.h [additional N for reduction]
             size_t batchsize = 0;
