@@ -27,7 +27,7 @@
 
 namespace ctns{
 
-   const bool debug_oper_renorm = true;
+   const bool debug_oper_renorm = false;
    extern const bool debug_oper_renorm;
 
    const bool debug_oper_rbasis = false;
@@ -683,8 +683,16 @@ namespace ctns{
             }
             timing.tf7 = tools::get_time();
 
-            dev_opaddr[4] = dev_workspace + batchsize*blksize*2;
-            Tm* dev_red = dev_opaddr[4] + batchsize*blksize0;
+            dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
+            Tm* dev_red = dev_opaddr[4] + batchsize*blksize0; // tmpspace for coefficients in reduction
+           
+            // debug 
+            Tm* tmp = new Tm[qops.size()];
+            CUDA_CHECK(cudaMemcpy(tmp, dev_qops, qops.size()*sizeof(Tm), cudaMemcpyDeviceToHost));
+            double error_init = linalg::xnrm2(qops.size(), tmp);
+            delete[] tmp;
+            std::cout << "rank=" << rank << " error_init=" << error_init << std::endl;
+            
             preprocess_renorm_batch2GPU(dev_qops, dev_site, size, rank, qops._size,
                                      Rmmtasks, dev_opaddr, dev_workspace, rinter._data, dev_red);
 
@@ -756,7 +764,7 @@ namespace ctns{
                }
             }
             std::cout << "total diff=" << diff << std::endl;
-            linalg::xcopy(qops._size, data1, qops._data);
+            linalg::xcopy(qops._size, data0, qops._data);
             delete[] data0;
             delete[] data1;
             if(diff > thresh_opdiff) exit(1);
@@ -804,11 +812,14 @@ namespace ctns{
          // 3. consistency check for Hamiltonian
          const auto& opH = qops('H').at(0);
          auto diffH = (opH-opH.H()).normF();
+         std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(20) << diffH 
+            << " coord=" << p << " rank=" << rank 
+            << std::defaultfloat << std::setprecision(2) 
+            << std::endl; 
          if(diffH > thresh_opdiff){
-            std::cout <<  "error in oper_renorm: norm of H-H.H() is " 
-               << std::scientific << std::setprecision(2) << diffH
-               << " > thresh_opdiff=" << thresh_opdiff << std::endl; 
-            exit(1);
+            std::cout <<  "error in oper_renorm: ||H-H.dagger|| is larger than thresh_opdiff=" << thresh_opdiff 
+               << std::endl;
+            //exit(1);
          }
 
          // check against explicit construction

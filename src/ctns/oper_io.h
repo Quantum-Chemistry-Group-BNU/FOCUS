@@ -112,10 +112,11 @@ namespace ctns{
          double tot = tools::get_duration(t2-t0);
          std::filesystem::path path{fname};
          double usage = io::directory_size(path.parent_path())/std::pow(1024,3);
-         std::cout << "T[save](info/data/tot)=" 
+         std::cout << "fname=" << fname 
+            << "T[save](info/data/tot)=" 
             << tools::get_duration(t1-t0) << "," 
             << tools::get_duration(t2-t1) << ","
-            << tot << " fname=" << fname 
+            << tot 
             << " size=" << tools::sizeGB<Tm>(qops._size) << "GB" 
             << " speed=" << tools::sizeGB<Tm>(qops._size)/tot << "GB/s" 
             << " disk[used]=" << usage << "GB"
@@ -197,11 +198,12 @@ namespace ctns{
          auto t3 = tools::get_time();
          if(debug_oper_io and debug){
             double tot = tools::get_duration(t3-t0);
-            std::cout << "T[load](info/setup/data/tot)=" 
+            std::cout << "fname=" << fname
+               << "T[load](info/setup/data/tot)=" 
                << tools::get_duration(t1-t0) << "," 
                << tools::get_duration(t2-t1) << ","
                << tools::get_duration(t3-t2) << "," 
-               << tot << " fname=" << fname
+               << tot 
                << " size=" << tools::sizeGB<Tm>(qops._size) << "GB" 
                << " speed=" << tools::sizeGB<Tm>(qops._size)/tot << "GB/s" 
                << std::endl;
