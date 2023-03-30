@@ -250,9 +250,9 @@ namespace ctns{
          }
          min_result.resize(maxsweep);
          t_total.resize(maxsweep);
-         t_axpy.resize(maxsweep);
+         t_inter.resize(maxsweep);
          t_gemm.resize(maxsweep);
-         t_gemv.resize(maxsweep);
+         t_red.resize(maxsweep);
       }
       // print control parameters
       void print_ctrls(const int isweep) const{ 
@@ -285,9 +285,9 @@ namespace ctns{
       std::vector<std::vector<dot_timing>> opt_timing;
       std::vector<dot_timing> timing_sweep;
       std::vector<double> t_total; 
-      std::vector<double> t_axpy; 
+      std::vector<double> t_inter; 
       std::vector<double> t_gemm; 
-      std::vector<double> t_gemv;
+      std::vector<double> t_red;
       // memory
       std::vector<std::vector<dot_CPUmem>> opt_CPUmem;
    };
@@ -364,7 +364,7 @@ namespace ctns{
       // print all previous optimized results - sweep_data
       std::cout << tools::line_separator << std::endl;
       std::cout << "summary of sweep optimization up to isweep=" << isweep << std::endl;
-      std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Taccum/S | t_axpy/S t_gemm/S t_gemv/S t_blas/S   per" << std::endl;
+      std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Taccum/S | t_inter/S t_gemm/S t_red/S t_blas/S   per" << std::endl;
       std::cout << std::scientific << std::setprecision(2);
       // print previous ctrl parameters
       double taccum = 0.0;
@@ -373,7 +373,7 @@ namespace ctns{
          const auto& ctrl = ctrls[jsweep];
          taccum += t_total[jsweep];
          nmvp = min_result[jsweep].nmvp;
-         double t_blas = t_axpy[jsweep]+t_gemm[jsweep]+t_gemv[jsweep];
+         double t_blas = t_inter[jsweep]+t_gemm[jsweep]+t_red[jsweep];
          std::cout << std::setw(13) << jsweep 
             << std::setw(3) << ctrl.dots 
             << std::setw(8) << ctrl.dcut 
@@ -382,9 +382,9 @@ namespace ctns{
             << nmvp << " | " 
             << t_total[jsweep] << " | " 
             << taccum << " | "
-            << t_axpy[jsweep] << " " 
+            << t_inter[jsweep] << " " 
             << t_gemm[jsweep] << " " 
-            << t_gemv[jsweep] << " "
+            << t_red[jsweep] << " "
             << t_blas << " "
             << t_blas/taccum*100 
             << std::endl;

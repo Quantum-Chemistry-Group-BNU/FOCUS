@@ -52,7 +52,7 @@ namespace ctns{
 #endif
 #endif
                gettimeofday(&t1, NULL);
-               oper_timer.sigma.t_axpy += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.sigma.t_inter += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
             // perform GEMMs [c2,c1,r,l]
@@ -87,7 +87,7 @@ namespace ctns{
 #endif
 #endif
                gettimeofday(&t1, NULL);
-               oper_timer.sigma.t_gemv += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.sigma.t_red += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
@@ -248,7 +248,7 @@ namespace ctns{
             std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
             hmmtasks[i].save(fgemmi);
          }
-         std::string freduction = "mmtasks_reduction";
+         std::string freduction = "hmmtasks_reduction";
          freduction += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond)+".txt";
          std::ofstream fout(freduction);
          for(int i=0; i<hmmtasks.size(); i++){

@@ -11,15 +11,15 @@ namespace ctns{
          // GPU_kernel
          void start(const int _nd){
             nd = _nd;
-            t_axpy = 0.0;
-            t_gemv = 0.0;
+            t_inter = 0.0;
+            t_red = 0.0;
             tHx.resize(nd);
             memset(tHx.data(), 0, nd*sizeof(double));
             cHx.resize(nd);
             memset(cHx.data(), 0, nd*sizeof(double));
             if(Hx_counter == 0){
-               t_axpy_tot = 0.0;
-               t_gemv_tot = 0.0;
+               t_inter_tot = 0.0;
+               t_red_tot = 0.0;
                tHx_tot.resize(nd);
                memset(tHx_tot.data(), 0, nd*sizeof(double));
                cHx_tot.resize(nd);
@@ -61,15 +61,15 @@ namespace ctns{
                tHx_tot[i] += tHx[i];
                cHx_tot[i] += cHx[i];
             }
-            t_axpy_tot += t_axpy;
+            t_inter_tot += t_inter;
             t_gemm_tot += t_gemm;
-            t_gemv_tot += t_gemv;
-            this->print(name, tHx, cHx, t_axpy, t_gemm, t_gemv);
-            this->print(name+"_tot", tHx_tot, cHx_tot, t_axpy_tot, t_gemm_tot, t_gemv_tot);
+            t_red_tot += t_red;
+            this->print(name, tHx, cHx, t_inter, t_gemm, t_red);
+            this->print(name+"_tot", tHx_tot, cHx_tot, t_inter_tot, t_gemm_tot, t_red_tot);
          }
       public:
-         double t_axpy, t_gemm, t_gemv;
-         double t_axpy_tot, t_gemm_tot, t_gemv_tot;
+         double t_inter, t_gemm, t_red;
+         double t_inter_tot, t_gemm_tot, t_red_tot;
          int nd = 0;
          int Hx_counter = 0;
          std::vector<double> tHx;

@@ -28,6 +28,9 @@ namespace ctns{
                << std::endl;
          }
 
+         // init
+         memset(y, 0, ndim*sizeof(Tm));
+
 #ifndef _OPENMP
 
          Tm* work = new Tm[blksize*2];

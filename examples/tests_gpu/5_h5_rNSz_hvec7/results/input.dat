@@ -32,6 +32,6 @@ schedule
 end
 maxsweep 6
 task_dmrg
-alg_hvec 7
+alg_hvec 16
 alg_renorm 2
 $end

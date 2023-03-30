@@ -42,7 +42,7 @@ namespace ctns{
 #endif
 #endif
                gettimeofday(&t1, NULL);
-               oper_timer.renorm.t_axpy += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.renorm.t_inter += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
             // perform GEMMs [c2,c1,r,l]
@@ -120,7 +120,7 @@ namespace ctns{
 #endif
 #endif
                gettimeofday(&t1, NULL);
-               oper_timer.renorm.t_gemv += ((double)(t1.tv_sec - t0.tv_sec) 
+               oper_timer.renorm.t_red += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
@@ -337,11 +337,11 @@ namespace ctns{
             mvlst.push_back(mv);
             const Tm beta = 1.0;
             mvbatch[k].init(mvlst, beta);
-            /*
+            
             // debug:
-            std::cout << "mvbatch:" << mvbatch[k].size << std::endl;
+            std::cout << "k=" << k << " mvbatch: size=" << mvbatch[k].size << " jlen=" << jlen << std::endl;
             for(int i=0; i<mvbatch[k].size; i++){
-               std::cout << "i=" << i << " M,N="
+               std::cout << " i=" << i << " M,N="
                   << mvbatch[k].M[i] << ","
                   << mvbatch[k].N[i] << " Aloc,off="
                   << mvbatch[k].locA[i] << "," << mvbatch[k].offA[i] << " xloc,off="
@@ -349,7 +349,7 @@ namespace ctns{
                   << mvbatch[k].locy[i] << "," << mvbatch[k].offy[i] 
                   << std::endl;
             }
-            */
+            
          } // k
       }
 

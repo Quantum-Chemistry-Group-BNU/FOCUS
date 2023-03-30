@@ -18,15 +18,12 @@
 #include "preprocess_hxlist.h"
 #include "preprocess_hformulae.h"
 #include "preprocess_sigma.h"
-#include "preprocess_sigma2.h"
 #include "preprocess_sigma_batch.h"
-#include "preprocess_sigma_batch2.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
 #ifdef GPU
 #include "preprocess_sigma_batchGPU.h"
-#include "preprocess_sigma_batch2GPU.h"
 #endif
 
 namespace ctns{
@@ -902,9 +899,9 @@ namespace ctns{
             if(alg_hvec == 0) oper_timer.analysis();
          }
          timing.tc = tools::get_time();
-         sweeps.t_axpy[isweep] += oper_timer.sigma.t_axpy;
+         sweeps.t_inter[isweep] += oper_timer.sigma.t_inter;
          sweeps.t_gemm[isweep] += oper_timer.sigma.t_gemm;
-         sweeps.t_gemv[isweep] += oper_timer.sigma.t_gemv;
+         sweeps.t_red[isweep] += oper_timer.sigma.t_red;
 
          // free tmp space on CPU
          if(alg_hvec==2 || alg_hvec==3 || 
@@ -930,9 +927,9 @@ namespace ctns{
             CPUmem.oper = sizeof(Tm)*qops_pool.size();
             CPUmem.display();
          }
-         sweeps.t_axpy[isweep] += oper_timer.renorm.t_axpy;
+         sweeps.t_inter[isweep] += oper_timer.renorm.t_inter;
          sweeps.t_gemm[isweep] += oper_timer.renorm.t_gemm;
-         sweeps.t_gemv[isweep] += oper_timer.renorm.t_gemv;
+         sweeps.t_red[isweep] += oper_timer.renorm.t_red;
 
          // 4. save on disk 
          qops_pool.save(frop);

@@ -13,7 +13,6 @@
 #include "preprocess_rformulae.h"
 #include "preprocess_renorm.h"
 #include "preprocess_renorm_batch.h"
-#include "preprocess_renorm_batch2.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -22,12 +21,11 @@
 #endif
 #ifdef GPU
 #include "preprocess_renorm_batchGPU.h"
-#include "preprocess_renorm_batch2GPU.h"
 #endif
 
 namespace ctns{
 
-   const bool debug_oper_renorm = false;
+   const bool debug_oper_renorm = true;
    extern const bool debug_oper_renorm;
 
    const bool debug_oper_rbasis = false;
@@ -101,7 +99,7 @@ namespace ctns{
          qops.mpirank = rank;
          qops.ifdist2 = true;
          // initialize memory 
-         qops.allocate_memory();
+         qops.allocate();
 
          //-------------------------------
          // 1. kernel for renormalization
@@ -258,6 +256,9 @@ namespace ctns{
             }
             timing.tf7 = tools::get_time();
             
+            // clear 
+            memset(qops._data, 0, qops._size*sizeof(Tm));
+            
             workspace = new Tm[worktot];
             preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size,
                                     Rmmtasks, opaddr, workspace);
@@ -321,7 +322,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             timing.tf7 = tools::get_time();
-            
+           
             workspace = new Tm[worktot];
             opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
             preprocess_renorm_batch2(qops._data, site._data, size, rank, qops._size,
@@ -688,11 +689,14 @@ namespace ctns{
            
             // debug 
             Tm* tmp = new Tm[qops.size()];
+            memset(tmp, 0, qops.size()*sizeof(Tm));
             CUDA_CHECK(cudaMemcpy(tmp, dev_qops, qops.size()*sizeof(Tm), cudaMemcpyDeviceToHost));
             double error_init = linalg::xnrm2(qops.size(), tmp);
             delete[] tmp;
             std::cout << "rank=" << rank << " error_init=" << error_init << std::endl;
             
+            CUDA_CHECK(cudaMemset(dev_qops, -99999, qops.size()*sizeof(Tm)));
+
             preprocess_renorm_batch2GPU(dev_qops, dev_site, size, rank, qops._size,
                                      Rmmtasks, dev_opaddr, dev_workspace, rinter._data, dev_red);
 

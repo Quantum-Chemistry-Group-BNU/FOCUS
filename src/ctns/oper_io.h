@@ -113,7 +113,7 @@ namespace ctns{
          std::filesystem::path path{fname};
          double usage = io::directory_size(path.parent_path())/std::pow(1024,3);
          std::cout << "fname=" << fname 
-            << "T[save](info/data/tot)=" 
+            << " T[save](info/data/tot)=" 
             << tools::get_duration(t1-t0) << "," 
             << tools::get_duration(t2-t1) << ","
             << tot 
@@ -154,9 +154,7 @@ namespace ctns{
          ifs.close();
          auto t1 = tools::get_time();
 
-         qops._setup_opdict();
-         qops._data = new Tm[qops._size];
-         qops._setup_data();
+         qops.allocate();
          auto t2 = tools::get_time();
 
          // read data
@@ -199,7 +197,7 @@ namespace ctns{
          if(debug_oper_io and debug){
             double tot = tools::get_duration(t3-t0);
             std::cout << "fname=" << fname
-               << "T[load](info/setup/data/tot)=" 
+               << " T[load](info/setup/data/tot)=" 
                << tools::get_duration(t1-t0) << "," 
                << tools::get_duration(t2-t1) << ","
                << tools::get_duration(t3-t2) << "," 

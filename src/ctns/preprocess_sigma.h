@@ -46,13 +46,13 @@ namespace ctns{
 
 #else
 
-         #pragma omp parallel
+#pragma omp parallel
          {
             Tm* yi = new Tm[ndim];
             memset(yi, 0, ndim*sizeof(ndim));
 
             Tm* work = new Tm[blksize*2];
-            #pragma omp for schedule(dynamic) nowait
+#pragma omp for schedule(dynamic) nowait
             for(int i=0; i<Hxlst.size(); i++){
                auto& Hxblk = Hxlst[i];
                Hxblk.kernel(x, opaddr, work);
@@ -60,7 +60,7 @@ namespace ctns{
             } // i
             delete[] work;
 
-            #pragma omp critical
+#pragma omp critical
             linalg::xaxpy(ndim, 1.0, yi, y);
 
             delete[] yi;
@@ -71,6 +71,71 @@ namespace ctns{
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
       }
+
+   // for Davidson diagonalization
+   template <typename Tm> 
+      void preprocess_Hx2(Tm* y,
+            const Tm* x,
+            const Tm& scale,
+            const int& size,
+            const int& rank,
+            const size_t& ndim,
+            const size_t& blksize,
+            Hxlist2<Tm>& Hxlst2,
+            Tm** opaddr){
+         const bool debug = false;
+#ifdef _OPENMP
+         int maxthreads = omp_get_max_threads();
+#else
+         int maxthreads = 1;
+#endif
+         if(rank == 0 && debug){
+            std::cout << "ctns::preprocess_Hx2"
+               << " mpisize=" << size 
+               << " maxthreads=" << maxthreads
+               << std::endl;
+         }
+
+         // initialization
+         memset(y, 0, ndim*sizeof(Tm));
+
+         // compute Y[I] = \sum_J H[I,J] X[J]
+#ifdef _OPENMP
+#pragma omp parallel
+         {
+#endif
+
+            Tm* work = new Tm[blksize*3];
+            for(int i=0; i<Hxlst2.size(); i++){
+               memset(work, 0, blksize*sizeof(Tm));
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic) nowait
+#endif
+               for(int j=0; j<Hxlst2[i].size(); j++){
+                  auto& Hxblk = Hxlst2[i][j];
+                  Tm* wptr = &work[blksize];
+                  Hxblk.kernel(x, opaddr, wptr);
+                  // save to local memory
+                  linalg::xaxpy(Hxblk.size, Hxblk.coeff, wptr, work);
+               } // j
+               if(Hxlst2[i].size()>0){
+                  const auto& Hxblk = Hxlst2[i][0];
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+                  linalg::xaxpy(Hxblk.size, 1.0, work, y+Hxblk.offout);
+               }
+            } // i
+            delete[] work;
+
+#ifdef _OPENMP
+         }
+#endif
+
+         // add const term
+         if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
+      }
+
 
 } // ctns
 

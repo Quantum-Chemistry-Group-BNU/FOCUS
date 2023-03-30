@@ -145,6 +145,7 @@ namespace ctns{
                   &workspace[omprank*tmpsize+wfsize]);
             // <bra|op|ket>
             auto& op = qops(key)[index];
+            memset(op._data, 0, op.size()*sizeof(Tm));
             contract_qt3_qt3_info(superblock, site.info, site.data(),
                   *opxwf_info, opxwf_data,
                   op.info, op.data());
