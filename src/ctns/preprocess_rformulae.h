@@ -45,44 +45,11 @@ namespace ctns{
             const auto& key = std::get<0>(task);
             const auto& index = std::get<1>(task);
             const auto& formula = std::get<2>(task);
-
-            //if(key != 'C' or index != 9) continue;
-            //if(key != 'C') continue;
-
-            /*
-            if(key == 'B' and index == 10007){
-               std::cout << "B10007" << " k=" << k << " key=" << key << " index=" << index << std::endl;
-               site.info.print("site");
-               for(auto pr :  qops_dict.at("r")('B')){
-                  if(pr.first == 10007){
-                      std::cout << "Br10007" << std::endl;
-                      qops_dict.at("r")('B').at(10007).print("B");
-                  }
-               }
-            }
-            */
- 
             for(int it=0; it<formula.size(); it++){
-               /*
-               Rlist<Tm> Rlst0;
-               Rmu[k][it].gen_Rlist(superblock, site.info, Rlst0, blksize, cost, false);
-               if(key == 'H'){
-                  Rmu[k][it].gen_Rlist(superblock, site.info, Rlst0, blksize, cost, true);
-               }
-               std::copy(Rlst0.begin(), Rlst0.end(), std::back_inserter(Rlst));
-               */
                Rmu[k][it].gen_Rlist(superblock, site.info, Rlst, blksize, cost, false);
                if(key == 'H'){
                   Rmu[k][it].gen_Rlist(superblock, site.info, Rlst, blksize, cost, true);
                }
-               /*
-               if(key == 'B' and index == 10007){
-                  std::cout << "B10007" << " k=" << k << " key=" << key << " index=" << index
-                            << " it=" << it 
-                            << " size=" << Rlst0.size()
-                            << std::endl;
-               }
-               */
             }
          }
          auto tb = tools::get_time();
@@ -132,11 +99,8 @@ namespace ctns{
          // 2. from Rmu to expanded block forms
          blksize = 0;
          cost = 0.0;
-         int nnzblk = site.info._nnzaddr.size(); // partitioned according to rows 
-
-         nnzblk = qops.qbra.size();
+         int nnzblk = qops.qbra.size(); // partitioned according to rows
          Rlst2.resize(nnzblk);
-
          for(int k=0; k<rsize; k++){
             const auto& task = rtasks.op_tasks[k];
             const auto& key = std::get<0>(task);
@@ -199,11 +163,8 @@ namespace ctns{
          blksize = 0;
          blksize0 = 0;
          cost = 0.0;
-         int nnzblk = site.info._nnzaddr.size(); // partitioned according to rows 
-
-         nnzblk = qops.qbra.size();
+         int nnzblk = qops.qbra.size(); // partitioned according to rows
          Rlst2.resize(nnzblk);
-
          for(int k=0; k<rsize; k++){
             const auto& task = rtasks.op_tasks[k];
             const auto& key = std::get<0>(task);
@@ -228,7 +189,6 @@ namespace ctns{
             tools::timing("preprocess_formulae_Rlist2Direct", t0, t1);
          }
       }
-
 
 } // ctns
 

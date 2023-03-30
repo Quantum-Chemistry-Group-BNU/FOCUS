@@ -1,7 +1,7 @@
 
-machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no #yes
+DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
@@ -10,6 +10,10 @@ USE_GPU = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
+# exec
+INSTALL_CI = yes
+INSTALL_CTNS = yes
+INSTALL_VMC = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
@@ -127,11 +131,12 @@ else
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64
    endif
-   ifeq ($(strip $(USE_GCC)),yes)
-      FLAGS += -fopenmp -lmkl_gnu_thread -lgomp
-   else
-      FLAGS += -qopenmp -lmkl_intel_thread -liomp5 
-   endif
+   #ifeq ($(strip $(USE_GCC)),yes)
+   #   FLAGS += -fopenmp -lmkl_gnu_thread -lgomp
+   #else
+   #   FLAGS += -qopenmp -lmkl_intel_thread -liomp5 
+   #endif
+   FLAGS += -fopenmp -lmkl_intel_thread -liomp5 
 endif
 # quaternion matrix diagonalization
 MATH += -L./extlibs/zquatev -lzquatev 
@@ -190,10 +195,20 @@ LIB_DIR = ./lib
 # all dependence
 SRC_DIR_CORE = ./$(SRC)/core
 SRC_DIR_IO   = ./$(SRC)/io
-SRC_DIR_CI   = ./$(SRC)/ci
-SRC_DIR_QT   = ./$(SRC)/ctns/qtensor
-SRC_DIR_CTNS = ./$(SRC)/ctns
-SRC_DIR_VMC  = ./$(SRC)/vmc
+
+ifeq ($(strip $(INSTALL_CI)), yes)
+   SRC_DIR_CI   = ./$(SRC)/ci
+endif
+
+ifeq ($(strip $(INSTALL_CTNS)), yes)
+   SRC_DIR_QT   = ./$(SRC)/ctns/qtensor
+   SRC_DIR_CTNS = ./$(SRC)/ctns
+endif
+
+ifeq ($(strip $(INSTALL_VMC)), yes)
+   SRC_DIR_VMC  = ./$(SRC)/vmc
+endif
+
 SRC_DIR_EXPT = ./$(SRC)/experiment
 
 INCLUDE_DIR = -I$(SRC_DIR_CORE) \
@@ -244,21 +259,27 @@ SRC_ALL = $(SRC_DEP)
 SRC_ALL += $(wildcard ./$(SRC)/drivers/*.cpp)
 OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
-all: depend \
-     $(LIB_DIR)/libcore.a \
-     $(LIB_DIR)/libio.a \
-     $(LIB_DIR)/libci.a \
-     $(LIB_DIR)/libctns.a \
-     $(LIB_DIR)/libvmc.a \
-     $(BIN_DIR)/tests_core.x \
-     $(BIN_DIR)/tests_ci.x \
-     $(BIN_DIR)/tests_ctns.x \
-     $(BIN_DIR)/exactdiag.x \
-     $(BIN_DIR)/fci.x \
-     $(BIN_DIR)/sci.x \
-     $(BIN_DIR)/prectns.x \
-     $(BIN_DIR)/ctns.x \
-     $(BIN_DIR)/vmc.x 
+all: depend core ci ctns vmc
+
+core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a $(BIN_DIR)/tests_core.x 
+
+ifeq ($(strip $(INSTALL_CI)), yes)
+ci: $(LIB_DIR)/libci.a $(BIN_DIR)/tests_ci.x $(BIN_DIR)/exactdiag.x $(BIN_DIR)/fci.x $(BIN_DIR)/sci.x
+else
+ci:
+endif
+
+ifeq ($(strip $(INSTALL_CTNS)), yes)
+ctns: $(LIB_DIR)/libctns.a $(BIN_DIR)/tests_ctns.x $(BIN_DIR)/prectns.x $(BIN_DIR)/ctns.x
+else
+ctns:	
+endif
+
+ifeq ($(strip $(INSTALL_VMC)), yes)
+vmc: $(LIB_DIR)/libvmc.a $(BIN_DIR)/vmc.x
+else
+vmc:
+endif
 
 # version
 GIT_HASH=`git rev-parse HEAD`

@@ -12,26 +12,42 @@ namespace ctns{
       struct hintermediates{
          public:
             // initialization
-            void init(const int alg_hinter,
+            void init(const bool ifDirect,
+                  const int alg_hinter,
                   const oper_dictmap<Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const symbolic_task<Tm>& H_formulae,
                   const bool debug=false){
-               if(alg_hinter == 0){
-                  this->init_omp(qops_dict, H_formulae, debug);
-               }else if(alg_hinter == 1){
-                  this->init_batch_cpu(qops_dict, oploc, opaddr, H_formulae, debug);
+               if(!ifDirect){
+                  if(alg_hinter == 0){
+                     this->init_omp(qops_dict, H_formulae, debug);
+                  }else if(alg_hinter == 1){
+                     this->init_batch_cpu(qops_dict, oploc, opaddr, H_formulae, debug);
 #ifdef GPU
-               }else if(alg_hinter == 2){
-                  this->init_batch_gpu(qops_dict, oploc, opaddr, H_formulae, debug);
+                  }else if(alg_hinter == 2){
+                     this->init_batch_gpu(qops_dict, oploc, opaddr, H_formulae, debug);
 #endif
+                  }else{
+                     std::cout << "error: no such option in Intermediates::init alg_hinter=" 
+                        << alg_hinter << std::endl;
+                     exit(1);
+                  }
+                  // setup opaddr
+                  opaddr[locInter] = _data;
                }else{
-                  std::cout << "error: no such option in Intermediates::init alg_hinter=" 
-                     << alg_hinter << std::endl;
-                  exit(1);
+                  if(alg_hinter == 1){
+                     this->initDirect_batch_cpu(qops_dict, oploc, opaddr, H_formulae, debug);
+#ifdef GPU
+                  }else if(alg_hinter == 2){
+                     this->initDirect_batch_gpu(qops_dict, oploc, opaddr, H_formulae, debug);
+#endif
+                  }else{
+                     std::cout << "error: no such option in Intermediates::initDirect alg_hinter=" 
+                        << alg_hinter << std::endl;
+                     exit(1);
+                  }
                }
-               opaddr[locInter] = _data;
             }
             // form hintermediates
             void init_omp(const oper_dictmap<Tm>& qops_dict,
@@ -42,38 +58,17 @@ namespace ctns{
                   Tm** opaddr,
                   const symbolic_task<Tm>& H_formulae,
                   const bool debug);
-#ifdef GPU
-            void init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
-                  const std::map<std::string,int>& oploc,
-                  Tm** opaddr,
-                  const symbolic_task<Tm>& H_formulae,
-                  const bool debug);
-#endif
-            // initialization [direct]
-            void initDirect(const int alg_hinter,
-                  const oper_dictmap<Tm>& qops_dict,
-                  const std::map<std::string,int>& oploc,
-                  Tm** opaddr,
-                  const symbolic_task<Tm>& H_formulae,
-                  const bool debug=false){
-               if(alg_hinter == 1){
-                  this->initDirect_batch_cpu(qops_dict, oploc, opaddr, H_formulae, debug);
-#ifdef GPU
-               }else if(alg_hinter == 2){
-                  this->initDirect_batch_gpu(qops_dict, oploc, opaddr, H_formulae, debug);
-#endif
-               }else{
-                  std::cout << "error: no such option in Intermediates::initDirect alg_hinter=" 
-                     << alg_hinter << std::endl;
-                  exit(1);
-               }
-            }
             void initDirect_batch_cpu(const oper_dictmap<Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const symbolic_task<Tm>& H_formulae,
                   const bool debug);
 #ifdef GPU
+            void init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+                  const std::map<std::string,int>& oploc,
+                  Tm** opaddr,
+                  const symbolic_task<Tm>& H_formulae,
+                  const bool debug);
             void initDirect_batch_gpu(const oper_dictmap<Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
@@ -219,9 +214,9 @@ namespace ctns{
          std::vector<Tm> alpha_vec(alpha_size);
 
          /*
-         Tm* _data1 = new Tm[_size];
-         Tm* _data2 = new Tm[_size];
-         */
+            Tm* _data1 = new Tm[_size];
+            Tm* _data2 = new Tm[_size];
+            */
 
          // setup GEMV_BATCH
          MVlist<Tm> mvlst(_count);
@@ -252,15 +247,15 @@ namespace ctns{
             mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dimes for isym=2
 
             /*
-            std::cout << "i,j=" << i << "," << j << " LDA=" << mv.LDA << std::endl;
-            std::cout << "sop=" << sop << std::endl;
-            std::cout << "index0=" << index0 << std::endl;
-            std::cout << "index1=" << index1 << std::endl;
-            std::cout << op0.size() << std::endl;
-            std::cout << op1.size() << std::endl;
-            std::cout << "op0._data=" << op0._data << std::endl;
-            std::cout << "op1._data=" << op1._data << std::endl;
-            */
+               std::cout << "i,j=" << i << "," << j << " LDA=" << mv.LDA << std::endl;
+               std::cout << "sop=" << sop << std::endl;
+               std::cout << "index0=" << index0 << std::endl;
+               std::cout << "index1=" << index1 << std::endl;
+               std::cout << op0.size() << std::endl;
+               std::cout << op1.size() << std::endl;
+               std::cout << "op0._data=" << op0._data << std::endl;
+               std::cout << "op1._data=" << op1._data << std::endl;
+               */
 
             mv.locA = oploc.at(block); 
             mv.offA = qops._offset.at(std::make_pair(label,index0)); // qops
@@ -277,21 +272,21 @@ namespace ctns{
             /*
             // debug  
             if(ndim > 0){
-               Tm* workspace = _data1+_offset.at(item);
-               symbolic_sum_oper(qops_dict, sop, workspace);
-               const Tm alpha = 1.0, beta = 0.0;
-               const int INCX = 1, INCY = 1;
-               Tm* Aptr = opaddr[mv.locA] + mv.offA;
-               Tm* Xptr = &alpha_vec[adx];
-               Tm* Yptr = _data2 + mv.offy;
-               linalg::xgemv(&mv.transA, mv.M, mv.N, alpha, Aptr, mv.LDA,
-                     Xptr, INCX, beta, Yptr, INCY);
-               std::cout << "i,j=" << i << "," << j << " idx=" << idx 
-                  << " nrm2a=" << linalg::xnrm2(mv.M, workspace)
-                  << " nrm2b=" << linalg::xnrm2(mv.M, Yptr);
-               linalg::xaxpy(mv.M, -1.0, workspace, Yptr);
-               auto diff = linalg::xnrm2(mv.M, Yptr);
-               std::cout << " diff=" << diff << std::endl;
+            Tm* workspace = _data1+_offset.at(item);
+            symbolic_sum_oper(qops_dict, sop, workspace);
+            const Tm alpha = 1.0, beta = 0.0;
+            const int INCX = 1, INCY = 1;
+            Tm* Aptr = opaddr[mv.locA] + mv.offA;
+            Tm* Xptr = &alpha_vec[adx];
+            Tm* Yptr = _data2 + mv.offy;
+            linalg::xgemv(&mv.transA, mv.M, mv.N, alpha, Aptr, mv.LDA,
+            Xptr, INCX, beta, Yptr, INCY);
+            std::cout << "i,j=" << i << "," << j << " idx=" << idx 
+            << " nrm2a=" << linalg::xnrm2(mv.M, workspace)
+            << " nrm2b=" << linalg::xnrm2(mv.M, Yptr);
+            linalg::xaxpy(mv.M, -1.0, workspace, Yptr);
+            auto diff = linalg::xnrm2(mv.M, Yptr);
+            std::cout << " diff=" << diff << std::endl;
             }
             */
 
@@ -324,44 +319,44 @@ namespace ctns{
          /*
          // debug
          {
-            Tm* _data0 = new Tm[_size];
-            memset(_data0, 0, _size*sizeof(Tm));
-            std::vector<std::pair<int,int>> _index(_count);
-            for(const auto& pr : _offset){
-               const auto& item = pr.first;
-               int i = item.first;
-               int j = item.second;
-               const auto& sop = H_formulae.tasks[i].terms[j];
-               Tm* workspace = _data0+_offset.at(item);
-               symbolic_sum_oper(qops_dict, sop, workspace);
-               const auto& sop0 = sop.sums[0].second;
-               const auto& index0 = sop0.index;
-               const auto& block = sop0.block;
-               const auto& label  = sop0.label;
-               const auto& qops = qops_dict.at(block);
-               const auto& op0 = qops(label).at(index0);
-               size_t ndim = op0.size();
-               Tm* yptr = _data+_offset.at(item);
-               std::cout << "i,j=" << i << "," << j
-                  << " nrm2a=" << linalg::xnrm2(ndim, workspace)
-                  << " nrm2b=" << linalg::xnrm2(ndim, yptr);
-               linalg::xaxpy(ndim, -1.0, yptr, workspace);
-               auto diff = linalg::xnrm2(ndim, workspace);
-               std::cout << " diff=" << diff << std::endl;
-            } // idx 
-            
-            std::cout << "data=" << linalg::xnrm2(_size, _data) << std::endl;
-            std::cout << "data0=" << linalg::xnrm2(_size, _data0) << std::endl;
-            std::cout << "data1=" << linalg::xnrm2(_size, _data1) << std::endl;
+         Tm* _data0 = new Tm[_size];
+         memset(_data0, 0, _size*sizeof(Tm));
+         std::vector<std::pair<int,int>> _index(_count);
+         for(const auto& pr : _offset){
+         const auto& item = pr.first;
+         int i = item.first;
+         int j = item.second;
+         const auto& sop = H_formulae.tasks[i].terms[j];
+         Tm* workspace = _data0+_offset.at(item);
+         symbolic_sum_oper(qops_dict, sop, workspace);
+         const auto& sop0 = sop.sums[0].second;
+         const auto& index0 = sop0.index;
+         const auto& block = sop0.block;
+         const auto& label  = sop0.label;
+         const auto& qops = qops_dict.at(block);
+         const auto& op0 = qops(label).at(index0);
+         size_t ndim = op0.size();
+         Tm* yptr = _data+_offset.at(item);
+         std::cout << "i,j=" << i << "," << j
+         << " nrm2a=" << linalg::xnrm2(ndim, workspace)
+         << " nrm2b=" << linalg::xnrm2(ndim, yptr);
+         linalg::xaxpy(ndim, -1.0, yptr, workspace);
+         auto diff = linalg::xnrm2(ndim, workspace);
+         std::cout << " diff=" << diff << std::endl;
+         } // idx 
 
-            std::cout << "_size=" << _size << std::endl;
-            linalg::xaxpy(_size, -1.0, _data, _data1);
-            auto diff = linalg::xnrm2(_size, _data1);
-            std::cout << "diff=" << diff << std::endl;
-            delete[] _data0;
-            delete[] _data1;
-            delete[] _data2;
-            if(diff > 1.e-10) exit(1);
+         std::cout << "data=" << linalg::xnrm2(_size, _data) << std::endl;
+         std::cout << "data0=" << linalg::xnrm2(_size, _data0) << std::endl;
+         std::cout << "data1=" << linalg::xnrm2(_size, _data1) << std::endl;
+
+         std::cout << "_size=" << _size << std::endl;
+         linalg::xaxpy(_size, -1.0, _data, _data1);
+         auto diff = linalg::xnrm2(_size, _data1);
+         std::cout << "diff=" << diff << std::endl;
+         delete[] _data0;
+         delete[] _data1;
+         delete[] _data2;
+         if(diff > 1.e-10) exit(1);
          }
          */
 

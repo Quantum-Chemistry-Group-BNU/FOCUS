@@ -96,7 +96,7 @@ namespace input{
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
                   & alg_hvec & alg_hinter & alg_renorm & alg_rinter 
-                  & ifdist1 & save_formulae & sort_formulae 
+                  & ifdist1 & save_formulae & sort_formulae & save_mmtask 
                   & hxorder & batchsize 
                   & cisolver & maxcycle & nbuff & damping
                   & rcanon_load & rcanon_file 
@@ -140,6 +140,7 @@ namespace input{
          bool ifdist1 = false;
          bool save_formulae = false;
          bool sort_formulae = false;
+         bool save_mmtask = false;
          int hxorder = 0;
          int batchsize = 1000;
          // dvdson

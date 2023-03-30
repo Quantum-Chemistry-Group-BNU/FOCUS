@@ -20,7 +20,7 @@ namespace ctns{
                   const int _batchblas,
                   const size_t _batchsize,
                   const size_t offset,
-                  const size_t offset0=0);
+                  const size_t offset0);
             // save dimensions for optimization
             void save(const std::string fgemm) const{
                for(int k=0; k<mmbatch2.size(); k++){
@@ -74,11 +74,27 @@ namespace ctns{
                   oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost; 
                }
             }
-            // reduction of y[:] = \sum_i ai*yi[:]
-            void reduction(const int k, Tm* workspace, Tm* y) const{
+            // reduction
+            void reduction(const int k, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
-               mmreduce[k].reduction(batchblas, workspace, y);
+               // reduction by GEMV
+               Tm* pcoeff = const_cast<Tm*>(coefflst[k].data());  
+#ifdef GPU
+               if(dev_red != nullptr){
+#ifdef USE_HIP
+                  HIP_CHECK(hipMemcpy(dev_red, pcoeff, coefflst[k].size()*sizeof(Tm), hipMemcpyHostToDevice));
+#else
+                  CUDA_CHECK(cudaMemcpy(dev_red, pcoeff, coefflst[k].size()*sizeof(Tm), cudaMemcpyHostToDevice));
+#endif
+                  pcoeff = dev_red;
+               }
+#endif
+               Tm* ptrs[3];
+               ptrs[0] = workspace;
+               ptrs[1] = pcoeff;
+               ptrs[2] = y;
+               mvbatch[k].kernel(batchblas, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                hipDeviceSynchronize();
@@ -96,6 +112,8 @@ namespace ctns{
             double cost = 0.0;
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
             std::vector<MMreduce<Tm>> mmreduce; // mmreduce[ibatch]
+            std::vector<std::vector<Tm>> coefflst;
+            std::vector<MVbatch<Tm>> mvbatch;
             // --- intermediates [Direct] ---
             std::vector<MVbatch<Tm>> imvbatch;
       };
@@ -123,6 +141,7 @@ namespace ctns{
          // start process Hxlst
          mmbatch2.resize(nbatch);
          mmreduce.resize(nbatch);
+         mvbatch.resize(nbatch);
          imvbatch.resize(nbatch);
          for(int k=0; k<nbatch; k++){
             size_t off = k*batchsize;
@@ -234,6 +253,51 @@ namespace ctns{
                mmreduce[k].coeff[j] = Hxblk.coeff;
             }
 
+            coefflst[k].resize(jlen);
+            MVlist<Tm> mvlst;
+            int nmu = 0;
+            size_t offout = Hxlst[off].offout;
+            for(size_t j=0; j<jlen; j++){
+               size_t jdx = off+j;
+               const auto& Hxblk = Hxlst[jdx];
+               coefflst[k][j] = Hxblk.coeff;
+               if(Hxblk.offout != offout){
+                  // append into mvbatch
+                  MVinfo<Tm> mv;
+                  mv.transA = 'N';
+                  mv.M = Hxlst[jdx-1].size;
+                  mv.N = nmu;
+                  mv.LDA = offset;
+                  mv.locA = 0;
+                  mv.offA = (j-nmu)*offset;
+                  mv.locx = 1;
+                  mv.offx = (j-nmu);
+                  mv.locy = 2;
+                  mv.offy = Hxlst[jdx-1].offout;
+                  mvlst.push_back(mv);
+                  // new 
+                  nmu = 1;
+                  offout = Hxblk.offout;
+               }else{
+                  nmu += 1;
+               }
+            } // j
+            // append into mvbatch
+            MVinfo<Tm> mv;
+            mv.transA = 'N';
+            mv.M = Hxlst[off+jlen-1].size;
+            mv.N = nmu;
+            mv.LDA = offset;
+            mv.locA = 0;
+            mv.offA = (jlen-nmu)*offset;
+            mv.locx = 1;
+            mv.offx = (jlen-nmu);
+            mv.locy = 2;
+            mv.offy = Hxlst[off+jlen-1].offout;
+            mvlst.push_back(mv);
+            const Tm beta = 1.0;
+            mvbatch[k].init(mvlst, beta);
+            
          } // k
       }
 

@@ -21,9 +21,7 @@ namespace ctns{
             const size_t& ndim,
             HMMtasks<Tm>& Hmmtasks,
             Tm** opaddr,
-            Tm* workspace,
-            double& t_kernel_ibond,
-            double& t_reduction_ibond){
+            Tm* workspace){
 #ifdef _OPENMP
          int maxthreads = omp_get_max_threads();
 #else
@@ -87,13 +85,11 @@ namespace ctns{
                << std::endl;
             oper_timer.sigma_analysis();
          }
-         t_kernel_ibond = time_gemm;
-         t_reduction_ibond = time_reduction;
       }
 
    // for Davidson diagonalization
    template <typename Tm> 
-      void preprocess_Hx_batch2(Tm* y,
+      void preprocess_Hx_batchDirect(Tm* y,
             const Tm* x,
             const Tm& scale,
             const int& size,
@@ -110,7 +106,7 @@ namespace ctns{
 #endif
          const bool debug = false;
          if(rank == 0 && debug){
-            std::cout << "ctns::preprocess_Hx_batch2"
+            std::cout << "ctns::preprocess_Hx_batchDirect"
                << " mpisize=" << size 
                << " maxthreads=" << maxthreads
                << std::endl;
@@ -168,7 +164,160 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_Hx_batch2: t[inter,gemm,reduction]="
+            std::cout << "preprocess_Hx_batchDirect: t[inter,gemm,reduction]="
+               << time_inter << "," << time_gemm << "," << time_reduction 
+               << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+               << std::endl;
+            oper_timer.sigma_analysis();
+         }
+      }
+
+   // for Davidson diagonalization
+   template <typename Tm> 
+      void preprocess_Hx_batchSingle(Tm* y,
+            const Tm* x,
+            const Tm& scale,
+            const int& size,
+            const int& rank,
+            const size_t& ndim,
+            HMMtask<Tm>& Hmmtask,
+            Tm** opaddr,
+            Tm* workspace){
+#ifdef _OPENMP
+         int maxthreads = omp_get_max_threads();
+#else
+         int maxthreads = 1;
+#endif
+         const bool debug = false;
+         if(rank == 0 && debug){
+            std::cout << "ctns::preprocess_Hx_batchSingle"
+               << " mpisize=" << size 
+               << " maxthreads=" << maxthreads
+               << std::endl;
+         }
+
+         double time_gemm=0.0;
+         double time_reduction=0.0;
+         struct timeval t0_gemm, t1_gemm;
+         struct timeval t0_reduction, t1_reduction;
+
+         // initialization
+         memset(y, 0, ndim*sizeof(Tm));
+
+         Tm* ptrs[7];
+         ptrs[0] = opaddr[0];
+         ptrs[1] = opaddr[1];
+         ptrs[2] = opaddr[2];
+         ptrs[3] = opaddr[3];
+         ptrs[4] = opaddr[4];
+         ptrs[5] = const_cast<Tm*>(x);
+         ptrs[6] = workspace;
+
+         oper_timer.sigma_start();
+         // loop over nonzero blocks
+         double cost = Hmmtask.cost;
+         for(int k=0; k<Hmmtask.nbatch; k++){
+            // gemm
+            gettimeofday(&t0_gemm, NULL);
+            Hmmtask.kernel(k, ptrs);
+            gettimeofday(&t1_gemm, NULL);
+            // reduction
+            gettimeofday(&t0_reduction, NULL);
+            Hmmtask.reduction(k, ptrs[6], y);
+            gettimeofday(&t1_reduction, NULL);
+            // timing
+            time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
+                  + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
+            time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
+                  + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+         } // k
+         // add const term
+         if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
+
+         // timing
+         if(rank == 0){
+            std::cout << "preprocess_Hx_batchSingle: t[gemm,reduction]="
+               << time_gemm << "," << time_reduction 
+               << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+               << std::endl;
+            oper_timer.sigma_analysis();
+         }
+      }
+
+   // for Davidson diagonalization
+   template <typename Tm> 
+      void preprocess_Hx_batchDirectSingle(Tm* y,
+            const Tm* x,
+            const Tm& scale,
+            const int& size,
+            const int& rank,
+            const size_t& ndim,
+            HMMtask<Tm>& Hmmtask,
+            Tm** opaddr,
+            Tm* workspace,
+            Tm* alphas){
+#ifdef _OPENMP
+         int maxthreads = omp_get_max_threads();
+#else
+         int maxthreads = 1;
+#endif
+         const bool debug = false;
+         if(rank == 0 && debug){
+            std::cout << "ctns::preprocess_Hx_batchDirectSingle"
+               << " mpisize=" << size 
+               << " maxthreads=" << maxthreads
+               << std::endl;
+         }
+
+         double time_inter=0.0;
+         double time_gemm=0.0;
+         double time_reduction=0.0;
+         struct timeval t0_axpy, t1_axpy;
+         struct timeval t0_gemm, t1_gemm;
+         struct timeval t0_reduction, t1_reduction;
+
+         // initialization
+         memset(y, 0, ndim*sizeof(Tm));
+
+         Tm* ptrs[7];
+         ptrs[0] = opaddr[0];
+         ptrs[1] = opaddr[1];
+         ptrs[2] = opaddr[2];
+         ptrs[3] = opaddr[3];
+         ptrs[4] = opaddr[4];
+         ptrs[5] = const_cast<Tm*>(x);
+         ptrs[6] = workspace;
+
+         oper_timer.sigma_start();
+         // loop over nonzero blocks
+         double cost = Hmmtask.cost;
+         for(int k=0; k<Hmmtask.nbatch; k++){
+            // axpy
+            gettimeofday(&t0_axpy, NULL);
+            Hmmtask.inter(k, opaddr, alphas);
+            gettimeofday(&t1_axpy, NULL);
+            // gemm
+            gettimeofday(&t0_gemm, NULL);
+            Hmmtask.kernel(k, ptrs);
+            gettimeofday(&t1_gemm, NULL);
+            // reduction
+            gettimeofday(&t0_reduction, NULL);
+            Hmmtask.reduction(k, ptrs[6], y);
+            gettimeofday(&t1_reduction, NULL);
+            // timing
+            time_inter += ((double)(t1_axpy.tv_sec - t0_axpy.tv_sec) 
+                  + (double)(t1_axpy.tv_usec - t0_axpy.tv_usec)/1000000.0);
+            time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
+                  + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
+            time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
+                  + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+         } // k
+         // add const term
+         if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
+
+         // timing
+         if(rank == 0){
+            std::cout << "preprocess_Hx_batchDirectSingle: t[inter,gemm,reduction]="
                << time_inter << "," << time_gemm << "," << time_reduction 
                << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;

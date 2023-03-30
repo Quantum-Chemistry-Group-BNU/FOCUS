@@ -209,6 +209,8 @@ void params_ctns::read(ifstream& istrm){
          save_formulae = true;
       }else if(line.substr(0,13)=="sort_formulae"){
          sort_formulae = true;
+      }else if(line.substr(0,11)=="save_mmtask"){
+         save_mmtask = true;
       }else if(line.substr(0,7)=="hxorder"){
          hxorder = stoi(line.substr(7));
       }else if(line.substr(0,9)=="batchsize"){
@@ -342,6 +344,7 @@ void params_ctns::print() const{
    cout << "ifdist1 = " << ifdist1 << endl;
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;
+   cout << "save_mmtask = " << save_mmtask << endl;
    cout << "hxorder = " << hxorder << endl;
    cout << "batchsize = " << batchsize << endl;
    // dvdson

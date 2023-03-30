@@ -25,7 +25,7 @@
 
 namespace ctns{
 
-   const bool debug_oper_renorm = true;
+   const bool debug_oper_renorm = false; //true;
    extern const bool debug_oper_renorm;
 
    const bool debug_oper_rbasis = false;
