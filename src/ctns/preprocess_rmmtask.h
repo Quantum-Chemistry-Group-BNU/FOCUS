@@ -3,7 +3,7 @@
 
 #include "preprocess_rlist.h"
 #include "preprocess_mmbatch.h"
-#include "preprocess_mmreduce.h"
+#include "preprocess_mvbatch.h"
 
 #include "time.h"
 #include "sys/time.h"
@@ -127,7 +127,9 @@ namespace ctns{
             int icase = -1, batchblas = -1;
             size_t totsize = 0, batchsize = 0, offset = 0, nbatch = 0;
             double cost = 0.0;
+            // --- GEMM ---
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
+            // --- reduction --- 
             std::vector<std::vector<std::pair<int,size_t>>> collectc; // icase=1 
             std::vector<std::vector<Tm>> coefflst;
             std::vector<MVbatch<Tm>> mvbatch;
@@ -273,7 +275,7 @@ namespace ctns{
             }
             */
 
-            // 3. setup mvbatch[k]
+            // 3. reduction
             // information for collect O(r,r') += \sum_c O(r,r',c)
             if(icase == 1){
                collectc[k].resize(jlen);
@@ -283,7 +285,7 @@ namespace ctns{
                   collectc[k][j] = std::make_pair(Rblk.dimin2[2], Rblk.size);
                } // j
             }
-
+            // setup mvbatch[k]
             coefflst[k].resize(jlen);
             MVlist<Tm> mvlst; 
             int nmu = 0;
@@ -292,15 +294,6 @@ namespace ctns{
                size_t jdx = off+j;
                const auto& Rblk = Rlst[jdx];
                coefflst[k][j] = Rblk.coeff;
-               /*
-               std::cout << "j=" << j 
-                  << " Rblk.size=" << Rblk.size
-                  << " Rblk.offrop=" << Rblk.offrop 
-                  << " offset=" << offset
-                  << " nmu=" << nmu
-                  << " coeff=" << coefflst[k][j]
-                  << std::endl;
-               */ 
                if(Rblk.offrop != offrop){
                   // append into mvbatch
                   MVinfo<Tm> mv;
@@ -337,19 +330,6 @@ namespace ctns{
             mvlst.push_back(mv);
             const Tm beta = 1.0;
             mvbatch[k].init(mvlst, beta);
-            
-            // debug:
-            std::cout << "k=" << k << " mvbatch: size=" << mvbatch[k].size << " jlen=" << jlen << std::endl;
-            for(int i=0; i<mvbatch[k].size; i++){
-               std::cout << " i=" << i << " M,N="
-                  << mvbatch[k].M[i] << ","
-                  << mvbatch[k].N[i] << " Aloc,off="
-                  << mvbatch[k].locA[i] << "," << mvbatch[k].offA[i] << " xloc,off="
-                  << mvbatch[k].locx[i] << "," << mvbatch[k].offx[i] << " yloc,off="
-                  << mvbatch[k].locy[i] << "," << mvbatch[k].offy[i] 
-                  << std::endl;
-            }
-            
          } // k
       }
 

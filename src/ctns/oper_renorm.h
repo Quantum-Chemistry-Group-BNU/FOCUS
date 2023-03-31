@@ -25,7 +25,7 @@
 
 namespace ctns{
 
-   const bool debug_oper_renorm = false; //true;
+   const bool debug_oper_renorm = true; 
    extern const bool debug_oper_renorm;
 
    const bool debug_oper_rbasis = false;
@@ -111,6 +111,7 @@ namespace ctns{
          rintermediates<Tm> rinter;
          Rlist<Tm> Rlst;
          Rlist2<Tm> Rlst2;
+         RMMtask<Tm> Rmmtask;
          RMMtasks<Tm> Rmmtasks;
          std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c",2}};
          Tm* opaddr[5] = {nullptr, nullptr, nullptr, nullptr, nullptr}; // {l,r,c1,c2,i}
@@ -153,36 +154,34 @@ namespace ctns{
 
             // symbolic formulae + dynamic allocation of memory
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, 
-                  debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
             symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
 
          }else if(alg_renorm == 2){
 
             // symbolic formulae + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1,
-                  debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
             worktot = symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
          
          }else if(alg_renorm == 4){
 
             // CPU: symbolic formulae + rintermediates + preallocation of workspace
+            const bool ifDirect = false;
             timing.tf2 = tools::get_time();
             
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1,
-                  debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
             timing.tf3 = tools::get_time();
             
             // generation of renormalization block [lc/lr/cr]
-            rinter.init(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
+            rinter.init(ifDirect, schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
             timing.tf4 = tools::get_time();
             timing.tf5 = tools::get_time();
 
             // GEMM list and GEMV list
-            preprocess_formulae_Rlist(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
-                  Rlst, blksize, cost, rank==0 && schd.ctns.verbose>0);
+            preprocess_formulae_Rlist(ifDirect,superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+                  Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
             timing.tf6 = tools::get_time();
 
             get_MMlist(Rlst, schd.ctns.hxorder);
@@ -198,13 +197,11 @@ namespace ctns{
             preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
             timing.tf8 = tools::get_time();
 
-         }else if(alg_renorm == 6){
+         }else if(alg_renorm == 6 || alg_renorm == 7 || alg_renorm == 8 || alg_renorm == 9){
 
             // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
-            if(schd.ctns.alg_rinter != 0 and schd.ctns.alg_rinter != 1){
-               std::cout << "error: alg_renorm=6 should be used with alg_rinter=0 or 1!" << std::endl;
-               exit(1);
-            }
+            const bool ifSingle = alg_renorm > 7;
+            const bool ifDirect = alg_renorm % 2 == 1;
             if(schd.ctns.batchsize == 0){
                std::cout << "error: batchsize should be set!" << std::endl;
                exit(1);
@@ -212,315 +209,98 @@ namespace ctns{
             timing.tf2 = tools::get_time();
 
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1,
-                  debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
             timing.tf3 = tools::get_time();
 
             // generation of renormalization block [lc/lr/cr]
-            rinter.init(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
+            rinter.init(ifDirect, schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
             timing.tf4 = tools::get_time();
             timing.tf5 = tools::get_time();
 
             // GEMM list and GEMV list
-            preprocess_formulae_Rlist2(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
-                  Rlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
+            size_t maxbatch = 0;
+            if(!ifSingle){
+               preprocess_formulae_Rlist2(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+                     Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+               for(int i=0; i<Rlst2.size(); i++){
+                  maxbatch = std::max(maxbatch, Rlst2[i].size());
+               } // i
+            }else{
+               preprocess_formulae_Rlist(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+                     Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+               maxbatch = Rlst.size();
+            }
+            if(!ifDirect) assert(blksize0 == 0);
             timing.tf6 = tools::get_time();
 
             // compute batchsize & allocate workspace
-            size_t maxbatch = 0;
-            for(int i=0; i<Rlst2.size(); i++){
-               maxbatch = std::max(maxbatch, Rlst2[i].size());
-            } // i
             size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
-
-            // generate Rmmtasks
-            const int batchblas = 1;
-            Rmmtasks.resize(Rlst2.size());
-            for(int i=0; i<Rmmtasks.size(); i++){
-               Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, batchblas, 
-                     batchsize, blksize*2);
-               if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
-                  std::cout << " rank=" << rank << " iblk=" << i
-                      << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
-                      << " batchsize=" << Rmmtasks[i].batchsize
-                      << " nbatch=" << Rmmtasks[i].nbatch
-                      << std::endl;
+            const int batchblas = schd.ctns.alg_rinter; // use the same keyword for GEMM_batc
+            if(!ifSingle){
+               Rmmtasks.resize(Rlst2.size());
+               for(int i=0; i<Rmmtasks.size(); i++){
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, batchblas, batchsize, blksize*2, blksize0);
+                  if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
+                     std::cout << " rank=" << rank << " iblk=" << i
+                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
+                         << " batchsize=" << Rmmtasks[i].batchsize
+                         << " nbatch=" << Rmmtasks[i].nbatch
+                         << std::endl;
+                  }
+               }
+            }else{
+               Rmmtask.init(Rlst, schd.ctns.hxorder, batchblas, batchsize, blksize*2, blksize0);
+               if(debug && schd.ctns.verbose>1){
+                  std::cout << " rank=" << rank 
+                     << " Rlst.size=" << Rlst.size()
+                     << " Rmmtask.totsize=" << Rmmtask.totsize
+                     << " batchsize=" << Rmmtask.batchsize 
+                     << " nbatch=" << Rmmtask.nbatch 
+                     << std::endl;
                }
             }
 
-            worktot = batchsize*blksize*2;
+            worktot = batchsize*(blksize*2 + blksize0);
             if(debug && schd.ctns.verbose>0){
                std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
-                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
-                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
-            }
-            timing.tf7 = tools::get_time();
-            
-            // clear 
-            memset(qops._data, 0, qops._size*sizeof(Tm));
-            
-            workspace = new Tm[worktot];
-            preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size,
-                                    Rmmtasks, opaddr, workspace);
-            timing.tf8 = tools::get_time();
-
-         }else if(alg_renorm == 7){
-
-            // BatchCPU: symbolic formulae + rintermediates [on the fly] + preallocation of workspace
-            if(schd.ctns.alg_rinter != 1){
-               std::cout << "error: alg_renorm=7 should be used with alg_rinter=1!" << std::endl;
-               exit(1);
-            }
-            if(schd.ctns.batchsize == 0){
-               std::cout << "error: batchsize should be set!" << std::endl;
-               exit(1);
-            }
-            timing.tf2 = tools::get_time();
-            
-            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1,
-                  debug_formulae);
-            timing.tf3 = tools::get_time();
-            
-            // generation of renormalization block [lc/lr/cr]
-            rinter.initDirect(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
-            timing.tf4 = tools::get_time();
-            timing.tf5 = tools::get_time();
-
-            // GEMM list and GEMV list
-            preprocess_formulae_Rlist2Direct(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
-                  Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
-            timing.tf6 = tools::get_time();
-
-            // compute batchsize & allocate workspace
-            size_t maxbatch = 0;
-            for(int i=0; i<Rlst2.size(); i++){
-               maxbatch = std::max(maxbatch, Rlst2[i].size());
-            } // i
-            size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
-
-            // generate Rmmtasks
-            const int batchblas = 1;
-            Rmmtasks.resize(Rlst2.size());
-            for(int i=0; i<Rmmtasks.size(); i++){
-               Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, batchblas, 
-                     batchsize, blksize*2, blksize0);
-               if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
-                  std::cout << " rank=" << rank << " iblk=" << i
-                      << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
-                      << " batchsize=" << Rmmtasks[i].batchsize
-                      << " nbatch=" << Rmmtasks[i].nbatch
-                      << std::endl;
-               }
-            }
-
-            worktot = batchsize*(blksize*2+blksize0);
-            if(debug && schd.ctns.verbose>0){
-               std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize
                   << " blksize0=" << blksize0 << " batchsize=" << batchsize
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
-            timing.tf7 = tools::get_time();
-           
             workspace = new Tm[worktot];
-            opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
-            preprocess_renorm_batch2(qops._data, site._data, size, rank, qops._size,
-                                     Rmmtasks, opaddr, workspace, rinter._data);
-            timing.tf8 = tools::get_time();
-
-#ifdef GPU
-         }else if(alg_renorm == 16){
-
-            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
-            if(rank == 0 && schd.ctns.verbose>0){
-               std::cout << "rank=" << rank
-                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
-                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << std::endl;
-            }
-            if(GPUmem.used() != 0){ 
-               std::cout << "error: there should not be any use of GPU memory at this point!" << std::endl;
-               std::cout << "GPUmem.used=" << GPUmem.used() << std::endl;
-               exit(1);
-            }
-
-            // allocate memery on GPU & copy qops
-            size_t opertot = qops1.size() + qops2.size();
-            size_t GPUmem_oper = sizeof(Tm)*opertot;
-            dev_oper = (Tm*)GPUmem.allocate(GPUmem_oper);
-            if(rank == 0 && schd.ctns.verbose>0){
-               std::cout << "rank=" << rank
-                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
-                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
-                  << std::endl;
-            }
-            dev_opaddr[0] = dev_oper;
-            if(superblock == "lc"){
-               dev_opaddr[1] = dev_opaddr[0] + qops1.size();
-               dev_opaddr[2] = dev_opaddr[1];
-               dev_opaddr[3] = dev_opaddr[2] + qops2.size();
-            }else if(superblock == "cr"){
-               dev_opaddr[1] = dev_opaddr[0];
-               dev_opaddr[2] = dev_opaddr[1] + qops2.size();
-               dev_opaddr[3] = dev_opaddr[2] + qops1.size();
-            }else if(superblock == "lr"){
-               dev_opaddr[1] = dev_opaddr[0] + qops1.size();
-               dev_opaddr[2] = dev_opaddr[1] + qops2.size();
-               dev_opaddr[3] = dev_opaddr[2];
-            }
-#ifdef USE_HIP
-            HIP_CHECK(hipMemcpy(dev_opaddr[oploc[block1]], qops1._data, qops1.size()*sizeof(Tm), hipMemcpyHostToDevice));
-            HIP_CHECK(hipMemcpy(dev_opaddr[oploc[block2]], qops2._data, qops2.size()*sizeof(Tm), hipMemcpyHostToDevice));
-#else
-            CUDA_CHECK(cudaMemcpy(dev_opaddr[oploc[block1]], qops1._data, qops1.size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(dev_opaddr[oploc[block2]], qops2._data, qops2.size()*sizeof(Tm), cudaMemcpyHostToDevice));
-#endif //USE_HIP
-
-            size_t GPUmem_qops = sizeof(Tm)*qops.size();
-            size_t GPUmem_site = sizeof(Tm)*site.size();
-            dev_qops = (Tm*)GPUmem.allocate(GPUmem_qops);
-            dev_site = (Tm*)GPUmem.allocate(GPUmem_site);
-            if(rank == 0 && schd.ctns.verbose>0){
-               std::cout << "rank=" << rank
-                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
-                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper,qops,site)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
-                  << "," << GPUmem_qops/std::pow(1024.0,3) 
-                  << "," << GPUmem_site/std::pow(1024.0,3) 
-                  << std::endl;
-            }
-#ifdef USE_HIP
-            HIP_CHECK(hipMemcpy(dev_site, site._data, site.size()*sizeof(Tm), hipMemcpyHostToDevice));
-#else
-            CUDA_CHECK(cudaMemcpy(dev_site, site._data, site.size()*sizeof(Tm), cudaMemcpyHostToDevice));
-#endif //USE_HIP
-
-            timing.tf2 = tools::get_time();
-
-            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1,
-                  debug_formulae);
-
-            timing.tf3 = tools::get_time();
-
-            //------------------------------
-            // intermediates
-            //------------------------------
-            if(schd.ctns.alg_rinter != 2){
-               rinter.init(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
-            }else{
-               rinter.init(schd.ctns.alg_rinter, qops_dict, oploc, dev_opaddr, rtasks, debug);
-            }
-            timing.tf4 = tools::get_time();
-
-            size_t GPUmem_rinter = sizeof(Tm)*rinter.size();
-            // copy from CPU to GPU 
-            if(schd.ctns.alg_rinter != 2){
-               dev_opaddr[4] = (Tm*)GPUmem.allocate(GPUmem_rinter);
-#ifdef USE_HIP
-               HIP_CHECK(hipMemcpy(dev_opaddr[4], rinter._value.data(), GPUmem_rinter, hipMemcpyHostToDevice));
-#else
-               CUDA_CHECK(cudaMemcpy(dev_opaddr[4], rinter._value.data(), GPUmem_rinter, cudaMemcpyHostToDevice));
-#endif// USE_HIP
-            }
-            if(rank == 0 && schd.ctns.verbose>0){
-               std::cout << "rank=" << rank
-                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
-                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper,qops,site,rinter)(GB)=" << GPUmem_oper/std::pow(1024.0,3)
-                  << "," << GPUmem_qops/std::pow(1024.0,3) 
-                  << "," << GPUmem_site/std::pow(1024.0,3) 
-                  << "," << GPUmem_rinter/std::pow(1024.0,3) 
-                  << std::endl;
-            }
-            timing.tf5 = tools::get_time();
-
-            // GEMM list and GEMV list
-            preprocess_formulae_Rlist2(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
-                  Rlst2, blksize, cost, rank==0 && schd.ctns.verbose>0);
-
-            timing.tf6 = tools::get_time();
-
-            // compute batchsize & allocate workspace
-            size_t maxbatch = 0;
-            for(int i=0; i<Rlst2.size(); i++){
-               maxbatch = std::max(maxbatch, Rlst2[i].size());
-            } // i
-            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
-            
-            // Determine batchsize dynamically: following sweep_twodot.h [additional N for reduction]
-            size_t batchsize = 0;
-            size_t GPUmem_reserved = GPUmem_oper + GPUmem_rinter + GPUmem_qops + GPUmem_site + 48;
-            if(GPUmem.size() > GPUmem_reserved){
-               batchsize = std::floor(double(GPUmem.size() - GPUmem_reserved)/(sizeof(Tm)*blksize*2 + 113));
-               batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
-               if(batchsize == 0 && maxbatch != 0){
-                  std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
-                  exit(1);
-               }
-            }else{
-               std::cout << "error: in sufficient GPU memory for batchGEMM! already reserved:" << std::endl;
-               std::cout << "GPUmem.size=" << GPUmem.size() << " GPUmem.used=" << GPUmem.used()
-                  << " GPUmem_reserved=" << GPUmem_reserved << " (oper,rinter,qops,site)=" 
-                  << GPUmem_oper << "," << GPUmem_rinter << "," << GPUmem_qops << "," << GPUmem_site 
-                  << std::endl;
-               exit(1);
-            }
-            size_t GPUmem_batch = sizeof(Tm)*batchsize*(blksize*2+1);
-            dev_workspace = (Tm*)GPUmem.allocate(GPUmem_batch);
-            GPUmem_used = GPUmem.used(); // later used in deallocate
-            if(schd.ctns.verbose>0){
-               std::cout << "rank=" << rank
-                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
-                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper,qops,site,rinter,batch)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
-                  << "," << GPUmem_qops/std::pow(1024.0,3)
-                  << "," << GPUmem_site/std::pow(1024.0,3)
-                  << "," << GPUmem_rinter/std::pow(1024.0,3)
-                  << "," << GPUmem_batch/std::pow(1024.0,3)
-                  << " batchsize=" << batchsize
-                  << std::endl;
-            }
-
-            // generate Rmmtasks
-            const int batchblas = 2;
-            Rmmtasks.resize(Rlst2.size());
-            for(int i=0; i<Rmmtasks.size(); i++){
-               Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, batchblas, 
-                     batchsize, blksize*2);
-               if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
-                  std::cout << " rank=" << rank << " iblk=" << i
-                      << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
-                      << " batchsize=" << Rmmtasks[i].batchsize
-                      << " nbatch=" << Rmmtasks[i].nbatch
-                      << std::endl;
-               }
-            }
             timing.tf7 = tools::get_time();
+            
+            // initialization of qops
+            memset(qops._data, 0, qops._size*sizeof(Tm));
+            timing.tf8 = tools::get_time();
 
             // kernel
-            Tm* dev_red = dev_workspace + batchsize*blksize*2;
-            preprocess_renorm_batchGPU(dev_qops, dev_site, size, rank, qops._size,
-                                    Rmmtasks, dev_opaddr, dev_workspace, dev_red);
-            
-            timing.tf8 = tools::get_time();
-
-            // copy results back to CPU
-#ifdef USE_HIP
-            HIP_CHECK(hipMemcpy(qops._data, dev_qops, qops.size()*sizeof(Tm), hipMemcpyDeviceToHost));
-#else
-            CUDA_CHECK(cudaMemcpy(qops._data, dev_qops, qops.size()*sizeof(Tm), cudaMemcpyDeviceToHost));
-#endif
-
-         }else if(alg_renorm == 17){
-
-            // BatchCPU: symbolic formulae + rintermediates [on the fly] + preallocation of workspace
-            if(schd.ctns.alg_rinter != 2){
-               std::cout << "error: alg_renorm=17 should be used with alg_rinter=2!" << std::endl;
-               exit(1);
+            if(!ifSingle){
+               if(!ifDirect){ 
+                  preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size,
+                                          Rmmtasks, opaddr, workspace);
+              }else{
+                  opaddr[4] = workspace + batchsize*blksize*2; // memory layout [workspace|inter]
+                  preprocess_renorm_batchDirect(qops._data, site._data, size, rank, qops._size,
+                                           Rmmtasks, opaddr, workspace, 
+                                           rinter._data);
+              }
+            }else{
+               if(!ifDirect){ 
+                  preprocess_renorm_batchSingle(qops._data, site._data, size, rank, qops._size,
+                                          Rmmtask, opaddr, workspace);
+               }else{
+                  opaddr[4] = workspace + batchsize*blksize*2; // memory layout [workspace|inter]
+                  preprocess_renorm_batchDirectSingle(qops._data, site._data, size, rank, qops._size,
+                                          Rmmtask, opaddr, workspace, 
+                                          rinter._data);
+               }
             }
+            timing.tf9 = tools::get_time();
+
+#ifdef GPU
+         }else if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
+
             if(rank == 0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
@@ -532,7 +312,15 @@ namespace ctns{
                std::cout << "GPUmem.used=" << GPUmem.used() << std::endl;
                exit(1);
             }
-          
+
+            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
+            const bool ifSingle = alg_renorm > 17;
+            const bool ifDirect = alg_renorm % 2 == 1;
+            if(ifDirect and schd.ctns.alg_renorm != 2){
+               std::cout << "error: alg_renorm=" << alg_renorm << " must be used with alg_renorm=2!" << std::endl;
+               exit(1);
+            }
+
             // allocate memery on GPU & copy qops
             size_t opertot = qops1.size() + qops2.size();
             size_t GPUmem_oper = sizeof(Tm)*opertot;
@@ -586,17 +374,22 @@ namespace ctns{
 #endif //USE_HIP
 
             timing.tf2 = tools::get_time();
-            
+
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1,
-                  debug_formulae);
- 
+                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
+
             timing.tf3 = tools::get_time();
 
             //------------------------------
             // intermediates
             //------------------------------
-            rinter.initDirect(schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
+            if(schd.ctns.alg_rinter != 2){
+               // compute hintermediates on CPU
+               rinter.init(ifDirect, schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
+            }else{
+               // compute hintermediates on GPU directly
+               rinter.init(ifDirect, schd.ctns.alg_rinter, qops_dict, oploc, dev_opaddr, rtasks, debug);
+            }
             timing.tf4 = tools::get_time();
 
             size_t GPUmem_rinter = sizeof(Tm)*rinter.size();
@@ -622,23 +415,28 @@ namespace ctns{
             timing.tf5 = tools::get_time();
 
             // GEMM list and GEMV list
-            preprocess_formulae_Rlist2Direct(superblock, qops, qops_dict, oploc, rtasks, site, rinter,
-                  Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
-            
+            size_t maxbatch = 0;
+            if(!ifSingle){
+               preprocess_formulae_Rlist2(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+                     Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+               for(int i=0; i<Rlst2.size(); i++){
+                  maxbatch = std::max(maxbatch, Rlst2[i].size());
+               } // i
+               maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
+            }else{
+               preprocess_formulae_Rlist(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+                     Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+               maxbatch = Rlst.size();
+            }
+            if(!ifDirect) assert(blksize0 == 0); 
             timing.tf6 = tools::get_time();
 
-            // compute batchsize & allocate workspace
-            size_t maxbatch = 0;
-            for(int i=0; i<Rlst2.size(); i++){
-               maxbatch = std::max(maxbatch, Rlst2[i].size());
-            } // i
-            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
-
             // Determine batchsize dynamically: following sweep_twodot.h [additional N for reduction]
+            size_t block = 2*blksize+blksize0+1;
             size_t batchsize = 0;
             size_t GPUmem_reserved = GPUmem_oper + GPUmem_rinter + GPUmem_qops + GPUmem_site + 88;
             if(GPUmem.size() > GPUmem_reserved){
-               batchsize = std::floor(double(GPUmem.size() - GPUmem_reserved)/(sizeof(Tm)*(blksize*2+blksize0) + 201));
+               batchsize = std::floor(double(GPUmem.size() - GPUmem_reserved)/(sizeof(Tm)*block + 136));
                batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
                if(batchsize == 0 && maxbatch != 0){
                   std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
@@ -652,7 +450,7 @@ namespace ctns{
                   << std::endl;
                exit(1);
             }
-            size_t GPUmem_batch = sizeof(Tm)*batchsize*(blksize*2+blksize0+1);
+            size_t GPUmem_batch = sizeof(Tm)*batchsize*block;
             dev_workspace = (Tm*)GPUmem.allocate(GPUmem_batch);
             GPUmem_used = GPUmem.used(); // later used in deallocate
             if(schd.ctns.verbose>0){
@@ -670,37 +468,65 @@ namespace ctns{
 
             // generate Rmmtasks
             const int batchblas = 2;
-            Rmmtasks.resize(Rlst2.size());
-            for(int i=0; i<Rmmtasks.size(); i++){
-               Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, batchblas, 
-                     batchsize, blksize*2, blksize0);
-               if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
-                  std::cout << " rank=" << rank << " iblk=" << i
-                      << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
-                      << " batchsize=" << Rmmtasks[i].batchsize
-                      << " nbatch=" << Rmmtasks[i].nbatch
-                      << std::endl;
+            if(!ifSingle){
+               Rmmtasks.resize(Rlst2.size());
+               for(int i=0; i<Rmmtasks.size(); i++){
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, batchblas, batchsize, blksize*2, blksize0);
+                  if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
+                     std::cout << " rank=" << rank << " iblk=" << i
+                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
+                         << " batchsize=" << Rmmtasks[i].batchsize
+                         << " nbatch=" << Rmmtasks[i].nbatch
+                         << std::endl;
+                  }
+               }
+            }else{
+               Rmmtask.init(Rlst, schd.ctns.hxorder, batchblas, batchsize, blksize*2, blksize0);
+               if(debug && schd.ctns.verbose>1){
+                  std::cout << " rank=" << rank 
+                     << " Rlst.size=" << Rlst.size()
+                     << " Rmmtask.totsize=" << Rmmtask.totsize
+                     << " batchsize=" << Rmmtask.batchsize 
+                     << " nbatch=" << Rmmtask.nbatch 
+                     << std::endl;
                }
             }
             timing.tf7 = tools::get_time();
 
-            dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
-            Tm* dev_red = dev_opaddr[4] + batchsize*blksize0; // tmpspace for coefficients in reduction
-           
-            // debug 
-            Tm* tmp = new Tm[qops.size()];
-            memset(tmp, 0, qops.size()*sizeof(Tm));
-            CUDA_CHECK(cudaMemcpy(tmp, dev_qops, qops.size()*sizeof(Tm), cudaMemcpyDeviceToHost));
-            double error_init = linalg::xnrm2(qops.size(), tmp);
-            delete[] tmp;
-            std::cout << "rank=" << rank << " error_init=" << error_init << std::endl;
-            
-            CUDA_CHECK(cudaMemset(dev_qops, -99999, qops.size()*sizeof(Tm)));
-
-            preprocess_renorm_batch2GPU(dev_qops, dev_site, size, rank, qops._size,
-                                     Rmmtasks, dev_opaddr, dev_workspace, rinter._data, dev_red);
-
+            // initialization of qops
+#ifdef USE_HIP
+            HIP_CHECK(hipMemset(dev_qops, 0, qops._size*sizeof(Tm)));
+#else
+            CUDA_CHECK(cudaMemset(dev_qops, 0, qops._size*sizeof(Tm)));
+#endif // USE_HIP
             timing.tf8 = tools::get_time();
+
+            // kernel
+            Tm* dev_red = dev_workspace + batchsize*(blksize*2+blksize0);
+            if(!ifSingle){
+               if(!ifDirect){
+                  preprocess_renorm_batchGPU(dev_qops, dev_site, size, rank, qops._size,
+                                          Rmmtasks, dev_opaddr, dev_workspace, 
+                                          dev_red);
+               }else{
+                  dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
+                  preprocess_renorm_batch2GPU(dev_qops, dev_site, size, rank, qops._size,
+                                          Rmmtasks, dev_opaddr, dev_workspace, 
+                                          rinter._data, dev_red);
+               }
+            }else{
+               if(!ifDirect){
+                  preprocess_renorm_batchGPUSingle(dev_qops, dev_site, size, rank, qops._size,
+                                          Rmmtask, dev_opaddr, dev_workspace, 
+                                          dev_red);
+               }else{
+                  dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
+                  preprocess_renorm_batch2GPU(dev_qops, dev_site, size, rank, qops._size,
+                                          Rmmtask, dev_opaddr, dev_workspace, 
+                                          rinter._data, dev_red);
+               }
+            }
+            timing.tf9 = tools::get_time();
 
             // copy results back to CPU
 #ifdef USE_HIP
@@ -710,12 +536,12 @@ namespace ctns{
 #endif
 
 #endif // GPU
-
+       
          }else{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
             exit(1);
          } // alg_renorm
-         timing.tf9 = tools::get_time();
+         timing.tf10 = tools::get_time();
 
          // debug 
          if(debug_oper_renorm){
@@ -775,7 +601,7 @@ namespace ctns{
          }
 
          // free tmp space on CPU
-         if(alg_renorm==6 || alg_renorm==7){
+         if(alg_renorm==6 || alg_renorm==7 || alg_renorm==8 || alg_renorm==9){
             delete[] workspace;
          }
 #ifdef GPU
@@ -840,16 +666,16 @@ namespace ctns{
             }
          }
 
-         timing.tf10 = tools::get_time();
+         timing.tf11 = tools::get_time();
          if(debug){ 
             if(schd.ctns.verbose>0) qops.print("qops");
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
          }
 
-            double t_tot = tools::get_duration(timing.tf10-timing.tf0); 
+            double t_tot = tools::get_duration(timing.tf11-timing.tf0); 
             double t_init = tools::get_duration(timing.tf1-timing.tf0);
-            double t_cal = tools::get_duration(timing.tf9-timing.tf1);
-            double t_comm = tools::get_duration(timing.tf10-timing.tf9);
+            double t_cal = tools::get_duration(timing.tf10-timing.tf1);
+            double t_comm = tools::get_duration(timing.tf11-timing.tf10);
             std::cout << "TIMING for Renormalization : " << t_tot 
                << " T(init/cal/comm)=" << t_init << "," << t_cal << "," << t_comm
                << " rank=" << rank

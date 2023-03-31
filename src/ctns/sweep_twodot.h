@@ -266,7 +266,7 @@ namespace ctns{
 
             // OpenMP + Single Hxlst: symbolic formulae + hintermediates + preallocation of workspace
             const bool ifDirect = false;
-            
+
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
@@ -398,7 +398,7 @@ namespace ctns{
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtasks), std::ref(opaddr), std::ref(workspace));
                }else{
-                  opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
+                  opaddr[4] = workspace + batchsize*blksize*2; // memory layout [workspace|inter]
                   HVec = bind(&ctns::preprocess_Hx_batchDirect<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtasks), std::ref(opaddr), std::ref(workspace),
@@ -410,7 +410,7 @@ namespace ctns{
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtask), std::ref(opaddr), std::ref(workspace));
                }else{
-                  opaddr[4] = workspace + batchsize*(blksize*2); // memory layout [workspace|inter]
+                  opaddr[4] = workspace + batchsize*blksize*2; // memory layout [workspace|inter]
                   HVec = bind(&ctns::preprocess_Hx_batchDirectSingle<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtask), std::ref(opaddr), std::ref(workspace),
@@ -432,7 +432,7 @@ namespace ctns{
                std::cout << "GPUmem.used=" << GPUmem.used() << std::endl;
                exit(1);
             }
-            
+
             // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
             const bool ifSingle = alg_hvec > 17;
             const bool ifDirect = alg_hvec % 2 == 1;
@@ -491,7 +491,7 @@ namespace ctns{
                hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, dev_opaddr, H_formulae, debug);
             }
             timing.tb4 = tools::get_time();
-            
+
             size_t GPUmem_hinter = sizeof(Tm)*hinter.size();
             // copy from CPU to GPU 
             if(schd.ctns.alg_hinter != 2){
@@ -526,7 +526,6 @@ namespace ctns{
                maxbatch = Hxlst.size();
             }
             if(!ifDirect) assert(blksize0 == 0); 
-            
             timing.tb6 = tools::get_time();
 
             //
@@ -537,8 +536,10 @@ namespace ctns{
             // GEMV_BATCH = [5*(N+1)*sizeof(int) + 3*N*sizeof(double*/complex*)]
             //            = 5*8*(N+1) + 3*N*8 = 64*N+40
             // Coefficient in reduction: N*sizeof(double/complex) => N*sizeof(Tm)
-            // Thus, total = oper + hinter + dvdson + sizeof(Tm)*N*+ 136*N+88
+            // Thus, total = oper + hinter + dvdson + sizeof(Tm)*N*BLKSIZE+ 136*N+88
+            // 
             // => N = (total-reserved)/(sizeof(Tm)*BLKSIZE+136) [BLKSIZE=2*blksize+blksize+1]
+            //
             size_t block = 2*blksize+blksize0+1;
             size_t batchsize = 0;
             size_t GPUmem_dvdson = sizeof(Tm)*2*ndim;
@@ -588,7 +589,7 @@ namespace ctns{
                         << std::endl;
                   }
                } // i
-               // save for analysis of BatchGEMM
+                 // save for analysis of BatchGEMM
                if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
                   save_hmmtasks(Hmmtasks, isweep, ibond);
                }

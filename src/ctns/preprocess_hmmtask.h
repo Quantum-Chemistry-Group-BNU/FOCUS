@@ -3,7 +3,7 @@
 
 #include "preprocess_hxlist.h"
 #include "preprocess_mmbatch.h"
-#include "preprocess_mmreduce.h"
+#include "preprocess_mvbatch.h"
 
 #include "time.h"
 #include "sys/time.h"
@@ -110,8 +110,9 @@ namespace ctns{
             int batchblas = -1;
             size_t totsize = 0, batchsize = 0, nbatch = 0;
             double cost = 0.0;
+            // --- GEMM ---
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
-            std::vector<MMreduce<Tm>> mmreduce; // mmreduce[ibatch]
+            // --- reduction --- 
             std::vector<std::vector<Tm>> coefflst;
             std::vector<MVbatch<Tm>> mvbatch;
             // --- intermediates [Direct] ---
@@ -140,7 +141,7 @@ namespace ctns{
 
          // start process Hxlst
          mmbatch2.resize(nbatch);
-         mmreduce.resize(nbatch);
+         coefflst.resize(nbatch);
          mvbatch.resize(nbatch);
          imvbatch.resize(nbatch);
          for(int k=0; k<nbatch; k++){
@@ -241,18 +242,7 @@ namespace ctns{
                cost += mmbatch2[k][i].cost; // accumulate MM cost
             } // i
 
-            // 3. setup mmreduce[k]
-            mmreduce[k].batchsize = jlen;
-            mmreduce[k].ndim = Hxlst[off].size;
-            mmreduce[k].offset = offset;
-            mmreduce[k].offout = Hxlst[off].offout;
-            mmreduce[k].coeff.resize(jlen);
-            for(size_t j=0; j<jlen; j++){
-               size_t jdx = off+j;
-               const auto& Hxblk = Hxlst[jdx];
-               mmreduce[k].coeff[j] = Hxblk.coeff;
-            }
-
+            // 3. reduction: setup mvbatch[k]
             coefflst[k].resize(jlen);
             MVlist<Tm> mvlst;
             int nmu = 0;
@@ -297,7 +287,6 @@ namespace ctns{
             mvlst.push_back(mv);
             const Tm beta = 1.0;
             mvbatch[k].init(mvlst, beta);
-            
          } // k
       }
 
@@ -312,18 +301,6 @@ namespace ctns{
             std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
             hmmtasks[i].save(fgemmi);
          }
-         std::string freduction = "hmmtasks_reduction";
-         freduction += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond)+".txt";
-         std::ofstream fout(freduction);
-         for(int i=0; i<hmmtasks.size(); i++){
-            for(int j=0; j<hmmtasks[i].mmreduce.size(); j++){
-               const auto& red = hmmtasks[i].mmreduce[j];
-               fout << "iblk=" << i << " ibatch=" << j 
-                  << " batchsize=" << red.batchsize << " ndim=" << red.ndim
-                  << std::endl;      
-            }
-         }
-         fout.close();
       }
 
 } // ctns

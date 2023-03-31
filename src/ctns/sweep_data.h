@@ -72,7 +72,7 @@ namespace ctns{
          this->print_part(msg+":dvdson solver [communication]", dtb8, tdvdsn, dtacc);
          this->print_part(msg+":dvdson solver [rest part]    ", dtb9, tdvdsn, dtacc);
         
-         double trenrm = dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9;
+         double trenrm = dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10;
          std::cout << "Detailed decomposition of T(renrm): " 
             << std::scientific << std::setprecision(2) << trenrm << " S"
             << std::endl;
@@ -84,9 +84,10 @@ namespace ctns{
          this->print_part(msg+":rintermediates memcpy cpu2gpu", dtf4, trenrm, dtacc);
          this->print_part(msg+":preprocess_formulae_Rlist2   ", dtf5, trenrm, dtacc);
          this->print_part(msg+":rmmtasks init                ", dtf6, trenrm, dtacc);
-         this->print_part(msg+":preprocess_renorm_batchGPU   ", dtf7, trenrm, dtacc);
-         this->print_part(msg+":qops memcpy gpu2cpu          ", dtf8, trenrm, dtacc);
-         this->print_part(msg+":communication of opS and opH ", dtf9, trenrm, dtacc);
+         this->print_part(msg+":qops memset                  ", dtf7, trenrm, dtacc);
+         this->print_part(msg+":preprocess_renorm_batchGPU   ", dtf8, trenrm, dtacc);
+         this->print_part(msg+":qops memcpy gpu2cpu          ", dtf9, trenrm, dtacc);
+         this->print_part(msg+":communication of opS and opH ", dtf10, trenrm, dtacc);
       }
       void analysis(const std::string msg,
             const bool debug=true){
@@ -118,6 +119,7 @@ namespace ctns{
          dtf7 = tools::get_duration(tf8-tf7); 
          dtf8 = tools::get_duration(tf9-tf8); 
          dtf9 = tools::get_duration(tf10-tf9); 
+         dtf10 = tools::get_duration(tf11-tf10); 
          
          if(debug) this->print(msg);
       }
@@ -155,6 +157,7 @@ namespace ctns{
          dtf7 += timer.dtf7; 
          dtf8 += timer.dtf8; 
          dtf9 += timer.dtf9; 
+         dtf10 += timer.dtf10;
    
          if(debug) this->print(msg);
       }
@@ -187,10 +190,11 @@ namespace ctns{
       Tm tf5; // rintermediates memcpy cpu2gpu
       Tm tf6; // preprocess_formulae_Rlist2   
       Tm tf7; // rmmtasks init                
-      Tm tf8; // preprocess_renorm_batchGPU   
-      Tm tf9; // qops memcpy gpu2cpu
-      Tm tf10; // communication 
-      double dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0;
+      Tm tf8; // qops memset
+      Tm tf9; // preprocess_renorm_batchGPU   
+      Tm tf10; // qops memcpy gpu2cpu
+      Tm tf11; // communication 
+      double dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0, dtf10=0;
    };
 
    // computed results at a given dot	

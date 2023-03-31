@@ -12,26 +12,41 @@ namespace ctns{
       struct rintermediates{
          public:
             // initialization
-            void init(const int alg_rinter,
+            void init(const bool ifDirect,
+                  const int alg_rinter,
                   const oper_dictmap<Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
                   const bool debug=false){
-               if(alg_rinter == 0){
-                  this->init_omp(qops_dict, rtasks, debug);
-               }else if(alg_rinter == 1){
-                  this->init_batch_cpu(qops_dict, oploc, opaddr, rtasks, debug);
+               if(!ifDirect){
+                  if(alg_rinter == 0){
+                     this->init_omp(qops_dict, rtasks, debug);
+                  }else if(alg_rinter == 1){
+                     this->init_batch_cpu(qops_dict, oploc, opaddr, rtasks, debug);
 #ifdef GPU
-               }else if(alg_rinter == 2){
-                  this->init_batch_gpu(qops_dict, oploc, opaddr, rtasks, debug);
+                  }else if(alg_rinter == 2){
+                     this->init_batch_gpu(qops_dict, oploc, opaddr, rtasks, debug);
 #endif
+                  }else{
+                     std::cout << "error: no such option in Intermediates::init alg_rinter=" 
+                        << alg_rinter << std::endl;
+                     exit(1);
+                  }
+                  opaddr[locInter] = _data;
                }else{
-                  std::cout << "error: no such option in Intermediates::init alg_rinter=" 
-                     << alg_rinter << std::endl;
-                  exit(1);
+                  if(alg_rinter == 1){
+                     this->initDirect_batch_cpu(qops_dict, oploc, opaddr, rtasks, debug);
+#ifdef GPU
+                  }else if(alg_rinter == 2){
+                     this->initDirect_batch_gpu(qops_dict, oploc, opaddr, rtasks, debug);
+#endif
+                  }else{
+                     std::cout << "error: no such option in Intermediates::initDirect alg_rinter=" 
+                        << alg_rinter << std::endl;
+                     exit(1);
+                  }
                }
-               opaddr[locInter] = _data;
             }
             // form rintermediates
             void init_omp(const oper_dictmap<Tm>& qops_dict,
@@ -42,38 +57,17 @@ namespace ctns{
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
                   const bool debug);
-#ifdef GPU
-            void init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
-                  const std::map<std::string,int>& oploc,
-                  Tm** opaddr,
-                  const renorm_tasks<Tm>& rtasks,
-                  const bool debug);
-#endif
-            // initialization [direct]
-            void initDirect(const int alg_rinter,
-                  const oper_dictmap<Tm>& qops_dict,
-                  const std::map<std::string,int>& oploc,
-                  Tm** opaddr,
-                  const renorm_tasks<Tm>& rtasks,
-                  const bool debug=false){
-               if(alg_rinter == 1){
-                  this->initDirect_batch_cpu(qops_dict, oploc, opaddr, rtasks, debug);
-#ifdef GPU
-               }else if(alg_rinter == 2){
-                  this->initDirect_batch_gpu(qops_dict, oploc, opaddr, rtasks, debug);
-#endif
-               }else{
-                  std::cout << "error: no such option in Intermediates::initDirect alg_rinter=" 
-                     << alg_rinter << std::endl;
-                  exit(1);
-               }
-            }
             void initDirect_batch_cpu(const oper_dictmap<Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
                   const bool debug);
 #ifdef GPU
+            void init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+                  const std::map<std::string,int>& oploc,
+                  Tm** opaddr,
+                  const renorm_tasks<Tm>& rtasks,
+                  const bool debug);
             void initDirect_batch_gpu(const oper_dictmap<Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
@@ -87,7 +81,7 @@ namespace ctns{
             std::map<std::tuple<int,int,int>,size_t> _offset; // map from (it,idx) in rtasks to offset
             size_t _count = 0, _size = 0;
             std::vector<Tm> _value;
-            Tm* _data;
+            Tm* _data = nullptr;
       };
 
    // openmp version with symbolic_sum_oper
