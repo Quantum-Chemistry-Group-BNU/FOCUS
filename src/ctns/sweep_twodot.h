@@ -196,15 +196,23 @@ namespace ctns{
          Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
          Tm* dev_oper = nullptr;
          Tm* dev_workspace = nullptr;
+         Tm* dev_red = nullptr;
          size_t GPUmem_used = 0;
 #endif
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
+
+         // consistency check
          if(Km::ifkr && alg_hvec >=4){
             std::cout << "error: alg_hvec >= 4 does not support complex yet!" << std::endl;
             exit(1); 
          }
+         if(alg_hvec < 10 and schd.ctns.alg_hinter == 2){
+            std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter!=2" << std::endl;
+            exit(1);
+         }
+
          if(alg_hvec == 0){
 
             // oldest version
@@ -348,6 +356,7 @@ namespace ctns{
                      Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Hxlst.size();
             }
+            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             if(!ifDirect) assert(blksize0 == 0); 
 
             // generate Hmmtasks
@@ -437,7 +446,7 @@ namespace ctns{
             const bool ifSingle = alg_hvec > 17;
             const bool ifDirect = alg_hvec % 2 == 1;
             if(ifDirect and schd.ctns.alg_hinter != 2){
-               std::cout << "error: alg_hvec=" << alg_hvec << " must be used with alg_hinter=2!" << std::endl;
+               std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
                exit(1);
             }
 
@@ -525,6 +534,7 @@ namespace ctns{
                      Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Hxlst.size();
             }
+            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             if(!ifDirect) assert(blksize0 == 0); 
             timing.tb6 = tools::get_time();
 
@@ -607,7 +617,7 @@ namespace ctns{
             timing.tb7 = tools::get_time();
 
             // GPU version of Hx
-            Tm* dev_red = dev_workspace + 2*ndim + batchsize*(blksize*2+blksize0); 
+            dev_red = dev_workspace + 2*ndim + batchsize*(blksize*2+blksize0); 
             if(!ifSingle){
                if(!ifDirect){
                   HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
@@ -615,7 +625,7 @@ namespace ctns{
                         std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
                         std::ref(dev_red));
                }else{
-                  dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*(blksize*2); // memory layout [workspace|inter]
+                  dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*blksize*2; // memory layout [workspace|inter]
                   HVec = bind(&ctns::preprocess_Hx_batchDirectGPU<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
@@ -628,7 +638,7 @@ namespace ctns{
                         std::cref(ndim), std::ref(Hmmtask), std::ref(dev_opaddr), std::ref(dev_workspace),
                         std::ref(dev_red));
                }else{
-                  dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*(blksize*2); // memory layout [workspace|inter]
+                  dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*blksize*2; // memory layout [workspace|inter]
                   HVec = bind(&ctns::preprocess_Hx_batchDirectGPUSingle<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtask), std::ref(dev_opaddr), std::ref(dev_workspace),
@@ -698,9 +708,9 @@ namespace ctns{
          // 4. save on disk 
          qops_pool.save(frop);
          /* NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ],
-            removing in the later configuration must wait until 
+            removing in the later configuration should wait until 
             the file from the former configuration has been saved!
-            Therefore, oper_remove must come later than save,
+            Therefore, oper_remove should come later than save,
             which contains the synchronization!
             */
          oper_remove(fdel, debug);

@@ -79,7 +79,7 @@ namespace ctns{
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
                // reduction by GEMV
-               Tm* pcoeff = const_cast<Tm*>(coefflst[k].data());  
+               Tm* pcoeff = const_cast<Tm*>(coefflst[k].data());
 #ifdef GPU
                if(dev_red != nullptr){
 #ifdef USE_HIP

@@ -61,10 +61,10 @@ namespace ctns{
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
 #ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(x, xCPU,ndim*sizeof(Tm), hipMemcpyHostToDevice));
+         HIP_CHECK(hipMemcpy(x, xCPU, ndim*sizeof(Tm), hipMemcpyHostToDevice));
          HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
 #else
-         CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
+         CUDA_CHECK(cudaMemcpy(x, xCPU, ndim*sizeof(Tm), cudaMemcpyHostToDevice));
          CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
 #endif //USE_HIP
          gettimeofday(&t1_copy, NULL);
@@ -169,10 +169,10 @@ namespace ctns{
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
 #ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(x, xCPU,ndim*sizeof(Tm), hipMemcpyHostToDevice));
+         HIP_CHECK(hipMemcpy(x, xCPU, ndim*sizeof(Tm), hipMemcpyHostToDevice));
          HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
 #else
-         CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
+         CUDA_CHECK(cudaMemcpy(x, xCPU, ndim*sizeof(Tm), cudaMemcpyHostToDevice));
          CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
 #endif //USE_HIP
          gettimeofday(&t1_copy, NULL);
@@ -280,10 +280,10 @@ namespace ctns{
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
 #ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(x, xCPU,ndim*sizeof(Tm), hipMemcpyHostToDevice));
+         HIP_CHECK(hipMemcpy(x, xCPU, ndim*sizeof(Tm), hipMemcpyHostToDevice));
          HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
 #else
-         CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
+         CUDA_CHECK(cudaMemcpy(x, xCPU, ndim*sizeof(Tm), cudaMemcpyHostToDevice));
          CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
 #endif //USE_HIP
          gettimeofday(&t1_copy, NULL);
@@ -384,10 +384,10 @@ namespace ctns{
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
 #ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(x, xCPU,ndim*sizeof(Tm), hipMemcpyHostToDevice));
+         HIP_CHECK(hipMemcpy(x, xCPU, ndim*sizeof(Tm), hipMemcpyHostToDevice));
          HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
 #else
-         CUDA_CHECK(cudaMemcpy(x, xCPU,ndim*sizeof(Tm), cudaMemcpyHostToDevice));
+         CUDA_CHECK(cudaMemcpy(x, xCPU, ndim*sizeof(Tm), cudaMemcpyHostToDevice));
          CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
 #endif //USE_HIP
          gettimeofday(&t1_copy, NULL);

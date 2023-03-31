@@ -132,17 +132,25 @@ namespace ctns{
          double cost=0.0;
          Tm* workspace;
 #ifdef GPU
+         Tm* dev_site = nullptr;
+         Tm* dev_qops = nullptr;
          Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
          Tm* dev_oper = nullptr;
          Tm* dev_workspace = nullptr;
-         Tm* dev_site = nullptr;
-         Tm* dev_qops = nullptr;
+         Tm* dev_red = nullptr;
          size_t GPUmem_used = 0;
 #endif
+
+         // consistency check
          if(Km::ifkr && alg_renorm >=4){
             std::cout << "error: alg_renorm >= 4 does not support complex yet!" << std::endl;
             exit(1); 
          }
+         if(alg_renorm < 10 and schd.ctns.alg_rinter == 2){
+            std::cout << "error: alg_renorm=" << alg_renorm << " should be used with alg_rinter!=2" << std::endl;
+            exit(1);
+         }
+
          timing.tf1 = tools::get_time();
          if(alg_renorm == 0){
 
@@ -206,6 +214,10 @@ namespace ctns{
                std::cout << "error: batchsize should be set!" << std::endl;
                exit(1);
             }
+            if(schd.ctns.alg_rinter == 2){
+               std::cout << "error: alg_renorm=" << alg_renorm << " should be used with alg_rinter!=2" << std::endl;
+               exit(1);
+            }
             timing.tf2 = tools::get_time();
 
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
@@ -230,6 +242,7 @@ namespace ctns{
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
             }
+            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             if(!ifDirect) assert(blksize0 == 0);
             timing.tf6 = tools::get_time();
 
@@ -317,7 +330,7 @@ namespace ctns{
             const bool ifSingle = alg_renorm > 17;
             const bool ifDirect = alg_renorm % 2 == 1;
             if(ifDirect and schd.ctns.alg_rinter != 2){
-               std::cout << "error: alg_renorm=" << alg_renorm << " must be used with alg_rinter=2!" << std::endl;
+               std::cout << "error: alg_renorm=" << alg_renorm << " should be used with alg_rinter=2" << std::endl;
                exit(1);
             }
 
@@ -422,12 +435,12 @@ namespace ctns{
                for(int i=0; i<Rlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Rlst2[i].size());
                } // i
-               maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             }else{
                preprocess_formulae_Rlist(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
             }
+            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             if(!ifDirect) assert(blksize0 == 0); 
             timing.tf6 = tools::get_time();
 
@@ -502,7 +515,7 @@ namespace ctns{
             timing.tf8 = tools::get_time();
 
             // kernel
-            Tm* dev_red = dev_workspace + batchsize*(blksize*2+blksize0);
+            dev_red = dev_workspace + batchsize*(blksize*2+blksize0);
             if(!ifSingle){
                if(!ifDirect){
                   preprocess_renorm_batchGPU(dev_qops, dev_site, size, rank, qops._size,
