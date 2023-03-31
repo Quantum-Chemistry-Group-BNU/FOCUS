@@ -292,30 +292,28 @@ KNOWN PROBLEMS
 
  * profiling: better timing for alg_hvec & alg_renorm
 
+=== TODOs ===
+
+ * Better GEMM_BATCH with TensorCore
+
+ * async IO strategy: Fix bug in parallel IO [mpi problem]
+
+
+
  * OpenMP for symbolic & mmtasks
    - more tests
    - compare mmtask & rmmtask
-
-=== TODOs ===
 
  * Better organization of tasks: 
    - Revise Hx -> a single big batch?
    - Use of TensorCore!!!
 
- * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma?]
-
  * OpenMP parallelization in decimation
 
- * async IO strategy: Fix bug in parallel IO [mpi problem]
+ * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma?]
 
 === Future ===
 
- * Support further partition of operators: reduce GPU memory requirement
-   - GPU only compute large blocks y[l,r,c1,c2] if d[l] & d[r] > dthresh,
-     and hence we only need to send rows of o[l,:] and o[r,:] as well as
-     the full vector x & y to GPU, which minimize the memory usage of GPU.
-   - Can renorm be performed in a similar way?
- 
  * Support complex version [DONE@20230228]
    - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
       otherwise renormalized state become complex, and the construction of H 
@@ -324,3 +322,9 @@ KNOWN PROBLEMS
  
  * Support Kramers version
 
+ * Support further partition of operators: reduce GPU memory requirement
+   - GPU only compute large blocks y[l,r,c1,c2] if d[l] & d[r] > dthresh,
+     and hence we only need to send rows of o[l,:] and o[r,:] as well as
+     the full vector x & y to GPU, which minimize the memory usage of GPU.
+   - Can renorm be performed in a similar way?
+ 
