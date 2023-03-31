@@ -30,14 +30,14 @@ namespace ctns{
          void print(std::string name, 
                const std::vector<double>& tdata, 
                const std::vector<double>& cost,
-               const double& taxpy,
+               const double& tinter,
                const double& tgemm,
-               const double& tgemv){
-            double tot = taxpy + tgemm + tgemv;
+               const double& tred){
+            double tot = tinter + tgemm + tred;
             std::cout << "--- TIMING for " << name << " :"
-               << " taxpy=" << taxpy 
-               << " tgemm=" << tgemm 
-               << " tgemv=" << tgemv
+               << " t_inter=" << tinter
+               << " t_gemm=" << tgemm 
+               << " t_reduction=" << tred
                << " tot=" << tot << " ---" 
                << std::endl;
             double cgemm = 0.0;
