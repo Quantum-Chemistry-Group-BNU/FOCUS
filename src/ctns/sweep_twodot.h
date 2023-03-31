@@ -625,13 +625,13 @@ namespace ctns{
                if(!ifDirect){
                   HVec = bind(&ctns::preprocess_Hx_batchGPUSingle<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
-                        std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
+                        std::cref(ndim), std::ref(Hmmtask), std::ref(dev_opaddr), std::ref(dev_workspace),
                         std::ref(dev_red));
                }else{
                   dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*(blksize*2); // memory layout [workspace|inter]
                   HVec = bind(&ctns::preprocess_Hx_batchDirectGPUSingle<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
-                        std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
+                        std::cref(ndim), std::ref(Hmmtask), std::ref(dev_opaddr), std::ref(dev_workspace),
                         std::ref(hinter._data), std::ref(dev_red));
                }
             }

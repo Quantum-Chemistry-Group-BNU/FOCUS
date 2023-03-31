@@ -9,6 +9,10 @@
 #include "sys/time.h"
 #include "oper_timer.h"
 
+#ifdef GPU
+#include "../gpu/gpu_blas.h"
+#endif
+
 namespace ctns{
 
    // Interface to Rlist

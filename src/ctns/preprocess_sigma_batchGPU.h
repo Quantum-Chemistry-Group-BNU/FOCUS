@@ -241,7 +241,7 @@ namespace ctns{
             const int& size,
             const int& rank,
             const size_t& ndim,
-            HMMtasks<Tm>& Hmmtasks,
+            HMMtask<Tm>& Hmmtask,
             Tm** opaddr,
             Tm* dev_workspace,
             Tm* dev_red){
@@ -342,7 +342,7 @@ namespace ctns{
             const int& size,
             const int& rank,
             const size_t& ndim,
-            HMMtasks<Tm>& Hmmtasks,
+            HMMtask<Tm>& Hmmtask,
             Tm** opaddr,
             Tm* dev_workspace,
             Tm* alphas,

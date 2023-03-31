@@ -25,7 +25,7 @@
 
 namespace ctns{
 
-   const bool debug_oper_renorm = true; 
+   const bool debug_oper_renorm = false; 
    extern const bool debug_oper_renorm;
 
    const bool debug_oper_rbasis = false;
@@ -316,8 +316,8 @@ namespace ctns{
             // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
             const bool ifSingle = alg_renorm > 17;
             const bool ifDirect = alg_renorm % 2 == 1;
-            if(ifDirect and schd.ctns.alg_renorm != 2){
-               std::cout << "error: alg_renorm=" << alg_renorm << " must be used with alg_renorm=2!" << std::endl;
+            if(ifDirect and schd.ctns.alg_rinter != 2){
+               std::cout << "error: alg_renorm=" << alg_renorm << " must be used with alg_rinter=2!" << std::endl;
                exit(1);
             }
 
@@ -510,7 +510,7 @@ namespace ctns{
                                           dev_red);
                }else{
                   dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
-                  preprocess_renorm_batch2GPU(dev_qops, dev_site, size, rank, qops._size,
+                  preprocess_renorm_batchDirectGPU(dev_qops, dev_site, size, rank, qops._size,
                                           Rmmtasks, dev_opaddr, dev_workspace, 
                                           rinter._data, dev_red);
                }
@@ -521,7 +521,7 @@ namespace ctns{
                                           dev_red);
                }else{
                   dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
-                  preprocess_renorm_batch2GPU(dev_qops, dev_site, size, rank, qops._size,
+                  preprocess_renorm_batchDirectGPUSingle(dev_qops, dev_site, size, rank, qops._size,
                                           Rmmtask, dev_opaddr, dev_workspace, 
                                           rinter._data, dev_red);
                }
