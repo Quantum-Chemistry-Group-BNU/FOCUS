@@ -674,10 +674,10 @@ namespace ctns{
 
             double t_tot = tools::get_duration(timing.tf11-timing.tf0); 
             double t_init = tools::get_duration(timing.tf1-timing.tf0);
-            double t_cal = tools::get_duration(timing.tf10-timing.tf1);
+            double t_kernel = tools::get_duration(timing.tf10-timing.tf1);
             double t_comm = tools::get_duration(timing.tf11-timing.tf10);
             std::cout << "TIMING for Renormalization : " << t_tot 
-               << " T(init/cal/comm)=" << t_init << "," << t_cal << "," << t_comm
+               << " T(init/kernel/comm)=" << t_init << "," << t_kernel << "," << t_comm
                << " rank=" << rank
                << std::endl;
          
