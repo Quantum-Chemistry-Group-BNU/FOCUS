@@ -81,25 +81,7 @@ namespace ctns{
       using Rlist2 = std::vector<std::vector<Rblock<Tm>>>; 
 
    template <typename Tm>
-      void get_MMlist(Rlist<Tm>& Rlst, const int hxorder){
-         // sort Rlst
-         if(hxorder == 1){ // sort by cost
-            std::stable_sort(Rlst.begin(), Rlst.end(),
-                  [](const Rblock<Tm>& t1, const Rblock<Tm>& t2){ 
-                  return t1.cost > t2.cost; });
-         }else if(hxorder == 2){ // sort by cost
-            std::stable_sort(Rlst.begin(), Rlst.end(),
-                  [](const Rblock<Tm>& t1, const Rblock<Tm>& t2){ 
-                  return t1.cost < t2.cost; });
-         }else if(hxorder == 3){ // sort by offrop
-            std::stable_sort(Rlst.begin(), Rlst.end(),
-                  [](const Rblock<Tm>& t1, const Rblock<Tm>& t2){ 
-                  return t1.offrop < t2.offrop; });
-         }else if(hxorder == 4){ // sort by offin
-            std::stable_sort(Rlst.begin(), Rlst.end(),
-                  [](const Rblock<Tm>& t1, const Rblock<Tm>& t2){ 
-                  return t1.offin < t2.offin; });
-         } 
+      void get_MMlist(Rlist<Tm>& Rlst){
          // generate MMlist 
          for(int i=0; i<Rlst.size(); i++){
             Rlst[i].get_MMlist();
@@ -107,10 +89,10 @@ namespace ctns{
       }
 
    template <typename Tm>
-      void get_MMlist(Rlist2<Tm>& Rlst2, const int hxorder){
+      void get_MMlist(Rlist2<Tm>& Rlst2){
          for(int i=0; i<Rlst2.size(); i++){
             auto& Rlst = Rlst2[i];
-            get_MMlist(Rlst, hxorder);
+            get_MMlist(Rlst);
          } // i
       }
 

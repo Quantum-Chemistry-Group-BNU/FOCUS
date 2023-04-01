@@ -211,8 +211,8 @@ void params_ctns::read(ifstream& istrm){
          sort_formulae = true;
       }else if(line.substr(0,11)=="save_mmtask"){
          save_mmtask = true;
-      }else if(line.substr(0,7)=="hxorder"){
-         hxorder = stoi(line.substr(7));
+      }else if(line.substr(0,7)=="mmorder"){
+         mmorder = stoi(line.substr(7));
       }else if(line.substr(0,9)=="batchsize"){
          batchsize = stoi(line.substr(9));
       }else if(line.substr(0,11)=="rcanon_load"){
@@ -345,7 +345,7 @@ void params_ctns::print() const{
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;
    cout << "save_mmtask = " << save_mmtask << endl;
-   cout << "hxorder = " << hxorder << endl;
+   cout << "mmorder = " << mmorder << endl;
    cout << "batchsize = " << batchsize << endl;
    // dvdson
    cout << "cisolver = " << cisolver << endl;

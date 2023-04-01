@@ -47,9 +47,10 @@ namespace ctns{
          if(debug){
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR preprocess_formulae_Hxlist : "
-               << tools::get_duration(t1-t0) << " S" 
+               << tools::get_duration(t1-t0) << " S"
+               << " size(H_formulae)=" << hsize  
                << " size(Hxlst)=" << Hxlst.size() 
-               << " T(Hmu/Hxlist/sort/tot)="
+               << " T(Hmu/Hxlist/sort)="
                << tools::get_duration(ta-t0) << ","
                << tools::get_duration(tb-ta) << ","
                << tools::get_duration(tc-tb) << " -----"
@@ -93,12 +94,14 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            std::cout << "T(Hmu/Hxlist/tot)="
+            std::cout << "----- TIMING FOR preprocess_formulae_Hxlist2 : "
+               << tools::get_duration(t1-t0) << " S"
+               << " size(H_formulae)=" << hsize  
+               << " size(Hxlst2)=" << nnzblk 
+               << " T(Hmu/Hxlist)="
                << tools::get_duration(ta-t0) << ","
-               << tools::get_duration(tb-ta) << ","
-               << tools::get_duration(t1-t0) 
+               << tools::get_duration(tb-ta) << " -----"
                << std::endl;
-            tools::timing("preprocess_formulae_Hxlist2", t0, t1);
          }
       }
 

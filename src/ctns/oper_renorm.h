@@ -31,7 +31,7 @@ namespace ctns{
    const bool debug_oper_rbasis = false;
    extern const bool debug_oper_rbasis;
 
-   const double thresh_opdiff = 1.e-10;
+   const double thresh_opdiff = 1.e-9;
    extern const double thresh_opdiff;
 
    // renormalize operators
@@ -193,7 +193,7 @@ namespace ctns{
                   Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
             timing.tf6 = tools::get_time();
 
-            get_MMlist(Rlst, schd.ctns.hxorder);
+            get_MMlist(Rlst);
 
             worktot = maxthreads*(blksize*2+qops._size);
             if(debug && schd.ctns.verbose>0){
@@ -253,7 +253,7 @@ namespace ctns{
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, batchblas, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                          << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -263,7 +263,7 @@ namespace ctns{
                   }
                }
             }else{
-               Rmmtask.init(Rlst, schd.ctns.hxorder, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()
@@ -485,7 +485,7 @@ namespace ctns{
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.hxorder, batchblas, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                          << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -495,7 +495,7 @@ namespace ctns{
                   }
                }
             }else{
-               Rmmtask.init(Rlst, schd.ctns.hxorder, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()
@@ -656,14 +656,18 @@ namespace ctns{
          // 3. consistency check for Hamiltonian
          const auto& opH = qops('H').at(0);
          auto diffH = (opH-opH.H()).normF();
-         std::cout << "check H-H.dagger=" << std::scientific << std::setprecision(2) << diffH 
-            << " coord=" << p << " rank=" << rank 
-            << std::defaultfloat << std::setprecision(2) 
-            << std::endl; 
-         if(diffH > thresh_opdiff){
-            std::cout <<  "error in oper_renorm: ||H-H.dagger|| is larger than thresh_opdiff=" << thresh_opdiff 
+         if(debug){
+            std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(2) << diffH 
+               << " coord=" << p << " rank=" << rank 
+               << std::defaultfloat << std::setprecision(2) 
                << std::endl;
-            //exit(1);
+         } 
+         if(diffH > thresh_opdiff){
+            std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(2) << diffH 
+               << " is larger than thresh_opdiff=" << thresh_opdiff 
+               << " for rank=" << rank 
+               << std::endl;
+            exit(1);
          }
 
          // check against explicit construction
@@ -681,17 +685,17 @@ namespace ctns{
          }
 
          timing.tf11 = tools::get_time();
-         if(debug) if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
-
+         if(debug){
+            if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
             double t_tot = tools::get_duration(timing.tf11-timing.tf0); 
             double t_init = tools::get_duration(timing.tf1-timing.tf0);
             double t_kernel = tools::get_duration(timing.tf10-timing.tf1);
             double t_comm = tools::get_duration(timing.tf11-timing.tf10);
-            std::cout << "----- TIMING FOR oper_renorm: " << t_tot << " S" 
+            std::cout << "----- TIMING FOR oper_renorm : " << t_tot << " S" 
                << " T(init/kernel/comm)=" << t_init << "," << t_kernel << "," << t_comm
                << " rank=" << rank << " -----"
                << std::endl;
-         
+         }
          return worktot;
       }
 

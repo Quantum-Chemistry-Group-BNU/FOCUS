@@ -108,31 +108,21 @@ namespace ctns{
             */
 
          auto t2 = tools::get_time();
-         //if(debug_oper_io and debug){
-         double tot = tools::get_duration(t2-t0);
-         std::filesystem::path path{fname};
-         double usage = io::directory_size(path.parent_path())/std::pow(1024,3);
-         std::cout << "fname=" << fname 
-            << " size=" << tools::sizeGB<Tm>(qops._size) << "GB" 
-            << " T[save](info/data/tot)=" 
-            << tools::get_duration(t1-t0) << "," 
-            << tools::get_duration(t2-t1) << ","
-            << tot 
-            << " speed=" << tools::sizeGB<Tm>(qops._size)/tot << "GB/s" 
-            << " disk[used]=" << usage << "GB"
-            << std::endl;
-         /*
-         std::filesystem::path path{fname};
-         double usage = io::directory_size(path.parent_path())/std::pow(1024,3);
-         double available = io::available_disk()/std::pow(1024,3);
-         double fsize = std::filesystem::file_size(fname+".op");
-         std::cout << "fsize=" << fsize/std::pow(1024.0,3) << "GB" 
-            << " ratio=" << qops._size*sizeof(Tm)/fsize 
-            << " usage=" << usage << "GB"
-            << " available=" << available << "GB" 
-            << std::endl;
-         */
-         //}
+         if(debug){
+            double tot = tools::get_duration(t2-t0);
+            std::filesystem::path path{fname};
+            double usage = io::directory_size(path.parent_path())/std::pow(1024,3);
+            std::cout << "fname=" << fname
+               << std::defaultfloat << std::setprecision(3)
+               << " size=" << tools::sizeGB<Tm>(qops._size) << "GB" 
+               << " T[save](info/data/tot)=" 
+               << tools::get_duration(t1-t0) << "," 
+               << tools::get_duration(t2-t1) << ","
+               << tot 
+               << " speed=" << tools::sizeGB<Tm>(qops._size)/tot << "GB/s" 
+               << " disk[used]=" << usage << "GB"
+               << std::endl;
+         }
       }
 
    template <typename Tm>

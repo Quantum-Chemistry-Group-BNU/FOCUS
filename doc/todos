@@ -292,6 +292,9 @@ KNOWN PROBLEMS
    - Single batch: 18/19
 
  * profiling: better timing for alg_hvec & alg_renorm [DONE@2023/04/01]
+   - alg_hvec=17/19
+   - mmorder
+   - ifdist1
 
 === Major ===
 

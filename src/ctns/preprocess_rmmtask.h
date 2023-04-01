@@ -143,7 +143,7 @@ namespace ctns{
 
    template <typename Tm>
       void RMMtask<Tm>::init(Rlist<Tm>& Rlst,
-            const int hxorder,
+            const int mmorder,
             const int _batchblas,
             const size_t _batchsize,
             const size_t _offset,
@@ -256,7 +256,7 @@ namespace ctns{
             // convert to batch list
             mmbatch2[k].resize(nd);
             for(int i=0; i<nd; i++){
-               if(hxorder == 1){ // sort by cost
+               if(mmorder == 1){ // sort by cost
                   std::stable_sort(mmlst2[i].begin(), mmlst2[i].end(),
                         [](const MMinfo<Tm>& mm1, const MMinfo<Tm>& mm2){
                         return mm1.cost() > mm2.cost();

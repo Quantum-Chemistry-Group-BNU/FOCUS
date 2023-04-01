@@ -67,8 +67,9 @@ namespace ctns{
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR preprocess_formulae_Rlist : "
                << tools::get_duration(t1-t0) << " S"
+               << " size(rtasks)=" << rsize
                << " size(Rlst)=" << Rlst.size() 
-               << " T(Rmu/Rxlist/sort/tot)="
+               << " T(Rmu/Rxlist/sort)="
                << tools::get_duration(ta-t0) << ","
                << tools::get_duration(tb-ta) << ","
                << tools::get_duration(tc-tb) << " -----"
@@ -131,12 +132,14 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            std::cout << "T(Rmu/Rlist/tot)="
+            std::cout << "----- TIMING FOR preprocess_formulae_Rlist2 : "
+               << tools::get_duration(t1-t0) << " S"
+               << " size(rtasks)=" << rsize
+               << " size(Rlst2)=" << nnzblk
+               << " T(Rmu/Rlist)="
                << tools::get_duration(ta-t0) << ","
-               << tools::get_duration(tb-ta) << ","
-               << tools::get_duration(t1-t0) 
+               << tools::get_duration(tb-ta) << " -----"
                << std::endl;
-            tools::timing("preprocess_formulae_Rlist2", t0, t1);
          }
       }
 
