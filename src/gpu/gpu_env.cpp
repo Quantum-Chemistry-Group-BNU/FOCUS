@@ -6,7 +6,7 @@
 magma_queue_t magma_queue = 0;
 gpu_mem GPUmem = {};
 
-void gpu_init(int rank)
+void gpu_init(const int rank)
 {
    magma_queue = 0;
    magma_device_t device_id = -1;
@@ -16,8 +16,7 @@ void gpu_init(int rank)
 
    magma_init();
    magma_getdevices(devices, MAXGPUS, &num_gpus);
-   if(num_gpus == 0)
-   {
+   if(num_gpus == 0){
       std::cout<<"error: no GPU available!"<<std::endl;
       exit(1);
    }
@@ -25,11 +24,13 @@ void gpu_init(int rank)
    magma_getdevice(&device_id);
 
    magma_queue_create(device_id, &magma_queue);
-   std::cout << "rank =" << rank << " num_gpus=" << num_gpus
-             << " device_id=" << device_id << " magma_queue=" <<magma_queue 
-             << std::endl;
+   
+   GPUmem.init(rank);
 
-   GPUmem.init();
+   std::cout << "rank=" << rank << " num_gpus=" << num_gpus
+             << " device_id=" << device_id << " magma_queue=" <<magma_queue
+             << " allocated GPUmem(GB)=" << tools::sizeGB<std::byte>(GPUmem.size()) 
+             << std::endl;
 }
 
 void gpu_clean()

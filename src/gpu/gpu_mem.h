@@ -13,19 +13,19 @@
 #include <magma_v2.h>
 #endif //USE_HIP
 
-#include "../core/tools.h" 
+#include <iostream>
 #include "gpu_check.h"
 
-const size_t MAX_GPU_PAGE= 128*1024*1024;
+const size_t MAX_GPU_PAGE = 128*1024*1024;
 extern const size_t MAX_GPU_PAGE;
 
 // class for controlling the usage of GPU memory
 class gpu_mem{
    public:
-      gpu_mem(): _size(0), _used(0), _addr(nullptr) {}
+      gpu_mem(): _rank(-1), _size(0), _used(0), _addr(nullptr) {}
 
       // allocate GPU memory
-      void init(){
+      void init(const int rank){
          size_t avail, total;
 #ifdef USE_HIP
          HIP_CHECK(hipMemGetInfo(&avail, &total));
@@ -33,13 +33,11 @@ class gpu_mem{
          CUDA_CHECK(cudaMemGetInfo(&avail, &total));
 #endif
          if(avail <= MAX_GPU_PAGE){
-            std::cout << "error: GPU memory is too small!" << std::endl;
+            std::cout << "error: GPU memory is too small on rank=" << rank << std::endl;
             exit(1);
          }
+         _rank = rank;
          _size = avail - MAX_GPU_PAGE;
-         std::cout << "allocated gpu mem size (GB) = "
-            << tools::sizeGB<std::byte>(_size)
-            << std::endl;
 #ifdef USE_HIP
          HIP_CHECK(hipMalloc((void**)&_addr, _size));
 #else
@@ -54,14 +52,16 @@ class gpu_mem{
          CUDA_CHECK(cudaFree(_addr));
 #endif //USE_HIP
          _addr = nullptr;
+         _rank = -1;
          _size = 0;
          _used = 0;
       }
 
       void* allocate(size_t n){
          if(_used + n >= _size){
-            std::cout << "error: exceeding allowed GPU memory!" << std::endl;
-            std::cout << "total size=" << _size << " used=" << _used << " required=" << n << std::endl; 
+            std::cout << "error: exceeding allowed GPU memory on rank=" << _rank << std::endl;
+            std::cout << "total size=" << _size << " used=" << _used << " required=" << n 
+               << " used+required=" << (_used+n) << std::endl; 
             exit(1);
          }else{
             _used = _used + n;
@@ -85,6 +85,7 @@ class gpu_mem{
       size_t size() const{ return _size; }
       size_t used() const{ return _used; }
    private:
+      int _rank = -1;
       size_t _size = 0;
       size_t _used = 0;
       void* _addr = nullptr;

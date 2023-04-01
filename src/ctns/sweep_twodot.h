@@ -430,7 +430,7 @@ namespace ctns{
 #ifdef GPU
          }else if(alg_hvec == 16 || alg_hvec == 17 || alg_hvec == 18 || alg_hvec == 19){
 
-            if(rank == 0 && schd.ctns.verbose>0){
+            if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
@@ -459,7 +459,7 @@ namespace ctns{
                + qops_dict.at("c2").size();
             size_t GPUmem_oper = sizeof(Tm)*opertot;
             dev_oper = (Tm*)GPUmem.allocate(GPUmem_oper);
-            if(rank == 0 && schd.ctns.verbose>0){
+            if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
@@ -512,7 +512,7 @@ namespace ctns{
                CUDA_CHECK(cudaMemcpy(dev_opaddr[4], hinter._value.data(), GPUmem_hinter, cudaMemcpyHostToDevice));
 #endif// USE_HIP
             }
-            if(rank == 0 && schd.ctns.verbose>0){
+            if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
@@ -572,7 +572,7 @@ namespace ctns{
             size_t GPUmem_batch = sizeof(Tm)*batchsize*block;
             dev_workspace = (Tm*)GPUmem.allocate(GPUmem_dvdson + GPUmem_batch);
             GPUmem_used = GPUmem.used(); // oper + dvdson + batch, later used in deallocate
-            if(schd.ctns.verbose>0){
+            if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
@@ -580,7 +580,6 @@ namespace ctns{
                   << "," << GPUmem_hinter/std::pow(1024.0,3)
                   << "," << GPUmem_dvdson/std::pow(1024.0,3)
                   << "," << GPUmem_batch/std::pow(1024.0,3)
-                  << " batchsize=" << batchsize
                   << std::endl;
             }
 

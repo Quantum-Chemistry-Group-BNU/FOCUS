@@ -315,7 +315,7 @@ namespace ctns{
 #ifdef GPU
          }else if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
 
-            if(rank == 0 && schd.ctns.verbose>0){
+            if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
@@ -339,7 +339,7 @@ namespace ctns{
             size_t opertot = qops1.size() + qops2.size();
             size_t GPUmem_oper = sizeof(Tm)*opertot;
             dev_oper = (Tm*)GPUmem.allocate(GPUmem_oper);
-            if(rank == 0 && schd.ctns.verbose>0){
+            if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
@@ -372,7 +372,7 @@ namespace ctns{
             size_t GPUmem_site = sizeof(Tm)*site.size();
             dev_qops = (Tm*)GPUmem.allocate(GPUmem_qops);
             dev_site = (Tm*)GPUmem.allocate(GPUmem_site);
-            if(rank == 0 && schd.ctns.verbose>0){
+            if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
@@ -416,7 +416,7 @@ namespace ctns{
                CUDA_CHECK(cudaMemcpy(dev_opaddr[4], rinter._value.data(), GPUmem_rinter, cudaMemcpyHostToDevice));
 #endif// USE_HIP
             }
-            if(rank == 0 && schd.ctns.verbose>0){
+            if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
@@ -467,7 +467,7 @@ namespace ctns{
             size_t GPUmem_batch = sizeof(Tm)*batchsize*block;
             dev_workspace = (Tm*)GPUmem.allocate(GPUmem_batch);
             GPUmem_used = GPUmem.used(); // later used in deallocate
-            if(schd.ctns.verbose>0){
+            if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
                   << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
@@ -476,7 +476,6 @@ namespace ctns{
                   << "," << GPUmem_site/std::pow(1024.0,3)
                   << "," << GPUmem_rinter/std::pow(1024.0,3)
                   << "," << GPUmem_batch/std::pow(1024.0,3)
-                  << " batchsize=" << batchsize
                   << std::endl;
             }
 
