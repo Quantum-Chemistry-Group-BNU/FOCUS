@@ -38,14 +38,22 @@ namespace ctns{
          }
          auto tb = tools::get_time();
 
+         // 3. sort by offout
+         std::stable_sort(Hxlst.begin(), Hxlst.end(),
+                  [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ 
+                  return t1.offout < t2.offout; });
+         auto tc = tools::get_time();
+         
          if(debug){
             auto t1 = tools::get_time();
-            std::cout << "T(Hmu/Hxlist/tot)="
+            std::cout << "----- TIMING FOR preprocess_formulae_Hxlist : "
+               << tools::get_duration(t1-t0) << " S" 
+               << " size(Hxlst)=" << Hxlst.size() 
+               << " T(Hmu/Hxlist/sort/tot)="
                << tools::get_duration(ta-t0) << ","
                << tools::get_duration(tb-ta) << ","
-               << tools::get_duration(t1-t0) 
+               << tools::get_duration(tc-tb) << " -----"
                << std::endl;
-            tools::timing("preprocess_formulae_Hxlist", t0, t1);
          }
       }
 

@@ -228,7 +228,7 @@ namespace ctns{
          }
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
-         oper_timer.start();
+         oper_timer.dot_start();
          onedot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2, 
                ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, timing);
          if(debug && schd.ctns.verbose>0){

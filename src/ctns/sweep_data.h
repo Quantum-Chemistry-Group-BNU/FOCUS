@@ -49,45 +49,45 @@ namespace ctns{
             << " S #####" 
             << std::endl;
          double dtacc = 0.0;
-         this->print_part(msg+":fetch", dt0, dt, dtacc); 
-         this->print_part(msg+":hdiag", dt1, dt, dtacc);
-         this->print_part(msg+":dvdsn", dt2, dt, dtacc);
-         this->print_part(msg+":decim", dt3, dt, dtacc);
-         this->print_part(msg+":guess", dt4, dt, dtacc);
-         this->print_part(msg+":renrm", dt5, dt, dtacc);
-         this->print_part(msg+":save " , dt6, dt, dtacc);
+         this->print_part("fetch", dt0, dt, dtacc); 
+         this->print_part("hdiag", dt1, dt, dtacc);
+         this->print_part("dvdsn", dt2, dt, dtacc);
+         this->print_part("decim", dt3, dt, dtacc);
+         this->print_part("guess", dt4, dt, dtacc);
+         this->print_part("renrm", dt5, dt, dtacc);
+         this->print_part("save " , dt6, dt, dtacc);
 
          double tdvdsn = dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9;
          std::cout << "Detailed decomposition of T(dvdsn): " 
             << std::scientific << std::setprecision(2) << tdvdsn << " S"
             << std::endl;
          dtacc = 0.0;
-         this->print_part(msg+":qops_dict memcpy cpu2gpu     ", dtb1, tdvdsn, dtacc);
-         this->print_part(msg+":symbolic_formulae_twodot     ", dtb2, tdvdsn, dtacc);
-         this->print_part(msg+":hintermediate init           ", dtb3, tdvdsn, dtacc);
-         this->print_part(msg+":hintermediates memcpy cpu2gpu", dtb4, tdvdsn, dtacc);
-         this->print_part(msg+":preprocess_hformulae_Hxlist2 ", dtb5, tdvdsn, dtacc);
-         this->print_part(msg+":hmmtasks init                ", dtb6, tdvdsn, dtacc);
-         this->print_part(msg+":dvdson solver [Hx_batchGPU]  ", dtb7, tdvdsn, dtacc);
-         this->print_part(msg+":dvdson solver [communication]", dtb8, tdvdsn, dtacc);
-         this->print_part(msg+":dvdson solver [rest part]    ", dtb9, tdvdsn, dtacc);
+         this->print_part("qops_dict memcpy cpu2gpu     ", dtb1, tdvdsn, dtacc);
+         this->print_part("symbolic_formulae_twodot     ", dtb2, tdvdsn, dtacc);
+         this->print_part("hintermediate init           ", dtb3, tdvdsn, dtacc);
+         this->print_part("hintermediates memcpy cpu2gpu", dtb4, tdvdsn, dtacc);
+         this->print_part("preprocess_hformulae_Hxlist2 ", dtb5, tdvdsn, dtacc);
+         this->print_part("hmmtasks init                ", dtb6, tdvdsn, dtacc);
+         this->print_part("dvdson solver [Hx_batchGPU]  ", dtb7, tdvdsn, dtacc);
+         this->print_part("dvdson solver [communication]", dtb8, tdvdsn, dtacc);
+         this->print_part("dvdson solver [rest part]    ", dtb9, tdvdsn, dtacc);
         
          double trenrm = dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10;
          std::cout << "Detailed decomposition of T(renrm): " 
             << std::scientific << std::setprecision(2) << trenrm << " S"
             << std::endl;
          dtacc = 0.0;
-         this->print_part(msg+":qops init                    ", dtf0, trenrm, dtacc);
-         this->print_part(msg+":qops_dict memcpy cpu2gpu     ", dtf1, trenrm, dtacc);
-         this->print_part(msg+":symbolic_formulae_renorm     ", dtf2, trenrm, dtacc);
-         this->print_part(msg+":rintermediate init           ", dtf3, trenrm, dtacc);
-         this->print_part(msg+":rintermediates memcpy cpu2gpu", dtf4, trenrm, dtacc);
-         this->print_part(msg+":preprocess_formulae_Rlist2   ", dtf5, trenrm, dtacc);
-         this->print_part(msg+":rmmtasks init                ", dtf6, trenrm, dtacc);
-         this->print_part(msg+":qops memset                  ", dtf7, trenrm, dtacc);
-         this->print_part(msg+":preprocess_renorm_batchGPU   ", dtf8, trenrm, dtacc);
-         this->print_part(msg+":qops memcpy gpu2cpu          ", dtf9, trenrm, dtacc);
-         this->print_part(msg+":communication of opS and opH ", dtf10, trenrm, dtacc);
+         this->print_part("qops init                    ", dtf0, trenrm, dtacc);
+         this->print_part("qops_dict memcpy cpu2gpu     ", dtf1, trenrm, dtacc);
+         this->print_part("symbolic_formulae_renorm     ", dtf2, trenrm, dtacc);
+         this->print_part("rintermediate init           ", dtf3, trenrm, dtacc);
+         this->print_part("rintermediates memcpy cpu2gpu", dtf4, trenrm, dtacc);
+         this->print_part("preprocess_formulae_Rlist2   ", dtf5, trenrm, dtacc);
+         this->print_part("rmmtasks init                ", dtf6, trenrm, dtacc);
+         this->print_part("qops memset                  ", dtf7, trenrm, dtacc);
+         this->print_part("preprocess_renorm_batchGPU   ", dtf8, trenrm, dtacc);
+         this->print_part("qops memcpy gpu2cpu          ", dtf9, trenrm, dtacc);
+         this->print_part("communication of opS and opH ", dtf10, trenrm, dtacc);
       }
       void analysis(const std::string msg,
             const bool debug=true){
@@ -253,10 +253,10 @@ namespace ctns{
             }
          }
          min_result.resize(maxsweep);
-         t_total.resize(maxsweep);
-         t_inter.resize(maxsweep);
-         t_gemm.resize(maxsweep);
-         t_red.resize(maxsweep);
+         t_total.resize(maxsweep, 0);
+         t_inter.resize(maxsweep, 0);
+         t_gemm.resize(maxsweep, 0);
+         t_red.resize(maxsweep, 0);
       }
       // print control parameters
       void print_ctrls(const int isweep) const{ 
@@ -327,6 +327,7 @@ namespace ctns{
             std::cout << " e[" << j << "]=" << eopt[j];
             eav[ibond] += eopt[j]; 
          } // jstate
+         std::cout << " t=" << std::setprecision(2) << opt_timing[isweep][ibond].dt;
          eav[ibond] /= nroots;
          dwt[ibond] = opt_result[isweep][ibond].dwt;
          std::cout << std::endl;
@@ -368,19 +369,19 @@ namespace ctns{
       // print all previous optimized results - sweep_data
       std::cout << tools::line_separator << std::endl;
       std::cout << "summary of sweep optimization up to isweep=" << isweep << std::endl;
-      std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Taccum/S | t_inter/S t_gemm/S t_red/S t_blas/S   per" << std::endl;
-      std::cout << std::scientific << std::setprecision(2);
+      std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Taccum/S | t_inter/S t_gemm/S t_red/S t_blas/S per" << std::endl;
       // print previous ctrl parameters
-      double taccum = 0.0;
+      double taccum=0.0;
       for(int jsweep=0; jsweep<=isweep; jsweep++){
          if(jsweep < restart_sweep) continue;
          const auto& ctrl = ctrls[jsweep];
          taccum += t_total[jsweep];
+         double tblas = t_inter[jsweep] + t_gemm[jsweep] + t_red[jsweep];
          nmvp = min_result[jsweep].nmvp;
-         double t_blas = t_inter[jsweep]+t_gemm[jsweep]+t_red[jsweep];
          std::cout << std::setw(13) << jsweep 
             << std::setw(3) << ctrl.dots 
             << std::setw(8) << ctrl.dcut 
+            << std::scientific << std::setprecision(2)
             << " " << ctrl.eps 
             << " " << ctrl.noise << " | " 
             << nmvp << " | " 
@@ -389,8 +390,8 @@ namespace ctns{
             << t_inter[jsweep] << " " 
             << t_gemm[jsweep] << " " 
             << t_red[jsweep] << " "
-            << t_blas << " "
-            << t_blas/taccum*100 
+            << tblas << " "
+            << std::defaultfloat << std::setprecision(3) << tblas/taccum*100 
             << std::endl;
       } // jsweep
       std::cout << "results: isweep, dcut, dwt, energies (delta_e)" << std::endl;

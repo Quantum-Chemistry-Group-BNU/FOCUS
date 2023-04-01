@@ -57,14 +57,22 @@ namespace ctns{
          }
          auto tb = tools::get_time();
 
+         // 3. sort by offout
+         std::stable_sort(Rlst.begin(), Rlst.end(),
+                  [](const Rblock<Tm>& t1, const Rblock<Tm>& t2){ 
+                  return t1.offrop < t2.offrop; });
+         auto tc = tools::get_time();
+         
          if(debug){
             auto t1 = tools::get_time();
-            std::cout << "T(Rmu/Rxlist/tot)="
+            std::cout << "----- TIMING FOR preprocess_formulae_Rlist : "
+               << tools::get_duration(t1-t0) << " S"
+               << " size(Rlst)=" << Rlst.size() 
+               << " T(Rmu/Rxlist/sort/tot)="
                << tools::get_duration(ta-t0) << ","
                << tools::get_duration(tb-ta) << ","
-               << tools::get_duration(t1-t0) 
+               << tools::get_duration(tc-tb) << " -----"
                << std::endl;
-            tools::timing("preprocess_formulae_Rlist", t0, t1);
          }
       }
 

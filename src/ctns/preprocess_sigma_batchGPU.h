@@ -71,7 +71,7 @@ namespace ctns{
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
-         oper_timer.sigma_start();
+         oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<Hmmtasks.size(); i++){
@@ -115,7 +115,7 @@ namespace ctns{
                       << time_copy << "," << time_gemm << "," << time_reduction 
                       << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
-            oper_timer.sigma_analysis();
+            oper_timer.sigma.analysis();
          }
       }
 
@@ -179,7 +179,7 @@ namespace ctns{
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
-         oper_timer.sigma_start();
+         oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<Hmmtasks.size(); i++){
@@ -229,7 +229,7 @@ namespace ctns{
                       << time_copy << "," << time_inter << "," << time_gemm << "," << time_reduction 
                       << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
-            oper_timer.sigma_analysis();
+            oper_timer.sigma.analysis();
          }
       }
 
@@ -290,7 +290,7 @@ namespace ctns{
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
-         oper_timer.sigma_start();
+         oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = Hmmtask.cost;
          for(int k=0; k<Hmmtask.nbatch; k++){
@@ -330,7 +330,7 @@ namespace ctns{
                       << time_copy << "," << time_gemm << "," << time_reduction 
                       << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
-            oper_timer.sigma_analysis();
+            oper_timer.sigma.analysis();
          }
       }
 
@@ -394,7 +394,7 @@ namespace ctns{
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
-         oper_timer.sigma_start();
+         oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = Hmmtask.cost;
          for(int k=0; k<Hmmtask.nbatch; k++){
@@ -440,7 +440,7 @@ namespace ctns{
                       << time_copy << "," << time_inter << "," << time_gemm << "," << time_reduction 
                       << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
-            oper_timer.sigma_analysis();
+            oper_timer.sigma.analysis();
          }
       }
 

@@ -124,7 +124,7 @@ LOGS
       else rebuild the operators
 	      task_dmrg & rcanon_load & rcanon_file newname.info
 
- * Better sweep performances [DONE@20220714]
+ * Better sweep performances [DONE@2022/07/14]
     - Reducing the number of Hx in Davidson solver:
     - tuning size of subspace & preconditioning
     - nbuff>=4 (larger value does not matter too much); keep 2 delU for restart!
@@ -239,74 +239,73 @@ KNOWN PROBLEMS
 
 === 2023 DMRG[GPU] ===
 
- * Better reduction algorithm using GEMV [DONE@20230301]
+ * Better reduction algorithm using GEMV [DONE@2023/03/01]
 
  * Test platform on jiageng:
-   - Add more tests in examples [DONE@20230301]
+   - Add more tests in examples [DONE@2023/03/01]
    - Muilt-GPU support on jiageng? => reinstall OpenMPI
    - Profiling: Check fetch time & CPU memory for Fe8S7!
 
- * Problems for large arrays: [DONE@20230307] 
+ * Problems for large arrays: [DONE@2023/03/07] 
    - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magmamemcpy size is int]
    - MPI: bypass the 2GB limit in MPI_COUNT by partitioned broadcast & reduce
    - MATH: Fix int32 & int64 problem in blas/lapack using MKL_INT [ndim is int]
    - zquatev: resolve cNK bugs? use MKL_INT
 
- * Support restart isweep & ibond: [DONE@20220309]
-      0. restructure rsites/lsites/rwfuns/psi into sites/rwfuns/psi - more compact [DONE@20220305]
+ * Support restart isweep & ibond: [DONE@2023/03/09]
+      0. restructure rsites/lsites/rwfuns/psi into sites/rwfuns/psi - more compact [DONE@2023/03/05]
          - rwfuns must be used, otherwise get_Hmat will not work in CNK in the last site !!!
-      1. fix guess error [DONE@20220306]
-      2. fix last conversion into RCF [DONE@20220306]
-      3. add dump RCF at each step [DONE@20220306]
-      4. support restart by loading RCF? [DONE@20220308]
-      5. support restart at a particular ibond? [DONE@20230309]
+      1. fix guess error [DONE@2023/03/06]
+      2. fix last conversion into RCF [DONE@2023/03/06]
+      3. add dump RCF at each step [DONE@2023/03/06]
+      4. support restart by loading RCF? [DONE@2023/03/08]
+      5. support restart at a particular ibond? [DONE@2023/03/09]
 
- * Batch support: [DONE@20230324]
+ * Batch support: [DONE@2023/03/24]
     - Support Intermediate with batch
          0. fix storage order in oper_dict to make opC contigous
-         1. consistent ordering for dgemv? [DONE@20230320]
+         1. consistent ordering for dgemv? [DONE@2023/03/20]
     - Support Renorm with batch
-         0. basic subroutines: alg_renorm=4 [DONE@20230319]
+         0. basic subroutines: alg_renorm=4 [DONE@2023/03/19]
             - preprocess_renorm.h
             - preprocess_rformulae.h
             - preprocess_rinter.h
             - preprocess_rlist.h
             - preprocess_rmu.h
-         1. alg_renorm=6: CPU batch [DONE@20230324]
+         1. alg_renorm=16: CPU batch [DONE@2023/03/24]
             - preprocess_rmmtasks.h
             - preprocess_rernorm_batch.h
     - Support Intermediate generated on the fly
-         0. sigma (alg_hvec=8) [DONE@20230323]
+         0. sigma (alg_hvec=7) [DONE@2023/03/23]
             - preprocess_sigma_batch2.h
-         1. renorm (alg_renorm=8) [DONE@20230323]
+         1. renorm (alg_renorm=17) [DONE@2023/03/23]
             - preprocess_renorm_batch2.h
 
- * GPU support for Intermediate & Renorm: [DONE@20203273]
+ * GPU support for Intermediate & Renorm: [DONE@2023/03/27]
    - Support Intermediate with GPU:
-         0. alg_inter=2: GPU batch [DONE@20230325]
+         0. alg_inter=2: GPU batch [DONE@2023/03/25]
    - Support Renorm with GPU:
-         0. alg_hvec=7/9: GPU batch [DONE@20230326]
+         0. alg_hvec=16/17: GPU batch [DONE@2023/03/26]
             - preprocess_rernorm_batchGPU.h
-         1. alg_renorm=7/9: GPU batch [DONE@20203273]
+         1. alg_renorm=16/17: GPU batch [DONE@2023/03/27]
             - preprocess_rernorm_batchGPU.h
+   - Single batch: 18/19
 
- * profiling: better timing for alg_hvec & alg_renorm
+ * profiling: better timing for alg_hvec & alg_renorm [DONE@2023/04/01]
 
-=== TODOs ===
+=== Major ===
 
- * Better GEMM_BATCH with TensorCore
+ * Better organization of tasks: a single big batch?
 
  * async IO strategy: Fix bug in parallel IO [mpi problem]
 
-
+ * Better GEMM_BATCH with TensorCore
+ 
+=== Minor ===
 
  * OpenMP for symbolic & mmtasks
    - more tests
    - compare mmtask & rmmtask
-
- * Better organization of tasks: 
-   - Revise Hx -> a single big batch?
-   - Use of TensorCore!!!
 
  * OpenMP parallelization in decimation
 

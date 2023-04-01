@@ -32,10 +32,9 @@ namespace ctns{
          if(schd.ctns.maxsweep == 0) return;
          auto t0 = tools::get_time();
 
-         // init
-         const auto& ntotal = icomb.topo.ntotal;
          // global timer
          dot_timing timing_global;
+         oper_timer.sweep_start();
          // generate sweep sequence
          auto sweep_seq = icomb.topo.get_sweeps(debug);
          sweep_data sweeps(sweep_seq, schd.ctns.nroots, schd.ctns.maxsweep, 
@@ -49,10 +48,8 @@ namespace ctns{
                sweeps.print_ctrls(isweep); // print sweep control
                std::cout << tools::line_separator2 << std::endl;
             }
-            
             // initialize
             if(rank == 0) sweep_init(icomb, schd.ctns.nroots);
-            
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
@@ -89,13 +86,16 @@ namespace ctns{
                // stop just for debug
                if(isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
             } // ibond
-            auto tf = tools::get_time();
-            sweeps.t_total[isweep] = tools::get_duration(tf-ti);
-            if(debug) sweeps.summary(isweep);
-
+            if(debug){
+               auto tf = tools::get_time();
+               sweeps.t_total[isweep] = tools::get_duration(tf-ti);
+               sweeps.t_inter[isweep] = oper_timer.sigma.t_inter_tot + oper_timer.renorm.t_inter_tot;
+               sweeps.t_gemm[isweep] = oper_timer.sigma.t_gemm_tot + oper_timer.renorm.t_gemm_tot;
+               sweeps.t_red[isweep] = oper_timer.sigma.t_red_tot + oper_timer.renorm.t_red_tot;
+               sweeps.summary(isweep);
+            }
             // generate right rcanonical form and save checkpoint file
             if(rank == 0) sweep_final(icomb, schd, scratch, isweep);
-
          } // isweep
          qops_pool.clean_up();
 

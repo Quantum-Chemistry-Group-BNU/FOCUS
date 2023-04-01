@@ -52,7 +52,7 @@ namespace ctns{
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
 
-         oper_timer.sigma_start();
+         oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<Hmmtasks.size(); i++){
@@ -83,7 +83,7 @@ namespace ctns{
                << time_gemm << "," << time_reduction 
                << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
-            oper_timer.sigma_analysis();
+            oper_timer.sigma.analysis();
          }
       }
 
@@ -131,7 +131,7 @@ namespace ctns{
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
 
-         oper_timer.sigma_start();
+         oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<Hmmtasks.size(); i++){
@@ -168,7 +168,7 @@ namespace ctns{
                << time_inter << "," << time_gemm << "," << time_reduction 
                << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
-            oper_timer.sigma_analysis();
+            oper_timer.sigma.analysis();
          }
       }
 
@@ -213,7 +213,7 @@ namespace ctns{
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
 
-         oper_timer.sigma_start();
+         oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = Hmmtask.cost;
          for(int k=0; k<Hmmtask.nbatch; k++){
@@ -240,7 +240,7 @@ namespace ctns{
                << time_gemm << "," << time_reduction 
                << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
-            oper_timer.sigma_analysis();
+            oper_timer.sigma.analysis();
          }
       }
 
@@ -288,7 +288,7 @@ namespace ctns{
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
 
-         oper_timer.sigma_start();
+         oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = Hmmtask.cost;
          for(int k=0; k<Hmmtask.nbatch; k++){
@@ -321,7 +321,7 @@ namespace ctns{
                << time_inter << "," << time_gemm << "," << time_reduction 
                << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
-            oper_timer.sigma_analysis();
+            oper_timer.sigma.analysis();
          }
       }
 

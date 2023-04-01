@@ -25,7 +25,7 @@
 
 namespace ctns{
 
-   const bool debug_oper_renorm = false; 
+   const bool debug_oper_renorm = false; //true; 
    extern const bool debug_oper_renorm;
 
    const bool debug_oper_rbasis = false;
@@ -100,11 +100,12 @@ namespace ctns{
          qops.ifdist2 = true;
          // initialize memory 
          qops.allocate();
+         if(debug) qops.print("qops");
 
          //-------------------------------
          // 1. kernel for renormalization
          //-------------------------------
-         oper_timer.start();
+         oper_timer.dot_start();
          const bool debug_formulae = schd.ctns.verbose>0;
          size_t worktot=0;
          // intermediates      
@@ -655,7 +656,7 @@ namespace ctns{
          // 3. consistency check for Hamiltonian
          const auto& opH = qops('H').at(0);
          auto diffH = (opH-opH.H()).normF();
-         std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(20) << diffH 
+         std::cout << "check H-H.dagger=" << std::scientific << std::setprecision(2) << diffH 
             << " coord=" << p << " rank=" << rank 
             << std::defaultfloat << std::setprecision(2) 
             << std::endl; 
@@ -680,18 +681,15 @@ namespace ctns{
          }
 
          timing.tf11 = tools::get_time();
-         if(debug){ 
-            if(schd.ctns.verbose>0) qops.print("qops");
-            if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
-         }
+         if(debug) if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
 
             double t_tot = tools::get_duration(timing.tf11-timing.tf0); 
             double t_init = tools::get_duration(timing.tf1-timing.tf0);
             double t_kernel = tools::get_duration(timing.tf10-timing.tf1);
             double t_comm = tools::get_duration(timing.tf11-timing.tf10);
-            std::cout << "TIMING for Renormalization : " << t_tot 
+            std::cout << "----- TIMING FOR oper_renorm: " << t_tot << " S" 
                << " T(init/kernel/comm)=" << t_init << "," << t_kernel << "," << t_comm
-               << " rank=" << rank
+               << " rank=" << rank << " -----"
                << std::endl;
          
          return worktot;

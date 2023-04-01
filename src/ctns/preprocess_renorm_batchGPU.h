@@ -51,7 +51,7 @@ namespace ctns{
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
 
-         oper_timer.renorm_start();
+         oper_timer.renorm.start();
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<Rmmtasks.size(); i++){
@@ -80,7 +80,7 @@ namespace ctns{
                       << time_gemm << "," << time_reduction 
                       << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
-            oper_timer.renorm_analysis();
+            oper_timer.renorm.analysis();
          }
       }
 
@@ -124,7 +124,7 @@ namespace ctns{
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
 
-         oper_timer.renorm_start();
+         oper_timer.renorm.start();
          // loop over nonzero blocks
          double cost = 0.0;
          for(int i=0; i<Rmmtasks.size(); i++){
@@ -159,7 +159,7 @@ namespace ctns{
                       << time_inter << "," << time_gemm << "," << time_reduction 
                       << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
-            oper_timer.renorm_analysis();
+            oper_timer.renorm.analysis();
          }
       }
 
@@ -200,7 +200,7 @@ namespace ctns{
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
 
-         oper_timer.renorm_start();
+         oper_timer.renorm.start();
          // loop over nonzero blocks
          double cost = Rmmtask.cost;
          for(int k=0; k<Rmmtask.nbatch; k++){
@@ -225,7 +225,7 @@ namespace ctns{
                       << time_gemm << "," << time_reduction 
                       << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
-            oper_timer.renorm_analysis();
+            oper_timer.renorm.analysis();
          }
       }
 
@@ -269,7 +269,7 @@ namespace ctns{
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
 
-         oper_timer.renorm_start();
+         oper_timer.renorm.start();
          // loop over nonzero blocks
          double cost = Rmmtask.cost;
          for(int k=0; k<Rmmtask.nbatch; k++){
@@ -300,7 +300,7 @@ namespace ctns{
                       << time_inter << "," << time_gemm << "," << time_reduction 
                       << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
-            oper_timer.renorm_analysis();
+            oper_timer.renorm.analysis();
          }
       }
 

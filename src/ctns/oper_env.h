@@ -131,6 +131,7 @@ namespace ctns{
          t_init = tools::get_duration(ta-t0);
 
          // 2. successive renormalization process
+         oper_timer.sweep_start();
          dot_timing timing_sweep, timing;
          oper_pool<Tm> qops_pool(iomode, schd.ctns.ioasync, debug);
          for(int idx=0; idx<icomb.topo.ntotal; idx++){

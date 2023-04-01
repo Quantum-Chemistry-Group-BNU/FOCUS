@@ -4,7 +4,6 @@
 #include <cassert>
 #include <vector>
 #include <string>
-// --- load ---
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -12,7 +11,6 @@
 #include <algorithm>
 #include "tools.h"
 #include "serialization.h"
-
 #ifndef SERIAL
 #include "mpi_wrapper.h"
 #endif
@@ -213,7 +211,7 @@ namespace integral{
                std::istringstream is(line);
                is >> i >> j >> k >> l >> eri; // read quadruple and integral
                if(i*j == 0 && k*l == 0){
-                  std::cout << "ecore = " << eri << std::endl;
+                  std::cout << " ecore = " << eri << std::endl;
                   ecore = std::real(eri);
                }else if(i*j != 0 && k*l == 0){
                   int1e.set(i-1, j-1, eri);

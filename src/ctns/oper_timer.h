@@ -9,23 +9,27 @@ namespace ctns{
    struct batch_timing{
       public:
          // GPU_kernel
-         void start(const int _nd){
+         void sweep_start(const std::string _name, const int _nd){
+            name = _name;
             nd = _nd;
+            counter = 0;
+            t_inter_tot = 0.0;
+            t_gemm_tot = 0.0;
+            t_red_tot = 0.0;
+            tHx_tot.resize(nd);
+            cHx_tot.resize(nd);
+            memset(tHx_tot.data(), 0, nd*sizeof(double));
+            memset(cHx_tot.data(), 0, nd*sizeof(double));
+         }
+         void start(){ // single sigma/renorm_batch call
+            counter += 1;
             t_inter = 0.0;
+            t_gemm = 0.0;
             t_red = 0.0;
             tHx.resize(nd);
-            memset(tHx.data(), 0, nd*sizeof(double));
             cHx.resize(nd);
+            memset(tHx.data(), 0, nd*sizeof(double));
             memset(cHx.data(), 0, nd*sizeof(double));
-            if(Hx_counter == 0){
-               t_inter_tot = 0.0;
-               t_red_tot = 0.0;
-               tHx_tot.resize(nd);
-               memset(tHx_tot.data(), 0, nd*sizeof(double));
-               cHx_tot.resize(nd);
-               memset(cHx_tot.data(), 0, nd*sizeof(double));
-            }
-            Hx_counter += 1;
          }
          void print(std::string name, 
                const std::vector<double>& tdata, 
@@ -34,7 +38,7 @@ namespace ctns{
                const double& tgemm,
                const double& tred){
             double tot = tinter + tgemm + tred;
-            std::cout << "--- TIMING for " << name << " :"
+            std::cout << "--- TIMING FOR " << name << " :"
                << " t_inter=" << tinter
                << " t_gemm=" << tgemm 
                << " t_reduction=" << tred
@@ -42,7 +46,7 @@ namespace ctns{
                << std::endl;
             double cgemm = 0.0;
             for(int i=0; i<nd; i++){
-               std::cout << " " << name << " counter=" << Hx_counter << " i=" << i << " t=" << tdata[i] 
+               std::cout << " " << name << " counter=" << counter << " i=" << i << " t=" << tdata[i] 
                   << " per=" << tdata[i]/tgemm*100 
                   << " cost=" << cost[i]
                   << " flops=" << cost[i]/tdata[i]
@@ -51,7 +55,7 @@ namespace ctns{
             }
             std::cout << " total GEMM cost=" << cgemm << " flops=" << cgemm/tgemm << std::endl;
          }
-         void analysis(std::string name){
+         void analysis(){
             t_gemm = 0.0;
             for(int i=0; i<nd; i++){
                t_gemm += tHx[i]; 
@@ -68,10 +72,11 @@ namespace ctns{
             this->print(name+"_tot", tHx_tot, cHx_tot, t_inter_tot, t_gemm_tot, t_red_tot);
          }
       public:
-         double t_inter, t_gemm, t_red;
-         double t_inter_tot, t_gemm_tot, t_red_tot;
-         int nd = 0;
-         int Hx_counter = 0;
+         std::string name; 
+         int nd=0;
+         int counter=0;
+         double t_inter=0.0, t_gemm=0.0, t_red=0.0;
+         double t_inter_tot=0.0, t_gemm_tot=0.0, t_red_tot=0.0;
          std::vector<double> tHx;
          std::vector<double> tHx_tot;
          std::vector<double> cHx;
@@ -121,16 +126,16 @@ namespace ctns{
                << " Finl=" << tHxFinl << " S"
                << std::endl; 
          }
-         void sigma_analysis(){ sigma.analysis("sigma"); }
-         void renorm_analysis(){ renorm.analysis("renorm"); }
-         void start(){
+         void dot_start(){
             timer.start();
             nC=0; nA=0; nB=0; nH=0; nS=0; nP=0; nQ=0;
             tC=0.0; tA=0.0; tB=0.0; tH=0.0; tS=0.0; tP=0.0; tQ=0.0;
             tHxInit=0.0; tHxCalc=0.0; tHxFinl=0.0;
          }
-         void sigma_start(){ sigma.start(8); }
-         void renorm_start(){ renorm.start(7); }
+         void sweep_start(){
+            sigma.sweep_start("sigma", 8);
+            renorm.sweep_start("renorm", 7);
+         }
       public:
          boost::timer::cpu_timer timer;
          // opxwf

@@ -664,7 +664,7 @@ namespace ctns{
          }
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
-         oper_timer.start();
+         oper_timer.dot_start();
          twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, dbond, timing);
          if(debug && schd.ctns.verbose>0){
@@ -672,9 +672,6 @@ namespace ctns{
             if(alg_hvec == 0) oper_timer.analysis();
          }
          timing.tc = tools::get_time();
-         sweeps.t_inter[isweep] += oper_timer.sigma.t_inter;
-         sweeps.t_gemm[isweep] += oper_timer.sigma.t_gemm;
-         sweeps.t_red[isweep] += oper_timer.sigma.t_red;
 
          // free tmp space on CPU
          if(alg_hvec==2 || alg_hvec==3 || 
@@ -701,9 +698,6 @@ namespace ctns{
             CPUmem.oper = sizeof(Tm)*qops_pool.size();
             CPUmem.display();
          }
-         sweeps.t_inter[isweep] += oper_timer.renorm.t_inter;
-         sweeps.t_gemm[isweep] += oper_timer.renorm.t_gemm;
-         sweeps.t_red[isweep] += oper_timer.renorm.t_red;
 
          // 4. save on disk 
          qops_pool.save(frop);
