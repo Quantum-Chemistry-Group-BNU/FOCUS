@@ -292,27 +292,47 @@ KNOWN PROBLEMS
    - Single batch: 18/19
 
  * profiling: better timing for alg_hvec & alg_renorm [DONE@2023/04/01]
-   - alg_hvec=17/19
-   - mmorder
-   - ifdist1
+   - single batch: alg_hvec=17/19
+   - mmorder [no significant difference]
+   - ifdist1?
 
 === Major ===
 
- * Better organization of tasks: a single big batch?
-
  * async IO strategy: Fix bug in parallel IO [mpi problem]
 
+ * Better treatment GEMM involving 'c': use axpy_vbatch?
+
+ --- TIMING FOR sigma_tot : t_inter=1.1e+03 t_gemm=5.35e+03 t_reduction=146 tot=6.59e+03 ---
+  sigma_tot counter=515 i=0 t=276 per=5.16 cost=5e+12 flops=1.81e+10
+  sigma_tot counter=515 i=1 t=373 per=6.97 cost=5.01e+12 flops=1.35e+10
+  sigma_tot counter=515 i=2 t=290 per=5.42 cost=5.04e+12 flops=1.74e+10
+  sigma_tot counter=515 i=3 t=384 per=7.17 cost=5.04e+12 flops=1.31e+10
+  sigma_tot counter=515 i=4 t=1.09e+03 per=20.4 cost=5.33e+15 flops=4.88e+12
+  sigma_tot counter=515 i=5 t=901 per=16.9 cost=5.17e+15 flops=5.73e+12
+  sigma_tot counter=515 i=6 t=913 per=17.1 cost=5.24e+15 flops=5.74e+12
+  sigma_tot counter=515 i=7 t=1.12e+03 per=20.9 cost=5.53e+15 flops=4.94e+12
+
+ --- TIMING FOR renorm_tot : t_inter=60.9 t_gemm=529 t_reduction=13.7 tot=604 ---
+  renorm_tot counter=140 i=0 t=38.4 per=7.26 cost=7.4e+11 flops=1.93e+10
+  renorm_tot counter=140 i=1 t=61.9 per=11.7 cost=8.11e+11 flops=1.31e+10
+  renorm_tot counter=140 i=2 t=30.8 per=5.81 cost=1.56e+14 flops=5.07e+12
+  renorm_tot counter=140 i=3 t=68.5 per=12.9 cost=4.13e+14 flops=6.02e+12
+  renorm_tot counter=140 i=4 t=27.1 per=5.12 cost=1.65e+14 flops=6.09e+12
+  renorm_tot counter=140 i=5 t=83 per=15.7 cost=4.2e+14 flops=5.06e+12
+  renorm_tot counter=140 i=6 t=220 per=41.5 cost=1.34e+15 flops=6.11e+12
+
  * Better GEMM_BATCH with TensorCore
- 
+
 === Minor ===
 
- * OpenMP for symbolic & mmtasks
-   - more tests
-   - compare mmtask & rmmtask
+ * OpenMP for serial part:
+   - mmtask & rmmtask
+   - decimation
 
- * OpenMP parallelization in decimation
+ * Better hdiag implementation
 
- * Support Mixed CPU-GPU implementation => mmtasks revise [also avoid copy for magma?]
+ * Support Mixed CPU-GPU implementation?
+   - mmtasks revise [also avoid copy for magma?]
 
 === Future ===
 
