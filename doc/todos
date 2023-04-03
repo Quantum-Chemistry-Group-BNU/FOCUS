@@ -323,6 +323,10 @@ KNOWN PROBLEMS
 
  * Better GEMM_BATCH with TensorCore
 
+ * memcpy [cpu<->gpu]: 
+   1. reduce in Davidson: first reduce within node
+   2. perform renormalization by class [CABPQSH, hiden memcpy]
+ 
 === Minor ===
 
  * OpenMP for serial part:
