@@ -36,10 +36,10 @@ namespace ctns{
                   opaddr[locInter] = _data;
                }else{
                   if(alg_rinter == 1){
-                     this->initDirect_batch_cpu(qops_dict, oploc, opaddr, rtasks, debug);
+                     this->initDirect_batch_cpu(rtasks, debug);
 #ifdef GPU
                   }else if(alg_rinter == 2){
-                     this->initDirect_batch_gpu(qops_dict, oploc, opaddr, rtasks, debug);
+                     this->initDirect_batch_gpu(rtasks, debug);
 #endif
                   }else{
                      std::cout << "error: no such option in Intermediates::initDirect alg_rinter=" 
@@ -57,10 +57,7 @@ namespace ctns{
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
                   const bool debug);
-            void initDirect_batch_cpu(const oper_dictmap<Tm>& qops_dict,
-                  const std::map<std::string,int>& oploc,
-                  Tm** opaddr,
-                  const renorm_tasks<Tm>& rtasks,
+            void initDirect_batch_cpu(const renorm_tasks<Tm>& rtasks,
                   const bool debug);
 #ifdef GPU
             void init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
@@ -68,10 +65,7 @@ namespace ctns{
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
                   const bool debug);
-            void initDirect_batch_gpu(const oper_dictmap<Tm>& qops_dict,
-                  const std::map<std::string,int>& oploc,
-                  Tm** opaddr,
-                  const renorm_tasks<Tm>& rtasks,
+            void initDirect_batch_gpu(const renorm_tasks<Tm>& rtasks,
                   const bool debug);
 #endif
             // helpers
@@ -440,10 +434,7 @@ namespace ctns{
    // This subroutine does not work for cNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
-      void rintermediates<Tm>::initDirect_batch_cpu(const oper_dictmap<Tm>& qops_dict,
-            const std::map<std::string,int>& oploc,
-            Tm** opaddr,
-            const renorm_tasks<Tm>& rtasks,
+      void rintermediates<Tm>::initDirect_batch_cpu(const renorm_tasks<Tm>& rtasks,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -516,10 +507,7 @@ namespace ctns{
    // This subroutine does not work for cNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
-      void rintermediates<Tm>::initDirect_batch_gpu(const oper_dictmap<Tm>& qops_dict,
-            const std::map<std::string,int>& oploc,
-            Tm** opaddr,
-            const renorm_tasks<Tm>& rtasks,
+      void rintermediates<Tm>::initDirect_batch_gpu(const renorm_tasks<Tm>& rtasks,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP

@@ -79,8 +79,8 @@ namespace ctns{
                   // timing 
                   if(debug){
                      const auto& timing = sweeps.opt_timing[isweep][ibond];
-                     sweeps.timing_sweep[isweep].accumulate(timing, "time_sweep", schd.ctns.verbose>0);
-                     timing_global.accumulate(timing, "time_global", schd.ctns.verbose>0);
+                     sweeps.timing_sweep[isweep].accumulate(timing, "sweep", schd.ctns.verbose>0);
+                     timing_global.accumulate(timing, "global", schd.ctns.verbose>0);
                   }
                }
                // stop just for debug
@@ -102,7 +102,7 @@ namespace ctns{
          if(debug){
             auto t1 = tools::get_time();
             tools::timing("ctns::sweep_opt", t0, t1);
-            if(schd.ctns.verbose>0) timing_global.print("time_global");
+            if(schd.ctns.verbose>0) timing_global.print("global");
          }
       }
 

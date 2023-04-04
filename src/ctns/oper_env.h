@@ -180,8 +180,8 @@ namespace ctns{
                timing.t1 = tools::get_time();
 
                if(debug){ 
-                  timing.analysis("time_local", schd.ctns.verbose>0);
-                  timing_sweep.accumulate(timing, "time_sweep", schd.ctns.verbose>0);
+                  timing.analysis("local", schd.ctns.verbose>0);
+                  timing_sweep.accumulate(timing, "sweep", schd.ctns.verbose>0);
                }
             }
          } // idx

@@ -725,7 +725,7 @@ namespace ctns{
          } // only rank-0 save and load, later broadcast
 
          timing.t1 = tools::get_time();
-         if(debug) timing.analysis("time_local", schd.ctns.verbose>0);
+         if(debug) timing.analysis("local", schd.ctns.verbose>0);
       }
 
 } // ctns
