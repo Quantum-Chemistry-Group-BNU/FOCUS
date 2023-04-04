@@ -33,5 +33,7 @@ end
 maxsweep 6
 task_dmrg
 alg_hvec 16
-alg_renorm 2
+alg_hinter 2
+alg_renorm 16
+alg_rinter 2
 $end

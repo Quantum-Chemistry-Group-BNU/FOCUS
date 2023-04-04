@@ -299,6 +299,8 @@ KNOWN PROBLEMS
 === Major ===
 
  * async IO strategy: Fix bug in parallel IO [mpi problem]
+   - cpu version
+   - gpu version
 
  * Better treatment GEMM involving 'c': use axpy_vbatch?
 
@@ -324,7 +326,7 @@ KNOWN PROBLEMS
  * Better GEMM_BATCH with TensorCore
 
  * memcpy [cpu<->gpu]: 
-   1. reduce in Davidson: first reduce within node
+   1. reduce in Davidson: first reduce within node - NCCL?
    2. perform renormalization by class [CABPQSH, hiden memcpy]
  
 === Minor ===

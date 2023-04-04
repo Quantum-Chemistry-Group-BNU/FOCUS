@@ -1,0 +1,1233 @@
+
+======================================================================
+     FOCUS: a platform for exploring FermiOniC qUantum Simulation     
+   							               
+       :!!!!!!!!!    ^!!!7!:      :!7!!~~!:!!!!!:  ~!!!. :!!!!7:      
+       .^G@P^^~?BJ ~GG!::~Y#P^  ^P#?^:^7G@^:5&#~.  ^J#! 7P:.:?&5      
+         5@Y  !J :~&@^     ?&@^^B@?     .?. ?&B     :P  5&J7~^~~      
+         5@G!?BB  ?&&:     :B@??&@^         ?&B     :P  .?5GB##P^     
+         5@Y  :!  ^B@J     !@#:^B@Y      ^: ?&#     ~P  JJ   .~@5     
+       .~G@P^:     ^5#5~^^7GY:  ^5&P7~~!?J: :5&5!~~!Y^  Y&5!^^7G^     
+       :~~~~~:       .~!!~^.      .~77!~.     :!7!~^    :::~!!^       
+   							               
+                    Authors: Zhendong Li @ BNU2019   		       
+======================================================================
+
+TIME = Tue Apr  4 23:43:12 2023
+
+GIT_HASH = c73ff6dacc890b1870ee79342b8e6f93dc8104b6
+
+mpisize = 1 maxthreads = 72
+
+input file = results/rinput.dat
+
+schedule::read fname = results/rinput.dat
+----------------------------------------------------------------------
+dtype 0
+nelec 4
+twoms 0
+integral_file moleinfo/rmole.info
+scratch ./scratch
+
+$sci
+dets 
+0 1 2 3
+end
+nroots 2
+schedule
+0 1.e-5
+end
+maxiter 3
+$end
+
+$ctns
+verbose 2
+qkind rNSz
+nroots 1
+maxdets 2 #10000
+thresh_proj 1.e-15
+thresh_ortho 1.e-8 
+topology_file topology/topo0
+schedule
+0 2 60 1.e-5 0.0
+end
+maxcycle 2
+maxsweep 1
+task_dmrg
+alg_hvec 19
+alg_hinter 2
+alg_renorm 19
+alg_rinter 2
+save_formulae
+$end
+
+----------------------------------------------------------------------
+
+===== schedule::print =====
+scratch = ./scratch
+dtype = 0
+nelec = 4
+twoms = 0
+integral_file = moleinfo/rmole.info
+
+===== params_sci::print =====
+nroots = 2
+no. of unique seeds = 1
+0-th det: 0 1 2 3 
+flip = 0
+eps0 = 0.01
+miniter = 0
+maxiter = 3
+schedule: iter eps1
+0 1e-05
+1 1e-05
+2 1e-05
+convergence parameters
+deltaE = 1e-10
+cisolver = 1
+maxcycle = 100
+crit_v = 0.0001
+ifpt2 = 0
+eps2 = 1e-08
+iroot = 0
+load = 0
+ci_file = ci.info
+cthrd = 0.01
+
+===== params_ctns::print =====
+qkind = rNSz
+topology_file = topology/topo0
+verbose = 2
+task_init = 0
+task_sdiag = 0
+task_ham = 1
+task_opt = 1
+restart_sweep = 0
+restart_bond = 0
+maxdets = 2
+thresh_proj = 1.000000e-15
+thresh_ortho = 1.000000e-08
+rdm_svd = 1.500000e+00
+nroots = 1
+guess = 1
+dbranch = 0
+maxsweep = 1
+maxbond = -1
+schedule: isweep, dots, dcut, eps, noise
+0 2 60 1.000000e-05 0.000000e+00
+alg_hvec = 19
+alg_hinter = 2
+alg_renorm = 19
+alg_rinter = 2
+ifdist1 = 0
+save_formulae = 1
+sort_formulae = 0
+save_mmtask = 0
+mmorder = 0
+batchsize = 1000000000
+cisolver = 1
+maxcycle = 2
+nbuff = 4
+damping = 1.000000e-10
+rcanon_load = 0
+rcanon_file = rcanon_ci.info
+iomode = 0
+ioasync = 0
+iroot = 0
+nsample = 100000
+ndetprt = 10
+
+io::create_scratch scratch=./scratch
+rank=0 num_gpus=1 device_id=0 magma_queue=0x2f90e40 allocated GPUmem(GB)=3.099774e+01
+
+ctns::topology::read fname=topology/topo0
+0
+1
+2
+3
+
+ctns::topology::print ntotal=4 nphysical=4 nbackbone=4
+topo:
+ i=0 : 0 
+ i=1 : 1 
+ i=2 : 2 
+ i=3 : 3 
+rcoord:
+ idx=0 coord=(3,0) node: pindex=3 type=0 center=(-1,-1) left=(2,0) right=(-2,-2)
+ idx=1 coord=(2,0) node: pindex=2 type=1 center=(-1,-1) left=(1,0) right=(3,0)
+ idx=2 coord=(1,0) node: pindex=1 type=1 center=(-1,-1) left=(0,0) right=(2,0)
+ idx=3 coord=(0,0) node: pindex=0 type=0 center=(-1,-1) left=(-2,-2) right=(1,0)
+rsupport/lsupport:
+ idx=0 coord=(3,0) rsupport: 3 ; lsupport: 0 1 2 
+ idx=1 coord=(2,0) rsupport: 2 3 ; lsupport: 0 1 
+ idx=2 coord=(1,0) rsupport: 1 2 3 ; lsupport: 0 
+ idx=3 coord=(0,0) rsupport: 0 1 2 3 ; lsupport: 
+corbs/rorbs/lorbs:
+ idx=0 coord=(3,0) corbs: 3 ; rorbs: ; lorbs: 0 1 2 
+ idx=1 coord=(2,0) corbs: 2 ; rorbs: 3 ; lorbs: 0 1 
+ idx=2 coord=(1,0) corbs: 1 ; rorbs: 2 3 ; lorbs: 0 
+ idx=3 coord=(0,0) corbs: 0 ; rorbs: 1 2 3 ; lorbs: 
+image2:
+ 0 1 2 3 4 5 6 7
+
+fci::ci_load fname=./scratch/ci.info
+
+fci::ci_truncate maxdets=2 ifortho=1
+ reduction from 20 to 2 dets
+ iroot=0 ova=9.857423230422e-01
+ iroot=1 ova=5.966693144994e-01
+
+ctns::rcanon_init qkind=rNSz
+
+ctns::init_rbases rdm_svd=1.50e+00 thresh_proj=1.00e-15
+
+idx=1 node=
+idx=2 node=
+idx=(2,0) type=1 rsupport=2 30 node=(3,( 
+
+idx=0) type=0 rsupport=3 
+ctns::right_projection<Km> thresh_proj=1.00e-15
+31,0) type=1 rsupport= qr=1 node=(0,0) type=0 rsupport=0 1 2 3 
+ctns::right_projection<Km> thresh_proj=1.00e-15
+ 2 3 
+ctns::right_projection<Km> thresh_proj=1.00e-15
+(0,0) dimB,dimBi=1,1 popBi=5.00e-01 popBc=5.00e-01 1-popBc=5.00e-01
+ qr=(2,0) dimB,dimBi=1,1 popBi=5.00e-01 popBc=1.00e+00 1-popBc=-2.22e-16
+dim(space,lspace,rspace)=2,2,2 dimBc=2 popBc=1.00e+00 SvN=1.00e+00
+----- TIMING FOR ctns::right_projection<Km> : 8.525e-03 S -----
+ qr=(4,0) dimB,dimBi=2,2 popBi=1 popBc=1 1-popBc=2.22e-16
+dim(space,lspace,rspace)=2,1,2 dimBc=2 popBc=1 SvN=1
+----- TIMING FOR ctns::right_projection<Km> : 4.687e-02 S -----
+ qr=(2,0) dimB,dimBi=2,2 popBi=1 popBc=1 1-popBc=2.22e-16
+dim(space,lspace,rspace)=2,1,2 dimBc=2 popBc=1 SvN=1
+----- TIMING FOR ctns::right_projection<Km> : 4.686e-02 S -----
+
+final rbases with thresh_proj=1e-15
+ idx=0 node=(3,0) type=0 shape=4,4
+ idx=1 node=(2,0) type=1 shape=2,2
+ idx=2 node=(1,0) type=1 shape=2,2
+ idx=3 node=(0,0) type=0 shape=2,2
+maximum bond dimension = 4
+----- TIMING FOR ctns::init_rbases : 6.792e-02 S -----
+
+ctns::init_rsites qkind=rNSz thresh_ortho=1e-08
+ idx=0 node=(3,0)[0] shape(l,r,c)=(4,1,4) maxdiff=0.000e+00 TIMING=1.908e-05 S
+ idx=1 node=(2,0)[1] shape(l,r,c)=(2,4,4) maxdiff=0.000e+00 TIMING=2.203e-04 S
+ idx=2 node=(1,0)[1] shape(l,r,c)=(2,2,4) maxdiff=2.250e-16 TIMING=1.349e-04 S
+ idx=3 node=(0,0)[0] shape(l,r,c)=(2,2,4) maxdiff=5.027e-16 TIMING=1.484e-04 S
+----- TIMING FOR ctns::init_rsites : 7.433e-04 S -----
+
+ctns::init_rwfuns qkind=rNSz thresh_ortho=1e-08
+stensor2: wf2 own=1 _data=0x313b9f80
+qinfo2: wf2 sym=(0,0) dir=0,1
+ qbond: qrow nsym=1 dimAll=2
+ (4,0):2
+ qbond: qcol nsym=1 dimAll=2
+ (4,0):2
+total no. of nonzero blocks=1 nblocks=1 size=4:3.05e-05MB
+
+check state overlaps ...
+matrix: ova_rwfuns size=(2,2)
+      1.0000e+00       2.7756e-17 
+      2.7756e-17       1.0000e+00 
+matrix: ova0_vs size=(2,2)
+      1.0000e+00       0.0000e+00 
+      0.0000e+00       1.0000e+00 
+diff of ova matrices = 3.165e-16
+----- TIMING FOR ctns::init_rwfuns : 1.826e-04 S -----
+comb::display_size
+ rbases: len=4 mem=8:6.1e-05MB:5.96e-08GB
+ sites: len=4 mem=17:0.00013MB:1.27e-07GB
+ rwfuns: len=2 mem=4:3.05e-05MB:2.98e-08GB
+ cpsi: len=0 mem=0:0MB:0GB
+total mem of comb=29:0.000221MB:2.16e-07GB
+----- TIMING FOR ctns::rcanon_init : 6.901e-02 S -----
+
+ctns::rcanon_save fname=./scratch/rcanon_ci.info
+
+ctns::rcanon_check thresh_ortho=1.00e-08
+ idx=0 node=(3,0) Drow=4 maxdiff=0.00e+00
+ idx=1 node=(2,0) Drow=2 maxdiff=0.00e+00
+ idx=2 node=(1,0) Drow=2 maxdiff=2.25e-16
+ idx=3 node=(0,0) Drow=2 maxdiff=5.03e-16
+stensor2: wf2 own=1 _data=0x18e13640
+qinfo2: wf2 sym=(0,0) dir=0,1
+ qbond: qrow nsym=1 dimAll=2
+ (4,0):2
+ qbond: qcol nsym=1 dimAll=2
+ (4,0):2
+total no. of nonzero blocks=1 nblocks=1 size=4:3.05e-05MB
+i=0 idx=0 block[(4,0),(4,0)] dim0,dim1=(2,2) size=4
+ dtensor2: blk_0 size=(2,2) _data=0x18e13640
+     -1.0000e+00       5.5511e-17 
+      2.7756e-17       1.0000e+00 
+ rwfuns: nroots=2 maxdiff=4.4582e-16
+----- TIMING FOR ctns::rcanon_check : 2.960e-04 S -----
+
+integral::load fname = moleinfo/rmole.info
+ sorb = 8
+ size(int1e) = 64:0.000488MB:4.77e-07GB
+ size(int2e) = 434:0.00331MB:3.23e-06GB
+ ecore = 2.29
+----- TIMING FOR integral::load_integral : 6.106e-04 S -----
+
+io::remove_scratch scratch=./scratch/sweep
+successfully removed ./scratch/sweep
+
+io::create_scratch scratch=./scratch/sweep
+successfully created ./scratch/sweep
+
+ctns::oper_env_right qkind=rNSz
+fname=./scratch/sweep/cop(3,0) size=7.15e-07GB T[save](info/data/tot)=0.000113,5.16e-05,0.000164 speed=0.00435GB/s disk[used]=9.33e-07GB
+fname=./scratch/sweep/rop(3,0) size=7.15e-07GB T[save](info/data/tot)=5.56e-05,4.53e-05,0.000101 speed=0.00709GB/s disk[used]=1.87e-06GB
+fname=./scratch/sweep/cop(2,0) size=7.15e-07GB T[save](info/data/tot)=6.18e-05,4.28e-05,0.000105 speed=0.00684GB/s disk[used]=2.8e-06GB
+fname=./scratch/sweep/cop(1,0) size=7.15e-07GB T[save](info/data/tot)=5.83e-05,4.26e-05,0.000101 speed=0.00709GB/s disk[used]=3.73e-06GB
+fname=./scratch/sweep/cop(0,0) size=7.15e-07GB T[save](info/data/tot)=6.09e-05,4.33e-05,0.000104 speed=0.00687GB/s disk[used]=4.67e-06GB
+fname=./scratch/sweep/lop(0,0) size=7.15e-07GB T[save](info/data/tot)=5.84e-05,4.03e-05,9.87e-05 speed=0.00725GB/s disk[used]=5.6e-06GB
+----- TIMING FOR ctns::oper_init : 1.814e-03 S -----
+T[ctns::oper_init](comp/save/tot)=0.00059,0.00114,0.00173
+
+idx=1 coord=(2,0)
+----- TIMING FOR ctns::oper_pool<Tm>::fetch : 2.379e-04 S -----
+ cqops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ rqops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ctns::oper_renorm_opAll coord=(2,0) superblock=cr isym=2 ifkr=0 alg_renorm=19 mpisize=1 maxthreads=72
+ qops: oplist=CABPQSH nops=C:4 A:6 B:10 P:6 Q:10 S:4 H:1 
+        dim(bra,ket)=2,2 size(op)=2:1.53e-05MB size(tot)=34:0.000259MB:2.53e-07GB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=0
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=1.43e-06 (oper)(GB)=1.43e-06
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=1.72e-06 (oper,qops,site)(GB)=1.43e-06,2.53e-07,3.73e-08
+ctns::symbolic_formulae_renorm mpisize=1 fname=./scratch/sweep/rformulae_env_idx1.txt
+----- TIMING FOR symbolic_formulae_renorm with size=41 : 1.505e-03 S -----
+rintermediates<Tm>::initDirect_batch_gpu maxthreads=72
+ no. of formulae=41
+ no. of rintermediate operators=0
+ no. of coefficients=0:0MB:0GB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=1.72e-06 (oper,qops,site,rinter)(GB)=1.43e-06,2.53e-07,3.73e-08,0
+----- TIMING FOR preprocess_formulae_Rlist : 0.000203 S size(rtasks)=41 size(Rlst)=212 T(Rmu/Rxlist/sort)=6.41e-05,9.85e-05,3.98e-05 -----
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=6.46e-06 (oper,qops,site,rinter,batch)(GB)=1.43e-06,2.53e-07,3.73e-08,0,4.74e-06
+ rank=0 Rlst.size=212 Rmmtask.totsize=212 batchsize=212 nbatch=1
+preprocess_renorm_batchDirectGPUDirect: t[inter,gemm,reduction]=1e-05,0.000959,0.000172 cost=1.05e+03 flops[gemm]=1.1e+06
+--- TIMING FOR renorm : t_inter=1e-05 t_gemm=0.000958 t_reduction=0.000172 tot=0.00114 ---
+ renorm counter=1 i=0 t=0.000301 per=31.4 cost=114 flops=3.79e+05
+ renorm counter=1 i=1 t=0.000168 per=17.5 cost=200 flops=1.19e+06
+ renorm counter=1 i=2 t=0.00016 per=16.7 cost=122 flops=7.62e+05
+ renorm counter=1 i=3 t=0.000161 per=16.8 cost=192 flops=1.19e+06
+ renorm counter=1 i=4 t=1e-06 per=0.104 cost=0 flops=0
+ renorm counter=1 i=5 t=1e-06 per=0.104 cost=0 flops=0
+ renorm counter=1 i=6 t=0.000166 per=17.3 cost=424 flops=2.55e+06
+ total GEMM cost=1.05e+03 flops=1.1e+06
+--- TIMING FOR renorm_tot : t_inter=1e-05 t_gemm=0.000958 t_reduction=0.000172 tot=0.00114 ---
+ renorm_tot counter=1 i=0 t=0.000301 per=31.4 cost=114 flops=3.79e+05
+ renorm_tot counter=1 i=1 t=0.000168 per=17.5 cost=200 flops=1.19e+06
+ renorm_tot counter=1 i=2 t=0.00016 per=16.7 cost=122 flops=7.62e+05
+ renorm_tot counter=1 i=3 t=0.000161 per=16.8 cost=192 flops=1.19e+06
+ renorm_tot counter=1 i=4 t=1e-06 per=0.104 cost=0 flops=0
+ renorm_tot counter=1 i=5 t=1e-06 per=0.104 cost=0 flops=0
+ renorm_tot counter=1 i=6 t=0.000166 per=17.3 cost=424 flops=2.55e+06
+ total GEMM cost=1.05e+03 flops=1.1e+06
+check ||H-H.dagger||=0.00e+00 coord=(2,0) rank=0
+----- TIMING FOR oper_renorm : 0.0039 S T(init/kernel/comm)=0.00019,0.0036,2.8e-05 rank=0 -----
+fname=./scratch/sweep/rop(2,0) size=2.53e-07GB T[save](info/data/tot)=0.00013,5.37e-05,0.000183 speed=0.00138GB/s disk[used]=2.33e-05GB
+##### local: 4.59e-03 S #####
+ T(local: fetch) = 3.50e-04 S  per =  7.6  per(accum) = 7.6
+ T(local: hdiag) = 0.00e+00 S  per =    0  per(accum) = 7.6
+ T(local: dvdsn) = 0.00e+00 S  per =    0  per(accum) = 7.6
+ T(local: decim) = 0.00e+00 S  per =    0  per(accum) = 7.6
+ T(local: guess) = 0.00e+00 S  per =    0  per(accum) = 7.6
+ T(local: renrm) = 3.94e-03 S  per =   86  per(accum) = 93
+ T(local: save ) = 3.01e-04 S  per =  6.5  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 0.00e+00 S
+ T(local: qops_dict memcpy cpu2gpu     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: symbolic_formulae_twodot     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: hintermediate init           ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: hintermediates memcpy cpu2gpu) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: preprocess_hformulae_Hxlist2 ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: hmmtasks init                ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: dvdson solver [Hx_batchGPU]  ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: dvdson solver [communication]) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: dvdson solver [rest part]    ) = 0.00e+00 S  per =    0  per(accum) = 0
+Detailed decomposition of T(renrm): 3.86e-03 S
+ T(local: qops init                    ) = 1.92e-04 S  per =    5  per(accum) = 5
+ T(local: qops_dict memcpy cpu2gpu     ) = 1.19e-04 S  per =  3.1  per(accum) = 8
+ T(local: symbolic_formulae_renorm     ) = 1.52e-03 S  per =   39  per(accum) = 47
+ T(local: rintermediate init           ) = 2.91e-05 S  per = 0.75  per(accum) = 48
+ T(local: rintermediates memcpy cpu2gpu) = 2.31e-05 S  per =  0.6  per(accum) = 49
+ T(local: preprocess_formulae_Rlist2   ) = 2.30e-04 S  per =    6  per(accum) = 55
+ T(local: rmmtasks init                ) = 1.60e-04 S  per =  4.1  per(accum) = 59
+ T(local: qops memset                  ) = 2.19e-05 S  per = 0.57  per(accum) = 59
+ T(local: preprocess_renorm_batchGPU   ) = 1.51e-03 S  per =   39  per(accum) = 99
+ T(local: qops memcpy gpu2cpu          ) = 2.64e-05 S  per = 0.68  per(accum) = 99
+ T(local: communication of opS and opH ) = 2.76e-05 S  per = 0.72  per(accum) = 1e+02
+##### sweep: 4.59e-03 S #####
+ T(sweep: fetch) = 3.50e-04 S  per =  7.6  per(accum) = 7.6
+ T(sweep: hdiag) = 0.00e+00 S  per =    0  per(accum) = 7.6
+ T(sweep: dvdsn) = 0.00e+00 S  per =    0  per(accum) = 7.6
+ T(sweep: decim) = 0.00e+00 S  per =    0  per(accum) = 7.6
+ T(sweep: guess) = 0.00e+00 S  per =    0  per(accum) = 7.6
+ T(sweep: renrm) = 3.94e-03 S  per =   86  per(accum) = 93
+ T(sweep: save ) = 3.01e-04 S  per =  6.5  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 0.00e+00 S
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: symbolic_formulae_twodot     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: hintermediate init           ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: hintermediates memcpy cpu2gpu) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: preprocess_hformulae_Hxlist2 ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: hmmtasks init                ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: dvdson solver [Hx_batchGPU]  ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: dvdson solver [communication]) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: dvdson solver [rest part]    ) = 0.00e+00 S  per =    0  per(accum) = 0
+Detailed decomposition of T(renrm): 3.86e-03 S
+ T(sweep: qops init                    ) = 1.92e-04 S  per =    5  per(accum) = 5
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 1.19e-04 S  per =  3.1  per(accum) = 8
+ T(sweep: symbolic_formulae_renorm     ) = 1.52e-03 S  per =   39  per(accum) = 47
+ T(sweep: rintermediate init           ) = 2.91e-05 S  per = 0.75  per(accum) = 48
+ T(sweep: rintermediates memcpy cpu2gpu) = 2.31e-05 S  per =  0.6  per(accum) = 49
+ T(sweep: preprocess_formulae_Rlist2   ) = 2.30e-04 S  per =    6  per(accum) = 55
+ T(sweep: rmmtasks init                ) = 1.60e-04 S  per =  4.1  per(accum) = 59
+ T(sweep: qops memset                  ) = 2.19e-05 S  per = 0.57  per(accum) = 59
+ T(sweep: preprocess_renorm_batchGPU   ) = 1.51e-03 S  per =   39  per(accum) = 99
+ T(sweep: qops memcpy gpu2cpu          ) = 2.64e-05 S  per = 0.68  per(accum) = 99
+ T(sweep: communication of opS and opH ) = 2.76e-05 S  per = 0.72  per(accum) = 1e+02
+
+idx=2 coord=(1,0)
+----- TIMING FOR ctns::oper_pool<Tm>::fetch : 1.565e-04 S -----
+ cqops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ rqops: oplist=CABPQSH nops=C:4 A:6 B:10 P:6 Q:10 S:4 H:1 
+        dim(bra,ket)=2,2 size(op)=2:1.53e-05MB size(tot)=34:0.000259MB:2.53e-07GB
+ctns::oper_renorm_opAll coord=(1,0) superblock=cr isym=2 ifkr=0 alg_renorm=19 mpisize=1 maxthreads=72
+ qops: oplist=CABPQSH nops=C:6 A:15 B:21 P:1 Q:3 S:2 H:1 
+        dim(bra,ket)=2,2 size(op)=4:3.05e-05MB size(tot)=60:0.000458MB:4.47e-07GB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=0
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=9.69e-07 (oper)(GB)=9.69e-07
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=1.45e-06 (oper,qops,site)(GB)=9.69e-07,4.47e-07,2.98e-08
+ctns::symbolic_formulae_renorm mpisize=1 fname=./scratch/sweep/rformulae_env_idx2.txt
+----- TIMING FOR symbolic_formulae_renorm with size=49 : 1.159e-03 S -----
+rintermediates<Tm>::initDirect_batch_gpu maxthreads=72
+ no. of formulae=49
+ no. of rintermediate operators=14
+ no. of coefficients=28:0.000214MB:2.09e-07GB
+----- TIMING FOR rintermediates<Tm>::initDirect_batch_gpu : 3.658e-05 S -----
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=1.65e-06 (oper,qops,site,rinter)(GB)=9.69e-07,4.47e-07,2.98e-08,2.09e-07
+----- TIMING FOR preprocess_formulae_Rlist : 8.18e-05 S size(rtasks)=49 size(Rlst)=42 T(Rmu/Rxlist/sort)=4.85e-05,2.65e-05,6.38e-06 -----
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=4.47e-06 (oper,qops,site,rinter,batch)(GB)=9.69e-07,4.47e-07,2.98e-08,2.09e-07,2.82e-06
+ rank=0 Rlst.size=42 Rmmtask.totsize=42 batchsize=42 nbatch=1
+preprocess_renorm_batchDirectGPUDirect: t[inter,gemm,reduction]=4e-06,0.000775,0.000134 cost=544 flops[gemm]=7.02e+05
+--- TIMING FOR renorm : t_inter=3e-06 t_gemm=0.000775 t_reduction=0.000134 tot=0.000912 ---
+ renorm counter=2 i=0 t=0.000174 per=22.5 cost=28 flops=1.61e+05
+ renorm counter=2 i=1 t=0.000157 per=20.3 cost=60 flops=3.82e+05
+ renorm counter=2 i=2 t=0.000147 per=19 cost=28 flops=1.9e+05
+ renorm counter=2 i=3 t=0.000149 per=19.2 cost=92 flops=6.17e+05
+ renorm counter=2 i=4 t=1e-06 per=0.129 cost=0 flops=0
+ renorm counter=2 i=5 t=1e-06 per=0.129 cost=0 flops=0
+ renorm counter=2 i=6 t=0.000146 per=18.8 cost=336 flops=2.3e+06
+ total GEMM cost=544 flops=7.02e+05
+--- TIMING FOR renorm_tot : t_inter=1.3e-05 t_gemm=0.00173 t_reduction=0.000306 tot=0.00205 ---
+ renorm_tot counter=2 i=0 t=0.000475 per=27.4 cost=142 flops=2.99e+05
+ renorm_tot counter=2 i=1 t=0.000325 per=18.8 cost=260 flops=8e+05
+ renorm_tot counter=2 i=2 t=0.000307 per=17.7 cost=150 flops=4.89e+05
+ renorm_tot counter=2 i=3 t=0.00031 per=17.9 cost=284 flops=9.16e+05
+ renorm_tot counter=2 i=4 t=2e-06 per=0.115 cost=0 flops=0
+ renorm_tot counter=2 i=5 t=2e-06 per=0.115 cost=0 flops=0
+ renorm_tot counter=2 i=6 t=0.000312 per=18 cost=760 flops=2.44e+06
+ total GEMM cost=1.6e+03 flops=9.21e+05
+check ||H-H.dagger||=7.85e-17 coord=(1,0) rank=0
+----- TIMING FOR oper_renorm : 0.003 S T(init/kernel/comm)=0.00015,0.0028,2.2e-05 rank=0 -----
+fname=./scratch/sweep/rop(1,0) size=4.47e-07GB T[save](info/data/tot)=8.44e-05,5.28e-05,0.000137 speed=0.00326GB/s disk[used]=3.8e-05GB
+##### local: 3.54e-03 S #####
+ T(local: fetch) = 2.54e-04 S  per =  7.2  per(accum) = 7.2
+ T(local: hdiag) = 0.00e+00 S  per =    0  per(accum) = 7.2
+ T(local: dvdsn) = 0.00e+00 S  per =    0  per(accum) = 7.2
+ T(local: decim) = 0.00e+00 S  per =    0  per(accum) = 7.2
+ T(local: guess) = 0.00e+00 S  per =    0  per(accum) = 7.2
+ T(local: renrm) = 3.04e-03 S  per =   86  per(accum) = 93
+ T(local: save ) = 2.52e-04 S  per =  7.1  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 0.00e+00 S
+ T(local: qops_dict memcpy cpu2gpu     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: symbolic_formulae_twodot     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: hintermediate init           ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: hintermediates memcpy cpu2gpu) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: preprocess_hformulae_Hxlist2 ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: hmmtasks init                ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: dvdson solver [Hx_batchGPU]  ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: dvdson solver [communication]) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: dvdson solver [rest part]    ) = 0.00e+00 S  per =    0  per(accum) = 0
+Detailed decomposition of T(renrm): 2.97e-03 S
+ T(local: qops init                    ) = 1.52e-04 S  per =  5.1  per(accum) = 5.1
+ T(local: qops_dict memcpy cpu2gpu     ) = 6.69e-05 S  per =  2.3  per(accum) = 7.4
+ T(local: symbolic_formulae_renorm     ) = 1.17e-03 S  per =   39  per(accum) = 47
+ T(local: rintermediate init           ) = 4.64e-05 S  per =  1.6  per(accum) = 48
+ T(local: rintermediates memcpy cpu2gpu) = 2.29e-05 S  per = 0.77  per(accum) = 49
+ T(local: preprocess_formulae_Rlist2   ) = 1.06e-04 S  per =  3.6  per(accum) = 53
+ T(local: rmmtasks init                ) = 7.39e-05 S  per =  2.5  per(accum) = 55
+ T(local: qops memset                  ) = 5.53e-06 S  per = 0.19  per(accum) = 55
+ T(local: preprocess_renorm_batchGPU   ) = 1.28e-03 S  per =   43  per(accum) = 99
+ T(local: qops memcpy gpu2cpu          ) = 2.16e-05 S  per = 0.73  per(accum) = 99
+ T(local: communication of opS and opH ) = 2.16e-05 S  per = 0.73  per(accum) = 1e+02
+##### sweep: 8.14e-03 S #####
+ T(sweep: fetch) = 6.03e-04 S  per =  7.4  per(accum) = 7.4
+ T(sweep: hdiag) = 0.00e+00 S  per =    0  per(accum) = 7.4
+ T(sweep: dvdsn) = 0.00e+00 S  per =    0  per(accum) = 7.4
+ T(sweep: decim) = 0.00e+00 S  per =    0  per(accum) = 7.4
+ T(sweep: guess) = 0.00e+00 S  per =    0  per(accum) = 7.4
+ T(sweep: renrm) = 6.98e-03 S  per =   86  per(accum) = 93
+ T(sweep: save ) = 5.52e-04 S  per =  6.8  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 0.00e+00 S
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: symbolic_formulae_twodot     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: hintermediate init           ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: hintermediates memcpy cpu2gpu) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: preprocess_hformulae_Hxlist2 ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: hmmtasks init                ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: dvdson solver [Hx_batchGPU]  ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: dvdson solver [communication]) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: dvdson solver [rest part]    ) = 0.00e+00 S  per =    0  per(accum) = 0
+Detailed decomposition of T(renrm): 6.83e-03 S
+ T(sweep: qops init                    ) = 3.44e-04 S  per =    5  per(accum) = 5
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 1.86e-04 S  per =  2.7  per(accum) = 7.8
+ T(sweep: symbolic_formulae_renorm     ) = 2.69e-03 S  per =   39  per(accum) = 47
+ T(sweep: rintermediate init           ) = 7.55e-05 S  per =  1.1  per(accum) = 48
+ T(sweep: rintermediates memcpy cpu2gpu) = 4.61e-05 S  per = 0.68  per(accum) = 49
+ T(sweep: preprocess_formulae_Rlist2   ) = 3.36e-04 S  per =  4.9  per(accum) = 54
+ T(sweep: rmmtasks init                ) = 2.34e-04 S  per =  3.4  per(accum) = 57
+ T(sweep: qops memset                  ) = 2.74e-05 S  per =  0.4  per(accum) = 58
+ T(sweep: preprocess_renorm_batchGPU   ) = 2.79e-03 S  per =   41  per(accum) = 99
+ T(sweep: qops memcpy gpu2cpu          ) = 4.79e-05 S  per =  0.7  per(accum) = 99
+ T(sweep: communication of opS and opH ) = 4.92e-05 S  per = 0.72  per(accum) = 1e+02
+
+idx=3 coord=(0,0)
+----- TIMING FOR ctns::oper_pool<Tm>::fetch : 1.399e-04 S -----
+ cqops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ rqops: oplist=CABPQSH nops=C:6 A:15 B:21 P:1 Q:3 S:2 H:1 
+        dim(bra,ket)=2,2 size(op)=4:3.05e-05MB size(tot)=60:0.000458MB:4.47e-07GB
+ctns::oper_renorm_opAll coord=(0,0) superblock=cr isym=2 ifkr=0 alg_renorm=19 mpisize=1 maxthreads=72
+ qops: oplist=CABPQSH nops=C:8 A:28 B:36 P:0 Q:0 S:0 H:1 
+        dim(bra,ket)=2,2 size(op)=4:3.05e-05MB size(tot)=84:0.000641MB:6.26e-07GB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=0
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=1.16e-06 (oper)(GB)=1.16e-06
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=1.82e-06 (oper,qops,site)(GB)=1.16e-06,6.26e-07,2.98e-08
+ctns::symbolic_formulae_renorm mpisize=1 fname=./scratch/sweep/rformulae_env_idx3.txt
+----- TIMING FOR symbolic_formulae_renorm with size=73 : 1.077e-03 S -----
+rintermediates<Tm>::initDirect_batch_gpu maxthreads=72
+ no. of formulae=73
+ no. of rintermediate operators=0
+ no. of coefficients=0:0MB:0GB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=1.82e-06 (oper,qops,site,rinter)(GB)=1.16e-06,6.26e-07,2.98e-08,0
+----- TIMING FOR preprocess_formulae_Rlist : 6.21e-05 S size(rtasks)=73 size(Rlst)=22 T(Rmu/Rxlist/sort)=4.23e-05,1.54e-05,3.77e-06 -----
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=3.29e-06 (oper,qops,site,rinter,batch)(GB)=1.16e-06,6.26e-07,2.98e-08,0,1.48e-06
+ rank=0 Rlst.size=22 Rmmtask.totsize=22 batchsize=22 nbatch=1
+preprocess_renorm_batchDirectGPUDirect: t[inter,gemm,reduction]=3e-06,0.000776,0.000134 cost=704 flops[gemm]=9.07e+05
+--- TIMING FOR renorm : t_inter=3e-06 t_gemm=0.000776 t_reduction=0.000134 tot=0.000913 ---
+ renorm counter=3 i=0 t=0.000167 per=21.5 cost=24 flops=1.44e+05
+ renorm counter=3 i=1 t=0.000154 per=19.8 cost=40 flops=2.6e+05
+ renorm counter=3 i=2 t=0.000154 per=19.8 cost=48 flops=3.12e+05
+ renorm counter=3 i=3 t=0.000149 per=19.2 cost=240 flops=1.61e+06
+ renorm counter=3 i=4 t=1e-06 per=0.129 cost=0 flops=0
+ renorm counter=3 i=5 t=1e-06 per=0.129 cost=0 flops=0
+ renorm counter=3 i=6 t=0.00015 per=19.3 cost=352 flops=2.35e+06
+ total GEMM cost=704 flops=9.07e+05
+--- TIMING FOR renorm_tot : t_inter=1.6e-05 t_gemm=0.00251 t_reduction=0.00044 tot=0.00296 ---
+ renorm_tot counter=3 i=0 t=0.000642 per=25.6 cost=166 flops=2.59e+05
+ renorm_tot counter=3 i=1 t=0.000479 per=19.1 cost=300 flops=6.26e+05
+ renorm_tot counter=3 i=2 t=0.000461 per=18.4 cost=198 flops=4.3e+05
+ renorm_tot counter=3 i=3 t=0.000459 per=18.3 cost=524 flops=1.14e+06
+ renorm_tot counter=3 i=4 t=3e-06 per=0.12 cost=0 flops=0
+ renorm_tot counter=3 i=5 t=3e-06 per=0.12 cost=0 flops=0
+ renorm_tot counter=3 i=6 t=0.000462 per=18.4 cost=1.11e+03 flops=2.41e+06
+ total GEMM cost=2.3e+03 flops=9.17e+05
+check ||H-H.dagger||=0.00e+00 coord=(0,0) rank=0
+----- TIMING FOR oper_renorm : 0.0029 S T(init/kernel/comm)=0.00017,0.0027,2.1e-05 rank=0 -----
+fname=./scratch/sweep/rop(0,0) size=6.26e-07GB T[save](info/data/tot)=8.13e-05,4.83e-05,0.00013 speed=0.00483GB/s disk[used]=5.27e-05GB
+##### local: 3.40e-03 S #####
+ T(local: fetch) = 2.31e-04 S  per =  6.8  per(accum) = 6.8
+ T(local: hdiag) = 0.00e+00 S  per =    0  per(accum) = 6.8
+ T(local: dvdsn) = 0.00e+00 S  per =    0  per(accum) = 6.8
+ T(local: decim) = 0.00e+00 S  per =    0  per(accum) = 6.8
+ T(local: guess) = 0.00e+00 S  per =    0  per(accum) = 6.8
+ T(local: renrm) = 2.92e-03 S  per =   86  per(accum) = 93
+ T(local: save ) = 2.53e-04 S  per =  7.4  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 0.00e+00 S
+ T(local: qops_dict memcpy cpu2gpu     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: symbolic_formulae_twodot     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: hintermediate init           ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: hintermediates memcpy cpu2gpu) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: preprocess_hformulae_Hxlist2 ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: hmmtasks init                ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: dvdson solver [Hx_batchGPU]  ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: dvdson solver [communication]) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(local: dvdson solver [rest part]    ) = 0.00e+00 S  per =    0  per(accum) = 0
+Detailed decomposition of T(renrm): 2.85e-03 S
+ T(local: qops init                    ) = 1.65e-04 S  per =  5.8  per(accum) = 5.8
+ T(local: qops_dict memcpy cpu2gpu     ) = 6.58e-05 S  per =  2.3  per(accum) = 8.1
+ T(local: symbolic_formulae_renorm     ) = 1.09e-03 S  per =   38  per(accum) = 46
+ T(local: rintermediate init           ) = 2.53e-05 S  per = 0.89  per(accum) = 47
+ T(local: rintermediates memcpy cpu2gpu) = 2.29e-05 S  per =  0.8  per(accum) = 48
+ T(local: preprocess_formulae_Rlist2   ) = 9.16e-05 S  per =  3.2  per(accum) = 51
+ T(local: rmmtasks init                ) = 6.71e-05 S  per =  2.4  per(accum) = 54
+ T(local: qops memset                  ) = 6.19e-06 S  per = 0.22  per(accum) = 54
+ T(local: preprocess_renorm_batchGPU   ) = 1.28e-03 S  per =   45  per(accum) = 99
+ T(local: qops memcpy gpu2cpu          ) = 2.01e-05 S  per =  0.7  per(accum) = 99
+ T(local: communication of opS and opH ) = 2.08e-05 S  per = 0.73  per(accum) = 1e+02
+##### sweep: 1.15e-02 S #####
+ T(sweep: fetch) = 8.34e-04 S  per =  7.2  per(accum) = 7.2
+ T(sweep: hdiag) = 0.00e+00 S  per =    0  per(accum) = 7.2
+ T(sweep: dvdsn) = 0.00e+00 S  per =    0  per(accum) = 7.2
+ T(sweep: decim) = 0.00e+00 S  per =    0  per(accum) = 7.2
+ T(sweep: guess) = 0.00e+00 S  per =    0  per(accum) = 7.2
+ T(sweep: renrm) = 9.90e-03 S  per =   86  per(accum) = 93
+ T(sweep: save ) = 8.05e-04 S  per =    7  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 0.00e+00 S
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: symbolic_formulae_twodot     ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: hintermediate init           ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: hintermediates memcpy cpu2gpu) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: preprocess_hformulae_Hxlist2 ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: hmmtasks init                ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: dvdson solver [Hx_batchGPU]  ) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: dvdson solver [communication]) = 0.00e+00 S  per =    0  per(accum) = 0
+ T(sweep: dvdson solver [rest part]    ) = 0.00e+00 S  per =    0  per(accum) = 0
+Detailed decomposition of T(renrm): 9.68e-03 S
+ T(sweep: qops init                    ) = 5.09e-04 S  per =  5.3  per(accum) = 5.3
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 2.51e-04 S  per =  2.6  per(accum) = 7.9
+ T(sweep: symbolic_formulae_renorm     ) = 3.78e-03 S  per =   39  per(accum) = 47
+ T(sweep: rintermediate init           ) = 1.01e-04 S  per =    1  per(accum) = 48
+ T(sweep: rintermediates memcpy cpu2gpu) = 6.90e-05 S  per = 0.71  per(accum) = 49
+ T(sweep: preprocess_formulae_Rlist2   ) = 4.28e-04 S  per =  4.4  per(accum) = 53
+ T(sweep: rmmtasks init                ) = 3.01e-04 S  per =  3.1  per(accum) = 56
+ T(sweep: qops memset                  ) = 3.36e-05 S  per = 0.35  per(accum) = 57
+ T(sweep: preprocess_renorm_batchGPU   ) = 4.07e-03 S  per =   42  per(accum) = 99
+ T(sweep: qops memcpy gpu2cpu          ) = 6.80e-05 S  per =  0.7  per(accum) = 99
+ T(sweep: communication of opS and opH ) = 7.00e-05 S  per = 0.72  per(accum) = 1e+02
+----- TIMING FOR ctns::oper_env_right : 1.597e-02 S -----
+T[ctns::oper_env_right](init/load/comp/save/tot)=0.00185,0.000835,0.0099,0.000805,0.0134
+matrix: Hij size=(2,2)
+     -2.12221217e+00      -1.52707809e-02 
+     -1.52707809e-02      -1.31205071e+00 
+matrix: Sij size=(2,2)
+      1.0000e+00       1.0908e-16 
+      1.0908e-16       1.0000e+00 
+
+ctns::sweep_opt maxsweep=1
+
+ctns::topology::get_sweeps
+ ibond=0 bond=(1,0)-(2,0) forward=1 cturn=0
+ ibond=1 bond=(1,0)-(2,0) forward=0 cturn=0
+..... end of get_sweeps .....
+
+======================================================================
+sweep parameters: isweep=0 dots=2 dcut=60 eps=1e-05 noise=0
+======================================================================
+
+ctns::sweep_init: nroots=1
+comb::display_size
+ rbases: len=4 mem=8:6.104e-05MB:5.96e-08GB
+ sites: len=4 mem=17:0.0001297MB:1.267e-07GB
+ rwfuns: len=2 mem=4:3.052e-05MB:2.98e-08GB
+ cpsi: len=1 mem=5:3.815e-05MB:3.725e-08GB
+total mem of comb=34:0.0002594MB:2.533e-07GB
+
+isweep=0 ibond=0/seqsize=2 dots=2 dbond=(1,0)-(2,0) forward=1 cturn=0
+----------------------------------------------------------------------
+ctns::sweep_twodot alg_hvec=19 alg_renorm=19 mpisize=1 maxthreads=72
+ctns::topology::check_partition: (sl,sr,sc1,sc2)=1,1,1,1 ifNC=1
+ suppl= 0
+ suppr= 3
+ suppc1= 1
+ suppc2= 2
+ctns::topology::get_fqops dots=2
+ fqop[0]=./scratch/sweep/lop(0,0)
+ fqop[1]=./scratch/sweep/rop(3,0)
+ fqop[2]=./scratch/sweep/cop(1,0)
+ fqop[3]=./scratch/sweep/cop(2,0)
+----- TIMING FOR ctns::oper_pool<Tm>::fetch : 4.133e-04 S -----
+qops info: rank=0
+ lqops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ rqops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ c1qops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ c2qops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ qops(tot)=384:0.00293MB:2.86e-06GB
+comb::display_size
+ rbases: len=4 mem=8:6.1e-05MB:5.96e-08GB
+ sites: len=4 mem=17:0.00013MB:1.27e-07GB
+ rwfuns: len=2 mem=4:3.05e-05MB:2.98e-08GB
+ cpsi: len=1 mem=5:3.81e-05MB:3.73e-08GB
+total mem of comb=34:0.000259MB:2.53e-07GB
+===== CPUmem(GB): tot=3.11e-06 (comb,oper,dvdson,hvec,renorm)=2.53e-07,2.86e-06,0,0,0 =====
+wf4(diml,dimr,dimc1,dimc2)=(4,4,4,4) nnz=36:0.000275MB
+stensor4: wf own=1 _data=0x313de5e0
+qinfo4: wf sym=(4,0)
+ qbond: qrow nsym=4 dimAll=4
+ (0,0):1 (2,0):1 (1,1):1 (1,-1):1
+ qbond: qcol nsym=4 dimAll=4
+ (0,0):1 (2,0):1 (1,1):1 (1,-1):1
+ qbond: qmid nsym=4 dimAll=4
+ (0,0):1 (2,0):1 (1,1):1 (1,-1):1
+ qbond: qver nsym=4 dimAll=4
+ (0,0):1 (2,0):1 (1,1):1 (1,-1):1
+total no. of nonzero blocks=36 nblocks=256 size=36:0.000275MB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=0
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=2.86e-06 (oper)(GB)=2.86e-06
+ctns::symbolic_formulae_twodot mpisize=1 fname=./scratch/sweep/hformulae_isweep0_ibond0.txt
+----- TIMING FOR symbolic_formulae_twodot with size=158 : 2.030e-03 S -----
+hintermediates<Tm>::initDirect_batch_gpu maxthreads=72
+ no. of formulae=158
+ no. of hintermediate operators=0
+ no. of coefficients=0:0MB:0GB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=2.86e-06 (oper,hinter)(GB)=2.86e-06,0
+----- TIMING FOR preprocess_formulae_Hxlist : 0.00251 S size(H_formulae)=158 size(Hxlst)=3240 T(Hmu/Hxlist/sort)=8.53e-05,0.00158,0.000851 -----
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=7.58e-05 (oper,hinter,dvdson,batch)(GB)=2.86e-06,0,5.36e-07,7.24e-05
+ rank=0 Hxlst.size=3240 Hmmtasks.totsize=3240 batchsize=3240 nbatch=1
+===== CPUmem(GB): tot=7.41e-06 (comb,oper,dvdson,hvec,renorm)=2.53e-07,2.86e-06,4.29e-06,0,0 =====
+ctns::twodot_guess |lc1>
+ctns::pdvdsonSolver_nkr::solve_iter ndim=36 is_complex=0 mpisize=1
+preprocess_Hx_batchDirectGPUSingle: t[copy,inter,gemm,reduction]=3.2e-05,7e-06,0.0016,0.00016 cost=1.56e+04 flops[gemm]=9.7e+06
+--- TIMING FOR sigma : t_inter=6e-06 t_gemm=0.0016 t_reduction=0.00016 tot=0.00177 ---
+ sigma counter=1 i=0 t=0.000217 per=13.5 cost=2.02e+03 flops=9.29e+06
+ sigma counter=1 i=1 t=0.000194 per=12.1 cost=2.02e+03 flops=1.04e+07
+ sigma counter=1 i=2 t=0.000187 per=11.7 cost=1.87e+03 flops=1e+07
+ sigma counter=1 i=3 t=0.000196 per=12.2 cost=1.87e+03 flops=9.55e+06
+ sigma counter=1 i=4 t=0.000199 per=12.4 cost=2.02e+03 flops=1.01e+07
+ sigma counter=1 i=5 t=0.000203 per=12.7 cost=2.02e+03 flops=9.93e+06
+ sigma counter=1 i=6 t=0.000214 per=13.3 cost=1.87e+03 flops=8.75e+06
+ sigma counter=1 i=7 t=0.000193 per=12 cost=1.87e+03 flops=9.7e+06
+ total GEMM cost=1.56e+04 flops=9.7e+06
+--- TIMING FOR sigma_tot : t_inter=6e-06 t_gemm=0.0016 t_reduction=0.00016 tot=0.00177 ---
+ sigma_tot counter=1 i=0 t=0.000217 per=13.5 cost=2.02e+03 flops=9.29e+06
+ sigma_tot counter=1 i=1 t=0.000194 per=12.1 cost=2.02e+03 flops=1.04e+07
+ sigma_tot counter=1 i=2 t=0.000187 per=11.7 cost=1.87e+03 flops=1e+07
+ sigma_tot counter=1 i=3 t=0.000196 per=12.2 cost=1.87e+03 flops=9.55e+06
+ sigma_tot counter=1 i=4 t=0.000199 per=12.4 cost=2.02e+03 flops=1.01e+07
+ sigma_tot counter=1 i=5 t=0.000203 per=12.7 cost=2.02e+03 flops=9.93e+06
+ sigma_tot counter=1 i=6 t=0.000214 per=13.3 cost=1.87e+03 flops=8.75e+06
+ sigma_tot counter=1 i=7 t=0.000193 per=12 cost=1.87e+03 flops=9.7e+06
+ total GEMM cost=1.56e+04 flops=9.7e+06
+settings: ndim=36 neig=1 maxcycle=2 nbuff=4 memory=4.02e-06GB
+          damping=1e-10 crit_v=1.000e-05 crit_indp=1.000e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
+    1   0 -      -2.122212172732  -1.00e+03   2.64e-01    1     1   2.38e-03  2.38e-03
+preprocess_Hx_batchDirectGPUSingle: t[copy,inter,gemm,reduction]=2.20e-05,4.00e-06,1.49e-03,1.43e-04 cost=1.56e+04 flops[gemm]=1.04e+07
+--- TIMING FOR sigma : t_inter=4.00e-06 t_gemm=1.49e-03 t_reduction=1.43e-04 tot=1.64e-03 ---
+ sigma counter=2 i=0 t=2.03e-04 per=1.36e+01 cost=2.02e+03 flops=9.93e+06
+ sigma counter=2 i=1 t=1.94e-04 per=1.30e+01 cost=2.02e+03 flops=1.04e+07
+ sigma counter=2 i=2 t=1.84e-04 per=1.24e+01 cost=1.87e+03 flops=1.02e+07
+ sigma counter=2 i=3 t=1.96e-04 per=1.32e+01 cost=1.87e+03 flops=9.55e+06
+ sigma counter=2 i=4 t=1.77e-04 per=1.19e+01 cost=2.02e+03 flops=1.14e+07
+ sigma counter=2 i=5 t=1.76e-04 per=1.18e+01 cost=2.02e+03 flops=1.15e+07
+ sigma counter=2 i=6 t=1.82e-04 per=1.22e+01 cost=1.87e+03 flops=1.03e+07
+ sigma counter=2 i=7 t=1.76e-04 per=1.18e+01 cost=1.87e+03 flops=1.06e+07
+ total GEMM cost=1.56e+04 flops=1.05e+07
+--- TIMING FOR sigma_tot : t_inter=1.00e-05 t_gemm=3.09e-03 t_reduction=3.03e-04 tot=3.40e-03 ---
+ sigma_tot counter=2 i=0 t=4.20e-04 per=1.36e+01 cost=4.03e+03 flops=9.60e+06
+ sigma_tot counter=2 i=1 t=3.88e-04 per=1.26e+01 cost=4.03e+03 flops=1.04e+07
+ sigma_tot counter=2 i=2 t=3.71e-04 per=1.20e+01 cost=3.74e+03 flops=1.01e+07
+ sigma_tot counter=2 i=3 t=3.92e-04 per=1.27e+01 cost=3.74e+03 flops=9.55e+06
+ sigma_tot counter=2 i=4 t=3.76e-04 per=1.22e+01 cost=4.03e+03 flops=1.07e+07
+ sigma_tot counter=2 i=5 t=3.79e-04 per=1.23e+01 cost=4.03e+03 flops=1.06e+07
+ sigma_tot counter=2 i=6 t=3.96e-04 per=1.28e+01 cost=3.74e+03 flops=9.45e+06
+ sigma_tot counter=2 i=7 t=3.69e-04 per=1.19e+01 cost=3.74e+03 flops=1.01e+07
+ total GEMM cost=3.11e+04 flops=1.01e+07
+    2   0 -      -2.162038522646  -3.98e-02   8.20e-02    2     2   4.76e-03  2.38e-03
+convergence failure: out of maxcycle=2
+TIMING for Davidson : 4.79e-03  T(cal/comm/rest)=4.45e-03,1.32e-06,3.39e-04
+optimized energies: isweep=0 dots=2 ibond=0 e[0]=-2.16203852265
+ctns::topology::get_fbond frop=./scratch/sweep/lop(1,0) fdel=./scratch/sweep/rop(2,0)
+ctns::twodot_renorm superblock=lc1 (rdm_svd,dbranch,dcut,iftrunc,noise)=1.5e+00,0,60,0,0.0e+00
+ctns::decimation_row: 
+ qbond: qsuper nsym=9 dimAll=16
+ (2,0):4 (1,1):2 (1,-1):2 (3,1):2 (3,-1):2 (0,0):1 (4,0):1 (2,2):1 (2,-2):1
+decimation summary: keep all 16 states
+===== CPUmem(GB): tot=3.1e-06 (comb,oper,dvdson,hvec,renorm)=2.5e-07,2.9e-06,0.0e+00,0.0e+00,0.0e+00 =====
+ctns::oper_renorm_opAll coord=(1,0) superblock=lc isym=2 ifkr=0 alg_renorm=19 mpisize=1 maxthreads=72
+ qops: oplist=CABPQSH nops=C:4 A:6 B:10 P:6 Q:10 S:4 H:1 
+        dim(bra,ket)=16,16 size(op)=36:2.7e-04MB size(tot)=940:7.2e-03MB:7.0e-06GB
+rank=0 GPUmem.size(GB)=3.1e+01 GPUmem.used(GB)=0.0e+00
+rank=0 GPUmem.size(GB)=3.1e+01 GPUmem.used(GB)=1.4e-06 (oper)(GB)=1.4e-06
+rank=0 GPUmem.size(GB)=3.1e+01 GPUmem.used(GB)=8.7e-06 (oper,qops,site)(GB)=1.4e-06,7.0e-06,2.7e-07
+ctns::symbolic_formulae_renorm mpisize=1 fname=./scratch/sweep/rformulae_isweep0_ibond0.txt
+----- TIMING FOR symbolic_formulae_renorm with size=41 : 1.521e-03 S -----
+rintermediates<Tm>::initDirect_batch_gpu maxthreads=72
+ no. of formulae=41
+ no. of rintermediate operators=0
+ no. of coefficients=0:0MB:0GB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=8.7e-06 (oper,qops,site,rinter)(GB)=1.43e-06,7e-06,2.68e-07,0
+----- TIMING FOR preprocess_formulae_Rlist : 0.000698 S size(rtasks)=41 size(Rlst)=892 T(Rmu/Rxlist/sort)=5.96e-05,0.000402,0.000236 -----
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=0.000228 (oper,qops,site,rinter,batch)(GB)=1.43e-06,7e-06,2.68e-07,0,0.000219
+ rank=0 Rlst.size=892 Rmmtask.totsize=892 batchsize=892 nbatch=1
+preprocess_renorm_batchDirectGPUDirect: t[inter,gemm,reduction]=5e-06,0.000832,0.000146 cost=1.74e+04 flops[gemm]=2.09e+07
+--- TIMING FOR renorm : t_inter=5e-06 t_gemm=0.000831 t_reduction=0.000146 tot=0.000982 ---
+ renorm counter=1 i=0 t=0.000174 per=20.9 cost=1.37e+03 flops=7.89e+06
+ renorm counter=1 i=1 t=0.000159 per=19.1 cost=1.77e+03 flops=1.11e+07
+ renorm counter=1 i=2 t=1e-06 per=0.12 cost=0 flops=0
+ renorm counter=1 i=3 t=1e-06 per=0.12 cost=0 flops=0
+ renorm counter=1 i=4 t=0.000156 per=18.8 cost=1.29e+03 flops=8.26e+06
+ renorm counter=1 i=5 t=0.000156 per=18.8 cost=1.85e+03 flops=1.19e+07
+ renorm counter=1 i=6 t=0.000184 per=22.1 cost=1.11e+04 flops=6.04e+07
+ total GEMM cost=1.74e+04 flops=2.09e+07
+--- TIMING FOR renorm_tot : t_inter=5e-06 t_gemm=0.000831 t_reduction=0.000146 tot=0.000982 ---
+ renorm_tot counter=1 i=0 t=0.000174 per=20.9 cost=1.37e+03 flops=7.89e+06
+ renorm_tot counter=1 i=1 t=0.000159 per=19.1 cost=1.77e+03 flops=1.11e+07
+ renorm_tot counter=1 i=2 t=1e-06 per=0.12 cost=0 flops=0
+ renorm_tot counter=1 i=3 t=1e-06 per=0.12 cost=0 flops=0
+ renorm_tot counter=1 i=4 t=0.000156 per=18.8 cost=1.29e+03 flops=8.26e+06
+ renorm_tot counter=1 i=5 t=0.000156 per=18.8 cost=1.85e+03 flops=1.19e+07
+ renorm_tot counter=1 i=6 t=0.000184 per=22.1 cost=1.11e+04 flops=6.04e+07
+ total GEMM cost=1.74e+04 flops=2.09e+07
+check ||H-H.dagger||=0.00e+00 coord=(1,0) rank=0
+----- TIMING FOR oper_renorm : 0.0045 S T(init/kernel/comm)=0.00023,0.0043,2.5e-05 rank=0 -----
+===== CPUmem(GB): tot=3.1e-06 (comb,oper,dvdson,hvec,renorm)=2.5e-07,2.9e-06,0,0,0 =====
+ctns::rcanon_save fname=./scratch/sweep/site_ibond0.info
+ctns::rcanon_save fname=./scratch/sweep/cpsi_ibond0.info
+comb::display_size
+ rbases: len=4 mem=8:6.1e-05MB:6e-08GB
+ sites: len=4 mem=49:0.00037MB:3.7e-07GB
+ rwfuns: len=2 mem=4:3.1e-05MB:3e-08GB
+ cpsi: len=1 mem=36:0.00027MB:2.7e-07GB
+total mem of comb=97:0.00074MB:7.2e-07GB
+===== CPUmem(GB): tot=1.1e-05 (comb,oper,dvdson,hvec,renorm)=7.2e-07,9.9e-06,0,0,0 =====
+fname=./scratch/sweep/lop(1,0) size=7e-06GB T[save](info/data/tot)=0.000302,0.000288,0.000591 speed=0.0119GB/s disk[used]=0.000106GB
+ctns::rcanon_save fname=./scratch/sweep/result_ibond0.info
+ctns::rcanon_save fname=./scratch/sweep/site_ibond0.info
+ctns::rcanon_save fname=./scratch/sweep/cpsi_ibond0.info
+##### local: 1.91e-02 S #####
+ T(local: fetch) = 7.81e-04 S  per =  4.1  per(accum) = 4.1
+ T(local: hdiag) = 2.51e-04 S  per =  1.3  per(accum) = 5.4
+ T(local: dvdsn) = 1.15e-02 S  per =   60  per(accum) = 66
+ T(local: decim) = 1.68e-04 S  per = 0.88  per(accum) = 67
+ T(local: guess) = 9.74e-05 S  per = 0.51  per(accum) = 67
+ T(local: renrm) = 4.65e-03 S  per =   24  per(accum) = 92
+ T(local: save ) = 1.61e-03 S  per =  8.4  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 1.12e-02 S
+ T(local: qops_dict memcpy cpu2gpu     ) = 4.35e-05 S  per = 0.39  per(accum) = 0.39
+ T(local: symbolic_formulae_twodot     ) = 2.04e-03 S  per =   18  per(accum) = 19
+ T(local: hintermediate init           ) = 2.86e-05 S  per = 0.26  per(accum) = 19
+ T(local: hintermediates memcpy cpu2gpu) = 1.70e-05 S  per = 0.15  per(accum) = 19
+ T(local: preprocess_hformulae_Hxlist2 ) = 2.55e-03 S  per =   23  per(accum) = 42
+ T(local: hmmtasks init                ) = 1.73e-03 S  per =   15  per(accum) = 57
+ T(local: dvdson solver [Hx_batchGPU]  ) = 4.45e-03 S  per =   40  per(accum) = 97
+ T(local: dvdson solver [communication]) = 1.32e-06 S  per = 0.012  per(accum) = 97
+ T(local: dvdson solver [rest part]    ) = 3.39e-04 S  per =    3  per(accum) = 1e+02
+Detailed decomposition of T(renrm): 4.53e-03 S
+ T(local: qops init                    ) = 2.34e-04 S  per =  5.2  per(accum) = 5.2
+ T(local: qops_dict memcpy cpu2gpu     ) = 7.22e-05 S  per =  1.6  per(accum) = 6.8
+ T(local: symbolic_formulae_renorm     ) = 1.53e-03 S  per =   34  per(accum) = 41
+ T(local: rintermediate init           ) = 2.64e-05 S  per = 0.58  per(accum) = 41
+ T(local: rintermediates memcpy cpu2gpu) = 2.34e-05 S  per = 0.52  per(accum) = 42
+ T(local: preprocess_formulae_Rlist2   ) = 7.26e-04 S  per =   16  per(accum) = 58
+ T(local: rmmtasks init                ) = 5.01e-04 S  per =   11  per(accum) = 69
+ T(local: qops memset                  ) = 1.38e-05 S  per =  0.3  per(accum) = 69
+ T(local: preprocess_renorm_batchGPU   ) = 1.35e-03 S  per =   30  per(accum) = 99
+ T(local: qops memcpy gpu2cpu          ) = 2.67e-05 S  per = 0.59  per(accum) = 99
+ T(local: communication of opS and opH ) = 2.49e-05 S  per = 0.55  per(accum) = 1e+02
+##### sweep: 1.91e-02 S #####
+ T(sweep: fetch) = 7.81e-04 S  per =  4.1  per(accum) = 4.1
+ T(sweep: hdiag) = 2.51e-04 S  per =  1.3  per(accum) = 5.4
+ T(sweep: dvdsn) = 1.15e-02 S  per =   60  per(accum) = 66
+ T(sweep: decim) = 1.68e-04 S  per = 0.88  per(accum) = 67
+ T(sweep: guess) = 9.74e-05 S  per = 0.51  per(accum) = 67
+ T(sweep: renrm) = 4.65e-03 S  per =   24  per(accum) = 92
+ T(sweep: save ) = 1.61e-03 S  per =  8.4  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 1.12e-02 S
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 4.35e-05 S  per = 0.39  per(accum) = 0.39
+ T(sweep: symbolic_formulae_twodot     ) = 2.04e-03 S  per =   18  per(accum) = 19
+ T(sweep: hintermediate init           ) = 2.86e-05 S  per = 0.26  per(accum) = 19
+ T(sweep: hintermediates memcpy cpu2gpu) = 1.70e-05 S  per = 0.15  per(accum) = 19
+ T(sweep: preprocess_hformulae_Hxlist2 ) = 2.55e-03 S  per =   23  per(accum) = 42
+ T(sweep: hmmtasks init                ) = 1.73e-03 S  per =   15  per(accum) = 57
+ T(sweep: dvdson solver [Hx_batchGPU]  ) = 4.45e-03 S  per =   40  per(accum) = 97
+ T(sweep: dvdson solver [communication]) = 1.32e-06 S  per = 0.012  per(accum) = 97
+ T(sweep: dvdson solver [rest part]    ) = 3.39e-04 S  per =    3  per(accum) = 1e+02
+Detailed decomposition of T(renrm): 4.53e-03 S
+ T(sweep: qops init                    ) = 2.34e-04 S  per =  5.2  per(accum) = 5.2
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 7.22e-05 S  per =  1.6  per(accum) = 6.8
+ T(sweep: symbolic_formulae_renorm     ) = 1.53e-03 S  per =   34  per(accum) = 41
+ T(sweep: rintermediate init           ) = 2.64e-05 S  per = 0.58  per(accum) = 41
+ T(sweep: rintermediates memcpy cpu2gpu) = 2.34e-05 S  per = 0.52  per(accum) = 42
+ T(sweep: preprocess_formulae_Rlist2   ) = 7.26e-04 S  per =   16  per(accum) = 58
+ T(sweep: rmmtasks init                ) = 5.01e-04 S  per =   11  per(accum) = 69
+ T(sweep: qops memset                  ) = 1.38e-05 S  per =  0.3  per(accum) = 69
+ T(sweep: preprocess_renorm_batchGPU   ) = 1.35e-03 S  per =   30  per(accum) = 99
+ T(sweep: qops memcpy gpu2cpu          ) = 2.67e-05 S  per = 0.59  per(accum) = 99
+ T(sweep: communication of opS and opH ) = 2.49e-05 S  per = 0.55  per(accum) = 1e+02
+##### global: 1.91e-02 S #####
+ T(global: fetch) = 7.81e-04 S  per =  4.1  per(accum) = 4.1
+ T(global: hdiag) = 2.51e-04 S  per =  1.3  per(accum) = 5.4
+ T(global: dvdsn) = 1.15e-02 S  per =   60  per(accum) = 66
+ T(global: decim) = 1.68e-04 S  per = 0.88  per(accum) = 67
+ T(global: guess) = 9.74e-05 S  per = 0.51  per(accum) = 67
+ T(global: renrm) = 4.65e-03 S  per =   24  per(accum) = 92
+ T(global: save ) = 1.61e-03 S  per =  8.4  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 1.12e-02 S
+ T(global: qops_dict memcpy cpu2gpu     ) = 4.35e-05 S  per = 0.39  per(accum) = 0.39
+ T(global: symbolic_formulae_twodot     ) = 2.04e-03 S  per =   18  per(accum) = 19
+ T(global: hintermediate init           ) = 2.86e-05 S  per = 0.26  per(accum) = 19
+ T(global: hintermediates memcpy cpu2gpu) = 1.70e-05 S  per = 0.15  per(accum) = 19
+ T(global: preprocess_hformulae_Hxlist2 ) = 2.55e-03 S  per =   23  per(accum) = 42
+ T(global: hmmtasks init                ) = 1.73e-03 S  per =   15  per(accum) = 57
+ T(global: dvdson solver [Hx_batchGPU]  ) = 4.45e-03 S  per =   40  per(accum) = 97
+ T(global: dvdson solver [communication]) = 1.32e-06 S  per = 0.012  per(accum) = 97
+ T(global: dvdson solver [rest part]    ) = 3.39e-04 S  per =    3  per(accum) = 1e+02
+Detailed decomposition of T(renrm): 4.53e-03 S
+ T(global: qops init                    ) = 2.34e-04 S  per =  5.2  per(accum) = 5.2
+ T(global: qops_dict memcpy cpu2gpu     ) = 7.22e-05 S  per =  1.6  per(accum) = 6.8
+ T(global: symbolic_formulae_renorm     ) = 1.53e-03 S  per =   34  per(accum) = 41
+ T(global: rintermediate init           ) = 2.64e-05 S  per = 0.58  per(accum) = 41
+ T(global: rintermediates memcpy cpu2gpu) = 2.34e-05 S  per = 0.52  per(accum) = 42
+ T(global: preprocess_formulae_Rlist2   ) = 7.26e-04 S  per =   16  per(accum) = 58
+ T(global: rmmtasks init                ) = 5.01e-04 S  per =   11  per(accum) = 69
+ T(global: qops memset                  ) = 1.38e-05 S  per =  0.3  per(accum) = 69
+ T(global: preprocess_renorm_batchGPU   ) = 1.35e-03 S  per =   30  per(accum) = 99
+ T(global: qops memcpy gpu2cpu          ) = 2.67e-05 S  per = 0.59  per(accum) = 99
+ T(global: communication of opS and opH ) = 2.49e-05 S  per = 0.55  per(accum) = 1e+02
+
+isweep=0 ibond=1/seqsize=2 dots=2 dbond=(1,0)-(2,0) forward=0 cturn=0
+----------------------------------------------------------------------
+ctns::sweep_twodot alg_hvec=19 alg_renorm=19 mpisize=1 maxthreads=72
+ctns::topology::check_partition: (sl,sr,sc1,sc2)=1,1,1,1 ifNC=1
+ suppl= 0
+ suppr= 3
+ suppc1= 1
+ suppc2= 2
+ctns::topology::get_fqops dots=2
+ fqop[0]=./scratch/sweep/lop(0,0)
+ fqop[1]=./scratch/sweep/rop(3,0)
+ fqop[2]=./scratch/sweep/cop(1,0)
+ fqop[3]=./scratch/sweep/cop(2,0)
+----- TIMING FOR ctns::oper_pool<Tm>::fetch : 1.751e-06 S -----
+qops info: rank=0
+ lqops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ rqops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ c1qops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ c2qops: oplist=CABPQSH nops=C:2 A:1 B:3 P:15 Q:21 S:6 H:1 
+        dim(bra,ket)=4,4 size(op)=4:3.05e-05MB size(tot)=96:0.000732MB:7.15e-07GB
+ qops(tot)=384:0.00293MB:2.86e-06GB
+comb::display_size
+ rbases: len=4 mem=8:6.1e-05MB:5.96e-08GB
+ sites: len=4 mem=49:0.000374MB:3.65e-07GB
+ rwfuns: len=2 mem=4:3.05e-05MB:2.98e-08GB
+ cpsi: len=1 mem=36:0.000275MB:2.68e-07GB
+total mem of comb=97:0.00074MB:7.23e-07GB
+===== CPUmem(GB): tot=1.06e-05 (comb,oper,dvdson,hvec,renorm)=7.23e-07,9.86e-06,0,0,0 =====
+wf4(diml,dimr,dimc1,dimc2)=(4,4,4,4) nnz=36:0.000275MB
+stensor4: wf own=1 _data=0x31cf7c50
+qinfo4: wf sym=(4,0)
+ qbond: qrow nsym=4 dimAll=4
+ (0,0):1 (2,0):1 (1,1):1 (1,-1):1
+ qbond: qcol nsym=4 dimAll=4
+ (0,0):1 (2,0):1 (1,1):1 (1,-1):1
+ qbond: qmid nsym=4 dimAll=4
+ (0,0):1 (2,0):1 (1,1):1 (1,-1):1
+ qbond: qver nsym=4 dimAll=4
+ (0,0):1 (2,0):1 (1,1):1 (1,-1):1
+total no. of nonzero blocks=36 nblocks=256 size=36:0.000275MB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=0
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=2.86e-06 (oper)(GB)=2.86e-06
+ctns::symbolic_formulae_twodot mpisize=1 fname=./scratch/sweep/hformulae_isweep0_ibond1.txt
+----- TIMING FOR symbolic_formulae_twodot with size=158 : 2.034e-03 S -----
+hintermediates<Tm>::initDirect_batch_gpu maxthreads=72
+ no. of formulae=158
+ no. of hintermediate operators=0
+ no. of coefficients=0:0MB:0GB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=2.86e-06 (oper,hinter)(GB)=2.86e-06,0
+----- TIMING FOR preprocess_formulae_Hxlist : 0.00222 S size(H_formulae)=158 size(Hxlst)=3240 T(Hmu/Hxlist/sort)=8.34e-05,0.00128,0.00085 -----
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=7.58e-05 (oper,hinter,dvdson,batch)(GB)=2.86e-06,0,5.36e-07,7.24e-05
+ rank=0 Hxlst.size=3240 Hmmtasks.totsize=3240 batchsize=3240 nbatch=1
+===== CPUmem(GB): tot=1.49e-05 (comb,oper,dvdson,hvec,renorm)=7.23e-07,9.86e-06,4.29e-06,0,0 =====
+ctns::twodot_guess |c2r>
+ctns::pdvdsonSolver_nkr::solve_iter ndim=36 is_complex=0 mpisize=1
+preprocess_Hx_batchDirectGPUSingle: t[copy,inter,gemm,reduction]=3.2e-05,6e-06,0.00149,0.000144 cost=1.56e+04 flops[gemm]=1.04e+07
+--- TIMING FOR sigma : t_inter=5e-06 t_gemm=0.00149 t_reduction=0.000144 tot=0.00164 ---
+ sigma counter=3 i=0 t=0.000205 per=13.8 cost=2.02e+03 flops=9.83e+06
+ sigma counter=3 i=1 t=0.000192 per=12.9 cost=2.02e+03 flops=1.05e+07
+ sigma counter=3 i=2 t=0.000186 per=12.5 cost=1.87e+03 flops=1.01e+07
+ sigma counter=3 i=3 t=0.00019 per=12.8 cost=1.87e+03 flops=9.85e+06
+ sigma counter=3 i=4 t=0.000183 per=12.3 cost=2.02e+03 flops=1.1e+07
+ sigma counter=3 i=5 t=0.000179 per=12 cost=2.02e+03 flops=1.13e+07
+ sigma counter=3 i=6 t=0.00018 per=12.1 cost=1.87e+03 flops=1.04e+07
+ sigma counter=3 i=7 t=0.000173 per=11.6 cost=1.87e+03 flops=1.08e+07
+ total GEMM cost=1.56e+04 flops=1.05e+07
+--- TIMING FOR sigma_tot : t_inter=1.5e-05 t_gemm=0.00458 t_reduction=0.000447 tot=0.00504 ---
+ sigma_tot counter=3 i=0 t=0.000625 per=13.6 cost=6.05e+03 flops=9.68e+06
+ sigma_tot counter=3 i=1 t=0.00058 per=12.7 cost=6.05e+03 flops=1.04e+07
+ sigma_tot counter=3 i=2 t=0.000557 per=12.2 cost=5.62e+03 flops=1.01e+07
+ sigma_tot counter=3 i=3 t=0.000582 per=12.7 cost=5.62e+03 flops=9.65e+06
+ sigma_tot counter=3 i=4 t=0.000559 per=12.2 cost=6.05e+03 flops=1.08e+07
+ sigma_tot counter=3 i=5 t=0.000558 per=12.2 cost=6.05e+03 flops=1.08e+07
+ sigma_tot counter=3 i=6 t=0.000576 per=12.6 cost=5.62e+03 flops=9.75e+06
+ sigma_tot counter=3 i=7 t=0.000542 per=11.8 cost=5.62e+03 flops=1.04e+07
+ total GEMM cost=4.67e+04 flops=1.02e+07
+settings: ndim=36 neig=1 maxcycle=2 nbuff=4 memory=4.02e-06GB
+          damping=1e-10 crit_v=1.000e-05 crit_indp=1.000e-12
+iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
+    1   0 -      -2.162038522646  -1.00e+03   8.20e-02    1     1   2.21e-03  2.21e-03
+preprocess_Hx_batchDirectGPUSingle: t[copy,inter,gemm,reduction]=2.10e-05,4.00e-06,1.55e-03,1.45e-04 cost=1.56e+04 flops[gemm]=1.00e+07
+--- TIMING FOR sigma : t_inter=4.00e-06 t_gemm=1.55e-03 t_reduction=1.45e-04 tot=1.70e-03 ---
+ sigma counter=4 i=0 t=2.06e-04 per=1.33e+01 cost=2.02e+03 flops=9.79e+06
+ sigma counter=4 i=1 t=2.00e-04 per=1.29e+01 cost=2.02e+03 flops=1.01e+07
+ sigma counter=4 i=2 t=1.95e-04 per=1.26e+01 cost=1.87e+03 flops=9.60e+06
+ sigma counter=4 i=3 t=2.06e-04 per=1.33e+01 cost=1.87e+03 flops=9.09e+06
+ sigma counter=4 i=4 t=1.88e-04 per=1.21e+01 cost=2.02e+03 flops=1.07e+07
+ sigma counter=4 i=5 t=1.87e-04 per=1.21e+01 cost=2.02e+03 flops=1.08e+07
+ sigma counter=4 i=6 t=1.97e-04 per=1.27e+01 cost=1.87e+03 flops=9.50e+06
+ sigma counter=4 i=7 t=1.72e-04 per=1.11e+01 cost=1.87e+03 flops=1.09e+07
+ total GEMM cost=1.56e+04 flops=1.00e+07
+--- TIMING FOR sigma_tot : t_inter=1.90e-05 t_gemm=6.13e-03 t_reduction=5.92e-04 tot=6.74e-03 ---
+ sigma_tot counter=4 i=0 t=8.31e-04 per=1.36e+01 cost=8.06e+03 flops=9.70e+06
+ sigma_tot counter=4 i=1 t=7.80e-04 per=1.27e+01 cost=8.06e+03 flops=1.03e+07
+ sigma_tot counter=4 i=2 t=7.52e-04 per=1.23e+01 cost=7.49e+03 flops=9.96e+06
+ sigma_tot counter=4 i=3 t=7.88e-04 per=1.29e+01 cost=7.49e+03 flops=9.50e+06
+ sigma_tot counter=4 i=4 t=7.47e-04 per=1.22e+01 cost=8.06e+03 flops=1.08e+07
+ sigma_tot counter=4 i=5 t=7.45e-04 per=1.22e+01 cost=8.06e+03 flops=1.08e+07
+ sigma_tot counter=4 i=6 t=7.73e-04 per=1.26e+01 cost=7.49e+03 flops=9.69e+06
+ sigma_tot counter=4 i=7 t=7.14e-04 per=1.16e+01 cost=7.49e+03 flops=1.05e+07
+ total GEMM cost=6.22e+04 flops=1.01e+07
+    2   0 -      -2.165999506990  -3.96e-03   2.71e-02    2     2   4.52e-03  2.26e-03
+convergence failure: out of maxcycle=2
+TIMING for Davidson : 4.56e-03  T(cal/comm/rest)=4.39e-03,1.15e-06,1.69e-04
+optimized energies: isweep=0 dots=2 ibond=1 e[0]=-2.16599950699
+ctns::topology::get_fbond frop=./scratch/sweep/rop(2,0) fdel=./scratch/sweep/lop(1,0)
+ctns::twodot_renorm superblock=c2r (rdm_svd,dbranch,dcut,iftrunc,noise)=1.5e+00,0,60,0,0.0e+00
+ctns::decimation_row: 
+ qbond: qsuper nsym=9 dimAll=16
+ (2,0):4 (1,1):2 (1,-1):2 (3,1):2 (3,-1):2 (0,0):1 (4,0):1 (2,2):1 (2,-2):1
+decimation summary: keep all 16 states
+===== CPUmem(GB): tot=1.1e-05 (comb,oper,dvdson,hvec,renorm)=7.2e-07,9.9e-06,0.0e+00,0.0e+00,0.0e+00 =====
+ctns::oper_renorm_opAll coord=(2,0) superblock=cr isym=2 ifkr=0 alg_renorm=19 mpisize=1 maxthreads=72
+ qops: oplist=CABPQSH nops=C:4 A:6 B:10 P:6 Q:10 S:4 H:1 
+        dim(bra,ket)=16,16 size(op)=36:2.7e-04MB size(tot)=940:7.2e-03MB:7.0e-06GB
+rank=0 GPUmem.size(GB)=3.1e+01 GPUmem.used(GB)=0.0e+00
+rank=0 GPUmem.size(GB)=3.1e+01 GPUmem.used(GB)=1.4e-06 (oper)(GB)=1.4e-06
+rank=0 GPUmem.size(GB)=3.1e+01 GPUmem.used(GB)=8.7e-06 (oper,qops,site)(GB)=1.4e-06,7.0e-06,2.7e-07
+ctns::symbolic_formulae_renorm mpisize=1 fname=./scratch/sweep/rformulae_isweep0_ibond1.txt
+----- TIMING FOR symbolic_formulae_renorm with size=41 : 1.764e-03 S -----
+rintermediates<Tm>::initDirect_batch_gpu maxthreads=72
+ no. of formulae=41
+ no. of rintermediate operators=0
+ no. of coefficients=0:0MB:0GB
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=8.7e-06 (oper,qops,site,rinter)(GB)=1.43e-06,7e-06,2.68e-07,0
+----- TIMING FOR preprocess_formulae_Rlist : 0.000593 S size(rtasks)=41 size(Rlst)=892 T(Rmu/Rxlist/sort)=5.71e-05,0.00032,0.000215 -----
+rank=0 GPUmem.size(GB)=31 GPUmem.used(GB)=0.000228 (oper,qops,site,rinter,batch)(GB)=1.43e-06,7e-06,2.68e-07,0,0.000219
+ rank=0 Rlst.size=892 Rmmtask.totsize=892 batchsize=892 nbatch=1
+preprocess_renorm_batchDirectGPUDirect: t[inter,gemm,reduction]=5e-06,0.000821,0.000143 cost=1.74e+04 flops[gemm]=2.12e+07
+--- TIMING FOR renorm : t_inter=5e-06 t_gemm=0.000821 t_reduction=0.000143 tot=0.000969 ---
+ renorm counter=2 i=0 t=0.000171 per=20.8 cost=1.1e+03 flops=6.41e+06
+ renorm counter=2 i=1 t=0.000163 per=19.9 cost=2.04e+03 flops=1.25e+07
+ renorm counter=2 i=2 t=0.000153 per=18.6 cost=1.18e+03 flops=7.71e+06
+ renorm counter=2 i=3 t=0.000159 per=19.4 cost=1.96e+03 flops=1.23e+07
+ renorm counter=2 i=4 t=1e-06 per=0.122 cost=0 flops=0
+ renorm counter=2 i=5 t=1e-06 per=0.122 cost=0 flops=0
+ renorm counter=2 i=6 t=0.000173 per=21.1 cost=1.11e+04 flops=6.43e+07
+ total GEMM cost=1.74e+04 flops=2.12e+07
+--- TIMING FOR renorm_tot : t_inter=1e-05 t_gemm=0.00165 t_reduction=0.000289 tot=0.00195 ---
+ renorm_tot counter=2 i=0 t=0.000345 per=20.9 cost=2.47e+03 flops=7.15e+06
+ renorm_tot counter=2 i=1 t=0.000322 per=19.5 cost=3.81e+03 flops=1.18e+07
+ renorm_tot counter=2 i=2 t=0.000154 per=9.32 cost=1.18e+03 flops=7.66e+06
+ renorm_tot counter=2 i=3 t=0.00016 per=9.69 cost=1.96e+03 flops=1.23e+07
+ renorm_tot counter=2 i=4 t=0.000157 per=9.5 cost=1.29e+03 flops=8.2e+06
+ renorm_tot counter=2 i=5 t=0.000157 per=9.5 cost=1.85e+03 flops=1.18e+07
+ renorm_tot counter=2 i=6 t=0.000357 per=21.6 cost=2.22e+04 flops=6.23e+07
+ total GEMM cost=3.48e+04 flops=2.11e+07
+check ||H-H.dagger||=0.00e+00 coord=(2,0) rank=0
+----- TIMING FOR oper_renorm : 0.0046 S T(init/kernel/comm)=0.00023,0.0043,2.4e-05 rank=0 -----
+===== CPUmem(GB): tot=1.1e-05 (comb,oper,dvdson,hvec,renorm)=7.2e-07,9.9e-06,0,0,0 =====
+ctns::rcanon_save fname=./scratch/sweep/site_ibond1.info
+ctns::rcanon_save fname=./scratch/sweep/cpsi_ibond1.info
+comb::display_size
+ rbases: len=4 mem=8:6.1e-05MB:6e-08GB
+ sites: len=4 mem=80:0.00061MB:6e-07GB
+ rwfuns: len=2 mem=4:3.1e-05MB:3e-08GB
+ cpsi: len=1 mem=36:0.00027MB:2.7e-07GB
+total mem of comb=128:0.00098MB:9.5e-07GB
+===== CPUmem(GB): tot=1.8e-05 (comb,oper,dvdson,hvec,renorm)=9.5e-07,1.7e-05,0,0,0 =====
+fname=./scratch/sweep/rop(2,0) size=7e-06GB T[save](info/data/tot)=0.00029,0.000284,0.000574 speed=0.0122GB/s disk[used]=0.000158GB
+ctns::rcanon_save fname=./scratch/sweep/result_ibond1.info
+ctns::rcanon_save fname=./scratch/sweep/site_ibond1.info
+ctns::rcanon_save fname=./scratch/sweep/cpsi_ibond1.info
+##### local: 1.81e-02 S #####
+ T(local: fetch) = 3.30e-04 S  per =  1.8  per(accum) = 1.8
+ T(local: hdiag) = 2.38e-04 S  per =  1.3  per(accum) = 3.1
+ T(local: dvdsn) = 1.06e-02 S  per =   58  per(accum) = 61
+ T(local: decim) = 1.66e-04 S  per = 0.92  per(accum) = 62
+ T(local: guess) = 7.88e-05 S  per = 0.43  per(accum) = 63
+ T(local: renrm) = 4.72e-03 S  per =   26  per(accum) = 89
+ T(local: save ) = 2.02e-03 S  per =   11  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 1.03e-02 S
+ T(local: qops_dict memcpy cpu2gpu     ) = 4.46e-05 S  per = 0.43  per(accum) = 0.43
+ T(local: symbolic_formulae_twodot     ) = 2.05e-03 S  per =   20  per(accum) = 20
+ T(local: hintermediate init           ) = 2.67e-05 S  per = 0.26  per(accum) = 21
+ T(local: hintermediates memcpy cpu2gpu) = 1.74e-05 S  per = 0.17  per(accum) = 21
+ T(local: preprocess_hformulae_Hxlist2 ) = 2.25e-03 S  per =   22  per(accum) = 43
+ T(local: hmmtasks init                ) = 1.35e-03 S  per =   13  per(accum) = 56
+ T(local: dvdson solver [Hx_batchGPU]  ) = 4.39e-03 S  per =   43  per(accum) = 98
+ T(local: dvdson solver [communication]) = 1.15e-06 S  per = 0.011  per(accum) = 98
+ T(local: dvdson solver [rest part]    ) = 1.69e-04 S  per =  1.6  per(accum) = 1e+02
+Detailed decomposition of T(renrm): 4.60e-03 S
+ T(local: qops init                    ) = 2.34e-04 S  per =  5.1  per(accum) = 5.1
+ T(local: qops_dict memcpy cpu2gpu     ) = 7.23e-05 S  per =  1.6  per(accum) = 6.7
+ T(local: symbolic_formulae_renorm     ) = 1.78e-03 S  per =   39  per(accum) = 45
+ T(local: rintermediate init           ) = 2.91e-05 S  per = 0.63  per(accum) = 46
+ T(local: rintermediates memcpy cpu2gpu) = 2.41e-05 S  per = 0.52  per(accum) = 46
+ T(local: preprocess_formulae_Rlist2   ) = 6.18e-04 S  per =   13  per(accum) = 60
+ T(local: rmmtasks init                ) = 4.49e-04 S  per =  9.8  per(accum) = 70
+ T(local: qops memset                  ) = 1.22e-05 S  per = 0.26  per(accum) = 70
+ T(local: preprocess_renorm_batchGPU   ) = 1.33e-03 S  per =   29  per(accum) = 99
+ T(local: qops memcpy gpu2cpu          ) = 2.58e-05 S  per = 0.56  per(accum) = 99
+ T(local: communication of opS and opH ) = 2.44e-05 S  per = 0.53  per(accum) = 1e+02
+##### sweep: 3.72e-02 S #####
+ T(sweep: fetch) = 1.11e-03 S  per =    3  per(accum) = 3
+ T(sweep: hdiag) = 4.89e-04 S  per =  1.3  per(accum) = 4.3
+ T(sweep: dvdsn) = 2.21e-02 S  per =   59  per(accum) = 64
+ T(sweep: decim) = 3.34e-04 S  per =  0.9  per(accum) = 65
+ T(sweep: guess) = 1.76e-04 S  per = 0.47  per(accum) = 65
+ T(sweep: renrm) = 9.37e-03 S  per =   25  per(accum) = 90
+ T(sweep: save ) = 3.63e-03 S  per =  9.7  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 2.15e-02 S
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 8.81e-05 S  per = 0.41  per(accum) = 0.41
+ T(sweep: symbolic_formulae_twodot     ) = 4.09e-03 S  per =   19  per(accum) = 19
+ T(sweep: hintermediate init           ) = 5.54e-05 S  per = 0.26  per(accum) = 20
+ T(sweep: hintermediates memcpy cpu2gpu) = 3.44e-05 S  per = 0.16  per(accum) = 20
+ T(sweep: preprocess_hformulae_Hxlist2 ) = 4.79e-03 S  per =   22  per(accum) = 42
+ T(sweep: hmmtasks init                ) = 3.08e-03 S  per =   14  per(accum) = 56
+ T(sweep: dvdson solver [Hx_batchGPU]  ) = 8.84e-03 S  per =   41  per(accum) = 98
+ T(sweep: dvdson solver [communication]) = 2.47e-06 S  per = 0.012  per(accum) = 98
+ T(sweep: dvdson solver [rest part]    ) = 5.08e-04 S  per =  2.4  per(accum) = 1e+02
+Detailed decomposition of T(renrm): 9.13e-03 S
+ T(sweep: qops init                    ) = 4.68e-04 S  per =  5.1  per(accum) = 5.1
+ T(sweep: qops_dict memcpy cpu2gpu     ) = 1.44e-04 S  per =  1.6  per(accum) = 6.7
+ T(sweep: symbolic_formulae_renorm     ) = 3.31e-03 S  per =   36  per(accum) = 43
+ T(sweep: rintermediate init           ) = 5.55e-05 S  per = 0.61  per(accum) = 44
+ T(sweep: rintermediates memcpy cpu2gpu) = 4.75e-05 S  per = 0.52  per(accum) = 44
+ T(sweep: preprocess_formulae_Rlist2   ) = 1.34e-03 S  per =   15  per(accum) = 59
+ T(sweep: rmmtasks init                ) = 9.49e-04 S  per =   10  per(accum) = 69
+ T(sweep: qops memset                  ) = 2.59e-05 S  per = 0.28  per(accum) = 69
+ T(sweep: preprocess_renorm_batchGPU   ) = 2.68e-03 S  per =   29  per(accum) = 99
+ T(sweep: qops memcpy gpu2cpu          ) = 5.25e-05 S  per = 0.58  per(accum) = 99
+ T(sweep: communication of opS and opH ) = 4.93e-05 S  per = 0.54  per(accum) = 1e+02
+##### global: 3.72e-02 S #####
+ T(global: fetch) = 1.11e-03 S  per =    3  per(accum) = 3
+ T(global: hdiag) = 4.89e-04 S  per =  1.3  per(accum) = 4.3
+ T(global: dvdsn) = 2.21e-02 S  per =   59  per(accum) = 64
+ T(global: decim) = 3.34e-04 S  per =  0.9  per(accum) = 65
+ T(global: guess) = 1.76e-04 S  per = 0.47  per(accum) = 65
+ T(global: renrm) = 9.37e-03 S  per =   25  per(accum) = 90
+ T(global: save ) = 3.63e-03 S  per =  9.7  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 2.15e-02 S
+ T(global: qops_dict memcpy cpu2gpu     ) = 8.81e-05 S  per = 0.41  per(accum) = 0.41
+ T(global: symbolic_formulae_twodot     ) = 4.09e-03 S  per =   19  per(accum) = 19
+ T(global: hintermediate init           ) = 5.54e-05 S  per = 0.26  per(accum) = 20
+ T(global: hintermediates memcpy cpu2gpu) = 3.44e-05 S  per = 0.16  per(accum) = 20
+ T(global: preprocess_hformulae_Hxlist2 ) = 4.79e-03 S  per =   22  per(accum) = 42
+ T(global: hmmtasks init                ) = 3.08e-03 S  per =   14  per(accum) = 56
+ T(global: dvdson solver [Hx_batchGPU]  ) = 8.84e-03 S  per =   41  per(accum) = 98
+ T(global: dvdson solver [communication]) = 2.47e-06 S  per = 0.012  per(accum) = 98
+ T(global: dvdson solver [rest part]    ) = 5.08e-04 S  per =  2.4  per(accum) = 1e+02
+Detailed decomposition of T(renrm): 9.13e-03 S
+ T(global: qops init                    ) = 4.68e-04 S  per =  5.1  per(accum) = 5.1
+ T(global: qops_dict memcpy cpu2gpu     ) = 1.44e-04 S  per =  1.6  per(accum) = 6.7
+ T(global: symbolic_formulae_renorm     ) = 3.31e-03 S  per =   36  per(accum) = 43
+ T(global: rintermediate init           ) = 5.55e-05 S  per = 0.61  per(accum) = 44
+ T(global: rintermediates memcpy cpu2gpu) = 4.75e-05 S  per = 0.52  per(accum) = 44
+ T(global: preprocess_formulae_Rlist2   ) = 1.34e-03 S  per =   15  per(accum) = 59
+ T(global: rmmtasks init                ) = 9.49e-04 S  per =   10  per(accum) = 69
+ T(global: qops memset                  ) = 2.59e-05 S  per = 0.28  per(accum) = 69
+ T(global: preprocess_renorm_batchGPU   ) = 2.68e-03 S  per =   29  per(accum) = 99
+ T(global: qops memcpy gpu2cpu          ) = 5.25e-05 S  per = 0.58  per(accum) = 99
+ T(global: communication of opS and opH ) = 4.93e-05 S  per = 0.54  per(accum) = 1e+02
+
+======================================================================
+sweep_data::summary isweep=0
+----------------------------------------------------------------------
+sweep parameters: isweep=0 dots=2 dcut=60 eps=1e-05 noise=0
+ ibond=0 bond=(1,0)-(2,0) forward=1 deff=16 dwt=+0.000e+00 nmvp=2 e[0]=-2.16203852265 t=0.019
+ ibond=1 bond=(1,0)-(2,0) forward=0 deff=16 dwt=+0.000e+00 nmvp=2 e[0]=-2.16599950699 t=0.018
+ eav_max=-2.16203852265 [ibond=0]  dwt_min=0.000e+00 [ibond=0]
+ eav_min=-2.16599950699 [ibond=1]  dwt_max=0.000e+00 [ibond=1]
+ eav_diff=0.003960984344
+ sweep energies: isweep=0 dots=2 dcut=60 deff=16 dwt=+0.000e+00 e[0]=-2.16599950699
+----------------------------------------------------------------------
+summary of sweep optimization up to isweep=0
+schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Taccum/S | t_inter/S t_gemm/S t_red/S t_blas/S per
+            0  2      60 1.00e-05 0.00e+00 | 4 | 3.98e-02 | 3.98e-02 | 2.90e-05 7.78e-03 8.81e-04 8.69e-03 21.8
+results: isweep, dcut, dwt, energies (delta_e)
+            0      60 +0.00e+00 e[0]=-2.16599950699 (0.00e+00)
+======================================================================
+
+ctns::sweep_final: convert into RCF & save into ./scratch/rcanon_isweep0.info
+----------------------------------------------------------------------
+Convert [LC]RR => [CR]RR:
+ctns::decimation_row: fname=./scratch/sweep/decimation_isweep0_C0R1.txt
+ qbond: qsuper nsym=16 dimAll=64
+ (2,0):9 (3,1):9 (3,-1):9 (4,0):9 (1,1):3 (1,-1):3 (2,2):3 (2,-2):3 (5,1):3 (5,-1):3 (4,2):3 (4,-2):3 (0,0):1 (6,0):1 (3,3):1 (3,-3):1
+decimation summary: 64->4 dwt=+0.000e+00 SvN=2.079e-01
+
+Convert [C]RRR => [cR]RRR:
+ctns::decimation_row: fname=./scratch/sweep/decimation_isweep0_cR0.txt
+ qbond: qsuper nsym=9 dimAll=16
+ (4,0):4 (3,1):2 (3,-1):2 (5,1):2 (5,-1):2 (2,0):1 (6,0):1 (4,2):1 (4,-2):1
+decimation summary: 16->1 dwt=+0.000e+00 SvN=0.000e+00
+
+ctns::rcanon_save fname=./scratch/rcanon_isweep0.info
+
+ctns::rcanon_check thresh_ortho=1.00e-08
+ idx=0 node=(3,0) Drow=4 maxdiff=0.00e+00
+ idx=1 node=(2,0) Drow=16 maxdiff=0.00e+00
+ idx=2 node=(1,0) Drow=4 maxdiff=4.44e-16
+ idx=3 node=(0,0) Drow=1 maxdiff=4.44e-16
+stensor2: wf2 own=1 _data=0x379f760
+qinfo2: wf2 sym=(0,0) dir=0,1
+ qbond: qrow nsym=1 dimAll=1
+ (4,0):1
+ qbond: qcol nsym=1 dimAll=1
+ (4,0):1
+total no. of nonzero blocks=1 nblocks=1 size=1:7.63e-06MB
+i=0 idx=0 block[(4,0),(4,0)] dim0,dim1=(1,1) size=1
+ dtensor2: blk_0 size=(1,1) _data=0x379f760
+      1.0000e+00 
+ rwfuns: nroots=1 maxdiff=4.4409e-16
+----- TIMING FOR ctns::rcanon_check : 2.609e-04 S -----
+..... end of isweep = 0 .....
+
+----- TIMING FOR ctns::sweep_opt : 4.204e-02 S -----
+##### global: 3.72e-02 S #####
+ T(global: fetch) = 1.11e-03 S  per =    3  per(accum) = 3
+ T(global: hdiag) = 4.89e-04 S  per =  1.3  per(accum) = 4.3
+ T(global: dvdsn) = 2.21e-02 S  per =   59  per(accum) = 64
+ T(global: decim) = 3.34e-04 S  per =  0.9  per(accum) = 65
+ T(global: guess) = 1.76e-04 S  per = 0.47  per(accum) = 65
+ T(global: renrm) = 9.37e-03 S  per =   25  per(accum) = 90
+ T(global: save ) = 3.63e-03 S  per =  9.7  per(accum) = 1e+02
+Detailed decomposition of T(dvdsn): 2.15e-02 S
+ T(global: qops_dict memcpy cpu2gpu     ) = 8.81e-05 S  per = 0.41  per(accum) = 0.41
+ T(global: symbolic_formulae_twodot     ) = 4.09e-03 S  per =   19  per(accum) = 19
+ T(global: hintermediate init           ) = 5.54e-05 S  per = 0.26  per(accum) = 20
+ T(global: hintermediates memcpy cpu2gpu) = 3.44e-05 S  per = 0.16  per(accum) = 20
+ T(global: preprocess_hformulae_Hxlist2 ) = 4.79e-03 S  per =   22  per(accum) = 42
+ T(global: hmmtasks init                ) = 3.08e-03 S  per =   14  per(accum) = 56
+ T(global: dvdson solver [Hx_batchGPU]  ) = 8.84e-03 S  per =   41  per(accum) = 98
+ T(global: dvdson solver [communication]) = 2.47e-06 S  per = 0.012  per(accum) = 98
+ T(global: dvdson solver [rest part]    ) = 5.08e-04 S  per =  2.4  per(accum) = 1e+02
+Detailed decomposition of T(renrm): 9.13e-03 S
+ T(global: qops init                    ) = 4.68e-04 S  per =  5.1  per(accum) = 5.1
+ T(global: qops_dict memcpy cpu2gpu     ) = 1.44e-04 S  per =  1.6  per(accum) = 6.7
+ T(global: symbolic_formulae_renorm     ) = 3.31e-03 S  per =   36  per(accum) = 43
+ T(global: rintermediate init           ) = 5.55e-05 S  per = 0.61  per(accum) = 44
+ T(global: rintermediates memcpy cpu2gpu) = 4.75e-05 S  per = 0.52  per(accum) = 44
+ T(global: preprocess_formulae_Rlist2   ) = 1.34e-03 S  per =   15  per(accum) = 59
+ T(global: rmmtasks init                ) = 9.49e-04 S  per =   10  per(accum) = 69
+ T(global: qops memset                  ) = 2.59e-05 S  per = 0.28  per(accum) = 69
+ T(global: preprocess_renorm_batchGPU   ) = 2.68e-03 S  per =   29  per(accum) = 99
+ T(global: qops memcpy gpu2cpu          ) = 5.25e-05 S  per = 0.58  per(accum) = 99
+ T(global: communication of opS and opH ) = 4.93e-05 S  per = 0.54  per(accum) = 1e+02
+
+Congrats! CTNS calculation finishes successfully. Tue Apr  4 23:43:13 2023
+
