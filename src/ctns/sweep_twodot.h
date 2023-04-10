@@ -121,7 +121,49 @@ namespace ctns{
          }
 
          // 3. Davidson solver for wf
-         // 3.1 prepare HVec
+         // 3.1 diag 
+         auto time0 = tools::get_time();
+         std::vector<double> diag(ndim, ecore/size); // constant term
+         twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
+         auto time1 = tools::get_time();
+         if(rank == 0){
+            std::vector<double> diag1(ndim, ecore/size); // constant term
+            twodot_diag1(qops_dict, wf, diag1.data(), size, rank, schd.ctns.ifdist1);
+            auto time2 = tools::get_time();
+
+            std::vector<double> diag2(ndim, ecore/size); // constant term
+            twodot_diag2(qops_dict, wf, diag2.data(), size, rank, schd.ctns.ifdist1);
+            auto time3 = tools::get_time();
+
+            linalg::xaxpy(ndim, -1.0, diag.data(), diag1.data());
+            linalg::xaxpy(ndim, -1.0, diag.data(), diag2.data());
+            std::cout << "-----------lzd-----------" << std::endl;
+            std::cout << "t0,t1,t2=" 
+               << tools::get_duration(time1-time0) << "," 
+               << tools::get_duration(time2-time1) << "," 
+               << tools::get_duration(time3-time2) << "," 
+               << std::endl;
+            double diff1 = linalg::xnrm2(ndim, diag1.data());
+            double diff2 = linalg::xnrm2(ndim, diag1.data());
+            std::cout << "diff of diag1,diag2=" << diff1 << "," << diff2 << std::endl;
+            std::cout << "-----------lzd-----------" << std::endl;
+            if(diff1 > 1.e-8 || diff2 > 1.e-8){ 
+               std::cout << "diff is too large!" << std::endl;
+               exit(1);
+            }
+         }
+#ifndef SERIAL
+         // reduction of partial diag: no need to broadcast, if only rank=0 
+         // executes the preconditioning in Davidson's algorithm
+         if(size > 1){
+            std::vector<double> diag2(ndim);
+            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0);
+            diag = std::move(diag2);
+         }
+#endif 
+         timing.tb = tools::get_time();
+
+         // 3.2 prepare HVec
          std::map<qsym,qinfo4<Tm>> info_dict;
          size_t opsize=0, wfsize=0, tmpsize=0, worktot=0;
          opsize = preprocess_opsize(qops_dict);
@@ -384,7 +426,7 @@ namespace ctns{
             // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
             const bool ifSingle = alg_hvec > 17;
             const bool ifDirect = alg_hvec % 2 == 1;
-            
+
             // allocate memery on GPU & copy qops
             for(int i=0; i<4; i++){
                auto& tqops = qops_pool(fneed[i]);
@@ -465,7 +507,7 @@ namespace ctns{
                         << std::endl;
                   }
                } // i
-                 // save for analysis of BatchGEMM
+               // save for analysis of BatchGEMM
                if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
                   save_hmmtasks(Hmmtasks, isweep, ibond);
                }
@@ -518,49 +560,6 @@ namespace ctns{
             std::cout << "error: no such option for alg_hvec=" << alg_hvec << std::endl;
             exit(1);
          } // alg_hvec
-         timing.tb = tools::get_time();
-
-         // 3.2 diag 
-         auto time0 = tools::get_time();
-         std::vector<double> diag(ndim, ecore/size); // constant term
-         twodot_diag1(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
-         auto time1 = tools::get_time();
-         /*     
-                std::vector<double> diag1(ndim, ecore/size); // constant term
-                twodot_diag1(qops_dict, wf, diag1.data(), size, rank, schd.ctns.ifdist1);
-                auto time2 = tools::get_time();
-
-                std::vector<double> diag2(ndim, ecore/size); // constant term
-                twodot_diag2(qops_dict, wf, diag2.data(), size, rank, schd.ctns.ifdist1);
-                auto time3 = tools::get_time();
-
-                linalg::xaxpy(ndim, -1.0, diag.data(), diag1.data());
-                linalg::xaxpy(ndim, -1.0, diag.data(), diag2.data());
-                std::cout << "-----------lzd-----------" << std::endl;
-                std::cout << "t0,t1,t2=" 
-                << tools::get_duration(time1-time0) << "," 
-                << tools::get_duration(time2-time1) << "," 
-                << tools::get_duration(time3-time2) << "," 
-                << std::endl;
-                double diff1 = linalg::xnrm2(ndim, diag1.data());
-                double diff2 = linalg::xnrm2(ndim, diag1.data());
-                std::cout << "diff of diag1,diag2=" << diff1 << "," << diff2 << std::endl;
-                std::cout << "-----------lzd-----------" << std::endl;
-                if(diff1 > 1.e-8 || diff2 > 1.e-8){ 
-                std::cout << "diff is too large!" << std::endl;
-                exit(1);
-                }
-                */
-#ifndef SERIAL
-         // reduction of partial diag: no need to broadcast, if only rank=0 
-         // executes the preconditioning in Davidson's algorithm
-         if(size > 1){
-            std::vector<double> diag2(ndim);
-            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0);
-            diag = std::move(diag2);
-         }
-#endif 
-         timing.tb = tools::get_time();
 
          //-------------
          // solve HC=CE         
@@ -601,13 +600,13 @@ namespace ctns{
          auto t0 = tools::get_time();
          qops_pool.save(frop, schd.ctns.async_save);
          auto t1 = tools::get_time();
-         
+
          /* Remove fdel on the same bond as frop but with opposite direction:
-            NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 
-            in the later configuration should wait until the file from the 
-            former configuration has been saved! Therefore, oper_remove should 
-            come later than save, which contains the synchronization!
-            */
+NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 
+in the later configuration should wait until the file from the 
+former configuration has been saved! Therefore, oper_remove should 
+come later than save, which contains the synchronization!
+*/
          qops_pool.remove(fdel, schd.ctns.async_remove);
          auto t2 = tools::get_time();
 
@@ -620,13 +619,13 @@ namespace ctns{
          auto t4 = tools::get_time();
 
          if(debug){
-         std::cout << "TIMING: " << tools::get_duration(t4-t0)
-            << " T(save/remove/release/save)="
-            << tools::get_duration(t1-t0) << ","
-            << tools::get_duration(t2-t1) << ","
-            << tools::get_duration(t3-t2) << ","
-            << tools::get_duration(t4-t3) 
-            << std::endl;
+            std::cout << "TIMING: " << tools::get_duration(t4-t0)
+               << " T(save/remove/release/save)="
+               << tools::get_duration(t1-t0) << ","
+               << tools::get_duration(t2-t1) << ","
+               << tools::get_duration(t3-t2) << ","
+               << tools::get_duration(t4-t3) 
+               << std::endl;
          }
 
          timing.t1 = tools::get_time();
