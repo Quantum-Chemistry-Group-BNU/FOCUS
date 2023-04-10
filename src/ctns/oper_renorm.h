@@ -390,6 +390,7 @@ namespace ctns{
          if(!ifDirect) assert(blksize0 == 0); 
          timing.tf6 = tools::get_time();
 
+         auto t0y = tools::get_time();
          // Determine batchsize dynamically
          size_t blocksize = 2*blksize+blksize0+1;
          preprocess_batchsize<Tm>(batchsize, gpumem_batch, blocksize, maxbatch, 0, rank);
@@ -400,9 +401,12 @@ namespace ctns{
                << " (oper,site,rinter,batch)=" << gpumem_oper/std::pow(1024.0,3) 
                << "," << gpumem_site/std::pow(1024.0,3) 
                << "," << gpumem_rinter/std::pow(1024.0,3) 
-               << "," << gpumem_batch/std::pow(1024.0,3) 
+               << "," << gpumem_batch/std::pow(1024.0,3)
+               << " blksize=" << blksize
+               << " blksize0=" << blksize0 
                << std::endl;
          }
+         auto t1y = tools::get_time();
 
          // generate Rmmtasks
          const int batchblas = 2;
@@ -428,6 +432,16 @@ namespace ctns{
                   << " nbatch=" << Rmmtask.nbatch 
                   << std::endl;
             }
+         }
+         auto t2y = tools::get_time();
+         if(rank == 0){
+            std::cout << "timing: allocate=" 
+               << tools::get_duration(t1y-t0y)
+               << " rmmtasks init="
+               << tools::get_duration(t2y-t1y)
+               << " total="  
+               << tools::get_duration(t2y-t0y)
+               << std::endl;
          }
          timing.tf7 = tools::get_time();
          timing.tf8 = tools::get_time();
@@ -459,11 +473,26 @@ namespace ctns{
          }
          timing.tf9 = tools::get_time();
 
+         auto t0x = tools::get_time();
          // copy results back to CPU
          qops.to_cpu();
+         auto t1x = tools::get_time();
 
          GPUmem.deallocate(dev_site, gpumem_site);
+         auto t2x = tools::get_time();
          GPUmem.deallocate(dev_workspace, gpumem_batch);
+         auto t3x = tools::get_time();
+         if(rank == 0){
+            std::cout << "timing: cpu2gpu=" 
+               << tools::get_duration(t1x-t0x)
+               << " deallocate(site/work)="
+               << tools::get_duration(t2x-t1x)
+               << ","
+               << tools::get_duration(t3x-t1x)
+               << " total="
+               << tools::get_duration(t3x-t0x)
+               << std::endl;
+         }
 
 #endif // GPU
 
