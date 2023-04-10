@@ -35,12 +35,23 @@ namespace ctns{
          //        B/Q^C1 B/Q^C2
          //         |      |
          // B/Q^L---*------*---B/Q^R
-         twodot_diag_BQ("lc1" ,  lqops, c1qops, wf, diag, size, rank);
-         twodot_diag_BQ("lc2" ,  lqops, c2qops, wf, diag, size, rank);
-         twodot_diag_BQ("lr"  ,  lqops,  rqops, wf, diag, size, rank);
-         twodot_diag_BQ("c1c2", c1qops, c2qops, wf, diag, size, rank);
-         twodot_diag_BQ("c1r" , c1qops,  rqops, wf, diag, size, rank);
-         twodot_diag_BQ("c2r" , c2qops,  rqops, wf, diag, size, rank);
+         size_t ndim = wf.size();
+#pragma omp parallel
+         {
+            double* di = new double[ndim];
+            memset(di, 0, ndim*sizeof(double));
+
+            twodot_diag_BQ("lc1" ,  lqops, c1qops, wf, di, size, rank);
+            twodot_diag_BQ("lc2" ,  lqops, c2qops, wf, di, size, rank);
+            twodot_diag_BQ("lr"  ,  lqops,  rqops, wf, di, size, rank);
+            twodot_diag_BQ("c1c2", c1qops, c2qops, wf, di, size, rank);
+            twodot_diag_BQ("c1r" , c1qops,  rqops, wf, di, size, rank);
+            twodot_diag_BQ("c2r" , c2qops,  rqops, wf, di, size, rank);
+
+#pragma omp critical
+            linalg::xaxpy(ndim, 1.0, di, diag);
+            delete[] di;
+         }
       }
 
    template <typename Tm>
@@ -145,8 +156,6 @@ namespace ctns{
          const auto& Hr  = rqops('H').at(0);
          const auto& Hc1 = c1qops('H').at(0);
          const auto& Hc2 = c2qops('H').at(0);
-         const size_t ndim = wf.size();
-#pragma omp parallel for reduction(+:diag[:ndim])
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
             int idx = wf.info._nnzaddr[i];
             int br, bc, bm, bv;
@@ -201,41 +210,32 @@ namespace ctns{
          // B^L*Q^R or Q^L*B^R 
 #ifdef _OPENMP
 
-         size_t ndim = wf.size();
-#pragma omp parallel
-         {
-            double* di = new double[ndim];
-            memset(di, 0, ndim*sizeof(double));
 #pragma omp for schedule(dynamic) nowait
-            for(const auto& index : bindex_dist){
-               const auto& O1 = qops1(BQ1).at(index);
-               const auto& O2 = qops2(BQ2).at(index);
-               if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
-               const double wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
-               if(superblock == "lc1"){ 
-                  twodot_diag_OlOc1(wt, O1, O2, wf, di);
-                  if(ifkr) twodot_diag_OlOc1(wt, O1.K(0), O2.K(0), wf, di);
-               }else if(superblock == "lc2"){ 
-                  twodot_diag_OlOc2(wt, O1, O2, wf, di);
-                  if(ifkr) twodot_diag_OlOc2(wt, O1.K(0), O2.K(0), wf, di);
-               }else if(superblock == "lr"){
-                  twodot_diag_OlOr(wt, O1, O2, wf, di);
-                  if(ifkr) twodot_diag_OlOr(wt, O1.K(0), O2.K(0), wf, di);
-               }else if(superblock == "c1c2"){
-                  twodot_diag_Oc1Oc2(wt, O1, O2, wf, di);
-                  if(ifkr) twodot_diag_Oc1Oc2(wt, O1.K(0), O2.K(0), wf, di);
-               }else if(superblock == "c1r"){
-                  twodot_diag_Oc1Or(wt, O1, O2, wf, di);
-                  if(ifkr) twodot_diag_Oc1Or(wt, O1.K(0), O2.K(0), wf, di);
-               }else if(superblock == "c2r"){
-                  twodot_diag_Oc2Or(wt, O1, O2, wf, di);
-                  if(ifkr) twodot_diag_Oc2Or(wt, O1.K(0), O2.K(0), wf, di);
-               }
-            } // index
-#pragma omp critical
-            linalg::xaxpy(ndim, 1.0, di, diag);
-            delete[] di;
-         }
+        for(const auto& index : bindex_dist){
+           const auto& O1 = qops1(BQ1).at(index);
+           const auto& O2 = qops2(BQ2).at(index);
+           if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
+           const double wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
+           if(superblock == "lc1"){ 
+              twodot_diag_OlOc1(wt, O1, O2, wf, diag);
+              if(ifkr) twodot_diag_OlOc1(wt, O1.K(0), O2.K(0), wf, diag);
+           }else if(superblock == "lc2"){ 
+              twodot_diag_OlOc2(wt, O1, O2, wf, diag);
+              if(ifkr) twodot_diag_OlOc2(wt, O1.K(0), O2.K(0), wf, diag);
+           }else if(superblock == "lr"){
+              twodot_diag_OlOr(wt, O1, O2, wf, diag);
+              if(ifkr) twodot_diag_OlOr(wt, O1.K(0), O2.K(0), wf, diag);
+           }else if(superblock == "c1c2"){
+              twodot_diag_Oc1Oc2(wt, O1, O2, wf, diag);
+              if(ifkr) twodot_diag_Oc1Oc2(wt, O1.K(0), O2.K(0), wf, diag);
+           }else if(superblock == "c1r"){
+              twodot_diag_Oc1Or(wt, O1, O2, wf, diag);
+              if(ifkr) twodot_diag_Oc1Or(wt, O1.K(0), O2.K(0), wf, diag);
+           }else if(superblock == "c2r"){
+              twodot_diag_Oc2Or(wt, O1, O2, wf, diag);
+              if(ifkr) twodot_diag_Oc2Or(wt, O1.K(0), O2.K(0), wf, diag);
+           }
+        } // index
 
 #else
 
@@ -275,8 +275,6 @@ namespace ctns{
             const stensor2<Tm>& Oc1,
             const stensor4<Tm>& wf,
             double* diag){
-         const size_t ndim = wf.size();
-#pragma omp parallel for reduction(+:diag[:ndim])
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
             int idx = wf.info._nnzaddr[i];
             int br, bc, bm, bv;
@@ -310,8 +308,6 @@ namespace ctns{
             const stensor2<Tm>& Oc2,
             const stensor4<Tm>& wf,
             double* diag){
-         const size_t ndim = wf.size();
-#pragma omp parallel for reduction(+:diag[:ndim])
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
             int idx = wf.info._nnzaddr[i];
             int br, bc, bm, bv;
@@ -345,8 +341,6 @@ namespace ctns{
             const stensor2<Tm>& Or,
             const stensor4<Tm>& wf,
             double* diag){
-         const size_t ndim = wf.size();
-#pragma omp parallel for reduction(+:diag[:ndim])
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
             int idx = wf.info._nnzaddr[i];
             int br, bc, bm, bv;
@@ -380,8 +374,6 @@ namespace ctns{
             const stensor2<Tm>& Oc2,
             const stensor4<Tm>& wf,
             double* diag){
-         const size_t ndim = wf.size();
-#pragma omp parallel for reduction(+:diag[:ndim])
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
             int idx = wf.info._nnzaddr[i];
             int br, bc, bm, bv;
@@ -415,8 +407,6 @@ namespace ctns{
             const stensor2<Tm>& Or,
             const stensor4<Tm>& wf,
             double* diag){
-         const size_t ndim = wf.size();
-#pragma omp parallel for reduction(+:diag[:ndim])
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
             int idx = wf.info._nnzaddr[i];
             int br, bc, bm, bv;
@@ -450,8 +440,6 @@ namespace ctns{
             const stensor2<Tm>& Or,
             const stensor4<Tm>& wf,
             double* diag){
-         const size_t ndim = wf.size();
-#pragma omp parallel for reduction(+:diag[:ndim])
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
             int idx = wf.info._nnzaddr[i];
             int br, bc, bm, bv;
