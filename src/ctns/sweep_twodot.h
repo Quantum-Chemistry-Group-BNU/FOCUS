@@ -447,6 +447,8 @@ namespace ctns{
                   << "," << gpumem_hinter/std::pow(1024.0,3) 
                   << "," << gpumem_dvdson/std::pow(1024.0,3)
                   << "," << gpumem_batch/std::pow(1024.0,3)
+                  << " blksize=" << blksize
+                  << " blksize0=" << blksize0 
                   << std::endl;
             }
 

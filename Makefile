@@ -1,8 +1,8 @@
 
-machine = dell #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no #yes
-USE_GCC = no #yes
+USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
@@ -80,9 +80,9 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
-      FLAGS += -DDEBUG -g -O0 -w #-Wall
+      FLAGS += -DDEBUG -O0 -w #-Wall
    else
-      FLAGS += -DNDEBUG -g -O2 -w #-Wall
+      FLAGS += -DNDEBUG -O2 -w #-Wall
    endif
    #FLAGS += -gdwarf-4 -gstrict-dwarf # dwarf error in ld
    ifeq ($(strip $(USE_MPI)),no)
