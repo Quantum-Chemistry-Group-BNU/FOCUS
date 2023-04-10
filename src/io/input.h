@@ -92,7 +92,7 @@ namespace input{
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
                   & task_init & task_sdiag & task_ham & task_opt
-                  & restart_sweep & restart_bond 
+                  & restart_sweep & restart_bond & timestamp
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
                   & alg_hvec & alg_hinter & alg_renorm & alg_rinter 
@@ -100,7 +100,7 @@ namespace input{
                   & mmorder & batchsize 
                   & cisolver & maxcycle & nbuff & damping
                   & rcanon_load & rcanon_file 
-                  & iomode & ioasync
+                  & iomode & async_fetch & async_save & async_remove
                   & iroot & nsample & ndetprt; 
             }
       public:
@@ -120,6 +120,7 @@ namespace input{
          // restart
          int restart_sweep = 0;
          int restart_bond = 0;
+         bool timestamp = false; 
          // conversion of sci 
          int maxdets = 10000;
          double thresh_proj = 1.e-16;
@@ -153,7 +154,9 @@ namespace input{
          std::string rcanon_file = "rcanon_ci.info";
          // oper_pool
          int iomode = 0;
-         int ioasync = 0;
+         bool async_fetch = false;
+         bool async_save = false;
+         bool async_remove = false;
          // sampling
          int iroot = 0;
          int nsample = 1.e5;

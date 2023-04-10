@@ -7,29 +7,6 @@
 
 namespace ctns{
 
-   // memory monitor
-   struct dot_CPUmem{
-      void display(){
-         const double toGB = 1.0/std::pow(1024.0,3);
-         tot = comb + oper + dvdson + hvec + renorm;
-         std::cout << "===== CPUmem(GB): tot=" << tot*toGB
-            << " (comb,oper,dvdson,hvec,renorm)=" 
-            << comb*toGB << ","
-            << oper*toGB << ","
-            << dvdson*toGB << ","
-            << hvec*toGB << ","
-            << renorm*toGB
-            << " =====" << std::endl;
-      }
-      public:
-      size_t comb = 0;
-      size_t oper = 0;
-      size_t dvdson = 0;
-      size_t hvec = 0;
-      size_t renorm = 0;
-      size_t tot = 0;
-   };
-
    // timing
    struct dot_timing{
       void print_part(const std::string key,
@@ -242,11 +219,9 @@ namespace ctns{
          // sweep results
          timing_sweep.resize(maxsweep);
          opt_result.resize(maxsweep);
-         opt_CPUmem.resize(maxsweep);
          opt_timing.resize(maxsweep);
          for(int i=0; i<maxsweep; i++){
             opt_result[i].resize(seqsize);
-            opt_CPUmem[i].resize(seqsize);
             opt_timing[i].resize(seqsize);
             for(int j=0; j<seqsize; j++){
                opt_result[i][j].eopt.resize(nroots, 0.0);
@@ -292,8 +267,6 @@ namespace ctns{
       std::vector<double> t_inter; 
       std::vector<double> t_gemm; 
       std::vector<double> t_red;
-      // memory
-      std::vector<std::vector<dot_CPUmem>> opt_CPUmem;
    };
 
    // analysis of the current sweep (eopt,dwt,deff) and timing

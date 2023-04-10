@@ -214,7 +214,7 @@ int main(int argc, char *argv[]){
 
 #ifdef GPU
    if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
-      gpu_clean();
+      gpu_finalize();
    }
 #endif
 

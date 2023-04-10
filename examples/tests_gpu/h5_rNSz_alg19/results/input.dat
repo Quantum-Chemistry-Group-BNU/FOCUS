@@ -1,0 +1,39 @@
+dtype 0
+nelec 5
+twoms 1
+integral_file moleinfo/fmole.info 
+scratch ./scratch
+
+$sci
+dets 
+0 1 2 3 4 
+end
+nroots 4
+eps0 1.e-6
+schedule
+0 1.e-2
+end
+maxiter 6
+$end
+
+$ctns
+verbose 1
+qkind rNSz
+nroots 2
+maxdets 500 #000
+topology_file topology/topo0
+thresh_ortho 1.e-8
+thresh_proj 1.e-14
+schedule
+# (n-th, dot, Dcut, dvdson, noise)
+0 2 10 1.e-4 1.e-4
+1 2 20 1.e-4 0.0
+2 2 20 1.e-4 0.0
+end
+maxsweep 6
+task_dmrg
+alg_hvec 19
+alg_hinter 2
+alg_renorm 19
+alg_rinter 2
+$end

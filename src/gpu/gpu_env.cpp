@@ -6,8 +6,7 @@
 magma_queue_t magma_queue = 0;
 gpu_mem GPUmem = {};
 
-void gpu_init(const int rank)
-{
+void gpu_init(const int rank){
    magma_queue = 0;
    magma_device_t device_id = -1;
 
@@ -25,17 +24,12 @@ void gpu_init(const int rank)
 
    magma_queue_create(device_id, &magma_queue);
    
-   GPUmem.init(rank);
-
    std::cout << "rank=" << rank << " num_gpus=" << num_gpus
              << " device_id=" << device_id << " magma_queue=" <<magma_queue
-             << " allocated GPUmem(GB)=" << tools::sizeGB<std::byte>(GPUmem.size()) 
              << std::endl;
 }
 
-void gpu_clean()
-{
-   GPUmem.free();
+void gpu_finalize(){
    magma_queue_destroy(magma_queue);
    magma_finalize();
 }

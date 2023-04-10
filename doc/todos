@@ -298,9 +298,13 @@ KNOWN PROBLEMS
 
 === Major ===
 
- * async IO strategy: Fix bug in parallel IO [mpi problem]
-   - cpu version
-   - gpu version
+ * async IO strategy:
+   - revise GPUmem control [DONE@2023/04/07]
+   - revise oper_pool
+   - revise sweep_twodot/onedot_renorm to release unnecessary operators before renorm to save memory
+   - overlap save operators with computation? [DONE@20230408]
+   - overlap fetch operators with computation? 
+   - async memcpy to GPU
 
  * Better treatment GEMM involving 'c': use axpy_vbatch?
 

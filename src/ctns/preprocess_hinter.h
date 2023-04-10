@@ -11,6 +11,17 @@ namespace ctns{
    template <typename Tm>
       struct hintermediates{
          public:
+            ~hintermediates(){
+               delete[] _data;
+#ifdef GPU
+               GPUmem.deallocate(_dev_data, _size*sizeof(Tm));
+#endif
+            }
+#ifdef GPU
+            void allocate_gpu(){
+               _dev_data = (Tm*)GPUmem.allocate(_size*sizeof(Tm));
+            }
+#endif
             // initialization
             void init(const bool ifDirect,
                   const int alg_hinter,
@@ -22,19 +33,20 @@ namespace ctns{
                if(!ifDirect){
                   if(alg_hinter == 0){
                      this->init_omp(qops_dict, H_formulae, debug);
+                     opaddr[locInter] = _data;
                   }else if(alg_hinter == 1){
                      this->init_batch_cpu(qops_dict, oploc, opaddr, H_formulae, debug);
+                     opaddr[locInter] = _data;
 #ifdef GPU
                   }else if(alg_hinter == 2){
                      this->init_batch_gpu(qops_dict, oploc, opaddr, H_formulae, debug);
+                     opaddr[locInter] = _dev_data;
 #endif
                   }else{
                      std::cout << "error: no such option in Intermediates::init alg_hinter=" 
                         << alg_hinter << std::endl;
                      exit(1);
                   }
-                  // setup opaddr
-                  opaddr[locInter] = _data;
                }else{
                   if(alg_hinter == 1){
                      this->initDirect_batch_cpu(H_formulae, debug);
@@ -75,8 +87,8 @@ namespace ctns{
          public:
             std::map<std::pair<int,int>,size_t> _offset; // map from (it,idx) in H_formulae to offset
             size_t _count = 0, _size = 0;
-            std::vector<Tm> _value;
             Tm* _data = nullptr;
+            Tm* _dev_data = nullptr;
       };
 
    // openmp version with symbolic_sum_oper
@@ -123,8 +135,7 @@ namespace ctns{
          if(_size == 0) return;
 
          // 2. allocate memory on CPU
-         _value.resize(_size);
-         _data = _value.data();
+         _data = new Tm[_size];
          memset(_data, 0, _size*sizeof(Tm));
 
          // 3. form hintermediates via AXPY
@@ -203,8 +214,7 @@ namespace ctns{
          if(_size == 0) return;
 
          // allocate memory on CPU
-         _value.resize(_size);
-         _data = _value.data();
+         _data = new Tm[_size];
          std::vector<Tm> alpha_vec(alpha_size);
 
          /*
@@ -411,12 +421,8 @@ namespace ctns{
          }
          if(_size == 0) return;
 
-         // allocate memory on CPU
-         size_t GPUmem_inter = sizeof(Tm)*_size;
-         _data = (Tm*)GPUmem.allocate(GPUmem_inter);
-         std::vector<Tm> alpha_vec(alpha_size);
-
          // setup GEMV_BATCH
+         std::vector<Tm> alpha_vec(alpha_size);
          MVlist<Tm> mvlst(_count);
          size_t idx = 0, adx = 0;
          for(const auto& pr : _offset){
@@ -459,13 +465,10 @@ namespace ctns{
          }
          assert(idx == _count && adx == alpha_size);
 
-         size_t GPUmem_alpha = sizeof(Tm)*alpha_size;
-         Tm* dev_alpha_vec = (Tm*)GPUmem.allocate(GPUmem_alpha);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(dev_alpha_vec, alpha_vec.data(), GPUmem_alpha, hipMemcpyHostToDevice));
-#else
-         CUDA_CHECK(cudaMemcpy(dev_alpha_vec, alpha_vec.data(), GPUmem_alpha, cudaMemcpyHostToDevice));
-#endif// USE_HIP
+         this->allocate_gpu();
+         size_t gpumem_alpha = alpha_size*sizeof(Tm);
+         Tm* dev_alpha_vec = (Tm*)GPUmem.allocate(gpumem_alpha);
+         GPUmem.to_gpu(dev_alpha_vec, alpha_vec.data(), gpumem_alpha);
 
          // perform GEMV_BATCH
          MVbatch<Tm> mvbatch;
@@ -476,7 +479,7 @@ namespace ctns{
          ptrs[2] = opaddr[2]; // c1
          ptrs[3] = opaddr[3]; // c2
          ptrs[4] = dev_alpha_vec;
-         ptrs[5] = _data;
+         ptrs[5] = _dev_data;
          struct timeval t0gemv, t1gemv;
          gettimeofday(&t0gemv, NULL);
          int batchblas = 2;
@@ -488,7 +491,7 @@ namespace ctns{
             << " time=" << dt << " flops=" << mvbatch.cost/dt
             << std::endl;
 
-         GPUmem.deallocate(dev_alpha_vec, GPUmem_alpha);
+         GPUmem.deallocate(dev_alpha_vec, gpumem_alpha);
 
          if(debug){
             auto t1 = tools::get_time();
@@ -536,9 +539,7 @@ namespace ctns{
          }
          if(_size == 0) return;
 
-         // allocate memory on CPU
-         _value.resize(_size);
-         _data = _value.data();
+         _data = new Tm[_size];
          size_t adx = 0;
          for(const auto& pr : _offset){
             const auto& item = pr.first;
@@ -550,7 +551,7 @@ namespace ctns{
             int len = sop.size();
             for(int k=0; k<len; k++){
                auto wtk = sop.sums[k].first;
-               _value[adx+k] = dagger? tools::conjugate(wtk) : wtk; 
+               _data[adx+k] = dagger? tools::conjugate(wtk) : wtk; 
             } 
             adx += len;
          }
@@ -602,7 +603,6 @@ namespace ctns{
          }
          if(_size == 0) return;
 
-         // allocate memory on CPU
          std::vector<Tm> alpha_vec(_size);
          size_t adx = 0;
          for(const auto& pr : _offset){
@@ -621,13 +621,8 @@ namespace ctns{
          }
          assert(adx == _size);
 
-         size_t GPUmem_inter = sizeof(Tm)*_size;
-         _data = (Tm*)GPUmem.allocate(GPUmem_inter);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(_data, alpha_vec.data(), GPUmem_inter, hipMemcpyHostToDevice));
-#else
-         CUDA_CHECK(cudaMemcpy(_data, alpha_vec.data(), GPUmem_inter, cudaMemcpyHostToDevice));
-#endif// USE_HIP
+         this->allocate_gpu();
+         GPUmem.to_gpu(_dev_data, alpha_vec.data(), _size*sizeof(Tm));
 
          if(debug){
             auto t1 = tools::get_time();

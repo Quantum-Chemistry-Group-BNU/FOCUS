@@ -195,6 +195,8 @@ void params_ctns::read(ifstream& istrm){
          restart_sweep = stoi(line.substr(13));
       }else if(line.substr(0,12)=="restart_bond"){
          restart_bond = stoi(line.substr(12));
+      }else if(line.substr(0,9)=="timestamp"){
+         timestamp = true;
       }else if(line.substr(0,8)=="alg_hvec"){
          alg_hvec = stoi(line.substr(8));
       }else if(line.substr(0,10)=="alg_hinter"){
@@ -235,7 +237,15 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,6)=="iomode"){
          iomode = stoi(line.substr(6));    
       }else if(line.substr(0,7)=="ioasync"){
-         ioasync = stoi(line.substr(7));
+         async_fetch = true;
+         async_save = true;
+         async_remove = true;
+      }else if(line.substr(0,11)=="async_fetch"){
+         async_fetch = true;
+      }else if(line.substr(0,10)=="async_save"){
+         async_save = true;
+      }else if(line.substr(0,12)=="async_remove"){
+         async_remove = true;
       }else if(line.substr(0,5)=="iroot"){
          iroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
@@ -316,6 +326,7 @@ void params_ctns::print() const{
    cout << "task_opt = " << task_opt << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;
+   cout << "timestamp = " << timestamp << endl;
    // conversion of sci
    cout << "maxdets = " << maxdets << endl;
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
@@ -357,7 +368,9 @@ void params_ctns::print() const{
    cout << "rcanon_file = " << rcanon_file << endl;
    // oper_poll
    cout << "iomode = " << iomode << endl;
-   cout << "ioasync = " << ioasync << endl;
+   cout << "async_fetch = " << async_fetch << endl;
+   cout << "async_save = " << async_save << endl;
+   cout << "async_remove = " << async_remove << endl;
    // sampling
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;

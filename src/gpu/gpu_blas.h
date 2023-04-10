@@ -37,11 +37,7 @@ namespace linalg{
       }
       size_t size = N*sizeof(double);
       double* dev_X = (double*)GPUmem.allocate(size);
-#ifdef USE_HIP
-      HIP_CHECK(hipMemcpy(dev_X, X, size, hipMemcpyHostToDevice));
-#else
-      CUDA_CHECK(cudaMemcpy(dev_X, X, size, cudaMemcpyHostToDevice));
-#endif// USE_HIP
+      GPUmem.to_gpu(dev_X, X, size);
       magma_dgemv(transA, M, N, alpha, A, LDA,
             dev_X, INCX, beta, Y, INCY, magma_queue);
       GPUmem.deallocate(dev_X, size);
@@ -58,11 +54,7 @@ namespace linalg{
       }
       size_t size = N*sizeof(magmaDoubleComplex);
       magmaDoubleComplex* dev_X = (magmaDoubleComplex*)GPUmem.allocate(size);
-#ifdef USE_HIP
-      HIP_CHECK(hipMemcpy(dev_X, X, size, hipMemcpyHostToDevice));
-#else
-      CUDA_CHECK(cudaMemcpy(dev_X, X, size, cudaMemcpyHostToDevice));
-#endif// USE_HIP
+      GPUmem.to_gpu(dev_X, X, size);
       magmaDoubleComplex alpha1{alpha.real(),alpha.imag()};
       magmaDoubleComplex beta1{beta.real(),beta.imag()};
       magma_zgemv(transA, M, N, alpha1, (magmaDoubleComplex *)A, LDA,

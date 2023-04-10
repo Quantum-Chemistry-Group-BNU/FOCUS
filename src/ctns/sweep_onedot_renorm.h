@@ -16,14 +16,13 @@ namespace ctns{
             const std::string scratch,
             linalg::matrix<typename Km::dtype>& vsol,
             stensor3<typename Km::dtype>& wf,
-            const oper_dictmap<typename Km::dtype>& qops_dict,
-            oper_dict<typename Km::dtype>& qops,
+            oper_pool<typename Km::dtype>& qops_pool,
+            const std::vector<std::string>& fneed,
+            const std::vector<std::string>& fneed_next,
+            const std::string& frop,
             sweep_data& sweeps,
             const int isweep,
             const int ibond){
-         const auto& lqops = qops_dict.at("l");
-         const auto& rqops = qops_dict.at("r");
-         const auto& cqops = qops_dict.at("c");
          using Tm = typename Km::dtype;
          const bool ifkr = Km::ifkr;
          int size = 1, rank = 0;
@@ -43,7 +42,6 @@ namespace ctns{
             std::cout << "ctns::onedot_renorm superblock=" << superblock;
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
-         auto& CPUmem = sweeps.opt_CPUmem[isweep][ibond];
 
          // 1. build reduced density matrix & perform decimation
          stensor2<Tm> rot;
@@ -73,20 +71,19 @@ namespace ctns{
             onedot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
          }
          vsol.clear();
-         if(debug){
-            CPUmem.dvdson = 0;
-            CPUmem.display();
-         }
          timing.te = tools::get_time();
 
          // 3. renorm operators	 
+         auto& qops  = qops_pool(frop);
+         auto& lqops = qops_pool(fneed[0]);
+         auto& rqops = qops_pool(fneed[1]);
+         auto& cqops = qops_pool(fneed[2]);
          const auto p = dbond.get_current();
          const auto& pdx = icomb.topo.rindex.at(p); 
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
             + "_isweep"+std::to_string(isweep)
                + "_ibond"+std::to_string(ibond) + ".txt";
-         size_t worktot = 0;
          if(superblock == "lc"){
             icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
             //-------------------------------------------------------------------
@@ -97,7 +94,8 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            worktot = oper_renorm_opAll("lc", icomb, p, int2e, int1e, schd,
+            qops_pool.release({fneed[1]}, fneed_next);
+            oper_renorm("lc", icomb, p, int2e, int1e, schd,
                   lqops, cqops, qops, fname, timing); 
          }else if(superblock == "lr"){
             icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
@@ -109,7 +107,8 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            worktot = oper_renorm_opAll("lr", icomb, p, int2e, int1e, schd,
+            qops_pool.release({fneed[2]}, fneed_next);
+            oper_renorm("lr", icomb, p, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing); 
          }else if(superblock == "cr"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
@@ -121,24 +120,10 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            worktot = oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,
+            qops_pool.release({fneed[0]}, fneed_next);
+            oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   cqops, rqops, qops, fname, timing); 
          }
-         if(debug){
-            CPUmem.renorm = worktot;
-            CPUmem.display();
-         }
-         timing.tf = tools::get_time();
-
-         // save for restart
-         if(rank == 0){
-            std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";
-            rcanon_save(icomb.sites[pdx], fsite);
-            if(schd.ctns.guess){ 
-               std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond)+".info";
-               rcanon_save(icomb.cpsi, fcpsi);
-            }
-         } // only rank-0 save and load, later broadcast
       }
 
 } // ctns

@@ -40,7 +40,7 @@ namespace ctns{
          sweep_data sweeps(sweep_seq, schd.ctns.nroots, schd.ctns.maxsweep, 
                schd.ctns.restart_sweep, schd.ctns.ctrls);
          // pool for handling operators
-         oper_pool<Tm> qops_pool(schd.ctns.iomode, schd.ctns.ioasync, debug);
+         oper_pool<Tm> qops_pool(schd.ctns.iomode, debug);
          for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
             if(isweep < schd.ctns.restart_sweep) continue; // restart case
             if(debug){
@@ -97,7 +97,7 @@ namespace ctns{
             // generate right rcanonical form and save checkpoint file
             if(rank == 0) sweep_final(icomb, schd, scratch, isweep);
          } // isweep
-         qops_pool.clean_up();
+         qops_pool.finalize();
 
          if(debug){
             auto t1 = tools::get_time();

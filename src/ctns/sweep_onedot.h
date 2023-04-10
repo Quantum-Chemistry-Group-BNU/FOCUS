@@ -4,6 +4,7 @@
 #include "../core/tools.h"
 #include "../core/linalg.h"
 #include "qtensor/qtensor.h"
+#include "sweep_util.h"
 #include "sweep_onedot_renorm.h"
 #include "sweep_onedot_diag.h"
 #include "sweep_onedot_local.h"
@@ -51,7 +52,6 @@ namespace ctns{
                << " maxthreads=" << maxthreads 
                << std::endl;
          }
-         auto& CPUmem = sweeps.opt_CPUmem[isweep][ibond];
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
 
@@ -61,7 +61,7 @@ namespace ctns{
 
          // 1. load operators 
          auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
-         qops_pool.fetch(fneed);
+         qops_pool.fetch(fneed, schd.ctns.alg_hvec>10);
          const oper_dictmap<Tm> qops_dict = {{"l",qops_pool(fneed[0])},
             {"r",qops_pool(fneed[1])},
             {"c",qops_pool(fneed[2])}};
@@ -78,15 +78,13 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(tsize) << "GB"
                << std::endl;
          }
-         if(debug){
-            CPUmem.comb = sizeof(Tm)*icomb.display_size(); 
-            CPUmem.oper = sizeof(Tm)*qops_pool.size(); 
-            CPUmem.display();
-         }
          timing.ta = tools::get_time();
 
+         // 1.5 look ahead for the next dbond
+         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
+
          // 2. onedot wavefunction
-         //	  |
+         //	    |
          //   --*--
          const auto& ql = qops_dict.at("l").qket;
          const auto& qr = qops_dict.at("r").qket;
@@ -132,7 +130,7 @@ namespace ctns{
          wfsize = preprocess_wfsize(wf.info, info_dict);
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
-               + "_isweep"+std::to_string(isweep)
+            + "_isweep"+std::to_string(isweep)
                + "_ibond"+std::to_string(ibond) + ".txt";
          HVec_type<Tm> HVec;
          Hx_functors<Tm> Hx_funs; // hvec0
@@ -186,7 +184,6 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            if(debug) CPUmem.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx2<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
                   std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -207,7 +204,6 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            if(debug) CPUmem.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx3<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -222,10 +218,6 @@ namespace ctns{
          // solve HC=CE
          int neig = sweeps.nroots;
          linalg::matrix<Tm> vsol(ndim,neig);
-         if(debug){
-            CPUmem.dvdson += sizeof(Tm)*ndim*(neig + std::min(ndim,size_t(neig+schd.ctns.nbuff))*3);
-            CPUmem.display();
-         }
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
          oper_timer.dot_start();
@@ -240,7 +232,6 @@ namespace ctns{
          // free temporary space
          if(schd.ctns.alg_hvec >=2){
             delete[] workspace;
-            if(debug) CPUmem.hvec = 0; 
          }
 
          // 3. decimation & renormalize operators
@@ -248,39 +239,17 @@ namespace ctns{
          auto frop = fbond.first;
          auto fdel = fbond.second;
          onedot_renorm(icomb, int2e, int1e, schd, scratch, 
-               vsol, wf, qops_dict, qops_pool(frop), 
+               vsol, wf, qops_pool, fneed, fneed_next, frop,
                sweeps, isweep, ibond);
-         if(debug){
-            CPUmem.comb = sizeof(Tm)*icomb.display_size();
-            CPUmem.oper = sizeof(Tm)*qops_pool.size();
-            CPUmem.display();
-         }
+         timing.tf = tools::get_time();
 
          // 4. save on disk 
-         qops_pool.save(frop);
-         /* NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ],
-                  removing in the later configuration must wait until 
-                  the file from the former configuration has been saved!
-                  Therefore, oper_remove must come later than save,
-                  which contains the synchronization!
-         */
-         oper_remove(fdel, debug);
+         qops_pool.save(frop, schd.ctns.async_save);
+
+         qops_pool.remove(fdel, schd.ctns.async_remove);
+
          // save for restart
-         if(rank == 0){
-            // local result
-            std::string fresult = scratch+"/result_ibond"+std::to_string(ibond)+".info";
-            rcanon_save(sweeps.opt_result[isweep][ibond], fresult);
-            // updated site
-            std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";
-            const auto p = dbond.get_current();
-            const auto& pdx = icomb.topo.rindex.at(p); 
-            rcanon_save(icomb.sites[pdx], fsite);
-            // generated cpsi
-            if(schd.ctns.guess){ 
-               std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond)+".info";
-               rcanon_save(icomb.cpsi, fcpsi);
-            }
-         } // only rank-0 save and load, later broadcast
+         if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
 
          timing.t1 = tools::get_time();
          if(debug) timing.analysis("local", schd.ctns.verbose>0);

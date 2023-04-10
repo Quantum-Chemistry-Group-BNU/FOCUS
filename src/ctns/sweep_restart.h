@@ -52,17 +52,7 @@ namespace ctns{
          // 1. load site (only for rank 0)
          const auto p = dbond.get_current();
          const auto& pdx = icomb.topo.rindex.at(p);
-         if(rank == 0){
-            std::string fresult = scratch+"/result_ibond"+std::to_string(ibond)+".info";
-            rcanon_load(sweeps.opt_result[isweep][ibond], fresult);
-            sweeps.opt_result[isweep][ibond].print();
-            std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";
-            rcanon_load(icomb.sites[pdx], fsite);
-            if(schd.ctns.guess){ 
-               std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond)+".info";
-               rcanon_load(icomb.cpsi, fcpsi);
-            }
-         }
+         if(rank == 0) sweep_load(icomb, schd, scratch, sweeps, isweep, ibond);
 #ifndef SERIAL
          if(size > 1) mpi_wrapper::broadcast(icomb.world, icomb.sites[pdx], 0);
 #endif
@@ -79,12 +69,15 @@ namespace ctns{
             fneed[0] = fneed[2];
          }
          fneed.resize(2);
-         qops_pool.fetch(fneed);
+         qops_pool.fetch(fneed, schd.ctns.alg_renorm>10);
+         
          dot_timing timing_local;
-         oper_renorm_opAll(superblock, icomb, p, int2e, int1e, schd,
+         oper_renorm(superblock, icomb, p, int2e, int1e, schd,
                qops_pool(fneed[0]), qops_pool(fneed[1]), qops_pool(frop), 
                fname, timing_local); 
-         qops_pool.save(frop);
+         
+         qops_pool.save(frop, schd.ctns.async_save);
+         qops_pool.release(fneed);
 
          auto t1 = tools::get_time();
          if(debug) tools::timing("ctns::sweep_restart", t0, t1);

@@ -133,7 +133,7 @@ namespace ctns{
          // 2. successive renormalization process
          oper_timer.sweep_start();
          dot_timing timing_sweep, timing;
-         oper_pool<Tm> qops_pool(iomode, schd.ctns.ioasync, debug);
+         oper_pool<Tm> qops_pool(iomode, debug);
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             auto p = icomb.topo.rcoord[idx];
             const auto& node = icomb.topo.get_node(p);
@@ -141,12 +141,12 @@ namespace ctns{
                auto tb = tools::get_time();
                timing.t0 = tools::get_time();
                if(debug) std::cout << "\nidx=" << idx << " coord=" << p << std::endl;
-               
+
                // a. get operators from memory / disk    
                std::vector<std::string> fneed(2);
                fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
                fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
-               qops_pool.fetch(fneed);
+               qops_pool.fetch(fneed, schd.ctns.alg_renorm>10);
                const auto& cqops = qops_pool(fneed[0]);
                const auto& rqops = qops_pool(fneed[1]);
                if(debug && schd.ctns.verbose>0){
@@ -167,14 +167,15 @@ namespace ctns{
                std::string fname;
                if(schd.ctns.save_formulae) fname = scratch+"/rformulae_env_idx"
                   + std::to_string(idx) + ".txt"; 
-               oper_renorm_opAll(superblock, icomb, p, int2e, int1e, schd,
+               oper_renorm(superblock, icomb, p, int2e, int1e, schd,
                      cqops, rqops, qops_pool(frop), fname, timing); 
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
                timing.tf = tools::get_time();
-               
+
                // c. save operators to disk
-               qops_pool.save(frop);
+               qops_pool.save(frop, schd.ctns.async_save);
+               qops_pool.release(fneed); 
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();
@@ -185,7 +186,7 @@ namespace ctns{
                }
             }
          } // idx
-         qops_pool.clean_up();
+         qops_pool.finalize();
 
          auto t1 = tools::get_time();
          if(debug){

@@ -27,6 +27,7 @@ namespace linalg{
         size_t total_dsize = 3*batch_count*sizeof(double*);
         void* dev_itotal = GPUmem.allocate(total_isize);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
+
         magma_int_t* dev_m = (magma_int_t*)dev_itotal;
         magma_int_t* dev_n = dev_m + (batch_count+1);
         magma_int_t* dev_ldda = dev_n + (batch_count+1);
@@ -36,25 +37,14 @@ namespace linalg{
         double** dev_X_array = dev_A_array + batch_count;
         double** dev_Y_array = dev_X_array + batch_count;
 
-#ifdef USE_HIP
-        HIP_CHECK(hipMemcpy(dev_m, m_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_n, n_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_ldda, ldda_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_incx, incx_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_incy, incy_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_A_array, A_array, batch_count*sizeof(double*), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_X_array, X_array, batch_count*sizeof(double*), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_Y_array, Y_array, batch_count*sizeof(double*), hipMemcpyHostToDevice));
-#else
-        CUDA_CHECK(cudaMemcpy(dev_m, m_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_n, n_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_ldda, ldda_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_incx, incx_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_incy, incy_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_A_array, A_array, batch_count*sizeof(double*), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_X_array, X_array, batch_count*sizeof(double*), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_Y_array, Y_array, batch_count*sizeof(double*), cudaMemcpyHostToDevice));
-#endif
+        GPUmem.to_gpu(dev_m, m_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_n, n_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_ldda, ldda_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_incx, incx_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_incy, incy_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_A_array, A_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_X_array, X_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_Y_array, Y_array, batch_count*sizeof(double*));
 
         magma_trans_t Trans = MagmaNoTrans;
         if(trans=='T'){
@@ -102,6 +92,7 @@ namespace linalg{
         size_t total_dsize = 3*batch_count*sizeof(magmaDoubleComplex*);
         void* dev_itotal = GPUmem.allocate(total_isize);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
+
         magma_int_t* dev_m = (magma_int_t*)dev_itotal;
         magma_int_t* dev_n = dev_m + (batch_count+1);
         magma_int_t* dev_ldda = dev_n + (batch_count+1);
@@ -111,25 +102,14 @@ namespace linalg{
         magmaDoubleComplex** dev_X_array = dev_A_array + batch_count;
         magmaDoubleComplex** dev_Y_array = dev_X_array + batch_count;
 
-#ifdef USE_HIP
-        HIP_CHECK(hipMemcpy(dev_m, m_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_n, n_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_ldda, ldda_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_incx, incx_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_incy, incy_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_A_array, A_array, batch_count*sizeof(magmaDoubleComplex*), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_X_array, X_array, batch_count*sizeof(magmaDoubleComplex*), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_Y_array, Y_array, batch_count*sizeof(magmaDoubleComplex*), hipMemcpyHostToDevice));
-#else
-        CUDA_CHECK(cudaMemcpy(dev_m, m_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_n, n_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_ldda, ldda_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_incx, incx_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_incy, incy_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_A_array, A_array, batch_count*sizeof(magmaDoubleComplex*), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_X_array, X_array, batch_count*sizeof(magmaDoubleComplex*), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_Y_array, Y_array, batch_count*sizeof(magmaDoubleComplex*), cudaMemcpyHostToDevice));
-#endif
+        GPUmem.to_gpu(dev_m, m_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_n, n_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_ldda, ldda_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_incx, incx_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_incy, incy_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_A_array, A_array, batch_count*sizeof(magmaDoubleComplex*));
+        GPUmem.to_gpu(dev_X_array, X_array, batch_count*sizeof(magmaDoubleComplex*));
+        GPUmem.to_gpu(dev_Y_array, Y_array, batch_count*sizeof(magmaDoubleComplex*));
 
         magma_trans_t Trans = MagmaNoTrans;
         if(trans=='T'){
@@ -179,6 +159,7 @@ namespace linalg{
         size_t total_dsize = 3*batch_count*sizeof(double*);
         void* dev_itotal = GPUmem.allocate(total_isize);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
+
         magma_int_t* dev_m = (magma_int_t*)dev_itotal;
         magma_int_t* dev_n = dev_m + (batch_count+1);
         magma_int_t* dev_k = dev_n + (batch_count+1);
@@ -189,27 +170,15 @@ namespace linalg{
         double** dev_b_array_ptr = dev_a_array_ptr + batch_count;
         double** dev_c_array_ptr = dev_b_array_ptr + batch_count;
 
-#ifdef USE_HIP
-        HIP_CHECK(hipMemcpy(dev_m, m_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_n, n_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_k, k_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_lda, lda_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_a_array_ptr, a_array, batch_count*sizeof(double*), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_b_array_ptr, b_array, batch_count*sizeof(double*), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_c_array_ptr, c_array, batch_count*sizeof(double*), hipMemcpyHostToDevice));
-#else
-        CUDA_CHECK(cudaMemcpy(dev_m, m_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_n, n_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_k, k_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_lda, lda_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_a_array_ptr, a_array, batch_count*sizeof(double*), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_b_array_ptr, b_array, batch_count*sizeof(double*), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_c_array_ptr, c_array, batch_count*sizeof(double*), cudaMemcpyHostToDevice));
-#endif
+        GPUmem.to_gpu(dev_m, m_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_n, n_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_k, k_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_lda, lda_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_a_array_ptr, a_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_b_array_ptr, b_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_c_array_ptr, c_array, batch_count*sizeof(double*));
 
         magma_trans_t transA = MagmaNoTrans;
         magma_trans_t transB = MagmaNoTrans;
@@ -265,6 +234,7 @@ namespace linalg{
         size_t total_dsize = 3*batch_count*sizeof(magmaDoubleComplex*);
         void* dev_itotal = GPUmem.allocate(total_isize);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
+
         magma_int_t* dev_m = (magma_int_t*)dev_itotal;
         magma_int_t* dev_n = dev_m + (batch_count+1);
         magma_int_t* dev_k = dev_n + (batch_count+1);
@@ -275,27 +245,15 @@ namespace linalg{
         magmaDoubleComplex** dev_b_array_ptr = dev_a_array_ptr + batch_count;
         magmaDoubleComplex** dev_c_array_ptr = dev_b_array_ptr + batch_count;
 
-#ifdef USE_HIP
-        HIP_CHECK(hipMemcpy(dev_m, m_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_n, n_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_k, k_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_lda, lda_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_a_array_ptr, a_array, batch_count*sizeof(magmaDoubleComplex*), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_b_array_ptr, b_array, batch_count*sizeof(magmaDoubleComplex*), hipMemcpyHostToDevice));
-        HIP_CHECK(hipMemcpy(dev_c_array_ptr, c_array, batch_count*sizeof(magmaDoubleComplex*), hipMemcpyHostToDevice));
-#else
-        CUDA_CHECK(cudaMemcpy(dev_m, m_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_n, n_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_k, k_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_lda, lda_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_a_array_ptr, a_array, batch_count*sizeof(magmaDoubleComplex*), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_b_array_ptr, b_array, batch_count*sizeof(magmaDoubleComplex*), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(dev_c_array_ptr, c_array, batch_count*sizeof(magmaDoubleComplex*), cudaMemcpyHostToDevice));
-#endif
+        GPUmem.to_gpu(dev_m, m_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_n, n_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_k, k_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_lda, lda_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_a_array_ptr, a_array, batch_count*sizeof(magmaDoubleComplex*));
+        GPUmem.to_gpu(dev_b_array_ptr, b_array, batch_count*sizeof(magmaDoubleComplex*));
+        GPUmem.to_gpu(dev_c_array_ptr, c_array, batch_count*sizeof(magmaDoubleComplex*));
 
         magma_trans_t transA = MagmaNoTrans;
         magma_trans_t transB = MagmaNoTrans;

@@ -6,6 +6,9 @@
 #include "../core/integral.h"
 #include "qtensor/qtensor.h"
 #include "oper_index.h"
+#ifdef GPU
+#include "../gpu/gpu_env.h"
+#endif
 
 namespace ctns{
 
@@ -28,7 +31,25 @@ namespace ctns{
          public:
             // constructor
             oper_dict(){}
-            ~oper_dict(){ delete[] _data; }
+            ~oper_dict(){ 
+               delete[] _data;
+#ifdef GPU
+               GPUmem.deallocate(_dev_data, _size*sizeof(Tm));
+#endif
+            }
+            bool avail_gpu() const{ return _dev_data != nullptr; }
+#ifdef GPU
+            void allocate_gpu(const bool ifclear=false){
+               _dev_data = (Tm*)GPUmem.allocate(_size*sizeof(Tm));
+               if(ifclear) GPUmem.memset(_dev_data, _size*sizeof(Tm));
+            }
+            void to_gpu(){
+               GPUmem.to_gpu(_dev_data, _data, _size*sizeof(Tm));
+            }
+            void to_cpu(){
+               GPUmem.to_cpu(_data, _dev_data, _size*sizeof(Tm));
+            }
+#endif
             // copy
             oper_dict(const oper_dict& op_dict) = delete;
             oper_dict& operator =(const oper_dict& op_dict) = delete;
@@ -71,11 +92,12 @@ namespace ctns{
             int mpisize = 1;
             int mpirank = 0;
             bool ifdist2 = false; // whether distribute two-index object
-         //private:
+            //private:
             std::map<std::pair<char,int>,size_t> _offset;
             std::map<char,oper_map<Tm>> _opdict;
             size_t _size = 0, _opsize = 0;
             Tm* _data = nullptr;
+            Tm* _dev_data = nullptr;
       };
    template <typename Tm>
       using oper_dictmap = std::map<std::string,const oper_dict<Tm>&>; // for sigma2

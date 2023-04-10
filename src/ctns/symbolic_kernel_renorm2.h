@@ -75,7 +75,7 @@ namespace ctns{
       }
 
    template <typename Tm>
-      size_t symbolic_kernel_renorm2(const std::string superblock,
+      void symbolic_kernel_renorm2(const std::string superblock,
             const renorm_tasks<Tm>& rtasks,
             const stensor3<Tm>& site,
             const oper_dict<Tm>& qops1,
@@ -153,7 +153,6 @@ namespace ctns{
             if(key == 'H' && qops.ifkr) op += op.K();
          } // i
          delete[] workspace;
-         return worktot;
       }
 
 } // ctns

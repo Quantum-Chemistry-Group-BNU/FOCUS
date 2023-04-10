@@ -6,11 +6,9 @@
 #ifdef USE_HIP
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
-#include <magma_v2.h>
 #else
 #include <cuda_runtime.h>
 #include <cuda.h>
-#include <magma_v2.h>
 #endif //USE_HIP
 
 #include <iostream>
@@ -19,13 +17,12 @@
 const size_t MAX_GPU_PAGE = 128*1024*1024;
 extern const size_t MAX_GPU_PAGE;
 
-// class for controlling the usage of GPU memory
+// interface
 class gpu_mem{
    public:
-      gpu_mem(): _rank(-1), _size(0), _used(0), _addr(nullptr) {}
+      gpu_mem(): _used(0) {};
 
-      // allocate GPU memory
-      void init(const int rank){
+      size_t available(const int rank){
          size_t avail, total;
 #ifdef USE_HIP
          HIP_CHECK(hipMemGetInfo(&avail, &total));
@@ -36,59 +33,62 @@ class gpu_mem{
             std::cout << "error: GPU memory is too small on rank=" << rank << std::endl;
             exit(1);
          }
-         _rank = rank;
-         _size = avail - MAX_GPU_PAGE;
+         avail -= MAX_GPU_PAGE;
+         return avail; 
+      }
+
+      void* allocate(const size_t size){
+         void *addr;
 #ifdef USE_HIP
-         HIP_CHECK(hipMalloc((void**)&_addr, _size));
+         HIP_CHECK(hipMalloc((void**)&addr, size));
 #else
-         CUDA_CHECK(cudaMalloc((void**)&_addr, _size));
+         CUDA_CHECK(cudaMalloc((void**)&addr, size));
+#endif //USE_HIP
+         _used += size; 
+         return addr;
+      }
+
+      void deallocate(void *ptr, const size_t size){
+         if(ptr == nullptr) return;
+         if(_used < size){
+            std::cout << "error in deallocate: _used=" << _used << " size=" << size << std::endl;
+            exit(1);
+         }
+         _used -= size;
+#ifdef USE_HIP
+         HIP_CHECK(hipFree(ptr));
+#else
+         CUDA_CHECK(cudaFree(ptr));
 #endif //USE_HIP
       }
 
-      void free(){
+      void memset(void *ptr, const size_t size){
 #ifdef USE_HIP
-         HIP_CHECK(hipFree(_addr));
+         HIP_CHECK(hipMemset(ptr, 0, size));
 #else
-         CUDA_CHECK(cudaFree(_addr));
+         CUDA_CHECK(cudaMemset(ptr, 0, size));
 #endif //USE_HIP
-         _addr = nullptr;
-         _rank = -1;
-         _size = 0;
-         _used = 0;
       }
 
-      void* allocate(size_t n){
-         if(_used + n >= _size){
-            std::cout << "error: exceeding allowed GPU memory on rank=" << _rank << std::endl;
-            std::cout << "total size=" << _size << " used=" << _used << " required=" << n 
-               << " used+required=" << (_used+n) << std::endl; 
-            exit(1);
-         }else{
-            _used = _used + n;
-            return _addr + _used - n;
-         }
+      void to_gpu(void *dev_ptr, const void *ptr, const size_t size){
+#ifdef USE_HIP
+         HIP_CHECK(hipMemcpy(dev_ptr, ptr, size, hipMemcpyHostToDevice));
+#else
+         CUDA_CHECK(cudaMemcpy(dev_ptr, ptr, size, cudaMemcpyHostToDevice));
+#endif //USE_HIP
       }
 
-      void deallocate(void *ptr, size_t n){
-         if(n == 0) return;
-         if(_used < n || ptr != _addr + _used - n){
-            std::cout << "error: deallocation not happening in reverse order"
-                      << " (_used < n)=" << (_used < n) 
-                      << " (ptr != _addr + _used - n)" << (ptr != _addr + _used - n)
-                      << std::endl;
-            exit(1);
-         }else{
-            _used = _used - n;
-         }
+      void to_cpu(void *ptr, const void *dev_ptr, const size_t size){
+#ifdef USE_HIP
+         HIP_CHECK(hipMemcpy(ptr, dev_ptr, size, hipMemcpyDeviceToHost));
+#else
+         CUDA_CHECK(cudaMemcpy(ptr, dev_ptr, size, cudaMemcpyDeviceToHost));
+#endif //USE_HIP
       }
 
-      size_t size() const{ return _size; }
       size_t used() const{ return _used; }
    private:
-      int _rank = -1;
-      size_t _size = 0;
       size_t _used = 0;
-      void* _addr = nullptr;
 };
 
 #endif // GPU_MEM_H

@@ -22,57 +22,24 @@ namespace ctns{
             const bool debug){
          auto t0 = tools::get_time();
 
-         // 1. preprocess formulae to Rmu
-         int rsize = rtasks.size();
-         std::vector<std::vector<Rmu_ptr<Tm>>> Rmu(rsize);
-         for(int k=0; k<rsize; k++){
-            const auto& task = rtasks.op_tasks[k];
-            const auto& key = std::get<0>(task);
-            const auto& index = std::get<1>(task);
-            const auto& formula = std::get<2>(task);
-            Rmu[k].resize(formula.size());
-            for(int it=0; it<formula.size(); it++){
-               Rmu[k][it].rinfo = const_cast<qinfo2<Tm>*>(&qops(key).at(index).info);
-               Rmu[k][it].offrop = qops._offset.at(std::make_pair(key,index));
-               Rmu[k][it].init(ifDirect, k, it, formula, qops_dict, rinter, oploc);
-            }
-         } // it
-         auto ta = tools::get_time();
-
-         // 2. from Rmu to Rxlst in expanded block forms
-         blksize = 0;
-         blksize0 = 0;
-         cost = 0.0;
-         for(int k=0; k<rsize; k++){
-            const auto& task = rtasks.op_tasks[k];
-            const auto& key = std::get<0>(task);
-            const auto& index = std::get<1>(task);
-            const auto& formula = std::get<2>(task);
-            for(int it=0; it<formula.size(); it++){
-               Rmu[k][it].gen_Rlist(superblock, site.info, Rlst, blksize, blksize0, cost, false);
-               if(key == 'H'){
-                  Rmu[k][it].gen_Rlist(superblock, site.info, Rlst, blksize, blksize0, cost, true);
-               }
-            }
+         Rlist2<Tm> Rlst2;
+         preprocess_formulae_Rlist2(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+               Rlst2, blksize, blksize0, cost, debug);
+         size_t size = 0;
+         for(int i=0; i<Rlst2.size(); i++){
+            size += Rlst2[i].size();
          }
-         auto tb = tools::get_time();
+         Rlst.reserve(size);
+         for(int i=0; i<Rlst2.size(); i++){
+            std::move(Rlst2[i].begin(), Rlst2[i].end(), std::back_inserter(Rlst));
+         }
 
-         // 3. sort by offout
-         std::stable_sort(Rlst.begin(), Rlst.end(),
-                  [](const Rblock<Tm>& t1, const Rblock<Tm>& t2){ 
-                  return t1.offrop < t2.offrop; });
-         auto tc = tools::get_time();
-         
          if(debug){
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR preprocess_formulae_Rlist : "
                << tools::get_duration(t1-t0) << " S"
-               << " size(rtasks)=" << rsize
-               << " size(Rlst)=" << Rlst.size() 
-               << " T(Rmu/Rxlist/sort)="
-               << tools::get_duration(ta-t0) << ","
-               << tools::get_duration(tb-ta) << ","
-               << tools::get_duration(tc-tb) << " -----"
+               << " size(rtasks)=" << rtasks.size()
+               << " size(Rlst)=" << Rlst.size() << " -----"
                << std::endl;
          }
       }

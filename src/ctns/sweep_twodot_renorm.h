@@ -16,15 +16,13 @@ namespace ctns{
             const std::string scratch,
             linalg::matrix<typename Km::dtype>& vsol,
             stensor4<typename Km::dtype>& wf,
-            const oper_dictmap<typename Km::dtype>& qops_dict,
-            oper_dict<typename Km::dtype>& qops,
+            oper_pool<typename Km::dtype>& qops_pool,
+            const std::vector<std::string>& fneed,
+            const std::vector<std::string>& fneed_next,
+            const std::string& frop,
             sweep_data& sweeps,
             const int isweep,
             const int ibond){
-         const auto& lqops = qops_dict.at("l");
-         const auto& rqops = qops_dict.at("r");
-         const auto& c1qops = qops_dict.at("c1");
-         const auto& c2qops = qops_dict.at("c2");
          using Tm = typename Km::dtype;
          const bool ifkr = Km::ifkr;
          int size = 1, rank = 0;
@@ -44,7 +42,6 @@ namespace ctns{
             std::cout << "ctns::twodot_renorm superblock=" << superblock;
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
-         auto& CPUmem = sweeps.opt_CPUmem[isweep][ibond];
 
          // 1. build reduced density matrix & perform decimation
          stensor2<Tm> rot;
@@ -76,20 +73,20 @@ namespace ctns{
             twodot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
          }
          vsol.clear();
-         if(debug){
-            CPUmem.dvdson = 0;
-            CPUmem.display();
-         }
          timing.te = tools::get_time();
 
-         // 3. renorm operators	 
+         // 3. renorm operators	
+         auto& qops   = qops_pool(frop); 
+         auto& lqops  = qops_pool(fneed[0]);
+         auto& rqops  = qops_pool(fneed[1]);
+         auto& c1qops = qops_pool(fneed[2]);
+         auto& c2qops = qops_pool(fneed[3]);
          const auto p = dbond.get_current();
          const auto& pdx = icomb.topo.rindex.at(p); 
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
             + "_isweep"+std::to_string(isweep)
                + "_ibond"+std::to_string(ibond) + ".txt";
-         size_t worktot = 0;
          if(superblock == "lc1"){
             icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
             //-------------------------------------------------------------------
@@ -100,8 +97,10 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            worktot = oper_renorm_opAll("lc", icomb, p, int2e, int1e, schd,
-                  lqops, c1qops, qops, fname, timing); 
+            qops_pool.release({fneed[1],fneed[3]}, fneed_next);
+            if(schd.ctns.async_fetch) qops_pool.fetch(fneed_next, false, true);
+            oper_renorm("lc", icomb, p, int2e, int1e, schd,
+                  lqops, c1qops, qops, fname, timing);
          }else if(superblock == "lr"){
             icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -112,7 +111,9 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            worktot = oper_renorm_opAll("lr", icomb, p, int2e, int1e, schd,
+            qops_pool.release({fneed[2],fneed[3]}, fneed_next);
+            if(schd.ctns.async_fetch) qops_pool.fetch(fneed_next, false, true);
+            oper_renorm("lr", icomb, p, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing); 
          }else if(superblock == "c2r"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
@@ -124,7 +125,9 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            worktot = oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,
+            qops_pool.release({fneed[0],fneed[2]}, fneed_next);
+            if(schd.ctns.async_fetch) qops_pool.fetch(fneed_next, false, true);
+            oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c2qops, rqops, qops, fname, timing);
          }else if(superblock == "c1c2"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
@@ -136,24 +139,11 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            worktot = oper_renorm_opAll("cr", icomb, p, int2e, int1e, schd,
+            qops_pool.release({fneed[0],fneed[1]}, fneed_next);
+            if(schd.ctns.async_fetch) qops_pool.fetch(fneed_next, false, true);
+            oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c1qops, c2qops, qops, fname, timing); 
          }
-         if(debug){
-            CPUmem.renorm = worktot;
-            CPUmem.display();
-         }
-         timing.tf = tools::get_time();
-
-         // save for restart
-         if(rank == 0){
-            std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";
-            rcanon_save(icomb.sites[pdx], fsite);
-            if(schd.ctns.guess){ 
-               std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond)+".info";
-               rcanon_save(icomb.cpsi, fcpsi);
-            }
-         } // only rank-0 save and load, later broadcast
       }
 
 } // ctns

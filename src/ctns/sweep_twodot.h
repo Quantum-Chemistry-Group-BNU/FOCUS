@@ -4,6 +4,7 @@
 #include "../core/tools.h"
 #include "../core/linalg.h"
 #include "qtensor/qtensor.h"
+#include "sweep_util.h"
 #include "sweep_twodot_renorm.h"
 #include "sweep_twodot_diag.h"
 #include "sweep_twodot_diag1.h"
@@ -59,7 +60,6 @@ namespace ctns{
                << " maxthreads=" << maxthreads 
                << std::endl;
          }
-         auto& CPUmem = sweeps.opt_CPUmem[isweep][ibond];
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
 
@@ -69,32 +69,30 @@ namespace ctns{
 
          // 1. load operators
          auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug && schd.ctns.verbose>0);
-         qops_pool.fetch(fneed);
+         qops_pool.fetch(fneed, schd.ctns.alg_hvec>10);
          const oper_dictmap<Tm> qops_dict = {{"l" ,qops_pool(fneed[0])},
             {"r" ,qops_pool(fneed[1])},
             {"c1",qops_pool(fneed[2])},
             {"c2",qops_pool(fneed[3])}};
+         size_t opertot = qops_dict.at("l").size()
+            + qops_dict.at("r").size()
+            + qops_dict.at("c1").size()
+            + qops_dict.at("c2").size();
          if(debug && schd.ctns.verbose>0){
             std::cout << "qops info: rank=" << rank << std::endl;
             qops_dict.at("l").print("lqops");
             qops_dict.at("r").print("rqops");
             qops_dict.at("c1").print("c1qops");
             qops_dict.at("c2").print("c2qops");
-            size_t opertot = qops_dict.at("l").size()
-               + qops_dict.at("r").size()
-               + qops_dict.at("c1").size()
-               + qops_dict.at("c2").size();
             std::cout << " qops(tot)=" << opertot 
                << ":" << tools::sizeMB<Tm>(opertot) << "MB"
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
          }
-         if(debug){
-            CPUmem.comb = sizeof(Tm)*icomb.display_size(); 
-            CPUmem.oper = sizeof(Tm)*qops_pool.size(); 
-            CPUmem.display();
-         }
          timing.ta = tools::get_time();
+
+         // 1.5 look ahead for the next dbond
+         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
 
          // 2. twodot wavefunction
          //	 \ /
@@ -123,50 +121,7 @@ namespace ctns{
          }
 
          // 3. Davidson solver for wf
-         // 3.1 diag 
-         auto time0 = tools::get_time();
-         std::vector<double> diag(ndim, ecore/size); // constant term
-         twodot_diag1(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
-         auto time1 = tools::get_time();
-         /*     
-                std::vector<double> diag1(ndim, ecore/size); // constant term
-                twodot_diag1(qops_dict, wf, diag1.data(), size, rank, schd.ctns.ifdist1);
-                auto time2 = tools::get_time();
-
-                std::vector<double> diag2(ndim, ecore/size); // constant term
-                twodot_diag2(qops_dict, wf, diag2.data(), size, rank, schd.ctns.ifdist1);
-                auto time3 = tools::get_time();
-
-                linalg::xaxpy(ndim, -1.0, diag.data(), diag1.data());
-                linalg::xaxpy(ndim, -1.0, diag.data(), diag2.data());
-                std::cout << "-----------lzd-----------" << std::endl;
-                std::cout << "t0,t1,t2=" 
-                << tools::get_duration(time1-time0) << "," 
-                << tools::get_duration(time2-time1) << "," 
-                << tools::get_duration(time3-time2) << "," 
-                << std::endl;
-                double diff1 = linalg::xnrm2(ndim, diag1.data());
-                double diff2 = linalg::xnrm2(ndim, diag1.data());
-                std::cout << "diff of diag1,diag2=" << diff1 << "," << diff2 << std::endl;
-                std::cout << "-----------lzd-----------" << std::endl;
-                if(diff1 > 1.e-8 || diff2 > 1.e-8){ 
-                std::cout << "diff is too large!" << std::endl;
-                exit(1);
-                }
-                */
-#ifndef SERIAL
-         // reduction of partial diag: no need to broadcast, if only rank=0 
-         // executes the preconditioning in Davidson's algorithm
-         if(size > 1){
-            std::vector<double> diag2(ndim);
-            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0);
-            diag = std::move(diag2);
-         }
-#endif 
-         timing.tb = tools::get_time();
-
-         // 3.2 Solve local problem: Hc=cE
-         // prepare HVec
+         // 3.1 prepare HVec
          std::map<qsym,qinfo4<Tm>> info_dict;
          size_t opsize=0, wfsize=0, tmpsize=0, worktot=0;
          opsize = preprocess_opsize(qops_dict);
@@ -194,10 +149,9 @@ namespace ctns{
          Tm* workspace;
 #ifdef GPU
          Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
-         Tm* dev_oper = nullptr;
          Tm* dev_workspace = nullptr;
          Tm* dev_red = nullptr;
-         size_t GPUmem_used = 0;
+         size_t batchsize, gpumem_dvdson, gpumem_batch;
 #endif
          using std::placeholders::_1;
          using std::placeholders::_2;
@@ -209,10 +163,15 @@ namespace ctns{
             exit(1); 
          }
          if(alg_hvec < 10 and schd.ctns.alg_hinter == 2){
-            std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter!=2" << std::endl;
+            std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter<2" << std::endl;
+            exit(1);
+         }
+         if(alg_hvec > 10 and schd.ctns.alg_hinter != 2){
+            std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
             exit(1);
          }
 
+         timing.tb1 = tools::get_time();
          if(alg_hvec == 0){
 
             // oldest version
@@ -243,7 +202,6 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            if(debug) CPUmem.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx2<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
                   std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -263,7 +221,6 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            if(debug) CPUmem.hvec = sizeof(Tm)*worktot;
             HVec = bind(&ctns::symbolic_Hx3<Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
@@ -279,7 +236,6 @@ namespace ctns{
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
-            if(debug) CPUmem.oper += sizeof(Tm)*hinter.size();
 
             preprocess_formulae_Hxlist(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
                   Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
@@ -292,7 +248,6 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
-            if(debug) CPUmem.hvec = sizeof(Tm)*worktot; // private workspace for each thread allocated inside preprocess_Hx
 
             HVec = bind(&ctns::preprocess_Hx<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
@@ -308,7 +263,6 @@ namespace ctns{
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
-            if(debug) CPUmem.oper += sizeof(Tm)*hinter.size();
 
             preprocess_formulae_Hxlist2(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
                   Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
@@ -321,7 +275,6 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
-            if(debug) CPUmem.hvec = sizeof(Tm)*worktot; // private workspace for each thread
 
             HVec = bind(&ctns::preprocess_Hx2<Tm>, _1, _2,
                   std::cref(scale), std::cref(size), std::cref(rank),
@@ -342,7 +295,6 @@ namespace ctns{
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
-            if(debug) CPUmem.oper += sizeof(Tm)*hinter.size();
 
             size_t maxbatch = 0;
             if(!ifSingle){
@@ -399,7 +351,6 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            if(debug) CPUmem.hvec = sizeof(Tm)*worktot;
 
             if(!ifSingle){
                if(!ifDirect){
@@ -430,58 +381,23 @@ namespace ctns{
 #ifdef GPU
          }else if(alg_hvec == 16 || alg_hvec == 17 || alg_hvec == 18 || alg_hvec == 19){
 
-            if(debug && schd.ctns.verbose>0){
-               std::cout << "rank=" << rank
-                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
-                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << std::endl;
-            }
-            if(GPUmem.used() != 0){ 
-               std::cout << "error: there should not be any use of GPU memory at this point!" << std::endl;
-               std::cout << "GPUmem.used=" << GPUmem.used() << std::endl;
-               exit(1);
-            }
-
             // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
             const bool ifSingle = alg_hvec > 17;
             const bool ifDirect = alg_hvec % 2 == 1;
-            if(ifDirect and schd.ctns.alg_hinter != 2){
-               std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
-               exit(1);
-            }
-
-            timing.tb1 = tools::get_time();
-
+            
             // allocate memery on GPU & copy qops
-            size_t opertot = qops_dict.at("l").size()
-               + qops_dict.at("r").size()
-               + qops_dict.at("c1").size()
-               + qops_dict.at("c2").size();
-            size_t GPUmem_oper = sizeof(Tm)*opertot;
-            dev_oper = (Tm*)GPUmem.allocate(GPUmem_oper);
+            for(int i=0; i<4; i++){
+               auto& tqops = qops_pool(fneed[i]);
+               assert(tqops.avail_gpu());
+               dev_opaddr[i] = tqops._dev_data;
+            }
+            size_t gpumem_oper = sizeof(Tm)*opertot;
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
-                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
-                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
+                  << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper)=" << gpumem_oper/std::pow(1024.0,3) 
                   << std::endl;
             }
-            dev_opaddr[0] = dev_oper;
-            dev_opaddr[1] = dev_opaddr[0] + qops_dict.at("l").size();
-            dev_opaddr[2] = dev_opaddr[1] + qops_dict.at("r").size();
-            dev_opaddr[3] = dev_opaddr[2] + qops_dict.at("c1").size();
-#ifdef USE_HIP
-            HIP_CHECK(hipMemcpy(dev_opaddr[0], qops_dict.at("l")._data, qops_dict.at("l").size()*sizeof(Tm), hipMemcpyHostToDevice));
-            HIP_CHECK(hipMemcpy(dev_opaddr[1], qops_dict.at("r")._data, qops_dict.at("r").size()*sizeof(Tm), hipMemcpyHostToDevice));
-            HIP_CHECK(hipMemcpy(dev_opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), hipMemcpyHostToDevice));
-            HIP_CHECK(hipMemcpy(dev_opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), hipMemcpyHostToDevice));
-#else
-            CUDA_CHECK(cudaMemcpy(dev_opaddr[0], qops_dict.at("l")._data, qops_dict.at("l").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(dev_opaddr[1], qops_dict.at("r")._data, qops_dict.at("r").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(dev_opaddr[2], qops_dict.at("c1")._data, qops_dict.at("c1").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-            CUDA_CHECK(cudaMemcpy(dev_opaddr[3], qops_dict.at("c2")._data, qops_dict.at("c2").size()*sizeof(Tm), cudaMemcpyHostToDevice));
-#endif //USE_HIP
-
             timing.tb2 = tools::get_time();
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
@@ -489,39 +405,20 @@ namespace ctns{
 
             timing.tb3 = tools::get_time();
 
-            //------------------------------
-            // intermediates
-            //------------------------------
-            if(schd.ctns.alg_hinter != 2){
-               // compute hintermediates on CPU
-               hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
-            }else{
-               // compute hintermediates on GPU directly
-               hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, dev_opaddr, H_formulae, debug);
-            }
-            timing.tb4 = tools::get_time();
-
-            size_t GPUmem_hinter = sizeof(Tm)*hinter.size();
-            // copy from CPU to GPU 
-            if(schd.ctns.alg_hinter != 2){
-               if(debug) CPUmem.oper += GPUmem_hinter;
-               dev_opaddr[4] = (Tm*)GPUmem.allocate(GPUmem_hinter);
-#ifdef USE_HIP
-               HIP_CHECK(hipMemcpy(dev_opaddr[4], hinter._value.data(), GPUmem_hinter, hipMemcpyHostToDevice));
-#else
-               CUDA_CHECK(cudaMemcpy(dev_opaddr[4], hinter._value.data(), GPUmem_hinter, cudaMemcpyHostToDevice));
-#endif// USE_HIP
-            }
+            // compute hintermediates on GPU directly
+            hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, dev_opaddr, H_formulae, debug);
+            size_t gpumem_hinter = sizeof(Tm)*hinter.size();
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
-                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
-                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper,hinter)(GB)=" << GPUmem_oper/std::pow(1024.0,3)
-                  << "," << GPUmem_hinter/std::pow(1024.0,3) 
+                  << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper,hinter)=" << gpumem_oper/std::pow(1024.0,3) 
+                  << "," << gpumem_hinter/std::pow(1024.0,3) 
                   << std::endl;
             }
+            timing.tb4 = tools::get_time();
             timing.tb5 = tools::get_time();
 
+            // GEMM list and GEMV list
             size_t maxbatch = 0;
             if(!ifSingle){
                preprocess_formulae_Hxlist2(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
@@ -538,48 +435,18 @@ namespace ctns{
             if(!ifDirect) assert(blksize0 == 0); 
             timing.tb6 = tools::get_time();
 
-            //
-            // Determine batchsize dynamically:
-            // total = oper + hinter + dvdson + sizeof(Tm)*N*(blksize*2+blksize0) + math [GEMM_BATCH & GEMV_BATCH]
-            // GEMM_BATCH = [6*(N+1)*sizeof(int) + 3*N*sizeof(double*/complex*)] (gpu_blas_batch.h)
-            //            = 6*8*(N+1) + 3*N*8 = 72*N+48 [size of pointer is 8]
-            // GEMV_BATCH = [5*(N+1)*sizeof(int) + 3*N*sizeof(double*/complex*)]
-            //            = 5*8*(N+1) + 3*N*8 = 64*N+40
-            // Coefficient in reduction: N*sizeof(double/complex) => N*sizeof(Tm)
-            // Thus, total = oper + hinter + dvdson + sizeof(Tm)*N*BLKSIZE+ 136*N+88
-            // 
-            // => N = (total-reserved)/(sizeof(Tm)*BLKSIZE+136) [BLKSIZE=2*blksize+blksize+1]
-            //
-            size_t block = 2*blksize+blksize0+1;
-            size_t batchsize = 0;
-            size_t GPUmem_dvdson = sizeof(Tm)*2*ndim;
-            size_t GPUmem_reserved = GPUmem_oper + GPUmem_hinter + GPUmem_dvdson + 88;
-            if(GPUmem.size() > GPUmem_reserved){
-               batchsize = std::floor(double(GPUmem.size() - GPUmem_reserved)/(sizeof(Tm)*block + 136));
-               batchsize = (maxbatch < batchsize)? maxbatch : batchsize; // sufficient
-               if(batchsize == 0 && maxbatch != 0){
-                  std::cout << "error: in sufficient GPU memory: batchsize=0!" << std::endl;
-                  exit(1);
-               }
-            }else{
-               std::cout << "error: in sufficient GPU memory for batchGEMM! already reserved:" << std::endl;
-               std::cout << "GPUmem.size=" << GPUmem.size() << " GPUmem.used=" << GPUmem.used()
-                  << " GPUmem_reserved=" << GPUmem_reserved << " (oper,hinter,dvdson)=" 
-                  << GPUmem_oper << "," << GPUmem_hinter << "," << GPUmem_dvdson 
-                  << std::endl;
-               exit(1);
-            }
-            size_t GPUmem_batch = sizeof(Tm)*batchsize*block;
-            dev_workspace = (Tm*)GPUmem.allocate(GPUmem_dvdson + GPUmem_batch);
-            GPUmem_used = GPUmem.used(); // oper + dvdson + batch, later used in deallocate
+            // Determine batchsize dynamically
+            gpumem_dvdson = sizeof(Tm)*2*ndim;
+            size_t blocksize = 2*blksize+blksize0+1;
+            preprocess_batchsize<Tm>(batchsize, gpumem_batch, blocksize, maxbatch, gpumem_dvdson, rank);
+            dev_workspace = (Tm*)GPUmem.allocate(gpumem_dvdson+gpumem_batch);
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
-                  << " GPUmem.size(GB)=" << GPUmem.size()/std::pow(1024.0,3)
-                  << " GPUmem.used(GB)=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper,hinter,dvdson,batch)(GB)=" << GPUmem_oper/std::pow(1024.0,3) 
-                  << "," << GPUmem_hinter/std::pow(1024.0,3)
-                  << "," << GPUmem_dvdson/std::pow(1024.0,3)
-                  << "," << GPUmem_batch/std::pow(1024.0,3)
+                  << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper,hinter,dvdson,batch)=" << gpumem_oper/std::pow(1024.0,3) 
+                  << "," << gpumem_hinter/std::pow(1024.0,3) 
+                  << "," << gpumem_dvdson/std::pow(1024.0,3)
+                  << "," << gpumem_batch/std::pow(1024.0,3)
                   << std::endl;
             }
 
@@ -628,7 +495,7 @@ namespace ctns{
                   HVec = bind(&ctns::preprocess_Hx_batchDirectGPU<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
-                        std::ref(hinter._data), std::ref(dev_red));
+                        std::ref(hinter._dev_data), std::ref(dev_red));
                }
             }else{
                if(!ifDirect){
@@ -641,7 +508,7 @@ namespace ctns{
                   HVec = bind(&ctns::preprocess_Hx_batchDirectGPUSingle<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtask), std::ref(dev_opaddr), std::ref(dev_workspace),
-                        std::ref(hinter._data), std::ref(dev_red));
+                        std::ref(hinter._dev_data), std::ref(dev_red));
                }
             }
 
@@ -651,16 +518,55 @@ namespace ctns{
             std::cout << "error: no such option for alg_hvec=" << alg_hvec << std::endl;
             exit(1);
          } // alg_hvec
+         timing.tb = tools::get_time();
+
+         // 3.2 diag 
+         auto time0 = tools::get_time();
+         std::vector<double> diag(ndim, ecore/size); // constant term
+         twodot_diag1(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
+         auto time1 = tools::get_time();
+         /*     
+                std::vector<double> diag1(ndim, ecore/size); // constant term
+                twodot_diag1(qops_dict, wf, diag1.data(), size, rank, schd.ctns.ifdist1);
+                auto time2 = tools::get_time();
+
+                std::vector<double> diag2(ndim, ecore/size); // constant term
+                twodot_diag2(qops_dict, wf, diag2.data(), size, rank, schd.ctns.ifdist1);
+                auto time3 = tools::get_time();
+
+                linalg::xaxpy(ndim, -1.0, diag.data(), diag1.data());
+                linalg::xaxpy(ndim, -1.0, diag.data(), diag2.data());
+                std::cout << "-----------lzd-----------" << std::endl;
+                std::cout << "t0,t1,t2=" 
+                << tools::get_duration(time1-time0) << "," 
+                << tools::get_duration(time2-time1) << "," 
+                << tools::get_duration(time3-time2) << "," 
+                << std::endl;
+                double diff1 = linalg::xnrm2(ndim, diag1.data());
+                double diff2 = linalg::xnrm2(ndim, diag1.data());
+                std::cout << "diff of diag1,diag2=" << diff1 << "," << diff2 << std::endl;
+                std::cout << "-----------lzd-----------" << std::endl;
+                if(diff1 > 1.e-8 || diff2 > 1.e-8){ 
+                std::cout << "diff is too large!" << std::endl;
+                exit(1);
+                }
+                */
+#ifndef SERIAL
+         // reduction of partial diag: no need to broadcast, if only rank=0 
+         // executes the preconditioning in Davidson's algorithm
+         if(size > 1){
+            std::vector<double> diag2(ndim);
+            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0);
+            diag = std::move(diag2);
+         }
+#endif 
+         timing.tb = tools::get_time();
 
          //-------------
          // solve HC=CE         
          //-------------
          int neig = sweeps.nroots;
          linalg::matrix<Tm> vsol(ndim,neig);
-         if(debug){
-            CPUmem.dvdson += sizeof(Tm)*ndim*(neig + std::min(ndim,size_t(neig+schd.ctns.nbuff))*3); 
-            CPUmem.display();
-         }
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
          oper_timer.dot_start();
@@ -677,12 +583,9 @@ namespace ctns{
                alg_hvec==6 || alg_hvec==7 ||
                alg_hvec==8 || alg_hvec==9){
             delete[] workspace;
-            if(debug) CPUmem.hvec = 0;
          }
 #ifdef GPU
-         if(alg_hvec>10){
-            GPUmem.deallocate(dev_oper, GPUmem_used);
-         }
+         if(alg_hvec>10) GPUmem.deallocate(dev_workspace, gpumem_dvdson+gpumem_batch);
 #endif
 
          // 3. decimation & renormalize operators
@@ -690,39 +593,41 @@ namespace ctns{
          auto frop = fbond.first;
          auto fdel = fbond.second;
          twodot_renorm(icomb, int2e, int1e, schd, scratch, 
-               vsol, wf, qops_dict, qops_pool(frop), 
+               vsol, wf, qops_pool, fneed, fneed_next, frop,
                sweeps, isweep, ibond);
-         if(debug){
-            CPUmem.comb = sizeof(Tm)*icomb.display_size();
-            CPUmem.oper = sizeof(Tm)*qops_pool.size();
-            CPUmem.display();
-         }
+         timing.tf = tools::get_time();
 
          // 4. save on disk 
-         qops_pool.save(frop);
-         /* NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ],
-            removing in the later configuration should wait until 
-            the file from the former configuration has been saved!
-            Therefore, oper_remove should come later than save,
-            which contains the synchronization!
+         auto t0 = tools::get_time();
+         qops_pool.save(frop, schd.ctns.async_save);
+         auto t1 = tools::get_time();
+         
+         /* Remove fdel on the same bond as frop but with opposite direction:
+            NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 
+            in the later configuration should wait until the file from the 
+            former configuration has been saved! Therefore, oper_remove should 
+            come later than save, which contains the synchronization!
             */
-         oper_remove(fdel, debug);
+         qops_pool.remove(fdel, schd.ctns.async_remove);
+         auto t2 = tools::get_time();
+
+         // release unused qops to save memory
+         qops_pool.release(fneed, fneed_next);
+         auto t3 = tools::get_time();
+
          // save for restart
-         if(rank == 0){
-            // local result
-            std::string fresult = scratch+"/result_ibond"+std::to_string(ibond)+".info";
-            rcanon_save(sweeps.opt_result[isweep][ibond], fresult);
-            // updated site
-            std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";
-            const auto p = dbond.get_current();
-            const auto& pdx = icomb.topo.rindex.at(p); 
-            rcanon_save(icomb.sites[pdx], fsite);
-            // generated cpsi
-            if(schd.ctns.guess){ 
-               std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond)+".info";
-               rcanon_save(icomb.cpsi, fcpsi);
-            }
-         } // only rank-0 save and load, later broadcast
+         if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
+         auto t4 = tools::get_time();
+
+         if(debug){
+         std::cout << "TIMING: " << tools::get_duration(t4-t0)
+            << " T(save/remove/release/save)="
+            << tools::get_duration(t1-t0) << ","
+            << tools::get_duration(t2-t1) << ","
+            << tools::get_duration(t3-t2) << ","
+            << tools::get_duration(t4-t3) 
+            << std::endl;
+         }
 
          timing.t1 = tools::get_time();
          if(debug) timing.analysis("local", schd.ctns.verbose>0);

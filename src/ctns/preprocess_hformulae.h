@@ -20,40 +20,25 @@ namespace ctns{
             const bool debug){
          auto t0 = tools::get_time();
 
-         // 1. preprocess formulae to Hmu
-         int hsize = H_formulae.size();
-         std::vector<Hmu_ptr<Tm>> Hmu_vec(hsize);
-         for(int it=0; it<hsize; it++){
-            Hmu_vec[it].init(ifDirect, it, H_formulae, qops_dict, hinter, oploc);
-         } // it
-         auto ta = tools::get_time();
-
-         // 2. from Hmu to Hxlst in expanded block forms
-         blksize = 0;
-         blksize0 = 0;
-         cost = 0.0;
-         for(int it=0; it<hsize; it++){
-            Hmu_vec[it].gen_Hxlist(wf.info, Hxlst, blksize, blksize0, cost, false);
-            Hmu_vec[it].gen_Hxlist(wf.info, Hxlst, blksize, blksize0, cost, true);
+         t0 = tools::get_time();
+         Hxlist2<Tm> Hxlst2;
+         preprocess_formulae_Hxlist2(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
+               Hxlst2, blksize, blksize0, cost, debug);
+         size_t size = 0;
+         for(int i=0; i<Hxlst2.size(); i++){
+            size += Hxlst2[i].size();
          }
-         auto tb = tools::get_time();
+         Hxlst.reserve(size);
+         for(int i=0; i<Hxlst2.size(); i++){
+            std::move(Hxlst2[i].begin(), Hxlst2[i].end(), std::back_inserter(Hxlst));
+         }
 
-         // 3. sort by offout
-         std::stable_sort(Hxlst.begin(), Hxlst.end(),
-                  [](const Hxblock<Tm>& t1, const Hxblock<Tm>& t2){ 
-                  return t1.offout < t2.offout; });
-         auto tc = tools::get_time();
-         
          if(debug){
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR preprocess_formulae_Hxlist : "
                << tools::get_duration(t1-t0) << " S"
-               << " size(H_formulae)=" << hsize  
-               << " size(Hxlst)=" << Hxlst.size() 
-               << " T(Hmu/Hxlist/sort)="
-               << tools::get_duration(ta-t0) << ","
-               << tools::get_duration(tb-ta) << ","
-               << tools::get_duration(tc-tb) << " -----"
+               << " size(H_formulae)=" << H_formulae.size()
+               << " size(Hxlst)=" << Hxlst.size() << " -----"
                << std::endl;
          }
       }
