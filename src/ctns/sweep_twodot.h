@@ -144,13 +144,46 @@ namespace ctns{
                << tools::get_duration(time3-time2) << "," 
                << std::endl;
             double diff1 = linalg::xnrm2(ndim, diag1.data());
-            double diff2 = linalg::xnrm2(ndim, diag1.data());
+            double diff2 = linalg::xnrm2(ndim, diag2.data());
             std::cout << "diff of diag1,diag2=" << diff1 << "," << diff2 << std::endl;
             std::cout << "-----------lzd-----------" << std::endl;
             if(diff1 > 1.e-8 || diff2 > 1.e-8){ 
                std::cout << "diff is too large!" << std::endl;
                exit(1);
             }
+
+            auto time0s = tools::get_time();
+            std::vector<double> diags(ndim, ecore/size); // constant term
+            twodot_diags(qops_dict, wf, diags.data(), size, rank, schd.ctns.ifdist1);
+            auto time1s = tools::get_time();
+            
+            std::vector<double> diag1s(ndim, ecore/size); // constant term
+            twodot_diag1s(qops_dict, wf, diag1s.data(), size, rank, schd.ctns.ifdist1);
+            auto time2s = tools::get_time();
+
+            std::vector<double> diag2s(ndim, ecore/size); // constant term
+            twodot_diag2s(qops_dict, wf, diag2s.data(), size, rank, schd.ctns.ifdist1);
+            auto time3s = tools::get_time();
+
+            linalg::xaxpy(ndim, -1.0, diag.data(), diags.data());
+            linalg::xaxpy(ndim, -1.0, diag.data(), diag1s.data());
+            linalg::xaxpy(ndim, -1.0, diag.data(), diag2s.data());
+            std::cout << "-----------lzd-----------" << std::endl;
+            std::cout << "t0s,t1s,t2s=" 
+               << tools::get_duration(time1s-time0s) << "," 
+               << tools::get_duration(time2s-time1s) << "," 
+               << tools::get_duration(time3s-time2s) << "," 
+               << std::endl;
+            double diff0s = linalg::xnrm2(ndim, diags.data());
+            double diff1s = linalg::xnrm2(ndim, diag1s.data());
+            double diff2s = linalg::xnrm2(ndim, diag2s.data());
+            std::cout << "diff of diag0,diag1,diag2=" << diff0s << "," << diff1s << "," << diff2s << std::endl;
+            std::cout << "-----------lzd-----------" << std::endl;
+            if(diff0s > 1.e-8 || diff1s > 1.e-8 || diff2s > 1.e-8){ 
+               std::cout << "diff is too large!" << std::endl;
+               exit(1);
+            }
+
          }
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
