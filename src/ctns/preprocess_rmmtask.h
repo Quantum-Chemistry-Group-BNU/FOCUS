@@ -103,11 +103,7 @@ namespace ctns{
                Tm* pcoeff = const_cast<Tm*>(coefflst[k].data());  
 #ifdef GPU
                if(dev_red != nullptr){
-#ifdef USE_HIP
-                  HIP_CHECK(hipMemcpy(dev_red, pcoeff, coefflst[k].size()*sizeof(Tm), hipMemcpyHostToDevice));
-#else
-                  CUDA_CHECK(cudaMemcpy(dev_red, pcoeff, coefflst[k].size()*sizeof(Tm), cudaMemcpyHostToDevice));
-#endif
+                  GPUmem.to_gpu(dev_red, pcoeff, coefflst[k].size()*sizeof(Tm));
                   pcoeff = dev_red;
                }
 #endif

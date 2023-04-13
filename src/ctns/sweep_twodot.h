@@ -24,6 +24,7 @@
 #include "../core/mpi_wrapper.h"
 #endif
 #ifdef GPU
+#include "sweep_twodot_diagGPU.h"
 #include "preprocess_sigma_batchGPU.h"
 #endif
 
@@ -90,9 +91,6 @@ namespace ctns{
                << std::endl;
          }
          timing.ta = tools::get_time();
-
-         // 1.5 look ahead for the next dbond
-         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
 
          // 2. twodot wavefunction
          //	 \ /
@@ -184,6 +182,15 @@ namespace ctns{
                exit(1);
             }
 
+            auto time0g = tools::get_time();
+            std::vector<double> diag_gpu(ndim, ecore/size); // constant term
+            twodot_diagGPU(qops_dict, wf, diag_gpu.data(), size, rank, schd.ctns.ifdist1);
+            auto time1g = tools::get_time();
+            linalg::xaxpy(ndim, -1.0, diag.data(), diag_gpu.data());
+            double diff0g = linalg::xnrm2(ndim, diag_gpu.data());
+            std::cout << "diff0g=" << diff0g << std::endl;
+            exit(1);
+ 
          }
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
@@ -195,6 +202,23 @@ namespace ctns{
          }
 #endif 
          timing.tb = tools::get_time();
+
+         // look ahead for the next dbond
+         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
+         auto frop = fbond.first;
+         auto fdel = fbond.second;
+         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
+         /*
+         // prefetch
+         if(schd.ctns.alg_hvec>10 && schd.ctns.async_fetch){
+            qops_pool(fneed[0]).clear();
+            qops_pool(fneed[1]).clear();
+            qops_pool(fneed[2]).clear();
+            qops_pool(fneed[3]).clear();
+            qops_pool(frop);
+            qops_pool.fetch(fneed_next, false, true);
+         }
+         */
 
          // 3.2 prepare HVec
          std::map<qsym,qinfo4<Tm>> info_dict;
@@ -623,9 +647,6 @@ namespace ctns{
 #endif
 
          // 3. decimation & renormalize operators
-         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
-         auto frop = fbond.first;
-         auto fdel = fbond.second;
          twodot_renorm(icomb, int2e, int1e, schd, scratch, 
                vsol, wf, qops_pool, fneed, fneed_next, frop,
                sweeps, isweep, ibond);

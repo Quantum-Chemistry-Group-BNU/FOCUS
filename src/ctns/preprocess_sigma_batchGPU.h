@@ -60,13 +60,8 @@ namespace ctns{
 
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(x, xCPU, ndim*sizeof(Tm), hipMemcpyHostToDevice));
-         HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
-#else
-         CUDA_CHECK(cudaMemcpy(x, xCPU, ndim*sizeof(Tm), cudaMemcpyHostToDevice));
-         CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
-#endif //USE_HIP
+         GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+         GPUmem.memset(y, ndim*sizeof(Tm));
          gettimeofday(&t1_copy, NULL);
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -97,11 +92,7 @@ namespace ctns{
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(yCPU, y, ndim*sizeof(Tm), hipMemcpyDeviceToHost));
-#else
-         CUDA_CHECK(cudaMemcpy(yCPU, y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
-#endif
+         GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
          gettimeofday(&t1_copy, NULL);
          time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -168,13 +159,8 @@ namespace ctns{
 
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(x, xCPU, ndim*sizeof(Tm), hipMemcpyHostToDevice));
-         HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
-#else
-         CUDA_CHECK(cudaMemcpy(x, xCPU, ndim*sizeof(Tm), cudaMemcpyHostToDevice));
-         CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
-#endif //USE_HIP
+         GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+         GPUmem.memset(y, ndim*sizeof(Tm));
          gettimeofday(&t1_copy, NULL);
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -211,11 +197,7 @@ namespace ctns{
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(yCPU, y, ndim*sizeof(Tm), hipMemcpyDeviceToHost));
-#else
-         CUDA_CHECK(cudaMemcpy(yCPU, y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
-#endif
+         GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
          gettimeofday(&t1_copy, NULL);
          time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -279,13 +261,8 @@ namespace ctns{
 
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(x, xCPU, ndim*sizeof(Tm), hipMemcpyHostToDevice));
-         HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
-#else
-         CUDA_CHECK(cudaMemcpy(x, xCPU, ndim*sizeof(Tm), cudaMemcpyHostToDevice));
-         CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
-#endif //USE_HIP
+         GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+         GPUmem.memset(y, ndim*sizeof(Tm));
          gettimeofday(&t1_copy, NULL);
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -312,11 +289,7 @@ namespace ctns{
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(yCPU, y, ndim*sizeof(Tm), hipMemcpyDeviceToHost));
-#else
-         CUDA_CHECK(cudaMemcpy(yCPU, y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
-#endif
+         GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
          gettimeofday(&t1_copy, NULL);
          time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -383,13 +356,8 @@ namespace ctns{
 
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(x, xCPU, ndim*sizeof(Tm), hipMemcpyHostToDevice));
-         HIP_CHECK(hipMemset(y, 0, ndim*sizeof(Tm)));
-#else
-         CUDA_CHECK(cudaMemcpy(x, xCPU, ndim*sizeof(Tm), cudaMemcpyHostToDevice));
-         CUDA_CHECK(cudaMemset(y, 0, ndim*sizeof(Tm)));
-#endif //USE_HIP
+         GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+         GPUmem.memset(y, ndim*sizeof(Tm));
          gettimeofday(&t1_copy, NULL);
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -422,11 +390,7 @@ namespace ctns{
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpy(yCPU, y, ndim*sizeof(Tm), hipMemcpyDeviceToHost));
-#else
-         CUDA_CHECK(cudaMemcpy(yCPU, y, ndim*sizeof(Tm), cudaMemcpyDeviceToHost));
-#endif
+         GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
          gettimeofday(&t1_copy, NULL);
          time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);

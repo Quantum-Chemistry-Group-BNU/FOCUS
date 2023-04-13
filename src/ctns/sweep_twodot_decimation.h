@@ -44,8 +44,8 @@ namespace ctns{
                wfs2[i] = std::move(wf2);
             }
             decimation_row(ifkr, wf.info.qrow, wf.info.qmid, 
-                  iftrunc, dcut, rdm_svd, wfs2, 
-                  rot, result.dwt, result.deff, fname,
+                  iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
+                  wfs2, rot, result.dwt, result.deff, fname,
                   debug);
 
          }else if(superblock == "lr"){ 
@@ -58,8 +58,8 @@ namespace ctns{
                wfs2[i] = std::move(wf2);
             }
             decimation_row(ifkr, wf.info.qrow, wf.info.qcol, 
-                  iftrunc, dcut, rdm_svd, wfs2, 
-                  rot, result.dwt, result.deff, fname,
+                  iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
+                  wfs2, rot, result.dwt, result.deff, fname,
                   debug);
 
          }else if(superblock == "c2r"){ 
@@ -71,8 +71,8 @@ namespace ctns{
                wfs2[i] = std::move(wf2);
             }
             decimation_row(ifkr, wf.info.qver, wf.info.qcol, 
-                  iftrunc, dcut, rdm_svd, wfs2, 
-                  rot, result.dwt, result.deff, fname,
+                  iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
+                  wfs2, rot, result.dwt, result.deff, fname,
                   debug);
             rot = rot.T(); // rot[alpha,r] = (V^+)
 
@@ -86,8 +86,8 @@ namespace ctns{
                wfs2[i] = std::move(wf2);
             } // i
             decimation_row(ifkr, wf.info.qmid, wf.info.qver, 
-                  iftrunc, dcut, rdm_svd, wfs2,
-                  rot, result.dwt, result.deff, fname,
+                  iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
+                  wfs2, rot, result.dwt, result.deff, fname,
                   debug);
             rot = rot.T(); // permute two lines for RCF
 

@@ -37,6 +37,7 @@ namespace ctns{
                      << " size=" << pr.second.size()
                      << ":" << tools::sizeMB<Tm>(pr.second.size()) << "MB"
                      << ":" << tools::sizeGB<Tm>(pr.second.size()) << "GB"
+                     << " cpu=" << pr.second.avail_cpu()
                      << " gpu=" << pr.second.avail_gpu()
                      << std::endl;
                   tsize += pr.second.size();
@@ -106,7 +107,8 @@ namespace ctns{
             std::cout << "ctns::oper_pool<Tm>::fetch: ifgpu=" << ifgpu << " ifasyn=" << ifasync
                << " fneed size=" << fneed.size() << std::endl;
             for(const auto& fqop : fneed){
-               std::cout << " fqop=" << fqop << std::endl;
+               bool ifexist = qstore.find(fqop) != qstore.end();
+               std::cout << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
             }
             this->display("in");
          }

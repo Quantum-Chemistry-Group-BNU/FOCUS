@@ -98,7 +98,6 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.release({fneed[1],fneed[3]}, fneed_next);
-            if(schd.ctns.async_fetch) qops_pool.fetch(fneed_next, false, true);
             oper_renorm("lc", icomb, p, int2e, int1e, schd,
                   lqops, c1qops, qops, fname, timing);
          }else if(superblock == "lr"){
@@ -112,7 +111,6 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.release({fneed[2],fneed[3]}, fneed_next);
-            if(schd.ctns.async_fetch) qops_pool.fetch(fneed_next, false, true);
             oper_renorm("lr", icomb, p, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing); 
          }else if(superblock == "c2r"){
@@ -126,7 +124,6 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.release({fneed[0],fneed[2]}, fneed_next);
-            if(schd.ctns.async_fetch) qops_pool.fetch(fneed_next, false, true);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c2qops, rqops, qops, fname, timing);
          }else if(superblock == "c1c2"){
@@ -140,7 +137,6 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.release({fneed[0],fneed[1]}, fneed_next);
-            if(schd.ctns.async_fetch) qops_pool.fetch(fneed_next, false, true);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c1qops, c2qops, qops, fname, timing); 
          }

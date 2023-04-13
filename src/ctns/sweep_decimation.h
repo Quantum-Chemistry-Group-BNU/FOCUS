@@ -130,11 +130,16 @@ namespace ctns{
             const bool iftrunc,
             const int dcut,
             const double rdm_svd,
+            const bool omp_decim,
             const std::vector<stensor2<Tm>>& wfs2,
             stensor2<Tm>& rot,
             double& dwt,
             int& deff,
             const std::string fname){
+         int maxthreads = 1;
+#ifdef _OPENMP
+         if(omp_decim) maxthreads = omp_get_max_threads();
+#endif
          const auto qprod = qmerge(qs1, qs2);
          const auto& qrow = qprod.first;
          const auto& dpt = qprod.second;
@@ -145,6 +150,8 @@ namespace ctns{
          if(debug_decimation){
             std::cout << "ctns::decimation_row_nkr"
                << " dcut=" << dcut << " nqr=" << nqr
+               << " omp_decim=" << omp_decim
+               << " maxthreads=" << maxthreads 
                << std::endl;
          }
          qrow.print("qsuper");
@@ -171,9 +178,9 @@ namespace ctns{
 
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-         //#ifdef _OPENMP
-         //   #pragma omp parallel for schedule(dynamic)
-         //#endif
+#ifdef _OPENMP
+   #pragma omp parallel for schedule(dynamic) num_threads(maxthreads)
+#endif
          for(int br=0; br<nqr; br++){
             const auto& qr = qrow.get_sym(br);
             const int rdim = qrow.get_dim(br);
@@ -198,9 +205,9 @@ namespace ctns{
                }
                kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
             } // qc
-              //#ifdef _OPENMP
-              //      #pragma omp critical
-              //#endif
+#ifdef _OPENMP
+      #pragma omp critical
+#endif
             results[br] = std::make_pair(sigs2, U);
          } // br
          int idx = 0;
@@ -255,6 +262,7 @@ namespace ctns{
             const bool iftrunc,
             const int dcut,
             const double rdm_svd,
+            const bool omp_decim,
             const std::vector<stensor2<Tm>>& wfs2,
             stensor2<Tm>& rot,
             double& dwt,
@@ -268,12 +276,17 @@ namespace ctns{
             const bool iftrunc,
             const int dcut,
             const double rdm_svd,
+            const bool omp_decim,
             const std::vector<stensor2<std::complex<double>>>& wfs2,
             stensor2<std::complex<double>>& rot,
             double& dwt,
             int& deff,
             const std::string fname){
          using Tm = std::complex<double>;
+         int maxthreads = 1;
+#ifdef _OPENMP
+         if(omp_decim) maxthreads = omp_get_max_threads();
+#endif
          const auto qprod = qmerge(qs1, qs2);
          const auto& qrow = qprod.first;
          const auto& dpt = qprod.second;
@@ -284,7 +297,9 @@ namespace ctns{
          int dim12 = qrow.get_dimAll(); 
          if(debug_decimation){ 
             std::cout << "ctns::decimation_row_kr"
-               << " dcut=" << dcut << " nqr=" << nqr 
+               << " dcut=" << dcut << " nqr=" << nqr
+               << " omp_decim=" << omp_decim
+               << " maxthreads=" << maxthreads 
                << std::endl;
          }
          qrow.print("qsuper");
@@ -309,10 +324,6 @@ namespace ctns{
                // convert back to the original product basis
                U = U.reorder_row(pos_new,1);
                linalg::xcopy(rdim*rdim,U.data(),blk.data()); 
-               /*
-                  std::cout << "br=" << br << " qr=" << qr << std::endl;
-                  U.print("U");
-                  */
             }
             rot = std::move(qt2);
             dwt = 0.0;
@@ -324,9 +335,9 @@ namespace ctns{
 
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-         //#ifdef _OPENMP
-         //   #pragma omp parallel for schedule(dynamic)
-         //#endif
+#ifdef _OPENMP
+   #pragma omp parallel for schedule(dynamic) num_threads(maxthreads)
+#endif
          for(int br=0; br<nqr; br++){
             const auto& qr = qrow.get_sym(br);
             const int rdim = qrow.get_dim(br);
@@ -358,9 +369,9 @@ namespace ctns{
                // convert back to the original product basis
                U = U.reorder_row(pos_new,1);
             } // qc
-              //#ifdef _OPENMP
-              //      #pragma omp critical
-              //#endif
+#ifdef _OPENMP
+      #pragma omp critical
+#endif
             results[br] = std::make_pair(sigs2, U);
          } // br
          int idx = 0;
@@ -446,6 +457,7 @@ namespace ctns{
             const bool iftrunc,
             const int dcut,
             const double rdm_svd,
+            const bool omp_decim,
             const std::vector<stensor2<Tm>>& wfs2,
             stensor2<Tm>& rot,
             double& dwt,
@@ -458,10 +470,10 @@ namespace ctns{
             std::cout << std::endl;
          }
          if(!ifkr){
-            decimation_row_nkr(qs1, qs2, iftrunc, dcut, rdm_svd, 
+            decimation_row_nkr(qs1, qs2, iftrunc, dcut, rdm_svd, omp_decim, 
                   wfs2, rot, dwt, deff, fname);
          }else{
-            decimation_row_kr(qs1, qs2, iftrunc, dcut, rdm_svd, 
+            decimation_row_kr(qs1, qs2, iftrunc, dcut, rdm_svd, omp_decim, 
                   wfs2, rot, dwt, deff, fname);
          }
       }

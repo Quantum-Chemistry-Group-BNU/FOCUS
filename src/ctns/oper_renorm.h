@@ -598,9 +598,7 @@ namespace ctns{
       auto diffH = (opH-opH.H()).normF();
       if(debug){
          std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(2) << diffH 
-            << " coord=" << p << " rank=" << rank 
-            << std::defaultfloat << std::setprecision(2) 
-            << std::endl;
+            << " coord=" << p << " rank=" << rank << std::defaultfloat << std::endl;
       } 
       if(diffH > thresh_opdiff){
          std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(2) << diffH 

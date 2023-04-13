@@ -16,12 +16,14 @@ using namespace fock;
 template <typename Tm>  
 void ED(const input::schedule& schd){
    std::cout << "\nExact Diagonalization:" << std::endl;
+   
    // read integral
    integral::two_body<Tm> int2e;
    integral::one_body<Tm> int1e;
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
-   // ED 
+   
+   // ED: define FCI space 
    onspace fci_space;
    if(schd.nelec == -1 and schd.twoms == -1){
       fci_space = get_fci_space(int1e.sorb); // Fock space
@@ -44,12 +46,30 @@ void ED(const input::schedule& schd){
          << " dim=" << fci_space.size()
          << std::endl;
    }
-   auto H = get_Hmat(fci_space,int2e,int1e,ecore);
+
+   // construct H by simple Slater-Condon rule
+   auto H = get_Hmat(fci_space, int2e, int1e, ecore);
+   double sdiff = H.diff_hermitian();
+   std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(2) << sdiff
+      << std::defaultfloat << std::endl;
+   const double thresh = 1.e-10;
+   if(sdiff > thresh){
+      std::cout << "error: sdiff is greater than thresh=" << thresh << std::endl;
+      exit(1);
+   }
    vector<double> es(H.rows());
    auto vs(H);
    linalg::eig_solver(H, es, vs); // Hc=ce
+
+   // print
    int nroots = schd.sci.nroots;
    int dim = fci_space.size();
+   std::cout << "\nsummary of FCI energies:" << std::endl;
+   for(int i=0; i<nroots; i++){
+      std::cout << " state " << i << " energy = "
+         << std::setprecision(12) << es[i] 
+         << std::endl;
+   }
    for(int i=0; i<nroots; i++){
       std::cout << "\nstate " << i << " energy = "
          << std::setprecision(12) << es[i] 

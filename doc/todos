@@ -304,7 +304,7 @@ KNOWN PROBLEMS
    - revise sweep_twodot/onedot_renorm to release unnecessary operators before renorm to save memory
    - overlap save operators with computation? [DONE@20230408]
    - overlap fetch operators with computation? 
-   - async memcpy to GPU
+   - async memcpy to GPU => magma_queue
 
  * Better treatment GEMM involving 'c': use axpy_vbatch?
 
@@ -329,8 +329,8 @@ KNOWN PROBLEMS
 
  * Better GEMM_BATCH with TensorCore
 
- * memcpy [cpu<->gpu]: 
-   1. reduce in Davidson: first reduce within node - NCCL?
+ * cpu<->gpu, network communication: 
+   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h
    2. perform renormalization by class [CABPQSH, hiden memcpy]
  
 === Minor ===
@@ -339,7 +339,7 @@ KNOWN PROBLEMS
    - mmtask & rmmtask
    - decimation
 
- * Better hdiag implementation
+ * hdiag implementation on GPU
 
  * Support Mixed CPU-GPU implementation?
    - mmtasks revise [also avoid copy for magma?]

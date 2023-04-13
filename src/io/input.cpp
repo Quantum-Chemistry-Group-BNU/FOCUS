@@ -230,6 +230,8 @@ void params_ctns::read(ifstream& istrm){
          thresh_ortho = stod(line.substr(12));
       }else if(line.substr(0,7)=="rdm_svd"){
          rdm_svd = stod(line.substr(7));
+      }else if(line.substr(0,9)=="omp_decim"){
+         omp_decim = true;
       }else if(line.substr(0,6)=="nroots"){
          nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){
@@ -332,6 +334,7 @@ void params_ctns::print() const{
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;
    cout << "rdm_svd = " << scientific << rdm_svd << endl;
+   cout << "omp_decim = " << omp_decim << endl;
    // sweep
    cout << "nroots = " << nroots << endl;
    cout << "guess = " << guess << endl;

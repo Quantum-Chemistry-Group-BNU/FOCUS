@@ -5,7 +5,7 @@
 
 namespace ctns{
 
-   const bool debug_twodot_diag = false;
+   const bool debug_twodot_diag = true;
    extern const bool debug_twodot_diag;
 
    template <typename Tm>
@@ -35,8 +35,12 @@ namespace ctns{
          //        B/Q^C1 B/Q^C2
          //         |      |
          // B/Q^L---*------*---B/Q^R
+         int maxthreads = 1;
+#ifdef _OPENMP
+         maxthreads = omp_get_max_threads();
+#endif
          size_t ndim = wf.size();
-#pragma omp parallel
+#pragma omp parallel num_threads(maxthreads)
          {
             double* di = new double[ndim];
             memset(di, 0, ndim*sizeof(double));

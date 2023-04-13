@@ -37,11 +37,16 @@ namespace ctns{
                GPUmem.deallocate(_dev_data, _size*sizeof(Tm));
 #endif
             }
+            void clear(){
+               delete[] _data;
+               _data = nullptr;
+            }
+            bool avail_cpu() const{ return _data != nullptr; }
             bool avail_gpu() const{ return _dev_data != nullptr; }
 #ifdef GPU
-            void allocate_gpu(const bool ifclear=false){
+            void allocate_gpu(const bool ifmemset=false){
                _dev_data = (Tm*)GPUmem.allocate(_size*sizeof(Tm));
-               if(ifclear) GPUmem.memset(_dev_data, _size*sizeof(Tm));
+               if(ifmemset) GPUmem.memset(_dev_data, _size*sizeof(Tm));
             }
             void to_gpu(){
                GPUmem.to_gpu(_dev_data, _data, _size*sizeof(Tm));
@@ -61,11 +66,11 @@ namespace ctns{
             // setup the mapping to physical address
             void _setup_data();
             // allocate memory
-            void allocate(const bool ifclear=false){
+            void allocate(const bool ifmemset=false){
                this->_setup_opdict();
                _data = new Tm[_size];
                this->_setup_data(); // assign pointer for each operator
-               if(ifclear) memset(_data, 0, _size*sizeof(Tm));
+               if(ifmemset) memset(_data, 0, _size*sizeof(Tm));
             }
             // stored operators
             std::vector<int> oper_index_op(const char key) const;
