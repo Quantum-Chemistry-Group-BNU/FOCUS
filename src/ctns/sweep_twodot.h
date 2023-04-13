@@ -147,14 +147,14 @@ namespace ctns{
             std::cout << "-----------lzd-----------" << std::endl;
             if(diff1 > 1.e-8 || diff2 > 1.e-8){ 
                std::cout << "diff is too large!" << std::endl;
-               exit(1);
+               //exit(1);
             }
 
             auto time0s = tools::get_time();
             std::vector<double> diags(ndim, ecore/size); // constant term
             twodot_diags(qops_dict, wf, diags.data(), size, rank, schd.ctns.ifdist1);
             auto time1s = tools::get_time();
-            
+
             std::vector<double> diag1s(ndim, ecore/size); // constant term
             twodot_diag1s(qops_dict, wf, diag1s.data(), size, rank, schd.ctns.ifdist1);
             auto time2s = tools::get_time();
@@ -179,18 +179,25 @@ namespace ctns{
             std::cout << "-----------lzd-----------" << std::endl;
             if(diff0s > 1.e-8 || diff1s > 1.e-8 || diff2s > 1.e-8){ 
                std::cout << "diff is too large!" << std::endl;
+               //exit(1);
+            }
+
+            std::cout << std::setprecision(10) << std::endl;
+            std::cout << "nrm2a=" << (linalg::xnrm2(ndim,diag.data())) << std::endl;
+            auto time0g = tools::get_time();
+            std::vector<double> diag_gpu(ndim); // constant term
+            twodot_diagGPU(qops_dict, wf, diag_gpu.data(), size, rank, schd.ctns.ifdist1, ecore/size);
+            auto time1g = tools::get_time();
+            std::cout << "nrm2b=" << (linalg::xnrm2(ndim,diag_gpu.data())) << std::endl;
+            linalg::xaxpy(ndim, -1.0, diag.data(), diag_gpu.data());
+            std::cout << "tgpu=" << tools::get_duration(time1g-time0g) << std::endl;
+            double diff0g = linalg::xnrm2(ndim, diag_gpu.data());
+            std::cout << "diff0g=" << diff0g << std::endl;
+            if(diff0g > 1.e-8){
+               std::cout << "diff is too large!" << std::endl;
                exit(1);
             }
 
-            auto time0g = tools::get_time();
-            std::vector<double> diag_gpu(ndim, ecore/size); // constant term
-            twodot_diagGPU(qops_dict, wf, diag_gpu.data(), size, rank, schd.ctns.ifdist1);
-            auto time1g = tools::get_time();
-            linalg::xaxpy(ndim, -1.0, diag.data(), diag_gpu.data());
-            double diff0g = linalg::xnrm2(ndim, diag_gpu.data());
-            std::cout << "diff0g=" << diff0g << std::endl;
-            exit(1);
- 
          }
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
@@ -211,12 +218,12 @@ namespace ctns{
          /*
          // prefetch
          if(schd.ctns.alg_hvec>10 && schd.ctns.async_fetch){
-            qops_pool(fneed[0]).clear();
-            qops_pool(fneed[1]).clear();
-            qops_pool(fneed[2]).clear();
-            qops_pool(fneed[3]).clear();
-            qops_pool(frop);
-            qops_pool.fetch(fneed_next, false, true);
+         qops_pool(fneed[0]).clear();
+         qops_pool(fneed[1]).clear();
+         qops_pool(fneed[2]).clear();
+         qops_pool(fneed[3]).clear();
+         qops_pool(frop);
+         qops_pool.fetch(fneed_next, false, true);
          }
          */
 

@@ -5,7 +5,7 @@
 
 namespace ctns{
 
-   const bool debug_twodot_diag = true;
+   const bool debug_twodot_diag = false;
    extern const bool debug_twodot_diag;
 
    template <typename Tm>

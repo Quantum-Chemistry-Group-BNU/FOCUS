@@ -1,5 +1,5 @@
 
-machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no #yes
 USE_GCC = yes
@@ -163,7 +163,7 @@ else ifeq ($(strip $(machine)), dell2)
    CUDA_DIR= /home/dell/anaconda3/envs/pytorch
    MAGMA_DIR = ../magma/magma-2.6.1
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static -lrt
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static -lrt 
 else ifeq ($(strip $(machine)), dell)
    CUDA_DIR= /usr/local/cuda
    MAGMA_DIR = ../magma/magma-2.6.1
@@ -175,6 +175,8 @@ else ifeq ($(strip $(machine)), jiageng)
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart_static -lrt
 endif
+FLAGS += -I./src/ctns/gpu_kernel
+LFLAGS += -L./src/ctns/gpu_kernel -lctnsGPU
 endif
 
 # IO
@@ -337,7 +339,7 @@ $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
 
 $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ctns.o -L$(LIB_DIR) -lctns $(LFLAGS) 
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ctns.o -L$(LIB_DIR) -lctns $(LFLAGS)
 
 # Main:
 $(BIN_DIR)/exactdiag.x: $(OBJ_DIR)/exactdiag.o $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a
@@ -354,11 +356,11 @@ $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(LIB_DIR)/libci.a
 
 $(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/prectns.o -L$(LIB_DIR) -lctns $(LFLAGS)
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/prectns.o -L$(LIB_DIR) -lctns $(LFLAGS) 
 
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/ctns.o -L$(LIB_DIR) -lctns $(LFLAGS)
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/ctns.o -L$(LIB_DIR) -lctns $(LFLAGS) 
 
 $(BIN_DIR)/vmc.x: $(OBJ_DIR)/vmc.o $(LIB_DIR)/libvmc.a
 	@echo "=== LINK $@"

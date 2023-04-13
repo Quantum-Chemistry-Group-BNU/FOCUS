@@ -5,7 +5,7 @@ ifeq ($(strip $(machine)), dell2)
    CXX = nvcc
    CUDA_DIR = /home/dell/anaconda3/envs/pytorch
 endif
-CXXFLAGS = -O2
+CXXFLAGS = -O2 
 
 LD       = $(CXX)
 LDFLAGS  = $(CXXFLAGS) $(LIBS)
