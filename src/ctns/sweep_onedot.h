@@ -109,8 +109,8 @@ namespace ctns{
 
          // 3. Davidson solver for wf
          // 3.1 diag 
-         std::vector<double> diag(ndim, ecore/size); // constant term
-         onedot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
+         std::vector<double> diag(ndim);
+         onedot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, ecore/size);
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
          // executes the preconditioning in Davidson's algorithm

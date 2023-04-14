@@ -179,7 +179,7 @@ namespace ctns{
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
 #ifdef _OPENMP
-   #pragma omp parallel for schedule(dynamic) num_threads(maxthreads)
+#pragma omp parallel for schedule(dynamic) num_threads(maxthreads)
 #endif
          for(int br=0; br<nqr; br++){
             const auto& qr = qrow.get_sym(br);
@@ -206,7 +206,7 @@ namespace ctns{
                kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
             } // qc
 #ifdef _OPENMP
-      #pragma omp critical
+#pragma omp critical
 #endif
             results[br] = std::make_pair(sigs2, U);
          } // br
@@ -336,7 +336,7 @@ namespace ctns{
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
 #ifdef _OPENMP
-   #pragma omp parallel for schedule(dynamic) num_threads(maxthreads)
+#pragma omp parallel for schedule(dynamic) num_threads(maxthreads)
 #endif
          for(int br=0; br<nqr; br++){
             const auto& qr = qrow.get_sym(br);
@@ -370,7 +370,7 @@ namespace ctns{
                U = U.reorder_row(pos_new,1);
             } // qc
 #ifdef _OPENMP
-      #pragma omp critical
+#pragma omp critical
 #endif
             results[br] = std::make_pair(sigs2, U);
          } // br
@@ -464,9 +464,13 @@ namespace ctns{
             int& deff,
             const std::string fname,
             const bool debug){
+         int maxthreads = 1;
+#ifdef _OPENMP
+         if(omp_decim) maxthreads = omp_get_max_threads();
+#endif
          if(debug){
-            std::cout << "ctns::decimation_row: ";
-            if(iftrunc && !fname.empty()) std::cout << "fname=" << fname;
+            std::cout << "ctns::decimation_row: maxthreads=" << maxthreads;
+            if(iftrunc && !fname.empty()) std::cout << " fname=" << fname;
             std::cout << std::endl;
          }
          if(!ifkr){

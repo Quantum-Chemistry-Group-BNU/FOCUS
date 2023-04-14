@@ -296,15 +296,20 @@ KNOWN PROBLEMS
    - mmorder [no significant difference]
    - ifdist1?
 
-=== Major ===
-
  * async IO strategy:
    - revise GPUmem control [DONE@2023/04/07]
    - revise oper_pool
    - revise sweep_twodot/onedot_renorm to release unnecessary operators before renorm to save memory
    - overlap save operators with computation? [DONE@20230408]
    - overlap fetch operators with computation? 
+      - hdiag implementation on GPU [DONE@20230414]
    - async memcpy to GPU => magma_queue
+
+ * cpu<->gpu, network communication: 
+   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h
+   2. perform renormalization by class [CABPQSH, hiden memcpy]
+
+=== Major ===
 
  * Better treatment GEMM involving 'c': use axpy_vbatch?
 
@@ -329,22 +334,10 @@ KNOWN PROBLEMS
 
  * Better GEMM_BATCH with TensorCore
 
- * cpu<->gpu, network communication: 
-   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h
-   2. perform renormalization by class [CABPQSH, hiden memcpy]
- 
-=== Minor ===
-
- * OpenMP for serial part:
-   - mmtask & rmmtask
-   - decimation
-
- * hdiag implementation on GPU
+=== Future ===
 
  * Support Mixed CPU-GPU implementation?
    - mmtasks revise [also avoid copy for magma?]
-
-=== Future ===
 
  * Support complex version [DONE@20230228]
    - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
