@@ -167,7 +167,7 @@ namespace sci{
             } // ia 
          } // idx
          auto ts = tools::get_time();
-         std::cout << "no. of singles = " << ns << " timing : " << std::setprecision(2) 
+         std::cout << "no. of singles = " << ns << " timing : " << std::setprecision(3) 
             << tools::get_duration(ts-t0) << " s" << std::endl;
 
          // doubles
@@ -228,7 +228,7 @@ namespace sci{
             } // ij
          } // idx
          auto td = tools::get_time();
-         std::cout << "no. of doubles = " << nd << " timing : " << std::setprecision(2) 
+         std::cout << "no. of doubles = " << nd << " timing : " << std::setprecision(3) 
             << tools::get_duration(td-ts) << " s" << std::endl;
 
          std::cout << "dim = " << dim << " new = " << space.size()-dim 

@@ -72,7 +72,7 @@ int tests::test_hamiltonian(){
       << e[0] << "\n" << e[1] << "\n" << e[2] << "\n"
       << e[3] << "\n" << e[4] << "\n" << e[5] << endl;
    auto t1 = tools::get_time();
-   cout << "timing : " << setw(10) << fixed << setprecision(2) 
+   cout << "timing : " << setw(10) << fixed << setprecision(3) 
       << tools::get_duration(t1-t0) << " s" << endl;
    // compared with FCI value
    assert(std::abs(e[0]+7.87388139034) < thresh); 

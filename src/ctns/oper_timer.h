@@ -89,7 +89,7 @@ namespace ctns{
             std::cout << "----- oper_timing -----" << std::endl;
             boost::timer::cpu_times elapsed = timer.elapsed();
             double cputime = (elapsed.user+elapsed.system)/1.0e9;
-            std::cout << std::scientific << std::setprecision(2)
+            std::cout << std::scientific << std::setprecision(3)
                << " user=" << elapsed.user/1.0e9 << " S"
                << " system=" << elapsed.system/1.0e9 << " S"
                << " wall=" << elapsed.wall/1.0e9 << " S"

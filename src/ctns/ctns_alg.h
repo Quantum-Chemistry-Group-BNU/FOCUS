@@ -28,7 +28,7 @@ namespace ctns{
             const bool ifortho=true){
          auto t0 = tools::get_time();
          std::cout << "\nctns::rcanon_check thresh_ortho=" 
-            << std::scientific << std::setprecision(2) << thresh_ortho 
+            << std::scientific << std::setprecision(3) << thresh_ortho 
             << std::endl;
          // loop over all sites
          for(int idx=0; idx<icomb.topo.ntotal; idx++){

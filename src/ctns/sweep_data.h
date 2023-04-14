@@ -15,14 +15,14 @@ namespace ctns{
             double& dtacc) const{
          dtacc += dtkey;
          std::cout << " T(" << std::setw(5) << key << ") = " 
-            << std::scientific << std::setprecision(2) << dtkey << " S"
+            << std::scientific << std::setprecision(3) << dtkey << " S"
             << "  per = " << std::setw(4) << std::defaultfloat << dtkey/(dttot+eps)*100 
             << "  per(accum) = " << dtacc/(dttot+eps)*100 
             << std::endl;
       }
       void print(const std::string msg) const{
          std::cout << "##### " << msg << ": " 
-            << std::scientific << std::setprecision(2) << dt
+            << std::scientific << std::setprecision(3) << dt
             << " S #####" 
             << std::endl;
          double dtacc = 0.0;
@@ -36,7 +36,7 @@ namespace ctns{
 
          double tdvdsn = dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9;
          std::cout << "Detailed decomposition of T(dvdsn): " 
-            << std::scientific << std::setprecision(2) << tdvdsn << " S"
+            << std::scientific << std::setprecision(3) << tdvdsn << " S"
             << std::endl;
          dtacc = 0.0;
          this->print_part(msg+": qops_dict memcpy cpu2gpu     ", dtb1, tdvdsn, dtacc);
@@ -51,7 +51,7 @@ namespace ctns{
         
          double trenrm = dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10;
          std::cout << "Detailed decomposition of T(renrm): " 
-            << std::scientific << std::setprecision(2) << trenrm << " S"
+            << std::scientific << std::setprecision(3) << trenrm << " S"
             << std::endl;
          dtacc = 0.0;
          this->print_part(msg+": qops init                    ", dtf0, trenrm, dtacc);
@@ -300,7 +300,7 @@ namespace ctns{
             std::cout << " e[" << j << "]=" << eopt[j];
             eav[ibond] += eopt[j]; 
          } // jstate
-         std::cout << " t=" << std::setprecision(2) << opt_timing[isweep][ibond].dt;
+         std::cout << " t=" << std::setprecision(3) << opt_timing[isweep][ibond].dt;
          eav[ibond] /= nroots;
          dwt[ibond] = opt_result[isweep][ibond].dwt;
          std::cout << std::endl;
@@ -355,7 +355,7 @@ namespace ctns{
          std::cout << std::setw(13) << jsweep 
             << std::setw(3) << ctrl.dots 
             << std::setw(8) << ctrl.dcut 
-            << std::scientific << std::setprecision(2)
+            << std::scientific << std::setprecision(3)
             << " " << ctrl.eps 
             << " " << ctrl.noise << " | " 
             << nmvp << " | " 
@@ -377,12 +377,12 @@ namespace ctns{
          const auto& eopt_jsweep = min_result[jsweep].eopt;
          std::cout << std::setw(13) << jsweep
             << std::setw(8) << ctrl.dcut << " "
-            << std::showpos << std::scientific << std::setprecision(2) << dwt
+            << std::showpos << std::scientific << std::setprecision(3) << dwt
             << std::noshowpos << std::defaultfloat << std::setprecision(12);
          for(int j=0; j<nroots; j++){ 
             std::cout << " e[" << j << "]=" 
                << std::defaultfloat << std::setprecision(12) << eopt_jsweep[j] << " ("
-               << std::scientific << std::setprecision(2) << eopt_jsweep[j]-eopt_isweep[j] << ")";
+               << std::scientific << std::setprecision(3) << eopt_jsweep[j]-eopt_isweep[j] << ")";
          } // jstate
          std::cout << std::endl;
       } // jsweep

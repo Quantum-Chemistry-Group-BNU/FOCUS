@@ -57,12 +57,12 @@ namespace ctns{
                      << std::setw(3) << i << " "
                      << std::setw(1) << ifconverge[(rnorm(i,iter)<crit_v)] << " "
                      << std::setw(20) << std::setprecision(12) << std::fixed << eigs(i,iter) << " "
-                     << std::setw(10) << std::setprecision(2) << std::scientific << eigs(i,iter)-eigs(i,iter-1) << " "
-                     << std::setw(10) << std::setprecision(2) << std::scientific << rnorm(i,iter) << " "
+                     << std::setw(10) << std::setprecision(3) << std::scientific << eigs(i,iter)-eigs(i,iter-1) << " "
+                     << std::setw(10) << std::setprecision(3) << std::scientific << rnorm(i,iter) << " "
                      << std::setw(4) << nsub << " " 
                      << std::setw(5) << nmvp << " "
-                     << std::setw(10) << std::setprecision(2) << std::scientific << t 
-                     << std::setw(10) << std::setprecision(2) << std::scientific << t/nmvp 
+                     << std::setw(10) << std::setprecision(3) << std::scientific << t 
+                     << std::setw(10) << std::setprecision(3) << std::scientific << t/nmvp 
                      << std::endl;
                } // i
             }

@@ -41,11 +41,11 @@ namespace linalg{
                             << std::setw(3) << i << " "
                             << std::setw(1) << ifconverge[(rnorm(i,iter)<crit_v)] << " "
                             << std::setw(20) << std::setprecision(12) << std::fixed << eigs(i,iter) << " "
-                            << std::setw(10) << std::setprecision(2) << std::scientific << eigs(i,iter)-eigs(i,iter-1) << " "
-                            << std::setw(10) << std::setprecision(2) << std::scientific << rnorm(i,iter) << " "
+                            << std::setw(10) << std::setprecision(3) << std::scientific << eigs(i,iter)-eigs(i,iter-1) << " "
+                            << std::setw(10) << std::setprecision(3) << std::scientific << rnorm(i,iter) << " "
                             << std::setw(4) << nsub << " " 
                             << std::setw(5) << nmvp << " "
-                            << std::setw(10) << std::setprecision(2) << std::scientific << t << std::endl;
+                            << std::setw(10) << std::setprecision(3) << std::scientific << t << std::endl;
                     } // i
                 } 
                 // perform H*x for a set of input vectors: x(nstate,ndim)
@@ -59,7 +59,7 @@ namespace linalg{
                     /*
                        bool debug = true;
                        if(debug){
-                       std::cout << "timing for HVecs : " << std::setprecision(2)  
+                       std::cout << "timing for HVecs : " << std::setprecision(3)  
                        << tools::get_duration(t1-t0) << " s" 
                        << " for nstate = " << nstate << std::endl;
                        }

@@ -50,7 +50,7 @@ void ED(const input::schedule& schd){
    // construct H by simple Slater-Condon rule
    auto H = get_Hmat(fci_space, int2e, int1e, ecore);
    double sdiff = H.diff_hermitian();
-   std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(2) << sdiff
+   std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << sdiff
       << std::defaultfloat << std::endl;
    const double thresh = 1.e-10;
    if(sdiff > thresh){

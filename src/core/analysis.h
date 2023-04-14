@@ -65,9 +65,9 @@ namespace fock{
                int nelec = space[i].nelec(); ne += pi*nelec; ne2 += pi*nelec*nelec;
                if(std::abs(civec[i]) > thresh){ 
                   std::cout << std::setw(8) << j << " : " << std::setw(8) << i << "   ";
-                  std::cout << std::fixed << std::scientific << std::setprecision(2) 
+                  std::cout << std::fixed << std::scientific << std::setprecision(3) 
                      << std::showpos << civec[i] << std::noshowpos;
-                  std::cout << std::fixed << std::setw(6) << std::setprecision(2) << pi*100;
+                  std::cout << std::fixed << std::setw(6) << std::setprecision(3) << pi*100;
                   std::cout << std::fixed << std::setw(3) << space[i].diff_num(space[idx[0]])/2
                      << "  " << space[i].to_string() << " (" << space[i].nelec() << ")"
                      << std::endl;
@@ -98,9 +98,9 @@ namespace fock{
                int nelec_b = space[i].nelec_b(); nb += pi*nelec_b; nb2 += pi*nelec_b*nelec_b;
                if(std::abs(civec[i]) > thresh){ 
                   std::cout << std::setw(8) << j << " : " << std::setw(8) << i << "   ";
-                  std::cout << std::fixed << std::scientific << std::setprecision(2) 
+                  std::cout << std::fixed << std::scientific << std::setprecision(3) 
                      << std::showpos << civec[i] << std::noshowpos;
-                  std::cout << std::fixed << std::setw(6) << std::setprecision(2) << pi*100;
+                  std::cout << std::fixed << std::setw(6) << std::setprecision(3) << pi*100;
                   std::cout << std::fixed << std::setw(3) << space[i].diff_num(space[idx[0]])/2
                      << std::fixed << std::setw(3) << space[i].norb_single() << "  "
                      << space[i] << " ("

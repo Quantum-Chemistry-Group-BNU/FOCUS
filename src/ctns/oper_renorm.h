@@ -597,11 +597,11 @@ namespace ctns{
       const auto& opH = qops('H').at(0);
       auto diffH = (opH-opH.H()).normF();
       if(debug){
-         std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(2) << diffH 
+         std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
             << " coord=" << p << " rank=" << rank << std::defaultfloat << std::endl;
       } 
       if(diffH > thresh_opdiff){
-         std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(2) << diffH 
+         std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
             << " is larger than thresh_opdiff=" << thresh_opdiff 
             << " for rank=" << rank 
             << std::endl;

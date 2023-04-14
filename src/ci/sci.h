@@ -159,11 +159,11 @@ namespace sci{
                std::vector<Tm> vtmp(vsol1.col(i),vsol1.col(i)+nsub);
                double SvN = fock::coeff_entropy(vtmp); 
                std::cout << "sci: iter=" << iter
-                  << " eps1=" << std::scientific << std::setprecision(2) << schd.sci.eps1[iter]
+                  << " eps1=" << std::scientific << std::setprecision(3) << schd.sci.eps1[iter]
                   << " nsub=" << nsub 
                   << " i=" << i 
                   << " e=" << std::defaultfloat << std::setprecision(12) << esol1[i] 
-                  << " de=" << std::scientific << std::setprecision(2) << esol1[i]-esol[i] 
+                  << " de=" << std::scientific << std::setprecision(3) << esol1[i]-esol[i] 
                   << " conv=" << conv[i] 
                   << " SvN=" << SvN
                   << std::endl;

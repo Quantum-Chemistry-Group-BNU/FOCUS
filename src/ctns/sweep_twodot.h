@@ -116,21 +116,6 @@ namespace ctns{
             exit(1);
          }
 
-         // look ahead for the next dbond
-         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
-         auto frop = fbond.first;
-         auto fdel = fbond.second;
-         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
-         // prefetch
-         if(schd.ctns.alg_hvec>10 && schd.ctns.async_fetch){
-            qops_pool(fneed[0]).clear();
-            qops_pool(fneed[1]).clear();
-            qops_pool(fneed[2]).clear();
-            qops_pool(fneed[3]).clear();
-            qops_pool(frop);
-            qops_pool.fetch(fneed_next, false, true);
-         }
-
          // 3. Davidson solver for wf
          // 3.1 diag 
          std::vector<double> diag(ndim); 
@@ -149,6 +134,21 @@ namespace ctns{
          }
 #endif 
          timing.tb = tools::get_time();
+
+         // look ahead for the next dbond
+         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
+         auto frop = fbond.first;
+         auto fdel = fbond.second;
+         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
+         // prefetch
+         if(schd.ctns.alg_hvec>10 && schd.ctns.async_fetch){
+            qops_pool(fneed[0]).clear();
+            qops_pool(fneed[1]).clear();
+            qops_pool(fneed[2]).clear();
+            qops_pool(fneed[3]).clear();
+            qops_pool(frop);
+            qops_pool.fetch(fneed_next, false, true);
+         }
 
          // 3.2 prepare HVec
          std::map<qsym,qinfo4<Tm>> info_dict;

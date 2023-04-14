@@ -51,7 +51,7 @@ namespace ctns{
             const double rdm_svd,
             const double thresh_proj){
          using Tm = typename Km::dtype;
-         std::cout << "\nctns::init_rbases" << std::scientific << std::setprecision(2) 
+         std::cout << "\nctns::init_rbases" << std::scientific << std::setprecision(3) 
             << " rdm_svd=" << rdm_svd
             << " thresh_proj=" << thresh_proj 
             << std::endl;

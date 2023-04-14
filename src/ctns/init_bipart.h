@@ -294,7 +294,7 @@ namespace ctns{
          auto t0 = tools::get_time();
          if(debug){
             std::cout << "ctns::right_projection<Km> thresh_proj=" 
-               << std::scientific << std::setprecision(2) << thresh_proj << std::endl;
+               << std::scientific << std::setprecision(3) << thresh_proj << std::endl;
          }
 
          // 1. prepare bipartition form of psi
@@ -365,7 +365,7 @@ namespace ctns{
          auto t0 = tools::get_time();
          if(debug){
             std::cout << "ctns::right_projection<cNK> thresh_proj=" 
-               << std::scientific << std::setprecision(2) << thresh_proj << std::endl;
+               << std::scientific << std::setprecision(3) << thresh_proj << std::endl;
          }
 
          // 1. bipartition form of psi
