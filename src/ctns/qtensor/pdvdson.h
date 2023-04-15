@@ -207,8 +207,14 @@ namespace ctns{
 
             // Precondition of a residual
             void precondition(const Tm* rvec, Tm* tvec, const double& ei){
-               for(size_t j=0; j<ndim; j++){
-                  tvec[j] = rvec[j]/(std::abs(Diag[j]-ei)+damping);
+               if(precond){
+                  for(size_t j=0; j<ndim; j++){
+                     tvec[j] = rvec[j]/(std::abs(Diag[j]-ei)+damping);
+                  }
+               }else{
+                  for(size_t j=0; j<ndim; j++){
+                     tvec[j] = rvec[j];
+                  }
                }
             }
 
@@ -352,11 +358,12 @@ namespace ctns{
             double crit_v = 1.e-5;  // used control parameter
             int maxcycle = 30;
             int nbuff = 4; // maximal additional vectors
-                           // settings
+            // settings
             int iprt = 0;
             double crit_indp = 1.e-12;
             double crit_skewH = 1.e-8;
             double damping = 1.e-12;
+            bool precond = true;
 #ifndef SERIAL
             boost::mpi::communicator world;
 #endif

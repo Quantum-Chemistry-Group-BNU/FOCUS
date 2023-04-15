@@ -365,7 +365,7 @@ namespace ctns{
             << t_gemm[jsweep] << " " 
             << t_red[jsweep] << " "
             << tblas << " "
-            << std::defaultfloat << std::setprecision(3) << tblas/taccum*100 
+            << std::defaultfloat << tblas/taccum*100 
             << std::endl;
       } // jsweep
       std::cout << "results: isweep, dcut, dwt, energies (delta_e)" << std::endl;

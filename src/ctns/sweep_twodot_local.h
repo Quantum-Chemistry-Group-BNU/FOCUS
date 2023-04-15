@@ -126,6 +126,7 @@ namespace ctns{
          solver.iprt = schd.ctns.verbose;
          solver.nbuff = schd.ctns.nbuff;
          solver.damping = schd.ctns.damping;
+         solver.precond = schd.ctns.precond;
          solver.Diag = diag.data();
          solver.HVec = HVec;
 #ifndef SERIAL
@@ -197,6 +198,7 @@ namespace ctns{
          solver.iprt = schd.ctns.verbose;
          solver.nbuff = schd.ctns.nbuff;
          solver.damping = schd.ctns.damping;
+         solver.precond = schd.ctns.precond;
          solver.Diag = diag.data();
          solver.HVec = HVec;
 #ifndef SERIAL

@@ -49,9 +49,11 @@ namespace ctns{
                if(ifmemset) GPUmem.memset(_dev_data, _size*sizeof(Tm));
             }
             void to_gpu(){
+               assert(_dev_data != nullptr && _data != nullptr);
                GPUmem.to_gpu(_dev_data, _data, _size*sizeof(Tm));
             }
             void to_cpu(){
+               assert(_dev_data != nullptr && _data != nullptr);
                GPUmem.to_cpu(_data, _dev_data, _size*sizeof(Tm));
             }
 #endif

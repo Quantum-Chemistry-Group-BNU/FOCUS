@@ -98,7 +98,7 @@ namespace input{
                   & alg_hvec & alg_hinter & alg_renorm & alg_rinter 
                   & ifdist1 & save_formulae & sort_formulae & save_mmtask 
                   & mmorder & batchsize 
-                  & cisolver & maxcycle & nbuff & damping
+                  & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
                   & iomode & async_fetch & async_save & async_remove
                   & iroot & nsample & ndetprt; 
@@ -150,6 +150,7 @@ namespace input{
          int maxcycle = 30;
          int nbuff = 4; // should be greater than 2
          double damping = 1.e-10;
+         bool precond = true;
          // io
          bool rcanon_load = false;
          std::string rcanon_file = "rcanon_ci.info";
