@@ -301,7 +301,7 @@ KNOWN PROBLEMS
    - revise oper_pool
    - revise sweep_twodot/onedot_renorm to release unnecessary operators before renorm to save memory
    - overlap save operators with computation? [DONE@20230408]
-   - overlap fetch operators with computation? 
+   - overlap fetch operators with computation? [DONE@20230415]
       - hdiag implementation on GPU [DONE@20230414]
    - async memcpy to GPU => magma_queue
 

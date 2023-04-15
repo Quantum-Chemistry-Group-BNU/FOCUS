@@ -27,7 +27,7 @@ namespace ctns{
                }
                return sz;
             }
-            void display(const std::string msg) const{
+            void display(const std::string msg="") const{
                std::cout << "qstore";
                if(msg.size()>0) std::cout << "[" << msg << "]";
                std::cout << ": size=" << qstore.size() << std::endl;
@@ -49,13 +49,16 @@ namespace ctns{
             }
             // fetch qops from memory / disk
             void fetch(const std::vector<std::string> fneed, const bool ifgpu, const bool ifasync=false);
-            // release
+            // release from qstore [delete on CPU & GPU]
             void release(const std::vector<std::string> frelease);
-            // release
+            // release from qstore 
             void release(const std::vector<std::string> fneed, 
                   const std::vector<std::string> fneed_next);
+            // clear [delete CPU space]
+            void clear(const std::vector<std::string> fneed); 
             // save to disk
-            void save(const std::string frop, const bool ifasync);
+            void save(const std::string frop, const bool ifasync, 
+                  const std::vector<std::string> fneed_next={});
             // remove from disk
             void remove(const std::string fdel, const bool ifasync);
             // finalize
@@ -162,9 +165,18 @@ namespace ctns{
          this->release(frelease);
       }
 
+   template <typename Tm>
+      void oper_pool<Tm>::clear(const std::vector<std::string> fneed){
+         for(auto& fqop : fneed){
+            if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
+            qstore[fqop].clear();
+         }
+      }
+
    // save to disk
    template <typename Tm>
-      void oper_pool<Tm>::save(const std::string frop, const bool ifasync){
+      void oper_pool<Tm>::save(const std::string frop, const bool ifasync, 
+            const std::vector<std::string> fneed_next){
          if(debug){
             std::cout << "ctns::oper_pool<Tm>::save ifasync=" << ifasync << " frop=" << frop 
                << " erase frop_prev=" << frop_prev << std::endl;
@@ -179,7 +191,13 @@ namespace ctns{
                   std::cref(qstore.at(frop)), debug);
          }
          auto t2 = tools::get_time();
-         qstore.erase(frop_prev);
+         // if result is not used in the next dbond, then release it
+         // NOTE: check is neceesary at the returning point: [ -*=>=*-* and -*=<=*-* ],
+         // because the previous left qops is needed in the next dbond!
+         auto result = std::find(fneed_next.begin(), fneed_next.end(), frop_prev);
+         if(result == fneed_next.end()){
+            qstore.erase(frop_prev);
+         }
          frop_prev = frop;
          if(debug){
             auto t3 = tools::get_time();

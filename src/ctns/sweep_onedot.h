@@ -244,7 +244,7 @@ namespace ctns{
          timing.tf = tools::get_time();
 
          // 4. save on disk 
-         qops_pool.save(frop, schd.ctns.async_save);
+         qops_pool.save(frop, schd.ctns.async_save, fneed_next);
 
          qops_pool.remove(fdel, schd.ctns.async_remove);
 

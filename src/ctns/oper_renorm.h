@@ -505,7 +505,7 @@ namespace ctns{
       // debug 
       if(debug_oper_renorm){
          const int target = -1;
-         std::cout << "\nlzd:qops:" << std::endl;
+         std::cout << "\nqops:" << std::endl;
          for(auto& key : qops.oplist){
             auto& opdict = qops(key);
             for(auto& pr : opdict){
@@ -525,7 +525,7 @@ namespace ctns{
                size, rank, fname, sort_formulae, ifdist1,
                debug_formulae);
          symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
-         std::cout << "\nlzd:qops: ref" << std::endl;
+         std::cout << "\nqops: ref" << std::endl;
          for(auto& key : qops.oplist){
             auto& opdict = qops(key);
             for(auto& pr : opdict){
@@ -541,7 +541,7 @@ namespace ctns{
 
          linalg::xaxpy(qops._size, -1.0, data0, qops._data);
          auto diff = linalg::xnrm2(qops._size, qops._data);
-         std::cout << "\nlzd:qops-diff" << std::endl;
+         std::cout << "\nqops-diff" << std::endl;
          for(auto& key : qops.oplist){
             auto& opdict = qops(key);
             for(auto& pr : opdict){

@@ -116,6 +116,18 @@ namespace ctns{
             exit(1);
          }
 
+         // look ahead for the next dbond
+         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
+         auto frop = fbond.first;
+         auto fdel = fbond.second;
+         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
+         // prefetch files for the next bond
+         if(schd.ctns.async_fetch){
+            if(schd.ctns.alg_hvec>10) qops_pool.clear(fneed);
+            qops_pool(frop);
+            qops_pool.fetch(fneed_next, false, true);
+         }
+
          // 3. Davidson solver for wf
          // 3.1 diag 
          std::vector<double> diag(ndim); 
@@ -134,21 +146,6 @@ namespace ctns{
          }
 #endif 
          timing.tb = tools::get_time();
-
-         // look ahead for the next dbond
-         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
-         auto frop = fbond.first;
-         auto fdel = fbond.second;
-         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
-         // prefetch
-         if(schd.ctns.alg_hvec>10 && schd.ctns.async_fetch){
-            qops_pool(fneed[0]).clear();
-            qops_pool(fneed[1]).clear();
-            qops_pool(fneed[2]).clear();
-            qops_pool(fneed[3]).clear();
-            qops_pool(frop);
-            qops_pool.fetch(fneed_next, false, true);
-         }
 
          // 3.2 prepare HVec
          std::map<qsym,qinfo4<Tm>> info_dict;
@@ -584,15 +581,14 @@ namespace ctns{
 
          // 4. save on disk 
          auto t0 = tools::get_time();
-         qops_pool.save(frop, schd.ctns.async_save);
+         qops_pool.save(frop, schd.ctns.async_save, fneed_next);
          auto t1 = tools::get_time();
 
-         /* Remove fdel on the same bond as frop but with opposite direction:
-NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 
-in the later configuration should wait until the file from the 
-former configuration has been saved! Therefore, oper_remove should 
-come later than save, which contains the synchronization!
-*/
+         // Remove fdel on the same bond as frop but with opposite direction:
+         // NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 
+         // in the later configuration should wait until the file from the 
+         // former configuration has been saved! Therefore, oper_remove should 
+         // come later than save, which contains the synchronization!
          qops_pool.remove(fdel, schd.ctns.async_remove);
          auto t2 = tools::get_time();
 
