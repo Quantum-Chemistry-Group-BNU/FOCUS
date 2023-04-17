@@ -105,7 +105,7 @@ namespace ctns{
 #ifdef NCCL
          }else{
             nccl_comm.reduce(yGPU, ndim, 0);
-            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(tm));
+            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
 #endif
          }
          gettimeofday(&t1_copy, NULL);
@@ -225,7 +225,7 @@ namespace ctns{
 #ifdef NCCL
          }else{
             nccl_comm.reduce(yGPU, ndim, 0);
-            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(tm));
+            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
 #endif
          }
          gettimeofday(&t1_copy, NULL);
@@ -332,7 +332,7 @@ namespace ctns{
 #ifdef NCCL
          }else{
             nccl_comm.reduce(yGPU, ndim, 0);
-            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(tm));
+            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
 #endif
          }
          gettimeofday(&t1_copy, NULL);
@@ -448,7 +448,7 @@ namespace ctns{
 #ifdef NCCL
          }else{
             nccl_comm.reduce(yGPU, ndim, 0);
-            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(tm));
+            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
 #endif
          }
          gettimeofday(&t1_copy, NULL);

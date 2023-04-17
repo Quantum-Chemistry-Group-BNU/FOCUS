@@ -306,7 +306,7 @@ KNOWN PROBLEMS
    - async memcpy to GPU => magma_queue
 
  * cpu<->gpu, network communication: 
-   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h
+   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DON@20230417]
    2. perform renormalization by class [CABPQSH, hiden memcpy]
 
 === Major ===
