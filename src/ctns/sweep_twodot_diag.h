@@ -14,8 +14,7 @@ namespace ctns{
             double* diag,
             const int size,
             const int rank,
-            const bool ifdist1,
-            const double ecore){
+            const bool ifdist1){
          const auto& lqops  = qops_dict.at("l");
          const auto& rqops  = qops_dict.at("r");
          const auto& c1qops = qops_dict.at("c1");
@@ -27,8 +26,7 @@ namespace ctns{
         
          // 0. constant term 
          size_t ndim = wf.size();
-         std::transform(diag, diag+ndim, diag,
-               [&ecore](const double& x){ return ecore; });
+         memset(diag, 0, ndim*sizeof(double));
 
          // 1. local terms: <lc1c2r|H|lc1c2r> = Hll + Hc1c1 + Hc2c2 + Hrr
          // NOTE: ifdist1=false, each node has nonzero H[l] and H[r],

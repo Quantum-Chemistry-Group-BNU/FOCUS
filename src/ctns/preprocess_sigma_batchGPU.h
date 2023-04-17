@@ -25,7 +25,8 @@ namespace ctns{
             HMMtasks<Tm>& Hmmtasks,
             Tm** opaddr,
             Tm* dev_workspace,
-            Tm* dev_red){
+            Tm* dev_red,
+            const bool ifnccl){
 #ifdef _OPENMP
          int maxthreads = omp_get_max_threads();
 #else
@@ -92,7 +93,14 @@ namespace ctns{
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
-         GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
+         if(!ifnccl){
+            GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
+#ifdef nccl
+         }else{
+            nccl_comm.reduce(y, ndim, 0);
+            if(rank==0) gpumem.to_cpu(ycpu, y, ndim*sizeof(tm));
+#endif
+         }
          gettimeofday(&t1_copy, NULL);
          time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -122,7 +130,8 @@ namespace ctns{
             Tm** opaddr,
             Tm* dev_workspace,
             Tm* alphas,
-            Tm* dev_red){
+            Tm* dev_red,
+            const bool ifnccl){
 #ifdef _OPENMP
          int maxthreads = omp_get_max_threads();
 #else
@@ -197,7 +206,14 @@ namespace ctns{
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
-         GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
+         if(!ifnccl){
+            GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
+#ifdef nccl
+         }else{
+            nccl_comm.reduce(y, ndim, 0);
+            if(rank==0) gpumem.to_cpu(ycpu, y, ndim*sizeof(tm));
+#endif
+         }
          gettimeofday(&t1_copy, NULL);
          time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -226,7 +242,8 @@ namespace ctns{
             HMMtask<Tm>& Hmmtask,
             Tm** opaddr,
             Tm* dev_workspace,
-            Tm* dev_red){
+            Tm* dev_red,
+            const bool ifnccl){
 #ifdef _OPENMP
          int maxthreads = omp_get_max_threads();
 #else
@@ -289,7 +306,14 @@ namespace ctns{
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
-         GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
+         if(!ifnccl){
+            GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
+#ifdef nccl
+         }else{
+            nccl_comm.reduce(y, ndim, 0);
+            if(rank==0) gpumem.to_cpu(ycpu, y, ndim*sizeof(tm));
+#endif
+         }
          gettimeofday(&t1_copy, NULL);
          time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -319,7 +343,8 @@ namespace ctns{
             Tm** opaddr,
             Tm* dev_workspace,
             Tm* alphas,
-            Tm* dev_red){
+            Tm* dev_red,
+            const bool ifnccl){
 #ifdef _OPENMP
          int maxthreads = omp_get_max_threads();
 #else
@@ -390,7 +415,14 @@ namespace ctns{
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
-         GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
+         if(!ifnccl){
+            GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
+#ifdef nccl
+         }else{
+            nccl_comm.reduce(y, ndim, 0);
+            if(rank==0) gpumem.to_cpu(ycpu, y, ndim*sizeof(tm));
+#endif
+         }
          gettimeofday(&t1_copy, NULL);
          time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);

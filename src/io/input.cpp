@@ -248,6 +248,8 @@ void params_ctns::read(ifstream& istrm){
          async_save = true;
       }else if(line.substr(0,12)=="async_remove"){
          async_remove = true;
+      }else if(line.substr(0,4)=="nccl"){
+         ifnccl = true;
       }else if(line.substr(0,5)=="iroot"){
          iroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
@@ -377,6 +379,7 @@ void params_ctns::print() const{
    cout << "async_fetch = " << async_fetch << endl;
    cout << "async_save = " << async_save << endl;
    cout << "async_remove = " << async_remove << endl;
+   cout << "ifnccl = " << ifnccl << endl;
    // sampling
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;

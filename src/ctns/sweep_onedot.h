@@ -110,7 +110,7 @@ namespace ctns{
          // 3. Davidson solver for wf
          // 3.1 diag 
          std::vector<double> diag(ndim);
-         onedot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, ecore/size);
+         onedot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
          // executes the preconditioning in Davidson's algorithm
@@ -120,6 +120,8 @@ namespace ctns{
             diag = std::move(diag2);
          }
 #endif 
+         std::transform(diag.begin(), diag.end(), diag.begin(),
+               [&ecore](const double& x){ return x+ecore; });
          timing.tb = tools::get_time();
 
          // 3.2 Solve local problem: Hc=cE

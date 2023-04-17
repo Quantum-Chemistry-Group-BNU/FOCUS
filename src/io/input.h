@@ -159,6 +159,7 @@ namespace input{
          bool async_fetch = false;
          bool async_save = false;
          bool async_remove = false;
+         bool ifnccl = false;
          // sampling
          int iroot = 0;
          int nsample = 1.e5;

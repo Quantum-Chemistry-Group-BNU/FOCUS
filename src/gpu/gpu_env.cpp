@@ -6,6 +6,10 @@
 magma_queue_t magma_queue = 0;
 gpu_mem GPUmem = {};
 
+#ifdef NCCL
+nccl_communicator nccl_comm;
+#endif
+
 void gpu_init(const int rank){
    if(rank == 0) std::cout << "gpu_init" << std::endl;
    magma_queue = 0;
@@ -33,6 +37,10 @@ void gpu_init(const int rank){
    std::cout << "run succesfully" << std::endl;
    */
 
+#ifdef NCCL
+   nccl_comm.init();
+#endif
+
    std::cout << "rank=" << rank << " num_gpus=" << num_gpus
       << " device_id=" << device_id << " magma_queue=" <<magma_queue
       << std::endl;
@@ -41,6 +49,9 @@ void gpu_init(const int rank){
 void gpu_finalize(){
    magma_queue_destroy(magma_queue);
    magma_finalize();
+#ifdef NCCL
+   nccl_comm.finalize();
+#endif
 }
 
 #endif

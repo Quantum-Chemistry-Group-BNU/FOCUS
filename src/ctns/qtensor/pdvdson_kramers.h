@@ -82,7 +82,7 @@ namespace ctns{
                   auto t1 = tools::get_time();
                   tcal += tools::get_duration(t1-t0);
 #ifndef SERIAL
-                  if(size > 1){
+                  if(!ifnccl && size > 1){
                      std::vector<Tm> y_sum(ndim);
                      mpi_wrapper::reduce(world, y+istate*ndim, ndim, y_sum.data(), std::plus<Tm>(), 0);
                      linalg::xcopy(ndim, y_sum.data(), y+istate*ndim);
@@ -513,6 +513,7 @@ namespace ctns{
             double crit_skewH = 1.e-8;
             double damping = 1.e-12;
             bool precond = true;
+            bool ifnccl = false;
 #ifndef SERIAL
             boost::mpi::communicator world;
 #endif

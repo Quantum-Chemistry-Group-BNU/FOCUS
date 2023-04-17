@@ -16,7 +16,7 @@ namespace mpi_wrapper{
    //--- broadcast ---
    // raw data
    template <typename Tm>
-      void broadcast(const boost::mpi::communicator & comm, Tm* ptr, size_t size, int root){
+      void broadcast(const boost::mpi::communicator & comm, Tm* ptr, const size_t size, const int root){
          size_t chunksize = get_chunksize<Tm>();
          for(size_t offset=0; offset<size; offset+=chunksize){
             size_t len = std::min(chunksize, size-offset);
@@ -27,8 +27,8 @@ namespace mpi_wrapper{
    //--- reduce ---
    // raw data
    template <typename Tm, typename Op>
-      void reduce(const boost::mpi::communicator & comm, const Tm* ptr_in, size_t size, 
-            Tm* ptr_out, Op op, int root){
+      void reduce(const boost::mpi::communicator & comm, const Tm* ptr_in, const size_t size, 
+            Tm* ptr_out, Op op, const int root){
          size_t chunksize = get_chunksize<Tm>();
          for(size_t offset=0; offset<size; offset+=chunksize){
             size_t len = std::min(chunksize, size-offset);

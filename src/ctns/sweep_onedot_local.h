@@ -34,6 +34,7 @@ namespace ctns{
          solver.nbuff = schd.ctns.nbuff;
          solver.damping = schd.ctns.damping;
          solver.precond = schd.ctns.precond;
+         solver.ifnccl = schd.ctns.ifnccl;
          solver.Diag = diag.data();
          solver.HVec = HVec;
 #ifndef SERIAL
@@ -108,6 +109,7 @@ namespace ctns{
          solver.nbuff = schd.ctns.nbuff;
          solver.damping = schd.ctns.damping;
          solver.precond = schd.ctns.precond;
+         solver.ifnccl = schd.ctns.ifnccl;
          solver.Diag = diag.data();
          solver.HVec = HVec;
 #ifndef SERIAL

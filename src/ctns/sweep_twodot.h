@@ -130,21 +130,24 @@ namespace ctns{
 
          // 3. Davidson solver for wf
          // 3.1 diag 
+         std::cout << "compute diag: ifnccl=" << schd.ctns.ifnccl << std::endl;
          std::vector<double> diag(ndim); 
          if(schd.ctns.alg_hvec>10){
-            twodot_diagGPU(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, ecore/size);
+            twodot_diagGPU(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
          }else{
-            twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, ecore/size);
+            twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
          }
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 executes 
          // the preconditioning in Davidson's algorithm
-         if(size > 1){
+         if(!schd.ctns.ifnccl && size > 1){
             std::vector<double> diag2(ndim);
             mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0);
             diag = std::move(diag2);
          }
 #endif 
+         std::transform(diag.begin(), diag.end(), diag.begin(),
+               [&ecore](const double& x){ return x+ecore; });
          timing.tb = tools::get_time();
 
          // 3.2 prepare HVec
@@ -517,26 +520,26 @@ namespace ctns{
                   HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
-                        std::ref(dev_red));
+                        std::ref(dev_red), std::cref(schd.ctns.ifnccl));
                }else{
                   dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*blksize*2; // memory layout [workspace|inter]
                   HVec = bind(&ctns::preprocess_Hx_batchDirectGPU<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
-                        std::ref(hinter._dev_data), std::ref(dev_red));
+                        std::ref(hinter._dev_data), std::ref(dev_red), std::cref(schd.ctns.ifnccl));
                }
             }else{
                if(!ifDirect){
                   HVec = bind(&ctns::preprocess_Hx_batchGPUSingle<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtask), std::ref(dev_opaddr), std::ref(dev_workspace),
-                        std::ref(dev_red));
+                        std::ref(dev_red), std::cref(schd.ctns.ifnccl));
                }else{
                   dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*blksize*2; // memory layout [workspace|inter]
                   HVec = bind(&ctns::preprocess_Hx_batchDirectGPUSingle<Tm>, _1, _2,
                         std::cref(scale), std::cref(size), std::cref(rank),
                         std::cref(ndim), std::ref(Hmmtask), std::ref(dev_opaddr), std::ref(dev_workspace),
-                        std::ref(hinter._dev_data), std::ref(dev_red));
+                        std::ref(hinter._dev_data), std::ref(dev_red), std::cref(schd.ctns.ifnccl));
                }
             }
 

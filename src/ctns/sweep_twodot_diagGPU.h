@@ -15,7 +15,7 @@ namespace ctns{
             const int size,
             const int rank,
             const bool ifdist1,
-            const double ecore){
+            const bool ifnccl){
          const auto& lqops  = qops_dict.at("l");
          const auto& rqops  = qops_dict.at("r");
          const auto& c1qops = qops_dict.at("c1");
@@ -79,15 +79,18 @@ namespace ctns{
          twodot_diagGPU_BQ("c1c2", c1qops, c2qops, wf, dev_diag, dev_dims, opoffs, size, rank);
          twodot_diagGPU_BQ("c1r" , c1qops,  rqops, wf, dev_diag, dev_dims, opoffs, size, rank);
          twodot_diagGPU_BQ("c2r" , c2qops,  rqops, wf, dev_diag, dev_dims, opoffs, size, rank);
-
-         GPUmem.to_cpu(diag, dev_diag, ndim*sizeof(ndim));         
+        
          GPUmem.deallocate(dev_dims, nblk*9*sizeof(ndim));
+         if(!ifnccl){
+            GPUmem.to_cpu(diag, dev_diag, ndim*sizeof(ndim));
+#ifdef NCCL
+         }else{
+            nccl_comm.reduce(dev_diag, ndim, 0);
+            if(rank==0) GPUmem.to_cpu(diag, dev_diag, ndim*sizeof(ndim));
+#endif
+         } 
          GPUmem.deallocate(dev_diag, ndim*sizeof(ndim));
-
-         std::transform(diag, diag+ndim, diag,
-               [&ecore](const double& x){ return x+ecore; });
       }
-
 
    template <typename Tm>
       void twodot_diagGPU_BQ(const std::string superblock,
