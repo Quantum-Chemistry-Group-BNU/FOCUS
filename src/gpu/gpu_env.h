@@ -9,8 +9,8 @@
 extern magma_queue_t magma_queue;
 extern gpu_mem GPUmem; 
 
-const int MAXGPUS = 100;
-extern const int MAXGPUS;
+const int MAX_GPUS = 128;
+extern const int MAX_GPUS;
 
 void gpu_init(const int rank);
 void gpu_finalize();
