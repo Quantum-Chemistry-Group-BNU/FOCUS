@@ -83,6 +83,9 @@ namespace ctns{
          GPUmem.deallocate(dev_dims, nblk*9*sizeof(ndim));
          if(!ifnccl){
             GPUmem.to_cpu(diag, dev_diag, ndim*sizeof(ndim));
+            std::cout << "lzd rank=" << rank
+               << " nrm2=" << (linalg::xnrm2(ndim, diag))
+               << std::endl;
 #ifdef NCCL
          }else{
             nccl_comm.reduce(dev_diag, ndim, 0);

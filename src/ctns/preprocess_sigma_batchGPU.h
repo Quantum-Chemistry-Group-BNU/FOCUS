@@ -48,27 +48,27 @@ namespace ctns{
          struct timeval t0_reduction, t1_reduction;
 
          // initialization
-         Tm* x = dev_workspace;
-         Tm* y = dev_workspace + ndim;
+         Tm* xGPU = dev_workspace;
+         Tm* yGPU = dev_workspace + ndim;
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
          ptrs[1] = opaddr[1];
          ptrs[2] = opaddr[2];
          ptrs[3] = opaddr[3];
          ptrs[4] = opaddr[4];
-         ptrs[5] = x;
+         ptrs[5] = xGPU;
          ptrs[6] = dev_workspace + 2*ndim;
 
-         GPUmem.memset(y, ndim*sizeof(Tm));
+         GPUmem.memset(yGPU, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
-            GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+            GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
 #ifdef NCCL
          }else{
-            if(rank==0) GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
-            nccl_comm.broadcast(x, ndim, 0);
+            if(rank==0) GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            nccl_comm.broadcast(xGPU, ndim, 0);
 #endif         
          }
          gettimeofday(&t1_copy, NULL);
@@ -88,25 +88,24 @@ namespace ctns{
                gettimeofday(&t1_gemm, NULL);
                // reduction
                gettimeofday(&t0_reduction, NULL);
-               Hmmtask.reduction(k, ptrs[6], y, dev_red);
+               Hmmtask.reduction(k, ptrs[6], yGPU, dev_red);
                gettimeofday(&t1_reduction, NULL);
                // timing
                time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
                      + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
                time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
                      + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
-
             } // k
          } // i
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
-            GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
-#ifdef nccl
+            GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+#ifdef NCCL
          }else{
-            nccl_comm.reduce(y, ndim, 0);
-            if(rank==0) gpumem.to_cpu(ycpu, y, ndim*sizeof(tm));
+            nccl_comm.reduce(yGPU, ndim, 0);
+            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(tm));
 #endif
          }
          gettimeofday(&t1_copy, NULL);
@@ -163,27 +162,27 @@ namespace ctns{
          struct timeval t0_reduction, t1_reduction;
 
          // initialization
-         Tm* x = dev_workspace;
-         Tm* y = dev_workspace + ndim;
+         Tm* xGPU = dev_workspace;
+         Tm* yGPU = dev_workspace + ndim;
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
          ptrs[1] = opaddr[1];
          ptrs[2] = opaddr[2];
          ptrs[3] = opaddr[3];
          ptrs[4] = opaddr[4];
-         ptrs[5] = x;
+         ptrs[5] = xGPU;
          ptrs[6] = dev_workspace + 2*ndim;
 
-         GPUmem.memset(y, ndim*sizeof(Tm));
+         GPUmem.memset(yGPU, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
-            GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+            GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
 #ifdef NCCL
          }else{
-            if(rank==0) GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
-            nccl_comm.broadcast(x, ndim, 0);
+            if(rank==0) GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            nccl_comm.broadcast(xGPU, ndim, 0);
 #endif         
          }
          gettimeofday(&t1_copy, NULL);
@@ -207,7 +206,7 @@ namespace ctns{
                gettimeofday(&t1_gemm, NULL);
                // reduction
                gettimeofday(&t0_reduction, NULL);
-               Hmmtask.reduction(k, ptrs[6], y, dev_red);
+               Hmmtask.reduction(k, ptrs[6], yGPU, dev_red);
                gettimeofday(&t1_reduction, NULL);
                // timing
                time_inter += ((double)(t1_inter.tv_sec - t0_inter.tv_sec) 
@@ -216,18 +215,17 @@ namespace ctns{
                      + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
                time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
                      + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
-
             } // k
          } // i
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
-            GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
-#ifdef nccl
+            GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+#ifdef NCCL
          }else{
-            nccl_comm.reduce(y, ndim, 0);
-            if(rank==0) gpumem.to_cpu(ycpu, y, ndim*sizeof(tm));
+            nccl_comm.reduce(yGPU, ndim, 0);
+            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(tm));
 #endif
          }
          gettimeofday(&t1_copy, NULL);
@@ -281,27 +279,27 @@ namespace ctns{
          struct timeval t0_reduction, t1_reduction;
 
          // initialization
-         Tm* x = dev_workspace;
-         Tm* y = dev_workspace + ndim;
+         Tm* xGPU = dev_workspace;
+         Tm* yGPU = dev_workspace + ndim;
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
          ptrs[1] = opaddr[1];
          ptrs[2] = opaddr[2];
          ptrs[3] = opaddr[3];
          ptrs[4] = opaddr[4];
-         ptrs[5] = x;
+         ptrs[5] = xGPU;
          ptrs[6] = dev_workspace + 2*ndim;
 
-         GPUmem.memset(y, ndim*sizeof(Tm));
+         GPUmem.memset(yGPU, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
-            GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+            GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
 #ifdef NCCL
          }else{
-            if(rank==0) GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
-            nccl_comm.broadcast(x, ndim, 0);
+            if(rank==0) GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            nccl_comm.broadcast(xGPU, ndim, 0);
 #endif         
          }
          gettimeofday(&t1_copy, NULL);
@@ -318,24 +316,23 @@ namespace ctns{
             gettimeofday(&t1_gemm, NULL);
             // reduction
             gettimeofday(&t0_reduction, NULL);
-            Hmmtask.reduction(k, ptrs[6], y, dev_red);
+            Hmmtask.reduction(k, ptrs[6], yGPU, dev_red);
             gettimeofday(&t1_reduction, NULL);
             // timing
             time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
                   + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
             time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
                   + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
-
          } // k
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
-            GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
-#ifdef nccl
+            GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+#ifdef NCCL
          }else{
-            nccl_comm.reduce(y, ndim, 0);
-            if(rank==0) gpumem.to_cpu(ycpu, y, ndim*sizeof(tm));
+            nccl_comm.reduce(yGPU, ndim, 0);
+            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(tm));
 #endif
          }
          gettimeofday(&t1_copy, NULL);
@@ -392,27 +389,27 @@ namespace ctns{
          struct timeval t0_reduction, t1_reduction;
 
          // initialization
-         Tm* x = dev_workspace;
-         Tm* y = dev_workspace + ndim;
+         Tm* xGPU = dev_workspace;
+         Tm* yGPU = dev_workspace + ndim;
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
          ptrs[1] = opaddr[1];
          ptrs[2] = opaddr[2];
          ptrs[3] = opaddr[3];
          ptrs[4] = opaddr[4];
-         ptrs[5] = x;
+         ptrs[5] = xGPU;
          ptrs[6] = dev_workspace + 2*ndim;
          
-         GPUmem.memset(y, ndim*sizeof(Tm));
+         GPUmem.memset(yGPU, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
-            GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+            GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
 #ifdef NCCL
          }else{
-            if(rank==0) GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
-            nccl_comm.broadcast(x, ndim, 0);
+            if(rank==0) GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            nccl_comm.broadcast(xGPU, ndim, 0);
 #endif         
          }
          gettimeofday(&t1_copy, NULL);
@@ -433,7 +430,7 @@ namespace ctns{
             gettimeofday(&t1_gemm, NULL);
             // reduction
             gettimeofday(&t0_reduction, NULL);
-            Hmmtask.reduction(k, ptrs[6], y, dev_red);
+            Hmmtask.reduction(k, ptrs[6], yGPU, dev_red);
             gettimeofday(&t1_reduction, NULL);
             // timing
             time_inter += ((double)(t1_inter.tv_sec - t0_inter.tv_sec) 
@@ -442,17 +439,16 @@ namespace ctns{
                   + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
             time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
                   + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
-
          } // k
 
          // copy yGPU to yCPU
          gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
-            GPUmem.to_cpu(yCPU, y, ndim*sizeof(Tm));
-#ifdef nccl
+            GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+#ifdef NCCL
          }else{
-            nccl_comm.reduce(y, ndim, 0);
-            if(rank==0) gpumem.to_cpu(ycpu, y, ndim*sizeof(tm));
+            nccl_comm.reduce(yGPU, ndim, 0);
+            if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(tm));
 #endif
          }
          gettimeofday(&t1_copy, NULL);
