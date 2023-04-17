@@ -100,7 +100,7 @@ namespace input{
                   & mmorder & batchsize 
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
-                  & iomode & async_fetch & async_save & async_remove
+                  & iomode & async_fetch & async_save & async_remove & ifnccl
                   & iroot & nsample & ndetprt; 
             }
       public:

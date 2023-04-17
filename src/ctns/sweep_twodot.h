@@ -130,7 +130,6 @@ namespace ctns{
 
          // 3. Davidson solver for wf
          // 3.1 diag 
-         std::cout << "compute diag: ifnccl=" << schd.ctns.ifnccl << std::endl;
          std::vector<double> diag(ndim); 
          if(schd.ctns.alg_hvec>10){
             twodot_diagGPU(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);

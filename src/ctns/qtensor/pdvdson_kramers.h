@@ -382,7 +382,7 @@ namespace ctns{
                   linalg::check_orthogonality(ndim, neig, vbas);
                }
 #ifndef SERIAL
-               if(size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
+               if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
 #endif
                HVecs(neig, wbas.data(), vbas.data());
 
@@ -470,7 +470,7 @@ namespace ctns{
                      exit(1);
                   }else{
 #ifndef SERIAL
-                     if(size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0);
+                     if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0);
 #endif	      
                      linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
                      HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);

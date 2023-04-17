@@ -59,10 +59,18 @@ namespace ctns{
          ptrs[5] = x;
          ptrs[6] = dev_workspace + 2*ndim;
 
+         GPUmem.memset(y, ndim*sizeof(Tm));
+
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
-         GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
-         GPUmem.memset(y, ndim*sizeof(Tm));
+         if(!ifnccl){
+            GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+#ifdef NCCL
+         }else{
+            if(rank==0) GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+            nccl_comm.broadcast(x, ndim, 0);
+#endif         
+         }
          gettimeofday(&t1_copy, NULL);
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -166,10 +174,18 @@ namespace ctns{
          ptrs[5] = x;
          ptrs[6] = dev_workspace + 2*ndim;
 
+         GPUmem.memset(y, ndim*sizeof(Tm));
+
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
-         GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
-         GPUmem.memset(y, ndim*sizeof(Tm));
+         if(!ifnccl){
+            GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+#ifdef NCCL
+         }else{
+            if(rank==0) GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+            nccl_comm.broadcast(x, ndim, 0);
+#endif         
+         }
          gettimeofday(&t1_copy, NULL);
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -276,10 +292,18 @@ namespace ctns{
          ptrs[5] = x;
          ptrs[6] = dev_workspace + 2*ndim;
 
+         GPUmem.memset(y, ndim*sizeof(Tm));
+
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
-         GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
-         GPUmem.memset(y, ndim*sizeof(Tm));
+         if(!ifnccl){
+            GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+#ifdef NCCL
+         }else{
+            if(rank==0) GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+            nccl_comm.broadcast(x, ndim, 0);
+#endif         
+         }
          gettimeofday(&t1_copy, NULL);
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
@@ -378,11 +402,19 @@ namespace ctns{
          ptrs[4] = opaddr[4];
          ptrs[5] = x;
          ptrs[6] = dev_workspace + 2*ndim;
+         
+         GPUmem.memset(y, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
          gettimeofday(&t0_copy, NULL);
-         GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
-         GPUmem.memset(y, ndim*sizeof(Tm));
+         if(!ifnccl){
+            GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+#ifdef NCCL
+         }else{
+            if(rank==0) GPUmem.to_gpu(x, xCPU, ndim*sizeof(Tm));
+            nccl_comm.broadcast(x, ndim, 0);
+#endif         
+         }
          gettimeofday(&t1_copy, NULL);
          time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
                + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
