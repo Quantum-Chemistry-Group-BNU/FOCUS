@@ -145,9 +145,6 @@ namespace ctns{
             diag = std::move(diag2);
          }
 #endif 
-         std::cout << "lzd: final diag: rank=" << rank << " diag="
-            << (linalg::xnrm2(ndim, diag.data()))
-            << std::endl;
          std::transform(diag.begin(), diag.end(), diag.begin(),
                [&ecore](const double& x){ return x+ecore; });
          timing.tb = tools::get_time();
