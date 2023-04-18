@@ -136,6 +136,7 @@ namespace ctns{
             double& dwt,
             int& deff,
             const std::string fname){
+         auto t0 = tools::get_time();
          int maxthreads = 1;
 #ifdef _OPENMP
          if(omp_decim) maxthreads = omp_get_max_threads();
@@ -229,6 +230,7 @@ namespace ctns{
          linalg::xscal(sig2all.size(), 1.0/sig2sum, sig2all.data());
          sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
          assert(std::abs(sig2sum - 1.0) < 1.e-10);
+         auto t1 = tools::get_time();
 
          // 2. select important sig2 & form rot
          std::vector<int> br_kept;
@@ -254,6 +256,13 @@ namespace ctns{
             }
          } // bc
          rot = std::move(qt2);
+         auto t2 = tools::get_time();
+         std::cout << "TIMING for decimation_row: "
+            << tools::get_duration(t2-t0) << " S"
+            << " T(decim/form)="
+            << tools::get_duration(t2-t1) << ","
+            << tools::get_duration(t1-t0)
+            << std::endl;
       }
 
    template <typename Tm>
