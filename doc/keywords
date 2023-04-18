@@ -95,7 +95,7 @@ $end
             worktot = batchsize*(blksize*2)
     =7: symbolic formulae + preallocation of workspace + intermediates [direct]
     =16: symbolic formulae + preallocation of workspace + intermediates [GPU]
-    =17: symbolic formulae + preallocation of workspace + intermediates [GPU + direct]
+    =17: symbolic formulae + preallocation of workspace + intermediates [GPU + direct inter]
     =18: symbolic formulae + preallocation of workspace + intermediates [GPU + single]
     =19: symbolic formulae + preallocation of workspace + intermediates [GPU + direct + single]
  - alg_renorm:

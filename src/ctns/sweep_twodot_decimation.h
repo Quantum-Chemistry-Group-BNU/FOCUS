@@ -19,6 +19,7 @@ namespace ctns{
             stensor4<Tm>& wf,
             stensor2<Tm>& rot,
             const std::string fname){
+         auto t0 = tools::get_time();
          const bool debug = schd.ctns.verbose>0;
          const auto& rdm_svd = schd.ctns.rdm_svd;
          const auto& dbond = sweeps.seq[ibond];
@@ -35,6 +36,7 @@ namespace ctns{
          auto& result = sweeps.opt_result[isweep][ibond];
          int nroots = vsol.cols();
          std::vector<stensor2<Tm>> wfs2(nroots);
+         auto t1 = tools::get_time();
          if(superblock == "lc1"){ 
 
             for(int i=0; i<nroots; i++){
@@ -43,6 +45,7 @@ namespace ctns{
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
+            t1 = tools::get_time();
             decimation_row(ifkr, wf.info.qrow, wf.info.qmid, 
                   iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
@@ -57,6 +60,7 @@ namespace ctns{
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
+            t1 = tools::get_time();
             decimation_row(ifkr, wf.info.qrow, wf.info.qcol, 
                   iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
@@ -70,6 +74,7 @@ namespace ctns{
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
+            t1 = tools::get_time();
             decimation_row(ifkr, wf.info.qver, wf.info.qcol, 
                   iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
@@ -85,6 +90,7 @@ namespace ctns{
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             } // i
+            t1 = tools::get_time();
             decimation_row(ifkr, wf.info.qmid, wf.info.qver, 
                   iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
@@ -92,6 +98,13 @@ namespace ctns{
             rot = rot.T(); // permute two lines for RCF
 
          } // superblock
+         auto t2 = tools::get_time();
+         std::cout << "TIMING FOR decimation: "
+            << tools::get_duration(t2-t0) << " S"
+            << " T(wf/decim)=" 
+            << tools::get_duration(t2-t1) << ","
+            << tools::get_duration(t1-t0)
+            << std::endl;
       }
 
    // initial guess for next site within the bond
