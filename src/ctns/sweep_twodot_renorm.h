@@ -100,6 +100,7 @@ namespace ctns{
             qops_pool.release({fneed[1],fneed[3]}, fneed_next);
             oper_renorm("lc", icomb, p, int2e, int1e, schd,
                   lqops, c1qops, qops, fname, timing);
+            qops_pool.release({fneed[0],fneed[2]}, fneed_next);
          }else if(superblock == "lr"){
             icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -113,6 +114,7 @@ namespace ctns{
             qops_pool.release({fneed[2],fneed[3]}, fneed_next);
             oper_renorm("lr", icomb, p, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing); 
+            qops_pool.release({fneed[0],fneed[1]}, fneed_next);
          }else if(superblock == "c2r"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -126,6 +128,7 @@ namespace ctns{
             qops_pool.release({fneed[0],fneed[2]}, fneed_next);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c2qops, rqops, qops, fname, timing);
+            qops_pool.release({fneed[3],fneed[1]}, fneed_next);
          }else if(superblock == "c1c2"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
             //-------------------------------------------------------------------
@@ -139,6 +142,7 @@ namespace ctns{
             qops_pool.release({fneed[0],fneed[1]}, fneed_next);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c1qops, c2qops, qops, fname, timing); 
+            qops_pool.release({fneed[2],fneed[3]}, fneed_next);
          }
       }
 

@@ -246,10 +246,8 @@ namespace ctns{
          timing.tf = tools::get_time();
 
          // 4. save on disk 
-         qops_pool.save(frop, schd.ctns.async_save, fneed_next);
-
+         qops_pool.dump(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save, fneed_next);
          qops_pool.remove(fdel, schd.ctns.async_remove);
-
          // save for restart
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
 

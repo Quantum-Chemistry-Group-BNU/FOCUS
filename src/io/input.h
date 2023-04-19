@@ -100,7 +100,7 @@ namespace input{
                   & mmorder & batchsize 
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
-                  & iomode & async_fetch & async_save & async_remove & ifnccl
+                  & iomode & async_fetch & async_save & async_remove & async_tocpu & ifnccl
                   & iroot & nsample & ndetprt; 
             }
       public:
@@ -159,6 +159,7 @@ namespace input{
          bool async_fetch = false;
          bool async_save = false;
          bool async_remove = false;
+         bool async_tocpu = false;
          bool ifnccl = false;
          // sampling
          int iroot = 0;

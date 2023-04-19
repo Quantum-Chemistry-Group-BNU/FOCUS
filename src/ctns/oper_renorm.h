@@ -474,8 +474,8 @@ namespace ctns{
             timing.tf9 = tools::get_time();
 
             auto t0x = tools::get_time();
-            // copy results back to CPU
-            qops.to_cpu();
+            // copy results back to CPU immediately, if NOT async_tocpu
+            if(!schd.ctns.async_tocpu) qops.to_cpu();
             auto t1x = tools::get_time();
 
             GPUmem.deallocate(dev_site, gpumem_site);
@@ -567,77 +567,84 @@ namespace ctns{
             delete[] workspace;
          }
 
-         // 2. reduce 
+         if(ifdist1 and schd.ctns.async_tocpu){
+            std::cout << "error: ifdist1 and async_tocpu are not compatible!" << std::endl;
+            exit(1);
+         }
+         if(!schd.ctns.async_tocpu){
+         
+            // 2. reduce 
 #ifndef SERIAL
-         if(size > 1 and ifdist1){
-            std::vector<Tm> top(qops._opsize);
-            // Sp[iproc] += \sum_i Sp[i]
-            auto opS_index = qops.oper_index_op('S');
-            for(int p : opS_index){
-               int iproc = distribute1(ifkr,size,p);
-               auto& opS = qops('S')[p];
-               size_t opsize = opS.size();
-               size_t off = qops._offset[std::make_pair('S',p)];
-               mpi_wrapper::reduce(icomb.world, opS.data(), opsize, top.data(), std::plus<Tm>(), iproc);
-               if(iproc == rank){ 
-                  linalg::xcopy(opsize, top.data(), opS.data());
+            if(ifdist1 and size > 1){
+               std::vector<Tm> top(qops._opsize);
+               // Sp[iproc] += \sum_i Sp[i]
+               auto opS_index = qops.oper_index_op('S');
+               for(int p : opS_index){
+                  int iproc = distribute1(ifkr,size,p);
+                  auto& opS = qops('S')[p];
+                  size_t opsize = opS.size();
+                  size_t off = qops._offset[std::make_pair('S',p)];
+                  mpi_wrapper::reduce(icomb.world, opS.data(), opsize, top.data(), std::plus<Tm>(), iproc);
+                  if(iproc == rank){ 
+                     linalg::xcopy(opsize, top.data(), opS.data());
+#ifdef GPU
+                     GPUmem.to_gpu(qops._dev_data+off, top.data(), opsize*sizeof(Tm));
+#endif
+                  }else{
+                     opS.set_zero();
+#ifdef GPU
+                     GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
+#endif
+                  }
+               }
+               // H[0] += \sum_i H[i]
+               auto& opH = qops('H')[0];
+               size_t opsize = opH.size();
+               size_t off = qops._offset[std::make_pair('H',0)];
+               mpi_wrapper::reduce(icomb.world, opH.data(), opsize, top.data(), std::plus<Tm>(), 0);
+               if(rank == 0){ 
+                  linalg::xcopy(opsize, top.data(), opH.data());
 #ifdef GPU
                   GPUmem.to_gpu(qops._dev_data+off, top.data(), opsize*sizeof(Tm));
 #endif
                }else{
-                  opS.set_zero();
+                  opH.set_zero();
 #ifdef GPU
                   GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
 #endif
                }
             }
-            // H[0] += \sum_i H[i]
-            auto& opH = qops('H')[0];
-            size_t opsize = opH.size();
-            size_t off = qops._offset[std::make_pair('H',0)];
-            mpi_wrapper::reduce(icomb.world, opH.data(), opsize, top.data(), std::plus<Tm>(), 0);
-            if(rank == 0){ 
-               linalg::xcopy(opsize, top.data(), opH.data());
-#ifdef GPU
-               GPUmem.to_gpu(qops._dev_data+off, top.data(), opsize*sizeof(Tm));
 #endif
-            }else{
-               opH.set_zero();
-#ifdef GPU
-               GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
-#endif
+
+            // 3. consistency check for Hamiltonian
+            const auto& opH = qops('H').at(0);
+            auto diffH = (opH-opH.H()).normF();
+            if(debug){
+               std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
+                  << " coord=" << p << " rank=" << rank << std::defaultfloat << std::endl;
+            } 
+            if(diffH > thresh_opdiff){
+               std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
+                  << " is larger than thresh_opdiff=" << thresh_opdiff 
+                  << " for rank=" << rank 
+                  << std::endl;
+               exit(1);
             }
-         }
-#endif
 
-         // 3. consistency check for Hamiltonian
-         const auto& opH = qops('H').at(0);
-         auto diffH = (opH-opH.H()).normF();
-         if(debug){
-            std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
-               << " coord=" << p << " rank=" << rank << std::defaultfloat << std::endl;
-         } 
-         if(diffH > thresh_opdiff){
-            std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
-               << " is larger than thresh_opdiff=" << thresh_opdiff 
-               << " for rank=" << rank 
-               << std::endl;
-            exit(1);
-         }
-
-         // check against explicit construction
-         if(debug_oper_rbasis){
-            for(const auto& key : qops.oplist){
-               if(key == 'C' || key == 'A' || key == 'B'){
-                  oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
-               }else if(key == 'P' || key == 'Q'){
-                  oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
-                  // check opS and opH only if ifdist1=true   
-               }else if((key == 'S' || key == 'H') and ifdist1){
-                  oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
+            // check against explicit construction
+            if(debug_oper_rbasis){
+               for(const auto& key : qops.oplist){
+                  if(key == 'C' || key == 'A' || key == 'B'){
+                     oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
+                  }else if(key == 'P' || key == 'Q'){
+                     oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
+                     // check opS and opH only if ifdist1=true   
+                  }else if((key == 'S' || key == 'H') and ifdist1){
+                     oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
+                  }
                }
             }
-         }
+         } // async_tocpu
 
          timing.tf11 = tools::get_time();
          if(debug){

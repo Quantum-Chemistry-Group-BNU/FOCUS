@@ -174,8 +174,8 @@ namespace ctns{
                timing.tf = tools::get_time();
 
                // c. save operators to disk
-               qops_pool.save(frop, schd.ctns.async_save);
                qops_pool.release(fneed); 
+               qops_pool.dump(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();

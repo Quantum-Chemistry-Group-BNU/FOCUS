@@ -57,14 +57,14 @@ namespace ctns{
             // clear [delete CPU space]
             void clear(const std::vector<std::string> fneed); 
             // save to disk
-            void save(const std::string frop, const bool ifasync, 
+            void dump(const std::string frop, const bool ifgpu, const bool ifasync, 
                   const std::vector<std::string> fneed_next={});
             // remove from disk
             void remove(const std::string fdel, const bool ifasync);
             // finalize
             void finalize(){
                if(thread_fetch.joinable()) thread_fetch.join();
-               if(thread_save.joinable()) thread_save.join();
+               if(thread_dump.joinable()) thread_dump.join();
                if(thread_remove.joinable()) thread_remove.join();
                qstore.clear();
             }
@@ -73,7 +73,7 @@ namespace ctns{
             bool debug=false;
             std::map<std::string,oper_dict<Tm>> qstore;
             std::thread thread_fetch; // prefetch qops for the next dbond
-            std::thread thread_save; // save renormalized operators
+            std::thread thread_dump; // save renormalized operators
             std::thread thread_remove; // remove qops on the same bond with opposite direction
             std::string frop_prev;
       };
@@ -173,22 +173,33 @@ namespace ctns{
          }
       }
 
+   template <typename Tm>
+      void oper_dump(std::map<std::string,oper_dict<Tm>>& qstore,
+            const std::string frop,
+            const bool ifgpu,
+            const int iomode,
+            const bool debug){
+#ifdef GPU
+         if(ifgpu) qstore[frop].to_cpu();
+#endif
+         oper_save<Tm>(iomode, frop, qstore.at(frop), debug);
+      }
+
    // save to disk
    template <typename Tm>
-      void oper_pool<Tm>::save(const std::string frop, const bool ifasync, 
+      void oper_pool<Tm>::dump(const std::string frop, const bool ifgpu, const bool ifasync, 
             const std::vector<std::string> fneed_next){
-         if(debug){
-            std::cout << "ctns::oper_pool<Tm>::save ifasync=" << ifasync << " frop=" << frop 
-               << " erase frop_prev=" << frop_prev << std::endl;
-         }
          auto t0 = tools::get_time();
-         if(thread_save.joinable()) thread_save.join(); // join before erasing the last rop! 
+         if(debug){
+            std::cout << "ctns::oper_pool<Tm>::dump: ifgpu=" << ifgpu << " ifasync=" << ifasync 
+               << " frop=" << frop << " erase frop_prev=" << frop_prev << std::endl;
+         }
+         if(thread_dump.joinable()) thread_dump.join(); // join before erasing the last rop! 
          auto t1 = tools::get_time();
          if(!ifasync){
-            ctns::oper_save<Tm>(iomode, frop, qstore.at(frop), debug);
+            oper_dump<Tm>(qstore, frop, ifgpu, iomode, debug);
          }else{
-            thread_save = std::thread(&ctns::oper_save<Tm>, iomode, frop,
-                  std::cref(qstore.at(frop)), debug);
+            thread_dump = std::thread(&ctns::oper_dump<Tm>, std::ref(qstore), frop, ifgpu, iomode, debug);
          }
          auto t2 = tools::get_time();
          // if result is not used in the next dbond, then release it

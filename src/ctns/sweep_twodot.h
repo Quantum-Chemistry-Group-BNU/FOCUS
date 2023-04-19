@@ -583,9 +583,8 @@ namespace ctns{
 
          // 4. save on disk 
          auto t0 = tools::get_time();
-         qops_pool.save(frop, schd.ctns.async_save, fneed_next);
+         qops_pool.dump(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save, fneed_next);
          auto t1 = tools::get_time();
-
          // Remove fdel on the same bond as frop but with opposite direction:
          // NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 
          // in the later configuration should wait until the file from the 
@@ -593,22 +592,15 @@ namespace ctns{
          // come later than save, which contains the synchronization!
          qops_pool.remove(fdel, schd.ctns.async_remove);
          auto t2 = tools::get_time();
-
-         // release unused qops to save memory
-         qops_pool.release(fneed, fneed_next);
-         auto t3 = tools::get_time();
-
          // save for restart
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
-         auto t4 = tools::get_time();
-
+         auto t3 = tools::get_time();
          if(debug){
-            std::cout << "TIMING: " << tools::get_duration(t4-t0)
-               << " T(save/remove/release/save)="
+            std::cout << "TIMING FOR cleanup: " << tools::get_duration(t3-t0)
+               << " T(save/remove/save)="
                << tools::get_duration(t1-t0) << ","
                << tools::get_duration(t2-t1) << ","
-               << tools::get_duration(t3-t2) << ","
-               << tools::get_duration(t4-t3) 
+               << tools::get_duration(t3-t2)
                << std::endl;
          }
 

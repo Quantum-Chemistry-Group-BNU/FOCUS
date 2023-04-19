@@ -76,8 +76,8 @@ namespace ctns{
                qops_pool(fneed[0]), qops_pool(fneed[1]), qops_pool(frop), 
                fname, timing_local); 
          
-         qops_pool.save(frop, schd.ctns.async_save);
          qops_pool.release(fneed);
+         qops_pool.dump(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save);
 
          auto t1 = tools::get_time();
          if(debug) tools::timing("ctns::sweep_restart", t0, t1);
