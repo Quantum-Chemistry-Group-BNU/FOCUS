@@ -486,7 +486,7 @@ namespace ctns{
                   auto tf = tools::get_time();    
                   t_tot = tools::get_duration(tf-ti);
                   t_rest = t_tot - t_cal - t_comm;
-                  std::cout << "TIMING for Davidson : " << t_tot
+                  std::cout << "TIMING FOR Davidson : " << t_tot
                      << "  T(cal/comm/rest)=" << t_cal << ","
                      << t_comm << "," << t_rest
                      << std::endl;

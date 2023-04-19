@@ -102,8 +102,8 @@ namespace ctns{
          std::cout << "TIMING FOR decimation: "
             << tools::get_duration(t2-t0) << " S"
             << " T(wf/decim)=" 
-            << tools::get_duration(t2-t1) << ","
-            << tools::get_duration(t1-t0)
+            << tools::get_duration(t1-t0) << ","
+            << tools::get_duration(t2-t1)
             << std::endl;
       }
 

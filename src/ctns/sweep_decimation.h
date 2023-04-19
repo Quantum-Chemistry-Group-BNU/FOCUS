@@ -180,7 +180,8 @@ namespace ctns{
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) num_threads(maxthreads)
+//#pragma omp parallel for schedule(dynamic) num_threads(maxthreads)
+#pragma omp parallel for schedule(dynamic)
 #endif
          for(int br=0; br<nqr; br++){
             const auto& qr = qrow.get_sym(br);
@@ -259,9 +260,9 @@ namespace ctns{
          auto t2 = tools::get_time();
          std::cout << "TIMING for decimation_row: "
             << tools::get_duration(t2-t0) << " S"
-            << " T(decim/form)="
-            << tools::get_duration(t2-t1) << ","
-            << tools::get_duration(t1-t0)
+            << " T(decim/formRot)="
+            << tools::get_duration(t1-t0) << ","
+            << tools::get_duration(t2-t1)
             << std::endl;
       }
 
