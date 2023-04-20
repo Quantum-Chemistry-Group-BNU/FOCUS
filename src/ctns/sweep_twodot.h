@@ -314,10 +314,6 @@ namespace ctns{
             // BatchGEMM: symbolic formulae + hintermediates + preallocation of workspace
             const bool ifSingle = alg_hvec > 7;
             const bool ifDirect = alg_hvec % 2 == 1;
-            if(schd.ctns.batchsize == 0){
-               std::cout << "error: batchsize should be set!" << std::endl;
-               exit(1);
-            }
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
@@ -336,11 +332,20 @@ namespace ctns{
                      Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Hxlst.size();
             }
-            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             if(!ifDirect) assert(blksize0 == 0); 
 
+            // determine batchsize dynamically
+            size_t blocksize = 2*blksize+blksize0;
+            preprocess_cpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, batchsize, worktot);
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
+                  << " blksize0=" << blksize0 << " batchsize=" << batchsize
+                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+            }
+            workspace = new Tm[worktot];
+
             // generate Hmmtasks
-            size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             const int batchblas = schd.ctns.alg_hinter; // use the same keyword for GEMM_batch
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
@@ -370,15 +375,6 @@ namespace ctns{
                      << std::endl;
                }
             }
-
-            worktot = batchsize*(blksize*2 + blksize0);
-            if(debug && schd.ctns.verbose>0){
-               std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
-                  << " blksize0=" << blksize0 << " batchsize=" << batchsize
-                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
-                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
-            }
-            workspace = new Tm[worktot];
 
             if(!ifSingle){
                if(!ifDirect){
@@ -459,14 +455,13 @@ namespace ctns{
                      Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Hxlst.size();
             }
-            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             if(!ifDirect) assert(blksize0 == 0); 
             timing.tb6 = tools::get_time();
 
             // Determine batchsize dynamically
             gpumem_dvdson = sizeof(Tm)*2*ndim;
             size_t blocksize = 2*blksize+blksize0+1;
-            preprocess_batchsize<Tm>(batchsize, gpumem_batch, blocksize, maxbatch, gpumem_dvdson, rank);
+            preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, gpumem_dvdson, rank, batchsize, gpumem_batch);
             dev_workspace = (Tm*)GPUmem.allocate(gpumem_dvdson+gpumem_batch);
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
@@ -476,7 +471,8 @@ namespace ctns{
                   << "," << gpumem_dvdson/std::pow(1024.0,3)
                   << "," << gpumem_batch/std::pow(1024.0,3)
                   << " blksize=" << blksize
-                  << " blksize0=" << blksize0 
+                  << " blksize0=" << blksize0
+                  << " batchsize=" << batchsize 
                   << std::endl;
             }
 

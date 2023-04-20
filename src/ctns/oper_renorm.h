@@ -213,10 +213,6 @@ namespace ctns{
             // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
             const bool ifSingle = alg_renorm > 7;
             const bool ifDirect = alg_renorm % 2 == 1;
-            if(schd.ctns.batchsize == 0){
-               std::cout << "error: batchsize should be set!" << std::endl;
-               exit(1);
-            }
             if(schd.ctns.alg_rinter == 2){
                std::cout << "error: alg_renorm=" << alg_renorm << " should be used with alg_rinter!=2" << std::endl;
                exit(1);
@@ -245,12 +241,21 @@ namespace ctns{
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
             }
-            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             if(!ifDirect) assert(blksize0 == 0);
             timing.tf6 = tools::get_time();
 
-            // compute batchsize & allocate workspace
-            size_t batchsize = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
+            // determine batchsize dynamically
+            size_t blocksize = 2*blksize+blksize0;
+            preprocess_cpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, batchsize, worktot);
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
+                  << " blksize0=" << blksize0 << " batchsize=" << batchsize
+                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+            }
+            workspace = new Tm[worktot];
+
+            // generate Rmmtasks
             const int batchblas = schd.ctns.alg_rinter; // use the same keyword for GEMM_batc
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
@@ -275,15 +280,6 @@ namespace ctns{
                      << std::endl;
                }
             }
-
-            worktot = batchsize*(blksize*2 + blksize0);
-            if(debug && schd.ctns.verbose>0){
-               std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
-                  << " blksize0=" << blksize0 << " batchsize=" << batchsize
-                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
-                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
-            }
-            workspace = new Tm[worktot];
             timing.tf7 = tools::get_time();
 
             // initialization of qops
@@ -387,14 +383,13 @@ namespace ctns{
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
             }
-            maxbatch = (maxbatch < schd.ctns.batchsize)? maxbatch : schd.ctns.batchsize;
             if(!ifDirect) assert(blksize0 == 0); 
             timing.tf6 = tools::get_time();
 
             auto t0y = tools::get_time();
             // Determine batchsize dynamically
             size_t blocksize = 2*blksize+blksize0+1;
-            preprocess_batchsize<Tm>(batchsize, gpumem_batch, blocksize, maxbatch, 0, rank);
+            preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, 0, rank, batchsize, gpumem_batch);
             dev_workspace = (Tm*)GPUmem.allocate(gpumem_batch);
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
@@ -405,11 +400,12 @@ namespace ctns{
                   << "," << gpumem_batch/std::pow(1024.0,3)
                   << " blksize=" << blksize
                   << " blksize0=" << blksize0 
+                  << " batchsize=" << batchsize 
                   << std::endl;
             }
             auto t1y = tools::get_time();
 
-            // generate Rmmtasks
+            // generate Rmmtasks given batchsize
             const int batchblas = 2;
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());

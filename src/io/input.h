@@ -97,7 +97,7 @@ namespace input{
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
                   & alg_hvec & alg_hinter & alg_renorm & alg_rinter 
                   & ifdist1 & save_formulae & sort_formulae & save_mmtask 
-                  & mmorder & batchsize 
+                  & mmorder & batchmem 
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
                   & iomode & async_fetch & async_save & async_remove & async_tocpu & ifnccl
@@ -144,7 +144,7 @@ namespace input{
          bool sort_formulae = false;
          bool save_mmtask = false;
          int mmorder = 0;
-         int batchsize = 2000;
+         double batchmem = 10; // GB
          // dvdson
          int cisolver = 1;
          int maxcycle = 30;
