@@ -35,8 +35,6 @@ namespace ctns{
                return sz;
             }
             void display(const std::string msg="") const{
-               std::cout << "lzd display" << std::endl;
-               std::cout << qstore.size() << std::endl;
                std::cout << "qstore";
                if(msg.size()>0) std::cout << "[" << msg << "]";
                std::cout << ": size=" << qstore.size() << std::endl;
@@ -111,9 +109,7 @@ namespace ctns{
                   if(debug){
                      std::cout << "ctns::oper_pool<Tm>::fetch_to_memory: ifgpu=" << ifgpu << " ifasyn=" << ifasync
                         << " fneed size=" << fneed.size() << std::endl;
-                     std::cout << "lzdA" << std::endl;
                      this->display("in");
-                     std::cout << "lzdB" << std::endl;
                   }
                   std::vector<bool> fetch(fneed.size(),0); 
                   for(int i=0; i<fneed.size(); i++){

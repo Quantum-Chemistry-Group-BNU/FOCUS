@@ -588,12 +588,16 @@ namespace ctns{
                   if(iproc == rank){ 
                      linalg::xcopy(opsize, top.data(), opS.data());
 #ifdef GPU
-                     GPUmem.to_gpu(qops._dev_data+off, top.data(), opsize*sizeof(Tm));
+                     if(schd.ctns.alg_renorm>10){
+                        GPUmem.to_gpu(qops._dev_data+off, top.data(), opsize*sizeof(Tm));
+                     }
 #endif
                   }else{
                      opS.set_zero();
 #ifdef GPU
-                     GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
+                     if(schd.ctns.alg_renorm>10){
+                        GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
+                     }
 #endif
                   }
                }
@@ -605,12 +609,16 @@ namespace ctns{
                if(rank == 0){ 
                   linalg::xcopy(opsize, top.data(), opH.data());
 #ifdef GPU
-                  GPUmem.to_gpu(qops._dev_data+off, top.data(), opsize*sizeof(Tm));
+                  if(schd.ctns.alg_renorm>10){
+                     GPUmem.to_gpu(qops._dev_data+off, top.data(), opsize*sizeof(Tm));
+                  }
 #endif
                }else{
                   opH.set_zero();
 #ifdef GPU
-                  GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
+                  if(schd.ctns.alg_renorm>10){
+                     GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
+                  }
 #endif
                }
             }

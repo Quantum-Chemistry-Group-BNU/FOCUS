@@ -1,3 +1,4 @@
+dtype 0
 nelec 6
 twoms 0
 integral_file moleinfo/fmole.info
@@ -28,4 +29,5 @@ end
 maxsweep 2
 task_dmrg
 cisolver 0
+ifdist1
 $end
