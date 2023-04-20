@@ -313,6 +313,7 @@ namespace ctns{
                }
             }
             timing.tf9 = tools::get_time();
+            timing.tf10 = tools::get_time();
 
 #ifdef GPU
          }else if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
@@ -477,13 +478,15 @@ namespace ctns{
             // copy results back to CPU immediately, if NOT async_tocpu
             if(!schd.ctns.async_tocpu) qops.to_cpu();
             auto t1x = tools::get_time();
+            
+            timing.tf10 = tools::get_time();
 
             GPUmem.deallocate(dev_site, gpumem_site);
             auto t2x = tools::get_time();
             GPUmem.deallocate(dev_workspace, gpumem_batch);
             auto t3x = tools::get_time();
             if(rank == 0){
-               std::cout << "timing: cpu2gpu=" 
+               std::cout << "timing: gpu2cpu=" 
                   << tools::get_duration(t1x-t0x)
                   << " deallocate(site/work)="
                   << tools::get_duration(t2x-t1x)
@@ -500,7 +503,7 @@ namespace ctns{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
             exit(1);
          } // alg_renorm
-         timing.tf10 = tools::get_time();
+         timing.tf11 = tools::get_time();
 
          // debug 
          if(debug_oper_renorm && rank == 0){
@@ -654,13 +657,13 @@ namespace ctns{
             }
          } // async_tocpu
 
-         timing.tf11 = tools::get_time();
+         timing.tf12 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
-            double t_tot = tools::get_duration(timing.tf11-timing.tf0); 
+            double t_tot = tools::get_duration(timing.tf12-timing.tf0); 
             double t_init = tools::get_duration(timing.tf1-timing.tf0);
-            double t_kernel = tools::get_duration(timing.tf10-timing.tf1);
-            double t_comm = tools::get_duration(timing.tf11-timing.tf10);
+            double t_kernel = tools::get_duration(timing.tf11-timing.tf1);
+            double t_comm = tools::get_duration(timing.tf12-timing.tf11);
             std::cout << "----- TIMING FOR oper_renorm : " << t_tot << " S" 
                << " T(init/kernel/comm)=" << t_init << "," << t_kernel << "," << t_comm
                << " rank=" << rank << " -----"

@@ -161,7 +161,7 @@ namespace ctns{
                      this->display("out");
                      auto t1 = tools::get_time();
                      std::cout << "----- TIMING FOR oper_pool<Tm>::erase_from_memory : "
-                        << tools::get_duration(t1-t0) << " S"
+                        << tools::get_duration(t1-t0) << " S -----"
                         << std::endl;
                   }
                }
