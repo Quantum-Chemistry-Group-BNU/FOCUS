@@ -144,7 +144,7 @@ namespace input{
          bool sort_formulae = false;
          bool save_mmtask = false;
          int mmorder = 0;
-         int batchsize = 10000;
+         int batchsize = 2000;
          // dvdson
          int cisolver = 1;
          int maxcycle = 30;
