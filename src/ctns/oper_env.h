@@ -146,7 +146,7 @@ namespace ctns{
                std::vector<std::string> fneed(2);
                fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
                fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
-               qops_pool.fetch(fneed, schd.ctns.alg_renorm>10);
+               qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
                const auto& cqops = qops_pool(fneed[0]);
                const auto& rqops = qops_pool(fneed[1]);
                if(debug && schd.ctns.verbose>0){
@@ -174,8 +174,8 @@ namespace ctns{
                timing.tf = tools::get_time();
 
                // c. save operators to disk
-               qops_pool.release(fneed); 
-               qops_pool.dump(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save);
+               qops_pool.erase_from_memory(fneed); 
+               qops_pool.save_to_disk(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();

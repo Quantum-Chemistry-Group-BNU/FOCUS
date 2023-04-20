@@ -77,10 +77,10 @@ namespace ctns{
 
          // 3. renorm operators	
          auto& qops   = qops_pool(frop); 
-         auto& lqops  = qops_pool(fneed[0]);
-         auto& rqops  = qops_pool(fneed[1]);
-         auto& c1qops = qops_pool(fneed[2]);
-         auto& c2qops = qops_pool(fneed[3]);
+         const auto& lqops  = qops_pool(fneed[0]);
+         const auto& rqops  = qops_pool(fneed[1]);
+         const auto& c1qops = qops_pool(fneed[2]);
+         const auto& c2qops = qops_pool(fneed[3]);
          const auto p = dbond.get_current();
          const auto& pdx = icomb.topo.rindex.at(p); 
          std::string fname;
@@ -97,10 +97,9 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            qops_pool.release({fneed[1],fneed[3]}, fneed_next);
+            qops_pool.erase_from_memory({fneed[1],fneed[3]}, fneed_next);
             oper_renorm("lc", icomb, p, int2e, int1e, schd,
                   lqops, c1qops, qops, fname, timing);
-            qops_pool.release({fneed[0],fneed[2]}, fneed_next);
          }else if(superblock == "lr"){
             icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -111,10 +110,9 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            qops_pool.release({fneed[2],fneed[3]}, fneed_next);
+            qops_pool.erase_from_memory({fneed[2],fneed[3]}, fneed_next);
             oper_renorm("lr", icomb, p, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing); 
-            qops_pool.release({fneed[0],fneed[1]}, fneed_next);
          }else if(superblock == "c2r"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -125,10 +123,9 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            qops_pool.release({fneed[0],fneed[2]}, fneed_next);
+            qops_pool.erase_from_memory({fneed[0],fneed[2]}, fneed_next);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c2qops, rqops, qops, fname, timing);
-            qops_pool.release({fneed[3],fneed[1]}, fneed_next);
          }else if(superblock == "c1c2"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
             //-------------------------------------------------------------------
@@ -139,10 +136,9 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            qops_pool.release({fneed[0],fneed[1]}, fneed_next);
+            qops_pool.erase_from_memory({fneed[0],fneed[1]}, fneed_next);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c1qops, c2qops, qops, fname, timing); 
-            qops_pool.release({fneed[2],fneed[3]}, fneed_next);
          }
       }
 

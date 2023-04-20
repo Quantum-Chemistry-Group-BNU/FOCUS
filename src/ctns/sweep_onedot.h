@@ -61,7 +61,7 @@ namespace ctns{
 
          // 1. load operators 
          auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
-         qops_pool.fetch(fneed, schd.ctns.alg_hvec>10);
+         qops_pool.fetch_to_memory(fneed, schd.ctns.alg_hvec>10);
          const oper_dictmap<Tm> qops_dict = {{"l",qops_pool(fneed[0])},
             {"r",qops_pool(fneed[1])},
             {"c",qops_pool(fneed[2])}};
@@ -245,9 +245,11 @@ namespace ctns{
                sweeps, isweep, ibond);
          timing.tf = tools::get_time();
 
-         // 4. save on disk 
-         qops_pool.dump(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save, fneed_next);
-         qops_pool.remove(fdel, schd.ctns.async_remove);
+         // 4. save on disk
+         qops_pool.erase_from_memory(fneed); 
+         qops_pool.save_to_disk(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save, fneed_next);
+         qops_pool.remove_from_disk(fdel, schd.ctns.async_remove);
+
          // save for restart
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
 
