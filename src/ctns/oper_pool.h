@@ -2,43 +2,46 @@
 #define OPER_POOL_H
 
 #include <thread>
+#include <memory>
 #include "oper_dict.h"
 #include "oper_io.h"
 
 namespace ctns{
 
    template <typename Tm>
-      using operData_pool = std::shared_ptr< std::map<std::string,oper_dict<Tm>> >;
+      using operData_pool = std::map<std::string,oper_dict<Tm>>;
 
    // pool for mananging operators
    template <typename Tm>
       struct oper_pool{
          public:
             // constuctor
-            oper_pool(const int _iomode, const bool _debug): iomode(_iomode), debug(_debug) {}
+            oper_pool(const int _iomode, const bool _debug): iomode(_iomode), debug(_debug){}
             const oper_dict<Tm>& operator()(const std::string fqop) const{
-               return qstore->at(fqop);
+               return qstore.at(fqop);
             }
-            oper_dict<Tm>& operator()(const std::string fqop){
-               return (*qstore)[fqop];
+            oper_dict<Tm>& operator()(const std::string& fqop){
+               return qstore[fqop];
+            }
+            bool exist(const std::string& frop) const{
+               return qstore.find(frop) != qstore.end();
             }
             // total size allocated for storing operators
             size_t size() const{
                size_t sz = 0;
-               //for(const auto& pr : *qstore){
-               for(auto pr = qstore->begin(); pr != qstore->end(); pr++){
+               for(auto pr = qstore.begin(); pr != qstore.end(); pr++){
                   sz += pr->second.size();
                }
                return sz;
             }
             void display(const std::string msg="") const{
+               std::cout << "lzd display" << std::endl;
+               std::cout << qstore.size() << std::endl;
                std::cout << "qstore";
                if(msg.size()>0) std::cout << "[" << msg << "]";
-               std::cout << ": size=" << qstore->size() << std::endl;
+               std::cout << ": size=" << qstore.size() << std::endl;
                size_t tsize = 0;
-               //const auto& xqstore = *qstore; 
-               //for(const auto& pr : xqstore){
-               for(auto pr = qstore->begin(); pr != qstore->end(); pr++){
+               for(auto pr = qstore.begin(); pr != qstore.end(); pr++){
                   std::cout << " fqop=" << pr->first 
                      << " size=" << pr->second.size()
                      << ":" << tools::sizeMB<Tm>(pr->second.size()) << "MB"
@@ -60,12 +63,11 @@ namespace ctns{
             void save_to_disk(const std::string frop, const bool ifgpu, const bool ifasync, 
                   const std::vector<std::string> fneed_next={});
             void remove_from_disk(const std::string fdel, const bool ifasync);
-            // finalize
             void finalize(){
                if(thread_fetch.joinable()) thread_fetch.join();
                if(thread_save.joinable()) thread_save.join();
                if(thread_remove.joinable()) thread_remove.join();
-               qstore->clear();
+               qstore.clear();
             }
                public:
             int iomode=0;
@@ -89,12 +91,12 @@ namespace ctns{
                      const auto& fqop = fneed[i];
                      if(!fetch[i]) continue;
                      if(debug) std::cout << "load: fqop=" << fqop << std::endl;
-                     oper_load(iomode, fqop, (*qstore)[fqop], debug);
+                     oper_load(iomode, fqop, qstore[fqop], debug);
                   }
 #ifdef GPU
                   if(ifgpu){
                      for(const auto& fqop : fneed){
-                        auto& tqops = (*qstore)[fqop];
+                        auto& tqops = qstore[fqop];
                         if(tqops.avail_gpu()) continue;
                         tqops.allocate_gpu();
                         tqops.to_gpu();
@@ -109,14 +111,17 @@ namespace ctns{
                   if(debug){
                      std::cout << "ctns::oper_pool<Tm>::fetch_to_memory: ifgpu=" << ifgpu << " ifasyn=" << ifasync
                         << " fneed size=" << fneed.size() << std::endl;
+                     std::cout << "lzdA" << std::endl;
                      this->display("in");
+                     std::cout << "lzdB" << std::endl;
                   }
                   std::vector<bool> fetch(fneed.size(),0); 
                   for(int i=0; i<fneed.size(); i++){
                      const auto& fqop = fneed[i];
-                     fetch[i] = (qstore->find(fqop) == qstore->end());
-                     (*qstore)[fqop]; // declare a spot here! this is helpful for threadsafty
-                     if(debug) std::cout << " i=" << i << " fqop=" << fqop << " fetch[i]=" << fetch[i] << std::endl;
+                     bool ifexist = this->exist(fqop);
+                     if(debug) std::cout << " i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
+                     fetch[i] = !ifexist;
+                     qstore[fqop]; // declare a spot here! this is helpful for threadsafty
                   }
                   if(thread_fetch.joinable()) thread_fetch.join();
                   auto t1 = tools::get_time();
@@ -145,7 +150,7 @@ namespace ctns{
                   if(debug){
                      std::cout << "ctns::oper_pool<Tm>::erase_from_memory: size=" << frelease.size() << std::endl; 
                      for(const auto& fqop : frelease){
-                        bool ifexist = qstore->find(fqop) != qstore->end();
+                        bool ifexist = this->exist(fqop);
                         std::cout << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
                      }
                      this->display("in");
@@ -154,7 +159,7 @@ namespace ctns{
                      if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
                      auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
                      if(result != fneed_next.end()) continue;
-                     qstore->erase(fqop);
+                     qstore.erase(fqop);
                   }
                   if(debug){
                      this->display("out");
@@ -169,7 +174,7 @@ namespace ctns{
                void oper_pool<Tm>::clear_from_cpumem(const std::vector<std::string> fneed){
                   for(auto& fqop : fneed){
                      if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
-                     (*qstore)[fqop].clear();
+                     qstore[fqop].clear();
                   }
                }
 
@@ -180,9 +185,9 @@ namespace ctns{
                      const int iomode,
                      const bool debug){
 #ifdef GPU
-                  if(ifgpu) (*qstore)[frop].to_cpu();
+                  if(ifgpu) qstore[frop].to_cpu();
 #endif
-                  oper_save<Tm>(iomode, frop, qstore->at(frop), debug);
+                  oper_save<Tm>(iomode, frop, qstore.at(frop), debug);
                }
 
             // save to disk
@@ -207,7 +212,7 @@ namespace ctns{
                   // because the previous left qops is needed in the next dbond!
                   auto result = std::find(fneed_next.begin(), fneed_next.end(), frop_prev);
                   if(result == fneed_next.end()){
-                     qstore->erase(frop_prev); // NOTE: frop_prev is only erased here to make sure the saving is finished!!!
+                     qstore.erase(frop_prev); // NOTE: frop_prev is only erased here to make sure the saving is finished!!!
                   }
                   frop_prev = frop;
                   if(debug){
