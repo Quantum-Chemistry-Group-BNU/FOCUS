@@ -336,7 +336,8 @@ namespace ctns{
 
             // determine batchsize dynamically
             size_t blocksize = 2*blksize+blksize0;
-            preprocess_cpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, batchsize, worktot);
+            preprocess_cpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, 
+                  batchsize, worktot);
             if(debug && schd.ctns.verbose>0){
                std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
                   << " blksize0=" << blksize0 << " batchsize=" << batchsize
@@ -461,7 +462,8 @@ namespace ctns{
             // Determine batchsize dynamically
             gpumem_dvdson = sizeof(Tm)*2*ndim;
             size_t blocksize = 2*blksize+blksize0+1;
-            preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, gpumem_dvdson, rank, batchsize, gpumem_batch);
+            preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, gpumem_dvdson, rank,
+                  batchsize, gpumem_batch);
             dev_workspace = (Tm*)GPUmem.allocate(gpumem_dvdson+gpumem_batch);
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank

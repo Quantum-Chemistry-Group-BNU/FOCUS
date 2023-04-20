@@ -26,6 +26,7 @@ namespace ctns{
    template <typename Tm>
       void preprocess_gpu_batchsize(const double batchmem,
             const size_t blocksize,
+            const size_t maxbatch,
             const size_t gpumem_other,
             const int rank,
             size_t& batchsize,
@@ -42,6 +43,7 @@ namespace ctns{
             std::cout << "error: in sufficient GPU batch memory: avail<=reserved!" << std::endl;
             exit(1);
          }
+         batchsize = std::min(batchsize, maxbatch);
          gpumem_batch = sizeof(Tm)*batchsize*blocksize;
       }
 #endif
@@ -49,6 +51,7 @@ namespace ctns{
    template <typename Tm>
       void preprocess_cpu_batchsize(const double batchmem,
             const size_t blocksize,
+            const size_t maxbatch,
             size_t& batchsize,
             size_t& cpumem_batch){
          assert(blocksize>0);
@@ -57,6 +60,7 @@ namespace ctns{
             std::cout << "error: in sufficient CPU batch memory: batchsize=0!" << std::endl;
             exit(1);
          }
+         batchsize = std::min(batchsize, maxbatch);
          cpumem_batch = batchsize*blocksize; // no sizeof(Tm) here for compatability
       }
 
