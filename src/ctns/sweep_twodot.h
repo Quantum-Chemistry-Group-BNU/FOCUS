@@ -131,10 +131,12 @@ namespace ctns{
          // 3. Davidson solver for wf
          // 3.1 diag 
          std::vector<double> diag(ndim); 
-         if(schd.ctns.alg_hvec>10){
-            twodot_diagGPU(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
-         }else{
+         if(schd.ctns.alg_hvec<10){
             twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
+#ifdef GPU
+         }else
+            twodot_diagGPU(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
+#endif
          }
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 executes 
@@ -179,8 +181,9 @@ namespace ctns{
          Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
          Tm* dev_workspace = nullptr;
          Tm* dev_red = nullptr;
-         size_t batchsize, gpumem_dvdson, gpumem_batch;
 #endif
+         size_t batchsize, gpumem_dvdson, gpumem_batch;
+
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;

@@ -137,8 +137,8 @@ namespace ctns{
          Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
          Tm* dev_workspace = nullptr;
          Tm* dev_red = nullptr;
-         size_t batchsize, gpumem_batch;
 #endif
+         size_t batchsize, gpumem_batch;
 
          // consistency check
          if(Km::ifkr && alg_renorm >=4){
