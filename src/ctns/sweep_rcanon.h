@@ -96,12 +96,12 @@ namespace ctns{
             const int dcut = 4*nroots; // psi[l,n,r,i] => U[l,i,a]sigma[a]Vt[a,n,r]
             double dwt; 
             int deff;
-            const bool ifkr = Km::ifkr;
             std::string fname = scratch+"/decimation"
                + "_isweep"+std::to_string(isweep) + "_C0R1.txt";
             const bool iftrunc = true;
-            decimation_row(ifkr, wfinfo.qmid, wfinfo.qcol, 
-                  iftrunc, dcut, schd.ctns.rdm_svd, schd.ctns.omp_decim, 
+            const int alg_decim = 0;
+            decimation_row(icomb, wfinfo.qmid, wfinfo.qcol, 
+                  iftrunc, dcut, schd.ctns.rdm_svd, alg_decim, 
                   wfs2, rot, dwt, deff, fname, 
                   schd.ctns.verbose>0);
             rot = rot.T();
@@ -127,12 +127,12 @@ namespace ctns{
             const int dcut = nroots; // psi[1,n,r,i] => U[1,i,a]sigma[a]Vt[a,n,r]
             double dwt;
             int deff;
-            const bool ifkr = Km::ifkr;
             std::string fname = scratch+"/decimation"
                + "_isweep"+std::to_string(isweep) + "_cR0.txt";
             const bool iftrunc = true;
-            decimation_row(ifkr, wfinfo.qmid, wfinfo.qcol,
-                  iftrunc, dcut, schd.ctns.rdm_svd, schd.ctns.omp_decim,
+            const int alg_decim = 0;
+            decimation_row(icomb, wfinfo.qmid, wfinfo.qcol,
+                  iftrunc, dcut, schd.ctns.rdm_svd, alg_decim,
                   wfs2, rot, dwt, deff, fname,
                   schd.ctns.verbose>0);
             rot = rot.T();

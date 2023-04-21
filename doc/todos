@@ -300,16 +300,19 @@ KNOWN PROBLEMS
    - revise GPUmem control [DONE@2023/04/07]
    - revise oper_pool
    - revise sweep_twodot/onedot_renorm to release unnecessary operators before renorm to save memory
-   - overlap save operators with computation? [DONE@20230408]
-   - overlap fetch operators with computation? [DONE@20230415]
-      - hdiag implementation on GPU [DONE@20230414]
+   - overlap save operators with computation? [DONE@2023/04/08]
+   - overlap fetch operators with computation? [DONE@2023/04/15]
+   - hdiag implementation on GPU [DONE@2023/04/14]
    - async memcpy to GPU => magma_queue
 
- * cpu<->gpu, network communication: 
-   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DON@20230417]
-   2. perform renormalization by class [CABPQSH, hiden memcpy]
+ * parallel decimation:
+   - openmp + mpi [DONE@2023/04/XX]
 
 === Major ===
+
+ * cpu<->gpu, network communication: 
+   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DON@2023/04/17]
+   2. perform renormalization by class [CABPQSH, hiden memcpy]
 
  * Better treatment GEMM involving 'c': use axpy_vbatch?
 
@@ -339,7 +342,7 @@ KNOWN PROBLEMS
  * Support Mixed CPU-GPU implementation?
    - mmtasks revise [also avoid copy for magma?]
 
- * Support complex version [DONE@20230228]
+ * Support complex version [DONE@2023/02/28]
    - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
       otherwise renormalized state become complex, and the construction of H 
       requires 'Conj' operation in GEMM!] 

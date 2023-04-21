@@ -1,7 +1,8 @@
 #ifndef SWEEP_TWODOT_RENORM_H
 #define SWEEP_TWODOT_RENORM_H
 
-#include "sweep_twodot_decimation.h"
+#include "sweep_onedot_renorm.h"
+#include "sweep_twodot_decim.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
@@ -24,7 +25,6 @@ namespace ctns{
             const int isweep,
             const int ibond){
          using Tm = typename Km::dtype;
-         const bool ifkr = Km::ifkr;
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -38,31 +38,12 @@ namespace ctns{
          }else{
             superblock = dbond.is_cturn()? "c1c2" : "c2r";
          }
-         if(debug && schd.ctns.verbose>0){ 
-            std::cout << "ctns::twodot_renorm superblock=" << superblock;
-         }
          auto& timing = sweeps.opt_timing[isweep][ibond];
 
          // 1. build reduced density matrix & perform decimation
          stensor2<Tm> rot;
-         if(rank == 0){
-            auto dims = icomb.topo.check_partition(2, dbond, false);
-            int ksupp;
-            if(superblock == "lc1"){
-               ksupp = dims[0] + dims[2];
-            }else if(superblock == "lr"){
-               ksupp = dims[0] + dims[1];
-            }else if(superblock == "c2r"){
-               ksupp = dims[1] + dims[3];
-            }else if(superblock == "c1c2"){
-               ksupp = dims[2] + dims[3];
-            }
-            std::string fname = scratch+"/decimation"
-               + "_isweep"+std::to_string(isweep)
-               + "_ibond"+std::to_string(ibond)+".txt";
-            twodot_decimation(schd, sweeps, isweep, ibond, ifkr, 
-                  superblock, ksupp, vsol, wf, rot, fname);
-         }
+         twodot_decimation(icomb, schd, scratch, sweeps, isweep, ibond, 
+               superblock, vsol, wf, rot);
 #ifndef SERIAL
          if(size > 1) mpi_wrapper::broadcast(icomb.world, rot, 0); 
 #endif

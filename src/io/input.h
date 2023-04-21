@@ -93,9 +93,9 @@ namespace input{
                ar & run & qkind & topology_file & verbose
                   & task_init & task_sdiag & task_ham & task_opt
                   & restart_sweep & restart_bond & timestamp
-                  & maxdets & thresh_proj & thresh_ortho & rdm_svd & omp_decim
+                  & maxdets & thresh_proj & thresh_ortho & rdm_svd 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
-                  & alg_hvec & alg_hinter & alg_renorm & alg_rinter 
+                  & alg_hvec & alg_hinter & alg_renorm & alg_rinter & alg_decim 
                   & ifdist1 & save_formulae & sort_formulae & save_mmtask 
                   & mmorder & batchmem 
                   & cisolver & maxcycle & nbuff & damping & precond
@@ -126,7 +126,6 @@ namespace input{
          double thresh_proj = 1.e-16;
          double thresh_ortho = 1.e-8;
          double rdm_svd = 1.5;
-         bool omp_decim = false;
          // sweep
          int nroots = 1; // this can be smaller than nroots in CI 
          int guess = 1;
@@ -139,6 +138,7 @@ namespace input{
          int alg_hinter = 0;
          int alg_renorm = 2;
          int alg_rinter = 0;
+         int alg_decim = 0;
          bool ifdist1 = false;
          bool save_formulae = false;
          bool sort_formulae = false;

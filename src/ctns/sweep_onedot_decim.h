@@ -1,19 +1,13 @@
-#ifndef SWEEP_ONEDOT_DECIMATION_H
-#define SWEEP_ONEDOT_DECIMATION_H
+#ifndef SWEEP_ONEDOT_DECIM_H
+#define SWEEP_ONEDOT_DECIM_H
 
 #include "oper_io.h"
-#include "sweep_decimation.h"
+#include "sweep_decim.h"
 
 namespace ctns{
 
    const double thresh_noise = 1.e-10;
    extern const double thresh_noise;
-
-   const bool check_canon = false;
-   extern const bool check_canon;
-
-   const double thresh_canon = 1.e-10;
-   extern const double thresh_canon;
 
    // do not perform truncation at the boundary
    inline bool start_truncation(const int ksupp, 
@@ -22,27 +16,44 @@ namespace ctns{
       return ksupp > knotrunc;
    }
 
-   template <typename Tm>
-      void onedot_decimation(const input::schedule& schd,
+   template <typename Km, typename Tm>
+      void onedot_decimation(const comb<Km>& icomb,
+            const input::schedule& schd,
+            const std::string scratch,
             sweep_data& sweeps,
             const int isweep,
             const int ibond, 
-            const bool ifkr,
             const std::string superblock,
-            const int ksupp,
             const linalg::matrix<Tm>& vsol,
             stensor3<Tm>& wf,
-            stensor2<Tm>& rot, 
-            const std::string fname){
-         const bool debug = schd.ctns.verbose>0;
-         const auto& rdm_svd = schd.ctns.rdm_svd;
+            stensor2<Tm>& rot){
+         int rank = 0, size = 1;
+#ifndef SERIAL
+         rank = icomb.world.rank();
+         size = icomb.world.size();
+#endif   
+         const bool debug = (rank==0 && schd.ctns.verbose>0);
+         std::string fname = scratch+"/decimation"
+            + "_isweep"+std::to_string(isweep)
+            + "_ibond"+std::to_string(ibond)+".txt";
          const auto& dbond = sweeps.seq[ibond];
+         auto dims = icomb.topo.check_partition(1, dbond, false);
+         int ksupp;
+         if(superblock == "lc"){
+            ksupp = dims[0] + dims[2];
+         }else if(superblock == "lr"){
+            ksupp = dims[0] + dims[1];
+         }else if(superblock == "cr"){
+            ksupp = dims[1] + dims[2];
+         }
+         const auto& rdm_svd = schd.ctns.rdm_svd;
          const int& dbranch = schd.ctns.dbranch;
          const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
          const bool iftrunc = start_truncation(ksupp, dcut);
          const auto& noise = sweeps.ctrls[isweep].noise;
          if(debug){
-            std::cout <<" (rdm_svd,dbranch,dcut,iftrunc,noise)=" 
+            std::cout << "ctns::onedot_renorm superblock=" << superblock
+               << " (rdm_svd,dbranch,dcut,iftrunc,noise)=" 
                << std::scientific << std::setprecision(1) << rdm_svd << ","
                << dbranch << "," << dcut << "," << iftrunc << ","
                << noise << std::endl;
@@ -59,8 +70,8 @@ namespace ctns{
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
-            decimation_row(ifkr, wf.info.qrow, wf.info.qmid, 
-                  iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
+            decimation_row(icomb, wf.info.qrow, wf.info.qmid, 
+                  iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
                   debug);
 
@@ -75,8 +86,8 @@ namespace ctns{
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
-            decimation_row(ifkr, wf.info.qrow, wf.info.qcol, 
-                  iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
+            decimation_row(icomb, wf.info.qrow, wf.info.qcol, 
+                  iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
                   debug);
 
@@ -89,8 +100,8 @@ namespace ctns{
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
-            decimation_row(ifkr, wf.info.qmid, wf.info.qcol, 
-                  iftrunc, dcut, rdm_svd, schd.ctns.omp_decim,
+            decimation_row(icomb, wf.info.qmid, wf.info.qcol, 
+                  iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
                   debug);
             rot = rot.T(); // rot[alpha,r] = (V^+)

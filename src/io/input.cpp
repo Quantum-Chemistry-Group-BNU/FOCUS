@@ -205,6 +205,8 @@ void params_ctns::read(ifstream& istrm){
          alg_renorm = stoi(line.substr(10));
       }else if(line.substr(0,10)=="alg_rinter"){
          alg_rinter = stoi(line.substr(10));
+      }else if(line.substr(0,9)=="alg_decim"){
+         alg_decim = stoi(line.substr(9));
       }else if(line.substr(0,7)=="ifdist1"){
          ifdist1 = true;	      
       }else if(line.substr(0,13)=="save_formulae"){
@@ -230,8 +232,6 @@ void params_ctns::read(ifstream& istrm){
          thresh_ortho = stod(line.substr(12));
       }else if(line.substr(0,7)=="rdm_svd"){
          rdm_svd = stod(line.substr(7));
-      }else if(line.substr(0,9)=="omp_decim"){
-         omp_decim = true;
       }else if(line.substr(0,6)=="nroots"){
          nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){
@@ -341,7 +341,6 @@ void params_ctns::print() const{
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;
    cout << "rdm_svd = " << scientific << rdm_svd << endl;
-   cout << "omp_decim = " << omp_decim << endl;
    // sweep
    cout << "nroots = " << nroots << endl;
    cout << "guess = " << guess << endl;
@@ -362,6 +361,7 @@ void params_ctns::print() const{
    cout << "alg_hinter = " << alg_hinter << endl;
    cout << "alg_renorm = " << alg_renorm << endl;
    cout << "alg_rinter = " << alg_rinter << endl;
+   cout << "alg_decim = " << alg_decim << endl;
    cout << "ifdist1 = " << ifdist1 << endl;
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;

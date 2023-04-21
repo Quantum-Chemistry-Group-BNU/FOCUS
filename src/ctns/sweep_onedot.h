@@ -150,10 +150,13 @@ namespace ctns{
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
+
+         // consistency check
          if(schd.ctns.alg_hvec >=4){
-            std::cout << "hinter does not support onedot yet!" << std::endl;
+            std::cout << "error: alg_hvec >=4 does not support onedot yet!" << std::endl;
             exit(1); 
          }
+
          if(schd.ctns.alg_hvec == 0){
 
             // oldest version
