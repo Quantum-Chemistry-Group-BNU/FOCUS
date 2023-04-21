@@ -48,12 +48,65 @@ namespace ctns{
                }
             }
          }else{
-            for(int br=rank; br<nqr; br+=size){
-               local_br.push_back(br);
+//            for(int br=rank; br<nqr; br+=size){
+//               local_br.push_back(br);
+//            }
+            std::vector<std::vector<int>> local_brs(size);
+            if(rank == 0){
+               std::vector<double> local_cost(size,0);
+               for(int br=0; br<nqr; br++){
+                  const auto& qr = qrow.get_sym(br);
+                  const int rdim = qrow.get_dim(br);
+
+                  int matched=0, bc1=0, cdim1=0;
+                  for(int bc=0; bc<qcol.size(); bc++){
+                     if(wfs2[0](br,bc).empty()) continue;
+                     const auto& qc = qcol.get_sym(bc);     
+                     if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
+                     matched += 1;
+                     if(matched > 1) tools::exit("multiple matched qc is not supported!");
+                     bc1 = bc;
+                     cdim1 = qcol.get_dim(bc);
+                  } // qc
+      
+                  if(matched == 1){ 
+                     int m = std::max(rdim,cdim1);
+                     int n = std::min(rdim,cdim1);
+                     // https://en.wikipedia.org/wiki/Singular_value_decomposition
+                     double cost = double(n)*n*m;
+                     auto ptr = std::min_element(local_cost.begin(), local_cost.end());
+                     int pos = std::distance(local_cost.begin(), ptr);
+                     std::cout << "br,rdim,cdim=" << br << "," << rdim << "," << cdim1 
+                        << " m,n=" << m << "," << n
+                        << " cost=" << cost 
+                        << " pos=" << pos 
+                        << std::endl;
+                     tools::print_vector(local_cost, "local_cost");
+                     local_cost[pos] += cost;
+                     local_brs[pos].push_back(br);
+                  }
+               }
+
+                for(int i=0; i<size; i++){
+                   std::cout << "rank=" << rank << " i=" << i << " sz=" << local_brs[i].size() 
+                      << " cost=" << local_cost[i] << std::endl;
+                   tools::print_vector(local_brs[i],"vec");
+                }
             }
+
+            boost::mpi::scatter(icomb.world, local_brs, local_br, 0);
+         
          }
          int local_size = local_br.size();
          std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
+         std::vector<double> timing1(local_size);
+         std::vector<double> timing2(local_size);
+         std::vector<double> timing3(local_size);
+
+         std::cout << "size=" << size << " rank=" << rank
+           << " local_size=" << local_size << std::endl;
+         icomb.world.barrier();
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -76,15 +129,37 @@ namespace ctns{
                matched += 1;
                if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
                // compute renormalized basis
+               auto t0x = tools::get_time();
                std::vector<linalg::matrix<Tm>> blks(nroots);
                for(int iroot=0; iroot<nroots; iroot++){
                   blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
                }
+               auto t1x = tools::get_time();
                kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+               auto t2x = tools::get_time();
+               timing1[ibr] = tools::get_duration(t1x-t0x);
+               timing2[ibr] = tools::get_duration(t2x-t1x);
             } // qc
+            auto t0x = tools::get_time();
             local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+            auto t1x = tools::get_time();
+            timing3[ibr] = tools::get_duration(t1x-t0x);
          } // br
          auto t1 = tools::get_time();
+
+         double time1 =0;
+         double time2 =0;
+         double time3 =0;
+         for(int i=0; i<local_size; i++){
+            time1 += timing1[i];
+            time2 += timing2[i];
+            time3 += timing3[i];
+         }
+         std::cout << "rank=" << rank << " t1,t2,t3="
+            << time1 << " " << time2 << " " << time3
+            << " total=" << (time1+time2+time3)
+            << std::endl;
+
          // collection
          if(alg_decim == 0){
             // reconstruct results
