@@ -39,7 +39,7 @@ namespace ctns{
          int nroots = wfs2.size();
          int nqr = qrow.size();
          if(debug){
-            std::cout << "ctns::decimation_row"
+            std::cout << "ctns::decimation_row_nkr"
                << " dcut=" << dcut << " nqr=" << nqr
                << " alg_decim=" << alg_decim
                << " mpisize=" << size
@@ -73,41 +73,9 @@ namespace ctns{
 
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-         for(int br=0; br<nqr; br++){
-            const auto& qr = qrow.get_sym(br);
-            const int rdim = qrow.get_dim(br);
-            if(debug_decimation){ 
-               if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
-               std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
-            }
-            // search for matched block 
-            std::vector<double> sigs2;
-            linalg::matrix<Tm> U;
-            int matched = 0;
-            for(int bc=0; bc<qcol.size(); bc++){
-               if(wfs2[0](br,bc).empty()) continue;
-               const auto& qc = qcol.get_sym(bc);     
-               if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
-               matched += 1;
-               if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
-               // compute renormalized basis
-               std::vector<linalg::matrix<Tm>> blks(nroots);
-               for(int iroot=0; iroot<nroots; iroot++){
-                  blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
-               }
-               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
-            } // qc
-#ifdef _OPENMP
-#pragma omp critical
-#endif
-            results[br] = std::make_pair(sigs2, U);
-         } // br
-
+         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, alg_decim, wfs2, results);
          auto t1 = tools::get_time();
+
          if(rank == 0){
             int idx = 0;
             double sig2sum = 0.0;
@@ -195,7 +163,6 @@ namespace ctns{
          const auto& dpt = qprod.second;
          assert(qrow == wfs2[0].info.qrow);
          const auto& qcol = wfs2[0].info.qcol;
-         int nroots = wfs2.size();
          int nqr = qrow.size();
          int dim12 = qrow.get_dimAll(); 
          if(debug){ 
@@ -242,48 +209,9 @@ namespace ctns{
 
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-         for(int br=0; br<nqr; br++){
-            const auto& qr = qrow.get_sym(br);
-            const int rdim = qrow.get_dim(br);
-            if(debug_decimation){ 
-               if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
-               std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
-            }
-            // search for matched block 
-            std::vector<double> sigs2;
-            linalg::matrix<Tm> U;
-            int matched = 0;
-            for(int bc=0; bc<qcol.size(); bc++){
-               if(wfs2[0](br,bc).empty()) continue;
-               const auto& qc = qcol.get_sym(bc);     
-               if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
-               matched += 1;
-               if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
-               // mapping product basis to kramers paired basis
-               std::vector<int> pos_new;
-               std::vector<double> phases;
-               mapping2krbasis(qr, qs1, qs2, dpt, pos_new, phases);
-               assert(pos_new.size() == rdim);
-               // compute KRS-adapted renormalized basis
-               std::vector<linalg::matrix<Tm>> blks(nroots);
-               for(int iroot=0; iroot<nroots; iroot++){
-                  blks[iroot] = wfs2[iroot](br,bc).to_matrix().reorder_row(pos_new).T();
-               }
-               kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_svd, debug_decimation);
-               // convert back to the original product basis
-               U = U.reorder_row(pos_new,1);
-            } // qc
-#ifdef _OPENMP
-#pragma omp critical
-#endif
-            results[br] = std::make_pair(sigs2, U);
-         } // br
-
+         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, alg_decim, wfs2, results);
          auto t1 = tools::get_time();
+
          if(rank == 0){
             int idx = 0;
             double sig2sum = 0.0;
