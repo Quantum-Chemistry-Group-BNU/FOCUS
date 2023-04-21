@@ -83,8 +83,8 @@ namespace ctns{
                      timing_global.accumulate(timing, "global", schd.ctns.verbose>0);
                   }
                }
-               // stop just for debug
-               if(isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
+               // stop just for debug [done it for rank-0]
+               if(rank==0 && isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
             } // ibond
             if(debug){
                auto tf = tools::get_time();
