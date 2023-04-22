@@ -21,26 +21,21 @@ namespace ctns{
       using decim_map = std::map<int,decim_item<Tm>>;
 
    template <typename Km>
-      void decimation_genbasis(const comb<Km>& icomb,
-            const qbond& qs1,
-            const qbond& qs2,
+      void decimation_scatter(const comb<Km>& icomb,
             const qbond& qrow,
             const qbond& qcol,
-            const qdpt& dpt,
-            const double rdm_svd,
             const int alg_decim,
             const std::vector<stensor2<typename Km::dtype>>& wfs2,
-            decim_map<typename Km::dtype>& results){
-         auto t0 = tools::get_time();
+            std::vector<std::pair<int,int>>& local_brbc){
+         const bool debug = false;
          using Tm = typename Km::dtype;
          int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
          size = icomb.world.size();
 #endif   
-         int nroots = wfs2.size();
          int nqr = qrow.size();
-         // preprocess
+         // preprocess wfs2 to find contributing blocks
          std::vector<std::pair<int,int>> brbc(nqr);
          std::vector<double> decim_cost(nqr);
          std::vector<int> index;
@@ -48,7 +43,7 @@ namespace ctns{
          if(rank == 0){
             for(int br=0; br<nqr; br++){
                int rdim = qrow.get_dim(br);
-               int matched=0;
+               int matched = 0;
                for(int bc=0; bc<qcol.size(); bc++){
                   if(wfs2[0](br,bc).empty()) continue;
                   matched += 1;
@@ -60,105 +55,68 @@ namespace ctns{
                   // estimator for FLOP of SVD following
                   // https://en.wikipedia.org/wiki/Singular_value_decomposition
                   decim_cost[neff] = double(n)*n*m;
-                  std::cout << "neff=" << neff
-                     << " rdim,cdim=" << rdim << "," << cdim 
-                     << " cost=" << decim_cost[neff]
-                     << std::endl;
+                  if(debug){
+                     std::cout << "neff=" << neff
+                        << " rdim,cdim=" << rdim << "," << cdim 
+                        << " cost=" << decim_cost[neff]
+                        << std::endl;
+                  }
                   neff += 1;
                } // bc
             } // br
             brbc.resize(neff);
             decim_cost.resize(neff);
             index = tools::sort_index(decim_cost, 1);
-         }
-         // determine local_brbc for each rank
-         std::vector<std::pair<int,int>> local_brbc;
-         if(alg_decim == 0){
+         } // rank-0
+         // from {brbc,decim_cost,index} to contruct local_brbc
+         if(alg_decim==0 || (alg_decim>0 && size==1)){
             if(rank == 0) local_brbc = std::move(brbc);
          }else{
             std::vector<std::vector<std::pair<int,int>>> local_brbcs(size);
+            // partition the task set using a greedy algorithm 
             if(rank == 0){
                std::vector<double> local_cost(size,0);
                for(int i=0; i<neff; i++){
                   int idx = index[i];
                   auto ptr = std::min_element(local_cost.begin(), local_cost.end());
                   int pos = std::distance(local_cost.begin(), ptr);
-                  std::cout << "br,bc=" << brbc[idx].first << "," << brbc[idx].second
-                     << " cost=" << decim_cost[idx] 
-                     << " pos=" << pos 
-                     << std::endl;
-                  tools::print_vector(local_cost, "local_cost");
+                  if(debug){
+                     std::cout << "br,bc=" << brbc[idx].first << "," << brbc[idx].second
+                        << " cost=" << decim_cost[idx] << " pos=" << pos 
+                        << std::endl;
+                     tools::print_vector(local_cost, "local_cost");
+                  }
                   local_cost[pos] += decim_cost[idx];
                   local_brbcs[pos].push_back(brbc[idx]);
                } // i
-
-               for(int i=0; i<size; i++){
-                  std::cout << "rank=" << rank << " i=" << i << " sz=" << local_brbcs[i].size() 
-                     << " cost=" << local_cost[i] << std::endl;
-                  for(int j=0; j<local_brbcs[i].size(); j++){
-                     std::cout << "j=" << j << " br=" << local_brbcs[i][j].first << std::endl;
+               if(debug){
+                  for(int i=0; i<size; i++){
+                     std::cout << "rank=" << rank << " i=" << i 
+                        << " size(local_brbc)=" << local_brbcs[i].size() 
+                        << " cost=" << local_cost[i] << std::endl;
+                     for(int j=0; j<local_brbcs[i].size(); j++){
+                        std::cout << "j=" << j << " br=" << local_brbcs[i][j].first << std::endl;
+                     }
                   }
                }
-            }
-
+            } // rank-0
+            // scatter the partition into each processes
             boost::mpi::scatter(icomb.world, local_brbcs, local_brbc, 0);
+         } // alg_decim
+      }
 
-         }
-         int local_size = local_brbc.size();
-         std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
-         std::vector<double> timing1(local_size);
-         std::vector<double> timing2(local_size);
-         std::vector<double> timing3(local_size);
-
-         auto t1 = tools::get_time();
-         std::cout << "size=" << size << " rank=" << rank
-            << " local_size=" << local_size << std::endl;
-         icomb.world.barrier();
-
-//#ifdef _OPENMP
-//#pragma omp parallel for schedule(dynamic)
-//#endif
-         for(int ibr=0; ibr<local_size; ibr++){
-            int br = local_brbc[ibr].first;
-            int bc = local_brbc[ibr].second;
-            // search for matched block 
-            std::vector<double> sigs2;
-            linalg::matrix<Tm> U;
-            // compute renormalized basis
-            auto t0x = tools::get_time();
-            std::vector<linalg::matrix<Tm>> blks(nroots);
-            for(int iroot=0; iroot<nroots; iroot++){
-               blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
-            }
-            auto t1x = tools::get_time();
-            timing1[ibr] = tools::get_duration(t1x-t0x);
-            kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
-            auto t2x = tools::get_time();
-            timing2[ibr] = tools::get_duration(t2x-t1x);
-            local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
-            auto t3x = tools::get_time();
-            timing3[ibr] = tools::get_duration(t3x-t2x);
-         } // br
-         auto t2 = tools::get_time();
-
-         double time1 =0;
-         double time2 =0;
-         double time3 =0;
-         for(int i=0; i<local_size; i++){
-            time1 += timing1[i];
-            time2 += timing2[i];
-            time3 += timing3[i];
-         }
-         std::cout << "rank=" << rank << " t1,t2,t3="
-            << time1 << " " << time2 << " " << time3
-            << " total=" << (time1+time2+time3)
-            << std::endl;
-
-         // collection
-         if(alg_decim == 0){
+   template <typename Km>
+      void decimation_gather(const comb<Km>& icomb,
+            const int alg_decim,
+            const std::vector<std::pair<int,decim_item<typename Km::dtype>>>& local_results,
+            decim_map<typename Km::dtype>& results,
+            const int size,
+            const int rank){
+         using Tm = typename Km::dtype;
+         if(alg_decim==0 || (alg_decim>0 && size==1)){
             // reconstruct results
             if(rank == 0){
-               for(int ibr=0; ibr<local_size; ibr++){
+               for(int ibr=0; ibr<local_results.size(); ibr++){
                   int br = local_results[ibr].first;
                   results[br] = std::move(local_results[ibr].second);
                }
@@ -176,12 +134,59 @@ namespace ctns{
                   }
                }
             }
-         }
+         } // alg_decim
+      }
+
+   template <typename Km>
+      void decimation_genbasis(const comb<Km>& icomb,
+            const qbond& qs1,
+            const qbond& qs2,
+            const qbond& qrow,
+            const qbond& qcol,
+            const qdpt& dpt,
+            const double rdm_svd,
+            const int alg_decim,
+            const std::vector<stensor2<typename Km::dtype>>& wfs2,
+            decim_map<typename Km::dtype>& results){
+         using Tm = typename Km::dtype;
+         int rank = 0, size = 1;
+#ifndef SERIAL
+         rank = icomb.world.rank();
+         size = icomb.world.size();
+#endif   
+         // determine local_brbc for each rank
+         auto t0 = tools::get_time();
+         std::vector<std::pair<int,int>> local_brbc;
+         decimation_scatter(icomb, qrow, qcol, alg_decim, wfs2, local_brbc);
+         auto t1 = tools::get_time();
+         int local_size = local_brbc.size();
+         std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
+         int nroots = wfs2.size();
+         //#ifdef _OPENMP
+         //#pragma omp parallel for schedule(dynamic)
+         //#endif
+         for(int ibr=0; ibr<local_size; ibr++){
+            int br = local_brbc[ibr].first;
+            int bc = local_brbc[ibr].second;
+            // search for matched block 
+            std::vector<double> sigs2;
+            linalg::matrix<Tm> U;
+            // compute renormalized basis
+            std::vector<linalg::matrix<Tm>> blks(nroots);
+            for(int iroot=0; iroot<nroots; iroot++){
+               blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
+            }
+            kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+            local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+         } // br
+         auto t2 = tools::get_time();
+         // collect local_results to results in rank-0
+         decimation_gather(icomb, alg_decim, local_results, results, size, rank);
          auto t3 = tools::get_time();
          if(rank == 0){
             std::cout << "----- TMING FOR decimation_genbasis: " 
                << tools::get_duration(t3-t0) << " S"
-               << " T(preprocess/compute/gather)="
+               << " T(scatter/comp/gather)="
                << tools::get_duration(t1-t0) << ","
                << tools::get_duration(t2-t1) << "," 
                << tools::get_duration(t3-t2) << " -----" 
