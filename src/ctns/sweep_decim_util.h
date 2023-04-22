@@ -162,23 +162,42 @@ namespace ctns{
          int local_size = local_brbc.size();
          std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
          int nroots = wfs2.size();
-         //#ifdef _OPENMP
-         //#pragma omp parallel for schedule(dynamic)
-         //#endif
-         for(int ibr=0; ibr<local_size; ibr++){
-            int br = local_brbc[ibr].first;
-            int bc = local_brbc[ibr].second;
-            // search for matched block 
-            std::vector<double> sigs2;
-            linalg::matrix<Tm> U;
-            // compute renormalized basis
-            std::vector<linalg::matrix<Tm>> blks(nroots);
-            for(int iroot=0; iroot<nroots; iroot++){
-               blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
-            }
-            kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
-            local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
-         } // br
+         if(alg_decim == 0){
+            // Serail + OpenMP parallelization 
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+            for(int ibr=0; ibr<local_size; ibr++){
+               int br = local_brbc[ibr].first;
+               int bc = local_brbc[ibr].second;
+               // search for matched block 
+               std::vector<double> sigs2;
+               linalg::matrix<Tm> U;
+               // compute renormalized basis
+               std::vector<linalg::matrix<Tm>> blks(nroots);
+               for(int iroot=0; iroot<nroots; iroot++){
+                  blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
+               }
+               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+            } // br
+         }else{
+            // MPI + BLAS level parrallelization
+            for(int ibr=0; ibr<local_size; ibr++){
+               int br = local_brbc[ibr].first;
+               int bc = local_brbc[ibr].second;
+               // search for matched block 
+               std::vector<double> sigs2;
+               linalg::matrix<Tm> U;
+               // compute renormalized basis
+               std::vector<linalg::matrix<Tm>> blks(nroots);
+               for(int iroot=0; iroot<nroots; iroot++){
+                  blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
+               }
+               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+            } // br
+         } // alg_decim 
          auto t2 = tools::get_time();
          // collect local_results to results in rank-0
          decimation_gather(icomb, alg_decim, local_results, results, size, rank);
