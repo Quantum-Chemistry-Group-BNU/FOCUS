@@ -132,8 +132,7 @@ namespace ctns{
             exit(1);
          }
          if(batchsize == 0 || totsize == 0) return;
-         nbatch = totsize/batchsize;
-         if(totsize%batchsize != 0) nbatch += 1; // thus, this works even for totsize < batchsize
+         nbatch = (totsize+batchsize-1)/batchsize;
 
          // start process Hxlst
          mmbatch2.resize(nbatch);

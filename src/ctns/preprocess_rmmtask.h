@@ -155,8 +155,7 @@ namespace ctns{
             exit(1);
          }
          if(batchsize == 0 || totsize == 0) return;
-         nbatch = totsize/batchsize;
-         if(totsize%batchsize != 0) nbatch += 1; // thus, this works even for totsize < batchsize
+         nbatch = (totsize+batchsize-1)/batchsize;
          
          // start process Rlst
          icase = Rlst[0].icase; 

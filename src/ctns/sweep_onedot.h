@@ -116,7 +116,7 @@ namespace ctns{
          // executes the preconditioning in Davidson's algorithm
          if(size > 1){
             std::vector<double> diag2(ndim);
-            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0);
+            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0, schd.ctns.alg_comm);
             diag = std::move(diag2);
          }
 #endif 

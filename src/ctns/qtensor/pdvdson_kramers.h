@@ -84,7 +84,7 @@ namespace ctns{
 #ifndef SERIAL
                   if(!ifnccl && size > 1){
                      std::vector<Tm> y_sum(ndim);
-                     mpi_wrapper::reduce(world, y+istate*ndim, ndim, y_sum.data(), std::plus<Tm>(), 0);
+                     mpi_wrapper::reduce(world, y+istate*ndim, ndim, y_sum.data(), std::plus<Tm>(), 0, alg_comm);
                      linalg::xcopy(ndim, y_sum.data(), y+istate*ndim);
                   }
                   auto t2 = tools::get_time();
@@ -382,7 +382,7 @@ namespace ctns{
                   linalg::check_orthogonality(ndim, neig, vbas);
                }
 #ifndef SERIAL
-               if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
+               if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0, alg_comm);
 #endif
                HVecs(neig, wbas.data(), vbas.data());
 
@@ -425,7 +425,7 @@ namespace ctns{
                      // broadcast results to all processors
                      if(size > 1){
                         boost::mpi::broadcast(world, tmpE.data(), neig, 0);
-                        mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
+                        mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0, alg_comm);
                      }
 #endif
                      linalg::xcopy(neig, tmpE.data(), es);
@@ -470,7 +470,7 @@ namespace ctns{
                      exit(1);
                   }else{
 #ifndef SERIAL
-                     if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0);
+                     if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0, alg_comm);
 #endif	      
                      linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
                      HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
@@ -513,6 +513,7 @@ namespace ctns{
             double crit_skewH = 1.e-8;
             double damping = 1.e-12;
             bool precond = true;
+            int alg_comm = 0;
             bool ifnccl = false;
 #ifndef SERIAL
             boost::mpi::communicator world;
