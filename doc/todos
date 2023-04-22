@@ -305,10 +305,11 @@ KNOWN PROBLEMS
    - hdiag implementation on GPU [DONE@2023/04/14]
    - async memcpy to GPU => magma_queue
 
- * parallel decimation:
-   - openmp + mpi [DONE@2023/04/XX]
-
 === Major ===
+
+ * parallel decimation:
+   - openmp + mpi [DONE@2023/04/23]
+   - mpi -> share memory?
 
  * cpu<->gpu, network communication: 
    1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DON@2023/04/17]
