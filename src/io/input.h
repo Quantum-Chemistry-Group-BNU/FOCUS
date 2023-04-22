@@ -138,7 +138,7 @@ namespace input{
          int alg_hinter = 0;
          int alg_renorm = 2;
          int alg_rinter = 0;
-         int alg_decim = 1;
+         int alg_decim = 1; // =0: Serial+OpenMP; =1: MPI+BLAS
          bool ifdist1 = false;
          bool save_formulae = false;
          bool sort_formulae = false;
