@@ -16,9 +16,9 @@ namespace ctns{
    extern const bool debug_decimation;
 
    template <typename Tm>
-      using decim_item = std::pair<std::vector<double>,linalg::matrix<Tm>>;
+      using decim_item = std::pair<std::vector<double>,linalg::matrix<Tm>>; // (sigs,Umat)
    template <typename Tm>
-      using decim_map = std::map<int,decim_item<Tm>>;
+      using decim_map = std::map<int,decim_item<Tm>>; // br->(sigs,Umat)
 
    template <typename Km>
       void decimation_scatter(const comb<Km>& icomb,
@@ -106,6 +106,38 @@ namespace ctns{
       }
 
    template <typename Km>
+      void decimation_gather(const comb<Km>& icomb,
+            const int alg_decim,
+            const std::vector<std::pair<int,decim_item<typename Km::dtype>>>& local_results,
+            decim_map<typename Km::dtype>& results,
+            const int size,
+            const int rank){
+         using Tm = typename Km::dtype;
+         if(alg_decim==0 || (alg_decim>0 && size==1)){
+            // reconstruct results
+            if(rank == 0){
+               for(int ibr=0; ibr<local_results.size(); ibr++){
+                  int br = local_results[ibr].first;
+                  results[br] = std::move(local_results[ibr].second);
+               }
+            }
+         }else{
+            std::vector<std::vector<std::pair<int,decim_item<Tm>>>> full_results;
+            boost::mpi::gather(icomb.world, local_results, full_results, 0);
+            // reconstruct results
+            if(rank == 0){
+               assert(full_results.size() == size);
+               for(int i=0; i<full_results.size(); i++){
+                  for(int j=0; j<full_results[i].size(); j++){
+                     int br = full_results[i][j].first;
+                     results[br] = std::move(full_results[i][j].second);
+                  }
+               }
+            }
+         } // alg_decim
+      }
+
+   template <typename Km>
       void decimation_genbasis(const comb<Km>& icomb,
             const qbond& qs1,
             const qbond& qs2,
@@ -127,14 +159,11 @@ namespace ctns{
          std::vector<std::pair<int,int>> local_brbc;
          decimation_scatter(icomb, qrow, qcol, alg_decim, wfs2, local_brbc);
          auto t1 = tools::get_time();
-         auto t2 = tools::get_time();
-         auto t3 = tools::get_time();
          int local_size = local_brbc.size();
+         std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
          int nroots = wfs2.size();
-         if(alg_decim==0 || (alg_decim>0 && size==1)){
-
+         if(alg_decim == 0){
             // Serail + OpenMP parallelization 
-            std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -152,22 +181,7 @@ namespace ctns{
                kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
                local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
             } // br
-            t2 = tools::get_time();
-            t3 = tools::get_time();
-
-            // reconstruct results only at rank-0
-            if(rank == 0){
-               for(int ibr=0; ibr<local_results.size(); ibr++){
-                  int br = local_results[ibr].first;
-                  results[br] = std::move(local_results[ibr].second);
-               }
-            }
- 
          }else{
-           
-            std::vector<int> local_info(local_size);
-            std::vector<std::vector<double>> local_sigs2(local_size); 
-            std::vector<linalg::matrix<Tm>> local_Umat(local_size); 
             // MPI + BLAS level parrallelization
             for(int ibr=0; ibr<local_size; ibr++){
                int br = local_brbc[ibr].first;
@@ -181,42 +195,20 @@ namespace ctns{
                   blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
                }
                kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
-               local_info[ibr] = br;
-               local_sigs2[ibr] = std::move(sigs2);
-               local_Umat[ibr] = std::move(U); 
+               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
             } // br
-            t2 = tools::get_time();
-         
-            // collect local_results to results in rank-0
-            std::vector<std::vector<int>> full_info;
-            std::vector<std::vector<std::vector<double>>> full_sigs2;
-            std::vector<std::vector<linalg::matrix<Tm>>> full_Umat;
-            boost::mpi::gather(icomb.world, local_info, full_info, 0);
-            boost::mpi::gather(icomb.world, local_sigs2, full_sigs2, 0);
-            boost::mpi::gather(icomb.world, local_Umat, full_Umat, 0);
-            t3 = tools::get_time();
-            
-            // reconstruct results
-            if(rank == 0){
-               assert(full_info.size() == size);
-               for(int i=0; i<full_info.size(); i++){
-                  for(int j=0; j<full_info[i].size(); j++){
-                     int br = full_info[i][j];
-                     results[br] = std::make_pair(full_sigs2[i][j],full_Umat[i][j]);
-                  }
-               }
-            }
-
          } // alg_decim 
+         auto t2 = tools::get_time();
+         // collect local_results to results in rank-0
+         decimation_gather(icomb, alg_decim, local_results, results, size, rank);
+         auto t3 = tools::get_time();
          if(rank == 0){
-            auto t4 = tools::get_time();
             std::cout << "----- TMING FOR decimation_genbasis: " 
                << tools::get_duration(t3-t0) << " S"
-               << " T(scatter/comp/gather/reconstruct)="
+               << " T(scatter/comp/gather)="
                << tools::get_duration(t1-t0) << ","
                << tools::get_duration(t2-t1) << "," 
-               << tools::get_duration(t3-t2) << "," 
-               << tools::get_duration(t4-t3) << " -----" 
+               << tools::get_duration(t3-t2) << " -----" 
                << std::endl;
          }
       }
