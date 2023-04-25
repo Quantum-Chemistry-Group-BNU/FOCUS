@@ -184,13 +184,15 @@ void params_ctns::read(ifstream& istrm){
          task_init = true;
       }else if(line.substr(0,10)=="task_sdiag"){
          task_sdiag = true;
+      }else if(line.substr(0,9)=="task_dmrg"){
+         task_ham = true;
+         task_opt = true;
       }else if(line.substr(0,8)=="task_ham"){
          task_ham = true;
       }else if(line.substr(0,8)=="task_opt"){
          task_opt = true;
-      }else if(line.substr(0,9)=="task_dmrg"){
-         task_ham = true;
-         task_opt = true;
+      }else if(line.substr(0,8)=="task_rdm"){
+         task_rdm = true;
       }else if(line.substr(0,13)=="restart_sweep"){
          restart_sweep = stoi(line.substr(13));
       }else if(line.substr(0,12)=="restart_bond"){
@@ -335,6 +337,7 @@ void params_ctns::print() const{
    cout << "task_sdiag = " << task_sdiag << endl;
    cout << "task_ham = " << task_ham << endl;
    cout << "task_opt = " << task_opt << endl;
+   cout << "task_rdm = " << task_rdm << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;
    cout << "timestamp = " << timestamp << endl;

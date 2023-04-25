@@ -115,9 +115,7 @@ namespace ctns{
          // reduction of partial diag: no need to broadcast, if only rank=0 
          // executes the preconditioning in Davidson's algorithm
          if(size > 1){
-            std::vector<double> diag2(ndim);
-            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0, schd.ctns.alg_comm);
-            diag = std::move(diag2);
+            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, 0, schd.ctns.alg_comm);
          }
 #endif 
          std::transform(diag.begin(), diag.end(), diag.begin(),

@@ -338,6 +338,22 @@ KNOWN PROBLEMS
 
  * Better GEMM_BATCH with TensorCore
 
+=== TODOs ===
+
+ * Reduced density matrix => DMRG compiler
+
+ * More balanced partition of rops and Hx? scale up to more nodes?
+   - formulae based partition
+
+ * Real space parallelization
+
+ * Support Kramers version: 
+   - support complex version [DONE@2023/02/28]
+   - what about R operation in contract? [general complex]
+   - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
+      otherwise renormalized state become complex, and the construction of H 
+      requires 'Conj' operation in GEMM!] 
+
 === Future ===
 
  * Support Mixed CPU-GPU implementation?
@@ -349,16 +365,3 @@ KNOWN PROBLEMS
      the full vector x & y to GPU, which minimize the memory usage of GPU.
    - Can renorm be performed in a similar way?
  
-=== TODOs ===
-
- * Reduced density matrix => DMRG compiler
-
- * Real space parallelization
-
- * Support Kramers version: 
-   - support complex version [DONE@2023/02/28]
-   - what about R operation in contract? [general complex]
-   - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
-      otherwise renormalized state become complex, and the construction of H 
-      requires 'Conj' operation in GEMM!] 
-

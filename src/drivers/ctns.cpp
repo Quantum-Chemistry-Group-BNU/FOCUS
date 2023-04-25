@@ -107,7 +107,7 @@ void CTNS(const input::schedule& schd){
          int iroot  = schd.ctns.iroot;
          int nsample = schd.ctns.nsample;
          int ndetprt = schd.ctns.ndetprt; 
-         double Sd = rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
+         double Sd = ctns::rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
       }
    }
 
@@ -131,7 +131,6 @@ void CTNS(const input::schedule& schd){
          io::remove_scratch(scratch, (rank == 0)); // start a new scratch
       }
       io::create_scratch(scratch, (rank == 0));
-
       // compute hamiltonian 
       if(schd.ctns.task_ham){
          auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
@@ -147,6 +146,10 @@ void CTNS(const input::schedule& schd){
       }
    } // ham || opt
 
+   if(schd.ctns.task_rdm){
+      auto scratch = schd.scratch+"/sweep";
+      ctns::sweep_rdm(icomb, schd, scratch);
+   }
 }
 
 int main(int argc, char *argv[]){

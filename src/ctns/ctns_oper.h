@@ -40,11 +40,9 @@ linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb,
    auto tmp = linalg::xgemm("N","T",Hmat,wfmat);
    Hmat = linalg::xgemm("N","N",wfmat.conj(),tmp);
 #ifndef SERIAL
+   // reduction of partial H formed on each processor if ifdist1 = false
    if(size > 1 and !schd.ctns.ifdist1){
-      // reduction of partial H formed on each processor if ifdist1 = false
-      linalg::matrix<Tm> Hmat2(Hmat.rows(),Hmat.cols());
-      mpi_wrapper::reduce(icomb.world, Hmat.data(), Hmat.size(), Hmat2.data(), std::plus<Tm>(), 0);
-      Hmat = Hmat2;
+      mpi_wrapper::reduce(icomb.world, Hmat.data(), Hmat.size(), 0);
    }
 #endif 
    return Hmat;

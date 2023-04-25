@@ -14,7 +14,6 @@ namespace mpi_wrapper{
       }
 
    //--- broadcast ---
-   // raw data
    template <typename Tm>
       void broadcast(const boost::mpi::communicator & comm, Tm* ptr, 
             const size_t size, const int root,
@@ -144,21 +143,31 @@ namespace mpi_wrapper{
          } // alg_comm
       }
 
-   //--- reduce ---
-   // raw data
-   template <typename Tm, typename Op>
-      void reduce(const boost::mpi::communicator & comm, const Tm* ptr_in, const size_t size, 
-            Tm* ptr_out, Op op, const int root, 
-            const int alg_comm=0){
+   //--- in-place reduce ---
+   template <typename Tm>
+      void reduce(const boost::mpi::communicator & comm, Tm* ptr_inout, const size_t size, const int root, 
+            const int alg_comm=0){ 
          size_t chunksize = get_chunksize<Tm>();
-         //if(alg_comm == 0){
-         for(size_t offset=0; offset<size; offset+=chunksize){
-            size_t len = std::min(chunksize, size-offset);
-            boost::mpi::reduce(comm, ptr_in+offset, len, ptr_out+offset, op, root); 
+         if(!tools::is_complex<Tm>()){
+            for(size_t offset=0; offset<size; offset+=chunksize){
+               size_t len = std::min(chunksize, size-offset);
+               if(comm.rank() == 0){
+                  // send_data, recv_data, count, datatype, op, root, communicator
+                  MPI_Reduce(MPI_IN_PLACE, ptr_inout+offset, len, MPI_DOUBLE, MPI_SUM, root, comm);
+               }else{
+                  MPI_Reduce(ptr_inout+offset, nullptr, len, MPI_DOUBLE, MPI_SUM, root, comm);
+               } 
+            }
+         }else{
+            for(size_t offset=0; offset<size; offset+=chunksize){
+               size_t len = std::min(chunksize, size-offset);
+               if(comm.rank() == 0){
+                  MPI_Reduce(MPI_IN_PLACE, ptr_inout+offset, len, MPI_DOUBLE_COMPLEX, MPI_SUM, root, comm);
+               }else{
+                  MPI_Reduce(ptr_inout+offset, nullptr, len, MPI_DOUBLE_COMPLEX, MPI_SUM, root, comm);
+               } 
+            }
          }
-         //}else{
-
-         //}
       }
 
 } // ctns

@@ -83,9 +83,7 @@ namespace ctns{
                   tcal += tools::get_duration(t1-t0);
 #ifndef SERIAL
                   if(!ifnccl && size > 1){
-                     std::vector<Tm> y_sum(ndim);
-                     mpi_wrapper::reduce(world, y+istate*ndim, ndim, y_sum.data(), std::plus<Tm>(), 0, alg_comm);
-                     linalg::xcopy(ndim, y_sum.data(), y+istate*ndim);
+                     mpi_wrapper::reduce(world, y+istate*ndim, ndim, 0, alg_comm);
                   }
                   auto t2 = tools::get_time();
                   tcomm += tools::get_duration(t2-t1); 

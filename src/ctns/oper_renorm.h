@@ -577,7 +577,6 @@ namespace ctns{
             // 2. reduce 
 #ifndef SERIAL
             if(ifdist1 and size > 1){
-               std::vector<Tm> top(qops._opsize);
                // Sp[iproc] += \sum_i Sp[i]
                auto opS_index = qops.oper_index_op('S');
                for(int p : opS_index){
@@ -585,20 +584,15 @@ namespace ctns{
                   auto& opS = qops('S')[p];
                   size_t opsize = opS.size();
                   size_t off = qops._offset[std::make_pair('S',p)];
-                  mpi_wrapper::reduce(icomb.world, opS.data(), opsize, top.data(), std::plus<Tm>(), iproc);
+                  mpi_wrapper::reduce(icomb.world, opS.data(), opsize, iproc, schd.ctns.alg_comm);
                   if(iproc == rank){ 
-                     linalg::xcopy(opsize, top.data(), opS.data());
 #ifdef GPU
-                     if(schd.ctns.alg_renorm>10){
-                        GPUmem.to_gpu(qops._dev_data+off, top.data(), opsize*sizeof(Tm));
-                     }
+                     if(schd.ctns.alg_renorm>10) GPUmem.to_gpu(qops._dev_data+off, opS.data(), opsize*sizeof(Tm));
 #endif
                   }else{
                      opS.set_zero();
 #ifdef GPU
-                     if(schd.ctns.alg_renorm>10){
-                        GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
-                     }
+                     if(schd.ctns.alg_renorm>10) GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
 #endif
                   }
                }
@@ -606,20 +600,15 @@ namespace ctns{
                auto& opH = qops('H')[0];
                size_t opsize = opH.size();
                size_t off = qops._offset[std::make_pair('H',0)];
-               mpi_wrapper::reduce(icomb.world, opH.data(), opsize, top.data(), std::plus<Tm>(), 0);
+               mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0, schd.ctns.alg_comm);
                if(rank == 0){ 
-                  linalg::xcopy(opsize, top.data(), opH.data());
 #ifdef GPU
-                  if(schd.ctns.alg_renorm>10){
-                     GPUmem.to_gpu(qops._dev_data+off, top.data(), opsize*sizeof(Tm));
-                  }
+                  if(schd.ctns.alg_renorm>10) GPUmem.to_gpu(qops._dev_data+off, opH.data(), opsize*sizeof(Tm));
 #endif
                }else{
                   opH.set_zero();
 #ifdef GPU
-                  if(schd.ctns.alg_renorm>10){
-                     GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
-                  }
+                  if(schd.ctns.alg_renorm>10) GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
 #endif
                }
             }
