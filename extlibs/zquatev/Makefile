@@ -1,6 +1,7 @@
 
-machine = cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = wuhan#cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 USE_ILP64 = yes
+USE_OPENBLAS = yes
 
 INCLUDE = -I.
 
@@ -25,6 +26,11 @@ else ifeq ($(strip $(machine)), scv7260)
    CXX = icpc 
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
    MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
+else ifeq ($(strip $(machine)), wuhan)
+   CXX = g++ 
+   CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
+   #MATHLIB =/home/HPCBase/libs/openblas0.3.18_kgcc9.3.1/lib
 else ifeq ($(strip $(machine)), cluster)
    CXX = icpc 
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
@@ -44,11 +50,9 @@ else ifeq ($(strip $(machine)), mac)
    LIBS += -lm
 endif
 
-ifeq ($(strip $(USE_ILP64)), no)
-   LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread  -ldl 
-else
-   CXXFLAGS += -DMKL_ILP64
-   LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread  -ldl 
+ifeq ($(strip $(USE_OPENBLAS)), yes)
+      CXXFLAGS += -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
+      LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lopenblas  -lpthread  -ldl 
 endif
 
 LD       = $(CXX)

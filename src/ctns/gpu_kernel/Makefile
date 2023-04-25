@@ -1,10 +1,12 @@
 
-machine = jiageng #dell2 #dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = wuhan#jiageng #dell2 #dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 ifeq ($(strip $(machine)), dell2)
    CUDA_DIR = /home/dell/anaconda3/envs/pytorch
 else ifeq ($(strip $(machine)), jiageng)
    CUDA_DIR= ${CUDADIR}
+else ifeq ($(strip $(machine)), wuhan)
+   CUDA_DIR=/home/HPCBase/compilers/cuda/11.4.0
 endif
 CXX = nvcc
 CXXFLAGS = -O3 -std=c++11 -I${CUDA_DIR}/include 

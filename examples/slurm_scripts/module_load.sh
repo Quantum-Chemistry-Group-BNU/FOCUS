@@ -1,6 +1,6 @@
 #!/bin/bash
 
-platform="cluster" #scy0799  #scv7260  #DCU_419 #DCU_zhengzhou #cluster
+platform="wuhan"  #wuhan scy0799  #scv7260  #DCU_419 #DCU_zhengzhou #cluster
 
 if [ $platform == "scy0799" ]; then
 module purge 
@@ -55,6 +55,42 @@ module load mkl/latest
 module load mpi/latest
 module load compiler-rt/latest
 module load cuda/11.6
+#########################################
+#interactive job run
+# $ salloc -N 1 -n 1 --gres=gpu:1
+########################################
+elif [ $platform == "wuhan" ]; then
+#module purge
+#export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_64/lib:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install/lib:$LD_LIBRARY_PATH
+#export CUDADIR=/home/HPCBase/compilers/cuda/11.4.0
+#source /home/HPCBase/tools/module-5.2.0/init/profile.sh
+#module use /home/HPCBase/modulefiles/
+#module load compilers/gcc/9.3.0
+#module load compilers/cuda/11.4.0
+#module load mpi/openmpi/4.1.2_gcc9.3.0  
+#module load libs/nccl/2.16.5-cuda11.4 
+#module load libs/openblas/0.3.18_kgcc9.3.1
+
+
+
+export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_64/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install/lib:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/lapack-3.11.0-install-64/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib:$LD_LIBRARY_PATH
+export CUDADIR=/home/HPCBase/compilers/cuda/11.4.0
+source /home/HPCBase/tools/module-5.2.0/init/profile.sh
+module use /home/HPCBase/modulefiles/
+module purge
+module load compilers/gcc/9.3.0
+module load mpi/openmpi/4.1.2_gcc9.3.0  
+#module load compilers/kgcc/9.3.1
+#module load mpi/hmpi/1.2.0_kgcc9.3.1
+module load compilers/cuda/11.4.0
+module load libs/nccl/2.16.5-cuda11.4 
+#module load libs/kml/1.7.0_full_gcc_omp
+
+#module load libs/openblas/0.3.18_kgcc9.3.1
 #########################################
 #interactive job run
 # $ salloc -N 1 -n 1 --gres=gpu:1
