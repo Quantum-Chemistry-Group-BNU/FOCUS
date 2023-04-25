@@ -305,7 +305,7 @@ KNOWN PROBLEMS
    - hdiag implementation on GPU [DONE@2023/04/14]
    - async memcpy to GPU => magma_queue
 
-=== Possible improvements ===
+=== TODOs: further improvements ===
 
  * parallel decimation:
    - openmp + mpi [DONE@2023/04/23]
@@ -338,23 +338,12 @@ KNOWN PROBLEMS
 
  * Better GEMM_BATCH with TensorCore
 
-=== TODOs ===
-
- * Reduced density matrix => DMRG compiler
+=== TODOs: scalabilities ===
 
  * More balanced partition of rops and Hx? scale up to more nodes?
    - formulae based partition
 
- * Real space parallelization
-
- * Support Kramers version: 
-   - support complex version [DONE@2023/02/28]
-   - what about R operation in contract? [general complex]
-   - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
-      otherwise renormalized state become complex, and the construction of H 
-      requires 'Conj' operation in GEMM!] 
-
-=== Future ===
+ * Real space parallelization (=> More GPUs)
 
  * Support Mixed CPU-GPU implementation?
    - mmtasks revise [also avoid copy for magma?]
@@ -364,4 +353,15 @@ KNOWN PROBLEMS
      and hence we only need to send rows of o[l,:] and o[r,:] as well as
      the full vector x & y to GPU, which minimize the memory usage of GPU.
    - Can renorm be performed in a similar way?
- 
+
+=== TODOs: functionalities ===
+
+ * Reduced density matrix (RDMs) 
+
+ * Support Kramers version: 
+   - support complex version [DONE@2023/02/28]
+   - what about 'R' operation in contract? [general complex]
+   - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
+      otherwise renormalized state become complex, and the construction of H 
+      requires 'Conj' operation in GEMM!] 
+

@@ -1,14 +1,14 @@
 
-machine = wuhan#dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no 
+DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
-USE_OPENBLAS=yes
+USE_GPU = no #yes
+USE_NCCL = no #yes
+USE_OPENBLAS = no#yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -143,15 +143,20 @@ ifeq ($(strip $(USE_OPENBLAS)),no)
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64
       endif
-      ifeq ($(strip $(USE_GCC)),yes)
-      FLAGS += -fopenmp 
-      MATH += -lmkl_gnu_thread -lgomp
+
+    	# special treatment for my mac machine
+      ifeq ($(strip $(machine)), mac)
+         FLAGS += -fopenmp 
+         MATH += -lmkl_intel_thread -liomp5 
       else
-      FLAGS += -qopenmp 
-      MATH += -lmkl_intel_thread -liomp5 
+         ifeq ($(strip $(USE_GCC)),yes)
+            FLAGS += -fopenmp 
+            MATH += -lmkl_gnu_thread -lgomp
+         else
+            FLAGS += -qopenmp 
+            MATH += -lmkl_intel_thread -liomp5 
+         endif
       endif
-   #FLAGS += -fopenmp 
-   #MATH += -lmkl_intel_thread -liomp5 
    endif
 else
    # parallel version of MKL
