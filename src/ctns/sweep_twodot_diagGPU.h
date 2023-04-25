@@ -24,12 +24,14 @@ namespace ctns{
             std::cout << "ctns::twodot_diagGPU ifkr=" << lqops.ifkr 
                << " size=" << size << std::endl;
          }
+	 auto t0 = tools::get_time();
 
          size_t nblk = wf.info._nnzaddr.size();
          size_t ndim = wf.size();
          double* dev_diag = (double*)GPUmem.allocate(ndim*sizeof(double));
          GPUmem.memset(dev_diag, ndim*sizeof(ndim));
-
+	 auto t1 = tools::get_time();
+	 
          size_t* dev_dims = (size_t*)GPUmem.allocate(nblk*9*sizeof(size_t));
          std::vector<size_t> blkdims(nblk*5,0);
          for(int i=0; i<nblk; i++){
@@ -44,6 +46,8 @@ namespace ctns{
             blkdims[5*i+4] = wf.info._offset[idx]-1;
          }
          GPUmem.to_gpu(dev_dims, blkdims.data(), nblk*5*sizeof(size_t));
+
+	 auto t2 = tools::get_time();
 
          std::vector<size_t> opoffs(nblk*4,0);
          // 1. local terms: <lc1c2r|H|lc1c2r> = Hll + Hc1c1 + Hc2c2 + Hrr
@@ -68,6 +72,7 @@ namespace ctns{
                   lqops._dev_data, rqops._dev_data,
                   c1qops._dev_data, c2qops._dev_data);
          }
+	 auto t3 = tools::get_time();
 
          // 2. density-density interactions: BQ terms where (p^+q)(r^+s) in two of l/c/r
          //        B/Q^C1 B/Q^C2
@@ -76,11 +81,14 @@ namespace ctns{
          twodot_diagGPU_BQ("lc1" ,  lqops, c1qops, wf, dev_diag, dev_dims, opoffs, size, rank);
          twodot_diagGPU_BQ("lc2" ,  lqops, c2qops, wf, dev_diag, dev_dims, opoffs, size, rank);
          twodot_diagGPU_BQ("lr"  ,  lqops,  rqops, wf, dev_diag, dev_dims, opoffs, size, rank);
+	 auto t4 = tools::get_time();
          twodot_diagGPU_BQ("c1c2", c1qops, c2qops, wf, dev_diag, dev_dims, opoffs, size, rank);
          twodot_diagGPU_BQ("c1r" , c1qops,  rqops, wf, dev_diag, dev_dims, opoffs, size, rank);
          twodot_diagGPU_BQ("c2r" , c2qops,  rqops, wf, dev_diag, dev_dims, opoffs, size, rank);
+	 auto t5 = tools::get_time();
         
          GPUmem.deallocate(dev_dims, nblk*9*sizeof(ndim));
+	 auto t6 = tools::get_time();
          if(!ifnccl){
             GPUmem.to_cpu(diag, dev_diag, ndim*sizeof(ndim));
 #ifdef NCCL
@@ -89,7 +97,21 @@ namespace ctns{
             if(rank==0) GPUmem.to_cpu(diag, dev_diag, ndim*sizeof(ndim));
 #endif
          } 
+	 auto t7 = tools::get_time();
          GPUmem.deallocate(dev_diag, ndim*sizeof(ndim));
+	 auto t8 = tools::get_time();
+	 if(rank == 0){
+		std::cout << "### DIAG TIMING: total=" 
+<< tools::get_duration(t8-t0)
+<< " t1=" << tools::get_duration(t1-t0) << ","
+<< " t2=" << tools::get_duration(t2-t1) << ","
+<< " t3=" << tools::get_duration(t3-t2) << ","
+<< " t4=" << tools::get_duration(t4-t3) << ","
+<< " t5=" << tools::get_duration(t5-t4) << ","
+<< " t6=" << tools::get_duration(t6-t5) << ","
+<< " t7=" << tools::get_duration(t7-t6) << ","
+<< " t8=" << tools::get_duration(t8-t7) << std::endl;
+}
       }
 
    template <typename Tm>

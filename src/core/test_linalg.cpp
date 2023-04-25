@@ -12,6 +12,7 @@ int tests::test_linalg(){
    cout << tools::line_separator << endl;	
    cout << "tests::test_linalg" << endl;
    cout << tools::line_separator << endl;
+   
 
    const int n = 3;
    const double thresh = 1.e-10;
@@ -116,6 +117,81 @@ int tests::test_linalg(){
    double diff_eigc = diff1c.normF();
    cout << "normF=" << diff_eigc << endl;
    assert(diff_eigc < thresh);
+
+ /**
+   cout << "\n dgesdd_ test:" << endl;
+   MKL_INT mm = 3000;
+   MKL_INT nn = 3000;
+   char jobz = 'S';
+   MKL_INT minmn = std::min(mm,nn);
+   MKL_INT info;
+
+   double work;
+
+   matrix<double> mat_A(mm,nn);
+   matrix<double> mat_B(mm,nn);
+   matrix<double> mat_U(mm,minmn);
+   matrix<double> mat_VT(minmn,nn);
+   matrix<MKL_INT> iwork(8*minmn,1);
+   matrix<double> d(minmn,1);
+   double workopt;
+   MKL_INT lwork=-1;
+
+
+   vector<double> s;
+   matrix<double> U, Vt;
+   
+   const int ITER = 2;
+
+   auto t0g = tools::get_time();
+   for(int iii=0;iii<ITER;iii++)
+   {
+   auto mat_C= xgemm("N","N",mat_A,mat_B);
+ 
+   }
+   auto t1g = tools::get_time();
+   double duration_gemm = tools::get_duration(t1g-t0g)/(ITER+0.0);
+   std::cout<<"duration_gemm cost is: "<<duration_gemm <<" Second !"<<std::endl;
+
+
+   ///////////////////////////////////////////////////////////////////////////////
+   auto t0 = tools::get_time();
+   for(int iii=0;iii<ITER;iii++)
+   {
+   //dgesdd_(&jobz, &mm, &nn, mat_A.data(), &mm, d.data(), mat_U.data(), &mm, mat_VT.data(), &minmn, &workopt, &lwork, iwork.data(), &info);
+   //svd_solver(mat_A, s, U, Vt, 13);
+   svd_solver(mat_A, s, U, Vt, 3);
+ 
+   }
+   auto t1 = tools::get_time();
+
+   double duration_dgesdd = tools::get_duration(t1-t0)/(ITER+0.0);
+   if(info !=0)
+   {
+       std::cout<<"dgesdd_ error"<<std::endl;
+       exit(0);
+   }
+
+   std::cout<<"duration_dgesdd cost is: "<<duration_dgesdd <<" Second !"<<std::endl;
+   ///////////////////////////////////////////////////////////////////////////////
+   vector<double> e(nn);
+   matrix<double> v;
+   auto t0e = tools::get_time();
+   for(int iii=0;iii<ITER;iii++)
+   {
+   //dgesdd_(&jobz, &mm, &nn, mat_A.data(), &mm, d.data(), mat_U.data(), &mm, mat_VT.data(), &minmn, &workopt, &lwork, iwork.data(), &info);
+   //svd_solver(mat_A, s, U, Vt, 13);
+   eig_solver(mat_A, e, v);
+ 
+   }
+   auto t1e = tools::get_time();
+
+   double duration_e = tools::get_duration(t1e-t0e)/(ITER+0.0);
+
+   std::cout<<"duration_e cost is: "<<duration_e <<" Second !"<<std::endl;
+   ///////////////////////////////////////////////////////////////////////////////
+
+   **/
 
    return 0;
 }

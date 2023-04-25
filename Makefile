@@ -1,13 +1,14 @@
 
-machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = wuhan#dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no #yes 
+DEBUG = no 
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
 USE_GPU = yes
 USE_NCCL = yes
+USE_OPENBLAS=yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -52,6 +53,15 @@ else ifeq ($(strip $(machine)), scy0799)
    LFLAGS = -L${BOOST}/lib -lboost_chrono-mt-x64 -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
+   endif
+else ifeq ($(strip $(machine)), wuhan)
+   #MATHLIB =/home/HPCBase/libs/openblas0.3.18_kgcc9.3.1/libs
+   #MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/lapack-3.11.0-install-64/lib64
+   MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
+   BOOST =/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_64
+   LFLAGS = -L${BOOST}/lib -lboost_chrono-mt-a64 -lboost_timer-mt-a64 -lboost_serialization-mt-a64 -lboost_system-mt-a64 -lboost_iostreams-mt-a64
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi-mt-a64
    endif
 else ifeq ($(strip $(machine)), scv7260)
    MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
@@ -111,36 +121,47 @@ else
    endif
 endif
 
+ifeq ($(strip $(USE_OPENBLAS)),no)
 # OpenMP & MKL
-ifeq ($(strip $(USE_OPENMP)),no)
-   ifeq ($(strip $(USE_ILP64)), no)
+   ifeq ($(strip $(USE_OPENMP)),no)
+      ifeq ($(strip $(USE_ILP64)), no)
       # serial version of MKL
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
-   else
+      else
       MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -DMKL_ILP64 -m64
+      endif
+   else
+   # parallel version of MKL
+   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
+      ifeq ($(strip $(USE_ILP64)), no)
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl 
+      else
+	   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64
+      endif
+      ifeq ($(strip $(USE_GCC)),yes)
+      FLAGS += -fopenmp 
+      MATH += -lmkl_gnu_thread -lgomp
+      else
+      FLAGS += -qopenmp 
+      MATH += -lmkl_intel_thread -liomp5 
+      endif
+   #FLAGS += -fopenmp 
+   #MATH += -lmkl_intel_thread -liomp5 
    endif
 else
    # parallel version of MKL
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
-   ifeq ($(strip $(USE_ILP64)), no)
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl 
-   else
-	   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64
-   endif
-   ifeq ($(strip $(USE_GCC)),yes)
-      FLAGS += -fopenmp 
-      MATH += -lmkl_gnu_thread -lgomp
-   else
-      FLAGS += -qopenmp 
-      MATH += -lmkl_intel_thread -liomp5 
-   endif
-   #FLAGS += -fopenmp 
-   #MATH += -lmkl_intel_thread -liomp5 
+   MATH = \
+	        -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+          -lopenblas -lpthread -lm -ldl -lrt 
+          #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
+   FLAGS += -fopenmp -DUSE_OPENBLAS -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
+
 endif
 # quaternion matrix diagonalization
 MATH += -L./extlibs/zquatev -lzquatev 
@@ -163,6 +184,11 @@ else ifeq ($(strip $(machine)), scy0799)
 else ifeq ($(strip $(machine)), scv7260)
    CUDA_DIR=/data/apps/cuda/11.4
    MAGMA_DIR=/data/home/scv7260/run/xiangchunyang/magma_2_6_1_install
+   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
+else ifeq ($(strip $(machine)), wuhan)
+   CUDA_DIR=/home/HPCBase/compilers/cuda/11.4.0
+   MAGMA_DIR=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
 else ifeq ($(strip $(machine)), dell2)
@@ -308,6 +334,7 @@ depend:
 	echo " USE_GCC = " $(USE_GCC); \
 	echo " USE_MPI = " $(USE_MPI); \
 	echo " USE_OPENMP = " $(USE_OPENMP); \
+	echo " USE_OPENBLAS = " $(USE_OPENBLAS); \
 	echo " USE_ILP64 = " $(USE_ILP64); \
 	echo " USE_GPU = " $(USE_GPU); \
 	echo " CXX = " $(CXX); \

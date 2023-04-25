@@ -130,6 +130,8 @@ namespace ctns{
 
          // 3. Davidson solver for wf
          // 3.1 diag 
+
+         auto diag_t0 = tools::get_time();
          std::vector<double> diag(ndim);
          if(schd.ctns.alg_hvec<10){
             twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
@@ -138,18 +140,42 @@ namespace ctns{
             twodot_diagGPU(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
 #endif
          }
+
+         auto diag_t1 = tools::get_time();
+         
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 executes 
          // the preconditioning in Davidson's algorithm
-         if(!schd.ctns.ifnccl && size > 1){
+        // if(!schd.ctns.ifnccl && size > 1){
             std::vector<double> diag2(ndim);
+         auto diag_t1a = tools::get_time();
             mpi_wrapper::reduce(icomb.world, diag.data(), ndim, diag2.data(), std::plus<double>(), 0, schd.ctns.alg_comm);
+         auto diag_t1b = tools::get_time();
             diag = std::move(diag2);
-         }
+         auto diag_t1c = tools::get_time();
+         //}
 #endif 
+         auto diag_t2 = tools::get_time();
          std::transform(diag.begin(), diag.end(), diag.begin(),
                [&ecore](const double& x){ return x+ecore; });
          timing.tb = tools::get_time();
+         auto diag_t3 = tools::get_time();
+
+         if(rank==0)
+         {
+            double duration_diagGPU = tools::get_duration(diag_t1-diag_t0);
+            double duration_diagreduce = tools::get_duration(diag_t2-diag_t1);
+            double duration_diagreduce_alloc = tools::get_duration(diag_t1a-diag_t1);
+            double duration_diagreduce_reduce = tools::get_duration(diag_t1b-diag_t1a);
+            double duration_diagreduce_move = tools::get_duration(diag_t1c-diag_t1b);
+            double duration_diagtransform = tools::get_duration(diag_t3-diag_t2);
+            std::cout<<"duration_diagGPU:"<<duration_diagGPU<<std::endl;
+            std::cout<<"duration_diagreduce:"<<duration_diagreduce<<std::endl;
+            std::cout<<"duration_diagreduce_alloc: ndim="<<ndim<<"  "<<duration_diagreduce_alloc<<std::endl;
+            std::cout<<"duration_diagreduce_reduce:"<<duration_diagreduce_reduce<<std::endl;
+            std::cout<<"duration_diagreduce_move:"<<duration_diagreduce_move<<std::endl;
+            std::cout<<"duration_diagtransform:"<<duration_diagtransform<<std::endl;
+         }
 
          // 3.2 prepare HVec
          std::map<qsym,qinfo4<Tm>> info_dict;
