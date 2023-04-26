@@ -133,7 +133,7 @@ namespace ctns{
          // 2. successive renormalization process
          oper_timer.sweep_start();
          dot_timing timing_sweep, timing;
-         oper_pool<Tm> qops_pool(iomode, debug);
+         oper_pool<Tm> qops_pool(iomode, debug && schd.ctns.verbose>1);
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             auto p = icomb.topo.rcoord[idx];
             const auto& node = icomb.topo.get_node(p);

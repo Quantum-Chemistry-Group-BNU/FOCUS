@@ -579,40 +579,37 @@ namespace ctns{
             if(ifdist1 and size > 1){
                // Sp[iproc] += \sum_i Sp[i]
                auto opS_index = qops.oper_index_op('S');
+               size_t totsize = 0;
                for(int p : opS_index){
                   int iproc = distribute1(ifkr,size,p);
                   auto& opS = qops('S')[p];
                   size_t opsize = opS.size();
+                  totsize += opsize;
                   size_t off = qops._offset[std::make_pair('S',p)];
                   mpi_wrapper::reduce(icomb.world, opS.data(), opsize, iproc, schd.ctns.alg_comm);
-                  if(iproc == rank){ 
-#ifdef GPU
-                     if(schd.ctns.alg_renorm>10) GPUmem.to_gpu(qops._dev_data+off, opS.data(), opsize*sizeof(Tm));
-#endif
-                  }else{
-                     opS.set_zero();
-#ifdef GPU
-                     if(schd.ctns.alg_renorm>10) GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
-#endif
-                  }
+                  if(iproc != rank) opS.set_zero();
                }
+#ifdef GPU
+               if(schd.ctns.alg_renorm>10 && opS_index.size()>0){
+                  int p0 = opS_index[0];
+                  size_t off = qops._offset[std::make_pair('S',p0)];
+                  Tm* ptr0 = qops('S')[p0].data();
+                  GPUmem.to_gpu(qops._dev_data+off, ptr0, totsize*sizeof(Tm));
+               }
+#endif
                // H[0] += \sum_i H[i]
                auto& opH = qops('H')[0];
                size_t opsize = opH.size();
                size_t off = qops._offset[std::make_pair('H',0)];
                mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0, schd.ctns.alg_comm);
-               if(rank == 0){ 
+               if(rank != 0) opH.set_zero(); 
 #ifdef GPU
-                  if(schd.ctns.alg_renorm>10) GPUmem.to_gpu(qops._dev_data+off, opH.data(), opsize*sizeof(Tm));
-#endif
-               }else{
-                  opH.set_zero();
-#ifdef GPU
-                  if(schd.ctns.alg_renorm>10) GPUmem.memset(qops._dev_data+off, opsize*sizeof(Tm));
-#endif
+               if(schd.ctns.alg_renorm>10){
+                  GPUmem.to_gpu(qops._dev_data+off, opH.data(), opsize*sizeof(Tm));
                }
-            }
 #endif
+            } // ifdist1 and size > 1
+#endif // SERIAL
 
             // 3. consistency check for Hamiltonian
             const auto& opH = qops('H').at(0);

@@ -121,6 +121,7 @@ namespace ctns{
                }
             } // bc
             rot = std::move(qt2);
+            qkept.print("qkept");
 
             if(debug){
                auto t2 = tools::get_time();
@@ -286,6 +287,7 @@ namespace ctns{
                }
             } // bc
             rot = std::move(qt2);
+            qkept.print("qkept");
 
             if(debug){
                auto t2 = tools::get_time();

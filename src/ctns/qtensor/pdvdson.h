@@ -100,7 +100,9 @@ namespace ctns{
                auto t0 = tools::get_time();
                linalg::matrix<Tm> id = linalg::identity_matrix<Tm>(ndim);
                linalg::matrix<Tm> H(ndim,ndim);
-               HVecs(ndim,H.data(),id.data());
+               HVecs(ndim, H.data(), id.data());
+               std::vector<double> e(ndim);
+               linalg::matrix<Tm> V(ndim,ndim);
                if(rank == 0){
                   // check consistency with diag
                   if(ifCheckDiag){
@@ -126,17 +128,22 @@ namespace ctns{
                      tools::exit("error: H is not symmetric in ctns::pdvdsonSolver_nkr::solve_diag!");
                   }
                   // solve eigenvalue problem by diagonalization
-                  std::vector<double> e(ndim);
-                  linalg::matrix<Tm> V;
                   linalg::eig_solver(H, e, V);
                   std::cout << "eigenvalues:\n" << std::setprecision(12);
                   for(size_t i=0; i<ndim; i++){
                      std::cout << "i=" << i << " e=" << e[i] << std::endl;
                   }
-                  // copy results
-                  linalg::xcopy(neig, e.data(), es);
-                  linalg::xcopy(ndim*neig, V.data(), vs);
                } // rank-0
+#ifndef SERIAL
+               // broadcast results
+               if(size > 1){
+                  boost::mpi::broadcast(world, e.data(), neig, 0);
+                  mpi_wrapper::broadcast(world, V.data(), ndim*neig, 0, alg_comm);
+               }
+#endif
+               // copy results
+               linalg::xcopy(neig, e.data(), es);
+               linalg::xcopy(ndim*neig, V.data(), vs);
                auto t1 = tools::get_time();
                if(rank == 0) tools::timing("solve_diag", t0, t1);
             }

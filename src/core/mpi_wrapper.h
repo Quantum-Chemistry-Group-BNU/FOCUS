@@ -151,7 +151,7 @@ namespace mpi_wrapper{
          if(!tools::is_complex<Tm>()){
             for(size_t offset=0; offset<size; offset+=chunksize){
                size_t len = std::min(chunksize, size-offset);
-               if(comm.rank() == 0){
+               if(comm.rank() == root){
                   // send_data, recv_data, count, datatype, op, root, communicator
                   MPI_Reduce(MPI_IN_PLACE, ptr_inout+offset, len, MPI_DOUBLE, MPI_SUM, root, comm);
                }else{
@@ -161,7 +161,7 @@ namespace mpi_wrapper{
          }else{
             for(size_t offset=0; offset<size; offset+=chunksize){
                size_t len = std::min(chunksize, size-offset);
-               if(comm.rank() == 0){
+               if(comm.rank() == root){
                   MPI_Reduce(MPI_IN_PLACE, ptr_inout+offset, len, MPI_DOUBLE_COMPLEX, MPI_SUM, root, comm);
                }else{
                   MPI_Reduce(ptr_inout+offset, nullptr, len, MPI_DOUBLE_COMPLEX, MPI_SUM, root, comm);

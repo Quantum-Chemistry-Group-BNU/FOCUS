@@ -226,7 +226,7 @@ namespace ctns{
          oper_timer.dot_start();
          onedot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2, 
                ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, timing);
-         if(debug && schd.ctns.verbose>0){
+         if(debug){
             sweeps.print_eopt(isweep, ibond);
             if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
          }

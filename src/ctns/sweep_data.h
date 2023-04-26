@@ -245,6 +245,7 @@ namespace ctns{
       // print optimized energies
       void print_eopt(const int isweep, const int ibond) const{
          const auto& eopt = opt_result[isweep][ibond].eopt;
+         const auto& nmvp = opt_result[isweep][ibond].nmvp;
          int dots = ctrls[isweep].dots;
          for(int i=0; i<nroots; i++){
             std::cout << "optimized energies:"
@@ -252,6 +253,7 @@ namespace ctns{
                << " dots=" << dots
                << " ibond=" << ibond 
                << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
+               << " nmvp=" << nmvp
                << std::endl;
          } // i
       }
