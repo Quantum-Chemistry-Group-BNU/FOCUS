@@ -312,7 +312,7 @@ KNOWN PROBLEMS
    - mpi -> share memory?
 
  * cpu<->gpu, network communication: 
-   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DON@2023/04/17]
+   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [error, 2023/04/17]
    2. perform renormalization by class [CABPQSH, hiden memcpy]
 
  * Better treatment GEMM involving 'c': use axpy_vbatch?
