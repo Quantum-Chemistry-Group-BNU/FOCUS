@@ -167,7 +167,7 @@ namespace input{
          bool ifnccl = false;
          // sampling
          int iroot = 0;
-         int nsample = 1.e5;
+         int nsample = 10000;
          int ndetprt = 10;
    };
 

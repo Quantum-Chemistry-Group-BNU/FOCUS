@@ -199,6 +199,7 @@ namespace integral{
             << tools::sizeMB<Tm>(int2e.size()) << "MB:"
             << tools::sizeGB<Tm>(int2e.size()) << "GB"
             << std::endl; 
+         
          // read
          int i,j,k,l;
          Tm eri;
@@ -223,6 +224,7 @@ namespace integral{
          istrm.close();
          // compute Qij
          int2e.initQ();
+         
          auto t1 = tools::get_time();
          tools::timing("integral::load_integral", t0, t1);
       }
