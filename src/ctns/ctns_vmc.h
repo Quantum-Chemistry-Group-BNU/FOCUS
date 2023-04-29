@@ -86,12 +86,15 @@ namespace ctns{
                } // ij
                double fac = 1.0/(i+1.0);
                ene = (ene*i + std::real(eloc))*fac;
-               ene2 = (ene2*i + std::norm(eloc))*fac;
+               ene2 = (ene2*i + std::norm(eloc))*fac; 
                if((i+1)%noff == 0){
+                  // Note: <psi|H-E|P><P|H-E|psi> is not <psi|(H-E)^2|psi>,
+                  // which can be simply seen by taking |psi> as a single determinant!
+                  // Thus, it is not the variance of the wavefunction.
                   std = std::sqrt(std::abs(ene2-ene*ene)/(i+1.e-10));
                   std::cout << " i=" << i 
                      << " <H>=" << std::defaultfloat << std::setprecision(12) << ene 
-                     << " <(H-E)^2>=" << std::scientific << std::setprecision(3) << (ene2-ene*ene)
+                     //<< " <(H-E)^2>=" << std::scientific << std::setprecision(3) << (ene2-ene*ene)
                      << " std=" << std::scientific << std::setprecision(3) << std
                      << " range=(" << std::defaultfloat << std::setprecision(12) 
                      << ene-std << "," << ene+std << ")" 

@@ -46,7 +46,7 @@ namespace ctns{
                   } // ir
                } // bc
             } // br
-              // cwf(n0,r0)*site1(r0,r1,n1) = psi(n0,r1,n1)
+            // cwf(n0,r0)*site1(r0,r1,n1) = psi(n0,r1,n1)
             icomb.cpsi[iroot] = contract_qt3_qt2("l",site1,cwf);
          } // iroot
          site0 = get_left_bsite<Tm>(Km::isym); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
@@ -56,50 +56,35 @@ namespace ctns{
    // cpsi1_to_rwfuns: generate right canonical form (RCF) for later usage: LCRR => cRRRR
    template <typename Km>
       void sweep_final(comb<Km>& icomb,
-            const integral::two_body<typename Km::dtype>& int2e,
-            const integral::one_body<typename Km::dtype>& int1e,
-            const double ecore,
             const input::schedule& schd,
             const std::string scratch,
-            oper_pool<typename Km::dtype>& qops_pool,
-            sweep_data& sweeps,
             const int isweep){
          using Tm = typename Km::dtype;
-         int rank = 0, size = 1;
-#ifndef SERIAL
-         rank = icomb.world.rank();
-         size = icomb.world.size();
-#endif   
          auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(isweep)+".info";
-         if(rank == 0){
-            std::cout << "\nctns::sweep_final: convert into RCF & save into "
-               << rcanon_file << std::endl;
-            std::cout << tools::line_separator << std::endl;
+         std::cout << "\nctns::sweep_final: convert into RCF & save into "
+            << rcanon_file << std::endl;
+         std::cout << tools::line_separator << std::endl;
+
+         // 1. reorthogonalize {cpsi} in case there is truncation in the last sweep
+         // such that they are not orthonormal any more, which can happens for
+         // small bond dimension. 
+         size_t ndim = icomb.cpsi[0].size();
+         int nroots = icomb.cpsi.size();
+         std::vector<Tm> v0(ndim*nroots);
+         for(int i=0; i<nroots; i++){
+            icomb.cpsi[i].to_array(&v0[ndim*i]);
          }
-         auto p0 = std::make_pair(0,0);
-         auto p1 = std::make_pair(1,0);
-         const auto& pdx0 = icomb.topo.rindex.at(p0);
-         const auto& pdx1 = icomb.topo.rindex.at(p1);
+         int nindp = linalg::get_ortho_basis(ndim, nroots, v0.data()); // reorthogonalization
+         assert(nindp == nroots);
+         for(int i=0; i<nroots; i++){
+            icomb.cpsi[i].from_array(&v0[ndim*i]);
+         }
+         v0.clear();
+         const auto& pdx0 = icomb.topo.rindex.at(std::make_pair(0,0));
+         const auto& pdx1 = icomb.topo.rindex.at(std::make_pair(1,0));
 
-         if(rank == 0){
-
-            // 1. reorthogonalize {cpsi} in case there is truncation in the last sweep
-            // such that they are not orthonormal any more, which can happens for
-            // small bond dimension. 
-            size_t ndim = icomb.cpsi[0].size();
-            int nroots = icomb.cpsi.size();
-            std::vector<Tm> v0(ndim*nroots);
-            for(int i=0; i<nroots; i++){
-               icomb.cpsi[i].to_array(&v0[ndim*i]);
-            }
-            int nindp = linalg::get_ortho_basis(ndim, nroots, v0.data()); // reorthogonalization
-            assert(nindp == nroots);
-            for(int i=0; i<nroots; i++){
-               icomb.cpsi[i].from_array(&v0[ndim*i]);
-            }
-            v0.clear();
-
-            // 2. compute C0 & R1 from cpsi via decimation: LCRR => CRRR
+         // 2. compute C0 & R1 from cpsi via decimation: LCRR => CRRR
+         {
             std::cout << "Convert [LC]RR => [CR]RR:" << std::endl;
             const auto& wfinfo = icomb.cpsi[0].info;
             stensor2<Tm> rot;
@@ -111,7 +96,8 @@ namespace ctns{
             const int dcut = 4*nroots; // psi[l,n,r,i] => U[l,i,a]sigma[a]Vt[a,n,r]
             double dwt; 
             int deff;
-            std::string fname = scratch+"/decimation" + "_isweep"+std::to_string(isweep) + "_C0R1.txt";
+            std::string fname = scratch+"/decimation"
+               + "_isweep"+std::to_string(isweep) + "_C0R1.txt";
             const bool iftrunc = true;
             const int alg_decim = 0;
             decimation_row(icomb, wfinfo.qmid, wfinfo.qcol, 
@@ -126,33 +112,12 @@ namespace ctns{
                auto psi = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.T()); // A0(1,n,r)
                icomb.cpsi[i] = std::move(psi);
             }
-
-         } // rank-0
-#ifndef SERIAL
-         if(size > 1) mpi_wrapper::broadcast(icomb.world, icomb.sites[pdx1], 0);
-#endif
-         {
-            auto p = p1;
-            std::vector<std::string> fneed(2);
-            fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
-            fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
-            qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
-            const auto& cqops = qops_pool(fneed[0]);
-            const auto& rqops = qops_pool(fneed[1]);
-            std::string frop = oper_fname(scratch, p, "r");
-            std::string superblock = "cr";
-            std::string fname;
-            dot_timing timing;
-            oper_renorm(superblock, icomb, p, int2e, int1e, schd,
-                  cqops, rqops, qops_pool(frop), fname, timing);
          }
 
          // 3. compute rwfuns & R0 from C0: CRRR => cRRRR
-         if(rank == 0){
-            
+         {
             std::cout << "\nConvert [C]RRR => [cR]RRR:" << std::endl;
             const auto& wfinfo = icomb.cpsi[0].info;
-            int nroots = icomb.cpsi.size();
             stensor2<Tm> rot;
             std::vector<stensor2<Tm>> wfs2(nroots);
             for(int i=0; i<nroots; i++){
@@ -186,36 +151,13 @@ namespace ctns{
                }
                icomb.rwfuns[iroot] = std::move(rwfun);
             } // iroot
-              
-         } // rank-0
-#ifndef SERIAL
-         if(size > 1) mpi_wrapper::broadcast(icomb.world, icomb.sites[pdx0], 0);
-#endif
-         {
-            auto p = p0;
-            std::vector<std::string> fneed(2);
-            fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
-            fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
-            qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
-            const auto& cqops = qops_pool(fneed[0]);
-            const auto& rqops = qops_pool(fneed[1]);
-            std::string frop = oper_fname(scratch, p, "r");
-            std::string superblock = "cr";
-            std::string fname;
-            dot_timing timing;
-            oper_renorm(superblock, icomb, p, int2e, int1e, schd,
-                  cqops, rqops, qops_pool(frop), fname, timing);
-            // get Hamiltonian
-            auto Hij = get_Hmat0(icomb, qops_pool(frop), ecore, schd);
-            if(rank == 0) Hij.print("Hij",8);
          }
 
          // 4. save & check
-         if(rank == 0){
-            ctns::rcanon_save(icomb, rcanon_file);
-            ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
-            std::cout << "..... end of isweep = " << isweep << " .....\n" << std::endl;
-         }
+         ctns::rcanon_save(icomb, rcanon_file);
+         ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+
+         std::cout << "..... end of isweep = " << isweep << " .....\n" << std::endl;
       }
 
 } // ctns
