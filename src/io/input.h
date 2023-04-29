@@ -91,12 +91,12 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
-                  & task_init & task_sdiag & task_ham & task_opt & task_rdm
+                  & task_init & task_sdiag & task_ham & task_opt & task_vmc & task_rdm
                   & restart_sweep & restart_bond & timestamp
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
                   & alg_hvec & alg_hinter & alg_renorm & alg_rinter & alg_decim & alg_comm 
-                  & ifdist1 & save_formulae & sort_formulae & save_mmtask 
+                  & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
                   & mmorder & batchmem 
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
@@ -117,6 +117,7 @@ namespace input{
          bool task_sdiag = false;
          bool task_ham = false;
          bool task_opt = false;
+         bool task_vmc = false;
          bool task_rdm = false;
          // restart
          int restart_sweep = 0;
@@ -142,6 +143,7 @@ namespace input{
          int alg_decim = 1;
          int alg_comm = 0;
          bool ifdist1 = false;
+         bool ifdistc = false;
          bool save_formulae = false;
          bool sort_formulae = false;
          bool save_mmtask = false;

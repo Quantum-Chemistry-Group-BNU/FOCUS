@@ -95,7 +95,8 @@ namespace ctns{
                sweeps.summary(isweep);
             }
             // generate right rcanonical form and save checkpoint file
-            if(rank == 0) sweep_final(icomb, schd, scratch, isweep);
+            sweep_final(icomb, int2e, int1e, ecore, schd, scratch, 
+                  qops_pool, sweeps, isweep);
          } // isweep
          qops_pool.finalize();
 

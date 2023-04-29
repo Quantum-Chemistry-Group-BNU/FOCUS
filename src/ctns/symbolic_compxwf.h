@@ -131,6 +131,7 @@ namespace ctns{
             const int size,
             const int rank,
             const bool ifdist1,
+            const bool ifdistc,
             const bool ifdagger=false){
          symbolic_task<Tm> formulae;
          int p = index, kp = p/2;
@@ -167,12 +168,6 @@ namespace ctns{
          auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank);
          auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank);
          auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank);
-         /*   
-              combine_two_index3 = true;
-              combine_two_index4 = true;
-              combine_two_index5 = true;
-              combine_two_index6 = true;
-              */
          if(!ifkr){
 
             // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	   

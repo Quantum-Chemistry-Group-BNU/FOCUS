@@ -105,6 +105,7 @@ namespace ctns{
             auto cindex_c1 = oper_index_opC(suppc1, ifkr);
             auto cindex_c2 = oper_index_opC(suppc2, ifkr);
             const bool& ifdist1 = schd.ctns.ifdist1;
+            const bool& ifdistc = schd.ctns.ifdistc;
             
             // renormalization
             auto fbond = icomb.topo.get_fbond(dbond,".");
@@ -142,7 +143,7 @@ namespace ctns{
             io::remove_scratch(scratch);
             io::create_scratch(scratch); 
 
-            std::vector<int> mpisizes({1,2,4,8,64});
+            std::vector<int> mpisizes({1,2,4,8,16,32,64,128});
             for(int idx=0; idx<mpisizes.size(); idx++){
                int mpisize = mpisizes[idx];
                std::cout << '\n' << tools::line_separator << std::endl;
@@ -223,7 +224,7 @@ namespace ctns{
                   std::map<std::string,int> counter;
                   auto formulae = gen_formulae_renorm(oplist, block1, block2, 
                         cindex1, cindex2, krest,
-                        isym, ifkr, int2e, mpisize, rank, ifdist1, 
+                        isym, ifkr, int2e, mpisize, rank, ifdist1, ifdistc, 
                         ifsave, counter);
 
                   formulae.display("total");
@@ -269,7 +270,7 @@ namespace ctns{
                   bool ifsave = true;
                   std::map<std::string,int> counter;
                   auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
-                        isym, ifkr, int2e, mpisize, rank, ifdist1, 
+                        isym, ifkr, int2e, mpisize, rank, ifdist1, ifdistc, 
                         ifsave, counter);
 
                   formulae.display("total");
@@ -298,7 +299,7 @@ namespace ctns{
             bool ifsave = false;
             std::map<std::string,int> counter;
             auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
-                  isym, ifkr, int2e, 1, 0, ifdist1, 
+                  isym, ifkr, int2e, 1, 0, ifdist1, ifdistc,
                   ifsave, counter);
             std::map<std::string,std::vector<int>> maps;
             for(int i=0; i<formulae.size(); i++){
@@ -339,7 +340,7 @@ namespace ctns{
                   bool ifsave = false;
                   std::map<std::string,int> counter;
                   auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
-                        isym, ifkr, int2e, mpisize, rank, ifdist1, 
+                        isym, ifkr, int2e, mpisize, rank, ifdist1, ifdistc, 
                         ifsave, counter);
                   for(int i=0; i<formulae.size(); i++){
                      auto symbol = formulae.tasks[i].symbol();

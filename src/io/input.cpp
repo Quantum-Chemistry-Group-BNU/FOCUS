@@ -191,6 +191,8 @@ void params_ctns::read(ifstream& istrm){
          task_ham = true;
       }else if(line.substr(0,8)=="task_opt"){
          task_opt = true;
+      }else if(line.substr(0,8)=="task_vmc"){
+         task_vmc = true;
       }else if(line.substr(0,8)=="task_rdm"){
          task_rdm = true;
       }else if(line.substr(0,13)=="restart_sweep"){
@@ -213,6 +215,8 @@ void params_ctns::read(ifstream& istrm){
          alg_comm = stoi(line.substr(8));
       }else if(line.substr(0,7)=="ifdist1"){
          ifdist1 = true;	      
+      }else if(line.substr(0,7)=="ifdistc"){
+         ifdistc = true;	      
       }else if(line.substr(0,13)=="save_formulae"){
          save_formulae = true;
       }else if(line.substr(0,13)=="sort_formulae"){
@@ -337,6 +341,7 @@ void params_ctns::print() const{
    cout << "task_sdiag = " << task_sdiag << endl;
    cout << "task_ham = " << task_ham << endl;
    cout << "task_opt = " << task_opt << endl;
+   cout << "task_vmc = " << task_vmc << endl;
    cout << "task_rdm = " << task_rdm << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;
@@ -369,6 +374,7 @@ void params_ctns::print() const{
    cout << "alg_decim = " << alg_decim << endl;
    cout << "alg_comm = " << alg_comm << endl;
    cout << "ifdist1 = " << ifdist1 << endl;
+   cout << "ifdistc = " << ifdistc << endl;
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;
    cout << "save_mmtask = " << save_mmtask << endl;

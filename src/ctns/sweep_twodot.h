@@ -100,6 +100,7 @@ namespace ctns{
          auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
          stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
          size_t ndim = wf.size();
+         int neig = sweeps.nroots;
          if(debug){
             std::cout << "wf4(diml,dimr,dimc1,dimc2)=(" 
                << ql.get_dimAll() << ","
@@ -113,6 +114,10 @@ namespace ctns{
          }
          if(ndim == 0){
             std::cout << "error: symmetry is inconsistent as ndim=0" << std::endl;
+            exit(1);
+         }
+         if(ndim < neig){
+            std::cout << "error: ndim<neig! either neig is too large or dcut is too small." << std::endl;
             exit(1);
          }
 
@@ -228,7 +233,7 @@ namespace ctns{
 
             // raw version: symbolic formulae + dynamic allocation of memory 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae); 
             HVec = bind(&ctns::symbolic_Hx<Tm,stensor4<Tm>>, _1, _2, std::cref(H_formulae),
                   std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
@@ -237,7 +242,7 @@ namespace ctns{
 
             // symbolic formulae + preallocation of workspace 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
             tmpsize = opsize + 3*wfsize;
             worktot = maxthreads*tmpsize;
             if(debug && schd.ctns.verbose>0){
@@ -256,7 +261,7 @@ namespace ctns{
 
             // symbolic formulae (factorized) + preallocation of workspace 
             H_formulae2 = symbolic_formulae_twodot2(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae); 
             tmpsize = opsize + 4*wfsize;
             worktot = maxthreads*tmpsize;
             if(debug && schd.ctns.verbose>0){
@@ -277,7 +282,7 @@ namespace ctns{
             const bool ifDirect = false;
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
 
@@ -304,7 +309,7 @@ namespace ctns{
             const bool ifDirect = false;
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae); 
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae); 
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
 
@@ -332,7 +337,7 @@ namespace ctns{
             const bool ifDirect = alg_hvec % 2 == 1;
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
 
@@ -442,7 +447,7 @@ namespace ctns{
             timing.tb2 = tools::get_time();
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, debug_formulae);
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
 
             timing.tb3 = tools::get_time();
 
@@ -566,7 +571,6 @@ namespace ctns{
          //-------------
          // solve HC=CE         
          //-------------
-         int neig = sweeps.nroots;
          linalg::matrix<Tm> vsol(ndim,neig);
          auto& nmvp = sweeps.opt_result[isweep][ibond].nmvp;
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;

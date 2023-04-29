@@ -20,6 +20,7 @@ namespace ctns{
             const int& size,
             const int& rank,
             const bool ifdist1,
+            const bool ifdistc,
             const bool ifsave,
             std::map<std::string,int>& counter){
          const int print_level = 1;
@@ -63,7 +64,7 @@ namespace ctns{
             // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
             auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
             auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", cindex_c2, cindex_r,
-                  int2e, index, isym, ifkr, size, rank, ifdist1);
+                  int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Sc2r.size() == 0) continue;
             auto Clc1_Sc2r = Clc1.outer_product(Sc2r);
             formulae.join(Clc1_Sc2r);
@@ -81,7 +82,7 @@ namespace ctns{
             int iformula = pr.second;
             // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
             auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", cindex_l, cindex_c1,
-                  int2e, index, isym, ifkr, size, rank, ifdist1);
+                  int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Slc1.size() == 0) continue;
             auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
             Cc2r.scale(-1.0);
@@ -201,6 +202,7 @@ namespace ctns{
             const std::string fname,
             const bool sort_formulae,
             const bool ifdist1,
+            const bool ifdistc,
             const bool debug=false){
          auto t0 = tools::get_time();
          const auto& lqops = qops_dict.at("l");
@@ -241,7 +243,7 @@ namespace ctns{
          // generation of Hx
          std::map<std::string,int> counter;
          auto formulae = gen_formulae_twodot(cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
-               int2e,size,rank,ifdist1,ifsave,counter);
+               int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
          // reorder if necessary
          if(sort_formulae){
             std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
@@ -282,6 +284,7 @@ namespace ctns{
             const std::string fname,
             const bool sort_formulae,
             const bool ifdist1,
+            const bool ifdistc,
             const bool debug=false){
          auto t0 = tools::get_time();
          const int print_level = 1;
@@ -364,7 +367,7 @@ namespace ctns{
             // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
             auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
             auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", cindex_c2, cindex_r,
-                  int2e, index, isym, ifkr, size, rank, ifdist1);
+                  int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Sc2r.size() == 0) continue;
             auto Clc1_Sc2r = bipart_oper(Clc1,Sc2r,"Clc1_Sc2r["+std::to_string(index)+"]");
             assert(Clc1_Sc2r.parity == 0);
@@ -383,7 +386,7 @@ namespace ctns{
             int iformula = pr.second;
             // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
             auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", cindex_l, cindex_c1,
-                  int2e, index, isym, ifkr, size, rank, ifdist1);
+                  int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Slc1.size() == 0) continue;
             auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
             Cc2r.scale(-1.0);

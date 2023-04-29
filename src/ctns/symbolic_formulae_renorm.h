@@ -21,6 +21,7 @@ namespace ctns{
             const int& size,
             const int& rank,
             const bool ifdist1,
+            const bool ifdistc,
             const bool ifsave,
             std::map<std::string,int>& counter){
          const int print_level = 1;
@@ -121,7 +122,7 @@ namespace ctns{
             auto sindex = oper_index_opS(krest, ifkr); 
             for(const auto& index : sindex){
                auto opS = symbolic_compxwf_opS<Tm>(block1, block2, cindex1, cindex2,
-                     int2e, index, isym, ifkr, size, rank, ifdist1);
+                     int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                // opS can be empty for ifdist1=true
                if(opS.size() == 0) continue;
                formulae.append(std::make_tuple('S', index, opS));
@@ -161,6 +162,7 @@ namespace ctns{
             const std::string fname,
             const bool sort_formulae,
             const bool ifdist1,
+            const bool ifdistc,
             const bool debug=false){
          auto t0 = tools::get_time();
          const std::string block1 = superblock.substr(0,1);
@@ -197,7 +199,7 @@ namespace ctns{
          std::map<std::string,int> counter;
          auto rformulae = gen_formulae_renorm(qops.oplist,block1,block2,
                cindex1,cindex2,qops.krest,isym,ifkr,
-               int2e,size,rank,ifdist1,ifsave,counter);
+               int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
          // reorder if necessary
          if(sort_formulae){
             std::map<std::string,int> dims = {{block1,qops1.qket.get_dimAll()},

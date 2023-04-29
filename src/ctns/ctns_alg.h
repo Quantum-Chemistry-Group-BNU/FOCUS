@@ -272,10 +272,10 @@ namespace ctns{
          return Sdiag;
       }
 
-   // Sampling CTNS to get {|det>,p(det)=|<det|Psi[i]>|^2} 
+   // Sampling CTNS to get {|det>,coeff(det)=<det|Psi[i]>} 
    // In case that CTNS is unnormalized, p(det) is also unnormalized. 
    template <typename Km>
-      std::pair<fock::onstate,double> rcanon_random(const comb<Km>& icomb, 
+      std::pair<fock::onstate,typename Km::dtype> rcanon_random(const comb<Km>& icomb, 
             const int iroot,
             const bool debug=false){
          if(debug) std::cout << "\nctns::rcanon_random iroot=" << iroot << std::endl; 
@@ -340,8 +340,7 @@ namespace ctns{
                << " diff=" << coeff0*sgn-coeff1 << std::endl;
             assert(std::abs(coeff0*sgn-coeff1)<1.e-10);
          }
-         double prob = std::norm(coeff0);
-         return std::make_pair(state,prob);
+         return std::make_pair(state,coeff0);
       }
 
    // compute diagonal entropy via sampling:
@@ -366,7 +365,7 @@ namespace ctns{
          for(int i=0; i<nsample; i++){
             auto pr = rcanon_random(icomb,iroot);
             auto state = pr.first;
-            auto ci2 = pr.second;
+            auto ci2 = std::norm(pr.second);
             // statistical analysis
             pop[state] += 1;
             double s = (ci2 < cutoff)? 0.0 : -log2(ci2)*ovlp;

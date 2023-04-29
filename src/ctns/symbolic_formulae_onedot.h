@@ -19,6 +19,7 @@ namespace ctns{
             const int& size,
             const int& rank,
             const bool ifdist1,
+            const bool ifdistc,
             const bool ifsave,
             std::map<std::string,int>& counter){
          const int print_level = 1;
@@ -61,7 +62,7 @@ namespace ctns{
             for(const auto& index : cindex_l){
                auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
                auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cindex_c, cindex_r,
-                     int2e, index, isym, ifkr, size, rank, ifdist1);
+                     int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                if(Scr.size() == 0) continue;
                auto Cl_Scr = Cl.outer_product(Scr);
                formulae.join(Cl_Scr);
@@ -153,7 +154,7 @@ namespace ctns{
             counter["SC"] = 0;
             for(const auto& index : cindex_r){
                auto Slc = symbolic_compxwf_opS<Tm>("l", "c", cindex_l, cindex_c,
-                     int2e, index, isym, ifkr, size, rank, ifdist1);
+                     int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                if(Slc.size() == 0) continue;
                Slc.scale(-1.0);
                auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
@@ -229,6 +230,7 @@ namespace ctns{
             const std::string fname,
             const bool sort_formulae,
             const bool ifdist1,
+            const bool ifdistc,
             const bool debug=false){
          auto t0 = tools::get_time();
          const int print_level = 1;
@@ -266,7 +268,7 @@ namespace ctns{
          // generation of Hx
          std::map<std::string,int> counter;
          auto formulae = gen_formulae_onedot(cindex_l,cindex_r,cindex_c,isym,ifkr,
-               int2e,size,rank,ifdist1,ifsave,counter);
+               int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
          // reorder if necessary
          if(sort_formulae){
             std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
@@ -306,6 +308,7 @@ namespace ctns{
             const std::string fname,
             const bool sort_formulae,
             const bool ifdist1,
+            const bool ifdistc,
             const bool debug=false){
          auto t0 = tools::get_time();
          const int print_level = 1;
@@ -384,7 +387,7 @@ namespace ctns{
             for(const auto& index : cindex_l){
                auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
                auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cindex_c, cindex_r,
-                     int2e, index, isym, ifkr, size, rank, ifdist1);
+                     int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                if(Scr.size() == 0) continue;
                auto Cl_Scr = bipart_oper(Cl,Scr,"Cl_Scr["+std::to_string(index)+"]");
                assert(Cl_Scr.parity == 0);
@@ -484,7 +487,7 @@ namespace ctns{
             counter["SC"] = 0;
             for(const auto& index : cindex_r){
                auto Slc = symbolic_compxwf_opS<Tm>("l", "c", cindex_l, cindex_c,
-                     int2e, index, isym, ifkr, size, rank, ifdist1);
+                     int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                if(Slc.size() == 0) continue;
                Slc.scale(-1.0);
                auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
