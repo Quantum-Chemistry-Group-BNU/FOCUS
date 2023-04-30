@@ -453,9 +453,10 @@ namespace linalg{
                return blk;
             }
          public:
-            int _rows, _cols;
-            size_t _size;
-            Tm* _data;
+            int _rows = 0;
+            int _cols = 0;
+            size_t _size = 0;
+            Tm* _data = nullptr;
       };
 
    // operator */+/- for conversion between real & complex matrices

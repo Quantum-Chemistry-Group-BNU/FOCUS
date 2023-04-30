@@ -98,10 +98,10 @@ namespace ctns{
                      thresh_proj, rdm_svd, debug_init);
 
             } // node type
-#ifdef _OPENMP
-#pragma omp critical
-#endif
-            icomb.rbases[idx] = std::move(rbasis); // avoid concurrently writing map
+//#ifdef _OPENMP
+//#pragma omp critical
+//#endif
+            icomb.rbases[idx] = rbasis; // std::move(rbasis) may cause memory error sometimes
             auto shape = get_shape(icomb.rbases[idx]); 
             assert(shape.first > 0 && shape.second > 0);
          } // idx

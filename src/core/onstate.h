@@ -459,9 +459,9 @@ namespace fock{
          friend class onspace_compact;
 
       private:
-         int _size;
-         int _len;
-         unsigned long* _repr;
+         int _size = 0;
+         int _len = 0;
+         unsigned long* _repr = nullptr;
    }; // onstate
 
    inline std::string symbol(const int i){
