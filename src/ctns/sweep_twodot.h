@@ -134,8 +134,10 @@ namespace ctns{
          }
 
          // 3. Davidson solver for wf
+#ifndef SERIAL
+         icomb.world.barrier();
+#endif
          // 3.1 diag 
-
          auto diag_t0 = tools::get_time();
          std::vector<double> diag(ndim);
          if(alg_hvec<10){

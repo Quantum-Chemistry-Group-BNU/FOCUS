@@ -159,6 +159,9 @@ namespace ctns{
             exit(1);
          }
 
+#ifndef SERIAL
+         icomb.world.barrier();
+#endif
          timing.tf1 = tools::get_time();
          if(alg_renorm == 0){
 
