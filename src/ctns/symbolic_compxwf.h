@@ -164,6 +164,7 @@ namespace ctns{
          bool combine_two_index4 = (kc1 <= kB2);
          bool combine_two_index5 = (kc2 <= kA1);
          bool combine_two_index6 = (kc2 <= kB1);
+         // index is distributed here
          auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank);
          auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank);
          auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank);
@@ -171,164 +172,280 @@ namespace ctns{
          if(!ifkr){
 
             // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	   
-            if(combine_two_index3){
-               // sum_q aq^+[1]*Ppq[2]
-               for(const auto& q : cindex1){
-                  int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-                  int iproc = distribute2(ifkr,size,ipq);
-                  if(iproc == rank){
-                     auto op1c = symbolic_oper(block1,'C',q);
-                     auto op2P = symbolic_oper(block2,'P',ipq);
-                     auto c1P2 = (p<q)? symbolic_prod<Tm>(op1c,op2P) : 
-                        symbolic_prod<Tm>(op1c,op2P,-1.0);
-                     formulae.append(c1P2);
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
+                  auto aindex2 = oper_index_opA(cindex2, ifkr);
+                  for(const auto& isr : aindex2){
+                     auto sr = oper_unpack(isr);
+                     int s2 = sr.first;
+                     int r2 = sr.second;
+                     auto op2 = symbolic_oper(block2,'A',isr).H();
+                     auto sym_op2 = op2.get_qsym(isym);
+                     // sum_q <pq1||s2r2> aq[1]^+
+                     symbolic_sum<Tm> top1;
+                     for(const auto& q1 : cindex1){
+                        auto op1 = symbolic_oper(block1,'C',q1);
+                        auto sym_op1 = op1.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2) continue;
+                        top1.sum(int2e.get(p,q1,s2,r2), op1);
+                     }
+                     formulae.append(top1,op2,ifdagger);
                   }
-               } // q
-            }else{
-               // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
-               for(const auto& isr : aindex2_dist){
-                  auto sr = oper_unpack(isr);
-                  int s2 = sr.first;
-                  int r2 = sr.second;
-                  auto op2 = symbolic_oper(block2,'A',isr).H();
-                  auto sym_op2 = op2.get_qsym(isym);
-                  // sum_q <pq1||s2r2> aq[1]^+
-                  symbolic_sum<Tm> top1;
-                  for(const auto& q1 : cindex1){
-                     auto op1 = symbolic_oper(block1,'C',q1);
-                     auto sym_op1 = op1.get_qsym(isym);
-                     if(sym_op != sym_op1 + sym_op2) continue;
-                     top1.sum(int2e.get(p,q1,s2,r2), op1);
+               }
+            }else{ 
+               if(combine_two_index3){
+                  // sum_q aq^+[1]*Ppq[2]
+                  for(const auto& q : cindex1){
+                     int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
+                     int iproc = distribute2(ifkr,size,ipq);
+                     if(iproc == rank){
+                        auto op1c = symbolic_oper(block1,'C',q);
+                        auto op2P = symbolic_oper(block2,'P',ipq);
+                        auto c1P2 = (p<q)? symbolic_prod<Tm>(op1c,op2P) : 
+                           symbolic_prod<Tm>(op1c,op2P,-1.0);
+                        formulae.append(c1P2);
+                     }
+                  } // q
+               }else{
+                  // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
+                  for(const auto& isr : aindex2_dist){
+                     auto sr = oper_unpack(isr);
+                     int s2 = sr.first;
+                     int r2 = sr.second;
+                     auto op2 = symbolic_oper(block2,'A',isr).H();
+                     auto sym_op2 = op2.get_qsym(isym);
+                     // sum_q <pq1||s2r2> aq[1]^+
+                     symbolic_sum<Tm> top1;
+                     for(const auto& q1 : cindex1){
+                        auto op1 = symbolic_oper(block1,'C',q1);
+                        auto sym_op1 = op1.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2) continue;
+                        top1.sum(int2e.get(p,q1,s2,r2), op1);
+                     }
+                     formulae.append(top1,op2,ifdagger);
                   }
-                  formulae.append(top1,op2,ifdagger);
                }
             }
 
-            // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]     
-            if(combine_two_index4){
-               // sum_q aq[1]*Qpq[2]
-               for(const auto& q : cindex1){
-                  int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-                  int iproc = distribute2(ifkr,size,ipq);
-                  if(iproc == rank){
-                     auto op1c = symbolic_oper(block1,'C',q);
-                     auto op1a = op1c.H();
-                     auto op2Q = symbolic_oper(block2,'Q',ipq);
-                     auto a1Q2 = (p<q)? symbolic_prod<Tm>(op1a,op2Q) : 
-                        symbolic_prod<Tm>(op1a,op2Q.H());
-                     formulae.append(a1Q2);
+            // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]    
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
+                  auto bindex2 = oper_index_opB(cindex2, ifkr);
+                  for(const auto& iqr : bindex2){
+                     auto qr = oper_unpack(iqr);
+                     int q2 = qr.first;
+                     int r2 = qr.second;
+                     auto op2 = symbolic_oper(block2,'B',iqr);
+                     auto sym_op2 = op2.get_qsym(isym);
+                     // sum_s <pq2||s1r2> as[1]
+                     symbolic_sum<Tm> top1;
+                     for(const auto& s1 : cindex1){
+                        auto op1 = symbolic_oper(block1,'C',s1).H();
+                        auto sym_op1 = op1.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2) continue;
+                        top1.sum(int2e.get(p,q2,s1,r2), op1);
+                     }
+                     formulae.append(top1,op2,ifdagger);
+                     // Hermitian part: q2<->r2
+                     if(q2 == r2) continue;	    
+                     auto op2H = op2.H();
+                     auto sym_op2H = op2H.get_qsym(isym);
+                     symbolic_sum<Tm> top1H;
+                     for(const auto& s1 : cindex1){
+                        auto op1 = symbolic_oper(block1,'C',s1).H();
+                        auto sym_op1 = op1.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2H) continue;
+                        top1H.sum(int2e.get(p,r2,s1,q2), op1);
+                     }
+                     formulae.append(top1H,op2H,ifdagger);
                   }
-               } // q
-            }else{
-               // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
-               for(const auto& iqr : bindex2_dist){
-                  auto qr = oper_unpack(iqr);
-                  int q2 = qr.first;
-                  int r2 = qr.second;
-                  auto op2 = symbolic_oper(block2,'B',iqr);
-                  auto sym_op2 = op2.get_qsym(isym);
-                  // sum_s <pq2||s1r2> as[1]
-                  symbolic_sum<Tm> top1;
-                  for(const auto& s1 : cindex1){
-                     auto op1 = symbolic_oper(block1,'C',s1).H();
-                     auto sym_op1 = op1.get_qsym(isym);
-                     if(sym_op != sym_op1 + sym_op2) continue;
-                     top1.sum(int2e.get(p,q2,s1,r2), op1);
+               }
+            }else{ 
+               if(combine_two_index4){
+                  // sum_q aq[1]*Qpq[2]
+                  for(const auto& q : cindex1){
+                     int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
+                     int iproc = distribute2(ifkr,size,ipq);
+                     if(iproc == rank){
+                        auto op1c = symbolic_oper(block1,'C',q);
+                        auto op1a = op1c.H();
+                        auto op2Q = symbolic_oper(block2,'Q',ipq);
+                        auto a1Q2 = (p<q)? symbolic_prod<Tm>(op1a,op2Q) : 
+                           symbolic_prod<Tm>(op1a,op2Q.H());
+                        formulae.append(a1Q2);
+                     }
+                  } // q
+               }else{
+                  // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
+                  for(const auto& iqr : bindex2_dist){
+                     auto qr = oper_unpack(iqr);
+                     int q2 = qr.first;
+                     int r2 = qr.second;
+                     auto op2 = symbolic_oper(block2,'B',iqr);
+                     auto sym_op2 = op2.get_qsym(isym);
+                     // sum_s <pq2||s1r2> as[1]
+                     symbolic_sum<Tm> top1;
+                     for(const auto& s1 : cindex1){
+                        auto op1 = symbolic_oper(block1,'C',s1).H();
+                        auto sym_op1 = op1.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2) continue;
+                        top1.sum(int2e.get(p,q2,s1,r2), op1);
+                     }
+                     formulae.append(top1,op2,ifdagger);
+                     // Hermitian part: q2<->r2
+                     if(q2 == r2) continue;	    
+                     auto op2H = op2.H();
+                     auto sym_op2H = op2H.get_qsym(isym);
+                     symbolic_sum<Tm> top1H;
+                     for(const auto& s1 : cindex1){
+                        auto op1 = symbolic_oper(block1,'C',s1).H();
+                        auto sym_op1 = op1.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2H) continue;
+                        top1H.sum(int2e.get(p,r2,s1,q2), op1);
+                     }
+                     formulae.append(top1H,op2H,ifdagger);
                   }
-                  formulae.append(top1,op2,ifdagger);
-                  // Hermitian part: q2<->r2
-                  if(q2 == r2) continue;	    
-                  auto op2H = op2.H();
-                  auto sym_op2H = op2H.get_qsym(isym);
-                  symbolic_sum<Tm> top1H;
-                  for(const auto& s1 : cindex1){
-                     auto op1 = symbolic_oper(block1,'C',s1).H();
-                     auto sym_op1 = op1.get_qsym(isym);
-                     if(sym_op != sym_op1 + sym_op2H) continue;
-                     top1H.sum(int2e.get(p,r2,s1,q2), op1);
-                  }
-                  formulae.append(top1H,op2H,ifdagger);
                }
             }
 
-            // 5. <pq2||s1r1> aq[2]^+ar[1]as[1] 
-            if(combine_two_index5){
-               // sum_q Ppq[1]*aq^+[2]
-               for(const auto& q : cindex2){
-                  int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-                  int iproc = distribute2(ifkr,size,ipq);
-                  if(iproc == rank){
-                     auto op2c = symbolic_oper(block2,'C',q);
-                     auto op1P = symbolic_oper(block1,'P',ipq);
-                     auto P1c2 = (p<q)? symbolic_prod<Tm>(op1P,op2c) : 
-                        symbolic_prod<Tm>(op1P,op2c,-1.0);
-                     formulae.append(P1c2);
+            // 5. <pq2||s1r1> aq[2]^+ar[1]as[1]
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
+                  auto aindex1 = oper_index_opA(cindex1, ifkr);
+                  for(const auto& isr : aindex1_dist){
+                     auto sr = oper_unpack(isr);
+                     int s1 = sr.first;
+                     int r1 = sr.second;
+                     auto op1 = symbolic_oper(block1,'A',isr).H();
+                     auto sym_op1 = op1.get_qsym(isym);
+                     // sum_q <pq2||s1r1> aq[2]^+
+                     symbolic_sum<Tm> top2;
+                     for(const auto& q2 : cindex2){
+                        auto op2 = symbolic_oper(block2,'C',q2);
+                        auto sym_op2 = op2.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2) continue;
+                        top2.sum(int2e.get(p,q2,s1,r1), op2);
+                     }
+                     formulae.append(op1,top2,ifdagger);
                   }
-               } // q
-            }else{
-               // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
-               for(const auto& isr : aindex1_dist){
-                  auto sr = oper_unpack(isr);
-                  int s1 = sr.first;
-                  int r1 = sr.second;
-                  auto op1 = symbolic_oper(block1,'A',isr).H();
-                  auto sym_op1 = op1.get_qsym(isym);
-                  // sum_q <pq2||s1r1> aq[2]^+
-                  symbolic_sum<Tm> top2;
-                  for(const auto& q2 : cindex2){
-                     auto op2 = symbolic_oper(block2,'C',q2);
-                     auto sym_op2 = op2.get_qsym(isym);
-                     if(sym_op != sym_op1 + sym_op2) continue;
-                     top2.sum(int2e.get(p,q2,s1,r1), op2);
+               }
+            }else{ 
+               if(combine_two_index5){
+                  // sum_q Ppq[1]*aq^+[2]
+                  for(const auto& q : cindex2){
+                     int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
+                     int iproc = distribute2(ifkr,size,ipq);
+                     if(iproc == rank){
+                        auto op2c = symbolic_oper(block2,'C',q);
+                        auto op1P = symbolic_oper(block1,'P',ipq);
+                        auto P1c2 = (p<q)? symbolic_prod<Tm>(op1P,op2c) : 
+                           symbolic_prod<Tm>(op1P,op2c,-1.0);
+                        formulae.append(P1c2);
+                     }
+                  } // q
+               }else{
+                  // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
+                  for(const auto& isr : aindex1_dist){
+                     auto sr = oper_unpack(isr);
+                     int s1 = sr.first;
+                     int r1 = sr.second;
+                     auto op1 = symbolic_oper(block1,'A',isr).H();
+                     auto sym_op1 = op1.get_qsym(isym);
+                     // sum_q <pq2||s1r1> aq[2]^+
+                     symbolic_sum<Tm> top2;
+                     for(const auto& q2 : cindex2){
+                        auto op2 = symbolic_oper(block2,'C',q2);
+                        auto sym_op2 = op2.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2) continue;
+                        top2.sum(int2e.get(p,q2,s1,r1), op2);
+                     }
+                     formulae.append(op1,top2,ifdagger);
                   }
-                  formulae.append(op1,top2,ifdagger);
                }
             }
 
-            // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]   
-            if(combine_two_index6){
-               // sum_q Qpq^[1]*aq[2]
-               for(const auto& q : cindex2){
-                  int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-                  int iproc = distribute2(ifkr,size,ipq);
-                  if(iproc == rank){
-                     auto op2c = symbolic_oper(block2,'C',q);
-                     auto op2a = op2c.H();
-                     auto op1Q = symbolic_oper(block1,'Q',ipq);
-                     auto Q1a2 = (p<q)? symbolic_prod<Tm>(op1Q,op2a) : 
-                        symbolic_prod<Tm>(op1Q.H(),op2a);
-                     formulae.append(Q1a2);
+            // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]  
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
+                  auto bindex1 = oper_index_opB(cindex1, ifkr);
+                  for(const auto& iqs : bindex1){
+                     auto qs = oper_unpack(iqs);
+                     int q1 = qs.first;
+                     int s1 = qs.second;
+                     auto op1 = symbolic_oper(block1,'B',iqs);
+                     auto sym_op1 = op1.get_qsym(isym);
+                     // sum_r -<pq1||s1r2> ar[2]
+                     symbolic_sum<Tm> top2;
+                     for(const auto& r2 : cindex2){
+                        auto op2 = symbolic_oper(block2,'C',r2).H();
+                        auto sym_op2 = op2.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2) continue;
+                        top2.sum(-int2e.get(p,q1,s1,r2), op2);
+                     }
+                     formulae.append(op1,top2,ifdagger);
+                     // Hermitian part: q1<->r1
+                     if(q1 == s1) continue;
+                     auto op1H = op1.H();
+                     auto sym_op1H = op1H.get_qsym(isym);
+                     symbolic_sum<Tm> top2H;
+                     for(const auto& r2 : cindex2){
+                        auto op2 = symbolic_oper(block2,'C',r2).H();
+                        auto sym_op2 = op2.get_qsym(isym);
+                        if(sym_op != sym_op1H + sym_op2) continue;
+                        top2H.sum(-int2e.get(p,s1,q1,r2), op2);
+                     }
+                     formulae.append(op1H,top2H,ifdagger);
                   }
-               } // q
-            }else{
-               // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
-               for(const auto& iqs : bindex1_dist){
-                  auto qs = oper_unpack(iqs);
-                  int q1 = qs.first;
-                  int s1 = qs.second;
-                  auto op1 = symbolic_oper(block1,'B',iqs);
-                  auto sym_op1 = op1.get_qsym(isym);
-                  // sum_r -<pq1||s1r2> ar[2]
-                  symbolic_sum<Tm> top2;
-                  for(const auto& r2 : cindex2){
-                     auto op2 = symbolic_oper(block2,'C',r2).H();
-                     auto sym_op2 = op2.get_qsym(isym);
-                     if(sym_op != sym_op1 + sym_op2) continue;
-                     top2.sum(-int2e.get(p,q1,s1,r2), op2);
+               }
+            }else{ 
+               if(combine_two_index6){
+                  // sum_q Qpq^[1]*aq[2]
+                  for(const auto& q : cindex2){
+                     int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
+                     int iproc = distribute2(ifkr,size,ipq);
+                     if(iproc == rank){
+                        auto op2c = symbolic_oper(block2,'C',q);
+                        auto op2a = op2c.H();
+                        auto op1Q = symbolic_oper(block1,'Q',ipq);
+                        auto Q1a2 = (p<q)? symbolic_prod<Tm>(op1Q,op2a) : 
+                           symbolic_prod<Tm>(op1Q.H(),op2a);
+                        formulae.append(Q1a2);
+                     }
+                  } // q
+               }else{
+                  // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
+                  for(const auto& iqs : bindex1_dist){
+                     auto qs = oper_unpack(iqs);
+                     int q1 = qs.first;
+                     int s1 = qs.second;
+                     auto op1 = symbolic_oper(block1,'B',iqs);
+                     auto sym_op1 = op1.get_qsym(isym);
+                     // sum_r -<pq1||s1r2> ar[2]
+                     symbolic_sum<Tm> top2;
+                     for(const auto& r2 : cindex2){
+                        auto op2 = symbolic_oper(block2,'C',r2).H();
+                        auto sym_op2 = op2.get_qsym(isym);
+                        if(sym_op != sym_op1 + sym_op2) continue;
+                        top2.sum(-int2e.get(p,q1,s1,r2), op2);
+                     }
+                     formulae.append(op1,top2,ifdagger);
+                     // Hermitian part: q1<->r1
+                     if(q1 == s1) continue;
+                     auto op1H = op1.H();
+                     auto sym_op1H = op1H.get_qsym(isym);
+                     symbolic_sum<Tm> top2H;
+                     for(const auto& r2 : cindex2){
+                        auto op2 = symbolic_oper(block2,'C',r2).H();
+                        auto sym_op2 = op2.get_qsym(isym);
+                        if(sym_op != sym_op1H + sym_op2) continue;
+                        top2H.sum(-int2e.get(p,s1,q1,r2), op2);
+                     }
+                     formulae.append(op1H,top2H,ifdagger);
                   }
-                  formulae.append(op1,top2,ifdagger);
-                  // Hermitian part: q1<->r1
-                  if(q1 == s1) continue;
-                  auto op1H = op1.H();
-                  auto sym_op1H = op1H.get_qsym(isym);
-                  symbolic_sum<Tm> top2H;
-                  for(const auto& r2 : cindex2){
-                     auto op2 = symbolic_oper(block2,'C',r2).H();
-                     auto sym_op2 = op2.get_qsym(isym);
-                     if(sym_op != sym_op1H + sym_op2) continue;
-                     top2H.sum(-int2e.get(p,s1,q1,r2), op2);
-                  }
-                  formulae.append(op1H,top2H,ifdagger);
                }
             }
 
