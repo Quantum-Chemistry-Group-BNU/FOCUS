@@ -68,7 +68,7 @@ namespace ctns{
 
          // 1. load operators
          auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug && schd.ctns.verbose>0);
-         qops_pool.fetch_to_memory(fneed, schd.ctns.alg_hvec>10);
+         qops_pool.fetch_to_memory(fneed, alg_hvec>10);
          const oper_dictmap<Tm> qops_dict = {{"l" ,qops_pool(fneed[0])},
             {"r" ,qops_pool(fneed[1])},
             {"c1",qops_pool(fneed[2])},
@@ -128,7 +128,7 @@ namespace ctns{
          auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
          // prefetch files for the next bond
          if(schd.ctns.async_fetch){
-            if(schd.ctns.alg_hvec>10) qops_pool.clear_from_cpumem(fneed);
+            if(alg_hvec>10) qops_pool.clear_from_cpumem(fneed);
             qops_pool(frop); // just declare a space for frop
             qops_pool.fetch_to_memory(fneed_next, false, schd.ctns.async_fetch); // just to cpu
          }
@@ -138,7 +138,7 @@ namespace ctns{
 
          auto diag_t0 = tools::get_time();
          std::vector<double> diag(ndim);
-         if(schd.ctns.alg_hvec<10){
+         if(alg_hvec<10){
             twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
 #ifdef GPU
          }else{
@@ -207,15 +207,19 @@ namespace ctns{
          const bool debug_formulae = schd.ctns.verbose>0;
 
          // consistency check
+         if(schd.ctns.ifdistc && !icomb.topo.ifmps){
+            std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
+            exit(1);
+         }
          if(Km::ifkr && alg_hvec >=4){
             std::cout << "error: alg_hvec >= 4 does not support complex yet!" << std::endl;
             exit(1); 
          }
-         if(alg_hvec < 10 and schd.ctns.alg_hinter == 2){
+         if(alg_hvec < 10 && schd.ctns.alg_hinter == 2){
             std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter<2" << std::endl;
             exit(1);
          }
-         if(alg_hvec > 10 and schd.ctns.alg_hinter != 2){
+         if(alg_hvec > 10 && schd.ctns.alg_hinter != 2){
             std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
             exit(1);
          }

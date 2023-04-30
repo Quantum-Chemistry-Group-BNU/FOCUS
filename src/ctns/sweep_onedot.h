@@ -43,10 +43,11 @@ namespace ctns{
 #ifdef _OPENMP
          maxthreads = omp_get_max_threads();
 #endif
+         const int alg_hvec = schd.ctns.alg_hvec;
          const bool debug = (rank==0);
          if(debug){
             std::cout << "ctns::sweep_onedot"
-               << " alg_hvec=" << schd.ctns.alg_hvec
+               << " alg_hvec=" << alg_hvec
                << " alg_renorm=" << schd.ctns.alg_renorm
                << " mpisize=" << size
                << " maxthreads=" << maxthreads 
@@ -61,7 +62,7 @@ namespace ctns{
 
          // 1. load operators 
          auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
-         qops_pool.fetch_to_memory(fneed, schd.ctns.alg_hvec>10);
+         qops_pool.fetch_to_memory(fneed, alg_hvec>10);
          const oper_dictmap<Tm> qops_dict = {{"l",qops_pool(fneed[0])},
             {"r",qops_pool(fneed[1])},
             {"c",qops_pool(fneed[2])}};
@@ -155,12 +156,24 @@ namespace ctns{
          const bool debug_formulae = schd.ctns.verbose>0;
 
          // consistency check
-         if(schd.ctns.alg_hvec >=4){
+         if(schd.ctns.ifdistc && !icomb.topo.ifmps){
+            std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
+            exit(1);
+         }
+         if(alg_hvec >=4){
             std::cout << "error: alg_hvec >=4 does not support onedot yet!" << std::endl;
             exit(1); 
          }
+         if(alg_hvec < 10 && schd.ctns.alg_hinter == 2){
+            std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter<2" << std::endl;
+            exit(1);
+         }
+         if(alg_hvec > 10 && schd.ctns.alg_hinter != 2){
+            std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
+            exit(1);
+         }
 
-         if(schd.ctns.alg_hvec == 0){
+         if(alg_hvec == 0){
 
             // oldest version
             Hx_funs = onedot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
@@ -168,7 +181,7 @@ namespace ctns{
             HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
 
-         }else if(schd.ctns.alg_hvec == 1){
+         }else if(alg_hvec == 1){
 
             // raw version: symbolic formulae + dynamic allocation of memory 
             H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
@@ -177,7 +190,7 @@ namespace ctns{
                   std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
 
-         }else if(schd.ctns.alg_hvec == 2){
+         }else if(alg_hvec == 2){
 
             // symbolic formulae + preallocation of workspace 
             H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
@@ -196,7 +209,7 @@ namespace ctns{
                   std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
                   std::ref(workspace));
 
-         }else if(schd.ctns.alg_hvec == 3){
+         }else if(alg_hvec == 3){
 
             // symbolic formulae (factorized) + preallocation of workspace 
             H_formulae2 = symbolic_formulae_onedot2(qops_dict, int2e, size, rank, fname,
@@ -216,7 +229,7 @@ namespace ctns{
                   std::ref(workspace));
 
          }else{
-            std::cout << "error: no such option for alg_hvec=" << schd.ctns.alg_hvec << std::endl;
+            std::cout << "error: no such option for alg_hvec=" << alg_hvec << std::endl;
             exit(1);
          } // alg_hvec
 
@@ -229,12 +242,12 @@ namespace ctns{
                ndim, neig, diag, HVec, eopt, vsol, nmvp, wf, timing);
          if(debug){
             sweeps.print_eopt(isweep, ibond);
-            if(schd.ctns.alg_hvec == 0) oper_timer.analysis();
+            if(alg_hvec == 0) oper_timer.analysis();
          }
          timing.tc = tools::get_time();
 
          // free temporary space
-         if(schd.ctns.alg_hvec >=2){
+         if(alg_hvec >=2){
             delete[] workspace;
          }
 

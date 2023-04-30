@@ -229,7 +229,8 @@ int main(int argc, char *argv[]){
    if(rank == 0){
       tools::finish("CTNS");	   
    }else{
-      io::remove_scratch(schd.scratch, (rank == 0));
+      // NOTE: scratch should be removed manually!
+      //io::remove_scratch(schd.scratch, (rank == 0)); 
    }
    return 0;
 }

@@ -91,7 +91,7 @@ namespace ctns{
          friend class boost::serialization::access;
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
-               ar & ntotal & nbackbone & nphysical 
+               ar & ifmps & ntotal & nbackbone & nphysical
                   & nodes & rcoord & rindex & image2;
             }
       public:
@@ -124,6 +124,7 @@ namespace ctns{
                const std::string scratch,
                const bool debug=false) const;
       public:
+         bool ifmps = true;
          int ntotal, nbackbone, nphysical;
          // nodes on comb
          std::vector<std::vector<node>> nodes; 

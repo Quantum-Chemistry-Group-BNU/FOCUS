@@ -142,6 +142,10 @@ namespace ctns{
          size_t batchsize, gpumem_batch;
 
          // consistency check
+         if(schd.ctns.ifdistc && !icomb.topo.ifmps){
+            std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
+            exit(1);
+         }
          if(Km::ifkr && alg_renorm >=4){
             std::cout << "error: alg_renorm >= 4 does not support complex yet!" << std::endl;
             exit(1); 
@@ -174,6 +178,11 @@ namespace ctns{
             // symbolic formulae + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
+
+            std::cout << "lzd coord=" << p  
+               << " rank=" << rank 
+               << " qops.mpirank=" << qops.mpirank 
+               << std::endl;
             symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
 
          }else if(alg_renorm == 4){
@@ -590,7 +599,7 @@ namespace ctns{
                   if(iproc != rank) opS.set_zero();
                }
 #ifdef GPU
-               if(schd.ctns.alg_renorm>10 && opS_index.size()>0){
+               if(alg_renorm>10 && opS_index.size()>0){
                   int p0 = opS_index[0];
                   size_t off = qops._offset[std::make_pair('S',p0)];
                   Tm* ptr0 = qops('S')[p0].data();
@@ -604,7 +613,7 @@ namespace ctns{
                mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0, schd.ctns.alg_comm);
                if(rank != 0) opH.set_zero(); 
 #ifdef GPU
-               if(schd.ctns.alg_renorm>10){
+               if(alg_renorm>10){
                   GPUmem.to_gpu(qops._dev_data+off, opH.data(), opsize*sizeof(Tm));
                }
 #endif

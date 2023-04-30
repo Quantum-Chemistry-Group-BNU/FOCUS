@@ -102,6 +102,7 @@ void topology::read(const string& fname){
             node.left   = make_pair(i-1,0);
             node.right  = make_pair(i+1,0);
          }else if(size > 1){
+            ifmps = false;
             nodes[i].resize(size+1);
             // type 0: leaves on branch
             auto& node = nodes[i][size];
@@ -196,6 +197,7 @@ void topology::read(const string& fname){
 
 void topology::print() const{
    cout << "\nctns::topology::print"
+      << " ifmps=" << ifmps
       << " ntotal=" << ntotal
       << " nphysical=" << nphysical 
       << " nbackbone=" << nbackbone
