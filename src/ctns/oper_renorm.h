@@ -60,6 +60,7 @@ namespace ctns{
          const bool ifkr = Km::ifkr;
          const bool sort_formulae = schd.ctns.sort_formulae;
          const bool ifdist1 = schd.ctns.ifdist1;
+         const bool ifdistc = schd.ctns.ifdistc;
          const bool debug = (rank == 0); 
          if(debug and schd.ctns.verbose>0){ 
             std::cout << "ctns::oper_renorm coord=" << p 
@@ -165,14 +166,14 @@ namespace ctns{
 
             // symbolic formulae + dynamic allocation of memory
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
 
          }else if(alg_renorm == 2){
 
             // symbolic formulae + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
 
          }else if(alg_renorm == 4){
@@ -182,7 +183,7 @@ namespace ctns{
             timing.tf2 = tools::get_time();
 
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             timing.tf3 = tools::get_time();
 
             // generation of renormalization block [lc/lr/cr]
@@ -220,7 +221,7 @@ namespace ctns{
             timing.tf2 = tools::get_time();
 
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             timing.tf3 = tools::get_time();
 
             // generation of renormalization block [lc/lr/cr]
@@ -353,7 +354,7 @@ namespace ctns{
             timing.tf2 = tools::get_time();
 
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
 
             timing.tf3 = tools::get_time();
 
@@ -524,8 +525,7 @@ namespace ctns{
             // alg_renorm=2: symbolic formulae + preallocation of workspace
             memset(qops._data, 0, qops._size*sizeof(Tm));
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1,
-                  debug_formulae);
+                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
             std::cout << "\nqops[ref]: rank=" << rank << std::endl;
             for(auto& key : qops.oplist){

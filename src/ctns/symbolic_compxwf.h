@@ -171,6 +171,11 @@ namespace ctns{
          auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank);
          if(!ifkr){
 
+            std::cout << "rank=" << rank << " ifdistc=" << ifdistc 
+               << " block1=" << block1
+               << " block2=" << block2
+               << std::endl;
+
             // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	   
             if(ifdistc && block2[0]=='c'){ // lc
                if(iproc == rank){
