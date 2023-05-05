@@ -143,12 +143,14 @@ namespace ctns{
          //
          int iproc = distribute1(ifkr,size,p);
          if(!ifdist1 or iproc==rank){
+/*
             // 1. S1*I2
             auto S1p = symbolic_prod<Tm>(symbolic_oper(block1,'S',index));
             formulae.append(S1p);
             // 2. I1*S2
             auto S2p = symbolic_prod<Tm>(symbolic_oper(block2,'S',index));
             formulae.append(S2p);
+*/
          }
          // cross terms
          int kc1 = ifkr? 2*cindex1.size() : cindex1.size();
@@ -159,22 +161,27 @@ namespace ctns{
          int kB2 = kc2*kc2;
          // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	   
          if(ifdistc && block2[0]=='c'){ // lc
+/*
             if(iproc == rank){
                // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
                auto aindex2 = oper_index_opA(cindex2, ifkr);
                symbolic_compxwf_opS3a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      aindex2, formulae);
             }
+*/
          }else{
             if(kc1 > kA2){
+/*
                auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank);
                symbolic_compxwf_opS3a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                     aindex2_dist, formulae);
+                    aindex2_dist, formulae);
+*/
             }else{
                // sum_q aq^+[1]*Ppq[2]
                symbolic_compxwf_opS3b(block1, block2, cindex1, cindex2, p, ifkr, size, rank, formulae);
             }
          }
+/*
          // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]    
          if(ifdistc && block2[0]=='c'){ // lc
             if(iproc == rank){
@@ -229,6 +236,7 @@ namespace ctns{
                symbolic_compxwf_opS6b(block1, block2, cindex1, cindex2, p, ifkr, size, rank, formulae);
             }
          }
+*/
          return formulae;
       }
 
@@ -244,7 +252,10 @@ namespace ctns{
             const bool ifkr,
             const std::vector<int>& aindex2,
             symbolic_task<Tm>& formulae){
+         std::cout << "opS3a" << std::endl;
          if(!ifkr){
+/*
+            std::cout << "lzdA" << std::endl;
             auto sym_op = get_qsym_opS(isym, p);
             for(const auto& isr : aindex2){
                auto sr = oper_unpack(isr);
@@ -260,8 +271,16 @@ namespace ctns{
                   if(sym_op != sym_op1 + sym_op2) continue;
                   top1.sum(int2e.get(p,q1,s2,r2), op1);
                }
-               formulae.append(top1,op2);
+               std::cout << "lzdA0" << std::endl;
+               std::cout << "is=" << isr << std::endl;
+               std::cout << "top1=" << top1 << std::endl;
+               std::cout << "op2=" << op2 << std::endl;
+               //formulae.append(top1,op2);
+               formulae.display("f");
+               std::cout << "lzdA1" << std::endl;
             }
+            std::cout << "lzdA2" << std::endl;
+*/
          }else{
             // Kramers symmetry-adapted version 
             for(const auto& isr : aindex2){
@@ -301,6 +320,8 @@ namespace ctns{
             const int size,
             const int rank,
             symbolic_task<Tm>& formulae){
+         std::cout << "opS3b" << std::endl;
+/*
          if(!ifkr){
             for(const auto& q : cindex1){
                int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
@@ -310,7 +331,7 @@ namespace ctns{
                   auto op2P = symbolic_oper(block2,'P',ipq);
                   auto c1P2 = (p<q)? symbolic_prod<Tm>(op1c,op2P) : 
                      symbolic_prod<Tm>(op1c,op2P,-1.0);
-                  formulae.append(c1P2);
+//                  formulae.append(c1P2);
                }
             } // q
          }else{
@@ -340,6 +361,7 @@ namespace ctns{
                }
             } // qa
          } // ifkr
+*/
       }
 
    // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
