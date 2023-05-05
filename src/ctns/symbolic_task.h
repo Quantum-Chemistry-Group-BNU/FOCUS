@@ -5,6 +5,8 @@
 
 namespace ctns{
 
+   // High-level: symbolic_task, op_task/renorm_tasks, bipart_oper/bipart_task
+
    // H = \sum_k H_k where H_k is a product of operator
    template <typename Tm>
       struct symbolic_task{
