@@ -181,11 +181,6 @@ namespace ctns{
             // symbolic formulae + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-
-            std::cout << "lzd coord=" << p  
-               << " rank=" << rank 
-               << " qops.mpirank=" << qops.mpirank 
-               << std::endl;
             symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
 
          }else if(alg_renorm == 4){

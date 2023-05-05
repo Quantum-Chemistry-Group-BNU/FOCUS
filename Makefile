@@ -91,7 +91,7 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
-      FLAGS += -DDEBUG -O0 -w #-Wall
+      FLAGS += -DDEBUG -O0 -g -w #-Wall
    else
       FLAGS += -DNDEBUG -O2 -w #-Wall
    endif

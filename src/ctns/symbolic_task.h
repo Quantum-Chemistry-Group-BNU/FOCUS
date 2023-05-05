@@ -23,7 +23,7 @@ namespace ctns{
             // append a term
             void append(const symbolic_sum<Tm>& top1, 
                   const symbolic_oper& op2,
-                  const bool ifdagger){
+                  const bool ifdagger=false){
                if(top1.size() == 0) return;
                auto term = symbolic_prod<Tm>(top1,op2);
                if(ifdagger) term = term.H();
@@ -31,7 +31,7 @@ namespace ctns{
             }
             void append(const symbolic_oper& op1,
                   const symbolic_sum<Tm>& top2, 
-                  const bool ifdagger){
+                  const bool ifdagger=false){
                if(top2.size() == 0) return;
                auto term = symbolic_prod<Tm>(op1,top2);
                if(ifdagger) term = term.H();
