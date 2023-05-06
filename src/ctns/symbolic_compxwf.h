@@ -143,14 +143,12 @@ namespace ctns{
          //
          int iproc = distribute1(ifkr,size,p);
          if(!ifdist1 or iproc==rank){
-/*
             // 1. S1*I2
             auto S1p = symbolic_prod<Tm>(symbolic_oper(block1,'S',index));
             formulae.append(S1p);
             // 2. I1*S2
             auto S2p = symbolic_prod<Tm>(symbolic_oper(block2,'S',index));
             formulae.append(S2p);
-*/
          }
          // cross terms
          int kc1 = ifkr? 2*cindex1.size() : cindex1.size();
@@ -171,7 +169,7 @@ namespace ctns{
             if(kc1 > kA2){
                auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank);
                symbolic_compxwf_opS3a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                    aindex2_dist, formulae);
+                     aindex2_dist, formulae);
             }else{
                // sum_q aq^+[1]*Ppq[2]
                symbolic_compxwf_opS3b(block1, block2, cindex1, cindex2, p, ifkr, size, rank, formulae);
@@ -187,7 +185,7 @@ namespace ctns{
             }
          }else{ 
             if(kc1 > kB2){
-               auto bindex2_dist = oper_index_opB(cindex2, ifkr);
+               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank);
                symbolic_compxwf_opS4a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      bindex2_dist, formulae);
             }else{

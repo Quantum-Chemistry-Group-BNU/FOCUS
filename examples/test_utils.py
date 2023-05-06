@@ -5,10 +5,10 @@ def check_difference(elst0,elst1):
    len1 = len(elst0)
    len2 = len(elst1)
    assert(len1 == len2)
-   diff = 0
+   ediff = 0
    for i in range(len1):
-      diff + abs(elst0[i]-elst1[i])
-   return diff
+       ediff += abs(elst0[i]-elst1[i])
+   return ediff
 
 def parse_ctns(fname="ctns.out"):
    debug = False
