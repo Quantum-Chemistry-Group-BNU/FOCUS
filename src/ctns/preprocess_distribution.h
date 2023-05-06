@@ -31,6 +31,19 @@ namespace ctns{
          << std::endl;
    }
 
+   inline void analyze_distribution2(const std::vector<std::map<std::string,int>>& counters,
+         std::vector<std::string> classes){
+       int mpisize = counters.size();
+       for(int i=0; i<classes.size(); i++){
+           auto cls = classes[i];
+           std::vector<int> sizes(mpisize);
+           for(int j=0; j<mpisize; j++){
+               sizes[j] = counters[j].at(cls);
+           }
+           analyze_distribution(sizes, " formulae "+cls);
+       }
+   }
+
    // analyze the distribution of operators along a sweep
    template <typename Km>
       void preprocess_distribution(const comb<Km>& icomb,
@@ -96,6 +109,8 @@ namespace ctns{
             int sc2 = suppc2.size();
             assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
             bool ifNC = (sl+sc1 <= sc2+sr);
+            auto key1 = ifNC? "AP" : "PA";
+            auto key2 = ifNC? "BQ" : "QB";
             std::cout << " (sl,sr,sc1,sc2)="
                << sl << "," << sr << "," << sc1 << "," << sc2
                << " ifNC=" << ifNC
@@ -194,6 +209,7 @@ namespace ctns{
                std::string rscratch = scratch+"/rformulae_mpisize"+std::to_string(mpisize);
                io::create_scratch(rscratch); 
                std::vector<int> rsizes(mpisize,0.0);
+               std::vector<std::map<std::string,int>> rcounters(mpisize);
                for(int rank=0; rank<mpisize; rank++){
                   std::string fname = rscratch+"/rformulae_rank"+std::to_string(rank)+".txt";
                   std::streambuf *psbuf, *backup;
@@ -244,13 +260,16 @@ namespace ctns{
                      << " H:" << counter["H"]
                      << std::endl;
                   rsizes[rank] = formulae.sizetot();
+                  rcounters[rank] = counter;
                } // rank
                analyze_distribution(rsizes,"renorm");
+               analyze_distribution2(rcounters,{"C","A","B","P","Q","S","H"});
 
                std::cout << "\n3. sizes of Hx formulae" << std::endl;
                std::string hscratch = scratch+"/hformulae_mpisize"+std::to_string(mpisize);
                io::create_scratch(hscratch); 
-               std::vector<int> fsizes(mpisize,0.0);
+               std::vector<int> hsizes(mpisize,0.0);
+               std::vector<std::map<std::string,int>> hcounters(mpisize);
                for(int rank=0; rank<mpisize; rank++){
                   std::string fname = hscratch+"/hformulae_rank"+std::to_string(rank)+".txt";
                   std::streambuf *psbuf, *backup;
@@ -278,8 +297,6 @@ namespace ctns{
                   file.close();
 
                   // statistics
-                  auto key1 = ifNC? "AP" : "PA";
-                  auto key2 = ifNC? "BQ" : "QB";
                   std::cout << " rank=" << rank
                      << " size(formulae)=" << formulae.size()
                      << " H1:" << counter["H1"]
@@ -289,9 +306,12 @@ namespace ctns{
                      << " " << key1 << ":" << counter[key1]
                      << " " << key2 << ":" << counter[key2]
                      << std::endl;
-                  fsizes[rank] = formulae.size();
+                  hsizes[rank] = formulae.size();
+                  hcounters[rank] = counter;
                } // rank
-               analyze_distribution(fsizes,"Htwodot");
+               analyze_distribution(hsizes,"Htwodot");
+               analyze_distribution2(hcounters,{"H1","H2","CS","SC",key1,key2});
+
             } // idx
 
 /*
