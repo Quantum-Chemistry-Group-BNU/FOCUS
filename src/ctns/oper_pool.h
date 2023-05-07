@@ -38,20 +38,26 @@ namespace ctns{
                std::cout << "qstore";
                if(msg.size()>0) std::cout << "[" << msg << "]";
                std::cout << ": size=" << qstore.size() << std::endl;
-               size_t tsize = 0;
+               size_t tsize_cpu = 0, tsize_gpu = 0;
                for(auto pr = qstore.begin(); pr != qstore.end(); pr++){
+                  bool avail_cpu = pr->second.avail_cpu();
+                  bool avail_gpu = pr->second.avail_gpu();
                   std::cout << " fqop=" << pr->first 
                      << " size=" << pr->second.size()
                      << ":" << tools::sizeMB<Tm>(pr->second.size()) << "MB"
                      << ":" << tools::sizeGB<Tm>(pr->second.size()) << "GB"
-                     << " cpu=" << pr->second.avail_cpu()
-                     << " gpu=" << pr->second.avail_gpu()
+                     << " cpu=" << avail_cpu
+                     << " gpu=" << avail_gpu
                      << std::endl;
-                  tsize += pr->second.size();
+                  if(avail_cpu) tsize_cpu += pr->second.size();
+                  if(avail_gpu) tsize_gpu += pr->second.size();
                }
-               std::cout << " total size=" << tsize
-                  << ":" << tools::sizeMB<Tm>(tsize) << "MB"
-                  << ":" << tools::sizeGB<Tm>(tsize) << "GB"
+               std::cout << " total size[cpu]=" << tsize_cpu
+                  << ":" << tools::sizeMB<Tm>(tsize_cpu) << "MB"
+                  << ":" << tools::sizeGB<Tm>(tsize_cpu) << "GB"
+                  << " size[gpu]=" << tsize_gpu
+                  << ":" << tools::sizeMB<Tm>(tsize_gpu) << "MB"
+                  << ":" << tools::sizeGB<Tm>(tsize_gpu) << "GB"
                   << std::endl;
             }
             void fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu, const bool ifasync=false);
