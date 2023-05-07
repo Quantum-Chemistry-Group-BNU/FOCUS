@@ -24,7 +24,7 @@ namespace ctns{
             friend class boost::serialization::access;	   
             template <class Archive>
                void serialize(Archive & ar, const unsigned int version){
-                  ar & isym & ifkr & qbra & qket 
+                  ar & sorb & isym & ifkr & qbra & qket 
                      & cindex & krest & oplist 
                      & mpisize & mpirank & ifdist2;
                }
@@ -90,6 +90,7 @@ namespace ctns{
             size_t opsize() const{ return _opsize; };
             void print(const std::string name, const int level=0) const;
          public:
+            int sorb = 0;
             int isym = 0;
             bool ifkr = false;
             qbond qbra, qket;
@@ -136,7 +137,7 @@ namespace ctns{
             << std::endl;
          // print each operator
          if(level > 0){
-            std::cout << " isym=" << isym << " ifkr=" << ifkr 
+            std::cout << " sorb=" << sorb << " isym=" << isym << " ifkr=" << ifkr 
                << " size[cindex]=" << cindex.size()
                << " size[krest]=" << krest.size() << std::endl;
             tools::print_vector(cindex, "cindex"); 
@@ -185,7 +186,7 @@ namespace ctns{
             }
             // distribute two index operators
             if(ifdist2 && mpisize > 1){
-               index = distribute2(ifkr, mpisize, index2, mpirank); 
+               index = distribute2vec(key, ifkr, mpisize, index2, mpirank, sorb); 
             }else{
                index = std::move(index2);
             }

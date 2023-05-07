@@ -75,6 +75,7 @@ namespace ctns{
          timing.tf0 = tools::get_time(); 
 
          // 0. setup basic information for qops
+         qops.sorb = int2e.sorb;
          qops.isym = isym;
          qops.ifkr = ifkr;
          qops.cindex = oper_combine_cindex(qops1.cindex, qops2.cindex);

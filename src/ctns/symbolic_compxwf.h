@@ -6,6 +6,9 @@
 
 namespace ctns{
 
+   const bool debug_opS = false;
+   extern const bool debug_opS;
+
    // kernel for computing renormalized P|ket> or P^+|ket> 
    template <typename Tm>
       symbolic_task<Tm> symbolic_compxwf_opP(const std::string block1,
@@ -167,12 +170,13 @@ namespace ctns{
             }
          }else{
             if(kc1 > kA2){
-               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank);
+               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
                symbolic_compxwf_opS3a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      aindex2_dist, formulae);
             }else{
                // sum_q aq^+[1]*Ppq[2]
-               symbolic_compxwf_opS3b(block1, block2, cindex1, cindex2, p, ifkr, size, rank, formulae);
+               symbolic_compxwf_opS3b(block1, block2, cindex1, cindex2, p, ifkr, 
+                     int2e.sorb, size, rank, formulae);
             }
          }
          // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]    
@@ -185,12 +189,13 @@ namespace ctns{
             }
          }else{ 
             if(kc1 > kB2){
-               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank);
+               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, int2e.sorb);
                symbolic_compxwf_opS4a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      bindex2_dist, formulae);
             }else{
                // sum_q aq[1]*Qpq[2]
-               symbolic_compxwf_opS4b(block1, block2, cindex1, cindex2, p, ifkr, size, rank, formulae);
+               symbolic_compxwf_opS4b(block1, block2, cindex1, cindex2, p, ifkr, 
+                     int2e.sorb, size, rank, formulae);
             }
          }
          // 5. <pq2||s1r1> aq[2]^+ar[1]as[1]
@@ -203,12 +208,13 @@ namespace ctns{
             }
          }else{ 
             if(kc2 > kA1){
-               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank);
+               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, int2e.sorb);
                symbolic_compxwf_opS5a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      aindex1_dist, formulae);
             }else{
                // sum_q Ppq[1]*aq^+[2]
-               symbolic_compxwf_opS5b(block1, block2, cindex1, cindex2, p, ifkr, size, rank, formulae);
+               symbolic_compxwf_opS5b(block1, block2, cindex1, cindex2, p, ifkr, 
+                     int2e.sorb, size, rank, formulae);
             }
          }
          // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]  
@@ -221,12 +227,13 @@ namespace ctns{
             }
          }else{
             if(kc2 > kB1){
-               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank);
+               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank, int2e.sorb);
                symbolic_compxwf_opS6a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      bindex1_dist, formulae);
             }else{
                // sum_q Qpq^[1]*aq[2]
-               symbolic_compxwf_opS6b(block1, block2, cindex1, cindex2, p, ifkr, size, rank, formulae);
+               symbolic_compxwf_opS6b(block1, block2, cindex1, cindex2, p, ifkr, 
+                     int2e.sorb, size, rank, formulae);
             }
          }
          return formulae;
@@ -244,6 +251,7 @@ namespace ctns{
             const bool ifkr,
             const std::vector<int>& aindex2,
             symbolic_task<Tm>& formulae){
+         if(debug_opS) std::cout << "symbolic_compxwf_opS3a p=" << p << std::endl;
          if(!ifkr){
             auto sym_op = get_qsym_opS(isym, p);
             for(const auto& isr : aindex2){
@@ -298,13 +306,15 @@ namespace ctns{
             const std::vector<int>& cindex2,
             const int p,
             const bool ifkr,
+            const int sorb,
             const int size,
             const int rank,
             symbolic_task<Tm>& formulae){
+         if(debug_opS) std::cout << "symbolic_compxwf_opS3b p=" << p << std::endl;
          if(!ifkr){
             for(const auto& q : cindex1){
                int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-               int iproc = distribute2(ifkr,size,ipq);
+               int iproc = distribute2('P',ifkr,size,ipq,sorb);
                if(iproc == rank){
                   auto op1c = symbolic_oper(block1,'C',q);
                   auto op2P = symbolic_oper(block2,'P',ipq);
@@ -323,7 +333,7 @@ namespace ctns{
                auto op1c_B = op1c_A.K(1);
                auto op1a_B = op1a_A.K(1);
                int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-               int iproc_aa = distribute2(ifkr,size,ipq_aa);
+               int iproc_aa = distribute2('P',ifkr,size,ipq_aa,sorb);
                if(iproc_aa == rank){
                   auto op2P_AA = symbolic_oper(block2,'P',ipq_aa);
                   auto c1P2_AA = (kp<kq)? symbolic_prod<Tm>(op1c_A,op2P_AA) : 
@@ -331,7 +341,7 @@ namespace ctns{
                   formulae.append(c1P2_AA);
                }
                int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-               int iproc_ab = distribute2(ifkr,size,ipq_ab);
+               int iproc_ab = distribute2('P',ifkr,size,ipq_ab,sorb);
                if(iproc_ab == rank){
                   auto op2P_AB = symbolic_oper(block2,'P',ipq_ab);
                   auto c1P2_AB = (kp<kq)? symbolic_prod<Tm>(op1c_B,op2P_AB) :
@@ -354,6 +364,7 @@ namespace ctns{
             const bool ifkr,
             const std::vector<int>& bindex2,
             symbolic_task<Tm>& formulae){
+         if(debug_opS) std::cout << "symbolic_compxwf_opS4a p=" << p << std::endl;
          if(!ifkr){
             auto sym_op = get_qsym_opS(isym, p);
             for(const auto& iqr : bindex2){
@@ -431,13 +442,15 @@ namespace ctns{
             const std::vector<int>& cindex2,
             const int p,
             const bool ifkr,
+            const int sorb,
             const int size,
             const int rank,
             symbolic_task<Tm>& formulae){
+         if(debug_opS) std::cout << "symbolic_compxwf_opS4b p=" << p << std::endl;
          if(!ifkr){ 
             for(const auto& q : cindex1){
                int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-               int iproc = distribute2(ifkr,size,ipq);
+               int iproc = distribute2('Q',ifkr,size,ipq,sorb);
                if(iproc == rank){
                   auto op1c = symbolic_oper(block1,'C',q);
                   auto op1a = op1c.H();
@@ -457,7 +470,7 @@ namespace ctns{
                auto op1c_B = op1c_A.K(1);
                auto op1a_B = op1a_A.K(1);
                int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-               int iproc_aa = distribute2(ifkr,size,ipq_aa);
+               int iproc_aa = distribute2('Q',ifkr,size,ipq_aa,sorb);
                if(iproc_aa == rank){
                   auto op2Q_AA = symbolic_oper(block2,'Q',ipq_aa);
                   auto a1Q2_AA = (kp<kq)? symbolic_prod<Tm>(op1a_A,op2Q_AA) : 
@@ -465,7 +478,7 @@ namespace ctns{
                   formulae.append(a1Q2_AA);
                }
                int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-               int iproc_ab = distribute2(ifkr,size,ipq_ab);
+               int iproc_ab = distribute2('Q',ifkr,size,ipq_ab,sorb);
                if(iproc_ab == rank){
                   auto op2Q_AB = symbolic_oper(block2,'Q',ipq_ab);
                   auto a1Q2_AB = (kp<kq)? symbolic_prod<Tm>(op1a_B,op2Q_AB) :
@@ -488,6 +501,7 @@ namespace ctns{
             const bool ifkr,
             const std::vector<int>& aindex1,
             symbolic_task<Tm>& formulae){
+         if(debug_opS) std::cout << "symbolic_compxwf_opS5a p=" << p << std::endl;
          if(!ifkr){
             auto sym_op = get_qsym_opS(isym, p);
             for(const auto& isr : aindex1){
@@ -542,13 +556,15 @@ namespace ctns{
             const std::vector<int>& cindex2,
             const int p,
             const bool ifkr,
+            const int sorb,
             const int size,
             const int rank,
             symbolic_task<Tm>& formulae){
+         if(debug_opS) std::cout << "symbolic_compxwf_opS5b p=" << p << std::endl;
          if(!ifkr){
             for(const auto& q : cindex2){
                int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-               int iproc = distribute2(ifkr,size,ipq);
+               int iproc = distribute2('P',ifkr,size,ipq,sorb);
                if(iproc == rank){
                   auto op2c = symbolic_oper(block2,'C',q);
                   auto op1P = symbolic_oper(block1,'P',ipq);
@@ -567,7 +583,7 @@ namespace ctns{
                auto op2c_B = op2c_A.K(1);
                auto op2a_B = op2a_A.K(1);
                int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-               int iproc_aa = distribute2(ifkr,size,ipq_aa);
+               int iproc_aa = distribute2('P',ifkr,size,ipq_aa,sorb);
                if(iproc_aa == rank){
                   auto op1P_AA = symbolic_oper(block1,'P',ipq_aa);
                   auto P1c2_AA = (kp<kq)? symbolic_prod<Tm>(op1P_AA,op2c_A) : 
@@ -575,7 +591,7 @@ namespace ctns{
                   formulae.append(P1c2_AA);
                } 
                int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-               int iproc_ab = distribute2(ifkr,size,ipq_ab);
+               int iproc_ab = distribute2('P',ifkr,size,ipq_ab,sorb);
                if(iproc_ab == rank){
                   auto op1P_AB = symbolic_oper(block1,'P',ipq_ab);
                   auto P1c2_AB = (kp<kq)? symbolic_prod<Tm>(op1P_AB,op2c_B) :
@@ -598,6 +614,7 @@ namespace ctns{
             const bool ifkr,
             const std::vector<int>& bindex1,
             symbolic_task<Tm>& formulae){
+         if(debug_opS) std::cout << "symbolic_compxwf_opS6a p=" << p << std::endl;
          if(!ifkr){
             auto sym_op = get_qsym_opS(isym, p);
             for(const auto& iqs : bindex1){
@@ -675,13 +692,15 @@ namespace ctns{
             const std::vector<int>& cindex2,
             const int p,
             const bool ifkr,
+            const int sorb,
             const int size,
             const int rank,
             symbolic_task<Tm>& formulae){
+         if(debug_opS) std::cout << "symbolic_compxwf_opS6b p=" << p << std::endl;
          if(!ifkr){
             for(const auto& q : cindex2){
                int ipq = (p<q)? oper_pack(p,q) : oper_pack(q,p);
-               int iproc = distribute2(ifkr,size,ipq);
+               int iproc = distribute2('Q',ifkr,size,ipq,sorb);
                if(iproc == rank){
                   auto op2c = symbolic_oper(block2,'C',q);
                   auto op2a = op2c.H();
@@ -701,7 +720,7 @@ namespace ctns{
                auto op2c_B = op2c_A.K(1);
                auto op2a_B = op2a_A.K(1);
                int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-               int iproc_aa = distribute2(ifkr,size,ipq_aa);
+               int iproc_aa = distribute2('Q',ifkr,size,ipq_aa,sorb);
                if(iproc_aa == rank){
                   auto op1Q_AA = symbolic_oper(block1,'Q',ipq_aa);
                   auto Q1a2_AA = (kp<kq)? symbolic_prod<Tm>(op1Q_AA,op2a_A) : 
@@ -709,7 +728,7 @@ namespace ctns{
                   formulae.append(Q1a2_AA);
                }
                int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-               int iproc_ab = distribute2(ifkr,size,ipq_ab);
+               int iproc_ab = distribute2('Q',ifkr,size,ipq_ab,sorb);
                if(iproc_ab == rank){
                   auto op1Q_AB = symbolic_oper(block1,'Q',ipq_ab);
                   auto Q1a2_AB = (kp<kq)? symbolic_prod<Tm>(op1Q_AB,op2a_B) :
@@ -727,6 +746,7 @@ namespace ctns{
             const std::vector<int>& cindex1,
             const std::vector<int>& cindex2,
             const bool ifkr,
+            const int sorb,
             const int size,
             const int rank,
             const bool ifdist1){
@@ -738,8 +758,8 @@ namespace ctns{
          auto BQ1 = ifNC? 'B' : 'Q';
          auto BQ2 = ifNC? 'Q' : 'B';
          const auto& cindex = ifNC? cindex1 : cindex2;
-         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank);
-         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
+         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, sorb);
+         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, sorb);
          //
          // H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
          //   = H1 + H2

@@ -34,7 +34,7 @@ namespace ctns{
          // Local terms:
          // H[lc1]
          auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", cindex_l, cindex_c1, 
-               ifkr, size, rank, ifdist1);
+               ifkr, int2e.sorb, size, rank, ifdist1);
          counter["H1"] = Hlc1.size();
          if(Hlc1.size() > 0){
             formulae.join(Hlc1);
@@ -45,7 +45,7 @@ namespace ctns{
          }
          // H[c2r]
          auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", cindex_c2, cindex_r, 
-               ifkr, size, rank, ifdist1);
+               ifkr, int2e.sorb, size, rank, ifdist1);
          counter["H2"] = Hc2r.size();
          if(Hc2r.size() > 0){
             formulae.join(Hc2r);
@@ -102,7 +102,7 @@ namespace ctns{
             for(const auto& pr : ainfo){
                int index = pr.first;
                int iformula = pr.second;
-               int iproc = distribute2(ifkr,size,index);
+               int iproc = distribute2('A',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
                   // Apq*Ppq + Apq^+*Ppq^+
                   auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula, ifkr);
@@ -125,7 +125,7 @@ namespace ctns{
             for(const auto& pr : binfo){
                int index = pr.first;
                int iformula = pr.second;
-               int iproc = distribute2(ifkr,size,index);
+               int iproc = distribute2('B',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
                   auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula, ifkr);
                   auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", cindex_c2, cindex_r,
@@ -149,7 +149,7 @@ namespace ctns{
             for(const auto& pr : ainfo){
                int index = pr.first;
                int iformula = pr.second;
-               int iproc = distribute2(ifkr,size,index);
+               int iproc = distribute2('A',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
                   // Apq*Ppq + Apq^+*Ppq^+
                   auto Plc1 = symbolic_compxwf_opP<Tm>("l", "c1", cindex_l, cindex_c1,
@@ -172,7 +172,7 @@ namespace ctns{
             for(const auto& pr : binfo){
                int index = pr.first;
                int iformula = pr.second;
-               int iproc = distribute2(ifkr,size,index);
+               int iproc = distribute2('B',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
                   auto Qlc1 = symbolic_compxwf_opQ<Tm>("l", "c1", cindex_l, cindex_c1,
                         int2e, index, isym, ifkr);
@@ -332,7 +332,7 @@ namespace ctns{
          // Local terms:
          // H[lc1]
          auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", cindex_l, cindex_c1, 
-               ifkr, size, rank, ifdist1);
+               ifkr, int2e.sorb, size, rank, ifdist1);
          counter["H1"] = (Hlc1.size()>0)? 1 : 0;
          if(Hlc1.size() > 0){
             auto Hlc1_Ic2r = bipart_oper('l',Hlc1,"Hlc1_Ic2r");
@@ -345,7 +345,7 @@ namespace ctns{
          }
          // H[c2r]
          auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", cindex_c2, cindex_r, 
-               ifkr, size, rank, ifdist1);
+               ifkr, int2e.sorb, size, rank, ifdist1);
          counter["H2"] = (Hc2r.size()>0)? 1 : 0;
          if(Hc2r.size() > 0){
             auto Ilc1_Hc2r = bipart_oper('r',Hc2r,"Ilc1_Hc2r");
@@ -408,7 +408,7 @@ namespace ctns{
             for(const auto& pr : ainfo){
                int index = pr.first;
                int iformula = pr.second;
-               int iproc = distribute2(ifkr,size,index);
+               int iproc = distribute2('A',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
                   // Apq*Ppq + Apq^+*Ppq^+
                   auto Alc1 = symbolic_normxwf_opA<Tm>("l", "c1", index, iformula, ifkr);
@@ -432,7 +432,7 @@ namespace ctns{
             for(const auto& pr : binfo){
                int index = pr.first;
                int iformula = pr.second;
-               int iproc = distribute2(ifkr,size,index);
+               int iproc = distribute2('B',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
                   auto Blc1 = symbolic_normxwf_opB<Tm>("l", "c1", index, iformula, ifkr);
                   auto Qc2r = symbolic_compxwf_opQ<Tm>("c2", "r", cindex_c2, cindex_r,
@@ -457,7 +457,7 @@ namespace ctns{
             for(const auto& pr : ainfo){
                int index = pr.first;
                int iformula = pr.second;
-               int iproc = distribute2(ifkr,size,index);
+               int iproc = distribute2('A',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
                   // Apq*Ppq + Apq^+*Ppq^+
                   auto Plc1 = symbolic_compxwf_opP<Tm>("l", "c1", cindex_l, cindex_c1,
@@ -481,7 +481,7 @@ namespace ctns{
             for(const auto& pr : binfo){
                int index = pr.first;
                int iformula = pr.second;
-               int iproc = distribute2(ifkr,size,index);
+               int iproc = distribute2('B',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
                   auto Qlc1 = symbolic_compxwf_opQ<Tm>("l", "c1", cindex_l, cindex_c1,
                         int2e, index, isym, ifkr);
