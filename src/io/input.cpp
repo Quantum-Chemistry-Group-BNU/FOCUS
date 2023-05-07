@@ -250,7 +250,7 @@ void params_ctns::read(ifstream& istrm){
          async_fetch = true;
          async_save = true;
          async_remove = true;
-         async_tocpu = true;
+         //async_tocpu = true;
       }else if(line.substr(0,11)=="async_fetch"){
          async_fetch = true;
       }else if(line.substr(0,10)=="async_save"){
