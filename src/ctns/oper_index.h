@@ -54,8 +54,9 @@ namespace ctns{
       int n = std::min(p,q);
       // determine rank
       int rank = -1;
+      //rank = (m*(m+1)/2+n)%size;
       if(m == n){
-         rank = distribute1(ifkr, size, m);
+         rank = distribute1(ifkr, size, m); // better distribution of diagonal terms
       }else{
          rank = (m*(m-1)/2+n)%size;
       }
