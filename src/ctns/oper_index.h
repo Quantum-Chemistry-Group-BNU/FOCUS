@@ -43,20 +43,33 @@ namespace ctns{
       return ifkr? (index/2)%size : index%size; 
    }
 
-   inline int distribute2(const bool ifkr, const int size, const int index){
+   inline int distribute2(const char key, const bool ifkr, const int size, const int index, const int sorb){
       auto pq = oper_unpack(index);
       int p = pq.first;
       int q = pq.second;
-      assert(p <= q);
-      return (q*(q+1)/2+p)%size;
+      // flip to improve load balance
+      if(p >= sorb/2) p = sorb-p-1; 
+      if(q >= sorb/2) q = sorb-q-1;
+      int m = std::max(p,q);
+      int n = std::min(p,q);
+      // determine rank
+      int rank = -1;
+      //rank = (m*(m+1)/2+n)%size;
+      if(m == n){
+         rank = distribute1(ifkr, size, m); // better distribution of diagonal terms
+      }else{
+         rank = (m*(m-1)/2+n)%size;
+      }
+      return rank;
    }
 
-   inline std::vector<int> distribute2(const bool ifkr, const int size, 
+   inline std::vector<int> distribute2vec(const char key,
+         const bool ifkr, const int size, 
          const std::vector<int>& index_full,
-         const int rank){
+         const int rank, const int sorb){
       std::vector<int> index_dist;
       for(int idx : index_full){
-         int iproc = distribute2(ifkr, size, idx);
+         int iproc = distribute2(key, ifkr, size, idx, sorb);
          if(iproc == rank) index_dist.push_back(idx);
       }
       return index_dist;
@@ -101,9 +114,9 @@ namespace ctns{
       return aindex;
    }
    inline std::vector<int> oper_index_opA_dist(const std::vector<int>& cindex1, const bool& ifkr,
-         const int size, const int rank){
+         const int size, const int rank, const int sorb){
       std::vector<int> aindex = oper_index_opA(cindex1, ifkr);
-      return distribute2(ifkr, size, aindex, rank);
+      return distribute2vec('A', ifkr, size, aindex, rank, sorb);
    }
 
    inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bool& ifkr){
@@ -120,9 +133,9 @@ namespace ctns{
       return bindex;
    }
    inline std::vector<int> oper_index_opB_dist(const std::vector<int>& cindex1, const bool& ifkr,
-         const int size, const int rank){
+         const int size, const int rank, const int sorb){
       std::vector<int> bindex = oper_index_opB(cindex1, ifkr);
-      return distribute2(ifkr, size, bindex, rank);
+      return distribute2vec('B', ifkr, size, bindex, rank, sorb);
    }
 
    inline std::vector<int> oper_index_opBdiag(const std::vector<int>& cindex1, const bool& ifkr){
@@ -134,9 +147,9 @@ namespace ctns{
       return bindex;
    }
    inline std::vector<int> oper_index_opBdiag_dist(const std::vector<int>& cindex1, const bool& ifkr,
-         const int size, const int rank){
+         const int size, const int rank, const int sorb){
       std::vector<int> bindex = oper_index_opBdiag(cindex1, ifkr);
-      return distribute2(ifkr, size, bindex, rank);
+      return distribute2vec('B', ifkr, size, bindex, rank, sorb);
    }
 
    // --- generate index for complementary operators: P,Q,S ---
@@ -164,9 +177,9 @@ namespace ctns{
       return index;
    }
    inline std::vector<int> oper_index_opP_dist(const std::vector<int>& krest, const bool& ifkr,
-         const int size, const int rank){
+         const int size, const int rank, const int sorb){
       std::vector<int> pindex = oper_index_opP(krest, ifkr);
-      return distribute2(ifkr, size, pindex, rank);
+      return distribute2vec('P', ifkr, size, pindex, rank, sorb);
    }
 
    inline std::vector<int> oper_index_opQ(const std::vector<int>& krest, const bool& ifkr){
@@ -191,9 +204,9 @@ namespace ctns{
       return index;
    }
    inline std::vector<int> oper_index_opQ_dist(const std::vector<int>& krest, const bool& ifkr,
-         const int size, const int rank){
+         const int size, const int rank, const int sorb){
       std::vector<int> qindex = oper_index_opQ(krest, ifkr);
-      return distribute2(ifkr, size, qindex, rank);
+      return distribute2vec('Q', ifkr, size, qindex, rank, sorb);
    }
 
    inline std::vector<int> oper_index_opS(const std::vector<int>& krest, const bool& ifkr){

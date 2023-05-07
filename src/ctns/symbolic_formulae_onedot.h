@@ -25,8 +25,8 @@ namespace ctns{
          const int print_level = 1;
          const bool ifNC = cindex_l.size() <= cindex_r.size();
          const auto& cindex = ifNC? cindex_l : cindex_r;
-         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank);
-         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
+         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, int2e.sorb);
+         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, int2e.sorb);
 
          symbolic_task<Tm> formulae;
          int idx = 0;
@@ -47,7 +47,7 @@ namespace ctns{
             }
             // 2. H^cr
             auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cindex_c, cindex_r, 
-                  ifkr, size, rank, ifdist1);
+                  ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H2"] = Hcr.size();
             if(Hcr.size() > 0){
                formulae.join(Hcr);
@@ -128,7 +128,7 @@ namespace ctns{
             // partition = lc|r
             // 1. H^lc 
             auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", cindex_l, cindex_c, 
-                  ifkr, size, rank, ifdist1);
+                  ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H1"] = Hlc.size();
             if(Hlc.size() > 0){
                formulae.join(Hlc);
@@ -345,8 +345,8 @@ namespace ctns{
                << std::endl;
          }
          const auto& cindex = ifNC? cindex_l : cindex_r;
-         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank);
-         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank);
+         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, int2e.sorb);
+         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, int2e.sorb);
 
          bipart_task<Tm> formulae;
          int idx = 0;
@@ -370,7 +370,7 @@ namespace ctns{
             }
             // 2. H^cr
             auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cindex_c, cindex_r, 
-                  ifkr, size, rank, ifdist1);
+                  ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H2"] = (Hcr.size()>0)? 1 : 0;
             if(Hcr.size() > 0){
                auto Il_Hcr = bipart_oper('r',Hcr,"Il_Hcr");
@@ -457,7 +457,7 @@ namespace ctns{
             // partition = lc|r
             // 1. H^lc 
             auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", cindex_l, cindex_c, 
-                  ifkr, size, rank, ifdist1);
+                  ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H1"] = (Hlc.size()>0)? 1 : 0;
             if(Hlc.size() > 0){
                auto Hlc_Ir = bipart_oper('l',Hlc,"Hlc_Ir");

@@ -33,6 +33,7 @@ namespace ctns{
             const int rank,
             const bool ifdist1){
          // setup basic information
+         qops.sorb = int2e.sorb;
          qops.isym = isym;
          qops.ifkr = ifkr;
          qops.cindex.push_back(2*kp);

@@ -79,12 +79,13 @@ namespace ctns{
 
             //if(ibond != mid0 and ibond != mid1) continue;
             if(ibond != mid0) continue;
+            //if(ibond != mid0-3 && ibond != mid0+3) continue;
 
             const auto& dbond = sweeps[ibond];
             const auto& p0 = dbond.p0;
             const auto& p1 = dbond.p1;
             const auto& forward = dbond.forward;
-            std::cout << tools::line_separator2 << std::endl;
+            std::cout << '\n' << tools::line_separator2 << std::endl;
             std::cout << "ibond=" << ibond << " dbond=" << dbond << std::endl;
             std::cout << tools::line_separator2 << std::endl;
 
@@ -179,28 +180,28 @@ namespace ctns{
                // a
                std::vector<int> astat(mpisize,0);  
                for(int idx : aindex){
-                  int iproc = distribute2(ifkr,mpisize,idx);
+                  int iproc = distribute2('A',ifkr,mpisize,idx,int2e.sorb);
                   astat[iproc] += 1;
                }
                analyze_distribution(astat,"opA stat");
                // b
                std::vector<int> bstat(mpisize,0);  
                for(int idx : bindex){
-                  int iproc = distribute2(ifkr,mpisize,idx);
+                  int iproc = distribute2('B',ifkr,mpisize,idx,int2e.sorb);
                   bstat[iproc] += 1;
                }
                analyze_distribution(bstat,"opB stat");
                // p
                std::vector<int> pstat(mpisize,0);  
                for(int idx : pindex){
-                  int iproc = distribute2(ifkr,mpisize,idx);
+                  int iproc = distribute2('P',ifkr,mpisize,idx,int2e.sorb);
                   pstat[iproc] += 1;
                }
                analyze_distribution(pstat,"opP stat");
                // q
                std::vector<int> qstat(mpisize,0);  
                for(int idx : qindex){
-                  int iproc = distribute2(ifkr,mpisize,idx);
+                  int iproc = distribute2('Q',ifkr,mpisize,idx,int2e.sorb);
                   qstat[iproc] += 1;
                }
                analyze_distribution(qstat,"opQ stat");

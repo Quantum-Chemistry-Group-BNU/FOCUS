@@ -70,7 +70,7 @@ namespace ctns{
             auto ainfo = oper_combine_opA(qops1.cindex, qops2.cindex, qops.ifkr);
             for(const auto& pr : ainfo){
                int index = pr.first, iformula = pr.second;
-               int iproc = distribute2(qops.ifkr, qops.mpisize, index);
+               int iproc = distribute2('A',qops.ifkr, qops.mpisize, index, qops.sorb);
                if(iproc == qops.mpirank){
                   Hx_functor<Tm> Hx("A", index, iformula);
                   Hx.opxwf = bind(&oper_normxwf_opA<Tm>, 
@@ -86,7 +86,7 @@ namespace ctns{
             auto binfo = oper_combine_opB(qops1.cindex, qops2.cindex, qops.ifkr);
             for(const auto& pr : binfo){
                int index = pr.first, iformula = pr.second;
-               int iproc = distribute2(qops.ifkr, qops.mpisize, index);
+               int iproc = distribute2('B',qops.ifkr, qops.mpisize, index, qops.sorb);
                if(iproc == qops.mpirank){
                   Hx_functor<Tm> Hx("B", index, iformula);
                   Hx.opxwf = bind(&oper_normxwf_opB<Tm>, 
