@@ -128,7 +128,7 @@ namespace ctns{
          auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
          // prefetch files for the next bond
          if(schd.ctns.async_fetch){
-            if(alg_hvec>10) qops_pool.clear_from_cpumem(fneed);
+            if(alg_hvec>10) qops_pool.clear_from_cpumem(fneed, fneed_next);
             qops_pool(frop); // just declare a space for frop
             qops_pool.fetch_to_memory(fneed_next, false, schd.ctns.async_fetch); // just to cpu
          }
