@@ -147,8 +147,8 @@ namespace ctns{
                fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
                fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
                qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
-               const auto& cqops = qops_pool(fneed[0]);
-               const auto& rqops = qops_pool(fneed[1]);
+               const auto& cqops = qops_pool.at(fneed[0]);
+               const auto& rqops = qops_pool.at(fneed[1]);
                if(debug && schd.ctns.verbose>0){
                   cqops.print("cqops");
                   rqops.print("rqops");
@@ -168,7 +168,7 @@ namespace ctns{
                if(schd.ctns.save_formulae) fname = scratch+"/rformulae_env_idx"
                   + std::to_string(idx) + ".txt"; 
                oper_renorm(superblock, icomb, p, int2e, int1e, schd,
-                     cqops, rqops, qops_pool(frop), fname, timing); 
+                     cqops, rqops, qops_pool[frop], fname, timing); 
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
                timing.tf = tools::get_time();

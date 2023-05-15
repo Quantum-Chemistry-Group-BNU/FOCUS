@@ -63,9 +63,11 @@ namespace ctns{
          // 1. load operators 
          auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
          qops_pool.fetch_to_memory(fneed, alg_hvec>10);
-         const oper_dictmap<Tm> qops_dict = {{"l",qops_pool(fneed[0])},
-            {"r",qops_pool(fneed[1])},
-            {"c",qops_pool(fneed[2])}};
+         const oper_dictmap<Tm> qops_dict = {
+            {"l",qops_pool.at(fneed[0])},
+            {"r",qops_pool.at(fneed[1])},
+            {"c",qops_pool.at(fneed[2])}
+         };
          if(debug && schd.ctns.verbose>0){
             std::cout << "qops info: rank=" << rank << std::endl;
             qops_dict.at("l").print("lqops");

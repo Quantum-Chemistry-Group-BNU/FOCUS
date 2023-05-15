@@ -62,10 +62,10 @@ namespace ctns{
          timing.te = tools::get_time();
 
          // 3. renorm operators	 
-         auto& qops  = qops_pool(frop);
-         const auto& lqops = qops_pool(fneed[0]);
-         const auto& rqops = qops_pool(fneed[1]);
-         const auto& cqops = qops_pool(fneed[2]);
+         auto& qops  = qops_pool[frop];
+         const auto& lqops = qops_pool.at(fneed[0]);
+         const auto& rqops = qops_pool.at(fneed[1]);
+         const auto& cqops = qops_pool.at(fneed[2]);
          const auto p = dbond.get_current();
          const auto& pdx = icomb.topo.rindex.at(p); 
          std::string fname;

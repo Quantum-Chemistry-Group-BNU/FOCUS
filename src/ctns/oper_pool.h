@@ -18,14 +18,14 @@ namespace ctns{
          public:
             // constuctor
             oper_pool(const int _iomode, const bool _debug): iomode(_iomode), debug(_debug){}
-            const oper_dict<Tm>& operator()(const std::string fqop) const{
+            const oper_dict<Tm>& at(const std::string fqop) const{
                std::cout << "lzd fqop=" << fqop
                   << " ifexit=" << this->exist(fqop)
                   << std::endl;
                assert(this->exist(fqop));
                return qstore.at(fqop);
             }
-            oper_dict<Tm>& operator()(const std::string& fqop){
+            oper_dict<Tm>& operator[](const std::string& fqop){
                return qstore[fqop];
             }
             bool exist(const std::string& frop) const{

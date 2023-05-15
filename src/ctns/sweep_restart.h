@@ -73,7 +73,7 @@ namespace ctns{
          
          dot_timing timing_local;
          oper_renorm(superblock, icomb, p, int2e, int1e, schd,
-               qops_pool(fneed[0]), qops_pool(fneed[1]), qops_pool(frop), 
+               qops_pool.at(fneed[0]), qops_pool.at(fneed[1]), qops_pool[frop], 
                fname, timing_local); 
          
          qops_pool.erase_from_memory(fneed);

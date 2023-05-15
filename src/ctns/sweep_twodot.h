@@ -69,10 +69,12 @@ namespace ctns{
          // 1. load operators
          auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug && schd.ctns.verbose>0);
          qops_pool.fetch_to_memory(fneed, alg_hvec>10);
-         const oper_dictmap<Tm> qops_dict = {{"l" ,qops_pool(fneed[0])},
-            {"r" ,qops_pool(fneed[1])},
-            {"c1",qops_pool(fneed[2])},
-            {"c2",qops_pool(fneed[3])}};
+         const oper_dictmap<Tm> qops_dict = {
+            {"l" ,qops_pool.at(fneed[0])},
+            {"r" ,qops_pool.at(fneed[1])},
+            {"c1",qops_pool.at(fneed[2])},
+            {"c2",qops_pool.at(fneed[3])}
+         };
          size_t opertot = qops_dict.at("l").size()
             + qops_dict.at("r").size()
             + qops_dict.at("c1").size()
@@ -129,7 +131,7 @@ namespace ctns{
          // prefetch files for the next bond
          if(schd.ctns.async_fetch){
             if(alg_hvec>10) qops_pool.clear_from_cpumem(fneed, fneed_next);
-            qops_pool(frop); // just declare a space for frop
+            qops_pool[frop]; // just declare a space for frop
             qops_pool.fetch_to_memory(fneed_next, false, schd.ctns.async_fetch); // just to cpu
          }
 
@@ -439,7 +441,7 @@ namespace ctns{
 
             // allocate memery on GPU & copy qops
             for(int i=0; i<4; i++){
-               auto& tqops = qops_pool(fneed[i]);
+               const auto& tqops = qops_pool.at(fneed[i]);
                assert(tqops.avail_gpu());
                dev_opaddr[i] = tqops._dev_data;
             }
