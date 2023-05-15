@@ -5,18 +5,28 @@
 #include <memory>
 #include "oper_dict.h"
 #include "oper_io.h"
+#include "oper_pool_safe.h"
 
 namespace ctns{
+  
+   // Change the definition of oper_pool here
+   template <typename Tm>
+      using oper_pool = oper_pool_safe<Tm>;
+      //using oper_pool = oper_pool_raw<Tm>;
+
+   /*
+    * oper_pool_raw with std::map 
+   */
 
    template <typename Tm>
-      using operData_pool = std::map<std::string,oper_dict<Tm>>;
+      using operData_pool_raw = std::map<std::string,oper_dict<Tm>>;
 
    // pool for mananging operators
    template <typename Tm>
-      struct oper_pool{
+      struct oper_pool_raw{
          public:
             // constuctor
-            oper_pool(const int _iomode, const bool _debug): iomode(_iomode), debug(_debug){}
+            oper_pool_raw(const int _iomode, const bool _debug): iomode(_iomode), debug(_debug){}
             const oper_dict<Tm>& at(const std::string fqop) const{
                assert(this->exist(fqop));
                return qstore.at(fqop);
@@ -80,7 +90,7 @@ namespace ctns{
          public:
             int iomode=0;
             bool debug=false;
-            operData_pool<Tm> qstore;
+            operData_pool_raw<Tm> qstore;
             std::thread thread_fetch; // prefetch qops for the next dbond
             std::thread thread_save; // save renormalized operators
             std::thread thread_remove; // remove qops on the same bond with opposite direction
@@ -88,7 +98,7 @@ namespace ctns{
       };
 
    template <typename Tm>
-      void oper_fetch(operData_pool<Tm>& qstore,
+      void oper_fetch(operData_pool_raw<Tm>& qstore,
             const std::vector<std::string> fneed,
             const std::vector<bool> fetch,
             const bool ifgpu,
@@ -114,10 +124,10 @@ namespace ctns{
       }
 
    template <typename Tm>
-      void oper_pool<Tm>::fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu, const bool ifasync){
+      void oper_pool_raw<Tm>::fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu, const bool ifasync){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::oper_pool<Tm>::fetch_to_memory: ifgpu=" << ifgpu << " ifasyn=" << ifasync
+            std::cout << "ctns::oper_pool_raw<Tm>::fetch_to_memory: ifgpu=" << ifgpu << " ifasyn=" << ifasync
                << " fneed size=" << fneed.size() << std::endl;
             this->display("in");
          }
@@ -139,7 +149,7 @@ namespace ctns{
          if(debug){
             this->display("out");
             auto t2 = tools::get_time();
-            std::cout << "----- TIMING FOR oper_pool<Tm>::fetch_to_memory : "
+            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::fetch_to_memory : "
                << tools::get_duration(t2-t0) << " S"
                << " T(sync/fetch)="
                << tools::get_duration(t1-t0) << "," 
@@ -150,11 +160,11 @@ namespace ctns{
 
    // release unnecessary qops in the next point
    template <typename Tm>
-      void oper_pool<Tm>::erase_from_memory(const std::vector<std::string> frelease,
+      void oper_pool_raw<Tm>::erase_from_memory(const std::vector<std::string> frelease,
             const std::vector<std::string> fneed_next){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::oper_pool<Tm>::erase_from_memory: size=" << frelease.size() << std::endl; 
+            std::cout << "ctns::oper_pool_raw<Tm>::erase_from_memory: size=" << frelease.size() << std::endl; 
             for(const auto& fqop : frelease){
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
@@ -172,18 +182,18 @@ namespace ctns{
          if(debug){
             this->display("out");
             auto t1 = tools::get_time();
-            std::cout << "----- TIMING FOR oper_pool<Tm>::erase_from_memory : "
+            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::erase_from_memory : "
                << tools::get_duration(t1-t0) << " S -----"
                << std::endl;
          }
       }
 
    template <typename Tm>
-      void oper_pool<Tm>::clear_from_cpumem(const std::vector<std::string> fclear,
+      void oper_pool_raw<Tm>::clear_from_cpumem(const std::vector<std::string> fclear,
             const std::vector<std::string> fneed_next){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::oper_pool<Tm>::clear_from_cpumem: size=" << fclear.size() << std::endl; 
+            std::cout << "ctns::oper_pool_raw<Tm>::clear_from_cpumem: size=" << fclear.size() << std::endl; 
             for(const auto& fqop : fclear){
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
@@ -201,14 +211,14 @@ namespace ctns{
          if(debug){
             this->display("out");
             auto t1 = tools::get_time();
-            std::cout << "----- TIMING FOR oper_pool<Tm>::clear_from_cpumem : "
+            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::clear_from_cpumem : "
                << tools::get_duration(t1-t0) << " S -----"
                << std::endl;
          }
       }
 
    template <typename Tm>
-      void oper_dump(operData_pool<Tm>& qstore,
+      void oper_dump(operData_pool_raw<Tm>& qstore,
             const std::string frop,
             const bool ifgpu,
             const int iomode,
@@ -221,11 +231,11 @@ namespace ctns{
 
    // save to disk
    template <typename Tm>
-      void oper_pool<Tm>::save_to_disk(const std::string frop, const bool ifgpu, const bool ifasync, 
+      void oper_pool_raw<Tm>::save_to_disk(const std::string frop, const bool ifgpu, const bool ifasync, 
             const std::vector<std::string> fneed_next){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::oper_pool<Tm>::save_to_disk: ifgpu=" << ifgpu << " ifasync=" << ifasync 
+            std::cout << "ctns::oper_pool_raw<Tm>::save_to_disk: ifgpu=" << ifgpu << " ifasync=" << ifasync 
                << " frop=" << frop << " erase frop_prev=" << frop_prev << std::endl;
          }
          if(thread_save.joinable()) thread_save.join(); // join before erasing the last rop! 
@@ -246,7 +256,7 @@ namespace ctns{
          frop_prev = frop;
          if(debug){
             auto t3 = tools::get_time();
-            std::cout << "----- TIMING FOR oper_pool<Tm>::save_to_disk : "
+            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::save_to_disk : "
                << tools::get_duration(t3-t0) << " S"
                << " T(sync/save/erase)=" 
                << tools::get_duration(t1-t0) << "," 
@@ -257,9 +267,9 @@ namespace ctns{
       }
 
    template <typename Tm>
-      void oper_pool<Tm>::remove_from_disk(const std::string fdel, const bool ifasync){
+      void oper_pool_raw<Tm>::remove_from_disk(const std::string fdel, const bool ifasync){
          if(debug){
-            std::cout << "ctns::oper_pool<Tm>::remove_from_disk ifasync=" << ifasync << " fdel=" << fdel << std::endl; 
+            std::cout << "ctns::oper_pool_raw<Tm>::remove_from_disk ifasync=" << ifasync << " fdel=" << fdel << std::endl; 
          }
          auto t0 = tools::get_time();
          if(thread_remove.joinable()) thread_remove.join();
@@ -271,7 +281,7 @@ namespace ctns{
          }
          if(debug){
             auto t2 = tools::get_time();
-            std::cout << "----- TIMING FOR oper_pool<Tm>::remove_from_disk : "
+            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::remove_from_disk : "
                << tools::get_duration(t2-t0) << " S"
                << " T(sync/remove)=" 
                << tools::get_duration(t1-t0) << "," 
