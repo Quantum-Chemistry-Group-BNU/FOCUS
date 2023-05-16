@@ -111,13 +111,14 @@ namespace ctns{
          auto t0 = tools::get_time();
          if(debug){
             std::cout << "ctns::oper_pool_raw<Tm>::fetch_to_memory: ifgpu=" << ifgpu
-               << " fneed size=" << fneed.size() << std::endl;
+               << " size=" << fneed.size() << std::endl;
             this->display("in");
          }
          for(int i=0; i<fneed.size(); i++){
             const auto& fqop = fneed[i];
             bool ifexist = this->exist(fqop);
-            if(debug) std::cout << " i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
+            if(debug) std::cout << "fetch: i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
+            if(ifexist) continue;
             oper_load(iomode, fqop, qstore[fqop], debug);
          }
 #ifdef GPU
@@ -159,14 +160,14 @@ namespace ctns{
          auto t0 = tools::get_time();
          if(debug){
             std::cout << "ctns::oper_pool_raw<Tm>::fetch_to_cpumem: ifasyn=" << ifasync
-               << " fneed size=" << fneed.size() << std::endl;
+               << " size=" << fneed.size() << std::endl;
             this->display("in");
          }
          std::vector<bool> fetch(fneed.size(),0); 
          for(int i=0; i<fneed.size(); i++){
             const auto& fqop = fneed[i];
             bool ifexist = this->exist(fqop);
-            if(debug) std::cout << " i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
+            if(debug) std::cout << "fetch: i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
             fetch[i] = !ifexist;
             qstore[fqop]; // declare a spot here! this is helpful for threadsafty
          }
@@ -196,7 +197,7 @@ namespace ctns{
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
                bool iferase = (result == fneed_next.end()) && (fqop != frop_prev); 
-               std::cout << " fqop=" << fqop << " ifexist=" << ifexist << " iferase=" << iferase << std::endl;
+               std::cout << "erase: fqop=" << fqop << " ifexist=" << ifexist << " iferase=" << iferase << std::endl;
             }
             this->display("in");
          }
@@ -239,7 +240,7 @@ namespace ctns{
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
                bool ifclear = (result == fneed_next.end()) && (fqop != frop_prev); 
-               std::cout << " fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
+               std::cout << "clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
             }
             this->display("in");
          }
@@ -270,7 +271,7 @@ namespace ctns{
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
                bool ifclear = (result == fneed_next.end()) && (fqop != frop_prev); 
-               std::cout << " fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
+               std::cout << "clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
             }
             this->display("in");
          }
@@ -328,9 +329,8 @@ namespace ctns{
             const std::vector<std::string> fneed_next){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::oper_pool_raw<Tm>::save_to_disk: ifgpu=" << ifgpu << " ifasync=" << ifasync 
-               << " frop=" << frop << " erase frop_prev=" << frop_prev << std::endl;
-            this->display("in");
+            std::cout << "ctns::oper_pool_raw<Tm>::save_to_disk: ifgpu=" << ifgpu 
+               << " ifasync=" << ifasync << " frop=" << frop << std::endl;
          }
          /*
          if(!ifasync){
@@ -347,7 +347,6 @@ namespace ctns{
          }
          frop_prev = frop;
          if(debug){
-            this->display("out");
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR oper_pool_raw<Tm>::save_to_disk : "
                << tools::get_duration(t1-t0) << " S -----"
@@ -358,7 +357,8 @@ namespace ctns{
    template <typename Tm>
       void oper_pool_raw<Tm>::remove_from_disk(const std::string fdel, const bool ifasync){
          if(debug){
-            std::cout << "ctns::oper_pool_raw<Tm>::remove_from_disk ifasync=" << ifasync << " fdel=" << fdel << std::endl; 
+            std::cout << "ctns::oper_pool_raw<Tm>::remove_from_disk ifasync=" << ifasync 
+               << " fdel=" << fdel << std::endl; 
          }
          auto t0 = tools::get_time();
          assert(!thread_remove.joinable()); 
