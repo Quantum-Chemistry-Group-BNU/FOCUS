@@ -116,9 +116,6 @@ namespace ctns{
          }
 
          // 3. Davidson solver for wf
-#ifndef SERIAL
-         icomb.world.barrier();
-#endif
          // 3.1 diag 
          std::vector<double> diag(ndim);
          onedot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);

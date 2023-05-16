@@ -90,6 +90,18 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
          }
+
+         // 1.5 look ahead for the next dbond
+         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
+         auto frop = fbond.first;
+         auto fdel = fbond.second;
+         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
+         // prefetch files for the next bond
+         if(schd.ctns.async_fetch){
+            if(alg_hvec>10) qops_pool.clear_from_cpumem(fneed, fneed_next);
+            qops_pool[frop]; // just declare a space for frop
+            qops_pool.fetch_to_memory(fneed_next, false, schd.ctns.async_fetch); // just to cpu
+         }
          timing.ta = tools::get_time();
 
          // 2. twodot wavefunction
@@ -123,22 +135,7 @@ namespace ctns{
             exit(1);
          }
 
-         // look ahead for the next dbond
-         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
-         auto frop = fbond.first;
-         auto fdel = fbond.second;
-         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
-         // prefetch files for the next bond
-         if(schd.ctns.async_fetch){
-            if(alg_hvec>10) qops_pool.clear_from_cpumem(fneed, fneed_next);
-            qops_pool[frop]; // just declare a space for frop
-            qops_pool.fetch_to_memory(fneed_next, false, schd.ctns.async_fetch); // just to cpu
-         }
-
          // 3. Davidson solver for wf
-#ifndef SERIAL
-         icomb.world.barrier();
-#endif
          // 3.1 diag 
          auto diag_t0 = tools::get_time();
          std::vector<double> diag(ndim);
@@ -151,8 +148,8 @@ namespace ctns{
          }
          auto diag_t1 = tools::get_time();
 #ifndef SERIAL
-         // reduction of partial diag: no need to broadcast, if only rank=0 executes 
-         // the preconditioning in Davidson's algorithm
+         // reduction of partial diag: no need to broadcast, if only rank=0 
+         // executes the preconditioning in Davidson's algorithm
          if(!schd.ctns.ifnccl && size > 1){
             mpi_wrapper::reduce(icomb.world, diag.data(), ndim, 0, schd.ctns.alg_comm);
          }
@@ -162,9 +159,7 @@ namespace ctns{
                [&ecore](const double& x){ return x+ecore; });
          timing.tb = tools::get_time();
          auto diag_t3 = tools::get_time();
-
-         if(rank==0)
-         {
+         if(rank==0){
             double duration_diagGPU = tools::get_duration(diag_t1-diag_t0);
             double duration_diagreduce = tools::get_duration(diag_t2-diag_t1);
             double duration_diagtransform = tools::get_duration(diag_t3-diag_t2);
