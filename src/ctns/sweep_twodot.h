@@ -99,7 +99,9 @@ namespace ctns{
          // prefetch files for the next bond
          if(schd.ctns.async_fetch){
             if(alg_hvec>10) qops_pool.clear_from_cpumem(fneed, fneed_next);
+            assert(!qops_pool.exist(frop));
             qops_pool[frop]; // just declare a space for frop
+            assert(qops_pool.exist(frop));
             qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
          }
          timing.ta = tools::get_time();
@@ -601,14 +603,6 @@ namespace ctns{
                vsol, wf, qops_pool, fneed, fneed_next, frop,
                sweeps, isweep, ibond);
          timing.tf = tools::get_time();
-
-         // join
-         if(schd.ctns.async_fetch){
-            if(qops_pool.thread_fetch.joinable()){
-               if(debug) std::cout << "thread_fetch.join" << std::endl;
-               qops_pool.thread_fetch.join();
-            }
-         }
 
          // 4. save on disk 
          auto t0 = tools::get_time();

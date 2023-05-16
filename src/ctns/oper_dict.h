@@ -42,7 +42,9 @@ namespace ctns{
                _data = nullptr;
             }
             void clear_gpu(){
-               delete[] _dev_data;
+#ifdef GPU
+               GPUmem.deallocate(_dev_data, _size*sizeof(Tm));
+#endif
                _dev_data = nullptr;
             }
             bool avail_cpu() const{ return _data != nullptr; }

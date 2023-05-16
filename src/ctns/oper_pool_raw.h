@@ -84,11 +84,15 @@ namespace ctns{
                   const std::vector<std::string> fneed_next={});
             // remove fdel [in the same bond as frop] from disk
             void remove_from_disk(const std::string fdel, const bool ifasync);
-            // final call
-            void finalize(){
+            // join
+            void join_all(){
                if(thread_fetch.joinable()) thread_fetch.join();
                if(thread_save.joinable()) thread_save.join();
                if(thread_remove.joinable()) thread_remove.join();
+            }
+            // final call
+            void finalize(){
+               this->join_all();
                qstore.clear();
                frop_prev.clear();
             }
@@ -103,17 +107,17 @@ namespace ctns{
       };
 
    template <typename Tm>
-      void oper_fetch(operData_pool_raw<Tm>& qstore,
-            const std::vector<std::string> fneed,
-            const std::vector<bool> fetch,
-            const bool ifgpu,
-            const int iomode,
-            const bool debug){
-         // load new data is in memory
+      void oper_pool_raw<Tm>::fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu){
+         auto t0 = tools::get_time();
+         if(debug){
+            std::cout << "ctns::oper_pool_raw<Tm>::fetch_to_memory: ifgpu=" << ifgpu
+               << " fneed size=" << fneed.size() << std::endl;
+            this->display("in");
+         }
          for(int i=0; i<fneed.size(); i++){
             const auto& fqop = fneed[i];
-            if(!fetch[i]) continue;
-            if(debug) std::cout << "load: fqop=" << fqop << std::endl;
+            bool ifexist = this->exist(fqop);
+            if(debug) std::cout << " i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
             oper_load(iomode, fqop, qstore[fqop], debug);
          }
 #ifdef GPU
@@ -126,31 +130,27 @@ namespace ctns{
             }
          }
 #endif
-      }
-
-   template <typename Tm>
-      void oper_pool_raw<Tm>::fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu){
-         auto t0 = tools::get_time();
-         if(debug){
-            std::cout << "ctns::oper_pool_raw<Tm>::fetch_to_memory: ifgpu=" << ifgpu
-               << " fneed size=" << fneed.size() << std::endl;
-            this->display("in");
-         }
-         std::vector<bool> fetch(fneed.size(),0); 
-         for(int i=0; i<fneed.size(); i++){
-            const auto& fqop = fneed[i];
-            bool ifexist = this->exist(fqop);
-            if(debug) std::cout << " i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
-            fetch[i] = !ifexist;
-            qstore[fqop]; // declare a spot here! this is helpful for threadsafty
-         }
-         oper_fetch(qstore, fneed, fetch, ifgpu, iomode, debug);
          if(debug){
             this->display("out");
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR oper_pool_raw<Tm>::fetch_to_memory : "
                << tools::get_duration(t1-t0) << " S -----"
                << std::endl;
+         }
+      }
+
+   template <typename Tm>
+      void oper_fetch(operData_pool_raw<Tm>& qstore,
+            const std::vector<std::string> fneed,
+            const std::vector<bool> fetch,
+            const int iomode,
+            const bool debug){
+         // load new data is in memory
+         for(int i=0; i<fneed.size(); i++){
+            const auto& fqop = fneed[i];
+            if(!fetch[i]) continue;
+            if(debug) std::cout << "fetch: fqop=" << fqop << std::endl;
+            oper_load(iomode, fqop, qstore[fqop], debug);
          }
       }
 
@@ -170,21 +170,17 @@ namespace ctns{
             fetch[i] = !ifexist;
             qstore[fqop]; // declare a spot here! this is helpful for threadsafty
          }
-         auto t1 = tools::get_time();
-         const bool ifgpu = false;
+         assert(!thread_fetch.joinable());
          if(!ifasync){
-            oper_fetch(qstore, fneed, fetch, ifgpu, iomode, debug);
+            oper_fetch(qstore, fneed, fetch, iomode, debug);
          }else{
-            thread_fetch = std::thread(&ctns::oper_fetch<Tm>, std::ref(qstore), fneed, fetch, ifgpu, iomode, debug);
+            thread_fetch = std::thread(&ctns::oper_fetch<Tm>, std::ref(qstore), fneed, fetch, iomode, debug);
          }
          if(debug){
             this->display("out");
-            auto t2 = tools::get_time();
+            auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR oper_pool_raw<Tm>::fetch_to_cpumem : "
-               << tools::get_duration(t2-t0) << " S"
-               << " T(sync/fetch)="
-               << tools::get_duration(t1-t0) << "," 
-               << tools::get_duration(t2-t1) << " -----"
+               << tools::get_duration(t1-t0) << " S -----"
                << std::endl;
          }
       }
@@ -204,17 +200,31 @@ namespace ctns{
             }
             this->display("in");
          }
+         this->join_all();
+         auto t1 = tools::get_time();
          for(const auto& fqop : frelease){
-            if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
+            if(fqop == frop_prev) continue;
             auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
             if(result != fneed_next.end()) continue;
             qstore.erase(fqop);
          }
+         auto t2 = tools::get_time();
+         // if result is not used in the next dbond, then release it
+         // NOTE: check is neceesary at the returning point: [ -*=>=*-* and -*=<=*-* ],
+         // because the previous left qops is needed in the next dbond!
+         auto result = std::find(fneed_next.begin(), fneed_next.end(), frop_prev);
+         if(result == fneed_next.end()){
+            qstore.erase(frop_prev); // NOTE: frop_prev is only erased here to make sure the saving is finished!
+         }
          if(debug){
             this->display("out");
-            auto t1 = tools::get_time();
+            auto t3 = tools::get_time();
             std::cout << "----- TIMING FOR oper_pool_raw<Tm>::erase_from_memory : "
-               << tools::get_duration(t1-t0) << " S -----"
+               << tools::get_duration(t3-t0) << " S"
+               << " T(join/erase1/erase2)="
+               << tools::get_duration(t1-t0) << ","
+               << tools::get_duration(t2-t1) << ","
+               << tools::get_duration(t3-t2)
                << std::endl;
          }
       }
@@ -239,6 +249,7 @@ namespace ctns{
             if(result != fneed_next.end()) continue;
             qstore[fqop].clear();
             qstore[fqop].clear_gpu();
+            qstore[fqop]._size = 0;
          }
          if(debug){
             this->display("out");
@@ -278,6 +289,7 @@ namespace ctns{
          }
       }
 
+/*
    template <typename Tm>
       void oper_dump(operData_pool_raw<Tm>& qstore,
             const std::string frop,
@@ -285,9 +297,29 @@ namespace ctns{
             const int iomode,
             const bool debug){
 #ifdef GPU
+         //std::cout << "lzd1 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
          if(ifgpu) qstore[frop].to_cpu();
+         //std::cout << "lzd2 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
 #endif
+         //std::cout << "lzd3 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
          oper_save<Tm>(iomode, frop, qstore.at(frop), debug);
+         //std::cout << "lzd4 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
+      }
+*/
+   template <typename Tm>
+      void oper_dump(oper_dict<Tm>& qops,
+            const std::string frop,
+            const bool ifgpu,
+            const int iomode,
+            const bool debug){
+#ifdef GPU
+         //std::cout << "lzd1 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
+         if(ifgpu) qops.to_cpu();
+         //std::cout << "lzd2 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
+#endif
+         //std::cout << "lzd3 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
+         oper_save<Tm>(iomode, frop, qops, debug);
+         //std::cout << "lzd4 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
       }
 
    // save to disk
@@ -300,35 +332,25 @@ namespace ctns{
                << " frop=" << frop << " erase frop_prev=" << frop_prev << std::endl;
             this->display("in");
          }
-         std::cout << "lzdA frop=" << frop << std::endl;
-         if(thread_save.joinable()) thread_save.join(); // join before erasing the last rop! 
-         std::cout << "lzdB frop=" << frop << std::endl;
-         auto t1 = tools::get_time();
+         /*
          if(!ifasync){
             oper_dump<Tm>(qstore, frop, ifgpu, iomode, debug);
          }else{
             thread_save = std::thread(&ctns::oper_dump<Tm>, std::ref(qstore), frop, ifgpu, iomode, debug);
          }
-         std::cout << "lzdC frop=" << frop << std::endl;
-         auto t2 = tools::get_time();
-         // if result is not used in the next dbond, then release it
-         // NOTE: check is neceesary at the returning point: [ -*=>=*-* and -*=<=*-* ],
-         // because the previous left qops is needed in the next dbond!
-         auto result = std::find(fneed_next.begin(), fneed_next.end(), frop_prev);
-         if(result == fneed_next.end()){
-            qstore.erase(frop_prev); // NOTE: frop_prev is only erased here to make sure the saving is finished!!!
+         */
+         assert(!thread_save.joinable()); 
+         if(!ifasync){
+            oper_dump<Tm>(qstore[frop], frop, ifgpu, iomode, debug);
+         }else{
+            thread_save = std::thread(&ctns::oper_dump<Tm>, std::ref(qstore[frop]), frop, ifgpu, iomode, debug);
          }
-         std::cout << "lzdD frop=" << frop << std::endl;
          frop_prev = frop;
          if(debug){
             this->display("out");
-            auto t3 = tools::get_time();
+            auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR oper_pool_raw<Tm>::save_to_disk : "
-               << tools::get_duration(t3-t0) << " S"
-               << " T(sync/save/erase)=" 
-               << tools::get_duration(t1-t0) << "," 
-               << tools::get_duration(t2-t1) << "," 
-               << tools::get_duration(t3-t2) << " -----"
+               << tools::get_duration(t1-t0) << " S -----"
                << std::endl;
          }
       }
@@ -339,20 +361,16 @@ namespace ctns{
             std::cout << "ctns::oper_pool_raw<Tm>::remove_from_disk ifasync=" << ifasync << " fdel=" << fdel << std::endl; 
          }
          auto t0 = tools::get_time();
-         if(thread_remove.joinable()) thread_remove.join();
-         auto t1 = tools::get_time();
+         assert(!thread_remove.joinable()); 
          if(!ifasync){
             ctns::oper_remove(fdel, debug);
          }else{
             thread_remove = std::thread(&ctns::oper_remove, fdel, debug);
          }
          if(debug){
-            auto t2 = tools::get_time();
+            auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR oper_pool_raw<Tm>::remove_from_disk : "
-               << tools::get_duration(t2-t0) << " S"
-               << " T(sync/remove)=" 
-               << tools::get_duration(t1-t0) << "," 
-               << tools::get_duration(t2-t1) << " -----"
+               << tools::get_duration(t1-t0) << " S -----"
                << std::endl;
          }
       }
