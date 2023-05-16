@@ -71,15 +71,15 @@ namespace ctns{
             // fetch from disk to cpu/gpu memory
             void fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu);
             void fetch_to_cpumem(const std::vector<std::string> fneed_next, const bool ifasync=false);
-            // erase from cpu & gpu memory
-            void erase_from_memory(const std::vector<std::string> fneed, 
+            // join and erase from cpu & gpu memory
+            void join_and_erase(const std::vector<std::string> fneed, 
                   const std::vector<std::string> fneed_next={});
             // only clear cpu memory
             void clear_from_memory(const std::vector<std::string> fneed,
                   const std::vector<std::string> fneed_next={}); 
             void clear_from_cpumem(const std::vector<std::string> fneed,
                   const std::vector<std::string> fneed_next={}); 
-            // save renormalized operator to file and erase frop_prev
+            // save renormalized operator to file 
             void save_to_disk(const std::string frop, const bool ifgpu, const bool ifasync, 
                   const std::vector<std::string> fneed_next={});
             // remove fdel [in the same bond as frop] from disk
@@ -187,11 +187,11 @@ namespace ctns{
 
    // release unnecessary qops in the next point
    template <typename Tm>
-      void oper_pool_raw<Tm>::erase_from_memory(const std::vector<std::string> frelease,
+      void oper_pool_raw<Tm>::join_and_erase(const std::vector<std::string> frelease,
             const std::vector<std::string> fneed_next){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::oper_pool_raw<Tm>::erase_from_memory: size=" << frelease.size() << std::endl; 
+            std::cout << "ctns::oper_pool_raw<Tm>::join_and_erase : size=" << frelease.size() << std::endl; 
             for(const auto& fqop : frelease){
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
@@ -219,7 +219,7 @@ namespace ctns{
          if(debug){
             this->display("out");
             auto t3 = tools::get_time();
-            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::erase_from_memory : "
+            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::join_and_erase : "
                << tools::get_duration(t3-t0) << " S"
                << " T(join/erase1/erase2)="
                << tools::get_duration(t1-t0) << ","

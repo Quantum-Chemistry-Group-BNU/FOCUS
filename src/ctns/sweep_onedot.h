@@ -263,7 +263,7 @@ namespace ctns{
          timing.tf = tools::get_time();
 
          // 4. save on disk
-         qops_pool.erase_from_memory(fneed, fneed_next); 
+         qops_pool.join_and_erase(fneed, fneed_next); 
          qops_pool.save_to_disk(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save, fneed_next);
          qops_pool.remove_from_disk(fdel, schd.ctns.async_remove);
 

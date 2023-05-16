@@ -609,7 +609,7 @@ namespace ctns{
 
          // 4. save on disk 
          auto t0 = tools::get_time();
-         qops_pool.erase_from_memory(fneed, fneed_next);
+         qops_pool.join_and_erase(fneed, fneed_next);
          auto t1 = tools::get_time();
          qops_pool.save_to_disk(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save, fneed_next);
          auto t2 = tools::get_time();
@@ -622,7 +622,7 @@ namespace ctns{
          auto t3 = tools::get_time();
          if(debug){
             std::cout << "TIMING FOR cleanup: " << tools::get_duration(t3-t0)
-               << " T(erase/save/remove)="
+               << " T(join&erase/save/remove)="
                << tools::get_duration(t1-t0) << ","
                << tools::get_duration(t2-t1) << ","
                << tools::get_duration(t3-t2)
