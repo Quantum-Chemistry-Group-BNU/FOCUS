@@ -25,6 +25,7 @@
 #include "sweep_twodot_diagGPU.h"
 #include "preprocess_sigma_batchGPU.h"
 #endif
+#include "ctns_sys.h"
 
 namespace ctns{
 
@@ -58,6 +59,7 @@ namespace ctns{
                << " mpisize=" << size
                << " maxthreads=" << maxthreads 
                << std::endl;
+            get_sys_status();
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
@@ -586,6 +588,7 @@ namespace ctns{
          if(debug){
             sweeps.print_eopt(isweep, ibond);
             if(alg_hvec == 0) oper_timer.analysis();
+            get_sys_status();
          }
          timing.tc = tools::get_time();
 
@@ -631,7 +634,10 @@ namespace ctns{
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
 
          timing.t1 = tools::get_time();
-         if(debug) timing.analysis("local", schd.ctns.verbose>0);
+         if(debug){
+            get_sys_status();
+            timing.analysis("local", schd.ctns.verbose>0);
+         }
       }
 
 } // ctns
