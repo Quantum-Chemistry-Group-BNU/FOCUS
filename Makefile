@@ -1,13 +1,13 @@
 
-machine = mac #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = jiageng #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
+DEBUG = no
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
-USE_GPU = no #yes
-USE_NCCL = no #yes
+USE_GPU = yes
+USE_NCCL = yes
 USE_OPENBLAS = no#yes
 # compression
 USE_LZ4 = no
@@ -91,7 +91,7 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
-      FLAGS += -DDEBUG -O0 -g -w #-Wall
+      FLAGS += -DDEBUG -O0 -w #-Wall
    else
       FLAGS += -DNDEBUG -O2 -w #-Wall
    endif

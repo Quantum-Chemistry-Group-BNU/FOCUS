@@ -117,7 +117,12 @@ namespace ctns{
             int idx = _nnzaddr[i];
             _addr_unpack(idx, br, bc);
             // We use the fact that each br/bc only appear once for Abelian symmetry!
-            assert(_br2bc[br] == -1 && _bc2br[bc] == -1);
+            if(!(_br2bc[br] == -1 && _bc2br[bc] == -1)){
+               this->print("error");
+               tools::print_vector(_br2bc, "_br2bc");
+               tools::print_vector(_bc2br, "_bc2br");
+               exit(1);
+            }
             _br2bc[br] = bc;
             _bc2br[bc] = br;
          }

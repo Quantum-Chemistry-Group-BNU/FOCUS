@@ -63,9 +63,11 @@ namespace ctns{
          // 1. load operators 
          auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
          qops_pool.fetch_to_memory(fneed, alg_hvec>10);
-         const oper_dictmap<Tm> qops_dict = {{"l",qops_pool(fneed[0])},
-            {"r",qops_pool(fneed[1])},
-            {"c",qops_pool(fneed[2])}};
+         const oper_dictmap<Tm> qops_dict = {
+            {"l",qops_pool.at(fneed[0])},
+            {"r",qops_pool.at(fneed[1])},
+            {"c",qops_pool.at(fneed[2])}
+         };
          if(debug && schd.ctns.verbose>0){
             std::cout << "qops info: rank=" << rank << std::endl;
             qops_dict.at("l").print("lqops");
@@ -114,9 +116,6 @@ namespace ctns{
          }
 
          // 3. Davidson solver for wf
-#ifndef SERIAL
-         icomb.world.barrier();
-#endif
          // 3.1 diag 
          std::vector<double> diag(ndim);
          onedot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
@@ -264,7 +263,7 @@ namespace ctns{
          timing.tf = tools::get_time();
 
          // 4. save on disk
-         qops_pool.erase_from_memory(fneed); 
+         qops_pool.erase_from_memory(fneed, fneed_next); 
          qops_pool.save_to_disk(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save, fneed_next);
          qops_pool.remove_from_disk(fdel, schd.ctns.async_remove);
 

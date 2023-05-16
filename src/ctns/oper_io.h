@@ -24,7 +24,7 @@ namespace ext { namespace bio = ext::boost::iostreams; }
 
 namespace ctns{ 
 
-   const bool debug_oper_io = false;
+   const bool debug_oper_io = true;
    extern const bool debug_oper_io;
 
    inline std::string oper_fname(const std::string scratch, 
