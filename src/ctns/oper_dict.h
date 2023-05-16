@@ -41,6 +41,10 @@ namespace ctns{
                delete[] _data;
                _data = nullptr;
             }
+            void clear_gpu(){
+               delete[] _dev_data;
+               _dev_data = nullptr;
+            }
             bool avail_cpu() const{ return _data != nullptr; }
             bool avail_gpu() const{ return _dev_data != nullptr; }
 #ifdef GPU

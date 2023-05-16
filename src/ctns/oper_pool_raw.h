@@ -69,11 +69,14 @@ namespace ctns{
                   << std::endl;
             }
             // fetch from disk to cpu/gpu memory
-            void fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu, const bool ifasync=false);
+            void fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu);
+            void fetch_to_cpumem(const std::vector<std::string> fneed_next, const bool ifasync=false);
             // erase from cpu & gpu memory
             void erase_from_memory(const std::vector<std::string> fneed, 
                   const std::vector<std::string> fneed_next={});
             // only clear cpu memory
+            void clear_from_memory(const std::vector<std::string> fneed,
+                  const std::vector<std::string> fneed_next={}); 
             void clear_from_cpumem(const std::vector<std::string> fneed,
                   const std::vector<std::string> fneed_next={}); 
             // save renormalized operator to file and erase frop_prev
@@ -126,10 +129,10 @@ namespace ctns{
       }
 
    template <typename Tm>
-      void oper_pool_raw<Tm>::fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu, const bool ifasync){
+      void oper_pool_raw<Tm>::fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::oper_pool_raw<Tm>::fetch_to_memory: ifgpu=" << ifgpu << " ifasyn=" << ifasync
+            std::cout << "ctns::oper_pool_raw<Tm>::fetch_to_memory: ifgpu=" << ifgpu
                << " fneed size=" << fneed.size() << std::endl;
             this->display("in");
          }
@@ -141,8 +144,34 @@ namespace ctns{
             fetch[i] = !ifexist;
             qstore[fqop]; // declare a spot here! this is helpful for threadsafty
          }
-         if(thread_fetch.joinable()) thread_fetch.join();
+         oper_fetch(qstore, fneed, fetch, ifgpu, iomode, debug);
+         if(debug){
+            this->display("out");
+            auto t1 = tools::get_time();
+            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::fetch_to_memory : "
+               << tools::get_duration(t1-t0) << " S -----"
+               << std::endl;
+         }
+      }
+
+   template <typename Tm>
+      void oper_pool_raw<Tm>::fetch_to_cpumem(const std::vector<std::string> fneed, const bool ifasync){
+         auto t0 = tools::get_time();
+         if(debug){
+            std::cout << "ctns::oper_pool_raw<Tm>::fetch_to_cpumem: ifasyn=" << ifasync
+               << " fneed size=" << fneed.size() << std::endl;
+            this->display("in");
+         }
+         std::vector<bool> fetch(fneed.size(),0); 
+         for(int i=0; i<fneed.size(); i++){
+            const auto& fqop = fneed[i];
+            bool ifexist = this->exist(fqop);
+            if(debug) std::cout << " i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
+            fetch[i] = !ifexist;
+            qstore[fqop]; // declare a spot here! this is helpful for threadsafty
+         }
          auto t1 = tools::get_time();
+         const bool ifgpu = false;
          if(!ifasync){
             oper_fetch(qstore, fneed, fetch, ifgpu, iomode, debug);
          }else{
@@ -151,7 +180,7 @@ namespace ctns{
          if(debug){
             this->display("out");
             auto t2 = tools::get_time();
-            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::fetch_to_memory : "
+            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::fetch_to_cpumem : "
                << tools::get_duration(t2-t0) << " S"
                << " T(sync/fetch)="
                << tools::get_duration(t1-t0) << "," 
@@ -185,6 +214,36 @@ namespace ctns{
             this->display("out");
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR oper_pool_raw<Tm>::erase_from_memory : "
+               << tools::get_duration(t1-t0) << " S -----"
+               << std::endl;
+         }
+      }
+
+   template <typename Tm>
+      void oper_pool_raw<Tm>::clear_from_memory(const std::vector<std::string> fclear,
+            const std::vector<std::string> fneed_next){
+         auto t0 = tools::get_time();
+         if(debug){
+            std::cout << "ctns::oper_pool_raw<Tm>::clear_from_memory: size=" << fclear.size() << std::endl; 
+            for(const auto& fqop : fclear){
+               bool ifexist = this->exist(fqop);
+               auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
+               bool ifclear = (result == fneed_next.end()) && (fqop != frop_prev); 
+               std::cout << " fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
+            }
+            this->display("in");
+         }
+         for(auto& fqop : fclear){
+            if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
+            auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
+            if(result != fneed_next.end()) continue;
+            qstore[fqop].clear();
+            qstore[fqop].clear_gpu();
+         }
+         if(debug){
+            this->display("out");
+            auto t1 = tools::get_time();
+            std::cout << "----- TIMING FOR oper_pool_raw<Tm>::clear_from_memory : "
                << tools::get_duration(t1-t0) << " S -----"
                << std::endl;
          }
