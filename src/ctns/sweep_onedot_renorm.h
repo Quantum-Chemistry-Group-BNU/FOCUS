@@ -82,7 +82,7 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            qops_pool.erase_from_memory({fneed[1]}, fneed_next);
+            qops_pool.clear_from_memory({fneed[1]}, fneed_next);
             oper_renorm("lc", icomb, p, int2e, int1e, schd,
                   lqops, cqops, qops, fname, timing);
          }else if(superblock == "lr"){
@@ -95,7 +95,7 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            qops_pool.erase_from_memory({fneed[2]}, fneed_next);
+            qops_pool.clear_from_memory({fneed[2]}, fneed_next);
             oper_renorm("lr", icomb, p, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing); 
          }else if(superblock == "cr"){
@@ -108,7 +108,7 @@ namespace ctns{
                assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
             }
             //-------------------------------------------------------------------
-            qops_pool.erase_from_memory({fneed[0]}, fneed_next);
+            qops_pool.clear_from_memory({fneed[0]}, fneed_next);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   cqops, rqops, qops, fname, timing); 
          }

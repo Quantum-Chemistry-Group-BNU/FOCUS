@@ -298,14 +298,18 @@ namespace ctns{
          if(debug){
             std::cout << "ctns::oper_pool_raw<Tm>::save_to_disk: ifgpu=" << ifgpu << " ifasync=" << ifasync 
                << " frop=" << frop << " erase frop_prev=" << frop_prev << std::endl;
+            this->display("in");
          }
+         std::cout << "lzdA frop=" << frop << std::endl;
          if(thread_save.joinable()) thread_save.join(); // join before erasing the last rop! 
+         std::cout << "lzdB frop=" << frop << std::endl;
          auto t1 = tools::get_time();
          if(!ifasync){
             oper_dump<Tm>(qstore, frop, ifgpu, iomode, debug);
          }else{
             thread_save = std::thread(&ctns::oper_dump<Tm>, std::ref(qstore), frop, ifgpu, iomode, debug);
          }
+         std::cout << "lzdC frop=" << frop << std::endl;
          auto t2 = tools::get_time();
          // if result is not used in the next dbond, then release it
          // NOTE: check is neceesary at the returning point: [ -*=>=*-* and -*=<=*-* ],
@@ -314,8 +318,10 @@ namespace ctns{
          if(result == fneed_next.end()){
             qstore.erase(frop_prev); // NOTE: frop_prev is only erased here to make sure the saving is finished!!!
          }
+         std::cout << "lzdD frop=" << frop << std::endl;
          frop_prev = frop;
          if(debug){
+            this->display("out");
             auto t3 = tools::get_time();
             std::cout << "----- TIMING FOR oper_pool_raw<Tm>::save_to_disk : "
                << tools::get_duration(t3-t0) << " S"
