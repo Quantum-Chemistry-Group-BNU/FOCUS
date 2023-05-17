@@ -211,8 +211,6 @@ void params_ctns::read(ifstream& istrm){
          alg_rinter = stoi(line.substr(10));
       }else if(line.substr(0,9)=="alg_decim"){
          alg_decim = stoi(line.substr(9));
-      }else if(line.substr(0,8)=="alg_comm"){
-         alg_comm = stoi(line.substr(8));
       }else if(line.substr(0,7)=="ifdist1"){
          ifdist1 = true;	      
       }else if(line.substr(0,7)=="ifdistc"){
@@ -372,7 +370,6 @@ void params_ctns::print() const{
    cout << "alg_renorm = " << alg_renorm << endl;
    cout << "alg_rinter = " << alg_rinter << endl;
    cout << "alg_decim = " << alg_decim << endl;
-   cout << "alg_comm = " << alg_comm << endl;
    cout << "ifdist1 = " << ifdist1 << endl;
    cout << "ifdistc = " << ifdistc << endl;
    cout << "save_formulae = " << save_formulae << endl;

@@ -83,7 +83,7 @@ namespace ctns{
                   tcal += tools::get_duration(t1-t0);
 #ifndef SERIAL
                   if(!ifnccl && size > 1){
-                     mpi_wrapper::reduce(world, y+istate*ndim, ndim, 0, alg_comm);
+                     mpi_wrapper::reduce(world, y+istate*ndim, ndim, 0);
                   }
                   auto t2 = tools::get_time();
                   tcomm += tools::get_duration(t2-t1); 
@@ -380,7 +380,7 @@ namespace ctns{
                   linalg::check_orthogonality(ndim, neig, vbas);
                }
 #ifndef SERIAL
-               if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0, alg_comm);
+               if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
 #endif
                HVecs(neig, wbas.data(), vbas.data());
 
@@ -423,7 +423,7 @@ namespace ctns{
                      // broadcast results to all processors
                      if(size > 1){
                         boost::mpi::broadcast(world, tmpE.data(), neig, 0);
-                        mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0, alg_comm);
+                        mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
                      }
 #endif
                      linalg::xcopy(neig, tmpE.data(), es);
@@ -468,7 +468,7 @@ namespace ctns{
                      exit(1);
                   }else{
 #ifndef SERIAL
-                     if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0, alg_comm);
+                     if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0);
 #endif	      
                      linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
                      HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
@@ -511,7 +511,6 @@ namespace ctns{
             double crit_skewH = 1.e-8;
             double damping = 1.e-12;
             bool precond = true;
-            int alg_comm = 0;
             bool ifnccl = false;
 #ifndef SERIAL
             boost::mpi::communicator world;

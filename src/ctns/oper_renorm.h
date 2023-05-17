@@ -594,7 +594,7 @@ namespace ctns{
                   size_t opsize = opS.size();
                   totsize += opsize;
                   size_t off = qops._offset[std::make_pair('S',p)];
-                  mpi_wrapper::reduce(icomb.world, opS.data(), opsize, iproc, schd.ctns.alg_comm);
+                  mpi_wrapper::reduce(icomb.world, opS.data(), opsize, iproc);
                   if(iproc != rank) opS.set_zero();
                }
 #ifdef GPU
@@ -609,7 +609,7 @@ namespace ctns{
                auto& opH = qops('H')[0];
                size_t opsize = opH.size();
                size_t off = qops._offset[std::make_pair('H',0)];
-               mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0, schd.ctns.alg_comm);
+               mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0);
                if(rank != 0) opH.set_zero(); 
 #ifdef GPU
                if(alg_renorm>10){
