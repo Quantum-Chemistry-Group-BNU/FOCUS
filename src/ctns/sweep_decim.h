@@ -97,11 +97,14 @@ namespace ctns{
             sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
             assert(std::abs(sig2sum - 1.0) < 1.e-10);
 
-            // 2. select important sig2 & form rot
+            // 2. select important sig2 
             std::vector<int> br_kept;
             std::vector<std::pair<qsym,int>> dims;
             decimation_selection(false, qrow, ifmatched, sig2all, idx2sector, dcut, 
                   dwt, deff, br_kept, dims, fname);
+            auto t2 = tools::get_time();
+
+            // 3. form rot
             qbond qkept(dims);
             auto isym = qkept.get_sym(0).isym();
             stensor2<Tm> qt2(qsym(isym), qrow, qkept);
@@ -124,12 +127,13 @@ namespace ctns{
             qkept.print("qkept");
 
             if(debug){
-               auto t2 = tools::get_time();
+               auto t3 = tools::get_time();
                std::cout << "----- TIMING for decimation_row: "
-                  << tools::get_duration(t2-t0) << " S"
-                  << " T(decim/formRot)="
+                  << tools::get_duration(t3-t0) << " S"
+                  << " T(decim/select/formRot)="
                   << tools::get_duration(t1-t0) << ","
-                  << tools::get_duration(t2-t1) << " -----"
+                  << tools::get_duration(t2-t1) << ","
+                  << tools::get_duration(t3-t2) << " -----"
                   << std::endl;
             }
          } // rank=0
@@ -250,11 +254,14 @@ namespace ctns{
             //sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
             //assert(std::abs(sig2sum - 1.0) < 1.e-10); 
 
-            // 2. select important sig2 & form rot
+            // 2. select important sig2
             std::vector<int> br_kept;
             std::vector<std::pair<qsym,int>> dims;
             decimation_selection(true, qrow, ifmatched, sig2all, idx2sector, dcut, 
                   dwt, deff, br_kept, dims, fname);
+            auto t2 = tools::get_time();
+            
+            // 3. form rot
             qbond qkept(dims);
             auto isym = qkept.get_sym(0).isym();
             stensor2<Tm> qt2(qsym(isym), qrow, qkept);
@@ -290,12 +297,13 @@ namespace ctns{
             qkept.print("qkept");
 
             if(debug){
-               auto t2 = tools::get_time();
+               auto t3 = tools::get_time();
                std::cout << "----- TIMING for decimation_row: "
-                  << tools::get_duration(t2-t0) << " S"
-                  << " T(decim/formRot)="
+                  << tools::get_duration(t3-t0) << " S"
+                  << " T(decim/select/formRot)="
                   << tools::get_duration(t1-t0) << ","
-                  << tools::get_duration(t2-t1) << " -----"
+                  << tools::get_duration(t2-t1) << ","
+                  << tools::get_duration(t3-t2) << " -----"
                   << std::endl;
             }
          } // rank-0
