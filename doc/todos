@@ -305,8 +305,6 @@ KNOWN PROBLEMS
    - hdiag implementation on GPU [DONE@2023/04/14]
    - async memcpy to GPU => magma_queue
 
-=== TODOs: further improvements ===
-
  * parallel decimation:
    - openmp + mpi [DONE@2023/04/23]
    - mpi -> share memory?
@@ -314,6 +312,8 @@ KNOWN PROBLEMS
  * cpu<->gpu, network communication: 
    1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [error, 2023/04/17]
    2. perform renormalization by class [CABPQSH, hiden memcpy]
+
+=== TODOs: further improvements ===
 
  * Better treatment GEMM involving 'c': use axpy_vbatch? [DONE@2023/XX/XX]
    - REMOVE c related for NSz symmetry
