@@ -26,7 +26,9 @@ namespace ctns{
                   double& cost,
                   const bool ifdagger) const;
             // onedot
-            void gen_Rlist2(const std::string superblock,
+            void gen_Rlist2(const int alg_coper,
+                  Tm** opaddr, 
+                  const std::string superblock,
                   const qinfo3<Tm>& site_info, 
                   Rlist2<Tm>& Rlst2,
                   size_t& blksize,
@@ -41,7 +43,7 @@ namespace ctns{
             qinfo2<Tm>* info[3] = {nullptr,nullptr,nullptr};
             int loc[3] = {-1,-1,-1};
             size_t off[3] = {0,0,0};
-            int terms = 0;
+            int terms = 0, cterms = 0; // terms corresponds to 'c' used for alg_coper=1
             Tm coeff = 1.0, coeffH = 1.0;
             // intermediates [direct] -> we assume each rmu contains only one intermediates
             int posInter = -1, lenInter = -1;
@@ -71,6 +73,7 @@ namespace ctns{
             parity[pos] = par;
             dagger[pos] = dag;
             info[pos] = const_cast<qinfo2<Tm>*>(&op0.info);
+            if(block[0]=='c') cterms += 1;
             int len = sop.size();
             if(len == 1){
                coeff *= sop.sums[0].first;
@@ -111,7 +114,7 @@ namespace ctns{
          for(int i=0; i<site_info._nnzaddr.size(); i++){
             int idx = site_info._nnzaddr[i];
             site_info._addr_unpack(idx,bi[0],bi[1],bi[2]);
-            Rblock<Tm> Rblk(terms);
+            Rblock<Tm> Rblk(terms,cterms);
             Rblk.offin = site_info._offset[idx]-1;
             Rblk.dimin[0] = site_info.qrow.get_dim(bi[0]); // br
             Rblk.dimin[1] = site_info.qcol.get_dim(bi[1]); // bc
@@ -198,7 +201,9 @@ namespace ctns{
    // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] (Oc^dagger0[bm,bm'] Or^dagger1[bc,bc']) psi[br',bc',bm']
    // lr: O[bm,bm'] = psi*[br,bc,bm] sigma[br,bc,bm'] (Ol^dagger0[br,br'] Or^dagger1[bc,bc']) psi[br',bc',bm']
    template <typename Tm>
-      void Rmu_ptr<Tm>::gen_Rlist2(const std::string superblock,
+      void Rmu_ptr<Tm>::gen_Rlist2(const int alg_coper,
+            Tm** opaddr,
+            const std::string superblock,
             const qinfo3<Tm>& site_info,
             Rlist2<Tm>& Rlst2,
             size_t& blksize,
@@ -210,13 +215,14 @@ namespace ctns{
          for(int i=0; i<site_info._nnzaddr.size(); i++){
             int idx = site_info._nnzaddr[i];
             site_info._addr_unpack(idx,bi[0],bi[1],bi[2]);
-            Rblock<Tm> Rblk(terms);
+            Rblock<Tm> Rblk(terms,cterms,alg_coper);
             Rblk.offin = site_info._offset[idx]-1;
             Rblk.dimin[0] = site_info.qrow.get_dim(bi[0]); // br
             Rblk.dimin[1] = site_info.qcol.get_dim(bi[1]); // bc
             Rblk.dimin[2] = site_info.qmid.get_dim(bi[2]); // bm
             // finding the corresponding operator blocks given {bo[0],bo[1],bo[2]}
             bool symAllowed = true;
+            Tm coeff_coper = 1.0;
             for(int k=0; k<3; k++){
                Rblk.dagger[k] = dagger[k]^ifdagger;
                if(this->identity(k)){
@@ -234,6 +240,11 @@ namespace ctns{
                      Rblk.loc[k] = loc[k];
                      Rblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
                      Rblk.dimout[k] = iftrans? info[k]->qcol.get_dim(bo[k]) : info[k]->qrow.get_dim(bo[k]);
+                     // special treatment of op[c] for NSz symmetry
+                     if(alg_coper == 1 && k >= 2){
+                        Tm coper = *(opaddr[loc[k]] + Rblk.off[k]);
+                        coeff_coper *= Rblk.dagger[k]? tools::conjugate(coper) : coper;
+                     }
                   }
                }
             }
@@ -250,7 +261,7 @@ namespace ctns{
             Rblk.dimin2[2] = Rblk.dimout[2];
             // compute sign due to parity
             int icase = 0;
-            Rblk.coeff = ifdagger? coeffH : coeff;
+            Rblk.coeff = (ifdagger? coeffH : coeff)*coeff_coper;
             if(superblock == "lc"){
                // OlOc|lc> = Ol|l> * Oc|c> (-1)^{p(Oc)*p(l)}
                icase = 1;

@@ -8,8 +8,10 @@ namespace ctns{
 
    template <typename Tm, typename QTm>
       void preprocess_formulae_Hxlist(const bool ifDirect,
+            const int alg_coper,
             const oper_dictmap<Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
+            Tm** opaddr,
             const symbolic_task<Tm>& H_formulae,
             const QTm& wf,
             const hintermediates<Tm>& hinter,
@@ -22,7 +24,7 @@ namespace ctns{
 
          t0 = tools::get_time();
          Hxlist2<Tm> Hxlst2;
-         preprocess_formulae_Hxlist2(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
+         preprocess_formulae_Hxlist2(ifDirect, alg_coper, qops_dict, oploc, opaddr, H_formulae, wf, hinter, 
                Hxlst2, blksize, blksize0, cost, debug);
          size_t size = 0;
          for(int i=0; i<Hxlst2.size(); i++){
@@ -45,8 +47,10 @@ namespace ctns{
 
    template <typename Tm, typename QTm>
       void preprocess_formulae_Hxlist2(const bool ifDirect,
+            const int alg_coper,
             const oper_dictmap<Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
+            Tm** opaddr,
             const symbolic_task<Tm>& H_formulae,
             const QTm& wf,
             const hintermediates<Tm>& hinter,
@@ -72,8 +76,8 @@ namespace ctns{
          int nnzblk = wf.info._nnzaddr.size();
          Hxlst2.resize(nnzblk);
          for(int it=0; it<hsize; it++){
-            Hmu_vec[it].gen_Hxlist2(wf.info, Hxlst2, blksize, blksize0, cost, false);
-            Hmu_vec[it].gen_Hxlist2(wf.info, Hxlst2, blksize, blksize0, cost, true);
+            Hmu_vec[it].gen_Hxlist2(alg_coper, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, false);
+            Hmu_vec[it].gen_Hxlist2(alg_coper, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, true);
          }
          auto tb = tools::get_time();
 

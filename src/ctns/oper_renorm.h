@@ -200,7 +200,8 @@ namespace ctns{
             timing.tf5 = tools::get_time();
 
             // GEMM list and GEMV list
-            preprocess_formulae_Rlist(ifDirect,superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+            preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_coper, superblock, 
+                  qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                   Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
             timing.tf6 = tools::get_time();
 
@@ -240,13 +241,15 @@ namespace ctns{
             // GEMM list and GEMV list
             size_t maxbatch = 0;
             if(!ifSingle){
-               preprocess_formulae_Rlist2(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+               preprocess_formulae_Rlist2(ifDirect, schd.ctns.alg_coper, superblock, 
+                     qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                      Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Rlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Rlst2[i].size());
                } // i
             }else{
-               preprocess_formulae_Rlist(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+               preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_coper, superblock, 
+                     qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
             }
@@ -270,7 +273,7 @@ namespace ctns{
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -280,7 +283,7 @@ namespace ctns{
                   }
                }
             }else{
-               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()
@@ -383,13 +386,15 @@ namespace ctns{
             // GEMM list and GEMV list
             size_t maxbatch = 0;
             if(!ifSingle){
-               preprocess_formulae_Rlist2(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+               preprocess_formulae_Rlist2(ifDirect, schd.ctns.alg_coper, superblock, 
+                     qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                      Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Rlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Rlst2[i].size());
                } // i
             }else{
-               preprocess_formulae_Rlist(ifDirect, superblock, qops, qops_dict, oploc, rtasks, site, rinter,
+               preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_coper, superblock, 
+                     qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
             }
@@ -421,7 +426,7 @@ namespace ctns{
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -431,7 +436,7 @@ namespace ctns{
                   }
                }
             }else{
-               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()

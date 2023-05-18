@@ -10,7 +10,15 @@ namespace ctns{
    template <typename Tm>
       struct Hxblock{
          public:
-            Hxblock(const int _dims, const int _terms): dims(_dims), terms(_terms) {};
+            Hxblock(const int _dims, 
+                  const int _terms, 
+                  const int _cterms,
+                  const int _alg_coper=0){
+               dims = _dims;
+               terms = _terms;
+               cterms = _cterms;
+               alg_coper = _alg_coper;
+            }
             bool identity(const int i) const{ return loc[i]==-1; }    
             void display() const{
                std::cout << "offout=" << offout << " offin=" << offin 
@@ -78,6 +86,7 @@ namespace ctns{
          public:
             int dims  = 0; // 3/4 for onedot/twodot
             int terms = 0; // no. of terms in Hmu 
+            int cterms = 0, alg_coper = 0; // special treatment of coper
             size_t dimout[4] = {0,0,0,0};
             size_t dimin[4] = {0,0,0,0};
             bool dagger[4] = {false,false,false,false};
@@ -123,10 +132,11 @@ namespace ctns{
             const size_t offset) const{
          // wf[br',bc',bm',bv']
          int xloc = locIn, yloc = locOut;
-         int nt = terms+1; // ZL@20230228: ensure the output is always at the first part of 2*blksize
+         // ZL@20230228: ensure the output is always at the first part of 2*blksize
+         int nt = terms - cterms*alg_coper + 1;
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc2^dagger3[bv,bv']: out(r,c,m,v) = o[d](v,x) in(r,c,m,x) 
-         if(!this->identity(3)){
+         if(!this->identity(3) && alg_coper==0){
             int p = 3;
             MMinfo<Tm> mm;
             mm.M = dimin[0]*dimin[1]*dimin[2];
@@ -146,7 +156,7 @@ namespace ctns{
             nt -= 1;
          }
          // Oc1^dagger2[bm,bm']: out(r,c,m,v) = o[d](m,x) in(r,c,x,v)
-         if(!this->identity(2)){
+         if(!this->identity(2) && alg_coper==0){
             int p = 2;
             for(int iv=0; iv<dimout[3]; iv++){
                MMinfo<Tm> mm;

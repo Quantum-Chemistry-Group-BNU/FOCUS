@@ -296,7 +296,7 @@ KNOWN PROBLEMS
    - mmorder [no significant difference]
    - ifdist1?
 
- * async IO strategy:
+ * async IO strategy: bugfix [DONE@2023/05/18]
    - revise GPUmem control [DONE@2023/04/07]
    - revise oper_pool
    - revise sweep_twodot/onedot_renorm to release unnecessary operators before renorm to save memory
@@ -304,6 +304,8 @@ KNOWN PROBLEMS
    - overlap fetch operators with computation? [DONE@2023/04/15]
    - hdiag implementation on GPU [DONE@2023/04/14]
    - async memcpy to GPU => magma_queue
+
+=== TODOs: further improvements ===
 
  * parallel decimation:
    - openmp + mpi [DONE@2023/04/23]
@@ -313,10 +315,10 @@ KNOWN PROBLEMS
    1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [error, 2023/04/17]
    2. perform renormalization by class [CABPQSH, hiden memcpy]
 
-=== TODOs: further improvements ===
-
  * Better treatment GEMM involving 'c': use axpy_vbatch? [DONE@2023/XX/XX]
-   - REMOVE c related for NSz symmetry
+   - REMOVE c related for NSz symmetry [DONE@2023/05/18]
+   - unrool for N symmetry
+   - general treatment for A[M,K]*B[K,N] for small K,N (~1,2,...,dbranch)
 
  * Better GEMM_BATCH with TensorCore
 

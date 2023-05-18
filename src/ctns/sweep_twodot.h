@@ -293,7 +293,8 @@ namespace ctns{
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
 
-            preprocess_formulae_Hxlist(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
+            preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_coper, 
+                  qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                   Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
 
             get_MMlist(Hxlst);
@@ -320,7 +321,8 @@ namespace ctns{
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
 
-            preprocess_formulae_Hxlist2(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
+            preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_coper, 
+                  qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                   Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
 
             get_MMlist(Hxlst2);
@@ -350,13 +352,15 @@ namespace ctns{
 
             size_t maxbatch = 0;
             if(!ifSingle){
-               preprocess_formulae_Hxlist2(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
+               preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_coper, 
+                     qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                      Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Hxlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Hxlst2[i].size());
                } // i
             }else{
-               preprocess_formulae_Hxlist(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
+               preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_coper, 
+                     qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                      Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Hxlst.size();
             }
@@ -379,7 +383,7 @@ namespace ctns{
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
                for(int i=0; i<Hmmtasks.size(); i++){
-                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i 
                         << " size=" << Hxlst2[i][0].size 
@@ -394,7 +398,7 @@ namespace ctns{
                   save_hmmtasks(Hmmtasks, isweep, ibond);
                }
             }else{
-               Hmmtask.init(Hxlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Hmmtask.init(Hxlst, schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Hxlst.size=" << Hxlst.size()
@@ -474,13 +478,15 @@ namespace ctns{
             // GEMM list and GEMV list
             size_t maxbatch = 0;
             if(!ifSingle){
-               preprocess_formulae_Hxlist2(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
+               preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_coper, 
+                     qops_dict, oploc, opaddr, H_formulae, wf, hinter, 
                      Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Hxlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Hxlst2[i].size());
                } // i
             }else{
-               preprocess_formulae_Hxlist(ifDirect, qops_dict, oploc, H_formulae, wf, hinter, 
+               preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_coper, 
+                     qops_dict, oploc, opaddr, H_formulae, wf, hinter, 
                      Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Hxlst.size();
             }
@@ -511,7 +517,7 @@ namespace ctns{
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
                for(int i=0; i<Hmmtasks.size(); i++){
-                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i 
                         << " size=" << Hxlst2[i][0].size 
@@ -526,7 +532,7 @@ namespace ctns{
                   save_hmmtasks(Hmmtasks, isweep, ibond);
                }
             }else{
-               Hmmtask.init(Hxlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Hmmtask.init(Hxlst, schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank
                      << " Hxlst.size=" << Hxlst.size()

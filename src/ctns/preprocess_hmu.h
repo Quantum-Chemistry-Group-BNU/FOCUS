@@ -33,7 +33,9 @@ namespace ctns{
                   double& cost,
                   const bool ifdagger) const;
             // twodot
-            void gen_Hxlist2(const qinfo4<Tm>& wf_info, 
+            void gen_Hxlist2(const int alg_coper,
+                  Tm** opaddr,
+                  const qinfo4<Tm>& wf_info, 
                   Hxlist2<Tm>& Hxlst2,
                   size_t& blksize,
                   size_t& blksize0,
@@ -45,7 +47,7 @@ namespace ctns{
             qinfo2<Tm>* info[4] = {nullptr,nullptr,nullptr,nullptr};
             int loc[4] = {-1,-1,-1,-1};
             size_t off[4] = {0,0,0,0};
-            int terms = 0;
+            int terms = 0, cterms = 0; // terms corresponds to 'c' used for alg_coper=1
             Tm coeff = 1.0, coeffH = 1.0;
             // intermediates [direct] -> we assume each hmu contains only one intermediates
             int posInter = -1, lenInter = -1;
@@ -75,6 +77,7 @@ namespace ctns{
             parity[pos] = par;
             dagger[pos] = dag;
             info[pos] = const_cast<qinfo2<Tm>*>(&op0.info);
+            if(block[0]=='c') cterms += 1;
             int len = sop.size();
             if(len == 1){
                coeff *= sop.sums[0].first;
@@ -112,7 +115,7 @@ namespace ctns{
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
             int idx = wf_info._nnzaddr[i];
             wf_info._addr_unpack(idx,bo[0],bo[1],bo[2]);
-            Hxblock<Tm> Hxblk(3,terms);
+            Hxblock<Tm> Hxblk(3,terms,cterms);
             Hxblk.offout = wf_info._offset[idx]-1;
             Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
             Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
@@ -180,7 +183,7 @@ namespace ctns{
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
             int idx = wf_info._nnzaddr[i];
             wf_info._addr_unpack(idx,bo[0],bo[1],bo[2],bo[3]);
-            Hxblock<Tm> Hxblk(4,terms);
+            Hxblock<Tm> Hxblk(4,terms,cterms);
             Hxblk.offout = wf_info._offset[idx]-1;
             Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
             Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
@@ -239,7 +242,9 @@ namespace ctns{
       }
 
    template <typename Tm>
-      void Hmu_ptr<Tm>::gen_Hxlist2(const qinfo4<Tm>& wf_info,
+      void Hmu_ptr<Tm>::gen_Hxlist2(const int alg_coper,
+            Tm** opaddr,
+            const qinfo4<Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
             size_t& blksize,
             size_t& blksize0,
@@ -249,7 +254,7 @@ namespace ctns{
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
             int idx = wf_info._nnzaddr[i];
             wf_info._addr_unpack(idx,bo[0],bo[1],bo[2],bo[3]);
-            Hxblock<Tm> Hxblk(4,terms);
+            Hxblock<Tm> Hxblk(4,terms,cterms,alg_coper);
             Hxblk.offout = wf_info._offset[idx]-1;
             Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
             Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
@@ -258,11 +263,14 @@ namespace ctns{
             Hxblk.size = Hxblk.dimout[0]*Hxblk.dimout[1]*Hxblk.dimout[2]*Hxblk.dimout[3];
             // finding the corresponding operator blocks given {bo[0],bo[1],bo[2],bo[3]}
             bool symAllowed = true;
+            Tm coeff_coper = 1.0;
             for(int k=0; k<4; k++){
-               Hxblk.dagger[k] = dagger[k]^ifdagger;
-               if(this->identity(k)){ // identity operator
+               Hxblk.dagger[k] = dagger[k]^ifdagger; // (O1^d1)^d = O1^(d^d1)
+               if(this->identity(k)){ 
+                  // identity operator
                   bi[k] = bo[k];
                }else{
+                  // not identity
                   bool iftrans = dagger[k]^ifdagger;
                   bi[k] = iftrans? info[k]->_bc2br[bo[k]] : info[k]->_br2bc[bo[k]];
                   if(bi[k] == -1){
@@ -273,6 +281,11 @@ namespace ctns{
                      assert(info[k]->_offset[jdx] != 0);
                      Hxblk.loc[k] = loc[k];
                      Hxblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
+                     // special treatment of op[c2/c1] for NSz symmetry
+                     if(alg_coper == 1 && k >= 2){ 
+                        Tm coper = *(opaddr[loc[k]] + Hxblk.off[k]);
+                        coeff_coper *= Hxblk.dagger[k]? tools::conjugate(coper) : coper;
+                     }
                   }
                }
             }
@@ -285,7 +298,7 @@ namespace ctns{
             Hxblk.dimin[2] = wf_info.qmid.get_dim(bi[2]);
             Hxblk.dimin[3] = wf_info.qver.get_dim(bi[3]);
             // compute sign due to parity
-            Hxblk.coeff = ifdagger? coeffH : coeff;
+            Hxblk.coeff = (ifdagger? coeffH : coeff)*coeff_coper;
             int pl  = wf_info.qrow.get_parity(bi[0]);
             int pc1 = wf_info.qmid.get_parity(bi[2]);
             int pc2 = wf_info.qver.get_parity(bi[3]);

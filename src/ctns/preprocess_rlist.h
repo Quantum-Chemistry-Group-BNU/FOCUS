@@ -14,7 +14,13 @@ namespace ctns{
    template <typename Tm>
       struct Rblock{
          public:
-            Rblock(const int _terms): terms(_terms) {};
+            Rblock(const int _terms,
+                  const int _cterms,
+                  const int _alg_coper=0){
+               terms = _terms;
+               cterms = _cterms;
+               alg_coper = _alg_coper;
+            }
             bool identity(const int i) const{ return loc[i]==-1; }
             void display() const{
                std::cout << "size=" << size << " terms=" << terms 
@@ -56,6 +62,7 @@ namespace ctns{
          public:
             int icase = -1; // 0:lc, 1:cr, 2:lr 
             int terms = 0; // no. of terms in Hmu 
+            int cterms = 0, alg_coper = 0; // special treatment of coper
             // information of o1 and o2
             bool dagger[3] = {false,false,false};
             int loc[3] = {-1,-1,-1};
@@ -110,10 +117,10 @@ namespace ctns{
          // wf[br',bc',bm']
          int xloc = locIn, yloc = locOut;
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
-         int nt = terms; 
+         int nt = terms - cterms*alg_coper; 
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc1^dagger2[bm,bm']: out(r,c,m) = o[d](m,x) in(r,c,x)
-         if(!this->identity(2)){
+         if(!this->identity(2) && alg_coper==0){
             int p = 2;
             MMinfo<Tm> mm;
             mm.M = dimin[0]*dimin[1];
