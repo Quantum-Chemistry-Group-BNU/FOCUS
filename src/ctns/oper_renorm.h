@@ -205,7 +205,7 @@ namespace ctns{
                   Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
             timing.tf6 = tools::get_time();
 
-            get_MMlist(Rlst);
+            get_MMlist2(Rlst);
 
             worktot = maxthreads*(blksize*2+qops._size);
             if(debug && schd.ctns.verbose>0){
@@ -273,7 +273,7 @@ namespace ctns{
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -283,7 +283,7 @@ namespace ctns{
                   }
                }
             }else{
-               Rmmtask.init(Rlst, schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()
@@ -426,7 +426,7 @@ namespace ctns{
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -436,7 +436,7 @@ namespace ctns{
                   }
                }
             }else{
-               Rmmtask.init(Rlst, schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()

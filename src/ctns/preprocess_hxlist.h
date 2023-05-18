@@ -13,7 +13,7 @@ namespace ctns{
             Hxblock(const int _dims, 
                   const int _terms, 
                   const int _cterms,
-                  const int _alg_coper=0){
+                  const int _alg_coper){
                dims = _dims;
                terms = _terms;
                cterms = _cterms;
@@ -29,6 +29,7 @@ namespace ctns{
                   << " dagger=" << dagger[0] << "," << dagger[1] << "," << dagger[2] << "," << dagger[3]
                   << " loc=" << loc[0] << "," << loc[1] << "," << loc[2] << "," << loc[3]
                   << " off=" << off[0] << "," << off[1] << "," << off[2] << "," << off[3]
+                  << " terms=" << terms << " cterms=" << cterms << " alg_coper=" << alg_coper 
                   << " coeff=" << coeff
                   << " cost=" << cost
                   << std::endl;  
@@ -58,30 +59,20 @@ namespace ctns{
                   exit(1);
                }
             }
-            void get_MMlist(){
-               MMlist2<Tm> MMlst2(4);
+            void get_MMlist2_twodot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
+            void get_MMlist2_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
+            void get_MMlist2(){
                if(dims == 4){
-                  get_MMlist_twodot(MMlst2);
+                  mmlst2.resize(4);
+                  get_MMlist2_twodot(mmlst2);
                }else if(dims == 3){
-                  get_MMlist_onedot(MMlst2);
+                  mmlst2.resize(3);
+                  get_MMlist2_onedot(mmlst2);
                }else{
                   std::cout << "error: no such option for dims=" << dims << std::endl;
                   exit(1);
                }
-               // flatten MMlst2 to MMlst
-               size_t size = MMlst2[0].size() + MMlst2[1].size() + MMlst2[2].size() + MMlst2[3].size();
-               assert(size > 0);
-               MMlst.resize(size);
-               int idx = 0;
-               for(int i=0; i<dims; i++){
-                  for(int j=0; j<MMlst2[i].size(); j++){
-                     MMlst[idx] = MMlst2[i][j];
-                     idx++;
-                  } // j
-               } // i
             }
-            void get_MMlist_twodot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
-            void get_MMlist_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
             void kernel(const Tm* x, Tm** opaddr, Tm* workspace) const;
          public:
             int dims  = 0; // 3/4 for onedot/twodot
@@ -97,7 +88,7 @@ namespace ctns{
             // for Matrix-Matrix multiplications
             size_t blksize = 0; // blksize of GEMM (can be different from size)
             double cost = 0.0;
-            MMlist<Tm> MMlst;
+            MMlist2<Tm> mmlst2;
             // intermediates [direct]
             int posInter = -1, lenInter = -1;
             size_t offInter = 0, ldaInter = 0; 
@@ -108,18 +99,18 @@ namespace ctns{
       using Hxlist2 = std::vector<std::vector<Hxblock<Tm>>>; 
 
    template <typename Tm>
-      void get_MMlist(Hxlist<Tm>& Hxlst){
+      void get_MMlist2(Hxlist<Tm>& Hxlst){
          // generate MMlist 
          for(int i=0; i<Hxlst.size(); i++){
-            Hxlst[i].get_MMlist();
+            Hxlst[i].get_MMlist2();
          }
       }
 
    template <typename Tm>
-      void get_MMlist(Hxlist2<Tm>& Hxlst2){
+      void get_MMlist2(Hxlist2<Tm>& Hxlst2){
          for(int i=0; i<Hxlst2.size(); i++){
             auto& Hxlst = Hxlst2[i];
-            get_MMlist(Hxlst);
+            get_MMlist2(Hxlst);
          } // i
       }
 
@@ -128,12 +119,18 @@ namespace ctns{
    // 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv']
    // 			wf[br',bc',bm',bv']
    template <typename Tm>
-      void Hxblock<Tm>::get_MMlist_twodot(MMlist2<Tm>& MMlst2,
+      void Hxblock<Tm>::get_MMlist2_twodot(MMlist2<Tm>& MMlst2,
             const size_t offset) const{
          // wf[br',bc',bm',bv']
          int xloc = locIn, yloc = locOut;
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
          int nt = terms - cterms*alg_coper + 1;
+        
+         //this->display();
+         //for(int i=0; i<mmlst2.size(); i++){
+         //   std::cout << "i=" << i << " mmlst2[i].size=" << mmlst2[i].size() << std::endl;
+         //}
+
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc2^dagger3[bv,bv']: out(r,c,m,v) = o[d](v,x) in(r,c,m,x) 
          if(!this->identity(3) && alg_coper==0){
@@ -226,7 +223,7 @@ namespace ctns{
    // 	             Oc1^dagger2[bm,bm'] 
    // 		     wf[br',bc',bm']
    template <typename Tm>
-      void Hxblock<Tm>::get_MMlist_onedot(MMlist2<Tm>& MMlst2,
+      void Hxblock<Tm>::get_MMlist2_onedot(MMlist2<Tm>& MMlst2,
             const size_t offset) const{
          // wf[br',bc',bm']
          int xloc = locIn, yloc = locOut;
@@ -306,15 +303,19 @@ namespace ctns{
          ptrs[4] = opaddr[4];
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
-         for(int i=0; i<MMlst.size(); i++){
-            const auto& mm = MMlst[i];
-            Tm* Aptr = ptrs[mm.locA] + mm.offA;
-            Tm* Bptr = ptrs[mm.locB] + mm.offB;
-            Tm* Cptr = ptrs[mm.locC] + mm.offC;
-            linalg::xgemm(&mm.transA, &mm.transB, mm.M, mm.N, mm.K, alpha,
-                  Aptr, mm.LDA, Bptr, mm.LDB, beta,
-                  Cptr, mm.M);
-         }
+         std::cout << "mmlst2.size=" << mmlst2.size() << std::endl;
+         for(int i=0; i<mmlst2.size(); i++){
+            std::cout << " i=" << i << " mmlst2[i].size=" << mmlst2[i].size() << std::endl;
+            for(int j=0; j<mmlst2[i].size(); j++){
+               const auto& mm = mmlst2[i][j];
+               Tm* Aptr = ptrs[mm.locA] + mm.offA;
+               Tm* Bptr = ptrs[mm.locB] + mm.offB;
+               Tm* Cptr = ptrs[mm.locC] + mm.offC;
+               linalg::xgemm(&mm.transA, &mm.transB, mm.M, mm.N, mm.K, alpha,
+                     Aptr, mm.LDA, Bptr, mm.LDB, beta,
+                     Cptr, mm.M);
+            } // j
+         } // i
       }
 
 } // ctns

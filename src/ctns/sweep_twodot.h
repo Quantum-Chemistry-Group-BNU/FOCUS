@@ -51,11 +51,12 @@ namespace ctns{
          maxthreads = omp_get_max_threads();
 #endif
          const int alg_hvec = schd.ctns.alg_hvec;
+         const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank==0);
          if(debug){
             std::cout << "ctns::sweep_twodot"
                << " alg_hvec=" << alg_hvec
-               << " alg_renorm=" << schd.ctns.alg_renorm
+               << " alg_renorm=" << alg_renorm
                << " mpisize=" << size
                << " maxthreads=" << maxthreads 
                << std::endl;
@@ -70,7 +71,7 @@ namespace ctns{
 
          // 1. load operators
          auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug && schd.ctns.verbose>0);
-         qops_pool.fetch_to_memory(fneed, alg_hvec>10);
+         qops_pool.fetch_to_memory(fneed, alg_hvec>10 || alg_renorm>10);
          const oper_dictmap<Tm> qops_dict = {
             {"l" ,qops_pool.at(fneed[0])},
             {"r" ,qops_pool.at(fneed[1])},
@@ -92,7 +93,7 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
          }
-
+         
          // 1.5 look ahead for the next dbond
          auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
          auto frop = fbond.first;
@@ -100,14 +101,12 @@ namespace ctns{
          auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
          // prefetch files for the next bond
          if(schd.ctns.async_fetch){
-            if(alg_hvec>10) qops_pool.clear_from_cpumem(fneed, fneed_next);
-            assert(!qops_pool.exist(frop));
+            if(alg_hvec>10 && alg_renorm>10) qops_pool.clear_from_cpumem(fneed, fneed_next);
             qops_pool[frop]; // just declare a space for frop
-            assert(qops_pool.exist(frop));
             qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
          }
          timing.ta = tools::get_time();
-         
+
          // 2. twodot wavefunction
          //	 \ /
          //   --*--
@@ -297,7 +296,7 @@ namespace ctns{
                   qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                   Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
 
-            get_MMlist(Hxlst);
+            get_MMlist2(Hxlst);
 
             worktot = maxthreads*(blksize*2+ndim);
             if(debug && schd.ctns.verbose>0){
@@ -325,7 +324,7 @@ namespace ctns{
                   qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                   Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
 
-            get_MMlist(Hxlst2);
+            get_MMlist2(Hxlst2);
 
             worktot = maxthreads*blksize*3;
             if(debug && schd.ctns.verbose>0){
@@ -383,7 +382,7 @@ namespace ctns{
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
                for(int i=0; i<Hmmtasks.size(); i++){
-                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i 
                         << " size=" << Hxlst2[i][0].size 
@@ -398,7 +397,7 @@ namespace ctns{
                   save_hmmtasks(Hmmtasks, isweep, ibond);
                }
             }else{
-               Hmmtask.init(Hxlst, schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Hmmtask.init(Hxlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Hxlst.size=" << Hxlst.size()
@@ -517,7 +516,7 @@ namespace ctns{
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
                for(int i=0; i<Hmmtasks.size(); i++){
-                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i 
                         << " size=" << Hxlst2[i][0].size 
@@ -532,7 +531,7 @@ namespace ctns{
                   save_hmmtasks(Hmmtasks, isweep, ibond);
                }
             }else{
-               Hmmtask.init(Hxlst, schd.ctns.alg_coper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Hmmtask.init(Hxlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank
                      << " Hxlst.size=" << Hxlst.size()

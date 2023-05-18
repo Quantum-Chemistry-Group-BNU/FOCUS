@@ -16,7 +16,7 @@ namespace ctns{
          public:
             Rblock(const int _terms,
                   const int _cterms,
-                  const int _alg_coper=0){
+                  const int _alg_coper){
                terms = _terms;
                cterms = _cterms;
                alg_coper = _alg_coper;
@@ -33,6 +33,7 @@ namespace ctns{
                   << " dagger=" << dagger[0] << "," << dagger[1] << "," << dagger[2]
                   << " loc=" << loc[0] << "," << loc[1] << "," << loc[2]
                   << " off=" << off[0] << "," << off[1] << "," << off[2]
+                  << " terms=" << terms << " cterms=" << cterms << " alg_coper=" << alg_coper 
                   << " coeff=" << coeff
                   << " cost=" << cost
                   << std::endl;
@@ -52,12 +53,11 @@ namespace ctns{
                // Additional information for psi*[br,bc,bm]
                cost += 2*double(dimin2[0])*dimin2[1]*dimin2[2]*dimout[icase];
             }
-            void get_MMlist_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0,
-                  const bool ifbatch=false) const;
-            void get_MMlist(){
-               MMlst2.resize(4);
-               get_MMlist_onedot(MMlst2);
-            } 
+            void get_MMlist2_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0, const bool ifbatch=false) const;
+            void get_MMlist2(){
+               mmlst2.resize(4);
+               get_MMlist2_onedot(mmlst2);
+            }
             void kernel(const Tm* x, Tm** opaddr, Tm* workspace) const;
          public:
             int icase = -1; // 0:lc, 1:cr, 2:lr 
@@ -77,7 +77,7 @@ namespace ctns{
             // for Matrix-Matrix multiplications
             size_t blksize = 0; // blksize of GEMM (can be different from size)
             double cost = 0.0;
-            MMlist2<Tm> MMlst2;
+            MMlist2<Tm> mmlst2;
             // intermediates [direct]
             int posInter = -1, lenInter = -1;
             size_t offInter = 0, ldaInter = 0; 
@@ -88,18 +88,18 @@ namespace ctns{
       using Rlist2 = std::vector<std::vector<Rblock<Tm>>>; 
 
    template <typename Tm>
-      void get_MMlist(Rlist<Tm>& Rlst){
+      void get_MMlist2(Rlist<Tm>& Rlst){
          // generate MMlist 
          for(int i=0; i<Rlst.size(); i++){
-            Rlst[i].get_MMlist();
+            Rlst[i].get_MMlist2();
          }
       }
 
    template <typename Tm>
-      void get_MMlist(Rlist2<Tm>& Rlst2){
+      void get_MMlist2(Rlist2<Tm>& Rlst2){
          for(int i=0; i<Rlst2.size(); i++){
             auto& Rlst = Rlst2[i];
-            get_MMlist(Rlst);
+            get_MMlist2(Rlst);
          } // i
       }
 
@@ -111,7 +111,7 @@ namespace ctns{
    // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] 
    // lr: O[bm,bm'] = psi*[br,bc,bm] sigma[br,bc,bm']
    template <typename Tm>
-      void Rblock<Tm>::get_MMlist_onedot(MMlist2<Tm>& MMlst2,
+      void Rblock<Tm>::get_MMlist2_onedot(MMlist2<Tm>& MMlst2,
             const size_t offset,
             const bool ifbatch) const{
          // wf[br',bc',bm']
@@ -246,9 +246,9 @@ namespace ctns{
          ptrs[4] = opaddr[4]; // inter
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
-         for(int i=0; i<MMlst2.size(); i++){
-            for(int j=0; j<MMlst2[i].size(); j++){
-               const auto& mm = MMlst2[i][j];
+         for(int i=0; i<mmlst2.size(); i++){
+            for(int j=0; j<mmlst2[i].size(); j++){
+               const auto& mm = mmlst2[i][j];
                Tm* Aptr = ptrs[mm.locA] + mm.offA;
                Tm* Bptr = ptrs[mm.locB] + mm.offB;
                Tm* Cptr = ptrs[mm.locC] + mm.offC;

@@ -44,11 +44,12 @@ namespace ctns{
          maxthreads = omp_get_max_threads();
 #endif
          const int alg_hvec = schd.ctns.alg_hvec;
+         const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank==0);
          if(debug){
             std::cout << "ctns::sweep_onedot"
                << " alg_hvec=" << alg_hvec
-               << " alg_renorm=" << schd.ctns.alg_renorm
+               << " alg_renorm=" << alg_renorm
                << " mpisize=" << size
                << " maxthreads=" << maxthreads 
                << std::endl;
@@ -62,7 +63,7 @@ namespace ctns{
 
          // 1. load operators 
          auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
-         qops_pool.fetch_to_memory(fneed, alg_hvec>10);
+         qops_pool.fetch_to_memory(fneed, alg_hvec>10 || alg_renorm>10);
          const oper_dictmap<Tm> qops_dict = {
             {"l",qops_pool.at(fneed[0])},
             {"r",qops_pool.at(fneed[1])},

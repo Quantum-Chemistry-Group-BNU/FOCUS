@@ -20,7 +20,6 @@ namespace ctns{
       struct RMMtask{
          public:
             void init(Rlist<Tm>& Rlst, 
-                  const int _alg_coper, 
                   const int hdxorder,
                   const int _batchblas,
                   const size_t _batchsize,
@@ -55,8 +54,7 @@ namespace ctns{
                struct timeval t0, t1;
                for(int i=0; i<mmbatch2[k].size(); i++){
                   gettimeofday(&t0, NULL);
-                  // skip [c] if alg_coper=1
-                  if(i >= 2*alg_coper) mmbatch2[k][i].kernel(batchblas, ptrs);
+                  mmbatch2[k][i].kernel(batchblas, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                   hipDeviceSynchronize();
@@ -126,7 +124,7 @@ namespace ctns{
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
-            int icase = -1, alg_coper = 0, batchblas = -1;
+            int icase = -1, batchblas = -1;
             size_t totsize = 0, batchsize = 0, offset = 0, nbatch = 0;
             double cost = 0.0;
             // --- GEMM ---
@@ -141,14 +139,12 @@ namespace ctns{
 
    template <typename Tm>
       void RMMtask<Tm>::init(Rlist<Tm>& Rlst,
-            const int _alg_coper,
             const int mmorder,
             const int _batchblas,
             const size_t _batchsize,
             const size_t _offset,
             const size_t offset0){
          // init
-         alg_coper = _alg_coper;
          batchblas = _batchblas;
          batchsize = _batchsize;
          totsize = Rlst.size();
@@ -210,7 +206,7 @@ namespace ctns{
             }
 
             // 2. setup mmbatch2[k]
-            const int nd = 7;
+            const int nd = 7; // c,ct,r,rt,l,lt,psi
             std::vector<size_t> dims(nd,0);
             // count how many gemms in each case 
             for(size_t j=0; j<jlen; j++){
@@ -241,7 +237,7 @@ namespace ctns{
                pos[2] = Rblk.dagger[0]? 4 : 5;
                pos[3] = 6;
                MMlist2<Tm> mmtmp2(4);
-               Rblk.get_MMlist_onedot(mmtmp2, j*offset, true);
+               Rblk.get_MMlist2_onedot(mmtmp2, j*offset, true);
                for(int i=0; i<mmtmp2.size(); i++){
                   int ipos = pos[i];
                   // copy the mmlst to the correct place
@@ -264,19 +260,6 @@ namespace ctns{
                mmbatch2[k][i].init(mmlst2[i]);
                cost += mmbatch2[k][i].cost; // accumulate MM cost
             } // i
-
-            /*
-            std::cout << "mmbatch:" << std::endl;
-            for(int i=0; i<nd; i++){
-               std::cout << "I=" << i << " size=" << mmbatch2[k][i].size << std::endl;
-               for(int j=0; j<mmbatch2[k][i].size; j++){
-                  std::cout << " j=" << j << " M,N,K="
-                     << mmbatch2[k][i].M[j] << ","
-                     << mmbatch2[k][i].N[j] << ","
-                     << mmbatch2[k][i].K[j] << std::endl;
-               }
-            }
-            */
 
             // 3. reduction
             // information for collect O(r,r') += \sum_c O(r,r',c)

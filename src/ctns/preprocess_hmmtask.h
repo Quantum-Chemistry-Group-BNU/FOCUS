@@ -16,7 +16,6 @@ namespace ctns{
       struct HMMtask{
          public:
             void init(Hxlist<Tm>& Hxlst,
-                  const int _alg_coper, 
                   const int hdxorder,
                   const int _batchblas,
                   const size_t _batchsize,
@@ -61,8 +60,7 @@ namespace ctns{
                struct timeval t0, t1;
                for(int i=0; i<mmbatch2[k].size(); i++){
                   gettimeofday(&t0, NULL);
-                  // skip [c2,c1] if alg_coper=1
-                  if(i >= 4*alg_coper) mmbatch2[k][i].kernel(batchblas, ptrs);
+                  mmbatch2[k][i].kernel(batchblas, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                   hipDeviceSynchronize();
@@ -105,7 +103,7 @@ namespace ctns{
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
-            int alg_coper = 0, batchblas = -1;
+            int batchblas = -1;
             size_t totsize = 0, batchsize = 0, nbatch = 0;
             double cost = 0.0;
             // --- GEMM ---
@@ -119,14 +117,12 @@ namespace ctns{
 
    template <typename Tm>
       void HMMtask<Tm>::init(Hxlist<Tm>& Hxlst,
-            const int _alg_coper,
             const int mmorder,
             const int _batchblas,
             const size_t _batchsize,
             const size_t offset,
             const size_t offset0){
          // init
-         alg_coper = _alg_coper;
          batchblas = _batchblas;
          batchsize = _batchsize;
          totsize = Hxlst.size();
@@ -185,7 +181,7 @@ namespace ctns{
             }
 
             // 2. setup mmbatch2[k]
-            const int nd = 8;
+            const int nd = 8; // c2,c2t,c1,c1t,r,rt,l,lt
             std::vector<size_t> dims(nd,0);
             // count how many gemms in each case 
             for(size_t j=0; j<jlen; j++){
@@ -217,7 +213,7 @@ namespace ctns{
                pos[2] = Hxblk.dagger[1]? 4 : 5;
                pos[3] = Hxblk.dagger[0]? 6 : 7;
                MMlist2<Tm> mmtmp2(4);
-               Hxblk.get_MMlist_twodot(mmtmp2, j*offset);
+               Hxblk.get_MMlist2_twodot(mmtmp2, j*offset);
                for(int i=0; i<mmtmp2.size(); i++){
                   int ipos = pos[i];
                   // copy the mmlst to the correct place
@@ -286,6 +282,9 @@ namespace ctns{
             mvlst.push_back(mv);
             const Tm beta = 1.0;
             mvbatch[k].init(mvlst, beta);
+
+            std::cout << "k=" << k << " size=" << mvbatch[k].size << std::endl;
+
          } // k
       }
 
