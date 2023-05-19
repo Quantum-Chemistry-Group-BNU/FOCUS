@@ -8,7 +8,7 @@ namespace ctns{
 
    template <typename Tm, typename QTm>
       void preprocess_formulae_Rlist(const bool ifDirect,
-            const int alg_coper,
+            const int alg_rcoper,
             const std::string superblock,
             const oper_dict<Tm>& qops,
             const oper_dictmap<Tm>& qops_dict,
@@ -25,7 +25,7 @@ namespace ctns{
          auto t0 = tools::get_time();
 
          Rlist2<Tm> Rlst2;
-         preprocess_formulae_Rlist2(ifDirect, alg_coper, superblock, qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
+         preprocess_formulae_Rlist2(ifDirect, alg_rcoper, superblock, qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                Rlst2, blksize, blksize0, cost, debug);
          size_t size = 0;
          for(int i=0; i<Rlst2.size(); i++){
@@ -48,7 +48,7 @@ namespace ctns{
 
    template <typename Tm, typename QTm>
       void preprocess_formulae_Rlist2(const bool ifDirect,
-            const int alg_coper,
+            const int alg_rcoper,
             const std::string superblock,
             const oper_dict<Tm>& qops,
             const oper_dictmap<Tm>& qops_dict,
@@ -93,9 +93,9 @@ namespace ctns{
             const auto& index = std::get<1>(task);
             const auto& formula = std::get<2>(task);
             for(int it=0; it<formula.size(); it++){
-               Rmu[k][it].gen_Rlist2(alg_coper, opaddr, superblock, site.info, Rlst2, blksize, blksize0, cost, false);
+               Rmu[k][it].gen_Rlist2(alg_rcoper, opaddr, superblock, site.info, Rlst2, blksize, blksize0, cost, false);
                if(key == 'H'){
-                  Rmu[k][it].gen_Rlist2(alg_coper, opaddr, superblock, site.info, Rlst2, blksize, blksize0, cost, true);
+                  Rmu[k][it].gen_Rlist2(alg_rcoper, opaddr, superblock, site.info, Rlst2, blksize, blksize0, cost, true);
                }
             }
          }

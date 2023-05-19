@@ -365,13 +365,13 @@ namespace ctns{
             << " " << ctrl.eps 
             << " " << ctrl.noise << " | " 
             << nmvp << " | " 
-            << t_total[jsweep] << " | " 
-            << taccum << " | "
-            << t_inter[jsweep] << " " 
-            << t_gemm[jsweep] << " " 
-            << t_red[jsweep] << " "
-            << tblas << " "
-            << std::defaultfloat << tblas/taccum*100 
+            << t_total[jsweep] << " | "  // single sweep
+            << taccum << " | "           // total time
+            << t_inter[jsweep] << " "    // intemediates [gemv]
+            << t_gemm[jsweep] << " "     // kernel [gemm]
+            << t_red[jsweep] << " "      // reduction [gemv]
+            << tblas << " "              // gemv+gemm
+            << std::defaultfloat << tblas/t_total[jsweep]*100 
             << std::endl;
       } // jsweep
       std::cout << "results: isweep, dcut, dwt, energies (delta_e)" << std::endl;

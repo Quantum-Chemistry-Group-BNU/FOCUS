@@ -29,13 +29,7 @@ void gpu_init(const int rank){
 
    magma_queue_create(device_id, &magma_queue);
 
-   /*
-   void* addr;
-   size_t size = 1024;
-   CUDA_CHECK(cudaMalloc((void**)&addr, size));
-   CUDA_CHECK(cudaFree(addr));
-   std::cout << "run succesfully" << std::endl;
-   */
+   GPUmem.init();
 
 #ifdef NCCL
    nccl_comm.init();
@@ -47,11 +41,15 @@ void gpu_init(const int rank){
 }
 
 void gpu_finalize(){
-   magma_queue_destroy(magma_queue);
-   magma_finalize();
+
 #ifdef NCCL
    nccl_comm.finalize();
 #endif
+   
+   GPUmem.finalize();
+   
+   magma_queue_destroy(magma_queue);
+   magma_finalize();
 }
 
 #endif

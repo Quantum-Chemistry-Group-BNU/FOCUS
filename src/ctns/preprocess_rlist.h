@@ -16,10 +16,10 @@ namespace ctns{
          public:
             Rblock(const int _terms,
                   const int _cterms,
-                  const int _alg_coper){
+                  const int _alg_rcoper){
                terms = _terms;
                cterms = _cterms;
-               alg_coper = _alg_coper;
+               alg_rcoper = _alg_rcoper;
             }
             bool identity(const int i) const{ return loc[i]==-1; }
             void display() const{
@@ -33,7 +33,7 @@ namespace ctns{
                   << " dagger=" << dagger[0] << "," << dagger[1] << "," << dagger[2]
                   << " loc=" << loc[0] << "," << loc[1] << "," << loc[2]
                   << " off=" << off[0] << "," << off[1] << "," << off[2]
-                  << " terms=" << terms << " cterms=" << cterms << " alg_coper=" << alg_coper 
+                  << " terms=" << terms << " cterms=" << cterms << " alg_rcoper=" << alg_rcoper 
                   << " coeff=" << coeff
                   << " cost=" << cost
                   << std::endl;
@@ -62,7 +62,7 @@ namespace ctns{
          public:
             int icase = -1; // 0:lc, 1:cr, 2:lr 
             int terms = 0; // no. of terms in Hmu 
-            int cterms = 0, alg_coper = 0; // special treatment of coper
+            int cterms = 0, alg_rcoper = 0; // special treatment of coper
             // information of o1 and o2
             bool dagger[3] = {false,false,false};
             int loc[3] = {-1,-1,-1};
@@ -116,11 +116,16 @@ namespace ctns{
             const bool ifbatch) const{
          // wf[br',bc',bm']
          int xloc = locIn, yloc = locOut;
+         // ZL@20230519: whether perform contraction for op[c2/c1]
+         // NOTE: contractions are performed for operators only with op[c2/c1]
+         //       in order to move x data to workspace for the convinience of
+         //       performing batch reduction later in reduction, see hmmtasks.
+         const bool ifcntr = alg_rcoper==0 || (alg_rcoper==1 && terms==cterms);
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
-         int nt = terms - cterms*alg_coper; 
+         int nt = ifcntr? terms : terms-cterms; 
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc1^dagger2[bm,bm']: out(r,c,m) = o[d](m,x) in(r,c,x)
-         if(!this->identity(2) && alg_coper==0){
+         if(!this->identity(2) && ifcntr){
             int p = 2;
             MMinfo<Tm> mm;
             mm.M = dimin[0]*dimin[1];

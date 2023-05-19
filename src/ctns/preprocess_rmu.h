@@ -10,6 +10,7 @@ namespace ctns{
    template <typename Tm>
       struct Rmu_ptr{
          public:
+            bool empty() const{ return terms==0; }
             bool identity(const int i) const{ return loc[i]==-1; }
             void init(const bool ifDirect,
                   const int k, const int it,
@@ -18,7 +19,7 @@ namespace ctns{
                   const rintermediates<Tm>& rinter,
                   const std::map<std::string,int>& oploc);
             // onedot
-            void gen_Rlist2(const int alg_coper,
+            void gen_Rlist2(const int alg_rcoper,
                   Tm** opaddr, 
                   const std::string superblock,
                   const qinfo3<Tm>& site_info, 
@@ -35,7 +36,7 @@ namespace ctns{
             qinfo2<Tm>* info[3] = {nullptr,nullptr,nullptr};
             int loc[3] = {-1,-1,-1};
             size_t off[3] = {0,0,0};
-            int terms = 0, cterms = 0; // terms corresponds to 'c' used for alg_coper=1
+            int terms = 0, cterms = 0; // terms corresponds to 'c' used for alg_rcoper=1
             Tm coeff = 1.0, coeffH = 1.0;
             // intermediates [direct] -> we assume each rmu contains only one intermediates
             int posInter = -1, lenInter = -1;
@@ -94,7 +95,7 @@ namespace ctns{
    // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] (Oc^dagger0[bm,bm'] Or^dagger1[bc,bc']) psi[br',bc',bm']
    // lr: O[bm,bm'] = psi*[br,bc,bm] sigma[br,bc,bm'] (Ol^dagger0[br,br'] Or^dagger1[bc,bc']) psi[br',bc',bm']
    template <typename Tm>
-      void Rmu_ptr<Tm>::gen_Rlist2(const int alg_coper,
+      void Rmu_ptr<Tm>::gen_Rlist2(const int alg_rcoper,
             Tm** opaddr,
             const std::string superblock,
             const qinfo3<Tm>& site_info,
@@ -103,12 +104,13 @@ namespace ctns{
             size_t& blksize0,
             double& cost,
             const bool ifdagger) const{
+         if(this->empty()) return;
          int bo[3], bi[3], bi2[3];
          // psi[br',bc',bm']
          for(int i=0; i<site_info._nnzaddr.size(); i++){
             int idx = site_info._nnzaddr[i];
             site_info._addr_unpack(idx,bi[0],bi[1],bi[2]);
-            Rblock<Tm> Rblk(terms,cterms,alg_coper);
+            Rblock<Tm> Rblk(terms,cterms,alg_rcoper);
             Rblk.offin = site_info._offset[idx]-1;
             Rblk.dimin[0] = site_info.qrow.get_dim(bi[0]); // br
             Rblk.dimin[1] = site_info.qcol.get_dim(bi[1]); // bc
@@ -134,11 +136,14 @@ namespace ctns{
                      Rblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
                      Rblk.dimout[k] = iftrans? info[k]->qcol.get_dim(bo[k]) : info[k]->qrow.get_dim(bo[k]);
                      // special treatment of op[c] for NSz symmetry
-                     if(alg_coper == 1 && k >= 2){
+                     if(alg_rcoper == 1 && k >= 2 && terms > cterms){
                         assert(k == loc[k]); // op[c] cannot be intermediates
                         Tm coper = *(opaddr[loc[k]] + Rblk.off[k]);
                         coeff_coper *= Rblk.dagger[k]? tools::conjugate(coper) : coper;
-                        std::cout << " Hx:coeff_coper=" << coeff_coper << std::endl;
+                        if(std::abs(coeff_coper)<thresh_coper){
+                           symAllowed = false;
+                           break;
+                        }
                      }
                   }
                }

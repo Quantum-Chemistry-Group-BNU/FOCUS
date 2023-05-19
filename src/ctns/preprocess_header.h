@@ -3,6 +3,9 @@
 
 namespace ctns{
 
+   const double thresh_coper = 1.e-16;
+   extern const double thresh_coper;
+
    const int locInter = 4; // intermediates
    const int locIn    = 5; // x
    const int locOut   = 6; // y

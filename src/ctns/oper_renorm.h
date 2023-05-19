@@ -159,8 +159,8 @@ namespace ctns{
             std::cout << "error: alg_renorm=" << alg_renorm << " should be used with alg_rinter=2" << std::endl;
             exit(1);
          }
-         if(schd.ctns.alg_coper == 1 && (alg_renorm == 4)){
-            std::cout << "error: alg_coper=1 is not compatible with alg_hvec=4" << std::endl;
+         if(schd.ctns.alg_rcoper == 1 && alg_renorm == 4){
+            std::cout << "error: alg_rcoper=1 is not compatible with alg_hvec=4" << std::endl;
             exit(1);
          }
 
@@ -201,7 +201,7 @@ namespace ctns{
             timing.tf5 = tools::get_time();
 
             // GEMM list and GEMV list
-            preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_coper, superblock, 
+            preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_rcoper, superblock, 
                   qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                   Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
             timing.tf6 = tools::get_time();
@@ -242,14 +242,14 @@ namespace ctns{
             // GEMM list and GEMV list
             size_t maxbatch = 0;
             if(!ifSingle){
-               preprocess_formulae_Rlist2(ifDirect, schd.ctns.alg_coper, superblock, 
+               preprocess_formulae_Rlist2(ifDirect, schd.ctns.alg_rcoper, superblock, 
                      qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                      Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Rlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Rlst2[i].size());
                } // i
             }else{
-               preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_coper, superblock, 
+               preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_rcoper, superblock, 
                      qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
@@ -387,14 +387,14 @@ namespace ctns{
             // GEMM list and GEMV list
             size_t maxbatch = 0;
             if(!ifSingle){
-               preprocess_formulae_Rlist2(ifDirect, schd.ctns.alg_coper, superblock, 
+               preprocess_formulae_Rlist2(ifDirect, schd.ctns.alg_rcoper, superblock, 
                      qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                      Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Rlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Rlst2[i].size());
                } // i
             }else{
-               preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_coper, superblock, 
+               preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_rcoper, superblock, 
                      qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
@@ -558,7 +558,7 @@ namespace ctns{
 
             linalg::xaxpy(qops._size, -1.0, data0, qops._data);
             auto diff = linalg::xnrm2(qops._size, qops._data);
-            std::cout << "\nqops[diff]: rank=" << std::endl;
+            std::cout << "\nqops[diff]: rank=" << rank << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
                for(auto& pr : opdict){

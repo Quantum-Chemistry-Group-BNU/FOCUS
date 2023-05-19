@@ -89,9 +89,9 @@ namespace ctns{
             if(debug){
                auto tf = tools::get_time();
                sweeps.t_total[isweep] = tools::get_duration(tf-ti);
-               sweeps.t_inter[isweep] = oper_timer.sigma.t_inter_tot + oper_timer.renorm.t_inter_tot;
-               sweeps.t_gemm[isweep] = oper_timer.sigma.t_gemm_tot + oper_timer.renorm.t_gemm_tot;
-               sweeps.t_red[isweep] = oper_timer.sigma.t_red_tot + oper_timer.renorm.t_red_tot;
+               sweeps.t_inter[isweep] = oper_timer.sigma.t_inter + oper_timer.renorm.t_inter;
+               sweeps.t_gemm[isweep]  = oper_timer.sigma.t_gemm  + oper_timer.renorm.t_gemm;
+               sweeps.t_red[isweep]   = oper_timer.sigma.t_red   + oper_timer.renorm.t_red;
                sweeps.summary(isweep);
             }
             // generate right rcanonical form and save checkpoint file

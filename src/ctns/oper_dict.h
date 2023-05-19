@@ -62,6 +62,10 @@ namespace ctns{
                assert(_dev_data != nullptr && _data != nullptr);
                GPUmem.to_cpu(_data, _dev_data, _size*sizeof(Tm));
             }
+            void to_cpuAsync(){
+               assert(_dev_data != nullptr && _data != nullptr);
+               GPUmem.to_cpuAsync(_data, _dev_data, _size*sizeof(Tm));
+            }
 #endif
             // copy
             oper_dict(const oper_dict& op_dict) = delete;

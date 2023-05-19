@@ -30,7 +30,7 @@ namespace ctns{
                   const bool ifdagger) const;
 */
             // twodot
-            void gen_Hxlist2(const int alg_coper,
+            void gen_Hxlist2(const int alg_hcoper,
                   Tm** opaddr,
                   const qinfo4<Tm>& wf_info, 
                   Hxlist2<Tm>& Hxlst2,
@@ -44,7 +44,7 @@ namespace ctns{
             qinfo2<Tm>* info[4] = {nullptr,nullptr,nullptr,nullptr};
             int loc[4] = {-1,-1,-1,-1};
             size_t off[4] = {0,0,0,0};
-            int terms = 0, cterms = 0; // terms corresponds to 'c' used for alg_coper=1
+            int terms = 0, cterms = 0; // terms corresponds to 'c' used for alg_hcoper=1
             Tm coeff = 1.0, coeffH = 1.0;
             // intermediates [direct] -> we assume each hmu contains only one intermediates
             int posInter = -1, lenInter = -1;
@@ -173,7 +173,7 @@ namespace ctns{
    // 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv'] 
    // 			wf[br',bc',bm',bv']
    template <typename Tm>
-      void Hmu_ptr<Tm>::gen_Hxlist2(const int alg_coper,
+      void Hmu_ptr<Tm>::gen_Hxlist2(const int alg_hcoper,
             Tm** opaddr,
             const qinfo4<Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
@@ -186,7 +186,7 @@ namespace ctns{
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
             int idx = wf_info._nnzaddr[i];
             wf_info._addr_unpack(idx,bo[0],bo[1],bo[2],bo[3]);
-            Hxblock<Tm> Hxblk(4,terms,cterms,alg_coper);
+            Hxblock<Tm> Hxblk(4,terms,cterms,alg_hcoper);
             Hxblk.offout = wf_info._offset[idx]-1;
             Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
             Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
@@ -214,10 +214,14 @@ namespace ctns{
                      Hxblk.loc[k] = loc[k];
                      Hxblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
                      // special treatment of op[c2/c1] for NSz symmetry
-                     if(alg_coper == 1 && k >= 2 && terms > cterms){ 
+                     if(alg_hcoper == 1 && k >= 2 && terms > cterms){ 
                         assert(k == loc[k]); // op[c] cannot be intermediates
                         Tm coper = *(opaddr[loc[k]] + Hxblk.off[k]);
                         coeff_coper *= Hxblk.dagger[k]? tools::conjugate(coper) : coper;
+                        if(std::abs(coeff_coper)<thresh_coper){
+                           symAllowed = false;
+                           break;
+                        }
                      }
                   }
                }

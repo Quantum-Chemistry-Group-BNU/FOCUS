@@ -95,7 +95,8 @@ namespace input{
                   & restart_sweep & restart_bond & timestamp
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
-                  & alg_hvec & alg_hinter & alg_renorm & alg_rinter & alg_coper & alg_decim 
+                  & alg_hvec & alg_hinter & alg_hcoper 
+                  & alg_renorm & alg_rinter & alg_rcoper & alg_decim 
                   & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
                   & mmorder & batchmem 
                   & cisolver & maxcycle & nbuff & damping & precond
@@ -138,9 +139,10 @@ namespace input{
          // algorithm
          int alg_hvec = 3;
          int alg_hinter = 0;
+         int alg_hcoper = 0;
          int alg_renorm = 2;
          int alg_rinter = 0;
-         int alg_coper = 0;
+         int alg_rcoper = 0;
          int alg_decim = 1;
          bool ifdist1 = false;
          bool ifdistc = false;

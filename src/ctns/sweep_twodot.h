@@ -101,7 +101,10 @@ namespace ctns{
          auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
          // prefetch files for the next bond
          if(schd.ctns.async_fetch){
-            if(alg_hvec>10 && alg_renorm>10) qops_pool.clear_from_cpumem(fneed, fneed_next);
+            if(alg_hvec>10 && alg_renorm>10){
+               const bool ifkeepcoper = schd.ctns.alg_hcoper==1 || schd.ctns.alg_rcoper==1;
+               qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
+            }
             qops_pool[frop]; // just declare a space for frop
             qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
          }
@@ -225,8 +228,8 @@ namespace ctns{
             std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
             exit(1);
          }
-         if(schd.ctns.alg_coper == 1 && (alg_hvec == 4 || alg_hvec == 5)){
-            std::cout << "error: alg_coper=1 is not compatible with alg_hvec=4/5" << std::endl;
+         if(schd.ctns.alg_hcoper == 1 && (alg_hvec == 4 || alg_hvec == 5)){
+            std::cout << "error: alg_hcoper=1 is not compatible with alg_hvec=4/5" << std::endl;
             exit(1);
          }
 
@@ -296,7 +299,7 @@ namespace ctns{
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
 
-            preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_coper, 
+            preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_hcoper, 
                   qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                   Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
 
@@ -324,7 +327,7 @@ namespace ctns{
 
             hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
 
-            preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_coper, 
+            preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_hcoper, 
                   qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                   Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
 
@@ -355,14 +358,14 @@ namespace ctns{
 
             size_t maxbatch = 0;
             if(!ifSingle){
-               preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_coper, 
+               preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_hcoper, 
                      qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                      Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Hxlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Hxlst2[i].size());
                } // i
             }else{
-               preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_coper, 
+               preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_hcoper, 
                      qops_dict, oploc, opaddr, H_formulae, wf, hinter,
                      Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Hxlst.size();
@@ -481,14 +484,14 @@ namespace ctns{
             // GEMM list and GEMV list
             size_t maxbatch = 0;
             if(!ifSingle){
-               preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_coper, 
+               preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_hcoper, 
                      qops_dict, oploc, opaddr, H_formulae, wf, hinter, 
                      Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Hxlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Hxlst2[i].size());
                } // i
             }else{
-               preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_coper, 
+               preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_hcoper, 
                      qops_dict, oploc, opaddr, H_formulae, wf, hinter, 
                      Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Hxlst.size();

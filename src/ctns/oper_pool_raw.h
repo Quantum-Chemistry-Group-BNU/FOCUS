@@ -76,9 +76,10 @@ namespace ctns{
                   const std::vector<std::string> fneed_next={});
             // only clear cpu memory
             void clear_from_memory(const std::vector<std::string> fneed,
-                  const std::vector<std::string> fneed_next={}); 
+                  const std::vector<std::string> fneed_next); 
             void clear_from_cpumem(const std::vector<std::string> fneed,
-                  const std::vector<std::string> fneed_next={}); 
+                  const std::vector<std::string> fneed_next,
+                  const bool ifkeepcoper); 
             // save renormalized operator to file 
             void save_to_disk(const std::string frop, const bool ifgpu, const bool ifasync, 
                   const std::vector<std::string> fneed_next={});
@@ -244,7 +245,7 @@ namespace ctns{
             }
             this->display("in");
          }
-         for(auto& fqop : fclear){
+         for(const auto& fqop : fclear){
             if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
             auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
             if(result != fneed_next.end()) continue;
@@ -263,7 +264,8 @@ namespace ctns{
 
    template <typename Tm>
       void oper_pool_raw<Tm>::clear_from_cpumem(const std::vector<std::string> fclear,
-            const std::vector<std::string> fneed_next){
+            const std::vector<std::string> fneed_next,
+            const bool ifkeepcoper){
          auto t0 = tools::get_time();
          if(debug){
             std::cout << "ctns::oper_pool_raw<Tm>::clear_from_cpumem: size=" << fclear.size() << std::endl; 
@@ -275,7 +277,9 @@ namespace ctns{
             }
             this->display("in");
          }
-         for(auto& fqop : fclear){
+         for(int i=0; i<fclear.size(); i++){
+            if(ifkeepcoper && i >= 2) continue; // skip op[c2/c1]
+            const auto& fqop = fclear[i];
             if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
             auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
             if(result != fneed_next.end()) continue;
@@ -290,23 +294,6 @@ namespace ctns{
          }
       }
 
-/*
-   template <typename Tm>
-      void oper_dump(operData_pool_raw<Tm>& qstore,
-            const std::string frop,
-            const bool ifgpu,
-            const int iomode,
-            const bool debug){
-#ifdef GPU
-         //std::cout << "lzd1 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
-         if(ifgpu) qstore[frop].to_cpu();
-         //std::cout << "lzd2 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
-#endif
-         //std::cout << "lzd3 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
-         oper_save<Tm>(iomode, frop, qstore.at(frop), debug);
-         //std::cout << "lzd4 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
-      }
-*/
    template <typename Tm>
       void oper_dump(oper_dict<Tm>& qops,
             const std::string frop,
@@ -314,13 +301,9 @@ namespace ctns{
             const int iomode,
             const bool debug){
 #ifdef GPU
-         //std::cout << "lzd1 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
-         if(ifgpu) qops.to_cpu();
-         //std::cout << "lzd2 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
+         if(ifgpu) qops.to_cpuAsync();
 #endif
-         //std::cout << "lzd3 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
          oper_save<Tm>(iomode, frop, qops, debug);
-         //std::cout << "lzd4 existQ=" << (qstore.find(frop) != qstore.end()) << " frop=" << frop << std::endl; 
       }
 
    // save to disk
@@ -332,13 +315,6 @@ namespace ctns{
             std::cout << "ctns::oper_pool_raw<Tm>::save_to_disk: ifgpu=" << ifgpu 
                << " ifasync=" << ifasync << " frop=" << frop << std::endl;
          }
-         /*
-         if(!ifasync){
-            oper_dump<Tm>(qstore, frop, ifgpu, iomode, debug);
-         }else{
-            thread_save = std::thread(&ctns::oper_dump<Tm>, std::ref(qstore), frop, ifgpu, iomode, debug);
-         }
-         */
          assert(!thread_save.joinable()); 
          if(!ifasync){
             oper_dump<Tm>(qstore[frop], frop, ifgpu, iomode, debug);

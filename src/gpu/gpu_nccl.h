@@ -68,6 +68,7 @@ struct nccl_communicator{
          }
       void finalize(){
          ncclCommDestroy(comm);
+         cudaStreamDestroy(s);
       }
    public:
       ncclUniqueId id;

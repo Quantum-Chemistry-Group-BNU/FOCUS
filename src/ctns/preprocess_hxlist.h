@@ -13,11 +13,11 @@ namespace ctns{
             Hxblock(const int _dims, 
                   const int _terms, 
                   const int _cterms,
-                  const int _alg_coper){
+                  const int _alg_hcoper){
                dims = _dims;
                terms = _terms;
                cterms = _cterms;
-               alg_coper = _alg_coper;
+               alg_hcoper = _alg_hcoper;
             }
             bool identity(const int i) const{ return loc[i]==-1; }    
             void display() const{
@@ -29,7 +29,7 @@ namespace ctns{
                   << " dagger=" << dagger[0] << "," << dagger[1] << "," << dagger[2] << "," << dagger[3]
                   << " loc=" << loc[0] << "," << loc[1] << "," << loc[2] << "," << loc[3]
                   << " off=" << off[0] << "," << off[1] << "," << off[2] << "," << off[3]
-                  << " terms=" << terms << " cterms=" << cterms << " alg_coper=" << alg_coper 
+                  << " terms=" << terms << " cterms=" << cterms << " alg_hcoper=" << alg_hcoper 
                   << " coeff=" << coeff
                   << " cost=" << cost
                   << std::endl;  
@@ -77,7 +77,7 @@ namespace ctns{
          public:
             int dims  = 0; // 3/4 for onedot/twodot
             int terms = 0; // no. of terms in Hmu 
-            int cterms = 0, alg_coper = 0; // special treatment of coper
+            int cterms = 0, alg_hcoper = 0; // special treatment of coper
             size_t dimout[4] = {0,0,0,0};
             size_t dimin[4] = {0,0,0,0};
             bool dagger[4] = {false,false,false,false};
@@ -127,7 +127,7 @@ namespace ctns{
          // NOTE: contractions are performed for operators only with op[c2/c1]
          //       in order to move x data to workspace for the convinience of
          //       performing batch reduction later in reduction, see hmmtasks.
-         const bool ifcntr = alg_coper == 0 || (alg_coper == 1 && terms == cterms); 
+         const bool ifcntr = alg_hcoper==0 || (alg_hcoper==1 && terms==cterms); 
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
          int nt = ifcntr? terms+1 : terms-cterms+1;
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;

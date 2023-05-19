@@ -7,11 +7,11 @@
 #include "gpu_mem.h"
 #include "gpu_nccl.h"
 
-extern magma_queue_t magma_queue;
-extern gpu_mem GPUmem; 
-
 const int MAX_GPUS = 128;
 extern const int MAX_GPUS;
+
+extern magma_queue_t magma_queue;
+extern gpu_mem GPUmem; 
 
 #ifdef NCCL
 extern nccl_communicator nccl_comm;
