@@ -69,7 +69,7 @@ namespace ctns{
                } // i
             }
             // reduction
-            void reduction(const int k, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
+            void reduction(const int k, const Tm* x, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
 

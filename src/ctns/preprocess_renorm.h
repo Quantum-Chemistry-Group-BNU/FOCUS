@@ -36,8 +36,8 @@ namespace ctns{
          Tm* work = new Tm[blksize*2];
          for(int i=0; i<Rlst.size(); i++){
             auto& Rblk = Rlst[i];
-            Rblk.kernel(x, opaddr, work);
-            linalg::xaxpy(Rblk.size, Rblk.coeff, work, y+Rblk.offrop);
+            bool ifcal = Rblk.kernel(x, opaddr, work);
+            if(ifcal) linalg::xaxpy(Rblk.size, Rblk.coeff, work, y+Rblk.offrop);
          } // i
          delete[] work;
 
@@ -52,8 +52,8 @@ namespace ctns{
             #pragma omp for schedule(dynamic) nowait
             for(int i=0; i<Rlst.size(); i++){
                auto& Rblk = Rlst[i];
-               Rblk.kernel(x, opaddr, work);
-               linalg::xaxpy(Rblk.size, Rblk.coeff, work, yi+Rblk.offrop);
+               bool ifcal = Rblk.kernel(x, opaddr, work);
+               if(ifcal) linalg::xaxpy(Rblk.size, Rblk.coeff, work, yi+Rblk.offrop);
             } // i
             delete[] work;
 

@@ -64,8 +64,9 @@ namespace ctns{
          // 1. preprocess formulae to Hmu
          int hsize = H_formulae.size();
          std::vector<Hmu_ptr<Tm>> Hmu_vec(hsize);
-         //for(int it=0; it<hsize; it++){
-         for(int it=1; it<2; it++){
+         for(int it=0; it<hsize; it++){
+         //for(int it=1; it<2; it++){
+            std::cout << "it=" << it << " HTerm=" << H_formulae.tasks[it] << std::endl;
             Hmu_vec[it].init(ifDirect, it, H_formulae, qops_dict, hinter, oploc); 
          } // it
          auto ta = tools::get_time();
@@ -78,7 +79,7 @@ namespace ctns{
          Hxlst2.resize(nnzblk);
          for(int it=0; it<hsize; it++){
             Hmu_vec[it].gen_Hxlist2(alg_coper, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, false);
-            //Hmu_vec[it].gen_Hxlist2(alg_coper, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, true);
+            Hmu_vec[it].gen_Hxlist2(alg_coper, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, true);
          }
          auto tb = tools::get_time();
 

@@ -58,7 +58,7 @@ namespace ctns{
                mmlst2.resize(4);
                get_MMlist2_onedot(mmlst2);
             }
-            void kernel(const Tm* x, Tm** opaddr, Tm* workspace) const;
+            bool kernel(const Tm* x, Tm** opaddr, Tm* workspace) const;
          public:
             int icase = -1; // 0:lc, 1:cr, 2:lr 
             int terms = 0; // no. of terms in Hmu 
@@ -236,7 +236,7 @@ namespace ctns{
 
    // Perform the actual matrix-matrix multiplication
    template <typename Tm>
-      void Rblock<Tm>::kernel(const Tm* x, Tm** opaddr, Tm* workspace) const{
+      bool Rblock<Tm>::kernel(const Tm* x, Tm** opaddr, Tm* workspace) const{
          const Tm alpha = 1.0; 
          Tm* ptrs[7];
          ptrs[0] = opaddr[0]; // l
@@ -246,8 +246,10 @@ namespace ctns{
          ptrs[4] = opaddr[4]; // inter
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
+         bool ifcal = false;
          for(int i=0; i<mmlst2.size(); i++){
             for(int j=0; j<mmlst2[i].size(); j++){
+               ifcal = true;
                const auto& mm = mmlst2[i][j];
                Tm* Aptr = ptrs[mm.locA] + mm.offA;
                Tm* Bptr = ptrs[mm.locB] + mm.offB;
@@ -259,6 +261,7 @@ namespace ctns{
                      Cptr, mm.M);
             } // j
          } // i
+         return ifcal;
       }
 
 } // ctns

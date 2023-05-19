@@ -75,7 +75,7 @@ namespace ctns{
                }
             }
             // reduction
-            void reduction(const int k, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
+            void reduction(const int k, const Tm* x, const Tm* workspace, Tm* y, Tm* dev_red=nullptr){
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
                // reduction by GEMV
@@ -86,10 +86,11 @@ namespace ctns{
                   pcoeff = dev_red;
                }
 #endif
-               Tm* ptrs[3];
-               ptrs[0] = workspace;
-               ptrs[1] = pcoeff;
-               ptrs[2] = y;
+               Tm* ptrs[4];
+               ptrs[0] = const_cast<Tm*>(x); 
+               ptrs[1] = const_cast<Tm*>(workspace);
+               ptrs[2] = pcoeff;
+               ptrs[3] = y;
                mvbatch[k].kernel(batchblas, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
@@ -247,18 +248,27 @@ namespace ctns{
                const auto& Hxblk = Hxlst[jdx];
                coefflst[k][j] = Hxblk.coeff;
                if(Hxblk.offout != offout){
+                  const auto& Hxblk0 = Hxlst[jdx-1];
                   // append into mvbatch
                   MVinfo<Tm> mv;
                   mv.transA = 'N';
-                  mv.M = Hxlst[jdx-1].size;
+                  mv.M = Hxblk0.size;
                   mv.N = nmu;
-                  mv.LDA = offset;
-                  mv.locA = 0;
-                  mv.offA = (j-nmu)*offset;
-                  mv.locx = 1;
+                  
+                  //// special treatment of alg_coper=1
+                  //if(Hxblk0.alg_coper == 1 && Hxblk0.terms == Hxblk0.cterms){
+                  //   mv.locA = 0;
+                  //   mv.LDA = Hxblk0.size;
+                  //   mv.offA = Hxblk0.offin; 
+                  //}else{
+                     mv.locA = 1;
+                     mv.LDA = offset;
+                     mv.offA = (j-nmu)*offset;
+                  //}
+                  mv.locx = 2;
                   mv.offx = (j-nmu);
-                  mv.locy = 2;
-                  mv.offy = Hxlst[jdx-1].offout;
+                  mv.locy = 3;
+                  mv.offy = Hxblk0.offout;
                   mvlst.push_back(mv);
                   // new 
                   nmu = 1;
@@ -268,23 +278,27 @@ namespace ctns{
                }
             } // j
             // append into mvbatch
+            const auto& Hxblk0 = Hxlst[off+jlen-1];
             MVinfo<Tm> mv;
             mv.transA = 'N';
-            mv.M = Hxlst[off+jlen-1].size;
+            mv.M = Hxblk0.size;
             mv.N = nmu;
-            mv.LDA = offset;
-            mv.locA = 0;
-            mv.offA = (jlen-nmu)*offset;
-            mv.locx = 1;
+            //if(Hxblk0.alg_coper == 1 && Hxblk0.terms == Hxblk0.cterms){
+            //   mv.locA = 0;
+            //   mv.LDA = Hxblk0.size;
+            //   mv.offA = Hxblk0.offin; 
+            //}else{ 
+               mv.locA = 1;
+               mv.LDA = offset;
+               mv.offA = (jlen-nmu)*offset;
+            //}
+            mv.locx = 2;
             mv.offx = (jlen-nmu);
-            mv.locy = 2;
-            mv.offy = Hxlst[off+jlen-1].offout;
+            mv.locy = 3;
+            mv.offy = Hxblk0.offout;
             mvlst.push_back(mv);
             const Tm beta = 1.0;
             mvbatch[k].init(mvlst, beta);
-
-            std::cout << "k=" << k << " size=" << mvbatch[k].size << std::endl;
-
          } // k
       }
 

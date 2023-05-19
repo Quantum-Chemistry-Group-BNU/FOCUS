@@ -11,6 +11,7 @@ namespace ctns{
    template <typename Tm>
       struct Hmu_ptr{
          public:
+            bool empty() const{ return terms==0; }
             bool identity(const int i) const{ return loc[i]==-1; }
             void init(const bool ifDirect, 
                   const int it,
@@ -59,9 +60,6 @@ namespace ctns{
             const std::map<std::string,int>& oploc){
          const auto& HTerm = H_formulae.tasks[it];
          terms = HTerm.size();
-
-         std::cout << "it=" << it << " HTerm=" << HTerm << std::endl;
-
          for(int idx=terms-1; idx>=0; idx--){
             const auto& sop = HTerm.terms[idx];
             const auto& sop0 = sop.sums[0].second;
@@ -111,6 +109,7 @@ namespace ctns{
             size_t& blksize0,
             double& cost,
             const bool ifdagger) const{
+         if(this->empty()) return;
          int bo[3], bi[3];
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
             int idx = wf_info._nnzaddr[i];
@@ -182,6 +181,7 @@ namespace ctns{
             size_t& blksize0,
             double& cost,
             const bool ifdagger) const{
+         if(this->empty()) return;
          int bo[4], bi[4];
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
             int idx = wf_info._nnzaddr[i];
@@ -214,7 +214,7 @@ namespace ctns{
                      Hxblk.loc[k] = loc[k];
                      Hxblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
                      // special treatment of op[c2/c1] for NSz symmetry
-                     if(alg_coper == 1 && k >= 2){ 
+                     if(alg_coper == 1 && k >= 2 && terms > cterms){ 
                         assert(k == loc[k]); // op[c] cannot be intermediates
                         Tm coper = *(opaddr[loc[k]] + Hxblk.off[k]);
                         coeff_coper *= Hxblk.dagger[k]? tools::conjugate(coper) : coper;
@@ -253,6 +253,10 @@ namespace ctns{
                blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
             }
             Hxlst2[i].push_back(Hxblk);
+         
+         //lzd debug   
+            break;
+         
          } // i
       }
 

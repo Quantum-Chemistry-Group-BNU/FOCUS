@@ -225,6 +225,10 @@ namespace ctns{
             std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
             exit(1);
          }
+         if(schd.ctns.alg_coper == 1 && (alg_hvec == 4 || alg_hvec == 5)){
+            std::cout << "error: alg_coper=1 is not compatible with alg_hvec=4/5" << std::endl;
+            exit(1);
+         }
 
          timing.tb1 = tools::get_time();
          if(alg_hvec == 0){
@@ -595,6 +599,8 @@ namespace ctns{
             get_sys_status();
          }
          timing.tc = tools::get_time();
+
+         exit(1);
 
          // free tmp space on CPU
          if(alg_hvec==2 || alg_hvec==3 || 

@@ -73,7 +73,7 @@ namespace ctns{
                   exit(1);
                }
             }
-            void kernel(const Tm* x, Tm** opaddr, Tm* workspace) const;
+            bool kernel(const Tm* x, Tm** opaddr, Tm* workspace) const;
          public:
             int dims  = 0; // 3/4 for onedot/twodot
             int terms = 0; // no. of terms in Hmu 
@@ -124,7 +124,12 @@ namespace ctns{
          // wf[br',bc',bm',bv']
          int xloc = locIn, yloc = locOut;
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
-         int nt = terms - cterms*alg_coper + 1;
+         int nt;
+         if(alg_coper == 0 || (alg_coper == 1 && terms == cterms)){
+            nt = terms + 1;
+         }else{
+            nt = terms - cterms + 1;
+         }
         
          //this->display();
          //for(int i=0; i<mmlst2.size(); i++){
@@ -133,7 +138,7 @@ namespace ctns{
 
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc2^dagger3[bv,bv']: out(r,c,m,v) = o[d](v,x) in(r,c,m,x) 
-         if(!this->identity(3) && alg_coper==0){
+         if(!this->identity(3) && (alg_coper==0 || (alg_coper == 1 && terms == cterms))){
             int p = 3;
             MMinfo<Tm> mm;
             mm.M = dimin[0]*dimin[1]*dimin[2];
@@ -153,7 +158,7 @@ namespace ctns{
             nt -= 1;
          }
          // Oc1^dagger2[bm,bm']: out(r,c,m,v) = o[d](m,x) in(r,c,x,v)
-         if(!this->identity(2) && alg_coper==0){
+         if(!this->identity(2) && (alg_coper==0 || (alg_coper == 1 && terms == cterms))){
             int p = 2;
             for(int iv=0; iv<dimout[3]; iv++){
                MMinfo<Tm> mm;
@@ -293,7 +298,7 @@ namespace ctns{
 
    // Perform the actual matrix-matrix multiplication
    template <typename Tm>
-      void Hxblock<Tm>::kernel(const Tm* x, Tm** opaddr, Tm* workspace) const{ 
+      bool Hxblock<Tm>::kernel(const Tm* x, Tm** opaddr, Tm* workspace) const{ 
          const Tm alpha = 1.0, beta = 0.0;
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
@@ -303,10 +308,10 @@ namespace ctns{
          ptrs[4] = opaddr[4];
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
-         std::cout << "mmlst2.size=" << mmlst2.size() << std::endl;
+         bool ifcal = true;
          for(int i=0; i<mmlst2.size(); i++){
-            std::cout << " i=" << i << " mmlst2[i].size=" << mmlst2[i].size() << std::endl;
             for(int j=0; j<mmlst2[i].size(); j++){
+               ifcal = true;
                const auto& mm = mmlst2[i][j];
                Tm* Aptr = ptrs[mm.locA] + mm.offA;
                Tm* Bptr = ptrs[mm.locB] + mm.offB;
@@ -316,6 +321,7 @@ namespace ctns{
                      Cptr, mm.M);
             } // j
          } // i
+         return ifcal;
       }
 
 } // ctns

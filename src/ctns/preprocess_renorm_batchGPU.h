@@ -64,7 +64,7 @@ namespace ctns{
                gettimeofday(&t1_gemm, NULL);
                // reduction
                gettimeofday(&t0_reduction, NULL);
-               Rmmtask.reduction(k, ptrs[6], y, dev_red);
+               Rmmtask.reduction(k, x, ptrs[6], y, dev_red);
                gettimeofday(&t1_reduction, NULL);
                // timing
                time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
@@ -141,7 +141,7 @@ namespace ctns{
                gettimeofday(&t1_gemm, NULL);
                // reduction
                gettimeofday(&t0_reduction, NULL);
-               Rmmtask.reduction(k, ptrs[6], y, dev_red);
+               Rmmtask.reduction(k, x, ptrs[6], y, dev_red);
                gettimeofday(&t1_reduction, NULL);
                // timing
                time_inter += ((double)(t1_inter.tv_sec - t0_inter.tv_sec) 
@@ -210,7 +210,7 @@ namespace ctns{
             gettimeofday(&t1_gemm, NULL);
             // reduction
             gettimeofday(&t0_reduction, NULL);
-            Rmmtask.reduction(k, ptrs[6], y, dev_red);
+            Rmmtask.reduction(k, x, ptrs[6], y, dev_red);
             gettimeofday(&t1_reduction, NULL);
             // timing
             time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
@@ -283,7 +283,7 @@ namespace ctns{
             gettimeofday(&t1_gemm, NULL);
             // reduction
             gettimeofday(&t0_reduction, NULL);
-            Rmmtask.reduction(k, ptrs[6], y, dev_red);
+            Rmmtask.reduction(k, x, ptrs[6], y, dev_red);
             gettimeofday(&t1_reduction, NULL);
             // timing
             time_inter += ((double)(t1_inter.tv_sec - t0_inter.tv_sec) 

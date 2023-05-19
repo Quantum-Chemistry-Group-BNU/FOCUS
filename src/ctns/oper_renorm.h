@@ -159,10 +159,11 @@ namespace ctns{
             std::cout << "error: alg_renorm=" << alg_renorm << " should be used with alg_rinter=2" << std::endl;
             exit(1);
          }
+         if(schd.ctns.alg_coper == 1 && (alg_renorm == 4)){
+            std::cout << "error: alg_coper=1 is not compatible with alg_hvec=4" << std::endl;
+            exit(1);
+         }
 
-#ifndef SERIAL
-         icomb.world.barrier();
-#endif
          timing.tf1 = tools::get_time();
          if(alg_renorm == 0){
 

@@ -39,8 +39,8 @@ namespace ctns{
          Tm* work = new Tm[blksize*2];
          for(int i=0; i<Hxlst.size(); i++){
             auto& Hxblk = Hxlst[i];
-            Hxblk.kernel(x, opaddr, work);
-            linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, y+Hxblk.offout);
+            bool ifcal = Hxblk.kernel(x, opaddr, work);
+            if(ifcal) linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, y+Hxblk.offout);
          } // i
          delete[] work;
 
@@ -55,8 +55,8 @@ namespace ctns{
 #pragma omp for schedule(dynamic) nowait
             for(int i=0; i<Hxlst.size(); i++){
                auto& Hxblk = Hxlst[i];
-               Hxblk.kernel(x, opaddr, work);
-               linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, yi+Hxblk.offout);
+               bool ifcal = Hxblk.kernel(x, opaddr, work);
+               if(ifcal) linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, yi+Hxblk.offout);
             } // i
             delete[] work;
 
@@ -114,9 +114,8 @@ namespace ctns{
                for(int j=0; j<Hxlst2[i].size(); j++){
                   auto& Hxblk = Hxlst2[i][j];
                   Tm* wptr = &work[blksize];
-                  Hxblk.kernel(x, opaddr, wptr);
-                  // save to local memory
-                  linalg::xaxpy(Hxblk.size, Hxblk.coeff, wptr, work);
+                  bool ifcal = Hxblk.kernel(x, opaddr, wptr);
+                  if(ifcal) linalg::xaxpy(Hxblk.size, Hxblk.coeff, wptr, work); // save to local memory
                } // j
                if(Hxlst2[i].size()>0){
                   const auto& Hxblk = Hxlst2[i][0];
