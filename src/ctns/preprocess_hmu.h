@@ -218,9 +218,6 @@ namespace ctns{
                         assert(k == loc[k]); // op[c] cannot be intermediates
                         Tm coper = *(opaddr[loc[k]] + Hxblk.off[k]);
                         coeff_coper *= Hxblk.dagger[k]? tools::conjugate(coper) : coper;
-                        std::cout << " R:coeff_coper=" << coeff_coper << std::endl;
-                        std::cout << "k=" << k << " bo[k]=" << bo[k] << " bi[k]=" << bi[k]
-                           << " addr=" << (opaddr[loc[k]] + Hxblk.off[k]) << std::endl;
                      }
                   }
                }
@@ -253,10 +250,6 @@ namespace ctns{
                blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
             }
             Hxlst2[i].push_back(Hxblk);
-         
-         //lzd debug   
-            break;
-         
          } // i
       }
 

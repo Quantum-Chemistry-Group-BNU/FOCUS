@@ -65,8 +65,6 @@ namespace ctns{
          int hsize = H_formulae.size();
          std::vector<Hmu_ptr<Tm>> Hmu_vec(hsize);
          for(int it=0; it<hsize; it++){
-         //for(int it=1; it<2; it++){
-            std::cout << "it=" << it << " HTerm=" << H_formulae.tasks[it] << std::endl;
             Hmu_vec[it].init(ifDirect, it, H_formulae, qops_dict, hinter, oploc); 
          } // it
          auto ta = tools::get_time();

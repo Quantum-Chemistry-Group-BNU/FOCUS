@@ -75,7 +75,7 @@ namespace ctns{
                }
             }
             // reduction
-            void reduction(const int k, const Tm* x, const Tm* workspace, Tm* y, Tm* dev_red=nullptr){
+            void reduction(const int k, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
                // reduction by GEMV
@@ -86,11 +86,10 @@ namespace ctns{
                   pcoeff = dev_red;
                }
 #endif
-               Tm* ptrs[4];
-               ptrs[0] = const_cast<Tm*>(x); 
-               ptrs[1] = const_cast<Tm*>(workspace);
-               ptrs[2] = pcoeff;
-               ptrs[3] = y;
+               Tm* ptrs[3];
+               ptrs[0] = workspace;
+               ptrs[1] = pcoeff;
+               ptrs[2] = y;
                mvbatch[k].kernel(batchblas, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
@@ -254,20 +253,12 @@ namespace ctns{
                   mv.transA = 'N';
                   mv.M = Hxblk0.size;
                   mv.N = nmu;
-                  
-                  //// special treatment of alg_coper=1
-                  //if(Hxblk0.alg_coper == 1 && Hxblk0.terms == Hxblk0.cterms){
-                  //   mv.locA = 0;
-                  //   mv.LDA = Hxblk0.size;
-                  //   mv.offA = Hxblk0.offin; 
-                  //}else{
-                     mv.locA = 1;
-                     mv.LDA = offset;
-                     mv.offA = (j-nmu)*offset;
-                  //}
-                  mv.locx = 2;
+                  mv.LDA = offset;
+                  mv.locA = 0;
+                  mv.offA = (j-nmu)*offset;
+                  mv.locx = 1;
                   mv.offx = (j-nmu);
-                  mv.locy = 3;
+                  mv.locy = 2;
                   mv.offy = Hxblk0.offout;
                   mvlst.push_back(mv);
                   // new 
@@ -283,18 +274,12 @@ namespace ctns{
             mv.transA = 'N';
             mv.M = Hxblk0.size;
             mv.N = nmu;
-            //if(Hxblk0.alg_coper == 1 && Hxblk0.terms == Hxblk0.cterms){
-            //   mv.locA = 0;
-            //   mv.LDA = Hxblk0.size;
-            //   mv.offA = Hxblk0.offin; 
-            //}else{ 
-               mv.locA = 1;
-               mv.LDA = offset;
-               mv.offA = (jlen-nmu)*offset;
-            //}
-            mv.locx = 2;
+            mv.LDA = offset;
+            mv.locA = 0;
+            mv.offA = (jlen-nmu)*offset;
+            mv.locx = 1;
             mv.offx = (jlen-nmu);
-            mv.locy = 3;
+            mv.locy = 2;
             mv.offy = Hxblk0.offout;
             mvlst.push_back(mv);
             const Tm beta = 1.0;

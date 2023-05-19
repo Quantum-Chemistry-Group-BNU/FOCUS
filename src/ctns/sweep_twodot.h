@@ -600,8 +600,6 @@ namespace ctns{
          }
          timing.tc = tools::get_time();
 
-         exit(1);
-
          // free tmp space on CPU
          if(alg_hvec==2 || alg_hvec==3 || 
                alg_hvec==6 || alg_hvec==7 ||

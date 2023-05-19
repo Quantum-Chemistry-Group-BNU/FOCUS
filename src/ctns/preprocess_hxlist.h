@@ -123,22 +123,16 @@ namespace ctns{
             const size_t offset) const{
          // wf[br',bc',bm',bv']
          int xloc = locIn, yloc = locOut;
+         // ZL@20230519: whether perform contraction for op[c2/c1]
+         // NOTE: contractions are performed for operators only with op[c2/c1]
+         //       in order to move x data to workspace for the convinience of
+         //       performing batch reduction later in reduction, see hmmtasks.
+         const bool ifcntr = alg_coper == 0 || (alg_coper == 1 && terms == cterms); 
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
-         int nt;
-         if(alg_coper == 0 || (alg_coper == 1 && terms == cterms)){
-            nt = terms + 1;
-         }else{
-            nt = terms - cterms + 1;
-         }
-        
-         //this->display();
-         //for(int i=0; i<mmlst2.size(); i++){
-         //   std::cout << "i=" << i << " mmlst2[i].size=" << mmlst2[i].size() << std::endl;
-         //}
-
+         int nt = ifcntr? terms+1 : terms-cterms+1;
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc2^dagger3[bv,bv']: out(r,c,m,v) = o[d](v,x) in(r,c,m,x) 
-         if(!this->identity(3) && (alg_coper==0 || (alg_coper == 1 && terms == cterms))){
+         if(!this->identity(3) && ifcntr){
             int p = 3;
             MMinfo<Tm> mm;
             mm.M = dimin[0]*dimin[1]*dimin[2];
@@ -158,7 +152,7 @@ namespace ctns{
             nt -= 1;
          }
          // Oc1^dagger2[bm,bm']: out(r,c,m,v) = o[d](m,x) in(r,c,x,v)
-         if(!this->identity(2) && (alg_coper==0 || (alg_coper == 1 && terms == cterms))){
+         if(!this->identity(2) && ifcntr){
             int p = 2;
             for(int iv=0; iv<dimout[3]; iv++){
                MMinfo<Tm> mm;
