@@ -117,10 +117,9 @@ namespace ctns{
          // wf[br',bc',bm']
          int xloc = locIn, yloc = locOut;
          // ZL@20230519: whether perform contraction for op[c2/c1]
-         // NOTE: contractions are performed for operators only with op[c2/c1]
-         //       in order to move x data to workspace for the convinience of
-         //       performing batch reduction later in reduction, see hmmtasks.
-         const bool ifcntr = alg_rcoper==0 || (alg_rcoper==1 && terms==cterms);
+         // NOTE: no need to perform contraction for op[c] if alg_rcoper,
+         //       because there is a last contraction with psi*. 
+         const bool ifcntr = alg_rcoper==0;
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
          int nt = ifcntr? terms : terms-cterms; 
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
