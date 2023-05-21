@@ -136,7 +136,7 @@ namespace ctns{
                      Rblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
                      Rblk.dimout[k] = iftrans? info[k]->qcol.get_dim(bo[k]) : info[k]->qrow.get_dim(bo[k]);
                      // special treatment of op[c] for NSz symmetry
-                     if(alg_rcoper == 1 && k >= 2){
+                     if(k >= 2 && alg_rcoper == 1){
                         assert(k == loc[k]); // op[c] cannot be intermediates
                         Tm coper = *(opaddr[loc[k]] + Rblk.off[k]);
                         coeff_coper *= Rblk.dagger[k]? tools::conjugate(coper) : coper;

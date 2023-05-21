@@ -11,11 +11,21 @@
 // wrapper for BLAS
 namespace linalg{
 
+   // copy
+   inline void xcopy_magma(const magma_int_t N, const double* X, double* Y){
+      const magma_int_t INCX = 1, INCY = 1;
+      magma_dcopy(N, X, INCX, Y, INCY, magma_queue);
+   }
+   inline void xcopy_magma(const magma_int_t N, const std::complex<double>* X, std::complex<double>* Y){
+      const magma_int_t INCX = 1, INCY = 1;
+      magma_zcopy(N, (magmaDoubleComplex *)X, INCX, (magmaDoubleComplex *)Y, INCY, magma_queue);
+   }
+
    // axpy
    inline void xaxpy_magma(const magma_int_t N, const double alpha, 
          const double* X, double* Y){
       const magma_int_t INCX = 1, INCY = 1;
-      magma_daxpy(N, alpha, X, INCX, Y, INCY, magma_queue );
+      magma_daxpy(N, alpha, X, INCX, Y, INCY, magma_queue);
    }
    inline void xaxpy_magma(const magma_int_t N, const std::complex<double> alpha, 
          const std::complex<double>* X, std::complex<double>* Y){

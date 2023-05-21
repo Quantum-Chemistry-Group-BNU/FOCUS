@@ -262,7 +262,7 @@ namespace ctns{
             } // i
 
             // 3. reduction
-            // information for collect O(r,r') += \sum_c O(r,r',c)
+            // 3.1 information for collect O(r,r') += \sum_c O(r,r',c)
             if(icase == 1){
                collectc[k].resize(jlen);
                for(size_t j=0; j<jlen; j++){
@@ -271,7 +271,7 @@ namespace ctns{
                   collectc[k][j] = std::make_pair(Rblk.dimin2[2], Rblk.size);
                } // j
             }
-            // setup mvbatch[k]
+            // 3.2 setup mvbatch[k]
             coefflst[k].resize(jlen);
             MVlist<Tm> mvlst; 
             int nmu = 0;

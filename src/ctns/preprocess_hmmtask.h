@@ -16,10 +16,11 @@ namespace ctns{
       struct HMMtask{
          public:
             void init(Hxlist<Tm>& Hxlst,
+                  const int _alg_hcoper,
                   const int hdxorder,
                   const int _batchblas,
                   const size_t _batchsize,
-                  const size_t offset,
+                  const size_t _offset,
                   const size_t offset0);
             // save dimensions for optimization
             void save(const std::string fgemm) const{
@@ -75,10 +76,38 @@ namespace ctns{
                }
             }
             // reduction
-            void reduction(const int k, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
+            void reduction(const int k, const Tm* x, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
                struct timeval t0, t1;
                gettimeofday(&t0, NULL);
-               // reduction by GEMV
+
+               // 1. special treatment for op[c2/c1]
+               if(alg_hcoper == 2){
+                  if(batchblas == 1){
+                     for(size_t j=0; j<copyxblk[k].size(); j++){
+                        size_t size = copyxblk[k][j].first;
+                        size_t offin = copyxblk[k][j].second;
+                        if(size == 0) continue;
+                        Tm* ptr = workspace+j*offset;
+                        linalg::xcopy(size, x+offin, ptr);
+                     } // j
+#ifdef GPU
+                  }else if(batchblas == 2){
+                     for(size_t j=0; j<copyxblk[k].size(); j++){
+                        size_t size = copyxblk[k][j].first;
+                        size_t offin = copyxblk[k][j].second;
+                        if(size == 0) continue;
+                        Tm* ptr = workspace+j*offset;
+                        linalg::xcopy_magma(size, x+offin, ptr);
+                     } // j
+#endif
+                  }else{
+                     std::cout << "error: no such option for batchblas=" << batchblas 
+                               << " in HMMtask.reduction" << std::endl;
+                     exit(1);
+                  }
+               }
+
+               // 2. reduction by GEMV
                Tm* pcoeff = const_cast<Tm*>(coefflst[k].data());
 #ifdef GPU
                if(dev_red != nullptr){
@@ -103,12 +132,13 @@ namespace ctns{
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
-            int batchblas = -1;
-            size_t totsize = 0, batchsize = 0, nbatch = 0;
+            int batchblas = -1, alg_hcoper = 0;
+            size_t totsize = 0, batchsize = 0, offset = 0, nbatch = 0;
             double cost = 0.0;
             // --- GEMM ---
             std::vector<std::vector<MMbatch<Tm>>> mmbatch2; // mmbatch2[ibatch][icase]
             // --- reduction --- 
+            std::vector<std::vector<std::pair<size_t,size_t>>> copyxblk; // alg_hcoper=2
             std::vector<std::vector<Tm>> coefflst;
             std::vector<MVbatch<Tm>> mvbatch;
             // --- intermediates [Direct] ---
@@ -117,15 +147,18 @@ namespace ctns{
 
    template <typename Tm>
       void HMMtask<Tm>::init(Hxlist<Tm>& Hxlst,
+            const int _alg_hcoper,
             const int mmorder,
             const int _batchblas,
             const size_t _batchsize,
-            const size_t offset,
+            const size_t _offset,
             const size_t offset0){
          // init
+         alg_hcoper = _alg_hcoper;
          batchblas = _batchblas;
          batchsize = _batchsize;
          totsize = Hxlst.size();
+         offset = _offset;
          if(batchsize == 0 && totsize !=0){
             std::cout << "error: inconsistent batchsize & totsize!" << std::endl;
             std::cout << "batchsize=" << batchsize << " totsize=" << totsize << std::endl;
@@ -136,6 +169,7 @@ namespace ctns{
 
          // start process Hxlst
          mmbatch2.resize(nbatch);
+         copyxblk.resize(nbatch);
          coefflst.resize(nbatch);
          mvbatch.resize(nbatch);
          imvbatch.resize(nbatch);
@@ -237,7 +271,21 @@ namespace ctns{
                cost += mmbatch2[k][i].cost; // accumulate MM cost
             } // i
 
-            // 3. reduction: setup mvbatch[k]
+            // 3. reduction:
+            // 3.1 copy
+            if(alg_hcoper == 2){
+               copyxblk[k].resize(jlen);
+               for(size_t j=0; j<jlen; j++){ 
+                  size_t jdx = off+j;
+                  const auto& Hxblk = Hxlst[jdx];
+                  if(Hxblk.terms == Hxblk.cterms){
+                     copyxblk[k][j] = std::make_pair(Hxblk.size,Hxblk.offin);
+                  }else{
+                     copyxblk[k][j] = std::make_pair(0,0);
+                  }
+               } // j
+            }
+            // 3.2 setup mvbatch[k]
             coefflst[k].resize(jlen);
             MVlist<Tm> mvlst;
             int nmu = 0;

@@ -102,7 +102,7 @@ namespace ctns{
          // prefetch files for the next bond
          if(schd.ctns.async_fetch){
             if(alg_hvec>10 && alg_renorm>10){
-               const bool ifkeepcoper = schd.ctns.alg_hcoper==1 || schd.ctns.alg_rcoper==1;
+               const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
                qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
             }
             qops_pool[frop]; // just declare a space for frop
@@ -228,8 +228,8 @@ namespace ctns{
             std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
             exit(1);
          }
-         if(schd.ctns.alg_hcoper == 1 && (alg_hvec == 4 || alg_hvec == 5)){
-            std::cout << "error: alg_hcoper=1 is not compatible with alg_hvec=4/5" << std::endl;
+         if(schd.ctns.alg_hcoper >= 1 && (alg_hvec == 4 || alg_hvec == 5)){
+            std::cout << "error: alg_hcoper>=1 is not compatible with alg_hvec=4/5" << std::endl;
             exit(1);
          }
 
@@ -389,7 +389,7 @@ namespace ctns{
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
                for(int i=0; i<Hmmtasks.size(); i++){
-                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i 
                         << " size=" << Hxlst2[i][0].size 
@@ -404,7 +404,7 @@ namespace ctns{
                   save_hmmtasks(Hmmtasks, isweep, ibond);
                }
             }else{
-               Hmmtask.init(Hxlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Hxlst.size=" << Hxlst.size()
@@ -523,7 +523,7 @@ namespace ctns{
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
                for(int i=0; i<Hmmtasks.size(); i++){
-                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i 
                         << " size=" << Hxlst2[i][0].size 
@@ -538,7 +538,7 @@ namespace ctns{
                   save_hmmtasks(Hmmtasks, isweep, ibond);
                }
             }else{
-               Hmmtask.init(Hxlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank
                      << " Hxlst.size=" << Hxlst.size()

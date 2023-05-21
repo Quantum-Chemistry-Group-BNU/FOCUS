@@ -214,7 +214,7 @@ namespace ctns{
                      Hxblk.loc[k] = loc[k];
                      Hxblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
                      // special treatment of op[c2/c1] for NSz symmetry
-                     if(alg_hcoper == 1 && k >= 2 && terms > cterms){ 
+                     if(k >= 2 && ((alg_hcoper==1 && terms>cterms) || alg_hcoper==2)){ 
                         assert(k == loc[k]); // op[c] cannot be intermediates
                         Tm coper = *(opaddr[loc[k]] + Hxblk.off[k]);
                         coeff_coper *= Hxblk.dagger[k]? tools::conjugate(coper) : coper;
