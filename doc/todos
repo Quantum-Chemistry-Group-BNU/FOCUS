@@ -315,7 +315,10 @@ KNOWN PROBLEMS
    1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [error, 2023/04/17]
    2. perform renormalization by class [CABPQSH, hiden memcpy]
 
- * Better treatment GEMM involving 'c': use axpy_vbatch? [DONE@2023/XX/XX]
+ * More balanced partition of rops and Hx? scale up to more nodes?
+   - formulae based partition
+
+ * Better treatment GEMM involving 'c': use axpy_vbatch?
    - REMOVE c related for NSz symmetry [DONE@2023/05/18]
    - unrool for N symmetry
    - general treatment for A[M,K]*B[K,N] for small K,N (~1,2,...,dbranch)
@@ -323,9 +326,6 @@ KNOWN PROBLEMS
  * Better GEMM_BATCH with TensorCore
 
 === TODOs: scalabilities ===
-
- * More balanced partition of rops and Hx? scale up to more nodes?
-   - formulae based partition
 
  * Real space parallelization (=> More GPUs)
 
