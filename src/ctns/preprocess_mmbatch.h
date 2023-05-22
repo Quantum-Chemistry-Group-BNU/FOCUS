@@ -12,6 +12,7 @@ namespace ctns{
    template <typename Tm>
       struct MMinfo{
          public:
+            size_t order() const{ return M + 50000*(N + 50000*K); }
             double cost() const{ return 2*double(M)*N*K; }
          public:
             char transA, transB;
@@ -37,6 +38,8 @@ namespace ctns{
 #ifdef GPU 
                }else if(batchblas == 2){
                   this->xgemm_batch_gpu(ptrs);
+               }else if(batchblas == 3){
+                  this->xgemm_batch_gpu_grouped(ptrs);
 #endif 
                }else{
                   std::cout << "error: no such option in MMbatch::kernel batchblas=" << batchblas << std::endl;
@@ -47,11 +50,19 @@ namespace ctns{
             void xgemm_batch_cpu(Tm** ptrs);
 #ifdef GPU
             void xgemm_batch_gpu(Tm** ptrs);
+#ifndef HIP
+            void xgemm_batch_gpu_grouped(Tm** ptrs);
+#endif
 #endif
             // save dimension for optimization
             void save(const std::string fname) const{
                std::ofstream fout(fname);
-               fout << size << " " << transA[0] << " " << transB[0] << " " << std::endl;
+               fout << size << " " << transA[0] << " " << transB[0] <<std::endl;
+               fout << gsta.size();
+               for(int i=0; i<gsta.size(); i++){
+                  fout << " " << gsta[i]; 
+               }
+               fout << std::endl;
                for(int i=0; i<size; i++){
                   fout << M[i] << " " << N[i] << " " << K[i] << std::endl;
                }
@@ -68,6 +79,7 @@ namespace ctns{
             std::vector<Tm*> Cptr;
             std::vector<Tm> alpha_vec, beta_vec;
             std::vector<MKL_INT> size_per_group_vec;
+            std::vector<int> gsta; // groups
       };
 
    template <typename Tm>
@@ -86,9 +98,20 @@ namespace ctns{
          offA.resize(size); offB.resize(size); offC.resize(size);
          cost = 0.0;
          size_t i = 0;
+         size_t order0 = 0;
          for(size_t j=0; j<MMlst.size(); j++){
             const auto& mm = MMlst[i];
             if(mm.M*mm.N*mm.K == 0) continue;
+            if(i == 0){
+               order0 = mm.order();
+               gsta.push_back(0);
+            }else{
+               size_t order1 = mm.order();
+               if(order1 != order0){
+                  gsta.push_back(i);
+                  order0 = order1;
+               }
+            }
             cost += mm.cost();
             transA[i] = mm.transA; transB[i] = mm.transB;
             M[i] = mm.M; N[i] = mm.N; K[i] = mm.K;
@@ -97,6 +120,7 @@ namespace ctns{
             offA[i] = mm.offA; offB[i] = mm.offB; offC[i] = mm.offC;
             i += 1; 
          }
+         gsta.push_back(size);
          Aptr.resize(size); Bptr.resize(size); Cptr.resize(size);
          alpha_vec.resize(size,1.0);
          beta_vec.resize(size,0.0);
@@ -149,6 +173,24 @@ namespace ctns{
                   Cptr.data(), M.data(), size);
          }
       }
+
+#ifndef HIP
+   template <typename Tm>
+      void MMbatch<Tm>::xgemm_batch_gpu_grouped(Tm** ptrs){
+         // initialization 
+         for(size_t i=0; i<size; i++){
+            Aptr[i] = ptrs[locA[i]] + offA[i];
+            Bptr[i] = ptrs[locB[i]] + offB[i];
+            Cptr[i] = ptrs[locC[i]] + offC[i];
+         }
+         if(size > 0){
+            linalg::xgemm_batch_gpu_grouped(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
+                  Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
+                  Cptr.data(), M.data(), size, gta);
+            }
+         }
+      }
+#endif
 #endif
 
 } // ctns

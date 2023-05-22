@@ -413,6 +413,9 @@ namespace ctns{
                      << " nbatch=" << Hmmtask.nbatch 
                      << std::endl;
                }
+               if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+                  save_hmmtask(Hmmtask, isweep, ibond);
+               }
             }
 
             if(!ifSingle){
@@ -546,6 +549,9 @@ namespace ctns{
                      << " batchsize=" << Hmmtask.batchsize 
                      << " nbatch=" << Hmmtask.nbatch 
                      << std::endl;
+               }
+               if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+                  save_hmmtask(Hmmtask, isweep, ibond);
                }
             }
             timing.tb7 = tools::get_time();

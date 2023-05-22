@@ -264,7 +264,8 @@ namespace ctns{
                if(mmorder == 1){ // sort by cost
                   std::stable_sort(mmlst2[i].begin(), mmlst2[i].end(),
                         [](const MMinfo<Tm>& mm1, const MMinfo<Tm>& mm2){
-                        return mm1.cost() > mm2.cost();
+                        //return mm1.cost() > mm2.cost();
+                        return mm1.order() > mm2.order(); 
                         });
                }
                mmbatch2[k][i].init(mmlst2[i]);
@@ -346,6 +347,13 @@ namespace ctns{
             std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
             hmmtasks[i].save(fgemmi);
          }
+      }
+
+   template <typename Tm>
+      void save_hmmtask(const HMMtask<Tm>& hmmtask, const int isweep, const int ibond){
+         std::string fgemm = "hmmtasks_gemm";
+         fgemm += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
+         hmmtask.save(fgemm);
       }
 
 } // ctns
