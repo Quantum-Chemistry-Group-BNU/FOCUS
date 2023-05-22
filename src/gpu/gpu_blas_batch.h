@@ -321,28 +321,28 @@ namespace linalg{
             
         for(int i=0; i<gsta.size()-1; i++){
            int ista = gsta[i];
-           int64_t nbatch = gsta[i+1]-ista;
-           int64_t m = m_array[ista], n = n_array[ista], k = k_array[ista];
-           int64_t lda = m, ldb = k, ldc = m; 
+           int nbatch = gsta[i+1]-ista;
+           int m = m_array[ista], n = n_array[ista], k = k_array[ista];
+           int lda = m, ldb = k, ldc = m; 
            cublasOperation_t transA = CUBLAS_OP_N ;
            if(transa=='T'){
               transA = CUBLAS_OP_T;
               lda = k;
            }
-           cublasOperation_t transb = CUBLAS_OP_N ;
+           cublasOperation_t transB = CUBLAS_OP_N ;
            if(transb=='T'){
               transB = CUBLAS_OP_T;
               ldb = n;
            }
-           cublasDgemmBatched_64(handle,
-                                 transA, transB,
-                                 m, n, k,
-                                 alpha,
-                                 &a_array[ista], lda,
-                                 &b_array[ista], ldb,
-                                 beta,
-                                 &c_array[ista], ldc,
-                                 nbatch);
+           cublasDgemmBatched(handle_cublas,
+                              transA, transB,
+                              m, n, k,
+                              alpha,
+                              &a_array[ista], lda,
+                              &b_array[ista], ldb,
+                              beta,
+                              &c_array[ista], ldc,
+                              nbatch);
         } // group
 
         GPUmem.deallocate(dev_dtotal, total_dsize);
@@ -355,7 +355,8 @@ namespace linalg{
             const std::complex<double> **a_array, const magma_int_t *lda_array,
             const std::complex<double> **b_array, const magma_int_t *ldb_array,
             const std::complex<double> *beta, std::complex<double> **c_array, const magma_int_t *ldc_array, 
-            const magma_int_t batch_count){
+            const magma_int_t batch_count,
+            const std::vector<int>& gsta){
 
         if(batch_count <= 0){
             std::cout<<"batch_count shoule > 0 in function xgemm_batch_gpu_grouped"<<std::endl;

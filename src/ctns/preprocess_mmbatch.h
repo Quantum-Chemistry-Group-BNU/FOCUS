@@ -30,19 +30,19 @@ namespace ctns{
       struct MMbatch{
          public:
             void init(const MMlist<Tm>& MMlst);
-            void kernel(const int batchblas, Tm** ptrs){
-               if(batchblas == 0){
+            void kernel(const int batchgemm, Tm** ptrs){
+               if(batchgemm == 0){
                   this->xgemm_omp(ptrs);   
-               }else if(batchblas == 1){
+               }else if(batchgemm == 1){
                   this->xgemm_batch_cpu(ptrs);   
 #ifdef GPU 
-               }else if(batchblas == 2){
+               }else if(batchgemm == 2){
                   this->xgemm_batch_gpu(ptrs);
-               }else if(batchblas == 3){
+               }else if(batchgemm == 3){
                   this->xgemm_batch_gpu_grouped(ptrs);
 #endif 
                }else{
-                  std::cout << "error: no such option in MMbatch::kernel batchblas=" << batchblas << std::endl;
+                  std::cout << "error: no such option in MMbatch::kernel batchgemm=" << batchgemm << std::endl;
                   exit(1);
                }
             }
@@ -186,8 +186,7 @@ namespace ctns{
          if(size > 0){
             linalg::xgemm_batch_gpu_grouped(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
-                  Cptr.data(), M.data(), size, gta);
-            }
+                  Cptr.data(), M.data(), size, gsta);
          }
       }
 #endif

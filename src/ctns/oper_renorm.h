@@ -274,7 +274,7 @@ namespace ctns{
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchblas, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -284,7 +284,7 @@ namespace ctns{
                   }
                }
             }else{
-               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()
@@ -427,7 +427,7 @@ namespace ctns{
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, schd.ctns.batchgemm, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -437,7 +437,7 @@ namespace ctns{
                   }
                }
             }else{
-               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, schd.ctns.batchgemm, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()

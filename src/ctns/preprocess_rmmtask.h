@@ -22,6 +22,7 @@ namespace ctns{
             void init(Rlist<Tm>& Rlst, 
                   const int hdxorder,
                   const int _batchblas,
+                  const int _batchgemm,
                   const size_t _batchsize,
                   const size_t offset,
                   const size_t offset0=0);
@@ -54,7 +55,7 @@ namespace ctns{
                struct timeval t0, t1;
                for(int i=0; i<mmbatch2[k].size(); i++){
                   gettimeofday(&t0, NULL);
-                  mmbatch2[k][i].kernel(batchblas, ptrs);
+                  mmbatch2[k][i].kernel(batchgemm, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                   hipDeviceSynchronize();
@@ -124,7 +125,7 @@ namespace ctns{
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
-            int icase = -1, batchblas = -1;
+            int icase = -1, batchblas = -1, batchgemm = -1;
             size_t totsize = 0, batchsize = 0, offset = 0, nbatch = 0;
             double cost = 0.0;
             // --- GEMM ---
@@ -141,11 +142,13 @@ namespace ctns{
       void RMMtask<Tm>::init(Rlist<Tm>& Rlst,
             const int mmorder,
             const int _batchblas,
+            const int _batchgemm,
             const size_t _batchsize,
             const size_t _offset,
             const size_t offset0){
          // init
          batchblas = _batchblas;
+         batchgemm = _batchgemm;
          batchsize = _batchsize;
          totsize = Rlst.size();
          offset = _offset;

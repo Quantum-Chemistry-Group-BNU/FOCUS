@@ -19,6 +19,7 @@ namespace ctns{
                   const int _alg_hcoper,
                   const int hdxorder,
                   const int _batchblas,
+                  const int _batchgemm,
                   const size_t _batchsize,
                   const size_t _offset,
                   const size_t offset0);
@@ -132,7 +133,7 @@ namespace ctns{
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
             }
          public:
-            int batchblas = -1, alg_hcoper = 0;
+            int batchblas = -1, batchgemm = -1, alg_hcoper = 0;
             size_t totsize = 0, batchsize = 0, offset = 0, nbatch = 0;
             double cost = 0.0;
             // --- GEMM ---
@@ -150,12 +151,14 @@ namespace ctns{
             const int _alg_hcoper,
             const int mmorder,
             const int _batchblas,
+            const int _batchgemm,
             const size_t _batchsize,
             const size_t _offset,
             const size_t offset0){
          // init
          alg_hcoper = _alg_hcoper;
          batchblas = _batchblas;
+         batchgemm = _batchgemm;
          batchsize = _batchsize;
          totsize = Hxlst.size();
          offset = _offset;

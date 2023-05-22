@@ -10,6 +10,10 @@
 const int MAX_GPUS = 128;
 extern const int MAX_GPUS;
 
+#ifndef HIP
+extern cublasHandle_t handle_cublas;
+#endif
+
 extern magma_queue_t magma_queue;
 extern gpu_mem GPUmem; 
 

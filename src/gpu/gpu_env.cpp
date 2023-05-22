@@ -6,6 +6,10 @@
 magma_queue_t magma_queue = 0;
 gpu_mem GPUmem = {};
 
+#ifndef HIP
+cublasHandle_t handle_cublas;
+#endif
+
 #ifdef NCCL
 nccl_communicator nccl_comm;
 #endif
@@ -31,6 +35,10 @@ void gpu_init(const int rank){
 
    GPUmem.init();
 
+#ifndef HIP
+   cublasCreate(&handle_cublas);
+#endif
+
 #ifdef NCCL
    nccl_comm.init();
 #endif
@@ -41,6 +49,10 @@ void gpu_init(const int rank){
 }
 
 void gpu_finalize(){
+
+#ifndef HIP
+   cublasDestroy(handle_cublas);
+#endif
 
 #ifdef NCCL
    nccl_comm.finalize();
