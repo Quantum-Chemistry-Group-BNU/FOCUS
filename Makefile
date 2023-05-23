@@ -1,7 +1,7 @@
 
 machine = jiageng #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no
+DEBUG = no # yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
@@ -215,7 +215,7 @@ else ifeq ($(strip $(machine)), jiageng)
    CUDA_DIR= ${CUDADIR}
    MAGMA_DIR = /public/home/bnulizdtest/magma
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = /public/home/bnulizdtest/nccl/build
       FLAGS += -DNCCL -I${NCCL_DIR}/include

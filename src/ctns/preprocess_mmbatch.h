@@ -38,9 +38,13 @@ namespace ctns{
                   this->xgemm_batch_cpu(ptrs);   
 #ifdef GPU 
                }else if(batchgemm == 2){
-                  this->xgemm_batch_gpu(ptrs);
+                  this->xgemm_batch_gpu_magma(ptrs);
+#ifndef HIP
                }else if(batchgemm == 3){
                   this->xgemm_batch_gpu_grouped(ptrs);
+               }else if(batchgemm == 4){
+                  this->xgemm_batch_gpu_stream(ptrs);
+#endif
 #endif 
                }else{
                   std::cout << "error: no such option in MMbatch::kernel batchgemm=" << batchgemm << std::endl;
@@ -50,9 +54,10 @@ namespace ctns{
             void xgemm_omp(Tm** ptrs);
             void xgemm_batch_cpu(Tm** ptrs);
 #ifdef GPU
-            void xgemm_batch_gpu(Tm** ptrs);
+            void xgemm_batch_gpu_magma(Tm** ptrs);
 #ifndef HIP
             void xgemm_batch_gpu_grouped(Tm** ptrs);
+            void xgemm_batch_gpu_stream(Tm** ptrs);
 #endif
 #endif
             // save dimension for optimization
@@ -165,7 +170,7 @@ namespace ctns{
 
 #ifdef GPU
    template <typename Tm>
-      void MMbatch<Tm>::xgemm_batch_gpu(Tm** ptrs){
+      void MMbatch<Tm>::xgemm_batch_gpu_magma(Tm** ptrs){
          // initialization 
          for(size_t i=0; i<size; i++){
             Aptr[i] = ptrs[locA[i]] + offA[i];
@@ -173,7 +178,7 @@ namespace ctns{
             Cptr[i] = ptrs[locC[i]] + offC[i];
          }
          if(size > 0){
-            linalg::xgemm_batch_gpu(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
+            linalg::xgemm_batch_gpu_magma(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
                   Cptr.data(), M.data(), size);
          }
@@ -191,6 +196,22 @@ namespace ctns{
          std::cout << "grouped size=" << size << std::endl;
          if(size > 0){
             linalg::xgemm_batch_gpu_grouped(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
+                  Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
+                  Cptr.data(), M.data(), size, gsta);
+         }
+      }
+
+   template <typename Tm>
+      void MMbatch<Tm>::xgemm_batch_gpu_stream(Tm** ptrs){
+         // initialization 
+         for(size_t i=0; i<size; i++){
+            Aptr[i] = ptrs[locA[i]] + offA[i];
+            Bptr[i] = ptrs[locB[i]] + offB[i];
+            Cptr[i] = ptrs[locC[i]] + offC[i];
+         }
+         std::cout << "grouped size=" << size << std::endl;
+         if(size > 0){
+            linalg::xgemm_batch_gpu_stream(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),
                   Cptr.data(), M.data(), size, gsta);
          }
