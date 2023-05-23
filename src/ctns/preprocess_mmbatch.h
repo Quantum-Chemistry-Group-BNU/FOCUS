@@ -31,6 +31,7 @@ namespace ctns{
          public:
             void init(const MMlist<Tm>& MMlst);
             void kernel(const int batchgemm, Tm** ptrs){
+               std::cout << "batchgemm=" << batchgemm << std::endl;
                if(batchgemm == 0){
                   this->xgemm_omp(ptrs);   
                }else if(batchgemm == 1){

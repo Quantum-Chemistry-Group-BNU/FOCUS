@@ -227,10 +227,10 @@ void params_ctns::read(ifstream& istrm){
          save_mmtask = true;
       }else if(line.substr(0,7)=="mmorder"){
          mmorder = stoi(line.substr(7));
+      }else if(line.substr(0,9)=="batchgemm"){
+         batchgemm = stoi(line.substr(9));
       }else if(line.substr(0,8)=="batchmem"){
          batchmem = stod(line.substr(8));
-      }else if(line.substr(0,9)=="batchgemm"){
-         batchgemm = stod(line.substr(9));
       }else if(line.substr(0,11)=="rcanon_load"){
          rcanon_load = true;
       }else if(line.substr(0,11)=="rcanon_file"){
@@ -384,8 +384,8 @@ void params_ctns::print() const{
    cout << "sort_formulae = " << sort_formulae << endl;
    cout << "save_mmtask = " << save_mmtask << endl;
    cout << "mmorder = " << mmorder << endl;
-   cout << "batchmem = " << batchmem << std::endl;
    cout << "batchgemm = " << batchgemm << std::endl;
+   cout << "batchmem = " << batchmem << std::endl;
    // dvdson
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;

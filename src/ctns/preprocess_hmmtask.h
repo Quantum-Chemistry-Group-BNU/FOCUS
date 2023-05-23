@@ -62,7 +62,7 @@ namespace ctns{
                struct timeval t0, t1;
                for(int i=0; i<mmbatch2[k].size(); i++){
                   gettimeofday(&t0, NULL);
-                  mmbatch2[k][i].kernel(batchblas, ptrs);
+                  mmbatch2[k][i].kernel(batchgemm, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                   hipDeviceSynchronize();
