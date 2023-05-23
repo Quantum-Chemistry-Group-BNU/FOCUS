@@ -12,7 +12,13 @@ namespace ctns{
    template <typename Tm>
       struct MMinfo{
          public:
-            size_t order() const{ return (50000*size_t(M) + size_t(N))*50000 + size_t(K); } // assuming M,N,K<50000
+            // lexicographic ordering of {M,N,K}
+            bool operator >(const MMinfo<T>& mm) const{
+               if(M > mm.M) return true;
+               if(N > mm.N) return true;
+               if(K > mm.K) return true;
+               return false;
+            }
             double cost() const{ return 2*double(M)*N*K; }
          public:
             char transA, transB;
@@ -111,6 +117,7 @@ namespace ctns{
          for(size_t j=0; j<MMlst.size(); j++){
             const auto& mm = MMlst[i];
             if(mm.M*mm.N*mm.K == 0) continue;
+            // grouping
             if(i == 0){
                order0 = mm.order();
                gsta.push_back(0);
@@ -192,7 +199,6 @@ namespace ctns{
             Bptr[i] = ptrs[locB[i]] + offB[i];
             Cptr[i] = ptrs[locC[i]] + offC[i];
          }
-         std::cout << "grouped size=" << size << std::endl;
          if(size > 0){
             linalg::xgemm_batch_gpu_grouped(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),

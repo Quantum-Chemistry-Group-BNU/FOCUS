@@ -108,7 +108,7 @@ namespace ctns{
             */
 
          auto t2 = tools::get_time();
-         if(debug){
+         if(debug_oper_io and debug){
             double tot = tools::get_duration(t2-t0);
             std::filesystem::path path{fname};
             double usage = io::directory_size(path.parent_path())/std::pow(1024,3);

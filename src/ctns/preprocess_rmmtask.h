@@ -267,8 +267,8 @@ namespace ctns{
                if(mmorder == 1){ // sort by cost
                   std::stable_sort(mmlst2[i].begin(), mmlst2[i].end(),
                         [](const MMinfo<Tm>& mm1, const MMinfo<Tm>& mm2){
-                        //return mm1.cost() > mm2.cost();
-                        return mm1.order() > mm2.order(); 
+                           //return mm1.cost() > mm2.cost();
+                           return mm1 > mm2; 
                         });
                }
                mmbatch2[k][i].init(mmlst2[i]);
