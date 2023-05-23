@@ -12,7 +12,7 @@ namespace ctns{
    template <typename Tm>
       struct MMinfo{
          public:
-            size_t order() const{ return M + 50000*(N + 50000*K); }
+            size_t order() const{ return (50000*size_t(M) + size_t(N))*50000 + size_t(K); } // assuming M,N,K<50000
             double cost() const{ return 2*double(M)*N*K; }
          public:
             char transA, transB;
@@ -57,14 +57,18 @@ namespace ctns{
             // save dimension for optimization
             void save(const std::string fname) const{
                std::ofstream fout(fname);
-               fout << size << " " << transA[0] << " " << transB[0] <<std::endl;
-               fout << gsta.size();
-               for(int i=0; i<gsta.size(); i++){
-                  fout << " " << gsta[i]; 
-               }
-               fout << std::endl;
-               for(int i=0; i<size; i++){
-                  fout << M[i] << " " << N[i] << " " << K[i] << std::endl;
+               if(size > 0){
+                  fout << size << " " << transA[0] << " " << transB[0] <<std::endl;
+                  fout << gsta.size();
+                  for(int i=0; i<gsta.size(); i++){
+                     fout << " " << gsta[i]; 
+                  }
+                  fout << std::endl;
+                  for(int i=0; i<size; i++){
+                     fout << M[i] << " " << N[i] << " " << K[i] << std::endl;
+                  }
+               }else{
+                  fout << "empty" << std::endl;
                }
                fout.close();
             }
@@ -183,6 +187,7 @@ namespace ctns{
             Bptr[i] = ptrs[locB[i]] + offB[i];
             Cptr[i] = ptrs[locC[i]] + offC[i];
          }
+         std::cout << "grouped size=" << size << std::endl;
          if(size > 0){
             linalg::xgemm_batch_gpu_grouped(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),

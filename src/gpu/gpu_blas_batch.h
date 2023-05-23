@@ -320,20 +320,27 @@ namespace linalg{
         GPUmem.to_gpu(dev_c_array_ptr, c_array, batch_count*sizeof(double*));
             
         for(int i=0; i<gsta.size()-1; i++){
+           std::cout << "group i=" << i << std::endl;
            int ista = gsta[i];
            int nbatch = gsta[i+1]-ista;
+           // convert from magma_int_t to int 
            int m = m_array[ista], n = n_array[ista], k = k_array[ista];
            int lda = m, ldb = k, ldc = m; 
            cublasOperation_t transA = CUBLAS_OP_N ;
-           if(transa=='T'){
+           if(transa=='T' || transa=='C'){
               transA = CUBLAS_OP_T;
               lda = k;
            }
            cublasOperation_t transB = CUBLAS_OP_N ;
-           if(transb=='T'){
+           if(transb=='T' || transb=='C'){
               transB = CUBLAS_OP_T;
               ldb = n;
            }
+           // https://docs.nvidia.com/cuda/cublas/index.html
+           std::cout << "X nbatch=" << nbatch << " m,n,k=" << m << "," << n << "," << k
+             << " lda,ldb,ldc=" << lda << "," << ldb << "," << ldc
+             << std::endl;
+           
            cublasDgemmBatched(handle_cublas,
                               transA, transB,
                               m, n, k,
@@ -343,9 +350,13 @@ namespace linalg{
                               beta,
                               &c_array[ista], ldc,
                               nbatch);
+          
+           std::cout << "Y" << std::endl;
         } // group
 
+        std::cout << "lzd1, total_dsize=" << total_dsize << std::endl;
         GPUmem.deallocate(dev_dtotal, total_dsize);
+        std::cout << "lzd2" << std::endl;
     }
 
     // complex
