@@ -31,7 +31,6 @@ namespace ctns{
          public:
             void init(const MMlist<Tm>& MMlst);
             void kernel(const int batchgemm, Tm** ptrs){
-               std::cout << "batchgemm=" << batchgemm << std::endl;
                if(batchgemm == 0){
                   this->xgemm_omp(ptrs);   
                }else if(batchgemm == 1){
@@ -209,7 +208,6 @@ namespace ctns{
             Bptr[i] = ptrs[locB[i]] + offB[i];
             Cptr[i] = ptrs[locC[i]] + offC[i];
          }
-         std::cout << "grouped size=" << size << std::endl;
          if(size > 0){
             linalg::xgemm_batch_gpu_stream(transA[0], transB[0], M.data(), N.data(), K.data(), alpha_vec.data(), 
                   Aptr.data(), LDA.data(), Bptr.data(), LDB.data(), beta_vec.data(),

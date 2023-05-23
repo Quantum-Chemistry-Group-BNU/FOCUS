@@ -5,6 +5,7 @@
 #include "cuda_runtime.h"
 #include "nccl.h"
 #include "mpi.h"
+#include "../core/tools.h"
 
 #define MPICHECK(cmd) \
    do {                          \
@@ -52,23 +53,30 @@ struct nccl_communicator{
       }
       template <typename Tm>
          void reduce(Tm* ptr, const size_t size, const int root){
-            // regarded as double?
-            NCCLCHECK(ncclReduce((const void*)ptr, (void*)ptr, 
-                     size*sizeof(Tm)/sizeof(ncclDouble),
-                     ncclDouble, ncclSum, root, comm, s));
+            if(!tools::is_complex<Tm>()){
+               NCCLCHECK(ncclReduce((const void*)ptr, (void*)ptr, 
+                        size, ncclDouble, ncclSum, root, comm, s));
+            }else{
+               std::cout << "error: not implemented yet in nccl::reduce" << std::endl;
+               exit(1);
+            }
             //completing NCCL operation by synchronizing on the CUDA stream
             CUDACHECK(cudaStreamSynchronize(s));
          }
       template <typename Tm>
          void broadcast(Tm* ptr, const size_t size, const int root){
-            NCCLCHECK(ncclBcast((void*)ptr, size*sizeof(Tm)/sizeof(ncclDouble), 
-                     ncclDouble, root, comm, s));
+            if(!tools::is_complex<Tm>()){
+               NCCLCHECK(ncclBcast((void*)ptr, size, ncclDouble, root, comm, s));
+            }else{
+               std::cout << "error: not implemented yet in nccl::bcast" << std::endl;
+               exit(1);
+            }
             //completing NCCL operation by synchronizing on the CUDA stream
             CUDACHECK(cudaStreamSynchronize(s));
          }
       void finalize(){
-         ncclCommDestroy(comm);
-         cudaStreamDestroy(s);
+         CUDACHECK(cudaStreamDestroy(s));
+         NCCLCHECK(ncclCommDestroy(comm));
       }
    public:
       ncclUniqueId id;

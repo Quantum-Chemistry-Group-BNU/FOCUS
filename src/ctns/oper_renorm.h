@@ -493,25 +493,50 @@ namespace ctns{
             timing.tf9 = tools::get_time();
 
             auto t0x = tools::get_time();
+#ifndef SERIAL
+            if(ifdist1 and size > 1 and schd.ctns.ifnccl){
+#ifdef HIP
+               std::cout << "error: not implemented yet! RCCL is not supported for opS and opH" << std::endl;
+               exit(1);
+#else
+               // NCCL is used to perform reduction for opS and opH
+               // Sp[iproc] += \sum_i Sp[i]
+               auto opS_index = qops.oper_index_op('S');
+               for(int p : opS_index){
+                  int iproc = distribute1(ifkr,size,p);
+                  auto& opS = qops('S')[p];
+                  size_t opsize = opS.size();
+                  size_t off = qops._offset[std::make_pair('S',p)];
+                  Tm* dev_ptr = qops._dev_data+off;
+                  nccl_comm.reduce(dev_ptr, opsize, iproc);
+                  if(iproc != rank) GPUmem.memset(dev_ptr, opsize*sizeof(Tm));
+               }
+               // H[0] += \sum_i H[i]
+               auto& opH = qops('H')[0];
+               size_t opsize = opH.size();
+               size_t off = qops._offset[std::make_pair('H',0)];
+               Tm* dev_ptr = qops._dev_data+off;
+               nccl_comm.reduce(dev_ptr, opsize, 0);
+               if(rank != 0) GPUmem.memset(dev_ptr, opsize*sizeof(Tm));
+#endif 
+            }
+#endif // SERIAL
+            auto t1x = tools::get_time();
             // copy results back to CPU immediately, if NOT async_tocpu
             if(!schd.ctns.async_tocpu) qops.to_cpu();
-            auto t1x = tools::get_time();
-            
+            auto t2x = tools::get_time();
             timing.tf10 = tools::get_time();
 
             GPUmem.deallocate(dev_site, gpumem_site);
-            auto t2x = tools::get_time();
-            GPUmem.deallocate(dev_workspace, gpumem_batch);
             auto t3x = tools::get_time();
+            GPUmem.deallocate(dev_workspace, gpumem_batch);
+            auto t4x = tools::get_time();
             if(rank == 0){
-               std::cout << "timing: gpu2cpu=" 
-                  << tools::get_duration(t1x-t0x)
-                  << " deallocate(site/work)="
-                  << tools::get_duration(t2x-t1x)
-                  << ","
-                  << tools::get_duration(t3x-t1x)
-                  << " total="
-                  << tools::get_duration(t3x-t0x)
+               std::cout << "timing: opS and opH=" << tools::get_duration(t1x-t0x)
+                  << " gpu2cpu=" << tools::get_duration(t2x-t1x)
+                  << " deallocate(site/work)=" << tools::get_duration(t3x-t2x)
+                  << "," << tools::get_duration(t4x-t3x)
+                  << " T(tot)=" << tools::get_duration(t4x-t0x)
                   << std::endl;
             }
 
@@ -525,6 +550,10 @@ namespace ctns{
 
          // debug 
          if(debug_oper_renorm && rank == 0){
+            if(schd.ctns.ifnccl || schd.ctns.async_tocpu){
+               std::cout << "error: debug should not be invoked with ifnccl and async_tocpu!" << std::endl;
+               exit(1);
+            }
             const int target = -1;
             std::cout << "\nqops: rank=" << rank << std::endl;
             for(auto& key : qops.oplist){
@@ -580,56 +609,54 @@ namespace ctns{
             delete[] data0;
             delete[] data1;
             if(diff > thresh_opdiff) exit(1);
-         }
+         } // debug
 
          // free tmp space on CPU
          if(alg_renorm==6 || alg_renorm==7 || alg_renorm==8 || alg_renorm==9){
             delete[] workspace;
          }
 
-         if(ifdist1 and schd.ctns.async_tocpu){
-            std::cout << "error: ifdist1 and async_tocpu are not compatible!" << std::endl;
-            exit(1);
-         }
-         if(!schd.ctns.async_tocpu){
-         
-            // 2. reduce 
+         // 2. reduce opS and opH 
 #ifndef SERIAL
-            if(ifdist1 and size > 1){
-               // Sp[iproc] += \sum_i Sp[i]
-               auto opS_index = qops.oper_index_op('S');
-               size_t totsize = 0;
-               for(int p : opS_index){
-                  int iproc = distribute1(ifkr,size,p);
-                  auto& opS = qops('S')[p];
-                  size_t opsize = opS.size();
-                  totsize += opsize;
-                  size_t off = qops._offset[std::make_pair('S',p)];
-                  mpi_wrapper::reduce(icomb.world, opS.data(), opsize, iproc);
-                  if(iproc != rank) opS.set_zero();
-               }
+         if(ifdist1 and size > 1 and !schd.ctns.ifnccl){
+            if(alg_renorm>=10 && schd.ctns.async_tocpu){
+               std::cout << "error: ifdist1 and async_tocpu are not compatible unless ifnccl=true!" << std::endl;
+               exit(1);
+            }
+            // Sp[iproc] += \sum_i Sp[i]
+            auto opS_index = qops.oper_index_op('S');
+            size_t totsize = 0;
+            for(int p : opS_index){
+               int iproc = distribute1(ifkr,size,p);
+               auto& opS = qops('S')[p];
+               size_t opsize = opS.size();
+               totsize += opsize;
+               size_t off = qops._offset[std::make_pair('S',p)];
+               mpi_wrapper::reduce(icomb.world, opS.data(), opsize, iproc);
+               if(iproc != rank) opS.set_zero();
+            }
+            // H[0] += \sum_i H[i]
+            auto& opH = qops('H')[0];
+            size_t opsize = opH.size();
+            size_t off = qops._offset[std::make_pair('H',0)];
+            mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0);
+            if(rank != 0) opH.set_zero();
 #ifdef GPU
-               if(alg_renorm>10 && opS_index.size()>0){
+            if(alg_renorm>=10){
+               if(opS_index.size()>0){
                   int p0 = opS_index[0];
                   size_t off = qops._offset[std::make_pair('S',p0)];
                   Tm* ptr0 = qops('S')[p0].data();
                   GPUmem.to_gpu(qops._dev_data+off, ptr0, totsize*sizeof(Tm));
                }
+               GPUmem.to_gpu(qops._dev_data+off, opH.data(), opsize*sizeof(Tm));
+            }
 #endif
-               // H[0] += \sum_i H[i]
-               auto& opH = qops('H')[0];
-               size_t opsize = opH.size();
-               size_t off = qops._offset[std::make_pair('H',0)];
-               mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0);
-               if(rank != 0) opH.set_zero(); 
-#ifdef GPU
-               if(alg_renorm>10){
-                  GPUmem.to_gpu(qops._dev_data+off, opH.data(), opsize*sizeof(Tm));
-               }
-#endif
-            } // ifdist1 and size > 1
+         } // ifdist1 and size > 1 and !schd.ctns.ifnccl
 #endif // SERIAL
 
+         // qops is available on CPU
+         if(!schd.ctns.async_tocpu){
             // 3. consistency check for Hamiltonian
             const auto& opH = qops('H').at(0);
             auto diffH = (opH-opH.H()).normF();
@@ -644,7 +671,6 @@ namespace ctns{
                   << std::endl;
                exit(1);
             }
-
             // check against explicit construction
             if(debug_oper_rbasis){
                for(const auto& key : qops.oplist){
