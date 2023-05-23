@@ -309,7 +309,6 @@ namespace linalg{
             return ;
         }
 
-        //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
         size_t total_dsize = 3*batch_count*sizeof(double*);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
         double** dev_a_array_ptr= (double**)dev_dtotal;
@@ -320,7 +319,6 @@ namespace linalg{
         GPUmem.to_gpu(dev_c_array_ptr, c_array, batch_count*sizeof(double*));
             
         for(int i=0; i<gsta.size()-1; i++){
-           std::cout << "group i=" << i << std::endl;
            int ista = gsta[i];
            int nbatch = gsta[i+1]-ista;
            // convert from magma_int_t to int 
@@ -337,26 +335,30 @@ namespace linalg{
               ldb = n;
            }
            // https://docs.nvidia.com/cuda/cublas/index.html
-           std::cout << "X nbatch=" << nbatch << " m,n,k=" << m << "," << n << "," << k
-             << " lda,ldb,ldc=" << lda << "," << ldb << "," << ldc
-             << std::endl;
-           
            cublasDgemmBatched(handle_cublas,
                               transA, transB,
                               m, n, k,
                               alpha,
-                              &a_array[ista], lda,
-                              &b_array[ista], ldb,
+                              &dev_a_array_ptr[ista], lda, // pointer should be on device
+                              &dev_b_array_ptr[ista], ldb,
                               beta,
-                              &c_array[ista], ldc,
+                              &dev_c_array_ptr[ista], ldc,
                               nbatch);
-          
-           std::cout << "Y" << std::endl;
+           /*
+           for(int j=0; j<nbatch; j++){
+              cublasDgemm(handle_cublas,
+                    transA, transB,
+                    m, n, k,
+                    alpha,
+                    a_array[ista+j], lda,
+                    b_array[ista+j], ldb,
+                    beta,
+                    c_array[ista+j], ldc);
+           }
+           */
         } // group
 
-        std::cout << "lzd1, total_dsize=" << total_dsize << std::endl;
         GPUmem.deallocate(dev_dtotal, total_dsize);
-        std::cout << "lzd2" << std::endl;
     }
 
     // complex

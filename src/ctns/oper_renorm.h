@@ -441,8 +441,7 @@ namespace ctns{
                } // i
                if(fmmtask.size()>0) save_mmtask(Rmmtasks, fmmtask);
             }else{
-               //Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, schd.ctns.batchgemm, batchsize, blksize*2, blksize0);
-               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, schd.ctns.batchgemm, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()
