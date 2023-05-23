@@ -210,6 +210,10 @@ namespace ctns{
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
+         std::string fmmtask;
+         if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+            fmmtask = "hmmtasks_gemm_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
+         }
 
          // consistency check
          if(schd.ctns.ifdistc && !icomb.topo.ifmps){
@@ -399,10 +403,7 @@ namespace ctns{
                         << std::endl;
                   }
                } // i
-               // save for analysis of BatchGEMM
-               if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
-                  save_hmmtasks(Hmmtasks, isweep, ibond);
-               }
+               if(fmmtask.size()>0) save_mmtask(Hmmtasks, fmmtask);
             }else{
                Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
@@ -413,9 +414,7 @@ namespace ctns{
                      << " nbatch=" << Hmmtask.nbatch 
                      << std::endl;
                }
-               if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
-                  save_hmmtask(Hmmtask, isweep, ibond);
-               }
+               if(fmmtask.size()>0) save_mmtask(Hmmtask, fmmtask);
             }
 
             if(!ifSingle){
@@ -536,10 +535,7 @@ namespace ctns{
                         << std::endl;
                   }
                } // i
-               // save for analysis of BatchGEMM
-               if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
-                  save_hmmtasks(Hmmtasks, isweep, ibond);
-               }
+               if(fmmtask.size()>0) save_mmtask(Hmmtasks, fmmtask);
             }else{
                Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, schd.ctns.batchgemm, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
@@ -550,9 +546,7 @@ namespace ctns{
                      << " nbatch=" << Hmmtask.nbatch 
                      << std::endl;
                }
-               if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
-                  save_hmmtask(Hmmtask, isweep, ibond);
-               }
+               if(fmmtask.size()>0) save_mmtask(Hmmtask, fmmtask);
             }
             timing.tb7 = tools::get_time();
 

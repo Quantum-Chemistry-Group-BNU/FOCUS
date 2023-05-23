@@ -166,9 +166,13 @@ namespace ctns{
                std::string superblock = "cr";
                std::string fname;
                if(schd.ctns.save_formulae) fname = scratch+"/rformulae_env_idx"
-                  + std::to_string(idx) + ".txt"; 
+                  + std::to_string(idx) + ".txt";
+               std::string fmmtask;
+               if(debug && schd.ctns.save_mmtask){
+                  fmmtask =  "rmmtasks_gemm_idx"+std::to_string(idx);
+               }
                oper_renorm(superblock, icomb, p, int2e, int1e, schd,
-                     cqops, rqops, qops_pool[frop], fname, timing); 
+                     cqops, rqops, qops_pool[frop], fname, timing, fmmtask); 
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
                timing.tf = tools::get_time();

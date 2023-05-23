@@ -26,6 +26,16 @@ namespace ctns{
                   const size_t _batchsize,
                   const size_t offset,
                   const size_t offset0=0);
+            // save dimensions for optimization
+            void save(const std::string fgemm) const{
+               for(int k=0; k<mmbatch2.size(); k++){
+                  for(int i=0; i<mmbatch2[k].size(); i++){
+                     std::string fgemmki = fgemm+"_"+std::to_string(k)+"."
+                        +std::to_string(i)+".txt";
+                     mmbatch2[k][i].save(fgemmki);
+                  }
+               }
+            }
             // form intermeidate operators
             void inter(const int k, Tm** opaddr, const Tm* alphas){
                struct timeval t0, t1;
@@ -257,7 +267,8 @@ namespace ctns{
                if(mmorder == 1){ // sort by cost
                   std::stable_sort(mmlst2[i].begin(), mmlst2[i].end(),
                         [](const MMinfo<Tm>& mm1, const MMinfo<Tm>& mm2){
-                        return mm1.cost() > mm2.cost();
+                        //return mm1.cost() > mm2.cost();
+                        return mm1.order() > mm2.order(); 
                         });
                }
                mmbatch2[k][i].init(mmlst2[i]);
@@ -324,6 +335,20 @@ namespace ctns{
 
    template <typename Tm>
       using RMMtasks = std::vector<RMMtask<Tm>>;
+
+   template <typename Tm>
+      void save_mmtask(const RMMtasks<Tm>& rmmtasks, const std::string fgemm){
+         std::cout << "save_mmtask fgemm = " << fgemm << std::endl;
+         for(int i=0; i<rmmtasks.size(); i++){
+            std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
+            rmmtasks[i].save(fgemmi);
+         }
+      }
+   template <typename Tm>
+      void save_mmtask(const RMMtask<Tm>& rmmtask, const std::string fgemm){
+         std::cout << "save_mmtask fgemm = " << fgemm << std::endl;
+         rmmtask.save(fgemm);
+      }
 
 } // ctns
 

@@ -186,11 +186,13 @@ namespace ctns{
             nt -= 1;
          }
          assert(nt == 0);
-         // Additional information for psi*[br,bc,bm]
+         //
+         // Final contraction with psi*[br,bc,bm] to form operators
+         // 
          if(icase == 0){
             // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] => (M,K) * (N,K)^T
             //
-            // TODOs: need to add conj on the first part in future !!!
+            // TODOs: need to add conj on the first part for complex object in future !
             //
             MMinfo<Tm> mm;
             mm.M = dimin2[0];

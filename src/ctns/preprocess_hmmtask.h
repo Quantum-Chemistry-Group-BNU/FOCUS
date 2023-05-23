@@ -343,19 +343,16 @@ namespace ctns{
       using HMMtasks = std::vector<HMMtask<Tm>>;
 
    template <typename Tm>
-      void save_hmmtasks(const HMMtasks<Tm>& hmmtasks, const int isweep, const int ibond){
-         std::string fgemm = "hmmtasks_gemm";
-         fgemm += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
+      void save_mmtask(const HMMtasks<Tm>& hmmtasks, const std::string fgemm){
+         std::cout << "save_mmtask fgemm = " << fgemm << std::endl;
          for(int i=0; i<hmmtasks.size(); i++){
             std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
             hmmtasks[i].save(fgemmi);
          }
       }
-
    template <typename Tm>
-      void save_hmmtask(const HMMtask<Tm>& hmmtask, const int isweep, const int ibond){
-         std::string fgemm = "hmmtasks_gemm";
-         fgemm += "_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
+      void save_mmtask(const HMMtask<Tm>& hmmtask, const std::string fgemm){
+         std::cout << "save_mmtask fgemm = " << fgemm << std::endl;
          hmmtask.save(fgemm);
       }
 

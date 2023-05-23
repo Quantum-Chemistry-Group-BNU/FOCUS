@@ -46,7 +46,8 @@ namespace ctns{
             const oper_dict<Tm>& qops2,
             oper_dict<Tm>& qops,
             const std::string fname,
-            dot_timing& timing){
+            dot_timing& timing,
+            const std::string fmmtask=""){
          int size = 1, rank = 0, maxthreads = 1;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -283,6 +284,7 @@ namespace ctns{
                         << std::endl;
                   }
                }
+               if(fmmtask.size()>0) save_mmtask(Rmmtasks, fmmtask);
             }else{
                Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchblas, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
@@ -293,6 +295,7 @@ namespace ctns{
                      << " nbatch=" << Rmmtask.nbatch 
                      << std::endl;
                }
+               if(fmmtask.size()>0) save_mmtask(Rmmtask, fmmtask);
             }
             timing.tf7 = tools::get_time();
 
@@ -435,7 +438,8 @@ namespace ctns{
                         << " nbatch=" << Rmmtasks[i].nbatch
                         << std::endl;
                   }
-               }
+               } // i
+               if(fmmtask.size()>0) save_mmtask(Rmmtasks, fmmtask);
             }else{
                Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, schd.ctns.batchgemm, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
@@ -446,6 +450,7 @@ namespace ctns{
                      << " nbatch=" << Rmmtask.nbatch 
                      << std::endl;
                }
+               if(fmmtask.size()>0) save_mmtask(Rmmtask, fmmtask);
             }
             auto t2y = tools::get_time();
             if(rank == 0){
