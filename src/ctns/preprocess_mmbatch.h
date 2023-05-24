@@ -12,12 +12,10 @@ namespace ctns{
    template <typename Tm>
       struct MMinfo{
          public:
+            std::tuple<int,int,int> get_dim3() const{ return std::make_tuple(M,N,K); }
             // lexicographic ordering of {M,N,K}
-            bool operator >(const MMinfo<T>& mm) const{
-               if(M > mm.M) return true;
-               if(N > mm.N) return true;
-               if(K > mm.K) return true;
-               return false;
+            bool operator >(const MMinfo<Tm>& mm) const{
+               return this->get_dim3() > mm.get_dim3();
             }
             double cost() const{ return 2*double(M)*N*K; }
          public:
@@ -113,19 +111,19 @@ namespace ctns{
          offA.resize(size); offB.resize(size); offC.resize(size);
          cost = 0.0;
          size_t i = 0;
-         size_t order0 = 0;
+         std::tuple<int,int,int> dim3;
          for(size_t j=0; j<MMlst.size(); j++){
             const auto& mm = MMlst[i];
             if(mm.M*mm.N*mm.K == 0) continue;
             // grouping
             if(i == 0){
-               order0 = mm.order();
+               dim3 = mm.get_dim3();
                gsta.push_back(0);
             }else{
-               size_t order1 = mm.order();
-               if(order1 != order0){
+               auto dim3new = mm.get_dim3();
+               if(dim3new != dim3){
+                  dim3 = dim3new;
                   gsta.push_back(i);
-                  order0 = order1;
                }
             }
             cost += mm.cost();
