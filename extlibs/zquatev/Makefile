@@ -1,7 +1,7 @@
 
 machine = wuhan#cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 USE_ILP64 = yes
-USE_OPENBLAS = yes
+USE_BLAS = yes
 
 INCLUDE = -I.
 
@@ -50,7 +50,7 @@ else ifeq ($(strip $(machine)), mac)
    LIBS += -lm
 endif
 
-ifeq ($(strip $(USE_OPENBLAS)), yes)
+ifeq ($(strip $(USE_BLAS)), yes)
       CXXFLAGS += -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
       LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lopenblas  -lpthread  -ldl 
 endif
