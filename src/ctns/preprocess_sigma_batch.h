@@ -81,7 +81,7 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_Hx_batch: t[gemm,reduction]="
                << time_gemm << "," << time_reduction 
-               << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.sigma.analysis();
          }
@@ -166,7 +166,7 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_Hx_batchDirect: t[inter,gemm,reduction]="
                << time_inter << "," << time_gemm << "," << time_reduction 
-               << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.sigma.analysis();
          }
@@ -238,7 +238,7 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_Hx_batchSingle: t[gemm,reduction]="
                << time_gemm << "," << time_reduction 
-               << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.sigma.analysis();
          }
@@ -319,7 +319,7 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_Hx_batchDirectSingle: t[inter,gemm,reduction]="
                << time_inter << "," << time_gemm << "," << time_reduction 
-               << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.sigma.analysis();
          }

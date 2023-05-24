@@ -119,7 +119,7 @@ namespace ctns{
          if(rank==0){
             std::cout << "preprocess_Hx_batchGPU: t[copy,gemm,reduction]="
                       << time_copy << "," << time_gemm << "," << time_reduction 
-                      << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
             oper_timer.sigma.analysis();
          }
@@ -239,7 +239,7 @@ namespace ctns{
          if(rank==0){
             std::cout << "preprocess_Hx_batchDirectGPU: t[copy,inter,gemm,reduction]="
                       << time_copy << "," << time_inter << "," << time_gemm << "," << time_reduction 
-                      << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
             oper_timer.sigma.analysis();
          }
@@ -346,7 +346,7 @@ namespace ctns{
          if(rank==0){
             std::cout << "preprocess_Hx_batchGPUSingle: t[copy,gemm,reduction]="
                       << time_copy << "," << time_gemm << "," << time_reduction 
-                      << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
             oper_timer.sigma.analysis();
          }
@@ -462,7 +462,7 @@ namespace ctns{
          if(rank==0){
             std::cout << "preprocess_Hx_batchDirectGPUSingle: t[copy,inter,gemm,reduction]="
                       << time_copy << "," << time_inter << "," << time_gemm << "," << time_reduction 
-                      << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
             oper_timer.sigma.analysis();
          }

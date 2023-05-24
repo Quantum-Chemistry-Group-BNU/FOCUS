@@ -78,7 +78,7 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_renorm_batchGPU: t[gemm,reduction]="
                       << time_gemm << "," << time_reduction 
-                      << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
             oper_timer.renorm.analysis();
          }
@@ -157,7 +157,7 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_renorm_batchDirectGPU: t[inter,gemm,reduction]="
                       << time_inter << "," << time_gemm << "," << time_reduction 
-                      << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
             oper_timer.renorm.analysis();
          }
@@ -223,7 +223,7 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_renorm_batchGPUSingle: t[gemm,reduction]="
                       << time_gemm << "," << time_reduction 
-                      << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
             oper_timer.renorm.analysis();
          }
@@ -298,7 +298,7 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_renorm_batchDirectGPUDirect: t[inter,gemm,reduction]="
                       << time_inter << "," << time_gemm << "," << time_reduction 
-                      << " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                       << std::endl;
             oper_timer.renorm.analysis();
          }

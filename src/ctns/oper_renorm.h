@@ -449,6 +449,17 @@ namespace ctns{
                      << " batchsize=" << Rmmtask.batchsize 
                      << " nbatch=" << Rmmtask.nbatch 
                      << std::endl;
+                  for(int k=0; k<Rmmtask.nbatch; k++){
+                     for(int i=0; i<Rmmtask.mmbatch2[k].size(); i++){
+                        if(Rmmtask.mmbatch2[k][i].size==0) continue;
+                        std::cout << " Rmmbatch2: k/nbatch=" << k << "/" << Rmmtask.nbatch
+                           << " i=" << i << " size=" << Rmmtask.mmbatch2[k][i].size
+                           << " group=" << Rmmtask.mmbatch2[k][i].gsta.size()-1
+                           << " average=" << Rmmtask.mmbatch2[k][i].size/(Rmmtask.mmbatch2[k][i].gsta.size()-1)
+                           << std::endl;
+                     }
+                  }
+ 
                }
                if(fmmtask.size()>0) save_mmtask(Rmmtask, fmmtask);
             }
