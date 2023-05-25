@@ -91,7 +91,7 @@ namespace ctns{
                   const std::vector<std::string> fneed_next,
                   const bool ifkeepcoper); 
             // save renormalized operator to file 
-            void save_to_disk(const std::string frop, const bool async_tocpu, const bool async_save, 
+            void save_to_disk(const std::string frop, const bool async_save, 
                   const std::vector<std::string> fneed_next={});
             // remove fdel [in the same bond as frop] from disk
             void remove_from_disk(const std::string fdel, const bool async_remove);
@@ -329,33 +329,20 @@ namespace ctns{
          }
       }
 
-   template <typename Tm>
-      void oper_dump(oper_dict<Tm>& qops,
-            const std::string frop,
-            const bool async_tocpu,
-            const int iomode,
-            const bool debug){
-#ifdef GPU
-         //if(async_tocpu) qops.to_cpuAsync();
-         if(async_tocpu) qops.to_cpu();
-#endif
-         oper_save<Tm>(iomode, frop, qops, debug);
-      }
-
    // save to disk
    template <typename Tm>
-      void oper_pool_raw<Tm>::save_to_disk(const std::string frop, const bool async_tocpu, const bool async_save, 
+      void oper_pool_raw<Tm>::save_to_disk(const std::string frop, const bool async_save, 
             const std::vector<std::string> fneed_next){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::oper_pool_raw<Tm>::save_to_disk: async_tocpu=" << async_tocpu 
-               << " async_save=" << async_save << " frop=" << frop << std::endl;
+            std::cout << "ctns::oper_pool_raw<Tm>::save_to_disk: async_save=" << async_save 
+               << " frop=" << frop << std::endl;
          }
          assert(!thread_save.joinable()); 
          if(!async_save){
-            oper_dump<Tm>(qstore[frop], frop, async_tocpu, iomode, debug);
+            oper_save<Tm>(iomode, frop, qstore[frop], debug);
          }else{
-            thread_save = std::thread(&ctns::oper_dump<Tm>, std::ref(qstore[frop]), frop, async_tocpu, iomode, debug);
+            thread_save = std::thread(&ctns::oper_save<Tm>, iomode, frop, std::ref(qstore[frop]), debug);
          }
          frop_prev = frop;
          if(debug){

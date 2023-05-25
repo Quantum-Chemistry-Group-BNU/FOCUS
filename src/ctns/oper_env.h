@@ -166,7 +166,7 @@ namespace ctns{
 
                // c. save operators to disk
                qops_pool.join_and_erase(fneed);
-               qops_pool.save_to_disk(frop, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, schd.ctns.async_save);
+               qops_pool.save_to_disk(frop, schd.ctns.async_save);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();

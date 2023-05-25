@@ -254,15 +254,12 @@ void params_ctns::read(ifstream& istrm){
          async_fetch = true;
          async_save = true;
          async_remove = true;
-         //async_tocpu = true;
       }else if(line.substr(0,11)=="async_fetch"){
          async_fetch = true;
       }else if(line.substr(0,10)=="async_save"){
          async_save = true;
       }else if(line.substr(0,12)=="async_remove"){
          async_remove = true;
-      }else if(line.substr(0,11)=="async_tocpu"){
-         async_tocpu = true;
       }else if(line.substr(0,4)=="nccl"){
          ifnccl = true;
       }else if(line.substr(0,5)=="iroot"){
@@ -400,7 +397,6 @@ void params_ctns::print() const{
    cout << "async_fetch = " << async_fetch << endl;
    cout << "async_save = " << async_save << endl;
    cout << "async_remove = " << async_remove << endl;
-   cout << "async_tocpu = " << async_tocpu << endl;
    cout << "ifnccl = " << ifnccl << endl;
    // sampling
    cout << "iroot = " << iroot << endl;
