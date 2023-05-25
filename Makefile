@@ -1,5 +1,5 @@
 
-machine = jiageng #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = wuhan #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no # yes
 USE_GCC = yes
@@ -8,7 +8,7 @@ USE_OPENMP = yes
 USE_ILP64 = yes
 USE_GPU = yes
 USE_NCCL = yes
-USE_OPENBLAS = no#yes
+USE_BLAS = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -58,7 +58,7 @@ else ifeq ($(strip $(machine)), wuhan)
    #MATHLIB =/home/HPCBase/libs/openblas0.3.18_kgcc9.3.1/libs
    #MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/lapack-3.11.0-install-64/lib64
    MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
-   BOOST =/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_64
+   BOOST =/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_openmpi_64
    LFLAGS = -L${BOOST}/lib -lboost_chrono-mt-a64 -lboost_timer-mt-a64 -lboost_serialization-mt-a64 -lboost_system-mt-a64 -lboost_iostreams-mt-a64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-a64
@@ -121,7 +121,7 @@ else
    endif
 endif
 
-ifeq ($(strip $(USE_OPENBLAS)),no)
+ifeq ($(strip $(USE_BLAS)),no)
 # OpenMP & MKL
    ifeq ($(strip $(USE_OPENMP)),no)
       ifeq ($(strip $(USE_ILP64)), no)
@@ -165,7 +165,7 @@ else
 	        -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
           -lopenblas -lpthread -lm -ldl -lrt 
           #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
-   FLAGS += -fopenmp -DUSE_OPENBLAS -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
+   FLAGS += -fopenmp -DUSE_BLAS -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
 
 endif
 # quaternion matrix diagonalization
@@ -193,9 +193,14 @@ else ifeq ($(strip $(machine)), scv7260)
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
 else ifeq ($(strip $(machine)), wuhan)
    CUDA_DIR=/home/HPCBase/compilers/cuda/11.4.0
-   MAGMA_DIR=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install
+   MAGMA_DIR=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-openblas64
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lcublas
+   ifeq ($(strip $(USE_NCCL)), yes)
+      NCCL_DIR = /home/HPCBase/libs/nccl/2.16.5-cuda11.4
+      FLAGS += -DNCCL -I${NCCL_DIR}/include	
+      LFLAGS += -L${NCCL_DIR}/lib -lnccl
+   endif
 else ifeq ($(strip $(machine)), dell2)
    CUDA_DIR= /home/dell/anaconda3/envs/pytorch
    MAGMA_DIR = ../magma/magma-2.6.1
@@ -339,7 +344,7 @@ depend:
 	echo " USE_GCC = " $(USE_GCC); \
 	echo " USE_MPI = " $(USE_MPI); \
 	echo " USE_OPENMP = " $(USE_OPENMP); \
-	echo " USE_OPENBLAS = " $(USE_OPENBLAS); \
+	echo " USE_BLAS = " $(USE_BLAS); \
 	echo " USE_ILP64 = " $(USE_ILP64); \
 	echo " USE_GPU = " $(USE_GPU); \
 	echo " CXX = " $(CXX); \
