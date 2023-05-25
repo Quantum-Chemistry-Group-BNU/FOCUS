@@ -149,7 +149,7 @@ namespace input{
          bool save_formulae = false;
          bool sort_formulae = false;
          bool save_mmtask = false;
-         int mmorder = 0;
+         int mmorder = 1; // sort by default
          int batchgemm = 2;
          double batchmem = 10; // GB
          // dvdson

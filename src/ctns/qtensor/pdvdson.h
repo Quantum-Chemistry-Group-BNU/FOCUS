@@ -212,6 +212,7 @@ namespace ctns{
 
             // Precondition of a residual
             void precondition(const Tm* rvec, Tm* tvec, const double& ei){
+               auto t0p = tools::get_time();
                if(precond){
                   for(size_t j=0; j<ndim; j++){
                      tvec[j] = rvec[j]/(std::abs(Diag[j]-ei)+damping);
@@ -221,6 +222,8 @@ namespace ctns{
                      tvec[j] = rvec[j];
                   }
                }
+               auto t1p = tools::get_time();
+               t_precond += tools::get_duration(t1p-t0p);
             }
 
             // Davidson iterative algorithm for Hv=ve 
@@ -280,7 +283,10 @@ namespace ctns{
                      //------------------------------------------------------------------------
                      // solve subspace problem and form full residuals: Res[i]=HX[i]-w[i]*X[i]
                      //------------------------------------------------------------------------
+                     auto t0s = tools::get_time(); 
                      nindp = subspace_solver(ndim,nsub,neig,naux,rconv,vbas,wbas,tmpE,rbas);
+                     auto t1s = tools::get_time();
+                     t_sub += tools::get_duration(t1s-t0s); 
                      //------------------------------------------------------------------------
                      // compute norm of residual
                      for(int i=0; i<neig; i++){
@@ -320,8 +326,11 @@ namespace ctns{
                         precondition(&rbas[i*ndim],&rbas[nres*ndim],tmpE[i]);
                         nres += 1;		
                      }
+                     auto t0o = tools::get_time();
                      nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas.data(),rbas.data(),crit_indp);
                      nindp = std::min(nindp, int(nmax-nsub));
+                     auto t1o = tools::get_time();
+                     t_ortho = tools::get_duration(t1o-t0o);
                   }
 
 #ifndef SERIAL
@@ -349,8 +358,9 @@ namespace ctns{
                   t_tot = tools::get_duration(tf-ti);
                   t_rest = t_tot - t_cal - t_comm;
                   std::cout << "TIMING FOR Davidson : " << t_tot
-                     << "  T(cal/comm/rest)=" << t_cal << ","
-                     << t_comm << "," << t_rest
+                     << "  T(cal/comm/rest)=" << t_cal << "," << t_comm << "," << t_rest
+                     << " T(sub/ortho/precond/sum)=" << t_sub << "," << t_ortho << "," << t_precond << ","
+                     << t_sub + t_ortho + t_precond
                      << std::endl;
                }
             }
@@ -379,6 +389,7 @@ namespace ctns{
             double t_cal = 0.0; // Hx
             double t_comm = 0.0; // reduce
             double t_rest = 0.0; // solver
+            double t_sub = 0.0, t_ortho = 0.0, t_precond = 0.0;
       };
 
 } // ctns

@@ -260,7 +260,7 @@ void params_ctns::read(ifstream& istrm){
          async_save = true;
       }else if(line.substr(0,12)=="async_remove"){
          async_remove = true;
-      }else if(line.substr(0,4)=="nccl"){
+      }else if(line.substr(0,6)=="ifnccl"){
          ifnccl = true;
       }else if(line.substr(0,5)=="iroot"){
          iroot = stoi(line.substr(5));

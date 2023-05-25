@@ -57,6 +57,7 @@ namespace ctns{
                std::cout << ": size=" << qstore.size() << std::endl;
                size_t tsize_cpu = 0, tsize_gpu = 0;
                for(auto pr = qstore.cbegin(); pr != qstore.cend(); pr++){
+                  if(this->keep(pr->first)) continue; // skip file in fdot
                   bool avail_cpu = pr->second.avail_cpu();
                   bool avail_gpu = pr->second.avail_gpu();
                   std::cout << " fqop=" << pr->first 
@@ -127,40 +128,20 @@ namespace ctns{
                << " size=" << fneed.size() << std::endl;
             this->display("in");
          }
-         std::cout << std::endl;
          for(int i=0; i<fneed.size(); i++){
             const auto& fqop = fneed[i];
             bool ifexist = this->exist(fqop);
             if(debug) std::cout << "fetch: i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
             if(ifexist) continue;
-            auto ti = tools::get_time();
             oper_load(iomode, fqop, qstore[fqop], debug);
-            auto tf = tools::get_time();
-            if(debug) std::cout << "fqop=" << fqop 
-               << " T(oper_load)=" << tools::get_duration(tf-ti) << std::endl;
          }
 #ifdef GPU
-         std::cout << std::endl;
          if(ifgpu){
             for(const auto& fqop : fneed){
                auto& tqops = qstore[fqop];
-               
-               bool avail_cpu = qstore.at(fqop).avail_cpu();
-               bool avail_gpu = qstore.at(fqop).avail_gpu();
-               if(debug) std::cout << "togpu: fqop=" << fqop 
-                  << " ifcpu=" << avail_cpu << " ifgpu=" << avail_gpu
-                  << std::endl;
-
                if(tqops.avail_gpu()) continue;
-               auto ta = tools::get_time();
                tqops.allocate_gpu();
-               auto tb = tools::get_time();
                tqops.to_gpu();
-               auto tc = tools::get_time();
-               if(debug) std::cout << "fqop=" << fqop
-                  << " T(alloc)=" << tools::get_duration(tb-ta) 
-                  << " T(togpu)=" << tools::get_duration(tc-tb) 
-                  << std::endl; 
             }
          }
 #endif

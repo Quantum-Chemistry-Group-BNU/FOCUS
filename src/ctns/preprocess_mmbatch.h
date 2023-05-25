@@ -13,9 +13,11 @@ namespace ctns{
       struct MMinfo{
          public:
             std::tuple<int,int,int> get_dim3() const{ return std::make_tuple(M,N,K); }
-            // lexicographic ordering of {M,N,K}
+            // ordered by cost and then lexicographic ordering of {M,N,K}
             bool operator >(const MMinfo<Tm>& mm) const{
-               return this->get_dim3() > mm.get_dim3();
+               size_t mnk = size_t(M)*size_t(N)*size_t(K);
+               size_t mnk2 = size_t(mm.M)*size_t(mm.N)*size_t(mm.K);
+               return (mnk>mnk2) || (mnk==mnk2 && this->get_dim3()>mm.get_dim3());
             }
             double cost() const{ return 2*double(M)*N*K; }
          public:
