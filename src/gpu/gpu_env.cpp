@@ -34,8 +34,6 @@ void gpu_init(const int rank){
 
    magma_queue_create(device_id, &magma_queue);
 
-   GPUmem.init();
-
 #ifndef HIP
    for(int i=0; i<NSTREAMS; i++){
       cudaStreamCreate(&stream[i]);

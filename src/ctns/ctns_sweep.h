@@ -31,6 +31,11 @@ namespace ctns{
          }
          if(schd.ctns.maxsweep == 0) return;
          auto t0 = tools::get_time();
+         
+         // pool for handling operators
+         oper_pool<Tm> qops_pool(schd.ctns.iomode, debug && schd.ctns.verbose>1);
+         oper_init_dotAll(qops_pool, icomb, int2e, int1e, scratch, schd.ctns.ifdist1, 
+               schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10);
 
          // global timer
          dot_timing timing_global;
@@ -38,8 +43,6 @@ namespace ctns{
          auto sweep_seq = icomb.topo.get_sweeps(debug);
          sweep_data sweeps(sweep_seq, schd.ctns.nroots, schd.ctns.maxsweep, 
                schd.ctns.restart_sweep, schd.ctns.ctrls);
-         // pool for handling operators
-         oper_pool<Tm> qops_pool(schd.ctns.iomode, debug && schd.ctns.verbose>1);
          for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
             if(isweep < schd.ctns.restart_sweep) continue; // restart case
             if(debug){

@@ -22,21 +22,8 @@ class gpu_mem{
    public:
       gpu_mem(): _used(0) {};
 
-      void init(){
-#ifdef HIP         
-         HIP_CHECK(hipStreamCreate(&sAsync));
-#else
-         CUDA_CHECK(cudaStreamCreate(&sAsync));
-#endif
-      }
-
       void finalize(){
          _used = 0;
-#ifdef HIP
-         HIP_CHECK(hipStreamDestroy(sAsync));
-#else
-         CUDA_CHECK(cudaStreamDestroy(sAsync));
-#endif
       }
 
       size_t available(const int rank){
@@ -103,24 +90,9 @@ class gpu_mem{
 #endif //USE_HIP
       }
 
-      void to_cpuAsync(void *ptr, const void *dev_ptr, const size_t size){
-#ifdef USE_HIP
-         HIP_CHECK(hipMemcpyAsync(ptr, dev_ptr, size, hipMemcpyDeviceToHost, sAsync));
-         HIP_CHECK(hipStreamSynchronize(sAsync));
-#else
-         CUDA_CHECK(cudaMemcpyAsync(ptr, dev_ptr, size, cudaMemcpyDeviceToHost, sAsync));
-         CUDA_CHECK(cudaStreamSynchronize(sAsync));
-#endif //USE_HIP
-      }
-
       size_t used() const{ return _used; }
    private:
       size_t _used = 0;
-#ifdef HIP
-      hipStream_t sAsync;
-#else
-      cudaStream_t sAsync;
-#endif
 };
 
 #endif // GPU_MEM_H

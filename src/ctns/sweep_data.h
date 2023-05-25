@@ -49,13 +49,13 @@ namespace ctns{
          this->print_part(msg+": dvdson solver [communication]", dtb8, tdvdsn, dtacc);
          this->print_part(msg+": dvdson solver [rest part]    ", dtb9, tdvdsn, dtacc);
         
-         double trenrm = dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11;
+         double trenrm = dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12;
          std::cout << "Detailed decomposition of T(renrm): " 
             << std::scientific << std::setprecision(3) << trenrm << " S"
             << std::endl;
          dtacc = 0.0;
          this->print_part(msg+": qops init                    ", dtf0, trenrm, dtacc);
-         this->print_part(msg+": qops_dict memcpy cpu2gpu     ", dtf1, trenrm, dtacc);
+         this->print_part(msg+": site memcpy cpu2gpu          ", dtf1, trenrm, dtacc);
          this->print_part(msg+": symbolic_formulae_renorm     ", dtf2, trenrm, dtacc);
          this->print_part(msg+": rintermediate init           ", dtf3, trenrm, dtacc);
          this->print_part(msg+": rintermediates memcpy cpu2gpu", dtf4, trenrm, dtacc);
@@ -63,9 +63,10 @@ namespace ctns{
          this->print_part(msg+": rmmtasks init                ", dtf6, trenrm, dtacc);
          this->print_part(msg+": qops memset                  ", dtf7, trenrm, dtacc);
          this->print_part(msg+": preprocess_renorm_batchGPU   ", dtf8, trenrm, dtacc);
-         this->print_part(msg+": qops memcpy gpu2cpu          ", dtf9, trenrm, dtacc);
-         this->print_part(msg+": deallocate gpu memory        ", dtf10, trenrm, dtacc);
-         this->print_part(msg+": communication of opS and opH ", dtf11, trenrm, dtacc);
+         this->print_part(msg+": reduction of opS & opH [nccl]", dtf9, trenrm, dtacc);
+         this->print_part(msg+": qops memcpy gpu2cpu          ", dtf10, trenrm, dtacc);
+         this->print_part(msg+": deallocate gpu memory        ", dtf11, trenrm, dtacc);
+         this->print_part(msg+": reduction of opS & opH [comm]", dtf12, trenrm, dtacc);
       }
       void analysis(const std::string msg,
             const bool debug=true){
@@ -99,6 +100,7 @@ namespace ctns{
          dtf9 = tools::get_duration(tf10-tf9); 
          dtf10 = tools::get_duration(tf11-tf10); 
          dtf11 = tools::get_duration(tf12-tf11); 
+         dtf12 = tools::get_duration(tf13-tf12); 
          
          if(debug) this->print(msg);
       }
@@ -138,6 +140,7 @@ namespace ctns{
          dtf9 += timer.dtf9; 
          dtf10 += timer.dtf10;
          dtf11 += timer.dtf11;
+         dtf12 += timer.dtf12;
    
          if(debug) this->print(msg);
       }
@@ -172,10 +175,11 @@ namespace ctns{
       Tm tf7; // rmmtasks init                
       Tm tf8; // qops memset
       Tm tf9; // preprocess_renorm_batchGPU   
-      Tm tf10; // qops memcpy gpu2cpu
-      Tm tf11; // deallocate gpu memory
-      Tm tf12; // communication 
-      double dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0, dtf10=0, dtf11=0;
+      Tm tf10; // reduction [nccl] 
+      Tm tf11; // qops memcpy gpu2cpu
+      Tm tf12; // deallocate gpu memory
+      Tm tf13; // reduction 
+      double dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0, dtf10=0, dtf11=0, dtf12=0;
    };
 
    // computed results at a given dot	

@@ -305,17 +305,17 @@ KNOWN PROBLEMS
    - hdiag implementation on GPU [DONE@2023/04/14]
    - async memcpy to GPU => magma_queue
 
-=== TODOs: further improvements ===
-
  * parallel decimation:
    - openmp + mpi [DONE@2023/04/23]
    - mpi -> share memory?
+   - GPU version for large D>10000?
 
  * cpu<->gpu, network communication: 
-   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [error, 2023/04/17]
+   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DONE@2023/04/17]
    2. perform renormalization by class [CABPQSH, hiden memcpy]
 
  * More balanced partition of rops and Hx? scale up to more nodes?
+   - better treatment of opS term for DMRG, assuming Cop are distributed [DONE@2023/05/01]
    - formulae based partition
 
  * Better treatment GEMM involving 'c': use axpy_vbatch?
@@ -324,10 +324,13 @@ KNOWN PROBLEMS
    - general treatment for A[M,K]*B[K,N] for small K,N (~1,2,...,dbranch)
 
  * Better GEMM_BATCH with TensorCore
+   - cublas dgemmbatched [DONE@2023/05/24]
 
 === TODOs: scalabilities ===
 
- * Real space parallelization (=> More GPUs)
+ * Better Davidson solver on GPU?
+
+ * Real space parallelization (=> More GPU/DCU)
 
  * Support Mixed CPU-GPU implementation?
    - mmtasks revise [also avoid copy for magma?]
@@ -341,6 +344,8 @@ KNOWN PROBLEMS
 === TODOs: functionalities ===
 
  * Reduced density matrix (RDMs) 
+
+ * Spin-adapted version?
 
  * Support Kramers version: 
    - support complex version [DONE@2023/02/28]

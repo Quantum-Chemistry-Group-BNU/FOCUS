@@ -165,7 +165,6 @@ namespace ctns{
             exit(1);
          }
 
-         timing.tf1 = tools::get_time();
          if(alg_renorm == 0){
 
             // oldest version
@@ -229,6 +228,7 @@ namespace ctns{
                std::cout << "error: alg_renorm=" << alg_renorm << " should be used with alg_rinter!=2" << std::endl;
                exit(1);
             }
+            timing.tf1 = tools::get_time();
             timing.tf2 = tools::get_time();
 
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
@@ -327,6 +327,7 @@ namespace ctns{
             }
             timing.tf9 = tools::get_time();
             timing.tf10 = tools::get_time();
+            timing.tf11 = tools::get_time();
 
 #ifdef GPU
          }else if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
@@ -355,6 +356,7 @@ namespace ctns{
                   << " (oper)=" << gpumem_oper/std::pow(1024.0,3) 
                   << std::endl;
             }
+            timing.tf1 = tools::get_time();
 
             size_t gpumem_site = sizeof(Tm)*site.size();
             dev_site = (Tm*)GPUmem.allocate(gpumem_site);
@@ -449,17 +451,18 @@ namespace ctns{
                      << " batchsize=" << Rmmtask.batchsize 
                      << " nbatch=" << Rmmtask.nbatch 
                      << std::endl;
-                  for(int k=0; k<Rmmtask.nbatch; k++){
-                     for(int i=0; i<Rmmtask.mmbatch2[k].size(); i++){
-                        if(Rmmtask.mmbatch2[k][i].size==0) continue;
-                        std::cout << " Rmmbatch2: k/nbatch=" << k << "/" << Rmmtask.nbatch
-                           << " i=" << i << " size=" << Rmmtask.mmbatch2[k][i].size
-                           << " group=" << Rmmtask.mmbatch2[k][i].gsta.size()-1
-                           << " average=" << Rmmtask.mmbatch2[k][i].size/(Rmmtask.mmbatch2[k][i].gsta.size()-1)
-                           << std::endl;
+                  if(schd.ctns.verbose>2){
+                     for(int k=0; k<Rmmtask.nbatch; k++){
+                        for(int i=0; i<Rmmtask.mmbatch2[k].size(); i++){
+                           if(Rmmtask.mmbatch2[k][i].size==0) continue;
+                           std::cout << " Rmmbatch2: k/nbatch=" << k << "/" << Rmmtask.nbatch
+                              << " i=" << i << " size=" << Rmmtask.mmbatch2[k][i].size
+                              << " group=" << Rmmtask.mmbatch2[k][i].gsta.size()-1
+                              << " average=" << Rmmtask.mmbatch2[k][i].size/(Rmmtask.mmbatch2[k][i].gsta.size()-1)
+                              << std::endl;
+                        }
                      }
                   }
- 
                }
                if(fmmtask.size()>0) save_mmtask(Rmmtask, fmmtask);
             }
@@ -503,7 +506,6 @@ namespace ctns{
             }
             timing.tf9 = tools::get_time();
 
-            auto t0x = tools::get_time();
 #ifndef SERIAL
             if(ifdist1 and size > 1 and schd.ctns.ifnccl){
 #ifdef HIP
@@ -532,22 +534,19 @@ namespace ctns{
 #endif 
             }
 #endif // SERIAL
-            auto t1x = tools::get_time();
+            timing.tf10 = tools::get_time();
             // copy results back to CPU immediately, if NOT async_tocpu
             if(!schd.ctns.async_tocpu) qops.to_cpu();
-            auto t2x = tools::get_time();
-            timing.tf10 = tools::get_time();
+            timing.tf11 = tools::get_time();
 
             GPUmem.deallocate(dev_site, gpumem_site);
-            auto t3x = tools::get_time();
             GPUmem.deallocate(dev_workspace, gpumem_batch);
-            auto t4x = tools::get_time();
+            auto tf = tools::get_time();
             if(rank == 0){
-               std::cout << "timing: opS and opH=" << tools::get_duration(t1x-t0x)
-                  << " gpu2cpu=" << tools::get_duration(t2x-t1x)
-                  << " deallocate(site/work)=" << tools::get_duration(t3x-t2x)
-                  << "," << tools::get_duration(t4x-t3x)
-                  << " T(tot)=" << tools::get_duration(t4x-t0x)
+               std::cout << "timing: comm[opS,opH]=" << tools::get_duration(timing.tf10-timing.tf9)
+                  << " gpu2cpu=" << tools::get_duration(timing.tf11-timing.tf10)
+                  << " deallocate(site,work)=" << tools::get_duration(tf-timing.tf11)
+                  << " T(tot)=" << tools::get_duration(tf-timing.tf9)
                   << std::endl;
             }
 
@@ -557,7 +556,7 @@ namespace ctns{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
             exit(1);
          } // alg_renorm
-         timing.tf11 = tools::get_time();
+         timing.tf12 = tools::get_time();
 
          // debug 
          if(debug_oper_renorm && rank == 0){
@@ -630,7 +629,7 @@ namespace ctns{
          // 2. reduce opS and opH 
 #ifndef SERIAL
          if(ifdist1 and size > 1 and !schd.ctns.ifnccl){
-            if(alg_renorm>=10 && schd.ctns.async_tocpu){
+            if(alg_renorm>10 && schd.ctns.async_tocpu){
                std::cout << "error: ifdist1 and async_tocpu are not compatible unless ifnccl=true!" << std::endl;
                exit(1);
             }
@@ -653,7 +652,7 @@ namespace ctns{
             mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0);
             if(rank != 0) opH.set_zero();
 #ifdef GPU
-            if(alg_renorm>=10){
+            if(alg_renorm>10){
                if(opS_index.size()>0){
                   int p0 = opS_index[0];
                   size_t off = qops._offset[std::make_pair('S',p0)];
@@ -697,13 +696,13 @@ namespace ctns{
             }
          } // async_tocpu
 
-         timing.tf12 = tools::get_time();
+         timing.tf13 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
-            double t_tot = tools::get_duration(timing.tf12-timing.tf0); 
+            double t_tot = tools::get_duration(timing.tf13-timing.tf0); 
             double t_init = tools::get_duration(timing.tf1-timing.tf0);
-            double t_kernel = tools::get_duration(timing.tf11-timing.tf1);
-            double t_comm = tools::get_duration(timing.tf12-timing.tf11);
+            double t_kernel = tools::get_duration(timing.tf12-timing.tf1);
+            double t_comm = tools::get_duration(timing.tf13-timing.tf12);
             std::cout << "----- TIMING FOR oper_renorm : " << t_tot << " S" 
                << " T(init/kernel/comm)=" << t_init << "," << t_kernel << "," << t_comm
                << " rank=" << rank << " -----"
