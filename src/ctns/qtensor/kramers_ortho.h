@@ -310,7 +310,7 @@ namespace kramers{
          assert(nindp > 0);
          rbas = rbas_new;
          // Orthonormality is essential
-         linalg::check_orthogonality(ndim, nindp, rbas);
+         linalg::check_orthogonality(ndim, nindp, rbas.data());
          return nindp;
       }
 
@@ -369,7 +369,7 @@ namespace kramers{
          assert(nindp > 0);
          rbas = rbas_new;
          // Orthonormality is essential
-         linalg::check_orthogonality(ndim, nindp, rbas);
+         linalg::check_orthogonality(ndim, nindp, rbas.data());
          return nindp;
       }
 

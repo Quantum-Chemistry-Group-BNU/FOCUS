@@ -21,16 +21,6 @@ namespace ctns{
          public:
             // constuctor
             oper_pool_raw(const int _iomode, const bool _debug): iomode(_iomode), debug(_debug){}
-            // init fdot
-            void init_fdot(const std::vector<std::string>& fneed){
-               for(const auto& fqop : fneed){
-                  fdot.insert(fqop);
-               }
-            }
-            // keep dot operators always in memory
-            bool keep(const std::string& fqop) const{
-               return fdot.find(fqop) != fdot.end(); 
-            }
             // check whether frop exist in the pool
             bool exist(const std::string& frop) const{
                return qstore.find(frop) != qstore.end();
@@ -57,7 +47,6 @@ namespace ctns{
                std::cout << ": size=" << qstore.size() << std::endl;
                size_t tsize_cpu = 0, tsize_gpu = 0;
                for(auto pr = qstore.cbegin(); pr != qstore.cend(); pr++){
-                  if(this->keep(pr->first)) continue; // skip file in fdot
                   bool avail_cpu = pr->second.avail_cpu();
                   bool avail_gpu = pr->second.avail_gpu();
                   std::cout << " fqop=" << pr->first 
@@ -107,7 +96,6 @@ namespace ctns{
                this->join_all();
                qstore.clear();
                frop_prev.clear();
-               fdot.clear();
             }
          private:
             int iomode=0;
@@ -117,7 +105,6 @@ namespace ctns{
             std::thread thread_save; // save renormalized operators
             std::thread thread_remove; // remove qops on the same bond with opposite direction
             std::string frop_prev;
-            std::set<std::string> fdot;
       };
 
    template <typename Tm>
@@ -221,7 +208,6 @@ namespace ctns{
             if(fqop == frop_prev) continue;
             auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
             if(result != fneed_next.end()) continue;
-            if(this->keep(fqop)) continue; // dot
             qstore.erase(fqop);
          }
          auto t2 = tools::get_time();
@@ -229,7 +215,7 @@ namespace ctns{
          // NOTE: check is neceesary at the returning point: [ -*=>=*-* and -*=<=*-* ],
          // because the previous left qops is needed in the next dbond!
          auto result = std::find(fneed_next.begin(), fneed_next.end(), frop_prev);
-         if(result == fneed_next.end() && !this->keep(frop_prev)){
+         if(result == fneed_next.end()){
             qstore.erase(frop_prev); // NOTE: frop_prev is only erased here to make sure the saving is finished!
          }
          if(debug){
@@ -263,7 +249,6 @@ namespace ctns{
             if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
             auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
             if(result != fneed_next.end()) continue;
-            if(this->keep(fqop)) continue; // dot
             qstore[fqop].clear();
             qstore[fqop].clear_gpu();
             qstore[fqop]._size = 0;
@@ -298,7 +283,6 @@ namespace ctns{
             if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
             auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
             if(result != fneed_next.end()) continue;
-            if(this->keep(fqop)) continue; // dot
             qstore[fqop].clear();
          }
          if(debug){

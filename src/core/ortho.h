@@ -29,9 +29,9 @@ namespace linalg{
       }
    template <typename Tm>
       double check_orthogonality(const size_t m, const size_t n,
-            const std::vector<Tm>& vbas,
+            const Tm* vbas,
             const double thresh=1.e-10){
-         linalg::matrix<Tm> V(m,n,vbas.data());
+         linalg::matrix<Tm> V(m,n,vbas);
          return check_orthogonality(V,thresh);
       }
 

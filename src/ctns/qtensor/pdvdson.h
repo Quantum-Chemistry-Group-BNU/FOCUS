@@ -67,7 +67,7 @@ namespace ctns{
 #ifndef SERIAL
                size = world.size();
                rank = world.rank();
-               world.barrier();
+               world.barrier(); // barrier
 #endif
                double tcal = 0.0, tcomm = 0.0;
                for(int istate=0; istate<nstate; istate++){
@@ -155,18 +155,17 @@ namespace ctns{
                   const int neig,
                   const int naux,
                   const std::vector<bool>& rconv,
-                  std::vector<Tm>& vbas,
-                  std::vector<Tm>& wbas,
+                  Tm* vbas,
+                  Tm* wbas,
                   std::vector<double>& tmpE,
-                  std::vector<Tm>& rbas){
+                  Tm* rbas){
+               auto t0 = tools::get_time();
                // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
                const Tm alpha = 1.0, beta=0.0;
-               auto t0 = tools::get_time();
                linalg::matrix<Tm> tmpH(nsub,nsub);
                linalg::xgemm("C", "N", nsub, nsub, ndim,
-                     alpha, vbas.data(), ndim, wbas.data(), ndim,
+                     alpha, vbas, ndim, wbas, ndim,
                      beta, tmpH.data(), nsub);
-               auto t1 = tools::get_time();
                // 2. check symmetry property
                double diff = tmpH.diff_hermitian();
                if(diff > crit_skewH){
@@ -177,7 +176,6 @@ namespace ctns{
                // 3. solve eigenvalue problem
                linalg::matrix<Tm> tmpU;
                linalg::eig_solver(tmpH, tmpE, tmpU);
-               auto t2 = tools::get_time();
                //---------------------------------------------------------------------------------
                // 4. Rotated basis to minimal subspace that can give the exact [neig] eigenvalues
                //    Also, the difference vector = xold - xnew as corrections (or simply xold)
@@ -194,51 +192,40 @@ namespace ctns{
                if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
                int nsub1 = neig + nindp;
                assert(nsub1 <= nsub);
-               auto t3 = tools::get_time();
                //---------------------------------------------------------------------------------
                // 5. form full residuals: Res[i]=HX[i]-e[i]*X[i]
                // vbas = {X[i]}
-               linalg::xcopy(ndim*nsub, vbas.data(), rbas.data()); 
+               linalg::xcopy(ndim*nsub, vbas, rbas); 
                linalg::xgemm("N", "N", ndim, nsub1, nsub,
-                     alpha, rbas.data(), ndim, tmpU.data(), nsub,
-                     beta, vbas.data(), ndim);
+                     alpha, rbas, ndim, tmpU.data(), nsub,
+                     beta, vbas, ndim);
                // wbas = {HX[i]}
-               linalg::xcopy(ndim*nsub, wbas.data(), rbas.data()); 
+               linalg::xcopy(ndim*nsub, wbas, rbas); 
                linalg::xgemm("N", "N", ndim, nsub1, nsub,
-                     alpha, rbas.data(), ndim, tmpU.data(), nsub,
-                     beta, wbas.data(), ndim);
-               auto t4 = tools::get_time();
+                     alpha, rbas, ndim, tmpU.data(), nsub,
+                     beta, wbas, ndim);
                // rbas = HX[i]-e[i]*X[i]
-               linalg::xcopy(ndim*neig, wbas.data(), rbas.data()); 
+               linalg::xcopy(ndim*neig, wbas, rbas); 
                for(int i=0; i<neig; i++){
                   linalg::xaxpy(ndim, -tmpE[i], &vbas[i*ndim], &rbas[i*ndim]); 
                }
-               auto t5 = tools::get_time();
-               std::cout << "T(sub)=" << tools::get_duration(t5-t0)
-                  << " T(H/eig/ortho/vw/res)="
-                  << tools::get_duration(t1-t0) << ","
-                  << tools::get_duration(t2-t1) << ","
-                  << tools::get_duration(t3-t2) << ","
-                  << tools::get_duration(t4-t3) << ","
-                  << tools::get_duration(t5-t4) 
-                  << std::endl;
+               auto t1 = tools::get_time();
+               t_sub += tools::get_duration(t1-t0);
                return nindp;
             }
 
             // Precondition of a residual
             void precondition(const Tm* rvec, Tm* tvec, const double& ei){
-               auto t0p = tools::get_time();
                if(precond){
+#ifdef _OPENMP
+                  #pragma omp for schedule(static,1048576)
+#endif
                   for(size_t j=0; j<ndim; j++){
                      tvec[j] = rvec[j]/(std::abs(Diag[j]-ei)+damping);
                   }
                }else{
-                  for(size_t j=0; j<ndim; j++){
-                     tvec[j] = rvec[j];
-                  }
+                  linalg::xcopy(ndim, rvec, tvec);
                }
-               auto t1p = tools::get_time();
-               t_precond += tools::get_duration(t1p-t0p);
             }
 
             // Davidson iterative algorithm for Hv=ve 
@@ -264,41 +251,31 @@ namespace ctns{
                // 0. initialization
                size_t nmax = std::min(ndim,size_t(neig+nbuff)); // maximal subspace size
                int naux = nmax-neig; // additional dimension for subspace
-               std::vector<Tm> vbas(ndim*nmax), wbas(ndim*nmax), rbas(ndim*nmax);
+               Tm* workspace = new Tm[ndim*nmax*3];
+               Tm* vbas = workspace;
+               Tm* wbas = workspace + ndim*nmax;
+               Tm* rbas = workspace + ndim*nmax*2;
                std::vector<double> tmpE(nmax);
                std::vector<bool> rconv(neig);
                linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); // history
                nmvp = 0;
-               auto t1i = tools::get_time();
-               t_init += tools::get_duration(t1i-ti);
 
                // 1. generate initial subspace - vbas
                if(rank == 0){
                   if(vguess != nullptr){
-                     auto t0x = tools::get_time();
-                     linalg::xcopy(ndim*neig, vguess, vbas.data());
-                     auto t1x = tools::get_time();
-                     t_xcopy += tools::get_duration(t1x-t0x);
+                     linalg::xcopy(ndim*neig, vguess, vbas);
                   }else{
                      auto index = tools::sort_index(ndim, Diag);
                      for(int i=0; i<neig; i++){
                         vbas[i*ndim+index[i]] = 1.0;
                      }
                   }
-                  auto t0c = tools::get_time();
-                  linalg::check_orthogonality(ndim, neig, vbas);
-                  auto t1c = tools::get_time();
-                  t_check += tools::get_duration(t1c-t0c); 
+                  if(debug) linalg::check_orthogonality(ndim, neig, vbas);
                }
 #ifndef SERIAL
-               if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
+               if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, vbas, ndim*neig, 0);
 #endif
-               HVecs(neig, wbas.data(), vbas.data());
-
-               // lzd
-               auto t0debug = tools::get_time();
-               double tot0 = tools::get_duration(t0debug-t1i);
-               double tot1 = 0.0, tot2 = 0.0, tot3 = 0.0, tot4 = 0.0;
+               HVecs(neig, wbas, vbas);
 
                // 2. begin to solve
                bool ifconv = false;
@@ -306,16 +283,12 @@ namespace ctns{
                int nindp = 0;
                for(int iter=1; iter<maxcycle+1; iter++){
 
-                  auto ta = tools::get_time();
                   // rank-0: solve the subspace problem
                   if(rank == 0){
                      //------------------------------------------------------------------------
                      // solve subspace problem and form full residuals: Res[i]=HX[i]-w[i]*X[i]
                      //------------------------------------------------------------------------
-                     auto t0s = tools::get_time(); 
                      nindp = subspace_solver(ndim,nsub,neig,naux,rconv,vbas,wbas,tmpE,rbas);
-                     auto t1s = tools::get_time();
-                     t_sub += tools::get_duration(t1s-t0s); 
                      //------------------------------------------------------------------------
                      // compute norm of residual
                      for(int i=0; i<neig; i++){
@@ -325,13 +298,10 @@ namespace ctns{
                         rconv[i] = (norm < crit_v)? true : false;
                      }
                      auto t1 = tools::get_time();
-                     t_resi += tools::get_duration(t1-t1s);
                      if(iprt >= 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
                      nsub = neig+nindp;
                      ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
                   } 
-                  auto tb = tools::get_time();
-
 #ifndef SERIAL
                   if(size > 1) boost::mpi::broadcast(world, ifconv, 0);
 #endif
@@ -341,30 +311,13 @@ namespace ctns{
                      // broadcast converged results to all processors
                      if(size > 1){
                         boost::mpi::broadcast(world, tmpE.data(), neig, 0);
-                        mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
+                        mpi_wrapper::broadcast(world, vbas, ndim*neig, 0);
                      }
 #endif
                      linalg::xcopy(neig, tmpE.data(), es);
-                     linalg::xcopy(ndim*neig, vbas.data(), vs);
-
-                     if(rank == 0){
-                        auto tc = tools::get_time();
-                        tot1 += tools::get_duration(tb-ta);
-                        tot2 += tools::get_duration(tc-tb);
-                        std::cout << "tinit=" << t_init
-                           << " tot0(hx)=" << tot0
-                           << " tot1(sub)=" << tot1
-                           << " tot2(done)=" << tot2
-                           << " tot3(res)=" << tot3
-                           << " tot4(new)=" << tot4
-                           << " tot=" << t_init+tot0+tot1+tot2+tot3+tot4
-                           << std::endl;
-                     } // debug
-
-
+                     linalg::xcopy(ndim*neig, vbas, vs);
                      break;
                   }
-                  auto tc = tools::get_time();
 
                   // if not converged, improve the subspace by adding preconditioned residues
                   if(rank == 0){
@@ -374,14 +327,9 @@ namespace ctns{
                         precondition(&rbas[i*ndim],&rbas[nres*ndim],tmpE[i]);
                         nres += 1;		
                      }
-                     auto t0o = tools::get_time();
-                     nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas.data(),rbas.data(),crit_indp);
+                     nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas,rbas,crit_indp);
                      nindp = std::min(nindp, int(nmax-nsub));
-                     auto t1o = tools::get_time();
-                     t_ortho = tools::get_duration(t1o-t0o);
                   }
-                  auto td = tools::get_time();
-
 #ifndef SERIAL
                   if(size > 1) boost::mpi::broadcast(world, nindp, 0);	    
 #endif
@@ -392,48 +340,23 @@ namespace ctns{
 #ifndef SERIAL
                      if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0);
 #endif	      
-                     auto t0x = tools::get_time(); 
                      linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
-                     auto t1x = tools::get_time();
-                     t_xcopy += tools::get_duration(t1x-t0x);  
                      HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
                      if(rank == 0){ 
                         nsub += nindp; // expand the subspace 
-                        auto t0c = tools::get_time();
-                        linalg::check_orthogonality(ndim,nsub,vbas);
-                        auto t1c = tools::get_time();
-                        t_check += tools::get_duration(t1c-t0c); 
+                        if(debug) linalg::check_orthogonality(ndim,nsub,vbas);
                      }
                   }
-                  auto te = tools::get_time();
-                  if(rank == 0){
-                     tot1 += tools::get_duration(tb-ta);
-                     tot2 += tools::get_duration(tc-tb);
-                     tot3 += tools::get_duration(td-tc);
-                     tot4 += tools::get_duration(te-td);
-                     std::cout << "tinit=" << t_init
-                           << " tot0(hx)=" << tot0
-                           << " tot1(sub)=" << tot1
-                           << " tot2(done)=" << tot2
-                           << " tot3(res)=" << tot3
-                           << " tot4(new)=" << tot4
-                           << " tot=" << t_init+tot0+tot1+tot2+tot3+tot4
-                           << std::endl;
-                  } // debug
 
                } // iter
+               delete [] workspace;
                if(rank == 0){
                   if(!ifconv) std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
                   auto tf = tools::get_time();    
                   t_tot = tools::get_duration(tf-ti);
-                  t_rest = t_tot - t_cal - t_comm;
-                  std::cout << "TIMING FOR Davidson : " << t_tot
-                     << "  T(cal/comm/rest)=" << t_cal << "," << t_comm << "," << t_rest
-                     << std::endl;
-                  std::cout << "decomposed rest: T(init/sub/resi/ortho/precond/xcopy/check)=" 
-                     << t_init << "," << t_sub << "," << t_resi << "," << t_ortho << "," << t_precond << "," << t_xcopy << "," << t_check 
-                     << " T(sum)=" << t_init + t_sub + t_resi + t_ortho + t_precond + t_xcopy + t_check
-                     << std::endl;
+                  t_rest = t_tot - t_cal - t_comm - t_sub;
+                  std::cout << "TIMING FOR Davidson : " << t_tot << "  T(cal/comm/sub/rest)=" 
+                     << t_cal << "," << t_comm << "," << t_sub << "," << t_rest << std::endl;
                }
             }
          public:
@@ -460,8 +383,9 @@ namespace ctns{
             double t_tot = 0.0;
             double t_cal = 0.0; // Hx
             double t_comm = 0.0; // reduce
-            double t_rest = 0.0; // solver
-            double t_init = 0.0, t_sub = 0.0, t_resi = 0.0, t_ortho = 0.0, t_precond = 0.0, t_xcopy = 0.0, t_check = 0.0;
+            double t_sub = 0.0; // subspace
+            double t_rest = 0.0; 
+            bool debug = false;
       };
 
 } // ctns

@@ -118,16 +118,16 @@ namespace ctns{
 
          // 3. Davidson solver for wf
          // 3.1 diag 
-         std::vector<double> diag(ndim);
-         onedot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
+         double* diag = new double[ndim];
+         onedot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
          // executes the preconditioning in Davidson's algorithm
          if(size > 1){
-            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, 0);
+            mpi_wrapper::reduce(icomb.world, diag, ndim, 0);
          }
 #endif 
-         std::transform(diag.begin(), diag.end(), diag.begin(),
+         std::transform(diag, diag+ndim, diag,
                [&ecore](const double& x){ return x+ecore; });
          timing.tb = tools::get_time();
 
@@ -250,6 +250,7 @@ namespace ctns{
          timing.tc = tools::get_time();
 
          // free temporary space
+         delete[] diag;
          if(alg_hvec >=2){
             delete[] workspace;
          }

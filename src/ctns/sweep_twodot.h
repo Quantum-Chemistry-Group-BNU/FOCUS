@@ -144,12 +144,12 @@ namespace ctns{
          // 3. Davidson solver for wf
          // 3.1 diag 
          auto diag_t0 = tools::get_time();
-         std::vector<double> diag(ndim);
+         double* diag = new double[ndim];
          if(alg_hvec <= 10){
-            twodot_diag(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1);
+            twodot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifdef GPU
          }else{
-            twodot_diagGPU(qops_dict, wf, diag.data(), size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
+            twodot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
 #endif
          }
          auto diag_t1 = tools::get_time();
@@ -157,11 +157,11 @@ namespace ctns{
          // reduction of partial diag: no need to broadcast, if only rank=0 
          // executes the preconditioning in Davidson's algorithm
          if(!schd.ctns.ifnccl && size > 1){
-            mpi_wrapper::reduce(icomb.world, diag.data(), ndim, 0);
+            mpi_wrapper::reduce(icomb.world, diag, ndim, 0);
          }
 #endif 
          auto diag_t2 = tools::get_time();
-         std::transform(diag.begin(), diag.end(), diag.begin(),
+         std::transform(diag, diag+ndim, diag,
                [&ecore](const double& x){ return x+ecore; });
          timing.tb = tools::get_time();
          auto diag_t3 = tools::get_time();
@@ -616,6 +616,7 @@ namespace ctns{
          timing.tc = tools::get_time();
 
          // free tmp space on CPU
+         delete[] diag;
          if(alg_hvec==2 || alg_hvec==3 || 
                alg_hvec==6 || alg_hvec==7 ||
                alg_hvec==8 || alg_hvec==9){

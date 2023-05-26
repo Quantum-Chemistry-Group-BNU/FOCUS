@@ -161,6 +161,7 @@ namespace ctns{
                   std::vector<Tm>& wbas,
                   std::vector<double>& tmpE,
                   std::vector<Tm>& rbas){
+               auto t0 = tools::get_time();
                // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
                const Tm alpha = 1.0, beta=0.0;
                linalg::matrix<Tm> tmpH(nsub,nsub);
@@ -213,6 +214,8 @@ namespace ctns{
                for(int i=0; i<neig; i++){
                   linalg::xaxpy(ndim, -tmpE[i], &vbas[i*ndim], &rbas[i*ndim]); 
                }
+               auto t1 = tools::get_time();
+               t_sub += tools::get_duration(t1-t0);
                return nindp;
             }
 
@@ -228,6 +231,7 @@ namespace ctns{
                   std::vector<Tm>& wbas,
                   std::vector<double>& tmpE,
                   std::vector<Tm>& rbas){
+               auto t0 = tools::get_time();
                // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
                const Tm alpha = 1.0, beta=0.0;
                linalg::matrix<Tm> tmpH2(nsub,nsub);
@@ -328,6 +332,8 @@ namespace ctns{
                   linalg::xaxpy(ndim, -tmpE[i1], &vbas[i1*ndim], &rbas[i1*ndim]); // -e*xob
                   //-------------------------------------------------------------------------
                } // i
+               auto t1 = tools::get_time();
+               t_sub += tools::get_duration(t1-t0);
                return nindp;
             }
 
@@ -338,9 +344,7 @@ namespace ctns{
                      tvec[j] = rvec[j]/(std::abs(Diag[j]-ei)+damping);
                   }
                }else{
-                  for(size_t j=0; j<ndim; j++){
-                     tvec[j] = rvec[j];
-                  }
+                  linalg::xcopy(ndim, rvec, tvec);
                }
             }
 
@@ -377,7 +381,7 @@ namespace ctns{
                // 1. generate initial subspace - vbas 
                if(rank == 0){
                   linalg::xcopy(ndim*neig, vguess, vbas.data()); // copying neig states from vguess
-                  linalg::check_orthogonality(ndim, neig, vbas);
+                  if(debug) linalg::check_orthogonality(ndim, neig, vbas.data());
                }
 #ifndef SERIAL
                if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
@@ -474,7 +478,7 @@ namespace ctns{
                      HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
                      if(rank == 0){
                         nsub += nindp; // expand the subspace
-                        linalg::check_orthogonality(ndim,nsub,vbas);
+                        if(debug) linalg::check_orthogonality(ndim,nsub,vbas.data());
                      }
                   }
 
@@ -483,11 +487,9 @@ namespace ctns{
                   if(!ifconv) std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
                   auto tf = tools::get_time();    
                   t_tot = tools::get_duration(tf-ti);
-                  t_rest = t_tot - t_cal - t_comm;
-                  std::cout << "TIMING FOR Davidson : " << t_tot
-                     << "  T(cal/comm/rest)=" << t_cal << ","
-                     << t_comm << "," << t_rest
-                     << std::endl;
+                  t_rest = t_tot - t_cal - t_comm - t_sub;
+                  std::cout << "TIMING FOR Davidson : " << t_tot << "  T(cal/comm/sub/rest)=" 
+                     << t_cal << "," << t_comm << "," << t_sub << "," << t_rest << std::endl;
                }
             }
          public:
@@ -520,7 +522,9 @@ namespace ctns{
             double t_tot = 0.0;
             double t_cal = 0.0; // Hx
             double t_comm = 0.0; // reduce
-            double t_rest = 0.0; // solver
+            double t_sub = 0.0; // subspace
+            double t_rest = 0.0; 
+            bool debug = false;
       };
 
 } // ctns

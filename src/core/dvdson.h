@@ -172,7 +172,7 @@ namespace linalg{
                             vbas[i*ndim+index[i]] = 1.0;
                         }
                     }
-                    check_orthogonality(ndim, neig, vbas);
+                    check_orthogonality(ndim, neig, vbas.data());
                     HVecs(neig, wbas.data(), vbas.data());
 
                     // Begin to solve
@@ -232,7 +232,7 @@ namespace linalg{
                             linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*neig]);
                             HVecs(nindp, &wbas[ndim*neig], &vbas[ndim*neig]);
                             nsub = neig+nindp;
-                            check_orthogonality(ndim,nsub,vbas);
+                            check_orthogonality(ndim,nsub,vbas.data());
                         }
                     } // iter
                     if(!ifconv){

@@ -13,7 +13,7 @@ namespace ctns{
             const int parity,
             const size_t ndim,
             const int neig,
-            std::vector<double>& diag,
+            const double* diag,
             HVec_type<typename Km:: dtype> HVec,
             std::vector<double>& eopt,
             linalg::matrix<typename Km::dtype>& vsol,
@@ -35,7 +35,7 @@ namespace ctns{
          solver.damping = schd.ctns.damping;
          solver.precond = schd.ctns.precond;
          solver.ifnccl = schd.ctns.ifnccl;
-         solver.Diag = diag.data();
+         solver.Diag = const_cast<double*>(diag);
          solver.HVec = HVec;
 #ifndef SERIAL
          solver.world = icomb.world;
@@ -88,7 +88,7 @@ namespace ctns{
             const int parity,
             const size_t ndim,
             const int neig,
-            std::vector<double>& diag,
+            const double* diag,
             HVec_type<std::complex<double>> HVec,
             std::vector<double>& eopt,
             linalg::matrix<std::complex<double>>& vsol,
@@ -110,7 +110,7 @@ namespace ctns{
          solver.damping = schd.ctns.damping;
          solver.precond = schd.ctns.precond;
          solver.ifnccl = schd.ctns.ifnccl;
-         solver.Diag = diag.data();
+         solver.Diag = const_cast<double*>(diag);
          solver.HVec = HVec;
 #ifndef SERIAL
          solver.world = icomb.world;
