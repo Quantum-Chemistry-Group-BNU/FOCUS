@@ -308,7 +308,7 @@ KNOWN PROBLEMS
  * parallel decimation:
    - openmp + mpi [DONE@2023/04/23]
    - mpi -> share memory?
-   - GPU version for large D>10000?
+   - GPU version for large D>5000? [DONE@2023/??/??]
 
  * cpu<->gpu, network communication: 
    1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DONE@2023/04/17]
@@ -329,8 +329,9 @@ KNOWN PROBLEMS
 === TODOs: scalabilities ===
 
  * Better Davidson solver on GPU?
+   - GPU memory is a problem
 
- * Real space parallelization (=> More GPU/DCU)
+ * Real space parallelization (=> More GPU/DCU) [!!!]
 
  * Support Mixed CPU-GPU implementation?
    - mmtasks revise [also avoid copy for magma?]
@@ -343,7 +344,7 @@ KNOWN PROBLEMS
 
 === TODOs: functionalities ===
 
- * Reduced density matrix (RDMs) 
+ * Reduced density matrix (RDMs) [!!!] 
 
  * Spin-adapted version?
 
