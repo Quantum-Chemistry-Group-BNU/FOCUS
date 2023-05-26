@@ -254,18 +254,26 @@ namespace ctns{
                std::vector<bool> rconv(neig);
                linalg::matrix<double> eigs(neig,maxcycle+1,1.e3), rnorm(neig,maxcycle+1); // history
                nmvp = 0;
+               auto t1i = tools::get_time();
+               t_init += tools::get_duration(t1i-ti);
 
                // 1. generate initial subspace - vbas
                if(rank == 0){
                   if(vguess != nullptr){
+                     auto t0x = tools::get_time();
                      linalg::xcopy(ndim*neig, vguess, vbas.data());
+                     auto t1x = tools::get_time();
+                     t_xcopy += tools::get_duration(t1x-t0x);
                   }else{
                      auto index = tools::sort_index(ndim, Diag);
                      for(int i=0; i<neig; i++){
                         vbas[i*ndim+index[i]] = 1.0;
                      }
                   }
+                  auto t0c = tools::get_time();
                   linalg::check_orthogonality(ndim, neig, vbas);
+                  auto t1c = tools::get_time();
+                  t_check += tools::get_duration(t1c-t0c); 
                }
 #ifndef SERIAL
                if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, vbas.data(), ndim*neig, 0);
@@ -296,6 +304,7 @@ namespace ctns{
                         rconv[i] = (norm < crit_v)? true : false;
                      }
                      auto t1 = tools::get_time();
+                     t_resi += tools::get_duration(t1-t1s);
                      if(iprt >= 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
                      nsub = neig+nindp;
                      ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
@@ -342,12 +351,18 @@ namespace ctns{
                   }else{
 #ifndef SERIAL
                      if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0);
-#endif	       
-                     linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]); 
+#endif	      
+                     auto t0x = tools::get_time(); 
+                     linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
+                     auto t1x = tools::get_time();
+                     t_xcopy += tools::get_duration(t1x-t0x);  
                      HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
                      if(rank == 0){ 
                         nsub += nindp; // expand the subspace 
+                        auto t0c = tools::get_time();
                         linalg::check_orthogonality(ndim,nsub,vbas);
+                        auto t1c = tools::get_time();
+                        t_check += tools::get_duration(t1c-t0c); 
                      }
                   }
 
@@ -359,8 +374,10 @@ namespace ctns{
                   t_rest = t_tot - t_cal - t_comm;
                   std::cout << "TIMING FOR Davidson : " << t_tot
                      << "  T(cal/comm/rest)=" << t_cal << "," << t_comm << "," << t_rest
-                     << " T(sub/ortho/precond/sum)=" << t_sub << "," << t_ortho << "," << t_precond << ","
-                     << t_sub + t_ortho + t_precond
+                     << std::endl;
+                  std::cout << "decomposed rest: T(init/sub/resi/ortho/precond/xcopy/check)=" 
+                     << t_init << "," << t_sub << "," << t_resi << "," << t_ortho << "," << t_precond << "," << t_xcopy << "," << t_check 
+                     << " T(sum)=" << t_init + t_sub + t_resi + t_ortho + t_precond + t_xcopy + t_check
                      << std::endl;
                }
             }
@@ -389,7 +406,7 @@ namespace ctns{
             double t_cal = 0.0; // Hx
             double t_comm = 0.0; // reduce
             double t_rest = 0.0; // solver
-            double t_sub = 0.0, t_ortho = 0.0, t_precond = 0.0;
+            double t_init = 0.0, t_sub = 0.0, t_resi = 0.0, t_ortho = 0.0, t_precond = 0.0, t_xcopy = 0.0, t_check = 0.0;
       };
 
 } // ctns

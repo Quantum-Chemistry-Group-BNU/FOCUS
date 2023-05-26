@@ -535,7 +535,7 @@ namespace ctns{
             }
 #endif // SERIAL
             timing.tf10 = tools::get_time();
-            qops.to_cpu();
+            if(!schd.ctns.async_tocpu) qops.to_cpu();
             timing.tf11 = tools::get_time();
 
             GPUmem.deallocate(dev_site, gpumem_site);
@@ -559,8 +559,8 @@ namespace ctns{
 
          // debug 
          if(debug_oper_renorm && rank == 0){
-            if(schd.ctns.ifnccl){
-               std::cout << "error: debug should not be invoked with ifnccl=true!" << std::endl;
+            if(schd.ctns.ifnccl || schd.ctns.async_tocpu){
+               std::cout << "error: debug should not be invoked with ifnccl or async_tocpu!" << std::endl;
                exit(1);
             }
             const int target = -1;
@@ -628,6 +628,10 @@ namespace ctns{
          // 2. reduce opS and opH 
 #ifndef SERIAL
          if(ifdist1 and size > 1 and !schd.ctns.ifnccl){
+            if(alg_renorm>=10 && schd.ctns.async_tocpu){
+               std::cout << "error: ifdist1 and async_tocpu are not compatible unless ifnccl=true!" << std::endl;
+               exit(1);
+            }
             // Sp[iproc] += \sum_i Sp[i]
             auto opS_index = qops.oper_index_op('S');
             size_t totsize = 0;
@@ -660,33 +664,38 @@ namespace ctns{
          } // ifdist1 and size > 1 and !schd.ctns.ifnccl
 #endif // SERIAL
 
-         // 3. consistency check for Hamiltonian
-         const auto& opH = qops('H').at(0);
-         auto diffH = (opH-opH.H()).normF();
-         if(debug){
-            std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
-               << " coord=" << p << " rank=" << rank << std::defaultfloat << std::endl;
-         } 
-         if(diffH > thresh_opdiff){
-            std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
-               << " is larger than thresh_opdiff=" << thresh_opdiff 
-               << " for rank=" << rank 
-               << std::endl;
-            exit(1);
-         }
-         // check against explicit construction
-         if(debug_oper_rbasis){
-            for(const auto& key : qops.oplist){
-               if(key == 'C' || key == 'A' || key == 'B'){
-                  oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
-               }else if(key == 'P' || key == 'Q'){
-                  oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
-                  // check opS and opH only if ifdist1=true   
-               }else if((key == 'S' || key == 'H') and ifdist1){
-                  oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
+         // qops is available on CPU
+         if(!schd.ctns.async_tocpu){
+
+            // 3. consistency check for Hamiltonian
+            const auto& opH = qops('H').at(0);
+            auto diffH = (opH-opH.H()).normF();
+            if(debug){
+               std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
+                  << " coord=" << p << " rank=" << rank << std::defaultfloat << std::endl;
+            } 
+            if(diffH > thresh_opdiff){
+               std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
+                  << " is larger than thresh_opdiff=" << thresh_opdiff 
+                  << " for rank=" << rank 
+                  << std::endl;
+               exit(1);
+            }
+            // check against explicit construction
+            if(debug_oper_rbasis){
+               for(const auto& key : qops.oplist){
+                  if(key == 'C' || key == 'A' || key == 'B'){
+                     oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
+                  }else if(key == 'P' || key == 'Q'){
+                     oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
+                     // check opS and opH only if ifdist1=true   
+                  }else if((key == 'S' || key == 'H') and ifdist1){
+                     oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
+                  }
                }
             }
-         }
+
+         } // async_tocpu
 
          timing.tf13 = tools::get_time();
          if(debug){

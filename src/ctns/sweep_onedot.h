@@ -265,7 +265,7 @@ namespace ctns{
 
          // 4. save on disk
          qops_pool.join_and_erase(fneed, fneed_next); 
-         qops_pool.save_to_disk(frop, schd.ctns.async_save, fneed_next);
+         qops_pool.save_to_disk(frop, schd.ctns.async_save, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, fneed_next);
          qops_pool.remove_from_disk(fdel, schd.ctns.async_remove);
 
          // save for restart
