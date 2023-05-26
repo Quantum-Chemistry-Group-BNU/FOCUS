@@ -43,7 +43,7 @@ namespace ctns{
                         << " crit_v=" << crit_v 
                         << " crit_indp=" << crit_indp << std::endl;
                   }
-                  std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s" << std::endl;
+                  std::cout << "iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s   tav[Hx]/s" << std::endl;
                }
                for(int i=0; i<neig; i++){
                   std::cout << std::setw(5) << iter << " " 
@@ -56,6 +56,7 @@ namespace ctns{
                      << std::setw(5) << nmvp << " "
                      << std::setw(10) << std::setprecision(3) << std::scientific << t 
                      << std::setw(10) << std::setprecision(3) << std::scientific << t/nmvp 
+                     << std::setw(10) << std::setprecision(3) << std::scientific << t_cal/nmvp 
                      << std::endl;
                } // i
             }
@@ -160,10 +161,12 @@ namespace ctns{
                   std::vector<Tm>& rbas){
                // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
                const Tm alpha = 1.0, beta=0.0;
+               auto t0 = tools::get_time();
                linalg::matrix<Tm> tmpH(nsub,nsub);
                linalg::xgemm("C", "N", nsub, nsub, ndim,
                      alpha, vbas.data(), ndim, wbas.data(), ndim,
                      beta, tmpH.data(), nsub);
+               auto t1 = tools::get_time();
                // 2. check symmetry property
                double diff = tmpH.diff_hermitian();
                if(diff > crit_skewH){
@@ -174,6 +177,7 @@ namespace ctns{
                // 3. solve eigenvalue problem
                linalg::matrix<Tm> tmpU;
                linalg::eig_solver(tmpH, tmpE, tmpU);
+               auto t2 = tools::get_time();
                //---------------------------------------------------------------------------------
                // 4. Rotated basis to minimal subspace that can give the exact [neig] eigenvalues
                //    Also, the difference vector = xold - xnew as corrections (or simply xold)
@@ -190,6 +194,7 @@ namespace ctns{
                if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
                int nsub1 = neig + nindp;
                assert(nsub1 <= nsub);
+               auto t3 = tools::get_time();
                //---------------------------------------------------------------------------------
                // 5. form full residuals: Res[i]=HX[i]-e[i]*X[i]
                // vbas = {X[i]}
@@ -202,11 +207,21 @@ namespace ctns{
                linalg::xgemm("N", "N", ndim, nsub1, nsub,
                      alpha, rbas.data(), ndim, tmpU.data(), nsub,
                      beta, wbas.data(), ndim);
+               auto t4 = tools::get_time();
                // rbas = HX[i]-e[i]*X[i]
                linalg::xcopy(ndim*neig, wbas.data(), rbas.data()); 
                for(int i=0; i<neig; i++){
                   linalg::xaxpy(ndim, -tmpE[i], &vbas[i*ndim], &rbas[i*ndim]); 
                }
+               auto t5 = tools::get_time();
+               std::cout << "T(sub)=" << tools::get_duration(t5-t0)
+                  << " T(H/eig/ortho/vw/res)="
+                  << tools::get_duration(t1-t0) << ","
+                  << tools::get_duration(t2-t1) << ","
+                  << tools::get_duration(t3-t2) << ","
+                  << tools::get_duration(t4-t3) << ","
+                  << tools::get_duration(t5-t4) 
+                  << std::endl;
                return nindp;
             }
 
@@ -280,12 +295,18 @@ namespace ctns{
 #endif
                HVecs(neig, wbas.data(), vbas.data());
 
+               // lzd
+               auto t0debug = tools::get_time();
+               double tot0 = tools::get_duration(t0debug-t1i);
+               double tot1 = 0.0, tot2 = 0.0, tot3 = 0.0, tot4 = 0.0;
+
                // 2. begin to solve
                bool ifconv = false;
                int nsub = (rank==0)? neig : 0;
                int nindp = 0;
                for(int iter=1; iter<maxcycle+1; iter++){
 
+                  auto ta = tools::get_time();
                   // rank-0: solve the subspace problem
                   if(rank == 0){
                      //------------------------------------------------------------------------
@@ -309,6 +330,7 @@ namespace ctns{
                      nsub = neig+nindp;
                      ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
                   } 
+                  auto tb = tools::get_time();
 
 #ifndef SERIAL
                   if(size > 1) boost::mpi::broadcast(world, ifconv, 0);
@@ -324,8 +346,25 @@ namespace ctns{
 #endif
                      linalg::xcopy(neig, tmpE.data(), es);
                      linalg::xcopy(ndim*neig, vbas.data(), vs);
+
+                     if(rank == 0){
+                        auto tc = tools::get_time();
+                        tot1 += tools::get_duration(tb-ta);
+                        tot2 += tools::get_duration(tc-tb);
+                        std::cout << "tinit=" << t_init
+                           << " tot0(hx)=" << tot0
+                           << " tot1(sub)=" << tot1
+                           << " tot2(done)=" << tot2
+                           << " tot3(res)=" << tot3
+                           << " tot4(new)=" << tot4
+                           << " tot=" << t_init+tot0+tot1+tot2+tot3+tot4
+                           << std::endl;
+                     } // debug
+
+
                      break;
                   }
+                  auto tc = tools::get_time();
 
                   // if not converged, improve the subspace by adding preconditioned residues
                   if(rank == 0){
@@ -341,6 +380,7 @@ namespace ctns{
                      auto t1o = tools::get_time();
                      t_ortho = tools::get_duration(t1o-t0o);
                   }
+                  auto td = tools::get_time();
 
 #ifndef SERIAL
                   if(size > 1) boost::mpi::broadcast(world, nindp, 0);	    
@@ -365,6 +405,21 @@ namespace ctns{
                         t_check += tools::get_duration(t1c-t0c); 
                      }
                   }
+                  auto te = tools::get_time();
+                  if(rank == 0){
+                     tot1 += tools::get_duration(tb-ta);
+                     tot2 += tools::get_duration(tc-tb);
+                     tot3 += tools::get_duration(td-tc);
+                     tot4 += tools::get_duration(te-td);
+                     std::cout << "tinit=" << t_init
+                           << " tot0(hx)=" << tot0
+                           << " tot1(sub)=" << tot1
+                           << " tot2(done)=" << tot2
+                           << " tot3(res)=" << tot3
+                           << " tot4(new)=" << tot4
+                           << " tot=" << t_init+tot0+tot1+tot2+tot3+tot4
+                           << std::endl;
+                  } // debug
 
                } // iter
                if(rank == 0){

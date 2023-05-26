@@ -131,7 +131,7 @@ namespace ctns{
          for(int i=0; i<fneed.size(); i++){
             const auto& fqop = fneed[i];
             bool ifexist = this->exist(fqop);
-            if(debug) std::cout << "fetch: i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
+            if(debug) std::cout << " fetch: i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
             if(ifexist) continue;
             oper_load(iomode, fqop, qstore[fqop], debug);
          }
@@ -164,7 +164,7 @@ namespace ctns{
          for(int i=0; i<fneed.size(); i++){
             const auto& fqop = fneed[i];
             if(!fetch[i]) continue;
-            if(debug) std::cout << "fetch: fqop=" << fqop << std::endl;
+            if(debug) std::cout << " fetch: fqop=" << fqop << std::endl;
             oper_load(iomode, fqop, qstore[fqop], debug);
          }
       }
@@ -181,7 +181,7 @@ namespace ctns{
          for(int i=0; i<fneed.size(); i++){
             const auto& fqop = fneed[i];
             bool ifexist = this->exist(fqop);
-            if(debug) std::cout << "fetch: i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
+            if(debug) std::cout << " fetch: i=" << i << " fqop=" << fqop << " ifexist=" << ifexist << std::endl;
             fetch[i] = !ifexist;
             qstore[fqop]; // declare a spot here! this is helpful for threadsafty
          }
@@ -211,7 +211,7 @@ namespace ctns{
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
                bool iferase = (result == fneed_next.end()) && (fqop != frop_prev); 
-               std::cout << "erase: fqop=" << fqop << " ifexist=" << ifexist << " iferase=" << iferase << std::endl;
+               std::cout << " erase: fqop=" << fqop << " ifexist=" << ifexist << " iferase=" << iferase << std::endl;
             }
             this->display("in");
          }
@@ -255,7 +255,7 @@ namespace ctns{
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
                bool ifclear = (result == fneed_next.end()) && (fqop != frop_prev); 
-               std::cout << "clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
+               std::cout << " clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
             }
             this->display("in");
          }
@@ -288,7 +288,7 @@ namespace ctns{
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
                bool ifclear = (result == fneed_next.end()) && (fqop != frop_prev); 
-               std::cout << "clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
+               std::cout << " clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
             }
             this->display("in");
          }
@@ -330,8 +330,7 @@ namespace ctns{
          auto t0 = tools::get_time();
          if(debug){
             std::cout << "ctns::oper_pool_raw<Tm>::save_to_disk: async_save=" << async_save 
-               << " async_tocpu=" << async_tocpu
-               << " frop=" << frop << std::endl;
+               << " async_tocpu=" << async_tocpu << " frop=" << frop << std::endl;
          }
          assert(!thread_save.joinable()); 
          if(!async_save){
