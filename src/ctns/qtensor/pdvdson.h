@@ -166,6 +166,7 @@ namespace ctns{
                linalg::xgemm("C", "N", nsub, nsub, ndim,
                      alpha, vbas, ndim, wbas, ndim,
                      beta, tmpH.data(), nsub);
+               auto t0a = tools::get_time();
                // 2. check symmetry property
                double diff = tmpH.diff_hermitian();
                if(diff > crit_skewH){
@@ -187,11 +188,13 @@ namespace ctns{
                   linalg::xcopy(nsub,delU.col(i),delU.col(nres));
                   nres++;
                }
+               auto t0b = tools::get_time();
                int nindp = linalg::get_ortho_basis(nsub,neig,nres,tmpU.data(),delU.data(),crit_indp);
                if(nindp >= naux) nindp = std::min(2,naux); // ZL@20221210 for naux=0
                if(nindp > 0) linalg::xcopy(nsub*nindp, delU.data(), tmpU.col(neig));
                int nsub1 = neig + nindp;
                assert(nsub1 <= nsub);
+               auto t0c = tools::get_time();
                //---------------------------------------------------------------------------------
                // 5. form full residuals: Res[i]=HX[i]-e[i]*X[i]
                // vbas = {X[i]}
@@ -204,6 +207,7 @@ namespace ctns{
                linalg::xgemm("N", "N", ndim, nsub1, nsub,
                      alpha, rbas, ndim, tmpU.data(), nsub,
                      beta, wbas, ndim);
+               auto t0d = tools::get_time();
                // rbas = HX[i]-e[i]*X[i]
                linalg::xcopy(ndim*neig, wbas, rbas); 
                for(int i=0; i<neig; i++){
@@ -211,11 +215,20 @@ namespace ctns{
                }
                auto t1 = tools::get_time();
                t_sub += tools::get_duration(t1-t0);
+               std::cout << "T(sub)=" << tools::get_duration(t1-t0)
+                  << " T(gemm/eig/ortho/gemm/axpy)="
+                  << tools::get_duration(t0a-t0) << ","
+                  << tools::get_duration(t0b-t0a) << ","
+                  << tools::get_duration(t0c-t0b) << ","
+                  << tools::get_duration(t0d-t0c) << ","
+                  << tools::get_duration(t1-t0d)
+                  << std::endl;
                return nindp;
             }
 
             // Precondition of a residual
             void precondition(const Tm* rvec, Tm* tvec, const double& ei){
+               auto t0 = tools::get_time();
                if(precond){
 #ifdef _OPENMP
                   #pragma omp for schedule(static,1048576)
@@ -226,6 +239,8 @@ namespace ctns{
                }else{
                   linalg::xcopy(ndim, rvec, tvec);
                }
+               auto t1 = tools::get_time();
+               t_precond += tools::get_duration(t1-t0);
             }
 
             // Davidson iterative algorithm for Hv=ve 
@@ -327,7 +342,10 @@ namespace ctns{
                         precondition(&rbas[i*ndim],&rbas[nres*ndim],tmpE[i]);
                         nres += 1;		
                      }
+                     auto t0o = tools::get_time();
                      nindp = linalg::get_ortho_basis(ndim,nsub,nres,vbas,rbas,crit_indp);
+                     auto t1o = tools::get_time();
+                     t_ortho += tools::get_duration(t1o-t0o);
                      nindp = std::min(nindp, int(nmax-nsub));
                   }
 #ifndef SERIAL
@@ -354,9 +372,12 @@ namespace ctns{
                   if(!ifconv) std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
                   auto tf = tools::get_time();    
                   t_tot = tools::get_duration(tf-ti);
-                  t_rest = t_tot - t_cal - t_comm - t_sub;
-                  std::cout << "TIMING FOR Davidson : " << t_tot << "  T(cal/comm/sub/rest)=" 
-                     << t_cal << "," << t_comm << "," << t_sub << "," << t_rest << std::endl;
+                  t_rest = t_tot - t_cal - t_comm - t_sub - t_precond;
+                  std::cout << "TIMING FOR Davidson : " << t_tot 
+                     << "  T(cal/comm/sub/precond/ortho/rest)=" 
+                     << t_cal << "," << t_comm << "," << t_sub << "," 
+                     << t_precond << "," << t_ortho << "," << t_rest 
+                     << std::endl;
                }
             }
          public:
@@ -384,6 +405,8 @@ namespace ctns{
             double t_cal = 0.0; // Hx
             double t_comm = 0.0; // reduce
             double t_sub = 0.0; // subspace
+            double t_precond = 0.0; // subspace
+            double t_ortho = 0.0; // ortho
             double t_rest = 0.0; 
             bool debug = false;
       };
