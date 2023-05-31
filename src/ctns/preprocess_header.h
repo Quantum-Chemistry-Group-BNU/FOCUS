@@ -39,11 +39,13 @@ namespace ctns{
          if(gpumem_avail > gpumem_reserved){
             batchsize = std::floor(double(gpumem_avail - gpumem_reserved)/(sizeof(Tm)*blocksize + 136));
             if(batchsize == 0){
-               std::cout << "error: in sufficient GPU batch memory: batchsize=0!" << std::endl;
+               std::cout << "error: insufficient GPU batch memory: batchsize=0! rank=" << rank << std::endl;
+               std::cout << "gpumem_avail=" << gpumem_avail << " gpumem_reserved=" << gpumem_reserved << std::endl;
                exit(1);
             }
          }else{
-            std::cout << "error: in sufficient GPU batch memory: avail<=reserved!" << std::endl;
+            std::cout << "error: insufficient GPU batch memory: avail<=reserved! rank=" << rank << std::endl;
+            std::cout << "gpumem_avail=" << gpumem_avail << " gpumem_reserved=" << gpumem_reserved << std::endl;
             exit(1);
          }
          batchsize = std::min(batchsize, maxbatch);
@@ -60,7 +62,7 @@ namespace ctns{
          assert(blocksize>0);
          batchsize = size_t(batchmem*std::pow(1024,3)/(sizeof(Tm)*blocksize));
          if(batchsize == 0){
-            std::cout << "error: in sufficient CPU batch memory: batchsize=0!" << std::endl;
+            std::cout << "error: insufficient CPU batch memory: batchsize=0!" << std::endl;
             exit(1);
          }
          batchsize = std::min(batchsize, maxbatch);

@@ -3,6 +3,7 @@
 
 #include "../core/tools.h"
 #include "../core/linalg.h"
+#include "ctns_sys.h"
 #include "qtensor/qtensor.h"
 #include "sweep_util.h"
 #include "sweep_twodot_renorm.h"
@@ -25,7 +26,6 @@
 #include "sweep_twodot_diagGPU.h"
 #include "preprocess_sigma_batchGPU.h"
 #endif
-#include "ctns_sys.h"
 
 namespace ctns{
 

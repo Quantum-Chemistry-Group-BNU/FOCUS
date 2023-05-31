@@ -1,6 +1,7 @@
 #ifndef OPER_RENORM_H
 #define OPER_RENORM_H
 
+#include "ctns_sys.h"
 #include "sweep_data.h"
 #include "oper_timer.h"
 #include "oper_functors.h"
@@ -103,8 +104,11 @@ namespace ctns{
          qops.ifdist2 = true;
          // initialize memory 
          qops.allocate();
-         if(debug) qops.print("qops");
-
+         if(debug){ 
+            qops.print("qops");
+            get_sys_status();
+         }
+ 
          //-------------------------------
          // 1. kernel for renormalization
          //-------------------------------
