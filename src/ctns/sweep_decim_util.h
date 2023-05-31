@@ -9,10 +9,10 @@
 
 namespace ctns{
 
-   const bool debug_auxbasis = true;
+   const bool debug_auxbasis = false;
    extern const bool debug_auxbasis;
 
-   const double thresh_sig2 = -1.e-14;
+   const double thresh_sig2 = 1.e-14;
    extern const double thresh_sig2;
 
    const bool debug_decimation = false;
@@ -30,7 +30,7 @@ namespace ctns{
             const int alg_decim,
             const std::vector<stensor2<typename Km::dtype>>& wfs2,
             std::vector<std::vector<std::pair<int,int>>>& local_brbc){
-         const bool debug = true;
+         const bool debug = false;
          using Tm = typename Km::dtype;
          int rank = 0, size = 1;
 #ifndef SERIAL
@@ -134,7 +134,7 @@ namespace ctns{
                }
             }
          }else{
-          
+            //--- algorithm 1: gather: there is problem in boost::mpi ---
             /*
             std::vector<std::vector<std::pair<int,decim_item<Tm>>>> full_results;
             boost::mpi::gather(icomb.world, local_results, full_results, 0);
@@ -150,29 +150,9 @@ namespace ctns{
                }
             }
             */
-
-            /*
-            for(int j=0; j<local_results.size(); j++){
-               std::vector<std::pair<int,decim_item<Tm>>> full_results;
-
-               std::cout << "rank=" << rank << " j=" << j
-                  << " sz=" << local_results[j].second.second.size() << std::endl;
-
-               icomb.world.barrier();
-               boost::mpi::gather(icomb.world, local_results[j], full_results, 0);
-               if(rank == 0){
-                  assert(full_results.size() == size);
-                  for(int i=0; i<size; i++){
-                     int br = full_results[i].first;
-                     if(br == -1) continue;
-                     results[br] = std::move(full_results[i].second);
-                  }
-               }
-            }
-            */
-           
+            //--- algorithm 2: isend & irecv: should work for rdim<16000 --- 
             if(rank != 0){
-               // send in ascending order of br
+               // send results to rank-0 
                std::vector<boost::mpi::request> request(local_results.size());
                for(int i=0; i<local_results.size(); i++){
                   const int br = local_results[i].first;
@@ -181,7 +161,6 @@ namespace ctns{
                }
                boost::mpi::wait_all(&request[0], &request[0]+local_results.size());
             }else{
-               
                // save local results first
                for(int ibr=0; ibr<local_results.size(); ibr++){
                   int br = local_results[ibr].first;
@@ -199,15 +178,12 @@ namespace ctns{
                for(int i=1; i<size; i++){
                   for(int j=0; j<local_brbc[i].size(); j++){
                      int br = local_brbc[i][j].first;
-                     if(br == -1) continue;
                      request[idx] = icomb.world.irecv(i, br, results[br]);
                      idx += 1;      
                   }
                }
                boost::mpi::wait_all(&request[0], &request[0]+nrecv);
-
-            }
-
+            } // rank
          } // alg_decim
       }
 
@@ -245,75 +221,44 @@ namespace ctns{
          if(alg_decim == 0) nthreads = omp_get_max_threads();
          #pragma omp parallel for schedule(dynamic) num_threads(nthreads)
 #endif
-         auto tx = tools::get_time();
          for(int ibr=0; ibr<local_size; ibr++){
             int br = local_brbc[rank][ibr].first;
             int bc = local_brbc[rank][ibr].second;
             std::vector<double> sigs2;
             linalg::matrix<Tm> U;
-
-            if(rank == 0) std::cout << "ibr=" << ibr
-                << " br/bc=" << br << "," << bc
-                << std::endl; 
-
-            if(br == -1){
-               local_results[ibr] = std::make_pair(-1,std::make_pair(sigs2, U));  
-            }else if(debug_auxbasis && bc == -1){
+            if(debug_auxbasis && bc == -1){
                // generate a random unitary
                int rdim = qrow.get_dim(br);
-               if(rank==0) std::cout << "rank=" << rank << " rdim=" << rdim << std::endl; 
                std::vector<linalg::matrix<Tm>> blks(1);
                blks[0] = linalg::random_matrix<Tm>(rdim,rdim);
-               auto t0d = tools::get_time();
                kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
                std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
                      [](const double& x){ return 1.e-14*x; });
-               auto t1d = tools::get_time();
-               if(rank == 0) std::cout << " decim1: ibr=" << ibr
-                  << " br,bc=" << br << "," << bc 
-                  << " rdim/cdim=" << blks[0].rows() << "," << blks[0].cols()
-                  << " t=" << tools::get_duration(t1d-t0d)
-                  << std::endl;
- 
                local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
             }else{
-               int rdim = qrow.get_dim(br);
-               if(rank==0) std::cout << "rank=" << rank << " rdim=" << rdim << std::endl; 
                // compute renormalized basis
                std::vector<linalg::matrix<Tm>> blks(nroots);
                for(int iroot=0; iroot<nroots; iroot++){
                   blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
                }
-               auto t0d = tools::get_time();
                kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
-               auto t1d = tools::get_time();
-               if(rank == 0) std::cout << " decim2: ibr=" << ibr
-                  << " br,bc=" << br << "," << bc 
-                  << " rdim/cdim=" << blks[0].rows() << "," << blks[0].cols()
-                  << " t=" << tools::get_duration(t1d-t0d)
-                  << std::endl;
                local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
             }
          } // br
-         auto ty = tools::get_time();
-         if(rank == 0) std::cout << "timing for compute0=" 
-            << tools::get_duration(ty-tx) 
-            << " size=" << local_size
-            << std::endl;
          auto t2 = tools::get_time();
          if(rank == 0) std::cout << "timing for compute=" 
             << tools::get_duration(t2-t1) << std::endl;
 
          // collect local_results to results in rank-0
-         decimation_gather(icomb, alg_decim, local_brbc, local_results, results, size, rank);
+         decimation_collect(icomb, alg_decim, local_brbc, local_results, results, size, rank);
          auto t3 = tools::get_time();
-         if(rank == 0) std::cout << "timing for gather=" 
+         if(rank == 0) std::cout << "timing for collect=" 
             << tools::get_duration(t3-t2) << std::endl;
          
          if(rank == 0){
             std::cout << "----- TMING FOR decimation_genbasis: " 
                << tools::get_duration(t3-t0) << " S"
-               << " T(divide/compute/conquer)="
+               << " T(divide/compute/collect)="
                << tools::get_duration(t1-t0) << ","
                << tools::get_duration(t2-t1) << "," 
                << tools::get_duration(t3-t2) << " -----" 
@@ -321,6 +266,9 @@ namespace ctns{
          }
       }
 
+   //
+   // NOTE: this part has not been revised
+   //
    template <>
       inline void decimation_genbasis(const comb<qkind::cNK>& icomb,
             const qbond& qs1,
@@ -449,34 +397,16 @@ namespace ctns{
          const auto& dim0 = qrow.get_dim(br);
          const auto& dim = kept_dim[br];
          const auto& wts = kept_wts[br];
-         if(dim != 0){
-            br_kept.push_back(br);
-            dims.emplace_back(qr,dim);
-            accum += wts;    
-            deff += dim;
-            // save information
-            std::cout << " iqr=" << iqr << " qr=" << qr
-               << " dim[full,kept]=" << dim0 << "," << dim 
-               << " wts=" << wts << " accum=" << accum << " deff=" << deff 
-               << std::endl;
-         }else{
-           
-            /* 
-            // additional: kept at least one state per sector
-            // ZL@20220517 disable such choice, since it will create many sector with dim=1 
-            if(!ifmatched[br]) continue;
-            br_kept.push_back(br);
-            int dmin = (ifkr && qr.parity()==1)? 2 : 1;
-            dims.emplace_back(qr,dmin);
-            deff += dmin;
-            // save information
-            std::cout << " iqr=" << iqr << " qr=" << qr
-               << " dim[full,kept]=" << dim0 << "," << dmin 
-               << " wts=" << wts << " accum=" << accum << " deff=" << deff
-               << " (additional)" << std::endl;
-            */
-
-         }
+         if(dim == 0) continue;
+         br_kept.push_back(br);
+         dims.emplace_back(qr,dim);
+         accum += wts;    
+         deff += dim;
+         // save information
+         std::cout << " iqr=" << iqr << " qr=" << qr
+            << " dim[full,kept]=" << dim0 << "," << dim 
+            << " wts=" << wts << " accum=" << accum << " deff=" << deff 
+            << std::endl;
       } // iqr
 
       if(ifsave){
