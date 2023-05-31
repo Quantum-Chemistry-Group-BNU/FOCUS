@@ -22,14 +22,11 @@ namespace ctns{
             const std::string fname,
             const bool debug){
          using Tm = typename Km::dtype;
-         int rank = 0, size = 1, maxthreads = 1;
+         int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
          size = icomb.world.size();
 #endif   
-#ifdef _OPENMP
-         maxthreads = omp_get_max_threads();
-#endif
          auto t0 = tools::get_time();
          const auto qprod = qmerge(qs1, qs2);
          const auto& qrow = qprod.first;
@@ -42,8 +39,7 @@ namespace ctns{
             std::cout << "ctns::decimation_row_nkr"
                << " dcut=" << dcut << " nqr=" << nqr
                << " alg_decim=" << alg_decim
-               << " mpisize=" << size
-               << " maxthreads=" << maxthreads;
+               << " mpisize=" << size;
             if(iftrunc && !fname.empty()) std::cout << " fname=" << fname;
             std::cout << std::endl;
             qrow.print("qsuper");
@@ -77,6 +73,7 @@ namespace ctns{
          auto t1 = tools::get_time();
 
          if(rank == 0){
+            // 1.5 merge all sig2 and normalize
             int idx = 0;
             double sig2sum = 0.0;
             std::vector<bool> ifmatched(nqr);
@@ -154,14 +151,11 @@ namespace ctns{
             const std::string fname,
             const bool debug){
          using Tm = std::complex<double>;
-         int rank = 0, size = 1, maxthreads = 1;
+         int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
          size = icomb.world.size();
 #endif   
-#ifdef _OPENMP
-         maxthreads = omp_get_max_threads();
-#endif
          auto t0 = tools::get_time();
          const auto qprod = qmerge(qs1, qs2);
          const auto& qrow = qprod.first;
@@ -174,7 +168,6 @@ namespace ctns{
             std::cout << "ctns::decimation_row_kr"
                << " dcut=" << dcut << " nqr=" << nqr
                << " alg_decim=" << alg_decim
-               << " maxthreads=" << maxthreads 
                << std::endl;
             if(iftrunc && !fname.empty()) std::cout << " fname=" << fname;
             std::cout << std::endl;

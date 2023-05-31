@@ -9,7 +9,10 @@
 
 namespace ctns{
 
-   const double thresh_sig2 = 1.e-14;
+   const bool debug_auxbasis = true;
+   extern const bool debug_auxbasis;
+
+   const double thresh_sig2 = -1.e-14;
    extern const double thresh_sig2;
 
    const bool debug_decimation = false;
@@ -21,13 +24,13 @@ namespace ctns{
       using decim_map = std::map<int,decim_item<Tm>>; // br->(sigs,Umat)
 
    template <typename Km>
-      void decimation_scatter(const comb<Km>& icomb,
+      void decimation_divide(const comb<Km>& icomb,
             const qbond& qrow,
             const qbond& qcol,
             const int alg_decim,
             const std::vector<stensor2<typename Km::dtype>>& wfs2,
-            std::vector<std::pair<int,int>>& local_brbc){
-         const bool debug = false;
+            std::vector<std::vector<std::pair<int,int>>>& local_brbc){
+         const bool debug = true;
          using Tm = typename Km::dtype;
          int rank = 0, size = 1;
 #ifndef SERIAL
@@ -35,48 +38,56 @@ namespace ctns{
          size = icomb.world.size();
 #endif   
          int nqr = qrow.size();
-         // preprocess wfs2 to find contributing blocks
+         
+         // 1. preprocess wfs2 to find contributing blocks
          std::vector<std::pair<int,int>> brbc(nqr);
          std::vector<double> decim_cost(nqr);
          std::vector<int> index;
-         int neff = 0;
+         int nqr_eff = 0;
          if(rank == 0){
             for(int br=0; br<nqr; br++){
                int rdim = qrow.get_dim(br);
+               // find matched column
                int matched = 0;
                for(int bc=0; bc<qcol.size(); bc++){
                   if(wfs2[0](br,bc).empty()) continue;
                   matched += 1;
                   if(matched > 1) tools::exit("multiple matched qc is not supported!");
-                  brbc[neff] = std::make_pair(br,bc);
+                  brbc[nqr_eff] = std::make_pair(br,bc);
                   int cdim = qcol.get_dim(bc);
                   int m = std::max(rdim,cdim);
                   int n = std::min(rdim,cdim);
                   // estimator for FLOP of SVD following
                   // https://en.wikipedia.org/wiki/Singular_value_decomposition
-                  decim_cost[neff] = double(n)*n*m;
+                  decim_cost[nqr_eff] = double(n)*n*m;
                   if(debug){
-                     std::cout << "neff=" << neff
+                     std::cout << "nqr_eff=" << nqr_eff
                         << " rdim,cdim=" << rdim << "," << cdim 
-                        << " cost=" << decim_cost[neff]
+                        << " cost=" << decim_cost[nqr_eff]
                         << std::endl;
                   }
-                  neff += 1;
+                  nqr_eff += 1;
                } // bc
+               // no matched column  
+               if(debug_auxbasis && matched == 0){
+                  brbc[nqr_eff] = std::make_pair(br,-1);
+                  decim_cost[nqr_eff] = double(rdim)*rdim*rdim;
+                  nqr_eff += 1;
+               }
             } // br
-            brbc.resize(neff);
-            decim_cost.resize(neff);
+            brbc.resize(nqr_eff);
+            decim_cost.resize(nqr_eff);
             index = tools::sort_index(decim_cost, 1);
          } // rank-0
-         // from {brbc,decim_cost,index} to contruct local_brbc
+         
+         // 2. from {brbc,decim_cost,index} to contruct local_brbc
          if(alg_decim==0 || (alg_decim>0 && size==1)){
-            if(rank == 0) local_brbc = std::move(brbc);
+            if(rank == 0) local_brbc[rank] = std::move(brbc);
          }else{
-            std::vector<std::vector<std::pair<int,int>>> local_brbcs(size);
-            // partition the task set using a greedy algorithm 
+            // partition the task set using a greedy algorithm to ensure load balance 
             if(rank == 0){
                std::vector<double> local_cost(size,0);
-               for(int i=0; i<neff; i++){
+               for(int i=0; i<nqr_eff; i++){
                   int idx = index[i];
                   auto ptr = std::min_element(local_cost.begin(), local_cost.end());
                   int pos = std::distance(local_cost.begin(), ptr);
@@ -87,27 +98,28 @@ namespace ctns{
                      tools::print_vector(local_cost, "local_cost");
                   }
                   local_cost[pos] += decim_cost[idx];
-                  local_brbcs[pos].push_back(brbc[idx]);
+                  local_brbc[pos].push_back(brbc[idx]);
                } // i
                if(debug){
                   for(int i=0; i<size; i++){
                      std::cout << "rank=" << rank << " i=" << i 
-                        << " size(local_brbc)=" << local_brbcs[i].size() 
+                        << " size(local_brbc)=" << local_brbc[i].size() 
                         << " cost=" << local_cost[i] << std::endl;
-                     for(int j=0; j<local_brbcs[i].size(); j++){
-                        std::cout << "j=" << j << " br=" << local_brbcs[i][j].first << std::endl;
+                     for(int j=0; j<local_brbc[i].size(); j++){
+                        std::cout << "j=" << j << " br=" << local_brbc[i][j].first << std::endl;
                      }
                   }
                }
             } // rank-0
-            // scatter the partition into each processes
-            boost::mpi::scatter(icomb.world, local_brbcs, local_brbc, 0);
+            // broadcast the partition into each processes
+            boost::mpi::broadcast(icomb.world, local_brbc, 0);
          } // alg_decim
       }
 
    template <typename Km>
-      void decimation_gather(const comb<Km>& icomb,
+      void decimation_collect(const comb<Km>& icomb,
             const int alg_decim,
+            const std::vector<std::vector<std::pair<int,int>>>& local_brbc,
             const std::vector<std::pair<int,decim_item<typename Km::dtype>>>& local_results,
             decim_map<typename Km::dtype>& results,
             const int size,
@@ -122,6 +134,8 @@ namespace ctns{
                }
             }
          }else{
+          
+            /*
             std::vector<std::vector<std::pair<int,decim_item<Tm>>>> full_results;
             boost::mpi::gather(icomb.world, local_results, full_results, 0);
             // reconstruct results
@@ -130,10 +144,70 @@ namespace ctns{
                for(int i=0; i<full_results.size(); i++){
                   for(int j=0; j<full_results[i].size(); j++){
                      int br = full_results[i][j].first;
+                     if(br == -1) continue;
                      results[br] = std::move(full_results[i][j].second);
                   }
                }
             }
+            */
+
+            /*
+            for(int j=0; j<local_results.size(); j++){
+               std::vector<std::pair<int,decim_item<Tm>>> full_results;
+
+               std::cout << "rank=" << rank << " j=" << j
+                  << " sz=" << local_results[j].second.second.size() << std::endl;
+
+               icomb.world.barrier();
+               boost::mpi::gather(icomb.world, local_results[j], full_results, 0);
+               if(rank == 0){
+                  assert(full_results.size() == size);
+                  for(int i=0; i<size; i++){
+                     int br = full_results[i].first;
+                     if(br == -1) continue;
+                     results[br] = std::move(full_results[i].second);
+                  }
+               }
+            }
+            */
+           
+            if(rank != 0){
+               // send in ascending order of br
+               std::vector<boost::mpi::request> request(local_results.size());
+               for(int i=0; i<local_results.size(); i++){
+                  const int br = local_results[i].first;
+                  const auto& item = local_results[i].second; 
+                  request[i] = icomb.world.isend(0, br, item);
+               }
+               boost::mpi::wait_all(&request[0], &request[0]+local_results.size());
+            }else{
+               
+               // save local results first
+               for(int ibr=0; ibr<local_results.size(); ibr++){
+                  int br = local_results[ibr].first;
+                  results[br] = std::move(local_results[ibr].second);
+               }
+               // recv results from other ranks
+               int nrecv = 0;
+               for(int i=1; i<size; i++){
+                  for(int j=0; j<local_brbc[i].size(); j++){
+                     nrecv += 1;
+                  }
+               }
+               std::vector<boost::mpi::request> request(nrecv);
+               int idx = 0;
+               for(int i=1; i<size; i++){
+                  for(int j=0; j<local_brbc[i].size(); j++){
+                     int br = local_brbc[i][j].first;
+                     if(br == -1) continue;
+                     request[idx] = icomb.world.irecv(i, br, results[br]);
+                     idx += 1;      
+                  }
+               }
+               boost::mpi::wait_all(&request[0], &request[0]+nrecv);
+
+            }
+
          } // alg_decim
       }
 
@@ -156,56 +230,90 @@ namespace ctns{
 #endif   
          // determine local_brbc for each rank
          auto t0 = tools::get_time();
-         std::vector<std::pair<int,int>> local_brbc;
-         decimation_scatter(icomb, qrow, qcol, alg_decim, wfs2, local_brbc);
+         std::vector<std::vector<std::pair<int,int>>> local_brbc(size);
+         decimation_divide(icomb, qrow, qcol, alg_decim, wfs2, local_brbc);
          auto t1 = tools::get_time();
-         int local_size = local_brbc.size();
+         if(rank == 0) std::cout << "timing for divide=" 
+            << tools::get_duration(t1-t0) << std::endl;
+         
+         // start decimation
+         int local_size = local_brbc[rank].size();
          std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
          int nroots = wfs2.size();
-         if(alg_decim == 0){
-            // Serail + OpenMP parallelization 
+         int nthreads = 1;
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)
+         if(alg_decim == 0) nthreads = omp_get_max_threads();
+         #pragma omp parallel for schedule(dynamic) num_threads(nthreads)
 #endif
-            for(int ibr=0; ibr<local_size; ibr++){
-               int br = local_brbc[ibr].first;
-               int bc = local_brbc[ibr].second;
-               // search for matched block 
-               std::vector<double> sigs2;
-               linalg::matrix<Tm> U;
+         auto tx = tools::get_time();
+         for(int ibr=0; ibr<local_size; ibr++){
+            int br = local_brbc[rank][ibr].first;
+            int bc = local_brbc[rank][ibr].second;
+            std::vector<double> sigs2;
+            linalg::matrix<Tm> U;
+
+            if(rank == 0) std::cout << "ibr=" << ibr
+                << " br/bc=" << br << "," << bc
+                << std::endl; 
+
+            if(br == -1){
+               local_results[ibr] = std::make_pair(-1,std::make_pair(sigs2, U));  
+            }else if(debug_auxbasis && bc == -1){
+               // generate a random unitary
+               int rdim = qrow.get_dim(br);
+               if(rank==0) std::cout << "rank=" << rank << " rdim=" << rdim << std::endl; 
+               std::vector<linalg::matrix<Tm>> blks(1);
+               blks[0] = linalg::random_matrix<Tm>(rdim,rdim);
+               auto t0d = tools::get_time();
+               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+               std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
+                     [](const double& x){ return 1.e-14*x; });
+               auto t1d = tools::get_time();
+               if(rank == 0) std::cout << " decim1: ibr=" << ibr
+                  << " br,bc=" << br << "," << bc 
+                  << " rdim/cdim=" << blks[0].rows() << "," << blks[0].cols()
+                  << " t=" << tools::get_duration(t1d-t0d)
+                  << std::endl;
+ 
+               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+            }else{
+               int rdim = qrow.get_dim(br);
+               if(rank==0) std::cout << "rank=" << rank << " rdim=" << rdim << std::endl; 
                // compute renormalized basis
                std::vector<linalg::matrix<Tm>> blks(nroots);
                for(int iroot=0; iroot<nroots; iroot++){
                   blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
                }
+               auto t0d = tools::get_time();
                kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+               auto t1d = tools::get_time();
+               if(rank == 0) std::cout << " decim2: ibr=" << ibr
+                  << " br,bc=" << br << "," << bc 
+                  << " rdim/cdim=" << blks[0].rows() << "," << blks[0].cols()
+                  << " t=" << tools::get_duration(t1d-t0d)
+                  << std::endl;
                local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
-            } // br
-         }else{
-            // MPI + BLAS level parrallelization
-            for(int ibr=0; ibr<local_size; ibr++){
-               int br = local_brbc[ibr].first;
-               int bc = local_brbc[ibr].second;
-               // search for matched block 
-               std::vector<double> sigs2;
-               linalg::matrix<Tm> U;
-               // compute renormalized basis
-               std::vector<linalg::matrix<Tm>> blks(nroots);
-               for(int iroot=0; iroot<nroots; iroot++){
-                  blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
-               }
-               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
-               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
-            } // br
-         } // alg_decim 
+            }
+         } // br
+         auto ty = tools::get_time();
+         if(rank == 0) std::cout << "timing for compute0=" 
+            << tools::get_duration(ty-tx) 
+            << " size=" << local_size
+            << std::endl;
          auto t2 = tools::get_time();
+         if(rank == 0) std::cout << "timing for compute=" 
+            << tools::get_duration(t2-t1) << std::endl;
+
          // collect local_results to results in rank-0
-         decimation_gather(icomb, alg_decim, local_results, results, size, rank);
+         decimation_gather(icomb, alg_decim, local_brbc, local_results, results, size, rank);
          auto t3 = tools::get_time();
+         if(rank == 0) std::cout << "timing for gather=" 
+            << tools::get_duration(t3-t2) << std::endl;
+         
          if(rank == 0){
             std::cout << "----- TMING FOR decimation_genbasis: " 
                << tools::get_duration(t3-t0) << " S"
-               << " T(scatter/comp/gather)="
+               << " T(divide/compute/conquer)="
                << tools::get_duration(t1-t0) << ","
                << tools::get_duration(t2-t1) << "," 
                << tools::get_duration(t3-t2) << " -----" 
@@ -352,20 +460,22 @@ namespace ctns{
                << " wts=" << wts << " accum=" << accum << " deff=" << deff 
                << std::endl;
          }else{
+           
+            /* 
             // additional: kept at least one state per sector
             // ZL@20220517 disable such choice, since it will create many sector with dim=1 
-            /*
-               if(!ifmatched[br]) continue;
-               br_kept.push_back(br);
-               int dmin = (ifkr && qr.parity()==1)? 2 : 1;
-               dims.emplace_back(qr,dmin);
-               deff += dmin;
+            if(!ifmatched[br]) continue;
+            br_kept.push_back(br);
+            int dmin = (ifkr && qr.parity()==1)? 2 : 1;
+            dims.emplace_back(qr,dmin);
+            deff += dmin;
             // save information
             std::cout << " iqr=" << iqr << " qr=" << qr
-            << " dim[full,kept]=" << dim0 << "," << dmin 
-            << " wts=" << wts << " accum=" << accum << " deff=" << deff
-            << " (additional)" << std::endl;
+               << " dim[full,kept]=" << dim0 << "," << dmin 
+               << " wts=" << wts << " accum=" << accum << " deff=" << deff
+               << " (additional)" << std::endl;
             */
+
          }
       } // iqr
 
