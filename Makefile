@@ -288,7 +288,8 @@ SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
 # separate libraries
-SRC_CORE = $(wildcard $(SRC_DIR_CORE)/*.cpp)
+SRC_CORE = $(wildcard $(SRC_DIR_CORE)/*.cpp \
+				 $(SRC_DIR_GPU)/*.cpp) # put GPU into CORE
 OBJ_CORE = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CORE}))
 
 SRC_IO = $(wildcard $(SRC_DIR_IO)/*.cpp) 
@@ -299,8 +300,7 @@ OBJ_CI = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CI}))
 
 SRC_CTNS = $(wildcard $(SRC_DIR_QT)/*.cpp \
 		      $(SRC_DIR_CTNS)/*.cpp \
-		      $(SRC_DIR_EXPT)/*.cpp \
-		      $(SRC_DIR_GPU)/*.cpp)
+		      $(SRC_DIR_EXPT)/*.cpp)
 OBJ_CTNS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CTNS}))
 
 SRC_VMC = $(wildcard $(SRC_DIR_VMC)/*.cpp)
@@ -313,7 +313,7 @@ OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend core ci ctns vmc
 
-core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a $(BIN_DIR)/tests_core.x $(BIN_DIR)/tests_mathlib.x 
+core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a $(BIN_DIR)/tests_core.x $(BIN_DIR)/tests_mathlib.x $(BIN_DIR)/tests_io.x $(BIN_DIR)/tests_mpi.x $(BIN_DIR)/tests_nccl.x 
 
 ifeq ($(strip $(INSTALL_CI)), yes)
 ci: $(LIB_DIR)/libci.a $(BIN_DIR)/tests_ci.x $(BIN_DIR)/exactdiag.x $(BIN_DIR)/fci.x $(BIN_DIR)/sci.x
@@ -344,9 +344,10 @@ depend:
 	echo " USE_GCC = " $(USE_GCC); \
 	echo " USE_MPI = " $(USE_MPI); \
 	echo " USE_OPENMP = " $(USE_OPENMP); \
-	echo " USE_BLAS = " $(USE_BLAS); \
 	echo " USE_ILP64 = " $(USE_ILP64); \
 	echo " USE_GPU = " $(USE_GPU); \
+	echo " USE_NCCL = " $(USE_NCCL); \
+	echo " USE_BLAS = " $(USE_BLAS); \
 	echo " CXX = " $(CXX); \
 	echo " CC = " $(CC); \
 	set -e; \
@@ -388,10 +389,24 @@ $(BIN_DIR)/tests_mathlib.x: $(OBJ_DIR)/tests_mathlib.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_mathlib.o $(LFLAGS) -L$(LIB_DIR) -lcore
 
+$(BIN_DIR)/tests_io.x: $(OBJ_DIR)/tests_io.o $(LIB_DIR)/libcore.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_io.o $(LFLAGS) -L$(LIB_DIR) -lcore
+
+$(BIN_DIR)/tests_mpi.x: $(OBJ_DIR)/tests_mpi.o $(LIB_DIR)/libcore.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_mpi.o $(LFLAGS) -L$(LIB_DIR) -lcore
+
+$(BIN_DIR)/tests_nccl.x: $(OBJ_DIR)/tests_nccl.o $(LIB_DIR)/libcore.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_nccl.o $(LFLAGS) -L$(LIB_DIR) -lcore
+
+# CI
 $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ci.o $(LFLAGS) -L$(LIB_DIR) -lci
 
+# CTNS
 $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ctns.o -L$(LIB_DIR) -lctns $(LFLAGS)

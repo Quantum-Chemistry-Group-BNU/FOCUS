@@ -1,6 +1,8 @@
 #ifdef GPU
-
 #ifdef NCCL
+
+#ifndef GPU_NCCL_H
+#define GPU_NCCL_H
 
 #include "cuda_runtime.h"
 #include "nccl.h"
@@ -84,6 +86,7 @@ struct nccl_communicator{
       cudaStream_t s;
 };
 
-#endif
+#endif // GPU_NCCL_H
 
-#endif
+#endif // NCCL
+#endif // GPU
