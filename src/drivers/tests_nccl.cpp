@@ -77,6 +77,7 @@ int main(int argc, char * argv[]) {
                   << "  t_gpu2cpu=" << t_gpu2cpu << " speed=" << count/t_gpu2cpu/std::pow(1024,3) << "GB/s" 
                   << std::endl;
 
+        GPUmem.deallocate(dev_data, count);
         world.barrier();
     }
 #endif
