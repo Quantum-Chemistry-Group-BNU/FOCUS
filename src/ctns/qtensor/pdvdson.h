@@ -372,11 +372,13 @@ namespace ctns{
                   if(!ifconv) std::cout << "convergence failure: out of maxcycle=" << maxcycle << std::endl;
                   auto tf = tools::get_time();    
                   t_tot = tools::get_duration(tf-ti);
-                  t_rest = t_tot - t_cal - t_comm - t_sub - t_precond;
+                  t_rest = t_tot - t_cal - t_comm;
+                  double t_other =  t_rest - t_sub - t_precond - t_ortho;
                   std::cout << "TIMING FOR Davidson : " << t_tot 
-                     << "  T(cal/comm/sub/precond/ortho/rest)=" 
-                     << t_cal << "," << t_comm << "," << t_sub << "," 
-                     << t_precond << "," << t_ortho << "," << t_rest 
+                     << "  T(cal/comm/rest)=" 
+                     << t_cal << "," << t_comm << "," << t_rest
+                     << "  T(sub/precond/ortho/other)="
+                     << t_sub << "," << t_precond << "," << t_ortho << "," << t_other
                      << std::endl;
                }
             }
@@ -404,10 +406,10 @@ namespace ctns{
             double t_tot = 0.0;
             double t_cal = 0.0; // Hx
             double t_comm = 0.0; // reduce
+            double t_rest = 0.0; 
             double t_sub = 0.0; // subspace
             double t_precond = 0.0; // subspace
             double t_ortho = 0.0; // ortho
-            double t_rest = 0.0; 
             bool debug = false;
       };
 

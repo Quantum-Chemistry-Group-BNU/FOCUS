@@ -51,7 +51,7 @@ namespace ctns{
       getrusage(RUSAGE_SELF, &usage);
       double user = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec/1.e6; // user time used
       double sys  = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec/1.e6; // sys time used
-      std::cout << "Timing: User:" << user << "S" 
+      std::cout << "  Timing: User:" << user << "S" 
          << " Sys:" << sys << "S"
          << " Total:" << user+sys << "S"
          << std::endl;

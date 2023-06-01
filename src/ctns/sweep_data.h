@@ -262,7 +262,7 @@ namespace ctns{
          } // i
       }
       // summary for a single sweep
-      void summary(const int isweep);
+      void summary(const int isweep, const int mpisize);
       public:
       int seqsize, nroots, maxsweep, restart_sweep;
       std::vector<directed_bond> seq; // sweep bond sequence 
@@ -359,7 +359,10 @@ namespace ctns{
 
       // print all previous optimized results - sweep_data
       std::cout << tools::line_separator << std::endl;
-      std::cout << "summary of sweep optimization up to isweep=" << isweep << std::endl;
+      std::cout << "summary of sweep optimization up to isweep=" << isweep 
+         << " mpisize=" << mpisize 
+         << " maxthreads=" << maxthreads
+         << std::endl;
       std::cout << "schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Taccum/S | t_inter/S t_gemm/S t_red/S t_blas/S per" << std::endl;
       // print previous ctrl parameters
       double taccum=0.0;
