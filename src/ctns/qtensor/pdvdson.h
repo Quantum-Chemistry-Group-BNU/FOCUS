@@ -278,7 +278,10 @@ namespace ctns{
                // 1. generate initial subspace - vbas
                if(rank == 0){
                   if(vguess != nullptr){
+                     auto t0x = tools::get_time();
                      linalg::xcopy(ndim*neig, vguess, vbas);
+                     auto t1x = tools::get_time();
+                     t_xcopy += tools::get_duration(t1x-t0x);
                   }else{
                      auto index = tools::sort_index(ndim, Diag);
                      for(int i=0; i<neig; i++){
@@ -306,6 +309,7 @@ namespace ctns{
                      nindp = subspace_solver(ndim,nsub,neig,naux,rconv,vbas,wbas,tmpE,rbas);
                      //------------------------------------------------------------------------
                      // compute norm of residual
+                     auto t0r = tools::get_time();
                      for(int i=0; i<neig; i++){
                         double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
                         eigs(i,iter) = tmpE[i];
@@ -313,6 +317,7 @@ namespace ctns{
                         rconv[i] = (norm < crit_v)? true : false;
                      }
                      auto t1 = tools::get_time();
+                     t_xnrm2 += tools::get_duration(t1-t0r);
                      if(iprt >= 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
                      nsub = neig+nindp;
                      ifconv = (count(rconv.begin(), rconv.end(), true) == neig);
@@ -325,12 +330,18 @@ namespace ctns{
 #ifndef SERIAL
                      // broadcast converged results to all processors
                      if(size > 1){
+                        auto t0b = tools::get_time();
                         boost::mpi::broadcast(world, tmpE.data(), neig, 0);
                         mpi_wrapper::broadcast(world, vbas, ndim*neig, 0);
+                        auto t1b = tools::get_time();
+                        t_comm += tools::get_duration(t1b-t0b);
                      }
 #endif
+                     auto t0x = tools::get_time();
                      linalg::xcopy(neig, tmpE.data(), es);
                      linalg::xcopy(ndim*neig, vbas, vs);
+                     auto t1x = tools::get_time();
+                     t_xcopy += tools::get_duration(t1x-t0x);
                      break;
                   }
 
@@ -357,8 +368,11 @@ namespace ctns{
                   }else{
 #ifndef SERIAL
                      if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, &rbas[0], ndim*nindp, 0);
-#endif	      
+#endif	     
+                     auto t0x = tools::get_time(); 
                      linalg::xcopy(ndim*nindp, &rbas[0], &vbas[ndim*nsub]);
+                     auto t1x = tools::get_time(); 
+                     t_xcopy += tools::get_duration(t1x-t0x);
                      HVecs(nindp, &wbas[ndim*nsub], &vbas[ndim*nsub]);
                      if(rank == 0){ 
                         nsub += nindp; // expand the subspace 
@@ -373,13 +387,18 @@ namespace ctns{
                   auto tf = tools::get_time();    
                   t_tot = tools::get_duration(tf-ti);
                   t_rest = t_tot - t_cal - t_comm;
-                  double t_other =  t_rest - t_sub - t_precond - t_ortho;
                   std::cout << "TIMING FOR Davidson : " << t_tot 
                      << "  T(cal/comm/rest)=" 
                      << t_cal << "," << t_comm << "," << t_rest
-                     << "  T(sub/precond/ortho/other)="
-                     << t_sub << "," << t_precond << "," << t_ortho << "," << t_other
                      << std::endl;
+                  double t_other =  t_rest - t_sub - t_precond - t_ortho - t_xcopy - t_xnrm2;
+                  std::cout << "decomposed t_rest=" << t_rest << std::endl;
+                  std::cout << " T(sub)    =" << t_sub     << " per=" << t_sub/t_rest*100 << std::endl;
+                  std::cout << " T(precond)=" << t_precond << " per=" << t_precond/t_rest*100 << std::endl;
+                  std::cout << " T(ortho)  =" << t_ortho   << " per=" << t_ortho/t_rest*100 << std::endl;
+                  std::cout << " T(xcopy)  =" << t_xcopy   << " per=" << t_xcopy/t_rest*100 << std::endl;
+                  std::cout << " T(xnrm2)  =" << t_xnrm2   << " per=" << t_xnrm2/t_rest*100 << std::endl;
+                  std::cout << " T(other)  =" << t_other   << " per=" << t_other/t_rest*100 << std::endl;
                }
             }
          public:
@@ -407,10 +426,13 @@ namespace ctns{
             double t_cal = 0.0; // Hx
             double t_comm = 0.0; // reduce
             double t_rest = 0.0; 
+            bool debug = false;
+            // decomposition of t_rest
             double t_sub = 0.0; // subspace
             double t_precond = 0.0; // subspace
             double t_ortho = 0.0; // ortho
-            bool debug = false;
+            double t_xcopy = 0.0; // copy
+            double t_xnrm2 = 0.0; // nrm2 
       };
 
 } // ctns
