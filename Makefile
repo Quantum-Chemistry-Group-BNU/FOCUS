@@ -1,13 +1,13 @@
 
-machine = mac #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = jiageng #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
+DEBUG = no #yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
-USE_GPU = no #yes
-USE_NCCL = no #yes
+USE_GPU = yes
+USE_NCCL = yes
 USE_BLAS = no #yes
 # compression
 USE_LZ4 = no
