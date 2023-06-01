@@ -1,14 +1,14 @@
 
-machine = wuhan #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no # yes
+DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
-USE_BLAS = yes
+USE_GPU = no #yes
+USE_NCCL = no #yes
+USE_BLAS = no #yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -313,7 +313,7 @@ OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend core ci ctns vmc
 
-core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a $(BIN_DIR)/tests_core.x 
+core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a $(BIN_DIR)/tests_core.x $(BIN_DIR)/tests_mathlib.x 
 
 ifeq ($(strip $(INSTALL_CI)), yes)
 ci: $(LIB_DIR)/libci.a $(BIN_DIR)/tests_ci.x $(BIN_DIR)/exactdiag.x $(BIN_DIR)/fci.x $(BIN_DIR)/sci.x
@@ -383,6 +383,10 @@ $(LIB_DIR)/libvmc.a: $(OBJ_VMC) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
 $(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_core.o $(LFLAGS) -L$(LIB_DIR) -lcore
+
+$(BIN_DIR)/tests_mathlib.x: $(OBJ_DIR)/tests_mathlib.o $(LIB_DIR)/libcore.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_mathlib.o $(LFLAGS) -L$(LIB_DIR) -lcore
 
 $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"

@@ -13,6 +13,7 @@ int test_dvdson();
 int test_integral();
 int test_hamiltonian();
 int test_simpleci();
+int test_mathlib();
 
 }
 
