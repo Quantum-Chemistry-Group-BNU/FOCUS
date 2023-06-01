@@ -92,7 +92,7 @@ namespace ctns{
                sweeps.t_inter[isweep] = oper_timer.sigma.t_inter_tot + oper_timer.renorm.t_inter_tot;
                sweeps.t_gemm[isweep]  = oper_timer.sigma.t_gemm_tot  + oper_timer.renorm.t_gemm_tot;
                sweeps.t_red[isweep]   = oper_timer.sigma.t_red_tot   + oper_timer.renorm.t_red_tot;
-               sweeps.summary(isweep);
+               sweeps.summary(isweep, size);
             }
             // generate right rcanonical form and save checkpoint file
             if(rank == 0) sweep_final(icomb, schd, scratch, isweep);

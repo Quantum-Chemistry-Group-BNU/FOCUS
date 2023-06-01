@@ -254,8 +254,8 @@ namespace ctns{
          for(int i=0; i<nroots; i++){
             std::cout << "optimized energies:"
                << " isweep=" << isweep 
-               << " dots=" << dots
                << " ibond=" << ibond 
+               << " dots=" << dots
                << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
                << " nmvp=" << nmvp
                << std::endl;
@@ -280,9 +280,16 @@ namespace ctns{
    };
 
    // analysis of the current sweep (eopt,dwt,deff) and timing
-   inline void sweep_data::summary(const int isweep){
+   inline void sweep_data::summary(const int isweep, const int mpisize){
+      int maxthreads = 1;
+#ifdef _OPENMP
+      maxthreads = omp_get_max_threads();
+#endif
       std::cout << "\n" << tools::line_separator2 << std::endl;
-      std::cout << "sweep_data::summary isweep=" << isweep << std::endl; 
+      std::cout << "sweep_data::summary isweep=" << isweep 
+         << " mpisize=" << mpisize 
+         << " maxthreads=" << maxthreads
+         << std::endl; 
       std::cout << tools::line_separator << std::endl;
       print_ctrls(isweep);
 
