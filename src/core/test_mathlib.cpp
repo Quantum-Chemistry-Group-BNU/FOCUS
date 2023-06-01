@@ -152,20 +152,5 @@ int tests::test_mathlib(){
    // svd
    test_svd<Tm>();
 
-/*
-// mac machine - ZL@20230601
-----------------------------------------------------------------------
-tests::test_mathlib maxthreads=4
-ndim=50000000 rows=2000 cols=2000
-----------------------------------------------------------------------
-time for test_loop = 0.203004 S
-time for test_xnrm2 = 0.0417343 S c=7071.07
-time for test_xcopy = 0.034611 S
-time for test_xgemm = 0.0885083 S FLOPS=168.359 G/s
-time for test_ortho = 2.64287 S
-time for test_eig = 0.390302 S
-time for test_svd = 1.69179 S
-*/
-
    return 0;
 }
