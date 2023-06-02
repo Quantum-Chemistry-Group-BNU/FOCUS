@@ -1,0 +1,54 @@
+
+// mac machine - ZL@20230601
+----------------------------------------------------------------------
+tests::test_mathlib maxthreads=4
+ndim=50000000 rows=2000 cols=2000
+----------------------------------------------------------------------
+time for test_loop = 0.203004 S
+time for test_xnrm2 = 0.0417343 S c=7071.07
+time for test_xcopy = 0.034611 S
+time for test_xgemm = 0.0885083 S FLOPS=168.359 G/s
+time for test_ortho = 2.64287 S
+time for test_eig = 0.390302 S
+time for test_svd = 1.69179 S
+
+// jiageng - mkl
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=8
+----------------------------------------------------------------------
+tests::test_mathlib maxthreads=1
+ndim=50000000 rows=2000 cols=2000
+----------------------------------------------------------------------
+time for test_loop = 0.0698263 S
+time for test_xnrm2 = 0.0123547 S c=7071.07
+time for test_xcopy = 0.00999965 S
+time for test_xgemm = 0.0311599 S FLOPS=478.216 G/s
+time for test_ortho = 1.96348 S
+time for test_eig = 0.265356 S
+time for test_svd = 0.610317 S
+
+export OMP_NUM_THREADS=8
+export MKL_NUM_THREADS=8
+----------------------------------------------------------------------
+tests::test_mathlib maxthreads=8
+ndim=50000000 rows=2000 cols=2000
+----------------------------------------------------------------------
+data type: DOUBLE
+time for test_loop = 0.0693973 S
+time for test_xnrm2 = 0.00985157 S c=7071.07
+time for test_xcopy = 0.00978466 S
+time for test_xscal = 0.00677777 S
+time for test_xgemm = 0.0288668 S FLOPS=516.205 G/s
+time for test_ortho = 1.611 S
+time for test_eig = 0.221419 S
+time for test_svd = 0.608259 S
+data type: DOUBLE_COMPLEX
+time for test_loop = 0.140277 S
+time for test_xnrm2 = 0.00969873 S c=7071.07
+time for test_xcopy = 0.0194603 S
+time for test_xscal = 0.0138964 S
+time for test_xgemm = 0.10724 S FLOPS=138.952 G/s
+time for test_ortho = 2.00555 S
+time for test_eig = 0.576223 S
+time for test_svd = 1.25792 S
+

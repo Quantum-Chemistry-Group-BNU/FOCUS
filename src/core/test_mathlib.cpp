@@ -76,13 +76,13 @@ void test_xgemm(){
    auto mat_B = linalg::random_matrix<Tm>(cols,rows);
    auto t0 = tools::get_time();
    for(int k=0; k<cycle; k++){
-     auto mat_C= xgemm("N","N",mat_A,mat_B);
+      auto mat_C= xgemm("N","N",mat_A,mat_B);
    }
    auto t1 = tools::get_time();
    double tav = tools::get_duration(t1-t0)/cycle;
    std::cout << "time for test_xgemm = " << tav << " S"
-    << " FLOPS=" << 2*double(rows)*double(cols)*double(rows)/tav/std::pow(1024.0,3) << " G/s"
-    << std::endl;
+      << " FLOPS=" << 2*double(rows)*double(cols)*double(rows)/tav/std::pow(1024.0,3) << " G/s"
+      << std::endl;
 }
 
 template <typename Tm>
@@ -104,7 +104,7 @@ void test_eig(){
    auto t0 = tools::get_time();
    for(int k=0; k<cycle; k++){
       vector<double> e(rows);
-      matrix<double> v;
+      matrix<Tm> v;
       eig_solver(mat, e, v);
    }
    auto t1 = tools::get_time();
@@ -136,36 +136,47 @@ int tests::test_mathlib(){
    cout << "ndim=" << ndim << " rows=" << rows << " cols=" << cols << endl;
    cout << tools::line_separator << endl;
 
-   using Tm = double;
-   // loop
-   test_loop<Tm>();
-   // xnrm2
-   test_xnrm2<Tm>();
-   // xcopy
-   test_xcopy<Tm>();
-   // gemm
-   test_xgemm<Tm>();
-   // ortho
-   test_ortho<Tm>();
-   // eig
-   test_eig<Tm>();
-   // svd
-   test_svd<Tm>();
+   cout << "data type: DOUBLE" << endl;
+   {
+      using Tm = double;
+      // loop
+      test_loop<Tm>();
+      // xnrm2
+      test_xnrm2<Tm>();
+      // xcopy
+      test_xcopy<Tm>();
+      // xcopy
+      test_xscal<Tm>();
+      // gemm
+      test_xgemm<Tm>();
+      // ortho
+      test_ortho<Tm>();
+      // eig
+      test_eig<Tm>();
+      // svd
+      test_svd<Tm>();
+   }
 
-/*
-// mac machine - ZL@20230601
-----------------------------------------------------------------------
-tests::test_mathlib maxthreads=4
-ndim=50000000 rows=2000 cols=2000
-----------------------------------------------------------------------
-time for test_loop = 0.203004 S
-time for test_xnrm2 = 0.0417343 S c=7071.07
-time for test_xcopy = 0.034611 S
-time for test_xgemm = 0.0885083 S FLOPS=168.359 G/s
-time for test_ortho = 2.64287 S
-time for test_eig = 0.390302 S
-time for test_svd = 1.69179 S
-*/
+    cout << "data type: DOUBLE_COMPLEX" << endl;
+   {
+      using Tm = std::complex<double>;
+      // loop
+      test_loop<Tm>();
+      // xnrm2
+      test_xnrm2<Tm>();
+      // xcopy
+      test_xcopy<Tm>();
+      // xcopy
+      test_xscal<Tm>();
+      // gemm
+      test_xgemm<Tm>();
+      // ortho
+      test_ortho<Tm>();
+      // eig
+      test_eig<Tm>();
+      // svd
+      test_svd<Tm>();
+   }
 
-   return 0;
+  return 0;
 }
