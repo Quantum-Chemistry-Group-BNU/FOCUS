@@ -70,7 +70,7 @@ namespace ctns{
                + "_ibond"+std::to_string(ibond) + ".txt";
          std::string fmmtask;
          if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
-            fmmtask = "rmmtasks_gemm_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
+            fmmtask = "rmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          }
          if(superblock == "lc1"){
             icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);

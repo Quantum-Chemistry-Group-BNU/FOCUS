@@ -16,6 +16,8 @@ namespace ctns{
             t_inter_tot = 0.0;
             t_gemm_tot = 0.0;
             t_red_tot = 0.0;
+            c_inter_tot = 0.0;
+            c_red_tot = 0.0;
             tHx_tot.resize(nd);
             cHx_tot.resize(nd);
             memset(tHx_tot.data(), 0, nd*sizeof(double));
@@ -26,6 +28,8 @@ namespace ctns{
             t_inter = 0.0;
             t_gemm = 0.0;
             t_red = 0.0;
+            c_inter = 0.0;
+            c_red = 0.0;
             tHx.resize(nd);
             cHx.resize(nd);
             memset(tHx.data(), 0, nd*sizeof(double));
@@ -35,25 +39,35 @@ namespace ctns{
                const std::vector<double>& tdata, 
                const std::vector<double>& cost,
                const double& tinter,
+               const double& cinter,
                const double& tgemm,
-               const double& tred){
+               const double& tred,
+               const double& cred){
+            const double eps = 1.e-16;
             double tot = tinter + tgemm + tred;
+            std::cout << std::scientific << std::setprecision(1);
             std::cout << "--- TIMING FOR " << name << " :"
-               << " t_inter=" << tinter
-               << " t_gemm=" << tgemm 
-               << " t_reduction=" << tred
+               << " t_inter=" << tinter << " t_gemm=" << tgemm << " t_reduction=" << tred
                << " tot=" << tot << " ---" 
                << std::endl;
+            // inter
+            std::cout << " " << name << "[inter] counter=" << counter << " t=" << tinter
+                  << " per=" << tinter/tot*100 << " cost=" << cinter << " flops=" << cinter/(tinter+eps)
+                  << std::endl;
+            // gemm
             double cgemm = 0.0;
             for(int i=0; i<nd; i++){
-               std::cout << " " << name << " counter=" << counter << " i=" << i << " t=" << tdata[i] 
-                  << " per=" << tdata[i]/tgemm*100 
-                  << " cost=" << cost[i]
-                  << " flops=" << cost[i]/tdata[i]
+               std::cout << " " << name << "[gemm] counter=" << counter << " i=" << i << " t=" << tdata[i] 
+                  << " per=" << tdata[i]/tot*100 << " cost=" << cost[i] << " flops=" << cost[i]/(tdata[i]+eps)
                   << std::endl;
                cgemm += cost[i];
             }
-            std::cout << " total GEMM cost=" << cgemm << " flops=" << cgemm/tgemm << std::endl;
+            std::cout << " " << name << "[gemm] counter=" << counter << " total t=" << tgemm
+                      << " per=" << tgemm/tot*100 << " cost=" << cgemm << " flops=" << cgemm/(tgemm+eps) << std::endl;
+            // red 
+            std::cout << " " << name << "[red] counter=" << counter << " t=" << tred
+                  << " per=" << tred/tot*100 << " cost=" << cred << " flops=" << cred/(tred+eps)
+                  << std::endl;
          }
          void analysis(){
             t_gemm = 0.0;
@@ -68,8 +82,10 @@ namespace ctns{
             t_inter_tot += t_inter;
             t_gemm_tot += t_gemm;
             t_red_tot += t_red;
-            this->print(name, tHx, cHx, t_inter, t_gemm, t_red);
-            this->print(name+"_tot", tHx_tot, cHx_tot, t_inter_tot, t_gemm_tot, t_red_tot);
+            c_inter_tot += c_inter;
+            c_red_tot += c_red;
+            this->print(name, tHx, cHx, t_inter, c_inter, t_gemm, t_red, c_red);
+            this->print(name+"_tot", tHx_tot, cHx_tot, t_inter_tot, c_inter_tot, t_gemm_tot, t_red_tot, c_red_tot);
          }
       public:
          std::string name; 
@@ -77,6 +93,8 @@ namespace ctns{
          int counter=0;
          double t_inter=0.0, t_gemm=0.0, t_red=0.0;
          double t_inter_tot=0.0, t_gemm_tot=0.0, t_red_tot=0.0;
+         double c_inter=0.0, c_red=0.0;
+         double c_inter_tot=0.0, c_red_tot=0.0;
          std::vector<double> tHx;
          std::vector<double> tHx_tot;
          std::vector<double> cHx;

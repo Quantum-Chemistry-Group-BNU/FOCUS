@@ -169,7 +169,7 @@ namespace ctns{
                   + std::to_string(idx) + ".txt";
                std::string fmmtask;
                if(debug && schd.ctns.save_mmtask){
-                  fmmtask =  "rmmtasks_gemm_idx"+std::to_string(idx);
+                  fmmtask =  "rmmtasks_idx"+std::to_string(idx);
                }
                oper_renorm(superblock, icomb, p, int2e, int1e, schd,
                      cqops, rqops, qops_pool[frop], fname, timing, fmmtask); 

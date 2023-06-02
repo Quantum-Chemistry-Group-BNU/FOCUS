@@ -275,11 +275,12 @@ namespace ctns{
             workspace = new Tm[worktot];
 
             // generate Rmmtasks
-            const int batchblas = schd.ctns.alg_rinter; // use the same keyword for GEMM_batc
+            const int batchblas = schd.ctns.alg_rinter; // use the same keyword for GEMM_batch
+            auto batchrenorm = std::make_tuple(batchblas,batchblas,batchblas); 
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchblas, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, batchrenorm, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -290,7 +291,7 @@ namespace ctns{
                }
                if(fmmtask.size()>0) save_mmtask(Rmmtasks, fmmtask);
             }else{
-               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchblas, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, batchrenorm, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()
@@ -436,7 +437,7 @@ namespace ctns{
             if(!ifSingle){
                Rmmtasks.resize(Rlst2.size());
                for(int i=0; i<Rmmtasks.size(); i++){
-                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, schd.ctns.batchgemm, batchsize, blksize*2, blksize0);
+                  Rmmtasks[i].init(Rlst2[i], schd.ctns.mmorder, batchblas, schd.ctns.batchrenorm, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Rlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i
                         << " Rmmtasks.totsize=" << Rmmtasks[i].totsize
@@ -447,7 +448,7 @@ namespace ctns{
                } // i
                if(fmmtask.size()>0) save_mmtask(Rmmtasks, fmmtask);
             }else{
-               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, schd.ctns.batchgemm, batchsize, blksize*2, blksize0);
+               Rmmtask.init(Rlst, schd.ctns.mmorder, batchblas, schd.ctns.batchrenorm, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Rlst.size=" << Rlst.size()

@@ -22,18 +22,30 @@ namespace ctns{
             void init(Rlist<Tm>& Rlst, 
                   const int hdxorder,
                   const int _batchblas,
-                  const int _batchgemm,
+                  const std::tuple<int,int,int>& _batchrenorm,
                   const size_t _batchsize,
                   const size_t offset,
                   const size_t offset0=0);
             // save dimensions for optimization
-            void save(const std::string fgemm) const{
+            void save(const std::string fmmtask) const{
+               // inter: 
+               for(int k=0; k<imvbatch.size(); k++){
+                  std::string fmmtask_k = fmmtask+"_inter_"+std::to_string(k)+".txt";
+                  imvbatch[k].save(fmmtask_k);
+               }
+               // gemm: no. of batch 
                for(int k=0; k<mmbatch2.size(); k++){
+                  // 0,1,2,3,4,5,6
                   for(int i=0; i<mmbatch2[k].size(); i++){
-                     std::string fgemmki = fgemm+"_"+std::to_string(k)+"."
+                     std::string fmmtask_k_i = fmmtask+"_"+std::to_string(k)+"."
                         +std::to_string(i)+".txt";
-                     mmbatch2[k][i].save(fgemmki);
+                     mmbatch2[k][i].save(fmmtask_k_i);
                   }
+               }
+               // red:
+               for(int k=0; k<mvbatch.size(); k++){
+                  std::string fmmtask_k = fmmtask+"_red_"+std::to_string(k)+".txt";
+                  mvbatch[k].save(fmmtask_k);
                }
             }
             // form intermeidate operators
@@ -48,7 +60,7 @@ namespace ctns{
                ptrs[4] = opaddr[4];
                ptrs[5] = const_cast<Tm*>(alphas);
                gettimeofday(&t0, NULL);
-               imvbatch[k].kernel(batchblas, ptrs);
+               imvbatch[k].kernel(batchinter, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                hipDeviceSynchronize();
@@ -59,6 +71,7 @@ namespace ctns{
                gettimeofday(&t1, NULL);
                oper_timer.renorm.t_inter += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+               oper_timer.renorm.c_inter += imvbatch[k].cost;
             }
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
@@ -122,7 +135,7 @@ namespace ctns{
                ptrs[0] = workspace;
                ptrs[1] = pcoeff;
                ptrs[2] = y;
-               mvbatch[k].kernel(batchblas, ptrs);
+               mvbatch[k].kernel(batchred, ptrs);
 #ifdef GPU
 #ifdef USE_HIP
                hipDeviceSynchronize();
@@ -133,9 +146,11 @@ namespace ctns{
                gettimeofday(&t1, NULL);
                oper_timer.renorm.t_red += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+               oper_timer.renorm.c_red += mvbatch[k].cost;
             }
          public:
-            int icase = -1, batchblas = -1, batchgemm = -1;
+            int icase = -1, batchblas = -1;
+            int batchinter = -1,  batchgemm = -1, batchred = -1;
             size_t totsize = 0, batchsize = 0, offset = 0, nbatch = 0;
             double cost = 0.0;
             // --- GEMM ---
@@ -152,13 +167,15 @@ namespace ctns{
       void RMMtask<Tm>::init(Rlist<Tm>& Rlst,
             const int mmorder,
             const int _batchblas,
-            const int _batchgemm,
+            const std::tuple<int,int,int>& _batchrenorm,
             const size_t _batchsize,
             const size_t _offset,
             const size_t offset0){
          // init
          batchblas = _batchblas;
-         batchgemm = _batchgemm;
+         batchinter= std::get<0>(_batchrenorm);
+         batchgemm = std::get<1>(_batchrenorm);
+         batchred  = std::get<2>(_batchrenorm);
          batchsize = _batchsize;
          totsize = Rlst.size();
          offset = _offset;
@@ -214,8 +231,15 @@ namespace ctns{
                      idx += 1;
                      Rblk.off[ipos] = j*offset0; // overwrite old position
                   } // j
+                  // sort
+                  if(mmorder == 1){
+                     std::stable_sort(mvlst.begin(), mvlst.end(),
+                           [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
+                              return mv1 > mv2;
+                              });
+                  }
                   imvbatch[k].init(mvlst);
-               }
+               } // nInter
             }
 
             // 2. setup mmbatch2[k]
@@ -264,10 +288,10 @@ namespace ctns{
             // convert to batch list
             mmbatch2[k].resize(nd);
             for(int i=0; i<nd; i++){
-               if(mmorder == 1){ // sort by cost
+               // sort
+               if(mmorder == 1){ 
                   std::stable_sort(mmlst2[i].begin(), mmlst2[i].end(),
                         [](const MMinfo<Tm>& mm1, const MMinfo<Tm>& mm2){
-                           //return mm1.cost() > mm2.cost();
                            return mm1 > mm2; 
                         });
                }
@@ -329,6 +353,13 @@ namespace ctns{
             mv.offy = Rlst[off+jlen-1].offrop;
             mvlst.push_back(mv);
             const Tm beta = 1.0;
+            // sort
+            if(mmorder == 1){
+               std::stable_sort(mvlst.begin(), mvlst.end(),
+                           [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
+                              return mv1 > mv2;
+                              });
+            }
             mvbatch[k].init(mvlst, beta);
          } // k
       }
@@ -337,17 +368,17 @@ namespace ctns{
       using RMMtasks = std::vector<RMMtask<Tm>>;
 
    template <typename Tm>
-      void save_mmtask(const RMMtasks<Tm>& rmmtasks, const std::string fgemm){
-         std::cout << "save_mmtask fgemm = " << fgemm << std::endl;
+      void save_mmtask(const RMMtasks<Tm>& rmmtasks, const std::string fmmtask){
+         std::cout << "save_mmtask fmmtask = " << fmmtask << std::endl;
          for(int i=0; i<rmmtasks.size(); i++){
-            std::string fgemmi = fgemm+"_iblk"+std::to_string(i);
-            rmmtasks[i].save(fgemmi);
+            std::string fmmtask_i = fmmtask+"_iblk"+std::to_string(i);
+            rmmtasks[i].save(fmmtask_i);
          }
       }
    template <typename Tm>
-      void save_mmtask(const RMMtask<Tm>& rmmtask, const std::string fgemm){
-         std::cout << "save_mmtask fgemm = " << fgemm << std::endl;
-         rmmtask.save(fgemm);
+      void save_mmtask(const RMMtask<Tm>& rmmtask, const std::string fmmtask){
+         std::cout << "save_mmtask fmmtask = " << fmmtask << std::endl;
+         rmmtask.save(fmmtask);
       }
 
 } // ctns

@@ -12,14 +12,14 @@ namespace ctns{
    template <typename Tm>
       struct MMinfo{
          public:
-            std::tuple<int,int,int> get_dim3() const{ return std::make_tuple(M,N,K); }
+            double cost() const{ return 2*double(M)*N*K; }
             // ordered by cost and then lexicographic ordering of {M,N,K}
+            std::tuple<int,int,int> get_dim3() const{ return std::make_tuple(M,N,K); }
             bool operator >(const MMinfo<Tm>& mm) const{
                size_t mnk = size_t(M)*size_t(N)*size_t(K);
                size_t mnk2 = size_t(mm.M)*size_t(mm.N)*size_t(mm.K);
                return (mnk>mnk2) || (mnk==mnk2 && this->get_dim3()>mm.get_dim3());
             }
-            double cost() const{ return 2*double(M)*N*K; }
          public:
             char transA, transB;
             int M, N, K, LDA, LDB;
@@ -36,6 +36,27 @@ namespace ctns{
       struct MMbatch{
          public:
             void init(const MMlist<Tm>& MMlst);
+            // save dimension for optimization
+            void save(const std::string fname) const{
+               std::ofstream fout(fname);
+               if(size > 0){
+                  // total batch size
+                  fout << size << " " << transA[0] << " " << transB[0] <<std::endl;
+                  // group information
+                  fout << gsta.size();
+                  for(int i=0; i<gsta.size(); i++){
+                     fout << " " << gsta[i]; 
+                  }
+                  fout << std::endl;
+                  // (M,N,K)
+                  for(int i=0; i<size; i++){
+                     fout << M[i] << " " << N[i] << " " << K[i] << std::endl;
+                  }
+               }else{
+                  fout << "empty" << std::endl;
+               }
+               fout.close();
+            }
             void kernel(const int batchgemm, Tm** ptrs){
                if(batchgemm == 0){
                   this->xgemm_omp(ptrs);   
@@ -65,24 +86,6 @@ namespace ctns{
             void xgemm_batch_gpu_stream(Tm** ptrs);
 #endif
 #endif
-            // save dimension for optimization
-            void save(const std::string fname) const{
-               std::ofstream fout(fname);
-               if(size > 0){
-                  fout << size << " " << transA[0] << " " << transB[0] <<std::endl;
-                  fout << gsta.size();
-                  for(int i=0; i<gsta.size(); i++){
-                     fout << " " << gsta[i]; 
-                  }
-                  fout << std::endl;
-                  for(int i=0; i<size; i++){
-                     fout << M[i] << " " << N[i] << " " << K[i] << std::endl;
-                  }
-               }else{
-                  fout << "empty" << std::endl;
-               }
-               fout.close();
-            }
          public:
             size_t size = 0;
             double cost = 0.0;

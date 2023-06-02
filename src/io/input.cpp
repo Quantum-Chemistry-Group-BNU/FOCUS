@@ -227,8 +227,16 @@ void params_ctns::read(ifstream& istrm){
          save_mmtask = true;
       }else if(line.substr(0,7)=="mmorder"){
          mmorder = stoi(line.substr(7));
-      }else if(line.substr(0,9)=="batchgemm"){
-         batchgemm = stoi(line.substr(9));
+      }else if(line.substr(0,10)=="batchsigma"){
+         std::string batchinter, batchgemm, batchred;
+         istringstream is(line.substr(10));
+         is >> batchinter >> batchgemm >> batchred;
+         batchsigma = std::make_tuple(stoi(batchinter), stoi(batchgemm), stoi(batchred)); 
+      }else if(line.substr(0,11)=="batchrenorm"){
+         std::string batchinter, batchgemm, batchred;
+         istringstream is(line.substr(11));
+         is >> batchinter >> batchgemm >> batchred;
+         batchrenorm = std::make_tuple(stoi(batchinter), stoi(batchgemm), stoi(batchred)); 
       }else if(line.substr(0,8)=="batchmem"){
          batchmem = stod(line.substr(8));
       }else if(line.substr(0,11)=="rcanon_load"){
@@ -383,7 +391,14 @@ void params_ctns::print() const{
    cout << "sort_formulae = " << sort_formulae << endl;
    cout << "save_mmtask = " << save_mmtask << endl;
    cout << "mmorder = " << mmorder << endl;
-   cout << "batchgemm = " << batchgemm << std::endl;
+   cout << "batchsigma = " << std::get<0>(batchsigma)
+      << " " << std::get<1>(batchsigma)
+      << " " << std::get<2>(batchsigma)
+      << std::endl;
+   cout << "batchrenorm = " << std::get<0>(batchrenorm)
+      << " " << std::get<1>(batchrenorm)
+      << " " << std::get<2>(batchrenorm)
+      << std::endl;
    cout << "batchmem = " << batchmem << std::endl;
    // dvdson
    cout << "cisolver = " << cisolver << endl;
