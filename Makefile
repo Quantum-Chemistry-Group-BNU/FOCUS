@@ -1,5 +1,5 @@
 
-machine = jiageng #dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no #yes
 USE_GCC = yes
@@ -202,10 +202,10 @@ else ifeq ($(strip $(machine)), wuhan)
       LFLAGS += -L${NCCL_DIR}/lib -lnccl
    endif
 else ifeq ($(strip $(machine)), dell2)
-   CUDA_DIR= /home/dell/anaconda3/envs/pytorch
+   CUDA_DIR= /home/dell/anaconda3/envs/pytorch2
    MAGMA_DIR = ../magma/magma-2.6.1
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart -lrt
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart -lrt -lcublas -lcublasLt
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = /home/dell/public-soft/nccl/build
       FLAGS += -DNCCL -I${NCCL_DIR}/include	
