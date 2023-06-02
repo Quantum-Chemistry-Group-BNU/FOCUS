@@ -171,20 +171,20 @@ namespace linalg{
            // convert from magma_int_t to int 
            int m = m_array[ista], n = n_array[ista];
            int lda = m, incx = incx_array[0], incy = incy_array[0]; 
-           cublasOperation_t transA = CUBLAS_OP_N ;
-           if(transa=='T' || transa=='C'){
-              transA = CUBLAS_OP_T;
+           cublasOperation_t trans = CUBLAS_OP_N ;
+           if(trans=='T' || trans=='C'){
+              trans = CUBLAS_OP_T;
               lda = n;
            }
            // https://docs.nvidia.com/cuda/cublas/index.html
            CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
-                              transA, 
+                              trans, 
                               m, n,
                               alpha,
-                              &dev_A_array_ptr[ista], lda, // pointer should be on device
-                              &dev_X_array_ptr[ista], incx,
+                              &dev_A_array[ista], lda, // pointer should be on device
+                              &dev_X_array[ista], incx,
                               beta,
-                              &dev_Y_array_ptr[ista], incy,
+                              &dev_Y_array[ista], incy,
                               nbatch));
         } // group
 
@@ -198,7 +198,8 @@ namespace linalg{
             const std::complex<double> **A_array, const magma_int_t *ldda_array, 
             const std::complex<double> **X_array, const magma_int_t *incx_array,
             const std::complex<double> *beta, std::complex<double>** Y_array, const magma_int_t *incy_array,
-            const magma_int_t batch_count){
+            const magma_int_t batch_count,
+            const std::vector<int>& gsta){
 
         if(batch_count <= 0){
             std::cout<<"batch_count shoule > 0 in function xgemv_batch_gpu_grouped"<<std::endl;
@@ -242,20 +243,20 @@ namespace linalg{
            // convert from magma_int_t to int 
            int m = m_array[ista], n = n_array[ista];
            int lda = m, incx = incx_array[0], incy = incy_array[0]; 
-           cublasOperation_t transA = CUBLAS_OP_N ;
-           if(transa=='T' || transa=='C'){
-              transA = CUBLAS_OP_T;
+           cublasOperation_t trans = CUBLAS_OP_N ;
+           if(trans=='T' || trans=='C'){
+              trans = CUBLAS_OP_T;
               lda = n;
            }
            // https://docs.nvidia.com/cuda/cublas/index.html
            CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
-                              transA, 
+                              trans, 
                               m, n,
                               alpha,
-                              &dev_A_array_ptr[ista], lda, // pointer should be on device
-                              &dev_X_array_ptr[ista], incx,
+                              &dev_A_array[ista], lda, // pointer should be on device
+                              &dev_X_array[ista], incx,
                               beta,
-                              &dev_Y_array_ptr[ista], incy,
+                              &dev_Y_array[ista], incy,
                               nbatch));
         } // group
 
@@ -275,7 +276,8 @@ namespace linalg{
             const std::complex<double> **A_array, const magma_int_t *ldda_array, 
             const std::complex<double> **X_array, const magma_int_t *incx_array,
             const std::complex<double> *beta, std::complex<double>** Y_array, const magma_int_t *incy_array,
-            const magma_int_t batch_count){
+            const magma_int_t batch_count,
+            const std::vector<int>& gsta){
 
         if(batch_count <= 0){
             std::cout<<"batch_count shoule > 0 in function xgemv_batch_gpu_stream"<<std::endl;
@@ -313,9 +315,9 @@ namespace linalg{
         magma_int_t* dev_lda = dev_k + (batch_count+1);
         magma_int_t* dev_ldb = dev_lda + (batch_count+1);
         magma_int_t* dev_ldc = dev_ldb + (batch_count+1);
-        double** dev_a_array_ptr= (double**)dev_dtotal;
-        double** dev_b_array_ptr = dev_a_array_ptr + batch_count;
-        double** dev_c_array_ptr = dev_b_array_ptr + batch_count;
+        double** dev_a_array = (double**)dev_dtotal;
+        double** dev_b_array = dev_a_array + batch_count;
+        double** dev_c_array = dev_b_array + batch_count;
 
         GPUmem.to_gpu(dev_m, m_array, batch_count*sizeof(magma_int_t));
         GPUmem.to_gpu(dev_n, n_array, batch_count*sizeof(magma_int_t));
@@ -323,9 +325,9 @@ namespace linalg{
         GPUmem.to_gpu(dev_lda, lda_array, batch_count*sizeof(magma_int_t));
         GPUmem.to_gpu(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t));
         GPUmem.to_gpu(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t));
-        GPUmem.to_gpu(dev_a_array_ptr, a_array, batch_count*sizeof(double*));
-        GPUmem.to_gpu(dev_b_array_ptr, b_array, batch_count*sizeof(double*));
-        GPUmem.to_gpu(dev_c_array_ptr, c_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(double*));
 
         magma_trans_t transA = MagmaNoTrans;
         magma_trans_t transB = MagmaNoTrans;
@@ -347,12 +349,12 @@ namespace linalg{
                 dev_n,
                 dev_k,
                 alpha[0],
-                dev_a_array_ptr,
+                dev_a_array,
                 dev_lda,
-                dev_b_array_ptr,
+                dev_b_array,
                 dev_ldb,
                 beta[0],
-                dev_c_array_ptr,
+                dev_c_array,
                 dev_ldc,
                 batch_count,
                 magma_queue
@@ -388,9 +390,9 @@ namespace linalg{
         magma_int_t* dev_lda = dev_k + (batch_count+1);
         magma_int_t* dev_ldb = dev_lda + (batch_count+1);
         magma_int_t* dev_ldc = dev_ldb + (batch_count+1);
-        magmaDoubleComplex** dev_a_array_ptr= (magmaDoubleComplex**)dev_dtotal;
-        magmaDoubleComplex** dev_b_array_ptr = dev_a_array_ptr + batch_count;
-        magmaDoubleComplex** dev_c_array_ptr = dev_b_array_ptr + batch_count;
+        magmaDoubleComplex** dev_a_array = (magmaDoubleComplex**)dev_dtotal;
+        magmaDoubleComplex** dev_b_array = dev_a_array + batch_count;
+        magmaDoubleComplex** dev_c_array = dev_b_array + batch_count;
 
         GPUmem.to_gpu(dev_m, m_array, batch_count*sizeof(magma_int_t));
         GPUmem.to_gpu(dev_n, n_array, batch_count*sizeof(magma_int_t));
@@ -398,9 +400,9 @@ namespace linalg{
         GPUmem.to_gpu(dev_lda, lda_array, batch_count*sizeof(magma_int_t));
         GPUmem.to_gpu(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t));
         GPUmem.to_gpu(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t));
-        GPUmem.to_gpu(dev_a_array_ptr, a_array, batch_count*sizeof(magmaDoubleComplex*));
-        GPUmem.to_gpu(dev_b_array_ptr, b_array, batch_count*sizeof(magmaDoubleComplex*));
-        GPUmem.to_gpu(dev_c_array_ptr, c_array, batch_count*sizeof(magmaDoubleComplex*));
+        GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(magmaDoubleComplex*));
+        GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(magmaDoubleComplex*));
+        GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(magmaDoubleComplex*));
 
         magma_trans_t transA = MagmaNoTrans;
         magma_trans_t transB = MagmaNoTrans;
@@ -424,12 +426,12 @@ namespace linalg{
                 dev_n,
                 dev_k,
                 alpha1,
-                dev_a_array_ptr,
+                dev_a_array,
                 dev_lda,
-                dev_b_array_ptr,
+                dev_b_array,
                 dev_ldb,
                 beta1,
-                dev_c_array_ptr,
+                dev_c_array,
                 dev_ldc,
                 batch_count,
                 magma_queue
@@ -458,12 +460,12 @@ namespace linalg{
 
         size_t total_dsize = 3*batch_count*sizeof(double*);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
-        double** dev_a_array_ptr= (double**)dev_dtotal;
-        double** dev_b_array_ptr = dev_a_array_ptr + batch_count;
-        double** dev_c_array_ptr = dev_b_array_ptr + batch_count;
-        GPUmem.to_gpu(dev_a_array_ptr, a_array, batch_count*sizeof(double*));
-        GPUmem.to_gpu(dev_b_array_ptr, b_array, batch_count*sizeof(double*));
-        GPUmem.to_gpu(dev_c_array_ptr, c_array, batch_count*sizeof(double*));
+        double** dev_a_array = (double**)dev_dtotal;
+        double** dev_b_array = dev_a_array + batch_count;
+        double** dev_c_array = dev_b_array + batch_count;
+        GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(double*));
             
         for(int i=0; i<gsta.size()-1; i++){
            int ista = gsta[i];
@@ -486,10 +488,10 @@ namespace linalg{
                               transA, transB,
                               m, n, k,
                               alpha,
-                              &dev_a_array_ptr[ista], lda, // pointer should be on device
-                              &dev_b_array_ptr[ista], ldb,
+                              &dev_a_array[ista], lda, // pointer should be on device
+                              &dev_b_array[ista], ldb,
                               beta,
-                              &dev_c_array_ptr[ista], ldc,
+                              &dev_c_array[ista], ldc,
                               nbatch));
            /*
            for(int j=0; j<nbatch; j++){
@@ -543,12 +545,12 @@ namespace linalg{
 
         size_t total_dsize = 3*batch_count*sizeof(double*);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
-        double** dev_a_array_ptr= (double**)dev_dtotal;
-        double** dev_b_array_ptr = dev_a_array_ptr + batch_count;
-        double** dev_c_array_ptr = dev_b_array_ptr + batch_count;
-        GPUmem.to_gpu(dev_a_array_ptr, a_array, batch_count*sizeof(double*));
-        GPUmem.to_gpu(dev_b_array_ptr, b_array, batch_count*sizeof(double*));
-        GPUmem.to_gpu(dev_c_array_ptr, c_array, batch_count*sizeof(double*));
+        double** dev_a_array = (double**)dev_dtotal;
+        double** dev_b_array = dev_a_array + batch_count;
+        double** dev_c_array = dev_b_array + batch_count;
+        GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(double*));
             
         for(int i=0; i<gsta.size()-1; i++){
 
@@ -575,10 +577,10 @@ namespace linalg{
                               transA, transB,
                               m, n, k,
                               alpha,
-                              &dev_a_array_ptr[ista], lda, // pointer should be on device
-                              &dev_b_array_ptr[ista], ldb,
+                              &dev_a_array[ista], lda, // pointer should be on device
+                              &dev_b_array[ista], ldb,
                               beta,
-                              &dev_c_array_ptr[ista], ldc,
+                              &dev_c_array[ista], ldc,
                               nbatch));
         } // group
 

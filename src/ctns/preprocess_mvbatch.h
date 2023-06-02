@@ -66,7 +66,7 @@ namespace ctns{
 #ifndef HIP
                }else if(batchgemv == 3){
                   this->xgemv_batch_gpu_grouped(ptrs);
-               }else if(batchgemm == 4){
+               }else if(batchgemv == 4){
                   this->xgemv_batch_gpu_stream(ptrs);
 #endif
 #endif 
