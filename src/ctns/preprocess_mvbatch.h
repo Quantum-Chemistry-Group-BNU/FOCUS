@@ -14,11 +14,11 @@ namespace ctns{
          public:
             double cost() const{ return 2*double(M)*N; }
             // ordered by cost and then lexicographic ordering of {M,N}
-            std::pair<int,int> get_dim2() const{ return std::make_pair(M,N); }
+            std::tuple<int,int,int> get_dims() const{ return std::make_tuple(M,N,LDA); }
             bool operator >(const MVinfo<Tm>& mv) const{
                size_t mn = size_t(M)*size_t(N);
                size_t mn2 = size_t(mv.M)*size_t(mv.N);
-               return (mn>mn2) || (mn==mn2 && this->get_dim2()>mv.get_dim2());
+               return (mn>mn2) || (mn==mn2 && this->get_dims()>mv.get_dims());
             }
          public:
             char transA;
@@ -46,9 +46,9 @@ namespace ctns{
                      fout << " " << gsta[i];
                   }
                   fout << std::endl;
-                  // (M,N)
+                  // (M,N,LDA)
                   for(int i=0; i<size; i++){
-                     fout << M[i] << " " << N[i] << std::endl;
+                     fout << M[i] << " " << N[i] << " " << LDA[i] << std::endl;
                   }
                }else{
                   fout << "empty" << std::endl;
@@ -114,18 +114,18 @@ namespace ctns{
          offA.resize(size); offx.resize(size); offy.resize(size);
          cost = 0.0;
          size_t i = 0;
-         std::pair<int,int> dim2;
+         std::tuple<int,int,int> dims;
          for(size_t j=0; j<MVlst.size(); j++){
             const auto& mv = MVlst[j];
             if(mv.M*mv.N == 0) continue;
             // grouping
             if(i == 0){
-               dim2 = mv.get_dim2();
+               dims = mv.get_dims();
                gsta.push_back(0);
             }else{
-               auto dim2new = mv.get_dim2();
-               if(dim2new != dim2){
-                  dim2 = dim2new;
+               auto dimsnew = mv.get_dims();
+               if(dimsnew != dims){
+                  dims = dimsnew;
                   gsta.push_back(i);
                }
             }

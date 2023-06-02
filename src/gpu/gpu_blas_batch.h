@@ -187,6 +187,13 @@ namespace linalg{
                               nbatch));
            /*
            for(int j=0; j<nbatch; j++){
+              std::cout << "ista=" << ista << " j=" << j << " ista+j=" << ista+j 
+                 << " m,n,lda=" << m << "," << n << "," << lda 
+                 << " m,n,lda=" << m_array[ista+j] << "," << n_array[ista+j] << "," << lda_array[ista+j] 
+                 << std::endl;
+              if(m != m_array[ista+j]){ std::cout << "error1" << std::endl; }
+              if(n != n_array[ista+j]){ std::cout << "error2" << std::endl; }
+              if(lda != lda_array[ista+j]){ std::cout << "error3" << std::endl; }
               cublasDgemv(handle_cublas,
                     Trans, 
                     m, n, 

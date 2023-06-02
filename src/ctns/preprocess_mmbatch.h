@@ -14,11 +14,11 @@ namespace ctns{
          public:
             double cost() const{ return 2*double(M)*N*K; }
             // ordered by cost and then lexicographic ordering of {M,N,K}
-            std::tuple<int,int,int> get_dim3() const{ return std::make_tuple(M,N,K); }
+            std::tuple<int,int,int,int,int> get_dims() const{ return std::make_tuple(M,N,K,LDA,LDB); }
             bool operator >(const MMinfo<Tm>& mm) const{
                size_t mnk = size_t(M)*size_t(N)*size_t(K);
                size_t mnk2 = size_t(mm.M)*size_t(mm.N)*size_t(mm.K);
-               return (mnk>mnk2) || (mnk==mnk2 && this->get_dim3()>mm.get_dim3());
+               return (mnk>mnk2) || (mnk==mnk2 && this->get_dims()>mm.get_dims());
             }
          public:
             char transA, transB;
@@ -48,9 +48,11 @@ namespace ctns{
                      fout << " " << gsta[i]; 
                   }
                   fout << std::endl;
-                  // (M,N,K)
+                  // (M,N,K,LDA,LDB)
                   for(int i=0; i<size; i++){
-                     fout << M[i] << " " << N[i] << " " << K[i] << std::endl;
+                     fout << M[i] << " " << N[i] << " " << K[i] 
+                        << " " << LDA[i] << " " << LDB[i] 
+                        << std::endl;
                   }
                }else{
                   fout << "empty" << std::endl;
@@ -116,18 +118,18 @@ namespace ctns{
          offA.resize(size); offB.resize(size); offC.resize(size);
          cost = 0.0;
          size_t i = 0;
-         std::tuple<int,int,int> dim3;
+         std::tuple<int,int,int,int,int> dims;
          for(size_t j=0; j<MMlst.size(); j++){
             const auto& mm = MMlst[i];
             if(mm.M*mm.N*mm.K == 0) continue;
             // grouping
             if(i == 0){
-               dim3 = mm.get_dim3();
+               dims = mm.get_dims();
                gsta.push_back(0);
             }else{
-               auto dim3new = mm.get_dim3();
-               if(dim3new != dim3){
-                  dim3 = dim3new;
+               auto dimsnew = mm.get_dims();
+               if(dimsnew != dims){
+                  dims = dimsnew;
                   gsta.push_back(i);
                }
             }

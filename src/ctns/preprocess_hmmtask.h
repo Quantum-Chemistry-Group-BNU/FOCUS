@@ -219,7 +219,7 @@ namespace ctns{
                      mv.transA = 'N';
                      mv.M = opsize;
                      mv.N = Hxblk.lenInter;
-                     mv.LDA = Hxblk.ldaInter; 
+                     mv.LDA = Hxblk.ldaInter; // see line 95 in preprocess_hmu.h [distance between two operators in inter]
                      mv.locA = ipos;
                      mv.offA = Hxblk.off[ipos];
                      mv.locx = 5;
