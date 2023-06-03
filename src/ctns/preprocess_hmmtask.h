@@ -19,7 +19,7 @@ namespace ctns{
                   const int _alg_hcoper,
                   const int hdxorder,
                   const int _batchblas,
-                  const std::tuple<int,int,int>& _batchsigma,
+                  const std::tuple<int,int,int>& _batchhvec,
                   const size_t _batchsize,
                   const size_t _offset,
                   const size_t offset0);
@@ -166,16 +166,16 @@ namespace ctns{
             const int _alg_hcoper,
             const int mmorder,
             const int _batchblas,
-            const std::tuple<int,int,int>& _batchsigma,
+            const std::tuple<int,int,int>& _batchhvec,
             const size_t _batchsize,
             const size_t _offset,
             const size_t offset0){
          // init
          alg_hcoper = _alg_hcoper;
          batchblas = _batchblas;
-         batchinter= std::get<0>(_batchsigma);
-         batchgemm = std::get<1>(_batchsigma);
-         batchred  = std::get<2>(_batchsigma);
+         batchinter= std::get<0>(_batchhvec);
+         batchgemm = std::get<1>(_batchhvec);
+         batchred  = std::get<2>(_batchhvec);
          batchsize = _batchsize;
          totsize = Hxlst.size();
          offset = _offset;
