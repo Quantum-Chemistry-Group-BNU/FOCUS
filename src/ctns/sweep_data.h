@@ -34,26 +34,31 @@ namespace ctns{
          this->print_part(msg+": renrm", dt5, dt, dtacc);
          this->print_part(msg+": save " , dt6, dt, dtacc);
 
-         double tdvdsn = dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9;
-         std::cout << "Detailed decomposition of T(dvdsn): " 
-            << std::scientific << std::setprecision(3) << tdvdsn << " S"
+         double tdvdsn = dtb0 + dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9 + dtb10;
+         std::cout << "Detailed decomposition of T(dvdsn) = " 
+            << std::scientific << std::setprecision(3) << dt2 << " S"
+            << "  T(sum) = " << tdvdsn << " S  per = " << tdvdsn/dt2*100
             << std::endl;
          dtacc = 0.0;
+         this->print_part(msg+": preprocess                   ", dtb0, tdvdsn, dtacc);
          this->print_part(msg+": qops_dict memcpy cpu2gpu     ", dtb1, tdvdsn, dtacc);
          this->print_part(msg+": symbolic_formulae_twodot     ", dtb2, tdvdsn, dtacc);
          this->print_part(msg+": hintermediate init           ", dtb3, tdvdsn, dtacc);
          this->print_part(msg+": hintermediates memcpy cpu2gpu", dtb4, tdvdsn, dtacc);
          this->print_part(msg+": preprocess_hformulae_Hxlist2 ", dtb5, tdvdsn, dtacc);
          this->print_part(msg+": hmmtasks init                ", dtb6, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [Hx_batchGPU]  ", dtb7, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [communication]", dtb8, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [rest part]    ", dtb9, tdvdsn, dtacc);
+         this->print_part(msg+": initial guess for dvdson     ", dtb7, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson solver [Hx_batchGPU]  ", dtb8, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson solver [communication]", dtb9, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson solver [rest part]    ", dtb10, tdvdsn, dtacc);
         
-         double trenrm = dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12;
-         std::cout << "Detailed decomposition of T(renrm): " 
-            << std::scientific << std::setprecision(3) << trenrm << " S"
+         double trenrm = dtfa + dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12 + dtfb;
+         std::cout << "Detailed decomposition of T(renrm) = " 
+            << std::scientific << std::setprecision(3) << dt5 << " S"
+            << "  T(sum) = " << trenrm << " S  per = " << trenrm/dt5*100
             << std::endl;
          dtacc = 0.0;
+         this->print_part(msg+": before oper_renorm           ", dtfa, trenrm, dtacc);
          this->print_part(msg+": qops init                    ", dtf0, trenrm, dtacc);
          this->print_part(msg+": site memcpy cpu2gpu          ", dtf1, trenrm, dtacc);
          this->print_part(msg+": symbolic_formulae_renorm     ", dtf2, trenrm, dtacc);
@@ -67,6 +72,7 @@ namespace ctns{
          this->print_part(msg+": qops memcpy gpu2cpu          ", dtf10, trenrm, dtacc);
          this->print_part(msg+": deallocate gpu memory        ", dtf11, trenrm, dtacc);
          this->print_part(msg+": reduction of opS & opH [comm]", dtf12, trenrm, dtacc);
+         this->print_part(msg+": after oper_renorm            ", dtfb, trenrm, dtacc);
       }
       void analysis(const std::string msg,
             const bool debug=true){
@@ -80,14 +86,17 @@ namespace ctns{
          dt6 = tools::get_duration(t1-tf); 
          
          // decomposition of dt2 into different parts
+         dtb0 = tools::get_duration(tb1-tb); 
          dtb1 = tools::get_duration(tb2-tb1); 
          dtb2 = tools::get_duration(tb3-tb2); 
          dtb3 = tools::get_duration(tb4-tb3); 
          dtb4 = tools::get_duration(tb5-tb4); 
          dtb5 = tools::get_duration(tb6-tb5); 
-         dtb6 = tools::get_duration(tb7-tb6); 
+         dtb6 = tools::get_duration(tb7-tb6);
+         // dtb7,8,9,10 are obtained in sweep_twodot_local.h
  
          // decomposition of dt5 into different parts
+         dtfa = tools::get_duration(tf0-te); 
          dtf0 = tools::get_duration(tf1-tf0); 
          dtf1 = tools::get_duration(tf2-tf1); 
          dtf2 = tools::get_duration(tf3-tf2); 
@@ -101,6 +110,7 @@ namespace ctns{
          dtf10 = tools::get_duration(tf11-tf10); 
          dtf11 = tools::get_duration(tf12-tf11); 
          dtf12 = tools::get_duration(tf13-tf12); 
+         dtfb = tools::get_duration(tf-tf13); 
          
          if(debug) this->print(msg);
       }
@@ -117,6 +127,7 @@ namespace ctns{
          dt6 += timer.dt6;
          
          // decomposition of dt2 into different parts
+         dtb0 += timer.dtb0;
          dtb1 += timer.dtb1; 
          dtb2 += timer.dtb2; 
          dtb3 += timer.dtb3; 
@@ -126,8 +137,10 @@ namespace ctns{
          dtb7 += timer.dtb7; 
          dtb8 += timer.dtb8; 
          dtb9 += timer.dtb9; 
+         dtb10 += timer.dtb10; 
        
          // decomposition of dt5 into different parts
+         dtfa += timer.dtfa; 
          dtf0 += timer.dtf0; 
          dtf1 += timer.dtf1; 
          dtf2 += timer.dtf2; 
@@ -141,6 +154,7 @@ namespace ctns{
          dtf10 += timer.dtf10;
          dtf11 += timer.dtf11;
          dtf12 += timer.dtf12;
+         dtfb += timer.dtfb; 
    
          if(debug) this->print(msg);
       }
@@ -164,7 +178,7 @@ namespace ctns{
       Tm tb5; // hintermediates memcpy cpu2gpu
       Tm tb6; // preprocess_hformulae_Hxlist2
       Tm tb7; // hmmtasks init                
-      double dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0;
+      double dtb0=0, dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0, dtb10=0;
       Tm tf0;
       Tm tf1; // qops init
       Tm tf2; // qops_dict memcpy cpu2gpu   
@@ -179,7 +193,7 @@ namespace ctns{
       Tm tf11; // qops memcpy gpu2cpu
       Tm tf12; // deallocate gpu memory
       Tm tf13; // reduction 
-      double dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0, dtf10=0, dtf11=0, dtf12=0;
+      double dtfa=0, dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0, dtf10=0, dtf11=0, dtf12=0, dtfb=0;
    };
 
    // computed results at a given dot	

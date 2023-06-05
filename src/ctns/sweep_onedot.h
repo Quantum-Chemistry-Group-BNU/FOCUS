@@ -265,15 +265,34 @@ namespace ctns{
          timing.tf = tools::get_time();
 
          // 4. save on disk
+         if(debug){
+            get_sys_status();
+            icomb.display_size();
+         }
+         auto t0 = tools::get_time();
          qops_pool.join_and_erase(fneed, fneed_next); 
+         auto t1 = tools::get_time();
          qops_pool.save_to_disk(frop, schd.ctns.async_save, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, fneed_next);
+         auto t2 = tools::get_time();
          qops_pool.remove_from_disk(fdel, schd.ctns.async_remove);
+         auto t3 = tools::get_time();
+         if(debug){
+            std::cout << "TIMING FOR cleanup: " << tools::get_duration(t3-t0)
+               << " T(join&erase/save/remove)="
+               << tools::get_duration(t1-t0) << ","
+               << tools::get_duration(t2-t1) << ","
+               << tools::get_duration(t3-t2)
+               << std::endl;
+         }
 
          // save for restart
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
 
          timing.t1 = tools::get_time();
-         if(debug) timing.analysis("local", schd.ctns.verbose>0);
+         if(debug){
+            get_sys_status();
+            timing.analysis("local", schd.ctns.verbose>0);
+         }
       }
 
 } // ctns

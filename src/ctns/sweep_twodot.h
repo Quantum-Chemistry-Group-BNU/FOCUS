@@ -635,6 +635,10 @@ namespace ctns{
          timing.tf = tools::get_time();
 
          // 4. save on disk 
+         if(debug){
+            get_sys_status();
+            icomb.display_size();
+         }
          auto t0 = tools::get_time();
          qops_pool.join_and_erase(fneed, fneed_next);
          auto t1 = tools::get_time();

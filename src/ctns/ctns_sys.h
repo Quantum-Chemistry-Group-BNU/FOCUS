@@ -43,6 +43,7 @@ namespace ctns{
       long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
       double vm_usage     = vsize /(1024.0*1024.0);
       double resident_set = rss * page_size_kb /(1024.0);
+      std::cout << std::setprecision(3) << std::scientific;
       std::cout << "CPUmem: VM:" << vm_usage/1024.0 << "GB"   // Virtual Memory used
          << " RSS:" << resident_set/1024.0 << "GB";   // Actual Memory used
 

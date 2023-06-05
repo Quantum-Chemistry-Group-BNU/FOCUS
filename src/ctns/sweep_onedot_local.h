@@ -55,6 +55,7 @@ namespace ctns{
                //------------------------------------
                // prepare initial guess     
                //------------------------------------
+               auto t0 = tools::get_time();
                std::vector<Tm> v0;
                if(rank == 0){ 
                   assert(icomb.cpsi.size() == neig && icomb.cpsi[0].size() == ndim);
@@ -68,6 +69,8 @@ namespace ctns{
                   assert(nindp == neig);
                }
                //------------------------------------
+               auto t1 = tools::get_time();
+               timing.dtb7 = tools::get_duration(t1-t0);
                solver.solve_iter(eopt.data(), vsol.data(), v0.data());
             }else{
                std::cout << "error: no such option for guess=" << schd.ctns.guess << std::endl;
@@ -76,9 +79,9 @@ namespace ctns{
 
          }
          nmvp = solver.nmvp;
-         timing.dtb7 = solver.t_cal; 
-         timing.dtb8 = solver.t_comm;
-         timing.dtb9 = solver.t_rest;
+         timing.dtb8 = solver.t_cal; 
+         timing.dtb9 = solver.t_comm;
+         timing.dtb10 = solver.t_rest;
       }
 
    template <>
@@ -118,6 +121,7 @@ namespace ctns{
          //------------------------------------
          // prepare initial guess     
          //------------------------------------
+         auto t0 = tools::get_time();
          std::vector<Tm> v0;
          if(rank == 0){
             assert(icomb.cpsi.size() == neig && icomb.cpsi[0].size() == ndim);
@@ -125,11 +129,14 @@ namespace ctns{
             solver.init_guess(icomb.cpsi, v0);
          }
          //------------------------------------
+         auto t1 = tools::get_time();
+         timing.dtb7 = tools::get_duration(t1-t0);
+         // solve
          solver.solve_iter(eopt.data(), vsol.data(), v0.data());
          nmvp = solver.nmvp;
-         timing.dtb7 = solver.t_cal; 
-         timing.dtb8 = solver.t_comm;
-         timing.dtb9 = solver.t_rest;
+         timing.dtb8 = solver.t_cal; 
+         timing.dtb9 = solver.t_comm;
+         timing.dtb10 = solver.t_rest;
       }
 
 } // ctns
