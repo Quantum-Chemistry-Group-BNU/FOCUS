@@ -102,7 +102,7 @@ namespace ctns{
          qops.mpisize = size;
          qops.mpirank = rank;
          qops.ifdist2 = true;
-         // initialize memory 
+         // initialize
          if(!schd.ctns.async_tocpu){
             qops.init();
          }else{

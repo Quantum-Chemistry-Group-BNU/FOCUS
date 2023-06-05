@@ -302,11 +302,8 @@ namespace ctns{
             const bool debug){
 #ifdef GPU
          if(async_tocpu){
-            std::cout << "allocate frop=" << frop << std::endl;
             qops.allocate_cpu();
-            std::cout << "to_cpu frop=" << frop << std::endl;
             qops.to_cpu();
-            std::cout << "save frop=" << frop << std::endl;
          }
 #endif
          oper_save<Tm>(iomode, frop, qops, debug);

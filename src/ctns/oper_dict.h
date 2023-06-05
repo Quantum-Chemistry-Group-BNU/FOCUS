@@ -51,6 +51,7 @@ namespace ctns{
             bool avail_gpu() const{ return _dev_data != nullptr; }
 #ifdef GPU
             void allocate_gpu(const bool ifmemset=false){
+               assert(!this->avail_gpu());
                _dev_data = (Tm*)GPUmem.allocate(_size*sizeof(Tm));
                if(ifmemset) GPUmem.memset(_dev_data, _size*sizeof(Tm));
             }
@@ -75,6 +76,7 @@ namespace ctns{
             void setup_data();
             // allocate cpu memory
             void allocate_cpu(const bool ifmemset=false){
+               assert(!this->avail_cpu());
                _data = new Tm[_size];
                if(ifmemset) memset(_data, 0, _size*sizeof(Tm));
             }
