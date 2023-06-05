@@ -144,7 +144,7 @@ namespace ctns{
          ifs.close();
          auto t1 = tools::get_time();
 
-         qops.allocate();
+         qops.init();
          auto t2 = tools::get_time();
 
          // read data

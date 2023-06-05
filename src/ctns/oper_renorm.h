@@ -103,7 +103,11 @@ namespace ctns{
          qops.mpirank = rank;
          qops.ifdist2 = true;
          // initialize memory 
-         qops.allocate();
+         if(!schd.ctns.async_tocpu){
+            qops.init();
+         }else{
+            qops.setup_opdict();
+         }
          if(debug){ 
             qops.print("qops");
             get_sys_status();
@@ -193,22 +197,17 @@ namespace ctns{
 
             // CPU: symbolic formulae + rintermediates + preallocation of workspace
             const bool ifDirect = false;
-            timing.tf2 = tools::get_time();
 
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-            timing.tf3 = tools::get_time();
 
             // generation of renormalization block [lc/lr/cr]
             rinter.init(ifDirect, schd.ctns.alg_rinter, qops_dict, oploc, opaddr, rtasks, debug);
-            timing.tf4 = tools::get_time();
-            timing.tf5 = tools::get_time();
 
             // GEMM list and GEMV list
             preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_rcoper, superblock, 
                   qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
                   Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
-            timing.tf6 = tools::get_time();
 
             get_MMlist2(Rlst);
 
@@ -218,10 +217,8 @@ namespace ctns{
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
-            timing.tf7 = tools::get_time();
 
             preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
-            timing.tf8 = tools::get_time();
 
          }else if(alg_renorm == 6 || alg_renorm == 7 || alg_renorm == 8 || alg_renorm == 9){
 

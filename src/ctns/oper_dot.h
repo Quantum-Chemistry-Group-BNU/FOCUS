@@ -48,7 +48,7 @@ namespace ctns{
          qops.qket = qphys;
          qops.oplist = "CABPQSH";
          // initialize memory
-         qops.allocate(true);
+         qops.init(true);
          // compute local operators on dot
          oper_dot_opC(qops, kp);
          oper_dot_opA(qops, kp);

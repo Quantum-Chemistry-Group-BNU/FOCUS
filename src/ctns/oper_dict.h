@@ -70,15 +70,19 @@ namespace ctns{
             oper_dict(oper_dict&& op_dict) = delete;
             oper_dict& operator =(oper_dict&& op_dict) = delete;
             // initialize _opdict, _size, _opsize
-            void _setup_opdict(const bool debug=false);
+            void setup_opdict(const bool debug=false);
             // setup the mapping to physical address
-            void _setup_data();
-            // allocate memory
-            void allocate(const bool ifmemset=false){
-               this->_setup_opdict();
+            void setup_data();
+            // allocate cpu memory
+            void allocate_cpu(const bool ifmemset=false){
                _data = new Tm[_size];
-               this->_setup_data(); // assign pointer for each operator
                if(ifmemset) memset(_data, 0, _size*sizeof(Tm));
+            }
+            // initialization
+            void init(const bool ifmemset=false){
+               this->setup_opdict();
+               this->allocate_cpu(ifmemset);
+               this->setup_data(); // assign pointer for each operator
             }
             // stored operators
             std::vector<int> oper_index_op(const char key) const;
@@ -231,7 +235,7 @@ namespace ctns{
 
    // initialize _opdict, _size, _opsize
    template <typename Tm>
-      void oper_dict<Tm>::_setup_opdict(const bool debug){
+      void oper_dict<Tm>::setup_opdict(const bool debug){
          if(debug){
             std::cout << "ctns::oper_dict<Tm>:_setup_opdict oplist=" 
                << oplist << std::endl;
@@ -251,10 +255,11 @@ namespace ctns{
                // only compute size 
                _opdict[key][idx].init(sym_op, qbra, qket, {1,0}, false);
                size_t sz = _opdict[key][idx].size();
+               _offset[std::make_pair(key,idx)] = _size;
+               _size += sz;
                sizes[key] += sz;
                _opsize = std::max(_opsize, sz);
             }
-            _size += sizes[key];
             if(debug){
                std::cout << " nop=" << op_index.size()
                   << " size=" << sizes[key] 
@@ -269,22 +274,18 @@ namespace ctns{
          }
       }
 
-   // setup the mapping to physical address
+   // setup the mapping to physical address for each operator
    template <typename Tm>
-      void oper_dict<Tm>::_setup_data(){
-         size_t off = 0;
+      void oper_dict<Tm>::setup_data(){
          for(const auto& key : oplist){
-            // use the same order in setup_opdict for storage 
-            auto op_index = this->oper_index_op(key); 
+            auto op_index = this->oper_index_op(key); // use the same order in setup_opdict for storage 
             for(int idx : op_index){
                auto& op = _opdict[key][idx];
+               size_t off = _offset[std::make_pair(key,idx)];
                assert(op.own == false);
                op.setup_data( _data+off );
-               _offset[std::make_pair(key,idx)] = off; 
-               off += op.size();
             }
          }
-         assert(off == _size);
       }
 
 } // ctns
