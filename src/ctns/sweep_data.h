@@ -37,7 +37,7 @@ namespace ctns{
          double tdvdsn = dtb0 + dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9 + dtb10;
          std::cout << "Detailed decomposition of T(dvdsn) = " 
             << std::scientific << std::setprecision(3) << dt2 << " S"
-            << "  T(sum) = " << tdvdsn << " S  per = " << tdvdsn/dt2*100
+            << "  T(sum) = " << tdvdsn << " S  per = " << tdvdsn/(dt2+eps)*100
             << std::endl;
          dtacc = 0.0;
          this->print_part(msg+": preprocess                   ", dtb0, tdvdsn, dtacc);
@@ -55,7 +55,7 @@ namespace ctns{
          double trenrm = dtfa + dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12 + dtfb;
          std::cout << "Detailed decomposition of T(renrm) = " 
             << std::scientific << std::setprecision(3) << dt5 << " S"
-            << "  T(sum) = " << trenrm << " S  per = " << trenrm/dt5*100
+            << "  T(sum) = " << trenrm << " S  per = " << trenrm/(dt5+eps)*100
             << std::endl;
          dtacc = 0.0;
          this->print_part(msg+": before oper_renorm           ", dtfa, trenrm, dtacc);

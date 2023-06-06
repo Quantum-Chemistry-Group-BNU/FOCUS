@@ -307,7 +307,6 @@ namespace ctns{
          }
 #endif
          oper_save<Tm>(iomode, frop, qops, debug);
-         std::cout << "end frop=" << frop << std::endl;
       }
 
    // save to disk
