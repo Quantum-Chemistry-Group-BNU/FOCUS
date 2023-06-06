@@ -10,7 +10,7 @@
 const int MAX_GPUS = 128;
 extern const int MAX_GPUS;
 
-#ifndef HIP
+#ifndef USE_HIP
 #define NSTREAMS 1000
 extern cudaStream_t stream[NSTREAMS];
 extern cublasHandle_t handle_cublas;

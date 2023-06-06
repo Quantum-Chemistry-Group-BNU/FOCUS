@@ -6,7 +6,7 @@
 magma_queue_t magma_queue = 0;
 gpu_mem GPUmem = {};
 
-#ifndef HIP
+#ifndef USE_HIP
 cudaStream_t stream[NSTREAMS];
 cublasHandle_t handle_cublas;
 #endif
@@ -34,7 +34,7 @@ void gpu_init(const int rank){
 
    magma_queue_create(device_id, &magma_queue);
 
-#ifndef HIP
+#ifndef USE_HIP
    for(int i=0; i<NSTREAMS; i++){
       cudaStreamCreate(&stream[i]);
    }
@@ -52,7 +52,7 @@ void gpu_init(const int rank){
 
 void gpu_finalize(){
 
-#ifndef HIP
+#ifndef USE_HIP
    for(int i=0; i<NSTREAMS; i++){
       cudaStreamDestroy(stream[i]);
    }

@@ -63,7 +63,7 @@ namespace ctns{
 #ifdef GPU 
                }else if(batchgemv == 2){
                   this->xgemv_batch_gpu_magma(ptrs);
-#ifndef HIP
+#ifndef USE_HIP
                }else if(batchgemv == 3){
                   this->xgemv_batch_gpu_grouped(ptrs);
                }else if(batchgemv == 4){
@@ -79,7 +79,7 @@ namespace ctns{
             void xgemv_batch_cpu(Tm** ptrs);
 #ifdef GPU
             void xgemv_batch_gpu_magma(Tm** ptrs);
-#ifndef HIP
+#ifndef USE_HIP
             void xgemv_batch_gpu_grouped(Tm** ptrs);
             void xgemv_batch_gpu_stream(Tm** ptrs);
 #endif
@@ -191,7 +191,7 @@ namespace ctns{
          }
       }
 
-#ifndef HIP
+#ifndef USE_HIP
    template <typename Tm>
       void MVbatch<Tm>::xgemv_batch_gpu_grouped(Tm** ptrs){
          // initialization 

@@ -510,7 +510,7 @@ namespace ctns{
 
 #ifndef SERIAL
             if(ifdist1 and size > 1 and schd.ctns.ifnccl){
-#ifdef HIP
+#ifdef USE_HIP
                std::cout << "error: not implemented yet! RCCL is not supported for opS and opH" << std::endl;
                exit(1);
 #else

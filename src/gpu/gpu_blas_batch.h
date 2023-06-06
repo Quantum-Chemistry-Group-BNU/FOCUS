@@ -140,7 +140,7 @@ namespace linalg{
         GPUmem.deallocate(dev_itotal, total_isize);
     }
 
-#ifndef HIP
+#ifndef USE_HIP
     // --- GEMV GROUPED ---
     // double
     inline void xgemv_batch_gpu_grouped(const char trans,
@@ -458,8 +458,7 @@ namespace linalg{
         GPUmem.deallocate(dev_itotal, total_isize);
     }
 
-#ifndef HIP
-
+#ifndef USE_HIP
     // --- GEMM GROUPED ---
     // double
     inline void xgemm_batch_gpu_grouped(const char transa, const char transb, 

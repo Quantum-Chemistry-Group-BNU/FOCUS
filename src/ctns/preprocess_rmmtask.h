@@ -48,6 +48,15 @@ namespace ctns{
                   mvbatch[k].save(fmmtask_k);
                }
             }
+            void deviceSync() const{
+#ifdef GPU
+#ifdef USE_HIP
+               hipDeviceSynchronize();
+#else
+               cudaDeviceSynchronize();
+#endif
+#endif
+            }
             // form intermeidate operators
             void inter(const int k, Tm** opaddr, const Tm* alphas){
                struct timeval t0, t1;
@@ -61,13 +70,7 @@ namespace ctns{
                ptrs[5] = const_cast<Tm*>(alphas);
                gettimeofday(&t0, NULL);
                imvbatch[k].kernel(batchinter, ptrs);
-#ifdef GPU
-#ifdef USE_HIP
-               hipDeviceSynchronize();
-#else
-               cudaDeviceSynchronize();
-#endif
-#endif
+               this->deviceSync();
                gettimeofday(&t1, NULL);
                oper_timer.renorm.t_inter += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
@@ -76,37 +79,35 @@ namespace ctns{
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
                struct timeval t0, t1;
-               if(batchgemm < 5){
+               assert(mmbatch2[k].size() == 7);
+               if(batchgemm == 5){
+                  // merged {ca,cb},{ra,rb},{la,lb}
+                  for(int i=0; i<mmbatch2[k].size()-1; i+=2){
+                     gettimeofday(&t0, NULL);
+                     xgemm_batch_gpu_merged(mmbatch2[k][i], mmbatch2[k][i+1], ptrs);
+                     this->deviceSync();
+                     gettimeofday(&t1, NULL);
+                     oper_timer.renorm.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
+                           + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+                     oper_timer.renorm.cHx[i] += mmbatch2[k][i].cost + mmbatch2[k][i+1].cost;
+                  } // i
+                  // last kernel for contracting with bra site
+                  gettimeofday(&t0, NULL);
+                  mmbatch2[k][6].kernel(4, ptrs);
+                  this->deviceSync();
+                  gettimeofday(&t1, NULL);
+                  oper_timer.renorm.tHx[6] += ((double)(t1.tv_sec - t0.tv_sec) 
+                           + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+                  oper_timer.renorm.cHx[6] += mmbatch2[k][6].cost;
+               }else{
                   for(int i=0; i<mmbatch2[k].size(); i++){
                      gettimeofday(&t0, NULL);
                      mmbatch2[k][i].kernel(batchgemm, ptrs);
-#ifdef GPU
-#ifdef USE_HIP
-                     hipDeviceSynchronize();
-#else
-                     cudaDeviceSynchronize();
-#endif
-#endif
+                     this->deviceSync();
                      gettimeofday(&t1, NULL);
                      oper_timer.renorm.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
                            + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
                      oper_timer.renorm.cHx[i] += mmbatch2[k][i].cost; 
-                  } // i
-               }else{
-                  for(int i=0; i<mmbatch2[k].size(); i+=2){
-                     gettimeofday(&t0, NULL);
-#ifdef GPU
-                     xgemm_batch_gpu_merged(mmbatch2[k][i], mmbatch2[k][i+1], ptrs);
-#ifdef USE_HIP
-                     hipDeviceSynchronize();
-#else
-                     cudaDeviceSynchronize();
-#endif
-#endif
-                     gettimeofday(&t1, NULL);
-                     oper_timer.renorm.tHx[i+1] += ((double)(t1.tv_sec - t0.tv_sec) 
-                           + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
-                     oper_timer.renorm.cHx[i+1] += mmbatch2[k][i].cost + mmbatch2[k][i+1].cost; 
                   } // i
                } // batchgemm
             }
@@ -154,13 +155,8 @@ namespace ctns{
                ptrs[1] = pcoeff;
                ptrs[2] = y;
                mvbatch[k].kernel(batchred, ptrs);
-#ifdef GPU
-#ifdef USE_HIP
-               hipDeviceSynchronize();
-#else
-               cudaDeviceSynchronize();
-#endif
-#endif
+               this->deviceSync();
+
                gettimeofday(&t1, NULL);
                oper_timer.renorm.t_red += ((double)(t1.tv_sec - t0.tv_sec) 
                      + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);

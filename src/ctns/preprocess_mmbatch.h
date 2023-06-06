@@ -67,7 +67,7 @@ namespace ctns{
 #ifdef GPU 
                }else if(batchgemm == 2){
                   this->xgemm_batch_gpu_magma(ptrs);
-#ifndef HIP
+#ifndef USE_HIP
                }else if(batchgemm == 3){
                   this->xgemm_batch_gpu_grouped(ptrs);
                }else if(batchgemm == 4){
@@ -83,7 +83,7 @@ namespace ctns{
             void xgemm_batch_cpu(Tm** ptrs);
 #ifdef GPU
             void xgemm_batch_gpu_magma(Tm** ptrs);
-#ifndef HIP
+#ifndef USE_HIP
             void xgemm_batch_gpu_grouped(Tm** ptrs);
             void xgemm_batch_gpu_stream(Tm** ptrs);
 #endif
@@ -195,7 +195,7 @@ namespace ctns{
          }
       }
 
-#ifndef HIP
+#ifndef USE_HIP
    template <typename Tm>
       void MMbatch<Tm>::xgemm_batch_gpu_grouped(Tm** ptrs){
          // initialization 
@@ -237,12 +237,12 @@ namespace ctns{
          // initialization
          size_t size1 = batch1.size;
          size_t size2 = batch2.size;
-         if(size1 == 0 && size2 == 0) return;
-         if(size1 != 0 && size2 == 0){
+         if(size1 == 0 && size2 == 0){
+            return;
+         }else if(size1 != 0 && size2 == 0){
             batch1.kernel(4, ptrs);
             return;
-         }
-         if(size1 == 0 && size2 != 0){
+         }else if(size1 == 0 && size2 != 0){
             batch2.kernel(4, ptrs);
             return;
          }
@@ -258,24 +258,20 @@ namespace ctns{
             batch2.Bptr[i] = ptrs[batch2.locB[i]] + batch2.offB[i];
             batch2.Cptr[i] = ptrs[batch2.locC[i]] + batch2.offC[i];
          }
-         std::cout << "size1,size2=" << size1 << "," << size2 << std::endl;
          size_t total_dsize = 3*(size1+size2)*sizeof(double*);
-         std::cout << "lzd0" << std::endl;
          void* dev_dtotal = GPUmem.allocate(total_dsize);
          double** dev_a_array1 = (double**)dev_dtotal;
          double** dev_b_array1 = dev_a_array1 + size1;
          double** dev_c_array1 = dev_b_array1 + size1;
-         double** dev_a_array2 = dev_c_array1 + size2;
+         double** dev_a_array2 = dev_c_array1 + size1;
          double** dev_b_array2 = dev_a_array2 + size2;
          double** dev_c_array2 = dev_b_array2 + size2;
-         std::cout << "lzdx" << std::endl;
          GPUmem.to_gpu(dev_a_array1, batch1.Aptr.data(), size1*sizeof(double*));
          GPUmem.to_gpu(dev_b_array1, batch1.Bptr.data(), size1*sizeof(double*));
          GPUmem.to_gpu(dev_c_array1, batch1.Cptr.data(), size1*sizeof(double*));
          GPUmem.to_gpu(dev_a_array2, batch2.Aptr.data(), size2*sizeof(double*));
          GPUmem.to_gpu(dev_b_array2, batch2.Bptr.data(), size2*sizeof(double*));
          GPUmem.to_gpu(dev_c_array2, batch2.Cptr.data(), size2*sizeof(double*));
-         std::cout << "lzd1" << std::endl;
          // setup batch1 
          for(int k=0; k<2; k++){
             const auto& batch = (k==0)? batch1 : batch2;
@@ -286,7 +282,7 @@ namespace ctns{
 
               int idx = i%NSTREAMS;
               CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[idx])); 
-                  
+
               int ista = batch.gsta[i];
               int nbatch = batch.gsta[i+1]-ista;
               // convert from magma_int_t to int 
@@ -316,14 +312,12 @@ namespace ctns{
                                  nbatch));
             } // group
          }
-         std::cout << "lzd2" << std::endl;
 
          // synchronize all streams
          int nstreams = (std::max(size1,size2)-1+NSTREAMS-1)/NSTREAMS; 
          for(int i=0; i<nstreams; i++){
             CUDA_CHECK(cudaStreamSynchronize(stream[i]));
          }
-         std::cout << "lzd3" << std::endl;
 
          GPUmem.deallocate(dev_dtotal, total_dsize);
       }
