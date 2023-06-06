@@ -237,16 +237,7 @@ namespace ctns{
          // initialization
          size_t size1 = batch1.size;
          size_t size2 = batch2.size;
-         if(size1 == 0 && size2 == 0){
-            return;
-         }else if(size1 != 0 && size2 == 0){
-            batch1.kernel(4, ptrs);
-            return;
-         }else if(size1 == 0 && size2 != 0){
-            batch2.kernel(4, ptrs);
-            return;
-         }
-         assert(size1 != 0 && size2 != 0); 
+         if(size1 == 0 && size2 == 0) return;
          for(size_t i=0; i<size1; i++){
             batch1.Aptr[i] = ptrs[batch1.locA[i]] + batch1.offA[i];
             batch1.Bptr[i] = ptrs[batch1.locB[i]] + batch1.offB[i];
@@ -272,51 +263,57 @@ namespace ctns{
          GPUmem.to_gpu(dev_a_array2, batch2.Aptr.data(), size2*sizeof(double*));
          GPUmem.to_gpu(dev_b_array2, batch2.Bptr.data(), size2*sizeof(double*));
          GPUmem.to_gpu(dev_c_array2, batch2.Cptr.data(), size2*sizeof(double*));
-         // setup batch1 
-         for(int k=0; k<2; k++){
-            const auto& batch = (k==0)? batch1 : batch2;
-            double** dev_a_array = (k==0)? dev_a_array1 : dev_a_array2;
-            double** dev_b_array = (k==0)? dev_b_array1 : dev_b_array2;
-            double** dev_c_array = (k==0)? dev_c_array1 : dev_c_array2;
-            for(int i=0; i<batch.gsta.size()-1; i++){
+         
+         size_t gsize1 = batch1.gsta.size()-1;
+         size_t gsize2 = batch2.gsta.size()-1;
+         size_t gsize = gsize1+gsize2; 
+         int ntimes = (gsize+NSTREAMS-1)/NSTREAMS; 
+         for(int k=0; k<ntimes; k++){
+            size_t off = k*NSTREAMS;
+            size_t jlen = std::min(gsize-off, size_t(NSTREAMS));
+         
+            for(int j=0; j<jlen; j++){
+               size_t jdx = off+j;
+               CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[j])); 
+               
+               const auto& batch = (jdx<gsize1)? batch1 : batch2;
+               double** dev_a_array = (jdx<gsize1)? dev_a_array1 : dev_a_array2;
+               double** dev_b_array = (jdx<gsize1)? dev_b_array1 : dev_b_array2;
+               double** dev_c_array = (jdx<gsize1)? dev_c_array1 : dev_c_array2;
+               int i = (jdx<gsize1)? jdx : jdx-gsize1;
+               
+               int ista = batch.gsta[i];
+               int nbatch = batch.gsta[i+1]-ista;
+               // convert from magma_int_t to int 
+               int m = batch.M[ista], n = batch.N[ista], k = batch.K[ista];
+               int lda = batch.LDA[ista], ldb = batch.LDB[ista], ldc = batch.M[ista]; 
+               const char transa = batch.transA[0];
+               const char transb = batch.transB[0];
+               cublasOperation_t transA = CUBLAS_OP_N ;
+               if(transa=='T' || transa=='C'){
+                  transA = CUBLAS_OP_T;
+               }
+               cublasOperation_t transB = CUBLAS_OP_N ;
+               if(transb=='T' || transb=='C'){
+                  transB = CUBLAS_OP_T;
+               }
+               const double* alpha = batch.alpha_vec.data();
+               const double* beta = batch.beta_vec.data();
+               // https://docs.nvidia.com/cuda/cublas/index.html
+               CUBLAS_CHECK(cublasDgemmBatched(handle_cublas,
+                                  transA, transB,
+                                  m, n, k,
+                                  alpha,
+                                  &dev_a_array[ista], lda, // pointer should be on device
+                                  &dev_b_array[ista], ldb,
+                                  beta,
+                                  &dev_c_array[ista], ldc,
+                                  nbatch));
+            } // j
 
-              int idx = i%NSTREAMS;
-              CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[idx])); 
-
-              int ista = batch.gsta[i];
-              int nbatch = batch.gsta[i+1]-ista;
-              // convert from magma_int_t to int 
-              int m = batch.M[ista], n = batch.N[ista], k = batch.K[ista];
-              int lda = batch.LDA[ista], ldb = batch.LDB[ista], ldc = batch.M[ista]; 
-              const char transa = batch.transA[0];
-              const char transb = batch.transB[0];
-              cublasOperation_t transA = CUBLAS_OP_N ;
-              if(transa=='T' || transa=='C'){
-                 transA = CUBLAS_OP_T;
-              }
-              cublasOperation_t transB = CUBLAS_OP_N ;
-              if(transb=='T' || transb=='C'){
-                 transB = CUBLAS_OP_T;
-              }
-              const double* alpha = batch.alpha_vec.data();
-              const double* beta = batch.beta_vec.data();
-              // https://docs.nvidia.com/cuda/cublas/index.html
-              CUBLAS_CHECK(cublasDgemmBatched(handle_cublas,
-                                 transA, transB,
-                                 m, n, k,
-                                 alpha,
-                                 &dev_a_array[ista], lda, // pointer should be on device
-                                 &dev_b_array[ista], ldb,
-                                 beta,
-                                 &dev_c_array[ista], ldc,
-                                 nbatch));
-            } // group
-         }
-
-         // synchronize all streams
-         int nstreams = (std::max(size1,size2)-1+NSTREAMS-1)/NSTREAMS; 
-         for(int i=0; i<nstreams; i++){
-            CUDA_CHECK(cudaStreamSynchronize(stream[i]));
+            for(int j=0; j<jlen; j++){
+               CUDA_CHECK(cudaStreamSynchronize(stream[j]));
+            }
          }
 
          GPUmem.deallocate(dev_dtotal, total_dsize);

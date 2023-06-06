@@ -7,7 +7,7 @@
 #include "gpu_mem.h"
 #include "gpu_nccl.h"
 
-const int MAX_GPUS = 128;
+const int MAX_GPUS = 16; // MAX GPU PER NODE
 extern const int MAX_GPUS;
 
 #ifndef USE_HIP

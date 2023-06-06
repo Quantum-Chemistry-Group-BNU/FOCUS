@@ -251,37 +251,41 @@ namespace linalg{
         GPUmem.to_gpu(dev_X_array, X_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_Y_array, Y_array, batch_count*sizeof(double*));
 
-        for(int i=0; i<gsta.size()-1; i++){
+        size_t gsize = gsta.size()-1;
+        int ntimes = (gsize+NSTREAMS-1)/NSTREAMS; 
+        for(int k=0; k<ntimes; k++){
+           size_t off = k*NSTREAMS;
+           size_t jlen = std::min(gsize-off, size_t(NSTREAMS));
            
-           int idx = i%NSTREAMS;
-           CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[idx]));
+           for(int j=0; j<jlen; j++){
+              size_t jdx = off+j;
+              CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[j])); 
+ 
+              int ista = gsta[jdx];
+              int nbatch = gsta[jdx+1]-ista;
+              // convert from magma_int_t to int 
+              int m = m_array[ista], n = n_array[ista];
+              int lda = lda_array[ista], incx = incx_array[ista], incy = incy_array[ista]; 
+              cublasOperation_t Trans = CUBLAS_OP_N ;
+              if(trans=='T' || trans=='C'){
+                 Trans = CUBLAS_OP_T;
+              }
+              // https://docs.nvidia.com/cuda/cublas/index.html
+              CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
+                                 Trans, 
+                                 m, n,
+                                 alpha,
+                                 &dev_A_array[ista], lda, // pointer should be on device
+                                 &dev_X_array[ista], incx,
+                                 beta,
+                                 &dev_Y_array[ista], incy,
+                                 nbatch));
+           } // j
 
-           int ista = gsta[i];
-           int nbatch = gsta[i+1]-ista;
-           // convert from magma_int_t to int 
-           int m = m_array[ista], n = n_array[ista];
-           int lda = lda_array[ista], incx = incx_array[ista], incy = incy_array[ista]; 
-           cublasOperation_t Trans = CUBLAS_OP_N ;
-           if(trans=='T' || trans=='C'){
-              Trans = CUBLAS_OP_T;
+           for(int j=0; j<jlen; j++){
+              CUDA_CHECK(cudaStreamSynchronize(stream[j]));
            }
-           // https://docs.nvidia.com/cuda/cublas/index.html
-           CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
-                              Trans, 
-                              m, n,
-                              alpha,
-                              &dev_A_array[ista], lda, // pointer should be on device
-                              &dev_X_array[ista], incx,
-                              beta,
-                              &dev_Y_array[ista], incy,
-                              nbatch));
-        } // group
-
-        // synchronize all streams
-        int nstreams = (gsta.size()-1+NSTREAMS-1)/NSTREAMS; 
-        for(int i=0; i<nstreams; i++){
-           CUDA_CHECK(cudaStreamSynchronize(stream[i]));
-        }
+        } // k
 
         GPUmem.deallocate(dev_dtotal, total_dsize);
     }
@@ -565,42 +569,46 @@ namespace linalg{
         GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(double*));
-            
-        for(int i=0; i<gsta.size()-1; i++){
-
-           int idx = i%NSTREAMS;
-           CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[idx])); 
+         
+        size_t gsize = gsta.size()-1;
+        int ntimes = (gsize+NSTREAMS-1)/NSTREAMS; 
+        for(int k=0; k<ntimes; k++){
+           size_t off = k*NSTREAMS;
+           size_t jlen = std::min(gsize-off, size_t(NSTREAMS));
+           
+           for(int j=0; j<jlen; j++){
+              size_t jdx = off+j;
+              CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[j])); 
                
-           int ista = gsta[i];
-           int nbatch = gsta[i+1]-ista;
-           // convert from magma_int_t to int 
-           int m = m_array[ista], n = n_array[ista], k = k_array[ista];
-           int lda = lda_array[ista], ldb = ldb_array[ista], ldc = ldc_array[ista]; 
-           cublasOperation_t transA = CUBLAS_OP_N ;
-           if(transa=='T' || transa=='C'){
-              transA = CUBLAS_OP_T;
-           }
-           cublasOperation_t transB = CUBLAS_OP_N ;
-           if(transb=='T' || transb=='C'){
-              transB = CUBLAS_OP_T;
-           }
-           // https://docs.nvidia.com/cuda/cublas/index.html
-           CUBLAS_CHECK(cublasDgemmBatched(handle_cublas,
-                              transA, transB,
-                              m, n, k,
-                              alpha,
-                              &dev_a_array[ista], lda, // pointer should be on device
-                              &dev_b_array[ista], ldb,
-                              beta,
-                              &dev_c_array[ista], ldc,
-                              nbatch));
-        } // group
+              int ista = gsta[jdx];
+              int nbatch = gsta[jdx+1]-ista;
+              // convert from magma_int_t to int 
+              int m = m_array[ista], n = n_array[ista], k = k_array[ista];
+              int lda = lda_array[ista], ldb = ldb_array[ista], ldc = ldc_array[ista]; 
+              cublasOperation_t transA = CUBLAS_OP_N ;
+              if(transa=='T' || transa=='C'){
+                 transA = CUBLAS_OP_T;
+              }
+              cublasOperation_t transB = CUBLAS_OP_N ;
+              if(transb=='T' || transb=='C'){
+                 transB = CUBLAS_OP_T;
+              }
+              // https://docs.nvidia.com/cuda/cublas/index.html
+              CUBLAS_CHECK(cublasDgemmBatched(handle_cublas,
+                                 transA, transB,
+                                 m, n, k,
+                                 alpha,
+                                 &dev_a_array[ista], lda, // pointer should be on device
+                                 &dev_b_array[ista], ldb,
+                                 beta,
+                                 &dev_c_array[ista], ldc,
+                                 nbatch));
+           } // j
 
-        // synchronize all streams
-        int nstreams = (gsta.size()-1+NSTREAMS-1)/NSTREAMS; 
-        for(int i=0; i<nstreams; i++){
-           CUDA_CHECK(cudaStreamSynchronize(stream[i]));
-        }
+           for(int j=0; j<jlen; j++){
+              CUDA_CHECK(cudaStreamSynchronize(stream[j]));
+           }
+        } // k
 
         GPUmem.deallocate(dev_dtotal, total_dsize);
     }
