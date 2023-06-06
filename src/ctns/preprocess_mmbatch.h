@@ -225,6 +225,109 @@ namespace ctns{
                   Cptr.data(), M.data(), size, gsta);
          }
       }
+
+   template <typename Tm>
+      void xgemm_batch_gpu_merged(MMbatch<Tm>& batch1, MMbatch<Tm>& batch2, Tm** ptrs){
+         std::cout << "error: xgemm_batch_gpu_merged is not implemented yet!" << std::endl;
+         exit(1);
+      }
+
+   template <>
+      inline void xgemm_batch_gpu_merged(MMbatch<double>& batch1, MMbatch<double>& batch2, double** ptrs){
+         // initialization
+         size_t size1 = batch1.size;
+         size_t size2 = batch2.size;
+         if(size1 == 0 && size2 == 0) return;
+         if(size1 != 0 && size2 == 0){
+            batch1.kernel(4, ptrs);
+            return;
+         }
+         if(size1 == 0 && size2 != 0){
+            batch2.kernel(4, ptrs);
+            return;
+         }
+         assert(size1 != 0 && size2 != 0); 
+         for(size_t i=0; i<size1; i++){
+            batch1.Aptr[i] = ptrs[batch1.locA[i]] + batch1.offA[i];
+            batch1.Bptr[i] = ptrs[batch1.locB[i]] + batch1.offB[i];
+            batch1.Cptr[i] = ptrs[batch1.locC[i]] + batch1.offC[i];
+         }
+         // initialization 
+         for(size_t i=0; i<size2; i++){
+            batch2.Aptr[i] = ptrs[batch2.locA[i]] + batch2.offA[i];
+            batch2.Bptr[i] = ptrs[batch2.locB[i]] + batch2.offB[i];
+            batch2.Cptr[i] = ptrs[batch2.locC[i]] + batch2.offC[i];
+         }
+         std::cout << "size1,size2=" << size1 << "," << size2 << std::endl;
+         size_t total_dsize = 3*(size1+size2)*sizeof(double*);
+         std::cout << "lzd0" << std::endl;
+         void* dev_dtotal = GPUmem.allocate(total_dsize);
+         double** dev_a_array1 = (double**)dev_dtotal;
+         double** dev_b_array1 = dev_a_array1 + size1;
+         double** dev_c_array1 = dev_b_array1 + size1;
+         double** dev_a_array2 = dev_c_array1 + size2;
+         double** dev_b_array2 = dev_a_array2 + size2;
+         double** dev_c_array2 = dev_b_array2 + size2;
+         std::cout << "lzdx" << std::endl;
+         GPUmem.to_gpu(dev_a_array1, batch1.Aptr.data(), size1*sizeof(double*));
+         GPUmem.to_gpu(dev_b_array1, batch1.Bptr.data(), size1*sizeof(double*));
+         GPUmem.to_gpu(dev_c_array1, batch1.Cptr.data(), size1*sizeof(double*));
+         GPUmem.to_gpu(dev_a_array2, batch2.Aptr.data(), size2*sizeof(double*));
+         GPUmem.to_gpu(dev_b_array2, batch2.Bptr.data(), size2*sizeof(double*));
+         GPUmem.to_gpu(dev_c_array2, batch2.Cptr.data(), size2*sizeof(double*));
+         std::cout << "lzd1" << std::endl;
+         // setup batch1 
+         for(int k=0; k<2; k++){
+            const auto& batch = (k==0)? batch1 : batch2;
+            double** dev_a_array = (k==0)? dev_a_array1 : dev_a_array2;
+            double** dev_b_array = (k==0)? dev_b_array1 : dev_b_array2;
+            double** dev_c_array = (k==0)? dev_c_array1 : dev_c_array2;
+            for(int i=0; i<batch.gsta.size()-1; i++){
+
+              int idx = i%NSTREAMS;
+              CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[idx])); 
+                  
+              int ista = batch.gsta[i];
+              int nbatch = batch.gsta[i+1]-ista;
+              // convert from magma_int_t to int 
+              int m = batch.M[ista], n = batch.N[ista], k = batch.K[ista];
+              int lda = batch.LDA[ista], ldb = batch.LDB[ista], ldc = batch.M[ista]; 
+              const char transa = batch.transA[0];
+              const char transb = batch.transB[0];
+              cublasOperation_t transA = CUBLAS_OP_N ;
+              if(transa=='T' || transa=='C'){
+                 transA = CUBLAS_OP_T;
+              }
+              cublasOperation_t transB = CUBLAS_OP_N ;
+              if(transb=='T' || transb=='C'){
+                 transB = CUBLAS_OP_T;
+              }
+              const double* alpha = batch.alpha_vec.data();
+              const double* beta = batch.beta_vec.data();
+              // https://docs.nvidia.com/cuda/cublas/index.html
+              CUBLAS_CHECK(cublasDgemmBatched(handle_cublas,
+                                 transA, transB,
+                                 m, n, k,
+                                 alpha,
+                                 &dev_a_array[ista], lda, // pointer should be on device
+                                 &dev_b_array[ista], ldb,
+                                 beta,
+                                 &dev_c_array[ista], ldc,
+                                 nbatch));
+            } // group
+         }
+         std::cout << "lzd2" << std::endl;
+
+         // synchronize all streams
+         int nstreams = (std::max(size1,size2)-1+NSTREAMS-1)/NSTREAMS; 
+         for(int i=0; i<nstreams; i++){
+            CUDA_CHECK(cudaStreamSynchronize(stream[i]));
+         }
+         std::cout << "lzd3" << std::endl;
+
+         GPUmem.deallocate(dev_dtotal, total_dsize);
+      }
+
 #endif
 #endif
 
