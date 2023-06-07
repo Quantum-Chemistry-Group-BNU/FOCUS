@@ -77,7 +77,19 @@ namespace ctns{
             void kernel(const int k, Tm** ptrs){
                struct timeval t0, t1;
                assert(mmbatch2[k].size() == 8);
-               if(batchgemm == 5){
+               if(batchgemm != 5){
+                  for(int i=0; i<mmbatch2[k].size(); i++){
+                     gettimeofday(&t0, NULL);
+                     mmbatch2[k][i].kernel(batchgemm, ptrs);
+                     this->deviceSync();
+                     gettimeofday(&t1, NULL);
+                     oper_timer.sigma.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
+                           + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+                     oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost; 
+                  }
+#ifdef GPU
+#ifndef USE_HIP
+               }else{
                   // merged {c2a,c2b},{c1a,c1b},{ra,rb},{la,lb}
                   for(int i=0; i<mmbatch2[k].size(); i+=2){
                      gettimeofday(&t0, NULL);
@@ -88,17 +100,9 @@ namespace ctns{
                               + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
                      oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost + mmbatch2[k][i+1].cost; 
                   } // i
-               }else{
-                  for(int i=0; i<mmbatch2[k].size(); i++){
-                     gettimeofday(&t0, NULL);
-                     mmbatch2[k][i].kernel(batchgemm, ptrs);
-                     this->deviceSync();
-                     gettimeofday(&t1, NULL);
-                     oper_timer.sigma.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
-                           + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
-                     oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost; 
-                  }
-               }
+#endif
+#endif
+               } // batchgemm
             }
             // reduction
             void reduction(const int k, const Tm* x, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
