@@ -1,10 +1,10 @@
 #ifndef PDVDSON_H
 #define PDVDSON_H
 
-#include "../../core/ortho.h"
+#include "../core/ortho.h"
 
 #ifndef SERIAL
-#include "../../core/mpi_wrapper.h"
+#include "../core/mpi_wrapper.h"
 #endif
 
 namespace ctns{

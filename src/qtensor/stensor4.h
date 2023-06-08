@@ -1,8 +1,8 @@
 #ifndef STENSOR4_H
 #define STENSOR4_H
 
-#include "../../core/serialization.h"
-#include "../../core/matrix.h"
+#include "../core/serialization.h"
+#include "../core/matrix.h"
 
 namespace ctns{
 

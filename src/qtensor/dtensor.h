@@ -2,9 +2,9 @@
 #define DTENSOR_H
 
 #include <cassert>
-#include "../../core/serialization.h"
-#include "../../core/matrix.h"
-#include "../../core/linalg.h"
+#include "../core/serialization.h"
+#include "../core/matrix.h"
+#include "../core/linalg.h"
 
 namespace ctns{
 

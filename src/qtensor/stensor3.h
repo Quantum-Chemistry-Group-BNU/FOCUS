@@ -1,11 +1,11 @@
 #ifndef STENSOR3_H
 #define STENSOR3_H
 
-#include "../../core/serialization.h"
-#include "../../core/matrix.h"
+#include "../core/serialization.h"
+#include "../core/matrix.h"
 
 #ifndef SERIAL
-#include "../../core/mpi_wrapper.h"
+#include "../core/mpi_wrapper.h"
 #endif
 
 namespace ctns{

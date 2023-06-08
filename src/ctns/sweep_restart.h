@@ -3,7 +3,7 @@
 
 #include "../core/tools.h"
 #include "../core/linalg.h"
-#include "qtensor/qtensor.h"
+#include "../qtensor/qtensor.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif

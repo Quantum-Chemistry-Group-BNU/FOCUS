@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include "qtensor/qtensor.h"
+#include "../qtensor/qtensor.h"
 #include "tests_ctns.h"
 //#include "init_phys.h"
 

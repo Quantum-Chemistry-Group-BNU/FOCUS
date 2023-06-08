@@ -224,19 +224,6 @@ KNOWN PROBLEMS
  4. The truncation thresh_sig2=1.e-14 may lead some differences on the number of renormalized states,
     such that the optimized energies can be slightly different with maxcycle truncated.
 
-=== 2023 VMC ===
-
- * Exact diagonalization by construct full Hamtiltonian [DONE@20230117]
-
- * VMC + iRBM:
-   - opt_exact [DONE@20230113]
-   - various RBM ansatz [DONE@20230114]
-   - stochastic reconfiguration (SR): SVD-based?
-   - opt_sample: MCMC
-   - schedule for nhiden?
-   - pretraining by SCI
-   - iron-sulfur clusters: frustrated spin systems
-
 === 2023 DMRG[GPU] ===
 
  * Better reduction algorithm using GEMV [DONE@2023/03/01]
@@ -354,4 +341,26 @@ KNOWN PROBLEMS
    - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
       otherwise renormalized state become complex, and the construction of H 
       requires 'Conj' operation in GEMM!] 
+
+=== 2023 VMC ===
+
+ * Exact diagonalization by construct full Hamtiltonian [DONE@20230117]
+
+ * VMC + iRBM:
+   - opt_exact [DONE@20230113]
+   - various RBM ansatz [DONE@20230114]
+   - stochastic reconfiguration (SR): SVD-based?
+   - opt_sample: MCMC
+   - schedule for nhiden?
+   - pretraining by SCI
+   - iron-sulfur clusters: frustrated spin systems
+
+ * postCTNS.x driver: interface MPS
+   => overlap between two MPS?
+   => <Psi|S2|Psi> via sampling?
+   => Sdiag: fast sampling
+   => VMC algorithm: fast <n|Psi>
+      - <Ps> for CTNS
+      - <PHP>/<P>
+      => RBM on top of MPS?
 

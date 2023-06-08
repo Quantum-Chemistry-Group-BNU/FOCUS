@@ -16,7 +16,7 @@ using namespace std;
 using namespace fock;
 
 template <typename Km>  
-void CTNS(const input::schedule& schd){
+void postMPS(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
@@ -25,9 +25,10 @@ void CTNS(const input::schedule& schd){
    // consistency check for dtype
    using Tm = typename Km::dtype;
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
-      tools::exit("error: inconsistent dtype in CTNS!");
+      tools::exit("error: inconsistent dtype in postMPS!");
    }
 
+   /*
    // CTNS 
    ctns::comb<Km> icomb;
    // convert from SCI or load from files
@@ -112,7 +113,7 @@ void CTNS(const input::schedule& schd){
    }
 
    // compute hamiltonian or optimize ctns by dmrg algorithm
-   if(schd.ctns.task_ham || schd.ctns.task_opt){
+   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_vmc){
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -144,7 +145,17 @@ void CTNS(const input::schedule& schd){
       if(schd.ctns.task_opt){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
+      // vmc for estimation uncertainty
+      if(schd.ctns.task_vmc){
+         ctns::vmc_estimate(icomb, int2e, int1e, ecore, schd, scratch);
+      }
    } // ham || opt || vmc
+
+   if(schd.ctns.task_rdm){
+      auto scratch = schd.scratch+"/sweep";
+      ctns::sweep_rdm(icomb, schd, scratch);
+   }
+   */
 }
 
 int main(int argc, char *argv[]){
@@ -193,19 +204,19 @@ int main(int argc, char *argv[]){
 #endif
 
    if(schd.ctns.qkind == "rZ2"){
-      CTNS<ctns::qkind::rZ2>(schd);
+      postMPS<ctns::qkind::rZ2>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
-      CTNS<ctns::qkind::cZ2>(schd);
+      postMPS<ctns::qkind::cZ2>(schd);
    }else if(schd.ctns.qkind == "rN"){
-      CTNS<ctns::qkind::rN>(schd);
+      postMPS<ctns::qkind::rN>(schd);
    }else if(schd.ctns.qkind == "cN"){
-      CTNS<ctns::qkind::cN>(schd);
+      postMPS<ctns::qkind::cN>(schd);
    }else if(schd.ctns.qkind == "rNSz"){
-      CTNS<ctns::qkind::rNSz>(schd);
+      postMPS<ctns::qkind::rNSz>(schd);
    }else if(schd.ctns.qkind == "cNSz"){
-      CTNS<ctns::qkind::cNSz>(schd);
+      postMPS<ctns::qkind::cNSz>(schd);
    }else if(schd.ctns.qkind == "cNK"){
-      CTNS<ctns::qkind::cNK>(schd);
+      postMPS<ctns::qkind::cNK>(schd);
    }else{
       tools::exit("error: no such qkind for ctns!");
    } // qkind
@@ -218,7 +229,7 @@ int main(int argc, char *argv[]){
 
    // cleanup 
    if(rank == 0){
-      tools::finish("CTNS");	   
+      tools::finish("postMPS");	   
    }else{
       // NOTE: scratch should be removed manually!
       //io::remove_scratch(schd.scratch, (rank == 0)); 

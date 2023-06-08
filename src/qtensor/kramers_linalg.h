@@ -1,7 +1,7 @@
 #ifndef KRAMERS_LINALG_H
 #define KRAMERS_LINALG_H
 
-#include "../../../extlibs/zquatev/zquatev.h"
+#include "../../extlibs/zquatev/zquatev.h"
 #include "qnum_qsym.h"
 #include "kramers_ortho.h"
 

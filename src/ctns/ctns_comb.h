@@ -1,7 +1,7 @@
 #ifndef CTNS_COMB_H
 #define CTNS_COMB_H
 
-#include "qtensor/qtensor.h"
+#include "../qtensor/qtensor.h"
 #include "ctns_topo.h"
 #include "init_rbasis.h"
 #include "init_phys.h" // get_qbond_vac

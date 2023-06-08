@@ -7,7 +7,7 @@
   1. odd-electron subspace: {|b>,K|b>}
 */
 
-#include "../../core/ortho.h"
+#include "../core/ortho.h"
 
 namespace kramers{
 

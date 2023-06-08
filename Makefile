@@ -1,13 +1,13 @@
 
-machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no #yes
+DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
+USE_GPU = no #yes
+USE_NCCL = no #yes
 USE_BLAS = no #yes
 # compression
 USE_LZ4 = no
@@ -15,6 +15,7 @@ USE_ZSTD = no
 # exec
 INSTALL_CI = yes
 INSTALL_CTNS = yes
+INSTALL_POSTMPS = yes
 INSTALL_VMC = yes
 
 # set library
@@ -253,8 +254,12 @@ ifeq ($(strip $(INSTALL_CI)), yes)
 endif
 
 ifeq ($(strip $(INSTALL_CTNS)), yes)
-   SRC_DIR_QT   = ./$(SRC)/ctns/qtensor
+   SRC_DIR_QT   = ./$(SRC)/qtensor
    SRC_DIR_CTNS = ./$(SRC)/ctns
+endif
+
+ifeq ($(strip $(INSTALL_POSTMPS)), yes)
+   SRC_DIR_POSTMPS = ./$(SRC)/postmps
 endif
 
 ifeq ($(strip $(INSTALL_VMC)), yes)
@@ -268,6 +273,7 @@ INCLUDE_DIR = -I$(SRC_DIR_CORE) \
      	        -I$(SRC_DIR_CI) \
      	        -I$(SRC_DIR_QT) \
      	        -I$(SRC_DIR_CTNS) \
+     	        -I$(SRC_DIR_POSTMPS) \
      	        -I$(SRC_DIR_VMC) \
      	        -I$(SRC_DIR_EXPT) 
 
@@ -281,6 +287,7 @@ SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 	  	     $(SRC_DIR_CI)/*.cpp \
 	  	     $(SRC_DIR_QT)/*.cpp \
 	  	     $(SRC_DIR_CTNS)/*.cpp \
+	  	     $(SRC_DIR_POSTMPS)/*.cpp \
 	  	     $(SRC_DIR_VMC)/*.cpp \
 	  	     $(SRC_DIR_EXPT)/*.cpp \
 	  	     $(SRC_DIR_GPU)/*.cpp)
@@ -303,6 +310,9 @@ SRC_CTNS = $(wildcard $(SRC_DIR_QT)/*.cpp \
 		      $(SRC_DIR_EXPT)/*.cpp)
 OBJ_CTNS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CTNS}))
 
+SRC_POSTMPS = $(wildcard $(SRC_DIR_POSTMPS)/*.cpp)
+OBJ_POSTMPS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_POSTMPS}))
+
 SRC_VMC = $(wildcard $(SRC_DIR_VMC)/*.cpp)
 OBJ_VMC = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_VMC}))
 
@@ -323,6 +333,12 @@ endif
 
 ifeq ($(strip $(INSTALL_CTNS)), yes)
 ctns: $(LIB_DIR)/libctns.a $(BIN_DIR)/tests_ctns.x $(BIN_DIR)/prectns.x $(BIN_DIR)/ctns.x
+else
+ctns:	
+endif
+
+ifeq ($(strip $(INSTALL_POSTMPS)), yes)
+ctns: $(LIB_DIR)/libpostmps.a $(BIN_DIR)/postmps.x
 else
 ctns:	
 endif
@@ -373,6 +389,10 @@ $(LIB_DIR)/libci.a: $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
 	ar crv $@ $^
 
 $(LIB_DIR)/libctns.a: $(OBJ_CTNS) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
+	@echo "=== COMPLIE $@"
+	ar crv $@ $^
+
+$(LIB_DIR)/libpostmps.a: $(OBJ_POSTMPS) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO) $(OBJ_CTNS)
 	@echo "=== COMPLIE $@"
 	ar crv $@ $^
 
@@ -431,6 +451,10 @@ $(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(LIB_DIR)/libctns.a
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/ctns.o -L$(LIB_DIR) -lctns $(LFLAGS) 
+
+$(BIN_DIR)/postmps.x: $(OBJ_DIR)/postmps.o $(LIB_DIR)/libpostmps.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/postmps.o -L$(LIB_DIR) -lpostmps $(LFLAGS) 
 
 $(BIN_DIR)/vmc.x: $(OBJ_DIR)/vmc.o $(LIB_DIR)/libvmc.a
 	@echo "=== LINK $@"

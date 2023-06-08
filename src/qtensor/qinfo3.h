@@ -1,8 +1,8 @@
 #ifndef QINFO3_H
 #define QINFO3_H
 
-#include "../../core/serialization.h"
-#include "../../core/tools.h"
+#include "../core/serialization.h"
+#include "../core/tools.h"
 
 namespace ctns{
 

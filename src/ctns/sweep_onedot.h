@@ -3,7 +3,7 @@
 
 #include "../core/tools.h"
 #include "../core/linalg.h"
-#include "qtensor/qtensor.h"
+#include "../qtensor/qtensor.h"
 #include "sweep_util.h"
 #include "sweep_onedot_renorm.h"
 #include "sweep_onedot_diag.h"

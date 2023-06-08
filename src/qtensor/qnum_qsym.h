@@ -1,8 +1,8 @@
 #ifndef QNUM_QSYM_H
 #define QNUM_QSYM_H
 
-#include "../../core/serialization.h"
-#include "../../core/onstate.h"
+#include "../core/serialization.h"
+#include "../core/onstate.h"
 #include <string>
 
 namespace ctns{

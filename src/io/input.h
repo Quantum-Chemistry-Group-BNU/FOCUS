@@ -91,7 +91,7 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
-                  & task_init & task_sdiag & task_ham & task_opt & task_vmc & task_rdm
+                  & task_init & task_sdiag & task_ham & task_opt 
                   & restart_sweep & restart_bond & timestamp
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
@@ -118,8 +118,6 @@ namespace input{
          bool task_sdiag = false;
          bool task_ham = false;
          bool task_opt = false;
-         bool task_vmc = false;
-         bool task_rdm = false;
          // restart
          int restart_sweep = 0;
          int restart_bond = 0;

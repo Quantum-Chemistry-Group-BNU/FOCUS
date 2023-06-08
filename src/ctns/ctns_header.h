@@ -7,8 +7,6 @@
 #include "ctns_alg.h"
 #include "ctns_oper.h" 
 #include "ctns_sweep.h"
-#include "ctns_vmc.h"
-#include "ctns_rdm.h"
 #include "preprocess_distribution.h"
 
 #endif

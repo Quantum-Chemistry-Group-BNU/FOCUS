@@ -4,7 +4,7 @@
 #include <map>
 #include "../core/serialization.h"
 #include "../core/integral.h"
-#include "qtensor/qtensor.h"
+#include "../qtensor/qtensor.h"
 #include "oper_index.h"
 #ifdef GPU
 #include "../gpu/gpu_env.h"
