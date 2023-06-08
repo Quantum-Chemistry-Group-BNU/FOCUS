@@ -37,6 +37,6 @@ alg_hinter 2
 alg_renorm 19
 alg_rinter 2
 ifdist1
-batchsigma 2 2 2
+batchhvec 2 2 2
 batchrenorm 2 2 2
 $end

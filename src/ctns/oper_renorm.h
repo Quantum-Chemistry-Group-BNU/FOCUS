@@ -510,8 +510,8 @@ namespace ctns{
 
 #ifndef SERIAL
             if(ifdist1 and size > 1 and schd.ctns.ifnccl){
-#ifdef USE_HIP
-               std::cout << "error: not implemented yet! RCCL is not supported for opS and opH" << std::endl;
+#ifndef NCCL
+               std::cout << "error: NCCL must be used for comm[opS,opH] for ifnccl=true!" << std::endl;
                exit(1);
 #else
                // NCCL is used to perform reduction for opS and opH
@@ -533,7 +533,7 @@ namespace ctns{
                Tm* dev_ptr = qops._dev_data+off;
                nccl_comm.reduce(dev_ptr, opsize, 0);
                if(rank != 0) GPUmem.memset(dev_ptr, opsize*sizeof(Tm));
-#endif 
+#endif
             }
 #endif // SERIAL
             timing.tf10 = tools::get_time();
