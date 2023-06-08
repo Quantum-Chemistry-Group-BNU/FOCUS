@@ -17,7 +17,8 @@ namespace input{
          friend class boost::serialization::access;
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
-               ar & run & qkind & topology_file & verbose; 
+               ar & run & qkind & topology_file & verbose
+                  & task_ovlp & bra & ket; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -28,6 +29,10 @@ namespace input{
          std::string topology_file = "TOPOLOGY";
          // debug level
          int verbose = 0;
+         // tasks
+         bool task_ovlp = false;
+         std::vector<int> bra;
+         std::vector<int> ket;
    };
 
 } // input

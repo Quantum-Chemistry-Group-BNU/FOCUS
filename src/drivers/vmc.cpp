@@ -102,6 +102,11 @@ int main(int argc, char *argv[]){
       schd.world = world;
    }
 #endif
+   if(!schd.vmc.run){
+      if(rank == 0) std::cout << "\ncheck input again, there is no task for VMC!" << std::endl;
+      return 0;
+   }
+
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    io::create_scratch(schd.scratch, (rank == 0));

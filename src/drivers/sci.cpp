@@ -55,6 +55,11 @@ int main(int argc, char *argv[]){
    }
    input::schedule schd;
    schd.read(fname);
+   if(!schd.sci.run){
+      std::cout << "\ncheck input again, there is no task for SCI!" << std::endl;
+      return 0;
+   }
+
    io::create_scratch(schd.scratch);
    // we will use Tm to control Hnr/Hrel 
    if(schd.dtype == 0){
@@ -62,6 +67,7 @@ int main(int argc, char *argv[]){
    }else if(schd.dtype == 1){
       SCI<complex<double>>(schd);
    }
+
    tools::finish("SCI");
    return 0;
 }

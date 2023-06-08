@@ -100,7 +100,7 @@ namespace ctns{
          auto qtmp = contract_qt3_qt2("r",site,qt2_r);
          qt2_r = contract_qt3_qt3("cr",site,qtmp);
          auto Smat = qt2_r.to_matrix();
-         return qt2_r.to_matrix();
+         return Smat;
       }
 
    // Algorithm 2:

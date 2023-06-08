@@ -33,6 +33,24 @@ void params_postmps::read(ifstream& istrm){
          is >> topology_file;
       }else if(line.substr(0,7)=="verbose"){
          verbose = stoi(line.substr(7));
+      }else if(line.substr(0,9)=="task_ovlp"){
+         task_ovlp = true;
+      }else if(line.substr(0,3)=="bra"){
+         line.clear();	   
+         getline(istrm,line);
+         istringstream is(line);
+         string s;
+         while(is>>s){
+            bra.push_back( stoi(s) );	    
+         }
+      }else if(line.substr(0,3)=="ket"){
+         line.clear();	   
+         getline(istrm,line);
+         istringstream is(line);
+         string s;
+         while(is>>s){
+            ket.push_back( stoi(s) );	    
+         }
       }else{
          tools::exit("error: no matching key! line = "+line);
       }
@@ -45,4 +63,8 @@ void params_postmps::print() const{
    cout << "topology_file = " << topology_file << endl;
    // debug level
    cout << "verbose = " << verbose << endl;
+   // tasks
+   cout << "task_ovlp = " << task_ovlp << endl;
+   tools::print_vector(bra, "bra");
+   tools::print_vector(ket, "ket");
 }

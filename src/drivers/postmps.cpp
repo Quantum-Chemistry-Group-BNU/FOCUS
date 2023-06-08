@@ -5,6 +5,7 @@
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
+#include "../postmps/postmps_header.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -28,6 +29,10 @@ void postMPS(const input::schedule& schd){
       tools::exit("error: inconsistent dtype in postMPS!");
    }
 
+   if(schd.postmps.task_ovlp){
+      ctns::mps_ovlp<Km>(schd);
+   }
+ 
    /*
    // CTNS 
    ctns::comb<Km> icomb;
@@ -193,39 +198,44 @@ int main(int argc, char *argv[]){
       schd.world = world;
    }
 #endif
+   if(!schd.postmps.run){
+      if(rank == 0) std::cout << "\ncheck input again, there is no task for POSTMPS!" << std::endl;
+      return 0;
+   }
+
    // setup scratch directory
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    io::create_scratch(schd.scratch, (rank == 0));
 
-#ifdef GPU
-   if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
-      gpu_init(rank);
-   }
-#endif
+//#ifdef GPU
+//   if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
+//      gpu_init(rank);
+//   }
+//#endif
 
-   if(schd.ctns.qkind == "rZ2"){
+   if(schd.postmps.qkind == "rZ2"){
       postMPS<ctns::qkind::rZ2>(schd);
-   }else if(schd.ctns.qkind == "cZ2"){
+   }else if(schd.postmps.qkind == "cZ2"){
       postMPS<ctns::qkind::cZ2>(schd);
-   }else if(schd.ctns.qkind == "rN"){
+   }else if(schd.postmps.qkind == "rN"){
       postMPS<ctns::qkind::rN>(schd);
-   }else if(schd.ctns.qkind == "cN"){
+   }else if(schd.postmps.qkind == "cN"){
       postMPS<ctns::qkind::cN>(schd);
-   }else if(schd.ctns.qkind == "rNSz"){
+   }else if(schd.postmps.qkind == "rNSz"){
       postMPS<ctns::qkind::rNSz>(schd);
-   }else if(schd.ctns.qkind == "cNSz"){
+   }else if(schd.postmps.qkind == "cNSz"){
       postMPS<ctns::qkind::cNSz>(schd);
-   }else if(schd.ctns.qkind == "cNK"){
+   }else if(schd.postmps.qkind == "cNK"){
       postMPS<ctns::qkind::cNK>(schd);
    }else{
-      tools::exit("error: no such qkind for ctns!");
+      tools::exit("error: no such qkind for postmps!");
    } // qkind
 
-#ifdef GPU
-   if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
-      gpu_finalize();
-   }
-#endif
+//#ifdef GPU
+//   if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
+//      gpu_finalize();
+//   }
+//#endif
 
    // cleanup 
    if(rank == 0){

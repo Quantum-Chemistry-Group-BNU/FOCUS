@@ -139,7 +139,15 @@ namespace ctns{
             bool dir_row() const{ return true; } 
             bool dir_col() const{ return true; }
             bool dir_mid() const{ return true; } 
-            bool dir_ver() const{ return true; } 
+            bool dir_ver() const{ return true; }
+            std::tuple<int,int,int,int> get_shape() const{
+               return std::make_tuple(
+                     info.qrow.get_dimAll(),
+                     info.qcol.get_dimAll(),
+                     info.qmid.get_dimAll(),
+                     info.qver.get_dimAll()
+                     );
+            }
             size_t size() const{ return info._size; }
             Tm* data() const{ return _data; }
             // access
