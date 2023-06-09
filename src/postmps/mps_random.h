@@ -53,10 +53,10 @@ namespace ctns{
             const int nsample,  
             const int nprt, // no. of largest states to be printed
             const double cutoff = 1.e-12){
+         auto ti = tools::get_time();
          std::cout << "\nctns::mps_Sdiag_sample iroot=" << iroot 
             << " nsample=" << nsample 
             << " nprt=" << nprt << std::endl;
-         auto t0 = tools::get_time();
          const int noff = nsample/10;
          // In case CTNS is not normalized 
          double ovlp = std::abs(get_Smat(imps,imps)(iroot,iroot));
@@ -64,6 +64,7 @@ namespace ctns{
          // start sampling
          double Sd = 0.0, Sd2 = 0.0, std = 0.0;
          std::map<fock::onstate,int> pop;
+         auto t0 = tools::get_time();
          for(int i=0; i<nsample; i++){
             auto pr = mps_random(imps,iroot);
             auto state = pr.first;
@@ -78,8 +79,10 @@ namespace ctns{
                std = std::sqrt((Sd2-Sd*Sd)/(i+1.e-10));
                auto t1 = tools::get_time();
                double dt = tools::get_duration(t1-t0);
-               std::cout << " i=" << i << " Sd=" << Sd << " std=" << std
-                  << " timing=" << dt << " S" << std::endl;	      
+               std::cout << " i=" << i 
+                  << "  Sd=" << std::setprecision(6) << Sd
+                  << "  std=" << std
+                  << "  timing=" << dt << " S" << std::endl;	      
                t0 = tools::get_time();
             }
          }
@@ -104,16 +107,19 @@ namespace ctns{
                auto ci = mps_CIcoeff(imps, iroot, state);
                sum += counts[idx];
                std::cout << " i=" << i << " " << state
-                  << " counts=" << counts[idx] 
+                  << " counts=" << counts[idx]
+                  << std::scientific << std::setprecision(4)
                   << " p_i(sample)=" << counts[idx]/(1.0*nsample)
                   << " {p_i(exact)=" << std::norm(ci)/ovlp 
-                  << " c_i(exact)=" << ci/std::sqrt(ovlp) << "}"
+                  << " c_i(exact)="  << ci/std::sqrt(ovlp) << "}"
                   << std::endl;
             }
             std::cout << "accumulated counts=" << sum 
                << " nsample=" << nsample 
                << " per=" << 1.0*sum/nsample << std::endl;
          }
+         auto tf = tools::get_time();
+         tools::timing("ctns::mps_diag_sample", ti, tf);
          return Sd;
       }
 

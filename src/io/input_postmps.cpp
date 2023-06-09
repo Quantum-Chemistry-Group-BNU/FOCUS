@@ -42,6 +42,7 @@ void params_postmps::read(ifstream& istrm){
       }else if(line.substr(0,3)=="bra"){
          line.clear();	   
          getline(istrm,line);
+         std::cout << line << std::endl;
          istringstream is(line);
          string s;
          while(is>>s){
@@ -50,6 +51,7 @@ void params_postmps::read(ifstream& istrm){
       }else if(line.substr(0,3)=="ket"){
          line.clear();	   
          getline(istrm,line);
+         std::cout << line << std::endl;
          istringstream is(line);
          string s;
          while(is>>s){
