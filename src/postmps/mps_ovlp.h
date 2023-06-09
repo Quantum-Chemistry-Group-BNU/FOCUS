@@ -39,52 +39,52 @@ namespace ctns{
          std::cout << "\nctns::mps_ovlp" << std::endl;
          topology topo;
          topo.read(schd.postmps.topology_file);
-         topo.print();
+         //topo.print();
          // <bra|ket>
-         int nbra = schd.postmps.bra.size();
-         for(int i=0; i<nbra; i++){
-            std::cout << "\n### ibra=" << i << " ###" << std::endl;
-            mps<Km> bmps;
-            auto bmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.postmps.bra[i])+".info";
-            bmps.nphysical = topo.nphysical;
-            bmps.image2 = topo.image2;
-            bmps.load(bmps_file);
-            bmps.print();
-            // compute row 
+         int nket = schd.postmps.ket.size();
+         for(int j=0; j<nket; j++){
+            std::cout << "\n### jket=" << j << " ###" << std::endl;
+            mps<Km> kmps;
+            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.postmps.ket[j])+".info"; 
+            kmps.nphysical = topo.nphysical;
+            kmps.image2 = topo.image2;
+            kmps.load(kmps_file);
+            kmps.print();
+            // compute column
             std::vector<linalg::matrix<Tm>> ovlp_i;
-            std::vector<int> ket(schd.postmps.bra[i]+1);
-            std::iota(ket.begin(), ket.end(), 0);
-            if(schd.postmps.ket[0] != -1) ket = schd.postmps.ket; 
-            int nket = ket.size();
-            ovlp_i.resize(nket);
-            for(int j=0; j<nket; j++){
-               std::cout << "\nibra=" << i << " jket=" << j << std::endl;
-               mps<Km> kmps;
-               auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(ket[j])+".info"; 
-               kmps.nphysical = topo.nphysical;
-               kmps.image2 = topo.image2;
-               kmps.load(kmps_file);
+            std::vector<int> bra(schd.postmps.ket[j]+1);
+            std::iota(bra.begin(), bra.end(), 0);
+            if(schd.postmps.bra[0] != -1) bra = schd.postmps.bra; 
+            int nbra = bra.size();
+            ovlp_i.resize(nbra);
+            for(int i=0; i<nbra; i++){
+               std::cout << "\n### jket=" << j << " ibra=" << i << " ###" << std::endl;
+               mps<Km> bmps;
+               auto bmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(bra[i])+".info";
+               bmps.nphysical = topo.nphysical;
+               bmps.image2 = topo.image2;
+               bmps.load(bmps_file);
                // compute overlap
-               ovlp_i[j] = get_Smat(bmps, kmps);
-               ovlp_i[j].print("Smat",8);
+               ovlp_i[i] = get_Smat(bmps, kmps);
+               ovlp_i[i].print("Smat",8);
             }
             // print summary
             int bstate = ovlp_i[0].rows();
             int kstate = ovlp_i[0].cols();
             for(int b=0; b<bstate; b++){
                for(int k=0; k<kstate; k++){
-                  std::cout << "\nSUMMARY: ibra=" << i 
+                  std::cout << "\nSUMMARY: jket=" << j
                      << " bstate=" << b 
                      << " kstate=" << k 
                      << std::endl;
-                  std::cout << "    j    jdx          ovlp   " << std::endl;
+                  std::cout << "    i    idx        ovlp     " << std::endl;
                   std::cout << "-----------------------------" << std::endl;
-                  for(int j=0; j<nket; j++){
-                     std::cout << std::setw(5) << j
-                        << " " << std::setw(5) << ket[j] 
-                        << " " << std::setw(16) << std::scientific << std::setprecision(6) << ovlp_i[j](b,k)
+                  for(int i=0; i<nbra; i++){
+                     std::cout << std::setw(5) << i
+                        << " " << std::setw(5) << bra[i]
+                        << " " << std::setw(16) << std::scientific << std::setprecision(6) << ovlp_i[i](b,k)
                         << std::endl;
-                  } // j
+                  } // i
                } // k
             } // b
          }

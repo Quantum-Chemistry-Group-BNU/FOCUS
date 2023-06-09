@@ -3,5 +3,7 @@
 
 #include "mps.h"
 #include "mps_ovlp.h"
+#include "mps_cicoeff.h"
+#include "mps_random.h"
 
 #endif

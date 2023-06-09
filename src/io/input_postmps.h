@@ -18,7 +18,9 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
-                  & task_ovlp & bra & ket; 
+                  & task_ovlp & task_cicoeff & task_sdiag 
+                  & bra & ket
+                  & iroot & nsample & ndetprt; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -31,8 +33,13 @@ namespace input{
          int verbose = 0;
          // tasks
          bool task_ovlp = false;
+         bool task_cicoeff = false;
+         bool task_sdiag = false;
          std::vector<int> bra;
          std::vector<int> ket;
+         int iroot = 0;
+         int nsample = 10000;
+         int ndetprt = 10;
    };
 
 } // input

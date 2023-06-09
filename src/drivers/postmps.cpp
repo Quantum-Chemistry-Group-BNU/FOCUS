@@ -32,91 +32,14 @@ void postMPS(const input::schedule& schd){
    if(schd.postmps.task_ovlp){
       ctns::mps_ovlp<Km>(schd);
    }
- 
+   if(schd.postmps.task_cicoeff){
+      ctns::mps_cicoeff<Km>(schd);
+   }
+   if(schd.postmps.task_sdiag){
+      ctns::mps_sdiag<Km>(schd);
+   }
+
    /*
-   // CTNS 
-   ctns::comb<Km> icomb;
-   // convert from SCI or load from files
-   if(rank == 0){
-      // dealing with topology 
-      icomb.topo.read(schd.ctns.topology_file);
-      icomb.topo.print();
-      if(schd.ctns.restart_sweep == 0){
-         // initialize RCF 
-         auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-         if(!schd.ctns.rcanon_load){
-            // from SCI wavefunction
-            onspace sci_space;
-            vector<double> es;
-            linalg::matrix<Tm> vs;
-            auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
-            fci::ci_load(sci_space, es, vs, ci_file);
-            // truncate CI coefficients
-            fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-            ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
-                  schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
-            ctns::rcanon_save(icomb, rcanon_file);
-            // debug        
-            const bool debug = false;
-            if(debug){ 
-               // <CI|CTNS>
-               auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
-               Sij_mix.print("Sij_mix");
-               // HIJ
-               integral::two_body<Tm> int2e;
-               integral::one_body<Tm> int1e;
-               double ecore;
-               integral::load(int2e, int1e, ecore, schd.integral_file);
-               io::create_scratch(schd.scratch);
-               auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-               Hij_ci.print("Hij_ci",8);
-               auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
-               Hij_ctns.print("Hij_ctns",8);
-               double diffH = (Hij_ctns - Hij_ci).normF();
-               cout << "\ncheck diffH=" << diffH << endl;
-               const double thresh = 1.e-8;
-               if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
-               io::remove_scratch(schd.scratch);
-               exit(1);
-            }
-         }else{
-            ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
-         } // rcanon_load
-      }else{
-         // restart a broken calculation from disk
-         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1)+".info";
-         if(schd.ctns.restart_sweep > schd.ctns.maxsweep){
-            std::cout << "error: restart_sweep exceed maxsweep!" << std::endl;
-            std::cout << " restart_sweep=" << schd.ctns.restart_sweep
-                      << " maxsweep=" << schd.ctns.maxsweep
-                      << std::endl;
-            exit(1);
-         }
-         ctns::rcanon_load(icomb, rcanon_file);
-      }
-      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
-   } // rank 0
-
-   if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
-
-#ifndef SERIAL
-   if(size > 1){
-      mpi_wrapper::broadcast(schd.world, icomb, 0);
-      icomb.world = schd.world;
-   }
-#endif
-
-   // compute sdiag
-   if(schd.ctns.task_sdiag){
-      // parallel sampling can be implemented in future (should be very simple)!
-      if(rank == 0){
-         int iroot  = schd.ctns.iroot;
-         int nsample = schd.ctns.nsample;
-         int ndetprt = schd.ctns.ndetprt; 
-         double Sd = ctns::rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
-      }
-   }
-
    // compute hamiltonian or optimize ctns by dmrg algorithm
    if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_vmc){
       // read integral
@@ -131,35 +54,6 @@ void postMPS(const input::schedule& schd){
          mpi_wrapper::broadcast(schd.world, int2e, 0);
       }
 #endif
-      // create scratch
-      auto scratch = schd.scratch+"/sweep";
-      if(schd.ctns.task_ham && schd.ctns.restart_bond == 0){ // restart_bond require site_ibondN.info in existing scratch 
-         io::remove_scratch(scratch, (rank == 0)); // start a new scratch
-      }
-      io::create_scratch(scratch, (rank == 0));
-      // compute hamiltonian 
-      if(schd.ctns.task_ham){
-         auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
-         if(rank == 0){
-            Hij.print("Hij",8);
-            auto Sij = ctns::get_Smat(icomb);
-            Sij.print("Sij");
-         }
-      }
-      // optimization from current RCF
-      if(schd.ctns.task_opt){
-         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
-      }
-      // vmc for estimation uncertainty
-      if(schd.ctns.task_vmc){
-         ctns::vmc_estimate(icomb, int2e, int1e, ecore, schd, scratch);
-      }
-   } // ham || opt || vmc
-
-   if(schd.ctns.task_rdm){
-      auto scratch = schd.scratch+"/sweep";
-      ctns::sweep_rdm(icomb, schd, scratch);
-   }
    */
 }
 

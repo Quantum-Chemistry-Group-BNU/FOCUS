@@ -35,6 +35,10 @@ void params_postmps::read(ifstream& istrm){
          verbose = stoi(line.substr(7));
       }else if(line.substr(0,9)=="task_ovlp"){
          task_ovlp = true;
+      }else if(line.substr(0,12)=="task_cicoeff"){
+         task_cicoeff = true;
+      }else if(line.substr(0,10)=="task_sdiag"){
+         task_sdiag = true;
       }else if(line.substr(0,3)=="bra"){
          line.clear();	   
          getline(istrm,line);
@@ -51,6 +55,12 @@ void params_postmps::read(ifstream& istrm){
          while(is>>s){
             ket.push_back( stoi(s) );	    
          }
+      }else if(line.substr(0,5)=="iroot"){
+         iroot = stoi(line.substr(5));
+      }else if(line.substr(0,7)=="nsample"){
+         nsample = stoi(line.substr(7));
+      }else if(line.substr(0,7)=="ndetprt"){
+         ndetprt = stoi(line.substr(7));
       }else{
          tools::exit("error: no matching key! line = "+line);
       }
@@ -65,6 +75,11 @@ void params_postmps::print() const{
    cout << "verbose = " << verbose << endl;
    // tasks
    cout << "task_ovlp = " << task_ovlp << endl;
+   cout << "task_cicoeff = " << task_cicoeff << endl;
+   cout << "task_sdiag = " << task_sdiag << endl;
    tools::print_vector(bra, "bra");
    tools::print_vector(ket, "ket");
+   cout << "iroot = " << iroot << endl;
+   cout << "nsample = " << nsample << endl;
+   cout << "ndetprt = " << ndetprt << endl;
 }

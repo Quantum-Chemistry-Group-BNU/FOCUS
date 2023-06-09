@@ -23,6 +23,8 @@ namespace ctns{
                load >> rwfuns;
                ifs.close();
             }
+            // physical index
+            int get_pindex(const int i) const{ return image2[2*i]/2; }
             // site0 & rwfuns
             qsym get_sym_state() const{
                assert(rwfuns[0].rows() == 1); // only one symmetry sector
@@ -63,6 +65,34 @@ namespace ctns{
                      << "," << std::get<2>(shape) // n
                      << ")" << std::endl;
                }
+            }
+            // underlying hilbert space
+            fock::onspace get_fcispace() const{
+               fock::onspace fci_space;
+               auto sym_state = this->get_sym_state();
+               int isym = sym_state.isym();
+               if(isym == 2){
+                  int ne = sym_state.ne();
+                  int tm = sym_state.tm();
+                  int na = (ne+tm)/2;
+                  int nb = (ne-tm)/2;
+                  fci_space = fock::get_fci_space(nphysical, na, nb);
+                  std::cout << "Generate Hilbert space for"
+                     << " (ks,na,nb)=" << nphysical << "," << na << "," << nb
+                     << " dim=" << fci_space.size()
+                     << std::endl;
+               }else if(isym == 1){
+                  int ne = sym_state.ne();
+                  fci_space = fock::get_fci_space(nphysical*2, ne);
+                  std::cout << "Generate Hilbert space for" 
+                     << " (k,n)=" << nphysical*2 << "," << ne
+                     << " dim=" << fci_space.size()
+                     << std::endl; 
+               }else{
+                  std::cout << "error: isym is not supported yet! isym=" << isym << endl;
+                  exit(1); 
+               }
+               return fci_space;
             }
          public:
             using Tm = typename Km::dtype;
