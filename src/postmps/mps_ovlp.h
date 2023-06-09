@@ -35,12 +35,14 @@ namespace ctns{
 
    template <typename Km>
       void mps_ovlp(const input::schedule& schd){
+         using Tm = typename Km::dtype;
          std::cout << "\nctns::mps_ovlp" << std::endl;
          topology topo;
          topo.read(schd.postmps.topology_file);
          topo.print();
          // <bra|ket>
-         for(int i=0; i<schd.postmps.bra.size(); i++){
+         int nbra = schd.postmps.bra.size();
+         for(int i=0; i<nbra; i++){
             std::cout << "\n### ibra=" << i << " ###" << std::endl;
             mps<Km> bmps;
             auto bmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.postmps.bra[i])+".info";
@@ -48,17 +50,43 @@ namespace ctns{
             bmps.image2 = topo.image2;
             bmps.load(bmps_file);
             bmps.print();
-            for(int j=0; j<schd.postmps.ket.size(); j++){
+            // compute row 
+            std::vector<linalg::matrix<Tm>> ovlp_i;
+            std::vector<int> ket(schd.postmps.bra[i]+1);
+            std::iota(ket.begin(), ket.end(), 0);
+            if(schd.postmps.ket[0] != -1) ket = schd.postmps.ket; 
+            int nket = ket.size();
+            ovlp_i.resize(nket);
+            for(int j=0; j<nket; j++){
                std::cout << "\nibra=" << i << " jket=" << j << std::endl;
                mps<Km> kmps;
-               auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.postmps.ket[j])+".info"; 
+               auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(ket[j])+".info"; 
                kmps.nphysical = topo.nphysical;
                kmps.image2 = topo.image2;
                kmps.load(kmps_file);
                // compute overlap
-               auto Smat = get_Smat(bmps, kmps);
-               Smat.print("Smat",8);
+               ovlp_i[j] = get_Smat(bmps, kmps);
+               ovlp_i[j].print("Smat",8);
             }
+            // print summary
+            int bstate = ovlp_i[0].rows();
+            int kstate = ovlp_i[0].cols();
+            for(int b=0; b<bstate; b++){
+               for(int k=0; k<kstate; k++){
+                  std::cout << "\nSUMMARY: ibra=" << i 
+                     << " bstate=" << b 
+                     << " kstate=" << k 
+                     << std::endl;
+                  std::cout << "    j    jdx          ovlp   " << std::endl;
+                  std::cout << "-----------------------------" << std::endl;
+                  for(int j=0; j<nket; j++){
+                     std::cout << std::setw(5) << j
+                        << " " << std::setw(5) << ket[j] 
+                        << " " << std::setw(16) << std::scientific << std::setprecision(6) << ovlp_i[j](b,k)
+                        << std::endl;
+                  } // j
+               } // k
+            } // b
          }
       }
 
