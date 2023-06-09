@@ -39,6 +39,8 @@ void params_postmps::read(ifstream& istrm){
          task_cicoeff = true;
       }else if(line.substr(0,10)=="task_sdiag"){
          task_sdiag = true;
+      }else if(line.substr(0,11)=="task_expect"){
+         task_expect = true;
       }else if(line.substr(0,3)=="bra"){
          line.clear();	   
          getline(istrm,line);
@@ -63,6 +65,8 @@ void params_postmps::read(ifstream& istrm){
          nsample = stoi(line.substr(7));
       }else if(line.substr(0,7)=="ndetprt"){
          ndetprt = stoi(line.substr(7));
+      }else if(line.substr(0,4)=="eps2"){
+         eps2 = stod(line.substr(4));
       }else{
          tools::exit("error: no matching key! line = "+line);
       }
@@ -79,9 +83,11 @@ void params_postmps::print() const{
    cout << "task_ovlp = " << task_ovlp << endl;
    cout << "task_cicoeff = " << task_cicoeff << endl;
    cout << "task_sdiag = " << task_sdiag << endl;
+   cout << "task_expect = " << task_expect << endl;
    tools::print_vector(bra, "bra");
    tools::print_vector(ket, "ket");
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;
    cout << "ndetprt = " << ndetprt << endl;
+   cout << "eps2 = " << eps2 << endl;
 }

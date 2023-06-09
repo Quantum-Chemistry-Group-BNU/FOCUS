@@ -358,10 +358,15 @@ KNOWN PROBLEMS
  * postCTNS.x driver: interface MPS
    - overlap between two MPS? [DONE@20230608]
    - Sdiag: fast sampling [DONE@20230609]
-   - parallel random number generator (PRNG)
-   - <Psi|H/H^2/S2|Psi> via sampling?
+   - expectation value via sampling:
+      - <Psi|H|Psi>
+      - <Psi|S2|Psi>
+      - <Psi|(H-E)^2|Psi>
+      - <Psi|Ps|Psi> 
    - VMC algorithm: fast <n|Psi>
       - <Ps> for CTNS: rNSz -> rN;
       - <PHP>/<P>
       - RBM on top of MPS?
+   - optimization:
+      - parallel random number generator (PRNG)
 

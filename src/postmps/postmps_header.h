@@ -5,5 +5,6 @@
 #include "mps_ovlp.h"
 #include "mps_cicoeff.h"
 #include "mps_random.h"
+#include "mps_expect.h"
 
 #endif

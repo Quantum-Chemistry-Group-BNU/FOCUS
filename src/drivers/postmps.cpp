@@ -38,23 +38,10 @@ void postMPS(const input::schedule& schd){
    if(schd.postmps.task_sdiag){
       ctns::mps_sdiag<Km>(schd);
    }
+   if(schd.postmps.task_expect){
+      ctns::mps_expect<Km>(schd);
+   }
 
-   /*
-   // compute hamiltonian or optimize ctns by dmrg algorithm
-   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_vmc){
-      // read integral
-      integral::two_body<Tm> int2e;
-      integral::one_body<Tm> int1e;
-      double ecore;
-      if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
-#ifndef SERIAL
-      if(size > 1){
-         boost::mpi::broadcast(schd.world, ecore, 0);
-         boost::mpi::broadcast(schd.world, int1e, 0);
-         mpi_wrapper::broadcast(schd.world, int2e, 0);
-      }
-#endif
-   */
 }
 
 int main(int argc, char *argv[]){

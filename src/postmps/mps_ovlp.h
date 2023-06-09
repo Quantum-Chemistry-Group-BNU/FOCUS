@@ -37,6 +37,8 @@ namespace ctns{
       void mps_ovlp(const input::schedule& schd){
          using Tm = typename Km::dtype;
          std::cout << "\nctns::mps_ovlp" << std::endl;
+         if(schd.postmps.ket.size()==0) return;
+         if(schd.postmps.bra.size()==0) return;
          topology topo;
          topo.read(schd.postmps.topology_file);
          //topo.print();

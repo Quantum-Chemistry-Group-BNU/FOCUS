@@ -28,6 +28,12 @@ namespace integral{
                   ar & sorb & data;
                }
          public:
+            one_body(){}
+            one_body(const int _sorb){
+               sorb = _sorb;
+               this->init_mem();
+               this->set_zero();
+            }
             void init_mem(){
                assert(sorb > 0);
                data.resize(sorb*sorb);
@@ -66,6 +72,12 @@ namespace integral{
    template <typename Tm>
       struct two_body{
          public:
+            two_body(){}
+            two_body(const int _sorb){
+               sorb = _sorb;
+               this->init_mem();
+               this->set_zero();
+            }
             void init_mem(){
                assert(sorb > 0);
                size_t pair = sorb*(sorb-1)/2;
