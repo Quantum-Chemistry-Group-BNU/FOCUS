@@ -21,7 +21,7 @@ void schedule::print() const{
    cout << "integral_file = " << integral_file << endl;
    if(sci.run) sci.print();
    if(ctns.run) ctns.print();
-   if(postmps.run) postmps.print();
+   if(post.run) post.print();
    if(vmc.run) vmc.print();
 }
 
@@ -56,8 +56,8 @@ void schedule::read(string fname){
          sci.read(istrm);
       }else if(line.substr(0,5)=="$ctns"){
          ctns.read(istrm);
-      }else if(line.substr(0,8)=="$postmps"){
-         postmps.read(istrm);
+      }else if(line.substr(0,5)=="$post"){
+         post.read(istrm);
       }else if(line.substr(0,4)=="$vmc"){
          vmc.read(istrm);
       }else{

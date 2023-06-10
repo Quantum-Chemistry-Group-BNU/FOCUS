@@ -11,7 +11,7 @@
 
 #include "input_sci.h"
 #include "input_ctns.h"
-#include "input_postmps.h"
+#include "input_post.h"
 #include "input_vmc.h"
 
 #ifndef SERIAL
@@ -31,7 +31,7 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & scratch & dtype & nelec & twoms & integral_file
-                  & sci & ctns & postmps & vmc;
+                  & sci & ctns & post & vmc;
             }
       public:
          void read(std::string fname="input.dat");
@@ -46,7 +46,7 @@ namespace input{
          // --- Methods --- 
          params_sci sci;
          params_ctns ctns;
-         params_postmps postmps;
+         params_post post;
          params_vmc vmc;
          // --- MPI ---
 #ifndef SERIAL

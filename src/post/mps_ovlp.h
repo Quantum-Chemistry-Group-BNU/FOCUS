@@ -37,26 +37,26 @@ namespace ctns{
       void mps_ovlp(const input::schedule& schd){
          using Tm = typename Km::dtype;
          std::cout << "\nctns::mps_ovlp" << std::endl;
-         if(schd.postmps.ket.size()==0) return;
-         if(schd.postmps.bra.size()==0) return;
+         if(schd.post.ket.size()==0) return;
+         if(schd.post.bra.size()==0) return;
          topology topo;
-         topo.read(schd.postmps.topology_file);
+         topo.read(schd.post.topology_file);
          //topo.print();
          // <bra|ket>
-         int nket = schd.postmps.ket.size();
+         int nket = schd.post.ket.size();
          for(int j=0; j<nket; j++){
             std::cout << "\n### jket=" << j << " ###" << std::endl;
             mps<Km> kmps;
-            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.postmps.ket[j])+".info"; 
+            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j])+".info"; 
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;
             kmps.load(kmps_file);
             kmps.print();
             // compute column
             std::vector<linalg::matrix<Tm>> ovlp_i;
-            std::vector<int> bra(schd.postmps.ket[j]+1);
+            std::vector<int> bra(schd.post.ket[j]+1);
             std::iota(bra.begin(), bra.end(), 0);
-            if(schd.postmps.bra[0] != -1) bra = schd.postmps.bra; 
+            if(schd.post.bra[0] != -1) bra = schd.post.bra; 
             int nbra = bra.size();
             ovlp_i.resize(nbra);
             for(int i=0; i<nbra; i++){

@@ -63,7 +63,7 @@ namespace integral{
             }
          public:
             int sorb = 0;
-         private:
+         public:
             std::vector<Tm> data; // Oij = <i|O|j>	
       };
 
@@ -130,7 +130,7 @@ namespace integral{
             // set all integrals to zero
             void set_zero(){
                memset(data.data(), 0, data.size()*sizeof(Tm));
-               memset(Q.data(), Q.size(), Q.size()*sizeof(Tm));
+               memset(Q.data(), 0, Q.size()*sizeof(Tm));
             }
             void print() const{
                std::cout << "integral::two_body sorb=" << sorb << std::endl;

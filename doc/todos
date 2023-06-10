@@ -360,12 +360,12 @@ KNOWN PROBLEMS
    - Sdiag: fast sampling [DONE@20230609]
    - expectation value via sampling:
       - <Psi|H|Psi>
-      - <Psi|S2|Psi>
+      - <Psi|S2|Psi> [DONE@20230611]
       - <Psi|(H-E)^2|Psi>
-      - <Psi|Ps|Psi> 
+      - <Psi|Ps|Psi> (lower sym: xNSz->xN) 
    - VMC algorithm: fast <n|Psi>
       - <Ps> for CTNS: rNSz -> rN;
-      - <PHP>/<P>
+      - <HP>/<P>
       - RBM on top of MPS?
    - optimization:
       - parallel random number generator (PRNG)

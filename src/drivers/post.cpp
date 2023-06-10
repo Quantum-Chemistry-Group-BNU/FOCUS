@@ -5,7 +5,7 @@
 #include "../io/input.h"
 #include "../ci/ci_header.h"
 #include "../ctns/ctns_header.h"
-#include "../postmps/postmps_header.h"
+#include "../post/post_header.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -17,7 +17,7 @@ using namespace std;
 using namespace fock;
 
 template <typename Km>  
-void postMPS(const input::schedule& schd){
+void POST(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
@@ -26,19 +26,19 @@ void postMPS(const input::schedule& schd){
    // consistency check for dtype
    using Tm = typename Km::dtype;
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
-      tools::exit("error: inconsistent dtype in postMPS!");
+      tools::exit("error: inconsistent dtype in POST!");
    }
 
-   if(schd.postmps.task_ovlp){
+   if(schd.post.task_ovlp){
       ctns::mps_ovlp<Km>(schd);
    }
-   if(schd.postmps.task_cicoeff){
+   if(schd.post.task_cicoeff){
       ctns::mps_cicoeff<Km>(schd);
    }
-   if(schd.postmps.task_sdiag){
+   if(schd.post.task_sdiag){
       ctns::mps_sdiag<Km>(schd);
    }
-   if(schd.postmps.task_expect){
+   if(schd.post.task_expect){
       ctns::mps_expect<Km>(schd);
    }
 
@@ -79,8 +79,8 @@ int main(int argc, char *argv[]){
       schd.world = world;
    }
 #endif
-   if(!schd.postmps.run){
-      if(rank == 0) std::cout << "\ncheck input again, there is no task for POSTMPS!" << std::endl;
+   if(!schd.post.run){
+      if(rank == 0) std::cout << "\ncheck input again, there is no task for POST!" << std::endl;
       return 0;
    }
 
@@ -94,22 +94,22 @@ int main(int argc, char *argv[]){
 //   }
 //#endif
 
-   if(schd.postmps.qkind == "rZ2"){
-      postMPS<ctns::qkind::rZ2>(schd);
-   }else if(schd.postmps.qkind == "cZ2"){
-      postMPS<ctns::qkind::cZ2>(schd);
-   }else if(schd.postmps.qkind == "rN"){
-      postMPS<ctns::qkind::rN>(schd);
-   }else if(schd.postmps.qkind == "cN"){
-      postMPS<ctns::qkind::cN>(schd);
-   }else if(schd.postmps.qkind == "rNSz"){
-      postMPS<ctns::qkind::rNSz>(schd);
-   }else if(schd.postmps.qkind == "cNSz"){
-      postMPS<ctns::qkind::cNSz>(schd);
-   }else if(schd.postmps.qkind == "cNK"){
-      postMPS<ctns::qkind::cNK>(schd);
+   if(schd.post.qkind == "rZ2"){
+      POST<ctns::qkind::rZ2>(schd);
+   }else if(schd.post.qkind == "cZ2"){
+      POST<ctns::qkind::cZ2>(schd);
+   }else if(schd.post.qkind == "rN"){
+      POST<ctns::qkind::rN>(schd);
+   }else if(schd.post.qkind == "cN"){
+      POST<ctns::qkind::cN>(schd);
+   }else if(schd.post.qkind == "rNSz"){
+      POST<ctns::qkind::rNSz>(schd);
+   }else if(schd.post.qkind == "cNSz"){
+      POST<ctns::qkind::cNSz>(schd);
+   }else if(schd.post.qkind == "cNK"){
+      POST<ctns::qkind::cNK>(schd);
    }else{
-      tools::exit("error: no such qkind for postmps!");
+      tools::exit("error: no such qkind for POST!");
    } // qkind
 
 //#ifdef GPU
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
 
    // cleanup 
    if(rank == 0){
-      tools::finish("postMPS");	   
+      tools::finish("POST");	   
    }else{
       // NOTE: scratch should be removed manually!
       //io::remove_scratch(schd.scratch, (rank == 0)); 

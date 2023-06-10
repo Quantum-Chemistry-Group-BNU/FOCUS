@@ -11,7 +11,7 @@
 
 namespace input{
 
-   struct params_postmps{
+   struct params_post{
       private:
          // serialize
          friend class boost::serialization::access;
@@ -19,7 +19,7 @@ namespace input{
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
                   & task_ovlp & task_cicoeff & task_sdiag & task_expect 
-                  & bra & ket
+                  & bra & ket & opname & integral_file
                   & iroot & nsample & ndetprt & eps2; 
             }
       public:
@@ -38,6 +38,8 @@ namespace input{
          bool task_expect = false;
          std::vector<int> bra;
          std::vector<int> ket;
+         std::string opname = "";
+         std::string integral_file = "mole.info";
          int iroot = 0;
          int nsample = 10000;
          int ndetprt = 10;
