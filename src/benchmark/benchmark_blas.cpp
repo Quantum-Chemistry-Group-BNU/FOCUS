@@ -1,4 +1,5 @@
 #include "../core/matrix.h"
+#include "../core/linalg.h"
 #include "../core/tools.h"
 
 template <typename Tm>
@@ -22,9 +23,9 @@ void test_xgemv_batch(const int M, const int N, const int nbatch){
       n_array[i] = N;
       group_size[i] = 1;
    }
-   auto a = linalg::random_matrix(M*N,nbatch);
-   auto x = linalg::random_matrix(N*1,nbatch);
-   auto y = linalg::random_matrix(M*1,nbatch);
+   auto a = linalg::random_matrix<Tm>(M*N,nbatch);
+   auto x = linalg::random_matrix<Tm>(N*1,nbatch);
+   auto y = linalg::random_matrix<Tm>(M*1,nbatch);
    Tm** A_array = new Tm*[nbatch];
    Tm** X_array = new Tm*[nbatch];
    Tm** Y_array = new Tm*[nbatch];
@@ -33,7 +34,7 @@ void test_xgemv_batch(const int M, const int N, const int nbatch){
       X_array[i] = x.col(i);
       Y_array[i] = y.col(i);
    }
-   linalg::xgemv_batch(trans_array, m_array, n_array, alpha_array, A_array, m_array,
+   linalg::xgemv_batch(transa_array, m_array, n_array, alpha_array, A_array, m_array,
          X_array, incx_array, beta_array, Y_array, incy_array,
          &group_count, group_size);
 }
