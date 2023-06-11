@@ -12,8 +12,8 @@ using namespace input;
 //
 // POSTMPS
 //
-void params_postmps::read(ifstream& istrm){
-   if(debug_input) cout << "params_postmps::read" << endl; 
+void params_post::read(ifstream& istrm){
+   if(debug_input) cout << "params_post::read" << endl; 
    run = true;
    // read 
    string line;
@@ -41,6 +41,8 @@ void params_postmps::read(ifstream& istrm){
          task_sdiag = true;
       }else if(line.substr(0,11)=="task_expect"){
          task_expect = true;
+         istringstream is(line.substr(11));
+         is >> opname;
       }else if(line.substr(0,3)=="bra"){
          line.clear();	   
          getline(istrm,line);
@@ -59,6 +61,9 @@ void params_postmps::read(ifstream& istrm){
          while(is>>s){
             ket.push_back( stoi(s) );	    
          }
+      }else if(line.substr(0,13)=="integral_file"){
+         istringstream is(line.substr(13));
+         is >> integral_file;
       }else if(line.substr(0,5)=="iroot"){
          iroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
@@ -73,8 +78,8 @@ void params_postmps::read(ifstream& istrm){
    }
 }
 
-void params_postmps::print() const{
-   cout << "\n===== params_postmps::print =====" << endl;
+void params_post::print() const{
+   cout << "\n===== params_post::print =====" << endl;
    cout << "qkind = " << qkind << endl;
    cout << "topology_file = " << topology_file << endl;
    // debug level
@@ -86,6 +91,8 @@ void params_postmps::print() const{
    cout << "task_expect = " << task_expect << endl;
    tools::print_vector(bra, "bra");
    tools::print_vector(ket, "ket");
+   cout << "opname = " << opname << endl;
+   cout << "integral_file = " << integral_file << endl;
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;
    cout << "ndetprt = " << ndetprt << endl;

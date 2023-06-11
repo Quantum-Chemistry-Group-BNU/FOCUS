@@ -15,7 +15,7 @@ USE_ZSTD = no
 # exec
 INSTALL_CI = yes
 INSTALL_CTNS = yes
-INSTALL_POSTMPS = yes
+INSTALL_POST = yes
 INSTALL_VMC = yes
 
 # set library
@@ -258,8 +258,8 @@ ifeq ($(strip $(INSTALL_CTNS)), yes)
    SRC_DIR_CTNS = ./$(SRC)/ctns
 endif
 
-ifeq ($(strip $(INSTALL_POSTMPS)), yes)
-   SRC_DIR_POSTMPS = ./$(SRC)/postmps
+ifeq ($(strip $(INSTALL_POST)), yes)
+   SRC_DIR_POST = ./$(SRC)/post
 endif
 
 ifeq ($(strip $(INSTALL_VMC)), yes)
@@ -273,7 +273,7 @@ INCLUDE_DIR = -I$(SRC_DIR_CORE) \
      	        -I$(SRC_DIR_CI) \
      	        -I$(SRC_DIR_QT) \
      	        -I$(SRC_DIR_CTNS) \
-     	        -I$(SRC_DIR_POSTMPS) \
+     	        -I$(SRC_DIR_POST) \
      	        -I$(SRC_DIR_VMC) \
      	        -I$(SRC_DIR_EXPT) 
 
@@ -287,7 +287,7 @@ SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 	  	     $(SRC_DIR_CI)/*.cpp \
 	  	     $(SRC_DIR_QT)/*.cpp \
 	  	     $(SRC_DIR_CTNS)/*.cpp \
-	  	     $(SRC_DIR_POSTMPS)/*.cpp \
+	  	     $(SRC_DIR_POST)/*.cpp \
 	  	     $(SRC_DIR_VMC)/*.cpp \
 	  	     $(SRC_DIR_EXPT)/*.cpp \
 	  	     $(SRC_DIR_GPU)/*.cpp)
@@ -310,8 +310,8 @@ SRC_CTNS = $(wildcard $(SRC_DIR_QT)/*.cpp \
 		      $(SRC_DIR_EXPT)/*.cpp)
 OBJ_CTNS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_CTNS}))
 
-SRC_POSTMPS = $(wildcard $(SRC_DIR_POSTMPS)/*.cpp)
-OBJ_POSTMPS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_POSTMPS}))
+SRC_POST = $(wildcard $(SRC_DIR_POST)/*.cpp)
+OBJ_POST = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_POST}))
 
 SRC_VMC = $(wildcard $(SRC_DIR_VMC)/*.cpp)
 OBJ_VMC = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_VMC}))
@@ -340,8 +340,8 @@ else
 ctns:	
 endif
 
-ifeq ($(strip $(INSTALL_POSTMPS)), yes)
-ctns: $(LIB_DIR)/libpostmps.a $(BIN_DIR)/postmps.x
+ifeq ($(strip $(INSTALL_POST)), yes)
+ctns: $(LIB_DIR)/libpost.a $(BIN_DIR)/post.x
 else
 ctns:	
 endif
@@ -395,7 +395,7 @@ $(LIB_DIR)/libctns.a: $(OBJ_CTNS) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
 	@echo "=== COMPLIE $@"
 	ar crv $@ $^
 
-$(LIB_DIR)/libpostmps.a: $(OBJ_POSTMPS) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO) $(OBJ_CTNS)
+$(LIB_DIR)/libpost.a: $(OBJ_POST) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO) $(OBJ_CTNS)
 	@echo "=== COMPLIE $@"
 	ar crv $@ $^
 
@@ -459,9 +459,9 @@ $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/ctns.o -L$(LIB_DIR) -lctns $(LFLAGS) 
 
-$(BIN_DIR)/postmps.x: $(OBJ_DIR)/postmps.o $(LIB_DIR)/libpostmps.a
+$(BIN_DIR)/post.x: $(OBJ_DIR)/post.o $(LIB_DIR)/libpost.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/postmps.o -L$(LIB_DIR) -lpostmps $(LFLAGS) 
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/post.o -L$(LIB_DIR) -lpost $(LFLAGS) 
 
 $(BIN_DIR)/vmc.x: $(OBJ_DIR)/vmc.o $(LIB_DIR)/libvmc.a
 	@echo "=== LINK $@"

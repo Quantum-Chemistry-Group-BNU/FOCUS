@@ -60,18 +60,18 @@ namespace ctns{
          using Tm = typename Km::dtype;
          std::cout << "\nctns::mps_cicoeff" << std::endl;
          topology topo;
-         topo.read(schd.postmps.topology_file);
+         topo.read(schd.post.topology_file);
          //topo.print();
-         int nket = schd.postmps.ket.size();
+         int nket = schd.post.ket.size();
          for(int j=0; j<nket; j++){
             std::cout << "\n### jket=" << j << " ###" << std::endl;
             mps<Km> kmps;
-            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.postmps.ket[j])+".info"; 
+            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j])+".info"; 
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;
             kmps.load(kmps_file);
             // compute cicoeff 
-            mps_cicoeff_check(kmps, schd.postmps.iroot);
+            mps_cicoeff_check(kmps, schd.post.iroot);
          }
       }
 
