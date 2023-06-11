@@ -1,13 +1,13 @@
 
-machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
+DEBUG = no
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
-USE_GPU = no #yes
-USE_NCCL = no #yes
+USE_GPU = yes
+USE_NCCL = yes
 USE_BLAS = no #yes
 # compression
 USE_LZ4 = no
@@ -318,12 +318,15 @@ OBJ_VMC = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_VMC}))
 
 # all the files with main functions
 SRC_ALL = $(SRC_DEP) 
-SRC_ALL += $(wildcard ./$(SRC)/drivers/*.cpp)
+SRC_ALL += $(wildcard ./$(SRC)/benchmark/*.cpp ./$(SRC)/drivers/*.cpp)
 OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend core ci ctns vmc
 
-core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a $(BIN_DIR)/tests_core.x $(BIN_DIR)/tests_mathlib.x $(BIN_DIR)/tests_io.x $(BIN_DIR)/tests_mpi.x $(BIN_DIR)/tests_nccl.x 
+core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a $(BIN_DIR)/tests_core.x \
+	$(BIN_DIR)/benchmark_mathlib.x $(BIN_DIR)/benchmark_blas.x \
+	$(BIN_DIR)/benchmark_io.x $(BIN_DIR)/benchmark_mpi.x \
+	$(BIN_DIR)/benchmark_nccl.x 
 
 ifeq ($(strip $(INSTALL_CI)), yes)
 ci: $(LIB_DIR)/libci.a $(BIN_DIR)/tests_ci.x $(BIN_DIR)/exactdiag.x $(BIN_DIR)/fci.x $(BIN_DIR)/sci.x
@@ -405,21 +408,25 @@ $(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_core.o $(LFLAGS) -L$(LIB_DIR) -lcore
 
-$(BIN_DIR)/tests_mathlib.x: $(OBJ_DIR)/tests_mathlib.o $(LIB_DIR)/libcore.a
+$(BIN_DIR)/benchmark_mathlib.x: $(OBJ_DIR)/benchmark_mathlib.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_mathlib.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_mathlib.o $(LFLAGS) -L$(LIB_DIR) -lcore
 
-$(BIN_DIR)/tests_io.x: $(OBJ_DIR)/tests_io.o $(LIB_DIR)/libcore.a
+$(BIN_DIR)/benchmark_blas.x: $(OBJ_DIR)/benchmark_blas.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_io.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_blas.o $(LFLAGS) -L$(LIB_DIR) -lcore
 
-$(BIN_DIR)/tests_mpi.x: $(OBJ_DIR)/tests_mpi.o $(LIB_DIR)/libcore.a
+$(BIN_DIR)/benchmark_io.x: $(OBJ_DIR)/benchmark_io.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_mpi.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_io.o $(LFLAGS) -L$(LIB_DIR) -lcore
 
-$(BIN_DIR)/tests_nccl.x: $(OBJ_DIR)/tests_nccl.o $(LIB_DIR)/libcore.a
+$(BIN_DIR)/benchmark_mpi.x: $(OBJ_DIR)/benchmark_mpi.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_nccl.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_mpi.o $(LFLAGS) -L$(LIB_DIR) -lcore
+
+$(BIN_DIR)/benchmark_nccl.x: $(OBJ_DIR)/benchmark_nccl.o $(LIB_DIR)/libcore.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_nccl.o $(LFLAGS) -L$(LIB_DIR) -lcore
 
 # CI
 $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
