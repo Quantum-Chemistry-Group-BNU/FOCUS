@@ -1,0 +1,68 @@
+
+dell2@20230601 - A100 40G
+
+=== GEMV_BATCH ===
+ i=1 M,N=300,300 nbatch=10 time=0.0444808 flops=4.04669e+07
+ i=3 M,N=900,900 nbatch=10 time=0.00387504 flops=4.1806e+09
+ i=5 M,N=1500,1500 nbatch=10 time=0.0128143 flops=3.51171e+09
+ i=7 M,N=2100,2100 nbatch=10 time=0.026401 flops=3.34078e+09
+ i=9 M,N=2700,2700 nbatch=10 time=0.0455472 flops=3.20107e+09
+
+=== GEMM_BATCH ===
+ i=1 M,N,K=300,300,1 nbatch=10 time=0.000895519 flops=2.01001e+09
+ i=3 M,N,K=900,900,1 nbatch=10 time=0.00299933 flops=5.4012e+09
+ i=5 M,N,K=1500,1500,1 nbatch=10 time=0.0108046 flops=4.1649e+09
+ i=7 M,N,K=2100,2100,1 nbatch=10 time=0.0252583 flops=3.49193e+09
+ i=9 M,N,K=2700,2700,1 nbatch=10 time=0.0431005 flops=3.38279e+09
+
+=== GEMM_BATCH ===
+ i=1 M,N,K=300,300,300 nbatch=10 time=0.00153829 flops=3.51039e+11
+ i=3 M,N,K=900,900,900 nbatch=10 time=0.0400837 flops=3.63739e+11
+ i=5 M,N,K=1500,1500,1500 nbatch=10 time=0.195221 flops=3.45761e+11
+ i=7 M,N,K=2100,2100,2100 nbatch=10 time=0.498141 flops=3.71822e+11
+ i=9 M,N,K=2700,2700,2700 nbatch=10 time=0.952389 flops=4.1334e+11
+gpu_init
+rank=0 num_gpus=2 device_id=0 magma_queue=0x1670fc0
+
+=== GEMV_BATCH_GPU: magma ===
+ i=1 M,N=300,300 nbatch=10 time=0.000630941 flops=2.85288e+09
+ i=3 M,N=900,900 nbatch=10 time=0.000710352 flops=2.28056e+10
+ i=5 M,N=1500,1500 nbatch=10 time=0.00093322 flops=4.82201e+10
+ i=7 M,N=2100,2100 nbatch=10 time=0.00117672 flops=7.49541e+10
+ i=9 M,N=2700,2700 nbatch=10 time=0.00145084 flops=1.00494e+11
+
+=== GEMV_BATCH_GPU: cublas ===
+ i=1 M,N=300,300 nbatch=10 time=0.000406639 flops=4.42653e+09
+ i=3 M,N=900,900 nbatch=10 time=0.000201602 flops=8.03563e+10
+ i=5 M,N=1500,1500 nbatch=10 time=0.000303903 flops=1.48074e+11
+ i=7 M,N=2100,2100 nbatch=10 time=0.000404702 flops=2.17938e+11
+ i=9 M,N=2700,2700 nbatch=10 time=0.000552815 flops=2.63741e+11
+
+=== GEMM_BATCH: magma ===
+ i=1 M,N,K=300,300,1 nbatch=10 time=0.000462502 flops=3.89188e+09
+ i=3 M,N,K=900,900,1 nbatch=10 time=0.000397677 flops=4.07366e+10
+ i=5 M,N,K=1500,1500,1 nbatch=10 time=0.000516525 flops=8.71207e+10
+ i=7 M,N,K=2100,2100,1 nbatch=10 time=0.000704115 flops=1.25264e+11
+ i=9 M,N,K=2700,2700,1 nbatch=10 time=0.000869853 flops=1.67615e+11
+
+=== GEMM_BATCH: cublas ===
+ i=1 M,N,K=300,300,1 nbatch=10 time=0.000271722 flops=6.62442e+09
+ i=3 M,N,K=900,900,1 nbatch=10 time=0.0002368 flops=6.84122e+10
+ i=5 M,N,K=1500,1500,1 nbatch=10 time=0.000306763 flops=1.46693e+11
+ i=7 M,N,K=2100,2100,1 nbatch=10 time=0.000414057 flops=2.13014e+11
+ i=9 M,N,K=2700,2700,1 nbatch=10 time=0.00055779 flops=2.61389e+11
+
+=== GEMM_BATCH: magma ===
+ i=1 M,N,K=300,300,300 nbatch=10 time=0.000504213 flops=1.07098e+12
+ i=3 M,N,K=900,900,900 nbatch=10 time=0.00481992 flops=3.02495e+12
+ i=5 M,N,K=1500,1500,1500 nbatch=10 time=0.0220727 flops=3.05808e+12
+ i=7 M,N,K=2100,2100,2100 nbatch=10 time=0.0381243 flops=4.85831e+12
+ i=9 M,N,K=2700,2700,2700 nbatch=10 time=0.0851567 flops=4.62277e+12
+
+=== GEMM_BATCH: cublas ===
+ i=1 M,N,K=300,300,300 nbatch=10 time=0.00138115 flops=3.90979e+11
+ i=3 M,N,K=900,900,900 nbatch=10 time=0.00127414 flops=1.1443e+13
+ i=5 M,N,K=1500,1500,1500 nbatch=10 time=0.00461177 flops=1.46365e+13
+ i=7 M,N,K=2100,2100,2100 nbatch=10 time=0.0127986 flops=1.44719e+13
+ i=9 M,N,K=2700,2700,2700 nbatch=10 time=0.0375398 flops=1.04865e+13
+
