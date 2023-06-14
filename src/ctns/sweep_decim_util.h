@@ -216,35 +216,62 @@ namespace ctns{
          int local_size = local_brbc[rank].size();
          std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
          int nroots = wfs2.size();
-         int nthreads = 1;
+         if(alg_decim == 0){
+            // MPI + OpenMP + serial SVD
 #ifdef _OPENMP
-         if(alg_decim == 0) nthreads = omp_get_max_threads();
-         #pragma omp parallel for schedule(dynamic) num_threads(nthreads)
+            #pragma omp parallel for schedule(dynamic)
 #endif
-         for(int ibr=0; ibr<local_size; ibr++){
-            int br = local_brbc[rank][ibr].first;
-            int bc = local_brbc[rank][ibr].second;
-            std::vector<double> sigs2;
-            linalg::matrix<Tm> U;
-            if(debug_auxbasis && bc == -1){
-               // generate a random unitary
-               int rdim = qrow.get_dim(br);
-               std::vector<linalg::matrix<Tm>> blks(1);
-               blks[0] = linalg::random_matrix<Tm>(rdim,rdim);
-               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
-               std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
-                     [](const double& x){ return 1.e-14*x; });
-               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
-            }else{
-               // compute renormalized basis
-               std::vector<linalg::matrix<Tm>> blks(nroots);
-               for(int iroot=0; iroot<nroots; iroot++){
-                  blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
+            for(int ibr=0; ibr<local_size; ibr++){
+               int br = local_brbc[rank][ibr].first;
+               int bc = local_brbc[rank][ibr].second;
+               std::vector<double> sigs2;
+               linalg::matrix<Tm> U;
+               if(debug_auxbasis && bc == -1){
+                  // generate a random unitary
+                  int rdim = qrow.get_dim(br);
+                  std::vector<linalg::matrix<Tm>> blks(1);
+                  blks[0] = linalg::random_matrix<Tm>(rdim,rdim);
+                  kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+                  std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
+                        [](const double& x){ return 1.e-14*x; });
+                  local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+               }else{
+                  // compute renormalized basis
+                  std::vector<linalg::matrix<Tm>> blks(nroots);
+                  for(int iroot=0; iroot<nroots; iroot++){
+                     blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
+                  }
+                  kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+                  local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
                }
-               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
-               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
-            }
-         } // br
+            } // br
+         }else{
+            // MPI + parallel SVD
+            for(int ibr=0; ibr<local_size; ibr++){
+               int br = local_brbc[rank][ibr].first;
+               int bc = local_brbc[rank][ibr].second;
+               std::vector<double> sigs2;
+               linalg::matrix<Tm> U;
+               if(debug_auxbasis && bc == -1){
+                  // generate a random unitary
+                  int rdim = qrow.get_dim(br);
+                  std::vector<linalg::matrix<Tm>> blks(1);
+                  blks[0] = linalg::random_matrix<Tm>(rdim,rdim);
+                  kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+                  std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
+                        [](const double& x){ return 1.e-14*x; });
+                  local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+               }else{
+                  // compute renormalized basis
+                  std::vector<linalg::matrix<Tm>> blks(nroots);
+                  for(int iroot=0; iroot<nroots; iroot++){
+                     blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
+                  }
+                  kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+                  local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+               }
+            } // br
+         } // alg_decim
          auto t2 = tools::get_time();
          if(rank == 0) std::cout << "timing for compute=" 
             << tools::get_duration(t2-t1) << std::endl;
