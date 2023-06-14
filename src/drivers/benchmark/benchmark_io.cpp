@@ -1,9 +1,9 @@
 #include <iostream>
 #include <numeric>
 #include <fstream>
-#include "../core/tools.h"
+#include "core/tools.h"
 #ifndef SERIAL
-#include "../core/mpi_wrapper.h"
+#include "core/mpi_wrapper.h"
 #endif
 
 void test_print(){

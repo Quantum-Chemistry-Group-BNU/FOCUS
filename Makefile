@@ -1,13 +1,13 @@
 
-machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no
+DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
+USE_GPU = no #yes
+USE_NCCL = no #yes
 USE_BLAS = no #yes
 # compression
 USE_LZ4 = no
@@ -268,7 +268,8 @@ endif
 
 SRC_DIR_EXPT = ./$(SRC)/experiment
 
-INCLUDE_DIR = -I$(SRC_DIR_CORE) \
+INCLUDE_DIR = -I./src \
+				  -I$(SRC_DIR_CORE) \
      	        -I$(SRC_DIR_IO) \
      	        -I$(SRC_DIR_CI) \
      	        -I$(SRC_DIR_QT) \
@@ -318,7 +319,9 @@ OBJ_VMC = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_VMC}))
 
 # all the files with main functions
 SRC_ALL = $(SRC_DEP) 
-SRC_ALL += $(wildcard ./$(SRC)/benchmark/*.cpp ./$(SRC)/drivers/*.cpp)
+SRC_ALL += $(wildcard $(SRC)/drivers/*.cpp \
+			  $(SRC)/drivers/benchmark/*.cpp \
+			  $(SRC)/drivers/tests/*.cpp)
 OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend core ci ctns vmc
@@ -335,7 +338,7 @@ ci:
 endif
 
 ifeq ($(strip $(INSTALL_CTNS)), yes)
-ctns: $(LIB_DIR)/libctns.a $(BIN_DIR)/tests_ctns.x $(BIN_DIR)/prectns.x $(BIN_DIR)/ctns.x
+ctns: $(LIB_DIR)/libctns.a $(BIN_DIR)/tests_ctns.x $(BIN_DIR)/tests_oper.x $(BIN_DIR)/prectns.x $(BIN_DIR)/ctns.x
 else
 ctns:	
 endif
@@ -437,6 +440,10 @@ $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
 $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ctns.o -L$(LIB_DIR) -lctns $(LFLAGS)
+
+$(BIN_DIR)/tests_oper.x: $(OBJ_DIR)/tests_oper.o $(LIB_DIR)/libctns.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_oper.o -L$(LIB_DIR) -lctns $(LFLAGS)
 
 # Main:
 $(BIN_DIR)/exactdiag.x: $(OBJ_DIR)/exactdiag.o $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a

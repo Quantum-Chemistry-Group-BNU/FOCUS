@@ -1,14 +1,14 @@
 #include <iostream>
 #include <iomanip>
-#include "../io/io.h"
-#include "../io/input.h"
-#include "../core/tools.h"
-#include "../core/onspace.h"
-#include "../core/integral.h"
-#include "../core/hamiltonian.h"
-#include "../core/matrix.h"
-#include "../core/linalg.h"
-#include "../core/analysis.h"
+#include "io/io.h"
+#include "io/input.h"
+#include "core/tools.h"
+#include "core/onspace.h"
+#include "core/integral.h"
+#include "core/hamiltonian.h"
+#include "core/matrix.h"
+#include "core/linalg.h"
+#include "core/analysis.h"
 
 using namespace std;
 using namespace fock;

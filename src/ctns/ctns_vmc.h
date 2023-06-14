@@ -1,6 +1,8 @@
 #ifndef CTNS_VMC_H
 #define CTNS_VMC_H
 
+#include "ci/sci_util.h"
+
 namespace ctns{
 
    // main for sweep optimizations for CTNS

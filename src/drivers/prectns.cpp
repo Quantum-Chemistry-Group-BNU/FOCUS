@@ -1,10 +1,10 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include "../io/io.h"
-#include "../io/input.h"
-#include "../ci/ci_header.h"
-#include "../ctns/ctns_header.h"
+#include "io/io.h"
+#include "io/input.h"
+#include "ci/ci_header.h"
+#include "ctns/ctns_header.h"
 
 using namespace std;
 using namespace fock;

@@ -1,12 +1,12 @@
 #include <iostream>
 #include <numeric>
 #include <fstream>
-#include "../core/tools.h"
+#include "core/tools.h"
 #ifdef GPU
-#include "../gpu/gpu_env.h"
+#include "gpu/gpu_env.h"
 #endif
 #ifndef SERIAL
-#include "../core/mpi_wrapper.h"
+#include "core/mpi_wrapper.h"
 #endif
 
 int main(int argc, char * argv[]) {

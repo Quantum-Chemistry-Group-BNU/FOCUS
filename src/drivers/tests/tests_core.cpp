@@ -1,4 +1,4 @@
-#include "../core/tests_core.h"
+#include "core/tests_core.h"
 
 int main(){
    

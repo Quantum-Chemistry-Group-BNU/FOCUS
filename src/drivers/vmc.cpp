@@ -1,10 +1,10 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include "../io/io.h"
-#include "../io/input.h"
-#include "../ci/ci_header.h"
-#include "../vmc/vmc_header.h"
+#include "io/io.h"
+#include "io/input.h"
+#include "ci/ci_header.h"
+#include "vmc/vmc_header.h"
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif

@@ -1,7 +1,7 @@
 #include <iostream>
-#include "../io/io.h"
-#include "../io/input.h"
-#include "../ci/ci_header.h"
+#include "io/io.h"
+#include "io/input.h"
+#include "ci/ci_header.h"
 
 using namespace std;
 using namespace fock;

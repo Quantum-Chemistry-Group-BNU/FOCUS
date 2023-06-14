@@ -1,15 +1,15 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include "../io/io.h"
-#include "../io/input.h"
-#include "../ci/ci_header.h"
-#include "../ctns/ctns_header.h"
+#include "io/io.h"
+#include "io/input.h"
+#include "ci/ci_header.h"
+#include "ctns/ctns_header.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 #ifdef GPU
-#include "../gpu/gpu_env.h"
+#include "gpu/gpu_env.h"
 #endif
 
 using namespace std;

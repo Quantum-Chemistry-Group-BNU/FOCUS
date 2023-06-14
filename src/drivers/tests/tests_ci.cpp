@@ -1,4 +1,4 @@
-#include "../ci/tests_ci.h"
+#include "ci/tests_ci.h"
 
 int main(){
    

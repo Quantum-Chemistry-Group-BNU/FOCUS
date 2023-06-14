@@ -1,14 +1,14 @@
 #include <memory>
-#include "../core/matrix.h"
-#include "../core/blas.h"
-#include "../core/blas_batch.h"
-#include "../core/tools.h"
+#include "core/matrix.h"
+#include "core/blas.h"
+#include "core/blas_batch.h"
+#include "core/tools.h"
 #ifndef SERIAL
-#include "../core/mpi_wrapper.h"
+#include "core/mpi_wrapper.h"
 #endif
 #ifdef GPU
-#include "../gpu/gpu_env.h"
-#include "../gpu/gpu_blas_batch.h"
+#include "gpu/gpu_env.h"
+#include "gpu/gpu_blas_batch.h"
 #endif
 
 using namespace std;

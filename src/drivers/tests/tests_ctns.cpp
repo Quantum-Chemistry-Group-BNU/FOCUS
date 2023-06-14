@@ -1,4 +1,4 @@
-#include "../ctns/tests_ctns.h"
+#include "ctns/tests_ctns.h"
 
 int main(){
    
