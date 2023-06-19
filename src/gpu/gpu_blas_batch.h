@@ -172,9 +172,39 @@ namespace linalg{
            int m = m_array[ista], n = n_array[ista];
            int lda = lda_array[ista], incx = incx_array[ista], incy = incy_array[ista]; 
            cublasOperation_t Trans = CUBLAS_OP_N ;
+           magma_trans_t Trans_ = MagmaNoTrans;
            if(trans=='T' || trans=='C'){
-              Trans = CUBLAS_OP_T;
+               Trans = CUBLAS_OP_T;
+               Trans_ = MagmaTrans;
            }
+           // https://docs.nvidia.com/cuda/cublas/index.html
+//           CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
+//                              Trans, 
+//                              m, n,
+//                              alpha,
+//                              &dev_A_array[ista], lda, // pointer should be on device
+//                              &dev_X_array[ista], incx,
+//                              beta,
+//                              &dev_Y_array[ista], incy,
+//                              nbatch));
+          // cudaStream_t cublas_stream;
+          // cublasGetStream(handle_cublas, &cublas_stream);
+
+          // magma_queue_t magma_queue;
+          // magma_queue_create_from_cuda(cublas_stream, NULL, NULL, NULL, &magma_queue);
+
+           magmablas_dgemv_batched(
+                              Trans_, 
+                              m, n,
+                              alpha[0],
+                              &dev_A_array[ista], lda, // pointer should be on device
+                              &dev_X_array[ista], incx,
+                              beta[0],
+                              &dev_Y_array[ista], incy,
+                              nbatch,
+                              magma_queue
+                              );
+#if 0
            // https://docs.nvidia.com/cuda/cublas/index.html
            CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
                               Trans, 
@@ -185,6 +215,20 @@ namespace linalg{
                               beta,
                               &dev_Y_array[ista], incy,
                               nbatch));
+#else
+//           
+//           for(int j=0; j<nbatch; j++){
+//              cublasDgemv(handle_cublas,
+//                    Trans, 
+//                    m, n, 
+//                    alpha,
+//                    A_array[ista+j], lda,
+//                    X_array[ista+j], incx,
+//                    beta,
+//                    Y_array[ista+j], incy);
+//           }
+           
+#endif
            /*
            for(int j=0; j<nbatch; j++){
               std::cout << "ista=" << ista << " j=" << j << " ista+j=" << ista+j 
@@ -267,19 +311,57 @@ namespace linalg{
               int m = m_array[ista], n = n_array[ista];
               int lda = lda_array[ista], incx = incx_array[ista], incy = incy_array[ista]; 
               cublasOperation_t Trans = CUBLAS_OP_N ;
+              magma_trans_t Trans_ = MagmaNoTrans;
               if(trans=='T' || trans=='C'){
                  Trans = CUBLAS_OP_T;
+                 Trans_ = MagmaTrans;
               }
-              // https://docs.nvidia.com/cuda/cublas/index.html
-              CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
-                                 Trans, 
-                                 m, n,
-                                 alpha,
-                                 &dev_A_array[ista], lda, // pointer should be on device
-                                 &dev_X_array[ista], incx,
-                                 beta,
-                                 &dev_Y_array[ista], incy,
-                                 nbatch));
+//              // https://docs.nvidia.com/cuda/cublas/index.html
+//              CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
+//                                 Trans, 
+//                                 m, n,
+//                                 alpha,
+//                                 &dev_A_array[ista], lda, // pointer should be on device
+//                                 &dev_X_array[ista], incx,
+//                                 beta,
+//                                 &dev_Y_array[ista], incy,
+//                                 nbatch));
+              magmablas_dgemv_batched(
+                      Trans_, 
+                      m, n,
+                      alpha[0],
+                      &dev_A_array[ista], lda, // pointer should be on device
+                      &dev_X_array[ista], incx,
+                      beta[0],
+                      &dev_Y_array[ista], incy,
+                      nbatch,
+                      magma_queue
+                      );
+#if 0
+           // https://docs.nvidia.com/cuda/cublas/index.html
+           CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
+                              Trans, 
+                              m, n,
+                              alpha,
+                              &dev_A_array[ista], lda, // pointer should be on device
+                              &dev_X_array[ista], incx,
+                              beta,
+                              &dev_Y_array[ista], incy,
+                              nbatch));
+#else
+//           
+//           for(int jj=0; jj<nbatch; jj++){
+//              cublasDgemv(handle_cublas,
+//                    Trans, 
+//                    m, n, 
+//                    alpha,
+//                    A_array[ista+jj], lda,
+//                    X_array[ista+jj], incx,
+//                    beta,
+//                    Y_array[ista+jj], incy);
+//           }
+           
+#endif
            } // j
 
            for(int j=0; j<jlen; j++){

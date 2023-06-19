@@ -8,11 +8,15 @@ else ifeq ($(strip $(machine)), jiageng)
 else ifeq ($(strip $(machine)), wuhan)
    CUDA_DIR=/home/HPCBase/compilers/cuda/11.4.0
 endif
+
+INCS = -I ${CUDA_DIR}/include
+LIBS = 
+
 CXX = nvcc
-CXXFLAGS = -O3 -std=c++11 -I${CUDA_DIR}/include 
+CXXFLAGS = -O3 -std=c++11  
 
 LD       = $(CXX)
-LDFLAGS  = $(CXXFLAGS) $(LIBS)
+LDFLAGS  = $(CXXFLAGS) 
 #LFLAGS = -shared -fPIC
 #LFLAGS = -dynamiclib -fPIC # for *.dylib
 
@@ -24,7 +28,7 @@ libctnsGPU.a: $(OBJECTS)
 	ar crv $@ $^
 
 %.o: %.cu
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@  $(INCS) $(LIBS)
 
 clean:
 	rm -f *.o *.a *.out 

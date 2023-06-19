@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <complex>
+#include <omp.h>
+#include <arm_neon.h>
 
 #ifdef MKL_ILP64
    #define MKL_INT long long int
@@ -62,9 +64,11 @@ extern "C" {
          const std::complex<double>* beta, std::complex<double>* Y, const MKL_INT* INCY);
 }
 
+double dnrm2_optimized(const double* x, const MKL_INT n);
+
+
 // wrapper for BLAS
 namespace linalg{
-
    // conj
    inline void xconj(const MKL_INT N, double* X){
       return;
@@ -118,7 +122,8 @@ namespace linalg{
    // xnrm2
    inline double xnrm2(const MKL_INT N, const double* X){
       MKL_INT INCX = 1;
-      return ::dnrm2_(&N, X, &INCX);
+      //return ::dnrm2_(&N, X, &INCX);
+      return ::dnrm2_optimized(X, N);
    }
    inline double xnrm2(const MKL_INT N, const std::complex<double>* X){
       MKL_INT INCX = 1;

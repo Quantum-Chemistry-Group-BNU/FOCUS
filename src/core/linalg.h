@@ -43,7 +43,6 @@ void zgesdd_(const char* JOBZ, const MKL_INT* M, const MKL_INT* N,
 
 // wrapper for LAPACK
 namespace linalg{
-
 // eigendecomposition HU=Ue: order=0/1 small-large/large-small
 void eig_solver(const matrix<double>& A, std::vector<double>& e, 
 		matrix<double>& U, const MKL_INT order=0);
@@ -63,6 +62,7 @@ void svd_solver(const matrix<double>& A, std::vector<double>& s,
 void svd_solver(const matrix<std::complex<double>>& A, std::vector<double>& s, 
 		matrix<std::complex<double>>& U, matrix<std::complex<double>>& Vt, 
 		const MKL_INT iop=13);
+
 
 } // linalg
 

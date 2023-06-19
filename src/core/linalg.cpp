@@ -7,6 +7,52 @@
 using namespace std;
 using namespace linalg;
 
+double dnrm2_optimized(const double* x, const MKL_INT n) {
+    const double* x_end = x + n;
+
+    // Initialize accumulators for each thread
+    const int num_threads = omp_get_max_threads();
+
+    std::cout<<"num_threads = "<<num_threads<<std::endl;
+    double acc_sum[num_threads] = {0.0};
+
+    #pragma omp parallel
+    {
+        int thread_id = omp_get_thread_num();
+        float64x2_t acc_v = vdupq_n_f64(0.0);
+
+        // Process data in chunks of 2 elements
+        #pragma omp for
+        for (int i = 0; i < n - 1; i += 2) {
+            float64x2_t x_v = vld1q_f64(x + i);
+            acc_v = vmlaq_f64(acc_v, x_v, x_v);
+        }
+
+        // Horizontal reduction of accumulators within the thread
+        float64x1_t acc_sum_v = vadd_f64(vget_low_f64(acc_v), vget_high_f64(acc_v));
+        double acc_thread = vget_lane_f64(acc_sum_v, 0);
+
+        // Accumulate the sum for each thread
+        acc_sum[thread_id] = acc_thread;
+    }
+
+    double acc_final = 0.0;
+    // Process any remaining elements
+    for (int i = (n / 2) * 2; i < n; ++i) {
+        acc_final += x[i] * x[i];
+    }
+
+    // Compute the final sum across all threads
+    for (int i = 0; i < num_threads; ++i) {
+        acc_final += acc_sum[i];
+    }
+
+    // Compute square root of the accumulated sum
+    return std::sqrt(acc_final);
+}
+
+
+
 // eigen-decomposition HU=Ue: order=0/1 small-large/large-small
 
 // real symmetric A
