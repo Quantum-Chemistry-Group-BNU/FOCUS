@@ -7,6 +7,9 @@
 
 namespace kramers{
 
+   const double thresh_Uortho = 1.e-8;
+   extern const double thresh_Uortho;
+
    // used in initial guess part 
    template <typename Tm>
       class blockMatrix{
@@ -351,7 +354,7 @@ namespace kramers{
             std::cout << std::endl;                               
             //U.print("U"); 
          }
-         linalg::check_orthogonality(U); // orthonormality is essential for variational calculations
+         linalg::check_orthogonality(U, thresh_Uortho); // orthonormality is essential for variational calculations
       }
 
    template <typename Tm> 
@@ -456,7 +459,7 @@ namespace kramers{
             std::cout << std::endl;                               
             //U.print("U"); 
          }
-         linalg::check_orthogonality(U);
+         linalg::check_orthogonality(U, thresh_Uortho);
       }
 
 } // kramers
