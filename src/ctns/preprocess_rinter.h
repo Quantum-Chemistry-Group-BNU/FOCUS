@@ -298,11 +298,10 @@ namespace ctns{
          gettimeofday(&t1gemv, NULL);
          double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
                + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);
-         std::cout << "cost_rinter=" << mvbatch.cost
-            << " time=" << dt << " flops=" << mvbatch.cost/dt
-            << std::endl;
-
          if(debug){
+            std::cout << "cost_rinter=" << mvbatch.cost
+               << " time=" << dt << " flops=" << mvbatch.cost/dt
+               << std::endl;
             auto t1 = tools::get_time();
             tools::timing("rintermediates<Tm>::init_batch_cpu", t0, t1);
          }
@@ -437,9 +436,11 @@ namespace ctns{
          gettimeofday(&t1gemv, NULL);
          double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
                + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);
-         std::cout << "cost_rinter=" << mvbatch.cost
-            << " time=" << dt << " flops=" << mvbatch.cost/dt
-            << std::endl;
+         if(debug){
+            std::cout << "cost_rinter=" << mvbatch.cost
+               << " time=" << dt << " flops=" << mvbatch.cost/dt
+               << std::endl;
+         }
 
          GPUmem.deallocate(dev_alpha_vec, gpumem_alpha);
 

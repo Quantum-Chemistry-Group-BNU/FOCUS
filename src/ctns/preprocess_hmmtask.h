@@ -17,7 +17,6 @@ namespace ctns{
          public:
             void init(Hxlist<Tm>& Hxlst,
                   const int _alg_hcoper,
-                  const int hdxorder,
                   const int _batchblas,
                   const std::tuple<int,int,int>& _batchhvec,
                   const size_t _batchsize,

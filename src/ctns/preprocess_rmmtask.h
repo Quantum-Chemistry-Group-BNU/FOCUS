@@ -20,7 +20,6 @@ namespace ctns{
       struct RMMtask{
          public:
             void init(Rlist<Tm>& Rlst, 
-                  const int hdxorder,
                   const int _batchblas,
                   const std::tuple<int,int,int>& _batchrenorm,
                   const size_t _batchsize,
