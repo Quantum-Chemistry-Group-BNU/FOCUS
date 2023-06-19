@@ -49,7 +49,7 @@ namespace input{
                   & alg_hvec & alg_hinter & alg_hcoper 
                   & alg_renorm & alg_rinter & alg_rcoper & alg_decim 
                   & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
-                  & mmorder & batchhvec & batchrenorm & batchmem
+                  & batchhvec & batchrenorm & batchmem
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
                   & iomode & async_fetch & async_save & async_remove & async_tocpu & ifnccl
@@ -99,7 +99,6 @@ namespace input{
          bool save_formulae = false;
          bool sort_formulae = false;
          bool save_mmtask = false;
-         int mmorder = 1; // sort by default
          std::tuple<int,int,int> batchhvec = {-1,-1,-1};
          std::tuple<int,int,int> batchrenorm = {-1,-1,-1};
          double batchmem = 10; // GB

@@ -183,7 +183,6 @@ namespace ctns{
 
    template <typename Tm>
       void RMMtask<Tm>::init(Rlist<Tm>& Rlst,
-            const int mmorder,
             const int _batchblas,
             const std::tuple<int,int,int>& _batchrenorm,
             const size_t _batchsize,
@@ -250,12 +249,10 @@ namespace ctns{
                      Rblk.off[ipos] = j*offset0; // overwrite old position
                   } // j
                   // sort
-                  if(mmorder == 1){
-                     std::stable_sort(mvlst.begin(), mvlst.end(),
-                           [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
-                              return mv1 > mv2;
-                              });
-                  }
+                  std::stable_sort(mvlst.begin(), mvlst.end(),
+                        [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
+                           return mv1 > mv2;
+                           });
                   imvbatch[k].init(mvlst);
                } // nInter
             }
@@ -307,12 +304,10 @@ namespace ctns{
             mmbatch2[k].resize(nd);
             for(int i=0; i<nd; i++){
                // sort
-               if(mmorder == 1){ 
-                  std::stable_sort(mmlst2[i].begin(), mmlst2[i].end(),
-                        [](const MMinfo<Tm>& mm1, const MMinfo<Tm>& mm2){
-                           return mm1 > mm2; 
-                        });
-               }
+               std::stable_sort(mmlst2[i].begin(), mmlst2[i].end(),
+                     [](const MMinfo<Tm>& mm1, const MMinfo<Tm>& mm2){
+                        return mm1 > mm2; 
+                     });
                mmbatch2[k][i].init(mmlst2[i]);
                cost += mmbatch2[k][i].cost; // accumulate MM cost
             } // i
@@ -372,12 +367,10 @@ namespace ctns{
             mvlst.push_back(mv);
             const Tm beta = 1.0;
             // sort
-            if(mmorder == 1){
-               std::stable_sort(mvlst.begin(), mvlst.end(),
-                           [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
-                              return mv1 > mv2;
-                              });
-            }
+            std::stable_sort(mvlst.begin(), mvlst.end(),
+                        [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
+                           return mv1 > mv2;
+                           });
             mvbatch[k].init(mvlst, beta);
          } // k
       }

@@ -398,7 +398,7 @@ namespace ctns{
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
                for(int i=0; i<Hmmtasks.size(); i++){
-                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, batchhvec, batchsize, blksize*2, blksize0);
+                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, batchblas, batchhvec, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i 
                         << " size=" << Hxlst2[i][0].size 
@@ -410,7 +410,7 @@ namespace ctns{
                } // i
                if(fmmtask.size()>0) save_mmtask(Hmmtasks, fmmtask);
             }else{
-               Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, batchhvec, batchsize, blksize*2, blksize0);
+               Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, batchblas, batchhvec, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank 
                      << " Hxlst.size=" << Hxlst.size()
@@ -531,7 +531,7 @@ namespace ctns{
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
                for(int i=0; i<Hmmtasks.size(); i++){
-                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, schd.ctns.batchhvec, batchsize, blksize*2, blksize0);
+                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, batchblas, schd.ctns.batchhvec, batchsize, blksize*2, blksize0);
                   if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
                      std::cout << " rank=" << rank << " iblk=" << i 
                         << " size=" << Hxlst2[i][0].size 
@@ -543,7 +543,7 @@ namespace ctns{
                } // i
                if(fmmtask.size()>0) save_mmtask(Hmmtasks, fmmtask);
             }else{
-               Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, schd.ctns.mmorder, batchblas, schd.ctns.batchhvec, batchsize, blksize*2, blksize0);
+               Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, batchblas, schd.ctns.batchhvec, batchsize, blksize*2, blksize0);
                if(debug && schd.ctns.verbose>1){
                   std::cout << " rank=" << rank
                      << " Hxlst.size=" << Hxlst.size()
