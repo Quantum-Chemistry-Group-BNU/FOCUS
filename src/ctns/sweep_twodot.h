@@ -297,12 +297,13 @@ namespace ctns{
          }else if(alg_hvec == 4){
 
             // OpenMP + Single Hxlst: symbolic formulae + hintermediates + preallocation of workspace
-            const bool ifDirect = false;
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
 
-            hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
+            const bool ifDirect = false;
+            const int batchgemv = 1;
+            hinter.init(ifDirect, schd.ctns.alg_hinter, batchgemv, qops_dict, oploc, opaddr, H_formulae, debug);
 
             preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_hcoper, 
                   qops_dict, oploc, opaddr, H_formulae, wf, hinter,
@@ -325,12 +326,13 @@ namespace ctns{
          }else if(alg_hvec == 5){
 
             // OpenMP + Hxlist2: symbolic formulae + hintermediates + preallocation of workspace
-            const bool ifDirect = false;
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae); 
 
-            hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
+            const bool ifDirect = false;
+            const int batchgemv = 1;
+            hinter.init(ifDirect, schd.ctns.alg_hinter, batchgemv, qops_dict, oploc, opaddr, H_formulae, debug);
 
             preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_hcoper, 
                   qops_dict, oploc, opaddr, H_formulae, wf, hinter,
@@ -353,13 +355,14 @@ namespace ctns{
          }else if(alg_hvec == 6 || alg_hvec == 7 || alg_hvec == 8 || alg_hvec == 9){
 
             // BatchGEMM: symbolic formulae + hintermediates + preallocation of workspace
-            const bool ifSingle = alg_hvec > 7;
-            const bool ifDirect = alg_hvec % 2 == 1;
 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
 
-            hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, opaddr, H_formulae, debug);
+            const bool ifSingle = alg_hvec > 7;
+            const bool ifDirect = alg_hvec % 2 == 1;
+            const int batchgemv = 1;
+            hinter.init(ifDirect, schd.ctns.alg_hinter, batchgemv, qops_dict, oploc, opaddr, H_formulae, debug);
 
             size_t maxbatch = 0;
             if(!ifSingle){
@@ -449,8 +452,6 @@ namespace ctns{
          }else if(alg_hvec == 16 || alg_hvec == 17 || alg_hvec == 18 || alg_hvec == 19){
 
             // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
-            const bool ifSingle = alg_hvec > 17;
-            const bool ifDirect = alg_hvec % 2 == 1;
 
             // allocate memery on GPU & copy qops
             for(int i=0; i<4; i++){
@@ -473,7 +474,10 @@ namespace ctns{
             timing.tb3 = tools::get_time();
 
             // compute hintermediates on GPU directly
-            hinter.init(ifDirect, schd.ctns.alg_hinter, qops_dict, oploc, dev_opaddr, H_formulae, debug);
+            const bool ifSingle = alg_hvec > 17;
+            const bool ifDirect = alg_hvec % 2 == 1;
+            const int batchgemv = std::get<0>(schd.ctns.batchhvec); 
+            hinter.init(ifDirect, schd.ctns.alg_hinter, batchgemv, qops_dict, oploc, dev_opaddr, H_formulae, debug);
             size_t gpumem_hinter = sizeof(Tm)*hinter.size();
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
@@ -523,7 +527,7 @@ namespace ctns{
             }
 
             // generate Hmmtasks given batchsize
-            const int batchblas = 2;
+            const int batchblas = 2; // GPU
             if(!ifSingle){
                Hmmtasks.resize(Hxlst2.size());
                for(int i=0; i<Hmmtasks.size(); i++){
