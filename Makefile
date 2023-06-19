@@ -326,7 +326,9 @@ OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend core ci ctns vmc
 
-core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a $(BIN_DIR)/tests_core.x \
+core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libcore.so \
+	$(LIB_DIR)/libio.a \
+	$(BIN_DIR)/tests_core.x \
 	$(BIN_DIR)/benchmark_mathlib.x $(BIN_DIR)/benchmark_blas.x \
 	$(BIN_DIR)/benchmark_io.x $(BIN_DIR)/benchmark_mpi.x \
 	$(BIN_DIR)/benchmark_nccl.x 
@@ -338,13 +340,15 @@ ci:
 endif
 
 ifeq ($(strip $(INSTALL_CTNS)), yes)
-ctns: $(LIB_DIR)/libctns.a $(BIN_DIR)/tests_ctns.x $(BIN_DIR)/tests_oper.x $(BIN_DIR)/prectns.x $(BIN_DIR)/ctns.x
+ctns: $(LIB_DIR)/libctns.a $(LIB_DIR)/libctns.so \
+	$(BIN_DIR)/tests_ctns.x $(BIN_DIR)/tests_oper.x $(BIN_DIR)/prectns.x $(BIN_DIR)/ctns.x
 else
 ctns:	
 endif
 
 ifeq ($(strip $(INSTALL_POST)), yes)
-ctns: $(LIB_DIR)/libpost.a $(BIN_DIR)/post.x
+ctns: $(LIB_DIR)/libpost.a $(LIB_DIR)/libpost.so \
+	$(BIN_DIR)/post.x
 else
 ctns:	
 endif
@@ -381,10 +385,16 @@ depend:
 	rm -f $$$$.depend # $$$$ id number 
 -include .depend
 
+FLAGS += -fPIC 
+
 # LIBARARIES
 $(LIB_DIR)/libcore.a: $(OBJ_CORE)
 	@echo "=== COMPLIE $@"
 	ar crv $@ $^
+
+$(LIB_DIR)/libcore.so: $(OBJ_CORE)
+	@echo "=== COMPLIE $@"
+	$(CXX) -shared $(FLAGS) -o $@ $^ $(LFLAGS)
 
 $(LIB_DIR)/libio.a: $(OBJ_IO)
 	@echo "=== COMPLIE $@"
@@ -398,9 +408,17 @@ $(LIB_DIR)/libctns.a: $(OBJ_CTNS) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
 	@echo "=== COMPLIE $@"
 	ar crv $@ $^
 
+$(LIB_DIR)/libctns.so: $(OBJ_CTNS) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
+	@echo "=== COMPLIE $@"
+	$(CXX) -shared $(FLAGS) -o $@ $^ $(LFLAGS)
+
 $(LIB_DIR)/libpost.a: $(OBJ_POST) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO) $(OBJ_CTNS)
 	@echo "=== COMPLIE $@"
 	ar crv $@ $^
+
+$(LIB_DIR)/libpost.so: $(OBJ_POST) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO) $(OBJ_CTNS)
+	@echo "=== COMPLIE $@"
+	$(CXX) -shared $(FLAGS) -o $@ $^ $(LFLAGS)
 
 $(LIB_DIR)/libvmc.a: $(OBJ_VMC) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
 	@echo "=== COMPLIE $@"
@@ -483,4 +501,5 @@ clean:
 	rm -f obj/*.o
 	rm -f bin/*.x
 	rm -f lib/*.a
+	rm -f lib/*.so
 	rm -f *.depend
