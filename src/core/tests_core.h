@@ -4,6 +4,7 @@
 namespace tests{
 
 // --- core ---
+int test_special();
 int test_tools();
 int test_matrix();
 int test_linalg();

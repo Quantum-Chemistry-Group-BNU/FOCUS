@@ -3,6 +3,7 @@
 int main(){
    
    // -- core ---
+   tests::test_special();
    tests::test_tools();
    tests::test_matrix();
    tests::test_onstate();

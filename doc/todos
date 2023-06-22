@@ -363,8 +363,11 @@ KNOWN PROBLEMS
       - <Psi|S2|Psi> [DONE@20230611]
       - <Psi|(H-E)^2|Psi>
    - spin-projection:
-      - <Psi|Ps|Psi> (lower sym: xNSz->xN) 
-      - E[P|psi>] = <HP>/<P> 
+      - small d function [DONE@20230621]
+      - Gauss-legendre points [DONE@20230622]
+      - matrix elements for exp[-i*beta*Sy] (no need)?
+      - <Psi|Ps|Psi> (lower sym: xNSz->xN => IMPORTANT) 
+      - E[P|psi>] = <Psi|HPs|Psi>/<Psi|Ps|Psi> 
    - VMC algorithm: fast <n|Psi>
       - RBM with libtorch?
       - RBM on top of MPS?
