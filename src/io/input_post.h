@@ -18,7 +18,7 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
-                  & task_ovlp & task_cicoeff & task_sdiag & task_expect 
+                  & task_ovlp & task_cicoeff & task_sdiag & task_expect & task_s2proj 
                   & bra & ket & opname & integral_file
                   & iroot & nsample & ndetprt & eps2; 
             }
@@ -36,6 +36,7 @@ namespace input{
          bool task_cicoeff = false;
          bool task_sdiag = false;
          bool task_expect = false;
+         bool task_s2proj = false;
          std::vector<int> bra;
          std::vector<int> ket;
          std::string opname = "";

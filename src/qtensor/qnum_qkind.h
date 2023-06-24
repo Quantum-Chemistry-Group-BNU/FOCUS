@@ -50,7 +50,7 @@ struct cNK{
 };
 
 // is_available
-template <typename Tm>
+template <typename Km>
 inline bool is_available(){ return false; }
 template <> inline bool is_available<rZ2>(){ return true; } 
 template <> inline bool is_available<cZ2>(){ return true; } 
@@ -61,7 +61,7 @@ template <> inline bool is_available<cNSz>(){ return true; }
 template <> inline bool is_available<cNK>(){ return true; }
 
 // get_name
-template <typename Tm>
+template <typename Km>
 inline std::string get_name(){ return ""; }
 template <> inline std::string get_name<rZ2>(){ return "rZ2"; } 
 template <> inline std::string get_name<cZ2>(){ return "cZ2"; } 
@@ -70,6 +70,14 @@ template <> inline std::string get_name<cN>(){ return "cN"; }
 template <> inline std::string get_name<rNSz>(){ return "rNSz"; }
 template <> inline std::string get_name<cNSz>(){ return "cNSz"; }
 template <> inline std::string get_name<cNK>(){ return "cNK"; }
+
+template <typename Km>
+inline bool is_rNSz(){ return false; }
+template <> inline bool is_rNSz<rNSz>(){ return true; }
+
+template <typename Km>
+inline bool is_cNSz(){ return false; }
+template <> inline bool is_cNSz<cNSz>(){ return true; }
 
 } // qkind
 

@@ -41,6 +41,9 @@ void POST(const input::schedule& schd){
    if(schd.post.task_expect){
       ctns::mps_expect<Km>(schd);
    }
+   if(schd.post.task_s2proj){
+      ctns::mps_s2proj<Km>(schd);
+   }
 
 }
 
