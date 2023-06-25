@@ -15,7 +15,7 @@
 using namespace std;
 using namespace fock;
 
-template <typename Km>  
+template <typename Qm, typename Tm>  
 void CTNS(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
@@ -23,13 +23,12 @@ void CTNS(const input::schedule& schd){
    size = schd.world.size();
 #endif
    // consistency check for dtype
-   using Tm = typename Km::dtype;
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
       tools::exit("error: inconsistent dtype in CTNS!");
    }
 
    // CTNS 
-   ctns::comb<Km> icomb;
+   ctns::comb<Qm,Tm> icomb;
    // convert from SCI or load from files
    if(rank == 0){
       // dealing with topology 
@@ -202,19 +201,19 @@ int main(int argc, char *argv[]){
 #endif
 
    if(schd.ctns.qkind == "rZ2"){
-      CTNS<ctns::qkind::rZ2>(schd);
+      CTNS<ctns::qkind::qZ2,double>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
-      CTNS<ctns::qkind::cZ2>(schd);
+      CTNS<ctns::qkind::qZ2,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rN"){
-      CTNS<ctns::qkind::rN>(schd);
+      CTNS<ctns::qkind::qN,double>(schd);
    }else if(schd.ctns.qkind == "cN"){
-      CTNS<ctns::qkind::cN>(schd);
+      CTNS<ctns::qkind::qN,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rNSz"){
-      CTNS<ctns::qkind::rNSz>(schd);
+      CTNS<ctns::qkind::qNSz,double>(schd);
    }else if(schd.ctns.qkind == "cNSz"){
-      CTNS<ctns::qkind::cNSz>(schd);
+      CTNS<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
-      CTNS<ctns::qkind::cNK>(schd);
+      CTNS<ctns::qkind::qNK,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for ctns!");
    } // qkind

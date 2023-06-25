@@ -5,13 +5,13 @@
 
 namespace ctns{
 
-   template <typename Km>
-      void twodot_guess_v0(comb<Km>& icomb, 
+   template <typename Qm, typename Tm>
+      void twodot_guess_v0(comb<Qm,Tm>& icomb, 
             const directed_bond& dbond,
             const size_t ndim,
             const int neig,
-            stensor4<typename Km::dtype>& wf,
-            std::vector<typename Km::dtype>& v0){
+            stensor4<Tm>& wf,
+            std::vector<Tm>& v0){
          const bool debug = true;
          if(debug) std::cout << "ctns::twodot_guess ";
          auto pdx0 = icomb.topo.rindex.at(dbond.p0);
@@ -98,22 +98,21 @@ namespace ctns{
       }
 
    // local CI solver	
-   template <typename Km>
-      void twodot_localCI(comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void twodot_localCI(comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const double eps,
             const int parity,
             const size_t ndim,
             const int neig,
             const double* diag,
-            HVec_type<typename Km:: dtype> HVec,
+            HVec_type<Tm> HVec,
             std::vector<double>& eopt,
-            linalg::matrix<typename Km::dtype>& vsol,
+            linalg::matrix<Tm>& vsol,
             int& nmvp,
-            stensor4<typename Km::dtype>& wf,
+            stensor4<Tm>& wf,
             const directed_bond& dbond,
             dot_timing& timing){
-         using Tm = typename Km::dtype;
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -121,7 +120,7 @@ namespace ctns{
 #endif
 
          // without kramers restriction
-         assert(Km::ifkr == false);
+         assert(Qm::ifkr == false);
          pdvdsonSolver_nkr<Tm> solver(ndim, neig, eps, schd.ctns.maxcycle);
          solver.iprt = schd.ctns.verbose;
          solver.nbuff = schd.ctns.nbuff;
@@ -175,7 +174,7 @@ namespace ctns{
       }
 
    template <>
-      inline void twodot_localCI(comb<qkind::cNK>& icomb,
+      inline void twodot_localCI(comb<qkind::qNK,std::complex<double>>& icomb,
             const input::schedule& schd,
             const double eps,
             const int parity,

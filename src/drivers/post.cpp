@@ -16,7 +16,7 @@
 using namespace std;
 using namespace fock;
 
-template <typename Km>  
+template <typename Qm, typename Tm>  
 void POST(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
@@ -24,24 +24,28 @@ void POST(const input::schedule& schd){
    size = schd.world.size();
 #endif
    // consistency check for dtype
-   using Tm = typename Km::dtype;
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
       tools::exit("error: inconsistent dtype in POST!");
    }
 
    if(schd.post.task_ovlp){
-      ctns::mps_ovlp<Km>(schd);
+      ctns::mps_ovlp<Qm,Tm>(schd);
    }
    if(schd.post.task_cicoeff){
-      ctns::mps_cicoeff<Km>(schd);
+      ctns::mps_cicoeff<Qm,Tm>(schd);
    }
    if(schd.post.task_sdiag){
-      ctns::mps_sdiag<Km>(schd);
+      ctns::mps_sdiag<Qm,Tm>(schd);
    }
    if(schd.post.task_expect){
-      ctns::mps_expect<Km>(schd);
+      ctns::mps_expect<Qm,Tm>(schd);
    }
-
+   if(schd.post.task_s2proj){
+      ctns::mps_s2proj<Qm,Tm>(schd);
+   }
+   if(schd.post.task_es2proj){
+      ctns::mps_es2proj<Qm,Tm>(schd);
+   }
 }
 
 int main(int argc, char *argv[]){
@@ -94,20 +98,16 @@ int main(int argc, char *argv[]){
 //   }
 //#endif
 
-   if(schd.post.qkind == "rZ2"){
-      POST<ctns::qkind::rZ2>(schd);
-   }else if(schd.post.qkind == "cZ2"){
-      POST<ctns::qkind::cZ2>(schd);
-   }else if(schd.post.qkind == "rN"){
-      POST<ctns::qkind::rN>(schd);
+   if(schd.post.qkind == "rN"){
+      POST<ctns::qkind::qN,double>(schd);
    }else if(schd.post.qkind == "cN"){
-      POST<ctns::qkind::cN>(schd);
+      POST<ctns::qkind::qN,std::complex<double>>(schd);
    }else if(schd.post.qkind == "rNSz"){
-      POST<ctns::qkind::rNSz>(schd);
+      POST<ctns::qkind::qNSz,double>(schd);
    }else if(schd.post.qkind == "cNSz"){
-      POST<ctns::qkind::cNSz>(schd);
+      POST<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.post.qkind == "cNK"){
-      POST<ctns::qkind::cNK>(schd);
+      POST<ctns::qkind::qNK,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for POST!");
    } // qkind

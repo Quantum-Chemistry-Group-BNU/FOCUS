@@ -15,16 +15,15 @@ namespace ctns{
    // initialization of operators for
    // (1) dot operators [c]
    // (2) boundary operators [l/r]
-   template <typename Km>
-      void oper_init_dotAll(const comb<Km>& icomb,
-            const integral::two_body<typename Km::dtype>& int2e,
-            const integral::one_body<typename Km::dtype>& int1e,
+   template <typename Qm, typename Tm>
+      void oper_init_dotAll(const comb<Qm,Tm>& icomb,
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
             const std::string scratch,
             const int iomode,
             const bool ifdist1){
-         using Tm = typename Km::dtype;
-         const int isym = Km::isym;
-         const bool ifkr = Km::ifkr;
+         const int isym = Qm::isym;
+         const bool ifkr = Qm::ifkr;
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -104,13 +103,12 @@ namespace ctns{
       }
 
    // build right environment operators
-   template <typename Km>
-      void oper_env_right(const comb<Km>& icomb, 
-            const integral::two_body<typename Km::dtype>& int2e,
-            const integral::one_body<typename Km::dtype>& int1e,
+   template <typename Qm, typename Tm>
+      void oper_env_right(const comb<Qm,Tm>& icomb, 
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
             const input::schedule& schd,
             const std::string scratch){
-         using Tm = typename Km::dtype;
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -120,7 +118,7 @@ namespace ctns{
          const auto& ifdist1 = schd.ctns.ifdist1;
          const bool debug = (rank==0);
          if(debug){ 
-            std::cout << "\nctns::oper_env_right qkind=" << qkind::get_name<Km>() << std::endl;
+            std::cout << "\nctns::oper_env_right qkind=" << qkind::get_name<Qm>() << std::endl;
          }
          double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
          

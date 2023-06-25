@@ -14,22 +14,21 @@ namespace ctns{
    const double thresh_canon = 1.e-10;
    extern const double thresh_canon;
 
-   template <typename Km>
-      void onedot_renorm(comb<Km>& icomb,
-            const integral::two_body<typename Km::dtype>& int2e, 
-            const integral::one_body<typename Km::dtype>& int1e,
+   template <typename Qm, typename Tm>
+      void onedot_renorm(comb<Qm,Tm>& icomb,
+            const integral::two_body<Tm>& int2e, 
+            const integral::one_body<Tm>& int1e,
             const input::schedule& schd,
             const std::string scratch,
-            linalg::matrix<typename Km::dtype>& vsol,
-            stensor3<typename Km::dtype>& wf,
-            oper_pool<typename Km::dtype>& qops_pool,
+            linalg::matrix<Tm>& vsol,
+            stensor3<Tm>& wf,
+            oper_pool<Tm>& qops_pool,
             const std::vector<std::string>& fneed,
             const std::vector<std::string>& fneed_next,
             const std::string& frop,
             sweep_data& sweeps,
             const int isweep,
             const int ibond){
-         using Tm = typename Km::dtype;
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();

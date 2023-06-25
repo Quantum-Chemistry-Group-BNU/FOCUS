@@ -231,7 +231,7 @@ namespace ctns{
                auto t0 = tools::get_time();
                if(precond){
 #ifdef _OPENMP
-                  #pragma omp for schedule(static,1048576)
+                  #pragma omp parallel for schedule(static,1048576)
 #endif
                   for(size_t j=0; j<ndim; j++){
                      tvec[j] = rvec[j]/(std::abs(Diag[j]-ei)+damping);

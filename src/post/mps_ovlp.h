@@ -4,14 +4,14 @@
 namespace ctns{
 
    // <MPS[i]|MPS[j]>
-   template <typename Km>
-      linalg::matrix<typename Km::dtype> get_Smat(const mps<Km>& bmps,
-            const mps<Km>& kmps){
+   template <typename Qm, typename Tm>
+      linalg::matrix<Tm> get_Smat(const mps<Qm,Tm>& bmps,
+            const mps<Qm,Tm>& kmps){
          auto t0 = tools::get_time();
          assert(bmps.nphysical == kmps.nphysical);
          int nphysical = bmps.nphysical;
          // loop over sites on backbone
-         stensor2<typename Km::dtype> qt2_r;
+         stensor2<Tm> qt2_r;
          for(int i=nphysical-1; i>0; i--){
             const auto& bsite = bmps.sites[i];
             const auto& ksite = kmps.sites[i];
@@ -33,9 +33,8 @@ namespace ctns{
          return Smat;
       }
 
-   template <typename Km>
+   template <typename Qm, typename Tm>
       void mps_ovlp(const input::schedule& schd){
-         using Tm = typename Km::dtype;
          std::cout << "\nctns::mps_ovlp" << std::endl;
          if(schd.post.ket.size()==0) return;
          if(schd.post.bra.size()==0) return;
@@ -46,7 +45,7 @@ namespace ctns{
          int nket = schd.post.ket.size();
          for(int j=0; j<nket; j++){
             std::cout << "\n### jket=" << j << " ###" << std::endl;
-            mps<Km> kmps;
+            mps<Qm,Tm> kmps;
             auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j])+".info"; 
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;
@@ -61,7 +60,7 @@ namespace ctns{
             ovlp_i.resize(nbra);
             for(int i=0; i<nbra; i++){
                std::cout << "\n### jket=" << j << " ibra=" << i << " ###" << std::endl;
-               mps<Km> bmps;
+               mps<Qm,Tm> bmps;
                auto bmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(bra[i])+".info";
                bmps.nphysical = topo.nphysical;
                bmps.image2 = topo.image2;

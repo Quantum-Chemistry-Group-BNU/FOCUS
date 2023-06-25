@@ -11,18 +11,17 @@
 namespace ctns{
 
    // onedot optimization algorithm
-   template <typename Km>
-      void sweep_restart(comb<Km>& icomb,
-            const integral::two_body<typename Km::dtype>& int2e,
-            const integral::one_body<typename Km::dtype>& int1e,
+   template <typename Qm, typename Tm>
+      void sweep_restart(comb<Qm,Tm>& icomb,
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
             const double ecore,
             const input::schedule& schd,
             const std::string scratch,
-            oper_pool<typename Km::dtype>& qops_pool,
+            oper_pool<Tm>& qops_pool,
             sweep_data& sweeps,
             const int isweep,
             const int ibond){
-         using Tm = typename Km::dtype;
          int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();

@@ -6,21 +6,20 @@
 namespace ctns{
 
    // local CI solver	
-   template <typename Km>
-      void onedot_localCI(comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void onedot_localCI(comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const double eps,
             const int parity,
             const size_t ndim,
             const int neig,
             const double* diag,
-            HVec_type<typename Km:: dtype> HVec,
+            HVec_type<Tm> HVec,
             std::vector<double>& eopt,
-            linalg::matrix<typename Km::dtype>& vsol,
+            linalg::matrix<Tm>& vsol,
             int& nmvp,
-            stensor3<typename Km::dtype>& wf,
+            stensor3<Tm>& wf,
             dot_timing& timing){
-         using Tm = typename Km::dtype;
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -28,7 +27,7 @@ namespace ctns{
 #endif
 
          // without kramers restriction
-         assert(Km::ifkr == false);
+         assert(Qm::ifkr == false);
          pdvdsonSolver_nkr<Tm> solver(ndim, neig, eps, schd.ctns.maxcycle);
          solver.iprt = schd.ctns.verbose;
          solver.nbuff = schd.ctns.nbuff;
@@ -85,7 +84,7 @@ namespace ctns{
       }
 
    template <>
-      inline void onedot_localCI(comb<qkind::cNK>& icomb,
+      inline void onedot_localCI(comb<qkind::qNK,std::complex<double>>& icomb,
             const input::schedule& schd,
             const double eps,
             const int parity,

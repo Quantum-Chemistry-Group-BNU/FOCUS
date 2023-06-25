@@ -4,8 +4,8 @@
 namespace ctns{
 
    // look ahead for the next fneed
-   template <typename Km>
-      std::vector<std::string> sweep_fneed_next(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      std::vector<std::string> sweep_fneed_next(const comb<Qm,Tm>& icomb,
             const std::string scratch,
             const sweep_data& sweeps,
             const int isweep,
@@ -27,8 +27,8 @@ namespace ctns{
       }
 
    // save for restart: only rank-0 save and load, later broadcast
-   template <typename Km>
-      void sweep_save(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void sweep_save(const comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const std::string scratch,
             const sweep_data& sweeps,
@@ -50,8 +50,8 @@ namespace ctns{
          }
       }
 
-   template <typename Km>
-      void sweep_load(comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void sweep_load(comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const std::string scratch,
             sweep_data& sweeps,

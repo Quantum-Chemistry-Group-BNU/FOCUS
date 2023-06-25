@@ -9,18 +9,16 @@
 using namespace std;
 using namespace fock;
 
-template <typename Km>  
+template <typename Qm, typename Tm>  
 void preCTNS(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
    size = schd.world.size();
 #endif
-   // consistency check for dtype
-   using Tm = typename Km::dtype;
    
    // preCTNS 
-   ctns::comb<Km> icomb;
+   ctns::comb<Qm,Tm> icomb;
    // convert from SCI or load from files
    if(rank == 0){
       // dealing with topology 
@@ -80,19 +78,19 @@ int main(int argc, char *argv[]){
    io::create_scratch(schd.scratch, (rank == 0));
 
    if(schd.ctns.qkind == "rZ2"){
-      preCTNS<ctns::qkind::rZ2>(schd);
+      preCTNS<ctns::qkind::qZ2,double>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
-      preCTNS<ctns::qkind::cZ2>(schd);
+      preCTNS<ctns::qkind::qZ2,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rN"){
-      preCTNS<ctns::qkind::rN>(schd);
+      preCTNS<ctns::qkind::qN,double>(schd);
    }else if(schd.ctns.qkind == "cN"){
-      preCTNS<ctns::qkind::cN>(schd);
+      preCTNS<ctns::qkind::qN,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rNSz"){
-      preCTNS<ctns::qkind::rNSz>(schd);
+      preCTNS<ctns::qkind::qNSz,double>(schd);
    }else if(schd.ctns.qkind == "cNSz"){
-      preCTNS<ctns::qkind::cNSz>(schd);
+      preCTNS<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
-      preCTNS<ctns::qkind::cNK>(schd);
+      preCTNS<ctns::qkind::qNK,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for ctns!");
    } // qkind
