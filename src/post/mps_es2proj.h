@@ -34,7 +34,7 @@ namespace ctns{
          
          // generate quadrature
          std::vector<double> xts, wts;
-         special::gen_s2quad(imps.nphysical, ne, ts/2.0, tm/2.0, xts, wts);
+         fock::gen_s2quad(imps.nphysical, ne, ts/2.0, tm/2.0, xts, wts);
  
          int noff = nsample/10;
          int k = imps.nphysical*2;

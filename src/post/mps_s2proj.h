@@ -173,7 +173,7 @@ namespace ctns{
             const int tm,
             const int ts){
          std::vector<double> xts, wts;
-         special::gen_s2quad(imps.nphysical, ne, ts/2.0, tm/2.0, xts, wts);
+         fock::gen_s2quad(imps.nphysical, ne, ts/2.0, tm/2.0, xts, wts);
          double ps = 0.0; 
          for(int i=0; i<xts.size(); i++){
             // apply |rmps> = exp(-i*beta*Sy)|imps>

@@ -1,11 +1,12 @@
 #ifndef SPECIAL_H
 #define SPECIAL_H
 
+#include <vector>
 #include <math.h>
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/quadrature/gauss.hpp>
 
-namespace special{
+namespace fock{
 
    // Gamma function
    template <typename Tm>
@@ -183,6 +184,6 @@ namespace special{
       }
    }
 
-} // special
+} // fock
 
 #endif

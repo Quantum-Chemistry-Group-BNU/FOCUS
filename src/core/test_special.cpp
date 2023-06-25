@@ -1,10 +1,10 @@
 #include <iostream>
-#include "special.h"
 #include "tools.h"
+#include "special.h"
 #include "tests_core.h"
 
 using namespace std;
-using namespace special;
+using namespace fock;
 
 int tests::test_special(){
    cout << endl;
