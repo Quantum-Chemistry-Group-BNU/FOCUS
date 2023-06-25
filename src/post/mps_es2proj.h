@@ -19,15 +19,14 @@ namespace ctns{
             const sci::heatbath_table<Tm>& hbtab,
             const double eps2,
             const bool debug){
-         /*
-         using Tm = typename Km::dtype;
          auto t0 = tools::get_time();
          if(debug){
             std::cout << "\nctns::mps_expect_es2proj:" 
-               << " Km=" << qkind::get_name<Km>()
-               << " Km2=" << qkind::get_name<Km2>()
+               << " Qm1=" << qkind::get_name<Qm1>()
+               << " Qm2=" << qkind::get_name<Qm2>()
                << " iroot=" << iroot
                << " ts=" << ts
+               << " ps=" << ps
                << " nsample=" << nsample
                << " eps2=" << std::scientific << eps2 
                << std::endl;
@@ -56,7 +55,7 @@ namespace ctns{
             Tm psi2_i = 0.0;
             for(int i=0; i<xts.size(); i++){
                auto rmps = mps_ryrotation(imps_low, xts[i]);
-               psi2_i += (Tm)(wts[i]*mps_CIcoeff(rmps,iroot,state));
+               psi2_i += wts[i]*mps_CIcoeff(rmps,iroot,state);
             }
             double v0i = std::abs(psi2_i);
             Tm eloc = ecore + fock::get_Hii(state,int2e,int1e)*psi2_i/psi_i;
@@ -72,7 +71,7 @@ namespace ctns{
                Tm psi2_j = 0.0;
                for(int i=0; i<xts.size(); i++){
                   auto rmps = mps_ryrotation(imps_low, xts[i]);
-                  psi2_j += (Tm)(wts[i]*mps_CIcoeff(rmps,iroot,state1));
+                  psi2_j += wts[i]*mps_CIcoeff(rmps,iroot,state1);
                }
                eloc += pr.first * psi2_j/psi_i;
             } // ia 
@@ -96,14 +95,14 @@ namespace ctns{
                      Tm psi2_j = 0.0;
                      for(int i=0; i<xts.size(); i++){
                         auto rmps = mps_ryrotation(imps_low, xts[i]);
-                        psi2_j += (Tm)(wts[i]*mps_CIcoeff(rmps,iroot,state2));
+                        psi2_j += wts[i]*mps_CIcoeff(rmps,iroot,state2);
                      }
                      eloc += pr.first * psi2_j/psi_i;
                   }
                } // ab
             } // ij
             // accumulate
-            double fac = 1.0/(iter+1.0);
+            double fac = 1.0/(iter+1.0)/ps;
             ene = (ene*iter + std::real(eloc))*fac;
             ene2 = (ene2*iter + std::norm(eloc))*fac; 
             if((iter+1)%noff == 0){
@@ -112,7 +111,7 @@ namespace ctns{
                // Thus, it is not the variance of the wavefunction.
                std = std::sqrt(std::abs(ene2-ene*ene)/(iter+1.e-10));
                std::cout << " iter=" << iter 
-                  << " <O>=" << std::defaultfloat << std::setprecision(12) << ene 
+                  << " <HP>/<P>=" << std::defaultfloat << std::setprecision(12) << ene 
                   << " std=" << std::scientific << std::setprecision(3) << std
                   << " range=(" << std::defaultfloat << std::setprecision(12) 
                   << ene-std << "," << ene+std << ")" 
@@ -124,7 +123,6 @@ namespace ctns{
             tools::timing("ctns::mps_expect_es2proj", t0, t1);
          }
          return std::make_pair(ene,std);
-         */
       }
 
    template <typename Qm, typename Tm>
@@ -166,6 +164,10 @@ namespace ctns{
             auto sym = kmps.get_sym_state();
             int ne = sym.ne();
             int tm = sym.tm();
+            if(ne%2 != schd.post.twos%2){
+               std::cout << "error: inconsistent ne and twos! (ne,twos)=" << ne << "," << schd.post.twos << std::endl;
+               exit(1);
+            }
             if(qkind::is_qNSz<Qm>()){
                mps<qkind::qN,Tm> kmps_low;
                lowerSym(kmps, kmps_low);
