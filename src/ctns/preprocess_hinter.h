@@ -400,11 +400,20 @@ namespace ctns{
          // perform GEMV_BATCH
          MVbatch<Tm> mvbatch;
          // sort
+         auto t0a = tools::get_time();
          std::stable_sort(mvlst.begin(), mvlst.end(),
                [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
                return mv1 > mv2;
                });
+         auto t1a = tools::get_time();
          mvbatch.init(mvlst);
+         auto t2a = tools::get_time();
+         if(debug){
+            std::cout << "batchgemv=" << batchgemv 
+               << " t(sort)=" <<tools::get_duration(t1a-t0a) 
+               << " t(init)=" <<tools::get_duration(t2a-t1a) 
+               << std::endl;
+         }
          Tm* ptrs[6];
          ptrs[0] = opaddr[0]; // l
          ptrs[1] = opaddr[1]; // r
