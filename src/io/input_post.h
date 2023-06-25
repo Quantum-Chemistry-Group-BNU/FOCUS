@@ -18,9 +18,10 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
-                  & task_ovlp & task_cicoeff & task_sdiag & task_expect & task_s2proj 
+                  & task_ovlp & task_cicoeff & task_sdiag & task_expect 
+                  & task_s2proj & task_es2proj
                   & bra & ket & opname & integral_file
-                  & iroot & nsample & ndetprt & eps2; 
+                  & iroot & nsample & ndetprt & twos & eps2; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -37,6 +38,7 @@ namespace input{
          bool task_sdiag = false;
          bool task_expect = false;
          bool task_s2proj = false;
+         bool task_es2proj = false;
          std::vector<int> bra;
          std::vector<int> ket;
          std::string opname = "";
@@ -44,6 +46,7 @@ namespace input{
          int iroot = 0;
          int nsample = 10000;
          int ndetprt = 10;
+         int twos = 0;
          double eps2 = 1.e-10;
    };
 

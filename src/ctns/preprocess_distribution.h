@@ -45,8 +45,8 @@ namespace ctns{
    }
 
    // analyze the distribution of operators along a sweep
-   template <typename Km>
-      void preprocess_distribution(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void preprocess_distribution(const comb<Qm,Tm>& icomb,
             const input::schedule& schd){	
          int size = 1, rank = 0;
 #ifndef SERIAL
@@ -54,10 +54,9 @@ namespace ctns{
          rank = icomb.world.rank();
 #endif  
          // settings 
-         using Tm = typename Km::dtype;
-         const int isym = Km::isym;
-         const bool ifkr = Km::ifkr;
-         const std::string qname = qkind::get_name<Km>();
+         const int isym = Qm::isym;
+         const bool ifkr = Qm::ifkr;
+         const std::string qname = qkind::get_name<Qm>();
          if(rank == 0){
             std::cout << "\nctns::preprocess_distribution" 
                << " qkind=" << qname

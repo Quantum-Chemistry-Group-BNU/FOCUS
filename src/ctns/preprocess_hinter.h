@@ -166,7 +166,7 @@ namespace ctns{
          }
       }
 
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void hintermediates<Tm>::init_batch_cpu(const oper_dictmap<Tm>& qops_dict,
@@ -296,7 +296,7 @@ namespace ctns{
       }
 
 #ifdef GPU
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void hintermediates<Tm>::init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
@@ -433,7 +433,7 @@ namespace ctns{
       }
 #endif
 
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void hintermediates<Tm>::initDirect_batch_cpu(const symbolic_task<Tm>& H_formulae,
@@ -497,7 +497,7 @@ namespace ctns{
       }
 
 #ifdef GPU
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void hintermediates<Tm>::initDirect_batch_gpu(const symbolic_task<Tm>& H_formulae,

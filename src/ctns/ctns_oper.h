@@ -10,10 +10,10 @@
 namespace ctns{
 
    // Hij = <CTNS[i]|H|CTNS[j]>
-   template <typename Km>
-      linalg::matrix<typename Km::dtype> get_Hmat(const comb<Km>& icomb, 
-            const integral::two_body<typename Km::dtype>& int2e,
-            const integral::one_body<typename Km::dtype>& int1e,
+   template <typename Qm, typename Tm>
+      linalg::matrix<Tm> get_Hmat(const comb<Qm,Tm>& icomb, 
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
             const double ecore,
             const input::schedule& schd,
             const std::string scratch){
@@ -27,7 +27,6 @@ namespace ctns{
          oper_env_right(icomb, int2e, int1e, schd, scratch);
 
          // load operators from file
-         using Tm = typename Km::dtype;
          oper_dict<Tm> qops;
          auto p = std::make_pair(0,0); 
          auto fname = oper_fname(scratch, p, "r");

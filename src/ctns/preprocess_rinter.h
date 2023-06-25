@@ -172,7 +172,7 @@ namespace ctns{
          }
       }
 
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void rintermediates<Tm>::init_batch_cpu(const oper_dictmap<Tm>& qops_dict,
@@ -308,7 +308,7 @@ namespace ctns{
       }
 
 #ifdef GPU
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void rintermediates<Tm>::init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
@@ -451,7 +451,7 @@ namespace ctns{
       }
 #endif
 
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void rintermediates<Tm>::initDirect_batch_cpu(const renorm_tasks<Tm>& rtasks,
@@ -522,7 +522,7 @@ namespace ctns{
       }
 
 #ifdef GPU
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void rintermediates<Tm>::initDirect_batch_gpu(const renorm_tasks<Tm>& rtasks,

@@ -3,11 +3,11 @@
 
 namespace ctns{
 
-   template <typename Km>
+   template <typename Qm, typename Tm>
       struct mps{
          public:
             mps(){
-               if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for MPS!");
+               if(!qkind::is_available<Qm>()) tools::exit("error: no such qkind for MPS!");
             }
             // load
             void load(const std::string fname){
@@ -35,13 +35,13 @@ namespace ctns{
                return rwfuns.size(); 
             }
             // wf2(iroot,icol): ->-*->-
-            stensor2<typename Km::dtype> get_wf2() const{
+            stensor2<Tm> get_wf2() const{
                int nroots = this->get_nroots();
                qbond qrow({{this->get_sym_state(),nroots}});
                const auto& qcol = rwfuns[0].info.qcol;
                const auto& dir = rwfuns[0].info.dir;
                assert(dir == dir_RWF);
-               stensor2<typename Km::dtype> wf2(rwfuns[0].info.sym, qrow, qcol, dir);
+               stensor2<Tm> wf2(rwfuns[0].info.sym, qrow, qcol, dir);
                for(int iroot=0; iroot<nroots; iroot++){
                   for(int ic=0; ic<rwfuns[0].info.qcol.get_dim(0); ic++){
                      wf2(0,0)(iroot,ic) = rwfuns[iroot](0,0)(0,ic);
@@ -50,7 +50,7 @@ namespace ctns{
                return wf2;
             }
             // site0
-            stensor3<typename Km::dtype> get_site0() const{
+            stensor3<Tm> get_site0() const{
                const auto& site0 = sites[0];
                return contract_qt3_qt2("l",site0,this->get_wf2());
             }
@@ -95,7 +95,6 @@ namespace ctns{
                return fci_space;
             }
          public:
-            using Tm = typename Km::dtype;
             int nphysical;
             std::vector<int> image2;
             std::vector<stensor3<Tm>> sites;
@@ -109,8 +108,8 @@ namespace ctns{
 namespace mpi_wrapper{
 
    // icomb: assuming the individual size of sites is small
-   template <typename Tm>
-      void broadcast(const boost::mpi::communicator & comm, ctns::mps<Tm>& imps, int root){
+   template <typename Qm, typename Tm>
+      void broadcast(const boost::mpi::communicator & comm, ctns::mps<Qm,Tm>& imps, int root){
          boost::mpi::broadcast(comm, imps.nphysical, root);
          int rank = comm.rank();
          if(rank != root) imps.sites.resize(imps.nphysical); // reserve space

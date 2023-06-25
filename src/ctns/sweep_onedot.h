@@ -23,18 +23,17 @@
 namespace ctns{
 
    // onedot optimization algorithm
-   template <typename Km>
-      void sweep_onedot(comb<Km>& icomb,
-            const integral::two_body<typename Km::dtype>& int2e,
-            const integral::one_body<typename Km::dtype>& int1e,
+   template <typename Qm, typename Tm>
+      void sweep_onedot(comb<Qm,Tm>& icomb,
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
             const double ecore,
             const input::schedule& schd,
             const std::string scratch,
-            oper_pool<typename Km::dtype>& qops_pool,
+            oper_pool<Tm>& qops_pool,
             sweep_data& sweeps,
             const int isweep,
             const int ibond){
-         using Tm = typename Km::dtype;
          int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
@@ -93,7 +92,7 @@ namespace ctns{
          const auto& ql = qops_dict.at("l").qket;
          const auto& qr = qops_dict.at("r").qket;
          const auto& qc = qops_dict.at("c").qket;
-         auto sym_state = get_qsym_state(Km::isym, schd.nelec, schd.twoms);
+         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, schd.twoms);
          stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
          size_t ndim = wf.size();
          int neig = sweeps.nroots;
@@ -149,7 +148,7 @@ namespace ctns{
          Hxlist<Tm> Hxlst; // hvec4
          Hxlist2<Tm> Hxlst2; // hvec5
          HMMtasks<Tm> Hmmtasks; // hvec6
-         Tm scale = Km::ifkr? 0.5*ecore : 1.0*ecore;
+         Tm scale = Qm::ifkr? 0.5*ecore : 1.0*ecore;
          std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c",2}};
          Tm* ptrs[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data, qops_dict.at("c")._data, 
             nullptr, nullptr};

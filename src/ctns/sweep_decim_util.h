@@ -23,15 +23,14 @@ namespace ctns{
    template <typename Tm>
       using decim_map = std::map<int,decim_item<Tm>>; // br->(sigs,Umat)
 
-   template <typename Km>
-      void decimation_divide(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void decimation_divide(const comb<Qm,Tm>& icomb,
             const qbond& qrow,
             const qbond& qcol,
             const int alg_decim,
-            const std::vector<stensor2<typename Km::dtype>>& wfs2,
+            const std::vector<stensor2<Tm>>& wfs2,
             std::vector<std::vector<std::pair<int,int>>>& local_brbc){
          const bool debug = false;
-         using Tm = typename Km::dtype;
          int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
@@ -118,15 +117,14 @@ namespace ctns{
          } // alg_decim
       }
 
-   template <typename Km>
-      void decimation_collect(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void decimation_collect(const comb<Qm,Tm>& icomb,
             const int alg_decim,
             const std::vector<std::vector<std::pair<int,int>>>& local_brbc,
-            const std::vector<std::pair<int,decim_item<typename Km::dtype>>>& local_results,
-            decim_map<typename Km::dtype>& results,
+            const std::vector<std::pair<int,decim_item<Tm>>>& local_results,
+            decim_map<Tm>& results,
             const int size,
             const int rank){
-         using Tm = typename Km::dtype;
          if(alg_decim==0 || (alg_decim>0 && size==1)){
             // reconstruct results
             if(rank == 0){
@@ -191,8 +189,8 @@ namespace ctns{
          } // alg_decim
       }
 
-   template <typename Km>
-      void decimation_genbasis(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void decimation_genbasis(const comb<Qm,Tm>& icomb,
             const qbond& qs1,
             const qbond& qs2,
             const qbond& qrow,
@@ -200,9 +198,8 @@ namespace ctns{
             const qdpt& dpt,
             const double rdm_svd,
             const int alg_decim,
-            const std::vector<stensor2<typename Km::dtype>>& wfs2,
-            decim_map<typename Km::dtype>& results){
-         using Tm = typename Km::dtype;
+            const std::vector<stensor2<Tm>>& wfs2,
+            decim_map<Tm>& results){
          int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
@@ -301,7 +298,7 @@ namespace ctns{
    // NOTE: this part has not been revised
    //
    template <>
-      inline void decimation_genbasis(const comb<qkind::cNK>& icomb,
+      inline void decimation_genbasis(const comb<qkind::qNK,std::complex<double>>& icomb,
             const qbond& qs1,
             const qbond& qs2,
             const qbond& qrow,

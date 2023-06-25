@@ -106,10 +106,11 @@ namespace ctns{
       }
 
    // lower symmetry for MPS
-   template <typename Km1, typename Km2>
-      void lowerSym(const mps<Km1>& imps, mps<Km2>& rmps){
-         std::cout << "lowerSym for MPS: Km1=" << qkind::get_name<Km1>()
-            << " Km2=" << qkind::get_name<Km2>()
+   template <typename Qm1, typename Qm2, typename Tm>
+      void lowerSym(const mps<Qm1,Tm>& imps, mps<Qm2,Tm>& rmps){
+         std::cout << "lowerSym for MPS:"
+            << " Qm1=" << qkind::get_name<Qm1>()
+            << " Qm2=" << qkind::get_name<Qm2>()
             << std::endl;
          const bool debug = false; 
          // copy basic information
@@ -133,10 +134,9 @@ namespace ctns{
          }
       }
 
-   // TODOs:
    // apply ry rotation exp(-i*x*Sy) to MPS
-   template <typename Km>
-      mps<Km> mps_ryrotation(const mps<Km>& imps, const double x){
+   template <typename Qm, typename Tm>
+      mps<Qm,Tm> mps_ryrotation(const mps<Qm,Tm>& imps, const double x){
          auto rmps = imps;
          for(int k=0; k<rmps.nphysical; k++){
             // A[n](l,r) = A(l,r,n)
@@ -165,15 +165,13 @@ namespace ctns{
          return rmps;
       }
 
-   // TODOs:
    // compute <Psi|Ps|Psi>
-   template <typename Km>
-      double mps_expect_s2proj(const mps<Km>& imps, 
+   template <typename Qm, typename Tm>
+      double mps_expect_s2proj(const mps<Qm,Tm>& imps, 
             const int iroot,
             const int ne,
             const int tm,
             const int ts){
-         using Tm = typename Km::dtype;
          std::vector<double> xts, wts;
          special::gen_s2quad(imps.nphysical, ne, ts/2.0, tm/2.0, xts, wts);
          double ps = 0.0; 
@@ -187,7 +185,7 @@ namespace ctns{
          return ps;
       }
 
-   template <typename Km>
+   template <typename Qm, typename Tm>
       void mps_s2proj(const input::schedule& schd){
          int rank = 0, size = 1;
 #ifndef SERIAL
@@ -202,7 +200,7 @@ namespace ctns{
          int nket = schd.post.ket.size();
          for(int j=0; j<nket; j++){
             std::cout << "\n### jket=" << j << " ###" << std::endl;
-            mps<Km> kmps;
+            mps<Qm,Tm> kmps;
             auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j])+".info"; 
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;
@@ -225,12 +223,8 @@ namespace ctns{
             for(int ts=ts_min; ts<=ts_max; ts+=2){
                std::cout << "\nts=" << ts << std::endl;
                double ps = 0.0;
-               if(qkind::is_rNSz<Km>()){
-                  mps<qkind::rN> kmps_low;
-                  lowerSym(kmps, kmps_low);
-                  ps = mps_expect_s2proj(kmps_low, schd.post.iroot, ne, tm, ts);
-               }else if(qkind::is_cNSz<Km>()){
-                  mps<qkind::cN> kmps_low;
+               if(qkind::is_qNSz<Qm>()){
+                  mps<qkind::qN,Tm> kmps_low;
                   lowerSym(kmps, kmps_low);
                   ps = mps_expect_s2proj(kmps_low, schd.post.iroot, ne, tm, ts);
                }

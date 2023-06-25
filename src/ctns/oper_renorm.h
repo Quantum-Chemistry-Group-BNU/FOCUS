@@ -36,9 +36,9 @@ namespace ctns{
    extern const double thresh_opdiff;
 
    // renormalize operators
-   template <typename Km, typename Tm>
+   template <typename Qm, typename Tm>
       void oper_renorm(const std::string superblock,
-            const comb<Km>& icomb,
+            const comb<Qm,Tm>& icomb,
             const comb_coord& p,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
@@ -58,8 +58,8 @@ namespace ctns{
          maxthreads = omp_get_max_threads();
 #endif
          const int alg_renorm = schd.ctns.alg_renorm;
-         const int isym = Km::isym;
-         const bool ifkr = Km::ifkr;
+         const int isym = Qm::isym;
+         const bool ifkr = Qm::ifkr;
          const bool sort_formulae = schd.ctns.sort_formulae;
          const bool ifdist1 = schd.ctns.ifdist1;
          const bool ifdistc = schd.ctns.ifdistc;
@@ -156,7 +156,7 @@ namespace ctns{
             std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
             exit(1);
          }
-         if(Km::ifkr && alg_renorm >=4){
+         if(Qm::ifkr && alg_renorm >=4){
             std::cout << "error: alg_renorm >= 4 does not support complex yet!" << std::endl;
             exit(1); 
          }

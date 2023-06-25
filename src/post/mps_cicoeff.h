@@ -4,11 +4,10 @@
 namespace ctns{
 
    // Algorithm 2: <n|MPS> by contraction
-   template <typename Km>
-      typename Km::dtype mps_CIcoeff(const mps<Km>& imps,
+   template <typename Qm, typename Tm>
+      Tm mps_CIcoeff(const mps<Qm,Tm>& imps,
             const int iroot,
             const fock::onstate& state){
-         using Tm = typename Km::dtype;
          // compute <n|MPS> by contracting all sites
          stensor2<Tm> qt2_r;
          for(int i=imps.nphysical-1; i>=0; i--){
@@ -16,7 +15,7 @@ namespace ctns{
             const auto& site = imps.sites[i];
             // given occ pattern, extract the corresponding qblock
             int pindex = imps.get_pindex(i);
-            auto qt2 = site.fix_mid( occ2mdx(Km::isym, state, pindex) ); 
+            auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, pindex) ); 
             if(i == imps.nphysical-1){
                qt2_r = std::move(qt2);
             }else{
@@ -33,11 +32,10 @@ namespace ctns{
          return sgn*blk(0,0);
       }
 
-   template <typename Km>
-      void mps_cicoeff_check(const mps<Km>& imps,
+   template <typename Qm, typename Tm>
+      void mps_cicoeff_check(const mps<Qm,Tm>& imps,
             const int iroot,
             const double thresh_print=1.e-8){
-         using Tm = typename Km::dtype;
          std::cout << "\nctns::mps_cicoeff_check iroot=" << iroot << std::endl;
          auto fci_space = imps.get_fcispace();
          int dim = fci_space.size();
@@ -55,9 +53,8 @@ namespace ctns{
          std::cout << "ovlp=" << ovlp << " Sdiag(exact)=" << Sdiag << std::endl;
       }
 
-   template <typename Km>
+   template <typename Qm, typename Tm>
       void mps_cicoeff(const input::schedule& schd){
-         using Tm = typename Km::dtype;
          std::cout << "\nctns::mps_cicoeff" << std::endl;
          topology topo;
          topo.read(schd.post.topology_file);
@@ -65,7 +62,7 @@ namespace ctns{
          int nket = schd.post.ket.size();
          for(int j=0; j<nket; j++){
             std::cout << "\n### jket=" << j << " ###" << std::endl;
-            mps<Km> kmps;
+            mps<Qm,Tm> kmps;
             auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j])+".info"; 
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;

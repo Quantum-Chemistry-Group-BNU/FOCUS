@@ -24,7 +24,7 @@ void test_loop(){
    auto t0 = tools::get_time();
    for(int k=0; k<cycle; k++){
 #ifdef _OPENMP
-#pragma omp for schedule(static,1048576)
+#pragma omp parallel for schedule(static,1048576)
 #endif 
       for(int i=0; i<ndim; i++){
          a[i] = b[i]/c;
