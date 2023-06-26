@@ -1,7 +1,7 @@
 
 machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no #yes
+DEBUG = no
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
@@ -382,8 +382,6 @@ depend:
 	echo 'finish dependency check!'; \
 	rm -f $$$$.depend # $$$$ id number 
 -include .depend
-
-FLAGS += -fPIC 
 
 # LIBARARIES
 $(LIB_DIR)/libcore.a: $(OBJ_CORE)

@@ -33,6 +33,7 @@ namespace ctns{
          // generate samples 
          double ene = 0.0, ene2 = 0.0, std = 0.0;
          for(int iter=0; iter<nsample; iter++){
+            auto t0 = tools::get_time();
             auto pr = mps_random(imps,iroot);
             auto state = pr.first;
             Tm psi_i = pr.second;
@@ -41,6 +42,8 @@ namespace ctns{
             state.get_vlst(vlst.data());
             double v0i = std::abs(psi_i);
             Tm eloc = ecore + fock::get_Hii(state,int2e,int1e);
+            auto t1 = tools::get_time();
+            std::cout << "iter=" << iter << " t1=" << tools::get_duration(t1-t0) << std::endl;
             // singles
             for(int ia=0; ia<nsingles; ia++){
                int ix = ia%no, ax = ia/no;
@@ -52,6 +55,10 @@ namespace ctns{
                Tm psi_j = mps_CIcoeff(imps, iroot, state1);
                eloc += pr.first * psi_j/psi_i;
             } // ia 
+            auto t2 = tools::get_time();
+            std::cout << "iter=" << iter << " t2=" << tools::get_duration(t2-t1) 
+               << " nsingles=" << nsingles << " t2av=" << tools::get_duration(t2-t1)/nsingles 
+               << std::endl;
             // doubles
             for(int ijdx=0; ijdx<no*(no-1)/2; ijdx++){
                auto pr = tools::inverse_pair0(ijdx);
@@ -73,6 +80,8 @@ namespace ctns{
                   }
                } // ab
             } // ij
+            auto t3 = tools::get_time();
+            std::cout << "iter=" << iter << " t3=" << tools::get_duration(t3-t2) << std::endl;
             // accumulate
             double fac = 1.0/(iter+1.0);
             ene = (ene*iter + std::real(eloc))*fac;
