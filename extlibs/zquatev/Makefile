@@ -1,7 +1,7 @@
 
-machine = wuhan#cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = archlinux#cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 USE_ILP64 = yes
-USE_BLAS = yes
+USE_BLAS = no
 
 INCLUDE = -I.
 
@@ -48,11 +48,18 @@ else ifeq ($(strip $(machine)), mac)
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
    MATHLIB = /opt/anaconda3/envs/work/lib
    LIBS += -lm
+else ifeq ($(strip $(machine)), archlinux)
+   CXX = g++
+   CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
+   LIBS += -lm
 endif
 
 ifeq ($(strip $(USE_BLAS)), yes)
       CXXFLAGS += -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
       LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lopenblas  -lpthread  -ldl 
+else
+      LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_ilp64 -lmkl_core -lmkl_gnu_thread -lm -lpthread -lgomp
 endif
 
 LD       = $(CXX)

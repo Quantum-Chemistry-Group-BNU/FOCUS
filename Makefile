@@ -1,13 +1,13 @@
 
-machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = archlinux #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no #yes
+DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
+USE_GPU = no #yes
+USE_NCCL = no #yes
 USE_BLAS = no #yes
 # compression
 USE_LZ4 = no
@@ -86,6 +86,15 @@ else ifeq ($(strip $(machine)), mac)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
+
+else ifeq ($(strip $(machine)), archlinux)
+   MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
+   BOOST = /usr
+   LFLAGS = -lboost_timer -lboost_chrono -lboost_serialization -lboost_system -lboost_iostreams
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi
+   endif
+
 endif
 FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include 
  
@@ -326,9 +335,7 @@ OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
 all: depend core ci ctns vmc
 
-core: $(LIB_DIR)/libcore.a \
-	$(LIB_DIR)/libio.a \
-	$(BIN_DIR)/tests_core.x \
+core: $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a $(BIN_DIR)/tests_core.x \
 	$(BIN_DIR)/benchmark_mathlib.x $(BIN_DIR)/benchmark_blas.x \
 	$(BIN_DIR)/benchmark_io.x $(BIN_DIR)/benchmark_mpi.x \
 	$(BIN_DIR)/benchmark_nccl.x 
@@ -359,7 +366,7 @@ endif
 
 # version
 GIT_HASH=`git rev-parse HEAD`
-FLAGS += -DGIT_HASH="\"$(GIT_HASH)\"" 
+FLAGS += -DGIT_HASH="\"$(GIT_HASH)\""  # print git log
 
 depend:
 	echo "Check compilation options:"; \
@@ -382,8 +389,6 @@ depend:
 	echo 'finish dependency check!'; \
 	rm -f $$$$.depend # $$$$ id number 
 -include .depend
-
-FLAGS += -fPIC 
 
 # LIBARARIES
 $(LIB_DIR)/libcore.a: $(OBJ_CORE)
