@@ -44,7 +44,7 @@ namespace linalg{
          const double *beta_array, double **y_array, const MKL_INT *incy_array, 
          const MKL_INT *group_count, const MKL_INT *group_size)
    {
-#if defined(USE_BLAS) 
+#ifndef USE_MKL
        MKL_INT idx =0;
        for(MKL_INT i=0; i<*group_count; i++)
        {
@@ -81,7 +81,7 @@ namespace linalg{
          const std::complex<double> *beta_array, std::complex<double> **y_array, const MKL_INT *incy_array, 
          const MKL_INT *group_count, const MKL_INT *group_size)
    {
-#if defined(USE_BLAS) 
+#ifndef USE_MKL
        MKL_INT idx =0;
        for(MKL_INT i=0; i<*group_count; i++)
        {
@@ -118,7 +118,7 @@ namespace linalg{
          const double *beta_array, double **c_array, const MKL_INT *ldc_array, 
          const MKL_INT *group_count, const MKL_INT *group_size)
    {
-#if defined(USE_BLAS) 
+#ifndef USE_MKL
        MKL_INT idx =0;
        for(MKL_INT i=0; i<*group_count; i++)
        {
@@ -156,7 +156,7 @@ namespace linalg{
          const MKL_INT *ldc_array, 
          const MKL_INT *group_count, const MKL_INT *group_size)
    {
-#if defined(USE_BLAS) 
+#ifndef USE_MKL
        MKL_INT idx =0;
        for(MKL_INT i=0; i<*group_count; i++)
        {

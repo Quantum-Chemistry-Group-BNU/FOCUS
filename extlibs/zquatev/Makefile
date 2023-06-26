@@ -1,7 +1,7 @@
 
-machine = wuhan#cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
-USE_ILP64 = yes
-USE_BLAS = yes
+machine = dell2 # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+USE_MKL = yes
+USE_ILP64 = yes # by default
 
 INCLUDE = -I.
 
@@ -50,9 +50,18 @@ else ifeq ($(strip $(machine)), mac)
    LIBS += -lm
 endif
 
-ifeq ($(strip $(USE_BLAS)), yes)
-      CXXFLAGS += -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
-      LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lopenblas  -lpthread  -ldl 
+ifeq ($(strip $(USE_MKL)),yes)
+   # serial version of MKL
+   ifeq ($(strip $(USE_ILP64)), no)
+   LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+          -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
+   else
+   LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+          -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -DMKL_ILP64 -m64
+   endif
+else
+   CXXFLAGS += -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
+   LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lopenblas  -lpthread  -ldl 
 endif
 
 LD       = $(CXX)

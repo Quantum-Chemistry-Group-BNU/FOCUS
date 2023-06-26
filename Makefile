@@ -1,14 +1,14 @@
 
-machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
+USE_MKL = yes
 USE_ILP64 = yes
 USE_GPU = yes
 USE_NCCL = yes
-USE_BLAS = no #yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -122,26 +122,26 @@ else
    endif
 endif
 
-ifeq ($(strip $(USE_BLAS)),no)
+ifeq ($(strip $(USE_MKL)),yes)
 # OpenMP & MKL
    ifeq ($(strip $(USE_OPENMP)),no)
       ifeq ($(strip $(USE_ILP64)), no)
       # serial version of MKL
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+      MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
       else
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+      MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -DMKL_ILP64 -m64
       endif
    else
    # parallel version of MKL
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
       ifeq ($(strip $(USE_ILP64)), no)
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+      MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl 
       else
 	   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+      MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64
       endif
 
@@ -162,12 +162,10 @@ ifeq ($(strip $(USE_BLAS)),no)
 else
    # parallel version of MKL
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
-   MATH = \
-	        -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
           -lopenblas -lpthread -lm -ldl -lrt 
           #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
-   FLAGS += -fopenmp -DUSE_BLAS -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
-
+   FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
 endif
 # quaternion matrix diagonalization
 MATH += -L./extlibs/zquatev -lzquatev 
@@ -368,10 +366,10 @@ depend:
 	echo " USE_GCC = " $(USE_GCC); \
 	echo " USE_MPI = " $(USE_MPI); \
 	echo " USE_OPENMP = " $(USE_OPENMP); \
+	echo " USE_MKL = " $(USE_MKL); \
 	echo " USE_ILP64 = " $(USE_ILP64); \
 	echo " USE_GPU = " $(USE_GPU); \
 	echo " USE_NCCL = " $(USE_NCCL); \
-	echo " USE_BLAS = " $(USE_BLAS); \
 	echo " CXX = " $(CXX); \
 	echo " CC = " $(CC); \
 	set -e; \
