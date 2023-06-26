@@ -10,66 +10,45 @@ namespace ctns{
 namespace qkind{ 
 
 // isym = 0:
-struct rZ2{
-   using dtype = double;
-   static const int isym = 0;
-   static const bool ifkr = false;
-};
-struct cZ2{
-   using dtype = std::complex<double>;
+struct qZ2{
    static const int isym = 0;
    static const bool ifkr = false;
 };
 // isym = 1:
-struct rN{
-   using dtype = double;
-   static const int isym = 1;
-   static const bool ifkr = false;
-};
-struct cN{
-   using dtype = std::complex<double>;
+struct qN{
    static const int isym = 1;
    static const bool ifkr = false;
 };
 // isym = 2:
-struct rNSz{
-   using dtype = double;
-   static const int isym = 2;
-   static const bool ifkr = false;
-};
-struct cNSz{
-   using dtype = std::complex<double>;
+struct qNSz{
    static const int isym = 2;
    static const bool ifkr = false;
 };
 // Kramers symmetry: relativistic H with SOC
-struct cNK{
-   using dtype = std::complex<double>;
+struct qNK{
    static const int isym = 1;
    static const bool ifkr = true;
 };
 
 // is_available
-template <typename Tm>
+template <typename Qm>
 inline bool is_available(){ return false; }
-template <> inline bool is_available<rZ2>(){ return true; } 
-template <> inline bool is_available<cZ2>(){ return true; } 
-template <> inline bool is_available<rN>(){ return true; } 
-template <> inline bool is_available<cN>(){ return true; } 
-template <> inline bool is_available<rNSz>(){ return true; }
-template <> inline bool is_available<cNSz>(){ return true; }
-template <> inline bool is_available<cNK>(){ return true; }
+template <> inline bool is_available<qZ2>(){ return true; } 
+template <> inline bool is_available<qN>(){ return true; } 
+template <> inline bool is_available<qNSz>(){ return true; }
+template <> inline bool is_available<qNK>(){ return true; }
 
 // get_name
-template <typename Tm>
+template <typename Qm>
 inline std::string get_name(){ return ""; }
-template <> inline std::string get_name<rZ2>(){ return "rZ2"; } 
-template <> inline std::string get_name<cZ2>(){ return "cZ2"; } 
-template <> inline std::string get_name<rN>(){ return "rN"; } 
-template <> inline std::string get_name<cN>(){ return "cN"; } 
-template <> inline std::string get_name<rNSz>(){ return "rNSz"; }
-template <> inline std::string get_name<cNSz>(){ return "cNSz"; }
-template <> inline std::string get_name<cNK>(){ return "cNK"; }
+template <> inline std::string get_name<qZ2>(){ return "qZ2"; } 
+template <> inline std::string get_name<qN>(){ return "qN"; } 
+template <> inline std::string get_name<qNSz>(){ return "qNSz"; }
+template <> inline std::string get_name<qNK>(){ return "qNK"; }
+
+template <typename Qm>
+inline bool is_qNSz(){ return false; }
+template <> inline bool is_qNSz<qNSz>(){ return true; }
 
 } // qkind
 

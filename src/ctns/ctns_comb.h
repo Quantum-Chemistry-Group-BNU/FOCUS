@@ -12,8 +12,8 @@
 
 namespace ctns{
 
-   template <typename Tm, typename Qm>
-      size_t display_vec_size(const Qm& vec, std::string name){
+   template <typename Tm, typename Vm>
+      size_t display_vec_size(const Vm& vec, std::string name){
          std::cout << " " << name << ": len=" << vec.size() << " mem=";
          size_t sz = 0;
          for(int i=0; i<vec.size(); i++){
@@ -26,18 +26,17 @@ namespace ctns{
          return sz;
       }
 
-   template <typename Km>
+   template <typename Qm, typename Tm>
       struct comb{
          public:
             // constructors
             comb(){
-               if(!qkind::is_available<Km>()) tools::exit("error: no such qkind for CTNS!");
+               if(!qkind::is_available<Qm>()) tools::exit("error: no such qkind for CTNS!");
             }
             // print size 
             size_t display_size() const{
                std::cout << "comb::display_size" << std::endl;
                size_t sz = 0;
-               using Tm = typename Km::dtype;
                sz += display_vec_size<Tm>(rbases, "rbases");
                sz += display_vec_size<Tm>(sites, "sites");
                sz += display_vec_size<Tm>(rwfuns, "rwfuns");
@@ -59,13 +58,13 @@ namespace ctns{
                return rwfuns.size(); 
             }
             // wf2(iroot,icol): ->-*->-
-            stensor2<typename Km::dtype> get_wf2() const{
+            stensor2<Tm> get_wf2() const{
                int nroots = this->get_nroots();
                qbond qrow({{this->get_sym_state(),nroots}});
                const auto& qcol = rwfuns[0].info.qcol;
                const auto& dir = rwfuns[0].info.dir;
                assert(dir == dir_RWF);
-               stensor2<typename Km::dtype> wf2(rwfuns[0].info.sym, qrow, qcol, dir);
+               stensor2<Tm> wf2(rwfuns[0].info.sym, qrow, qcol, dir);
                for(int iroot=0; iroot<nroots; iroot++){
                   for(int ic=0; ic<rwfuns[0].info.qcol.get_dim(0); ic++){
                      wf2(0,0)(iroot,ic) = rwfuns[iroot](0,0)(0,ic);
@@ -74,7 +73,6 @@ namespace ctns{
                return wf2;
             }
          public:
-            using Tm = typename Km::dtype;
             // -- CTNS ---
             topology topo;
             // used in initialization & debug operators 
@@ -97,8 +95,8 @@ namespace ctns{
 namespace mpi_wrapper{
 
    // icomb: assuming the individual size of sites is small
-   template <typename Tm>
-      void broadcast(const boost::mpi::communicator & comm, ctns::comb<Tm>& icomb, int root){
+   template <typename Qm, typename Tm>
+      void broadcast(const boost::mpi::communicator & comm, ctns::comb<Qm,Tm>& icomb, int root){
          boost::mpi::broadcast(comm, icomb.topo, root);
          boost::mpi::broadcast(comm, icomb.rbases, root);
          int rank = comm.rank();

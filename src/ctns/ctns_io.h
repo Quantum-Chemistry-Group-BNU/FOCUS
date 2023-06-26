@@ -10,8 +10,8 @@ namespace ctns{
    extern const bool ifsavebin;
 
    // for comb
-   template <typename Km>
-      void rcanon_save(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void rcanon_save(const comb<Qm,Tm>& icomb,
             const std::string fname="rcanon.info"){
          std::cout << "\nctns::rcanon_save fname=" << fname << std::endl;
 
@@ -41,8 +41,8 @@ namespace ctns{
          }
       }
 
-   template <typename Km>
-      void rcanon_load(comb<Km>& icomb, // no const!
+   template <typename Qm, typename Tm>
+      void rcanon_load(comb<Qm,Tm>& icomb, // no const!
             const std::string fname="rcanon.info"){
          std::cout << "\nctns:rcanon_load fname=" << fname << std::endl;
 

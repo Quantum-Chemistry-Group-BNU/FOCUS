@@ -1,14 +1,18 @@
 #include <iostream>
-#include "tests_core.h"
-#include "special.h"
 #include "tools.h"
+#include "special.h"
+#include "tests_core.h"
 
 using namespace std;
-using namespace special;
+using namespace fock;
 
 int tests::test_special(){
+   cout << endl;
+   cout << tools::line_separator << endl;	
+   cout << "tests::test_special" << endl;
+   cout << tools::line_separator << endl;	
+
    cout << std::setprecision(20);
-   
    cout << gamma(3) << endl;
    cout << gamma(3.1) << endl;
 
@@ -38,4 +42,6 @@ int tests::test_special(){
    for(int i=0; i<npt; i++){
       std::cout << " x,w=" << xts[i] << "," << wts[i] << std::endl;
    }
+
+   return 0;
 }

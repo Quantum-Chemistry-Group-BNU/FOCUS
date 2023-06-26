@@ -1,7 +1,7 @@
 
-machine = archlinux#cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
-USE_ILP64 = yes
-USE_BLAS = no
+machine = dell2 # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+USE_MKL = yes
+USE_ILP64 = yes # by default
 
 INCLUDE = -I.
 
@@ -58,8 +58,6 @@ endif
 ifeq ($(strip $(USE_BLAS)), yes)
       CXXFLAGS += -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
       LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lopenblas  -lpthread  -ldl 
-else
-      LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_ilp64 -lmkl_core -lmkl_gnu_thread -lm -lpthread -lgomp
 endif
 
 LD       = $(CXX)

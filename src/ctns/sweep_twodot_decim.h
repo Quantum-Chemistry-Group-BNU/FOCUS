@@ -5,8 +5,8 @@
 
 namespace ctns{
 
-   template <typename Km, typename Tm>
-      void twodot_decimation(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void twodot_decimation(const comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const std::string scratch,
             sweep_data& sweeps,
@@ -127,13 +127,13 @@ namespace ctns{
       }
 
    // initial guess for next site within the bond
-   template <typename Km>
+   template <typename Qm, typename Tm>
       void twodot_guess_psi(const std::string superblock,
-            comb<Km>& icomb,
+            comb<Qm,Tm>& icomb,
             const directed_bond& dbond,
-            const linalg::matrix<typename Km::dtype>& vsol,
-            stensor4<typename Km::dtype>& wf,
-            const stensor2<typename Km::dtype>& rot){
+            const linalg::matrix<Tm>& vsol,
+            stensor4<Tm>& wf,
+            const stensor2<Tm>& rot){
          const bool debug = false;
          if(debug) std::cout << "ctns::twodot_guess_psi superblock=" << superblock << std::endl;
          int nroots = vsol.cols();

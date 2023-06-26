@@ -6,5 +6,7 @@
 #include "mps_cicoeff.h"
 #include "mps_random.h"
 #include "mps_expect.h"
+#include "mps_s2proj.h"
+#include "mps_es2proj.h"
 
 #endif

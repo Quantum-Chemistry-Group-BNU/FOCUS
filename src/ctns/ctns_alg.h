@@ -22,8 +22,8 @@ namespace ctns{
 
    // Algorithm 0:
    // Check right canonical form
-   template <typename Km>
-      void rcanon_check(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void rcanon_check(const comb<Qm,Tm>& icomb,
             const double thresh_ortho,
             const bool ifortho=true){
          auto t0 = tools::get_time();
@@ -60,12 +60,12 @@ namespace ctns{
 
    // Algorithm 1:
    // <CTNS[i]|CTNS[j]>: compute by a typical loop for right canonical form 
-   template <typename Km>
-      linalg::matrix<typename Km::dtype> get_Smat(const comb<Km>& icomb){ 
+   template <typename Qm, typename Tm>
+      linalg::matrix<Tm> get_Smat(const comb<Qm,Tm>& icomb){ 
          // loop over sites on backbone
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
-         stensor2<typename Km::dtype> qt2_r, qt2_u;
+         stensor2<Tm> qt2_r, qt2_u;
          for(int i=icomb.topo.nbackbone-1; i>0; i--){
             const auto& node = nodes[i][0];
             int tp = node.type;
@@ -105,10 +105,9 @@ namespace ctns{
 
    // Algorithm 2:
    // <n|CTNS[i]> by contracting the CTNS
-   template <typename Km>
-      std::vector<typename Km::dtype> rcanon_CIcoeff(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
             const fock::onstate& state){
-         using Tm = typename Km::dtype;
          // compute <n|CTNS> by contracting all sites
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
@@ -120,7 +119,7 @@ namespace ctns{
                // site on backbone with physical index
                const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
                // given occ pattern, extract the corresponding qblock
-               auto qt2 = site.fix_mid( occ2mdx(Km::isym, state, node.pindex) ); 
+               auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, node.pindex) ); 
                if(i == icomb.topo.nbackbone-1){
                   qt2_r = std::move(qt2);
                }else{
@@ -131,7 +130,7 @@ namespace ctns{
                for(int j=nodes[i].size()-1; j>=1; j--){
                   const auto& site = icomb.sites[rindex.at(std::make_pair(i,j))];
                   const auto& nodej = nodes[i][j];
-                  auto qt2 = site.fix_mid( occ2mdx(Km::isym, state, nodej.pindex) );
+                  auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, nodej.pindex) );
                   if(j == nodes[i].size()-1){
                      qt2_u = std::move(qt2);
                   }else{
@@ -162,10 +161,10 @@ namespace ctns{
       }
 
    // check rcanon_CIcoeff
-   template <typename Km>
-      int rcanon_CIcoeff_check(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      int rcanon_CIcoeff_check(const comb<Qm,Tm>& icomb,
             const fock::onspace& space,
-            const linalg::matrix<typename Km::dtype>& vs,
+            const linalg::matrix<Tm>& vs,
             const double thresh=1.e-8){
          std::cout << "\nctns::rcanon_CIcoeff_check" << std::endl;
          int n = icomb.get_nroots(); 
@@ -189,11 +188,10 @@ namespace ctns{
       }
 
    // ovlp[i,n] = <SCI[i]|CTNS[n]>
-   template <typename Km>
-      linalg::matrix<typename Km::dtype> rcanon_CIovlp(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      linalg::matrix<Tm> rcanon_CIovlp(const comb<Qm,Tm>& icomb,
             const fock::onspace& space,
-            const linalg::matrix<typename Km::dtype>& vs){
-         using Tm = typename Km::dtype;
+            const linalg::matrix<Tm>& vs){
          std::cout << "\nctns::rcanon_CIovlp" << std::endl;
          int n = icomb.get_nroots(); 
          int dim = space.size();
@@ -210,11 +208,10 @@ namespace ctns{
 
    // Algorithm 3:
    // exact computation of Sdiag, only for small system
-   template <typename Km>
-      double rcanon_Sdiag_exact(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      double rcanon_Sdiag_exact(const comb<Qm,Tm>& icomb,
             const int iroot,
             const double thresh_print=1.e-10){
-         using Tm = typename Km::dtype; 
          std::cout << "\nctns::rcanon_Sdiag_exact iroot=" << iroot
             << " thresh_print=" << thresh_print << std::endl;
          // setup FCI space
@@ -222,11 +219,11 @@ namespace ctns{
          int ne = sym_state.ne(); 
          int ks = icomb.get_nphysical();
          fock::onspace fci_space;
-         if(Km::isym == 0){
+         if(Qm::isym == 0){
             fci_space = fock::get_fci_space(2*ks);
-         }else if(Km::isym == 1){
+         }else if(Qm::isym == 1){
             fci_space = fock::get_fci_space(2*ks,ne);
-         }else if(Km::isym == 2){
+         }else if(Qm::isym == 2){
             int tm = sym_state.tm(); 
             int na = (ne+tm)/2, nb = ne-na;
             fci_space = fock::get_fci_space(ks,na,nb); 
@@ -274,12 +271,11 @@ namespace ctns{
 
    // Sampling CTNS to get {|det>,coeff(det)=<det|Psi[i]>} 
    // In case that CTNS is unnormalized, p(det) is also unnormalized. 
-   template <typename Km>
-      std::pair<fock::onstate,typename Km::dtype> rcanon_random(const comb<Km>& icomb, 
+   template <typename Qm, typename Tm>
+      std::pair<fock::onstate,Tm> rcanon_random(const comb<Qm,Tm>& icomb, 
             const int iroot,
             const bool debug=false){
          if(debug) std::cout << "\nctns::rcanon_random iroot=" << iroot << std::endl; 
-         using Tm = typename Km::dtype; 
          fock::onstate state(2*icomb.get_nphysical());
          // initialize boundary wf for i-th state
          auto wf = icomb.rwfuns[iroot];
@@ -295,7 +291,7 @@ namespace ctns{
                std::vector<stensor2<Tm>> qt2n(4);
                std::vector<double> weights(4);
                for(int idx=0; idx<4; idx++){
-                  qt2n[idx] = qt3.fix_mid( idx2mdx(Km::isym, idx) );
+                  qt2n[idx] = qt3.fix_mid( idx2mdx(Qm::isym, idx) );
                   // \sum_a |psi[n,a]|^2
                   auto psi2 = qt2n[idx].dot(qt2n[idx].H()); 
                   weights[idx] = std::real(psi2(0,0)(0,0));
@@ -314,7 +310,7 @@ namespace ctns{
                   std::vector<stensor3<Tm>> qt3n(4);
                   std::vector<double> weights(4);
                   for(int idx=0; idx<4; idx++){
-                     auto qt2 = sitej.fix_mid( idx2mdx(Km::isym, idx) );
+                     auto qt2 = sitej.fix_mid( idx2mdx(Qm::isym, idx) );
                      // purely change direction
                      qt3n[idx] = contract_qt3_qt2("c",qt3,qt2.T()); 
                      // \sum_ab |psi[n,a,b]|^2
@@ -345,8 +341,8 @@ namespace ctns{
 
    // compute diagonal entropy via sampling:
    // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
-   template <typename Km>
-      double rcanon_Sdiag_sample(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      double rcanon_Sdiag_sample(const comb<Qm,Tm>& icomb,
             const int iroot,
             const int nsample,  
             const int nprt=10){ // no. of largest states to be printed

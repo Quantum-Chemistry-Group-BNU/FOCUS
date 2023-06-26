@@ -43,6 +43,10 @@ void params_post::read(ifstream& istrm){
          task_expect = true;
          istringstream is(line.substr(11));
          is >> opname;
+      }else if(line.substr(0,11)=="task_s2proj"){
+         task_s2proj = true;
+      }else if(line.substr(0,12)=="task_es2proj"){
+         task_es2proj = true;
       }else if(line.substr(0,3)=="bra"){
          line.clear();	   
          getline(istrm,line);
@@ -70,6 +74,8 @@ void params_post::read(ifstream& istrm){
          nsample = stoi(line.substr(7));
       }else if(line.substr(0,7)=="ndetprt"){
          ndetprt = stoi(line.substr(7));
+      }else if(line.substr(0,4)=="twos"){
+         twos = stoi(line.substr(4));
       }else if(line.substr(0,4)=="eps2"){
          eps2 = stod(line.substr(4));
       }else{
@@ -89,6 +95,8 @@ void params_post::print() const{
    cout << "task_cicoeff = " << task_cicoeff << endl;
    cout << "task_sdiag = " << task_sdiag << endl;
    cout << "task_expect = " << task_expect << endl;
+   cout << "task_s2proj = " << task_s2proj << endl;
+   cout << "task_es2proj = " << task_es2proj << endl;
    tools::print_vector(bra, "bra");
    tools::print_vector(ket, "ket");
    cout << "opname = " << opname << endl;
@@ -96,5 +104,6 @@ void params_post::print() const{
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;
    cout << "ndetprt = " << ndetprt << endl;
+   cout << "twos = " << twos << endl;
    cout << "eps2 = " << eps2 << endl;
 }

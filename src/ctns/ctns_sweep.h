@@ -10,14 +10,13 @@
 namespace ctns{
 
    // main for sweep optimizations for CTNS
-   template <typename Km>
-      void sweep_opt(comb<Km>& icomb, // initial comb wavefunction
-            const integral::two_body<typename Km::dtype>& int2e,
-            const integral::one_body<typename Km::dtype>& int1e,
+   template <typename Qm, typename Tm>
+      void sweep_opt(comb<Qm,Tm>& icomb, // initial comb wavefunction
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
             const double ecore,
             const input::schedule& schd,
             const std::string scratch){
-         using Tm = typename Km::dtype;
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();

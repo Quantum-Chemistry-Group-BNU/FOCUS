@@ -166,7 +166,7 @@ namespace ctns{
          }
       }
 
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void hintermediates<Tm>::init_batch_cpu(const oper_dictmap<Tm>& qops_dict,
@@ -296,7 +296,7 @@ namespace ctns{
       }
 
 #ifdef GPU
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void hintermediates<Tm>::init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
@@ -400,11 +400,20 @@ namespace ctns{
          // perform GEMV_BATCH
          MVbatch<Tm> mvbatch;
          // sort
+         auto t0a = tools::get_time();
          std::stable_sort(mvlst.begin(), mvlst.end(),
                [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
                return mv1 > mv2;
                });
+         auto t1a = tools::get_time();
          mvbatch.init(mvlst);
+         auto t2a = tools::get_time();
+         if(debug){
+            std::cout << "batchgemv=" << batchgemv 
+               << " t(sort)=" <<tools::get_duration(t1a-t0a) 
+               << " t(init)=" <<tools::get_duration(t2a-t1a) 
+               << std::endl;
+         }
          Tm* ptrs[6];
          ptrs[0] = opaddr[0]; // l
          ptrs[1] = opaddr[1]; // r
@@ -433,7 +442,7 @@ namespace ctns{
       }
 #endif
 
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void hintermediates<Tm>::initDirect_batch_cpu(const symbolic_task<Tm>& H_formulae,
@@ -497,7 +506,7 @@ namespace ctns{
       }
 
 #ifdef GPU
-   // This subroutine does not work for cNK. Besides, we make the
+   // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
    template <typename Tm>
       void hintermediates<Tm>::initDirect_batch_gpu(const symbolic_task<Tm>& H_formulae,

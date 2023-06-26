@@ -280,31 +280,30 @@ namespace ctns{
    //
    // compute {|r>} basis for a given bipartition specified by the position bpos
    //
-   template <typename Km>
-      void right_projection(renorm_basis<typename Km::dtype>& rbasis,
+   template <typename Qm, typename Tm>
+      void right_projection(renorm_basis<Tm>& rbasis,
             const int bpos,
             const fock::onspace& space,
-            const linalg::matrix<typename Km::dtype>& vs,
+            const linalg::matrix<Tm>& vs,
             const double thresh_proj,
             const double rdm_svd,
             const bool debug){
          const bool debug_basis = false;
-         using Tm = typename Km::dtype;
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::right_projection<Km> thresh_proj=" 
+            std::cout << "ctns::right_projection<Qm,Tm> thresh_proj=" 
                << std::scientific << std::setprecision(3) << thresh_proj << std::endl;
          }
 
          // 1. prepare bipartition form of psi
          bipart_space lspace, rspace;
-         lspace.init(Km::isym, bpos, space, 0);
-         rspace.init(Km::isym, bpos, space, 1);
+         lspace.init(Qm::isym, bpos, space, 0);
+         rspace.init(Qm::isym, bpos, space, 1);
          // update space info
          lspace.update_maps();
          rspace.update_maps();
          // construct wfs
-         bipart_ciwfs<Tm> wfs(Km::isym, bpos, space, vs, lspace, rspace);
+         bipart_ciwfs<Tm> wfs(Qm::isym, bpos, space, vs, lspace, rspace);
 
          // 2. decimation for each qr
          int nroots = vs.cols();
@@ -346,7 +345,7 @@ namespace ctns{
                << lspace.get_dimAll() << "," << rspace.get_dimAll() 
                << " dimBc=" << dimBc << " popBc=" << popBc << " SvN=" << SvN << std::endl; 
             auto t1 = tools::get_time();
-            tools::timing("ctns::right_projection<Km>", t0, t1);
+            tools::timing("ctns::right_projection<Qm,Tm>", t0, t1);
          }
       }
 
@@ -354,7 +353,7 @@ namespace ctns{
    // time-reversal symmetry adapted right_projection
    //
    template <> 
-      inline void right_projection<qkind::cNK>(renorm_basis<std::complex<double>>& rbasis,
+      inline void right_projection<qkind::qNK,std::complex<double>>(renorm_basis<std::complex<double>>& rbasis,
             const int bpos,
             const fock::onspace& space,
             const linalg::matrix<std::complex<double>>& vs,
@@ -365,21 +364,21 @@ namespace ctns{
          using Tm = std::complex<double>;
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::right_projection<cNK> thresh_proj=" 
+            std::cout << "ctns::right_projection<qNK> thresh_proj=" 
                << std::scientific << std::setprecision(3) << thresh_proj << std::endl;
          }
 
          // 1. bipartition form of psi
          bipart_space lspace, rspace;
-         lspace.init(qkind::cNK::isym, bpos, space, 0);
-         rspace.init(qkind::cNK::isym, bpos, space, 1);
+         lspace.init(qkind::qNK::isym, bpos, space, 0);
+         rspace.init(qkind::qNK::isym, bpos, space, 1);
          // reorder rspace.basis to form Kramers-paired structure
          rspace.kramers_basis_reorder();
          // update space info
          lspace.update_maps();
          rspace.update_maps();
          // construct wfs
-         bipart_ciwfs<Tm> wfs(qkind::cNK::isym, bpos, space, vs, lspace, rspace);
+         bipart_ciwfs<Tm> wfs(qkind::qNK::isym, bpos, space, vs, lspace, rspace);
 
          // 2. form dm for each qr
          int nroots = vs.cols();
@@ -426,7 +425,7 @@ namespace ctns{
                << lspace.get_dimAll() << "," << rspace.get_dimAll() 
                << " dimBc=" << dimBc << " popBc=" << popBc << " SvN=" << SvN << std::endl; 
             auto t1 = tools::get_time();
-            tools::timing("ctns::right_projection<cNK>", t0, t1);
+            tools::timing("ctns::right_projection<qNK>", t0, t1);
          }
       }
 

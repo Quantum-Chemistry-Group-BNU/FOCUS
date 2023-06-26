@@ -8,9 +8,8 @@ namespace ctns{
 
    // rwfuns_to_cpsi: generate initial guess for 
    // the initial sweep optimization at p=(1,0): cRRRR => LCRR (L=Id)
-   template <typename Km>
-      void sweep_init(comb<Km>& icomb, const int nroots){
-         using Tm = typename Km::dtype;
+   template <typename Qm, typename Tm>
+      void sweep_init(comb<Qm,Tm>& icomb, const int nroots){
          std::cout << "\nctns::sweep_init: nroots=" << nroots << std::endl;
          if(icomb.get_nroots() < nroots){
             std::cout << "dim(psi0)=" << icomb.get_nroots() << " nroots=" << nroots << std::endl;
@@ -31,7 +30,7 @@ namespace ctns{
             //    /|\       ->  n0-<-*->-r0
             // q->-*->-r0            |
             //                       q
-            stensor2<typename Km::dtype> cwf(sym_state, site0.info.qmid, site0.info.qcol, dir_WF2);
+            stensor2<Tm> cwf(sym_state, site0.info.qmid, site0.info.qcol, dir_WF2);
             for(int br=0; br<cwf.rows(); br++){
                for(int bc=0; bc<cwf.cols(); bc++){
                   auto blk = cwf(br,bc);
@@ -49,17 +48,16 @@ namespace ctns{
             // cwf(n0,r0)*site1(r0,r1,n1) = psi(n0,r1,n1)
             icomb.cpsi[iroot] = contract_qt3_qt2("l",site1,cwf);
          } // iroot
-         site0 = get_left_bsite<Tm>(Km::isym); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
+         site0 = get_left_bsite<Tm>(Qm::isym); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
          icomb.display_size();
       }
 
    // cpsi1_to_rwfuns: generate right canonical form (RCF) for later usage: LCRR => cRRRR
-   template <typename Km>
-      void sweep_final(comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void sweep_final(comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const std::string scratch,
             const int isweep){
-         using Tm = typename Km::dtype;
          auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(isweep)+".info";
          std::cout << "\nctns::sweep_final: convert into RCF & save into "
             << rcanon_file << std::endl;
@@ -145,7 +143,7 @@ namespace ctns{
             for(int iroot=0; iroot<nroots; iroot++){
                auto cwf = icomb.cpsi[iroot].merge_cr().dot(rot.H()); // <-W[1,alpha]->
                // change the carrier of sym_state from center to left
-               stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, dir_RWF);
+               stensor2<Tm> rwfun(qsym(Qm::isym), qrow, qcol, dir_RWF);
                for(int ic=0; ic<qcol.get_dim(0); ic++){
                   rwfun(0,0)(0,ic) = cwf(0,0)(0,ic);
                }

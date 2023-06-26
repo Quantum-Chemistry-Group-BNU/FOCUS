@@ -5,10 +5,9 @@ namespace ctns{
 
    // Sampling CTNS to get {|det>,coeff(det)=<det|Psi[i]>} 
    // In case that CTNS is unnormalized, p(det) is also unnormalized. 
-   template <typename Km>
-      std::pair<fock::onstate,typename Km::dtype> mps_random(const mps<Km>& imps, 
+   template <typename Qm, typename Tm>
+      std::pair<fock::onstate,Tm> mps_random(const mps<Qm,Tm>& imps, 
             const int iroot, const bool debug=false){
-         using Tm = typename Km::dtype; 
          if(debug) std::cout << "\nctns::mps_random iroot=" << iroot << std::endl; 
          fock::onstate state(2*imps.nphysical);
          // initialize boundary wf for i-th state
@@ -21,7 +20,7 @@ namespace ctns{
             std::vector<stensor2<Tm>> qt2n(4);
             std::vector<double> weights(4);
             for(int idx=0; idx<4; idx++){
-               qt2n[idx] = qt3.fix_mid( idx2mdx(Km::isym, idx) );
+               qt2n[idx] = qt3.fix_mid( idx2mdx(Qm::isym, idx) );
                // \sum_a |psi[n,a]|^2
                auto psi2 = qt2n[idx].dot(qt2n[idx].H()); 
                weights[idx] = std::real(psi2(0,0)(0,0));
@@ -47,8 +46,8 @@ namespace ctns{
 
    // compute diagonal entropy via sampling:
    // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
-   template <typename Km>
-      double mps_sdiag_sample(const mps<Km>& imps,
+   template <typename Qm, typename Tm>
+      double mps_sdiag_sample(const mps<Qm,Tm>& imps,
             const int iroot,
             const int nsample,  
             const int nprt, // no. of largest states to be printed
@@ -123,9 +122,8 @@ namespace ctns{
          return Sd;
       }
 
-   template <typename Km>
+   template <typename Qm, typename Tm>
       void mps_sdiag(const input::schedule& schd){
-         using Tm = typename Km::dtype;
          std::cout << "\nctns::mps_sdiag" << std::endl;
          topology topo;
          topo.read(schd.post.topology_file);
@@ -133,7 +131,7 @@ namespace ctns{
          int nket = schd.post.ket.size();
          for(int j=0; j<nket; j++){
             std::cout << "\n### jket=" << j << " ###" << std::endl;
-            mps<Km> kmps;
+            mps<Qm,Tm> kmps;
             auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j])+".info"; 
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;

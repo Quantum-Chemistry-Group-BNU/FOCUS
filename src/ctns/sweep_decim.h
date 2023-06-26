@@ -7,21 +7,20 @@ namespace ctns{
 
    // generate renormalized basis from wfs2[row,col] for row
    // if dcut=-1, no truncation is performed except for sig2 < thresh_sig2
-   template <typename Km>
-      void decimation_row(const comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void decimation_row(const comb<Qm,Tm>& icomb,
             const qbond& qs1,
             const qbond& qs2,
             const bool iftrunc,
             const int dcut,
             const double rdm_svd,
             const int alg_decim,
-            const std::vector<stensor2<typename Km::dtype>>& wfs2,
-            stensor2<typename Km::dtype>& rot,
+            const std::vector<stensor2<Tm>>& wfs2,
+            stensor2<Tm>& rot,
             double& dwt,
             int& deff,
             const std::string fname,
             const bool debug){
-         using Tm = typename Km::dtype;
          int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
@@ -137,7 +136,7 @@ namespace ctns{
       }
 
    template <>
-      inline void decimation_row(const comb<qkind::cNK>& icomb,
+      inline void decimation_row(const comb<qkind::qNK,std::complex<double>>& icomb,
             const qbond& qs1,
             const qbond& qs2,
             const bool iftrunc,

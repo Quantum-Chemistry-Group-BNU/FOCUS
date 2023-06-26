@@ -17,14 +17,14 @@ extern const bool debug_init;
 namespace ctns{
 
    // initialize RCF from SCI wavefunctions
-   template <typename Km>
-      void rcanon_init(comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void rcanon_init(comb<Qm,Tm>& icomb,
             const fock::onspace& space,
-            const linalg::matrix<typename Km::dtype>& vs,
+            const linalg::matrix<Tm>& vs,
             const double rdm_svd,
             const double thresh_proj,
             const double thresh_ortho){
-         std::cout << "\nctns::rcanon_init qkind=" << qkind::get_name<Km>() << std::endl;
+         std::cout << "\nctns::rcanon_init qkind=" << qkind::get_name<Qm>() << std::endl;
          auto t0 = tools::get_time();
 
          // 1. compute renormalized bases {|r>} from SCI wavefunctions
@@ -44,13 +44,12 @@ namespace ctns{
       }
 
    // compute renormalized bases {|r>} from SCI wavefunctions 
-   template <typename Km>
-      void init_rbases(comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void init_rbases(comb<Qm,Tm>& icomb,
             const fock::onspace& space,
-            const linalg::matrix<typename Km::dtype>& vs,
+            const linalg::matrix<Tm>& vs,
             const double rdm_svd,
             const double thresh_proj){
-         using Tm = typename Km::dtype;
          std::cout << "\nctns::init_rbases" << std::scientific << std::setprecision(3) 
             << " rdm_svd=" << rdm_svd
             << " thresh_proj=" << thresh_proj 
@@ -77,7 +76,7 @@ namespace ctns{
             // for boundary site, we simply choose to use identity
             if(node.type == 0 && p != std::make_pair(0,0)){
 
-               rbasis = get_rbasis_phys<Tm>(Km::isym);
+               rbasis = get_rbasis_phys<Tm>(Qm::isym);
 
                // Generate {|r>} at the internal nodes
             }else{
@@ -94,7 +93,7 @@ namespace ctns{
                fock::transform_coeff(space, vs, order, space2, vs2); 
 
                // 3. bipartition of space and compute renormalized states [time-consuming part!]
-               right_projection<Km>(rbasis, 2*bpos, space2, vs2, 
+               right_projection<Qm,Tm>(rbasis, 2*bpos, space2, vs2, 
                      thresh_proj, rdm_svd, debug_init);
 
             } // node type
@@ -128,11 +127,10 @@ namespace ctns{
       }
 
    // build site tensor from {|r>} bases
-   template <typename Km>
-      void init_rsites(comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void init_rsites(comb<Qm,Tm>& icomb,
             const double thresh_ortho){
-         using Tm = typename Km::dtype;
-         std::cout << "\nctns::init_rsites qkind=" << qkind::get_name<Km>() 
+         std::cout << "\nctns::init_rsites qkind=" << qkind::get_name<Qm>() 
             << " thresh_ortho=" << thresh_ortho
             << std::endl;
          auto t0 = tools::get_time();
@@ -152,7 +150,7 @@ namespace ctns{
             // type=0: end or leaves
             if(node.type == 0 && p != std::make_pair(0,0)){
 
-               icomb.sites[idx] = get_right_bsite<Tm>(Km::isym);
+               icomb.sites[idx] = get_right_bsite<Tm>(Qm::isym);
 
             // physical/internal on backbone/branch
             }else{
@@ -169,12 +167,12 @@ namespace ctns{
                //                   |
                const auto& rbasis_l = icomb.rbases[idx];
                const auto& rbasis_c = (node.type==3)? icomb.rbases[topo.rindex.at(node.center)] : \
-                                      get_rbasis_phys<Tm>(Km::isym); 
+                                      get_rbasis_phys<Tm>(Qm::isym); 
                const auto& rbasis_r = icomb.rbases[topo.rindex.at(node.right)];
                auto qrow = get_qbond(rbasis_l); 
                auto qcol = get_qbond(rbasis_r);
                auto qmid = get_qbond(rbasis_c);
-               stensor3<Tm> qt3(qsym(Km::isym), qrow, qcol, qmid);
+               stensor3<Tm> qt3(qsym(Qm::isym), qrow, qcol, qmid);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) collapse(3)
 #endif
@@ -260,22 +258,21 @@ namespace ctns{
       }
 
    // compute wave function at the start for right canonical form
-   template <typename Km>
-      void init_rwfuns(comb<Km>& icomb,
+   template <typename Qm, typename Tm>
+      void init_rwfuns(comb<Qm,Tm>& icomb,
             const fock::onspace& space,
-            const linalg::matrix<typename Km::dtype>& vs,
+            const linalg::matrix<Tm>& vs,
             const double thresh_ortho){
-         using Tm = typename Km::dtype;
-         std::cout << "\nctns::init_rwfuns qkind=" << qkind::get_name<Km>() 
+         std::cout << "\nctns::init_rwfuns qkind=" << qkind::get_name<Qm>() 
             << " thresh_ortho=" << thresh_ortho 
             << std::endl;
          auto t0 = tools::get_time();
 
          // determine symmetry of rwfuns
-         auto sym_state = get_qsym_onstate(Km::isym, space[0]);
+         auto sym_state = get_qsym_onstate(Qm::isym, space[0]);
          // check symmetry: we assume all the dets are of the same symmetry!
          for(int i=0; i<space.size(); i++){
-            auto sym = get_qsym_onstate(Km::isym, space[i]);
+            auto sym = get_qsym_onstate(Qm::isym, space[i]);
             if(sym != sym_state){
                std::cout << "sym_state=" << sym_state 
                   << " det=" << space[i] << " sym=" << sym
@@ -318,7 +315,7 @@ namespace ctns{
                wf(ir,0) = vs2(i,iroot);
             } // i
             // rwfuns[l,r] for RCF: ->-*->- 
-            stensor2<Tm> rwfun(qsym(Km::isym), qrow, qcol, {0,1}); 
+            stensor2<Tm> rwfun(qsym(Qm::isym), qrow, qcol, {0,1}); 
             xgemm("T","N",1.0,wf,rbasis[0].coeff.conj(),0.0,rwfun(0,0));
             icomb.rwfuns[iroot] = std::move(rwfun);
          } // iroot
