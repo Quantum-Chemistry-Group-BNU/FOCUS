@@ -1,10 +1,10 @@
 
-machine = archlinux #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
-USE_OPENMP = no
+USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
 USE_GPU = no
@@ -17,7 +17,7 @@ INSTALL_CI = yes
 INSTALL_CTNS = yes
 INSTALL_POST = yes
 INSTALL_VMC = yes
-INSTALL_PY = yes
+INSTALL_PY = no #yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
@@ -100,7 +100,7 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
  
 target = depend core ci ctns vmc
 ifeq ($(strip $(INSTALL_PY)), yes)
-   PYBIND = $(shell python3 -m pybind11 --includes)
+   PYBIND = $(shell python -m pybind11 --includes)
    FLAGS += $(PYBIND)
    FLAGS += -fPIC
    target += python 
@@ -263,40 +263,39 @@ LIB_DIR = ./lib
 # all dependence
 SRC_DIR_CORE = ./$(SRC)/core
 SRC_DIR_IO   = ./$(SRC)/io
-
-ifeq ($(strip $(INSTALL_CI)), yes)
-   SRC_DIR_CI   = ./$(SRC)/ci
-endif
-
-ifeq ($(strip $(INSTALL_CTNS)), yes)
-   SRC_DIR_QT   = ./$(SRC)/qtensor
-   SRC_DIR_CTNS = ./$(SRC)/ctns
-endif
-
-ifeq ($(strip $(INSTALL_POST)), yes)
-   SRC_DIR_POST = ./$(SRC)/post
-endif
-
-ifeq ($(strip $(INSTALL_VMC)), yes)
-   SRC_DIR_VMC  = ./$(SRC)/vmc
-endif
-
-ifeq ($(strip $(INSTALL_PY)), yes)
-   SRC_DIR_PY = ./$(SRC)/python
-endif
-
 SRC_DIR_EXPT = ./$(SRC)/experiment
 
 INCLUDE_DIR = -I./src \
 				  -I$(SRC_DIR_CORE) \
      	        -I$(SRC_DIR_IO) \
-     	        -I$(SRC_DIR_CI) \
-     	        -I$(SRC_DIR_QT) \
-     	        -I$(SRC_DIR_CTNS) \
-     	        -I$(SRC_DIR_POST) \
-     	        -I$(SRC_DIR_VMC) \
-     	        -I$(SRC_DIR_EXPT) \
-              -I$(SRC_DIR_PY)
+              -I$(SRC_DIR_EXPT)
+
+ifeq ($(strip $(INSTALL_CI)), yes)
+   SRC_DIR_CI   = ./$(SRC)/ci
+   INCLUDE_DIR += -I$(SRC_DIR_CI)
+endif
+
+ifeq ($(strip $(INSTALL_CTNS)), yes)
+   SRC_DIR_QT   = ./$(SRC)/qtensor
+   SRC_DIR_CTNS = ./$(SRC)/ctns
+   INCLUDE_DIR += -I$(SRC_DIR_QT)
+   INCLUDE_DIR += -I$(SRC_DIR_CTNS)
+endif
+
+ifeq ($(strip $(INSTALL_POST)), yes)
+   SRC_DIR_POST = ./$(SRC)/post
+   INCLUDE_DIR += -I$(SRC_DIR_POST)
+endif
+
+ifeq ($(strip $(INSTALL_VMC)), yes)
+   SRC_DIR_VMC  = ./$(SRC)/vmc
+   INCLUDE_DIR += -I$(SRC_DIR_VMC)
+endif
+
+ifeq ($(strip $(INSTALL_PY)), yes)
+   SRC_DIR_PY = ./$(SRC)/python
+   INCLUDE_DIR += -I$(SRC_DIR_PY)
+endif
 
 ifeq ($(strip $(USE_GPU)), yes)
    SRC_DIR_GPU = ./$(SRC)/gpu
@@ -383,7 +382,7 @@ endif
 
 
 ifeq ($(strip $(INSTALL_PY)), yes)
-python: $(LIB_DIR)/libbindpy.a $(LIB_DIR)/qubic$(shell python3-config --extension-suffix)
+python: $(LIB_DIR)/libbindpy.a $(LIB_DIR)/qubic.so
 else
 python:	
 endif
@@ -512,7 +511,7 @@ $(BIN_DIR)/vmc.x: $(OBJ_DIR)/vmc.o $(LIB_DIR)/libvmc.a
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/vmc.o $(LFLAGS) -L$(LIB_DIR) -lci
 
 # bind python
-$(LIB_DIR)/qubic$(shell python3-config --extension-suffix): $(OBJ_DIR)/bind_python.o $(LIB_DIR)/libbindpy.a
+$(LIB_DIR)/qubic.so: $(OBJ_DIR)/bind_python.o $(LIB_DIR)/libbindpy.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/bind_python.o -shared $(LFLAGS) -L$(LIB_DIR) -lbindpy
 
