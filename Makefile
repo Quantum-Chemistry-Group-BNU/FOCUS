@@ -1,14 +1,14 @@
 
-machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = archlinux #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no
+DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
-USE_OPENMP = yes
+USE_OPENMP = no
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
+USE_GPU = no
+USE_NCCL = no
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -17,6 +17,7 @@ INSTALL_CI = yes
 INSTALL_CTNS = yes
 INSTALL_POST = yes
 INSTALL_VMC = yes
+INSTALL_PY = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
@@ -86,9 +87,25 @@ else ifeq ($(strip $(machine)), mac)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
+
+else ifeq ($(strip $(machine)), archlinux)
+   MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
+   BOOST = /usr
+   LFLAGS = -lboost_timer -lboost_chrono -lboost_serialization -lboost_system -lboost_iostreams
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi
+   endif
 endif
 FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include 
  
+target = depend core ci ctns vmc
+ifeq ($(strip $(INSTALL_PY)), yes)
+   PYBIND = $(shell python3 -m pybind11 --includes)
+   FLAGS += $(PYBIND)
+   FLAGS += -fPIC
+   target += python 
+endif
+
 ifeq ($(strip $(USE_GCC)),yes)
    # GCC compiler
    ifeq ($(strip $(DEBUG)),yes)
@@ -264,6 +281,10 @@ ifeq ($(strip $(INSTALL_VMC)), yes)
    SRC_DIR_VMC  = ./$(SRC)/vmc
 endif
 
+ifeq ($(strip $(INSTALL_PY)), yes)
+   SRC_DIR_PY = ./$(SRC)/python
+endif
+
 SRC_DIR_EXPT = ./$(SRC)/experiment
 
 INCLUDE_DIR = -I./src \
@@ -274,7 +295,8 @@ INCLUDE_DIR = -I./src \
      	        -I$(SRC_DIR_CTNS) \
      	        -I$(SRC_DIR_POST) \
      	        -I$(SRC_DIR_VMC) \
-     	        -I$(SRC_DIR_EXPT) 
+     	        -I$(SRC_DIR_EXPT) \
+              -I$(SRC_DIR_PY)
 
 ifeq ($(strip $(USE_GPU)), yes)
    SRC_DIR_GPU = ./$(SRC)/gpu
@@ -289,7 +311,8 @@ SRC_DEP = $(wildcard $(SRC_DIR_CORE)/*.cpp \
 	  	     $(SRC_DIR_POST)/*.cpp \
 	  	     $(SRC_DIR_VMC)/*.cpp \
 	  	     $(SRC_DIR_EXPT)/*.cpp \
-	  	     $(SRC_DIR_GPU)/*.cpp)
+	  	     $(SRC_DIR_GPU)/*.cpp \
+           $(SRC_DIR_PY)/*.cpp)
 
 OBJ_DEP = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_DEP}))
 
@@ -315,6 +338,9 @@ OBJ_POST = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_POST}))
 SRC_VMC = $(wildcard $(SRC_DIR_VMC)/*.cpp)
 OBJ_VMC = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_VMC}))
 
+SRC_PY = $(wildcard $(SRC_DIR_PY)/*.cpp)
+OBJ_PY = $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(notdir ${SRC_PY}))
+
 # all the files with main functions
 SRC_ALL = $(SRC_DEP) 
 SRC_ALL += $(wildcard $(SRC)/drivers/*.cpp \
@@ -322,7 +348,7 @@ SRC_ALL += $(wildcard $(SRC)/drivers/*.cpp \
 			  $(SRC)/drivers/tests/*.cpp)
 OBJ_ALL = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir ${SRC_ALL}))
 
-all: depend core ci ctns vmc
+all: $(target) 
 
 core: $(LIB_DIR)/libcore.a \
 	$(LIB_DIR)/libio.a \
@@ -355,9 +381,16 @@ else
 vmc:
 endif
 
+
+ifeq ($(strip $(INSTALL_PY)), yes)
+python: $(LIB_DIR)/libbindpy.a $(LIB_DIR)/qubic$(shell python3-config --extension-suffix)
+else
+python:	
+endif
+
 # version
 GIT_HASH=`git rev-parse HEAD`
-FLAGS += -DGIT_HASH="\"$(GIT_HASH)\"" 
+FLAGS += -DGIT_HASH="\"$(GIT_HASH)\""  # print git log
 
 depend:
 	echo "Check compilation options:"; \
@@ -403,6 +436,10 @@ $(LIB_DIR)/libpost.a: $(OBJ_POST) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO) $(OBJ_CTNS)
 	ar crv $@ $^
 
 $(LIB_DIR)/libvmc.a: $(OBJ_VMC) $(OBJ_CI) $(OBJ_CORE) $(OBJ_IO)
+	@echo "=== COMPLIE $@"
+	ar crv $@ $^
+
+$(LIB_DIR)/libbindpy.a: $(OBJ_PY) $(OBJ_CORE) $(OBJ_CI) $(OBJ_POST) $(OBJ_CTNS) $(OBJ_IO)
 	@echo "=== COMPLIE $@"
 	ar crv $@ $^
 
@@ -473,6 +510,11 @@ $(BIN_DIR)/post.x: $(OBJ_DIR)/post.o $(LIB_DIR)/libpost.a
 $(BIN_DIR)/vmc.x: $(OBJ_DIR)/vmc.o $(LIB_DIR)/libvmc.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/vmc.o $(LFLAGS) -L$(LIB_DIR) -lci
+
+# bind python
+$(LIB_DIR)/qubic$(shell python3-config --extension-suffix): $(OBJ_DIR)/bind_python.o $(LIB_DIR)/libbindpy.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/bind_python.o -shared $(LFLAGS) -L$(LIB_DIR) -lbindpy
 
 # Needs to be here! 
 $(OBJ_ALL):

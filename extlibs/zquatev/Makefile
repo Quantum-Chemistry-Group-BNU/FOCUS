@@ -1,6 +1,6 @@
 
-machine = dell2 # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
-USE_MKL = yes
+machine = archlinux # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+USE_MKL = no
 USE_ILP64 = yes # by default
 
 INCLUDE = -I.
@@ -47,6 +47,11 @@ else ifeq ($(strip $(machine)), mac)
    CXX = g++
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
    MATHLIB = /opt/anaconda3/envs/work/lib
+   LIBS += -lm
+else ifeq ($(strip $(machine)), archlinux)
+   CXX = g++
+   CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
    LIBS += -lm
 endif
 

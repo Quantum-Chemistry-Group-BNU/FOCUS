@@ -1,5 +1,14 @@
 #ifndef MPS_H
 #define MPS_H
+#include "../core/onspace.h"
+#include "../core/serialization.h"
+#include "../ctns/ctns_topo.h"
+#include "../io/input.h"
+#include "../qtensor/qtensor.h"
+#include "../core/onspace.h"
+#include "../ci/ci_header.h"
+#include "../core/special.h"
+#include <ios>
 
 namespace ctns{
 
@@ -89,7 +98,7 @@ namespace ctns{
                      << " dim=" << fci_space.size()
                      << std::endl; 
                }else{
-                  std::cout << "error: isym is not supported yet! isym=" << isym << endl;
+                  std::cout << "error: isym is not supported yet! isym=" << isym << std::endl;
                   exit(1); 
                }
                return fci_space;

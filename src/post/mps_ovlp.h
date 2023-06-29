@@ -1,5 +1,6 @@
 #ifndef MPS_OVLP_H
 #define MPS_OVLP_H
+#include "mps.h"
 
 namespace ctns{
 

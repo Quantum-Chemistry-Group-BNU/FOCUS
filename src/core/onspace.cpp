@@ -53,3 +53,12 @@ onspace fock::get_fci_space(const int ks, const int na, const int nb){
    }
    return space;
 }
+
+onspace fock::convert_space(const unsigned long *bra, const int sorb, const int n){
+   onspace space;
+   int _len = (sorb-1)/64+1;
+   for(size_t i = 0; i < n; i++){
+      space.push_back(onstate(&bra[i*_len], sorb));
+   }
+   return space;
+}

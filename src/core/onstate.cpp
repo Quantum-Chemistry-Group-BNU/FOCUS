@@ -30,6 +30,23 @@ onstate::onstate(const onstate& state_a, const onstate& state_b){
    }
 }
 
+// vector<unsigned long> constructors
+onstate::onstate(const std::vector<unsigned long> &array, const int n){
+   _size = n;
+   _len = (n-1)/64+1;
+   _repr = new unsigned long[_len];
+   std::copy_n(&array[0], _len, _repr);
+
+};
+
+// unsigned long array constructors
+onstate::onstate(const unsigned long *array, const int n){
+   _size = n;
+   _len = (n-1)/64+1;
+   _repr = new unsigned long[_len];
+   std::copy_n(array, _len, _repr);
+};
+
 // copy constructor
 onstate::onstate(const onstate& state){
    _size = state._size;

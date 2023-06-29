@@ -108,6 +108,11 @@ namespace fock{
          onstate(const std::string& on); 
          // merge two states with different spins - neglect phases
          onstate(const onstate& state_a, const onstate& state_b);
+         // vector<unsigned long> constructors
+         onstate(const std::vector<unsigned long> &array, const int n);
+
+         // unsigned long array constructors
+         onstate(const unsigned long *array, const int n);
 
          // join two states
          onstate join(const onstate& state) const{
@@ -453,6 +458,11 @@ namespace fock{
                zvec[i] = (*this)[i]? 1.0 : -1.0;
             }
             return zvec;
+         }
+
+         // get _repr 
+         auto get_data() const{
+            return _repr;
          }
 
          // onspace_compact in onspace.h for dump
