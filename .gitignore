@@ -23,3 +23,5 @@ src.tar
 .*.swo
 .*.swp
 tmp
+src/python/backup/
+.vscode/settings.json

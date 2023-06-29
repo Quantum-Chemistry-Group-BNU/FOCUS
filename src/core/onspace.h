@@ -47,6 +47,9 @@ namespace fock{
    // k - number of spatial orbitals 
    onspace get_fci_space(const int ks, const int na, const int nb);
 
+   // from unsigned long array convert space, nth onstate
+   onspace convert_space(const unsigned long *bra, const int sorb, const int n);
+
    // --- Permute underlying basis (in CTNS) ---
    // transform space and coefficient upon permutation
    template <typename Tm>

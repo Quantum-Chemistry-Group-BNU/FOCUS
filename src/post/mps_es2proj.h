@@ -1,5 +1,6 @@
 #ifndef MPS_ES2PROJ_H
 #define MPS_ES2PROJ_H
+#include "mps.h"
 
 namespace ctns{
 

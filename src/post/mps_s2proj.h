@@ -3,6 +3,8 @@
 
 #include "core/special.h"
 #include "mps_cicoeff.h"
+#include "mps.h"
+
 
 namespace ctns{
 
@@ -214,7 +216,7 @@ namespace ctns{
             int k = kmps.nphysical;
             int ne = sym.ne();
             int tm = sym.tm();
-            int na_max = min(ne,k);
+            int na_max = std::min(ne,k);
             int nb_min = ne - na_max;
             int ts_max = na_max - nb_min;
             int ts_min = ne%2;

@@ -1,5 +1,6 @@
 #ifndef MPS_EXPECT_H
 #define MPS_EXPECT_H
+#include "mps.h"
 
 namespace ctns{
 

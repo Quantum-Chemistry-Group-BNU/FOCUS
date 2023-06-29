@@ -1,8 +1,10 @@
 #ifndef MPS_CICOEFF_H
 #define MPS_CICOEFF_H
+#include "mps.h"
+#include "../core/analysis.h"
+
 
 namespace ctns{
-
    // Algorithm 2: <n|MPS> by contraction
    template <typename Qm, typename Tm>
       Tm mps_CIcoeff(const mps<Qm,Tm>& imps,

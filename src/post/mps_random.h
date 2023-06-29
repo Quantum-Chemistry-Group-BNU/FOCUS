@@ -1,5 +1,6 @@
 #ifndef MPS_RANDOM_H
 #define MPS_RANDOM_H
+#include "mps.h"
 
 namespace ctns{
 
