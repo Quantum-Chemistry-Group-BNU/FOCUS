@@ -92,11 +92,11 @@ int main(int argc, char *argv[]){
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    io::create_scratch(schd.scratch, (rank == 0));
 
-//#ifdef GPU
-//   if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
-//      gpu_init(rank);
-//   }
-//#endif
+#ifdef GPU
+   if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
+      gpu_init(rank);
+   }
+#endif
 
    if(schd.post.qkind == "rN"){
       POST<ctns::qkind::qN,double>(schd);
@@ -112,11 +112,11 @@ int main(int argc, char *argv[]){
       tools::exit("error: no such qkind for POST!");
    } // qkind
 
-//#ifdef GPU
-//   if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
-//      gpu_finalize();
-//   }
-//#endif
+#ifdef GPU
+   if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
+      gpu_finalize();
+   }
+#endif
 
    // cleanup 
    if(rank == 0){

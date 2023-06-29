@@ -172,9 +172,10 @@ namespace ctns{
             const int ne,
             const int tm,
             const int ts){
+         auto t0 = tools::get_time();
          std::vector<double> xts, wts;
          fock::gen_s2quad(imps.nphysical, ne, ts/2.0, tm/2.0, xts, wts);
-         double ps = 0.0; 
+         double ps = 0.0;
          for(int i=0; i<xts.size(); i++){
             // apply |rmps> = exp(-i*beta*Sy)|imps>
             auto rmps = mps_ryrotation(imps, xts[i]);
@@ -182,6 +183,8 @@ namespace ctns{
             Tm ova = get_Smat(imps, rmps)(iroot, iroot);
             ps += wts[i]*std::real(ova);
          }
+         auto t1 = tools::get_time();
+         tools::timing("mps_expect_s2proj", t0, t1);
          return ps;
       }
 
@@ -205,6 +208,7 @@ namespace ctns{
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;
             kmps.load(kmps_file);
+            kmps.print();
             // compute expectation value via sampling
             auto sym = kmps.get_sym_state();
             if(sym.isym() != 2){
@@ -229,7 +233,7 @@ namespace ctns{
                   ps = mps_expect_s2proj(kmps_low, schd.post.iroot, ne, tm, ts);
                }
                sum += ps;
-               std::cout << " ts=" << ts << " ps=" << ps << " sum=" << sum << std::endl;
+               std::cout << " ts=" << ts << " ps=" << std::setprecision(8) << ps << " sum=" << sum << std::endl;
             } // ts
             std::cout << "\nfinal sum=" << sum << " 1-sum=" << (1.0-sum) << std::endl;
             if(abs(1.0-sum)>1.e-10){

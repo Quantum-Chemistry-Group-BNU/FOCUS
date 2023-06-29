@@ -369,13 +369,16 @@ KNOWN PROBLEMS
       - <Psi|Ps|Psi> (lower sym: xNSz->xN => IMPORTANT) [DONE@20230624] 
       - E[P|psi>] = <Psi|HPs|Psi>/<Psi|Ps|Psi> [DONE@20230625]
 
+   - error for <Psi|Ps|Psi> at Smax?
+
    - optimization for VMC energy
+      - faster <n|Psi> functions
  
    - parallelization:
       - parallel random number generator (PRNG)
       - MPI+OpenMP
       - GPU?
 
-   - VMC algorithm: fast <n|Psi>
+   - VMC algorithm:
       - RBM with libtorch?
       - RBM on top of MPS?
