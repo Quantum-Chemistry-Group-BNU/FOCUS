@@ -1,5 +1,5 @@
 
-machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -7,8 +7,8 @@ USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = no
-USE_NCCL = no
+USE_GPU = yes
+USE_NCCL = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -101,7 +101,7 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
 target = depend core ci ctns vmc
 ifeq ($(strip $(INSTALL_PY)), yes)
    PYBIND = $(shell python -m pybind11 --includes)
-   FLAGS += $(PYBIND)
+   FLAGS += $(PYBIND) -DPYTHON_BINDING
    FLAGS += -fPIC
    target += python 
 endif
@@ -140,15 +140,17 @@ else
 endif
 
 ifeq ($(strip $(USE_MKL)),yes)
-# OpenMP & MKL
+   # OpenMP & MKL
    ifeq ($(strip $(USE_OPENMP)),no)
       ifeq ($(strip $(USE_ILP64)), no)
       # serial version of MKL
-      MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
+      FLAGS += -DUSE_MKL
       else
-      MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -DMKL_ILP64 -m64
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl 
+      FLAGS += -DUSE_MKL -DMKL_ILP64 -m64
       endif
    else
    # parallel version of MKL
@@ -156,12 +158,13 @@ ifeq ($(strip $(USE_MKL)),yes)
       ifeq ($(strip $(USE_ILP64)), no)
       MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
              -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl 
+      FLAGS += -DUSE_MKL
       else
 	   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
       MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl -DMKL_ILP64 -m64
+             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl 
+      FLAGS += -DUSE_MKL -DMKL_ILP64 -m64
       endif
-
     	# special treatment for my mac machine
       ifeq ($(strip $(machine)), mac)
          FLAGS += -fopenmp 
@@ -177,8 +180,7 @@ ifeq ($(strip $(USE_MKL)),yes)
       endif
    endif
 else
-   # parallel version of MKL
-   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
+   # openblas/kblas
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
           -lopenblas -lpthread -lm -ldl -lrt 
           #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
@@ -524,4 +526,5 @@ clean:
 	rm -f obj/*.o
 	rm -f bin/*.x
 	rm -f lib/*.a
+	rm -f lib/*.so
 	rm -f *.depend

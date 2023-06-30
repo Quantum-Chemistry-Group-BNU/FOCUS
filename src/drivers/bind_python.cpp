@@ -1,3 +1,5 @@
+#ifdef PYTHON_BINDING
+
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -19,3 +21,5 @@ PYBIND11_MODULE(qubic, m) {
   auto m_mps = m.def_submodule("post", "ctns post mps module");
   PyMps(m_mps);
 }
+
+#endif
