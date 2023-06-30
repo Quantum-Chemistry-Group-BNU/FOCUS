@@ -1,5 +1,5 @@
 
-machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -7,8 +7,8 @@ USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
+USE_GPU = no #yes
+USE_NCCL = no #yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -17,7 +17,7 @@ INSTALL_CI = yes
 INSTALL_CTNS = yes
 INSTALL_POST = yes
 INSTALL_VMC = yes
-INSTALL_PY = no #yes
+INSTALL_PY = yes
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
@@ -100,7 +100,10 @@ FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include
  
 target = depend core ci ctns vmc
 ifeq ($(strip $(INSTALL_PY)), yes)
-   PYBIND = $(shell python -m pybind11 --includes)
+   ifeq ($(strip $(machine)), mac)
+      PYBIND = -undefined dynamic_lookup 
+   endif
+   PYBIND += $(shell python3 -m pybind11 --includes)
    FLAGS += $(PYBIND) -DPYTHON_BINDING
    FLAGS += -fPIC
    target += python 
