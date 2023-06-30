@@ -43,5 +43,10 @@ int tests::test_special(){
       std::cout << " x,w=" << xts[i] << "," << wts[i] << std::endl;
    }
 
+   double x = 2.771986;
+   double s = 5;
+   double ms = 0;
+   cout << "d(5,0,0,x)=" << smalld(s,ms,ms,x) << endl;
+
    return 0;
 }

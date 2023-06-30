@@ -38,13 +38,14 @@ namespace fock{
       thresh = -0.1;
       for(int s=0; s<=int(2*j+0.1); s++){
          if(j+ms-s>thresh && mp-ms+s>thresh && j-mp-s>thresh){
-            double sgn = pow(-1.0,mp-ms+s);
-            double a1 = 1.0/gamma(j+ms-s+1);
-            double a2 = 1.0/gamma(s+1);
-            double a3 = 1.0/gamma(mp-ms+s+1);
-            double a4 = 1.0/gamma(j-mp-s+1);
-            double cs = pow(cb,2*j+ms-mp-2*s);
-            double ss = pow(sb,mp-ms+2*s);
+            double sval = s;
+            double sgn = pow(-1.0,mp-ms+sval);
+            double a1 = 1.0/gamma(j+ms-sval+1.0);
+            double a2 = 1.0/gamma(sval+1.0);
+            double a3 = 1.0/gamma(mp-ms+sval+1.0);
+            double a4 = 1.0/gamma(j-mp-sval+1.0);
+            double cs = pow(cb,2*j+ms-mp-2.0*sval);
+            double ss = pow(sb,mp-ms+2.0*sval);
             double tmp = sgn*a1*a2*a3*a4*cs*ss;
             val += tmp;
          }
@@ -173,6 +174,7 @@ namespace fock{
          const double s, const double sz, 
          std::vector<double>& xts, 
          std::vector<double>& wts){
+      const bool debug = true;
       // https://pubs.acs.org/doi/epdf/10.1021/acs.jctc.7b00270
       int omega = (n<=k)? n : 2*k-n; 
       int ng = ceil( ((omega+2*s)/2.0 + 1)/2 );
@@ -181,6 +183,14 @@ namespace fock{
          xts[i] = acos(xts[i]);
          double fac = smalld(s, sz, sz, xts[i]);
          wts[i] = (s+0.5)*fac*wts[i];
+      }
+      // debug
+      if(debug){
+         std::cout << "fock::gen_s2quad: k,n=" << k << "," << n
+            << " s,sz=" << s << "," << sz << std::endl;
+         std::cout << " no. of gauss-legendre quadrature points=" << ng << std::endl;
+         tools::print_vector(xts, "xts");
+         tools::print_vector(wts, "wts");
       }
    }
 
