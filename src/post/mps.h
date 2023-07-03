@@ -1,5 +1,6 @@
 #ifndef MPS_H
 #define MPS_H
+
 #include "../core/onspace.h"
 #include "../core/serialization.h"
 #include "../ctns/ctns_topo.h"
@@ -8,6 +9,7 @@
 #include "../core/onspace.h"
 #include "../ci/ci_header.h"
 #include "../core/special.h"
+#include "mps_convert.h"
 #include <ios>
 
 namespace ctns{
@@ -31,6 +33,30 @@ namespace ctns{
                }
                load >> rwfuns;
                ifs.close();
+               // debug
+               //this->convert();
+            }
+            // convert
+            std::vector<std::vector<stensor2<Tm>>> convert(){
+               std::vector<std::vector<stensor2<Tm>>> mps2(nphysical);
+               for(int i=0; i<nphysical; i++){
+                  mps2[i].resize(4);
+                  if(i==0){
+                     auto site0 = this->get_site0();
+                     site_convert<Qm>(site0, mps2[i]);
+                  }else{
+                     site_convert<Qm>(sites[i], mps2[i]);
+                  }
+               }
+               // check
+               for(int i=0; i<nphysical; i++){
+                  auto mat = (mps2[i][0].dot(mps2[i][0].H())).to_matrix() 
+                           + (mps2[i][1].dot(mps2[i][1].H())).to_matrix() 
+                           + (mps2[i][2].dot(mps2[i][2].H())).to_matrix()  
+                           + (mps2[i][3].dot(mps2[i][3].H())).to_matrix(); 
+                  mat.print("mat"+std::to_string(i));
+               }
+               return mps2;
             }
             // physical index
             int get_pindex(const int i) const{ return image2[2*i]/2; }
