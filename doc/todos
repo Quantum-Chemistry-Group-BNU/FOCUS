@@ -368,17 +368,13 @@ KNOWN PROBLEMS
       - matrix elements for exp[-i*beta*Sy] [DONE@20230624]
       - <Psi|Ps|Psi> (lower sym: xNSz->xN => IMPORTANT) [DONE@20230624] 
       - E[P|psi>] = <Psi|HPs|Psi>/<Psi|Ps|Psi> [DONE@20230625]
-
-   - error for <Psi|Ps|Psi> at Smax?
-
+      - error for <Psi|Ps|Psi> at Smax? <Psi|Ps|Psi> >= 0 [DONE@20230630]
    - optimization for VMC energy
-      - faster <n|Psi> functions
- 
+      - faster <n|Psi> functions [!!!]
    - parallelization:
       - parallel random number generator (PRNG)
       - MPI+OpenMP
       - GPU?
-
    - VMC algorithm:
       - RBM with libtorch?
       - RBM on top of MPS?

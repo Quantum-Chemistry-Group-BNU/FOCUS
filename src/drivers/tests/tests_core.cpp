@@ -3,6 +3,7 @@
 int main(){
    
    // -- core ---
+   tests::test_special();
    tests::test_tools();
    tests::test_matrix();
    tests::test_onstate();
@@ -11,7 +12,6 @@ int main(){
    tests::test_integral();
    tests::test_hamiltonian();
    tests::test_simpleci();
-   tests::test_special();
 
    return 0;   
 }
