@@ -1,5 +1,6 @@
 #ifndef QNUM_QBOND_H
 #define QNUM_QBOND_H
+#include "qnum_qsym.h"
 
 namespace ctns{
 

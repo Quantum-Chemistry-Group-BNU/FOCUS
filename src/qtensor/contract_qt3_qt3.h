@@ -1,6 +1,8 @@
 #ifndef CONTRACT_QT3_QT3_H
 #define CONTRACT_QT3_QT3_H
 
+#include "stensor2.h"
+#include "stensor3.h"
 namespace ctns{
 
    template <typename Tm>

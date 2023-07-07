@@ -12,26 +12,16 @@
 
 #include "core/onspace.h"
 #include "core/onstate.h"
+#include "post/mps.h"
 #include "post/post_header.h"
+#include "py_utils.h"
+#include "pybind11/cast.h"
+#include "qtensor/qnum_qkind.h"
 #include "qtensor/qtensor.h"
 
 namespace py = pybind11;
 using namespace ctns;
 using onspace = std::vector<fock::onstate>;
-
-// ref: https://github.com/ssciwr/pybind11-numpy-example/ move
-template <typename Sequence>
-inline py::array_t<typename Sequence::value_type> as_pyarray(Sequence &&seq) {
-  auto size = seq.size();
-  auto data = seq.data();
-  std::unique_ptr<Sequence> seq_ptr =
-      std::make_unique<Sequence>(std::move(seq));
-  auto capsule = py::capsule(seq_ptr.get(), [](void *p) {
-    std::unique_ptr<Sequence>(reinterpret_cast<Sequence *>(p));
-  });
-  seq_ptr.release();
-  return py::array(size, data, capsule);
-}
 
 template <typename Qm, typename Tm>
 py::array_t<Tm> nbatch_mps_CIcoeff(const mps<Qm, Tm> &imps, const int iroot,
@@ -108,6 +98,8 @@ void PyMps(py::module &m) {
       .def("load", &mps<qkind::qNSz, double>::load, "load MPS file")
       .def("print", &mps<qkind::qNSz, double>::print)
       .def("get_pindex", &mps<qkind::qNSz, double>::get_pindex)
+      .def("convert", &mps<qkind::qNSz, double>::convert,
+           py::arg("debug") = false)
       .def_static(
           "load_topology",
           [](const std::string ftopo) {

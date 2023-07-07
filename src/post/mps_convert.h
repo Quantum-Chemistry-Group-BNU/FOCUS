@@ -1,6 +1,8 @@
 #ifndef MPS_CONVERT_H
 #define MPS_CONVERT_H
 
+#include "qtensor/qtensor.h"
+
 namespace ctns{
 
    template <typename Qm, typename Tm>

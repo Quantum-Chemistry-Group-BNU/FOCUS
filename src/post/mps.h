@@ -37,7 +37,7 @@ namespace ctns{
                //this->convert();
             }
             // convert
-            std::vector<std::vector<stensor2<Tm>>> convert(){
+            std::vector<std::vector<stensor2<Tm>>> convert(bool debug = false){
                std::vector<std::vector<stensor2<Tm>>> mps2(nphysical);
                for(int i=0; i<nphysical; i++){
                   mps2[i].resize(4);
@@ -49,12 +49,14 @@ namespace ctns{
                   }
                }
                // check
-               for(int i=0; i<nphysical; i++){
-                  auto mat = (mps2[i][0].dot(mps2[i][0].H())).to_matrix() 
-                           + (mps2[i][1].dot(mps2[i][1].H())).to_matrix() 
-                           + (mps2[i][2].dot(mps2[i][2].H())).to_matrix()  
-                           + (mps2[i][3].dot(mps2[i][3].H())).to_matrix(); 
-                  mat.print("mat"+std::to_string(i));
+               if (debug) {
+                  for (int i = 0; i < nphysical; i++) {
+                     auto mat = (mps2[i][0].dot(mps2[i][0].H())).to_matrix() +
+                                (mps2[i][1].dot(mps2[i][1].H())).to_matrix() +
+                                (mps2[i][2].dot(mps2[i][2].H())).to_matrix() +
+                                (mps2[i][3].dot(mps2[i][3].H())).to_matrix();
+                     mat.print("mat" + std::to_string(i));
+                  }
                }
                return mps2;
             }

@@ -3,6 +3,8 @@
 
 #include "../core/serialization.h"
 #include "../core/matrix.h"
+#include "qinfo3.h"
+#include "qnum_qdpt.h"
 
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"

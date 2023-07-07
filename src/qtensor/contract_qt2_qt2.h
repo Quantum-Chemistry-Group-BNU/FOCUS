@@ -1,6 +1,7 @@
 #ifndef CONTRACT_QT2_QT2_H
 #define CONTRACT_QT2_QT2_H
 
+#include "stensor2.h"
 namespace ctns{
 
 // formula: qt2(r,c) = \sum_x qt2a(r,x)*qt2b(x,c) [GEMM]

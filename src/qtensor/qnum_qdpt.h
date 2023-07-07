@@ -3,6 +3,7 @@
 
 #include "qnum_qsym.h"
 #include "../core/tools.h"
+#include "qnum_qbond.h"
 
 namespace ctns{
 

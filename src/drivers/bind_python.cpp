@@ -20,6 +20,11 @@ PYBIND11_MODULE(qubic, m) {
   PyIntegral(m_integral);
   auto m_mps = m.def_submodule("post", "ctns post mps module");
   PyMps(m_mps);
+  auto m_qtensor = m.def_submodule("qtensor", "qtensor module");
+  PyStensor2(m_qtensor);
+  PyQinfo2(m_qtensor);
+  PyQbond(m_qtensor);
+  PyQsym(m_qtensor);
 }
 
 #endif

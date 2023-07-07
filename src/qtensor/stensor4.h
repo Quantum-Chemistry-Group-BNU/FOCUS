@@ -3,6 +3,8 @@
 
 #include "../core/serialization.h"
 #include "../core/matrix.h"
+#include "qinfo4.h"
+#include "qnum_qdpt.h"
 
 namespace ctns{
 

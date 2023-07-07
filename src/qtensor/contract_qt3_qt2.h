@@ -1,6 +1,8 @@
 #ifndef CONTRACT_QT3_QT2_H
 #define CONTRACT_QT3_QT2_H
 
+#include "stensor2.h"
+#include "stensor3.h"
 namespace ctns{
 
    // --- contract_qt3_qt2 ---

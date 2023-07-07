@@ -1,6 +1,8 @@
 #ifndef RESHAPE_QT3_QT2_H
 #define RESHAPE_QT3_QT2_H
 
+#include "stensor2.h"
+#include "stensor3.h"
 namespace ctns{
 
    // --- one-dot wavefunction: qt3[l,r,r] <-> qt2 ---

@@ -3,6 +3,9 @@
 
 #include "../core/serialization.h"
 #include "../core/tools.h"
+#include "qnum_qsym.h"
+#include "qnum_qbond.h"
+#include "dtensor.h"
 
 namespace ctns{
 
