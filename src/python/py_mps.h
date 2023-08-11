@@ -43,13 +43,13 @@ auto nbatch_mps_random(const mps<Qm, Tm> &imps, const int iroot,
                        const int nbatch, const int sorb,
                        const bool debug = false) {
   int _len = (sorb - 1) / 64 + 1;
-  auto result_state = std::vector<unsigned long>(nbatch, 0);
+  auto result_state = std::vector<unsigned long>(nbatch * _len, 0);
   auto result_coeff0 = std::vector<Tm>(nbatch, 0);
   for (int i = 0; i < nbatch; i++) {
     // c++17 new feature
     auto [state, coeff0] = ctns::mps_random<Qm, Tm>(imps, iroot, debug);
     std::copy_n(state.get_data(), _len,
-                &result_state[i]);  // how to access private variables
+                &result_state[i * _len]);  // sorb maybe great 64
     result_coeff0[i] = coeff0;
   }
   // vector to numpy array
