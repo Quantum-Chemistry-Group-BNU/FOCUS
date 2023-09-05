@@ -44,9 +44,21 @@ void gpu_init(const int rank){
 #ifdef NCCL
    nccl_comm.init();
 #endif
+   //
+   //debug
+//   cudaDeviceReset();
+   size_t avail, total;
+#ifdef USE_HIP
+   HIP_CHECK(hipMemGetInfo(&avail, &total));
+#else
+   CUDA_CHECK(cudaMemGetInfo(&avail, &total));
+#endif
+         //debug
 
    std::cout << "rank=" << rank << " num_gpus=" << num_gpus
       << " device_id=" << device_id << " magma_queue=" <<magma_queue
+      <<" GPU avail memory="<<tools::sizeGB<std::byte>(avail)<<" GB"
+      <<" GPU total memory="<<tools::sizeGB<std::byte>(total)<<" GB"
       << std::endl;
 }
 

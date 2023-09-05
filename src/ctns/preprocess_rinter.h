@@ -25,6 +25,7 @@ namespace ctns{
             // initialization
             void init(const bool ifDirect,
                   const int alg_rinter,
+                  const int batchgemv,
                   const oper_dictmap<Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
@@ -35,11 +36,11 @@ namespace ctns{
                      this->init_omp(qops_dict, rtasks, debug);
                      opaddr[locInter] = _data;
                   }else if(alg_rinter == 1){
-                     this->init_batch_cpu(qops_dict, oploc, opaddr, rtasks, debug);
+                     this->init_batch_cpu(qops_dict, oploc, opaddr, rtasks, batchgemv, debug);
                      opaddr[locInter] = _data;
 #ifdef GPU
                   }else if(alg_rinter == 2){
-                     this->init_batch_gpu(qops_dict, oploc, opaddr, rtasks, debug);
+                     this->init_batch_gpu(qops_dict, oploc, opaddr, rtasks, batchgemv, debug);
                      opaddr[locInter] = _dev_data;
 #endif
                   }else{
@@ -69,6 +70,7 @@ namespace ctns{
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
+                  const int batchgemv,
                   const bool debug);
             void initDirect_batch_cpu(const renorm_tasks<Tm>& rtasks,
                   const bool debug);
@@ -77,6 +79,7 @@ namespace ctns{
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
+                  const int batchgemv,
                   const bool debug);
             void initDirect_batch_gpu(const renorm_tasks<Tm>& rtasks,
                   const bool debug);
@@ -176,6 +179,7 @@ namespace ctns{
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const renorm_tasks<Tm>& rtasks,
+            const int batchgemv,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -275,6 +279,11 @@ namespace ctns{
 
          // perform GEMV_BATCH
          MVbatch<Tm> mvbatch;
+         // sort
+         std::stable_sort(mvlst.begin(), mvlst.end(),
+               [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
+               return mv1 > mv2;
+               });
          mvbatch.init(mvlst);
          Tm* ptrs[6];
          ptrs[0] = opaddr[0];
@@ -284,7 +293,6 @@ namespace ctns{
          ptrs[4] = alpha_vec.data(); 
          ptrs[5] = _data;
          struct timeval t0gemv, t1gemv;
-         int batchgemv = 1;
          gettimeofday(&t0gemv, NULL);
          mvbatch.kernel(batchgemv, ptrs);
          gettimeofday(&t1gemv, NULL);
@@ -308,6 +316,7 @@ namespace ctns{
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const renorm_tasks<Tm>& rtasks,
+            const int batchgemv,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -409,6 +418,11 @@ namespace ctns{
 
          // perform GEMV_BATCH
          MVbatch<Tm> mvbatch;
+         // sort
+         std::stable_sort(mvlst.begin(), mvlst.end(),
+               [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
+               return mv1 > mv2;
+               });
          mvbatch.init(mvlst);
          Tm* ptrs[6];
          ptrs[0] = opaddr[0]; // l
@@ -418,7 +432,6 @@ namespace ctns{
          ptrs[4] = dev_alpha_vec;
          ptrs[5] = _dev_data;
          struct timeval t0gemv, t1gemv;
-         int batchgemv = 2;
          gettimeofday(&t0gemv, NULL);
          mvbatch.kernel(batchgemv, ptrs);
          gettimeofday(&t1gemv, NULL);

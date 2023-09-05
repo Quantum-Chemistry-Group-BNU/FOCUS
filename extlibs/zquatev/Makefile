@@ -29,10 +29,10 @@ else ifeq ($(strip $(machine)), wuhan)
    CXX = g++ 
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 
 	 #openblas
-   #MATHLIB = ~/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
+   MATHLIB = ~/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
 	 #kblas
-   MATHLIB =/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/kblas-install-ilp64/omp
-   LAPACKLIB = ~/xiangchunyang/software/lapack-3.11.0-install-kblas64
+   #MATHLIB =/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/kblas-install-ilp64/omp
+   #LAPACKLIB = ~/xiangchunyang/software/lapack-3.11.0-install-kblas64
 else ifeq ($(strip $(machine)), cluster)
    CXX = icpc 
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 
@@ -57,8 +57,8 @@ ifeq ($(strip $(USE_BLAS)), yes)
       LIBS += -L $(MATHLIB) -lopenblas_omp  -lpthread  -ldl 
    else
       CXXFLAGS += -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
-      #LIBS += -L $(MATHLIB) -lopenblas_omp  -lpthread  -ldl 
-      LIBS += -L $(MATHLIB) -lkblas -L $(LAPACKLIB) -llapack64  -lpthread  -ldl 
+      LIBS += -L $(MATHLIB) -lopenblas_omp  -lpthread  -ldl 
+      #LIBS += -L $(MATHLIB) -lkblas -L $(LAPACKLIB) -llapack64  -lpthread  -ldl 
    endif
 endif
 

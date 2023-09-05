@@ -16,6 +16,12 @@ void zheevd_(const char* JOBZ, const char* UPLO, const MKL_INT* N,
 	     double* RWORK, const MKL_INT* LRWORK, 
 	     MKL_INT* IWORK, const MKL_INT* LIWORK, MKL_INT* INFO);
 // svd
+void dgesvd_optimization(const char* JOBU, const char* JOBVT, const MKL_INT* M, const MKL_INT* N,
+	     double* A, const MKL_INT* LDA, double* S, 
+	     double* U, const MKL_INT* LDU,
+	     double* VT, const MKL_INT* LDVT, 
+	     double* WORK, const MKL_INT* LWORK, MKL_INT* INFO);
+
 void dgesvd_(const char* JOBU, const char* JOBVT, const MKL_INT* M, const MKL_INT* N,
 	     double* A, const MKL_INT* LDA, double* S, 
 	     double* U, const MKL_INT* LDU,

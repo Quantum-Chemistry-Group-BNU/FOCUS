@@ -83,6 +83,7 @@ namespace ctns{
          // 2. from {brbc,decim_cost,index} to contruct local_brbc
          if(alg_decim==0 || (alg_decim>0 && size==1)){
             if(rank == 0) local_brbc[rank] = std::move(brbc);
+#ifndef SERIAL
          }else{
             // partition the task set using a greedy algorithm to ensure load balance 
             if(rank == 0){
@@ -113,6 +114,7 @@ namespace ctns{
             } // rank-0
             // broadcast the partition into each processes
             boost::mpi::broadcast(icomb.world, local_brbc, 0);
+#endif
          } // alg_decim
       }
 
@@ -133,6 +135,7 @@ namespace ctns{
                   results[br] = std::move(local_results[ibr].second);
                }
             }
+#ifndef SERIAL
          }else{
             //--- algorithm 1: gather: there is problem in boost::mpi ---
             /*
@@ -184,6 +187,7 @@ namespace ctns{
                }
                boost::mpi::wait_all(&request[0], &request[0]+nrecv);
             } // rank
+#endif
          } // alg_decim
       }
 

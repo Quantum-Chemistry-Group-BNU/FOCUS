@@ -25,6 +25,7 @@ namespace ctns{
             // initialization
             void init(const bool ifDirect,
                   const int alg_hinter,
+                  const int batchgemv,
                   const oper_dictmap<Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
@@ -35,11 +36,11 @@ namespace ctns{
                      this->init_omp(qops_dict, H_formulae, debug);
                      opaddr[locInter] = _data;
                   }else if(alg_hinter == 1){
-                     this->init_batch_cpu(qops_dict, oploc, opaddr, H_formulae, debug);
+                     this->init_batch_cpu(qops_dict, oploc, opaddr, H_formulae, batchgemv, debug);
                      opaddr[locInter] = _data;
 #ifdef GPU
                   }else if(alg_hinter == 2){
-                     this->init_batch_gpu(qops_dict, oploc, opaddr, H_formulae, debug);
+                     this->init_batch_gpu(qops_dict, oploc, opaddr, H_formulae, batchgemv, debug);
                      opaddr[locInter] = _dev_data;
 #endif
                   }else{
@@ -69,6 +70,7 @@ namespace ctns{
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const symbolic_task<Tm>& H_formulae,
+                  const int batchgemv,
                   const bool debug);
             void initDirect_batch_cpu(const symbolic_task<Tm>& H_formulae,
                   const bool debug);
@@ -77,6 +79,7 @@ namespace ctns{
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const symbolic_task<Tm>& H_formulae,
+                  const int batchgemv,
                   const bool debug);
             void initDirect_batch_gpu(const symbolic_task<Tm>& H_formulae,
                   const bool debug);
@@ -170,6 +173,7 @@ namespace ctns{
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const symbolic_task<Tm>& H_formulae,
+            const int batchgemv,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -302,6 +306,11 @@ namespace ctns{
 
          // perform GEMV_BATCH
          MVbatch<Tm> mvbatch;
+         // sort
+         std::stable_sort(mvlst.begin(), mvlst.end(),
+               [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
+               return mv1 > mv2;
+               });
          mvbatch.init(mvlst);
          Tm* ptrs[6];
          ptrs[0] = opaddr[0]; // l
@@ -312,8 +321,7 @@ namespace ctns{
          ptrs[5] = _data;
          struct timeval t0gemv, t1gemv;
          gettimeofday(&t0gemv, NULL);
-         int batchblas = 1;
-         mvbatch.kernel(batchblas, ptrs);
+         mvbatch.kernel(batchgemv, ptrs);
          gettimeofday(&t1gemv, NULL);
          double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
                + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);
@@ -379,6 +387,7 @@ namespace ctns{
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const symbolic_task<Tm>& H_formulae,
+            const int batchgemv,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -474,7 +483,13 @@ namespace ctns{
 
          // perform GEMV_BATCH
          MVbatch<Tm> mvbatch;
+         // sort
+         std::stable_sort(mvlst.begin(), mvlst.end(),
+               [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
+               return mv1 > mv2;
+               });
          mvbatch.init(mvlst);
+         mvbatch.save("hinter.txt");
          Tm* ptrs[6];
          ptrs[0] = opaddr[0]; // l
          ptrs[1] = opaddr[1]; // r
@@ -484,8 +499,7 @@ namespace ctns{
          ptrs[5] = _dev_data;
          struct timeval t0gemv, t1gemv;
          gettimeofday(&t0gemv, NULL);
-         int batchblas = 2;
-         mvbatch.kernel(batchblas, ptrs);
+         mvbatch.kernel(batchgemv, ptrs);
          gettimeofday(&t1gemv, NULL);
          double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
                + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);

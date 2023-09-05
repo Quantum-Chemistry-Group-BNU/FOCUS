@@ -325,14 +325,16 @@ namespace ctns{
                auto key = std::make_pair(ql,qr);
                const auto& blk = wfs.qblocks[key];
                if(blk.size() == 0) continue;
-               if(debug_basis) std::cout << "find matched ql =" << ql << std::endl;
+               if(debug_basis){
+                  std::cout << "find matched ql =" << ql << " qr+ql=" << qr+ql << std::endl;
+               }
                matched += 1;
                if(matched > 1) tools::exit("multiple matched ql is not supported!");
                kramers::get_renorm_states_nkr(blk, sigs2, U, rdm_svd, debug_basis);
             } // ql
-              // 2.2 select important renormalized states from (sigs2,U) 
-              // NOTE: it is possible that matched=0, when we add flipped det in bipart_space with sym=NSz!
-              //       then this part needs to be skipped as no sig2 and U are generated.
+            // 2.2 select important renormalized states from (sigs2,U) 
+            // NOTE: it is possible that matched=0, when we add flipped det in bipart_space with sym=NSz!
+            //       then this part needs to be skipped as no sig2 and U are generated.
             if(matched == 1){
                update_rbasis(rbasis, qr, rspace, sigs2, U, dimBc, popBc, SvN, thresh_proj, debug);
             }

@@ -60,6 +60,9 @@ module load cuda/11.6
 # $ salloc -N 1 -n 1 --gres=gpu:1
 ########################################
 elif [ $platform == "wuhan" ]; then
+export PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/ctags-5.8-install/bin:$PATH
+export PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/cmake-3.26.3-install/bin:$PATH
+export PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/valgrind-3.21.0-install/bin:$PATH
 ##kblas hmpi
 #export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-kblas64-lapack64/lib:$LD_LIBRARY_PATH
 #export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_hmpi_64/lib:$LD_LIBRARY_PATH
@@ -70,6 +73,7 @@ elif [ $platform == "wuhan" ]; then
 export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-openblas64/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_openmpi_64/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/project/qubic_kunpeng/qubic/blas_optimized_libs/lib:$LD_LIBRARY_PATH
 
 #export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/lapack-3.11.0-install-64/lib64:$LD_LIBRARY_PATH
 export CUDADIR=/home/HPCBase/compilers/cuda/11.4.0

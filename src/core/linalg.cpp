@@ -13,7 +13,7 @@ double dnrm2_optimized(const double* x, const MKL_INT n) {
     // Initialize accumulators for each thread
     const int num_threads = omp_get_max_threads();
 
-    std::cout<<"num_threads = "<<num_threads<<std::endl;
+//    std::cout<<"num_threads = "<<num_threads<<std::endl;
     double acc_sum[num_threads] = {0.0};
 
     #pragma omp parallel
@@ -160,6 +160,7 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
    }
    if(info){
       cout << "svd[d] failed with info=" << info << endl;
+      std::cout<<"iop="<<iop<<"; m="<<m<<"; n="<<n<<"; ldu="<<ldu<<"; ldvt="<<ldvt<<std::endl;
       exit(1);
    }
 }

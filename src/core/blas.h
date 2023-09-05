@@ -5,6 +5,9 @@
 #include <complex>
 #include <omp.h>
 #include <arm_neon.h>
+extern "C" {
+#include <cblas_optimized.h>
+}
 
 #ifdef MKL_ILP64
    #define MKL_INT long long int
@@ -91,11 +94,13 @@ namespace linalg{
    // copy
    inline void xcopy(const MKL_INT N, const double* X, double* Y){
       MKL_INT INCX = 1, INCY = 1;
-      ::dcopy_(&N, X, &INCX, Y, &INCY);
+      //::dcopy_(&N, X, &INCX, Y, &INCY);
+      cblas_dcopy_optimized((MKL_INT)N, (double*)X, INCX, Y, INCY);
    }
    inline void xcopy(const MKL_INT N, const std::complex<double>* X, std::complex<double>* Y){
       MKL_INT INCX = 1, INCY = 1;
-      ::zcopy_(&N, X, &INCX, Y, &INCY);
+      //::zcopy_(&N, X, &INCX, Y, &INCY);
+      cblas_zcopy_optimized((MKL_INT)N, (void*)X, INCX, Y, INCY);
    }
 
    inline void xcopy(const MKL_INT N, const double* X, const MKL_INT INCX, 
@@ -123,11 +128,13 @@ namespace linalg{
    inline double xnrm2(const MKL_INT N, const double* X){
       MKL_INT INCX = 1;
       //return ::dnrm2_(&N, X, &INCX);
-      return ::dnrm2_optimized(X, N);
+      //return ::dnrm2_optimized(X, N);
+      return cblas_dnrm2_optimized((MKL_INT)N, (double*)X, INCX);
    }
    inline double xnrm2(const MKL_INT N, const std::complex<double>* X){
       MKL_INT INCX = 1;
-      return ::dznrm2_(&N, X, &INCX);
+      //return ::dznrm2_(&N, X, &INCX);
+      return cblas_znrm2_optimized((MKL_INT)N, (void*)X, INCX);
    }
 
    // xdot
@@ -157,6 +164,78 @@ namespace linalg{
          const std::complex<double>* B, const MKL_INT LDB,
          const std::complex<double> beta, std::complex<double>* C, const MKL_INT LDC){
       ::zgemm_(TRANSA, TRANSB, &M, &N, &K, &alpha, A, &LDA, B, &LDB, &beta, C, &LDC);
+   }
+
+   // C = alpha*A*B + beta*C
+   inline void xgemm_small(const char* TRANSA, const char* TRANSB,
+         const MKL_INT M, const MKL_INT N, const MKL_INT K,
+         const double alpha, const double* A, const MKL_INT LDA, 
+         const double* B, const MKL_INT LDB,
+         const double beta, double* C, const MKL_INT LDC){
+      //::dgemm_(TRANSA, TRANSB, &M, &N, &K, &alpha, A, &LDA, B, &LDB, &beta, C, &LDC);
+       CBLAS_TRANSPOSE transa_, transb_;
+      if(*TRANSA=='N') 
+      {
+          transa_=CblasNoTrans;
+      }else if(*TRANSA =='T')
+      {
+          transa_=CblasTrans;
+      }else if(*TRANSA == 'R')
+      {
+          transa_=CblasConjNoTrans;
+      }else{
+          transa_=CblasConjTrans;
+      }
+
+      if(*TRANSB=='N') 
+      {
+          transb_=CblasNoTrans;
+      }else if(*TRANSB =='T')
+      {
+          transb_=CblasTrans;
+      }else if(*TRANSB == 'R')
+      {
+          transb_=CblasConjNoTrans;
+      }else{
+          transb_=CblasConjTrans;
+      }
+
+      cblas_dgemm_small(CblasColMajor, transa_, transb_, M, N, K, alpha, (double*)A, LDA, (double*)B, LDB, beta, (double*)C, LDC);
+   }
+   inline void xgemm_small(const char* TRANSA, const char* TRANSB, 
+         const MKL_INT M, const MKL_INT N, const MKL_INT K,
+         const std::complex<double> alpha, const std::complex<double>* A, const MKL_INT LDA, 
+         const std::complex<double>* B, const MKL_INT LDB,
+         const std::complex<double> beta, std::complex<double>* C, const MKL_INT LDC){
+      //::zgemm_(TRANSA, TRANSB, &M, &N, &K, &alpha, A, &LDA, B, &LDB, &beta, C, &LDC);
+      enum CBLAS_TRANSPOSE transa_, transb_;
+      if(*TRANSA=='N') 
+      {
+          transa_=CblasNoTrans;
+      }else if(*TRANSA =='T')
+      {
+          transa_=CblasTrans;
+      }else if(*TRANSA == 'R')
+      {
+          transa_=CblasConjNoTrans;
+      }else{
+          transa_=CblasConjTrans;
+      }
+
+      if(*TRANSB=='N') 
+      {
+          transb_=CblasNoTrans;
+      }else if(*TRANSB =='T')
+      {
+          transb_=CblasTrans;
+      }else if(*TRANSB == 'R')
+      {
+          transb_=CblasConjNoTrans;
+      }else{
+          transb_=CblasConjTrans;
+      }
+
+      cblas_zgemm_small(CblasColMajor, transa_, transb_, M, N, K, (void*)(&alpha), (void*)A, LDA, (void*)B, LDB, (void*)(&beta), (void*)C, LDC);
    }
 
    // y = alpha*A*x + beta*y

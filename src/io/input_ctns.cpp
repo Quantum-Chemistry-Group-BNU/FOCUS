@@ -78,8 +78,6 @@ void params_ctns::read(ifstream& istrm){
          sort_formulae = true;
       }else if(line.substr(0,11)=="save_mmtask"){
          save_mmtask = true;
-      }else if(line.substr(0,7)=="mmorder"){
-         mmorder = stoi(line.substr(7));
       }else if(line.substr(0,9)=="batchhvec"){
          std::string batchinter, batchgemm, batchred;
          istringstream is(line.substr(10));
@@ -242,7 +240,6 @@ void params_ctns::print() const{
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;
    cout << "save_mmtask = " << save_mmtask << endl;
-   cout << "mmorder = " << mmorder << endl;
    cout << "batchhvec = " << std::get<0>(batchhvec)
       << " " << std::get<1>(batchhvec)
       << " " << std::get<2>(batchhvec)
