@@ -28,6 +28,9 @@ void POST(const input::schedule& schd){
       tools::exit("error: inconsistent dtype in POST!");
    }
 
+   if(schd.post.task_dumpbin){
+      ctns::mps_dumpbin<Qm,Tm>(schd);
+   }
    if(schd.post.task_ovlp){
       ctns::mps_ovlp<Qm,Tm>(schd);
    }

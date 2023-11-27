@@ -81,12 +81,14 @@ namespace ctns{
          // ZL@20221207 dump (symmetry label is not stored)
          void dump(std::ofstream& ofs) const{
             int sz = dims.size();
-            std::vector<int> ds(sz+1,0);
+            std::vector<int> ds(1+3*sz,0);
             ds[0] = sz;
             for(int i=0; i<sz; i++){
-               ds[i+1] = dims[i].second;
+               ds[3*i+1] = dims[i].first.ne();
+               ds[3*i+2] = dims[i].first.tm();
+               ds[3*i+3] = dims[i].second;
             }
-            ofs.write((char*)(ds.data()), sizeof(ds[0])*(sz+1));
+            ofs.write((char*)(ds.data()), sizeof(ds[0])*(3*sz+1));
          }
       public:
          std::vector<std::pair<qsym,int>> dims;

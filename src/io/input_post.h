@@ -18,7 +18,7 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
-                  & task_ovlp & task_cicoeff & task_sdiag & task_expect 
+                  & task_dumpbin & task_ovlp & task_cicoeff & task_sdiag & task_expect 
                   & task_s2proj & task_es2proj
                   & bra & ket & opname & integral_file
                   & iroot & nsample & ndetprt & twos & eps2; 
@@ -33,6 +33,7 @@ namespace input{
          // debug level
          int verbose = 0;
          // tasks
+         bool task_dumpbin = false;
          bool task_ovlp = false;
          bool task_cicoeff = false;
          bool task_sdiag = false;

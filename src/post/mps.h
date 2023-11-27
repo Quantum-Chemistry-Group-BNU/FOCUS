@@ -33,8 +33,22 @@ namespace ctns{
                }
                load >> rwfuns;
                ifs.close();
-               // debug
+               // debug: for python interface
                //this->convert();
+            }
+            // dump
+            void dumpbin(const std::string fname){
+               std::ofstream ofs2(fname+".bin", std::ios::binary);
+               ofs2.write((char*)(&nphysical), sizeof(int));
+               // save all sites
+               for(int idx=0; idx<nphysical-1; idx++){
+                  int jdx = nphysical-1-idx; // from right to left
+                  sites[jdx].dump(ofs2);
+               }
+               // site0
+               auto site0 = get_site0();
+               site0.dump(ofs2);
+               ofs2.close();
             }
             // convert
             std::vector<std::vector<stensor2<Tm>>> convert(bool debug = false){

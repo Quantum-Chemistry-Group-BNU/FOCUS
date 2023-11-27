@@ -33,6 +33,8 @@ void params_post::read(ifstream& istrm){
          is >> topology_file;
       }else if(line.substr(0,7)=="verbose"){
          verbose = stoi(line.substr(7));
+      }else if(line.substr(0,12)=="task_dumpbin"){
+         task_dumpbin = true;
       }else if(line.substr(0,9)=="task_ovlp"){
          task_ovlp = true;
       }else if(line.substr(0,12)=="task_cicoeff"){
@@ -91,6 +93,7 @@ void params_post::print() const{
    // debug level
    cout << "verbose = " << verbose << endl;
    // tasks
+   cout << "task_dumpbin = " << task_dumpbin << endl;
    cout << "task_ovlp = " << task_ovlp << endl;
    cout << "task_cicoeff = " << task_cicoeff << endl;
    cout << "task_sdiag = " << task_sdiag << endl;
