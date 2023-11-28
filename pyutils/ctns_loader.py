@@ -18,17 +18,20 @@ class tensor3():
         # rows
         self.rows = struct.unpack('i', data[off:off+4])[0]
         off += 4
-        self.qrow = np.fromfile(fname, dtype=np.int32, offset=off, count=self.rows)
+        self.qrow = np.fromfile(fname, dtype=np.int32, offset=off, count=3*self.rows)
+        self.qrow = self.qrow.reshape(self.rows,3)
         off += self.qrow.nbytes
         # cols
         self.cols = struct.unpack('i', data[off:off+4])[0]
         off += 4
-        self.qcol = np.fromfile(fname, dtype=np.int32, offset=off, count=self.cols)
+        self.qcol = np.fromfile(fname, dtype=np.int32, offset=off, count=3*self.cols)
+        self.qcol = self.qcol.reshape(self.cols,3)
         off += self.qcol.nbytes
         # mids
         self.mids = struct.unpack('i', data[off:off+4])[0]
         off += 4
-        self.qmid = np.fromfile(fname, dtype=np.int32, offset=off, count=self.mids)
+        self.qmid = np.fromfile(fname, dtype=np.int32, offset=off, count=3*self.mids)
+        self.qmid = self.qmid.reshape(self.mids,3)
         off += self.qmid.nbytes
         # offset
         self.nblks = self.rows*self.cols*self.mids
@@ -54,19 +57,22 @@ class tensor3():
         return 0
 
     def todense(self):
-        dim_row = np.sum(self.qrow)
-        dim_col = np.sum(self.qcol)
-        dim_mid = np.sum(self.qmid)
+        drow = self.qrow[:,2]
+        dcol = self.qcol[:,2]
+        dmid = self.qmid[:,2]
+        dim_row = np.sum(drow)
+        dim_col = np.sum(dcol)
+        dim_mid = np.sum(dmid)
         dtensor = np.zeros((dim_mid,dim_col,dim_row), dtype=self.data.dtype) # nrl in C order
-        off_row = [0] + list(np.cumsum(self.qrow))
-        off_col = [0] + list(np.cumsum(self.qcol))
-        off_mid = [0] + list(np.cumsum(self.qmid))
+        off_row = [0] + list(np.cumsum(drow))
+        off_col = [0] + list(np.cumsum(dcol))
+        off_mid = [0] + list(np.cumsum(dmid))
         for r in range(self.rows):
-            dr = self.qrow[r] 
+            dr = self.qrow[r,2] 
             for c in range(self.cols):
-                dc = self.qcol[c]
+                dc = self.qcol[c,2]
                 for m in range(self.mids):
-                    dm = self.qmid[m]
+                    dm = self.qmid[m,2]
                     off = self.offset[r,c,m] # lrn in C order 
                     if(off == 0): continue
                     blksize = np.uint64(dr*dc*dm)
@@ -106,6 +112,8 @@ class ctns_info():
 if __name__ == '__main__':
 
     ctns = ctns_info()
-    ctns.load('examples/rcanon.info.bin')
+    ctns.load('rcanon_isweep3.info.bin')
     ctns.prt()
 
+    for i in range(ctns.ntotal):
+        print(ctns.rsites[i].todense())

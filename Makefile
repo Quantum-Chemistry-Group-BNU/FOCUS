@@ -82,12 +82,11 @@ else ifeq ($(strip $(machine)), DCU_419)
    endif
 else ifeq ($(strip $(machine)), mac)
    MATHLIB = /opt/anaconda3/envs/work/lib
-   BOOST = /Users/zhendongli/Desktop/documents_ZL/Codes/boost/install
-   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   BOOST = /Users/zhendongli/Desktop/documents_ZL/Codes/boost/install_1_83_0
+   LFLAGS = -L${BOOST}/lib -Wl,-rpath,${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
-
 else ifeq ($(strip $(machine)), archlinux)
    MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
    BOOST = /usr

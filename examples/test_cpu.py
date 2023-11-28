@@ -17,7 +17,7 @@ os.environ['CTNS'] = CTNS
 
 #cdir = os.getcwd()
 #dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
-dirs = ['tests_cpu/0_h6_tns',
+dirs = ['tests_cpu/0_h6_tns', 
         'tests_cpu/1_lih3_dcg', 
         'tests_cpu/2_lih3+_dcg', 
         'tests_cpu/3_h6+_kr',
