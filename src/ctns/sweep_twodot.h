@@ -460,7 +460,9 @@ namespace ctns{
                dev_opaddr[i] = tqops._dev_data;
             }
             size_t gpumem_oper = sizeof(Tm)*opertot;
+            //xiang
             if(debug && schd.ctns.verbose>0){
+            //if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                   << " (oper)=" << gpumem_oper/std::pow(1024.0,3) 
@@ -479,7 +481,9 @@ namespace ctns{
             const int batchgemv = std::get<0>(schd.ctns.batchhvec); 
             hinter.init(ifDirect, schd.ctns.alg_hinter, batchgemv, qops_dict, oploc, dev_opaddr, H_formulae, debug);
             size_t gpumem_hinter = sizeof(Tm)*hinter.size();
+            //xiang
             if(debug && schd.ctns.verbose>0){
+            //if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                   << " (oper,hinter)=" << gpumem_oper/std::pow(1024.0,3) 
@@ -513,7 +517,9 @@ namespace ctns{
             preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, gpumem_dvdson, rank,
                   batchsize, gpumem_batch);
             dev_workspace = (Tm*)GPUmem.allocate(gpumem_dvdson+gpumem_batch);
+            //xiang
             if(debug && schd.ctns.verbose>0){
+            //if(schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                   << " (oper,hinter,dvdson,batch)=" << gpumem_oper/std::pow(1024.0,3) 
@@ -563,9 +569,23 @@ namespace ctns{
                         }
                      }
                   }
+
+
                }
                if(fmmtask.size()>0) save_mmtask(Hmmtask, fmmtask);
+
+               //xiang 20231013
+                  //std::cout << "20231013 isweep=" << isweep 
+                  //    << " ibond=" << ibond
+                  //    << " rank=" << rank 
+                  //    <<" H_formulae="<<H_formulae.size()
+                  //    << " Hxlst.size=" << Hxlst.size()
+                  //    << " Hmmtasks.totsize=" << Hmmtask.totsize
+                  //    << " Hmmtasks.cost=" << Hmmtask.cost
+                  //    << " Hmmtasks.nbatch=" << Hmmtask.nbatch
+                  //    << std::endl;
             }
+
             timing.tb7 = tools::get_time();
 
             // GPU version of Hx

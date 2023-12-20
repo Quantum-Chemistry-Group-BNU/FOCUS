@@ -458,6 +458,7 @@ namespace ctns{
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);
 
+         //xiang 20231013
          // timing
          if(rank==0){
             std::cout << "preprocess_Hx_batchDirectGPUSingle: t[copy,inter,gemm,reduction]="
@@ -466,7 +467,13 @@ namespace ctns{
                       << std::endl;
             oper_timer.sigma.analysis();
          }
-      }
+
+         //   std::cout <<"20231013_2 rank="<<rank<< "preprocess_Hx_batchDirectGPUSingle: t[copy,inter,gemm,reduction]="
+         //             << time_copy << "," << time_inter << "," << time_gemm << "," << time_reduction 
+         //             //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+         //             << std::endl;
+         //   oper_timer.sigma.analysis();
+         }
 
 } // ctns
 
