@@ -1,8 +1,8 @@
 
-machine = dell2 # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = mac # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 USE_GCC = yes
-USE_MKL = yes
+USE_MKL = no #yes
 USE_ILP64 = yes # by default
 
 INCLUDE = -I.
@@ -48,7 +48,7 @@ else ifeq ($(strip $(machine)), jiageng)
 else ifeq ($(strip $(machine)), mac)
    CXX = g++
    FLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
-   MATHLIB = /opt/anaconda3/envs/work/lib
+   MATHLIB = /Users/zhendongli/Desktop/FOCUS/mathlib/lapack-3.12.0/build/lib
    LIBS += -lm
 else ifeq ($(strip $(machine)), archlinux)
    CXX = g++
@@ -69,10 +69,16 @@ ifeq ($(strip $(USE_MKL)),yes)
    endif
 else
    # openblas/kblas
+   ifeq ($(strip $(machine)), mac)
+   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+          -lblas64 -llapack64 -lpthread -lgfortran
+   FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -m64
+   else
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
           -lopenblas -lpthread -lm -ldl -lrt 
           #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
    FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
+   endif
 endif
 LIBS += ${MATH}
 

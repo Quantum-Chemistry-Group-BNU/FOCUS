@@ -5,7 +5,7 @@ DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
-USE_MKL = yes
+USE_MKL = no #yes
 USE_ILP64 = yes
 USE_GPU = no #yes
 USE_NCCL = no #yes
@@ -81,7 +81,7 @@ else ifeq ($(strip $(machine)), DCU_419)
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else ifeq ($(strip $(machine)), mac)
-   MATHLIB = /opt/anaconda3/envs/work/lib
+   MATHLIB = /Users/zhendongli/Desktop/FOCUS/mathlib/lapack-3.12.0/build/lib
    BOOST = /Users/zhendongli/Desktop/documents_ZL/Codes/boost/install_1_83_0
    LFLAGS = -L${BOOST}/lib -Wl,-rpath,${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
@@ -167,26 +167,27 @@ ifeq ($(strip $(USE_MKL)),yes)
              -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl 
       FLAGS += -DUSE_MKL -DMKL_ILP64 -m64
       endif
-    	# special treatment for my mac machine
-      ifeq ($(strip $(machine)), mac)
+      ifeq ($(strip $(USE_GCC)),yes)
          FLAGS += -fopenmp 
-         MATH += -lmkl_intel_thread -liomp5 
+         MATH += -lmkl_gnu_thread -lgomp
       else
-         ifeq ($(strip $(USE_GCC)),yes)
-            FLAGS += -fopenmp 
-            MATH += -lmkl_gnu_thread -lgomp
-         else
-            FLAGS += -qopenmp 
-            MATH += -lmkl_intel_thread -liomp5 
-         endif
+         FLAGS += -qopenmp 
+         MATH += -lmkl_intel_thread -liomp5 
       endif
    endif
 else
-   # openblas/kblas
-   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lopenblas -lpthread -lm -ldl -lrt 
-          #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
-   FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
+   # special treatment for my mac machine
+   ifeq ($(strip $(machine)), mac)
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lblas64 -llapack64 -lpthread -lgfortran
+      FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -m64
+   else
+      # openblas/kblas
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lopenblas -lpthread -lm -ldl -lrt 
+             #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
+      FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
+   endif
 endif
 # quaternion matrix diagonalization
 MATH += -L./extlibs/zquatev -lzquatev 

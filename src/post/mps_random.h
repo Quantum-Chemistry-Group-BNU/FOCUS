@@ -89,7 +89,7 @@ namespace ctns{
          // print important determinants
          if(nprt > 0){
             int size = pop.size();
-            std::cout << "sampled important determinants: pop.size=" << size << std::endl; 
+            std::cout << "sampled unique determinants: pop.size=" << size << std::endl; 
             std::vector<fock::onstate> states(size);
             std::vector<int> counts(size);
             int i = 0;
@@ -117,6 +117,20 @@ namespace ctns{
             std::cout << "accumulated counts=" << sum 
                << " nsample=" << nsample 
                << " per=" << 1.0*sum/nsample << std::endl;
+            // save into file
+            std::cout << "write det.txt file ..." << std::endl;
+            double psum = 0.0;
+            ofstream output("det.txt");
+            output << size << endl;
+            for(int i=0; i<size; i++){
+               int idx = indx[i];
+               fock::onstate state = states[idx];
+               auto ci = mps_CIcoeff(imps, iroot, state);
+               psum += std::norm(ci)/ovlp;
+               output << i << "  " << state << "  " << ci << endl;
+            }
+            output << "psum=" << psum << endl; 
+            output.close();
          }
          auto tf = tools::get_time();
          tools::timing("ctns::mps_diag_sample", ti, tf);

@@ -43,7 +43,7 @@ using namespace std;
 
 int main(int argc, char * argv[]) {
 
-  const MKL_INT n = (argc>1) ? atoi(argv[1]) : 1000;
+  const MKL_INT n = (argc>1) ? atoi(argv[1]) : 100;
   const MKL_INT n2 = n*2;
   const MKL_INT nld = n*2;
   cout << "n=" << n << endl;
