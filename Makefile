@@ -368,7 +368,9 @@ ci:
 endif
 
 ifeq ($(strip $(INSTALL_CTNS)), yes)
-ctns: $(LIB_DIR)/libctns.a $(BIN_DIR)/tests_ctns.x $(BIN_DIR)/tests_oper.x $(BIN_DIR)/prectns.x $(BIN_DIR)/ctns.x
+ctns: $(LIB_DIR)/libctns.a $(BIN_DIR)/tests_ctns.x \
+	$(BIN_DIR)/tests_oper.x $(BIN_DIR)/prectns.x \
+	$(BIN_DIR)/ctns.x $(BIN_DIR)/sadmrg.x
 else
 ctns:	
 endif
@@ -506,6 +508,10 @@ $(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(LIB_DIR)/libctns.a
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/ctns.o -L$(LIB_DIR) -lctns $(LFLAGS) 
+
+$(BIN_DIR)/sadmrg.x: $(OBJ_DIR)/sadmrg.o $(LIB_DIR)/libctns.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/sadmrg.o -L$(LIB_DIR) -lctns $(LFLAGS) 
 
 $(BIN_DIR)/post.x: $(OBJ_DIR)/post.o $(LIB_DIR)/libpost.a
 	@echo "=== LINK $@"

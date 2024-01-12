@@ -267,9 +267,19 @@
 
 ### 2024 DMRG[SA] ###
 
- * Spin-adapted DMRG algorithm
+ * driver & makefile: sadmrg [DONE@2024/01/12]
 
- * GPU implementation
+ * data structure for tensors [KEY!]
 
+ * generate initial guess by conversion
 
+ * get Hamiltonian: 
+    - Renormalization
+    - Prepare environment operators
+
+ * Spin-adapted DMRG algorithm:
+    - contractions
+    - initial guess
+
+ * GPU implementation:
 
