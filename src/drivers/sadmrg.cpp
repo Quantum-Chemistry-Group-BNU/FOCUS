@@ -27,20 +27,9 @@ void SADMRG(const input::schedule& schd){
       tools::exit("error: inconsistent dtype in SADMRG!");
    }
 
-   // initialization
-
-   // load from a given NSA-MPS
-   // load from a restart calculations
-
-   // build environment 
-   
-   // perform computation
-
-   // sdiag sampling
-
-/*
-   // SADMRG
-   // CTNS 
+   // initialization: two options
+   // 1. load from a given NSA-MPS
+   // 2. load from a restart calculations
    ctns::comb<Qm,Tm> icomb;
    // convert from SCI or load from files
    if(rank == 0){
@@ -48,46 +37,35 @@ void SADMRG(const input::schedule& schd){
       icomb.topo.read(schd.ctns.topology_file);
       icomb.topo.print();
       if(schd.ctns.restart_sweep == 0){
+         
          // initialize RCF 
          auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-         if(!schd.ctns.rcanon_load){
-            // from SCI wavefunction
-            onspace sci_space;
-            vector<double> es;
-            linalg::matrix<Tm> vs;
-            auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
-            fci::ci_load(sci_space, es, vs, ci_file);
-            // truncate CI coefficients
-            fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-            ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
-                  schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
-            ctns::rcanon_save(icomb, rcanon_file);
-            // debug        
-            const bool debug = false;
-            if(debug){ 
-               // <CI|CTNS>
-               auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
-               Sij_mix.print("Sij_mix");
-               // HIJ
-               integral::two_body<Tm> int2e;
-               integral::one_body<Tm> int1e;
-               double ecore;
-               integral::load(int2e, int1e, ecore, schd.integral_file);
-               io::create_scratch(schd.scratch);
-               auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-               Hij_ci.print("Hij_ci",8);
-               auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
-               Hij_ctns.print("Hij_ctns",8);
-               double diffH = (Hij_ctns - Hij_ci).normF();
-               cout << "\ncheck diffH=" << diffH << endl;
-               const double thresh = 1.e-8;
-               if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
-               io::remove_scratch(schd.scratch);
-               exit(1);
-            }
+         if(schd.ctns.tosu2){ 
+            ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
+            icomb_NSz.topo = icomb.topo;
+            if(!schd.ctns.rcanon_load){
+               // from SCI wavefunction
+               onspace sci_space;
+               vector<double> es;
+               linalg::matrix<Tm> vs;
+               auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
+               fci::ci_load(sci_space, es, vs, ci_file);
+               // truncate CI coefficients
+               fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
+               ctns::rcanon_init(icomb_NSz, sci_space, vs, schd.ctns.rdm_svd,
+                     schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
+               ctns::rcanon_save(icomb_NSz, rcanon_file);
+            }else{
+               ctns::rcanon_load(icomb_NSz, rcanon_file); // user defined rcanon_file
+            } // rcanon_load
+
+            // convert
+            //ctns::rcanon_()icomb_NSz, icomb);
+            exit(1);
          }else{
             ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
-         } // rcanon_load
+         }
+
       }else{
          // restart a broken calculation from disk
          auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1)+".info";
@@ -100,7 +78,10 @@ void SADMRG(const input::schedule& schd){
          }
          ctns::rcanon_load(icomb, rcanon_file);
       }
-      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+      
+      //ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+      exit(1);
+      
    } // rank 0
 
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
@@ -119,12 +100,12 @@ void SADMRG(const input::schedule& schd){
          int iroot  = schd.ctns.iroot;
          int nsample = schd.ctns.nsample;
          int ndetprt = schd.ctns.ndetprt; 
-         double Sd = ctns::rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
+         //double Sd = ctns::rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
       }
    }
 
    // compute hamiltonian or optimize ctns by dmrg algorithm
-   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_vmc){
+   if(schd.ctns.task_ham || schd.ctns.task_opt){
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -145,23 +126,19 @@ void SADMRG(const input::schedule& schd){
       io::create_scratch(scratch, (rank == 0));
       // compute hamiltonian 
       if(schd.ctns.task_ham){
-         auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
-         if(rank == 0){
-            Hij.print("Hij",8);
-            auto Sij = ctns::get_Smat(icomb);
-            Sij.print("Sij");
-         }
+         //auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
+         //if(rank == 0){
+         //   Hij.print("Hij",8);
+         //   auto Sij = ctns::get_Smat(icomb);
+         //   Sij.print("Sij");
+         //}
       }
       // optimization from current RCF
       if(schd.ctns.task_opt){
-         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
+         //ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
-      // vmc for estimation uncertainty
-      if(schd.ctns.task_vmc){
-         ctns::vmc_estimate(icomb, int2e, int1e, ecore, schd, scratch);
-      }
-   } // ham || opt || vmc
-*/
+      exit(1);
+   } // ham || opt
 }
 
 int main(int argc, char *argv[]){
@@ -217,7 +194,7 @@ int main(int argc, char *argv[]){
    if(schd.ctns.qkind == "rNS"){
       SADMRG<ctns::qkind::qNS,double>(schd);
    }else if(schd.ctns.qkind == "cNS"){
-      SADMRG<ctns::qkind::qNSz,std::complex<double>>(schd);
+      SADMRG<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for sadmrg!");
    } // qkind

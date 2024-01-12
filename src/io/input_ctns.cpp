@@ -129,6 +129,8 @@ void params_ctns::read(ifstream& istrm){
          nsample = stoi(line.substr(7));
       }else if(line.substr(0,7)=="ndetprt"){
          ndetprt = stoi(line.substr(7));
+      }else if(line.substr(0,5)=="tosu2"){
+         tosu2 = true;
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
@@ -269,4 +271,6 @@ void params_ctns::print() const{
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;
    cout << "ndetprt = " << ndetprt << endl;
+   // su2 symmetry
+   cout << "tosu2 = " << tosu2 << endl;
 }

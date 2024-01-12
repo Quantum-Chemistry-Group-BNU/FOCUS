@@ -53,7 +53,8 @@ namespace input{
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
                   & iomode & async_fetch & async_save & async_remove & async_tocpu & ifnccl
-                  & iroot & nsample & ndetprt; 
+                  & iroot & nsample & ndetprt
+                  & tosu2; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -122,6 +123,8 @@ namespace input{
          int iroot = 0;
          int nsample = 10000;
          int ndetprt = 10;
+         // su2 symmetry
+         bool tosu2 = false;
    };
 
 } // input
