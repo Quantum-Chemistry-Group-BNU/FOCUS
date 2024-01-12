@@ -1,319 +1,20 @@
 
-----
-LOGS
-----
+### TODOs: more functionalities ###
 
-=== 2021 ===
+ * Spin-adapted version?
 
- * Setup tests for NR & R integrals [DONE2021/03/24]
- 
- * Redesign and decouple codes [DONE2021/04/08]
-    
- * Implementation of CTNS with TRS [DONE2021/05/16]
-    - checked for kinds {rN,rNSz,cN,cNSz,cNK}
-    - rewrite qtensor such that qt2/qt3/qt4 are just views
+ * Reduced density matrix (RDMs) [!!!] 
 
- * Parallelization: MPI [DONE2021/05/30]
-    - cleanup (IO) 
-    - setup testing mechanism? 
-    - preparation: makefile -> mpi 
-    - mpi version 
-       - distribute AP & BQ, compxwf, Hmat [DONE2021/05/23]
-       - opt: HDiag, HVec, Davidson, pRDM, rwfuns, twodot [DONE2021/05/28] 
-       - load balance: adjust distribution
-       - careful check serial/parallel version against previous 
-         versions with different compilers
+ * Perturbative spin-orbit interaction?
 
- * Benchmark performances: Fe2S2 [DONE2021/08/11]
-    - different topologies: -> SVD-based decimation
-       - problem: TRS-adapted SVD decimation is necessary in initialization [DONE2021/07/06] 
-       - problem: decimation in sweep -> have to give up perturbative noise for CTNS! 
-		   - decimation_row_nkr [DONE2021/07/09]
-		   - decimation_row_kr [DONE2021/07/11]
+ * Support Kramers version: 
+   - support complex version [DONE@2023/02/28]
+   - what about 'R' operation in contract? [general complex]
+   - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
+      otherwise renormalized state become complex, and the construction of H 
+      requires 'Conj' operation in GEMM!] 
 
- * Optimized parallel version [DONE2021/10/02]
-    - OpenMP support [DONE2021/09/03]
- 	 - Hx & decimation
-	 - Initialization of CTNS
-    - Z2 symmetry: {rZ2,cZ2}
-        - Checked by diagonalizing fock::Hmat
-    - better data structure for qtensor & oper_dict [DONE2021/10/02]
-        - problem: can bypass the 2GB limit in MPI_COUNT using native MPI support (later)
-
-=== 2022 ===
-
- * Optimized algorithm: symbolic algorithm [DONE@20220402]
-    - onedot algorithm:
-    	- generation of onedot_Hx formulae
-    	- implemenation of onedot_Hx contraction [DONE2022/01/16]
-	   - adjoint of Hterm is treated in symbolic_onedot_Hx
-	   - implementation of Kramers version of Hx [DONE2022/01/18]
-	   - different treatment of Hl,Hcr,{CS/SC,AP,BQ}
-    - twodot algorithm:
-    	- generation of twodot_Hx formulae [DONE2022/01/18]
-    	- optimized formation of sigma vector [DONE2022/01/22]
-      - contract_qt4_qt2 (without intermediate/reshaping)
-    - renormalization algorithm:
-	 - generation of formulae 
-         - optimized renormalization [DONE2022/02/17]
-    - generation of formula: 
-        - onedot/twodot-ibond
-        - renormalization [DONE2022/02/21]
-    - profiling:
-	     - benchmark for small systems
-        - minimize memory allocation / intermediates?
-	     - make sure the code works for Fe4S4 & Fe8S7 with small D [DONE2022/02/28]
-	     - formulae correctly generated 
-        - use input for schd & fname to control whether write *.txt 
-    - optimization of onedot & twodot algorithm:
-	     - int1e only appears in oper_dot.h
-        - remove explicit H() in qt_qt:
-	 - revise qt3_qt2 without explicit H() 
-        - revise qt4_qt2 without explicit H() [DONE2022/02/23]
-        - preprocess onedot: 
-        - avoid memory allocation in sigma (onedot/twodot)
-	     - avoid memset?
-        - revise renormalization [DONE2022/02/27]
-        - preprocess twodot:
-	       - preallocation of workspace
-	       - contract_qt4_qt2_info [DONE2022/03/01]
-    - better data structure? pointer? [DONE2022/03/18] 
-	 - vtune profile stackblock for comparison [!!!] 
-        - info only store offset or maps: [CRUCIAL PART!!!]
-	     - auto& blk3 = qt3(br,bc,bm) - avoid computation!
-        - avoid daxpy?
-    - low-level implementation of contract without dtensor!
-	     - contract_qt3_qt2_info
-	     - contract_qt4_qt2_info
-	     - contract_qt3_qt3_info
-  	 - openmp error due to qt2.conjugate() for complex case [1_lih3_dcg]
-	 - conjugate is treated outside contract_opxwf!
-    - minimal operation count: bipart_oper with factorization
-
- * Better IO strategy: 
-    - oper_stack: global memory for saving oper_load [DONE2022/04/08]
-    - concurrency: separate computation & save for saving oper_save [DONE2022/04/09]
-    - remove hdf5 support: compare against iostream (timing)	
-    - new computational model:
-	   1. fetch qops from memory / disk
-	   2. compute [Hx/renorm] + save previous qops [threaded]
-	   3. fkept is updated, the old qops will be released
-      4. delete unused file at a given bond
-    ### NOT DONE YET ###
-    - data compression? 
-    - reduce half AB/PQ operators?
-
- * Distributed H[CS] term - Chan's algorithm [DONE2022/06/10]
-    - renorm opS and opH
-    - twodot partition
-    - onedot partition
-    - hdiag for ifdist1
-   
- * Load balance:
-    - better distribution of operators [DONE2022/06/15]
-    - opS? currently this is not good because a*Ac type operators 
-    - Hx? typical: cN [isym=1, ifkr=False]
-		   cNSz [isym=2, ifkr=False]
-		   cNK [isym=1, ifkr=True]
-
- * Restart from optimized states:
-    - task_dmrg & lastdot
-    - change the name of the file rcanon_new.info to avoid overwrite later
-    - if the operator files are not deleted:
-	      task_opt & rcanon_load & rcanon_file newname.info
-      else rebuild the operators
-	      task_dmrg & rcanon_load & rcanon_file newname.info
-
- * Better sweep performances [DONE@2022/07/14]
-    - Reducing the number of Hx in Davidson solver:
-    - tuning size of subspace & preconditioning
-    - nbuff>=4 (larger value does not matter too much); keep 2 delU for restart!
-	 - LOBPCG like improvement 
-    - Sweep decimation:
-        - only perform decimation for 4*ksupp >= Dcut, hence boundary sites are 
-          almost exact, unless some quantum numbers are missing from the start.
-        - exact sites for cNK also work!
- 
- * More abstract implementation: preparation for GPU
-    - Basics [DONE2022/06/25]
-       1. AXPY: form summed operators (form intermediates)
-       2. GEMM: contract and accumulate
-       3. MMlist & cost analysis
-    - Twodot Hx [DONE2022/06/27]
-    - Onedot Hx [DONE2022/06/27]
-
- ### TODOs ###
-
- * Openmp version: different parallelization strategies:
-    - hvec4/hvec5/hvec6
-    - Renormalization? [allows smaller temporary memory usuage!!!]
-    - Kramers version?
-    - Complex version: 'R'?
-
- * Towards large-scale parallelization [DONE2022/XX/XX]
-    - profile openmp/mpi onedot/twodot version with large D
-	 - note: when noise is added, the results can be different 
-	 - analyze why the parallel efficiency is low?
-	 - 1. sort formulae + static/dynamic/guided,chunksize [DONE2022/03/05]
-	 - 2. private workspace?
-	 - 3. reduction
-    - GPU implementation 
-    - merged wf4[lc1,c2r] implementation?
-
- * Other improvements for special usages:
-    - different symmetry, in particular, kramers version:
-	 - complex arithmetic
-	 - how to avoid repeated K()?
-    - other topologies:
-	 - comb tns
-
- * Applications:
-    - Small system like C2+/O2? [checked against FCI results]
-    - Fe2S2 [CAS(30e,20o)] - parallelized
-    - SOC within this active space
-    - G-tensor/GIAO for Ferric-Ferrous dimer [THIS WOULD BE GREAT!]
-    - entropy as a complexity measure?
-    - classical help for quantum computing? better biased measurement?
- 
- * Twordms: enable Rel-CASSCF with interface to other codes 
-
- * VMPS+GPU? (simply dense matrix multiplication?)
-
---------------
-KNOWN PROBLEMS
---------------
-
- 1. thresh_proj & thresh_ortho sensitivity in SCI projection [theoretical/numerical problem?]
-    => implement canonicalization with help!
-
- 2. to work with ctns, pRDM is removed which makes onedot opt prone to local minimum:
-    implementing decimation for {|psi>, sum_k a_k|psi>, sum_l b_l|psi>} may help.
-
-     /home/lx/lzd/focus_repo/FOCUS/examples/3_h6+_kr
-     finput= results/rinput.dat
-     fname[ref]= results/rctns.out
-     nsweep= 2
-     fname[cal]= ./tmp/rctns.out
-     nsweep= 2
-     eref= [-2.89565156 -2.74390766]  ecal= [-2.89503561 -2.74089796]  ediff= 0.0030720814731275076
-     fail
-
- 3. In SVD-based decimation, it is possible that total=2, full=8, since some sectors do not have matched sectors.
-   
-     decimation for each symmetry sector:
-     >br=0 qr=(4,0) rdim=2
-     >br=1 qr=(5,-1) rdim=4
-     >br=2 qr=(5,1) rdim=4
-     >br=3 qr=(6,-2) rdim=2
-     >br=4 qr=(6,0) rdim=8
-      find matched qc =(0,0)
-      SVD-based decimation: dim(l,r)=1,8
-      sigs2[final]: 0.5 0.5
-     >br=5 qr=(6,2) rdim=2
-     >br=6 qr=(7,-1) rdim=4
-     >br=7 qr=(7,1) rdim=4
-     >br=8 qr=(8,0) rdim=2
-     
-     sorted renormalized states: total=2 dcut=2 thresh_sig2=1e-14
-      i=0 qr=(6,0) 0-th sig2=0.5 accum=0.5
-      i=1 qr=(6,0) 1-th sig2=0.5 accum=1
-     select renormalized states per symmetry sector: nqr=9
-      iqr=0 qr=(6,0) dim[full,kept]=8,2 wts=1 accum=1 deff=2
-     decimation summary: 32->2 dwt=0 SvN=1
-    
- 4. The truncation thresh_sig2=1.e-14 may lead some differences on the number of renormalized states,
-    such that the optimized energies can be slightly different with maxcycle truncated.
-
-=== 2023 DMRG[GPU] ===
-
- * Better reduction algorithm using GEMV [DONE@2023/03/01]
-
- * Test platform on jiageng:
-   - Add more tests in examples [DONE@2023/03/01]
-   - Muilt-GPU support on jiageng? => reinstall OpenMPI
-   - Profiling: Check fetch time & CPU memory for Fe8S7!
-
- * Problems for large arrays: [DONE@2023/03/07] 
-   - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magmamemcpy size is int]
-   - MPI: bypass the 2GB limit in MPI_COUNT by partitioned broadcast & reduce
-   - MATH: Fix int32 & int64 problem in blas/lapack using MKL_INT [ndim is int]
-   - zquatev: resolve cNK bugs? use MKL_INT
-
- * Support restart isweep & ibond: [DONE@2023/03/09]
-      0. restructure rsites/lsites/rwfuns/psi into sites/rwfuns/psi - more compact [DONE@2023/03/05]
-         - rwfuns must be used, otherwise get_Hmat will not work in CNK in the last site !!!
-      1. fix guess error [DONE@2023/03/06]
-      2. fix last conversion into RCF [DONE@2023/03/06]
-      3. add dump RCF at each step [DONE@2023/03/06]
-      4. support restart by loading RCF? [DONE@2023/03/08]
-      5. support restart at a particular ibond? [DONE@2023/03/09]
-
- * Batch support: [DONE@2023/03/24]
-    - Support Intermediate with batch
-         0. fix storage order in oper_dict to make opC contigous
-         1. consistent ordering for dgemv? [DONE@2023/03/20]
-    - Support Renorm with batch
-         0. basic subroutines: alg_renorm=4 [DONE@2023/03/19]
-            - preprocess_renorm.h
-            - preprocess_rformulae.h
-            - preprocess_rinter.h
-            - preprocess_rlist.h
-            - preprocess_rmu.h
-         1. alg_renorm=16: CPU batch [DONE@2023/03/24]
-            - preprocess_rmmtasks.h
-            - preprocess_rernorm_batch.h
-    - Support Intermediate generated on the fly
-         0. sigma (alg_hvec=7) [DONE@2023/03/23]
-            - preprocess_sigma_batch2.h
-         1. renorm (alg_renorm=17) [DONE@2023/03/23]
-            - preprocess_renorm_batch2.h
-
- * GPU support for Intermediate & Renorm: [DONE@2023/03/27]
-   - Support Intermediate with GPU:
-         0. alg_inter=2: GPU batch [DONE@2023/03/25]
-   - Support Renorm with GPU:
-         0. alg_hvec=16/17: GPU batch [DONE@2023/03/26]
-            - preprocess_rernorm_batchGPU.h
-         1. alg_renorm=16/17: GPU batch [DONE@2023/03/27]
-            - preprocess_rernorm_batchGPU.h
-   - Single batch: 18/19
-
- * profiling: better timing for alg_hvec & alg_renorm [DONE@2023/04/01]
-   - single batch: alg_hvec=17/19
-   - mmorder [no significant difference]
-   - ifdist1?
-
- * async IO strategy: bugfix [DONE@2023/05/18]
-   - revise GPUmem control [DONE@2023/04/07]
-   - revise oper_pool
-   - revise sweep_twodot/onedot_renorm to release unnecessary operators before renorm to save memory
-   - overlap save operators with computation? [DONE@2023/04/08]
-   - overlap fetch operators with computation? [DONE@2023/04/15]
-   - hdiag implementation on GPU [DONE@2023/04/14]
-   - async memcpy to GPU => magma_queue
-
- * parallel decimation:
-   - openmp + mpi [DONE@2023/04/23]
-   - mpi -> share memory?
-   - GPU version for large D>5000? [DONE@2023/??/??]
-
- * cpu<->gpu, network communication: 
-   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DONE@2023/04/17]
-   2. perform renormalization by class [CABPQSH, hiden memcpy]
-
- * More balanced partition of rops and Hx? scale up to more nodes?
-   - better treatment of opS term for DMRG, assuming Cop are distributed [DONE@2023/05/01]
-   - formulae based partition
-
- * Better treatment GEMM involving 'c': use axpy_vbatch?
-   - REMOVE c related for NSz symmetry [DONE@2023/05/18]
-   - unrool for N symmetry
-   - general treatment for A[M,K]*B[K,N] for small K,N (~1,2,...,dbranch)
-
- * Better GEMM_BATCH with TensorCore
-   - cublas dgemmbatched [DONE@2023/05/24]
-
-=== TODOs: scalabilities ===
+### TODOs: better scalabilities ###
 
  * Better Davidson solver on GPU?
    - GPU memory is a problem
@@ -329,52 +30,28 @@ KNOWN PROBLEMS
      the full vector x & y to GPU, which minimize the memory usage of GPU.
    - Can renorm be performed in a similar way?
 
-=== TODOs: functionalities ===
+### TODOs: applications ###
 
- * Reduced density matrix (RDMs) [!!!] 
+ * Towards large-scale parallelization: 
+    - profile openmp/mpi onedot/twodot version with large D
+	 - note: when noise is added, the results can be different 
+	 - analyze why the parallel efficiency is low?
+	 - 1. sort formulae + static/dynamic/guided,chunksize [DONE2022/03/05]
+	 - 2. private workspace?
+	 - 3. reduction
+    - GPU implementation 
+    - merged wf4[lc1,c2r] implementation?
+	 - how to avoid repeated K()?
 
- * Spin-adapted version?
+ * Applications:
+    - Small system like C2+/O2? [checked against FCI results]
+    - Fe2S2 [CAS(30e,20o)] - parallelized
+    - SOC within this active space
+    - G-tensor/GIAO for Ferric-Ferrous dimer [THIS WOULD BE GREAT!]
+    - entropy as a complexity measure?
+    - classical help for quantum computing? better biased measurement?
+ 
+ * Twordms: enable Rel-CASSCF with interface to other codes 
 
- * Support Kramers version: 
-   - support complex version [DONE@2023/02/28]
-   - what about 'R' operation in contract? [general complex]
-   - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
-      otherwise renormalized state become complex, and the construction of H 
-      requires 'Conj' operation in GEMM!] 
+ * VMPS+GPU? (simply dense matrix multiplication?)
 
-=== 2023 VMC ===
-
- * Exact diagonalization by construct full Hamtiltonian [DONE@20230117]
-
- * VMC + iRBM:
-   - opt_exact [DONE@20230113]
-   - various RBM ansatz [DONE@20230114]
-   - stochastic reconfiguration (SR): SVD-based?
-   - opt_sample: MCMC
-   - schedule for nhiden?
-   - pretraining by SCI
-   - iron-sulfur clusters: frustrated spin systems
-
- * postCTNS.x driver: interface MPS
-   - overlap between two MPS? [DONE@20230608]
-   - Sdiag: fast sampling [DONE@20230609]
-   - expectation value via sampling:
-      - <Psi|H|Psi>
-      - <Psi|S2|Psi> [DONE@20230611]
-      - <Psi|(H-E)^2|Psi>
-   - spin-projection:
-      - small d function [DONE@20230621]
-      - Gauss-legendre points [DONE@20230622]
-      - matrix elements for exp[-i*beta*Sy] [DONE@20230624]
-      - <Psi|Ps|Psi> (lower sym: xNSz->xN => IMPORTANT) [DONE@20230624] 
-      - E[P|psi>] = <Psi|HPs|Psi>/<Psi|Ps|Psi> [DONE@20230625]
-      - error for <Psi|Ps|Psi> at Smax? <Psi|Ps|Psi> >= 0 [DONE@20230630]
-   - optimization for VMC energy
-      - faster <n|Psi> functions [!!!]
-   - parallelization:
-      - parallel random number generator (PRNG)
-      - MPI+OpenMP
-      - GPU?
-   - VMC algorithm:
-      - RBM with libtorch?
-      - RBM on top of MPS?
