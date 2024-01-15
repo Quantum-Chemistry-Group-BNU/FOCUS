@@ -274,6 +274,8 @@
       (1) std::conditional<Qm::ifabelian, stensor2<Tm>, stensor2su2<Tm>>::type in comb 
       (2) template <bool y=ifab, std::enable_if_t<y,int> = 0> in qtensor2 
    - tensor with non-abelian symmetry
+      (1) qinfoXsu2
+      (2) stensorXsu2
 
  * generate initial guess by conversion
 
