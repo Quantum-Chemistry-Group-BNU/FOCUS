@@ -13,26 +13,31 @@ namespace ctns{
       struct qZ2{
          static const int isym = 0;
          static const bool ifkr = false;
+         static const bool ifabelian = true;
       };
       // isym = 1:
       struct qN{
          static const int isym = 1;
          static const bool ifkr = false;
+         static const bool ifabelian = true;
       };
       // isym = 2:
       struct qNSz{
          static const int isym = 2;
          static const bool ifkr = false;
+         static const bool ifabelian = true;
       };
       // Kramers symmetry: relativistic H with SOC
       struct qNK{
          static const int isym = 1;
          static const bool ifkr = true;
+         static const bool ifabelian = true;
       };
       // isym = 3;
       struct qNS{
          static const int isym = 3;
          static const bool ifkr = false;
+         static const bool ifabelian = false;
       };
 
       // is_available

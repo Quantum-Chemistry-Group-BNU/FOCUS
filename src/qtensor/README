@@ -2,4 +2,18 @@
 For SU2 symmetry:
 
 qnum_qkind.h
+qtensor.h
+
+qtensor2.h
+qtensor3.h
+qtensor4.h
+
+qinfo2su2.h
+qinfo3su2.h
+qinfo4su2.h
+
+stensor2su2.h
+stensor3su2.h
+stensor4su2.h
+
 

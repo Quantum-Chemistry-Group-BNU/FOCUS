@@ -78,11 +78,11 @@ namespace ctns{
             // used in initialization & debug operators 
             std::vector<renorm_basis<Tm>> rbases;
             // mixed canonical form
-            std::vector<stensor3<Tm>> sites;
+            std::vector<qtensor3<Qm::ifabelian,Tm>> sites;
             // wavefunction at the left boundary -*-
-            std::vector<stensor2<Tm>> rwfuns;
+            std::vector<qtensor2<Qm::ifabelian,Tm>> rwfuns;
             // central wavefunction
-            std::vector<stensor3<Tm>> cpsi;
+            std::vector<qtensor3<Qm::ifabelian,Tm>> cpsi;
 #ifndef SERIAL
             boost::mpi::communicator world; // for MPI
 #endif

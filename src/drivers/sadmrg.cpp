@@ -59,9 +59,10 @@ void SADMRG(const input::schedule& schd){
                ctns::rcanon_load(icomb_NSz, rcanon_file); // user defined rcanon_file
             } // rcanon_load
 
-            // convert
-            //ctns::rcanon_()icomb_NSz, icomb);
+            // convert to SU2 symmetry via sweep projection
+            //ctns::rcanon_tosu2(icomb_NSz, icomb);
             exit(1);
+
          }else{
             ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
          }

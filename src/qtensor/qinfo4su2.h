@@ -1,16 +1,12 @@
-#ifndef QINFO4_H
-#define QINFO4_H
+#ifndef QINFO4SU2_H
+#define QINFO4SU2_H
 
-#include "../core/serialization.h"
-#include "../core/tools.h"
-#include "qnum_qsym.h"
-#include "qnum_qbond.h"
-#include "dtensor.h"
+#include "qinfo4.h"
 
 namespace ctns{
 
    template <typename Tm>
-      struct qinfo4{
+      struct qinfo4su2{
          private:
             // serialize
             friend class boost::serialization::access;	   
@@ -24,6 +20,7 @@ namespace ctns{
                   this->setup();
                }
             BOOST_SERIALIZATION_SPLIT_MEMBER()
+/*
             // conservation: dir={1,1,1,1} 
             bool _ifconserve(const int br, const int bc, const int bm, const int bv) const{
                return sym == qrow.get_sym(br) 
@@ -31,9 +28,11 @@ namespace ctns{
                   + qmid.get_sym(bm) 
                   + qver.get_sym(bv);
             }
+*/
             // setup derived variables
             void setup();
          public:
+/*
             // address for storaging block data
             int _addr(const int br, const int bc, const int bm, const int bv) const{
                return ((br*_cols + bc)*_mids + bm)*_vers + bv;
@@ -76,6 +75,7 @@ namespace ctns{
                      qver.get_dim(bv),
                      data+off-1);
             }
+*/
          public:
             static const int dims = 4; 
             qsym sym;
@@ -83,12 +83,15 @@ namespace ctns{
          public: // derived
             size_t _size = 0;
             int _rows = 0, _cols = 0, _mids = 0, _vers = 0;
+/*
             std::vector<int> _nnzaddr;
             std::vector<size_t> _offset;
+*/
       };
 
    template <typename Tm>
-      void qinfo4<Tm>::setup(){
+      void qinfo4su2<Tm>::setup(){
+/*
          _rows = qrow.size();
          _cols = qcol.size();
          _mids = qmid.size();
@@ -121,8 +124,10 @@ namespace ctns{
          } // br
          _nnzaddr.resize(ndx);
          _size -= 1; // tricky part
+*/
       }
 
+/*
    template <typename Tm>
       void qinfo4<Tm>::print(const std::string name) const{
          std::cout << "qinfo4: " << name << " sym=" << sym << std::endl;
@@ -135,6 +140,7 @@ namespace ctns{
             << " size=" << _size << ":" << tools::sizeMB<Tm>(_size) << "MB" 
             << std::endl; 
       }
+*/
 
 } // ctns
 
