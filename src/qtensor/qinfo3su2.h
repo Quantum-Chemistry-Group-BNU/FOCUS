@@ -2,6 +2,7 @@
 #define QINFO3SU2_H
 
 #include "qinfo3.h"
+#include "spincoupling.h"
 
 namespace ctns{
 
@@ -12,83 +13,82 @@ namespace ctns{
             friend class boost::serialization::access;	   
             template <class Archive>
                void save(Archive & ar, const unsigned int version) const{
-                  ar & sym & qrow & qcol & qmid & dir;
+                  ar & sym & qrow & qcol & qmid & dir & couple;
                }
             template <class Archive>
                void load(Archive & ar, const unsigned int version){
-                  ar & sym & qrow & qcol & qmid & dir;
+                  ar & sym & qrow & qcol & qmid & dir & couple;
                   this->setup();
                }
             BOOST_SERIALIZATION_SPLIT_MEMBER()
-/*
-            // conservation pattern determined by dir
-            bool _ifconserve(const int br, const int bc, const int bm) const{
-               return sym == (std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br))
-                  + (std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc))
-                  + (std::get<2>(dir) ? qmid.get_sym(bm) : -qmid.get_sym(bm));
-            }
-*/
             // setup derived variables
             void setup();
+            // conservation pattern determined by dir
+            bool _ifconserve(const int br, const int bc, const int bm, const int tsi) const{
+               bool ifnele = sym.ne() == (std::get<0>(dir) ? qrow.get_sym(br).ne() : -qrow.get_sym(br).ne())
+                  + (std::get<1>(dir) ? qcol.get_sym(bc).ne() : -qcol.get_sym(bc).ne())
+                  + (std::get<2>(dir) ? qmid.get_sym(bm).ne() : -qmid.get_sym(bm).ne());
+               // triangular condition
+               bool ifspin;
+               if(couple == LCcouple){
+                  ifspin = spin_triangle(qrow.get_sym(br).tm(), qmid.get_sym(bm).tm(), tsi) &&
+                     spin_triangle(tsi, qcol.get_sym(bc).tm(), sym.tm());
+               }else if(couple == CRcouple){
+                  ifspin = spin_triangle(qmid.get_sym(bm).tm(), qcol.get_sym(bc).tm(), tsi) &&
+                     spin_triangle(tsi, qrow.get_sym(br).tm(), sym.tm());
+               }
+               return ifnele && ifspin;
+            }
          public:
-/*
-            // address for storaging block data
-            int _addr(const int br, const int bc, const int bm) const{
-               return (br*_cols + bc)*_mids + bm;
-            }
-            void _addr_unpack(const int idx3, int& br, int& bc, int& bm) const{
-               bm = idx3%_mids;
-               int idx2 = idx3/_mids;
-               bc = idx2%_cols;
-               br = idx2/_cols;
-            }
             // initialization
             void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-                  const qbond& _qmid, const direction3 _dir=dir_RCF){
+                  const qbond& _qmid, const direction3 _dir=dir_RCF, 
+                  const spincoupling3 _couple=LCcouple){
                sym = _sym;
                qrow = _qrow;
                qcol = _qcol;
                qmid = _qmid;
                dir = _dir;
+               couple = LCcouple;
                this->setup();
             }
             // print
             void print(const std::string name) const;
             // check
-            bool operator ==(const qinfo3& info) const{
+            bool operator ==(const qinfo3su2& info) const{
                return sym==info.sym && qrow==info.qrow && qcol==info.qcol 
-                  && qmid==info.qmid && dir==info.dir;
+                  && qmid==info.qmid && dir==info.dir 
+                  && couple=info.couple;
             }
             // helpers
-            bool empty(const int br, const int bc, const int bm) const{
-               return _offset[_addr(br,bc,bm)] == 0;
+            bool empty(const int br, const int bc, const int bm, const int tsi) const{
+               return _offset.at(std::make_tuple(br,bc,bm,tsi)) == 0;
             }
             dtensor3<Tm> operator()(const int br, const int bc, const int bm, 
-                  Tm* data) const{
-               size_t off = _offset[_addr(br,bc,bm)];
+                  const int tsi, Tm* data) const{
+               size_t off = _offset.at(std::make_tuple(br,bc,bm,tsi));
                return (off == 0)? dtensor3<Tm>() : dtensor3<Tm>(qrow.get_dim(br),
-                     qcol.get_dim(bc),
-                     qmid.get_dim(bm),
-                     data+off-1);
+                     qcol.get_dim(bc), qmid.get_dim(bm), data+off-1);
             }
+            /*
             // ZL@20221207 dump
             void dump(std::ofstream& ofs) const;
-*/
+            */
          public:
             static const int dims = 3;
             qsym sym;
             qbond qrow, qcol, qmid;
             direction3 dir;
-         public: // derived
+            spincoupling3 couple;
+            // derived
             size_t _size = 0;
             int _rows = 0, _cols = 0, _mids = 0;
-/*
-            std::vector<int> _nnzaddr;
-            std::vector<size_t> _offset;
-*/
+         public: 
+            std::vector<std::tuple<int,int,int,int>> _nnzaddr; // (br,bc,bm,tsi)
+            std::map<std::tuple<int,int,int,int>,size_t> _offset;
       };
 
-/*
+   /*
    template <typename Tm>
       void qinfo3su2<Tm>::dump(std::ofstream& ofs) const{
          // C order
@@ -98,45 +98,44 @@ namespace ctns{
          ofs.write((char*)(_offset.data()), sizeof(size_t)*_offset.size());
          ofs.write((char*)(&_size), sizeof(_size)); // F order
       }
-*/
+   */
 
    template <typename Tm>
       void qinfo3su2<Tm>::setup(){
-/*
-         _rows = qrow.size();
-         _cols = qcol.size();
-         _mids = qmid.size();
-         int nblks = _rows*_cols*_mids;
-         _nnzaddr.resize(nblks);
-         _offset.resize(nblks, 0);
-         _size = 1;
-         int idx = 0, ndx = 0;
-         for(int br=0; br<_rows; br++){
+         /*
+            _rows = qrow.size();
+            _cols = qcol.size();
+            _mids = qmid.size();
+            int nblks = _rows*_cols*_mids;
+            _nnzaddr.resize(nblks);
+            _offset.resize(nblks, 0);
+            _size = 1;
+            int idx = 0, ndx = 0;
+            for(int br=0; br<_rows; br++){
             int rdim = qrow.get_dim(br);
             for(int bc=0; bc<_cols; bc++){
-               int cdim = qcol.get_dim(bc);
-               int rcdim = rdim*cdim;
-               for(int bm=0; bm<_mids; bm++){
-                  if(_ifconserve(br,bc,bm)){
-                     _nnzaddr[ndx] = idx;
-                     _offset[idx] = _size;
-                     int mdim = qmid.get_dim(bm);
-                     _size += rcdim*mdim;
-                     ndx += 1;
-                  }
-                  idx += 1;
-               } // bm 
+            int cdim = qcol.get_dim(bc);
+            int rcdim = rdim*cdim;
+            for(int bm=0; bm<_mids; bm++){
+            if(_ifconserve(br,bc,bm)){
+            _nnzaddr[ndx] = idx;
+            _offset[idx] = _size;
+            int mdim = qmid.get_dim(bm);
+            _size += rcdim*mdim;
+            ndx += 1;
+            }
+            idx += 1;
+            } // bm 
             } // bc
-         } // br
-         _nnzaddr.resize(ndx);
-         _size -= 1; // tricky part
-*/ 
+            } // br
+            _nnzaddr.resize(ndx);
+            _size -= 1; // tricky part
+            */ 
       }
 
-/*
    template <typename Tm>
       void qinfo3su2<Tm>::print(const std::string name) const{
-         std::cout << "qinfo3: " << name << " sym=" << sym << " dir="
+         std::cout << "qinfo3su2: " << name << " sym=" << sym << " dir="
             << std::get<0>(dir) << "," 
             << std::get<1>(dir) << ","
             << std::get<2>(dir) << std::endl; 
@@ -148,7 +147,6 @@ namespace ctns{
             << " size=" << _size << ":" << tools::sizeMB<Tm>(_size) << "MB" 
             << std::endl; 
       }
-*/
 
 } // ctns
 

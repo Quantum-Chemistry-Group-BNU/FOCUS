@@ -13,6 +13,7 @@ namespace ctns{
    //  isym = 0: Z2
    //  isym = 1: N=(Ne,0)
    //  isym = 2: NSz=(Ne,2M)
+   //  isym = 3: NS=(Ne,S) [tm is ts in this case!]
    //
    class qsym{
       private:

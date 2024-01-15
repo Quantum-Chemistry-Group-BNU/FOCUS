@@ -18,6 +18,10 @@
 #include "qinfo2su2.h"
 #include "qinfo3su2.h"
 #include "qinfo4su2.h"
+
+#include "fermionsign.h"
+#include "spincoupling.h"
+
 #include "qtensor2.h"
 #include "qtensor3.h"
 #include "qtensor4.h"

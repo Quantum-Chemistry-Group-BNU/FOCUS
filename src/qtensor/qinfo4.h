@@ -24,6 +24,8 @@ namespace ctns{
                   this->setup();
                }
             BOOST_SERIALIZATION_SPLIT_MEMBER()
+            // setup derived variables
+            void setup();
             // conservation: dir={1,1,1,1} 
             bool _ifconserve(const int br, const int bc, const int bm, const int bv) const{
                return sym == qrow.get_sym(br) 
@@ -31,8 +33,6 @@ namespace ctns{
                   + qmid.get_sym(bm) 
                   + qver.get_sym(bv);
             }
-            // setup derived variables
-            void setup();
          public:
             // address for storaging block data
             int _addr(const int br, const int bc, const int bm, const int bv) const{
@@ -67,22 +67,19 @@ namespace ctns{
             bool empty(const int br, const int bc, const int bm, const int bv) const{
                return _offset[_addr(br,bc,bm,bv)] == 0;
             }
-            dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv,
-                  Tm* data) const{
+            dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv, Tm* data) const{
                size_t off = _offset[_addr(br,bc,bm,bv)];
                return (off == 0)? dtensor4<Tm>() : dtensor4<Tm>(qrow.get_dim(br),
-                     qcol.get_dim(bc),
-                     qmid.get_dim(bm),
-                     qver.get_dim(bv),
-                     data+off-1);
+                     qcol.get_dim(bc), qmid.get_dim(bm), qver.get_dim(bv), data+off-1);
             }
          public:
             static const int dims = 4; 
             qsym sym;
             qbond qrow, qcol, qmid, qver;
-         public: // derived
+            // derived
             size_t _size = 0;
             int _rows = 0, _cols = 0, _mids = 0, _vers = 0;
+         public: 
             std::vector<int> _nnzaddr;
             std::vector<size_t> _offset;
       };

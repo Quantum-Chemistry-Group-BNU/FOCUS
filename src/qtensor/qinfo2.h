@@ -32,13 +32,13 @@ namespace ctns{
                   this->setup();
                }
             BOOST_SERIALIZATION_SPLIT_MEMBER()
-               // conservation pattern determined by dir
-               bool _ifconserve(const int br, const int bc) const{
-                  return sym == (std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br))
-                     + (std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc));
-               }
             // setup derived variables
             void setup();
+            // conservation pattern determined by dir
+            bool _ifconserve(const int br, const int bc) const{
+               return sym == (std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br))
+                  + (std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc));
+            }
          public:
             // address for storaging block data  - FORTRAN ORDER
             int _addr(const int br, const int bc) const{
@@ -67,21 +67,20 @@ namespace ctns{
             bool empty(const int br, const int bc) const{
                return _offset[_addr(br,bc)] == 0;
             }
-            dtensor2<Tm> operator()(const int br, const int bc, 
-                  Tm* data) const{
+            dtensor2<Tm> operator()(const int br, const int bc, Tm* data) const{
                size_t off = _offset[_addr(br,bc)];
                return (off == 0)? dtensor2<Tm>() : dtensor2<Tm>(qrow.get_dim(br),
-                     qcol.get_dim(bc),
-                     data+off-1);
+                     qcol.get_dim(bc), data+off-1);
             }
          public:
             static const int dims = 2; 
             qsym sym; // <row|op[in]|col>
             qbond qrow, qcol;
             direction2 dir = dir_OPER;
-         public: // derived
+            // derived
             size_t _size = 0;
             int _rows = 0, _cols = 0;
+         public: 
             std::vector<int> _nnzaddr;
             std::vector<size_t> _offset;
             // ZL@20220621 fast access of nonzero blocks 

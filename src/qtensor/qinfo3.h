@@ -34,14 +34,14 @@ namespace ctns{
                   this->setup();
                }
             BOOST_SERIALIZATION_SPLIT_MEMBER()
-               // conservation pattern determined by dir
-               bool _ifconserve(const int br, const int bc, const int bm) const{
-                  return sym == (std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br))
-                     + (std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc))
-                     + (std::get<2>(dir) ? qmid.get_sym(bm) : -qmid.get_sym(bm));
-               }
             // setup derived variables
             void setup();
+            // conservation pattern determined by dir
+            bool _ifconserve(const int br, const int bc, const int bm) const{
+               return sym == (std::get<0>(dir) ? qrow.get_sym(br) : -qrow.get_sym(br))
+                  + (std::get<1>(dir) ? qcol.get_sym(bc) : -qcol.get_sym(bc))
+                  + (std::get<2>(dir) ? qmid.get_sym(bm) : -qmid.get_sym(bm));
+            }
          public:
             // address for storaging block data
             int _addr(const int br, const int bc, const int bm) const{
@@ -74,13 +74,10 @@ namespace ctns{
             bool empty(const int br, const int bc, const int bm) const{
                return _offset[_addr(br,bc,bm)] == 0;
             }
-            dtensor3<Tm> operator()(const int br, const int bc, const int bm, 
-                  Tm* data) const{
+            dtensor3<Tm> operator()(const int br, const int bc, const int bm, Tm* data) const{
                size_t off = _offset[_addr(br,bc,bm)];
                return (off == 0)? dtensor3<Tm>() : dtensor3<Tm>(qrow.get_dim(br),
-                     qcol.get_dim(bc),
-                     qmid.get_dim(bm),
-                     data+off-1);
+                     qcol.get_dim(bc), qmid.get_dim(bm), data+off-1);
             }
             // ZL@20221207 dump
             void dump(std::ofstream& ofs) const;
@@ -89,9 +86,10 @@ namespace ctns{
             qsym sym;
             qbond qrow, qcol, qmid;
             direction3 dir;
-         public: // derived
+            // derived
             size_t _size = 0;
             int _rows = 0, _cols = 0, _mids = 0;
+         public: 
             std::vector<int> _nnzaddr;
             std::vector<size_t> _offset;
       };
@@ -105,7 +103,7 @@ namespace ctns{
          ofs.write((char*)(_offset.data()), sizeof(size_t)*_offset.size());
          ofs.write((char*)(&_size), sizeof(_size)); // F order
       }
- 
+
    template <typename Tm>
       void qinfo3<Tm>::setup(){
          _rows = qrow.size();

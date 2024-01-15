@@ -34,43 +34,6 @@ namespace ctns{
       }
 
    // wf[lc1c2r] = wf(row,col,mid,ver)
-   template <typename Tm>
-      void cntr_signed(const std::string block, const qinfo4<Tm>& info, Tm* data){
-         if(block == "r"){
-            int br, bc, bm, bv;
-            for(int i=0; i<info._nnzaddr.size(); i++){
-               int idx = info._nnzaddr[i];
-               info._addr_unpack(idx,br,bc,bm,bv);
-               auto blk4 = info(br,bc,bm,bv,data);
-               // (-1)^{p(l)+p(c1)+p(c2)}wf[lc1c2r]
-               int pt = info.qrow.get_parity(br)
-                  + info.qmid.get_parity(bm)
-                  + info.qver.get_parity(bv);
-               if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
-            } // i
-         }else if(block == "c2"){
-            int br, bc, bm, bv;
-            for(int i=0; i<info._nnzaddr.size(); i++){
-               int idx = info._nnzaddr[i];
-               info._addr_unpack(idx,br,bc,bm,bv);
-               auto blk4 = info(br,bc,bm,bv,data);
-               // (-1)^{p(l)+p(c1)}wf[lc1c2r]
-               int pt = info.qrow.get_parity(br)
-                  + info.qmid.get_parity(bm);
-               if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
-            } // i
-         }else if(block == "c1"){
-            int br, bc, bm, bv;
-            for(int i=0; i<info._nnzaddr.size(); i++){
-               int idx = info._nnzaddr[i];
-               info._addr_unpack(idx,br,bc,bm,bv);
-               auto blk4 = info(br,bc,bm,bv,data);
-               // (-1)^{p(l)}wf[lc1c2r]
-               int pt = info.qrow.get_parity(br);
-               if(pt%2 == 1) linalg::xscal(blk4.size(), -1.0, blk4.data());
-            } // i
-         } // block 
-      }
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
       void qtensor4<ifab,Tm>::cntr_signed(const std::string block){

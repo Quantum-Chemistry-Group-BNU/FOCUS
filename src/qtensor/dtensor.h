@@ -18,7 +18,7 @@ namespace ctns{
    template <typename Tm>   
       struct dtensor2 : public linalg::BaseMatrix<Tm> {
          private:
-            int _addr(const int i0, const int i1) const{ 
+            int _addr_pack(const int i0, const int i1) const{ 
                return i0+dim0*i1; 
             }
          public:
@@ -35,12 +35,12 @@ namespace ctns{
             const Tm operator()(const int i0, const int i1) const{
                assert(i0>=0 && i0<dim0);
                assert(i1>=0 && i1<dim1);
-               return _data[_addr(i0,i1)];
+               return _data[_addr_pack(i0,i1)];
             }
             Tm& operator()(const int i0, const int i1){ 
                assert(i0>=0 && i0<dim0);
                assert(i1>=0 && i1<dim1);
-               return _data[_addr(i0,i1)];
+               return _data[_addr_pack(i0,i1)];
             } 
             bool empty() const{ return _size==0; }
             size_t size() const{ return _size; }
@@ -72,8 +72,8 @@ namespace ctns{
             // interface with xgemm, similar to linalg::matrix 
             int rows() const{ return dim0; }
             int cols() const{ return dim1; }
-            const Tm* col(const int j) const{ return &_data[_addr(0,j)]; }; 
-            Tm* col(const int j){ return &_data[_addr(0,j)]; }; 
+            const Tm* col(const int j) const{ return &_data[_addr_pack(0,j)]; }; 
+            Tm* col(const int j){ return &_data[_addr_pack(0,j)]; }; 
          public:
             Tm* _data = nullptr;
             int dim0 = 0, dim1 = 0; 
@@ -84,7 +84,7 @@ namespace ctns{
    template <typename Tm>   
       struct dtensor3{
          private:
-            int _addr(const int i0, const int i1, const int i2) const{ 
+            int _addr_pack(const int i0, const int i1, const int i2) const{ 
                return i0+dim0*(i1+dim1*i2); 
             }
          public:
@@ -104,13 +104,13 @@ namespace ctns{
                assert(i0>=0 && i0<dim0);
                assert(i1>=0 && i1<dim1);
                assert(i2>=0 && i2<dim2);
-               return _data[_addr(i0,i1,i2)];
+               return _data[_addr_pack(i0,i1,i2)];
             }	     
             Tm& operator()(const int i0, const int i1, const int i2){ 
                assert(i0>=0 && i0<dim0);
                assert(i1>=0 && i1<dim1);
                assert(i2>=0 && i2<dim2);
-               return _data[_addr(i0,i1,i2)];
+               return _data[_addr_pack(i0,i1,i2)];
             }
             bool empty() const{ return _size==0; }
             size_t size() const{ return _size; }
@@ -120,10 +120,10 @@ namespace ctns{
             void set_zero(){ memset(_data, 0, _size*sizeof(Tm)); } 
             // --- SPECIFIC FUNCTIONS ---
             const dtensor2<Tm> get(const int i2) const{
-               return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2));
+               return dtensor2<Tm>(dim0,dim1,_data+_addr_pack(0,0,i2));
             }
             dtensor2<Tm> get(const int i2){
-               return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2));
+               return dtensor2<Tm>(dim0,dim1,_data+_addr_pack(0,0,i2));
             }
             // print
             void print(std::string name="", const int prec=4) const{
@@ -146,7 +146,7 @@ namespace ctns{
    template <typename Tm>   
       struct dtensor4{
          private:
-            int _addr(const int i0, const int i1, const int i2, const int i3) const{ 
+            int _addr_pack(const int i0, const int i1, const int i2, const int i3) const{ 
                return i0+dim0*(i1+dim1*(i2+dim2*i3)); 
             }
          public:
@@ -169,14 +169,14 @@ namespace ctns{
                assert(i1>=0 && i1<dim1);
                assert(i2>=0 && i2<dim2);
                assert(i3>=0 && i3<dim3);
-               return _data[_addr(i0,i1,i2,i3)];
+               return _data[_addr_pack(i0,i1,i2,i3)];
             }	     
             Tm& operator()(const int i0, const int i1, const int i2, const int i3){ 
                assert(i0>=0 && i0<dim0);
                assert(i1>=0 && i1<dim1);
                assert(i2>=0 && i2<dim2);
                assert(i3>=0 && i3<dim3);
-               return _data[_addr(i0,i1,i2,i3)];
+               return _data[_addr_pack(i0,i1,i2,i3)];
             }
             bool empty() const{ return _size==0; }
             size_t size() const{ return _size; }
@@ -186,16 +186,16 @@ namespace ctns{
             void set_zero(){ memset(_data, 0, _size*sizeof(Tm)); }
             // --- SPECIFIC FUNCTIONS ---
             const dtensor2<Tm> get(const int i2, const int i3) const{
-               return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2,i3));
+               return dtensor2<Tm>(dim0,dim1,_data+_addr_pack(0,0,i2,i3));
             }
             dtensor2<Tm> get(const int i2, const int i3){
-               return dtensor2<Tm>(dim0,dim1,_data+_addr(0,0,i2,i3));
+               return dtensor2<Tm>(dim0,dim1,_data+_addr_pack(0,0,i2,i3));
             }
             const dtensor3<Tm> get(const int i3) const{
-               return dtensor3<Tm>(dim0,dim1,dim2,_data+_addr(0,0,0,i3));
+               return dtensor3<Tm>(dim0,dim1,dim2,_data+_addr_pack(0,0,0,i3));
             }
             dtensor3<Tm> get(const int i3){
-               return dtensor3<Tm>(dim0,dim1,dim2,_data+_addr(0,0,0,i3));
+               return dtensor3<Tm>(dim0,dim1,dim2,_data+_addr_pack(0,0,0,i3));
             }
             // print
             void print(std::string name="", const int prec=4) const{
