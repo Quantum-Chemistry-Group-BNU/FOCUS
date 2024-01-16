@@ -201,7 +201,7 @@ namespace ctns{
                   size_t off = info._offset[info._addr(br,bc)];
                   return (off==0)? nullptr : _data+off-1;
                }
-            // print
+            // print [comes latter than access]
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                void print(const std::string name, const int level=0) const;
             // from/to dense matrix: assign block to proper place
@@ -257,7 +257,20 @@ namespace ctns{
                }
             
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
-            
+            // access
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               dtensor2<Tm> operator()(const int br, const int bc) const{
+                  return info(br,bc,_data);
+               }
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               Tm* start_ptr(const int br, const int bc) const{
+                  size_t off = info.get_offset(br,bc);
+                  return (off==0)? nullptr : _data+off-1;
+               }
+            // print
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               void print(const std::string name, const int level=0) const;
+ 
          public:
             bool own = true; // whether the object owns its data
             Tm* _data = nullptr;

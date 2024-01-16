@@ -66,13 +66,17 @@ namespace ctns{
                   && qmid==info.qmid && qver==info.qver && couple=info.couple;
             }
             // helpers
+            size_t get_offset(const int br, const int bc, const int bm, const int bv,
+                 const int tsi, const int tsj) const{
+               return _offset.at(std::make_tuple(br,bc,bm,bv,tsi,tsj));
+            } 
             bool empty(const int br, const int bc, const int bm, const int bv, 
                   const int tsi, const int tsj) const{
-               return _offset.at(std::make_tuple(br,bc,bm,bv,tsi,tsj)) == 0;
+               return this->get_offset(br,bc,bm,bv,tsi,tsj) == 0;
             }
             dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv,
                   const int tsi, const int tsj, Tm* data) const{
-               size_t off = _offset.at(std::make_tuple(br,bc,bm,bv,tsi,tsj));
+               size_t off = this->get_offset(br,bc,bm,bv,tsi,tsj);
                return (off == 0)? dtensor4<Tm>() : dtensor4<Tm>(qrow.get_dim(br),
                      qcol.get_dim(bc), qmid.get_dim(bm), qver.get_dim(bv), data+off-1);
             }

@@ -269,7 +269,7 @@
 
  * driver & makefile: sadmrg [DONE@2024/01/12]
 
- * data structure for tensors & comb [DONE@2024/01/XX]
+ * data structure for tensors & comb [DONE@2024/01/16]
    - switch between different implementation depending on Abelian or not [!!!]
       (1) std::conditional<Qm::ifabelian, stensor2<Tm>, stensor2su2<Tm>>::type in comb 
       (2) template <bool y=ifab, std::enable_if_t<y,int> = 0> in qtensor2 
@@ -288,6 +288,4 @@
     - initial guess
 
  * GPU implementation:
-
-
 

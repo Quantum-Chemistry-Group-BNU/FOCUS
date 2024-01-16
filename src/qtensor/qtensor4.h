@@ -180,6 +180,13 @@ namespace ctns{
             }
             double normF() const{ return linalg::xnrm2(info._size, _data); }
             void set_zero(){ memset(_data, 0, info._size*sizeof(Tm)); }
+            // for sweep algorithm
+            void from_array(const Tm* array){
+               linalg::xcopy(info._size, array, _data);
+            }
+            void to_array(Tm* array) const{
+               linalg::xcopy(info._size, _data, array);
+            }
 
             // --- SPECIFIC FUNCTIONS ---
             // access
@@ -206,15 +213,6 @@ namespace ctns{
             // ZL20210413: application of time-reversal operation
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                qtensor4<ifab,Tm> K(const int nbar=0) const;
-            // for sweep algorithm
-            template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               void from_array(const Tm* array){
-                  linalg::xcopy(info._size, array, _data);
-               }
-            template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               void to_array(Tm* array) const{
-                  linalg::xcopy(info._size, _data, array);
-               }
             // for decimation
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                qproduct dpt_lc1()  const{ return qmerge(info.qrow, info.qmid); };
@@ -253,7 +251,24 @@ namespace ctns{
                }
 
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
-
+            // access
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               dtensor4<Tm> operator()(const int br, const int bc, 
+                     const int bm, const int bv,
+                     const int tsi, const int tsj) const{ 
+                  return info(br,bc,bm,bv,tsi,tsj,_data);
+               }
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               Tm* start_ptr(const int br, const int bc, 
+                     const int bm, const int bv,
+                     const int tsi, const int tsj) const{
+                  size_t off = info.get_offset(br,bc,bm,bv,tsi,tsj);
+                  return (off==0)? nullptr : _data+off-1;
+               }
+            // print
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               void print(const std::string name, const int level=0) const;
+ 
          public:
             bool own = true; // whether the object owns its data
             Tm* _data = nullptr;

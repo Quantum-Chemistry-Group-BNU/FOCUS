@@ -9,6 +9,7 @@ qinfo3su2.h
 qinfo4su2.h
 
 fermionsign.h
+spincoupling.h
 
 qtensor2.h
 qtensor3.h
@@ -21,5 +22,4 @@ qinfo4su2.h
 stensor2su2.h
 stensor3su2.h
 stensor4su2.h
-
 
