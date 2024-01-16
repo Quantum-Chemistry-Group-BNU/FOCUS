@@ -78,7 +78,7 @@ namespace ctns{
          int nblks = _rows*_cols;
          _nnzaddr.resize(nblks);
          _size = 1;
-         int idx = 0, ndx = 0;
+         int ndx = 0;
          for(int br=0; br<_rows; br++){
             int rdim = qrow.get_dim(br);
             for(int bc=0; bc<_cols; bc++){
@@ -92,12 +92,12 @@ namespace ctns{
                }else{
                   _offset[indices] = 0;
                }
-               idx += 1;
             } // bc
          } // br
          _nnzaddr.resize(ndx);
          _size -= 1; // tricky part
-                     // ZL@20220621 fast access of nonzero blocks
+         
+         // ZL@20220621 fast access of nonzero blocks
          _br2bc.resize(_rows);
          _bc2br.resize(_cols);
          int br, bc;

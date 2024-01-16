@@ -21,8 +21,8 @@ namespace ctns{
                   this->setup();
                }
             BOOST_SERIALIZATION_SPLIT_MEMBER()
-               // setup derived variables
-               void setup();
+            // setup derived variables
+            void setup();
             // conservation: dir={1,1,1,1} 
             bool _ifconserve(const int br, const int bc, const int bm, const int bv, 
                   const int tsi, const int tsj) const{
@@ -91,45 +91,81 @@ namespace ctns{
 
    template <typename Tm>
       void qinfo4su2<Tm>::setup(){
-         /*
-            _rows = qrow.size();
-            _cols = qcol.size();
-            _mids = qmid.size();
-            _vers = qver.size();
-            int nblks = _rows*_cols*_mids*_vers;
-            _nnzaddr.resize(nblks);
-            _offset.resize(nblks, 0);
-            _size = 1;
-            int idx = 0, ndx = 0;
-            for(int br=0; br<_rows; br++){
+         _rows = qrow.size();
+         _cols = qcol.size();
+         _mids = qmid.size();
+         _vers = qver.size();
+         _size = 1;
+         for(int br=0; br<_rows; br++){
             int rdim = qrow.get_dim(br);
             for(int bc=0; bc<_cols; bc++){
-            int cdim = qcol.get_dim(bc);
-            int rcdim = rdim*cdim;
-            for(int bm=0; bm<_mids; bm++){
-            int mdim = qmid.get_dim(bm);
-            int rcmdim = rcdim*mdim;
-            for(int bv=0; bv<_vers; bv++){
-            if(_ifconserve(br,bc,bm,bv)){
-            _nnzaddr[ndx] = idx;
-            _offset[idx] = _size;
-            int vdim = qver.get_dim(bv);
-            _size += rcmdim*vdim;
-            ndx += 1;
-            }
-            idx += 1;
-            } // bv
-            } // bm
+               int cdim = qcol.get_dim(bc);
+               int rcdim = rdim*cdim;
+               for(int bm=0; bm<_mids; bm++){
+                  int mdim = qmid.get_dim(bm);
+                  int rcmdim = rcdim*mdim;
+                  for(int bv=0; bv<_vers; bv++){
+                     int vdim = qver.get_dim(bv);
+                     // different coupling cases
+                     int tsl = qrow.get_sym(br).tm();
+                     int tsc1 = qmid.get_sym(bm).tm();
+                     int tsc2 = qver.get_sym(bv).tm();
+                     int tsr = qcol.get_sym(bc).tm();
+                     if(couple == LC1andC2Rcouple){
+                        // sLsC1 => sLC1, sC2sR => sC2R
+                        for(int tslc1=std::abs(tsl-tsc1); tslc1<=tsl+tsc1; tslc1+=2){
+                           for(int tsc2r=std::abs(tsc2-tsr); tsc2r<=tsc2+tsr; tsc2r+=2){
+                              auto indices = std::make_tuple(br,bc,bm,bv,tslc1,tsc2r);
+                              if(_ifconserve(br,bc,bm,tslc1,tsc2r)){
+                                 _nnzaddr.push_back(indices);
+                                 _offset[indices] = _size;
+                                 _size += rcmdim*vdim;
+                              }else{
+                                 _offset[indices] = 0;
+                              }
+                           }
+                        }
+                     }else if(couple == LC1andC2couple){
+                        // sLsC1 => sLC1, sLC1sC2 => sLC1C2
+                        for(int tslc1=std::abs(tsl-tsc1); tslc1<=tsl+tsc1; tslc1+=2){
+                           for(int tslc1c2=std::abs(tslc1-tsc2); tslc1c2<=tslc1+tsc2; tslc1c2+=2){
+                              auto indices = std::make_tuple(br,bc,bm,bv,tslc1,tslc1c2);
+                              if(_ifconserve(br,bc,bm,tslc1,tslc1c2)){
+                                 _nnzaddr.push_back(indices);
+                                 _offset[indices] = _size;
+                                 _size += rcmdim*vdim;
+                              }else{
+                                 _offset[indices] = 0;
+                              }
+                           }
+                        }
+                     }else if(couple == C1andC2Rcouple){
+                        // sC2sR => sC2R, sC1sC2R => sC1C2R
+                        for(int tsc2r=std::abs(tsc2-tsr); tsc2r<=tsc2+tsr; tsc2r+=2){
+                           for(int tsc1c2r=std::abs(tsc1-tsc2r); tsc1c2r<=tsc1+tsc2r; tsc1c2r+=2){
+                              auto indices = std::make_tuple(br,bc,bm,bv,tsc2r,tsc1c2r);
+                              if(_ifconserve(br,bc,bm,tsc2r,tsc1c2r)){
+                                 _nnzaddr.push_back(indices);
+                                 _offset[indices] = _size;
+                                 _size += rcmdim*vdim;
+                              }else{
+                                 _offset[indices] = 0;
+                              }
+                           }
+                        }
+                     } // couple
+                  } // bv
+               } // bm
             } // bc
-            } // br
-            _nnzaddr.resize(ndx);
-            _size -= 1; // tricky part
-            */
+         } // br
+         _size -= 1; // tricky part
       }
 
    template <typename Tm>
       void qinfo4su2<Tm>::print(const std::string name) const{
-         std::cout << "qinfo4su2: " << name << " sym=" << sym << std::endl;
+         std::cout << "qinfo4su2: " << name << " sym=" << sym 
+            << " couple=" << couple
+            << std::endl;
          qrow.print("qrow");
          qcol.print("qcol");
          qmid.print("qmid");

@@ -1,8 +1,8 @@
 #ifndef QNUM_QDPT_H
 #define QNUM_QDPT_H
 
-#include "qnum_qsym.h"
 #include "../core/tools.h"
+#include "qnum_qsym.h"
 #include "qnum_qbond.h"
 
 namespace ctns{

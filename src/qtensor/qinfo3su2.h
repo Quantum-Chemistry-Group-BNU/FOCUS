@@ -89,48 +89,63 @@ namespace ctns{
       };
 
    /*
-   template <typename Tm>
+      template <typename Tm>
       void qinfo3su2<Tm>::dump(std::ofstream& ofs) const{
-         // C order
-         qrow.dump(ofs);
-         qcol.dump(ofs);
-         qmid.dump(ofs);
-         ofs.write((char*)(_offset.data()), sizeof(size_t)*_offset.size());
-         ofs.write((char*)(&_size), sizeof(_size)); // F order
-      }
+   // C order
+   qrow.dump(ofs);
+   qcol.dump(ofs);
+   qmid.dump(ofs);
+   ofs.write((char*)(_offset.data()), sizeof(size_t)*_offset.size());
+   ofs.write((char*)(&_size), sizeof(_size)); // F order
+   }
    */
 
    template <typename Tm>
       void qinfo3su2<Tm>::setup(){
-         /*
-            _rows = qrow.size();
-            _cols = qcol.size();
-            _mids = qmid.size();
-            int nblks = _rows*_cols*_mids;
-            _nnzaddr.resize(nblks);
-            _offset.resize(nblks, 0);
-            _size = 1;
-            int idx = 0, ndx = 0;
-            for(int br=0; br<_rows; br++){
+         _rows = qrow.size();
+         _cols = qcol.size();
+         _mids = qmid.size();
+         _size = 1;
+         for(int br=0; br<_rows; br++){
             int rdim = qrow.get_dim(br);
             for(int bc=0; bc<_cols; bc++){
-            int cdim = qcol.get_dim(bc);
-            int rcdim = rdim*cdim;
-            for(int bm=0; bm<_mids; bm++){
-            if(_ifconserve(br,bc,bm)){
-            _nnzaddr[ndx] = idx;
-            _offset[idx] = _size;
-            int mdim = qmid.get_dim(bm);
-            _size += rcdim*mdim;
-            ndx += 1;
-            }
-            idx += 1;
-            } // bm 
+               int cdim = qcol.get_dim(bc);
+               int rcdim = rdim*cdim;
+               for(int bm=0; bm<_mids; bm++){
+                  int mdim = qmid.get_dim(bm);
+                  // different coupling cases
+                  int tsl = qrow.get_sym(br).tm();
+                  int tsc = qmid.get_sym(bm).tm();
+                  int tsr = qcol.get_sym(bc).tm();
+                  if(couple == LCcouple){
+                     // sLsC => sLC
+                     for(int tslc=std::abs(tsl-tsc); tslc<=tsl+tsc; tslc+=2){
+                        auto indices = std::make_tuple(br,bc,bm,tslc); 
+                        if(_ifconserve(br,bc,bm,tslc)){
+                           _nnzaddr.push_back(indices);
+                           _offset[indices] = _size;
+                           _size += rcdim*mdim;
+                        }else{
+                           _offset[indices] = 0;
+                        }
+                     }
+                  }else if(couple == CRcouple){
+                     // sCsR => sCR
+                     for(int tscr=std::abs(tsc-tsr); tscr<=tsc+tsr; tscr+=2){
+                        auto indices = std::make_tuple(br,bc,bm,tscr);
+                        if(_ifconserve(br,bc,bm,tscr)){
+                           _nnzaddr.push_back(indices);
+                           _offset[indices] = _size;
+                           _size += rcdim*mdim;
+                        }else{
+                           _offset[indices] = 0;
+                        }
+                     }
+                  } // couple
+               } // bm 
             } // bc
-            } // br
-            _nnzaddr.resize(ndx);
-            _size -= 1; // tricky part
-            */ 
+         } // br
+         _size -= 1; // tricky part
       }
 
    template <typename Tm>
@@ -138,7 +153,9 @@ namespace ctns{
          std::cout << "qinfo3su2: " << name << " sym=" << sym << " dir="
             << std::get<0>(dir) << "," 
             << std::get<1>(dir) << ","
-            << std::get<2>(dir) << std::endl; 
+            << std::get<2>(dir) 
+            << " couple=" << couple
+            << std::endl; 
          qrow.print("qrow");
          qcol.print("qcol");
          qmid.print("qmid");
