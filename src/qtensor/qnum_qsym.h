@@ -31,8 +31,8 @@ namespace ctns{
          qsym(const short isym, const short ne): _isym(isym), _ne(ne), _tm(0) {} 
          qsym(const short isym, const short ne, const short tm): _isym(isym), _ne(ne), _tm(tm) {
             // ne,tm can be negative due to the negative function 
-            if(isym == 2 && (std::abs(ne)%2 != std::abs(tm)%2)){ 
-               std::cout << "error: inconsistent (ne,tm) for isym=2!" << std::endl;
+            if( (isym==2 or isym==3) && (std::abs(ne)%2 != std::abs(tm)%2) ){ 
+               std::cout << "error: inconsistent (ne,tm) for isym=" << isym << std::endl;
                std::cout << "ne = " << ne << " tm=" << tm << std::endl;
                exit(1); 
             }
@@ -62,6 +62,10 @@ namespace ctns{
          short isym() const{ return _isym; }
          short ne() const{ return _ne; }
          short tm() const{ return _tm; }
+         short ts() const{ 
+            assert(_isym==3); 
+            return _tm; 
+         }
          short parity() const{ return _ne%2; }
          // print
          std::string to_string() const{ 
@@ -99,7 +103,8 @@ namespace ctns{
             return sym1 + sym2i;
          }
          qsym flip() const{ return qsym(_isym, _ne, -_tm); }
-         qsym operator -() const{ 
+         qsym operator -() const{
+            assert(_isym != 3); 
             if(_isym == 0){
                return qsym(_isym, _ne, 0);
             }else{
@@ -109,7 +114,7 @@ namespace ctns{
       private:
          short _isym = 0;
          short _ne = 0; // na+nb
-         short _tm = 0; // na-nb
+         short _tm = 0; // na-nb or twoS
    };
 
    // get qsym for a given onstate

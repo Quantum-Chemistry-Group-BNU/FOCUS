@@ -28,7 +28,7 @@ namespace ctns{
                bool ifnele = sym.ne() == (std::get<0>(dir) ? qrow.get_sym(br).ne() : -qrow.get_sym(br).ne())
                   + (std::get<1>(dir) ? qcol.get_sym(bc).ne() : -qcol.get_sym(bc).ne());
                // triangular condition
-               bool ifspin = spin_triangle(sym.tm(), qrow.get_sym(br).tm(), qcol.get_sym(bc).tm());
+               bool ifspin = spin_triangle(sym.ts(), qrow.get_sym(br).ts(), qcol.get_sym(bc).ts());
                return ifnele && ifspin;
             }
          public:

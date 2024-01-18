@@ -31,17 +31,17 @@ namespace ctns{
                // triangular condition
                bool ifspin;
                if(couple == LC1andC2Rcouple){
-                  ifspin = spin_triangle(qrow.get_sym(br).tm(), qmid.get_sym(bm).tm(), tsi) && 
-                     spin_triangle(qcol.get_sym(bc).tm(), qver.get_sym(bv).tm(), tsj) &&
-                     spin_triangle(tsi, tsj, sym.tm());
+                  ifspin = spin_triangle(qrow.get_sym(br).ts(), qmid.get_sym(bm).ts(), tsi) && 
+                     spin_triangle(qcol.get_sym(bc).ts(), qver.get_sym(bv).ts(), tsj) &&
+                     spin_triangle(tsi, tsj, sym.ts());
                }else if(couple == LC1andC2couple){
-                  ifspin = spin_triangle(qrow.get_sym(br).tm(), qmid.get_sym(bm).tm(), tsi) &&
-                     spin_triangle(tsi, qver.get_sym(bv).tm(), tsj) && 
-                     spin_triangle(tsj, qcol.get_sym(bc).tm(), sym.tm()); 
+                  ifspin = spin_triangle(qrow.get_sym(br).ts(), qmid.get_sym(bm).ts(), tsi) &&
+                     spin_triangle(tsi, qver.get_sym(bv).ts(), tsj) && 
+                     spin_triangle(tsj, qcol.get_sym(bc).ts(), sym.ts()); 
                }else if(couple == C1andC2Rcouple){
-                  ifspin = spin_triangle(qcol.get_sym(bc).tm(), qver.get_sym(bv).tm(), tsj) &&
-                     spin_triangle(qmid.get_sym(bm).tm(), tsj, tsi) &&
-                     spin_triangle(qrow.get_sym(br).tm(), tsi, sym.tm());
+                  ifspin = spin_triangle(qcol.get_sym(bc).ts(), qver.get_sym(bv).ts(), tsj) &&
+                     spin_triangle(qmid.get_sym(bm).ts(), tsj, tsi) &&
+                     spin_triangle(qrow.get_sym(br).ts(), tsi, sym.ts());
                }
                return ifnele && ifspin; 
             }
@@ -111,10 +111,10 @@ namespace ctns{
                   for(int bv=0; bv<_vers; bv++){
                      int vdim = qver.get_dim(bv);
                      // different coupling cases
-                     int tsl = qrow.get_sym(br).tm();
-                     int tsc1 = qmid.get_sym(bm).tm();
-                     int tsc2 = qver.get_sym(bv).tm();
-                     int tsr = qcol.get_sym(bc).tm();
+                     int tsl = qrow.get_sym(br).ts();
+                     int tsc1 = qmid.get_sym(bm).ts();
+                     int tsc2 = qver.get_sym(bv).ts();
+                     int tsr = qcol.get_sym(bc).ts();
                      if(couple == LC1andC2Rcouple){
                         // sLsC1 => sLC1, sC2sR => sC2R
                         for(int tslc1=std::abs(tsl-tsc1); tslc1<=tsl+tsc1; tslc1+=2){

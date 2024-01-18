@@ -31,11 +31,11 @@ namespace ctns{
                // triangular condition
                bool ifspin;
                if(couple == LCcouple){
-                  ifspin = spin_triangle(qrow.get_sym(br).tm(), qmid.get_sym(bm).tm(), tsi) &&
-                     spin_triangle(tsi, qcol.get_sym(bc).tm(), sym.tm());
+                  ifspin = spin_triangle(qrow.get_sym(br).ts(), qmid.get_sym(bm).ts(), tsi) &&
+                     spin_triangle(tsi, qcol.get_sym(bc).ts(), sym.ts());
                }else if(couple == CRcouple){
-                  ifspin = spin_triangle(qmid.get_sym(bm).tm(), qcol.get_sym(bc).tm(), tsi) &&
-                     spin_triangle(tsi, qrow.get_sym(br).tm(), sym.tm());
+                  ifspin = spin_triangle(qmid.get_sym(bm).ts(), qcol.get_sym(bc).ts(), tsi) &&
+                     spin_triangle(tsi, qrow.get_sym(br).ts(), sym.ts());
                }
                return ifnele && ifspin;
             }
@@ -117,9 +117,9 @@ namespace ctns{
                for(int bm=0; bm<_mids; bm++){
                   int mdim = qmid.get_dim(bm);
                   // different coupling cases
-                  int tsl = qrow.get_sym(br).tm();
-                  int tsc = qmid.get_sym(bm).tm();
-                  int tsr = qcol.get_sym(bc).tm();
+                  int tsl = qrow.get_sym(br).ts();
+                  int tsc = qmid.get_sym(bm).ts();
+                  int tsr = qcol.get_sym(bc).ts();
                   if(couple == LCcouple){
                      // sLsC => sLC
                      for(int tslc=std::abs(tsl-tsc); tslc<=tsl+tsc; tslc+=2){

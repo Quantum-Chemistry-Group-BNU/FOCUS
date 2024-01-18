@@ -269,7 +269,7 @@
 
  * driver & makefile: sadmrg [DONE@2024/01/12]
 
- * data structure for tensors & comb [DONE@2024/01/16]
+ * data structure for tensors & comb: [DONE@2024/01/16]
    - switch between different implementation depending on Abelian or not [!!!]
       (1) std::conditional<Qm::ifabelian, stensor2<Tm>, stensor2su2<Tm>>::type in comb 
       (2) template <bool y=ifab, std::enable_if_t<y,int> = 0> in qtensor2 
@@ -277,15 +277,21 @@
       (1) qinfoXsu2
       (2) stensorXsu2
 
- * generate initial guess by conversion
+ * generate initial guess by conversion: [DONE@2024/01/xx]
+   - conversion to su2 
+      - data structures
+      - sweep projection
+   - su2 to u1 expansion
+   - check the correctness by overlap <MPS[u1]|MPS[su2]>
 
- * get Hamiltonian: 
-    - Renormalization
-    - Prepare environment operators
+ * get Hamiltonian: [DONE@2024/02/xx] 
+   - Renormalization
+   - Prepare environment operators
 
- * Spin-adapted DMRG algorithm:
-    - contractions
-    - initial guess
+ * Spin-adapted DMRG algorithm: [DONE@2024/03/xx]
+   - contractions
+   - initial guess
 
- * GPU implementation:
+ * GPU implementation: [DONE@2024/04/xx]
+   - batchGEMM
 

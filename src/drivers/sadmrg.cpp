@@ -60,8 +60,7 @@ void SADMRG(const input::schedule& schd){
             } // rcanon_load
 
             // convert to SU2 symmetry via sweep projection
-            //ctns::rcanon_tosu2(icomb_NSz, icomb);
-            exit(1);
+            ctns::rcanon_tosu2(icomb_NSz, icomb, schd.twos);
 
          }else{
             ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file

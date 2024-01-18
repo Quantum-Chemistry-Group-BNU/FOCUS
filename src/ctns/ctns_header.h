@@ -10,4 +10,6 @@
 #include "ctns_vmc.h"
 #include "preprocess_distribution.h"
 
+#include "sadmrg/ctns_tosu2.h"
+
 #endif
