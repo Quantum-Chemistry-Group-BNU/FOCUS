@@ -278,9 +278,13 @@
       (2) stensorXsu2
 
  * generate initial guess by conversion: [DONE@2024/01/xx]
-   - conversion to su2 
+   - tosu2: conversion to su2  
       - data structures
-      - sweep projection
+         - Wmat 
+         - MixedSite
+         - density matrix [DONE@2024/01/21]
+      - cg couling: gsl (GNU Scientific Library) 
+      - sweep projection [DONE@2024/01/23]
    - su2 to u1 expansion
    - check the correctness by overlap <MPS[u1]|MPS[su2]>
 

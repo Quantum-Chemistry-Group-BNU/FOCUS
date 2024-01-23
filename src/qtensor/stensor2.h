@@ -107,9 +107,12 @@ namespace ctns{
 
    // ZL20200531: Permute the line of diagrams, while maintaining their directions
    // 	       This does not change the tensor, but just permute order of index
+   //         
+   //           i --<--*--<-- j => j -->--*-->-- i
+   //
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
-      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::T() const{
+      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::P() const{
          qtensor2<ifab,Tm> qt2(info.sym, info.qcol, info.qrow, 
                {std::get<1>(info.dir), std::get<0>(info.dir)});
          int br, bc;

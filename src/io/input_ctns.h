@@ -54,7 +54,7 @@ namespace input{
                   & rcanon_load & rcanon_file 
                   & iomode & async_fetch & async_save & async_remove & async_tocpu & ifnccl
                   & iroot & nsample & ndetprt
-                  & tosu2; 
+                  & tosu2 & thresh_tosu2 ; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -77,7 +77,7 @@ namespace input{
          bool timestamp = false; 
          // conversion of sci 
          int maxdets = 10000;
-         double thresh_proj = 1.e-16;
+         double thresh_proj = 1.e-14;
          double thresh_ortho = 1.e-8;
          double rdm_svd = 1.5;
          // sweep
@@ -125,6 +125,7 @@ namespace input{
          int ndetprt = 10;
          // su2 symmetry
          bool tosu2 = false;
+         double thresh_tosu2 = 1.e-14;
    };
 
 } // input

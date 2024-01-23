@@ -131,6 +131,8 @@ void params_ctns::read(ifstream& istrm){
          ndetprt = stoi(line.substr(7));
       }else if(line.substr(0,5)=="tosu2"){
          tosu2 = true;
+      }else if(line.substr(0,12)=="thresh_tosu2"){
+         thresh_tosu2 = stod(line.substr(12)); 
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
@@ -273,4 +275,5 @@ void params_ctns::print() const{
    cout << "ndetprt = " << ndetprt << endl;
    // su2 symmetry
    cout << "tosu2 = " << tosu2 << endl;
+   cout << "thresh_tosu2 = " << scientific << thresh_tosu2 << endl;
 }

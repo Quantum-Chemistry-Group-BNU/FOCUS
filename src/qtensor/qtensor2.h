@@ -139,6 +139,16 @@ namespace ctns{
             }
             size_t size() const{ return info._size; }
             Tm* data() const{ return _data; }
+            // inplace conjugate
+            void _conj(){
+               linalg::xconj(info._size, _data);
+            }
+            // conjugate
+            qtensor2<ifab,Tm> conj() const{
+               qtensor2<ifab,Tm> qt2(info);
+               linalg::xconj(info._size, qt2._data);
+               return qt2; 
+            }
             // simple arithmetic operations
             qtensor2& operator *=(const Tm fac){
                linalg::xscal(info._size, fac, _data);
@@ -219,11 +229,17 @@ namespace ctns{
             }
             // ZL20200531: Permute the line of diagrams, while maintaining their directions
             // 	     This does not change the tensor, but just permute order of index
+            //         
+            //         i --<--*--<-- j => j -->--*-->-- i
+            //
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               qtensor2<ifab,Tm> T() const;
+               qtensor2<ifab,Tm> P() const;
             // ZL20200531: This is used in taking Hermitian conjugate of operators.
             // 	     If row/col is permuted while dir fixed, this effectively changes 
             // 	     the direction of lines in diagrams
+            //         
+            //         i --<--*--<-- j => j --<--*'--<-- i
+            //
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                qtensor2<ifab,Tm> H() const;
             // ZL20210401: generate matrix representation for Kramers paired operators

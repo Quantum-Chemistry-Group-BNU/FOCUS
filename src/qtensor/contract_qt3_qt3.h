@@ -3,6 +3,7 @@
 
 #include "stensor2.h"
 #include "stensor3.h"
+
 namespace ctns{
 
    template <typename Tm>
@@ -12,11 +13,15 @@ namespace ctns{
          stensor2<Tm> qt2;
          qsym sym = -qt3a.info.sym + qt3b.info.sym;
          if(superblock == "lc"){
-            qt2.init(sym, qt3a.info.qcol, qt3b.info.qcol); 
+            // flip direction and qsym on the first tensor
+            direction2 dir = {1-std::get<1>(qt3a.info.dir), std::get<1>(qt3b.info.dir)}; 
+            qt2.init(sym, qt3a.info.qcol, qt3b.info.qcol, dir); 
          }else if(superblock == "cr"){
-            qt2.init(sym, qt3a.info.qrow, qt3b.info.qrow);
+            direction2 dir = {1-std::get<0>(qt3a.info.dir), std::get<0>(qt3b.info.dir)}; 
+            qt2.init(sym, qt3a.info.qrow, qt3b.info.qrow, dir);
          }else if(superblock == "lr"){
-            qt2.init(sym, qt3a.info.qmid, qt3b.info.qmid);
+            direction2 dir = {1-std::get<2>(qt3a.info.dir), std::get<2>(qt3b.info.dir)}; 
+            qt2.init(sym, qt3a.info.qmid, qt3b.info.qmid, dir);
          }
          contract_qt3_qt3_info(superblock,qt3a.info, qt3a.data(), 
                qt3b.info, qt3b.data(),
@@ -143,7 +148,7 @@ namespace ctns{
 
    // formula: qt2(r,c) = \sum_xy Conj[qt3a](x,y,r)*qt3b(x,y,c)
    //
-   // 	      r|
+   //            r|
    //          /--*--\ qt3a
    // q(r,c) = |x    |y	  = <r|c> = tr(A[r]^* B[c]^T)
    //          \--*--/ qt3b

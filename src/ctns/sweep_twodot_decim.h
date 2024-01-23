@@ -87,7 +87,7 @@ namespace ctns{
 
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
-               auto wf2 = wf.merge_lc1_c2r().T();
+               auto wf2 = wf.merge_lc1_c2r().P();
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
@@ -96,14 +96,14 @@ namespace ctns{
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
                   debug);
-            rot = rot.T(); // rot[alpha,r] = (V^+)
+            rot = rot.P(); // rot[alpha,r] = (V^+)
 
          }else if(superblock == "c1c2"){
 
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
                wf.permCR_signed();
-               auto wf2 = wf.merge_lr_c1c2().T();
+               auto wf2 = wf.merge_lr_c1c2().P();
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             } // i
@@ -112,7 +112,7 @@ namespace ctns{
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
                   debug);
-            rot = rot.T(); // permute two lines for RCF
+            rot = rot.P(); // permute two lines for RCF
 
          } // superblock
          if(debug){

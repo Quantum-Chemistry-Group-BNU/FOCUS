@@ -64,7 +64,7 @@ namespace ctns{
                   // psi[a,r,c2] => cwf[a,c2r]
                   auto cwf = icomb.cpsi[i].merge_cr();
                   // l[l,a,c1]*cwf[a,c2r] => wf3[l,c2r,c1]
-                  auto wf3 = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.T());
+                  auto wf3 = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.P());
                   // wf3[l,c2r,c1] => wf4[l,r,c1,c2] 
                   auto wf4 = wf3.split_c2r(wf.info.qver, wf.info.qcol);
                   assert(wf4.size() == ndim);

@@ -88,7 +88,7 @@ namespace ctns{
             stensor2<Tm> rot;
             std::vector<stensor2<Tm>> wfs2(nroots);
             for(int i=0; i<nroots; i++){
-               auto wf2 = icomb.cpsi[i].merge_cr().T();
+               auto wf2 = icomb.cpsi[i].merge_cr().P();
                wfs2[i] = std::move(wf2);
             }
             const int dcut = 4*nroots; // psi[l,n,r,i] => U[l,i,a]sigma[a]Vt[a,n,r]
@@ -102,12 +102,12 @@ namespace ctns{
                   iftrunc, dcut, schd.ctns.rdm_svd, alg_decim, 
                   wfs2, rot, dwt, deff, fname, 
                   schd.ctns.verbose>0);
-            rot = rot.T();
+            rot = rot.P();
             icomb.sites[pdx1] = rot.split_cr(wfinfo.qmid, wfinfo.qcol);
             // compute C0 
             for(int i=0; i<nroots; i++){
                auto cwf = icomb.cpsi[i].merge_cr().dot(rot.H()); // <-W[l,alpha]->
-               auto psi = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.T()); // A0(1,n,r)
+               auto psi = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.P()); // A0(1,n,r)
                icomb.cpsi[i] = std::move(psi);
             }
          }
@@ -119,7 +119,7 @@ namespace ctns{
             stensor2<Tm> rot;
             std::vector<stensor2<Tm>> wfs2(nroots);
             for(int i=0; i<nroots; i++){
-               auto wf2 = icomb.cpsi[i].merge_cr().T();
+               auto wf2 = icomb.cpsi[i].merge_cr().P();
                wfs2[i] = std::move(wf2);
             }
             const int dcut = nroots; // psi[1,n,r,i] => U[1,i,a]sigma[a]Vt[a,n,r]
@@ -133,7 +133,7 @@ namespace ctns{
                   iftrunc, dcut, schd.ctns.rdm_svd, alg_decim,
                   wfs2, rot, dwt, deff, fname,
                   schd.ctns.verbose>0);
-            rot = rot.T();
+            rot = rot.P();
             icomb.sites[pdx0] = rot.split_cr(wfinfo.qmid, wfinfo.qcol);
             // form rwfuns(iroot,irbas)
             const auto& sym_state = wfinfo.sym;

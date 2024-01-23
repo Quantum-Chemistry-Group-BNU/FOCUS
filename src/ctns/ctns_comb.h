@@ -77,7 +77,9 @@ namespace ctns{
             topology topo;
             // used in initialization & debug operators 
             std::vector<renorm_basis<Tm>> rbases;
-            // mixed canonical form
+            // mixed canonical form:
+            // note that the sites are count from the right
+            // that is the first one is the last site in MPS!
             std::vector<qtensor3<Qm::ifabelian,Tm>> sites;
             // wavefunction at the left boundary -*-
             std::vector<qtensor2<Qm::ifabelian,Tm>> rwfuns;

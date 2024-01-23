@@ -96,7 +96,7 @@ namespace ctns{
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
                // wf3[l,r,c] => wf2[l,cr]
-               auto wf2 = wf.merge_cr().T();
+               auto wf2 = wf.merge_cr().P();
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
@@ -104,7 +104,7 @@ namespace ctns{
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
                   debug);
-            rot = rot.T(); // rot[alpha,r] = (V^+)
+            rot = rot.P(); // rot[alpha,r] = (V^+)
 
          } // superblock
       }
@@ -150,11 +150,11 @@ namespace ctns{
                wf.from_array(vsol.col(i));
                auto cwf = wf.merge_cr().dot(rot.H()); // <-W[l,alpha]->
                if(!cturn){
-                  auto psi = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.T());
+                  auto psi = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.P());
                   icomb.cpsi[i] = std::move(psi);
                }else{
                   // special treatment of the propagation downside to backbone
-                  auto psi = contract_qt3_qt2("c",icomb.sites[pdx0],cwf.T());
+                  auto psi = contract_qt3_qt2("c",icomb.sites[pdx0],cwf.P());
                   psi.permCR_signed(); // |(lr)c> back to |lcr> order on backbone
                   icomb.cpsi[i] = std::move(psi);
                }

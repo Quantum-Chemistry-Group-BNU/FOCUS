@@ -140,7 +140,7 @@ namespace ctns{
                // internal site without physical index
                const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
                // contract upper matrix: permute row and col for contract_qt3_qt2_c
-               auto qt3 = contract_qt3_qt2("c",site,qt2_u.T());
+               auto qt3 = contract_qt3_qt2("c",site,qt2_u.P());
                auto qt2 = qt3.fix_mid( std::make_pair(0,0) );
                qt2_r = qt2.dot(qt2_r); // contract right matrix
             } // tp
@@ -312,7 +312,7 @@ namespace ctns{
                   for(int idx=0; idx<4; idx++){
                      auto qt2 = sitej.fix_mid( idx2mdx(Qm::isym, idx) );
                      // purely change direction
-                     qt3n[idx] = contract_qt3_qt2("c",qt3,qt2.T()); 
+                     qt3n[idx] = contract_qt3_qt2("c",qt3,qt2.P()); 
                      // \sum_ab |psi[n,a,b]|^2
                      auto psi2 = contract_qt3_qt3("cr",qt3n[idx],qt3n[idx]); 
                      weights[idx] = std::real(psi2(0,0)(0,0));

@@ -25,6 +25,7 @@
          $ 修改make.inc的22行 GPU架构为GPU_TARGET ?= Volta或者Ampere （NVIDIA GeForce RTX 3090）
          $ make
          $ make install prefix= INSTALL_PATH
+      4. gsl: for SA-DMRG
  - Install:
       1. Edit makefile in extlibs/zquatev/ & make 
       2. Edit makefile & make
