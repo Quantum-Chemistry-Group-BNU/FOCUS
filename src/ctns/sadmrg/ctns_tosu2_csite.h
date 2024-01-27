@@ -12,6 +12,7 @@ namespace ctns{
    using qproduct3 = std::pair<qbond3,qdpt3>;
 
    inline qproduct3 qmerge(const qbond3& qs1, const qbond3& qs2){
+      const bool debug = false;
       qdpt3 dpt;
       // natural ordering qs1,qs2 based on the double loop
       for(int i1=0; i1<qs1.size(); i1++){
@@ -52,12 +53,12 @@ namespace ctns{
       for(auto& pr : dpt){
          auto& q12 = pr.first;
          auto& comp = pr.second;
-
-         std::cout << "\nsym=(" << std::get<0>(q12) << ","
-            << std::get<1>(q12) << "," 
-            << std::get<2>(q12) << ")"
-            << std::endl;
-
+         if(debug){
+            std::cout << "\nsym=(" << std::get<0>(q12) << ","
+               << std::get<1>(q12) << "," 
+               << std::get<2>(q12) << ")"
+               << std::endl;
+         }
          int i1 = std::get<0>(comp[0]);
          int i2 = std::get<1>(comp[0]);
          auto q1 = qs1[i1].first;
@@ -84,23 +85,23 @@ namespace ctns{
             std::get<2>(comp[i]) = off;
             d1 = qs1[i1].second;
             d2 = qs2[i2].second;
-
-            std::cout << " i=" << i << " i1,i2=" << i1 << "," << i2 
-               << " q1=(" << std::get<0>(q1) 
-               << "," << std::get<1>(q1) 
-               << "," << std::get<2>(q1) << ")" 
-               << " q2=(" << std::get<0>(q2) 
-               << "," << std::get<1>(q2)
-               << "," << std::get<2>(q2) << ")"
-               << " d1=" << d1 << " d2=" << d2
-               << " off=" << std::get<2>(comp[i])
-               << std::endl;
-
+            if(debug){
+               std::cout << " i=" << i << " i1,i2=" << i1 << "," << i2 
+                  << " q1=(" << std::get<0>(q1) 
+                  << "," << std::get<1>(q1) 
+                  << "," << std::get<2>(q1) << ")" 
+                  << " q2=(" << std::get<0>(q2) 
+                  << "," << std::get<1>(q2)
+                  << "," << std::get<2>(q2) << ")"
+                  << " d1=" << d1 << " d2=" << d2
+                  << " off=" << std::get<2>(comp[i])
+                  << std::endl;
+            }
          } // i
          off += d1*d2;
          qs12[idx] = std::make_pair(q12,off);
          idx += 1;
-         std::cout << "dim=" << off << std::endl;
+         if(debug) std::cout << "dim=" << off << std::endl;
       }
       //if(debug) display_qbond3(qs12,"qc");
       return std::make_pair(qs12,dpt);

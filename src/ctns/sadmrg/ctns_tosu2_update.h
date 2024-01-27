@@ -97,8 +97,6 @@ namespace ctns{
          const auto& pmid = qmidInfo.second;
          const auto& qcol = qcolInfo.first;
          const auto& pcol = qcolInfo.second;
-         qmid.print("qmid"); 
-         qcol.print("qcol");
          // 1. form qrow
          qbond qrow;
          std::map<qsym,int> prow;
@@ -108,14 +106,11 @@ namespace ctns{
             prow[pr.first] = idx;
             idx += 1;
          }
-         qrow.print("qrow");
          // 2. assemble site
          stensor3su2<Tm> site(qsym({3,0,0}),qrow,qcol,qmid,dir_RCF,CRcouple);
-         site.print("site",2);
          for(const auto& pr : Yinfo){
             const auto& sym = pr.first;
             const auto& ymat = Yinfo.at(sym);
-            std::cout << "sym=" << sym << std::endl;
             int n = sym.ne();
             int ts = sym.ts();
             qsym3 sym3({n,ts,ts}); // find the high-spin case
@@ -142,10 +137,9 @@ namespace ctns{
                   unique_ns.push_back(i);
                }
             }
-            tools::print_vector(unique_ns,"unique_ns");
+            //tools::print_vector(unique_ns,"unique_ns");
             // loop over unique (N1,S1),(N2,S2) combinations
             for(int i=0; i<unique_ns.size(); i++){
-               std::cout << "j=" << i << std::endl;
                int i1 = std::get<0>(comp[i]);
                int i2 = std::get<1>(comp[i]);
                auto q1 = qs1[i1].first;
@@ -155,18 +149,11 @@ namespace ctns{
                int d1 = qs1[i1].second;
                int d2 = qs2[i2].second;
                // locate the block
-               std::cout << "sym=" << sym << std::endl;
                int brow = prow.at(sym);
-               std::cout << "brow=" << brow << std::endl;
-               std::cout << "sym1=" << sym1 << std::endl;
                int bmid = pmid.at(sym1);
-               std::cout << "bmid=" << bmid << std::endl;
-               std::cout << "sym2=" << sym2 << std::endl;
                int bcol = pcol.at(sym2);
-               std::cout << "bcol=" << bcol << std::endl;
                int tsi = ts; // intermediate spin is ts because site sym has S=0. 
                auto blk = site(brow,bcol,bmid,tsi);
-               blk.print("blk");
                size_t offcr = std::get<2>(comp[i]); 
                int drow = qrow.get_dim(brow);
                assert(drow == ymat.rows());
@@ -175,12 +162,13 @@ namespace ctns{
                size_t N = drow*dcol*dmid;
                const Tm* xptr = ymat.data() + offcr*drow;
                linalg::xcopy(N, xptr, blk.data());
+               /*
                std::cout << "br,bc,bm=" << brow << "," << bcol << "," << bmid
                   << " dr,dc,dm=" << drow << "," << dcol << "," << dmid
                   << " N=" << N << " offcr=" << offcr 
                   << std::endl;
                std::cout << ymat.rows() << "," << ymat.cols() << std::endl;
-
+               */
             }
          }
          return site;
@@ -190,18 +178,15 @@ namespace ctns{
    template <typename Tm>
       std::vector<stensor2su2<Tm>> updateRWFuns(const comb<qkind::qNSz,Tm>& icomb_NSz,
             const Wmatrix<Tm>& wmat,
-            const int twos){
+            const int twos,
+            const bool debug=true){
          const Tm alpha = 1.0, beta = 0.0;
-         std::cout << "\nctns::updateRWFuns twos=" << twos << std::endl;
-
-         wmat.qrow.print("wmat_qrow");
-         display_qbond3(wmat.qcol,"wmat_qcol");
-
+         if(debug) std::cout << "\nctns::updateRWFuns twos=" << twos << std::endl;
          // 1. analyze the population
          const auto& rwfuns = icomb_NSz.rwfuns;
          int nroot = rwfuns.size();
          for(int iroot=0; iroot<nroot; iroot++){
-            std::cout << "\niroot=" << iroot << std::endl;
+            if(debug) std::cout << "\niroot=" << iroot << std::endl;
             assert(rwfuns[iroot].rows()==1 && rwfuns[iroot].cols()==1);
             assert(rwfuns[iroot].info.qcol == wmat.qrow);
             // rwfuns[iroot].dot(wmat);
@@ -219,16 +204,18 @@ namespace ctns{
                      blkr.data(), d0, blkw, di, beta,
                      rwfunW.data(), d0);
                // check
-               auto symj = wmat.qcol[j].first;
-               std::cout << "> j=" << j << " sym=(" << std::get<0>(symj) << ","
-                  << std::get<1>(symj) << "," << std::get<2>(symj) << ")"
-                  << std::endl;
-               rwfunW.print("rwfunW");
                auto pop_j = std::pow(rwfunW.normF(),2); 
-               std::cout << "pop[j] = " << std::setprecision(10) << pop_j << std::endl;
                pop += pop_j; 
+               if(debug){
+                  auto symj = wmat.qcol[j].first;
+                  std::cout << "> j=" << j << " sym=(" << std::get<0>(symj) << ","
+                     << std::get<1>(symj) << "," << std::get<2>(symj) << ")"
+                     << std::endl;
+                  rwfunW.print("rwfunW");
+                  std::cout << "pop[j] = " << std::setprecision(10) << pop_j << std::endl;
+               }
             } // j
-            std::cout << "total pop = " << std::setprecision(10) << pop << std::endl;
+            if(debug) std::cout << "total pop = " << std::setprecision(10) << pop << std::endl;
          } // iroot
 
          // projection

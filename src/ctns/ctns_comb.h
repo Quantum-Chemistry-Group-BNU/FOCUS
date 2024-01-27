@@ -35,7 +35,7 @@ namespace ctns{
             }
             // print shape
             void display_shape() const{
-               std::cout << "comb::display_shape" << std::endl;
+               std::cout << "\ncomb::display_shape" << std::endl;
                for(int i=0; i<sites.size(); i++){
                   auto shape = sites[i].get_shape();
                   std::cout << " idx=" << i
