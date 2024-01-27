@@ -19,10 +19,10 @@ namespace ctns{
             tsi = std::get<3>(key);
             const auto blk = (*this)(br,bc,bm,tsi);
             if(level >= 1){
-               std::cout << "i=" << i << " block[" 
-                  << info.qrow.get_sym(br) << "," 
-                  << info.qcol.get_sym(bc) << "," 
-                  << info.qmid.get_sym(bm) << ";"
+               std::cout << "i=" << i << " block["
+                  << br << ":" << info.qrow.get_sym(br) << "," 
+                  << bc << ":" << info.qcol.get_sym(bc) << "," 
+                  << bm << ":" << info.qmid.get_sym(bm) << ";"
                   << tsi << "]" 
                   << " dim0,dim1,dim2=(" 
                   << blk.dim0 << "," 

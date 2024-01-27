@@ -10,7 +10,7 @@
 namespace ctns{
 
    using direction2 = std::tuple<bool,bool>;
-   const direction2 dir_OPER  = {1,0}; // {out,int} by usual convention for operators in diagrams 
+   const direction2 dir_OPER = {1,0}; // {out,int} by usual convention for operators in diagrams 
    const direction2 dir_RWF = {0,1}; // ->-*->- to be contracted with a site from left
    const direction2 dir_WF2 = {1,1}; // central WF
    extern const direction2 dir_OPER;

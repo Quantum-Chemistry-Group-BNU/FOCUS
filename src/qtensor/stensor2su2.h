@@ -18,8 +18,8 @@ namespace ctns{
             const auto blk = (*this)(br,bc);
             if(level >= 1){
                std::cout << "i=" << i << " block["  
-                  << info.qrow.get_sym(br) << "," 
-                  << info.qcol.get_sym(bc) << "]" 
+                  << br << ":" << info.qrow.get_sym(br) << "," 
+                  << bc << ":" << info.qcol.get_sym(bc) << "]" 
                   << " dim0,dim1=(" 
                   << blk.dim0 << "," 
                   << blk.dim1 << ")" 

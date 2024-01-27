@@ -46,6 +46,8 @@ namespace ctns{
 
          // sweep projection: start from the last site
          int nsite = icomb_NSz.get_nphysical();
+         icomb.sites.resize(nsite);
+
          for(int i=0; i<nsite; i++){
 
             // load site
@@ -56,6 +58,7 @@ namespace ctns{
                icomb_NSz.sites[i].print("rsite_"+std::to_string(i));
             }
 
+            /*
             std::cout << "\nwmat" << std::endl;
             wmat.qrow.print("qrow");
             display_qbond3(wmat.qcol,"qcol");
@@ -69,12 +72,12 @@ namespace ctns{
             double diffw = wwh.normF();
             std::cout << "diffw=" << diffw << std::endl;
             //if(diffw > 1.e-10) exit(1);
-
-            // form MixedRSite
+            */
+            
+            // 1. form MixedRSite
             auto msite = formMixedRSite(icomb_NSz.sites[i], wmat);
-            const auto& qc = msite.qmid;
-            const auto& qr = msite.qcol;
-
+          
+            /*
             auto rmat = contract_qt3_qt3("cr",icomb_NSz.sites[i],icomb_NSz.sites[i]).to_matrix();
             rmat.print("rmat");
 
@@ -85,13 +88,15 @@ namespace ctns{
             auto diff2 = dev2.normF();
             std::cout << "diffRmat=" << diff2 << std::endl;
             //if(diff2 > 1.e-10) exit(1);
+            */
 
+            // 2. form CoupledRSite [MOST IMPORTANT STEP!]
+            const auto& qc = msite.qmid;
+            const auto& qr = msite.qcol;
+            auto qprod = qmerge(qc,qr);
+            auto csite = formCoupledRSite(msite, qprod, qc, qr);
 
-            // form CoupledRSite [!!!]
-            auto csite = formCoupledRSite(msite);
-
-
-
+            /*
             std::cout << "\ncsite" << std::endl;
             csite.qrow.print("qrow");
             display_qbond3(csite.qcol,"qcol");
@@ -109,16 +114,15 @@ namespace ctns{
             dmenv[i].to_matrix().print("dmenv");
             double tr = std::real(dmenv[i].to_matrix().trace());
             std::cout << "tr(DMenv)=" << tr << std::endl;
+            */
 
-            // density matrix
+            // 3. density matrix
             auto cdm = formCoupledDM(csite, dmenv[i]);
             
-            //if(i==1) exit(1);
-
-            // decimation by diagonlizing quasi-dm 
+            // 4. decimation by diagonlizing quasi-dm 
             auto Yinfo = decimQuasiDM(cdm, thresh_tosu2);
 
- 
+            /* 
             csite.to_matrix().print("csite");
             rmat.print("rmat");
             std::cout << "\nYinfo:" << std::endl;
@@ -126,28 +130,38 @@ namespace ctns{
                std::cout << "sym=" << pr.first << std::endl;
                pr.second.print("Ymat");
             }
+            */
 
-
-           // update information: W
+            // 5. update information: W
             wmat = updateWmat(csite, Yinfo);
 
-
-
-            // example Y into sa-mps site
-
-            //if(i==0) exit(1);
-
+            // 6. expand Y into sa-mps site
+            icomb.sites[i] = updateSite(Yinfo, qprod, qc, qr);
          }
+         
+         if(debug){
+            std::cout << "\n#######" << std::endl;
+            std::cout << " FINAL" << std::endl;
+            std::cout << "#######" << std::endl;
+            wmat.qrow.print("qrow");
+            display_qbond3(wmat.qcol,"qcol");
+         }
+         //// debug
+         //rcanon_Sdiag_sample(icomb_NSz, 0, 100, 10);
+         /*
+         auto wf2 = icomb_NSz.get_wf2();
+         wf2.to_matrix().print("wf2");
+         auto ovlp = wf2.H().dot(wf2);
+         ovlp.to_matrix().print("ovlp");
+         */
+         icomb.rwfuns = updateRWFuns(icomb_NSz, wmat, twos);
 
-         std::cout << "\n### FINAL ###" << std::endl;
-         wmat.qrow.print("qrow");
-         display_qbond3(wmat.qcol,"qcol");
+         std::cout << "\nSummary of sweep projection: nroot=" << icomb_NSz.rwfuns.size()
+            << " final nstate=" << icomb.rwfuns.size()
+            << std::endl; 
 
-         // debug
-         rcanon_Sdiag_sample(icomb_NSz, 0, 100, 10);
-
-         finalWaveFunction(icomb_NSz.rwfuns, wmat);
-         exit(1);
+         icomb_NSz.display_shape();
+         icomb.display_shape();
 
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_tosu2", t0, t1);

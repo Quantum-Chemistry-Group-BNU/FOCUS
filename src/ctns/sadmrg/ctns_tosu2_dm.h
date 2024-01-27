@@ -85,6 +85,7 @@ namespace ctns{
                      blkA, di, rhoA.data(), di, beta1,
                      blkDM, dj);
 
+               /*
                std::cout << "> i=" << i << std::endl;
                blkD.print("blkD");
                linalg::matrix<Tm> amat(di,dj,blkA);
@@ -92,22 +93,27 @@ namespace ctns{
                rhoA.print("rhoA");
                linalg::matrix<Tm> mat(dj,dj,blkDM);
                mat.print("blkDM");
+               */
             } // i
 
+            /*
             linalg::matrix<Tm> mat(dj,dj,blkDM);
             std::cout << "final j=" << j << " off=" << off << std::endl;
             mat.print("blkDM");
             tr += std::real(mat.trace());
             std::cout << "tr=" << tr << std::endl;
+            */
 
          } // j
          linalg::xconj(cdm._size, cdm._data.data());
 
+         /*
          std::cout << "tr(rho)=" << tr << std::endl;
          if(std::abs(tr-1.0)>1.e-6){
             std::cout << "error: tr(rho) != 1, diff=" << tr-1.0 << std::endl;
             //exit(1);
          }
+         */
 
          return cdm;
       }
@@ -117,9 +123,9 @@ namespace ctns{
             const double thresh_tosu2,
             const bool debug=true){
          if(debug) std::cout << "\nctns::decimQuasiDM thresh_tosu2=" << thresh_tosu2 << std::endl;
-         // preprocess qrow
+         // preprocess qrow, use qmap store indices of symmetry sectors (N,S,M)
+         // sharing the same (N,S), which will be state-averaged in quasi-DM 
          const auto& qrow = cdm.qrow;
-         display_qbond3(qrow,"qrow");
          std::vector<qsym> syms;
          std::map<qsym,std::vector<int>> qmap;
          for(int i=0; i<qrow.size(); i++){
@@ -135,29 +141,35 @@ namespace ctns{
             const auto& sym = pr.first;
             const auto& comp = pr.second;
             int dim = qrow[comp[0]].second;
-            std::cout << "\nsym=" << sym << " dim=" << dim << std::endl;
+            
+            //std::cout << "\nsym=" << sym << " dim=" << dim << std::endl;
+            
             // form quasi-RDM by averaging different M
             linalg::matrix<Tm> qdm(dim,dim);
             int N = dim*dim;
             for(int i=0; i<comp.size(); i++){
                int idx = comp[i];
-               std::cout << " i=" << i << " comp[i]=" << idx << std::endl;
+               
+               //std::cout << " i=" << i << " comp[i]=" << idx << std::endl;
                size_t off = cdm._offset.at(std::make_pair(idx,idx));
                if(off == 0) continue;
                const Tm* cptr = cdm._data.data() + off-1; 
 
+               /*
                std::cout << "off=" << off << std::endl;
                linalg::matrix<Tm> cdmBLK(dim,dim,cptr);
                cdmBLK.print("cdmBLK");
+               */
 
                linalg::xaxpy(N, 1.0, cptr, qdm.data());
             }
             // decimation
             std::vector<double> sigs2(dim);
             linalg::matrix<Tm> U;
-            qdm.print("qdm");
+            //qdm.print("qdm");
             linalg::eig_solver(qdm, sigs2, U, 1);
-            tools::print_vector(sigs2,"sigs2");
+            //tools::print_vector(sigs2,"sigs2");
+            
             // selection of important states 
             int nkept = 0;
             for(int k=0; k<sigs2.size(); k++){
@@ -167,7 +179,7 @@ namespace ctns{
                   nkept += 1;
                }
             }
-            std::cout << "nkept=" << nkept << std::endl;
+            //std::cout << "nkept=" << nkept << std::endl;
             if(nkept == 0) continue;
             sigs2sum += std::accumulate(sigs2.begin(), sigs2.begin()+nkept, 0.0);
             // save

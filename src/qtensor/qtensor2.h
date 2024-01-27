@@ -53,18 +53,17 @@ namespace ctns{
                   memset(_data, 0, info._size*sizeof(Tm));
                }
          public:
-
             // --- GENERAL FUNCTIONS ---
             // constructors
             qtensor2(){};
             void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-                  const direction2 _dir={1,0}, const bool _own=true){
+                  const direction2 _dir=dir_OPER, const bool _own=true){
                info.init(_sym, _qrow, _qcol, _dir);
                own = _own;
                if(own) this->allocate();
             }
             qtensor2(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
-                  const direction2 _dir={1,0}, const bool _own=true){
+                  const direction2 _dir=dir_OPER, const bool _own=true){
                this->init(_sym, _qrow, _qcol, _dir, _own);
             }
             // simple constructor from qinfo

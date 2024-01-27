@@ -43,13 +43,13 @@ namespace ctns{
             // initialization
             void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
                   const qbond& _qmid, const direction3 _dir=dir_RCF, 
-                  const spincoupling3 _couple=LCcouple){
+                  const spincoupling3 _couple=CRcouple){
                sym = _sym;
                qrow = _qrow;
                qcol = _qcol;
                qmid = _qmid;
                dir = _dir;
-               couple = LCcouple;
+               couple = _couple;
                this->setup();
             }
             // print

@@ -56,16 +56,6 @@ namespace ctns{
             // --- GENERAL FUNCTIONS ---
             // constructors
             qtensor3(){}
-            void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
-                  const direction3 _dir={0,1,1}, const bool _own=true){
-               info.init(_sym, _qrow, _qcol, _qmid, _dir);
-               own = _own;
-               if(own) this->allocate();
-            }
-            qtensor3(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
-                  const direction3 _dir={0,1,1}, const bool _own=true){
-               this->init(_sym, _qrow, _qcol, _qmid, _dir, _own);
-            }
             // simple constructor from qinfo
             void init(const qinfo3<Tm>& _info, const bool _own=true){
                info = _info;
@@ -186,6 +176,19 @@ namespace ctns{
             }
 
             // --- SPECIFIC FUNCTIONS : abelian case ---
+            // constructors
+            template <bool y=ifab, std::enable_if_t<y,int> = 0>
+               void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
+                  const direction3 _dir=dir_RCF, const bool _own=true){
+                  info.init(_sym, _qrow, _qcol, _qmid, _dir);
+                  own = _own;
+                  if(own) this->allocate();
+               }
+            template <bool y=ifab, std::enable_if_t<y,int> = 0>
+               qtensor3(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
+                  const direction3 _dir=dir_RCF, const bool _own=true){
+                  this->init(_sym, _qrow, _qcol, _qmid, _dir, _own);
+               }
             // access
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                dtensor3<Tm> operator()(const int br, const int bc, const int bm) const{
@@ -264,6 +267,19 @@ namespace ctns{
                void dump(std::ofstream& ofs) const;
 
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
+            // constructors
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
+                  const direction3 _dir=dir_RCF, const spincoupling3 _couple=CRcouple, const bool _own=true){
+                  info.init(_sym, _qrow, _qcol, _qmid, _dir, _couple);
+                  own = _own;
+                  if(own) this->allocate();
+               }
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor3(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, const qbond& _qmid,
+                  const direction3 _dir=dir_RCF, const spincoupling3 _couple=CRcouple, const bool _own=true){
+                  this->init(_sym, _qrow, _qcol, _qmid, _dir, _couple, _own);
+               }
             // access
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                dtensor3<Tm> operator()(const int br, const int bc, const int bm, const int tsi) const{

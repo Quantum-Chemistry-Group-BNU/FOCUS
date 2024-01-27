@@ -1,12 +1,31 @@
 #ifndef CTNS_TOSU2_QBOND3_H
 #define CTNS_TOSU2_QBOND3_H
 
+#include <set>
+#include "../../qtensor/qnum_qbond.h"
+
 namespace ctns{
 
    using qsym3 = std::tuple<short,short,short>; // (N,TS,TM)
    using qbond3 = std::vector<std::pair<qsym3,int>>; // qsym,dim
 
-   std::vector<int> get_offset(const qbond3& qs){
+   inline std::pair<qbond,std::map<qsym,int>> qbond3_to_qbond(const qbond3& qs3){
+      qbond qs;
+      std::map<qsym,int> symdict;
+      int idx = 0;
+      for(int i=0; i<qs3.size(); i++){
+         const auto& sym3 = qs3[i].first;
+         qsym sym({3,std::get<0>(sym3),std::get<1>(sym3)});
+         if(symdict.find(sym) == symdict.end()){
+            symdict[sym] = idx;
+            idx += 1;
+            qs.dims.push_back(std::make_pair(sym,qs3[i].second));
+         }
+      } // i
+      return std::make_pair(qs,symdict);
+   }
+
+   inline std::vector<int> get_offset(const qbond3& qs){
       std::vector<int> offset;
       int ioff = 0;
       for(int i=0; i<qs.size(); i++){

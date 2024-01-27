@@ -279,23 +279,30 @@
 
  * generate initial guess by conversion: [DONE@2024/01/xx]
    - tosu2: conversion to su2  
-      - data structures
-         - Wmat 
-         - MixedSite
-         - density matrix [DONE@2024/01/21]
+      - data structures: Wmat, MixedSite, density matrix [DONE@2024/01/21]
       - cg couling: gsl (GNU Scientific Library) 
       - sweep projection [DONE@2024/01/23]
-   - su2 to u1 expansion
-   - check the correctness by overlap <MPS[u1]|MPS[su2]>
+      - check thresh_su2 [DONE@2024/01/25]
+      - expand Yinfo into MPS site [DONE@2024/01/XX]
 
- * get Hamiltonian: [DONE@2024/02/xx] 
-   - Renormalization
-   - Prepare environment operators
+ * get Hamiltonian: [DONE@2024/02/xx]
+   - renormalization
+   - dot operators 
+   - prepare environment operators
 
  * Spin-adapted DMRG algorithm: [DONE@2024/03/xx]
+   - twodot sweep algorithm
    - contractions
-   - initial guess
+   - decimation
+   - propagation of initial guess
+   - CPU implementation?
+      - batched?
+      - openMP?
 
  * GPU implementation: [DONE@2024/04/xx]
    - batchGEMM
+
+ * sdiag sampling:
+   - sample CSF?
+   - sample DET?
 

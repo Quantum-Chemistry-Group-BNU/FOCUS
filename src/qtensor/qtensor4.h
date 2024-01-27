@@ -52,20 +52,6 @@ namespace ctns{
             // --- GENERAL FUNCTIONS ---
             // constructors
             qtensor4(){}
-            void init(const qsym& _sym, 
-                  const qbond& _qrow, const qbond& _qcol, 
-                  const qbond& _qmid, const qbond& _qver,
-                  const bool _own=true){
-               info.init(_sym, _qrow, _qcol, _qmid, _qver);
-               own = _own;
-               if(own) this->allocate();
-            }
-            qtensor4(const qsym& _sym, 
-                  const qbond& _qrow, const qbond& _qcol, 
-                  const qbond& _qmid, const qbond& _qver,
-                  const bool _own=true){
-               this->init(_sym, _qrow, _qcol, _qmid, _qver, _own);
-            }
             // simple constructor from qinfo
             void init(const qinfo4<Tm>& _info, const bool _own=true){
                info = _info;
@@ -188,7 +174,24 @@ namespace ctns{
                linalg::xcopy(info._size, _data, array);
             }
 
-            // --- SPECIFIC FUNCTIONS ---
+            // --- SPECIFIC FUNCTIONS : abelian case ---
+            // constructors
+            template <bool y=ifab, std::enable_if_t<y,int> = 0>
+               void init(const qsym& _sym, 
+                  const qbond& _qrow, const qbond& _qcol, 
+                  const qbond& _qmid, const qbond& _qver,
+                  const bool _own=true){
+                  info.init(_sym, _qrow, _qcol, _qmid, _qver);
+                  own = _own;
+                  if(own) this->allocate();
+               }
+            template <bool y=ifab, std::enable_if_t<y,int> = 0>
+               qtensor4(const qsym& _sym, 
+                  const qbond& _qrow, const qbond& _qcol, 
+                  const qbond& _qmid, const qbond& _qver,
+                  const bool _own=true){
+                  this->init(_sym, _qrow, _qcol, _qmid, _qver, _own);
+               }
             // access
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                dtensor4<Tm> operator()(const int br, const int bc, 
@@ -251,6 +254,25 @@ namespace ctns{
                }
 
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
+            // constructors
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               void init(const qsym& _sym, 
+                  const qbond& _qrow, const qbond& _qcol, 
+                  const qbond& _qmid, const qbond& _qver,
+                  const spincoupling4 _couple=LC1andC2Rcouple,
+                  const bool _own=true){
+                  info.init(_sym, _qrow, _qcol, _qmid, _qver, _couple);
+                  own = _own;
+                  if(own) this->allocate();
+               }
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor4(const qsym& _sym, 
+                  const qbond& _qrow, const qbond& _qcol, 
+                  const qbond& _qmid, const qbond& _qver,
+                  const spincoupling4 _couple=LC1andC2Rcouple,
+                  const bool _own=true){
+                  this->init(_sym, _qrow, _qcol, _qmid, _qver, _couple, _own);
+               }
             // access
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                dtensor4<Tm> operator()(const int br, const int bc, 

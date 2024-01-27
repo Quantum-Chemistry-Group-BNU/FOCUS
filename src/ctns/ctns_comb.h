@@ -33,6 +33,21 @@ namespace ctns{
             comb(){
                if(!qkind::is_available<Qm>()) tools::exit("error: no such qkind for CTNS!");
             }
+            // print shape
+            void display_shape() const{
+               std::cout << "comb::display_shape" << std::endl;
+               for(int i=0; i<sites.size(); i++){
+                  auto shape = sites[i].get_shape();
+                  std::cout << " idx=" << i
+                     << " node=" << topo.rcoord[i]
+                     << " shape(l,r,c)=(" << std::get<0>(shape) << ","
+                     << std::get<1>(shape) << ","
+                     << std::get<2>(shape) << ")"
+                     << std::endl;
+               } // i
+               auto wf2 = this->get_wf2();
+               wf2.print("wf2");
+            }
             // print size 
             size_t display_size() const{
                std::cout << "comb::display_size" << std::endl;
@@ -58,16 +73,30 @@ namespace ctns{
                return rwfuns.size(); 
             }
             // wf2(iroot,icol): ->-*->-
-            stensor2<Tm> get_wf2() const{
+            qtensor2<Qm::ifabelian,Tm> get_wf2() const{
                int nroots = this->get_nroots();
-               qbond qrow({{this->get_sym_state(),nroots}});
+               auto sym_state = this->get_sym_state();
+               qbond qrow({{sym_state,nroots}});
                const auto& qcol = rwfuns[0].info.qcol;
                const auto& dir = rwfuns[0].info.dir;
                assert(dir == dir_RWF);
-               stensor2<Tm> wf2(rwfuns[0].info.sym, qrow, qcol, dir);
+               // matching state symmetry
+               int jdx = -1;
+               for(int j=0; j<qcol.size(); j++){
+                  if(qcol.get_sym(j) == sym_state){
+                     jdx = j;
+                     break;
+                  }
+               }
+               if(jdx == -1){
+                  std::cout << "error: no matching symmetry for sym_state=" << sym_state << std::endl;
+                  exit(1);
+               }
+               // copy data
+               qtensor2<Qm::ifabelian,Tm> wf2(rwfuns[0].info.sym, qrow, qcol, dir);
                for(int iroot=0; iroot<nroots; iroot++){
-                  for(int ic=0; ic<rwfuns[0].info.qcol.get_dim(0); ic++){
-                     wf2(0,0)(iroot,ic) = rwfuns[iroot](0,0)(0,ic);
+                  for(int ic=0; ic<rwfuns[0].info.qcol.get_dim(jdx); ic++){
+                     wf2(0,jdx)(iroot,ic) = rwfuns[iroot](0,jdx)(0,ic);
                   }
                }
                return wf2;

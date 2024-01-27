@@ -22,10 +22,10 @@ namespace ctns{
             const auto blk = (*this)(br,bc,bm,bv,tsi,tsj);
             if(level >= 1){
                std::cout << "i=" << i << " block[" 
-                  << info.qrow.get_sym(br) << "," 
-                  << info.qcol.get_sym(bc) << ","
-                  << info.qmid.get_sym(bm) << "," 
-                  << info.qver.get_sym(bv) << ";"
+                  << br << ":" << info.qrow.get_sym(br) << "," 
+                  << bc << ":" << info.qcol.get_sym(bc) << ","
+                  << bm << ":" << info.qmid.get_sym(bm) << "," 
+                  << bv << ":" << info.qver.get_sym(bv) << ";"
                   << tsi << "," << tsj << "]" 
                   << " dim0,dim1,dim2,dim3=(" 
                   << blk.dim0 << "," 
