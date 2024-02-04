@@ -177,6 +177,9 @@ namespace ctns{
          icomb_NSz.display_shape();
          icomb.display_shape();
 
+         auto Sij = ctns::get_Smat(icomb);
+         Sij.print("Sij");
+ 
          /*
          std::cout << "\nrcanon_CIcoeff:" << std::endl;
          fock::onspace fci_space;

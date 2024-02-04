@@ -287,7 +287,8 @@
 
  * MPS algebra: ctns_alg.h
    - rcanon_check [DONE@2024/02/04]
-   - overlap: get_Smat
+   - overlap: get_Smat [DONE@2024/02/04]
+   - cicoeff:
    - sdiag sampling:
       - sample CSF?
       - sample DET?
