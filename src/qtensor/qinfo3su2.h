@@ -21,8 +21,8 @@ namespace ctns{
                   this->setup();
                }
             BOOST_SERIALIZATION_SPLIT_MEMBER()
-            // setup derived variables
-            void setup();
+               // setup derived variables
+               void setup();
             // conservation pattern determined by dir
             bool _ifconserve(const int br, const int bc, const int bm, const int tsi) const{
                bool ifnele = sym.ne() == (std::get<0>(dir) ? qrow.get_sym(br).ne() : -qrow.get_sym(br).ne())
@@ -73,10 +73,8 @@ namespace ctns{
                return (off == 0)? dtensor3<Tm>() : dtensor3<Tm>(qrow.get_dim(br),
                      qcol.get_dim(bc), qmid.get_dim(bm), data+off-1);
             }
-            /*
-            // ZL@20221207 dump
+            // ZL@20221207 for dump MPS RCF site into binary format [sym,couple can be deduced] 
             void dump(std::ofstream& ofs) const;
-            */
          public:
             static const int dims = 3;
             qsym sym;
@@ -91,17 +89,15 @@ namespace ctns{
             std::map<std::tuple<int,int,int,int>,size_t> _offset;
       };
 
-   /*
-      template <typename Tm>
+   template <typename Tm>
       void qinfo3su2<Tm>::dump(std::ofstream& ofs) const{
-   // C order
-   qrow.dump(ofs);
-   qcol.dump(ofs);
-   qmid.dump(ofs);
-   ofs.write((char*)(_offset.data()), sizeof(size_t)*_offset.size());
-   ofs.write((char*)(&_size), sizeof(_size)); // F order
-   }
-   */
+         // C order
+         qrow.dump(ofs);
+         qcol.dump(ofs);
+         qmid.dump(ofs);
+         ofs.write((char*)(_nnzaddr.data()), sizeof(_nnzaddr[0])*_nnzaddr.size());
+         ofs.write((char*)(&_size), sizeof(_size)); // F order
+      }
 
    template <typename Tm>
       void qinfo3su2<Tm>::setup(){

@@ -17,6 +17,9 @@ namespace ctns{
 
    const bool debug_qtensor4 = false;
    extern const bool debug_qtensor4;
+            
+   template <bool ifab, typename Tm>
+      using qinfo4type = typename std::conditional<ifab, qinfo4<Tm>, qinfo4su2<Tm>>::type;
 
    template <bool ifab, typename Tm>
       struct qtensor4{
@@ -53,12 +56,12 @@ namespace ctns{
             // constructors
             qtensor4(){}
             // simple constructor from qinfo
-            void init(const qinfo4<Tm>& _info, const bool _own=true){
+            void init(const qinfo4type<ifab,Tm>& _info, const bool _own=true){
                info = _info;
                own = _own;
                if(own) this->allocate();
             }
-            qtensor4(const qinfo4<Tm>& _info, const bool _own=true){
+            qtensor4(const qinfo4type<ifab,Tm>& _info, const bool _own=true){
                this->init(_info, _own);
             }
             // used to for setup ptr, if own=false
@@ -294,7 +297,7 @@ namespace ctns{
          public:
             bool own = true; // whether the object owns its data
             Tm* _data = nullptr;
-            typename std::conditional<ifab, qinfo4<Tm>, qinfo4su2<Tm>>::type info;
+            qinfo4type<ifab,Tm> info;
       };
 
    template <typename Tm>

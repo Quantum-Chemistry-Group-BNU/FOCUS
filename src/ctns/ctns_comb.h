@@ -35,7 +35,7 @@ namespace ctns{
             }
             // print shape
             void display_shape() const{
-               std::cout << "\ncomb::display_shape" << std::endl;
+               std::cout << "\ncomb::display_shape qkind=" << qkind::get_name<Qm>() << std::endl;
                for(int i=0; i<sites.size(); i++){
                   auto shape = sites[i].get_shape();
                   std::cout << " idx=" << i
@@ -50,7 +50,7 @@ namespace ctns{
             }
             // print size 
             size_t display_size() const{
-               std::cout << "comb::display_size" << std::endl;
+               std::cout << "comb::display_size qkind=" << qkind::get_name<Qm>() << std::endl;
                size_t sz = 0;
                sz += display_vec_size<Tm>(rbases, "rbases");
                sz += display_vec_size<Tm>(sites, "sites");

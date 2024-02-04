@@ -8,13 +8,6 @@ namespace ctns{
 
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
-      void qtensor3<ifab,Tm>::dump(std::ofstream& ofs) const{
-         info.dump(ofs);
-         ofs.write((char*)(_data), sizeof(Tm)*info._size);
-      }
-
-   template <bool ifab, typename Tm>
-      template <bool y, std::enable_if_t<y,int>>
       void qtensor3<ifab,Tm>::print(const std::string name, const int level) const{
          std::cout << "qtensor3: " << name << " own=" << own << " _data=" << _data << std::endl; 
          info.print(name);

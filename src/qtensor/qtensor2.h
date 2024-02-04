@@ -24,6 +24,9 @@ namespace ctns{
    extern const bool debug_qtensor2; 
 
    template <bool ifab, typename Tm>
+      using qinfo2type = typename std::conditional<ifab, qinfo2<Tm>, qinfo2su2<Tm>>::type;
+
+   template <bool ifab, typename Tm>
       struct qtensor2{
          private:
             friend class boost::serialization::access;	   
@@ -67,12 +70,12 @@ namespace ctns{
                this->init(_sym, _qrow, _qcol, _dir, _own);
             }
             // simple constructor from qinfo
-            void init(const qinfo2<Tm>& _info, const bool _own=true){
+            void init(const qinfo2type<ifab,Tm>& _info, const bool _own=true){
                info = _info;
                own = _own;
                if(own) this->allocate();
             }
-            qtensor2(const qinfo2<Tm>& _info, const bool _own=true){
+            qtensor2(const qinfo2type<ifab,Tm>& _info, const bool _own=true){
                this->init(_info, _own);
             }
             // used to for setup ptr, if own=false
@@ -143,8 +146,9 @@ namespace ctns{
                linalg::xconj(info._size, _data);
             }
             // conjugate
-            qtensor2<ifab,Tm> conj() const{
-               qtensor2<ifab,Tm> qt2(info);
+            qtensor2 conj() const{
+               qtensor2 qt2(info);
+               linalg::xcopy(info._size, _data, qt2._data);
                linalg::xconj(info._size, qt2._data);
                return qt2; 
             }
@@ -198,6 +202,15 @@ namespace ctns{
                auto rand = linalg::random_matrix<Tm>(info._size,1);
                linalg::xaxpy(info._size, noise, rand.data(), _data);
             }
+            // check whether <l|o|r> is a faithful rep for o=I
+            double check_identityMatrix(const double thresh_ortho, const bool debug=false) const;
+            // from/to dense matrix: assign block to proper place
+            void from_matrix(const linalg::matrix<Tm>& mat); 
+            linalg::matrix<Tm> to_matrix() const;
+            // algebra
+            qtensor2<ifab,Tm> dot(const qtensor2<ifab,Tm>& qt) const{ 
+               return contract_qt2_qt2(*this, qt); 
+            }
 
             // --- SPECIFIC FUNCTIONS : abelian case ---
             // access
@@ -213,19 +226,6 @@ namespace ctns{
             // print [comes latter than access]
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                void print(const std::string name, const int level=0) const;
-            // from/to dense matrix: assign block to proper place
-            template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               void from_matrix(const linalg::matrix<Tm>& mat); 
-            template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               linalg::matrix<Tm> to_matrix() const;
-            // check whether <l|o|r> is a faithful rep for o=I
-            template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               double check_identityMatrix(const double thresh_ortho, const bool debug=false) const;
-            // algebra
-            template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               qtensor2<ifab,Tm> dot(const qtensor2<ifab,Tm>& qt) const{ 
-                  return contract_qt2_qt2(*this, qt); 
-            }
             // ZL20200531: Permute the line of diagrams, while maintaining their directions
             // 	     This does not change the tensor, but just permute order of index
             //         
@@ -267,10 +267,10 @@ namespace ctns{
             // wf2[lr,c1c2] => wf3[l,r,c1c2] => wf4[l,r,c1,c2] 
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                qtensor4<ifab,Tm> split_lr_c1c2(const qbond& qlx, const qbond& qrx, 
-                  const qbond& qc1, const qbond& qc2) const{
+                     const qbond& qc1, const qbond& qc2) const{
                   return (this->split_lr(qlx, qrx)).split_c1c2(qc1, qc2);
                }
-            
+
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
             // access
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
@@ -285,17 +285,100 @@ namespace ctns{
             // print
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                void print(const std::string name, const int level=0) const;
- 
+            // ZL20200531: Permute the line of diagrams, while maintaining their directions
+            // 	     This does not change the tensor, but just permute order of index
+            //         
+            //         i --<--*--<-- j => j -->--*-->-- i
+            //
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> P() const;
+            // return adjoint tensor
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> H() const;
+
          public:
             bool own = true; // whether the object owns its data
             Tm* _data = nullptr;
-            typename std::conditional<ifab, qinfo2<Tm>, qinfo2su2<Tm>>::type info;
+            qinfo2type<ifab,Tm> info;
       };
 
    template <typename Tm>
       using stensor2 = qtensor2<true,Tm>;
    template <typename Tm>
       using stensor2su2 = qtensor2<false,Tm>;
+
+   template <bool ifab, typename Tm>
+      double qtensor2<ifab,Tm>::check_identityMatrix(const double thresh_ortho, const bool debug) const{
+         if(debug) std::cout << "qtensor2::check_identityMatrix thresh_ortho=" << thresh_ortho << std::endl;
+         double maxdiff = -1.0;
+         for(int br=0; br<info._rows; br++){
+            for(int bc=0; bc<info._cols; bc++){
+               const auto blk = (*this)(br,bc);
+               if(blk.empty()) continue;
+               if(br != bc){
+                  std::string msg = "error: not a block-diagonal matrix! br,bc=";
+                  tools::exit(msg+std::to_string(br)+","+std::to_string(bc));
+               }
+               auto qr = info.qrow.get_sym(br);
+               int ndim = info.qrow.get_dim(br);
+               double diff = (blk.to_matrix() - linalg::identity_matrix<Tm>(ndim)).normF();
+               maxdiff = std::max(diff,maxdiff);
+               if(debug || (!debug && diff > thresh_ortho)){ 
+                  std::cout << " br=" << br << " qr=" << qr << " ndim=" << ndim 
+                     << " |Sr-Id|_F=" << diff << std::endl;
+               }
+               if(diff > thresh_ortho){
+                  blk.print("diagonal block");
+                  tools::exit("error: not an identity matrix!"); 
+               }
+            } // bc
+         } // br
+         return maxdiff;
+      }
+
+   template <bool ifab, typename Tm>
+      linalg::matrix<Tm> qtensor2<ifab,Tm>::to_matrix() const{
+         int m = info.qrow.get_dimAll();
+         int n = info.qcol.get_dimAll();
+         linalg::matrix<Tm> mat(m,n);
+         // assign block to proper place
+         auto roff = info.qrow.get_offset();
+         auto coff = info.qcol.get_offset();
+         for(int br=0; br<info._rows; br++){
+            int offr = roff[br];		 
+            for(int bc=0; bc<info._cols; bc++){
+               int offc = coff[bc];
+               const auto blk = (*this)(br,bc);
+               if(blk.empty()) continue;
+               for(int ic=0; ic<blk.dim1; ic++){
+                  for(int ir=0; ir<blk.dim0; ir++){
+                     mat(offr+ir,offc+ic) = blk(ir,ic);
+                  } // ir
+               } // ic
+            } // bc
+         } // br
+         return mat;
+      }
+
+   // from dense matrix: assign block to proper place
+   template <bool ifab, typename Tm>
+      void qtensor2<ifab,Tm>::from_matrix(const linalg::matrix<Tm>& mat){
+         auto roff = info.qrow.get_offset();
+         auto coff = info.qcol.get_offset();
+         for(int br=0; br<info._rows; br++){
+            int offr = roff[br];		 
+            for(int bc=0; bc<info._cols; bc++){
+               int offc = coff[bc];
+               auto blk = (*this)(br,bc);
+               if(blk.empty()) continue;
+               for(int ic=0; ic<blk.dim1; ic++){
+                  for(int ir=0; ir<blk.dim0; ir++){
+                     blk(ir,ic) = mat(offr+ir,offc+ic);
+                  } // ir
+               } // ic
+            } // bc
+         } // br
+      }
 
 } // ctns
 

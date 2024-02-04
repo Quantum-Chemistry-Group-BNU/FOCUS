@@ -188,11 +188,9 @@ namespace ctns{
             ys.dims.push_back(std::make_pair(sym,nkept));
          }
          ys.print("ys");
-         std::cout << "sigs2sum=" << sigs2sum << std::endl;
-         if(std::abs(sigs2sum-1.0)>1.e-6){
-            std::cout << "sigs2sum is not 1! diff=" << sigs2sum-1.0 << std::endl;
-            //exit(1);
-         }
+         std::cout << "sigs2sum=" << sigs2sum 
+            << " diff(1-sigs2sum)=" << 1.0-sigs2sum 
+            << std::endl;
          return Yinfo;
       }
 

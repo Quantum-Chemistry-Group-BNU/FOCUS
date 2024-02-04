@@ -33,8 +33,8 @@
 #include "stensor4su2.h"
 
 #include "contract_qt2_qt2.h"
-#include "contract_qt3_qt3.h"
 #include "contract_qt3_qt2.h"
+#include "contract_qt3_qt3.h"
 #include "contract_qt4_qt2.h"
 #include "contract_opxwf.h"
 
@@ -43,5 +43,10 @@
 
 #include "pdvdson.h"
 #include "pdvdson_kramers.h"
+
+// contraction for su2 tensor: only for stot=0
+#include "contract_qt2_qt2_su2.h"
+#include "contract_qt3_qt2_su2.h"
+#include "contract_qt3_qt3_su2.h"
 
 #endif

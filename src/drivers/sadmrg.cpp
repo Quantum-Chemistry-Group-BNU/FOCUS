@@ -61,6 +61,7 @@ void SADMRG(const input::schedule& schd){
 
             // convert to SU2 symmetry via sweep projection
             ctns::rcanon_tosu2(icomb_NSz, icomb, schd.twos, schd.ctns.thresh_tosu2);
+            ctns::rcanon_save(icomb, rcanon_file+"_su2");
 
          }else{
             ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
@@ -68,7 +69,7 @@ void SADMRG(const input::schedule& schd){
 
       }else{
          // restart a broken calculation from disk
-         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1)+".info";
+         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1);
          if(schd.ctns.restart_sweep > schd.ctns.maxsweep){
             std::cout << "error: restart_sweep exceed maxsweep!" << std::endl;
             std::cout << " restart_sweep=" << schd.ctns.restart_sweep
@@ -78,8 +79,10 @@ void SADMRG(const input::schedule& schd){
          }
          ctns::rcanon_load(icomb, rcanon_file);
       }
-      
-      //ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+     
+      // NEXT STEP: 
+      icomb.display_shape();
+      ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
       exit(1);
       
    } // rank 0

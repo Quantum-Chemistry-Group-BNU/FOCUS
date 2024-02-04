@@ -58,7 +58,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             const int isweep){
-         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(isweep)+".info";
+         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(isweep);
          std::cout << "\nctns::sweep_final: convert into RCF & save into "
             << rcanon_file << std::endl;
          std::cout << tools::line_separator << std::endl;

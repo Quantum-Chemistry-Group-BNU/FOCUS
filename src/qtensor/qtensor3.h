@@ -23,6 +23,9 @@ namespace ctns{
    extern const bool debug_qtensor3;
 
    template <bool ifab, typename Tm>
+      using qinfo3type = typename std::conditional<ifab, qinfo3<Tm>, qinfo3su2<Tm>>::type;
+
+   template <bool ifab, typename Tm>
       struct qtensor3{
          private:
             friend class boost::serialization::access;	   
@@ -57,12 +60,12 @@ namespace ctns{
             // constructors
             qtensor3(){}
             // simple constructor from qinfo
-            void init(const qinfo3<Tm>& _info, const bool _own=true){
+            void init(const qinfo3type<ifab,Tm>& _info, const bool _own=true){
                info = _info;
                own = _own;
                if(own) this->allocate();
             }
-            qtensor3(const qinfo3<Tm>& _info, const bool _own=true){
+            qtensor3(const qinfo3type<ifab,Tm>& _info, const bool _own=true){
                this->init(_info, _own);
             }
             // used to for setup ptr, if own=false
@@ -174,6 +177,11 @@ namespace ctns{
             void to_array(Tm* array) const{
                linalg::xcopy(info._size, _data, array);
             }
+            // ZL@20221207 dump into binary format [python can load]
+            void dump(std::ofstream& ofs) const{
+               info.dump(ofs);
+               ofs.write((char*)(_data), sizeof(Tm)*info._size);
+            }
 
             // --- SPECIFIC FUNCTIONS : abelian case ---
             // constructors
@@ -262,9 +270,6 @@ namespace ctns{
                   auto dpt = qmerge(qc1, qc2).second;     
                   return split_qt4_qt3_c1c2(*this, qc1, qc2, dpt);
                }
-            // ZL@20221207 dump
-            template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               void dump(std::ofstream& ofs) const;
 
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
             // constructors
@@ -293,11 +298,14 @@ namespace ctns{
             // print
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                void print(const std::string name, const int level=0) const;
+            // fix middle index (bm,im) - bm-th block, im-idx - composite index!
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> fix_mid(const std::pair<int,int> mdx) const;
  
          public:
             bool own = true; // whether the object owns its data
             Tm* _data = nullptr;
-            typename std::conditional<ifab, qinfo3<Tm>, qinfo3su2<Tm>>::type info;
+            qinfo3type<ifab,Tm> info;
       };
 
    template <typename Tm>

@@ -12,10 +12,10 @@ namespace ctns{
    // for comb
    template <typename Qm, typename Tm>
       void rcanon_save(const comb<Qm,Tm>& icomb,
-            const std::string fname="rcanon.info"){
+            const std::string fname="rcanon"){
          std::cout << "\nctns::rcanon_save fname=" << fname << std::endl;
 
-         std::ofstream ofs(fname, std::ios::binary);
+         std::ofstream ofs(fname+".info", std::ios::binary);
          boost::archive::binary_oarchive save(ofs);
          // save sites 
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
@@ -43,10 +43,10 @@ namespace ctns{
 
    template <typename Qm, typename Tm>
       void rcanon_load(comb<Qm,Tm>& icomb, // no const!
-            const std::string fname="rcanon.info"){
+            const std::string fname="rcanon"){
          std::cout << "\nctns:rcanon_load fname=" << fname << std::endl;
 
-         std::ifstream ifs(fname, std::ios::binary);
+         std::ifstream ifs(fname+".info", std::ios::binary);
          boost::archive::binary_iarchive load(ifs);
          // load sites 
          icomb.sites.resize(icomb.topo.ntotal);
@@ -62,7 +62,7 @@ namespace ctns{
       void rcanon_save(const Tm& site,
             const std::string fname){
          std::cout << "ctns::rcanon_save fname=" << fname << std::endl;
-         std::ofstream ofs(fname, std::ios::binary);
+         std::ofstream ofs(fname+".info", std::ios::binary);
          boost::archive::binary_oarchive save(ofs);
          save << site;
          ofs.close();
@@ -72,7 +72,7 @@ namespace ctns{
       void rcanon_load(Tm& site,
             const std::string fname){
          std::cout << "ctns:rcanon_load fname=" << fname << std::endl;
-         std::ifstream ifs(fname, std::ios::binary);
+         std::ifstream ifs(fname+".info", std::ios::binary);
          boost::archive::binary_iarchive load(ifs);
          load >> site;
          ifs.close();

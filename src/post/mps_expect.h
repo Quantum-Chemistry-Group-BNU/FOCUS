@@ -257,7 +257,7 @@ namespace ctns{
          if(debug_vmc){
             comb<Qm,Tm> icomb;
             icomb.topo.read(schd.post.topology_file);
-            auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[0])+".info";
+            auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[0]);
             rcanon_load(icomb, rcanon_file);
             auto scratch = schd.scratch+"/sweep";
             io::create_scratch(scratch, (rank == 0));
@@ -274,7 +274,7 @@ namespace ctns{
          for(int j=0; j<nket; j++){
             std::cout << "\n### jket=" << j << " ###" << std::endl;
             mps<Qm,Tm> kmps;
-            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j])+".info"; 
+            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j]); 
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;
             kmps.load(kmps_file);

@@ -47,7 +47,7 @@ namespace ctns{
          for(int j=0; j<nket; j++){
             std::cout << "\n### jket=" << j << " ###" << std::endl;
             mps<Qm,Tm> kmps;
-            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j])+".info"; 
+            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j]); 
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;
             kmps.load(kmps_file);
@@ -62,7 +62,7 @@ namespace ctns{
             for(int i=0; i<nbra; i++){
                std::cout << "\n### jket=" << j << " ibra=" << i << " ###" << std::endl;
                mps<Qm,Tm> bmps;
-               auto bmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(bra[i])+".info";
+               auto bmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(bra[i]);
                bmps.nphysical = topo.nphysical;
                bmps.image2 = topo.image2;
                bmps.load(bmps_file);

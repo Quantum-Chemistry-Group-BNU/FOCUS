@@ -89,6 +89,7 @@ namespace ctns{
             const qbond3& qs1,
             const qbond3& qs2,
             const bool debug=true){
+         int debug_level = 0;
          if(debug) std::cout << "\nctns::updateSite" << std::endl;
          const auto& dpt = qprod.second;
          auto qmidInfo = qbond3_to_qbond(qs1);
@@ -97,11 +98,44 @@ namespace ctns{
          const auto& pmid = qmidInfo.second;
          const auto& qcol = qcolInfo.first;
          const auto& pcol = qcolInfo.second;
+
+         // debug: dpt
+         if(debug_level>0){
+            for(const auto& pr : dpt){
+               const auto& sym3 = pr.first;
+               const auto& comp = pr.second;
+               std::cout << "sym3=(" << std::get<0>(sym3) << "," << std::get<1>(sym3)
+                  << "," << std::get<2>(sym3) << ")"
+                  << std::endl;
+               for(int i=0; i<comp.size(); i++){
+                  int i1 = std::get<0>(comp[i]);
+                  int i2 = std::get<1>(comp[i]);
+                  auto q1 = qs1[i1].first;
+                  auto q2 = qs2[i2].first;
+                  std::cout << " i1,i2=" << i1 << "," << i2 
+                     << " q1=(" << std::get<0>(q1) << "," << std::get<1>(q1) 
+                     << "," << std::get<2>(q1) << ")"
+                     << " q2=(" << std::get<0>(q2) << "," << std::get<1>(q2)
+                     << "," << std::get<2>(q2) << ")"
+                     << std::endl;
+               } // i
+            }
+         }
+
          // 1. form qrow
          qbond qrow;
          std::map<qsym,int> prow;
          int idx = 0;
          for(const auto& pr : Yinfo){
+
+            if(debug_level>0){
+               std::cout << "idx=" << idx << " sym=" << pr.first << std::endl;
+               const auto & ymat = pr.second;
+               auto ovlp = linalg::xgemm("N","N",ymat,ymat.H());
+               ymat.print("Ymat");
+               ovlp.print("ovlp");
+            }
+
             qrow.dims.push_back(std::make_pair(pr.first,pr.second.rows()));
             prow[pr.first] = idx;
             idx += 1;
@@ -137,11 +171,16 @@ namespace ctns{
                   unique_ns.push_back(i);
                }
             }
-            //tools::print_vector(unique_ns,"unique_ns");
+            if(debug_level>0){ 
+               std::cout << "\nsym=" << sym << std::endl;
+               tools::print_vector(unique_ns,"unique_ns");
+            }
+
             // loop over unique (N1,S1),(N2,S2) combinations
             for(int i=0; i<unique_ns.size(); i++){
-               int i1 = std::get<0>(comp[i]);
-               int i2 = std::get<1>(comp[i]);
+               int idx = unique_ns[i];
+               int i1 = std::get<0>(comp[idx]);
+               int i2 = std::get<1>(comp[idx]);
                auto q1 = qs1[i1].first;
                auto q2 = qs2[i2].first;
                qsym sym1({3,std::get<0>(q1),std::get<1>(q1)});
@@ -154,7 +193,7 @@ namespace ctns{
                int bcol = pcol.at(sym2);
                int tsi = ts; // intermediate spin is ts because site sym has S=0. 
                auto blk = site(brow,bcol,bmid,tsi);
-               size_t offcr = std::get<2>(comp[i]); 
+               size_t offcr = std::get<2>(comp[idx]); 
                int drow = qrow.get_dim(brow);
                assert(drow == ymat.rows());
                int dmid = d1;
@@ -162,15 +201,27 @@ namespace ctns{
                size_t N = drow*dcol*dmid;
                const Tm* xptr = ymat.data() + offcr*drow;
                linalg::xcopy(N, xptr, blk.data());
-               /*
-               std::cout << "br,bc,bm=" << brow << "," << bcol << "," << bmid
-                  << " dr,dc,dm=" << drow << "," << dcol << "," << dmid
-                  << " N=" << N << " offcr=" << offcr 
-                  << std::endl;
-               std::cout << ymat.rows() << "," << ymat.cols() << std::endl;
-               */
+
+               if(debug_level>0){
+                  std::cout << "i=" << i << " sym1=" << sym1 << " sym2=" << sym2 << std::endl;
+                  std::cout << "br,bc,bm=" << brow << "," << bcol << "," << bmid
+                     << " dr,dc,dm=" << drow << "," << dcol << "," << dmid
+                     << " symr=" << qrow.get_sym(brow)
+                     << " symc=" << qcol.get_sym(bcol)
+                     << " symm=" << qmid.get_sym(bmid)
+                     << " N=" << N << " offcr=" << offcr 
+                     << std::endl;
+                  std::cout << ymat.rows() << "," << ymat.cols() << std::endl;
+                  blk.print("blk");
+               }
             }
          }
+         
+         if(debug_level>0){ 
+            std::cout << "\nfinal site:" << std::endl;
+            site.print("site",2);
+         }
+
          return site;
       }
 
@@ -212,10 +263,11 @@ namespace ctns{
                      << std::get<1>(symj) << "," << std::get<2>(symj) << ")"
                      << std::endl;
                   rwfunW.print("rwfunW");
-                  std::cout << "pop[j] = " << std::setprecision(10) << pop_j << std::endl;
+                  std::cout << "pop[j]=" << std::setprecision(10) << pop_j << std::endl;
                }
             } // j
-            if(debug) std::cout << "total pop = " << std::setprecision(10) << pop << std::endl;
+            if(debug) std::cout << "total pop=" << std::setprecision(10) << pop 
+               << " diff(1-pop)=" << 1.0-pop << std::endl;
          } // iroot
 
          // projection
@@ -252,6 +304,11 @@ namespace ctns{
                wf2new = linalg::xgemm("N","N",U,Vt);
             }
          } // j
+         if(wf2new.size() == 0){
+            std::cout << "error: no such wavefunction with target twos=" << twos 
+               << " change twos instead!" << std::endl;
+            exit(1); 
+         }
 
          // 3. assemble rwfuns
          qsym vac_sym({3,0,0});
@@ -269,6 +326,7 @@ namespace ctns{
             }
             rwfuns_new[i] = std::move(state);
          } // i
+
          return rwfuns_new;
       }
 

@@ -34,14 +34,14 @@ namespace ctns{
             auto qtmp = contract_qt3_qt2("l",site,dmenv[i]);
             dmenv[i-1] = contract_qt3_qt3("lc",site,qtmp);
          }
-
+         /*
          // check
          for(int i=0; i<dmenv.size(); i++){
             const auto& dm = dmenv[i];
             double tr = std::real(dm.to_matrix().trace());
             std::cout << "i=" << i << " tr(rhol)=" << tr << std::endl; 
          }
-
+         */
          return dmenv;
       }
 

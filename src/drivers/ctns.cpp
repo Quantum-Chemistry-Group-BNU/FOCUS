@@ -77,7 +77,7 @@ void CTNS(const input::schedule& schd){
          } // rcanon_load
       }else{
          // restart a broken calculation from disk
-         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1)+".info";
+         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1);
          if(schd.ctns.restart_sweep > schd.ctns.maxsweep){
             std::cout << "error: restart_sweep exceed maxsweep!" << std::endl;
             std::cout << " restart_sweep=" << schd.ctns.restart_sweep

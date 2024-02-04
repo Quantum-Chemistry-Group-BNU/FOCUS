@@ -65,7 +65,7 @@ namespace ctns{
          // loop over sites on backbone
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
-         stensor2<Tm> qt2_r, qt2_u;
+         qtensor2<Qm::ifabelian,Tm> qt2_r, qt2_u;
          for(int i=icomb.topo.nbackbone-1; i>0; i--){
             const auto& node = nodes[i][0];
             int tp = node.type;
@@ -108,11 +108,13 @@ namespace ctns{
    template <typename Qm, typename Tm>
       std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
             const fock::onstate& state){
+         std::cout << "X state=" << state << std::endl;
          // compute <n|CTNS> by contracting all sites
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
-         stensor2<Tm> qt2_r, qt2_u;
+         qtensor2<Qm::ifabelian,Tm> qt2_r, qt2_u;
          for(int i=icomb.topo.nbackbone-1; i>=0; i--){
+            std::cout << "\ni=" << i << std::endl;
             const auto& node = nodes[i][0];
             int tp = node.type;
             if(tp == 0 || tp == 1){
@@ -120,11 +122,16 @@ namespace ctns{
                const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
                // given occ pattern, extract the corresponding qblock
                auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, node.pindex) ); 
+               
+               qt2.print("qt2");
+               qt2_r.print("qt2_r.old");
                if(i == icomb.topo.nbackbone-1){
                   qt2_r = std::move(qt2);
                }else{
                   qt2_r = qt2.dot(qt2_r); // (out,x)*(x,in)->(out,in)
                }
+               qt2_r.print("qt2_r.new");
+
             }else if(tp == 3){
                // propogate symmetry from leaves down to backbone
                for(int j=nodes[i].size()-1; j>=1; j--){
@@ -145,6 +152,7 @@ namespace ctns{
                qt2_r = qt2.dot(qt2_r); // contract right matrix
             } // tp
          } // i
+         std::cout << "wfcoeff" << std::endl;
          const auto& wfcoeff = icomb.get_wf2().dot(qt2_r);
          assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
          // finally return coeff = <n|CTNS[i]> as a vector 
@@ -168,7 +176,7 @@ namespace ctns{
             const double thresh=1.e-8){
          std::cout << "\nctns::rcanon_CIcoeff_check" << std::endl;
          int n = icomb.get_nroots(); 
-         int dim = space.size();
+         size_t dim = space.size();
          double maxdiff = -1.e10;
          // cmat[j,i] = <D[i]|CTNS[j]>
          for(int i=0; i<dim; i++){
@@ -194,7 +202,7 @@ namespace ctns{
             const linalg::matrix<Tm>& vs){
          std::cout << "\nctns::rcanon_CIovlp" << std::endl;
          int n = icomb.get_nroots(); 
-         int dim = space.size();
+         size_t dim = space.size();
          // cmat[n,i] = <D[i]|CTNS[n]>
          linalg::matrix<Tm> cmat(n,dim);
          for(int i=0; i<dim; i++){
@@ -228,7 +236,7 @@ namespace ctns{
             int na = (ne+tm)/2, nb = ne-na;
             fci_space = fock::get_fci_space(ks,na,nb); 
          }
-         int dim = fci_space.size();
+         size_t dim = fci_space.size();
          std::cout << " ks=" << ks << " sym=" << sym_state << " dimFCI=" << dim << std::endl;
 
          // brute-force computation of exact coefficients <n|CTNS>
@@ -288,7 +296,7 @@ namespace ctns{
                const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
                auto qt3 = contract_qt3_qt2("l",site,wf);
                // compute probability for physical index
-               std::vector<stensor2<Tm>> qt2n(4);
+               std::vector<qtensor2<Qm::ifabelian,Tm>> qt2n(4);
                std::vector<double> weights(4);
                for(int idx=0; idx<4; idx++){
                   qt2n[idx] = qt3.fix_mid( idx2mdx(Qm::isym, idx) );
@@ -307,7 +315,7 @@ namespace ctns{
                for(int j=1; j<nodes[i].size(); j++){
                   const auto& sitej = icomb.sites[rindex.at(std::make_pair(i,j))];
                   // compute probability for physical index
-                  std::vector<stensor3<Tm>> qt3n(4);
+                  std::vector<qtensor3<Qm::ifabelian,Tm>> qt3n(4);
                   std::vector<double> weights(4);
                   for(int idx=0; idx<4; idx++){
                      auto qt2 = sitej.fix_mid( idx2mdx(Qm::isym, idx) );

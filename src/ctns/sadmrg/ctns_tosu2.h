@@ -37,7 +37,6 @@ namespace ctns{
          auto rho = tmp.H().dot(tmp2);
          rho.print("rho");
          rho.to_matrix().print("rho");
-         exit(1);
          */
 
          // initial Wmatrix
@@ -137,6 +136,12 @@ namespace ctns{
 
             // 6. expand Y into sa-mps site
             icomb.sites[i] = updateSite(Yinfo, qprod, qc, qr);
+
+            // debug:
+            auto qt2 = contract_qt3_qt3("cr", icomb.sites[i], icomb.sites[i]);
+            qt2.check_identityMatrix(1.e-10, false);
+            qt2.to_matrix().print("qt2mat");
+
          }
          
          if(debug){
@@ -146,22 +151,50 @@ namespace ctns{
             wmat.qrow.print("qrow");
             display_qbond3(wmat.qcol,"qcol");
          }
-         //// debug
+         // debug
          //rcanon_Sdiag_sample(icomb_NSz, 0, 100, 10);
+
          /*
          auto wf2 = icomb_NSz.get_wf2();
          wf2.to_matrix().print("wf2");
-         auto ovlp = wf2.H().dot(wf2);
+         auto ovlp = (wf2.dot(wf2.H())).conj();
          ovlp.to_matrix().print("ovlp");
          */
          icomb.rwfuns = updateRWFuns(icomb_NSz, wmat, twos);
 
+         /*
+         auto wf2 = icomb.get_wf2();
+         wf2.to_matrix().print("wf2");
+         auto ovlp = (wf2.dot(wf2.H())).conj();
+         ovlp.to_matrix().print("ovlp");
+         ovlp.check_identityMatrix(1.e-10);
+         */
+
          std::cout << "\nSummary of sweep projection: nroot=" << icomb_NSz.rwfuns.size()
             << " final nstate=" << icomb.rwfuns.size()
-            << std::endl; 
+            << std::endl;
 
          icomb_NSz.display_shape();
          icomb.display_shape();
+
+         /*
+         std::cout << "\nrcanon_CIcoeff:" << std::endl;
+         fock::onspace fci_space;
+         auto sym_state = icomb.get_sym_state();
+         fci_space = fock::get_fci_space(2*nsite, sym_state.ne()); 
+         size_t dim = fci_space.size(); 
+         std::vector<Tm> v(dim);
+         for(int i=0; i<dim; i++){
+            auto coeff = rcanon_CIcoeff(icomb, fci_space[i]);
+            std::cout << "i=" << i 
+               << " state=" << fci_space[i]
+               << " <n|CTNS[0]>=" << coeff[0] 
+               << std::endl;   
+            v[i] = coeff[0];
+         }
+         auto overlap = std::pow(linalg::xnrm2(dim, v.data()),2);
+         std::cout << "<v|v>=" << overlap << std::endl;
+         */
 
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_tosu2", t0, t1);

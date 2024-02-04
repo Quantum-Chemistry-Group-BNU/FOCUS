@@ -206,7 +206,7 @@ namespace ctns{
          for(int j=0; j<nket; j++){
             std::cout << "\n### jket=" << j << " ###" << std::endl;
             mps<Qm,Tm> kmps;
-            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j])+".info"; 
+            auto kmps_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.post.ket[j]); 
             kmps.nphysical = topo.nphysical;
             kmps.image2 = topo.image2;
             kmps.load(kmps_file);

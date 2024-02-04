@@ -111,7 +111,7 @@ namespace input{
          bool precond = true;
          // io
          bool rcanon_load = false;
-         std::string rcanon_file = "rcanon_ci.info";
+         std::string rcanon_file = "rcanon_ci";
          // oper_pool
          int iomode = 0;
          bool async_fetch = false;

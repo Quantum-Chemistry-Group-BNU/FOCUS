@@ -286,18 +286,18 @@
       - expand Yinfo into MPS site [DONE@2024/01/27]
 
  * MPS algebra: ctns_alg.h
-   - rcanon_check
+   - rcanon_check [DONE@2024/02/04]
    - overlap: get_Smat
    - sdiag sampling:
       - sample CSF?
       - sample DET?
 
- * get Hamiltonian: [DONE@2024/02/xx]
+ * get Hamiltonian: [DONE@2024/03/xx]
    - renormalization
    - dot operators 
    - prepare environment operators
 
- * Spin-adapted DMRG algorithm: [DONE@2024/03/xx]
+ * Spin-adapted DMRG algorithm: [DONE@2024/04/xx]
    - twodot sweep algorithm
    - contractions
    - decimation
@@ -306,6 +306,6 @@
       - batched?
       - openMP?
 
- * GPU implementation: [DONE@2024/04/xx]
+ * GPU implementation: [DONE@2024/05/xx]
    - batchGEMM
 

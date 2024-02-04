@@ -35,17 +35,17 @@ namespace ctns{
             const int isweep,
             const int ibond){
          // local result
-         std::string fresult = scratch+"/result_ibond"+std::to_string(ibond)+".info";
+         std::string fresult = scratch+"/result_ibond"+std::to_string(ibond);
          rcanon_save(sweeps.opt_result[isweep][ibond], fresult);
          // updated site
-         std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";
+         std::string fsite = scratch+"/site_ibond"+std::to_string(ibond);
          const auto& dbond = sweeps.seq[ibond];
          const auto p = dbond.get_current();
          const auto& pdx = icomb.topo.rindex.at(p); 
          rcanon_save(icomb.sites[pdx], fsite);
          // generated cpsi
          if(schd.ctns.guess){ 
-            std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond)+".info";
+            std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond);
             rcanon_save(icomb.cpsi, fcpsi);
          }
       }
@@ -58,18 +58,18 @@ namespace ctns{
             const int isweep,
             const int ibond){
          // load local result
-         std::string fresult = scratch+"/result_ibond"+std::to_string(ibond)+".info";
+         std::string fresult = scratch+"/result_ibond"+std::to_string(ibond);
          rcanon_load(sweeps.opt_result[isweep][ibond], fresult);
          sweeps.opt_result[isweep][ibond].print();
          // load site
-         std::string fsite = scratch+"/site_ibond"+std::to_string(ibond)+".info";
+         std::string fsite = scratch+"/site_ibond"+std::to_string(ibond);
          const auto& dbond = sweeps.seq[ibond];
          const auto p = dbond.get_current();
          const auto& pdx = icomb.topo.rindex.at(p);
          rcanon_load(icomb.sites[pdx], fsite);
          // load cpsi
          if(schd.ctns.guess){ 
-            std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond)+".info";
+            std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond);
             rcanon_load(icomb.cpsi, fcpsi);
          }
       }
