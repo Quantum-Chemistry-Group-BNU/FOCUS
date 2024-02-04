@@ -128,7 +128,8 @@ namespace ctns{
       }
 
    //
-   // relations among (idx->occ->mdx), used when physical degree is specified in ctns_alg.h
+   // relations among (idx->occ->mdx), used when 
+   // physical degree is specified in ctns_alg.h
    //
    //  idx = 0,1,2,3
    //  occ = 00,11,01,10
