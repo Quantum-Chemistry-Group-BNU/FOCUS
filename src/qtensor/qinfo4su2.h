@@ -31,17 +31,17 @@ namespace ctns{
                // triangular condition
                bool ifspin;
                if(couple == LC1andC2Rcouple){
-                  ifspin = spin_triangle(qrow.get_sym(br).ts(), qmid.get_sym(bm).ts(), tsi) && 
-                     spin_triangle(qcol.get_sym(bc).ts(), qver.get_sym(bv).ts(), tsj) &&
-                     spin_triangle(tsi, tsj, sym.ts());
+                  ifspin = fock::spin_triangle(qrow.get_sym(br).ts(), qmid.get_sym(bm).ts(), tsi) && 
+                     fock::spin_triangle(qcol.get_sym(bc).ts(), qver.get_sym(bv).ts(), tsj) &&
+                     fock::spin_triangle(tsi, tsj, sym.ts());
                }else if(couple == LC1andC2couple){
-                  ifspin = spin_triangle(qrow.get_sym(br).ts(), qmid.get_sym(bm).ts(), tsi) &&
-                     spin_triangle(tsi, qver.get_sym(bv).ts(), tsj) && 
-                     spin_triangle(tsj, qcol.get_sym(bc).ts(), sym.ts()); 
+                  ifspin = fock::spin_triangle(qrow.get_sym(br).ts(), qmid.get_sym(bm).ts(), tsi) &&
+                     fock::spin_triangle(tsi, qver.get_sym(bv).ts(), tsj) && 
+                     fock::spin_triangle(tsj, qcol.get_sym(bc).ts(), sym.ts()); 
                }else if(couple == C1andC2Rcouple){
-                  ifspin = spin_triangle(qcol.get_sym(bc).ts(), qver.get_sym(bv).ts(), tsj) &&
-                     spin_triangle(qmid.get_sym(bm).ts(), tsj, tsi) &&
-                     spin_triangle(qrow.get_sym(br).ts(), tsi, sym.ts());
+                  ifspin = fock::spin_triangle(qcol.get_sym(bc).ts(), qver.get_sym(bv).ts(), tsj) &&
+                     fock::spin_triangle(qmid.get_sym(bm).ts(), tsj, tsi) &&
+                     fock::spin_triangle(qrow.get_sym(br).ts(), tsi, sym.ts());
                }
                return ifnele && ifspin; 
             }

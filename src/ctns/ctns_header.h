@@ -8,6 +8,7 @@
 #include "ctns_ova.h"
 #include "ctns_cicoeff.h"
 #include "ctns_sample.h"
+#include "ctns_sdiag.h"
 
 #include "ctns_oper.h" 
 

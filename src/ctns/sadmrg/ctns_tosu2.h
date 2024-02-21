@@ -10,6 +10,8 @@
 #include "ctns_tosu2_env.h"
 #include "ctns_tosu2_update.h"
 
+#include "../../core/csf.h"
+
 namespace ctns{
 
    // convert to SU2 symmetry via sweep projection
@@ -58,34 +60,34 @@ namespace ctns{
             }
 
             /*
-            std::cout << "\nwmat" << std::endl;
-            wmat.qrow.print("qrow");
-            display_qbond3(wmat.qcol,"qcol");
-            wmat.to_matrix().print("wmat");
+               std::cout << "\nwmat" << std::endl;
+               wmat.qrow.print("qrow");
+               display_qbond3(wmat.qcol,"qcol");
+               wmat.to_matrix().print("wmat");
 
-            auto w = wmat.to_matrix();
-            w.print("w");
-            auto wwh = linalg::xgemm("N","N",w,w.H());
-            wwh.print("wwh");
-            wwh = wwh - linalg::identity_matrix<Tm>(w.rows());
-            double diffw = wwh.normF();
-            std::cout << "diffw=" << diffw << std::endl;
+               auto w = wmat.to_matrix();
+               w.print("w");
+               auto wwh = linalg::xgemm("N","N",w,w.H());
+               wwh.print("wwh");
+               wwh = wwh - linalg::identity_matrix<Tm>(w.rows());
+               double diffw = wwh.normF();
+               std::cout << "diffw=" << diffw << std::endl;
             //if(diffw > 1.e-10) exit(1);
             */
-            
+
             // 1. form MixedRSite
             auto msite = formMixedRSite(icomb_NSz.sites[i], wmat);
-          
+
             /*
-            auto rmat = contract_qt3_qt3("cr",icomb_NSz.sites[i],icomb_NSz.sites[i]).to_matrix();
-            rmat.print("rmat");
+               auto rmat = contract_qt3_qt3("cr",icomb_NSz.sites[i],icomb_NSz.sites[i]).to_matrix();
+               rmat.print("rmat");
 
-            auto rmat2 = contract_qt3_qt3_cr(msite,msite).to_matrix();
-            rmat2.print("rmat2");
+               auto rmat2 = contract_qt3_qt3_cr(msite,msite).to_matrix();
+               rmat2.print("rmat2");
 
-            auto dev2 = rmat2-rmat;
-            auto diff2 = dev2.normF();
-            std::cout << "diffRmat=" << diff2 << std::endl;
+               auto dev2 = rmat2-rmat;
+               auto diff2 = dev2.normF();
+               std::cout << "diffRmat=" << diff2 << std::endl;
             //if(diff2 > 1.e-10) exit(1);
             */
 
@@ -96,16 +98,16 @@ namespace ctns{
             auto csite = formCoupledRSite(msite, qprod, qc, qr);
 
             /*
-            std::cout << "\ncsite" << std::endl;
-            csite.qrow.print("qrow");
-            display_qbond3(csite.qcol,"qcol");
-            auto cmat = csite.to_matrix();
-            cmat.print("csite");
-            auto renv = linalg::xgemm("N","N",cmat,cmat.H());
-            renv.print("renv");
-            auto dev = rmat-renv;
-            auto diff = dev.normF();
-            std::cout << "diffRenv=" << diff << std::endl;
+               std::cout << "\ncsite" << std::endl;
+               csite.qrow.print("qrow");
+               display_qbond3(csite.qcol,"qcol");
+               auto cmat = csite.to_matrix();
+               cmat.print("csite");
+               auto renv = linalg::xgemm("N","N",cmat,cmat.H());
+               renv.print("renv");
+               auto dev = rmat-renv;
+               auto diff = dev.normF();
+               std::cout << "diffRenv=" << diff << std::endl;
             //if(diff > 1.e-10) exit(1);
 
             std::cout << "\nDM:" << std::endl;
@@ -117,19 +119,19 @@ namespace ctns{
 
             // 3. density matrix
             auto cdm = formCoupledDM(csite, dmenv[i]);
-            
+
             // 4. decimation by diagonlizing quasi-dm 
             auto Yinfo = decimQuasiDM(cdm, thresh_tosu2);
 
             /* 
-            csite.to_matrix().print("csite");
-            rmat.print("rmat");
-            std::cout << "\nYinfo:" << std::endl;
-            for(const auto& pr : Yinfo){
+               csite.to_matrix().print("csite");
+               rmat.print("rmat");
+               std::cout << "\nYinfo:" << std::endl;
+               for(const auto& pr : Yinfo){
                std::cout << "sym=" << pr.first << std::endl;
                pr.second.print("Ymat");
-            }
-            */
+               }
+               */
 
             // 5. update information: W
             wmat = updateWmat(csite, Yinfo);
@@ -143,7 +145,7 @@ namespace ctns{
             qt2.to_matrix().print("qt2mat");
 
          }
-         
+
          if(debug){
             std::cout << "\n#######" << std::endl;
             std::cout << " FINAL" << std::endl;
@@ -155,20 +157,20 @@ namespace ctns{
          //rcanon_Sdiag_sample(icomb_NSz, 0, 100, 10);
 
          /*
-         auto wf2 = icomb_NSz.get_wf2();
-         wf2.to_matrix().print("wf2");
-         auto ovlp = (wf2.dot(wf2.H())).conj();
-         ovlp.to_matrix().print("ovlp");
-         */
+            auto wf2 = icomb_NSz.get_wf2();
+            wf2.to_matrix().print("wf2");
+            auto ovlp = (wf2.dot(wf2.H())).conj();
+            ovlp.to_matrix().print("ovlp");
+            */
          icomb.rwfuns = updateRWFuns(icomb_NSz, wmat, twos);
 
          /*
-         auto wf2 = icomb.get_wf2();
-         wf2.to_matrix().print("wf2");
-         auto ovlp = (wf2.dot(wf2.H())).conj();
-         ovlp.to_matrix().print("ovlp");
-         ovlp.check_identityMatrix(1.e-10);
-         */
+            auto wf2 = icomb.get_wf2();
+            wf2.to_matrix().print("wf2");
+            auto ovlp = (wf2.dot(wf2.H())).conj();
+            ovlp.to_matrix().print("ovlp");
+            ovlp.check_identityMatrix(1.e-10);
+            */
 
          std::cout << "\nSummary of sweep projection: nroot=" << icomb_NSz.rwfuns.size()
             << " final nstate=" << icomb.rwfuns.size()
@@ -179,25 +181,36 @@ namespace ctns{
 
          auto Sij = ctns::get_Smat(icomb);
          Sij.print("Sij");
- 
+
          /*
-         std::cout << "\nrcanon_CIcoeff:" << std::endl;
-         fock::onspace fci_space;
-         auto sym_state = icomb.get_sym_state();
-         fci_space = fock::get_fci_space(2*nsite, sym_state.ne()); 
-         size_t dim = fci_space.size(); 
-         std::vector<Tm> v(dim);
-         for(int i=0; i<dim; i++){
+            std::cout << "\nrcanon_CIcoeff:" << std::endl;
+            fock::onspace fci_space;
+            auto sym_state = icomb.get_sym_state();
+            fci_space = fock::get_fci_space(2*nsite, sym_state.ne()); 
+            size_t dim = fci_space.size(); 
+            std::vector<Tm> v(dim);
+            for(int i=0; i<dim; i++){
             auto coeff = rcanon_CIcoeff(icomb, fci_space[i]);
             std::cout << "i=" << i 
-               << " state=" << fci_space[i]
-               << " <n|CTNS[0]>=" << coeff[0] 
-               << std::endl;   
+            << " state=" << fci_space[i]
+            << " <n|CTNS[0]>=" << coeff[0] 
+            << std::endl;   
             v[i] = coeff[0];
+            }
+            auto overlap = std::pow(linalg::xnrm2(dim, v.data()),2);
+            std::cout << "<v|v>=" << overlap << std::endl;
+            */
+
+         int k=10, n=10, ts=10;
+        
+         std::cout << fock::dim_csf_space(k,n,ts) << std::endl;
+
+         fock::csfspace fci_space = fock::get_csf_space(k,n,ts);
+         size_t dim = fci_space.size();
+         for(int i=0; i<dim; i++){
+            std::cout << "i=" << i << " csf=" << fci_space[i].repr << std::endl;
          }
-         auto overlap = std::pow(linalg::xnrm2(dim, v.data()),2);
-         std::cout << "<v|v>=" << overlap << std::endl;
-         */
+         exit(1);
 
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_tosu2", t0, t1);

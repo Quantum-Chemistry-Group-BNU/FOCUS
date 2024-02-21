@@ -3,7 +3,7 @@
 
 #include "ctns_tosu2_wmat.h"
 #include "ctns_tosu2_msite.h"
-#include "../../qtensor/spincoupling.h"
+#include "../../core/spin.h"
 
 namespace ctns{
 
@@ -135,7 +135,7 @@ namespace ctns{
                int tm1 = std::get<2>(q1);
                int tm2 = std::get<2>(q2);
                assert(tm12 == tm1+tm2);
-               Tm cg = cgcoeff(ts1,ts2,ts12,tm1,tm2,tm12);
+               Tm cg = fock::cgcoeff(ts1,ts2,ts12,tm1,tm2,tm12);
                int d1 = qs1[k1].second;
                int d2 = qs2[k2].second;
                // offcr need to multiply dimr 

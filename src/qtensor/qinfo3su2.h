@@ -31,11 +31,11 @@ namespace ctns{
                // triangular condition
                bool ifspin;
                if(couple == LCcouple){
-                  ifspin = spin_triangle(qrow.get_sym(br).ts(), qmid.get_sym(bm).ts(), tsi) &&
-                     spin_triangle(tsi, qcol.get_sym(bc).ts(), sym.ts());
+                  ifspin = fock::spin_triangle(qrow.get_sym(br).ts(), qmid.get_sym(bm).ts(), tsi) &&
+                     fock::spin_triangle(tsi, qcol.get_sym(bc).ts(), sym.ts());
                }else if(couple == CRcouple){
-                  ifspin = spin_triangle(qmid.get_sym(bm).ts(), qcol.get_sym(bc).ts(), tsi) &&
-                     spin_triangle(tsi, qrow.get_sym(br).ts(), sym.ts());
+                  ifspin = fock::spin_triangle(qmid.get_sym(bm).ts(), qcol.get_sym(bc).ts(), tsi) &&
+                     fock::spin_triangle(tsi, qrow.get_sym(br).ts(), sym.ts());
                }
                return ifnele && ifspin;
             }

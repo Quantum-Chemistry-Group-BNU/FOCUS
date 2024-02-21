@@ -467,6 +467,7 @@ namespace fock{
 
          // onspace_compact in onspace.h for dump
          friend class onspace_compact;
+         friend class csfstate;
 
       private:
          int _size = 0;
