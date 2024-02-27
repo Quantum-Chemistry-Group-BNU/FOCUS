@@ -17,16 +17,18 @@ namespace ctns{
 
    // Algorithm 2:
    // <n|CTNS[i]> by contracting the CTNS
+   //
+   // |n>=|n1n2n3>, |q> can be |q1q3q2>, |psi>=|q>*psi(q)
+   // then <n|psi> = <n|q>*psi(q), <n|q> is the sign
+   //
    template <typename Qm, typename Tm>
       std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
             const fock::onstate& state){
-         std::cout << "X state=" << state << std::endl;
          // compute <n|CTNS> by contracting all sites
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
          qtensor2<Qm::ifabelian,Tm> qt2_r, qt2_u;
          for(int i=icomb.topo.nbackbone-1; i>=0; i--){
-            std::cout << "\ni=" << i << std::endl;
             const auto& node = nodes[i][0];
             int tp = node.type;
             if(tp == 0 || tp == 1){
@@ -34,16 +36,11 @@ namespace ctns{
                const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
                // given occ pattern, extract the corresponding qblock
                auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, node.pindex) ); 
-               
-               qt2.print("qt2");
-               qt2_r.print("qt2_r.old");
                if(i == icomb.topo.nbackbone-1){
                   qt2_r = std::move(qt2);
                }else{
                   qt2_r = qt2.dot(qt2_r); // (out,x)*(x,in)->(out,in)
                }
-               qt2_r.print("qt2_r.new");
-
             }else if(tp == 3){
                // propogate symmetry from leaves down to backbone
                for(int j=nodes[i].size()-1; j>=1; j--){
@@ -64,7 +61,6 @@ namespace ctns{
                qt2_r = qt2.dot(qt2_r); // contract right matrix
             } // tp
          } // i
-         std::cout << "wfcoeff" << std::endl;
          const auto& wfcoeff = icomb.get_wf2().dot(qt2_r);
          assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
          // finally return coeff = <n|CTNS[i]> as a vector 

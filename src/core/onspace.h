@@ -46,6 +46,8 @@ namespace fock{
    onspace get_fci_space(const int k, const int n);
    // k - number of spatial orbitals 
    onspace get_fci_space(const int ks, const int na, const int nb);
+   // spin space {a,b}
+   onspace get_fci_space_single(const int ks, const int na);
 
    // from unsigned long array convert space, nth onstate
    onspace convert_space(const unsigned long *bra, const int sorb, const int n);

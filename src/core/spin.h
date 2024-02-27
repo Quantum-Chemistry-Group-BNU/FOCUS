@@ -9,16 +9,7 @@ namespace fock{
       return (ts1+ts2-ts3)%2==0 && std::abs(ts1-ts2) <= ts3 && ts3 <= ts1+ts2;
    }
 
-   inline double wigner3j(const int two_ja, 
-         const int two_jb, 
-         const int two_jc, 
-         const int two_ma, 
-         const int two_mb, 
-         const int two_mc){
-      return ::gsl_sf_coupling_3j(two_ja,two_jb,two_jc,
-            two_ma,two_mb,two_mc);
-   }
-
+   // <ja,ma,jb,mb|jc,mc>
    inline double cgcoeff(const int two_ja, 
          const int two_jb, 
          const int two_jc, 
@@ -28,6 +19,16 @@ namespace fock{
       int sum = (-two_ja+two_jb-two_mc)/2;
       return ::gsl_sf_coupling_3j(two_ja,two_jb,two_jc,
             two_ma,two_mb,-two_mc)*std::sqrt(two_jc+1.0)*std::pow(-1,sum);
+   }
+
+   inline double wigner3j(const int two_ja, 
+         const int two_jb, 
+         const int two_jc, 
+         const int two_ma, 
+         const int two_mb, 
+         const int two_mc){
+      return ::gsl_sf_coupling_3j(two_ja,two_jb,two_jc,
+            two_ma,two_mb,two_mc);
    }
 
    inline double wigner6j(const int two_ja, 

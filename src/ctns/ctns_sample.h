@@ -69,16 +69,17 @@ namespace ctns{
                wf = qt3.fix_mid(std::make_pair(0,0));
             } // tp
          }
-         // finally wf should be the corresponding CI coefficients: coeff0*sgn = coeff1
-         auto coeff0 = wf(0,0)(0,0);
+         // finally wf should be the corresponding CI coefficients
+         double sgn = state.permute_sgn(icomb.topo.image2); // from orbital ordering
+         auto coeff0 = sgn*wf(0,0)(0,0);
          if(debug){
-            double sgn = state.permute_sgn(icomb.topo.image2); // from orbital ordering
             auto coeff1 = rcanon_CIcoeff(icomb, state)[iroot];
             std::cout << " state=" << state 
-               << " coeff0,sgn=" << coeff0 << "," << sgn
+               << " coeff0=" << coeff0 
                << " coeff1=" << coeff1 
-               << " diff=" << coeff0*sgn-coeff1 << std::endl;
-            assert(std::abs(coeff0*sgn-coeff1)<1.e-10);
+               << " diff=" << coeff0-coeff1 
+               << std::endl;
+            assert(std::abs(coeff0-coeff1)<1.e-10);
          }
          return std::make_pair(state,coeff0);
       }

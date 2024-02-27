@@ -54,6 +54,17 @@ onspace fock::get_fci_space(const int ks, const int na, const int nb){
    return space;
 }
 
+onspace fock::get_fci_space_single(const int k, const int n){
+   assert(k >= n);
+   onspace space;
+   string s = string(k-n,'a')+string(n,'b');
+   do{
+      // flip is added to be consistent with ordering in the previous function
+      space.push_back( onstate(s, 1).flip() ); 
+   }while(next_permutation(s.begin(), s.end()));
+   return space;
+}
+
 onspace fock::convert_space(const unsigned long *bra, const int sorb, const int n){
    onspace space;
    int _len = (sorb-1)/64+1;

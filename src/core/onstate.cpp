@@ -6,14 +6,36 @@ using namespace std;
 using namespace fock;
 
 // constructor from "010011" strings (read from right to left)
-onstate::onstate(const string& s){
-   _size = s.size();
-   _len = (_size-1)/64+1;
-   _repr = new unsigned long[_len];
-   // initialize, otherwise some unused bits will not be 0.
-   fill_n(_repr, _len, 0); 
-   for(int i=0; i<_size; i++){
-      (*this)[i] = s[_size-1-i] == '1' ? 1 : 0;
+onstate::onstate(const string& s, const int iop){
+   if(iop == 0){
+      _size = s.size();
+      _len = (_size-1)/64+1;
+      _repr = new unsigned long[_len];
+      // initialize, otherwise some unused bits will not be 0.
+      fill_n(_repr, _len, 0); 
+      for(int i=0; i<_size; i++){
+         (*this)[i] = (s[_size-1-i]=='1')? 1 : 0;
+      }
+   }else{
+      int size = s.size();
+       _size = 2*size;
+      _len = (_size-1)/64+1;
+      _repr = new unsigned long[_len];
+      for(int i=0; i<size; i++){
+         if(s[size-1-i] == '0'){
+            (*this)[2*i]=0; 
+            (*this)[2*i+1]=0;
+         }else if(s[size-1-i] == 'a' || s[size-1-i] == 'u'){
+            (*this)[2*i]=1; 
+            (*this)[2*i+1]=0;
+         }else if(s[size-1-i] == 'b' || s[size-1-i] == 'd'){
+            (*this)[2*i]=0; 
+            (*this)[2*i+1]=1;
+         }else if(s[size-1-i] == '2'){
+            (*this)[2*i]=1; 
+            (*this)[2*i+1]=1;
+         }
+      } // i
    }
 }
 
@@ -107,7 +129,7 @@ string onstate::to_string() const{
 }
 
 // print 2ab0 string
-string onstate::to_string2() const{
+string onstate::to_string2(const bool ifcsf) const{
    assert(_size%2 == 0); // only for even no. of basis function 
    string s; 
    int nodd,neven; 
@@ -117,9 +139,9 @@ string onstate::to_string2() const{
       if(nodd == 1 && neven == 1)
          s += '2';
       else if(nodd == 0 && neven == 1)
-         s += 'a';
+         s += ifcsf? 'u' : 'a';
       else if(nodd == 1 && neven == 0)
-         s += 'b';
+         s += ifcsf? 'd' : 'b';
       else if(nodd == 0 && neven == 0)
          s += '0';
    }

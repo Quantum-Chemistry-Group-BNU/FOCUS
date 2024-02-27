@@ -104,8 +104,8 @@ namespace fock{
          onstate& operator =(onstate&& state);
 
          // special constructors
-         // from "01011"
-         onstate(const std::string& on); 
+         // from "01011" or "02ab"
+         onstate(const std::string& on, const int iop=0);
          // merge two states with different spins - neglect phases
          onstate(const onstate& state_a, const onstate& state_b);
          // vector<unsigned long> constructors
@@ -144,7 +144,7 @@ namespace fock{
          }
          // print
          std::string to_string() const;
-         std::string to_string2() const;
+         std::string to_string2(const bool ifcsf=false) const;
          friend std::ostream& operator <<(std::ostream& os, const onstate& state);
 
          // comparison [from high position] 
@@ -467,7 +467,6 @@ namespace fock{
 
          // onspace_compact in onspace.h for dump
          friend class onspace_compact;
-         friend class csfstate;
 
       private:
          int _size = 0;
