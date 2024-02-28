@@ -23,7 +23,7 @@ namespace fock{
             auto tsinter = intermediate_tsarray();
             for(const auto& ts : tsinter){
                if(ts < 0){
-                  std::cout << "error: not a valid csf as ts<0" << std::endl;
+                  std::cout << "error: not a valid csf as ts<0 in s=" << s << std::endl;
                   tools::print_vector(tsinter,"tsinter");
                   exit(1);
                }

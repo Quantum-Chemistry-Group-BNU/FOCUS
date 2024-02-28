@@ -288,7 +288,7 @@
  * MPS algebra: ctns_alg.h
    - rcanon_check [DONE@2024/02/04]
    - overlap: get_Smat [DONE@2024/02/04]
-   - CSF related data structure [DONE@2024/02/XX]
+   - CSF related data structure [DONE@2024/02/28]
    - cicoeff:
    - sdiag sampling:
       - sample CSF?

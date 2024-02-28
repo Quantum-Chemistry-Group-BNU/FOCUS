@@ -12,30 +12,27 @@ ostream& fock::operator <<(ostream& os, const csfstate& state){
 }
 
 // right canonical form
+// 
+//    0   1   2   3   4   5
+//    *---*---*---*---*---*
+//  0   1   2   3   4   5   6 [intermediate n/s]
+//
 std::vector<int> csfstate::intermediate_narray() const{
    int k = repr.size()/2;
-   std::vector<int> ninter(k);
+   std::vector<int> ninter(k+1,0);
    for(int i=k-1; i>=0; i--){
       int ndelta = repr[2*i]+repr[2*i+1];
-      if(i==k-1){
-         ninter[i] = ndelta;
-      }else{
-         ninter[i] += ninter[i+1]+ndelta;
-      }
+      ninter[i] += ninter[i+1]+ndelta;
    }
    return ninter;
 }
 
 std::vector<int> csfstate::intermediate_tsarray() const{
    int k = repr.size()/2;
-   std::vector<int> tsinter(k);
+   std::vector<int> tsinter(k+1,0);
    for(int i=k-1; i>=0; i--){
       int tsdelta = repr[2*i]-repr[2*i+1];
-      if(i==k-1){
-         tsinter[i] = tsdelta;
-      }else{
-         tsinter[i] += tsinter[i+1]+tsdelta;
-      }
+      tsinter[i] += tsinter[i+1]+tsdelta;
    }
    return tsinter;
 }
@@ -66,7 +63,7 @@ double csfstate::det_coeff(const onstate& state) const{
          tsout = tsin + tsdelta;
          tmout = tmin + tmdelta;
          // we impose that only the high-spin det is generated.
-         if(i == ks-1) tmout = twos(); 
+         //if(i == 0) tmout = twos(); 
          if(abs(tmout)<=tsout){
             coeff *= cgcoeff(1,tsin,tsout,tmdelta,tmin,tmout); // <s[i]m[i]S[i-1]M[i-1]|S[i]M[i]>
          }else{
@@ -113,13 +110,18 @@ std::pair<onspace,std::vector<double>> csfstate::to_det() const{
 
 std::pair<onstate,double> csfstate::sample() const{
    int ks = norb();
+   auto tsarray = intermediate_tsarray();
    onstate state(2*ks);
    double coeff = 1.0;
-   int tsin = 0, tsout = 0;
-   int tmin = 0, tmout = 0;
+   int tmin = 0, tmout = twos();
+   //
    // sample must be carried out from left as in MPS
+   //
+   // out --<--*--<-- in where M[out]=M[in]+M[phys]
+   //         /|\
+   //          phys
+   //
    for(int i=0; i<ks; i++){
-   /*
       int apos = 2*i;
       int bpos = 2*i+1;
       int dval = dvec(i);
@@ -129,29 +131,29 @@ std::pair<onstate,double> csfstate::sample() const{
       }else{
          // open-shell case: sample a/b
          int tsdelta = repr[apos]-repr[bpos];
-         tsout = tsin + tsdelta;
+         // <s[i]m[i]S[i-1]M[i-1]|S[i]M[i]>
+         int tsin = tsarray[i+1];
+         int tsout = tsarray[i]; 
          std::vector<double> weights(2);
          // alpha
-         tmout = tmin + 1;
+         tmin = tmout - 1;
          double ca = 0.0;
-         if(abs(tmout)<=tsout) ca = cgcoeff(1,tsin,tsout,1,tmin,tmout);
+         if(abs(tmin)<=tsin) ca = cgcoeff(1,tsin,tsout,1,tmin,tmout);
          weights[0] = ca*ca;                                    
          // beta                                                
-         tmout = tmin - 1;                                      
+         tmin = tmout + 1;                                      
          double cb = 0.0;                                       
-         if(abs(tmout)<=tsout) cb = cgcoeff(1,tsin,tsout,-1,tmin,tmout);
+         if(abs(tmin)<=tsin) cb = cgcoeff(1,tsin,tsout,-1,tmin,tmout);
          weights[1] = cb*cb;
          // sample 
          std::discrete_distribution<> dist(weights.begin(),weights.end());
          int idx = dist(tools::generator);
          state[apos] = 1-idx;
          state[bpos] = idx;
-         tmout = tmin + (1-2*idx);
+         tmin = tmout - (1-2*idx);
+         coeff *= (idx==0)? ca : cb;
       }
-      tsin = tsout;
-      tmin = tmout;
-   */
-      exit(1);
+      tmout = tmin;
    } // i
    return std::make_pair(state,coeff);
 }
@@ -237,7 +239,10 @@ double csfstate::Sdiag_exact() const{
 csfspace fock::get_csf_space(const int k, const int n, const int ts){
    const bool debug = false;
    std::cout << "fock::get_csf_space (k,n,ts)=" << k << "," << n << "," << ts << std::endl;
-   assert(k <= 32); // no. of spatial orbitals should be smaller than 32
+   if(n%2 != ts%2){
+      std::cout << "error: inconsistent n & ts!" << std::endl;
+      exit(1);
+   }
    csfspace space;
    csfstate vacuum(k);
    space.push_back(vacuum);

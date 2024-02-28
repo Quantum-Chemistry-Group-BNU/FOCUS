@@ -8,6 +8,7 @@ int main(){
    tests::test_matrix();
    tests::test_onstate();
    tests::test_onspace();
+   tests::test_csf();
    tests::test_dvdson();
    tests::test_integral();
    tests::test_hamiltonian();

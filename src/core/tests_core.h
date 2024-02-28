@@ -10,6 +10,7 @@ int test_matrix();
 int test_linalg();
 int test_onstate();
 int test_onspace();
+int test_csf();
 int test_dvdson();
 int test_integral();
 int test_hamiltonian();
