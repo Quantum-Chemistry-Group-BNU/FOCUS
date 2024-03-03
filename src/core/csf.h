@@ -34,6 +34,7 @@ namespace fock{
          int norb() const{ return repr.norb(); }
          int norb_single() const{ return repr.norb_single(); }
          int dvec(const int k) const{ return repr[2*k+1]*2+repr[2*k]; } // step value
+         int nvec(const int k) const{ return repr[2*k+1]+repr[2*k]; }
          std::vector<int> intermediate_narray() const;
          std::vector<int> intermediate_tsarray() const;
          std::vector<int> orbs_single() const{

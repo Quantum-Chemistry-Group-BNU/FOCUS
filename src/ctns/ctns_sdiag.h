@@ -11,42 +11,23 @@
 #include "../core/onspace.h"
 #include "../core/analysis.h"
 #include "ctns_comb.h"
+#include "ctns_expand.h"
 
 namespace ctns{
 
    // Algorithm 3:
    // exact computation of Sdiag, only for small system
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       double rcanon_Sdiag_exact(const comb<Qm,Tm>& icomb,
             const int iroot,
             const double thresh_print=1.e-10){
          std::cout << "\nctns::rcanon_Sdiag_exact iroot=" << iroot
             << " thresh_print=" << thresh_print << std::endl;
-         // setup FCI space
-         qsym sym_state = icomb.get_sym_state();
-         int ne = sym_state.ne(); 
-         int ks = icomb.get_nphysical();
-         fock::onspace fci_space;
-         if(Qm::isym == 0){
-            fci_space = fock::get_fci_space(2*ks);
-         }else if(Qm::isym == 1){
-            fci_space = fock::get_fci_space(2*ks,ne);
-         }else if(Qm::isym == 2){
-            int tm = sym_state.tm(); 
-            int na = (ne+tm)/2, nb = ne-na;
-            fci_space = fock::get_fci_space(ks,na,nb); 
-         }
-         size_t dim = fci_space.size();
-         std::cout << " ks=" << ks << " sym=" << sym_state << " dimFCI=" << dim << std::endl;
 
-         // brute-force computation of exact coefficients <n|CTNS>
-         std::vector<Tm> coeff(dim,0.0);
-         for(int i=0; i<dim; i++){
-            const auto& state = fci_space[i];
-            coeff[i] = rcanon_CIcoeff(icomb, state)[iroot];
-            if(std::abs(coeff[i]) < thresh_print) continue;
-            std::cout << " i=" << i << " " << state << " coeff=" << coeff[i] << std::endl; 
-         }
+         // expand CTNS into determinants
+         auto expansion = rcanon_expand_onstate(icomb, iroot, thresh_print);
+         auto coeff = expansion.second;
+         size_t dim = coeff.size();
          double Sdiag = fock::coeff_entropy(coeff);
          double ovlp = std::pow(linalg::xnrm2(dim,&coeff[0]),2); 
          std::cout << "ovlp=" << ovlp << " Sdiag(exact)=" << Sdiag << std::endl;
@@ -79,7 +60,7 @@ namespace ctns{
 
    // compute diagonal entropy via sampling:
    // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       double rcanon_Sdiag_sample(const comb<Qm,Tm>& icomb,
             const int iroot,
             const int nsample,  

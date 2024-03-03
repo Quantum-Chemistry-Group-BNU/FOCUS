@@ -130,7 +130,7 @@ namespace ctns{
          std::map<qsym,std::vector<int>> qmap;
          for(int i=0; i<qrow.size(); i++){
             auto qr = qrow[i].first;
-            qsym sym({3,std::get<0>(qr),std::get<1>(qr)});
+            qsym sym(3,std::get<0>(qr),std::get<1>(qr));
             qmap[sym].push_back(i);
          }
          // loop over symmetry sectors

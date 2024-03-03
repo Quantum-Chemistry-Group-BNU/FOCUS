@@ -32,8 +32,8 @@ namespace ctns{
          qsym(const short isym, const short ne, const short tm): _isym(isym), _ne(ne), _tm(tm) {
             // ne,tm can be negative due to the negative function 
             if( (isym==2 or isym==3) && (std::abs(ne)%2 != std::abs(tm)%2) ){ 
-               std::cout << "error: inconsistent (ne,tm) for isym=" << isym << std::endl;
-               std::cout << "ne = " << ne << " tm=" << tm << std::endl;
+               std::cout << "error: inconsistent (ne,tm) for isym=" << isym 
+                  << " (ne,tm)=" << ne << "," << tm << std::endl;
                exit(1); 
             }
          }

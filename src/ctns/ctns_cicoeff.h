@@ -11,6 +11,7 @@
 
 #include "../core/onspace.h"
 #include "../core/analysis.h"
+#include "../core/csf.h"
 #include "ctns_comb.h"
 
 namespace ctns{
@@ -21,9 +22,12 @@ namespace ctns{
    // |n>=|n1n2n3>, |q> can be |q1q3q2>, |psi>=|q>*psi(q)
    // then <n|psi> = <n|q>*psi(q), <n|q> is the sign
    //
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
             const fock::onstate& state){
+         // finally return coeff = <n|CTNS[i]> as a vector 
+         int n = icomb.get_nroots(); 
+         std::vector<Tm> coeff(n,0.0);
          // compute <n|CTNS> by contracting all sites
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
@@ -63,9 +67,6 @@ namespace ctns{
          } // i
          const auto& wfcoeff = icomb.get_wf2().dot(qt2_r);
          assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
-         // finally return coeff = <n|CTNS[i]> as a vector 
-         int n = icomb.get_nroots(); 
-         std::vector<Tm> coeff(n,0.0);
          // in case this CTNS does not encode this det, no such block 
          const auto blk2 = wfcoeff(0,0);
          if(blk2.empty()) return coeff; 
@@ -76,8 +77,58 @@ namespace ctns{
          return coeff;
       }
 
+   // <CSF|CTNS[i]>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
+            const fock::csfstate& state){
+         // only correct for MPS, because csf is linearly coupled.
+         assert(icomb.topo.ifmps);
+         // finally return coeff = <n|CTNS[i]> as a vector 
+         int n = icomb.get_nroots(); 
+         std::vector<Tm> coeff(n,0.0);
+         // intermediate quantum number
+         auto narray  = state.intermediate_narray();
+         auto tsarray = state.intermediate_tsarray();
+         // compute <n|CTNS> by contracting all sites
+         const auto& nodes = icomb.topo.nodes;
+         const auto& rindex = icomb.topo.rindex;
+         linalg::matrix<Tm> bmat;
+         for(int i=icomb.topo.nbackbone-1; i>=0; i--){
+            const auto& node = nodes[i][0];
+            int tp = node.type;
+            if(tp == 0 || tp == 1){
+               // site on backbone with physical index
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               qsym ql(3,narray[i],tsarray[i]);
+               qsym qr(3,narray[i+1],tsarray[i+1]);
+               qsym qc(3,state.nvec(i),state.dvec(i)==1 or state.dvec(i)==2);
+               // take out a block of data
+               auto blk3 = site.get_rcf_symblk(ql,qr,qc);
+               // in case this CTNS does not encode this csf, no such block 
+               if(blk3.empty()) return coeff;
+               int dl = blk3.dim0;
+               int dr = blk3.dim1;
+               // given occ pattern, extract the corresponding qblock
+               if(i == icomb.topo.nbackbone-1){
+                  assert(dr == 1);
+                  linalg::matrix<Tm> tmp(dl,dr,blk3.data());
+                  bmat = std::move(tmp); 
+               }else{
+                  linalg::matrix<Tm> tmp(dl,dr,blk3.data());
+                  bmat = linalg::xgemm("N","N",tmp,bmat);
+               }
+            } // tp
+         } // i
+         auto wf2mat = icomb.get_wf2().to_matrix();
+         auto wfcoeff = linalg::xgemm("N","N",wf2mat,bmat);
+         assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
+         assert(wfcoeff.size() == n);
+         linalg::xcopy(n, wfcoeff.data(), coeff.data());
+         return coeff;
+      }
+
    // check rcanon_CIcoeff
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       int rcanon_CIcoeff_check(const comb<Qm,Tm>& icomb,
             const fock::onspace& space,
             const linalg::matrix<Tm>& vs,
@@ -104,7 +155,7 @@ namespace ctns{
       }
 
    // ovlp[i,n] = <SCI[i]|CTNS[n]>
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       linalg::matrix<Tm> rcanon_CIovlp(const comb<Qm,Tm>& icomb,
             const fock::onspace& space,
             const linalg::matrix<Tm>& vs){

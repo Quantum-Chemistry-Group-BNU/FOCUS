@@ -107,7 +107,7 @@ namespace ctns{
             // used in initialization & debug operators 
             std::vector<renorm_basis<Tm>> rbases;
             // mixed canonical form:
-            // note that the sites are count from the right
+            // note that the sites are count from the right as in RCF [!]
             // that is the first one is the last site in MPS!
             std::vector<qtensor3<Qm::ifabelian,Tm>> sites;
             // wavefunction at the left boundary -*-

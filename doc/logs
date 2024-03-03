@@ -285,21 +285,22 @@
       - check thresh_su2 [DONE@2024/01/25]
       - expand Yinfo into MPS site [DONE@2024/01/27]
 
- * MPS algebra: ctns_alg.h
+ * MPS algebra: ctns_alg.h [DONE@2024/03/XX]
    - rcanon_check [DONE@2024/02/04]
    - overlap: get_Smat [DONE@2024/02/04]
    - CSF related data structure [DONE@2024/02/28]
-   - cicoeff:
-   - sdiag sampling:
+   - ctns_csf2samps.h [DONE@2024/02/28]
+   - ctns_expand.h & ctns_cicoeff.h [DONE@2024/03/03]
+   - ctns_sample.h & ctns_sdiag.h
       - sample CSF?
       - sample DET?
 
- * get Hamiltonian: [DONE@2024/03/xx]
+ * get Hamiltonian: [DONE@2024/04/xx]
    - renormalization
    - dot operators 
    - prepare environment operators
 
- * Spin-adapted DMRG algorithm: [DONE@2024/04/xx]
+ * Spin-adapted DMRG algorithm: [DONE@2024/05/xx]
    - twodot sweep algorithm
    - contractions
    - decimation
@@ -308,6 +309,6 @@
       - batched?
       - openMP?
 
- * GPU implementation: [DONE@2024/05/xx]
+ * GPU implementation: [DONE@2024/06/xx]
    - batchGEMM
 

@@ -15,7 +15,7 @@ namespace ctns{
 
    // Sampling CTNS to get {|det>,coeff(det)=<det|Psi[i]>} 
    // In case that CTNS is unnormalized, p(det) is also unnormalized. 
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       std::pair<fock::onstate,Tm> rcanon_random(const comb<Qm,Tm>& icomb, 
             const int iroot,
             const bool debug=false){

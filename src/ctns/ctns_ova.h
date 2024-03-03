@@ -98,6 +98,58 @@ namespace ctns{
          return Smat;
       }
 
+   // <CTNS[i]|CTNS[j]> for two different icomb
+   template <typename Qm, typename Tm>
+      linalg::matrix<Tm> get_Smat(const comb<Qm,Tm>& icomb,
+            const comb<Qm,Tm>& icomb2){ 
+         // loop over sites on backbone
+         const auto& nodes = icomb.topo.nodes;
+         const auto& rindex = icomb.topo.rindex;
+         qtensor2<Qm::ifabelian,Tm> qt2_r, qt2_u;
+         for(int i=icomb.topo.nbackbone-1; i>0; i--){
+            const auto& node = nodes[i][0];
+            int tp = node.type;
+            if(tp == 0 || tp == 1){
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               const auto& site2 = icomb2.sites[rindex.at(std::make_pair(i,0))];
+               if(i == icomb.topo.nbackbone-1){
+                  qt2_r = contract_qt3_qt3("cr",site,site2);
+               }else{
+                  auto qtmp = contract_qt3_qt2("r",site2,qt2_r);
+                  qt2_r = contract_qt3_qt3("cr",site,qtmp);
+               }
+            }else if(tp == 3){
+               for(int j=nodes[i].size()-1; j>=1; j--){
+                  const auto& site = icomb.sites[rindex.at(std::make_pair(i,j))];
+                  const auto& site2 = icomb2.sites[rindex.at(std::make_pair(i,j))];
+                  if(j == nodes[i].size()-1){
+                     qt2_u = contract_qt3_qt3("cr",site,site2);
+                  }else{
+                     auto qtmp = contract_qt3_qt2("r",site2,qt2_u);
+                     qt2_u = contract_qt3_qt3("cr",site,qtmp);
+                  }
+               } // j
+               // internal site without physical index
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               const auto& site2 = icomb2.sites[rindex.at(std::make_pair(i,0))];
+               auto qtmp = contract_qt3_qt2("r",site2,qt2_r); // ket
+               qtmp = contract_qt3_qt2("c",qtmp,qt2_u); // upper branch
+               qt2_r = contract_qt3_qt3("cr",site,qtmp); // bra
+            }
+         } // i
+         // first merge: sum_l rwfuns[j,l]*site0[l,r,n] => site[j,r,n]
+         // Ket
+         const auto& site0Ket = icomb2.sites[rindex.at(std::make_pair(0,0))];
+         auto siteKet  = contract_qt3_qt2("l",site0Ket, icomb2.get_wf2());
+         auto qtmp = contract_qt3_qt2("r",siteKet ,qt2_r);
+         // Bra
+         const auto& site0Bra = icomb.sites[rindex.at(std::make_pair(0,0))];
+         auto siteBra = contract_qt3_qt2("l",site0Bra, icomb.get_wf2());
+         qt2_r = contract_qt3_qt3("cr",siteBra,qtmp);
+         auto Smat = qt2_r.to_matrix();
+         return Smat;
+      }
+
 } // ctns
 
 #endif

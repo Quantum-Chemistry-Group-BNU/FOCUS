@@ -17,7 +17,7 @@ namespace ctns{
          assert(qt2a.dir_col() == !qt2b.dir_row());
          assert(qt2a.info.qcol == qt2b.info.qrow);
          //qsym sym = qt2a.info.sym + qt2b.info.sym;
-         qsym sym({3,0,0});
+         qsym sym(3,0,0);
 
          direction2 dir = {qt2a.dir_row(), qt2b.dir_col()};
          stensor2su2<Tm> qt2(sym, qt2a.info.qrow, qt2b.info.qcol, dir);

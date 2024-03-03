@@ -76,17 +76,25 @@ namespace ctns{
    inline qbond get_qbond_phys(const int isym){
       qbond qphys;
       if(isym == 0){
+         // Z2
          qphys.dims = {{qsym(isym,0,0),2},   // 0,2
             {qsym(isym,1,0),2}};  // a,b
       }else if(isym == 1){
+         // N
          qphys.dims = {{qsym(isym,0,0),1},   // 0
             {qsym(isym,2,0),1},   // 2
             {qsym(isym,1,0),2}};  // a,b
       }else if(isym == 2){
+         // N,Sz
          qphys.dims = {{qsym(isym,0,0),1},   // 0
             {qsym(isym,2,0),1},   // 2
             {qsym(isym,1,1),1},   // a
-            {qsym(isym,1,-1),1}}; // b
+            {qsym(isym,1,-1),1}}; // b 
+      }else if(isym == 3){
+         // N,S added by ZL@20240228
+         qphys.dims = {{qsym(isym,0,0),1}, // 0
+            {qsym(isym,2,0),1},   // 2
+            {qsym(isym,1,1),1}};  // not 2 in the spin-adapted case [!]
       }
       return qphys;
    }

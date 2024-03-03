@@ -29,8 +29,8 @@ namespace ctns{
                if(std::abs(tm12) > ts12) continue;
                assert((ts12-tm12)%2==0);
                qsym3 q12({n12,ts12,tm12});
-               qsym qns1({3,std::get<0>(q1),ts1});
-               qsym qns2({3,std::get<0>(q2),ts2});
+               qsym qns1(3,std::get<0>(q1),ts1);
+               qsym qns2(3,std::get<0>(q2),ts2);
                dpt[q12].push_back(std::make_tuple(i1,i2,-1,qns1,qns2));
             }
          }
@@ -65,16 +65,16 @@ namespace ctns{
          auto q2 = qs2[i2].first;
          int d1 = qs1[i1].second;
          int d2 = qs2[i2].second;
-         qsym sym1({3,std::get<0>(q1),std::get<1>(q1)});
-         qsym sym2({3,std::get<0>(q2),std::get<1>(q2)});
+         qsym sym1(3,std::get<0>(q1),std::get<1>(q1));
+         qsym sym2(3,std::get<0>(q2),std::get<1>(q2));
          size_t off = 0; 
          for(int i=0; i<comp.size(); i++){
             int i1 = std::get<0>(comp[i]);
             int i2 = std::get<1>(comp[i]);
             auto q1 = qs1[i1].first;
             auto q2 = qs2[i2].first;
-            qsym sym1new({3,std::get<0>(q1),std::get<1>(q1)});
-            qsym sym2new({3,std::get<0>(q2),std::get<1>(q2)});
+            qsym sym1new(3,std::get<0>(q1),std::get<1>(q1));
+            qsym sym2new(3,std::get<0>(q2),std::get<1>(q2));
             // new combination is found
             if(sym1 != sym1new || sym2 != sym2new){
                off += d1*d2; // d1,d2 are old dimensions

@@ -15,7 +15,7 @@ namespace ctns{
       int idx = 0;
       for(int i=0; i<qs3.size(); i++){
          const auto& sym3 = qs3[i].first;
-         qsym sym({3,std::get<0>(sym3),std::get<1>(sym3)});
+         qsym sym(3,std::get<0>(sym3),std::get<1>(sym3));
          if(symdict.find(sym) == symdict.end()){
             symdict[sym] = idx;
             idx += 1;

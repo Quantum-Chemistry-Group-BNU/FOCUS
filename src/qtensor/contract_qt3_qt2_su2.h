@@ -20,7 +20,7 @@ namespace ctns{
    
          //auto sym2 = iftrans? -qt2.info.sym : qt2.info.sym;
          //qsym sym = qt3a.info.sym + sym2;
-         qsym sym({3,0,0});
+         qsym sym(3,0,0);
 
          auto qext = iftrans? qt2.info.qcol : qt2.info.qrow; 
          auto qint = iftrans? qt2.info.qrow : qt2.info.qcol;

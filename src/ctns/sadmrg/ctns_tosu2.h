@@ -182,6 +182,16 @@ namespace ctns{
          auto Sij = ctns::get_Smat(icomb);
          Sij.print("Sij");
 
+         int iroot = 0;
+         auto expansion = rcanon_expand_onstate(icomb_NSz, iroot);
+         rcanon_Sdiag_exact(icomb_NSz, iroot);
+        
+         auto expansion1 = rcanon_expand_csfstate(icomb, iroot);
+         auto expansion2 = rcanon_expand_onstate(icomb, iroot);
+         auto ova = linalg::xdot(expansion2.first.size(), expansion.second.data(), expansion2.second.data());
+         std::cout << "ova=" << ova << " p2=" << std::setprecision(10) << ova*ova << std::endl;
+         exit(1);
+
          /*
             std::cout << "\nrcanon_CIcoeff:" << std::endl;
             fock::onspace fci_space;
@@ -200,17 +210,6 @@ namespace ctns{
             auto overlap = std::pow(linalg::xnrm2(dim, v.data()),2);
             std::cout << "<v|v>=" << overlap << std::endl;
             */
-
-         int k=10, n=10, ts=10;
-        
-         std::cout << fock::dim_csf_space(k,n,ts) << std::endl;
-
-         fock::csfspace fci_space = fock::get_csf_space(k,n,ts);
-         size_t dim = fci_space.size();
-         for(int i=0; i<dim; i++){
-            std::cout << "i=" << i << " csf=" << fci_space[i].repr << std::endl;
-         }
-         exit(1);
 
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_tosu2", t0, t1);

@@ -298,9 +298,9 @@ namespace ctns{
             // print
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                void print(const std::string name, const int level=0) const;
-            // fix middle index (bm,im) - bm-th block, im-idx - composite index!
+            // get block by sym used in rcanon_CIcoeff
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
-               qtensor2<ifab,Tm> fix_mid(const std::pair<int,int> mdx) const;
+               dtensor3<Tm> get_rcf_symblk(const qsym qr, const qsym qc, const qsym qm) const;
  
          public:
             bool own = true; // whether the object owns its data

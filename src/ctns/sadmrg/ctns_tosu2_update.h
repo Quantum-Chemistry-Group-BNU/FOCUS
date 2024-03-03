@@ -19,7 +19,7 @@ namespace ctns{
          qbond3 qcol2;
          for(int i=0; i<qcol.size(); i++){
             auto sym3 = qcol[i].first;
-            qsym sym({3,std::get<0>(sym3),std::get<1>(sym3)});
+            qsym sym(3,std::get<0>(sym3),std::get<1>(sym3));
             /*
                std::cout << "i=" << i
                << " sym=" << sym
@@ -39,7 +39,7 @@ namespace ctns{
          int jdx = 0;
          for(int j=0; j<qcol.size(); j++){
             auto sym3 = qcol[j].first;
-            qsym sym({3,std::get<0>(sym3),std::get<1>(sym3)});
+            qsym sym(3,std::get<0>(sym3),std::get<1>(sym3));
             // some symmetry sector may not present after decimation
             if(Yinfo.find(sym) == Yinfo.end()) continue;
             const auto& ymat = Yinfo.at(sym);
@@ -141,13 +141,13 @@ namespace ctns{
             idx += 1;
          }
          // 2. assemble site
-         stensor3su2<Tm> site(qsym({3,0,0}),qrow,qcol,qmid,dir_RCF,CRcouple);
+         stensor3su2<Tm> site(qsym(3,0,0),qrow,qcol,qmid,dir_RCF,CRcouple);
          for(const auto& pr : Yinfo){
             const auto& sym = pr.first;
             const auto& ymat = Yinfo.at(sym);
             int n = sym.ne();
             int ts = sym.ts();
-            qsym3 sym3({n,ts,ts}); // find the high-spin case
+            qsym3 sym3(n,ts,ts); // find the high-spin case
             const auto& comp = dpt.at(sym3);
             // loop over combination
             std::vector<int> unique_ns(1,0);
@@ -155,15 +155,15 @@ namespace ctns{
             int i2 = std::get<1>(comp[0]);
             auto q1 = qs1[i1].first;
             auto q2 = qs2[i2].first;
-            qsym sym1({3,std::get<0>(q1),std::get<1>(q1)});
-            qsym sym2({3,std::get<0>(q2),std::get<1>(q2)});
+            qsym sym1(3,std::get<0>(q1),std::get<1>(q1));
+            qsym sym2(3,std::get<0>(q2),std::get<1>(q2));
             for(int i=0; i<comp.size(); i++){
                int i1 = std::get<0>(comp[i]);
                int i2 = std::get<1>(comp[i]);
                auto q1 = qs1[i1].first;
                auto q2 = qs2[i2].first;
-               qsym sym1new({3,std::get<0>(q1),std::get<1>(q1)});
-               qsym sym2new({3,std::get<0>(q2),std::get<1>(q2)});
+               qsym sym1new(3,std::get<0>(q1),std::get<1>(q1));
+               qsym sym2new(3,std::get<0>(q2),std::get<1>(q2));
                // new combination is found
                if(sym1 != sym1new || sym2 != sym2new){
                   sym1 = sym1new;
@@ -183,8 +183,8 @@ namespace ctns{
                int i2 = std::get<1>(comp[idx]);
                auto q1 = qs1[i1].first;
                auto q2 = qs2[i2].first;
-               qsym sym1({3,std::get<0>(q1),std::get<1>(q1)});
-               qsym sym2({3,std::get<0>(q2),std::get<1>(q2)});
+               qsym sym1(3,std::get<0>(q1),std::get<1>(q1));
+               qsym sym2(3,std::get<0>(q2),std::get<1>(q2));
                int d1 = qs1[i1].second;
                int d2 = qs2[i2].second;
                // locate the block
@@ -311,8 +311,8 @@ namespace ctns{
          }
 
          // 3. assemble rwfuns
-         qsym vac_sym({3,0,0});
-         qsym state_sym({3,n,twos});
+         qsym vac_sym(3,0,0);
+         qsym state_sym(3,n,twos);
          qbond qrow({{state_sym,1}});
          auto qcolInfo = qbond3_to_qbond(wmat.qcol);
          const auto& qcol = qcolInfo.first;

@@ -90,6 +90,17 @@ namespace ctns{
             }
             ofs.write((char*)(ds.data()), sizeof(ds[0])*(3*sz+1));
          }
+         // look for sym
+         int existQ(const qsym& sym) const{
+            int idx = -1;
+            for(int i=0; i<dims.size(); i++){
+               if(sym == dims[i].first){
+                  idx = i;
+                  break;
+               }
+            }
+            return idx;
+         }
       public:
          std::vector<std::pair<qsym,int>> dims;
    };

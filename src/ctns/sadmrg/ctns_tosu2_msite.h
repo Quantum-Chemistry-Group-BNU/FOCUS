@@ -105,7 +105,7 @@ namespace ctns{
       stensor2<Tm> contract_qt3_qt3_cr(const MixedRSite<Tm>& qt3a,
             const MixedRSite<Tm>& qt3b){
          const Tm alpha = 1.0, beta = 1.0;
-         stensor2<Tm> qt2(qsym({2,0,0}), qt3a.qrow, qt3b.qrow, {0,1});
+         stensor2<Tm> qt2(qsym(2,0,0), qt3a.qrow, qt3b.qrow, {0,1});
          // loop over qt3a
          int br, bx, bm;
          for(const auto& pr : qt3a._offset){
