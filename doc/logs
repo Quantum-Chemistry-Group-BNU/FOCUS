@@ -296,9 +296,9 @@
       - sample DET? 
 
  * get Hamiltonian: [DONE@2024/04/xx]
-   - renormalization
-   - dot operators 
    - prepare environment operators
+   - oper_dot.h
+   - oper_renorm.h
 
  * Spin-adapted DMRG algorithm: [DONE@2024/05/xx]
    - twodot sweep algorithm
