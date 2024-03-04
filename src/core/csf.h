@@ -12,6 +12,7 @@ namespace fock{
    struct csfstate{
       public:
          // constructor
+         csfstate(){}
          csfstate(const int k){ 
             onstate _repr(2*k);
             repr = _repr;  
@@ -29,6 +30,8 @@ namespace fock{
                }
             }
          }
+         // comparison used in map [see rcanon_Sdiag]
+         bool operator <(const csfstate& state) const{ return repr<state.repr; }  
          int nelec() const{ return repr.nelec(); }
          int twos() const{ return repr.nelec_a()-repr.nelec_b(); }
          int norb() const{ return repr.norb(); }

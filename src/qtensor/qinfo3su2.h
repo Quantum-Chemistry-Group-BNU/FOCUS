@@ -62,7 +62,12 @@ namespace ctns{
             }
             // helpers
             size_t get_offset(const int br, const int bc, const int bm, const int tsi) const{
-               return _offset.at(std::make_tuple(br,bc,bm,tsi));
+               auto key = std::make_tuple(br,bc,bm,tsi);
+               if(_offset.find(key) == _offset.end()){
+                  return 0;
+               }else{
+                  return _offset.at(std::make_tuple(br,bc,bm,tsi));
+               }
             }
             bool empty(const int br, const int bc, const int bm, const int tsi) const{
                return this->get_offset(br,bc,bm,tsi) == 0;

@@ -12,8 +12,11 @@
 #include "../core/analysis.h"
 #include "ctns_comb.h"
 #include "ctns_expand.h"
+#include "ctns_random.h"
 
 namespace ctns{
+
+   // --- Abelian MPS ---
 
    // Algorithm 3:
    // exact computation of Sdiag, only for small system
@@ -26,15 +29,15 @@ namespace ctns{
 
          // expand CTNS into determinants
          auto expansion = rcanon_expand_onstate(icomb, iroot, thresh_print);
-         auto coeff = expansion.second;
-         size_t dim = coeff.size();
-         double Sdiag = fock::coeff_entropy(coeff);
-         double ovlp = std::pow(linalg::xnrm2(dim,&coeff[0]),2); 
+         auto coeffs = expansion.second;
+         size_t dim = coeffs.size();
+         double Sdiag = fock::coeff_entropy(coeffs);
+         double ovlp = std::pow(linalg::xnrm2(dim,&coeffs[0]),2); 
          std::cout << "ovlp=" << ovlp << " Sdiag(exact)=" << Sdiag << std::endl;
 
          // check: computation by sampling CI vector
          std::vector<double> weights(dim,0.0);
-         std::transform(coeff.begin(), coeff.end(), weights.begin(),
+         std::transform(coeffs.begin(), coeffs.end(), weights.begin(),
                [](const Tm& x){ return std::norm(x); });
          std::discrete_distribution<> dist(weights.begin(),weights.end());
          const int nsample = 1e6;
@@ -58,13 +61,48 @@ namespace ctns{
          return Sdiag;
       }
 
+   // --- Non-Abelian MPS --- 
+   
+   // exact computation of Sdiag, only for small system
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      double rcanon_Sdiag_exact(const comb<Qm,Tm>& icomb,
+            const int iroot,
+            const std::string type,
+            const double thresh_print=1.e-10){
+         std::cout << "\nctns::rcanon_Sdiag_exact iroot=" << iroot
+            << " type=" << type
+            << " thresh_print=" << thresh_print << std::endl;
+
+         // expand CTNS into csf/det
+         std::vector<Tm> coeffs;
+         if(type == "csf"){
+            auto expansion = rcanon_expand_csfstate(icomb, iroot, thresh_print);
+            coeffs = expansion.second;
+         }else if(type == "det"){
+            auto expansion = rcanon_expand_onstate(icomb, iroot, thresh_print);
+            coeffs = expansion.second;
+         }else{
+            tools::exit("error: no such type for rcanon_Sdiag_exact");
+         } 
+         size_t dim = coeffs.size();
+         double Sdiag = fock::coeff_entropy(coeffs);
+         double ovlp = std::pow(linalg::xnrm2(dim,&coeffs[0]),2);
+         std::cout << "ovlp=" << ovlp << " Sdiag(exact)=" << Sdiag << std::endl;
+
+         return Sdiag;
+      }
+
+
+   // --- Abelian & Non-Abelian MPS ---
+
    // compute diagonal entropy via sampling:
    // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
-   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+   template <typename Qm, typename Tm>
       double rcanon_Sdiag_sample(const comb<Qm,Tm>& icomb,
             const int iroot,
-            const int nsample,  
+            const int nsample=10000,
             const int nprt=10){ // no. of largest states to be printed
+         using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type; 
          const double cutoff = 1.e-12;
          std::cout << "\nctns::rcanon_Sdiag_sample iroot=" << iroot 
             << " nsample=" << nsample 
@@ -76,7 +114,7 @@ namespace ctns{
          std::cout << "<CTNS[i]|CTNS[i]> = " << ovlp << std::endl; 
          // start sampling
          double Sd = 0.0, Sd2 = 0.0, std = 0.0;
-         std::map<fock::onstate,int> pop;
+         std::map<statetype,int> pop;
          for(int i=0; i<nsample; i++){
             auto pr = rcanon_random(icomb,iroot);
             auto state = pr.first;
@@ -99,8 +137,8 @@ namespace ctns{
          // print important determinants
          if(nprt > 0){
             int size = pop.size();
-            std::cout << "sampled important determinants: pop.size=" << size << std::endl; 
-            std::vector<fock::onstate> states(size);
+            std::cout << "sampled important csf/det: pop.size=" << size << std::endl; 
+            std::vector<statetype> states(size);
             std::vector<int> counts(size);
             int i = 0;
             for(const auto& pr : pop){
@@ -113,7 +151,7 @@ namespace ctns{
             int sum = 0;
             for(int i=0; i<std::min(size,nprt); i++){
                int idx = indx[i];
-               fock::onstate state = states[idx];
+               auto state = states[idx];
                auto ci = rcanon_CIcoeff(icomb, state)[iroot];
                sum += counts[idx];
                std::cout << " i=" << i << " " << state

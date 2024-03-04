@@ -62,6 +62,8 @@ namespace ctns{
             rbasis[3].sym = qsym(isym,1,-1);
             rbasis[3].space.push_back(fock::onstate("10")); // b
             rbasis[3].coeff = linalg::identity_matrix<Tm>(1);
+         }else{
+            tools::exit("error: no such case in get_rbasis_phys!");
          }
          return rbasis;
       }
@@ -95,6 +97,8 @@ namespace ctns{
          qphys.dims = {{qsym(isym,0,0),1}, // 0
             {qsym(isym,2,0),1},   // 2
             {qsym(isym,1,1),1}};  // not 2 in the spin-adapted case [!]
+      }else{
+         tools::exit("error: no such case in get_qbond_phys!");
       }
       return qphys;
    }
@@ -190,6 +194,19 @@ namespace ctns{
          }else if(idx == 3){
             mdx = std::make_pair(3,0);
          }
+         /*
+      }else if(isym == 3){
+         if(idx == 0){
+            mdx = std::make_pair(0,0);
+         }else if(idx == 1){
+            mdx = std::make_pair(1,0);
+         }else if(idx == 2){
+            mdx = std::make_pair(2,0);
+         }
+         */
+      }else{
+         std::cout << "error: no such in idx2mdx with isym=" << isym << std::endl;
+         exit(1);
       }
       return mdx;
    }

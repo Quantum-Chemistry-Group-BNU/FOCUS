@@ -301,7 +301,12 @@ namespace ctns{
             // get block by sym used in rcanon_CIcoeff
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                dtensor3<Tm> get_rcf_symblk(const qsym qr, const qsym qc, const qsym qm) const;
- 
+            /*
+            // fix middle index (bm,im) - bm-th block, im-idx - composite index!
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> fix_mid(const std::pair<int,int> mdx) const;
+            */
+
          public:
             bool own = true; // whether the object owns its data
             Tm* _data = nullptr;

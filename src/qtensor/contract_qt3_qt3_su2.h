@@ -83,7 +83,7 @@ namespace ctns{
          }
       }
 
-/*
+   /*
    // formula: qt2(r,c) = \sum_xm Conj[qt3a](x,r,m)*qt3b(x,c,m) [storage: qt3(L,R,C)]
    //
    //          /--*--r qt3a
@@ -98,21 +98,23 @@ namespace ctns{
             Tm* qt2_data){
          const Tm alpha = 1.0, beta = 1.0;
          // loop over qt3a
-         int bx, br, bm;
+         int bx, br, bm, tsi;
          for(int i=0; i<qt3a_info._nnzaddr.size(); i++){
-            int idx = qt3a_info._nnzaddr[i];
-            qt3a_info._addr_unpack(idx,bx,br,bm);
-            size_t off3a = qt3a_info._offset[idx];
+            auto key = qt3a_info._nnzaddr[i];
+            bx = std::get<0>(key);
+            br = std::get<1>(key);
+            bm = std::get<2>(key);
+            tsi = std::get<3>(key);
+            size_t off3a = qt3a_info.get_offset(bx,br,bm,tsi);
             const Tm* blk3a = qt3a_data + off3a-1;
             int xdim = qt3a_info.qrow.get_dim(bx);
             int rdim = qt3a_info.qcol.get_dim(br);
             int mdim = qt3a_info.qmid.get_dim(bm);
             // loop over bc
             for(int bc=0; bc<qt2_info._cols; bc++){
-               size_t off3b = qt3b_info._offset[qt3b_info._addr(bx,bc,bm)];
-               if(off3b == 0) continue;
-               size_t off2 = qt2_info._offset[qt2_info._addr(br,bc)];
-               if(off2 == 0) continue;
+               size_t off3b = qt3b_info.get_offset(bx,bc,bm,tsi);
+               size_t off2 = qt2_info.get_offset(br,bc);
+               if(off3b == 0 || off2 == 0) continue;
                // qt2(r,c) = Conj[qt3a](x,r,m)*qt3b(x,c,m)
                const Tm* blk3b = qt3b_data + off3b-1;
                Tm* blk2 = qt2_data + off2-1;
@@ -129,7 +131,7 @@ namespace ctns{
             } // bc
          } // i
       }
-*/
+   */
 
    // formula: qt2(r,c) = \sum_xm Conj[qt3a](r,x,m)*qt3b(c,x,m)
    //
@@ -143,6 +145,8 @@ namespace ctns{
             Tm* qt3b_data,
             qinfo2su2<Tm>& qt2_info,
             Tm* qt2_data){
+         assert(qt3a_info.couple == CRcouple);
+         assert(qt3b_info.couple == CRcouple);
          const Tm alpha = 1.0, beta = 1.0;
          // loop over qt3a
          int br, bx, bm, tsi;
@@ -157,8 +161,6 @@ namespace ctns{
             int rdim = qt3a_info.qrow.get_dim(br);
             int xdim = qt3a_info.qcol.get_dim(bx);
             int mdim = qt3a_info.qmid.get_dim(bm);
-            // formula: qt2(r,c) = \sum_xm Conj[qt3a]([r,x],m)*qt3b([c,x],m) couple=LCcouple
-            // formula: qt2(r,c) = \sum_xm Conj[qt3a](r,[x,m])*qt3b(c,[x,m]) couple=CRcouple
             // loop over bc
             for(int bc=0; bc<qt2_info._cols; bc++){
                size_t off3b = qt3b_info.get_offset(bc,bx,bm,tsi);

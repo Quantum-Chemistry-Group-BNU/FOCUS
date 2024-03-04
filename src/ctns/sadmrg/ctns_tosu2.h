@@ -179,17 +179,28 @@ namespace ctns{
          icomb_NSz.display_shape();
          icomb.display_shape();
 
+         int iroot = 0;
+         /*
          auto Sij = ctns::get_Smat(icomb);
          Sij.print("Sij");
 
-         int iroot = 0;
          auto expansion = rcanon_expand_onstate(icomb_NSz, iroot);
          rcanon_Sdiag_exact(icomb_NSz, iroot);
-        
+         rcanon_Sdiag_sample(icomb_NSz, iroot);
+
          auto expansion1 = rcanon_expand_csfstate(icomb, iroot);
          auto expansion2 = rcanon_expand_onstate(icomb, iroot);
          auto ova = linalg::xdot(expansion2.first.size(), expansion.second.data(), expansion2.second.data());
          std::cout << "ova=" << ova << " p2=" << std::setprecision(10) << ova*ova << std::endl;
+         */
+
+         rcanon_Sdiag_exact(icomb, iroot, "csf");
+         rcanon_Sdiag_exact(icomb, iroot, "det");
+        
+         for(int i=0; i<100; i++){ 
+            rcanon_random(icomb, iroot, true);
+         }
+         rcanon_Sdiag_sample(icomb, iroot);
          exit(1);
 
          /*
