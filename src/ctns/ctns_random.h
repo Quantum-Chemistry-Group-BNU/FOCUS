@@ -103,12 +103,15 @@ namespace ctns{
          auto wf = icomb.rwfuns[iroot];
          const auto& nodes = icomb.topo.nodes; 
          const auto& rindex = icomb.topo.rindex;
-         std::vector<qsym> syminter(icomb.topo.nbackbone);
+         auto sym = icomb.get_sym_state();
+         int ne = sym.ne();
+         int ts = sym.ts();
          // loop from left to right
          for(int i=0; i<icomb.topo.nbackbone; i++){
             int tp = nodes[i][0].type;
             if(tp == 0 || tp == 1){
                const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               
                // 0. setup probability for (bc,bm)
                auto qt3 = contract_qt3_qt2("l",site,wf);
                const auto& qrow = qt3.info.qrow;
@@ -130,47 +133,50 @@ namespace ctns{
                      weights[iaddr] = std::pow(linalg::xnrm2(blk3.size(), blk3.data()),2);
                   }
                }
+
                // 1. sample
                std::discrete_distribution<> dist(weights.begin(), weights.end());
                int idx = dist(tools::generator);
                auto key = indices[idx];
                int bc = key.first;
                int bm = key.second;
-               syminter[i] = qcol.get_sym(bc);
+               //std::cout << "\nsite i=" << i << " bc=" << bc << " bm=" << bm << std::endl;
+               //qt3.print("qt3",2);
+               
                // 2. construct wf
-               qbond qleft({{qcol.get_sym(bc),qcol.get_dim(bc)}});
+               qbond qleft({{qcol.get_sym(bc),1}}); // because dr*dm=1
                wf.init(qsym(3,0,0),qleft,qcol,{1-std::get<1>(qt3.info.dir),std::get<1>(qt3.info.dir)});
                auto blk3 = qt3(0,bc,bm,qrow.get_sym(0).ts());
                auto blk2 = wf(0,bc);
+               //wf.print("wf",2);
                assert(!blk3.empty() && !blk2.empty() && blk3.size()==blk2.size());
                linalg::xcopy(blk3.size(), blk3.data(), blk2.data());
+               
+               // 3. setup state
+               auto sym = qcol.get_sym(bc);
+               int dne = ne - sym.ne();
+               int dts = ts - sym.ts();
+               if(dne == 0 and dts == 0){
+                  state.repr[2*i] = 0;
+                  state.repr[2*i+1] = 0;
+               }else if(dne == 2 and dts == 0){
+                  state.repr[2*i] = 1;
+                  state.repr[2*i+1] = 1;
+               }else if(dne == 1 and dts == 1){
+                  state.repr[2*i] = 1;
+                  state.repr[2*i+1] = 0;
+               }else if(dne == 1 and dts == -1){
+                  state.repr[2*i] = 0;
+                  state.repr[2*i+1] = 1;
+               }else{
+                  std::cout << "error: no such case for (dne,dts)=" 
+                     << dne << "," << dts << std::endl;
+                  exit(1);
+               }
+               ne = sym.ne();
+               ts = sym.ts();
+
             } // tp
-         }
-         auto sym = icomb.get_sym_state();
-         int ne = sym.ne();
-         int ts = sym.ts();
-         for(int i=0; i<syminter.size(); i++){
-            int dne = ne-syminter[i].ne();
-            int dts = ts-syminter[i].ts();
-            if(dne == 0 and dts == 0){
-               state.repr[2*i] = 0;
-               state.repr[2*i+1] = 0;
-            }else if(dne == 2 and dts == 0){
-               state.repr[2*i] = 1;
-               state.repr[2*i+1] = 1;
-            }else if(dne == 1 and dts == 1){
-               state.repr[2*i] = 1;
-               state.repr[2*i+1] = 0;
-            }else if(dne == 1 and dts == -1){
-               state.repr[2*i] = 0;
-               state.repr[2*i+1] = 1;
-            }else{
-               std::cout << "error: no such case for (dne,dts)=" 
-                  << dne << "," << dts << std::endl;
-               exit(1);
-            }
-            ne = syminter[i].ne();
-            ts = syminter[i].ts();
          }
          // finally wf should be the corresponding CI coefficients
          assert(wf.rows() == 1 && wf.cols() == 1); 

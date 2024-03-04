@@ -197,10 +197,11 @@ namespace ctns{
          rcanon_Sdiag_exact(icomb, iroot, "csf");
          rcanon_Sdiag_exact(icomb, iroot, "det");
         
-         for(int i=0; i<100; i++){ 
-            rcanon_random(icomb, iroot, true);
-         }
-         rcanon_Sdiag_sample(icomb, iroot);
+         //for(int i=0; i<100; i++){ 
+         //   rcanon_random(icomb, iroot, true);
+         //}
+         rcanon_Sdiag_sample(icomb, iroot, 10000);
+         rcanon_sampleDET(icomb, iroot, 10000);
          exit(1);
 
          /*

@@ -10,6 +10,18 @@ int tests::test_csf(){
    cout << "tests::test_csf" << endl;
    cout << tools::line_separator << endl;	
 
+   csfstate state("00udu2");
+   auto exp = state.Sdiag_exact();
+   auto pr = state.random();
+   std::cout << "random: " << pr.first << " : " << pr.second << std::endl;
+   state.Sdiag_sample();
+
+   csfstate state2("2udu00");
+   auto exp2 = state2.Sdiag_exact();
+   auto pr2 = state2.random();
+   std::cout << "random: " << pr2.first << " : " << pr2.second << std::endl;
+   state2.Sdiag_sample();
+
    int k=3, n=3, ts=1;
    //int k=6, n=6, ts=1;
    //int k=35, n=2, ts=0;

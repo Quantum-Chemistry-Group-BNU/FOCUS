@@ -108,7 +108,7 @@ std::pair<onspace,std::vector<double>> csfstate::to_det() const{
    return std::make_pair(dets,coeff);
 }
 
-std::pair<onstate,double> csfstate::sample() const{
+std::pair<onstate,double> csfstate::random() const{
    int ks = norb();
    auto tsarray = intermediate_tsarray();
    onstate state(2*ks);
@@ -148,12 +148,18 @@ std::pair<onstate,double> csfstate::sample() const{
          // sample 
          std::discrete_distribution<> dist(weights.begin(),weights.end());
          int idx = dist(tools::generator);
+         /*
+         std::cout << "i=" << i << " dval=" << dval 
+            << " idx=" << idx << " ca=" << ca << " cb=" << cb
+            << " tmout=" << tmout << " tmin=" << tmin
+            << std::endl; 
+         */
+         // update
          state[apos] = 1-idx;
          state[bpos] = idx;
-         tmin = tmout - (1-2*idx);
+         tmout = tmout - (1-2*idx);
          coeff *= (idx==0)? ca : cb;
       }
-      tmout = tmin;
    } // i
    return std::make_pair(state,coeff);
 }
@@ -167,7 +173,7 @@ double csfstate::Sdiag_sample(const int nsample, const int nprt) const{
    double Sd = 0.0, Sd2 = 0.0, std = 0.0;
    std::map<fock::onstate,int> pop;
    for(int i=0; i<nsample; i++){
-      auto pr = sample();
+      auto pr = random();
       auto state = pr.first;
       auto ci2 = std::norm(pr.second);
       // statistical analysis

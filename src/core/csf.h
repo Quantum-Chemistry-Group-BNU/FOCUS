@@ -59,8 +59,8 @@ namespace fock{
          // by default the M=S is used.
          std::pair<onspace,std::vector<double>> to_det() const;
          // sample
-         std::pair<onstate,double> sample() const;
-         double Sdiag_sample(const int nsample, const int nprt=10) const;
+         std::pair<onstate,double> random() const;
+         double Sdiag_sample(const int nsample=10000, const int nprt=10) const;
          double Sdiag_exact() const;
          // print
          std::string to_string() const{ return repr.to_string2(true); }

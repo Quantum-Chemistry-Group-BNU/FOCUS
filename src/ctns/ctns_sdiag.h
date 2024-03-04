@@ -168,6 +168,69 @@ namespace ctns{
          return Sd;
       }
 
+   // compute diagonal entropy via sampling:
+   // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      void rcanon_sampleDET(const comb<Qm,Tm>& icomb,
+            const int iroot,
+            const int nsample=10000,
+            const int nprt=10){ // no. of largest states to be printed
+         const double cutoff = 1.e-12;
+         std::cout << "\nctns::rcanon_sampleDET iroot=" << iroot 
+            << " nsample=" << nsample 
+            << " nprt=" << nprt << std::endl;
+         auto t0 = tools::get_time();
+         const int noff = nsample/10;
+         // In case CTNS is not normalized 
+         double ovlp = std::abs(get_Smat(icomb)(iroot,iroot));
+         std::cout << "<CTNS[i]|CTNS[i]> = " << ovlp << std::endl; 
+         // start sampling
+         std::map<fock::onstate,int> pop;
+         for(int i=0; i<nsample; i++){
+            // two-step sampling 
+            auto pr = rcanon_random(icomb,iroot);
+            auto csf = pr.first;
+            auto pr2 = csf.random();
+            auto state = pr2.first;
+            // statistical analysis
+            pop[state] += 1;
+            if((i+1)%noff == 0){
+               auto t1 = tools::get_time();
+               double dt = tools::get_duration(t1-t0);
+               std::cout << " i=" << i << " timing=" << dt << " s" << std::endl;	      
+               t0 = tools::get_time();
+            }
+         }
+         // print important determinants
+         if(nprt > 0){
+            int size = pop.size();
+            std::cout << "sampled important det: pop.size=" << size << std::endl; 
+            std::vector<fock::onstate> states(size);
+            std::vector<int> counts(size);
+            int i = 0;
+            for(const auto& pr : pop){
+               states[i] = pr.first;
+               counts[i] = pr.second;
+               i++;
+            }
+            auto indx = tools::sort_index(counts,1);
+            // compare the first n important dets by counts
+            int sum = 0;
+            for(int i=0; i<std::min(size,nprt); i++){
+               int idx = indx[i];
+               auto state = states[idx];
+               sum += counts[idx];
+               std::cout << " i=" << i << " " << state
+                  << " counts=" << counts[idx] 
+                  << " p_i(sample)=" << counts[idx]/(1.0*nsample)
+                  << std::endl;
+            }
+            std::cout << "accumulated counts=" << sum 
+               << " nsample=" << nsample 
+               << " per=" << 1.0*sum/nsample << std::endl;
+         }
+      }
+
 } // ctns
 
 #endif
