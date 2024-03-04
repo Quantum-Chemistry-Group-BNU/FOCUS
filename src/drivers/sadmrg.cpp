@@ -79,12 +79,9 @@ void SADMRG(const input::schedule& schd){
          }
          ctns::rcanon_load(icomb, rcanon_file);
       }
-     
+
       // NEXT STEP: 
-      icomb.display_shape();
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
-      exit(1);
-      
    } // rank 0
 
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
@@ -103,7 +100,7 @@ void SADMRG(const input::schedule& schd){
          int iroot  = schd.ctns.iroot;
          int nsample = schd.ctns.nsample;
          int ndetprt = schd.ctns.ndetprt; 
-         //double Sd = ctns::rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
+         double Sd = ctns::rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
       }
    }
 
@@ -129,13 +126,15 @@ void SADMRG(const input::schedule& schd){
       io::create_scratch(scratch, (rank == 0));
       // compute hamiltonian 
       if(schd.ctns.task_ham){
-         //auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
-         //if(rank == 0){
-         //   Hij.print("Hij",8);
-         //   auto Sij = ctns::get_Smat(icomb);
-         //   Sij.print("Sij");
-         //}
+         auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
+         if(rank == 0){
+            Hij.print("Hij",8);
+            auto Sij = ctns::get_Smat(icomb);
+            Sij.print("Sij");
+         }
       }
+      exit(1);
+
       // optimization from current RCF
       if(schd.ctns.task_opt){
          //ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);

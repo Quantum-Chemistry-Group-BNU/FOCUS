@@ -179,8 +179,8 @@ namespace ctns{
          icomb_NSz.display_shape();
          icomb.display_shape();
 
-         int iroot = 0;
          /*
+         int iroot = 0;
          auto Sij = ctns::get_Smat(icomb);
          Sij.print("Sij");
 
@@ -192,7 +192,6 @@ namespace ctns{
          auto expansion2 = rcanon_expand_onstate(icomb, iroot);
          auto ova = linalg::xdot(expansion2.first.size(), expansion.second.data(), expansion2.second.data());
          std::cout << "ova=" << ova << " p2=" << std::setprecision(10) << ova*ova << std::endl;
-         */
 
          rcanon_Sdiag_exact(icomb, iroot, "csf");
          rcanon_Sdiag_exact(icomb, iroot, "det");
@@ -203,6 +202,7 @@ namespace ctns{
          rcanon_Sdiag_sample(icomb, iroot, 10000);
          rcanon_sampleDET(icomb, iroot, 10000);
          exit(1);
+         */
 
          /*
             std::cout << "\nrcanon_CIcoeff:" << std::endl;
