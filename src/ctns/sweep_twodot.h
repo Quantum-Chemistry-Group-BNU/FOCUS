@@ -37,7 +37,7 @@ namespace ctns{
             const double ecore,
             const input::schedule& schd,
             const std::string scratch,
-            oper_pool<Tm>& qops_pool,
+            qoper_pool<Qm::ifabelian,Tm>& qops_pool,
             sweep_data& sweeps,
             const int isweep,
             const int ibond){

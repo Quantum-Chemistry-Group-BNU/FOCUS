@@ -6,6 +6,7 @@
 #endif
 
 #include "oper_dot.h"
+#include "oper_dot_su2.h"
 #include "oper_io.h"
 #include "oper_renorm.h"
 #include "oper_pool.h"
@@ -42,7 +43,7 @@ namespace ctns{
                auto ta = tools::get_time();
                //---------------------------------------------
                int kp = node.pindex;
-               oper_dict<Tm> qops;
+               qoper_dict<Qm::ifabelian,Tm> qops;
                oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
                //---------------------------------------------
                auto tb = tools::get_time();
@@ -60,7 +61,7 @@ namespace ctns{
                auto ta = tools::get_time();
                //---------------------------------------------
                int kp = node.pindex;
-               oper_dict<Tm> qops;
+               qoper_dict<Qm::ifabelian,Tm> qops;
                oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
                //---------------------------------------------
                auto tb = tools::get_time();
@@ -79,7 +80,7 @@ namespace ctns{
          auto ta = tools::get_time();
          //---------------------------------------------
          int kp = icomb.topo.get_node(p).pindex;
-         oper_dict<Tm> qops;
+         qoper_dict<Qm::ifabelian,Tm> qops;
          oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
          //---------------------------------------------
          auto tb = tools::get_time();
@@ -131,7 +132,7 @@ namespace ctns{
          // 2. successive renormalization process
          oper_timer.sweep_start();
          dot_timing timing_sweep, timing;
-         oper_pool<Tm> qops_pool(iomode, debug && schd.ctns.verbose>1);
+         qoper_pool<Qm::ifabelian,Tm> qops_pool(iomode, debug && schd.ctns.verbose>1);
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             auto p = icomb.topo.rcoord[idx];
             const auto& node = icomb.topo.get_node(p);
@@ -139,7 +140,9 @@ namespace ctns{
                auto tb = tools::get_time();
                timing.t0 = tools::get_time();
                if(debug) std::cout << "\nidx=" << idx << " coord=" << p << std::endl;
-
+               
+               exit(1);
+/*
                // a. get operators from memory / disk    
                std::vector<std::string> fneed(2);
                fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
@@ -181,7 +184,7 @@ namespace ctns{
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();
-
+*/
                if(debug){ 
                   timing.analysis("local", schd.ctns.verbose>0);
                   timing_sweep.accumulate(timing, "sweep", schd.ctns.verbose>0);

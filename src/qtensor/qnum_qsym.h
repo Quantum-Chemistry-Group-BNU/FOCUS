@@ -145,6 +145,9 @@ namespace ctns{
          sym_op = qsym(isym,1,0);
       }else if(isym == 2){ 
          sym_op = (spin==0)? qsym(isym,1,1) : qsym(isym,1,-1);
+      }else if(isym == 3){
+         assert(spin == 0); // must be of alpha spin
+         sym_op = qsym(isym,1,1); // C[1/2]
       }
       return sym_op;
    }
@@ -162,6 +165,13 @@ namespace ctns{
          }else{
             sym_op = (spin1==0)? qsym(isym,2,2) : qsym(isym,2,-2);
          }
+      }else if(isym == 3){
+         assert(spin1 == 0);
+         if(spin1 != spin2){
+            sym_op = qsym(isym,2,0); // Apq[0]
+         }else{
+            sym_op = qsym(isym,2,2); // Apq[1]
+         }
       }
       return sym_op;
    }
@@ -177,20 +187,42 @@ namespace ctns{
          }else{
             sym_op = (spin1==0)? qsym(isym,0,2) : qsym(isym,0,-2);
          }
+      }else if(isym == 3){
+         assert(spin1 == 0);
+         if(spin1 == spin2){
+            sym_op = qsym(isym,0,0); // Bps[0]
+         }else{
+            sym_op = qsym(isym,0,2); // Bps[1]
+         }
       }
       return sym_op;
    }
    // Sp: qsym of ap^+Sp must be zero
    inline qsym get_qsym_opS(const short isym, const int p){
-      return -get_qsym_opC(isym, p);
+      auto symC = get_qsym_opC(isym, p);
+      if(isym != 3){
+         return -symC;
+      }else{
+         return qsym(3,-symC.ne(),symC.ts());
+      }
    }
    // Ppq: qsym of ApqPpq must be zero
    inline qsym get_qsym_opP(const short isym, const int p, const int q){
-      return -get_qsym_opA(isym, p, q);
+      auto symA = get_qsym_opA(isym, p, q);
+      if(isym != 3){
+         return -symA;
+      }else{
+         return qsym(3,-symA.ne(),symA.ts());
+      }
    }
    // Qps: qsym of BpsQps must be zero
    inline qsym get_qsym_opQ(const short isym, const int p, const int s){
-      return -get_qsym_opB(isym, p, s);
+      auto symB = get_qsym_opB(isym, p, s);
+      if(isym != 3){
+         return -symB;
+      }else{
+         return qsym(3,-symB.ne(),symB.ts());
+      }
    }
 
 } // ctns

@@ -14,11 +14,15 @@ namespace ctns{
 
    // --- oper_dict: container for operators --- 
 
+   template <bool ifab, typename Tm>
+      using qoper_map = std::map<int,qtensor2<ifab,Tm>>; // index to operator
    template <typename Tm>
-      using oper_map = std::map<int,stensor2<Tm>>; // index to operator
+      using oper_map = std::map<int,qtensor2<true,Tm>>;
+   template <typename Tm>
+      using opersu2_map = std::map<int,qtensor2<false,Tm>>;
 
-   template <typename Tm>
-      struct oper_dict{
+   template <bool ifab, typename Tm>
+      struct qoper_dict{
          private:
             // IO of data will be handled in oper_io.h
             friend class boost::serialization::access;	   
@@ -30,8 +34,8 @@ namespace ctns{
                }
          public:
             // constructor
-            oper_dict(){}
-            ~oper_dict(){ 
+            qoper_dict(){}
+            ~qoper_dict(){ 
                delete[] _data;
 #ifdef GPU
                GPUmem.deallocate(_dev_data, _size*sizeof(Tm));
@@ -65,11 +69,11 @@ namespace ctns{
             }
 #endif
             // copy
-            oper_dict(const oper_dict& op_dict) = delete;
-            oper_dict& operator =(const oper_dict& op_dict) = delete;
+            qoper_dict(const qoper_dict& op_dict) = delete;
+            qoper_dict& operator =(const qoper_dict& op_dict) = delete;
             // move
-            oper_dict(oper_dict&& op_dict) = delete;
-            oper_dict& operator =(oper_dict&& op_dict) = delete;
+            qoper_dict(qoper_dict&& op_dict) = delete;
+            qoper_dict& operator =(qoper_dict&& op_dict) = delete;
             // initialize _opdict, _size, _opsize
             void setup_opdict(const bool debug=false);
             // setup the mapping to physical address
@@ -91,10 +95,10 @@ namespace ctns{
             // symmetry of op
             qsym get_qsym_op(const char key, const int idx) const;
             // access
-            const oper_map<Tm>& operator()(const char key) const{
+            const qoper_map<ifab,Tm>& operator()(const char key) const{
                return _opdict.at(key);
             }
-            oper_map<Tm>& operator()(const char key){
+            qoper_map<ifab,Tm>& operator()(const char key){
                return _opdict[key];      
             }
             // helpers
@@ -114,17 +118,26 @@ namespace ctns{
             bool ifdist2 = false; // whether distribute two-index object
             //private:
             std::map<std::pair<char,int>,size_t> _offset;
-            std::map<char,oper_map<Tm>> _opdict;
+            std::map<char,qoper_map<ifab,Tm>> _opdict;
             size_t _size = 0, _opsize = 0;
             Tm* _data = nullptr;
             Tm* _dev_data = nullptr;
       };
    template <typename Tm>
-      using oper_dictmap = std::map<std::string,const oper_dict<Tm>&>; // for sigma2
+      using oper_dict = qoper_dict<true,Tm>;
+   template <typename Tm>
+      using opersu2_dict = qoper_dict<false,Tm>;
+   
+   template <bool ifab, typename Tm>
+      using qoper_dictmap = std::map<std::string,const qoper_dict<ifab,Tm>&>; // for sigma2
+   template <typename Tm>
+      using oper_dictmap = qoper_dictmap<true,Tm>;
+   template <typename Tm>
+      using opersu2_dictmap = qoper_dictmap<false,Tm>;
 
    // helpers
-   template <typename Tm>
-      void oper_dict<Tm>::print(const std::string name, const int level) const{
+   template <bool ifab, typename Tm>
+      void qoper_dict<ifab,Tm>::print(const std::string name, const int level) const{
          std::cout << " " << name << ": oplist=" << oplist;
          // count no. of operators in each class
          std::string opseq = "CABPQSH";
@@ -176,8 +189,8 @@ namespace ctns{
       }
 
    // array of indices for operator with key
-   template <typename Tm>
-      std::vector<int> oper_dict<Tm>::oper_index_op(const char key) const{
+   template <bool ifab, typename Tm>
+      std::vector<int> qoper_dict<ifab,Tm>::oper_index_op(const char key) const{
          std::vector<int> index;
          if(key == 'C'){
             index = cindex;
@@ -230,16 +243,16 @@ namespace ctns{
       }
       return sym_op;
    } 
-   template <typename Tm>
-      qsym oper_dict<Tm>::get_qsym_op(const char key, const int idx) const{
+   template <bool ifab, typename Tm>
+      qsym qoper_dict<ifab,Tm>::get_qsym_op(const char key, const int idx) const{
          return ctns::get_qsym_op(key, isym, idx);
       }
 
    // initialize _opdict, _size, _opsize
-   template <typename Tm>
-      void oper_dict<Tm>::setup_opdict(const bool debug){
+   template <bool ifab, typename Tm>
+      void qoper_dict<ifab,Tm>::setup_opdict(const bool debug){
          if(debug){
-            std::cout << "ctns::oper_dict<Tm>:_setup_opdict oplist=" 
+            std::cout << "ctns::qoper_dict::setup_opdict oplist=" 
                << oplist << std::endl;
          }
          // count the size
@@ -248,7 +261,7 @@ namespace ctns{
          // loop over different types of operators
          for(const auto& key : oplist){
             sizes[key] = 0;
-            _opdict[key] = oper_map<Tm>(); // initialize an empty dictionary
+            _opdict[key] = qoper_map<ifab,Tm>(); // initialize an empty dictionary
             if(debug) std::cout << " allocate_memory for op" << key << ":";
             // loop over indices
             auto op_index = this->oper_index_op(key);
@@ -277,8 +290,8 @@ namespace ctns{
       }
 
    // setup the mapping to physical address for each operator
-   template <typename Tm>
-      void oper_dict<Tm>::setup_data(){
+   template <bool ifab, typename Tm>
+      void qoper_dict<ifab,Tm>::setup_data(){
          for(const auto& key : oplist){
             auto op_index = this->oper_index_op(key); // use the same order in setup_opdict for storage 
             for(int idx : op_index){

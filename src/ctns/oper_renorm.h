@@ -43,9 +43,9 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const input::schedule& schd,
-            const oper_dict<Tm>& qops1,
-            const oper_dict<Tm>& qops2,
-            oper_dict<Tm>& qops,
+            const qoper_dict<Qm::ifabelian,Tm>& qops1,
+            const qoper_dict<Qm::ifabelian,Tm>& qops2,
+            qoper_dict<Qm::ifabelian,Tm>& qops,
             const std::string fname,
             dot_timing& timing,
             const std::string fmmtask=""){
@@ -129,7 +129,7 @@ namespace ctns{
          Tm* opaddr[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
          const std::string block1 = superblock.substr(0,1);
          const std::string block2 = superblock.substr(1,2);
-         const oper_dictmap<Tm> qops_dict = {{block1,qops1}, {block2,qops2}};
+         const qoper_dictmap<Qm::ifabelian,Tm> qops_dict = {{block1,qops1}, {block2,qops2}};
          if(superblock == "lc"){
             opaddr[0] = qops1._data;
             opaddr[2] = qops2._data;

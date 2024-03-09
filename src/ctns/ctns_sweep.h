@@ -38,7 +38,7 @@ namespace ctns{
          sweep_data sweeps(sweep_seq, schd.ctns.nroots, schd.ctns.maxsweep, 
                schd.ctns.restart_sweep, schd.ctns.ctrls);
          // pool for handling operators
-         oper_pool<Tm> qops_pool(schd.ctns.iomode, debug && schd.ctns.verbose>1);
+         qoper_pool<Qm::ifabelian,Tm> qops_pool(schd.ctns.iomode, debug && schd.ctns.verbose>1);
          for(int isweep=0; isweep<schd.ctns.maxsweep; isweep++){
             if(isweep < schd.ctns.restart_sweep) continue; // restart case
             if(debug){

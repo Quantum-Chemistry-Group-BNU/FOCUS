@@ -44,10 +44,10 @@ namespace ctns{
       io::remove_file(fname+".op", debug_oper_io && debug);
    }
 
-   template <typename Tm>
+   template <bool ifab, typename Tm>
       void oper_save(const int iomode,
             const std::string fname, 
-            const oper_dict<Tm>& qops,
+            const qoper_dict<ifab,Tm>& qops,
             const bool debug){
          if(debug_oper_io and debug){ 
             std::cout << "ctns::oper_save"
@@ -125,10 +125,10 @@ namespace ctns{
          }
       }
 
-   template <typename Tm>
+   template <bool ifab, typename Tm>
       void oper_load(const int iomode,
             const std::string fname, 
-            oper_dict<Tm>& qops,
+            qoper_dict<ifab,Tm>& qops,
             const bool debug){
          if(debug_oper_io and debug){
             std::cout << "ctns::oper_load"

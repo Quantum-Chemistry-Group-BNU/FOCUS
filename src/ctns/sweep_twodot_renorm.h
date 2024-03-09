@@ -17,7 +17,7 @@ namespace ctns{
             const std::string scratch,
             linalg::matrix<Tm>& vsol,
             stensor4<Tm>& wf,
-            oper_pool<Tm>& qops_pool,
+            qoper_pool<Qm::ifabelian,Tm>& qops_pool,
             const std::vector<std::string>& fneed,
             const std::vector<std::string>& fneed_next,
             const std::string& frop,

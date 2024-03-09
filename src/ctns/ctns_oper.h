@@ -27,7 +27,7 @@ namespace ctns{
          oper_env_right(icomb, int2e, int1e, schd, scratch);
 
          // load operators from file
-         oper_dict<Tm> qops;
+         qoper_dict<Qm::ifabelian,Tm> qops;
          auto p = std::make_pair(0,0); 
          auto fname = oper_fname(scratch, p, "r");
          oper_load(schd.ctns.iomode, fname, qops, (rank==0));

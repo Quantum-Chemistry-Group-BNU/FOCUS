@@ -296,9 +296,12 @@
       - sample DET? 
 
  * get Hamiltonian: [DONE@2024/04/xx]
-   - prepare environment operators
-   - oper_dot.h
-   - oper_renorm.h
+   - oper_env_right: prepare environment operators
+      - oper_dict.h: data structure {c,A,B,P,Q,S}
+         - qnum_qsym.h: get_sym_opX
+         - oper_pool.h: support su2 tensor [DONE@2024/03/09]
+      - oper_dot.h
+      - oper_renorm.h
 
  * Spin-adapted DMRG algorithm: [DONE@2024/05/xx]
    - twodot sweep algorithm

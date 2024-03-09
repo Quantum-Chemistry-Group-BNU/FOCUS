@@ -36,7 +36,7 @@ namespace ctns{
       // isym = 3;
       struct qNS{
          static const int isym = 3;
-         static const bool ifkr = false;
+         static const bool ifkr = true; // algorithmically similar to qNK
          static const bool ifabelian = false;
       };
 
