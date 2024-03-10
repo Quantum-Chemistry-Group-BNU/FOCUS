@@ -2,7 +2,6 @@
 #define OPER_DOT_H
 
 /*
-
    Dot operators: CABPQSH
 
    The local basis is {|0>,|2>,|a>,|b>} in consistent with ctns_phys.h
@@ -10,7 +9,6 @@
    We use the convention that p1+*p2+*q2*q1 where p1<p2 and q2>q1, i.e., 
    The index in the middle is larger than that close to the boundary.
    This is different from the ordering used in onstate.h
-
 */
 
 #include "init_phys.h"

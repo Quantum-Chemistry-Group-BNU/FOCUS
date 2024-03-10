@@ -77,17 +77,19 @@ namespace ctns{
                   blk(ir,ic) = tools::conjugate(blkh(ic,ir));
                } // ir
             } // ic
-           
+            //-----------------------------------------------------
             // determine the prefactor for Adjoint tensor operator 
+            // <br||Tk_bar||bc> = (-1)^{k-jc+jr}sqrt{[jc]/[jr]}<bc||Tk||br>*
             auto symr = qt2.info.qrow.get_sym(br);
             auto symc = qt2.info.qcol.get_sym(bc);
             int tsr = symr.ts();
             int tsc = symc.ts();
-            int deltats = info.sym.ts() + tsr - tsc;
-            Tm fac = deltats%2==0? 1.0 : -1.0;
-            fac *= std::sqrt((2.0*tsc+1.0)/(2.0*tsr+1.0));
+            int deltats = (info.sym.ts() + tsr - tsc);
+            assert(deltats%2 == 0);
+            Tm fac = (deltats/2)%2==0? 1.0 : -1.0;
+            fac *= std::sqrt((tsc+1.0)/(tsr+1.0));
             linalg::xscal(blk.size(), fac, blk.data());
-
+            //----------------------------------------------------
          } // i
          return qt2; 
       }
