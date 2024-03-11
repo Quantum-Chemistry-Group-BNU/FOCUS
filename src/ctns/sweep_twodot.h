@@ -645,7 +645,8 @@ namespace ctns{
          auto t0 = tools::get_time();
          qops_pool.join_and_erase(fneed, fneed_next);
          auto t1 = tools::get_time();
-         qops_pool.save_to_disk(frop, schd.ctns.async_save, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, fneed_next);
+         qops_pool.save_to_disk(frop, schd.ctns.async_save, 
+               schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, fneed_next);
          auto t2 = tools::get_time();
          // Remove fdel on the same bond as frop but with opposite direction:
          // NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 

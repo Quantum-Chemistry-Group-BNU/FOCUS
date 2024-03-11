@@ -1,43 +1,12 @@
-#ifndef OPER_RENORM_H
-#define OPER_RENORM_H
+#ifndef OPER_RENORM_SU2_H
+#define OPER_RENORM_SU2_H
 
-#include <type_traits>
-#include "ctns_sys.h"
-#include "sweep_data.h"
-#include "oper_timer.h"
-#include "oper_functors.h"
-#include "oper_normxwf.h"
-#include "oper_compxwf.h"
-#include "oper_rbasis.h"
-#include "oper_renorm_kernel.h"
-#include "symbolic_kernel_renorm.h"
-#include "symbolic_kernel_renorm2.h"
-#include "preprocess_rformulae.h"
-#include "preprocess_renorm.h"
-#include "preprocess_renorm_batch.h"
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-#ifndef SERIAL
-#include "../core/mpi_wrapper.h"
-#endif
-#ifdef GPU
-#include "preprocess_renorm_batchGPU.h"
-#endif
+#include "../oper_renorm.h"
 
 namespace ctns{
 
-   const bool debug_oper_renorm = false; 
-   extern const bool debug_oper_renorm;
-
-   const bool debug_oper_rbasis = false;
-   extern const bool debug_oper_rbasis;
-
-   const double thresh_opdiff = 1.e-9;
-   extern const double thresh_opdiff;
-
    // renormalize operators
-   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       void oper_renorm(const std::string superblock,
             const comb<Qm,Tm>& icomb,
             const comb_coord& p,
@@ -157,10 +126,12 @@ namespace ctns{
             std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
             exit(1);
          }
+         /*
          if(Qm::ifkr && alg_renorm >=4){
             std::cout << "error: alg_renorm >= 4 does not support complex yet!" << std::endl;
             exit(1); 
          }
+         */
          if(alg_renorm < 10 and schd.ctns.alg_rinter == 2){
             std::cout << "error: alg_renorm=" << alg_renorm << " should be used with alg_rinter<2" << std::endl;
             exit(1);
@@ -174,55 +145,7 @@ namespace ctns{
             exit(1);
          }
 
-         if(alg_renorm == 0){
-
-            // oldest version
-            auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
-            oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
-
-         }else if(alg_renorm == 1){
-
-            // symbolic formulae + dynamic allocation of memory
-            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-            symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
-
-         }else if(alg_renorm == 2){
-
-            // symbolic formulae + preallocation of workspace
-            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
-
-         }else if(alg_renorm == 4){
-
-            // CPU: symbolic formulae + rintermediates + preallocation of workspace
-
-            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-
-            // generation of renormalization block [lc/lr/cr]
-            const bool ifDirect = false;
-            const int batchgemv = 1;
-            rinter.init(ifDirect, schd.ctns.alg_rinter, batchgemv, qops_dict, oploc, opaddr, rtasks, debug);
-
-            // GEMM list and GEMV list
-            preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_rcoper, superblock, 
-                  qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
-                  Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
-
-            get_MMlist2(Rlst);
-
-            worktot = maxthreads*(blksize*2+qops._size);
-            if(debug && schd.ctns.verbose>0){
-               std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
-                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
-                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
-            }
-
-            preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
-
-         }else if(alg_renorm == 6 || alg_renorm == 7 || alg_renorm == 8 || alg_renorm == 9){
+         if(alg_renorm == 6 || alg_renorm == 7 || alg_renorm == 8 || alg_renorm == 9){
 
             // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
             if(schd.ctns.alg_rinter == 2){
@@ -232,6 +155,8 @@ namespace ctns{
             timing.tf1 = tools::get_time();
             timing.tf2 = tools::get_time();
 
+            exit(1);
+/*
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             timing.tf3 = tools::get_time();
@@ -333,12 +258,12 @@ namespace ctns{
             timing.tf9 = tools::get_time();
             timing.tf10 = tools::get_time();
             timing.tf11 = tools::get_time();
-
+*/
 #ifdef GPU
          }else if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
 
             // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
-
+/*
             // allocate memery on GPU & copy qops 
             if(superblock == "lc"){
                dev_opaddr[0] = qops1._dev_data;
@@ -511,7 +436,7 @@ namespace ctns{
                }
             }
             timing.tf9 = tools::get_time();
-
+*/
 #ifndef SERIAL
             if(ifdist1 and size > 1 and schd.ctns.ifnccl){
 #ifndef NCCL
@@ -562,69 +487,6 @@ namespace ctns{
             exit(1);
          } // alg_renorm
          timing.tf12 = tools::get_time();
-
-         // debug 
-         if(debug_oper_renorm && rank == 0){
-            if(schd.ctns.ifnccl || schd.ctns.async_tocpu){
-               std::cout << "error: debug should not be invoked with ifnccl or async_tocpu!" << std::endl;
-               exit(1);
-            }
-            const int target = -1;
-            std::cout << "\nqops: rank=" << rank << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               for(auto& pr : opdict){
-                  std::cout << "rank=" << rank
-                     << " key=" << key
-                     << " pr.first=" << pr.first
-                     << " pr.second=" << pr.second.normF()
-                     << std::endl;
-                  if(key == 'C' and pr.first == target) pr.second.print("Cnew",2);
-               }
-            }
-            Tm* data0 = new Tm[qops._size];
-            linalg::xcopy(qops._size, qops._data, data0);
-
-            // alg_renorm=2: symbolic formulae + preallocation of workspace
-            memset(qops._data, 0, qops._size*sizeof(Tm));
-            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                  size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
-            std::cout << "\nqops[ref]: rank=" << rank << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               for(auto& pr : opdict){
-                  std::cout << "rank=" << rank
-                     << " key=" << key
-                     << " pr.first=" << pr.first
-                     << " pr.second[ref]=" << pr.second.normF()
-                     << std::endl;
-                  if(key == 'C' and pr.first == target) pr.second.print("Cref",2);
-               }
-            }
-            Tm* data1 = new Tm[qops._size];
-            linalg::xcopy(qops._size, qops._data, data1);
-
-            linalg::xaxpy(qops._size, -1.0, data0, qops._data);
-            auto diff = linalg::xnrm2(qops._size, qops._data);
-            std::cout << "\nqops[diff]: rank=" << rank << std::endl;
-            for(auto& key : qops.oplist){
-               auto& opdict = qops(key);
-               for(auto& pr : opdict){
-                  std::cout << "rank=" << rank 
-                     << " key=" << key
-                     << " pr.first=" << pr.first
-                     << " pr.second[diff]=" << pr.second.normF()
-                     << std::endl;
-                  if(key == 'C' and pr.first == target) pr.second.print("Cdiff",2);
-               }
-            }
-            std::cout << "rank=" << rank << " total diff=" << diff << std::endl;
-            linalg::xcopy(qops._size, data0, qops._data);
-            delete[] data0;
-            delete[] data1;
-            if(diff > thresh_opdiff) exit(1);
-         } // debug
 
          // free tmp space on CPU
          if(alg_renorm==6 || alg_renorm==7 || alg_renorm==8 || alg_renorm==9){
@@ -687,20 +549,6 @@ namespace ctns{
                   << std::endl;
                exit(1);
             }
-            // check against explicit construction
-            if(debug_oper_rbasis){
-               for(const auto& key : qops.oplist){
-                  if(key == 'C' || key == 'A' || key == 'B'){
-                     oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
-                  }else if(key == 'P' || key == 'Q'){
-                     oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
-                     // check opS and opH only if ifdist1=true   
-                  }else if((key == 'S' || key == 'H') and ifdist1){
-                     oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
-                  }
-               }
-            }
-
          } // async_tocpu
 
          timing.tf13 = tools::get_time();

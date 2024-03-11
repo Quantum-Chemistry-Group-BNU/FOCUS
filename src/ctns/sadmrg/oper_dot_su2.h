@@ -11,12 +11,12 @@
    This is different from the ordering used in onstate.h
 */
 
-#include "init_phys.h"
-#include "oper_dict.h"
+#include "../init_phys.h"
+#include "../oper_dict.h"
 
 namespace ctns{
 
-   const bool debug_oper_dot_su2 = true;
+   const bool debug_oper_dot_su2 = false;
    extern const bool debug_oper_dot_su2;
 
    // init local operators on dot

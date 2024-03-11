@@ -300,18 +300,25 @@
       - oper_dict.h: data structure {c,A,B,P,Q,S}
          - qnum_qsym.h: get_sym_opX
          - oper_pool.h: support su2 tensor [DONE@2024/03/09]
-      - oper_dot.h
-      - oper_renorm.h
+      - oper_dot_su2.h: [DONE@2024/03/10]
+      - oper_renorm.h:
+         - symbolic_formulae_renorm: how to encode info about intermediate spins
+         - rinter.init()
+         - preprocess_formulae_Rlist
+         - Rmmtasks[i].init()
+         - preprocess_renorm_batchDirectSingle()
 
  * Spin-adapted DMRG algorithm: [DONE@2024/05/xx]
    - twodot sweep algorithm
    - contractions
    - decimation
    - propagation of initial guess
-   - CPU implementation?
-      - batched?
-      - openMP?
 
  * GPU implementation: [DONE@2024/06/xx]
-   - batchGEMM
+
+ * Benchmark:
+   - fe2s2
+   - fe4s4
+   - fe8s7
+   - femoco
 

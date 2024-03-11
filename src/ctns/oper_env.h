@@ -5,11 +5,12 @@
 #include <boost/mpi.hpp>
 #endif
 
-#include "oper_dot.h"
-#include "oper_dot_su2.h"
 #include "oper_io.h"
-#include "oper_renorm.h"
 #include "oper_pool.h"
+#include "oper_dot.h"
+#include "oper_renorm.h"
+#include "sadmrg/oper_dot_su2.h"
+#include "sadmrg/oper_renorm_su2.h"
 
 namespace ctns{
 
@@ -141,8 +142,6 @@ namespace ctns{
                timing.t0 = tools::get_time();
                if(debug) std::cout << "\nidx=" << idx << " coord=" << p << std::endl;
                
-               exit(1);
-/*
                // a. get operators from memory / disk    
                std::vector<std::string> fneed(2);
                fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
@@ -173,18 +172,19 @@ namespace ctns{
                   fmmtask =  "rmmtasks_idx"+std::to_string(idx);
                }
                oper_renorm(superblock, icomb, p, int2e, int1e, schd,
-                     cqops, rqops, qops_pool[frop], fname, timing, fmmtask); 
+                     cqops, rqops, qops_pool[frop], fname, timing, fmmtask);
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
                timing.tf = tools::get_time();
 
                // c. save operators to disk
                qops_pool.join_and_erase(fneed);
-               qops_pool.save_to_disk(frop, schd.ctns.async_save, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu);
+               qops_pool.save_to_disk(frop, schd.ctns.async_save, 
+                     schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();
-*/
+
                if(debug){ 
                   timing.analysis("local", schd.ctns.verbose>0);
                   timing_sweep.accumulate(timing, "sweep", schd.ctns.verbose>0);
