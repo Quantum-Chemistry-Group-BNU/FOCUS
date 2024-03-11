@@ -2,6 +2,7 @@
 #define OPER_RENORM_SU2_H
 
 #include "../oper_renorm.h"
+#include "symbolic_formulae_renorm_su2.h"
 
 namespace ctns{
 
@@ -35,7 +36,7 @@ namespace ctns{
          const bool ifdistc = schd.ctns.ifdistc;
          const bool debug = (rank == 0); 
          if(debug and schd.ctns.verbose>0){ 
-            std::cout << "ctns::oper_renorm coord=" << p 
+            std::cout << "ctns::oper_renorm(su2) coord=" << p 
                << " superblock=" << superblock 
                << " isym=" << isym 
                << " ifkr=" << ifkr
@@ -155,12 +156,11 @@ namespace ctns{
             timing.tf1 = tools::get_time();
             timing.tf2 = tools::get_time();
 
-            exit(1);
-/*
-            auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
+            auto rtasks = symbolic_formulae_renorm_su2(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             timing.tf3 = tools::get_time();
-
+            exit(1);
+/*
             // generation of renormalization block [lc/lr/cr]
             const bool ifSingle = alg_renorm > 7;
             const bool ifDirect = alg_renorm % 2 == 1;
@@ -543,7 +543,7 @@ namespace ctns{
                   << " coord=" << p << " rank=" << rank << std::defaultfloat << std::endl;
             } 
             if(diffH > thresh_opdiff){
-               std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
+               std::cout <<  "error in oper_renorm(su2): ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
                   << " is larger than thresh_opdiff=" << thresh_opdiff 
                   << " for rank=" << rank 
                   << std::endl;
@@ -558,7 +558,7 @@ namespace ctns{
             double t_init = tools::get_duration(timing.tf1-timing.tf0);
             double t_kernel = tools::get_duration(timing.tf12-timing.tf1);
             double t_comm = tools::get_duration(timing.tf13-timing.tf12);
-            std::cout << "----- TIMING FOR oper_renorm : " << t_tot << " S" 
+            std::cout << "----- TIMING FOR oper_renorm(su2) : " << t_tot << " S" 
                << " T(init/kernel/comm)=" << t_init << "," << t_kernel << "," << t_comm
                << " rank=" << rank << " -----"
                << std::endl;

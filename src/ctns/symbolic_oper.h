@@ -210,6 +210,14 @@ namespace ctns{
             friend std::ostream& operator <<(std::ostream& os, const symbolic_prod& ops){
                int n = ops.terms.size();
                if(n > 0){
+                  // su2 case: spins
+                  if(ops.ispins.size() > 0){
+                     for(int i=0; i<ops.ispins.size(); i++){
+                        os << "(" << std::get<0>(ops.ispins[i]) 
+                           << "," << std::get<1>(ops.ispins[i]) 
+                           << "," << std::get<2>(ops.ispins[i]) << ")";
+                     }
+                  }
                   os << ops.terms[0];
                   for(int i=1; i<n; i++){
                      os << " * " << ops.terms[i];
@@ -276,6 +284,7 @@ namespace ctns{
          public:
             bool parity = false;
             std::vector<symbolic_sum<Tm>> terms;
+            std::vector<std::tuple<int,int,int>> ispins; // intermediate spins for su2 case
       };
 
 } // ctns

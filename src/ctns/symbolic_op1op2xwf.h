@@ -21,7 +21,6 @@ namespace ctns{
             const bool ifdagger1,
             const bool ifdagger2,
             const bool ifdagger){
-         symbolic_prod<Tm> term;
          if(cindex1.size() <= cindex2.size()){
             // sum_i a1[i] * (sum_j oij a2[j])
             for(const auto& i : cindex1){
@@ -73,7 +72,6 @@ namespace ctns{
             const bool ifdagger1,
             const bool ifdagger2,
             const bool ifdagger){
-         symbolic_prod<Tm> term;
          if(cindex1.size() <= cindex2.size()){
             // sum_i a1[i] * (sum_j oij a2[j])
             for(const auto& ia : cindex1){
