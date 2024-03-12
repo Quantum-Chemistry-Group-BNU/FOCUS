@@ -120,7 +120,7 @@ namespace ctns{
                         for(int tslc1=std::abs(tsl-tsc1); tslc1<=tsl+tsc1; tslc1+=2){
                            for(int tsc2r=std::abs(tsc2-tsr); tsc2r<=tsc2+tsr; tsc2r+=2){
                               auto indices = std::make_tuple(br,bc,bm,bv,tslc1,tsc2r);
-                              if(_ifconserve(br,bc,bm,tslc1,tsc2r)){
+                              if(_ifconserve(br,bc,bm,bv,tslc1,tsc2r)){
                                  _nnzaddr.push_back(indices);
                                  _offset[indices] = _size;
                                  _size += rcmdim*vdim;
@@ -134,7 +134,7 @@ namespace ctns{
                         for(int tslc1=std::abs(tsl-tsc1); tslc1<=tsl+tsc1; tslc1+=2){
                            for(int tslc1c2=std::abs(tslc1-tsc2); tslc1c2<=tslc1+tsc2; tslc1c2+=2){
                               auto indices = std::make_tuple(br,bc,bm,bv,tslc1,tslc1c2);
-                              if(_ifconserve(br,bc,bm,tslc1,tslc1c2)){
+                              if(_ifconserve(br,bc,bm,bv,tslc1,tslc1c2)){
                                  _nnzaddr.push_back(indices);
                                  _offset[indices] = _size;
                                  _size += rcmdim*vdim;
@@ -148,7 +148,7 @@ namespace ctns{
                         for(int tsc2r=std::abs(tsc2-tsr); tsc2r<=tsc2+tsr; tsc2r+=2){
                            for(int tsc1c2r=std::abs(tsc1-tsc2r); tsc1c2r<=tsc1+tsc2r; tsc1c2r+=2){
                               auto indices = std::make_tuple(br,bc,bm,bv,tsc2r,tsc1c2r);
-                              if(_ifconserve(br,bc,bm,tsc2r,tsc1c2r)){
+                              if(_ifconserve(br,bc,bm,bv,tsc2r,tsc1c2r)){
                                  _nnzaddr.push_back(indices);
                                  _offset[indices] = _size;
                                  _size += rcmdim*vdim;

@@ -224,7 +224,6 @@ namespace ctns{
             int size = rformulae.size();
             tools::timing("symbolic_formulae_renorm(su2) with size="+std::to_string(size), t0, t1);
          }
-         exit(1);
          return rformulae;
       }
 

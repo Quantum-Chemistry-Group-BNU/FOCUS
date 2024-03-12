@@ -1,9 +1,10 @@
-#ifndef SWEEP_ONEDOT_H
-#define SWEEP_ONEDOT_H
+#ifndef SWEEP_ONEDOT_SU2_H
+#define SWEEP_ONEDOT_SU2_H
 
-#include "../core/tools.h"
-#include "../core/linalg.h"
-#include "../qtensor/qtensor.h"
+#include "../../core/tools.h"
+#include "../../core/linalg.h"
+#include "../../qtensor/qtensor.h"
+/*
 #include "sweep_util.h"
 #include "sweep_onedot_renorm.h"
 #include "sweep_onedot_diag.h"
@@ -16,14 +17,15 @@
 #include "preprocess_size.h"
 #include "preprocess_sigma.h"
 #include "preprocess_sigma_batch.h"
+*/
 #ifndef SERIAL
-#include "../core/mpi_wrapper.h"
+#include "../../core/mpi_wrapper.h"
 #endif
 
 namespace ctns{
 
    // onedot optimization algorithm
-   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       void sweep_onedot(comb<Qm,Tm>& icomb,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
@@ -46,7 +48,7 @@ namespace ctns{
          const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank==0);
          if(debug){
-            std::cout << "ctns::sweep_onedot"
+            std::cout << "ctns::sweep_onedot(su2)"
                << " alg_hvec=" << alg_hvec
                << " alg_renorm=" << alg_renorm
                << " mpisize=" << size
@@ -92,8 +94,8 @@ namespace ctns{
          const auto& ql = qops_dict.at("l").qket;
          const auto& qr = qops_dict.at("r").qket;
          const auto& qc = qops_dict.at("c").qket;
-         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, schd.twoms);
-         stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
+         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, schd.twos);
+         stensor3su2<Tm> wf(sym_state, ql, qr, qc, dir_WF3); // by default, CRcouple is used.
          size_t ndim = wf.size();
          int neig = sweeps.nroots;
          if(debug){
@@ -118,6 +120,7 @@ namespace ctns{
          // 3. Davidson solver for wf
          // 3.1 diag 
          double* diag = new double[ndim];
+/*
          onedot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
@@ -125,14 +128,16 @@ namespace ctns{
          if(size > 1){
             mpi_wrapper::reduce(icomb.world, diag, ndim, 0);
          }
-#endif 
+#endif
+*/
          std::transform(diag, diag+ndim, diag,
                [&ecore](const double& x){ return x+ecore; });
          timing.tb = tools::get_time();
 
+/*
          // 3.2 Solve local problem: Hc=cE
          // prepare HVec
-         std::map<qsym,qinfo3<Tm>> info_dict;
+         std::map<qsym,qinfo3su2<Tm>> info_dict;
          size_t opsize, wfsize, tmpsize, worktot;
          opsize = preprocess_opsize(qops_dict);
          wfsize = preprocess_wfsize(wf.info, info_dict);
@@ -286,7 +291,7 @@ namespace ctns{
 
          // save for restart
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
-
+*/
          timing.t1 = tools::get_time();
          if(debug){
             get_sys_status();

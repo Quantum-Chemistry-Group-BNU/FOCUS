@@ -1,20 +1,21 @@
-#ifndef SWEEP_RCANON_H
-#define SWEEP_RCANON_H
+#ifndef SWEEP_RCANON_SU2_H
+#define SWEEP_RCANON_SU2_H
 
-#include "../core/tools.h"
-#include "../core/linalg.h"
+#include "../../core/tools.h"
+#include "../../core/linalg.h"
 
 namespace ctns{
 
    // rwfuns_to_cpsi: generate initial guess from RCF for 
    // the initial sweep optimization at p=(1,0): cRRRR => LCRR (L=Id)
-   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       void sweep_init(comb<Qm,Tm>& icomb, const int nroots){
-         std::cout << "\nctns::sweep_init: nroots=" << nroots << std::endl;
+         std::cout << "\nctns::sweep_init(su2): nroots=" << nroots << std::endl;
          if(icomb.get_nroots() < nroots){
             std::cout << "dim(psi0)=" << icomb.get_nroots() << " nroots=" << nroots << std::endl;
             tools::exit("error in sweep_init: requested nroots exceed!");
          }
+/*
          const auto& rindex = icomb.topo.rindex;
          auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))];
          auto& site1 = icomb.sites[rindex.at(std::make_pair(1,0))]; // const
@@ -50,19 +51,20 @@ namespace ctns{
          } // iroot
          site0 = get_left_bsite<Tm>(Qm::isym); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
          icomb.display_size();
+*/
       }
 
    // cpsi1_to_rwfuns: generate right canonical form (RCF) for later usage: LCRR => cRRRR
-   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       void sweep_final(comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const std::string scratch,
             const int isweep){
          auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(isweep);
-         std::cout << "\nctns::sweep_final: convert into RCF & save into "
+         std::cout << "\nctns::sweep_final(su2): convert into RCF & save into "
             << rcanon_file << std::endl;
          std::cout << tools::line_separator << std::endl;
-
+/*
          // 1. reorthogonalize {cpsi} in case there is truncation in the last sweep
          // such that they are not orthonormal any more, which can happens for
          // small bond dimension. 
@@ -154,7 +156,7 @@ namespace ctns{
          // 4. save & check
          ctns::rcanon_save(icomb, rcanon_file);
          ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
-
+*/
          std::cout << "..... end of isweep = " << isweep << " .....\n" << std::endl;
       }
 

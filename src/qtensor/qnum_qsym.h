@@ -131,8 +131,11 @@ namespace ctns{
          sym_state = qsym(isym, nelec%2, 0);
       }else if(isym == 1){
          sym_state = qsym(isym, nelec, 0);
-      }else if(isym == 2){
+      }else if(isym == 2 || isym == 3){
          sym_state = qsym(isym, nelec, twoms);
+      }else{
+         std::cout << "error: no such option in get_qsym_state! isym=" << isym << std::endl;
+         exit(1);
       }
       return sym_state;
    }
@@ -148,6 +151,9 @@ namespace ctns{
       }else if(isym == 3){
          assert(spin == 0); // must be of alpha spin
          sym_op = qsym(isym,1,1); // C[1/2]
+      }else{
+         std::cout << "error: no such option for get_qsym_opC! isym=" << isym << std::endl;
+         exit(1);
       }
       return sym_op;
    }
@@ -172,6 +178,9 @@ namespace ctns{
          }else{
             sym_op = qsym(isym,2,2); // Apq[1]
          }
+      }else{
+         std::cout << "error: no such option for get_qsym_opA! isym=" << isym << std::endl;
+         exit(1);
       }
       return sym_op;
    }
@@ -194,6 +203,9 @@ namespace ctns{
          }else{
             sym_op = qsym(isym,0,2); // Bps[1]
          }
+      }else{
+         std::cout << "error: no such option for get_qsym_opB! isym=" << isym << std::endl;
+         exit(1);
       }
       return sym_op;
    }

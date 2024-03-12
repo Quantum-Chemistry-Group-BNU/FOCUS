@@ -143,7 +143,7 @@ namespace ctns{
          }
          size_t blksize=0, blksize0=0;
          double cost=0.0;
-         Tm* workspace;
+         Tm* workspace = nullptr;
 #ifdef GPU
          Tm* dev_site = nullptr;
          Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};

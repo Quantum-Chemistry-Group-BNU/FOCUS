@@ -2,10 +2,13 @@
 #define CTNS_SWEEP_H
 
 #include "sweep_data.h"
-#include "sweep_rcanon.h"
 #include "sweep_restart.h"
 #include "sweep_onedot.h"
 #include "sweep_twodot.h"
+#include "sweep_rcanon.h"
+#include "sadmrg/sweep_onedot_su2.h"
+#include "sadmrg/sweep_twodot_su2.h"
+#include "sadmrg/sweep_rcanon_su2.h"
 
 namespace ctns{
 

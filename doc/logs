@@ -303,6 +303,8 @@
       - oper_dot_su2.h: [DONE@2024/03/10]
       - oper_renorm.h:
          - symbolic_formulae_renorm: how to encode info about intermediate spins
+            - symbolic_normxwf_su2
+            - symbolic_compxwf_su2: COMPLICATED PART ! [DONE@2024/03/12]
          - rinter.init()
          - preprocess_formulae_Rlist
          - Rmmtasks[i].init()

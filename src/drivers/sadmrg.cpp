@@ -133,13 +133,10 @@ void SADMRG(const input::schedule& schd){
             Sij.print("Sij");
          }
       }
-      exit(1);
-
       // optimization from current RCF
       if(schd.ctns.task_opt){
-         //ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
+         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
-      exit(1);
    } // ham || opt
 }
 

@@ -75,7 +75,7 @@ namespace ctns{
          qops.ifdist2 = true;
          // initialize
          if(!schd.ctns.async_tocpu){
-            qops.init();
+            qops.init(true);
          }else{
             qops.setup_opdict();
          }
@@ -113,7 +113,7 @@ namespace ctns{
          }
          size_t blksize=0, blksize0=0;
          double cost=0.0;
-         Tm* workspace;
+         Tm* workspace = nullptr;
 #ifdef GPU
          Tm* dev_site = nullptr;
          Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
@@ -156,11 +156,10 @@ namespace ctns{
             timing.tf1 = tools::get_time();
             timing.tf2 = tools::get_time();
 
+/*
             auto rtasks = symbolic_formulae_renorm_su2(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             timing.tf3 = tools::get_time();
-            exit(1);
-/*
             // generation of renormalization block [lc/lr/cr]
             const bool ifSingle = alg_renorm > 7;
             const bool ifDirect = alg_renorm % 2 == 1;
