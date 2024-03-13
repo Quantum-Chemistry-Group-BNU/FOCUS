@@ -175,14 +175,13 @@ namespace ctns{
          const std::string block2 = superblock.substr(1,2);
          const auto& cindex1 = qops1.cindex;
          const auto& cindex2 = qops2.cindex;
-         const int isym = qops.isym;
          const bool ifkr = qops.ifkr;
          std::streambuf *psbuf, *backup;
          std::ofstream file;
          bool ifsave = !fname.empty();
          if(ifsave){
             if(rank == 0 and debug){
-               std::cout << "ctns::symbolic_formulae_renorm(su2)"
+               std::cout << "ctns::symbolic_formulae_renorm_su2"
                   << " mpisize=" << size
                   << " fname=" << fname
                   << std::endl;
@@ -192,8 +191,7 @@ namespace ctns{
             backup = std::cout.rdbuf(); // back up cout's streambuf
             psbuf = file.rdbuf(); // get file's streambuf
             std::cout.rdbuf(psbuf); // assign streambuf to cout
-            std::cout << "ctns::symbolic_formulae_renorm(su2)"
-               << " isym=" << isym
+            std::cout << "ctns::symbolic_formulae_renorm_su2"
                << " ifkr=" << ifkr
                << " block1=" << block1
                << " block2=" << block2
@@ -222,7 +220,7 @@ namespace ctns{
          if(rank == 0 and debug){
             auto t1 = tools::get_time();
             int size = rformulae.size();
-            tools::timing("symbolic_formulae_renorm(su2) with size="+std::to_string(size), t0, t1);
+            tools::timing("symbolic_formulae_renorm_su2 with size="+std::to_string(size), t0, t1);
          }
          return rformulae;
       }

@@ -61,6 +61,12 @@ namespace ctns{
                st_new.parity = parity^st.parity;
                return st_new;
             }
+            // append ispins
+            void append_ispins(const std::tuple<int,int,int>& ispn){
+               for(int i=0; i<tasks.size(); i++){
+                  tasks[i].append_ispins(ispn);
+               }
+            }
             // display
             void display(const std::string name, const int level=1) const{
                std::cout << " symbolic_task=" << name << " : size=" << tasks.size() << std::endl;

@@ -4,6 +4,7 @@
 #include "../../core/tools.h"
 #include "../../core/linalg.h"
 #include "../../qtensor/qtensor.h"
+#include "symbolic_formulae_twodot_su2.h"
 /*
 #include "ctns_sys.h"
 #include "sweep_util.h"
@@ -11,7 +12,6 @@
 #include "sweep_twodot_diag.h"
 #include "sweep_twodot_local.h"
 #include "sweep_twodot_sigma.h"
-#include "symbolic_formulae_twodot.h"
 #include "symbolic_kernel_sigma.h"
 #include "symbolic_kernel_sigma2.h"
 #include "symbolic_kernel_sigma3.h"
@@ -244,11 +244,10 @@ namespace ctns{
          if(alg_hvec == 6 || alg_hvec == 7 || alg_hvec == 8 || alg_hvec == 9){
 
             // BatchGEMM: symbolic formulae + hintermediates + preallocation of workspace
+            H_formulae = symbolic_formulae_twodot_su2(qops_dict, int2e, size, rank, fname,
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
             exit(1);
 /*
-            H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
-
             const bool ifSingle = alg_hvec > 7;
             const bool ifDirect = alg_hvec % 2 == 1;
             const int batchgemv = 1;

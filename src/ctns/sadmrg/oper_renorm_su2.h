@@ -156,9 +156,9 @@ namespace ctns{
             timing.tf1 = tools::get_time();
             timing.tf2 = tools::get_time();
 
-/*
             auto rtasks = symbolic_formulae_renorm_su2(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
+/*
             timing.tf3 = tools::get_time();
             // generation of renormalization block [lc/lr/cr]
             const bool ifSingle = alg_renorm > 7;

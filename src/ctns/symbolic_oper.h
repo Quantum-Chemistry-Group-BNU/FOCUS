@@ -215,7 +215,7 @@ namespace ctns{
                      for(int i=0; i<ops.ispins.size(); i++){
                         os << "(" << std::get<0>(ops.ispins[i]) 
                            << "," << std::get<1>(ops.ispins[i]) 
-                           << "," << std::get<2>(ops.ispins[i]) << ")";
+                           << "," << std::get<2>(ops.ispins[i]) << ") ";
                      }
                   }
                   os << ops.terms[0];
@@ -261,6 +261,9 @@ namespace ctns{
                t12.terms = terms;
                std::copy(t.terms.begin(), t.terms.end(), std::back_inserter(t12.terms));
                t12.parity = parity^t.parity;
+               // copy intermediate spins
+               t12.ispins = ispins;
+               std::copy(t.ispins.begin(), t.ispins.end(), std::back_inserter(t12.ispins));
                return t12;
             }
             // helper
@@ -280,6 +283,10 @@ namespace ctns{
                   t += terms[i].cost(dims);
                }
                return t;
+            }
+            // append
+            void append_ispins(const std::tuple<int,int,int>& ispn){
+               ispins.push_back(ispn);
             }
          public:
             bool parity = false;
