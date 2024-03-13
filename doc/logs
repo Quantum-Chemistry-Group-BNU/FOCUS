@@ -301,11 +301,11 @@
          - qnum_qsym.h: get_sym_opX
          - oper_pool.h: support su2 tensor [DONE@2024/03/09]
       - oper_dot_su2.h: [DONE@2024/03/10]
-      - oper_renorm.h:
+      - oper_renorm.h: KET STEP !
          - symbolic_formulae_renorm_su2: how to encode info about intermediate spins
             - symbolic_normxwf_su2:
             - symbolic_compxwf_su2: COMPLICATED PART ! [DONE@2024/03/12]
-         - rinter.init()
+         - intermediates: rinter.init()
          - preprocess_formulae_Rlist
          - Rmmtasks[i].init()
          - preprocess_renorm_batchDirectSingle()

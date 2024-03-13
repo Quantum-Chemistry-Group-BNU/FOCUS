@@ -16,6 +16,25 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& vsol,
+            stensor4su2<Tm>& wf,
+            qoper_pool<Qm::ifabelian,Tm>& qops_pool,
+            const std::vector<std::string>& fneed,
+            const std::vector<std::string>& fneed_next,
+            const std::string& frop,
+            sweep_data& sweeps,
+            const int isweep,
+            const int ibond){
+         std::cout << "twodot_renorm not implemented yet for su2!" << std::endl;
+         exit(1);
+      }
+ 
+   template <typename Qm, typename Tm>
+      void twodot_renorm(comb<Qm,Tm>& icomb,
+            const integral::two_body<Tm>& int2e, 
+            const integral::one_body<Tm>& int1e,
+            const input::schedule& schd,
+            const std::string scratch,
+            linalg::matrix<Tm>& vsol,
             stensor4<Tm>& wf,
             qoper_pool<Qm::ifabelian,Tm>& qops_pool,
             const std::vector<std::string>& fneed,

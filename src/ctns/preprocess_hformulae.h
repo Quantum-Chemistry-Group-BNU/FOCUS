@@ -6,15 +6,15 @@
 
 namespace ctns{
 
-   template <typename Tm, typename QTm>
+   template <bool ifab, typename Tm, typename QTm>
       void preprocess_formulae_Hxlist(const bool ifDirect,
             const int alg_hcoper,
-            const oper_dictmap<Tm>& qops_dict,
+            const qoper_dictmap<ifab,Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const symbolic_task<Tm>& H_formulae,
             const QTm& wf,
-            const hintermediates<Tm>& hinter,
+            const hintermediates<ifab,Tm>& hinter,
             Hxlist<Tm>& Hxlst,
             size_t& blksize,
             size_t& blksize0,
@@ -45,15 +45,15 @@ namespace ctns{
          }
       }
 
-   template <typename Tm, typename QTm>
+   template <bool ifab, typename Tm, typename QTm>
       void preprocess_formulae_Hxlist2(const bool ifDirect,
             const int alg_hcoper,
-            const oper_dictmap<Tm>& qops_dict,
+            const qoper_dictmap<ifab,Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const symbolic_task<Tm>& H_formulae,
             const QTm& wf,
-            const hintermediates<Tm>& hinter,
+            const hintermediates<ifab,Tm>& hinter,
             Hxlist2<Tm>& Hxlst2,
             size_t& blksize,
             size_t& blksize0,
@@ -63,7 +63,7 @@ namespace ctns{
 
          // 1. preprocess formulae to Hmu
          int hsize = H_formulae.size();
-         std::vector<Hmu_ptr<Tm>> Hmu_vec(hsize);
+         std::vector<Hmu_ptr<ifab,Tm>> Hmu_vec(hsize);
          for(int it=0; it<hsize; it++){
             Hmu_vec[it].init(ifDirect, it, H_formulae, qops_dict, hinter, oploc); 
          } // it

@@ -158,7 +158,7 @@ namespace ctns{
       }
 
    template <typename Tm>
-      renorm_tasks<Tm> symbolic_formulae_renorm_su2(const std::string superblock,
+      renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
             const integral::two_body<Tm>& int2e,
             const opersu2_dict<Tm>& qops1,
             const opersu2_dict<Tm>& qops2,
@@ -181,7 +181,7 @@ namespace ctns{
          bool ifsave = !fname.empty();
          if(ifsave){
             if(rank == 0 and debug){
-               std::cout << "ctns::symbolic_formulae_renorm_su2"
+               std::cout << "ctns::symbolic_formulae_renorm(su2)"
                   << " mpisize=" << size
                   << " fname=" << fname
                   << std::endl;
@@ -191,7 +191,7 @@ namespace ctns{
             backup = std::cout.rdbuf(); // back up cout's streambuf
             psbuf = file.rdbuf(); // get file's streambuf
             std::cout.rdbuf(psbuf); // assign streambuf to cout
-            std::cout << "ctns::symbolic_formulae_renorm_su2"
+            std::cout << "ctns::symbolic_formulae_renorm(su2)"
                << " ifkr=" << ifkr
                << " block1=" << block1
                << " block2=" << block2

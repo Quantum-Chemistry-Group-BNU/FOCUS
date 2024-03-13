@@ -10,7 +10,6 @@
 #include "oper_dot.h"
 #include "oper_renorm.h"
 #include "sadmrg/oper_dot_su2.h"
-#include "sadmrg/oper_renorm_su2.h"
 
 namespace ctns{
 

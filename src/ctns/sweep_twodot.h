@@ -30,7 +30,7 @@
 namespace ctns{
 
    // twodot optimization algorithm
-   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+   template <typename Qm, typename Tm>
       void sweep_twodot(comb<Qm,Tm>& icomb,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
@@ -117,8 +117,8 @@ namespace ctns{
          const auto& qr  = qops_dict.at("r").qket;
          const auto& qc1 = qops_dict.at("c1").qket;
          const auto& qc2 = qops_dict.at("c2").qket;
-         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, schd.twoms);
-         stensor4<Tm> wf(sym_state, ql, qr, qc1, qc2);
+         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, (Qm::ifabelian? schd.twoms : schd.twos));
+         qtensor4<Qm::ifabelian,Tm> wf(sym_state, ql, qr, qc1, qc2);
          size_t ndim = wf.size();
          int neig = sweeps.nroots;
          if(debug){
@@ -175,10 +175,10 @@ namespace ctns{
          }
 
          // 3.2 prepare HVec
-         std::map<qsym,qinfo4<Tm>> info_dict;
+         std::map<qsym,qinfo4type<Qm::ifabelian,Tm>> info_dict;
          size_t opsize=0, wfsize=0, tmpsize=0, worktot=0;
-         opsize = preprocess_opsize(qops_dict);
-         wfsize = preprocess_wfsize(wf.info, info_dict);
+         opsize = preprocess_opsize<Qm::ifabelian,Tm>(qops_dict);
+         wfsize = preprocess_wfsize<Qm::ifabelian,Tm>(wf.info, info_dict);
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
             + "_isweep"+std::to_string(isweep)
@@ -187,7 +187,7 @@ namespace ctns{
          Hx_functors<Tm> Hx_funs; // hvec0
          symbolic_task<Tm> H_formulae; // hvec1,2
          bipart_task<Tm> H_formulae2; // hvec3
-         hintermediates<Tm> hinter; // hvec4,5,6
+         hintermediates<Qm::ifabelian,Tm> hinter; // hvec4,5,6
          Hxlist<Tm> Hxlst; // hvec4
          Hxlist2<Tm> Hxlst2; // hvec5
          HMMtask<Tm> Hmmtask;
@@ -220,7 +220,7 @@ namespace ctns{
             std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
             exit(1);
          }
-         if(Qm::ifkr && alg_hvec >=4){
+         if(Qm::ifabelian && Qm::ifkr && alg_hvec >=4){
             std::cout << "error: alg_hvec >= 4 does not support complex yet!" << std::endl;
             exit(1); 
          }

@@ -236,7 +236,7 @@ namespace ctns{
 
    // primitive form (without factorization)
    template <typename Tm>
-      symbolic_task<Tm> symbolic_formulae_twodot_su2(const opersu2_dictmap<Tm>& qops_dict,
+      symbolic_task<Tm> symbolic_formulae_twodot(const opersu2_dictmap<Tm>& qops_dict,
             const integral::two_body<Tm>& int2e,
             const int& size,
             const int& rank,
@@ -263,7 +263,7 @@ namespace ctns{
          bool ifsave = !fname.empty();
          if(ifsave){
             if(rank == 0 and debug){
-               std::cout << "ctns::symbolic_formulae_twodot_su2"
+               std::cout << "ctns::symbolic_formulae_twodot(su2)"
                   << " mpisize=" << size
                   << " fname=" << fname 
                   << std::endl;
@@ -273,7 +273,7 @@ namespace ctns{
             backup = std::cout.rdbuf(); // back up cout's streambuf
             psbuf = file.rdbuf(); // get file's streambuf
             std::cout.rdbuf(psbuf); // assign streambuf to cout
-            std::cout << "cnts::symbolic_formulae_twodot_su2"
+            std::cout << "cnts::symbolic_formulae_twodot(su2)"
                << " ifkr=" << ifkr
                << " mpisize=" << size
                << " mpirank=" << rank 
@@ -309,7 +309,7 @@ namespace ctns{
          if(rank == 0 and debug){
             auto t1 = tools::get_time();
             int size = formulae.size();
-            tools::timing("symbolic_formulae_twodot_su2 with size="+std::to_string(size), t0, t1);
+            tools::timing("symbolic_formulae_twodot(su2) with size="+std::to_string(size), t0, t1);
          }
          return formulae;
       }

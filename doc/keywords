@@ -109,6 +109,10 @@ $end
     =17: symbolic formulae + preallocation of workspace + intermediates [GPU + direct]
     =18: symbolic formulae + preallocation of workspace + intermediates [GPU + single]
     =19: symbolic formulae + preallocation of workspace + intermediates [GPU + direct + single]
+ - alg_hcoper
+    =0: always contract op[c1/c2] - most general case
+    =1: NSz/NS: only contract op[c1/c2] when it is purely on dot [see preprocess_hmu.h]
+    =2: NSz/NS: no contract for op[c1/c2] - but to perform reduction, x needs to be copied to workspace [see preprocess_hmmtask.h]
  - iomode: =0 (default: no compression)
  - ioasync: =0 (default: sequential)
 

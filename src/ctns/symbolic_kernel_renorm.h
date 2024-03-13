@@ -82,6 +82,17 @@ namespace ctns{
    template <typename Tm>
       void symbolic_kernel_renorm(const std::string superblock,
             const renorm_tasks<Tm>& rtasks,
+            const stensor3su2<Tm>& site,
+            const opersu2_dict<Tm>& qops1,
+            const opersu2_dict<Tm>& qops2,
+            opersu2_dict<Tm>& qops,
+            const int verbose){
+         std::cout << "error: no implementation of symbolic_kernel_renorm for su2!" << std::endl;
+         exit(1);
+      }
+   template <typename Tm>
+      void symbolic_kernel_renorm(const std::string superblock,
+            const renorm_tasks<Tm>& rtasks,
             const stensor3<Tm>& site,
             const oper_dict<Tm>& qops1,
             const oper_dict<Tm>& qops2,

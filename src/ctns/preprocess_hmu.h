@@ -8,7 +8,7 @@ namespace ctns{
 
    // H[mu] = coeff*Ol*Or*Oc (onedot)
    //       = coeff*Ol*Or*Oc1*Oc2 (twodot) 
-   template <typename Tm>
+   template <bool ifab, typename Tm>
       struct Hmu_ptr{
          public:
             bool empty() const{ return terms==0; }
@@ -16,8 +16,8 @@ namespace ctns{
             void init(const bool ifDirect, 
                   const int it,
                   const symbolic_task<Tm>& H_formulae,
-                  const oper_dictmap<Tm>& qops_dict,
-                  const hintermediates<Tm>& hinter,
+                  const qoper_dictmap<ifab,Tm>& qops_dict,
+                  const hintermediates<ifab,Tm>& hinter,
                   const std::map<std::string,int>& oploc);
 /*
  * ZL@20230518: TO BE SUPPORTED IN FUTURE
@@ -30,9 +30,19 @@ namespace ctns{
                   const bool ifdagger) const;
 */
             // twodot
+            template <bool y=ifab, std::enable_if_t<y,int> = 0> 
             void gen_Hxlist2(const int alg_hcoper,
                   Tm** opaddr,
-                  const qinfo4<Tm>& wf_info, 
+                  const qinfo4type<ifab,Tm>& wf_info, 
+                  Hxlist2<Tm>& Hxlst2,
+                  size_t& blksize,
+                  size_t& blksize0,
+                  double& cost,
+                  const bool ifdagger) const;
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0> 
+            void gen_Hxlist2(const int alg_hcoper,
+                  Tm** opaddr,
+                  const qinfo4type<ifab,Tm>& wf_info, 
                   Hxlist2<Tm>& Hxlst2,
                   size_t& blksize,
                   size_t& blksize0,
@@ -41,7 +51,7 @@ namespace ctns{
          public:
             bool parity[4] = {false,false,false,false};
             bool dagger[4] = {false,false,false,false};
-            qinfo2<Tm>* info[4] = {nullptr,nullptr,nullptr,nullptr};
+            qinfo2type<ifab,Tm>* info[4] = {nullptr,nullptr,nullptr,nullptr};
             int loc[4] = {-1,-1,-1,-1};
             size_t off[4] = {0,0,0,0};
             int terms = 0, cterms = 0; // terms corresponds to 'c' used for alg_hcoper=1
@@ -49,14 +59,21 @@ namespace ctns{
             // intermediates [direct] -> we assume each hmu contains only one intermediates
             int posInter = -1, lenInter = -1;
             size_t offInter = 0, ldaInter = 0;
+            // intermediate spins:
+            // twodot: {{S1,S2,S12},{S3,S4,S34},{S12,S34,S1234}} ((lc1)(c2r))
+            // onedot: {{S1,S2,S12},{S12,S3,S123}} ((lc)r)
+            //         {{S2,S3,S23},{S1,S23,S123}} (l(cr)}
+            int tspins[9] = {-1,-1,-1,
+                             -1,-1,-1,
+                             -1,-1,-1};
       };
 
-   template <typename Tm>
-      void Hmu_ptr<Tm>::init(const bool ifDirect,
+   template <bool ifab, typename Tm>
+      void Hmu_ptr<ifab,Tm>::init(const bool ifDirect,
             const int it,
             const symbolic_task<Tm>& H_formulae,
-            const oper_dictmap<Tm>& qops_dict,
-            const hintermediates<Tm>& hinter,
+            const qoper_dictmap<ifab,Tm>& qops_dict,
+            const hintermediates<ifab,Tm>& hinter,
             const std::map<std::string,int>& oploc){
          const auto& HTerm = H_formulae.tasks[it];
          terms = HTerm.size();
@@ -73,7 +90,7 @@ namespace ctns{
             int pos = oploc.at(block); 
             parity[pos] = par;
             dagger[pos] = dag;
-            info[pos] = const_cast<qinfo2<Tm>*>(&op0.info);
+            info[pos] = const_cast<qinfo2type<ifab,Tm>*>(&op0.info);
             if(block[0]=='c') cterms += 1;
             int len = sop.size();
             if(len == 1){
@@ -97,7 +114,18 @@ namespace ctns{
                }
             }
          } // idx
-         coeffH = tools::conjugate(coeff)*HTerm.Hsign(); 
+         coeffH = tools::conjugate(coeff)*HTerm.Hsign();
+         // intermediate spins
+         if(HTerm.ispins.size() != 0){
+            int j = 0;
+            for(int i=0; i<HTerm.ispins.size(); i++){
+               const auto& ispin = HTerm.ispins[i];
+               tspins[j] = std::get<0>(ispin);
+               tspins[j+1] = std::get<1>(ispin);
+               tspins[j+2] = std::get<2>(ispin);
+               j += 3;
+            }
+         }
       }
 
 /*
@@ -173,10 +201,11 @@ namespace ctns{
    // sigma[br,bc,bm,bv] = Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
    // 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv'] 
    // 			wf[br',bc',bm',bv']
-   template <typename Tm>
-      void Hmu_ptr<Tm>::gen_Hxlist2(const int alg_hcoper,
+   template <bool ifab, typename Tm>
+      template <bool y, std::enable_if_t<y,int>>
+      void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
             Tm** opaddr,
-            const qinfo4<Tm>& wf_info,
+            const qinfo4type<ifab,Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
             size_t& blksize,
             size_t& blksize0,
@@ -256,6 +285,97 @@ namespace ctns{
             }
             Hxlst2[i].push_back(Hxblk);
          } // i
+      }
+
+   // sigma[br,bc,bm,bv] = Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
+   // 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv'] 
+   // 			wf[br',bc',bm',bv']
+   template <bool ifab, typename Tm>
+      template <bool y, std::enable_if_t<!y,int>>
+      void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
+            Tm** opaddr,
+            const qinfo4type<ifab,Tm>& wf_info,
+            Hxlist2<Tm>& Hxlst2,
+            size_t& blksize,
+            size_t& blksize0,
+            double& cost,
+            const bool ifdagger) const{
+         if(this->empty()) return;
+/*
+         int bo[4], bi[4];
+         for(int i=0; i<wf_info._nnzaddr.size(); i++){
+            int idx = wf_info._nnzaddr[i];
+            wf_info._addr_unpack(idx,bo[0],bo[1],bo[2],bo[3]);
+            Hxblock<Tm> Hxblk(4,terms,cterms,alg_hcoper);
+            Hxblk.offout = wf_info._offset[idx]-1;
+            Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
+            Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
+            Hxblk.dimout[2] = wf_info.qmid.get_dim(bo[2]);
+            Hxblk.dimout[3] = wf_info.qver.get_dim(bo[3]);
+            Hxblk.size = Hxblk.dimout[0]*Hxblk.dimout[1]*Hxblk.dimout[2]*Hxblk.dimout[3];
+            // finding the corresponding operator blocks given {bo[0],bo[1],bo[2],bo[3]}
+            bool symAllowed = true;
+            Tm coeff_coper = 1.0;
+            for(int k=0; k<4; k++){ // l,r,c1,c2
+               Hxblk.dagger[k] = dagger[k]^ifdagger; // (O1^d1)^d = O1^(d^d1)
+               if(this->identity(k)){ 
+                  // identity operator
+                  bi[k] = bo[k];
+               }else{
+                  // not identity
+                  bool iftrans = dagger[k]^ifdagger;
+                  bi[k] = iftrans? info[k]->_bc2br[bo[k]] : info[k]->_br2bc[bo[k]];
+                  if(bi[k] == -1){
+                     symAllowed = false;
+                     break;
+                  }else{
+                     int jdx = iftrans? info[k]->_addr(bi[k],bo[k]) : info[k]->_addr(bo[k],bi[k]);
+                     assert(info[k]->_offset[jdx] != 0);
+                     Hxblk.loc[k] = loc[k];
+                     Hxblk.off[k] = off[k]+(info[k]->_offset[jdx]-1);
+                     // special treatment of op[c2/c1] for NSz symmetry
+                     if(k >= 2 && ((alg_hcoper==1 && terms>cterms) || alg_hcoper==2)){ 
+                        assert(k == loc[k]); // op[c] cannot be intermediates
+                        Tm coper = *(opaddr[loc[k]] + Hxblk.off[k]);
+                        coeff_coper *= Hxblk.dagger[k]? tools::conjugate(coper) : coper;
+                        if(std::abs(coeff_coper)<thresh_coper){
+                           symAllowed = false;
+                           break;
+                        }
+                     }
+                  }
+               }
+            }
+            if(!symAllowed) continue;
+            size_t offin = wf_info._offset[wf_info._addr(bi[0],bi[1],bi[2],bi[3])];
+            if(offin == 0) continue; // in case of no matching contractions
+            Hxblk.offin = offin-1;
+            Hxblk.dimin[0] = wf_info.qrow.get_dim(bi[0]);
+            Hxblk.dimin[1] = wf_info.qcol.get_dim(bi[1]);
+            Hxblk.dimin[2] = wf_info.qmid.get_dim(bi[2]);
+            Hxblk.dimin[3] = wf_info.qver.get_dim(bi[3]);
+            // compute sign due to parity
+            Hxblk.coeff = (ifdagger? coeffH : coeff)*coeff_coper;
+            int pl  = wf_info.qrow.get_parity(bi[0]);
+            int pc1 = wf_info.qmid.get_parity(bi[2]);
+            int pc2 = wf_info.qver.get_parity(bi[3]);
+            if(parity[1] && (pl+pc1+pc2)%2==1) Hxblk.coeff *= -1.0; // Or
+            if(parity[3] && (pl+pc1)%2==1) Hxblk.coeff *= -1.0;  // Oc2
+            if(parity[2] && pl%2==1) Hxblk.coeff *= -1.0; // Oc1
+            Hxblk.setup();
+            blksize = std::max(blksize, Hxblk.blksize);
+            cost += Hxblk.cost;
+            // Intermediates
+            if(posInter != -1){
+               Hxblk.posInter = posInter;
+               Hxblk.lenInter = lenInter;
+               Hxblk.offInter = offInter;
+               Hxblk.ldaInter = ldaInter;
+               blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
+            }
+            Hxlst2[i].push_back(Hxblk);
+         } // i
+*/
       }
 
 } // ctns

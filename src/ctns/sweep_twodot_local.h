@@ -10,6 +10,16 @@ namespace ctns{
             const directed_bond& dbond,
             const size_t ndim,
             const int neig,
+            stensor4su2<Tm>& wf,
+            std::vector<Tm>& v0){
+         std::cout << "twodot_guess_v0 not implemented for su2 yet!" << std::endl;
+         exit(1);
+      }
+   template <typename Qm, typename Tm>
+      void twodot_guess_v0(comb<Qm,Tm>& icomb, 
+            const directed_bond& dbond,
+            const size_t ndim,
+            const int neig,
             stensor4<Tm>& wf,
             std::vector<Tm>& v0){
          const bool debug = true;
@@ -110,7 +120,7 @@ namespace ctns{
             std::vector<double>& eopt,
             linalg::matrix<Tm>& vsol,
             int& nmvp,
-            stensor4<Tm>& wf,
+            qtensor4<Qm::ifabelian,Tm>& wf,
             const directed_bond& dbond,
             dot_timing& timing){
          int size = 1, rank = 0;
@@ -185,7 +195,7 @@ namespace ctns{
             std::vector<double>& eopt,
             linalg::matrix<std::complex<double>>& vsol,
             int& nmvp,
-            stensor4<std::complex<double>>& wf,
+            qtensor4<true,std::complex<double>>& wf,
             const directed_bond& dbond,
             dot_timing& timing){
          using Tm = std::complex<double>;

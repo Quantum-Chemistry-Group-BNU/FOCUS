@@ -8,7 +8,8 @@
 
 namespace ctns{
 
-   template <typename Tm>
+   // Given H_formulae, identify the intermediates defined as a sum \sum_i^n ci*oi (n>1)
+   template <bool ifab, typename Tm>
       struct hintermediates{
          public:
             ~hintermediates(){
@@ -26,7 +27,7 @@ namespace ctns{
             void init(const bool ifDirect,
                   const int alg_hinter,
                   const int batchgemv,
-                  const oper_dictmap<Tm>& qops_dict,
+                  const qoper_dictmap<ifab,Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const symbolic_task<Tm>& H_formulae,
@@ -63,10 +64,10 @@ namespace ctns{
                }
             }
             // form hintermediates
-            void init_omp(const oper_dictmap<Tm>& qops_dict,
+            void init_omp(const qoper_dictmap<ifab,Tm>& qops_dict,
                   const symbolic_task<Tm>& H_formulae,
                   const bool debug);
-            void init_batch_cpu(const oper_dictmap<Tm>& qops_dict,
+            void init_batch_cpu(const qoper_dictmap<ifab,Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const symbolic_task<Tm>& H_formulae,
@@ -75,7 +76,7 @@ namespace ctns{
             void initDirect_batch_cpu(const symbolic_task<Tm>& H_formulae,
                   const bool debug);
 #ifdef GPU
-            void init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+            void init_batch_gpu(const qoper_dictmap<ifab,Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const symbolic_task<Tm>& H_formulae,
@@ -95,8 +96,8 @@ namespace ctns{
       };
 
    // openmp version with symbolic_sum_oper
-   template <typename Tm>
-      void hintermediates<Tm>::init_omp(const oper_dictmap<Tm>& qops_dict,
+   template <bool ifab, typename Tm>
+      void hintermediates<ifab,Tm>::init_omp(const qoper_dictmap<ifab,Tm>& qops_dict,
             const symbolic_task<Tm>& H_formulae,
             const bool debug){
          auto t0 = tools::get_time();
@@ -106,7 +107,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "hintermediates<Tm>::init_omp maxthreads=" << maxthreads << std::endl;
+            std::cout << "hintermediates<ifab,Tm>::init_omp maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
          }
 
@@ -162,14 +163,14 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("hintermediates<Tm>::init_omp", t0, t1);
+            tools::timing("hintermediates<ifab,Tm>::init_omp", t0, t1);
          }
       }
 
    // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
-   template <typename Tm>
-      void hintermediates<Tm>::init_batch_cpu(const oper_dictmap<Tm>& qops_dict,
+   template <bool ifab, typename Tm>
+      void hintermediates<ifab,Tm>::init_batch_cpu(const qoper_dictmap<ifab,Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const symbolic_task<Tm>& H_formulae,
@@ -182,7 +183,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "hintermediates<Tm>::init_batch_cpu maxthreads=" << maxthreads << std::endl;
+            std::cout << "hintermediates<ifab,Tm>::init_batch_cpu maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
          }
 
@@ -291,15 +292,15 @@ namespace ctns{
                << " time=" << dt << " flops=" << mvbatch.cost/dt
                << std::endl;
             auto t1 = tools::get_time();
-            tools::timing("hintermediates<Tm>::init_batch_cpu", t0, t1);
+            tools::timing("hintermediates<ifab,Tm>::init_batch_cpu", t0, t1);
          }
       }
 
 #ifdef GPU
    // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
-   template <typename Tm>
-      void hintermediates<Tm>::init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+   template <bool ifab, typename Tm>
+      void hintermediates<ifab,Tm>::init_batch_gpu(const qoper_dictmap<ifab,Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const symbolic_task<Tm>& H_formulae,
@@ -312,7 +313,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "hintermediates<Tm>::init_batch_gpu maxthreads=" << maxthreads << std::endl;
+            std::cout << "hintermediates<ifab,Tm>::init_batch_gpu maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
          }
 
@@ -437,15 +438,15 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("hintermediates<Tm>::init_batch_gpu", t0, t1);
+            tools::timing("hintermediates<ifab,Tm>::init_batch_gpu", t0, t1);
          }
       }
 #endif
 
    // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
-   template <typename Tm>
-      void hintermediates<Tm>::initDirect_batch_cpu(const symbolic_task<Tm>& H_formulae,
+   template <bool ifab, typename Tm>
+      void hintermediates<ifab,Tm>::initDirect_batch_cpu(const symbolic_task<Tm>& H_formulae,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -454,7 +455,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "hintermediates<Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
+            std::cout << "hintermediates<ifab,Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
          }
 
@@ -501,15 +502,15 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("hintermediates<Tm>::initDirect_batch_cpu", t0, t1);
+            tools::timing("hintermediates<ifab,Tm>::initDirect_batch_cpu", t0, t1);
          }
       }
 
 #ifdef GPU
    // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
-   template <typename Tm>
-      void hintermediates<Tm>::initDirect_batch_gpu(const symbolic_task<Tm>& H_formulae,
+   template <bool ifab, typename Tm>
+      void hintermediates<ifab,Tm>::initDirect_batch_gpu(const symbolic_task<Tm>& H_formulae,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -518,7 +519,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "hintermediates<Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
+            std::cout << "hintermediates<ifab,Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
          }
 
@@ -568,7 +569,7 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("hintermediates<Tm>::initDirect_batch_gpu", t0, t1);
+            tools::timing("hintermediates<ifab,Tm>::initDirect_batch_gpu", t0, t1);
          }
       }
 #endif

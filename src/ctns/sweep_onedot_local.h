@@ -18,7 +18,7 @@ namespace ctns{
             std::vector<double>& eopt,
             linalg::matrix<Tm>& vsol,
             int& nmvp,
-            stensor3<Tm>& wf,
+            qtensor3<Qm::ifabelian,Tm>& wf,
             dot_timing& timing){
          int size = 1, rank = 0;
 #ifndef SERIAL
@@ -27,7 +27,6 @@ namespace ctns{
 #endif
 
          // without kramers restriction
-         assert(Qm::ifkr == false);
          pdvdsonSolver_nkr<Tm> solver(ndim, neig, eps, schd.ctns.maxcycle);
          solver.iprt = schd.ctns.verbose;
          solver.nbuff = schd.ctns.nbuff;
@@ -95,7 +94,7 @@ namespace ctns{
             std::vector<double>& eopt,
             linalg::matrix<std::complex<double>>& vsol,
             int& nmvp,
-            stensor3<std::complex<double>>& wf,
+            qtensor3<true,std::complex<double>>& wf,
             dot_timing& timing){
          using Tm = std::complex<double>;
          int size = 1, rank = 0;

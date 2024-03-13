@@ -12,7 +12,16 @@
 #endif
 
 namespace ctns{
-        
+       
+   template <typename Tm>
+      void oper_renorm_kernel(const std::string superblock,
+            const Hx_functors<Tm>& rfuns,
+            const stensor3su2<Tm>& site,
+            opersu2_dict<Tm>& qops,
+            const int verbose){
+         std::cout << "error: no implementation of oper_renorm_kernel for su2!" << std::endl;
+         exit(1);
+      }
    template <typename Tm>
       void oper_renorm_kernel(const std::string superblock,
             const Hx_functors<Tm>& rfuns,
@@ -43,6 +52,17 @@ namespace ctns{
          } // i
       }
 
+   template <typename Tm>
+      Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
+            const stensor3su2<Tm>& site,
+            const integral::two_body<Tm>& int2e,
+            const opersu2_dict<Tm>& qops1,
+            const opersu2_dict<Tm>& qops2,
+            const opersu2_dict<Tm>& qops,
+            const bool ifdist1){
+         std::cout << "error: no implementation of oper_renorm_functors for su2!" << std::endl;
+         exit(1);
+      } 
    template <typename Tm>
       Hx_functors<Tm> oper_renorm_functors(const std::string superblock,
             const stensor3<Tm>& site,

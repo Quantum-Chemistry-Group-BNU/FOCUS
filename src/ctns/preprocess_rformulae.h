@@ -6,17 +6,17 @@
 
 namespace ctns{
 
-   template <typename Tm, typename QTm>
+   template <bool ifab, typename Tm, typename QTm>
       void preprocess_formulae_Rlist(const bool ifDirect,
             const int alg_rcoper,
             const std::string superblock,
-            const oper_dict<Tm>& qops,
-            const oper_dictmap<Tm>& qops_dict,
+            const qoper_dict<ifab,Tm>& qops,
+            const qoper_dictmap<ifab,Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const renorm_tasks<Tm>& rtasks,
             const QTm& site,
-            const rintermediates<Tm>& rinter,
+            const rintermediates<ifab,Tm>& rinter,
             Rlist<Tm>& Rlst,
             size_t& blksize,
             size_t& blksize0,
@@ -46,17 +46,17 @@ namespace ctns{
          }
       }
 
-   template <typename Tm, typename QTm>
+   template <bool ifab, typename Tm, typename QTm>
       void preprocess_formulae_Rlist2(const bool ifDirect,
             const int alg_rcoper,
             const std::string superblock,
-            const oper_dict<Tm>& qops,
-            const oper_dictmap<Tm>& qops_dict,
+            const qoper_dict<ifab,Tm>& qops,
+            const qoper_dictmap<ifab,Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const renorm_tasks<Tm>& rtasks,
             const QTm& site,
-            const rintermediates<Tm>& rinter,
+            const rintermediates<ifab,Tm>& rinter,
             Rlist2<Tm>& Rlst2,
             size_t& blksize,
             size_t& blksize0,
@@ -66,7 +66,7 @@ namespace ctns{
 
          // 1. preprocess formulae to Rmu
          int rsize = rtasks.size();
-         std::vector<std::vector<Rmu_ptr<Tm>>> Rmu(rsize);
+         std::vector<std::vector<Rmu_ptr<ifab,Tm>>> Rmu(rsize);
          for(int k=0; k<rsize; k++){
             const auto& task = rtasks.op_tasks[k];
             const auto& key = std::get<0>(task);
@@ -74,7 +74,7 @@ namespace ctns{
             const auto& formula = std::get<2>(task);
             Rmu[k].resize(formula.size());
             for(int it=0; it<formula.size(); it++){
-               Rmu[k][it].rinfo = const_cast<qinfo2<Tm>*>(&qops(key).at(index).info);
+               Rmu[k][it].rinfo = const_cast<qinfo2type<ifab,Tm>*>(&qops(key).at(index).info);
                Rmu[k][it].offrop = qops._offset.at(std::make_pair(key,index));
                Rmu[k][it].init(ifDirect, k, it, formula, qops_dict, rinter, oploc);
             }

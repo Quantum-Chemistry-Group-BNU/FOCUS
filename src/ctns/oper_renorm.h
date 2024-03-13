@@ -37,7 +37,7 @@ namespace ctns{
    extern const double thresh_opdiff;
 
    // renormalize operators
-   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+   template <typename Qm, typename Tm>
       void oper_renorm(const std::string superblock,
             const comb<Qm,Tm>& icomb,
             const comb_coord& p,
@@ -68,6 +68,7 @@ namespace ctns{
          if(debug and schd.ctns.verbose>0){ 
             std::cout << "ctns::oper_renorm coord=" << p 
                << " superblock=" << superblock 
+               << " ifab=" << Qm::ifabelian
                << " isym=" << isym 
                << " ifkr=" << ifkr
                << " alg_renorm=" << alg_renorm	
@@ -120,8 +121,8 @@ namespace ctns{
          oper_timer.dot_start();
          const bool debug_formulae = schd.ctns.verbose>0;
          size_t worktot=0;
-         // intermediates      
-         rintermediates<Tm> rinter;
+         // intermediates
+         rintermediates<Qm::ifabelian,Tm> rinter;
          Rlist<Tm> Rlst;
          Rlist2<Tm> Rlst2;
          RMMtask<Tm> Rmmtask;
@@ -157,7 +158,7 @@ namespace ctns{
             std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
             exit(1);
          }
-         if(Qm::ifkr && alg_renorm >=4){
+         if(Qm::ifabelian && Qm::ifkr && alg_renorm >=4){
             std::cout << "error: alg_renorm >= 4 does not support complex yet!" << std::endl;
             exit(1); 
          }

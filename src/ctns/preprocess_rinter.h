@@ -8,7 +8,8 @@
 
 namespace ctns{
 
-   template <typename Tm>
+   // Given rtasks, identify the intermediates defined as a sum \sum_i^n ci*oi (n>1)
+   template <bool ifab, typename Tm>
       struct rintermediates{
          public:
             ~rintermediates(){
@@ -26,7 +27,7 @@ namespace ctns{
             void init(const bool ifDirect,
                   const int alg_rinter,
                   const int batchgemv,
-                  const oper_dictmap<Tm>& qops_dict,
+                  const qoper_dictmap<ifab,Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
@@ -63,10 +64,10 @@ namespace ctns{
                }
             }
             // form rintermediates
-            void init_omp(const oper_dictmap<Tm>& qops_dict,
+            void init_omp(const qoper_dictmap<ifab,Tm>& qops_dict,
                   const renorm_tasks<Tm>& rtasks,
                   const bool debug);
-            void init_batch_cpu(const oper_dictmap<Tm>& qops_dict,
+            void init_batch_cpu(const qoper_dictmap<ifab,Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
@@ -75,7 +76,7 @@ namespace ctns{
             void initDirect_batch_cpu(const renorm_tasks<Tm>& rtasks,
                   const bool debug);
 #ifdef GPU
-            void init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+            void init_batch_gpu(const qoper_dictmap<ifab,Tm>& qops_dict,
                   const std::map<std::string,int>& oploc,
                   Tm** opaddr,
                   const renorm_tasks<Tm>& rtasks,
@@ -95,8 +96,8 @@ namespace ctns{
       };
 
    // openmp version with symbolic_sum_oper
-   template <typename Tm>
-      void rintermediates<Tm>::init_omp(const oper_dictmap<Tm>& qops_dict,
+   template <bool ifab, typename Tm>
+      void rintermediates<ifab,Tm>::init_omp(const qoper_dictmap<ifab,Tm>& qops_dict,
             const renorm_tasks<Tm>& rtasks,
             const bool debug){
          auto t0 = tools::get_time();
@@ -106,7 +107,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "rintermediates<Tm>::init_omp maxthreads=" << maxthreads << std::endl;
+            std::cout << "rintermediates<ifab,Tm>::init_omp maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << rtasks.size() << std::endl;
          }
 
@@ -168,14 +169,14 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("rintermediates<Tm>::init_omp", t0, t1);
+            tools::timing("rintermediates<ifab,Tm>::init_omp", t0, t1);
          }
       }
 
    // This subroutine does not work for qNK. Besides, we make the
-   // assumption that the C operators are stored contegously.
-   template <typename Tm>
-      void rintermediates<Tm>::init_batch_cpu(const oper_dictmap<Tm>& qops_dict,
+   // assumption that the C operators are stored in a consecutive way.
+   template <bool ifab, typename Tm>
+      void rintermediates<ifab,Tm>::init_batch_cpu(const qoper_dictmap<ifab,Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const renorm_tasks<Tm>& rtasks,
@@ -188,7 +189,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "rintermediates<Tm>::init_batch_cpu maxthreads=" << maxthreads << std::endl;
+            std::cout << "rintermediates<ifab,Tm>::init_batch_cpu maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << rtasks.size() << std::endl;
          }
 
@@ -259,7 +260,7 @@ namespace ctns{
             mv.transA = 'N';
             mv.M = op0.size(); 
             mv.N = len;
-            //mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dimes for isym=2
+            //mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dims for isym=2
             mv.LDA = qops._offset.at(std::make_pair(label,index1)) - qops._offset.at(std::make_pair(label,index0));
             mv.locA = oploc.at(block); 
             mv.offA = qops._offset.at(std::make_pair(label,index0)); // qops
@@ -271,7 +272,7 @@ namespace ctns{
             for(int k=0; k<len; k++){
                auto wtk = sop.sums[k].first;
                alpha_vec[adx+k] = dagger? tools::conjugate(wtk) : wtk; 
-            } 
+            }
             adx += len;
             idx += 1;
          }
@@ -303,15 +304,15 @@ namespace ctns{
                << " time=" << dt << " flops=" << mvbatch.cost/dt
                << std::endl;
             auto t1 = tools::get_time();
-            tools::timing("rintermediates<Tm>::init_batch_cpu", t0, t1);
+            tools::timing("rintermediates<ifab,Tm>::init_batch_cpu", t0, t1);
          }
       }
 
 #ifdef GPU
    // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
-   template <typename Tm>
-      void rintermediates<Tm>::init_batch_gpu(const oper_dictmap<Tm>& qops_dict,
+   template <bool ifab, typename Tm>
+      void rintermediates<ifab,Tm>::init_batch_gpu(const qoper_dictmap<ifab,Tm>& qops_dict,
             const std::map<std::string,int>& oploc,
             Tm** opaddr,
             const renorm_tasks<Tm>& rtasks,
@@ -324,7 +325,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "rintermediates<Tm>::init_batch_gpu maxthreads=" << maxthreads << std::endl;
+            std::cout << "rintermediates<ifab,Tm>::init_batch_gpu maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << rtasks.size() << std::endl;
          }
 
@@ -446,15 +447,15 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("rintermediates<Tm>::init_batch_gpu", t0, t1);
+            tools::timing("rintermediates<ifab,Tm>::init_batch_gpu", t0, t1);
          }
       }
 #endif
 
    // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
-   template <typename Tm>
-      void rintermediates<Tm>::initDirect_batch_cpu(const renorm_tasks<Tm>& rtasks,
+   template <bool ifab, typename Tm>
+      void rintermediates<ifab,Tm>::initDirect_batch_cpu(const renorm_tasks<Tm>& rtasks,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -463,7 +464,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "rintermediates<Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
+            std::cout << "rintermediates<ifab,Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << rtasks.size() << std::endl;
          }
 
@@ -517,15 +518,15 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("rintermediates<Tm>::initDirect_batch_cpu", t0, t1);
+            tools::timing("rintermediates<ifab,Tm>::initDirect_batch_cpu", t0, t1);
          }
       }
 
 #ifdef GPU
    // This subroutine does not work for qNK. Besides, we make the
    // assumption that the C operators are stored contegously.
-   template <typename Tm>
-      void rintermediates<Tm>::initDirect_batch_gpu(const renorm_tasks<Tm>& rtasks,
+   template <bool ifab, typename Tm>
+      void rintermediates<ifab,Tm>::initDirect_batch_gpu(const renorm_tasks<Tm>& rtasks,
             const bool debug){
          auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -534,7 +535,7 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          if(debug){
-            std::cout << "rintermediates<Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
+            std::cout << "rintermediates<ifab,Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
             std::cout << " no. of formulae=" << rtasks.size() << std::endl;
          }
 
@@ -592,7 +593,7 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("rintermediates<Tm>::initDirect_batch_gpu", t0, t1);
+            tools::timing("rintermediates<ifab,Tm>::initDirect_batch_gpu", t0, t1);
          }
       }
 #endif

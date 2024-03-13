@@ -277,6 +277,19 @@ namespace ctns{
 
    // bipartite form (with factorization)
    template <typename Tm>
+      bipart_task<Tm> symbolic_formulae_twodot2(const opersu2_dictmap<Tm>& qops_dict,
+            const integral::two_body<Tm>& int2e,
+            const int& size,
+            const int& rank,
+            const std::string fname,
+            const bool sort_formulae,
+            const bool ifdist1,
+            const bool ifdistc,
+            const bool debug=false){
+         std::cout << "error: no implementation of symbolic_formulae_twodot2 for su2!" << std::endl;
+         exit(1);
+      }
+   template <typename Tm>
       bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
             const integral::two_body<Tm>& int2e,
             const int& size,

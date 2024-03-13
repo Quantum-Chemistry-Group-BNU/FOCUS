@@ -23,7 +23,7 @@
 namespace ctns{
 
    // onedot optimization algorithm
-   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+   template <typename Qm, typename Tm>
       void sweep_onedot(comb<Qm,Tm>& icomb,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
@@ -92,8 +92,8 @@ namespace ctns{
          const auto& ql = qops_dict.at("l").qket;
          const auto& qr = qops_dict.at("r").qket;
          const auto& qc = qops_dict.at("c").qket;
-         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, schd.twoms);
-         stensor3<Tm> wf(sym_state, ql, qr, qc, dir_WF3);
+         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, (Qm::ifabelian? schd.twoms : schd.twos));
+         qtensor3<Qm::ifabelian,Tm> wf(sym_state, ql, qr, qc, dir_WF3); // su2 case: by default, CRcouple is used.
          size_t ndim = wf.size();
          int neig = sweeps.nroots;
          if(debug){
@@ -132,10 +132,10 @@ namespace ctns{
 
          // 3.2 Solve local problem: Hc=cE
          // prepare HVec
-         std::map<qsym,qinfo3<Tm>> info_dict;
+         std::map<qsym,qinfo3type<Qm::ifabelian,Tm>> info_dict;
          size_t opsize, wfsize, tmpsize, worktot;
-         opsize = preprocess_opsize(qops_dict);
-         wfsize = preprocess_wfsize(wf.info, info_dict);
+         opsize = preprocess_opsize<Qm::ifabelian,Tm>(qops_dict);
+         wfsize = preprocess_wfsize<Qm::ifabelian,Tm>(wf.info, info_dict);
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
             + "_isweep"+std::to_string(isweep)
@@ -144,7 +144,7 @@ namespace ctns{
          Hx_functors<Tm> Hx_funs; // hvec0
          symbolic_task<Tm> H_formulae; // hvec1,2
          bipart_task<Tm> H_formulae2; // hvec3
-         hintermediates<Tm> hinter; // hvec4,5,6
+         hintermediates<Qm::ifabelian,Tm> hinter; // hvec4,5,6
          Hxlist<Tm> Hxlst; // hvec4
          Hxlist2<Tm> Hxlst2; // hvec5
          HMMtasks<Tm> Hmmtasks; // hvec6

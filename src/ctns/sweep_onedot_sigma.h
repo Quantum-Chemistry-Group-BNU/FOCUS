@@ -237,6 +237,18 @@ namespace ctns{
 
    // Collect all Hx_funs 
    template <typename Tm>
+      Hx_functors<Tm> onedot_Hx_functors(const opersu2_dictmap<Tm>& qops_dict,
+            const integral::two_body<Tm>& int2e,
+            const double& ecore,
+            const stensor3su2<Tm>& wf,
+            const int& size,
+            const int& rank,
+            const bool& ifdist1,
+            const bool debug=false){
+         std::cout << "error: no implementation of onedot_Hx_functors for su2!" << std::endl;
+         exit(1);
+      }
+   template <typename Tm>
       Hx_functors<Tm> onedot_Hx_functors(const oper_dictmap<Tm>& qops_dict,
             const integral::two_body<Tm>& int2e,
             const double& ecore,
@@ -323,6 +335,16 @@ namespace ctns{
          return Hx_funs;
       }
 
+   template <typename Tm> 
+      void onedot_Hx(Tm* y,
+            const Tm* x,
+            Hx_functors<Tm>& Hx_funs,
+            stensor3su2<Tm>& wf,
+            const int size,
+            const int rank){
+         std::cout << "error: no implementation of onedot_Hx for su2!" << std::endl;
+         exit(1);
+      }
    template <typename Tm> 
       void onedot_Hx(Tm* y,
             const Tm* x,
