@@ -30,31 +30,42 @@ namespace ctns{
          symbolic_task<Tm> formulae;
          int idx = 0;
 
-/*
          // Local terms:
          // H[lc1]
-         auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", cindex_l, cindex_c1, 
+         auto Hlc1 = symbolic_compxwf_opH_su2<Tm>("l", "c1", cindex_l, cindex_c1, 
                ifkr, int2e.sorb, size, rank, ifdist1);
          counter["H1"] = Hlc1.size();
          if(Hlc1.size() > 0){
-            formulae.join(Hlc1);
+            auto op2 = symbolic_prod<Tm>(symbolic_oper("c2",'I',0),symbolic_oper("r",'I',0));
+            op2.ispins.push_back(std::make_tuple(0,0,0));
+            symbolic_task<Tm> Ic2r;
+            Ic2r.append(op2);
+            auto Hlc1_Ic2r = Hlc1.outer_product(Ic2r);
+            Hlc1_Ic2r.append_ispins(std::make_tuple(0,0,0));
+            formulae.join(Hlc1_Ic2r);
             if(ifsave){ 
                std::cout << "idx=" << idx++; 
-               Hlc1.display("Hlc1", print_level);
+               Hlc1_Ic2r.display("Hlc1_Ic2r", print_level);
             }
          }
          // H[c2r]
-         auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", cindex_c2, cindex_r, 
+         auto Hc2r = symbolic_compxwf_opH_su2<Tm>("c2", "r", cindex_c2, cindex_r, 
                ifkr, int2e.sorb, size, rank, ifdist1);
          counter["H2"] = Hc2r.size();
          if(Hc2r.size() > 0){
-            formulae.join(Hc2r);
+            auto op1 = symbolic_prod<Tm>(symbolic_oper("l",'I',0),symbolic_oper("c1",'I',0));
+            op1.ispins.push_back(std::make_tuple(0,0,0));
+            symbolic_task<Tm> Ilc1;
+            Ilc1.append(op1);
+            auto Ilc1_Hc2r = Ilc1.outer_product(Hc2r);
+            Ilc1_Hc2r.append_ispins(std::make_tuple(0,0,0)); 
+            formulae.join(Ilc1_Hc2r);
             if(ifsave){ 
                std::cout << "idx=" << idx++;
-               Hc2r.display("Hc2r", print_level);
+               Ilc1_Hc2r.display("Ilc1_Hc2r", print_level);
             }
          }
-*/
+
          // One-index terms:
          // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
          counter["CS"] = 0;
@@ -219,6 +230,7 @@ namespace ctns{
             }
 
          } // ifNC
+
          return formulae;
       }
 
