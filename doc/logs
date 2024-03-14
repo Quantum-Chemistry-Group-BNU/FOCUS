@@ -307,7 +307,7 @@
             - symbolic_compxwf_su2: COMPLICATED PART ! [DONE@2024/03/12]
          - intermediates: rinter.init() [DONE@2024/03/14]
          - preprocess_formulae_Rlist.h
-         - preprocess_rmu.h
+         - preprocess_rmu.h [DONE@2024/03/XX]
          - Rmmtasks[i].init()
          - preprocess_renorm_batchDirectSingle()
 
@@ -315,8 +315,9 @@
    - twodot sweep algorithm
       - symbolic_formulae_twodot_su2: [DONE@2024/03/13]
       - restructure the code the reuse more subroutines
-   - contractions
+      - preprocess_hmu.h [DONE@2024/03/14]
    - decimation
+   - renorm
    - propagation of initial guess
    - singlet embedding
 

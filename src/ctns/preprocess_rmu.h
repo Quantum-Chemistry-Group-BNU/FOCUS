@@ -297,11 +297,9 @@ namespace ctns{
             for(const auto& b1 : b1vec){
                for(const auto& b2 : b2vec){
                   int bo[3]; // sigma
-                  bo[0] = bi[0];
-                  bo[1] = bi[1];
-                  bo[2] = bi[2];
                   bo[k1] = b1;
-                  bo[k2] = b2; 
+                  bo[k2] = b2;
+                  bo[k3] = bi[k3]; 
                   // Additional information for psi*[br,bc,bm]
                   // lc: O[bc,bc'] = psi*[br,bc,bm] sigma[br,bc',bm] 
                   // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] 
@@ -324,20 +322,40 @@ namespace ctns{
                      Rblk.offin  = site_info.get_offset(bi[0],bi[1],bi[2],ts12)-1;
                      Rblk.offin2 = offin2-1;
                      Rblk.offrop = offrop+offop-1; // add global offset
-                     Rblk.dimin[0] = site_info.qrow.get_dim(bi[0]); // br
-                     Rblk.dimin[1] = site_info.qcol.get_dim(bi[1]); // bc
-                     Rblk.dimin[2] = site_info.qmid.get_dim(bi[2]); // bm
-                     Rblk.dimout[k3] = Rblk.dimin[k3];
+                     // update Rblk.dagger/loc/off
+                     Tm coeff_coper = 1.0;
+                     bool skip = false;
+                     for(int k=0; k<3; k++){
+                        if(k!=k1 and k!=k2) continue;
+                        if(this->identity(k)) continue;
+                        Rblk.dagger[k] = dagger[k]^ifdagger;
+                        Rblk.loc[k] = loc[k];
+                        size_t offset = Rblk.dagger[k]? info[k]->get_offset(bi[k],bo[k]) :
+                           info[k]->get_offset(bo[k],bi[k]);
+                        assert(offset != 0);
+                        Rblk.off[k] = off[k]+offset-1;
+                        // bar{bar{Tk}} = (-1)^2k Tk
+                        if(dagger[k] && ifdagger) coeff_coper *= parity[k]? -1.0 : 1.0;
+                        if(k >= 2 && alg_rcoper == 1){
+                           assert(k == loc[k]); // op[c] cannot be intermediates
+                           Tm coper = *(opaddr[loc[k]] + Rblk.off[k]);
+                           coeff_coper *= Rblk.dagger[k]? tools::conjugate(coper) : coper;
+                           if(std::abs(coeff_coper)<thresh_coper){
+                              skip = true;
+                              break;
+                           }
+                        }
+                     } // k
+                     if(skip) continue;
                      // sign factors due to spin
                      int ts1p = (qmap.at(k1)->get_sym(bo[k1])).ts();
                      int ts2p = (qmap.at(k2)->get_sym(bo[k2])).ts();
                      int ts1  = (qmap.at(k1)->get_sym(bi[k1])).ts();
                      int ts2  = (qmap.at(k2)->get_sym(bi[k2])).ts();
-                     Tm coeff_coper = std::sqrt((ts1p+1.0)*(ts2p+1.0)*(ts12+1.0)*(tspins[2]+1.0))*
-                                       fock::wigner9j(ts1p,ts2p,ts12p,
-                                                      ts1,ts2,ts12,
-                                                      tspins[0],tspins[1],tspins[2]);
+                     coeff_coper *= std::sqrt((ts1p+1.0)*(ts2p+1.0)*(ts12+1.0)*(tspins[2]+1.0))*
+                                    fock::wigner9j(ts1p,ts2p,ts12p,ts1,ts2,ts12,tspins[0],tspins[1],tspins[2]);
                      if(std::abs(coeff_coper)<thresh_coper) continue;
+                     // sign from adjoint
                      if(!this->identity(k1) && dagger[k1]^ifdagger){
                         int ts = tspins[0] + ts1p - ts1;
                         coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((ts1+1.0)/(ts1p+1.0));
@@ -346,33 +364,6 @@ namespace ctns{
                         int ts = tspins[1] + ts1p - ts1;
                         coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((ts2+1.0)/(ts2p+1.0));
                      }
-                     // update Rblk.dagger/loc/off/dimout
-                     bool skip = false;
-                     for(int k=0; k<3; k++){
-                        if(k!=k1 and k!=k2) continue;
-                        if(!this->identity(k)){
-                           Rblk.dagger[k] = dagger[k]^ifdagger;
-                           Rblk.loc[k] = loc[k];
-                           size_t offset = Rblk.dagger[k]? info[k]->get_offset(bi[k],bo[k]) :
-                              info[k]->get_offset(bo[k],bi[k]);
-                           assert(offset != 0);
-                           Rblk.off[k] = off[k]+offset-1;
-                           Rblk.dimout[k] = Rblk.dagger[k]? info[k]->qcol.get_dim(bo[k]) :
-                              info[k]->qrow.get_dim(bo[k]);
-                           // bar{bar{Tk}} = (-1)^2k Tk
-                           if(dagger[k] && ifdagger) coeff_coper *= parity[k]? -1.0 : 1.0;
-                           if(k >= 2 && alg_rcoper == 1){
-                              assert(k == loc[k]); // op[c] cannot be intermediates
-                              Tm coper = *(opaddr[loc[k]] + Rblk.off[k]);
-                              coeff_coper *= Rblk.dagger[k]? tools::conjugate(coper) : coper;
-                              if(std::abs(coeff_coper)<thresh_coper){
-                                 skip = true;
-                                 break;
-                              }
-                           }
-                        } // k
-                     } // b3
-                     if(skip) continue;
                      // compute sign due to parity
                      Rblk.coeff = (ifdagger? coeffH : coeff)*coeff_coper;
                      if(k3 == 1){
@@ -389,9 +380,15 @@ namespace ctns{
                         if(parity[1] && p0==1) Rblk.coeff *= -1.0;
                      }
                      // setup dimensions
-                     Rblk.dimin2[k1] = Rblk.dimout[k1];
-                     Rblk.dimin2[k2] = Rblk.dimout[k2];
-                     Rblk.dimin2[k3] = rinfo->qrow.get_dim(bi2[k3]);
+                     Rblk.dimin[0] = site_info.qrow.get_dim(bi[0]); // br
+                     Rblk.dimin[1] = site_info.qcol.get_dim(bi[1]); // bc
+                     Rblk.dimin[2] = site_info.qmid.get_dim(bi[2]); // bm
+                     Rblk.dimout[0] = site_info.qrow.get_dim(bo[0]);
+                     Rblk.dimout[1] = site_info.qcol.get_dim(bo[1]);
+                     Rblk.dimout[2] = site_info.qmid.get_dim(bo[2]);
+                     Rblk.dimin2[0] = site_info.qrow.get_dim(bi2[0]);
+                     Rblk.dimin2[1] = site_info.qcol.get_dim(bi2[1]);
+                     Rblk.dimin2[2] = site_info.qmid.get_dim(bi2[2]);
                      Rblk.size = Rblk.dimin2[k3]*Rblk.dimout[k3];
                      Rblk.setup();
                      blksize = std::max(blksize, Rblk.blksize);

@@ -681,8 +681,6 @@ namespace ctns{
 
             // 3. consistency check for Hamiltonian
             const auto& opH = qops('H').at(0);
-            opH.to_matrix().print("Hmat");
-            exit(1);
             auto diffH = (opH-opH.H()).normF();
             if(debug){
                std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
@@ -695,6 +693,10 @@ namespace ctns{
                   << std::endl;
                exit(1);
             }
+            
+            //qops.print("qops",3);
+            //exit(1);
+            
             // check against explicit construction
             if(debug_oper_rbasis){
                for(const auto& key : qops.oplist){
