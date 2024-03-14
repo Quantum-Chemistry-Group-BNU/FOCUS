@@ -172,7 +172,7 @@ namespace ctns{
             if(level > 1){
                for(const auto& key : opseq){
                   if(exist[key] == 0) continue;
-                  std::cout << " " << key << ": ";
+                  std::cout << " List of op" << key << ": ";
                   auto op_index = this->oper_index_op(key);
                   for(int idx : op_index){
                      if(key == 'H' || key == 'C' || key == 'S'){
@@ -183,7 +183,16 @@ namespace ctns{
                      }
                   }
                   std::cout << std::endl;
-               }
+                  // print operator matrix
+                  if(level > 2){
+                     for(int idx : op_index){
+                        const auto& op = _opdict.at(key).at(idx);
+                        std::string opname(1,key);
+                        opname += "("+std::to_string(idx)+")";
+                        op.to_matrix().print("op"+opname);
+                     }
+                  } // level>2
+               } // key
             } // level>1	 
          } // level>0
       }

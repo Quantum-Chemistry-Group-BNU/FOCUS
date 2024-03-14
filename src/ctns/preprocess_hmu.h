@@ -84,6 +84,7 @@ namespace ctns{
             const auto& dag = sop0.dagger;
             const auto& block = sop0.block;
             const auto& label = sop0.label;
+            if(label == 'I') continue; // for su2 case, we add 'I' into formula
             const auto& index0 = sop0.index;
             const auto& qops = qops_dict.at(block); 
             const auto& op0 = qops(label).at(index0);

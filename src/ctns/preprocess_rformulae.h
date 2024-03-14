@@ -85,7 +85,7 @@ namespace ctns{
          blksize = 0;
          blksize0 = 0;
          cost = 0.0;
-         int nnzblk = qops.qbra.size(); // partitioned according to rows
+         int nnzblk = qops.qbra.size()*qops.qket.size(); // partitioned according to (rows,cols)
          Rlst2.resize(nnzblk);
          for(int k=0; k<rsize; k++){
             const auto& task = rtasks.op_tasks[k];

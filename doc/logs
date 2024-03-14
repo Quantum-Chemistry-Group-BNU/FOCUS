@@ -318,6 +318,7 @@
    - contractions
    - decimation
    - propagation of initial guess
+   - singlet embedding
 
  * GPU implementation: [DONE@2024/06/xx]
 

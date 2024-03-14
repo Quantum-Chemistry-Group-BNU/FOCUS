@@ -60,7 +60,7 @@ namespace ctns{
             }
             bool kernel(const Tm* x, Tm** opaddr, Tm* workspace) const;
          public:
-            int icase = -1; // 0:lc, 1:cr, 2:lr 
+            int icase = -1; // 0:cr, 1:lc, 2:lr 
             int terms = 0; // no. of terms in Hmu 
             int cterms = 0, alg_rcoper = 0; // special treatment of coper
             // information of o1 and o2
@@ -68,9 +68,9 @@ namespace ctns{
             int loc[3] = {-1,-1,-1};
             size_t off[3] = {0,0,0};
             // information of psi*[br,bc,bm],psi[br',bc',bm']
-            size_t dimin[3] = {0,0,0};
-            size_t dimout[3] = {0,0,0};
-            size_t dimin2[3] = {0,0,0};
+            size_t dimin[3] = {0,0,0};  // psi[br',bc',bm']
+            size_t dimout[3] = {0,0,0}; // sigma
+            size_t dimin2[3] = {0,0,0}; // psi*[br,bc,bm]
             size_t offin = 0, offin2 = 0;
             size_t offrop = 0, size = 0; // size of output operator
             Tm coeff = 1.0;
