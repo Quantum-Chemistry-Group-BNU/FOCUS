@@ -7,6 +7,7 @@
 
 #include "symbolic_formulae_renorm.h"
 #include "symbolic_kernel_sum.h"
+#include "preprocess_size.h"
 
 namespace ctns{
 
@@ -107,8 +108,8 @@ namespace ctns{
          int maxthreads = 1;
 #endif
          std::map<qsym,qinfo3<Tm>> info_dict;
-         size_t opsize = preprocess_opsize(qops_dict);
-         size_t wfsize = preprocess_wfsize(site.info, info_dict);
+         size_t opsize = preprocess_opsize<true,Tm>(qops_dict);
+         size_t wfsize = preprocess_wfsize<true,Tm>(site.info, info_dict);
          size_t tmpsize = opsize + 3*wfsize;
          size_t worktot = maxthreads*tmpsize;
          if(qops.mpirank == 0 and verbose>0){

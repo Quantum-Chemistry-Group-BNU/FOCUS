@@ -10,6 +10,8 @@
 #include "oper_compxwf.h"
 #include "oper_rbasis.h"
 #include "oper_renorm_kernel.h"
+#include "symbolic_formulae_renorm.h"
+#include "sadmrg/symbolic_formulae_renorm_su2.h"
 #include "symbolic_kernel_renorm.h"
 #include "symbolic_kernel_renorm2.h"
 #include "preprocess_rformulae.h"

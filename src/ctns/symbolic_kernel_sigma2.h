@@ -65,11 +65,11 @@ namespace ctns{
          linalg::xaxpy(Hwf.size(), fac, opxwf_data, Hwf.data());
       }
 
-   template <typename Tm, typename QTm, typename QInfo> 
+   template <bool ifab, typename Tm, typename QTm, typename QInfo> 
       void symbolic_Hx2(Tm* y,
             const Tm* x,
             const symbolic_task<Tm>& H_formulae,
-            const opersu2_dictmap<Tm>& qops_dict,
+            const qoper_dictmap<ifab,Tm>& qops_dict,
             const double& ecore,
             QTm& wf,
             const int& size,

@@ -16,6 +16,7 @@
 #include "preprocess_size.h"
 #include "preprocess_sigma.h"
 #include "preprocess_sigma_batch.h"
+#include "sadmrg/sweep_onedot_diag_su2.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
@@ -180,7 +181,7 @@ namespace ctns{
             // oldest version
             Hx_funs = onedot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
                   schd.ctns.ifdist1, debug_formulae);
-            HVec = bind(&ctns::onedot_Hx<Tm>, _1, _2, std::ref(Hx_funs),
+            HVec = bind(&ctns::onedot_Hx<Qm::ifabelian,Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
 
          }else if(alg_hvec == 1){
@@ -188,7 +189,7 @@ namespace ctns{
             // raw version: symbolic formulae + dynamic allocation of memory 
             H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae); 
-            HVec = bind(&ctns::symbolic_Hx<Tm,stensor3<Tm>>, _1, _2, std::cref(H_formulae),
+            HVec = bind(&ctns::symbolic_Hx<Qm::ifabelian,Tm,stensor3<Tm>>, _1, _2, std::cref(H_formulae),
                   std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
 
@@ -205,7 +206,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            HVec = bind(&ctns::symbolic_Hx2<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
+            HVec = bind(&ctns::symbolic_Hx2<Qm::ifabelian,Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
                   std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
                   std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
@@ -224,7 +225,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            HVec = bind(&ctns::symbolic_Hx3<Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
+            HVec = bind(&ctns::symbolic_Hx3<Qm::ifabelian,Tm,stensor3<Tm>,qinfo3<Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
                   std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),

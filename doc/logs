@@ -305,14 +305,16 @@
          - symbolic_formulae_renorm_su2: how to encode info about intermediate spins
             - symbolic_normxwf_su2:
             - symbolic_compxwf_su2: COMPLICATED PART ! [DONE@2024/03/12]
-         - intermediates: rinter.init()
-         - preprocess_formulae_Rlist
+         - intermediates: rinter.init() [DONE@2024/03/14]
+         - preprocess_formulae_Rlist.h
+         - preprocess_rmu.h
          - Rmmtasks[i].init()
          - preprocess_renorm_batchDirectSingle()
 
  * Spin-adapted DMRG algorithm: [DONE@2024/05/xx]
    - twodot sweep algorithm
       - symbolic_formulae_twodot_su2: [DONE@2024/03/13]
+      - restructure the code the reuse more subroutines
    - contractions
    - decimation
    - propagation of initial guess

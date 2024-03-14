@@ -35,6 +35,17 @@ namespace ctns{
    }
 
    // check normal operators: C, A, B
+   template <bool ifab, typename Qm, typename Tm>
+      void oper_check_rbasis(const comb<Qm,Tm>& bra,
+            const comb<Qm,Tm>& ket, 
+            const comb_coord& p,
+            qoper_dict<ifab,Tm>& qops,
+            const char opname,
+            const int size,
+            const int rank){
+         std::cout << "error: no implementation of oper_check_rbasis for su2!" << std::endl;
+         exit(1);
+      }
    template <typename Qm, typename Tm>
       void oper_check_rbasis(const comb<Qm,Tm>& bra,
             const comb<Qm,Tm>& ket, 
@@ -280,6 +291,20 @@ namespace ctns{
       }
 
    // check complementary operators: P, Q, S, H
+   template <bool ifab, typename Qm, typename Tm>
+      void oper_check_rbasis(const comb<Qm,Tm>& bra,
+            const comb<Qm,Tm>& ket, 
+            const comb_coord& p,
+            qoper_dict<ifab,Tm>& qops,
+            const char opname,
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const int size,
+            const int rank,
+            const bool ifdist1=false){
+         std::cout << "error: no implementation of oper_check_rbasis for su2!" << std::endl;
+         exit(1);
+      }
    template <typename Qm, typename Tm>
       void oper_check_rbasis(const comb<Qm,Tm>& bra,
             const comb<Qm,Tm>& ket, 

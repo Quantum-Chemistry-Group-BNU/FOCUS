@@ -119,11 +119,11 @@ namespace ctns{
          } // it
       }
 
-   template <typename Tm, typename QTm, typename QInfo> 
+   template <bool ifab, typename Tm, typename QTm, typename QInfo> 
       void symbolic_Hx3(Tm* y,
             const Tm* x,
             const bipart_task<Tm>& H_formulae,
-            const opersu2_dictmap<Tm>& qops_dict,
+            const qoper_dictmap<ifab,Tm>& qops_dict,
             const double& ecore,
             QTm& wf,
             const int& size,
