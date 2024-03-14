@@ -227,7 +227,7 @@ namespace ctns{
       Hx_functors<Tm> twodot_Hx_functors(const opersu2_dictmap<Tm>& qops_dict,
             const integral::two_body<Tm>& int2e,
             const double& ecore,
-            const stensor4<Tm>& wf,
+            const stensor4su2<Tm>& wf,
             const int& size,
             const int& rank,
             const bool& ifdist1,

@@ -127,7 +127,9 @@ def compareAll(dirs,nfail,thresh=1.e-8):
    return nfail
 
 def test_run(dirs):
+   nsuccess = 0
    nfail = 0
+   successed = []
    failed = []
    t0 = time.time()
    for fname in dirs:
@@ -137,8 +139,12 @@ def test_run(dirs):
       if nfail_out != nfail:
           failed.append(fname)
           nfail = nfail_out
-      print("\nSummary: nfail =",nfail) 
+      else:
+          successed.append(fname)
+          nsuccess += 1
+      print("\nSummary: nsuccess=",nsuccess," nfail=",nfail," total=",nsuccess+nfail)
       print('failed tests:',failed)
+      print('successed tests:',successed)
    t1 = time.time()
    print('\ntotol time =',t1-t0)
    return nfail

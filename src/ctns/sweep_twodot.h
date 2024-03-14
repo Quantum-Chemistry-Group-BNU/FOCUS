@@ -52,11 +52,13 @@ namespace ctns{
 #ifdef _OPENMP
          maxthreads = omp_get_max_threads();
 #endif
+         const bool ifab = Qm::ifabelian;
          const int alg_hvec = schd.ctns.alg_hvec;
          const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank==0);
          if(debug){
             std::cout << "ctns::sweep_twodot"
+               << " ifabelian=" << ifab
                << " alg_hvec=" << alg_hvec
                << " alg_renorm=" << alg_renorm
                << " mpisize=" << size
@@ -75,7 +77,7 @@ namespace ctns{
          // 1. load operators
          auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug && schd.ctns.verbose>0);
          qops_pool.fetch_to_memory(fneed, alg_hvec>10 || alg_renorm>10);
-         const qoper_dictmap<Qm::ifabelian,Tm> qops_dict = {
+         const qoper_dictmap<ifab,Tm> qops_dict = {
             {"l" ,qops_pool.at(fneed[0])},
             {"r" ,qops_pool.at(fneed[1])},
             {"c1",qops_pool.at(fneed[2])},
@@ -120,8 +122,8 @@ namespace ctns{
          const auto& qr  = qops_dict.at("r").qket;
          const auto& qc1 = qops_dict.at("c1").qket;
          const auto& qc2 = qops_dict.at("c2").qket;
-         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, (Qm::ifabelian? schd.twoms : schd.twos));
-         qtensor4<Qm::ifabelian,Tm> wf(sym_state, ql, qr, qc1, qc2);
+         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, (ifab? schd.twoms : schd.twos));
+         qtensor4<ifab,Tm> wf(sym_state, ql, qr, qc1, qc2);
          size_t ndim = wf.size();
          int neig = sweeps.nroots;
          if(debug){
@@ -178,10 +180,10 @@ namespace ctns{
          }
 
          // 3.2 prepare HVec
-         std::map<qsym,qinfo4type<Qm::ifabelian,Tm>> info_dict;
+         std::map<qsym,qinfo4type<ifab,Tm>> info_dict;
          size_t opsize=0, wfsize=0, tmpsize=0, worktot=0;
-         opsize = preprocess_opsize<Qm::ifabelian,Tm>(qops_dict);
-         wfsize = preprocess_wfsize<Qm::ifabelian,Tm>(wf.info, info_dict);
+         opsize = preprocess_opsize<ifab,Tm>(qops_dict);
+         wfsize = preprocess_wfsize<ifab,Tm>(wf.info, info_dict);
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/hformulae"
             + "_isweep"+std::to_string(isweep)
@@ -190,7 +192,7 @@ namespace ctns{
          Hx_functors<Tm> Hx_funs; // hvec0
          symbolic_task<Tm> H_formulae; // hvec1,2
          bipart_task<Tm> H_formulae2; // hvec3
-         hintermediates<Qm::ifabelian,Tm> hinter; // hvec4,5,6
+         hintermediates<ifab,Tm> hinter; // hvec4,5,6
          Hxlist<Tm> Hxlst; // hvec4
          Hxlist2<Tm> Hxlst2; // hvec5
          HMMtask<Tm> Hmmtask;
@@ -223,7 +225,7 @@ namespace ctns{
             std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
             exit(1);
          }
-         if(Qm::ifabelian && Qm::ifkr && alg_hvec >=4){
+         if(ifab && Qm::ifkr && alg_hvec >=4){
             std::cout << "error: alg_hvec >= 4 does not support complex yet!" << std::endl;
             exit(1); 
          }
@@ -246,7 +248,7 @@ namespace ctns{
             // oldest version
             Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, 
                   schd.ctns.ifdist1, debug_formulae);
-            HVec = bind(&ctns::twodot_Hx<Qm::ifabelian,Tm>, _1, _2, std::ref(Hx_funs),
+            HVec = bind(&ctns::twodot_Hx<ifab,Tm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
 
          }else if(alg_hvec == 1){
@@ -254,7 +256,7 @@ namespace ctns{
             // raw version: symbolic formulae + dynamic allocation of memory 
             H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
                   schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae); 
-            HVec = bind(&ctns::symbolic_Hx<Qm::ifabelian,Tm,stensor4<Tm>>, _1, _2, std::cref(H_formulae),
+            HVec = bind(&ctns::symbolic_Hx<ifab,Tm,qtensor4<ifab,Tm>>, _1, _2, std::cref(H_formulae),
                   std::cref(qops_dict), std::cref(ecore),
                   std::ref(wf), std::cref(size), std::cref(rank));
 
@@ -271,7 +273,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            HVec = bind(&ctns::symbolic_Hx2<Qm::ifabelian,Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
+            HVec = bind(&ctns::symbolic_Hx2<ifab,Tm,qtensor4<ifab,Tm>,qinfo4type<ifab,Tm>>, _1, _2, 
                   std::cref(H_formulae), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
                   std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
@@ -290,7 +292,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            HVec = bind(&ctns::symbolic_Hx3<Qm::ifabelian,Tm,stensor4<Tm>,qinfo4<Tm>>, _1, _2, 
+            HVec = bind(&ctns::symbolic_Hx3<ifab,Tm,qtensor4<ifab,Tm>,qinfo4type<ifab,Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
                   std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
