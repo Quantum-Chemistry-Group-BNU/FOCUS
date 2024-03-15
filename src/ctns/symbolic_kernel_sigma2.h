@@ -79,10 +79,11 @@ namespace ctns{
             const size_t& wfsize,
             const size_t& tmpsize,
             Tm* workspace){
-         std::cout << "error: no implementation of symbolic_Hx2 for su2!" << std::endl;
+         std::cout << "error: no implementation of symbolic_Hx2 for su2! ifab=" << ifab << std::endl;
+         assert(!ifab);
          exit(1);
       } 
-   template <typename Tm, typename QTm, typename QInfo> 
+   template <bool ifab, typename Tm, typename QTm, typename QInfo, std::enable_if_t<ifab,int> = 0> 
       void symbolic_Hx2(Tm* y,
             const Tm* x,
             const symbolic_task<Tm>& H_formulae,

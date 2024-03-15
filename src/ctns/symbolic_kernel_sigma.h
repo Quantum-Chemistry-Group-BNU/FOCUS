@@ -91,10 +91,11 @@ namespace ctns{
             QTm& wf,
             const int size,
             const int rank){
-         std::cout << "error: no implementation of symbolic_Hx for su2!" << std::endl;
+         std::cout << "error: no implementation of symbolic_Hx for su2! ifab=" << ifab << std::endl;
+         assert(!ifab);
          exit(1);
       }
-   template <typename Tm, typename QTm> 
+   template <bool ifab, typename Tm, typename QTm, std::enable_if_t<ifab,int> = 0> 
       void symbolic_Hx(Tm* y,
             const Tm* x,
             const symbolic_task<Tm>& H_formulae,

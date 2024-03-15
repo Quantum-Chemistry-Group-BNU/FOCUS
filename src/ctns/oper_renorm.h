@@ -172,10 +172,12 @@ namespace ctns{
             std::cout << "error: alg_renorm=" << alg_renorm << " should be used with alg_rinter=2" << std::endl;
             exit(1);
          }
+         /*
          if(schd.ctns.alg_rcoper == 1 && alg_renorm == 4){
             std::cout << "error: alg_rcoper=1 is not compatible with alg_hvec=4" << std::endl;
             exit(1);
          }
+         */
 
          if(alg_renorm == 0){
 

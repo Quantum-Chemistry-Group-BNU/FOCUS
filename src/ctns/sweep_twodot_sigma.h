@@ -339,10 +339,10 @@ namespace ctns{
             qtensor4<ifab,Tm>& wf,
             const int size,
             const int rank){
-         std::cout << "error: no implementation of twodot_Hx for su2!" << std::endl;
+         std::cout << "error: no implementation of twodot_Hx for su2! ifab=" << ifab << std::endl;
          exit(1);
       }
-   template <typename Tm> 
+   template <bool ifab, typename Tm, std::enable_if_t<ifab,int> = 0> 
       void twodot_Hx(Tm* y,
             const Tm* x,
             Hx_functors<Tm>& Hx_funs,

@@ -94,6 +94,8 @@ $end
     =6: symbolic formulae + preallocation of workspace + intermediates [BatchGEMM]
             worktot = batchsize*(blksize*2)
     =7: symbolic formulae + preallocation of workspace + intermediates [direct]
+    =8: symbolic formulae + preallocation of workspace + intermediates [single]
+    =9: symbolic formulae + preallocation of workspace + intermediates [direct + single]
     =16: symbolic formulae + preallocation of workspace + intermediates [GPU]
     =17: symbolic formulae + preallocation of workspace + intermediates [GPU + direct inter]
     =18: symbolic formulae + preallocation of workspace + intermediates [GPU + single]
@@ -104,15 +106,20 @@ $end
     =2: symbolic formulae + preallocation of workspace
     =4: symbolic formulae + preallocation of workspace + intermediates [Rlst]
     =6: symbolic formulae + preallocation of workspace + intermediates [BatchGEMM]
-    =7: symbolic formulae + preallocation of workspace + intermediates [direct] 
+    =7: symbolic formulae + preallocation of workspace + intermediates [direct]
+    =8: symbolic formulae + preallocation of workspace + intermediates [single]
+    =9: symbolic formulae + preallocation of workspace + intermediates [direct + single]
     =16: symbolic formulae + preallocation of workspace + intermediates [GPU]
     =17: symbolic formulae + preallocation of workspace + intermediates [GPU + direct]
     =18: symbolic formulae + preallocation of workspace + intermediates [GPU + single]
     =19: symbolic formulae + preallocation of workspace + intermediates [GPU + direct + single]
- - alg_hcoper
+ - alg_hcoper: see preprocess_hmu.h
     =0: always contract op[c1/c2] - most general case
     =1: NSz/NS: only contract op[c1/c2] when it is purely on dot [see preprocess_hmu.h]
     =2: NSz/NS: no contract for op[c1/c2] - but to perform reduction, x needs to be copied to workspace [see preprocess_hmmtask.h]
+ - alg_rcoper: see preprocess_rmu.h
+    =0: always contract op[c1/c2] - most general case
+    =1: the same with alg_hcoper, but in rmmtask there is not need to copy x, because in renorm psi* will contract with sigma  
  - iomode: =0 (default: no compression)
  - ioasync: =0 (default: sequential)
 

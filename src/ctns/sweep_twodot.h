@@ -237,10 +237,12 @@ namespace ctns{
             std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
             exit(1);
          }
+         /*
          if(schd.ctns.alg_hcoper >= 1 && (alg_hvec == 4 || alg_hvec == 5)){
             std::cout << "error: alg_hcoper>=1 is not compatible with alg_hvec=4/5" << std::endl;
             exit(1);
          }
+         */
 
          timing.tb1 = tools::get_time();
          if(alg_hvec == 0){
@@ -292,6 +294,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
+            std::cout << "ifab=" << ifab << std::endl;
             HVec = bind(&ctns::symbolic_Hx3<ifab,Tm,qtensor4<ifab,Tm>,qinfo4type<ifab,Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 

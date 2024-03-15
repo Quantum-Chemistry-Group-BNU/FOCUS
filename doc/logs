@@ -317,7 +317,6 @@
       - restructure the code the reuse more subroutines
       - preprocess_hmu.h [DONE@2024/03/14]
    - decimation
-   - renorm
    - propagation of initial guess
    - singlet embedding
 
