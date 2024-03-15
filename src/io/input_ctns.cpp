@@ -194,6 +194,9 @@ void params_ctns::read(ifstream& istrm){
          ctrls[j].isweep = j;
       }
    } // size
+   // check input
+   assert(alg_hcoper <= 2);
+   assert(alg_rcoper <= 1);
 }
 
 void params_ctns::print() const{

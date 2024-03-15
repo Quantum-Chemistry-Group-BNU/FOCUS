@@ -695,9 +695,9 @@ namespace ctns{
                   << std::endl;
                exit(1);
             }
-            
-            //qops.print("qops",3);
-            //exit(1);
+           
+            // lzd 
+            qops.print("qops",3);
             
             // check against explicit construction
             if(debug_oper_rbasis){

@@ -290,24 +290,23 @@ namespace ctns{
             bi[1] = std::get<1>(key);
             bi[2] = std::get<2>(key);
             ts12  = std::get<3>(key);
-            const auto& b1vec = this->identity(k1)? std::vector<int>({bi[k1]}) : 
+            const auto& bo1vec = this->identity(k1)? std::vector<int>({bi[k1]}) : 
                (dagger[k1]^ifdagger? info[k1]->_br2bc[bi[k1]] : info[k1]->_bc2br[bi[k1]]);
-            const auto& b2vec = this->identity(k2)? std::vector<int>({bi[k2]}) : 
+            const auto& bo2vec = this->identity(k2)? std::vector<int>({bi[k2]}) : 
                (dagger[k2]^ifdagger? info[k2]->_br2bc[bi[k2]] : info[k2]->_bc2br[bi[k2]]);
-            for(const auto& b1 : b1vec){
-               for(const auto& b2 : b2vec){
+            for(const auto& bo1 : bo1vec){
+               for(const auto& bo2 : bo2vec){
                   int bo[3]; // sigma
-                  bo[k1] = b1;
-                  bo[k2] = b2;
+                  bo[k1] = bo1;
+                  bo[k2] = bo2;
                   bo[k3] = bi[k3]; 
                   // Additional information for psi*[br,bc,bm]
                   // lc: O[bc,bc'] = psi*[br,bc,bm] sigma[br,bc',bm] 
                   // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] 
                   // lr: O[bm,bm'] = psi*[br,bc,bm] sigma[br,bc,bm']
                   int bi2[3]; // psi*
-                  bi2[0] = bo[0];
-                  bi2[1] = bo[1];
-                  bi2[2] = bo[2];
+                  bi2[k1] = bo[k1];
+                  bi2[k2] = bo[k2];
                   for(int b3=0; b3<qmap.at(k3)->size(); b3++){
                      bi2[k3] = b3;
                      // check symmetry for output and psi*
@@ -334,7 +333,7 @@ namespace ctns{
                            info[k]->get_offset(bo[k],bi[k]);
                         assert(offset != 0);
                         Rblk.off[k] = off[k]+offset-1;
-                        // bar{bar{Tk}} = (-1)^2k Tk
+                        // sgn from bar{bar{Ts}} = (-1)^2s Ts
                         if(dagger[k] && ifdagger) coeff_coper *= parity[k]? -1.0 : 1.0;
                         if(k >= 2 && alg_rcoper == 1){
                            assert(k == loc[k]); // op[c] cannot be intermediates
@@ -348,6 +347,7 @@ namespace ctns{
                      } // k
                      if(skip) continue;
                      // sign factors due to spin
+                     // <S1p|O1|S1><S2p|O2|S2>
                      int ts1p = (qmap.at(k1)->get_sym(bo[k1])).ts();
                      int ts2p = (qmap.at(k2)->get_sym(bo[k2])).ts();
                      int ts1  = (qmap.at(k1)->get_sym(bi[k1])).ts();
@@ -361,7 +361,7 @@ namespace ctns{
                         coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((ts1+1.0)/(ts1p+1.0));
                      }
                      if(!this->identity(k2) && dagger[k2]^ifdagger){
-                        int ts = tspins[1] + ts1p - ts1;
+                        int ts = tspins[1] + ts2p - ts2;
                         coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((ts2+1.0)/(ts2p+1.0));
                      }
                      // compute sign due to parity

@@ -313,23 +313,23 @@ namespace ctns{
             bo[3] = std::get<3>(key);
             tslc1p = std::get<4>(key);
             tsc2rp = std::get<5>(key);
-            const auto& b0vec = this->identity(0)? std::vector<int>({bo[0]}) :
+            const auto& bi0vec = this->identity(0)? std::vector<int>({bo[0]}) :
                 (dagger[0]^ifdagger? info[0]->_bc2br[bo[0]] : info[0]->_br2bc[bo[0]]);
-            const auto& b1vec = this->identity(1)? std::vector<int>({bo[1]}) :
+            const auto& bi1vec = this->identity(1)? std::vector<int>({bo[1]}) :
                 (dagger[1]^ifdagger? info[1]->_bc2br[bo[1]] : info[1]->_br2bc[bo[1]]);
-            const auto& b2vec = this->identity(2)? std::vector<int>({bo[2]}) :
+            const auto& bi2vec = this->identity(2)? std::vector<int>({bo[2]}) :
                 (dagger[2]^ifdagger? info[2]->_bc2br[bo[2]] : info[2]->_br2bc[bo[2]]);
-            const auto& b3vec = this->identity(3)? std::vector<int>({bo[3]}) :
+            const auto& bi3vec = this->identity(3)? std::vector<int>({bo[3]}) :
                 (dagger[3]^ifdagger? info[3]->_bc2br[bo[3]] : info[3]->_br2bc[bo[3]]);
-            for(const auto& b0 : b0vec){
-               for(const auto& b1 : b1vec){
-                  for(const auto& b2 : b2vec){
-                     for(const auto& b3 : b3vec){
+            for(const auto& bi0 : bi0vec){
+               for(const auto& bi1 : bi1vec){
+                  for(const auto& bi2 : bi2vec){
+                     for(const auto& bi3 : bi3vec){
                         int bi[4]; // wf
-                        bi[0] = b1;
-                        bi[1] = b2;
-                        bi[2] = b3;
-                        bi[3] = b3;
+                        bi[0] = bi0;
+                        bi[1] = bi1;
+                        bi[2] = bi2;
+                        bi[3] = bi3;
                         // setup Slc1,Sc2r
                         int tslp  = wf_info.qrow.get_sym(bo[0]).ts(); // l
                         int tsrp  = wf_info.qcol.get_sym(bo[1]).ts(); // r
@@ -358,6 +358,8 @@ namespace ctns{
                                     info[k]->get_offset(bo[k],bi[k]);
                                  assert(offset != 0);
                                  Hxblk.off[k] = off[k]+offset-1;
+                                 // sgn from bar{bar{Ts}} = (-1)^2s Ts
+                                 if(dagger[k] && ifdagger) coeff_coper *= parity[k]? -1.0 : 1.0;
                                  // special treatment of op[c2/c1] for NS symmetry
                                  if(k >= 2 && ((alg_hcoper==1 && terms>cterms) || alg_hcoper==2)){ 
                                     assert(k == loc[k]); // op[c] cannot be intermediates
