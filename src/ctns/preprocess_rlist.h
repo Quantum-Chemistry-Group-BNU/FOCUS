@@ -19,7 +19,16 @@ namespace ctns{
                   const int _alg_rcoper){
                terms = _terms;
                cterms = _cterms;
-               alg_rcoper = _alg_rcoper;
+               //
+               // ZL@20230519: whether perform contraction for op[c2/c1]
+               // NOTE: no need to perform contraction for op[c] if alg_rcoper,
+               //       because there is a last contraction with psi*. 
+               //
+               // The option (=1) only works for NSz or NS, where coper is a number.
+               // alg_rcoper=0: always contract op[c]
+               // alg_rcoper=1: always absorb the copers into Rblk.coeff
+               //
+               ifcntr = (_alg_rcoper==0);
             }
             bool identity(const int i) const{ return loc[i]==-1; }
             void display() const{
@@ -33,7 +42,7 @@ namespace ctns{
                   << " dagger=" << dagger[0] << "," << dagger[1] << "," << dagger[2]
                   << " loc=" << loc[0] << "," << loc[1] << "," << loc[2]
                   << " off=" << off[0] << "," << off[1] << "," << off[2]
-                  << " terms=" << terms << " cterms=" << cterms << " alg_rcoper=" << alg_rcoper 
+                  << " terms=" << terms << " cterms=" << cterms << " ifcntr=" << ifcntr 
                   << " coeff=" << coeff
                   << " cost=" << cost
                   << std::endl;
@@ -47,13 +56,13 @@ namespace ctns{
                   dimin2[icase]*dimout[icase]*dfac // renormalized operators
                };
                blksize = *std::max_element(dimsInter.begin(), dimsInter.end());
-               if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[2];
+               if(!this->identity(2) & ifcntr) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[2];
                if(!this->identity(1)) cost += 2*double(dimin[0])*dimin[1]*dimout[2]*dimout[1];
                if(!this->identity(0)) cost += 2*double(dimin[0])*dimout[1]*dimout[2]*dimout[0];
                // Additional information for psi*[br,bc,bm]
                cost += 2*double(dimin2[0])*dimin2[1]*dimin2[2]*dimout[icase];
             }
-            void get_MMlist2_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0, const bool ifbatch=false) const;
+            void get_MMlist2_onedot(MMlist2<Tm>& mmlst2, const size_t offset=0, const bool ifbatch=false) const;
             void get_MMlist2(){
                mmlst2.resize(4);
                get_MMlist2_onedot(mmlst2);
@@ -62,7 +71,8 @@ namespace ctns{
          public:
             int icase = -1; // 0:cr, 1:lc, 2:lr 
             int terms = 0; // no. of terms in Hmu 
-            int cterms = 0, alg_rcoper = 0; // special treatment of coper
+            int cterms = 0; // special treatment of coper
+            bool ifcntr = true;
             // information of o1 and o2
             bool dagger[3] = {false,false,false};
             int loc[3] = {-1,-1,-1};
@@ -77,7 +87,7 @@ namespace ctns{
             // for Matrix-Matrix multiplications
             size_t blksize = 0; // blksize of GEMM (can be different from size)
             double cost = 0.0;
-            MMlist2<Tm> mmlst2;
+            MMlist2<Tm> mmlst2; // c,r,l,psi*
             // intermediates [direct]
             int posInter = -1, lenInter = -1;
             size_t offInter = 0, ldaInter = 0; 
@@ -111,15 +121,11 @@ namespace ctns{
    // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] 
    // lr: O[bm,bm'] = psi*[br,bc,bm] sigma[br,bc,bm']
    template <typename Tm>
-      void Rblock<Tm>::get_MMlist2_onedot(MMlist2<Tm>& MMlst2,
+      void Rblock<Tm>::get_MMlist2_onedot(MMlist2<Tm>& mmlst2,
             const size_t offset,
             const bool ifbatch) const{
          // wf[br',bc',bm']
          int xloc = locIn, yloc = locOut;
-         // ZL@20230519: whether perform contraction for op[c2/c1]
-         // NOTE: no need to perform contraction for op[c] if alg_rcoper,
-         //       because there is a last contraction with psi*. 
-         const bool ifcntr = alg_rcoper==0;
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
          int nt = ifcntr? terms : terms-cterms; 
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
@@ -137,7 +143,7 @@ namespace ctns{
             mm.locA = xloc;   mm.offA = xoff;
             mm.locB = loc[p]; mm.offB = off[p];
             mm.locC = yloc;   mm.offC = yoff; 
-            MMlst2[0].push_back(mm); 
+            mmlst2[0].push_back(mm); 
             // update x & y  
             xloc = locOut; xoff = offset+(nt%2)*blksize; 
             yloc = locOut; yoff = offset+(1-nt%2)*blksize;
@@ -158,7 +164,7 @@ namespace ctns{
                mm.locA = xloc;   mm.offA = xoff+im*mm.M*mm.K;
                mm.locB = loc[p]; mm.offB = off[p];
                mm.locC = yloc;   mm.offC = yoff+im*mm.M*mm.N;
-               MMlst2[1].push_back(mm);
+               mmlst2[1].push_back(mm);
             }
             // update x & y
             xloc = locOut; xoff = offset+(nt%2)*blksize;
@@ -179,7 +185,7 @@ namespace ctns{
             mm.locA = loc[p]; mm.offA = off[p];
             mm.locB = xloc;   mm.offB = xoff;
             mm.locC = yloc;   mm.offC = yoff;
-            MMlst2[2].push_back(mm);
+            mmlst2[2].push_back(mm);
             // update x & y
             xloc = locOut; xoff = offset+(nt%2)*blksize;
             yloc = locOut; yoff = offset+(1-nt%2)*blksize;
@@ -205,7 +211,7 @@ namespace ctns{
             mm.locA = locIn; mm.offA = offin2;
             mm.locB = xloc;  mm.offB = xoff;
             mm.locC = yloc;  mm.offC = yoff;
-            MMlst2[3].push_back(mm);
+            mmlst2[3].push_back(mm);
          }else if(icase == 1){
             // lc: O[bc,bc'] = psi*[br,bc,bm] sigma[br,bc',bm] => (K,M)^H * (K,N) 
             for(int im=0; im<dimin2[2]; im++){
@@ -221,7 +227,7 @@ namespace ctns{
                mm.locB = xloc;  mm.offB = xoff+im*mm.N*mm.K;
                mm.locC = yloc;  mm.offC = yoff;
                if(ifbatch) mm.offC += im*mm.M*mm.N;
-               MMlst2[3].push_back(mm);
+               mmlst2[3].push_back(mm);
             }
          }else if(icase == 2){
             // lr: O[bm,bm'] = psi*[br,bc,bm] sigma[br,bc,bm']
@@ -236,7 +242,7 @@ namespace ctns{
             mm.locA = locIn; mm.offA = offin2;
             mm.locB = xloc;  mm.offB = xoff;
             mm.locC = yloc;  mm.offC = yoff;
-            MMlst2[3].push_back(mm);
+            mmlst2[3].push_back(mm);
          }
       }
 
@@ -267,6 +273,7 @@ namespace ctns{
                      Cptr, mm.M);
             } // j
          } // i
+         assert(ifcal == true);
          return ifcal;
       }
 

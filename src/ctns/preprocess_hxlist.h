@@ -17,7 +17,19 @@ namespace ctns{
                dims = _dims;
                terms = _terms;
                cterms = _cterms;
-               alg_hcoper = _alg_hcoper;
+               //
+               // ZL@20230519: whether perform contraction for op[c2/c1]
+               // NOTE: contractions are performed for operators only with op[c2/c1]
+               //       in order to move x data to workspace for the convinience of
+               //       performing batch reduction later in reduction, see hmmtasks.
+               // 
+               // The option (=1/2) only works for NSz or NS, where coper is a number.
+               // alg_hcoper=0: always contract op[c2/c1]
+               // alg_hcoper=1: only contract by GEMM if terms=ctmers;
+               //               other cases the copers are absorbed into Hxblk.coeff
+               // alg_hcoper=2: always absorb the copers into Hxblk.coeff
+               //
+               ifcntr = _alg_hcoper==0 || (_alg_hcoper==1 && terms==cterms); 
             }
             bool identity(const int i) const{ return loc[i]==-1; }    
             void display() const{
@@ -29,7 +41,7 @@ namespace ctns{
                   << " dagger=" << dagger[0] << "," << dagger[1] << "," << dagger[2] << "," << dagger[3]
                   << " loc=" << loc[0] << "," << loc[1] << "," << loc[2] << "," << loc[3]
                   << " off=" << off[0] << "," << off[1] << "," << off[2] << "," << off[3]
-                  << " terms=" << terms << " cterms=" << cterms << " alg_hcoper=" << alg_hcoper 
+                  << " terms=" << terms << " cterms=" << cterms << " ifcntr=" << ifcntr 
                   << " coeff=" << coeff
                   << " cost=" << cost
                   << std::endl;  
@@ -42,8 +54,8 @@ namespace ctns{
                      dimin[0] *dimout[1]*dimout[2]*dimout[3],
                      dimout[0]*dimout[1]*dimout[2]*dimout[3]};
                   blksize = *std::max_element(dimsInter.begin(), dimsInter.end());
-                  if(!this->identity(3)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimin[3]*dimout[3]; // Oc2
-                  if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[3]*dimout[2]; // Oc1
+                  if(!this->identity(3) & ifcntr) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimin[3]*dimout[3]; // Oc2
+                  if(!this->identity(2) & ifcntr) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[3]*dimout[2]; // Oc1
                   if(!this->identity(1)) cost += 2*double(dimin[0])*dimin[1]*dimout[2]*dimout[3]*dimout[1]; // Or
                   if(!this->identity(0)) cost += 2*double(dimin[0])*dimout[1]*dimout[2]*dimout[3]*dimout[0]; // Ol
                }else if(dims == 3){
@@ -51,7 +63,7 @@ namespace ctns{
                      dimin[0] *dimout[1]*dimout[2],
                      dimout[0]*dimout[1]*dimout[2]};
                   blksize = *std::max_element(dimsInter.begin(), dimsInter.end());
-                  if(!this->identity(2)) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[2];
+                  if(!this->identity(2) & ifcntr) cost += 2*double(dimin[0])*dimin[1]*dimin[2]*dimout[2];
                   if(!this->identity(1)) cost += 2*double(dimin[0])*dimin[1]*dimout[2]*dimout[1];
                   if(!this->identity(0)) cost += 2*double(dimin[0])*dimout[1]*dimout[2]*dimout[0];
                }else{
@@ -59,8 +71,8 @@ namespace ctns{
                   exit(1);
                }
             }
-            void get_MMlist2_twodot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
-            void get_MMlist2_onedot(MMlist2<Tm>& MMlst2, const size_t offset=0) const;
+            void get_MMlist2_twodot(MMlist2<Tm>& mmlst2, const size_t offset=0) const;
+            void get_MMlist2_onedot(MMlist2<Tm>& mmlst2, const size_t offset=0) const;
             void get_MMlist2(){
                if(dims == 4){
                   mmlst2.resize(4);
@@ -77,18 +89,21 @@ namespace ctns{
          public:
             int dims  = 0; // 3/4 for onedot/twodot
             int terms = 0; // no. of terms in Hmu 
-            int cterms = 0, alg_hcoper = 0; // special treatment of coper
-            size_t dimout[4] = {0,0,0,0};
-            size_t dimin[4] = {0,0,0,0};
+            int cterms = 0; // special treatment of coper
+            bool ifcntr= true;
+            // information of o[l,r,c1,c2]
             bool dagger[4] = {false,false,false,false};
             int loc[4] = {-1,-1,-1,-1};
             size_t off[4] = {0,0,0,0};
+            // information of sigma and psi
+            size_t dimout[4] = {0,0,0,0};
+            size_t dimin[4] = {0,0,0,0};
             size_t offout = 0, offin = 0, size = 0; // size of output block 
             Tm coeff = 1.0;
             // for Matrix-Matrix multiplications
             size_t blksize = 0; // blksize of GEMM (can be different from size)
             double cost = 0.0;
-            MMlist2<Tm> mmlst2;
+            MMlist2<Tm> mmlst2; // {c2,c1,r,l} / {c,r,l}
             // intermediates [direct]
             int posInter = -1, lenInter = -1;
             size_t offInter = 0, ldaInter = 0; 
@@ -119,15 +134,10 @@ namespace ctns{
    // 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv']
    // 			wf[br',bc',bm',bv']
    template <typename Tm>
-      void Hxblock<Tm>::get_MMlist2_twodot(MMlist2<Tm>& MMlst2,
+      void Hxblock<Tm>::get_MMlist2_twodot(MMlist2<Tm>& mmlst2,
             const size_t offset) const{
          // wf[br',bc',bm',bv']
          int xloc = locIn, yloc = locOut;
-         // ZL@20230519: whether perform contraction for op[c2/c1]
-         // NOTE: contractions are performed for operators only with op[c2/c1]
-         //       in order to move x data to workspace for the convinience of
-         //       performing batch reduction later in reduction, see hmmtasks.
-         const bool ifcntr = alg_hcoper==0 || (alg_hcoper==1 && terms==cterms); 
          // ZL@20230228: ensure the output is always at the first part of 2*blksize
          int nt = ifcntr? terms+1 : terms-cterms+1;
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
@@ -145,7 +155,7 @@ namespace ctns{
             mm.locA = xloc;   mm.offA = xoff;
             mm.locB = loc[p]; mm.offB = off[p];
             mm.locC = yloc;   mm.offC = yoff; 
-            MMlst2[0].push_back(mm); 
+            mmlst2[0].push_back(mm); 
             // update x & y  
             xloc = locOut; xoff = offset+(nt%2)*blksize; 
             yloc = locOut; yoff = offset+(1-nt%2)*blksize;
@@ -166,7 +176,7 @@ namespace ctns{
                mm.locA = xloc;   mm.offA = xoff+iv*mm.M*mm.K;
                mm.locB = loc[p]; mm.offB = off[p];
                mm.locC = yloc;   mm.offC = yoff+iv*mm.M*mm.N;
-               MMlst2[1].push_back(mm);
+               mmlst2[1].push_back(mm);
             }
             // update x & y
             xloc = locOut; xoff = offset+(nt%2)*blksize;
@@ -189,7 +199,7 @@ namespace ctns{
                   mm.locA = xloc;   mm.offA = xoff+(iv*dimout[2]+im)*mm.M*mm.K;
                   mm.locB = loc[p]; mm.offB = off[p];
                   mm.locC = yloc;   mm.offC = yoff+(iv*dimout[2]+im)*mm.M*mm.N;
-                  MMlst2[2].push_back(mm);
+                  mmlst2[2].push_back(mm);
                }
             }
             // update x & y
@@ -211,7 +221,7 @@ namespace ctns{
             mm.locA = loc[p]; mm.offA = off[p];
             mm.locB = xloc;   mm.offB = xoff;
             mm.locC = yloc;   mm.offC = yoff;
-            MMlst2[3].push_back(mm);
+            mmlst2[3].push_back(mm);
             nt -= 1;
          }
          assert(nt == 1);
@@ -222,14 +232,15 @@ namespace ctns{
    // 	             Oc1^dagger2[bm,bm'] 
    // 		     wf[br',bc',bm']
    template <typename Tm>
-      void Hxblock<Tm>::get_MMlist2_onedot(MMlist2<Tm>& MMlst2,
+      void Hxblock<Tm>::get_MMlist2_onedot(MMlist2<Tm>& mmlst2,
             const size_t offset) const{
          // wf[br',bc',bm']
          int xloc = locIn, yloc = locOut;
-         int nt = terms+1; // ZL@20230228: ensure the output is always at the first part of 2*blksize
+         // ZL@20230228: ensure the output is always at the first part of 2*blksize
+         int nt = ifcntr? terms+1 : terms-cterms+1; 
          size_t xoff = offin, yoff = offset+(nt%2)*blksize;
          // Oc1^dagger2[bm,bm']: out(r,c,m) = o[d](m,x) in(r,c,x)
-         if(!this->identity(2)){
+         if(!this->identity(2) && ifcntr){
             int p = 2;
             MMinfo<Tm> mm;
             mm.M = dimin[0]*dimin[1];
@@ -242,7 +253,7 @@ namespace ctns{
             mm.locA = xloc;   mm.offA = xoff;
             mm.locB = loc[p]; mm.offB = off[p];
             mm.locC = yloc;   mm.offC = yoff; 
-            MMlst2[0].push_back(mm); 
+            mmlst2[0].push_back(mm); 
             // update x & y  
             xloc = locOut; xoff = offset+(nt%2)*blksize; 
             yloc = locOut; yoff = offset+(1-nt%2)*blksize;
@@ -263,7 +274,7 @@ namespace ctns{
                mm.locA = xloc;   mm.offA = xoff+im*mm.M*mm.K;
                mm.locB = loc[p]; mm.offB = off[p];
                mm.locC = yloc;   mm.offC = yoff+im*mm.M*mm.N;
-               MMlst2[1].push_back(mm);
+               mmlst2[1].push_back(mm);
             }
             // update x & y
             xloc = locOut; xoff = offset+(nt%2)*blksize;
@@ -284,7 +295,7 @@ namespace ctns{
             mm.locA = loc[p]; mm.offA = off[p];
             mm.locB = xloc;   mm.offB = xoff;
             mm.locC = yloc;   mm.offC = yoff;
-            MMlst2[2].push_back(mm);
+            mmlst2[2].push_back(mm);
             nt -= 1;
          }
          assert(nt == 1);
@@ -302,7 +313,7 @@ namespace ctns{
          ptrs[4] = opaddr[4];
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
-         bool ifcal = true;
+         bool ifcal = false;
          for(int i=0; i<mmlst2.size(); i++){
             for(int j=0; j<mmlst2[i].size(); j++){
                ifcal = true;

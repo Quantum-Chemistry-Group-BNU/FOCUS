@@ -228,12 +228,12 @@ namespace ctns{
             bool symAllowed = true;
             Tm coeff_coper = 1.0;
             for(int k=0; k<4; k++){ // l,r,c1,c2
-               Hxblk.dagger[k] = dagger[k]^ifdagger; // (O1^d1)^d = O1^(d^d1)
                if(this->identity(k)){ 
                   // identity operator
                   bi[k] = bo[k];
                }else{
                   // not identity
+                  Hxblk.dagger[k] = dagger[k]^ifdagger; // (O1^d1)^d = O1^(d^d1)
                   bool iftrans = dagger[k]^ifdagger;
                   bi[k] = iftrans? info[k]->_bc2br[bo[k]] : info[k]->_br2bc[bo[k]];
                   if(bi[k] == -1){

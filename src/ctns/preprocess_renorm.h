@@ -33,6 +33,7 @@ namespace ctns{
 
 #ifndef _OPENMP
 
+         // serial version
          Tm* work = new Tm[blksize*2];
          for(int i=0; i<Rlst.size(); i++){
             auto& Rblk = Rlst[i];
@@ -43,6 +44,7 @@ namespace ctns{
 
 #else
 
+         // openmp version
          #pragma omp parallel
          {
             Tm* yi = new Tm[ndim];

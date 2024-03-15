@@ -168,11 +168,11 @@ namespace ctns{
             bool symAllowed = true;
             Tm coeff_coper = 1.0;
             for(int k=0; k<3; k++){ // l,r,c
-               Rblk.dagger[k] = dagger[k]^ifdagger;
                if(this->identity(k)){
                   bo[k] = bi[k];
                   Rblk.dimout[k] = Rblk.dimin[k];
                }else{
+                  Rblk.dagger[k] = dagger[k]^ifdagger;
                   bool iftrans = dagger[k]^ifdagger;
                   bo[k] = iftrans? info[k]->_br2bc[bi[k]] : info[k]->_bc2br[bi[k]];
                   if(bo[k] == -1){

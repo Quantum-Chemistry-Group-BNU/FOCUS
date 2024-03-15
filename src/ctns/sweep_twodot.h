@@ -675,6 +675,8 @@ namespace ctns{
          // save for restart
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
 
+         exit(1);
+
          timing.t1 = tools::get_time();
          if(debug){
             get_sys_status();

@@ -36,16 +36,22 @@ namespace ctns{
          // compute Y[I] = \sum_J H[I,J] X[J]
 #ifndef _OPENMP
 
+         // serial version
          Tm* work = new Tm[blksize*2];
          for(int i=0; i<Hxlst.size(); i++){
             auto& Hxblk = Hxlst[i];
             bool ifcal = Hxblk.kernel(x, opaddr, work);
-            if(ifcal) linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, y+Hxblk.offout);
+            if(ifcal){
+               linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, y+Hxblk.offout);
+            }else{
+               linalg::xaxpy(Hxblk.size, Hxblk.coeff, x+Hxblk.offin, y+Hxblk.offout);
+            }
          } // i
          delete[] work;
 
 #else
 
+         // openmp version
 #pragma omp parallel
          {
             Tm* yi = new Tm[ndim];
@@ -56,7 +62,11 @@ namespace ctns{
             for(int i=0; i<Hxlst.size(); i++){
                auto& Hxblk = Hxlst[i];
                bool ifcal = Hxblk.kernel(x, opaddr, work);
-               if(ifcal) linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, yi+Hxblk.offout);
+               if(ifcal){
+                  linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, yi+Hxblk.offout);
+               }else{
+                  linalg::xaxpy(Hxblk.size, Hxblk.coeff, x+Hxblk.offin, yi+Hxblk.offout);
+               }
             } // i
             delete[] work;
 
@@ -115,7 +125,11 @@ namespace ctns{
                   auto& Hxblk = Hxlst2[i][j];
                   Tm* wptr = &work[blksize];
                   bool ifcal = Hxblk.kernel(x, opaddr, wptr);
-                  if(ifcal) linalg::xaxpy(Hxblk.size, Hxblk.coeff, wptr, work); // save to local memory
+                  if(ifcal){
+                     linalg::xaxpy(Hxblk.size, Hxblk.coeff, wptr, work); // save to local memory
+                  }else{
+                     linalg::xaxpy(Hxblk.size, Hxblk.coeff, x+Hxblk.offin, work);
+                  }
                } // j
                if(Hxlst2[i].size()>0){
                   const auto& Hxblk = Hxlst2[i][0];
