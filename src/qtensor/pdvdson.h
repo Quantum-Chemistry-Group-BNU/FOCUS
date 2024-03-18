@@ -99,15 +99,28 @@ namespace ctns{
 #endif
                if(rank == 0) std::cout << "ctns::pdvdsonSolver_nkr:solve_diag" << std::endl;
                auto t0 = tools::get_time();
+               
                linalg::matrix<Tm> id = linalg::identity_matrix<Tm>(ndim);
                linalg::matrix<Tm> H(ndim,ndim);
                HVecs(ndim, H.data(), id.data());
+
                std::vector<double> e(ndim);
                linalg::matrix<Tm> V(ndim,ndim);
+               
                if(rank == 0){
+              
+                  H.print("Hmat");
+                  // check symmetry
+                  auto sdiff = H.diff_hermitian();
+                  std::cout << "|H-H.h|=" << sdiff << std::endl;
+                  if(sdiff > 1.e-5){
+                     (H-H.H()).print("H-H.h");
+                     tools::exit("error: H is not symmetric in ctns::pdvdsonSolver_nkr::solve_diag!");
+                  }
+              
                   // check consistency with diag
                   if(ifCheckDiag){
-                     std::cout << "ndim=" << ndim << std::endl;
+                     std::cout << "CheckDiag: ndim=" << ndim << std::endl;
                      std::cout << std::setprecision(12);
                      double diff = 0.0;
                      for(int i=0; i<ndim; i++){
@@ -117,17 +130,11 @@ namespace ctns{
                            << " diff=" << Diag[i]-H(i,i)
                            << std::endl;
                         diff += std::abs(Diag[i]-H(i,i));
-                        if(diff>1.e-10) tools::exit("error: |Diag[i]-H(i,i)| is too large!");
                      } // i
+                     if(diff>1.e-10) tools::exit("error: |Diag[i]-H(i,i)| is too large!");
                      std::cout << "CheckDiag passed successfully!" << std::endl;
                   }
-                  // check symmetry
-                  auto sdiff = H.diff_hermitian();
-                  std::cout << "|H-H.h|=" << sdiff << std::endl;
-                  if(sdiff > 1.e-5){
-                     (H-H.H()).print("H-H.h");
-                     tools::exit("error: H is not symmetric in ctns::pdvdsonSolver_nkr::solve_diag!");
-                  }
+
                   // solve eigenvalue problem by diagonalization
                   linalg::eig_solver(H, e, V);
                   std::cout << "eigenvalues:\n" << std::setprecision(12);
@@ -142,6 +149,7 @@ namespace ctns{
                   mpi_wrapper::broadcast(world, V.data(), ndim*neig, 0);
                }
 #endif
+               
                // copy results
                linalg::xcopy(neig, e.data(), es);
                linalg::xcopy(ndim*neig, V.data(), vs);
@@ -284,6 +292,7 @@ namespace ctns{
                      t_xcopy += tools::get_duration(t1x-t0x);
                   }else{
                      auto index = tools::sort_index(ndim, Diag);
+                     memset(vbas, 0, ndim*neig*sizeof(Tm)); 
                      for(int i=0; i<neig; i++){
                         vbas[i*ndim+index[i]] = 1.0;
                      }

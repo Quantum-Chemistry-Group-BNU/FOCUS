@@ -130,7 +130,6 @@ namespace ctns{
 #endif
 
          // without kramers restriction
-         assert(Qm::ifkr == false);
          pdvdsonSolver_nkr<Tm> solver(ndim, neig, eps, schd.ctns.maxcycle);
          solver.iprt = schd.ctns.verbose;
          solver.nbuff = schd.ctns.nbuff;

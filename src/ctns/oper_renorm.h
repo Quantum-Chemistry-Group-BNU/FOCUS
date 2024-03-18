@@ -278,7 +278,6 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            std::cout << "lzdC" << std::endl;
 
             // generate Rmmtasks
             const int batchblas = schd.ctns.alg_rinter; // use the same keyword for GEMM_batch
@@ -309,7 +308,6 @@ namespace ctns{
                if(fmmtask.size()>0) save_mmtask(Rmmtask, fmmtask);
             }
             timing.tf7 = tools::get_time();
-            std::cout << "lzdD" << std::endl;
 
             // initialization of qops
             memset(qops._data, 0, qops._size*sizeof(Tm));
@@ -340,7 +338,6 @@ namespace ctns{
             timing.tf9 = tools::get_time();
             timing.tf10 = tools::get_time();
             timing.tf11 = tools::get_time();
-            std::cout << "lzdE" << std::endl;
 
 #ifdef GPU
          }else if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
@@ -695,9 +692,6 @@ namespace ctns{
                   << std::endl;
                exit(1);
             }
-           
-            // lzd 
-            qops.print("qops",3);
             
             // check against explicit construction
             if(debug_oper_rbasis){

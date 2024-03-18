@@ -90,7 +90,7 @@ namespace ctns{
             int dims  = 0; // 3/4 for onedot/twodot
             int terms = 0; // no. of terms in Hmu 
             int cterms = 0; // special treatment of coper
-            bool ifcntr= true;
+            bool ifcntr = true;
             // information of o[l,r,c1,c2]
             bool dagger[4] = {false,false,false,false};
             int loc[4] = {-1,-1,-1,-1};

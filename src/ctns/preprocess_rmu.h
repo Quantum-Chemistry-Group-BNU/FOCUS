@@ -64,7 +64,6 @@ namespace ctns{
             const rintermediates<ifab,Tm>& rinter,
             const std::map<std::string,int>& oploc){
          const auto& RTerm = R_formulae.tasks[it];
-         std::cout << "RTerm=" << RTerm << std::endl;
          for(int idx=RTerm.size()-1; idx>=0; idx--){
             const auto& sop = RTerm.terms[idx];
             const auto& sop0 = sop.sums[0].second;

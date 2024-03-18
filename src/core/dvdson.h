@@ -168,6 +168,7 @@ namespace linalg{
                         linalg::xcopy(ndim*neig, vguess, vbas.data());
                     }else{
                         auto index = tools::sort_index(ndim, Diag);
+                        memset(vbas.data(), 0, ndim*neig*sizeof(Tm));
                         for(int i=0; i<neig; i++){
                             vbas[i*ndim+index[i]] = 1.0;
                         }

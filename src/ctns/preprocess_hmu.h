@@ -76,8 +76,10 @@ namespace ctns{
             const hintermediates<ifab,Tm>& hinter,
             const std::map<std::string,int>& oploc){
          const auto& HTerm = H_formulae.tasks[it];
-         terms = HTerm.size();
-         for(int idx=terms-1; idx>=0; idx--){
+
+         std::cout << "HTerm=" << HTerm << std::endl;
+
+         for(int idx=HTerm.size()-1; idx>=0; idx--){
             const auto& sop = HTerm.terms[idx];
             const auto& sop0 = sop.sums[0].second;
             const auto& par = sop0.parity;
@@ -85,6 +87,7 @@ namespace ctns{
             const auto& block = sop0.block;
             const auto& label = sop0.label;
             if(label == 'I') continue; // for su2 case, we add 'I' into formula
+            terms += 1;
             const auto& index0 = sop0.index;
             const auto& qops = qops_dict.at(block); 
             const auto& op0 = qops(label).at(index0);
@@ -199,9 +202,9 @@ namespace ctns{
       }
 */
 
-   // sigma[br,bc,bm,bv] = Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
-   // 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv'] 
-   // 			wf[br',bc',bm',bv']
+   // sigma[br',bc',bm',bv'] = Ol^dagger0[br',br] Or^dagger1[bc',bc] 
+   // 			Oc1^dagger2[bm',bm] Oc2^dagger3[bv',bv] 
+   // 			wf[br,bc,bm,bv]
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
       void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
@@ -288,9 +291,9 @@ namespace ctns{
          } // i
       }
 
-   // sigma[br,bc,bm,bv] = Ol^dagger0[br,br'] Or^dagger1[bc,bc'] 
-   // 			Oc1^dagger2[bm,bm'] Oc2^dagger3[bv,bv'] 
-   // 			wf[br',bc',bm',bv']
+   // sigma[br',bc',bm',bv'] = Ol^dagger0[br',br] Or^dagger1[bc',bc] 
+   // 			Oc1^dagger2[bm',bm] Oc2^dagger3[bv',bv] 
+   // 			wf[br,bc,bm,bv]
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<!y,int>>
       void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
@@ -302,7 +305,7 @@ namespace ctns{
             double& cost,
             const bool ifdagger) const{
          if(this->empty()) return;
-         // wf[br,bc,bm,bv]
+         // sigma[br',bc',bm',bv']
          int bo[4], tslc1p, tsc2rp, tstot;
          tstot = wf_info.sym.ts();
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
@@ -313,6 +316,8 @@ namespace ctns{
             bo[3] = std::get<3>(key);
             tslc1p = std::get<4>(key);
             tsc2rp = std::get<5>(key);
+            size_t offout = wf_info.get_offset(bo[0],bo[1],bo[2],bo[3],tslc1p,tsc2rp);
+            assert(offout > 0);
             const auto& bi0vec = this->identity(0)? std::vector<int>({bo[0]}) :
                 (dagger[0]^ifdagger? info[0]->_bc2br[bo[0]] : info[0]->_br2bc[bo[0]]);
             const auto& bi1vec = this->identity(1)? std::vector<int>({bo[1]}) :
@@ -346,8 +351,8 @@ namespace ctns{
                               // setup block
                               Hxblock<Tm> Hxblk(4,terms,cterms,alg_hcoper);
                               Hxblk.offin = offin-1;
-                              Hxblk.offout = wf_info.get_offset(bo[0],bo[1],bo[2],bo[3],tslc1p,tsc2rp)-1;
-                              // update Rblk.dagger/loc/off
+                              Hxblk.offout = offout-1;
+                              // update Hxblk.dagger/loc/off
                               Tm coeff_coper = 1.0;
                               bool skip = false;
                               for(int k=0; k<4; k++){ // l,r,c1,c2
@@ -432,13 +437,16 @@ namespace ctns{
                                  blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
                               }
                               Hxlst2[i].push_back(Hxblk);
+
+                              Hxblk.display();
+
                            } // tsc2r
                         } // tslc1
                      } // b3
                   } // b2
                } // b1
             } // b0
-         } // i 
+         } // i
       }
 
 } // ctns
