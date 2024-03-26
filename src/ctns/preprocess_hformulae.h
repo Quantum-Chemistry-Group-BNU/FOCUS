@@ -80,6 +80,7 @@ namespace ctns{
             Hmu_vec[it].gen_Hxlist2(alg_hcoper, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, true);
          }
          auto tb = tools::get_time();
+         assert(blksize > 0);
 
          if(debug){
             auto t1 = tools::get_time();

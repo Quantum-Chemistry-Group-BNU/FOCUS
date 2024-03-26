@@ -86,7 +86,11 @@ namespace ctns{
             const auto& dag = sop0.dagger;
             const auto& block = sop0.block;
             const auto& label = sop0.label;
-            if(label == 'I') continue; // for su2 case, we add 'I' into formula
+            if(label == 'I'){
+               assert(sop.size() == 1);
+               coeff *= sop.sums[0].first;
+               continue; // for su2 case, we add 'I' into formula
+            }
             terms += 1;
             const auto& index0 = sop0.index;
             const auto& qops = qops_dict.at(block); 
@@ -97,6 +101,8 @@ namespace ctns{
             info[pos] = const_cast<qinfo2type<ifab,Tm>*>(&op0.info);
             if(block[0]=='c') cterms += 1;
             int len = sop.size();
+
+            std::cout << "idx=" << idx << " len=" << len << " sop.sum[0]=" << sop.sums[0].first << std::endl;
             if(len == 1){
                coeff *= sop.sums[0].first;
                loc[pos] = pos;
@@ -118,6 +124,7 @@ namespace ctns{
                }
             }
          } // idx
+         std::cout << "coeff=" << coeff << std::endl;
          coeffH = tools::conjugate(coeff)*HTerm.Hsign();
          // intermediate spins
          if(HTerm.ispins.size() != 0){

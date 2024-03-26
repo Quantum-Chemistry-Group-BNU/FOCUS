@@ -197,7 +197,7 @@ namespace ctns{
          Hxlist2<Tm> Hxlst2; // hvec5
          HMMtask<Tm> Hmmtask;
          HMMtasks<Tm> Hmmtasks; // hvec6
-         Tm scale = Qm::ifkr? 0.5*ecore : 1.0*ecore;
+         Tm scale = qkind::is_qNK<Qm>()? 0.5*ecore : 1.0*ecore;
          std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c1",2},{"c2",3}};
          Tm* opaddr[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data,
             qops_dict.at("c1")._data, qops_dict.at("c2")._data,

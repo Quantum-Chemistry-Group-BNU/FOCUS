@@ -8,6 +8,9 @@ namespace ctns{
    const bool debug_twodot_diag_su2 = false;
    extern const bool debug_twodot_diag_su2;
 
+   const double thresh_diag_angular = 1.e-14;
+   extern const double thresh_diag_angular;
+
    template <typename Tm>
       void twodot_diag(const opersu2_dictmap<Tm>& qops_dict,
             const stensor4su2<Tm>& wf,
@@ -23,7 +26,7 @@ namespace ctns{
             std::cout << "ctns::twodot_diag(su2) ifkr=" << lqops.ifkr 
                << " size=" << size << std::endl;
          }
-/*        
+
          // 0. constant term 
          size_t ndim = wf.size();
          memset(diag, 0, ndim*sizeof(double));
@@ -45,16 +48,16 @@ namespace ctns{
          twodot_diag_BQ("c1c2", c1qops, c2qops, wf, diag, size, rank);
          twodot_diag_BQ("c1r" , c1qops,  rqops, wf, diag, size, rank);
          twodot_diag_BQ("c2r" , c2qops,  rqops, wf, diag, size, rank);
-*/
+
       }
-/*
+
    // H[loc] 
    template <typename Tm>
-      void twodot_diag_local(const oper_dict<Tm>& lqops,
-            const oper_dict<Tm>& rqops,
-            const oper_dict<Tm>& c1qops,
-            const oper_dict<Tm>& c2qops,
-            const stensor4<Tm>& wf,
+      void twodot_diag_local(const opersu2_dict<Tm>& lqops,
+            const opersu2_dict<Tm>& rqops,
+            const opersu2_dict<Tm>& c1qops,
+            const opersu2_dict<Tm>& c2qops,
+            const stensor4su2<Tm>& wf,
             double* diag,
             const int size,
             const int rank){
@@ -65,20 +68,29 @@ namespace ctns{
          const auto& Hr  = rqops('H').at(0);
          const auto& Hc1 = c1qops('H').at(0);
          const auto& Hc2 = c2qops('H').at(0);
+         int br, bc, bm, bv, tslc1, tsc2r, tstot;
+         tstot = wf.info.sym.ts();
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            int idx = wf.info._nnzaddr[i];
-            int br, bc, bm, bv;
-            wf.info._addr_unpack(idx, br, bc, bm, bv);
-            auto blk = wf(br,bc,bm,bv);
-            int rdim = blk.dim0;
-            int cdim = blk.dim1;
-            int mdim = blk.dim2;
-            int vdim = blk.dim3;
+            auto key = wf.info._nnzaddr[i];
+            br = std::get<0>(key);
+            bc = std::get<1>(key);
+            bm = std::get<2>(key);
+            bv = std::get<3>(key);
+            tslc1 = std::get<4>(key);
+            tsc2r = std::get<5>(key);
+            int tsl  = wf.info.qrow.get_sym(br).ts();
+            int tsr  = wf.info.qcol.get_sym(bc).ts();
+            int tsc1 = wf.info.qmid.get_sym(bm).ts();
+            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            int rdim = wf.info.qrow.get_dim(br);
+            int cdim = wf.info.qcol.get_dim(bc);
+            int mdim = wf.info.qmid.get_dim(bm);
+            int vdim = wf.info.qver.get_dim(bv);
             const auto blkl = Hl(br,br);
             const auto blkr = Hr(bc,bc);
             const auto blkc1 = Hc1(bm,bm);
             const auto blkc2 = Hc2(bv,bv);
-            size_t ircmv = wf.info._offset[idx]-1;
+            size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
                   for(int ic=0; ic<cdim; ic++){
@@ -97,9 +109,9 @@ namespace ctns{
 
    template <typename Tm>
       void twodot_diag_BQ(const std::string superblock,
-            const oper_dict<Tm>& qops1,
-            const oper_dict<Tm>& qops2,
-            const stensor4<Tm>& wf,
+            const opersu2_dict<Tm>& qops1,
+            const opersu2_dict<Tm>& qops2,
+            const stensor4su2<Tm>& wf,
             double* diag,
             const int size,
             const int rank){
@@ -119,55 +131,82 @@ namespace ctns{
          for(const auto& index : bindex_dist){
             const auto& O1 = qops1(BQ1).at(index);
             const auto& O2 = qops2(BQ2).at(index);
-            if(O1.info.sym.is_nonzero()) continue; // screening for <l|B/Q^l_{pq}|l>
-            const double wt = ifkr? 2.0*wfacBQ(index) : 2.0*wfac(index); // 2.0 from B^H*Q^H
+            assert(O1.info.sym.ne() == 0);
+            auto pq = oper_unpack(index);
+            int p = pq.first, kp = p/2, sp = p%2;
+            int q = pq.second, kq = q/2, sq = q%2;
+            int ts = (sp!=sq)? 2 : 0;
+            double fac = (kp==kq)? 0.5 : 1.0;
+            double wt = ((ts==0)? fac : -fac*std::sqrt(3.0))*2.0; // 2.0 from B^H*Q^H
             if(superblock == "lc1"){ 
-               twodot_diag_OlOc1(wt, O1, O2, wf, diag);
-               if(ifkr) twodot_diag_OlOc1(wt, O1.K(0), O2.K(0), wf, diag);
+               twodot_diag_OlOc1(ts, wt, O1, O2, wf, diag);
             }else if(superblock == "lc2"){ 
-               twodot_diag_OlOc2(wt, O1, O2, wf, diag);
-               if(ifkr) twodot_diag_OlOc2(wt, O1.K(0), O2.K(0), wf, diag);
+               twodot_diag_OlOc2(ts, wt, O1, O2, wf, diag);
             }else if(superblock == "lr"){
-               twodot_diag_OlOr(wt, O1, O2, wf, diag);
-               if(ifkr) twodot_diag_OlOr(wt, O1.K(0), O2.K(0), wf, diag);
+               twodot_diag_OlOr(ts, wt, O1, O2, wf, diag);
             }else if(superblock == "c1c2"){
-               twodot_diag_Oc1Oc2(wt, O1, O2, wf, diag);
-               if(ifkr) twodot_diag_Oc1Oc2(wt, O1.K(0), O2.K(0), wf, diag);
+               twodot_diag_Oc1Oc2(ts, wt, O1, O2, wf, diag);
             }else if(superblock == "c1r"){
-               twodot_diag_Oc1Or(wt, O1, O2, wf, diag);
-               if(ifkr) twodot_diag_Oc1Or(wt, O1.K(0), O2.K(0), wf, diag);
+               twodot_diag_Oc1Or(ts, wt, O1, O2, wf, diag);
             }else if(superblock == "c2r"){
-               twodot_diag_Oc2Or(wt, O1, O2, wf, diag);
-               if(ifkr) twodot_diag_Oc2Or(wt, O1.K(0), O2.K(0), wf, diag);
+               twodot_diag_Oc2Or(ts, wt, O1, O2, wf, diag);
             }
          } // index
       }
 
    // Ol*Oc1
    template <typename Tm>
-      void twodot_diag_OlOc1(const double wt,
-            const stensor2<Tm>& Ol,
-            const stensor2<Tm>& Oc1,
-            const stensor4<Tm>& wf,
+      void twodot_diag_OlOc1(const int ts,
+            const double wt,
+            const stensor2su2<Tm>& Ol,
+            const stensor2su2<Tm>& Oc1,
+            const stensor4su2<Tm>& wf,
             double* diag){
+         // rank of operators
+         int tsOl = ts;
+         int tsOc1 = ts;
+         int tsOlc1 = 0;
+         int tsOc2 = 0;
+         int tsOr = 0;
+         int tsOc2r = 0;
+         int tsOtot = 0;
+         int br, bc, bm, bv, tslc1, tsc2r, tstot;
+         tstot = wf.info.sym.ts();
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            int idx = wf.info._nnzaddr[i];
-            int br, bc, bm, bv;
-            wf.info._addr_unpack(idx, br, bc, bm, bv);
-            auto blk = wf(br,bc,bm,bv);
-            int rdim = blk.dim0;
-            int cdim = blk.dim1;
-            int mdim = blk.dim2;
-            int vdim = blk.dim3;
+            auto key = wf.info._nnzaddr[i];
+            br = std::get<0>(key);
+            bc = std::get<1>(key);
+            bm = std::get<2>(key);
+            bv = std::get<3>(key);
+            tslc1 = std::get<4>(key);
+            tsc2r = std::get<5>(key);
+            int tsl  = wf.info.qrow.get_sym(br).ts();
+            int tsr  = wf.info.qcol.get_sym(bc).ts();
+            int tsc1 = wf.info.qmid.get_sym(bm).ts();
+            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            int rdim = wf.info.qrow.get_dim(br);
+            int cdim = wf.info.qcol.get_dim(bc);
+            int mdim = wf.info.qmid.get_dim(bm);
+            int vdim = wf.info.qver.get_dim(bv);
+            // spin factor
+            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
+            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
+                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
+                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
+                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
+                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
+                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             // Ol*Oc1
-            const auto blkl  = Ol(br,br); 
+            const auto blkl  = Ol(br,br);
             const auto blkc1 = Oc1(bm,bm);
-            size_t ircmv = wf.info._offset[idx]-1;  
+            if(blkl.size() == 0 || blkc1.size() == 0) continue;
+            size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;  
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
                   for(int ic=0; ic<cdim; ic++){
                      for(int ir=0; ir<rdim; ir++){
-                        diag[ircmv] += wt*std::real(blkl(ir,ir)*blkc1(im,im));
+                        diag[ircmv] += fac*std::real(blkl(ir,ir)*blkc1(im,im));
                         ircmv++;
                      } // ir
                   } // ic
@@ -178,29 +217,57 @@ namespace ctns{
 
    // Ol*Oc2
    template <typename Tm>
-      void twodot_diag_OlOc2(const double wt,
-            const stensor2<Tm>& Ol,
-            const stensor2<Tm>& Oc2,
-            const stensor4<Tm>& wf,
+      void twodot_diag_OlOc2(const int ts,
+            const double wt,
+            const stensor2su2<Tm>& Ol,
+            const stensor2su2<Tm>& Oc2,
+            const stensor4su2<Tm>& wf,
             double* diag){
+         // rank of operators
+         int tsOl = ts;
+         int tsOc1 = 0;
+         int tsOlc1 = ts;
+         int tsOc2 = ts;
+         int tsOr = 0;
+         int tsOc2r = ts;
+         int tsOtot = 0;
+         int br, bc, bm, bv, tslc1, tsc2r, tstot;
+         tstot = wf.info.sym.ts();
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            int idx = wf.info._nnzaddr[i];
-            int br, bc, bm, bv;
-            wf.info._addr_unpack(idx, br, bc, bm, bv);
-            auto blk = wf(br,bc,bm,bv);
-            int rdim = blk.dim0;
-            int cdim = blk.dim1;
-            int mdim = blk.dim2;
-            int vdim = blk.dim3;
+            auto key = wf.info._nnzaddr[i];
+            br = std::get<0>(key);
+            bc = std::get<1>(key);
+            bm = std::get<2>(key);
+            bv = std::get<3>(key);
+            tslc1 = std::get<4>(key);
+            tsc2r = std::get<5>(key);
+            int tsl  = wf.info.qrow.get_sym(br).ts();
+            int tsr  = wf.info.qcol.get_sym(bc).ts();
+            int tsc1 = wf.info.qmid.get_sym(bm).ts();
+            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            int rdim = wf.info.qrow.get_dim(br);
+            int cdim = wf.info.qcol.get_dim(bc);
+            int mdim = wf.info.qmid.get_dim(bm);
+            int vdim = wf.info.qver.get_dim(bv);
+            // spin factor
+            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
+            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
+                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
+                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
+                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
+                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
+                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             // Ol*Oc2
             const auto blkl  = Ol(br,br); 
-            const auto blkc2 = Oc2(bv,bv); 
-            size_t ircmv = wf.info._offset[idx]-1;  
+            const auto blkc2 = Oc2(bv,bv);
+            if(blkl.size() == 0 || blkc2.size() == 0) continue;
+            size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;  
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
                   for(int ic=0; ic<cdim; ic++){
                      for(int ir=0; ir<rdim; ir++){
-                        diag[ircmv] += wt*std::real(blkl(ir,ir)*blkc2(iv,iv));
+                        diag[ircmv] += fac*std::real(blkl(ir,ir)*blkc2(iv,iv));
                         ircmv++;
                      } // ir
                   } // ic
@@ -211,29 +278,57 @@ namespace ctns{
 
    // Ol*Or
    template <typename Tm>
-      void twodot_diag_OlOr(const double wt,
-            const stensor2<Tm>& Ol,
-            const stensor2<Tm>& Or,
-            const stensor4<Tm>& wf,
+      void twodot_diag_OlOr(const int ts,
+            const double wt,
+            const stensor2su2<Tm>& Ol,
+            const stensor2su2<Tm>& Or,
+            const stensor4su2<Tm>& wf,
             double* diag){
+         // rank of operators
+         int tsOl = ts;
+         int tsOc1 = 0;
+         int tsOlc1 = ts;
+         int tsOc2 = 0;
+         int tsOr = ts;
+         int tsOc2r = ts;
+         int tsOtot = 0;
+         int br, bc, bm, bv, tslc1, tsc2r, tstot;
+         tstot = wf.info.sym.ts();
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            int idx = wf.info._nnzaddr[i];
-            int br, bc, bm, bv;
-            wf.info._addr_unpack(idx, br, bc, bm, bv);
-            auto blk = wf(br,bc,bm,bv);
-            int rdim = blk.dim0;
-            int cdim = blk.dim1;
-            int mdim = blk.dim2;
-            int vdim = blk.dim3;
+            auto key = wf.info._nnzaddr[i];
+            br = std::get<0>(key);
+            bc = std::get<1>(key);
+            bm = std::get<2>(key);
+            bv = std::get<3>(key);
+            tslc1 = std::get<4>(key);
+            tsc2r = std::get<5>(key);
+            int tsl  = wf.info.qrow.get_sym(br).ts();
+            int tsr  = wf.info.qcol.get_sym(bc).ts();
+            int tsc1 = wf.info.qmid.get_sym(bm).ts();
+            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            int rdim = wf.info.qrow.get_dim(br);
+            int cdim = wf.info.qcol.get_dim(bc);
+            int mdim = wf.info.qmid.get_dim(bm);
+            int vdim = wf.info.qver.get_dim(bv);
+            // spin factor
+            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
+            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
+                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
+                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
+                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
+                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
+                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             // Ol*Or
             const auto blkl = Ol(br,br); 
             const auto blkr = Or(bc,bc); 
-            size_t ircmv = wf.info._offset[idx]-1;  
+            if(blkl.size() == 0 || blkr.size() == 0) continue;
+            size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
                   for(int ic=0; ic<cdim; ic++){
                      for(int ir=0; ir<rdim; ir++){
-                        diag[ircmv] += wt*std::real(blkl(ir,ir)*blkr(ic,ic));
+                        diag[ircmv] += fac*std::real(blkl(ir,ir)*blkr(ic,ic));
                         ircmv++;
                      } // ir
                   } // ic
@@ -244,29 +339,57 @@ namespace ctns{
 
    // Oc1*Oc2
    template <typename Tm>
-      void twodot_diag_Oc1Oc2(const double wt,
-            const stensor2<Tm>& Oc1,
-            const stensor2<Tm>& Oc2,
-            const stensor4<Tm>& wf,
+      void twodot_diag_Oc1Oc2(const int ts,
+            const double wt,
+            const stensor2su2<Tm>& Oc1,
+            const stensor2su2<Tm>& Oc2,
+            const stensor4su2<Tm>& wf,
             double* diag){
+         // rank of operators
+         int tsOl = 0;
+         int tsOc1 = ts;
+         int tsOlc1 = ts;
+         int tsOc2 = ts;
+         int tsOr = 0;
+         int tsOc2r = ts;
+         int tsOtot = 0;
+         int br, bc, bm, bv, tslc1, tsc2r, tstot;
+         tstot = wf.info.sym.ts();
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            int idx = wf.info._nnzaddr[i];
-            int br, bc, bm, bv;
-            wf.info._addr_unpack(idx, br, bc, bm, bv);
-            auto blk = wf(br,bc,bm,bv);
-            int rdim = blk.dim0;
-            int cdim = blk.dim1;
-            int mdim = blk.dim2;
-            int vdim = blk.dim3;
+            auto key = wf.info._nnzaddr[i];
+            br = std::get<0>(key);
+            bc = std::get<1>(key);
+            bm = std::get<2>(key);
+            bv = std::get<3>(key);
+            tslc1 = std::get<4>(key);
+            tsc2r = std::get<5>(key);
+            int tsl  = wf.info.qrow.get_sym(br).ts();
+            int tsr  = wf.info.qcol.get_sym(bc).ts();
+            int tsc1 = wf.info.qmid.get_sym(bm).ts();
+            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            int rdim = wf.info.qrow.get_dim(br);
+            int cdim = wf.info.qcol.get_dim(bc);
+            int mdim = wf.info.qmid.get_dim(bm);
+            int vdim = wf.info.qver.get_dim(bv);
+            // spin factor
+            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
+            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
+                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
+                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
+                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
+                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
+                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             // Oc1*Oc2
             const auto blkc1 = Oc1(bm,bm); 
             const auto blkc2 = Oc2(bv,bv); 
-            size_t ircmv = wf.info._offset[idx]-1;  
+            if(blkc1.size() == 0 || blkc2.size() == 0) continue;
+            size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
                   for(int ic=0; ic<cdim; ic++){
                      for(int ir=0; ir<rdim; ir++){
-                        diag[ircmv] += wt*std::real(blkc1(im,im)*blkc2(iv,iv));
+                        diag[ircmv] += fac*std::real(blkc1(im,im)*blkc2(iv,iv));
                         ircmv++;
                      } // ir
                   } // ic
@@ -277,24 +400,52 @@ namespace ctns{
 
    // Oc1*Or
    template <typename Tm>
-      void twodot_diag_Oc1Or(const double wt,
-            const stensor2<Tm>& Oc1,
-            const stensor2<Tm>& Or,
-            const stensor4<Tm>& wf,
+      void twodot_diag_Oc1Or(const int ts,
+            const double wt,
+            const stensor2su2<Tm>& Oc1,
+            const stensor2su2<Tm>& Or,
+            const stensor4su2<Tm>& wf,
             double* diag){
+         // rank of operators
+         int tsOl = 0;
+         int tsOc1 = ts;
+         int tsOlc1 = ts;
+         int tsOc2 = 0;
+         int tsOr = ts;
+         int tsOc2r = ts;
+         int tsOtot = 0;
+         int br, bc, bm, bv, tslc1, tsc2r, tstot;
+         tstot = wf.info.sym.ts();
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            int idx = wf.info._nnzaddr[i];
-            int br, bc, bm, bv;
-            wf.info._addr_unpack(idx, br, bc, bm, bv);
-            auto blk = wf(br,bc,bm,bv);
-            int rdim = blk.dim0;
-            int cdim = blk.dim1;
-            int mdim = blk.dim2;
-            int vdim = blk.dim3;
+            auto key = wf.info._nnzaddr[i];
+            br = std::get<0>(key);
+            bc = std::get<1>(key);
+            bm = std::get<2>(key);
+            bv = std::get<3>(key);
+            tslc1 = std::get<4>(key);
+            tsc2r = std::get<5>(key);
+            int tsl  = wf.info.qrow.get_sym(br).ts();
+            int tsr  = wf.info.qcol.get_sym(bc).ts();
+            int tsc1 = wf.info.qmid.get_sym(bm).ts();
+            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            int rdim = wf.info.qrow.get_dim(br);
+            int cdim = wf.info.qcol.get_dim(bc);
+            int mdim = wf.info.qmid.get_dim(bm);
+            int vdim = wf.info.qver.get_dim(bv);
+            // spin factor
+            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
+            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
+                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
+                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
+                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
+                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
+                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             // Oc1*Or
             const auto blkc1 = Oc1(bm,bm); 
             const auto blkr  = Or(bc,bc); 
-            size_t ircmv = wf.info._offset[idx]-1;  
+            if(blkc1.size() == 0 || blkr.size() == 0) continue;
+            size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
                   for(int ic=0; ic<cdim; ic++){
@@ -310,29 +461,57 @@ namespace ctns{
 
    // Oc2*Or
    template <typename Tm>
-      void twodot_diag_Oc2Or(const double wt,
-            const stensor2<Tm>& Oc2,
-            const stensor2<Tm>& Or,
-            const stensor4<Tm>& wf,
+      void twodot_diag_Oc2Or(const int ts,
+            const double wt,
+            const stensor2su2<Tm>& Oc2,
+            const stensor2su2<Tm>& Or,
+            const stensor4su2<Tm>& wf,
             double* diag){
+         // rank of operators
+         int tsOl = 0;
+         int tsOc1 = 0;
+         int tsOlc1 = 0;
+         int tsOc2 = ts;
+         int tsOr = ts;
+         int tsOc2r = 0;
+         int tsOtot = 0;
+         int br, bc, bm, bv, tslc1, tsc2r, tstot;
+         tstot = wf.info.sym.ts();
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            int idx = wf.info._nnzaddr[i];
-            int br, bc, bm, bv;
-            wf.info._addr_unpack(idx, br, bc, bm, bv);
-            auto blk = wf(br,bc,bm,bv);
-            int rdim = blk.dim0;
-            int cdim = blk.dim1;
-            int mdim = blk.dim2;
-            int vdim = blk.dim3;
+            auto key = wf.info._nnzaddr[i];
+            br = std::get<0>(key);
+            bc = std::get<1>(key);
+            bm = std::get<2>(key);
+            bv = std::get<3>(key);
+            tslc1 = std::get<4>(key);
+            tsc2r = std::get<5>(key);
+            int tsl  = wf.info.qrow.get_sym(br).ts();
+            int tsr  = wf.info.qcol.get_sym(bc).ts();
+            int tsc1 = wf.info.qmid.get_sym(bm).ts();
+            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            int rdim = wf.info.qrow.get_dim(br);
+            int cdim = wf.info.qcol.get_dim(bc);
+            int mdim = wf.info.qmid.get_dim(bm);
+            int vdim = wf.info.qver.get_dim(bv);
+            // spin factor
+            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
+            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
+                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
+                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
+                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
+                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
+                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             // Oc2*Or
             const auto blkc2 = Oc2(bv,bv); 
             const auto blkr  = Or(bc,bc); 
-            size_t ircmv = wf.info._offset[idx]-1;  
+            if(blkc2.size() == 0 || blkr.size() == 0) continue;
+            size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
                   for(int ic=0; ic<cdim; ic++){
                      for(int ir=0; ir<rdim; ir++){
-                        diag[ircmv] += wt*std::real(blkc2(iv,iv)*blkr(ic,ic));
+                        diag[ircmv] += fac*std::real(blkc2(iv,iv)*blkr(ic,ic));
                         ircmv++;
                      } // ir
                   } // ic
@@ -340,7 +519,7 @@ namespace ctns{
             } // iv
          } // i
       }
-*/
+
 } // ctns
 
 #endif

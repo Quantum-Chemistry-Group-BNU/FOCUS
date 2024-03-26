@@ -667,13 +667,14 @@ namespace ctns{
          //   + <p1q1||s2r2> p1^+q1^+r2s2 + h.c.
          //   + <p1q2||s1r2> p1^+q2^+r2s1 
          //
+         const double scale = 0.5; 
          if(!ifdist1 or rank==0){ 
             // 1. H1*I2
-            auto H1 = symbolic_prod<Tm>(symbolic_oper(block1,'H',0), symbolic_oper(block2,'I',0), 0.5);
+            auto H1 = symbolic_prod<Tm>(symbolic_oper(block1,'H',0), symbolic_oper(block2,'I',0), scale);
             H1.ispins.push_back(std::make_tuple(0,0,0));
             formulae.append(H1);
             // 2. I1*H2
-            auto H2 = symbolic_prod<Tm>(symbolic_oper(block2,'I',0), symbolic_oper(block2,'H',0), 0.5);
+            auto H2 = symbolic_prod<Tm>(symbolic_oper(block2,'I',0), symbolic_oper(block2,'H',0), scale);
             H2.ispins.push_back(std::make_tuple(0,0,0));
             formulae.append(H2);
          }

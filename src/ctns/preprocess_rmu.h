@@ -71,7 +71,11 @@ namespace ctns{
             const auto& dag = sop0.dagger;
             const auto& block = sop0.block;
             const auto& label = sop0.label;
-            if(label == 'I') continue; // for su2 case, we add 'I' into formula
+            if(label == 'I'){
+               assert(sop.size() == 1);
+               coeff *= sop.sums[0].first;
+               continue; // for su2 case, we add 'I' into formula
+            }
             terms += 1;
             const auto& index0 = sop0.index;
             const auto& qops = qops_dict.at(block); 

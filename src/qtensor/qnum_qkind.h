@@ -62,6 +62,10 @@ namespace ctns{
          inline bool is_qNSz(){ return false; }
       template <> inline bool is_qNSz<qNSz>(){ return true; }
 
+      template <typename Qm>
+         inline bool is_qNK(){ return false; }
+      template <> inline bool is_qNK<qNK>(){ return true; }
+
    } // qkind
 
 } // ctns
