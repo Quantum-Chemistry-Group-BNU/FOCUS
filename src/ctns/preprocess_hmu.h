@@ -76,9 +76,6 @@ namespace ctns{
             const hintermediates<ifab,Tm>& hinter,
             const std::map<std::string,int>& oploc){
          const auto& HTerm = H_formulae.tasks[it];
-
-         std::cout << "HTerm=" << HTerm << std::endl;
-
          for(int idx=HTerm.size()-1; idx>=0; idx--){
             const auto& sop = HTerm.terms[idx];
             const auto& sop0 = sop.sums[0].second;
@@ -101,8 +98,6 @@ namespace ctns{
             info[pos] = const_cast<qinfo2type<ifab,Tm>*>(&op0.info);
             if(block[0]=='c') cterms += 1;
             int len = sop.size();
-
-            std::cout << "idx=" << idx << " len=" << len << " sop.sum[0]=" << sop.sums[0].first << std::endl;
             if(len == 1){
                coeff *= sop.sums[0].first;
                loc[pos] = pos;
@@ -124,7 +119,6 @@ namespace ctns{
                }
             }
          } // idx
-         std::cout << "coeff=" << coeff << std::endl;
          coeffH = tools::conjugate(coeff)*HTerm.Hsign();
          // intermediate spins
          if(HTerm.ispins.size() != 0){
@@ -444,9 +438,6 @@ namespace ctns{
                                  blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
                               }
                               Hxlst2[i].push_back(Hxblk);
-
-                              Hxblk.display();
-
                            } // tsc2r
                         } // tslc1
                      } // b3

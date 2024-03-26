@@ -310,7 +310,8 @@
          - preprocess_rmu.h [DONE@2024/03/15]
          - Rmmtasks[i].init()
          - preprocess_renorm_batchDirectSingle()
-   - convert su2mps to non-spin-adapted MPS: debug
+   - convert su2mps to non-spin-adapted MPS? 
+      - debug Hij & correctness of the generated formula [DONE@2024/04/XX]
 
  * Spin-adapted DMRG algorithm: [DONE@2024/05/xx]
    - twodot sweep algorithm
@@ -320,6 +321,8 @@
    - diag [check use guess & cisolver]
    - decimation
       - reshape wf4?
+
+ * Other functionalities:
    - propagation of initial guess
    - singlet embedding
 
