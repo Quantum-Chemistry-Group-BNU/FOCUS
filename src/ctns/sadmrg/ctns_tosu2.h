@@ -9,6 +9,7 @@
 #include "ctns_tosu2_dm.h"
 #include "ctns_tosu2_env.h"
 #include "ctns_tosu2_update.h"
+#include "ctns_tononsu2.h"
 
 #include "../../core/csf.h"
 
@@ -178,6 +179,13 @@ namespace ctns{
 
          icomb_NSz.display_shape();
          icomb.display_shape();
+
+         // debug by checking the overlap
+         comb<qkind::qNSz,Tm> icomb_NSz2;
+         rcanon_tononsu2(icomb, icomb_NSz2);
+         auto Smat = get_Smat(icomb_NSz,icomb_NSz2);
+         Smat.print("Smat");
+         exit(1);
 
          /*
          int iroot = 0;

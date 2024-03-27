@@ -79,8 +79,7 @@ void SADMRG(const input::schedule& schd){
          }
          ctns::rcanon_load(icomb, rcanon_file);
       }
-
-      // NEXT STEP: 
+      
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
    } // rank 0
 
@@ -129,6 +128,16 @@ void SADMRG(const input::schedule& schd){
          auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
          if(rank == 0){
             Hij.print("Hij",8);
+
+            const bool debug_Hij = true;
+            if(debug_Hij){
+               ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
+               ctns::rcanon_tononsu2(icomb, icomb_NSz);
+               auto Hij_NSz = ctns::get_Hmat(icomb_NSz, int2e, int1e, ecore, schd, scratch);
+               auto diff = (Hij - Hij_NSz).normF();
+               std::cout << "diff=" << diff << std::endl; 
+            }
+            
             auto Sij = ctns::get_Smat(icomb);
             Sij.print("Sij");
          }
