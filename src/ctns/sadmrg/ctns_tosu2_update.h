@@ -233,22 +233,30 @@ namespace ctns{
             const bool debug=true){
          const Tm alpha = 1.0, beta = 0.0;
          if(debug) std::cout << "\nctns::updateRWFuns twos=" << twos << std::endl;
-         // 1. analyze the population
+
+         // 1. just analyze the population
+         // rwfunsW[i,b] = rwfuns[i,a]*wmat[a,b] 
          const auto& rwfuns = icomb_NSz.rwfuns;
          int nroot = rwfuns.size();
          for(int iroot=0; iroot<nroot; iroot++){
             if(debug) std::cout << "\niroot=" << iroot << std::endl;
-            assert(rwfuns[iroot].rows()==1 && rwfuns[iroot].cols()==1);
             assert(rwfuns[iroot].info.qcol == wmat.qrow);
+            assert(rwfuns[iroot].rows()==1);
+            // find the block
+            int b = 0;
+            for(b=0; b<rwfuns[iroot].cols(); b++){
+               if(rwfuns[iroot].info.qrow.get_sym(0) == 
+                     rwfuns[iroot].info.qcol.get_sym(b)) break;
+            }
             // rwfuns[iroot].dot(wmat);
             double pop = 0.0;
-            auto blkr = rwfuns[iroot](0,0);
+            auto blkr = rwfuns[iroot](0,b);
             for(int j=0; j<wmat.qcol.size(); j++){
-               size_t offw = wmat._offset.at(std::make_pair(0,j));
+               size_t offw = wmat._offset.at(std::make_pair(b,j));
                if(offw == 0) continue;
                const Tm* blkw = wmat._data.data() + offw-1;
                int d0 = 1;
-               int di = wmat.qrow.get_dim(0);
+               int di = wmat.qrow.get_dim(b);
                int dj = wmat.qcol[j].second;
                linalg::matrix<Tm> rwfunW(d0,dj);
                linalg::xgemm("N", "N", d0, dj, di, alpha,
@@ -270,7 +278,7 @@ namespace ctns{
                << " diff(1-pop)=" << 1.0-pop << std::endl;
          } // iroot
 
-         // projection
+         // 2. projection
          auto wf2 = icomb_NSz.get_wf2();
          auto sym_state = icomb_NSz.get_sym_state();
          int n = sym_state.ne();
@@ -292,7 +300,7 @@ namespace ctns{
                // when the truncation threshold is very large! 
                nstate = std::min(nroot,dj);
                linalg::matrix<Tm> rwfunW(nstate,dj);
-               // rW = rwfun(n,i)*W(i,j)
+               // rW(n,j) = rwfun(n,i)*W(i,j)
                linalg::xgemm("N", "N", nstate, dj, di, alpha,
                      wf2.data(), nroot, blkw, di, beta,
                      rwfunW.data(), nstate);
@@ -300,7 +308,7 @@ namespace ctns{
                std::vector<double> s;
                linalg::matrix<Tm> U, Vt;
                linalg::svd_solver(rwfunW, s, U, Vt, 13);
-               // lowdin orthonormalization 
+               // lowdin orthonormalization: wf2new = U*Vt 
                wf2new = linalg::xgemm("N","N",U,Vt);
             }
          } // j
@@ -310,7 +318,7 @@ namespace ctns{
             exit(1); 
          }
 
-         // 3. assemble rwfuns
+         // 3. assemble vector form of rwfuns
          qsym vac_sym(3,0,0);
          qsym state_sym(3,n,twos);
          qbond qrow({{state_sym,1}});

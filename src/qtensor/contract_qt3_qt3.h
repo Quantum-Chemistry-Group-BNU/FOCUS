@@ -39,16 +39,19 @@ namespace ctns{
             Tm* qt2_data){
          assert(qt2_info.sym == -qt3a_info.sym + qt3b_info.sym);
          assert(qt3a_info.dir  == qt3b_info.dir); // bra dir fliped
-         assert(qt3a_info.qrow == qt3b_info.qrow);
-         assert(qt3a_info.qcol == qt3b_info.qcol);
-         assert(qt3a_info.qmid == qt3b_info.qmid);
          if(superblock == "lc"){
+            assert(qt3a_info.qrow == qt3b_info.qrow); // l
+            assert(qt3a_info.qmid == qt3b_info.qmid); // c
             contract_qt3_qt3_info_lc(qt3a_info, qt3a_data, qt3b_info, qt3b_data,
                   qt2_info, qt2_data);
          }else if(superblock == "cr"){
+            assert(qt3a_info.qcol == qt3b_info.qcol); // r
+            assert(qt3a_info.qmid == qt3b_info.qmid); // c
             contract_qt3_qt3_info_cr(qt3a_info, qt3a_data, qt3b_info, qt3b_data,
                   qt2_info, qt2_data);
          }else if(superblock == "lr"){
+            assert(qt3a_info.qrow == qt3b_info.qrow); // l
+            assert(qt3a_info.qcol == qt3b_info.qcol); // r
             contract_qt3_qt3_info_lr(qt3a_info, qt3a_data, qt3b_info, qt3b_data,
                   qt2_info, qt2_data);
          }else{

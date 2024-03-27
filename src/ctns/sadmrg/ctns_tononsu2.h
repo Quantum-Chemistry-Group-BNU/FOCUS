@@ -5,23 +5,38 @@
 
 namespace ctns{
 
-   inline std::pair<qbond,std::map<qsym3,std::pair<int,int>>> qbond_su2expand(const qbond& qs){
+   inline std::pair<qbond,std::map<qsym3,std::pair<int,int>>> qbond_su2expand(const qbond& qs,
+         const int iop=0,
+         const int tm0=0){
       std::map<qsym,std::vector<int>> qmap;
+      std::vector<qsym> qsyms; // this ordered qsym ensures that symsectors for physical indices are consistent
       for(int i=0; i<qs.size(); i++){
          auto sym = qs.dims[i].first;
          auto dim = qs.dims[i].second;
          int ne = sym.ne();
          int ts = sym.ts();
-         for(int tm=-ts; tm<=ts; tm+=2){
-            qmap[qsym(2,ne,tm)].push_back(i);
+         for(int tm=ts; tm>=-ts; tm-=2){
+            if(iop == 0){
+               qsym sym2(2,ne,tm);
+               if(std::find(qsyms.begin(), qsyms.end(), sym2)==qsyms.end()){
+                  qsyms.push_back(sym2);   
+               }
+               qmap[sym2].push_back(i);
+            }else{
+               if(tm != tm0) continue;
+               qsym sym2(2,ne,tm);
+               if(std::find(qsyms.begin(), qsyms.end(), sym2)==qsyms.end()){
+                  qsyms.push_back(sym2);   
+               }
+               qmap[sym2].push_back(i);
+            } // iop 
          }
       }
       qbond qs2;
       std::map<qsym3,std::pair<int,int>> offmap;
-      int b = 0;
-      for(const auto& pr : qmap){
-         auto sym0 = pr.first;
-         auto indices = pr.second;
+      for(int b=0; b<qsyms.size(); b++){
+         const auto& sym0 = qsyms[b];
+         const auto& indices = qmap.at(sym0);
          int ne = sym0.ne();
          int tm = sym0.tm();
          int dimtot = 0;
@@ -35,7 +50,6 @@ namespace ctns{
             dimtot += dim;
          }
          qs2.dims.push_back(std::make_pair(sym0,dimtot));
-         b += 1;
       }
       return std::make_pair(qs2,offmap);
    }
@@ -43,6 +57,7 @@ namespace ctns{
    template <typename Tm>
       void qtensor3_tononsu2(const stensor3su2<Tm>& site,
             stensor3<Tm>& site2){
+         assert(site.info.sym == qsym(3,0,0));
          assert(site.info.dir == dir_RCF);
          assert(site.info.couple == CRcouple);
          const auto& qrow = site.info.qrow;
@@ -75,19 +90,20 @@ namespace ctns{
             int rdim = blk.dim0;
             int cdim = blk.dim1;
             int mdim = blk.dim2;
-            for(int tmm=-tsm; tmm<=tsm; tmm+=2){
+            for(int tmm=tsm; tmm>=-tsm; tmm-=2){
                auto infom = offmapm.at(qsym3(qm.ne(),qm.ts(),tmm));
                int bm2 = infom.first;
                int offm = infom.second;
-               for(int tmc=-tsc; tmc<=tsc; tmc+=2){
+               for(int tmc=tsc; tmc>=-tsc; tmc-=2){
                   auto infoc = offmapc.at(qsym3(qc.ne(),qc.ts(),tmc));
                   int bc2 = infoc.first;
                   int offc = infoc.second;
-                  for(int tmr=-tsr; tmr<=tsr; tmr+=2){
+                  for(int tmr=tsr; tmr>=-tsr; tmr-=2){
                      auto infor = offmapr.at(qsym3(qr.ne(),qr.ts(),tmr));
                      int br2 = infor.first;
                      int offr = infor.second;
                      // spin factor <SkMkS[rk]M[rk]|S[rk-1]M[rk-1]>
+                     if(tmm + tmc != tmr) continue;
                      double cgfac = fock::cgcoeff(tsm,tsc,tsr,tmm,tmc,tmr);
                      // block
                      auto blk2 = site2(br2,bc2,bm2);
@@ -109,17 +125,59 @@ namespace ctns{
 
    template <typename Tm>
       void qtensor2_tononsu2(const stensor2su2<Tm>& rwfun,
-            stensor2<Tm>& rwfun2){
-
-
+            stensor2<Tm>& rwfun2,
+            const int tmr){
+         assert(rwfun.info.sym == qsym(3,0,0));
+         assert(rwfun.info.dir == dir_RWF); 
+         const auto& qrow = rwfun.info.qrow;
+         const auto& qcol = rwfun.info.qcol;
+         auto qexpandr = qbond_su2expand(qrow,1,tmr);
+         auto qexpandc = qbond_su2expand(qcol);
+         const auto& qrow2 = qexpandr.first;
+         const auto& qcol2 = qexpandc.first;
+         const auto& offmapr = qexpandr.second;
+         const auto& offmapc = qexpandc.second;
+         rwfun2.init(qsym(2,0,0),qrow2,qcol2,dir_RWF);
+         for(int i=0; i<rwfun.info._nnzaddr.size(); i++){
+            auto key = rwfun.info._nnzaddr[i];
+            int br = std::get<0>(key);
+            int bc = std::get<1>(key);
+            auto qr = rwfun.info.qrow.get_sym(br); // left
+            auto qc = rwfun.info.qcol.get_sym(bc); // right
+            int tsr = qr.ts(); 
+            int tsc = qc.ts();
+            const auto blk = rwfun(br,bc);
+            int rdim = blk.dim0;
+            int cdim = blk.dim1;
+            for(int tmc=tsc; tmc>=-tsc; tmc-=2){
+               auto infoc = offmapc.at(qsym3(qc.ne(),qc.ts(),tmc));
+               int bc2 = infoc.first;
+               int offc = infoc.second;
+               if(tmc != tmr) continue;
+               auto infor = offmapr.at(qsym3(qr.ne(),qr.ts(),tmr));
+               int br2 = infor.first;
+               int offr = infor.second;
+               // block
+               auto blk2 = rwfun2(br2,bc2);
+               for(int ic=0; ic<cdim; ic++){
+                  int ic2 = offc + ic;
+                  for(int ir=0; ir<rdim; ir++){
+                     int ir2 = offr + ir;
+                     blk2(ir2,ic2) = blk(ir,ic);
+                  } // ir
+               } // ic
+            } // tmc
+         } // i
       }
 
    // convert SU2 mps to non-SU2 mps by a simple expansion
    template <typename Tm>
       void rcanon_tononsu2(const comb<qkind::qNS,Tm>& icomb,
-            comb<qkind::qNSz,Tm>& icomb_NSz){
+            comb<qkind::qNSz,Tm>& icomb_NSz,
+            const int tm){
          const bool debug = true;
-         std::cout << "\nctns::rcanon_tononsu2" << std::endl;
+         std::cout << "\nctns::rcanon_tononsu2 tm=" << tm << std::endl;
+         assert(std::abs(tm) <= icomb.get_sym_state().ts());
          icomb_NSz.topo = icomb.topo;
          // sites
          int nphysical = icomb.get_nphysical();
@@ -131,7 +189,7 @@ namespace ctns{
          int nroots = icomb.get_nroots();
          icomb_NSz.rwfuns.resize(nroots);
          for(int i=0; i<nroots; i++){
-            qtensor2_tononsu2(icomb.rwfuns[i],icomb_NSz.rwfuns[i]);
+            qtensor2_tononsu2(icomb.rwfuns[i],icomb_NSz.rwfuns[i],tm);
          }
       }
 

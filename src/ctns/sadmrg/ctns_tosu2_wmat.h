@@ -6,7 +6,7 @@
 
 namespace ctns{
 
-   // W[alpha,beta]
+   // W[alpha(qbond),beta(qbond3)]
    template <typename Tm>
       struct Wmatrix{
          public:

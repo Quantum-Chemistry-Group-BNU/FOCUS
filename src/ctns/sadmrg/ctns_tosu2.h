@@ -47,6 +47,7 @@ namespace ctns{
          wmat = initW0vac<Tm>();
 
          // sweep projection: start from the last site
+         icomb.topo = icomb_NSz.topo;
          int nsite = icomb_NSz.get_nphysical();
          icomb.sites.resize(nsite);
 
@@ -179,13 +180,6 @@ namespace ctns{
 
          icomb_NSz.display_shape();
          icomb.display_shape();
-
-         // debug by checking the overlap
-         comb<qkind::qNSz,Tm> icomb_NSz2;
-         rcanon_tononsu2(icomb, icomb_NSz2);
-         auto Smat = get_Smat(icomb_NSz,icomb_NSz2);
-         Smat.print("Smat");
-         exit(1);
 
          /*
          int iroot = 0;

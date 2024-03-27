@@ -63,6 +63,51 @@ void SADMRG(const input::schedule& schd){
             ctns::rcanon_tosu2(icomb_NSz, icomb, schd.twos, schd.ctns.thresh_tosu2);
             ctns::rcanon_save(icomb, rcanon_file+"_su2");
 
+            // debug by checking the overlap
+            ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz2;
+            auto symstate = icomb_NSz.get_sym_state(); 
+            rcanon_tononsu2(icomb, icomb_NSz2, symstate.tm());
+            icomb_NSz.display_shape();
+            ctns::comb<Qm,Tm> icomb2;
+            ctns::rcanon_tosu2(icomb_NSz2, icomb2, schd.twos, schd.ctns.thresh_tosu2);
+            auto smat = get_Smat(icomb2,icomb);
+            auto smat2 = get_Smat(icomb_NSz2,icomb_NSz);
+            // HIJ
+            integral::two_body<Tm> int2e;
+            integral::one_body<Tm> int1e;
+            double ecore;
+            integral::load(int2e, int1e, ecore, schd.integral_file);
+            io::create_scratch(schd.scratch);
+            
+            auto Hij1 = ctns::get_Hmat(icomb_NSz, int2e, int1e, ecore, schd, schd.scratch);
+            std::cout << "\nicomb_NSz" << std::endl;
+            Hij1.print("Hij1",8);
+            
+            auto Hij2 = ctns::get_Hmat(icomb_NSz2, int2e, int1e, ecore, schd, schd.scratch);
+            std::cout << "\nicomb_NSz2" << std::endl;
+            Hij2.print("Hij2",8);
+            
+            auto Hij3 = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
+            std::cout << "\nicomb" << std::endl;
+            Hij3.print("Hij3",8);
+
+            auto Hij4 = ctns::get_Hmat(icomb2, int2e, int1e, ecore, schd, schd.scratch);
+            std::cout << "\nicomb2" << std::endl;
+            Hij4.print("Hij4",8);
+            
+            std::cout << "\ncompare:" << std::endl;
+            smat.print("smat");
+            smat2.print("smat2");
+            Hij1.print("Hij1",8);
+            Hij2.print("Hij2",8);
+            Hij3.print("Hij3",8);
+            Hij4.print("Hij4",8);
+            icomb_NSz.display_shape();
+            ctns::rcanon_expand_onstate(icomb_NSz,0);
+            icomb_NSz2.display_shape();
+            ctns::rcanon_expand_onstate(icomb_NSz2,0);
+            exit(1);
+
          }else{
             ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
          }
@@ -132,10 +177,13 @@ void SADMRG(const input::schedule& schd){
             const bool debug_Hij = true;
             if(debug_Hij){
                ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
-               ctns::rcanon_tononsu2(icomb, icomb_NSz);
+               ctns::rcanon_tononsu2(icomb, icomb_NSz, icomb.get_sym_state().ts()); // default: high-spin
                auto Hij_NSz = ctns::get_Hmat(icomb_NSz, int2e, int1e, ecore, schd, scratch);
                auto diff = (Hij - Hij_NSz).normF();
-               std::cout << "diff=" << diff << std::endl; 
+               std::cout << "diff=" << diff << std::endl;
+               Hij.print("Hij",8);
+               Hij_NSz.print("Hij_NSz",8);
+               exit(1); 
             }
             
             auto Sij = ctns::get_Smat(icomb);
