@@ -107,8 +107,9 @@ namespace ctns{
    //        |               |
    //     ---*---|vac>   n---*
    //  |out> 	              |
-   template <typename Tm>
-      stensor3<Tm> get_right_bsite(const int isym){
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+      stensor3<Tm> get_right_bsite(){
+         int isym = Qm::isym;
          auto qvac = get_qbond_vac(isym);
          auto qphys = get_qbond_phys(isym);
          stensor3<Tm> qt3(qsym(isym), qphys, qvac, qphys); // lrc
@@ -120,18 +121,49 @@ namespace ctns{
          }
          return qt3;
       }
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      stensor3su2<Tm> get_right_bsite(){
+         int isym = Qm::isym;
+         auto qvac = get_qbond_vac(isym);
+         auto qphys = get_qbond_phys(isym);
+         stensor3su2<Tm> qt3(qsym(isym), qphys, qvac, qphys); // lrc
+         for(int bk=0; bk<qphys.size(); bk++){
+            int ts = qphys.get_sym(bk).ts();
+            auto blk = qt3(bk,0,bk,ts);
+            for(int im=0; im<qphys.get_dim(bk); im++){
+               blk(im,0,im) = 1.0;
+            }
+         }
+         return qt3;
+      }
 
    //        n            
    //        |            
    //     ---*--- <out|
    //  <vac| 	       
-   template <typename Tm>
-      stensor3<Tm> get_left_bsite(const int isym){
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+      stensor3<Tm> get_left_bsite(){
+         int isym = Qm::isym;
          auto qvac = get_qbond_vac(isym);
          auto qphys = get_qbond_phys(isym);
          stensor3<Tm> qt3(qsym(isym), qvac, qphys, qphys, dir_LCF);
          for(int bk=0; bk<qphys.size(); bk++){
             auto blk = qt3(0,bk,bk);
+            for(int im=0; im<qphys.get_dim(bk); im++){
+               blk(0,im,im) = 1.0;
+            }
+         }
+         return qt3;
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      stensor3su2<Tm> get_left_bsite(){
+         int isym = Qm::isym;
+         auto qvac = get_qbond_vac(isym);
+         auto qphys = get_qbond_phys(isym);
+         stensor3su2<Tm> qt3(qsym(isym), qvac, qphys, qphys, dir_LCF, LCcouple);
+         for(int bk=0; bk<qphys.size(); bk++){
+            int ts = qphys.get_sym(bk).ts();
+            auto blk = qt3(0,bk,bk,ts);
             for(int im=0; im<qphys.get_dim(bk); im++){
                blk(0,im,im) = 1.0;
             }

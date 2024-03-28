@@ -72,6 +72,14 @@ void SADMRG(const input::schedule& schd){
             ctns::rcanon_tosu2(icomb_NSz2, icomb2, schd.twos, schd.ctns.thresh_tosu2);
             auto smat = get_Smat(icomb2,icomb);
             auto smat2 = get_Smat(icomb_NSz2,icomb_NSz);
+            smat.print("smat",10);
+            smat2.print("smat2",10);
+            
+            icomb_NSz.display_shape();
+            ctns::rcanon_expand_onstate(icomb_NSz,0);
+            icomb_NSz2.display_shape();
+            ctns::rcanon_expand_onstate(icomb_NSz2,0);
+            
             // HIJ
             integral::two_body<Tm> int2e;
             integral::one_body<Tm> int1e;
@@ -82,7 +90,20 @@ void SADMRG(const input::schedule& schd){
             auto Hij1 = ctns::get_Hmat(icomb_NSz, int2e, int1e, ecore, schd, schd.scratch);
             std::cout << "\nicomb_NSz" << std::endl;
             Hij1.print("Hij1",8);
-            
+          
+            std::cout << "\nicomb_NSz" << std::endl; 
+            for(int i=0; i<icomb_NSz.get_nphysical(); i++){
+               std::cout << "\ni=" << i << std::endl;
+               icomb_NSz.sites[i].print("site"+std::to_string(i));
+            }
+               
+            std::cout << "\nicomb_NSz2" << std::endl; 
+            for(int i=0; i<icomb_NSz.get_nphysical(); i++){
+               std::cout << "\ni=" << i << std::endl;
+               icomb_NSz2.sites[i].print("site"+std::to_string(i));
+            }
+            ctns::rcanon_save(icomb_NSz2, rcanon_file+"_NSz2");
+
             auto Hij2 = ctns::get_Hmat(icomb_NSz2, int2e, int1e, ecore, schd, schd.scratch);
             std::cout << "\nicomb_NSz2" << std::endl;
             Hij2.print("Hij2",8);
@@ -96,16 +117,12 @@ void SADMRG(const input::schedule& schd){
             Hij4.print("Hij4",8);
             
             std::cout << "\ncompare:" << std::endl;
-            smat.print("smat");
-            smat2.print("smat2");
-            Hij1.print("Hij1",8);
-            Hij2.print("Hij2",8);
-            Hij3.print("Hij3",8);
-            Hij4.print("Hij4",8);
-            icomb_NSz.display_shape();
-            ctns::rcanon_expand_onstate(icomb_NSz,0);
-            icomb_NSz2.display_shape();
-            ctns::rcanon_expand_onstate(icomb_NSz2,0);
+            smat.print("smat",10);
+            smat2.print("smat2",10);
+            Hij1.print("Hij1",10);
+            Hij2.print("Hij2",10);
+            Hij3.print("Hij3",10);
+            Hij4.print("Hij4",10);
             exit(1);
 
          }else{

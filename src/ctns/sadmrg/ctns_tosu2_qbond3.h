@@ -70,7 +70,7 @@ namespace ctns{
       return qvac; 
    }
 
-   inline qbond3 get_qbond_phys(){
+   inline qbond3 get_qbond3_phys(){
       qbond3 qphys({{std::make_tuple(0,0,0),1},   // 0
             {std::make_tuple(2,0,0),1},   // 2
             {std::make_tuple(1,1,1),1},   // a

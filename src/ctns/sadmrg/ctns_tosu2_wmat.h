@@ -86,6 +86,17 @@ namespace ctns{
          return wmat;
       }
 
+   template <typename Tm>
+      Wmatrix<Tm> initW0site0(){
+         qbond qrow = get_qbond_phys(2); 
+         qbond3 qcol = get_qbond3_phys(); 
+         Wmatrix<Tm> wmat(qrow,qcol);
+         for(int idx=0; idx<wmat._data.size(); idx++){
+            wmat._data[idx] = 1.0;
+         }
+         return wmat;
+      }
+
 } // ctns
 
 #endif

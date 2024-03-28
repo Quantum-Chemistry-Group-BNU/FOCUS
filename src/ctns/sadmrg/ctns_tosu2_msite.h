@@ -60,7 +60,7 @@ namespace ctns{
          // init Am 
          const auto& qrow = rsite.info.qrow;
          const auto& qcol = wmat.qcol;
-         const auto qmid = get_qbond_phys(); 
+         const auto qmid = get_qbond3_phys(); 
          MixedRSite<Tm> msite(qrow, qcol, qmid);
          // start contraction 
          int br, bc, bm;

@@ -150,7 +150,7 @@ namespace ctns{
             // type=0: end or leaves
             if(node.type == 0 && p != std::make_pair(0,0)){
 
-               icomb.sites[idx] = get_right_bsite<Tm>(Qm::isym);
+               icomb.sites[idx] = get_right_bsite<Qm,Tm>();
 
             // physical/internal on backbone/branch
             }else{

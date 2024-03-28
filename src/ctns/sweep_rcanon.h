@@ -48,7 +48,7 @@ namespace ctns{
             // cwf(n0,r0)*site1(r0,r1,n1) = psi(n0,r1,n1)
             icomb.cpsi[iroot] = contract_qt3_qt2("l",site1,cwf);
          } // iroot
-         site0 = get_left_bsite<Tm>(Qm::isym); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
+         site0 = get_left_bsite<Qm,Tm>(); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
          icomb.display_size();
       }
 
@@ -95,7 +95,7 @@ namespace ctns{
             // cwf(n0,r0)*site1(r0,r1,n1) = psi(n0,r1,n1)
             icomb.cpsi[iroot] = contract_qt3_qt2("l",site1,cwf);
          } // iroot
-         site0 = get_left_bsite<Tm>(Qm::isym); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
+         site0 = get_left_bsite<Qm,Tm>(); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
          icomb.display_size();
 */
       }
