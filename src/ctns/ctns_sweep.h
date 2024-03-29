@@ -6,6 +6,7 @@
 #include "sweep_onedot.h"
 #include "sweep_twodot.h"
 #include "sweep_rcanon.h"
+#include "sadmrg/sweep_rcanon_su2.h"
 
 namespace ctns{
 

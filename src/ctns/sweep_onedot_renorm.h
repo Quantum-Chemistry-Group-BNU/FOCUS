@@ -2,6 +2,7 @@
 #define SWEEP_ONEDOT_RENORM_H
 
 #include "sweep_onedot_decim.h"
+#include "sweep_onedot_guess.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif

@@ -3,6 +3,7 @@
 
 #include "sweep_onedot_renorm.h"
 #include "sweep_twodot_decim.h"
+#include "sweep_twodot_guess.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif

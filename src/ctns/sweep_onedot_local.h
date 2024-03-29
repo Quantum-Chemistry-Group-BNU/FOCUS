@@ -2,6 +2,7 @@
 #define SWEEP_ONEDOT_LOCAL_H
 
 #include "oper_functors.h"
+#include "sweep_onedot_guess.h"
 
 namespace ctns{
 
