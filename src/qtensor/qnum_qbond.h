@@ -42,6 +42,16 @@ namespace ctns{
             for(const auto& p : dims) dim += p.second;
             return dim;
          }
+         // total dimension U1
+         int get_dimAllU1() const{
+            int dim = 0;
+            for(const auto& p : dims){
+               const auto& sym = p.first;
+               assert(sym.isym() == 3);
+               dim += p.second*(sym.ts()+1); // *(2S+1)
+            }
+            return dim;
+         }
          // offset 
          std::vector<int> get_offset() const{
             std::vector<int> offset;

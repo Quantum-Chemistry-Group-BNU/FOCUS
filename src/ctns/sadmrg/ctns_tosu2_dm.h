@@ -188,7 +188,7 @@ namespace ctns{
             ys.dims.push_back(std::make_pair(sym,nkept));
          }
          ys.print("ys");
-         std::cout << "sigs2sum=" << sigs2sum 
+         std::cout << " sigs2sum=" << sigs2sum 
             << " diff(1-sigs2sum)=" << 1.0-sigs2sum 
             << std::endl;
          return Yinfo;

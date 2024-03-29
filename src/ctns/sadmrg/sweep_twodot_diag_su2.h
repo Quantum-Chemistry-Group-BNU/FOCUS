@@ -127,7 +127,6 @@ namespace ctns{
                << " size=" << bindex_dist.size() 
                << std::endl;
          }
-         tools::print_vector(bindex_dist,"bindex_dist");
          // B^L*Q^R or Q^L*B^R 
          for(const auto& index : bindex_dist){
             const auto& O1 = qops1(BQ1).at(index);

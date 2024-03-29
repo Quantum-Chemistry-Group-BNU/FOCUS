@@ -42,8 +42,14 @@ namespace ctns{
                      << " node=" << topo.rcoord[i]
                      << " shape(l,r,c)=(" << std::get<0>(shape) << ","
                      << std::get<1>(shape) << ","
-                     << std::get<2>(shape) << ")"
-                     << std::endl;
+                     << std::get<2>(shape) << ")";
+                  if(!Qm::ifabelian){
+                     auto shapeU1 = sites[i].get_shapeU1();
+                     std::cout << " shapeU1(l,r,c)=(" << std::get<0>(shapeU1) << ","
+                        << std::get<1>(shapeU1) << ","
+                        << std::get<2>(shapeU1) << ")";
+                  }
+                  std::cout << std::endl;
                } // i
                auto wf2 = this->get_wf2();
                wf2.print("wf2");

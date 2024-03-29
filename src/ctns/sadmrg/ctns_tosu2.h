@@ -21,14 +21,14 @@ namespace ctns{
             comb<qkind::qNS,Tm>& icomb,
             const int twos,
             const double thresh_tosu2){
-         const bool debug = true;
+         const bool debug = false;
          std::cout << "\nctns::rcanon_tosu2 twos=" << twos 
             << " thresh_tosu2=" << thresh_tosu2
             << std::endl;
          auto t0 = tools::get_time();
 
          // build environment
-         auto dmenv = buildDMLeftEnv(icomb_NSz);
+         auto dmenv = buildDMLeftEnv(icomb_NSz, debug);
          
          // sweep projection: start from the last site
          icomb.topo = icomb_NSz.topo;
@@ -45,38 +45,34 @@ namespace ctns{
 
          for(int i=1; i<nsite; i++){
 
-            if(debug){
-               std::cout << "\n######" << std::endl;
-               std::cout << " i=" << i << std::endl;
-               std::cout << "######" << std::endl;
-               icomb_NSz.sites[i].print("rsite_"+std::to_string(i));
-            }
+            std::cout << "idx=" << i << std::endl;
+            if(debug) icomb_NSz.sites[i].print("rsite_"+std::to_string(i));
 
             // 1. form MixedRSite
-            auto msite = formMixedRSite(icomb_NSz.sites[i], wmat);
+            auto msite = formMixedRSite(icomb_NSz.sites[i], wmat, debug);
 
             // 2. form CoupledRSite [MOST IMPORTANT STEP!]
             const auto& qc = msite.qmid;
             const auto& qr = msite.qcol;
             auto qprod = qmerge(qc,qr);
-            auto csite = formCoupledRSite(msite, qprod, qc, qr);
+            auto csite = formCoupledRSite(msite, qprod, qc, qr, debug);
 
             // 3. density matrix
-            auto cdm = formCoupledDM(csite, dmenv[i]);
+            auto cdm = formCoupledDM(csite, dmenv[i], debug);
 
             // 4. decimation by diagonlizing quasi-dm 
-            auto Yinfo = decimQuasiDM(cdm, thresh_tosu2);
+            auto Yinfo = decimQuasiDM(cdm, thresh_tosu2, debug);
 
             // 5. update information: W
-            wmat = updateWmat(csite, Yinfo);
+            wmat = updateWmat(csite, Yinfo, debug);
 
             // 6. expand Y into sa-mps site
-            icomb.sites[i] = updateSite(Yinfo, qprod, qc, qr);
+            icomb.sites[i] = updateSite(Yinfo, qprod, qc, qr, debug);
 
             // debug:
             auto qt2 = contract_qt3_qt3("cr", icomb.sites[i], icomb.sites[i]);
             qt2.check_identityMatrix(1.e-10, false);
-            qt2.to_matrix().print("qt2mat");
+            if(debug) qt2.to_matrix().print("qt2mat");
 
          }
 

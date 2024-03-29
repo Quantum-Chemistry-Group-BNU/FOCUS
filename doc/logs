@@ -312,7 +312,8 @@
          - preprocess_renorm_batchDirectSingle()
    - convert su2mps to non-spin-adapted MPS? 
       - to_nonsu2 [DONE@2024/03/28]
-      - debug Hij & correctness of the generated formula [DONE@2024/XX/XX] 
+      - debug Hij & correctness of the generated formula 
+      - opS is the most complicated [DONE@2024/03/29] 
 
  * Spin-adapted DMRG algorithm: [DONE@2024/05/xx]
    - twodot sweep algorithm
@@ -327,7 +328,10 @@
    - propagation of initial guess
    - singlet embedding
 
- * GPU implementation: [DONE@2024/06/xx]
+ * Careful check of different implementations: [DONE@2024/06/xx]
+   - OpenMP
+   - MPI
+   - GPU
 
  * Benchmark:
    - fe2s2

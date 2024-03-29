@@ -267,11 +267,12 @@ namespace ctns{
                pop += pop_j; 
                if(debug){
                   auto symj = wmat.qcol[j].first;
-                  std::cout << "> j=" << j << " sym=(" << std::get<0>(symj) << ","
-                     << std::get<1>(symj) << "," << std::get<2>(symj) << ")"
-                     << std::endl;
+                  std::cout << "# j=" << j << " sym=(" << std::get<0>(symj) << ","
+                     << std::get<1>(symj) << "," << std::get<2>(symj) << ")";
+                  if(std::get<1>(symj) == twos) std::cout << " target sector!";
+                  std::cout << std::endl;
                   rwfunW.print("rwfunW");
-                  std::cout << "pop[j]=" << std::setprecision(10) << pop_j << std::endl;
+                  std::cout << " pop[j]=" << std::setprecision(10) << pop_j << std::endl;
                }
             } // j
             if(debug) std::cout << "total pop=" << std::setprecision(10) << pop 

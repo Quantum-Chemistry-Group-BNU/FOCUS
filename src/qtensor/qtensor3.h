@@ -270,6 +270,11 @@ namespace ctns{
                   auto dpt = qmerge(qc1, qc2).second;     
                   return split_qt4_qt3_c1c2(*this, qc1, qc2, dpt);
                }
+            // shape
+            template <bool y=ifab, std::enable_if_t<y,int> = 0>
+               std::tuple<int,int,int> get_shapeU1() const{
+                  return this->get_shape();
+            }
 
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
             // constructors
@@ -306,6 +311,15 @@ namespace ctns{
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                qtensor2<ifab,Tm> fix_mid(const std::pair<int,int> mdx) const;
             */
+            // shape
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               std::tuple<int,int,int> get_shapeU1() const{
+                  return std::make_tuple(
+                        info.qrow.get_dimAllU1(),
+                        info.qcol.get_dimAllU1(),
+                        info.qmid.get_dimAllU1()
+                        );
+            }
 
          public:
             bool own = true; // whether the object owns its data
