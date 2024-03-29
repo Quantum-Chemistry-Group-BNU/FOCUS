@@ -122,6 +122,7 @@ namespace ctns{
          coeffH = tools::conjugate(coeff)*HTerm.Hsign();
          // intermediate spins
          if(HTerm.ispins.size() != 0){
+            assert(HTerm.ispins.size() == 3 or HTerm.ispins.size() == 2); // twodot or onedot
             int j = 0;
             for(int i=0; i<HTerm.ispins.size(); i++){
                const auto& ispin = HTerm.ispins[i];

@@ -105,15 +105,35 @@ void SADMRG(const input::schedule& schd){
             ctns::rcanon_save(icomb_NSz2, rcanon_file+"_NSz2");
 
             auto Hij2 = ctns::get_Hmat(icomb_NSz2, int2e, int1e, ecore, schd, schd.scratch);
-            std::cout << "\nicomb_NSz2" << std::endl;
-            Hij2.print("Hij2",8);
-            
-            auto Hij3 = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
-            std::cout << "\nicomb" << std::endl;
-            Hij3.print("Hij3",8);
 
-            auto Hij4 = ctns::get_Hmat(icomb2, int2e, int1e, ecore, schd, schd.scratch);
+            for(int i=5; i>=0; i--){
+               ctns::qoper_dict<true,Tm> qops;
+               auto p = std::make_pair(i,0);
+               auto fname = ctns::oper_fname(schd.scratch, p, "r");
+               ctns::oper_load(schd.ctns.iomode, fname, qops, (rank==0));
+               std::cout << "\nlzd opH: i=" << i << std::endl;
+               qops('H')[0].to_matrix().print("H");
+            }
+
+            auto Hij3 = ctns::get_Hmat(icomb2, int2e, int1e, ecore, schd, schd.scratch);
+
+            for(int i=5; i>=0; i--){
+               ctns::qoper_dict<false,Tm> qops2;
+               auto p = std::make_pair(i,0);
+               auto fname = ctns::oper_fname(schd.scratch, p, "r");
+               ctns::oper_load(schd.ctns.iomode, fname, qops2, (rank==0));
+               std::cout << "\nlzd opH(su2): i=" << i << std::endl;
+               qops2('H')[0].to_matrix().print("H");
+            }
+
+            std::cout << "\nicomb_NSz2" << std::endl;
+            Hij2.print("Hij",10);
             std::cout << "\nicomb2" << std::endl;
+            Hij3.print("Hij2",10);
+            exit(1);
+
+            auto Hij4 = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
+            std::cout << "\nicomb" << std::endl;
             Hij4.print("Hij4",8);
             
             std::cout << "\ncompare:" << std::endl;
@@ -123,7 +143,6 @@ void SADMRG(const input::schedule& schd){
             Hij2.print("Hij2",10);
             Hij3.print("Hij3",10);
             Hij4.print("Hij4",10);
-            exit(1);
 
          }else{
             ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
@@ -191,7 +210,7 @@ void SADMRG(const input::schedule& schd){
          if(rank == 0){
             Hij.print("Hij",8);
 
-            const bool debug_Hij = true;
+            const bool debug_Hij = false;
             if(debug_Hij){
                ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
                ctns::rcanon_tononsu2(icomb, icomb_NSz, icomb.get_sym_state().ts()); // default: high-spin

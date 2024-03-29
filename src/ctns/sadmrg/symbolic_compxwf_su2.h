@@ -25,7 +25,7 @@ namespace ctns{
             // sum_i a1[i] * (sum_j oij a2[j])
             for(const auto& i : cindex1){
                auto op1C = symbolic_oper(block1,'C',i);      
-               auto op1 = ifdagger1? op1C : op1C.H();
+               auto op1 = ifdagger1? op1C : op1C.H(); // default is [a^+]^+ = a
                // top2 = sum_j oij a2[j]
                symbolic_sum<Tm> top2;
                for(const auto& j : cindex2){
@@ -145,7 +145,7 @@ namespace ctns{
                if(ts == 0){
                   int pa = p, sa = s;
                   o1ij[oper_pack(q1a,r2a)] =  int2e.get(pa,q1a,sa,r2a) + int2e.get(pa,q1b,sa,r2b);
-                  o2ij[oper_pack(q1a,r2a)] =  int2e.get(pa,r2a,sa,q1a) + int2e.get(pa,r2b,sa,q1b);
+                  o2ij[oper_pack(q1a,r2a)] =  int2e.get(pa,r2a,sa,q1a) + int2e.get(pa,r2b,sa,q1b); // (-1)^0=1
                }else{
                   int pa = p, sb = s;
                   o1ij[oper_pack(q1a,r2a)] =  int2e.get(pa,q1b,sb,r2a);
@@ -341,7 +341,7 @@ namespace ctns{
             symbolic_sum<Tm> top1;
             for(const auto& q1 : cindex1){
                auto op1 = symbolic_oper(block1,'C',q1);
-               double fac = (ts==0)? 1.0/std::sqrt(2.0) : -std::sqrt(3.0/2.0);
+               double fac = (ts==0)? -1.0/std::sqrt(2.0) : +std::sqrt(3.0/2.0);
                top1.sum(fac*get_xint2e_su2(int2e,ts,p/2,q1/2,ks,kr), op1);
             }
             auto op12 = symbolic_prod(top1,op2);
@@ -459,7 +459,7 @@ namespace ctns{
             int iproc_aa = distribute2('Q',ifkr,size,ipq_aa,sorb);
             if(iproc_aa == rank){
                auto op2Q_AA = symbolic_oper(block2,'Q',ipq_aa);
-               double fac = 1.0/std::sqrt(2.0);
+               double fac = 1.0/std::sqrt(2.0); // singlet case
                auto a1Q2_AA = (kp<kq)? symbolic_prod<Tm>(op1a,op2Q_AA,fac) : 
                   symbolic_prod<Tm>(op1a,op2Q_AA.H(),fac);
                a1Q2_AA.ispins.push_back(std::make_tuple(1,0,1));
@@ -470,9 +470,9 @@ namespace ctns{
             int iproc_ab = distribute2('Q',ifkr,size,ipq_ab,sorb);
             if(iproc_ab == rank){
                auto op2Q_AB = symbolic_oper(block2,'Q',ipq_ab);
-               double fac = -std::sqrt(3.0/2.0);
+               double fac = -std::sqrt(3.0/2.0); // triplet case: additional sign exist - different from nonSU2 case !
                auto a1Q2_AB = (kp<kq)? symbolic_prod<Tm>(op1a,op2Q_AB,fac) :
-                  symbolic_prod<Tm>(op1a,op2Q_AB.H(),-fac);
+                  symbolic_prod<Tm>(op1a,op2Q_AB.H(),-fac); // Qpq^k = (-1)^k (Qqp^k)^d
                a1Q2_AB.ispins.push_back(std::make_tuple(1,2,1));
                formulae.append(a1Q2_AB);
             }
@@ -587,7 +587,7 @@ namespace ctns{
             for(const auto& r2a : cindex2){
                auto op2 = symbolic_oper(block2,'C',r2a).H();
                double fac = (ts==0)? 1.0/std::sqrt(2.0) : -std::sqrt(3.0/2.0);
-               top2H.sum(fac*get_vint2e_su2(int2e,ts,p/2,ks1,r2a/2,kq1), op2);
+               top2H.sum(fac*get_vint2e_su2(int2e,ts,p/2,ks1,r2a/2,kq1), op2); // s<->q
             }
             auto op12H = symbolic_prod(op1H,top2H);
             op12H.ispins.push_back(std::make_tuple(ts,1,1));
@@ -618,7 +618,7 @@ namespace ctns{
             int iproc_aa = distribute2('Q',ifkr,size,ipq_aa,sorb);
             if(iproc_aa == rank){
                auto op1Q_AA = symbolic_oper(block1,'Q',ipq_aa);
-               double fac = 1.0/std::sqrt(2.0);
+               double fac = 1.0/std::sqrt(2.0); // singlet
                auto Q1a2_AA = (kp<kq)? symbolic_prod<Tm>(op1Q_AA,op2a,fac) : 
                   symbolic_prod<Tm>(op1Q_AA.H(),op2a,fac);
                Q1a2_AA.ispins.push_back(std::make_tuple(0,1,1));
@@ -629,9 +629,9 @@ namespace ctns{
             int iproc_ab = distribute2('Q',ifkr,size,ipq_ab,sorb);
             if(iproc_ab == rank){
                auto op1Q_AB = symbolic_oper(block1,'Q',ipq_ab);
-               double fac = std::sqrt(3.0/2.0);
+               double fac = std::sqrt(3.0/2.0); // triplet case: additional sign exist - different from nonSU2 case !
                auto Q1a2_AB = (kp<kq)? symbolic_prod<Tm>(op1Q_AB,op2a,fac) :
-                  symbolic_prod<Tm>(op1Q_AB.H(),op2a,fac);
+                  symbolic_prod<Tm>(op1Q_AB.H(),op2a,-fac);
                Q1a2_AB.ispins.push_back(std::make_tuple(2,1,1));
                formulae.append(Q1a2_AB);
             }
@@ -649,6 +649,7 @@ namespace ctns{
             const int size,
             const int rank,
             const bool ifdist1){
+         assert(ifkr == true);
          symbolic_task<Tm> formulae;
          // for AP,BQ terms: to ensure the optimal scaling!
          const bool ifNC = cindex1.size() <= cindex2.size(); 
@@ -696,7 +697,7 @@ namespace ctns{
             if(!ifdist1 or iproc==rank){
                auto op1S = symbolic_oper(block1,'S',q2);
                auto op2C = symbolic_oper(block2,'C',q2);
-               auto S1C2 = symbolic_prod<Tm>(op1S, op2C, -std::sqrt(2.0));
+               auto S1C2 = symbolic_prod<Tm>(op1S, op2C, std::sqrt(2.0)); // in su2 case, the sign is +1
                S1C2.ispins.push_back(std::make_tuple(1,1,0));
                formulae.append(S1C2);
             }

@@ -27,7 +27,7 @@ namespace ctns{
                << " size=" << size << std::endl;
          }
 
-         // 0. constant term 
+         // 0. cleanup 
          size_t ndim = wf.size();
          memset(diag, 0, ndim*sizeof(double));
 
@@ -127,6 +127,7 @@ namespace ctns{
                << " size=" << bindex_dist.size() 
                << std::endl;
          }
+         tools::print_vector(bindex_dist,"bindex_dist");
          // B^L*Q^R or Q^L*B^R 
          for(const auto& index : bindex_dist){
             const auto& O1 = qops1(BQ1).at(index);
@@ -137,7 +138,7 @@ namespace ctns{
             int q = pq.second, kq = q/2, sq = q%2;
             int ts = (sp!=sq)? 2 : 0;
             double fac = (kp==kq)? 0.5 : 1.0;
-            double wt = ((ts==0)? fac : -fac*std::sqrt(3.0))*2.0; // 2.0 from B^H*Q^H
+            double wt = ((ts==0)? 1.0 : -std::sqrt(3.0))*fac*2.0; // 2.0 from B^H*Q^H
             if(superblock == "lc1"){ 
                twodot_diag_OlOc1(ts, wt, O1, O2, wf, diag);
             }else if(superblock == "lc2"){ 
@@ -450,7 +451,7 @@ namespace ctns{
                for(int im=0; im<mdim; im++){
                   for(int ic=0; ic<cdim; ic++){
                      for(int ir=0; ir<rdim; ir++){
-                        diag[ircmv] += wt*std::real(blkc1(im,im)*blkr(ic,ic));
+                        diag[ircmv] += fac*std::real(blkc1(im,im)*blkr(ic,ic));
                         ircmv++;
                      } // ir
                   } // ic

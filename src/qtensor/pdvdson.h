@@ -109,7 +109,7 @@ namespace ctns{
                
                if(rank == 0){
               
-                  H.print("Hmat");
+                  //H.print("Hmat");
                   // check symmetry
                   auto sdiff = H.diff_hermitian();
                   std::cout << "|H-H.h|=" << sdiff << std::endl;

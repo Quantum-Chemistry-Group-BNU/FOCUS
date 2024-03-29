@@ -30,6 +30,8 @@ namespace ctns{
             const int size,
             const int rank,
             const bool ifdist1){
+         assert(isym == 3);
+         assert(ifkr == true);
          // setup basic information
          qops.sorb = int2e.sorb;
          qops.isym = isym;
@@ -146,6 +148,7 @@ namespace ctns{
          qt2nanb.from_matrix(mat);
          const auto& qBpp0 = qops('B')[oper_pack(ka,ka)];
          int N = qops('H')[0].size();
+         assert(N == qBpp0.size() and N == qt2nanb.size());
          Tm* ptr = qops('H')[0].data();
          linalg::xaxpy(N, int2e.get(ka,kb,ka,kb), qt2nanb.data(), ptr);
          linalg::xaxpy(N, std::sqrt(2.0)*int1e.get(ka,ka), qBpp0.data(), ptr);
