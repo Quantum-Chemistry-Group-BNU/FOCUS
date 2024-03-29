@@ -294,7 +294,7 @@ namespace ctns{
                qtensor2<ifab,Tm> P() const;
             // return adjoint tensor
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
-               qtensor2<ifab,Tm> H() const;
+               qtensor2<ifab,Tm> H(const bool adjoint=true) const;
 
          public:
             bool own = true; // whether the object owns its data

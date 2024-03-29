@@ -1,9 +1,9 @@
-#ifndef SWEEP_TWODOT_RENORM_H
-#define SWEEP_TWODOT_RENORM_H
+#ifndef SWEEP_TWODOT_RENORM_SU2_H
+#define SWEEP_TWODOT_RENORM_SU2_H
 
-#include "sweep_onedot_renorm.h"
-#include "sweep_twodot_decim.h"
-#include "sweep_twodot_guess.h"
+#include "../sweep_onedot_renorm.h"
+#include "sweep_twodot_decim_su2.h"
+#include "sweep_twodot_guess_su2.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
@@ -17,7 +17,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& vsol,
-            stensor4<Tm>& wf,
+            stensor4su2<Tm>& wf,
             qoper_pool<Qm::ifabelian,Tm>& qops_pool,
             const std::vector<std::string>& fneed,
             const std::vector<std::string>& fneed_next,
@@ -25,6 +25,7 @@ namespace ctns{
             sweep_data& sweeps,
             const int isweep,
             const int ibond){
+         assert(icomb.topo.ifmps);
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -41,9 +42,10 @@ namespace ctns{
          auto& timing = sweeps.opt_timing[isweep][ibond];
 
          // 1. build reduced density matrix & perform decimation
-         stensor2<Tm> rot;
+         stensor2su2<Tm> rot;
          twodot_decimation(icomb, schd, scratch, sweeps, isweep, ibond, 
                superblock, vsol, wf, rot);
+         exit(1);
 #ifndef SERIAL
          if(size > 1) mpi_wrapper::broadcast(icomb.world, rot, 0); 
 #endif
@@ -73,57 +75,31 @@ namespace ctns{
             fmmtask = "rmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          }
          if(superblock == "lc1"){
-            icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
-            //-------------------------------------------------------------------
-            if(check_canon){
-               rot -= icomb.sites[pdx].merge_lc();
-               assert(rot.normF() < thresh_canon);
-               auto ovlp = contract_qt3_qt3("lc", icomb.sites[pdx], icomb.sites[pdx]);
-               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
-            }
+//            icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
+//            //-------------------------------------------------------------------
+//            if(check_canon){
+//               rot -= icomb.sites[pdx].merge_lc();
+//               assert(rot.normF() < thresh_canon);
+//               auto ovlp = contract_qt3_qt3("lc", icomb.sites[pdx], icomb.sites[pdx]);
+//               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+//            }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[1],fneed[3]}, fneed_next);
             oper_renorm("lc", icomb, p, int2e, int1e, schd,
                   lqops, c1qops, qops, fname, timing, fmmtask);
-         }else if(superblock == "lr"){
-            icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
-            //-------------------------------------------------------------------
-            if(check_canon){
-               rot -= icomb.sites[pdx].merge_lr();
-               assert(rot.normF() < thresh_canon);
-               auto ovlp = contract_qt3_qt3("lr", icomb.sites[pdx],icomb.sites[pdx]);
-               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
-            }
-            //-------------------------------------------------------------------
-            qops_pool.clear_from_memory({fneed[2],fneed[3]}, fneed_next);
-            oper_renorm("lr", icomb, p, int2e, int1e, schd,
-                  lqops, rqops, qops, fname, timing, fmmtask); 
          }else if(superblock == "c2r"){
-            icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
-            //-------------------------------------------------------------------
-            if(check_canon){
-               rot -= icomb.sites[pdx].merge_cr();
-               assert(rot.normF() < thresh_canon);
-               auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
-               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
-            }
+//            icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
+//            //-------------------------------------------------------------------
+//            if(check_canon){
+//               rot -= icomb.sites[pdx].merge_cr();
+//               assert(rot.normF() < thresh_canon);
+//               auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
+//               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+//            }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[0],fneed[2]}, fneed_next);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c2qops, rqops, qops, fname, timing, fmmtask);
-         }else if(superblock == "c1c2"){
-            icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
-            //-------------------------------------------------------------------
-            if(check_canon){
-               rot -= icomb.sites[pdx].merge_cr();
-               assert(rot.normF() < thresh_canon);
-               auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
-               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
-            }
-            //-------------------------------------------------------------------
-            qops_pool.clear_from_memory({fneed[0],fneed[1]}, fneed_next);
-            oper_renorm("cr", icomb, p, int2e, int1e, schd,
-                  c1qops, c2qops, qops, fname, timing, fmmtask); 
          } // superblock
       }
 

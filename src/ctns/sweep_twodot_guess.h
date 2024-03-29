@@ -96,53 +96,6 @@ namespace ctns{
             const directed_bond& dbond,
             const size_t ndim,
             const int neig,
-            stensor4su2<Tm>& wf,
-            std::vector<Tm>& v0){
-         std::cout << "twodot_guess_v0 not implemented for su2 yet!" << std::endl;
-         exit(1);
-/*
-         const bool debug = true;
-         if(debug) std::cout << "ctns::twodot_guess(su2) ";
-         auto pdx0 = icomb.topo.rindex.at(dbond.p0);
-         auto pdx1 = icomb.topo.rindex.at(dbond.p1);
-         assert(icomb.cpsi.size() == neig);
-         v0.resize(ndim*neig);
-         if(dbond.forward){
-
-            if(debug) std::cout << "|lc1>" << std::endl;
-            for(int i=0; i<neig; i++){
-               // psi[l,a,c1] => cwf[lc1,a]
-               auto cwf = icomb.cpsi[i].merge_lc(); 
-               // cwf[lc1,a]*r[a,r,c2] => wf3[lc1,r,c2]
-               auto wf3 = contract_qt3_qt2("l",icomb.sites[pdx1],cwf); 
-               // wf3[lc1,r,c2] => wf4[l,r,c1,c2]
-               auto wf4 = wf3.split_lc1(wf.info.qrow, wf.info.qmid);
-               assert(wf4.size() == ndim);
-               wf4.to_array(&v0[ndim*i]);
-            }
-
-         }else{
-
-            if(debug) std::cout << "|c2r>" << std::endl;
-            for(int i=0; i<neig; i++){
-               // psi[a,r,c2] => cwf[a,c2r]
-               auto cwf = icomb.cpsi[i].merge_cr();
-               // l[l,a,c1]*cwf[a,c2r] => wf3[l,c2r,c1]
-               auto wf3 = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.P());
-               // wf3[l,c2r,c1] => wf4[l,r,c1,c2] 
-               auto wf4 = wf3.split_c2r(wf.info.qver, wf.info.qcol);
-               assert(wf4.size() == ndim);
-               wf4.to_array(&v0[ndim*i]);
-            }
-
-         } // forward
-*/      
-      }
-   template <typename Qm, typename Tm>
-      void twodot_guess_v0(comb<Qm,Tm>& icomb, 
-            const directed_bond& dbond,
-            const size_t ndim,
-            const int neig,
             stensor4<Tm>& wf,
             std::vector<Tm>& v0){
          const bool debug = true;

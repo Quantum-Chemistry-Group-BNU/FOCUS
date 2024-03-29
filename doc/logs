@@ -321,12 +321,19 @@
       - restructure the code the reuse more subroutines
       - preprocess_hmu.h [DONE@2024/03/14]
    - diag [check use guess & cisolver]
-   - decimation
+   - renorm: sweep_twodot_renorm_su2.h
       - reshape wf4?
-
+      - sweep_twodot_decim_su2.h
+      - sweep_decim_su2.h
+      - split qt3?
+ 
  * Other functionalities:
    - propagation of initial guess
+      - sweep_twodot_guess_su2.h
+   - canonicalization:
+      - sweep_rcanon.h
    - singlet embedding
+      - sweep_init: ?
 
  * Careful check of different implementations: [DONE@2024/06/xx]
    - OpenMP

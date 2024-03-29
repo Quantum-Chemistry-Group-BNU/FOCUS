@@ -60,7 +60,7 @@ namespace ctns{
    // return the adjoint tensor
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<!y,int>>
-      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::H() const{
+      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::H(const bool adjoint) const{
          // symmetry of operator get changed in consistency with line changes
          qsym sym(3,-info.sym.ne(),info.sym.ts());
          qtensor2<ifab,Tm> qt2(sym, info.qcol, info.qrow, info.dir);
@@ -79,16 +79,18 @@ namespace ctns{
             } // ic
             //-----------------------------------------------------
             // determine the prefactor for Adjoint tensor operator 
-            // <br||Tk_bar||bc> = (-1)^{k-jc+jr}sqrt{[jc]/[jr]}<bc||Tk||br>*
-            auto symr = qt2.info.qrow.get_sym(br);
-            auto symc = qt2.info.qcol.get_sym(bc);
-            int tsr = symr.ts();
-            int tsc = symc.ts();
-            int deltats = (info.sym.ts() + tsr - tsc);
-            assert(deltats%2 == 0);
-            Tm fac = (deltats/2)%2==0? 1.0 : -1.0;
-            fac *= std::sqrt((tsc+1.0)/(tsr+1.0));
-            linalg::xscal(blk.size(), fac, blk.data());
+            if(adjoint){
+               // <br||Tk_bar||bc> = (-1)^{k-jc+jr}sqrt{[jc]/[jr]}<bc||Tk||br>*
+               auto symr = qt2.info.qrow.get_sym(br);
+               auto symc = qt2.info.qcol.get_sym(bc);
+               int tsr = symr.ts();
+               int tsc = symc.ts();
+               int deltats = (info.sym.ts() + tsr - tsc);
+               assert(deltats%2 == 0);
+               Tm fac = (deltats/2)%2==0? 1.0 : -1.0;
+               fac *= std::sqrt((tsc+1.0)/(tsr+1.0));
+               linalg::xscal(blk.size(), fac, blk.data());
+            }
             //----------------------------------------------------
          } // i
          return qt2; 
