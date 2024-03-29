@@ -210,16 +210,16 @@ namespace ctns{
                assert(aindex2.size() == 1);
                symbolic_compxwf_opS3a_su2(block1, block2, cindex1, cindex2, int2e, p, 
                      aindex2, formulae);
+            }
+         }else{
+            if(kc1 > kA2){
+               // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
+               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
+               symbolic_compxwf_opS3a_su2(block1, block2, cindex1, cindex2, int2e, p,
+                     aindex2_dist, formulae);
             }else{
-               if(kc1 > kA2){
-                  // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
-                  auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
-                  symbolic_compxwf_opS3a_su2(block1, block2, cindex1, cindex2, int2e, p,
-                        aindex2_dist, formulae);
-               }else{
-                  symbolic_compxwf_opS3b_su2(block1, block2, cindex1, cindex2, p, ifkr,
-                        int2e.sorb, size, rank, formulae);
-               }
+               symbolic_compxwf_opS3b_su2(block1, block2, cindex1, cindex2, p, ifkr,
+                     int2e.sorb, size, rank, formulae);
             }
          }
 
@@ -231,7 +231,7 @@ namespace ctns{
                symbolic_compxwf_opS4a_su2(block1, block2, cindex1, cindex2, int2e, p,
                      bindex2, formulae);
             }
-         }else{ 
+         }else{
             if(kc1 > kB2){
                auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, int2e.sorb);
                symbolic_compxwf_opS4a_su2(block1, block2, cindex1, cindex2, int2e, p, 
@@ -252,7 +252,7 @@ namespace ctns{
                symbolic_compxwf_opS5a_su2(block1, block2, cindex1, cindex2, int2e, p,
                      aindex1, formulae);
             }
-         }else{ 
+         }else{
             if(kc2 > kA1){
                auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, int2e.sorb);
                symbolic_compxwf_opS5a_su2(block1, block2, cindex1, cindex2, int2e, p,
@@ -368,24 +368,24 @@ namespace ctns{
          for(const auto& qa : cindex1){
             int qb = qa+1, kq = qa/2;
             auto op1c = symbolic_oper(block1,'C',qa);
-            // singlet Ppq:
+            // triplet Ppq:
             int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
             int iproc_aa = distribute2('P',ifkr,size,ipq_aa,sorb);
             if(iproc_aa == rank){
                auto op2P_AA = symbolic_oper(block2,'P',ipq_aa);
-               double fac = -1.0/std::sqrt(2.0); // Ppq0 = Pqp0
+               double fac = (kp<kq)? std::sqrt(3.0/2.0) : -std::sqrt(3.0/2.0); // Ppq1 = -Pqp1
                auto c1P2_AA = symbolic_prod<Tm>(op1c,op2P_AA,fac); 
-               c1P2_AA.ispins.push_back(std::make_tuple(1,0,1)); 
+               c1P2_AA.ispins.push_back(std::make_tuple(1,2,1)); 
                formulae.append(c1P2_AA);
             }
-            // triplet Ppq:
+            // singlet Ppq:
             int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
             int iproc_ab = distribute2('P',ifkr,size,ipq_ab,sorb);
             if(iproc_ab == rank){
                auto op2P_AB = symbolic_oper(block2,'P',ipq_ab);
-               double fac = (kp<kq)? std::sqrt(3.0/2.0) : -std::sqrt(3.0/2.0); // Ppq1 = -Pqp1
+               double fac = -1.0/std::sqrt(2.0); // Ppq0 = Pqp0
                auto c1P2_AB = symbolic_prod<Tm>(op1c,op2P_AB,fac);
-               c1P2_AB.ispins.push_back(std::make_tuple(1,2,1));
+               c1P2_AB.ispins.push_back(std::make_tuple(1,0,1));
                formulae.append(c1P2_AB);
             }
          } // qa
@@ -528,24 +528,24 @@ namespace ctns{
          for(const auto& qa : cindex2){
             int qb = qa+1, kq = qa/2;
             auto op2c = symbolic_oper(block2,'C',qa);
-            // singlet Ppq:
+            // triplet Ppq: 
             int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
             int iproc_aa = distribute2('P',ifkr,size,ipq_aa,sorb);
             if(iproc_aa == rank){
                auto op1P_AA = symbolic_oper(block1,'P',ipq_aa);
-               double fac = -1.0/std::sqrt(2.0); // Ppq0 = Pqp0
+               double fac = (kp<kq)? -std::sqrt(3.0/2.0) : std::sqrt(3.0/2.0); // Ppq1 = -Pqp1
                auto P1c2_AA = symbolic_prod<Tm>(op1P_AA,op2c,fac);
-               P1c2_AA.ispins.push_back(std::make_tuple(0,1,1));
+               P1c2_AA.ispins.push_back(std::make_tuple(2,1,1));
                formulae.append(P1c2_AA);
             }
-            // triplet Ppq: 
+            // singlet Ppq:
             int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
             int iproc_ab = distribute2('P',ifkr,size,ipq_ab,sorb);
             if(iproc_ab == rank){
                auto op1P_AB = symbolic_oper(block1,'P',ipq_ab);
-               double fac = (kp<kq)? -std::sqrt(3.0/2.0) : std::sqrt(3.0/2.0); // Ppq1 = -Pqp1
+               double fac = -1.0/std::sqrt(2.0); // Ppq0 = Pqp0
                auto P1c2_AB = symbolic_prod<Tm>(op1P_AB,op2c,fac);
-               P1c2_AB.ispins.push_back(std::make_tuple(2,1,1));
+               P1c2_AB.ispins.push_back(std::make_tuple(0,1,1));
                formulae.append(P1c2_AB);
             }
          } // qa
@@ -705,8 +705,9 @@ namespace ctns{
          // Two-index operators
          // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
          for(const auto& index : aindex_dist){
-            int i = index%kpack, ki = i/2, spin_i = i%2;
-            int j = index/kpack, kj = j/2, spin_j = j%2;
+            auto pr = oper_unpack(index);
+            int i = pr.first, ki = i/2, spin_i = i%2;
+            int j = pr.second, kj = j/2, spin_j = j%2;
             int ts = (spin_i!=spin_j)? 0 : 2;
             double wfac = (ki==kj)? 0.5 : 1.0;
             const double wt = (ts==0)? -wfac : std::sqrt(3.0);
@@ -718,11 +719,12 @@ namespace ctns{
          }
          // 6. Bps^1*Qps^2 / Qqr^1*Bqr^2
          for(const auto& index : bindex_dist){
-            int i = index%kpack, ki = i/2, spin_i = i%2;
-            int j = index/kpack, kj = j/2, spin_j = j%2;
+            auto pr = oper_unpack(index);
+            int i = pr.first, ki = i/2, spin_i = i%2;
+            int j = pr.second, kj = j/2, spin_j = j%2;
             int ts = (spin_i!=spin_j)? 2 : 0;
             double wfac = (ki==kj)? 0.5 : 1.0;
-            const double wt = (ts==0)? wfac : -std::sqrt(3.0)*wfac;
+            const double wt = ((ts==0)? 1.0 : -std::sqrt(3.0))*wfac;
             auto op1 = symbolic_oper(block1,BQ1,index);
             auto op2 = symbolic_oper(block2,BQ2,index);
             auto BQ = symbolic_prod<Tm>(op1, op2, wt);
