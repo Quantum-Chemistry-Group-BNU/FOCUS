@@ -228,6 +228,11 @@ namespace ctns{
             // ZL20210413: application of time-reversal operation
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                qtensor3<ifab,Tm> K(const int nbar=0) const;
+            // shape
+            template <bool y=ifab, std::enable_if_t<y,int> = 0>
+               std::tuple<int,int,int> get_shapeU1() const{
+                  return this->get_shape();
+            }
             // for decimation
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                qproduct dpt_lc() const{ return qmerge(info.qrow, info.qmid); }
@@ -270,11 +275,6 @@ namespace ctns{
                   auto dpt = qmerge(qc1, qc2).second;     
                   return split_qt4_qt3_c1c2(*this, qc1, qc2, dpt);
                }
-            // shape
-            template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               std::tuple<int,int,int> get_shapeU1() const{
-                  return this->get_shape();
-            }
 
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
             // constructors
@@ -320,6 +320,35 @@ namespace ctns{
                         info.qmid.get_dimAllU1()
                         );
             }
+            // for decimation
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qproduct dpt_lc() const{ return qmerge_su2(info.qrow, info.qmid); }
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qproduct dpt_cr() const{ return qmerge_su2(info.qmid, info.qcol); }
+            // reshape: merge wf3[l,r,c]
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> merge_lc() const{ // wf2[lc,r] 
+                  auto qprod = dpt_lc();
+                  return merge_qt3_qt2_lc(*this, qprod.first, qprod.second);
+               }
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> merge_cr() const{ // wf2[l,cr]
+                  auto qprod = dpt_cr(); 
+                  return merge_qt3_qt2_cr(*this, qprod.first, qprod.second);
+               }
+            // reshape: split
+            // wf3[lc1,r,c2] -> wf4[l,r,c1,c2]
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor4<ifab,Tm> split_lc1(const qbond& qlx, const qbond& qc1) const{
+                  auto dpt = qmerge_su2(qlx, qc1).second;
+                  return split_qt4_qt3_lc1(*this, qlx, qc1, dpt);
+               }
+            // wf3[l,c2r,c1] -> wf4[l,r,c1,c2]
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor4<ifab,Tm> split_c2r(const qbond& qc2, const qbond& qrx) const{
+                  auto dpt = qmerge_su2(qc2, qrx).second;
+                  return split_qt4_qt3_c2r(*this, qc2, qrx, dpt); 
+               }
 
          public:
             bool own = true; // whether the object owns its data

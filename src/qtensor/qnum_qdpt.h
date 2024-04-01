@@ -51,6 +51,50 @@ namespace ctns{
       return std::make_pair(qs12,dpt);
    }
 
+   // qs12 = qs1*qs2: non-Abelian case
+   inline qproduct qmerge_su2(const qbond& qs1, const qbond& qs2){
+      // init dpt
+      qdpt dpt;
+      std::vector<qsym> syms12; // natural ordering qs1,qs2 based on the double loop
+      for(int i1=0; i1<qs1.size(); i1++){
+         auto q1 = qs1.get_sym(i1);
+         int n1 = q1.ne();
+         int ts1 = q1.ts();
+         for(int i2=0; i2<qs2.size(); i2++){
+            auto q2 = qs2.get_sym(i2);
+            int n2 = q2.ne();
+            int ts2 = q2.ts();
+            // non-Abelian case
+            for(int ts12=std::abs(ts1-ts2); ts12<=ts1+ts2; ts12+=2){
+               qsym q12(3,n1+n2,ts12);
+               if(dpt.find(q12) == dpt.end()) syms12.push_back(q12);
+               dpt[q12].push_back(std::make_tuple(i1,i2,-1));
+            } // ts12
+         }
+      }
+      // form qs12 & compute offset
+      qbond qs12;
+      for(int i=0; i<syms12.size(); i++){
+         const auto& q12 = syms12[i];
+         auto& p12 = dpt[q12];
+         // count offset for dpt[q12]
+         int dim = 0;
+         for(int i12=0; i12<p12.size(); i12++){
+            int i1 = std::get<0>(p12[i12]);
+            int i2 = std::get<1>(p12[i12]);
+            int d1 = qs1.get_dim(i1);
+            int d2 = qs2.get_dim(i2);
+            p12[i12] = std::make_tuple(i1,i2,dim);
+            dim += d1*d2; 
+         }
+         // setup dims for qs12
+         qs12.dims.push_back(std::make_pair(q12,dim));
+      }
+      if(sort_by_dim) qs12.sort_by_dim(); // reoder qs12 if necessary
+      return std::make_pair(qs12,dpt);
+   }
+
+
    // mapping from original PRODUCT basis to kramers paired basis:
    // V[odd] = {|le,ro>,|lo,re>}
    inline void mapping2krbasis_odd(const qsym& qr,

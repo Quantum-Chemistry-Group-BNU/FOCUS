@@ -5,6 +5,7 @@
 
 namespace ctns{
 
+   // expand qs(isym=3) to qs(isym=2)
    inline std::pair<qbond,std::map<qsym3,std::pair<int,int>>> qbond_su2expand(const qbond& qs,
          const int iop=0,
          const int tm0=0){

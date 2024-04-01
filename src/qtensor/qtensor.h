@@ -38,8 +38,8 @@
 #include "contract_qt4_qt2.h"
 #include "contract_opxwf.h"
 
-#include "reshape_qt3_qt2.h"
 #include "reshape_qt4_qt3.h"
+#include "reshape_qt3_qt2.h"
 
 #include "pdvdson.h"
 #include "pdvdson_kramers.h"
@@ -48,5 +48,8 @@
 #include "contract_qt2_qt2_su2.h"
 #include "contract_qt3_qt2_su2.h"
 #include "contract_qt3_qt3_su2.h"
+
+#include "reshape_qt4_qt3_su2.h"
+#include "reshape_qt3_qt2_su2.h"
 
 #endif

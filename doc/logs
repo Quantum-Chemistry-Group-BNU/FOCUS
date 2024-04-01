@@ -322,10 +322,10 @@
       - preprocess_hmu.h [DONE@2024/03/14]
    - diag [check use guess & cisolver]
    - renorm: sweep_twodot_renorm_su2.h
-      - reshape wf4?
+      - reshape_qt4_qt3_su2.h: turns out to be extremely simple based on existing code! [DONE@2024/04/01]
+      - reshape_qt3_qt2_su2.h
       - sweep_twodot_decim_su2.h
       - sweep_decim_su2.h
-      - split qt3?
  
  * Other functionalities:
    - propagation of initial guess

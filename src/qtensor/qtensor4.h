@@ -293,7 +293,33 @@ namespace ctns{
             // print
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                void print(const std::string name, const int level=0) const;
- 
+            // for decimation
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qproduct dpt_lc1()  const{ return qmerge_su2(info.qrow, info.qmid); };
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qproduct dpt_c2r()  const{ return qmerge_su2(info.qver, info.qcol); };
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qproduct dpt_c1c2() const{ return qmerge_su2(info.qmid, info.qver); };
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qproduct dpt_lr()   const{ return qmerge_su2(info.qrow, info.qcol); };
+            // reshape: merge wf4[l,r,c1,c2]
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor3<ifab,Tm> merge_lc1() const{ // wf3[lc1,r,c2] 
+                  auto qprod = dpt_lc1();
+                  return merge_qt4_qt3_lc1(*this, qprod.first, qprod.second);
+               }
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor3<ifab,Tm> merge_c2r() const{ // wf3[l,c2r,c1]
+                  auto qprod = dpt_c2r();
+                  return merge_qt4_qt3_c2r(*this, qprod.first, qprod.second);
+               }
+            // shorthand function
+            // wf4[l,r,c1,c2] => wf3[lc1,r,c2] => wf2[lc1,c2r]
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> merge_lc1_c2r() const{
+                  return (this->merge_lc1()).merge_cr();
+               }
+
          public:
             bool own = true; // whether the object owns its data
             Tm* _data = nullptr;
