@@ -25,7 +25,7 @@ namespace ctns{
          size = icomb.world.size();
 #endif   
          auto t0 = tools::get_time();
-         const auto qprod = qmerge(qs1, qs2);
+         const auto qprod = qmerge_su2(qs1, qs2);
          const auto& qrow = qprod.first;
          const auto& dpt = qprod.second;
          assert(qrow == wfs2[0].info.qrow);
@@ -41,7 +41,6 @@ namespace ctns{
             std::cout << std::endl;
             qrow.print("qsuper");
          }
-         std::cout << "decimation_row(su2) not implemented yet!" << std::endl;
          exit(1);
 /*
          // 0. untruncated case

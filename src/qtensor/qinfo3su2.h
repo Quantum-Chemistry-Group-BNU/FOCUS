@@ -58,7 +58,7 @@ namespace ctns{
             bool operator ==(const qinfo3su2& info) const{
                return sym==info.sym && qrow==info.qrow && qcol==info.qcol 
                   && qmid==info.qmid && dir==info.dir 
-                  && couple=info.couple;
+                  && couple==info.couple;
             }
             // helpers
             size_t get_offset(const int br, const int bc, const int bm, const int tsi) const{

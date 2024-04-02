@@ -349,6 +349,11 @@ namespace ctns{
                   auto dpt = qmerge_su2(qc2, qrx).second;
                   return split_qt4_qt3_c2r(*this, qc2, qrx, dpt); 
                }
+            // recouple
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor3<ifab,Tm> recouple_lc() const;
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor3<ifab,Tm> recouple_cr() const;
 
          public:
             bool own = true; // whether the object owns its data

@@ -98,6 +98,64 @@ namespace ctns{
       }
       */
 
+   // recouple_lc qt3[l,r,c;lc] from qt3[l,r,c,cr]
+   template <bool ifab, typename Tm>
+      template <bool y, std::enable_if_t<!y,int>>
+      qtensor3<ifab,Tm> qtensor3<ifab,Tm>::recouple_lc() const{
+         assert(info.couple == CRcouple);
+         qtensor3<ifab,Tm> qt3(info.sym, info.qrow, info.qcol, info.qmid, info.dir, LCcouple);
+         int tstot = info.sym.ts();
+         for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+            auto key = qt3.info._nnzaddr[i];
+            int br = std::get<0>(key); // l
+            int bc = std::get<1>(key); // r
+            int bm = std::get<2>(key); // c
+            int tslc = std::get<3>(key);
+            auto blk = qt3(br,bc,bm,tslc);
+            int tsl = info.qrow.get_sym(br).ts();
+            int tsr = info.qcol.get_sym(bc).ts();
+            int tsc = info.qmid.get_sym(bm).ts();
+            for(int tscr=std::abs(tsc-tsr); tscr<=tsc+tsr; tscr+=2){
+               const auto blk2 = (*this)(br,bc,bm,tscr);
+               if(blk2.empty()) continue;
+               double fac = std::sqrt((tslc+1.0)*(tscr+1.0))*fock::wigner6j(tsl,tsc,tslc,tsr,tstot,tscr);
+               int ts = tsl+tsc+tsr+tstot;
+               if((ts/2)%2==1) fac *= -1;
+               linalg::xaxpy(blk.size(), fac, blk2.data(), blk.data());
+            } // tscr
+         } // i
+         return qt3;
+      }
+    
+   // recouple_lc qt3[l,r,c;cr]
+   template <bool ifab, typename Tm>
+      template <bool y, std::enable_if_t<!y,int>>
+      qtensor3<ifab,Tm> qtensor3<ifab,Tm>::recouple_cr() const{
+         assert(info.couple == LCcouple);
+         qtensor3<ifab,Tm> qt3(info.sym, info.qrow, info.qcol, info.qmid, info.dir, CRcouple);
+         int tstot = info.sym.ts();
+         for(int i=0; i<qt3.info._nnzaddr.size(); i++){
+            auto key = qt3.info._nnzaddr[i];
+            int br = std::get<0>(key); // l
+            int bc = std::get<1>(key); // r
+            int bm = std::get<2>(key); // c
+            int tscr = std::get<3>(key);
+            auto blk = qt3(br,bc,bm,tscr);
+            int tsl = info.qrow.get_sym(br).ts();
+            int tsr = info.qcol.get_sym(bc).ts();
+            int tsc = info.qmid.get_sym(bm).ts();
+            for(int tslc=std::abs(tsl-tsc); tslc<=tsl+tsc; tslc+=2){
+               const auto blk2 = (*this)(br,bc,bm,tslc);
+               if(blk2.empty()) continue;
+               double fac = std::sqrt((tslc+1.0)*(tscr+1.0))*fock::wigner6j(tsl,tsc,tslc,tsr,tstot,tscr);
+               int ts = tsl+tsc+tsr+tstot;
+               if((ts/2)%2==1) fac *= -1;
+               linalg::xaxpy(blk.size(), fac, blk2.data(), blk.data());
+            } // tslc
+         } // i
+         return qt3;
+      }
+ 
 } // ctns
 
 #endif
