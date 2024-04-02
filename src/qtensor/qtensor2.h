@@ -308,12 +308,11 @@ namespace ctns{
                   auto dpt = qmerge_su2(qcx, qrx).second;
                   return split_qt3_qt2_cr(*this, qcx, qrx, dpt);
                }
-            // shorthand function
-            // wf2[lr,c1c2] => wf3[l,r,c1c2] => wf4[l,r,c1,c2] 
+            // wf2[lr,c] -> wf3[l,r,c]
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
-               qtensor4<ifab,Tm> split_lr_c1c2(const qbond& qlx, const qbond& qrx, 
-                     const qbond& qc1, const qbond& qc2) const{
-                  return (this->split_lr(qlx, qrx)).split_c1c2(qc1, qc2);
+               qtensor3<ifab,Tm> split_lr(const qbond& qlx, const qbond& qrx) const{
+                  std::cout << "error: split_lr is not implemented for su2 case!" << std::endl;
+                  exit(1);
                }
 
          public:

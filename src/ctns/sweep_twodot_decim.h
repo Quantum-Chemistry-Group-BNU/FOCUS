@@ -14,8 +14,8 @@ namespace ctns{
             const int ibond,
             const std::string superblock,
             const linalg::matrix<Tm>& vsol, 
-            stensor4<Tm>& wf,
-            stensor2<Tm>& rot){
+            qtensor4<Qm::ifabelian,Tm>& wf,
+            qtensor2<Qm::ifabelian,Tm>& rot){
          int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
@@ -52,7 +52,7 @@ namespace ctns{
          }
          auto& result = sweeps.opt_result[isweep][ibond];
          int nroots = vsol.cols();
-         std::vector<stensor2<Tm>> wfs2(nroots);
+         std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
          auto t1 = tools::get_time();
          if(superblock == "lc1"){ 
 
@@ -64,21 +64,6 @@ namespace ctns{
             }
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qrow, wf.info.qmid, 
-                  iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
-                  wfs2, rot, result.dwt, result.deff, fname,
-                  debug);
-
-         }else if(superblock == "lr"){ 
-
-            for(int i=0; i<nroots; i++){
-               wf.from_array(vsol.col(i));
-               wf.permCR_signed();
-               auto wf2 = wf.merge_lr_c1c2();
-               if(noise > thresh_noise) wf2.add_noise(noise);
-               wfs2[i] = std::move(wf2);
-            }
-            t1 = tools::get_time();
-            decimation_row(icomb, wf.info.qrow, wf.info.qcol, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
                   debug);
@@ -98,8 +83,25 @@ namespace ctns{
                   debug);
             rot = rot.P(); // rot[alpha,r] = (V^+)
 
+         }else if(superblock == "lr"){ 
+
+            assert(Qm::ifabelian);
+            for(int i=0; i<nroots; i++){
+               wf.from_array(vsol.col(i));
+               wf.permCR_signed();
+               auto wf2 = wf.merge_lr_c1c2();
+               if(noise > thresh_noise) wf2.add_noise(noise);
+               wfs2[i] = std::move(wf2);
+            }
+            t1 = tools::get_time();
+            decimation_row(icomb, wf.info.qrow, wf.info.qcol, 
+                  iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
+                  wfs2, rot, result.dwt, result.deff, fname,
+                  debug);
+
          }else if(superblock == "c1c2"){
 
+            assert(Qm::ifabelian);
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
                wf.permCR_signed();

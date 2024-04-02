@@ -21,7 +21,6 @@
 #include "preprocess_sigma_batch.h"
 #include "sadmrg/sweep_twodot_diag_su2.h"
 #include "sadmrg/symbolic_formulae_twodot_su2.h"
-#include "sadmrg/sweep_twodot_renorm_su2.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif

@@ -94,6 +94,14 @@ namespace ctns{
       return std::make_pair(qs12,dpt);
    }
 
+   // general interface used in decim
+   inline qproduct qmerge_spaces(const bool ifab, const qbond& qs1, const qbond& qs2){
+      if(ifab){
+         return qmerge(qs1, qs2);
+      }else{
+         return qmerge_su2(qs1, qs2);
+      }
+   }
 
    // mapping from original PRODUCT basis to kramers paired basis:
    // V[odd] = {|le,ro>,|lo,re>}

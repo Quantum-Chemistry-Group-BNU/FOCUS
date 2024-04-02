@@ -64,6 +64,7 @@ namespace ctns{
             << rcanon_file << std::endl;
          std::cout << tools::line_separator << std::endl;
          std::cout << "sweep_final(su2) not implemented yet!" << std::endl;
+         return;
          exit(1);
 /*
          // 1. reorthogonalize {cpsi} in case there is truncation in the last sweep

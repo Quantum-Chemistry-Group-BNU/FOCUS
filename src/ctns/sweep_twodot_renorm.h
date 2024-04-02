@@ -4,6 +4,7 @@
 #include "sweep_onedot_renorm.h"
 #include "sweep_twodot_decim.h"
 #include "sweep_twodot_guess.h"
+#include "sadmrg/sweep_twodot_guess_su2.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
@@ -17,7 +18,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& vsol,
-            stensor4<Tm>& wf,
+            qtensor4<Qm::ifabelian,Tm>& wf,
             qoper_pool<Qm::ifabelian,Tm>& qops_pool,
             const std::vector<std::string>& fneed,
             const std::vector<std::string>& fneed_next,
@@ -41,7 +42,7 @@ namespace ctns{
          auto& timing = sweeps.opt_timing[isweep][ibond];
 
          // 1. build reduced density matrix & perform decimation
-         stensor2<Tm> rot;
+         qtensor2<Qm::ifabelian,Tm> rot;
          twodot_decimation(icomb, schd, scratch, sweeps, isweep, ibond, 
                superblock, vsol, wf, rot);
 #ifndef SERIAL
@@ -85,19 +86,6 @@ namespace ctns{
             qops_pool.clear_from_memory({fneed[1],fneed[3]}, fneed_next);
             oper_renorm("lc", icomb, p, int2e, int1e, schd,
                   lqops, c1qops, qops, fname, timing, fmmtask);
-         }else if(superblock == "lr"){
-            icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
-            //-------------------------------------------------------------------
-            if(check_canon){
-               rot -= icomb.sites[pdx].merge_lr();
-               assert(rot.normF() < thresh_canon);
-               auto ovlp = contract_qt3_qt3("lr", icomb.sites[pdx],icomb.sites[pdx]);
-               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
-            }
-            //-------------------------------------------------------------------
-            qops_pool.clear_from_memory({fneed[2],fneed[3]}, fneed_next);
-            oper_renorm("lr", icomb, p, int2e, int1e, schd,
-                  lqops, rqops, qops, fname, timing, fmmtask); 
          }else if(superblock == "c2r"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -111,7 +99,22 @@ namespace ctns{
             qops_pool.clear_from_memory({fneed[0],fneed[2]}, fneed_next);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,
                   c2qops, rqops, qops, fname, timing, fmmtask);
+         }else if(superblock == "lr"){
+            assert(Qm::ifabelian);
+            icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
+            //-------------------------------------------------------------------
+            if(check_canon){
+               rot -= icomb.sites[pdx].merge_lr();
+               assert(rot.normF() < thresh_canon);
+               auto ovlp = contract_qt3_qt3("lr", icomb.sites[pdx],icomb.sites[pdx]);
+               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            }
+            //-------------------------------------------------------------------
+            qops_pool.clear_from_memory({fneed[2],fneed[3]}, fneed_next);
+            oper_renorm("lr", icomb, p, int2e, int1e, schd,
+                  lqops, rqops, qops, fname, timing, fmmtask); 
          }else if(superblock == "c1c2"){
+            assert(Qm::ifabelian);
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
             //-------------------------------------------------------------------
             if(check_canon){

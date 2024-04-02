@@ -315,7 +315,7 @@ namespace ctns{
          } // j
          if(wf2new.size() == 0){
             std::cout << "error: no such wavefunction with target twos=" << twos 
-               << " change twos instead!" << std::endl;
+               << ": change twos instead!" << std::endl;
             exit(1); 
          }
 

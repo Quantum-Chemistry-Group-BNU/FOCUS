@@ -319,7 +319,19 @@ namespace ctns{
                qtensor2<ifab,Tm> merge_lc1_c2r() const{
                   return (this->merge_lc1()).merge_cr();
                }
-
+            // wf4[l,r,c1,c2] => wf3[l,r,c1c2] => wf2[lr,c1c2]
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> merge_lr_c1c2() const{
+                  std::cout << "error: merge_lr_c1c2 is not implemented for su2 case!" << std::endl;
+                  exit(1);
+               }
+            // wf[lc1c2r]->wf[lc1c2r]*(-1)^{(p[c1]+p[c2])*p[r]} 
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               void permCR_signed(){
+                  std::cout << "error: permCR_signed is not implemented for su2 case!" << std::endl;
+                  exit(1);
+               }
+ 
          public:
             bool own = true; // whether the object owns its data
             Tm* _data = nullptr;

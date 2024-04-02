@@ -336,6 +336,11 @@ namespace ctns{
                   auto qprod = dpt_cr(); 
                   return merge_qt3_qt2_cr(*this, qprod.first, qprod.second);
                }
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> merge_lr() const{ // wf2[lr,c]
+                  std::cout << "error: merge_lr is not implemented for su2 case!" << std::endl;
+                  exit(1);
+               }
             // reshape: split
             // wf3[lc1,r,c2] -> wf4[l,r,c1,c2]
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>

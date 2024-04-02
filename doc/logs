@@ -295,7 +295,7 @@
       - sample CSF? 
       - sample DET? 
 
- * get Hamiltonian: [DONE@2024/04/xx]
+ * get Hamiltonian: [DONE@2024/04/01]
    - oper_env_right: prepare environment operators
       - oper_dict.h: data structure {c,A,B,P,Q,S}
          - qnum_qsym.h: get_sym_opX
@@ -320,11 +320,12 @@
       - symbolic_formulae_twodot_su2: [DONE@2024/03/13]
       - restructure the code the reuse more subroutines
       - preprocess_hmu.h [DONE@2024/03/14]
-   - diag [check use guess & cisolver]
+   - twodot_diag: checked use guess=0 & cisolver=0
    - renorm: sweep_twodot_renorm_su2.h
       - reshape_qt4_qt3_su2.h: turns out to be extremely simple based on existing code! [DONE@2024/04/01]
       - reshape_qt3_qt2_su2.h
-      - sweep_twodot_decim_su2.h
+      - sweep_twodot_decim_su2.h: basic version checked with notrunc option! [DONE@2024/04/02]
+   - decimation with truncation:
       - sweep_decim_su2.h
  
  * Other functionalities:
@@ -335,11 +336,14 @@
       - sweep_rcanon.h
    - singlet embedding
       - sweep_init: ?
+ 
+ * GPU version:
+   - twodot_diag_GPU
+   - cuSolver: decimation
 
  * Careful check of different implementations: [DONE@2024/06/xx]
    - OpenMP
    - MPI
-   - GPU
 
  * Benchmark:
    - fe2s2
