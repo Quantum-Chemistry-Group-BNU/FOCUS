@@ -28,8 +28,6 @@ namespace ctns{
          
          int nroots = wfs2.size();
          int nqr = qrow.size();
-         std::cout << "decimation_genbasis" << std::endl;
-         exit(1);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -40,23 +38,35 @@ namespace ctns{
                if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
                std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
             }
-            // search for matched block 
-            std::vector<double> sigs2;
-            linalg::matrix<Tm> U;
-            int matched = 0;
+            // 1. search for matched block 
+            std::vector<int> matched_bc;
+            int dim = 0; 
             for(int bc=0; bc<qcol.size(); bc++){
                if(wfs2[0](br,bc).empty()) continue;
                const auto& qc = qcol.get_sym(bc);     
+               const int cdim = qcol.get_dim(bc);
                if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
-               matched += 1;
-               if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
-               // compute KRS-adapted renormalized basis
-               std::vector<linalg::matrix<Tm>> blks(nroots);
-               for(int iroot=0; iroot<nroots; iroot++){
-                  blks[iroot] = wfs2[iroot](br,bc).to_matrix().T();
-               }
-               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+               matched_bc.push_back(bc);
+               dim += cdim;
             } // qc
+            if(dim == 0) continue;
+            // 2. merge matrix into large blocks
+            std::vector<linalg::matrix<Tm>> blks(nroots);
+            // compute KRS-adapted renormalized basis
+            for(int iroot=0; iroot<nroots; iroot++){
+               linalg::matrix<Tm> clr(rdim,dim);
+               int off = 0;
+               for(const auto& bc : matched_bc){
+                  const auto blk = wfs2[iroot](br,bc);
+                  linalg::xcopy(blk.size(), blk.data(), clr.data()+off);
+                  off += blk.size();
+               }
+               blks[iroot] = clr.T(); // to be used in get_renorm_states_nkr 
+            }
+            // 3. decimation
+            std::vector<double> sigs2;
+            linalg::matrix<Tm> U;
+            kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
 #ifdef _OPENMP
 #pragma omp critical
 #endif

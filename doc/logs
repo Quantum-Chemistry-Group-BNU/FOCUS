@@ -326,7 +326,7 @@
       - reshape_qt3_qt2_su2.h
       - sweep_twodot_decim_su2.h: basic version checked with notrunc option! [DONE@2024/04/02]
    - decimation with truncation:
-      - sweep_decim_su2.h
+      - sweep_decim_su2.h: simple version [DONE@2024/04/02]
  
  * Other functionalities:
    - propagation of initial guess

@@ -308,7 +308,7 @@ namespace kramers{
    extern const int svd_iop;
 
    // Input: a vector of matrices {c[l,r]}
-   // Output: the reduced basis U[r,alpha]
+   // Output: the reduced basis U[r,alpha] for the right space
    template <typename Tm> 
       void get_renorm_states_nkr(const std::vector<linalg::matrix<Tm>>& clr,
             std::vector<double>& sigs2,
