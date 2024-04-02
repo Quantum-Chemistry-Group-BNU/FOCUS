@@ -274,8 +274,8 @@
       (1) std::conditional<Qm::ifabelian, stensor2<Tm>, stensor2su2<Tm>>::type in comb 
       (2) template <bool y=ifab, std::enable_if_t<y,int> = 0> in qtensor2 
    - tensor with non-abelian symmetry
-      (1) qinfoXsu2
-      (2) stensorXsu2
+      (1) qinfoNsu2 (N is rank)
+      (2) stensorNsu2
 
  * generate initial guess by conversion: [DONE@2024/01/27]
    - tosu2: conversion to su2  
@@ -315,7 +315,7 @@
       - debug Hij & correctness of the generated formula 
       - opS is the most complicated [DONE@2024/03/29] 
 
- * Spin-adapted DMRG algorithm: [DONE@2024/05/xx]
+ * Spin-adapted DMRG algorithm: [DONE@2024/04/02]
    - twodot sweep algorithm
       - symbolic_formulae_twodot_su2: [DONE@2024/03/13]
       - restructure the code the reuse more subroutines
@@ -343,13 +343,14 @@
    - twodot_diag_GPU
    - cuSolver: decimation
 
- * Careful check of different implementations: [DONE@2024/06/xx]
-   - OpenMP
-   - MPI
-
- * Benchmark:
-   - fe2s2
-   - fe4s4
-   - fe8s7
-   - femoco
+ * Careful check:
+   - different implementations: [DONE@2024/06/xx]
+      - OpenMP
+      - MPI
+      - GPU
+   - Benchmark:
+      - fe2s2
+      - fe4s4
+      - fe8s7
+      - femoco
 
