@@ -9,8 +9,8 @@ namespace ctns{
             comb<Qm,Tm>& icomb,
             const directed_bond& dbond,
             const linalg::matrix<Tm>& vsol,
-            stensor4<Tm>& wf,
-            const stensor2<Tm>& rot){
+            qtensor4<Qm::ifabelian,Tm>& wf,
+            const qtensor2<Qm::ifabelian,Tm>& rot){
          const bool debug = false;
          if(debug) std::cout << "ctns::twodot_guess_psi superblock=" << superblock << std::endl;
          int nroots = vsol.cols();
@@ -33,24 +33,6 @@ namespace ctns{
                icomb.cpsi[i] = std::move(psi);
             }
 
-         }else if(superblock == "lr"){
-
-            for(int i=0; i<nroots; i++){
-               wf.from_array(vsol.col(i));
-               //-------------------------------------------
-               // Two-dot case: simply use cwf[alpha,c2,c1]
-               //-------------------------------------------
-               // wf4[l,r,c1,c2] => wf2[lr,c1c2]
-               wf.permCR_signed();
-               auto wf2 = wf.merge_lr_c1c2();
-               // rot.H()[alpha,lr]*wf3[lr,c1c2] => cwf[alpha,c1c2]
-               auto cwf = rot.H().dot(wf2);
-               // cwf[alpha,c1c2] => cwf[alpha,c2,c1] 
-               auto psi = cwf.split_cr(wf.info.qmid, wf.info.qver);
-               //-------------------------------------------
-               icomb.cpsi[i] = std::move(psi);
-            }
-
          }else if(superblock == "c2r"){
 
             for(int i=0; i<vsol.cols(); i++){
@@ -68,8 +50,28 @@ namespace ctns{
                icomb.cpsi[i] = std::move(psi);
             }
 
+         }else if(superblock == "lr"){
+
+            assert(Qm::ifabelian);
+            for(int i=0; i<nroots; i++){
+               wf.from_array(vsol.col(i));
+               //-------------------------------------------
+               // Two-dot case: simply use cwf[alpha,c2,c1]
+               //-------------------------------------------
+               // wf4[l,r,c1,c2] => wf2[lr,c1c2]
+               wf.permCR_signed();
+               auto wf2 = wf.merge_lr_c1c2();
+               // rot.H()[alpha,lr]*wf3[lr,c1c2] => cwf[alpha,c1c2]
+               auto cwf = rot.H().dot(wf2);
+               // cwf[alpha,c1c2] => cwf[alpha,c2,c1] 
+               auto psi = cwf.split_cr(wf.info.qmid, wf.info.qver);
+               //-------------------------------------------
+               icomb.cpsi[i] = std::move(psi);
+            }
+
          }else if(superblock == "c1c2"){
 
+            assert(Qm::ifabelian);
             for(int i=0; i<vsol.cols(); i++){
                wf.from_array(vsol.col(i));
                //----------------------------------------------
@@ -96,7 +98,7 @@ namespace ctns{
             const directed_bond& dbond,
             const size_t ndim,
             const int neig,
-            stensor4<Tm>& wf,
+            qtensor4<Qm::ifabelian,Tm>& wf,
             std::vector<Tm>& v0){
          const bool debug = true;
          if(debug) std::cout << "ctns::twodot_guess ";
@@ -110,7 +112,7 @@ namespace ctns{
                if(debug) std::cout << "|lc1>" << std::endl;
                for(int i=0; i<neig; i++){
                   // psi[l,a,c1] => cwf[lc1,a]
-                  auto cwf = icomb.cpsi[i].merge_lc(); 
+                  auto cwf = icomb.cpsi[i].recouple_lc().merge_lc(); 
                   // cwf[lc1,a]*r[a,r,c2] => wf3[lc1,r,c2]
                   auto wf3 = contract_qt3_qt2("l",icomb.sites[pdx1],cwf); 
                   // wf3[lc1,r,c2] => wf4[l,r,c1,c2]
@@ -121,6 +123,7 @@ namespace ctns{
 
             }else{
 
+               assert(Qm::ifabelian);
                //
                //     c2
                //      |
@@ -148,7 +151,7 @@ namespace ctns{
                if(debug) std::cout << "|c2r>" << std::endl;
                for(int i=0; i<neig; i++){
                   // psi[a,r,c2] => cwf[a,c2r]
-                  auto cwf = icomb.cpsi[i].merge_cr();
+                  auto cwf = icomb.cpsi[i].recouple_cr().merge_cr();
                   // l[l,a,c1]*cwf[a,c2r] => wf3[l,c2r,c1]
                   auto wf3 = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.P());
                   // wf3[l,c2r,c1] => wf4[l,r,c1,c2] 
@@ -159,6 +162,7 @@ namespace ctns{
 
             }else{
 
+               assert(Qm::ifabelian);
                //
                //     c2
                //      |

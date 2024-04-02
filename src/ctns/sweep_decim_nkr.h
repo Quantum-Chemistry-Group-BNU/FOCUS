@@ -9,7 +9,7 @@
 
 namespace ctns{
 
-   const bool debug_decimation = true;
+   const bool debug_decimation = false;
    extern const bool debug_decimation;
 
    const bool debug_auxbasis = false; // whether include random basis for no matching col case

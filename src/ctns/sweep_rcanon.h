@@ -9,7 +9,7 @@ namespace ctns{
    // rwfuns_to_cpsi: generate initial guess from RCF for 
    // the initial sweep optimization at p=(1,0): cRRRR => LCRR (L=Id)
    template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
-      void sweep_init(comb<Qm,Tm>& icomb, const int nroots){
+      void sweep_init(comb<Qm,Tm>& icomb, const int nroots, const bool singlet=false){
          std::cout << "\nctns::sweep_init: nroots=" << nroots << std::endl;
          if(icomb.get_nroots() < nroots){
             std::cout << "dim(psi0)=" << icomb.get_nroots() << " nroots=" << nroots << std::endl;

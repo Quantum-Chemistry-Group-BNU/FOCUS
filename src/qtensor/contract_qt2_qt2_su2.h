@@ -10,14 +10,12 @@ namespace ctns{
       stensor2su2<Tm> contract_qt2_qt2(const stensor2su2<Tm>& qt2a, 
             const stensor2su2<Tm>& qt2b){
         
-         // only for symmetry is zero 
-         assert(qt2a.info.sym.is_zero());
-         assert(qt2b.info.sym.is_zero());
-
          assert(qt2a.dir_col() == !qt2b.dir_row());
          assert(qt2a.info.qcol == qt2b.info.qrow);
-         //qsym sym = qt2a.info.sym + qt2b.info.sym;
-         qsym sym(3,0,0);
+
+         // symmetry cannot be simply added, unless one of them is with S=0!
+         assert(qt2a.info.sym.is_zero() || qt2b.info.sym.is_zero());
+         qsym sym = qt2a.info.sym + qt2b.info.sym;
 
          direction2 dir = {qt2a.dir_row(), qt2b.dir_col()};
          stensor2su2<Tm> qt2(sym, qt2a.info.qrow, qt2b.info.qcol, dir);

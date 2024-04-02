@@ -275,6 +275,15 @@ namespace ctns{
                   auto dpt = qmerge(qc1, qc2).second;     
                   return split_qt4_qt3_c1c2(*this, qc1, qc2, dpt);
                }
+            // recouple
+            template <bool y=ifab, std::enable_if_t<y,int> = 0>
+               qtensor3<ifab,Tm> recouple_lc() const{
+                  return *this;
+               }
+            template <bool y=ifab, std::enable_if_t<y,int> = 0>
+               qtensor3<ifab,Tm> recouple_cr() const{
+                  return *this;
+               }
 
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
             // constructors
@@ -311,6 +320,12 @@ namespace ctns{
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                qtensor2<ifab,Tm> fix_mid(const std::pair<int,int> mdx) const;
             */
+            // wf[lcr]->wf[lcr]*(-1)^{p[c]*p[r]}
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               void permCR_signed(){
+                  std::cout << "error: permCR_signed is not implemented for su2 case!" << std::endl;
+                  exit(1);
+               } 
             // shape
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                std::tuple<int,int,int> get_shapeU1() const{

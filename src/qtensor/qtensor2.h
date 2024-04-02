@@ -294,7 +294,7 @@ namespace ctns{
                qtensor2<ifab,Tm> P() const;
             // return adjoint tensor
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
-               qtensor2<ifab,Tm> H(const bool adjoint=true) const;
+               qtensor2<ifab,Tm> H(const bool adjoint=false) const;
             // reshape: split into qtensor3
             // wf2[lc,r] -> wf3[l,r,c]
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
@@ -312,6 +312,14 @@ namespace ctns{
             template <bool y=ifab, std::enable_if_t<!y,int> = 0>
                qtensor3<ifab,Tm> split_lr(const qbond& qlx, const qbond& qrx) const{
                   std::cout << "error: split_lr is not implemented for su2 case!" << std::endl;
+                  exit(1);
+               }
+            // shorthand function
+            // wf2[lr,c1c2] => wf3[l,r,c1c2] => wf4[l,r,c1,c2] 
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor4<ifab,Tm> split_lr_c1c2(const qbond& qlx, const qbond& qrx, 
+                     const qbond& qc1, const qbond& qc2) const{
+                  std::cout << "error: split_lr_c1c2 is not implemented for su2 case!" << std::endl;
                   exit(1);
                }
 

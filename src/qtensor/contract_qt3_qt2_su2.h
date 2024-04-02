@@ -14,13 +14,9 @@ namespace ctns{
             const bool iftrans=false){
    
          // symmetry cannot be simply added, unless one of them is with S=0!
-         assert(qt2.info.sym.is_zero());
-         assert(qt3a.info.sym.is_zero());
+         assert(qt2.info.sym.is_zero() || qt3a.info.sym.is_zero());
          assert(iftrans == false);
-   
-         //auto sym2 = iftrans? -qt2.info.sym : qt2.info.sym;
-         //qsym sym = qt3a.info.sym + sym2;
-         qsym sym(3,0,0);
+         qsym sym = qt3a.info.sym + qt2.info.sym;
 
          auto qext = iftrans? qt2.info.qcol : qt2.info.qrow; 
          auto qint = iftrans? qt2.info.qrow : qt2.info.qcol;
@@ -38,7 +34,7 @@ namespace ctns{
             assert(qt3a.dir_col() == !dint);
             assert(qt3a.info.qcol == qint);
             direction3 dir = {qt3a.dir_row(), dext, qt3a.dir_mid()};
-            qt3.init(sym, qt3a.info.qrow, qext, qt3a.info.qmid, dir);
+            qt3.init(sym, qt3a.info.qrow, qext, qt3a.info.qmid, dir, qt3a.info.couple);
             contract_qt3_qt2_info_r(qt3a.info, qt3a.data(), qt2.info, qt2.data(), 
                   qt3.info, qt3.data(), iftrans); 
 /*

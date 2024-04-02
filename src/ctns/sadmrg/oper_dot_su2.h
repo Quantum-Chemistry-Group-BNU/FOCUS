@@ -172,7 +172,7 @@ namespace ctns{
          stensor2su2<Tm> qt2Ts(qsym(3,-1,1), qops.qbra, qops.qket); // ka^+ kb ka
          qt2Ts.from_matrix(mat);
          // S_{p}^C = 1/2 hpq aq + <pq||sr> aq^+aras [r>s]
-         const auto akA = qops('C')[ka].H();
+         const auto akA = qops('C')[ka].H(true);
          for(auto& pr : qops('S')){
             int p = pr.first;
             auto& opS = pr.second;

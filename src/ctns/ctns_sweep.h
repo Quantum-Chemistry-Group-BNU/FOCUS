@@ -49,7 +49,7 @@ namespace ctns{
             }
             oper_timer.sweep_start();
             // initialize
-            if(rank == 0 and schd.ctns.guess) sweep_init(icomb, schd.ctns.nroots);
+            if(rank == 0 and schd.ctns.guess) sweep_init(icomb, schd.ctns.nroots, schd.ctns.singlet);
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){

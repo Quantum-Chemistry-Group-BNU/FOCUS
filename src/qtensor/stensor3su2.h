@@ -102,7 +102,7 @@ namespace ctns{
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<!y,int>>
       qtensor3<ifab,Tm> qtensor3<ifab,Tm>::recouple_lc() const{
-         assert(info.couple == CRcouple);
+         if(info.couple == LCcouple) return *this;
          qtensor3<ifab,Tm> qt3(info.sym, info.qrow, info.qcol, info.qmid, info.dir, LCcouple);
          int tstot = info.sym.ts();
          for(int i=0; i<qt3.info._nnzaddr.size(); i++){
@@ -131,7 +131,7 @@ namespace ctns{
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<!y,int>>
       qtensor3<ifab,Tm> qtensor3<ifab,Tm>::recouple_cr() const{
-         assert(info.couple == LCcouple);
+         if(info.couple == CRcouple) return *this;
          qtensor3<ifab,Tm> qt3(info.sym, info.qrow, info.qcol, info.qmid, info.dir, CRcouple);
          int tstot = info.sym.ts();
          for(int i=0; i<qt3.info._nnzaddr.size(); i++){

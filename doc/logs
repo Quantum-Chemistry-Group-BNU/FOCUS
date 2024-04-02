@@ -331,11 +331,13 @@
  * Other functionalities:
    - propagation of initial guess
       - recouple for qt3: [DONE@2024/04/02]
-      - sweep_twodot_guess_su2.h
+      - sweep_twodot_guess.h: revised by adding recoupling
+   - initialize guess for start
+      - sweep_init: [DONE@2024/04/02]
    - canonicalization:
-      - sweep_rcanon.h
-   - singlet embedding
-      - sweep_init: ?
+      - sweep_rcanon.h: [DONE@2024/04/02]
+   - singlet embedding:
+      - change operators
  
  * GPU version:
    - twodot_diag_GPU
