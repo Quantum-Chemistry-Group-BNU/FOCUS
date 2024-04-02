@@ -42,7 +42,7 @@ namespace ctns{
          const auto& rdm_svd = schd.ctns.rdm_svd;
          const int& dbranch = schd.ctns.dbranch;
          const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
-         const bool iftrunc = start_truncation(ksupp, dcut);
+         const bool iftrunc = start_truncation(ksupp, dcut) && !schd.ctns.notrunc;
          const auto& noise = sweeps.ctrls[isweep].noise;
          if(debug){
             std::cout << "ctns::twodot_renorm(su2) superblock=" << superblock

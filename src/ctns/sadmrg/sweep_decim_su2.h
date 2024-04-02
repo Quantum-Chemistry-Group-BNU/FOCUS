@@ -34,6 +34,7 @@ namespace ctns{
          int nqr = qrow.size();
          if(debug){
             std::cout << "ctns::decimation_row(su2)"
+               << " iftrunc=" << iftrunc
                << " dcut=" << dcut << " nqr=" << nqr
                << " alg_decim=" << alg_decim
                << " mpisize=" << size;
@@ -41,13 +42,12 @@ namespace ctns{
             std::cout << std::endl;
             qrow.print("qsuper");
          }
-         exit(1);
-/*
+
          // 0. untruncated case
          if(!iftrunc){
             if(rank == 0){
                auto isym = qrow.get_sym(0).isym();
-               stensor2<Tm> qt2(qsym(isym), qrow, qrow); // identity matrix
+               stensor2su2<Tm> qt2(qsym(isym), qrow, qrow); // identity matrix
                for(int br=0; br<nqr; br++){
                   const auto& qr = qrow.get_sym(br);
                   const int rdim = qrow.get_dim(br);
@@ -64,7 +64,7 @@ namespace ctns{
             } // rank-0
             return;
          }
-
+/*
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
          decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, alg_decim, wfs2, results);

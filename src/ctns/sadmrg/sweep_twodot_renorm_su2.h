@@ -45,7 +45,6 @@ namespace ctns{
          stensor2su2<Tm> rot;
          twodot_decimation(icomb, schd, scratch, sweeps, isweep, ibond, 
                superblock, vsol, wf, rot);
-         exit(1);
 #ifndef SERIAL
          if(size > 1) mpi_wrapper::broadcast(icomb.world, rot, 0); 
 #endif
@@ -75,27 +74,27 @@ namespace ctns{
             fmmtask = "rmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          }
          if(superblock == "lc1"){
-//            icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
-//            //-------------------------------------------------------------------
-//            if(check_canon){
-//               rot -= icomb.sites[pdx].merge_lc();
-//               assert(rot.normF() < thresh_canon);
-//               auto ovlp = contract_qt3_qt3("lc", icomb.sites[pdx], icomb.sites[pdx]);
-//               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
-//            }
+            icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
+            //-------------------------------------------------------------------
+            if(check_canon){
+               rot -= icomb.sites[pdx].merge_lc();
+               assert(rot.normF() < thresh_canon);
+               auto ovlp = contract_qt3_qt3("lc", icomb.sites[pdx], icomb.sites[pdx]);
+               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[1],fneed[3]}, fneed_next);
             oper_renorm("lc", icomb, p, int2e, int1e, schd,
                   lqops, c1qops, qops, fname, timing, fmmtask);
          }else if(superblock == "c2r"){
-//            icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
-//            //-------------------------------------------------------------------
-//            if(check_canon){
-//               rot -= icomb.sites[pdx].merge_cr();
-//               assert(rot.normF() < thresh_canon);
-//               auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
-//               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
-//            }
+            icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
+            //-------------------------------------------------------------------
+            if(check_canon){
+               rot -= icomb.sites[pdx].merge_cr();
+               assert(rot.normF() < thresh_canon);
+               auto ovlp = contract_qt3_qt3("cr", icomb.sites[pdx],icomb.sites[pdx]);
+               assert(ovlp.check_identityMatrix(thresh_canon) < thresh_canon);
+            }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[0],fneed[2]}, fneed_next);
             oper_renorm("cr", icomb, p, int2e, int1e, schd,

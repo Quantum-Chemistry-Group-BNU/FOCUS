@@ -36,6 +36,7 @@ namespace ctns{
          int nqr = qrow.size();
          if(debug){
             std::cout << "ctns::decimation_row_nkr"
+               << " iftrunc=" << iftrunc
                << " dcut=" << dcut << " nqr=" << nqr
                << " alg_decim=" << alg_decim
                << " mpisize=" << size;
@@ -165,9 +166,10 @@ namespace ctns{
          int dim12 = qrow.get_dimAll(); 
          if(debug){ 
             std::cout << "ctns::decimation_row_kr"
+               << " iftrunc=" << iftrunc
                << " dcut=" << dcut << " nqr=" << nqr
                << " alg_decim=" << alg_decim
-               << std::endl;
+               << " mpisize=" << size;
             if(iftrunc && !fname.empty()) std::cout << " fname=" << fname;
             std::cout << std::endl;
             qrow.print("qsuper");

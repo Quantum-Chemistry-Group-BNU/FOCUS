@@ -47,14 +47,14 @@ namespace input{
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
                   & alg_hvec & alg_hinter & alg_hcoper 
-                  & alg_renorm & alg_rinter & alg_rcoper & alg_decim 
+                  & alg_renorm & alg_rinter & alg_rcoper & alg_decim & notrunc 
                   & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
                   & batchhvec & batchrenorm & batchmem
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
                   & iomode & async_fetch & async_save & async_remove & async_tocpu & ifnccl
                   & iroot & nsample & ndetprt
-                  & tosu2 & thresh_tosu2 ; 
+                  & tosu2 & thresh_tosu2; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -95,6 +95,7 @@ namespace input{
          int alg_rinter = 0;
          int alg_rcoper = 0;
          int alg_decim = 1;
+         bool notrunc = false;
          bool ifdist1 = false;
          bool ifdistc = false;
          bool save_formulae = false;
