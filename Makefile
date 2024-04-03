@@ -20,6 +20,7 @@ INSTALL_VMC = yes
 INSTALL_PY = yes
 
 # set library
+GSLDIR = /usr/local
 ifeq ($(strip $(machine)), lenovo)
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
    BOOST = /home/lx/software/boost/install_1_79_0
@@ -87,8 +88,6 @@ else ifeq ($(strip $(machine)), mac)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
-   GSLDIR = /usr/local
-   LFLAGS += -L${GSLDIR}/lib -lgsl
 else ifeq ($(strip $(machine)), archlinux)
    MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
    BOOST = /usr
@@ -98,6 +97,7 @@ else ifeq ($(strip $(machine)), archlinux)
    endif
 endif
 FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -I${GSLDIR}/include 
+LFLAGS += -L${GSLDIR}/lib -lgsl
  
 target = depend core ci ctns vmc
 ifeq ($(strip $(INSTALL_PY)), yes)

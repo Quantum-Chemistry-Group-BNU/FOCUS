@@ -348,7 +348,7 @@
       - OpenMP
       - MPI
       - GPU
-   - Benchmark:
+   - benchmark:
       - fe2s2
       - fe4s4
       - fe8s7

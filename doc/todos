@@ -1,7 +1,7 @@
 
 ### TODOs: more functionalities ###
 
- * Spin-adapted version?
+ * Spin-adapted version? [DONE]
 
  * Reduced density matrix (RDMs) [!!!] 
 
@@ -32,7 +32,7 @@
 
 ### TODOs: applications ###
 
- * Towards large-scale parallelization: 
+ * Towards large-scale parallelization: some old issues 
     - profile openmp/mpi onedot/twodot version with large D
 	 - note: when noise is added, the results can be different 
 	 - analyze why the parallel efficiency is low?

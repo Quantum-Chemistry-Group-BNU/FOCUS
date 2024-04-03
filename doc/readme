@@ -17,15 +17,16 @@
       1. C++ compiler
       2. BOOST (https://www.boost.org/users/download/)
  - Extlibs:
-      1. zquatev (https://github.com/qsimulate-open/zquatev) for 
+      1. extlibs/zquatev: (https://github.com/qsimulate-open/zquatev) for 
 	      diagonalization of quaternion matrix (relativistic case)
-      2. compression libraries: lz4 & zstd
-      3. gpu: magma
+      2. extlibs/magma: for gpu
          $ cp make.inc-examples/make.inc.mkl-icc make.inc
          $ 修改make.inc的22行 GPU架构为GPU_TARGET ?= Volta或者Ampere （NVIDIA GeForce RTX 3090）
          $ make
          $ make install prefix= INSTALL_PATH
-      4. gsl: for SA-DMRG
+      3. mathlib/gsl: for SA-DMRG
+      4. mathlib/lapack: for linear algebra [NOT REQUIRED IF MKL EXIST]
+      5. compression libraries: lz4 & zstd [NOT USED NOW]
  - Install:
       1. Edit makefile in extlibs/zquatev/ & make 
       2. Edit makefile & make
