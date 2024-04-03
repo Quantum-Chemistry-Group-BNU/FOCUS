@@ -178,7 +178,7 @@ namespace ctns{
             const int tm){
          const bool debug = true;
          std::cout << "\nctns::rcanon_tononsu2 tm=" << tm << std::endl;
-         assert(std::abs(tm) <= icomb.get_sym_state().ts());
+         assert(std::abs(tm) <= icomb.get_qsym_state().ts());
          icomb_NSz.topo = icomb.topo;
          // sites
          int nphysical = icomb.get_nphysical();

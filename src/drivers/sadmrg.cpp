@@ -67,8 +67,8 @@ void SADMRG(const input::schedule& schd){
             const bool debug_convert_and_hmat = false;
             if(debug_convert_and_hmat){
                ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz2;
-               auto symstate = icomb_NSz.get_sym_state(); 
-               ctns::rcanon_tononsu2(icomb, icomb_NSz2, symstate.tm());
+               auto sym_state = icomb_NSz.get_qsym_state(); 
+               ctns::rcanon_tononsu2(icomb, icomb_NSz2, sym_state.tm());
                // HIJ
                integral::two_body<Tm> int2e;
                integral::one_body<Tm> int1e;

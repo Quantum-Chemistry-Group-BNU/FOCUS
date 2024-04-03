@@ -6,7 +6,6 @@
 #include "sweep_onedot.h"
 #include "sweep_twodot.h"
 #include "sweep_rcanon.h"
-#include "sadmrg/sweep_rcanon_su2.h"
 
 namespace ctns{
 
@@ -31,7 +30,10 @@ namespace ctns{
          }
          if(schd.ctns.maxsweep == 0) return;
          auto t0 = tools::get_time();
-         
+        
+         // build operators on the left dot
+         oper_init_dotL(icomb, int2e, int1e, schd, scratch);
+
          // global timer
          dot_timing timing_global;
          // generate sweep sequence

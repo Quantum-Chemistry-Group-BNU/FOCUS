@@ -70,7 +70,7 @@ namespace ctns{
             }
             // helpers
             int get_nphysical() const{ return topo.nphysical; }
-            qsym get_sym_state() const{
+            qsym get_qsym_state() const{
                assert(rwfuns[0].rows() == 1); // only one symmetry sector
                return rwfuns[0].info.qrow.get_sym(0);
             }
@@ -81,7 +81,7 @@ namespace ctns{
             // wf2(iroot,icol): ->-*->-
             qtensor2<Qm::ifabelian,Tm> get_wf2() const{
                int nroots = this->get_nroots();
-               auto sym_state = this->get_sym_state();
+               auto sym_state = this->get_qsym_state();
                qbond qrow({{sym_state,nroots}});
                const auto& qcol = rwfuns[0].info.qcol;
                const auto& dir = rwfuns[0].info.dir;

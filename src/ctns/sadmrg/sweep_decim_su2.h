@@ -76,7 +76,7 @@ namespace ctns{
          if(rank == 0){
             auto t1 = tools::get_time();
             std::cout << "----- TMING FOR decimation_genbasis(su2): "
-               << tools::get_duration(t1-t0) << " S"
+               << tools::get_duration(t1-t0) << " S -----"
                << std::endl;
          }
       }

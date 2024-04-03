@@ -35,7 +35,7 @@ namespace ctns{
 
          int noff = nsample/10;
          int k = icomb.get_nphysical()*2;
-         int no = icomb.get_sym_state().ne();
+         int no = icomb.get_qsym_state().ne();
          int nv = k - no;
          int nsingles = no*nv;
          std::vector<int> olst(no), vlst(nv);

@@ -64,8 +64,11 @@ namespace ctns{
                      icomb.cpsi[i].to_array(&v0[ndim*i]);
                   }
                   // reorthogonalization
-                  int nindp = linalg::get_ortho_basis(ndim, neig, v0.data()); 
-                  assert(nindp == neig);
+                  int nindp = linalg::get_ortho_basis(ndim, neig, v0.data());
+                  if(nindp != neig){
+                     std::cout << "error: nindp=" << nindp << " does not match neig=" << neig << std::endl;
+                     exit(1);
+                  } 
                }
                //------------------------------------
                auto t1 = tools::get_time();

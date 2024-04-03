@@ -328,7 +328,7 @@
    - decimation with truncation:
       - sweep_decim_su2.h: simple version [DONE@2024/04/02]
  
- * Other functionalities:
+ * Other functionalities: [DONE@2024/04/03]
    - propagation of initial guess
       - recouple for qt3: [DONE@2024/04/02]
       - sweep_twodot_guess.h: revised by adding recoupling
@@ -337,9 +337,11 @@
    - canonicalization:
       - sweep_rcanon.h: [DONE@2024/04/02]
    - singlet embedding:
-      - change operators
+      - sweep_init & get_left_bsite: [DONE@2024/04/03]
+      - change operators: oper_dot_su2.h [DONE@2024/04/03]
+      - sweep_final:
  
- * GPU version: on dell2
+ * GPU version: on dell2 [DONE@2024/04/XX]
    - twodot_diag_GPU
    - cuSolver: decimation
 

@@ -19,7 +19,7 @@ namespace ctns{
             const int iroot){
          std::cout << "\nctns::rcanon_expand_onspace iroot=" << iroot << std::endl; 
          // setup FCI space
-         qsym sym_state = icomb.get_sym_state();
+         qsym sym_state = icomb.get_qsym_state();
          int ne = sym_state.ne(); 
          int ks = icomb.get_nphysical();
          fock::onspace fci_space;
@@ -69,7 +69,7 @@ namespace ctns{
             const int iroot){
          std::cout << "\nctns::rcanon_expand_csfspace iroot=" << iroot << std::endl; 
          // setup FCI space
-         qsym sym_state = icomb.get_sym_state();
+         qsym sym_state = icomb.get_qsym_state();
          int ne = sym_state.ne(); 
          int ks = icomb.get_nphysical();
          int ts = sym_state.ts(); 
@@ -124,7 +124,7 @@ namespace ctns{
          auto csf_expansion = rcanon_expand_csfstate(icomb, iroot, thresh_print);
          const auto& csf_space = csf_expansion.first;
          const auto& csf_coeff = csf_expansion.second; 
-         qsym sym_state = icomb.get_sym_state();
+         qsym sym_state = icomb.get_qsym_state();
          int ne = sym_state.ne(); 
          int ks = icomb.get_nphysical();
          int ts = sym_state.ts(); 

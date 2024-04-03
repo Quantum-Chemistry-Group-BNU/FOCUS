@@ -95,7 +95,9 @@ namespace ctns{
          const auto& ql = qops_dict.at("l").qket;
          const auto& qr = qops_dict.at("r").qket;
          const auto& qc = qops_dict.at("c").qket;
-         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, (ifab? schd.twoms : schd.twos));
+         auto sym_state = get_qsym_state(Qm::isym, schd.nelec, 
+               (ifab? schd.twoms : schd.twos),
+               schd.ctns.singlet);
          qtensor3<ifab,Tm> wf(sym_state, ql, qr, qc, dir_WF3); // su2 case: by default, CRcouple is used.
          size_t ndim = wf.size();
          int neig = sweeps.nroots;

@@ -63,7 +63,10 @@ namespace ctns{
                   twodot_guess_v0(icomb, dbond, ndim, neig, wf, v0);
                   // reorthogonalization
                   int nindp = linalg::get_ortho_basis(ndim, neig, v0.data()); 
-                  assert(nindp == neig);
+                  if(nindp != neig){
+                     std::cout << "error: nindp=" << nindp << " does not match neig=" << neig << std::endl;
+                     exit(1);
+                  } 
                }
                //------------------------------------
                auto t1 = tools::get_time();

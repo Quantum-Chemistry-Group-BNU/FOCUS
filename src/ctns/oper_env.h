@@ -13,11 +13,57 @@
 
 namespace ctns{
 
+   template <typename Qm, typename Tm>
+      void oper_init_dotL(const comb<Qm,Tm>& icomb,
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const input::schedule& schd,
+            const std::string scratch){
+
+         const int isym = Qm::isym;
+         const bool ifkr = Qm::ifkr;
+         int size = 1, rank = 0;
+#ifndef SERIAL
+         size = icomb.world.size();
+         rank = icomb.world.rank();
+#endif
+         const auto& iomode = schd.ctns.iomode;
+         const auto& ifdist1 = schd.ctns.ifdist1;
+         const bool debug = (rank==0);
+         if(debug){
+            std::cout << "\nctns::oper_init_dotL isym=" << isym 
+               << " ifkr=" << ifkr 
+               << " singlet=" << schd.ctns.singlet
+               << std::endl;
+         }
+         auto t0 = tools::get_time();
+
+         // lop: left boundary at the start (0,0)
+         auto p = std::make_pair(0,0);
+         //---------------------------------------------
+         int kp = icomb.topo.get_node(p).pindex;
+         qoper_dict<Qm::ifabelian,Tm> qops;
+         oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
+         //---------------------------------------------
+         std::string fop = oper_fname(scratch, p, "l");
+         if(isym == 3 and schd.ctns.singlet){
+            qoper_dict<Qm::ifabelian,Tm> qops2;
+            oper_init_dotSE(qops, qops2, icomb.get_qsym_state().ts());
+            oper_save(iomode, fop, qops2, debug);
+         }else{
+            oper_save(iomode, fop, qops, debug);
+         }
+         //---------------------------------------------
+
+         auto t1 = tools::get_time();
+         if(debug) tools::timing("ctns::oper_init_dotL", t0, t1);
+      } 
+
    // initialization of operators for
    // (1) dot operators [c]
    // (2) boundary operators [l/r]
    template <typename Qm, typename Tm>
-      void oper_init_dotAll(const comb<Qm,Tm>& icomb,
+      void oper_init_dotCR(const comb<Qm,Tm>& icomb,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const std::string scratch,
@@ -75,27 +121,10 @@ namespace ctns{
             }
          }
 
-         // lop: left boundary at the start (0,0)
-         auto p = std::make_pair(0,0);
-         auto ta = tools::get_time();
-         //---------------------------------------------
-         int kp = icomb.topo.get_node(p).pindex;
-         qoper_dict<Qm::ifabelian,Tm> qops;
-         oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
-         //---------------------------------------------
-         auto tb = tools::get_time();
-         //---------------------------------------------
-         std::string fop = oper_fname(scratch, p, "l");
-         oper_save(iomode, fop, qops, debug);
-         //---------------------------------------------
-         auto tc = tools::get_time();
-         t_comp += tools::get_duration(tb-ta);
-         t_save += tools::get_duration(tc-tb);
-
          auto t1 = tools::get_time();
          if(debug){
-            tools::timing("ctns::oper_init", t0, t1);
-            std::cout << "T[ctns::oper_init](comp/save/tot)="
+            tools::timing("ctns::oper_init_dotCR", t0, t1);
+            std::cout << "T[ctns::oper_init_dotCR](comp/save/tot)="
                << t_comp << ","
                << t_save << ","
                << (t_comp + t_save)
@@ -125,7 +154,7 @@ namespace ctns{
          
          // 1. construct for dot [cop] & boundary operators [lop/rop]
          auto t0 = tools::get_time();
-         oper_init_dotAll(icomb, int2e, int1e, scratch, iomode, ifdist1);
+         oper_init_dotCR(icomb, int2e, int1e, scratch, iomode, ifdist1);
          auto ta = tools::get_time();
          t_init = tools::get_duration(ta-t0);
 

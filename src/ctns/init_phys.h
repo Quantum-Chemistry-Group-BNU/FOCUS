@@ -103,6 +103,15 @@ namespace ctns{
       return qphys;
    }
 
+   // for singlet embedding
+   inline qbond get_qbond_embed(const int ts){
+      qbond qaux({{qsym(3,ts,ts),1}, // 0
+                  {qsym(3,ts+2,ts),1}, // 2
+                  {qsym(3,ts+1,ts+1),1}}); // +1
+      if(ts > 0) qaux.dims.push_back({qsym(3,ts+1,ts-1),1}); // -1
+      return qaux;
+   }
+
    //        n             |vac>
    //        |               |
    //     ---*---|vac>   n---*
@@ -142,7 +151,7 @@ namespace ctns{
    //     ---*--- <out|
    //  <vac| 	       
    template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
-      stensor3<Tm> get_left_bsite(){
+      stensor3<Tm> get_left_bsite(const qsym& sym_symstate, const bool singlet=false){
          int isym = Qm::isym;
          auto qvac = get_qbond_vac(isym);
          auto qphys = get_qbond_phys(isym);
@@ -156,18 +165,21 @@ namespace ctns{
          return qt3;
       }
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
-      stensor3su2<Tm> get_left_bsite(){
+      stensor3su2<Tm> get_left_bsite(const qsym& sym_state, const bool singlet=false){
          int isym = Qm::isym;
-         auto qvac = get_qbond_vac(isym);
+         assert(isym == 3);
          auto qphys = get_qbond_phys(isym);
-         stensor3su2<Tm> qt3(qsym(isym), qvac, qphys, qphys, dir_LCF, LCcouple);
-         for(int bk=0; bk<qphys.size(); bk++){
-            int ts = qphys.get_sym(bk).ts();
-            auto blk = qt3(0,bk,bk,ts);
-            for(int im=0; im<qphys.get_dim(bk); im++){
-               blk(0,im,im) = 1.0;
-            }
+         qbond qrow, qcol;
+         if(!singlet){
+            qrow = get_qbond_vac(isym);
+            qcol = qphys;
+         }else{
+            int ts = sym_state.ts();
+            qrow = qbond({{qsym(3,ts,ts),1}});
+            qcol = get_qbond_embed(ts);
          }
+         stensor3su2<Tm> qt3(qsym(isym), qrow, qcol, qphys, dir_LCF, LCcouple);
+         std::fill_n(qt3.data(), qt3.size(), 1.0); // identity block with dimension 1 
          return qt3;
       }
 

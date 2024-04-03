@@ -19,6 +19,103 @@ namespace ctns{
    const bool debug_oper_dot_su2 = false;
    extern const bool debug_oper_dot_su2;
 
+   // return the spin and parity of operator (key,index)
+   inline std::pair<int,int> get_spin_parity(const char key, const int index){
+       int tk, pk;
+       if(key == 'H'){
+          tk = 0;
+          pk = 0;
+       }else if(key == 'C' || key == 'S'){
+          tk = 1;
+          pk = 1;
+       }else if(key == 'A' || key == 'P'){
+          auto pq = oper_unpack(index);
+          int p = pq.first, kp = p/2, sp = p%2;
+          int q = pq.second, kq = q/2, sq = q%2;
+          tk = (sp!=sq)? 0 : 2;   
+          pk = 0;
+       }else if(key == 'B' || key == 'Q'){
+          auto pq = oper_unpack(index);
+          int p = pq.first, kp = p/2, sp = p%2;
+          int q = pq.second, kq = q/2, sq = q%2;
+          tk = (sp!=sq)? 2 : 0;
+          pk = 0;
+       }else{
+          std::cout << "error: get_spin_parity does not have key=" << key << std::endl;
+          exit(1); 
+       }
+       return std::make_pair(tk,pk);
+   }
+               
+   template <typename Tm>
+      void oper_dotSE(const int ts,
+            const int tk,
+            const int pk,
+            const stensor2su2<Tm>& op, 
+            stensor2su2<Tm>& op2){
+         // map from b[EC] of op2 to b of op[C] (E=env,C=dot) 
+         // see get_qbond_embed in ../init_phys.h
+         std::vector<int> cmap({0,1,2,2});
+         for(int i=0; i<op2.info._nnzaddr.size(); i++){
+            auto key = op2.info._nnzaddr[i];
+            int br = std::get<0>(key);
+            int bc = std::get<1>(key);
+            auto blk2 = op2(br,bc);
+            if(blk2.empty()) continue;
+            int cbr = cmap[br];
+            int cbc = cmap[bc];
+            const auto blk = op(cbr,cbc);
+            if(blk.empty()) continue;
+            int tsr = op2.info.qrow.get_sym(br).ts();
+            int tsc = op2.info.qcol.get_sym(bc).ts();
+            int ctsr = op.info.qrow.get_sym(cbr).ts();
+            int ctsc = op.info.qcol.get_sym(cbc).ts();
+            double fac = std::sqrt((ts+1.0)*(ctsr+1.0)*(tsc+1.0)*(tk+1.0))*
+               fock::wigner9j(ts,ctsr,tsr,ts,ctsc,tsc,0,tk,tk);
+            if(ts%2==1 and pk==1) fac *= -1;
+            assert(blk2.size() == 1 and blk.size() == 1);
+            blk2._data[0] = fac*blk._data[0];
+         }
+      }
+
+   // init local operators on dot: singlet embedding case
+   template <typename Tm>
+      void oper_init_dotSE(const oper_dict<Tm>& qops,
+            oper_dict<Tm>& qops2,
+            const int ts){
+         std::cout << "error: oper_init_dotSE only work for su2 case!" << std::endl;
+         exit(1);
+      } 
+   template <typename Tm>
+      void oper_init_dotSE(const opersu2_dict<Tm>& qops,
+            opersu2_dict<Tm>& qops2,
+            const int ts){
+         // setup basic information
+         qops2.sorb = qops.sorb;
+         qops2.isym = qops.isym;
+         qops2.ifkr = qops.ifkr;
+         qops2.cindex = qops.cindex;
+         qops2.krest = qops.krest;
+         qops2.oplist = qops.oplist;
+         auto qembed = get_qbond_embed(ts);
+         qops2.qbra = qembed;
+         qops2.qket = qembed;
+         // initialize memory
+         qops2.init(true);
+         // transform operators
+         for(const auto& key : qops.oplist){
+            for(const auto& pr : qops(key)){
+               const auto& index = pr.first;
+               const auto& op = pr.second;
+               auto spin_parity = get_spin_parity(key, index);
+               int tk = spin_parity.first;
+               int pk = spin_parity.second;
+               auto& op2 = qops2(key).at(index);
+               oper_dotSE(ts, tk, pk, op, op2);
+            }
+         }
+      }
+
    // init local operators on dot
    template <typename Tm>
       void oper_init_dot(opersu2_dict<Tm>& qops,
@@ -30,8 +127,7 @@ namespace ctns{
             const int size,
             const int rank,
             const bool ifdist1){
-         assert(isym == 3);
-         assert(ifkr == true);
+         assert(isym == 3 and ifkr == true);
          // setup basic information
          qops.sorb = int2e.sorb;
          qops.isym = isym;

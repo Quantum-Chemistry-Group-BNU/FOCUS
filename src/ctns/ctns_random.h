@@ -103,7 +103,7 @@ namespace ctns{
          auto wf = icomb.rwfuns[iroot];
          const auto& nodes = icomb.topo.nodes; 
          const auto& rindex = icomb.topo.rindex;
-         auto sym = icomb.get_sym_state();
+         auto sym = icomb.get_qsym_state();
          int ne = sym.ne();
          int ts = sym.ts();
          // loop from left to right

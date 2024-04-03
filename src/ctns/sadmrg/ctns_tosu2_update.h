@@ -281,7 +281,7 @@ namespace ctns{
 
          // 2. projection
          auto wf2 = icomb_NSz.get_wf2();
-         auto sym_state = icomb_NSz.get_sym_state();
+         auto sym_state = icomb_NSz.get_qsym_state();
          int n = sym_state.ne();
          int tm = sym_state.tm();
          int nstate;
