@@ -339,7 +339,7 @@
    - singlet embedding:
       - sweep_init & get_left_bsite: [DONE@2024/04/03]
       - change operators: oper_dot_su2.h [DONE@2024/04/03]
-      - sweep_final:
+      - sweep_final: [DONE@2024/04/03]
  
  * GPU version: on dell2 [DONE@2024/04/XX]
    - twodot_diag_GPU

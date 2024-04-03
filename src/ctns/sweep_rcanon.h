@@ -92,8 +92,8 @@ namespace ctns{
          {
             std::cout << "Convert [LC]RR => [CR]RR:" << std::endl;
             const auto& wfinfo = icomb.cpsi[0].info;
-            stensor2<Tm> rot;
-            std::vector<stensor2<Tm>> wfs2(nroots);
+            qtensor2<Qm::ifabelian,Tm> rot;
+            std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
             for(int i=0; i<nroots; i++){
                auto wf2 = icomb.cpsi[i].recouple_cr().merge_cr().P();
                wfs2[i] = std::move(wf2);
@@ -123,8 +123,8 @@ namespace ctns{
          {
             std::cout << "\nConvert [C]RRR => [cR]RRR:" << std::endl;
             const auto& wfinfo = icomb.cpsi[0].info;
-            stensor2<Tm> rot;
-            std::vector<stensor2<Tm>> wfs2(nroots);
+            qtensor2<Qm::ifabelian,Tm> rot;
+            std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
             for(int i=0; i<nroots; i++){
                auto wf2 = icomb.cpsi[i].recouple_cr().merge_cr().P();
                wfs2[i] = std::move(wf2);
@@ -150,7 +150,7 @@ namespace ctns{
             for(int i=0; i<nroots; i++){
                auto cwf = wfs2[i].P().dot(rot.H()); // <-W[1,alpha]->
                // change the carrier of sym_state from center to left
-               stensor2su2<Tm> rwfun(qsym(Qm::isym), qrow, qcol, dir_RWF);
+               qtensor2<Qm::ifabelian,Tm> rwfun(qsym(Qm::isym), qrow, qcol, dir_RWF);
                assert(cwf.size() == rwfun.size());
                linalg::xcopy(cwf.size(), cwf.data(), rwfun.data());
                icomb.rwfuns[i] = std::move(rwfun);
