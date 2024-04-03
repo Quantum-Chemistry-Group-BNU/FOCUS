@@ -12,9 +12,6 @@ namespace ctns{
    using qdpt = std::map<qsym,std::vector<std::tuple<int,int,int>>>;
    using qproduct = std::pair<qbond,qdpt>;
 
-   const bool sort_by_dim = true;
-   extern const bool sort_by_dim; 
-
    // qs12 = qs1*qs2
    inline qproduct qmerge(const qbond& qs1, const qbond& qs2){
       // init dpt
@@ -47,7 +44,6 @@ namespace ctns{
          // setup dims for qs12
          qs12.dims.push_back(std::make_pair(q12,dim));
       }
-      if(sort_by_dim) qs12.sort_by_dim(); // reoder qs12 if necessary
       return std::make_pair(qs12,dpt);
    }
 
@@ -90,7 +86,6 @@ namespace ctns{
          // setup dims for qs12
          qs12.dims.push_back(std::make_pair(q12,dim));
       }
-      if(sort_by_dim) qs12.sort_by_dim(); // reoder qs12 if necessary
       return std::make_pair(qs12,dpt);
    }
 

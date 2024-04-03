@@ -9,7 +9,10 @@ namespace ctns{
 
    const double thresh_sig2 = 1.e-14;
    extern const double thresh_sig2;
-   
+  
+   const bool sort_by_dim = true; // sort the decimated symmetry sector by dimension
+   extern const bool sort_by_dim;
+
    // select important sigs
    inline void decimation_selection(const bool ifkr,
          const qbond& qrow,

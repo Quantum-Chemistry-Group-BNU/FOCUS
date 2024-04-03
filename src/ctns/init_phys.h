@@ -103,7 +103,7 @@ namespace ctns{
       return qphys;
    }
 
-   // for singlet embedding
+   // for singlet embedding: qembed = env+dot
    inline qbond get_qbond_embed(const int ts){
       qbond qaux({{qsym(3,ts,ts),1}, // 0
                   {qsym(3,ts+2,ts),1}, // 2
