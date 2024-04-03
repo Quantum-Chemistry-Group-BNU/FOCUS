@@ -11,8 +11,10 @@ HOME = os.path.dirname(os.getcwd())
 print('HOME=',HOME)
 SCI  = HOME+"/bin/sci.x"
 CTNS = mpiprefix + HOME+"/bin/ctns.x"
+SADMRG = mpiprefix + HOME+"/bin/sadmrg.x"
 os.environ['SCI'] = SCI
 os.environ['CTNS'] = CTNS
+os.environ['SADMRG'] = SADMRG
 
 #import os
 #print(os.environ['DYLD_LIBRARY_PATH'])

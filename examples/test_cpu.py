@@ -9,8 +9,10 @@ HOME = os.path.dirname(os.getcwd())
 print('HOME=',HOME)
 SCI  = HOME+"/bin/sci.x"
 CTNS = mpiprefix + HOME+"/bin/ctns.x"
+SADMRG = mpiprefix + HOME+"/bin/sadmrg.x"
 os.environ['SCI'] = SCI
 os.environ['CTNS'] = CTNS
+os.environ['SADMRG'] = SADMRG
 
 #import os
 #print(os.environ['DYLD_LIBRARY_PATH'])
@@ -28,5 +30,6 @@ dirs = ['tests_cpu/0_h6_tns',
         'tests_cpu/5_h5_rNSz_renorm2',
         'tests_cpu/5_h5_cNSz_hvec5',
         'tests_cpu/7_h6_cisolver',
+        'tests_cpu/8_h6+_sadmrg',
         ]
 test_utils.test_run(dirs)
