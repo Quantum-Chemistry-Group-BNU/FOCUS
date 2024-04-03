@@ -339,7 +339,7 @@
    - singlet embedding:
       - change operators
  
- * GPU version:
+ * GPU version: on dell2
    - twodot_diag_GPU
    - cuSolver: decimation
 
