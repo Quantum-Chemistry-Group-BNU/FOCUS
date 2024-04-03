@@ -61,59 +61,6 @@ namespace ctns{
          icomb.display_size();
       }
 
-   // rwfuns_to_cpsi: generate initial guess from RCF for 
-   // the initial sweep optimization at p=(1,0): cRRRR => LCRR (L=Id)
-   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
-      void sweep_init2(comb<Qm,Tm>& icomb, const int nroots, const bool singlet=false){
-
-      }
-   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
-      void sweep_init2(comb<Qm,Tm>& icomb, const int nroots, const bool singlet=false){
-         std::cout << "\nctns::sweep_init: nroots=" << nroots << std::endl;
-         if(icomb.get_nroots() < nroots){
-            std::cout << "dim(psi0)=" << icomb.get_nroots() << " nroots=" << nroots << std::endl;
-            tools::exit("error in sweep_init: requested nroots exceed!");
-         }
-         const auto& rindex = icomb.topo.rindex;
-         auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))];
-         auto& site1 = icomb.sites[rindex.at(std::make_pair(1,0))]; // const
-         auto sym_state = icomb.get_qsym_state();
-         icomb.cpsi.resize(nroots);
-         for(int iroot=0; iroot<nroots; iroot++){
-            // qt2(1,r): ->-*->-
-            auto qt2 = icomb.rwfuns[iroot];
-            // qt2(1,r)*site0(r,r0,n0) = qt3(1,r0,n0)
-            auto qt3 = contract_qt3_qt2("l",site0,qt2);
-            // qt3(1,r0,n0) -> cwf(n0,r0)
-            //     n0
-            //    /|\       ->  n0-<-*->-r0
-            // q->-*->-r0            |
-            //                       q
-            stensor2<Tm> cwf(sym_state, site0.info.qmid, site0.info.qcol, dir_WF2);
-            for(int br=0; br<cwf.rows(); br++){
-               for(int bc=0; bc<cwf.cols(); bc++){
-                  auto blk = cwf(br,bc);
-                  if(blk.empty()) continue;
-                  const auto blk0 = qt3(0,bc,br);
-                  int rdim = cwf.info.qrow.get_dim(br);
-                  int cdim = cwf.info.qcol.get_dim(bc);
-                  for(int ir=0; ir<rdim; ir++){
-                     for(int ic=0; ic<cdim; ic++){
-                        blk(ir,ic) = blk0(0,ic,ir);
-                     } // ic
-                  } // ir
-               } // bc
-            } // br
-            // cwf(n0,r0)*site1(r0,r1,n1) = psi(n0,r1,n1)
-            cwf.print("cwf");
-            cwf.to_matrix().print("cwf");
-            icomb.cpsi[iroot] = contract_qt3_qt2("l",site1,cwf);
-         } // iroot
-         site0 = get_left_bsite<Qm,Tm>(sym_state, singlet); // C[0]R[1] => L[0]C[1] (L[0]=Id) 
-         icomb.display_size();
-         exit(1);
-      }
-
    // cpsi1_to_rwfuns: generate right canonical form (RCF) for later usage: LCRR => cRRRR
    template <typename Qm, typename Tm>
       void sweep_final(comb<Qm,Tm>& icomb,
