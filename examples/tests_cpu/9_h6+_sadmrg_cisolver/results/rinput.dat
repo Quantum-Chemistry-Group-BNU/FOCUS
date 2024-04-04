@@ -1,0 +1,40 @@
+nelec 5
+twoms 1
+twos 1
+integral_file moleinfo/fmole.info
+scratch ./scratch
+
+$sci
+dets 
+0 1 2 3 4 
+end
+nroots 2
+schedule
+0 1.e-5
+end
+maxiter 3
+$end
+
+$ctns
+qkind rNS
+nroots 2
+maxdets 10000
+tosu2
+thresh_tosu2 1.e-10
+thresh_proj 1.e-15
+thresh_ortho 1.e-8 
+topology_file topology/topo1
+schedule
+0 2 60 1.e-5 0.0
+end
+maxsweep 2
+task_dmrg
+alg_renorm 6 
+alg_rcoper 1
+alg_hvec 5
+alg_hcoper 2
+alg_hinter 1
+alg_rinter 1
+cisolver 0
+singlet
+$end
