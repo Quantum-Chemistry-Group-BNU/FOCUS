@@ -14,11 +14,6 @@ os.environ['SCI'] = SCI
 os.environ['CTNS'] = CTNS
 os.environ['SADMRG'] = SADMRG
 
-#import os
-#print(os.environ['DYLD_LIBRARY_PATH'])
-
-#cdir = os.getcwd()
-#dirs = [tdir for tdir in os.listdir(cdir) if os.path.isdir(tdir)]
 dirs = ['tests_cpu/0_h6_tns', 
         'tests_cpu/1_lih3_dcg', 
         'tests_cpu/2_lih3+_dcg', 

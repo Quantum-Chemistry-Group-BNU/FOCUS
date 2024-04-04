@@ -340,17 +340,16 @@
       - sweep_init & get_left_bsite: [DONE@2024/04/03]
       - change operators: oper_dot_su2.h [DONE@2024/04/03]
       - sweep_final: [DONE@2024/04/03]
- 
- * GPU version: on dell2 [DONE@2024/04/XX]
+
+ * Careful check different implementations: [DONE@2024/04/xx]
+    - MPI
+    - OpenMP
+
+ * GPU version: on dell2 [DONE@2024/05/XX]
    - twodot_diag_GPU
    - cuSolver: decimation
 
- * Careful check:
-   - different implementations: [DONE@2024/06/xx]
-      - OpenMP
-      - MPI
-      - GPU
-   - benchmark:
+ * Benchmark: jiageng [DONE@2024/06/XX]
       - fe2s2
       - fe4s4
       - fe8s7

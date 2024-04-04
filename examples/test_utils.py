@@ -73,26 +73,27 @@ def testAll(dirs):
          os.system(cmd)
          t1 = time.time()
          print('timing =',t1-t0)
-	     
-         # CTNS
-         print('=== CTNS ===')
-         CTNS = os.environ['CTNS']
-         cmd = CTNS+" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"ctns.out"
-         print('cmd = ', cmd)
-         t0 = time.time()
-         os.system(cmd)
-         t1 = time.time()
-         print('timing =',t1-t0)
-
-	     # SADMRG
-         print('=== SADMRG ===')
-         SADMRG = os.environ['SADMRG']
-         cmd = SADMRG+" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"ctns.out"
-         print('cmd = ', cmd)
-         t0 = time.time()
-         os.system(cmd)
-         t1 = time.time()
-         print('timing =',t1-t0)
+	
+         # SADMRG
+         if 'sadmrg' in fdir:
+            print('=== SADMRG ===')
+            SADMRG = os.environ['SADMRG']
+            cmd = SADMRG+" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"ctns.out"
+            print('cmd = ', cmd)
+            t0 = time.time()
+            os.system(cmd)
+            t1 = time.time()
+            print('timing =',t1-t0)
+         else:
+            # CTNS
+            print('=== CTNS ===')
+            CTNS = os.environ['CTNS']
+            cmd = CTNS+" results/"+prefix+"input.dat > "+tmpdir+"/"+prefix+"ctns.out"
+            print('cmd = ', cmd)
+            t0 = time.time()
+            os.system(cmd)
+            t1 = time.time()
+            print('timing =',t1-t0)
 
       os.chdir(parrent)
    print("\nRun successfully!")

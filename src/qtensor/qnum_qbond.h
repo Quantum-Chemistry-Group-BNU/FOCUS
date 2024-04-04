@@ -17,19 +17,25 @@ namespace ctns{
          qbond(){};
          qbond(const std::vector<std::pair<qsym,int>>& ds): dims(ds) {}
          // order
-         void sort_by_sym(){
-            std::stable_sort(dims.begin(), dims.end(),
+         qbond sort_by_sym() const{
+            qbond qs;
+            qs.dims = dims;
+            std::stable_sort(qs.dims.begin(), qs.dims.end(),
                   [](const std::pair<qsym,int>& t1,
                      const std::pair<qsym,int>& t2){
                   return t2.first < t1.first;
                   });
+            return qs;
          }
-         void sort_by_dim(){
-            std::stable_sort(dims.begin(), dims.end(),
+         qbond sort_by_dim() const{
+            qbond qs;
+            qs.dims = dims; 
+            std::stable_sort(qs.dims.begin(), qs.dims.end(),
                   [](const std::pair<qsym,int>& t1,
                      const std::pair<qsym,int>& t2){
                   return t2.second < t1.second;
                   });
+            return qs;
          }
          // helpers
          int size() const{ return dims.size(); }

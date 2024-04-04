@@ -105,6 +105,28 @@ namespace ctns{
          return qt2; 
       }
 
+   // align
+   template <bool ifab, typename Tm>
+      template <bool y, std::enable_if_t<y,int>>
+      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::align_qrow(const qbond& qrow2) const{
+         assert(info.qrow.sort_by_sym() == qrow2.sort_by_sym());
+         if(info.qrow == qrow2) return *this;
+         // align
+         qtensor2<ifab,Tm> qt2(info.sym, qrow2, info.qcol, info.dir);
+         int br, bc;
+         for(int i=0; i<qt2.info._nnzaddr.size(); i++){
+            int idx = qt2.info._nnzaddr[i];
+            qt2.info._addr_unpack(idx,br,bc);
+            auto blk = qt2(br,bc);
+            // find the location: work for small qrow2
+            int br0 = info.qrow.existQ(qrow2.get_sym(br));
+            const auto blk0 = (*this)(br0,bc);
+            assert(blk0.size() == blk.size());
+            linalg::xcopy(blk0.size(), blk0.data(), blk.data());
+         }
+         return qt2;
+      }
+
 } // ctns
 
 #endif

@@ -52,7 +52,8 @@ namespace ctns{
             auto qt3 = contract_qt3_qt2("l",site0,qt2);
             // recouple to qt3(1,r0,n0)[LCcouple] => cwf(1*n0,r0)
             auto cwf = qt3.recouple_lc().merge_lc();
-            assert(cwf.info.qrow == site0new.info.qcol); // must be consistent
+            // must be consistent, as merge_lc may change the order
+            cwf = cwf.align_qrow(site0new.info.qcol);
             // cwf(n0,r0)*site1(r0,r1,n1) = psi(n0,r1,n1)
             icomb.cpsi[iroot] = contract_qt3_qt2("l",site1,cwf);
          } // iroot

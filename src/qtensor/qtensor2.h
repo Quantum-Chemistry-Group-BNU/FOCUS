@@ -270,6 +270,8 @@ namespace ctns{
                      const qbond& qc1, const qbond& qc2) const{
                   return (this->split_lr(qlx, qrx)).split_c1c2(qc1, qc2);
                }
+            template <bool y=ifab, std::enable_if_t<y,int> = 0>
+               qtensor2<ifab,Tm> align_qrow(const qbond& qrow2) const;
 
             // --- SPECIFIC FUNCTIONS : non-abelian case ---
             // access
@@ -322,6 +324,8 @@ namespace ctns{
                   std::cout << "error: split_lr_c1c2 is not implemented for su2 case!" << std::endl;
                   exit(1);
                }
+            template <bool y=ifab, std::enable_if_t<!y,int> = 0>
+               qtensor2<ifab,Tm> align_qrow(const qbond& qrow2) const;
 
          public:
             bool own = true; // whether the object owns its data
