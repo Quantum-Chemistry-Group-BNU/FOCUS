@@ -344,10 +344,12 @@
  * Careful check different implementations: [DONE@2024/04/xx]
     - MPI:
       - bugfix for ifdist1
+      - bugfix for blksize==0
     - OpenMP:
       - bugfix for 1_lih_dcg?
 
  * GPU version: on dell2 [DONE@2024/05/XX]
+   - treatment for blksize==0 when mpisize is very large and system is small
    - twodot_diag_GPU
    - cuSolver: decimation
 
