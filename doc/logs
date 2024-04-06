@@ -341,21 +341,23 @@
       - change operators: oper_dot_su2.h [DONE@2024/04/03]
       - sweep_final: [DONE@2024/04/03]
 
- * Careful check different implementations: [DONE@2024/04/xx]
+ * Careful check different implementations: [DONE@2024/04/06]
     - MPI:
       - bugfix for ifdist1
       - bugfix for blksize==0
     - OpenMP:
-      - bugfix for 1_lih_dcg?
+      - bugfix for 1_lih_dcg? Due to linking to both gomp&iomp via magma.
+                              The compiler for magam must be the same!!!
 
  * GPU version: on dell2 [DONE@2024/05/XX]
-   - treatment for blksize==0 when mpisize is very large and system is small
+   - TODOs: treatment for blksize==0 when mpisize is very large and system is small
    - twodot_diag_GPU
    - cuSolver: decimation
 
  * Benchmark: jiageng [DONE@2024/06/XX]
-      - fe2s2
-      - fe4s4
-      - fe8s7
-      - femoco
+   - TODOs: recompile magma using gcc
+   - fe2s2
+   - fe4s4
+   - fe8s7
+   - femoco
 

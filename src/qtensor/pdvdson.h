@@ -114,8 +114,7 @@ namespace ctns{
                   auto sdiff = H.diff_hermitian();
                   std::cout << "|H-H.h|=" << sdiff << std::endl;
                   if(sdiff > 1.e-5){
-                     (H-H.H()).print("H-H.h");
-                     tools::exit("error: H is not symmetric in ctns::pdvdsonSolver_nkr::solve_diag!");
+                     tools::exit("error: H is not Hermitian in ctns::pdvdsonSolver_nkr::solve_diag!");
                   }
               
                   // check consistency with diag

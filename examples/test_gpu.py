@@ -1,11 +1,11 @@
 import os
 import test_utils
 
-mpiprefix = "mpirun -np 1 "
-os.environ['OMP_NUM_THREADS'] = "4"
+mpiprefix = "mpirun -np 2 "
+os.environ['OMP_NUM_THREADS'] = "10"
 print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-print('CUDA_VISIBLE_DEVICES=',os.environ.get('CUDA_VISIBLE_DEVICES'))
+#os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+#print('CUDA_VISIBLE_DEVICES=',os.environ.get('CUDA_VISIBLE_DEVICES'))
 
 HOME = os.path.dirname(os.getcwd())
 print('HOME=',HOME)
@@ -27,5 +27,6 @@ dirs = ['tests_gpu/h4',
         'tests_gpu/h5_rNSz_alg18',
         'tests_gpu/h5_rNSz_alg19',
         'tests_gpu/h5_rNSz_alg19b', # ifdist1
+        'tests_gpu/h5_rNSz_cisolver'
         ]
 test_utils.test_run(dirs)

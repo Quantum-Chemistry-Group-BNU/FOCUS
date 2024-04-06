@@ -49,4 +49,6 @@
     https://github.com/boostorg/mpi/issues/124
     edit BOOST_MPI_USE_IMPROBE in boost/mpi/config.hpp
  - std::filesystem may cause problems for old compilers
+ - magma needs to be compiled with the same compiler as focus
+   otherwise, there will be problems in using openmp!
 

@@ -296,7 +296,6 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
             workspace = new Tm[worktot];
-            std::cout << "ifab=" << ifab << std::endl;
             HVec = bind(&ctns::symbolic_Hx3<ifab,Tm,qtensor4<ifab,Tm>,qinfo4type<ifab,Tm>>, _1, _2, 
                   std::cref(H_formulae2), std::cref(qops_dict), std::cref(ecore), 
                   std::ref(wf), std::cref(size), std::cref(rank), std::cref(info_dict), 
