@@ -206,13 +206,13 @@ namespace ctns{
             nullptr};
          size_t blksize=0, blksize0=0;
          double cost=0.0;
-         Tm* workspace;
+         Tm* workspace = nullptr;
 #ifdef GPU
          Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
          Tm* dev_workspace = nullptr;
          Tm* dev_red = nullptr;
 #endif
-         size_t batchsize, gpumem_dvdson, gpumem_batch;
+         size_t batchsize=0, gpumem_dvdson=0, gpumem_batch=0;
 
          using std::placeholders::_1;
          using std::placeholders::_2;
@@ -389,47 +389,49 @@ namespace ctns{
             }
             if(!ifDirect) assert(blksize0 == 0); 
 
-            // determine batchsize dynamically
-            size_t blocksize = 2*blksize+blksize0;
-            preprocess_cpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, 
-                  batchsize, worktot);
-            if(debug && schd.ctns.verbose>0){
-               std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
-                  << " blksize0=" << blksize0 << " batchsize=" << batchsize
-                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
-                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
-            }
-            workspace = new Tm[worktot];
+            if(blksize > 0){
+               // determine batchsize dynamically
+               size_t blocksize = 2*blksize+blksize0;
+               preprocess_cpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, 
+                     batchsize, worktot);
+               if(debug && schd.ctns.verbose>0){
+                  std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
+                     << " blksize0=" << blksize0 << " batchsize=" << batchsize
+                     << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                     << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+               }
+               workspace = new Tm[worktot];
 
-            // generate Hmmtasks
-            const int batchblas = schd.ctns.alg_hinter; // use the same keyword for GEMM_batch
-            auto batchhvec = std::make_tuple(batchblas,batchblas,batchblas);
-            if(!ifSingle){
-               Hmmtasks.resize(Hxlst2.size());
-               for(int i=0; i<Hmmtasks.size(); i++){
-                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, batchblas, batchhvec, batchsize, blksize*2, blksize0);
-                  if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
-                     std::cout << " rank=" << rank << " iblk=" << i 
-                        << " size=" << Hxlst2[i][0].size 
-                        << " Hmmtasks.totsize=" << Hmmtasks[i].totsize
-                        << " batchsize=" << Hmmtasks[i].batchsize 
-                        << " nbatch=" << Hmmtasks[i].nbatch 
+               // generate Hmmtasks
+               const int batchblas = schd.ctns.alg_hinter; // use the same keyword for GEMM_batch
+               auto batchhvec = std::make_tuple(batchblas,batchblas,batchblas);
+               if(!ifSingle){
+                  Hmmtasks.resize(Hxlst2.size());
+                  for(int i=0; i<Hmmtasks.size(); i++){
+                     Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, batchblas, batchhvec, batchsize, blksize*2, blksize0);
+                     if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
+                        std::cout << " rank=" << rank << " iblk=" << i 
+                           << " size=" << Hxlst2[i][0].size 
+                           << " Hmmtasks.totsize=" << Hmmtasks[i].totsize
+                           << " batchsize=" << Hmmtasks[i].batchsize 
+                           << " nbatch=" << Hmmtasks[i].nbatch 
+                           << std::endl;
+                     }
+                  } // i
+                  if(fmmtask.size()>0) save_mmtask(Hmmtasks, fmmtask);
+               }else{
+                  Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, batchblas, batchhvec, batchsize, blksize*2, blksize0);
+                  if(debug && schd.ctns.verbose>1){
+                     std::cout << " rank=" << rank 
+                        << " Hxlst.size=" << Hxlst.size()
+                        << " Hmmtask.totsize=" << Hmmtask.totsize
+                        << " batchsize=" << Hmmtask.batchsize 
+                        << " nbatch=" << Hmmtask.nbatch 
                         << std::endl;
                   }
-               } // i
-               if(fmmtask.size()>0) save_mmtask(Hmmtasks, fmmtask);
-            }else{
-               Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, batchblas, batchhvec, batchsize, blksize*2, blksize0);
-               if(debug && schd.ctns.verbose>1){
-                  std::cout << " rank=" << rank 
-                     << " Hxlst.size=" << Hxlst.size()
-                     << " Hmmtask.totsize=" << Hmmtask.totsize
-                     << " batchsize=" << Hmmtask.batchsize 
-                     << " nbatch=" << Hmmtask.nbatch 
-                     << std::endl;
+                  if(fmmtask.size()>0) save_mmtask(Hmmtask, fmmtask);
                }
-               if(fmmtask.size()>0) save_mmtask(Hmmtask, fmmtask);
-            }
+            } // blksize>0
 
             if(!ifSingle){
                if(!ifDirect){
@@ -518,9 +520,11 @@ namespace ctns{
 
             // Determine batchsize dynamically
             gpumem_dvdson = sizeof(Tm)*2*ndim;
-            size_t blocksize = 2*blksize+blksize0+1;
-            preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, gpumem_dvdson, rank,
-                  batchsize, gpumem_batch);
+            if(blksize > 0){
+               size_t blocksize = 2*blksize+blksize0+1;
+               preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, gpumem_dvdson, rank,
+                     batchsize, gpumem_batch);
+            }
             dev_workspace = (Tm*)GPUmem.allocate(gpumem_dvdson+gpumem_batch);
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank

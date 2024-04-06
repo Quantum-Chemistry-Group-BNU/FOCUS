@@ -100,7 +100,6 @@ namespace ctns{
             }
          }
          auto tb = tools::get_time();
-         assert(blksize > 0);
 
          if(debug){
             auto t1 = tools::get_time();
