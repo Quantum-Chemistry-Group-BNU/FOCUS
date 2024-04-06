@@ -599,7 +599,7 @@ namespace ctns{
             memset(qops._data, 0, qops._size*sizeof(Tm));
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
+            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, ifdist1, schd.ctns.verbose);
             std::cout << "\nqops[ref]: rank=" << rank << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
