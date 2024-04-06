@@ -28,8 +28,7 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const int size,
-            const int rank,
-            const bool ifdist1){
+            const int rank){
          // setup basic information
          qops.sorb = int2e.sorb;
          qops.isym = isym;

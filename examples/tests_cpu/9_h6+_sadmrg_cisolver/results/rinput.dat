@@ -37,4 +37,5 @@ alg_hinter 1
 alg_rinter 1
 cisolver 0
 singlet
+ifdist1
 $end

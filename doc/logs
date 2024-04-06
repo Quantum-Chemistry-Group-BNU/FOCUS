@@ -342,8 +342,10 @@
       - sweep_final: [DONE@2024/04/03]
 
  * Careful check different implementations: [DONE@2024/04/xx]
-    - MPI
-    - OpenMP
+    - MPI:
+      - bugfix for ifdist1
+    - OpenMP:
+      - bugfix for 1_lih_dcg?
 
  * GPU version: on dell2 [DONE@2024/05/XX]
    - twodot_diag_GPU

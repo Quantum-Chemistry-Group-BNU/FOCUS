@@ -28,7 +28,6 @@ namespace ctns{
          rank = icomb.world.rank();
 #endif
          const auto& iomode = schd.ctns.iomode;
-         const auto& ifdist1 = schd.ctns.ifdist1;
          const bool debug = (rank==0);
          if(debug){
             std::cout << "\nctns::oper_init_dotL isym=" << isym 
@@ -43,7 +42,7 @@ namespace ctns{
          //---------------------------------------------
          int kp = icomb.topo.get_node(p).pindex;
          qoper_dict<Qm::ifabelian,Tm> qops;
-         oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
+         oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
          //---------------------------------------------
          std::string fop = oper_fname(scratch, p, "l");
          if(isym == 3 and schd.ctns.singlet){
@@ -67,8 +66,7 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const std::string scratch,
-            const int iomode,
-            const bool ifdist1){
+            const int iomode){
          const int isym = Qm::isym;
          const bool ifkr = Qm::ifkr;
          int size = 1, rank = 0;
@@ -90,7 +88,7 @@ namespace ctns{
                //---------------------------------------------
                int kp = node.pindex;
                qoper_dict<Qm::ifabelian,Tm> qops;
-               oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
+               oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
                //---------------------------------------------
                auto tb = tools::get_time();
                //---------------------------------------------
@@ -108,7 +106,7 @@ namespace ctns{
                //---------------------------------------------
                int kp = node.pindex;
                qoper_dict<Qm::ifabelian,Tm> qops;
-               oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank, ifdist1);
+               oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
                //---------------------------------------------
                auto tb = tools::get_time();
                //---------------------------------------------
@@ -145,7 +143,6 @@ namespace ctns{
          rank = icomb.world.rank();
 #endif   
          const auto& iomode = schd.ctns.iomode;
-         const auto& ifdist1 = schd.ctns.ifdist1;
          const bool debug = (rank==0);
          if(debug){ 
             std::cout << "\nctns::oper_env_right qkind=" << qkind::get_name<Qm>() << std::endl;
@@ -154,7 +151,7 @@ namespace ctns{
          
          // 1. construct for dot [cop] & boundary operators [lop/rop]
          auto t0 = tools::get_time();
-         oper_init_dotCR(icomb, int2e, int1e, scratch, iomode, ifdist1);
+         oper_init_dotCR(icomb, int2e, int1e, scratch, iomode);
          auto ta = tools::get_time();
          t_init = tools::get_duration(ta-t0);
 

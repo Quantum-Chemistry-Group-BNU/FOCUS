@@ -183,6 +183,7 @@ namespace ctns{
 
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site, int2e, qops1, qops2, qops, ifdist1);
+            // initialize of qops
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
 
          }else if(alg_renorm == 1){
@@ -190,14 +191,16 @@ namespace ctns{
             // symbolic formulae + dynamic allocation of memory
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-            symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
+            // initialization of qops inside
+            symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.ifdist1, schd.ctns.verbose);
 
          }else if(alg_renorm == 2){
 
             // symbolic formulae + preallocation of workspace
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.verbose);
+            // initialization of qops inside 
+            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.ifdist1, schd.ctns.verbose);
 
          }else if(alg_renorm == 4){
 
@@ -225,6 +228,7 @@ namespace ctns{
                   << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
             }
 
+            // initialization of qops inside
             preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
 
          }else if(alg_renorm == 6 || alg_renorm == 7 || alg_renorm == 8 || alg_renorm == 9){
@@ -355,6 +359,7 @@ namespace ctns{
                dev_opaddr[0] = qops1._dev_data;
                dev_opaddr[1] = qops2._dev_data;
             }
+            // initialization of qops
             qops.allocate_gpu(true);
             size_t opertot = qops1.size() + qops2.size() + qops.size();
             size_t gpumem_oper = sizeof(Tm)*opertot;
@@ -680,6 +685,16 @@ namespace ctns{
 
             // 3. consistency check for Hamiltonian
             const auto& opH = qops('H').at(0);
+            // NAN check
+            for(int i=0; i<opH.size(); i++){
+               double Hr = std::real(opH._data[i]);
+               double Hi = std::imag(opH._data[i]);
+               if(std::isnan(Hr) or std::isnan(Hi)){
+                  std::cout << "error: opH contains NAN at rank=" << rank << std::endl;
+                  exit(1);
+               }
+            }
+            // Hermicity check
             auto diffH = (opH-opH.H()).normF();
             if(debug){
                std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 

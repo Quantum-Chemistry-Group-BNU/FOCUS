@@ -125,8 +125,7 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const int size,
-            const int rank,
-            const bool ifdist1){
+            const int rank){
          assert(isym == 3 and ifkr == true);
          // setup basic information
          qops.sorb = int2e.sorb;

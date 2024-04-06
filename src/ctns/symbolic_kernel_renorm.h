@@ -86,6 +86,7 @@ namespace ctns{
             const opersu2_dict<Tm>& qops1,
             const opersu2_dict<Tm>& qops2,
             opersu2_dict<Tm>& qops,
+            const bool ifdist1,
             const int verbose){
          std::cout << "error: no implementation of symbolic_kernel_renorm for su2!" << std::endl;
          exit(1);
@@ -97,12 +98,27 @@ namespace ctns{
             const oper_dict<Tm>& qops1,
             const oper_dict<Tm>& qops2,
             oper_dict<Tm>& qops,
+            const bool ifdist1,
             const int verbose){
          if(qops.mpirank==0 and verbose>1){
             std::cout << "ctns::symbolic_kernel_renorm"
                << " size(formulae)=" << rtasks.size() 
                << std::endl;
          }
+
+         // ZL@20240406: initialize opS & opH in the case of ifdist1,
+         // because otherwise they may not be touched for large mpisize
+         if(ifdist1){
+            for(const auto& key : "SH"){
+               for(const auto& pr : qops(key)){
+                  int index = pr.first;
+                  auto& op = pr.second;
+                  memset(op._data, 0, op.size()*sizeof(Tm));
+               }
+            }
+         }
+
+         // perform renormalization
          const std::string block1 = superblock.substr(0,1);
          const std::string block2 = superblock.substr(1,2);
          const oper_dictmap<Tm> qops_dict = {{block1,qops1},
