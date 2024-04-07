@@ -351,7 +351,7 @@
 
  * GPU version: on dell2 [DONE@2024/05/XX]
    - TODOs: treatment for blksize==0 when mpisize is very large and system is small
-   - twodot_diag_GPU
+   - twodot_diag_GPU: [DONE@2024/04/07]
    - cuSolver: decimation
 
  * Benchmark: jiageng [DONE@2024/06/XX]
