@@ -3,11 +3,11 @@
 
  * Spin-adapted version? [DONE]
 
- * Reduced density matrix (RDMs) [!!!] 
+ * Reduced density matrix (RDMs) + One-dot algorithm [!!!] 
 
- * Perturbative spin-orbit interaction?
+ * Perturbative spin-orbit interaction via state interaction?
 
- * Support Kramers version: 
+ * Kramers version for 2c/4c Hamiltonian: 
    - support complex version [DONE@2023/02/28]
    - what about 'R' operation in contract? [general complex]
    - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
