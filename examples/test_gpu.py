@@ -27,6 +27,7 @@ dirs = ['tests_gpu/h4',
         'tests_gpu/h5_rNSz_alg18',
         'tests_gpu/h5_rNSz_alg19',
         'tests_gpu/h5_rNSz_alg19b', # ifdist1
-        'tests_gpu/h5_rNSz_cisolver'
+        'tests_gpu/h5_rNSz_cisolver',
+        'tests_gpu/h6_sadmrg_cisolver'
         ]
 test_utils.test_run(dirs)

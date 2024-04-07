@@ -157,11 +157,10 @@ namespace ctns{
 #ifdef GPU
          }else{
             twodot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
+            /*
             GPUmem.sync();
-
             double* diag2 = new double[ndim];
             twodot_diag(qops_dict, wf, diag2, size, rank, schd.ctns.ifdist1);
-
             for(int i=0; i<ndim; i++){
                std::cout << "i=" << i << " di=" << diag[i]+ecore << " di2=" << diag2[i]+ecore
                   << " diff=" << diag2[i]-diag[i]
@@ -175,6 +174,7 @@ namespace ctns{
                exit(1);
             }
             delete[] diag2;
+            */
 #endif
          }
          auto diag_t1 = tools::get_time();
