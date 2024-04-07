@@ -90,6 +90,14 @@ class gpu_mem{
 #endif //USE_HIP
       }
 
+      void sync(){
+#ifdef USE_HIP
+         hipDeviceSynchronize();
+#else
+         cudaDeviceSynchronize();
+#endif
+      }
+
       size_t used() const{ return _used; }
    private:
       size_t _used = 0;

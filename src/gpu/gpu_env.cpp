@@ -16,7 +16,7 @@ nccl_communicator nccl_comm;
 #endif
 
 void gpu_init(const int rank){
-   if(rank == 0) std::cout << "gpu_init" << std::endl;
+   if(rank == 0) std::cout << "\ngpu_init" << std::endl;
    magma_queue = 0;
    magma_device_t device_id = -1;
 
@@ -35,10 +35,18 @@ void gpu_init(const int rank){
    magma_queue_create(device_id, &magma_queue);
 
 #ifndef USE_HIP
+   int cudaToolkitVersion;
+   cudaRuntimeGetVersion(&cudaToolkitVersion);
    for(int i=0; i<NSTREAMS; i++){
       cudaStreamCreate(&stream[i]);
    }
    cublasCreate(&handle_cublas);
+   int cublasVersion;
+   cublasGetVersion(handle_cublas, &cublasVersion);
+   if(rank == 0){
+      std::cout << "CUDA Runtime version: " << cudaToolkitVersion << std::endl;
+      std::cout << "CUBLAS version: " << cublasVersion << std::endl;
+   }
 #endif
 
 #ifdef NCCL
@@ -62,9 +70,9 @@ void gpu_finalize(){
 #ifdef NCCL
    nccl_comm.finalize();
 #endif
-   
+
    GPUmem.finalize();
-   
+
    magma_queue_destroy(magma_queue);
    magma_finalize();
 }

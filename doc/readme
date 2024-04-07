@@ -29,6 +29,7 @@
       5. compression libraries: lz4 & zstd [NOT USED NOW]
  - Install:
       1. Edit makefile in extlibs/zquatev/ & make 
+      2. Go to src/ctns/gpu_kernel & make [if GPU is used, be careful about Cuda toolkit & runtime version]
       2. Edit makefile & make
  - Tested compilations:
       1. GCC 9.2.0_2 + boost 1_56_0 (macbook pro; need to > 8 for ranged for)

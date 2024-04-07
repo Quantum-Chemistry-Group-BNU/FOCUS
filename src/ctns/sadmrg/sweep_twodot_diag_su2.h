@@ -127,11 +127,13 @@ namespace ctns{
                << " size=" << bindex_dist.size() 
                << std::endl;
          }
+
          // B^L*Q^R or Q^L*B^R 
          for(const auto& index : bindex_dist){
             const auto& O1 = qops1(BQ1).at(index);
             const auto& O2 = qops2(BQ2).at(index);
             assert(O1.info.sym.ne() == 0);
+            // determine spin rank
             auto pq = oper_unpack(index);
             int p = pq.first, kp = p/2, sp = p%2;
             int q = pq.second, kq = q/2, sq = q%2;
@@ -154,6 +156,46 @@ namespace ctns{
          } // index
       }
 
+   template <typename Tm>
+      double get_twodot_diag_su2info(const int i,
+            const stensor4su2<Tm>& wf,
+            int& br,
+            int& bc,
+            int& bm,
+            int& bv,
+            int& tslc1,
+            int& tsc2r,
+            const int tsOl,
+            const int tsOc1,
+            const int tsOlc1,
+            const int tsOc2,
+            const int tsOr,
+            const int tsOc2r,
+            const int tsOtot,
+            const double wt){
+         int tstot = wf.info.sym.ts();
+         auto key = wf.info._nnzaddr[i];
+         br = std::get<0>(key);
+         bc = std::get<1>(key);
+         bm = std::get<2>(key);
+         bv = std::get<3>(key);
+         tslc1 = std::get<4>(key);
+         tsc2r = std::get<5>(key);
+         int tsl  = wf.info.qrow.get_sym(br).ts();
+         int tsr  = wf.info.qcol.get_sym(bc).ts();
+         int tsc1 = wf.info.qmid.get_sym(bm).ts();
+         int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+         // spin factor
+         // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
+         double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
+            fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
+            std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
+            fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
+            std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
+            fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
+         return fac;
+      }
+
    // Ol*Oc1
    template <typename Tm>
       void twodot_diag_OlOc1(const int ts,
@@ -170,37 +212,19 @@ namespace ctns{
          int tsOr = 0;
          int tsOc2r = 0;
          int tsOtot = 0;
-         int br, bc, bm, bv, tslc1, tsc2r, tstot;
-         tstot = wf.info.sym.ts();
+         int br, bc, bm, bv, tslc1, tsc2r;
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            auto key = wf.info._nnzaddr[i];
-            br = std::get<0>(key);
-            bc = std::get<1>(key);
-            bm = std::get<2>(key);
-            bv = std::get<3>(key);
-            tslc1 = std::get<4>(key);
-            tsc2r = std::get<5>(key);
-            int tsl  = wf.info.qrow.get_sym(br).ts();
-            int tsr  = wf.info.qcol.get_sym(bc).ts();
-            int tsc1 = wf.info.qmid.get_sym(bm).ts();
-            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            double fac = get_twodot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
+                  tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             int rdim = wf.info.qrow.get_dim(br);
             int cdim = wf.info.qcol.get_dim(bc);
             int mdim = wf.info.qmid.get_dim(bm);
             int vdim = wf.info.qver.get_dim(bv);
-            // spin factor
-            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
-            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
-                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
-                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
-                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
-                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
-                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
-            if(std::abs(fac) < thresh_diag_angular) continue;
             // Ol*Oc1
             const auto blkl  = Ol(br,br);
             const auto blkc1 = Oc1(bm,bm);
-            if(blkl.size() == 0 || blkc1.size() == 0) continue;
+            assert(blkl.size() > 0 and blkc1.size() > 0);
             size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;  
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
@@ -231,37 +255,19 @@ namespace ctns{
          int tsOr = 0;
          int tsOc2r = ts;
          int tsOtot = 0;
-         int br, bc, bm, bv, tslc1, tsc2r, tstot;
-         tstot = wf.info.sym.ts();
+         int br, bc, bm, bv, tslc1, tsc2r;
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            auto key = wf.info._nnzaddr[i];
-            br = std::get<0>(key);
-            bc = std::get<1>(key);
-            bm = std::get<2>(key);
-            bv = std::get<3>(key);
-            tslc1 = std::get<4>(key);
-            tsc2r = std::get<5>(key);
-            int tsl  = wf.info.qrow.get_sym(br).ts();
-            int tsr  = wf.info.qcol.get_sym(bc).ts();
-            int tsc1 = wf.info.qmid.get_sym(bm).ts();
-            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            double fac = get_twodot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
+                  tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             int rdim = wf.info.qrow.get_dim(br);
             int cdim = wf.info.qcol.get_dim(bc);
             int mdim = wf.info.qmid.get_dim(bm);
             int vdim = wf.info.qver.get_dim(bv);
-            // spin factor
-            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
-            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
-                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
-                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
-                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
-                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
-                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
-            if(std::abs(fac) < thresh_diag_angular) continue;
             // Ol*Oc2
             const auto blkl  = Ol(br,br); 
             const auto blkc2 = Oc2(bv,bv);
-            if(blkl.size() == 0 || blkc2.size() == 0) continue;
+            assert(blkl.size() > 0 and blkc2.size() > 0);
             size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;  
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
@@ -292,37 +298,19 @@ namespace ctns{
          int tsOr = ts;
          int tsOc2r = ts;
          int tsOtot = 0;
-         int br, bc, bm, bv, tslc1, tsc2r, tstot;
-         tstot = wf.info.sym.ts();
+         int br, bc, bm, bv, tslc1, tsc2r;
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            auto key = wf.info._nnzaddr[i];
-            br = std::get<0>(key);
-            bc = std::get<1>(key);
-            bm = std::get<2>(key);
-            bv = std::get<3>(key);
-            tslc1 = std::get<4>(key);
-            tsc2r = std::get<5>(key);
-            int tsl  = wf.info.qrow.get_sym(br).ts();
-            int tsr  = wf.info.qcol.get_sym(bc).ts();
-            int tsc1 = wf.info.qmid.get_sym(bm).ts();
-            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            double fac = get_twodot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
+                  tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             int rdim = wf.info.qrow.get_dim(br);
             int cdim = wf.info.qcol.get_dim(bc);
             int mdim = wf.info.qmid.get_dim(bm);
             int vdim = wf.info.qver.get_dim(bv);
-            // spin factor
-            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
-            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
-                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
-                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
-                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
-                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
-                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
-            if(std::abs(fac) < thresh_diag_angular) continue;
             // Ol*Or
             const auto blkl = Ol(br,br); 
             const auto blkr = Or(bc,bc); 
-            if(blkl.size() == 0 || blkr.size() == 0) continue;
+            assert(blkl.size() > 0 and blkr.size() > 0);
             size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
@@ -353,37 +341,19 @@ namespace ctns{
          int tsOr = 0;
          int tsOc2r = ts;
          int tsOtot = 0;
-         int br, bc, bm, bv, tslc1, tsc2r, tstot;
-         tstot = wf.info.sym.ts();
+         int br, bc, bm, bv, tslc1, tsc2r;
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            auto key = wf.info._nnzaddr[i];
-            br = std::get<0>(key);
-            bc = std::get<1>(key);
-            bm = std::get<2>(key);
-            bv = std::get<3>(key);
-            tslc1 = std::get<4>(key);
-            tsc2r = std::get<5>(key);
-            int tsl  = wf.info.qrow.get_sym(br).ts();
-            int tsr  = wf.info.qcol.get_sym(bc).ts();
-            int tsc1 = wf.info.qmid.get_sym(bm).ts();
-            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            double fac = get_twodot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
+                  tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             int rdim = wf.info.qrow.get_dim(br);
             int cdim = wf.info.qcol.get_dim(bc);
             int mdim = wf.info.qmid.get_dim(bm);
             int vdim = wf.info.qver.get_dim(bv);
-            // spin factor
-            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
-            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
-                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
-                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
-                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
-                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
-                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
-            if(std::abs(fac) < thresh_diag_angular) continue;
             // Oc1*Oc2
             const auto blkc1 = Oc1(bm,bm); 
             const auto blkc2 = Oc2(bv,bv); 
-            if(blkc1.size() == 0 || blkc2.size() == 0) continue;
+            assert(blkc1.size() > 0 and blkc2.size() > 0);
             size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
@@ -414,37 +384,19 @@ namespace ctns{
          int tsOr = ts;
          int tsOc2r = ts;
          int tsOtot = 0;
-         int br, bc, bm, bv, tslc1, tsc2r, tstot;
-         tstot = wf.info.sym.ts();
+         int br, bc, bm, bv, tslc1, tsc2r;
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            auto key = wf.info._nnzaddr[i];
-            br = std::get<0>(key);
-            bc = std::get<1>(key);
-            bm = std::get<2>(key);
-            bv = std::get<3>(key);
-            tslc1 = std::get<4>(key);
-            tsc2r = std::get<5>(key);
-            int tsl  = wf.info.qrow.get_sym(br).ts();
-            int tsr  = wf.info.qcol.get_sym(bc).ts();
-            int tsc1 = wf.info.qmid.get_sym(bm).ts();
-            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            double fac = get_twodot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
+                  tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             int rdim = wf.info.qrow.get_dim(br);
             int cdim = wf.info.qcol.get_dim(bc);
             int mdim = wf.info.qmid.get_dim(bm);
             int vdim = wf.info.qver.get_dim(bv);
-            // spin factor
-            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
-            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
-                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
-                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
-                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
-                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
-                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
-            if(std::abs(fac) < thresh_diag_angular) continue;
             // Oc1*Or
             const auto blkc1 = Oc1(bm,bm); 
             const auto blkr  = Or(bc,bc); 
-            if(blkc1.size() == 0 || blkr.size() == 0) continue;
+            assert(blkc1.size() > 0 and blkr.size() > 0);
             size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){
@@ -475,37 +427,19 @@ namespace ctns{
          int tsOr = ts;
          int tsOc2r = 0;
          int tsOtot = 0;
-         int br, bc, bm, bv, tslc1, tsc2r, tstot;
-         tstot = wf.info.sym.ts();
+         int br, bc, bm, bv, tslc1, tsc2r;
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
-            auto key = wf.info._nnzaddr[i];
-            br = std::get<0>(key);
-            bc = std::get<1>(key);
-            bm = std::get<2>(key);
-            bv = std::get<3>(key);
-            tslc1 = std::get<4>(key);
-            tsc2r = std::get<5>(key);
-            int tsl  = wf.info.qrow.get_sym(br).ts();
-            int tsr  = wf.info.qcol.get_sym(bc).ts();
-            int tsc1 = wf.info.qmid.get_sym(bm).ts();
-            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
+            double fac = get_twodot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
+                  tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
+            if(std::abs(fac) < thresh_diag_angular) continue;
             int rdim = wf.info.qrow.get_dim(br);
             int cdim = wf.info.qcol.get_dim(bc);
             int mdim = wf.info.qmid.get_dim(bm);
             int vdim = wf.info.qver.get_dim(bv);
-            // spin factor
-            // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
-            double fac = wt*std::sqrt((tslc1+1.0)*(tsc2r+1.0)*(tstot+1.0)*(tsOtot+1.0))*
-                         fock::wigner9j(tslc1,tsc2r,tstot,tslc1,tsc2r,tstot,tsOlc1,tsOc2r,tsOtot)*
-                         std::sqrt((tsl+1.0)*(tsc1+1.0)*(tslc1+1.0)*(tsOlc1+1.0))*
-                         fock::wigner9j(tsl,tsc1,tslc1,tsl,tsc1,tslc1,tsOl,tsOc1,tsOlc1)*
-                         std::sqrt((tsc2+1.0)*(tsr+1.0)*(tsc2r+1.0)*(tsOc2r+1.0))*
-                         fock::wigner9j(tsc2,tsr,tsc2r,tsc2,tsr,tsc2r,tsOc2,tsOr,tsOc2r);
-            if(std::abs(fac) < thresh_diag_angular) continue;
             // Oc2*Or
             const auto blkc2 = Oc2(bv,bv); 
             const auto blkr  = Or(bc,bc); 
-            if(blkc2.size() == 0 || blkr.size() == 0) continue;
+            assert(blkc2.size() > 0 and blkr.size() > 0);
             size_t ircmv = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
             for(int iv=0; iv<vdim; iv++){
                for(int im=0; im<mdim; im++){

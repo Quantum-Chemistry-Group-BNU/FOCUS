@@ -46,11 +46,7 @@ namespace ctns{
             }
             void deviceSync() const{
 #ifdef GPU
-#ifdef USE_HIP
-               hipDeviceSynchronize();
-#else
-               cudaDeviceSynchronize();
-#endif
+               GPUmem.sync();
 #endif
             }
             // form intermeidate operators

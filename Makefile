@@ -1,26 +1,25 @@
 
-machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
-USE_MKL = no #yes
+USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = no #yes
-USE_NCCL = no #yes
+USE_GPU = yes
+USE_NCCL = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
 # exec
 INSTALL_CI = yes
 INSTALL_CTNS = yes
-INSTALL_POST = yes
-INSTALL_VMC = yes
-INSTALL_PY = yes
+INSTALL_POST = no #yes
+INSTALL_VMC = no #yes
+INSTALL_PY = no #yes
 
 # set library
-GSLDIR = /usr/local
 ifeq ($(strip $(machine)), lenovo)
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
    BOOST = /home/lx/software/boost/install_1_79_0
@@ -42,6 +41,7 @@ else ifeq ($(strip $(machine)), dell2)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
+   GSLDIR = /usr/local
 else ifeq ($(strip $(machine)), jiageng)
    MATHLIB = ./mkl2022 #/public/software/intel/oneapi2021/mkl/latest #/public/software/anaconda/anaconda3-2022.5/lib
    BOOST = /public/home/bnulizdtest/boost/install-gcc
@@ -88,6 +88,7 @@ else ifeq ($(strip $(machine)), mac)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
+   GSLDIR = /usr/local
 else ifeq ($(strip $(machine)), archlinux)
    MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
    BOOST = /usr
@@ -96,8 +97,8 @@ else ifeq ($(strip $(machine)), archlinux)
       LFLAGS += -lboost_mpi
    endif
 endif
-FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -I${GSLDIR}/include 
 LFLAGS += -L${GSLDIR}/lib -lgsl
+FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -I${GSLDIR}/include 
  
 target = depend core ci ctns vmc
 ifeq ($(strip $(INSTALL_PY)), yes)
@@ -144,31 +145,31 @@ else
 endif
 
 ifeq ($(strip $(USE_MKL)),yes)
-   # OpenMP & MKL
-   ifeq ($(strip $(USE_OPENMP)),no)
-      ifeq ($(strip $(USE_ILP64)), no)
-      # serial version of MKL
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
-      FLAGS += -DUSE_MKL
+	# FLAGS
+   FLAGS += -DUSE_MKL
+   ifeq ($(strip $(USE_ILP64)),yes)
+      FLAGS += -DMKL_ILP64 -m64
+   endif
+	# LFLAGS
+   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB)
+   MKL_BASIC = -lmkl_core -lpthread -lm -ldl
+   ifeq ($(strip $(USE_ILP64)),yes)
+      ifeq ($(strip $(USE_GCC)),yes)
+	      MATH += -lmkl_gf_ilp64 
       else
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl 
-      FLAGS += -DUSE_MKL -DMKL_ILP64 -m64
+	      MATH += -lmkl_intel_ilp64 
       endif
    else
-   # parallel version of MKL
-   # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
-      ifeq ($(strip $(USE_ILP64)), no)
-      MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl 
-      FLAGS += -DUSE_MKL
+      ifeq ($(strip $(USE_GCC)),yes)
+	      MATH += -lmkl_gf_lp64 
       else
-	   # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
-      MATH = -DUSE_MKL -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lmkl_intel_ilp64 -lmkl_core -lpthread -lm -ldl 
-      FLAGS += -DUSE_MKL -DMKL_ILP64 -m64
+	      MATH += -lmkl_intel_lp64 
       endif
+   endif
+	# OpenMP & MKL
+   ifeq ($(strip $(USE_OPENMP)),no)
+		MATH += -lmkl_sequential ${MKL_BASIC}
+   else
       ifeq ($(strip $(USE_GCC)),yes)
          FLAGS += -fopenmp 
          MATH += -lmkl_gnu_thread -lgomp
@@ -197,8 +198,6 @@ LFLAGS += ${MATH}
 
 # GPU
 ifeq ($(strip $(USE_GPU)), yes)
-FLAGS += -I./src/ctns/gpu_kernel
-LFLAGS += -L./src/ctns/gpu_kernel -lctnsGPU
 ifeq ($(strip $(machine)), DCU_419)
    HIP_DIR=/public/software/compiler/rocm/rocm-3.3.0/hip
    MAGMA_DIR=/public/software/mathlib/magma/magma-rocm_3.3_develop
@@ -228,7 +227,7 @@ else ifeq ($(strip $(machine)), dell2)
    CUDA_DIR= /home/dell/anaconda3/envs/pytorch2
    MAGMA_DIR = ../magma/magma-2.6.1
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart -lrt -lcublas -lcublasLt
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart -lrt -lcublas
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = /home/dell/public-soft/nccl/build
       FLAGS += -DNCCL -I${NCCL_DIR}/include	
@@ -250,6 +249,8 @@ else ifeq ($(strip $(machine)), jiageng)
       LFLAGS += -L${NCCL_DIR}/lib -lnccl
    endif
 endif
+FLAGS += -I./src/ctns/gpu_kernel
+LFLAGS += -L./src/ctns/gpu_kernel -lctnsGPU
 endif
 
 # IO

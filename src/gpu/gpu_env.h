@@ -11,7 +11,7 @@ const int MAX_GPUS = 16; // MAX GPU PER NODE
 extern const int MAX_GPUS;
 
 #ifndef USE_HIP
-#define NSTREAMS 1000
+#define NSTREAMS 100
 extern cudaStream_t stream[NSTREAMS];
 extern cublasHandle_t handle_cublas;
 #endif

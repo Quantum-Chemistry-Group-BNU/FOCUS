@@ -130,7 +130,10 @@ namespace ctns{
                            << std::endl;
                         diff += std::abs(Diag[i]-H(i,i));
                      } // i
-                     if(diff>1.e-10) tools::exit("error: |Diag[i]-H(i,i)| is too large!");
+                     if(diff>1.e-10){
+                        std::cout << "error: |Diag[i]-H(i,i)| is too large! diff=" << diff << std::endl;
+                        exit(1);
+                     }
                      std::cout << "CheckDiag passed successfully!" << std::endl;
                   }
 
