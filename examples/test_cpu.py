@@ -2,7 +2,7 @@ import os
 import test_utils
 
 mpiprefix = "mpirun -np 2 "
-os.environ['OMP_NUM_THREADS'] = "36"
+os.environ['OMP_NUM_THREADS'] = "8"
 print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
 
 HOME = os.path.dirname(os.getcwd())

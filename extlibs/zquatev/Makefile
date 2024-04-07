@@ -1,8 +1,9 @@
 
-machine = mac # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = dell2 # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 USE_GCC = yes
-USE_MKL = no #yes
+USE_OPENMP = yes
+USE_MKL = yes
 USE_ILP64 = yes # by default
 
 INCLUDE = -I.
@@ -57,27 +58,45 @@ else ifeq ($(strip $(machine)), archlinux)
    LIBS += -lm
 endif
 
+# https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
 ifeq ($(strip $(USE_MKL)),yes)
-   ifeq ($(strip $(USE_ILP64)), no)
-   # serial version of MKL
-   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
-   else
-   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl 
-   FLAGS += -DMKL_ILP64 -m64
+	# FLAGS
+   FLAGS += -DUSE_MKL
+   ifeq ($(strip $(USE_ILP64)),yes)
+      FLAGS += -DMKL_ILP64 -m64
    endif
-else
-   # openblas/kblas
-   ifeq ($(strip $(machine)), mac)
-   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lblas64 -llapack64 -lpthread -lgfortran
-   FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -m64
+	# LFLAGS
+   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB)
+   ifeq ($(strip $(USE_ILP64)),yes)
+      MATH += -lmkl_intel_ilp64 
    else
-   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lopenblas -lpthread -lm -ldl -lrt 
-          #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
-   FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
+      MATH += -lmkl_intel_lp64 
+   endif
+	# OpenMP & MKL
+   ifeq ($(strip $(USE_OPENMP)),no)
+      MATH += -lmkl_sequential 
+   else
+      ifeq ($(strip $(USE_GCC)),yes)
+         FLAGS += -fopenmp 
+         MATH += -lmkl_gnu_thread -lgomp
+      else
+         FLAGS += -qopenmp 
+         MATH += -lmkl_intel_thread -liomp5 
+      endif
+   endif
+   MATH += -lmkl_core -lpthread -lm -ldl
+else
+   # special treatment for my mac machine
+   ifeq ($(strip $(machine)), mac)
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lblas64 -llapack64 -lpthread -lgfortran
+      FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -m64
+   else
+      # openblas/kblas
+      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+             -lopenblas -lpthread -lm -ldl -lrt 
+             #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
+      FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
    endif
 endif
 LIBS += ${MATH}

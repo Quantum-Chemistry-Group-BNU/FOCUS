@@ -1,7 +1,7 @@
 
 machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
+DEBUG = no #yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
@@ -152,23 +152,14 @@ ifeq ($(strip $(USE_MKL)),yes)
    endif
 	# LFLAGS
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB)
-   MKL_BASIC = -lmkl_core -lpthread -lm -ldl
    ifeq ($(strip $(USE_ILP64)),yes)
-      ifeq ($(strip $(USE_GCC)),yes)
-	      MATH += -lmkl_gf_ilp64 
-      else
-	      MATH += -lmkl_intel_ilp64 
-      endif
+      MATH += -lmkl_intel_ilp64 
    else
-      ifeq ($(strip $(USE_GCC)),yes)
-	      MATH += -lmkl_gf_lp64 
-      else
-	      MATH += -lmkl_intel_lp64 
-      endif
+      MATH += -lmkl_intel_lp64 
    endif
 	# OpenMP & MKL
    ifeq ($(strip $(USE_OPENMP)),no)
-		MATH += -lmkl_sequential ${MKL_BASIC}
+      MATH += -lmkl_sequential
    else
       ifeq ($(strip $(USE_GCC)),yes)
          FLAGS += -fopenmp 
@@ -178,6 +169,7 @@ ifeq ($(strip $(USE_MKL)),yes)
          MATH += -lmkl_intel_thread -liomp5 
       endif
    endif
+   MATH += -lmkl_core -lpthread -lm -ldl
 else
    # special treatment for my mac machine
    ifeq ($(strip $(machine)), mac)

@@ -24,7 +24,7 @@ thresh_proj 1.e-15
 thresh_ortho 1.e-8 
 topology_file topology/topo1
 schedule
-0 2 60 1.e-5 0.0
+0 2 10 1.e-4 0.0
 end
 maxsweep 2
 task_dmrg
