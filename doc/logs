@@ -355,7 +355,8 @@
    - cuSolver: decimation
 
  * Benchmark: jiageng [DONE@2024/06/XX]
-   - TODOs: recompile magma using gcc
+   - Compilation on jiageng: need to used mkl for magma/zquatev, but mkl2022 for focus,
+                             otherwise, dgemv_batch does not exist
    - fe2s2
    - fe4s4
    - fe8s7
