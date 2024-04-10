@@ -1,5 +1,5 @@
 
-machine = dell2 # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = mac # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 USE_GCC = yes
 USE_OPENMP = yes
@@ -49,7 +49,8 @@ else ifeq ($(strip $(machine)), jiageng)
 else ifeq ($(strip $(machine)), mac)
    CXX = g++
    FLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
-   MATHLIB = /Users/zhendongli/Desktop/FOCUS/mathlib/lapack-3.12.0/build/lib
+   #MATHLIB = /Users/zhendongli/Desktop/FOCUS/mathlib/lapack-3.12.0/build/lib
+   MATHLIB = /Users/zhendongli/anaconda3/envs/osx64test/lib
    LIBS += -lm
 else ifeq ($(strip $(machine)), archlinux)
    CXX = g++
@@ -58,6 +59,13 @@ else ifeq ($(strip $(machine)), archlinux)
    LIBS += -lm
 endif
 
+# special treatment for my mac machine
+ifeq ($(strip $(machine)), mac)
+   #MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+   #       -lblas64 -llapack64 -lpthread -lgfortran
+   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lmkl_intel_ilp64 -lmkl_intel_thread -liomp5 -lmkl_core -lpthread -lm -ldl
+   FLAGS += -DUSE_MKL -DMKL_ILP64 -m64 -fopenmp 
+else
 # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.sl42kc
 ifeq ($(strip $(USE_MKL)),yes)
 	# FLAGS
@@ -86,18 +94,12 @@ ifeq ($(strip $(USE_MKL)),yes)
    endif
    MATH += -lmkl_core -lpthread -lm -ldl
 else
-   # special treatment for my mac machine
-   ifeq ($(strip $(machine)), mac)
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lblas64 -llapack64 -lpthread -lgfortran
-      FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -m64
-   else
-      # openblas/kblas
-      MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-             -lopenblas -lpthread -lm -ldl -lrt 
-             #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
-      FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
-   endif
+   # openblas/kblas
+   MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
+          -lopenblas -lpthread -lm -ldl -lrt 
+          #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
+   FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
+endif
 endif
 LIBS += ${MATH}
 
