@@ -447,32 +447,32 @@ $(LIB_DIR)/libbindpy.a: $(OBJ_PY) $(OBJ_CORE) $(OBJ_CI) $(OBJ_POST) $(OBJ_CTNS) 
 # Executables
 $(BIN_DIR)/tests_core.x: $(OBJ_DIR)/tests_core.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_core.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_core.o -L$(LIB_DIR) -lcore $(LFLAGS) 
 
 $(BIN_DIR)/benchmark_mathlib.x: $(OBJ_DIR)/benchmark_mathlib.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_mathlib.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_mathlib.o -L$(LIB_DIR) -lcore $(LFLAGS) 
 
 $(BIN_DIR)/benchmark_blas.x: $(OBJ_DIR)/benchmark_blas.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_blas.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_blas.o -L$(LIB_DIR) -lcore $(LFLAGS) 
 
 $(BIN_DIR)/benchmark_io.x: $(OBJ_DIR)/benchmark_io.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_io.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_io.o -L$(LIB_DIR) -lcore $(LFLAGS) 
 
 $(BIN_DIR)/benchmark_mpi.x: $(OBJ_DIR)/benchmark_mpi.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_mpi.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_mpi.o -L$(LIB_DIR) -lcore $(LFLAGS) 
 
 $(BIN_DIR)/benchmark_nccl.x: $(OBJ_DIR)/benchmark_nccl.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_nccl.o $(LFLAGS) -L$(LIB_DIR) -lcore
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_nccl.o -L$(LIB_DIR) -lcore $(LFLAGS) 
 
 # CI
 $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ci.o $(LFLAGS) -L$(LIB_DIR) -lci
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/tests_ci.o -L$(LIB_DIR) -lci $(LFLAGS) 
 
 # CTNS
 $(BIN_DIR)/tests_ctns.x: $(OBJ_DIR)/tests_ctns.o $(LIB_DIR)/libctns.a
@@ -486,15 +486,15 @@ $(BIN_DIR)/tests_oper.x: $(OBJ_DIR)/tests_oper.o $(LIB_DIR)/libctns.a
 # Main:
 $(BIN_DIR)/exactdiag.x: $(OBJ_DIR)/exactdiag.o $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/exactdiag.o $(LFLAGS) -L$(LIB_DIR) -lcore -lio
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/exactdiag.o -L$(LIB_DIR) -lcore -lio $(LFLAGS) 
 
 $(BIN_DIR)/fci.x: $(OBJ_DIR)/fci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/fci.o $(LFLAGS) -L$(LIB_DIR) -lci
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/fci.o -L$(LIB_DIR) -lci $(LFLAGS) 
 
 $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/sci.o $(LFLAGS) -L$(LIB_DIR) -lci
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/sci.o -L$(LIB_DIR) -lci $(LFLAGS) 
 
 $(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
@@ -514,7 +514,7 @@ $(BIN_DIR)/post.x: $(OBJ_DIR)/post.o $(LIB_DIR)/libpost.a
 
 $(BIN_DIR)/vmc.x: $(OBJ_DIR)/vmc.o $(LIB_DIR)/libvmc.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/vmc.o $(LFLAGS) -L$(LIB_DIR) -lci
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/vmc.o -L$(LIB_DIR) -lci $(LFLAGS) 
 
 # bind python
 $(LIB_DIR)/qubic.so: $(OBJ_DIR)/bind_python.o $(LIB_DIR)/libbindpy.a
