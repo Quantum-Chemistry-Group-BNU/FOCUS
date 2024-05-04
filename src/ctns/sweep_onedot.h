@@ -14,11 +14,19 @@
 #include "symbolic_kernel_sigma2.h"
 #include "symbolic_kernel_sigma3.h"
 #include "preprocess_size.h"
+#include "preprocess_hxlist.h"
+#include "preprocess_hformulae.h"
 #include "preprocess_sigma.h"
 #include "preprocess_sigma_batch.h"
 #include "sadmrg/sweep_onedot_diag_su2.h"
+//#include "sadmrg/symbolic_formulae_onedot_su2.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
+#endif
+#ifdef GPU
+#include "preprocess_sigma_batchGPU.h"
+#include "sweep_onedot_diagGPU.h"
+#include "sadmrg/sweep_onedot_diagGPU_su2.h"
 #endif
 
 namespace ctns{
@@ -71,23 +79,38 @@ namespace ctns{
             {"r",qops_pool.at(fneed[1])},
             {"c",qops_pool.at(fneed[2])}
          };
+         size_t opertot = qops_dict.at("l").size()
+            + qops_dict.at("r").size()
+            + qops_dict.at("c").size();
          if(debug && schd.ctns.verbose>0){
             std::cout << "qops info: rank=" << rank << std::endl;
             qops_dict.at("l").print("lqops");
             qops_dict.at("r").print("rqops");
             qops_dict.at("c").print("cqops");
-            size_t tsize = qops_dict.at("l").size()
-               + qops_dict.at("r").size()
-               + qops_dict.at("c").size();
-            std::cout << " qops(tot)=" << tsize 
-               << ":" << tools::sizeMB<Tm>(tsize) << "MB"
-               << ":" << tools::sizeGB<Tm>(tsize) << "GB"
+            std::cout << " qops(tot)=" << opertot
+               << ":" << tools::sizeMB<Tm>(opertot) << "MB"
+               << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
          }
          timing.ta = tools::get_time();
 
          // 1.5 look ahead for the next dbond
          auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
+         /*
+         auto frop = fbond.first;
+         auto fdel = fbond.second;
+         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
+         // prefetch files for the next bond
+         if(schd.ctns.async_fetch){
+            if(alg_hvec>10 && alg_renorm>10){
+               const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
+               qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
+            }
+            qops_pool[frop]; // just declare a space for frop
+            qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
+         }
+         timing.ta = tools::get_time();
+         */
 
          // 2. onedot wavefunction
          //	    |
@@ -127,9 +150,26 @@ namespace ctns{
             onedot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifdef GPU
          }else{
-            //onedot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
-            std::cout << "not implemented yet!" << std::endl;
-            exit(1);
+            onedot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
+            const bool debug_diagGPU = true;
+            if(debug_diagGPU){
+               GPUmem.sync();
+               double* diag2 = new double[ndim];
+               onedot_diag(qops_dict, wf, diag2, size, rank, schd.ctns.ifdist1);
+               for(int i=0; i<ndim; i++){
+                  std::cout << "i=" << i << " di=" << diag[i]+ecore << " di2=" << diag2[i]+ecore
+                     << " diff=" << diag2[i]-diag[i]
+                     << std::endl;
+               }
+               linalg::xaxpy(ndim, -1.0, diag, diag2);
+               auto diff = linalg::xnrm2(ndim, diag2);
+               std::cout << "diff[tot]=" << diff << std::endl;
+               if(diff > 1.e-8){
+                  std::cout << "error!" << std::endl;
+                  exit(1);
+               }
+               delete[] diag2;
+            }
 #endif
          }
 #ifndef SERIAL
@@ -413,6 +453,160 @@ namespace ctns{
                         std::ref(hinter._data));
                }
             }
+
+#ifdef GPU
+         }else if(alg_hvec == 16 || alg_hvec == 17 || alg_hvec == 18 || alg_hvec == 19){
+
+            // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
+
+            // allocate memery on GPU & copy qops
+            for(int i=0; i<3; i++){
+               const auto& tqops = qops_pool.at(fneed[i]);
+               assert(tqops.avail_gpu());
+               dev_opaddr[i] = tqops._dev_data;
+            }
+            size_t gpumem_oper = sizeof(Tm)*opertot;
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper)=" << gpumem_oper/std::pow(1024.0,3) 
+                  << std::endl;
+            }
+            timing.tb2 = tools::get_time();
+
+            H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
+
+            timing.tb3 = tools::get_time();
+
+            // compute hintermediates on GPU directly
+            const bool ifSingle = alg_hvec > 17;
+            const bool ifDirect = alg_hvec % 2 == 1;
+            const int batchgemv = std::get<0>(schd.ctns.batchhvec); 
+            hinter.init(ifDirect, schd.ctns.alg_hinter, batchgemv, qops_dict, oploc, dev_opaddr, H_formulae, debug);
+            size_t gpumem_hinter = sizeof(Tm)*hinter.size();
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper,hinter)=" << gpumem_oper/std::pow(1024.0,3) 
+                  << "," << gpumem_hinter/std::pow(1024.0,3) 
+                  << std::endl;
+            }
+            timing.tb4 = tools::get_time();
+            timing.tb5 = tools::get_time();
+
+            // GEMM list and GEMV list
+            size_t maxbatch = 0;
+            if(!ifSingle){
+               preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_hcoper, 
+                     qops_dict, oploc, opaddr, H_formulae, wf, hinter, 
+                     Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+               for(int i=0; i<Hxlst2.size(); i++){
+                  maxbatch = std::max(maxbatch, Hxlst2[i].size());
+               } // i
+            }else{
+               preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_hcoper, 
+                     qops_dict, oploc, opaddr, H_formulae, wf, hinter, 
+                     Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+               maxbatch = Hxlst.size();
+            }
+            if(!ifDirect) assert(blksize0 == 0); 
+            timing.tb6 = tools::get_time();
+
+            // Determine batchsize dynamically
+            gpumem_dvdson = sizeof(Tm)*2*ndim;
+            if(blksize > 0){
+               size_t blocksize = 2*blksize+blksize0+1;
+               preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, gpumem_dvdson, rank,
+                     batchsize, gpumem_batch);
+            }
+            dev_workspace = (Tm*)GPUmem.allocate(gpumem_dvdson+gpumem_batch);
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "rank=" << rank
+                  << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " (oper,hinter,dvdson,batch)=" << gpumem_oper/std::pow(1024.0,3) 
+                  << "," << gpumem_hinter/std::pow(1024.0,3) 
+                  << "," << gpumem_dvdson/std::pow(1024.0,3)
+                  << "," << gpumem_batch/std::pow(1024.0,3)
+                  << " blksize=" << blksize
+                  << " blksize0=" << blksize0
+                  << " batchsize=" << batchsize 
+                  << std::endl;
+            }
+
+            // generate Hmmtasks given batchsize
+            const int batchblas = 2; // GPU
+            if(!ifSingle){
+               Hmmtasks.resize(Hxlst2.size());
+               for(int i=0; i<Hmmtasks.size(); i++){
+                  Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, batchblas, schd.ctns.batchhvec, batchsize, blksize*2, blksize0);
+                  if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
+                     std::cout << " rank=" << rank << " iblk=" << i 
+                        << " size=" << Hxlst2[i][0].size 
+                        << " Hmmtasks.totsize=" << Hmmtasks[i].totsize
+                        << " batchsize=" << Hmmtasks[i].batchsize 
+                        << " nbatch=" << Hmmtasks[i].nbatch 
+                        << std::endl;
+                  }
+               } // i
+               if(fmmtask.size()>0) save_mmtask(Hmmtasks, fmmtask);
+            }else{
+               Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, batchblas, schd.ctns.batchhvec, batchsize, blksize*2, blksize0);
+               if(debug && schd.ctns.verbose>1){
+                  std::cout << " rank=" << rank
+                     << " Hxlst.size=" << Hxlst.size()
+                     << " Hmmtasks.totsize=" << Hmmtask.totsize
+                     << " batchsize=" << Hmmtask.batchsize 
+                     << " nbatch=" << Hmmtask.nbatch 
+                     << std::endl;
+                  if(schd.ctns.verbose>2){
+                     for(int k=0; k<Hmmtask.nbatch; k++){
+                        for(int i=0; i<Hmmtask.mmbatch2[k].size(); i++){
+                           if(Hmmtask.mmbatch2[k][i].size==0) continue;
+                           std::cout << " Hmmbatch2: k/nbatch=" << k << "/" << Hmmtask.nbatch
+                              << " i=" << i << " size=" << Hmmtask.mmbatch2[k][i].size
+                              << " group=" << Hmmtask.mmbatch2[k][i].gsta.size()-1
+                              << " average=" << Hmmtask.mmbatch2[k][i].size/(Hmmtask.mmbatch2[k][i].gsta.size()-1)
+                              << std::endl;
+                        }
+                     }
+                  }
+               }
+               if(fmmtask.size()>0) save_mmtask(Hmmtask, fmmtask);
+            }
+            timing.tb7 = tools::get_time();
+
+            // GPU version of Hx
+            dev_red = dev_workspace + 2*ndim + batchsize*(blksize*2+blksize0); 
+            if(!ifSingle){
+               if(!ifDirect){
+                  HVec = bind(&ctns::preprocess_Hx_batchGPU<Tm>, _1, _2,
+                        std::cref(scale), std::cref(size), std::cref(rank),
+                        std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
+                        std::ref(dev_red), std::cref(schd.ctns.ifnccl));
+               }else{
+                  dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*blksize*2; // memory layout [workspace|inter]
+                  HVec = bind(&ctns::preprocess_Hx_batchDirectGPU<Tm>, _1, _2,
+                        std::cref(scale), std::cref(size), std::cref(rank),
+                        std::cref(ndim), std::ref(Hmmtasks), std::ref(dev_opaddr), std::ref(dev_workspace),
+                        std::ref(hinter._dev_data), std::ref(dev_red), std::cref(schd.ctns.ifnccl));
+               }
+            }else{
+               if(!ifDirect){
+                  HVec = bind(&ctns::preprocess_Hx_batchGPUSingle<Tm>, _1, _2,
+                        std::cref(scale), std::cref(size), std::cref(rank),
+                        std::cref(ndim), std::ref(Hmmtask), std::ref(dev_opaddr), std::ref(dev_workspace),
+                        std::ref(dev_red), std::cref(schd.ctns.ifnccl));
+               }else{
+                  dev_opaddr[4] = dev_workspace + 2*ndim + batchsize*blksize*2; // memory layout [workspace|inter]
+                  HVec = bind(&ctns::preprocess_Hx_batchDirectGPUSingle<Tm>, _1, _2,
+                        std::cref(scale), std::cref(size), std::cref(rank),
+                        std::cref(ndim), std::ref(Hmmtask), std::ref(dev_opaddr), std::ref(dev_workspace),
+                        std::ref(hinter._dev_data), std::ref(dev_red), std::cref(schd.ctns.ifnccl));
+               }
+            }
+
+#endif // GPU
 
          }else{
             std::cout << "error: no such option for alg_hvec=" << alg_hvec << std::endl;

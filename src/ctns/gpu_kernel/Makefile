@@ -13,7 +13,7 @@ CXX = nvcc
 
 CXXFLAGS = -O3 -std=c++11 -I${CUDA_DIR}/include  
 
-SRCS = twodot_diagGPU_kernel.cu
+SRCS = twodot_diagGPU_kernel.cu onedot_diagGPU_kernel.cu
 
 OBJS = $(SRCS:.cu=.o)
 

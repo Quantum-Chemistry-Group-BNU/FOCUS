@@ -328,7 +328,7 @@
    - decimation with truncation:
       - sweep_decim_su2.h: simple version [DONE@2024/04/02]
  
- * Other functionalities: [DONE@2024/04/03]
+ * Other important functionalities: [DONE@2024/04/03]
    - propagation of initial guess
       - recouple for qt3: [DONE@2024/04/02]
       - sweep_twodot_guess.h: revised by adding recoupling
@@ -340,6 +340,7 @@
       - sweep_init & get_left_bsite: [DONE@2024/04/03]
       - change operators: oper_dot_su2.h [DONE@2024/04/03]
       - sweep_final: [DONE@2024/04/03]
+   - twodot_diag_GPU: [DONE@2024/04/07]
 
  * Careful check different implementations: [DONE@2024/04/06]
     - MPI:
@@ -349,34 +350,40 @@
       - bugfix for 1_lih_dcg? Due to linking to both gomp&iomp via magma.
                               The compiler for magam must be the same!!!
  
- * Onedot algorithm: [DONE@2024/05/XX]
-   - sweep_onedot.h:
-      - non-spin-adapted case: alg_hvec=4 & alg_hvec=5 [DONE@2024/05/04]
+ * Onedot algorithm: sweep_onedot.h[DONE@2024/05/XX]
+    - non-spin-adapted case:
+      - alg_hvec=4 & alg_hvec=5 [DONE@2024/05/04]
          - preprocess_hmu.h
-      - non-spin-adapted case: alg_hvec=6,7,8,9
+      - alg_hvec=6,7,8,9 [DONE@2024/05/04]
          - preprocess_hmmtask.h
-
- 
-      - preprocess_hmu.h for spin-adapted case: (lc)r or l(cr)
-   - GPU version:
-      - non-spin-adapted
-      - spin-adapted 
-   - diag_GPU:
-      - twodot_diag_GPU: [DONE@2024/04/07]
+      - alg_hvec=16,17,18,19 [DONE@2024/05/04]
+         - sweep_onedot_diagGPU.h
+         - gpu_kernel/onedot_diagGPU_kernel.*
+   - async IO for onedot case
+   - spin-adapted case: 
       - onedot_diag_GPU:
- 
+      - preprocess_hmu.h for spin-adapted case: (lc)r or l(cr)
+      - propagation of initial guess & finalization?
+
  * GPU version: on dell2 [DONE@2024/05/XX]
    - cuSolver: decimation [DONE@2024/05/XX]
 
  * Benchmark: jiageng [DONE@2024/06/XX]
-   - Compilation on jiageng: need to used mkl for magma/zquatev, but mkl2022 for focus,
-                             otherwise, dgemv_batch does not exist
+   - Compilation on jiageng: need to used mkl for magma/zquatev, 
+                             but use mkl2022 for focus,
+                             otherwise, dgemv_batch does not exist!
    - fe2s2
    - fe4s4
    - fe8s7
    - femoco
 
  * Reduced density matrices: [DONE@2024/06/XX]
-   - one-body RDM
-   - two-body RDM
+   - non-spin-adapted case:
+      - one-body RDM:
+      - two-body RDM:
+      - transition PDM:
+   - spin-adapted case:
+      - one-body RDM:
+      - two-body RDM:
+      - transition PDM:
 

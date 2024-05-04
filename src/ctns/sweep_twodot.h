@@ -25,8 +25,8 @@
 #include "../core/mpi_wrapper.h"
 #endif
 #ifdef GPU
-#include "sweep_twodot_diagGPU.h"
 #include "preprocess_sigma_batchGPU.h"
+#include "sweep_twodot_diagGPU.h"
 #include "sadmrg/sweep_twodot_diagGPU_su2.h"
 #endif
 
@@ -157,24 +157,25 @@ namespace ctns{
 #ifdef GPU
          }else{
             twodot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
-            /*
-            GPUmem.sync();
-            double* diag2 = new double[ndim];
-            twodot_diag(qops_dict, wf, diag2, size, rank, schd.ctns.ifdist1);
-            for(int i=0; i<ndim; i++){
-               std::cout << "i=" << i << " di=" << diag[i]+ecore << " di2=" << diag2[i]+ecore
-                  << " diff=" << diag2[i]-diag[i]
-                  << std::endl;
+            const bool debug_diagGPU = true;
+            if(debug_diagGPU){
+               GPUmem.sync();
+               double* diag2 = new double[ndim];
+               twodot_diag(qops_dict, wf, diag2, size, rank, schd.ctns.ifdist1);
+               for(int i=0; i<ndim; i++){
+                  std::cout << "i=" << i << " di=" << diag[i]+ecore << " di2=" << diag2[i]+ecore
+                     << " diff=" << diag2[i]-diag[i]
+                     << std::endl;
+               }
+               linalg::xaxpy(ndim, -1.0, diag, diag2);
+               auto diff = linalg::xnrm2(ndim, diag2);
+               std::cout << "diff[tot]=" << diff << std::endl;
+               if(diff > 1.e-8){
+                  std::cout << "error!" << std::endl;
+                  exit(1);
+               }
+               delete[] diag2;
             }
-            linalg::xaxpy(ndim, -1.0, diag, diag2);
-            auto diff = linalg::xnrm2(ndim, diag2);
-            std::cout << "diff[tot]=" << diff << std::endl;
-            if(diff > 1.e-8){
-               std::cout << "error!" << std::endl;
-               exit(1);
-            }
-            delete[] diag2;
-            */
 #endif
          }
          auto diag_t1 = tools::get_time();

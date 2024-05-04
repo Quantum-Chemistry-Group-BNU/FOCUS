@@ -1,15 +1,15 @@
-#include "twodot_diagGPU_kernel.h"
+#include "onedot_diagGPU_kernel.h"
 #include <iostream>
 #include <cuda_runtime.h>
 
-std::pair<dim3,dim3> get_partition2(const size_t ndim){
+std::pair<dim3,dim3> get_partition1(const size_t ndim){
    const size_t nthreads = 512;
    dim3 dimBlock(nthreads);
    dim3 dimGrid((ndim+nthreads-1)/nthreads);
    return std::make_pair(dimBlock,dimGrid);
 }
 
-__device__ void get_position2(const size_t idx, 
+__device__ void get_position1(const size_t idx, 
       const size_t nblk, 
       const size_t* dev_dims,
       int& i,
@@ -18,88 +18,78 @@ __device__ void get_position2(const size_t idx,
    // determine the block
    i = nblk-1;
    for(int j=0; j<nblk; j++){
-      if(idx < dev_dims[5*j+4]){
+      if(idx < dev_dims[4*j+3]){
          i = j-1;
          break;
       } 
    }
-   dims[0] = dev_dims[5*i];   // r 
-   dims[1] = dev_dims[5*i+1]; // c
-   dims[2] = dev_dims[5*i+2]; // m 
-   dims[3] = dev_dims[5*i+3]; // v
-   // dtermine iv,im,ic,ir
-   size_t idx4 = idx - dev_dims[5*i+4];
-   id[0] = idx4 % dims[0];
-   size_t idx3 = idx4 / dims[0];
-   id[1] = idx3 % dims[1];
-   size_t idx2 = idx3 / dims[1];
-   id[2] = idx2 % dims[2];
-   id[3] = idx2 / dims[2];
+   dims[0] = dev_dims[4*i];   // r 
+   dims[1] = dev_dims[4*i+1]; // c
+   dims[2] = dev_dims[4*i+2]; // m 
+   // dtermine im,ic,ir
+   size_t idx3 = idx - dev_dims[4*i+3];
+   id[0] = idx3 % dims[0];
+   size_t idx2 = idx3 / dims[0];
+   id[1] = idx2 % dims[1];
+   id[2] = idx2 / dims[1];
 }
 
 // H[local]
-__global__ void diagGPU_local_kernel2(const size_t nblk,
+__global__ void diagGPU_local_kernel1(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
       const double* dev_lopaddr,
       const double* dev_ropaddr,
-      const double* dev_c1opaddr,
-      const double* dev_c2opaddr){
+      const double* dev_copaddr){
    size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
    if(idx < ndim){
       int i;
-      size_t dims[4];
-      int id[4];
-      get_position2(idx, nblk, dev_dims, i, dims, id);
-      size_t l  = dev_dims[5*nblk+4*i]   + id[0]*(dims[0]+1);
-      size_t r  = dev_dims[5*nblk+4*i+1] + id[1]*(dims[1]+1);
-      size_t c1 = dev_dims[5*nblk+4*i+2] + id[2]*(dims[2]+1);
-      size_t c2 = dev_dims[5*nblk+4*i+3] + id[3]*(dims[3]+1);
+      size_t dims[3];
+      int id[3];
+      get_position1(idx, nblk, dev_dims, i, dims, id);
+      size_t l = dev_dims[4*nblk+3*i]   + id[0]*(dims[0]+1);
+      size_t r = dev_dims[4*nblk+3*i+1] + id[1]*(dims[1]+1);
+      size_t c = dev_dims[4*nblk+3*i+2] + id[2]*(dims[2]+1);
       dev_diag[idx] += dev_lopaddr[l]
          + dev_ropaddr[r]
-         + dev_c1opaddr[c1]
-         + dev_c2opaddr[c2];
+         + dev_copaddr[c];
    }
 }
-__global__ void diagGPU_local_kernel2(const size_t nblk,
+__global__ void diagGPU_local_kernel1(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
       const COMPLX* dev_lopaddr,
       const COMPLX* dev_ropaddr,
-      const COMPLX* dev_c1opaddr,
-      const COMPLX* dev_c2opaddr){
+      const COMPLX* dev_copaddr){
    size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
    if(idx < ndim){
       int i;
-      size_t dims[4];
-      int id[4];
-      get_position2(idx, nblk, dev_dims, i, dims, id);
-      size_t l  = dev_dims[5*nblk+4*i]   + id[0]*(dims[0]+1);
-      size_t r  = dev_dims[5*nblk+4*i+1] + id[1]*(dims[1]+1);
-      size_t c1 = dev_dims[5*nblk+4*i+2] + id[2]*(dims[2]+1);
-      size_t c2 = dev_dims[5*nblk+4*i+3] + id[3]*(dims[3]+1);
+      size_t dims[3];
+      int id[3];
+      get_position1(idx, nblk, dev_dims, i, dims, id);
+      size_t l = dev_dims[4*nblk+3*i]   + id[0]*(dims[0]+1);
+      size_t r = dev_dims[4*nblk+3*i+1] + id[1]*(dims[1]+1);
+      size_t c = dev_dims[4*nblk+3*i+2] + id[2]*(dims[2]+1);
       dev_diag[idx] += dev_lopaddr[l].x
          + dev_ropaddr[r].x
-         + dev_c1opaddr[c1].x
-         + dev_c2opaddr[c2].x;
+         + dev_copaddr[c].x;
    }
 }
 template <>
-void ctns::twodot_diagGPU_local(const size_t nblk,
+void ctns::onedot_diagGPU_local(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
       const double* dev_lopaddr,
       const double* dev_ropaddr,
-      const double* dev_c1opaddr,
-      const double* dev_c2opaddr){
-   auto part = get_partition2(ndim);
+      const double* dev_copaddr){
+   auto part = get_partition1(ndim);
    dim3 dimBlock = part.first;
    dim3 dimGrid = part.second;
-   diagGPU_local_kernel2<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
-         dev_lopaddr, dev_ropaddr, dev_c1opaddr, dev_c2opaddr);
+   diagGPU_local_kernel1<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
+         dev_lopaddr, dev_ropaddr, dev_copaddr);
    cudaError_t cudaError = cudaGetLastError();
    if (cudaError != cudaSuccess) {
       printf("CUDA error: %s\n", cudaGetErrorString(cudaError));
@@ -107,19 +97,18 @@ void ctns::twodot_diagGPU_local(const size_t nblk,
    }
 }
 template <>
-void ctns::twodot_diagGPU_local(const size_t nblk,
+void ctns::onedot_diagGPU_local(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
       const COMPLX* dev_lopaddr,
       const COMPLX* dev_ropaddr,
-      const COMPLX* dev_c1opaddr,
-      const COMPLX* dev_c2opaddr){
-   auto part = get_partition2(ndim);
+      const COMPLX* dev_copaddr){
+   auto part = get_partition1(ndim);
    dim3 dimBlock = part.first;
    dim3 dimGrid = part.second;
-   diagGPU_local_kernel2<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
-         dev_lopaddr, dev_ropaddr, dev_c1opaddr, dev_c2opaddr);
+   diagGPU_local_kernel1<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
+         dev_lopaddr, dev_ropaddr, dev_copaddr);
    cudaError_t cudaError = cudaGetLastError();
    if (cudaError != cudaSuccess) {
       printf("CUDA error: %s\n", cudaGetErrorString(cudaError));
@@ -128,7 +117,7 @@ void ctns::twodot_diagGPU_local(const size_t nblk,
 }
 
 // O1O2
-__global__ void diagGPU_O1O2_kernel2(const size_t nblk,
+__global__ void diagGPU_O1O2_kernel1(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
@@ -140,15 +129,15 @@ __global__ void diagGPU_O1O2_kernel2(const size_t nblk,
    size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
    if(idx < ndim){
       int i;
-      size_t dims[4];
-      int id[4];
-      get_position2(idx, nblk, dev_dims, i, dims, id);
-      size_t o1 = dev_dims[5*nblk+2*i]   + id[i1]*(dims[i1]+1);
-      size_t o2 = dev_dims[5*nblk+2*i+1] + id[i2]*(dims[i2]+1);
+      size_t dims[3];
+      int id[3];
+      get_position1(idx, nblk, dev_dims, i, dims, id);
+      size_t o1 = dev_dims[4*nblk+2*i]   + id[i1]*(dims[i1]+1);
+      size_t o2 = dev_dims[4*nblk+2*i+1] + id[i2]*(dims[i2]+1);
       dev_diag[idx] += wt*dev_opaddr1[o1]*dev_opaddr2[o2];
    }
 }
-__global__ void diagGPU_O1O2_kernel2(const size_t nblk,
+__global__ void diagGPU_O1O2_kernel1(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
@@ -160,16 +149,16 @@ __global__ void diagGPU_O1O2_kernel2(const size_t nblk,
    size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
    if(idx < ndim){
       int i;
-      size_t dims[4];
-      int id[4];
-      get_position2(idx, nblk, dev_dims, i, dims, id);
-      size_t o1 = dev_dims[5*nblk+2*i]   + id[i1]*(dims[i1]+1);
-      size_t o2 = dev_dims[5*nblk+2*i+1] + id[i2]*(dims[i2]+1);
+      size_t dims[3];
+      int id[3];
+      get_position1(idx, nblk, dev_dims, i, dims, id);
+      size_t o1 = dev_dims[4*nblk+2*i]   + id[i1]*(dims[i1]+1);
+      size_t o2 = dev_dims[4*nblk+2*i+1] + id[i2]*(dims[i2]+1);
       dev_diag[idx] += wt*COMPLX_MUL(dev_opaddr1[o1],dev_opaddr2[o2]).x;
    }
 }
 template <>
-void ctns::twodot_diagGPU_O1O2(const size_t nblk,
+void ctns::onedot_diagGPU_O1O2(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
@@ -178,10 +167,10 @@ void ctns::twodot_diagGPU_O1O2(const size_t nblk,
       const double wt,
       const int i1,
       const int i2){
-   auto part = get_partition2(ndim);
+   auto part = get_partition1(ndim);
    dim3 dimBlock = part.first;
    dim3 dimGrid = part.second;
-   diagGPU_O1O2_kernel2<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
+   diagGPU_O1O2_kernel1<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
          dev_opaddr1, dev_opaddr2, wt, i1, i2);
    cudaError_t cudaError = cudaGetLastError();
    if (cudaError != cudaSuccess) {
@@ -190,7 +179,7 @@ void ctns::twodot_diagGPU_O1O2(const size_t nblk,
    }
 }
 template <>
-void ctns::twodot_diagGPU_O1O2(const size_t nblk,
+void ctns::onedot_diagGPU_O1O2(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
@@ -199,10 +188,10 @@ void ctns::twodot_diagGPU_O1O2(const size_t nblk,
       const double wt,
       const int i1,
       const int i2){
-   auto part = get_partition2(ndim);
+   auto part = get_partition1(ndim);
    dim3 dimBlock = part.first;
    dim3 dimGrid = part.second;
-   diagGPU_O1O2_kernel2<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
+   diagGPU_O1O2_kernel1<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
          dev_opaddr1, dev_opaddr2, wt, i1, i2);
    cudaError_t cudaError = cudaGetLastError();
    if (cudaError != cudaSuccess) {
@@ -212,7 +201,7 @@ void ctns::twodot_diagGPU_O1O2(const size_t nblk,
 }
 
 // O1O2_su2
-__global__ void diagGPU_O1O2_kernel2_su2(const size_t nblk,
+__global__ void diagGPU_O1O2_kernel1_su2(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
@@ -224,16 +213,16 @@ __global__ void diagGPU_O1O2_kernel2_su2(const size_t nblk,
    size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
    if(idx < ndim){
       int i;
-      size_t dims[4];
-      int id[4];
-      get_position2(idx, nblk, dev_dims, i, dims, id);
-      size_t o1 = dev_dims[5*nblk+2*i]   + id[i1]*(dims[i1]+1);
-      size_t o2 = dev_dims[5*nblk+2*i+1] + id[i2]*(dims[i2]+1);
+      size_t dims[3];
+      int id[3];
+      get_position1(idx, nblk, dev_dims, i, dims, id);
+      size_t o1 = dev_dims[4*nblk+2*i]   + id[i1]*(dims[i1]+1);
+      size_t o2 = dev_dims[4*nblk+2*i+1] + id[i2]*(dims[i2]+1);
       if(std::abs(dev_fac[i]) < ctns::thresh_diag_angular2) return;
       dev_diag[idx] += dev_fac[i]*dev_opaddr1[o1]*dev_opaddr2[o2];
    }
 }
-__global__ void diagGPU_O1O2_kernel2_su2(const size_t nblk,
+__global__ void diagGPU_O1O2_kernel1_su2(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
@@ -245,17 +234,17 @@ __global__ void diagGPU_O1O2_kernel2_su2(const size_t nblk,
    size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
    if(idx < ndim){
       int i;
-      size_t dims[4];
-      int id[4];
-      get_position2(idx, nblk, dev_dims, i, dims, id);
-      size_t o1 = dev_dims[5*nblk+2*i]   + id[i1]*(dims[i1]+1);
-      size_t o2 = dev_dims[5*nblk+2*i+1] + id[i2]*(dims[i2]+1);
+      size_t dims[3];
+      int id[3];
+      get_position1(idx, nblk, dev_dims, i, dims, id);
+      size_t o1 = dev_dims[4*nblk+2*i]   + id[i1]*(dims[i1]+1);
+      size_t o2 = dev_dims[4*nblk+2*i+1] + id[i2]*(dims[i2]+1);
       if(std::abs(dev_fac[i]) < ctns::thresh_diag_angular2) return;
       dev_diag[idx] += dev_fac[i]*COMPLX_MUL(dev_opaddr1[o1],dev_opaddr2[o2]).x;
    }
 }
 template <>
-void ctns::twodot_diagGPU_O1O2_su2(const size_t nblk,
+void ctns::onedot_diagGPU_O1O2_su2(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
@@ -264,10 +253,10 @@ void ctns::twodot_diagGPU_O1O2_su2(const size_t nblk,
       const double* dev_fac,
       const int i1,
       const int i2){
-   auto part = get_partition2(ndim);
+   auto part = get_partition1(ndim);
    dim3 dimBlock = part.first;
    dim3 dimGrid = part.second;
-   diagGPU_O1O2_kernel2_su2<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
+   diagGPU_O1O2_kernel1_su2<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
          dev_opaddr1, dev_opaddr2, dev_fac, i1, i2);
    cudaError_t cudaError = cudaGetLastError();
    if (cudaError != cudaSuccess) {
@@ -276,7 +265,7 @@ void ctns::twodot_diagGPU_O1O2_su2(const size_t nblk,
    }
 }
 template <>
-void ctns::twodot_diagGPU_O1O2_su2(const size_t nblk,
+void ctns::onedot_diagGPU_O1O2_su2(const size_t nblk,
       const size_t ndim,
       double* dev_diag,
       const size_t* dev_dims,
@@ -285,10 +274,10 @@ void ctns::twodot_diagGPU_O1O2_su2(const size_t nblk,
       const double* dev_fac,
       const int i1,
       const int i2){
-   auto part = get_partition2(ndim);
+   auto part = get_partition1(ndim);
    dim3 dimBlock = part.first;
    dim3 dimGrid = part.second;
-   diagGPU_O1O2_kernel2_su2<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
+   diagGPU_O1O2_kernel1_su2<<<dimGrid,dimBlock>>>(nblk, ndim, dev_diag, dev_dims, 
          dev_opaddr1, dev_opaddr2, dev_fac, i1, i2);
    cudaError_t cudaError = cudaGetLastError();
    if (cudaError != cudaSuccess) {

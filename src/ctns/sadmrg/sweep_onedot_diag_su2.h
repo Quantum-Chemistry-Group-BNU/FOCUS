@@ -22,6 +22,8 @@ namespace ctns{
             std::cout << "ctns::onedot_diag(su2) ifkr=" << lqops.ifkr 
                << " size=" << size << std::endl;
          }
+         std::cout << "not implemented yet!" << std::endl;
+         exit(1);
 /*
          // 0. constant term 
          size_t ndim = wf.size();
