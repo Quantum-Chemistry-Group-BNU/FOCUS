@@ -71,7 +71,7 @@ namespace ctns{
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
                struct timeval t0, t1;
-               assert(mmbatch2[k].size() == 8);
+               //assert(mmbatch2[k].size() == 8);
                if(batchgemm != 5){
                   for(int i=0; i<mmbatch2[k].size(); i++){
                      gettimeofday(&t0, NULL);
@@ -244,49 +244,92 @@ namespace ctns{
             }
 
             // 2. setup mmbatch2[k]
-            const int nd = 8; // c2,c2t,c1,c1t,r,rt,l,lt
-            std::vector<size_t> dims(nd,0);
-            // count how many gemms in each case 
-            for(size_t j=0; j<jlen; j++){
-               size_t jdx = off+j;
-               const auto& Hxblk = Hxlst[jdx];
-               int pos[4];
-               pos[0] = Hxblk.dagger[3]? 0 : 1;
-               pos[1] = Hxblk.dagger[2]? 2 : 3;
-               pos[2] = Hxblk.dagger[1]? 4 : 5;
-               pos[3] = Hxblk.dagger[0]? 6 : 7;
-               dims[pos[0]] += Hxblk.identity(3)? 0 : 1; 
-               dims[pos[1]] += Hxblk.identity(2)? 0 : Hxblk.dimout[3]; // c1
-               dims[pos[2]] += Hxblk.identity(1)? 0 : Hxblk.dimout[3]*Hxblk.dimout[2]; // r
-               dims[pos[3]] += Hxblk.identity(0)? 0 : 1; // l
-            }
-
-            // generation of mmlst2
+            const int dims = Hxlst[off].dims;
+            int nd = 2*dims; 
+            std::vector<size_t> ncntrs(nd,0);
             MMlist2<Tm> mmlst2(nd);
-            for(int i=0; i<nd; i++){
-               mmlst2[i].resize(dims[i]); // c2,c1,r,l
-            }
-            std::vector<size_t> idx(nd,0);
-            for(size_t j=0; j<jlen; j++){
-               size_t jdx = off+j;
-               const auto& Hxblk = Hxlst[jdx];
-               int pos[4];
-               pos[0] = Hxblk.dagger[3]? 0 : 1;
-               pos[1] = Hxblk.dagger[2]? 2 : 3;
-               pos[2] = Hxblk.dagger[1]? 4 : 5;
-               pos[3] = Hxblk.dagger[0]? 6 : 7;
-               MMlist2<Tm> mmtmp2(4);
-               Hxblk.get_MMlist2_twodot(mmtmp2, j*offset);
-               for(int i=0; i<mmtmp2.size(); i++){
-                  int ipos = pos[i];
-                  // copy the mmlst to the correct place
-                  for(int k=0; k<mmtmp2[i].size(); k++){
-                     mmlst2[ipos][idx[ipos]] = mmtmp2[i][k];
-                     idx[ipos]++;
-                  } //k
-               } // i
-            } // j
-
+            if(dims == 3){ 
+               // onedot: c,ct,r,rt,l,lt
+               // count how many gemms in each case 
+               for(size_t j=0; j<jlen; j++){
+                  size_t jdx = off+j;
+                  const auto& Hxblk = Hxlst[jdx];
+                  int pos[3];
+                  pos[0] = Hxblk.dagger[2]? 0 : 1;
+                  pos[1] = Hxblk.dagger[1]? 2 : 3;
+                  pos[2] = Hxblk.dagger[0]? 4 : 5;
+                  ncntrs[pos[0]] += Hxblk.identity(2)? 0 : 1;
+                  ncntrs[pos[1]] += Hxblk.identity(1)? 0 : Hxblk.dimout[2]; // c
+                  ncntrs[pos[2]] += Hxblk.identity(0)? 0 : 1; // l
+               }
+               // generation of mmlst2
+               for(int i=0; i<nd; i++){
+                  mmlst2[i].resize(ncntrs[i]);
+               }
+               std::vector<size_t> idx(nd,0);
+               for(size_t j=0; j<jlen; j++){
+                  size_t jdx = off+j;
+                  const auto& Hxblk = Hxlst[jdx];
+                  int pos[3];
+                  pos[0] = Hxblk.dagger[2]? 0 : 1;
+                  pos[1] = Hxblk.dagger[1]? 2 : 3;
+                  pos[2] = Hxblk.dagger[0]? 4 : 5;
+                  MMlist2<Tm> mmtmp2(3);
+                  Hxblk.get_MMlist2_onedot(mmtmp2, j*offset);
+                  for(int i=0; i<mmtmp2.size(); i++){
+                     int ipos = pos[i];
+                     // copy the mmlst to the correct place
+                     for(int k=0; k<mmtmp2[i].size(); k++){
+                        mmlst2[ipos][idx[ipos]] = mmtmp2[i][k];
+                        idx[ipos]++;
+                     } //k
+                  } // i
+               } // j
+            }else if(dims == 4){
+               // twodot: c2,c2t,c1,c1t,r,rt,l,lt
+               // count how many gemms in each case 
+               for(size_t j=0; j<jlen; j++){
+                  size_t jdx = off+j;
+                  const auto& Hxblk = Hxlst[jdx];
+                  int pos[4];
+                  pos[0] = Hxblk.dagger[3]? 0 : 1;
+                  pos[1] = Hxblk.dagger[2]? 2 : 3;
+                  pos[2] = Hxblk.dagger[1]? 4 : 5;
+                  pos[3] = Hxblk.dagger[0]? 6 : 7;
+                  ncntrs[pos[0]] += Hxblk.identity(3)? 0 : 1; 
+                  ncntrs[pos[1]] += Hxblk.identity(2)? 0 : Hxblk.dimout[3]; // c1
+                  ncntrs[pos[2]] += Hxblk.identity(1)? 0 : Hxblk.dimout[3]*Hxblk.dimout[2]; // r
+                  ncntrs[pos[3]] += Hxblk.identity(0)? 0 : 1; // l
+               }
+               // generation of mmlst2
+               for(int i=0; i<nd; i++){
+                  mmlst2[i].resize(ncntrs[i]);
+               }
+               std::vector<size_t> idx(nd,0);
+               for(size_t j=0; j<jlen; j++){
+                  size_t jdx = off+j;
+                  const auto& Hxblk = Hxlst[jdx];
+                  int pos[4];
+                  pos[0] = Hxblk.dagger[3]? 0 : 1;
+                  pos[1] = Hxblk.dagger[2]? 2 : 3;
+                  pos[2] = Hxblk.dagger[1]? 4 : 5;
+                  pos[3] = Hxblk.dagger[0]? 6 : 7;
+                  MMlist2<Tm> mmtmp2(4);
+                  Hxblk.get_MMlist2_twodot(mmtmp2, j*offset);
+                  for(int i=0; i<mmtmp2.size(); i++){
+                     int ipos = pos[i];
+                     // copy the mmlst to the correct place
+                     for(int k=0; k<mmtmp2[i].size(); k++){
+                        mmlst2[ipos][idx[ipos]] = mmtmp2[i][k];
+                        idx[ipos]++;
+                     } //k
+                  } // i
+               } // j
+            }else{
+               std::cout << "error: no such case in preprocess_hmmtask for dims=" << dims << std::endl;
+               exit(1); 
+            } 
+            
             // convert to batch list
             mmbatch2[k].resize(nd);
             for(int i=0; i<nd; i++){

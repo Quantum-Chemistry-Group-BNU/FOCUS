@@ -49,14 +49,14 @@ namespace ctns{
                sweeps.print_ctrls(isweep); // print sweep control
                std::cout << tools::line_separator2 << std::endl;
             }
-            oper_timer.sweep_start();
+            const auto& dots = sweeps.ctrls[isweep].dots;
+            oper_timer.sweep_start(dots);
             // initialize
             if(rank == 0 and schd.ctns.guess) sweep_init(icomb, schd.ctns.nroots, schd.ctns.singlet);
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
                const auto& dbond = sweeps.seq[ibond];
-               const auto& dots = sweeps.ctrls[isweep].dots;
                auto tp0 = icomb.topo.get_type(dbond.p0);
                auto tp1 = icomb.topo.get_type(dbond.p1);
                if(debug){

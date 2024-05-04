@@ -348,11 +348,25 @@
     - OpenMP:
       - bugfix for 1_lih_dcg? Due to linking to both gomp&iomp via magma.
                               The compiler for magam must be the same!!!
+ 
+ * Onedot algorithm: [DONE@2024/05/XX]
+   - sweep_onedot.h:
+      - non-spin-adapted case: alg_hvec=4 & alg_hvec=5 [DONE@2024/05/04]
+         - preprocess_hmu.h
+      - non-spin-adapted case: alg_hvec=6,7,8,9
+         - preprocess_hmmtask.h
 
+ 
+      - preprocess_hmu.h for spin-adapted case: (lc)r or l(cr)
+   - GPU version:
+      - non-spin-adapted
+      - spin-adapted 
+   - diag_GPU:
+      - twodot_diag_GPU: [DONE@2024/04/07]
+      - onedot_diag_GPU:
+ 
  * GPU version: on dell2 [DONE@2024/05/XX]
-   - TODOs: treatment for blksize==0 when mpisize is very large and system is small
-   - twodot_diag_GPU: [DONE@2024/04/07]
-   - cuSolver: decimation
+   - cuSolver: decimation [DONE@2024/05/XX]
 
  * Benchmark: jiageng [DONE@2024/06/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, but mkl2022 for focus,
@@ -361,4 +375,8 @@
    - fe4s4
    - fe8s7
    - femoco
+
+ * Reduced density matrices: [DONE@2024/06/XX]
+   - one-body RDM
+   - two-body RDM
 

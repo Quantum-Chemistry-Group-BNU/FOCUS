@@ -246,7 +246,7 @@ namespace ctns{
             exit(1);
          }
          if(ifab && Qm::ifkr && alg_hvec >=4){
-            std::cout << "error: alg_hvec >= 4 does not support complex yet!" << std::endl;
+            std::cout << "error: alg_hvec >= 4 does not support complex yet! GEMM with conj is needed." << std::endl;
             exit(1); 
          }
          if(alg_hvec < 10 && schd.ctns.alg_hinter == 2){
@@ -257,12 +257,6 @@ namespace ctns{
             std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
             exit(1);
          }
-         /*
-         if(schd.ctns.alg_hcoper >= 1 && (alg_hvec == 4 || alg_hvec == 5)){
-            std::cout << "error: alg_hcoper>=1 is not compatible with alg_hvec=4/5" << std::endl;
-            exit(1);
-         }
-         */
 
          timing.tb1 = tools::get_time();
          if(alg_hvec == 0){

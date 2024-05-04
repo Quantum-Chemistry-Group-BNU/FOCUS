@@ -150,8 +150,12 @@ namespace ctns{
             tC=0.0; tA=0.0; tB=0.0; tH=0.0; tS=0.0; tP=0.0; tQ=0.0;
             tHxInit=0.0; tHxCalc=0.0; tHxFinl=0.0;
          }
-         void sweep_start(){
-            sigma.sweep_start("sigma", 8);
+         void sweep_start(const int dots=0){
+            if(dots == 1){
+               sigma.sweep_start("sigma", 6);
+            }else if(dots == 2){ 
+               sigma.sweep_start("sigma", 8);
+            }
             renorm.sweep_start("renorm", 7);
          }
       public:

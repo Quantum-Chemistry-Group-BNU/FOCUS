@@ -123,7 +123,15 @@ namespace ctns{
          // 3. Davidson solver for wf
          // 3.1 diag 
          double* diag = new double[ndim];
-         onedot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
+         if(alg_hvec <= 10){
+            onedot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
+#ifdef GPU
+         }else{
+            //onedot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
+            std::cout << "not implemented yet!" << std::endl;
+            exit(1);
+#endif
+         }
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
          // executes the preconditioning in Davidson's algorithm
@@ -138,7 +146,7 @@ namespace ctns{
          // 3.2 Solve local problem: Hc=cE
          // prepare HVec
          std::map<qsym,qinfo3type<ifab,Tm>> info_dict;
-         size_t opsize, wfsize, tmpsize, worktot;
+         size_t opsize=0, wfsize=0, tmpsize=0, worktot=0;
          opsize = preprocess_opsize<ifab,Tm>(qops_dict);
          wfsize = preprocess_wfsize<ifab,Tm>(wf.info, info_dict);
          std::string fname;
@@ -152,23 +160,37 @@ namespace ctns{
          hintermediates<ifab,Tm> hinter; // hvec4,5,6
          Hxlist<Tm> Hxlst; // hvec4
          Hxlist2<Tm> Hxlst2; // hvec5
+         HMMtask<Tm> Hmmtask;
          HMMtasks<Tm> Hmmtasks; // hvec6
          Tm scale = qkind::is_qNK<Qm>()? 0.5*ecore : 1.0*ecore;
          std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c",2}};
-         Tm* ptrs[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data, qops_dict.at("c")._data, 
+         Tm* opaddr[5] = {qops_dict.at("l")._data, qops_dict.at("r")._data, qops_dict.at("c")._data, 
             nullptr, nullptr};
-         Tm* workspace;
+         size_t blksize=0, blksize0=0;
+         double cost=0.0;
+         Tm* workspace = nullptr;
+#ifdef GPU
+         Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
+         Tm* dev_workspace = nullptr;
+         Tm* dev_red = nullptr;
+#endif
+         size_t batchsize=0, gpumem_dvdson=0, gpumem_batch=0;
+
          using std::placeholders::_1;
          using std::placeholders::_2;
          const bool debug_formulae = schd.ctns.verbose>0;
+         std::string fmmtask;
+         if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+            fmmtask = "hmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
+         }
 
          // consistency check
          if(schd.ctns.ifdistc && !icomb.topo.ifmps){
             std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
             exit(1);
          }
-         if(alg_hvec >=4){
-            std::cout << "error: alg_hvec >=4 does not support onedot yet!" << std::endl;
+         if(ifab && Qm::ifkr && alg_hvec >=4){
+            std::cout << "error: alg_hvec >=4 does not support onedot yet! GEMM with conj is needed." << std::endl;
             exit(1); 
          }
          if(alg_hvec < 10 && schd.ctns.alg_hinter == 2){
@@ -180,6 +202,7 @@ namespace ctns{
             exit(1);
          }
 
+         timing.tb1 = tools::get_time();
          if(alg_hvec == 0){
 
             // oldest version
@@ -235,6 +258,162 @@ namespace ctns{
                   std::cref(opsize), std::cref(wfsize), std::cref(tmpsize),
                   std::ref(workspace));
 
+         }else if(alg_hvec == 4){
+
+            // OpenMP + Single Hxlst: symbolic formulae + hintermediates + preallocation of workspace
+
+            H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
+
+            const bool ifDirect = false;
+            const int batchgemv = 1;
+            hinter.init(ifDirect, schd.ctns.alg_hinter, batchgemv, qops_dict, oploc, opaddr, H_formulae, debug);
+
+            preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_hcoper, 
+                  qops_dict, oploc, opaddr, H_formulae, wf, hinter,
+                  Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+
+            get_MMlist2(Hxlst);
+
+            worktot = maxthreads*(blksize*2+ndim);
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
+                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+            }
+
+            HVec = bind(&ctns::preprocess_Hx<Tm>, _1, _2,
+                  std::cref(scale), std::cref(size), std::cref(rank),
+                  std::cref(ndim), std::cref(blksize), 
+                  std::ref(Hxlst), std::ref(opaddr));
+
+         }else if(alg_hvec == 5){
+
+            // OpenMP + Hxlist2: symbolic formulae + hintermediates + preallocation of workspace
+
+            H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae); 
+
+            const bool ifDirect = false;
+            const int batchgemv = 1;
+            hinter.init(ifDirect, schd.ctns.alg_hinter, batchgemv, qops_dict, oploc, opaddr, H_formulae, debug);
+
+            preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_hcoper, 
+                  qops_dict, oploc, opaddr, H_formulae, wf, hinter,
+                  Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+
+            get_MMlist2(Hxlst2);
+
+            worktot = maxthreads*blksize*3;
+            if(debug && schd.ctns.verbose>0){
+               std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
+                  << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                  << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+            }
+
+            HVec = bind(&ctns::preprocess_Hx2<Tm>, _1, _2,
+                  std::cref(scale), std::cref(size), std::cref(rank),
+                  std::cref(ndim), std::cref(blksize), 
+                  std::ref(Hxlst2), std::ref(opaddr));
+
+         }else if(alg_hvec == 6 || alg_hvec == 7 || alg_hvec == 8 || alg_hvec == 9){
+
+            // BatchGEMM: symbolic formulae + hintermediates + preallocation of workspace
+
+            H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
+                  schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, debug_formulae);
+
+            const bool ifSingle = alg_hvec > 7;
+            const bool ifDirect = alg_hvec % 2 == 1;
+            const int batchgemv = 1;
+            hinter.init(ifDirect, schd.ctns.alg_hinter, batchgemv, qops_dict, oploc, opaddr, H_formulae, debug);
+
+            size_t maxbatch = 0;
+            if(!ifSingle){
+               preprocess_formulae_Hxlist2(ifDirect, schd.ctns.alg_hcoper, 
+                     qops_dict, oploc, opaddr, H_formulae, wf, hinter,
+                     Hxlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+               for(int i=0; i<Hxlst2.size(); i++){
+                  maxbatch = std::max(maxbatch, Hxlst2[i].size());
+               } // i
+            }else{
+               preprocess_formulae_Hxlist(ifDirect, schd.ctns.alg_hcoper, 
+                     qops_dict, oploc, opaddr, H_formulae, wf, hinter,
+                     Hxlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+               maxbatch = Hxlst.size();
+            }
+            if(!ifDirect) assert(blksize0 == 0); 
+
+            if(blksize > 0){
+               // determine batchsize dynamically
+               size_t blocksize = 2*blksize+blksize0;
+               preprocess_cpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, 
+                     batchsize, worktot);
+               if(debug && schd.ctns.verbose>0){
+                  std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
+                     << " blksize0=" << blksize0 << " batchsize=" << batchsize
+                     << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                     << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+               }
+               workspace = new Tm[worktot];
+
+               // generate Hmmtasks
+               const int batchblas = schd.ctns.alg_hinter; // use the same keyword for GEMM_batch
+               auto batchhvec = std::make_tuple(batchblas,batchblas,batchblas);
+               if(!ifSingle){
+                  Hmmtasks.resize(Hxlst2.size());
+                  for(int i=0; i<Hmmtasks.size(); i++){
+                     Hmmtasks[i].init(Hxlst2[i], schd.ctns.alg_hcoper, batchblas, batchhvec, batchsize, blksize*2, blksize0);
+                     if(debug && schd.ctns.verbose>1 && Hxlst2[i].size()>0){
+                        std::cout << " rank=" << rank << " iblk=" << i 
+                           << " size=" << Hxlst2[i][0].size 
+                           << " Hmmtasks.totsize=" << Hmmtasks[i].totsize
+                           << " batchsize=" << Hmmtasks[i].batchsize 
+                           << " nbatch=" << Hmmtasks[i].nbatch 
+                           << std::endl;
+                     }
+                  } // i
+                  if(fmmtask.size()>0) save_mmtask(Hmmtasks, fmmtask);
+               }else{
+                  Hmmtask.init(Hxlst, schd.ctns.alg_hcoper, batchblas, batchhvec, batchsize, blksize*2, blksize0);
+                  if(debug && schd.ctns.verbose>1){
+                     std::cout << " rank=" << rank 
+                        << " Hxlst.size=" << Hxlst.size()
+                        << " Hmmtask.totsize=" << Hmmtask.totsize
+                        << " batchsize=" << Hmmtask.batchsize 
+                        << " nbatch=" << Hmmtask.nbatch 
+                        << std::endl;
+                  }
+                  if(fmmtask.size()>0) save_mmtask(Hmmtask, fmmtask);
+               }
+            } // blksize>0
+
+            if(!ifSingle){
+               if(!ifDirect){
+                  HVec = bind(&ctns::preprocess_Hx_batch<Tm>, _1, _2,
+                        std::cref(scale), std::cref(size), std::cref(rank),
+                        std::cref(ndim), std::ref(Hmmtasks), std::ref(opaddr), std::ref(workspace));
+               }else{
+                  opaddr[4] = workspace + batchsize*blksize*2; // memory layout [workspace|inter]
+                  HVec = bind(&ctns::preprocess_Hx_batchDirect<Tm>, _1, _2,
+                        std::cref(scale), std::cref(size), std::cref(rank),
+                        std::cref(ndim), std::ref(Hmmtasks), std::ref(opaddr), std::ref(workspace),
+                        std::ref(hinter._data));
+               }
+            }else{
+               if(!ifDirect){
+                  HVec = bind(&ctns::preprocess_Hx_batchSingle<Tm>, _1, _2,
+                        std::cref(scale), std::cref(size), std::cref(rank),
+                        std::cref(ndim), std::ref(Hmmtask), std::ref(opaddr), std::ref(workspace));
+               }else{
+                  opaddr[4] = workspace + batchsize*blksize*2; // memory layout [workspace|inter]
+                  HVec = bind(&ctns::preprocess_Hx_batchDirectSingle<Tm>, _1, _2,
+                        std::cref(scale), std::cref(size), std::cref(rank),
+                        std::cref(ndim), std::ref(Hmmtask), std::ref(opaddr), std::ref(workspace),
+                        std::ref(hinter._data));
+               }
+            }
+
          }else{
             std::cout << "error: no such option for alg_hvec=" << alg_hvec << std::endl;
             exit(1);
@@ -276,7 +455,8 @@ namespace ctns{
          auto t0 = tools::get_time();
          qops_pool.join_and_erase(fneed, fneed_next); 
          auto t1 = tools::get_time();
-         qops_pool.save_to_disk(frop, schd.ctns.async_save, schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, fneed_next);
+         qops_pool.save_to_disk(frop, schd.ctns.async_save, 
+               schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, fneed_next);
          auto t2 = tools::get_time();
          qops_pool.remove_from_disk(fdel, schd.ctns.async_remove);
          auto t3 = tools::get_time();
