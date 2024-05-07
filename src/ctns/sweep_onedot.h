@@ -150,26 +150,7 @@ namespace ctns{
             onedot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifdef GPU
          }else{
-            onedot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl);
-            const bool debug_diagGPU = true;
-            if(debug_diagGPU){
-               GPUmem.sync();
-               double* diag2 = new double[ndim];
-               onedot_diag(qops_dict, wf, diag2, size, rank, schd.ctns.ifdist1);
-               for(int i=0; i<ndim; i++){
-                  std::cout << "i=" << i << " di=" << diag[i]+ecore << " di2=" << diag2[i]+ecore
-                     << " diff=" << diag2[i]-diag[i]
-                     << std::endl;
-               }
-               linalg::xaxpy(ndim, -1.0, diag, diag2);
-               auto diff = linalg::xnrm2(ndim, diag2);
-               std::cout << "diff[tot]=" << diff << std::endl;
-               if(diff > 1.e-8){
-                  std::cout << "error!" << std::endl;
-                  exit(1);
-               }
-               delete[] diag2;
-            }
+            onedot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl, schd.ctns.diagcheck);
 #endif
          }
 #ifndef SERIAL

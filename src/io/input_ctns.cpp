@@ -137,6 +137,8 @@ void params_ctns::read(ifstream& istrm){
          thresh_tosu2 = stod(line.substr(12));
       }else if(line.substr(0,7)=="singlet"){
          singlet = true;
+      }else if(line.substr(0,9)=="diagcheck"){
+         diagcheck = true;
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
@@ -201,6 +203,11 @@ void params_ctns::read(ifstream& istrm){
    // check input
    assert(alg_hcoper <= 2);
    assert(alg_rcoper <= 1);
+   // diag gpu check
+   if(diagcheck && (async_fetch || async_tocpu)){
+      std::cout << "error: diagcheck should not be used with async_fetch/async_tocpu!" << std::endl;
+      exit(1);
+   }
 }
 
 void params_ctns::print() const{
@@ -285,4 +292,6 @@ void params_ctns::print() const{
    cout << "tosu2 = " << tosu2 << endl;
    cout << "thresh_tosu2 = " << scientific << thresh_tosu2 << endl;
    cout << "singlet = " << singlet << endl;
+   // gpu
+   cout << "diagcheck = " << diagcheck << endl;
 }

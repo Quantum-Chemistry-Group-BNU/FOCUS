@@ -5,6 +5,7 @@
 
 #include "oper_dict.h"
 #include "../gpu_kernel/onedot_diagGPU_kernel.h"
+#include "../sweep_onedot_diag.h"
 #include "sweep_onedot_diag_su2.h"
 
 namespace ctns{
@@ -16,7 +17,8 @@ namespace ctns{
             const int size,
             const int rank,
             const bool ifdist1,
-            const bool ifnccl){
+            const bool ifnccl,
+            const bool diagcheck){
          const auto& lqops = qops_dict.at("l");
          const auto& rqops = qops_dict.at("r");
          const auto& cqops = qops_dict.at("c");
@@ -100,6 +102,9 @@ namespace ctns{
          onedot_diagGPU_BQ("c2r" , c2qops,  rqops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
          GPUmem.deallocate(dev_fac, nblk*sizeof(double));
          auto t4 = tools::get_time();
+
+         // debug
+         if(diagcheck) onedot_diagGPU_check(ndim, dev_diag, qops_dict, wf, size, rank, ifdist1);
 
          GPUmem.deallocate(dev_dims, nblk*7*sizeof(size_t));
          auto t5 = tools::get_time();
