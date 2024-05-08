@@ -1,5 +1,5 @@
 
-machine = mac # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = a800 # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 USE_GCC = yes
 USE_OPENMP = yes
@@ -46,6 +46,12 @@ else ifeq ($(strip $(machine)), jiageng)
    CXX = g++ #icpc 
    FLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
    MATHLIB = ${MKLROOT}
+
+else ifeq ($(strip $(machine)), a800)
+   CXX = g++ #icpc 
+   FLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB = ${MKLROOT}
+
 else ifeq ($(strip $(machine)), mac)
    CXX = g++
    FLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
@@ -116,7 +122,7 @@ libzquatev.a: $(OBJECTS)
 	ar crv $@ $^
 
 test.x: test.o
-	$(LD) $(LDFLAGS) -o $@ $^ -L. -lzquatev 
+	$(LD) -o $@ $^ $(LDFLAGS) -L. -lzquatev 
 
 %.o: %.cc
 	$(CXX) $(FLAGS) -c $< -o $@

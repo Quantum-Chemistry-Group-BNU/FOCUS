@@ -15,7 +15,8 @@ namespace ctns{
             const int size,
             const int rank,
             const bool ifdist1,
-            const bool ifnccl){
+            const bool ifnccl,
+            const bool diagcheck){
          const auto& lqops = qops_dict.at("l");
          const auto& rqops = qops_dict.at("r");
          const auto& cqops = qops_dict.at("c");
@@ -81,6 +82,9 @@ namespace ctns{
          onedot_diagGPU_BQ("cr", cqops, rqops, wf, dev_diag, dev_dims, opoffs, size, rank);
          auto t4 = tools::get_time();
 
+         // debug
+         if(diagcheck) onedot_diagGPU_check(ndim, dev_diag, qops_dict, wf, size, rank, ifdist1);
+
          GPUmem.deallocate(dev_dims, nblk*7*sizeof(size_t));
          auto t5 = tools::get_time();
          if(!ifnccl){
@@ -107,6 +111,36 @@ namespace ctns{
                << " t7=" << tools::get_duration(t7-t6) 
                << std::endl;
          }
+      }
+
+   template <bool ifab, typename Tm>
+      void onedot_diagGPU_check(const int ndim,
+            const double* dev_diag,
+            const qoper_dictmap<ifab,Tm>& qops_dict,
+            const qtensor3<ifab,Tm>& wf,
+            const int size,
+            const int rank,
+            const bool ifdist1){
+         double* diag1 = new double[ndim];
+         GPUmem.to_cpu(diag1, dev_diag, ndim*sizeof(double));
+         GPUmem.sync();
+         double* diag2 = new double[ndim];
+         onedot_diag(qops_dict, wf, diag2, size, rank, ifdist1);
+         for(int i=0; i<ndim; i++){
+            std::cout << "rank=" << rank << " i=" << i 
+               << " di[gpu]=" << diag1[i] << " di[cpu]=" << diag2[i]
+               << " diff=" << diag2[i]-diag1[i]
+               << std::endl;
+         }
+         linalg::xaxpy(ndim, -1.0, diag1, diag2);
+         auto diff = linalg::xnrm2(ndim, diag2);
+         std::cout << "rank=" << rank << " diff[tot]=" << diff << std::endl;
+         if(diff > 1.e-8){
+            std::cout << "error: diff is too large!"  << std::endl;
+            exit(1);
+         }
+         delete[] diag1;
+         delete[] diag2;
       }
 
    template <typename Tm>

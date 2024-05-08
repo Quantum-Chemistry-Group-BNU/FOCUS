@@ -54,7 +54,8 @@ namespace input{
                   & rcanon_load & rcanon_file 
                   & iomode & async_fetch & async_save & async_remove & async_tocpu & ifnccl
                   & iroot & nsample & ndetprt
-                  & tosu2 & thresh_tosu2 & singlet; 
+                  & tosu2 & thresh_tosu2 & singlet
+                  & diagcheck; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -128,6 +129,8 @@ namespace input{
          bool tosu2 = false;
          double thresh_tosu2 = 1.e-14;
          bool singlet = false; // singlet embedding
+         // gpu
+         bool diagcheck = false;
    };
 
 } // input
