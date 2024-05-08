@@ -41,8 +41,8 @@ namespace ctns{
             << std::endl;
          dtacc = 0.0;
          this->print_part(msg+": preprocess                   ", dtb0, tdvdsn, dtacc);
-         this->print_part(msg+": qops_dict memcpy cpu2gpu     ", dtb1, tdvdsn, dtacc);
-         this->print_part(msg+": symbolic_formulae_twodot     ", dtb2, tdvdsn, dtacc);
+         this->print_part(msg+": symbolic_formulae_twodot     ", dtb1, tdvdsn, dtacc);
+         this->print_part(msg+": qops_dict memcpy cpu2gpu     ", dtb2, tdvdsn, dtacc);
          this->print_part(msg+": hintermediate init           ", dtb3, tdvdsn, dtacc);
          this->print_part(msg+": hintermediates memcpy cpu2gpu", dtb4, tdvdsn, dtacc);
          this->print_part(msg+": preprocess_hformulae_Hxlist2 ", dtb5, tdvdsn, dtacc);

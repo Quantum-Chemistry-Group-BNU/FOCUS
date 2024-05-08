@@ -85,6 +85,14 @@ namespace ctns{
                   const std::vector<std::string> fneed_next={});
             // remove fdel [in the same bond as frop] from disk
             void remove_from_disk(const std::string fdel, const bool async_remove);
+            // finalize dot in sweep 
+            void finalize_dot(const std::vector<std::string> fneed,
+                  const std::vector<std::string> fneed_next,
+                  const std::string frop,
+                  const std::string fdel, 
+                  const bool async_save, 
+                  const bool async_tocpu,
+                  const bool async_remove);
             // join
             void join_all(){
                if(thread_fetch.joinable()) thread_fetch.join();
@@ -101,8 +109,8 @@ namespace ctns{
             int iomode=0;
             bool debug=false;
             qoperData_pool<ifab,Tm> qstore;
-            std::thread thread_fetch; // prefetch qops for the next dbond
-            std::thread thread_save; // save renormalized operators
+            std::thread thread_fetch;  // prefetch qops for the next dbond
+            std::thread thread_save;   // save renormalized operators
             std::thread thread_remove; // remove qops on the same bond with opposite direction
             std::string frop_prev;
       };
@@ -311,7 +319,8 @@ namespace ctns{
 
    // save to disk
    template <bool ifab, typename Tm>
-      void qoper_pool<ifab,Tm>::save_to_disk(const std::string frop, const bool async_save, 
+      void qoper_pool<ifab,Tm>::save_to_disk(const std::string frop, 
+            const bool async_save, 
             const bool async_tocpu,
             const std::vector<std::string> fneed_next){
          auto t0 = tools::get_time();
@@ -337,11 +346,11 @@ namespace ctns{
 
    template <bool ifab, typename Tm>
       void qoper_pool<ifab,Tm>::remove_from_disk(const std::string fdel, const bool async_remove){
+         auto t0 = tools::get_time();
          if(debug){
             std::cout << "ctns::qoper_pool::remove_from_disk: async_remove=" << async_remove 
                << " fdel=" << fdel << std::endl; 
          }
-         auto t0 = tools::get_time();
          assert(!thread_remove.joinable()); 
          if(!async_remove){
             ctns::oper_remove(fdel, debug);
@@ -356,6 +365,40 @@ namespace ctns{
          }
       }
 
+   template <bool ifab, typename Tm>
+      void qoper_pool<ifab,Tm>::finalize_dot(const std::vector<std::string> fneed,
+                  const std::vector<std::string> fneed_next,
+                  const std::string frop,
+                  const std::string fdel, 
+                  const bool async_save, 
+                  const bool async_tocpu,
+                  const bool async_remove){
+         auto t0 = tools::get_time();
+         if(debug){
+            std::cout << "ctns::qoper_pool::finalize_dot" << std::endl;
+         }
+         this->join_and_erase(fneed, fneed_next);
+         auto t1 = tools::get_time();
+         this->save_to_disk(frop, async_save, async_tocpu, fneed_next);
+         auto t2 = tools::get_time();
+         // Remove fdel on the same bond as frop but with opposite direction:
+         // NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 
+         // in the later configuration should wait until the file from the 
+         // former configuration has been saved! Therefore, oper_remove should 
+         // come later than save, which contains the synchronization!
+         this->remove_from_disk(fdel, async_remove);
+         if(debug){
+            auto t3 = tools::get_time();
+            std::cout << "----- TIMING FOR qoper_pool::finalize_dot: " 
+               << tools::get_duration(t3-t0)
+               << " T(join&erase/save/remove)="
+               << tools::get_duration(t1-t0) << ","
+               << tools::get_duration(t2-t1) << ","
+               << tools::get_duration(t3-t2)
+               << std::endl;
+         }
+      }
+ 
 } // ctns
 
 #endif

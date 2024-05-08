@@ -360,6 +360,8 @@
          - sweep_onedot_diagGPU.h
          - gpu_kernel/onedot_diagGPU_kernel.*
    - use function class for HVec
+      - twodot & onedot
+      - better timing for dvdson
    - async IO for onedot case
    - spin-adapted case: 
       - symbolic_formulae_onedot_su2.h

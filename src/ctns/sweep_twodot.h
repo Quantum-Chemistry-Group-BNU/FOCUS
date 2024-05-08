@@ -3,29 +3,17 @@
 
 #include "../core/tools.h"
 #include "../core/linalg.h"
-#include "../qtensor/qtensor.h"
 #include "ctns_sys.h"
 #include "sweep_util.h"
-#include "sweep_twodot_renorm.h"
 #include "sweep_twodot_diag.h"
-#include "sweep_twodot_local.h"
-#include "sweep_twodot_sigma.h"
-#include "symbolic_formulae_twodot.h"
-#include "symbolic_kernel_sigma.h"
-#include "symbolic_kernel_sigma2.h"
-#include "symbolic_kernel_sigma3.h"
-#include "preprocess_size.h"
-#include "preprocess_hxlist.h"
-#include "preprocess_hformulae.h"
-#include "preprocess_sigma.h"
-#include "preprocess_sigma_batch.h"
 #include "sadmrg/sweep_twodot_diag_su2.h"
-#include "sadmrg/symbolic_formulae_twodot_su2.h"
+#include "sweep_twodot_local.h"
+#include "sweep_twodot_renorm.h"
+#include "sweep_hvec.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
 #ifdef GPU
-#include "preprocess_sigma_batchGPU.h"
 #include "sweep_twodot_diagGPU.h"
 #include "sadmrg/sweep_twodot_diagGPU_su2.h"
 #endif
@@ -181,24 +169,7 @@ namespace ctns{
             std::cout<<"duration_diagtransform:"<<duration_diagtransform<<std::endl;
          }
 
-         // 3.2 prepare HVec
-         // consistency check
-         if(schd.ctns.ifdistc && !icomb.topo.ifmps){
-            std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
-            exit(1);
-         }
-         if(ifab && Qm::ifkr && alg_hvec >=4){
-            std::cout << "error: alg_hvec >= 4 does not support complex yet! GEMM with conj is needed." << std::endl;
-            exit(1); 
-         }
-         if(alg_hvec < 10 && schd.ctns.alg_hinter == 2){
-            std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter<2" << std::endl;
-            exit(1);
-         }
-         if(alg_hvec > 10 && schd.ctns.alg_hinter != 2){
-            std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter=2" << std::endl;
-            exit(1);
-         }
+         // 3.2 prepare HVec & solve local problem: Hc=cE
          // formulae file
          std::string fname;
          if(schd.ctns.save_formulae){
@@ -211,9 +182,9 @@ namespace ctns{
          if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
             fmmtask = "hmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          }
-         HVec_wrapper<ifab,Tm,qinfo4type<ifab,Tm>,qtensor4<ifab,Tm>> HVec;
-         HVec.init(2, schd.ctns.alg_hvec, fname, qops_dict, timing);
-
+         HVec_wrapper<Qm,Tm,qinfo4type<ifab,Tm>,qtensor4<ifab,Tm>> HVec;
+         HVec.init(2, qops_dict, int2e, ecore, schd, size, rank, maxthreads, 
+               ndim, wf, timing, fname, fmmtask);
 
          //-------------
          // solve HC=CE         
@@ -224,6 +195,9 @@ namespace ctns{
          oper_timer.dot_start();
          twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec.Hx, eopt, vsol, nmvp, wf, dbond, timing);
+         // free tmp space on CPU & GPU
+         delete[] diag;
+         HVec.finalize();
          if(debug){
             sweeps.print_eopt(isweep, ibond);
             if(alg_hvec == 0) oper_timer.analysis();
@@ -231,43 +205,21 @@ namespace ctns{
          }
          timing.tc = tools::get_time();
 
-         // free tmp space on CPU & GPU
-         delete[] diag;
-         HVec.finalize();
-
          // 3. decimation & renormalize operators
          twodot_renorm(icomb, int2e, int1e, schd, scratch, 
                vsol, wf, qops_pool, fneed, fneed_next, frop,
                sweeps, isweep, ibond);
-         timing.tf = tools::get_time();
-
-         // 4. save on disk 
          if(debug){
             get_sys_status();
             icomb.display_size();
          }
-         auto t0 = tools::get_time();
-         qops_pool.join_and_erase(fneed, fneed_next);
-         auto t1 = tools::get_time();
-         qops_pool.save_to_disk(frop, schd.ctns.async_save, 
-               schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, fneed_next);
-         auto t2 = tools::get_time();
-         // Remove fdel on the same bond as frop but with opposite direction:
-         // NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 
-         // in the later configuration should wait until the file from the 
-         // former configuration has been saved! Therefore, oper_remove should 
-         // come later than save, which contains the synchronization!
-         qops_pool.remove_from_disk(fdel, schd.ctns.async_remove);
-         auto t3 = tools::get_time();
-         if(debug){
-            std::cout << "TIMING FOR cleanup: " << tools::get_duration(t3-t0)
-               << " T(join&erase/save/remove)="
-               << tools::get_duration(t1-t0) << ","
-               << tools::get_duration(t2-t1) << ","
-               << tools::get_duration(t3-t2)
-               << std::endl;
-         }
+         timing.tf = tools::get_time();
 
+         // 4. save on disk 
+         qops_pool.finalize_dot(fneed, fneed_next, frop, fdel,
+               schd.ctns.async_save,
+               schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu,
+               schd.ctns.async_remove);
          // save for restart
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
 

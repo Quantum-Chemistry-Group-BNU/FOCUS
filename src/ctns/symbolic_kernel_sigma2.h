@@ -65,7 +65,7 @@ namespace ctns{
          linalg::xaxpy(Hwf.size(), fac, opxwf_data, Hwf.data());
       }
 
-   template <bool ifab, typename Tm, typename QTm, typename QInfo> 
+   template <bool ifab, typename Tm, typename QInfo, typename QTm> 
       void symbolic_Hx2(Tm* y,
             const Tm* x,
             const symbolic_task<Tm>& H_formulae,
@@ -83,7 +83,7 @@ namespace ctns{
          assert(!ifab);
          exit(1);
       } 
-   template <bool ifab, typename Tm, typename QTm, typename QInfo, std::enable_if_t<ifab,int> = 0> 
+   template <bool ifab, typename Tm, typename QInfo, typename QTm, std::enable_if_t<ifab,int> = 0> 
       void symbolic_Hx2(Tm* y,
             const Tm* x,
             const symbolic_task<Tm>& H_formulae,

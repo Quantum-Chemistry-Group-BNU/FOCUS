@@ -30,7 +30,13 @@ namespace ctns{
          }
          if(schd.ctns.maxsweep == 0) return;
          auto t0 = tools::get_time();
-        
+       
+         // consistency check
+         if(schd.ctns.ifdistc && !icomb.topo.ifmps){
+            std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
+            exit(1);
+         }
+
          // build operators on the left dot
          oper_init_dotL(icomb, int2e, int1e, schd, scratch);
 
