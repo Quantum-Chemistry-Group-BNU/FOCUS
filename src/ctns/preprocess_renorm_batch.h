@@ -35,8 +35,6 @@ namespace ctns{
 
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
          
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
@@ -55,18 +53,16 @@ namespace ctns{
             cost += Rmmtask.cost;
             for(int k=0; k<Rmmtask.nbatch; k++){
                // gemm
-               gettimeofday(&t0_gemm, NULL);
+               auto t0gemm = tools::get_time();
                Rmmtask.kernel(k, ptrs);
-               gettimeofday(&t1_gemm, NULL);
+               auto t1gemm = tools::get_time();
                // reduction
-               gettimeofday(&t0_reduction, NULL);
+               auto t0reduction = tools::get_time();
                Rmmtask.reduction(k, x, ptrs[6], y);
-               gettimeofday(&t1_reduction, NULL);
+               auto t1reduction = tools::get_time();
                // timing
-               time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                     + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-               time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                     + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+               time_gemm += tools::get_duration(t1gemm-t0gemm);
+               time_reduction += tools::get_duration(t1reduction-t0reduction);
             } // k
          } // i
 
@@ -74,7 +70,6 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_renorm_batch: t[gemm,reduction]="
                << time_gemm << "," << time_reduction 
-               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.renorm.analysis();
          }
@@ -106,9 +101,6 @@ namespace ctns{
          double time_inter=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_inter, t1_inter;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
          
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
@@ -127,24 +119,21 @@ namespace ctns{
             cost += Rmmtask.cost;
             for(int k=0; k<Rmmtask.nbatch; k++){
                // inter 
-               gettimeofday(&t0_inter, NULL);
+               auto t0inter = tools::get_time();
                Rmmtask.inter(k, opaddr, alphas);
-               gettimeofday(&t1_inter, NULL);
+               auto t1inter = tools::get_time();
                // gemm
-               gettimeofday(&t0_gemm, NULL);
+               auto t0gemm = tools::get_time();
                Rmmtask.kernel(k, ptrs);
-               gettimeofday(&t1_gemm, NULL);
+               auto t1gemm = tools::get_time();
                // reduction
-               gettimeofday(&t0_reduction, NULL);
+               auto t0reduction = tools::get_time();
                Rmmtask.reduction(k, x, ptrs[6], y);
-               gettimeofday(&t1_reduction, NULL);
+               auto t1reduction = tools::get_time();
                // timing
-               time_inter += ((double)(t1_inter.tv_sec - t0_inter.tv_sec) 
-                     + (double)(t1_inter.tv_usec - t0_inter.tv_usec)/1000000.0);
-               time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                     + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-               time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                     + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+               time_inter += tools::get_duration(t1inter-t0inter);
+               time_gemm += tools::get_duration(t1gemm-t0gemm);
+               time_reduction += tools::get_duration(t1reduction-t0reduction);
             } // k
          } // i
 
@@ -152,7 +141,6 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_renorm_batchDirect: t[inter,gemm,reduction]="
                << time_inter << "," << time_gemm << "," << time_reduction 
-               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.renorm.analysis();
          }
@@ -182,8 +170,6 @@ namespace ctns{
 
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
@@ -199,25 +185,22 @@ namespace ctns{
          double cost = Rmmtask.cost;
          for(int k=0; k<Rmmtask.nbatch; k++){
             // gemm
-            gettimeofday(&t0_gemm, NULL);
+            auto t0gemm = tools::get_time();
             Rmmtask.kernel(k, ptrs);
-            gettimeofday(&t1_gemm, NULL);
+            auto t1gemm = tools::get_time();
             // reduction
-            gettimeofday(&t0_reduction, NULL);
+            auto t0reduction = tools::get_time();
             Rmmtask.reduction(k, x, ptrs[6], y);
-            gettimeofday(&t1_reduction, NULL);
+            auto t1reduction = tools::get_time();
             // timing
-            time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                  + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-            time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                  + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+            time_gemm += tools::get_duration(t1gemm-t0gemm);
+            time_reduction += tools::get_duration(t1reduction-t0reduction);
          } // k
 
          // timing
          if(rank == 0){
             std::cout << "preprocess_renorm_batchSingle: t[gemm,reduction]="
                << time_gemm << "," << time_reduction 
-               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.renorm.analysis();
          }
@@ -249,9 +232,6 @@ namespace ctns{
          double time_inter=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_inter, t1_inter;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          Tm* ptrs[7];
          ptrs[0] = opaddr[0];
@@ -267,31 +247,27 @@ namespace ctns{
          double cost = Rmmtask.cost;
          for(int k=0; k<Rmmtask.nbatch; k++){
             // inter 
-            gettimeofday(&t0_inter, NULL);
+            auto t0inter = tools::get_time();
             Rmmtask.inter(k, opaddr, alphas);
-            gettimeofday(&t1_inter, NULL);
+            auto t1inter = tools::get_time();
             // gemm
-            gettimeofday(&t0_gemm, NULL);
+            auto t0gemm = tools::get_time();
             Rmmtask.kernel(k, ptrs);
-            gettimeofday(&t1_gemm, NULL);
+            auto t1gemm = tools::get_time();
             // reduction
-            gettimeofday(&t0_reduction, NULL);
+            auto t0reduction = tools::get_time();
             Rmmtask.reduction(k, x, ptrs[6], y);
-            gettimeofday(&t1_reduction, NULL);
+            auto t1reduction = tools::get_time();
             // timing
-            time_inter += ((double)(t1_inter.tv_sec - t0_inter.tv_sec) 
-                  + (double)(t1_inter.tv_usec - t0_inter.tv_usec)/1000000.0);
-            time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                  + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-            time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                  + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+            time_inter += tools::get_duration(t1inter-t0inter);
+            time_gemm += tools::get_duration(t1gemm-t0gemm);
+            time_reduction += tools::get_duration(t1reduction-t0reduction);
          } // k
 
          // timing
          if(rank == 0){
             std::cout << "preprocess_renorm_batchDirectSingle: t[inter,gemm,reduction]="
                << time_inter << "," << time_gemm << "," << time_reduction 
-               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.renorm.analysis();
          }

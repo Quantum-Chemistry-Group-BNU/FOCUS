@@ -149,6 +149,7 @@ namespace ctns{
             nC=0; nA=0; nB=0; nH=0; nS=0; nP=0; nQ=0;
             tC=0.0; tA=0.0; tB=0.0; tH=0.0; tS=0.0; tP=0.0; tQ=0.0;
             tHxInit=0.0; tHxCalc=0.0; tHxFinl=0.0;
+            tcommgpu=0.0;
          }
          void sweep_start(const int dots=0){
             if(dots == 1){
@@ -168,6 +169,8 @@ namespace ctns{
          // GPU_kernel
          batch_timing sigma;
          batch_timing renorm;
+         // nccl in preprocess_sigma_batchGPU [cpu2gpu,gpu2cpu,reduce]
+         double tcommgpu=0.0;
    };
 
    extern oper_timing oper_timer;

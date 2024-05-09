@@ -54,7 +54,6 @@ namespace ctns{
             }
             // form intermeidate operators
             void inter(const int k, Tm** opaddr, const Tm* alphas){
-               struct timeval t0, t1;
                // perform GEMV_BATCH
                Tm* ptrs[6];
                ptrs[0] = opaddr[0];
@@ -63,26 +62,23 @@ namespace ctns{
                ptrs[3] = opaddr[3];
                ptrs[4] = opaddr[4];
                ptrs[5] = const_cast<Tm*>(alphas);
-               gettimeofday(&t0, NULL);
+               auto t0 = tools::get_time();
                imvbatch[k].kernel(batchinter, ptrs);
                this->deviceSync();
-               gettimeofday(&t1, NULL);
-               oper_timer.renorm.t_inter += ((double)(t1.tv_sec - t0.tv_sec) 
-                     + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+               auto t1 = tools::get_time();
+               oper_timer.renorm.t_inter += tools::get_duration(t1-t0);
                oper_timer.renorm.c_inter += imvbatch[k].cost;
             }
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
-               struct timeval t0, t1;
                assert(mmbatch2[k].size() == 7);
                if(batchgemm != 5){
                   for(int i=0; i<mmbatch2[k].size(); i++){
-                     gettimeofday(&t0, NULL);
+                     auto t0 = tools::get_time();
                      mmbatch2[k][i].kernel(batchgemm, ptrs);
                      this->deviceSync();
-                     gettimeofday(&t1, NULL);
-                     oper_timer.renorm.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
-                           + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+                     auto t1 = tools::get_time();
+                     oper_timer.renorm.tHx[i] += tools::get_duration(t1-t0);
                      oper_timer.renorm.cHx[i] += mmbatch2[k][i].cost; 
                   } // i
 #ifdef GPU
@@ -90,21 +86,19 @@ namespace ctns{
                }else{
                   // merged {ca,cb},{ra,rb},{la,lb}
                   for(int i=0; i<mmbatch2[k].size()-1; i+=2){
-                     gettimeofday(&t0, NULL);
+                     auto t0 = tools::get_time();
                      xgemm_batch_gpu_merged(mmbatch2[k][i], mmbatch2[k][i+1], ptrs);
                      this->deviceSync();
-                     gettimeofday(&t1, NULL);
-                     oper_timer.renorm.tHx[i] += ((double)(t1.tv_sec - t0.tv_sec) 
-                           + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+                     auto t1 = tools::get_time();
+                     oper_timer.renorm.tHx[i] += tools::get_duration(t1-t0);
                      oper_timer.renorm.cHx[i] += mmbatch2[k][i].cost + mmbatch2[k][i+1].cost;
                   } // i
                   // last kernel for contracting with bra site
-                  gettimeofday(&t0, NULL);
+                  auto t0 = tools::get_time();
                   mmbatch2[k][6].kernel(4, ptrs);
                   this->deviceSync();
-                  gettimeofday(&t1, NULL);
-                  oper_timer.renorm.tHx[6] += ((double)(t1.tv_sec - t0.tv_sec) 
-                           + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+                  auto t1 = tools::get_time();
+                  oper_timer.renorm.tHx[6] += tools::get_duration(t1-t0);
                   oper_timer.renorm.cHx[6] += mmbatch2[k][6].cost;
 #endif
 #endif
@@ -112,8 +106,7 @@ namespace ctns{
             }
             // reduction
             void reduction(const int k, const Tm* x, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
-               struct timeval t0, t1;
-               gettimeofday(&t0, NULL);
+               auto t0 = tools::get_time();
 
                // 1. collect O(r,r') += \sum_c O(r,r',c) [axpy_batch]
                if(icase == 1){
@@ -156,9 +149,8 @@ namespace ctns{
                mvbatch[k].kernel(batchred, ptrs);
                this->deviceSync();
 
-               gettimeofday(&t1, NULL);
-               oper_timer.renorm.t_red += ((double)(t1.tv_sec - t0.tv_sec) 
-                     + (double)(t1.tv_usec - t0.tv_usec)/1000000.0);
+               auto t1 = tools::get_time();
+               oper_timer.renorm.t_red += tools::get_duration(t1-t0);
                oper_timer.renorm.c_red += mvbatch[k].cost;
             }
          public:

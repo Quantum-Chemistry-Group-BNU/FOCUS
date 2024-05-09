@@ -72,7 +72,7 @@ namespace ctns{
                }
                //------------------------------------
                auto t1 = tools::get_time();
-               timing.dtb7 = tools::get_duration(t1-t0);
+               timing.dtb5 = tools::get_duration(t1-t0);
                solver.solve_iter(eopt.data(), vsol.data(), v0.data());
             }else{
                std::cout << "error: no such option for guess=" << schd.ctns.guess << std::endl;
@@ -81,9 +81,10 @@ namespace ctns{
 
          }
          nmvp = solver.nmvp;
-         timing.dtb8 = solver.t_cal; 
-         timing.dtb9 = solver.t_comm;
-         timing.dtb10 = solver.t_rest;
+         timing.dtb6 = solver.t_cal - oper_timer.tcommgpu; 
+         timing.dtb7 = oper_timer.tcommgpu;
+         timing.dtb8 = solver.t_comm;
+         timing.dtb9 = solver.t_rest;
       }
 
    template <>
@@ -132,13 +133,14 @@ namespace ctns{
          }
          //------------------------------------
          auto t1 = tools::get_time();
-         timing.dtb7 = tools::get_duration(t1-t0);
+         timing.dtb5 = tools::get_duration(t1-t0);
          // solve
          solver.solve_iter(eopt.data(), vsol.data(), v0.data());
          nmvp = solver.nmvp;
-         timing.dtb8 = solver.t_cal; 
-         timing.dtb9 = solver.t_comm;
-         timing.dtb10 = solver.t_rest;
+         timing.dtb6 = solver.t_cal - oper_timer.tcommgpu; 
+         timing.dtb7 = oper_timer.tcommgpu;
+         timing.dtb8 = solver.t_comm;
+         timing.dtb9 = solver.t_rest;
       }
 
 } // ctns

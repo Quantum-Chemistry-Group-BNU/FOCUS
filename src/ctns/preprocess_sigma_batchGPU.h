@@ -40,12 +40,9 @@ namespace ctns{
                << std::endl;
          }
 
-         double time_copy=0.0;
+         double time_comm1=0.0, time_comm2=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_copy, t1_copy;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          // initialization
          Tm* xGPU = dev_workspace;
@@ -62,18 +59,24 @@ namespace ctns{
          GPUmem.memset(yGPU, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
-         gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
+            auto t0comm1 = tools::get_time();
             GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #ifdef NCCL
          }else{
+            auto t0comm1 = tools::get_time();
             if(rank==0) GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
+            // bcast
+            auto t0comm2 = tools::get_time();
             nccl_comm.broadcast(xGPU, ndim, 0);
+            auto t1comm2 = tools::get_time();
+            time_comm2 += tools::get_duration(t1comm2-t0comm2);
 #endif         
          }
-         gettimeofday(&t1_copy, NULL);
-         time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
-               + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
          oper_timer.sigma.start();
          // loop over nonzero blocks
@@ -83,44 +86,53 @@ namespace ctns{
             cost += Hmmtask.cost;
             for(int k=0; k<Hmmtask.nbatch; k++){
                // gemm on GPU
-               gettimeofday(&t0_gemm, NULL);
+               auto t0gemm = tools::get_time();
                Hmmtask.kernel(k, ptrs);
-               gettimeofday(&t1_gemm, NULL);
+               auto t1gemm = tools::get_time();
                // reduction
-               gettimeofday(&t0_reduction, NULL);
+               auto t0reduction = tools::get_time();
                Hmmtask.reduction(k, xGPU, ptrs[6], yGPU, dev_red);
-               gettimeofday(&t1_reduction, NULL);
+               auto t1reduction = tools::get_time();
                // timing
-               time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                     + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-               time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                     + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+               time_gemm += tools::get_duration(t1gemm-t0gemm); 
+               time_reduction += tools::get_duration(t1reduction-t0reduction);
             } // k
          } // i
 
          // copy yGPU to yCPU
-         gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
+            auto t0comm1 = tools::get_time();
             GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #ifdef NCCL
          }else{
+            // reduce
+            auto t0comm2 = tools::get_time();
             nccl_comm.reduce(yGPU, ndim, 0);
+            auto t1comm2 = tools::get_time();
+            time_comm2 += tools::get_duration(t1comm2-t0comm2);
+            // tocpu
+            auto t0comm1 = tools::get_time();
             if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #endif
          }
-         gettimeofday(&t1_copy, NULL);
-         time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
-               + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);
 
          // timing
          if(rank==0){
-            std::cout << "preprocess_Hx_batchGPU: t[copy,gemm,reduction]="
-                      << time_copy << "," << time_gemm << "," << time_reduction 
-                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+            std::cout << "preprocess_Hx_batchGPU: t[comm,gemm,reduction]="
+                      << time_comm1+time_comm2 << "," << time_gemm << "," << time_reduction 
                       << std::endl;
+            std::cout << " t[comm(intra)]=" << time_comm1
+               << " speed=" << 2*ndim/time_comm1/std::pow(1024,3) << "GB/s" 
+               << " t[comm(inter)]=" << time_comm2
+               << " speed=" << 2*ndim/time_comm2/std::pow(1024,3) << "GB/s" 
+            oper_timer.tcommgpu += time_comm1+time_comm2;
             oper_timer.sigma.analysis();
          }
       }
@@ -152,14 +164,10 @@ namespace ctns{
                << std::endl;
          }
 
-         double time_copy=0.0;
+         double time_comm1=0.0, time_comm2=0.0;
          double time_inter=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_copy, t1_copy;
-         struct timeval t0_inter, t1_inter;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          // initialization
          Tm* xGPU = dev_workspace;
@@ -176,18 +184,24 @@ namespace ctns{
          GPUmem.memset(yGPU, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
-         gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
+            auto t0comm1 = tools::get_time();
             GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #ifdef NCCL
          }else{
+            auto t0comm1 = tools::get_time();
             if(rank==0) GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
+            // bcast
+            auto t0comm2 = tools::get_time();
             nccl_comm.broadcast(xGPU, ndim, 0);
+            auto t1comm2 = tools::get_time();
+            time_comm2 += tools::get_duration(t1comm2-t0comm2);
 #endif         
          }
-         gettimeofday(&t1_copy, NULL);
-         time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
-               + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
          oper_timer.sigma.start();
          // loop over nonzero blocks
@@ -196,51 +210,59 @@ namespace ctns{
             auto& Hmmtask = Hmmtasks[i];
             cost += Hmmtask.cost;
             for(int k=0; k<Hmmtask.nbatch; k++){
-               // axpy
-               gettimeofday(&t0_inter, NULL);
+               // inter
+               auto t0inter = tools::get_time();
                Hmmtask.inter(k, opaddr, alphas);
-               gettimeofday(&t1_inter, NULL);
+               auto t1inter = tools::get_time();
                // gemm on GPU
-               gettimeofday(&t0_gemm, NULL);
+               auto t0gemm = tools::get_time();
                Hmmtask.kernel(k, ptrs);
-               gettimeofday(&t1_gemm, NULL);
+               auto t1gemm = tools::get_time();
                // reduction
-               gettimeofday(&t0_reduction, NULL);
+               auto t0reduction = tools::get_time();
                Hmmtask.reduction(k, xGPU, ptrs[6], yGPU, dev_red);
-               gettimeofday(&t1_reduction, NULL);
+               auto t1reduction = tools::get_time();
                // timing
-               time_inter += ((double)(t1_inter.tv_sec - t0_inter.tv_sec) 
-                     + (double)(t1_inter.tv_usec - t0_inter.tv_usec)/1000000.0);
-               time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                     + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-               time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                     + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+               time_inter += tools::get_duration(t1inter-t0inter); 
+               time_gemm += tools::get_duration(t1gemm-t0gemm); 
+               time_reduction += tools::get_duration(t1reduction-t0reduction);
             } // k
          } // i
 
          // copy yGPU to yCPU
-         gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
+            auto t0comm1 = tools::get_time();
             GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #ifdef NCCL
          }else{
+            // reduce
+            auto t0comm2 = tools::get_time();
             nccl_comm.reduce(yGPU, ndim, 0);
+            auto t1comm2 = tools::get_time();
+            time_comm2 += tools::get_duration(t1comm2-t0comm2);
+            // tocpu
+            auto t0comm1 = tools::get_time();
             if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #endif
          }
-         gettimeofday(&t1_copy, NULL);
-         time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
-               + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);
 
          // timing
          if(rank==0){
-            std::cout << "preprocess_Hx_batchDirectGPU: t[copy,inter,gemm,reduction]="
-                      << time_copy << "," << time_inter << "," << time_gemm << "," << time_reduction 
-                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+            std::cout << "preprocess_Hx_batchDirectGPU: t[comm,inter,gemm,reduction]="
+                      << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction 
                       << std::endl;
+            std::cout << " t[comm(intra)]=" << time_comm1
+               << " speed=" << 2*ndim/time_comm1/std::pow(1024,3) << "GB/s" 
+               << " t[comm(inter)]=" << time_comm2
+               << " speed=" << 2*ndim/time_comm2/std::pow(1024,3) << "GB/s" 
+            oper_timer.tcommgpu += time_comm1+time_comm2;
             oper_timer.sigma.analysis();
          }
       }
@@ -271,12 +293,9 @@ namespace ctns{
                << std::endl;
          }
 
-         double time_copy=0.0;
+         double time_comm1=0.0, time_comm2=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_copy, t1_copy;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          // initialization
          Tm* xGPU = dev_workspace;
@@ -293,61 +312,76 @@ namespace ctns{
          GPUmem.memset(yGPU, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
-         gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
+            auto t0comm1 = tools::get_time();
             GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #ifdef NCCL
          }else{
+            auto t0comm1 = tools::get_time();
             if(rank==0) GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
+            // bcast
+            auto t0comm2 = tools::get_time();
             nccl_comm.broadcast(xGPU, ndim, 0);
+            auto t1comm2 = tools::get_time();
+            time_comm2 += tools::get_duration(t1comm2-t0comm2);
 #endif         
          }
-         gettimeofday(&t1_copy, NULL);
-         time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
-               + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
          oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = Hmmtask.cost;
          for(int k=0; k<Hmmtask.nbatch; k++){
             // gemm on GPU
-            gettimeofday(&t0_gemm, NULL);
+            auto t0gemm = tools::get_time();
             Hmmtask.kernel(k, ptrs);
-            gettimeofday(&t1_gemm, NULL);
+            auto t1gemm = tools::get_time();
             // reduction
-            gettimeofday(&t0_reduction, NULL);
+            auto t0reduction = tools::get_time();
             Hmmtask.reduction(k, xGPU, ptrs[6], yGPU, dev_red);
-            gettimeofday(&t1_reduction, NULL);
+            auto t1reduction = tools::get_time();
             // timing
-            time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                  + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-            time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                  + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+            time_gemm += tools::get_duration(t1gemm-t0gemm); 
+            time_reduction += tools::get_duration(t1reduction-t0reduction);
          } // k
 
          // copy yGPU to yCPU
-         gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
+            auto t0comm1 = tools::get_time();
             GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #ifdef NCCL
          }else{
+            // reduce
+            auto t0comm2 = tools::get_time();
             nccl_comm.reduce(yGPU, ndim, 0);
+            auto t1comm2 = tools::get_time();
+            time_comm2 += tools::get_duration(t1comm2-t0comm2);
+            // tocpu
+            auto t0comm1 = tools::get_time();
             if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #endif
          }
-         gettimeofday(&t1_copy, NULL);
-         time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
-               + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);
 
          // timing
          if(rank==0){
-            std::cout << "preprocess_Hx_batchGPUSingle: t[copy,gemm,reduction]="
-                      << time_copy << "," << time_gemm << "," << time_reduction 
-                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+            std::cout << "preprocess_Hx_batchGPUSingle: t[comm,gemm,reduction]="
+                      << time_comm1+time_comm2 << "," << time_gemm << "," << time_reduction 
                       << std::endl;
+            std::cout << " t[comm(intra)]=" << time_comm1
+               << " speed=" << 2*ndim/time_comm1/std::pow(1024,3) << "GB/s" 
+               << " t[comm(inter)]=" << time_comm2
+               << " speed=" << 2*ndim/time_comm2/std::pow(1024,3) << "GB/s" 
+            oper_timer.tcommgpu += time_comm1+time_comm2;
             oper_timer.sigma.analysis();
          }
       }
@@ -379,14 +413,10 @@ namespace ctns{
                << std::endl;
          }
 
-         double time_copy=0.0;
+         double time_comm1=0.0, time_comm2=0.0;
          double time_inter=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_copy, t1_copy;
-         struct timeval t0_inter, t1_inter;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          // initialization
          Tm* xGPU = dev_workspace;
@@ -403,67 +433,81 @@ namespace ctns{
          GPUmem.memset(yGPU, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
-         gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
+            auto t0comm1 = tools::get_time();
             GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #ifdef NCCL
          }else{
+            auto t0comm1 = tools::get_time();
             if(rank==0) GPUmem.to_gpu(xGPU, xCPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
+            // bcast
+            auto t0comm2 = tools::get_time();
             nccl_comm.broadcast(xGPU, ndim, 0);
+            auto t1comm2 = tools::get_time();
+            time_comm2 += tools::get_duration(t1comm2-t0comm2);
 #endif         
          }
-         gettimeofday(&t1_copy, NULL);
-         time_copy = ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
-               + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
          oper_timer.sigma.start();
          // loop over nonzero blocks
          double cost = Hmmtask.cost;
          for(int k=0; k<Hmmtask.nbatch; k++){
-            // axpy
-            gettimeofday(&t0_inter, NULL);
+            // inter
+            auto t0inter = tools::get_time();
             Hmmtask.inter(k, opaddr, alphas);
-            gettimeofday(&t1_inter, NULL);
+            auto t1inter = tools::get_time();
             // gemm on GPU
-            gettimeofday(&t0_gemm, NULL);
+            auto t0gemm = tools::get_time();
             Hmmtask.kernel(k, ptrs);
-            gettimeofday(&t1_gemm, NULL);
+            auto t1gemm = tools::get_time();
             // reduction
-            gettimeofday(&t0_reduction, NULL);
+            auto t0reduction = tools::get_time();
             Hmmtask.reduction(k, xGPU, ptrs[6], yGPU, dev_red);
-            gettimeofday(&t1_reduction, NULL);
+            auto t1reduction = tools::get_time();
             // timing
-            time_inter += ((double)(t1_inter.tv_sec - t0_inter.tv_sec) 
-                  + (double)(t1_inter.tv_usec - t0_inter.tv_usec)/1000000.0);
-            time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                  + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-            time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                  + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+            time_inter += tools::get_duration(t1inter-t0inter); 
+            time_gemm += tools::get_duration(t1gemm-t0gemm); 
+            time_reduction += tools::get_duration(t1reduction-t0reduction);
          } // k
 
          // copy yGPU to yCPU
-         gettimeofday(&t0_copy, NULL);
          if(!ifnccl){
+            auto t0comm1 = tools::get_time();
             GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #ifdef NCCL
          }else{
+            // reduce
+            auto t0comm2 = tools::get_time();
             nccl_comm.reduce(yGPU, ndim, 0);
+            auto t1comm2 = tools::get_time();
+            time_comm2 += tools::get_duration(t1comm2-t0comm2);
+            // tocpu
+            auto t0comm1 = tools::get_time();
             if(rank==0) GPUmem.to_cpu(yCPU, yGPU, ndim*sizeof(Tm));
+            auto t1comm1 = tools::get_time();
+            time_comm1 += tools::get_duration(t1comm1-t0comm1);
 #endif
          }
-         gettimeofday(&t1_copy, NULL);
-         time_copy += ((double)(t1_copy.tv_sec - t0_copy.tv_sec) 
-               + (double)(t1_copy.tv_usec - t0_copy.tv_usec)/1000000.0);
 
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, xCPU, yCPU);
 
          // timing
          if(rank==0){
-            std::cout << "preprocess_Hx_batchDirectGPUSingle: t[copy,inter,gemm,reduction]="
-                      << time_copy << "," << time_inter << "," << time_gemm << "," << time_reduction 
-                      //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
+            std::cout << "preprocess_Hx_batchDirectGPUSingle: t[comm,inter,gemm,reduction]="
+                      << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction 
                       << std::endl;
+            std::cout << " t[comm(intra)]=" << time_comm1
+               << " speed=" << 2*ndim/time_comm1/std::pow(1024,3) << "GB/s" 
+               << " t[comm(inter)]=" << time_comm2
+               << " speed=" << 2*ndim/time_comm2/std::pow(1024,3) << "GB/s" 
+            oper_timer.tcommgpu += time_comm1+time_comm2;
             oper_timer.sigma.analysis();
          }
       }

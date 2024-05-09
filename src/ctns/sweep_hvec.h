@@ -61,7 +61,6 @@ namespace ctns{
                      const int& rank,
                      const bool& ifdist1,
                      const bool debug=false);
-
             template <typename QTm2=QTm, std::enable_if_t<std::is_same<QTm2,qtensor4<Qm::ifabelian,Tm>>::value,bool> = 0>
                void init_Hx_functors(const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict,
                      const integral::two_body<Tm>& int2e,
@@ -71,27 +70,6 @@ namespace ctns{
                      const int& rank,
                      const bool& ifdist1,
                      const bool debug=false);
-
-            /*
-               template <typename Qm2=Qm, typename Tm2=Tm, typename QInfo2=QInfo, typename QTm2=QTm, std::enable_if_t<std::is_same<QTm2,qtensor3<Qm2::ifabelian,Tm2>>::value,bool> = 0>
-               void init_Hx_functors(const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict,
-               const integral::two_body<Tm>& int2e,
-               const double& ecore,
-               const QTm& wf,
-               const int& size,
-               const int& rank,
-               const bool& ifdist1,
-               const bool debug=false);
-               template <typename Qm2=Qm, typename Tm2=Tm, typename QInfo2=QInfo, typename QTm2=QTm, std::enable_if_t<std::is_same<QTm2,qtensor4<Qm2::ifabelian,Tm2>>::value,bool> = 0>
-               void init_Hx_functors(const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict,
-               const integral::two_body<Tm>& int2e,
-               const double& ecore,
-               const QTm& wf,
-               const int& size,
-               const int& rank,
-               const bool& ifdist1,
-               const bool debug=false);
-               */
             // cleanup
             void finalize();
          public:
@@ -179,18 +157,22 @@ namespace ctns{
             if(alg_hvec != 3){
                if(dots == 1){
                   H_formulae = symbolic_formulae_onedot(qops_dict, int2e, size, rank, fname,
-                        schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, schd.ctns.verbose>0);
+                        schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+                        schd.ctns.ifdistc, schd.ctns.verbose>0);
                }else{
                   H_formulae = symbolic_formulae_twodot(qops_dict, int2e, size, rank, fname,
-                        schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, schd.ctns.verbose>0);
+                        schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+                        schd.ctns.ifdistc, schd.ctns.verbose>0);
                }
             }else{
                if(dots == 1){
                   H_formulae2 = symbolic_formulae_onedot2(qops_dict, int2e, size, rank, fname,
-                        schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, schd.ctns.verbose>0);
+                        schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+                        schd.ctns.ifdistc, schd.ctns.verbose>0);
                }else{ 
                   H_formulae2 = symbolic_formulae_twodot2(qops_dict, int2e, size, rank, fname,
-                        schd.ctns.sort_formulae, schd.ctns.ifdist1, schd.ctns.ifdistc, schd.ctns.verbose>0); 
+                        schd.ctns.sort_formulae, schd.ctns.ifdist1, 
+                        schd.ctns.ifdistc, schd.ctns.verbose>0); 
                }
             }
          }
@@ -200,15 +182,13 @@ namespace ctns{
          if(alg_hvec == 0){
 
             // oldest version
-            std::cout << "lzdA" << std::endl;
             this->init_Hx_functors(qops_dict, int2e, ecore, wf, size, rank,
                   schd.ctns.ifdist1, schd.ctns.verbose>0);
-            std::cout << "lzdB" << std::endl;
+
             /*
-               Hx = bind(&ctns::ndot_Hx<ifab,Tm,QTm>, _1, _2, std::ref(Hx_funs),
-               std::ref(wf), std::cref(size), std::cref(rank));
-               */
-            std::cout << "lzdC" << std::endl;
+            Hx = bind(&ctns::ndot_Hx<ifab,Tm,QTm>, _1, _2, std::ref(Hx_funs),
+                  std::ref(wf), std::cref(size), std::cref(rank));
+            */
 
          }else if(alg_hvec == 1){
 

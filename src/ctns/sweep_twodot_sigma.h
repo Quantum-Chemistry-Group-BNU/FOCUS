@@ -332,21 +332,21 @@ namespace ctns{
          return Hx_funs;
       }
 
-   template <bool ifab, typename Tm, typename QTm> 
-      void ndot_Hx(Tm* y,
+   template <bool ifab, typename Tm> 
+      void twodot_Hx(Tm* y,
             const Tm* x,
             Hx_functors<Tm>& Hx_funs,
-            QTm& wf,
+            qtensor4<ifab,Tm>& wf,
             const int size,
             const int rank){
          std::cout << "error: no implementation of twodot_Hx for su2! ifab=" << ifab << std::endl;
          exit(1);
       }
-   template <bool ifab, typename Tm, typename QTm, std::enable_if_t<std::is_same<QTm,qtensor4<ifab,Tm>>::value,bool> = 0, std::enable_if_t<ifab,int> = 0> 
-      void ndot_Hx(Tm* y,
+   template <bool ifab, typename Tm, std::enable_if_t<ifab,int> = 0> 
+      void twodot_Hx(Tm* y,
             const Tm* x,
             Hx_functors<Tm>& Hx_funs,
-            QTm& wf,
+            stensor4<Tm>& wf,
             const int size,
             const int rank){
          auto t0 = tools::get_time();

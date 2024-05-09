@@ -37,8 +37,6 @@ namespace ctns{
 
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          // initialization
          memset(y, 0, ndim*sizeof(Tm));
@@ -60,18 +58,16 @@ namespace ctns{
             cost += Hmmtask.cost;
             for(int k=0; k<Hmmtask.nbatch; k++){
                // gemm
-               gettimeofday(&t0_gemm, NULL);
+               auto t0gemm = tools::get_time();
                Hmmtask.kernel(k, ptrs);
-               gettimeofday(&t1_gemm, NULL);
+               auto t1gemm = tools::get_time();
                // reduction
-               gettimeofday(&t0_reduction, NULL);
+               auto t0reduction = tools::get_time();
                Hmmtask.reduction(k, x, ptrs[6], y);
-               gettimeofday(&t1_reduction, NULL);
+               auto t1reduction = tools::get_time();
                // timing
-               time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                     + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-               time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                     + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+               time_gemm += tools::get_duration(t1gemm-t0gemm);
+               time_reduction += tools::get_duration(t1reduction-t0reduction);
             } // k
          } // i
          // add const term
@@ -81,7 +77,6 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_Hx_batch: t[gemm,reduction]="
                << time_gemm << "," << time_reduction 
-               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.sigma.analysis();
          }
@@ -115,9 +110,6 @@ namespace ctns{
          double time_inter=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_axpy, t1_axpy;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          // initialization
          memset(y, 0, ndim*sizeof(Tm));
@@ -138,25 +130,22 @@ namespace ctns{
             auto& Hmmtask = Hmmtasks[i];
             cost += Hmmtask.cost;
             for(int k=0; k<Hmmtask.nbatch; k++){
-               // axpy
-               gettimeofday(&t0_axpy, NULL);
+               // inter
+               auto t0inter = tools::get_time();
                Hmmtask.inter(k, opaddr, alphas);
-               gettimeofday(&t1_axpy, NULL);
+               auto t1inter = tools::get_time();
                // gemm
-               gettimeofday(&t0_gemm, NULL);
+               auto t0gemm = tools::get_time();
                Hmmtask.kernel(k, ptrs);
-               gettimeofday(&t1_gemm, NULL);
+               auto t1gemm = tools::get_time();
                // reduction
-               gettimeofday(&t0_reduction, NULL);
+               auto t0reduction = tools::get_time();
                Hmmtask.reduction(k, x, ptrs[6], y);
-               gettimeofday(&t1_reduction, NULL);
+               auto t1reduction = tools::get_time();
                // timing
-               time_inter += ((double)(t1_axpy.tv_sec - t0_axpy.tv_sec) 
-                     + (double)(t1_axpy.tv_usec - t0_axpy.tv_usec)/1000000.0);
-               time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                     + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-               time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                     + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+               time_inter += tools::get_duration(t1inter-t0inter);
+               time_gemm += tools::get_duration(t1gemm-t0gemm);
+               time_reduction += tools::get_duration(t1reduction-t0reduction);
             } // k
          } // i
          // add const term
@@ -166,7 +155,6 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_Hx_batchDirect: t[inter,gemm,reduction]="
                << time_inter << "," << time_gemm << "," << time_reduction 
-               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.sigma.analysis();
          }
@@ -198,8 +186,6 @@ namespace ctns{
 
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          // initialization
          memset(y, 0, ndim*sizeof(Tm));
@@ -218,18 +204,16 @@ namespace ctns{
          double cost = Hmmtask.cost;
          for(int k=0; k<Hmmtask.nbatch; k++){
             // gemm
-            gettimeofday(&t0_gemm, NULL);
+            auto t0gemm = tools::get_time();
             Hmmtask.kernel(k, ptrs);
-            gettimeofday(&t1_gemm, NULL);
+            auto t1gemm = tools::get_time();
             // reduction
-            gettimeofday(&t0_reduction, NULL);
+            auto t0reduction = tools::get_time();
             Hmmtask.reduction(k, x, ptrs[6], y);
-            gettimeofday(&t1_reduction, NULL);
+            auto t1reduction = tools::get_time();
             // timing
-            time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                  + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-            time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                  + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+            time_gemm += tools::get_duration(t1gemm-t0gemm);
+            time_reduction += tools::get_duration(t1reduction-t0reduction);
          } // k
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
@@ -238,7 +222,6 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_Hx_batchSingle: t[gemm,reduction]="
                << time_gemm << "," << time_reduction 
-               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.sigma.analysis();
          }
@@ -272,9 +255,6 @@ namespace ctns{
          double time_inter=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
-         struct timeval t0_axpy, t1_axpy;
-         struct timeval t0_gemm, t1_gemm;
-         struct timeval t0_reduction, t1_reduction;
 
          // initialization
          memset(y, 0, ndim*sizeof(Tm));
@@ -292,25 +272,22 @@ namespace ctns{
          // loop over nonzero blocks
          double cost = Hmmtask.cost;
          for(int k=0; k<Hmmtask.nbatch; k++){
-            // axpy
-            gettimeofday(&t0_axpy, NULL);
+            // inter
+            auto t0inter = tools::get_time();
             Hmmtask.inter(k, opaddr, alphas);
-            gettimeofday(&t1_axpy, NULL);
+            auto t1inter = tools::get_time();
             // gemm
-            gettimeofday(&t0_gemm, NULL);
+            auto t0gemm = tools::get_time();
             Hmmtask.kernel(k, ptrs);
-            gettimeofday(&t1_gemm, NULL);
+            auto t1gemm = tools::get_time();
             // reduction
-            gettimeofday(&t0_reduction, NULL);
+            auto t0reduction = tools::get_time();
             Hmmtask.reduction(k, x, ptrs[6], y);
-            gettimeofday(&t1_reduction, NULL);
+            auto t1reduction = tools::get_time();
             // timing
-            time_inter += ((double)(t1_axpy.tv_sec - t0_axpy.tv_sec) 
-                  + (double)(t1_axpy.tv_usec - t0_axpy.tv_usec)/1000000.0);
-            time_gemm += ((double)(t1_gemm.tv_sec - t0_gemm.tv_sec) 
-                  + (double)(t1_gemm.tv_usec - t0_gemm.tv_usec)/1000000.0);
-            time_reduction += ((double)(t1_reduction.tv_sec - t0_reduction.tv_sec) 
-                  + (double)(t1_reduction.tv_usec - t0_reduction.tv_usec)/1000000.0);
+            time_inter += tools::get_duration(t1inter-t0inter);
+            time_gemm += tools::get_duration(t1gemm-t0gemm);
+            time_reduction += tools::get_duration(t1reduction-t0reduction);
          } // k
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
@@ -319,7 +296,6 @@ namespace ctns{
          if(rank == 0){
             std::cout << "preprocess_Hx_batchDirectSingle: t[inter,gemm,reduction]="
                << time_inter << "," << time_gemm << "," << time_reduction 
-               //<< " cost=" << cost << " flops[gemm]=" << cost/time_gemm
                << std::endl;
             oper_timer.sigma.analysis();
          }

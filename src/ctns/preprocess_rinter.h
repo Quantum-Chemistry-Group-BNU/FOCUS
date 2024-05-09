@@ -293,12 +293,10 @@ namespace ctns{
          ptrs[3] = opaddr[3];
          ptrs[4] = alpha_vec.data(); 
          ptrs[5] = _data;
-         struct timeval t0gemv, t1gemv;
-         gettimeofday(&t0gemv, NULL);
+         auto t0gemv = tools::get_time();
          mvbatch.kernel(batchgemv, ptrs);
-         gettimeofday(&t1gemv, NULL);
-         double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
-               + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);
+         auto t1gemv = tools::get_time();
+         double dt = tools::get_duration(t1gemv-t0gemv);
          if(debug){
             std::cout << "cost_rinter=" << mvbatch.cost
                << " time=" << dt << " flops=" << mvbatch.cost/dt
@@ -431,12 +429,10 @@ namespace ctns{
          ptrs[3] = opaddr[3]; // c2
          ptrs[4] = dev_alpha_vec;
          ptrs[5] = _dev_data;
-         struct timeval t0gemv, t1gemv;
-         gettimeofday(&t0gemv, NULL);
+         auto t0gemv = tools::get_time();
          mvbatch.kernel(batchgemv, ptrs);
-         gettimeofday(&t1gemv, NULL);
-         double dt = ((double)(t1gemv.tv_sec - t0gemv.tv_sec) 
-               + (double)(t1gemv.tv_usec - t0gemv.tv_usec)/1000000.0);
+         auto t1gemv = tools::get_time();
+         double dt = tools::get_duration(t1gemv-t0gemv);
          if(debug){
             std::cout << "cost_rinter=" << mvbatch.cost
                << " time=" << dt << " flops=" << mvbatch.cost/dt

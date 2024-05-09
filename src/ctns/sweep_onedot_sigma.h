@@ -335,9 +335,8 @@ namespace ctns{
          return Hx_funs;
       }
 
-   /*
    template <bool ifab, typename Tm> 
-      void ndot_Hx(Tm* y,
+      void onedot_Hx(Tm* y,
             const Tm* x,
             Hx_functors<Tm>& Hx_funs,
             qtensor3<ifab,Tm>& wf,
@@ -347,9 +346,8 @@ namespace ctns{
          assert(!ifab);
          exit(1);
       }
-   */
    template <bool ifab, typename Tm, std::enable_if_t<ifab,int> = 0> 
-      void ndot_Hx(Tm* y,
+      void onedot_Hx(Tm* y,
             const Tm* x,
             Hx_functors<Tm>& Hx_funs,
             stensor3<Tm>& wf,

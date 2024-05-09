@@ -34,23 +34,22 @@ namespace ctns{
          this->print_part(msg+": renrm", dt5, dt, dtacc);
          this->print_part(msg+": save " , dt6, dt, dtacc);
 
-         double tdvdsn = dtb0 + dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9 + dtb10;
+         double tdvdsn = dtb0 + dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9;
          std::cout << "Detailed decomposition of T(dvdsn) = " 
             << std::scientific << std::setprecision(3) << dt2 << " S"
             << "  T(sum) = " << tdvdsn << " S  per = " << tdvdsn/(dt2+eps)*100
             << std::endl;
          dtacc = 0.0;
-         this->print_part(msg+": preprocess                   ", dtb0, tdvdsn, dtacc);
-         this->print_part(msg+": symbolic_formulae_twodot     ", dtb1, tdvdsn, dtacc);
-         this->print_part(msg+": qops_dict memcpy cpu2gpu     ", dtb2, tdvdsn, dtacc);
-         this->print_part(msg+": hintermediate init           ", dtb3, tdvdsn, dtacc);
-         this->print_part(msg+": hintermediates memcpy cpu2gpu", dtb4, tdvdsn, dtacc);
-         this->print_part(msg+": preprocess_hformulae_Hxlist2 ", dtb5, tdvdsn, dtacc);
-         this->print_part(msg+": hmmtasks init                ", dtb6, tdvdsn, dtacc);
-         this->print_part(msg+": initial guess for dvdson     ", dtb7, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [Hx_batchGPU]  ", dtb8, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [communication]", dtb9, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [rest part]    ", dtb10, tdvdsn, dtacc);
+         this->print_part(msg+": preprocess                  ", dtb0, tdvdsn, dtacc);
+         this->print_part(msg+": symbolic_formulae           ", dtb1, tdvdsn, dtacc);
+         this->print_part(msg+": hintermediate init          ", dtb2, tdvdsn, dtacc);
+         this->print_part(msg+": preprocess_hformulae_Hxlist ", dtb3, tdvdsn, dtacc);
+         this->print_part(msg+": hmmtasks init               ", dtb4, tdvdsn, dtacc);
+         this->print_part(msg+": initial guess for dvdson    ", dtb5, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson solver [Hx_batchGPU] ", dtb6, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson solver [comm(gpu)]   ", dtb7, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson solver [comm(cpu)]   ", dtb8, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson solver [rest part]   ", dtb9, tdvdsn, dtacc);
         
          double trenrm = dtfa + dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12 + dtfb;
          std::cout << "Detailed decomposition of T(renrm) = " 
@@ -91,9 +90,7 @@ namespace ctns{
          dtb2 = tools::get_duration(tb3-tb2); 
          dtb3 = tools::get_duration(tb4-tb3); 
          dtb4 = tools::get_duration(tb5-tb4); 
-         dtb5 = tools::get_duration(tb6-tb5); 
-         dtb6 = tools::get_duration(tb7-tb6);
-         // dtb7,8,9,10 are obtained in sweep_twodot_local.h
+         // dtb5-9 are obtained in sweep_twodot_local.h
  
          // decomposition of dt5 into different parts
          dtfa = tools::get_duration(tf0-te); 
@@ -137,7 +134,6 @@ namespace ctns{
          dtb7 += timer.dtb7; 
          dtb8 += timer.dtb8; 
          dtb9 += timer.dtb9; 
-         dtb10 += timer.dtb10; 
        
          // decomposition of dt5 into different parts
          dtfa += timer.dtfa; 
@@ -172,13 +168,11 @@ namespace ctns{
       double dt=0, dt0=0, dt1=0, dt2=0, dt3=0, dt4=0, dt5=0, dt6=0;
       // decomposition of dt2 into different parts
       Tm tb1; 
-      Tm tb2; // qops_dict memcpy cpu2gpu    
-      Tm tb3; // symbolic_formulae_twodot     
-      Tm tb4; // hintermediate init           
-      Tm tb5; // hintermediates memcpy cpu2gpu
-      Tm tb6; // preprocess_hformulae_Hxlist2
-      Tm tb7; // hmmtasks init                
-      double dtb0=0, dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0, dtb10=0;
+      Tm tb2; 
+      Tm tb3; 
+      Tm tb4; 
+      Tm tb5; 
+      double dtb0=0, dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0;
       Tm tf0;
       Tm tf1; // qops init
       Tm tf2; // qops_dict memcpy cpu2gpu   
