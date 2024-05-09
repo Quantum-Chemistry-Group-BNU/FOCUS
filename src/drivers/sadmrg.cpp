@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include "core/perf.h"
+#include "core/perfcomm.h"
 #include "io/io.h"
 #include "io/input.h"
 #include "ci/ci_header.h"

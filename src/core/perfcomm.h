@@ -14,7 +14,7 @@ void perfcomm(const boost::mpi::communicator& world, const size_t data_count){
    const int size = world.size();
    const int rank = world.rank();
    if(rank==0){
-      std::cout << "perfcomm(broadcast/reduce): size=" << size << ":"
+      std::cout << "\nperfcomm(broadcast/reduce): size=" << size << ":"
          <<tools::sizeMB<double>(data_count)<<"MB:"
          <<tools::sizeGB<double>(data_count)<<"GB"
          <<std::endl;
@@ -45,8 +45,9 @@ void perfcomm(const boost::mpi::communicator& world, const size_t data_count){
 
 #ifdef GPU
 #ifdef NCCL
-   Tm* dev_data = (Tm*)GPUmem.allocate(data_count);
-   if(rank==0) GPUmem.to_gpu(dev_data, data.data(), data_count);
+   size_t count = data_count*sizeof(Tm);
+   Tm* dev_data = (Tm*)GPUmem.allocate(count);
+   if(rank==0) GPUmem.to_gpu(dev_data, data.data(), count);
    cudaDeviceSynchronize();
    world.barrier();
    {
@@ -70,6 +71,7 @@ void perfcomm(const boost::mpi::communicator& world, const size_t data_count){
          << " speed=" << tools::sizeGB<Tm>(data_count)/dt << "GB/s" 
          << std::endl;
    }
+   GPUmem.deallocate(dev_data, count);
 #endif
 #endif
 }
