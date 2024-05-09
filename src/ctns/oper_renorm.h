@@ -688,7 +688,7 @@ namespace ctns{
          } // ifdist1 and size > 1 and !schd.ctns.ifnccl
 #endif // SERIAL
 
-         // qops is available on CPU
+         // qops is available on CPU, consistency check
          if(!schd.ctns.async_tocpu){
 
             // 3. consistency check for Hamiltonian
