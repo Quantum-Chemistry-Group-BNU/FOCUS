@@ -127,7 +127,7 @@ namespace ctns{
             std::cout << "error: alg_hvec >= 4 does not support complex yet! GEMM with conj is needed." << std::endl;
             exit(1); 
          }
-         if(alg_hvec < 10 && alg_hinter == 2){
+         if(alg_hvec <= 10 && alg_hinter == 2){
             std::cout << "error: alg_hvec=" << alg_hvec << " should be used with alg_hinter<2" << std::endl;
             exit(1);
          }

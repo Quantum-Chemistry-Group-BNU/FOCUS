@@ -208,6 +208,17 @@ void params_ctns::read(ifstream& istrm){
       std::cout << "error: diagcheck should not be used with async_fetch/async_tocpu!" << std::endl;
       exit(1);
    }
+   // nccl
+   bool usecpu = (alg_hvec <= 10 || alg_renorm <=10);
+   if(usecpu && ifnccl){
+      std::cout << "error: ifnccl=true only for alg_hvec/alg_renorm>10 [gpu]!" << std::endl;
+      exit(1);
+   }
+   // async_tocpu
+   if(usecpu && async_tocpu){
+      std::cout << "error: async_tocpu=true only for alg_hvec/alg_renorm>10 [gpu]!" << std::endl;
+      exit(1);
+   }
 }
 
 void params_ctns::print() const{
