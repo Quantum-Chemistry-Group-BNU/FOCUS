@@ -20,6 +20,7 @@ void schedule::print() const{
    cout << "twoms = " << twoms << endl;
    cout << "twos  = " << twos  << endl;
    cout << "integral_file = " << integral_file << endl;
+   cout << "perfcomm = " << perfcomm << endl;
    if(sci.run) sci.print();
    if(ctns.run) ctns.print();
    if(post.run) post.print();
@@ -55,6 +56,8 @@ void schedule::read(string fname){
       }else if(line.substr(0,13)=="integral_file"){
          istringstream is(line.substr(13));
          is >> integral_file;
+      }else if(line.substr(0,8)=="perfcomm"){
+         perfcomm = stoi(line.substr(8));
       }else if(line.substr(0,4)=="$sci"){
          sci.read(istrm);
       }else if(line.substr(0,5)=="$ctns"){

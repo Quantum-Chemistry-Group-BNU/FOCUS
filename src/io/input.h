@@ -30,7 +30,8 @@ namespace input{
          friend class boost::serialization::access;
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
-               ar & scratch & dtype & nelec & twoms & twos & integral_file
+               ar & scratch & dtype & nelec & twoms & twos & integral_file 
+                  & perfcomm 
                   & sci & ctns & post & vmc;
             }
       public:
@@ -44,6 +45,7 @@ namespace input{
          int twoms = 0;
          int twos = 0;
          std::string integral_file = "mole.info";
+         int perfcomm = 0;
          // --- Methods --- 
          params_sci sci;
          params_ctns ctns;

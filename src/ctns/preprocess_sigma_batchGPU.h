@@ -14,6 +14,19 @@
 
 namespace ctns{
 
+   template <typename Tm>
+      void analyze_tcommgpu(const size_t ndim, 
+            const double time_comm1, 
+            const double time_comm2){
+         double sizeGB = tools::sizeGB<Tm>(ndim);
+         std::cout << " ndim=" << ndim << ":" << sizeGB << "GB" 
+            << " t[comm(intra)]=" << time_comm1
+            << " speed=" << 2*sizeGB/time_comm1 << "GB/s" 
+            << " t[comm(inter)]=" << time_comm2
+            << " speed=" << 2*sizeGB/time_comm2 << "GB/s"
+            << std::endl;
+      }
+
    // for Davidson diagonalization
    template <typename Tm> 
       void preprocess_Hx_batchGPU(Tm* yCPU,
@@ -39,7 +52,7 @@ namespace ctns{
                << " maxthreads=" << maxthreads
                << std::endl;
          }
-
+         auto t0 = tools::get_time();
          double time_comm1=0.0, time_comm2=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
@@ -125,13 +138,12 @@ namespace ctns{
 
          // timing
          if(rank==0){
-            std::cout << "preprocess_Hx_batchGPU: t[comm,gemm,reduction]="
-                      << time_comm1+time_comm2 << "," << time_gemm << "," << time_reduction 
-                      << std::endl;
-            std::cout << " t[comm(intra)]=" << time_comm1
-               << " speed=" << 2*ndim/time_comm1/std::pow(1024,3) << "GB/s" 
-               << " t[comm(inter)]=" << time_comm2
-               << " speed=" << 2*ndim/time_comm2/std::pow(1024,3) << "GB/s" 
+            auto t1 = tools::get_time();
+            std::cout << "preprocess_Hx_batchGPU: t[comm,gemm,reduction,tot]="
+               << time_comm1+time_comm2 << "," << time_gemm << "," << time_reduction
+               << "," << tools::get_duration(t1-t0) 
+               << std::endl;
+            analyze_tcommgpu<Tm>(ndim,time_comm1,time_comm2); 
             oper_timer.tcommgpu += time_comm1+time_comm2;
             oper_timer.sigma.analysis();
          }
@@ -163,7 +175,7 @@ namespace ctns{
                << " maxthreads=" << maxthreads
                << std::endl;
          }
-
+         auto t0 = tools::get_time();
          double time_comm1=0.0, time_comm2=0.0;
          double time_inter=0.0;
          double time_gemm=0.0;
@@ -255,13 +267,12 @@ namespace ctns{
 
          // timing
          if(rank==0){
-            std::cout << "preprocess_Hx_batchDirectGPU: t[comm,inter,gemm,reduction]="
-                      << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction 
-                      << std::endl;
-            std::cout << " t[comm(intra)]=" << time_comm1
-               << " speed=" << 2*ndim/time_comm1/std::pow(1024,3) << "GB/s" 
-               << " t[comm(inter)]=" << time_comm2
-               << " speed=" << 2*ndim/time_comm2/std::pow(1024,3) << "GB/s" 
+            auto t1 = tools::get_time();
+            std::cout << "preprocess_Hx_batchDirectGPU: t[comm,inter,gemm,reduction,tot]="
+               << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction
+               << "," << tools::get_duration(t1-t0)
+               << std::endl;
+            analyze_tcommgpu<Tm>(ndim,time_comm1,time_comm2);
             oper_timer.tcommgpu += time_comm1+time_comm2;
             oper_timer.sigma.analysis();
          }
@@ -292,7 +303,7 @@ namespace ctns{
                << " maxthreads=" << maxthreads
                << std::endl;
          }
-
+         auto t0 = tools::get_time();
          double time_comm1=0.0, time_comm2=0.0;
          double time_gemm=0.0;
          double time_reduction=0.0;
@@ -374,13 +385,12 @@ namespace ctns{
 
          // timing
          if(rank==0){
-            std::cout << "preprocess_Hx_batchGPUSingle: t[comm,gemm,reduction]="
-                      << time_comm1+time_comm2 << "," << time_gemm << "," << time_reduction 
-                      << std::endl;
-            std::cout << " t[comm(intra)]=" << time_comm1
-               << " speed=" << 2*ndim/time_comm1/std::pow(1024,3) << "GB/s" 
-               << " t[comm(inter)]=" << time_comm2
-               << " speed=" << 2*ndim/time_comm2/std::pow(1024,3) << "GB/s" 
+            auto t1 = tools::get_time();
+            std::cout << "preprocess_Hx_batchGPUSingle: t[comm,gemm,reduction,tot]="
+               << time_comm1+time_comm2 << "," << time_gemm << "," << time_reduction 
+               << "," << tools::get_duration(t1-t0)
+               << std::endl;
+            analyze_tcommgpu<Tm>(ndim,time_comm1,time_comm2);
             oper_timer.tcommgpu += time_comm1+time_comm2;
             oper_timer.sigma.analysis();
          }
@@ -412,7 +422,7 @@ namespace ctns{
                << " maxthreads=" << maxthreads
                << std::endl;
          }
-
+         auto t0 = tools::get_time();
          double time_comm1=0.0, time_comm2=0.0;
          double time_inter=0.0;
          double time_gemm=0.0;
@@ -429,7 +439,7 @@ namespace ctns{
          ptrs[4] = opaddr[4];
          ptrs[5] = xGPU;
          ptrs[6] = dev_workspace + 2*ndim;
-         
+
          GPUmem.memset(yGPU, ndim*sizeof(Tm));
 
          // from xCPU to x &  memset yGPU
@@ -500,13 +510,12 @@ namespace ctns{
 
          // timing
          if(rank==0){
-            std::cout << "preprocess_Hx_batchDirectGPUSingle: t[comm,inter,gemm,reduction]="
-                      << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction 
-                      << std::endl;
-            std::cout << " t[comm(intra)]=" << time_comm1
-               << " speed=" << 2*ndim/time_comm1/std::pow(1024,3) << "GB/s" 
-               << " t[comm(inter)]=" << time_comm2
-               << " speed=" << 2*ndim/time_comm2/std::pow(1024,3) << "GB/s" 
+            auto t1 = tools::get_time();
+            std::cout << "preprocess_Hx_batchDirectGPUSingle: t[comm,inter,gemm,reduction,tot]="
+               << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction
+               << "," << tools::get_duration(t1-t0)
+               << std::endl;
+            analyze_tcommgpu<Tm>(ndim,time_comm1,time_comm2);
             oper_timer.tcommgpu += time_comm1+time_comm2;
             oper_timer.sigma.analysis();
          }

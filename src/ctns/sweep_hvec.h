@@ -352,10 +352,13 @@ namespace ctns{
             // BatchGEMM on GPU: symbolic formulae + hintermediates + preallocation of workspace
 
             // setup addresses for GPU
-            for(int i=0; i<dots+2; i++){
-               const auto& tqops = qops_pool.at(fneed[i]);
-               assert(tqops.avail_gpu());
-               dev_opaddr[i] = tqops._dev_data;
+            size_t opertot = 0;
+            for(const auto& pr : qops_dict){
+               const auto& key = pr.first;
+               const auto& qops = pr.second;
+               assert(qops.avail_gpu());
+               dev_opaddr[oploc.at(key)] = qops._dev_data;
+               opertot += qops.size();
             }
             size_t gpumem_oper = sizeof(Tm)*opertot;
             if(rank==0 && schd.ctns.verbose>0){

@@ -86,7 +86,7 @@ namespace ctns{
                      auto t0 = tools::get_time();
                      xgemm_batch_gpu_merged(mmbatch2[k][i], mmbatch2[k][i+1], ptrs);
                      this->deviceSync();
-                     auto t1 = = tools::get_time();
+                     auto t1 = tools::get_time();
                      oper_timer.sigma.tHx[i] += tools::get_duration(t1-t0);
                      oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost + mmbatch2[k][i+1].cost; 
                   } // i

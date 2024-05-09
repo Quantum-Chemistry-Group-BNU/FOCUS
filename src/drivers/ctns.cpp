@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include "core/perf.h"
 #include "io/io.h"
 #include "io/input.h"
 #include "ci/ci_header.h"
@@ -198,6 +199,10 @@ int main(int argc, char *argv[]){
    if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
       gpu_init(rank);
    }
+#endif
+
+#ifndef SERIAL
+   if(schd.perfcomm) perfcomm<double>(world, 1ULL<<schd.perfcomm);
 #endif
 
    if(schd.ctns.qkind == "rZ2"){
