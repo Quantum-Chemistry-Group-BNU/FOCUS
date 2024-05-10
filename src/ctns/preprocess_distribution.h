@@ -114,7 +114,7 @@ namespace ctns{
             std::cout << " (sl,sr,sc1,sc2)="
                << sl << "," << sr << "," << sc1 << "," << sc2
                << " ifNC=" << ifNC
-               << endl;
+               << std::endl;
             auto cindex_l = oper_index_opC(suppl, ifkr);
             auto cindex_r = oper_index_opC(suppr, ifkr);
             auto cindex_c1 = oper_index_opC(suppc1, ifkr);
