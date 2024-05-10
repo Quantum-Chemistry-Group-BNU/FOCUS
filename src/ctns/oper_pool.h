@@ -183,7 +183,7 @@ namespace ctns{
          if(!async_fetch){
             oper_fetch(qstore, fneed, fetch, iomode, debug);
          }else{
-            thread_fetch = std::thread(&ctns::oper_fetch<ifab,Tm>, std::ref(qstore), fneed, fetch, iomode, debug);
+            thread_fetch = std::thread(&ctns::oper_fetch<ifab,Tm>, std::ref(qstore), fneed, fetch, iomode, false);
          }
          if(debug){
             this->display("out");
@@ -316,7 +316,7 @@ namespace ctns{
             oper_save(iomode, frop, qstore[frop], debug);
          }else{
             thread_save = std::thread(&ctns::oper_save<ifab,Tm>, iomode,
-                  frop, std::cref(qstore[frop]), debug);
+                  frop, std::cref(qstore[frop]), false);
          }
          frop_prev = frop;
          if(debug){
@@ -338,7 +338,7 @@ namespace ctns{
          if(!async_remove){
             ctns::oper_remove(fdel, debug);
          }else{
-            thread_remove = std::thread(&ctns::oper_remove, fdel, debug);
+            thread_remove = std::thread(&ctns::oper_remove, fdel, false);
          }
          if(debug){
             auto t1 = tools::get_time();
