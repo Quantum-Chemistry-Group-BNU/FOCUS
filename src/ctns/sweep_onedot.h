@@ -205,8 +205,8 @@ namespace ctns{
          // 4. save on disk
          qops_pool.finalize_dot(fneed, fneed_next, frop, fdel,
                schd.ctns.async_save,
-               schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu,
                schd.ctns.async_remove);
+
          // save for restart
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
 

@@ -107,11 +107,7 @@ namespace ctns{
          qops.mpirank = rank;
          qops.ifdist2 = true;
          // initialize
-         if(!schd.ctns.async_tocpu){
-            qops.init();
-         }else{
-            qops.setup_opdict();
-         }
+         qops.init();
          if(debug){ 
             qops.print("qops");
             get_sys_status();
@@ -559,11 +555,13 @@ namespace ctns{
             }
 #endif // SERIAL
             timing.tf10 = tools::get_time();
-            if(!schd.ctns.async_tocpu) qops.to_cpu();
+            
+            qops.to_cpu();
             timing.tf11 = tools::get_time();
-
+            
             GPUmem.deallocate(dev_site, gpumem_site);
             if(blksize > 0) GPUmem.deallocate(dev_workspace, gpumem_batch);
+            
             auto tf = tools::get_time();
             if(rank == 0){
                std::cout << "timing: comm[opS,opH]=" << tools::get_duration(timing.tf10-timing.tf9)
@@ -572,7 +570,6 @@ namespace ctns{
                   << " T(tot)=" << tools::get_duration(tf-timing.tf9)
                   << std::endl;
             }
-
 #endif // GPU
 
          }else{
@@ -583,8 +580,8 @@ namespace ctns{
 
          // debug 
          if(debug_oper_renorm && rank == 0){
-            if(schd.ctns.ifnccl || schd.ctns.async_tocpu){
-               std::cout << "error: debug should not be invoked with ifnccl or async_tocpu!" << std::endl;
+            if(schd.ctns.ifnccl){
+               std::cout << "error: debug should not be invoked with ifnccl!" << std::endl;
                exit(1);
             }
             const int target = -1;
@@ -652,10 +649,6 @@ namespace ctns{
          // 2. reduce opS and opH 
 #ifndef SERIAL
          if(ifdist1 and size > 1 and !schd.ctns.ifnccl){
-            if(alg_renorm>=10 && schd.ctns.async_tocpu){
-               std::cout << "error: ifdist1 and async_tocpu are not compatible unless ifnccl=true!" << std::endl;
-               exit(1);
-            }
             // Sp[iproc] += \sum_i Sp[i]
             auto opS_index = qops.oper_index_op('S');
             size_t totsize = 0;
@@ -689,8 +682,7 @@ namespace ctns{
 #endif // SERIAL
 
          // qops is available on CPU, consistency check
-         if(!schd.ctns.async_tocpu){
-
+         {
             // 3. consistency check for Hamiltonian
             const auto& opH = qops('H').at(0);
             // NAN check
@@ -715,7 +707,6 @@ namespace ctns{
                   << std::endl;
                exit(1);
             }
-            
             // check against explicit construction
             if(debug_oper_rbasis){
                for(const auto& key : qops.oplist){
@@ -729,9 +720,8 @@ namespace ctns{
                   }
                }
             }
-
-         } // async_tocpu
-
+         } // end of consistency check
+ 
          timing.tf13 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();

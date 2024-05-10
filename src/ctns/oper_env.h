@@ -204,15 +204,14 @@ namespace ctns{
 
                // c. save operators to disk
                qops_pool.join_and_erase(fneed);
-               qops_pool.save_to_disk(frop, schd.ctns.async_save, 
-                     schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu);
+               qops_pool.save_to_disk(frop, schd.ctns.async_save);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();
 
                if(debug){ 
-                  timing.analysis("local", schd.ctns.verbose>0);
-                  timing_sweep.accumulate(timing, "sweep", schd.ctns.verbose>0);
+                  timing.analysis("local oper_env", schd.ctns.verbose>0);
+                  timing_sweep.accumulate(timing, "sweep oper_env", schd.ctns.verbose>0);
                }
             }
          } // idx

@@ -216,45 +216,17 @@ namespace ctns{
          timing.tf = tools::get_time();
 
          // 4. save on disk 
-        
-         auto t0 = tools::get_time();
-         qops_pool.join_and_erase(fneed, fneed_next);
-
-         icomb.world.barrier();
-
-         auto t1 = tools::get_time();
-         qops_pool.save_to_disk(frop, schd.ctns.async_save,
-               schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu, fneed_next);
-         auto t2 = tools::get_time();
-         // Remove fdel on the same bond as frop but with opposite direction:
-         // NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing
-         // in the later configuration should wait until the file from the
-         // former configuration has been saved! Therefore, oper_remove should
-         // come later than save, which contains the synchronization!
-         qops_pool.remove_from_disk(fdel, schd.ctns.async_remove);
-         auto t3 = tools::get_time();
-         if(debug){
-            std::cout << "TIMING FOR cleanup: " << tools::get_duration(t3-t0)
-               << " T(join&erase/save/remove)="
-               << tools::get_duration(t1-t0) << ","
-               << tools::get_duration(t2-t1) << ","
-               << tools::get_duration(t3-t2)
-               << std::endl;
-         }
-         
-         /*
          qops_pool.finalize_dot(fneed, fneed_next, frop, fdel,
                schd.ctns.async_save,
-               schd.ctns.alg_renorm>10 && schd.ctns.async_tocpu,
                schd.ctns.async_remove);
-         */
+         
          // save for restart
          if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
 
          timing.t1 = tools::get_time();
          if(debug){
             get_sys_status();
-            timing.analysis("local", schd.ctns.verbose>0);
+            timing.analysis("local opt", schd.ctns.verbose>0);
          }
       }
 

@@ -121,8 +121,6 @@ void params_ctns::read(ifstream& istrm){
          async_save = true;
       }else if(line.substr(0,12)=="async_remove"){
          async_remove = true;
-      }else if(line.substr(0,11)=="async_tocpu"){
-         async_tocpu = true;
       }else if(line.substr(0,6)=="ifnccl"){
          ifnccl = true;
       }else if(line.substr(0,5)=="iroot"){
@@ -204,19 +202,14 @@ void params_ctns::read(ifstream& istrm){
    assert(alg_hcoper <= 2);
    assert(alg_rcoper <= 1);
    // diag gpu check
-   if(diagcheck && (async_fetch || async_tocpu)){
-      std::cout << "error: diagcheck should not be used with async_fetch/async_tocpu!" << std::endl;
+   if(diagcheck && async_fetch){
+      std::cout << "error: diagcheck should not be used with async_fetch!" << std::endl;
       exit(1);
    }
    // nccl
    bool usecpu = (alg_hvec <= 10 || alg_renorm <=10);
    if(usecpu && ifnccl){
       std::cout << "error: ifnccl=true only for alg_hvec/alg_renorm>10 [gpu]!" << std::endl;
-      exit(1);
-   }
-   // async_tocpu
-   if(usecpu && async_tocpu){
-      std::cout << "error: async_tocpu=true only for alg_hvec/alg_renorm>10 [gpu]!" << std::endl;
       exit(1);
    }
 }
@@ -293,7 +286,6 @@ void params_ctns::print() const{
    cout << "async_fetch = " << async_fetch << endl;
    cout << "async_save = " << async_save << endl;
    cout << "async_remove = " << async_remove << endl;
-   cout << "async_tocpu = " << async_tocpu << endl;
    cout << "ifnccl = " << ifnccl << endl;
    // sampling
    cout << "iroot = " << iroot << endl;

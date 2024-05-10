@@ -81,7 +81,7 @@ namespace ctns{
                   const std::vector<std::string> fneed_next,
                   const bool ifkeepcoper); 
             // save renormalized operator to file 
-            void save_to_disk(const std::string frop, const bool async_save, const bool async_tocpu, 
+            void save_to_disk(const std::string frop, const bool async_save,
                   const std::vector<std::string> fneed_next={});
             // remove fdel [in the same bond as frop] from disk
             void remove_from_disk(const std::string fdel, const bool async_remove);
@@ -91,7 +91,6 @@ namespace ctns{
                   const std::string frop,
                   const std::string fdel, 
                   const bool async_save, 
-                  const bool async_tocpu,
                   const bool async_remove);
             // join
             void join_all(){
@@ -302,38 +301,22 @@ namespace ctns{
          }
       }
 
-   template <bool ifab, typename Tm>
-      void oper_dump(qoper_dict<ifab,Tm>& qops,
-            const std::string frop,
-            const bool async_tocpu,
-            const int iomode,
-            const bool debug){
-#ifdef GPU
-         if(async_tocpu){
-            qops.allocate_cpu();
-            qops.to_cpu();
-         }
-#endif
-         oper_save(iomode, frop, qops, debug);
-      }
-
    // save to disk
    template <bool ifab, typename Tm>
       void qoper_pool<ifab,Tm>::save_to_disk(const std::string frop, 
             const bool async_save, 
-            const bool async_tocpu,
             const std::vector<std::string> fneed_next){
          auto t0 = tools::get_time();
          if(debug){
             std::cout << "ctns::qoper_pool::save_to_disk: async_save=" << async_save 
-               << " async_tocpu=" << async_tocpu << " frop=" << frop << std::endl;
+               << " frop=" << frop << std::endl;
          }
          assert(!thread_save.joinable()); 
          if(!async_save){
-            oper_dump(qstore[frop], frop, async_tocpu, iomode, debug);
+            oper_save(iomode, frop, qstore[frop], debug);
          }else{
-            thread_save = std::thread(&ctns::oper_dump<ifab,Tm>, std::ref(qstore[frop]), 
-                  frop, async_tocpu, iomode, debug);
+            thread_save = std::thread(&ctns::oper_save<ifab,Tm>, iomode,
+                  frop, std::cref(qstore[frop]), debug);
          }
          frop_prev = frop;
          if(debug){
@@ -371,7 +354,6 @@ namespace ctns{
                   const std::string frop,
                   const std::string fdel, 
                   const bool async_save, 
-                  const bool async_tocpu,
                   const bool async_remove){
          auto t0 = tools::get_time();
          if(debug){
@@ -379,7 +361,7 @@ namespace ctns{
          }
          this->join_and_erase(fneed, fneed_next);
          auto t1 = tools::get_time();
-         this->save_to_disk(frop, async_save, async_tocpu, fneed_next);
+         this->save_to_disk(frop, async_save, fneed_next);
          auto t2 = tools::get_time();
          // Remove fdel on the same bond as frop but with opposite direction:
          // NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 

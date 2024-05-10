@@ -62,6 +62,7 @@ namespace ctns{
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
+               auto t0x = tools::get_time();
                const auto& dbond = sweeps.seq[ibond];
                auto tp0 = icomb.topo.get_type(dbond.p0);
                auto tp1 = icomb.topo.get_type(dbond.p1);
@@ -87,8 +88,8 @@ namespace ctns{
                   // timing 
                   if(debug){
                      const auto& timing = sweeps.opt_timing[isweep][ibond];
-                     sweeps.timing_sweep[isweep].accumulate(timing, "sweep", schd.ctns.verbose>0);
-                     timing_global.accumulate(timing, "global", schd.ctns.verbose>0);
+                     sweeps.timing_sweep[isweep].accumulate(timing, "sweep opt", schd.ctns.verbose>0);
+                     timing_global.accumulate(timing, "global opt", schd.ctns.verbose>0);
                   }
                }
                // stop just for debug [done it for rank-0]
@@ -110,7 +111,7 @@ namespace ctns{
          if(debug){
             auto t1 = tools::get_time();
             tools::timing("ctns::sweep_opt", t0, t1);
-            if(schd.ctns.verbose>0) timing_global.print("global");
+            if(schd.ctns.verbose>0) timing_global.print("global opt");
          }
       }
 

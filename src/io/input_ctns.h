@@ -52,7 +52,7 @@ namespace input{
                   & batchhvec & batchrenorm & batchmem
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
-                  & iomode & async_fetch & async_save & async_remove & async_tocpu & ifnccl
+                  & iomode & async_fetch & async_save & async_remove & ifnccl
                   & iroot & nsample & ndetprt
                   & tosu2 & thresh_tosu2 & singlet
                   & diagcheck; 
@@ -119,7 +119,6 @@ namespace input{
          bool async_fetch = false;
          bool async_save = false;
          bool async_remove = false;
-         bool async_tocpu = false;
          bool ifnccl = false;
          // sampling
          int iroot = 0;
