@@ -6,8 +6,6 @@
 #include "oper_dict.h"
 #include "ctns_comb.h"
 
-#include <stdlib.h>     //for using the function sleep
-
 // compression
 #include <boost/iostreams/filtering_stream.hpp>
 
@@ -19,8 +17,6 @@ namespace ext { namespace bio = ext::boost::iostreams; }
 #ifdef ZSTD
 #include <boost/iostreams/filter/zstd.hpp>
 #endif
-
-#include "../experiment/fp_codec.h"
 
 namespace ctns{ 
 
@@ -91,21 +87,10 @@ namespace ctns{
             out.reset();
             ofs2.close();
 #endif
-         }else if(iomode == 3){
-            std::ofstream ofs2(fname+".op", std::ios::binary);
-            const double prec = 1.e-14;
-            FPCodec<double> fp(prec);
-            fp.write_array(ofs2, (double*)qops._data, qops._size);
-            ofs2.close(); 
          }else{
             std::cout << "error: no such option in oper_save! iomode=" << iomode << std::endl;
             exit(1); 
          }
-
-         /*
-            std::cout << "saving operators fname=" << fname << std::endl; 
-            if(qops._size > 1.e6) sleep(5); // make the programme waiting for 10 seconds
-            */
 
          auto t2 = tools::get_time();
          if(debug_oper_io and debug){
@@ -173,11 +158,6 @@ namespace ctns{
             in.reset();
             ifs2.close();
 #endif
-         }else if(iomode == 3){
-            std::ifstream ifs2(fname+".op", std::ios::binary);
-            FPCodec<double> fp; 
-            fp.read_array(ifs2, (double*)qops._data, qops._size);
-            ifs2.close();
          }else{
             std::cout << "error: no such option in oper_load! iomode=" << iomode << std::endl;
             exit(1); 
