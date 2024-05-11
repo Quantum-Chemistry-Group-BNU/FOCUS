@@ -366,7 +366,9 @@
    - spin-adapted case: start from cisolver=0 & guess=0 
       - symbolic_formulae_onedot_su2.h [DONE@2024/05/11]
       - preprocess_hmu.h for spin-adapted case: l|cr or lc|r [DONE@2024/05/11]
-      - onedot_diag_GPU:
+      - onedot_diag:
+         - onedot_diag_su2.h:
+         - onedot_diagGPU_su2.h:
       - propagation of initial guess & finalization?  
          - LC/CRcouple
 

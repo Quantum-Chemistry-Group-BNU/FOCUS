@@ -2,14 +2,12 @@
 #define SWEEP_TWODOT_DIAG_SU2_H
 
 #include "../oper_dict.h"
+#include "sweep_onedot_diag_su2.h"
 
 namespace ctns{
 
    const bool debug_twodot_diag_su2 = false;
    extern const bool debug_twodot_diag_su2;
-
-   const double thresh_diag_angular = 1.e-14;
-   extern const double thresh_diag_angular;
 
    template <typename Tm>
       void twodot_diag(const opersu2_dictmap<Tm>& qops_dict,
@@ -68,8 +66,7 @@ namespace ctns{
          const auto& Hr  = rqops('H').at(0);
          const auto& Hc1 = c1qops('H').at(0);
          const auto& Hc2 = c2qops('H').at(0);
-         int br, bc, bm, bv, tslc1, tsc2r, tstot;
-         tstot = wf.info.sym.ts();
+         int br, bc, bm, bv, tslc1, tsc2r;
          for(int i=0; i<wf.info._nnzaddr.size(); i++){
             auto key = wf.info._nnzaddr[i];
             br = std::get<0>(key);
@@ -78,10 +75,6 @@ namespace ctns{
             bv = std::get<3>(key);
             tslc1 = std::get<4>(key);
             tsc2r = std::get<5>(key);
-            int tsl  = wf.info.qrow.get_sym(br).ts();
-            int tsr  = wf.info.qcol.get_sym(bc).ts();
-            int tsc1 = wf.info.qmid.get_sym(bm).ts();
-            int tsc2 = wf.info.qver.get_sym(bv).ts(); 
             int rdim = wf.info.qrow.get_dim(br);
             int cdim = wf.info.qcol.get_dim(bc);
             int mdim = wf.info.qmid.get_dim(bm);

@@ -118,10 +118,10 @@ namespace ctns{
                   }
               
                   // check consistency with diag
+                  double diff = 0.0;
                   if(ifCheckDiag){
                      std::cout << "CheckDiag: ndim=" << ndim << std::endl;
                      std::cout << std::setprecision(12);
-                     double diff = 0.0;
                      for(int i=0; i<ndim; i++){
                         std::cout << "i=" << i 
                            << " H(i,i)=" << H(i,i) 
@@ -130,11 +130,6 @@ namespace ctns{
                            << std::endl;
                         diff += std::abs(Diag[i]-H(i,i));
                      } // i
-                     if(diff>1.e-10){
-                        std::cout << "error: |Diag[i]-H(i,i)| is too large! diff=" << diff << std::endl;
-                        exit(1);
-                     }
-                     std::cout << "CheckDiag passed successfully!" << std::endl;
                   }
 
                   // solve eigenvalue problem by diagonalization
@@ -142,6 +137,14 @@ namespace ctns{
                   std::cout << "eigenvalues:\n" << std::setprecision(12);
                   for(size_t i=0; i<ndim; i++){
                      std::cout << "i=" << i << " e=" << e[i] << std::endl;
+                  }
+                     
+                  if(ifCheckDiag){
+                     if(diff>1.e-10){
+                        std::cout << "error: |Diag[i]-H(i,i)| is too large! diff=" << diff << std::endl;
+                        exit(1);
+                     }
+                     std::cout << "CheckDiag passed successfully!" << std::endl;
                   }
                } // rank-0
 #ifndef SERIAL

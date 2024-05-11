@@ -22,7 +22,6 @@ namespace ctns{
             // onedot
             template <bool y=ifab, std::enable_if_t<y,int> = 0> 
                void gen_Hxlist2(const int alg_hcoper,
-                     const bool ifNC,
                      Tm** opaddr,
                      const qinfo3type<ifab,Tm>& wf_info, 
                      Hxlist2<Tm>& Hxlst2,
@@ -32,7 +31,6 @@ namespace ctns{
                      const bool ifdagger) const;
             template <bool y=ifab, std::enable_if_t<!y,int> = 0> 
                void gen_Hxlist2(const int alg_hcoper,
-                     const bool ifNC,
                      Tm** opaddr,
                      const qinfo3type<ifab,Tm>& wf_info, 
                      Hxlist2<Tm>& Hxlst2,
@@ -43,7 +41,6 @@ namespace ctns{
             // twodot
             template <bool y=ifab, std::enable_if_t<y,int> = 0> 
                void gen_Hxlist2(const int alg_hcoper,
-                     const bool ifNC,
                      Tm** opaddr,
                      const qinfo4type<ifab,Tm>& wf_info, 
                      Hxlist2<Tm>& Hxlst2,
@@ -53,7 +50,6 @@ namespace ctns{
                      const bool ifdagger) const;
             template <bool y=ifab, std::enable_if_t<!y,int> = 0> 
                void gen_Hxlist2(const int alg_hcoper,
-                     const bool ifNC,
                      Tm** opaddr,
                      const qinfo4type<ifab,Tm>& wf_info, 
                      Hxlist2<Tm>& Hxlst2,
@@ -154,7 +150,6 @@ namespace ctns{
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
       void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
-            const bool ifNC,
             Tm** opaddr,
             const qinfo3type<ifab,Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
@@ -238,7 +233,6 @@ namespace ctns{
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<!y,int>>
       void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
-            const bool ifNC,
             Tm** opaddr,
             const qinfo3type<ifab,Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
@@ -250,7 +244,7 @@ namespace ctns{
          // sigma[br',bc',bm']
          int bo[3], tstot;
          tstot = wf_info.sym.ts();
-         if(ifNC){
+         if(wf_info.couple == CRcouple){
             // l|cr: CRcouple
             int tscrp;
             for(int i=0; i<wf_info._nnzaddr.size(); i++){
@@ -486,7 +480,7 @@ namespace ctns{
                   } // bi1
                } // bi0
             } // i
-         } // ifNC
+         } // couple
       }
 
    // twodot:
@@ -496,7 +490,6 @@ namespace ctns{
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
       void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
-            const bool ifNC,
             Tm** opaddr,
             const qinfo4type<ifab,Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
@@ -587,7 +580,6 @@ namespace ctns{
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<!y,int>>
       void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,       
-            const bool ifNC,
             Tm** opaddr,
             const qinfo4type<ifab,Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,

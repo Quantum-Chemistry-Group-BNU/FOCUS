@@ -147,7 +147,6 @@ namespace ctns{
          // 3.1 diag 
          double* diag = new double[ndim];
          std::cout << "diag is to be developed and checked!" << ifab << std::endl;
-/*
          if(alg_hvec <= 10){
             onedot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifdef GPU
@@ -155,7 +154,6 @@ namespace ctns{
             onedot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl, schd.ctns.diagcheck);
 #endif
          }
-*/
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
          // executes the preconditioning in Davidson's algorithm

@@ -137,7 +137,7 @@ namespace ctns{
             int rdim = blk.dim0;
             int cdim = blk.dim1;
             int mdim = blk.dim2;
-            // Ol*Or 
+            // Ol*Oc 
             const auto blkl = Ol(br,br);
             const auto blkc = Oc(bm,bm);
             size_t ircm = wf.info._offset[idx]-1;
