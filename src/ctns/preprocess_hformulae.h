@@ -70,14 +70,17 @@ namespace ctns{
          auto ta = tools::get_time();
 
          // 2. from Hmu to expanded block forms
+         const auto& lqops = qops_dict.at("l");
+         const auto& rqops = qops_dict.at("r");
+         const bool ifNC = lqops.size() <= rqops.size();
          blksize = 0;
          blksize0 = 0;
          cost = 0.0;
          int nnzblk = wf.info._nnzaddr.size();
          Hxlst2.resize(nnzblk);
          for(int it=0; it<hsize; it++){
-            Hmu_vec[it].gen_Hxlist2(alg_hcoper, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, false);
-            Hmu_vec[it].gen_Hxlist2(alg_hcoper, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, true);
+            Hmu_vec[it].gen_Hxlist2(alg_hcoper, ifNC, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, false);
+            Hmu_vec[it].gen_Hxlist2(alg_hcoper, ifNC, opaddr, wf.info, Hxlst2, blksize, blksize0, cost, true);
          }
          auto tb = tools::get_time();
 

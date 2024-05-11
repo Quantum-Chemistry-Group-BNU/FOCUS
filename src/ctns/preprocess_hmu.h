@@ -21,42 +21,46 @@ namespace ctns{
                   const std::map<std::string,int>& oploc);
             // onedot
             template <bool y=ifab, std::enable_if_t<y,int> = 0> 
-            void gen_Hxlist2(const int alg_hcoper,
-                  Tm** opaddr,
-                  const qinfo3type<ifab,Tm>& wf_info, 
-                  Hxlist2<Tm>& Hxlst2,
-                  size_t& blksize,
-                  size_t& blksize0,
-                  double& cost,
-                  const bool ifdagger) const;
+               void gen_Hxlist2(const int alg_hcoper,
+                     const bool ifNC,
+                     Tm** opaddr,
+                     const qinfo3type<ifab,Tm>& wf_info, 
+                     Hxlist2<Tm>& Hxlst2,
+                     size_t& blksize,
+                     size_t& blksize0,
+                     double& cost,
+                     const bool ifdagger) const;
             template <bool y=ifab, std::enable_if_t<!y,int> = 0> 
-            void gen_Hxlist2(const int alg_hcoper,
-                  Tm** opaddr,
-                  const qinfo3type<ifab,Tm>& wf_info, 
-                  Hxlist2<Tm>& Hxlst2,
-                  size_t& blksize,
-                  size_t& blksize0,
-                  double& cost,
-                  const bool ifdagger) const;
+               void gen_Hxlist2(const int alg_hcoper,
+                     const bool ifNC,
+                     Tm** opaddr,
+                     const qinfo3type<ifab,Tm>& wf_info, 
+                     Hxlist2<Tm>& Hxlst2,
+                     size_t& blksize,
+                     size_t& blksize0,
+                     double& cost,
+                     const bool ifdagger) const;
             // twodot
             template <bool y=ifab, std::enable_if_t<y,int> = 0> 
-            void gen_Hxlist2(const int alg_hcoper,
-                  Tm** opaddr,
-                  const qinfo4type<ifab,Tm>& wf_info, 
-                  Hxlist2<Tm>& Hxlst2,
-                  size_t& blksize,
-                  size_t& blksize0,
-                  double& cost,
-                  const bool ifdagger) const;
+               void gen_Hxlist2(const int alg_hcoper,
+                     const bool ifNC,
+                     Tm** opaddr,
+                     const qinfo4type<ifab,Tm>& wf_info, 
+                     Hxlist2<Tm>& Hxlst2,
+                     size_t& blksize,
+                     size_t& blksize0,
+                     double& cost,
+                     const bool ifdagger) const;
             template <bool y=ifab, std::enable_if_t<!y,int> = 0> 
-            void gen_Hxlist2(const int alg_hcoper,
-                  Tm** opaddr,
-                  const qinfo4type<ifab,Tm>& wf_info, 
-                  Hxlist2<Tm>& Hxlst2,
-                  size_t& blksize,
-                  size_t& blksize0,
-                  double& cost,
-                  const bool ifdagger) const;
+               void gen_Hxlist2(const int alg_hcoper,
+                     const bool ifNC,
+                     Tm** opaddr,
+                     const qinfo4type<ifab,Tm>& wf_info, 
+                     Hxlist2<Tm>& Hxlst2,
+                     size_t& blksize,
+                     size_t& blksize0,
+                     double& cost,
+                     const bool ifdagger) const;
          public:
             bool parity[4] = {false,false,false,false};
             bool dagger[4] = {false,false,false,false};
@@ -73,8 +77,8 @@ namespace ctns{
             // onedot: {{S1,S2,S12},{S12,S3,S123}} ((lc)r)
             //         {{S2,S3,S23},{S1,S23,S123}} (l(cr)}
             int tspins[9] = {-1,-1,-1,
-                             -1,-1,-1,
-                             -1,-1,-1};
+               -1,-1,-1,
+               -1,-1,-1};
       };
 
    template <bool ifab, typename Tm>
@@ -150,6 +154,7 @@ namespace ctns{
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
       void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
+            const bool ifNC,
             Tm** opaddr,
             const qinfo3type<ifab,Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
@@ -228,11 +233,12 @@ namespace ctns{
             Hxlst2[i].push_back(Hxblk);
          } // i
       }
- 
+
    // su2 case:
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<!y,int>>
       void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
+            const bool ifNC,
             Tm** opaddr,
             const qinfo3type<ifab,Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
@@ -241,9 +247,246 @@ namespace ctns{
             double& cost,
             const bool ifdagger) const{
          if(this->empty()) return;
-
-         std::cout << "not implemented yet!" << std::endl;
-         exit(1);
+         // sigma[br',bc',bm']
+         int bo[3], tstot;
+         tstot = wf_info.sym.ts();
+         if(ifNC){
+            // l|cr: CRcouple
+            int tscrp;
+            for(int i=0; i<wf_info._nnzaddr.size(); i++){
+               auto key = wf_info._nnzaddr[i];
+               bo[0] = std::get<0>(key); // br
+               bo[1] = std::get<1>(key); // bc
+               bo[2] = std::get<2>(key); // bm
+               tscrp = std::get<3>(key); // tscr
+               size_t offout = wf_info.get_offset(bo[0],bo[1],bo[2],tscrp);
+               assert(offout > 0);
+               const auto& bi0vec = this->identity(0)? std::vector<int>({bo[0]}) :
+                  (dagger[0]^ifdagger? info[0]->_bc2br[bo[0]] : info[0]->_br2bc[bo[0]]);
+               const auto& bi1vec = this->identity(1)? std::vector<int>({bo[1]}) :
+                  (dagger[1]^ifdagger? info[1]->_bc2br[bo[1]] : info[1]->_br2bc[bo[1]]);
+               const auto& bi2vec = this->identity(2)? std::vector<int>({bo[2]}) :
+                  (dagger[2]^ifdagger? info[2]->_bc2br[bo[2]] : info[2]->_br2bc[bo[2]]);
+               for(const auto& bi0 : bi0vec){
+                  for(const auto& bi1 : bi1vec){
+                     for(const auto& bi2 : bi2vec){
+                        int bi[3]; // wf
+                        bi[0] = bi0;
+                        bi[1] = bi1;
+                        bi[2] = bi2;
+                        // setup Scr
+                        int tslp = wf_info.qrow.get_sym(bo[0]).ts(); // l
+                        int tsrp = wf_info.qcol.get_sym(bo[1]).ts(); // r
+                        int tscp = wf_info.qmid.get_sym(bo[2]).ts(); // c
+                        int tsl  = wf_info.qrow.get_sym(bi[0]).ts();
+                        int tsr  = wf_info.qcol.get_sym(bi[1]).ts();
+                        int tsc  = wf_info.qmid.get_sym(bi[2]).ts();
+                        for(int tscr=std::abs(tsc-tsr); tscr<=tsc+tsr; tscr+=2){
+                           size_t offin = wf_info.get_offset(bi[0],bi[1],bi[2],tscr);
+                           if(offin == 0) continue;
+                           // setup block
+                           Hxblock<Tm> Hxblk(3,terms,cterms,alg_hcoper);
+                           Hxblk.offin = offin-1;
+                           Hxblk.offout = offout-1;
+                           // update Hxblk.dagger/loc/off
+                           Tm coeff_coper = 1.0;
+                           bool skip = false;
+                           for(int k=0; k<3; k++){ // l,r,c
+                              if(this->identity(k)) continue;
+                              Hxblk.dagger[k] = dagger[k]^ifdagger; // (O1^d1)^d = O1^(d^d1)
+                              Hxblk.loc[k] = loc[k];
+                              size_t offset = Hxblk.dagger[k]? info[k]->get_offset(bi[k],bo[k]) : 
+                                 info[k]->get_offset(bo[k],bi[k]);
+                              assert(offset != 0);
+                              Hxblk.off[k] = off[k]+offset-1;
+                              // sgn from bar{bar{Ts}} = (-1)^2s Ts
+                              if(dagger[k] && ifdagger) coeff_coper *= parity[k]? -1.0 : 1.0;
+                              // special treatment of op[c2/c1] for NS symmetry
+                              if(k >= 2 && ((alg_hcoper==1 && terms>cterms) || alg_hcoper==2)){ 
+                                 assert(k == loc[k]); // op[c] cannot be intermediates
+                                 Tm coper = *(opaddr[loc[k]] + Hxblk.off[k]);
+                                 coeff_coper *= Hxblk.dagger[k]? tools::conjugate(coper) : coper;
+                                 if(std::abs(coeff_coper)<thresh_coper){
+                                    skip = true;
+                                    break;
+                                 }
+                              }
+                           } // k
+                           if(skip) continue;
+                           // sign factors due to spin: l|cr
+                           // (<Slp|Ol|Sl>)(<Scp|Oc|Sc><Srp|Or|Sr>)[ScrpScr])[Stot]
+                           coeff_coper *= std::sqrt((tslp+1.0)*(tscrp+1.0)*(tstot+1.0)*(tspins[5]+1.0))*
+                              fock::wigner9j(tslp,tscrp,tstot,tsl,tscr,tstot,tspins[3],tspins[4],tspins[5])*
+                              std::sqrt((tscp+1.0)*(tsrp+1.0)*(tscr+1.0)*(tspins[2]+1.0))*
+                              fock::wigner9j(tscp,tsrp,tscrp,tsc,tsr,tscr,tspins[0],tspins[1],tspins[2]);
+                           if(std::abs(coeff_coper)<thresh_coper) continue;
+                           // sign from adjoint: l|cr
+                           // tspins = (Sc,Sr,Scr),(Sl,Scr,Stot)
+                           // <Slp|Ol|Sl>
+                           if(!this->identity(0) && dagger[0]^ifdagger){
+                              int ts = tspins[3] + tslp - tsl;
+                              coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((tsl+1.0)/(tslp+1.0));
+                           }
+                           // <Srp|Or|Sr> 
+                           if(!this->identity(1) && dagger[1]^ifdagger){
+                              int ts = tspins[1] + tsrp - tsr;
+                              coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((tsr+1.0)/(tsrp+1.0));
+                           }
+                           // <Scp|Oc|Sc>
+                           if(!this->identity(2) && dagger[2]^ifdagger){
+                              int ts = tspins[0] + tscp - tsc;
+                              coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((tsc+1.0)/(tscp+1.0));
+                           }
+                           // compute sign due to parity
+                           Hxblk.coeff = (ifdagger? coeffH : coeff)*coeff_coper;
+                           int pl = wf_info.qrow.get_parity(bi[0]);
+                           int pc = wf_info.qmid.get_parity(bi[2]);
+                           if(parity[1] && (pl+pc)%2==1) Hxblk.coeff *= -1.0; // Or
+                           if(parity[2] && pl%2==1) Hxblk.coeff *= -1.0;  // Oc
+                           // setup dimsions
+                           Hxblk.dimin[0] = wf_info.qrow.get_dim(bi[0]);
+                           Hxblk.dimin[1] = wf_info.qcol.get_dim(bi[1]);
+                           Hxblk.dimin[2] = wf_info.qmid.get_dim(bi[2]);
+                           Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
+                           Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
+                           Hxblk.dimout[2] = wf_info.qmid.get_dim(bo[2]);
+                           Hxblk.size = Hxblk.dimout[0]*Hxblk.dimout[1]*Hxblk.dimout[2];
+                           Hxblk.setup();
+                           blksize = std::max(blksize, Hxblk.blksize);
+                           cost += Hxblk.cost;
+                           // Intermediates
+                           if(posInter != -1){
+                              Hxblk.posInter = posInter;
+                              Hxblk.lenInter = lenInter;
+                              Hxblk.offInter = offInter;
+                              Hxblk.ldaInter = ldaInter;
+                              blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
+                           }
+                           Hxlst2[i].push_back(Hxblk);
+                        } // tscr
+                     } // bi2
+                  } // bi1
+               } // bi0
+            } // i
+         }else{
+            // lc|r: LCcouple
+            int tslcp;
+            for(int i=0; i<wf_info._nnzaddr.size(); i++){
+               auto key = wf_info._nnzaddr[i];
+               bo[0] = std::get<0>(key); // br
+               bo[1] = std::get<1>(key); // bc
+               bo[2] = std::get<2>(key); // bm
+               tslcp = std::get<3>(key); // tslc
+               size_t offout = wf_info.get_offset(bo[0],bo[1],bo[2],tslcp);
+               assert(offout > 0);
+               const auto& bi0vec = this->identity(0)? std::vector<int>({bo[0]}) :
+                  (dagger[0]^ifdagger? info[0]->_bc2br[bo[0]] : info[0]->_br2bc[bo[0]]);
+               const auto& bi1vec = this->identity(1)? std::vector<int>({bo[1]}) :
+                  (dagger[1]^ifdagger? info[1]->_bc2br[bo[1]] : info[1]->_br2bc[bo[1]]);
+               const auto& bi2vec = this->identity(2)? std::vector<int>({bo[2]}) :
+                  (dagger[2]^ifdagger? info[2]->_bc2br[bo[2]] : info[2]->_br2bc[bo[2]]);
+               for(const auto& bi0 : bi0vec){
+                  for(const auto& bi1 : bi1vec){
+                     for(const auto& bi2 : bi2vec){
+                        int bi[3]; // wf
+                        bi[0] = bi0;
+                        bi[1] = bi1;
+                        bi[2] = bi2;
+                        // setup Slc
+                        int tslp = wf_info.qrow.get_sym(bo[0]).ts(); // l
+                        int tsrp = wf_info.qcol.get_sym(bo[1]).ts(); // r
+                        int tscp = wf_info.qmid.get_sym(bo[2]).ts(); // c
+                        int tsl  = wf_info.qrow.get_sym(bi[0]).ts();
+                        int tsr  = wf_info.qcol.get_sym(bi[1]).ts();
+                        int tsc  = wf_info.qmid.get_sym(bi[2]).ts();
+                        for(int tslc=std::abs(tsl-tsc); tslc<=tsl+tsc; tslc+=2){
+                           size_t offin = wf_info.get_offset(bi[0],bi[1],bi[2],tslc);
+                           if(offin == 0) continue;
+                           // setup block
+                           Hxblock<Tm> Hxblk(3,terms,cterms,alg_hcoper);
+                           Hxblk.offin = offin-1;
+                           Hxblk.offout = offout-1;
+                           // update Hxblk.dagger/loc/off
+                           Tm coeff_coper = 1.0;
+                           bool skip = false;
+                           for(int k=0; k<3; k++){ // l,r,c
+                              if(this->identity(k)) continue;
+                              Hxblk.dagger[k] = dagger[k]^ifdagger; // (O1^d1)^d = O1^(d^d1)
+                              Hxblk.loc[k] = loc[k];
+                              size_t offset = Hxblk.dagger[k]? info[k]->get_offset(bi[k],bo[k]) : 
+                                 info[k]->get_offset(bo[k],bi[k]);
+                              assert(offset != 0);
+                              Hxblk.off[k] = off[k]+offset-1;
+                              // sgn from bar{bar{Ts}} = (-1)^2s Ts
+                              if(dagger[k] && ifdagger) coeff_coper *= parity[k]? -1.0 : 1.0;
+                              // special treatment of op[c2/c1] for NS symmetry
+                              if(k >= 2 && ((alg_hcoper==1 && terms>cterms) || alg_hcoper==2)){ 
+                                 assert(k == loc[k]); // op[c] cannot be intermediates
+                                 Tm coper = *(opaddr[loc[k]] + Hxblk.off[k]);
+                                 coeff_coper *= Hxblk.dagger[k]? tools::conjugate(coper) : coper;
+                                 if(std::abs(coeff_coper)<thresh_coper){
+                                    skip = true;
+                                    break;
+                                 }
+                              }
+                           } // k
+                           if(skip) continue;
+                           // sign factors due to spin: lc|r
+                           // ((<Slp|Ol|Sl><Scp|Oc1|Sc>)[Slcp,Slc](<Srp|Or|Sr>))[Stot]
+                           coeff_coper *= std::sqrt((tslcp+1.0)*(tsrp+1.0)*(tstot+1.0)*(tspins[5]+1.0))*
+                              fock::wigner9j(tslcp,tsrp,tstot,tslc,tsr,tstot,tspins[3],tspins[4],tspins[5])*
+                              std::sqrt((tslp+1.0)*(tscp+1.0)*(tslc+1.0)*(tspins[2]+1.0))*
+                              fock::wigner9j(tslp,tscp,tslcp,tsl,tsc,tslc,tspins[0],tspins[1],tspins[2]);
+                           if(std::abs(coeff_coper)<thresh_coper) continue;
+                           // sign from adjoint: lc|r
+                           // tspins = (Sl,Sc,Slc),(Slc,Sr,Stot)
+                           // <Slp|Ol|Sl>
+                           if(!this->identity(0) && dagger[0]^ifdagger){
+                              int ts = tspins[0] + tslp - tsl;
+                              coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((tsl+1.0)/(tslp+1.0));
+                           }
+                           // <Srp|Or|Sr> 
+                           if(!this->identity(1) && dagger[1]^ifdagger){
+                              int ts = tspins[4] + tsrp - tsr;
+                              coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((tsr+1.0)/(tsrp+1.0));
+                           }
+                           // <Scp|Oc|Sc>
+                           if(!this->identity(2) && dagger[2]^ifdagger){
+                              int ts = tspins[1] + tscp - tsc;
+                              coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((tsc+1.0)/(tscp+1.0));
+                           }
+                           // compute sign due to parity
+                           Hxblk.coeff = (ifdagger? coeffH : coeff)*coeff_coper;
+                           int pl = wf_info.qrow.get_parity(bi[0]);
+                           int pc = wf_info.qmid.get_parity(bi[2]);
+                           if(parity[1] && (pl+pc)%2==1) Hxblk.coeff *= -1.0; // Or
+                           if(parity[2] && pl%2==1) Hxblk.coeff *= -1.0; // Oc1
+                           // setup dimsions
+                           Hxblk.dimin[0] = wf_info.qrow.get_dim(bi[0]);
+                           Hxblk.dimin[1] = wf_info.qcol.get_dim(bi[1]);
+                           Hxblk.dimin[2] = wf_info.qmid.get_dim(bi[2]);
+                           Hxblk.dimout[0] = wf_info.qrow.get_dim(bo[0]);
+                           Hxblk.dimout[1] = wf_info.qcol.get_dim(bo[1]);
+                           Hxblk.dimout[2] = wf_info.qmid.get_dim(bo[2]);
+                           Hxblk.size = Hxblk.dimout[0]*Hxblk.dimout[1]*Hxblk.dimout[2];
+                           Hxblk.setup();
+                           blksize = std::max(blksize, Hxblk.blksize);
+                           cost += Hxblk.cost;
+                           // Intermediates
+                           if(posInter != -1){
+                              Hxblk.posInter = posInter;
+                              Hxblk.lenInter = lenInter;
+                              Hxblk.offInter = offInter;
+                              Hxblk.ldaInter = ldaInter;
+                              blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
+                           }
+                           Hxlst2[i].push_back(Hxblk);
+                        } // tslc
+                     } // bi2
+                  } // bi1
+               } // bi0
+            } // i
+         } // ifNC
       }
 
    // twodot:
@@ -253,6 +496,7 @@ namespace ctns{
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
       void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
+            const bool ifNC,
             Tm** opaddr,
             const qinfo4type<ifab,Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
@@ -342,7 +586,8 @@ namespace ctns{
    // 			wf[br,bc,bm,bv]
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<!y,int>>
-      void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,
+      void Hmu_ptr<ifab,Tm>::gen_Hxlist2(const int alg_hcoper,       
+            const bool ifNC,
             Tm** opaddr,
             const qinfo4type<ifab,Tm>& wf_info,
             Hxlist2<Tm>& Hxlst2,
@@ -365,13 +610,13 @@ namespace ctns{
             size_t offout = wf_info.get_offset(bo[0],bo[1],bo[2],bo[3],tslc1p,tsc2rp);
             assert(offout > 0);
             const auto& bi0vec = this->identity(0)? std::vector<int>({bo[0]}) :
-                (dagger[0]^ifdagger? info[0]->_bc2br[bo[0]] : info[0]->_br2bc[bo[0]]);
+               (dagger[0]^ifdagger? info[0]->_bc2br[bo[0]] : info[0]->_br2bc[bo[0]]);
             const auto& bi1vec = this->identity(1)? std::vector<int>({bo[1]}) :
-                (dagger[1]^ifdagger? info[1]->_bc2br[bo[1]] : info[1]->_br2bc[bo[1]]);
+               (dagger[1]^ifdagger? info[1]->_bc2br[bo[1]] : info[1]->_br2bc[bo[1]]);
             const auto& bi2vec = this->identity(2)? std::vector<int>({bo[2]}) :
-                (dagger[2]^ifdagger? info[2]->_bc2br[bo[2]] : info[2]->_br2bc[bo[2]]);
+               (dagger[2]^ifdagger? info[2]->_bc2br[bo[2]] : info[2]->_br2bc[bo[2]]);
             const auto& bi3vec = this->identity(3)? std::vector<int>({bo[3]}) :
-                (dagger[3]^ifdagger? info[3]->_bc2br[bo[3]] : info[3]->_br2bc[bo[3]]);
+               (dagger[3]^ifdagger? info[3]->_bc2br[bo[3]] : info[3]->_br2bc[bo[3]]);
             for(const auto& bi0 : bi0vec){
                for(const auto& bi1 : bi1vec){
                   for(const auto& bi2 : bi2vec){
@@ -426,13 +671,14 @@ namespace ctns{
                               // sign factors due to spin
                               // ((<Slp|Ol|Sl><Sc1p|Oc1|Sc1>)[Slc1p,Slc1](<Sc2p|Oc2|Sc2><Srp|Or|Sr>)[Sc2rpSc2r])[Stot]
                               coeff_coper *= std::sqrt((tslc1p+1.0)*(tsc2rp+1.0)*(tstot+1.0)*(tspins[8]+1.0))*
-                                             fock::wigner9j(tslc1p,tsc2rp,tstot,tslc1,tsc2r,tstot,tspins[6],tspins[7],tspins[8])*
-                                             std::sqrt((tslp+1.0)*(tsc1p+1.0)*(tslc1+1.0)*(tspins[2]+1.0))*
-                                             fock::wigner9j(tslp,tsc1p,tslc1p,tsl,tsc1,tslc1,tspins[0],tspins[1],tspins[2])*
-                                             std::sqrt((tsc2p+1.0)*(tsrp+1.0)*(tsc2r+1.0)*(tspins[5]+1.0))*
-                                             fock::wigner9j(tsc2p,tsrp,tsc2rp,tsc2,tsr,tsc2r,tspins[3],tspins[4],tspins[5]);
+                                 fock::wigner9j(tslc1p,tsc2rp,tstot,tslc1,tsc2r,tstot,tspins[6],tspins[7],tspins[8])*
+                                 std::sqrt((tslp+1.0)*(tsc1p+1.0)*(tslc1+1.0)*(tspins[2]+1.0))*
+                                 fock::wigner9j(tslp,tsc1p,tslc1p,tsl,tsc1,tslc1,tspins[0],tspins[1],tspins[2])*
+                                 std::sqrt((tsc2p+1.0)*(tsrp+1.0)*(tsc2r+1.0)*(tspins[5]+1.0))*
+                                 fock::wigner9j(tsc2p,tsrp,tsc2rp,tsc2,tsr,tsc2r,tspins[3],tspins[4],tspins[5]);
                               if(std::abs(coeff_coper)<thresh_coper) continue;
                               // sign from adjoint
+                              // tspins = (Sl,Sc1,Slc1)(Sc2,Sr,Sc2r),(Slc1,Sc2r,Stot)
                               // <Slp|Ol|Sl>
                               if(!this->identity(0) && dagger[0]^ifdagger){
                                  int ts = tspins[0] + tslp - tsl;

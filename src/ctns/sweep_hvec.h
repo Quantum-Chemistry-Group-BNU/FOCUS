@@ -14,8 +14,6 @@
 #include "preprocess_hxlist.h"
 #include "preprocess_sigma.h"
 #include "preprocess_sigma_batch.h"
-#include "sadmrg/symbolic_formulae_twodot_su2.h"
-//#include "sadmrg/symbolic_formulae_onedot_su2.h"
 #ifdef GPU
 #include "preprocess_sigma_batchGPU.h"
 #endif

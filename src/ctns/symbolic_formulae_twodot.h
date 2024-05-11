@@ -6,6 +6,7 @@
 #include "symbolic_oper.h"
 #include "symbolic_normxwf.h"
 #include "symbolic_compxwf.h"
+#include "sadmrg/symbolic_formulae_twodot_su2.h"
 
 namespace ctns{
 
@@ -194,8 +195,8 @@ namespace ctns{
       }
 
    // primitive form (without factorization)
-   template <typename Tm>
-      symbolic_task<Tm> symbolic_formulae_twodot(const oper_dictmap<Tm>& qops_dict,
+   template <bool ifab, typename Tm>
+      symbolic_task<Tm> symbolic_formulae_twodot(const qoper_dictmap<ifab,Tm>& qops_dict,
             const integral::two_body<Tm>& int2e,
             const int& size,
             const int& rank,
@@ -224,6 +225,7 @@ namespace ctns{
          if(ifsave){
             if(rank == 0 and debug){
                std::cout << "ctns::symbolic_formulae_twodot"
+                  << " ifab=" << ifab
                   << " mpisize=" << size
                   << " fname=" << fname 
                   << std::endl;
@@ -242,8 +244,14 @@ namespace ctns{
          }
          // generation of Hx
          std::map<std::string,int> counter;
-         auto formulae = gen_formulae_twodot(cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
-               int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
+         symbolic_task<Tm> formulae;
+         if(ifab){
+            formulae = gen_formulae_twodot(cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
+                  int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
+         }else{
+            formulae = gen_formulae_twodot_su2(cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
+                  int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
+         }
          // reorder if necessary
          if(sort_formulae){
             std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},

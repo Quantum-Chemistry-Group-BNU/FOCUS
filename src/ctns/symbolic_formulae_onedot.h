@@ -6,6 +6,7 @@
 #include "symbolic_task.h"
 #include "symbolic_normxwf.h"
 #include "symbolic_compxwf.h"
+#include "sadmrg/symbolic_formulae_onedot_su2.h"
 
 namespace ctns{
 
@@ -222,21 +223,8 @@ namespace ctns{
       }
 
    // primitive form (without factorization)
-   template <typename Tm>
-      symbolic_task<Tm> symbolic_formulae_onedot(const opersu2_dictmap<Tm>& qops_dict,
-            const integral::two_body<Tm>& int2e,
-            const int& size,
-            const int& rank,
-            const std::string fname,
-            const bool sort_formulae,
-            const bool ifdist1,
-            const bool ifdistc,
-            const bool debug=false){
-         std::cout << "error: no implementation of symbolic_formulae_onedot for su2!" << std::endl;
-         exit(1);
-      }
-   template <typename Tm>
-      symbolic_task<Tm> symbolic_formulae_onedot(const oper_dictmap<Tm>& qops_dict,
+   template <bool ifab, typename Tm>
+      symbolic_task<Tm> symbolic_formulae_onedot(const qoper_dictmap<ifab,Tm>& qops_dict,
             const integral::two_body<Tm>& int2e,
             const int& size,
             const int& rank,
@@ -262,6 +250,7 @@ namespace ctns{
          if(ifsave){
             if(rank == 0 and debug){
                std::cout << "ctns::symbolic_formulae_onedot"
+                  << " ifab=" << ifab
                   << " mpisize=" << size
                   << " fname=" << fname 
                   << std::endl;
@@ -280,8 +269,14 @@ namespace ctns{
          }
          // generation of Hx
          std::map<std::string,int> counter;
-         auto formulae = gen_formulae_onedot(cindex_l,cindex_r,cindex_c,isym,ifkr,
-               int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
+         symbolic_task<Tm> formulae;
+         if(ifab){
+            formulae = gen_formulae_onedot(cindex_l,cindex_r,cindex_c,isym,ifkr,
+                  int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
+         }else{
+            formulae = gen_formulae_onedot_su2(cindex_l,cindex_r,cindex_c,isym,ifkr,
+                  int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
+         }
          // reorder if necessary
          if(sort_formulae){
             std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},

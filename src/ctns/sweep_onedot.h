@@ -58,7 +58,7 @@ namespace ctns{
 
          // check partition 
          const auto& dbond = sweeps.seq[ibond];
-         icomb.topo.check_partition(1, dbond, debug, schd.ctns.verbose);
+         auto dims = icomb.topo.check_partition(1, dbond, debug, schd.ctns.verbose);
 
          // 1. load operators 
          auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
@@ -108,7 +108,20 @@ namespace ctns{
          auto sym_state = get_qsym_state(Qm::isym, schd.nelec, 
                (ifab? schd.twoms : schd.twos),
                schd.ctns.singlet);
-         qtensor3<ifab,Tm> wf(sym_state, ql, qr, qc, dir_WF3); // su2 case: by default, CRcouple is used.
+         qtensor3<ifab,Tm> wf;
+         if(ifab){
+            // abelian case
+            wf.init(sym_state, ql, qr, qc, dir_WF3);
+         }else{
+            // su2 case
+            spincoupling3 couple;
+            if(dims[0] <= dims[1]){
+               couple = CRcouple; // l|cr
+            }else{
+               couple = LCcouple; // lc|r
+            }
+            wf.init(sym_state, ql, qr, qc, dir_WF3, couple);
+         }
          size_t ndim = wf.size();
          int neig = sweeps.nroots;
          if(debug){
@@ -133,6 +146,8 @@ namespace ctns{
          // 3. Davidson solver for wf
          // 3.1 diag 
          double* diag = new double[ndim];
+         std::cout << "diag is to be developed and checked!" << ifab << std::endl;
+/*
          if(alg_hvec <= 10){
             onedot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
 #ifdef GPU
@@ -140,6 +155,7 @@ namespace ctns{
             onedot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl, schd.ctns.diagcheck);
 #endif
          }
+*/
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
          // executes the preconditioning in Davidson's algorithm

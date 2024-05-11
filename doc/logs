@@ -364,10 +364,11 @@
       - better timing for dvdson 
       - async IO for onedot case
    - spin-adapted case: start from cisolver=0 & guess=0 
-      - symbolic_formulae_onedot_su2.h
-      - preprocess_hmu.h for spin-adapted case: (lc)r or l(cr)
+      - symbolic_formulae_onedot_su2.h [DONE@2024/05/11]
+      - preprocess_hmu.h for spin-adapted case: l|cr or lc|r [DONE@2024/05/11]
       - onedot_diag_GPU:
-      - propagation of initial guess & finalization?
+      - propagation of initial guess & finalization?  
+         - LC/CRcouple
 
  * Benchmark: jiageng [DONE@2024/06/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 

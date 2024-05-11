@@ -14,6 +14,7 @@ namespace ctns{
             const std::vector<int>& cindex_r,
             const std::vector<int>& cindex_c1,
             const std::vector<int>& cindex_c2,
+            const int isym, // for uniform interface only
             const bool ifkr,
             const integral::two_body<Tm>& int2e,
             const int& size,
@@ -231,86 +232,6 @@ namespace ctns{
 
          } // ifNC
 
-         return formulae;
-      }
-
-   // primitive form (without factorization)
-   template <typename Tm>
-      symbolic_task<Tm> symbolic_formulae_twodot(const opersu2_dictmap<Tm>& qops_dict,
-            const integral::two_body<Tm>& int2e,
-            const int& size,
-            const int& rank,
-            const std::string fname,
-            const bool sort_formulae,
-            const bool ifdist1,
-            const bool ifdistc,
-            const bool debug=false){
-         auto t0 = tools::get_time();
-         const auto& lqops = qops_dict.at("l");
-         const auto& rqops = qops_dict.at("r");
-         const auto& c1qops = qops_dict.at("c1");
-         const auto& c2qops = qops_dict.at("c2");
-         const auto& cindex_l = lqops.cindex;
-         const auto& cindex_r = rqops.cindex;
-         const auto& cindex_c1 = c1qops.cindex;
-         const auto& cindex_c2 = c2qops.cindex;
-         int slc1 = cindex_l.size() + cindex_c1.size();
-         int sc2r = cindex_c2.size() + cindex_r.size();
-         const bool ifNC = (slc1 <= sc2r);
-         const bool ifkr = lqops.ifkr; 
-         std::streambuf *psbuf, *backup;
-         std::ofstream file;
-         bool ifsave = !fname.empty();
-         if(ifsave){
-            if(rank == 0 and debug){
-               std::cout << "ctns::symbolic_formulae_twodot(su2)"
-                  << " mpisize=" << size
-                  << " fname=" << fname 
-                  << std::endl;
-            }
-            // http://www.cplusplus.com/reference/ios/ios/rdbuf/
-            file.open(fname);
-            backup = std::cout.rdbuf(); // back up cout's streambuf
-            psbuf = file.rdbuf(); // get file's streambuf
-            std::cout.rdbuf(psbuf); // assign streambuf to cout
-            std::cout << "cnts::symbolic_formulae_twodot(su2)"
-               << " ifkr=" << ifkr
-               << " mpisize=" << size
-               << " mpirank=" << rank 
-               << std::endl;
-         }
-         // generation of Hx
-         std::map<std::string,int> counter;
-         auto formulae = gen_formulae_twodot_su2(cindex_l,cindex_r,cindex_c1,cindex_c2,ifkr,
-               int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
-         // reorder if necessary
-         if(sort_formulae){
-            std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
-               {"r",rqops.qket.get_dimAll()},
-               {"c1",c1qops.qket.get_dimAll()},
-               {"c2",c2qops.qket.get_dimAll()}};
-            formulae.sort(dims);
-         }
-         if(ifsave){
-            std::cout << "\nSUMMARY size=" << formulae.size();
-            if(ifNC){
-               std::cout << " CS:" << counter["CS"] << " SC:" << counter["SC"]
-                  << " AP:" << counter["AP"] << " BQ:" << counter["BQ"]
-                  << std::endl;
-            }else{
-               std::cout << " SC:" << counter["SC"] << " CS:" << counter["CS"]
-                  << " PA:" << counter["PA"] << " QB:" << counter["QB"]
-                  << std::endl;
-            }
-            formulae.display("total");
-            std::cout.rdbuf(backup); // restore cout's original streambuf
-            file.close();
-         }
-         if(rank == 0 and debug){
-            auto t1 = tools::get_time();
-            int size = formulae.size();
-            tools::timing("symbolic_formulae_twodot(su2) with size="+std::to_string(size), t0, t1);
-         }
          return formulae;
       }
 
