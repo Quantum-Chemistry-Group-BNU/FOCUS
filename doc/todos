@@ -3,7 +3,18 @@
 
  * Spin-adapted version? [DONE]
 
- * Reduced density matrix (RDMs) + One-dot algorithm [!!!] 
+ * One-dot algorithm [???] 
+
+ * Reduced density matrices: (RDMs) 
+   - non-spin-adapted case:
+      - one-body RDM:
+      - two-body RDM:
+      - transition PDM:
+   - spin-adapted case:
+      - one-body RDM:
+      - two-body RDM:
+      - transition PDM:
+   - transition particle density matrix (for SOC)
 
  * Perturbative spin-orbit interaction via state interaction?
 

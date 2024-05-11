@@ -84,8 +84,7 @@ namespace ctns{
          timing.ta = tools::get_time();
 
          // 1.5 look ahead for the next dbond
-         auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
-         /*
+         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
          auto frop = fbond.first;
          auto fdel = fbond.second;
          auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
@@ -99,7 +98,6 @@ namespace ctns{
             qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
          }
          timing.ta = tools::get_time();
-         */
 
          // 2. onedot wavefunction
          //	    |
@@ -190,9 +188,6 @@ namespace ctns{
          timing.tc = tools::get_time();
 
          // 3. decimation & renormalize operators
-         auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
-         auto frop = fbond.first;
-         auto fdel = fbond.second;
          onedot_renorm(icomb, int2e, int1e, schd, scratch, 
                vsol, wf, qops_pool, fneed, fneed_next, frop,
                sweeps, isweep, ibond);

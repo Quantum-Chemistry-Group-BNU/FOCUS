@@ -362,18 +362,14 @@
    - use function class for HVec [DONE@2024/05/10]
       - twodot & onedot abstraction 
       - better timing for dvdson 
-   - async IO for onedot case
-   - spin-adapted case: 
+      - async IO for onedot case
+   - spin-adapted case: start from cisolver=0 & guess=0 
       - symbolic_formulae_onedot_su2.h
       - preprocess_hmu.h for spin-adapted case: (lc)r or l(cr)
-      - propagation of initial guess & finalization?
       - onedot_diag_GPU:
+      - propagation of initial guess & finalization?
 
- * Decimation on GPU? [DONE@2024/06/XX]
-   - cuSolver: svd
-   - cuSOlver: eig
-
- * Benchmark: jiageng [DONE@2024/07/XX]
+ * Benchmark: jiageng [DONE@2024/06/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
                              but use mkl2022 for focus,
                              otherwise, dgemv_batch does not exist!
@@ -381,14 +377,8 @@
    - fe4s4
    - fe8s7
    - femoco
-
- * Reduced density matrices: [DONE@2024/08/XX]
-   - non-spin-adapted case:
-      - one-body RDM:
-      - two-body RDM:
-      - transition PDM:
-   - spin-adapted case:
-      - one-body RDM:
-      - two-body RDM:
-      - transition PDM:
+ 
+ * Decimation on GPU? [DONE@2024/06/XX]
+   - cuSolver: svd
+   - cuSOlver: eig
 

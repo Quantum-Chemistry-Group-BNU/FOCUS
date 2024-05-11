@@ -60,7 +60,9 @@ namespace ctns{
                      const int& size,
                      const int& rank,
                      const bool& ifdist1,
-                     const bool debug=false);
+                     const bool debug=false){
+                  Hx_funs = onedot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, ifdist1, debug);
+               }
             template <typename QTm2=QTm, std::enable_if_t<std::is_same<QTm2,qtensor4<Qm::ifabelian,Tm>>::value,bool> = 0>
                void init_Hx_functors(const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict,
                      const integral::two_body<Tm>& int2e,
@@ -69,7 +71,9 @@ namespace ctns{
                      const int& size,
                      const int& rank,
                      const bool& ifdist1,
-                     const bool debug=false);
+                     const bool debug=false){
+                  Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, ifdist1, debug);
+               }
             // cleanup
             void finalize();
          public:
@@ -102,6 +106,25 @@ namespace ctns{
             size_t maxbatch=0, batchsize=0, gpumem_dvdson=0, gpumem_batch=0;
       };
 
+   template <bool ifab, typename Tm, typename QTm, std::enable_if_t<std::is_same<QTm,qtensor3<ifab,Tm>>::value,bool> = 0>
+      void oldest_Hx(Tm* y,
+            const Tm* x,
+            Hx_functors<Tm>& Hx_funs,
+            QTm& wf,
+            const int size,
+            const int rank){
+         onedot_Hx(y, x, Hx_funs, wf, size, rank);
+      }
+   template <bool ifab, typename Tm, typename QTm, std::enable_if_t<std::is_same<QTm,qtensor4<ifab,Tm>>::value,bool> = 0>
+      void oldest_Hx(Tm* y,
+            const Tm* x,
+            Hx_functors<Tm>& Hx_funs,
+            QTm& wf,
+            const int size,
+            const int rank){
+         twodot_Hx(y, x, Hx_funs, wf, size, rank);
+      }
+
    template <typename Qm, typename Tm, typename QInfo, typename QTm>
       void HVec_wrapper<Qm,Tm,QInfo,QTm>::init(const int dots, 
             const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict,
@@ -122,6 +145,10 @@ namespace ctns{
          alg_hinter = schd.ctns.alg_hinter;
          alg_hcoper = schd.ctns.alg_hcoper;
          // consistency check
+         if(!ifab && alg_hvec < 4){
+            std::cout << "error: use alg_hvec >= 4 for non-Abelian case! alg_hvec=" << alg_hvec << std::endl;
+            exit(1);
+         }
          if(ifab && Qm::ifkr && alg_hvec >=4){
             // This needs to be checked more carefully, for instance, complex case with rNS/cNS.
             std::cout << "error: alg_hvec >= 4 does not support complex yet! GEMM with conj is needed." << std::endl;
@@ -185,10 +212,8 @@ namespace ctns{
             this->init_Hx_functors(qops_dict, int2e, ecore, wf, size, rank,
                   schd.ctns.ifdist1, schd.ctns.verbose>0);
 
-            /*
-            Hx = bind(&ctns::ndot_Hx<ifab,Tm,QTm>, _1, _2, std::ref(Hx_funs),
+            Hx = bind(&ctns::oldest_Hx<ifab,Tm,QTm>, _1, _2, std::ref(Hx_funs),
                   std::ref(wf), std::cref(size), std::cref(rank));
-            */
 
          }else if(alg_hvec == 1){
 
@@ -532,32 +557,6 @@ namespace ctns{
             }
             if(fmmtask.size()>0) save_mmtask(Hmmtask, fmmtask);
          }
-      }
-
-   // init Hx_functors
-   template <typename Qm, typename Tm, typename QInfo, typename QTm>
-      template <typename QTm2, std::enable_if_t<std::is_same<QTm2,qtensor3<Qm::ifabelian,Tm>>::value,bool>>
-      void HVec_wrapper<Qm,Tm,QInfo,QTm>::init_Hx_functors(const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict,
-            const integral::two_body<Tm>& int2e,
-            const double& ecore,
-            const QTm& wf,
-            const int& size,
-            const int& rank,
-            const bool& ifdist1,
-            const bool debug){
-         Hx_funs = onedot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, ifdist1, debug);
-      }
-   template <typename Qm, typename Tm, typename QInfo, typename QTm>
-      template <typename QTm2, std::enable_if_t<std::is_same<QTm2,qtensor4<Qm::ifabelian,Tm>>::value,bool>>
-      void HVec_wrapper<Qm,Tm,QInfo,QTm>::init_Hx_functors(const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict,
-            const integral::two_body<Tm>& int2e,
-            const double& ecore,
-            const QTm& wf,
-            const int& size,
-            const int& rank,
-            const bool& ifdist1,
-            const bool debug){
-         Hx_funs = twodot_Hx_functors(qops_dict, int2e, ecore, wf, size, rank, ifdist1, debug);
       }
 
 } // ctns

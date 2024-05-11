@@ -335,18 +335,17 @@ namespace ctns{
          return Hx_funs;
       }
 
-   template <bool ifab, typename Tm> 
+   template <typename Tm> 
       void onedot_Hx(Tm* y,
             const Tm* x,
             Hx_functors<Tm>& Hx_funs,
-            qtensor3<ifab,Tm>& wf,
+            stensor3su2<Tm>& wf,
             const int size,
             const int rank){
-         std::cout << "error: no implementation of onedot_Hx for su2! ifab=" << ifab << std::endl;
-         assert(!ifab);
+         std::cout << "error: no implementation of onedot_Hx for su2!" << std::endl;
          exit(1);
       }
-   template <bool ifab, typename Tm, std::enable_if_t<ifab,int> = 0> 
+   template <typename Tm> 
       void onedot_Hx(Tm* y,
             const Tm* x,
             Hx_functors<Tm>& Hx_funs,
