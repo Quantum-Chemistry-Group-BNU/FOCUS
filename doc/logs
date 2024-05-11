@@ -315,7 +315,7 @@
       - debug Hij & correctness of the generated formula 
       - opS is the most complicated [DONE@2024/03/29] 
 
- * Spin-adapted DMRG algorithm: [DONE@2024/04/02]
+ * Spin-adapted DMRG algorithm: twodot [DONE@2024/04/02]
    - twodot sweep algorithm
       - symbolic_formulae_twodot_su2: [DONE@2024/03/13]
       - restructure the code the reuse more subroutines
@@ -350,7 +350,7 @@
       - bugfix for 1_lih_dcg? Due to linking to both gomp&iomp via magma.
                               The compiler for magam must be the same!!!
  
- * Onedot algorithm: sweep_onedot.h[DONE@2024/05/XX]
+ * Onedot algorithm: sweep_onedot.h [DONE@2024/05/12]
     - non-spin-adapted case:
       - alg_hvec=4 & alg_hvec=5 [DONE@2024/05/04]
          - preprocess_hmu.h
@@ -363,16 +363,19 @@
       - twodot & onedot abstraction 
       - better timing for dvdson 
       - async IO for onedot case
-   - spin-adapted case: start from cisolver=0 & guess=0 
+   - spin-adapted case: simply start from cisolver=0 & guess=0 to check Hij & Diag: [DONE@2024/05/11] 
       - symbolic_formulae_onedot_su2.h [DONE@2024/05/11]
       - preprocess_hmu.h for spin-adapted case: l|cr or lc|r [DONE@2024/05/11]
-      - onedot_diag:
-         - onedot_diag_su2.h:
+      - onedot_diag: 
+         - onedot_diag_su2.h: 
+      - onedot_renorm:
+         - onedot_decimation:
+      - propagation of initial guess & finalization?
+         - onedot_guess_psi: turn out to be extremely simple, e.g., recouple_cr().merge_cr()
+      - gpu version:   
          - onedot_diagGPU_su2.h:
-      - propagation of initial guess & finalization?  
-         - LC/CRcouple
 
- * Benchmark: jiageng [DONE@2024/06/XX]
+ * Benchmark: jiageng or other platform [DONE@2024/06/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
                              but use mkl2022 for focus,
                              otherwise, dgemv_batch does not exist!

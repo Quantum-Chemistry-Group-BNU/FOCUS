@@ -9,8 +9,8 @@ namespace ctns{
             comb<Qm,Tm>& icomb,
             const directed_bond& dbond,
             const linalg::matrix<Tm>& vsol,
-            stensor3<Tm>& wf,
-            const stensor2<Tm>& rot){
+            qtensor3<Qm::ifabelian,Tm>& wf,
+            const qtensor2<Qm::ifabelian,Tm>& rot){
          const bool debug = false;
          if(debug) std::cout << "ctns::onedot_guess_psi superblock=" << superblock << std::endl;
          const auto& pdx0 = icomb.topo.rindex.at(dbond.p0);
@@ -22,13 +22,14 @@ namespace ctns{
 
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
-               auto cwf = rot.H().dot(wf.merge_lc()); // <-W[alpha,r]->
+               auto cwf = rot.H().dot(wf.recouple_lc().merge_lc()); // <-W[alpha,r]->
                auto psi = contract_qt3_qt2("l",icomb.sites[pdx1],cwf);
                icomb.cpsi[i] = std::move(psi);
             }
 
          }else if(superblock == "lr"){
 
+            assert(Qm::ifabelian);
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
                wf.permCR_signed();
@@ -42,7 +43,7 @@ namespace ctns{
             auto cturn = dbond.is_cturn(); 
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
-               auto cwf = wf.merge_cr().dot(rot.H()); // <-W[l,alpha]->
+               auto cwf = wf.recouple_cr().merge_cr().dot(rot.H()); // <-W[l,alpha]->
                if(!cturn){
                   auto psi = contract_qt3_qt2("r",icomb.sites[pdx0],cwf.P());
                   icomb.cpsi[i] = std::move(psi);

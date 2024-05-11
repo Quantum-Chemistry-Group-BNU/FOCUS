@@ -22,26 +22,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& vsol,
-            stensor3su2<Tm>& wf,
-            qoper_pool<Qm::ifabelian,Tm>& qops_pool,
-            const std::vector<std::string>& fneed,
-            const std::vector<std::string>& fneed_next,
-            const std::string& frop,
-            sweep_data& sweeps,
-            const int isweep,
-            const int ibond){
-         std::cout << "onedot_renorm not implemented yet for su2!" << std::endl;
-         exit(1);
-      }
- 
-   template <typename Qm, typename Tm>
-      void onedot_renorm(comb<Qm,Tm>& icomb,
-            const integral::two_body<Tm>& int2e, 
-            const integral::one_body<Tm>& int1e,
-            const input::schedule& schd,
-            const std::string scratch,
-            linalg::matrix<Tm>& vsol,
-            stensor3<Tm>& wf,
+            qtensor3<Qm::ifabelian,Tm>& wf,
             qoper_pool<Qm::ifabelian,Tm>& qops_pool,
             const std::vector<std::string>& fneed,
             const std::vector<std::string>& fneed_next,
@@ -65,14 +46,14 @@ namespace ctns{
          auto& timing = sweeps.opt_timing[isweep][ibond];
 
          // 1. build reduced density matrix & perform decimation
-         stensor2<Tm> rot;
+         qtensor2<Qm::ifabelian,Tm> rot;
          onedot_decimation(icomb, schd, scratch, sweeps, isweep, ibond, 
                superblock, vsol, wf, rot);
 #ifndef SERIAL
          if(size > 1) mpi_wrapper::broadcast(icomb.world, rot, 0); 
 #endif
          timing.td = tools::get_time();
-
+         
          // 2. prepare guess for the next site
          if(rank == 0 && schd.ctns.guess){
             onedot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);

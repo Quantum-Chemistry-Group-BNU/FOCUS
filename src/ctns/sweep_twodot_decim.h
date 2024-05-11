@@ -119,11 +119,11 @@ namespace ctns{
          } // superblock
          if(debug){
             auto t2 = tools::get_time();
-            std::cout << "TIMING FOR decimation: "
+            std::cout << "----- TIMING FOR twodot_decimation: "
                << tools::get_duration(t2-t0) << " S"
                << " T(wf/decim)=" 
                << tools::get_duration(t1-t0) << ","
-               << tools::get_duration(t2-t1)
+               << tools::get_duration(t2-t1) << " S -----"
                << std::endl;
          }
       }

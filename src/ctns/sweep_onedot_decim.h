@@ -25,13 +25,14 @@ namespace ctns{
             const int ibond, 
             const std::string superblock,
             const linalg::matrix<Tm>& vsol,
-            stensor3<Tm>& wf,
-            stensor2<Tm>& rot){
+            qtensor3<Qm::ifabelian,Tm>& wf,
+            qtensor2<Qm::ifabelian,Tm>& rot){
          int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
          size = icomb.world.size();
 #endif   
+         auto t0 = tools::get_time();
          const bool debug = (rank==0 && schd.ctns.verbose>0);
          std::string fname = scratch+"/decimation"
             + "_isweep"+std::to_string(isweep)
@@ -60,16 +61,18 @@ namespace ctns{
          }
          auto& result = sweeps.opt_result[isweep][ibond];
          int nroots = vsol.cols();
-         std::vector<stensor2<Tm>> wfs2(nroots);
+         std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
+         auto t1 = tools::get_time();
          if(superblock == "lc"){
 
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
                // wf3[l,r,c] => wf2[lc,r]
-               auto wf2 = wf.merge_lc();
+               auto wf2 = wf.recouple_lc().merge_lc();
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
+            t1 = tools::get_time();
             decimation_row(icomb, wf.info.qrow, wf.info.qmid, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
@@ -86,6 +89,7 @@ namespace ctns{
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
+            t1 = tools::get_time();
             decimation_row(icomb, wf.info.qrow, wf.info.qcol, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
@@ -96,10 +100,11 @@ namespace ctns{
             for(int i=0; i<nroots; i++){
                wf.from_array(vsol.col(i));
                // wf3[l,r,c] => wf2[l,cr]
-               auto wf2 = wf.merge_cr().P();
+               auto wf2 = wf.recouple_cr().merge_cr().P();
                if(noise > thresh_noise) wf2.add_noise(noise);
                wfs2[i] = std::move(wf2);
             }
+            t1 = tools::get_time();
             decimation_row(icomb, wf.info.qmid, wf.info.qcol, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
                   wfs2, rot, result.dwt, result.deff, fname,
@@ -107,6 +112,15 @@ namespace ctns{
             rot = rot.P(); // rot[alpha,r] = (V^+)
 
          } // superblock
+         if(debug){
+            auto t2 = tools::get_time();
+            std::cout << "----- TIMING FOR onedot_decimation: "
+               << tools::get_duration(t2-t0) << " S"
+               << " T(wf/decim)=" 
+               << tools::get_duration(t1-t0) << ","
+               << tools::get_duration(t2-t1) << " S -----"
+               << std::endl;
+         }
       }
 
 } // ctns
