@@ -28,9 +28,6 @@ namespace ctns{
          }
          auto t0 = tools::get_time();
 
-         std::cout << "not implemented yet!" << std::endl;
-         exit(1);
-/*
          // initialize dev_diag on GPU
          size_t used = GPUmem.used();
          size_t nblk = wf.info._nnzaddr.size();
@@ -39,52 +36,45 @@ namespace ctns{
          GPUmem.memset(dev_diag, ndim*sizeof(double));
          auto t1 = tools::get_time();
 
-         size_t* dev_dims = (size_t*)GPUmem.allocate(nblk*9*sizeof(size_t));
-         std::vector<size_t> blkdims(nblk*5,0);
+         size_t* dev_dims = (size_t*)GPUmem.allocate(nblk*7*sizeof(size_t));
+         std::vector<size_t> blkdims(nblk*4,0);
          for(int i=0; i<nblk; i++){
             auto key = wf.info._nnzaddr[i];
             int br = std::get<0>(key);
             int bc = std::get<1>(key);
             int bm = std::get<2>(key);
-            int bv = std::get<3>(key);
-            int tslc1 = std::get<4>(key);
-            int tsc2r = std::get<5>(key);
-            auto blk = wf(br,bc,bm,bv,tslc1,tsc2r);
-            blkdims[5*i]   = blk.dim0;
-            blkdims[5*i+1] = blk.dim1;
-            blkdims[5*i+2] = blk.dim2;
-            blkdims[5*i+3] = blk.dim3;
-            blkdims[5*i+4] = wf.info.get_offset(br,bc,bm,bv,tslc1,tsc2r)-1;
+            int tsi = std::get<3>(key);
+            auto blk = wf(br,bc,bm,tsi);
+            blkdims[4*i]   = blk.dim0;
+            blkdims[4*i+1] = blk.dim1;
+            blkdims[4*i+2] = blk.dim2;
+            blkdims[4*i+3] = wf.info.get_offset(br,bc,bm,tsi)-1;
          }
-         GPUmem.to_gpu(dev_dims, blkdims.data(), nblk*5*sizeof(size_t));
+         GPUmem.to_gpu(dev_dims, blkdims.data(), nblk*4*sizeof(size_t));
          auto t2 = tools::get_time();
 
-         std::vector<size_t> opoffs(nblk*4,0);
+         std::vector<size_t> opoffs(nblk*3,0);
          // 1. local terms: <lc1c2r|H|lc1c2r> = Hll + Hc1c1 + Hc2c2 + Hrr
          // NOTE: ifdist1=false, each node has nonzero H[l] and H[r],
          // whose contributions to Diag need to be taken into aacount.
          if(!ifdist1 || rank == 0){
-            const auto& Hl  = lqops('H').at(0);
-            const auto& Hr  = rqops('H').at(0);
-            const auto& Hc1 = c1qops('H').at(0);
-            const auto& Hc2 = c2qops('H').at(0);
+            const auto& Hl = lqops('H').at(0);
+            const auto& Hr = rqops('H').at(0);
+            const auto& Hc = cqops('H').at(0);
             for(int i=0; i<nblk; i++){
                auto key = wf.info._nnzaddr[i];
                int br = std::get<0>(key);
                int bc = std::get<1>(key);
                int bm = std::get<2>(key);
-               int bv = std::get<3>(key);
-               int tslc1 = std::get<4>(key);
-               int tsc2r = std::get<5>(key);
-               opoffs[4*i]   =  lqops._offset.at(std::make_pair('H',0)) + Hl.info.get_offset(br,br)-1;
-               opoffs[4*i+1] =  rqops._offset.at(std::make_pair('H',0)) + Hr.info.get_offset(bc,bc)-1;
-               opoffs[4*i+2] = c1qops._offset.at(std::make_pair('H',0)) + Hc1.info.get_offset(bm,bm)-1;
-               opoffs[4*i+3] = c2qops._offset.at(std::make_pair('H',0)) + Hc2.info.get_offset(bv,bv)-1;
+               int tsi = std::get<3>(key);
+               opoffs[3*i]   = lqops._offset.at(std::make_pair('H',0)) + Hl.info.get_offset(br,br)-1;
+               opoffs[3*i+1] = rqops._offset.at(std::make_pair('H',0)) + Hr.info.get_offset(bc,bc)-1;
+               opoffs[3*i+2] = cqops._offset.at(std::make_pair('H',0)) + Hc.info.get_offset(bm,bm)-1;
             }
-            GPUmem.to_gpu(&dev_dims[nblk*5], opoffs.data(), nblk*4*sizeof(size_t));
+            GPUmem.to_gpu(&dev_dims[nblk*4], opoffs.data(), nblk*3*sizeof(size_t));
             onedot_diagGPU_local(nblk, ndim, dev_diag, dev_dims, 
                   lqops._dev_data, rqops._dev_data,
-                  c1qops._dev_data, c2qops._dev_data);
+                  cqops._dev_data);
          }
          auto t3 = tools::get_time();
 
@@ -94,12 +84,9 @@ namespace ctns{
          // B/Q^L---*------*---B/Q^R
          std::vector<double> vec_fac(nblk);
          double* dev_fac = (double*)GPUmem.allocate(nblk*sizeof(double)); 
-         onedot_diagGPU_BQ("lc1" ,  lqops, c1qops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
-         onedot_diagGPU_BQ("lc2" ,  lqops, c2qops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
-         onedot_diagGPU_BQ("lr"  ,  lqops,  rqops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
-         onedot_diagGPU_BQ("c1c2", c1qops, c2qops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
-         onedot_diagGPU_BQ("c1r" , c1qops,  rqops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
-         onedot_diagGPU_BQ("c2r" , c2qops,  rqops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
+         onedot_diagGPU_BQ("lc", lqops, cqops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
+         onedot_diagGPU_BQ("lr", lqops, rqops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
+         onedot_diagGPU_BQ("cr", cqops, rqops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
          GPUmem.deallocate(dev_fac, nblk*sizeof(double));
          auto t4 = tools::get_time();
 
@@ -132,10 +119,8 @@ namespace ctns{
                << " t7=" << tools::get_duration(t7-t6) 
                << std::endl;
          }
-*/
       }
 
-/*
    template <typename Tm>
       void onedot_diagGPU_BQ(const std::string superblock,
             const opersu2_dict<Tm>& qops1,
@@ -176,143 +161,89 @@ namespace ctns{
             double fac = (kp==kq)? 0.5 : 1.0;
             double wt = ((ts==0)? 1.0 : -std::sqrt(3.0))*fac*2.0; // 2.0 from B^H*Q^H
 
-            if(superblock == "lc1"){
+            if(superblock == "lc"){
 
                int tsOl = ts;
-               int tsOc1 = ts;
-               int tsOlc1 = 0;
-               int tsOc2 = 0;
+               int tsOc = ts;
                int tsOr = 0;
-               int tsOc2r = 0;
-               int tsOtot = 0;
-               int br, bc, bm, bv, tslc1, tsc2r;
+               int tsO1 = 0, tsO2 = 0, tsOtot = 0;
+               if(wf.info.couple == CRcouple){
+                  // l|cr: Ol*(Oc*Ir)
+                  tsO1 = ts; tsO2 = ts;
+               }else{
+                  // lc|r: (Ol*Oc)*Ir
+                  tsO1 = 0; tsO2 = 0;
+               }
+               int br, bc, bm, tsi;
                for(int i=0; i<nblk; i++){
-                  double fac = get_onedot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
-                        tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
+                  double fac = get_onedot_diag_su2info(i,wf,br,bc,bm,tsi,
+                        tsOl,tsOc,tsOr,tsO1,tsO2,tsOtot,wt);
                   vec_fac[i] = fac;
                   if(std::abs(fac) < thresh_diag_angular) continue;
                   opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info.get_offset(br,br)-1;
                   opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info.get_offset(bm,bm)-1;
                }
                GPUmem.to_gpu(dev_fac, vec_fac.data(), nblk*sizeof(double));
-               GPUmem.to_gpu(&dev_dims[nblk*5], opoffs.data(), nblk*2*sizeof(size_t));
+               GPUmem.to_gpu(&dev_dims[nblk*4], opoffs.data(), nblk*2*sizeof(size_t));
                onedot_diagGPU_O1O2_su2(nblk, ndim, dev_diag, dev_dims, qops1._dev_data, qops2._dev_data, dev_fac, 0, 2);
-
-            }else if(superblock == "lc2"){
-
-               int tsOl = ts;
-               int tsOc1 = 0;
-               int tsOlc1 = ts;
-               int tsOc2 = ts;
-               int tsOr = 0;
-               int tsOc2r = ts;
-               int tsOtot = 0;
-               int br, bc, bm, bv, tslc1, tsc2r;
-               for(int i=0; i<nblk; i++){
-                  double fac = get_onedot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
-                        tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
-                  vec_fac[i] = fac;
-                  if(std::abs(fac) < thresh_diag_angular) continue;
-                  opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info.get_offset(br,br)-1;
-                  opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info.get_offset(bv,bv)-1;
-               }
-               GPUmem.to_gpu(dev_fac, vec_fac.data(), nblk*sizeof(double));
-               GPUmem.to_gpu(&dev_dims[nblk*5], opoffs.data(), nblk*2*sizeof(size_t));
-               onedot_diagGPU_O1O2_su2(nblk, ndim, dev_diag, dev_dims, qops1._dev_data, qops2._dev_data, dev_fac, 0, 3);
 
             }else if(superblock == "lr"){
 
                int tsOl = ts;
-               int tsOc1 = 0;
-               int tsOlc1 = ts;
-               int tsOc2 = 0;
+               int tsOc = 0;
                int tsOr = ts;
-               int tsOc2r = ts;
-               int tsOtot = 0;
-               int br, bc, bm, bv, tslc1, tsc2r;
+               int tsO1 = 0, tsO2 = 0, tsOtot = 0;
+               if(wf.info.couple == CRcouple){
+                  // l|cr: Ol*(Ic*Or)
+                  tsO1 = ts; tsO2 = ts;
+               }else{
+                  // lc|r: (Ol*Ic)*Or
+                  tsO1 = ts; tsO2 = ts;
+               }
+               int br, bc, bm, tsi;
                for(int i=0; i<nblk; i++){
-                  double fac = get_onedot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
-                        tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
+                  double fac = get_onedot_diag_su2info(i,wf,br,bc,bm,tsi,
+                        tsOl,tsOc,tsOr,tsO1,tsO2,tsOtot,wt);
                   vec_fac[i] = fac;
                   if(std::abs(fac) < thresh_diag_angular) continue;
                   opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info.get_offset(br,br)-1;
                   opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info.get_offset(bc,bc)-1;
                }
                GPUmem.to_gpu(dev_fac, vec_fac.data(), nblk*sizeof(double));
-               GPUmem.to_gpu(&dev_dims[nblk*5], opoffs.data(), nblk*2*sizeof(size_t));
+               GPUmem.to_gpu(&dev_dims[nblk*4], opoffs.data(), nblk*2*sizeof(size_t));
                onedot_diagGPU_O1O2_su2(nblk, ndim, dev_diag, dev_dims, qops1._dev_data, qops2._dev_data, dev_fac, 0, 1);
 
-            }else if(superblock == "c1c2"){
+            }else if(superblock == "cr"){
 
                int tsOl = 0;
-               int tsOc1 = ts;
-               int tsOlc1 = ts;
-               int tsOc2 = ts;
-               int tsOr = 0;
-               int tsOc2r = ts;
-               int tsOtot = 0;
-               int br, bc, bm, bv, tslc1, tsc2r;
-               for(int i=0; i<nblk; i++){
-                  double fac = get_onedot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
-                        tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
-                  vec_fac[i] = fac;
-                  if(std::abs(fac) < thresh_diag_angular) continue;
-                  opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info.get_offset(bm,bm)-1;
-                  opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info.get_offset(bv,bv)-1;
-               }
-               GPUmem.to_gpu(dev_fac, vec_fac.data(), nblk*sizeof(double));
-               GPUmem.to_gpu(&dev_dims[nblk*5], opoffs.data(), nblk*2*sizeof(size_t));
-               onedot_diagGPU_O1O2_su2(nblk, ndim, dev_diag, dev_dims, qops1._dev_data, qops2._dev_data, dev_fac, 2, 3);
-
-            }else if(superblock == "c1r"){
-
-               int tsOl = 0;
-               int tsOc1 = ts;
-               int tsOlc1 = ts;
-               int tsOc2 = 0;
+               int tsOc = ts;
                int tsOr = ts;
-               int tsOc2r = ts;
-               int tsOtot = 0;
-               int br, bc, bm, bv, tslc1, tsc2r;
+               int tsO1 = 0, tsO2 = 0, tsOtot = 0;
+               if(wf.info.couple == CRcouple){
+                  // l|cr: Il*(Oc*Or)
+                  tsO1 = 0; tsO2 = 0;
+               }else{
+                  // lc|r: (Il*Oc)*Or
+                  tsO1 = ts; tsO2 = ts;
+               }
+               int br, bc, bm, tsi;
                for(int i=0; i<nblk; i++){
-                  double fac = get_onedot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
-                        tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
+                  double fac = get_onedot_diag_su2info(i,wf,br,bc,bm,tsi,
+                        tsOl,tsOc,tsOr,tsO1,tsO2,tsOtot,wt);
                   vec_fac[i] = fac;
                   if(std::abs(fac) < thresh_diag_angular) continue;
                   opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info.get_offset(bm,bm)-1;
                   opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info.get_offset(bc,bc)-1;
                }
                GPUmem.to_gpu(dev_fac, vec_fac.data(), nblk*sizeof(double));
-               GPUmem.to_gpu(&dev_dims[nblk*5], opoffs.data(), nblk*2*sizeof(size_t));
+               GPUmem.to_gpu(&dev_dims[nblk*4], opoffs.data(), nblk*2*sizeof(size_t));
                onedot_diagGPU_O1O2_su2(nblk, ndim, dev_diag, dev_dims, qops1._dev_data, qops2._dev_data, dev_fac, 2, 1);
-
-            }else if(superblock == "c2r"){
-
-               int tsOl = 0;
-               int tsOc1 = 0;
-               int tsOlc1 = 0;
-               int tsOc2 = ts;
-               int tsOr = ts;
-               int tsOc2r = 0;
-               int tsOtot = 0;
-               int br, bc, bm, bv, tslc1, tsc2r;
-               for(int i=0; i<nblk; i++){
-                  double fac = get_onedot_diag_su2info(i,wf,br,bc,bm,bv,tslc1,tsc2r,
-                        tsOl,tsOc1,tsOlc1,tsOc2,tsOr,tsOc2r,tsOtot,wt);
-                  vec_fac[i] = fac;
-                  if(std::abs(fac) < thresh_diag_angular) continue;
-                  opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info.get_offset(bv,bv)-1;
-                  opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info.get_offset(bc,bc)-1;
-               }
-               GPUmem.to_gpu(dev_fac, vec_fac.data(), nblk*sizeof(double));
-               GPUmem.to_gpu(&dev_dims[nblk*5], opoffs.data(), nblk*2*sizeof(size_t));
-               onedot_diagGPU_O1O2_su2(nblk, ndim, dev_diag, dev_dims, qops1._dev_data, qops2._dev_data, dev_fac, 3, 1);
 
             } // endif
 
          } // index
       }
-*/
+
 } // ctns
 
 #endif

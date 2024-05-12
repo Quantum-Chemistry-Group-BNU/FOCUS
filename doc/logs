@@ -372,7 +372,7 @@
          - onedot_decimation:
       - propagation of initial guess & finalization?
          - onedot_guess_psi: turn out to be extremely simple, e.g., recouple_cr().merge_cr()
-      - gpu version:   
+      - gpu version: [DONE@2024/05/12] 
          - onedot_diagGPU_su2.h:
 
  * Benchmark: jiageng or other platform [DONE@2024/06/XX]
