@@ -124,6 +124,7 @@ void SADMRG(const input::schedule& schd){
          int nsample = schd.ctns.nsample;
          int ndetprt = schd.ctns.ndetprt; 
          double Sd = ctns::rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
+         ctns::rcanon_sampleDET(icomb, iroot, nsample, ndetprt);   
       }
    }
 
