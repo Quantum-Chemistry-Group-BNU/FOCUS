@@ -3,16 +3,18 @@ import test_utils
 
 mpiprefix = "mpirun -np 2 "
 os.environ['OMP_NUM_THREADS'] = "8"
-print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
 
 HOME = os.path.dirname(os.getcwd())
-print('HOME=',HOME)
 SCI  = HOME+"/bin/sci.x"
 CTNS = mpiprefix + HOME+"/bin/ctns.x"
 SADMRG = mpiprefix + HOME+"/bin/sadmrg.x"
 os.environ['SCI'] = SCI
 os.environ['CTNS'] = CTNS
 os.environ['SADMRG'] = SADMRG
+
+print('mpiprefix=',mpiprefix)
+print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
+print('HOME=',HOME)
 
 dirs = ['tests_cpu/0_h6_tns', 
         'tests_cpu/1_lih3_dcg', 

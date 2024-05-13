@@ -3,18 +3,20 @@ import test_utils
 
 mpiprefix = "mpirun -np 2 "
 os.environ['OMP_NUM_THREADS'] = "10"
-print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
 #os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 #print('CUDA_VISIBLE_DEVICES=',os.environ.get('CUDA_VISIBLE_DEVICES'))
 
 HOME = os.path.dirname(os.getcwd())
-print('HOME=',HOME)
 SCI  = HOME+"/bin/sci.x"
 CTNS = mpiprefix + HOME+"/bin/ctns.x"
 SADMRG = mpiprefix + HOME+"/bin/sadmrg.x"
 os.environ['SCI'] = SCI
 os.environ['CTNS'] = CTNS
 os.environ['SADMRG'] = SADMRG
+
+print('mpiprefix=',mpiprefix)
+print('OMP_NUM_THREADS=',os.environ.get('OMP_NUM_THREADS'))
+print('HOME=',HOME)
 
 #import os
 #print(os.environ['DYLD_LIBRARY_PATH'])
@@ -29,7 +31,7 @@ dirs = ['tests_gpu/h4',
         'tests_gpu/h5_rNSz_alg19b', # ifdist1
         'tests_gpu/h5_rNSz_cisolver',
         'tests_gpu/h6_sadmrg_cisolver',
-        'tests_gpu/h6_sadmrg_onedot'
+        'tests_gpu/h6_sadmrg_onedot',
         'tests_gpu/h6_sadmrg_nccl'
         ]
 test_utils.test_run(dirs)
