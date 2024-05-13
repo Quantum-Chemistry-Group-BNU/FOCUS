@@ -76,6 +76,7 @@ namespace ctns{
                fname, timing_local); 
          
          qops_pool.join_and_erase(fneed);
+         icomb.world.barrier();
          qops_pool.save_to_disk(frop, schd.ctns.async_save);
 
          auto t1 = tools::get_time();
