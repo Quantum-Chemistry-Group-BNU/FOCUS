@@ -2,9 +2,11 @@
 #define PDVDSON_H
 
 #include "../core/ortho.h"
-
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
+#endif
+#ifdef GPU
+#include "../gpu/gpu_env.h"
 #endif
 
 namespace ctns{
@@ -120,7 +122,7 @@ namespace ctns{
                   // check consistency with diag
                   double diff = 0.0;
                   if(ifCheckDiag){
-                     std::cout << "CheckDiag: ndim=" << ndim << std::endl;
+                     std::cout << "CheckDiag[master]: ndim=" << ndim << std::endl;
                      std::cout << std::setprecision(12);
                      for(int i=0; i<ndim; i++){
                         std::cout << "i=" << i 

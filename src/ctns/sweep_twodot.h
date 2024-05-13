@@ -59,11 +59,12 @@ namespace ctns{
          timing.t0 = tools::get_time();
 
          // 0. check partition
+         const int dots = 2; 
          const auto& dbond = sweeps.seq[ibond];
-         icomb.topo.check_partition(2, dbond, debug, schd.ctns.verbose);
+         icomb.topo.check_partition(dots, dbond, debug, schd.ctns.verbose);
 
          // 1. load operators
-         auto fneed = icomb.topo.get_fqops(2, dbond, scratch, debug && schd.ctns.verbose>0);
+         auto fneed = icomb.topo.get_fqops(dots, dbond, scratch, debug && schd.ctns.verbose>0);
          qops_pool.fetch_to_memory(fneed, alg_hvec>10 || alg_renorm>10);
          const qoper_dictmap<ifab,Tm> qops_dict = {
             {"l" ,qops_pool.at(fneed[0])},
@@ -125,7 +126,7 @@ namespace ctns{
                << " nnz=" << ndim << ":"
                << tools::sizeMB<Tm>(ndim) << "MB"
                << std::endl;
-            wf.print("wf",schd.ctns.verbose-2);
+            wf.print("wf4",schd.ctns.verbose-2);
          }
          if(ndim == 0){
             std::cout << "error: symmetry is inconsistent as ndim=0" << std::endl;
@@ -183,7 +184,7 @@ namespace ctns{
             fmmtask = "hmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          }
          HVec_wrapper<Qm,Tm,qinfo4type<ifab,Tm>,qtensor4<ifab,Tm>> HVec;
-         HVec.init(2, qops_dict, int2e, ecore, schd, size, rank, maxthreads, 
+         HVec.init(dots, qops_dict, int2e, ecore, schd, size, rank, maxthreads, 
                ndim, wf, timing, fname, fmmtask);
 
          //-------------

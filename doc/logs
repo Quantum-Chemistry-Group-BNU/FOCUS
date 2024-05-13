@@ -350,7 +350,7 @@
       - bugfix for 1_lih_dcg? Due to linking to both gomp&iomp via magma.
                               The compiler for magam must be the same!!!
  
- * Onedot algorithm: sweep_onedot.h [DONE@2024/05/12]
+ * Onedot algorithm: sweep_onedot.h [DONE@2024/05/13]
     - non-spin-adapted case:
       - alg_hvec=4 & alg_hvec=5 [DONE@2024/05/04]
          - preprocess_hmu.h

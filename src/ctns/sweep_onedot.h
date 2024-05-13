@@ -52,16 +52,19 @@ namespace ctns{
                << " mpisize=" << size
                << " maxthreads=" << maxthreads 
                << std::endl;
+            get_sys_status();
+            icomb.display_size();
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
 
-         // check partition 
+         // 0. check partition 
+         const int dots = 1;
          const auto& dbond = sweeps.seq[ibond];
-         auto dims = icomb.topo.check_partition(1, dbond, debug, schd.ctns.verbose);
+         auto dims = icomb.topo.check_partition(dots, dbond, debug, schd.ctns.verbose);
 
          // 1. load operators 
-         auto fneed = icomb.topo.get_fqops(1, dbond, scratch, debug && schd.ctns.verbose>0);
+         auto fneed = icomb.topo.get_fqops(dots, dbond, scratch, debug && schd.ctns.verbose>0);
          qops_pool.fetch_to_memory(fneed, alg_hvec>10 || alg_renorm>10);
          const qoper_dictmap<ifab,Tm> qops_dict = {
             {"l",qops_pool.at(fneed[0])},
@@ -81,7 +84,6 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
          }
-         timing.ta = tools::get_time();
 
          // 1.5 look ahead for the next dbond
          auto fbond = icomb.topo.get_fbond(dbond, scratch, debug && schd.ctns.verbose>0);
@@ -145,6 +147,7 @@ namespace ctns{
 
          // 3. Davidson solver for wf
          // 3.1 diag 
+         auto diag_t0 = tools::get_time();
          double* diag = new double[ndim];
          if(alg_hvec <= 10){
             onedot_diag(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1);
@@ -153,16 +156,27 @@ namespace ctns{
             onedot_diagGPU(qops_dict, wf, diag, size, rank, schd.ctns.ifdist1, schd.ctns.ifnccl, schd.ctns.diagcheck);
 #endif
          }
+         auto diag_t1 = tools::get_time();
 #ifndef SERIAL
          // reduction of partial diag: no need to broadcast, if only rank=0 
          // executes the preconditioning in Davidson's algorithm
-         if(size > 1){
+         if(!schd.ctns.ifnccl && size > 1){
             mpi_wrapper::reduce(icomb.world, diag, ndim, 0);
          }
 #endif 
+         auto diag_t2 = tools::get_time();
          std::transform(diag, diag+ndim, diag,
                [&ecore](const double& x){ return x+ecore; });
          timing.tb = tools::get_time();
+         auto diag_t3 = tools::get_time();
+         if(rank==0){
+            double duration_diagGPU = tools::get_duration(diag_t1-diag_t0);
+            double duration_diagreduce = tools::get_duration(diag_t2-diag_t1);
+            double duration_diagtransform = tools::get_duration(diag_t3-diag_t2);
+            std::cout<<"duration_diagGPU:"<<duration_diagGPU<<std::endl;
+            std::cout<<"duration_diagreduce:"<<duration_diagreduce<<std::endl;
+            std::cout<<"duration_diagtransform:"<<duration_diagtransform<<std::endl;
+         }
 
          // 3.2 prepare HVec & solve local problem: Hc=cE
          // formulae file
@@ -178,7 +192,7 @@ namespace ctns{
             fmmtask = "hmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          }
          HVec_wrapper<Qm,Tm,qinfo3type<ifab,Tm>,qtensor3<ifab,Tm>> HVec;
-         HVec.init(1, qops_dict, int2e, ecore, schd, size, rank, maxthreads, 
+         HVec.init(dots, qops_dict, int2e, ecore, schd, size, rank, maxthreads, 
                ndim, wf, timing, fname, fmmtask);
 
          //-------------
@@ -190,7 +204,7 @@ namespace ctns{
          oper_timer.dot_start();
          onedot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2, 
                ndim, neig, diag, HVec.Hx, eopt, vsol, nmvp, wf, timing);
-         // free temporary space
+         // free tmp space on CPU & GPU
          delete[] diag;
          HVec.finalize();
          if(debug){
@@ -221,7 +235,7 @@ namespace ctns{
          timing.t1 = tools::get_time();
          if(debug){
             get_sys_status();
-            timing.analysis("local", schd.ctns.verbose>0);
+            timing.analysis("local opt", schd.ctns.verbose>0);
          }
       }
 

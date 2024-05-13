@@ -30,5 +30,6 @@ dirs = ['tests_gpu/h4',
         'tests_gpu/h5_rNSz_cisolver',
         'tests_gpu/h6_sadmrg_cisolver',
         'tests_gpu/h6_sadmrg_onedot'
+        'tests_gpu/h6_sadmrg_nccl'
         ]
 test_utils.test_run(dirs)
