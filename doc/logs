@@ -383,8 +383,4 @@
    - fe4s4
    - fe8s7
    - femoco
- 
- * Decimation on GPU? [DONE@2024/06/XX]
-   - cuSolver: svd
-   - cuSOlver: eig
 

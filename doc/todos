@@ -1,10 +1,6 @@
 
 ### TODOs: more functionalities ###
 
- * Spin-adapted version? [DONE]
-
- * One-dot algorithm [???] 
-
  * Reduced density matrices: (RDMs) 
    - non-spin-adapted case:
       - one-body RDM:
@@ -24,8 +20,12 @@
    - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
       otherwise renormalized state become complex, and the construction of H 
       requires 'Conj' operation in GEMM!] 
-
+ 
 ### TODOs: better scalabilities ###
+
+ * Decimation on GPU?
+   - cuSolver: svd
+   - cuSOlver: eig
 
  * Better Davidson solver on GPU?
    - GPU memory is a problem
@@ -42,17 +42,6 @@
    - Can renorm be performed in a similar way?
 
 ### TODOs: applications ###
-
- * Towards large-scale parallelization: some old issues 
-    - profile openmp/mpi onedot/twodot version with large D
-	 - note: when noise is added, the results can be different 
-	 - analyze why the parallel efficiency is low?
-	 - 1. sort formulae + static/dynamic/guided,chunksize [DONE2022/03/05]
-	 - 2. private workspace?
-	 - 3. reduction
-    - GPU implementation 
-    - merged wf4[lc1,c2r] implementation?
-	 - how to avoid repeated K()?
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]
