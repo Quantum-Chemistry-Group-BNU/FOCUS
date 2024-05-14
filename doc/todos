@@ -1,17 +1,6 @@
 
 ### TODOs: more functionalities ###
 
- * Reduced density matrices: (RDMs) 
-   - non-spin-adapted case:
-      - one-body RDM:
-      - two-body RDM:
-      - transition PDM:
-   - spin-adapted case:
-      - one-body RDM:
-      - two-body RDM:
-      - transition PDM:
-   - transition particle density matrix (for SOC)
-
  * Perturbative spin-orbit interaction via state interaction?
 
  * Kramers version for 2c/4c Hamiltonian: 
@@ -31,11 +20,12 @@
    - GPU memory is a problem
 
  * Real space parallelization (=> More GPU/DCU) [!!!]
+   - No really useful for pratical applications except for large-scale benchmark
 
  * Support Mixed CPU-GPU implementation?
    - mmtasks revise [also avoid copy for magma?]
  
- * Support further partition of operators: reduce GPU memory requirement
+ * Support further partition of operators: reduce GPU memory requirement [!!!]
    - GPU only compute large blocks y[l,r,c1,c2] if d[l] & d[r] > dthresh,
      and hence we only need to send rows of o[l,:] and o[r,:] as well as
      the full vector x & y to GPU, which minimize the memory usage of GPU.

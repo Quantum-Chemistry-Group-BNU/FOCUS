@@ -384,3 +384,14 @@
    - fe8s7
    - femoco
 
+ * Reduced density matrices: (RDMs) [DONE@2024/08/XX] 
+   - non-spin-adapted case:
+      - one-body RDM:
+      - two-body RDM:
+      - transition PDM:
+   - spin-adapted case:
+      - one-body RDM:
+      - two-body RDM:
+      - transition PDM:
+   - transition particle density matrix (for SOC)
+
