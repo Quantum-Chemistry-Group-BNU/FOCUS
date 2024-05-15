@@ -393,5 +393,8 @@
       - one-body RDM:
       - two-body RDM:
       - transition PDM:
+   - quantum information measure:
+      - single orbital entropy
+      - mutual information
    - transition particle density matrix (for SOC)
 

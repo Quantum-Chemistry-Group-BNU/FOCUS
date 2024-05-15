@@ -48,6 +48,10 @@ void params_ctns::read(ifstream& istrm){
          task_opt = true;
       }else if(line.substr(0,8)=="task_vmc"){
          task_vmc = true;
+      }else if(line.substr(0,11)=="task_expand"){
+         task_expand = true;
+      }else if(line.substr(0,13)=="task_tononsu2"){
+         task_tononsu2 = true;
       }else if(line.substr(0,13)=="restart_sweep"){
          restart_sweep = stoi(line.substr(13));
       }else if(line.substr(0,12)=="restart_bond"){
@@ -127,8 +131,8 @@ void params_ctns::read(ifstream& istrm){
          iroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
          nsample = stoi(line.substr(7));
-      }else if(line.substr(0,7)=="ndetprt"){
-         ndetprt = stoi(line.substr(7));
+      }else if(line.substr(0,5)=="pthrd"){
+         pthrd = stod(line.substr(5));
       }else if(line.substr(0,5)=="tosu2"){
          tosu2 = true;
       }else if(line.substr(0,12)=="thresh_tosu2"){
@@ -226,6 +230,8 @@ void params_ctns::print() const{
    cout << "task_ham = " << task_ham << endl;
    cout << "task_opt = " << task_opt << endl;
    cout << "task_vmc = " << task_vmc << endl;
+   cout << "task_expand = " << task_expand << endl;
+   cout << "task_tononsu2 = " << task_tononsu2 << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;
    cout << "timestamp = " << timestamp << endl;
@@ -290,7 +296,7 @@ void params_ctns::print() const{
    // sampling
    cout << "iroot = " << iroot << endl;
    cout << "nsample = " << nsample << endl;
-   cout << "ndetprt = " << ndetprt << endl;
+   cout << "pthrd = " << pthrd << endl;
    // su2 symmetry
    cout << "tosu2 = " << tosu2 << endl;
    cout << "thresh_tosu2 = " << scientific << thresh_tosu2 << endl;

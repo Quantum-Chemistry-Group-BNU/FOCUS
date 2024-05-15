@@ -116,15 +116,31 @@ void SADMRG(const input::schedule& schd){
    }
 #endif
 
+   // debug
+   if(schd.ctns.task_expand){
+      if(rank == 0){
+         ctns::rcanon_Sdiag_exact(icomb, schd.ctns.iroot, "csf", schd.ctns.pthrd);  
+         ctns::rcanon_Sdiag_exact(icomb, schd.ctns.iroot, "det", schd.ctns.pthrd); 
+      }
+   }
+
    // compute sdiag
    if(schd.ctns.task_sdiag){
       // parallel sampling can be implemented in future (should be very simple)!
       if(rank == 0){
-         int iroot  = schd.ctns.iroot;
-         int nsample = schd.ctns.nsample;
-         int ndetprt = schd.ctns.ndetprt; 
-         double Sd = ctns::rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
-         ctns::rcanon_sampleDET(icomb, iroot, nsample, ndetprt);   
+         ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, schd.ctns.pthrd);
+         ctns::rcanon_sample_samps2det(icomb, schd.ctns.iroot, schd.ctns.nsample, schd.ctns.pthrd);
+      }
+   }
+   
+   // convert to nonsu2
+   if(schd.ctns.task_tononsu2){
+      if(rank == 0){
+         ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
+         ctns::rcanon_tononsu2(icomb, icomb_NSz, schd.twoms); 
+         icomb.display_shape();
+         icomb_NSz.display_shape();
+         ctns::rcanon_Sdiag_exact(icomb_NSz, schd.ctns.iroot, schd.ctns.pthrd);
       }
    }
 

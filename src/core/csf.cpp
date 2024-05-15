@@ -83,7 +83,7 @@ std::pair<onspace,std::vector<double>> csfstate::to_det() const{
    if(norb_single() == 0){
       dets.push_back(repr);
       coeff.resize(1);
-      coeff[0] = 0;
+      coeff[0] = 1;
    }else{
       int ne_os = norb_single();
       int ts = twos();

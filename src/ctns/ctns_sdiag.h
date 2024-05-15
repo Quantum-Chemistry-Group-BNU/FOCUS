@@ -16,70 +16,53 @@
 
 namespace ctns{
 
-   // --- Abelian MPS ---
+   // --- Sdiag_exact: Abelian MPS ---
 
    // Algorithm 3:
    // exact computation of Sdiag, only for small system
    template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       double rcanon_Sdiag_exact(const comb<Qm,Tm>& icomb,
             const int iroot,
-            const double thresh_print=1.e-10){
-         std::cout << "\nctns::rcanon_Sdiag_exact iroot=" << iroot
-            << " thresh_print=" << thresh_print << std::endl;
-
+            const double pthrd=1.e-2){
+         std::cout << "\nctns::rcanon_Sdiag_exact:"
+            << " ifab=" << Qm::ifabelian
+            << " iroot=" << iroot
+            << " pthrd=" << pthrd
+            << std::endl;
          // expand CTNS into determinants
-         auto expansion = rcanon_expand_onstate(icomb, iroot, thresh_print);
+         auto expansion = rcanon_expand_onspace(icomb, iroot, pthrd);
          auto coeffs = expansion.second;
          size_t dim = coeffs.size();
          double Sdiag = fock::coeff_entropy(coeffs);
          double ovlp = std::pow(linalg::xnrm2(dim,&coeffs[0]),2); 
-         std::cout << "ovlp=" << ovlp << " Sdiag(exact)=" << Sdiag << std::endl;
-
-         // check: computation by sampling CI vector
-         std::vector<double> weights(dim,0.0);
-         std::transform(coeffs.begin(), coeffs.end(), weights.begin(),
-               [](const Tm& x){ return std::norm(x); });
-         std::discrete_distribution<> dist(weights.begin(),weights.end());
-         const int nsample = 1e6;
-         int noff = nsample/10;
-         const double cutoff = 1.e-12;
-         double Sd = 0.0, Sd2 = 0.0, std = 0.0;
-         for(int i=0; i<nsample; i++){
-            int idx = dist(tools::generator);
-            auto ci2 = weights[idx];
-            double s = (ci2 < cutoff)? 0.0 : -log2(ci2)*ovlp;
-            double fac = 1.0/(i+1.0);
-            Sd = (Sd*i + s)*fac;
-            Sd2 = (Sd2*i + s*s)*fac;
-            if((i+1)%noff == 0){
-               std = std::sqrt((Sd2-Sd*Sd)/(i+1.e-10));
-               std::cout << " i=" << i << " Sd=" << Sd << " std=" << std 
-                  << " range=(" << Sd-std << "," << Sd+std << ")"
-                  << std::endl;
-            }
-         }
+         std::cout << "dim=" << dim << std::setprecision(6) 
+            << " ovlp=" << ovlp 
+            << " Sdiag(exact)=" << Sdiag 
+            << std::endl;
          return Sdiag;
       }
 
-   // --- Non-Abelian MPS --- 
+   // --- Sdiag_exact: Non-Abelian MPS --- 
    
    // exact computation of Sdiag, only for small system
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       double rcanon_Sdiag_exact(const comb<Qm,Tm>& icomb,
             const int iroot,
             const std::string type,
-            const double thresh_print=1.e-10){
-         std::cout << "\nctns::rcanon_Sdiag_exact iroot=" << iroot
+            const double pthrd=1.e-2){
+         std::cout << "\nctns::rcanon_Sdiag_exact:"
+            << " ifab=" << Qm::ifabelian
+            << " iroot=" << iroot
             << " type=" << type
-            << " thresh_print=" << thresh_print << std::endl;
-
+            << " pthrd=" << pthrd 
+            << std::endl;
          // expand CTNS into csf/det
          std::vector<Tm> coeffs;
          if(type == "csf"){
-            auto expansion = rcanon_expand_csfstate(icomb, iroot, thresh_print);
+            auto expansion = rcanon_expand_csfspace(icomb, iroot, pthrd);
             coeffs = expansion.second;
          }else if(type == "det"){
-            auto expansion = rcanon_expand_onstate(icomb, iroot, thresh_print);
+            auto expansion = rcanon_expand_onspace(icomb, iroot, pthrd);
             coeffs = expansion.second;
          }else{
             tools::exit("error: no such type for rcanon_Sdiag_exact");
@@ -87,13 +70,15 @@ namespace ctns{
          size_t dim = coeffs.size();
          double Sdiag = fock::coeff_entropy(coeffs);
          double ovlp = std::pow(linalg::xnrm2(dim,&coeffs[0]),2);
-         std::cout << "ovlp=" << ovlp << " Sdiag(exact)=" << Sdiag << std::endl;
-
+         std::cout << "dim=" << dim << std::setprecision(6) 
+            << " ovlp=" << ovlp 
+            << " Sdiag(exact)=" << Sdiag 
+            << std::endl;
          return Sdiag;
       }
 
 
-   // --- Abelian & Non-Abelian MPS ---
+   // --- Sdiag_sample: Abelian & Non-Abelian MPS ---
 
    // compute diagonal entropy via sampling:
    // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
@@ -101,13 +86,16 @@ namespace ctns{
       double rcanon_Sdiag_sample(const comb<Qm,Tm>& icomb,
             const int iroot,
             const int nsample=10000,
-            const int nprt=10){ // no. of largest states to be printed
+            const int pthrd=1.e-2){ // no. of largest states to be printed
          using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type; 
-         const double cutoff = 1.e-12;
-         std::cout << "\nctns::rcanon_Sdiag_sample iroot=" << iroot 
-            << " nsample=" << nsample 
-            << " nprt=" << nprt << std::endl;
          auto t0 = tools::get_time();
+         const double cutoff = 1.e-12;
+         std::cout << "\nctns::rcanon_Sdiag_sample:" 
+            << " ifab=" << Qm::ifabelian
+            << " iroot=" << iroot 
+            << " nsample=" << nsample 
+            << " pthrd=" << pthrd
+            << std::endl;
          const int noff = nsample/10;
          // In case CTNS is not normalized 
          double ovlp = std::abs(get_Smat(icomb)(iroot,iroot));
@@ -129,57 +117,66 @@ namespace ctns{
                std = std::sqrt((Sd2-Sd*Sd)/(i+1.e-10));
                auto t1 = tools::get_time();
                double dt = tools::get_duration(t1-t0);
-               std::cout << " i=" << i << " Sd=" << Sd << " std=" << std
+               std::cout << " i=" << i 
+                  << std::setprecision(6)
+                  << " Sdiag=" << Sd << " std=" << std
                   << " timing=" << dt << " s" << std::endl;	      
                t0 = tools::get_time();
             }
          }
          // print important determinants
-         if(nprt > 0){
-            int size = pop.size();
-            std::cout << "sampled important csf/det: pop.size=" << size << std::endl; 
-            std::vector<statetype> states(size);
-            std::vector<int> counts(size);
-            int i = 0;
-            for(const auto& pr : pop){
-               states[i] = pr.first;
-               counts[i] = pr.second;
-               i++;
-            }
-            auto indx = tools::sort_index(counts,1);
-            // compare the first n important dets by counts
-            int sum = 0;
-            for(int i=0; i<std::min(size,nprt); i++){
-               int idx = indx[i];
-               auto state = states[idx];
-               auto ci = rcanon_CIcoeff(icomb, state)[iroot];
-               sum += counts[idx];
-               std::cout << " i=" << i << " " << state
-                  << " counts=" << counts[idx] 
-                  << " p_i(sample)=" << counts[idx]/(1.0*nsample)
-                  << " p_i(exact)=" << std::norm(ci)/ovlp 
-                  << " c_i(exact)=" << ci/std::sqrt(ovlp)
-                  << std::endl;
-            }
-            std::cout << "accumulated counts=" << sum 
-               << " nsample=" << nsample 
-               << " per=" << 1.0*sum/nsample << std::endl;
+         int size = pop.size();
+         std::cout << "sampled important csf/det: pop.size=" << size << std::endl; 
+         std::vector<statetype> states(size);
+         std::vector<int> counts(size);
+         double Sdpop = 0.0;
+         int i = 0;
+         for(const auto& pr : pop){
+            states[i] = pr.first;
+            counts[i] = pr.second;
+            double ci2 = counts[i]/(1.0*nsample);
+            Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log2(ci2)*ovlp;
+            i++;
          }
+         auto indx = tools::sort_index(counts,1);
+         // compare the first n important dets by counts
+         int sum = 0;
+         for(int i=0; i<size; i++){
+            int idx = indx[i];
+            auto state = states[idx];
+            auto ci = rcanon_CIcoeff(icomb, state)[iroot];
+            double pop = std::norm(ci)/ovlp;
+            if(pop < pthrd) break;
+            sum += counts[idx];
+            std::cout << " i=" << i << " " << state
+               << " counts=" << counts[idx] 
+               << " p_i(sample)=" << counts[idx]/(1.0*nsample)
+               << " p_i(exact)=" << pop
+               << " c_i(exact)=" << ci/std::sqrt(ovlp)
+               << std::endl;
+         }
+         std::cout << "accumulated counts=" << sum 
+            << " nsample=" << nsample 
+            << " per=" << 1.0*sum/nsample << std::endl;
+         std::cout << "estimated Sdiag[MC]=" << Sd << " Sdiag[pop]=" << Sdpop << std::endl;
          return Sd;
       }
 
    // compute diagonal entropy via sampling:
    // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
-      void rcanon_sampleDET(const comb<Qm,Tm>& icomb,
+      double rcanon_sample_samps2det(const comb<Qm,Tm>& icomb,
             const int iroot,
             const int nsample=10000,
-            const int nprt=10){ // no. of largest states to be printed
-         const double cutoff = 1.e-12;
-         std::cout << "\nctns::rcanon_sampleDET iroot=" << iroot 
-            << " nsample=" << nsample 
-            << " nprt=" << nprt << std::endl;
+            const int pthrd=1.e-2){ // no. of largest states to be printed
          auto t0 = tools::get_time();
+         const double cutoff = 1.e-12;
+         std::cout << "\nctns::rcanon_sample_samps2det:"
+            << " ifab=" << Qm::ifabelian
+            << " iroot=" << iroot 
+            << " nsample=" << nsample 
+            << " pthrd=" << pthrd
+            << std::endl;
          const int noff = nsample/10;
          // In case CTNS is not normalized 
          double ovlp = std::abs(get_Smat(icomb)(iroot,iroot));
@@ -202,33 +199,38 @@ namespace ctns{
             }
          }
          // print important determinants
-         if(nprt > 0){
-            int size = pop.size();
-            std::cout << "sampled important det: pop.size=" << size << std::endl; 
-            std::vector<fock::onstate> states(size);
-            std::vector<int> counts(size);
-            int i = 0;
-            for(const auto& pr : pop){
-               states[i] = pr.first;
-               counts[i] = pr.second;
-               i++;
-            }
-            auto indx = tools::sort_index(counts,1);
-            // compare the first n important dets by counts
-            int sum = 0;
-            for(int i=0; i<std::min(size,nprt); i++){
-               int idx = indx[i];
-               auto state = states[idx];
-               sum += counts[idx];
-               std::cout << " i=" << i << " " << state
-                  << " counts=" << counts[idx] 
-                  << " p_i(sample)=" << counts[idx]/(1.0*nsample)
-                  << std::endl;
-            }
-            std::cout << "accumulated counts=" << sum 
-               << " nsample=" << nsample 
-               << " per=" << 1.0*sum/nsample << std::endl;
+         int size = pop.size();
+         std::cout << "sampled important det: pop.size=" << size << std::endl; 
+         std::vector<fock::onstate> states(size);
+         std::vector<int> counts(size);
+         double Sdpop = 0.0;
+         int i = 0;
+         for(const auto& pr : pop){
+            states[i] = pr.first;
+            counts[i] = pr.second;
+            double ci2 = counts[i]/(1.0*nsample);
+            Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log2(ci2)*ovlp;
+            i++;
          }
+         auto indx = tools::sort_index(counts,1);
+         // compare the first n important dets by counts
+         int sum = 0;
+         for(int i=0; i<size; i++){
+            int idx = indx[i];
+            auto state = states[idx];
+            double pop = counts[idx]/(1.0*nsample);
+            if(pop < pthrd) break;
+            sum += counts[idx];
+            std::cout << " i=" << i << " " << state
+               << " counts=" << counts[idx] 
+               << " p_i(sample)=" << pop
+               << std::endl;
+         }
+         std::cout << "accumulated counts=" << sum 
+            << " nsample=" << nsample 
+            << " per=" << 1.0*sum/nsample << std::endl;
+         std::cout << "estimated Sdiag[pop]=" << Sdpop << std::endl;
+         return Sdpop;
       }
 
 } // ctns

@@ -43,6 +43,7 @@ namespace input{
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
                   & task_init & task_sdiag & task_ham & task_opt & task_vmc 
+                  & task_expand & task_tononsu2 
                   & restart_sweep & restart_bond & timestamp
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
@@ -53,7 +54,7 @@ namespace input{
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_load & rcanon_file 
                   & iomode & async_fetch & async_save & async_remove & ifnccl
-                  & iroot & nsample & ndetprt
+                  & iroot & nsample & pthrd
                   & tosu2 & thresh_tosu2 & singlet
                   & diagcheck; 
             }
@@ -72,6 +73,8 @@ namespace input{
          bool task_ham = false;
          bool task_opt = false;
          bool task_vmc = false;
+         bool task_expand = false;
+         bool task_tononsu2 = false;
          // restart
          int restart_sweep = 0;
          int restart_bond = 0;
@@ -123,7 +126,7 @@ namespace input{
          // sampling
          int iroot = 0;
          int nsample = 10000;
-         int ndetprt = 10;
+         double pthrd = 1.e-2;
          // su2 symmetry
          bool tosu2 = false;
          double thresh_tosu2 = 1.e-14;

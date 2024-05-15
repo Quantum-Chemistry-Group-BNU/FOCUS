@@ -100,14 +100,18 @@ void CTNS(const input::schedule& schd){
    }
 #endif
 
+   // debug
+   if(schd.ctns.task_expand){
+      if(rank == 0){
+         ctns::rcanon_Sdiag_exact(icomb, schd.ctns.iroot, schd.ctns.pthrd);
+      }
+   }
+
    // compute sdiag
    if(schd.ctns.task_sdiag){
       // parallel sampling can be implemented in future (should be very simple)!
       if(rank == 0){
-         int iroot  = schd.ctns.iroot;
-         int nsample = schd.ctns.nsample;
-         int ndetprt = schd.ctns.ndetprt; 
-         double Sd = ctns::rcanon_Sdiag_sample(icomb, iroot, nsample, ndetprt);
+         ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, schd.ctns.pthrd);
       }
    }
 
