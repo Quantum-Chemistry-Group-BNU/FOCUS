@@ -86,7 +86,7 @@ namespace ctns{
       double rcanon_Sdiag_sample(const comb<Qm,Tm>& icomb,
             const int iroot,
             const int nsample=10000,
-            const int pthrd=1.e-2){ // no. of largest states to be printed
+            const double pthrd=1.e-2){ // no. of largest states to be printed
          using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type; 
          auto t0 = tools::get_time();
          const double cutoff = 1.e-12;
@@ -168,7 +168,7 @@ namespace ctns{
       double rcanon_sample_samps2det(const comb<Qm,Tm>& icomb,
             const int iroot,
             const int nsample=10000,
-            const int pthrd=1.e-2){ // no. of largest states to be printed
+            const double pthrd=1.e-2){ // no. of largest states to be printed
          auto t0 = tools::get_time();
          const double cutoff = 1.e-12;
          std::cout << "\nctns::rcanon_sample_samps2det:"
@@ -230,6 +230,7 @@ namespace ctns{
             << " nsample=" << nsample 
             << " per=" << 1.0*sum/nsample << std::endl;
          std::cout << "estimated Sdiag[pop]=" << Sdpop << std::endl;
+         std::cout << "warning: it is not the exact pop (interference is neglected)!" << std::endl;
          return Sdpop;
       }
 

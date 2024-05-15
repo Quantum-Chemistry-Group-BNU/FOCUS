@@ -190,6 +190,7 @@ namespace ctns{
          fock::onspace fci_space = fock::get_fci_space(ks,na,nb); 
          size_t dim = fci_space.size();
          std::vector<Tm> coeff(dim,0.0);
+         std::vector<double> pop2(dim,0.0);
          // setup map
          std::map<fock::onstate,int> idxmap;
          for(int i=0; i<dim; i++){
@@ -205,8 +206,11 @@ namespace ctns{
             for(int j=0; j<det_space.size(); j++){
                const auto& det = det_space[j];
                coeff[idxmap[det]] += csf_coeff[i]*det_coeff[j];
+               pop2[idxmap[det]] += std::norm(csf_coeff[i]*det_coeff[j]);
             }
          }
+         fock::entropy(pop2); 
+         std::cout << "warning: it is not the exact pop (interference is neglected)!" << std::endl;
          // print
          std::vector<double> pop(dim,0.0);
          double ovlp = 0.0;
@@ -232,6 +236,16 @@ namespace ctns{
                << " coeff=" << coeff[idx] 
                << std::endl;
          }
+         /*
+         // debug
+         for(int i=0; i<csf_space.size(); i++){
+             const auto& csf = csf_space[i];
+             std::cout << "\n### i=" << i << " csf=" << csf << std::endl;
+             auto det_expansion = csf.to_det();
+             csf.Sdiag_exact();
+             csf.Sdiag_sample(10000,10);
+         }
+         */
          return std::make_pair(fci_space,coeff); 
       }
 
