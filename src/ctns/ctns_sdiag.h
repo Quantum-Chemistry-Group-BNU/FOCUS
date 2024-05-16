@@ -34,10 +34,14 @@ namespace ctns{
          auto coeffs = expansion.second;
          size_t dim = coeffs.size();
          double Sdiag = fock::coeff_entropy(coeffs);
-         double ovlp = std::pow(linalg::xnrm2(dim,&coeffs[0]),2); 
+         double ovlp = std::pow(linalg::xnrm2(dim,&coeffs[0]),2);
+         std::transform(coeffs.begin(), coeffs.end(), coeffs.begin(),
+              [](const Tm& x){ return std::norm(x); });
+         double IPR = std::pow(linalg::xnrm2(dim,&coeffs[0]),2); 
          std::cout << "dim=" << dim << std::setprecision(6) 
             << " ovlp=" << ovlp 
-            << " Sdiag(exact)=" << Sdiag 
+            << " Sdiag(exact)=" << Sdiag
+            << " IPR=" << IPR 
             << std::endl;
          return Sdiag;
       }
@@ -70,9 +74,13 @@ namespace ctns{
          size_t dim = coeffs.size();
          double Sdiag = fock::coeff_entropy(coeffs);
          double ovlp = std::pow(linalg::xnrm2(dim,&coeffs[0]),2);
+         std::transform(coeffs.begin(), coeffs.end(), coeffs.begin(),
+              [](const Tm& x){ return std::norm(x); });
+         double IPR = std::pow(linalg::xnrm2(dim,&coeffs[0]),2); 
          std::cout << "dim=" << dim << std::setprecision(6) 
             << " ovlp=" << ovlp 
             << " Sdiag(exact)=" << Sdiag 
+            << " IPR=" << IPR 
             << std::endl;
          return Sdiag;
       }
@@ -101,7 +109,7 @@ namespace ctns{
          double ovlp = std::abs(get_Smat(icomb)(iroot,iroot));
          std::cout << "<CTNS[i]|CTNS[i]> = " << ovlp << std::endl; 
          // start sampling
-         double Sd = 0.0, Sd2 = 0.0, std = 0.0;
+         double Sd = 0.0, Sd2 = 0.0, std = 0.0, IPR = 0.0;
          std::map<statetype,int> pop;
          for(int i=0; i<nsample; i++){
             auto pr = rcanon_random(icomb,iroot);
@@ -110,9 +118,11 @@ namespace ctns{
             // statistical analysis
             pop[state] += 1;
             double s = (ci2 < cutoff)? 0.0 : -log2(ci2)*ovlp;
+            double ipr = ci2*ovlp;
             double fac = 1.0/(i+1.0);
             Sd = (Sd*i + s)*fac;
             Sd2 = (Sd2*i + s*s)*fac;
+            IPR = (IPR*i + ipr)*fac;
             if((i+1)%noff == 0){
                std = std::sqrt((Sd2-Sd*Sd)/(i+1.e-10));
                auto t1 = tools::get_time();
@@ -120,6 +130,7 @@ namespace ctns{
                std::cout << " i=" << i 
                   << std::setprecision(6)
                   << " Sdiag=" << Sd << " std=" << std
+                  << " IPR=" << IPR
                   << " timing=" << dt << " s" << std::endl;	      
                t0 = tools::get_time();
             }
@@ -129,13 +140,14 @@ namespace ctns{
          std::cout << "sampled important csf/det: pop.size=" << size << std::endl; 
          std::vector<statetype> states(size);
          std::vector<int> counts(size);
-         double Sdpop = 0.0;
+         double Sdpop = 0.0, IPRpop = 0.0;
          int i = 0;
          for(const auto& pr : pop){
             states[i] = pr.first;
             counts[i] = pr.second;
             double ci2 = counts[i]/(1.0*nsample);
             Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log2(ci2)*ovlp;
+            IPRpop += ci2*ci2*ovlp;
             i++;
          }
          auto indx = tools::sort_index(counts,1);
@@ -159,6 +171,7 @@ namespace ctns{
             << " nsample=" << nsample 
             << " per=" << 1.0*sum/nsample << std::endl;
          std::cout << "estimated Sdiag[MC]=" << Sd << " Sdiag[pop]=" << Sdpop << std::endl;
+         std::cout << "estimated IPR[MC]=" << IPR << " IPR[pop]=" << IPRpop << std::endl;
          return Sd;
       }
 
@@ -203,13 +216,14 @@ namespace ctns{
          std::cout << "sampled important det: pop.size=" << size << std::endl; 
          std::vector<fock::onstate> states(size);
          std::vector<int> counts(size);
-         double Sdpop = 0.0;
+         double Sdpop = 0.0, IPRpop = 0.0;
          int i = 0;
          for(const auto& pr : pop){
             states[i] = pr.first;
             counts[i] = pr.second;
             double ci2 = counts[i]/(1.0*nsample);
             Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log2(ci2)*ovlp;
+            IPRpop += ci2*ci2*ovlp;
             i++;
          }
          auto indx = tools::sort_index(counts,1);
@@ -231,6 +245,7 @@ namespace ctns{
             << " per=" << 1.0*sum/nsample << std::endl;
          std::cout << "estimated Sdiag[pop]=" << Sdpop << std::endl;
          std::cout << "warning: it is not the exact pop (interference is neglected)!" << std::endl;
+         std::cout << "estimated IPR[pop]=" << IPRpop << std::endl;
          return Sdpop;
       }
 
