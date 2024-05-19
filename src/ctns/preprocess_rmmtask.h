@@ -72,37 +72,14 @@ namespace ctns{
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
                assert(mmbatch2[k].size() == 7);
-               if(batchgemm != 5){
-                  for(int i=0; i<mmbatch2[k].size(); i++){
-                     auto t0 = tools::get_time();
-                     mmbatch2[k][i].kernel(batchgemm, ptrs);
-                     this->deviceSync();
-                     auto t1 = tools::get_time();
-                     oper_timer.renorm.tHx[i] += tools::get_duration(t1-t0);
-                     oper_timer.renorm.cHx[i] += mmbatch2[k][i].cost; 
-                  } // i
-#ifdef GPU
-#ifndef USE_HIP
-               }else{
-                  // merged {ca,cb},{ra,rb},{la,lb}
-                  for(int i=0; i<mmbatch2[k].size()-1; i+=2){
-                     auto t0 = tools::get_time();
-                     xgemm_batch_gpu_merged(mmbatch2[k][i], mmbatch2[k][i+1], ptrs);
-                     this->deviceSync();
-                     auto t1 = tools::get_time();
-                     oper_timer.renorm.tHx[i] += tools::get_duration(t1-t0);
-                     oper_timer.renorm.cHx[i] += mmbatch2[k][i].cost + mmbatch2[k][i+1].cost;
-                  } // i
-                  // last kernel for contracting with bra site
+               for(int i=0; i<mmbatch2[k].size(); i++){
                   auto t0 = tools::get_time();
-                  mmbatch2[k][6].kernel(4, ptrs);
+                  mmbatch2[k][i].kernel(batchgemm, ptrs);
                   this->deviceSync();
                   auto t1 = tools::get_time();
-                  oper_timer.renorm.tHx[6] += tools::get_duration(t1-t0);
-                  oper_timer.renorm.cHx[6] += mmbatch2[k][6].cost;
-#endif
-#endif
-               } // batchgemm
+                  oper_timer.renorm.tHx[i] += tools::get_duration(t1-t0);
+                  oper_timer.renorm.cHx[i] += mmbatch2[k][i].cost; 
+               } // i
             }
             // reduction
             void reduction(const int k, const Tm* x, Tm* workspace, Tm* y, Tm* dev_red=nullptr){

@@ -323,12 +323,16 @@ namespace linalg{
             std::cout<<"batch_count shoule > 0 in function xgemm_batch_gpu_magma"<<std::endl;
             return ;
         }
+        
+        //auto t0 = tools::get_time();
 
         //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
         size_t total_isize = 6*(batch_count+1)*sizeof(magma_int_t);
         size_t total_dsize = 3*batch_count*sizeof(double*);
         void* dev_itotal = GPUmem.allocate(total_isize);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
+
+        //auto t1 = tools::get_time();
 
         magma_int_t* dev_m = (magma_int_t*)dev_itotal;
         magma_int_t* dev_n = dev_m + (batch_count+1);
@@ -349,6 +353,8 @@ namespace linalg{
         GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(double*));
+        
+        //auto t2 = tools::get_time();
 
         magma_trans_t transA = MagmaNoTrans;
         magma_trans_t transB = MagmaNoTrans;
@@ -381,8 +387,20 @@ namespace linalg{
                 magma_queue
                 );
 
+        //auto t3 = tools::get_time();
+       
         GPUmem.deallocate(dev_dtotal, total_dsize);
         GPUmem.deallocate(dev_itotal, total_isize);
+       
+        /*
+        auto t4 = tools::get_time();
+        std::cout << "GEMM[magma]: talloc=" << tools::get_duration(t1-t0)
+                  << " t2gpu=" << tools::get_duration(t2-t1)
+                  << " tcomp=" << tools::get_duration(t3-t2)
+                  << " tdealloc=" << tools::get_duration(t4-t3)
+                  << " total=" << tools::get_duration(t4-t0)
+                  << std::endl;
+        */
     }
 
     // complex
@@ -463,8 +481,12 @@ namespace linalg{
     }
 
 #ifndef USE_HIP
+    
+#ifdef GEMMGROUPED
+
+    // https://github.com/NVIDIA/CUDALibrarySamples/tree/master/cuBLAS/Level-3/gemmGroupedBatched
+    /*
     // --- GEMM GROUPED ---
-    // double
     inline void xgemm_batch_gpu_grouped(const char transa, const char transb, 
             const magma_int_t *m_array, const magma_int_t *n_array, const magma_int_t *k_array,
             const double *alpha, const double **a_array, const magma_int_t *lda_array, 
@@ -478,15 +500,121 @@ namespace linalg{
             return ;
         }
 
+        auto t0 = tools::get_time();
+
+        int group_count = gsta.size()-1;
+        std::vector<int> group_size(group_count);
+        std::vector<cublasOperation_t> transa_array(group_count);
+        std::vector<cublasOperation_t> transb_array(group_count);
+        double cost = 0.0;
+        for(int i=0; i<group_count; i++){
+           group_size[i] = gsta[i+1]-gsta[i];
+           cost += 2.0*double(m_array[i])*n_array[i]*k_array[i]*group_size[i];
+           transa_array[i] = (transa=='T' || transa=='C')? CUBLAS_OP_T : CUBLAS_OP_N;
+           transb_array[i] = (transb=='T' || transb=='C')? CUBLAS_OP_T : CUBLAS_OP_N;
+        }
+
+        //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
+        size_t total_isize = (6*batch_count+group_count)*sizeof(magma_int_t);
+        size_t total_dsize = 3*batch_count*sizeof(double*);
+        size_t total_csize = 2*group_count*sizeof(double);
+        size_t total_tsize = 2*group_count*sizeof(cublasOperation_t);
+        void* dev_itotal = GPUmem.allocate(total_isize);
+        void* dev_dtotal = GPUmem.allocate(total_dsize);
+        void* dev_ctotal = GPUmem.allocate(total_csize);
+        void* dev_ttotal = GPUmem.allocate(total_tsize);
+        auto t1 = tools::get_time();
+        
+        magma_int_t* dev_m = (magma_int_t*)dev_itotal;
+        magma_int_t* dev_n = dev_m + (batch_count);
+        magma_int_t* dev_k = dev_n + (batch_count);
+        magma_int_t* dev_lda = dev_k + (batch_count);
+        magma_int_t* dev_ldb = dev_lda + (batch_count);
+        magma_int_t* dev_ldc = dev_ldb + (batch_count);
+        magma_int_t* dev_group_size = dev_ldc + group_count;
+        double** dev_a_array = (double**)dev_dtotal;
+        double** dev_b_array = dev_a_array + batch_count;
+        double** dev_c_array = dev_b_array + batch_count;
+        double* dev_alpha = (double*)dev_ctotal;
+        double* dev_beta = dev_alpha + group_count;
+        cublasOperation_t* dev_transa_array = (cublasOperation_t*)dev_ttotal;
+        cublasOperation_t* dev_transb_array = dev_transa_array + group_count;
+        GPUmem.to_gpu(dev_m, m_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_n, n_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_k, k_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_lda, lda_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_group_size, group_size.data(), group_count*sizeof(magma_int_t));
+        GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(double*));
+        GPUmem.to_gpu(dev_alpha, alpha, group_count*sizeof(double));
+        GPUmem.to_gpu(dev_beta, beta, group_count*sizeof(double));
+        GPUmem.to_gpu(dev_transa_array, transa_array.data(), group_count*sizeof(cublasOperation_t));
+        GPUmem.to_gpu(dev_transb_array, transb_array.data(), group_count*sizeof(cublasOperation_t));
+        auto t2 = tools::get_time();
+ 
+        CUBLAS_CHECK(cublasDgemmGroupedBatched(handle_cublas,
+                           dev_transa_array, dev_transb_array,
+                           dev_m, dev_n, dev_k,
+                           dev_alpha,
+                           dev_a_array, dev_lda, // pointer should be on device
+                           dev_b_array, dev_ldb,
+                           dev_beta,
+                           dev_c_array, dev_ldc,
+                           group_count,
+                           dev_group_size));
+
+        auto t3 = tools::get_time();
+        GPUmem.deallocate(dev_ttotal, total_tsize);
+        GPUmem.deallocate(dev_ctotal, total_csize);
+        GPUmem.deallocate(dev_dtotal, total_dsize);
+        GPUmem.deallocate(dev_itotal, total_isize);
+        auto t4 = tools::get_time();
+        std::cout << "GEMM[grouped]: talloc=" << tools::get_duration(t1-t0)
+                  << " t2gpu=" << tools::get_duration(t2-t1)
+                  << " tcomp=" << tools::get_duration(t3-t2)
+                  << " tdealloc=" << tools::get_duration(t4-t3)
+                  << " total=" << tools::get_duration(t4-t0)
+                  << " flops=" << cost/tools::get_duration(t3-t2)
+                  << std::endl;
+   }
+   */
+
+#else
+
+    // double
+    inline void xgemm_batch_gpu_grouped(const char transa, const char transb, 
+            const magma_int_t *m_array, const magma_int_t *n_array, const magma_int_t *k_array,
+            const double *alpha, const double **a_array, const magma_int_t *lda_array, 
+            const double **b_array, const magma_int_t *ldb_array,
+            const double *beta, double **c_array, const magma_int_t *ldc_array, 
+            const magma_int_t batch_count,
+            const std::vector<int>& gsta){
+
+        if(batch_count <= 0){
+            std::cout<<"batch_count shoule > 0 in function xgemm_batch_gpu_grouped"<<std::endl;
+            return ;
+        }
+    
+        //auto t0 = tools::get_time();
+
         size_t total_dsize = 3*batch_count*sizeof(double*);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
+        
+        //auto t1 = tools::get_time();
+        
         double** dev_a_array = (double**)dev_dtotal;
         double** dev_b_array = dev_a_array + batch_count;
         double** dev_c_array = dev_b_array + batch_count;
         GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(double*));
-            
+        
+        //auto t2 = tools::get_time();
+
+        double cost = 0.0; 
         for(int i=0; i<gsta.size()-1; i++){
            int ista = gsta[i];
            int nbatch = gsta[i+1]-ista;
@@ -501,7 +629,9 @@ namespace linalg{
            if(transb=='T' || transb=='C'){
               transB = CUBLAS_OP_T;
            }
+           cost += double(m)*n*k*2*nbatch;
            // https://docs.nvidia.com/cuda/cublas/index.html
+           //auto ti = tools::get_time();
            CUBLAS_CHECK(cublasDgemmBatched(handle_cublas,
                               transA, transB,
                               m, n, k,
@@ -511,6 +641,18 @@ namespace linalg{
                               beta,
                               &dev_c_array[ista], ldc,
                               nbatch));
+           /*
+           auto tj = tools::get_time();
+           GPUmem.sync();
+           auto tf = tools::get_time();
+           std::cout << "i=" << i 
+                     << " m,n,k,b=" << m << "," << n << "," << k << "," << nbatch
+                     << " cost=" << double(m)*n*k*2*nbatch
+                     << " flops=" << double(m)*n*k*2*nbatch/tools::get_duration(tf-ti)
+                     << " t0=" << tools::get_duration(tj-ti)
+                     << " t1=" << tools::get_duration(tf-tj)
+                     << std::endl;
+           */
            /*
            for(int j=0; j<nbatch; j++){
               cublasDgemm(handle_cublas,
@@ -524,9 +666,23 @@ namespace linalg{
            }
            */
         } // group
+        
+        //auto t3 = tools::get_time();
 
         GPUmem.deallocate(dev_dtotal, total_dsize);
+       
+        /* 
+        auto t4 = tools::get_time();
+        std::cout << "GEMM[grouped]: talloc=" << tools::get_duration(t1-t0)
+                  << " t2gpu=" << tools::get_duration(t2-t1)
+                  << " tcomp=" << tools::get_duration(t3-t2)
+                  << " tdealloc=" << tools::get_duration(t4-t3)
+                  << " total=" << tools::get_duration(t4-t0)
+                  << " flops=" << cost/tools::get_duration(t3-t2)
+                  << std::endl;
+        */
     }
+#endif
 
     // complex
     inline void xgemm_batch_gpu_grouped(const char transa, const char transb, 
@@ -561,14 +717,21 @@ namespace linalg{
             return ;
         }
 
+        //auto t0 = tools::get_time();
+
         size_t total_dsize = 3*batch_count*sizeof(double*);
         void* dev_dtotal = GPUmem.allocate(total_dsize);
+        
+        //auto t1 = tools::get_time();
+
         double** dev_a_array = (double**)dev_dtotal;
         double** dev_b_array = dev_a_array + batch_count;
         double** dev_c_array = dev_b_array + batch_count;
         GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(double*));
+        
+        //auto t2 = tools::get_time();
          
         size_t gsize = gsta.size()-1;
         int ntimes = (gsize+NSTREAMS-1)/NSTREAMS; 
@@ -610,7 +773,19 @@ namespace linalg{
            }
         } // k
 
+        //auto t3 = tools::get_time();
+
         GPUmem.deallocate(dev_dtotal, total_dsize);
+      
+        /*  
+        auto t4 = tools::get_time();
+        std::cout << "GEMM[stream]: talloc=" << tools::get_duration(t1-t0)
+                  << " t2gpu=" << tools::get_duration(t2-t1)
+                  << " tcomp=" << tools::get_duration(t3-t2)
+                  << " tdealloc=" << tools::get_duration(t4-t3)
+                  << " total=" << tools::get_duration(t4-t0)
+                  << std::endl;
+        */
     }
 
     // complex

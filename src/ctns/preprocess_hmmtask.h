@@ -69,30 +69,19 @@ namespace ctns{
             // perform GEMMs [c2,c1,r,l]
             void kernel(const int k, Tm** ptrs){
                //assert(mmbatch2[k].size() == 8);
-               if(batchgemm != 5){
-                  for(int i=0; i<mmbatch2[k].size(); i++){
-                     auto t0 = tools::get_time();
-                     mmbatch2[k][i].kernel(batchgemm, ptrs);
-                     this->deviceSync();
-                     auto t1 = tools::get_time();
-                     oper_timer.sigma.tHx[i] += tools::get_duration(t1-t0);
-                     oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost; 
-                  }
-#ifdef GPU
-#ifndef USE_HIP
-               }else{
-                  // merged {c2a,c2b},{c1a,c1b},{ra,rb},{la,lb}
-                  for(int i=0; i<mmbatch2[k].size(); i+=2){
-                     auto t0 = tools::get_time();
-                     xgemm_batch_gpu_merged(mmbatch2[k][i], mmbatch2[k][i+1], ptrs);
-                     this->deviceSync();
-                     auto t1 = tools::get_time();
-                     oper_timer.sigma.tHx[i] += tools::get_duration(t1-t0);
-                     oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost + mmbatch2[k][i+1].cost; 
-                  } // i
-#endif
-#endif
-               } // batchgemm
+               for(int i=0; i<mmbatch2[k].size(); i++){
+                  auto t0 = tools::get_time();
+                  mmbatch2[k][i].kernel(batchgemm, ptrs);
+                  auto tx = tools::get_time();
+                  this->deviceSync();
+                  auto t1 = tools::get_time();
+                  std::cout << "i=" << i
+                            << " tcomp=" << tools::get_duration(tx-t0)
+                            << " tsync=" << tools::get_duration(t1-tx)
+                            << std::endl;
+                  oper_timer.sigma.tHx[i] += tools::get_duration(t1-t0);
+                  oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost; 
+               }
             }
             // reduction
             void reduction(const int k, const Tm* x, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
