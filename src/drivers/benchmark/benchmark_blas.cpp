@@ -154,7 +154,7 @@ double test_xgemv_batch_gpu(const int M, const int N, const int nbatch, const in
             Y_array.data(), incy_array.get(),
             group_count);
    }else{
-     linalg::xgemv_batch_gpu_grouped(transa_array[0], m_array.get(), n_array.get(), 
+      linalg::xgemv_batch_gpu_grouped(transa_array[0], m_array.get(), n_array.get(), 
             alpha_array.get(), A_array.data(), m_array.get(),
             X_array.data(), incx_array.get(), beta_array.get(), 
             Y_array.data(), incy_array.get(),
@@ -235,7 +235,7 @@ double test_xgemm_batch_gpu(const int M, const int N, const int K, const int nba
 #endif
 
 int main(int argc, char *argv[]){
-   
+
    int N0 = 100;
    int nbatch = 10;
    int imax = 10;
@@ -288,91 +288,114 @@ int main(int argc, char *argv[]){
 
    gpu_init(rank);
 
-   std::cout << "\n=== GEMV_BATCH_GPU: magma ===" << std::endl;
-   for(int i=1; i<=imax; i+=1){  
-      int N = i*N0;
-      double dt = test_xgemv_batch_gpu<Tm>(N, N, nbatch, 0);
-      std::cout << " i=" << i << " M,N=" << N << "," << N 
-         << " nbatch=" << nbatch
-         << " time=" << dt
-         << " flops=" << nbatch*2*double(N)*N/dt
-         << std::endl; 
+   const bool ifmagma = false;
+   const int nrepeat = 3;
+
+   if(ifmagma){
+      std::cout << "\n=== GEMV_BATCH_GPU: magma ===" << std::endl;
+      for(int i=1; i<=imax; i+=1){  
+         int N = i*N0;
+         for(int j=1; j<=nrepeat; j++){
+            double dt = test_xgemv_batch_gpu<Tm>(N, N, nbatch, 0);
+            std::cout << " i=" << i << " j=" << j << " M,N=" << N << "," << N 
+               << " nbatch=" << nbatch
+               << " time=" << dt
+               << " flops=" << nbatch*2*double(N)*N/dt
+               << std::endl; 
+         }
+      }
    }
 
    std::cout << "\n=== GEMV_BATCH_GPU: cublas ===" << std::endl;
    for(int i=1; i<=imax; i+=1){  
       int N = i*N0;
-      double dt = test_xgemv_batch_gpu<Tm>(N, N, nbatch, 1);
-      std::cout << " i=" << i << " M,N=" << N << "," << N 
-         << " nbatch=" << nbatch
-         << " time=" << dt
-         << " flops=" << nbatch*2*double(N)*N/dt
-         << std::endl; 
+      for(int j=1; j<=nrepeat; j++){
+         double dt = test_xgemv_batch_gpu<Tm>(N, N, nbatch, 1);
+         std::cout << " i=" << i << " j=" << j << " M,N=" << N << "," << N 
+            << " nbatch=" << nbatch
+            << " time=" << dt
+            << " flops=" << nbatch*2*double(N)*N/dt
+            << std::endl; 
+      }
    }
 
-   std::cout << "\n=== GEMM_BATCH (N,N,1): magma ===" << std::endl;
-   for(int i=1; i<=imax; i+=1){  
-      int N = i*N0;
-      double dt = test_xgemm_batch_gpu<Tm>(N, N, 1, nbatch, 0);
-      std::cout << " i=" << i << " M,N,K=" << N << "," << N << "," << 1 
-         << " nbatch=" << nbatch
-         << " time=" << dt
-         << " cost=" << nbatch*2*double(N)*N
-         << " flops=" << nbatch*2*double(N)*N/dt
-         << std::endl; 
+   if(ifmagma){
+      std::cout << "\n=== GEMM_BATCH (N,N,1): magma ===" << std::endl;
+      for(int i=1; i<=imax; i+=1){  
+         int N = i*N0;
+         for(int j=1; j<=nrepeat; j++){
+            double dt = test_xgemm_batch_gpu<Tm>(N, N, 1, nbatch, 0);
+            std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << 1 
+               << " nbatch=" << nbatch
+               << " time=" << dt
+               << " cost=" << nbatch*2*double(N)*N
+               << " flops=" << nbatch*2*double(N)*N/dt
+               << std::endl; 
+         }
+      }
    }
 
    std::cout << "\n=== GEMM_BATCH (N,N,1): cublas ===" << std::endl;
    for(int i=1; i<=imax; i+=1){  
       int N = i*N0;
-      double dt = test_xgemm_batch_gpu<Tm>(N, N, 1, nbatch, 1);
-      std::cout << " i=" << i << " M,N,K=" << N << "," << N << "," << 1 
-         << " nbatch=" << nbatch
-         << " time=" << dt
-         << " cost=" << nbatch*2*double(N)*N
-         << " flops=" << nbatch*2*double(N)*N/dt
-         << std::endl; 
+      for(int j=1; j<=nrepeat; j++){
+         double dt = test_xgemm_batch_gpu<Tm>(N, N, 1, nbatch, 1);
+         std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << 1 
+            << " nbatch=" << nbatch
+            << " time=" << dt
+            << " cost=" << nbatch*2*double(N)*N
+            << " flops=" << nbatch*2*double(N)*N/dt
+            << std::endl;
+      } 
    }
 
-   std::cout << "\n=== GEMM_BATCH (N,N,N): magma ===" << std::endl;
-   for(int i=1; i<=imax; i+=1){  
-      int N = i*N0;
-      double dt = test_xgemm_batch_gpu<Tm>(N, N, N, nbatch, 0);
-      std::cout << " i=" << i << " M,N,K=" << N << "," << N << "," << N  
-         << " nbatch=" << nbatch
-         << " time=" << dt
-         << " cost=" << nbatch*2*double(N)*N*N
-         << " flops=" << nbatch*2*double(N)*N*N/dt
-         << std::endl; 
+   if(ifmagma){
+      std::cout << "\n=== GEMM_BATCH (N,N,N): magma ===" << std::endl;
+      for(int i=1; i<=imax; i+=1){  
+         int N = i*N0;
+         for(int j=1; j<=nrepeat; j++){
+            double dt = test_xgemm_batch_gpu<Tm>(N, N, N, nbatch, 0);
+            std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << N  
+               << " nbatch=" << nbatch
+               << " time=" << dt
+               << " cost=" << nbatch*2*double(N)*N*N
+               << " flops=" << nbatch*2*double(N)*N*N/dt
+               << std::endl; 
+         }
+      }
    }
 
    std::cout << "\n=== GEMM_BATCH (N,N,N): cublas ===" << std::endl;
    for(int i=1; i<=imax; i+=1){  
       int N = i*N0;
-      double dt = test_xgemm_batch_gpu<Tm>(N, N, N, nbatch, 1);
-      std::cout << " i=" << i << " M,N,K=" << N << "," << N << "," << N  
-         << " nbatch=" << nbatch
-         << " time=" << dt
-         << " cost=" << nbatch*2*double(N)*N*N
-         << " flops=" << nbatch*2*double(N)*N*N/dt
-         << std::endl; 
+      for(int j=1; j<=nrepeat; j++){
+         double dt = test_xgemm_batch_gpu<Tm>(N, N, N, nbatch, 1);
+         std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << N  
+            << " nbatch=" << nbatch
+            << " time=" << dt
+            << " cost=" << nbatch*2*double(N)*N*N
+            << " flops=" << nbatch*2*double(N)*N*N/dt
+            << std::endl; 
+      }
    }
 
    std::cout << "\n=== GEMM_BATCH (N,N,N): cublas ===" << std::endl;
    for(int i=imax; i>=1; i-=1){  
       int N = i*N0;
-      double dt = test_xgemm_batch_gpu<Tm>(N, N, N, nbatch, 1);
-      std::cout << " i=" << i << " M,N,K=" << N << "," << N << "," << N  
-         << " nbatch=" << nbatch
-         << " time=" << dt
-         << " cost=" << nbatch*2*double(N)*N*N
-         << " flops=" << nbatch*2*double(N)*N*N/dt
-         << std::endl; 
+      for(int j=1; j<=nrepeat; j++){
+         double dt = test_xgemm_batch_gpu<Tm>(N, N, N, nbatch, 1);
+         std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << N  
+            << " nbatch=" << nbatch
+            << " time=" << dt
+            << " cost=" << nbatch*2*double(N)*N*N
+            << " flops=" << nbatch*2*double(N)*N*N/dt
+            << std::endl; 
+      }
    }
 
    std::cout << "\n=== GEMM_BATCH (M,N,K): cublas[NEW] ===" << std::endl;
    for(int b=500; b<5000; b+=500){
-      for(int i=0; i<2; i++){
+      for(int i=1; i<=nrepeat; i++){
          int M = 38;
          int N = 50;
          int K = 50;
@@ -391,5 +414,5 @@ int main(int argc, char *argv[]){
 
 #endif
 
-  return 0;   
+   return 0;   
 }
