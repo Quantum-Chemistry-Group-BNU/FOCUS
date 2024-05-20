@@ -295,6 +295,7 @@ int main(int argc, char *argv[]){
       std::cout << "\n=== GEMV_BATCH_GPU: magma ===" << std::endl;
       for(int i=1; i<=imax; i+=1){  
          int N = i*N0;
+         std::cout << std::endl;
          for(int j=1; j<=nrepeat; j++){
             double dt = test_xgemv_batch_gpu<Tm>(N, N, nbatch, 0);
             std::cout << " i=" << i << " j=" << j << " M,N=" << N << "," << N 
@@ -309,6 +310,7 @@ int main(int argc, char *argv[]){
    std::cout << "\n=== GEMV_BATCH_GPU: cublas ===" << std::endl;
    for(int i=1; i<=imax; i+=1){  
       int N = i*N0;
+      std::cout << std::endl;
       for(int j=1; j<=nrepeat; j++){
          double dt = test_xgemv_batch_gpu<Tm>(N, N, nbatch, 1);
          std::cout << " i=" << i << " j=" << j << " M,N=" << N << "," << N 
@@ -323,6 +325,7 @@ int main(int argc, char *argv[]){
       std::cout << "\n=== GEMM_BATCH (N,N,1): magma ===" << std::endl;
       for(int i=1; i<=imax; i+=1){  
          int N = i*N0;
+         std::cout << std::endl;
          for(int j=1; j<=nrepeat; j++){
             double dt = test_xgemm_batch_gpu<Tm>(N, N, 1, nbatch, 0);
             std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << 1 
@@ -338,6 +341,7 @@ int main(int argc, char *argv[]){
    std::cout << "\n=== GEMM_BATCH (N,N,1): cublas ===" << std::endl;
    for(int i=1; i<=imax; i+=1){  
       int N = i*N0;
+      std::cout << std::endl;
       for(int j=1; j<=nrepeat; j++){
          double dt = test_xgemm_batch_gpu<Tm>(N, N, 1, nbatch, 1);
          std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << 1 
@@ -353,6 +357,7 @@ int main(int argc, char *argv[]){
       std::cout << "\n=== GEMM_BATCH (N,N,N): magma ===" << std::endl;
       for(int i=1; i<=imax; i+=1){  
          int N = i*N0;
+         std::cout << std::endl;
          for(int j=1; j<=nrepeat; j++){
             double dt = test_xgemm_batch_gpu<Tm>(N, N, N, nbatch, 0);
             std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << N  
@@ -368,6 +373,7 @@ int main(int argc, char *argv[]){
    std::cout << "\n=== GEMM_BATCH (N,N,N): cublas ===" << std::endl;
    for(int i=1; i<=imax; i+=1){  
       int N = i*N0;
+      std::cout << std::endl;
       for(int j=1; j<=nrepeat; j++){
          double dt = test_xgemm_batch_gpu<Tm>(N, N, N, nbatch, 1);
          std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << N  
@@ -382,6 +388,7 @@ int main(int argc, char *argv[]){
    std::cout << "\n=== GEMM_BATCH (N,N,N): cublas ===" << std::endl;
    for(int i=imax; i>=1; i-=1){  
       int N = i*N0;
+      std::cout << std::endl;
       for(int j=1; j<=nrepeat; j++){
          double dt = test_xgemm_batch_gpu<Tm>(N, N, N, nbatch, 1);
          std::cout << " i=" << i << " j=" << j << " M,N,K=" << N << "," << N << "," << N  
@@ -395,6 +402,7 @@ int main(int argc, char *argv[]){
 
    std::cout << "\n=== GEMM_BATCH (M,N,K): cublas[NEW] ===" << std::endl;
    for(int b=500; b<5000; b+=500){
+      std::cout << std::endl;
       for(int i=1; i<=nrepeat; i++){
          int M = 38;
          int N = 50;
