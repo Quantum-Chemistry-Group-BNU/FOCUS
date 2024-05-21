@@ -1,7 +1,7 @@
 
 machine = a800 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
+DEBUG = no #yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
@@ -256,7 +256,7 @@ else ifeq ($(strip $(machine)), jiageng)
 else ifeq ($(strip $(machine)), a800)
    CUDA_DIR= ${CUDA_ROOT}
    MAGMA_DIR = /GLOBALFS/bnu_pp_1/FOCUS/extlibs/magma-2.8.0
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
+   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include # -DGEMMGROUPED only for cuda12.4 
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = ${NCCL_ROOT}

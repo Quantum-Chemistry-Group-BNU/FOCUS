@@ -75,10 +75,6 @@ namespace ctns{
                   auto tx = tools::get_time();
                   this->deviceSync();
                   auto t1 = tools::get_time();
-                  std::cout << "i=" << i
-                            << " tcomp=" << tools::get_duration(tx-t0)
-                            << " tsync=" << tools::get_duration(t1-tx)
-                            << std::endl;
                   oper_timer.sigma.tHx[i] += tools::get_duration(t1-t0);
                   oper_timer.sigma.cHx[i] += mmbatch2[k][i].cost; 
                }
