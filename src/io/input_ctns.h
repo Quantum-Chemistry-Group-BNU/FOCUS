@@ -52,7 +52,7 @@ namespace input{
                   & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
                   & batchhvec & batchrenorm & batchmem
                   & cisolver & maxcycle & nbuff & damping & precond
-                  & rcanon_load & rcanon_file 
+                  & rcanon_file & rcanon2_file
                   & iomode & async_fetch & async_save & async_remove & ifnccl
                   & iroot & nsample & pthrd
                   & tosu2 & thresh_tosu2 & singlet
@@ -75,6 +75,7 @@ namespace input{
          bool task_vmc = false;
          bool task_expand = false;
          bool task_tononsu2 = false;
+         int task_rdm = 0;
          // restart
          int restart_sweep = 0;
          int restart_bond = 0;
@@ -115,8 +116,8 @@ namespace input{
          double damping = 1.e-10;
          bool precond = true;
          // io
-         bool rcanon_load = false;
-         std::string rcanon_file = "rcanon_ci";
+         std::string rcanon_file = "";
+         std::string rcanon2_file = "";
          // oper_pool
          int iomode = 0;
          bool async_fetch = false;

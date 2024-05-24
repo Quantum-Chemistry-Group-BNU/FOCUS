@@ -40,12 +40,13 @@ void SADMRG(const input::schedule& schd){
       if(schd.ctns.restart_sweep == 0){
          
          // initialize RCF 
-         auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
+         std::string rcanon_file;
          if(schd.ctns.tosu2){ 
             ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
             icomb_NSz.topo = icomb.topo;
-            if(!schd.ctns.rcanon_load){
+            if(schd.ctns.rcanon_file.empty()){
                // from SCI wavefunction
+               rcanon_file = schd.scratch+"/rcanon_ci";
                onspace sci_space;
                vector<double> es;
                linalg::matrix<Tm> vs;
@@ -57,6 +58,7 @@ void SADMRG(const input::schedule& schd){
                      schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
                ctns::rcanon_save(icomb_NSz, rcanon_file);
             }else{
+               rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
                ctns::rcanon_load(icomb_NSz, rcanon_file); // user defined rcanon_file
             } // rcanon_load
 
@@ -88,6 +90,8 @@ void SADMRG(const input::schedule& schd){
             }
 
          }else{
+            assert(!schd.ctns.rcanon_file.empty());
+            rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
             ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
          }
 
@@ -249,11 +253,6 @@ int main(int argc, char *argv[]){
 #endif
 
    // cleanup 
-   if(rank == 0){
-      tools::finish("SADMRG");	   
-   }else{
-      // NOTE: scratch should be removed manually!
-      //io::remove_scratch(schd.scratch, (rank == 0)); 
-   }
+   if(rank == 0) tools::finish("SADMRG");	   
    return 0;
 }

@@ -52,6 +52,8 @@ void params_ctns::read(ifstream& istrm){
          task_expand = true;
       }else if(line.substr(0,13)=="task_tononsu2"){
          task_tononsu2 = true;
+      }else if(line.substr(0,8)=="task_rdm"){
+         task_rdm = stoi(line.substr(8)); 
       }else if(line.substr(0,13)=="restart_sweep"){
          restart_sweep = stoi(line.substr(13));
       }else if(line.substr(0,12)=="restart_bond"){
@@ -96,11 +98,12 @@ void params_ctns::read(ifstream& istrm){
          batchrenorm = std::make_tuple(stoi(batchinter), stoi(batchgemm), stoi(batchred)); 
       }else if(line.substr(0,8)=="batchmem"){
          batchmem = stod(line.substr(8));
-      }else if(line.substr(0,11)=="rcanon_load"){
-         rcanon_load = true;
       }else if(line.substr(0,11)=="rcanon_file"){
          istringstream is(line.substr(11));
          is >> rcanon_file;
+      }else if(line.substr(0,12)=="rcanon2_file"){
+         istringstream is(line.substr(12));
+         is >> rcanon2_file;
       }else if(line.substr(0,7)=="maxdets"){
          maxdets = stoi(line.substr(7)); 
       }else if(line.substr(0,11)=="thresh_proj"){
@@ -232,6 +235,7 @@ void params_ctns::print() const{
    cout << "task_vmc = " << task_vmc << endl;
    cout << "task_expand = " << task_expand << endl;
    cout << "task_tononsu2 = " << task_tononsu2 << endl;
+   cout << "task_rdm = " << task_rdm << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;
    cout << "timestamp = " << timestamp << endl;
@@ -285,8 +289,8 @@ void params_ctns::print() const{
    cout << "damping = " << damping << endl;
    cout << "precond = " << precond << endl;
    // io
-   cout << "rcanon_load = " << rcanon_load << endl; 
    cout << "rcanon_file = " << rcanon_file << endl;
+   cout << "rcanon2_file = " << rcanon2_file << endl;
    // oper_poll
    cout << "iomode = " << iomode << endl;
    cout << "async_fetch = " << async_fetch << endl;

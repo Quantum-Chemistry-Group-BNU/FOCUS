@@ -35,8 +35,10 @@ ostream& ctns::operator <<(ostream& os, const directed_bond& dbond){
 }
 
 // topology
-void topology::read(const string& fname){
-   cout << "\nctns::topology::read fname=" << fname << endl;
+void topology::read(const string& fname, const bool debug){
+   if(debug){
+      cout << "\nctns::topology::read fname=" << fname << endl;
+   }
 
    ifstream istrm(fname);
    if(!istrm){
@@ -51,7 +53,7 @@ void topology::read(const string& fname){
       line.clear();	    
       getline(istrm,line);
       if(line.empty() || line[0]=='#') continue;
-      cout << line << endl;
+      if(debug) cout << line << endl;
       boost::trim_left(line); // in case there is a space 
       boost::split(v,line,boost::is_any_of(","),boost::token_compress_on);
       vector<int> branch;

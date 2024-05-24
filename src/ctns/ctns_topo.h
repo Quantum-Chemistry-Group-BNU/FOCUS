@@ -96,7 +96,7 @@ namespace ctns{
             }
       public:
          topology(){};
-         void read(const std::string& topology_file); 
+         void read(const std::string& topology_file, const bool debug=true); 
          void print() const;
          // helpers
          const node& get_node(const comb_coord& p) const{ return nodes[p.first][p.second]; }

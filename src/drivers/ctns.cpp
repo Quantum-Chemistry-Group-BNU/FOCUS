@@ -37,9 +37,10 @@ void CTNS(const input::schedule& schd){
       icomb.topo.print();
       if(schd.ctns.restart_sweep == 0){
          // initialize RCF 
-         auto rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-         if(!schd.ctns.rcanon_load){
+         std::string rcanon_file;
+         if(schd.ctns.rcanon_file.empty()){
             // from SCI wavefunction
+            rcanon_file = schd.scratch+"/rcanon_ci";
             onspace sci_space;
             vector<double> es;
             linalg::matrix<Tm> vs;
@@ -74,8 +75,9 @@ void CTNS(const input::schedule& schd){
                exit(1);
             }
          }else{
+            rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
             ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
-         } // rcanon_load
+         } 
       }else{
          // restart a broken calculation from disk
          auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1);
@@ -234,11 +236,6 @@ int main(int argc, char *argv[]){
 #endif
 
    // cleanup 
-   if(rank == 0){
-      tools::finish("CTNS");	   
-   }else{
-      // NOTE: scratch should be removed manually!
-      //io::remove_scratch(schd.scratch, (rank == 0)); 
-   }
+   if(rank == 0) tools::finish("CTNS");	   
    return 0;
 }
