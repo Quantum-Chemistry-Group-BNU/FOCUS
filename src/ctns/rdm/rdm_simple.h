@@ -59,7 +59,8 @@ namespace ctns{
       linalg::matrix<Tm> rdm2_simple(const comb<Qm,Tm>& icomb1,
             const comb<Qm,Tm>& icomb2,
             const int iroot1,
-            const int iroot2){
+            const int iroot2,
+            const bool debug=false){
          std::cout << "\nctns::rdm2_simple: iroot1=" << iroot1
             << " iroot2=" << iroot2 
             << std::endl;
@@ -82,7 +83,7 @@ namespace ctns{
                      auto icomb2jkl = apply_cop(icomb2kl, kj, spin_j, 1); // aj^+akal|psi2>
                      auto icomb2ijkl = apply_cop(icomb2jkl, ki, spin_i, 1); // ai^+aj^+akal|psi2>
                      auto smat = get_Smat(icomb1,icomb2ijkl); // <psi1|ai^+aj^+akal|psi2>
-                                                              // map back to the actual orbital      
+                     // map back to the actual orbital      
                      int pi = 2*icomb2.topo.image2[ki] + spin_i;
                      int pj = 2*icomb2.topo.image2[kj] + spin_j;
                      int pk = 2*icomb2.topo.image2[kk] + spin_k;
@@ -94,7 +95,6 @@ namespace ctns{
                } // k
             } // j
          } // i
-         const bool debug = true;
          if(debug){
             auto rdm1 = rdm1_simple(icomb1,icomb2,iroot1,iroot2);
             auto rdm1b = fock::get_rdm1_from_rdm2(rdm2);

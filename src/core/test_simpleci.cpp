@@ -121,9 +121,9 @@ int tests::test_simpleci(){
    // compute E
    cout << setprecision(12);
    cout << "e0=" << ecore << endl;
-   double e1 = get_e1(rdm1, int1e);
+   auto e1 = get_e1(rdm1, int1e);
    cout << "e1=" << e1 << endl;
-   double e2 = get_e2(rdm2, int2e);
+   auto e2 = get_e2(rdm2, int2e);
    cout << "e2=" << e2 << endl;
    auto etot = get_etot(rdm2, rdm1, int2e, int1e, ecore);
    cout << "etot=" << etot << " e0=" << e[0] << " diff=" << e[0]-etot << endl; 

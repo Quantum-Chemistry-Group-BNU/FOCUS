@@ -385,11 +385,14 @@
    - femoco
 
  * Reduced density matrices: (RDMs) [DONE@2024/08/XX]
-   - Brute-force RDM algorithm: [DONE@2024/06/XX]
+   - Brute-force RDM algorithm:
       - Application of local op to MPS:
-         - non-spin-adapted:
+         - non-spin-adapted: [DONE@2024/05/27]
          - spin-adapted?
-      - Contract <bMPS|kMPS>
+      - Contract <bMPS|kMPS> to get RDM/TDM
+      - quantum information measure:
+         - single orbital entropy
+         - mutual information
    - Optimized algorithm via reusing intermediates
       - non-spin-adapted case:
          - one-body RDM:

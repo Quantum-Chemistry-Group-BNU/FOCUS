@@ -32,6 +32,19 @@ void RDM(const input::schedule& schd){
    // The driver rdm only support MPS with the same kind (topo,Qm,Tm)
    //-----------------------------------------------------------------
 
+   // read integral
+   integral::two_body<Tm> int2e;
+   integral::one_body<Tm> int1e;
+   double ecore;
+   if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
+#ifndef SERIAL
+   if(size > 1){
+      boost::mpi::broadcast(schd.world, ecore, 0);
+      boost::mpi::broadcast(schd.world, int1e, 0);
+      mpi_wrapper::broadcast(schd.world, int2e, 0);
+   }
+#endif
+
    // initialization of MPS
    ctns::comb<Qm,Tm> icomb;
    if(schd.ctns.rcanon_file.size()>0){
@@ -46,28 +59,21 @@ void RDM(const input::schedule& schd){
 
    // rdm task
    if(schd.ctns.task_rdm == 1){
-      ctns::rdm1_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
-      ctns::rdm2_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
-   }else if(schd.ctns.task_rdm == 2){
-      // read integral
-      integral::two_body<Tm> int2e;
-      integral::one_body<Tm> int1e;
-      double ecore;
-      if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
-#ifndef SERIAL
-      if(size > 1){
-         boost::mpi::broadcast(schd.world, ecore, 0);
-         boost::mpi::broadcast(schd.world, int1e, 0);
-         mpi_wrapper::broadcast(schd.world, int2e, 0);
+      if(rank == 0){
+         auto rdm1 = ctns::rdm1_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
+         auto rdm2 = ctns::rdm2_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
+         Tm etot = fock::get_etot(rdm2,rdm1,int2e,int1e) + ecore;
+         cout << "etot(rdm)=" << setprecision(12) << etot << endl;
       }
-#endif
-/*
- 69    // make_rdm2 from sparseH
- 75    double etot = fock::get_etot(rdm2,int2e,int1e,ecore);
- 76    cout << "etot(rdm)=" << setprecision(12) << etot << endl;
- 77    assert(std::abs(etot-es1[0]) < 1.e-8);
- 78
-*/
+   }else if(schd.ctns.task_rdm == 2){
+      if(rank == 0){
+         auto tdm1 = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+         auto tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+         Tm Hij = fock::get_etot(tdm2,tdm1,int2e,int1e);
+         auto smat = get_Smat(icomb, icomb2);
+         Hij += smat(schd.ctns.iroot,schd.ctns.jroot)*ecore; 
+         cout << "<i|H|j>(rdm)=" << setprecision(12) << Hij << endl;
+      }
    } // task_rdm
 }
 

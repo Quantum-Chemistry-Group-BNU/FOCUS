@@ -140,7 +140,7 @@ namespace fock{
 
    // E1 = h[p,q]*<p^+q>
    template <typename Tm>
-      double get_e1(const linalg::matrix<Tm>& rdm1,
+      Tm get_e1(const linalg::matrix<Tm>& rdm1,
             const integral::one_body<Tm>& int1e){
          Tm e1 = 0.0;
          int k = int1e.sorb;
@@ -150,12 +150,12 @@ namespace fock{
                e1 += rdm1(i,j)*int1e.get(i,j);
             }
          }
-         return std::real(e1);
+         return e1;
       }
 
    // E2 = <p0p1||q0q1>*<p0^+p1^+q1q0> (p0>p1,q0>q1)
    template <typename Tm>
-      double get_e2(const linalg::matrix<Tm>& rdm2,
+      Tm get_e2(const linalg::matrix<Tm>& rdm2,
             const integral::two_body<Tm>& int2e){
          Tm e2 = 0.0;
          int k = int2e.sorb;
@@ -171,25 +171,25 @@ namespace fock{
                }
             }
          }
-         return std::real(e2);
+         return e2;
       }
 
    // Etot = h[p,q]*<p^+q> + <p0p1||q0q1>*<p0^+p1^+q1q0>
    template <typename Tm>
-      double get_etot(const linalg::matrix<Tm>& rdm2,
+      Tm get_etot(const linalg::matrix<Tm>& rdm2,
             const linalg::matrix<Tm>& rdm1,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
-            const double ecore){
-         double e1 = get_e1(rdm1, int1e);
-         double e2 = get_e2(rdm2, int2e);
+            const double ecore=0.0){
+         auto e1 = get_e1(rdm1, int1e);
+         auto e2 = get_e2(rdm2, int2e);
          return ecore+e1+e2;
       }
    template <typename Tm>
-      double get_etot(const linalg::matrix<Tm>& rdm2,
+      Tm get_etot(const linalg::matrix<Tm>& rdm2,
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
-            const double ecore){
+            const double ecore=0.0){
          auto rdm1 = get_rdm1_from_rdm2(rdm2);
          return get_etot(rdm2, rdm1, int2e, int1e, ecore);
       }

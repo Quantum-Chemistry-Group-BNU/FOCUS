@@ -72,7 +72,7 @@ int tests::test_fci(){
    linalg::matrix<DTYPE> rdm2(k2,k2);
    fci::get_rdm2(sparseH,space2,v0,v0,rdm2);
    
-   double etot = fock::get_etot(rdm2,int2e,int1e,ecore);
+   auto etot = fock::get_etot(rdm2,int2e,int1e,ecore);
    cout << "etot(rdm)=" << setprecision(12) << etot << endl;
    assert(std::abs(etot-es1[0]) < 1.e-8);
 
