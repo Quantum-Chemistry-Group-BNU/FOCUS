@@ -45,9 +45,30 @@ void RDM(const input::schedule& schd){
    }
 
    // rdm task
-   if(schd.ctns.task_rdm == 0){
-      std::cout << "task_rdm == 0" << std::endl;
-   }
+   if(schd.ctns.task_rdm == 1){
+      ctns::rdm1_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
+      ctns::rdm2_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
+   }else if(schd.ctns.task_rdm == 2){
+      // read integral
+      integral::two_body<Tm> int2e;
+      integral::one_body<Tm> int1e;
+      double ecore;
+      if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
+#ifndef SERIAL
+      if(size > 1){
+         boost::mpi::broadcast(schd.world, ecore, 0);
+         boost::mpi::broadcast(schd.world, int1e, 0);
+         mpi_wrapper::broadcast(schd.world, int2e, 0);
+      }
+#endif
+/*
+ 69    // make_rdm2 from sparseH
+ 75    double etot = fock::get_etot(rdm2,int2e,int1e,ecore);
+ 76    cout << "etot(rdm)=" << setprecision(12) << etot << endl;
+ 77    assert(std::abs(etot-es1[0]) < 1.e-8);
+ 78
+*/
+   } // task_rdm
 }
 
 int main(int argc, char *argv[]){
@@ -118,10 +139,10 @@ int main(int argc, char *argv[]){
       RDM<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
       RDM<ctns::qkind::qNK,std::complex<double>>(schd);
-   }else if(schd.ctns.qkind == "rNS"){
-      RDM<ctns::qkind::qNS,double>(schd);
-   }else if(schd.ctns.qkind == "cNS"){
-      RDM<ctns::qkind::qNS,std::complex<double>>(schd);
+//   }else if(schd.ctns.qkind == "rNS"){
+//      RDM<ctns::qkind::qNS,double>(schd);
+//   }else if(schd.ctns.qkind == "cNS"){
+//      RDM<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for rdm!");
    } // qkind

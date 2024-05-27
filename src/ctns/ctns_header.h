@@ -15,8 +15,9 @@
 #include "ctns_sweep.h"
 #include "preprocess_distribution.h"
 
-#include "sadmrg/ctns_tosu2.h"
-
 #include "ctns_vmc.h"
+
+#include "sadmrg/ctns_tosu2.h"
+#include "rdm/rdm_simple.h"
 
 #endif

@@ -132,6 +132,8 @@ void params_ctns::read(ifstream& istrm){
          ifnccl = true;
       }else if(line.substr(0,5)=="iroot"){
          iroot = stoi(line.substr(5));
+      }else if(line.substr(0,5)=="jroot"){
+         jroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
          nsample = stoi(line.substr(7));
       }else if(line.substr(0,5)=="pthrd"){
@@ -299,6 +301,7 @@ void params_ctns::print() const{
    cout << "ifnccl = " << ifnccl << endl;
    // sampling
    cout << "iroot = " << iroot << endl;
+   cout << "jroot = " << jroot << endl;
    cout << "nsample = " << nsample << endl;
    cout << "pthrd = " << pthrd << endl;
    // su2 symmetry

@@ -126,6 +126,7 @@ namespace input{
          bool ifnccl = false;
          // sampling
          int iroot = 0;
+         int jroot = 0;
          int nsample = 10000;
          double pthrd = 1.e-2;
          // su2 symmetry
