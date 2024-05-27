@@ -101,7 +101,7 @@ namespace sci{
             double pa = std::norm(va0/(e0-ea));
             e2 += e2tmp;
             z2 += pa;
-            if(pa > 1.e-12) Sd_PT += -pa*log2(pa);
+            if(pa > 1.e-12) Sd_PT += -pa*log(pa);
             // check whether smaller e2tmp has been found
             for(int i=0; i<nmax; i++){
                if(e2tmp < e2max[i]){
@@ -139,7 +139,7 @@ namespace sci{
          std::cout << "pdim = " << std::setw(20) << pdim << std::endl;
          // diagonal entropy
          double Sd_CI = fock::coeff_entropy(v0);
-         double Sd_tot = (Sd_CI+Sd_PT)/z2 + log2(z2);
+         double Sd_tot = (Sd_CI+Sd_PT)/z2 + log(z2);
          std::cout << "z2   = " << std::fixed << std::setw(20) << std::setprecision(12) << z2 << std::endl;
          std::cout << "eCI  = " << std::fixed << std::setw(20) << std::setprecision(12) << e0 
             << "     Sd_CI  = " << Sd_CI << std::endl; 

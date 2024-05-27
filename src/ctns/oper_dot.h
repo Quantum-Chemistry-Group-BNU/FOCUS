@@ -66,33 +66,6 @@ namespace ctns{
 #endif
       }
 
-   template <typename Tm>
-      stensor2<Tm> get_dot_opC(const int isym, const int ispin){
-         auto qphys = get_qbond_phys(isym);
-         auto sym = get_qsym_op('C', isym, ispin);
-         stensor2<Tm> opC(sym,qphys,qphys);
-         linalg::matrix<Tm> mat(4,4);
-         if(ispin == 0){
-            // c[0] = kA^+
-            // [[0. 0. 0. 0.]
-            //  [0. 0. 0. 1.]
-            //  [1. 0. 0. 0.]
-            //  [0. 0. 0. 0.]]
-            mat(1,3) = 1;
-            mat(2,0) = 1;
-         }else{
-            // also store c[1] = kB^+
-            // [[ 0.  0.  0.  0.]
-            //  [ 0.  0. -1.  0.]
-            //  [ 0.  0.  0.  0.]
-            //  [ 1.  0.  0.  0.]]
-            mat(1,2) = -1;
-            mat(3,0) = 1;
-         }
-         opC.from_matrix(mat);
-         return opC;
-      }
-
    // kA^+
    template <typename Tm>
       void oper_dot_opC(oper_dict<Tm>& qops,

@@ -46,7 +46,7 @@ namespace ctns{
       }
 
    // compute diagonal entropy via sampling:
-   // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
+   // S = -p[i]logp[i] = - (sum_i p[i]) <logp[i] > = -<psi|psi>*<logp[i]>
    template <typename Qm, typename Tm>
       double mps_sdiag_sample(const mps<Qm,Tm>& imps,
             const int iroot,
@@ -71,7 +71,7 @@ namespace ctns{
             auto ci2 = std::norm(pr.second);
             // statistical analysis
             pop[state] += 1;
-            double s = (ci2 < cutoff)? 0.0 : -log2(ci2)*ovlp;
+            double s = (ci2 < cutoff)? 0.0 : -log(ci2)*ovlp;
             double fac = 1.0/(i+1.0);
             Sd = (Sd*i + s)*fac;
             Sd2 = (Sd2*i + s*s)*fac;

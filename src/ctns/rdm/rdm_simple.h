@@ -1,14 +1,14 @@
 #ifndef CTNS_RDM_SIMPLE_H
 #define CTNS_RDM_SIMPLE_H
 
-#include "../oper_dot.h"
+#include "../oper_dot_local.h"
 #include "../../core/simplerdm.h"
 
 namespace ctns{
 
    // Abelian case
    template <typename Qm, typename Tm>
-      comb<Qm,Tm> apply_cop(const comb<Qm,Tm>& icomb,
+      comb<Qm,Tm> apply_opC(const comb<Qm,Tm>& icomb,
             const int ki, 
             const int ispin, 
             const int type){
@@ -43,10 +43,10 @@ namespace ctns{
             for(int j=0; j<sorb; j++){
                int ki = i/2, spin_i = i%2;
                int kj = j/2, spin_j = j%2;
-               auto icomb2j = apply_cop(icomb2, kj, spin_j, 0); // aj|psi2>
-               auto icomb2ij = apply_cop(icomb2j, ki, spin_i, 1); // ai^+aj|psi2>
+               auto icomb2j = apply_opC(icomb2, kj, spin_j, 0); // aj|psi2>
+               auto icomb2ij = apply_opC(icomb2j, ki, spin_i, 1); // ai^+aj|psi2>
                auto smat = get_Smat(icomb1,icomb2ij); // <psi1|ai^+aj|psi2>
-                                                      // map back to the actual orbital      
+               // map back to the actual orbital      
                int pi = 2*icomb2.topo.image2[ki] + spin_i;
                int pj = 2*icomb2.topo.image2[kj] + spin_j;
                rdm1(pi,pj) = smat(iroot1,iroot2);
@@ -78,10 +78,10 @@ namespace ctns{
                      int kj = j/2, spin_j = j%2;
                      int kk = k/2, spin_k = k%2;
                      int kl = l/2, spin_l = l%2;
-                     auto icomb2l = apply_cop(icomb2, kl, spin_l, 0); // al|psi2>
-                     auto icomb2kl = apply_cop(icomb2l, kk, spin_k, 0); // akal|psi2>
-                     auto icomb2jkl = apply_cop(icomb2kl, kj, spin_j, 1); // aj^+akal|psi2>
-                     auto icomb2ijkl = apply_cop(icomb2jkl, ki, spin_i, 1); // ai^+aj^+akal|psi2>
+                     auto icomb2l = apply_opC(icomb2, kl, spin_l, 0); // al|psi2>
+                     auto icomb2kl = apply_opC(icomb2l, kk, spin_k, 0); // akal|psi2>
+                     auto icomb2jkl = apply_opC(icomb2kl, kj, spin_j, 1); // aj^+akal|psi2>
+                     auto icomb2ijkl = apply_opC(icomb2jkl, ki, spin_i, 1); // ai^+aj^+akal|psi2>
                      auto smat = get_Smat(icomb1,icomb2ijkl); // <psi1|ai^+aj^+akal|psi2>
                      // map back to the actual orbital      
                      int pi = 2*icomb2.topo.image2[ki] + spin_i;
@@ -104,6 +104,86 @@ namespace ctns{
          }
          return rdm2;
       }
+
+   // single-site entropy
+   template <typename Qm, typename Tm>
+      std::vector<double> entropy1_simple(const comb<Qm,Tm>& icomb1,
+            const int iroot1,
+            const bool debug=true){
+         std::cout << "\nctns::entropy1_simple: iroot1=" << iroot1
+            << std::endl;
+         assert(iroot1 < icomb1.get_nroots());
+         int norb = icomb1.get_nphysical();
+         std::vector<double> sp(norb);
+         auto icomb2 = icomb1;
+         for(int i=0; i<norb; i++){
+            auto csite = icomb2.sites[norb-1-i];
+            Tm na, nb, nanb;
+            { 
+               auto opBaa = get_dot_opB<Tm>(Qm::isym, 0, 0);
+               icomb2.sites[norb-1-i] = contract_qt3_qt2("c", csite, opBaa);
+               auto smat = get_Smat(icomb1,icomb2); 
+               na = smat(iroot1,iroot1); 
+            }
+            {
+               auto opBbb = get_dot_opB<Tm>(Qm::isym, 1, 1);
+               icomb2.sites[norb-1-i] = contract_qt3_qt2("c", csite, opBbb);
+               auto smat = get_Smat(icomb1,icomb2); 
+               nb = smat(iroot1,iroot1); 
+            }
+            {
+               auto opDabba = get_dot_opDabba<Tm>(Qm::isym);
+               icomb2.sites[norb-1-i] = contract_qt3_qt2("c", csite, opDabba);
+               auto smat = get_Smat(icomb1,icomb2);
+               nanb = smat(iroot1,iroot1);
+            }
+            icomb2.sites[norb-1-i] = std::move(csite);
+            
+            std::cout << "na,nb,nanb=" << na
+               << " " << nb
+               << " " << nanb
+               << std::endl;
+
+            // {|vac>,|up>,|dw>,|up,dw>}
+            std::vector<double> lambda(4);
+            lambda[3] = std::real(nanb); 
+            lambda[2] = std::real(nb - nanb); // <dw+dw>=<nb*(1-na)>=<nb>-<nanb> 
+            lambda[1] = std::real(na - nanb);
+            lambda[0] = std::real(1.0 - na - nb + nanb);
+
+            std::cout << lambda[0] << " "
+               << lambda[1] << " "
+               << lambda[2] << " "
+               << lambda[3] << std::endl;
+
+            int pi = icomb1.topo.image2[i];
+            sp[pi] = fock::entropy(lambda); 
+         }
+         if(debug){
+            double sum = 0.0;
+            for(int i=0; i<norb; i++){
+               std::cout << "p=" << i
+                  << " tmp=" << icomb1.topo.image2[i] 
+                  << " Sp=" << std::setprecision(12) << sp[i] 
+                  << std::endl;
+               sum += sp[i];
+            }
+            std::cout << "sum=" << std::setprecision(12) << sum << std::endl;
+         }
+         return sp;
+      }
+
+/*
+   // two-site entropy
+   template <typename Qm, typename Tm>
+      linalg::matrix<Tm> entropy2_simple(const comb<Qm,Tm>& icomb1,
+            const int iroot1){
+         std::cout << "\nctns::entropy2_simple: iroot1=" << iroot1
+            << std::endl;
+         assert(iroot1 < icomb1.get_nroots());
+         int sorb = 2*icomb2.get_nphysical();
+      }
+*/
 
 } // ctns
 

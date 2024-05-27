@@ -89,7 +89,7 @@ namespace ctns{
    // --- Sdiag_sample: Abelian & Non-Abelian MPS ---
 
    // compute diagonal entropy via sampling:
-   // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
+   // S = -p[i]logp[i] = - (sum_i p[i]) <logp[i] > = -<psi|psi>*<logp[i]>
    template <typename Qm, typename Tm>
       double rcanon_Sdiag_sample(const comb<Qm,Tm>& icomb,
             const int iroot,
@@ -117,7 +117,7 @@ namespace ctns{
             auto ci2 = std::norm(pr.second);
             // statistical analysis
             pop[state] += 1;
-            double s = (ci2 < cutoff)? 0.0 : -log2(ci2)*ovlp;
+            double s = (ci2 < cutoff)? 0.0 : -log(ci2)*ovlp;
             double ipr = ci2*ovlp;
             double fac = 1.0/(i+1.0);
             Sd = (Sd*i + s)*fac;
@@ -146,7 +146,7 @@ namespace ctns{
             states[i] = pr.first;
             counts[i] = pr.second;
             double ci2 = counts[i]/(1.0*nsample);
-            Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log2(ci2)*ovlp;
+            Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log(ci2)*ovlp;
             IPRpop += ci2*ci2*ovlp;
             i++;
          }
@@ -176,7 +176,7 @@ namespace ctns{
       }
 
    // compute diagonal entropy via sampling:
-   // S = -p[i]log2p[i] = - (sum_i p[i]) <log2p[i] > = -<psi|psi>*<log2p[i]>
+   // S = -p[i]logp[i] = - (sum_i p[i]) <logp[i] > = -<psi|psi>*<logp[i]>
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       double rcanon_sample_samps2det(const comb<Qm,Tm>& icomb,
             const int iroot,
@@ -222,7 +222,7 @@ namespace ctns{
             states[i] = pr.first;
             counts[i] = pr.second;
             double ci2 = counts[i]/(1.0*nsample);
-            Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log2(ci2)*ovlp;
+            Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log(ci2)*ovlp;
             IPRpop += ci2*ci2*ovlp;
             i++;
          }

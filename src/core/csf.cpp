@@ -178,7 +178,7 @@ double csfstate::Sdiag_sample(const int nsample, const int nprt) const{
       auto ci2 = std::norm(pr.second);
       // statistical analysis
       pop[state] += 1;
-      double s = (ci2 < cutoff)? 0.0 : -log2(ci2);
+      double s = (ci2 < cutoff)? 0.0 : -log(ci2);
       double fac = 1.0/(i+1.0);
       Sd = (Sd*i + s)*fac;
       Sd2 = (Sd2*i + s*s)*fac;

@@ -242,7 +242,7 @@ namespace ctns{
             if(eigs[i] > thresh_proj){
                kept.push_back(i);
                popBi += eigs[i];
-               SvN += -eigs[i]*log2(eigs[i]); // compute entanglement entropy
+               SvN += -eigs[i]*log(eigs[i]); // compute entanglement entropy
             }
          }
          int dimBi = kept.size();

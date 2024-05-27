@@ -60,7 +60,7 @@ namespace fock{
             for(const auto& i : idx){ 
                pi = std::norm(civec[i]);
                psum0 += pi;
-               Sd += (pi < cutoff)? 0.0 : -pi*log2(pi);
+               Sd += (pi < cutoff)? 0.0 : -pi*log(pi);
                // Measurement in Z-basis
                int nelec = space[i].nelec(); ne += pi*nelec; ne2 += pi*nelec*nelec;
                if(std::abs(civec[i]) > thresh){ 
@@ -91,7 +91,7 @@ namespace fock{
             for(const auto& i : idx){ 
                pi = std::norm(civec[i]);
                psum0 += pi;
-               Sd += (pi < cutoff)? 0.0 : -pi*log2(pi);
+               Sd += (pi < cutoff)? 0.0 : -pi*log(pi);
                // Measurement in Z-basis
                int nelec = space[i].nelec(); ne += pi*nelec; ne2 += pi*nelec*nelec;
                int nelec_a = space[i].nelec_a(); na += pi*nelec_a; na2 += pi*nelec_a*nelec_a;
@@ -137,7 +137,7 @@ namespace fock{
       for(const auto& pi : p){
          if(pi < cutoff) continue;
          psum += pi;
-         ssum -= pi*log2(pi);
+         ssum -= pi*log(pi);
       }
       std::cout << "fock::entropy : " 
          << std::defaultfloat << std::setprecision(12)
@@ -153,7 +153,7 @@ namespace fock{
             double pi = std::norm(ci);
             if(pi < cutoff) continue;
             psum += pi;
-            ssum += -pi*log2(pi);
+            ssum += -pi*log(pi);
          }
          return ssum;
       }

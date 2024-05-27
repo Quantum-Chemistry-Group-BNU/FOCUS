@@ -74,6 +74,14 @@ void RDM(const input::schedule& schd){
          Hij += smat(schd.ctns.iroot,schd.ctns.jroot)*ecore; 
          cout << "<i|H|j>(rdm)=" << setprecision(12) << Hij << endl;
       }
+   }else if(schd.ctns.task_rdm == 3){
+      if(rank == 0){
+         // entropy analysis
+         auto s1 = ctns::entropy1_simple(icomb, schd.ctns.iroot);
+         /*
+         auto s2 = ctns::entropy2_simple(icomb, schd.ctns.iroot);
+         */
+      }
    } // task_rdm
 }
 

@@ -57,7 +57,7 @@ namespace ctns{
          kept_dim[br] += nfac;
          kept_wts[br] += nfac*sig2all[idx];
          accum += nfac*sig2all[idx];
-         SvN += -nfac*sig2all[idx]*std::log2(sig2all[idx]);
+         SvN += -nfac*sig2all[idx]*std::log(sig2all[idx]);
          std::cout << " i=" << i << " qr=" << qr 
             << " " << kept_dim[br]/nfac-1 << "-th"
             << " sig2=" << sig2all[idx] 
