@@ -97,7 +97,7 @@ namespace ctns{
             const double pthrd=1.e-2){ // no. of largest states to be printed
          using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type; 
          auto t0 = tools::get_time();
-         const double cutoff = 1.e-12;
+         const double cutoff = 0.0;
          std::cout << "\nctns::rcanon_Sdiag_sample:" 
             << " ifab=" << Qm::ifabelian
             << " iroot=" << iroot 
@@ -183,7 +183,7 @@ namespace ctns{
             const int nsample=10000,
             const double pthrd=1.e-2){ // no. of largest states to be printed
          auto t0 = tools::get_time();
-         const double cutoff = 1.e-12;
+         const double cutoff = 0.0;
          std::cout << "\nctns::rcanon_sample_samps2det:"
             << " ifab=" << Qm::ifabelian
             << " iroot=" << iroot 
