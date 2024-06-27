@@ -56,7 +56,8 @@ namespace input{
                   & iomode & async_fetch & async_save & async_remove & ifnccl
                   & iroot & nsample & pthrd
                   & tosu2 & thresh_tosu2 & singlet
-                  & diagcheck; 
+                  & diagcheck
+                  & savebin; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -135,6 +136,8 @@ namespace input{
          bool singlet = false; // singlet embedding
          // gpu
          bool diagcheck = false;
+         // rdm and entropy
+         bool savebin = false;
    };
 
 } // input

@@ -98,6 +98,7 @@ namespace ctns{
          topology(){};
          void read(const std::string& topology_file, const bool debug=true); 
          void print() const;
+         std::vector<int> get_image1() const;
          // helpers
          const node& get_node(const comb_coord& p) const{ return nodes[p.first][p.second]; }
          int get_type(const comb_coord& p) const{ return nodes[p.first][p.second].type; }

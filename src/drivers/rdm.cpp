@@ -50,15 +50,18 @@ void RDM(const input::schedule& schd){
    if(schd.ctns.rcanon_file.size()>0){
       ctns::comb_load(icomb, schd, schd.ctns.rcanon_file);
       icomb.display_shape();
+      if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.ctns.rcanon_file);
    }
    ctns::comb<Qm,Tm> icomb2;
    if(schd.ctns.rcanon2_file.size()>0){
       ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
       icomb2.display_shape();
+      if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.ctns.rcanon2_file);
    }
 
    // rdm task
    if(schd.ctns.task_rdm == 1){
+      // reduce density matrix
       if(rank == 0){
          auto rdm1 = ctns::rdm1_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
          auto rdm2 = ctns::rdm2_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
@@ -66,6 +69,7 @@ void RDM(const input::schedule& schd){
          cout << "etot(rdm)=" << setprecision(12) << etot << endl;
       }
    }else if(schd.ctns.task_rdm == 2){
+      // transition density matrix
       if(rank == 0){
          auto tdm1 = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
          auto tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
@@ -75,14 +79,12 @@ void RDM(const input::schedule& schd){
          cout << "<i|H|j>(rdm)=" << setprecision(12) << Hij << endl;
       }
    }else if(schd.ctns.task_rdm == 3){
+      // single-site entropy analysis
       if(rank == 0){
-         // entropy analysis
          auto s1 = ctns::entropy1_simple(icomb, schd.ctns.iroot);
-         /*
-         auto s2 = ctns::entropy2_simple(icomb, schd.ctns.iroot);
-         */
       }
    } // task_rdm
+
 }
 
 int main(int argc, char *argv[]){

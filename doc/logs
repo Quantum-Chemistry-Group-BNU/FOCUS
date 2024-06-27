@@ -239,7 +239,7 @@
    - pretraining by SCI
    - iron-sulfur clusters: frustrated spin systems
 
-### 2023 postCTNS  ###
+### 2023 postCTNS ###
 
  * postCTNS.x driver: interface MPS: [DONE@2023/06/30]
    - overlap between two MPS? 
@@ -301,7 +301,7 @@
          - qnum_qsym.h: get_sym_opX
          - oper_pool.h: support su2 tensor [DONE@2024/03/09]
       - oper_dot_su2.h: [DONE@2024/03/10]
-      - oper_renorm.h: KET STEP !
+      - oper_renorm.h: KEY STEP [!!!]
          - symbolic_formulae_renorm_su2: how to encode info about intermediate spins
             - symbolic_normxwf_su2:
             - symbolic_compxwf_su2: COMPLICATED PART ! [DONE@2024/03/12]
@@ -375,7 +375,33 @@
       - gpu version: [DONE@2024/05/12] 
          - onedot_diagGPU_su2.h:
 
- * Benchmark: jiageng or other platform [DONE@2024/07/XX]
+ * Reduced density matrices: (RDMs) [DONE@2024/08/XX]
+   - Brute-force RDM & TDM algorithm:
+      - non-spin-adapted: [DONE@2024/06/02]
+         - Application of local op to MPS:
+         - Contract <bMPS|kMPS> to get RDM/TDM
+         - quantum information measure:
+            - single orbital entropy [or just from 1,2-RDMs]
+
+      - spin-adapted case? 
+         - What is the correct math for applying operators?
+
+   - Optimized algorithm via reusing intermediates
+      - non-spin-adapted case: [THIS SHOUDLD BE SIMPLE!!!]
+         - one-body RDM:
+         - two-body RDM:
+      - spin-adapted case:
+         - one-body RDM:
+         - two-body RDM:
+      - transition PDM:
+         - between same spins
+         - between different spins (for SOC)
+         - between singlet embedding wavefunction?
+   - GPU version:
+      - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
+
+
+ * Benchmark: jiageng or other platform [DONE@2024/08/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
                              but use mkl2022 for focus,
                              otherwise, dgemv_batch does not exist!
@@ -384,27 +410,3 @@
    - fe8s7
    - femoco
 
- * Reduced density matrices: (RDMs) [DONE@2024/08/XX]
-   - Brute-force RDM algorithm:
-      - Application of local op to MPS:
-         - non-spin-adapted: [DONE@2024/05/27]
-         - spin-adapted?
-      - Contract <bMPS|kMPS> to get RDM/TDM
-      - quantum information measure:
-         - single orbital entropy
-         - mutual information
-   - Optimized algorithm via reusing intermediates
-      - non-spin-adapted case:
-         - one-body RDM:
-         - two-body RDM:
-         - transition PDM:
-      - spin-adapted case:
-         - one-body RDM:
-         - two-body RDM:
-         - transition PDM:
-      - quantum information measure:
-         - single orbital entropy
-         - mutual information
-      - transition particle density matrix (for SOC)
-   - GPU version:
- 

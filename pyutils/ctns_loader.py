@@ -83,7 +83,7 @@ class tensor3():
                     # data stored lrn in F order 
                     dtensor[sta_m:sta_m+dm,sta_c:sta_c+dc,sta_r:sta_r+dr] = \
                             self.data[off:off+blksize].reshape(dm,dc,dr).copy()
-        dtensor = dtensor.transpose(0,2,1).copy() # nrl->nlr convention
+        dtensor = dtensor.transpose(2,0,1).copy() # nrl->lnr convention
         return dtensor
 
 
@@ -108,6 +108,12 @@ class ctns_info():
             self.rsites[i].prt(str(i))
         return 0 
 
+    # lnr convention
+    def toMPSdense(self):
+        sites = [None]*self.ntotal
+        for i in range(self.ntotal):
+            sites[self.ntotal-1-i] = self.rsites[i].todense()
+        return sites
 
 if __name__ == '__main__':
 

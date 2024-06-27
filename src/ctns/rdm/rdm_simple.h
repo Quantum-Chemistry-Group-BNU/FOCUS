@@ -36,6 +36,7 @@ namespace ctns{
             << std::endl;
          assert(iroot1 < icomb1.get_nroots());
          assert(iroot2 < icomb2.get_nroots());
+         auto image1 = icomb1.topo.get_image1();
          int sorb = 2*icomb2.get_nphysical();
          // rdm1[i,j] = <i^+j>
          linalg::matrix<Tm> rdm1(sorb,sorb);
@@ -47,8 +48,8 @@ namespace ctns{
                auto icomb2ij = apply_opC(icomb2j, ki, spin_i, 1); // ai^+aj|psi2>
                auto smat = get_Smat(icomb1,icomb2ij); // <psi1|ai^+aj|psi2>
                // map back to the actual orbital      
-               int pi = 2*icomb2.topo.image2[ki] + spin_i;
-               int pj = 2*icomb2.topo.image2[kj] + spin_j;
+               int pi = 2*image1[ki] + spin_i;
+               int pj = 2*image1[kj] + spin_j;
                rdm1(pi,pj) = smat(iroot1,iroot2);
             } // j
          } // i
@@ -66,6 +67,7 @@ namespace ctns{
             << std::endl;
          assert(iroot1 < icomb1.get_nroots());
          assert(iroot2 < icomb2.get_nroots());
+         auto image1 = icomb1.topo.get_image1();
          int sorb = 2*icomb2.get_nphysical();
          // rdm2[i,j,k,l] = <i^+j^+kl> (i>j,k<l)
          int sorb2 = sorb*(sorb-1)/2;
@@ -84,10 +86,10 @@ namespace ctns{
                      auto icomb2ijkl = apply_opC(icomb2jkl, ki, spin_i, 1); // ai^+aj^+akal|psi2>
                      auto smat = get_Smat(icomb1,icomb2ijkl); // <psi1|ai^+aj^+akal|psi2>
                      // map back to the actual orbital      
-                     int pi = 2*icomb2.topo.image2[ki] + spin_i;
-                     int pj = 2*icomb2.topo.image2[kj] + spin_j;
-                     int pk = 2*icomb2.topo.image2[kk] + spin_k;
-                     int pl = 2*icomb2.topo.image2[kl] + spin_l;
+                     int pi = 2*image1[ki] + spin_i;
+                     int pj = 2*image1[kj] + spin_j;
+                     int pk = 2*image1[kk] + spin_k;
+                     int pl = 2*image1[kl] + spin_l;
                      auto pij = tools::canonical_pair0(pi,pj);
                      auto pkl = tools::canonical_pair0(pk,pl);
                      rdm2(pij,pkl) = smat(iroot1,iroot2);
@@ -113,6 +115,7 @@ namespace ctns{
          std::cout << "\nctns::entropy1_simple: iroot1=" << iroot1
             << std::endl;
          assert(iroot1 < icomb1.get_nroots());
+         auto image1 = icomb1.topo.get_image1();
          int norb = icomb1.get_nphysical();
          std::vector<double> sp(norb);
          auto icomb2 = icomb1;
@@ -138,32 +141,19 @@ namespace ctns{
                nanb = smat(iroot1,iroot1);
             }
             icomb2.sites[norb-1-i] = std::move(csite);
-            
-            std::cout << "na,nb,nanb=" << na
-               << " " << nb
-               << " " << nanb
-               << std::endl;
-
             // {|vac>,|up>,|dw>,|up,dw>}
             std::vector<double> lambda(4);
             lambda[3] = std::real(nanb); 
             lambda[2] = std::real(nb - nanb); // <dw+dw>=<nb*(1-na)>=<nb>-<nanb> 
             lambda[1] = std::real(na - nanb);
             lambda[0] = std::real(1.0 - na - nb + nanb);
-
-            std::cout << lambda[0] << " "
-               << lambda[1] << " "
-               << lambda[2] << " "
-               << lambda[3] << std::endl;
-
-            int pi = icomb1.topo.image2[i];
+            int pi = image1[i];
             sp[pi] = fock::entropy(lambda); 
          }
          if(debug){
             double sum = 0.0;
             for(int i=0; i<norb; i++){
                std::cout << "p=" << i
-                  << " tmp=" << icomb1.topo.image2[i] 
                   << " Sp=" << std::setprecision(12) << sp[i] 
                   << std::endl;
                sum += sp[i];
@@ -172,18 +162,6 @@ namespace ctns{
          }
          return sp;
       }
-
-/*
-   // two-site entropy
-   template <typename Qm, typename Tm>
-      linalg::matrix<Tm> entropy2_simple(const comb<Qm,Tm>& icomb1,
-            const int iroot1){
-         std::cout << "\nctns::entropy2_simple: iroot1=" << iroot1
-            << std::endl;
-         assert(iroot1 < icomb1.get_nroots());
-         int sorb = 2*icomb2.get_nphysical();
-      }
-*/
 
 } // ctns
 

@@ -146,6 +146,8 @@ void params_ctns::read(ifstream& istrm){
          singlet = true;
       }else if(line.substr(0,9)=="diagcheck"){
          diagcheck = true;
+      }else if(line.substr(0,7)=="savebin"){
+         savebin = true;
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
@@ -310,4 +312,6 @@ void params_ctns::print() const{
    cout << "singlet = " << singlet << endl;
    // gpu
    cout << "diagcheck = " << diagcheck << endl;
+   // rdm and entropy
+   cout << "savebin = " << savebin << endl;
 }

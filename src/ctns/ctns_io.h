@@ -7,9 +7,6 @@
 
 namespace ctns{ 
 
-   const bool ifsavebin = false;
-   extern const bool ifsavebin;
-
    // for comb
    template <typename Qm, typename Tm>
       void rcanon_save(const comb<Qm,Tm>& icomb,
@@ -25,22 +22,26 @@ namespace ctns{
          }
          save << icomb.rwfuns;
          ofs.close();
+      }
 
-         // ZL@20221207 binary format for easier loading in python 
-         if(ifsavebin){
-            std::ofstream ofs2(fname+".bin", std::ios::binary);
-            ofs2.write((char*)(&icomb.topo.ntotal), sizeof(int));
-            // save all sites
-            for(int idx=0; idx<icomb.topo.ntotal-1; idx++){
-               icomb.sites[idx].dump(ofs2);
-            }
-            // merge rwfun & site0
-            const auto& rindex = icomb.topo.rindex;
-            const auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))];
-            auto site = contract_qt3_qt2("l",site0,icomb.get_wf2());
-            site.dump(ofs2);
-            ofs2.close();
+   // ZL@20221207 binary format for easier loading in python 
+   template <typename Qm, typename Tm>
+      void rcanon_savebin(const comb<Qm,Tm>& icomb,
+            const std::string fname,
+            const bool debug=true){
+         if(debug) std::cout << "\nctns::rcanon_savebin fname=" << fname << std::endl;
+         std::ofstream ofs2(fname+".bin", std::ios::binary);
+         ofs2.write((char*)(&icomb.topo.ntotal), sizeof(int));
+         // save all sites
+         for(int idx=0; idx<icomb.topo.ntotal-1; idx++){
+            icomb.sites[idx].dump(ofs2);
          }
+         // merge rwfun & site0
+         const auto& rindex = icomb.topo.rindex;
+         const auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))];
+         auto site = contract_qt3_qt2("l",site0,icomb.get_wf2());
+         site.dump(ofs2);
+         ofs2.close();
       }
 
    template <typename Qm, typename Tm>

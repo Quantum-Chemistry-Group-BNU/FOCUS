@@ -34,6 +34,14 @@ ostream& ctns::operator <<(ostream& os, const directed_bond& dbond){
    return os;   
 }
 
+std::vector<int> topology::get_image1() const{
+   std::vector<int> image1(nphysical); 
+   for(int i=0; i<nphysical; i++){
+      image1[i] = image2[2*i]/2;
+   }
+   return image1;
+}
+
 // topology
 void topology::read(const string& fname, const bool debug){
    if(debug){
