@@ -132,7 +132,7 @@ namespace fock{
       }
 
    inline double entropy(const std::vector<double>& p, 
-         const double cutoff=1.e-12){
+         const double cutoff=0.0){
       double psum = 0.0, ssum = 0.0;
       for(const auto& pi : p){
          if(pi < cutoff) continue;
@@ -147,7 +147,7 @@ namespace fock{
 
    template <typename Tm>
       double coeff_entropy(const std::vector<Tm>& coeff, 
-            const double cutoff=1.e-12){
+            const double cutoff=0.0){
          double psum = 0.0, ssum = 0.0;
          for(const auto& ci : coeff){
             double pi = std::norm(ci);
