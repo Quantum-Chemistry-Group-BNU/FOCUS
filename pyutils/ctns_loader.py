@@ -1,6 +1,8 @@
 import numpy as np
 import struct
 
+# Interfacing MPS produced by FOCUS with Numpy
+
 class tensor3():
     def __init__(self):
         self.rows = None

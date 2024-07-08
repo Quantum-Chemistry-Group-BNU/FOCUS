@@ -1,6 +1,9 @@
 import numpy as np
 import scipy
+import copy
 from opt_einsum import contract as einsum
+
+# Some functions for MPS
 
 def shapes(sites):
     shape = []
@@ -12,17 +15,20 @@ def overlap(sites1,sites2):
     assert len(sites1) == len(sites2)
     env = np.ones((1,1),dtype=sites1[0].dtype)
     for i in range(len(sites1)-1,-1,-1):
-        tmp = einsum('lnr,rk->lnk',sites2[i],env)
+        tmp = einsum('lnr,dr->lnd',sites2[i],env)
         env = einsum('lnr,mnr->lm',sites1[i].conj(),tmp)
     return env
 
-def get_SvN(pop):
+def get_SvN(pop,thresh=0.0):
     s = 0.0
     for p in pop:
-        if p < 1.e-16: continue
+        if p < thresh: continue
         s += -p*np.log(p)
     return s
 
+#=========
+# Entropy
+#=========
 def singleSiteEntropy(sites,iroot=0):
     nsite = len(sites)
     sp = np.zeros(nsite)
@@ -69,3 +75,82 @@ def mutualInformation(spq,sp):
             Ipq[i,j] = sp[i] + sp[j] - spq[i,j]
             Ipq[j,i] = Ipq[i,j]
     return Ipq
+
+#================
+# Canonical Form
+#================
+def checkRCF(sites,thresh=1.e-10):
+    nsite = len(sites)
+    diff = 0
+    for i in range(nsite-1,-1,-1):
+        ova = einsum('unr,dnr->ud',sites[i],sites[i])
+        d = ova.shape[0]
+        diff_i = np.linalg.norm(ova-np.identity(d))
+        diff += diff_i
+        print('check i=',i,' site.shape=',sites[i].shape,' |S-I|=',diff_i)
+    if diff > nsite*thresh:
+        print('MPS is not in RCF: diff=',diff)
+        return 1
+    else:
+        print('MPS is in RCF')
+        return 0
+
+def checkLCF(sites,thresh=1.e-10):
+    nsite = len(sites)
+    diff = 0
+    for i in range(0,nsite):
+        ova = einsum('lnu,lnd->ud',sites[i],sites[i])
+        d = ova.shape[0]
+        diff_i = np.linalg.norm(ova-np.identity(d))
+        diff += diff_i
+        print('check i=',i,' site.shape=',sites[i].shape,' |S-I|=',diff_i)
+    if diff > nsite*thresh:
+        print('MPS is not in LCF: diff=',diff)
+        return 1
+    else:
+        print('MPS is in LCF')
+        return 0
+        
+def leftCanonicalization(sites, svd_driver='gesvd'):
+    nsite = len(sites)
+    sites_tmp = copy.deepcopy(sites)
+    cpsi = sites_tmp[0]
+    shape = cpsi.shape
+    cpsi = cpsi.reshape(shape[0],1,shape[1],shape[2]) # ilnr
+    for i in range(nsite-1):
+        psi2 = cpsi.transpose(1,2,3,0) # ilnr->lnri
+        shape = psi2.shape
+        psi2 = psi2.reshape(shape[0]*shape[1],shape[2]*shape[3])
+        u,s,vt = scipy.linalg.svd(psi2, full_matrices=False, lapack_driver=svd_driver)
+        d = s.shape[0]
+        sites_tmp[i] = u.reshape(shape[0],shape[1],d)
+        vt = einsum('l,lr->lr',s,vt)
+        vt = vt.reshape(d,shape[2],shape[3])
+        # update cpsi for the next site
+        cpsi = einsum('lci,cnr->ilnr',vt,sites_tmp[i+1])
+    # construct the last site
+    shape = cpsi.shape
+    assert shape[3] == 1
+    cpsi = cpsi.reshape(shape[0],shape[1],shape[2])
+    sites_tmp[nsite-1] = einsum('iln->lni',cpsi)
+    return sites_tmp
+
+def getLCFStateFromLCF(sites_lcf, iroot):
+    sites_tmp = copy.deepcopy(sites_lcf)
+    site = sites_tmp[-1]
+    sites_tmp[-1] = site[:,:,[iroot]]
+    return sites_tmp
+
+def getLCFStateFromRCF(sites_rcf, iroot):
+    sites_lcf = leftCanonicalization(sites_rcf)
+    sites_tmp = copy.deepcopy(sites_lcf)
+    site = sites_tmp[-1]
+    sites_tmp[-1] = site[:,:,[iroot]]
+    return sites_tmp
+
+def getRCFStateFromRCF(sites_rcf, iroot):
+    sites_tmp = copy.deepcopy(sites_rcf)
+    site = sites_tmp[0]
+    sites_tmp[0] = site[[iroot],:,:]
+    return sites_tmp
+

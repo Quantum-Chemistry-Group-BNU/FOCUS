@@ -1,0 +1,16 @@
+
+To use these functions, add path to PYTHONPATH:
+
+   export PYTHONPATH="/Users/zhendongli/Desktop/FOCUS/pyutils:${PYTHONPATH}"
+
+Example for input for rdm.x
+
+   $ctns
+   verbose 1
+   qkind rNSz
+   topology_file topo
+   rcanon_file rcanon_isweep1
+   iroot 0
+   savebin
+   task_rdm 3
+   $end
