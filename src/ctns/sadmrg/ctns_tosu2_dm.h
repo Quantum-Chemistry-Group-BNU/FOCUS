@@ -59,15 +59,16 @@ namespace ctns{
          const auto& qrow = csite.qrow;
          const auto& qcol = csite.qcol;
          CoupledDM<Tm> cdm(qcol, qcol);
-         // DM = (B*rhol*B^+), B=A^T => DM = A^TA^* 
+         // DM = (B*rhol^T*B^+), B=A^T => DM = A^TA^*
+         // ZL@20240613: Change rhol to rhol^T, which should be correct! 
          double tr = 0.0;
          for(int j=0; j<qcol.size(); j++){
             int dj = qcol[j].second;
             size_t off = cdm._offset[std::make_pair(j,j)];
             if(off == 0) continue;
             Tm* blkDM = cdm._data.data() + off-1;
-            // DM[J,J] = \sum_I (A^+[J,I] * rho[I,I]^* * A[I,J])^* at the symmetry block level
-            //         = \sum_I (A^+[J,I] * rho[I,I]^T * A[I,J])^* as rho is Hermitian
+            // DM[J,J] = \sum_I (A^+[J,I] * rho[I,I]^H * A[I,J])^* at the symmetry block level
+            //         = \sum_I (A^+[J,I] * rho[I,I] * A[I,J])^* as rho is Hermitian
             for(int i=0; i<qrow.size(); i++){
                int di = qrow.get_dim(i);
                size_t offA = csite._offset.at(std::make_pair(i,j));
@@ -76,15 +77,14 @@ namespace ctns{
                if(blkD.empty()) continue;
                const Tm* blkA = csite._data.data() + offA-1; 
                linalg::matrix<Tm> rhoA(di,dj);
-               // rho[I,I]^T * A[I,J]
-               linalg::xgemm("T", "N", di, dj, di, alpha,
+               // rho[I,I] * A[I,J]
+               linalg::xgemm("N", "N", di, dj, di, alpha,
                      blkD.data(), di, blkA, di, beta0,
                      rhoA.data(), di);
                // A^+[J,I] * rhoA[I,J] 
                linalg::xgemm("C", "N", dj, dj, di, alpha,
                      blkA, di, rhoA.data(), di, beta1,
                      blkDM, dj);
-
                /*
                std::cout << "> i=" << i << std::endl;
                blkD.print("blkD");

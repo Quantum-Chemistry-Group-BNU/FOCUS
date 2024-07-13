@@ -41,7 +41,8 @@ void SADMRG(const input::schedule& schd){
          
          // initialize RCF 
          std::string rcanon_file;
-         if(schd.ctns.tosu2){ 
+         if(schd.ctns.tosu2){
+
             ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
             icomb_NSz.topo = icomb.topo;
             if(schd.ctns.rcanon_file.empty()){
@@ -93,7 +94,7 @@ void SADMRG(const input::schedule& schd){
             assert(!schd.ctns.rcanon_file.empty());
             rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
             ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
-         }
+         } // tosu2
 
       }else{
          // restart a broken calculation from disk

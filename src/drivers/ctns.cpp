@@ -36,48 +36,59 @@ void CTNS(const input::schedule& schd){
       icomb.topo.read(schd.ctns.topology_file);
       icomb.topo.print();
       if(schd.ctns.restart_sweep == 0){
+         
          // initialize RCF 
          std::string rcanon_file;
-         if(schd.ctns.rcanon_file.empty()){
-            // from SCI wavefunction
-            rcanon_file = schd.scratch+"/rcanon_ci";
-            onspace sci_space;
-            vector<double> es;
-            linalg::matrix<Tm> vs;
-            auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
-            fci::ci_load(sci_space, es, vs, ci_file);
-            // truncate CI coefficients
-            fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-            ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
-                  schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
-            ctns::rcanon_save(icomb, rcanon_file);
-            // debug        
-            const bool debug = false;
-            if(debug){ 
-               // <CI|CTNS>
-               auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
-               Sij_mix.print("Sij_mix");
-               // HIJ
-               integral::two_body<Tm> int2e;
-               integral::one_body<Tm> int1e;
-               double ecore;
-               integral::load(int2e, int1e, ecore, schd.integral_file);
-               io::create_scratch(schd.scratch);
-               auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
-               Hij_ci.print("Hij_ci",8);
-               auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
-               Hij_ctns.print("Hij_ctns",8);
-               double diffH = (Hij_ctns - Hij_ci).normF();
-               cout << "\ncheck diffH=" << diffH << endl;
-               const double thresh = 1.e-8;
-               if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
-               io::remove_scratch(schd.scratch);
-               exit(1);
-            }
+         if(schd.ctns.fromnosym){
+
+            ctns::rcanon_fromnosym(icomb);
+            ctns::rcanon_save(icomb, "rmps_sym");
+
          }else{
-            rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-            ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
-         } 
+
+            if(schd.ctns.rcanon_file.empty()){
+               // from SCI wavefunction
+               rcanon_file = schd.scratch+"/rcanon_ci";
+               onspace sci_space;
+               vector<double> es;
+               linalg::matrix<Tm> vs;
+               auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
+               fci::ci_load(sci_space, es, vs, ci_file);
+               // truncate CI coefficients
+               fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
+               ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
+                     schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
+               ctns::rcanon_save(icomb, rcanon_file);
+               // debug        
+               const bool debug = false;
+               if(debug){ 
+                  // <CI|CTNS>
+                  auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
+                  Sij_mix.print("Sij_mix");
+                  // HIJ
+                  integral::two_body<Tm> int2e;
+                  integral::one_body<Tm> int1e;
+                  double ecore;
+                  integral::load(int2e, int1e, ecore, schd.integral_file);
+                  io::create_scratch(schd.scratch);
+                  auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
+                  Hij_ci.print("Hij_ci",8);
+                  auto Hij_ctns = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
+                  Hij_ctns.print("Hij_ctns",8);
+                  double diffH = (Hij_ctns - Hij_ci).normF();
+                  cout << "\ncheck diffH=" << diffH << endl;
+                  const double thresh = 1.e-8;
+                  if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
+                  io::remove_scratch(schd.scratch);
+                  exit(1);
+               }
+            }else{
+               rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
+               ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
+            }
+
+         } // nosym
+
       }else{
          // restart a broken calculation from disk
          auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1);

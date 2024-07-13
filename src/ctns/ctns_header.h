@@ -19,5 +19,6 @@
 
 #include "sadmrg/ctns_tosu2.h"
 #include "rdm/rdm_simple.h"
+#include "nosym/ctns_fromnosym.h"
 
 #endif

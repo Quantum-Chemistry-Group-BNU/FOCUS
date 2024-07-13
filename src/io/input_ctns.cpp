@@ -148,6 +148,8 @@ void params_ctns::read(ifstream& istrm){
          diagcheck = true;
       }else if(line.substr(0,7)=="savebin"){
          savebin = true;
+      }else if(line.substr(0,9)=="fromnosym"){
+         fromnosym = true;
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
@@ -314,4 +316,6 @@ void params_ctns::print() const{
    cout << "diagcheck = " << diagcheck << endl;
    // rdm and entropy
    cout << "savebin = " << savebin << endl;
+   // nosym
+   cout << "fromnosym = " << fromnosym << endl;
 }

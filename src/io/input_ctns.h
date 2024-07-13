@@ -57,7 +57,8 @@ namespace input{
                   & iroot & nsample & pthrd
                   & tosu2 & thresh_tosu2 & singlet
                   & diagcheck
-                  & savebin; 
+                  & savebin 
+                  & fromnosym; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -138,6 +139,8 @@ namespace input{
          bool diagcheck = false;
          // rdm and entropy
          bool savebin = false;
+         // load from MPS without symmetry
+         bool fromnosym = false;
    };
 
 } // input
