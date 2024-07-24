@@ -21,7 +21,7 @@ namespace ctns{
          auto t0 = tools::get_time();
 
          // load nsectors
-         std::vector<int> nsectors(nsite+1);
+         std::vector<int> nsectors(nsite+2);
          {
             std::ifstream ifs2(prefix+".nsectors", std::ios::binary);
             ifs2.read((char*)(nsectors.data()), nsectors.size()*sizeof(int));
@@ -30,8 +30,8 @@ namespace ctns{
          if(debug) tools::print_vector(nsectors, "nsectors");
         
          // load qbonds 
-         std::vector<qbond> qbonds(nsite+1);
-         for(int i=0; i<nsite+1; i++){
+         std::vector<qbond> qbonds(nsite+2);
+         for(int i=0; i<nsite+2; i++){
             std::vector<int> data(nsectors[i]*3);
             std::ifstream ifs2(prefix+".qbond"+std::to_string(i), std::ios::binary);
             ifs2.read((char*)(data.data()), data.size()*sizeof(int));
@@ -62,24 +62,19 @@ namespace ctns{
          }
          
          // load rwfuns
-         qsym sym_state = qbonds[nsite].get_sym(0);
-         int nroot = qbonds[nsite].get_dim(0);
+         qsym sym_state = qbonds[nsite+1].get_sym(0);
+         int nroot = qbonds[nsite+1].get_dim(0);
          qbond qleft;
          qleft.dims.push_back(std::make_pair(sym_state,1)); 
          std::cout << "sym_state=" << sym_state << " nroot=" << nroot << std::endl;
-         // load data
-         std::vector<Tm> data(nroot*nroot);
-         {
-            std::ifstream ifs2(prefix+".rwfuns", std::ios::binary);
-            ifs2.read((char*)(data.data()), data.size()*sizeof(Tm));
-            ifs2.close();
-         }
-         // save rwfuns
+         // load rwfuns
+         std::ifstream ifs2(prefix+".rwfuns", std::ios::binary);
          icomb.rwfuns.resize(nroot);
          for(int i=0; i<nroot; i++){
             icomb.rwfuns[i].init(qsym(2,0,0),qleft,qbonds[nsite],dir_RWF);
-            linalg::xcopy(nroot, &data[i*nroot], icomb.rwfuns[i].data());
+            ifs2.read((char*)(icomb.rwfuns[i].data()), icomb.rwfuns[i].size()*sizeof(Tm));
          }
+         ifs2.close();
 
          // check
          icomb.display_shape();

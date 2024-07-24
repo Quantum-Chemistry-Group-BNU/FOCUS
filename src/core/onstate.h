@@ -469,8 +469,8 @@ namespace fock{
          friend class onspace_compact;
 
       private:
-         int _size = 0;
-         int _len = 0;
+         int _size = 0; // no. of spin orbitals
+         int _len = 0; // no. of unsigned int 
          unsigned long* _repr = nullptr;
    }; // onstate
 

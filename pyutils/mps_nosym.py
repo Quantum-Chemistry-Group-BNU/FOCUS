@@ -30,10 +30,10 @@ def direct_product(qs1,qs2):
                 dic[key] += combine_index12(dim1,dim2,qs1[key1],qs2[key2])
     return dic
 
-def sweep_projection(sites,thresh=1.e-14,debug=False):
+def sweep_projection(sites,ne,tm,thresh=1.e-14,debug=False):
     nsite = len(sites)
     nroot = sites[0].shape[0]
-    if debug: print('[sweep_projection] nsite=',nsite,'nroot=',nroot)
+    print('\n[sweep_projection] nsite=',nsite,'nroot=',nroot)
     # build enviroment
     env = [None]*(nsite+1)
     env[0] = np.identity(nroot)/nroot
@@ -73,10 +73,11 @@ def sweep_projection(sites,thresh=1.e-14,debug=False):
             e = -e
             kept = np.argwhere(e>thresh)
             nkept = min(dim,len(kept))
-            if nkept > 0:
+            if nkept > 0 and (i>0 or (i==0) and (ne==key[0]) and (tm==key[1])):
                 vbas[key] = v[:,:nkept]
                 qnum_reduced[key] = list(range(dim_reduced,dim_reduced+nkept))
                 dim_reduced += nkept
+                if debug or i==0: print(' key=',key,'eig=',e,'nkept=',nkept)
         # assemble into a full matrix
         rmat = np.zeros((dim_super,dim_reduced))
         for key in qnum_reduced:
@@ -94,8 +95,10 @@ def sweep_projection(sites,thresh=1.e-14,debug=False):
         if debug:
             print('tensor=',tensor.shape)
             print('qnum_reduced=',qnum_reduced)
-    # rwfuns
-    rwfuns = wmat.copy()
+    # rwfuns from lowdin orthonormalization of wmat
+    u,s,vt = scipy.linalg.svd(wmat)
+    rwfuns = u.dot(vt)
+    print('rwfuns:\n',rwfuns)
     # form qbonds
     qbonds = [np.array([[0,0,1]],dtype=np.int32)]
     for i in range(nsite):
@@ -109,14 +112,15 @@ def sweep_projection(sites,thresh=1.e-14,debug=False):
             qdata[idx][2] = len(qnum[key])
             idx += 1
         qbonds.append(qdata)
+    qbonds.append(np.array([[ne,tm,nroot]],dtype=np.int32))
     return qbonds,rmps_sites,rwfuns
 
 def dumpMPSforFOCUS(qbonds,rmps_sites,rwfuns,prefix='rmps',debug=False):
     nsite = len(rmps_sites)
-    print('[dumpMPSforFOCUS] nsite=',nsite)
+    print('\n[dumpMPSforFOCUS] nsite=',nsite)
     # dump qbonds
-    nsectors = np.zeros(nsite+1,dtype=np.int32)
-    for i in range(nsite+1):
+    nsectors = np.zeros(nsite+2,dtype=np.int32)
+    for i in range(nsite+2):
         qbonds[i].tofile(prefix+'.qbond'+str(i))
         nsectors[i] = qbonds[i].shape[0]
     nsectors.tofile(prefix+'.nsectors')
@@ -156,7 +160,6 @@ def dumpMPSforFOCUS(qbonds,rmps_sites,rwfuns,prefix='rmps',debug=False):
             dimR = np.sum(qcol[:,2])
             print(' i=',i,'(dl,dn,dr)=',(dimL,dimC,dimR),'nnz=',nnz)
     # dump rwfuns
-    assert rwfuns.shape[0] == rwfuns.shape[1]
     data = rwfuns.reshape(-1) # ir [C order]
     data.tofile(prefix+'.rwfuns')
     if debug: print(' rwfuns.shape=',rwfuns.shape)

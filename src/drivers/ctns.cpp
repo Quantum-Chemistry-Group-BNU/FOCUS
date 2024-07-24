@@ -54,6 +54,13 @@ void CTNS(const input::schedule& schd){
                linalg::matrix<Tm> vs;
                auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
                fci::ci_load(sci_space, es, vs, ci_file);
+               // consistency check
+               if(sci_space[0].size() != 2*icomb.get_nphysical()){
+                  std::cout << "error: state.size is inconsistent with 2*nphysical in topo:"
+                     << " state.size=" << sci_space[0].size() << " nphysical=" << icomb.get_nphysical()
+                     << std::endl;
+                  exit(1);  
+               } 
                // truncate CI coefficients
                fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
                ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
@@ -134,7 +141,16 @@ void CTNS(const input::schedule& schd){
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
       double ecore;
-      if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
+      if(rank == 0){
+         integral::load(int2e, int1e, ecore, schd.integral_file);
+         // consistency check
+         if(int1e.sorb != icomb.get_nphysical()*2){
+            std::cout << "error: int1e.sorb is inconsistent with 2*nphysical in topo:"
+             << " sorb=" << int1e.sorb << " nphysical=" << icomb.get_nphysical()
+             << std::endl;
+            exit(1);  
+         }
+      }
 #ifndef SERIAL
       if(size > 1){
          boost::mpi::broadcast(schd.world, ecore, 0);
