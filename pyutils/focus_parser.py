@@ -1,5 +1,15 @@
 import numpy as np
 
+def parse_sci(fname="sci.out"):
+    f = open(fname,'r')
+    lines = f.readlines()
+    elst = []
+    for line in lines:
+        if 'state' in line and 'energy' in line:
+            e = eval(line.split()[-1])
+            elst.append(e)
+    return elst
+
 def parse_ctns(fname="ctns.out"):
    debug = False
    f = open(fname,"r")
