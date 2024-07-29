@@ -189,13 +189,13 @@ void SADMRG(const input::schedule& schd){
       if(schd.ctns.task_ham){
          auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
          if(rank == 0){
-            Hij.print("Hij",10);
+            Hij.print("Hij",schd.ctns.outprec);
             auto Sij = ctns::get_Smat(icomb);
-            Sij.print("Sij",10);
+            Sij.print("Sij",schd.ctns.outprec);
          }
       }
       // optimization from current RCF
-      if(schd.ctns.task_opt){
+      if(schd.ctns.task_opt and schd.ctns.maxsweep>0){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
    } // ham || opt

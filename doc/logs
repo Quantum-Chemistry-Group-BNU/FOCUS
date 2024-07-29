@@ -142,24 +142,24 @@
  * Better reduction algorithm using GEMV [DONE@2023/03/01]
 
  * Test platform on jiageng: [DONE@2023/03/01]
-   - Add more tests in examples 
-   - Muilt-GPU support on jiageng? => reinstall OpenMPI
-   - Profiling: Check fetch time & CPU memory for Fe8S7!
+    - Add more tests in examples 
+    - Muilt-GPU support on jiageng? => reinstall OpenMPI
+    - Profiling: Check fetch time & CPU memory for Fe8S7!
 
  * Problems for large arrays: [DONE@2023/03/07] 
-   - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magmamemcpy size is int]
-   - MPI: bypass the 2GB limit in MPI_COUNT by partitioned broadcast & reduce
-   - MATH: Fix int32 & int64 problem in blas/lapack using MKL_INT [ndim is int]
-   - zquatev: resolve cNK bugs? use MKL_INT
+    - Fix bug in GPU implementation - wrong results sometimes? [DONE@20230227 magmamemcpy size is int]
+    - MPI: bypass the 2GB limit in MPI_COUNT by partitioned broadcast & reduce
+    - MATH: Fix int32 & int64 problem in blas/lapack using MKL_INT [ndim is int]
+    - zquatev: resolve cNK bugs? use MKL_INT
 
  * Support restart isweep & ibond: [DONE@2023/03/09]
-      0. restructure rsites/lsites/rwfuns/psi into sites/rwfuns/psi - more compact 
-         - rwfuns must be used, otherwise get_Hmat will not work in CNK in the last site !!!
-      1. fix guess error 
-      2. fix last conversion into RCF 
-      3. add dump RCF at each step 
-      4. support restart by loading RCF
-      5. support restart at a particular ibond
+    0. restructure rsites/lsites/rwfuns/psi into sites/rwfuns/psi - more compact 
+       - rwfuns must be used, otherwise get_Hmat will not work in CNK in the last site !!!
+    1. fix guess error 
+    2. fix last conversion into RCF 
+    3. add dump RCF at each step 
+    4. support restart by loading RCF
+    5. support restart at a particular ibond
 
  * Batch support: [DONE@2023/03/24]
     - Support Intermediate with batch
@@ -182,165 +182,165 @@
             - preprocess_renorm_batch2.h
 
  * GPU support for Intermediate & Renorm: [DONE@2023/03/27]
-   - Support Intermediate with GPU:
-         0. alg_inter=2: GPU batch 
-   - Support Renorm with GPU:
-         0. alg_hvec=16/17: GPU batch 
-            - preprocess_rernorm_batchGPU.h
-         1. alg_renorm=16/17: GPU batch 
-            - preprocess_rernorm_batchGPU.h
-   - Single batch: 18/19
+    - Support Intermediate with GPU:
+          0. alg_inter=2: GPU batch 
+    - Support Renorm with GPU:
+          0. alg_hvec=16/17: GPU batch 
+             - preprocess_rernorm_batchGPU.h
+          1. alg_renorm=16/17: GPU batch 
+             - preprocess_rernorm_batchGPU.h
+    - Single batch: 18/19
 
  * Profiling: better timing for alg_hvec & alg_renorm [DONE@2023/04/01]
-   - single batch: alg_hvec=17/19
-   - mmorder [no significant difference]
-   - ifdist1?
+    - single batch: alg_hvec=17/19
+    - mmorder [no significant difference]
+    - ifdist1?
 
  * async IO strategy: bugfix [DONE@2023/05/18]
-   - revise GPUmem control 
-   - revise oper_pool
-   - revise sweep_twodot/onedot_renorm to release unnecessary operators before renorm to save memory
-   - overlap save operators with computation? 
-   - overlap fetch operators with computation? 
-   - hdiag implementation on GPU 
-   - async memcpy to GPU => magma_queue
+    - revise GPUmem control 
+    - revise oper_pool
+    - revise sweep_twodot/onedot_renorm to release unnecessary operators before renorm to save memory
+    - overlap save operators with computation? 
+    - overlap fetch operators with computation? 
+    - hdiag implementation on GPU 
+    - async memcpy to GPU => magma_queue
 
  * parallel decimation:
-   - openmp + mpi [DONE@2023/04/23]
-   - mpi -> share memory?
-   - GPU version for large D>5000? [DONE@2023/??/??]
+    - openmp + mpi [DONE@2023/04/23]
+    - mpi -> share memory?
+    - GPU version for large D>5000? [DONE@2023/??/??]
 
  * cpu<->gpu, network communication: 
-   1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DONE@2023/04/17]
-   2. perform renormalization by class [CABPQSH, hiden memcpy]
+    1. reduce in Davidson: first reduce within node - NCCL? see core/mpi_wrapper.h [DONE@2023/04/17]
+    2. perform renormalization by class [CABPQSH, hiden memcpy]
 
  * More balanced partition of rops and Hx? scale up to more nodes?
-   - better treatment of opS term for DMRG, assuming Cop are distributed [DONE@2023/05/01]
-   - formulae based partition
+    - better treatment of opS term for DMRG, assuming Cop are distributed [DONE@2023/05/01]
+    - formulae based partition
 
  * Better treatment GEMM involving 'c': use axpy_vbatch?
-   - REMOVE c related for NSz symmetry [DONE@2023/05/18]
-   - unrool for N symmetry
-   - general treatment for A[M,K]*B[K,N] for small K,N (~1,2,...,dbranch)
+    - REMOVE c related for NSz symmetry [DONE@2023/05/18]
+    - unrool for N symmetry
+    - general treatment for A[M,K]*B[K,N] for small K,N (~1,2,...,dbranch)
 
  * Better GEMM_BATCH with TensorCore: [DONE@2023/05/24]
-   - cublas dgemmbatched 
+    - cublas dgemmbatched 
 
  * Exact diagonalization by construct full Hamtiltonian [DONE@2023/01/17]
 
 ### 2023 VMC ###
 
  * VMC + iRBM:
-   - opt_exact [DONE@2023/01/13]
-   - various RBM ansatz [DONE@2023/01/14]
-   - stochastic reconfiguration (SR): SVD-based?
-   - opt_sample: MCMC
-   - schedule for nhiden?
-   - pretraining by SCI
-   - iron-sulfur clusters: frustrated spin systems
+    - opt_exact [DONE@2023/01/13]
+    - various RBM ansatz [DONE@2023/01/14]
+    - stochastic reconfiguration (SR): SVD-based?
+    - opt_sample: MCMC
+    - schedule for nhiden?
+    - pretraining by SCI
+    - iron-sulfur clusters: frustrated spin systems
 
 ### 2023 postCTNS ###
 
  * postCTNS.x driver: interface MPS: [DONE@2023/06/30]
-   - overlap between two MPS? 
-   - Sdiag: fast sampling 
-   - expectation value via sampling:
-      - <Psi|H|Psi>
-      - <Psi|S2|Psi> 
-      - <Psi|(H-E)^2|Psi>
-   - spin-projection:
-      - small d function 
-      - Gauss-legendre points 
-      - matrix elements for exp[-i*beta*Sy] 
-      - <Psi|Ps|Psi> (lower sym: xNSz->xN => IMPORTANT) 
-      - E[P|psi>] = <Psi|HPs|Psi>/<Psi|Ps|Psi> 
-      - error for <Psi|Ps|Psi> at Smax? <Psi|Ps|Psi> >= 0
-   - optimization for VMC energy
-      - faster <n|Psi> functions [!!!]
-   - parallelization:
-      - parallel random number generator (PRNG)
-      - MPI+OpenMP
-      - GPU?
-   - VMC algorithm:
-      - RBM with libtorch?
-      - RBM on top of MPS?
+    - overlap between two MPS? 
+    - Sdiag: fast sampling 
+    - expectation value via sampling:
+       - <Psi|H|Psi>
+       - <Psi|S2|Psi> 
+       - <Psi|(H-E)^2|Psi>
+    - spin-projection:
+       - small d function 
+       - Gauss-legendre points 
+       - matrix elements for exp[-i*beta*Sy] 
+       - <Psi|Ps|Psi> (lower sym: xNSz->xN => IMPORTANT) 
+       - E[P|psi>] = <Psi|HPs|Psi>/<Psi|Ps|Psi> 
+       - error for <Psi|Ps|Psi> at Smax? <Psi|Ps|Psi> >= 0
+    - optimization for VMC energy
+       - faster <n|Psi> functions [!!!]
+    - parallelization:
+       - parallel random number generator (PRNG)
+       - MPI+OpenMP
+       - GPU?
+    - VMC algorithm:
+       - RBM with libtorch?
+       - RBM on top of MPS?
 
 ### 2024 DMRG[SA] ###
 
  * driver & makefile: sadmrg [DONE@2024/01/12]
 
  * data structure for tensors & comb: [DONE@2024/01/16]
-   - switch between different implementation depending on Abelian or not [!!!]
-      (1) std::conditional<Qm::ifabelian, stensor2<Tm>, stensor2su2<Tm>>::type in comb 
-      (2) template <bool y=ifab, std::enable_if_t<y,int> = 0> in qtensor2 
-   - tensor with non-abelian symmetry
-      (1) qinfoNsu2 (N is rank)
-      (2) stensorNsu2
+    - switch between different implementation depending on Abelian or not [!!!]
+       (1) std::conditional<Qm::ifabelian, stensor2<Tm>, stensor2su2<Tm>>::type in comb 
+       (2) template <bool y=ifab, std::enable_if_t<y,int> = 0> in qtensor2 
+    - tensor with non-abelian symmetry
+       (1) qinfoNsu2 (N is rank)
+       (2) stensorNsu2
 
  * generate initial guess by conversion: [DONE@2024/01/27]
-   - tosu2: conversion to su2  
-      - data structures: Wmat, MixedSite, density matrix [DONE@2024/01/21]
-      - cg couling: gsl (GNU Scientific Library) 
-      - sweep projection [DONE@2024/01/23]
-      - check thresh_su2 [DONE@2024/01/25]
-      - expand Yinfo into MPS site [DONE@2024/01/27]
+    - tosu2: conversion to su2  
+       - data structures: Wmat, MixedSite, density matrix [DONE@2024/01/21]
+       - cg couling: gsl (GNU Scientific Library) 
+       - sweep projection [DONE@2024/01/23]
+       - check thresh_su2 [DONE@2024/01/25]
+       - expand Yinfo into MPS site [DONE@2024/01/27]
 
  * MPS algebra: ctns_alg.h [DONE@2024/03/04]
-   - rcanon_check [DONE@2024/02/04]
-   - overlap: get_Smat [DONE@2024/02/04]
-   - CSF related data structure [DONE@2024/02/28]
-   - ctns_csf2samps.h [DONE@2024/02/28]
-   - ctns_expand.h & ctns_cicoeff.h [DONE@2024/03/03]
-   - ctns_sample.h & ctns_sdiag.h [DONE@2024/03/04]
-      - sample CSF? 
-      - sample DET? 
+    - rcanon_check [DONE@2024/02/04]
+    - overlap: get_Smat [DONE@2024/02/04]
+    - CSF related data structure [DONE@2024/02/28]
+    - ctns_csf2samps.h [DONE@2024/02/28]
+    - ctns_expand.h & ctns_cicoeff.h [DONE@2024/03/03]
+    - ctns_sample.h & ctns_sdiag.h [DONE@2024/03/04]
+       - sample CSF? 
+       - sample DET? 
 
  * get Hamiltonian: [DONE@2024/04/01]
-   - oper_env_right: prepare environment operators
-      - oper_dict.h: data structure {c,A,B,P,Q,S}
-         - qnum_qsym.h: get_sym_opX
-         - oper_pool.h: support su2 tensor [DONE@2024/03/09]
-      - oper_dot_su2.h: [DONE@2024/03/10]
-      - oper_renorm.h: KEY STEP [!!!]
-         - symbolic_formulae_renorm_su2: how to encode info about intermediate spins
-            - symbolic_normxwf_su2:
-            - symbolic_compxwf_su2: COMPLICATED PART ! [DONE@2024/03/12]
-         - intermediates: rinter.init() [DONE@2024/03/14]
-         - preprocess_formulae_Rlist.h
-         - preprocess_rmu.h [DONE@2024/03/15]
-         - Rmmtasks[i].init()
-         - preprocess_renorm_batchDirectSingle()
-   - convert su2mps to non-spin-adapted MPS? 
-      - to_nonsu2 [DONE@2024/03/28]
-      - debug Hij & correctness of the generated formula 
-      - opS is the most complicated [DONE@2024/03/29] 
+    - oper_env_right: prepare environment operators
+       - oper_dict.h: data structure {c,A,B,P,Q,S}
+          - qnum_qsym.h: get_sym_opX
+          - oper_pool.h: support su2 tensor [DONE@2024/03/09]
+       - oper_dot_su2.h: [DONE@2024/03/10]
+       - oper_renorm.h: KEY STEP [!!!]
+          - symbolic_formulae_renorm_su2: how to encode info about intermediate spins
+             - symbolic_normxwf_su2:
+             - symbolic_compxwf_su2: COMPLICATED PART ! [DONE@2024/03/12]
+          - intermediates: rinter.init() [DONE@2024/03/14]
+          - preprocess_formulae_Rlist.h
+          - preprocess_rmu.h [DONE@2024/03/15]
+          - Rmmtasks[i].init()
+          - preprocess_renorm_batchDirectSingle()
+    - convert su2mps to non-spin-adapted MPS? 
+       - to_nonsu2 [DONE@2024/03/28]
+       - debug Hij & correctness of the generated formula 
+       - opS is the most complicated [DONE@2024/03/29] 
 
  * Spin-adapted DMRG algorithm: twodot [DONE@2024/04/02]
-   - twodot sweep algorithm
-      - symbolic_formulae_twodot_su2: [DONE@2024/03/13]
-      - restructure the code the reuse more subroutines
-      - preprocess_hmu.h [DONE@2024/03/14]
-   - twodot_diag: checked use guess=0 & cisolver=0
-   - renorm: sweep_twodot_renorm_su2.h
-      - reshape_qt4_qt3_su2.h: turns out to be extremely simple based on existing code! [DONE@2024/04/01]
-      - reshape_qt3_qt2_su2.h
-      - sweep_twodot_decim_su2.h: basic version checked with notrunc option! [DONE@2024/04/02]
-   - decimation with truncation:
-      - sweep_decim_su2.h: simple version [DONE@2024/04/02]
+    - twodot sweep algorithm
+       - symbolic_formulae_twodot_su2: [DONE@2024/03/13]
+       - restructure the code the reuse more subroutines
+       - preprocess_hmu.h [DONE@2024/03/14]
+    - twodot_diag: checked use guess=0 & cisolver=0
+    - renorm: sweep_twodot_renorm_su2.h
+       - reshape_qt4_qt3_su2.h: turns out to be extremely simple based on existing code! [DONE@2024/04/01]
+       - reshape_qt3_qt2_su2.h
+       - sweep_twodot_decim_su2.h: basic version checked with notrunc option! [DONE@2024/04/02]
+    - decimation with truncation:
+       - sweep_decim_su2.h: simple version [DONE@2024/04/02]
  
  * Other important functionalities: [DONE@2024/04/03]
-   - propagation of initial guess
-      - recouple for qt3: [DONE@2024/04/02]
-      - sweep_twodot_guess.h: revised by adding recoupling
-   - initialize guess for start
-      - sweep_init: [DONE@2024/04/02]
-   - canonicalization:
-      - sweep_rcanon.h: [DONE@2024/04/02]
-   - singlet embedding:
-      - sweep_init & get_left_bsite: [DONE@2024/04/03]
-      - change operators: oper_dot_su2.h [DONE@2024/04/03]
-      - sweep_final: [DONE@2024/04/03]
-   - twodot_diag_GPU: [DONE@2024/04/07]
+    - propagation of initial guess
+       - recouple for qt3: [DONE@2024/04/02]
+       - sweep_twodot_guess.h: revised by adding recoupling
+    - initialize guess for start
+       - sweep_init: [DONE@2024/04/02]
+    - canonicalization:
+       - sweep_rcanon.h: [DONE@2024/04/02]
+    - singlet embedding:
+       - sweep_init & get_left_bsite: [DONE@2024/04/03]
+       - change operators: oper_dot_su2.h [DONE@2024/04/03]
+       - sweep_final: [DONE@2024/04/03]
+    - twodot_diag_GPU: [DONE@2024/04/07]
 
  * Careful check different implementations: [DONE@2024/04/06]
     - MPI:
@@ -348,9 +348,9 @@
       - bugfix for blksize==0
     - OpenMP:
       - bugfix for 1_lih_dcg? Due to linking to both gomp&iomp via magma.
-                              The compiler for magam must be the same!!!
+                               The compiler for magam must be the same!!!
  
- * Onedot algorithm: sweep_onedot.h [DONE@2024/05/13]
+ * Spin-adapted DMRG algorithm: sweep_onedot.h [DONE@2024/05/13]
     - non-spin-adapted case:
       - alg_hvec=4 & alg_hvec=5 [DONE@2024/05/04]
          - preprocess_hmu.h
@@ -375,38 +375,6 @@
       - gpu version: [DONE@2024/05/12] 
          - onedot_diagGPU_su2.h:
 
- * Reduced density matrices: (RDMs) [DONE@2024/08/XX]
-   - Brute-force RDM & TDM algorithm:
-      - non-spin-adapted: [DONE@2024/06/02]
-         - Application of local op to MPS:
-         - Contract <bMPS|kMPS> to get RDM/TDM
-         - quantum information measure:
-            - single orbital entropy [or just from 1,2-RDMs]
-
-      - spin-adapted case? 
-         - What is the correct math for applying operators?
-
-   - Optimized algorithm via reusing intermediates
-      - non-spin-adapted case: [THIS SHOUDLD BE SIMPLE!!!]
-         - one-body RDM:
-         - two-body RDM:
-      - spin-adapted case:
-         - one-body RDM:
-         - two-body RDM:
-      - transition PDM:
-         - between same spins
-         - between different spins (for SOC)
-         - between singlet embedding wavefunction?
-   - GPU version:
-      - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
-
-
- * Benchmark: jiageng or other platform [DONE@2024/08/XX]
-   - Compilation on jiageng: need to used mkl for magma/zquatev, 
-                             but use mkl2022 for focus,
-                             otherwise, dgemv_batch does not exist!
-   - fe2s2
-   - fe4s4
-   - fe8s7
-   - femoco
+ * Orbital-optimized DMRG: 
+    - driver [DONE@2024/07/29]
 

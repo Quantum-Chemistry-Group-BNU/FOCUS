@@ -11,7 +11,34 @@
 
 namespace input{
 
-   // CTNS
+   // orbital optimization 
+   struct params_orbopt{
+      private:
+         // serialize
+         friend class boost::serialization::access;
+         template<class Archive>
+            void serialize(Archive & ar, const unsigned int version){
+               ar & maxiter & dfac & macroiter & microiter & alpha;
+            }
+       public:
+         inline void print() const{
+            std::cout << "orbopt parameters:"
+               << " maxiter=" << maxiter 
+               << " dfac=" << dfac
+               << " macroiter=" << macroiter
+               << " microiter=" << microiter
+               << " alpha=" << alpha 
+               << std::endl;
+         }
+      public:
+         int maxiter = 10;
+         int dfac = 2;
+         int macroiter = 3;
+         int microiter = 50;
+         double alpha = 0.5;
+   };
+
+   // sweep
    struct params_sweep{
       private:
          // serialize
@@ -35,6 +62,7 @@ namespace input{
          double noise; 
    };
 
+   // CTNS
    struct params_ctns{
       private:
          // serialize
@@ -42,10 +70,10 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
-                  & task_init & task_sdiag & task_ham & task_opt & task_vmc 
-                  & task_expand & task_tononsu2 
+                  & task_init & task_sdiag & task_ham & task_opt & task_orb
+                  & task_vmc & task_expand & task_tononsu2 & task_rdm  
                   & restart_sweep & restart_bond & timestamp
-                  & maxdets & thresh_proj & thresh_ortho & rdm_svd 
+                  & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls
                   & alg_hvec & alg_hinter & alg_hcoper 
                   & alg_renorm & alg_rinter & alg_rcoper & alg_decim & notrunc 
@@ -58,7 +86,7 @@ namespace input{
                   & tosu2 & thresh_tosu2 & singlet
                   & diagcheck
                   & savebin 
-                  & fromnosym; 
+                  & fromnosym;
             }
       public:
          void read(std::ifstream& istrm);
@@ -70,14 +98,15 @@ namespace input{
          // debug level
          int verbose = 0;
          // task
-         bool task_init = false;
-         bool task_sdiag = false;
-         bool task_ham = false;
-         bool task_opt = false;
-         bool task_vmc = false;
-         bool task_expand = false;
-         bool task_tononsu2 = false;
-         int task_rdm = 0;
+         bool task_init = false; // only perform initialization (converting to CTNS)
+         bool task_sdiag = false; // compute sdiag via sampling
+         bool task_ham = false; // compute Hij and Sij
+         bool task_opt = false; // DMRG sweep optimization
+         bool task_orb = false; // orbital optimization
+         bool task_vmc = false; 
+         bool task_expand = false; // expand into FCI vectors
+         bool task_tononsu2 = false; // convert SU2-MPS to non-SU2-MPS
+         int task_rdm = 0; // used in rdm.cpp
          // restart
          int restart_sweep = 0;
          int restart_bond = 0;
@@ -87,6 +116,7 @@ namespace input{
          double thresh_proj = 1.e-14;
          double thresh_ortho = 1.e-8;
          double rdm_svd = 1.5;
+         int outprec = 12;
          // sweep
          int nroots = 1; // this can be smaller than nroots in CI 
          int guess = 1;
@@ -141,6 +171,8 @@ namespace input{
          bool savebin = false;
          // load from MPS without symmetry
          bool fromnosym = false;
+         // orbital optimization
+         params_orbopt ooparams;
    };
 
 } // input

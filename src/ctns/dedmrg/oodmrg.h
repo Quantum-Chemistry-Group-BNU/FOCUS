@@ -1,17 +1,10 @@
-#ifndef CTNS_SWEEP_H
-#define CTNS_SWEEP_H
-
-#include "sweep_data.h"
-#include "sweep_restart.h"
-#include "sweep_onedot.h"
-#include "sweep_twodot.h"
-#include "sweep_rcanon.h"
+#ifndef CTNS_OODMRG_H
+#define CTNS_OODMRG_H
 
 namespace ctns{
 
-   // main for sweep optimizations for CTNS
    template <typename Qm, typename Tm>
-      sweep_data sweep_opt(comb<Qm,Tm>& icomb, // initial comb wavefunction
+      void oodmrg(comb<Qm,Tm>& icomb, 
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore,
@@ -22,14 +15,42 @@ namespace ctns{
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif  
-         const bool debug = (rank==0); 
+         const bool debug = (rank==0);
+         const int maxiter = schd.ctns.ooparams.maxiter; 
          if(debug){ 
-            std::cout << "\nctns::sweep_opt maxsweep=" 
-               << schd.ctns.maxsweep 
+            std::cout << "\nctns::oodmrg maxiter=" << maxiter 
+               << " maxsweep=" << schd.ctns.maxsweep 
                << std::endl;
          }
          auto t0 = tools::get_time();
 
+         const int norb = icomb.get_nphysical();
+         std::vector<double> e_history(maxiter);
+         double e_min = 1.e20;
+         auto urot_min = linalg::identity_matrix<Tm>(norb);
+         for(int iter=0; iter<maxiter; iter++){
+            // optimization
+            auto sweepres = ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
+            
+            // minimize entanglement
+            
+            // randomized swap layer
+            
+            // update integrals
+
+            // prepare new environment
+            auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
+            if(rank == 0){
+               Hij.print("Hij",schd.ctns.outprec);
+               auto Sij = ctns::get_Smat(icomb);
+               Sij.print("Sij",schd.ctns.outprec);
+            }
+            exit(1);
+         }
+
+/*
+         if(schd.ctns.maxsweep == 0) return;
+      
          // consistency check
          if(schd.ctns.ifdistc && !icomb.topo.ifmps){
             std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
@@ -93,27 +114,27 @@ namespace ctns{
                }
                // stop just for debug [done it for rank-0]
                if(rank==0 && isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
-           } // ibond
-           if(debug){
-              auto tf = tools::get_time();
-              sweeps.t_total[isweep] = tools::get_duration(tf-ti);
-              sweeps.t_inter[isweep] = oper_timer.sigma.t_inter_tot + oper_timer.renorm.t_inter_tot;
-              sweeps.t_gemm[isweep]  = oper_timer.sigma.t_gemm_tot  + oper_timer.renorm.t_gemm_tot;
-              sweeps.t_red[isweep]   = oper_timer.sigma.t_red_tot   + oper_timer.renorm.t_red_tot;
-              sweeps.summary(isweep, size);
-           }
-           // generate right rcanonical form and save checkpoint file
-           if(rank == 0 && schd.ctns.guess) sweep_final(icomb, schd, scratch, isweep);
-       } // isweep
-       qops_pool.finalize();
+            } // ibond
+            if(debug){
+               auto tf = tools::get_time();
+               sweeps.t_total[isweep] = tools::get_duration(tf-ti);
+               sweeps.t_inter[isweep] = oper_timer.sigma.t_inter_tot + oper_timer.renorm.t_inter_tot;
+               sweeps.t_gemm[isweep]  = oper_timer.sigma.t_gemm_tot  + oper_timer.renorm.t_gemm_tot;
+               sweeps.t_red[isweep]   = oper_timer.sigma.t_red_tot   + oper_timer.renorm.t_red_tot;
+               sweeps.summary(isweep, size);
+            }
+            // generate right rcanonical form and save checkpoint file
+            if(rank == 0 && schd.ctns.guess) sweep_final(icomb, schd, scratch, isweep);
+         } // isweep
+         qops_pool.finalize();
+*/
 
-       if(debug){
-          auto t1 = tools::get_time();
-          tools::timing("ctns::sweep_opt", t0, t1);
-       }
-       return sweeps;
-    }
+         if(debug){
+            auto t1 = tools::get_time();
+            tools::timing("ctns::oodmrg", t0, t1);
+         }
+      }
 
-} // ctns
+   } // ctns
 
 #endif

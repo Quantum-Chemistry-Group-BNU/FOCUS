@@ -1,6 +1,38 @@
 
 ### TODOs: more functionalities ###
 
+ * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
+   - Compilation on jiageng: need to used mkl for magma/zquatev, 
+                             but use mkl2022 for focus,
+                             otherwise, dgemv_batch does not exist!
+   - fe2s2
+   - fe4s4
+   - fe8s7
+   - femoco
+
+ * Reduced density matrices: (RDMs) [DONE@202X/XX/XX]
+   - Brute-force RDM & TDM algorithm:
+      - non-spin-adapted: [DONE@2024/06/02]
+         - Application of local op to MPS:
+         - Contract <bMPS|kMPS> to get RDM/TDM
+         - quantum information measure:
+            - single orbital entropy [or just from 1,2-RDMs]
+      - spin-adapted case? 
+         - What is the correct math for applying operators?
+   - Optimized algorithm via reusing intermediates
+      - non-spin-adapted case: [THIS SHOUDLD BE SIMPLE!!!]
+         - one-body RDM:
+         - two-body RDM:
+      - spin-adapted case:
+         - one-body RDM:
+         - two-body RDM:
+      - transition PDM:
+         - between same spins
+         - between different spins (for SOC)
+         - between singlet embedding wavefunction?
+   - GPU version:
+      - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
+
  * Perturbative spin-orbit interaction via state interaction?
 
  * Kramers version for 2c/4c Hamiltonian: 

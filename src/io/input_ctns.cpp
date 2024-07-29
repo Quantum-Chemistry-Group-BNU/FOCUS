@@ -46,6 +46,9 @@ void params_ctns::read(ifstream& istrm){
          task_ham = true;
       }else if(line.substr(0,8)=="task_opt"){
          task_opt = true;
+      }else if(line.substr(0,8)=="task_orb"){
+         task_ham = true; // enable task_ham to prepare environment!
+         task_orb = true;
       }else if(line.substr(0,8)=="task_vmc"){
          task_vmc = true;
       }else if(line.substr(0,11)=="task_expand"){
@@ -112,6 +115,8 @@ void params_ctns::read(ifstream& istrm){
          thresh_ortho = stod(line.substr(12));
       }else if(line.substr(0,7)=="rdm_svd"){
          rdm_svd = stod(line.substr(7));
+      }else if(line.substr(0,7)=="outprec"){
+         outprec = stoi(line.substr(7));
       }else if(line.substr(0,6)=="nroots"){
          nroots = stoi(line.substr(6));
       }else if(line.substr(0,5)=="guess"){
@@ -166,6 +171,16 @@ void params_ctns::read(ifstream& istrm){
          maxsweep = stoi(line.substr(8));
       }else if(line.substr(0,7)=="maxbond"){
          maxbond = stoi(line.substr(7));
+      }else if(line.substr(0,9)=="oomaxiter"){
+         ooparams.maxiter = stoi(line.substr(9));
+      }else if(line.substr(0,6)=="oodfac"){
+         ooparams.dfac = stoi(line.substr(6));
+      }else if(line.substr(0,11)=="oomacroiter"){
+         ooparams.macroiter = stoi(line.substr(11));
+      }else if(line.substr(0,11)=="oomicroiter"){
+         ooparams.microiter = stoi(line.substr(11));
+      }else if(line.substr(0,7)=="ooalpha"){
+         ooparams.alpha = stod(line.substr(7));
       }else if(line.substr(0,8)=="schedule"){
          while(true){
             line.clear();
@@ -238,6 +253,7 @@ void params_ctns::print() const{
    cout << "task_sdiag = " << task_sdiag << endl;
    cout << "task_ham = " << task_ham << endl;
    cout << "task_opt = " << task_opt << endl;
+   cout << "task_orb = " << task_orb << endl;
    cout << "task_vmc = " << task_vmc << endl;
    cout << "task_expand = " << task_expand << endl;
    cout << "task_tononsu2 = " << task_tononsu2 << endl;
@@ -250,6 +266,7 @@ void params_ctns::print() const{
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;
    cout << "rdm_svd = " << scientific << rdm_svd << endl;
+   cout << "outprec = " << outprec << endl;
    // sweep
    cout << "nroots = " << nroots << endl;
    cout << "guess = " << guess << endl;
@@ -318,4 +335,6 @@ void params_ctns::print() const{
    cout << "savebin = " << savebin << endl;
    // nosym
    cout << "fromnosym = " << fromnosym << endl;
+   // orbital optimization
+   ooparams.print();
 }
