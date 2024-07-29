@@ -50,7 +50,7 @@ namespace ctns{
          this->print_part(msg+": dvdson solver [comm(gpu)]   ", dtb7, tdvdsn, dtacc);
          this->print_part(msg+": dvdson solver [comm(cpu)]   ", dtb8, tdvdsn, dtacc);
          this->print_part(msg+": dvdson solver [rest part]   ", dtb9, tdvdsn, dtacc);
-        
+
          double trenrm = dtfa + dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12 + dtfb;
          std::cout << "Detailed decomposition of T(renrm) = " 
             << std::scientific << std::setprecision(3) << dt5 << " S"
@@ -83,7 +83,7 @@ namespace ctns{
          dt4 = tools::get_duration(te-td); 
          dt5 = tools::get_duration(tf-te); 
          dt6 = tools::get_duration(t1-tf); 
-         
+
          // decomposition of dt2 into different parts
          dtb0 = tools::get_duration(tb1-tb); 
          dtb1 = tools::get_duration(tb2-tb1); 
@@ -91,7 +91,7 @@ namespace ctns{
          dtb3 = tools::get_duration(tb4-tb3); 
          dtb4 = tools::get_duration(tb5-tb4); 
          // dtb5-9 are obtained in sweep_twodot_local.h
- 
+
          // decomposition of dt5 into different parts
          dtfa = tools::get_duration(tf0-te); 
          dtf0 = tools::get_duration(tf1-tf0); 
@@ -108,7 +108,7 @@ namespace ctns{
          dtf11 = tools::get_duration(tf12-tf11); 
          dtf12 = tools::get_duration(tf13-tf12); 
          dtfb = tools::get_duration(tf-tf13); 
-         
+
          if(debug) this->print(msg);
       }
       void accumulate(const dot_timing& timer,
@@ -122,7 +122,7 @@ namespace ctns{
          dt4 += timer.dt4;
          dt5 += timer.dt5;
          dt6 += timer.dt6;
-         
+
          // decomposition of dt2 into different parts
          dtb0 += timer.dtb0;
          dtb1 += timer.dtb1; 
@@ -134,7 +134,7 @@ namespace ctns{
          dtb7 += timer.dtb7; 
          dtb8 += timer.dtb8; 
          dtb9 += timer.dtb9; 
-       
+
          // decomposition of dt5 into different parts
          dtfa += timer.dtfa; 
          dtf0 += timer.dtf0; 
@@ -151,7 +151,7 @@ namespace ctns{
          dtf11 += timer.dtf11;
          dtf12 += timer.dtf12;
          dtfb += timer.dtfb; 
-   
+
          if(debug) this->print(msg);
       }
       public:
@@ -208,9 +208,9 @@ namespace ctns{
                   << std::endl;
             } // i
             std::cout << " deff=" << deff
-                      << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt
-                      << std::noshowpos << " nmvp=" << nmvp
-                      << std::endl;
+               << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt
+               << std::noshowpos << " nmvp=" << nmvp
+               << std::endl;
          }    
       public:
          std::vector<double> eopt; // eopt[nroots]
@@ -271,6 +271,11 @@ namespace ctns{
       }
       // summary for a single sweep
       void summary(const int isweep, const int mpisize);
+      // helps
+      double get_eminlast(const int iroot=0) const{
+         return min_result[maxsweep-1].eopt[iroot];
+      }
+
       public:
       int seqsize, nroots, maxsweep, restart_sweep;
       std::vector<directed_bond> seq; // sweep bond sequence 

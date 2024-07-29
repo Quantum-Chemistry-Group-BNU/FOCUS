@@ -10,6 +10,7 @@
 #include <sstream>
 #include <algorithm>
 #include "tools.h"
+#include "matrix.h"
 #include "serialization.h"
 #ifndef SERIAL
 #include "mpi_wrapper.h"
@@ -61,6 +62,13 @@ namespace integral{
                   }
                }
             }
+            // orbital rotation
+            linalg::matrix<Tm> mat_full() const;
+            linalg::matrix<Tm> mat_alpha() const;
+            linalg::matrix<Tm> mat_beta() const;
+            one_body<Tm> rotate_spatial(const linalg::matrix<Tm>& urot) const;
+            void from_spatial(const linalg::matrix<Tm>& mat_alpha,
+                  const linalg::matrix<Tm>& mat_beta);
          public:
             int sorb = 0;
          public:

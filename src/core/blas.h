@@ -94,6 +94,7 @@ namespace linalg{
       ::zcopy_(&N, X, &INCX, Y, &INCY);
    }
 
+   // general copy with offset
    inline void xcopy(const MKL_INT N, const double* X, const MKL_INT INCX, 
          double* Y, const MKL_INT INCY){
       ::dcopy_(&N, X, &INCX, Y, &INCY);
