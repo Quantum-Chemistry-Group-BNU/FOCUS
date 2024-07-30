@@ -380,8 +380,10 @@
     - minmize_entropy
        - entropy functions [DONE@2024/07/30]
        - minmize_entropy
-         - genUrot
-         - s2forRotatedPsi4: apply Urot to twodot wavefunction
+         - apply U4 to twodot wavefunction
+            - genUrot
+            - apply Urot to twodot wavefunction? HOW?
+            - s2forRotatedPsi4: 
          - minmize_entropy via Nelder-Mead
       - apply_randomLayer
     - large-scale application?

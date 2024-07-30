@@ -336,6 +336,23 @@ vector<directed_bond> topology::get_mps_bsweeps(const bool debug) const{
    return sweeps;
 }
 
+vector<directed_bond> topology::get_mps_sweeps(const bool debug) const{
+   if(debug) cout << "\nctns::topology::get_mps_sweeps" << endl;
+   assert(nbackbone == nphysical);
+   vector<directed_bond> sweeps;
+   for(int i=0; i<nbackbone-1; i++){
+      auto p0 = make_pair(i,0);
+      auto p1 = make_pair(i+1,0);      
+      sweeps.push_back( directed_bond(p0,p1,1) );
+   }
+   for(int i=nbackbone-1; i>=1; i--){
+      auto p0 = make_pair(i-1,0);      
+      auto p1 = make_pair(i,0); 
+      sweeps.push_back( directed_bond(p0,p1,0) );
+   }
+   return sweeps;
+}
+
 vector<int> topology::get_supp_rest(const vector<int>& rsupp) const{
    vector<int> bas(nphysical);
    iota(bas.begin(), bas.end(), 0);
