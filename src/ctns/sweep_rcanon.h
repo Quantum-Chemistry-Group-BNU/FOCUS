@@ -108,9 +108,10 @@ namespace ctns{
                + "_isweep"+std::to_string(isweep) + "_C0R1.txt";
             const bool iftrunc = true;
             const int alg_decim = 0;
+            std::vector<double> sigs2full;
             decimation_row(icomb, wfinfo.qmid, wfinfo.qcol, 
                   iftrunc, dcut, schd.ctns.rdm_svd, alg_decim, 
-                  wfs2, rot, dwt, deff, fname, 
+                  wfs2, sigs2full, rot, dwt, deff, fname, 
                   schd.ctns.verbose>0);
             rot = rot.P();
             icomb.sites[pdx1] = rot.split_cr(wfinfo.qmid, wfinfo.qcol);
@@ -139,9 +140,10 @@ namespace ctns{
                + "_isweep"+std::to_string(isweep) + "_cR0.txt";
             const bool iftrunc = true;
             const int alg_decim = 0;
+            std::vector<double> sigs2full;
             decimation_row(icomb, wfinfo.qmid, wfinfo.qcol,
                   iftrunc, dcut, schd.ctns.rdm_svd, alg_decim,
-                  wfs2, rot, dwt, deff, fname,
+                  wfs2, sigs2full, rot, dwt, deff, fname,
                   schd.ctns.verbose>0);
             rot = rot.P();
             icomb.sites[pdx0] = rot.split_cr(wfinfo.qmid, wfinfo.qcol);

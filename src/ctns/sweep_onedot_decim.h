@@ -62,7 +62,8 @@ namespace ctns{
          auto& result = sweeps.opt_result[isweep][ibond];
          int nroots = vsol.cols();
          std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
-         auto t1 = tools::get_time();
+         std::vector<double> sigs2full;
+         auto t1 = tools::get_time(); // just declare this variable
          if(superblock == "lc"){
 
             for(int i=0; i<nroots; i++){
@@ -75,7 +76,7 @@ namespace ctns{
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qrow, wf.info.qmid, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
-                  wfs2, rot, result.dwt, result.deff, fname,
+                  wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
 
          }else if(superblock == "lr"){
@@ -92,7 +93,7 @@ namespace ctns{
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qrow, wf.info.qcol, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
-                  wfs2, rot, result.dwt, result.deff, fname,
+                  wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
 
          }else if(superblock == "cr"){
@@ -107,7 +108,7 @@ namespace ctns{
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qmid, wf.info.qcol, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
-                  wfs2, rot, result.dwt, result.deff, fname,
+                  wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
             rot = rot.P(); // rot[alpha,r] = (V^+)
 

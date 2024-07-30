@@ -54,6 +54,14 @@ namespace ctns{
                auto wf2 = this->get_wf2();
                wf2.print("wf2");
             }
+            // maximal bond dimension
+            int get_dmax() const{
+               int dmax = -1;
+               for(int i=0; i<sites.size(); i++){
+                  dmax = std::max(dmax,std::get<1>(sites[i].get_shape()));
+               } // i
+               return dmax;
+            }
             // print size 
             size_t display_size() const{
                std::cout << "comb::display_size qkind=" << qkind::get_name<Qm>() << std::endl;

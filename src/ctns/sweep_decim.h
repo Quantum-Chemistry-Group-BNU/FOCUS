@@ -116,6 +116,7 @@ namespace ctns{
             const double rdm_svd,
             const int alg_decim,
             const std::vector<qtensor2<Qm::ifabelian,Tm>>& wfs2,
+            std::vector<double>& sigs2full,
             qtensor2<Qm::ifabelian,Tm>& rot,
             double& dwt,
             int& deff,
@@ -194,6 +195,7 @@ namespace ctns{
             linalg::xscal(sig2all.size(), 1.0/sig2sum, sig2all.data());
             sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
             assert(std::abs(sig2sum - 1.0) < 1.e-10);
+            sigs2full = sig2all; // return this values
 
             // 2. select important sig2 
             std::vector<int> br_kept;
@@ -226,7 +228,7 @@ namespace ctns{
 
             if(debug){
                auto t3 = tools::get_time();
-               std::cout << "----- TIMING for decimation_row: "
+               std::cout << "----- TIMING for decimation_row(nkr): "
                   << tools::get_duration(t3-t0) << " S"
                   << " T(decim/select/formRot)="
                   << tools::get_duration(t1-t0) << ","
@@ -237,6 +239,7 @@ namespace ctns{
          } // rank=0
       }
 
+   // Kramers case
    template <>
       inline void decimation_row(const comb<qkind::qNK,std::complex<double>>& icomb,
             const qbond& qs1,
@@ -246,6 +249,7 @@ namespace ctns{
             const double rdm_svd,
             const int alg_decim,
             const std::vector<stensor2<std::complex<double>>>& wfs2,
+            std::vector<double>& sigs2full,
             stensor2<std::complex<double>>& rot,
             double& dwt,
             int& deff,
@@ -313,6 +317,7 @@ namespace ctns{
          auto t1 = tools::get_time();
 
          if(rank == 0){
+            // 1.5 merge all sig2 and normalize
             int idx = 0;
             double sig2sum = 0.0;
             std::vector<bool> ifmatched(nqr);
@@ -327,6 +332,7 @@ namespace ctns{
                assert(nkept == sigs2.size());
                if(qr.parity() == 0){
                   std::copy(sigs2.begin(), sigs2.end(), std::back_inserter(sig2all));
+                  std::copy(sigs2.begin(), sigs2.end(), std::back_inserter(sigs2full));
                   sig2sum += std::accumulate(sigs2.begin(), sigs2.end(), 0.0);
                   for(int i=0; i<nkept; i++){
                      idx2sector[idx] = br;
@@ -337,6 +343,8 @@ namespace ctns{
                   assert(nkept%2 == 0);
                   int nkept2 = nkept/2;
                   std::copy(sigs2.begin(), sigs2.begin()+nkept2, std::back_inserter(sig2all));
+                  std::copy(sigs2.begin(), sigs2.begin()+nkept2, std::back_inserter(sigs2full));
+                  std::copy(sigs2.begin(), sigs2.begin()+nkept2, std::back_inserter(sigs2full));
                   sig2sum += 2.0*std::accumulate(sigs2.begin(), sigs2.begin()+nkept2, 0.0);
                   for(int i=0; i<nkept2; i++){
                      idx2sector[idx] = br;
@@ -345,9 +353,10 @@ namespace ctns{
                } // parity
             } // br
             linalg::xscal(sig2all.size(), 1.0/sig2sum, sig2all.data());
-            //NOTE: in kr case, sig2all only contain partial sigs2, thus no check is applied
-            //sig2sum = std::accumulate(sig2all.begin(), sig2all.end(), 0.0);
-            //assert(std::abs(sig2sum - 1.0) < 1.e-10); 
+            //NOTE: in kr case, sig2all only contain partial sigs2
+            sig2sum = std::accumulate(sigs2full.begin(), sigs2full.end(), 0.0);
+            linalg::xscal(sigs2full.size(), 1.0/sig2sum, sigs2full.data());
+            assert(std::abs(sig2sum - 1.0) < 1.e-10);
 
             // 2. select important sig2
             std::vector<int> br_kept;
@@ -393,7 +402,7 @@ namespace ctns{
 
             if(debug){
                auto t3 = tools::get_time();
-               std::cout << "----- TIMING for decimation_row: "
+               std::cout << "----- TIMING for decimation_row(kr): "
                   << tools::get_duration(t3-t0) << " S"
                   << " T(decim/select/formRot)="
                   << tools::get_duration(t1-t0) << ","

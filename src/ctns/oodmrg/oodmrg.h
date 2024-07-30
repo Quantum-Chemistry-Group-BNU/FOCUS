@@ -2,6 +2,7 @@
 #define CTNS_OODMRG_H
 
 #include "../../core/integral_rotate.h"
+#include "oodmrg_move.h"
 
 namespace ctns{
 
@@ -37,23 +38,19 @@ namespace ctns{
 
             if(rank == 0){
                std::cout << tools::line_separator2 << std::endl;
-               std::cout << "iter=" << iter << std::endl;
+               std::cout << "OO-DMRG: iter=" << iter << std::endl;
                std::cout << tools::line_separator2 << std::endl;
             }
             
-            // prepare environment
+            // minimize entanglement only at rank 0
             auto icomb_new = icomb;
             auto urot = urot_min;
-/*         
-            // minimize entanglement only at rank 0
             if(rank == 0){
-            // we assume that icomb has already been available, 
-            // which is usually the case with a initial MPS from
-            // SCI or a previous optimization.
-            // randomized swap layer
-            //urot,icomb_new = minimize_entropy(icomb)
+               // we assume that icomb has already been available, 
+               // which is usually the case with a initial MPS from
+               // SCI or a previous optimization.
+               oodmrg_move(icomb_new, urot, schd);
             }
-*/
 #ifndef SERIAL
             if(size > 1){
                mpi_wrapper::broadcast(schd.world, icomb_new, 0);
@@ -100,6 +97,8 @@ namespace ctns{
                   icomb = std::move(icomb_new); // move is defined, but copy is deleted
                }else{
                   std::cout << "reject the move!" << std::endl;
+                  // urot_min and icomb in the next iter will 
+                  // still be the old one without change.
                }
                enew_history[iter] = e_new;
                emin_history[iter] = e_min;

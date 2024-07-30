@@ -344,37 +344,46 @@
 
  * Careful check different implementations: [DONE@2024/04/06]
     - MPI:
-      - bugfix for ifdist1
-      - bugfix for blksize==0
+       - bugfix for ifdist1
+       - bugfix for blksize==0
     - OpenMP:
-      - bugfix for 1_lih_dcg? Due to linking to both gomp&iomp via magma.
+       - bugfix for 1_lih_dcg? Due to linking to both gomp&iomp via magma.
                                The compiler for magam must be the same!!!
  
  * Spin-adapted DMRG algorithm: sweep_onedot.h [DONE@2024/05/13]
     - non-spin-adapted case:
-      - alg_hvec=4 & alg_hvec=5 [DONE@2024/05/04]
-         - preprocess_hmu.h
-      - alg_hvec=6,7,8,9 [DONE@2024/05/04]
-         - preprocess_hmmtask.h
-      - alg_hvec=16,17,18,19 [DONE@2024/05/07]
-         - sweep_onedot_diagGPU.h
-         - gpu_kernel/onedot_diagGPU_kernel.*
-   - use function class for HVec [DONE@2024/05/10]
-      - twodot & onedot abstraction 
-      - better timing for dvdson 
-      - async IO for onedot case
-   - spin-adapted case: simply start from cisolver=0 & guess=0 to check Hij & Diag: [DONE@2024/05/11] 
-      - symbolic_formulae_onedot_su2.h [DONE@2024/05/11]
-      - preprocess_hmu.h for spin-adapted case: l|cr or lc|r [DONE@2024/05/11]
-      - onedot_diag: 
-         - onedot_diag_su2.h: 
-      - onedot_renorm:
-         - onedot_decimation:
-      - propagation of initial guess & finalization?
-         - onedot_guess_psi: turn out to be extremely simple, e.g., recouple_cr().merge_cr()
-      - gpu version: [DONE@2024/05/12] 
-         - onedot_diagGPU_su2.h:
+       - alg_hvec=4 & alg_hvec=5 [DONE@2024/05/04]
+          - preprocess_hmu.h
+       - alg_hvec=6,7,8,9 [DONE@2024/05/04]
+          - preprocess_hmmtask.h
+       - alg_hvec=16,17,18,19 [DONE@2024/05/07]
+          - sweep_onedot_diagGPU.h
+          - gpu_kernel/onedot_diagGPU_kernel.*
+    - use function class for HVec [DONE@2024/05/10]
+       - twodot & onedot abstraction 
+       - better timing for dvdson 
+       - async IO for onedot case
+    - spin-adapted case: simply start from cisolver=0 & guess=0 to check Hij & Diag: [DONE@2024/05/11] 
+       - symbolic_formulae_onedot_su2.h [DONE@2024/05/11]
+       - preprocess_hmu.h for spin-adapted case: l|cr or lc|r [DONE@2024/05/11]
+       - onedot_diag: 
+          - onedot_diag_su2.h: 
+       - onedot_renorm:
+          - onedot_decimation:
+       - propagation of initial guess & finalization?
+          - onedot_guess_psi: turn out to be extremely simple, e.g., recouple_cr().merge_cr()
+       - gpu version: [DONE@2024/05/12] 
+          - onedot_diagGPU_su2.h:
 
  * Orbital-optimized DMRG: 
     - driver [DONE@2024/07/29]
-
+    - minmize_entropy
+       - entropy functions [DONE@2024/07/30]
+       - minmize_entropy
+         - genUrot
+         - s2forRotatedPsi4: apply Urot to twodot wavefunction
+         - minmize_entropy via Nelder-Mead
+      - apply_randomLayer
+    - large-scale application?
+    - what is the problem of simutaneously using task_dmrg and task_orb?
+ 

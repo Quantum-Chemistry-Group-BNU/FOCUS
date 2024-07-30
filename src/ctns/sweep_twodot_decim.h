@@ -53,6 +53,7 @@ namespace ctns{
          auto& result = sweeps.opt_result[isweep][ibond];
          int nroots = vsol.cols();
          std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
+         std::vector<double> sigs2full;
          auto t1 = tools::get_time();
          if(superblock == "lc1"){ 
 
@@ -65,7 +66,7 @@ namespace ctns{
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qrow, wf.info.qmid, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
-                  wfs2, rot, result.dwt, result.deff, fname,
+                  wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
 
          }else if(superblock == "c2r"){ 
@@ -79,7 +80,7 @@ namespace ctns{
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qver, wf.info.qcol, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
-                  wfs2, rot, result.dwt, result.deff, fname,
+                  wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
             rot = rot.P(); // rot[alpha,r] = (V^+)
 
@@ -96,7 +97,7 @@ namespace ctns{
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qrow, wf.info.qcol, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
-                  wfs2, rot, result.dwt, result.deff, fname,
+                  wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
 
          }else if(superblock == "c1c2"){
@@ -112,7 +113,7 @@ namespace ctns{
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qmid, wf.info.qver, 
                   iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
-                  wfs2, rot, result.dwt, result.deff, fname,
+                  wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
             rot = rot.P(); // permute two lines for RCF
 
