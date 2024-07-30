@@ -62,20 +62,48 @@ namespace integral{
                   }
                }
             }
-            // orbital rotation
-            linalg::matrix<Tm> mat_full() const;
-            linalg::matrix<Tm> mat_alpha() const;
-            linalg::matrix<Tm> mat_beta() const;
-            one_body<Tm> rotate_spatial(const linalg::matrix<Tm>& urot) const;
+            // helpers
+            linalg::matrix<Tm> mat_full() const{
+               linalg::matrix<Tm> mat(sorb,sorb,data.data());
+               return mat;
+            }
+            linalg::matrix<Tm> mat_alpha() const{
+               const int norb = sorb/2;
+               linalg::matrix<Tm> mat(norb,norb);
+               for(int j=0; j<norb; j++){
+                  linalg::xcopy(norb, &data[(2*j)*sorb], 2, mat.col(j), 1);
+               }
+               return mat; 
+            }
+            linalg::matrix<Tm> mat_beta() const{
+               const int norb = sorb/2;
+               linalg::matrix<Tm> mat(norb,norb);
+               for(int j=0; j<norb; j++){
+                  linalg::xcopy(norb, &data[(2*j+1)*sorb+1], 2, mat.col(j), 1);
+               }
+               return mat;
+            }
             void from_spatial(const linalg::matrix<Tm>& mat_alpha,
-                  const linalg::matrix<Tm>& mat_beta);
+                  const linalg::matrix<Tm>& mat_beta){
+               assert(mat_alpha.rows() == mat_alpha.cols() and 2*mat_alpha.rows() == sorb);
+               assert(mat_beta.rows() == mat_beta.cols() and 2*mat_beta.rows() == sorb);
+               const int norb = sorb/2;
+               // copy alpha
+               for(int j=0; j<mat_alpha.cols(); j++){
+                  linalg::xcopy(norb, mat_alpha.col(j), 1, &data[(2*j)*sorb], 2);
+               }
+               // copy beta
+               for(int j=0; j<mat_beta.cols(); j++){
+                  linalg::xcopy(norb, mat_beta.col(j), 1, &data[(2*j+1)*sorb+1], 2);
+               }
+            }
          public:
             int sorb = 0;
          public:
             std::vector<Tm> data; // Oij = <i|O|j>	
       };
 
-   // two-electron integral <ij||kl> [packed i>j, k>l, (ij)>(kl)]
+   // two-electron integral <ij||kl> [packed i>j, k>l, (ij)>=(kl)]
    // diagonal term Qij = <ij||ij> (i>j)
    template <typename Tm>
       struct two_body{
@@ -219,7 +247,7 @@ namespace integral{
             << tools::sizeMB<Tm>(int2e.size()) << "MB:"
             << tools::sizeGB<Tm>(int2e.size()) << "GB"
             << std::endl; 
-         
+
          // read
          int i,j,k,l;
          Tm eri;
@@ -244,7 +272,7 @@ namespace integral{
          istrm.close();
          // compute Qij
          int2e.initQ();
-         
+
          auto t1 = tools::get_time();
          tools::timing("integral::load_integral", t0, t1);
       }

@@ -86,7 +86,8 @@ namespace input{
                   & tosu2 & thresh_tosu2 & singlet
                   & diagcheck
                   & savebin 
-                  & fromnosym;
+                  & fromnosym
+                  & ooparams;
             }
       public:
          void read(std::ifstream& istrm);
