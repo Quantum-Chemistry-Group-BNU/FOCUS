@@ -51,9 +51,6 @@ namespace ctns{
             size_t get_offset(const int br, const int bc) const{
                return _offset.at(std::make_tuple(br,bc));
             }
-            //bool empty(const int br, const int bc) const{
-            //   return this->get_offset(br,bc) == 0;
-            //}
             dtensor2<Tm> operator()(const int br, const int bc, Tm* data) const{
                size_t off = this->get_offset(br,bc);
                return (off == 0)? dtensor2<Tm>() : dtensor2<Tm>(qrow.get_dim(br),

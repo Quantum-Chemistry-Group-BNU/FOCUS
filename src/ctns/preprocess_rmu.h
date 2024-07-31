@@ -211,9 +211,9 @@ namespace ctns{
             bi2[k2] = bo[k2];
             bi2[k3] = rinfo->_bc2br[bo[k3]];
             if(bi2[k3] == -1) continue;
-            size_t offop = rinfo->_offset[rinfo->_addr(bi2[k3],bo[k3])];
+            size_t offop = rinfo->get_offset(bi2[k3],bo[k3]);
             if(offop == 0) continue;
-            size_t offin2 = site_info._offset[site_info._addr(bi2[0],bi2[1],bi2[2])];
+            size_t offin2 = site_info.get_offset(bi2[0],bi2[1],bi2[2]);
             if(offin2 == 0) continue;
             Rblk.offin2 = offin2-1;
             Rblk.offrop = offrop+offop-1; // add global offset

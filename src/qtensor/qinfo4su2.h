@@ -68,12 +68,15 @@ namespace ctns{
             // helpers
             size_t get_offset(const int br, const int bc, const int bm, const int bv,
                  const int tsi, const int tsj) const{
-               return _offset.at(std::make_tuple(br,bc,bm,bv,tsi,tsj));
-            } 
-            //bool empty(const int br, const int bc, const int bm, const int bv, 
-            //      const int tsi, const int tsj) const{
-            //   return this->get_offset(br,bc,bm,bv,tsi,tsj) == 0;
-            //}
+               auto key = std::make_tuple(br,bc,bm,bv,tsi,tsj);
+               // In some cases, the input value of tsi is not permitted,
+               // such as in preprocess_rmu.h, thus a search is necessary
+               if(_offset.find(key) == _offset.end()){
+                  return 0;
+               }else{
+                  return _offset.at(key);
+               }
+            }
             dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv,
                   const int tsi, const int tsj, Tm* data) const{
                size_t off = this->get_offset(br,bc,bm,bv,tsi,tsj);
