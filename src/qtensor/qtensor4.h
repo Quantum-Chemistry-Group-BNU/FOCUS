@@ -204,7 +204,7 @@ namespace ctns{
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                Tm* start_ptr(const int br, const int bc, 
                      const int bm, const int bv) const{
-                  size_t off = info._offset[info._addr(br,bc,bm,bv)];
+                  size_t off = info.get_offset(br,bc,bm,bv);
                   return (off==0)? nullptr : _data+off-1;
                }
             // print

@@ -84,7 +84,7 @@ namespace ctns{
             // 	      = \sum_x qt2(x,r)*qt4a(x,c,m,v) ; iftrans=true
             int bx = iftrans? qt2_info._bc2br[br] : qt2_info._br2bc[br];
             if(bx != -1){
-               size_t off4a = qt4a_info._offset[qt4a_info._addr(bx,bc,bm,bv)];
+               size_t off4a = qt4a_info.get_offset(bx,bc,bm,bv);
                if(off4a != 0){
                   ifzero = false; 
                   int jdx = iftrans? qt2_info._addr(bx,br) : qt2_info._addr(br,bx);
@@ -136,7 +136,7 @@ namespace ctns{
             // 	      = \sum_x qt2(x,c)*qt4a(r,x,m,v) ; iftrans=true
             int bx = iftrans? qt2_info._bc2br[bc] : qt2_info._br2bc[bc];
             if(bx != -1){
-               size_t off4a = qt4a_info._offset[qt4a_info._addr(br,bx,bm,bv)];
+               size_t off4a = qt4a_info.get_offset(br,bx,bm,bv);
                if(off4a != 0){
                   ifzero = false;
                   int jdx = iftrans? qt2_info._addr(bx,bc) : qt2_info._addr(bc,bx);
@@ -196,7 +196,7 @@ namespace ctns{
             // 	      = \sum_x qt2(x,m)*qt4a(r,c,x,v) ; iftrans=true
             int bx = iftrans? qt2_info._bc2br[bm] : qt2_info._br2bc[bm];
             if(bx != -1){
-               size_t off4a = qt4a_info._offset[qt4a_info._addr(br,bc,bx,bv)];
+               size_t off4a = qt4a_info.get_offset(br,bc,bx,bv);
                if(off4a != 0){
                   ifzero = false;
                   int jdx = iftrans? qt2_info._addr(bx,bm) : qt2_info._addr(bm,bx);
@@ -255,7 +255,7 @@ namespace ctns{
             // 	      = \sum_x qt2(x,v)*qt4a(r,c,m,x) ; iftrans=true
             int bx = iftrans? qt2_info._bc2br[bv] : qt2_info._br2bc[bv];
             if(bx != -1){
-               size_t off4a = qt4a_info._offset[qt4a_info._addr(br,bc,bm,bx)];
+               size_t off4a = qt4a_info.get_offset(br,bc,bm,bx);
                if(off4a != 0){
                   ifzero = false;
                   int jdx = iftrans? qt2_info._addr(bx,bv) : qt2_info._addr(bv,bx);

@@ -64,11 +64,14 @@ namespace ctns{
                   && qmid==info.qmid && qver==info.qver;
             }
             // helpers
-            bool empty(const int br, const int bc, const int bm, const int bv) const{
-               return _offset[_addr(br,bc,bm,bv)] == 0;
+            size_t get_offset(const int br, const int bc, const int bm, const int bv) const{
+               return _offset[_addr(br,bc,bm,bv)];
             }
+            //bool empty(const int br, const int bc, const int bm, const int bv) const{
+            //   return this->get_offset(br,bc,bm,bv) == 0;
+            //}
             dtensor4<Tm> operator()(const int br, const int bc, const int bm, const int bv, Tm* data) const{
-               size_t off = _offset[_addr(br,bc,bm,bv)];
+               size_t off = this->get_offset(br,bc,bm,bv);
                return (off == 0)? dtensor4<Tm>() : dtensor4<Tm>(qrow.get_dim(br),
                      qcol.get_dim(bc), qmid.get_dim(bm), qver.get_dim(bv), data+off-1);
             }

@@ -207,9 +207,9 @@ namespace ctns{
             int rdim = qt3a_info.qmid.get_dim(br);
             // loop over bc
             for(int bc=0; bc<qt2_info._cols; bc++){
-               size_t off3b = qt3b_info._offset[qt3b_info._addr(bx,by,bc)];
+               size_t off3b = qt3b_info.get_offset(bx,by,bc);
                if(off3b == 0) continue;
-               size_t off2 = qt2_info._offset[qt2_info._addr(br,bc)];
+               size_t off2 = qt2_info.get_offset(br,bc);
                if(off2 == 0) continue;
                // qt2(r,c) = Conj[qt3a](x,y,r)*qt3b(x,y,c)
                const Tm* blk3b = qt3b_data + off3b-1;

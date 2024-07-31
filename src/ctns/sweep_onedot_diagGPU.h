@@ -62,9 +62,9 @@ namespace ctns{
                int idx = wf.info._nnzaddr[i];
                int br, bc, bm;
                wf.info._addr_unpack(idx, br, bc, bm);
-               opoffs[3*i]   = lqops._offset.at(std::make_pair('H',0)) + Hl.info._offset[Hl.info._addr(br,br)]-1;
-               opoffs[3*i+1] = rqops._offset.at(std::make_pair('H',0)) + Hr.info._offset[Hr.info._addr(bc,bc)]-1;
-               opoffs[3*i+2] = cqops._offset.at(std::make_pair('H',0)) + Hc.info._offset[Hc.info._addr(bm,bm)]-1;
+               opoffs[3*i]   = lqops._offset.at(std::make_pair('H',0)) + Hl.info.get_offset(br,br)-1;
+               opoffs[3*i+1] = rqops._offset.at(std::make_pair('H',0)) + Hr.info.get_offset(bc,bc)-1;
+               opoffs[3*i+2] = cqops._offset.at(std::make_pair('H',0)) + Hc.info.get_offset(bm,bm)-1;
             }
             GPUmem.to_gpu(&dev_dims[nblk*4], opoffs.data(), nblk*3*sizeof(size_t));
             onedot_diagGPU_local(nblk, ndim, dev_diag, dev_dims, 
@@ -181,8 +181,8 @@ namespace ctns{
                   int idx = wf.info._nnzaddr[i];
                   int br, bc, bm;
                   wf.info._addr_unpack(idx, br, bc, bm);
-                  opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info._offset[O1.info._addr(br,br)]-1;
-                  opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info._offset[O2.info._addr(bm,bm)]-1;
+                  opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info.get_offset(br,br)-1;
+                  opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info.get_offset(bm,bm)-1;
                }
                GPUmem.to_gpu(&dev_dims[nblk*4], opoffs.data(), nblk*2*sizeof(size_t));
                onedot_diagGPU_O1O2(nblk, ndim, dev_diag, dev_dims, qops1._dev_data, qops2._dev_data, wt, 0, 2);
@@ -193,8 +193,8 @@ namespace ctns{
                   int idx = wf.info._nnzaddr[i];
                   int br, bc, bm;
                   wf.info._addr_unpack(idx, br, bc, bm);
-                  opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info._offset[O1.info._addr(br,br)]-1;
-                  opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info._offset[O2.info._addr(bc,bc)]-1;
+                  opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info.get_offset(br,br)-1;
+                  opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info.get_offset(bc,bc)-1;
                }
                GPUmem.to_gpu(&dev_dims[nblk*4], opoffs.data(), nblk*2*sizeof(size_t));
                onedot_diagGPU_O1O2(nblk, ndim, dev_diag, dev_dims, qops1._dev_data, qops2._dev_data, wt, 0, 1);
@@ -205,8 +205,8 @@ namespace ctns{
                   int idx = wf.info._nnzaddr[i];
                   int br, bc, bm;
                   wf.info._addr_unpack(idx, br, bc, bm);
-                  opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info._offset[O1.info._addr(bm,bm)]-1;
-                  opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info._offset[O2.info._addr(bc,bc)]-1;
+                  opoffs[2*i]   = qops1._offset.at(std::make_pair(BQ1,index)) + O1.info.get_offset(bm,bm)-1;
+                  opoffs[2*i+1] = qops2._offset.at(std::make_pair(BQ2,index)) + O2.info.get_offset(bc,bc)-1;
                }
                GPUmem.to_gpu(&dev_dims[nblk*4], opoffs.data(), nblk*2*sizeof(size_t));
                onedot_diagGPU_O1O2(nblk, ndim, dev_diag, dev_dims, qops1._dev_data, qops2._dev_data, wt, 2, 1);

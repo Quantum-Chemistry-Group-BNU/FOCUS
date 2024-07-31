@@ -354,8 +354,8 @@ namespace ctns{
             } // br
             linalg::xscal(sig2all.size(), 1.0/sig2sum, sig2all.data());
             //NOTE: in kr case, sig2all only contain partial sigs2
-            sig2sum = std::accumulate(sigs2full.begin(), sigs2full.end(), 0.0);
             linalg::xscal(sigs2full.size(), 1.0/sig2sum, sigs2full.data());
+            sig2sum = std::accumulate(sigs2full.begin(), sigs2full.end(), 0.0);
             assert(std::abs(sig2sum - 1.0) < 1.e-10);
 
             // 2. select important sig2

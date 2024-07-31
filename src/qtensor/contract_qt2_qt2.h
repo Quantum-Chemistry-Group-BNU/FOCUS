@@ -28,9 +28,9 @@ namespace ctns{
             int bx = qt2a.info._br2bc[br];
             if(bx == -1) continue;
             if(bx != qt2b.info._bc2br[bc]) continue;
-            size_t off2a = qt2a.info._offset[qt2a.info._addr(br,bx)];
+            size_t off2a = qt2a.info.get_offset(br,bx);
             Tm* blk2a = qt2a.data() + off2a-1;
-            size_t off2b = qt2b.info._offset[qt2b.info._addr(bx,bc)];
+            size_t off2b = qt2b.info.get_offset(bx,bc);
             Tm* blk2b = qt2b.data() + off2b-1;
             int xdim = qt2a.info.qcol.get_dim(bx);
             linalg::xgemm("N", "N", rdim, cdim, xdim, alpha,

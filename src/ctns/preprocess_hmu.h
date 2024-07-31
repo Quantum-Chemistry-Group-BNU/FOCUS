@@ -202,7 +202,7 @@ namespace ctns{
                }
             }
             if(!symAllowed) continue;
-            size_t offin = wf_info._offset[wf_info._addr(bi[0],bi[1],bi[2])];
+            size_t offin = wf_info.get_offset(bi[0],bi[1],bi[2]);
             if(offin == 0) continue; // in case of no matching contractions
             Hxblk.offin = offin-1;
             Hxblk.dimin[0] = wf_info.qrow.get_dim(bi[0]);
@@ -543,7 +543,7 @@ namespace ctns{
                }
             }
             if(!symAllowed) continue;
-            size_t offin = wf_info._offset[wf_info._addr(bi[0],bi[1],bi[2],bi[3])];
+            size_t offin = wf_info.get_offset(bi[0],bi[1],bi[2],bi[3]);
             if(offin == 0) continue; // in case of no matching contractions
             Hxblk.offin = offin-1;
             Hxblk.dimin[0] = wf_info.qrow.get_dim(bi[0]);

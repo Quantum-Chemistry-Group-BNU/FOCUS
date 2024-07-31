@@ -1,5 +1,5 @@
 
-machine = a800 # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = mac # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 USE_GCC = yes
 USE_OPENMP = yes

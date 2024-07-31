@@ -79,12 +79,11 @@ namespace ctns{
             std::vector<Tm> v0;
             twodot_guess_v0(icomb_tmp, dbond, ndim, nroots, wf, v0);
             assert(v0.size() == ndim*nroots);
-            linalg::matrix<Tm> vsol(ndim,nroots,v0.data());
             // perform decimation
             qtensor2<Qm::ifabelian,Tm> rot;
             std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
             for(int i=0; i<nroots; i++){
-               wf.from_array(vsol.col(i));
+               wf.from_array(&v0[i*ndim]);
                auto wf2 = wf.merge_lc1_c2r();
                wfs2[i] = std::move(wf2);
             }
@@ -101,6 +100,7 @@ namespace ctns{
                   debug);
             svalues[ibond] = std::move(sigs2full);
             // propagate to the next site
+            linalg::matrix<Tm> vsol(ndim,nroots,v0.data());
             twodot_guess_psi(superblock, icomb_tmp, dbond, vsol, wf, rot);
             vsol.clear();
          } // ibond

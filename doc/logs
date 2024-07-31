@@ -377,15 +377,13 @@
 
  * Orbital-optimized DMRG: 
     - driver [DONE@2024/07/29]
-    - minmize_entropy
+    - disentangle 
        - entropy functions [DONE@2024/07/30]
-       - minmize_entropy
-         - apply U4 to twodot wavefunction
-            - genUrot
-            - apply Urot to twodot wavefunction? HOW?
-            - s2forRotatedPsi4: 
-         - minmize_entropy via Nelder-Mead
-      - apply_randomLayer
+       - reduce_entropy
+         - canonicalization loop [DONE@2024/07/31]
+         - apply Urot to twodot wavefunction? [DONE@2024/XX/XX] 
+         - reduce_entropy via Nelder-Mead
+      - apply_randomLayer by randomizing theta
     - large-scale application?
     - what is the problem of simutaneously using task_dmrg and task_orb?
  

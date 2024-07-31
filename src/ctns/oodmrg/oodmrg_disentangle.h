@@ -1,7 +1,9 @@
 #ifndef CTNS_OODMRG_DISENTANGLE_H
 #define CTNS_OODMRG_DISENTANGLE_H
 
+#include "nelder_mead.h"
 #include "oodmrg_entropy.h"
+#include "oodmrg_rotate.h"
 
 namespace ctns{
 
@@ -14,12 +16,7 @@ namespace ctns{
             const int j,
             const double theta){
          int norb = urot.rows();
-         std::cout << "norb=" << norb 
-            << " i=" << i 
-            << " j=" << j
-            << std::endl;
          std::vector<Tm> ui(norb,0), uj(norb,0);
-         urot.print("urot");
          double c = std::cos(theta);
          double s = std::sin(theta);
          linalg::xaxpy(norb,  c, urot.col(i), ui.data());
@@ -28,7 +25,49 @@ namespace ctns{
          linalg::xaxpy(norb,  c, urot.col(j), uj.data());
          linalg::xcopy(norb, ui.data(), urot.col(i));
          linalg::xcopy(norb, uj.data(), urot.col(j));
-         urot.print("urot");
+      }
+
+   template <typename Qm, typename Tm>
+      double twodot_wavefun_entropy(const std::array<double,1> theta_array,
+            const comb<Qm,Tm>& icomb,
+            const std::vector<Tm>& v0,
+            std::vector<Tm>& vr,
+            qtensor4<Qm::ifabelian,Tm>& wf,
+            qtensor2<Qm::ifabelian,Tm>& rot,
+            std::vector<qtensor2<Qm::ifabelian,Tm>>& wfs2,
+            const bool& forward,
+            const int& dmax,
+            const double& alpha,
+            const bool& debug){
+         // rotate wavefunction
+         twodot_rotate<Qm::ifabelian,Tm>(v0, vr, wf, theta_array[0]);
+         // decimation
+         const bool iftrunc = true;
+         const double rdm_svd = 1.5;
+         const int alg_decim = 0;
+         std::string fname;
+         std::vector<double> sigs2full; 
+         double dwt;
+         int deff;
+         // see sweep_twodot_decim.h
+         wf.from_array(vr.data());
+         if(forward){
+            wfs2[0] = wf.merge_lc1_c2r();
+            decimation_row(icomb, wf.info.qrow, wf.info.qmid, 
+                  iftrunc, dmax, rdm_svd, alg_decim,
+                  wfs2, sigs2full, rot, dwt, deff, fname,
+                  debug);
+         }else{
+            wfs2[0] = wf.merge_lc1_c2r().P();
+            decimation_row(icomb, wf.info.qver, wf.info.qcol,
+                  iftrunc, dmax, rdm_svd, alg_decim,
+                  wfs2, sigs2full, rot, dwt, deff, fname,
+                  debug);
+            rot = rot.P(); 
+         }
+         // entropy
+         double entropy = renyi_entropy(sigs2full, alpha);
+         return entropy;
       }
 
    template <typename Qm, typename Tm>
@@ -52,16 +91,15 @@ namespace ctns{
          const auto& rindex = icomb.topo.rindex;
          const auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))]; // will be updated
          const auto wf2 = get_boundary_coupling<Qm,Tm>(sym_state, singlet); // env*C[0]
-         auto icomb_tmp = icomb;
-         icomb_tmp.cpsi.resize(nroots);
+         icomb.cpsi.resize(nroots);
          for(int iroot=0; iroot<nroots; iroot++){
             // qt2(1,r): ->-*->-
             auto qt2 = contract_qt2_qt2(wf2,icomb.rwfuns[iroot]);
             // qt2(1,r)*site0(r,r0,n0) = qt3(1,r0,n0)[CRcouple]
             auto qt3 = contract_qt3_qt2("l",site0,qt2);
             // recouple to qt3(1,r0,n0)[LCcouple]
-            icomb_tmp.cpsi[iroot] = qt3.recouple_lc();
-            icomb_tmp.cpsi[iroot].print("cwf");
+            icomb.cpsi[iroot] = qt3.recouple_lc();
+            icomb.cpsi[iroot].print("cwf");
          } // iroot
 
          // start forward sweep
@@ -84,20 +122,31 @@ namespace ctns{
             }
 
             // construct twodot wavefunction: wf4
-            const auto& cpsi0 = icomb_tmp.cpsi[0];
-            const auto& site1 = icomb_tmp.sites[rindex.at(std::make_pair(ibond+1,0))];
-            const auto& ql  = cpsi0.info.qrow;
-            const auto& qr  = site1.info.qcol;
-            const auto& qc1 = cpsi0.info.qmid;
-            const auto& qc2 = site1.info.qmid;
-            qtensor4<Qm::ifabelian,Tm> wf(sym_state, ql, qr, qc1, qc2);
+            qtensor4<Qm::ifabelian,Tm> wf;
+            if(dbond.forward){
+               const auto& site0 = icomb.cpsi[0];
+               const auto& site1 = icomb.sites[rindex.at(dbond.p1)];
+               const auto& ql  = site0.info.qrow;
+               const auto& qr  = site1.info.qcol;
+               const auto& qc1 = site0.info.qmid;
+               const auto& qc2 = site1.info.qmid;
+               wf.init(sym_state, ql, qr, qc1, qc2);
+            }else{
+               const auto& site0 = icomb.sites[rindex.at(dbond.p0)];
+               const auto& site1 = icomb.cpsi[0];
+               const auto& ql  = site0.info.qrow;
+               const auto& qr  = site1.info.qcol;
+               const auto& qc1 = site0.info.qmid;
+               const auto& qc2 = site1.info.qmid;
+               wf.init(sym_state, ql, qr, qc1, qc2);
+            }
             size_t ndim = wf.size();
             if(debug){
                std::cout << "wf4(diml,dimr,dimc1,dimc2)=(" 
-                  << ql.get_dimAll() << ","
-                  << qr.get_dimAll() << ","
-                  << qc1.get_dimAll() << ","
-                  << qc2.get_dimAll() << ")"
+                  << wf.info.qrow.get_dimAll() << ","
+                  << wf.info.qcol.get_dimAll() << ","
+                  << wf.info.qmid.get_dimAll() << ","
+                  << wf.info.qver.get_dimAll() << ")"
                   << " nnz=" << ndim << ":"
                   << tools::sizeMB<Tm>(ndim) << "MB"
                   << std::endl;
@@ -107,50 +156,65 @@ namespace ctns{
                std::cout << "error: symmetry is inconsistent as ndim=0" << std::endl;
                exit(1);
             }
-            
+
             // generate wavefunction;
             std::vector<Tm> v0;
-            twodot_guess_v0(icomb_tmp, dbond, ndim, nroots, wf, v0);
+            twodot_guess_v0(icomb, dbond, ndim, nroots, wf, v0);
             assert(v0.size() == ndim*nroots);
-            linalg::matrix<Tm> vsol(ndim,nroots,v0.data());
-            
+
             //------------------------------------------
             // reduce entanglement via orbital rotation
             //------------------------------------------
-
-            // apply u to wf4
-
-            // perform decimation
+            std::vector<Tm> vr(ndim);
             qtensor2<Qm::ifabelian,Tm> rot;
             std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
-            for(int i=0; i<nroots; i++){
-               wf.from_array(vsol.col(i));
-               auto wf2 = wf.merge_lc1_c2r();
-               wfs2[i] = std::move(wf2);
-            }
-            const bool iftrunc = true;
-            const double rdm_svd = 1.5;
-            const int alg_decim = 0;
-            std::string fname;
-            std::vector<double> sigs2full; 
-            double dwt;
-            int deff;
-            decimation_row(icomb_tmp, wf.info.qrow, wf.info.qmid, 
-                  iftrunc, dmax, rdm_svd, alg_decim,
-                  wfs2, sigs2full, rot, dwt, deff, fname,
-                  debug);
+            // interface for optimizer
+            std::function<double(const std::array<double,1>)> fun;
+            using std::placeholders::_1;
+            fun = bind(&ctns::twodot_wavefun_entropy<Qm,Tm>, _1, std::cref(icomb), 
+                  std::cref(v0), std::ref(vr), std::ref(wf), std::ref(rot), std::ref(wfs2),
+                  std::cref(dbond.forward), std::cref(dmax), std::cref(alpha), std::cref(debug)); 
 
+            std::array<double,1> theta0 = {0.0};
+            std::array<double,1> step = {0.1};
+            /*
+            nelder_mead_result<double,1> result = nelder_mead<double,1>(
+                  fun, theta0, 1.e-10, step);
+            std::cout << "Found minimum: " << std::fixed << result.xmin[0] << std::endl;
+            std::cout << "Val=" << fun(result.xmin) << std::endl;
+            */
+            double sfun = fun(theta0);
+            std::cout << "lzd ibond=" << ibond << " sfun=" << sfun << std::endl;
+
+            // save the current site
+            const auto p = dbond.get_current();
+            const auto& pdx = rindex.at(p); 
+            if(superblock == "lc1"){
+               icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
+            }else if(superblock == "c2r"){
+               icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
+            }else{
+               std::cout << "error: no such option for superblock=" << superblock << std::endl;
+               exit(1);
+            }
 
             // propagate to the next site
-            twodot_guess_psi(superblock, icomb_tmp, dbond, vsol, wf, rot);
+            linalg::matrix<Tm> vsol(ndim,nroots,v0.data());
+            std::cout << "superblock=" << superblock << std::endl;
+            twodot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
             vsol.clear();
 
-            // update u
-            double theta = 3.1415926535897932384626/2;
-            givens_rotatation(urot, dbond.p0.first, dbond.p1.first, -theta);
-            exit(1);
+            icomb.cpsi[0].print("cpsi");
 
+            // update u
+            double theta = 0.0; //result.xmin[0];
+            givens_rotatation(urot, dbond.p0.first, dbond.p1.first, -theta);
          } // ibond
+     
+         // compute rwfuns for the next call of reduce_entropy_single
+         const double rdm_svd = 1.5;
+         std::string fname;
+         sweep_final_CR2cRR(icomb, rdm_svd, fname, debug);
       }
 
    template <typename Qm, typename Tm>
@@ -160,6 +224,13 @@ namespace ctns{
             const int microiter,
             const double alpha,
             const bool debug){
+         if(debug){
+            std::cout << "reduce_entropy_multi:" 
+               << " dmax=" << dmax
+               << " microiter=" << microiter
+               << " alpha=" << alpha
+               << std::endl;
+         }
          const double thresh = 1.e-8;
          double totaldiff = 0.0;
          bool ifconv = false;
@@ -169,6 +240,7 @@ namespace ctns{
             if(debug){
                std::cout << "\n=== imicro=" << imicro << " ===" << std::endl;
             }
+            reduce_entropy_single(icomb, urot, dmax, alpha, debug);
             reduce_entropy_single(icomb, urot, dmax, alpha, debug);
             exit(1);
             double s_new = sum_of_entropy(icomb, alpha);

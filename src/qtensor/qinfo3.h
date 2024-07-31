@@ -71,11 +71,14 @@ namespace ctns{
                   && qmid==info.qmid && dir==info.dir;
             }
             // helpers
-            bool empty(const int br, const int bc, const int bm) const{
-               return _offset[_addr(br,bc,bm)] == 0;
-            }
+            size_t get_offset(const int br, const int bc, const int bm) const{
+               return _offset[_addr(br,bc,bm)];
+            }  
+            //bool empty(const int br, const int bc, const int bm) const{
+            //   return _offset[_addr(br,bc,bm)] == 0;
+            //}
             dtensor3<Tm> operator()(const int br, const int bc, const int bm, Tm* data) const{
-               size_t off = _offset[_addr(br,bc,bm)];
+               size_t off = this->get_offset(br,bc,bm);
                return (off == 0)? dtensor3<Tm>() : dtensor3<Tm>(qrow.get_dim(br),
                      qcol.get_dim(bc), qmid.get_dim(bm), data+off-1);
             }
