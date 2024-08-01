@@ -99,9 +99,9 @@ namespace ctns{
             const size_t ndim,
             const int neig,
             qtensor4<Qm::ifabelian,Tm>& wf,
-            std::vector<Tm>& v0){
-         const bool debug = true;
-         if(debug) std::cout << "ctns::twodot_guess ";
+            std::vector<Tm>& v0,
+            const bool debug=true){
+         if(debug) std::cout << "ctns::twodot_guess_v0 ";
          auto pdx0 = icomb.topo.rindex.at(dbond.p0);
          auto pdx1 = icomb.topo.rindex.at(dbond.p1);
          assert(icomb.cpsi.size() == neig);

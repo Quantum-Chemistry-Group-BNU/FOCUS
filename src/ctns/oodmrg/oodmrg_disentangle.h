@@ -4,6 +4,7 @@
 #include "nelder_mead.h"
 #include "oodmrg_entropy.h"
 #include "oodmrg_rotate.h"
+#include <nlopt.hpp>
 
 namespace ctns{
 
@@ -38,7 +39,9 @@ namespace ctns{
             const bool& forward,
             const int& dmax,
             const double& alpha,
-            const bool& debug){
+            int& counter){
+         counter += 1;
+         const bool debug = false;
          // rotate wavefunction
          twodot_rotate<Qm::ifabelian,Tm>(v0, vr, wf, theta_array[0]);
          // decimation
@@ -53,13 +56,13 @@ namespace ctns{
          wf.from_array(vr.data());
          if(forward){
             wfs2[0] = wf.merge_lc1_c2r();
-            decimation_row(icomb, wf.info.qrow, wf.info.qmid, 
+            decimation_row(icomb, wf.info.qrow, wf.info.qmid, // lc1=(row,mid) 
                   iftrunc, dmax, rdm_svd, alg_decim,
                   wfs2, sigs2full, rot, dwt, deff, fname,
                   debug);
          }else{
             wfs2[0] = wf.merge_lc1_c2r().P();
-            decimation_row(icomb, wf.info.qver, wf.info.qcol,
+            decimation_row(icomb, wf.info.qver, wf.info.qcol, // c2r=(ver,col)
                   iftrunc, dmax, rdm_svd, alg_decim,
                   wfs2, sigs2full, rot, dwt, deff, fname,
                   debug);
@@ -70,6 +73,15 @@ namespace ctns{
          return entropy;
       }
 
+   using optfun = std::function<double(const std::array<double,1>)>;
+
+   inline double nlopt_vfun_entropy(const std::vector<double> &theta, std::vector<double> &grad, void *my_func_data){
+      optfun* fun = (optfun*)my_func_data;
+      std::array<double,1> theta_array = {theta[0]};
+      double result = (*fun)(theta_array);
+      return result;
+   }
+
    template <typename Qm, typename Tm>
       void reduce_entropy_single(comb<Qm,Tm>& icomb,
             linalg::matrix<Tm>& urot,
@@ -77,7 +89,17 @@ namespace ctns{
             const double alpha,
             const bool debug){
          if(debug){
-            std::cout << "reduce_entropy_single" << std::endl;
+            std::cout << "reduce_entropy_single dmax=" << dmax
+               << " alpha=" << alpha 
+               << std::endl;
+         }
+         const bool debug_check = false;
+
+         auto svalues = get_schmidt_values(icomb);
+         for(int i=0; i<svalues.size(); i++){
+            std::cout << "i=" << i 
+               << " sval=" << renyi_entropy(svalues[i], alpha)
+               << std::endl;
          }
 
          // generate sweep sequence
@@ -99,7 +121,6 @@ namespace ctns{
             auto qt3 = contract_qt3_qt2("l",site0,qt2);
             // recouple to qt3(1,r0,n0)[LCcouple]
             icomb.cpsi[iroot] = qt3.recouple_lc();
-            icomb.cpsi[iroot].print("cwf");
          } // iroot
 
          // start forward sweep
@@ -141,7 +162,7 @@ namespace ctns{
                wf.init(sym_state, ql, qr, qc1, qc2);
             }
             size_t ndim = wf.size();
-            if(debug){
+            if(debug_check){
                std::cout << "wf4(diml,dimr,dimc1,dimc2)=(" 
                   << wf.info.qrow.get_dimAll() << ","
                   << wf.info.qcol.get_dimAll() << ","
@@ -159,7 +180,7 @@ namespace ctns{
 
             // generate wavefunction;
             std::vector<Tm> v0;
-            twodot_guess_v0(icomb, dbond, ndim, nroots, wf, v0);
+            twodot_guess_v0(icomb, dbond, ndim, nroots, wf, v0, debug_check);
             assert(v0.size() == ndim*nroots);
 
             //------------------------------------------
@@ -171,21 +192,67 @@ namespace ctns{
             // interface for optimizer
             std::function<double(const std::array<double,1>)> fun;
             using std::placeholders::_1;
+            int counter;
             fun = bind(&ctns::twodot_wavefun_entropy<Qm,Tm>, _1, std::cref(icomb), 
                   std::cref(v0), std::ref(vr), std::ref(wf), std::ref(rot), std::ref(wfs2),
-                  std::cref(dbond.forward), std::cref(dmax), std::cref(alpha), std::cref(debug)); 
-
-            std::array<double,1> theta0 = {0.0};
+                  std::cref(dbond.forward), std::cref(dmax), std::cref(alpha),
+                  std::ref(counter)); 
+            
+            // prepare a good initial guess by scanning 
+            counter = 0;
+            const int npt = 5;
+            const double pi = 4.0*std::atan(1.0);
+            std::vector<double> funlst(npt);
+            for(int i=0; i<npt; i++){
+               std::array<double,1> theta = {pi*i/(npt-1)};
+               funlst[i] = fun(theta); 
+            }
+            auto index = tools::sort_index(funlst); 
+            tools::print_vector(funlst,"funlst");
+            // optimize
+            std::array<double,1> theta0 = {index[0]*pi/(npt-1)};
             std::array<double,1> step = {0.1};
-            /*
             nelder_mead_result<double,1> result = nelder_mead<double,1>(
                   fun, theta0, 1.e-10, step);
-            std::cout << "Found minimum: " << std::fixed << result.xmin[0] << std::endl;
-            std::cout << "Val=" << fun(result.xmin) << std::endl;
-            */
-            double sfun = fun(theta0);
-            std::cout << "lzd ibond=" << ibond << " sfun=" << sfun << std::endl;
+            if(result.ifault != 0){
+               std::cout << "warning: minimization fails in optimizer!" << std::endl;
+               exit(1);
+            }
+            std::cout << "lzd thetamin=" << result.xmin[0] 
+               << " ynewlo=" << result.ynewlo
+               << " icount=" << result.icount
+               << " ifault=" << result.ifault 
+               << std::endl;
 
+            counter = 0;
+            
+            //nlopt::opt opt(nlopt::LN_COBYLA, 1);
+            //nlopt::opt opt(nlopt::LN_BOBYQA, 1);
+            //nlopt::opt opt(nlopt::LN_NELDERMEAD, 1);
+            nlopt::opt opt(nlopt::LN_SBPLX, 1);
+            
+            std::vector<double> lb = {0};
+            std::vector<double> ub = {pi};
+            opt.set_lower_bounds(lb);
+            opt.set_upper_bounds(ub);
+            opt.set_xtol_rel(1.e-8);
+            opt.set_ftol_rel(1.e-8);
+            std::vector<double> x = {index[0]*pi/(npt-1)};
+            opt.set_min_objective(nlopt_vfun_entropy, &fun);
+            double minf;
+            try{
+               nlopt::result result = opt.optimize(x, minf);
+               std::cout << "counter=" << counter 
+                  << " found minimum at f(" << x[0] << ") = "
+                  << std::setprecision(10) << minf << std::endl;
+            }
+            catch(std::exception &e) {
+               std::cout << "nlopt failed: " << e.what() << std::endl;
+            }
+
+            // re-evaluate the function to output {vr, rot} correctly. 
+            fun({result.xmin[0]});
+            
             // save the current site
             const auto p = dbond.get_current();
             const auto& pdx = rindex.at(p); 
@@ -197,20 +264,19 @@ namespace ctns{
                std::cout << "error: no such option for superblock=" << superblock << std::endl;
                exit(1);
             }
-
+            
             // propagate to the next site
-            linalg::matrix<Tm> vsol(ndim,nroots,v0.data());
-            std::cout << "superblock=" << superblock << std::endl;
+            linalg::matrix<Tm> vsol(ndim,nroots,vr.data());
             twodot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
             vsol.clear();
 
-            icomb.cpsi[0].print("cpsi");
-
             // update u
             double theta = 0.0; //result.xmin[0];
-            givens_rotatation(urot, dbond.p0.first, dbond.p1.first, -theta);
+            givens_rotatation(urot, dbond.p0.first, dbond.p1.first, theta);
+
          } // ibond
-     
+         exit(1);
+
          // compute rwfuns for the next call of reduce_entropy_single
          const double rdm_svd = 1.5;
          std::string fname;

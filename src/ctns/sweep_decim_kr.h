@@ -16,7 +16,8 @@ namespace ctns{
             const double rdm_svd,
             const int alg_decim,
             const std::vector<stensor2<std::complex<double>>>& wfs2,
-            decim_map<std::complex<double>>& results){
+            decim_map<std::complex<double>>& results,
+            const bool debug){
          using Tm = std::complex<double>;
          int rank = 0, size = 1;
 #ifndef SERIAL
@@ -67,7 +68,7 @@ namespace ctns{
             results[br] = std::make_pair(sigs2, U);
          } // br
          
-         if(rank == 0){
+         if(debug and rank == 0){
             auto t1 = tools::get_time();
             std::cout << "----- TMING FOR decimation_genbasis(kr): "
                << tools::get_duration(t1-t0) << " S -----"

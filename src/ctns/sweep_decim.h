@@ -24,11 +24,12 @@ namespace ctns{
          int& deff,
          std::vector<int>& br_kept,
          std::vector<std::pair<qsym,int>>& dims,
-         const std::string fname){
+         const std::string fname,
+         const bool debug){
 
       std::streambuf *psbuf, *backup;
       std::ofstream file;
-      bool ifsave = !fname.empty();
+      bool ifsave = !fname.empty() and debug;
       if(ifsave){
          // http://www.cplusplus.com/reference/ios/ios/rdbuf/
          file.open(fname);
@@ -43,9 +44,11 @@ namespace ctns{
       std::vector<double> kept_wts(nqr,0.0); // weights kept in each symmetry sector
       deff = 0; // bond dimension kept (including additional for symmetry)
       double accum = 0.0, SvN = 0.0;
-      std::cout << "sorted renormalized states: total=" << sig2all.size()
-         << " dcut=" << dcut << " thresh_sig2=" << thresh_sig2 
-         << std::endl;
+      if(debug){
+         std::cout << "sorted renormalized states: total=" << sig2all.size()
+            << " dcut=" << dcut << " thresh_sig2=" << thresh_sig2 
+            << std::endl;
+      }
       for(int i=0; i<sig2all.size(); i++){
          if(dcut > -1 && deff >= dcut) break; // discard rest
          int idx = index[i];
@@ -58,10 +61,12 @@ namespace ctns{
          kept_wts[br] += nfac*sig2all[idx];
          accum += nfac*sig2all[idx];
          SvN += -nfac*sig2all[idx]*std::log(sig2all[idx]);
-         std::cout << " i=" << i << " qr=" << qr 
-            << " " << kept_dim[br]/nfac-1 << "-th"
-            << " sig2=" << sig2all[idx] 
-            << " accum=" << accum << std::endl;
+         if(debug){
+            std::cout << " i=" << i << " qr=" << qr 
+               << " " << kept_dim[br]/nfac-1 << "-th"
+               << " sig2=" << sig2all[idx] 
+               << " accum=" << accum << std::endl;
+         }
       } // i
       dwt = 1.0-accum;
       // construct qbond & recompute deff including additional states 
@@ -74,7 +79,7 @@ namespace ctns{
       }else{
          index2 = tools::sort_index(kept_wts, 1); 
       }
-      std::cout << "select renormalized states per symmetry sector: nqr=" << nqr << std::endl;
+      if(debug) std::cout << "select renormalized states per symmetry sector: nqr=" << nqr << std::endl;
       for(int iqr=0; iqr<nqr; iqr++){
          int br = index2[iqr];
          const auto& qr = qrow.get_sym(br);
@@ -87,10 +92,12 @@ namespace ctns{
          accum += wts;    
          deff += dim;
          // save information
-         std::cout << " iqr=" << iqr << " qr=" << qr
-            << " dim[full,kept]=" << dim0 << "," << dim 
-            << " wts=" << wts << " accum=" << accum << " deff=" << deff 
-            << std::endl;
+         if(debug){
+            std::cout << " iqr=" << iqr << " qr=" << qr
+               << " dim[full,kept]=" << dim0 << "," << dim 
+               << " wts=" << wts << " accum=" << accum << " deff=" << deff 
+               << std::endl;
+         }
       } // iqr
 
       if(ifsave){
@@ -100,9 +107,11 @@ namespace ctns{
          std::cout.rdbuf(backup); // restore cout's original streambuf
          file.close();
       }
-      std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
-         << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt 
-         << " SvN=" << std::noshowpos << SvN << std::endl;
+      if(debug){
+         std::cout << "decimation summary: " << qrow.get_dimAll() << "->" << deff  
+            << " dwt=" << std::showpos << std::scientific << std::setprecision(3) << dwt 
+            << " SvN=" << std::noshowpos << SvN << std::endl;
+      }
    }
 
    // generate renormalized basis from wfs2[row,col] for row
@@ -171,7 +180,7 @@ namespace ctns{
 
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, alg_decim, wfs2, results);
+         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, alg_decim, wfs2, results, debug);
          auto t1 = tools::get_time();
 
          if(rank == 0){
@@ -201,7 +210,7 @@ namespace ctns{
             std::vector<int> br_kept;
             std::vector<std::pair<qsym,int>> dims;
             decimation_selection(false, qrow, ifmatched, sig2all, idx2sector, dcut, 
-                  dwt, deff, br_kept, dims, fname);
+                  dwt, deff, br_kept, dims, fname, debug);
             auto t2 = tools::get_time();
 
             // 3. form rot
@@ -224,7 +233,7 @@ namespace ctns{
                }
             } // bc
             rot = std::move(qt2);
-            qkept.print("qkept");
+            if(debug) qkept.print("qkept");
 
             if(debug){
                auto t3 = tools::get_time();
@@ -313,7 +322,7 @@ namespace ctns{
 
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, alg_decim, wfs2, results);
+         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, alg_decim, wfs2, results, debug);
          auto t1 = tools::get_time();
 
          if(rank == 0){
@@ -362,7 +371,7 @@ namespace ctns{
             std::vector<int> br_kept;
             std::vector<std::pair<qsym,int>> dims;
             decimation_selection(true, qrow, ifmatched, sig2all, idx2sector, dcut, 
-                  dwt, deff, br_kept, dims, fname);
+                  dwt, deff, br_kept, dims, fname, debug);
             auto t2 = tools::get_time();
             
             // 3. form rot
@@ -398,7 +407,7 @@ namespace ctns{
                }
             } // bc
             rot = std::move(qt2);
-            qkept.print("qkept");
+            if(debug) qkept.print("qkept");
 
             if(debug){
                auto t3 = tools::get_time();

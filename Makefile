@@ -100,6 +100,7 @@ else ifeq ($(strip $(machine)), mac)
       LFLAGS += -lboost_mpi-mt-x64
    endif
    GSLDIR = /usr/local
+   NLOPTDIR = /usr/local
 else ifeq ($(strip $(machine)), archlinux)
    MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
    BOOST = /usr
@@ -108,8 +109,8 @@ else ifeq ($(strip $(machine)), archlinux)
       LFLAGS += -lboost_mpi
    endif
 endif
-LFLAGS += -L${GSLDIR}/lib -lgsl
-FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -I${GSLDIR}/include 
+LFLAGS += -L${GSLDIR}/lib -lgsl -L${NLOPTDIR}/lib -lnlopt
+FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -I${GSLDIR}/include -I${NLOPTDIR}/include
  
 target = depend core ci ctns vmc
 ifeq ($(strip $(INSTALL_PY)), yes)

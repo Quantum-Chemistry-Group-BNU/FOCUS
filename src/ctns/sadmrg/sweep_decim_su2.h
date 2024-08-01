@@ -18,7 +18,8 @@ namespace ctns{
             const double rdm_svd,
             const int alg_decim,
             const std::vector<stensor2su2<Tm>>& wfs2,
-            decim_map<Tm>& results){
+            decim_map<Tm>& results,
+            const bool debug){
          int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
@@ -73,7 +74,7 @@ namespace ctns{
             results[br] = std::make_pair(sigs2, U);
          } // br
 
-         if(rank == 0){
+         if(debug and rank == 0){
             auto t1 = tools::get_time();
             std::cout << "----- TMING FOR decimation_genbasis(su2): "
                << tools::get_duration(t1-t0) << " S -----"

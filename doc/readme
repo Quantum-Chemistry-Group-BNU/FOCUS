@@ -19,8 +19,11 @@
       3. openmpi: need to comipled with 64-bit integer support
             ./configure --prefix=/public/home/bnulizdtest/openmpi/install64 --with-slurm --with-pmi --with-pmix FFLAGS="-m64 -fdefault-integer-8" FCFLAGS="-m64 -fdefault-integer-8" CFLAGS=-m64 CXXFLAGS=-m64 --enable-mpi-fortran=usempi
             make -j N && make install
-      4. mathlib/gsl: for SA-DMRG
-      x. mathlib/lapack: for linear algebra [NOT REQUIRED IF MKL EXIST]
+      4. extlibs/gsl: for SA-DMRG
+      5. extlibs/nlopt: for OO-DMRG
+      6. extlibs/zquatev: (https://github.com/qsimulate-open/zquatev) for 
+            diagonalization of quaternion matrix (relativistic case)
+      x. extlibs/lapack: for linear algebra [NOT REQUIRED IF MKL EXIST]
       x. compression libraries: lz4 & zstd [NOT USED NOW]
  - For GPU:
       1. extlibs/magma
@@ -29,14 +32,9 @@
          $ make
          $ make install prefix= INSTALL_PATH
       2. extlibs/nccl      
- - Extlibs:
-      1. extlibs/zquatev: (https://github.com/qsimulate-open/zquatev) for 
-	      diagonalization of quaternion matrix (relativistic case)
  - Install:
-      1. Setup all the einvironments
-      2. Edit makefile in extlibs/zquatev/ & make 
-      3. Go to src/ctns/gpu_kernel & make [if GPU is used, be careful about Cuda toolkit & runtime version]
-      4. Edit makefile & make
+      1. Setup all the einvironments [if GPU is used, be careful about Cuda toolkit & runtime version]
+      2. Follow the guide described in zhendongli2008@github.io
  - Tested compilations:
       1. GCC 9.2.0_2 + boost 1_56_0 (macbook pro; need to > 8 for ranged for)
       2. intel 19.1.3.304 + boost 1_75_0 (lenovo@BNU)
@@ -44,8 +42,10 @@
 
 === How to run ===
  - General procedure:	
-      1. run sci.x to generate initial guess
-      2. run ctns.x to optimize CTNS, see examples
+      -. run sci.x to generate initial guess
+      -. run ctns.x to optimize CTNS, see examples
+      -. run sadmrg.x to optimize MPS with SU(2) symmetry
+      -. run rdm.x to savebin / compute RDMs (slow)
  - Examples:
       0. go to examples/fe2s2
       1. ../../bin/sci.x input.dat

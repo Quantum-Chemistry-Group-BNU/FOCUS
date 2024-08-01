@@ -20,6 +20,8 @@ extlibs/lz4-dev/
 extlibs/zstd-dev/
 extlibs/magma-2.6.1/
 extlibs/gsl-2.7.1/
+extlibs/nlopt-2.7.1
+pyutils/.ipynb_checkpoints/
 src.tar
 .*.swo
 .*.swp

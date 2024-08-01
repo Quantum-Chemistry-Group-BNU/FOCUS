@@ -70,8 +70,8 @@ template<typename real, int n>
 struct nelder_mead_result {
     std::array<real,n> xmin;
     real ynewlo;
-    int icount;
-    int numres;
+    int icount; // no. of function call
+    int numres; // no. of restart - ZL@20240731
     int ifault;
 };
 

@@ -7,7 +7,7 @@ namespace ctns{
 
    template <typename Qm, typename Tm>
       std::vector<std::vector<double>> get_schmidt_values(const comb<Qm,Tm>& icomb,
-            const bool debug=true){
+            const bool debug=false){
 
          // generate sweep sequence
          const int dmax = icomb.get_dmax();
@@ -30,7 +30,6 @@ namespace ctns{
             auto qt3 = contract_qt3_qt2("l",site0,qt2);
             // recouple to qt3(1,r0,n0)[LCcouple]
             icomb_tmp.cpsi[iroot] = qt3.recouple_lc();
-            icomb_tmp.cpsi[iroot].print("cwf");
          } // iroot
 
          // start forward sweep
@@ -77,7 +76,7 @@ namespace ctns{
             }
             // generate wavefunction;
             std::vector<Tm> v0;
-            twodot_guess_v0(icomb_tmp, dbond, ndim, nroots, wf, v0);
+            twodot_guess_v0(icomb_tmp, dbond, ndim, nroots, wf, v0, debug);
             assert(v0.size() == ndim*nroots);
             // perform decimation
             qtensor2<Qm::ifabelian,Tm> rot;

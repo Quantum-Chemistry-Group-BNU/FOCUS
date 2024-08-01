@@ -381,8 +381,8 @@
        - entropy functions [DONE@2024/07/30]
        - reduce_entropy
          - canonicalization loop [DONE@2024/07/31]
-         - apply Urot to twodot wavefunction? [DONE@2024/XX/XX] 
-         - reduce_entropy via Nelder-Mead
+         - apply Urot to twodot wavefunction? [DONE@2024/08/01] 
+         - reduce_entropy via nlopt [DONE@2024/08/02]
       - apply_randomLayer by randomizing theta
     - large-scale application?
     - what is the problem of simutaneously using task_dmrg and task_orb?

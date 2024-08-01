@@ -196,7 +196,8 @@ namespace ctns{
             const double rdm_svd,
             const int alg_decim,
             const std::vector<stensor2<Tm>>& wfs2,
-            decim_map<Tm>& results){
+            decim_map<Tm>& results,
+            const bool debug){
          int rank = 0, size = 1;
 #ifndef SERIAL
          rank = icomb.world.rank();
@@ -207,9 +208,10 @@ namespace ctns{
          std::vector<std::vector<std::pair<int,int>>> local_brbc(size);
          decimation_divide(icomb, qrow, qcol, alg_decim, wfs2, local_brbc);
          auto t1 = tools::get_time();
-         if(rank == 0) std::cout << "timing for divide=" 
-            << tools::get_duration(t1-t0) << std::endl;
-         
+         if(debug and rank == 0){
+            std::cout << "timing for divide=" << tools::get_duration(t1-t0) << std::endl;
+         }
+
          // start decimation
          int local_size = local_brbc[rank].size();
          std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
@@ -271,16 +273,18 @@ namespace ctns{
             } // br
          } // alg_decim
          auto t2 = tools::get_time();
-         if(rank == 0) std::cout << "timing for compute=" 
-            << tools::get_duration(t2-t1) << std::endl;
+         if(debug and rank == 0){
+            std::cout << "timing for compute=" << tools::get_duration(t2-t1) << std::endl;
+         }
 
          // collect local_results to results in rank-0
          decimation_collect(icomb, alg_decim, local_brbc, local_results, results, size, rank);
          auto t3 = tools::get_time();
-         if(rank == 0) std::cout << "timing for collect=" 
-            << tools::get_duration(t3-t2) << std::endl;
-         
-         if(rank == 0){
+         if(debug and rank == 0){
+            std::cout << "timing for collect=" << tools::get_duration(t3-t2) << std::endl;
+         }
+
+         if(debug and rank == 0){
             std::cout << "----- TMING FOR decimation_genbasis(nkr): " 
                << tools::get_duration(t3-t0) << " S"
                << " T(divide/compute/collect)="
