@@ -40,8 +40,9 @@ namespace ctns{
          } // idx
          // rwfuns
          auto wf2 = icomb.get_wf2();
-         wf2.print("wf2",2);
          auto qt2 = contract_qt2_qt2(wf2, wf2.H());
+         wf2.print("wf2",2);
+         std::cout << "check wf2*wf2.H():" << std::endl;
          double maxdiff = qt2.check_identityMatrix(thresh_ortho, false);
          int Dtot = qt2.info.qrow.get_dimAll();
          std::cout << " rwfuns: nroots=" << Dtot 

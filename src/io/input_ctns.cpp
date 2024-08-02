@@ -171,16 +171,16 @@ void params_ctns::read(ifstream& istrm){
          maxsweep = stoi(line.substr(8));
       }else if(line.substr(0,7)=="maxbond"){
          maxbond = stoi(line.substr(7));
-      }else if(line.substr(0,9)=="oomaxiter"){
-         ooparams.maxiter = stoi(line.substr(9));
-      }else if(line.substr(0,6)=="oodfac"){
-         ooparams.dfac = stoi(line.substr(6));
-      }else if(line.substr(0,11)=="oomacroiter"){
-         ooparams.macroiter = stoi(line.substr(11));
-      }else if(line.substr(0,11)=="oomicroiter"){
-         ooparams.microiter = stoi(line.substr(11));
-      }else if(line.substr(0,7)=="ooalpha"){
-         ooparams.alpha = stod(line.substr(7));
+      }else if(line.substr(0,10)=="oo_maxiter"){
+         ooparams.maxiter = stoi(line.substr(10));
+      }else if(line.substr(0,7)=="oo_dfac"){
+         ooparams.dfac = stoi(line.substr(7));
+      }else if(line.substr(0,12)=="oo_macroiter"){
+         ooparams.macroiter = stoi(line.substr(12));
+      }else if(line.substr(0,12)=="oo_microiter"){
+         ooparams.microiter = stoi(line.substr(12));
+      }else if(line.substr(0,8)=="oo_alpha"){
+         ooparams.alpha = stod(line.substr(8));
       }else if(line.substr(0,8)=="schedule"){
          while(true){
             line.clear();
