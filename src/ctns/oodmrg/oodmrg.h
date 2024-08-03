@@ -117,10 +117,11 @@ namespace ctns{
                std::cout << tools::line_separator << std::endl;
                std::cout << std::endl;
             } // rank-0
-
          } // iter
 
+
          // save e_min,urot_min,icomb?
+
 
          if(debug){
             auto t1 = tools::get_time();

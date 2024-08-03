@@ -18,24 +18,28 @@ namespace input{
          friend class boost::serialization::access;
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
-               ar & maxiter & dfac & macroiter & microiter & alpha;
+               ar & iprt & maxiter & dfac & macroiter & microiter & alpha & thrdopt;
             }
        public:
          inline void print() const{
             std::cout << "orbopt parameters:"
+               << " iprt=" << iprt
                << " maxiter=" << maxiter 
                << " dfac=" << dfac
                << " macroiter=" << macroiter
                << " microiter=" << microiter
-               << " alpha=" << alpha 
+               << " alpha=" << alpha
+               << " thrdopt=" << thrdopt
                << std::endl;
          }
       public:
+         int iprt = 0;
          int maxiter = 10;
          int dfac = 2;
          int macroiter = 3;
          int microiter = 50;
-         double alpha = 0.5;
+         double alpha = 1.0;
+         double thrdopt = 1.e-6;
    };
 
    // sweep

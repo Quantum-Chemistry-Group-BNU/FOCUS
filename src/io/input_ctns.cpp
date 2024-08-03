@@ -171,6 +171,8 @@ void params_ctns::read(ifstream& istrm){
          maxsweep = stoi(line.substr(8));
       }else if(line.substr(0,7)=="maxbond"){
          maxbond = stoi(line.substr(7));
+      }else if(line.substr(0,7)=="oo_iprt"){
+         ooparams.iprt = stoi(line.substr(7));
       }else if(line.substr(0,10)=="oo_maxiter"){
          ooparams.maxiter = stoi(line.substr(10));
       }else if(line.substr(0,7)=="oo_dfac"){
@@ -181,6 +183,8 @@ void params_ctns::read(ifstream& istrm){
          ooparams.microiter = stoi(line.substr(12));
       }else if(line.substr(0,8)=="oo_alpha"){
          ooparams.alpha = stod(line.substr(8));
+      }else if(line.substr(0,10)=="oo_thrdopt"){
+         ooparams.thrdopt = stod(line.substr(10));
       }else if(line.substr(0,8)=="schedule"){
          while(true){
             line.clear();

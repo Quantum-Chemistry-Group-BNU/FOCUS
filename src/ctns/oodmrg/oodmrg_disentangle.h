@@ -1,7 +1,6 @@
 #ifndef CTNS_OODMRG_DISENTANGLE_H
 #define CTNS_OODMRG_DISENTANGLE_H
 
-#include "nelder_mead.h"
 #include "oodmrg_entropy.h"
 #include "oodmrg_rotate.h"
 #include <nlopt.hpp>
@@ -12,7 +11,7 @@ namespace ctns{
    // (ui,uj)[        ] = (ui*c+uj*s,-ui*s+uj*c)
    //        [ s    c ]
    template <typename Tm>   
-      void givens_rotatation(linalg::matrix<Tm>& urot, 
+      void givens_rotation(linalg::matrix<Tm>& urot, 
             const int i,
             const int j,
             const double theta){
@@ -41,8 +40,8 @@ namespace ctns{
             const double& alpha,
             double& dwt,
             int& deff,
-            int& counter){
-         counter += 1;
+            int& ncall){
+         ncall += 1;
          // rotate wavefunction
          assert(theta.size() == 1);
          twodot_rotate<Qm::ifabelian,Tm>(v0, vr, wf, theta[0]);
@@ -73,7 +72,7 @@ namespace ctns{
       }
 
    using optfun = std::function<double(const std::vector<double>&)>;
-   
+
    // interface to nlopt
    inline double nlopt_vfun_entropy(const std::vector<double>& theta, 
          std::vector<double>& grad, 
@@ -84,23 +83,27 @@ namespace ctns{
    }
 
    template <typename Qm, typename Tm>
-      void reduce_entropy_single(comb<Qm,Tm>& icomb,
+      double reduce_entropy_single(comb<Qm,Tm>& icomb,
             linalg::matrix<Tm>& urot,
+            const std::string scheme,
             const int dmax,
             const double alpha,
             const bool debug){
          if(debug){
-            std::cout << "reduce_entropy_single dmax=" << dmax
-               << " alpha=" << alpha 
+            std::cout << "reduce_entropy_single"
+               << " scheme=" << scheme
+               << " dmax=" << dmax
+               << " alpha=" << alpha
                << std::endl;
          }
          const bool debug_check = false;
-
-         auto svalues = get_schmidt_values(icomb);
-         for(int i=0; i<svalues.size(); i++){
-            std::cout << "i=" << i 
-               << " sval=" << renyi_entropy(svalues[i], alpha)
-               << std::endl;
+         if(debug_check){         
+            auto svalues = get_schmidt_values(icomb);
+            for(int i=0; i<svalues.size(); i++){
+               std::cout << "i=" << i 
+                  << " sval=" << renyi_entropy(svalues[i], alpha)
+                  << std::endl;
+            }
          }
 
          // generate sweep sequence
@@ -136,8 +139,8 @@ namespace ctns{
             }else{
                superblock = dbond.is_cturn()? "c1c2" : "c2r";
             }
-            if(debug){
-               std::cout << "\nibond=" << ibond << "/seqsize=" << sweep_seq.size()
+            if(debug_check){
+               std::cout << "ibond=" << ibond << "/seqsize=" << sweep_seq.size()
                   << " dots=" << dots << " dbond=" << dbond
                   << std::endl;
             }
@@ -178,102 +181,98 @@ namespace ctns{
                exit(1);
             }
 
-            // generate wavefunction;
+            // generate wavefunction
             std::vector<Tm> v0;
             twodot_guess_v0(icomb, dbond, ndim, nroots, wf, v0, debug_check);
             double norm = linalg::xnrm2(v0.size(), v0.data());
-            std::cout << "norm=" << norm << std::endl;
-            if(ibond == sweep_seq.size()-1){
-               linalg::xscal(v0.size(), 1.0/norm, v0.data());
-            }
+            linalg::xscal(v0.size(), 1.0/norm, v0.data());
             assert(v0.size() == ndim*nroots);
 
-            //------------------------------------------
             // reduce entanglement via orbital rotation
-            //------------------------------------------
+            optfun fun;
+            using std::placeholders::_1;
             std::vector<Tm> vr(ndim);
             qtensor2<Qm::ifabelian,Tm> rot;
             std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
-            // interface for optimizer
-            optfun fun;
-            using std::placeholders::_1;
             double dwt;
             int deff;
-            int counter;
+            int ncall = 0;
             fun = bind(&ctns::twodot_wavefun_entropy<Qm,Tm>, _1, std::cref(icomb), 
                   std::cref(v0), std::ref(vr), std::ref(wf), std::ref(rot), std::ref(wfs2),
                   std::cref(dbond.forward), std::cref(dmax), std::cref(alpha),
-                  std::ref(dwt), std::ref(deff), std::ref(counter)); 
+                  std::ref(dwt), std::ref(deff), std::ref(ncall)); 
 
             // prepare a good initial guess by scanning 
-            counter = 0;
-            const int npt = 30;
             const double pi = 4.0*std::atan(1.0);
-            std::vector<double> anglst(npt), funlst(npt);
-            for(int i=0; i<npt; i++){
-               std::array<double,1> theta = {pi*i/(npt-1)};
-               anglst[i] = theta[0];
-               funlst[i] = fun(theta); 
-            }
-            auto index = tools::sort_index(funlst); 
-            //tools::print_vector(anglst,"anglst");
-            //tools::print_vector(funlst,"funlst");
-            
-            // optimize
-            std::array<double,1> theta0 = {index[0]*pi/(npt-1)};
-            std::array<double,1> step = {0.1};
-            nelder_mead_result<double,1> result0 = nelder_mead<double,1>(
-                  fun, theta0, 1.e-10, step);
-            if(result0.ifault != 0){
-               std::cout << "warning: minimization fails in optimizer!" << std::endl;
-               exit(1);
-            }
-            std::cout << "lzd thetamin=" << result0.xmin[0] 
-               << " ynewlo=" << result0.ynewlo
-               << " icount=" << result0.icount
-               << " ifault=" << result0.ifault 
-               << std::endl;
+            int npt;
+            std::vector<double> anglst, funlst;
+            std::vector<double> x(1);
+            double fmin;
+            if(scheme == "opt"){
+               npt = 30;
+               anglst.resize(npt);
+               funlst.resize(npt);
+               for(int i=0; i<npt; i++){
+                  std::vector<double> theta = {pi*i/(npt-1)};
+                  anglst[i] = theta[0];
+                  funlst[i] = fun(theta); 
+               }
+               auto index = tools::sort_index(funlst); 
 
-            counter = 0;
-
-            //nlopt::opt opt(nlopt::GN_DIRECT, 1);
-            //nlopt::opt opt(nlopt::LN_COBYLA, 1);
-            nlopt::opt opt(nlopt::LN_BOBYQA, 1);
-            //nlopt::opt opt(nlopt::LN_NELDERMEAD, 1);
-
-            std::vector<double> lb = {0};
-            std::vector<double> ub = {pi};
-            opt.set_lower_bounds(lb);
-            opt.set_upper_bounds(ub);
-            opt.set_xtol_rel(1.e-10);
-            opt.set_ftol_rel(1.e-10);
-            std::vector<double> x = {index[0]*pi/(npt-1)};
-            opt.set_min_objective(nlopt_vfun_entropy, &fun);
-            double minf;
-            try{
-               nlopt::result result = opt.optimize(x, minf);
-               std::cout << "counter=" << counter 
-                  << " found minimum at f(" << x[0] << ") = "
-                  << std::setprecision(10) << minf << std::endl;
+               // nlopt: optimize
+               nlopt::opt opt(nlopt::LN_BOBYQA, 1);
+               std::vector<double> lb = {0};
+               std::vector<double> ub = {pi};
+               opt.set_lower_bounds(lb);
+               opt.set_upper_bounds(ub);
+               opt.set_xtol_rel(1.e-8);
+               opt.set_ftol_rel(1.e-8);
+               opt.set_min_objective(nlopt_vfun_entropy, &fun);
+               try{
+                  // initial guess
+                  x[0] = {index[0]*pi/(npt-1)};
+                  nlopt::result result = opt.optimize(x, fmin);
+               }
+               catch(std::exception &e) {
+                  std::cout << "nlopt failed: " << e.what() << std::endl;
+               }
+            }else if(scheme == "random"){
+               npt = 1;
+               anglst.resize(npt);
+               funlst.resize(npt);
+               std::vector<double> theta = {0};
+               anglst[0] = theta[0];
+               funlst[0] = fun(theta);
+               if(dbond.forward){
+                  // random linear SWAP
+                  std::uniform_int_distribution<> dist(0,1);
+                  x[0] = pi/2.0*dist(tools::generator);
+               }else{
+                  x[0] = 0.0;
+               } 
+            }else{
+               std::cout << "error: no such scheme=" << scheme << std::endl;
+               exit(1); 
             }
-            catch(std::exception &e) {
-               std::cout << "nlopt failed: " << e.what() << std::endl;
-            }
-
-            double fx = fun({result0.xmin[0]});
-            std::cout << "x0=" << result0.xmin[0] << " f(x0)=" << fx << std::endl;
 
             // re-evaluate the function to output {vr, rot} correctly. 
-            double f0 = fun({x[0]});
-            std::cout << "x=" << x[0] << " f(x)=" << f0 << std::endl;
-            
-            std::cout << "forward=" << dbond.forward 
-               << " dmax=" << dmax 
-               << " deff=" << deff 
-               << " dwt=" << dwt
-               << std::endl;
-
+            fmin = fun(x);
             maxdwt = std::max(maxdwt,dwt);
+            if(debug){
+               std::cout << " i=" << ibond
+                  << " (" << dbond.p0.first << ","
+                  << dbond.p1.first << ")[" 
+                  << dbond.forward << "]"
+                  << std::scientific << std::setprecision(3)
+                  << " f0=" << funlst[0]
+                  << " fx=" << fmin 
+                  << " diff=" << fmin-funlst[0]
+                  << " x=" << x[0]
+                  << " deff=" << deff 
+                  << " dwt=" << dwt
+                  << " ncall=" << ncall 
+                  << std::endl;
+            }
 
             // save the current site
             const auto p = dbond.get_current();
@@ -293,15 +292,16 @@ namespace ctns{
             vsol.clear();
 
             // update u
-            double theta = 0.0; //result.xmin[0];
-            givens_rotatation(urot, dbond.p0.first, dbond.p1.first, theta);
+            double theta = x[0];
+            givens_rotation(urot, dbond.p0.first, dbond.p1.first, theta);
          } // ibond
 
-         std::cout << "maxdwt=" << maxdwt << std::endl;
          // compute rwfuns for the next call of reduce_entropy_single
          const double rdm_svd = 1.5;
          std::string fname;
          sweep_final_CR2cRR(icomb, rdm_svd, fname, debug_check);
+         
+         return maxdwt;
       }
 
    template <typename Qm, typename Tm>
@@ -310,44 +310,46 @@ namespace ctns{
             const int dmax,
             const int microiter,
             const double alpha,
-            const bool debug){
+            const double thrdopt,
+            const bool debug=false){
          if(debug){
             std::cout << "reduce_entropy_multi:" 
                << " dmax=" << dmax
                << " microiter=" << microiter
                << " alpha=" << alpha
+               << " thrdopt=" << thrdopt
                << std::endl;
          }
          auto icomb0 = icomb;
-         const double thresh = 1.e-8;
          double totaldiff = 0.0;
          bool ifconv = false;
          double s_old = sum_of_entropy(icomb, alpha);
-         std::cout << "s_old=" << s_old << std::endl;
+         if(debug){
+            std::cout << "s[old]=" << s_old << std::endl;
+         }
          for(int imicro=0; imicro<microiter; imicro++){
             if(debug){
                std::cout << "\n=== imicro=" << imicro << " ===" << std::endl;
             }
-            auto icomb_tmp = icomb;
-            reduce_entropy_single(icomb, urot, dmax, alpha, debug);
+            // optimize
+            double maxdwt = reduce_entropy_single(icomb, urot, "opt", dmax, alpha, debug);
             double s_new = sum_of_entropy(icomb, alpha);
-            double diff = s_new - s_old;
+            double s_diff = s_new - s_old;
             if(debug){
-               std::cout << "imicro=" << imicro << " s_old=" << s_old
-                  << " s_new=" << s_new << " diff=" << diff
+               auto smat = get_Smat(icomb,icomb0);
+               std::cout << "result: s[old]=" << s_old
+                  << " s[new]=" << s_new << " s[diff]=" << s_diff
+                  << " maxdwt=" << maxdwt
+                  << " <MPS[0]|MPS[new]>=" << smat(0,0)
                   << std::endl;
             }
-
-            icomb.display_shape();
-            auto smat2 = get_Smat(icomb,icomb0);
-            smat2.print("smat2");
-
-            if(std::abs(diff) < thresh){
+            // check convergence
+            if(std::abs(s_diff) < thrdopt){
                if(debug){
                   std::cout << "reduce_entropy_multi converges!"
                      << " imicro=" << imicro 
-                     << " diff=" << diff
-                     << " thresh=" << thresh
+                     << " s[diff]=" << s_diff
+                     << " thrdopt=" << thrdopt
                      << std::endl;
                }
                ifconv = true; 
@@ -358,9 +360,8 @@ namespace ctns{
          } // imicro
          if(not ifconv){
             std::cout << "Warning: reduce_entropy_multi does not converge in microiter="
-              << microiter << std::endl;
+               << microiter << std::endl;
          }
-         exit(1);
       }
 
 } // ctns

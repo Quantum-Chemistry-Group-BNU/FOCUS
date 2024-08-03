@@ -8,14 +8,15 @@ namespace ctns{
    template <typename Qm, typename Tm>
       void oodmrg_move(comb<Qm,Tm>& icomb,
             linalg::matrix<Tm>& urot,
-            const input::schedule& schd,
-            const bool debug=true){
+            const input::schedule& schd){
+         const bool debug = schd.ctns.ooparams.iprt > 0;
          // initialization
          const int dcut = schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut;
          const int& dfac = schd.ctns.ooparams.dfac;
          const int& macroiter = schd.ctns.ooparams.macroiter;
          const int& microiter = schd.ctns.ooparams.microiter;
          const double& alpha = schd.ctns.ooparams.alpha;
+         const double& thrdopt = schd.ctns.ooparams.thrdopt;
          const int dmax = dfac*dcut; 
          if(debug){
             std::cout << "oodmrg_move: dcut=" << dcut
@@ -23,12 +24,12 @@ namespace ctns{
                << " macroiter=" << macroiter
                << " microiter=" << microiter
                << " alpha=" << alpha
+               << " thrdopt=" << thrdopt
                << std::endl;
          }
 
          // first optimization step
-         reduce_entropy_multi(icomb, urot, dmax, microiter, alpha, debug);
-         exit(1);
+         reduce_entropy_multi(icomb, urot, dmax, microiter, alpha, thrdopt, debug);
 
          // start subsequent optimization
          for(int imacro=0; imacro<macroiter; imacro++){
@@ -37,12 +38,13 @@ namespace ctns{
             }
 
             // apply_randomlayer
-            //apply_randomlayer(icomb, urot);
-
+            double maxdwt = reduce_entropy_single(icomb, urot, "random", dmax, alpha, debug);
+            
             // reduce_entropy
-            reduce_entropy_multi(icomb, urot, dmax, microiter, alpha, debug);
-
+            reduce_entropy_multi(icomb, urot, dmax, microiter, alpha, thrdopt, debug);
          } // imacro 
+
+         icomb.display_shape();
          exit(1);
       }
 
