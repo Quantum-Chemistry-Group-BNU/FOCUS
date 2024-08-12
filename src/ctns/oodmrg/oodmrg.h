@@ -40,6 +40,7 @@ namespace ctns{
          std::vector<double> u_history(maxiter);
          std::vector<bool> acceptance(maxiter,0);
          auto urot_min = linalg::identity_matrix<Tm>(norb);
+         double u_diff;
          integral::one_body<Tm> int1e_new;
          integral::two_body<Tm> int2e_new;
          for(int iter=0; iter<maxiter; iter++){
@@ -58,7 +59,7 @@ namespace ctns{
                // we assume that icomb has already been available, 
                // which is usually the case with a initial MPS from
                // SCI or a previous optimization.
-               oodmrg_move(icomb_new, urot, schd);
+               u_diff = oodmrg_move(icomb_new, urot, schd);
             }
 #ifndef SERIAL
             if(size > 1){
@@ -80,16 +81,14 @@ namespace ctns{
 
             // prepare environment
             auto Hij = ctns::get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
-            
+            if(rank == 0) Hij.print("Hij", schd.ctns.outprec);
+
             // optimization
             auto result = ctns::sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
 
             // accept or reject
             if(rank == 0){
                double e_new = result.get_eminlast(0);
-               // urot = urot_min*U => U = urot_min.H()*urot
-               auto u = linalg::xgemm("C","N",urot_min,urot) - linalg::identity_matrix<Tm>(norb);
-               double u_diff = linalg::xnrm2(u.size(), u.data());
                // print
                std::cout << std::endl;
                std::cout << tools::line_separator << std::endl;
@@ -107,7 +106,7 @@ namespace ctns{
                   urot_min = urot;
                   icomb = std::move(icomb_new); // move is defined, but copy is deleted
                }else{
-                  std::cout << "reject the move!" << std::endl;
+                  std::cout << "reject the move! deltaE=" << e_new-e_min << std::endl;
                   // urot_min and icomb in the next iter will 
                   // still be the old one without change.
                }
@@ -115,7 +114,7 @@ namespace ctns{
                emin_history[iter+1] = e_min;
                u_history[iter] = u_diff;
                // display results
-               Hij0.print("initial Hij",schd.ctns.outprec);
+               Hij0.print("initial Hij", schd.ctns.outprec);
                std::cout << "summary of oodmrg results:" << std::endl;
                for(int jter=0; jter<=iter; jter++){
                   std::cout << " iter=" << jter

@@ -6,7 +6,7 @@
 namespace ctns{
 
    template <typename Qm, typename Tm>
-      void oodmrg_move(comb<Qm,Tm>& icomb,
+      double oodmrg_move(comb<Qm,Tm>& icomb,
             linalg::matrix<Tm>& urot,
             const input::schedule& schd){
          const int iprt = schd.ctns.ooparams.iprt;
@@ -29,6 +29,9 @@ namespace ctns{
          }
          auto t0 = tools::get_time();
 
+         // save the initial u0;         
+         auto u0 = urot;
+
          // first optimization step
          if(iprt >= 0) std::cout << "\n### initial entanglement compression ###" << std::endl;
          reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
@@ -46,11 +49,17 @@ namespace ctns{
             reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
          } // imacro 
 
+         // urot = u0*U => U = u0.H()*urot
+         int norb = u0.rows();
+         auto udiff = linalg::xgemm("C","N",u0,urot) - linalg::identity_matrix<Tm>(norb);
+         double u_diff = linalg::xnrm2(udiff.size(), udiff.data());
          if(iprt >= 0){
+            std::cout << "\noodmrg_move: |U-I|_F=" << u_diff << std::endl;
             icomb.display_shape();
             auto t1 = tools::get_time();
             tools::timing("ctns::oodmrg_move", t0, t1);
          }
+         return u_diff;
       }
 
 } // ctns
