@@ -1,6 +1,7 @@
 #ifndef CTNS_OODMRG_DISENTANGLE_H
 #define CTNS_OODMRG_DISENTANGLE_H
 
+#include "../../io/input_ctns.h"
 #include "oodmrg_entropy.h"
 #include "oodmrg_rotate.h"
 #include <nlopt.hpp>
@@ -87,13 +88,18 @@ namespace ctns{
             linalg::matrix<Tm>& urot,
             const std::string scheme,
             const int dmax,
-            const double alpha,
-            const int iprt){
+            const input::params_orbopt& ooparams){
+         const int& iprt = ooparams.iprt;
+         const double& alpha = ooparams.alpha;
+         const double& thrdloc = ooparams.thrdloc;
+         const int& nptloc = ooparams.nptloc;
          if(iprt > 0){
             std::cout << "reduce_entropy_single"
                << " scheme=" << scheme
                << " dmax=" << dmax
                << " alpha=" << alpha
+               << " thrdloc=" << thrdloc
+               << " nptloc=" << nptloc
                << std::endl;
          }
          const bool debug_check = false;
@@ -210,7 +216,7 @@ namespace ctns{
             std::vector<double> x(1);
             double fmin;
             if(scheme == "opt"){
-               npt = 30;
+               npt = nptloc;
                anglst.resize(npt);
                funlst.resize(npt);
                for(int i=0; i<npt; i++){
@@ -226,8 +232,8 @@ namespace ctns{
                std::vector<double> ub = {pi};
                opt.set_lower_bounds(lb);
                opt.set_upper_bounds(ub);
-               opt.set_xtol_rel(1.e-8);
-               opt.set_ftol_rel(1.e-8);
+               opt.set_xtol_rel(thrdloc);
+               opt.set_ftol_rel(thrdloc);
                opt.set_min_objective(nlopt_vfun_entropy, &fun);
                try{
                   // initial guess
@@ -259,7 +265,7 @@ namespace ctns{
             // re-evaluate the function to output {vr, rot} correctly. 
             fmin = fun(x);
             maxdwt = std::max(maxdwt,dwt);
-            if(iprt > 0){
+            if(iprt > 1){
                std::cout << " i=" << ibond
                   << " (" << dbond.p0.first << ","
                   << dbond.p1.first << ")[" 
@@ -313,10 +319,11 @@ namespace ctns{
       void reduce_entropy_multi(comb<Qm,Tm>& icomb,
             linalg::matrix<Tm>& urot,
             const int dmax,
-            const int microiter,
-            const double alpha,
-            const double thrdopt,
-            const int iprt=0){
+            const input::params_orbopt& ooparams){
+         const int& microiter = ooparams.microiter;
+         const double& alpha = ooparams.alpha;
+         const double& thrdopt = ooparams.thrdopt;
+         const int& iprt = ooparams.iprt;
          if(iprt >= 0){
             std::cout << "reduce_entropy_multi:" 
                << " dmax=" << dmax
@@ -338,10 +345,10 @@ namespace ctns{
          // optimization
          for(int imicro=0; imicro<microiter; imicro++){
             if(iprt > 0){
-               std::cout << "\n=== imicro=" << imicro << " ===" << std::endl;
+               std::cout << "=== imicro=" << imicro << " ===" << std::endl;
             }
             // optimize
-            double imaxdwt = reduce_entropy_single(icomb, urot, "opt", dmax, alpha, iprt);
+            double imaxdwt = reduce_entropy_single(icomb, urot, "opt", dmax, ooparams);
             maxdwt = std::max(maxdwt,imaxdwt);
             double s_new = sum_of_entropy(icomb, alpha);
             double s_diff = s_new - s_old;

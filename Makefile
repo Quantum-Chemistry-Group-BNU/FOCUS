@@ -1,14 +1,14 @@
 
-machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
+DEBUG = no #yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = no #yes
-USE_NCCL = no #yes
+USE_GPU = yes
+USE_NCCL = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -50,6 +50,8 @@ else ifeq ($(strip $(machine)), jiageng)
       LFLAGS += -lboost_mpi-mt-x64
    endif
    #FLAGS += -no-multibyte-chars
+   NLOPTDIR_LIB = ./extlibs/nlopt-2.7.1/build/lzdnlopt/lib64
+   NLOPTDIR_INCLUDE = ./extlibs/nlopt-2.7.1/build/lzdnlopt/include
 
 else ifeq ($(strip $(machine)), a800)
    MATHLIB = $(MKLROOT)
@@ -100,7 +102,8 @@ else ifeq ($(strip $(machine)), mac)
       LFLAGS += -lboost_mpi-mt-x64
    endif
    GSLDIR = /usr/local
-   NLOPTDIR = /usr/local
+   NLOPTDIR_LIB = /usr/local/lib
+   NLOPTDIR_INCLUDE = /usr/local/include
 else ifeq ($(strip $(machine)), archlinux)
    MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
    BOOST = /usr
@@ -109,8 +112,8 @@ else ifeq ($(strip $(machine)), archlinux)
       LFLAGS += -lboost_mpi
    endif
 endif
-LFLAGS += -L${GSLDIR}/lib -lgsl -L${NLOPTDIR}/lib -lnlopt
-FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -I${GSLDIR}/include -I${NLOPTDIR}/include
+LFLAGS += -L${GSLDIR}/lib -lgsl -L${NLOPTDIR_LIB} -lnlopt
+FLAGS += -std=c++17 ${INCLUDE_DIR} -I${BOOST}/include -I${GSLDIR}/include -I${NLOPTDIR_INCLUDE}
  
 target = depend core ci ctns vmc
 ifeq ($(strip $(INSTALL_PY)), yes)

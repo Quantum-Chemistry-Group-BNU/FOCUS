@@ -36,9 +36,9 @@ namespace ctns{
          std::vector<double> enew_history(maxiter);
          std::vector<double> emin_history(maxiter+1);
          emin_history[0] = std::real(Hij0(0,0));
+         double e_min = emin_history[0];
          std::vector<double> u_history(maxiter);
          std::vector<bool> acceptance(maxiter,0);
-         double e_min = 1.e20;
          auto urot_min = linalg::identity_matrix<Tm>(norb);
          integral::one_body<Tm> int1e_new;
          integral::two_body<Tm> int2e_new;

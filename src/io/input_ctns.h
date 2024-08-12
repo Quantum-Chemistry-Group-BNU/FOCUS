@@ -18,7 +18,8 @@ namespace input{
          friend class boost::serialization::access;
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
-               ar & iprt & maxiter & dfac & macroiter & microiter & alpha & thrdopt;
+               ar & iprt & maxiter & dfac & macroiter & microiter & alpha & thrdopt 
+                  & thrdloc & nptloc;
             }
        public:
          inline void print() const{
@@ -30,6 +31,8 @@ namespace input{
                << " microiter=" << microiter
                << " alpha=" << alpha
                << " thrdopt=" << thrdopt
+               << " thrdloc=" << thrdloc
+               << " nptloc=" << nptloc
                << std::endl;
          }
       public:
@@ -40,6 +43,8 @@ namespace input{
          int microiter = 50;
          double alpha = 1.0;
          double thrdopt = 1.e-6;
+         double thrdloc = 1.e-6;
+         double nptloc = 20;
    };
 
    // sweep

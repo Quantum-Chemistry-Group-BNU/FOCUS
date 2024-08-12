@@ -11,27 +11,27 @@ namespace ctns{
             const input::schedule& schd){
          const int iprt = schd.ctns.ooparams.iprt;
          // initialization
-         const int dcut = schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut;
-         const int& dfac = schd.ctns.ooparams.dfac;
          const int& macroiter = schd.ctns.ooparams.macroiter;
          const int& microiter = schd.ctns.ooparams.microiter;
          const double& alpha = schd.ctns.ooparams.alpha;
-         const double& thrdopt = schd.ctns.ooparams.thrdopt;
+         const int dcut = schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut;
+         const int dfac = schd.ctns.ooparams.dfac;
          const int dmax = dfac*dcut; 
          if(iprt >= 0){
             std::cout << "\noodmrg_move: dcut=" << dcut
-               << " dfac=" << dfac 
                << " macroiter=" << macroiter
                << " microiter=" << microiter
                << " alpha=" << alpha
-               << " thrdopt=" << thrdopt
+               << " dfac=" << dfac 
+               << " dcut=" << dcut
+               << " dmax=" << dmax 
                << std::endl;
          }
          auto t0 = tools::get_time();
 
          // first optimization step
          if(iprt >= 0) std::cout << "\n### initial entanglement compression ###" << std::endl;
-         reduce_entropy_multi(icomb, urot, dmax, microiter, alpha, thrdopt, iprt);
+         reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
 
          // start subsequent optimization
          for(int imacro=0; imacro<macroiter; imacro++){
@@ -40,10 +40,10 @@ namespace ctns{
             }
 
             // apply_randomlayer
-            double maxdwt = reduce_entropy_single(icomb, urot, "random", dmax, alpha, iprt);
+            double maxdwt = reduce_entropy_single(icomb, urot, "random", dmax, schd.ctns.ooparams);
 
             // reduce_entropy
-            reduce_entropy_multi(icomb, urot, dmax, microiter, alpha, thrdopt, iprt);
+            reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
          } // imacro 
 
          if(iprt >= 0){
