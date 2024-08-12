@@ -1,4 +1,5 @@
 #include "integral.h"
+#include "integral_io.h"
 #include "tools.h"
 #include "tests_core.h"
 

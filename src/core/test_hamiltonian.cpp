@@ -3,6 +3,7 @@
 #include "tools.h"
 #include "onspace.h"
 #include "integral.h"
+#include "integral_io.h"
 #include "hamiltonian.h"
 #include "matrix.h"
 #include "linalg.h"

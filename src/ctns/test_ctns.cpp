@@ -3,6 +3,7 @@
 #include <string>
 #include "../io/io.h"
 #include "../io/input.h"
+#include "../core/integral_io.h"
 #include "../ci/ci_header.h"
 #include "ctns_header.h"
 #include "tests_ctns.h"

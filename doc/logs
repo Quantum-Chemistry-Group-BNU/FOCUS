@@ -383,8 +383,9 @@
          - canonicalization loop [DONE@2024/07/31]
          - apply Urot to twodot wavefunction? [DONE@2024/08/01] 
          - reduce_entropy via nlopt [DONE@2024/08/02]
-      - apply random layer by randomizing theta [DONE@2024/08/03]
-    - correct combination of rotated MPS with rotated integrals
-    - mpi implementation for large-scale application
-    - what is the problem of simutaneously using task_dmrg and task_orb?
- 
+       - apply random layer by randomizing theta [DONE@2024/08/03]
+    - correct combination of rotated MPS with rotated integrals [DONE@2024/08/12]
+    - export output such as mps and integrals?
+       - urot.bin
+       - rmole_info.new   
+    - mpi implementation for large-scale application [DONE@2024/08/12]

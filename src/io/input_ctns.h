@@ -74,7 +74,7 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
-                  & task_init & task_sdiag & task_ham & task_opt & task_orb
+                  & task_init & task_sdiag & task_ham & task_opt & task_orbopt
                   & task_vmc & task_expand & task_tononsu2 & task_rdm  
                   & restart_sweep & restart_bond & timestamp
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
@@ -107,7 +107,7 @@ namespace input{
          bool task_sdiag = false; // compute sdiag via sampling
          bool task_ham = false; // compute Hij and Sij
          bool task_opt = false; // DMRG sweep optimization
-         bool task_orb = false; // orbital optimization
+         bool task_orbopt = false; // orbital optimization
          bool task_vmc = false; 
          bool task_expand = false; // expand into FCI vectors
          bool task_tononsu2 = false; // convert SU2-MPS to non-SU2-MPS

@@ -5,6 +5,7 @@
 #include "core/tools.h"
 #include "core/onspace.h"
 #include "core/integral.h"
+#include "core/integral_io.h"
 #include "core/hamiltonian.h"
 #include "core/matrix.h"
 #include "core/linalg.h"

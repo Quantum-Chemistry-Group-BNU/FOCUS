@@ -4,10 +4,7 @@
 #include <cassert>
 #include <vector>
 #include <string>
-#include <iostream>
 #include <iomanip>
-#include <fstream>
-#include <sstream>
 #include <algorithm>
 #include "tools.h"
 #include "matrix.h"
@@ -209,73 +206,6 @@ namespace integral{
             std::vector<Tm> data; // <ij||kl>
             std::vector<double> Q;  // Qij=<ij||ij> 
       };
-
-   // load integrals from mole.info 
-   template <typename Tm>
-      void load(two_body<Tm>& int2e, one_body<Tm>& int1e, double& ecore, const std::string fname){
-         auto t0 = tools::get_time();
-         std::cout << "\nintegral::load fname = " << fname << std::endl; 
-         std::ifstream istrm(fname);
-         if(!istrm){
-            std::cout << "failed to open " << fname << std::endl;
-            exit(1);
-         }
-         // parse MOLEINFO file
-         int sorb;
-         std::string line;
-         while(!istrm.eof()){
-            line.clear();	    
-            std::getline(istrm,line);
-            if(line.empty() || line[0]=='#'){
-               continue; // skip empty and comments
-            }else{
-               sorb = std::stoi(line);
-               break;
-            }
-         }
-         // load integrals
-         int1e.sorb = sorb;
-         int1e.init_mem(); 
-         int2e.sorb = sorb; 
-         int2e.init_mem(); 
-         std::cout << " sorb = " << sorb << std::endl;
-         std::cout << " size(int1e) = " << int1e.size() << ":" 
-            << tools::sizeMB<Tm>(int1e.size()) << "MB:"
-            << tools::sizeGB<Tm>(int1e.size()) << "GB"
-            << std::endl;
-         std::cout << " size(int2e) = " << int2e.size() << ":" 
-            << tools::sizeMB<Tm>(int2e.size()) << "MB:"
-            << tools::sizeGB<Tm>(int2e.size()) << "GB"
-            << std::endl; 
-
-         // read
-         int i,j,k,l;
-         Tm eri;
-         while(!istrm.eof()){
-            line.clear();	    
-            std::getline(istrm,line);
-            if(line.empty() || line[0]=='#'){
-               continue; // skip empty and comments
-            }else{
-               std::istringstream is(line);
-               is >> i >> j >> k >> l >> eri; // read quadruple and integral
-               if(i*j == 0 && k*l == 0){
-                  std::cout << " ecore = " << eri << std::endl;
-                  ecore = std::real(eri);
-               }else if(i*j != 0 && k*l == 0){
-                  int1e.set(i-1, j-1, eri);
-               }else if(i*j != 0 && k*l != 0){
-                  int2e.set(i-1, j-1, k-1, l-1, eri);
-               }
-            }
-         }
-         istrm.close();
-         // compute Qij
-         int2e.initQ();
-
-         auto t1 = tools::get_time();
-         tools::timing("integral::load_integral", t0, t1);
-      }
 
 } // integral
 

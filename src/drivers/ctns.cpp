@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <string>
 #include "core/perfcomm.h"
+#include "core/integral_io.h"
 #include "io/io.h"
 #include "io/input.h"
 #include "ci/ci_header.h"
@@ -136,7 +137,7 @@ void CTNS(const input::schedule& schd){
    }
 
    // compute hamiltonian or optimize ctns by dmrg algorithm
-   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_orb || schd.ctns.task_vmc){
+   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_orbopt || schd.ctns.task_vmc){
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -178,7 +179,7 @@ void CTNS(const input::schedule& schd){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
       // orbital optimization
-      if(schd.ctns.task_orb){
+      if(schd.ctns.task_orbopt){
          ctns::oodmrg(icomb, int2e, int1e, ecore, schd, scratch);
       }
       // vmc for estimation uncertainty

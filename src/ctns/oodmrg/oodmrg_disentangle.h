@@ -88,8 +88,8 @@ namespace ctns{
             const std::string scheme,
             const int dmax,
             const double alpha,
-            const bool debug){
-         if(debug){
+            const int iprt){
+         if(iprt > 0){
             std::cout << "reduce_entropy_single"
                << " scheme=" << scheme
                << " dmax=" << dmax
@@ -105,6 +105,7 @@ namespace ctns{
                   << std::endl;
             }
          }
+         auto t0 = tools::get_time();
 
          // generate sweep sequence
          auto sweep_seq = icomb.topo.get_mps_sweeps();
@@ -258,7 +259,7 @@ namespace ctns{
             // re-evaluate the function to output {vr, rot} correctly. 
             fmin = fun(x);
             maxdwt = std::max(maxdwt,dwt);
-            if(debug){
+            if(iprt > 0){
                std::cout << " i=" << ibond
                   << " (" << dbond.p0.first << ","
                   << dbond.p1.first << ")[" 
@@ -300,7 +301,11 @@ namespace ctns{
          const double rdm_svd = 1.5;
          std::string fname;
          sweep_final_CR2cRR(icomb, rdm_svd, fname, debug_check);
-         
+        
+         if(iprt > 0){
+            auto t1 = tools::get_time();
+            tools::timing("ctns::reduce_entropy_single", t0, t1);
+         } 
          return maxdwt;
       }
 
@@ -311,8 +316,8 @@ namespace ctns{
             const int microiter,
             const double alpha,
             const double thrdopt,
-            const bool debug=false){
-         if(debug){
+            const int iprt=0){
+         if(iprt >= 0){
             std::cout << "reduce_entropy_multi:" 
                << " dmax=" << dmax
                << " microiter=" << microiter
@@ -320,36 +325,43 @@ namespace ctns{
                << " thrdopt=" << thrdopt
                << std::endl;
          }
+         auto t0 = tools::get_time();
+
+         // initialization
          auto icomb0 = icomb;
          double totaldiff = 0.0;
          bool ifconv = false;
-         double s_old = sum_of_entropy(icomb, alpha);
-         if(debug){
-            std::cout << "s[old]=" << s_old << std::endl;
-         }
+         double s_init = sum_of_entropy(icomb, alpha);
+         double s_old = s_init;
+         double maxdwt = -1.0;
+         
+         // optimization
          for(int imicro=0; imicro<microiter; imicro++){
-            if(debug){
+            if(iprt > 0){
                std::cout << "\n=== imicro=" << imicro << " ===" << std::endl;
             }
             // optimize
-            double maxdwt = reduce_entropy_single(icomb, urot, "opt", dmax, alpha, debug);
+            double imaxdwt = reduce_entropy_single(icomb, urot, "opt", dmax, alpha, iprt);
+            maxdwt = std::max(maxdwt,imaxdwt);
             double s_new = sum_of_entropy(icomb, alpha);
             double s_diff = s_new - s_old;
-            if(debug){
+            if(iprt > 0){
                auto smat = get_Smat(icomb,icomb0);
                std::cout << "result: s[old]=" << s_old
                   << " s[new]=" << s_new << " s[diff]=" << s_diff
-                  << " maxdwt=" << maxdwt
+                  << " imaxdwt=" << imaxdwt 
                   << " <MPS[0]|MPS[new]>=" << smat(0,0)
                   << std::endl;
             }
             // check convergence
             if(std::abs(s_diff) < thrdopt){
-               if(debug){
-                  std::cout << "reduce_entropy_multi converges!"
-                     << " imicro=" << imicro 
-                     << " s[diff]=" << s_diff
-                     << " thrdopt=" << thrdopt
+               if(iprt >= 0){
+                  std::cout << "converge in "
+                     << (imicro+1) << " iterations:"
+                     << std::setprecision(4)
+                     << " s[init]=" << s_init 
+                     << " s[new]=" << s_new
+                     << " maxdwt=" << maxdwt
                      << std::endl;
                }
                ifconv = true; 
@@ -361,6 +373,11 @@ namespace ctns{
          if(not ifconv){
             std::cout << "Warning: reduce_entropy_multi does not converge in microiter="
                << microiter << std::endl;
+         }
+         
+         if(iprt >= 0){
+            auto t1 = tools::get_time();
+            tools::timing("ctns::reduce_entropy_multi", t0, t1);
          }
       }
 

@@ -1,6 +1,7 @@
 #include "../core/tools.h"
 #include "../core/onspace.h"
 #include "../core/integral.h"
+#include "../core/integral_io.h"
 #include "../core/matrix.h"
 #include "../core/dvdson.h"
 #include "../core/simpleci.h"

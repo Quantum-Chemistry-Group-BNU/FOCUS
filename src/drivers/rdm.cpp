@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <string>
 #include "core/perfcomm.h"
+#include "core/integral_io.h"
 #include "io/io.h"
 #include "io/input.h"
 #include "ci/ci_header.h"

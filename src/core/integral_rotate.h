@@ -142,7 +142,9 @@ namespace integral{
       void rotate_spatial(const one_body<Tm>& int1e,
             one_body<Tm>& int1e_new,
             const linalg::matrix<Tm>& urot){
-         std::cout << "rotate_spatial for int1e" << std::endl;
+         std::cout << "\nrotate_spatial for int1e" << std::endl;
+         auto t0 = tools::get_time();
+         
          const int norb = urot.rows();
          assert(int1e.sorb == 2*norb);
          int1e_new.sorb = int1e.sorb;
@@ -157,13 +159,18 @@ namespace integral{
          int1e_beta = linalg::xgemm("C","N",urot,tmpb);
          // construct
          int1e_new.from_spatial(int1e_alpha,int1e_beta);
+         
+         auto t1 = tools::get_time();
+         tools::timing("integral::rotate_spatial", t0, t1);
       }
 
    template <typename Tm>
       void rotate_spatial(const two_body<Tm>& int2e,
             two_body<Tm>& int2e_new,
             const linalg::matrix<Tm>& urot){
-         std::cout << "rotate_spatial for int2e" << std::endl;
+         std::cout << "\nrotate_spatial for int2e" << std::endl;
+         auto t0 = tools::get_time();
+
          const int norb = urot.rows();
          assert(int2e.sorb == 2*norb);
          int sorb = int2e.sorb;
@@ -235,6 +242,9 @@ namespace integral{
             exit(1);
          }
          int2e_new.initQ();
+
+         auto t1 = tools::get_time();
+         tools::timing("integral::rotate_spatial", t0, t1);
       }
 
 } // integral

@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <string>
 #include "../io/input.h"
+#include "../core/integral_io.h"
 #include "ci_header.h"
 #include "tests_ci.h"
 

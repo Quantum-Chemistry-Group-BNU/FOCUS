@@ -1,6 +1,7 @@
 #include <iostream>
 #include "io/io.h"
 #include "io/input.h"
+#include "core/integral_io.h"
 #include "ci/ci_header.h"
 
 using namespace std;
