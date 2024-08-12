@@ -20,10 +20,12 @@ namespace ctns{
          rank = icomb.world.rank();
 #endif  
          const bool debug = (rank==0);
-         const int maxiter = schd.ctns.ooparams.maxiter; 
+         const int maxiter = schd.ctns.ooparams.maxiter;
+         const bool acceptall = schd.ctns.ooparams.acceptall; 
          if(debug){ 
             std::cout << "\nctns::oodmrg maxiter=" << maxiter 
-               << " maxsweep=" << schd.ctns.maxsweep 
+               << " maxsweep=" << schd.ctns.maxsweep
+               << " acceptall=" << acceptall 
                << std::endl;
          }
          auto t0 = tools::get_time();
@@ -99,14 +101,15 @@ namespace ctns{
                   << std::endl;
                std::cout << tools::line_separator << std::endl;
                // check acceptance
-               if(e_new < e_min or iter == maxiter-1){
-                  std::cout << "accept the move!" << std::endl;
+               double deltaE = e_new - e_min;
+               if(deltaE < 0 or iter == maxiter-1 or acceptall){
+                  std::cout << "accept the move! deltaE=" << deltaE << std::endl;
                   acceptance[iter] = true;
                   e_min = e_new;
                   urot_min = urot;
                   icomb = std::move(icomb_new); // move is defined, but copy is deleted
                }else{
-                  std::cout << "reject the move! deltaE=" << e_new-e_min << std::endl;
+                  std::cout << "reject the move! deltaE=" << deltaE << std::endl;
                   // urot_min and icomb in the next iter will 
                   // still be the old one without change.
                }
@@ -122,8 +125,9 @@ namespace ctns{
                      << std::defaultfloat << std::setprecision(12)  
                      << " e_new=" << enew_history[jter]
                      << " e_min=" << emin_history[jter+1]
-                     << " de_min=" << std::scientific << std::setprecision(2)
-                     << (emin_history[jter+1]-emin_history[jter])
+                     << std::scientific << std::setprecision(2)
+                     << " de_i=" << (emin_history[jter+1]-emin_history[jter])
+                     << " de_0=" << (emin_history[jter+1]-emin_history[0])
                      << " u_diff=" << u_history[jter]
                      << std::endl;
                }
