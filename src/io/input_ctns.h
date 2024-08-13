@@ -40,10 +40,10 @@ namespace input{
          int iprt = 1;
          int maxiter = 10;
          int dfac = 2;
-         int macroiter = 3;
+         int macroiter = 5;
          int microiter = 50;
-         double alpha = 1.0;
-         double thrdopt = 1.e-6;
+         double alpha = 0.5;
+         double thrdopt = 1.e-4;
          double thrdloc = 1.e-6;
          double nptloc = 20;
          bool acceptall = false; 

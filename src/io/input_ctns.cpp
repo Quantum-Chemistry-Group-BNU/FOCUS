@@ -47,7 +47,6 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,8)=="task_opt"){
          task_opt = true;
       }else if(line.substr(0,11)=="task_orbopt"){
-         task_ham = true; // enable task_ham to prepare environment!
          task_orbopt = true;
       }else if(line.substr(0,8)=="task_vmc"){
          task_vmc = true;

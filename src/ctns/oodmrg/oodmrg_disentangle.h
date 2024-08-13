@@ -354,7 +354,8 @@ namespace ctns{
             double s_diff = s_new - s_old;
             if(iprt > 0){
                auto smat = get_Smat(icomb,icomb0);
-               std::cout << "result: s[old]=" << s_old
+               std::cout << "result:" << std::scientific
+                  << " s[old]=" << s_old
                   << " s[new]=" << s_new << " s[diff]=" << s_diff
                   << " imaxdwt=" << imaxdwt 
                   << " <MPS[0]|MPS[new]>=" << smat(0,0)

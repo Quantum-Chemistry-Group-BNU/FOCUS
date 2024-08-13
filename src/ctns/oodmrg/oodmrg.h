@@ -50,7 +50,12 @@ namespace ctns{
             if(rank == 0){
                std::cout << std::endl;
                std::cout << tools::line_separator2 << std::endl;
-               std::cout << "OO-DMRG: iter=" << iter << std::endl;
+               std::cout << "OO-DMRG: maxiter=" << maixter << " iter=" << iter;
+               if(iter != maxiter-1){
+                  std::cout << std::endl;
+               }else{
+                  std::cout << " last iter without orbital rotation" << std::endl;
+               }
                std::cout << tools::line_separator2 << std::endl;
             }
             
@@ -62,6 +67,8 @@ namespace ctns{
                // which is usually the case with a initial MPS from
                // SCI or a previous optimization.
                u_diff = oodmrg_move(icomb_new, urot, schd);
+            }else{
+               u_diff = 0.0;
             }
 #ifndef SERIAL
             if(size > 1){
@@ -95,6 +102,7 @@ namespace ctns{
                std::cout << std::endl;
                std::cout << tools::line_separator << std::endl;
                std::cout << "OO-DMRG: iter=" << iter << std::setprecision(12)
+                  << " dcut=" << schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut
                   << " e_new=" << e_new
                   << " e_min=" << e_min
                   << " |U-I|_F=" << std::setprecision(2) << u_diff 
