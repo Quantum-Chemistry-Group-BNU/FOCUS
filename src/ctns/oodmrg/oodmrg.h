@@ -50,7 +50,7 @@ namespace ctns{
             if(rank == 0){
                std::cout << std::endl;
                std::cout << tools::line_separator2 << std::endl;
-               std::cout << "OO-DMRG: maxiter=" << maixter << " iter=" << iter;
+               std::cout << "OO-DMRG: maxiter=" << maxiter << " iter=" << iter;
                if(iter != maxiter-1){
                   std::cout << std::endl;
                }else{
@@ -145,9 +145,10 @@ namespace ctns{
   
          // save integrals and urot_min
          if(rank == 0){
-            std::cout << "save urot_min to fname = urot.bin" << std::endl;
+            std::cout << "save urot_min into fname = urot.bin" << std::endl;
             urot_min.save("urot.bin");
             std::string fname = schd.integral_file+".new";
+            std::cout << "save integral into fname = " << fname << std::endl;
             integral::save(int2e_new, int1e_new, ecore, fname);
          }
 

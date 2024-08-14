@@ -23,18 +23,17 @@ namespace input{
             }
        public:
          inline void print() const{
-            std::cout << "orbopt parameters:"
-               << " iprt=" << iprt
-               << " maxiter=" << maxiter 
-               << " dfac=" << dfac
-               << " macroiter=" << macroiter
-               << " microiter=" << microiter
-               << " alpha=" << alpha
-               << " thrdopt=" << thrdopt
-               << " thrdloc=" << thrdloc
-               << " nptloc=" << nptloc
-               << " acceptall=" << acceptall
-               << std::endl;
+            std::cout << "orbopt parameters:" << std::endl;
+            std::cout << " iprt=" << iprt << std::endl;
+            std::cout << " maxiter=" << maxiter << std::endl;
+            std::cout << " dfac=" << dfac << std::endl;
+            std::cout << " macroiter=" << macroiter << std::endl;
+            std::cout << " microiter=" << microiter << std::endl;
+            std::cout << " alpha=" << alpha << std::endl;
+            std::cout << " thrdopt=" << thrdopt << std::endl;
+            std::cout << " thrdloc=" << thrdloc << std::endl;
+            std::cout << " nptloc=" << nptloc << std::endl;
+            std::cout << " acceptall=" << acceptall << std::endl;
          }
       public:
          int iprt = 1;
