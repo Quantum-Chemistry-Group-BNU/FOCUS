@@ -174,10 +174,10 @@ namespace integral{
 
          assert(int2e.sorb == 2*norb);
          int sorb = int2e.sorb;
-         int pair = sorb*(sorb-1)/2;
-         // we need to use this structure because <<pq||kl> does not have 8-fold symmetry
-         linalg::matrix<Tm> int2e_half(pair,pair); 
-         // large matrix
+         int2e_new.sorb = sorb;
+         int2e_new.init_mem();
+         
+         // large mocoefficient matrix
          linalg::matrix<Tm> mocoeff(sorb,sorb);
          linalg::matrix<Tm> mocoeff_conj(sorb,sorb);
          for(int i=0; i<sorb; i++){
@@ -187,8 +187,14 @@ namespace integral{
                mocoeff_conj(i,j) = tools::conjugate(urot(i/2,j/2)); 
             }
          }
+         
+         // we need to use this structure, because 
+         // <<pq||kl> does not have 8-fold symmetry!!!
+         int pair = sorb*(sorb-1)/2;
+         linalg::matrix<Tm> int2e_half(pair,pair); 
+         
          // half transformation-1: 
-         // <ij||kl> = sum_rs <ij||rs>*C[r,k]*C[s,l]
+         // <ij||kl> = sum_rs <ij||rs>*C[r,k]*C[s,l] (i>j)
          for(int i=0; i<sorb; i++){
             for(int j=0; j<i; j++){
                size_t ij = i*(i-1)/2+j;
@@ -212,42 +218,45 @@ namespace integral{
                } // k
             } // j
          } // i
+         
          // half transformation-2: 
          // <ij||kl> = sum_pq <pq||kl>*C[p,i]*C[q,j]
-         int2e_new.sorb = sorb;
-         int2e_new.init_mem();
-         for(int i=0; i<sorb; i++){
-            for(int j=0; j<i; j++){
-               size_t ij = i*(i-1)/2+j;
+         for(int k=0; k<sorb; k++){
+            for(int l=0; l<k; l++){
+               size_t kl = k*(k-1)/2+l;
                // O[p,q] 
                linalg::matrix<Tm> tmp1(sorb,sorb);
-               for(int r=0; r<sorb; r++){
-                  for(int s=0; s<r; s++){
-                     size_t rs = r*(r-1)/2+s;
-                     tmp1(r,s) = int2e_half(ij,rs);
-                     tmp1(s,r) = -tmp1(r,s);
+               for(int p=0; p<sorb; p++){
+                  for(int q=0; q<p; q++){
+                     size_t pq = p*(p-1)/2+q;
+                     tmp1(p,q) = int2e_half(pq,kl);
+                     tmp1(q,p) = -tmp1(p,q);
                   }
                }
-               // X[i,j] = Cconj[p,i]*O[p,q]*Cconj[q,j]
+               // X[i,j] = C_conj[p,i]*(O[p,q]*C_conj[q,j])
                auto tmp2 = linalg::xgemm("N","N",tmp1,mocoeff_conj);
                auto tmp3 = linalg::xgemm("T","N",mocoeff_conj,tmp2);
                // save
-               for(int k=0; k<sorb; k++){
-                  for(int l=0; l<k; l++){
-                     size_t kl = k*(k-1)/2+l;
-                     int2e_new.set(i,j,k,l,tmp3(k,l));
+               for(int i=0; i<sorb; i++){
+                  for(int j=0; j<i; j++){
+                     size_t ij = i*(i-1)/2+j;
+                     int2e_new.set(i,j,k,l,tmp3(i,j));
                   } // l
                } // k
             } // j
          } // i
+         int2e_new.initQ();
+         
          const bool debug = false;
          if(debug){
             std::cout << std::setprecision(8) << std::endl;
-            std::cout << linalg::xnrm2(int2e.data.size(), int2e.data.data()) << std::endl;
-            std::cout << linalg::xnrm2(int2e_new.data.size(), int2e_new.data.data()) << std::endl;
+            // old
+            std::cout << "|int2e|=" << linalg::xnrm2(int2e.data.size(), int2e.data.data()) << std::endl;
             auto tensor0 = get_fulltensor(int2e);
-            auto tensor1 = get_fulltensor(int2e_new);
             check_fulltensor(tensor0, sorb);
+            // new
+            std::cout << "|int2e_new|=" << linalg::xnrm2(int2e_new.data.size(), int2e_new.data.data()) << std::endl;
+            auto tensor1 = get_fulltensor(int2e_new);
             check_fulltensor(tensor1, sorb);
             // plain
             rotate_spatial_plain(int2e,int2e_new,urot);
@@ -257,7 +266,6 @@ namespace integral{
             std::cout << "diff=" << linalg::xnrm2(tensor2.size(), tensor2.data()) << std::endl;
             exit(1);
          }
-         int2e_new.initQ();
 
          auto t1 = tools::get_time();
          tools::timing("integral::rotate_spatial", t0, t1);
