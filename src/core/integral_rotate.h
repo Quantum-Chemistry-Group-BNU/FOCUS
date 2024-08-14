@@ -142,10 +142,10 @@ namespace integral{
       void rotate_spatial(const one_body<Tm>& int1e,
             one_body<Tm>& int1e_new,
             const linalg::matrix<Tm>& urot){
-         std::cout << "\nrotate_spatial for int1e" << std::endl;
+         const int norb = urot.rows();
+         std::cout << "\nintegral::rotate_spatial for int1e: norb=" << norb << std::endl;
          auto t0 = tools::get_time();
          
-         const int norb = urot.rows();
          assert(int1e.sorb == 2*norb);
          int1e_new.sorb = int1e.sorb;
          int1e_new.init_mem();
@@ -168,58 +168,74 @@ namespace integral{
       void rotate_spatial(const two_body<Tm>& int2e,
             two_body<Tm>& int2e_new,
             const linalg::matrix<Tm>& urot){
-         std::cout << "\nrotate_spatial for int2e" << std::endl;
+         const int norb = urot.rows();
+         std::cout << "\nintegral::rotate_spatial for int2e: norb=" << norb << std::endl;
          auto t0 = tools::get_time();
 
-         const int norb = urot.rows();
          assert(int2e.sorb == 2*norb);
          int sorb = int2e.sorb;
          int pair = sorb*(sorb-1)/2;
          // we need to use this structure because <<pq||kl> does not have 8-fold symmetry
          linalg::matrix<Tm> int2e_half(pair,pair); 
-         // <ij||rs> -> <ij||kl> = sum_rs <ij||rs>*C[r,k]*C[s,l]
+         // large matrix
+         linalg::matrix<Tm> mocoeff(sorb,sorb);
+         linalg::matrix<Tm> mocoeff_conj(sorb,sorb);
+         for(int i=0; i<sorb; i++){
+            for(int j=0; j<sorb; j++){
+               if(i%2 != j%2) continue;
+               mocoeff(i,j) = urot(i/2,j/2); 
+               mocoeff_conj(i,j) = tools::conjugate(urot(i/2,j/2)); 
+            }
+         }
+         // half transformation-1: 
+         // <ij||kl> = sum_rs <ij||rs>*C[r,k]*C[s,l]
          for(int i=0; i<sorb; i++){
             for(int j=0; j<i; j++){
                size_t ij = i*(i-1)/2+j;
+               // O[r,s]
+               linalg::matrix<Tm> tmp1(sorb,sorb);
+               for(int r=0; r<sorb; r++){
+                  for(int s=0; s<r; s++){
+                     tmp1(r,s) = int2e.get(i,j,r,s);
+                     tmp1(s,r) = -tmp1(r,s);
+                  }
+               }
+               // X[k,l] = C[r,k]*(O[r,s]*C[s,l])
+               auto tmp2 = linalg::xgemm("N","N",tmp1,mocoeff);
+               auto tmp3 = linalg::xgemm("T","N",mocoeff,tmp2);
+               // save
                for(int k=0; k<sorb; k++){
                   for(int l=0; l<k; l++){
                      size_t kl = k*(k-1)/2+l;
-                     Tm sum = 0.0;
-                     for(int r=k%2; r<sorb; r+=2){
-                        for(int s=l%2; s<sorb; s+=2){
-                           sum += int2e.get(i,j,r,s)
-                              *urot(r/2,k/2)
-                              *urot(s/2,l/2);
-                        } // s
-                     } // r
-                     int2e_half(ij,kl) = sum;
+                     int2e_half(ij,kl) = tmp3(k,l);
                   } // l
                } // k
             } // j
          } // i
+         // half transformation-2: 
          // <ij||kl> = sum_pq <pq||kl>*C[p,i]*C[q,j]
          int2e_new.sorb = sorb;
          int2e_new.init_mem();
          for(int i=0; i<sorb; i++){
             for(int j=0; j<i; j++){
                size_t ij = i*(i-1)/2+j;
+               // O[p,q] 
+               linalg::matrix<Tm> tmp1(sorb,sorb);
+               for(int r=0; r<sorb; r++){
+                  for(int s=0; s<r; s++){
+                     size_t rs = r*(r-1)/2+s;
+                     tmp1(r,s) = int2e_half(ij,rs);
+                     tmp1(s,r) = -tmp1(r,s);
+                  }
+               }
+               // X[i,j] = Cconj[p,i]*O[p,q]*Cconj[q,j]
+               auto tmp2 = linalg::xgemm("N","N",tmp1,mocoeff_conj);
+               auto tmp3 = linalg::xgemm("T","N",mocoeff_conj,tmp2);
+               // save
                for(int k=0; k<sorb; k++){
                   for(int l=0; l<k; l++){
                      size_t kl = k*(k-1)/2+l;
-                     if(kl < ij) continue;
-                     Tm sum = 0.0;
-                     for(int p=i%2; p<sorb; p+=2){
-                        for(int q=j%2; q<sorb; q+=2){
-                           if(p == q) continue;
-                           size_t pq = p>q? p*(p-1)/2+q : q*(q-1)/2+p;
-                           Tm sgn = p>q? 1.0 : -1.0;
-                           sum += int2e_half(pq,kl)
-                              *sgn
-                              *tools::conjugate(urot(p/2,i/2))
-                              *tools::conjugate(urot(q/2,j/2));
-                        } // q 
-                     } // p
-                     int2e_new.set(i,j,k,l,sum);
+                     int2e_new.set(i,j,k,l,tmp3(k,l));
                   } // l
                } // k
             } // j
