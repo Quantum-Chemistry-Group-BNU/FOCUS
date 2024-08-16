@@ -8,6 +8,7 @@ import scipy.linalg
 from pyscf import ao2mo
 from pyscf.scf import hf
 import functools
+import time
 
 # Provide the basic interface
 class iface:
@@ -22,7 +23,10 @@ class iface:
 
    # This is the central part
    def get_integral(self,mo_coeff):
-      print('\n[iface.get_integral]')
+      t0 = time.time()
+      print('\n[iface.get_integral] nmo=',mo_coeff.shape[1],\
+              ' nfrozen=',self.nfrozen,\
+              ' nact=',mo_coeff.shape[1]-self.nfrozen)
       ecore = self.mol.energy_nuc()
       # Intergrals
       mcoeffC = mo_coeff[:,:self.nfrozen].copy()
@@ -37,9 +41,13 @@ class iface:
          ecore += 0.5*numpy.trace(pCore.dot(hcore+fock))
       else:
          hmo = functools.reduce(numpy.dot,(mcoeffA.T,hcore,mcoeffA))
+      t1 = time.time()
+      print(' time for heff=',t1-t0,'S')
       # Active part
       nact = mcoeffA.shape[1]
       eri = self.get_eri(mcoeffA)
+      t2 = time.time()
+      print(' time for h2e=',t2-t0,'S')
       # save
       self.ecore = ecore
       self.hmo = hmo
