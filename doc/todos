@@ -1,6 +1,12 @@
 
 ### TODOs: more functionalities ###
 
+ * more robust initialization, together with canonicalization sweep
+
+ * point group symmetry (D2h) -> good for molecules like cr2
+
+ * decim for su2 is not optimized
+
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
                              but use mkl2022 for focus,
