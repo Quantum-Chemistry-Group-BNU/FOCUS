@@ -126,7 +126,7 @@ namespace ctns{
             Sd2 = (Sd2*i + s*s)*fac;
             IPR = (IPR*i + ipr)*fac;
             if((i+1)%noff == 0){
-               std = std::sqrt((Sd2-Sd*Sd)/(i+1.e-10));
+               std = std::sqrt(std::abs(Sd2-Sd*Sd)/(i+1.e-10)); // use abs in case of small negative value
                auto t1 = tools::get_time();
                double dt = tools::get_duration(t1-t0);
                std::cout << " i=" << i 
