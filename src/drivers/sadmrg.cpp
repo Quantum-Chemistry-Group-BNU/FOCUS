@@ -40,70 +40,91 @@ void SADMRG(const input::schedule& schd){
       icomb.topo.read(schd.ctns.topology_file);
       icomb.topo.print();
       if(schd.ctns.restart_sweep == 0){
-         
+
          // initialize RCF 
-         if(schd.ctns.tosu2){
+         if(!schd.ctns.inputcsf.empty()){
 
-            ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
-            icomb_NSz.topo = icomb.topo;
-            if(schd.ctns.rcanon_file.empty()){
-               // from SCI wavefunction
-               rcanon_file = schd.scratch+"/rcanon_ci";
-               onspace sci_space;
-               vector<double> es;
-               linalg::matrix<Tm> vs;
-               auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
-               fci::ci_load(sci_space, es, vs, ci_file);
-               // consistency check
-               if(sci_space[0].size() != 2*icomb.get_nphysical()){
-                  std::cout << "error: state.size is inconsistent with 2*nphysical in topo:"
-                     << " state.size=" << sci_space[0].size() << " nphysical=" << icomb.get_nphysical()
-                     << std::endl;
-                  exit(1);  
-               }
-               // truncate CI coefficients
-               fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-               ctns::rcanon_init(icomb_NSz, sci_space, vs, schd.ctns.rdm_svd,
-                     schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
-               ctns::rcanon_save(icomb_NSz, rcanon_file);
-            }else{
-               rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-               ctns::rcanon_load(icomb_NSz, rcanon_file); // user defined rcanon_file
-            } // rcanon_load
-
-            // convert to SU2 symmetry via sweep projection
-            ctns::rcanon_tosu2(icomb_NSz, icomb, schd.twos, schd.ctns.thresh_tosu2);
-            rcanon_file += "_su2"; 
-            ctns::rcanon_save(icomb, rcanon_file);
-
-            // debug by checking the overlap
-            const bool debug_convert_and_hmat = false;
-            if(debug_convert_and_hmat){
-               ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz2;
-               auto sym_state = icomb_NSz.get_qsym_state(); 
-               ctns::rcanon_tononsu2(icomb, icomb_NSz2, sym_state.tm());
-               // HIJ
-               integral::two_body<Tm> int2e;
-               integral::one_body<Tm> int1e;
-               double ecore;
-               integral::load(int2e, int1e, ecore, schd.integral_file);
-               io::create_scratch(schd.scratch);
-               // compare 
-               auto Hij1 = ctns::get_Hmat(icomb_NSz, int2e, int1e, ecore, schd, schd.scratch);
-               auto Hij2 = ctns::get_Hmat(icomb_NSz2, int2e, int1e, ecore, schd, schd.scratch);
-               auto Hij3 = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
-               std::cout << "\ncompare:" << std::endl;
-               Hij1.print("icomb_NSz",10);
-               Hij2.print("icomb_NSz2",10);
-               Hij3.print("icomb",10);
+            fock::csfstate csf(schd.ctns.inputcsf);
+            // consistency check
+            if(csf.norb() != icomb.topo.nphysical or 
+                  csf.nelec() != schd.nelec or 
+                  csf.twos() != schd.twos){
+               std::cout << "error: (k,ne,ts)=" << csf.norb() << "," << csf.nelec() << "," << csf.twos()
+                 << " of csf=" << csf << " is inconsistent with input (k,ne,ts)=" 
+                 << icomb.topo.nphysical << "," << schd.nelec << "," << schd.twos
+                 << std::endl;
                exit(1);
             }
+            icomb = ctns::csf2samps<Tm>(icomb.topo, csf);
+            rcanon_file = schd.scratch+"/rcanon_csf"; 
+            ctns::rcanon_save(icomb, rcanon_file);
 
-         }else{
-            assert(!schd.ctns.rcanon_file.empty());
-            rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
-            ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
-         } // tosu2
+         }else{ 
+
+            if(schd.ctns.tosu2){
+
+               ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
+               icomb_NSz.topo = icomb.topo;
+               if(schd.ctns.rcanon_file.empty()){
+                  // from SCI wavefunction
+                  rcanon_file = schd.scratch+"/rcanon_ci";
+                  onspace sci_space;
+                  vector<double> es;
+                  linalg::matrix<Tm> vs;
+                  auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
+                  fci::ci_load(sci_space, es, vs, ci_file);
+                  // consistency check
+                  if(sci_space[0].size() != 2*icomb.get_nphysical()){
+                     std::cout << "error: state.size is inconsistent with 2*nphysical in topo:"
+                        << " state.size=" << sci_space[0].size() << " nphysical=" << icomb.get_nphysical()
+                        << std::endl;
+                     exit(1);  
+                  }
+                  // truncate CI coefficients
+                  fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
+                  ctns::rcanon_init(icomb_NSz, sci_space, vs, schd.ctns.rdm_svd,
+                        schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
+                  ctns::rcanon_save(icomb_NSz, rcanon_file);
+               }else{
+                  rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
+                  ctns::rcanon_load(icomb_NSz, rcanon_file); // user defined rcanon_file
+               } // rcanon_load
+
+               // convert to SU2 symmetry via sweep projection
+               ctns::rcanon_tosu2(icomb_NSz, icomb, schd.twos, schd.ctns.thresh_tosu2);
+               rcanon_file += "_su2"; 
+               ctns::rcanon_save(icomb, rcanon_file);
+
+               // debug by checking the overlap
+               const bool debug_convert_and_hmat = false;
+               if(debug_convert_and_hmat){
+                  ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz2;
+                  auto sym_state = icomb_NSz.get_qsym_state(); 
+                  ctns::rcanon_tononsu2(icomb, icomb_NSz2, sym_state.tm());
+                  // HIJ
+                  integral::two_body<Tm> int2e;
+                  integral::one_body<Tm> int1e;
+                  double ecore;
+                  integral::load(int2e, int1e, ecore, schd.integral_file);
+                  io::create_scratch(schd.scratch);
+                  // compare 
+                  auto Hij1 = ctns::get_Hmat(icomb_NSz, int2e, int1e, ecore, schd, schd.scratch);
+                  auto Hij2 = ctns::get_Hmat(icomb_NSz2, int2e, int1e, ecore, schd, schd.scratch);
+                  auto Hij3 = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, schd.scratch);
+                  std::cout << "\ncompare:" << std::endl;
+                  Hij1.print("icomb_NSz",10);
+                  Hij2.print("icomb_NSz2",10);
+                  Hij3.print("icomb",10);
+                  exit(1);
+               }
+
+            }else{
+               assert(!schd.ctns.rcanon_file.empty());
+               rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
+               ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
+            } // tosu2
+
+         } // inputcsf
 
       }else{
          // restart a broken calculation from disk
@@ -111,13 +132,13 @@ void SADMRG(const input::schedule& schd){
          if(schd.ctns.restart_sweep > schd.ctns.maxsweep){
             std::cout << "error: restart_sweep exceed maxsweep!" << std::endl;
             std::cout << " restart_sweep=" << schd.ctns.restart_sweep
-                      << " maxsweep=" << schd.ctns.maxsweep
-                      << std::endl;
+               << " maxsweep=" << schd.ctns.maxsweep
+               << std::endl;
             exit(1);
          }
          ctns::rcanon_load(icomb, rcanon_file);
       }
-      
+
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
    } // rank 0
 
@@ -146,7 +167,7 @@ void SADMRG(const input::schedule& schd){
          ctns::rcanon_sample_samps2det(icomb, schd.ctns.iroot, schd.ctns.nsample, schd.ctns.pthrd);
       }
    }
-   
+
    // convert to nonsu2
    if(schd.ctns.task_tononsu2){
       if(rank == 0){
@@ -156,7 +177,7 @@ void SADMRG(const input::schedule& schd){
          ctns::rcanon_save(icomb_NSz, rcanon_file);
          icomb.display_shape();
          icomb_NSz.display_shape();
-         ctns::rcanon_Sdiag_exact(icomb_NSz, schd.ctns.iroot, schd.ctns.pthrd);
+         ctns::rcanon_Sdiag_sample(icomb_NSz, schd.ctns.iroot, schd.ctns.nsample, schd.ctns.pthrd);
       }
    }
 
@@ -171,8 +192,8 @@ void SADMRG(const input::schedule& schd){
          // consistency check
          if(int1e.sorb != icomb.get_nphysical()*2){
             std::cout << "error: int1e.sorb is inconsistent with 2*nphysical in topo:"
-             << " sorb=" << int1e.sorb << " nphysical=" << icomb.get_nphysical()
-             << std::endl;
+               << " sorb=" << int1e.sorb << " nphysical=" << icomb.get_nphysical()
+               << std::endl;
             exit(1);  
          }
       }

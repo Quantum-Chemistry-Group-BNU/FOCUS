@@ -93,7 +93,7 @@ namespace input{
                   & rcanon_file & rcanon2_file
                   & iomode & async_fetch & async_save & async_remove & ifnccl
                   & iroot & nsample & pthrd
-                  & tosu2 & thresh_tosu2 & singlet
+                  & tosu2 & thresh_tosu2 & singlet & inputcsf
                   & diagcheck
                   & savebin 
                   & fromnosym
@@ -176,6 +176,7 @@ namespace input{
          bool tosu2 = false;
          double thresh_tosu2 = 1.e-8;
          bool singlet = false; // singlet embedding
+         std::string inputcsf = "";
          // gpu
          bool diagcheck = false;
          // rdm and entropy

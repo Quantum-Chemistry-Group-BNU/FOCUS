@@ -148,6 +148,9 @@ void params_ctns::read(ifstream& istrm){
          thresh_tosu2 = stod(line.substr(12));
       }else if(line.substr(0,7)=="singlet"){
          singlet = true;
+      }else if(line.substr(0,7)=="fromcsf"){
+         istringstream is(line.substr(7));
+         is >> inputcsf;
       }else if(line.substr(0,9)=="diagcheck"){
          diagcheck = true;
       }else if(line.substr(0,7)=="savebin"){
@@ -338,6 +341,7 @@ void params_ctns::print() const{
    cout << "tosu2 = " << tosu2 << endl;
    cout << "thresh_tosu2 = " << scientific << thresh_tosu2 << endl;
    cout << "singlet = " << singlet << endl;
+   cout << "inputcsf = " << inputcsf << endl;
    // gpu
    cout << "diagcheck = " << diagcheck << endl;
    // rdm and entropy

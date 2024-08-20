@@ -104,7 +104,7 @@ namespace fock{
          onstate& operator =(onstate&& state);
 
          // special constructors
-         // from "01011" or "02ab"
+         // from "01011" [iop=0] or "02ab" [iop!=0] (read from right to left)
          onstate(const std::string& on, const int iop=0);
          // merge two states with different spins - neglect phases
          onstate(const onstate& state_a, const onstate& state_b);

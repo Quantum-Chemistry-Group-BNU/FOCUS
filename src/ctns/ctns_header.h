@@ -18,8 +18,9 @@
 #include "ctns_vmc.h"
 
 #include "sadmrg/ctns_tosu2.h"
-#include "rdm/rdm_simple.h"
+#include "sadmrg/ctns_csf2samps.h"
 #include "nosym/ctns_fromnosym.h"
 #include "oodmrg/oodmrg.h"
+#include "rdm/rdm_simple.h"
 
 #endif

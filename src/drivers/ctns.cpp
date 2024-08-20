@@ -43,7 +43,8 @@ void CTNS(const input::schedule& schd){
          if(schd.ctns.fromnosym){
 
             ctns::rcanon_fromnosym(icomb);
-            ctns::rcanon_save(icomb, "rmps_sym");
+            rcanon_file = schd.scratch+"/rmps_sym";
+            ctns::rcanon_save(icomb, rcanon_file);
 
          }else{
 
@@ -130,7 +131,7 @@ void CTNS(const input::schedule& schd){
 
    // compute sdiag
    if(schd.ctns.task_sdiag){
-      // parallel sampling can be implemented in future (should be very simple)!
+      // TODOs: parallel sampling can be implemented in future (should be very simple)!
       if(rank == 0){
          ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, schd.ctns.pthrd);
       }

@@ -15,7 +15,7 @@ namespace ctns{
          samps.sites.resize(ks);
          auto narray  = csf.intermediate_narray();
          auto tsarray = csf.intermediate_tsarray();
-         /*
+         /* 
          std::cout << "csf=" << csf << std::endl;
          tools::print_vector(narray, "narray");
          tools::print_vector(tsarray, "tsarray");

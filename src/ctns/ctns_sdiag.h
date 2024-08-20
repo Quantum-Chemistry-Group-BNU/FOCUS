@@ -114,7 +114,8 @@ namespace ctns{
          for(int i=0; i<nsample; i++){
             auto pr = rcanon_random(icomb,iroot);
             auto state = pr.first;
-            //std::cout << "i=" << i << " state=" << state << " cicoeff=" << pr.second << std::endl;
+            //std::cout << "i=" << i << " state=" << state << " cicoeff=" << std::scientific << pr.second 
+            //   << " log=" << std::norm(pr.second) << " " << std::log(std::norm(pr.second)) << std::endl;
             auto ci2 = std::norm(pr.second);
             // statistical analysis
             pop[state] += 1;

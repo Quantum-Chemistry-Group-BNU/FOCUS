@@ -24,6 +24,12 @@ namespace ctns{
                }
                qmap[sym2].push_back(i);
             }else{
+               if(std::abs(tm)%2 != std::abs(tm0)%2){
+                  std::cout << "error in qbond_su2expand: inconsistent"
+                     << " (tm,tm0)=" << tm << "," << tm0
+                     << std::endl;
+                  exit(1);
+               }
                if(tm != tm0) continue;
                qsym sym2(2,ne,tm);
                if(std::find(qsyms.begin(), qsyms.end(), sym2)==qsyms.end()){
@@ -178,7 +184,19 @@ namespace ctns{
             const int tm){
          const bool debug = true;
          std::cout << "\nctns::rcanon_tononsu2 tm=" << tm << std::endl;
-         assert(std::abs(tm) <= icomb.get_qsym_state().ts());
+         // consistency check
+         auto sym = icomb.get_qsym_state();
+         int ne = sym.ne();
+         int ts = sym.ts();
+         if(ne%2 != ts%2){
+            std::cout << "error: inconsistent (ne,ts)=" << ne << "," << ts << std::endl;
+            exit(1);
+         }
+         if(std::abs(tm)>ts or std::abs(tm)%2!=std::abs(ts)%2){
+            std::cout << "error: inconsistent (ts,tm)=" << ts << "," << tm << std::endl;
+            exit(1);
+         }
+         // construct icomb_NSz
          icomb_NSz.topo = icomb.topo;
          // sites
          int nphysical = icomb.get_nphysical();
