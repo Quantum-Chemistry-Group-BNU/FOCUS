@@ -174,7 +174,7 @@ namespace input{
          double pthrd = 1.e-2;
          // su2 symmetry
          bool tosu2 = false;
-         double thresh_tosu2 = 1.e-14;
+         double thresh_tosu2 = 1.e-8;
          bool singlet = false; // singlet embedding
          // gpu
          bool diagcheck = false;

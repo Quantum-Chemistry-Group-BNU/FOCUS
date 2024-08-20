@@ -45,7 +45,7 @@ namespace ctns{
 
          for(int i=1; i<nsite; i++){
 
-            std::cout << "idx=" << i << std::endl;
+            std::cout << ">>> idx=" << i << std::endl;
             if(debug) icomb_NSz.sites[i].print("rsite_"+std::to_string(i));
 
             // 1. form MixedRSite

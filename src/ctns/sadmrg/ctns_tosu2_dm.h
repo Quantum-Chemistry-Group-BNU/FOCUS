@@ -191,6 +191,11 @@ namespace ctns{
          std::cout << " sigs2sum=" << sigs2sum 
             << " diff(1-sigs2sum)=" << 1.0-sigs2sum 
             << std::endl;
+         if(ys.size() == 0){
+            std::cout << "error: size of new qbond is zero! thresh_tosu2=" << thresh_tosu2
+               << " is probably too large!" << std::endl;
+            exit(1);
+         }
          return Yinfo;
       }
 

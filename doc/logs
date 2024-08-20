@@ -375,17 +375,20 @@
        - gpu version: [DONE@2024/05/12] 
           - onedot_diagGPU_su2.h:
 
- * Orbital-optimized DMRG: 
-    - driver [DONE@2024/07/29]
-    - disentangle 
-       - entropy functions [DONE@2024/07/30]
-       - reduce_entropy
-         - canonicalization loop [DONE@2024/07/31]
-         - apply Urot to twodot wavefunction? [DONE@2024/08/01] 
-         - reduce_entropy via nlopt [DONE@2024/08/02]
-       - apply random layer by randomizing theta [DONE@2024/08/03]
-    - correct combination of rotated MPS with rotated integrals [DONE@2024/08/12]
-    - export output such as mps and integrals?
-       - urot.bin
-       - rmole_info.new   
-    - mpi implementation for large-scale application [DONE@2024/08/12]
+ * Orbital-optimized DMRG:
+    - non-spin-adapted: [DONE@2024/08/12]
+      - driver [DONE@2024/07/29]
+      - disentangle 
+         - entropy functions [DONE@2024/07/30]
+         - reduce_entropy
+           - canonicalization loop [DONE@2024/07/31]
+           - apply Urot to twodot wavefunction? [DONE@2024/08/01] 
+           - reduce_entropy via nlopt [DONE@2024/08/02]
+         - apply random layer by randomizing theta [DONE@2024/08/03]
+      - correct combination of rotated MPS with rotated integrals [DONE@2024/08/12]
+      - export output such as mps and integrals?
+         - urot.txt
+         - rmole_info.new   
+      - mpi implementation for large-scale application [DONE@2024/08/12]
+    - support su2 mps [DONE@2024/XX/XX]
+

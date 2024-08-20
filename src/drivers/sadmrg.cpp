@@ -33,6 +33,7 @@ void SADMRG(const input::schedule& schd){
    // 1. load from a given NSA-MPS
    // 2. load from a restart calculations
    ctns::comb<Qm,Tm> icomb;
+   std::string rcanon_file;
    // convert from SCI or load from files
    if(rank == 0){
       // dealing with topology 
@@ -41,7 +42,6 @@ void SADMRG(const input::schedule& schd){
       if(schd.ctns.restart_sweep == 0){
          
          // initialize RCF 
-         std::string rcanon_file;
          if(schd.ctns.tosu2){
 
             ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
@@ -73,7 +73,8 @@ void SADMRG(const input::schedule& schd){
 
             // convert to SU2 symmetry via sweep projection
             ctns::rcanon_tosu2(icomb_NSz, icomb, schd.twos, schd.ctns.thresh_tosu2);
-            ctns::rcanon_save(icomb, rcanon_file+"_su2");
+            rcanon_file += "_su2"; 
+            ctns::rcanon_save(icomb, rcanon_file);
 
             // debug by checking the overlap
             const bool debug_convert_and_hmat = false;
@@ -106,7 +107,7 @@ void SADMRG(const input::schedule& schd){
 
       }else{
          // restart a broken calculation from disk
-         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1);
+         rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1);
          if(schd.ctns.restart_sweep > schd.ctns.maxsweep){
             std::cout << "error: restart_sweep exceed maxsweep!" << std::endl;
             std::cout << " restart_sweep=" << schd.ctns.restart_sweep
@@ -150,7 +151,9 @@ void SADMRG(const input::schedule& schd){
    if(schd.ctns.task_tononsu2){
       if(rank == 0){
          ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
-         ctns::rcanon_tononsu2(icomb, icomb_NSz, schd.twoms); 
+         ctns::rcanon_tononsu2(icomb, icomb_NSz, schd.twoms);
+         rcanon_file += "_nonsu2"; 
+         ctns::rcanon_save(icomb_NSz, rcanon_file);
          icomb.display_shape();
          icomb_NSz.display_shape();
          ctns::rcanon_Sdiag_exact(icomb_NSz, schd.ctns.iroot, schd.ctns.pthrd);

@@ -239,7 +239,7 @@ namespace ctns{
          const auto& rwfuns = icomb_NSz.rwfuns;
          int nroot = rwfuns.size();
          for(int iroot=0; iroot<nroot; iroot++){
-            if(debug) std::cout << "\niroot=" << iroot << std::endl;
+            if(debug) std::cout << "\n### iroot=" << iroot << " ###" << std::endl;
             assert(rwfuns[iroot].info.qcol == wmat.qrow);
             assert(rwfuns[iroot].rows()==1);
             // find the block
@@ -267,12 +267,12 @@ namespace ctns{
                pop += pop_j; 
                if(debug){
                   auto symj = wmat.qcol[j].first;
-                  std::cout << "# j=" << j << " sym=(" << std::get<0>(symj) << ","
-                     << std::get<1>(symj) << "," << std::get<2>(symj) << ")";
+                  std::cout << "> j=" << j << " sym=(" << std::get<0>(symj) << ","
+                     << std::get<1>(symj) << "," << std::get<2>(symj) << ")"
+                     << " pop[j]=" << std::defaultfloat << std::setprecision(3) << pop_j;
                   if(std::get<1>(symj) == twos) std::cout << " target sector!";
                   std::cout << std::endl;
                   rwfunW.print("rwfunW");
-                  std::cout << " pop[j]=" << std::setprecision(10) << pop_j << std::endl;
                }
             } // j
             if(debug) std::cout << "total pop=" << std::setprecision(10) << pop 

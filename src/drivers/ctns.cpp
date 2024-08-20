@@ -31,6 +31,7 @@ void CTNS(const input::schedule& schd){
 
    // CTNS 
    ctns::comb<Qm,Tm> icomb;
+   std::string rcanon_file;
    // convert from SCI or load from files
    if(rank == 0){
       // dealing with topology 
@@ -39,7 +40,6 @@ void CTNS(const input::schedule& schd){
       if(schd.ctns.restart_sweep == 0){
          
          // initialize RCF 
-         std::string rcanon_file;
          if(schd.ctns.fromnosym){
 
             ctns::rcanon_fromnosym(icomb);
@@ -99,7 +99,7 @@ void CTNS(const input::schedule& schd){
 
       }else{
          // restart a broken calculation from disk
-         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1);
+         rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1);
          if(schd.ctns.restart_sweep > schd.ctns.maxsweep){
             std::cout << "error: restart_sweep exceed maxsweep!" << std::endl;
             std::cout << " restart_sweep=" << schd.ctns.restart_sweep
