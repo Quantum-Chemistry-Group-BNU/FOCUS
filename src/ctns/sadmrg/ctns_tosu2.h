@@ -87,12 +87,16 @@ namespace ctns{
          // form rwfuns
          icomb.rwfuns = updateRWFuns(icomb_NSz, wmat, twos);
 
-         std::cout << "\nSummary of sweep projection: nroot=" << icomb_NSz.rwfuns.size()
-            << " final nstate=" << icomb.rwfuns.size()
-            << std::endl;
-
+         // print
          icomb_NSz.display_shape();
          icomb.display_shape();
+         std::cout << "\nSummary of sweep projection:"
+            << " nroot[nonsu2]=" << icomb_NSz.rwfuns.size()
+            << " => nstate[su2]=" << icomb.rwfuns.size()
+            << std::endl;
+         if(icomb.rwfuns.size() < icomb_NSz.rwfuns.size()){ 
+            std::cout << "Warning: nstate[su2] < nroot[nonsu2]!" << std::endl;
+         }
 
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_tosu2", t0, t1);

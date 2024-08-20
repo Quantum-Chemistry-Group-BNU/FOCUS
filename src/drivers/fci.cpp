@@ -32,12 +32,15 @@ void FCI(const input::schedule& schd){
    fci::ci_solver(sparseH, es, vs, fci_space, int2e, int1e, ecore);
    fci::ci_save(fci_space, es, vs, ci_file);
    sparseH.dump(schd.scratch+"/sparseH.bin");
-   for(int i=0; i<nroots; i++){
-      std::cout << "\nstate " << i << " energy = "  
-                << std::setprecision(12) << es[i] 
-                << std::endl;
-      std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
-      coeff_population(fci_space, vi, schd.sci.cthrd);
+   // print the ci vectors
+   if(schd.sci.ifanalysis){ 
+      for(int i=0; i<nroots; i++){
+         std::cout << "\nstate " << i << " energy = "  
+            << std::setprecision(12) << es[i] 
+            << std::endl;
+         std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
+         coeff_population(fci_space, vi, schd.sci.cthrd);
+      }
    }
 }
 

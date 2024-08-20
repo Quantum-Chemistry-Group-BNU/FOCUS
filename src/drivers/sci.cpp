@@ -27,13 +27,16 @@ void SCI(const input::schedule& schd){
    }else{
       fci::ci_load(sci_space, es, vs, ci_file);
    }
-   int dim = sci_space.size(); 
-   for(int i=0; i<nroots; i++){
-      std::cout << "\nstate " << i << " energy = "  
-                << std::setprecision(12) << es[i] 
-                << std::endl;
-      std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
-      coeff_population(sci_space, vi, schd.sci.cthrd);
+   int dim = sci_space.size();
+   // print the ci vectors
+   if(schd.sci.ifanalysis){ 
+      for(int i=0; i<nroots; i++){
+         std::cout << "\nstate " << i << " energy = "  
+            << std::setprecision(12) << es[i] 
+            << std::endl;
+         std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
+         coeff_population(sci_space, vi, schd.sci.cthrd);
+      }
    }
    // pt2 for single root
    if(schd.sci.ifpt2){

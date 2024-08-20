@@ -54,7 +54,7 @@ namespace ctns{
             const int iroot,
             const std::string type,
             const double pthrd=1.e-2){
-         std::cout << "\nctns::rcanon_Sdiag_exact:"
+         std::cout << "\nctns::rcanon_Sdiag_exact(su2):"
             << " ifab=" << Qm::ifabelian
             << " iroot=" << iroot
             << " type=" << type
@@ -114,6 +114,7 @@ namespace ctns{
          for(int i=0; i<nsample; i++){
             auto pr = rcanon_random(icomb,iroot);
             auto state = pr.first;
+            //std::cout << "i=" << i << " state=" << state << " cicoeff=" << pr.second << std::endl;
             auto ci2 = std::norm(pr.second);
             // statistical analysis
             pop[state] += 1;
@@ -145,7 +146,7 @@ namespace ctns{
          for(const auto& pr : pop){
             states[i] = pr.first;
             counts[i] = pr.second;
-            double ci2 = counts[i]/(1.0*nsample);
+            double ci2 = counts[i]/(1.0*nsample); // frequency in the sample
             Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log(ci2)*ovlp;
             IPRpop += ci2*ci2*ovlp;
             i++;
@@ -156,7 +157,9 @@ namespace ctns{
          for(int i=0; i<size; i++){
             int idx = indx[i];
             auto state = states[idx];
+            //std::cout << "i=" << i << " state=" << state << " iroot=" << iroot << std::endl;
             auto ci = rcanon_CIcoeff(icomb, state)[iroot];
+            //std::cout << "ci=" << ci << std::endl;
             double pop = std::norm(ci)/ovlp;
             if(pop < pthrd) break;
             sum += counts[idx];

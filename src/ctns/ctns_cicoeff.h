@@ -89,6 +89,15 @@ namespace ctns{
          // intermediate quantum number
          auto narray  = state.intermediate_narray();
          auto tsarray = state.intermediate_tsarray();
+         /*
+         std::cout << "csf=" << state << std::endl;
+         tools::print_vector(narray,"narray");
+         tools::print_vector(tsarray,"tsarray");
+         //
+         // csf=222000 [from right to left]
+         //  narray= 6 6 6 6 4 2 0
+         //  tsarray= 0 0 0 0 0 0 0
+         */
          // compute <n|CTNS> by contracting all sites
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
@@ -119,10 +128,13 @@ namespace ctns{
                }
             } // tp
          } // i
-         auto wf2mat = icomb.get_wf2().to_matrix();
-         auto wfcoeff = linalg::xgemm("N","N",wf2mat,bmat);
-         assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
-         assert(wfcoeff.size() == n);
+         // final contraction with rwfun
+         qsym qout(3,narray[0],tsarray[0]);
+         auto wf2 = icomb.get_wf2();
+         int bc = wf2.info.qcol.existQ(qout); 
+         auto wf2blk = wf2(0,bc);
+         auto wfcoeff = linalg::xgemm("N","N",wf2blk,bmat);
+         assert(wfcoeff.rows() == n && wfcoeff.cols() == 1);
          linalg::xcopy(n, wfcoeff.data(), coeff.data());
          return coeff;
       }

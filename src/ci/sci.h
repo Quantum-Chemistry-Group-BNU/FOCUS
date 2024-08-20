@@ -168,18 +168,24 @@ namespace sci{
                   << " SvN=" << SvN
                   << std::endl;
                fock::coeff_analysis(vtmp);
+               if(i != neig-1) std::cout << std::endl;
             }
             esol = esol1;
             vsol = vsol1;
             ifconv = (count(conv.begin(), conv.end(), true) == neig);
             if(iter>=schd.sci.miniter && ifconv){
-               std::cout << "\nsci convergence is achieved!" << std::endl;
+               std::cout << "\nsci convergence is achieved for threshold deltaE=" 
+                  << std::scientific << schd.sci.deltaE 
+                  << std::endl;
                break;
             }
          } // iter
          if(!ifconv){
-            std::cout << "\nsci convergence failure: out of maxiter=" << schd.sci.maxiter << std::endl;
+            std::cout << "\nsci convergence failure: out of maxiter=" << schd.sci.maxiter 
+               << " for threshsold deltaE=" << std::scientific << schd.sci.deltaE
+               << std::endl;
          }
+         std::cout << std::endl;
          // finally save results
          es.resize(neig);
          vs.resize(nsub,neig);

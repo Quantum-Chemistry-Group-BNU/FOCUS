@@ -89,7 +89,9 @@ void params_sci::read(ifstream& istrm){
          istringstream is(line.substr(7));
          is >> ci_file;
       }else if(line.substr(0,5)=="cthrd"){
-         cthrd = stod(line.substr(5)); 
+         cthrd = stod(line.substr(5));
+      }else if(line.substr(0,8)=="analysis"){
+         ifanalysis = true; 
       }else{
          tools::exit("error: no matching key! line = "+line);
       }
@@ -150,4 +152,5 @@ void params_sci::print() const{
    cout << "ci_file = " << ci_file << endl;
    // cthrd
    cout << "cthrd = " << cthrd << endl;
+   cout << "ifanalysis = " << ifanalysis << endl;
 }
