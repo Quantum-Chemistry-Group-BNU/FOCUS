@@ -34,6 +34,15 @@ namespace sci{
             // convert det to onstate
             fock::onstate state(k); 
             for(int i : det) state[i] = 1;
+            // check Ms value if necessary
+            if(schd.sci.checkms and state.twoms() != schd.twoms){
+               std::cout << "error: inconsistent twoms:"
+                         << " twoms[input]=" << schd.twoms
+                         << " twoms[det]=" << state.twoms() 
+                         << " det=" << state 
+                         << std::endl;
+               exit(1);
+            }
             // search first
             auto search = varSpace.find(state);
             if(search == varSpace.end()){

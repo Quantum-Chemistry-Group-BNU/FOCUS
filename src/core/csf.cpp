@@ -80,15 +80,15 @@ double csfstate::det_coeff(const onstate& state) const{
 std::pair<onspace,std::vector<double>> csfstate::to_det() const{
    onspace dets;
    std::vector<double> coeff;
-   if(norb_single() == 0){
+   int ne_os = norb_single();
+   if(ne_os == 0){
       dets.push_back(repr);
       coeff.resize(1);
       coeff[0] = 1;
    }else{
-      int ne_os = norb_single();
       int ts = twos();
       int na_os = (ne_os+ts)/2;
-      onspace dets_os = get_fci_space_single(norb_single(), na_os);
+      onspace dets_os = get_fci_space_single(ne_os, na_os);
       size_t dim = dets_os.size();
       dets.resize(dim);
       coeff.resize(dim);
