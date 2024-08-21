@@ -1,11 +1,9 @@
 
 ### TODOs: more functionalities ###
 
- * more robust initialization, together with canonicalization sweep
-
  * point group symmetry (D2h) -> good for molecules like cr2
 
- * decim for su2 is not optimized
+ * decim for su2 is not optimized yet
 
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
@@ -15,31 +13,6 @@
    - fe4s4
    - fe8s7
    - femoco
-
- * Reduced density matrices: (RDMs) [DONE@202X/XX/XX]
-   - Brute-force RDM & TDM algorithm:
-      - non-spin-adapted: [DONE@2024/06/02]
-         - Application of local op to MPS:
-         - Contract <bMPS|kMPS> to get RDM/TDM
-         - quantum information measure:
-            - single orbital entropy [or just from 1,2-RDMs]
-      - spin-adapted case? 
-         - What is the correct math for applying operators?
-   - Optimized algorithm via reusing intermediates
-      - non-spin-adapted case: [THIS SHOUDLD BE SIMPLE!!!]
-         - one-body RDM:
-         - two-body RDM:
-      - spin-adapted case:
-         - one-body RDM:
-         - two-body RDM:
-      - transition PDM:
-         - between same spins
-         - between different spins (for SOC)
-         - between singlet embedding wavefunction?
-   - GPU version:
-      - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
-
- * Perturbative spin-orbit interaction via state interaction?
 
  * Kramers version for 2c/4c Hamiltonian: 
    - support complex version [DONE@2023/02/28]

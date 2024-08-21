@@ -390,18 +390,45 @@
          - urot.txt
          - rmole_info.new   
       - mpi implementation for large-scale application [DONE@2024/08/12]
-    - improvements: [DONE@2024/XX/XX]
+    - improvements related with CSF: [DONE@2024/XX/XX]
       - csf to samps to nsamps?
     - support su2 mps
 
-TODOs: before 2025	
+ ===== TODOs: before 2025 =====
    2 check open-shell systems: femoco?								
-   3 compute entanglement entropy? Along the bond?								
-   4 more robust initialization, and canonicalization								
+   3 compute entanglement entropy? Along the bond?
+      - canonicalization?	
+   4 more robust initialization, and canonicalization
+      - addition of MPS and canonicalization 
+      - support linear combination of dets and csf states via addition of MPS and canonicalization 
    5 better algorithm to extract the largest k-coefficients?								
    6 OO-DMRG at the level of SA-DMRG?								
 
- Future: RDM-based orbital optimization									
+ ===== Future: RDM-based orbital optimization =====
    1 natural orbitals?								
    2 other measures of electron correlation? Shee's work?								
+
+ * Reduced density matrices: (RDMs) [DONE@202X/XX/XX]
+   - Brute-force RDM & TDM algorithm:
+      - non-spin-adapted: [DONE@2024/06/02]
+         - Application of local op to MPS:
+         - Contract <bMPS|kMPS> to get RDM/TDM
+         - quantum information measure:
+            - single orbital entropy [or just from 1,2-RDMs]
+      - spin-adapted case? 
+         - What is the correct math for applying operators?
+   - Optimized algorithm via reusing intermediates
+      - non-spin-adapted case: [THIS SHOUDLD BE SIMPLE!!!]
+         - one-body RDM:
+         - two-body RDM:
+      - spin-adapted case:
+         - one-body RDM:
+         - two-body RDM:
+      - transition PDM:
+         - between same spins
+         - between singlet embedding wavefunction?
+      - between different spins (for SOC)
+         - perturbative SOC via state interaction
+   - GPU version:
+      - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
 
