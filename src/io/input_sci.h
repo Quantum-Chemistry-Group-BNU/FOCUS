@@ -19,7 +19,7 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & nroots & det_seeds & nseeds & flip
-                  & eps0 & eps1 & miniter & maxiter & deltaE
+                  & eps0 & eps1 & miniter & maxiter & deltaE & checkms
                   & cisolver & maxcycle & crit_v & ifpt2 & eps2 & iroot
                   & load & ci_file & cthrd & ifanalysis;
             }
@@ -41,6 +41,7 @@ namespace input{
          int miniter = 0;
          int maxiter = 0;
          double deltaE = 1.e-10;
+         bool checkms = false;
          // dvdson
          int cisolver = 1;
          int maxcycle = 100;

@@ -37,7 +37,9 @@ void params_sci::read(ifstream& istrm){
       }else if(line.substr(0,7)=="maxiter"){
          maxiter = stoi(line.substr(7));
       }else if(line.substr(0,6)=="deltaE"){
-         deltaE = stod(line.substr(6)); 
+         deltaE = stod(line.substr(6));
+      }else if(line.substr(0,7)=="checkms"){
+         checkms = true; 
       }else if(line.substr(0,3)=="pt2"){
          ifpt2 = true;
       }else if(line.substr(0,4)=="eps2"){
@@ -140,6 +142,7 @@ void params_sci::print() const{
    }
    cout << "convergence parameters" << endl;
    cout << "deltaE = " << deltaE << endl;
+   cout << "checkms = " << checkms << endl;
    cout << "cisolver = " << cisolver << endl;
    cout << "maxcycle = " << maxcycle << endl;
    cout << "crit_v = " << crit_v << endl;

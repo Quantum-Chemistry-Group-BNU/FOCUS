@@ -133,7 +133,7 @@ namespace ctns{
          // 3. save site0
          icomb.sites[pdx0] = rot.split_cr(wfinfo.qmid, wfinfo.qcol);
          // 4. form rwfuns(iroot,irbas)
-         const auto& sym_state = icomb.get_qsym_state(); // not wfinfo.sym in singlet embedding 
+         const auto& sym_state = icomb.get_qsym_state(); // not wfinfo.sym in singlet embedding (wfinfo.sym=0) 
          qbond qrow({{sym_state, 1}});
          const auto& qcol = rot.info.qrow;
          icomb.rwfuns.resize(nroots);

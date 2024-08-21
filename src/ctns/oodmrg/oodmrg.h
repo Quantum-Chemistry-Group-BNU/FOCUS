@@ -128,6 +128,7 @@ namespace ctns{
                Hij0.print("initial Hij", schd.ctns.outprec);
                std::cout << "summary of oodmrg results:" << std::endl;
                for(int jter=0; jter<=iter; jter++){
+                  if(jter == maxiter-1) std::cout << "final check:" << std::endl;
                   std::cout << " iter=" << jter
                      << " accept=" << acceptance[jter]
                      << std::defaultfloat << std::setprecision(12)  
