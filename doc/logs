@@ -390,5 +390,18 @@
          - urot.txt
          - rmole_info.new   
       - mpi implementation for large-scale application [DONE@2024/08/12]
-    - support su2 mps [DONE@2024/XX/XX]
+    - improvements: [DONE@2024/XX/XX]
+      - csf to samps to nsamps?
+    - support su2 mps
+
+TODOs: before 2025	
+   2 check open-shell systems: femoco?								
+   3 compute entanglement entropy? Along the bond?								
+   4 more robust initialization, and canonicalization								
+   5 better algorithm to extract the largest k-coefficients?								
+   6 OO-DMRG at the level of SA-DMRG?								
+
+ Future: RDM-based orbital optimization									
+   1 natural orbitals?								
+   2 other measures of electron correlation? Shee's work?								
 

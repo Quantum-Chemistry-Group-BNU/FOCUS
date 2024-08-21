@@ -22,8 +22,27 @@ namespace ctns{
          */
          int isym = 3;
          auto qmid = get_qbond_phys(isym);
+         //
+         // ZL@20240820:
+         // special treatment of the rightmost two sites,
+         // because in our implementation of DMRG, we always
+         // assume the first site is an identity.
+         //
+         samps.sites[0] = get_right_bsite<qkind::qNS,Tm>();
+         qsym syml(isym,narray[ks-2],tsarray[ks-2]);
+         qbond ql({{syml,1}});
+         stensor3su2<Tm> site(qsym(isym,0,0),ql,qmid,qmid,dir_RCF,CRcouple);
+         // find the proper block to set
+         qsym symr(isym,narray[ks-1],tsarray[ks-1]);
+         int ndel = narray[ks-2] - narray[ks-1];
+         std::vector<int> tsmap = {0,1,0}; // (0,0),(1,1),(2,0)
+         qsym symc(isym,ndel,tsmap[ndel]);
+         auto blk = site.get_rcf_symblk(syml, symr, symc);
+         assert(blk.size() == 1);
+         blk._data[0] = 1;
+         samps.sites[1] = std::move(site);
          // loop from the last site to generate the RCF
-         for(int i=ks-1; i>=0; i--){
+         for(int i=ks-3; i>=0; i--){
             // l--<--*--<--r
             //       |
             //       phys

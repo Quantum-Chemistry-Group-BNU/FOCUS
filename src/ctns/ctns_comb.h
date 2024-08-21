@@ -115,6 +115,22 @@ namespace ctns{
                }
                return wf2;
             }
+            // reorthogonalize {cpsi}
+            void orthonormalize_cpsi(){
+               assert(cpsi.size() > 0);
+               size_t ndim = cpsi[0].size();
+               int nroots = cpsi.size();
+               std::vector<Tm> v0(ndim*nroots);
+               for(int i=0; i<nroots; i++){
+                  cpsi[i].to_array(&v0[ndim*i]);
+               }
+               int nindp = linalg::get_ortho_basis(ndim, nroots, v0.data()); // reorthogonalization
+               assert(nindp == nroots);
+               for(int i=0; i<nroots; i++){
+                  cpsi[i].from_array(&v0[ndim*i]);
+               }
+               v0.clear();
+            }
          public:
             // -- CTNS ---
             topology topo;

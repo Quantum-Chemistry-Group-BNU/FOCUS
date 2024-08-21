@@ -74,3 +74,10 @@ double io::available_disk(){
    const fs::space_info si = fs::space(".", ec);
    return si.available;
 }
+
+void io::file_existQ(const std::string fname){
+   if(!fs::exists(fname)){
+      std::cout << "error: this file does not exist!" << std::endl;
+      exit(1);
+   }
+}

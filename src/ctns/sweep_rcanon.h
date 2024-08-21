@@ -158,32 +158,21 @@ namespace ctns{
             << rcanon_file << std::endl;
          std::cout << tools::line_separator << std::endl;
 
-         // 1. reorthogonalize {cpsi} in case there is truncation in the last sweep
-         // such that they are not orthonormal any more, which can happens for
-         // small bond dimension. 
-         size_t ndim = icomb.cpsi[0].size();
-         int nroots = icomb.cpsi.size();
-         std::vector<Tm> v0(ndim*nroots);
-         for(int i=0; i<nroots; i++){
-            icomb.cpsi[i].to_array(&v0[ndim*i]);
-         }
-         int nindp = linalg::get_ortho_basis(ndim, nroots, v0.data()); // reorthogonalization
-         assert(nindp == nroots);
-         for(int i=0; i<nroots; i++){
-            icomb.cpsi[i].from_array(&v0[ndim*i]);
-         }
-         v0.clear();
-
-         // 2. compute C0 & R1 from cpsi via decimation: LCRR => CRRR
+         // 1. compute C0 & R1 from cpsi via decimation: LCRR => CRRR
          std::string fname;
+         // reorthogonalize {cpsi} in case there is truncation in the last sweep
+         // such that they are not orthonormal any more, which can happens for
+         // small bond dimension.
+         icomb.orthonormalize_cpsi();
          fname = scratch+"/decimation_isweep"+std::to_string(isweep)+"_C0R1.txt";
          sweep_final_LCR2CRR(icomb, schd.ctns.rdm_svd, fname, schd.ctns.verbose>0);
 
-         // 3. compute rwfuns & R0 from C0: CRRR => cRRRR
+         // 2. compute rwfuns & R0 from C0: CRRR => cRRRR
+         icomb.orthonormalize_cpsi();
          fname = scratch+"/decimation_isweep"+std::to_string(isweep)+"_cR0.txt";
          sweep_final_CR2cRR(icomb, schd.ctns.rdm_svd, fname, schd.ctns.verbose>0);
 
-         // 4. save & check
+         // 3. save & check
          ctns::rcanon_save(icomb, rcanon_file);
          ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
 

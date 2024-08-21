@@ -2,6 +2,7 @@
 #define CTNS_IO_H
 
 #include "../io/input.h"
+#include "../io/io.h"
 #include "../core/serialization.h"
 #include "ctns_comb.h"
 
@@ -49,6 +50,8 @@ namespace ctns{
             const std::string fname,
             const bool debug=true){
          if(debug) std::cout << "\nctns:rcanon_load fname=" << fname << std::endl;
+
+         io::file_existQ(fname+".info"); // check existance first
 
          std::ifstream ifs(fname+".info", std::ios::binary);
          boost::archive::binary_iarchive load(ifs);

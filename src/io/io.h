@@ -13,6 +13,7 @@ void remove_scratch(const std::string sdir, const bool debug=true);
 void remove_file(const std::string fname, const bool debug=true);
 double directory_size(const std::filesystem::path& directory);
 double available_disk();
+void file_existQ(const std::string fname);
 
 } // io
 

@@ -47,8 +47,8 @@ void SADMRG(const input::schedule& schd){
             fock::csfstate csf(schd.ctns.inputcsf);
             // consistency check
             if(csf.norb() != icomb.topo.nphysical or 
-                  csf.nelec() != schd.nelec or 
-                  csf.twos() != schd.twos){
+               csf.nelec() != schd.nelec or 
+               csf.twos() != schd.twos){
                std::cout << "error: (k,ne,ts)=" << csf.norb() << "," << csf.nelec() << "," << csf.twos()
                  << " of csf=" << csf << " is inconsistent with input (k,ne,ts)=" 
                  << icomb.topo.nphysical << "," << schd.nelec << "," << schd.twos
