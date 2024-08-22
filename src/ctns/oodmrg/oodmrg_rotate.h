@@ -55,13 +55,13 @@ namespace ctns{
             // case-1: {(0,0)},{(1,1)} - no transformation is needed
             if((bm == 0 and bv == 0) or
                (bm == 1 and bv == 1)){
-               std::cout << "case-1" << std::endl;
+               if(debug_twodot_rotate) std::cout << "case-1" << std::endl;
                linalg::xcopy(size, &v0[offset], &vr[offset]); 
             }
             // case-2: {(2,0),(0,2)},{(2,1),(1,2)}
             if((bm == 2 and bv == 0) or
                (bm == 2 and bv == 1)){
-               std::cout << "case-2a" << std::endl;
+               if(debug_twodot_rotate) std::cout << "case-2a" << std::endl;
                size_t offset1 = wf.info.get_offset(br,bc,bv,bm,tsl,tsl);
                assert(offset1 > 0);
                offset1 -= 1;
@@ -70,7 +70,7 @@ namespace ctns{
             }
             if((bm == 0 and bv == 2) or
                (bm == 1 and bv == 2)){
-               std::cout << "case-2b" << std::endl;
+               if(debug_twodot_rotate) std::cout << "case-2b" << std::endl;
                size_t offset1 = wf.info.get_offset(br,bc,bv,bm,tsr,tsr);
                assert(offset1 > 0);
                offset1 -= 1;
@@ -79,7 +79,8 @@ namespace ctns{
             }
             // case-3: {(1,0),(0,1),(2,2)}
             if((bm == 1 and bv == 0)){
-               std::cout << "case-3a" << std::endl;
+               if(debug_twodot_rotate) std::cout << "case-3a" << std::endl;
+               // (c2, s2, sqrt[2]*cs)^T
                assert(tsl==tsr && tsl==tsi && tsl==tsj);
                size_t offset0 = wf.info.get_offset(br,bc,1,0,tsi,tsj);
                size_t offset1 = wf.info.get_offset(br,bc,0,1,tsi,tsj);
@@ -89,14 +90,16 @@ namespace ctns{
                linalg::xaxpy(size, c2, &v0[offset0], &vr[offset]);
                linalg::xaxpy(size, s2, &v0[offset1], &vr[offset]);
                for(int tshp=std::abs(tsl-1); tshp<=tsl+1; tshp+=2){
+                  Tm fac = (std::sqrt(2)*cs)*std::sqrt(tshp+1.0)*fock::racah(tsl,1,tsr,1,tshp,0); 
                   size_t offset2 = wf.info.get_offset(br,bc,2,2,tshp,tshp);
-                  Tm fac = std::sqrt(2)*cs*std::sqrt((tshp+1.0)/(tsl+1.0)/2.0);
-                  if((3*tsl+3+tshp)%2 == 1) fac = -fac; // additional sign
+                  assert(offset2 > 0);
+                  offset2 -= 1;
                   linalg::xaxpy(size, fac, &v0[offset2], &vr[offset]);
                }
             }
             if((bm == 0 and bv == 1)){
-               std::cout << "case-3b" << std::endl;
+               if(debug_twodot_rotate) std::cout << "case-3b" << std::endl;
+               // (s2, c2, -sqrt[2]*cs)^T
                assert(tsl==tsr && tsl==tsi && tsl==tsj);
                size_t offset0 = wf.info.get_offset(br,bc,1,0,tsi,tsj);
                size_t offset1 = wf.info.get_offset(br,bc,0,1,tsi,tsj);
@@ -106,42 +109,39 @@ namespace ctns{
                linalg::xaxpy(size, s2, &v0[offset0], &vr[offset]);
                linalg::xaxpy(size, c2, &v0[offset1], &vr[offset]);
                for(int tshp=std::abs(tsl-1); tshp<=tsl+1; tshp+=2){
+                  Tm fac = (-std::sqrt(2)*cs)*std::sqrt(tshp+1.0)*fock::racah(tsl,1,tsr,1,tshp,0); 
                   size_t offset2 = wf.info.get_offset(br,bc,2,2,tshp,tshp);
-                  Tm fac = -std::sqrt(2)*cs*std::sqrt((tshp+1.0)/(tsl+1.0)/2.0);
-                  if((3*tsl+3+tshp)%2 == 1) fac = -fac; // additional sign
+                  assert(offset2 > 0);
+                  offset2 -= 1;
                   linalg::xaxpy(size, fac, &v0[offset2], &vr[offset]);
                }
             }
             if((bm == 2 and bv == 2)){
-               std::cout << "case-3c: tsl,tsr,tsc1,tsc2,tsi,tsj=" 
+               if(debug_twodot_rotate){
+                  std::cout << "case-3c: tsl,tsr,tsc1,tsc2,tsi,tsj=" 
                   << tsl << "," << tsr << "," << tsc1 << "," << tsc2 << ","
                   << tsi << "," << tsj << std::endl;
+               }
                if(tsl == tsr){
                   size_t offset0 = wf.info.get_offset(br,bc,1,0,tsl,tsl);
                   size_t offset1 = wf.info.get_offset(br,bc,0,1,tsl,tsl);
                   assert(offset0 > 0 and offset1 > 0);
                   offset0 -= 1;
                   offset1 -= 1;
-                  Tm fac = -std::sqrt(2)*cs*std::sqrt((tsi+1.0)/(tsl+1.0)/2.0);
-                  if((3*tsl+3+tsi)%2 == 1) fac = -fac; // additional sign
+                  Tm fac = (-std::sqrt(2)*cs)*std::sqrt(tsi+1.0)*fock::racah(tsl,1,tsr,1,tsi,0); 
                   linalg::xaxpy(size,  fac, &v0[offset0], &vr[offset]);
                   linalg::xaxpy(size, -fac, &v0[offset1], &vr[offset]);
                }
                int tsmin = std::min(tsl,tsr);
                for(int tshp=std::abs(tsmin-1); tshp<=tsmin+1; tshp+=2){
                   if(!fock::spin_triangle(tsl,1,tshp) or !fock::spin_triangle(tsr,1,tshp)) continue;   
-                  std::cout << "tshp=" << tshp << std::endl;
                   // S[c1c2]=0
                   Tm fac = 0.0;
                   if(tsl == tsr){
                      fac += std::cos(2*theta)*fock::racah(tsl,1,tsr,1,tsi,0)*fock::racah(tsl,1,tsr,1,tshp,0);
                   }
-                  // check Triangle(tshp,tsr,1)
-                  std::cout << "lzd" << std::endl;
-                  std::cout << "lzd fac=" << fac << std::endl;
                   // S[c1c2]=1
-                  fac += fock::racah(tsl,1,tsr,1,tsi,2)*fock::racah(tsl,1,tsr,1,tshp,2);
-                  std::cout << "lzd fac=" << fac << std::endl;
+                  fac += 3.0*fock::racah(tsl,1,tsr,1,tsi,2)*fock::racah(tsl,1,tsr,1,tshp,2);
                   fac *= std::sqrt((tsi+1.0)*(tshp+1.0));
                   // multiply wavefunction
                   size_t offset2 = wf.info.get_offset(br,bc,2,2,tshp,tshp);

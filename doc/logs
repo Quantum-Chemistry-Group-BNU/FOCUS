@@ -394,7 +394,7 @@
       - improvements related with CSF: csf to samps to nsamps [DONE@2024/08/21]
       - support for singlet embedding in computing entropy [DONE@2024/08/22]
          - a task support for computing the entropy for given MPS
-      - apply urot to a su2 twodot wavefunction (most complicated step)
+      - apply urot to a su2 twodot wavefunction (most complicated step) [DONE@2024/08/22]
          - can this be done analytically without invoking recoupling explicitly? Yes!
 
  ===== TODOs =====
