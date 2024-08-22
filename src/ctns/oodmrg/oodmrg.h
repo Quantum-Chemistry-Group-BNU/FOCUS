@@ -58,7 +58,7 @@ namespace ctns{
                }
                std::cout << tools::line_separator2 << std::endl;
             }
-            
+
             // minimize entanglement only at rank 0
             auto icomb_new = icomb;
             auto urot = urot_min;
@@ -75,7 +75,6 @@ namespace ctns{
                mpi_wrapper::broadcast(schd.world, icomb_new, 0);
             }
 #endif
-
             // update integrals
             if(rank == 0){
                rotate_spatial(int1e, int1e_new, urot);
@@ -93,7 +92,8 @@ namespace ctns{
             if(rank == 0) Hij.print("Hij", schd.ctns.outprec);
 
             // optimization
-            auto result = ctns::sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
+            std::string rcfprefix = "oo_";
+            auto result = ctns::sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
 
             // accept or reject
             if(rank == 0){
@@ -146,10 +146,9 @@ namespace ctns{
   
          // save integrals and urot_min
          if(rank == 0){
-            std::cout << "save urot_min into fname = urot.txt" << std::endl;
+            std::cout << "save OO-DMRG results for later calculations:" << std::endl;
             urot_min.save_text("urot", schd.ctns.outprec);
             std::string fname = schd.integral_file+".new";
-            std::cout << "save integral into fname = " << fname << std::endl;
             integral::save(int2e_new, int1e_new, ecore, fname);
          }
 

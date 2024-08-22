@@ -165,6 +165,7 @@ namespace linalg{
             }
             // save
             void save_text(const std::string& fname, const int prec=4) const{
+               std::cout << "save matrix into fname = " << fname << ".txt" << std::endl;
                std::ofstream file(fname+".txt"); 
                file << std::defaultfloat << std::setprecision(prec); 
                for(int i=0; i<_rows; i++){

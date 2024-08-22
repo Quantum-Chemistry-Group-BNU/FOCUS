@@ -19,8 +19,12 @@
 
 #include "sadmrg/ctns_tosu2.h"
 #include "sadmrg/ctns_csf2samps.h"
+
 #include "nosym/ctns_fromnosym.h"
+
+#include "ctns_entropy.h"
 #include "oodmrg/oodmrg.h"
+
 #include "rdm/rdm_simple.h"
 
 #endif

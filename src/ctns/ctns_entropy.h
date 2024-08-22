@@ -1,7 +1,7 @@
-#ifndef CTNS_OODMRG_ENTROPY_H
-#define CTNS_OODMRG_ENTROPY_H
+#ifndef CTNS_ENTROPY_H
+#define CTNS_ENTROPY_H
 
-#include "../sweep_twodot_guess.h"
+#include "sweep_twodot_guess.h"
 
 namespace ctns{
 
@@ -133,6 +133,46 @@ namespace ctns{
             s_sum += renyi_entropy(svalues[i], alpha);
          }
          return s_sum;
+      }
+
+   // compute the Schmidt decomposition of an MPS wavefunction
+   template <typename Qm, typename Tm>
+      void rcanon_schmidt(const comb<Qm,Tm>& icomb, // initial comb wavefunction
+            const int iroot,
+            const std::string schmidt_file){
+         std::cout << "\nctns::rcanon_schmidt:"
+           << " iroot=" << iroot 
+           << " fname=" << schmidt_file << ".txt"
+           << std::endl;
+         auto t0 = tools::get_time();
+
+         // compute the Schmidt decomposition
+         auto svalues = get_schmidt_values(icomb);
+
+         // compute the entropy
+         std::cout << "von Neumann entropies across all bonds:" << std::endl;
+         for(int i=0; i<svalues.size(); i++){
+            auto sval = renyi_entropy(svalues[i], 1.0);
+            std::cout << " ibond=" << i 
+               << " SvN=" << std::setprecision(6) << sval 
+               << std::endl;
+         }
+
+         // save into file
+         std::cout << "save schdmidt values into file" << std::endl;
+         std::ofstream file(schmidt_file+".txt");
+         file << icomb.get_nphysical() << std::endl;
+         file << std::scientific << std::setprecision(10);
+         for(int i=0; i<svalues.size(); i++){
+            for(int j=0; j<svalues[i].size(); j++){
+               file << svalues[i][j] << " ";
+            }
+            file << std::endl;
+         }
+         file.close();
+
+         auto t1 = tools::get_time();
+         tools::timing("ctns::rcanon_schmidt", t0, t1);
       }
 
 } // ctns

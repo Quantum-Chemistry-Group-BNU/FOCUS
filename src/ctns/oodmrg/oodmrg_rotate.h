@@ -1,17 +1,151 @@
 #ifndef OODMRG_ROTATE_H
 #define OODMRG_ROTATE_H
 
+#include "../../core/spin.h"
+
 namespace ctns{
 
+   // su2 case
    template <bool ifab, typename Tm>
       void twodot_rotate(const std::vector<Tm>& v0, 
-            const std::vector<Tm>& vr, 
+            std::vector<Tm>& vr, 
             qtensor4<ifab,Tm>& wf, 
             const double theta){
          std::cout << "error: not implemented for su2 case! ifab=" << ifab << std::endl;
          assert(!ifab);
-         exit(1);
+         // this function only works for singlet embedding case
+         auto sym = wf.info.sym;
+         if(sym.ts() != 0){
+            std::cout << "error in twodot_rotate(su2): only support singlet, but ts=" << sym.ts() << std::endl;
+            exit(1);
+         }  
+         assert(v0.size() == vr.size());
+         double c = std::cos(theta);
+         double s = std::sin(theta);
+         double c2 = c*c, s2 = s*s, cs = c*s;
+         // clear
+         memset(vr.data(), 0, vr.size()*sizeof(Tm));
+         int br, bc, bm, bv, tsi, tsj;
+         for(int i=0; i<wf.info._nnzaddr.size(); i++){
+            auto key = wf.info._nnzaddr[i];
+            br = std::get<0>(key);
+            bc = std::get<1>(key);
+            bm = std::get<2>(key);
+            bv = std::get<3>(key);
+            tsi = std::get<4>(key);
+            tsj = std::get<5>(key);
+            int tsl = wf.info.qrow.get_sym(br).ts();
+            int tsr = wf.info.qcol.get_sym(bc).ts();
+            auto blk4 = wf(br,bc,bm,bv,tsi,tsj);
+            assert(tsi == tsj); // for singlet wavefunction
+            size_t size = blk4.size();
+            size_t offset = wf.info.get_offset(br,bc,bm,bv,tsi,tsj);
+            assert(offset > 0);
+            offset -= 1;
+            // let {0,1,2} refers to {|N,S>}={|0,0>,|2,0>,|1,1/2>} as defined in init_phys.h
+            // in total 9 subcases:
+            // case-1: {(0,0)},{(1,1)} - no transformation is needed
+            if((bm == 0 and bv == 0) or
+               (bm == 1 and bv == 1)){
+               linalg::xcopy(size, &v0[offset], &vr[offset]); 
+            }
+            // case-2: {(2,0),(0,2)},{(2,1),(1,2)}
+            if((bm == 2 and bv == 0) or
+               (bm == 2 and bv == 1)){
+               size_t offset1 = wf.info.get_offset(br,bc,bv,bm,tsl,tsl);
+               assert(offset1 > 0);
+               offset1 -= 1;
+               linalg::xaxpy(size, c, &v0[offset] , &vr[offset]);
+               linalg::xaxpy(size, s, &v0[offset1], &vr[offset]); 
+            }
+            if((bm == 0 and bv == 2) or
+               (bm == 1 and bv == 2)){
+               size_t offset1 = wf.info.get_offset(br,bc,bv,bm,tsr,tsr);
+               assert(offset1 > 0);
+               offset1 -= 1;
+               linalg::xaxpy(size,  c, &v0[offset] , &vr[offset]);
+               linalg::xaxpy(size, -s, &v0[offset1], &vr[offset]); 
+            }
+            // case-3: {(1,0),(0,1),(2,2)}
+            if((bm == 1 and bv == 0)){
+               assert(tsl == tsr == tsi == tsj);
+               size_t offset0 = wf.info.get_offset(br,bc,1,0,tsi,tsj);
+               size_t offset1 = wf.info.get_offset(br,bc,0,1,tsi,tsj);
+               assert(offset0 > 0 and offset1 > 0);
+               offset0 -= 1;
+               offset1 -= 1;
+               linalg::xaxpy(size, c2, &v0[offset0], &vr[offset]);
+               linalg::xaxpy(size, s2, &v0[offset1], &vr[offset]);
+               for(int tshp=std::abs(tsl-1); tshp<=tsl+1; tshp+=2){
+                  size_t offset2 = wf.info.get_offset(br,bc,2,2,tshp,tshp);
+                  Tm fac = std::sqrt(2)*cs*std::sqrt((tshp+1.0)/(tsl+1.0)/2.0);
+                  if((3*tsl+3+tshp)%2 == 1) fac = -fac; // additional sign
+                  linalg::xaxpy(size, fac, &v0[offset2], &vr[offset]);
+               }
+            }
+            if((bm == 0 and bv == 1)){
+               assert(tsl == tsr == tsi == tsj);
+               size_t offset0 = wf.info.get_offset(br,bc,1,0,tsi,tsj);
+               size_t offset1 = wf.info.get_offset(br,bc,0,1,tsi,tsj);
+               assert(offset0 > 0 and offset1 > 0);
+               offset0 -= 1;
+               offset1 -= 1;
+               linalg::xaxpy(size, s2, &v0[offset0], &vr[offset]);
+               linalg::xaxpy(size, c2, &v0[offset1], &vr[offset]);
+               for(int tshp=std::abs(tsl-1); tshp<=tsl+1; tshp+=2){
+                  size_t offset2 = wf.info.get_offset(br,bc,2,2,tshp,tshp);
+                  Tm fac = -std::sqrt(2)*cs*std::sqrt((tshp+1.0)/(tsl+1.0)/2.0);
+                  if((3*tsl+3+tshp)%2 == 1) fac = -fac; // additional sign
+                  linalg::xaxpy(size, fac, &v0[offset2], &vr[offset]);
+               }
+            }
+            if((bm == 2 and bv == 2)){
+               if(tsl == tsr){
+                  size_t offset0 = wf.info.get_offset(br,bc,1,0,tsl,tsl);
+                  size_t offset1 = wf.info.get_offset(br,bc,0,1,tsl,tsl);
+                  assert(offset0 > 0 and offset1 > 0);
+                  offset0 -= 1;
+                  offset1 -= 1;
+                  Tm fac = -std::sqrt(2)*cs*std::sqrt((tsi+1.0)/(tsl+1.0)/2.0);
+                  if((3*tsl+3+tsi)%2 == 1) fac = -fac; // additional sign
+                  linalg::xaxpy(size,  fac, &v0[offset0], &vr[offset]);
+                  linalg::xaxpy(size, -fac, &v0[offset1], &vr[offset]);
+               }
+               for(int tshp=std::abs(tsl-1); tshp<=tsl+1; tshp+=2){
+                  // S[c1c2]=0
+                  Tm fac = 0.0;
+                  if(tsl == tsr){
+                     fac += std::cos(2*theta)*fock::racah(tsl,1,tsr,1,tsi,0)*fock::racah(tsl,1,tsr,1,tshp,0);
+                  }
+                  // check Triangle(tshp,tsr,1)
+                  if(!fock::spin_triangle(tsr,1,tshp)) continue;   
+                  // S[c1c2]=1
+                  fac += fock::racah(tsl,1,tsr,1,tsi,2)*fock::racah(tsl,1,tsr,1,tshp,2);
+                  fac *= std::sqrt((tsi+1.0)*(tshp+1.0));
+                  // multiply wavefunction
+                  size_t offset2 = wf.info.get_offset(br,bc,2,2,tshp,tshp);
+                  linalg::xaxpy(size, fac, &v0[offset2], &vr[offset]);
+               } // tshp
+            }
+         } // i
+         // debug by checking the norm of the rotated wavefunction,
+         // which should be identitcal to the unrotated one.
+         const bool debug = true;
+         if(debug){
+            double norm0 = linalg::xnrm2(v0.size(), v0.data());
+            double norm1 = linalg::xnrm2(vr.size(), vr.data());
+            if(std::abs(norm0-norm1)>1.e-10){
+               std::cout << "error in twodot_rotate(su2):"
+                  << " norm0=" << norm0 
+                  << " norm1=" << norm1
+                  << " diff=" << norm0-norm1
+                  << std::endl;
+               exit(1);
+            }
+         }
       }
+
+   // Abelian
    template <bool ifab, typename Tm, std::enable_if_t<ifab,int> = 0>
       void twodot_rotate(const std::vector<Tm>& v0, 
             std::vector<Tm>& vr, 
@@ -40,6 +174,7 @@ namespace ctns{
             assert(offset > 0);
             offset -= 1;
             // let {0,1,2,3} refers to {|0>,|2>,|a>,|b>} as defined in init_phys.h
+            // in total 16 subcases:
             // case-1: {(0,0)},{(1,1)},{(2,2)},{(3,3)} - no transformation is needed
             if((bm == 0 and bv == 0) or
                (bm == 1 and bv == 1) or
@@ -88,6 +223,21 @@ namespace ctns{
                linalg::xaxpy(size, udict.at(std::make_tuple(bm,bv,3)), &v0[offset3], &vr[offset]);
             }
          } // i
+         // debug by checking the norm of the rotated wavefunction,
+         // which should be identitcal to the unrotated one.
+         const bool debug = false;
+         if(debug){
+            double norm0 = linalg::xnrm2(v0.size(), v0.data());
+            double norm1 = linalg::xnrm2(vr.size(), vr.data());
+            if(std::abs(norm0-norm1)>1.e-10){
+               std::cout << "error in twodot_rotate:"
+                  << " norm0=" << norm0 
+                  << " norm1=" << norm1
+                  << " diff=" << norm0-norm1
+                  << std::endl;
+               exit(1);
+            }
+         }
       }
 
 } // ctns

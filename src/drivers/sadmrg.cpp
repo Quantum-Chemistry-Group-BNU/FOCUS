@@ -182,6 +182,13 @@ void SADMRG(const input::schedule& schd){
       }
    }
 
+   // compute schmidt decomposition
+   if(schd.ctns.task_schmidt){
+      if(rank == 0){
+         ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schd.ctns.schmidt_file);
+      }
+   }
+
    // compute hamiltonian or optimize ctns by dmrg algorithm
    if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_orbopt){
       // read integral

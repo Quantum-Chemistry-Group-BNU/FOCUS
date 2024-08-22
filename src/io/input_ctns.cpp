@@ -54,6 +54,10 @@ void params_ctns::read(ifstream& istrm){
          task_expand = true;
       }else if(line.substr(0,13)=="task_tononsu2"){
          task_tononsu2 = true;
+      }else if(line.substr(0,12)=="task_schmidt"){
+         task_schmidt = true;
+         istringstream is(line.substr(12));
+         is >> schmidt_file;
       }else if(line.substr(0,8)=="task_rdm"){
          task_rdm = stoi(line.substr(8)); 
       }else if(line.substr(0,13)=="restart_sweep"){
@@ -270,6 +274,8 @@ void params_ctns::print() const{
    cout << "task_expand = " << task_expand << endl;
    cout << "task_tononsu2 = " << task_tononsu2 << endl;
    cout << "task_rdm = " << task_rdm << endl;
+   cout << "task_schmidt = " << task_schmidt << endl;
+   cout << "schmidt_file = " << schmidt_file << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;
    cout << "timestamp = " << timestamp << endl;
