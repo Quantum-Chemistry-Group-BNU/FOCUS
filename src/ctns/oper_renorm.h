@@ -92,15 +92,21 @@ namespace ctns{
          if(superblock == "cr"){
             qops.krest = node.lorbs;
             qops.qbra = site.info.qrow;
-            qops.qket = site.info.qrow; 
+            qops.qket = site.info.qrow;
+            assert(check_consistency(site.info.qmid, qops1.qbra));
+            assert(check_consistency(site.info.qcol, qops2.qbra));
          }else if(superblock == "lc"){
             qops.krest = node.rorbs;
             qops.qbra = site.info.qcol;
             qops.qket = site.info.qcol;
+            assert(check_consistency(site.info.qrow, qops1.qbra));
+            assert(check_consistency(site.info.qmid, qops2.qbra));
          }else if(superblock == "lr"){
             qops.krest = node.corbs;
             qops.qbra = site.info.qmid;
             qops.qket = site.info.qmid;
+            assert(check_consistency(site.info.qrow, qops1.qbra));
+            assert(check_consistency(site.info.qcol, qops2.qbra));
          }
          qops.oplist = "CABPQSH";
          qops.mpisize = size;

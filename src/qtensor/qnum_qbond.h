@@ -121,6 +121,17 @@ namespace ctns{
          std::vector<std::pair<qsym,int>> dims;
    };
 
+   inline bool check_consistency(const qbond& qs1,
+         const qbond& qs2){
+      bool identical = (qs1 == qs2);
+      if(!identical){
+         std::cout << "\nerror: inconsistent qs1 and qs2:" << std::endl;
+         qs1.print("qs1");
+         qs2.print("qs2");
+      }
+      return identical;
+   }
+
 } // ctns
 
 #endif
