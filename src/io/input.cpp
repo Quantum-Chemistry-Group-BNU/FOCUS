@@ -17,7 +17,7 @@ void schedule::print() const{
    cout << "scratch = " << scratch << endl;
    cout << "dtype = " << dtype << endl;
    cout << "nelec = " << nelec << endl;
-   cout << "twoms = " << twoms << endl;
+   cout << "twom  = " << twom  << endl;
    cout << "twos  = " << twos  << endl;
    cout << "integral_file = " << integral_file << endl;
    cout << "perfcomm = " << perfcomm << endl;
@@ -49,8 +49,8 @@ void schedule::read(string fname){
          dtype = stoi(line.substr(5));
       }else if(line.substr(0,5)=="nelec"){
          nelec = stoi(line.substr(5)); // [5,end)
-      }else if(line.substr(0,5)=="twoms"){
-         twoms = stoi(line.substr(5)); // [5,end)
+      }else if(line.substr(0,4)=="twom"){
+         twom = stoi(line.substr(4)); 
       }else if(line.substr(0,4)=="twos"){
          twos = stoi(line.substr(4)); 
       }else if(line.substr(0,13)=="integral_file"){

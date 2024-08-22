@@ -196,7 +196,7 @@ namespace fock{
             }
             return ne;
          }
-         int twoms() const{
+         int twom() const{
             return nelec_a()-nelec_b();
          }
 

@@ -61,7 +61,7 @@ namespace ctns{
                   state1[i] = 0;
                   state1[a] = 1;
                   auto pr = fock::get_HijS(state,state1,int2e,int1e);
-                  Tm psi_j = ctns::rcanon_CIcoeff(icomb, state1)[iroot];
+                  Tm psi_j = rcanon_CIcoeff(icomb, state1)[iroot];
                   eloc += pr.first * psi_j/psi_i;
                } // ia 
                // doubles
@@ -80,7 +80,7 @@ namespace ctns{
                         state2[a] = 1;
                         state2[b] = 1;
                         auto pr = fock::get_HijD(state,state2,int2e,int1e);
-                        Tm psi_j = ctns::rcanon_CIcoeff(icomb, state2)[iroot];
+                        Tm psi_j = rcanon_CIcoeff(icomb, state2)[iroot];
                         eloc += pr.first * psi_j/psi_i;
                      }
                   } // ab

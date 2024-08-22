@@ -42,9 +42,9 @@ void SADMRG(const input::schedule& schd){
       if(schd.ctns.restart_sweep == 0){
 
          // initialize RCF 
-         if(!schd.ctns.inputcsf.empty()){
+         if(!schd.ctns.inputconf.empty()){
 
-            fock::csfstate csf(schd.ctns.inputcsf);
+            fock::csfstate csf(schd.ctns.inputconf);
             // consistency check
             if(csf.norb() != icomb.topo.nphysical or 
                csf.nelec() != schd.nelec or 
@@ -125,7 +125,7 @@ void SADMRG(const input::schedule& schd){
                ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
             } // tosu2
 
-         } // inputcsf
+         } // inputconf
 
       }else{
          // restart a broken calculation from disk
@@ -173,7 +173,7 @@ void SADMRG(const input::schedule& schd){
    if(schd.ctns.task_tononsu2){
       if(rank == 0){
          ctns::comb<ctns::qkind::qNSz,Tm> icomb_NSz;
-         ctns::rcanon_tononsu2(icomb, icomb_NSz, schd.twoms);
+         ctns::rcanon_tononsu2(icomb, icomb_NSz, schd.twom);
          rcanon_file += "_nonsu2"; 
          ctns::rcanon_save(icomb_NSz, rcanon_file);
          icomb.display_shape();

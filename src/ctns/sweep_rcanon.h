@@ -177,8 +177,8 @@ namespace ctns{
          sweep_final_CR2cRR(icomb, schd.ctns.rdm_svd, fname, schd.ctns.verbose>0);
 
          // 3. save & check
-         ctns::rcanon_save(icomb, rcanon_file);
-         ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+         rcanon_save(icomb, rcanon_file);
+         rcanon_check(icomb, schd.ctns.thresh_ortho);
 
          std::cout << "..... end of isweep = " << isweep << " .....\n" << std::endl;
       }

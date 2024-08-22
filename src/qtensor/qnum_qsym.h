@@ -120,24 +120,24 @@ namespace ctns{
    // get qsym for a given onstate
    inline qsym get_qsym_onstate(const short isym, const fock::onstate& state){
       short ne = (isym==0)? state.nelec()%2 : state.nelec();
-      short tm = (isym<=1)? 0 : state.twoms();
+      short tm = (isym<=1)? 0 : state.twom();
       return qsym(isym, ne, tm);
    }
 
    // set qsym for state
-   inline qsym get_qsym_state(const short isym, const int nelec, const int twoms, const bool singlet=false){
+   inline qsym get_qsym_state(const short isym, const int nelec, const int twom, const bool singlet=false){
       qsym sym_state;
       if(isym == 0){
          sym_state = qsym(isym, nelec%2, 0);
       }else if(isym == 1){
          sym_state = qsym(isym, nelec, 0);
       }else if(isym == 2){
-         sym_state = qsym(isym, nelec, twoms);
+         sym_state = qsym(isym, nelec, twom);
       }else if(isym == 3){
          if(!singlet){
-            sym_state = qsym(isym, nelec, twoms);
+            sym_state = qsym(isym, nelec, twom);
          }else{
-            sym_state = qsym(isym, nelec+twoms, 0); // singlet embedding
+            sym_state = qsym(isym, nelec+twom, 0); // singlet embedding
          }
       }else{
          std::cout << "error: no such option in get_qsym_state! isym=" << isym << std::endl;

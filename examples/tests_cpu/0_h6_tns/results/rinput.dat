@@ -1,5 +1,5 @@
 nelec 6
-twoms 0
+twom 0
 integral_file moleinfo/fmole.info
 scratch ./scratch
 

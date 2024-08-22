@@ -5,7 +5,7 @@
 
 namespace ctns{
 
-   const bool debug_twodot_rotate = true;
+   const bool debug_twodot_rotate = false;
    extern const bool debug_twodot_rotate;
 
    // su2 case

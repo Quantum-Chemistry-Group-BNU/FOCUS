@@ -26,21 +26,21 @@ void ED(const input::schedule& schd){
    
    // ED: define FCI space 
    onspace fci_space;
-   if(schd.nelec == -1 and schd.twoms == -1){
+   if(schd.nelec == -1 and schd.twom == -1){
       fci_space = get_fci_space(int1e.sorb); // Fock space
       std::cout << "\nGenerate Fock space for"
          << " k=" << int1e.sorb 
          << " dim=" << fci_space.size()
          << std::endl; 
-   }else if(schd.nelec >= 0 and schd.twoms == -1){
+   }else if(schd.nelec >= 0 and schd.twom == -1){
       fci_space = get_fci_space(int1e.sorb, schd.nelec); // N-electron Hilbert space
       std::cout << "\nGenerate Hilbert space for" 
          << " (k,n)=" << int1e.sorb << "," << schd.nelec 
          << " dim=" << fci_space.size()
          << std::endl; 
-   }else if(schd.nelec >= 0 and schd.twoms >= 0){
-      int na = (schd.nelec + schd.twoms)/2;
-      int nb = (schd.nelec - schd.twoms)/2;
+   }else if(schd.nelec >= 0 and schd.twom >= 0){
+      int na = (schd.nelec + schd.twom)/2;
+      int nb = (schd.nelec - schd.twom)/2;
       fci_space = get_fci_space(int1e.sorb/2, na, nb); // (Na,Nb)-electron Hilbert space
       std::cout << "\nGenerate Hilbert space for"
          << " (ks,na,nb)=" << int1e.sorb/2 << "," << na << "," << nb

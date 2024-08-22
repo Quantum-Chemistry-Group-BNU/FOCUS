@@ -112,7 +112,7 @@ namespace ctns{
          const auto& qc1 = qops_dict.at("c1").qket;
          const auto& qc2 = qops_dict.at("c2").qket;
          auto sym_state = get_qsym_state(Qm::isym, schd.nelec, 
-               (ifab? schd.twoms : schd.twos),
+               (ifab? schd.twom : schd.twos),
                schd.ctns.singlet);
          qtensor4<ifab,Tm> wf(sym_state, ql, qr, qc1, qc2);
          size_t ndim = wf.size();

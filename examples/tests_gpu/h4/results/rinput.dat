@@ -1,6 +1,6 @@
 dtype 0
 nelec 4
-twoms 0
+twom 0
 integral_file moleinfo/rmole.info
 scratch ./scratch
 

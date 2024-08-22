@@ -39,8 +39,8 @@ namespace vmc{
          if(tools::is_complex<Tm>()){
             fci_space = fock::get_fci_space(int1e.sorb, schd.nelec);
          }else{
-            int na = (schd.nelec + schd.twoms)/2;
-            int nb = (schd.nelec - schd.twoms)/2;
+            int na = (schd.nelec + schd.twom)/2;
+            int nb = (schd.nelec - schd.twom)/2;
             fci_space = fock::get_fci_space(int1e.sorb/2, na, nb);
          }
 

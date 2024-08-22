@@ -40,7 +40,7 @@ void PyFock(py::module &m){
       .def_property_readonly("size", &fock::onstate::size)
       .def_property_readonly("nelec_a", &fock::onstate::nelec_a)
       .def_property_readonly("nelec_b", &fock::onstate::nelec_b)
-      .def_property_readonly("twoms", &fock::onstate::twoms)
+      .def_property_readonly("twom", &fock::onstate::twom)
       .def_property_readonly("zvec", &fock::onstate::get_zvec)
       .def("join", &fock::onstate::join)
       .def("to_string", &fock::onstate::to_string)

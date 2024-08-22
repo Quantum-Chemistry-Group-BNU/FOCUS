@@ -35,10 +35,10 @@ namespace sci{
             fock::onstate state(k); 
             for(int i : det) state[i] = 1;
             // check Ms value if necessary
-            if(schd.sci.checkms and state.twoms() != schd.twoms){
-               std::cout << "error: inconsistent twoms:"
-                         << " twoms[input]=" << schd.twoms
-                         << " twoms[det]=" << state.twoms() 
+            if(schd.sci.checkms and state.twom() != schd.twom){
+               std::cout << "error: inconsistent twom:"
+                         << " twom[input]=" << schd.twom
+                         << " twom[det]=" << state.twom() 
                          << " det=" << state 
                          << std::endl;
                exit(1);

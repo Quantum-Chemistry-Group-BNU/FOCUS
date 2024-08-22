@@ -108,7 +108,7 @@ namespace ctns{
          const auto& qr = qops_dict.at("r").qket;
          const auto& qc = qops_dict.at("c").qket;
          auto sym_state = get_qsym_state(Qm::isym, schd.nelec, 
-               (ifab? schd.twoms : schd.twos),
+               (ifab? schd.twom : schd.twos),
                schd.ctns.singlet);
          qtensor3<ifab,Tm> wf;
          if(ifab){

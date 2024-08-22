@@ -31,7 +31,7 @@ namespace ctns{
          auto t0 = tools::get_time();
         
          // compute Hij first to get the initial Hij 
-         auto Hij0 = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch);
+         auto Hij0 = get_Hmat(icomb, int2e, int1e, ecore, schd, scratch);
          if(debug) Hij0.print("initial Hij", schd.ctns.outprec);
 
          const int norb = icomb.get_nphysical();
@@ -88,12 +88,12 @@ namespace ctns{
 #endif
 
             // prepare environment
-            auto Hij = ctns::get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
+            auto Hij = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
             if(rank == 0) Hij.print("Hij", schd.ctns.outprec);
 
             // optimization
             std::string rcfprefix = "oo_";
-            auto result = ctns::sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
+            auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
 
             // accept or reject
             if(rank == 0){
