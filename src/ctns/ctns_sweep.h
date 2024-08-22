@@ -16,7 +16,8 @@ namespace ctns{
             const integral::one_body<Tm>& int1e,
             const double ecore,
             const input::schedule& schd,
-            const std::string scratch){
+            const std::string scratch,
+            const std::string rcfprefix=""){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -103,7 +104,7 @@ namespace ctns{
               sweeps.summary(isweep, size);
            }
            // generate right rcanonical form and save checkpoint file
-           if(rank == 0 && schd.ctns.guess) sweep_final(icomb, schd, scratch, isweep);
+           if(rank == 0 && schd.ctns.guess) sweep_final(icomb, schd, scratch, isweep, rcfprefix);
        } // isweep
        qops_pool.finalize();
 

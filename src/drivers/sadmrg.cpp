@@ -119,6 +119,7 @@ void SADMRG(const input::schedule& schd){
                }
 
             }else{
+               // load from a given file
                assert(!schd.ctns.rcanon_file.empty());
                rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
                ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
@@ -182,7 +183,7 @@ void SADMRG(const input::schedule& schd){
    }
 
    // compute hamiltonian or optimize ctns by dmrg algorithm
-   if(schd.ctns.task_ham || schd.ctns.task_opt){
+   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_orbopt){
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -206,7 +207,8 @@ void SADMRG(const input::schedule& schd){
 #endif
       // create scratch
       auto scratch = schd.scratch+"/sweep";
-      if(schd.ctns.task_ham && schd.ctns.restart_bond == 0){ // restart_bond require site_ibondN.info in existing scratch 
+      // restart_bond require site_ibondN.info in existing scratch 
+      if((schd.ctns.task_ham || schd.ctns.task_opt) && schd.ctns.restart_bond == 0){ 
          io::remove_scratch(scratch, (rank == 0)); // start a new scratch
       }
       io::create_scratch(scratch, (rank == 0));
@@ -223,7 +225,11 @@ void SADMRG(const input::schedule& schd){
       if(schd.ctns.task_opt and schd.ctns.maxsweep>0){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
-   } // ham || opt
+      // orbital optimization
+      if(schd.ctns.task_orbopt){
+         ctns::oodmrg(icomb, int2e, int1e, ecore, schd, scratch);
+      }
+   } // ham || opt || orbopt
 }
 
 int main(int argc, char *argv[]){

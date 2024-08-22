@@ -41,6 +41,18 @@ namespace fock{
             two_jd,two_je,two_jf);
    }
 
+   inline double racah(const int two_ja, 
+         const int two_jb, 
+         const int two_jc, 
+         const int two_jd, 
+         const int two_je, 
+         const int two_jf){
+      double val = ::gsl_sf_coupling_6j(two_ja,two_jb,two_je,
+            two_jd,two_jc,two_jf);
+      if((two_ja+two_jb+two_jc+two_jd)%2 == 1) val = -val;
+      return val;
+   }
+
    inline double wigner9j(const int two_ja, 
          const int two_jb, 
          const int two_jc, 

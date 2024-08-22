@@ -67,7 +67,7 @@ namespace ctns{
             const double rdm_svd,
             const std::string fname,
             const bool debug){
-         if(debug) std::cout << "ctns::sweep_final_LCR2CRR: convert [LC]R => [CR]R" << std::endl;
+         if(debug) std::cout << "\nctns::sweep_final_LCR2CRR: convert [LC]R => [CR]R" << std::endl;
          const auto& pdx0 = icomb.topo.rindex.at(std::make_pair(0,0));
          const auto& pdx1 = icomb.topo.rindex.at(std::make_pair(1,0));
          int nroots = icomb.cpsi.size();
@@ -106,7 +106,7 @@ namespace ctns{
             const double rdm_svd,
             const std::string fname,
             const bool debug){
-         if(debug) std::cout << "ctns::sweep_final_CR2cRR: convert [C]R => [cR]R" << std::endl;
+         if(debug) std::cout << "\nctns::sweep_final_CR2cRR: convert [C]R => [cR]R" << std::endl;
          const auto& pdx0 = icomb.topo.rindex.at(std::make_pair(0,0));
          const auto& pdx1 = icomb.topo.rindex.at(std::make_pair(1,0));
          int nroots = icomb.cpsi.size();
@@ -152,10 +152,14 @@ namespace ctns{
       void sweep_final(comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const std::string scratch,
-            const int isweep){
-         auto rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(isweep);
-         std::cout << "\nctns::sweep_final: convert into RCF & save into "
-            << rcanon_file << std::endl;
+            const int isweep,
+            const std::string rcfprefix=""){
+         std::cout << "\nctns::sweep_final: convert into RCF & save into ";
+         
+         // 0. rcf file to be saved on disk
+         auto rcanon_file = schd.scratch+"/"+rcfprefix+"rcanon_isweep"+std::to_string(isweep);
+         if(!Qm::ifabelian) rcanon_file += "_su2";
+         std::cout << rcanon_file << std::endl;
          std::cout << tools::line_separator << std::endl;
 
          // 1. compute C0 & R1 from cpsi via decimation: LCRR => CRRR

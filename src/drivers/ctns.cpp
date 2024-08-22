@@ -188,7 +188,7 @@ void CTNS(const input::schedule& schd){
       if(schd.ctns.task_vmc){
          ctns::vmc_estimate(icomb, int2e, int1e, ecore, schd, scratch);
       }
-   } // ham || opt || vmc
+   } // ham || opt || orbopt || vmc
 }
 
 int main(int argc, char *argv[]){
