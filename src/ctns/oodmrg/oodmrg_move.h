@@ -87,7 +87,6 @@ namespace ctns{
          double totaldiff = 0.0;
          bool ifconv = false;
          double s_init = sum_of_entropy(icomb, alpha); // record the input entropy
-         exit(1);
          double s_old = s_init;
          double maxdwt = -1.0;
 

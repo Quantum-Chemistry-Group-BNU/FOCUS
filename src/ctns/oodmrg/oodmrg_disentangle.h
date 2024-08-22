@@ -8,26 +8,6 @@
 
 namespace ctns{
 
-   //        [ c   -s ]
-   // (ui,uj)[        ] = (ui*c+uj*s,-ui*s+uj*c)
-   //        [ s    c ]
-   template <typename Tm>   
-      void givens_rotation(linalg::matrix<Tm>& urot, 
-            const int i,
-            const int j,
-            const double theta){
-         int norb = urot.rows();
-         std::vector<Tm> ui(norb,0), uj(norb,0);
-         double c = std::cos(theta);
-         double s = std::sin(theta);
-         linalg::xaxpy(norb,  c, urot.col(i), ui.data());
-         linalg::xaxpy(norb,  s, urot.col(j), ui.data());
-         linalg::xaxpy(norb, -s, urot.col(i), uj.data());
-         linalg::xaxpy(norb,  c, urot.col(j), uj.data());
-         linalg::xcopy(norb, ui.data(), urot.col(i));
-         linalg::xcopy(norb, uj.data(), urot.col(j));
-      }
-
    template <typename Qm, typename Tm>
       double twodot_wavefun_entropy(const std::vector<double>& theta,
             const comb<Qm,Tm>& icomb,
@@ -89,12 +69,14 @@ namespace ctns{
             const std::string scheme,
             const int dmax,
             const input::params_orbopt& ooparams){
+         const bool ifab = Qm::ifabelian;
          const int& iprt = ooparams.iprt;
          const double& alpha = ooparams.alpha;
          const double& thrdloc = ooparams.thrdloc;
          const int& nptloc = ooparams.nptloc;
          if(iprt > 0){
             std::cout << "reduce_entropy_single"
+               << " ifab=" << ifab
                << " scheme=" << scheme
                << " dmax=" << dmax
                << " alpha=" << alpha
@@ -102,39 +84,27 @@ namespace ctns{
                << " nptloc=" << nptloc
                << std::endl;
          }
+         auto t0 = tools::get_time();
+
+         // initialization: generate cpsi
+         const int iroot = 0;
+         const bool singlet = true;
+         init_cpsi_dot0(icomb, iroot, singlet);
+
          const bool debug_check = false;
          if(debug_check){         
-            auto svalues = get_schmidt_values(icomb);
+            auto svalues = get_schmidt_values(icomb, iroot, singlet);
             for(int i=0; i<svalues.size(); i++){
                std::cout << "i=" << i 
                   << " sval=" << renyi_entropy(svalues[i], alpha)
                   << std::endl;
             }
          }
-         auto t0 = tools::get_time();
 
          // generate sweep sequence
-         auto sweep_seq = icomb.topo.get_mps_sweeps();
          const int nroots = 1;
-         const int dots = 2;
-
-         // initialization: generate cpsi
-         const bool singlet = false;
-         auto sym_state = icomb.get_qsym_state();
          const auto& rindex = icomb.topo.rindex;
-         const auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))]; // will be updated
-         const auto wf2 = get_boundary_coupling<Qm,Tm>(sym_state, singlet); // env*C[0]
-         icomb.cpsi.resize(nroots);
-         for(int iroot=0; iroot<nroots; iroot++){
-            // qt2(1,r): ->-*->-
-            auto qt2 = contract_qt2_qt2(wf2,icomb.rwfuns[iroot]);
-            // qt2(1,r)*site0(r,r0,n0) = qt3(1,r0,n0)[CRcouple]
-            auto qt3 = contract_qt3_qt2("l",site0,qt2);
-            // recouple to qt3(1,r0,n0)[LCcouple]
-            icomb.cpsi[iroot] = qt3.recouple_lc();
-         } // iroot
-
-         // start forward sweep
+         auto sweep_seq = icomb.topo.get_mps_sweeps();
          double maxdwt = -1.0;
          for(int ibond=0; ibond<sweep_seq.size(); ibond++){
             const auto& dbond = sweep_seq[ibond];
@@ -147,30 +117,23 @@ namespace ctns{
                superblock = dbond.is_cturn()? "c1c2" : "c2r";
             }
             if(debug_check){
+               const int dots = 2;
                std::cout << "ibond=" << ibond << "/seqsize=" << sweep_seq.size()
                   << " dots=" << dots << " dbond=" << dbond
                   << std::endl;
             }
 
             // construct twodot wavefunction: wf4
-            qtensor4<Qm::ifabelian,Tm> wf;
-            if(dbond.forward){
-               const auto& site0 = icomb.cpsi[0];
-               const auto& site1 = icomb.sites[rindex.at(dbond.p1)];
-               const auto& ql  = site0.info.qrow;
-               const auto& qr  = site1.info.qcol;
-               const auto& qc1 = site0.info.qmid;
-               const auto& qc2 = site1.info.qmid;
-               wf.init(sym_state, ql, qr, qc1, qc2);
-            }else{
-               const auto& site0 = icomb.sites[rindex.at(dbond.p0)];
-               const auto& site1 = icomb.cpsi[0];
-               const auto& ql  = site0.info.qrow;
-               const auto& qr  = site1.info.qcol;
-               const auto& qc1 = site0.info.qmid;
-               const auto& qc2 = site1.info.qmid;
-               wf.init(sym_state, ql, qr, qc1, qc2);
-            }
+            const auto sym_state = icomb.get_qsym_state();
+            auto wfsym = get_qsym_state(Qm::isym, sym_state.ne(),
+                  (ifab? sym_state.tm() : sym_state.ts()), singlet);
+            const auto& site0 = dbond.forward? icomb.cpsi[0] : icomb.sites[rindex.at(dbond.p0)];
+            const auto& site1 = dbond.forward? icomb.sites[rindex.at(dbond.p1)] : icomb.cpsi[0];
+            const auto& ql  = site0.info.qrow;
+            const auto& qr  = site1.info.qcol;
+            const auto& qc1 = site0.info.qmid;
+            const auto& qc2 = site1.info.qmid;
+            qtensor4<ifab,Tm> wf(wfsym, ql, qr, qc1, qc2);
             size_t ndim = wf.size();
             if(debug_check){
                std::cout << "wf4(diml,dimr,dimc1,dimc2)=(" 
@@ -195,27 +158,30 @@ namespace ctns{
             linalg::xscal(v0.size(), 1.0/norm, v0.data());
             assert(v0.size() == ndim*nroots);
 
+            //---------------------------------------------------------
             // reduce entanglement via orbital rotation
-            optfun fun;
-            using std::placeholders::_1;
+            qtensor2<ifab,Tm> rot;
+            std::vector<qtensor2<ifab,Tm>> wfs2(nroots);
             std::vector<Tm> vr(ndim);
-            qtensor2<Qm::ifabelian,Tm> rot;
-            std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
             double dwt;
             int deff;
             int ncall = 0;
+            optfun fun;
+            using std::placeholders::_1;
             fun = bind(&ctns::twodot_wavefun_entropy<Qm,Tm>, _1, std::cref(icomb), 
                   std::cref(v0), std::ref(vr), std::ref(wf), std::ref(rot), std::ref(wfs2),
                   std::cref(dbond.forward), std::cref(dmax), std::cref(alpha),
                   std::ref(dwt), std::ref(deff), std::ref(ncall)); 
 
-            // prepare a good initial guess by scanning 
+            // start optimization
             const double pi = 4.0*std::atan(1.0);
             int npt;
             std::vector<double> anglst, funlst;
             std::vector<double> x(1);
             double fmin;
             if(scheme == "opt"){
+            
+               // repare a good initial guess by scanning 
                npt = nptloc;
                anglst.resize(npt);
                funlst.resize(npt);
@@ -243,7 +209,10 @@ namespace ctns{
                catch(std::exception &e) {
                   std::cout << "nlopt failed: " << e.what() << std::endl;
                }
+
+            // randomly apply SWAP gates
             }else if(scheme == "random"){
+           
                npt = 1;
                anglst.resize(npt);
                funlst.resize(npt);
@@ -257,6 +226,7 @@ namespace ctns{
                }else{
                   x[0] = 0.0;
                } 
+            
             }else{
                std::cout << "error: no such scheme=" << scheme << std::endl;
                exit(1); 
@@ -280,6 +250,10 @@ namespace ctns{
                   << " ncall=" << ncall 
                   << std::endl;
             }
+            
+            // update urot
+            double theta = x[0];
+            givens_rotation(urot, dbond.p0.first, dbond.p1.first, theta);
 
             // save the current site
             const auto p = dbond.get_current();
@@ -292,15 +266,12 @@ namespace ctns{
                std::cout << "error: no such option for superblock=" << superblock << std::endl;
                exit(1);
             }
+            //---------------------------------------------------------
 
             // propagate to the next site
             linalg::matrix<Tm> vsol(ndim,nroots,vr.data());
             twodot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
             vsol.clear();
-
-            // update u
-            double theta = x[0];
-            givens_rotation(urot, dbond.p0.first, dbond.p1.first, theta);
          } // ibond
 
          // compute rwfuns for the next call of reduce_entropy_single

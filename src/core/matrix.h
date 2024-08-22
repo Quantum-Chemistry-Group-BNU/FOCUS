@@ -551,6 +551,26 @@ namespace linalg{
          return C;
       }
 
+   //        [ c   -s ]
+   // (ui,uj)[        ] = (ui*c+uj*s,-ui*s+uj*c)
+   //        [ s    c ]
+   template <typename Tm>   
+      void givens_rotation(linalg::matrix<Tm>& urot, 
+            const int i,
+            const int j,
+            const double theta){
+         int norb = urot.rows();
+         std::vector<Tm> ui(norb,0), uj(norb,0);
+         double c = std::cos(theta);
+         double s = std::sin(theta);
+         linalg::xaxpy(norb,  c, urot.col(i), ui.data());
+         linalg::xaxpy(norb,  s, urot.col(j), ui.data());
+         linalg::xaxpy(norb, -s, urot.col(i), uj.data());
+         linalg::xaxpy(norb,  c, urot.col(j), uj.data());
+         linalg::xcopy(norb, ui.data(), urot.col(i));
+         linalg::xcopy(norb, uj.data(), urot.col(j));
+      }
+
 } // linalg
 
 #endif

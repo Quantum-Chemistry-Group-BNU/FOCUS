@@ -56,8 +56,8 @@ namespace ctns{
          // generate forward sweep sequence
          const int nroots = 1;
          const auto& rindex = icomb_tmp.topo.rindex;
-         const int dmax = icomb_tmp.get_dmax();
          auto fsweep_seq = icomb_tmp.topo.get_mps_fsweeps();
+         const int dmax = icomb_tmp.get_dmax();
          for(int ibond=0; ibond<fsweep_seq.size(); ibond++){
             const auto& dbond = fsweep_seq[ibond];
             auto tp0 = icomb_tmp.topo.get_type(dbond.p0);
@@ -74,16 +74,17 @@ namespace ctns{
                   << " dots=" << dots << " dbond=" << dbond
                   << std::endl;
             }
+            
             // construct twodot wavefunction: wf4
+            const auto sym_state = icomb_tmp.get_qsym_state();
+            auto wfsym = get_qsym_state(Qm::isym, sym_state.ne(),
+                  (ifab? sym_state.tm() : sym_state.ts()), singlet);
             const auto& cpsi0 = icomb_tmp.cpsi[0];
             const auto& site1 = icomb_tmp.sites[rindex.at(std::make_pair(ibond+1,0))];
             const auto& ql  = cpsi0.info.qrow;
             const auto& qr  = site1.info.qcol;
             const auto& qc1 = cpsi0.info.qmid;
             const auto& qc2 = site1.info.qmid;
-            const auto sym_state = icomb_tmp.get_qsym_state();
-            auto wfsym = get_qsym_state(Qm::isym, sym_state.ne(),
-                  (ifab? sym_state.tm() : sym_state.ts()), singlet);
             qtensor4<ifab,Tm> wf(wfsym, ql, qr, qc1, qc2);
             size_t ndim = wf.size();
             if(debug){
@@ -101,10 +102,13 @@ namespace ctns{
                std::cout << "error: symmetry is inconsistent as ndim=0" << std::endl;
                exit(1);
             }
+            
             // generate wavefunction;
             std::vector<Tm> v0;
             twodot_guess_v0(icomb_tmp, dbond, ndim, nroots, wf, v0, debug);
             assert(v0.size() == ndim*nroots);
+            
+            //---------------------------------------------------------
             // perform decimation
             qtensor2<ifab,Tm> rot;
             std::vector<qtensor2<ifab,Tm>> wfs2(nroots);
@@ -125,11 +129,14 @@ namespace ctns{
                   wfs2, sigs2full, rot, dwt, deff, fname,
                   debug);
             svalues[ibond] = std::move(sigs2full);
+            //---------------------------------------------------------
+            
             // propagate to the next site
             linalg::matrix<Tm> vsol(ndim, nroots, v0.data());
             twodot_guess_psi(superblock, icomb_tmp, dbond, vsol, wf, rot);
             vsol.clear();
          } // ibond
+           
          return svalues;
       }
 
@@ -150,11 +157,14 @@ namespace ctns{
       return ssum;
    }
 
+   // Warning: this function used in OO-DMRG,
+   // which works only for iroot=0 & singlet=true
    template <typename Qm, typename Tm>
       double sum_of_entropy(const comb<Qm,Tm>& icomb,
             const double alpha){
-         const bool debug = true;
-         auto svalues = get_schmidt_values(icomb);
+         const int iroot = 0;
+         const bool singlet = true;
+         auto svalues = get_schmidt_values(icomb, iroot, singlet);
          double s_sum = 0.0;
          for(int i=0; i<svalues.size(); i++){
             s_sum += renyi_entropy(svalues[i], alpha);
