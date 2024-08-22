@@ -390,22 +390,19 @@
          - urot.txt
          - rmole_info.new   
       - mpi implementation for large-scale application [DONE@2024/08/12]
-    - support su2 mps: [DONE@2024/XX/XX]
+    - oodmrg support su2 mps: [DONE@2024/XX/XX]
       - improvements related with CSF: csf to samps to nsamps [DONE@2024/08/21]
-      - support for singlet embedding in computing entropy
+      - support for singlet embedding in computing entropy [DONE@2024/08/22]
          - a task support for computing the entropy for given MPS
-      - apply urot to twodot wavefunction
-    
- ===== TODOs =====
-   2 check open-shell systems: femoco?								
-   3 compute entanglement entropy? Along the bond?
-      - canonicalization?
-      - singlet embedding?	
-   4 more robust initialization, and canonicalization
-      - addition of MPS and canonicalization 
-      - support linear combination of dets and csf states via addition of MPS and canonicalization 
-   5 better algorithm to extract the largest k-coefficients?								
-   6 OO-DMRG at the level of SA-DMRG?								
-      - application of urot to a su2 twodot wavefunction!
-      - can this be done analytically without invoking recoupling explicitly?
+      - apply urot to a su2 twodot wavefunction (most complicated step)
+         - can this be done analytically without invoking recoupling explicitly? Yes!
 
+ ===== TODOs =====
+   * check open-shell systems: femoco?								
+   * more robust initialization, and canonicalization
+      - addition of MPS and canonicalization 
+      - support linear combination of dets and csf states via addition of MPS and canonicalization
+      - then we can check the fidelity <approx|exact>! 
+   * better algorithm to extract the largest k-coefficients?
+      - my previous sampling algorithm?
+	
