@@ -34,7 +34,8 @@ namespace ctns{
          auto Hij0 = get_Hmat(icomb, int2e, int1e, ecore, schd, scratch);
          double e0gs = std::real(Hij0(0,0));
          if(debug) Hij0.print("initial Hij", schd.ctns.outprec);
-
+         
+         // start oodmrg optimization   
          const int norb = icomb.get_nphysical();
          std::vector<double> enew_history(maxiter);
          std::vector<double> emin_history(maxiter+1);
@@ -61,7 +62,7 @@ namespace ctns{
             }
 
             // minimize entanglement only at rank 0
-            auto icomb_new = icomb;
+            auto icomb_new = icomb; 
             auto urot = urot_min;
             if(rank == 0 and (iter != maxiter-1 and iter != 0)){
                // we assume that icomb has already been available, 

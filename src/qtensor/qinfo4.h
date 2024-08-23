@@ -89,6 +89,12 @@ namespace ctns{
 
    template <typename Tm>
       void qinfo4<Tm>::setup(){
+
+         // ZL@20240730 for oodmrg with mpi
+         _nnzaddr.clear();
+         _offset.clear();
+
+         // setup
          _rows = qrow.size();
          _cols = qcol.size();
          _mids = qmid.size();

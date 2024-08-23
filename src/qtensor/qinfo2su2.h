@@ -73,6 +73,14 @@ namespace ctns{
 
    template <typename Tm>
       void qinfo2su2<Tm>::setup(){
+        
+         // ZL@20240730 for oodmrg 
+         _nnzaddr.clear();
+         _offset.clear();
+         _br2bc.clear();
+         _bc2br.clear();
+         
+         // setup
          _rows = qrow.size();
          _cols = qcol.size();
          int nblks = _rows*_cols;

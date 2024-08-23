@@ -92,6 +92,17 @@ namespace ctns{
 
    template <typename Tm>
       void qinfo2<Tm>::setup(){
+
+         // ZL@20240730 in oodmrg, sometimes icomb.rwfuns is already available at all ranks.
+         //             Thus, in broadcasting (see load function), when recalculating these
+         //             data, they already have values if we only use resize(_rows,-1).
+         //             This will cause failure in checking [_br2bc[br] == -1 && _bc2br[bc] == -1] 
+         _nnzaddr.clear();
+         _offset.clear();
+         _br2bc.clear();
+         _bc2br.clear();
+        
+         // setup 
          _rows = qrow.size();
          _cols = qcol.size();
          int nblks = _rows*_cols;
@@ -116,14 +127,8 @@ namespace ctns{
          _size -= 1; // tricky part
          
          // ZL@20220621 fast access of nonzero blocks
-         _br2bc.resize(_rows);
-         _bc2br.resize(_cols);
-         // ZL@20240730 in oodmrg, sometimes icomb.rwfuns is already available at all ranks.
-         //             Thus, in broadcasting (see load function), when recalculating these
-         //             data, they already have values if we only use resize(_rows,-1).
-         //             This will cause failure in checking [_br2bc[br] == -1 && _bc2br[bc] == -1] 
-         std::fill_n(_br2bc.data(), _rows, -1); 
-         std::fill_n(_bc2br.data(), _cols, -1);
+         _br2bc.resize(_rows, -1);
+         _bc2br.resize(_cols, -1);
          int br, bc;
          for(int i=0; i<ndx; i++){
             int idx = _nnzaddr[i];

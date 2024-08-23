@@ -46,8 +46,8 @@ void params_ctns::read(ifstream& istrm){
          task_ham = true;
       }else if(line.substr(0,8)=="task_opt"){
          task_opt = true;
-      }else if(line.substr(0,11)=="task_orbopt"){
-         task_orbopt = true;
+      }else if(line.substr(0,11)=="task_oodmrg"){
+         task_oodmrg = true;
       }else if(line.substr(0,8)=="task_vmc"){
          task_vmc = true;
       }else if(line.substr(0,11)=="task_expand"){
@@ -269,7 +269,7 @@ void params_ctns::print() const{
    cout << "task_sdiag = " << task_sdiag << endl;
    cout << "task_ham = " << task_ham << endl;
    cout << "task_opt = " << task_opt << endl;
-   cout << "task_orbopt = " << task_orbopt << endl;
+   cout << "task_oodmrg = " << task_oodmrg << endl;
    cout << "task_vmc = " << task_vmc << endl;
    cout << "task_expand = " << task_expand << endl;
    cout << "task_tononsu2 = " << task_tononsu2 << endl;

@@ -11,7 +11,7 @@ namespace ctns{
       void reduce_entropy_multi(comb<Qm,Tm>& icomb,
             linalg::matrix<Tm>& urot,
             const int dmax,
-            const input::params_orbopt& ooparams){
+            const input::params_oodmrg& ooparams){
          const int& microiter = ooparams.microiter;
          const double& alpha = ooparams.alpha;
          const double& thrdopt = ooparams.thrdopt;

@@ -398,6 +398,7 @@
          - can this be done analytically without invoking recoupling explicitly? Yes!
       - rcanon_lastdots: to make mps in canonical form, where the last dot is identity.
     - settings: initial and final oodmrg do not change orbital
+    - bugfix: mpi error for oosadmrg due to problem in qinfo
 
  ===== TODOs =====
    * check open-shell systems: femoco?								

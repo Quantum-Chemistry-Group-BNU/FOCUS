@@ -162,7 +162,7 @@ void CTNS(const input::schedule& schd){
    }
 
    // compute hamiltonian or optimize ctns by dmrg algorithm
-   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_orbopt || schd.ctns.task_vmc){
+   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_oodmrg || schd.ctns.task_vmc){
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -205,14 +205,14 @@ void CTNS(const input::schedule& schd){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
       // orbital optimization
-      if(schd.ctns.task_orbopt){
+      if(schd.ctns.task_oodmrg){
          ctns::oodmrg(icomb, int2e, int1e, ecore, schd, scratch);
       }
       // vmc for estimation uncertainty
       if(schd.ctns.task_vmc){
          ctns::vmc_estimate(icomb, int2e, int1e, ecore, schd, scratch);
       }
-   } // ham || opt || orbopt || vmc
+   } // ham || opt || oodmrg || vmc
 }
 
 int main(int argc, char *argv[]){

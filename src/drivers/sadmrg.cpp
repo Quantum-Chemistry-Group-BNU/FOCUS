@@ -190,7 +190,7 @@ void SADMRG(const input::schedule& schd){
    }
 
    // compute hamiltonian or optimize ctns by dmrg algorithm
-   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_orbopt){
+   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_oodmrg){
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -233,10 +233,10 @@ void SADMRG(const input::schedule& schd){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
       // orbital optimization
-      if(schd.ctns.task_orbopt){
+      if(schd.ctns.task_oodmrg){
          ctns::oodmrg(icomb, int2e, int1e, ecore, schd, scratch);
       }
-   } // ham || opt || orbopt
+   } // ham || opt || oodmrg
 }
 
 int main(int argc, char *argv[]){

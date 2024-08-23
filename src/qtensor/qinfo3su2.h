@@ -105,10 +105,21 @@ namespace ctns{
 
    template <typename Tm>
       void qinfo3su2<Tm>::setup(){
+         
+         // ZL@20240730 for oodmrg with mpi
+         _nnzaddr.clear();
+         _offset.clear();
+
+         // setup
          _rows = qrow.size();
          _cols = qcol.size();
          _mids = qmid.size();
+         int nblks = _rows*_cols*_mids;
+         // we change to the current setting for the correct use in oodmrg,
+         // in which a nonempty icomb is communicated several times
+         _nnzaddr.resize(nblks); 
          _size = 1;
+         int ndx = 0;
          for(int br=0; br<_rows; br++){
             int rdim = qrow.get_dim(br);
             for(int bc=0; bc<_cols; bc++){
@@ -125,9 +136,10 @@ namespace ctns{
                      for(int tslc=std::abs(tsl-tsc); tslc<=tsl+tsc; tslc+=2){
                         auto indices = std::make_tuple(br,bc,bm,tslc); 
                         if(_ifconserve(br,bc,bm,tslc)){
-                           _nnzaddr.push_back(indices);
+                           _nnzaddr[ndx] = indices;
                            _offset[indices] = _size;
                            _size += rcdim*mdim;
+                           ndx += 1;
                         }else{
                            _offset[indices] = 0;
                         }
@@ -137,9 +149,10 @@ namespace ctns{
                      for(int tscr=std::abs(tsc-tsr); tscr<=tsc+tsr; tscr+=2){
                         auto indices = std::make_tuple(br,bc,bm,tscr);
                         if(_ifconserve(br,bc,bm,tscr)){
-                           _nnzaddr.push_back(indices);
+                           _nnzaddr[ndx] = indices;
                            _offset[indices] = _size;
                            _size += rcdim*mdim;
+                           ndx += 1;
                         }else{
                            _offset[indices] = 0;
                         }
@@ -148,6 +161,7 @@ namespace ctns{
                } // bm 
             } // bc
          } // br
+         _nnzaddr.resize(ndx);
          _size -= 1; // tricky part
       }
 

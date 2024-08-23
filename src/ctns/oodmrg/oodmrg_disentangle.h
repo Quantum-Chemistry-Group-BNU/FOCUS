@@ -68,7 +68,7 @@ namespace ctns{
             linalg::matrix<Tm>& urot,
             const std::string scheme,
             const int dmax,
-            const input::params_orbopt& ooparams){
+            const input::params_oodmrg& ooparams){
          const bool ifab = Qm::ifabelian;
          const int& iprt = ooparams.iprt;
          const double& alpha = ooparams.alpha;
