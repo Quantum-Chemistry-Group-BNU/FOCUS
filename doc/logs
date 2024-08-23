@@ -397,6 +397,7 @@
       - apply urot to a su2 twodot wavefunction (most complicated step) [DONE@2024/08/22]
          - can this be done analytically without invoking recoupling explicitly? Yes!
       - rcanon_lastdots: to make mps in canonical form, where the last dot is identity.
+    - settings: initial and final oodmrg do not change orbital
 
  ===== TODOs =====
    * check open-shell systems: femoco?								

@@ -98,35 +98,37 @@ namespace ctns{
 
             // accept or reject
             if(rank == 0){
-               double e_new = result.get_eminlast(0);
-               // print
-               std::cout << std::endl;
-               std::cout << tools::line_separator2 << std::endl;
-               std::cout << "OO-DMRG: iter=" << iter << std::setprecision(12)
-                  << " dcut=" << schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut
-                  << " e_new=" << e_new
-                  << " e_min=" << e_min
-                  << " |U-I|_F=" << std::setprecision(2) << u_diff 
-                  << std::endl;
-               std::cout << tools::line_separator << std::endl;
                // check acceptance
+               std::string status;
+               double e_new = result.get_eminlast(0);
                double deltaE = e_new - e_min;
                if(deltaE < 0 or iter == maxiter-1 or acceptall){
-                  std::cout << "accept the move! deltaE=" << deltaE << std::endl;
+                  status = "Accept the move!";
                   acceptance[iter] = true;
                   e_min = e_new;
                   urot_min = urot;
                   icomb = std::move(icomb_new); // move is defined, but copy is deleted
                }else{
-                  std::cout << "reject the move! deltaE=" << deltaE << std::endl;
                   // urot_min and icomb in the next iter will 
                   // still be the old one without change.
+                  status = "Reject the move!";
                }
                enew_history[iter] = e_new;
                emin_history[iter+1] = e_min;
                u_history[iter] = u_diff;
+
                // display results
-               std::cout << "initial ground-state energy = " << e0gs << std::endl;
+               std::cout << std::endl;
+               std::cout << tools::line_separator2 << std::endl;
+               std::cout << "OO-DMRG: iter=" << iter << std::setprecision(12)
+                  << " dcut=" << schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut
+                  << std::scientific << std::setprecision(2)
+                  << " deltaE=" << deltaE << " " << status
+                  << std::endl;
+               std::cout << tools::line_separator << std::endl;
+               std::cout << "initial ground-state energy=" 
+                  << std::defaultfloat << std::setprecision(12) << e0gs 
+                  << std::endl;
                std::cout << "summary of oodmrg results:" << std::endl;
                for(int jter=0; jter<=iter; jter++){
                   if(jter == maxiter-1) std::cout << "final check:" << std::endl;
@@ -136,9 +138,9 @@ namespace ctns{
                      << " e_new=" << enew_history[jter]
                      << " e_min=" << emin_history[jter+1]
                      << std::scientific << std::setprecision(2)
-                     << " de_i=" << (emin_history[jter+1]-emin_history[jter])
-                     << " de_0=" << (emin_history[jter+1]-emin_history[0])
-                     << " u_diff=" << u_history[jter]
+                     << " de_i=" << std::setw(9) << (emin_history[jter+1]-emin_history[jter])
+                     << " de_0=" << std::setw(9) << (emin_history[jter+1]-emin_history[0])
+                     << " u_diff=" << std::setw(8) << u_history[jter]
                      << std::endl;
                }
                std::cout << tools::line_separator2 << std::endl;

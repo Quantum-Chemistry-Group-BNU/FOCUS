@@ -27,14 +27,12 @@ namespace ctns{
          auto t0 = tools::get_time();
 
          // initialization
-         auto icomb0 = icomb;
-         double totaldiff = 0.0;
-         bool ifconv = false;
          double s_init = sum_of_entropy(icomb, alpha); // record the input entropy
          double s_old = s_init;
-         double maxdwt = -1.0;
 
          // optimization
+         double maxdwt = -1.0;
+         bool ifconv = false;
          for(int imicro=0; imicro<microiter; imicro++){
             if(iprt > 0){
                std::cout << "=== imicro=" << imicro << " ===" << std::endl;
@@ -45,23 +43,17 @@ namespace ctns{
             double s_new = sum_of_entropy(icomb, alpha);
             double s_diff = s_new - s_old;
             if(iprt > 0){
-               auto smat = get_Smat(icomb,icomb0);
                std::cout << "result:" << std::scientific
-                  << " s[old]=" << s_old
-                  << " s[new]=" << s_new << " s[diff]=" << s_diff
-                  << " imaxdwt=" << imaxdwt 
-                  << " <MPS[0]|MPS[new]>=" << smat(0,0)
+                  << " s[old]=" << s_old << " s[new]=" << s_new 
+                  << " s[diff]=" << s_diff << " imaxdwt=" << imaxdwt 
                   << std::endl;
             }
             // check convergence
             if(std::abs(s_diff) < thrdopt){
                if(iprt >= 0){
-                  std::cout << "converge in "
-                     << (imicro+1) << " iterations:"
-                     << std::setprecision(4)
-                     << " s[init]=" << s_init 
-                     << " s[new]=" << s_new
-                     << " maxdwt=" << maxdwt
+                  std::cout << "converge in " << (imicro+1) << " iterations:"
+                     << std::setprecision(4) << " s[init]=" << s_init 
+                     << " s[new]=" << s_new << " maxdwt=" << maxdwt
                      << std::endl;
                }
                ifconv = true; 
