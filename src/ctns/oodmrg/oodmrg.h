@@ -29,18 +29,12 @@ namespace ctns{
                << std::endl;
          }
          auto t0 = tools::get_time();
-        
-         // compute Hij first to get the initial Hij 
-         auto Hij0 = get_Hmat(icomb, int2e, int1e, ecore, schd, scratch);
-         double e0gs = std::real(Hij0(0,0));
-         if(debug) Hij0.print("initial Hij", schd.ctns.outprec);
-         
+                
          // start oodmrg optimization   
          const int norb = icomb.get_nphysical();
          std::vector<double> enew_history(maxiter);
          std::vector<double> emin_history(maxiter+1);
-         emin_history[0] = e0gs;
-         double e_min = emin_history[0];
+         double e0gs, e_min;
          std::vector<double> u_history(maxiter);
          std::vector<bool> acceptance(maxiter,0);
          auto urot_min = linalg::identity_matrix<Tm>(norb);
@@ -91,7 +85,15 @@ namespace ctns{
 
             // prepare environment
             auto Hij = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
-            if(rank == 0) Hij.print("Hij", schd.ctns.outprec);
+            if(rank == 0){
+               Hij.print("Hij", schd.ctns.outprec);
+               // save the initial ground-state energy
+               if(iter == 0){
+                  e0gs = std::real(Hij(0,0));
+                  emin_history[0] = e0gs;
+                  e_min = e0gs;
+               }
+            }
 
             // optimization
             std::string rcfprefix = "oo_";
