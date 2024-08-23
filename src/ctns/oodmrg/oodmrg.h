@@ -32,12 +32,13 @@ namespace ctns{
         
          // compute Hij first to get the initial Hij 
          auto Hij0 = get_Hmat(icomb, int2e, int1e, ecore, schd, scratch);
+         double e0gs = std::real(Hij0(0,0));
          if(debug) Hij0.print("initial Hij", schd.ctns.outprec);
 
          const int norb = icomb.get_nphysical();
          std::vector<double> enew_history(maxiter);
          std::vector<double> emin_history(maxiter+1);
-         emin_history[0] = std::real(Hij0(0,0));
+         emin_history[0] = e0gs;
          double e_min = emin_history[0];
          std::vector<double> u_history(maxiter);
          std::vector<bool> acceptance(maxiter,0);
@@ -62,7 +63,7 @@ namespace ctns{
             // minimize entanglement only at rank 0
             auto icomb_new = icomb;
             auto urot = urot_min;
-            if(rank == 0 and iter != maxiter-1){
+            if(rank == 0 and (iter != maxiter-1 and iter != 0)){
                // we assume that icomb has already been available, 
                // which is usually the case with a initial MPS from
                // SCI or a previous optimization.
@@ -100,7 +101,7 @@ namespace ctns{
                double e_new = result.get_eminlast(0);
                // print
                std::cout << std::endl;
-               std::cout << tools::line_separator << std::endl;
+               std::cout << tools::line_separator2 << std::endl;
                std::cout << "OO-DMRG: iter=" << iter << std::setprecision(12)
                   << " dcut=" << schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut
                   << " e_new=" << e_new
@@ -125,7 +126,7 @@ namespace ctns{
                emin_history[iter+1] = e_min;
                u_history[iter] = u_diff;
                // display results
-               Hij0.print("initial Hij", schd.ctns.outprec);
+               std::cout << "initial ground-state energy = " << e0gs << std::endl;
                std::cout << "summary of oodmrg results:" << std::endl;
                for(int jter=0; jter<=iter; jter++){
                   if(jter == maxiter-1) std::cout << "final check:" << std::endl;
@@ -140,7 +141,7 @@ namespace ctns{
                      << " u_diff=" << u_history[jter]
                      << std::endl;
                }
-               std::cout << tools::line_separator << std::endl;
+               std::cout << tools::line_separator2 << std::endl;
             } // rank-0
          } // iter
   
