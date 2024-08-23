@@ -45,7 +45,7 @@ namespace ctns{
       std::pair<fock::onspace,std::vector<Tm>> rcanon_expand_onspace(const comb<Qm,Tm>& icomb,
             const int iroot,
             const double pthrd=1.e-2){
-         std::cout << "\nctns::rcanon_expand_onspace:"
+         std::cout << "ctns::rcanon_expand_onspace:"
             << " ifab=" << Qm::ifabelian
             << " iroot=" << iroot 
             << " pthrd=" << pthrd
@@ -115,7 +115,7 @@ namespace ctns{
             const double pthrd=1.e-2,
             const int iprt=1){
          if(iprt>0){
-            std::cout << "\nctns::rcanon_expand_csfspace:"
+            std::cout << "ctns::rcanon_expand_csfspace:"
                << " ifab=" << Qm::ifabelian
                << " iroot=" << iroot 
                << " pthrd=" << pthrd
@@ -172,7 +172,7 @@ namespace ctns{
             const int iroot,
             const double pthrd=1.e-2){
          const bool debug = false;
-         std::cout << "\nctns::rcanon_expand_onspace:"
+         std::cout << "ctns::rcanon_expand_onspace:"
             << " ifab=" << Qm::ifabelian
             << " iroot=" << iroot 
             << " pthrd=" << pthrd
