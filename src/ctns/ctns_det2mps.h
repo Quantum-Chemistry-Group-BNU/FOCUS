@@ -46,6 +46,7 @@ namespace ctns{
          qt2._data[0] = 1.0;
          mps.rwfuns.resize(1);
          mps.rwfuns[0] = std::move(qt2);
+
          // d=1 to rcanon for Hmat & DMRG
          if(ifrcanon) rcanon_lastdots(mps);
          /*

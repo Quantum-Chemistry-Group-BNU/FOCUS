@@ -15,7 +15,7 @@ namespace integral{
             double& ecore, 
             const std::string fname){
          auto t0 = tools::get_time();
-         std::cout << "integral::load fname = " << fname << std::endl; 
+         std::cout << "\nintegral::load fname = " << fname << std::endl; 
 
          std::ifstream istrm(fname);
          if(!istrm){

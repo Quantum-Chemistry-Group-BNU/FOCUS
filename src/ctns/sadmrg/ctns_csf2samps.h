@@ -44,8 +44,9 @@ namespace ctns{
          qt2._data[0] = 1.0;
          samps.rwfuns.resize(1);
          samps.rwfuns[0] = std::move(qt2);
+
          // d=1 to rcanon for Hmat & DMRG
-         if(ifrcanon) rcanon_lastdots(mps);
+         if(ifrcanon) rcanon_lastdots(samps);
          /*
          // check
          rcanon_Sdiag_sample(samps, 0, 100, -1);
