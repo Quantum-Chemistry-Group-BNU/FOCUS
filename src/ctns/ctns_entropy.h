@@ -2,42 +2,11 @@
 #define CTNS_ENTROPY_H
 
 #include "sweep_twodot_guess.h"
+#include "ctns_rcanon.h"
 
 namespace ctns{
-        
-   // r*R0*R1*R2 to C0*R1*R2 
-   template <typename Qm, typename Tm>
-      void init_cpsi_dot0(comb<Qm,Tm>& icomb,
-            const int iroot=-1,
-            const bool singlet=true){
-         const auto& rindex = icomb.topo.rindex;
-         const auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))]; // will be updated
-         const auto sym_state = icomb.get_qsym_state();
-         const auto wf2 = get_boundary_coupling<Qm,Tm>(sym_state, singlet); // env*C[0]
-         int nroots = (iroot==-1)? icomb.get_nroots() : 1;
-         icomb.cpsi.resize(nroots);
-         if(iroot == -1){
-            for(int iroot=0; iroot<nroots; iroot++){
-               // qt2(1,r): ->-*->-
-               auto qt2 = contract_qt2_qt2(wf2,icomb.rwfuns[iroot]);
-               // qt2(1,r)*site0(r,r0,n0) = qt3(1,r0,n0)[CRcouple]
-               auto qt3 = contract_qt3_qt2("l",site0,qt2);
-               // recouple to qt3(1,r0,n0)[LCcouple]
-               icomb.cpsi[iroot] = qt3.recouple_lc();
-            } // iroot
-         }else{
-            // get an MPS for a single state
-            if(iroot != 0) icomb.rwfuns[0] = std::move(icomb.rwfuns[iroot]);
-            icomb.rwfuns.resize(1);
-            // qt2(1,r): ->-*->-
-            auto qt2 = contract_qt2_qt2(wf2,icomb.rwfuns[0]);
-            // qt2(1,r)*site0(r,r0,n0) = qt3(1,r0,n0)[CRcouple]
-            auto qt3 = contract_qt3_qt2("l",site0,qt2);
-            // recouple to qt3(1,r0,n0)[LCcouple]
-            icomb.cpsi[0] = qt3.recouple_lc();
-         }
-      }
 
+   // Schmidt decomposition for MPS[iroot]   
    template <typename Qm, typename Tm>
       std::vector<std::vector<double>> get_schmidt_values(const comb<Qm,Tm>& icomb,
             const int iroot=0,

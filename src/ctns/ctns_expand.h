@@ -137,7 +137,7 @@ namespace ctns{
             auto tmp = rcanon_CIcoeff(icomb, state)[iroot];
             if(std::abs(coeff[i]-tmp) > 1.e-10){
                std::cout << "error: inconsistent evaluation of wfcoeff:" << std::endl;
-               std::cout << "coeff by csf2samps&get_Smat=" << coeff[i] << std::endl;
+               std::cout << "coeff by csf2samps|get_Smat=" << coeff[i] << std::endl;
                std::cout << "coeff by rcanon_CIcoeff=" << tmp << std::endl;
                std::cout << "difference=" << coeff[i]-tmp << std::endl;
                exit(1);

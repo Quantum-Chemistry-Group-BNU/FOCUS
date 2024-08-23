@@ -152,8 +152,8 @@ void params_ctns::read(ifstream& istrm){
          thresh_tosu2 = stod(line.substr(12));
       }else if(line.substr(0,7)=="singlet"){
          singlet = true;
-      }else if(line.substr(0,4)=="conf"){
-         istringstream is(line.substr(4));
+      }else if(line.substr(0,8)=="fromconf"){
+         istringstream is(line.substr(8));
          is >> inputconf;
       }else if(line.substr(0,9)=="diagcheck"){
          diagcheck = true;

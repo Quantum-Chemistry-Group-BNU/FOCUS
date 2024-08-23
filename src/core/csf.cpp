@@ -11,11 +11,13 @@ ostream& fock::operator <<(ostream& os, const csfstate& state){
    return os;
 }
 
+//
 // right canonical form
 // 
-//    0   1   2   3   4   5
+//  A[0]A[1]A[2]A[3]A[4]A[5]
+//    |   |   |   |   |   |
 //    *---*---*---*---*---*
-//  0   1   2   3   4   5   6 [intermediate n/s]
+//  0   1   2   3   4   5   6 [intermediate n/s storage]
 //
 std::vector<int> csfstate::intermediate_narray() const{
    int k = repr.size()/2;

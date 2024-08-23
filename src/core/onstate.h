@@ -199,6 +199,26 @@ namespace fock{
          int twom() const{
             return nelec_a()-nelec_b();
          }
+         
+         // used in det2mps
+         std::vector<int> intermediate_narray() const{
+            int ks = _size/2;
+            std::vector<int> ninter(ks+1,0);
+            for(int i=ks-1; i>=0; i--){
+               int ndelta = (*this)[2*i]+(*this)[2*i+1];
+               ninter[i] += ninter[i+1]+ndelta;
+            }
+            return ninter;
+         }
+         std::vector<int> intermediate_tmarray() const{
+            int ks = _size/2;
+            std::vector<int> tminter(ks+1,0);
+            for(int i=ks-1; i>=0; i--){
+               int tmdelta = (*this)[2*i]-(*this)[2*i+1];
+               tminter[i] = tminter[i+1]+tmdelta;
+            }
+            return tminter;
+         }
 
          // creation/annihilation operators related subroutines
          // parity: = (-1)^sum_k fk for k in [0,n) 

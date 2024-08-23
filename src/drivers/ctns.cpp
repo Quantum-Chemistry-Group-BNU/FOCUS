@@ -46,9 +46,9 @@ void CTNS(const input::schedule& schd){
             rcanon_file = schd.scratch+"/rmps_sym";
             ctns::rcanon_save(icomb, rcanon_file);
 
-         }else if(!schd.ctnsinputconf.empty()){
+         }else if(!schd.ctns.inputconf.empty()){
 
-            fock::onstate det(schd.ctns.inputconf);
+            fock::onstate det(schd.ctns.inputconf, 1);
             // consistency check
             if(det.norb() != icomb.topo.nphysical or
                det.nelec() != schd.nelec or
@@ -59,7 +59,7 @@ void CTNS(const input::schedule& schd){
                   << std::endl;
                exit(1);
             }
-            icomb = ctns::det2mps<Tm>(icomb.topo, det);
+            icomb = ctns::det2mps<Qm,Tm>(icomb.topo, det);
             rcanon_file = schd.scratch+"/rcanon_det";
             ctns::rcanon_save(icomb, rcanon_file);
 

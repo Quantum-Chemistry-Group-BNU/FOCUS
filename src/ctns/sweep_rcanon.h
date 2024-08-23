@@ -6,26 +6,6 @@
 
 namespace ctns{
 
-   // --<--*-->--
-   //     /|\
-   // boundary_coupling: |tot>=|vaccum>*|physical>
-   template <typename Qm, typename Tm>
-      qtensor2<Qm::ifabelian,Tm> get_boundary_coupling(const qsym& sym_state, const bool singlet){
-         const int isym = sym_state.isym();
-         qbond qcol({{sym_state,1}});
-         qtensor2<Qm::ifabelian,Tm> wf2;
-         if(isym == 3 && singlet){
-            qbond qrow({{qsym(3,sym_state.ts(),sym_state.ts()),1}}); // couple to fictious site
-            wf2.init(qsym(3,sym_state.ne()+sym_state.ts(),0),qrow,qcol,dir_WF2);
-         }else{ 
-            qbond qrow({{qsym(isym,0,0),1}}); // couple to vacuum
-            wf2.init(sym_state,qrow,qcol,dir_WF2);
-         }
-         assert(wf2.size() == 1);
-         wf2._data[0] = 1.0;
-         return wf2;
-      }
-
    // rwfuns_to_cpsi: generate initial guess from RCF for 
    // the initial sweep optimization at p=(1,0): cRRRR => LCRR (L=Id)
    template <typename Qm, typename Tm>

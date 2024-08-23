@@ -2,6 +2,7 @@
 #define CTNS_OODMRG_MOVE_H
 
 #include "oodmrg_disentangle.h"
+#include "../ctns_rcanon.h"
 
 namespace ctns{
 
@@ -124,7 +125,7 @@ namespace ctns{
          } // imacro 
 
          // change the last site of MPS to identity for later optimization
-         rcanon_lastdot(icomb);
+         rcanon_lastdots(icomb);
 
          // urot = u0*U => U = u0.H()*urot
          int norb = u0.rows();

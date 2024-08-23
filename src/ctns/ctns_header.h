@@ -18,8 +18,9 @@
 #include "ctns_vmc.h"
 
 #include "sadmrg/ctns_tosu2.h"
-#include "sadmrg/ctns_csf2samps.h"
 
+#include "ctns_det2mps.h"
+#include "sadmrg/ctns_csf2samps.h"
 #include "nosym/ctns_fromnosym.h"
 
 #include "ctns_entropy.h"
