@@ -27,7 +27,7 @@ namespace ctns{
          auto t0 = tools::get_time();
 
          // initialization
-         double s_init = sum_of_entropy(icomb, alpha); // record the input entropy
+         double s_init = rcanon_entropysum(icomb, alpha); // record the input entropy
          double s_old = s_init;
 
          // optimization
@@ -40,7 +40,7 @@ namespace ctns{
             // optimize
             double imaxdwt = reduce_entropy_single(icomb, urot, "opt", dmax, ooparams);
             maxdwt = std::max(maxdwt,imaxdwt);
-            double s_new = sum_of_entropy(icomb, alpha);
+            double s_new = rcanon_entropysum(icomb, alpha);
             double s_diff = s_new - s_old;
             if(iprt > 0){
                std::cout << "result:" << std::scientific

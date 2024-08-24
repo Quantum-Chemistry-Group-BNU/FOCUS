@@ -129,7 +129,7 @@ namespace ctns{
    // Warning: this function used in OO-DMRG,
    // which works only for iroot=0 & singlet=true
    template <typename Qm, typename Tm>
-      double sum_of_entropy(const comb<Qm,Tm>& icomb,
+      double rcanon_entropysum(const comb<Qm,Tm>& icomb,
             const double alpha){
          const int iroot = 0;
          const bool singlet = true;
