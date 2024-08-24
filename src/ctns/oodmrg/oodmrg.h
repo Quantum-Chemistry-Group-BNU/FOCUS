@@ -148,7 +148,7 @@ namespace ctns{
                double e_new = result.get_eminlast(0);
                double deltaE = e_new - e_min;
                if(deltaE < 0 or iter == maxiter-1 or acceptall){
-                  status = "Accept the move!";
+                  status = "accept move!";
                   acceptance[iter] = true;
                   e_min = e_new;
                   urot_min = urot;
@@ -157,7 +157,7 @@ namespace ctns{
                }else{
                   // urot_min and icomb in the next iter will 
                   // still be the old one without change.
-                  status = "Reject the move!";
+                  status = "reject move!";
                   srenyi_history[iter+1] = srenyi_history[iter]; 
                }
                enew_history[iter] = e_new;
@@ -166,7 +166,7 @@ namespace ctns{
                // display results
                std::cout << std::endl;
                std::cout << tools::line_separator2 << std::endl;
-               std::cout << "OO-DMRG:"
+               std::cout << "OO-DMRG results:"
                   << " iter=" << iter
                   << " alpha=" << alpha
                   << " dcut=" << schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut
@@ -180,8 +180,8 @@ namespace ctns{
                   << " Sd=" << sdiag_history[0]
                   << " Sr=" << srenyi_history[0] 
                   << std::endl;
-               std::cout << "summary of oodmrg results:" << std::endl;
                for(int jter=0; jter<=iter; jter++){
+                  if(jter == 1) std::cout << "oodmrg steps:" << std::endl;
                   if(jter == maxiter-1) std::cout << "final check:" << std::endl;
                   std::cout << " iter=" << jter << ":" << acceptance[jter]
                      << std::defaultfloat << std::setprecision(12)  
