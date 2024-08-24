@@ -34,7 +34,8 @@ namespace ctns{
          const int norb = icomb.get_nphysical();
          std::vector<double> enew_history(maxiter);
          std::vector<double> emin_history(maxiter+1);
-         double e0gs, e_min;
+         std::vector<double> sdiag_history(maxiter+1);
+         double e_min;
          std::vector<double> u_history(maxiter);
          std::vector<bool> acceptance(maxiter,0);
          auto urot_min = linalg::identity_matrix<Tm>(norb);
@@ -116,17 +117,22 @@ namespace ctns{
             auto Hij = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
             if(rank == 0){
                Hij.print("Hij", schd.ctns.outprec);
+               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, 1000);
                // save the initial ground-state energy
                if(iter == 0){
-                  e0gs = std::real(Hij(0,0));
-                  emin_history[0] = e0gs;
-                  e_min = e0gs;
+                  e_min = std::real(Hij(0,0));
+                  emin_history[0] = e_min;
+                  sdiag_history[0] = Sd;
                }
             }
             
             // optimization
             std::string rcfprefix = "oo_";
             auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
+            if(rank == 0){   
+               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, 1000);
+               sdiag_history[iter+1] = Sd;
+            }
             /* 
             auto Hij2 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
             Hij2.print("Hij2",10);
@@ -163,7 +169,8 @@ namespace ctns{
                   << std::endl;
                std::cout << tools::line_separator << std::endl;
                std::cout << "initial ground-state energy=" 
-                  << std::defaultfloat << std::setprecision(12) << e0gs 
+                  << std::defaultfloat << std::setprecision(12) << emin_history[0]
+                  << " sdiag=" << std::scientific << std::setprecision(2) << sdiag_history[0] 
                   << std::endl;
                std::cout << "summary of oodmrg results:" << std::endl;
                for(int jter=0; jter<=iter; jter++){
@@ -174,8 +181,9 @@ namespace ctns{
                      << " e_new=" << enew_history[jter]
                      << " e_min=" << emin_history[jter+1]
                      << std::scientific << std::setprecision(2)
-                     << " de_i=" << std::setw(9) << (emin_history[jter+1]-emin_history[jter])
-                     << " de_0=" << std::setw(9) << (emin_history[jter+1]-emin_history[0])
+                     << " deltaE=" << std::setw(9) << (enew_history[jter]-emin_history[jter])
+                     << " lowerE=" << std::setw(9) << (emin_history[jter+1]-emin_history[0])
+                     << " sdiag=" << std::setw(8) << sdiag_history[jter+1]
                      << " u_diff=" << std::setw(8) << u_history[jter]
                      << std::endl;
                }

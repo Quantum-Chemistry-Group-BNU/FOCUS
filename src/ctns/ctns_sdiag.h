@@ -94,7 +94,8 @@ namespace ctns{
       double rcanon_Sdiag_sample(const comb<Qm,Tm>& icomb,
             const int iroot,
             const int nsample=10000,
-            const double pthrd=1.e-2){ // no. of largest states to be printed
+            const double pthrd=1.e-2,
+            const int nprt=10){ // no. of largest states to be printed
          using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type; 
          auto t0 = tools::get_time();
          const double cutoff = 0.0;
@@ -162,7 +163,7 @@ namespace ctns{
             auto ci = rcanon_CIcoeff(icomb, state)[iroot];
             //std::cout << "ci=" << ci << std::endl;
             double pop = std::norm(ci)/ovlp;
-            if(pop < pthrd) break;
+            if(pop < pthrd and i >= nprt) break;
             sum += counts[idx];
             std::cout << " i=" << i << " " << state
                << " counts=" << counts[idx] 
@@ -185,7 +186,8 @@ namespace ctns{
       double rcanon_sample_samps2det(const comb<Qm,Tm>& icomb,
             const int iroot,
             const int nsample=10000,
-            const double pthrd=1.e-2){ // no. of largest states to be printed
+            const double pthrd=1.e-2,
+            const int nprt=10){ // no. of largest states to be printed
          auto t0 = tools::get_time();
          const double cutoff = 0.0;
          std::cout << "\nctns::rcanon_sample_samps2det:"
@@ -237,7 +239,7 @@ namespace ctns{
             int idx = indx[i];
             auto state = states[idx];
             double pop = counts[idx]/(1.0*nsample);
-            if(pop < pthrd) break;
+            if(pop < pthrd and i >= nprt) break;
             sum += counts[idx];
             std::cout << " i=" << i << " " << state
                << " counts=" << counts[idx] 

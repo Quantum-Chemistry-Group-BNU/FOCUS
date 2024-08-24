@@ -375,7 +375,7 @@
        - gpu version: [DONE@2024/05/12] 
           - onedot_diagGPU_su2.h:
 
- * Orbital-optimized DMRG: output configurations for quantum computing!
+ * Orbital-optimized DMRG: output configurations for quantum computing! [DONE@2024/08/24]
     - non-spin-adapted: [DONE@2024/08/12]
       - driver [DONE@2024/07/29]
       - disentangle 
@@ -397,10 +397,10 @@
       - apply urot to a su2 twodot wavefunction (most complicated step) [DONE@2024/08/22]
          - can this be done analytically without invoking recoupling explicitly? Yes!
       - rcanon_lastdots: to make mps in canonical form, where the last dot is identity.
+      - bugfix for samps: 
+        - mpi error for oosadmrg due to problem in qinfo
+        - oosadmrg for hchain? bug in W-coefficient
     - settings: initial and final oodmrg do not change orbital
-    - bugfix: 
-      - mpi error for oosadmrg due to problem in qinfo
-      - oosadmrg for hchain? bug in W-coefficient
 
  ===== TODOs =====
 
@@ -415,4 +415,3 @@
       - my previous sampling algorithm?
       - search algorithm?
 
-	
