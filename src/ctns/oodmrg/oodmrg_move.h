@@ -120,16 +120,17 @@ namespace ctns{
          rcanon_lastdots(icomb);
 
          // urot = u0*U => U = u0.H()*urot
-         int norb = u0.rows();
-         auto udiff = linalg::xgemm("C","N",u0,urot) - linalg::identity_matrix<Tm>(norb);
-         double u_diff = linalg::xnrm2(udiff.size(), udiff.data());
+         auto umove = linalg::xgemm("C","N",u0,urot);
+         double u_dev = deviationFromIdentity(umove);
          if(iprt >= 0){
-            std::cout << "\noodmrg_move: |U-I|_F=" << u_diff << std::endl;
+            std::cout << "\noodmrg_move: |U[move]-I|_F=" 
+               << std::scientific << std::setprecision(2) << u_dev 
+               << std::endl;
             icomb.display_shape();
             auto t1 = tools::get_time();
             tools::timing("ctns::oodmrg_move", t0, t1);
          }
-         return u_diff;
+         return u_dev;
       }
 
 } // ctns

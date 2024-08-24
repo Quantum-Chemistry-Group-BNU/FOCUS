@@ -104,6 +104,7 @@ namespace ctns{
             << " iroot=" << iroot 
             << " nsample=" << nsample 
             << " pthrd=" << pthrd
+            << " nprt=" << nprt
             << std::endl;
          const int noff = nsample/10;
          // In case CTNS is not normalized 
@@ -163,7 +164,7 @@ namespace ctns{
             auto ci = rcanon_CIcoeff(icomb, state)[iroot];
             //std::cout << "ci=" << ci << std::endl;
             double pop = std::norm(ci)/ovlp;
-            if(pop < pthrd and i >= nprt) break;
+            if(pop < pthrd or i >= nprt) break;
             sum += counts[idx];
             std::cout << " i=" << i << " " << state
                << " counts=" << counts[idx] 
@@ -195,6 +196,7 @@ namespace ctns{
             << " iroot=" << iroot 
             << " nsample=" << nsample 
             << " pthrd=" << pthrd
+            << " nprt=" << nprt
             << std::endl;
          const int noff = nsample/10;
          // In case CTNS is not normalized 
@@ -239,7 +241,7 @@ namespace ctns{
             int idx = indx[i];
             auto state = states[idx];
             double pop = counts[idx]/(1.0*nsample);
-            if(pop < pthrd and i >= nprt) break;
+            if(pop < pthrd or i >= nprt) break;
             sum += counts[idx];
             std::cout << " i=" << i << " " << state
                << " counts=" << counts[idx] 

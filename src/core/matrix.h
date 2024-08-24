@@ -571,6 +571,15 @@ namespace linalg{
          linalg::xcopy(norb, uj.data(), urot.col(j));
       }
 
+   // deviation from identity
+   template <typename Tm>
+      double deviationFromIdentity(const linalg::matrix<Tm>& U){
+         assert(U.rows() == U.cols());
+         size_t n = U.rows();
+         auto dev = U - identity_matrix<Tm>(n);
+         return dev.normF();
+      }
+
 } // linalg
 
 #endif

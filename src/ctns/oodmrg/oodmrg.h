@@ -34,12 +34,12 @@ namespace ctns{
          const int norb = icomb.get_nphysical();
          std::vector<double> enew_history(maxiter);
          std::vector<double> emin_history(maxiter+1);
-         std::vector<double> sdiag_history(maxiter+1);
+         std::vector<double> sdiag_history(maxiter+1,0);
          double e_min;
          std::vector<double> u_history(maxiter);
          std::vector<bool> acceptance(maxiter,0);
          auto urot_min = linalg::identity_matrix<Tm>(norb);
-         double u_diff;
+         double u_dev;
          integral::one_body<Tm> int1e_new;
          integral::two_body<Tm> int2e_new;
 
@@ -52,7 +52,6 @@ namespace ctns{
             const int dcut = schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut;
             const int dfac = schd.ctns.ooparams.dfac;
             const int dmax = dfac*dcut;
-            u_diff = 0.0;
             std::vector<int> gates = {{0},{1},{2}};
             reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
             //reduce_entropy_single(icomb_new, urot, "opt", dmax, schd.ctns.ooparams);
@@ -88,19 +87,20 @@ namespace ctns{
             // minimize entanglement only at rank 0
             auto icomb_new = icomb; 
             auto urot = urot_min;
-            if(rank == 0 and (iter != maxiter-1 and iter != 0)){
+            if(iter != maxiter-1 and iter != 0){
                // we assume that icomb has already been available, 
                // which is usually the case with a initial MPS from
                // SCI or a previous optimization.
-               u_diff = oodmrg_move(icomb_new, urot, schd);
+               if(rank == 0) u_dev = oodmrg_move(icomb_new, urot, schd);
             }else{
-               u_diff = 0.0;
+               u_dev = 0.0;
             }
 #ifndef SERIAL
             if(size > 1){
                mpi_wrapper::broadcast(schd.world, icomb_new, 0);
             }
 #endif
+
             // update integrals
             if(rank == 0){
                rotate_spatial(int1e, int1e_new, urot);
@@ -112,12 +112,12 @@ namespace ctns{
                mpi_wrapper::broadcast(schd.world, int2e_new, 0);
             }
 #endif
-
+            
             // prepare environment
             auto Hij = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
             if(rank == 0){
                Hij.print("Hij", schd.ctns.outprec);
-               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, 1000);
+               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
                // save the initial ground-state energy
                if(iter == 0){
                   e_min = std::real(Hij(0,0));
@@ -130,7 +130,7 @@ namespace ctns{
             std::string rcfprefix = "oo_";
             auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
             if(rank == 0){   
-               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, 1000);
+               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
                sdiag_history[iter+1] = Sd;
             }
             /* 
@@ -157,7 +157,7 @@ namespace ctns{
                }
                enew_history[iter] = e_new;
                emin_history[iter+1] = e_min;
-               u_history[iter] = u_diff;
+               u_history[iter] = u_dev;
 
                // display results
                std::cout << std::endl;
@@ -165,7 +165,7 @@ namespace ctns{
                std::cout << "OO-DMRG: iter=" << iter << std::setprecision(12)
                   << " dcut=" << schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut
                   << std::scientific << std::setprecision(2)
-                  << " deltaE=" << deltaE << " " << status
+                  << " DE=" << deltaE << " " << status
                   << std::endl;
                std::cout << tools::line_separator << std::endl;
                std::cout << "initial ground-state energy=" 
@@ -181,10 +181,10 @@ namespace ctns{
                      << " e_new=" << enew_history[jter]
                      << " e_min=" << emin_history[jter+1]
                      << std::scientific << std::setprecision(2)
-                     << " deltaE=" << std::setw(9) << (enew_history[jter]-emin_history[jter])
-                     << " lowerE=" << std::setw(9) << (emin_history[jter+1]-emin_history[0])
+                     << " DE=" << std::setw(9) << (enew_history[jter]-emin_history[jter]) // deltaE
+                     << " LE=" << std::setw(9) << (emin_history[jter+1]-emin_history[0]) // loweringE
                      << " sdiag=" << std::setw(8) << sdiag_history[jter+1]
-                     << " u_diff=" << std::setw(8) << u_history[jter]
+                     << " |Ui-I|=" << std::setw(8) << u_history[jter]
                      << std::endl;
                }
                std::cout << tools::line_separator2 << std::endl;

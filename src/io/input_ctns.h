@@ -173,7 +173,7 @@ namespace input{
          // sampling
          int iroot = 0;
          int jroot = 0;
-         int nsample = 10000;
+         int nsample = 1000;
          double pthrd = 1.e-2;
          // su2 symmetry
          bool tosu2 = false;
