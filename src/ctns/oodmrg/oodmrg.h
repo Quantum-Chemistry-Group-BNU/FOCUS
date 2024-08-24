@@ -94,6 +94,9 @@ namespace ctns{
                   e_min = e0gs;
                }
             }
+            
+            // lzd
+            if(iter == 1) exit(1);
 
             // optimization
             std::string rcfprefix = "oo_";

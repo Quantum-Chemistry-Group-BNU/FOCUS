@@ -85,7 +85,7 @@ namespace ctns{
          const int dfac = schd.ctns.ooparams.dfac;
          const int dmax = dfac*dcut; 
          if(iprt >= 0){
-            std::cout << "\noodmrg_move: dcut=" << dcut
+            std::cout << "\noodmrg_move:"
                << " macroiter=" << macroiter
                << " microiter=" << microiter
                << " alpha=" << alpha
