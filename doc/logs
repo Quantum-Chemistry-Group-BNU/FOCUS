@@ -404,14 +404,14 @@
 
  ===== TODOs =====
 
-   * check open-shell systems: femoco?								
-
-   * more robust initialization, and canonicalization
-      - support linear combination of dets and csf states via addition of MPS and canonicalization
-      - addition of MPS and canonicalization 
-      - then we can check the fidelity <approx|exact>! 
+   * check open-shell systems: fe2s2, fe4s4, femoco?								
 
    * better algorithm to extract the largest k-coefficients?
       - my previous sampling algorithm?
       - search algorithm?
 
+   * more robust initialization, and canonicalization
+      - support linear combination of dets and csf states via addition of MPS and canonicalization
+      - addition of MPS and canonicalization 
+      - then we can check the fidelity <approx|exact>!
+ 
