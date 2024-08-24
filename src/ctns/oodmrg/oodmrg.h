@@ -29,8 +29,8 @@ namespace ctns{
                << std::endl;
          }
          auto t0 = tools::get_time();
-                
-         // start oodmrg optimization   
+
+         // initialization
          const int norb = icomb.get_nphysical();
          std::vector<double> enew_history(maxiter);
          std::vector<double> emin_history(maxiter+1);
@@ -41,6 +41,35 @@ namespace ctns{
          double u_diff;
          integral::one_body<Tm> int1e_new;
          integral::two_body<Tm> int2e_new;
+
+         // check whether twodot_rotate is correct?
+         const bool debug_rotate = false;
+         if(debug_rotate){
+            auto icomb_new = icomb; 
+            auto urot = urot_min; 
+            auto Hij = get_Hmat(icomb_new, int2e, int1e, ecore, schd, scratch);
+            const int dcut = schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut;
+            const int dfac = schd.ctns.ooparams.dfac;
+            const int dmax = dfac*dcut;
+            u_diff = 0.0;
+            std::vector<int> gates = {{0},{1},{2}};
+            reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
+            //reduce_entropy_single(icomb_new, urot, "opt", dmax, schd.ctns.ooparams);
+            rcanon_lastdots(icomb_new);
+            rotate_spatial(int1e, int1e_new, urot);
+            rotate_spatial(int2e, int2e_new, urot);
+            auto Hij2 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
+            auto smat = get_Smat(icomb);
+            auto smat2 = get_Smat(icomb_new);
+            urot.print("urot");
+            Hij.print("Hij",10);
+            Hij2.print("Hij2",10);
+            smat.print("smat",10);
+            smat2.print("smat2",10);
+            exit(1);
+         }
+
+         // start optimization
          for(int iter=0; iter<maxiter; iter++){
 
             if(rank == 0){
@@ -95,12 +124,13 @@ namespace ctns{
                }
             }
             
-            // lzd
-            if(iter == 1) exit(1);
-
             // optimization
             std::string rcfprefix = "oo_";
             auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
+            /* 
+            auto Hij2 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
+            Hij2.print("Hij2",10);
+            */
 
             // accept or reject
             if(rank == 0){

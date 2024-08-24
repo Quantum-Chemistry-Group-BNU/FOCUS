@@ -68,7 +68,8 @@ namespace ctns{
             linalg::matrix<Tm>& urot,
             const std::string scheme,
             const int dmax,
-            const input::params_oodmrg& ooparams){
+            const input::params_oodmrg& ooparams,
+            std::vector<int> gates={}){
          const bool ifab = Qm::ifabelian;
          const int& iprt = ooparams.iprt;
          const double& alpha = ooparams.alpha;
@@ -211,6 +212,22 @@ namespace ctns{
                }
 
             // randomly apply SWAP gates
+            }else if(scheme == "randomswap"){
+           
+               npt = 1;
+               anglst.resize(npt);
+               funlst.resize(npt);
+               std::vector<double> theta = {0};
+               anglst[0] = theta[0];
+               funlst[0] = fun(theta);
+               if(dbond.forward){
+                  std::uniform_int_distribution<> dist(0,1);
+                  x[0] = pi/2.0*dist(tools::generator);
+               }else{
+                  x[0] = 0.0;
+               }
+           
+            // randomly apply rotation gates
             }else if(scheme == "random"){
            
                npt = 1;
@@ -220,13 +237,18 @@ namespace ctns{
                anglst[0] = theta[0];
                funlst[0] = fun(theta);
                if(dbond.forward){
-                  // random linear SWAP
-                  std::uniform_int_distribution<> dist(0,1);
-                  x[0] = pi/2.0*dist(tools::generator);
+                  std::uniform_real_distribution<double> dist(0,1);
+                  if(gates.size() == 0){
+                     x[0] = 2*pi*dist(tools::generator);
+                  }else{
+                     auto result = std::find(gates.begin(), gates.end(), dbond.p0.first);
+                     bool ifexist = !(result == gates.end());
+                     if(ifexist) x[0] = 2*pi*dist(tools::generator);                     
+                  }
                }else{
                   x[0] = 0.0;
-               } 
-            
+               }
+ 
             }else{
                std::cout << "error: no such scheme=" << scheme << std::endl;
                exit(1); 
@@ -269,7 +291,7 @@ namespace ctns{
             //---------------------------------------------------------
 
             // propagate to the next site
-            linalg::matrix<Tm> vsol(ndim,nroots,vr.data());
+            linalg::matrix<Tm> vsol(ndim, nroots, vr.data());
             twodot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
             vsol.clear();
          } // ibond

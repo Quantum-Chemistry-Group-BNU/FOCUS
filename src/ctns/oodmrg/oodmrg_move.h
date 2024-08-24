@@ -111,7 +111,7 @@ namespace ctns{
                   << std::endl;
             }
             // apply_randomlayer
-            double maxdwt = reduce_entropy_single(icomb, urot, "random", dmax, schd.ctns.ooparams);
+            double maxdwt = reduce_entropy_single(icomb, urot, "randomswap", dmax, schd.ctns.ooparams);
             // reduce_entropy
             reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
          } // imacro 

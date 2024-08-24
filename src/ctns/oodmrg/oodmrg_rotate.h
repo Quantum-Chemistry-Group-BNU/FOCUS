@@ -14,12 +14,17 @@ namespace ctns{
             std::vector<Tm>& vr, 
             qtensor4<ifab,Tm>& wf, 
             const double theta){
+         assert(!ifab);
+         assert(v0.size() == vr.size());
+         // direct copy without rotation
+         if(std::abs(theta) < 1.e-16){
+            linalg::xcopy(v0.size(), v0.data(), vr.data());
+            return;
+         }
          if(debug_twodot_rotate){
             std::cout << "\nctns::twodot_rotate(su2): theta=" << theta << std::endl;
             wf.print("wf",1);
          }
-         assert(!ifab);
-         assert(v0.size() == vr.size());
          // this function only works for singlet embedding case
          auto sym = wf.info.sym;
          if(sym.ts() != 0){
@@ -50,14 +55,17 @@ namespace ctns{
             size_t offset = wf.info.get_offset(br,bc,bm,bv,tsi,tsj);
             assert(offset > 0);
             offset -= 1;
+
             // let {0,1,2} refers to {|N,S>}={|0,0>,|2,0>,|1,1/2>} as defined in init_phys.h
             // in total 9 subcases:
+            
             // case-1: {(0,0)},{(1,1)} - no transformation is needed
             if((bm == 0 and bv == 0) or
                (bm == 1 and bv == 1)){
                if(debug_twodot_rotate) std::cout << "case-1" << std::endl;
                linalg::xcopy(size, &v0[offset], &vr[offset]); 
             }
+            
             // case-2: {(2,0),(0,2)},{(2,1),(1,2)}
             if((bm == 2 and bv == 0) or
                (bm == 2 and bv == 1)){
@@ -77,6 +85,7 @@ namespace ctns{
                linalg::xaxpy(size,  c, &v0[offset] , &vr[offset]);
                linalg::xaxpy(size, -s, &v0[offset1], &vr[offset]); 
             }
+            
             // case-3: {(1,0),(0,1),(2,2)}
             if((bm == 1 and bv == 0)){
                if(debug_twodot_rotate) std::cout << "case-3a" << std::endl;
@@ -150,6 +159,7 @@ namespace ctns{
                   linalg::xaxpy(size, fac, &v0[offset2], &vr[offset]);
                } // tshp
             }
+
          } // i
          // debug by checking the norm of the rotated wavefunction,
          // which should be identitcal to the unrotated one.
@@ -173,11 +183,16 @@ namespace ctns{
             std::vector<Tm>& vr, 
             stensor4<Tm>& wf, 
             const double theta){
+         assert(v0.size() == vr.size());
+         // direct copy without rotation
+         if(std::abs(theta) < 1.e-16){
+            linalg::xcopy(v0.size(), v0.data(), vr.data());
+            return;
+         }
          if(debug_twodot_rotate){
             std::cout << "\nctns::twodot_rotate: theta=" << theta << std::endl;
             wf.print("wf",1);
          }
-         assert(v0.size() == vr.size());
          double c = std::cos(theta);
          double s = std::sin(theta);
          double c2 = c*c, s2 = s*s, cs = c*s;
@@ -199,8 +214,10 @@ namespace ctns{
             size_t offset = wf.info.get_offset(br,bc,bm,bv);
             assert(offset > 0);
             offset -= 1;
+
             // let {0,1,2,3} refers to {|0>,|2>,|a>,|b>} as defined in init_phys.h
             // in total 16 subcases:
+
             // case-1: {(0,0)},{(1,1)},{(2,2)},{(3,3)} - no transformation is needed
             if((bm == 0 and bv == 0) or
                (bm == 1 and bv == 1) or
@@ -208,6 +225,7 @@ namespace ctns{
                (bm == 3 and bv == 3)){
                linalg::xcopy(size, &v0[offset], &vr[offset]); 
             }
+
             // case-2: {(2,0),(0,2)},{(3,0),(0,3)},{(2,1),(1,2)},{(3,1),(1,3)}
             if((bm == 2 and bv == 0) or
                (bm == 3 and bv == 0) or
@@ -229,6 +247,7 @@ namespace ctns{
                linalg::xaxpy(size,  c, &v0[offset] , &vr[offset]);
                linalg::xaxpy(size, -s, &v0[offset1], &vr[offset]); 
             }
+
             // case-3: {(1,0),(0,1),(2,3),(3,2)}
             if((bm == 1 and bv == 0) or
                (bm == 0 and bv == 1) or
@@ -248,7 +267,9 @@ namespace ctns{
                linalg::xaxpy(size, udict.at(std::make_tuple(bm,bv,2)), &v0[offset2], &vr[offset]);
                linalg::xaxpy(size, udict.at(std::make_tuple(bm,bv,3)), &v0[offset3], &vr[offset]);
             }
+
          } // i
+         
          // debug by checking the norm of the rotated wavefunction,
          // which should be identitcal to the unrotated one.
          if(debug_twodot_rotate){

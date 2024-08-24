@@ -398,14 +398,21 @@
          - can this be done analytically without invoking recoupling explicitly? Yes!
       - rcanon_lastdots: to make mps in canonical form, where the last dot is identity.
     - settings: initial and final oodmrg do not change orbital
-    - bugfix: mpi error for oosadmrg due to problem in qinfo
+    - bugfix: 
+      - mpi error for oosadmrg due to problem in qinfo
+      - oosadmrg for hchain? bug in W-coefficient
 
  ===== TODOs =====
+
    * check open-shell systems: femoco?								
+
    * more robust initialization, and canonicalization
-      - addition of MPS and canonicalization 
       - support linear combination of dets and csf states via addition of MPS and canonicalization
+      - addition of MPS and canonicalization 
       - then we can check the fidelity <approx|exact>! 
+
    * better algorithm to extract the largest k-coefficients?
       - my previous sampling algorithm?
+      - search algorithm?
+
 	
