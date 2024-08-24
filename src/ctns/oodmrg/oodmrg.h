@@ -118,13 +118,14 @@ namespace ctns{
             auto Hij = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
             if(rank == 0){
                Hij.print("Hij", schd.ctns.outprec);
-               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
-               auto Sr = rcanon_entropysum(icomb_new, alpha);
                // save the initial ground-state energy
                if(iter == 0){
                   e_min = std::real(Hij(0,0));
                   emin_history[0] = e_min;
+                  // compute initial entropy
+                  auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
                   sdiag_history[0] = Sd;
+                  auto Sr = rcanon_entropysum(icomb_new, alpha);
                   srenyi_history[0] = Sr;
                }
             }
@@ -135,6 +136,8 @@ namespace ctns{
             if(rank == 0){   
                auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
                sdiag_history[iter+1] = Sd;
+               auto Sr = rcanon_entropysum(icomb_new, alpha);
+               srenyi_history[iter+1] = Sr; 
             }
             /* 
             auto Hij2 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
@@ -153,12 +156,10 @@ namespace ctns{
                   e_min = e_new;
                   urot_min = urot;
                   icomb = std::move(icomb_new); // move is defined, but copy is deleted
-                  srenyi_history[iter+1] = rcanon_entropysum(icomb, alpha);
                }else{
                   // urot_min and icomb in the next iter will 
                   // still be the old one without change.
                   status = "reject move!";
-                  srenyi_history[iter+1] = srenyi_history[iter]; 
                }
                enew_history[iter] = e_new;
                emin_history[iter+1] = e_min;
@@ -175,7 +176,7 @@ namespace ctns{
                   << std::endl;
                std::cout << tools::line_separator << std::endl;
                std::cout << "initial ground-state energy=" 
-                  << std::defaultfloat << std::setprecision(12) << emin_history[0]
+                  << std::defaultfloat << std::setprecision(10) << emin_history[0]
                   << std::scientific << std::setprecision(2) 
                   << " Sd=" << sdiag_history[0]
                   << " Sr=" << srenyi_history[0] 
@@ -184,7 +185,7 @@ namespace ctns{
                   if(jter == 1) std::cout << "oodmrg steps:" << std::endl;
                   if(jter == maxiter-1) std::cout << "final check:" << std::endl;
                   std::cout << " iter=" << jter << ":" << acceptance[jter]
-                     << std::defaultfloat << std::setprecision(12)  
+                     << std::fixed << std::setprecision(10)  
                      << " E_i=" << enew_history[jter]
                      << " E_min=" << emin_history[jter+1]
                      << std::scientific << std::setprecision(2)
