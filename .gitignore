@@ -28,3 +28,4 @@ src.tar
 tmp
 src/python/backup/
 .vscode/settings.json
+docs/build
