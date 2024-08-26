@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-FOCUS documentation
-###################
+FOCUS
+#####
 
-FOCUS (FermiOniC qUantum Simulation) is developed to explore the complexity of electronic structure problems.
+**FOCUS** (FermiOniC qUantum Simulation) is developed to explore the complexity of electronic structure problems.
 Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic and relativistic Hamiltonians.
 
 .. toctree::
@@ -29,7 +29,9 @@ Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic 
    :maxdepth: 1
    :caption: Methods
 
+   methods/sci
    methods/csf
+   methods/dmrg
    methods/se
    methods/oodmrg
 

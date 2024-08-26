@@ -240,7 +240,7 @@ Output:
    dim=400 ovlp=1 Sdiag(exact)=2.07944 IPR=0.125
 
 
-Start OO-DMRG from a csf
+Start OO-DMRG from a CSF
 ========================
 
 Input:
