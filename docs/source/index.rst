@@ -31,6 +31,7 @@ Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic 
 
    methods/csf
    methods/se
+   methods/oodmrg
 
 .. toctree::
    :maxdepth: 1

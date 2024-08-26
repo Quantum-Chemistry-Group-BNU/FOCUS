@@ -121,7 +121,7 @@ This can work with singlet embedding.
    singlet
    $end
    
-Convert a csf into a nonsu2 mps, and then sample dets
+Convert a CSF into a nonsu2 mps, and then sample dets
 =====================================================
 
 Input:
@@ -186,4 +186,83 @@ Output:
    estimated Sdiag[MC]=12.8091 Sdiag[pop]=8.22603
    estimated IPR[MC]=0.0051644 IPR[pop]=0.00545804
    
+Expand a CSF to dets
+====================
+
+Input: using keywork ``task_expand``. This works only for small systems.
+
+.. code-block::
+
+   $ctns
+   verbose 2
+   qkind rNS
+   nroots 1
+   maxdets 1
+   thresh_proj 1.e-15
+   thresh_ortho 1.e-8
+   topology_file topology/topo1
+   schedule
+   0 2 1 1.e-5 0.0
+   end
+   maxsweep 4
+   alg_hvec 4
+   alg_renorm 4
+   task_expand
+   fromconf ududud
+   $end
+  
+Output:
+
+.. code-block::
+   :emphasize-lines: 14
+         
+   ctns::rcanon_Sdiag_exact(su2): ifab=0 iroot=0 type=csf pthrd=0.01
+   ctns::rcanon_expand_csfspace: ifab=0 iroot=0 pthrd=0.01
+   ctns::get_csfspace: ifab=0 iroot=0
+   fock::get_csf_space (k,n,ts)=6,6,0
+   ks=6 sym=(6,0) dimFCI[csf]=175
+   ovlp=1
+    i=0 idx=95 state=ududud pop=1 coeff=1
+   dim=175 ovlp=1 Sdiag(exact)=0 IPR=1
+   
+   ctns::rcanon_Sdiag_exact(su2): ifab=0 iroot=0 type=det pthrd=0.01
+   ctns::rcanon_expand_onspace: ifab=0 iroot=0 pthrd=0.01
+   fock::get_csf_space (k,n,ts)=6,6,0
+   ovlp=1
+    i=0 idx=114 state=bababa pop=0.125 coeff=0.353553
+    i=1 idx=133 state=babaab pop=0.125 coeff=-0.353553
+    i=2 idx=152 state=baabba pop=0.125 coeff=-0.353553
+    i=3 idx=171 state=baabab pop=0.125 coeff=0.353553
+    i=4 idx=228 state=abbaba pop=0.125 coeff=-0.353553
+    i=5 idx=247 state=abbaab pop=0.125 coeff=0.353553
+    i=6 idx=266 state=ababba pop=0.125 coeff=0.353553
+    i=7 idx=285 state=ababab pop=0.125 coeff=-0.353553
+   dim=400 ovlp=1 Sdiag(exact)=2.07944 IPR=0.125
+
+
+Start OO-DMRG from a csf
+========================
+
+Input:
+
+.. code-block::
+
+   $ctns
+   verbose 2
+   qkind rNS
+   nroots 1
+   maxdets 1
+   thresh_proj 1.e-15
+   thresh_ortho 1.e-8
+   topology_file topology/topo1
+   schedule
+   0 2 5 1.e-4 0.0
+   end
+   maxsweep 4
+   alg_hvec 4
+   alg_renorm 4
+   fromconf ududud
+   task_oodmrg
+   oo_maxiter 5
+   $end
    
