@@ -1,6 +1,6 @@
 
-SCI
-###
+sci.x
+#####
 
 Selected Configuration Interaction (SCI)
 

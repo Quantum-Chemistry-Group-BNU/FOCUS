@@ -1,6 +1,6 @@
 
-CTNS
-####
+ctns.x
+######
 
 Comb Tensor Network States (CTNS)
 

@@ -27,7 +27,7 @@ Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Methods
+   :caption: Theory and Implementation
 
    methods/sci
    methods/csf

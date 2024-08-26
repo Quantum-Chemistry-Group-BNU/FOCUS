@@ -1,9 +1,9 @@
 
-General
-#######
+Basics
+######
 
-General usages
-**************
+Basic usages
+************
 
 * use ``sci.x`` to generate initial guess
 

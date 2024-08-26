@@ -1,6 +1,6 @@
 
-SADMRG
-######
+sadmrg.x
+########
 
 Spin-Adapted Density Matrix Renormalization Group (SA-DMRG)
 
