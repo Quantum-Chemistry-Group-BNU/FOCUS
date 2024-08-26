@@ -10,7 +10,7 @@ FOCUS (FermiOniC qUantum Simulation) is developed to explore the complexity of e
 Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic and relativistic Hamiltonians.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Getting started
 
    getstart/installation
@@ -28,6 +28,9 @@ Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic 
 .. toctree::
    :maxdepth: 1
    :caption: Methods
+
+   methods/csf
+   methods/se
 
 .. toctree::
    :maxdepth: 1

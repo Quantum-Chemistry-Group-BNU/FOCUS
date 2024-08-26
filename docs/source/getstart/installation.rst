@@ -2,6 +2,11 @@
 Installation
 #############
 
+.. contents:: Table of contents
+   :local:
+   :backlinks: entry
+   :depth: 2
+
 Requirements
 *************
 
