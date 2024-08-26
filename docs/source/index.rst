@@ -4,15 +4,34 @@
    contain the root `toctree` directive.
 
 FOCUS documentation
-===================
+###################
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+FOCUS (FermiOniC qUantum Simulation) is developed to explore the complexity of electronic structure problems.
+Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic and relativistic Hamiltonians.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Getting started
 
-    windows-shortcuts.md
+   getstart/installation
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorials
+
+   tutorials/general
+   tutorials/sci
+   tutorials/ctns
+   tutorials/sadmrg
+   tutorials/rdm
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Methods
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Known problems
+
+   problems/problems
 
