@@ -207,12 +207,18 @@ namespace ctns{
                   if(!Qm::ifabelian) rcanon_file += "_su2";
                   rcanon_save(icomb, rcanon_file);
                   urot_min.save_text("urot", schd.ctns.outprec);
-                  std::string fname = schd.integral_file+".new";
-                  integral::save(int2e_new, int1e_new, ecore, fname);
                }
             } // rank-0
          } // iter
-  
+
+         // save integrals for urot_min
+         if(rank == 0){
+            rotate_spatial(int1e, int1e_new, urot_min);
+            rotate_spatial(int2e, int2e_new, urot_min);
+            std::string fname = schd.integral_file+".new";
+            integral::save(int2e_new, int1e_new, ecore, fname);
+         }
+
          if(debug){
             auto t1 = tools::get_time();
             tools::timing("ctns::oodmrg", t0, t1);
