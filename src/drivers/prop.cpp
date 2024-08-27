@@ -30,7 +30,7 @@ void RDM(const input::schedule& schd){
    }
 
    //-----------------------------------------------------------------
-   // The driver rdm only support MPS with the same kind (topo,Qm,Tm)
+   // The driver prop only support MPS with the same kind (topo,Qm,Tm)
    //-----------------------------------------------------------------
 
    // read integral
@@ -60,8 +60,8 @@ void RDM(const input::schedule& schd){
       if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.ctns.rcanon2_file);
    }
 
-   // rdm task
-   if(schd.ctns.task_rdm == 1){
+   // task
+   if(schd.ctns.task_prop == 1){
       // reduce density matrix
       if(rank == 0){
          auto rdm1 = ctns::rdm1_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
@@ -69,7 +69,7 @@ void RDM(const input::schedule& schd){
          Tm etot = fock::get_etot(rdm2,rdm1,int2e,int1e) + ecore;
          cout << "etot(rdm)=" << setprecision(12) << etot << endl;
       }
-   }else if(schd.ctns.task_rdm == 2){
+   }else if(schd.ctns.task_prop == 2){
       // transition density matrix
       if(rank == 0){
          auto tdm1 = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
@@ -79,13 +79,22 @@ void RDM(const input::schedule& schd){
          Hij += smat(schd.ctns.iroot,schd.ctns.jroot)*ecore; 
          cout << "<i|H|j>(rdm)=" << setprecision(12) << Hij << endl;
       }
-   }else if(schd.ctns.task_rdm == 3){
+   }else if(schd.ctns.task_prop == 3){
       // single-site entropy analysis
       if(rank == 0){
          auto s1 = ctns::entropy1_simple(icomb, schd.ctns.iroot);
       }
-   } // task_rdm
+   } // task_prop
 
+   // We may also need 
+   // <MPS|MPS'>
+   // <MPS|H|MPS'> (enable different bra and ket in oper_renorm)
+   // <MPS[N-1]|ap|MPS[N]>
+   // <MPS[N-2]|apaq|MPS[N]>
+   // <MPS[N]|ap^+aq|MPS'[N]>
+
+   // How to deal with SU(2) case? 
+   // In particular, the singlet embedding case!
 }
 
 int main(int argc, char *argv[]){
@@ -161,7 +170,7 @@ int main(int argc, char *argv[]){
 //   }else if(schd.ctns.qkind == "cNS"){
 //      RDM<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
-      tools::exit("error: no such qkind for rdm!");
+      tools::exit("error: no such qkind for prop!");
    } // qkind
 
 #ifdef GPU

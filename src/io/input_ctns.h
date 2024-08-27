@@ -81,7 +81,7 @@ namespace input{
             void serialize(Archive & ar, const unsigned int version){
                ar & run & qkind & topology_file & verbose
                   & task_init & task_sdiag & task_ham & task_opt & task_oodmrg
-                  & task_vmc & task_expand & task_tononsu2 & task_rdm 
+                  & task_vmc & task_expand & task_tononsu2 & task_prop
                   & task_schmidt & schmidt_file 
                   & restart_sweep & restart_bond & timestamp
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
@@ -118,7 +118,7 @@ namespace input{
          bool task_vmc = false; 
          bool task_expand = false; // expand into FCI vectors
          bool task_tononsu2 = false; // convert SU2-MPS to non-SU2-MPS
-         int task_rdm = 0; // used in rdm.cpp
+         int task_prop = 0; // used in prop.cpp
          bool task_schmidt = false; // compute schmidt values
          std::string schmidt_file = "schmidt_values"; 
          // restart

@@ -5,6 +5,8 @@ Basics
 Basic usages
 ************
 
+* use ``fci.x`` or ``exactdiag.x`` only for small systems [for benchmark]
+
 * use ``sci.x`` to generate initial guess
 
 * use ``ctns.x`` to optimize CTNS

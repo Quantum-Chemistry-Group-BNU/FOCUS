@@ -1,6 +1,6 @@
 
-FCI and SCI
-###########
+CI
+##
 
 Configuration Interaction (CI) algorithm
 
