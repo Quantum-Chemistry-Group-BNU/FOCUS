@@ -134,33 +134,53 @@ namespace ctns{
             const std::string scratch,
             const int isweep,
             const std::string rcfprefix=""){
-         std::cout << "\nctns::sweep_final: convert into RCF & save into ";
-         
-         // 0. rcf file to be saved on disk
-         auto rcanon_file = schd.scratch+"/"+rcfprefix+"rcanon_isweep"+std::to_string(isweep);
-         if(!Qm::ifabelian) rcanon_file += "_su2";
-         std::cout << rcanon_file << std::endl;
-         std::cout << tools::line_separator << std::endl;
+         int size = 1, rank = 0;
+#ifndef SERIAL
+         size = icomb.world.size();
+         rank = icomb.world.rank();
+#endif  
 
-         // 1. compute C0 & R1 from cpsi via decimation: LCRR => CRRR
-         std::string fname;
-         // reorthogonalize {cpsi} in case there is truncation in the last sweep
-         // such that they are not orthonormal any more, which can happens for
-         // small bond dimension.
-         icomb.orthonormalize_cpsi();
-         fname = scratch+"/decimation_isweep"+std::to_string(isweep)+"_C0R1.txt";
-         sweep_final_LCR2CRR(icomb, schd.ctns.rdm_svd, fname, schd.ctns.verbose>0);
+         // only perform canonicalization at rank-0
+         if(rank == 0){ 
+            std::cout << "\nctns::sweep_final: convert into RCF & save into ";
+            
+            // 0. rcf file to be saved on disk
+            auto rcanon_file = schd.scratch+"/"+rcfprefix+"rcanon_isweep"+std::to_string(isweep);
+            if(!Qm::ifabelian) rcanon_file += "_su2";
+            std::cout << rcanon_file << std::endl;
+            std::cout << tools::line_separator << std::endl;
+   
+            // 1. compute C0 & R1 from cpsi via decimation: LCRR => CRRR
+            std::string fname;
+            // reorthogonalize {cpsi} in case there is truncation in the last sweep
+            // such that they are not orthonormal any more, which can happens for
+            // small bond dimension.
+            icomb.orthonormalize_cpsi();
+            fname = scratch+"/decimation_isweep"+std::to_string(isweep)+"_C0R1.txt";
+            sweep_final_LCR2CRR(icomb, schd.ctns.rdm_svd, fname, schd.ctns.verbose>0);
+   
+            // 2. compute rwfuns & R0 from C0: CRRR => cRRRR
+            icomb.orthonormalize_cpsi();
+            fname = scratch+"/decimation_isweep"+std::to_string(isweep)+"_cR0.txt";
+            sweep_final_CR2cRR(icomb, schd.ctns.rdm_svd, fname, schd.ctns.verbose>0);
+   
+            // 3. save & check
+            rcanon_save(icomb, rcanon_file);
+            rcanon_check(icomb, schd.ctns.thresh_ortho);
+         }
 
-         // 2. compute rwfuns & R0 from C0: CRRR => cRRRR
-         icomb.orthonormalize_cpsi();
-         fname = scratch+"/decimation_isweep"+std::to_string(isweep)+"_cR0.txt";
-         sweep_final_CR2cRR(icomb, schd.ctns.rdm_svd, fname, schd.ctns.verbose>0);
+         // however, the result needs to be broadcast, in case icomb will be used later
+#ifndef SERIAL
+         if(size > 1){
+            const auto& pdx0 = icomb.topo.rindex.at(std::make_pair(0,0));
+            const auto& pdx1 = icomb.topo.rindex.at(std::make_pair(1,0));
+            boost::mpi::broadcast(icomb.world, icomb.sites[pdx1], 0);
+            boost::mpi::broadcast(icomb.world, icomb.sites[pdx0], 0);
+            boost::mpi::broadcast(icomb.world, icomb.rwfuns, 0);
+         } 
+#endif
 
-         // 3. save & check
-         rcanon_save(icomb, rcanon_file);
-         rcanon_check(icomb, schd.ctns.thresh_ortho);
-
-         std::cout << "..... end of isweep = " << isweep << " .....\n" << std::endl;
+         if(rank == 0) std::cout << "..... end of isweep = " << isweep << " .....\n" << std::endl;
       }
 
 } // ctns
