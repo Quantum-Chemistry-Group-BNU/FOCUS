@@ -21,12 +21,16 @@ namespace ctns{
 #endif  
          const bool debug = (rank==0);
          const int maxiter = schd.ctns.ooparams.maxiter;
+         const int dcut = schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut;
          const bool acceptall = schd.ctns.ooparams.acceptall;
-         const double alpha = schd.ctns.ooparams.alpha; 
+         const double alpha = schd.ctns.ooparams.alpha;
          if(debug){ 
-            std::cout << "\nctns::oodmrg maxiter=" << maxiter 
+            std::cout << "\nctns::oodmrg"
+               << " maxiter=" << maxiter 
                << " maxsweep=" << schd.ctns.maxsweep
-               << " acceptall=" << acceptall 
+               << " dcut=" << dcut
+               << " acceptall=" << acceptall
+               << " alpha=" << alpha 
                << std::endl;
          }
          auto t0 = tools::get_time();
@@ -50,7 +54,6 @@ namespace ctns{
             auto icomb_new = icomb; 
             auto urot = urot_min; 
             auto Hij = get_Hmat(icomb_new, int2e, int1e, ecore, schd, scratch);
-            const int dcut = schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut;
             const int dfac = schd.ctns.ooparams.dfac;
             const int dmax = dfac*dcut;
             std::vector<int> gates = {{0},{1},{2}};
@@ -170,7 +173,7 @@ namespace ctns{
                std::cout << "OO-DMRG results:"
                   << " iter=" << iter
                   << " alpha=" << alpha
-                  << " dcut=" << schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut
+                  << " dcut=" << dcut
                   << std::scientific << std::setprecision(2)
                   << " DE=" << deltaE << " " << status
                   << std::endl;
@@ -197,17 +200,19 @@ namespace ctns{
                      << std::endl;
                }
                std::cout << tools::line_separator2 << std::endl;
+
+               // save the current best results
+               if(acceptance[iter]){
+                  std::string rcanon_file = schd.scratch+"/oo_rcanon_d"+std::to_string(dcut); 
+                  if(!Qm::ifabelian) rcanon_file += "_su2";
+                  rcanon_save(icomb, rcanon_file);
+                  urot_min.save_text("urot", schd.ctns.outprec);
+                  std::string fname = schd.integral_file+".new";
+                  integral::save(int2e_new, int1e_new, ecore, fname);
+               }
             } // rank-0
          } // iter
   
-         // save integrals and urot_min
-         if(rank == 0){
-            std::cout << "save OO-DMRG results for later calculations:" << std::endl;
-            urot_min.save_text("urot", schd.ctns.outprec);
-            std::string fname = schd.integral_file+".new";
-            integral::save(int2e_new, int1e_new, ecore, fname);
-         }
-
          if(debug){
             auto t1 = tools::get_time();
             tools::timing("ctns::oodmrg", t0, t1);
