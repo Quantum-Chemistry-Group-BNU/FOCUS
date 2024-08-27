@@ -406,6 +406,8 @@
         - oosadmrg for hchain? bug in W-coefficient
     - settings: initial and final oodmrg do not change orbital
 
+ * Documentation [DONE@2024/08/26]
+
  ===== TODOs =====
 
    * check open-shell systems: fe2s2, fe4s4, femoco?								

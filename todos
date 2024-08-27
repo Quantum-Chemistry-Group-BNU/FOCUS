@@ -1,10 +1,6 @@
 
 ### TODOs: more functionalities ###
 
- ===== Future: RDM-based orbital optimization =====
-   1 natural orbitals?								
-   2 other measures of electron correlation? Shee's work?								
-
  * Reduced density matrices: (RDMs) [DONE@202X/XX/XX]
    - Brute-force RDM & TDM algorithm:
       - non-spin-adapted: [DONE@2024/06/02]
@@ -28,10 +24,14 @@
          - perturbative SOC via state interaction
    - GPU version:
       - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
+   - Applications:
+      - Spin-spin correlation function
+      - natural orbitals
+      - RDM-based orbital optimization (CASSCF, QIO, ...) 
+      - other measures of electron correlation? Shee's work?								
 
- * point group symmetry (D2h) -> good for molecules like cr2
-
- * decim for su2 is not optimized yet
+ * Disentangle transformation:
+   - Generate circuit for quantum computer
 
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
@@ -42,18 +42,25 @@
    - fe8s7
    - femoco
 
+### TODOs: more functionalities ###
+
  * Kramers version for 2c/4c Hamiltonian: 
    - support complex version [DONE@2023/02/28]
    - what about 'R' operation in contract? [general complex]
    - hvec4 error for CNSz in H5 with real integral? [noise cannot be added, 
       otherwise renormalized state become complex, and the construction of H 
       requires 'Conj' operation in GEMM!] 
- 
-### TODOs: better scalabilities ###
+   - Two-RDMs: enable Rel-CASSCF with interface to other codes 
+
+### TODOs: better performance ###
+
+ * decim for su2 is not optimized yet
 
  * Decimation on GPU?
    - cuSolver: svd
    - cuSOlver: eig
+
+ * point group symmetry (D2h) -> good for molecules like cr2
 
  * Better Davidson solver on GPU?
    - GPU memory is a problem
@@ -74,13 +81,11 @@
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]
+    - entropy as a complexity measure?
     - Fe2S2 [CAS(30e,20o)] - parallelized
     - SOC within this active space
-    - G-tensor/GIAO for Ferric-Ferrous dimer [THIS WOULD BE GREAT!]
-    - entropy as a complexity measure?
+    - G-tensor/GIAO for Ferric-Ferrous dimer
     - classical help for quantum computing? better biased measurement?
  
- * Twordms: enable Rel-CASSCF with interface to other codes 
-
  * VMPS+GPU? (simply dense matrix multiplication?)
 
