@@ -6,6 +6,7 @@
 #include <string>
 #include <iomanip>
 #include <algorithm>
+#include <new> // For std::bad_alloc
 #include "tools.h"
 #include "matrix.h"
 #include "serialization.h"
@@ -114,7 +115,14 @@ namespace integral{
             void init_mem(){
                assert(sorb > 0);
                size_t pair = sorb*(sorb-1)/2;
-               data.resize(pair*(pair+1)/2,0.0);
+               size_t quad = pair*(pair+1)/2;
+               try { 
+                  data.resize(quad,0.0);
+               }
+               catch (const std::bad_alloc& e) {
+                  std::cerr << "error: Memory allocation failed: " << e.what() << std::endl;
+                  exit(1);
+               }
                Q.resize(pair);
             }
             size_t size() const{ return data.size()+Q.size(); }

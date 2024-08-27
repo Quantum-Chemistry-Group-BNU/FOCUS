@@ -172,6 +172,7 @@ namespace integral{
          std::cout << "\nintegral::rotate_spatial for int2e: norb=" << norb << std::endl;
          auto t0 = tools::get_time();
 
+         // initialize memory
          assert(int2e.sorb == 2*norb);
          int sorb = int2e.sorb;
          int2e_new.sorb = sorb;

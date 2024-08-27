@@ -149,6 +149,8 @@ namespace ctns{
             }
             if(ndim == 0){
                std::cout << "error: symmetry is inconsistent as ndim=0" << std::endl;
+               std::cout << "ibond=" << ibond << std::endl;
+               wf.print("wf4");
                exit(1);
             }
 

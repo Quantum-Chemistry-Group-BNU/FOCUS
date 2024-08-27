@@ -69,16 +69,13 @@ namespace ctns{
          std::cout << "bm,im=" << bm << "," << im << std::endl;
          std::cout << "symIn=" << symIn << std::endl;
          qt2.print("qt2",2);
-         std::cout << "lzd" << std::endl;
 
          int br, bc;
          for(int i=0; i<info._nnzaddr.size(); i++){
             auto key = qt2.info._nnzaddr[i];
             br = std::get<0>(key);
             bc = std::get<1>(key);
-         std::cout << "lzd1" << std::endl;
             auto blk2 = qt2(br,bc);
-         std::cout << "lzd1x" << std::endl;
             if(info.couple == LCcouple){
                // coupling (lc)r: s[lc]=s[r] because sym is zero.
                int tsr = info.qcol.get_sym(bc).ts();
@@ -93,7 +90,6 @@ namespace ctns{
                linalg::xcopy(blk2.size(), blk3.get(im).data(), blk2.data());
             }
          } // br
-         std::cout << "lzd2" << std::endl;
          return qt2;
       }
       */
