@@ -1,5 +1,5 @@
 
-### TODOs: more functionalities ###
+### 2024 DMRG[RDM] ###
 
  * Reduced density matrices: (RDMs) [DONE@202X/XX/XX]
    - Brute-force RDM & TDM algorithm:
@@ -29,6 +29,8 @@
       - natural orbitals
       - RDM-based orbital optimization (CASSCF, QIO, ...) 
       - other measures of electron correlation? Shee's work?								
+
+### 2025 DMRG[QC] ###
 
  * Disentangle transformation:
    - Generate circuit for quantum computer

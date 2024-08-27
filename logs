@@ -1,5 +1,5 @@
 
-### FOCUS: FermiOniC qUantum Simulation ###
+=== FOCUS: FermiOniC qUantum Simulation ===
 
    Started by Zhendong Li @ Sep 14, 2019
 
@@ -232,7 +232,7 @@
 
  * Exact diagonalization by construct full Hamtiltonian [DONE@2023/01/17]
 
-### 2023 VMC ###
+### 2023 VMC [unifinished] ###
 
  * VMC + iRBM:
     - opt_exact [DONE@2023/01/13]
@@ -243,7 +243,7 @@
     - pretraining by SCI
     - iron-sulfur clusters: frustrated spin systems
 
-### 2023 postCTNS ###
+### 2023 postCTNS [unfinished] ###
 
  * postCTNS.x driver: interface MPS: [DONE@2023/06/30]
     - overlap between two MPS? 
@@ -379,6 +379,8 @@
        - gpu version: [DONE@2024/05/12] 
           - onedot_diagGPU_su2.h:
 
+### 2024 DMRG[OO] ###
+
  * Orbital-optimized DMRG: output configurations for quantum computing! [DONE@2024/08/24]
     - non-spin-adapted: [DONE@2024/08/12]
       - driver [DONE@2024/07/29]
@@ -420,4 +422,4 @@
       - support linear combination of dets and csf states via addition of MPS and canonicalization
       - addition of MPS and canonicalization 
       - then we can check the fidelity <approx|exact>!
- 
+
