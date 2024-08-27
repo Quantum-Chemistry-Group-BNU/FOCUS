@@ -132,7 +132,10 @@ namespace ctns{
                   srenyi_history[0] = Sr;
                }
             }
-            
+           
+            // lzd
+            if(iter == 1) exit(1);
+
             // optimization of MPS with new integrals
             std::string rcfprefix = "oo_";
             auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
