@@ -41,7 +41,7 @@ namespace ctns{
 #ifndef SERIAL
          // reduction of partial H formed on each processor if ifdist1 = false
          if(size > 1 and !schd.ctns.ifdist1){
-            mpi_wrapper::reduce(icomb.world, Hmat.data(), Hmat.size(), 0);
+            mpi_wrapper::allreduce(icomb.world, Hmat.data(), Hmat.size());
          }
 #endif 
          return Hmat;

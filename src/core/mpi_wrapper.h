@@ -51,6 +51,24 @@ namespace mpi_wrapper{
          }
       }
 
+   //--- in-place allreduce ---
+   template <typename Tm>
+      void allreduce(const boost::mpi::communicator & comm, Tm* ptr_inout, 
+            const size_t size){ 
+         size_t chunksize = get_chunksize<Tm>();
+         if(!tools::is_complex<Tm>()){
+            for(size_t offset=0; offset<size; offset+=chunksize){
+               size_t len = std::min(chunksize, size-offset);
+               MPI_Allreduce(MPI_IN_PLACE, ptr_inout+offset, len, MPI_DOUBLE, MPI_SUM, comm);
+            }
+         }else{
+            for(size_t offset=0; offset<size; offset+=chunksize){
+               size_t len = std::min(chunksize, size-offset);
+               MPI_Allreduce(MPI_IN_PLACE, ptr_inout+offset, len, MPI_DOUBLE_COMPLEX, MPI_SUM, comm);
+            }
+         }
+      }
+
 } // ctns
 
 #endif

@@ -53,23 +53,36 @@ namespace ctns{
          if(debug_rotate){
             auto icomb_new = icomb; 
             auto urot = urot_min; 
-            auto Hij = get_Hmat(icomb_new, int2e, int1e, ecore, schd, scratch);
-            const int dfac = schd.ctns.ooparams.dfac;
-            const int dmax = dfac*dcut;
-            std::vector<int> gates = {{0},{1},{2}};
-            reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
-            //reduce_entropy_single(icomb_new, urot, "opt", dmax, schd.ctns.ooparams);
-            rcanon_lastdots(icomb_new);
-            rotate_spatial(int1e, int1e_new, urot);
-            rotate_spatial(int2e, int2e_new, urot);
-            auto Hij2 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
-            auto smat = get_Smat(icomb);
-            auto smat2 = get_Smat(icomb_new);
-            urot.print("urot");
-            Hij.print("Hij",10);
-            Hij2.print("Hij2",10);
-            smat.print("smat",10);
-            smat2.print("smat2",10);
+            auto Hij0 = get_Hmat(icomb_new, int2e, int1e, ecore, schd, scratch);
+            Hij0.print("Hij0_rank"+std::to_string(rank),10);
+            if(rank == 0){
+               const int dfac = schd.ctns.ooparams.dfac;
+               const int dmax = dfac*dcut;
+               std::vector<int> gates; // = {{0},{1},{2}};
+               double maxdwt = reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
+               std::cout << "maxdwt=" << maxdwt << std::endl;
+               //reduce_entropy_single(icomb_new, urot, "opt", dmax, schd.ctns.ooparams);
+               rcanon_lastdots(icomb_new);
+               rotate_spatial(int1e, int1e_new, urot);
+               rotate_spatial(int2e, int2e_new, urot);
+            }
+#ifndef SERIAL
+            if(size > 1){
+               mpi_wrapper::broadcast(schd.world, icomb_new, 0);
+               boost::mpi::broadcast(schd.world, int1e_new, 0);
+               mpi_wrapper::broadcast(schd.world, int2e_new, 0);
+            }
+#endif
+            auto Hij1 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
+            Hij0.print("Hij0_rank"+std::to_string(rank),10);
+            Hij1.print("Hij1_rank"+std::to_string(rank),10);
+            auto Sij0 = get_Smat(icomb);
+            auto Sij1 = get_Smat(icomb_new);
+            Sij0.print("Sij0_rank"+std::to_string(rank),10);
+            Sij1.print("Sij1_rank"+std::to_string(rank),10);
+#ifndef SERIAL
+            icomb.world.barrier();
+#endif
             exit(1);
          }
 
@@ -116,11 +129,11 @@ namespace ctns{
                mpi_wrapper::broadcast(schd.world, int2e_new, 0);
             }
 #endif
-            
+
             // prepare environment
             auto Hij = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
             if(rank == 0){
-               Hij.print("Hij", schd.ctns.outprec);
+               Hij.print("Hij0_iter"+std::to_string(iter), schd.ctns.outprec);
                // save the initial ground-state energy
                if(iter == 0){
                   e_min = std::real(Hij(0,0));
@@ -132,9 +145,6 @@ namespace ctns{
                   srenyi_history[0] = Sr;
                }
             }
-           
-            // lzd
-            if(iter == 1) exit(1);
 
             // optimization of MPS with new integrals
             std::string rcfprefix = "oo_";
@@ -145,10 +155,46 @@ namespace ctns{
                auto Sr = rcanon_entropysum(icomb_new, alpha);
                srenyi_history[iter+1] = Sr; 
             }
-            /* 
-            auto Hij2 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
-            Hij2.print("Hij2",10);
-            */
+
+            const bool debug_rotate2 = true;
+            if(debug_rotate2){
+               auto Hij0 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
+               Hij0.print("Hij0_rank"+std::to_string(rank),10);
+               if(rank == 0){
+                  const int dfac = schd.ctns.ooparams.dfac;
+                  const int dmax = dfac*dcut;
+                  std::vector<int> gates; // = {{0},{1},{2}};
+                  double maxdwt = reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
+                  std::cout << "maxdwt=" << maxdwt << std::endl;
+                  //reduce_entropy_single(icomb_new, urot, "opt", dmax, schd.ctns.ooparams);
+                  rcanon_lastdots(icomb_new);
+                  rotate_spatial(int1e, int1e_new, urot);
+                  rotate_spatial(int2e, int2e_new, urot);
+               }
+#ifndef SERIAL
+               if(size > 1){
+                  mpi_wrapper::broadcast(schd.world, icomb_new, 0);
+                  boost::mpi::broadcast(schd.world, int1e_new, 0);
+                  mpi_wrapper::broadcast(schd.world, int2e_new, 0);
+               }
+#endif
+               auto Hij1 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
+               Hij0.print("Hij0_rank"+std::to_string(rank),10);
+               Hij1.print("Hij1_rank"+std::to_string(rank),10);
+#ifndef SERIAL
+               icomb.world.barrier();
+#endif
+               exit(1);
+            }
+
+/*
+            // lzd
+            if(iter == 1){
+               if(rank == 0) auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
+               schd.world.barrier();
+               exit(1);
+            }
+*/
 
             // accept or reject
             if(rank == 0){
@@ -228,6 +274,6 @@ namespace ctns{
          }
       }
 
-   } // ctns
+} // ctns
 
 #endif
