@@ -31,6 +31,11 @@ namespace ctns{
          }
          auto t0 = tools::get_time();
 
+         if(schd.ctns.maxsweep == 0){
+            sweep_data sweeps;
+            return sweeps;
+         }
+
          // consistency check
          if(schd.ctns.ifdistc && !icomb.topo.ifmps){
             std::cout << "error: ifdistc should be used only with MPS!" << std::endl;

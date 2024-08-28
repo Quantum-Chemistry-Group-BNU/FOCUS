@@ -221,6 +221,7 @@ namespace ctns{
 
    struct sweep_data{
       // constructor
+      sweep_data(): seqsize(-1), nroots(-1), maxsweep(-1), restart_sweep(-1) {};
       sweep_data(const std::vector<directed_bond>& sweep_seq,
             const int _nroots,
             const int _maxsweep,
@@ -273,7 +274,11 @@ namespace ctns{
       void summary(const int isweep, const int mpisize);
       // helps
       double get_eminlast(const int iroot=0) const{
-         return min_result[maxsweep-1].eopt[iroot];
+         if(maxsweep > 0){
+            return min_result[maxsweep-1].eopt[iroot];
+         }else{
+            return 0.0;
+         }
       }
 
       public:

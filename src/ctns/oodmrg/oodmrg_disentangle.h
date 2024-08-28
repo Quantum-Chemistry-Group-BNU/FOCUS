@@ -245,7 +245,7 @@ namespace ctns{
                   }else{
                      auto result = std::find(gates.begin(), gates.end(), dbond.p0.first);
                      bool ifexist = !(result == gates.end());
-                     if(ifexist) x[0] = 2*pi*dist(tools::generator);                     
+                     if(ifexist) x[0] = pi/2; //2*pi*dist(tools::generator);                     
                   }
                }else{
                   x[0] = 0.0;

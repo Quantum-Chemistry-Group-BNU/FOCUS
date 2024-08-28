@@ -21,7 +21,7 @@ namespace ctns{
 #endif  
          const bool debug = (rank==0);
          const int maxiter = schd.ctns.ooparams.maxiter;
-         const int dcut = schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut;
+         const int dcut = schd.ctns.maxsweep>0? schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut : -1;
          const bool acceptall = schd.ctns.ooparams.acceptall;
          const double alpha = schd.ctns.ooparams.alpha;
          if(debug){ 
@@ -49,7 +49,7 @@ namespace ctns{
          integral::two_body<Tm> int2e_new;
 
          // check whether twodot_rotate is correct?
-         const bool debug_rotate = false;
+         const bool debug_rotate = true;
          if(debug_rotate){
             auto icomb_new = icomb; 
             auto urot = urot_min; 
@@ -57,8 +57,8 @@ namespace ctns{
             Hij0.print("Hij0_rank"+std::to_string(rank),10);
             if(rank == 0){
                const int dfac = schd.ctns.ooparams.dfac;
-               const int dmax = dfac*dcut;
-               std::vector<int> gates; // = {{0},{1},{2}};
+               const int dmax = dfac*icomb_new.get_dmax();
+               std::vector<int> gates; // = {{30},{31},{32},{33},{71}}; //= {{4},{5},{10},{20},{30},{40},{50},{60}}; //,{1},{2}};
                double maxdwt = reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
                std::cout << "maxdwt=" << maxdwt << std::endl;
                //reduce_entropy_single(icomb_new, urot, "opt", dmax, schd.ctns.ooparams);
@@ -162,7 +162,7 @@ namespace ctns{
                Hij0.print("Hij0_rank"+std::to_string(rank),10);
                if(rank == 0){
                   const int dfac = schd.ctns.ooparams.dfac;
-                  const int dmax = dfac*dcut;
+                  const int dmax = dfac*icomb_new.get_dmax();
                   std::vector<int> gates; // = {{0},{1},{2}};
                   double maxdwt = reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
                   std::cout << "maxdwt=" << maxdwt << std::endl;
@@ -186,15 +186,6 @@ namespace ctns{
 #endif
                exit(1);
             }
-
-/*
-            // lzd
-            if(iter == 1){
-               if(rank == 0) auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
-               schd.world.barrier();
-               exit(1);
-            }
-*/
 
             // accept or reject
             if(rank == 0){

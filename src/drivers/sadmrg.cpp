@@ -229,7 +229,7 @@ void SADMRG(const input::schedule& schd){
          }
       }
       // optimization from current RCF
-      if(schd.ctns.task_opt and schd.ctns.maxsweep>0){
+      if(schd.ctns.task_opt){
          ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
       }
       // orbital optimization
