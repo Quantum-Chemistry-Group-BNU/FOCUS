@@ -21,7 +21,8 @@ namespace ctns{
             const double& alpha,
             double& dwt,
             int& deff,
-            int& ncall){
+            int& ncall,
+            const bool& debug){
          ncall += 1;
          // rotate wavefunction
          assert(theta.size() == 1);
@@ -39,13 +40,13 @@ namespace ctns{
             decimation_row(icomb, wf.info.qrow, wf.info.qmid, // lc1=(row,mid) 
                   iftrunc, dmax, rdm_svd, alg_decim,
                   wfs2, sigs2full, rot, dwt, deff, fname,
-                  false);
+                  debug);
          }else{
             wfs2[0] = wf.merge_lc1_c2r().P();
             decimation_row(icomb, wf.info.qver, wf.info.qcol, // c2r=(ver,col)
                   iftrunc, dmax, rdm_svd, alg_decim,
                   wfs2, sigs2full, rot, dwt, deff, fname,
-                  false);
+                  debug);
             rot = rot.P(); 
          }
          double entropy = renyi_entropy(sigs2full, alpha);
@@ -70,6 +71,7 @@ namespace ctns{
             const int dmax,
             const input::params_oodmrg& ooparams,
             std::vector<int> gates={}){
+         const bool debug_check = false;
          const bool ifab = Qm::ifabelian;
          const int& iprt = ooparams.iprt;
          const double& alpha = ooparams.alpha;
@@ -92,16 +94,6 @@ namespace ctns{
          const bool singlet = true;
          init_cpsi_dot0(icomb, iroot, singlet);
 
-         const bool debug_check = false;
-         if(debug_check){         
-            auto svalues = get_schmidt_values(icomb, iroot, singlet);
-            for(int i=0; i<svalues.size(); i++){
-               std::cout << "i=" << i 
-                  << " sval=" << renyi_entropy(svalues[i], alpha)
-                  << std::endl;
-            }
-         }
-
          // generate sweep sequence
          const int nroots = 1;
          const auto& rindex = icomb.topo.rindex;
@@ -119,7 +111,7 @@ namespace ctns{
             }
             if(debug_check){
                const int dots = 2;
-               std::cout << "ibond=" << ibond << "/seqsize=" << sweep_seq.size()
+               std::cout << "\nibond=" << ibond << "/seqsize=" << sweep_seq.size()
                   << " dots=" << dots << " dbond=" << dbond
                   << std::endl;
             }
@@ -169,12 +161,13 @@ namespace ctns{
             double dwt;
             int deff;
             int ncall = 0;
+            bool debug = false;
             optfun fun;
             using std::placeholders::_1;
             fun = bind(&ctns::twodot_wavefun_entropy<Qm,Tm>, _1, std::cref(icomb), 
                   std::cref(v0), std::ref(vr), std::ref(wf), std::ref(rot), std::ref(wfs2),
                   std::cref(dbond.forward), std::cref(dmax), std::cref(alpha),
-                  std::ref(dwt), std::ref(deff), std::ref(ncall)); 
+                  std::ref(dwt), std::ref(deff), std::ref(ncall), std::cref(debug)); 
 
             // start optimization
             const double pi = 4.0*std::atan(1.0);
@@ -257,7 +250,8 @@ namespace ctns{
             }
 
             // re-evaluate the function to output {vr, rot} correctly. 
-            fmin = fun(x);
+            fmin = twodot_wavefun_entropy(x, icomb, v0, vr, wf, rot, wfs2,
+                  dbond.forward, dmax, alpha, dwt, deff, ncall, debug_check);
             maxdwt = std::max(maxdwt,dwt);
             if(iprt > 1){
                std::cout << " i=" << ibond

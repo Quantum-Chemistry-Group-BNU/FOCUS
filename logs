@@ -420,3 +420,11 @@
       - addition of MPS and canonicalization 
       - then we can check the fidelity <approx|exact>!
 
+   * <MPS|H1e|MPS'>?
+
+#  modified:   Makefile
+#  modified:   logs
+#  modified:   src/ctns/oodmrg/oodmrg.h
+#  modified:   src/ctns/oodmrg/oodmrg_disentangle.h
+#  modified:   src/drivers/sadmrg.cpp
+#

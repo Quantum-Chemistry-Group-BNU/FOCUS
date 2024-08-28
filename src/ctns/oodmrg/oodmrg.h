@@ -53,18 +53,63 @@ namespace ctns{
          if(debug_rotate){
             auto icomb_new = icomb; 
             auto urot = urot_min; 
-            auto Hij0 = get_Hmat(icomb_new, int2e, int1e, ecore, schd, scratch);
-            Hij0.print("Hij0_rank"+std::to_string(rank),10);
+            //auto Hij0 = get_Hmat(icomb_new, int2e, int1e, ecore, schd, scratch);
+            //Hij0.print("Hij0_rank"+std::to_string(rank),10);
             if(rank == 0){
                const int dfac = schd.ctns.ooparams.dfac;
                const int dmax = dfac*icomb_new.get_dmax();
-               std::vector<int> gates; // = {{30},{31},{32},{33},{71}}; //= {{4},{5},{10},{20},{30},{40},{50},{60}}; //,{1},{2}};
+               //std::vector<int> gates = {64};
+               /*
+               std::vector<int> gates = {0,1,2,3,4,5,6,7,8,9,10,11,12,
+               13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,
+               31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
+               49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66};
+               std::vector<int> gates = {31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
+               49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66};
+               */
+               
+               std::vector<int> gates = {
+                  0,1,2,3,4,5,6,7,8,9,10,11,12,
+                  13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,
+                  31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
+               49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66};
+               
                double maxdwt = reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
                std::cout << "maxdwt=" << maxdwt << std::endl;
                //reduce_entropy_single(icomb_new, urot, "opt", dmax, schd.ctns.ooparams);
+              
+               auto Sd1 = rcanon_Sdiag_sample(icomb, 0, schd.ctns.nsample, -1, 10);
+               auto Sd2 = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
+              
                rcanon_lastdots(icomb_new);
+               
+               auto Sd3 = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
+               /*
                rotate_spatial(int1e, int1e_new, urot);
                rotate_spatial(int2e, int2e_new, urot);
+               */ 
+               for(int i=0; i<urot.rows(); i++){
+                  for(int j=0; j<urot.cols(); j++){
+                     if(std::abs(urot(i,j))>1.e-10 and i!=j){
+                        std::cout << "urot i=" << i << " j=" << j << " uij=" << urot(i,j) << std::endl;
+                     }
+                  }
+               }
+               auto diff = linalg::check_orthogonality(urot);
+               std::cout << "diff=" << diff << std::endl;
+
+               auto pr = rcanon_random(icomb,0);
+               auto pr2 = rcanon_random(icomb_new,0);
+               auto state = pr.first;
+               auto state2 = pr2.first;
+
+               for(int i=0; i<urot.rows(); i++){
+                  std::cout << "i=" << i << " state=" << state[2*i+1] << state[2*i]
+                     << " state2=" << state2[2*i+1] << state[2*i]
+                     << std::endl;
+               } 
+               exit(1);
+               
             }
 #ifndef SERIAL
             if(size > 1){
@@ -73,6 +118,7 @@ namespace ctns{
                mpi_wrapper::broadcast(schd.world, int2e_new, 0);
             }
 #endif
+/*
             auto Hij1 = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
             Hij0.print("Hij0_rank"+std::to_string(rank),10);
             Hij1.print("Hij1_rank"+std::to_string(rank),10);
@@ -83,6 +129,12 @@ namespace ctns{
 #ifndef SERIAL
             icomb.world.barrier();
 #endif
+
+            auto diffH = Hij1 - Hij0;
+            diffH.print("diffH",10);
+            auto Sd1 = rcanon_Sdiag_sample(icomb, 0, schd.ctns.nsample, -1, 10);
+            auto Sd2 = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
+*/
             exit(1);
          }
 
@@ -163,7 +215,7 @@ namespace ctns{
                if(rank == 0){
                   const int dfac = schd.ctns.ooparams.dfac;
                   const int dmax = dfac*icomb_new.get_dmax();
-                  std::vector<int> gates; // = {{0},{1},{2}};
+                  std::vector<int> gates; // = {0,1,2,3};
                   double maxdwt = reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
                   std::cout << "maxdwt=" << maxdwt << std::endl;
                   //reduce_entropy_single(icomb_new, urot, "opt", dmax, schd.ctns.ooparams);
