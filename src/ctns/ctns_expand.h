@@ -218,7 +218,8 @@ namespace ctns{
          double ovlp = 0.0;
          for(int i=0; i<dim; i++){
             const auto& state = fci_space[i];
-            coeff[i] *= state.permute_sgn(icomb.topo.image2); // convert back to physical ordering 
+            // ZL@20240829: Use the rindex ordering, without converting to natural ordering 0123...
+            //coeff[i] *= state.permute_sgn(icomb.topo.image2); // convert back to physical ordering 
             pop[i] = std::norm(coeff[i]);
             ovlp += pop[i];
          }

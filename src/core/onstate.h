@@ -340,8 +340,13 @@ namespace fock{
             }
             return state;
          }
-         // permutation of sites
-         onstate permute(const std::vector<int>& image2) const{
+         // mathematically map |n0n1n2n3> to |n[p[0]]n[p[1]]n[p[2]]n[p[3]]> by permutations
+         std::pair<onstate,int> permute(const std::vector<int>& image2) const{
+            auto state = permute_state(image2);
+            auto sgn = permute_sgn(image2);
+            return std::make_pair(state,sgn);
+         }
+         onstate permute_state(const std::vector<int>& image2) const{
             assert(image2.size() == _size);
             onstate state(_size);
             for(int i=0; i<_size; i++){

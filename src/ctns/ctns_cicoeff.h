@@ -26,6 +26,7 @@ namespace ctns{
       std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
             const fock::onstate& state){
          // finally return coeff = <n|CTNS[i]> as a vector 
+         int nsite = icomb.get_nphysical();
          int n = icomb.get_nroots(); 
          std::vector<Tm> coeff(n,0.0);
          // compute <n|CTNS> by contracting all sites
@@ -39,7 +40,7 @@ namespace ctns{
                // site on backbone with physical index
                const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
                // given occ pattern, extract the corresponding qblock
-               auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, node.pindex) ); 
+               auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, node.lindex) ); 
                if(i == icomb.topo.nbackbone-1){
                   qt2_r = std::move(qt2);
                }else{
@@ -50,7 +51,7 @@ namespace ctns{
                for(int j=nodes[i].size()-1; j>=1; j--){
                   const auto& site = icomb.sites[rindex.at(std::make_pair(i,j))];
                   const auto& nodej = nodes[i][j];
-                  auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, nodej.pindex) );
+                  auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, nodej.lindex) );
                   if(j == nodes[i].size()-1){
                      qt2_u = std::move(qt2);
                   }else{
@@ -71,9 +72,7 @@ namespace ctns{
          const auto blk2 = wfcoeff(0,0);
          if(blk2.empty()) return coeff; 
          assert(blk2.size() == n);
-         // compute fermionic sign changes to match ordering of orbitals
-         double sgn = state.permute_sgn(icomb.topo.image2);
-         linalg::xaxpy(n, sgn, blk2.data(), coeff.data());
+         linalg::xcopy(n, blk2.data(), coeff.data());
          return coeff;
       }
 
@@ -102,8 +101,10 @@ namespace ctns{
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
          linalg::matrix<Tm> bmat;
+         // loop from the rightmost site of MPS to the left
          for(int i=icomb.topo.nbackbone-1; i>=0; i--){
             const auto& node = nodes[i][0];
+            assert(i == node.lindex);
             int tp = node.type;
             if(tp == 0 || tp == 1){
                // site on backbone with physical index
@@ -144,18 +145,26 @@ namespace ctns{
       int rcanon_CIcoeff_check(const comb<Qm,Tm>& icomb,
             const fock::onspace& space,
             const linalg::matrix<Tm>& vs,
+            const bool reorder=true,
             const double thresh=1.e-8){
-         std::cout << "\nctns::rcanon_CIcoeff_check" << std::endl;
+         std::cout << "\nctns::rcanon_CIcoeff_check reorder=" << reorder << std::endl;
          int n = icomb.get_nroots(); 
          size_t dim = space.size();
          double maxdiff = -1.e10;
          // cmat[j,i] = <D[i]|CTNS[j]>
          for(int i=0; i<dim; i++){
-            auto coeff = rcanon_CIcoeff(icomb, space[i]);
-            std::cout << " i=" << i << " state=" << space[i] << std::endl;
+            auto state = space[i];
+            double sgn = 1.0;
+            if(reorder){
+               auto pr = state.permute(icomb.topo.image2);
+               state = pr.first;
+               sgn = pr.second;
+            }
+            auto coeff = rcanon_CIcoeff(icomb, state);
+            std::cout << " i=" << i << " state=" << state << std::endl;
             for(int j=0; j<n; j++){
-               auto diff = std::abs(coeff[j] - vs(i,j));
-               std::cout << "   j=" << j << " <n|CTNS[j]>=" << coeff[j] 
+               auto diff = std::abs(sgn*coeff[j] - vs(i,j));
+               std::cout << "   j=" << j << " <n|CTNS[j]>=" << sgn*coeff[j] 
                   << " <n|CI[j]>=" << vs(i,j)
                   << " diff=" << diff << std::endl;
                maxdiff = std::max(maxdiff, diff);
@@ -170,15 +179,23 @@ namespace ctns{
    template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       linalg::matrix<Tm> rcanon_CIovlp(const comb<Qm,Tm>& icomb,
             const fock::onspace& space,
-            const linalg::matrix<Tm>& vs){
-         std::cout << "\nctns::rcanon_CIovlp" << std::endl;
+            const linalg::matrix<Tm>& vs,
+            const bool reorder=true){
+         std::cout << "\nctns::rcanon_CIovlp reorder=" << reorder << std::endl;
          int n = icomb.get_nroots(); 
          size_t dim = space.size();
          // cmat[n,i] = <D[i]|CTNS[n]>
          linalg::matrix<Tm> cmat(n,dim);
          for(int i=0; i<dim; i++){
-            auto coeff = rcanon_CIcoeff(icomb, space[i]);
-            linalg::xcopy(n, coeff.data(), cmat.col(i));
+            auto state = space[i];
+            double sgn = 1.0;
+            if(reorder){
+               auto pr = state.permute(icomb.topo.image2);
+               state = pr.first;
+               sgn = pr.second;
+            }
+            auto coeff = rcanon_CIcoeff(icomb, state);
+            linalg::xaxpy(n, sgn, coeff.data(), cmat.col(i));
          }
          // ovlp[i,n] = vs*[k,i] cmat[n,k]
          auto ovlp = linalg::xgemm("C","T",vs,cmat);

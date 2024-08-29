@@ -18,7 +18,9 @@ ostream& ctns::operator <<(ostream& os, const comb_coord& coord){
 
 // node
 ostream& ctns::operator <<(ostream& os, const node& nd){
-   os << "node: pindex=" << nd.pindex 
+   os << "node:"
+      << " lindex=" << nd.lindex
+      << " porb="   << nd.porb
       << " type="   << nd.type
       << " center=" << nd.center 
       << " left="   << nd.left
@@ -87,7 +89,7 @@ void topology::read(const string& fname, const bool debug){
          nodes[i].resize(1);
          // type 0: end
          auto& node = nodes[i][0];
-         node.pindex = orbsgrid[i][0]; 
+         node.porb = orbsgrid[i][0]; 
          node.type   = 0;
          node.center = coord_phys;
          node.left   = make_pair(i-1,0);
@@ -96,7 +98,7 @@ void topology::read(const string& fname, const bool debug){
          nodes[i].resize(1);
          // type 0: start
          auto& node = nodes[i][0];
-         node.pindex = orbsgrid[i][0]; 
+         node.porb = orbsgrid[i][0]; 
          node.type   = 0;
          node.center = coord_phys;
          node.left   = coord_vac;
@@ -106,7 +108,7 @@ void topology::read(const string& fname, const bool debug){
             nodes[i].resize(1);
             // type 1: physical site on backbone
             auto& node = nodes[i][0];
-            node.pindex = orbsgrid[i][0];
+            node.porb = orbsgrid[i][0];
             node.type   = 1;
             node.center = coord_phys;
             node.left   = make_pair(i-1,0);
@@ -116,7 +118,7 @@ void topology::read(const string& fname, const bool debug){
             nodes[i].resize(size+1);
             // type 0: leaves on branch
             auto& node = nodes[i][size];
-            node.pindex = orbsgrid[i][size-1];
+            node.porb = orbsgrid[i][size-1];
             node.type   = 0;
             node.center = coord_phys;
             node.left   = make_pair(i,size-1);
@@ -124,7 +126,7 @@ void topology::read(const string& fname, const bool debug){
             // type 2: physical site on branch
             for(int j=size-1; j>=1; j--){
                auto& nodej = nodes[i][j];
-               nodej.pindex = orbsgrid[i][j-1];
+               nodej.porb = orbsgrid[i][j-1];
                nodej.type   = 2;
                nodej.center = coord_phys;
                nodej.left   = make_pair(i,j-1);
@@ -132,7 +134,7 @@ void topology::read(const string& fname, const bool debug){
             } // j
               // type 3: internal site on backbone
             auto& nodei = nodes[i][0];
-            nodei.pindex = -1; // no physical index
+            nodei.porb = -1; // no physical index
             nodei.type   = 3;
             nodei.center = make_pair(i,1);
             nodei.left   = make_pair(i-1,0);
@@ -148,6 +150,20 @@ void topology::read(const string& fname, const bool debug){
          rcoord.push_back(make_pair(i,j));
          rindex[make_pair(i,j)] = ntotal;
          ntotal++;
+      }
+   }
+
+   // ZL@20240829: for occupation number vector
+   int lindex = 0;
+   for(int i=0; i<nbackbone; i++){
+      for(int j=0; j<nodes[i].size(); j++){
+         auto& node = nodes[i][j];
+         if(node.porb == -1){
+            node.lindex = -1;
+         }else{
+            node.lindex = lindex;
+            lindex++;
+         }
       }
    }
 
@@ -216,15 +232,18 @@ void topology::print() const{
    for(int i=0; i<nbackbone; i++){
       cout << " i=" << i << " : ";
       for(int j=0; j<nodes[i].size(); j++){
-         cout << nodes[i][j].pindex << " ";
+         cout << nodes[i][j].porb << " ";
       }
       cout << endl; 
    } 
    cout << "rcoord:" << endl;
    for(int idx=0; idx<ntotal; idx++){
       auto p = rcoord[idx];
+      assert(idx == rindex.at(p));
       auto& node = nodes[p.first][p.second];
-      cout << " idx=" << idx << " coord=" << p << " " << node << endl;
+      cout << " idx=" << idx << " coord=" << p
+         << " rindex=" << rindex.at(p) 
+         << " " << node << endl;
       assert(idx == rindex.at(p));
    }
    cout << "rsupport/lsupport:" << endl;
@@ -254,8 +273,6 @@ void topology::print() const{
    cout << "image2:" << endl;
    for(int i=0; i<2*nphysical; i++) cout << " " << image2[i];
    cout << endl;
-   // just check sweep sequence 
-   get_sweeps();
 }
 
 vector<directed_bond> topology::get_sweeps(const bool debug) const{

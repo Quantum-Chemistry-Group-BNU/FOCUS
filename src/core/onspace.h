@@ -71,10 +71,10 @@ namespace fock{
          space2.clear();
          std::vector<double> sgns;
          for(const auto& state : space){
-            space2.push_back(state.permute(image2));
-            auto sgn = state.permute_sgn(image2); 
+            auto pr = state.permute(image2);
+            space2.push_back(pr.first); 
             // for later multiplication with complex<double>
-            sgns.push_back(static_cast<double>(sgn));
+            sgns.push_back(static_cast<double>(pr.second));
          }
          int dim = space.size();
          int nroots = vs.cols();

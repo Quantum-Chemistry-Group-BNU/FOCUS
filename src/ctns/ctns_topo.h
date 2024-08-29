@@ -31,15 +31,16 @@ namespace ctns{
          friend class boost::serialization::access;
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
-               ar & pindex & type & center & left & right
+               ar & lindex & porb & type & center & left & right
                   & rsupport & lsupport
                   & corbs & lorbs & rorbs;
             }
       public:
          friend std::ostream& operator <<(std::ostream& os, const node& nd);
       public:
-         int pindex; // physical index: p-th spatial orbital; =-1 for internal sites 
-         int type;	  // type of node: 0 [boundary], 1 [backbone], 2 [branch], 3 [internal]
+         int lindex; // position in the occupation number vector
+         int porb; // physical index: p-th spatial orbital; =-1 for internal sites 
+         int type; // type of node: 0 [boundary], 1 [backbone], 2 [branch], 3 [internal]
          comb_coord center; // c-neighbor
          comb_coord left;   // l-neighbor
          comb_coord right;  // r-neighbor

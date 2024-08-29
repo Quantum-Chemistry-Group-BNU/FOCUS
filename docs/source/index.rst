@@ -31,6 +31,7 @@ Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic 
 
    methods/ci
    methods/csf
+   methods/ordering
    methods/dmrg
    methods/se
    methods/oodmrg

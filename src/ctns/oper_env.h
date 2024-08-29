@@ -40,7 +40,7 @@ namespace ctns{
          // lop: left boundary at the start (0,0)
          auto p = std::make_pair(0,0);
          //---------------------------------------------
-         int kp = icomb.topo.get_node(p).pindex;
+         int kp = icomb.topo.get_node(p).porb;
          qoper_dict<Qm::ifabelian,Tm> qops;
          oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
          //---------------------------------------------
@@ -86,7 +86,7 @@ namespace ctns{
             if(node.type != 3){
                auto ta = tools::get_time();
                //---------------------------------------------
-               int kp = node.pindex;
+               int kp = node.porb;
                qoper_dict<Qm::ifabelian,Tm> qops;
                oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
                //---------------------------------------------
@@ -104,7 +104,7 @@ namespace ctns{
             if(node.type == 0 && p.first != 0){
                auto ta = tools::get_time();
                //---------------------------------------------
-               int kp = node.pindex;
+               int kp = node.porb;
                qoper_dict<Qm::ifabelian,Tm> qops;
                oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
                //---------------------------------------------

@@ -45,5 +45,6 @@ the intermediate particle numbers and spins:
    csf=000222 | 543210 => A[0]A[1]A[2]A[3]A[4]A[5]=222000
    narray= 6 4 2 0 0 0 0
    tsarray= 0 0 0 0 0 0 0
-   
-   
+
+That is, :math:`|n_0n_1n_2n_3n_4n_5\rangle=|222000\rangle` in **mathematical form** ("000222" is referred to as the **output form**),with spin coupling from right to the left in consistent with the right canonical form of SA-MPS.
+

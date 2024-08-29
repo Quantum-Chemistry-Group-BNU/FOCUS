@@ -87,7 +87,8 @@ void CTNS(const input::schedule& schd){
                ctns::rcanon_save(icomb, rcanon_file);
                // debug        
                const bool debug = false;
-               if(debug){ 
+               if(debug){
+                  ctns::rcanon_CIcoeff_check(icomb, sci_space, vs);
                   // <CI|CTNS>
                   auto Sij_mix = ctns::rcanon_CIovlp(icomb, sci_space, vs);
                   Sij_mix.print("Sij_mix");
@@ -105,7 +106,6 @@ void CTNS(const input::schedule& schd){
                   cout << "\ncheck diffH=" << diffH << endl;
                   const double thresh = 1.e-8;
                   if(diffH > thresh) tools::exit(string("error: diffH > thresh=")+to_string(thresh));
-                  io::remove_scratch(schd.scratch);
                   exit(1);
                }
             }else{
