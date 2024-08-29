@@ -1,19 +1,18 @@
 
-Singlet Embedding
+Singlet embedding
 #################
 
 Basics
 ======
 
-Singlet embedding couples an fictious systems with the physical system such
+In spin-adapted DMRG, singlet embedding couples an fictious systems with the physical system such
 that the total wavefunction is a singlet.
 
 .. math::
 
    |\Psi\rangle = [|\Psi\rangle_{aux}\rangle \times |\Psi_{phys}\rangle]^0
 
-This turns out to be very useful in DMRG and OO-DMRG, since many of the
-6j or 9j coefficients get dramatically simplified.
+This turns out to be very useful in DMRG and OO-DMRG, since many 6j or 9j coefficients get dramatically simplified.
 
 Changes due to singlet embedding
 ================================
