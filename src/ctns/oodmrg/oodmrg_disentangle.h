@@ -238,7 +238,7 @@ namespace ctns{
                   }else{
                      auto result = std::find(gates.begin(), gates.end(), dbond.p0.first);
                      bool ifexist = !(result == gates.end());
-                     if(ifexist) x[0] = pi/2; //2*pi*dist(tools::generator);                     
+                     if(ifexist) x[0] = 2*pi*dist(tools::generator);                     
                   }
                }else{
                   x[0] = 0.0;
@@ -271,7 +271,10 @@ namespace ctns{
             
             // update urot
             double theta = x[0];
-            givens_rotation(urot, dbond.p0.first, dbond.p1.first, theta);
+            // need to locate the physical orbital
+            int orb0 = icomb.topo.get_node(dbond.p0).porb; 
+            int orb1 = icomb.topo.get_node(dbond.p1).porb;
+            givens_rotation(urot, orb0, orb1, theta); 
 
             // save the current site
             const auto p = dbond.get_current();
@@ -296,7 +299,7 @@ namespace ctns{
          const double rdm_svd = 1.5;
          std::string fname;
          sweep_final_CR2cRR(icomb, rdm_svd, fname, debug_check);
-        
+
          if(iprt > 0){
             auto t1 = tools::get_time();
             tools::timing("ctns::reduce_entropy_single", t0, t1);

@@ -234,7 +234,7 @@ void SADMRG(const input::schedule& schd){
       }
       // orbital optimization
       if(schd.ctns.task_oodmrg){
-      //   ctns::oodmrg(icomb, int2e, int1e, ecore, schd, scratch);
+         ctns::oodmrg(icomb, int2e, int1e, ecore, schd, scratch);
       }
    } // ham || opt || oodmrg
 }

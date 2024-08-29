@@ -22,6 +22,7 @@
          - between singlet embedding wavefunction?
       - between different spins (for SOC)
          - perturbative SOC via state interaction
+   - <MPS|H1e|MPS'> and <MPS|H2e|MPS'>
    - GPU version:
       - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
    - Applications:

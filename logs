@@ -381,7 +381,7 @@
 
 ### 2024 DMRG[OO] ###
 
- * Orbital-optimized DMRG: output configurations for quantum computing! [DONE@2024/08/24]
+ * Orbital-optimized DMRG: output configurations for quantum computing! [DONE@2024/08/29]
     - non-spin-adapted: [DONE@2024/08/12]
       - driver [DONE@2024/07/29]
       - disentangle 
@@ -406,25 +406,20 @@
       - bugfix for samps: 
         - mpi error for oosadmrg due to problem in qinfo
         - oosadmrg for hchain? bug in W-coefficient
+        - update urot should based on actual orbital indices to be consistent with integrals,
+          rather than the site index only. => This leads to failure in topo!=natural topo.
     - settings: initial and final oodmrg do not change orbital
 
  * Documentation [DONE@2024/08/26]
 
- ===== TODOs =====
-
-   * check open-shell systems: femoco?
-
-   * more robust initialization, and canonicalization
-      - check what is the problem of losing orthonormality
-      - support linear combination of dets and csf states via addition of MPS and canonicalization
-      - addition of MPS and canonicalization 
+ * More robust initialization from dets, and canonicalization
+    - initialization from SCI: more than 10000 dets?
+      - check what is the problem of losing orthonormality?
+      - add thresh_init?
+      - projection like swee_projection?
+    - support linear combination of dets and csf states via addition of MPS and canonicalization
+      - add keywords fromci (unnormalized) to generate a RCF [used for opt or other purpose]
+      - addition of MPS 
+      - canonicalization / variational compression? 
       - then we can check the fidelity <approx|exact>!
-
-   * <MPS|H1e|MPS'>?
-
-#  modified:   Makefile
-#  modified:   logs
-#  modified:   src/ctns/oodmrg/oodmrg.h
-#  modified:   src/ctns/oodmrg/oodmrg_disentangle.h
-#  modified:   src/drivers/sadmrg.cpp
-#
+ 
