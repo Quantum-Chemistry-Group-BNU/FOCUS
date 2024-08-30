@@ -7,6 +7,7 @@
 
 #include "../core/tools.h"
 #include "../core/onspace.h"
+#include "../ci/fci_util.h"
 #include "ctns_comb.h"
 #include "init_phys.h"
 #include "init_bipart.h"
@@ -19,13 +20,19 @@ namespace ctns{
    // initialize RCF from SCI wavefunctions
    template <typename Qm, typename Tm>
       void rcanon_init(comb<Qm,Tm>& icomb,
-            const fock::onspace& space,
-            const linalg::matrix<Tm>& vs,
+            const fock::onspace& space0,
+            const linalg::matrix<Tm>& vs0,
+            const int maxdets,
             const double rdm_svd,
             const double thresh_proj,
             const double thresh_ortho){
          std::cout << "\nctns::rcanon_init qkind=" << qkind::get_name<Qm>() << std::endl;
          auto t0 = tools::get_time();
+
+         // 0. truncate ci wavefunction if necessary
+         auto space = space0;
+         auto vs = vs0;
+         fci::ci_truncate(space, vs, maxdets);
 
          // 1. compute renormalized bases {|r>} from SCI wavefunctions
          init_rbases(icomb, space, vs, rdm_svd, thresh_proj);
@@ -36,8 +43,8 @@ namespace ctns{
          // 3. compute wave functions at the start for right canonical form 
          init_rwfuns(icomb, space, vs, thresh_ortho);
 
-         // check
-         icomb.display_size();
+         // 4. canonicalization
+         init_rcanon(icomb, space, vs, thresh_ortho);
 
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_init", t0, t1);
@@ -59,6 +66,7 @@ namespace ctns{
          // loop over bond - parallelizable
          const auto& topo = icomb.topo;
          icomb.rbases.resize(topo.ntotal);
+         std::vector<double> popBc(topo.ntotal,1.0);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -93,7 +101,7 @@ namespace ctns{
                fock::transform_coeff(space, vs, order, space2, vs2); 
 
                // 3. bipartition of space and compute renormalized states [time-consuming part!]
-               right_projection<Qm,Tm>(rbasis, 2*bpos, space2, vs2, 
+               popBc[idx] = right_projection<Qm,Tm>(rbasis, 2*bpos, space2, vs2, 
                      thresh_proj, rdm_svd, debug_init);
 
             } // node type
@@ -107,7 +115,7 @@ namespace ctns{
 
          // print information for all renormalized basis {|r>} at each bond
          if(debug_init){
-            std::cout << "\nfinal rbases with thresh_proj=" << thresh_proj << std::endl;
+            std::cout << "\ngenerated rbases with thresh_proj=" << thresh_proj << std::endl;
             int Dmax = 0;
             for(int idx=0; idx<topo.ntotal; idx++){
                auto p = topo.rcoord[idx];
@@ -115,7 +123,8 @@ namespace ctns{
                // shape can be different from dim(rspace) if associated weight is zero!
                auto shape = get_shape(icomb.rbases[idx]);
                std::cout << " idx=" << idx << " node=" << p << " type=" << topo.get_type(p)
-                  << " shape=" << shape.first << "," << shape.second 
+                  << " shape=" << shape.first << "," << shape.second
+                  << " 1-popBc=" << std::scientific << std::setprecision(3) << 1.0-popBc[idx]
                   << std::endl;
                Dmax = std::max(Dmax,shape.second);
             } // idx
@@ -246,11 +255,11 @@ namespace ctns{
                   << icomb.sites[idx].info.qcol.get_dimAll() << ","
                   << icomb.sites[idx].info.qmid.get_dimAll() << ")"
                   << " maxdiff=" << std::scientific << maxdiff 
+                  << " deviate=" << (maxdiff>thresh_ortho)
                   << " TIMING=" << dt << " S"
                   << std::endl;
-               if(maxdiff>thresh_ortho) tools::exit("error: deviate from identity matrix!");
+               //if(maxdiff>thresh_ortho) tools::exit("error: deviate from identity matrix!");
             }
-
          } // idx
 
          auto t1 = tools::get_time();
@@ -347,6 +356,43 @@ namespace ctns{
 
          auto t1 = tools::get_time();
          tools::timing("ctns::init_rwfuns", t0, t1);
+      }
+
+   // canonicalize
+   template <typename Qm, typename Tm>
+      void init_rcanon(comb<Qm,Tm>& icomb,
+            const fock::onspace& space,
+            const linalg::matrix<Tm>& vs,
+            const double thresh_ortho){
+         std::cout << "\nctns::init_rcanon" 
+            << " thresh_ortho=" << thresh_ortho
+            << std::endl; 
+
+         auto smat0a = rcanon_CIovlp(icomb, space, vs);
+         smat0a.print("<CI|CTNS[0]>");
+         auto smat1a = get_Smat(icomb);
+         std::cout << std::endl;
+         smat1a.print("<CTNS[0]|CTNS[0]>");
+
+         // canonicalization
+         const bool ifortho = true;
+         const bool debug = false;
+         auto icomb_new = icomb;
+         rcanon_canonicalize(icomb_new, ifortho, debug);
+
+         auto smat0b = get_Smat(icomb_new);
+         std::cout << std::endl;
+         smat0b.print("<CTNS[new]|CTNS[new]>");
+         auto smat1b = get_Smat(icomb,icomb_new);
+         std::cout << std::endl;
+         smat1b.print("<CTNS[0]|CTNS[new]>");
+         auto smat2b = rcanon_CIovlp(icomb_new, space, vs);
+         smat2b.print("<CI|CTNS[new]>");
+
+         // check canonical form
+         rcanon_check(icomb_new, thresh_ortho);
+         
+         icomb = std::move(icomb_new);
       }
 
 } // ctns

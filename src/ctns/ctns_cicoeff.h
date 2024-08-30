@@ -181,7 +181,11 @@ namespace ctns{
             const fock::onspace& space,
             const linalg::matrix<Tm>& vs,
             const bool reorder=true){
-         std::cout << "\nctns::rcanon_CIovlp reorder=" << reorder << std::endl;
+         assert(space.size() == vs.rows());
+         std::cout << "\nctns::rcanon_CIovlp reorder=" << reorder 
+            << " cistates=" << vs.cols() 
+            << " ciconfs=" << space.size() 
+            << std::endl;
          int n = icomb.get_nroots(); 
          size_t dim = space.size();
          // cmat[n,i] = <D[i]|CTNS[n]>

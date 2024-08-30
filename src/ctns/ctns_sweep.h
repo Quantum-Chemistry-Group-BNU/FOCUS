@@ -48,7 +48,7 @@ namespace ctns{
          // global timer
          dot_timing timing_global;
          // generate sweep sequence
-         auto sweep_seq = icomb.topo.get_sweeps(debug);
+         auto sweep_seq = icomb.topo.get_sweeps(false,debug);
          sweep_data sweeps(sweep_seq, schd.ctns.nroots, schd.ctns.maxsweep, 
                schd.ctns.restart_sweep, schd.ctns.ctrls);
          // pool for handling operators

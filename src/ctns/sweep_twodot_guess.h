@@ -136,7 +136,7 @@ namespace ctns{
                for(int i=0; i<neig; i++){
                   // psi[l,r,a] => cwf[lr,a]		 
                   auto cwf = icomb.cpsi[i].merge_lr(); // on backone
-                                                       // r[a,c2,c1] => r[a,c1c2], cwf[lr,a]*r[a,c1c2] => wf2[lr,c1c2]
+                  // r[a,c2,c1] => r[a,c1c2], cwf[lr,a]*r[a,c1c2] => wf2[lr,c1c2]
                   auto wf2 = cwf.dot(icomb.sites[pdx1].merge_cr());
                   // wf2[lr,c1c2] => wf4[l,r,c1,c2] 
                   auto wf4 = wf2.split_lr_c1c2(wf.info.qrow, wf.info.qcol, wf.info.qmid, wf.info.qver);

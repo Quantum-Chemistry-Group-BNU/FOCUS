@@ -81,8 +81,7 @@ void SADMRG(const input::schedule& schd){
                      exit(1);  
                   }
                   // truncate CI coefficients
-                  fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-                  ctns::rcanon_init(icomb_NSz, sci_space, vs, schd.ctns.rdm_svd,
+                  ctns::rcanon_init(icomb_NSz, sci_space, vs, schd.ctns.maxdets, schd.ctns.rdm_svd,
                         schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
                   ctns::rcanon_save(icomb_NSz, rcanon_file);
                }else{

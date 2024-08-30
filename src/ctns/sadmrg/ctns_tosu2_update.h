@@ -292,9 +292,7 @@ namespace ctns{
             if(offw == 0) continue;
             const Tm* blkw = wmat._data.data() + offw-1;
             // check target symmetry (N,S,M)
-            if(n == std::get<0>(sym3) && 
-                  twos == std::get<1>(sym3) && 
-                  tm == std::get<2>(sym3)){
+            if(n == std::get<0>(sym3) && twos == std::get<1>(sym3) && tm == std::get<2>(sym3)){
                int di = wmat.qrow.get_dim(0); 
                int dj = wmat.qcol[j].second;
                // possible number of states, ns can be smaller than nroot,

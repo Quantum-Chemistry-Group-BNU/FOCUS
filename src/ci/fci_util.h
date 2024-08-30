@@ -72,12 +72,14 @@ namespace fci{
             const int maxdets,
             const bool ifortho=true){
          const bool debug = true;
-         std::cout << "\nfci::ci_truncate maxdets=" << maxdets 
-            << " ifortho=" << ifortho << std::endl;
+         std::cout << "\nfci::ci_truncate"
+            << " ciconfs=" << space.size()
+            << " maxdets=" << maxdets 
+            << " ifortho=" << ifortho 
+            << std::endl;
          int nsub = space.size();
          int neig = vs.cols();
          int nred = std::min(nsub,maxdets);
-         std::cout << " reduction from " << nsub << " to " << nred << " dets" << std::endl;
          // select important basis
          std::vector<double> cmax(nsub,0.0);
          for(int j=0; j<neig; j++){
@@ -109,7 +111,7 @@ namespace fci{
                }
                // <vs2|vec> = <vs2|full vec>
                auto ova = linalg::xdot(nred, vs2.col(j), vec.data());
-               std::cout << " iroot=" << j << " ova=" 
+               std::cout << " iroot=" << j << " <CI[trunc]|CI>=" 
                   << std::setprecision(12) << ova << std::endl;
             }
          }

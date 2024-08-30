@@ -71,7 +71,7 @@ namespace ctns{
          int2e.init_mem();
          std::fill_n(int2e.data.begin(), int2e.data.size(), 1.0); 
 
-         auto sweeps = icomb.topo.get_sweeps(true);
+         auto sweeps = icomb.topo.get_sweeps(false,true);
          int mid0 = icomb.topo.nphysical/2-2;
          int mid1 = sweeps.size()-1-mid0;
          for(int ibond=0; ibond<sweeps.size(); ibond++){

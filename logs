@@ -413,13 +413,12 @@
  * Documentation [DONE@2024/08/26]
 
  * More robust initialization from dets, and canonicalization
-    - initialization from SCI: more than 10000 dets?
-      - check what is the problem of losing orthonormality?
-      - add thresh_init?
-      - projection like swee_projection?
+    - initialization from SCI: more than 100000 dets [DONE@20240830]
+      - rcanonicalization (ctns_rcanon.h)
     - support linear combination of dets and csf states via addition of MPS and canonicalization
       - add keywords fromci (unnormalized) to generate a RCF [used for opt or other purpose]
       - addition of MPS 
       - canonicalization / variational compression? 
       - then we can check the fidelity <approx|exact>!
+      - variational compression up/down to some Dcut
  

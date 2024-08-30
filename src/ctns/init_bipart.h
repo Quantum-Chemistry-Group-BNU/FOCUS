@@ -281,7 +281,7 @@ namespace ctns{
    // compute {|r>} basis for a given bipartition specified by the position bpos
    //
    template <typename Qm, typename Tm>
-      void right_projection(renorm_basis<Tm>& rbasis,
+      double right_projection(renorm_basis<Tm>& rbasis,
             const int bpos,
             const fock::onspace& space,
             const linalg::matrix<Tm>& vs,
@@ -335,25 +335,27 @@ namespace ctns{
             // NOTE: it is possible that matched=0, when we add flipped det in bipart_space with sym=NSz!
             //       then this part needs to be skipped as no sig2 and U are generated.
             if(matched == 1){
-               update_rbasis(rbasis, qr, rspace, sigs2, U, dimBc, popBc, SvN, thresh_proj, debug);
+               update_rbasis(rbasis, qr, rspace, sigs2, U, dimBc, popBc, SvN, thresh_proj, debug_basis);
             }
          } // qr
-         assert(std::abs(popBc-1.0) < 10*thresh_proj);
+         // ZL@20240830: disable this to use large thresh_proj
+         //assert(std::abs(popBc-1.0) < 10*thresh_proj);
 
          if(debug){
-            std::cout << "dim(space,lspace,rspace)=" << space.size() << "," 
+            std::cout << " dim(space,lspace,rspace)=" << space.size() << "," 
                << lspace.get_dimAll() << "," << rspace.get_dimAll() 
-               << " dimBc=" << dimBc << " popBc=" << popBc << " SvN=" << SvN << std::endl; 
+               << " dimBc=" << dimBc << " 1-popBc=" << 1-popBc << " SvN=" << SvN << std::endl; 
             auto t1 = tools::get_time();
             tools::timing("ctns::right_projection<Qm,Tm>", t0, t1);
          }
+         return popBc;
       }
 
    //
    // time-reversal symmetry adapted right_projection
    //
    template <> 
-      inline void right_projection<qkind::qNK,std::complex<double>>(renorm_basis<std::complex<double>>& rbasis,
+      inline double right_projection<qkind::qNK,std::complex<double>>(renorm_basis<std::complex<double>>& rbasis,
             const int bpos,
             const fock::onspace& space,
             const linalg::matrix<std::complex<double>>& vs,
@@ -415,18 +417,19 @@ namespace ctns{
             } // ql
               // 2.2 select important renormalized states from (sigs2,U) 
             if(matched == 1){
-               update_rbasis(rbasis, qr, rspace, sigs2, U, dimBc, popBc, SvN, thresh_proj, debug);
+               update_rbasis(rbasis, qr, rspace, sigs2, U, dimBc, popBc, SvN, thresh_proj, debug_basis);
             }
          } // qr
-         assert(std::abs(popBc-1.0) < 10*thresh_proj);
+         //assert(std::abs(popBc-1.0) < 10*thresh_proj);
 
          if(debug){
-            std::cout << "dim(space,lspace,rspace)=" << space.size() << "," 
+            std::cout << " dim(space,lspace,rspace)=" << space.size() << "," 
                << lspace.get_dimAll() << "," << rspace.get_dimAll() 
-               << " dimBc=" << dimBc << " popBc=" << popBc << " SvN=" << SvN << std::endl; 
+               << " dimBc=" << dimBc << " 1-popBc=" << 1-popBc << " SvN=" << SvN << std::endl; 
             auto t1 = tools::get_time();
             tools::timing("ctns::right_projection<qNK>", t0, t1);
          }
+         return popBc;
       }
 
 } // ctns

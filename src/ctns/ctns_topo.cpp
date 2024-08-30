@@ -275,45 +275,44 @@ void topology::print() const{
    cout << endl;
 }
 
-vector<directed_bond> topology::get_sweeps(const bool debug) const{
-   if(debug) cout << "\nctns::topology::get_sweeps" << endl;
+vector<directed_bond> topology::get_sweeps(const bool ifboundary, const bool debug) const{
+   if(debug) cout << "\nctns::topology::get_sweeps ifboundary=" << ifboundary << endl;
    vector<directed_bond> sweeps;
    // sweep sequence: 
-   for(int i=1; i<nbackbone-1; i++){
+   int ista = ifboundary? 0 : 1;
+   int iend = ifboundary? nbackbone : nbackbone-1;
+   for(int i=ista; i<iend; i++){
       // branch forward
-      for(int j=1; j<nodes[i].size()-1; j++){
+      int jend = ifboundary? nodes[i].size() : nodes[i].size()-1;
+      for(int j=1; j<jend; j++){
          auto p0 = make_pair(i,j-1);
          auto p1 = make_pair(i,j);
          sweeps.push_back( directed_bond(p0,p1,1) );
       }
       // branch backward
-      for(int j=nodes[i].size()-2; j>0; j--){
+      int jsta = ifboundary? nodes[i].size()-1 : nodes[i].size()-2;
+      for(int j=jsta; j>0; j--){
          auto p0 = make_pair(i,j-1);
          auto p1 = make_pair(i,j);
          sweeps.push_back( directed_bond(p0,p1,0) );
       }
       // backbone forward
-      if(i != nbackbone-2){
+      if(i != iend-1){
          auto p0 = make_pair(i,0);
          auto p1 = make_pair(i+1,0);      
          sweeps.push_back( directed_bond(p0,p1,1) );
       }
    }
    // backward on backbone
-   for(int i=nbackbone-2; i>=2; i--){
+   ista = ifboundary? nbackbone-1 : nbackbone-2;
+   iend = ifboundary? 1 : 2;
+   for(int i=ista; i>=iend; i--){
       auto p0 = make_pair(i-1,0);      
       auto p1 = make_pair(i,0); 
       sweeps.push_back( directed_bond(p0,p1,0) );
    }
    // check
    if(debug){
-      // in this scheme, each internal bond is visited twice
-      int ninternal = 0;
-      for(const auto& p : rcoord){
-         auto& node = nodes[p.first][p.second];
-         if(node.type != 0) ninternal += 1; 
-      }
-      assert(sweeps.size() == 2*(ninternal-1));
       for(int idx=0; idx<sweeps.size(); idx++){
          const auto& p0 = sweeps[idx].p0;
          const auto& p1 = sweeps[idx].p1;
@@ -324,6 +323,16 @@ vector<directed_bond> topology::get_sweeps(const bool debug) const{
             << " cturn=" << sweeps[idx].is_cturn()
             << endl;
       }
+      // consistency check: in this scheme, each bond is visited twice
+      int ninternal = 0; // type=1,2,3
+      int nboundary = 0;
+      for(const auto& p : rcoord){
+         auto& node = nodes[p.first][p.second];
+         if(node.type != 0) ninternal += 1; 
+         if(node.type == 0) nboundary += 1;
+      }
+      assert((!ifboundary and (sweeps.size() == 2*(ninternal-1))) or
+              (ifboundary and (sweeps.size() == 2*(ninternal-1+nboundary))));
       std::cout << "..... end of get_sweeps .....\n" << std::endl; 
    }
    return sweeps;

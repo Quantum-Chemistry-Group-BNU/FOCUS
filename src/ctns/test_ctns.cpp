@@ -82,10 +82,8 @@ int tests::test_ctns(){
    icomb.topo.print();
 
    // 2. initialize right canonical form from SCI wavefunction
-   fci::ci_truncate(sci_space, vs, schd.ctns.maxdets);
-
    if(schd.ctns.rcanon_file.empty()){
-      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.rdm_svd,
+      ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.maxdets, schd.ctns.rdm_svd,
 		        schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
       ctns::rcanon_save(icomb, "rcanon");
    }else{

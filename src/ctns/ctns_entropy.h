@@ -14,6 +14,9 @@ namespace ctns{
             const bool debug=false){
          const bool ifab = Qm::ifabelian;
 
+         // currently only support MPS
+         assert(icomb.topo.ifmps); 
+
          // generate cpsi for dot0 to init the sweep
          auto icomb_tmp = icomb;
          init_cpsi_dot0(icomb_tmp, iroot, singlet);

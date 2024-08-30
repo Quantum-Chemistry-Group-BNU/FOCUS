@@ -354,13 +354,9 @@ namespace ctns{
                int ndim = info.qrow.get_dim(br);
                double diff = (blk.to_matrix() - linalg::identity_matrix<Tm>(ndim)).normF();
                maxdiff = std::max(diff,maxdiff);
-               if(debug || (!debug && diff > thresh_ortho)){ 
+               if(debug and diff > thresh_ortho){ 
                   std::cout << " br=" << br << " qr=" << qr << " ndim=" << ndim 
                      << " |Sr-Id|_F=" << diff << std::endl;
-               }
-               if(diff > thresh_ortho){
-                  blk.print("diagonal block");
-                  tools::exit("error: not an identity matrix!"); 
                }
             } // bc
          } // br

@@ -109,7 +109,7 @@ namespace ctns{
          std::vector<int> get_suppl(const comb_coord& p) const{ return get_node(p).lorbs; }
          std::vector<int> get_suppr(const comb_coord& p) const{ return get_node(p).rorbs; }
          // sweep related 
-         std::vector<directed_bond> get_sweeps(const bool debug=false) const;
+         std::vector<directed_bond> get_sweeps(const bool ifboundary, const bool debug=false) const;
          std::vector<directed_bond> get_mps_fsweeps(const bool debug=false) const;
          std::vector<directed_bond> get_mps_bsweeps(const bool debug=false) const;
          std::vector<directed_bond> get_mps_sweeps(const bool debug=false) const;

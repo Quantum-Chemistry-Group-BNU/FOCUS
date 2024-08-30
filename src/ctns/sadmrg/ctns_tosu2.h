@@ -69,11 +69,10 @@ namespace ctns{
             // 6. expand Y into sa-mps site
             icomb.sites[i] = updateSite(Yinfo, qprod, qc, qr, debug);
 
-            // debug:
+            // debug: check right canonical form
             auto qt2 = contract_qt3_qt3("cr", icomb.sites[i], icomb.sites[i]);
-            qt2.check_identityMatrix(1.e-10, false);
+            assert(qt2.check_identityMatrix(1.e-10, false) < 1.e-10);
             if(debug) qt2.to_matrix().print("qt2mat");
-
          }
 
          if(debug){
