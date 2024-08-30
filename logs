@@ -411,11 +411,12 @@
     - settings: initial and final oodmrg do not change orbital
 
  * Documentation [DONE@2024/08/26]
+    - initial commit
 
  * More robust initialization from dets, and canonicalization
-    - initialization from SCI: more than 100000 dets [DONE@20240830]
-      - rcanonicalization (ctns_rcanon.h)
-    - support linear combination of dets and csf states via addition of MPS and canonicalization
+    - initialization from SCI: support more than 100000 dets [DONE@2024/08/30]
+      - fix the loose of orthogonality via canonicalization (ctns_rcanon.h)
+    - support linear combination of dets and csf states [DONE@2024/XX/XX]
       - add keywords fromci (unnormalized) to generate a RCF [used for opt or other purpose]
       - addition of MPS 
       - canonicalization / variational compression? 
