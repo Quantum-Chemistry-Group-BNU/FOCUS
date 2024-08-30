@@ -13,11 +13,11 @@
                     Authors: Zhendong Li @ BNU2019   		       
 ======================================================================
 
-TIME = Sat Jun 18 18:10:08 2022
+TIME = Fri Aug 30 23:25:17 2024
 
-GIT_HASH = 8586666d6309c1dd812219db890f663dd3b90fce
+GIT_HASH = 6b3a4a9f0ca89752138391044b5517d8093a95ac
 
-mpisize = 1 maxthreads = 4
+mpisize = 2 maxthreads = 8
 
 input file = results/cinput.dat
 
@@ -25,7 +25,7 @@ schedule::read fname = results/cinput.dat
 ----------------------------------------------------------------------
 dtype 1
 nelec 6
-twoms 0
+twom 0
 integral_file moleinfo/fmole.info
 scratch ./scratch
 
@@ -53,7 +53,7 @@ schedule
 #2 1 10 1.e-4 1.e-4
 #4 1 10 1.e-5 0.0
 #0 1 20 1.e-2 1.e-4
-0 1 60 1.e-5 0.0
+0 1 60 1.e-5 1.e-5
 end
 maxsweep 2
 task_dmrg
@@ -65,8 +65,10 @@ $end
 scratch = ./scratch
 dtype = 1
 nelec = 6
-twoms = 0
+twom  = 0
+twos  = 0
 integral_file = moleinfo/fmole.info
+perfcomm = 0
 
 ===== params_sci::print =====
 nroots = 2
@@ -82,6 +84,7 @@ schedule: iter eps1
 2 1e-05
 convergence parameters
 deltaE = 1e-10
+checkms = 0
 cisolver = 1
 maxcycle = 100
 crit_v = 0.0001
@@ -90,6 +93,8 @@ eps2 = 1e-08
 iroot = 0
 load = 0
 ci_file = ci.info
+cthrd = 0.01
+ifanalysis = 0
 
 ===== params_ctns::print =====
 qkind = cNK
@@ -99,33 +104,79 @@ task_init = 0
 task_sdiag = 0
 task_ham = 1
 task_opt = 1
+task_oodmrg = 0
+task_vmc = 0
+task_expand = 0
+task_tononsu2 = 0
+task_prop = 0
+task_schmidt = 0
+schmidt_file = schmidt_values
+restart_sweep = 0
+restart_bond = 0
+timestamp = 0
 maxdets = 10000
 thresh_proj = 1.000000e-15
 thresh_ortho = 1.000000e-08
-rdm_vs_svd = 1.500000e+00
+rdm_svd = 1.500000e+00
+outprec = 12
 nroots = 2
-guess    = 1
-dbranch  = 0
+guess = 1
+dbranch = 0
 maxsweep = 2
 maxbond = -1
-lastdot = 0
 schedule: isweep, dots, dcut, eps, noise
-0 1 60 1.000000e-05 0.000000e+00
-1 1 60 1.000000e-05 0.000000e+00
+0 1 60 1.000000e-05 1.000000e-05
+1 1 60 1.000000e-05 1.000000e-05
 alg_hvec = 3
+alg_hinter = 0
+alg_hcoper = 0
 alg_renorm = 2
-save_formulae = 0
-sort_formulae = 1
+alg_rinter = 0
+alg_rcoper = 0
+alg_decim = 1
+notrunc = 0
 ifdist1 = 0
+ifdistc = 0
+save_formulae = 0
+sort_formulae = 0
+save_mmtask = 0
+batchhvec = -1 -1 -1
+batchrenorm = -1 -1 -1
+batchmem = 1.000000e+01
 cisolver = 1
-maxcycle = 100
-rcanon_load = 0
-rcanon_file = rcanon.info
+maxcycle = 30
+nbuff = 4
+damping = 1.000000e-10
+precond = 1
+rcanon_file = 
+rcanon2_file = 
 iomode = 0
-ioasync = 0
+async_fetch = 0
+async_save = 0
+async_remove = 0
+ifnccl = 0
 iroot = 0
-nsample = 100000
-ndetprt = 10
+jroot = 0
+nsample = 1000
+pthrd = 1.000000e-02
+tosu2 = 0
+thresh_tosu2 = 1.000000e-08
+singlet = 0
+inputconf = 
+diagcheck = 0
+savebin = 0
+fromnosym = 0
+oodmrg parameters:
+ iprt=1
+ maxiter=10
+ dfac=2
+ macroiter=5
+ microiter=50
+ alpha=5.000000e-01
+ thrdopt=1.000000e-04
+ thrdloc=1.000000e-06
+ nptloc=2.000000e+01
+ acceptall=0
 
 io::create_scratch scratch=./scratch
 
@@ -137,7 +188,7 @@ ctns::topology::read fname=topology/topo1
 4
 5
 
-ctns::topology::print ntotal=6 nphysical=6 nbackbone=6
+ctns::topology::print ifmps=1 ntotal=6 nphysical=6 nbackbone=6
 topo:
  i=0 : 0 
  i=1 : 1 
@@ -146,12 +197,12 @@ topo:
  i=4 : 4 
  i=5 : 5 
 rcoord:
- idx=0 coord=(5,0) node: pindex=5 type=0 center=(-1,-1) left=(4,0) right=(-2,-2)
- idx=1 coord=(4,0) node: pindex=4 type=1 center=(-1,-1) left=(3,0) right=(5,0)
- idx=2 coord=(3,0) node: pindex=3 type=1 center=(-1,-1) left=(2,0) right=(4,0)
- idx=3 coord=(2,0) node: pindex=2 type=1 center=(-1,-1) left=(1,0) right=(3,0)
- idx=4 coord=(1,0) node: pindex=1 type=1 center=(-1,-1) left=(0,0) right=(2,0)
- idx=5 coord=(0,0) node: pindex=0 type=0 center=(-1,-1) left=(-2,-2) right=(1,0)
+ idx=0 coord=(5,0) rindex=0 node: lindex=5 porb=5 type=0 center=(-1,-1) left=(4,0) right=(-2,-2)
+ idx=1 coord=(4,0) rindex=1 node: lindex=4 porb=4 type=1 center=(-1,-1) left=(3,0) right=(5,0)
+ idx=2 coord=(3,0) rindex=2 node: lindex=3 porb=3 type=1 center=(-1,-1) left=(2,0) right=(4,0)
+ idx=3 coord=(2,0) rindex=3 node: lindex=2 porb=2 type=1 center=(-1,-1) left=(1,0) right=(3,0)
+ idx=4 coord=(1,0) rindex=4 node: lindex=1 porb=1 type=1 center=(-1,-1) left=(0,0) right=(2,0)
+ idx=5 coord=(0,0) rindex=5 node: lindex=0 porb=0 type=0 center=(-1,-1) left=(-2,-2) right=(1,0)
 rsupport/lsupport:
  idx=0 coord=(5,0) rsupport: 5 ; lsupport: 0 1 2 3 4 
  idx=1 coord=(4,0) rsupport: 4 5 ; lsupport: 0 1 2 3 
@@ -171,114 +222,160 @@ image2:
 
 fci::ci_load fname=./scratch/ci.info
 
-fci::ci_truncate maxdets=10000 ifortho=1
- reduction from 399 to 399 dets
- iroot=0 ova=(1.000000000000e+00,0.000000000000e+00)
- iroot=1 ova=(1.000000000000e+00,0.000000000000e+00)
+ctns::rcanon_init qkind=qNK
+Intel MKL WARNING: Support of Intel(R) Streaming SIMD Extensions 4.2 (Intel(R) SSE4.2) enabled only processors has been deprecated. Intel oneAPI Math Kernel Library 2025.0 will require Intel(R) Advanced Vector Extensions (Intel(R) AVX) instructions.
 
-ctns::rcanon_init qkind=cNK
+fci::ci_truncate ciconfs=399 maxdets=10000 ifortho=1
+ iroot=0 <CI[trunc]|CI>=(1.000000000000e+00,0.000000000000e+00)
+ iroot=1 <CI[trunc]|CI>=(1.000000000000e+00,0.000000000000e+00)
 
-ctns::init_rbases rdm_vs_svd=1.50e+00 thresh_proj=1.00e-15
+ctns::init_rbases rdm_svd=1.500e+00 thresh_proj=1.000e-15
+
+idx=2 node=(3,0) type=1 rsupport=3 4 5 
+
+idx=5 node=(0,0) type=0 rsupport=0 1 2 3 4 5 
+
+idx=4 node=(1,0) type=1 rsupport=1 2 3 4 5 
+
+idx=1 node=(4,0) type=1 rsupport=4 5 
 
 idx=0 node=(5,0) type=0 rsupport=5 
 
-idx=
 idx=3 node=(2,0) type=1 rsupport=2 3 4 5 
-2 node=(3,0) type=1 rsupport=3 4 5 
-idx=
-idx=41 node=(1,0) type=1 rsupport=1  node=2 3 4 5 
-(4,0) type=1 rsupport=4 5 
+ctns::right_projection<qNK> thresh_proj=ctns::right_projection<qNK> thresh_proj=1e-15
+1.000e-15
+ctns::right_projection<qNK> thresh_proj=1.000e-15
+ctns::right_projection<qNK> thresh_proj=1.000e-15
+ctns::right_projection<qNK> thresh_proj=1.000e-15
+ dim(space,lspace,rspace)=399,196,16 dimBc=16 1-popBc=-4.441e-16 SvN=1.325e+00
+----- TIMING FOR ctns::right_projection<qNK> : 1.677e-02 S -----
+ dim(space,lspace,rspace)=399,1,400 dimBc=4 1-popBc=2.22e-16 SvN=0.693
+----- TIMING FOR ctns::right_projection<qNK> : 1.697e-02 S -----
+ dim(space,lspace,rspace)=399,64,64 dimBc=64 1-popBc=-1.11e-15 SvN=1.93
+----- TIMING FOR ctns::right_projection<qNK> : 1.969e-02 S -----
+ dim(space,lspace,rspace)=399,4,400 dimBc=16 1-popBc=-6.66e-16 SvN=1.77
+----- TIMING FOR ctns::right_projection<qNK> : 1.988e-02 S -----
+ dim(space,lspace,rspace)=399,16,196 dimBc=64 1-popBc=-4.44e-16 SvN=1.48
+----- TIMING FOR ctns::right_projection<qNK> : 2.138e-02 S -----
 
-ctns::right_projection<cNK> thresh_proj=1.00e-15
-ctns::right_projection<cNK> thresh_proj=1.00e-15
-ctns::right_projection<cNK> thresh_proj=1.00e-15
-ctns::right_projection<cNK> thresh_proj=1.00e-15
- qr=(0) dimB,dimBi=1,1 popBi= qr=2.59e-12 popBc=2.59e-12 1-popBc=1.00e+00
-(0) dimB,dimBi=1,1 popBi=1.23e-04 popBc=1.23e-04 1-popBc=1.00e+00
- qr=(1) dimB,dimBi=4,4 popBi=9.92e-02 popBc=9.94e-02 1-popBc=9.01e-01
- qr=(1) dimB,dimBi=6,6 popBi=2.11e-04 popBc=2.11e-04 1-popBc=1.00e+00
- qr= qr=(2) dimB,dimBi=6,6 popBi=(4) dimB,dimBi=100,4 popBi=8.21e-01 popBc=9.20e-01 1-popBc=8.00e-02
-1.56e-01 popBc=1.56e-01 1-popBc=8.44e-01
- qr=(2) dimB,dimBi=15,15 popBi=1.63e-01 popBc=1.63e-01 1-popBc=8.37e-01
- qr= qr=(2) dimB,dimBi=(3) dimB,dimBi=16,4 popBi=3.70e-04 popBc=3.70e-04 1-popBc=1.00e+00
-4,4 popBi=7.96e-02 popBc=1.00e+00 1-popBc=3.70e-04
- qr=(4) dimB,dimBi=1,1 popBi=3.70e-04 popBc=1.00e+00 1-popBc=0.00e+00
-dim(space,lspace,rspace)=399,196,16 dimBc=16 popBc=1.00e+00 SvN=1.91e+00
------ TIMING FOR ctns::right_projection<cNK> : 4.000e-03 S -----
- qr=(3) dimB,dimBi=20,20 popBi=0.673 popBc=0.837 1-popBc=0.163
-
-idx=5 node=(0,0) type=0 rsupport=0 1 2 3 4 5 
- qr=(3) dimB,dimBi=48,16 popBi=0.0796 popBc=0.08 1-popBc=0.92
- qr=(4) dimB,dimBi=15,15 popBi=0.163 popBc=1 1-popBc=0.000211
- qr=(5) dimB,dimBi=200,8 popBi=0.731 popBc=0.887 1-popBc=0.113
- qr=(5) dimB,dimBi=6,6 popBi=0.000211 popBc=1 1-popBc=2.59e-12
- qr=(6) dimB,dimBi=1,1 popBi=2.59e-12 popBc=1 1-popBc=-2.22e-16
-dim(space,lspace,rspace)=399,64,64 dimBc=64 popBc=1 SvN=2.78
------ TIMING FOR ctns::right_projection<cNK> : 4.000e-03 S -----
-ctns::right_projection<cNK> thresh_proj=1.00e-15
- qr=(6) dimB,dimBi=100,4 popBi=1.13e-01 popBc=1.00e+00 1-popBc=-2.22e-16
-dim(space,lspace,rspace)=399,4,400 dimBc=16 popBc=1.00e+00 SvN=2.55e+00
------ TIMING FOR ctns::right_projection<cNK> : 4.000e-03 S -----
- qr=(4) dimB,dimBi=68,24 popBi=0.821 popBc=0.901 1-popBc=0.0994
- qr=(5) dimB,dimBi=48,16 popBi=0.0992 popBc=1 1-popBc=0.000123
- qr=(6) dimB,dimBi=16,4 popBi=0.000123 popBc=1 1-popBc=2.22e-16
-dim(space,lspace,rspace)=399,16,196 dimBc=64 popBc=1 SvN=2.14
------ TIMING FOR ctns::right_projection<cNK> : 5.000e-03 S -----
- qr=(6) dimB,dimBi=400,4 popBi=1 popBc=1 1-popBc=8.88e-16
-dim(space,lspace,rspace)=399,1,400 dimBc=4 popBc=1 SvN=1
------ TIMING FOR ctns::right_projection<cNK> : 1.000e-03 S -----
-
-final rbases with thresh_proj=1e-15
- idx=0 node=(5,0) type=0 shape=4,4
- idx=1 node=(4,0) type=1 shape=16,16
- idx=2 node=(3,0) type=1 shape=64,64
- idx=3 node=(2,0) type=1 shape=196,64
- idx=4 node=(1,0) type=1 shape=400,16
- idx=5 node=(0,0) type=0 shape=400,4
+generated rbases with thresh_proj=1e-15
+ idx=0 node=(5,0) type=0 shape=4,4 1-popBc=0.000e+00
+ idx=1 node=(4,0) type=1 shape=16,16 1-popBc=-4.441e-16
+ idx=2 node=(3,0) type=1 shape=64,64 1-popBc=-1.110e-15
+ idx=3 node=(2,0) type=1 shape=196,64 1-popBc=-4.441e-16
+ idx=4 node=(1,0) type=1 shape=400,16 1-popBc=-6.661e-16
+ idx=5 node=(0,0) type=0 shape=400,4 1-popBc=2.220e-16
 maximum bond dimension = 64
------ TIMING FOR ctns::init_rbases : 7.000e-03 S -----
+----- TIMING FOR ctns::init_rbases : 2.240e-02 S -----
 
-ctns::init_rsites qkind=cNK thresh_ortho=1e-08
- idx=0 node=(5,0)[0]ctns::get_right_bsite isym=1
- shape(l,r,c)=(4,1,4) maxdiff=0.000e+00 TIMING=0.000e+00 S
- idx=1 node=(4,0)[1] shape(l,r,c)=(16,4,4) maxdiff=5.271e-16 TIMING=0.000e+00 S
- idx=2 node=(3,0)[1] shape(l,r,c)=(64,16,4) maxdiff=2.000e-15 TIMING=0.000e+00 S
- idx=3 node=(2,0)[1] shape(l,r,c)=(64,64,4) maxdiff=5.116e-15 TIMING=0.000e+00 S
- idx=4 node=(1,0)[1] shape(l,r,c)=(16,64,4) maxdiff=1.939e-15 TIMING=0.000e+00 S
- idx=5 node=(0,0)[0] shape(l,r,c)=(4,16,4) maxdiff=1.238e-15 TIMING=0.000e+00 S
------ TIMING FOR ctns::init_rsites : 1.000e-03 S -----
+ctns::init_rsites qkind=qNK thresh_ortho=1e-08
+ idx=0 node=(5,0)[0] shape(l,r,c)=(4,1,4) maxdiff=0.000e+00 deviate=0 TIMING=6.100e-05 S
+ idx=1 node=(4,0)[1] shape(l,r,c)=(16,4,4) maxdiff=8.882e-16 deviate=0 TIMING=2.050e-04 S
+ idx=2 node=(3,0)[1] shape(l,r,c)=(64,16,4) maxdiff=2.633e-15 deviate=0 TIMING=1.800e-04 S
+ idx=3 node=(2,0)[1] shape(l,r,c)=(64,64,4) maxdiff=5.599e-15 deviate=0 TIMING=2.270e-04 S
+ idx=4 node=(1,0)[1] shape(l,r,c)=(16,64,4) maxdiff=2.197e-15 deviate=0 TIMING=2.840e-04 S
+ idx=5 node=(0,0)[0] shape(l,r,c)=(4,16,4) maxdiff=9.434e-16 deviate=0 TIMING=3.160e-04 S
+----- TIMING FOR ctns::init_rsites : 2.639e-03 S -----
 
-ctns::init_rwfuns qkind=cNK thresh_ortho=1e-08
-matrix: rwfuns size=(2,4)
-(0.00e+00,-4.46e-12) (-1.00e+00,0.00e+00) (0.00e+00,1.97e-03) (-7.80e-15,0.00e+00) 
-(0.00e+00,1.00e+00) (-4.46e-12,0.00e+00) (0.00e+00,8.79e-15) (1.76e-03,0.00e+00) 
+ctns::init_rwfuns qkind=qNK thresh_ortho=1e-08
+qtensor2: wf2 own=1 _data=0x600000552800
+qinfo2: wf2 sym=(0) dir=0,1
+ qbond: qrow nsym=1 dimAll=2
+ (6):2
+ qbond: qcol nsym=1 dimAll=4
+ (6):4
+total no. of nonzero blocks=1 nblocks=1 size=8:0.000122MB
 
 check state overlaps ...
 matrix: ova_rwfuns size=(2,2)
-(1.0000e+00,-0.0000e+00) (-1.4332e-17,-0.0000e+00) 
-(-1.4332e-17,-0.0000e+00) (1.0000e+00,-0.0000e+00) 
+(1.0000e+00,-0.0000e+00) (5.9784e-17,-0.0000e+00) 
+(5.9784e-17,-0.0000e+00) (1.0000e+00,-0.0000e+00) 
 matrix: ova0_vs size=(2,2)
-(1.0000e+00,0.0000e+00) (7.2799e-17,0.0000e+00) 
-(7.2799e-17,0.0000e+00) (1.0000e+00,0.0000e+00) 
-diff of ova matrices = 1.731e-15
------ TIMING FOR ctns::init_rwfuns : 0.000e+00 S -----
------ TIMING FOR ctns::rcanon_init : 1.000e-02 S -----
+(1.0000e+00,0.0000e+00) (-3.4694e-17,0.0000e+00) 
+(-3.4694e-17,0.0000e+00) (1.0000e+00,0.0000e+00) 
+diff of ova matrices = 8.192e-16
+----- TIMING FOR ctns::init_rwfuns : 9.270e-04 S -----
 
-ctns::rcanon_save fname=./scratch/rcanon.info
+ctns::init_rcanon thresh_ortho=1e-08
 
-ctns::rcanon_check thresh_ortho=1.00e-08
- idx=0 node=(5,0) Dtot=4 maxdiff=0.00e+00
- idx=1 node=(4,0) Dtot=16 maxdiff=5.27e-16
- idx=2 node=(3,0) Dtot=64 maxdiff=2.00e-15
- idx=3 node=(2,0) Dtot=64 maxdiff=5.12e-15
- idx=4 node=(1,0) Dtot=16 maxdiff=1.94e-15
- idx=5 node=(0,0) Dtot=4 maxdiff=1.24e-15
+ctns::rcanon_CIovlp reorder=1 cistates=2 ciconfs=399
+matrix: <CI|CTNS[0]> size=(2,2)
+(1.0000e+00,1.2068e-19) (-5.7784e-17,-5.7133e-18) 
+(-5.6177e-17,1.6300e-18) (1.0000e+00,1.9549e-19) 
+
+matrix: <CTNS[0]|CTNS[0]> size=(2,2)
+(1.0000e+00,4.7354e-19) (-5.0460e-17,-5.9863e-18) 
+(-7.7753e-17,8.7302e-18) (1.0000e+00,5.9940e-19) 
+
+rcanon::rcanon_canonicalize ifortho=1 ifab=1 nroots=2 dmax=64
+----- TIMING FOR ctns::rcanon_canonicalize : 1.384e-02 S -----
+
+matrix: <CTNS[new]|CTNS[new]> size=(2,2)
+(1.0000e+00,-8.3679e-19) (3.7610e-16,-3.6203e-18) 
+(3.7357e-16,-5.3107e-17) (1.0000e+00,-4.8773e-19) 
+
+matrix: <CTNS[0]|CTNS[new]> size=(2,2)
+(3.3767e-10,6.2788e-12) (1.0000e+00,5.9168e-18) 
+(-2.6496e-17,1.0000e+00) (-6.2789e-12,-3.3767e-10) 
+
+ctns::rcanon_CIovlp reorder=1 cistates=2 ciconfs=399
+matrix: <CI|CTNS[new]> size=(2,2)
+(3.3767e-10,6.2787e-12) (1.0000e+00,6.6095e-18) 
+(-2.6560e-17,1.0000e+00) (-6.2787e-12,-3.3767e-10) 
+
+ctns::rcanon_check thresh_ortho=1.000e-08
+ idx=0 node=(5,0) Drow=4 maxdiff=0.000e+00 deviate=0
+ idx=1 node=(4,0) Drow=16 maxdiff=1.896e-15 deviate=0
+ idx=2 node=(3,0) Drow=64 maxdiff=3.978e-15 deviate=0
+ idx=3 node=(2,0) Drow=64 maxdiff=5.823e-15 deviate=0
+ idx=4 node=(1,0) Drow=16 maxdiff=1.817e-15 deviate=0
+ idx=5 node=(0,0) Drow=2 maxdiff=4.442e-16 deviate=0
+qtensor2: wf2 own=1 _data=0x600003e7e340
+qinfo2: wf2 sym=(0) dir=0,1
+ qbond: qrow nsym=1 dimAll=2
+ (6):2
+ qbond: qcol nsym=1 dimAll=2
+ (6):2
+total no. of nonzero blocks=1 nblocks=1 size=4:6.104e-05MB
+i=0 idx=0 block[0:(6),0:(6)] dim0,dim1=(2,2) size=4
+ dtensor2: blk_0 size=(2,2) _data=0x600003e7e340
+(1.0000e+00,0.0000e+00) (-1.0635e-19,0.0000e+00) 
+(-1.0635e-19,0.0000e+00) (-1.0000e+00,0.0000e+00) 
+check wf2*wf2.H():
+ rwfuns: nroots=2 maxdiff=7.3113e-26 deviate=0
+----- TIMING FOR ctns::rcanon_check : 2.170e-04 S -----
+----- TIMING FOR ctns::rcanon_init : 1.255e-01 S -----
+
+ctns::rcanon_save fname=./scratch/rcanon_ci
+
+ctns::rcanon_check thresh_ortho=1.000e-08
+ idx=0 node=(5,0) Drow=4 maxdiff=0.000e+00 deviate=0
+ idx=1 node=(4,0) Drow=16 maxdiff=1.896e-15 deviate=0
+ idx=2 node=(3,0) Drow=64 maxdiff=3.978e-15 deviate=0
+ idx=3 node=(2,0) Drow=64 maxdiff=5.823e-15 deviate=0
+ idx=4 node=(1,0) Drow=16 maxdiff=1.817e-15 deviate=0
+ idx=5 node=(0,0) Drow=2 maxdiff=4.442e-16 deviate=0
+qtensor2: wf2 own=1 _data=0x600003e7cdc0
+qinfo2: wf2 sym=(0) dir=0,1
+ qbond: qrow nsym=1 dimAll=2
+ (6):2
+ qbond: qcol nsym=1 dimAll=2
+ (6):2
+total no. of nonzero blocks=1 nblocks=1 size=4:6.104e-05MB
+i=0 idx=0 block[0:(6),0:(6)] dim0,dim1=(2,2) size=4
+ dtensor2: blk_0 size=(2,2) _data=0x600003e7cdc0
+(1.0000e+00,0.0000e+00) (-1.0635e-19,0.0000e+00) 
+(-1.0635e-19,0.0000e+00) (-1.0000e+00,0.0000e+00) 
+check wf2*wf2.H():
+ rwfuns: nroots=2 maxdiff=7.3113e-26 deviate=0
+----- TIMING FOR ctns::rcanon_check : 2.430e-04 S -----
 
 integral::load fname = moleinfo/fmole.info
-sorb = 12
-size(int1e) = 144:2.20e-03MB:2.15e-06GB
-size(int2e) = 2277:3.47e-02MB:3.39e-05GB
------ TIMING FOR integral::load_integral : 1.000e-03 S -----
+ sorb = 12
+ size(int1e) = 144:0.0022MB:2.15e-06GB
+ size(int2e) = 2277:0.0347MB:3.39e-05GB
+ ecore = (4.6,0)
+----- TIMING FOR integral::load : 1.111e-03 S -----
 
 io::remove_scratch scratch=./scratch/sweep
 successfully removed ./scratch/sweep
@@ -286,613 +383,895 @@ successfully removed ./scratch/sweep
 io::create_scratch scratch=./scratch/sweep
 successfully created ./scratch/sweep
 
-ctns::oper_env_right qkind=cNK
------ TIMING FOR ctns::oper_init : 5.000e-03 S -----
-T[ctns::oper_init](comp/save/tot)=0,0,0
+ctns::oper_env_right qkind=qNK
+ctns::oper_save iomode=0 fname=./scratch/sweep/cop(5,0) size=0.00378MB:3.7e-06GB
+fname=./scratch/sweep/cop(5,0) size=3.7e-06GB T[save](info/data/tot)=0.000173,5.6e-05,0.000229 speed=0.0161GB/s disk[used]=3.9e-06GB
+ctns::oper_save iomode=0 fname=./scratch/sweep/rop(5,0) size=0.00378MB:3.7e-06GB
+Intel MKL WARNING: Support of Intel(R) Streaming SIMD Extensions 4.2 (Intel(R) SSE4.2) enabled only processors has been deprecated. Intel oneAPI Math Kernel Library 2025.0 will require Intel(R) Advanced Vector Extensions (Intel(R) AVX) instructions.
+fname=./scratch/sweep/rop(5,0) size=3.7e-06GB T[save](info/data/tot)=7e-05,4.8e-05,0.000118 speed=0.0313GB/s disk[used]=7.8e-06GB
+ctns::oper_save iomode=0 fname=./scratch/sweep/cop(4,0) size=0.00378MB:3.7e-06GB
+fname=./scratch/sweep/cop(4,0) size=3.7e-06GB T[save](info/data/tot)=6.6e-05,4.8e-05,0.000114 speed=0.0324GB/s disk[used]=1.17e-05GB
+ctns::oper_save iomode=0 fname=./scratch/sweep/cop(3,0) size=0.00378MB:3.7e-06GB
+fname=./scratch/sweep/cop(3,0) size=3.7e-06GB T[save](info/data/tot)=6.9e-05,5e-05,0.000119 speed=0.0311GB/s disk[used]=1.56e-05GB
+ctns::oper_save iomode=0 fname=./scratch/sweep/cop(2,0) size=0.00378MB:3.7e-06GB
+fname=./scratch/sweep/cop(2,0) size=3.7e-06GB T[save](info/data/tot)=6.9e-05,5.2e-05,0.000121 speed=0.0305GB/s disk[used]=1.95e-05GB
+ctns::oper_save iomode=0 fname=./scratch/sweep/cop(1,0) size=0.00378MB:3.7e-06GB
+fname=./scratch/sweep/cop(1,0) size=3.7e-06GB T[save](info/data/tot)=6.7e-05,4.7e-05,0.000114 speed=0.0324GB/s disk[used]=2.34e-05GB
+ctns::oper_save iomode=0 fname=./scratch/sweep/cop(0,0) size=0.00378MB:3.7e-06GB
+fname=./scratch/sweep/cop(0,0) size=3.7e-06GB T[save](info/data/tot)=6.9e-05,4.7e-05,0.000116 speed=0.0319GB/s disk[used]=2.73e-05GB
+----- TIMING FOR ctns::oper_init_dotCR : 3.849e-03 S -----
+T[ctns::oper_init_dotCR](comp/save/tot)=0.00248,0.00122,0.00371
 
 idx=1 coord=(4,0)
-TIMING for Renormalization : 0.004  T(cal/comm)=0.004,0
+ qops: oplist=CABPQSH nops=C:2 A:2 B:3 P:13 Q:16 S:4 H:1 
+        dim(bra,ket)=16,16 size(op)=70:0.00107MB size(tot)=2156:0.0329MB:3.21e-05GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:9.107e-01S Sys:1.554e-01S Total:1.066e+00S
+check ||H-H.dagger||=0.000e+00 coord=(4,0) rank=0
+----- TIMING FOR oper_renorm : 0.00221 S T(init/kernel/comm)=-1.73e+09,1.73e+09,7.6e-05 rank=0 -----
 
 idx=2 coord=(3,0)
-TIMING for Renormalization : 0.004  T(cal/comm)=0.004,0
+ qops: oplist=CABPQSH nops=C:3 A:5 B:7 P:6 Q:8 S:3 H:1 
+        dim(bra,ket)=64,64 size(op)=924:0.0141MB size(tot)=24981:0.381MB:0.000372GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.197e+00S Sys:2.249e-01S Total:1.422e+00S
+check ||H-H.dagger||=0.000e+00 coord=(3,0) rank=0
+----- TIMING FOR oper_renorm : 0.00402 S T(init/kernel/comm)=-1.73e+09,1.73e+09,7.5e-05 rank=0 -----
 
 idx=3 coord=(2,0)
-TIMING for Renormalization : 0.005  T(cal/comm)=0.005,0
+ qops: oplist=CABPQSH nops=C:4 A:10 B:13 P:1 Q:2 S:2 H:1 
+        dim(bra,ket)=64,64 size(op)=1120:0.0171MB size(tot)=28224:0.431MB:0.000421GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.208e+00S Sys:2.275e-01S Total:1.435e+00S
+check ||H-H.dagger||=0.000e+00 coord=(2,0) rank=0
+----- TIMING FOR oper_renorm : 0.00358 S T(init/kernel/comm)=-1.73e+09,1.73e+09,6.4e-05 rank=0 -----
 
 idx=4 coord=(1,0)
-TIMING for Renormalization : 0.004  T(cal/comm)=0.004,0
+ qops: oplist=CABPQSH nops=C:5 A:15 B:18 P:1 Q:2 S:1 H:1 
+        dim(bra,ket)=16,16 size(op)=96:0.00146MB size(tot)=2656:0.0405MB:3.96e-05GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.224e+00S Sys:2.330e-01S Total:1.457e+00S
+check ||H-H.dagger||=0.000e+00 coord=(1,0) rank=0
+----- TIMING FOR oper_renorm : 0.00435 S T(init/kernel/comm)=-1.73e+09,1.73e+09,0.000114 rank=0 -----
 
 idx=5 coord=(0,0)
-TIMING for Renormalization : 0.002  T(cal/comm)=0.002,0
------ TIMING FOR ctns::oper_env_right : 3.200e-02 S -----
-T[ctns::oper_env_right](init/load/comp/save/tot)=0.005,0,0.019,0,0.024
+ qops: oplist=CABPQSH nops=C:6 A:22 B:26 P:0 Q:0 S:0 H:1 
+        dim(bra,ket)=2,2 size(op)=4:6.1e-05MB size(tot)=108:0.00165MB:1.61e-06GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.235e+00S Sys:2.361e-01S Total:1.471e+00S
+check ||H-H.dagger||=0.000e+00 coord=(0,0) rank=0
+----- TIMING FOR oper_renorm : 0.000764 S T(init/kernel/comm)=-1.73e+09,1.73e+09,1e-05 rank=0 -----
+----- TIMING FOR ctns::oper_env_right : 7.526e-02 S -----
+T[ctns::oper_env_right](init/load/comp/save/tot)=0.00386,0.00241,0.015,0.0539,0.0752
+ctns::oper_load iomode=0 fname=./scratch/sweep/rop(0,0)
+fname=./scratch/sweep/rop(0,0) size=1.61e-06GB T[load](info/setup/data/tot)=3.1e-05,0.000213,1.1e-05,0.000255 speed=0.00631GB/s
 matrix: Hij size=(2,2)
-(-3.23605710e+00,-4.81482486e-35) (1.72699883e-17,5.63570354e-17) 
-(1.72699883e-17,-5.63570354e-17) (-2.88488492e+00,9.62964972e-35) 
+(-2.884885193729e+00,0.000000000000e+00) (-1.185814335530e-10,0.000000000000e+00) 
+(-1.185814335530e-10,0.000000000000e+00) (-3.236061715657e+00,0.000000000000e+00) 
 matrix: Sij size=(2,2)
-(1.0000e+00,1.5677e-19) (-9.4082e-17,-1.1041e-17) 
-(-5.7002e-17,1.0935e-17) (1.0000e+00,3.5711e-19) 
+(1.000000000000e+00,-8.367853178497e-19) (3.760995452492e-16,-3.620256900731e-18) 
+(3.735664896897e-16,-5.310660322860e-17) (1.000000000000e+00,-4.877306080365e-19) 
 
 ctns::sweep_opt maxsweep=2
-ctns::get_left_bsite isym=1
 
-ctns::topology::get_sweeps
+ctns::oper_init_dotL isym=1 ifkr=1 singlet=0
+ctns::oper_save iomode=0 fname=./scratch/sweep/lop(0,0) size=0.0037841796875MB:3.69548797607e-06GB
+fname=./scratch/sweep/lop(0,0) size=3.7e-06GB T[save](info/data/tot)=7.8e-05,5.9e-05,0.000137 speed=0.027GB/s disk[used]=0.000898GB
+----- TIMING FOR ctns::oper_init_dotL : 6.080e-04 S -----
+
+ctns::topology::get_sweeps ifboundary=0
  ibond=0 bond=(1,0)-(2,0) forward=1 cturn=0
  ibond=1 bond=(2,0)-(3,0) forward=1 cturn=0
  ibond=2 bond=(3,0)-(4,0) forward=1 cturn=0
  ibond=3 bond=(3,0)-(4,0) forward=0 cturn=0
  ibond=4 bond=(2,0)-(3,0) forward=0 cturn=0
  ibond=5 bond=(1,0)-(2,0) forward=0 cturn=0
+..... end of get_sweeps .....
+
 ======================================================================
-sweep parameters: isweep=0 dots=1 dcut=60 eps=1e-05 noise=0
+sweep parameters: isweep=0 dots=1 dcut=60 eps=1e-05 noise=1e-05
 ======================================================================
+
+ctns::sweep_init: nroots=2 sym_state=(6) singlet=0
+qtensor3: site0new own=1 _data=0x600000f50a20
+qinfo3: site0new sym=(0) dir=1,0,1
+ qbond: qrow nsym=1 dimAll=1
+ (0):1
+ qbond: qcol nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=3 nblocks=9 size=6:9.16e-05MB
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:0.000366MB:3.58e-07GB
+ sites: len=6 mem=5822:0.0888MB:8.68e-05GB
+ rwfuns: len=2 mem=4:6.1e-05MB:5.96e-08GB
+ cpsi: len=2 mem=560:0.00854MB:8.34e-06GB
+total mem of comb=6410:0.0978MB:9.55e-05GB
 
 isweep=0 ibond=0/seqsize=6 dots=1 dbond=(1,0)-(2,0) forward=1 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:4.291e+09GB RSS:2.670e-05GB  Timing: User:1.241e+00S Sys:2.393e-01S Total:1.480e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=5822:8.884e-02MB:8.675e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=560:8.545e-03MB:8.345e-06GB
+total mem of comb=6410:9.781e-02MB:9.552e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=1,4,1 ifNC=1
-wf3(diml,dimr,dimc)=(4,64,4) nnz=280:0.004272MB
+wf3(diml,dimr,dimc)=(4,64,4) nnz=280:4.272e-03MB
+qtensor3: wf3 own=1 _data=0x7fdb14832e00
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+ qbond: qcol nsym=5 dimAll=64
+ (4):24 (3):16 (5):16 (2):4 (6):4
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=9 nblocks=45 size=280:4.272e-03MB
+duration_diagGPU:1.710e-04
+duration_diagreduce:2.300e-05
+duration_diagtransform:2.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 -      -3.236061715709  -1.00e+03   2.45e-03    2     2   4.00e-03  2.00e-03
-    1   1 -      -2.795716337545  -1.00e+03   8.05e-03    2     2   4.00e-03  2.00e-03
-    2   0 -      -3.236066184302  -4.47e-06   3.49e-04    4     4   7.00e-03  1.75e-03
-    2   1 -      -2.795768004098  -5.17e-05   5.05e-03    4     4   7.00e-03  1.75e-03
-    3   0 -      -3.236066262186  -7.79e-08   1.38e-04    4     6   1.10e-02  1.83e-03
-    3   1 -      -2.795782375221  -1.44e-05   3.20e-03    4     6   1.10e-02  1.83e-03
-    4   0 -      -3.236066273327  -1.11e-08   6.67e-05    4     8   1.50e-02  1.87e-03
-    4   1 -      -2.795789156140  -6.78e-06   2.59e-03    4     8   1.50e-02  1.87e-03
-    5   0 -      -3.236066276555  -3.23e-09   4.42e-05    4    10   1.80e-02  1.80e-03
-    5   1 -      -2.795793080239  -3.92e-06   1.88e-03    4    10   1.80e-02  1.80e-03
-    6   0 -      -3.236066277790  -1.23e-09   2.66e-05    4    12   2.20e-02  1.83e-03
-    6   1 -      -2.795795400660  -2.32e-06   1.54e-03    4    12   2.20e-02  1.83e-03
-    7   0 -      -3.236066278325  -5.35e-10   1.95e-05    4    14   2.50e-02  1.79e-03
-    7   1 -      -2.795796792547  -1.39e-06   1.14e-03    4    14   2.50e-02  1.79e-03
-    8   0 -      -3.236066278568  -2.43e-10   1.22e-05    4    16   2.90e-02  1.81e-03
-    8   1 -      -2.795797640609  -8.48e-07   9.27e-04    4    16   2.90e-02  1.81e-03
-    9   0 +      -3.236066278682  -1.13e-10   9.11e-06    4    18   3.20e-02  1.78e-03
-    9   1 -      -2.795798163144  -5.23e-07   7.03e-04    4    18   3.20e-02  1.78e-03
-   10   0 +      -3.236066278683  -1.16e-12   8.90e-06    3    19   3.40e-02  1.79e-03
-   10   1 -      -2.795798490771  -3.28e-07   5.75e-04    3    19   3.40e-02  1.79e-03
-   11   0 +      -3.236066278683  -4.02e-13   8.94e-06    3    20   3.60e-02  1.80e-03
-   11   1 -      -2.795798698965  -2.08e-07   4.45e-04    3    20   3.60e-02  1.80e-03
-   12   0 +      -3.236066278683  -4.17e-14   8.93e-06    3    21   3.80e-02  1.81e-03
-   12   1 -      -2.795798836390  -1.37e-07   3.70e-04    3    21   3.80e-02  1.81e-03
-   13   0 +      -3.236066278683  -2.58e-13   8.98e-06    3    22   4.00e-02  1.82e-03
-   13   1 -      -2.795798930008  -9.36e-08   2.98e-04    3    22   4.00e-02  1.82e-03
-   14   0 +      -3.236066278684  -4.25e-13   8.94e-06    3    23   4.10e-02  1.78e-03
-   14   1 -      -2.795798996443  -6.64e-08   2.53e-04    3    23   4.10e-02  1.78e-03
-   15   0 +      -3.236066278684  -6.16e-13   9.01e-06    3    24   4.30e-02  1.79e-03
-   15   1 -      -2.795799045511  -4.91e-08   2.14e-04    3    24   4.30e-02  1.79e-03
-   16   0 +      -3.236066278685  -9.24e-13   8.95e-06    3    25   4.50e-02  1.80e-03
-   16   1 -      -2.795799083552  -3.80e-08   1.88e-04    3    25   4.50e-02  1.80e-03
-   17   0 +      -3.236066278686  -1.12e-12   9.04e-06    3    26   4.70e-02  1.81e-03
-   17   1 -      -2.795799114308  -3.08e-08   1.69e-04    3    26   4.70e-02  1.81e-03
-   18   0 +      -3.236066278688  -1.44e-12   8.96e-06    3    27   4.90e-02  1.81e-03
-   18   1 -      -2.795799140329  -2.60e-08   1.53e-04    3    27   4.90e-02  1.81e-03
-   19   0 +      -3.236066278689  -1.54e-12   9.05e-06    3    28   5.10e-02  1.82e-03
-   19   1 -      -2.795799163127  -2.28e-08   1.45e-04    3    28   5.10e-02  1.82e-03
-   20   0 +      -3.236066278691  -1.75e-12   8.97e-06    3    29   5.20e-02  1.79e-03
-   20   1 -      -2.795799183809  -2.07e-08   1.36e-04    3    29   5.20e-02  1.79e-03
-   21   0 +      -3.236066278693  -1.70e-12   9.04e-06    3    30   5.40e-02  1.80e-03
-   21   1 -      -2.795799203047  -1.92e-08   1.34e-04    3    30   5.40e-02  1.80e-03
-   22   0 +      -3.236066278695  -1.77e-12   8.97e-06    3    31   5.60e-02  1.81e-03
-   22   1 -      -2.795799221382  -1.83e-08   1.28e-04    3    31   5.60e-02  1.81e-03
-   23   0 +      -3.236066278696  -1.62e-12   9.03e-06    3    32   5.80e-02  1.81e-03
-   23   1 -      -2.795799239158  -1.78e-08   1.30e-04    3    32   5.80e-02  1.81e-03
-   24   0 +      -3.236066278698  -1.59e-12   8.96e-06    3    33   6.00e-02  1.82e-03
-   24   1 -      -2.795799256680  -1.75e-08   1.26e-04    3    33   6.00e-02  1.82e-03
-   25   0 +      -3.236066278699  -1.40e-12   9.01e-06    3    34   6.20e-02  1.82e-03
-   25   1 -      -2.795799274159  -1.75e-08   1.30e-04    3    34   6.20e-02  1.82e-03
-   26   0 +      -3.236066278701  -1.33e-12   8.95e-06    3    35   6.30e-02  1.80e-03
-   26   1 -      -2.795799291795  -1.76e-08   1.28e-04    3    35   6.30e-02  1.80e-03
-   27   0 +      -3.236066278702  -1.15e-12   8.98e-06    3    36   6.50e-02  1.81e-03
-   27   1 -      -2.795799309739  -1.79e-08   1.33e-04    3    36   6.50e-02  1.81e-03
-   28   0 +      -3.236066278703  -1.06e-12   8.93e-06    3    37   6.70e-02  1.81e-03
-   28   1 -      -2.795799328142  -1.84e-08   1.32e-04    3    37   6.70e-02  1.81e-03
-   29   0 +      -3.236066278704  -8.99e-13   8.96e-06    3    38   6.90e-02  1.82e-03
-   29   1 -      -2.795799347126  -1.90e-08   1.38e-04    3    38   6.90e-02  1.82e-03
-   30   0 +      -3.236066278705  -8.16e-13   8.93e-06    3    39   7.10e-02  1.82e-03
-   30   1 -      -2.795799366816  -1.97e-08   1.37e-04    3    39   7.10e-02  1.82e-03
-   31   0 +      -3.236066278705  -6.87e-13   8.95e-06    3    40   7.20e-02  1.80e-03
-   31   1 -      -2.795799387322  -2.05e-08   1.44e-04    3    40   7.20e-02  1.80e-03
-   32   0 +      -3.236066278706  -6.13e-13   8.92e-06    3    41   7.40e-02  1.80e-03
-   32   1 -      -2.795799408757  -2.14e-08   1.44e-04    3    41   7.40e-02  1.80e-03
-   33   0 +      -3.236066278706  -5.08e-13   8.93e-06    3    42   7.60e-02  1.81e-03
-   33   1 -      -2.795799431224  -2.25e-08   1.52e-04    3    42   7.60e-02  1.81e-03
-   34   0 +      -3.236066278707  -4.49e-13   8.91e-06    3    43   7.80e-02  1.81e-03
-   34   1 -      -2.795799454833  -2.36e-08   1.52e-04    3    43   7.80e-02  1.81e-03
-   35   0 +      -3.236066278707  -3.70e-13   8.93e-06    3    44   8.00e-02  1.82e-03
-   35   1 -      -2.795799479688  -2.49e-08   1.60e-04    3    44   8.00e-02  1.82e-03
-   36   0 +      -3.236066278707  -3.23e-13   8.91e-06    3    45   8.20e-02  1.82e-03
-   36   1 -      -2.795799505899  -2.62e-08   1.61e-04    3    45   8.20e-02  1.82e-03
-   37   0 +      -3.236066278708  -2.64e-13   8.92e-06    3    46   8.40e-02  1.83e-03
-   37   1 -      -2.795799533575  -2.77e-08   1.70e-04    3    46   8.40e-02  1.83e-03
-   38   0 +      -3.236066278708  -2.28e-13   8.91e-06    3    47   8.50e-02  1.81e-03
-   38   1 -      -2.795799562830  -2.93e-08   1.71e-04    3    47   8.50e-02  1.81e-03
-   39   0 +      -3.236066278708  -1.88e-13   8.91e-06    3    48   8.70e-02  1.81e-03
-   39   1 -      -2.795799593779  -3.09e-08   1.80e-04    3    48   8.70e-02  1.81e-03
-   40   0 +      -3.236066278708  -1.62e-13   8.91e-06    3    49   8.90e-02  1.82e-03
-   40   1 -      -2.795799626546  -3.28e-08   1.81e-04    3    49   8.90e-02  1.82e-03
-   41   0 +      -3.236066278708  -1.27e-13   8.91e-06    3    50   9.10e-02  1.82e-03
-   41   1 -      -2.795799661256  -3.47e-08   1.91e-04    3    50   9.10e-02  1.82e-03
-   42   0 +      -3.236066278709  -1.12e-13   8.91e-06    3    51   9.30e-02  1.82e-03
-   42   1 -      -2.795799698042  -3.68e-08   1.92e-04    3    51   9.30e-02  1.82e-03
-   43   0 +      -3.236066278709  -9.10e-14   8.91e-06    3    52   9.50e-02  1.83e-03
-   43   1 -      -2.795799737043  -3.90e-08   2.03e-04    3    52   9.50e-02  1.83e-03
-   44   0 +      -3.236066278709  -7.55e-14   8.91e-06    3    53   9.60e-02  1.81e-03
-   44   1 -      -2.795799778406  -4.14e-08   2.04e-04    3    53   9.60e-02  1.81e-03
-   45   0 +      -3.236066278709  -6.22e-14   8.91e-06    3    54   9.80e-02  1.81e-03
-   45   1 -      -2.795799822284  -4.39e-08   2.15e-04    3    54   9.80e-02  1.81e-03
-   46   0 +      -3.236066278709  -5.11e-14   8.91e-06    3    55   1.00e-01  1.82e-03
-   46   1 -      -2.795799868841  -4.66e-08   2.17e-04    3    55   1.00e-01  1.82e-03
-   47   0 +      -3.236066278709  -4.35e-14   8.91e-06    3    56   1.02e-01  1.82e-03
-   47   1 -      -2.795799918247  -4.94e-08   2.28e-04    3    56   1.02e-01  1.82e-03
-   48   0 +      -3.236066278709  -3.42e-14   8.91e-06    3    57   1.04e-01  1.82e-03
-   48   1 -      -2.795799970684  -5.24e-08   2.31e-04    3    57   1.04e-01  1.82e-03
-   49   0 +      -3.236066278709  -2.89e-14   8.91e-06    3    58   1.06e-01  1.83e-03
-   49   1 -      -2.795800026345  -5.57e-08   2.43e-04    3    58   1.06e-01  1.83e-03
-   50   0 +      -3.236066278709  -2.22e-14   8.91e-06    3    59   1.07e-01  1.81e-03
-   50   1 -      -2.795800085432  -5.91e-08   2.45e-04    3    59   1.07e-01  1.81e-03
-   51   0 +      -3.236066278709  -2.00e-14   8.91e-06    3    60   1.09e-01  1.82e-03
-   51   1 -      -2.795800148163  -6.27e-08   2.58e-04    3    60   1.09e-01  1.82e-03
-   52   0 +      -3.236066278709  -1.73e-14   8.91e-06    3    61   1.11e-01  1.82e-03
-   52   1 -      -2.795800214763  -6.66e-08   2.60e-04    3    61   1.11e-01  1.82e-03
-   53   0 +      -3.236066278709  -1.24e-14   8.91e-06    3    62   1.13e-01  1.82e-03
-   53   1 -      -2.795800285478  -7.07e-08   2.74e-04    3    62   1.13e-01  1.82e-03
-   54   0 +      -3.236066278709  -1.20e-14   8.91e-06    3    63   1.15e-01  1.83e-03
-   54   1 -      -2.795800360561  -7.51e-08   2.77e-04    3    63   1.15e-01  1.83e-03
-   55   0 +      -3.236066278709  -7.99e-15   8.91e-06    3    64   1.17e-01  1.83e-03
-   55   1 -      -2.795800440287  -7.97e-08   2.91e-04    3    64   1.17e-01  1.83e-03
-   56   0 +      -3.236066278709  -7.11e-15   8.91e-06    3    65   1.19e-01  1.83e-03
-   56   1 -      -2.795800524945  -8.47e-08   2.94e-04    3    65   1.19e-01  1.83e-03
-   57   0 +      -3.236066278709  -6.22e-15   8.91e-06    3    66   1.20e-01  1.82e-03
-   57   1 -      -2.795800614842  -8.99e-08   3.09e-04    3    66   1.20e-01  1.82e-03
-   58   0 +      -3.236066278709  -5.77e-15   8.91e-06    3    67   1.22e-01  1.82e-03
-   58   1 -      -2.795800710302  -9.55e-08   3.12e-04    3    67   1.22e-01  1.82e-03
-   59   0 +      -3.236066278709  -6.22e-15   8.91e-06    3    68   1.24e-01  1.82e-03
-   59   1 -      -2.795800811673  -1.01e-07   3.28e-04    3    68   1.24e-01  1.82e-03
-   60   0 +      -3.236066278709  -2.66e-15   8.91e-06    3    69   1.26e-01  1.83e-03
-   60   1 -      -2.795800919320  -1.08e-07   3.32e-04    3    69   1.26e-01  1.83e-03
-   61   0 +      -3.236066278709  -3.11e-15   8.91e-06    3    70   1.28e-01  1.83e-03
-   61   1 -      -2.795801033636  -1.14e-07   3.49e-04    3    70   1.28e-01  1.83e-03
-   62   0 +      -3.236066278709  -1.78e-15   8.91e-06    3    71   1.29e-01  1.82e-03
-   62   1 -      -2.795801155030  -1.21e-07   3.52e-04    3    71   1.29e-01  1.82e-03
-   63   0 +      -3.236066278709  -3.55e-15   8.91e-06    3    72   1.31e-01  1.82e-03
-   63   1 -      -2.795801283947  -1.29e-07   3.70e-04    3    72   1.31e-01  1.82e-03
-   64   0 +      -3.236066278709  -2.66e-15   8.91e-06    3    73   1.33e-01  1.82e-03
-   64   1 -      -2.795801420846  -1.37e-07   3.74e-04    3    73   1.33e-01  1.82e-03
-   65   0 +      -3.236066278709  -2.22e-15   8.91e-06    3    74   1.35e-01  1.82e-03
-   65   1 -      -2.795801566231  -1.45e-07   3.93e-04    3    74   1.35e-01  1.82e-03
-   66   0 +      -3.236066278709  -2.22e-15   8.91e-06    3    75   1.37e-01  1.83e-03
-   66   1 -      -2.795801720618  -1.54e-07   3.97e-04    3    75   1.37e-01  1.83e-03
-   67   0 +      -3.236066278709  -1.33e-15   8.91e-06    3    76   1.39e-01  1.83e-03
-   67   1 -      -2.795801884576  -1.64e-07   4.18e-04    3    76   1.39e-01  1.83e-03
-   68   0 +      -3.236066278709  -4.44e-16   8.91e-06    3    77   1.40e-01  1.82e-03
-   68   1 -      -2.795802058687  -1.74e-07   4.22e-04    3    77   1.40e-01  1.82e-03
-   69   0 +      -3.236066278709  -3.55e-15   8.91e-06    3    78   1.42e-01  1.82e-03
-   69   1 -      -2.795802243592  -1.85e-07   4.44e-04    3    78   1.42e-01  1.82e-03
-   70   0 +      -3.236066278709  -4.44e-16   8.91e-06    3    79   1.44e-01  1.82e-03
-   70   1 -      -2.795802439947  -1.96e-07   4.48e-04    3    79   1.44e-01  1.82e-03
-   71   0 +      -3.236066278709  -3.55e-15   8.91e-06    3    80   1.46e-01  1.82e-03
-   71   1 -      -2.795802648475  -2.09e-07   4.71e-04    3    80   1.46e-01  1.82e-03
-   72   0 +      -3.236066278709   1.33e-15   8.91e-06    3    81   1.48e-01  1.83e-03
-   72   1 -      -2.795802869916  -2.21e-07   4.76e-04    3    81   1.48e-01  1.83e-03
-   73   0 +      -3.236066278709  -4.00e-15   8.91e-06    3    82   1.50e-01  1.83e-03
-   73   1 -      -2.795803105085  -2.35e-07   5.00e-04    3    82   1.50e-01  1.83e-03
-   74   0 +      -3.236066278709   1.33e-15   8.91e-06    3    83   1.52e-01  1.83e-03
-   74   1 -      -2.795803354817  -2.50e-07   5.06e-04    3    83   1.52e-01  1.83e-03
-   75   0 +      -3.236066278709  -1.78e-15   8.91e-06    3    84   1.54e-01  1.83e-03
-   75   1 -      -2.795803620030  -2.65e-07   5.31e-04    3    84   1.54e-01  1.83e-03
-   76   0 +      -3.236066278709  -4.44e-16   8.91e-06    3    85   1.56e-01  1.84e-03
-   76   1 -      -2.795803901666  -2.82e-07   5.37e-04    3    85   1.56e-01  1.84e-03
-   77   0 +      -3.236066278709  -3.11e-15   8.91e-06    3    86   1.58e-01  1.84e-03
-   77   1 -      -2.795804200762  -2.99e-07   5.64e-04    3    86   1.58e-01  1.84e-03
-   78   0 +      -3.236066278709   0.00e+00   8.91e-06    3    87   1.60e-01  1.84e-03
-   78   1 -      -2.795804518376  -3.18e-07   5.70e-04    3    87   1.60e-01  1.84e-03
-   79   0 +      -3.236066278709  -8.88e-16   8.91e-06    3    88   1.62e-01  1.84e-03
-   79   1 -      -2.795804855681  -3.37e-07   5.99e-04    3    88   1.62e-01  1.84e-03
-   80   0 +      -3.236066278709  -4.44e-16   8.91e-06    3    89   1.64e-01  1.84e-03
-   80   1 -      -2.795805213869  -3.58e-07   6.06e-04    3    89   1.64e-01  1.84e-03
-   81   0 +      -3.236066278709   4.44e-16   8.91e-06    3    90   1.66e-01  1.84e-03
-   81   1 -      -2.795805594264  -3.80e-07   6.36e-04    3    90   1.66e-01  1.84e-03
-   82   0 +      -3.236066278709  -1.78e-15   8.91e-06    3    91   1.68e-01  1.85e-03
-   82   1 -      -2.795805998208  -4.04e-07   6.43e-04    3    91   1.68e-01  1.85e-03
-   83   0 +      -3.236066278709   2.22e-15   8.91e-06    3    92   1.70e-01  1.85e-03
-   83   1 -      -2.795806427196  -4.29e-07   6.76e-04    3    92   1.70e-01  1.85e-03
-   84   0 +      -3.236066278709   4.44e-16   8.91e-06    3    93   1.71e-01  1.84e-03
-   84   1 -      -2.795806882742  -4.56e-07   6.83e-04    3    93   1.71e-01  1.84e-03
-   85   0 +      -3.236066278709  -1.78e-15   8.91e-06    3    94   1.73e-01  1.84e-03
-   85   1 -      -2.795807366535  -4.84e-07   7.18e-04    3    94   1.73e-01  1.84e-03
-   86   0 +      -3.236066278709   0.00e+00   8.91e-06    3    95   1.75e-01  1.84e-03
-   86   1 -      -2.795807880283  -5.14e-07   7.25e-04    3    95   1.75e-01  1.84e-03
-   87   0 +      -3.236066278709   0.00e+00   8.91e-06    3    96   1.77e-01  1.84e-03
-   87   1 -      -2.795808425899  -5.46e-07   7.62e-04    3    96   1.77e-01  1.84e-03
-   88   0 +      -3.236066278709   0.00e+00   8.91e-06    3    97   1.79e-01  1.85e-03
-   88   1 -      -2.795809005316  -5.79e-07   7.70e-04    3    97   1.79e-01  1.85e-03
-   89   0 +      -3.236066278709   0.00e+00   8.91e-06    3    98   1.81e-01  1.85e-03
-   89   1 -      -2.795809620710  -6.15e-07   8.10e-04    3    98   1.81e-01  1.85e-03
-   90   0 +      -3.236066278709   1.78e-15   8.91e-06    3    99   1.83e-01  1.85e-03
-   90   1 -      -2.795810274284  -6.54e-07   8.18e-04    3    99   1.83e-01  1.85e-03
-   91   0 +      -3.236066278709   1.78e-15   8.91e-06    3   100   1.85e-01  1.85e-03
-   91   1 -      -2.795810968539  -6.94e-07   8.60e-04    3   100   1.85e-01  1.85e-03
-   92   0 +      -3.236066278709   0.00e+00   8.91e-06    3   101   1.86e-01  1.84e-03
-   92   1 -      -2.795811706038  -7.37e-07   8.69e-04    3   101   1.86e-01  1.84e-03
-   93   0 +      -3.236066278709  -2.66e-15   8.91e-06    3   102   1.88e-01  1.84e-03
-   93   1 -      -2.795812489726  -7.84e-07   9.14e-04    3   102   1.88e-01  1.84e-03
-   94   0 +      -3.236066278709   4.44e-16   8.91e-06    3   103   1.90e-01  1.84e-03
-   94   1 -      -2.795813322716  -8.33e-07   9.24e-04    3   103   1.90e-01  1.84e-03
-   95   0 +      -3.236066278709   1.78e-15   8.91e-06    3   104   1.92e-01  1.85e-03
-   95   1 -      -2.795814208681  -8.86e-07   9.72e-04    3   104   1.92e-01  1.85e-03
-   96   0 +      -3.236066278709   8.88e-16   8.91e-06    3   105   1.94e-01  1.85e-03
-   96   1 -      -2.795815151767  -9.43e-07   9.83e-04    3   105   1.94e-01  1.85e-03
-   97   0 +      -3.236066278709   4.44e-16   8.91e-06    3   106   1.96e-01  1.85e-03
-   97   1 -      -2.795816157100  -1.01e-06   1.04e-03    3   106   1.96e-01  1.85e-03
-   98   0 +      -3.236066278709  -1.33e-15   8.91e-06    3   107   1.98e-01  1.85e-03
-   98   1 -      -2.795817231164  -1.07e-06   1.05e-03    3   107   1.98e-01  1.85e-03
-   99   0 +      -3.236066278709  -1.33e-15   8.91e-06    3   108   1.99e-01  1.84e-03
-   99   1 -      -2.795818382518  -1.15e-06   1.11e-03    3   108   1.99e-01  1.84e-03
-  100   0 +      -3.236066278709   8.88e-16   8.91e-06    3   109   2.01e-01  1.84e-03
-  100   1 -      -2.795819623612  -1.24e-06   1.13e-03    3   109   2.01e-01  1.84e-03
-convergence failure: out of maxcycle=100
-TIMING for Davidson : 2.01e-01  T(cal/comm/rest)=1.12e-01,0.00e+00,8.90e-02
-decimation summary: 16->16 dwt=1.11e-16 SvN=1.97e+00
-TIMING for Renormalization : 3.00e-03  T(cal/comm)=3.00e-03,0.00e+00
+    1   0 -      -3.236061715657 -1.003e+03  2.453e-03    2     2  4.792e-03 2.396e-03
+    1   1 -      -2.884885193729 -1.003e+03  4.206e-05    2     2  4.792e-03 2.396e-03
+    2   0 -      -3.236066184654 -4.469e-06  3.484e-04    4     4  1.022e-02 2.554e-03
+    2   1 +      -2.884885194415 -6.861e-10  6.248e-06    4     4  1.022e-02 2.554e-03
+    3   0 -      -3.236066263526 -7.887e-08  1.345e-04    5     5  1.297e-02 2.595e-03
+    3   1 +      -2.884885194415  8.882e-16  6.248e-06    5     5  1.297e-02 2.595e-03
+    4   0 -      -3.236066275246 -1.172e-08  5.539e-05    4     6  1.593e-02 2.655e-03
+    4   1 +      -2.884885194415  4.441e-16  6.248e-06    4     6  1.593e-02 2.655e-03
+    5   0 -      -3.236066277977 -2.731e-09  2.893e-05    4     7  1.880e-02 2.685e-03
+    5   1 +      -2.884885194415  4.441e-16  6.248e-06    4     7  1.880e-02 2.685e-03
+    6   0 -      -3.236066278678 -7.013e-10  1.200e-05    4     8  2.103e-02 2.629e-03
+    6   1 +      -2.884885194415  8.882e-16  6.248e-06    4     8  2.103e-02 2.629e-03
+    7   0 +      -3.236066278787 -1.083e-10  4.355e-06    4     9  2.324e-02 2.583e-03
+    7   1 +      -2.884885194415 -4.441e-16  6.248e-06    4     9  2.324e-02 2.583e-03
+TIMING FOR Davidson : 2.393e-02  T(cal/comm/sub/rest)=1.095e-02,7.748e-03,3.640e-04,4.874e-03
+optimized energies: isweep=0 ibond=0 dots=1 e[0]=-3.23606627879 nmvp=9
+optimized energies: isweep=0 ibond=0 dots=1 e[1]=-2.88488519441 nmvp=9
+CPUmem: VM:7.451e-09GB RSS:2.670e-04GB  Timing: User:1.334e+00S Sys:2.695e-01S Total:1.603e+00S
+ qops: oplist=CABPQSH nops=C:2 A:1 B:2 P:10 Q:13 S:4 H:1 
+        dim(bra,ket)=16,16 size(op)=70:1.068e-03MB size(tot)=1764:2.692e-02MB:2.629e-05GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.339e+00S Sys:2.720e-01S Total:1.611e+00S
+check ||H-H.dagger||=0.000e+00 coord=(1,0) rank=0
+----- TIMING FOR oper_renorm : 0.00178 S T(init/kernel/comm)=-1.73e+09,1.73e+09,3e-05 rank=0 -----
+CPUmem: VM:7.451e-09GB RSS:4.027e+08GB  Timing: User:1.346e+00S Sys:2.733e-01S Total:1.619e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4772:7.281e-02MB:7.111e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1848:2.820e-02MB:2.754e-05GB
+total mem of comb=6648:1.014e-01MB:9.906e-05GB
+----- TIMING FOR cleanup: 7.450e-04 T(join&erase/save/remove)=2.460e-04,3.580e-04,1.410e-04 S -----
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:1.349e+00S Sys:2.749e-01S Total:1.624e+00S
 
 isweep=0 ibond=1/seqsize=6 dots=1 dbond=(2,0)-(3,0) forward=1 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:1.349e+00S Sys:2.750e-01S Total:1.624e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4772:7.281e-02MB:7.111e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1848:2.820e-02MB:2.754e-05GB
+total mem of comb=6648:1.014e-01MB:9.906e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=2,3,1 ifNC=1
-wf3(diml,dimr,dimc)=(16,64,4) nnz=924:1.41e-02MB
+wf3(diml,dimr,dimc)=(16,64,4) nnz=924:1.410e-02MB
+qtensor3: wf3 own=1 _data=0x7fdb13812600
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=16
+ (0):1 (2):6 (1):4 (4):1 (3):4
+ qbond: qcol nsym=7 dimAll=64
+ (3):20 (2):15 (4):15 (1):6 (5):6 (0):1 (6):1
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=15 nblocks=105 size=924:1.410e-02MB
+duration_diagGPU:5.330e-04
+duration_diagreduce:1.700e-05
+duration_diagtransform:3.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 -      -3.236066278709  -1.00e+03   6.85e-05    2     2   7.00e-03  3.50e-03
-    1   1 -      -2.795819623612  -1.00e+03   8.69e-03    2     2   7.00e-03  3.50e-03
-    2   0 +      -3.236066279853  -1.14e-09   7.72e-06    4     4   1.30e-02  3.25e-03
-    2   1 -      -2.795856018889  -3.64e-05   3.45e-03    4     4   1.30e-02  3.25e-03
-    3   0 +      -3.236066279853  -7.86e-13   7.64e-06    3     5   1.60e-02  3.20e-03
-    3   1 -      -2.795863663446  -7.64e-06   2.52e-03    3     5   1.60e-02  3.20e-03
-    4   0 +      -3.236066279854  -2.26e-13   7.64e-06    3     6   2.00e-02  3.33e-03
-    4   1 -      -2.795867791388  -4.13e-06   2.08e-03    3     6   2.00e-02  3.33e-03
-    5   0 +      -3.236066279854  -7.42e-14   7.62e-06    3     7   2.30e-02  3.29e-03
-    5   1 -      -2.795871643303  -3.85e-06   2.21e-03    3     7   2.30e-02  3.29e-03
-    6   0 +      -3.236066279854  -1.38e-14   7.63e-06    3     8   2.60e-02  3.25e-03
-    6   1 -      -2.795876554254  -4.91e-06   2.54e-03    3     8   2.60e-02  3.25e-03
-    7   0 +      -3.236066279854  -3.11e-15   7.63e-06    3     9   3.00e-02  3.33e-03
-    7   1 -      -2.795883623611  -7.07e-06   3.07e-03    3     9   3.00e-02  3.33e-03
-    8   0 +      -3.236066279854   4.44e-16   7.62e-06    3    10   3.30e-02  3.30e-03
-    8   1 -      -2.795894864674  -1.12e-05   3.89e-03    3    10   3.30e-02  3.30e-03
-    9   0 +      -3.236066279854  -8.88e-15   7.63e-06    3    11   3.60e-02  3.27e-03
-    9   1 -      -2.795914346417  -1.95e-05   5.22e-03    3    11   3.60e-02  3.27e-03
-   10   0 +      -3.236066279854  -1.02e-14   7.62e-06    3    12   3.90e-02  3.25e-03
-   10   1 -      -2.795950110682  -3.58e-05   7.01e-03    3    12   3.90e-02  3.25e-03
-   11   0 +      -3.236066279854  -1.07e-14   7.63e-06    3    13   4.20e-02  3.23e-03
-   11   1 -      -2.796018479272  -6.84e-05   9.93e-03    3    13   4.20e-02  3.23e-03
-   12   0 +      -3.236066279854  -7.99e-15   7.62e-06    3    14   4.60e-02  3.29e-03
-   12   1 -      -2.796152031799  -1.34e-04   1.36e-02    3    14   4.60e-02  3.29e-03
-   13   0 +      -3.236066279854  -8.88e-15   7.63e-06    3    15   4.90e-02  3.27e-03
-   13   1 -      -2.796416409004  -2.64e-04   1.96e-02    3    15   4.90e-02  3.27e-03
-   14   0 +      -3.236066279854  -4.00e-15   7.62e-06    3    16   5.30e-02  3.31e-03
-   14   1 -      -2.796941547718  -5.25e-04   2.69e-02    3    16   5.30e-02  3.31e-03
-   15   0 +      -3.236066279854  -4.00e-15   7.63e-06    3    17   5.60e-02  3.29e-03
-   15   1 -      -2.797984173672  -1.04e-03   3.90e-02    3    17   5.60e-02  3.29e-03
-   16   0 +      -3.236066279854  -4.00e-15   7.62e-06    3    18   5.90e-02  3.28e-03
-   16   1 -      -2.800030866513  -2.05e-03   5.27e-02    3    18   5.90e-02  3.28e-03
-   17   0 +      -3.236066279854  -4.44e-16   7.63e-06    3    19   6.20e-02  3.26e-03
-   17   1 -      -2.803971199312  -3.94e-03   7.49e-02    3    19   6.20e-02  3.26e-03
-   18   0 +      -3.236066279854  -2.22e-15   7.62e-06    3    20   6.50e-02  3.25e-03
-   18   1 -      -2.811232743753  -7.26e-03   9.71e-02    3    20   6.50e-02  3.25e-03
-   19   0 +      -3.236066279854   1.33e-15   7.62e-06    3    21   6.90e-02  3.29e-03
-   19   1 -      -2.823740792690  -1.25e-02   1.29e-01    3    21   6.90e-02  3.29e-03
-   20   0 +      -3.236066279854  -2.66e-15   7.62e-06    3    22   7.20e-02  3.27e-03
-   20   1 -      -2.843070898046  -1.93e-02   1.51e-01    3    22   7.20e-02  3.27e-03
-   21   0 +      -3.236066279854  -2.22e-15   7.62e-06    3    23   7.60e-02  3.30e-03
-   21   1 -      -2.869268928757  -2.62e-02   1.75e-01    3    23   7.60e-02  3.30e-03
-   22   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    24   7.90e-02  3.29e-03
-   22   1 -      -2.899988020498  -3.07e-02   1.79e-01    3    24   7.90e-02  3.29e-03
-   23   0 +      -3.236066279854  -1.78e-15   7.62e-06    3    25   8.30e-02  3.32e-03
-   23   1 -      -2.931764641526  -3.18e-02   1.83e-01    3    25   8.30e-02  3.32e-03
-   24   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    26   8.60e-02  3.31e-03
-   24   1 -      -2.961295612921  -2.95e-02   1.69e-01    3    26   8.60e-02  3.31e-03
-   25   0 +      -3.236066279854   1.78e-15   7.62e-06    3    27   9.00e-02  3.33e-03
-   25   1 -      -2.986692860790  -2.54e-02   1.59e-01    3    27   9.00e-02  3.33e-03
-   26   0 +      -3.236066279854   0.00e+00   7.62e-06    3    28   9.30e-02  3.32e-03
-   26   1 -      -3.007173112978  -2.05e-02   1.38e-01    3    28   9.30e-02  3.32e-03
-   27   0 +      -3.236066279854   0.00e+00   7.62e-06    3    29   9.70e-02  3.34e-03
-   27   1 -      -3.022967365494  -1.58e-02   1.23e-01    3    29   9.70e-02  3.34e-03
-   28   0 +      -3.236066279854   4.44e-16   7.62e-06    3    30   1.01e-01  3.37e-03
-   28   1 -      -3.034692012368  -1.17e-02   1.03e-01    3    30   1.01e-01  3.37e-03
-   29   0 +      -3.236066279854  -1.33e-15   7.62e-06    3    31   1.04e-01  3.35e-03
-   29   1 -      -3.043176464836  -8.48e-03   8.94e-02    3    31   1.04e-01  3.35e-03
-   30   0 +      -3.236066279854   0.00e+00   7.62e-06    3    32   1.07e-01  3.34e-03
-   30   1 -      -3.049184952513  -6.01e-03   7.32e-02    3    32   1.07e-01  3.34e-03
-   31   0 +      -3.236066279854   1.33e-15   7.62e-06    3    33   1.10e-01  3.33e-03
-   31   1 -      -3.053382521868  -4.20e-03   6.25e-02    3    33   1.10e-01  3.33e-03
-   32   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    34   1.14e-01  3.35e-03
-   32   1 -      -3.056282167080  -2.90e-03   5.06e-02    3    34   1.14e-01  3.35e-03
-   33   0 +      -3.236066279854   2.22e-15   7.62e-06    3    35   1.17e-01  3.34e-03
-   33   1 -      -3.058272253246  -1.99e-03   4.30e-02    3    35   1.17e-01  3.34e-03
-   34   0 +      -3.236066279854  -1.78e-15   7.62e-06    3    36   1.21e-01  3.36e-03
-   34   1 -      -3.059630946861  -1.36e-03   3.46e-02    3    36   1.21e-01  3.36e-03
-   35   0 +      -3.236066279854   4.44e-16   7.62e-06    3    37   1.24e-01  3.35e-03
-   35   1 -      -3.060556185627  -9.25e-04   2.93e-02    3    37   1.24e-01  3.35e-03
-   36   0 +      -3.236066279854  -1.33e-15   7.62e-06    3    38   1.27e-01  3.34e-03
-   36   1 -      -3.061184985231  -6.29e-04   2.36e-02    3    38   1.27e-01  3.34e-03
-   37   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    39   1.30e-01  3.33e-03
-   37   1 -      -3.061612081608  -4.27e-04   1.99e-02    3    39   1.30e-01  3.33e-03
-   38   0 +      -3.236066279854   8.88e-16   7.62e-06    3    40   1.34e-01  3.35e-03
-   38   1 -      -3.061902067587  -2.90e-04   1.60e-02    3    40   1.34e-01  3.35e-03
-   39   0 +      -3.236066279854  -1.78e-15   7.62e-06    3    41   1.37e-01  3.34e-03
-   39   1 -      -3.062099038702  -1.97e-04   1.35e-02    3    41   1.37e-01  3.34e-03
-   40   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    42   1.40e-01  3.33e-03
-   40   1 -      -3.062232885730  -1.34e-04   1.09e-02    3    42   1.40e-01  3.33e-03
-   41   0 +      -3.236066279854   1.33e-15   7.62e-06    3    43   1.43e-01  3.33e-03
-   41   1 -      -3.062323914599  -9.10e-05   9.21e-03    3    43   1.43e-01  3.33e-03
-   42   0 +      -3.236066279854  -1.78e-15   7.62e-06    3    44   1.46e-01  3.32e-03
-   42   1 -      -3.062385871573  -6.20e-05   7.41e-03    3    44   1.46e-01  3.32e-03
-   43   0 +      -3.236066279854  -8.88e-16   7.62e-06    3    45   1.50e-01  3.33e-03
-   43   1 -      -3.062428084801  -4.22e-05   6.28e-03    3    45   1.50e-01  3.33e-03
-   44   0 +      -3.236066279854   2.22e-15   7.62e-06    3    46   1.53e-01  3.33e-03
-   44   1 -      -3.062456873592  -2.88e-05   5.06e-03    3    46   1.53e-01  3.33e-03
-   45   0 +      -3.236066279854  -1.33e-15   7.62e-06    3    47   1.56e-01  3.32e-03
-   45   1 -      -3.062476529144  -1.97e-05   4.29e-03    3    47   1.56e-01  3.32e-03
-   46   0 +      -3.236066279854   0.00e+00   7.62e-06    3    48   1.59e-01  3.31e-03
-   46   1 -      -3.062489963148  -1.34e-05   3.46e-03    3    48   1.59e-01  3.31e-03
-   47   0 +      -3.236066279854  -1.78e-15   7.62e-06    3    49   1.62e-01  3.31e-03
-   47   1 -      -3.062499155767  -9.19e-06   2.93e-03    3    49   1.62e-01  3.31e-03
-   48   0 +      -3.236066279854   0.00e+00   7.62e-06    3    50   1.65e-01  3.30e-03
-   48   1 -      -3.062505453196  -6.30e-06   2.37e-03    3    50   1.65e-01  3.30e-03
-   49   0 +      -3.236066279854   1.78e-15   7.62e-06    3    51   1.68e-01  3.29e-03
-   49   1 -      -3.062509772639  -4.32e-06   2.01e-03    3    51   1.68e-01  3.29e-03
-   50   0 +      -3.236066279854  -1.78e-15   7.62e-06    3    52   1.72e-01  3.31e-03
-   50   1 -      -3.062512738932  -2.97e-06   1.62e-03    3    52   1.72e-01  3.31e-03
-   51   0 +      -3.236066279854  -1.78e-15   7.62e-06    3    53   1.75e-01  3.30e-03
-   51   1 -      -3.062514778661  -2.04e-06   1.38e-03    3    53   1.75e-01  3.30e-03
-   52   0 +      -3.236066279854   0.00e+00   7.62e-06    3    54   1.78e-01  3.30e-03
-   52   1 -      -3.062516183051  -1.40e-06   1.12e-03    3    54   1.78e-01  3.30e-03
-   53   0 +      -3.236066279854   4.44e-16   7.62e-06    3    55   1.81e-01  3.29e-03
-   53   1 -      -3.062517151353  -9.68e-07   9.54e-04    3    55   1.81e-01  3.29e-03
-   54   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    56   1.84e-01  3.29e-03
-   54   1 -      -3.062517819896  -6.69e-07   7.72e-04    3    56   1.84e-01  3.29e-03
-   55   0 +      -3.236066279854   4.44e-16   7.62e-06    3    57   1.87e-01  3.28e-03
-   55   1 -      -3.062518282166  -4.62e-07   6.60e-04    3    57   1.87e-01  3.28e-03
-   56   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    58   1.90e-01  3.28e-03
-   56   1 -      -3.062518602273  -3.20e-07   5.34e-04    3    58   1.90e-01  3.28e-03
-   57   0 +      -3.236066279854  -1.78e-15   7.62e-06    3    59   1.94e-01  3.29e-03
-   57   1 -      -3.062518824289  -2.22e-07   4.57e-04    3    59   1.94e-01  3.29e-03
-   58   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    60   1.97e-01  3.28e-03
-   58   1 -      -3.062518978510  -1.54e-07   3.71e-04    3    60   1.97e-01  3.28e-03
-   59   0 +      -3.236066279854   1.78e-15   7.62e-06    3    61   2.00e-01  3.28e-03
-   59   1 -      -3.062519085818  -1.07e-07   3.18e-04    3    61   2.00e-01  3.28e-03
-   60   0 +      -3.236066279854  -2.66e-15   7.62e-06    3    62   2.03e-01  3.27e-03
-   60   1 -      -3.062519160605  -7.48e-08   2.58e-04    3    62   2.03e-01  3.27e-03
-   61   0 +      -3.236066279854   4.44e-16   7.62e-06    3    63   2.06e-01  3.27e-03
-   61   1 -      -3.062519212817  -5.22e-08   2.22e-04    3    63   2.06e-01  3.27e-03
-   62   0 +      -3.236066279854  -2.22e-15   7.62e-06    3    64   2.09e-01  3.27e-03
-   62   1 -      -3.062519249332  -3.65e-08   1.80e-04    3    64   2.09e-01  3.27e-03
-   63   0 +      -3.236066279854   0.00e+00   7.62e-06    3    65   2.13e-01  3.28e-03
-   63   1 -      -3.062519274914  -2.56e-08   1.56e-04    3    65   2.13e-01  3.28e-03
-   64   0 +      -3.236066279854   0.00e+00   7.62e-06    3    66   2.16e-01  3.27e-03
-   64   1 -      -3.062519292868  -1.80e-08   1.27e-04    3    66   2.16e-01  3.27e-03
-   65   0 +      -3.236066279854   8.88e-16   7.62e-06    3    67   2.19e-01  3.27e-03
-   65   1 -      -3.062519305492  -1.26e-08   1.09e-04    3    67   2.19e-01  3.27e-03
-   66   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    68   2.22e-01  3.26e-03
-   66   1 -      -3.062519314383  -8.89e-09   8.91e-05    3    68   2.22e-01  3.26e-03
-   67   0 +      -3.236066279854   0.00e+00   7.62e-06    3    69   2.25e-01  3.26e-03
-   67   1 -      -3.062519320658  -6.27e-09   7.71e-05    3    69   2.25e-01  3.26e-03
-   68   0 +      -3.236066279854   0.00e+00   7.62e-06    3    70   2.28e-01  3.26e-03
-   68   1 -      -3.062519325094  -4.44e-09   6.29e-05    3    70   2.28e-01  3.26e-03
-   69   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    71   2.31e-01  3.25e-03
-   69   1 -      -3.062519328235  -3.14e-09   5.46e-05    3    71   2.31e-01  3.25e-03
-   70   0 +      -3.236066279854  -8.88e-16   7.62e-06    3    72   2.34e-01  3.25e-03
-   70   1 -      -3.062519330464  -2.23e-09   4.46e-05    3    72   2.34e-01  3.25e-03
-   71   0 +      -3.236066279854   1.33e-15   7.62e-06    3    73   2.37e-01  3.25e-03
-   71   1 -      -3.062519332048  -1.58e-09   3.87e-05    3    73   2.37e-01  3.25e-03
-   72   0 +      -3.236066279854  -4.44e-16   7.62e-06    3    74   2.41e-01  3.26e-03
-   72   1 -      -3.062519333175  -1.13e-09   3.17e-05    3    74   2.41e-01  3.26e-03
-   73   0 +      -3.236066279854  -3.11e-15   7.62e-06    3    75   2.44e-01  3.25e-03
-   73   1 -      -3.062519333980  -8.04e-10   2.76e-05    3    75   2.44e-01  3.25e-03
-   74   0 +      -3.236066279854   4.44e-16   7.62e-06    3    76   2.47e-01  3.25e-03
-   74   1 -      -3.062519334554  -5.74e-10   2.26e-05    3    76   2.47e-01  3.25e-03
-   75   0 +      -3.236066279854  -1.33e-15   7.62e-06    3    77   2.50e-01  3.25e-03
-   75   1 -      -3.062519334965  -4.11e-10   1.97e-05    3    77   2.50e-01  3.25e-03
-   76   0 +      -3.236066279854   1.33e-15   7.62e-06    3    78   2.53e-01  3.24e-03
-   76   1 -      -3.062519335260  -2.95e-10   1.62e-05    3    78   2.53e-01  3.24e-03
-   77   0 +      -3.236066279854  -1.33e-15   7.62e-06    3    79   2.56e-01  3.24e-03
-   77   1 -      -3.062519335471  -2.11e-10   1.42e-05    3    79   2.56e-01  3.24e-03
-   78   0 +      -3.236066279854   0.00e+00   7.62e-06    3    80   2.59e-01  3.24e-03
-   78   1 -      -3.062519335623  -1.52e-10   1.16e-05    3    80   2.59e-01  3.24e-03
-   79   0 +      -3.236066279854   0.00e+00   7.62e-06    3    81   2.63e-01  3.25e-03
-   79   1 -      -3.062519335732  -1.09e-10   1.02e-05    3    81   2.63e-01  3.25e-03
-   80   0 +      -3.236066279854   8.88e-16   7.62e-06    3    82   2.66e-01  3.24e-03
-   80   1 +      -3.062519335811  -7.88e-11   8.38e-06    3    82   2.66e-01  3.24e-03
-TIMING for Davidson : 2.66e-01  T(cal/comm/rest)=1.89e-01,0.00e+00,7.70e-02
-decimation summary: 64->60 dwt=1.64e-10 SvN=2.18e+00
-TIMING for Renormalization : 3.00e-03  T(cal/comm)=3.00e-03,0.00e+00
+    1   0 -      -3.236066278787 -1.003e+03  6.731e-05    2     2  7.208e-03 3.604e-03
+    1   1 -      -2.884885194415 -1.003e+03  1.419e-04    2     2  7.208e-03 3.604e-03
+    2   0 +      -3.236066279863 -1.077e-09  7.214e-06    4     4  1.375e-02 3.438e-03
+    2   1 -      -2.884885200059 -5.644e-09  2.059e-05    4     4  1.375e-02 3.438e-03
+    3   0 +      -3.236066279863 -8.882e-16  7.214e-06    5     5  1.728e-02 3.456e-03
+    3   1 +      -2.884885200198 -1.394e-10  4.322e-06    5     5  1.728e-02 3.456e-03
+TIMING FOR Davidson : 1.975e-02  T(cal/comm/sub/rest)=1.113e-02,4.270e-04,3.380e-04,7.851e-03
+optimized energies: isweep=0 ibond=1 dots=1 e[0]=-3.23606627986 nmvp=5
+optimized energies: isweep=0 ibond=1 dots=1 e[1]=-2.8848852002 nmvp=5
+CPUmem: VM:0.000e+00GB RSS:5.341e-05GB  Timing: User:1.440e+00S Sys:3.001e-01S Total:1.741e+00S
+ qops: oplist=CABPQSH nops=C:3 A:6 B:8 P:5 Q:7 S:3 H:1 
+        dim(bra,ket)=60,60 size(op)=902:1.376e-02MB size(tot)=23607:3.602e-01MB:3.518e-04GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.495e+00S Sys:3.229e-01S Total:1.817e+00S
+check ||H-H.dagger||=0.000e+00 coord=(2,0) rank=0
+----- TIMING FOR oper_renorm : 0.00194 S T(init/kernel/comm)=-1.73e+09,1.73e+09,5.5e-05 rank=0 -----
+CPUmem: VM:0.000e+00GB RSS:4.027e+08GB  Timing: User:1.502e+00S Sys:3.244e-01S Total:1.826e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=1986:3.030e-02MB:2.959e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=3834:5.850e-02MB:5.713e-05GB
+----- TIMING FOR cleanup: 5.480e-04 T(join&erase/save/remove)=5.500e-05,3.810e-04,1.120e-04 S -----
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:1.503e+00S Sys:3.257e-01S Total:1.829e+00S
 
 isweep=0 ibond=2/seqsize=6 dots=1 dbond=(3,0)-(4,0) forward=1 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:1.504e+00S Sys:3.257e-01S Total:1.829e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=1986:3.030e-02MB:2.959e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=3834:5.850e-02MB:5.713e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=3,2,1 ifNC=0
-wf3(diml,dimr,dimc)=(60,16,4) nnz=892:1.36e-02MB
+wf3(diml,dimr,dimc)=(60,16,4) nnz=910:1.389e-02MB
+qtensor3: wf3 own=1 _data=0x7fdb12856200
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=60
+ (3):20 (2):15 (4):15 (5):6 (1):4
+ qbond: qcol nsym=5 dimAll=16
+ (2):6 (1):4 (3):4 (0):1 (4):1
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=13 nblocks=75 size=910:1.389e-02MB
+duration_diagGPU:6.230e-04
+duration_diagreduce:1.700e-05
+duration_diagtransform:3.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 +      -3.236066278957  -1.00e+03   9.82e-06    2     2   6.00e-03  3.00e-03
-    1   1 +      -3.062519335541  -1.00e+03   8.96e-06    2     2   6.00e-03  3.00e-03
-TIMING for Davidson : 6.00e-03  T(cal/comm/rest)=6.00e-03,0.00e+00,0.00e+00
-decimation summary: 240->32 dwt=0.00e+00 SvN=2.32e+00
-TIMING for Renormalization : 3.00e-03  T(cal/comm)=3.00e-03,0.00e+00
+    1   0 -      -3.236066275731 -1.003e+03  1.688e-05    2     2  6.948e-03 3.474e-03
+    1   1 +      -2.884885199035 -1.003e+03  7.343e-06    2     2  6.948e-03 3.474e-03
+    2   0 +      -3.236066275824 -9.347e-11  3.616e-06    3     3  1.062e-02 3.540e-03
+    2   1 +      -2.884885199035 -6.217e-15  7.343e-06    3     3  1.062e-02 3.540e-03
+TIMING FOR Davidson : 1.239e-02  T(cal/comm/sub/rest)=6.612e-03,5.850e-04,1.670e-04,5.028e-03
+optimized energies: isweep=0 ibond=2 dots=1 e[0]=-3.23606627582 nmvp=3
+optimized energies: isweep=0 ibond=2 dots=1 e[1]=-2.88488519903 nmvp=3
+CPUmem: VM:0.000e+00GB RSS:4.005e-04GB  Timing: User:1.555e+00S Sys:3.392e-01S Total:1.894e+00S
+ qops: oplist=CABPQSH nops=C:4 A:13 B:16 P:2 Q:3 S:2 H:1 
+        dim(bra,ket)=60,60 size(op)=1054:1.608e-02MB size(tot)=31541:4.813e-01MB:4.700e-04GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.596e+00S Sys:3.603e-01S Total:1.957e+00S
+check ||H-H.dagger||=0.000e+00 coord=(3,0) rank=0
+----- TIMING FOR oper_renorm : 0.00383 S T(init/kernel/comm)=-1.73e+09,1.73e+09,7.6e-05 rank=0 -----
+CPUmem: VM:0.000e+00GB RSS:4.027e+08GB  Timing: User:1.611e+00S Sys:3.632e-01S Total:1.974e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4559:6.956e-02MB:6.793e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=542:8.270e-03MB:8.076e-06GB
+total mem of comb=5129:7.826e-02MB:7.643e-05GB
+----- TIMING FOR cleanup: 5.660e-04 T(join&erase/save/remove)=6.900e-05,4.090e-04,8.800e-05 S -----
+CPUmem: VM:9.313e-10GB RSS:4.027e+08GB  Timing: User:1.612e+00S Sys:3.643e-01S Total:1.976e+00S
 
 isweep=0 ibond=3/seqsize=6 dots=1 dbond=(3,0)-(4,0) forward=0 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:9.313e-10GB RSS:4.027e+08GB  Timing: User:1.612e+00S Sys:3.644e-01S Total:1.976e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4559:6.956e-02MB:6.793e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=542:8.270e-03MB:8.076e-06GB
+total mem of comb=5129:7.826e-02MB:7.643e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=4,1,1 ifNC=0
-wf3(diml,dimr,dimc)=(32,4,4) nnz=140:2.14e-03MB
+wf3(diml,dimr,dimc)=(60,4,4) nnz=271:4.135e-03MB
+qtensor3: wf3 own=1 _data=0x7fdb1284e400
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=60
+ (4):23 (3):16 (5):16 (6):3 (2):2
+ qbond: qcol nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=9 nblocks=45 size=271:4.135e-03MB
+duration_diagGPU:1.150e-04
+duration_diagreduce:3.000e-05
+duration_diagtransform:1.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 +      -3.236066278957  -1.00e+03   4.56e-06    2     2   1.00e-03  5.00e-04
-    1   1 +      -3.062519335541  -1.00e+03   6.34e-06    2     2   1.00e-03  5.00e-04
-TIMING for Davidson : 1.00e-03  T(cal/comm/rest)=0.00e+00,0.00e+00,1.00e-03
-decimation summary: 16->16 dwt=-2.22e-16 SvN=1.94e+00
-TIMING for Renormalization : 5.00e-03  T(cal/comm)=5.00e-03,0.00e+00
+    1   0 -      -3.236066220801 -1.003e+03  4.572e-05    2     2  4.504e-03 2.252e-03
+    1   1 -      -2.884885148720 -1.003e+03  5.067e-05    2     2  4.504e-03 2.252e-03
+    2   0 +      -3.236066221703 -9.022e-10  9.154e-06    4     4  9.681e-03 2.420e-03
+    2   1 -      -2.884885149954 -1.234e-09  1.190e-05    4     4  9.681e-03 2.420e-03
+    3   0 +      -3.236066221703 -2.185e-13  9.128e-06    5     5  1.199e-02 2.397e-03
+    3   1 +      -2.884885150037 -8.320e-11  6.213e-06    5     5  1.199e-02 2.397e-03
+TIMING FOR Davidson : 1.269e-02  T(cal/comm/sub/rest)=5.567e-03,4.179e-03,1.310e-04,2.815e-03
+optimized energies: isweep=0 ibond=3 dots=1 e[0]=-3.2360662217 nmvp=5
+optimized energies: isweep=0 ibond=3 dots=1 e[1]=-2.88488515004 nmvp=5
+CPUmem: VM:5.588e-09GB RSS:8.202e-04GB  Timing: User:1.663e+00S Sys:3.806e-01S Total:2.044e+00S
+ qops: oplist=CABPQSH nops=C:2 A:2 B:3 P:13 Q:16 S:4 H:1 
+        dim(bra,ket)=16,16 size(op)=70:1.068e-03MB size(tot)=2156:3.290e-02MB:3.213e-05GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.669e+00S Sys:3.831e-01S Total:2.052e+00S
+check ||H-H.dagger||=0.000e+00 coord=(4,0) rank=0
+----- TIMING FOR oper_renorm : 0.0018 S T(init/kernel/comm)=-1.73e+09,1.73e+09,2.1e-05 rank=0 -----
+CPUmem: VM:5.588e-09GB RSS:8.202e-04GB  Timing: User:1.674e+00S Sys:3.847e-01S Total:2.059e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4559:6.956e-02MB:6.793e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=6407:9.776e-02MB:9.547e-05GB
+----- TIMING FOR cleanup: 5.250e-04 T(join&erase/save/remove)=7.300e-05,3.330e-04,1.190e-04 S -----
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:1.676e+00S Sys:3.860e-01S Total:2.062e+00S
 
 isweep=0 ibond=4/seqsize=6 dots=1 dbond=(2,0)-(3,0) forward=0 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:1.677e+00S Sys:3.861e-01S Total:2.063e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4559:6.956e-02MB:6.793e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=6407:9.776e-02MB:9.547e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=3,2,1 ifNC=0
-wf3(diml,dimr,dimc)=(60,16,4) nnz=892:1.36e-02MB
+wf3(diml,dimr,dimc)=(60,16,4) nnz=910:1.389e-02MB
+qtensor3: wf3 own=1 _data=0x7fdb14070800
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=60
+ (3):20 (2):15 (4):15 (5):6 (1):4
+ qbond: qcol nsym=5 dimAll=16
+ (0):1 (2):6 (1):4 (4):1 (3):4
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=13 nblocks=75 size=910:1.389e-02MB
+duration_diagGPU:5.840e-04
+duration_diagreduce:6.000e-06
+duration_diagtransform:2.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 +      -3.236066278957  -1.00e+03   9.82e-06    2     2   5.00e-03  2.50e-03
-    1   1 +      -3.062519335541  -1.00e+03   8.96e-06    2     2   5.00e-03  2.50e-03
-TIMING for Davidson : 5.00e-03  T(cal/comm/rest)=4.00e-03,0.00e+00,1.00e-03
-decimation summary: 64->60 dwt=1.55e-10 SvN=2.18e+00
-TIMING for Renormalization : 4.00e-03  T(cal/comm)=4.00e-03,0.00e+00
+    1   0 -      -3.236066221703 -1.003e+03  3.861e-04    2     2  6.137e-03 3.069e-03
+    1   1 -      -2.884885150037 -1.003e+03  3.455e-04    2     2  6.137e-03 3.069e-03
+    2   0 -      -3.236066272841 -5.114e-08  8.119e-05    4     4  1.489e-02 3.723e-03
+    2   1 -      -2.884885195452 -4.542e-08  8.392e-05    4     4  1.489e-02 3.723e-03
+    3   0 -      -3.236066275480 -2.639e-09  2.482e-05    6     6  2.331e-02 3.885e-03
+    3   1 -      -2.884885198460 -3.008e-09  3.019e-05    6     6  2.331e-02 3.885e-03
+    4   0 +      -3.236066275770 -2.895e-10  9.840e-06    6     8  3.087e-02 3.858e-03
+    4   1 -      -2.884885198890 -4.295e-10  1.484e-05    6     8  3.087e-02 3.858e-03
+    5   0 +      -3.236066275771 -1.474e-12  9.755e-06    5     9  3.502e-02 3.892e-03
+    5   1 +      -2.884885199012 -1.223e-10  8.335e-06    5     9  3.502e-02 3.892e-03
+TIMING FOR Davidson : 3.681e-02  T(cal/comm/sub/rest)=2.063e-02,1.097e-03,8.940e-04,1.418e-02
+optimized energies: isweep=0 ibond=4 dots=1 e[0]=-3.23606627577 nmvp=9
+optimized energies: isweep=0 ibond=4 dots=1 e[1]=-2.88488519901 nmvp=9
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.832e+00S Sys:4.243e-01S Total:2.256e+00S
+ qops: oplist=CABPQSH nops=C:3 A:5 B:7 P:6 Q:8 S:3 H:1 
+        dim(bra,ket)=60,60 size(op)=902:1.376e-02MB size(tot)=23607:3.602e-01MB:3.518e-04GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.850e+00S Sys:4.319e-01S Total:2.282e+00S
+check ||H-H.dagger||=0.000e+00 coord=(3,0) rank=0
+----- TIMING FOR oper_renorm : 0.00181 S T(init/kernel/comm)=-1.73e+09,1.73e+09,5.3e-05 rank=0 -----
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.858e+00S Sys:4.334e-01S Total:2.291e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=1972:3.009e-02MB:2.939e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=3820:5.829e-02MB:5.692e-05GB
+----- TIMING FOR cleanup: 5.760e-04 T(join&erase/save/remove)=6.300e-05,3.930e-04,1.200e-04 S -----
+CPUmem: VM:9.313e-10GB RSS:4.027e+08GB  Timing: User:1.859e+00S Sys:4.342e-01S Total:2.293e+00S
 
 isweep=0 ibond=5/seqsize=6 dots=1 dbond=(1,0)-(2,0) forward=0 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:9.313e-10GB RSS:4.027e+08GB  Timing: User:1.859e+00S Sys:4.342e-01S Total:2.293e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=1972:3.009e-02MB:2.939e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=3820:5.829e-02MB:5.692e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=2,3,1 ifNC=1
-wf3(diml,dimr,dimc)=(16,60,4) nnz=892:1.36e-02MB
+wf3(diml,dimr,dimc)=(16,60,4) nnz=910:1.389e-02MB
+qtensor3: wf3 own=1 _data=0x7fdb14833600
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=16
+ (0):1 (2):6 (1):4 (4):1 (3):4
+ qbond: qcol nsym=5 dimAll=60
+ (3):20 (2):15 (4):15 (5):6 (1):4
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=13 nblocks=75 size=910:1.389e-02MB
+duration_diagGPU:5.400e-04
+duration_diagreduce:1.400e-05
+duration_diagtransform:2.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 -      -3.236066278109  -1.00e+03   5.73e-05    2     2   5.00e-03  2.50e-03
-    1   1 -      -3.062519335269  -1.00e+03   3.15e-05    2     2   5.00e-03  2.50e-03
-    2   0 +      -3.236066278982  -8.74e-10   8.17e-06    4     4   1.20e-02  3.00e-03
-    2   1 +      -3.062519335596  -3.27e-10   8.48e-06    4     4   1.20e-02  3.00e-03
-TIMING for Davidson : 1.20e-02  T(cal/comm/rest)=9.00e-03,0.00e+00,3.00e-03
-decimation summary: 240->32 dwt=2.22e-16 SvN=2.32e+00
-TIMING for Renormalization : 3.00e-03  T(cal/comm)=3.00e-03,0.00e+00
+    1   0 -      -3.236066271498 -1.003e+03  1.256e-04    2     2  6.846e-03 3.423e-03
+    1   1 -      -2.884885197056 -1.003e+03  6.564e-05    2     2  6.846e-03 3.423e-03
+    2   0 -      -3.236066275537 -4.039e-09  1.856e-05    4     4  1.339e-02 3.346e-03
+    2   1 +      -2.884885198257 -1.201e-09  9.142e-06    4     4  1.339e-02 3.346e-03
+    3   0 +      -3.236066275641 -1.047e-10  4.255e-06    5     5  1.685e-02 3.371e-03
+    3   1 +      -2.884885198257 -1.106e-13  9.135e-06    5     5  1.685e-02 3.371e-03
+TIMING FOR Davidson : 1.864e-02  T(cal/comm/sub/rest)=1.086e-02,5.850e-04,2.160e-04,6.984e-03
+optimized energies: isweep=0 ibond=5 dots=1 e[0]=-3.23606627564 nmvp=5
+optimized energies: isweep=0 ibond=5 dots=1 e[1]=-2.88488519826 nmvp=5
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.938e+00S Sys:4.556e-01S Total:2.393e+00S
+ qops: oplist=CABPQSH nops=C:4 A:10 B:13 P:1 Q:2 S:2 H:1 
+        dim(bra,ket)=60,60 size(op)=1048:1.599e-02MB size(tot)=25688:3.920e-01MB:3.828e-04GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.965e+00S Sys:4.660e-01S Total:2.431e+00S
+check ||H-H.dagger||=0.000e+00 coord=(2,0) rank=0
+----- TIMING FOR oper_renorm : 0.0025 S T(init/kernel/comm)=-1.73e+09,1.73e+09,0.000146 rank=0 -----
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:1.976e+00S Sys:4.680e-01S Total:2.444e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4548:6.940e-02MB:6.777e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=540:8.240e-03MB:8.047e-06GB
+total mem of comb=5116:7.806e-02MB:7.623e-05GB
+----- TIMING FOR cleanup: 6.430e-04 T(join&erase/save/remove)=1.170e-04,4.100e-04,1.160e-04 S -----
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:1.977e+00S Sys:4.692e-01S Total:2.447e+00S
 
 ======================================================================
-sweep_data::summary isweep=0
+sweep_data::summary isweep=0 mpisize=2 maxthreads=8
 ----------------------------------------------------------------------
-sweep parameters: isweep=0 dots=1 dcut=60 eps=1.00e-05 noise=0.00e+00
- ibond=0 bond=(1,0)-(2,0) forward=1 deff=16 dwt=+1.110e-16 nmvp=109 e[0]=-3.23606627871 e[1]=-2.79581962361
- ibond=1 bond=(2,0)-(3,0) forward=1 deff=60 dwt=+1.638e-10 nmvp=82 e[0]=-3.23606627985 e[1]=-3.06251933581
- ibond=2 bond=(3,0)-(4,0) forward=1 deff=32 dwt=+0.000e+00 nmvp=2 e[0]=-3.23606627896 e[1]=-3.06251933554
- ibond=3 bond=(3,0)-(4,0) forward=0 deff=16 dwt=-2.220e-16 nmvp=2 e[0]=-3.23606627896 e[1]=-3.06251933554
- ibond=4 bond=(2,0)-(3,0) forward=0 deff=60 dwt=+1.547e-10 nmvp=2 e[0]=-3.23606627896 e[1]=-3.06251933554
- ibond=5 bond=(1,0)-(2,0) forward=0 deff=32 dwt=+2.220e-16 nmvp=4 e[0]=-3.23606627898 e[1]=-3.0625193356
-minimal energies at ibond=1
- sweep energies: isweep=0 dots=1 dcut=60 deff=60 dwt=+1.638e-10 e[0]=-3.23606627985
- sweep energies: isweep=0 dots=1 dcut=60 deff=60 dwt=+1.638e-10 e[1]=-3.06251933581
+sweep parameters: isweep=0 dots=1 dcut=60 eps=1.000e-05 noise=1.000e-05
+ ibond=0 bond=(1,0)-(2,0) forward=1 deff=16 dwt=+0.000e+00 nmvp=9 e[0]=-3.23606627879 e[1]=-2.88488519441 t=0.0297
+ ibond=1 bond=(2,0)-(3,0) forward=1 deff=60 dwt=+1.481e-09 nmvp=5 e[0]=-3.23606627986 e[1]=-2.8848852002 t=0.0382
+ ibond=2 bond=(3,0)-(4,0) forward=1 deff=60 dwt=+1.250e-09 nmvp=3 e[0]=-3.23606627582 e[1]=-2.88488519903 t=0.0299
+ ibond=3 bond=(3,0)-(4,0) forward=0 deff=16 dwt=+0.000e+00 nmvp=5 e[0]=-3.2360662217 e[1]=-2.88488515004 t=0.0178
+ ibond=4 bond=(2,0)-(3,0) forward=0 deff=60 dwt=+1.475e-09 nmvp=9 e[0]=-3.23606627577 e[1]=-2.88488519901 t=0.0455
+ ibond=5 bond=(1,0)-(2,0) forward=0 deff=60 dwt=+1.480e-09 nmvp=5 e[0]=-3.23606627564 e[1]=-2.88488519826 t=0.0318
+ eav_max=-3.06047568587 [ibond=3]  dwt_min=0.000e+00 [ibond=0]
+ eav_min=-3.06047574003 [ibond=1]  dwt_max=1.481e-09 [ibond=1]
+ eav_diff=5.41606524074e-08
+ sweep energies: isweep=0 dots=1 dcut=60 deff=60 dwt=+1.481e-09 e[0]=-3.23606627986
+ sweep energies: isweep=0 dots=1 dcut=60 deff=60 dwt=+1.481e-09 e[1]=-2.8848852002
 ----------------------------------------------------------------------
-summary of sweep optimization up to isweep=0
-schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Tav/S | Taccum/S
-         0  1  60  1.00e-05  0.00e+00 | 201 | 5.48e-01 | 2.73e-03 | 5.48e-01
+summary of sweep optimization up to isweep=0 mpisize=2 maxthreads=8
+schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Taccum/S | t_inter/S t_gemm/S t_red/S t_blas/S per
+            0  1      60 1.000e-05 1.000e-05 | 36 | 1.933e-01 | 1.933e-01 | 0.000e+00 0.000e+00 0.000e+00 0.000e+00 0
 results: isweep, dcut, dwt, energies (delta_e)
-         0      60 +1.64e-10 e[0]=-3.23606627985 (0.00e+00) e[1]=-3.06251933581 (0.00e+00)
+            0      60 +1.481e-09 e[0]=-3.23606627986 (0.000e+00) e[1]=-2.8848852002 (0.000e+00)
 ======================================================================
 
+ctns::sweep_final: convert into RCF & save into ./scratch/rcanon_isweep0
+----------------------------------------------------------------------
+
+ctns::rcanon_save fname=./scratch/rcanon_isweep0
+
+ctns::rcanon_check thresh_ortho=1.000e-08
+ idx=0 node=(5,0) Drow=4 maxdiff=0.000e+00 deviate=0
+ idx=1 node=(4,0) Drow=16 maxdiff=4.441e-16 deviate=0
+ idx=2 node=(3,0) Drow=60 maxdiff=4.164e-15 deviate=0
+ idx=3 node=(2,0) Drow=60 maxdiff=5.048e-15 deviate=0
+ idx=4 node=(1,0) Drow=8 maxdiff=9.805e-16 deviate=0
+ idx=5 node=(0,0) Drow=2 maxdiff=2.486e-16 deviate=0
+qtensor2: wf2 own=1 _data=0x600003e78980
+qinfo2: wf2 sym=(0) dir=0,1
+ qbond: qrow nsym=1 dimAll=2
+ (6):2
+ qbond: qcol nsym=1 dimAll=2
+ (6):2
+total no. of nonzero blocks=1 nblocks=1 size=4:6.104e-05MB
+i=0 idx=0 block[0:(6),0:(6)] dim0,dim1=(2,2) size=4
+ dtensor2: blk_0 size=(2,2) _data=0x600003e78980
+(-1.0000e+00,1.9949e-17) (-3.4694e-18,-7.4810e-18) 
+(-3.4694e-18,-5.4210e-19) (1.0000e+00,-8.6736e-18) 
+check wf2*wf2.H():
+ rwfuns: nroots=2 maxdiff=4.9664e-16 deviate=0
+----- TIMING FOR ctns::rcanon_check : 2.500e-04 S -----
+..... end of isweep = 0 .....
+
 ======================================================================
-sweep parameters: isweep=1 dots=1 dcut=60 eps=1.00e-05 noise=0.00e+00
+sweep parameters: isweep=1 dots=1 dcut=60 eps=1e-05 noise=1e-05
 ======================================================================
+
+ctns::sweep_init: nroots=2 sym_state=(6) singlet=0
+qtensor3: site0new own=1 _data=0x600000f5d440
+qinfo3: site0new sym=(0) dir=1,0,1
+ qbond: qrow nsym=1 dimAll=1
+ (0):1
+ qbond: qcol nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=3 nblocks=9 size=6:9.16e-05MB
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:0.000366MB:3.58e-07GB
+ sites: len=6 mem=5018:0.0766MB:7.48e-05GB
+ rwfuns: len=2 mem=4:6.1e-05MB:5.96e-08GB
+ cpsi: len=2 mem=540:0.00824MB:8.05e-06GB
+total mem of comb=5586:0.0852MB:8.32e-05GB
 
 isweep=1 ibond=0/seqsize=6 dots=1 dbond=(1,0)-(2,0) forward=1 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:4.291e+09GB RSS:2.670e-05GB  Timing: User:1.989e+00S Sys:4.742e-01S Total:2.463e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=5018:7.657e-02MB:7.477e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=540:8.240e-03MB:8.047e-06GB
+total mem of comb=5586:8.524e-02MB:8.324e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=1,4,1 ifNC=1
-wf3(diml,dimr,dimc)=(4,32,4) nnz=140:2.14e-03MB
+wf3(diml,dimr,dimc)=(4,60,4) nnz=270:4.120e-03MB
+qtensor3: wf3 own=1 _data=0x7fdb13816a00
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+ qbond: qcol nsym=5 dimAll=60
+ (4):24 (5):16 (3):14 (6):4 (2):2
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=9 nblocks=45 size=270:4.120e-03MB
+duration_diagGPU:1.740e-04
+duration_diagreduce:5.000e-06
+duration_diagtransform:1.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 +      -3.236066278982  -1.00e+03   2.29e-06    2     2   1.00e-03  5.00e-04
-    1   1 +      -3.062519335596  -1.00e+03   6.43e-06    2     2   1.00e-03  5.00e-04
-TIMING for Davidson : 1.00e-03  T(cal/comm/rest)=0.00e+00,0.00e+00,1.00e-03
-decimation summary: 16->16 dwt=2.22e-16 SvN=1.94e+00
-TIMING for Renormalization : 5.00e-03  T(cal/comm)=5.00e-03,0.00e+00
+    1   0 -      -3.236066221435 -1.003e+03  4.383e-05    2     2  4.680e-03 2.340e-03
+    1   1 -      -2.884885152256 -1.003e+03  4.055e-05    2     2  4.680e-03 2.340e-03
+    2   0 +      -3.236066222296 -8.611e-10  9.166e-06    4     4  1.003e-02 2.509e-03
+    2   1 -      -2.884885153166 -9.100e-10  1.321e-05    4     4  1.003e-02 2.509e-03
+    3   0 +      -3.236066222300 -3.464e-12  8.871e-06    5     5  1.224e-02 2.448e-03
+    3   1 +      -2.884885153301 -1.350e-10  8.362e-06    5     5  1.224e-02 2.448e-03
+TIMING FOR Davidson : 1.294e-02  T(cal/comm/sub/rest)=5.526e-03,4.527e-03,1.330e-04,2.755e-03
+optimized energies: isweep=1 ibond=0 dots=1 e[0]=-3.2360662223 nmvp=5
+optimized energies: isweep=1 ibond=0 dots=1 e[1]=-2.8848851533 nmvp=5
+CPUmem: VM:6.519e-09GB RSS:9.041e-04GB  Timing: User:2.046e+00S Sys:4.925e-01S Total:2.539e+00S
+ qops: oplist=CABPQSH nops=C:2 A:1 B:2 P:10 Q:13 S:4 H:1 
+        dim(bra,ket)=16,16 size(op)=70:1.068e-03MB size(tot)=1764:2.692e-02MB:2.629e-05GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:2.052e+00S Sys:4.949e-01S Total:2.546e+00S
+check ||H-H.dagger||=0.000e+00 coord=(1,0) rank=0
+----- TIMING FOR oper_renorm : 0.00149 S T(init/kernel/comm)=-1.73e+09,1.73e+09,2.1e-05 rank=0 -----
+CPUmem: VM:6.519e-09GB RSS:4.027e+08GB  Timing: User:2.057e+00S Sys:4.964e-01S Total:2.553e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4548:6.940e-02MB:6.777e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=6396:9.760e-02MB:9.531e-05GB
+----- TIMING FOR cleanup: 4.940e-04 T(join&erase/save/remove)=6.700e-05,3.150e-04,1.120e-04 S -----
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:2.058e+00S Sys:4.977e-01S Total:2.556e+00S
 
 isweep=1 ibond=1/seqsize=6 dots=1 dbond=(2,0)-(3,0) forward=1 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:2.058e+00S Sys:4.977e-01S Total:2.556e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4548:6.940e-02MB:6.777e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=6396:9.760e-02MB:9.531e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=2,3,1 ifNC=1
-wf3(diml,dimr,dimc)=(16,60,4) nnz=892:1.36e-02MB
+wf3(diml,dimr,dimc)=(16,60,4) nnz=910:1.389e-02MB
+qtensor3: wf3 own=1 _data=0x7fdaf301c600
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=16
+ (0):1 (2):6 (1):4 (4):1 (3):4
+ qbond: qcol nsym=5 dimAll=60
+ (3):20 (2):15 (4):15 (5):6 (1):4
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=13 nblocks=75 size=910:1.389e-02MB
+duration_diagGPU:5.120e-04
+duration_diagreduce:7.000e-06
+duration_diagtransform:3.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 +      -3.236066278982  -1.00e+03   8.17e-06    2     2   5.00e-03  2.50e-03
-    1   1 +      -3.062519335596  -1.00e+03   8.48e-06    2     2   5.00e-03  2.50e-03
-TIMING for Davidson : 5.00e-03  T(cal/comm/rest)=4.00e-03,0.00e+00,1.00e-03
-decimation summary: 64->60 dwt=1.48e-10 SvN=2.18e+00
-TIMING for Renormalization : 4.00e-03  T(cal/comm)=4.00e-03,0.00e+00
+    1   0 -      -3.236066222300 -1.003e+03  3.827e-04    2     2  6.480e-03 3.240e-03
+    1   1 -      -2.884885153301 -1.003e+03  3.322e-04    2     2  6.480e-03 3.240e-03
+    2   0 -      -3.236066273255 -5.095e-08  7.427e-05    4     4  1.361e-02 3.403e-03
+    2   1 -      -2.884885195237 -4.194e-08  7.716e-05    4     4  1.361e-02 3.403e-03
+    3   0 -      -3.236066275394 -2.139e-09  2.149e-05    6     6  2.079e-02 3.465e-03
+    3   1 -      -2.884885197893 -2.656e-09  2.830e-05    6     6  2.079e-02 3.465e-03
+    4   0 +      -3.236066275599 -2.046e-10  8.676e-06    6     8  2.736e-02 3.420e-03
+    4   1 -      -2.884885198366 -4.735e-10  1.589e-05    6     8  2.736e-02 3.420e-03
+    5   0 +      -3.236066275600 -1.696e-12  8.458e-06    5     9  3.112e-02 3.458e-03
+    5   1 -      -2.884885198643 -2.762e-10  1.849e-05    5     9  3.112e-02 3.458e-03
+    6   0 +      -3.236066275600 -1.332e-13  8.414e-06    4    10  3.445e-02 3.445e-03
+    6   1 -      -2.884885200890 -2.248e-09  1.325e-04    4    10  3.445e-02 3.445e-03
+    7   0 +      -3.236066275601 -5.915e-13  8.257e-06    4    11  3.868e-02 3.517e-03
+    7   1 -      -2.989291983126 -1.044e-01  2.710e-01    4    11  3.868e-02 3.517e-03
+    8   0 +      -3.236066275602 -8.171e-13  8.175e-06    4    12  4.231e-02 3.526e-03
+    8   1 -      -3.025261442499 -3.597e-02  1.830e-01    4    12  4.231e-02 3.526e-03
+    9   0 +      -3.236066275602 -1.892e-13  8.207e-06    4    13  4.558e-02 3.506e-03
+    9   1 -      -3.055282610125 -3.002e-02  8.453e-02    4    13  4.558e-02 3.506e-03
+   10   0 +      -3.236066275604 -2.315e-12  8.036e-06    4    14  4.868e-02 3.477e-03
+   10   1 -      -3.059028834322 -3.746e-03  4.938e-02    4    14  4.868e-02 3.477e-03
+   11   0 +      -3.236066275605 -2.460e-13  8.091e-06    4    15  5.243e-02 3.495e-03
+   11   1 -      -3.060965017425 -1.936e-03  3.243e-02    4    15  5.243e-02 3.495e-03
+   12   0 +      -3.236066275609 -4.527e-12  7.653e-06    4    16  5.565e-02 3.478e-03
+   12   1 -      -3.061782884725 -8.179e-04  2.300e-02    4    16  5.565e-02 3.478e-03
+   13   0 +      -3.236066275609 -4.263e-14  7.656e-06    4    17  5.919e-02 3.482e-03
+   13   1 -      -3.062178081237 -3.952e-04  1.545e-02    4    17  5.919e-02 3.482e-03
+   14   0 +      -3.236066275610 -6.946e-13  7.579e-06    4    18  6.319e-02 3.510e-03
+   14   1 -      -3.062387046940 -2.090e-04  1.138e-02    4    18  6.319e-02 3.510e-03
+   15   0 +      -3.236066275610  1.332e-15  7.579e-06    4    19  6.632e-02 3.490e-03
+   15   1 -      -3.062478982834 -9.194e-05  6.515e-03    4    19  6.632e-02 3.490e-03
+   16   0 +      -3.236066275610 -3.331e-14  7.568e-06    4    20  6.984e-02 3.492e-03
+   16   1 -      -3.062503067572 -2.408e-05  4.036e-03    4    20  6.984e-02 3.492e-03
+   17   0 +      -3.236066275610 -6.217e-14  7.559e-06    4    21  7.436e-02 3.541e-03
+   17   1 -      -3.062514524649 -1.146e-05  2.442e-03    4    21  7.436e-02 3.541e-03
+   18   0 +      -3.236066275610 -5.329e-15  7.558e-06    4    22  7.797e-02 3.544e-03
+   18   1 -      -3.062518121173 -3.597e-06  1.121e-03    4    22  7.797e-02 3.544e-03
+   19   0 +      -3.236066275610 -2.665e-15  7.558e-06    4    23  8.125e-02 3.533e-03
+   19   1 -      -3.062518908505 -7.873e-07  6.758e-04    4    23  8.125e-02 3.533e-03
+   20   0 +      -3.236066275610  0.000e+00  7.559e-06    4    24  8.495e-02 3.540e-03
+   20   1 -      -3.062519195156 -2.867e-07  3.561e-04    4    24  8.495e-02 3.540e-03
+   21   0 +      -3.236066275610 -3.970e-13  7.578e-06    4    25  8.817e-02 3.527e-03
+   21   1 -      -3.062519279364 -8.421e-08  2.096e-04    4    25  8.817e-02 3.527e-03
+   22   0 +      -3.236066275611 -1.106e-12  7.572e-06    4    26  9.093e-02 3.497e-03
+   22   1 -      -3.062519310709 -3.134e-08  1.386e-04    4    26  9.093e-02 3.497e-03
+   23   0 +      -3.236066275612 -1.014e-12  7.525e-06    4    27  9.409e-02 3.485e-03
+   23   1 -      -3.062519323471 -1.276e-08  8.635e-05    4    27  9.409e-02 3.485e-03
+   24   0 +      -3.236066275613 -8.837e-13  7.441e-06    4    28  9.758e-02 3.485e-03
+   24   1 -      -3.062519327777 -4.306e-09  4.739e-05    4    28  9.758e-02 3.485e-03
+   25   0 +      -3.236066275614 -3.135e-13  7.385e-06    4    29  1.009e-01 3.479e-03
+   25   1 -      -3.062519329332 -1.554e-09  3.089e-05    4    29  1.009e-01 3.479e-03
+   26   0 +      -3.236066275614 -3.553e-15  7.387e-06    4    30  1.044e-01 3.481e-03
+   26   1 -      -3.062519330049 -7.174e-10  1.779e-05    4    30  1.044e-01 3.481e-03
+   27   0 +      -3.236066275614 -1.954e-14  7.391e-06    4    31  1.081e-01 3.488e-03
+   27   1 -      -3.062519330246 -1.973e-10  1.015e-05    4    31  1.081e-01 3.488e-03
+   28   0 +      -3.236066275614 -4.357e-13  7.369e-06    4    32  1.116e-01 3.487e-03
+   28   1 +      -3.062519330314 -6.752e-11  5.817e-06    4    32  1.116e-01 3.487e-03
+TIMING FOR Davidson : 1.135e-01  T(cal/comm/sub/rest)=7.106e-02,2.131e-03,2.460e-03,3.780e-02
+optimized energies: isweep=1 ibond=1 dots=1 e[0]=-3.23606627561 nmvp=32
+optimized energies: isweep=1 ibond=1 dots=1 e[1]=-3.06251933031 nmvp=32
+CPUmem: VM:3.725e-09GB RSS:0.000e+00GB  Timing: User:2.516e+00S Sys:6.086e-01S Total:3.125e+00S
+ qops: oplist=CABPQSH nops=C:3 A:6 B:8 P:5 Q:7 S:3 H:1 
+        dim(bra,ket)=60,60 size(op)=902:1.376e-02MB size(tot)=23607:3.602e-01MB:3.518e-04GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:2.532e+00S Sys:6.155e-01S Total:3.147e+00S
+check ||H-H.dagger||=0.000e+00 coord=(2,0) rank=0
+----- TIMING FOR oper_renorm : 0.00181 S T(init/kernel/comm)=-1.73e+09,1.73e+09,6.3e-05 rank=0 -----
+CPUmem: VM:3.725e-09GB RSS:4.027e+08GB  Timing: User:2.537e+00S Sys:6.162e-01S Total:3.153e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=1972:3.009e-02MB:2.939e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=3820:5.829e-02MB:5.692e-05GB
+----- TIMING FOR cleanup: 6.550e-04 T(join&erase/save/remove)=6.600e-05,4.490e-04,1.400e-04 S -----
+CPUmem: VM:9.313e-10GB RSS:4.027e+08GB  Timing: User:2.538e+00S Sys:6.174e-01S Total:3.155e+00S
 
 isweep=1 ibond=2/seqsize=6 dots=1 dbond=(3,0)-(4,0) forward=1 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:9.313e-10GB RSS:4.027e+08GB  Timing: User:2.538e+00S Sys:6.174e-01S Total:3.155e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=1972:3.009e-02MB:2.939e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=3820:5.829e-02MB:5.692e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=3,2,1 ifNC=0
-wf3(diml,dimr,dimc)=(60,16,4) nnz=892:1.36e-02MB
+wf3(diml,dimr,dimc)=(60,16,4) nnz=910:1.389e-02MB
+qtensor3: wf3 own=1 _data=0x7fdb13811600
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=60
+ (3):20 (2):15 (4):15 (1):6 (5):4
+ qbond: qcol nsym=5 dimAll=16
+ (0):1 (2):6 (1):4 (4):1 (3):4
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=13 nblocks=75 size=910:1.389e-02MB
+duration_diagGPU:7.130e-04
+duration_diagreduce:1.300e-05
+duration_diagtransform:3.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 -      -3.236066278155  -1.00e+03   5.56e-05    2     2   5.00e-03  2.50e-03
-    1   1 -      -3.062519335337  -1.00e+03   3.08e-05    2     2   5.00e-03  2.50e-03
-    2   0 +      -3.236066278983  -8.28e-10   7.75e-06    4     4   1.20e-02  3.00e-03
-    2   1 +      -3.062519335653  -3.15e-10   7.21e-06    4     4   1.20e-02  3.00e-03
-TIMING for Davidson : 1.20e-02  T(cal/comm/rest)=9.00e-03,0.00e+00,3.00e-03
-decimation summary: 240->32 dwt=0.00e+00 SvN=2.32e+00
-TIMING for Renormalization : 3.00e-03  T(cal/comm)=3.00e-03,0.00e+00
+    1   0 -      -3.236066273242 -1.003e+03  1.222e-04    2     2  7.061e-03 3.531e-03
+    1   1 -      -3.062519327569 -1.003e+03  1.449e-04    2     2  7.061e-03 3.531e-03
+    2   0 -      -3.236066277147 -3.904e-09  1.917e-05    4     4  1.438e-02 3.595e-03
+    2   1 -      -3.062519333208 -5.639e-09  1.957e-05    4     4  1.438e-02 3.595e-03
+    3   0 +      -3.236066277260 -1.130e-10  4.544e-06    6     6  2.074e-02 3.456e-03
+    3   1 +      -3.062519333334 -1.265e-10  4.652e-06    6     6  2.074e-02 3.456e-03
+TIMING FOR Davidson : 2.255e-02  T(cal/comm/sub/rest)=1.322e-02,1.040e-03,2.340e-04,8.052e-03
+optimized energies: isweep=1 ibond=2 dots=1 e[0]=-3.23606627726 nmvp=6
+optimized energies: isweep=1 ibond=2 dots=1 e[1]=-3.06251933333 nmvp=6
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:2.640e+00S Sys:6.444e-01S Total:3.285e+00S
+ qops: oplist=CABPQSH nops=C:4 A:13 B:16 P:2 Q:3 S:2 H:1 
+        dim(bra,ket)=60,60 size(op)=1046:1.596e-02MB size(tot)=31300:4.776e-01MB:4.664e-04GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:2.673e+00S Sys:6.571e-01S Total:3.330e+00S
+check ||H-H.dagger||=0.000e+00 coord=(3,0) rank=0
+----- TIMING FOR oper_renorm : 0.0036 S T(init/kernel/comm)=-1.73e+09,1.73e+09,0.000153 rank=0 -----
+CPUmem: VM:0.000e+00GB RSS:4.027e+08GB  Timing: User:2.688e+00S Sys:6.603e-01S Total:3.348e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4544:6.934e-02MB:6.771e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=540:8.240e-03MB:8.047e-06GB
+total mem of comb=5112:7.800e-02MB:7.617e-05GB
+----- TIMING FOR cleanup: 5.970e-04 T(join&erase/save/remove)=1.520e-04,3.500e-04,9.500e-05 S -----
+CPUmem: VM:9.313e-10GB RSS:4.027e+08GB  Timing: User:2.690e+00S Sys:6.618e-01S Total:3.351e+00S
 
 isweep=1 ibond=3/seqsize=6 dots=1 dbond=(3,0)-(4,0) forward=0 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:9.313e-10GB RSS:4.027e+08GB  Timing: User:2.690e+00S Sys:6.619e-01S Total:3.352e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4544:6.934e-02MB:6.771e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=540:8.240e-03MB:8.047e-06GB
+total mem of comb=5112:7.800e-02MB:7.617e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=4,1,1 ifNC=0
-wf3(diml,dimr,dimc)=(32,4,4) nnz=140:2.14e-03MB
+wf3(diml,dimr,dimc)=(60,4,4) nnz=270:4.120e-03MB
+qtensor3: wf3 own=1 _data=0x7fdaf300e600
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=60
+ (4):24 (3):16 (5):14 (2):3 (6):3
+ qbond: qcol nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=9 nblocks=45 size=270:4.120e-03MB
+duration_diagGPU:1.140e-04
+duration_diagreduce:3.500e-05
+duration_diagtransform:0.000e+00
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 +      -3.236066278983  -1.00e+03   1.88e-06    2     2   1.00e-03  5.00e-04
-    1   1 +      -3.062519335653  -1.00e+03   4.84e-06    2     2   1.00e-03  5.00e-04
-TIMING for Davidson : 1.00e-03  T(cal/comm/rest)=0.00e+00,0.00e+00,1.00e-03
-decimation summary: 16->16 dwt=-2.22e-16 SvN=1.94e+00
-TIMING for Renormalization : 5.00e-03  T(cal/comm)=5.00e-03,0.00e+00
+    1   0 -      -3.236066222532 -1.003e+03  4.615e-05    2     2  5.019e-03 2.510e-03
+    1   1 -      -3.062519279567 -1.003e+03  4.634e-05    2     2  5.019e-03 2.510e-03
+    2   0 +      -3.236066223418 -8.856e-10  9.034e-06    4     4  9.297e-03 2.324e-03
+    2   1 +      -3.062519280505 -9.380e-10  9.189e-06    4     4  9.297e-03 2.324e-03
+TIMING FOR Davidson : 1.003e-02  T(cal/comm/sub/rest)=4.943e-03,2.551e-03,9.800e-05,2.435e-03
+optimized energies: isweep=1 ibond=3 dots=1 e[0]=-3.23606622342 nmvp=4
+optimized energies: isweep=1 ibond=3 dots=1 e[1]=-3.0625192805 nmvp=4
+CPUmem: VM:8.382e-09GB RSS:1.419e-03GB  Timing: User:2.734e+00S Sys:6.756e-01S Total:3.409e+00S
+ qops: oplist=CABPQSH nops=C:2 A:2 B:3 P:13 Q:16 S:4 H:1 
+        dim(bra,ket)=16,16 size(op)=70:1.068e-03MB size(tot)=2156:3.290e-02MB:3.213e-05GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:2.739e+00S Sys:6.777e-01S Total:3.417e+00S
+check ||H-H.dagger||=0.000e+00 coord=(4,0) rank=0
+----- TIMING FOR oper_renorm : 0.00185 S T(init/kernel/comm)=-1.73e+09,1.73e+09,2.4e-05 rank=0 -----
+CPUmem: VM:8.382e-09GB RSS:1.419e-03GB  Timing: User:2.745e+00S Sys:6.797e-01S Total:3.425e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4544:6.934e-02MB:6.771e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=6392:9.753e-02MB:9.525e-05GB
+----- TIMING FOR cleanup: 4.670e-04 T(join&erase/save/remove)=7.300e-05,2.900e-04,1.040e-04 S -----
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:2.747e+00S Sys:6.808e-01S Total:3.428e+00S
 
 isweep=1 ibond=4/seqsize=6 dots=1 dbond=(2,0)-(3,0) forward=0 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:2.747e+00S Sys:6.808e-01S Total:3.428e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4544:6.934e-02MB:6.771e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=6392:9.753e-02MB:9.525e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=3,2,1 ifNC=0
-wf3(diml,dimr,dimc)=(60,16,4) nnz=892:1.36e-02MB
+wf3(diml,dimr,dimc)=(60,16,4) nnz=910:1.389e-02MB
+qtensor3: wf3 own=1 _data=0x7fdb14065600
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=60
+ (3):20 (2):15 (4):15 (1):6 (5):4
+ qbond: qcol nsym=5 dimAll=16
+ (0):1 (2):6 (1):4 (4):1 (3):4
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=13 nblocks=75 size=910:1.389e-02MB
+duration_diagGPU:5.860e-04
+duration_diagreduce:1.400e-05
+duration_diagtransform:2.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 +      -3.236066278983  -1.00e+03   7.75e-06    2     2   5.00e-03  2.50e-03
-    1   1 +      -3.062519335653  -1.00e+03   7.21e-06    2     2   5.00e-03  2.50e-03
-TIMING for Davidson : 5.00e-03  T(cal/comm/rest)=4.00e-03,0.00e+00,1.00e-03
-decimation summary: 64->60 dwt=1.50e-10 SvN=2.18e+00
-TIMING for Renormalization : 4.00e-03  T(cal/comm)=4.00e-03,0.00e+00
+    1   0 -      -3.236066223418 -1.003e+03  3.835e-04    2     2  7.727e-03 3.864e-03
+    1   1 -      -3.062519280505 -1.003e+03  3.757e-04    2     2  7.727e-03 3.864e-03
+    2   0 -      -3.236066274261 -5.084e-08  8.434e-05    4     4  1.633e-02 4.082e-03
+    2   1 -      -3.062519330627 -5.012e-08  7.653e-05    4     4  1.633e-02 4.082e-03
+    3   0 -      -3.236066276956 -2.696e-09  2.482e-05    6     6  2.328e-02 3.880e-03
+    3   1 -      -3.062519333009 -2.382e-09  2.377e-05    6     6  2.328e-02 3.880e-03
+    4   0 +      -3.236066277217 -2.603e-10  9.377e-06    6     8  3.050e-02 3.812e-03
+    4   1 -      -3.062519333281 -2.719e-10  1.021e-05    6     8  3.050e-02 3.812e-03
+    5   0 +      -3.236066277218 -1.172e-12  9.259e-06    5     9  3.457e-02 3.841e-03
+    5   1 +      -3.062519333336 -5.530e-11  5.164e-06    5     9  3.457e-02 3.841e-03
+TIMING FOR Davidson : 3.654e-02  T(cal/comm/sub/rest)=2.353e-02,2.010e-04,5.220e-04,1.228e-02
+optimized energies: isweep=1 ibond=4 dots=1 e[0]=-3.23606627722 nmvp=9
+optimized energies: isweep=1 ibond=4 dots=1 e[1]=-3.06251933334 nmvp=9
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:2.907e+00S Sys:7.223e-01S Total:3.629e+00S
+ qops: oplist=CABPQSH nops=C:3 A:5 B:7 P:6 Q:8 S:3 H:1 
+        dim(bra,ket)=60,60 size(op)=902:1.376e-02MB size(tot)=23607:3.602e-01MB:3.518e-04GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:2.923e+00S Sys:7.280e-01S Total:3.651e+00S
+check ||H-H.dagger||=0.000e+00 coord=(3,0) rank=0
+----- TIMING FOR oper_renorm : 0.00239 S T(init/kernel/comm)=-1.73e+09,1.73e+09,7.6e-05 rank=0 -----
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:2.930e+00S Sys:7.294e-01S Total:3.659e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=1972:3.009e-02MB:2.939e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=3820:5.829e-02MB:5.692e-05GB
+----- TIMING FOR cleanup: 6.920e-04 T(join&erase/save/remove)=8.900e-05,4.540e-04,1.490e-04 S -----
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:2.931e+00S Sys:7.306e-01S Total:3.662e+00S
 
 isweep=1 ibond=5/seqsize=6 dots=1 dbond=(1,0)-(2,0) forward=0 cturn=0
 ----------------------------------------------------------------------
-ctns::sweep_onedot alg_hvec=3 alg_renorm=2 mpisize=1 maxthreads=4
+ctns::sweep_onedot ifabelian=1 alg_hvec=3 alg_renorm=2 mpisize=2 maxthreads=8
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:2.932e+00S Sys:7.306e-01S Total:3.662e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=1972:3.009e-02MB:2.939e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=1820:2.777e-02MB:2.712e-05GB
+total mem of comb=3820:5.829e-02MB:5.692e-05GB
 ctns::topology::check_partition: (sl,sr,sc)=2,3,1 ifNC=1
-wf3(diml,dimr,dimc)=(16,60,4) nnz=892:1.36e-02MB
+wf3(diml,dimr,dimc)=(16,60,4) nnz=910:1.389e-02MB
+qtensor3: wf3 own=1 _data=0x7fdaf3011a00
+qinfo3: wf3 sym=(6) dir=1,1,1
+ qbond: qrow nsym=5 dimAll=16
+ (0):1 (2):6 (1):4 (4):1 (3):4
+ qbond: qcol nsym=5 dimAll=60
+ (3):20 (2):15 (4):15 (5):6 (1):4
+ qbond: qmid nsym=3 dimAll=4
+ (0):1 (2):1 (1):2
+total no. of nonzero blocks=13 nblocks=75 size=910:1.389e-02MB
+duration_diagGPU:5.280e-04
+duration_diagreduce:9.000e-06
+duration_diagtransform:3.000e-06
 iter   ieig        eigenvalue        ediff      rnorm   nsub  nmvp   time/s    tav/s
-    1   0 -      -3.236066278151  -1.00e+03   5.55e-05    2     2   5.00e-03  2.50e-03
-    1   1 -      -3.062519335399  -1.00e+03   3.01e-05    2     2   5.00e-03  2.50e-03
-    2   0 +      -3.236066278977  -8.25e-10   8.00e-06    4     4   1.20e-02  3.00e-03
-    2   1 +      -3.062519335688  -2.88e-10   6.47e-06    4     4   1.20e-02  3.00e-03
-TIMING for Davidson : 1.20e-02  T(cal/comm/rest)=9.00e-03,0.00e+00,3.00e-03
-decimation summary: 240->32 dwt=0.00e+00 SvN=2.32e+00
-TIMING for Renormalization : 3.00e-03  T(cal/comm)=3.00e-03,0.00e+00
+    1   0 -      -3.236066274094 -1.003e+03  9.279e-05    2     2  6.746e-03 3.373e-03
+    1   1 -      -3.062519330828 -1.003e+03  9.423e-05    2     2  6.746e-03 3.373e-03
+    2   0 -      -3.236066276509 -2.414e-09  1.374e-05    4     4  1.411e-02 3.526e-03
+    2   1 -      -3.062519333471 -2.643e-09  1.433e-05    4     4  1.411e-02 3.526e-03
+    3   0 +      -3.236066276576 -6.715e-11  3.458e-06    6     6  2.092e-02 3.486e-03
+    3   1 +      -3.062519333549 -7.784e-11  3.599e-06    6     6  2.092e-02 3.486e-03
+TIMING FOR Davidson : 2.299e-02  T(cal/comm/sub/rest)=1.224e-02,1.437e-03,4.740e-04,8.841e-03
+optimized energies: isweep=1 ibond=5 dots=1 e[0]=-3.23606627658 nmvp=6
+optimized energies: isweep=1 ibond=5 dots=1 e[1]=-3.06251933355 nmvp=6
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:3.034e+00S Sys:7.571e-01S Total:3.791e+00S
+ qops: oplist=CABPQSH nops=C:4 A:10 B:13 P:1 Q:2 S:2 H:1 
+        dim(bra,ket)=60,60 size(op)=1054:1.608e-02MB size(tot)=25841:3.943e-01MB:3.851e-04GB
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:3.068e+00S Sys:7.705e-01S Total:3.839e+00S
+check ||H-H.dagger||=0.000e+00 coord=(2,0) rank=0
+----- TIMING FOR oper_renorm : 0.0032 S T(init/kernel/comm)=-1.73e+09,1.73e+09,6.4e-05 rank=0 -----
+CPUmem: VM:0.000e+00GB RSS:0.000e+00GB  Timing: User:3.081e+00S Sys:7.733e-01S Total:3.854e+00S
+comb::display_size qkind=qNK
+ rbases: len=6 mem=24:3.662e-04MB:3.576e-07GB
+ sites: len=6 mem=4559:6.956e-02MB:6.793e-05GB
+ rwfuns: len=2 mem=4:6.104e-05MB:5.960e-08GB
+ cpsi: len=2 mem=542:8.270e-03MB:8.076e-06GB
+total mem of comb=5129:7.826e-02MB:7.643e-05GB
+----- TIMING FOR cleanup: 5.170e-04 T(join&erase/save/remove)=5.800e-05,3.480e-04,1.110e-04 S -----
+CPUmem: VM:1.863e-09GB RSS:4.027e+08GB  Timing: User:3.083e+00S Sys:7.746e-01S Total:3.857e+00S
 
 ======================================================================
-sweep_data::summary isweep=1
+sweep_data::summary isweep=1 mpisize=2 maxthreads=8
 ----------------------------------------------------------------------
-sweep parameters: isweep=1 dots=1 dcut=60 eps=1.00e-05 noise=0.00e+00
- ibond=0 bond=(1,0)-(2,0) forward=1 deff=16 dwt=+2.220e-16 nmvp=2 e[0]=-3.23606627898 e[1]=-3.0625193356
- ibond=1 bond=(2,0)-(3,0) forward=1 deff=60 dwt=+1.479e-10 nmvp=2 e[0]=-3.23606627898 e[1]=-3.0625193356
- ibond=2 bond=(3,0)-(4,0) forward=1 deff=32 dwt=+0.000e+00 nmvp=4 e[0]=-3.23606627898 e[1]=-3.06251933565
- ibond=3 bond=(3,0)-(4,0) forward=0 deff=16 dwt=-2.220e-16 nmvp=2 e[0]=-3.23606627898 e[1]=-3.06251933565
- ibond=4 bond=(2,0)-(3,0) forward=0 deff=60 dwt=+1.496e-10 nmvp=2 e[0]=-3.23606627898 e[1]=-3.06251933565
- ibond=5 bond=(1,0)-(2,0) forward=0 deff=32 dwt=+0.000e+00 nmvp=4 e[0]=-3.23606627898 e[1]=-3.06251933569
-minimal energies at ibond=5
- sweep energies: isweep=1 dots=1 dcut=60 deff=32 dwt=+0.000e+00 e[0]=-3.23606627898
- sweep energies: isweep=1 dots=1 dcut=60 deff=32 dwt=+0.000e+00 e[1]=-3.06251933569
+sweep parameters: isweep=1 dots=1 dcut=60 eps=1.000e-05 noise=1.000e-05
+ ibond=0 bond=(1,0)-(2,0) forward=1 deff=16 dwt=+0.000e+00 nmvp=5 e[0]=-3.2360662223 e[1]=-2.8848851533 t=0.0181
+ ibond=1 bond=(2,0)-(3,0) forward=1 deff=60 dwt=+1.067e-09 nmvp=32 e[0]=-3.23606627561 e[1]=-3.06251933031 t=0.122
+ ibond=2 bond=(3,0)-(4,0) forward=1 deff=60 dwt=+1.065e-09 nmvp=6 e[0]=-3.23606627726 e[1]=-3.06251933333 t=0.0375
+ ibond=3 bond=(3,0)-(4,0) forward=0 deff=16 dwt=+0.000e+00 nmvp=4 e[0]=-3.23606622342 e[1]=-3.0625192805 t=0.0151
+ ibond=4 bond=(2,0)-(3,0) forward=0 deff=60 dwt=+9.433e-10 nmvp=9 e[0]=-3.23606627722 e[1]=-3.06251933334 t=0.0458
+ ibond=5 bond=(1,0)-(2,0) forward=0 deff=60 dwt=+1.460e-09 nmvp=6 e[0]=-3.23606627658 e[1]=-3.06251933355 t=0.0375
+ eav_max=-3.0604756878 [ibond=0]  dwt_min=0.000e+00 [ibond=0]
+ eav_min=-3.1492928053 [ibond=2]  dwt_max=1.460e-09 [ibond=5]
+ eav_diff=0.0888171174968
+ sweep energies: isweep=1 dots=1 dcut=60 deff=60 dwt=+1.065e-09 e[0]=-3.23606627726
+ sweep energies: isweep=1 dots=1 dcut=60 deff=60 dwt=+1.065e-09 e[1]=-3.06251933333
 ----------------------------------------------------------------------
-summary of sweep optimization up to isweep=1
-schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Tav/S | Taccum/S
-         0  1  60  1.00e-05  0.00e+00 | 201 | 5.48e-01 | 2.73e-03 | 5.48e-01
-         1  1  60  1.00e-05  0.00e+00 | 16 | 9.50e-02 | 5.94e-03 | 6.43e-01
+summary of sweep optimization up to isweep=1 mpisize=2 maxthreads=8
+schedule: isweep, dots, dcut, eps, noise | nmvp | Tsweep/S | Taccum/S | t_inter/S t_gemm/S t_red/S t_blas/S per
+            0  1      60 1.000e-05 1.000e-05 | 36 | 1.933e-01 | 1.933e-01 | 0.000e+00 0.000e+00 0.000e+00 0.000e+00 0
+            1  1      60 1.000e-05 1.000e-05 | 62 | 2.763e-01 | 4.696e-01 | 0.000e+00 0.000e+00 0.000e+00 0.000e+00 0
 results: isweep, dcut, dwt, energies (delta_e)
-         0      60 +1.64e-10 e[0]=-3.23606627985 (-8.77e-10) e[1]=-3.06251933581 (-1.24e-10)
-         1      60 +0.00e+00 e[0]=-3.23606627898 (0.00e+00) e[1]=-3.06251933569 (0.00e+00)
+            0      60 +1.481e-09 e[0]=-3.23606627986 (-2.603e-09) e[1]=-2.8848852002 (1.776e-01)
+            1      60 +1.065e-09 e[0]=-3.23606627726 (0.000e+00) e[1]=-3.06251933333 (0.000e+00)
 ======================================================================
 
------ TIMING FOR ctns::opt_sweep : 6.450e-01 S -----
-##### time_global: 6.36e-01 S #####
- T(fetch) = 1.00e-03 S  per = 0.16  per(accum) = 0.16
- T(hdiag) = 8.00e-03 S  per =  1.3  per(accum) = 1.4
- T(dvdsn) = 5.45e-01 S  per =   86  per(accum) = 87
- T(decim) = 3.00e-03 S  per = 0.47  per(accum) = 88
- T(guess) = 0.00e+00 S  per =    0  per(accum) = 88
- T(renrm) = 4.50e-02 S  per =  7.1  per(accum) = 95
- T( save) = 1.00e-03 S  per = 0.16  per(accum) = 95
+ctns::sweep_final: convert into RCF & save into ./scratch/rcanon_isweep1
+----------------------------------------------------------------------
 
-ctns::rcanon_save fname=./scratch/rcanon_new.info
+ctns::rcanon_save fname=./scratch/rcanon_isweep1
 
-Congrats! CTNS calculation finishes successfully. Sat Jun 18 18:10:08 2022
+ctns::rcanon_check thresh_ortho=1.000e-08
+ idx=0 node=(5,0) Drow=4 maxdiff=0.000e+00 deviate=0
+ idx=1 node=(4,0) Drow=16 maxdiff=4.441e-16 deviate=0
+ idx=2 node=(3,0) Drow=60 maxdiff=5.028e-15 deviate=0
+ idx=3 node=(2,0) Drow=60 maxdiff=4.731e-15 deviate=0
+ idx=4 node=(1,0) Drow=8 maxdiff=1.382e-15 deviate=0
+ idx=5 node=(0,0) Drow=2 maxdiff=4.004e-16 deviate=0
+qtensor2: wf2 own=1 _data=0x600003e6c000
+qinfo2: wf2 sym=(0) dir=0,1
+ qbond: qrow nsym=1 dimAll=2
+ (6):2
+ qbond: qcol nsym=1 dimAll=2
+ (6):2
+total no. of nonzero blocks=1 nblocks=1 size=4:6.104e-05MB
+i=0 idx=0 block[0:(6),0:(6)] dim0,dim1=(2,2) size=4
+ dtensor2: blk_0 size=(2,2) _data=0x600003e6c000
+(1.0408e-17,-2.2118e-17) (1.0000e+00,-1.3010e-17) 
+(1.0000e+00,5.2042e-17) (-1.3878e-17,-1.7781e-17) 
+check wf2*wf2.H():
+ rwfuns: nroots=2 maxdiff=6.2809e-16 deviate=0
+----- TIMING FOR ctns::rcanon_check : 1.990e-04 S -----
+..... end of isweep = 1 .....
+
+----- TIMING FOR ctns::sweep_opt : 4.783e-01 S -----
+
+Congrats! CTNS calculation finishes successfully. Fri Aug 30 23:25:18 2024
 
