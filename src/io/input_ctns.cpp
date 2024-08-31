@@ -144,6 +144,8 @@ void params_ctns::read(ifstream& istrm){
          jroot = stoi(line.substr(5));
       }else if(line.substr(0,7)=="nsample"){
          nsample = stoi(line.substr(7));
+      }else if(line.substr(0,4)=="nprt"){
+         nprt = stoi(line.substr(4));
       }else if(line.substr(0,5)=="pthrd"){
          pthrd = stod(line.substr(5));
       }else if(line.substr(0,5)=="tosu2"){
@@ -155,6 +157,12 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,8)=="fromconf"){
          istringstream is(line.substr(8));
          is >> inputconf;
+      }else if(line.substr(0,9)=="saveconfs"){
+         istringstream is(line.substr(9));
+         is >> saveconfs;
+      }else if(line.substr(0,9)=="loadconfs"){
+         istringstream is(line.substr(9));
+         is >> loadconfs;
       }else if(line.substr(0,9)=="diagcheck"){
          diagcheck = true;
       }else if(line.substr(0,7)=="savebin"){
@@ -342,12 +350,12 @@ void params_ctns::print() const{
    cout << "iroot = " << iroot << endl;
    cout << "jroot = " << jroot << endl;
    cout << "nsample = " << nsample << endl;
+   cout << "nprt = " << nprt << endl;
    cout << "pthrd = " << pthrd << endl;
    // su2 symmetry
    cout << "tosu2 = " << tosu2 << endl;
    cout << "thresh_tosu2 = " << scientific << thresh_tosu2 << endl;
    cout << "singlet = " << singlet << endl;
-   cout << "inputconf = " << inputconf << endl;
    // gpu
    cout << "diagcheck = " << diagcheck << endl;
    // rdm and entropy
@@ -356,4 +364,8 @@ void params_ctns::print() const{
    cout << "fromnosym = " << fromnosym << endl;
    // orbital optimization
    ooparams.print();
+   // configurations
+   cout << "inputconf = " << inputconf << endl;
+   cout << "saveconfs = " << saveconfs << endl;
+   cout << "loadconfs = " << loadconfs << endl;
 }

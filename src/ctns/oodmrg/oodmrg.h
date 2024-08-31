@@ -143,7 +143,7 @@ namespace ctns{
                   e_min = std::real(Hij(0,0));
                   emin_history[0] = e_min;
                   // compute initial entropy
-                  auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
+                  auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
                   sdiag_history[0] = Sd;
                   auto Sr = rcanon_entropysum(icomb_new, alpha);
                   srenyi_history[0] = Sr;
@@ -154,7 +154,7 @@ namespace ctns{
             std::string rcfprefix = "oo_";
             auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
             if(rank == 0){   
-               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, -1, 10);
+               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
                sdiag_history[iter+1] = Sd;
                auto Sr = rcanon_entropysum(icomb_new, alpha);
                srenyi_history[iter+1] = Sr; 

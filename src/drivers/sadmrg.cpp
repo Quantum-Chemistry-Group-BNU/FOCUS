@@ -163,8 +163,10 @@ void SADMRG(const input::schedule& schd){
    if(schd.ctns.task_sdiag){
       // parallel sampling can be implemented in future (should be very simple)!
       if(rank == 0){
-         ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, schd.ctns.pthrd);
-         ctns::rcanon_sample_samps2det(icomb, schd.ctns.iroot, schd.ctns.nsample, schd.ctns.pthrd);
+         ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
+               schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
+         ctns::rcanon_sample_samps2det(icomb, schd.ctns.iroot, schd.ctns.nsample, 
+               schd.ctns.pthrd, schd.ctns.nprt);
       }
    }
 
@@ -177,7 +179,8 @@ void SADMRG(const input::schedule& schd){
          ctns::rcanon_save(icomb_NSz, rcanon_file);
          icomb.display_shape();
          icomb_NSz.display_shape();
-         ctns::rcanon_Sdiag_sample(icomb_NSz, schd.ctns.iroot, schd.ctns.nsample, schd.ctns.pthrd);
+         ctns::rcanon_Sdiag_sample(icomb_NSz, schd.ctns.iroot, schd.ctns.nsample, 
+               schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
       }
    }
 

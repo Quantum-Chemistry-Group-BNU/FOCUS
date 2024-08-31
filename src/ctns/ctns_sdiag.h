@@ -95,7 +95,8 @@ namespace ctns{
             const int iroot,
             const int nsample=10000,
             const double pthrd=1.e-2,
-            const int nprt=10){ // no. of largest states to be printed
+            const int nprt=10, // no. of largest states to be printed
+            const std::string saveconfs=""){
          using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type; 
          auto t0 = tools::get_time();
          const double cutoff = 0.0;
@@ -105,67 +106,75 @@ namespace ctns{
             << " nsample=" << nsample 
             << " pthrd=" << pthrd
             << " nprt=" << nprt
+            << " saveconfs=" << saveconfs
             << std::endl;
          const int noff = nsample/10;
          // In case CTNS is not normalized 
          double ovlp = std::abs(get_Smat(icomb)(iroot,iroot));
          std::cout << "<CTNS[i]|CTNS[i]> = " << ovlp << std::endl; 
          // start sampling
-         double Sd = 0.0, Sd2 = 0.0, std = 0.0, IPR = 0.0;
+         double Sd = 0.0, Sd2 = 0.0, IPR = 0.0, IPR2 = 0.0;
          std::map<statetype,int> pop;
+         std::map<statetype,Tm> coeff;
          for(int i=0; i<nsample; i++){
             auto pr = rcanon_random(icomb,iroot);
             auto state = pr.first;
-            //std::cout << "i=" << i << " state=" << state << " cicoeff=" << std::scientific << pr.second 
-            //   << " log=" << std::norm(pr.second) << " " << std::log(std::norm(pr.second)) << std::endl;
             auto ci2 = std::norm(pr.second);
             // statistical analysis
             pop[state] += 1;
+            coeff[state] = pr.second;
             double s = (ci2 < cutoff)? 0.0 : -log(ci2)*ovlp;
             double ipr = ci2*ovlp;
             double fac = 1.0/(i+1.0);
-            Sd = (Sd*i + s)*fac;
-            Sd2 = (Sd2*i + s*s)*fac;
-            IPR = (IPR*i + ipr)*fac;
+            Sd   = (Sd*i + s)*fac;
+            Sd2  = (Sd2*i + s*s)*fac;
+            IPR  = (IPR*i + ipr)*fac;
+            IPR2 = (IPR2*i + ipr*ipr)*fac; 
             if((i+1)%noff == 0){
-               std = std::sqrt(std::abs(Sd2-Sd*Sd)/(i+1.e-10)); // use abs in case of small negative value
+               double std1 = std::sqrt(std::abs(Sd2-Sd*Sd)/(i+1.e-10)); // use abs in case of small negative value
+               double std2 = std::sqrt(std::abs(IPR2-IPR*IPR)/(i+1.e-10)); // use abs in case of small negative value
                auto t1 = tools::get_time();
                double dt = tools::get_duration(t1-t0);
                std::cout << " i=" << i 
                   << std::setprecision(6)
-                  << " Sdiag=" << Sd << " std=" << std
-                  << " IPR=" << IPR
-                  << " timing=" << dt << " s" << std::endl;	      
+                  << " Sdiag=" << Sd << " std=" << std1
+                  << " IPR=" << IPR << " std=" << std2
+                  << " TIMING=" << dt << " S" 
+                  << std::endl;	      
                t0 = tools::get_time();
             }
          }
+         std::cout << "estimated Sdiag[MC]=" << Sd << " IPR[MC]=" << IPR << std::endl;
          // print important determinants
          int size = pop.size();
-         std::cout << "sampled important csf/det: pop.size=" << size << std::endl; 
          std::vector<statetype> states(size);
          std::vector<int> counts(size);
+         std::vector<double> coeff2(size); 
          double Sdpop = 0.0, IPRpop = 0.0;
          int i = 0;
          for(const auto& pr : pop){
             states[i] = pr.first;
             counts[i] = pr.second;
+            coeff2[i] = std::norm(coeff[pr.first]);
             double ci2 = counts[i]/(1.0*nsample); // frequency in the sample
             Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log(ci2)*ovlp;
             IPRpop += ci2*ci2*ovlp;
             i++;
          }
-         auto indx = tools::sort_index(counts,1);
-         // compare the first n important dets by counts
+         double psum = std::accumulate(coeff2.begin(), coeff2.end(), 0.0);
+         std::cout << "sampled unique csf/det: pop.size=" << size 
+            << " psum=" << psum << " Sdiag[pop]=" << Sdpop << " IPR[pop]=" << IPRpop 
+            << std::endl;
+         // print the first n important configurations
+         auto indx = tools::sort_index(coeff2,1);
          int sum = 0;
          for(int i=0; i<size; i++){
             int idx = indx[i];
             auto state = states[idx];
-            //std::cout << "i=" << i << " state=" << state << " iroot=" << iroot << std::endl;
-            auto ci = rcanon_CIcoeff(icomb, state)[iroot];
-            //std::cout << "ci=" << ci << std::endl;
-            double pop = std::norm(ci)/ovlp;
-            if(pop < pthrd or i >= nprt) break;
+            auto ci = coeff[state];
+            double pop = coeff2[idx]/ovlp;
             sum += counts[idx];
+            if(pop < pthrd or i >= nprt) break;
             std::cout << " i=" << i << " " << state
                << " counts=" << counts[idx] 
                << " p_i(sample)=" << counts[idx]/(1.0*nsample)
@@ -173,11 +182,23 @@ namespace ctns{
                << " c_i(exact)=" << ci/std::sqrt(ovlp)
                << std::endl;
          }
-         std::cout << "accumulated counts=" << sum 
+         std::cout << "accumulated counts for listed confs=" << sum 
             << " nsample=" << nsample 
             << " per=" << 1.0*sum/nsample << std::endl;
-         std::cout << "estimated Sdiag[MC]=" << Sd << " Sdiag[pop]=" << Sdpop << std::endl;
-         std::cout << "estimated IPR[MC]=" << IPR << " IPR[pop]=" << IPRpop << std::endl;
+         // save configurations to text file
+         if(!saveconfs.empty()){
+            std::cout << "save to file " << saveconfs << ".txt" << std::endl;
+            std::ofstream file(saveconfs+".txt");
+            file << std::defaultfloat << std::setprecision(12);
+            file << "size = " << size << " psum = " << psum << std::endl;
+            for(int i=0; i<size; i++){
+               int idx = indx[i];
+               auto state = states[idx];
+               auto ci = coeff[state];
+               file << state << " " << ci << std::endl;
+            }
+            file.close(); 
+         }
          return Sd;
       }
 
@@ -215,7 +236,7 @@ namespace ctns{
             if((i+1)%noff == 0){
                auto t1 = tools::get_time();
                double dt = tools::get_duration(t1-t0);
-               std::cout << " i=" << i << " timing=" << dt << " s" << std::endl;	      
+               std::cout << " i=" << i << " TIMING=" << dt << " S" << std::endl;	      
                t0 = tools::get_time();
             }
          }
@@ -248,7 +269,7 @@ namespace ctns{
                << " p_i(sample)=" << pop
                << std::endl;
          }
-         std::cout << "accumulated counts=" << sum 
+         std::cout << "accumulated counts for listed confs=" << sum 
             << " nsample=" << nsample 
             << " per=" << 1.0*sum/nsample << std::endl;
          std::cout << "estimated Sdiag[pop]=" << Sdpop << std::endl;

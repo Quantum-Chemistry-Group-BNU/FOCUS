@@ -93,12 +93,13 @@ namespace input{
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_file & rcanon2_file
                   & iomode & async_fetch & async_save & async_remove & ifnccl
-                  & iroot & nsample & pthrd
-                  & tosu2 & thresh_tosu2 & singlet & inputconf
+                  & iroot & nsample & nprt & pthrd
+                  & tosu2 & thresh_tosu2 & singlet 
                   & diagcheck
                   & savebin 
                   & fromnosym
-                  & ooparams;
+                  & ooparams
+                  & inputconf & saveconfs & loadconfs;
             }
       public:
          void read(std::ifstream& istrm);
@@ -174,12 +175,12 @@ namespace input{
          int iroot = 0;
          int jroot = 0;
          int nsample = 1000;
-         double pthrd = 1.e-2;
+         int nprt = 10;
+         double pthrd = -1.e-2;
          // su2 symmetry
          bool tosu2 = false;
          double thresh_tosu2 = 1.e-8;
          bool singlet = false; // singlet embedding
-         std::string inputconf = "";
          // gpu
          bool diagcheck = false;
          // rdm and entropy
@@ -188,6 +189,10 @@ namespace input{
          bool fromnosym = false;
          // orbital optimization
          params_oodmrg ooparams;
+         // configurations
+         std::string inputconf = "";
+         std::string saveconfs = "";
+         std::string loadconfs = "";
    };
 
 } // input
