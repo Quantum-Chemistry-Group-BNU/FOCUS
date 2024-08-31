@@ -173,8 +173,8 @@ namespace ctns{
             auto state = states[idx];
             auto ci = coeff[state];
             double pop = coeff2[idx]/ovlp;
-            sum += counts[idx];
             if(pop < pthrd or i >= nprt) break;
+            sum += counts[idx];
             std::cout << " i=" << i << " " << state
                << " counts=" << counts[idx] 
                << " p_i(sample)=" << counts[idx]/(1.0*nsample)
@@ -189,8 +189,8 @@ namespace ctns{
          if(!saveconfs.empty()){
             std::cout << "save to file " << saveconfs << ".txt" << std::endl;
             std::ofstream file(saveconfs+".txt");
-            file << std::defaultfloat << std::setprecision(12);
-            file << "size = " << size << " psum = " << psum << std::endl;
+            file << std::fixed << std::setprecision(12);
+            file << "size=" << size << " psum=" << psum << std::endl;
             for(int i=0; i<size; i++){
                int idx = indx[i];
                auto state = states[idx];
@@ -242,7 +242,6 @@ namespace ctns{
          }
          // print important determinants
          int size = pop.size();
-         std::cout << "sampled important det: pop.size=" << size << std::endl; 
          std::vector<fock::onstate> states(size);
          std::vector<int> counts(size);
          double Sdpop = 0.0, IPRpop = 0.0;
@@ -255,8 +254,12 @@ namespace ctns{
             IPRpop += ci2*ci2*ovlp;
             i++;
          }
-         auto indx = tools::sort_index(counts,1);
+         std::cout << "sampled unique det: pop.size=" << size 
+            << " Sdiag[pop]=" << Sdpop << " IPR[pop]=" << IPRpop 
+            << std::endl;
+         std::cout << "warning: it is not the exact pop (interference is neglected)!" << std::endl;
          // compare the first n important dets by counts
+         auto indx = tools::sort_index(counts,1);
          int sum = 0;
          for(int i=0; i<size; i++){
             int idx = indx[i];
@@ -272,9 +275,6 @@ namespace ctns{
          std::cout << "accumulated counts for listed confs=" << sum 
             << " nsample=" << nsample 
             << " per=" << 1.0*sum/nsample << std::endl;
-         std::cout << "estimated Sdiag[pop]=" << Sdpop << std::endl;
-         std::cout << "warning: it is not the exact pop (interference is neglected)!" << std::endl;
-         std::cout << "estimated IPR[pop]=" << IPRpop << std::endl;
          return Sdpop;
       }
 

@@ -417,6 +417,7 @@
     - initialization from SCI: support more than 100000 dets [DONE@2024/08/30]
       - fix the loose of orthogonality via canonicalization (ctns_rcanon.h)
     - support linear combination of dets and csf states [DONE@2024/XX/XX]
+      - keyword: fromconf, saveconfs, loadconfs
       - add keywords fromci (unnormalized) to generate a RCF [used for opt or other purpose]
       - addition of MPS 
       - canonicalization / variational compression? 
