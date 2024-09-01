@@ -182,7 +182,9 @@ namespace ctns{
             const linalg::matrix<Tm>& vs,
             const bool reorder=true){
          assert(space.size() == vs.rows());
-         std::cout << "\nctns::rcanon_CIovlp reorder=" << reorder 
+         std::cout << "\nctns::rcanon_CIovlp"
+            << " ifab=" << Qm::ifabelian
+            << " reorder=" << reorder 
             << " cistates=" << vs.cols() 
             << " ciconfs=" << space.size() 
             << std::endl;
@@ -200,6 +202,37 @@ namespace ctns{
             }
             auto coeff = rcanon_CIcoeff(icomb, state);
             linalg::xaxpy(n, sgn, coeff.data(), cmat.col(i));
+         }
+         // ovlp[i,n] = vs*[k,i] cmat[n,k]
+         auto ovlp = linalg::xgemm("C","T",vs,cmat);
+         return ovlp;
+      }
+
+   // SA-MPS and CSF
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> rcanon_CIovlp(const comb<Qm,Tm>& icomb,
+            const fock::csfspace& space,
+            const linalg::matrix<Tm>& vs,
+            const bool reorder=false){
+         assert(space.size() == vs.rows());
+         std::cout << "\nctns::rcanon_CIovlp"
+            << " ifab=" << Qm::ifabelian
+            << " reorder=" << reorder
+            << " cistates=" << vs.cols() 
+            << " ciconfs=" << space.size() 
+            << std::endl;
+         if(!Qm::ifabelian and reorder){
+            std::cout << "error: csf does not support reorder!" << std::endl;
+            exit(1);
+         }
+         int n = icomb.get_nroots(); 
+         size_t dim = space.size();
+         // cmat[n,i] = <D[i]|CTNS[n]>
+         linalg::matrix<Tm> cmat(n,dim);
+         for(int i=0; i<dim; i++){
+            auto state = space[i];
+            auto coeff = rcanon_CIcoeff(icomb, state);
+            linalg::xcopy(n, coeff.data(), cmat.col(i));
          }
          // ovlp[i,n] = vs*[k,i] cmat[n,k]
          auto ovlp = linalg::xgemm("C","T",vs,cmat);

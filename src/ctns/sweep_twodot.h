@@ -232,11 +232,11 @@ namespace ctns{
          if(debug){
             auto t3 = tools::get_time();
             std::cout << "----- TIMING FOR cleanup: " 
-               << tools::get_duration(t3-t0)
+               << tools::get_duration(t3-t0) << " S"
                << " T(join&erase/save/remove)="
                << tools::get_duration(t1-t0) << ","
                << tools::get_duration(t2-t1) << ","
-               << tools::get_duration(t3-t2) << " S -----"
+               << tools::get_duration(t3-t2) << " -----"
                << std::endl;
          }
         

@@ -226,7 +226,7 @@ namespace ctns{
                << " T(join/erase1/erase2)="
                << tools::get_duration(t1-t0) << ","
                << tools::get_duration(t2-t1) << ","
-               << tools::get_duration(t3-t2) << " S -----"
+               << tools::get_duration(t3-t2) << " -----"
                << std::endl;
          }
       }

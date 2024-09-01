@@ -119,7 +119,7 @@ namespace ctns{
                << tools::get_duration(t2-t0) << " S"
                << " T(wf/decim)=" 
                << tools::get_duration(t1-t0) << ","
-               << tools::get_duration(t2-t1) << " S -----"
+               << tools::get_duration(t2-t1) << " -----"
                << std::endl;
          }
       }

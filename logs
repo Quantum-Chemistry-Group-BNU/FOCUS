@@ -413,11 +413,13 @@
  * Documentation [DONE@2024/08/26]
     - initial commit
 
- * More robust initialization from dets, and canonicalization
+ * More robust initialization from dets, and canonicalization [DONE@2024/09/02]
     - initialization from SCI: support more than 100000 dets [DONE@2024/08/30]
       - fix the loose of orthogonality via canonicalization (ctns_rcanon.h)
-    - support linear combination of dets and csf states [DONE@2024/XX/XX]
+    - support linear combination of dets and csf states [DONE@2024/09/02]
       - keyword: fromconf, saveconfs, loadconfs
-      - addition of MPS and then canonicalization [nonsu2] 
-      - addition of MPS and then canonicalization [su2]
-      - unnormalized to generate a RCF [used for opt or other purpose]
+      - addition of MPS and then canonicalization for nonsu2 case
+      - addition of MPS and then canonicalization for su2 case
+      - This is efficient for generating a RCF with < 1000 dets/csf,
+        which can be used for later optimization or other purpose.
+

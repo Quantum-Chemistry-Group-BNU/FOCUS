@@ -174,7 +174,7 @@ namespace input{
          // sampling
          int iroot = 0;
          int jroot = 0;
-         int nsample = 1000;
+         int nsample = 5000;
          int nprt = 10;
          double pthrd = -1.e-2;
          // su2 symmetry
