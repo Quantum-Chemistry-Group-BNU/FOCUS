@@ -418,9 +418,6 @@
       - fix the loose of orthogonality via canonicalization (ctns_rcanon.h)
     - support linear combination of dets and csf states [DONE@2024/XX/XX]
       - keyword: fromconf, saveconfs, loadconfs
-      - add keywords fromci (unnormalized) to generate a RCF [used for opt or other purpose]
-      - addition of MPS 
-      - canonicalization / variational compression? 
-      - then we can check the fidelity <approx|exact>!
-      - variational compression up/down to some Dcut
- 
+      - addition of MPS and then canonicalization [nonsu2] 
+      - addition of MPS and then canonicalization [su2]
+      - unnormalized to generate a RCF [used for opt or other purpose]

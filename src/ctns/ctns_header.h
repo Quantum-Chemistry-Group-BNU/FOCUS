@@ -22,6 +22,7 @@
 #include "ctns_det2mps.h"
 #include "sadmrg/ctns_csf2samps.h"
 #include "nosym/ctns_fromnosym.h"
+#include "ctns_loadconfs.h"
 
 #include "ctns_entropy.h"
 #include "oodmrg/oodmrg.h"

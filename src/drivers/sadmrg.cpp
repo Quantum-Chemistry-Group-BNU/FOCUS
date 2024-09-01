@@ -44,6 +44,7 @@ void SADMRG(const input::schedule& schd){
          // initialize RCF 
          if(!schd.ctns.inputconf.empty()){
 
+            // from a single configuration
             fock::csfstate csf(schd.ctns.inputconf);
             // consistency check
             if(csf.norb() != icomb.topo.nphysical or 
@@ -56,7 +57,14 @@ void SADMRG(const input::schedule& schd){
                exit(1);
             }
             icomb = ctns::csf2samps<Tm>(icomb.topo, csf);
-            rcanon_file = schd.scratch+"/rcanon_csf"; 
+            rcanon_file = schd.scratch+"/rcanon_conf_su2"; 
+            ctns::rcanon_save(icomb, rcanon_file);
+         
+         }else if(!schd.ctns.loadconfs.empty()){
+
+            // from a list of configurations
+            ctns::rcanon_loadconfs(icomb, schd.ctns.loadconfs); 
+            rcanon_file = schd.scratch+"/rcanon_confs_su2";
             ctns::rcanon_save(icomb, rcanon_file);
 
          }else{ 

@@ -85,7 +85,7 @@ Configurations are saved in ``confs.txt``
 
 .. code-block::
 
-   size=378 psum=0.980751123663
+   size= 378 psum= 0.980751123663
    0000000aaa2222 0.906007955131
    0000000a2aa222 0.204001677820
    000000a0a2a222 -0.120659974486

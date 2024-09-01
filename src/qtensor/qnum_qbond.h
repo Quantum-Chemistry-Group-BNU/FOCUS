@@ -117,6 +117,21 @@ namespace ctns{
             }
             return idx;
          }
+         // directsum: qs12 = qs1+qs2
+         qbond directsum(const qbond& qs) const{
+            qbond qs12 = (*this);
+            for(const auto& pr : qs.dims){
+               const auto& sym = pr.first;
+               const auto& dim = pr.second;
+               int idx = qs12.existQ(sym);
+               if(idx == -1){
+                  qs12.dims.push_back(pr);
+               }else{
+                  qs12.dims[idx].second += dim;
+               }
+            }
+            return qs12;
+         }
       public:
          std::vector<std::pair<qsym,int>> dims;
    };

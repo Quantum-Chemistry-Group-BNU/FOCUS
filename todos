@@ -2,6 +2,7 @@
 ### 2024 DMRG[RDM] ###
 
  * Reduced density matrices: (RDMs) [DONE@202X/XX/XX]
+   - Overlap of two MPS?
    - Brute-force RDM & TDM algorithm:
       - non-spin-adapted: [DONE@2024/06/02]
          - Application of local op to MPS:
@@ -11,7 +12,7 @@
       - spin-adapted case? 
          - What is the correct math for applying operators?
    - Optimized algorithm via reusing intermediates
-      - non-spin-adapted case: [THIS SHOUDLD BE SIMPLE!!!]
+      - non-spin-adapted case: [THIS SHOUDLD BE SIMPLE FOLLOWING CHAN'S PAPER!!!]
          - one-body RDM:
          - two-body RDM:
       - spin-adapted case:
@@ -22,19 +23,16 @@
          - between singlet embedding wavefunction?
       - between different spins (for SOC)
          - perturbative SOC via state interaction
-   - <MPS|H1e|MPS'> and <MPS|H2e|MPS'>
+   - <MPS1|H1e|MPS2> and <MPS1|H2e|MPS2>
    - GPU version:
       - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
    - Applications:
       - Spin-spin correlation function
-      - natural orbitals
+      - Natural orbitals
       - RDM-based orbital optimization (CASSCF, QIO, ...) 
-      - other measures of electron correlation? Shee's work?								
+      - Other measures of electron correlation? Shee's work?								
 
 ### 2025 DMRG[QC] ###
-
- * Disentangle transformation:
-   - Generate circuit for quantum computer
 
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
@@ -44,6 +42,9 @@
    - fe4s4
    - fe8s7
    - femoco
+
+ * Disentangle transformation:
+   - Generate circuit for quantum computer
 
 ### TODOs: more functionalities ###
 
@@ -57,13 +58,13 @@
 
 ### TODOs: better performance ###
 
- * decim for su2 is not optimized yet
+ * Decim for su2 is not optimized/parallelized yet
 
  * Decimation on GPU?
    - cuSolver: svd
    - cuSOlver: eig
 
- * point group symmetry (D2h) -> good for molecules like cr2
+ * Point group symmetry (D2h) -> good for molecules like cr2
 
  * Better Davidson solver on GPU?
    - GPU memory is a problem

@@ -190,7 +190,7 @@ namespace ctns{
             std::cout << "save to file " << saveconfs << ".txt" << std::endl;
             std::ofstream file(saveconfs+".txt");
             file << std::fixed << std::setprecision(12);
-            file << "size=" << size << " psum=" << psum << std::endl;
+            file << "size= " << size << " psum= " << psum << std::endl;
             for(int i=0; i<size; i++){
                int idx = indx[i];
                auto state = states[idx];

@@ -48,6 +48,7 @@ void CTNS(const input::schedule& schd){
 
          }else if(!schd.ctns.inputconf.empty()){
 
+            // from a single configurations
             fock::onstate det(schd.ctns.inputconf, 1);
             // consistency check
             if(det.norb() != icomb.topo.nphysical or
@@ -60,7 +61,14 @@ void CTNS(const input::schedule& schd){
                exit(1);
             }
             icomb = ctns::det2mps<Qm,Tm>(icomb.topo, det);
-            rcanon_file = schd.scratch+"/rcanon_det";
+            rcanon_file = schd.scratch+"/rcanon_conf";
+            ctns::rcanon_save(icomb, rcanon_file);
+
+         }else if(!schd.ctns.loadconfs.empty()){
+
+            // from a list of configurations
+            ctns::rcanon_loadconfs(icomb, schd.ctns.loadconfs);
+            rcanon_file = schd.scratch+"/rcanon_confs";
             ctns::rcanon_save(icomb, rcanon_file);
 
          }else{
