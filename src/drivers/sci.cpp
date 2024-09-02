@@ -45,6 +45,25 @@ void SCI(const input::schedule& schd){
       std::vector<Tm> vi(vs.col(iroot), vs.col(iroot)+dim);
       sci::pt2_solver(schd, es[iroot], vi, sci_space, int2e, int1e, ecore);
    }
+   // rdm
+   if(schd.sci.rdm){
+      // compute sparse_hamiltonian
+      const bool Htype = tools::is_complex<Tm>();
+      fci::sparse_hamiltonian<Tm> sparseH2;
+      sparseH2.get_hamiltonian(sci_space, int2e, int1e, ecore, Htype);
+      int k = int1e.sorb;
+      int k2 = k*(k-1)/2;
+      int iroot = schd.sci.iroot;
+      int jroot = schd.sci.jroot;
+      linalg::matrix<Tm> rdm2(k2,k2);
+      std::vector<Tm> vi(vs.col(iroot), vs.col(iroot)+dim);
+      std::vector<Tm> vj(vs.col(jroot), vs.col(jroot)+dim);
+      fci::get_rdm2(sparseH2, sci_space, vi, vj, rdm2);
+      auto Hij = fock::get_etot(rdm2, int2e, int1e, ecore);
+      std::cout << "I,J=" << iroot << "," << jroot
+         << " HIJ=" << std::fixed << std::setprecision(12) << Hij 
+         << std::endl;
+   }
 }
 
 int main(int argc, char *argv[]){

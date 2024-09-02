@@ -1,39 +1,4 @@
 
-### 2024 DMRG[RDM] ###
-
- * Reduced density matrices: (RDMs) [DONE@202X/XX/XX]
-   - Overlap of two MPS?
-   - Brute-force RDM & TDM algorithm:
-      - non-spin-adapted: [DONE@2024/06/02]
-         - Application of local op to MPS:
-         - Contract <bMPS|kMPS> to get RDM/TDM
-         - quantum information measure:
-            - single orbital entropy [or just from 1,2-RDMs]
-      - spin-adapted case? 
-         - What is the correct math for applying operators?
-   - Optimized algorithm via reusing intermediates
-      - non-spin-adapted case: [THIS SHOUDLD BE SIMPLE FOLLOWING CHAN'S PAPER!!!]
-         - one-body RDM:
-         - two-body RDM:
-      - spin-adapted case:
-         - one-body RDM:
-         - two-body RDM:
-      - transition PDM:
-         - between same spins
-         - between singlet embedding wavefunction?
-      - between different spins (for SOC)
-         - perturbative SOC via state interaction
-   - <MPS1|H1e|MPS2> and <MPS1|H2e|MPS2>
-   - GPU version:
-      - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
-   - Applications:
-      - Spin-spin correlation function
-      - Natural orbitals
-      - RDM-based orbital optimization (CASSCF, QIO, ...) 
-      - Other measures of electron correlation? Shee's work?								
-
-### 2025 DMRG[QC] ###
-
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
                              but use mkl2022 for focus,
@@ -43,7 +8,10 @@
    - fe8s7
    - femoco
 
+### 2025 DMRG + QC ###
+
  * Disentangle transformation:
+   - Python implementation
    - Generate circuit for quantum computer
 
 ### TODOs: more functionalities ###
@@ -58,7 +26,7 @@
 
 ### TODOs: better performance ###
 
- * Decim for su2 is not optimized/parallelized yet
+ * Decimation for su2 is not optimized/parallelized yet
 
  * Decimation on GPU?
    - cuSolver: svd

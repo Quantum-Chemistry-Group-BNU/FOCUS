@@ -68,12 +68,12 @@ void ED(const input::schedule& schd){
    std::cout << "\nsummary of FCI energies:" << std::endl;
    for(int i=0; i<nroots; i++){
       std::cout << " state " << i << " energy = "
-         << std::setprecision(12) << es[i] 
+         << std::fixed << std::setprecision(12) << es[i] 
          << std::endl;
    }
    for(int i=0; i<nroots; i++){
       std::cout << "\nstate " << i << " energy = "
-         << std::setprecision(12) << es[i] 
+         << std::fixed << std::setprecision(12) << es[i] 
          << std::endl;
       std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
       const int iop = 0;

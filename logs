@@ -423,3 +423,46 @@
       - This is efficient for generating a RCF with < 1000 dets/csf,
         which can be used for later optimization or other purpose.
 
+### 2024 DMRG[RDM] ###
+
+ * Properties for post-CI/DMRG calculations:
+   - Wish list:
+      - Overlap of two MPS? <MPS1|MPS2>
+      - 1-RDM: <MPS1|p^+q|MPS2> -> <Epq>, <Tpq>
+      - 2-RDM: <MPS1|p^+q^+rs|MPS2> (p>q,r<s) => MOST IMPORTANT
+      - <MPS2|H|MPS2>
+   - Possible applications:
+      - Spin-spin correlation function
+      - Natural orbitals
+      - RDM-based orbital optimization (CASSCF, QIO, ...) 
+      - Other measures of electron correlation? Shee's work?							
+ 
+ * Use SCI to prepare benchmark! [DONE@2024/09/02]
+   - Applied to FeMoco
+
+ * DMRG implementation:	
+   - Brute-force RDM & TDM algorithm:
+      - non-spin-adapted: [DONE@2024/06/02]
+         - Application of local op to MPS:
+         - Contract <bMPS|kMPS> to get RDM/TDM
+         - quantum information measure:
+            - single orbital entropy [or just from 1,2-RDMs]
+      - spin-adapted case? 
+         - What is the correct math for applying operators?
+   - Batch algorithm for RDMs: THIS SHOUDLD BE SIMPLE FOLLOWING CHAN'S PAPER!!!
+   - Optimized algorithm via reusing intermediates
+      - non-spin-adapted case: 
+         - one-body RDM:
+         - two-body RDM:
+      - spin-adapted case:
+         - one-body RDM:
+         - two-body RDM:
+      - transition PDM:
+         - between same spins
+         - between singlet embedding wavefunction?
+      - between different spins (for SOC)
+         - perturbative SOC via state interaction
+   - GPU version:
+      - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
+   - Singlet embedding for SOC - <Tpq>?
+
